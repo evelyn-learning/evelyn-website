@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
+import { DemoTracker } from '@/components/demos/DemoTracker';
 import { Mic, MessageSquare, Upload, Pencil, ExternalLink } from 'lucide-react';
 
 const VoiceTutorLiveDemo = dynamic(
@@ -89,7 +90,9 @@ function DemoSection() {
 
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Live demo — real embed behind a click-to-start cover */}
-          <VoiceTutorLiveDemo />
+          <DemoTracker productId="voice-tutor" productTitle="AI Voice Tutor" mode="voice">
+            <VoiceTutorLiveDemo />
+          </DemoTracker>
 
           {/* Feature cards */}
           <div className="grid md:grid-cols-2 gap-4">
@@ -295,7 +298,7 @@ function CTASection() {
 
 function RelatedProductsSection() {
   const related = [
-    { title: '24/7 Homework Helper', href: '/products/homework-bot', icon: '🤖' },
+    { title: 'Evelyn Academy', href: '/products/academy', icon: '🏫' },
     { title: 'AI Math Solver', href: '/products/math-solver', icon: '🔢' },
     { title: 'Tutoring Co-Pilot', href: '/products/tutor-copilot', icon: '👨‍🏫' }
   ];

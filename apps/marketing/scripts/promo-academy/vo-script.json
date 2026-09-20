@@ -1,0 +1,53 @@
+{
+  "voice": {
+    "note": "Crimsora promo narrator (Coach Riley, same Cartesia voiceId as academy seed-teachers.ts) — confirmed by Praveen 2026-09-17 for the Evelyn Academy tour.",
+    "voiceId": "bf0a246a-8642-498a-9950-80c35e9276b5"
+  },
+  "segments": [
+    {
+      "key": "a1-hook",
+      "scene": "intro card → course workspace, Lessons tab",
+      "text": "This is Evelyn Academy — a complete learning platform, under your brand."
+    },
+    {
+      "key": "a2-study",
+      "scene": "click Study → live lesson opens",
+      "text": "Every lesson is taught live, by an A I voice tutor."
+    },
+    {
+      "key": "a3-handoff",
+      "scene": "lead-in to the tutor-only session slice; narrator silent during it",
+      "text": "Here's the tutor, mid-lesson."
+    },
+    {
+      "key": "a4-practice",
+      "scene": "Practice & Quizzes → objective drill, review-due flag",
+      "text": "Every objective has practice, quizzes and a unit test — and review is flagged the moment it's due."
+    },
+    {
+      "key": "a5-mock",
+      "scene": "mock exam player → score report",
+      "text": "Timed mock exams, scored by unit — and reviewed with the tutor."
+    },
+    {
+      "key": "a6-progress",
+      "scene": "Overview: mastery heatmap, review due",
+      "text": "You see what each learner has mastered, and exactly where they're stuck."
+    },
+    {
+      "key": "a7-brand",
+      "scene": "brand swap: academy blue → crimsora crimson → evelyn teal",
+      "text": "One platform. Your name, your colours, your courses."
+    },
+    {
+      "key": "a8-admin",
+      "scene": "admin students dashboard",
+      "text": "And your team sees every learner, every session, every replay."
+    },
+    {
+      "key": "a9-cta",
+      "scene": "end card",
+      "text": "Bring your syllabus. We'll build your academy. Evelyn learning dot com."
+    }
+  ]
+}

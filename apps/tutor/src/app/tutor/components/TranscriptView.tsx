@@ -51,6 +51,16 @@ interface TranscriptViewProps {
    *  Default false; the host wires `true` when the PACING_V2_BUTTONS
    *  flag is on. */
   enablePacingChips?: boolean;
+  /** Empty-state second line. Voice's "Start speaking to begin!" assumes a
+   *  mic — text mode has no mic, so the host overrides this with a typing
+   *  hint. Defaults to the original voice copy so every other caller (and
+   *  every existing snapshot) stays byte-identical. */
+  emptyHint?: string;
+  /** Text mode: standard chat "stick to bottom" auto-scroll instead of the
+   *  voice near-bottom-only rule (see the effect below for why voice's
+   *  gate doesn't work for text's un-streamed full-paragraph replies).
+   *  Defaults to false/undefined so voice is byte-identical. */
+  stickToBottom?: boolean;
 }
 
 /** Round-20 (2026-07-17): bubbles now render inline $…$ math via KaTeX.
@@ -196,7 +206,7 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   return 'open';
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive (or when the picker
@@ -204,12 +214,77 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // Otherwise a streaming update would yank them back down every tick,
   // making the transcript feel "stuck" / unscrollable when they try to
   // read earlier turns (observed in the new SessionStage drawer 2026-06-23).
+  // Text mode ("stickToBottom"): standard chat semantics instead of the
+  // near-bottom-only rule below. Diagnosis (owner live-test, re-review
+  // 2026-09-19), two root causes found against a live :3007 session:
+  //  1. `containerRef` IS the real scroller (confirmed via an instrumented
+  //     run — the ancestor chain up to the panel's `absolute z-50` wrapper
+  //     all report scrollHeight===clientHeight; only this `h-full
+  //     overflow-y-auto` div actually overflows) — so it was never a
+  //     wrong-element problem. But the `< 120` "near bottom" gate below
+  //     compares the STALE scrollTop from before a DOM commit against the
+  //     NEW scrollHeight after it, so a reply that lands as one full
+  //     paragraph (text mode has no per-character caption reveal the way
+  //     voice's TTS-timed captions do) can jump distance-from-bottom past
+  //     120px in a single commit, permanently stranding the view with no
+  //     event left to re-trigger the scroll.
+  //  2. The FIX's own first attempt (a separate `useEffect(…, [stickToBottom])`
+  //     that attached scroll/wheel/touch listeners once, to track when the
+  //     student deliberately scrolls up) had a mount-order bug: this
+  //     component EARLY-RETURNS a completely different, containerRef-less
+  //     JSX tree while `transcript.length === 0` (see the empty-state
+  //     return below), so on the very first render `containerRef.current`
+  //     is null. `[stickToBottom]` never changes again after mount, so
+  //     that effect ran exactly once against a null ref and the listeners
+  //     were NEVER attached — confirmed by an instrumented run: the
+  //     "scrolled up" ref stayed `false` no matter how far the student
+  //     scrolled, and the very next tutor chunk always yanked the view
+  //     back to the bottom (a real second bug, not merely a test
+  //     artifact — reproduced with both a real wheel scroll and a direct,
+  //     synchronous `scrollTop` + `dispatchEvent('scroll')`, ruling out an
+  //     event-ordering race). Folding attachment into THIS effect — which
+  //     already re-runs on every `transcript`/`picker` change, i.e.
+  //     exactly when the empty→populated transition happens — fixes it:
+  //     by the time this effect body runs for a non-empty transcript,
+  //     `containerRef.current` is guaranteed to be the mounted node.
+  // `stickToBottom` sidesteps gate (1) entirely: the student's own message
+  // always scrolls to bottom, and a tutor entry arriving/streaming scrolls
+  // to bottom unless the student deliberately scrolled away. Voice's
+  // near-bottom-only rule (the `else` branch) is completely untouched.
+  const userScrolledUpRef = useRef(false);
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    if (stickToBottom) {
+      const onScrollLikeEvent = () => {
+        const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+        userScrolledUpRef.current = distance > 120;
+      };
+      el.addEventListener('scroll', onScrollLikeEvent, { passive: true });
+      el.addEventListener('wheel', onScrollLikeEvent, { passive: true });
+      el.addEventListener('touchmove', onScrollLikeEvent, { passive: true });
+      // The student's own message just landed (or is still the latest
+      // entry while the reply is pending) — always snap to bottom and
+      // clear the "scrolled up" latch, exactly like sending a message in
+      // any standard chat UI.
+      const lastEntry = transcript[transcript.length - 1];
+      if (lastEntry?.role === 'student') {
+        userScrolledUpRef.current = false;
+        el.scrollTop = el.scrollHeight;
+      } else if (!userScrolledUpRef.current) {
+        // Tutor entry arriving or streaming: follow unless the student
+        // deliberately scrolled up to read earlier turns.
+        el.scrollTop = el.scrollHeight;
+      }
+      return () => {
+        el.removeEventListener('scroll', onScrollLikeEvent);
+        el.removeEventListener('wheel', onScrollLikeEvent);
+        el.removeEventListener('touchmove', onScrollLikeEvent);
+      };
+    }
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
     if (nearBottom) el.scrollTop = el.scrollHeight;
-  }, [transcript, picker]);
+  }, [transcript, picker, stickToBottom]);
 
   // Round-6e (third attempt at "open at the latest message"): the drawer's
   // OWNER announces every open ('evelyn:transcript-drawer-opened', see
@@ -299,7 +374,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         <p className="text-center">
           Your conversation will appear here.
           <br />
-          Start speaking to begin!
+          {emptyHint}
         </p>
       </div>
     );

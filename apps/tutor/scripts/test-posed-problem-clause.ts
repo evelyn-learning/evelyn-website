@@ -53,8 +53,14 @@ function main() {
   // 2026-07-10 (session-1783659462609): the tutor made a student hand-
   //    multiply 792 x 128 x 243 for a binomial-theorem lesson, and kept
   //    quizzing after the student twice asked it to just compute.
+  // Pin updated 2026-09-06: R29 (85ce9abb) deliberately broadened this
+  // clause's trigger from "bulky"/large arithmetic to ANY calculator-
+  // reachable evaluation regardless of size, and re-worded the header to
+  // "CRITICAL — incidental arithmetic is not the lesson" to match — without
+  // updating this pin. Intent (tutor computes it, honors "just tell me"
+  // immediately) is unchanged, so re-pin to the current, broader header.
   test('arithmetic-grind clause: bulky arithmetic is not the lesson', () => {
-    assert.ok(prompt.includes('Bulky arithmetic is not the lesson'), 'clause header missing');
+    assert.ok(prompt.includes('incidental arithmetic is not the lesson'), 'clause header missing');
     assert.ok(prompt.includes('compute it YOURSELF'), 'tutor-computes mandate missing');
     assert.ok(prompt.includes('immediately'), 'honor just-tell-me immediately missing');
   });

@@ -50,6 +50,14 @@ export const TUTOR_SKIP_DETERMINISTIC =
 // project_tutor_render_speech_sync.
 export const TUTOR_RENDER_SYNC =
   process.env.NEXT_PUBLIC_TUTOR_RENDER_SYNC !== 'off';
+// Partner embed voice default (2026-09-15, Kanzoo sandbox finding): a token
+// with NO teacher persona used to fall back to the OpenAI Realtime voice, so
+// a partner that simply omitted `teacher` got a different (synthetic) voice
+// from every first-party surface. Default ON: such tokens now speak with
+// Cartesia + CARTESIA_DEFAULT_VOICE_ID. A persona that explicitly declares an
+// openai voice still gets it. 'off' restores the pre-2026-09-15 fallback.
+export const TUTOR_EMBED_CARTESIA_DEFAULT =
+  process.env.NEXT_PUBLIC_TUTOR_EMBED_CARTESIA_DEFAULT !== 'off';
 // Student whiteboard marks (Phase 1, 2026-07-05): tap-to-point. Default
 // OFF — new student-facing input surface. See student-marks design spec.
 export const TUTOR_STUDENT_MARKS =
@@ -108,6 +116,38 @@ export const TUTOR_FALSE_ASSERTION_KILL =
  *  correct answer to the spoken side-question isn't killed against a stale
  *  anchor. Default ON. */
 export const TUTOR_FA_STALE_ANCHOR_DOWNGRADE = process.env.NEXT_PUBLIC_TUTOR_FA_STALE_ANCHOR_DOWNGRADE !== 'off';
+/** portal-704e3e01 (2026-09-04): a false-assertion KILL removed the turn's
+ *  verdict and the retry restored none — the student asked out loud whether
+ *  she had got the previous question right. Appends a replant clause to the
+ *  false-assertion rejection so the re-delivery still grades the answer.
+ *  Default ON; NEXT_PUBLIC_TUTOR_VERDICT_REPLANT_ON_KILL=off is the switch. */
+export const TUTOR_VERDICT_REPLANT_ON_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_VERDICT_REPLANT_ON_KILL !== 'off';
+/** portal-704e3e01 (2026-09-04) @1414.3s: performKill retracted the speech
+ *  while mark_segment_complete / advance_lesson / show_segment_card from the
+ *  SAME killed turn dispatched anyway, moving the lesson onto content the
+ *  student never heard introduced. Withholds lesson-STATE tools (never
+ *  renders) for the remainder of a killed attempt.
+ *  Default ON; NEXT_PUBLIC_TUTOR_KILL_WITHHOLDS_ADVANCE=off is the switch. */
+export const TUTOR_KILL_WITHHOLDS_ADVANCE =
+  process.env.NEXT_PUBLIC_TUTOR_KILL_WITHHOLDS_ADVANCE !== 'off';
+/** Holistic-pedagogy round (2026-09-05, spec §A.8): per-LO struggle ledger —
+ *  inferred gaps + in-session recurrence. Default ON;
+ *  NEXT_PUBLIC_TUTOR_STRUGGLE_LEDGER=off is the switch. */
+export const TUTOR_STRUGGLE_LEDGER =
+  process.env.NEXT_PUBLIC_TUTOR_STRUGGLE_LEDGER !== 'off';
+/** Spec §B.8: consent-gated recap offers (mid-session recurrence + session
+ *  start). Default ON; NEXT_PUBLIC_TUTOR_RECAP_OFFER=off is the switch. */
+export const TUTOR_RECAP_OFFER =
+  process.env.NEXT_PUBLIC_TUTOR_RECAP_OFFER !== 'off';
+/** Spec §C.10: close_session_notes tool, practice-assign call, fallback,
+ *  summary line. Default ON; NEXT_PUBLIC_TUTOR_CLOSE_NOTES=off is the switch. */
+export const TUTOR_CLOSE_NOTES =
+  process.env.NEXT_PUBLIC_TUTOR_CLOSE_NOTES !== 'off';
+/** Spec §D.5: false-praise-opener guard + praise-contradiction widening.
+ *  Default ON; NEXT_PUBLIC_TUTOR_FALSE_PRAISE_OPENER=off is the switch. */
+export const TUTOR_FALSE_PRAISE_OPENER =
+  process.env.NEXT_PUBLIC_TUTOR_FALSE_PRAISE_OPENER !== 'off';
 // R58 student-declared hold (live, portal-2f23ece4: "ignore everything I
 // say until I say candle" — the tutor kept answering every overheard
 // utterance and the private aside landed in the transcript). While
@@ -625,3 +665,82 @@ export const TUTOR_STT_ENGINE_INK2 =
 // standing flag-default rule.
 export const TUTOR_OPENING_BARGEIN_ESCAPE =
   process.env.NEXT_PUBLIC_TUTOR_OPENING_BARGEIN_ESCAPE !== 'off';
+/** portal-9a9b7c09 (2026-09-04): the tutor speaks numbers as words and every
+ *  arithmetic guard parses digits, so a session with seven defective turns
+ *  fired zero kills. Feeds tutor sentences through spokenNumbersToDigits
+ *  before the arithmetic and reversal guards.
+ *  Default ON; NEXT_PUBLIC_TUTOR_SPOKEN_NUMBER_GUARDS=off is the switch. */
+export const TUTOR_SPOKEN_NUMBER_GUARDS =
+  process.env.NEXT_PUBLIC_TUTOR_SPOKEN_NUMBER_GUARDS !== 'off';
+/** portal-9a9b7c09 (2026-09-04): showEquation-11 painted
+ *  "16 + 9 + 9 + 4 + 144 = 182" while the same turn's speech said the total
+ *  was thirty-eight. The judge flagged it at kill severity and, being
+ *  advisory-only, aired nothing. The board is ground truth the tutor wrote
+ *  itself, so this deterministic comparison may kill.
+ *  Default ON; NEXT_PUBLIC_TUTOR_BOARD_CONTRADICTION=off is the switch. */
+export const TUTOR_BOARD_CONTRADICTION =
+  process.env.NEXT_PUBLIC_TUTOR_BOARD_CONTRADICTION !== 'off';
+/** portal-704e3e01 (2026-09-04) @1027.9s: the brain spoke a whole
+ *  <result>…</result> block aloud. The meta-narration filter matched content
+ *  phrases and that block contained none. Extract to a pure module and add a
+ *  structural markup rule. Flag TUTOR_META_NARRATION_STRUCTURAL (default ON).
+ *  Default ON; NEXT_PUBLIC_TUTOR_META_NARRATION_STRUCTURAL=off is the switch. */
+export const TUTOR_META_NARRATION_STRUCTURAL =
+  process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_STRUCTURAL !== 'off';
+
+/** portal-704e3e01 (2026-09-04): the show_problem → show_segment_card
+ *  substitution twice chose a card the orchestrator then rejected — a
+ *  COMPLETE segment @1111.7s, and a card already on the board while the
+ *  student had asked for a different problem @1021.1s. Both became
+ *  self-inflicted validator retries. Gates the substitution on those two.
+ *  Default ON; NEXT_PUBLIC_TUTOR_SUBSTITUTE_GATE=off is the switch. */
+export const TUTOR_SUBSTITUTE_GATE =
+  process.env.NEXT_PUBLIC_TUTOR_SUBSTITUTE_GATE !== 'off';
+/** portal-704e3e01 (2026-09-04) @1122.5s: the auto-newPage was titled from
+ *  the plan's authored problem while the card that rendered was a
+ *  generate_problem substitute, and the fixed slice(0, 70) cut it
+ *  mid-expression. Retitles at flush from the problem actually rendering.
+ *  Default ON; NEXT_PUBLIC_TUTOR_PAGE_TITLE_FROM_RENDER=off is the switch. */
+export const TUTOR_PAGE_TITLE_FROM_RENDER =
+  process.env.NEXT_PUBLIC_TUTOR_PAGE_TITLE_FROM_RENDER !== 'off';
+/** portal-00fa1bb7 / portal-5bc0fc1e / portal-c3007206 (2026-09-03/04): three
+ *  dead-start sessions with ZERO debug events. Events ride a 30s interval or a
+ *  beforeunload beacon an iframed embed does not reliably get. Adds pagehide +
+ *  visibilitychange listeners and one early flush inside the first 10s after
+ *  the session latches — on WHICHEVER of three signals fires first: the
+ *  first start_tap, evelyn:session-started, or transcript growth PAST the
+ *  resume baseline (fix-round-3: the transcript backstop closes every entry
+ *  point that bypasses the first two — e.g. the resume-await toolbar or a
+ *  restored try-yourself card — without naming any of them; start_tap and
+ *  session-started still fire earlier when they apply, opening the window
+ *  sooner). The baseline is resumeState.transcript.length, not zero,
+ *  because a resume DOES restore transcript at mount with no gesture —
+ *  fix-round-4 corrected an earlier claim here that it restored only
+ *  position. A page load with none of the three is navigation, not a dead
+ *  start, and mints nothing.
+ *  Default ON; NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL=off is the switch. */
+export const TUTOR_TELEMETRY_SURVIVAL =
+  process.env.NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL !== 'off';
+/** portal-00fa1bb7 / -5bc0fc1e / -c3007206: the session-usage upsert runs on
+ *  MOUNT, so every embed load mints a tutorsessions row — a student browsing
+ *  the lesson menu creates one "abandoned" session per click, indistinguishable
+ *  from a real failed start. Holds every write until the session is ENGAGED,
+ *  latched on WHICHEVER of three signals fires first (embed/page.tsx's
+ *  sessionEngagedAtRef): the first start_tap (a tap that never became a
+ *  session is exactly the dead-start case worth diagnosing, and it must
+ *  still get its row and its telemetry — resumeContinue() emits this too,
+ *  as of fix-round-2, since a resumed mount deliberately suppresses the
+ *  session-started dispatch below), evelyn:session-started (gesture /
+ *  typed-first-message starts), or transcript growth PAST the resume
+ *  baseline (fix-round-3 backstop — after three rounds each closing one
+ *  named entry point and finding another, this latches on the invariant
+ *  instead: a session is one where the tutor actually did something, and
+ *  every costed path ends in a brain turn that produces transcript;
+ *  fix-round-4 baselined it at resumeState.transcript.length because a
+ *  resume DOES restore transcript at mount with no gesture, so a `> 0`
+ *  test made merely previewing a resumable session latch and overwrite the
+ *  real prior session's duration/endedAt/status with an abandoned save).
+ *  A load with none of the three is plain navigation and mints nothing.
+ *  Default ON; NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC=off is the switch. */
+export const TUTOR_DEFER_SESSION_DOC =
+  process.env.NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC !== 'off';

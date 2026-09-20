@@ -5,7 +5,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { normalizeSentenceSpacing } from '../src/lib/tutor/voice/sentence-spacing';
+import { normalizeSentenceSpacing, stripHtmlBreakTags } from '../src/lib/tutor/voice/sentence-spacing';
 
 let passed = 0;
 let failed = 0;
@@ -138,6 +138,26 @@ test('leaves lowercase ratios alone', () => {
 test('leaves single-letter-before-colon alone (labels like x:Y)', () => {
   const s = 'map x:Y here';
   assert.equal(normalizeSentenceSpacing(s), s);
+});
+
+// stripHtmlBreakTags — live 2026-09-18 (portal-7cefb23d): the brain opened a
+// turn with a literal "<br>" line, which reached the transcript and TTS.
+test('stripHtmlBreakTags: leading <br> + blank line removed', () => {
+  assert.equal(stripHtmlBreakTags('<br>\n\nLet me look at this.'), 'Let me look at this.');
+});
+test('stripHtmlBreakTags: <br/> and <br /> mid-text become a space', () => {
+  assert.equal(stripHtmlBreakTags('first<br/>second<br />third'), 'first second third');
+});
+test('stripHtmlBreakTags: <p> wrappers dropped', () => {
+  assert.equal(stripHtmlBreakTags('<p>Hello there.</p>'), 'Hello there.');
+});
+test('stripHtmlBreakTags: a real less-than comparison is untouched', () => {
+  const s = 'so 3 < 5 and x > 2 holds';
+  assert.equal(stripHtmlBreakTags(s), s);
+});
+test('stripHtmlBreakTags: no tags → identical string', () => {
+  const s = 'Plain sentence, nothing to do.';
+  assert.equal(stripHtmlBreakTags(s), s);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -24,6 +24,7 @@
  * about board content.
  */
 import { NextRequest } from 'next/server';
+import { repairJudgeJson } from '@/lib/tutor/voice/judge-json-repair';
 import { getModelClient, prepareParams } from '@/lib/tutor/ai/model-registry';
 import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '@/lib/tutor/judge-prompt';
 
@@ -65,6 +66,12 @@ interface JudgeRequestBody {
    *  judge passed a false "Not quite" on a correct answer — it had no
    *  way to know what was asked. */
   questionContext?: string;
+  /** Optional AUTHORED_SOLUTION — the lesson author's ground truth for
+   *  the problem the student is working. When present it outranks the
+   *  whiteboard: the board may carry the tutor's own wrong derivation
+   *  (2026-09-06 live check 3, portal-3a024b75), and the judge must not
+   *  treat board content as true when it contradicts this. */
+  authoredSolution?: string;
 }
 
 interface JudgeIssue {
@@ -137,6 +144,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     return badRequest('Invalid JSON body');
   }
   if (typeof body.boardSummary !== 'string') return badRequest('boardSummary must be a string');
+  if (body.authoredSolution !== undefined && (typeof body.authoredSolution !== 'string' || body.authoredSolution.length > 1500)) {
+    return badRequest('authoredSolution must be a string ≤ 1500 chars');
+  }
   if (typeof body.spokenText !== 'string' || body.spokenText.trim().length === 0) {
     // Nothing to judge → trivially grounded.
     return new Response(JSON.stringify({ grounded: true, issues: [] } satisfies JudgeResponse), {
@@ -177,7 +187,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       const jsonStr = extractFirstJsonObject(raw);
       if (jsonStr) parsed = JSON.parse(jsonStr);
     } catch {
-      console.warn('[tutor/judge] failed to parse JSON; raw=', raw.slice(0, 200));
+      // Live 2026-09-05: unescaped inner quotes in a claim string. Repair
+      // before failing open — a flagged issue was lost that way.
+      const repaired = repairJudgeJson(raw);
+      if (repaired) {
+        parsed = { ...(repaired.grounded !== undefined ? { grounded: repaired.grounded } : {}), issues: repaired.issues as JudgeIssue[] | undefined };
+        console.warn(`[tutor/judge] parse failed; repaired via ${repaired.method} (issues=${repaired.issues?.length ?? 0})`);
+      } else {
+        console.warn('[tutor/judge] failed to parse JSON; raw=', raw.slice(0, 200));
+      }
     }
     const grounded = parsed?.grounded === false ? false : true;
     const issues = Array.isArray(parsed?.issues) ? parsed!.issues!.filter(

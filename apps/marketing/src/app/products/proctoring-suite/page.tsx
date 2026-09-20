@@ -244,7 +244,7 @@ function ComplianceSection() {
             {[
               { badge: 'FERPA', desc: 'Student Privacy' },
               { badge: 'COPPA', desc: 'Child Protection' },
-              { badge: 'SOC 2', desc: 'Data Security' },
+              { badge: 'TLS', desc: 'Encrypted in Transit' },
               { badge: 'GDPR', desc: 'EU Compliance' }
             ].map((item, idx) => (
               <div key={idx} className="p-4">

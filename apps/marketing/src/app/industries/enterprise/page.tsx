@@ -74,7 +74,7 @@ const capabilities = [
   'SSO & SAML integration',
   'LMS/LXP integration',
   'Custom branding',
-  'Enterprise security (SOC 2)',
+  'Security overview and DPA available',
   'Dedicated success manager',
   'API access',
   'On-premise deployment options',

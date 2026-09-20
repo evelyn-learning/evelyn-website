@@ -35,6 +35,7 @@ import {
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
+import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 
 // 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
 // the resting state in place of 'listening' while the student owns the
@@ -47,6 +48,8 @@ export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'spea
 const SHOW_QUICK_ACTIONS = false;
 
 export interface SessionStageProps {
+  /** Text-only tutor mode (partner token claim). Default 'voice'. */
+  sessionMode?: SessionMode;
   lessonTitle: string;
   subtitle?: ReactNode;
   /** Optional partner brand lockup (logo / product name) shown at the left of
@@ -84,6 +87,11 @@ export interface SessionStageProps {
   /** Round-28b: transient voice-hiccup captions pin — board bottom, just
    *  above the floating tutor bar (both voice engines failed a sentence). */
   hiccupPin?: ReactNode;
+  /** Task 15: homework action pin — board bottom, same wrapper as
+   *  `hiccupPin` (both may show at once). Composed by TutorSession; unlike
+   *  the hiccup pin, this does NOT auto-clear — it stays until dismissed
+   *  or the session ends. */
+  actionPin?: ReactNode;
   // presence
   voiceState: VoiceState;
   /** R35 T-A (demo-polish): show the full-stage "joining" overlay — board +
@@ -223,7 +231,8 @@ const TITLE_REVEAL_MS = 4000;
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
+    sessionMode = 'voice',
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -283,12 +292,15 @@ export default function SessionStage(props: SessionStageProps) {
     return () => clearInterval(id);
   }, [micLevelRef, reactsToMic]);
 
-  // The transcript drawer is CLOSED by default and only opens on explicit
-  // user action (Transcript button / caption tap). We deliberately do NOT
-  // auto-open it on the lesson-picker nudge — popping it over the board on
-  // session start was disorienting (it dimmed the whole stage). The nudge
-  // picker still lives in the transcript, reachable via the Transcript button.
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // The transcript drawer is closed by default in voice; open in text mode
+  // (see below), and in voice only opens on explicit user action (Transcript
+  // button / caption tap). We deliberately do NOT auto-open it on the
+  // lesson-picker nudge — popping it over the board on session start was
+  // disorienting (it dimmed the whole stage). The nudge picker still lives
+  // in the transcript, reachable via the Transcript button.
+  // Text-only mode: the transcript IS the conversation surface, so it starts
+  // open (Option C). Voice keeps the closed default.
+  const [drawerOpen, setDrawerOpen] = useState(sessionMode === 'text');
   // R42 (2026-08-10, session portal-cb2addf5): one debug event per
   // open/close, with the triggering surface — added to diagnose the
   // header-icon "two taps to open" bug (the icon used to be OPEN-only, so
@@ -416,6 +428,80 @@ export default function SessionStage(props: SessionStageProps) {
   // repeatedly, so it needs a standing exemption. dockRef marks the dock's
   // always-visible controls as never "outside" for this dismiss.
   const dockRef = useRef<HTMLDivElement>(null);
+  // Text mode: the opaque composer card sits in the dock's place and the
+  // board needs clearance equal to its live height so content isn't hidden
+  // under it. The floor was 88px (a generic "leave room" guess); the geometry
+  // probe (owner re-review) showed the actual single-line composer renders
+  // ~50px tall, so the floor alone — not the measured height — was driving
+  // both the board's paddingBottom and the panel's `bottom`, adding 32px of
+  // unwanted extra clearance. One shared constant so the two expressions
+  // (below, and at the panel's `bottom` style) cannot diverge again.
+  const TEXT_DOCK_MIN_PX = 56;
+  const [dockHeight, setDockHeight] = useState(0);
+  useEffect(() => {
+    if (sessionMode !== 'text' || !dockRef.current) return;
+    const el = dockRef.current;
+    const ro = new ResizeObserver(() => setDockHeight(el.getBoundingClientRect().height));
+    ro.observe(el);
+    setDockHeight(el.getBoundingClientRect().height);
+    return () => ro.disconnect();
+  }, [sessionMode]);
+  // Text mode, <md: the transcript sheet starts at `top-[42dvh]` (Addendum
+  // 2) instead of floating beside the board, so the board column's bottom
+  // clearance can no longer be the composer-height expression used on
+  // md+ (owner mobile test, re-review 2026-09-19: the board ran BEHIND the
+  // sheet the whole time, since that expression is only ~70-90px, nowhere
+  // near enough to clear a sheet that starts 58% up the screen). Track the
+  // breakpoint the same way `dockHeight` is tracked (an effect + listener,
+  // not a CSS class — this value feeds an inline-style `calc()`, and a
+  // runtime-interpolated Tailwind arbitrary class doesn't compile, per the
+  // panel `bottom` fix earlier in this file).
+  // SSR-safe default (`true`, matching the server's `window`-less render)
+  // rather than reading `matchMedia` in the initializer: a lazy initializer
+  // that reads `window` runs identically on the client's FIRST render, so
+  // it already lands on the correct value (e.g. `false` on a 390px phone)
+  // before hydration — but React's hydration diffing does NOT patch a
+  // mismatched attribute on that first pass ("won't be patched up"), and
+  // since the state was already correct, the effect below's `setIsMdUp`
+  // call was a no-op (same value in, same value out) that never triggered
+  // the re-render needed to fix the stuck, wrong DOM (caught live: the
+  // mobile board kept the desktop dockHeight-based padding forever).
+  // Starting from the SSR value and correcting it via a genuine state
+  // change in the effect (a real transition, not a no-op) forces the
+  // needed update. One-frame flash of the desktop value on mobile is the
+  // accepted tradeoff — same pattern `dockHeight` already uses (starts 0).
+  const [isMdUp, setIsMdUp] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = () => setIsMdUp(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  // Text mode, <md: the sheet's top offset as one dvh number, shared by
+  // both the sheet's own (necessarily static-literal) Tailwind class and
+  // the board column's inline-style bottom-clearance `calc()` below — a
+  // class string and a JS arithmetic expression can't read from the same
+  // template, so THESE TWO MUST BE KEPT IN SYNC BY HAND if either changes.
+  // Owner mobile-split ruling (re-review 2026-09-19): 50/50 (was 42/58).
+  const TEXT_SHEET_TOP_DVH = 50;
+  const TEXT_SHEET_TOP_CLASS = 'top-[50dvh]'; // must equal `top-[${TEXT_SHEET_TOP_DVH}dvh]`
+  // md+: same composer-clearance expression as the panel's `bottom` (they
+  // must match — Addendum 4/5). <md: the board column's remaining share is
+  // `100dvh - TEXT_SHEET_TOP_DVH` of the column's height, plus an 8px gap.
+  const boardBottomClearanceText = isMdUp
+    ? `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))`
+    : `calc(${100 - TEXT_SHEET_TOP_DVH}dvh + 8px)`;
+  // Text mode, <md: the board pager (page pill with ‹ › arrows) moves
+  // INSIDE the board card as a compact row instead of floating above it
+  // (owner mobile-split ruling, same pass) — no floating pill, no extra
+  // vertical row between the header and the card; the card just gains
+  // that row's height. md+ text mode and every voice case keep the
+  // floating placement untouched. `boardPages` stays the same prop shape
+  // (no `pagerPlacement` added to the public interface) — this is purely
+  // an internal SessionStage render branch.
+  const pagerInCard = sessionMode === 'text' && !isMdUp;
   useEffect(() => {
     if (!toolsOpen) return;
     // R57: the whole dismiss cycle is off while always-open. Registering no
@@ -528,6 +614,16 @@ export default function SessionStage(props: SessionStageProps) {
       document.removeEventListener('webkitfullscreenchange', onFs);
     };
   }, []);
+
+  // Shared with the board column's own top padding AND (text mode only)
+  // the presence overlay below — the overlay is a SIBLING of the column,
+  // not a descendant, so without this it used a static `pt-14` that
+  // didn't match the column's actual top offset, and centering a box
+  // whose top is off (independently of the bottom clearance fix below it)
+  // shifts its MIDPOINT down by half that difference — measured a
+  // consistent 24px-low offset at every width (owner phone re-review,
+  // 2026-09-19) until this was shared too.
+  const boardColumnTopPadClass = (showSwitcher && !pagerInCard) ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2');
 
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
@@ -782,12 +878,99 @@ export default function SessionStage(props: SessionStageProps) {
             needed (plus clearance for the floating switcher when shown) — the
             bottom is deliberately NOT padded to clear the floating bar: ink
             may run behind it and stay readable through the 40% surface. */}
-        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center`}>
+        <div
+          // Text mode shared column geometry (owner re-review, tight-gaps
+          // pass): PANEL_W=360, PANEL_RIGHT=12, GAP=16 ⇒ the column reserves
+          // 360+12+16=388px on the right for the panel, and 16px (`pl-4`) on
+          // the left so the card's left margin matches the card↔panel gap.
+          // Every text-mode overlay below (presence cluster, Q-pin/pager/
+          // pins, composer) shares these exact numbers so all three surfaces
+          // (board card, transcript panel, composer) line up. Static Tailwind
+          // literals only — no runtime interpolation inside `[...]` (that
+          // silently fails to compile; see the panel `bottom` fix below).
+          // `boardColumnTopPadClass`: no floating-pager clearance to
+          // reserve above the card when the pager has moved INSIDE it
+          // (`showSwitcher && !pagerInCard`) — shared with the presence
+          // overlay below so their tops (and therefore vertical centers)
+          // agree.
+          className={`absolute inset-0 ${boardColumnTopPadClass} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
+          style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
+        >
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
               scrollbar appears (Images 2/3, 2026-06-24). Empty board stays
               transparent — the presence overlay owns that state. */}
-          <div className={`w-full max-w-3xl h-full ${boardEmpty ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
+          {/* Text mode (Option C): the board must read as a card separate
+              from the floating transcript panel even before any content
+              exists — an unframed empty board next to a framed panel looked
+              lopsided. Voice keeps the original "frame only once there's
+              content" behavior byte-identical. `max-w-3xl` (768px, voice)
+              becomes `max-w-4xl` (896px, matching the composer's 880px cap)
+              in text mode — NOT `max-w-none`: a diagram SVG is `w-full`
+              with a viewBox, so its rendered height scales with the card's
+              width, and on a wide column (`max-w-none` let the card reach
+              ~1400px) a fixed-aspect drawing got proportionally far taller
+              than in voice, leaving a large empty gap below it (owner live
+              test, re-review 2026-09-19). The column's `flex justify-center`
+              already centers a max-width-clamped child with no extra
+              `mx-auto` needed (same technique voice's `max-w-3xl` already
+              relied on) — so on a column wider than 896px the card gets
+              symmetric margins instead of the 16px left gap; that's
+              intended once the card is no longer flush against the panel
+              gutter. */}
+          {/* pr-14 (<md, text mode only): the floating tools rail (~48px,
+              wrench/pen/Aa/camera/expand) sits at `right-2` over the
+              board's top-right corner — on the full-width phone column
+              (unlike md+, where the rail lands over the panel gutter, a
+              separate pre-existing issue not in this pass's scope) that
+              corner IS board content, so it covered whatever rendered
+              there (owner mobile test, re-review 2026-09-19). Padding
+              inside the card (not a width change) keeps the card's own
+              border/background full-width while narrowing what
+              WhiteboardCanvas actually renders into, clearing the rail. */}
+          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${sessionMode === 'text' ? 'pr-14 md:pr-0' : ''} ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>
+            {/* Text mode, <md: the pager moves IN the card (compact row, no
+                floating pill, no extra vertical row) — owner mobile-split
+                ruling, re-review 2026-09-19. Mirrors the floating version's
+                controls (prev/label/next, "new content" dot) at a smaller
+                scale that fits a single header-like row. */}
+            {pagerInCard && showSwitcher && boardPages && (
+              <div className="flex items-center gap-1 px-2 py-1.5 border-b border-slate-100 shrink-0">
+                <button
+                  onClick={() => boardPages.goTo(boardPages.index - 1)}
+                  disabled={boardPages.index === 0}
+                  className="shrink-0 grid place-items-center w-6 h-6 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                  title="Previous board"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="flex-1 min-w-0 flex items-center justify-center gap-1 truncate text-center text-xs font-medium text-slate-700">
+                  <span className="truncate">{formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}</span>
+                  <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-400">{boardPages.index + 1}/{boardPages.count}</span>
+                </span>
+                <button
+                  onClick={() => boardPages.goTo(boardPages.index + 1)}
+                  disabled={boardPages.index >= boardPages.count - 1}
+                  className="relative shrink-0 grid place-items-center w-6 h-6 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                  title="Next board"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  {boardPages.pendingIndex != null && boardPages.pendingIndex !== boardPages.index && (
+                    <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            )}
+            {pagerInCard ? (
+              // Same "absolute inset-0 inside a relative flex-1 min-h-0"
+              // trick TranscriptView's panel uses — a flex-1 parent's
+              // percentage height doesn't always resolve, and
+              // WhiteboardCanvas's own root is `h-full`.
+              <div className="relative flex-1 min-h-0">
+                <div className="absolute inset-0">{board}</div>
+              </div>
+            ) : board}
+          </div>
         </div>
 
         {/* presence overlay when the board is empty. pb clears the floating
@@ -799,8 +982,38 @@ export default function SessionStage(props: SessionStageProps) {
           // centering and clipping the hero under the header (live-test #1);
           // a short cluster (orb-only presence) still centers. pt-14 keeps the
           // top clear of the floating header even at the scroll origin.
-          <div className="absolute inset-0 z-[5] flex flex-col px-6 pt-14 pb-32 overflow-y-auto pointer-events-none">
-          <div className="m-auto w-full flex flex-col items-center">
+          // Text mode: same md:pl-4/md:pr-[388px] column reservation as the
+          // board column above, so the cluster centers over the CARD, not
+          // the full stage. Text mode ALSO needs the same top AND bottom
+          // padding the board column applies (`boardColumnTopPadClass` /
+          // `boardBottomClearanceText` — sheet-based bottom on <md,
+          // composer-based on md+): this overlay is a SIBLING of the board
+          // column, not a descendant, so it doesn't inherit that padding.
+          // The static `pt-14`/`pb-32` it used instead didn't match the
+          // column's real top/bottom offsets — the box's top and bottom
+          // edges both differed from the card's, so its centered content
+          // landed well off the card's real middle (owner phone re-review,
+          // same 2026-09-19 pass: measured a consistent ~24px-low offset at
+          // EVERY width, tracing to the top mismatch alone — fixing only
+          // the bottom clearance wasn't sufficient). Swapping to
+          // `justify-center` (from `m-auto` on the inner wrapper) for text
+          // mode centers within the now-correctly-sized box; voice keeps
+          // its original `pt-14`/`pb-32`/scroll-from-top `m-auto` behavior
+          // for a tall (mock-review agenda) cluster, untouched.
+          // pr-14 (<md, text mode): the same tools-rail clearance the card's
+          // own content wrapper got (Addendum 9) — without it, this
+          // overlay's box was the full card width, so its centered
+          // heading could paint under the rail (owner ruling, re-review
+          // 2026-09-19). No `md:pr-0` reset needed: the already-present
+          // `md:pr-[388px]` (the panel-gutter reservation) is itself an
+          // md:-scoped override of the same property, so it naturally
+          // wins over the base `pr-14` at md+ — same mobile-first
+          // cascade every other breakpoint swap in this file relies on.
+          <div
+            className={`absolute inset-0 z-[5] flex flex-col px-6 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? `${boardColumnTopPadClass} pr-14 md:pl-4 md:pr-[388px] justify-center` : 'pt-14 pb-32'}`}
+            style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
+          >
+          <div className={sessionMode === 'text' ? 'w-full flex flex-col items-center' : 'm-auto w-full flex flex-col items-center'}>
             {objective && !isFreePractice && (
               <span className="ss-cap mb-7 inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
                 <Target className="w-4 h-4" /> {objective}
@@ -812,96 +1025,120 @@ export default function SessionStage(props: SessionStageProps) {
                 started it reverts to the presence indicator it has always
                 been — orbIsStartButton also refuses while an agenda pick is
                 in flight, so the brain never gets a duplicate kickoff. */}
-            {orbStarts ? (
-              <>
-                <button
-                  type="button"
-                  onClick={onOrbStart}
-                  data-testid="tutor-orb-start"
-                  aria-label="Start the lesson"
-                  className="relative mb-3 grid place-items-center pointer-events-auto rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
-                >
-                  {/* Ring pulse invites the tap. */}
-                  <span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
-                  <span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
-                  <div className="ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br from-blue-400 to-blue-600">
-                    <Sparkles className="w-12 h-12 drop-shadow" />
-                  </div>
-                </button>
-                {/* The instruction now sits ON the action instead of pointing
-                    at the far edge of the frame. aria-hidden + tabIndex -1:
-                    the orb button above is the accessible control, and this
-                    is its visible label — exposing both would present the
-                    same action twice to a screen reader. */}
-                <button
-                  type="button"
-                  onClick={onOrbStart}
-                  tabIndex={-1}
-                  aria-hidden
-                  className="mb-5 pointer-events-auto rounded-full bg-blue-600 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
-                >
-                  Tap to start
-                </button>
-              </>
-            ) : (
-              <div className="relative mb-6 grid place-items-center">
-                {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
-                <div
-                  className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
-                  // While the student speaks, the orb swells with their voice — a
-                  // direct "I'm hearing you" signal.
-                  style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
-                >
-                  <Sparkles className="w-12 h-12 drop-shadow" />
-                </div>
-              </div>
-            )}
-            {/* The VU meter has nothing to show before the mic opens — and a
-                dead meter under a "Tap to start" orb reads as a broken
-                control. */}
-            {!orbStarts && <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>}
-            {listeningHint === 'didnt-catch' ? (
-              <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
-            ) : (
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
-              </p>
-            )}
-            {/* Once started, the tutor's WORDS live in the small Caption Strip
-                at the bottom — NOT as a wall of big text here. The center stays
-                calm: orb + waveform + state. Pre-start shows the lesson + CTA. */}
-            {agendaEngaged ? (
-              // Agenda round 4: a pick has fired; hold a calm placeholder until
-              // the board content arrives (which hides this whole overlay).
-              <p className="ss-cap max-w-xl text-center text-base text-slate-400">
-                Starting… — the tutor is pulling up your question.
-              </p>
-            ) : started ? (
-              isFreePractice && !liveCaption ? (
-                <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
-              ) : null
-            ) : (
-              <>
-                {/* What are we learning today — the top-bar title is small, so
-                    surface the lesson here at the start as the focal context. */}
-                {hasPlan && (
-                  <p className="mb-2 text-sm sm:text-base text-slate-500">
-                    Today’s lesson: <span className="font-semibold text-slate-700">{lessonTitle}</span>
-                  </p>
-                )}
-                {/* The old "Tap the mic below to start" heading and its ↓
-                    arrow are gone: the instruction lives on the orb button
-                    above now, and repeating it here would point at a control
-                    that is no longer the primary one. When no orb start path
-                    is wired the heading still has a job, so it stays. */}
-                {!orbStarts && (
-                  <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
-                    Tap the mic below to start
-                  </p>
-                )}
-                <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
-                  Just talk — I&apos;ll listen and teach on the board {!orbStarts && <ArrowDown className="w-4 h-4" />}
+            {/* Text mode (Option C, product review 2026-09-19): no orb, no
+                "Tap to start", no "VOICE TUTOR" presence label, no
+                "Just talk" — there is no mic. The composer at the bottom is
+                the start control, so the pre-start cluster just names that.
+                Voice's whole cluster below is untouched, byte-identical. */}
+            {sessionMode === 'text' ? (
+              agendaEngaged ? (
+                <p className="ss-cap max-w-xl text-center text-base text-slate-400">
+                  Starting… — the tutor is pulling up your question.
                 </p>
+              ) : started ? (
+                isFreePractice && !liveCaption ? (
+                  <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
+                ) : null
+              ) : (
+                <>
+                  <p className="text-lg font-semibold text-slate-800">Type your question below to start</p>
+                  <p className="mt-2 text-sm text-slate-500">I&apos;ll teach on the board as we go</p>
+                </>
+              )
+            ) : (
+              <>
+                {orbStarts ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onOrbStart}
+                      data-testid="tutor-orb-start"
+                      aria-label="Start the lesson"
+                      className="relative mb-3 grid place-items-center pointer-events-auto rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
+                    >
+                      {/* Ring pulse invites the tap. */}
+                      <span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
+                      <span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
+                      <div className="ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br from-blue-400 to-blue-600">
+                        <Sparkles className="w-12 h-12 drop-shadow" />
+                      </div>
+                    </button>
+                    {/* The instruction now sits ON the action instead of pointing
+                        at the far edge of the frame. aria-hidden + tabIndex -1:
+                        the orb button above is the accessible control, and this
+                        is its visible label — exposing both would present the
+                        same action twice to a screen reader. */}
+                    <button
+                      type="button"
+                      onClick={onOrbStart}
+                      tabIndex={-1}
+                      aria-hidden
+                      className="mb-5 pointer-events-auto rounded-full bg-blue-600 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
+                    >
+                      Tap to start
+                    </button>
+                  </>
+                ) : (
+                  <div className="relative mb-6 grid place-items-center">
+                    {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
+                    <div
+                      className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
+                      // While the student speaks, the orb swells with their voice — a
+                      // direct "I'm hearing you" signal.
+                      style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
+                    >
+                      <Sparkles className="w-12 h-12 drop-shadow" />
+                    </div>
+                  </div>
+                )}
+                {/* The VU meter has nothing to show before the mic opens — and a
+                    dead meter under a "Tap to start" orb reads as a broken
+                    control. */}
+                {!orbStarts && <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>}
+                {listeningHint === 'didnt-catch' ? (
+                  <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
+                ) : (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                    {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
+                  </p>
+                )}
+                {/* Once started, the tutor's WORDS live in the small Caption Strip
+                    at the bottom — NOT as a wall of big text here. The center stays
+                    calm: orb + waveform + state. Pre-start shows the lesson + CTA. */}
+                {agendaEngaged ? (
+                  // Agenda round 4: a pick has fired; hold a calm placeholder until
+                  // the board content arrives (which hides this whole overlay).
+                  <p className="ss-cap max-w-xl text-center text-base text-slate-400">
+                    Starting… — the tutor is pulling up your question.
+                  </p>
+                ) : started ? (
+                  isFreePractice && !liveCaption ? (
+                    <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
+                  ) : null
+                ) : (
+                  <>
+                    {/* What are we learning today — the top-bar title is small, so
+                        surface the lesson here at the start as the focal context. */}
+                    {hasPlan && (
+                      <p className="mb-2 text-sm sm:text-base text-slate-500">
+                        Today’s lesson: <span className="font-semibold text-slate-700">{lessonTitle}</span>
+                      </p>
+                    )}
+                    {/* The old "Tap the mic below to start" heading and its ↓
+                        arrow are gone: the instruction lives on the orb button
+                        above now, and repeating it here would point at a control
+                        that is no longer the primary one. When no orb start path
+                        is wired the heading still has a job, so it stays. */}
+                    {!orbStarts && (
+                      <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
+                        Tap the mic below to start
+                      </p>
+                    )}
+                    <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
+                      Just talk — I&apos;ll listen and teach on the board {!orbStarts && <ArrowDown className="w-4 h-4" />}
+                    </p>
+                  </>
+                )}
               </>
             )}
             {/* Mock-review "review agenda" (replaces the generic starters when a
@@ -1086,6 +1323,13 @@ export default function SessionStage(props: SessionStageProps) {
                   `controls` timer above; showing both would double it. */}
               {headerClock && <span className="sm:hidden">{headerClock}</span>}
               {adaptiveMenu}
+              {/* hidden below md (owner mobile test, re-review 2026-09-19):
+                  the phone header is already tight with the transcript
+                  icon, clock, pace pill/⋯, and End control — this chip is
+                  purely informational and was pushing End off-screen. */}
+              {sessionMode === 'text' && (
+                <span className="hidden md:inline-flex mr-2 items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Text session</span>
+              )}
               {endControl}
             </div>
           </div>
@@ -1096,7 +1340,12 @@ export default function SessionStage(props: SessionStageProps) {
             TITLE_REVEAL_MS; tapping it again dismisses early. */}
         {titleRevealed && (
           <div
-            className="absolute left-2 right-2 top-full z-40 mt-1 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md"
+            // Text mode: this banner spans the header's full width (the
+            // panel floats independently below the header), so it can run
+            // under the pinned transcript panel (panel is z-50) exactly
+            // like the "Adjust the lesson" menu (owner desktop test,
+            // re-review 2026-09-19) — z-[60] clears it. Voice keeps z-40.
+            className={`absolute left-2 right-2 top-full mt-1 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md ${sessionMode === 'text' ? 'z-[60]' : 'z-40'}`}
             role="status"
             onClick={hideTitle}
             data-testid="lesson-title-reveal"
@@ -1187,9 +1436,11 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Slim board page switcher (top-center) — only when the
               chromeless board has >1 page. Shows the current board's title +
               "n / N" with prev/next; the WhiteboardCanvas's own page bar is
-              suppressed (chrome="minimal"). ===== */}
-      {showSwitcher && boardPages && (
-        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto`}>
+              suppressed (chrome="minimal"). Text mode <md: this floating
+              placement is suppressed — the compact in-card row above
+              renders instead (`pagerInCard`, owner mobile-split ruling). ===== */}
+      {showSwitcher && boardPages && !pagerInCard && (
+        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
           <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
@@ -1298,20 +1549,27 @@ export default function SessionStage(props: SessionStageProps) {
             agendaRail && !isFullscreen
               ? (showSwitcher ? 'top-[140px]' : 'top-[104px]')
               : (showSwitcher ? 'top-[100px]' : 'top-16')
-          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing`}
+          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}
         >
           {questionPin}
         </div>
       )}
 
-      {/* ===== Voice-hiccup captions pin (round-28b) — board bottom, just
-              above the floating tutor bar: the sentence NEITHER voice
-              engine could speak, readable where the student is already
-              looking. Transient; host clears it when audio resumes. ===== */}
-      {hiccupPin && (
-        <div className="absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none">
-          <div className="max-w-[min(88vw,560px)] pointer-events-auto">
+      {/* ===== Voice-hiccup captions pin (round-28b) + Homework action pin
+              (Task 15) — board bottom, just above the floating tutor bar:
+              the hiccup pin is the sentence NEITHER voice engine could speak
+              (transient; host clears it when audio resumes), the action pin
+              is set once a homework assignment is finalized this session
+              (stays until the student dismisses it or the session ends).
+              Both may show at once, so they share ONE container at this
+              offset and stack vertically instead of overlapping (Task 16
+              fix, live-check-3 addendum: both rendered at the same absolute
+              bottom offset). ===== */}
+      {(hiccupPin || actionPin) && (
+        <div className={`absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
+          <div className="max-w-[min(88vw,560px)] pointer-events-auto flex flex-col items-center gap-2">
             {hiccupPin}
+            {actionPin}
           </div>
         </div>
       )}
@@ -1324,8 +1582,12 @@ export default function SessionStage(props: SessionStageProps) {
               stays readable through the 40%-white surface. Deliberately
               translucent at ALL times (product call, 2026-07-14) — no
               idle-fade behavior. Honors the bottom safe-area inset. ===== */}
-      <div className="absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none">
-        <div className="w-[min(96vw,640px)] px-2 pointer-events-auto">
+      <div className={`absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
+        {/* Text mode: span the card's width (up to 880px) instead of the
+            voice dock's fixed min(96vw,640px) puck, so the composer visually
+            centers on the board CARD, not on a narrow strip in the middle of
+            the (now wider, panel-cleared) column. Voice: no class change. */}
+        <div className={`${sessionMode === 'text' ? 'md:w-full md:max-w-[880px]' : ''} w-[min(96vw,640px)] px-2 pointer-events-auto`}>
           {/* ONE-LINE slim bar (R1 2026-07-14): [mic][caption][input][send]
               [mute] — the caption rides inside the dock as VTR's captionSlot
               (composed in TutorSession; it doubles as the mic-state line when
@@ -1359,7 +1621,7 @@ export default function SessionStage(props: SessionStageProps) {
               floating tutor bar (z-30) right above, below the Agenda/
               transcript drawers (z-40) in case one is somehow still open. ===== */}
       {warmupOverlay && (
-        <div className="absolute inset-x-0 top-14 bottom-0 z-[35] flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px]">
+        <div className={`absolute inset-x-0 top-14 bottom-0 z-[35] flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px] ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
           <p className="text-base font-semibold text-slate-700">Your tutor is joining…</p>
           <p className="text-sm text-slate-500">hang tight — this takes a few seconds</p>
@@ -1432,7 +1694,12 @@ export default function SessionStage(props: SessionStageProps) {
       )}
 
       {/* ===== Transcript drawer ===== */}
-      {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} />}
+      {/* Text mode (Option C, product review 2026-09-19): the panel floats
+          BESIDE the board rather than over it, so there is no dim/blur
+          backdrop and no click-outside-to-close — the panel is pinned open
+          for the whole text session. Voice keeps the original overlay
+          drawer + backdrop byte-identical. */}
+      {drawerOpen && sessionMode !== 'text' && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} />}
       {/* On phones the CLOSED drawer is display:none, NOT just translated
           off-canvas. iOS Safari does not reliably clip a translated-off-screen
           child of a `fixed overflow-hidden` ancestor, so a translateY(100%)
@@ -1440,11 +1707,40 @@ export default function SessionStage(props: SessionStageProps) {
           bar scrolled away), and couldn't be dismissed (it was already in the
           "closed" state). `hidden` removes it from layout entirely. Desktop
           keeps the slide-in-from-right via translate-x. */}
-      <div className={`absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`}>
-        <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
+      <div
+        className={
+          sessionMode === 'text'
+            ? `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 ${TEXT_SHEET_TOP_CLASS} pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-[calc(3.5rem_+_12px)] md:left-auto md:right-3 md:w-[360px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl flex translate-y-0 md:translate-x-0`
+            : `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`
+        }
+        // Text mode: `bottom` must clear the floating composer bar (z-30) —
+        // the same dockHeight-derived expression the board column uses
+        // (~811). A `md:bottom-[calc(${dockHeight}px…)]` TEMPLATE-LITERAL
+        // Tailwind class does NOT work: Tailwind's JIT scanner only picks up
+        // classes it can find as static string tokens in source, so a
+        // runtime-interpolated arbitrary value never compiles — the class
+        // silently never exists in the generated CSS, and the panel fell
+        // back to the plain `bottom-0` in its className, running the panel
+        // behind the composer at md+ (caught in re-review). Setting it via
+        // inline style at ALL widths (the composer floats at the bottom on
+        // phones too) sidesteps Tailwind's static-analysis requirement
+        // entirely. Voice keeps its static `bottom-0` class, untouched.
+        style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
+      >
+        {/* Text mode: the sheet is pinned open, not a draggable bottom
+            sheet — the grab handle implies an affordance that isn't there
+            (owner mobile test, re-review 2026-09-19). Voice: unchanged. */}
+        {sessionMode !== 'text' && (
+          <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
+        )}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>
-          <button onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
+          {/* Text mode: the panel is pinned open beside the board (Option C) —
+              there is no "close" state to return to, so the X is dropped.
+              Voice keeps the original close control byte-identical. */}
+          {sessionMode !== 'text' && (
+            <button onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
+          )}
         </div>
         {/* TranscriptView is `h-full overflow-y-auto`. A flex-1 parent's
             percentage-height doesn't always resolve (flexbox gotcha), which
@@ -1589,7 +1885,7 @@ export function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: (
 
   return (
     <div ref={ref} className="flex-1 min-w-0 overflow-hidden whitespace-nowrap text-sm text-slate-700">
-      <InlineMathText text={capText} />
+      <InlineMathText text={capText} nowrap />
     </div>
   );
 }

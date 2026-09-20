@@ -68,6 +68,25 @@ export interface GapEvidence {
    *  Used for "you previously said X" re-grounding in later sessions.
    *  At most 2 quotes, ≤30 words each. May be empty. */
   studentQuotes: string[];
+
+  /** Holistic-pedagogy round (spec §A.7/§B.6). Engine-only fields — the
+   *  contract's GapEntrySchema strips them on the wire. */
+  /** How many times this gap RECURRED within sessions (ledger count, summed). */
+  recurrenceCount?: number;
+  /** True when the FIRST record came from the orchestrator's behavioural
+   *  inference, not a brain tool call. Confidence is capped at
+   *  INFERRED_CONFIDENCE_CAP so inference never auto-confirms. */
+  inferred?: boolean;
+  /** Consent-gated recap history for this gap. */
+  recap?: RecapRecord;
+}
+
+export interface RecapRecord {
+  offers: number;
+  accepts: number;
+  declines: number;
+  lastOfferAt: string;
+  lastOutcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling';
 }
 
 /** A recorded learning gap — something the brain noticed during a
@@ -144,6 +163,10 @@ export interface SessionMemory {
   losTouched: string[];
   /** A short narrative summary the brain produced at end-of-session. */
   summary?: string;
+  /** Too few real student turns for anything to have been taught (see
+   *  thin-session.ts). Kept for accounting; skipped by the prior-sessions
+   *  block so "last time" never points at it. */
+  thin?: boolean;
   /** Time the student spent in the session, minutes. */
   durationMinutes?: number;
   /** Mastery deltas applied during this session. */
@@ -241,6 +264,9 @@ export interface StudentProfile {
    *  variety Phase 1). Keyed by lessonPlanId. Absent for students who have
    *  never had a flagged session. */
   planContentSeen?: Record<string, PlanContentSeen>;
+  /** Spec §C.3 — the tutor's own "next time we'll…" note from the last
+   *  session's close_session_notes call. Rendered next boot, ≤ 14 days. */
+  nextSessionIntent?: { text: string; sessionId: string; at: string };
 }
 
 /** Bounded record of the specific FILLINGS a student has already been shown

@@ -3,7 +3,7 @@ import { voiceEngines } from './data/engines';
 import { whiteboardTypes, whiteboardCategories } from './data/whiteboard-types';
 import { subjects, supportedCurricula, topicCount } from './data/curriculum';
 import { languageCount } from './data/languages';
-import { launchPromo, platformFees } from './data/pricing';
+import { pricing, perSessionUsd } from './data/pricing';
 
 function Hero() {
   return (
@@ -45,7 +45,7 @@ function StatsBar() {
     { value: `${whiteboardTypes.filter((t) => t.category !== 'navigation').length}`, label: 'Whiteboard Visual Types' },
     { value: `${topicCount}+`, label: 'Topics Covered' },
     { value: `${languageCount}+`, label: 'Languages Supported' },
-    { value: '<400ms', label: 'Premium Latency' },
+    { value: '<400ms', label: 'Response Latency' },
   ];
 
   return (
@@ -69,8 +69,8 @@ function HowItWorks() {
     {
       step: '1',
       title: 'Generate a Session Token',
-      description: 'Your backend creates a signed JWT with the student\'s subject, level, and your branding.',
-      code: '{ "student_id": "stu_123", "subject": "math", "level": "11-12" }',
+      description: 'Your backend signs a JWT with the student, the lesson and the teacher persona. One secret, HS256.',
+      code: '{ "partner_id": "your-id", "student_id": "stu_123", "subject": "math", "level": "Grade 6", "teacher": { ... } }',
     },
     {
       step: '2',
@@ -80,9 +80,9 @@ function HowItWorks() {
     },
     {
       step: '3',
-      title: 'Receive Webhooks',
-      description: 'We send session data, transcripts, and usage metrics to your endpoint in real-time.',
-      code: '{ "event": "session.ended", "data": { "duration": 1847, "cost": 1.23 } }',
+      title: 'Get the Results',
+      description: 'The iframe posts session events to your page; your backend pulls minutes, mastery and gaps from the signed API.',
+      code: '{ "type": "evelyn:session_ended", "data": { "session_id": "…", "duration": 1847, "milestone": "recap_reached" } }',
     },
   ];
 
@@ -91,7 +91,7 @@ function HowItWorks() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold text-slate-900">Integrate in Three Steps</h2>
-          <p className="mt-3 text-slate-600">From API keys to live tutoring in your platform.</p>
+          <p className="mt-3 text-slate-600">From partner credentials to live tutoring in your platform.</p>
         </div>
         <div className="grid gap-8 lg:grid-cols-3">
           {steps.map((step) => (
@@ -119,7 +119,7 @@ function EngineComparison() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold text-slate-900">The Voice Engine</h2>
-          <p className="mt-3 text-slate-600">A single tier that powers every deployment — retail, whitelabel, and API.</p>
+          <p className="mt-3 text-slate-600">One engine, one rate — the same tutor powers every deployment, retail, white-label and API.</p>
         </div>
         <div className="mx-auto max-w-3xl">
           <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/50 p-8">
@@ -255,7 +255,7 @@ function BuildVsBuy() {
   const rows = [
     { build: '6-12 months to build whiteboard alone', buy: 'Launch in weeks' },
     { build: '16+ visual renderers to develop and maintain', buy: 'Battle-tested rendering engine' },
-    { build: 'Voice engine integration and tuning', buy: 'Production-grade, two tiers available' },
+    { build: 'Voice engine integration and tuning', buy: 'Production-grade voice stack, tuned for tutoring' },
     { build: 'Ongoing AI prompt engineering', buy: 'Continuously refined pedagogy' },
     { build: 'Multi-stage validation layers to build', buy: 'Built-in quality assurance' },
     { build: 'Your team maintains it all', buy: 'We handle updates and improvements' },
@@ -290,44 +290,37 @@ function BuildVsBuy() {
   );
 }
 
-function LaunchPartnerSection() {
+function PricingSection() {
   return (
     <section className="bg-white py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8 text-center lg:p-12">
           <span className="mb-4 inline-block rounded-full bg-blue-600 px-4 py-1.5 text-sm font-bold text-white">
-            Launch Partner Program
+            Simple Pricing
           </span>
-          <h2 className="mb-3 text-3xl font-bold text-slate-900">
-            50% off for early partners
-          </h2>
+          <div className="mb-2 flex items-baseline justify-center gap-1">
+            <span className="text-5xl font-bold text-slate-900">${pricing.perMinuteUsd.toFixed(2)}</span>
+            <span className="text-lg text-slate-500">/ tutoring minute</span>
+          </div>
           <p className="mb-8 text-slate-600">
-            Join as a launch partner and lock in reduced rates for your first year.
+            {pricing.tagline} A 30-minute session costs ${perSessionUsd(30).toFixed(2)}.
           </p>
-          <div className="mb-8 grid gap-6 sm:grid-cols-2">
-            <div className="rounded-xl bg-white p-6 shadow-sm">
-              <p className="text-sm text-slate-500">One-time setup</p>
-              <div className="mt-1 flex items-baseline justify-center gap-2">
-                <span className="text-3xl font-bold text-slate-900">${launchPromo.setupPrice.toLocaleString()}</span>
-                <span className="text-lg text-slate-400 line-through">${platformFees.setup.toLocaleString()}</span>
+          <div className="mb-8 grid gap-4 sm:grid-cols-3">
+            {['No setup fee', 'No monthly platform fee', 'No minimum commitment'].map((line) => (
+              <div key={line} className="rounded-xl bg-white p-4 text-sm font-medium text-slate-700 shadow-sm">
+                {line}
               </div>
-            </div>
-            <div className="rounded-xl bg-white p-6 shadow-sm">
-              <p className="text-sm text-slate-500">Monthly platform fee</p>
-              <div className="mt-1 flex items-baseline justify-center gap-2">
-                <span className="text-3xl font-bold text-slate-900">${launchPromo.monthlyPrice}/mo</span>
-                <span className="text-lg text-slate-400 line-through">${platformFees.monthly}/mo</span>
-              </div>
-              <p className="mt-1 text-xs text-slate-400">for first {launchPromo.monthlyDiscountMonths} months</p>
-            </div>
+            ))}
           </div>
           <Link
-            href="/sandbox"
+            href="/pricing"
             className="inline-block rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
           >
-            Apply as Launch Partner
+            See what&apos;s included
           </Link>
-          <p className="mt-3 text-xs text-slate-400">Limited spots available. Usage fees billed separately.</p>
+          <p className="mt-3 text-xs text-slate-400">
+            Text-only sessions ${pricing.textPerMinuteUsd.toFixed(2)}/min. Volume pricing on request.
+          </p>
         </div>
       </div>
     </section>
@@ -374,7 +367,7 @@ export default function TutorPortalHome() {
       <WhiteboardShowcase />
       <CurriculumSection />
       <BuildVsBuy />
-      <LaunchPartnerSection />
+      <PricingSection />
       <CTASection />
     </>
   );

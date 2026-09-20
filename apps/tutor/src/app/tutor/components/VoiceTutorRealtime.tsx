@@ -20,13 +20,31 @@ import {
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
+// Aliased: this file already has a `SessionMode` (opening-behavior's
+// lessonNode/freestyle/diagnostic `targetKind`, unrelated concept) — the
+// text-only tutor mode is `TutorSessionMode` here to avoid the collision.
+import type { SessionMode as TutorSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { decideStage2CancelAction, isDuplicateTranscript, type Stage2Verdict } from '@/lib/tutor/voice/stage2-cancel-policy';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
-import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
+import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/voice/rule8-client';
+// Holistic-pedagogy round (spec §B.4): deterministic accept/decline/unclear
+// classification of the student's reply to a recap OFFER.
+import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
+import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
+import { isHomeworkAnnouncement } from '@/lib/tutor/voice/homework-announce';
+import { detectSpokenProblem, detectSpokenEquationClaim } from '@/lib/tutor/voice/spoken-problem-board';
+import { buildHomeworkPointerSentence } from '@/lib/tutor/voice/homework-pointer';
+import { isWrapUtterance } from '@/lib/tutor/voice/session-struggles-block';
+/** End button: how long the final profile commit may hold the exit. */
+const FINAL_COMMIT_MAX_WAIT_MS = 3000;
+/** Chromium rejects keepalive bodies over 64 KiB; stay under with margin. */
+const KEEPALIVE_MAX_BYTES = 60_000;
+/** Opener retry after a client-side fetch failure. */
+const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
@@ -45,6 +63,11 @@ import {
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
+// Task 20 — shape of the boot route's `learnerExtras`, imported from the
+// module that PRODUCES it so the two can never drift. TYPE-ONLY: context-block
+// pulls the Mongoose learner store at module load, so a value import would
+// drag server-only code into the client bundle.
+import type { LearnerContextExtras } from '@/lib/tutor/learner-model/context-block';
 import {
   resolveCompletionOutcome,
   shouldFireRecapMilestone,
@@ -66,6 +89,18 @@ import {
   resolveSegmentEvidence,
   type SegmentEvidenceSignal,
 } from '@/lib/tutor/orchestrator/segment-evidence';
+import {
+  createLedger,
+  applyLedgerEvent,
+  markRecovered,
+  STUCK_CUE_RE,
+  CONFUSION_RE,
+  prereqKey,
+  type LedgerState,
+  type LedgerDetection,
+  type LedgerEventKind,
+  isLedgerStuckCue,
+} from '@/lib/tutor/orchestrator/struggle-ledger';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -84,17 +119,23 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import { isMetaNarration } from '@/lib/tutor/voice/meta-narration';
+import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict, DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
-import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer } from '@/lib/tutor/voice/denied-answer-reversal';
+import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer, problemKeyForDenial } from '@/lib/tutor/voice/denied-answer-reversal';
+import { findAuthoredEndingContradiction, problemMatchesAuthored } from '@/lib/tutor/voice/authored-ending';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
+import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
 import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
+import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
+import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
 import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
@@ -142,6 +183,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { normalizeEquationLabel, decideLabelDuplicate, type SeenEquationLabel } from '@/lib/tutor/whiteboard/equation-label-dedup';
 import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
@@ -161,6 +203,7 @@ import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
 import { shouldAbortStalledBrain } from '@/lib/tutor/voice/brain-stall';
 import type { InteractionType } from '@/hooks/useDemoTracking';
+import { truncatePageTitle, retitleFromBatch } from '@/lib/tutor/whiteboard/page-title';
 
 import {
   TUTOR_BRAIN_FAST_OPENER,
@@ -187,6 +230,7 @@ import {
   TUTOR_NOISE_FLOOR_NUDGE,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
+  TUTOR_BOARD_CONTRADICTION,
   TUTOR_IDLE_NUDGE_V2,
   TUTOR_ANSWER_REVEAL_GUARD,
   TUTOR_DEDUP_RETRY_CONTEXT,
@@ -228,6 +272,16 @@ import {
   TUTOR_THINK_TIME_HOLD,
   TUTOR_TURN_COALESCE,
   TUTOR_OPENING_BARGEIN_ESCAPE,
+  TUTOR_VERDICT_REPLANT_ON_KILL,
+  TUTOR_KILL_WITHHOLDS_ADVANCE,
+  TUTOR_SPOKEN_NUMBER_GUARDS,
+  TUTOR_META_NARRATION_STRUCTURAL,
+  TUTOR_SUBSTITUTE_GATE,
+  TUTOR_PAGE_TITLE_FROM_RENDER,
+  TUTOR_STRUGGLE_LEDGER,
+  TUTOR_FALSE_PRAISE_OPENER,
+  TUTOR_CLOSE_NOTES,
+  TUTOR_RECAP_OFFER,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -236,6 +290,7 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { detectBoardContradiction } from '@/lib/tutor/voice/board-contradiction';
 import { findOutOfBoundsPins, buildMapBoundsRejection, findCrowdedPins, buildCrowdedPinsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
@@ -245,6 +300,9 @@ import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/
 import { buildJudgeCorrectionNote, hasMathExpression, shouldConsumeJudgeCorrectionNote, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
+import { extractChoiceOptions, reconcileMcqLetterWithContent, type ChoiceOption } from '@/lib/tutor/voice/mcq-letter-content';
+import { isBareArithmeticRecheck } from '@/lib/tutor/voice/arithmetic-recheck';
+import { findUngroundedComputation } from '@/lib/tutor/voice/posed-computation';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -264,6 +322,8 @@ import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchest
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
+import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
+import { shouldSubstituteShowProblem } from '@/lib/tutor/orchestrator/show-problem-substitution';
 import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
 
 export type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
@@ -329,6 +389,48 @@ import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
  *  tutor flag defaults on (`!== 'off'`), never off, because R49 shipped two
  *  severe fixes dark and production kept the bugs. */
 const CONCEPT_TAGGING_ON = process.env.NEXT_PUBLIC_TUTOR_CONCEPT_TAGGING !== 'off';
+
+/** Task 6, live-check-3 fixes round (2026-09-07, portal-3a024b75): kill+retry
+ *  when the tutor's spoken solution-count verdict contradicts the seed's
+ *  authored answer (e.g. affirming "no solution" on an authored identity).
+ *  Default ON per the standing flag rule. */
+const TUTOR_AUTHORED_ENDING_GUARD = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_ENDING_GUARD !== 'off';
+
+/** Task 12, live-check-3 fixes round (2026-09-07): draft homework DURING the
+ *  session on deterministic evidence (recurrence / recap still-struggling /
+ *  incorrect streak ≥ 2) rather than waiting on a brain tool call at the
+ *  goodbye. Default ON per the standing flag rule. */
+const TUTOR_HOMEWORK_DRAFTS = process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_DRAFTS !== 'off';
+/** Live check 6 (2026-09-07, portal-63ee9f2c). Three runtime nets, default ON
+ *  per the standing flag rule:
+ *  - SPOKEN_PROBLEM_BOARD: a numeric problem posed in speech whose numbers
+ *    are not on the board is rendered as a problem card at stream end.
+ *  - AUTO_SEGMENT_CARD: an advance_lesson into a segment with an authored
+ *    card, with no card rendered that turn, renders the authored card.
+ *  - SEGMENT_OVERLONG_NOTE: after 6 tutor turns in a hook/concept segment a
+ *    runtime note tells the brain to advance and render the next card. */
+const TUTOR_SPOKEN_PROBLEM_BOARD = process.env.NEXT_PUBLIC_TUTOR_SPOKEN_PROBLEM_BOARD !== 'off';
+const TUTOR_AUTO_SEGMENT_CARD = process.env.NEXT_PUBLIC_TUTOR_AUTO_SEGMENT_CARD !== 'off';
+const TUTOR_SEGMENT_OVERLONG_NOTE = process.env.NEXT_PUBLIC_TUTOR_SEGMENT_OVERLONG_NOTE !== 'off';
+const SEGMENT_OVERLONG_NOTE_TURNS = 6;
+
+/** Live check 6: a tracked problem the student has already answered and the
+ *  tutor affirmed is SETTLED — its key must not grade later answers to newer
+ *  questions (a correct "x − .75x" was killed against a recipe's "6"
+ *  answered three minutes earlier). */
+function liveCardKey(p: { expectedAnswer?: string; resolvedAtMs?: number } | null): string | undefined {
+  return p && !p.resolvedAtMs ? p.expectedAnswer : undefined;
+}
+function liveUnverifiedKey(p: { unverifiedCardAnswer?: string; resolvedAtMs?: number } | null): string | undefined {
+  return p && !p.resolvedAtMs ? p.unverifiedCardAnswer : undefined;
+}
+/** Bounded fetch signal. `AbortSignal.timeout` is not universal (older
+ *  WebViews / embedded browsers); where it is missing the call is simply
+ *  unbounded rather than throwing a TypeError at the call site. */
+const signalFor = (ms: number): AbortSignal | undefined =>
+  typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+    ? AbortSignal.timeout(ms)
+    : undefined;
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -346,6 +448,22 @@ import {
 // producing a negative diff. A negative latency is never a genuine
 // measurement — skip the misleading emit and publish a lightweight note
 // instead so the corruption itself stays visible in telemetry.
+// Holistic-pedagogy round: the CLOSED GapSignalCode set (student-profile/
+// types.ts). The brain's `signalsObserved` arrives as free-form strings, so
+// anything crossing into a typed GapSignalCode[] — e.g. the struggle
+// ledger's recurrence listener — is filtered through this guard first; an
+// unknown code must never reach a consumer that trusts the enum.
+const GAP_SIGNAL_CODES: ReadonlySet<string> = new Set([
+  'MISCONCEPTION_DETECTED',
+  'STUDENT_VERBALIZED_CONFUSION',
+  'INCORRECT_AFTER_HINT',
+  'NO_RECOVERY',
+  'INCORRECT_STREAK_2_PLUS',
+  'STUCK_CUE',
+  'SLOW_SEGMENT',
+]);
+const isGapSignalCode = (s: string): s is LedgerDetection['signals'][number] => GAP_SIGNAL_CODES.has(s);
+
 const emitTurnLatencyEvent = (
   onDebugEvent: ((type: string, message: string, data?: Record<string, unknown>) => void) | undefined,
   lat: ReturnType<TurnLatencyLedger['summarize']>,
@@ -463,6 +581,17 @@ interface VoiceTutorRealtimeProps {
    *  NEVER persisted engine-side. Only consumed when TUTOR_PEDAGOGY_OPENER is
    *  on. */
   readinessNote?: string;
+  /** Holistic-pedagogy round (spec §C.7) — where tutor-assigned practice
+   *  lands in the HOST's UI ("Unit 2 · Practice"), composed by the academy.
+   *  Two uses: it is named to the brain in <student_context_transient> so
+   *  the closing sentence can point at a real place, and it rides out on
+   *  the final profile commit. ABSENT ⇒ the brain is told nothing and says
+   *  nothing about homework (a standalone /tutor session has no such UI). */
+  practiceLocator?: string;
+  /** Holistic-pedagogy round (spec §C.7) — the student's stated goal, prose,
+   *  composed by the academy. Transient session-scoped context, same carrier
+   *  semantics as readinessNote: never persisted engine-side. */
+  goalNote?: string;
   /** Opener-recency (part A) — fires at most ONCE per session, when this
    *  session's OWN opener record is captured (the opener turn's finalized
    *  tutor text + the resolved opener kind). Dev/e2e consumer today (the
@@ -477,6 +606,13 @@ interface VoiceTutorRealtimeProps {
    *  Only consumed when TUTOR_PEDAGOGY_OPENER is on. Default false — the
    *  main /tutor page has no trial concept and omits it. */
   isTrial?: boolean;
+  /** Open-scope session (2026-09-10): the embed's `open_scope` token field.
+   *  When true the system prompt carries the Rule 7(b) override (student may
+   *  switch to any subject/topic) and the per-turn `subject` is withheld from
+   *  the brain request so the Lever-A tool filter fails OPEN instead of
+   *  pinning whiteboard tools to the starting subject. Default false ⇒ every
+   *  existing session is byte-identical. */
+  openScope?: boolean;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -539,6 +675,11 @@ interface VoiceTutorRealtimeProps {
    *  consumer tracks the furthest reached. See `TutorMilestone`. */
   onMilestone?: (milestone: TutorMilestone) => void;
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
+  /** Task 15 — fires whenever a homework assignment is finalized this
+   *  session with a locator to send the student to (see
+   *  `onHomeworkAssignedRef` below for the exact call sites). Additive +
+   *  optional; absent ⇒ no-op. */
+  onHomeworkAssigned?: (a: { los: Array<{ loId: string; title: string; count: number }>; locator?: string }) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
   validateToolCalls?: boolean;
   /**
@@ -571,6 +712,11 @@ interface VoiceTutorRealtimeProps {
    *    (Crimsora v2 Phase 2E). Select via ?tts=silent or
    *    NEXT_PUBLIC_TUTOR_TTS_ENGINE=silent. */
   ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
+  /** Text-only tutor mode (2026-09-19). 'text' ⇒ no mic, no perception WS,
+   *  composer is the primary input, silent TTS clock. Default 'voice'. */
+  sessionMode?: TutorSessionMode;
+  /** Silent-clock pace; only meaningful when ttsProvider === 'silent'. */
+  silentSecondsPerWord?: number;
   /** Cartesia voice id for the persona-mapped teacher voice (Task 3).
    *  Only consumed when ttsProvider === 'cartesia'; resolved by the caller
    *  via resolveCartesiaVoice() (src/lib/tutor/voice/cartesia-voice-registry.ts). */
@@ -727,7 +873,7 @@ interface VoiceTutorRealtimeProps {
    *  lessonPlanId prop flow. The child has already logged the event
    *  and emitted the debug telemetry; the parent's responsibility is
    *  state + UX (chat notice, progress-strip update). */
-  onProposePlanSwap?: (args: { targetSubTopic: string; reason?: string }) => Promise<void>;
+  onProposePlanSwap?: (args: { targetSubTopic: string; targetSubject?: string; reason?: string }) => Promise<void>;
   /** Fires when the brain emits confirm_plan_los in response to a
    *  picker segment. Parent calls /api/tutor/expand-plan-los which
    *  upserts the same plan id with expanded segments; the child's
@@ -778,6 +924,12 @@ interface VoiceTutorRealtimeProps {
 // Round-7c: how long to hold a "quiet but finite" MicSilentWarning after the
 // opening turn's audio has finished before showing the banner, provided the
 // student still hasn't been heard at all. See pendingMicNoticeRef.
+// Holistic-pedagogy round (spec §B): recap detour budget. Whichever of
+// the two bounds trips first stamps ONE wrap nudge; RECAP_OVERRUN_TURNS
+// turns past that nudge logs (telemetry only) that the recap outstayed it.
+const RECAP_WRAP_TURNS = 6;
+const RECAP_WRAP_MS = 4 * 60_000;
+const RECAP_OVERRUN_TURNS = 2;
 const MIC_NOTICE_GRACE_MS = 20_000;
 
 // Final-review Finding 2 (minor hardening): max age of lastPerceptionTextRef
@@ -903,6 +1055,8 @@ export function VoiceTutorRealtime({
   progressDigest,
   lastOpener,
   readinessNote,
+  practiceLocator,
+  goalNote,
   onOpenerRecord,
   isTrial = false,
   targetKind,
@@ -920,11 +1074,14 @@ export function VoiceTutorRealtime({
   onBrainUsage,
   onMilestone,
   onDebugEvent,
+  onHomeworkAssigned,
   handleRef,
   validateToolCalls = false,
   claudeBrainMode = false,
   useRealtimeV2 = false,
   ttsProvider = 'realtime',
+  sessionMode = 'voice',
+  silentSecondsPerWord,
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   onLessonPlanProgress,
@@ -951,6 +1108,7 @@ export function VoiceTutorRealtime({
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
+  openScope = false,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -967,6 +1125,9 @@ export function VoiceTutorRealtime({
   // so a transcript can arrive well after the mute click).
   const isMicMutedRef = useRef(false);
   isMicMutedRef.current = isMicMuted;
+  // Task 5: text mode has no mic at all — read as muted from the start so
+  // any mic-state UI (and the startListening guards below) agree with reality.
+  useEffect(() => { if (sessionMode === 'text') setIsMicMuted(true); }, [sessionMode]);
   // R34 T4: per-device "Manual mic" mode — opt-in (localStorage), gated by
   // TUTOR_MANUAL_MIC. Finalized transcripts buffer instead of dispatching;
   // the student taps a ✓ send affordance to submit the combined turn.
@@ -1884,6 +2045,23 @@ export function VoiceTutorRealtime({
   // counting, and the endpoint upserts SessionMemory by sessionId).
   // No-op when studentId is unset (demo flow).
   //
+  // Fix round 1 (spec §C.1) — the locator line is what licenses the brain to
+  // PROMISE homework ("if none is given, do not mention homework at all"). With
+  // TUTOR_CLOSE_NOTES off the handler drops the assign, so naming a location
+  // would have the tutor promise practice nothing ever creates. Withholding the
+  // locator is the safe flag-off state; the tool + prompt section stay live
+  // (silent tools are never flag-gated in this codebase).
+  //
+  // FINAL REVIEW 2026-09-07 (Important) — TUTOR_CLOSE_NOTES is the MASTER KILL
+  // SWITCH for the whole homework feature, not just for the close tool. The
+  // draft-during-session path (`draftHomework`), the finalize-on-any-exit path
+  // (`pendingFinalize` + the `finalizeHomework` body field), and the resume
+  // rehydrate effect all honour it too, and every one of them sends
+  // `locatorForPrompt` rather than the raw `practiceLocator` prop. Otherwise
+  // flag-off still WRITES locator-labelled homework that nothing is allowed to
+  // announce — a killed feature quietly creating student-visible records.
+  const locatorForPrompt = TUTOR_CLOSE_NOTES ? practiceLocator : undefined;
+
   // Learning-gaps blending (2026-07-05): commits are now INCREMENTAL, not
   // End-button-only. Previously the sole call site was the End/Pause click,
   // so a tab close / mobile swipe-away / reload silently lost the whole
@@ -1934,7 +2112,13 @@ export function VoiceTutorRealtime({
     }
     const accum = sessionAccumRef.current;
     const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0
-      && accum.segmentOutcomes.length === 0;
+      && accum.segmentOutcomes.length === 0
+      // Holistic-pedagogy round (spec §C.2): a session whose ONLY new signal
+      // is the tutor's next-time intent must still commit it — but only the
+      // FINAL commit sends nextSessionIntent, so scoping to isFinal keeps an
+      // intermediate flush from posting a body with nothing new in it. Only
+      // ever set under TUTOR_CLOSE_NOTES ⇒ flag-off this term is always false.
+      && !(opts?.final === true && accum.nextTimeIntent);
     // Content variety (phase 1): a FINAL commit must still post to CAPTURE the
     // fillings shown, even on a session that accumulated nothing gradeable
     // (e.g. a hook-only session the student didn't finish) — otherwise the
@@ -1945,7 +2129,16 @@ export function VoiceTutorRealtime({
     // with an empty accumulator still posts when prior flushes committed data
     // this session (transcript → summary on the upserted SessionMemory) OR
     // when it needs to capture content fillings.
-    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0) && !finalCapture) return;
+    // Task 13 fix round 1 (Important 1): an EXIT commit that has a drafted
+    // but unfinalized homework must post even with an empty accumulator —
+    // otherwise a tab close after everything was already flushed silently
+    // drops the draft, which is exactly the exit this round exists for.
+    const pendingFinalize = TUTOR_HOMEWORK_DRAFTS
+      && TUTOR_CLOSE_NOTES
+      && !homeworkFinalizedRef.current
+      && draftedLosRef.current.size > 0
+      && (opts?.final === true || opts?.keepalive === true);
+    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0) && !finalCapture && !pendingFinalize) return;
     const isFinal = opts?.final === true;
     const transcript = isFinal
       ? transcriptRef.current
@@ -1975,6 +2168,30 @@ export function VoiceTutorRealtime({
       // Only stamp when at least one overlay tool fired — keeps SessionMemory
       // entries lean on sessions that didn't touch topic-notes.
       notesOverlaysAddedThisSession: totalNotesOverlays > 0 ? notesCount : undefined,
+      // Holistic-pedagogy round (spec §C.2) — FINAL commit only. The intent
+      // is a whole-session statement, not an increment, and the locator +
+      // acknowledgements only matter once the session is over. Absent
+      // fields ⇒ the route's body is byte-identical to pre-round.
+      ...(isFinal && accum.nextTimeIntent ? { nextSessionIntent: accum.nextTimeIntent } : {}),
+      // Same TUTOR_CLOSE_NOTES derivation the prompt uses: flag-off must never
+      // stamp a locator onto the route's fallback auto-assignment either, or a
+      // killed feature still writes locator-labelled homework nobody announced.
+      ...(isFinal && locatorForPrompt ? { practiceLocator: locatorForPrompt } : {}),
+      // Task 13 (Praveen 2026-09-07): homework is finalized on ANY exit. The
+      // close tool may never have fired (student closed the tab, time cap,
+      // brain never called it) — the exit commit promotes whatever draft
+      // the session accumulated. Skipped once a finalize already returned
+      // this session, so an End after a close-tool finalize is a no-op.
+      // BOTH exit commits carry it: the End button commits
+      // {final:true, keepalive:true} and the pagehide handler commits
+      // {keepalive:true} WITHOUT final — gating on `isFinal` alone would
+      // leave tab-close, the exit this whole round exists for, unfinalized.
+      // `isFinal` is what names the source, not `keepalive` (the End path
+      // asks for keepalive too).
+      ...((isFinal || opts?.keepalive === true) && TUTOR_HOMEWORK_DRAFTS && TUTOR_CLOSE_NOTES && !homeworkFinalizedRef.current
+        ? { finalizeHomework: { source: isFinal ? 'end' as const : 'pagehide' as const } }
+        : {}),
+      ...(isFinal && homeworkAckIdsRef.current.length ? { homeworkAcknowledged: homeworkAckIdsRef.current } : {}),
     };
     sessionAccumRef.current = {
       losTouched: new Set(),
@@ -1982,16 +2199,35 @@ export function VoiceTutorRealtime({
       gaps: [],
       topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
       segmentOutcomes: [],
+      // Holistic-pedagogy round (spec §C.2): nextTimeIntent is NOT an
+      // increment — it is a session-scoped latch only the FINAL commit
+      // consumes. An intermediate flush must carry it forward or a
+      // close_session_notes that fired before the last debounced flush
+      // would lose its intent.
+      ...(isFinal ? {} : { nextTimeIntent: accum.nextTimeIntent }),
     };
     profileFlushCountRef.current += 1;
     try {
+      const payload = JSON.stringify(body);
+      // keepalive bodies are capped (64 KiB in Chromium); a request over the
+      // cap REJECTS outright, which would lose the commit entirely. Above
+      // the cap send it plain — the End path awaits the commit, the
+      // pagehide path gets its best effort.
+      const useKeepalive = opts?.keepalive === true && payload.length < KEEPALIVE_MAX_BYTES;
+      if (opts?.keepalive === true && !useKeepalive) {
+        onDebugEvent?.('profile_commit_keepalive_skipped', `bytes=${payload.length} final=${isFinal}`);
+      }
       const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
-        body: JSON.stringify(body),
-        // pagehide path: let the request outlive the page teardown.
-        ...(opts?.keepalive ? { keepalive: true } : {}),
+        body: payload,
+        // pagehide/End path: let the request outlive the page teardown.
+        ...(useKeepalive ? { keepalive: true } : {}),
       });
+      if (isFinal) {
+        console.log(`[VoiceTutorRealtime] final profile commit status=${res.status} bytes=${payload.length} keepalive=${useKeepalive}`);
+        onDebugEvent?.('profile_commit_final', `status=${res.status} bytes=${payload.length} keepalive=${useKeepalive}`);
+      }
       if (!res.ok) {
         console.warn('[VoiceTutorRealtime] profile commit failed:', res.status);
         return;
@@ -2000,10 +2236,41 @@ export function VoiceTutorRealtime({
       if (data.summary) {
         console.log('[VoiceTutorRealtime] session summary generated:', data.summary);
       }
+      // Holistic-pedagogy round (spec §C.3): the commit route's fallback
+      // auto-assign fired (the brain never called close_session_notes, or
+      // its call failed). Adopt its result for the summary card — but never
+      // overwrite an assignment the in-session tool call already made.
+      // Task 13: the commit route finalized a homework draft on this exit.
+      // Adopt it exactly as the in-session finalize does — refs + the
+      // summary-card/pin callback (Task 15) — so an End-time or pagehide
+      // finalize surfaces the same card an in-session one does.
+      // (Not gated on isFinal: the route only ever answers with
+      // assignedPractice when it honoured a finalizeHomework this request,
+      // and the pagehide commit sends one too.)
+      if (Array.isArray(data.assignedPractice) && data.assignedPractice.length && typeof data.practiceLocator === 'string' && data.practiceLocator) {
+        const los = data.assignedPractice as Array<{ loId: string; title: string; count: number }>;
+        assignedPracticeRef.current = los;
+        homeworkFinalizedRef.current = true;
+        onHomeworkAssignedRef.current?.({ los, locator: data.practiceLocator as string });
+        onDebugEventRef.current?.('practice_assigned', `finalize-on-exit ${los.map((a) => `${a.loId}:${a.count}`).join(',')}`);
+      }
+      if (Array.isArray(data.assigned) && data.assigned.length && assignedPracticeRef.current === null) {
+        const detail = (data.assigned as Array<{ loId: string; count: number }>).map((a) => `${a.loId}:${a.count}`).join(',');
+        // Fix round 1 (spec §C.6) — same locator gate as the in-session path:
+        // no locator ⇒ the record exists but nothing announces it. Reads the
+        // flag-gated derivation, not the raw prop, so the summary card and the
+        // record the route wrote agree under TUTOR_CLOSE_NOTES=off.
+        if (locatorForPrompt) {
+          assignedPracticeRef.current = data.assigned as Array<{ loId: string; title: string; count: number }>;
+          onDebugEventRef.current?.('practice_assigned_auto', detail);
+        } else {
+          onDebugEventRef.current?.('practice_assigned_auto', `silent=no-locator ${detail}`);
+        }
+      }
     } catch (err) {
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
     }
-  }, [studentId, subject, topic, level, lessonPlanId, embedToken]);
+  }, [studentId, subject, topic, level, lessonPlanId, embedToken, practiceLocator, locatorForPrompt]);
   // Count of commits already posted this session — lets the final commit
   // post transcript+summary even when its own accumulator increment is
   // empty (everything already flushed incrementally).
@@ -2022,6 +2289,38 @@ export function VoiceTutorRealtime({
       void commitSessionToProfile();
     }, PROFILE_FLUSH_DEBOUNCE_MS);
   }, [studentId, commitSessionToProfile]);
+  /** LOs already drafted as homework this page (server merges; this only saves round-trips). */
+  const draftedLosRef = useRef<Set<string>>(new Set());
+  /** True once a finalize returned an assignment THIS session — the only licence to speak about homework. */
+  const homeworkFinalizedRef = useRef(false);
+  // Homework drafts (Praveen 2026-09-07 ruling): homework is DRAFTED during
+  // the session on deterministic evidence and FINALIZED on any exit — no
+  // creation path depends on the brain calling a tool at the goodbye.
+  const draftHomework = useCallback((loId: string, trigger: 'recurrence' | 'recap_still_struggling' | 'incorrect_streak') => {
+    // TUTOR_CLOSE_NOTES is the feature's master kill switch (see the
+    // `locatorForPrompt` invariant above): flag-off, nothing may announce
+    // homework, so nothing may create it either.
+    if (!TUTOR_HOMEWORK_DRAFTS || !TUTOR_CLOSE_NOTES || !studentId || !lessonPlanId) return;
+    if (loId.startsWith('prereq:')) return;
+    if (!(lessonPlanRef.current?.los ?? []).some((l) => l.id === loId)) return;
+    if (draftedLosRef.current.has(loId) || homeworkFinalizedRef.current) return;
+    draftedLosRef.current.add(loId);
+    void fetch('/api/tutor/practice-assign/draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+      body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds: [loId], trigger: `${trigger}:${loId}`, locator: locatorForPrompt }),
+    }).then(async (res) => {
+      if (res.status === 200) {
+        const data = await res.json() as { status: string; los: Array<{ loId: string; count: number }> };
+        onDebugEvent?.('practice_draft_upserted', `lo=${loId} trigger=${trigger} status=${data.status} count=${data.los.find((l) => l.loId === loId)?.count ?? 0}`);
+      } else if (res.status === 204) {
+        onDebugEvent?.('practice_draft_empty', `lo=${loId} trigger=${trigger} (no bank items)`);
+      } else {
+        draftedLosRef.current.delete(loId);
+        onDebugEvent?.('practice_draft_failed', `lo=${loId} status=${res.status}`);
+      }
+    }).catch((e) => { draftedLosRef.current.delete(loId); onDebugEvent?.('practice_draft_failed', `lo=${loId} ${String((e as Error).message).slice(0, 60)}`); });
+  }, [studentId, lessonPlanId, subject, embedToken, practiceLocator, locatorForPrompt, onDebugEvent]);
   // Abnormal-exit coverage: pagehide fires on tab close / navigation /
   // mobile background-then-kill (more reliably than beforeunload on iOS).
   // keepalive lets the POST complete after teardown. Cheap no-op when the
@@ -2121,6 +2420,12 @@ export function VoiceTutorRealtime({
   // handleMicClick is declared, so it reads through this ref — same idiom as
   // gestureSessionStartRef immediately above.
   const micClickRef = useRef<(() => void) | null>(null);
+
+  // Task 5: text mode's composer <input> ref, so a stray orb tap (the
+  // pre-start center orb is not sessionMode-aware — see handleMicClick's
+  // text-mode branch) can be routed to the typed-submit start gesture
+  // instead of the voice mic-kickoff sequence.
+  const studentTextInputRef = useRef<HTMLInputElement | null>(null);
 
   // R32 T9: warmup watchdog. A stalled [start lesson] / [Session-resumed…] /
   // typed-first kickoff used to pin isWarmingUp (and the DISABLED mic) forever
@@ -2251,8 +2556,8 @@ export function VoiceTutorRealtime({
   if (!transientContextComputedRef.current) {
     transientContextComputedRef.current = true;
     transientContextBlockRef.current =
-      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote)
-        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote })
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote || locatorForPrompt || goalNote)
+        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator: locatorForPrompt, goalNote })
         : null;
   }
   // Task 17 — learner-context boot block (flag TUTOR_LEARNER_CONTEXT,
@@ -2288,6 +2593,23 @@ export function VoiceTutorRealtime({
       observation: string;
       studentQuotes: string[];
       signals: string[];
+      /** Holistic-pedagogy round (spec §A): true when the ORCHESTRATOR
+       *  inferred this gap from the struggle ledger rather than the brain
+       *  naming it. The store caps confidence for inferred gaps. */
+      inferred?: boolean;
+      /** How many recurrences of this gap this increment carries (ledger
+       *  detections ≥ 2, or a brain record_gap with recurrence:true).
+       *  Summed into evidence.recurrenceCount server-side. */
+      recurrences?: number;
+      /** Consent-gated recap offer/outcome for this gap this increment
+       *  (written by the recap state machine). */
+      recap?: { offered: number; outcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling' };
+      /** True for entries that carry ONLY recap/recurrence bookkeeping for a
+       *  gap already on the server profile (recap offered/returned; the
+       *  flush-safety recurrence entry). The commit route forwards the flag
+       *  and the store merges those counters into an EXISTING active gap
+       *  only — never creating one, never overwriting its observation. */
+      bookkeepingOnly?: boolean;
     }>;
     /** Per-session topic-notes ATTEMPT counts, used by the orchestrator
      *  rate-limit gate. Counts every accepted (post-warmup, pre-rate-cap)
@@ -2318,6 +2640,13 @@ export function VoiceTutorRealtime({
       streakAtComplete?: number;
       turns?: number;
     }>;
+    /** Holistic-pedagogy round (spec §C.2): what the tutor said it would
+     *  open with next session (from `close_session_notes`). Unlike every
+     *  other field here this is NOT an increment-since-last-flush value —
+     *  it is a single latest-wins string that only the FINAL commit sends
+     *  (as `nextSessionIntent`), so the intermediate reset below carries it
+     *  forward instead of clearing it. */
+    nextTimeIntent?: string;
   }>({
     losTouched: new Set(),
     masteryDeltas: [],
@@ -2325,6 +2654,273 @@ export function VoiceTutorRealtime({
     topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
     segmentOutcomes: [],
   });
+  // ── Holistic-pedagogy round (spec §C.1-C.2): close-of-session notes ──
+  // `close_session_notes` may legitimately fire more than once (the brain
+  // re-wraps after a "wait, one more thing"). The ASSIGN call is one-shot
+  // per session — a second call still refreshes nextTimeIntent.
+  const closeNotesFiredRef = useRef(false);
+  // What the practice-assign route actually created, for the end-of-session
+  // summary card. Null until an assign succeeds (either the in-session tool
+  // call or the commit-route fallback).
+  const assignedPracticeRef = useRef<Array<{ loId: string; title: string; count: number }> | null>(null);
+  // Task 13 — the tool-result note for close_session_notes. The close
+  // handler is dispatched through handleWhiteboardCommand, whose return value
+  // is what the tool-result payload is built from; a ref is the only way to
+  // get a per-command string out of that batch loop. Read-and-cleared by the
+  // handler's return so a later, unrelated command can never inherit it.
+  const closeNotesResultNoteRef = useRef<string | null>(null);
+  // Task 13 fix round 2 — latched the moment the RUNTIME speaks the homework
+  // pointer. After that, any model sentence that announces homework is a
+  // duplicate of a line the student just heard, so the announce gate drops
+  // it (the prompt already forbids it; this is the deterministic half).
+  const homeworkPointerSpokenRef = useRef(false);
+  // Task 13 — assigned by Task 15 (the session-summary card + action pin).
+  // Called ONLY on a finalize that actually created an assignment AND has a
+  // locator to send the student to.
+  const onHomeworkAssignedRef = useRef<((a: { los: Array<{ loId: string; title: string; count: number }>; locator?: string }) => void) | undefined>(undefined);
+  // Task 15 — assigned from the prop every render (not gated behind a
+  // useEffect + deps array) so a caller that changes the callback identity
+  // never races a finalize that fires between renders.
+  onHomeworkAssignedRef.current = onHomeworkAssigned;
+  // Task 20 fills this: ids of the homework assignments the tutor is
+  // instructed to raise out loud this session. Filled at the opener-seed
+  // site and ONLY when the homework continuity clause actually landed in
+  // the opening directive (fix round 1) — the commit route turns these into
+  // a permanent `acknowledgedAt` write, so a clause that is never spoken
+  // must never reach it. Declared here so the final commit body can carry
+  // `homeworkAcknowledged` without a second edit to that call site.
+  const homeworkAckIdsRef = useRef<string[]>([]);
+  // Task 20 — the STRUCTURED twin of learnerContextBlockRef, set by the same
+  // boot fetch (server flag TUTOR_LEARNER_CONTEXT + a lessonPlanId prop ⇒ the
+  // field is present; otherwise it stays null). Only ever read under
+  // TUTOR_RECAP_OFFER, so flag off ⇒ the opener behaves exactly as before.
+  const learnerExtrasRef = useRef<LearnerContextExtras | null>(null);
+  // The continuity clause chosen at opener-seed time (spec §C.6). Stashed so
+  // the agenda-rail REBUILD of the opening directive (handleMicClick) can
+  // prepend the SAME clause instead of re-deriving it — the rebuild has no
+  // OpeningBehavior in scope. Null whenever no clause applies.
+  const continuityClauseRef = useRef<string | null>(null);
+  // ── Holistic-pedagogy round (spec §A): per-LO struggle ledger ────────
+  // One LedgerState per session (fresh via the key={sessionId} remount).
+  // Fed from sites the orchestrator already owns (streak increments, cue
+  // matches, segment turn counts, brain gap calls); on a detection it
+  // either pushes an INFERRED gap (the student never named the
+  // difficulty) or marks a RECURRENCE on an existing one.
+  const ledgerRef = useRef<LedgerState>(createLedger());
+  // Resume rehydrate (Praveen 2026-09-07 ruling §5): the struggle ledger and
+  // the drafted-LO set are page memory; a resumed page must reload them or
+  // the close-tool fallback sees nothing (live 2026-09-06 addendum A2).
+  useEffect(() => {
+    // Same master kill switch as the draft/finalize paths (see the
+    // `locatorForPrompt` invariant above) — flag-off must not rehydrate a
+    // homework state the session is not allowed to create or announce.
+    if (!TUTOR_HOMEWORK_DRAFTS || !TUTOR_CLOSE_NOTES || !resumeState || !studentId) return;
+    let cancelled = false;
+    void fetch('/api/tutor/practice-assign/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+      body: JSON.stringify({ studentId, sessionId: sessionIdRef.current }),
+    }).then(async (res) => {
+      if (cancelled || res.status !== 200) { if (res.status !== 204) onDebugEvent?.('homework_state_rehydrate_failed', `status=${res.status}`); return; }
+      const data = await res.json() as { status: 'draft' | 'assigned'; locator?: string; los: Array<{ loId: string; title: string; count: number }> };
+      for (const lo of data.los) {
+        draftedLosRef.current.add(lo.loId);
+        if (!ledgerRef.current.has(lo.loId)) {
+          ledgerRef.current.set(lo.loId, { score: 0, events: [], detections: 1, inferredPushed: true, recovered: false });
+        }
+      }
+      if (data.status === 'assigned') {
+        homeworkFinalizedRef.current = true;
+        if (data.locator && data.los.length) { assignedPracticeRef.current = data.los; onHomeworkAssignedRef.current?.({ los: data.los, locator: data.locator }); }
+      }
+      onDebugEvent?.('homework_state_rehydrated', `status=${data.status} los=[${data.los.map((l) => l.loId).join(',')}]`);
+    }).catch((e) => onDebugEvent?.('homework_state_rehydrate_failed', String((e as Error).message).slice(0, 60)));
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeState, studentId, embedToken]);
+  // `draftHomework` (declared above, after scheduleProfileFlush) is called
+  // from `feedLedger` and the recurrence listener below — both defined
+  // BEFORE it would otherwise be in scope. Held in a ref (typed, seeded with
+  // a no-op) so those earlier sites can call `draftHomeworkRef.current(...)`
+  // safely; the real callback is assigned here, after its own declaration.
+  const draftHomeworkRef = useRef<(loId: string, trigger: 'recurrence' | 'recap_still_struggling' | 'incorrect_streak') => void>(() => {});
+  draftHomeworkRef.current = draftHomework;
+  // Set by the recap state machine while a recap runs in free mode, so
+  // events with no segment LO still attribute to the recap's LO.
+  const activeLedgerLoRef = useRef<string | null>(null);
+  // The recap state machine registers itself here (recap arming listens
+  // for recurrences). Null until then — the ledger never depends on it.
+  const recurrenceListenerRef = useRef<((d: LedgerDetection & { loTitle: string }) => void) | null>(null);
+  // ── Holistic-pedagogy round (spec §B): consent-gated recap ──────────
+  // One offer per LO per session. `recapRef` is the session's offer
+  // ledger (outcome 'pending' until the student's next real utterance is
+  // classified); the three `pending*` refs are ONE-TURN carriers consumed
+  // where the brain body is assembled; `activeRecapRef` tracks the recap
+  // detour itself (free mode → wrap nudge → return on the next advance).
+  const recapRef = useRef<Map<string, { source: 'recurrence' | 'session-start'; offeredAtMs: number; outcome: 'pending' | 'accepted' | 'declined' | 'unclear'; loTitle: string }>>(new Map());
+  const pendingRecapOfferRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
+  const pendingRecapGoRef = useRef<{ loId: string; loTitle: string } | null>(null);
+  /** The offer that rode THIS turn's `<recap_offer>` block, checked at turn
+   *  ok against the tutor's spoken text (isRecapOfferVoiced). Unvoiced ⇒ the
+   *  pending entry is withdrawn (the next utterance is NOT a reply) and the
+   *  offer is re-armed, up to RECAP_OFFER_MAX_ATTEMPTS per LO. */
+  const recapOfferSentThisTurnRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
+  const recapOfferAttemptsRef = useRef<Map<string, number>>(new Map());
+  /** Set when the judge flagged THIS turn's denial as ungrounded (and the
+   *  deterministic gate did not overrule it). The post-stream pacing block
+   *  then withholds the incorrect-streak increment and the ledger event:
+   *  live 2026-09-06 the tutor's mis-gradings became the student's
+   *  "incorrect streak", a gap, a recurrence and a recap blaming them. */
+  const judgeFlaggedDenialThisTurnRef = useRef(false);
+  /** A soft stuck cue heard this turn, fed to the ledger at turn ok unless
+   *  the verdict layer credited the same turn as correct. */
+  const pendingStuckCueRef = useRef<{ segId?: string } | null>(null);
+  /** The opener's single network-failure retry (F6, 2026-09-05). */
+  const openerRetryUsedRef = useRef(false);
+  const activeRecapRef = useRef<{ loId: string; loTitle: string; startedAtMs: number; turns: number; wrapNudged: boolean; wrapNudgedAtTurn: number; overrunLogged: boolean; goSeen: boolean } | null>(null);
+  /** Segment → LO, using the SAME resolution the mastery-delta /
+   *  segment-evidence sites use: the segment's own LO group when it
+   *  resolves to one of the plan's LOs (generated AND review plans mint
+   *  ids on the "<loId>-hook/-concept/-worked/-try" convention), else the
+   *  plan's first LO (curated single-LO plans). */
+  const loForSegment = (segId: string): string | null => {
+    const plan = lessonPlanRef.current;
+    if (!plan) return null;
+    const groupId = segId ? loGroupOf(segId) : undefined;
+    const resolved = !!(groupId && plan.los?.some((lo) => lo.id === groupId));
+    return (resolved ? groupId : plan.los?.[0]?.id) ?? null;
+  };
+  const loTitleFor = (loId: string): string => {
+    const lo = lessonPlanRef.current?.los?.find((l) => l.id === loId);
+    return lo?.shortTitle ?? lo?.description ?? loId;
+  };
+  /** Feed one ledger event. On a detection: bump the recurrence count of
+   *  an existing accumulator gap (or push a minimal recurrence-only entry
+   *  when the accumulator was already flushed — the store merges it onto
+   *  the committed gap), else push an INFERRED gap when the brain hasn't
+   *  recorded one for this LO in this segment.
+   *  Flag-off ⇒ returns immediately; nothing in this file's behaviour
+   *  changes. */
+  const feedLedger = (kind: LedgerEventKind, explicitLoId?: string | null, explicitSegId?: string) => {
+    if (!TUTOR_STRUGGLE_LEDGER) return;
+    const segId = explicitSegId || currentSegmentIdRef.current;
+    const loId = explicitLoId ?? (segId ? loForSegment(segId) : activeLedgerLoRef.current);
+    if (!loId) return;
+    const d = applyLedgerEvent(ledgerRef.current, { kind, loId, segId: segId || 'free', atMs: Date.now() });
+    // Incorrect-streak homework trigger: counts regardless of whether this
+    // event produced a ledger detection (`d` can be null) — two wrong/
+    // no_recovery events on the same LO is evidence on its own.
+    if (kind === 'wrong' || kind === 'no_recovery') {
+      const wrongs = ledgerRef.current.get(loId)?.events.filter((e) => e.kind === 'wrong' || e.kind === 'no_recovery').length ?? 0;
+      if (wrongs >= 2) draftHomeworkRef.current(loId, 'incorrect_streak');
+    }
+    if (!d) return;
+    const accum = sessionAccumRef.current;
+    const isPrereq = loId.startsWith('prereq:');
+    // `!g.bookkeepingOnly` — a bookkeeping entry is a COUNTER, not the gap.
+    // Treating one as `existing` made this branch bump its `recurrences` and
+    // return before the inferred push, so the LO's FIRST real detection was
+    // recorded nowhere: the server drops a bookkeeping-only record that has no
+    // gap to merge onto. Skipping them lets the real push happen alongside; the
+    // commit route merges both entries by loId.
+    const existing = accum.gaps.find((g) => !g.bookkeepingOnly && (isPrereq
+      ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === loId
+      : g.kind === 'lo' && g.loId === loId));
+    // A brain_gap event that produced this LO's FIRST detection is not a
+    // recurrence — it IS the gap the brain just pushed one line earlier.
+    // (Without this, every brain record_gap would immediately stamp
+    // recurrences=1 on its own fresh entry and arm a recap.)
+    const brainGapFirstDetection = kind === 'brain_gap' && d.count === 1;
+    if (!brainGapFirstDetection && (d.recurrence || existing)) {
+      if (existing) {
+        existing.recurrences = (existing.recurrences ?? 0) + 1;
+      } else {
+        // The accumulator was flushed since the first sighting. Push a
+        // minimal entry carrying only the recurrence — the commit route
+        // merges it onto the already-committed gap by loId/conceptLabel.
+        accum.gaps.push({
+          ...(isPrereq
+            ? { kind: 'prerequisite' as const, conceptLabel: loId.slice('prereq:'.length) }
+            : { kind: 'lo' as const, loId }),
+          observation: 'Recurred later in the session.',
+          studentQuotes: [],
+          signals: d.signals,
+          recurrences: 1,
+          // Carries a recurrence tally only. Never create a gap from it.
+          bookkeepingOnly: true,
+        });
+        if (!isPrereq) accum.losTouched.add(loId);
+      }
+      console.log(`[VoiceTutorRealtime] gap recurred loId="${loId}" count=${d.count} signals=[${d.signals.join(',')}]`);
+      onDebugEvent?.('gap_recurred', `lo="${loId}" count=${d.count}`);
+      recurrenceListenerRef.current?.({ ...d, loTitle: loTitleFor(loId) });
+      scheduleProfileFlush();
+      return;
+    }
+    const lo = ledgerRef.current.get(loId);
+    if (!brainGapFirstDetection && !d.sawBrainGapThisSegment && !isPrereq && lo && !lo.inferredPushed) {
+      lo.inferredPushed = true;
+      const wrongs = lo.events.filter((e) => e.kind === 'wrong').length;
+      const signalPhrase = d.signals.map((s) => s.toLowerCase().replace(/_/g, ' ')).join(', ') || 'repeated difficulty';
+      accum.gaps.push({
+        kind: 'lo',
+        loId,
+        inferred: true,
+        observation: `Inferred from behaviour: ${wrongs} incorrect attempt${wrongs === 1 ? '' : 's'} and ${signalPhrase} on this objective; the student did not name the difficulty.`,
+        studentQuotes: [],
+        signals: d.signals,
+      });
+      accum.losTouched.add(loId);
+      console.log(`[VoiceTutorRealtime] gap inferred loId="${loId}" signals=[${d.signals.join(',')}]`);
+      onDebugEvent?.('gap_inferred', `lo="${loId}" signals=${d.signals.join('+')}`);
+      scheduleProfileFlush();
+    }
+  };
+  // ── Recap: arm on recurrence (spec §B.2) ────────────────────────────
+  // The ledger calls recurrenceListenerRef on every RECURRENCE. Arming
+  // only stages the offer — the `<recap_offer>` block rides the next
+  // brain turn, and the offer is recorded 'pending' at that moment (see
+  // the brain-input assembly), so a session that ends first leaves no
+  // phantom offer in the profile. Flag off ⇒ the listener returns before
+  // touching any ref.
+  useEffect(() => {
+    recurrenceListenerRef.current = (d) => {
+      // Homework drafting on recurrence must NOT depend on the recap flag —
+      // fixed after review: this used to sit after the TUTOR_RECAP_OFFER
+      // early-return below, so recap-off silently killed recurrence drafts.
+      if (d.recurrence && !d.loId.startsWith('prereq:')) draftHomeworkRef.current(d.loId, 'recurrence');
+      if (!TUTOR_RECAP_OFFER || !d.recurrence) return;
+      // Recaps are LO-scoped this round: the ledger also keys prerequisite
+      // concepts as `prereq:<label>`, and letting one through would
+      // fabricate a kind:'lo' gap whose loId is that synthetic key.
+      if (d.loId.startsWith('prereq:')) return;
+      // One offer per LO per session; never interrupt a running recap; and
+      // never stack a second offer while one is still awaiting its reply —
+      // the classifier consumes the FIRST pending entry it finds, so a
+      // second pending entry would be answered by the wrong utterance.
+      if (recapRef.current.has(d.loId) || activeRecapRef.current) return;
+      if ([...recapRef.current.values()].some((e) => e.outcome === 'pending')) return;
+      pendingRecapOfferRef.current = { loId: d.loId, loTitle: d.loTitle, source: 'recurrence', soft: false };
+      onDebugEventRef.current?.('recap_offer_armed', `lo="${d.loId}" source=recurrence`);
+    };
+    return () => { recurrenceListenerRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  /** Session-start recap arming (Task 20 calls this). Unlike a recurrence
+   *  offer, the session-start offer rides the OPENING directive rather
+   *  than a `<recap_offer>` block — the opener already asks the question,
+   *  so the entry goes straight to 'pending' and the student's first real
+   *  utterance is classified as the reply. */
+  const armSessionStartRecap = (c: { loId: string; loTitle: string; soft: boolean }) => {
+    if (!TUTOR_RECAP_OFFER || recapRef.current.has(c.loId)) return;
+    // Fix round 1 — mirror the recurrence listener's rule: never stack a
+    // second offer while one is still awaiting its reply. The classifier
+    // consumes the FIRST pending entry it finds, so a second pending entry
+    // would be answered by the wrong utterance.
+    if ([...recapRef.current.values()].some((e) => e.outcome === 'pending')) return;
+    recapRef.current.set(c.loId, { source: 'session-start', offeredAtMs: Date.now(), outcome: 'pending', loTitle: c.loTitle });
+    onDebugEvent?.('recap_offer_armed', `lo="${c.loId}" source=session-start${c.soft ? ' soft' : ''}`);
+  };
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
   // the first one's audio — observed 2026-04-26 when the user typed two
@@ -2395,6 +2991,10 @@ export function VoiceTutorRealtime({
   // hasStarted declaration.
   const hasStartedRef = useRef(false);
 
+  // Text mode: the OpenAI Realtime WS is a pure TTS sink; the composer must
+  // be live immediately, gated only on the brain route being reachable.
+  const [brainReachable, setBrainReachable] = useState(true);
+
   // Variable-name continuity: track declared functions across the session.
   // When the tutor silently renames f→g without redeclaring, we rewrite the
   // incoming equation back to the declared name before rendering.
@@ -2441,7 +3041,7 @@ export function VoiceTutorRealtime({
   // original card or pick a structurally different label, instead of
   // decorating with ✓ / ✗ / (final) / (1) and producing duplicate
   // cards. Observed 2026-05-02 session.
-  const equationLabelsThisSessionRef = useRef<Map<string, { originalLabel: string; originalLatex: string; latexNormalized: string }>>(new Map());
+  const equationLabelsThisSessionRef = useRef<Map<string, SeenEquationLabel>>(new Map());
 
   // Set of step indices already emitted on the CURRENT page via a
   // showEquation labeled "Step N: …" or "Step N — …". Used to drop
@@ -2463,7 +3063,31 @@ export function VoiceTutorRealtime({
   // problem staged in pendingGeneratedAnswerRef (see the inverse-verdict
   // call site) — the student always answers the most recently POSED
   // problem, which is not necessarily the most recently RENDERED card.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; trackedAtMs?: number } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number; resolvedAtMs?: number } | null>(null);
+  // Live check 6 (2026-09-07) runtime nets — see the TUTOR_SPOKEN_PROBLEM_BOARD
+  // flag block for the design. Rolling window of recent board text (problem
+  // statements, equation latex) so the spoken-problem net can tell "numbers
+  // already on the board" from "numbers that exist only in speech".
+  const recentBoardTextsRef = useRef<string[]>([]);
+  // The most recent resolved lesson advance — consumed at stream end to
+  // render the authored card the brain advanced into but never painted.
+  const lastAdvanceRef = useRef<{ segId: string; atMs: number } | null>(null);
+  // Set when a tutor turn ended on a question; cleared by the next real
+  // student turn. The correction-note deadline must not volunteer a brain turn
+  // while the student is still expected to answer (the volunteer answered the
+  // tutor's own misconception question in portal-63ee9f2c).
+  const openTutorQuestionRef = useRef<number | null>(null);
+  // Substantive tutor turns since the segment cursor last moved.
+  const turnsInSegmentRef = useRef<{ segId: string; turns: number; noted: boolean }>({ segId: '', turns: 0, noted: false });
+  // Runtime pedagogy note for the next brain turn (same prepend convention as
+  // the cadence / board-anchor / judge notes; own ref, own concern).
+  const pendingRuntimeNoteRef = useRef<string | null>(null);
+  // Live check 7: the note must not land while the student is answering an
+  // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
+  // advanced mid-problem and rendered the next card under the wrong problem).
+  // Captured at turn start, before openTutorQuestionRef is cleared.
+  const openQuestionAtTurnStartRef = useRef(false);
+  const runtimeNoteHeldTurnsRef = useRef(0);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -3335,6 +3959,21 @@ export function VoiceTutorRealtime({
         correctionNoteTimerRef.current = setTimeout(fire, CORRECTION_NOTE_TIMEOUT_MS);
         return;
       }
+      // Live check 6 (portal-63ee9f2c, 07:07:13Z): the tutor had just asked
+      // the misconception question and the student was reading; the deadline
+      // fired, the brain took the note as its turn and ANSWERED ITS OWN
+      // QUESTION ("Below where it started. Let's check it…"). While a tutor
+      // question is open, hold the note for the student's real reply — it is
+      // consumed there with full context. No re-arm: the next real student
+      // turn spends it, and the idle nudge (which does not consume notes)
+      // remains the mechanism for a student who never answers.
+      if (openTutorQuestionRef.current) {
+        onDebugEvent?.(
+          'judge_correction_note_timeout_held',
+          `open tutor question since ${Date.now() - openTutorQuestionRef.current}ms ago — note held for the student's reply`,
+        );
+        return;
+      }
       onDebugEvent?.(
         'judge_correction_note_timeout',
         `undelivered ${CORRECTION_NOTE_TIMEOUT_MS}ms — volunteering the correction`,
@@ -3798,6 +4437,10 @@ export function VoiceTutorRealtime({
   // regardless of `opts`.
   const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string, opts?: { seamMode?: boolean }) => {
     console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
+    // Live check 6 nets: remember the advance for the stream-end auto-card
+    // and restart the per-segment turn counter.
+    lastAdvanceRef.current = { segId: next, atMs: Date.now() };
+    turnsInSegmentRef.current = { segId: next, turns: 0, noted: false };
     // Auto-mark "visited" segments: every segment from the outgoing
     // index (inclusive) up to the target index (exclusive) is added to
     // completedSegmentIdsRef. Keeps the progress strip advancing even
@@ -3911,7 +4554,9 @@ export function VoiceTutorRealtime({
     // for "0.15×80=12". The runtime silently dropped the linear
     // equation, but the brain narrated as if it rendered. Per-segment
     // scoping eliminates the false collision without changing intra-
-    // segment dedup behavior.
+    // segment dedup behavior. Since 2026-09-07 the map is ALSO
+    // page-scoped and prior-on-board-gated (equation-label-dedup.ts);
+    // this clear remains as the segment boundary.
     equationLabelsThisSessionRef.current.clear();
     // Auto-newPage for visual freshness: every segment transition starts
     // the student on a fresh whiteboard page. Page title: for generated
@@ -3946,7 +4591,9 @@ export function VoiceTutorRealtime({
     const descRaw = loDesc || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || '';
     const desc = (typeof descRaw === 'string' ? descRaw : '').trim();
     const newPageTitle = stage && desc ? `${stage}: ${desc}` : stage || desc || nextSeg?.id || '';
-    const pageTitleStr = String(newPageTitle).slice(0, 70);
+    // Boundary-safe: the fixed slice cut "…= 4x − 11" to "…= 4x −"
+    // mid-expression (portal-704e3e01 @1122.5s).
+    const pageTitleStr = truncatePageTitle(String(newPageTitle));
     // Defer the auto-newPage to the next batch — fire only if that batch
     // contains a command that actually renders (see pendingAdvanceNewPageRef).
     // Turn-end seam skip (R44 review round 3, Finding 1b): the three
@@ -4001,7 +4648,8 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         e.processed.map((c) => (c as any).id).filter((id: unknown): id is string => typeof id === 'string'),
       );
-      onDebugEvent('render_sync_flush', `${ready.length} render(s) painted${flushedIds.length ? ` (${flushedIds.join(',')})` : ''}`);
+      const boardRenders = ready.reduce((n, e) => n + e.processed.filter(isBoardRenderCommand).length, 0);
+      onDebugEvent('render_sync_flush', `${boardRenders} render(s) painted${ready.length !== boardRenders ? ` batches=${ready.length}` : ''}${flushedIds.length ? ` (${flushedIds.join(',')})` : ''}`);
     }
     // Nothing left to hold → cancel the stall timer.
     if (renderBufferRef.current.length === 0 && renderStallTimerRef.current) {
@@ -4153,6 +4801,16 @@ export function VoiceTutorRealtime({
         try { turnRenderPayloadTextRef.current += ' ' + JSON.stringify(c); }
         catch { /* a non-serializable command is simply not counted */ }
       }
+    }
+    // R1 telemetry (2026-09-07): a batch that lost every command during
+    // processing must not enter the sync buffer — it would flush as
+    // "1 render(s) painted" with no id and Rule 8 would ask for a repair of
+    // ink nobody requested. Meta-only batches (advance_lesson etc.) are the
+    // routine case; a rejected sole render is the interesting one and is
+    // already reported by its own `tool_call`/`render_dropped` event.
+    if (processed.length === 0) {
+      onDebugEvent?.('render_sync_empty_batch', 'no command survived processing');
+      return;
     }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
@@ -4971,45 +5629,64 @@ export function VoiceTutorRealtime({
         // ✗, " (final)", etc. — observed 2026-05-02 session: emitted
         // "Step 1: Sum" with `=?` then "Step 1: Sum ✓" with `=400` as
         // separate cards. Strip common decorations before comparing
-        // labels; if two equations have label-equivalent identifiers
-        // emitted in the same session, drop the new one with feedback
-        // telling the brain to either pick a unique label or avoid the
-        // redundant emission.
+        // labels (equation-label-dedup.ts).
+        //
+        // R1 (2026-09-07, portal-3a024b75 "silent render drop"): a
+        // same-label collision used to be dropped SILENTLY whenever it
+        // fell within one segment, regardless of page or whether the
+        // prior equation was still on the board. A segment spanning
+        // several problems (e.g. 27 min in "hook") reused labels like
+        // "Final answer" per problem, so the runtime ate one equation
+        // per repeat — six times in one session — while the brain
+        // narrated as if it rendered. The guard is now page-scoped and
+        // only fires when the prior labeled equation is STILL on the
+        // board; it rejects with a reason instead of dropping silently
+        // (see decideLabelDuplicate's doc comment for the full rule).
         const rawLabel = (cmdAny.label?.trim() || '');
         if (rawLabel) {
-          const normalizedLabel = rawLabel
-            .toLowerCase()
-            // Strip decorative suffixes / annotations.
-            .replace(/[✓✗✔✘☐☑]/g, '')
-            .replace(/\s*\(final\)\s*$/i, '')
-            .replace(/\s*\(corrected\)\s*$/i, '')
-            .replace(/\s*\(updated\)\s*$/i, '')
-            .replace(/\s*\(\d+\)\s*$/i, '')
-            .replace(/\s+/g, ' ')
-            .trim();
+          const normalizedLabel = normalizeEquationLabel(rawLabel);
           if (normalizedLabel) {
             const seen = equationLabelsThisSessionRef.current.get(normalizedLabel);
-            if (seen && seen.latexNormalized !== normalized) {
-              // Round-7+ Fix: silently drop label-duplicate equations.
-              // Previously this pushed a rejection that triggered a
-              // validator-feedback retry cascade — observed 2026-05-03
-              // session: brain emitted show_equation(label="Final
-              // Answer", new latex), runtime pushed rejection, brain on
-              // retry MISINTERPRETED the rejection and emitted a fresh
-              // show_problem({old dataset}) instead of fixing the
-              // label, regressing the student to the FIRST mean problem.
-              // The label-dup is purely cosmetic (the math may even be
-              // identical or a refinement); surfacing it as a rejection
-              // is more harmful than just dropping the duplicate.
-              console.warn(`[VoiceTutorRealtime] Dropping label-duplicate equation: "${rawLabel}" (normalizes to "${normalizedLabel}", clashes with prior "${seen.originalLabel}") — silent drop, no retry`);
-              onDebugEvent?.('show_equation_label_duplicate_silent', `"${rawLabel}" ~= "${seen.originalLabel}"`);
+            const signature = buildShowSignature('showEquation', cmd);
+            const currentPageKey = catalogRef.current.getCurrentPageTitle() ?? '';
+            const priorOnBoard = !!seen && !!catalogRef.current.findBySignature(seen.signature);
+            // FINAL REVIEW 2026-09-07 (Important): this runs BEFORE the batch's
+            // synthetic newPage is prepended (deferred segment-advance page, or
+            // an armed topic shift — both flushed further down this flush), so
+            // `currentPageKey` names the page being LEFT. Rejecting a reused
+            // label against it is the false-drop class this guard exists to end.
+            const pageOpenPending = !!pendingAdvanceNewPageRef.current || !!topicShiftPendingRef.current;
+            const problemEpochNow = servedProblemStatementsRef.current.size;
+            const decision = decideLabelDuplicate({ normalizedLabel, normalizedLatex: normalized, seen, currentPageKey, priorOnBoard, pageOpenPending, problemEpochNow });
+            if (decision.kind === 'reject') {
+              // R1 (2026-09-07): a real same-page collision is a REJECTION the
+              // brain can act on, never a silent drop — see the module header.
+              console.warn(`[VoiceTutorRealtime] Rejecting label-duplicate equation: "${rawLabel}" clashes with prior "${seen!.originalLabel}" on this page`);
+              onDebugEvent?.('tool_call', `Dropped label-duplicate equation: "${rawLabel}" ~= "${seen!.originalLabel}" (same page, prior on board)`);
+              onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}"`);
+              rejected.push({ action: 'show_equation', reason: decision.reason });
               return [];
             }
-            equationLabelsThisSessionRef.current.set(normalizedLabel, {
-              originalLabel: rawLabel,
-              originalLatex: latex,
-              latexNormalized: normalized,
-            });
+            if (decision.kind === 'register') {
+              if (decision.newProblemSince) {
+                onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}" (new problem card since — registered instead)`);
+              }
+              if (decision.pageOpenPending) {
+                // Rescued reject: recorded (not silent) so a live session shows
+                // the guard fired and chose to register instead of drop.
+                onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}" (page-open pending — registered instead)`);
+              }
+              // Key it to the page the equation will actually land on when that
+              // page's title is already known (the deferred advance carries it);
+              // otherwise the current key, which fails toward registering later
+              // collisions rather than dropping them.
+              const registerPageKey = decision.pageOpenPending
+                ? (pendingAdvanceNewPageRef.current?.title ?? currentPageKey)
+                : currentPageKey;
+              equationLabelsThisSessionRef.current.set(normalizedLabel, {
+                originalLabel: rawLabel, originalLatex: latex, latexNormalized: normalized, signature, pageKey: registerPageKey, problemEpoch: problemEpochNow,
+              });
+            }
             // If the label looks like "Step N…" or "Step N: …",
             // record N so any future spoken reference to step N is
             // grounded. Generic — doesn't care about subject content.
@@ -5688,6 +6365,19 @@ export function VoiceTutorRealtime({
     // --- Track declarations + integrands + current problem for next turn ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const cmd of processed) {
+      {
+        // Live check 6: rolling window of board text for the spoken-problem net.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // The whole command payload (statement, latex, diagram labels…), capped.
+        try {
+          const boardTxt = JSON.stringify(cmd).slice(0, 2000);
+          if (boardTxt && boardTxt.length > 2 && /\d/.test(boardTxt)) {
+            const arr = recentBoardTextsRef.current;
+            arr.push(boardTxt);
+            if (arr.length > 12) arr.splice(0, arr.length - 12);
+          }
+        } catch { /* unserialisable command — skip */ }
+      }
       if (cmd.action === 'showProblem') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p = (cmd as any).problem;
@@ -5712,6 +6402,7 @@ export function VoiceTutorRealtime({
             // ("See." → "C") — must be the ACTUAL letters this problem
             // offers, not a blind A-E guess.
             choiceLetters: extractChoiceLetters(p.answerChoices),
+            choiceOptions: extractChoiceOptions(p.answerChoices),
             ...(genMatch ? { source: 'generated' as const, expectedAnswer: genMatch.expectedAnswer } : {}),
           };
           if (genMatch) {
@@ -5753,6 +6444,7 @@ export function VoiceTutorRealtime({
             source: 'card',
             hasChoices: Array.isArray(tyAny.choices) && tyAny.choices.length > 0,
             choiceLetters: extractChoiceLetters(tyAny.choices),
+            choiceOptions: extractChoiceOptions(tyAny.choices),
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           walkThroughInsistenceRef.current = 0;
@@ -5817,6 +6509,13 @@ export function VoiceTutorRealtime({
               setActiveSegmentId('');
               currentProblemRef.current = null;
               catalogRef.current.setCurrentSegment('');
+            }
+            // Recap (spec §B): the brain going free is the recap detour
+            // actually starting. Logged once — a second {to:"free"} while
+            // the same recap runs is a no-op.
+            if (activeRecapRef.current && !activeRecapRef.current.goSeen) {
+              activeRecapRef.current.goSeen = true;
+              onDebugEvent?.('recap_started', `lo="${activeRecapRef.current.loId}"`);
             }
             continue;
           }
@@ -5885,6 +6584,38 @@ export function VoiceTutorRealtime({
             // crossing. Reverted in favor of the route.ts wiring,
             // which delivers the beat mid-generation with zero extra
             // round-trips and zero UI side effects.
+            // Recap (spec §B.6): leaving free mode for a real segment ends
+            // the detour. Deliberately ANY resolved advance while a recap is
+            // active — the brain returning to the plan is the return, whether
+            // it goes to 'next', back to the segment the student left, or
+            // forward to a jump target.
+            // Outcome is the LEDGER's verdict on the LO, not the brain's
+            // opinion: recovered ⇒ 'improved', else 'still_struggling'.
+            // (Cross-flag hole: with TUTOR_STRUGGLE_LEDGER off the ledger is
+            // never fed, so `recovered` can never be true and a recap offered
+            // by the session-start path would always read 'still_struggling'.
+            // Both flags ship default-ON together; noted so a solo kill of the
+            // ledger flag is understood as biasing this field, not breaking it.)
+            if (activeRecapRef.current) {
+              const a = activeRecapRef.current;
+              const recovered = ledgerRef.current.get(a.loId)?.recovered === true;
+              const outcome = recovered ? 'improved' as const : 'still_struggling' as const;
+              // ALWAYS a second entry, never a mutation of the reply-time one:
+              // if no profile flush intervened, overwriting in place would turn
+              // {offered:1, outcome:'accepted'} into {offered:1,
+              // outcome:'improved'} and the accept would never be counted
+              // (mergeRecap counts an accept only on 'accepted'). The commit
+              // route merges both entries by loId, so flushed and unflushed
+              // timings both land offers 1 / accepts 1 / lastOutcome=outcome.
+              // `offered: 0` — the offer itself was counted at reply time.
+              sessionAccumRef.current.gaps.push({ kind: 'lo', loId: a.loId, observation: `Recap ${outcome === 'improved' ? 'helped' : 'did not settle it'} this session.`, studentQuotes: [], signals: [], recap: { offered: 0, outcome }, bookkeepingOnly: true });
+              console.log(`[VoiceTutorRealtime] recap returned lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
+              onDebugEvent?.('recap_returned', `lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
+              if (outcome === 'still_struggling') draftHomeworkRef.current(a.loId, 'recap_still_struggling');
+              activeRecapRef.current = null;
+              activeLedgerLoRef.current = null;
+              scheduleProfileFlush();
+            }
             applyResolvedAdvance(plan, fromSegId, next);
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
@@ -6214,7 +6945,13 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const c = cmd as any;
         const targetSubTopic: string = typeof c.targetSubTopic === 'string' ? c.targetSubTopic : '';
+        const targetSubject: string | undefined = typeof c.targetSubject === 'string' && c.targetSubject.trim() ? c.targetSubject.trim() : undefined;
         const reason: string | undefined = typeof c.reason === 'string' ? c.reason : undefined;
+        // 2026-09-10: emit the debug event BEFORE either early return. The
+        // embed dropped every swap for months (handler never wired) with
+        // zero telemetry under this event name because the emit sat below
+        // the `continue`s.
+        onDebugEvent?.('propose_plan_swap', `target="${targetSubTopic}"${targetSubject ? ` subject="${targetSubject}"` : ''}${reason ? ` reason="${reason}"` : ''}${onProposePlanSwap ? '' : ' DROPPED=no-handler'}`);
         if (!targetSubTopic) {
           console.warn('[VoiceTutorRealtime] proposePlanSwap missing targetSubTopic, dropping');
           continue;
@@ -6229,13 +6966,12 @@ export function VoiceTutorRealtime({
         // existing useEffect and lessonPlanContext reflects it.
         void (async () => {
           try {
-            await onProposePlanSwap({ targetSubTopic, reason });
+            await onProposePlanSwap({ targetSubTopic, targetSubject, reason });
           } catch (err) {
             console.warn('[VoiceTutorRealtime] onProposePlanSwap threw:', err);
           }
         })();
-        console.log(`[VoiceTutorRealtime] propose_plan_swap target="${targetSubTopic}"${reason ? ` reason="${reason}"` : ''}`);
-        onDebugEvent?.('propose_plan_swap', `target="${targetSubTopic}"${reason ? ` reason="${reason}"` : ''}`);
+        console.log(`[VoiceTutorRealtime] propose_plan_swap target="${targetSubTopic}"${targetSubject ? ` subject="${targetSubject}"` : ''}${reason ? ` reason="${reason}"` : ''}`);
         continue;
       }
       if (cmd.action === 'recordGap' || cmd.action === 'flagPrerequisiteGap') {
@@ -6248,7 +6984,9 @@ export function VoiceTutorRealtime({
           objectiveSignals.push('INCORRECT_STREAK_2_PLUS');
         }
         const cue = studentCueRef.current?.cue;
-        if (cue && /\b(stuck|skip|don't know|dont know|i don't get|help me|can't do)\b/i.test(cue)) {
+        // STUCK_CUE_RE (struggle-ledger.ts) is this regex, moved verbatim so
+        // the ledger and this objective-signal stamp share one definition.
+        if (cue && STUCK_CUE_RE.test(cue)) {
           objectiveSignals.push('STUCK_CUE');
         }
         if (segmentTurnCountRef.current.count >= 6) {
@@ -6261,6 +6999,63 @@ export function VoiceTutorRealtime({
         const brainSignals: string[] = Array.isArray(c.signalsObserved) ? c.signalsObserved : [];
         // Union — preserves order, dedupes.
         const signals = Array.from(new Set([...brainSignals, ...objectiveSignals]));
+        // Holistic-pedagogy round (spec §A.5): the brain can mark a gap it
+        // has ALREADY recorded this session as recurring.
+        // INVARIANT: one brain recurrence ⇒ exactly ONE `recurrences`
+        // increment and exactly ONE gap_recurred event + listener call.
+        // Both sub-cases below therefore `continue` and do NOT call
+        // feedLedger: a brain_gap fed here would, on the second such call
+        // for the same LO, produce its own detection (count >= 2 ⇒
+        // recurrence) and bump/announce the SAME recurrence a second time.
+        const brainRecurrence = TUTOR_STRUGGLE_LEDGER && c.recurrence === true;
+        if (brainRecurrence) {
+          const isPrereqCmd = cmd.action !== 'recordGap';
+          // Same validity gate as the ordinary push below — a malformed
+          // call falls through and is dropped there, exactly as before.
+          const valid = observation !== '' && (isPrereqCmd
+            ? typeof c.conceptLabel === 'string' && c.conceptLabel.trim() !== ''
+            : typeof c.loId === 'string' && c.loId !== '');
+          const key: string | null = !valid ? null
+            : isPrereqCmd ? prereqKey(c.conceptLabel) : String(c.loId);
+          // `!g.bookkeepingOnly` for the same reason as feedLedger's lookup:
+          // bumping a counter-only entry would swallow this brain-declared gap.
+          const priorEntry = key === null ? undefined : sessionAccumRef.current.gaps.find((g) => !g.bookkeepingOnly && (isPrereqCmd
+            ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === key
+            : g.kind === 'lo' && g.loId === key));
+          if (key) {
+            if (priorEntry) {
+              // Still un-flushed — bump in place; never a second entry.
+              priorEntry.recurrences = (priorEntry.recurrences ?? 0) + 1;
+            } else {
+              // The first sighting was already flushed. Push the gap as
+              // usual but carrying recurrences:1, so the commit route
+              // merges the count onto the committed entry.
+              sessionAccumRef.current.gaps.push({
+                ...(isPrereqCmd
+                  ? { kind: 'prerequisite' as const, conceptLabel: String(c.conceptLabel) }
+                  : { kind: 'lo' as const, loId: String(c.loId) }),
+                observation,
+                studentQuotes,
+                signals,
+                recurrences: 1,
+              });
+              if (!isPrereqCmd) sessionAccumRef.current.losTouched.add(String(c.loId));
+            }
+            const count = (priorEntry?.recurrences ?? 1) + 1;
+            console.log(`[VoiceTutorRealtime] gap recurred (brain) key="${key}" count=${count} signals=[${signals.join(',')}]`);
+            onDebugEvent?.('gap_recurred', `lo="${key}" count=${count}`);
+            recurrenceListenerRef.current?.({
+              loId: key,
+              count,
+              recurrence: true,
+              signals: signals.filter(isGapSignalCode),
+              sawBrainGapThisSegment: true,
+              loTitle: isPrereqCmd ? String(c.conceptLabel) : loTitleFor(key),
+            });
+            scheduleProfileFlush();
+            continue;
+          }
+        }
         if (cmd.action === 'recordGap') {
           if (c.loId && observation) {
             sessionAccumRef.current.gaps.push({
@@ -6273,6 +7068,11 @@ export function VoiceTutorRealtime({
             sessionAccumRef.current.losTouched.add(c.loId);
             console.log(`[VoiceTutorRealtime] gap recorded: kind=lo loId="${c.loId}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
             scheduleProfileFlush();
+            // Ledger: a brain-named gap is the strongest struggle signal
+            // (weight 2). It never pushes an inferred duplicate — the
+            // detection it triggers carries sawBrainGapThisSegment — but it
+            // primes the LO so a LATER struggle on it reads as a recurrence.
+            feedLedger('brain_gap', c.loId);
           }
         } else {
           if (c.conceptLabel && observation) {
@@ -6285,8 +7085,192 @@ export function VoiceTutorRealtime({
             });
             console.log(`[VoiceTutorRealtime] gap recorded: kind=prerequisite concept="${c.conceptLabel}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
             scheduleProfileFlush();
+            feedLedger('brain_gap', prereqKey(c.conceptLabel));
           }
         }
+        continue;
+      }
+      // Holistic-pedagogy round (spec §C.1-C.2) — silent close-of-session
+      // notes. Two independent outputs: (a) a one-shot practice assignment
+      // for the objectives the brain says earned homework, (b) the tutor's
+      // stated intent for next session, which rides out on the FINAL
+      // profile commit. Flag off ⇒ dropped silently (the render filter
+      // above already excludes the action unconditionally, so flag-off
+      // behaviour is byte-identical to pre-round).
+      if (cmd.action === 'closeSessionNotes') {
+        if (!TUTOR_CLOSE_NOTES) continue;
+        const c = cmd as { assignLoIds: string[]; reason?: string; nextTimeIntent?: string };
+        // Latest-wins: a second wrap-up call refreshes the intent even
+        // though it can no longer assign.
+        if (c.nextTimeIntent) sessionAccumRef.current.nextTimeIntent = c.nextTimeIntent;
+        // Only ids the brain could legitimately have seen: this plan's LOs,
+        // or an LO the struggle ledger touched. Prereq ledger keys are not
+        // assignable (they name concepts, not bank-addressable objectives).
+        const planLos = new Set((lessonPlanRef.current?.los ?? []).map((l) => l.id));
+        const ledgerLos = new Set([...ledgerRef.current.keys()].filter((k) => !k.startsWith('prereq:')));
+        let loIds = c.assignLoIds.filter((id) => planLos.has(id) || ledgerLos.has(id));
+        // Live 2026-09-06 (portal-4bbe5d91): the brain called the tool with NO
+        // objectives after a session where the ledger had a recurrence and an
+        // accepted recap ended "still struggling" — the goodbye said "all
+        // locked in". The ledger is the deterministic record; when the brain
+        // assigns nothing but the ledger saw the same objective recur, assign
+        // that objective (up to two, most detections first).
+        if (!loIds.length && studentId && !closeNotesFiredRef.current) {
+          const recurring = [...ledgerRef.current.entries()]
+            .filter(([k, v]) => !k.startsWith('prereq:') && v.detections >= 2 && planLos.has(k))
+            .sort((a, b) => b[1].detections - a[1].detections)
+            .map(([k]) => k)
+            .slice(0, 2);
+          if (recurring.length) {
+            loIds = recurring;
+            c.reason = c.reason?.trim() || 'This one tripped you up more than once today — a few reps to make it stick.';
+            onDebugEvent?.('practice_assign_fallback', `ledger-recurrence lo=[${recurring.join(',')}] brain-requested=[${c.assignLoIds.join(',')}]`);
+          }
+        }
+        // Live 2026-09-05 (portal-51b667f1): the tool call reached this
+        // handler and NOTHING followed — no assigned, no failed — because a
+        // refused gate emitted no telemetry. Every refusal now says why.
+        // (Kept for the gates that still refuse outright; the no-LO case is
+        // now decided by the finalize's own answer below, because a draft
+        // built from in-session evidence can still be promoted.)
+        if (!studentId || closeNotesFiredRef.current || (!loIds.length && !TUTOR_HOMEWORK_DRAFTS)) {
+          const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+          onDebugEvent?.('practice_assign_skipped', `${reason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}]`);
+        }
+        // Task 13 (Praveen 2026-09-07): the assignment must EXIST before the
+        // brain's goodbye sentence, or the tutor announces a card that was
+        // never created. So this is AWAITED — the handler is already async
+        // and the brain's turn holds here — and every call is bounded so a
+        // slow route can never hang the goodbye. Two bounded round-trips
+        // (draft + finalize) ⇒ ~8s worst case; each leg fails closed to
+        // "nothing was assigned".
+        let note = 'close_session_notes: nothing was assigned — do not mention homework or practice.';
+        // Fix round 1 (Important 4): flag-off, an empty loIds would POST
+        // `loIds: []` to the legacy route and log a false
+        // practice_assign_failed status=400. With drafts ON there is always
+        // something to ask the finalize about (an evidence draft); with them
+        // OFF there is nothing to do without brain LOs.
+        if (studentId && !closeNotesFiredRef.current && (loIds.length > 0 || TUTOR_HOMEWORK_DRAFTS)) {
+          try {
+            const headers = { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) };
+            // No brain LOs ⇒ skip the draft POST but STILL finalize: an
+            // evidence draft (recurrence / still-struggling recap /
+            // incorrect streak) may already be waiting to be promoted.
+            // Fix round 1 (Important 3 + minor 5): the draft's own answer is
+            // reported with the same three events draftHomework uses, and it
+            // owns its try/catch — a draft timeout must never cost us the
+            // finalize leg, which is what actually creates the homework.
+            if (loIds.length && TUTOR_HOMEWORK_DRAFTS) {
+              try {
+                const dres = await fetch('/api/tutor/practice-assign/draft', {
+                  method: 'POST',
+                  headers,
+                  signal: signalFor(4000),
+                  body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, trigger: 'close_tool', locator: practiceLocator }),
+                });
+                if (dres.status === 200) {
+                  const ddata = await dres.json() as { status: string; los: Array<{ loId: string; count: number }> };
+                  onDebugEvent?.('practice_draft_upserted', `lo=[${loIds.join(',')}] trigger=close_tool status=${ddata.status} counts=${ddata.los.map((l) => `${l.loId}:${l.count}`).join(',')}`);
+                  // Record them as drafted so a later exit commit knows a
+                  // draft is pending (Important 1's `pendingFinalize`) even
+                  // when the finalize leg below times out.
+                  for (const id of loIds) draftedLosRef.current.add(id);
+                } else if (dres.status === 204) {
+                  onDebugEvent?.('practice_draft_empty', `lo=[${loIds.join(',')}] trigger=close_tool (no bank items)`);
+                } else {
+                  onDebugEvent?.('practice_draft_failed', `lo=[${loIds.join(',')}] trigger=close_tool status=${dres.status}`);
+                }
+              } catch (e) {
+                onDebugEvent?.('practice_draft_failed', `lo=[${loIds.join(',')}] trigger=close_tool ${String((e as Error).message).slice(0, 60)}`);
+              }
+            }
+            const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
+            const res = TUTOR_HOMEWORK_DRAFTS
+              ? await fetch('/api/tutor/practice-assign/finalize', {
+                  method: 'POST',
+                  headers,
+                  signal: signalFor(4000),
+                  body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, source: 'close_tool', reason, nextTimeIntent: c.nextTimeIntent, locator: practiceLocator }),
+                })
+              : await fetch('/api/tutor/practice-assign', {
+                  method: 'POST',
+                  headers,
+                  signal: signalFor(4000),
+                  body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, reason, locator: practiceLocator, nextTimeIntent: c.nextTimeIntent }),
+                });
+            // Fix round 1 (minor 2) — the once-latch closes only on a
+            // REACHED route (200 assigned / 204 nothing-to-assign). A 5xx
+            // or a thrown fetch leaves it open so a second
+            // close_session_notes can retry; the route's sessionId-keyed
+            // upsert makes that retry idempotent.
+            if (res.status === 200 || res.status === 204) closeNotesFiredRef.current = true;
+            if (res.status === 200) {
+              const data = await res.json() as { assigned: Array<{ loId: string; title: string; count: number }> };
+              const detail = data.assigned.map((a) => `${a.loId}:${a.count}`).join(',');
+              // Fix round 1 (spec §C.6) — the STUDENT-FACING surface is
+              // gated on a locator: with no place to send them, nothing may
+              // announce homework. The assignment record still exists (real
+              // data the host can surface later); only the announcement is
+              // suppressed, and the debug event says so.
+              if (practiceLocator && data.assigned.length) {
+                assignedPracticeRef.current = data.assigned;
+                homeworkFinalizedRef.current = true;
+                onHomeworkAssignedRef.current?.({ los: data.assigned, locator: practiceLocator });
+                onDebugEvent?.('practice_assigned', detail);
+                // Fix round 1 (Important 2): the CLIENT speaks the pointer.
+                // On the production brain path the tool_result is resolved
+                // server-side, so the brain never learns what was assigned
+                // or where — it would be guessing at the count and the
+                // location. The runtime knows both, exactly, and only now.
+                // One deterministic sentence, through the same queue the
+                // brain's sentences use, mirrored into the transcript.
+                const pointer = buildHomeworkPointerSentence({ los: data.assigned, locator: practiceLocator });
+                if (pointer) {
+                  speakTextRef.current?.(pointer);
+                  homeworkPointerSpokenRef.current = true;
+                  transcriptRef.current = [
+                    ...transcriptRef.current,
+                    {
+                      id: `tutor-${Date.now()}-homework-pointer`,
+                      timestamp: new Date(),
+                      role: 'tutor',
+                      text: pointer,
+                    } as TranscriptEntry,
+                  ];
+                  onTranscriptUpdate([...transcriptRef.current]);
+                  onTrackInteraction?.('message', pointer, undefined, 'tutor');
+                  onDebugEvent?.('homework_pointer_spoken', pointer.slice(0, 120));
+                  // Final review 2026-09-07 (minor m3): the note is written
+                  // HERE, after the null-check — it claims the runtime already
+                  // announced the practice, and that is only true when a
+                  // pointer sentence actually went out. A `pointer === null`
+                  // case (every count 0 / no titles) keeps the default
+                  // nothing-was-assigned note, so the brain is never told an
+                  // announcement happened that never did.
+                  note = `close_session_notes: practice on ${data.assigned.map((a) => a.title).join(' and ')} was assigned and the runtime has already told the student where it is — do not mention homework or practice again; just say goodbye.`;
+                }
+              } else {
+                onDebugEvent?.('practice_assigned', `silent=${practiceLocator ? 'empty' : 'no-locator'} ${detail}`);
+              }
+            } else if (res.status !== 204) {
+              onDebugEvent?.('practice_assign_failed', `status=${res.status}`);
+            } else {
+              // 204 — nothing to promote. With no brain LOs that is the
+              // outcome the old pre-flight gate used to report; WITH brain
+              // LOs it means the draft leg produced no bank items, which is
+              // a different (and more interesting) failure.
+              const skipReason = loIds.length
+                ? 'finalize-204-with-los'
+                : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+              onDebugEvent?.('practice_assign_skipped', `${skipReason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}] finalize=204`);
+            }
+          } catch (e) {
+            onDebugEvent?.('practice_assign_failed', String((e as Error).message).slice(0, 80));
+          }
+        }
+        closeNotesResultNoteRef.current = note;
+        console.log(`[VoiceTutorRealtime] close_session_notes assign=[${loIds.join(',')}] intent="${(c.nextTimeIntent ?? '').slice(0, 60)}"`);
+        scheduleProfileFlush();
         continue;
       }
       // Topic-notes overlay tools — fire silently to the per-student
@@ -6671,14 +7655,34 @@ export function VoiceTutorRealtime({
       });
       if (hasFreshTeaching) {
         const deferred = pendingAdvanceNewPageRef.current;
-        processed = [{ action: 'newPage', title: deferred.title } as WhiteboardCommand, ...processed];
+        // Title from the problem that is actually about to render, not the
+        // authored one this page was named after at advance time — a
+        // generate_problem substitute resolves AFTER the title is computed
+        // (portal-704e3e01 @1122.5s: "…2(x + 5) − 3 = 4x −" over a card
+        // reading "x/2 + 3 = x/5 + 6").
+        // Last, not first: if a batch ever carries two showProblem commands
+        // the later one supersedes the earlier on the page, and titling from
+        // the first would reproduce this task's own bug within one flush.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const renderedProblem = [...processed].reverse().find((cmd) => String(cmd.action) === 'showProblem') as any;
+        const renderedStatement = typeof renderedProblem?.problem?.statement === 'string'
+          ? renderedProblem.problem.statement
+          : undefined;
+        const titleDecision = TUTOR_PAGE_TITLE_FROM_RENDER
+          ? retitleFromBatch({ deferredTitle: deferred.title, renderedStatement })
+          : { title: deferred.title, retitled: false };
+        const pageTitle = titleDecision.title;
+        processed = [{ action: 'newPage', title: pageTitle } as WhiteboardCommand, ...processed];
         // Open the deferred page in the catalog Page model (this synthetic
         // newPage is prepended after the step-1 side-effect loop, so the
         // setCurrentPage bridge never sees it). setCurrentPage syncs the view.
-        catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
-        catalogRef.current.setCurrentPage(deferred.title);
-        console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${deferred.title}")`);
-        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title}`);
+        catalogRef.current.openPage({ title: pageTitle, segmentId: deferred.segmentId });
+        catalogRef.current.setCurrentPage(pageTitle);
+        console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
+        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}`);
+        if (titleDecision.retitled) {
+          onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);
+        }
         pendingAdvanceNewPageRef.current = null;
       } else {
         console.log('[VoiceTutorRealtime] auto-newPage on segment advance STILL deferred — no fresh teaching content this batch');
@@ -6715,6 +7719,7 @@ export function VoiceTutorRealtime({
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
+      'closeSessionNotes',
     ]);
     // Running page title used to stamp catalog entries with the page
     // they were rendered on. Updated whenever we see a newPage in the
@@ -6854,9 +7859,14 @@ export function VoiceTutorRealtime({
         // page is not (session-1783693044096: the tutor described the
         // photosynthesis diagram while the student sat two pages away).
         // Scroll to it — but never yank the view for a same-page repeat.
+        // Live check 7: how buried is the existing item on its own page?
+        const itemsAfterOnPage = existing.pageId
+          ? catalogRef.current.getItems().filter((it) => it.pageId === existing.pageId && it.order > existing.order).length
+          : 0;
         if (shouldScrollToDedupedItem({
           itemPageTitle: existing.pageTitle,
           currentPageTitle: catalogRef.current.getCurrentPageTitle(),
+          itemsAfterOnPage,
         })) {
           onWhiteboardCommand([{
             action: 'scrollTo',
@@ -7494,7 +8504,11 @@ export function VoiceTutorRealtime({
         c.action !== 'flagPrerequisiteGap' &&
         c.action !== 'expandTopicNotesTheory' &&
         c.action !== 'addTopicNotesMethod' &&
-        c.action !== 'addTopicNotesPointer',
+        c.action !== 'addTopicNotesPointer' &&
+        // Holistic-pedagogy round (spec §C.1): filtered UNCONDITIONALLY —
+        // flag-off drops the action in the handler, so it must never reach
+        // the canvas either way.
+        c.action !== 'closeSessionNotes',
     );
 
     // Render↔speech sync: on the brain-stream path this BUFFERS the visual
@@ -7565,7 +8579,12 @@ export function VoiceTutorRealtime({
     // command (the per-site events above are heterogeneous; this is the
     // grep-able / embed-persisted roll-up — see EMBED_DEBUG_EVENT_PREFIXES).
     for (const r of rejected) onDebugEvent?.('render_dropped', `${r.action} — ${r.reason.slice(0, 120)}`);
-    return { rejected, assignedIds, manifests, duplicates, boardSnapshot };
+    // Task 13: close_session_notes' own report (assigned / nothing) rides
+    // out on the result so the tool_result the model reads carries it.
+    // Read-and-cleared: a later, unrelated command must never inherit it.
+    const note = closeNotesResultNoteRef.current;
+    closeNotesResultNoteRef.current = null;
+    return { rejected, assignedIds, manifests, duplicates, boardSnapshot, ...(note ? { note } : {}) };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent, applyResolvedAdvance]);
 
   // Build a context summary from the current transcript
@@ -8087,7 +9106,12 @@ export function VoiceTutorRealtime({
     // Pre-emptive session rotation — surfaces a UI prompt so the user
     // can choose to continue (rotates the underlying realtime session)
     // or wrap up. See thresholds comment above.
-    if (sessionMinutes >= rotationThreshold && !sessionRotationFiredRef.current) {
+    // Rotation exists for the OpenAI Realtime WebSocket's ~60-min cap. The
+    // Claude-brain path has no such cap (Cartesia TTS, per-turn HTTP), so the
+    // "almost an hour — keep going?" banner and the silent auto-rotation are
+    // pure noise there (live 2026-09-06: a 64-min session got the banner at
+    // 55 min and simply carried on). The 45-min SPOKEN check-in above stays.
+    if (sessionMinutes >= rotationThreshold && !sessionRotationFiredRef.current && !claudeBrainMode) {
       sessionRotationFiredRef.current = true;
       console.log(`[VoiceTutorRealtime] rotation prompt shown at ${sessionMinutes.toFixed(1)} min (threshold ${rotationThreshold.toFixed(1)})`);
       onDebugEvent?.('session_rotation_prompt', `Session at ${sessionMinutes.toFixed(1)} min (T=${T})`);
@@ -8095,7 +9119,7 @@ export function VoiceTutorRealtime({
     }
 
     // Silent auto-rotation fallback.
-    if (sessionMinutes >= autoRotationThreshold && sessionRotationPrompt && !autoRotationFiredRef.current) {
+    if (sessionMinutes >= autoRotationThreshold && sessionRotationPrompt && !autoRotationFiredRef.current && !claudeBrainMode) {
       autoRotationFiredRef.current = true;
       console.warn(`[VoiceTutorRealtime] silent auto-rotation at ${sessionMinutes.toFixed(1)} min (threshold ${autoRotationThreshold.toFixed(1)}) — user ignored banner`);
       onDebugEvent?.('session_auto_rotation', `Silent rotation at ${sessionMinutes.toFixed(1)} min (T=${T})`);
@@ -8165,6 +9189,11 @@ export function VoiceTutorRealtime({
       // lands during the opener's own audio. Gate those instead of
       // alarming a student who was never given a chance to speak.
       if (error.name === 'MicSilentWarning') {
+        // Task 5: text mode never opens a mic, so this warning is never
+        // meaningful there — suppress it outright rather than let a stray/
+        // late-arriving probe surface a "mic looks silent" nag to a student
+        // who was never asked to use one.
+        if (sessionMode === 'text') return;
         const bannerText = "I can't hear you — your mic looks silent. Check the mic permission or volume, or type below.";
         const trulyDead = /peak=-Infinity/.test(error.message);
         if (trulyDead) {
@@ -8206,7 +9235,7 @@ export function VoiceTutorRealtime({
     setErrorMessage(error.message);
     onDebugEvent?.('error', error.message);
     onError?.(error);
-  }, [onError, onDebugEvent]);
+  }, [onError, onDebugEvent, sessionMode]);
 
   // Listen for molecule changes from the Ketcher editor
   // Use a ref to access sendTextMessage without re-creating the listener
@@ -8245,8 +9274,27 @@ export function VoiceTutorRealtime({
         // can (flag-gated) join the learner-context block for THIS lesson's
         // objectives. Absent prop ⇒ query string unchanged ⇒ same request
         // shape as before Task 17.
+        // Task 20: `subject` scopes the server's ability-band hint read and
+        // `goals` carries the student's `Goal:`-prefixed social-memory notes
+        // (pipe-separated, at most 2 — the server strips the prefix). Both are
+        // appended ONLY under TUTOR_RECAP_OFFER so a flag-off boot sends the
+        // byte-identical URL every pre-Task-20 caller sent.
+        // `subject` and `socialMemory` are read here but deliberately kept OUT
+        // of this effect's `[studentId, embedToken]` dep array: the boot fetch
+        // is mount-once (the refs it fills are read once at opener-seed time),
+        // and adding a prop that can change mid-session would refetch the
+        // profile on every change.
+        const goalNotes = TUTOR_RECAP_OFFER
+          ? (socialMemory ?? [])
+            .map((t) => (t.note ?? '').replace(/\|/g, ' ').trim())
+            .filter((n) => /^goal:/i.test(n))
+            .slice(0, 2)
+          : [];
+        const extrasQuery = TUTOR_RECAP_OFFER
+          ? `${subject ? `&subject=${encodeURIComponent(subject)}` : ''}${goalNotes.length ? `&goals=${encodeURIComponent(goalNotes.join('|'))}` : ''}`
+          : '';
         const url = lessonPlanId
-          ? `/api/tutor/student-profile/${encodeURIComponent(studentId)}?lessonPlanId=${encodeURIComponent(lessonPlanId)}`
+          ? `/api/tutor/student-profile/${encodeURIComponent(studentId)}?lessonPlanId=${encodeURIComponent(lessonPlanId)}${extrasQuery}`
           : `/api/tutor/student-profile/${encodeURIComponent(studentId)}`;
         const res = await fetch(
           url,
@@ -8265,10 +9313,30 @@ export function VoiceTutorRealtime({
         // `data.learnerContext` is `undefined` when the field is absent
         // (flag off / no param), so `?? null` keeps the ref's default.
         learnerContextBlockRef.current = data.learnerContext ?? null;
+        // Task 20 — structured extras for the opener. `learnerExtras` is
+        // absent unless the server flag is on AND lessonPlanId was sent, so
+        // `?? null` keeps the ref's default. Gated on TUTOR_RECAP_OFFER: flag
+        // off ⇒ nothing is consumed and homeworkAckIdsRef stays empty, so the
+        // session-commit body carries no `homeworkAcknowledged` key.
+        // Fix round 1: this site does NOT fill homeworkAckIdsRef. Writing an
+        // acknowledgement is a one-way DB effect (`acknowledgedAt` on the
+        // assignment), and boot cannot know whether the tutor will ever SAY
+        // anything about the homework — the journey may be ineligible for a
+        // continuity clause, or there may be no opener clause to prepend it
+        // to. The fill moved to the opener-seed site, where the clause that
+        // will actually be spoken is known. The debug event stays here as
+        // pure telemetry (hence the `seen:` prefix — it records what the boot
+        // read, never an acknowledgement).
+        if (TUTOR_RECAP_OFFER) {
+          learnerExtrasRef.current = data.learnerExtras ?? null;
+          if (learnerExtrasRef.current?.homework?.length) {
+            onDebugEvent?.('homework_checked', `seen:${learnerExtrasRef.current.homework.map((h) => `${h.assignmentId}:${h.overall}`).join(',')}`);
+          }
+        }
         if (learnerContextBlockRef.current !== null) {
           transientContextBlockRef.current =
-            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote)
-              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote })
+            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote || locatorForPrompt || goalNote)
+              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote, practiceLocator: locatorForPrompt, goalNote })
               : null;
         }
         if (TUTOR_PEDAGOGY_OPENER) {
@@ -8386,6 +9454,23 @@ export function VoiceTutorRealtime({
           });
         } catch { /* a bad command shouldn't abort the whole seed */ }
       });
+      // A6 (live 2026-09-06 addendum, portal-3a024b75): after a resume the
+      // brain scrolled to a card it remembered while the catalog it queries
+      // offered only one feature — nothing recorded what the seed above
+      // actually rebuilt. Log-only investigation hook. The catalog mirror
+      // above (the forEach's catalogRef.current.append calls) is synchronous,
+      // so getItems()/getPages() already reflect the full seed here — no
+      // await needed.
+      {
+        const items = catalogRef.current.getItems();
+        const pages = catalogRef.current.getPages();
+        const last = items[items.length - 1]?.itemId ?? '(none)';
+        onDebugEvent?.('resume_board_seeded', `persisted=${resumeState.whiteboardCommands.length} catalog=${items.length} pages=${pages.length} last=${last}`);
+        const persistedRenders = resumeState.whiteboardCommands.filter(isBoardRenderCommand).length;
+        if (items.length < persistedRenders) {
+          onDebugEvent?.('resume_board_seed_mismatch', `persisted_renders=${persistedRenders} catalog=${items.length}`);
+        }
+      }
       // R36 (live 2026-07-30, SAT session portal-fdee5b34): rehydrate the
       // ACTIVE problem from the restored board. currentProblemRef was only
       // ever set on live tool dispatch, so after a resume the brain's
@@ -8410,6 +9495,7 @@ export function VoiceTutorRealtime({
             source: 'card',
             hasChoices: Array.isArray(cmd.choices) && cmd.choices.length > 0,
             choiceLetters: extractChoiceLetters(cmd.choices),
+            choiceOptions: extractChoiceOptions(cmd.choices),
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
@@ -8825,6 +9911,10 @@ export function VoiceTutorRealtime({
     // may set this DURING this turn's retry loop; must not carry a signal
     // stashed by a PRIOR turn (or a prior turn's attempt) into this one.
     objectiveCorrectThisTurnRef.current = null;
+    // Task 7: fresh per-turn judge-flagged-denial withhold flag — a kill or
+    // advisory signal stashed by a PRIOR turn must not withhold THIS turn's
+    // credit.
+    judgeFlaggedDenialThisTurnRef.current = false;
     // R47 Task 2: fresh per-turn "completed THIS turn" list — see
     // segmentsCompletedThisTurnRef's declaration. A mark_segment_complete
     // from a PRIOR turn must not count as "predates this turn" evidence
@@ -8898,6 +9988,8 @@ export function VoiceTutorRealtime({
     // per-call consts (not refs) — callBrainOnce's internal kill/retry
     // loop re-attempts the SAME logical turn, so one snapshot at the top
     // correctly stays fixed across retries.
+    // Set when this turn carries a judge correction note (arithmetic-recheck drop below).
+    let correctionNoteThisTurn = false;
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     // Number of sentences actually dispatched to TTS this turn. Tracks
@@ -9100,6 +10192,9 @@ export function VoiceTutorRealtime({
       // handleResponseDone reads to decide whether to update streak.
       if (!silent && !isBracketed) {
         pacingTurnCounterRef.current += 1;
+        // Live check 6: a real student turn answers (or moves past) the open question.
+        openQuestionAtTurnStartRef.current = !!openTutorQuestionRef.current;
+        openTutorQuestionRef.current = null;
         const segIdNow = currentSegmentIdRef.current;
         // Clear stale cue from prior turn before evaluating this one
         studentCueRef.current = null;
@@ -9118,6 +10213,24 @@ export function VoiceTutorRealtime({
         // brain affirmation in response false-increments the streak.
         // Observed 2026-05-06 lines session.
         const isHelpRequest = /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
+        // Struggle ledger (spec §A): THIS is the stuck signal, not the
+        // boredom-cue site — boredomCueRegex ∩ STUCK_CUE_RE is only "skip",
+        // and the I'm-stuck BUTTON's prose is suppressed there entirely by
+        // hasButtonMarker. Fire on the help-request classifier and, belt-and-
+        // braces, on the button marker itself (read off originalTranscript
+        // because FIX B may have rewritten the visible transcript).
+        const stuckButtonClick = /\[I'?m-stuck-button-clicked/i.test(originalTranscript);
+        // Live 2026-09-05 (portal-51b667f1): four false detections from "I
+        // don't know" as filler/hedge inside long CORRECT answers. Two gates:
+        // the ledger's stricter cue predicate, and a deferral to turn ok so a
+        // turn the verdict layer credits as correct feeds no stuck cue at all.
+        // The button is explicit and feeds immediately.
+        if (stuckButtonClick) feedLedger('stuck_cue');
+        else if (isHelpRequest && isLedgerStuckCue(lower)) {
+          pendingStuckCueRef.current = { segId: segIdNow || undefined };
+        } else if (isHelpRequest) {
+          onDebugEvent?.('stuck_cue_ignored', `filler-or-hedge "${lower.slice(0, 60)}"`);
+        }
         // Round-22 (2026-07-17, session portal-cbd93b08): a single-letter
         // MCQ answer ("d") failed every verification signal — no digits, no
         // math language, 1 word, length < 3 — so two correct MCQ answers
@@ -9186,6 +10299,10 @@ export function VoiceTutorRealtime({
         }
         if (isVerification) {
           segmentTurnCountRef.current = { segId: segIdNow, count: segmentTurnCountRef.current.count + 1 };
+          // Struggle ledger (spec §A): crossing the SLOW_SEGMENT threshold
+          // (the same 6 the objective-signal stamp uses) is half a struggle
+          // point — fired ONCE, on the crossing turn, not every turn after.
+          if (segmentTurnCountRef.current.count === 6) feedLedger('slow_segment', undefined, segIdNow || undefined);
         }
         // Boredom-cue regex — verbatim match logged for telemetry. Cue
         // is consumed by the next-turn student_state block formatter.
@@ -9223,6 +10340,11 @@ export function VoiceTutorRealtime({
             stepPaceBias(+1, 'cue', cueMatch[0]);
           }
         }
+        // Struggle ledger (spec §A): verbalized confusion is a struggle
+        // signal in its own right — it is NOT in the boredom-cue set, so
+        // it is read off the transcript directly (generic shapes only, no
+        // subject terms — see CONFUSION_RE).
+        if (CONFUSION_RE.test(lower)) feedLedger('confusion');
       }
       // Mirror current segment id into the catalog so subsequent
       // appends are stamped with it AND getSnapshot's filter scopes
@@ -9323,6 +10445,24 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
       }
+      // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
+      if (pendingRuntimeNoteRef.current) {
+        // Live check 7: deliver only on a turn where the student is NOT mid-answer —
+        // no tutor question was open, or the utterance is a bare ack / move-on.
+        // Held at most 3 turns, then delivered regardless (the note itself now says
+        // "finish the problem in play first").
+        const ackOrMoveOn = /^(?:ok(?:ay)?|yes|yeah|yep|sure|ready|next|go|continue|done|move on|let'?s (?:go|move on|continue)|got it|alright)[!.\s]*$/i.test(transcript.trim());
+        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || runtimeNoteHeldTurnsRef.current >= 3;
+        if (deliver) {
+          runTranscript = `${pendingRuntimeNoteRef.current}\n\n${runTranscript}`;
+          pendingRuntimeNoteRef.current = null;
+          runtimeNoteHeldTurnsRef.current = 0;
+          onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
+        } else {
+          runtimeNoteHeldTurnsRef.current += 1;
+          onDebugEvent?.('segment_overlong_note_held', `student is answering an open question (${runtimeNoteHeldTurnsRef.current}/3)`);
+        }
+      }
       // Judge correction note (2026-08-07) — same convention, own concern.
       // R42 (2026-08-10, session portal-cb2addf5): synthetic/nudge
       // dispatches (bracketed transcripts — idle-nudge, cover turns,
@@ -9333,6 +10473,7 @@ export function VoiceTutorRealtime({
       if (pendingJudgeCorrectionNoteRef.current && shouldConsumeJudgeCorrectionNote(transcript)) {
         runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
         pendingJudgeCorrectionNoteRef.current = null;
+        correctionNoteThisTurn = true;
         // R50 T3: the note is spent — cancel its deadline so the timeout
         // path cannot dispatch a second, now-pointless correction turn.
         if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
@@ -9555,6 +10696,127 @@ export function VoiceTutorRealtime({
       }
       const studentMarksForTurn = TUTOR_STUDENT_MARKS ? drainStudentMarks() : undefined;
 
+      // ── Recap: classify the student's reply to a standing offer ──────
+      // (spec §B.4). Runs exactly once per turn, and only for a REAL
+      // student utterance — a bracket-marked marker ("[the student
+      // clicked …]") is orchestrator narration, not consent. Deliberately
+      // OUTSIDE the validator-retry loop below: classification consumes
+      // the pending offer, so running it per attempt would either
+      // re-classify or (once consumed) drop the verdict from the retry
+      // that actually reaches the brain. Flag off ⇒ no ref is read and
+      // `recapReply` stays undefined ⇒ the field is absent from the body.
+      let recapReply: 'accept' | 'decline' | 'unclear' | undefined;
+      if (TUTOR_RECAP_OFFER) {
+        const pendingEntry = [...recapRef.current.entries()].find(([, e]) => e.outcome === 'pending');
+        if (pendingEntry && transcript && !/^\s*\[/.test(transcript)) {
+          const [loId, entry] = pendingEntry;
+          const verdict = classifyRecapReply(transcript);
+          entry.outcome = verdict === 'accept' ? 'accepted' : verdict === 'decline' ? 'declined' : 'unclear';
+          console.log(`[VoiceTutorRealtime] recap offer reply lo="${loId}" verdict=${verdict}`);
+          onDebugEvent?.('recap_offer_reply', `lo="${loId}" ${verdict}`);
+          const accum = sessionAccumRef.current;
+          const g = accum.gaps.find((x) => x.kind === 'lo' && x.loId === loId);
+          const rec = { offered: 1, outcome: verdict === 'accept' ? 'accepted' as const : verdict === 'decline' ? 'declined' as const : undefined };
+          if (g) g.recap = rec;
+          else if (verdict !== 'unclear') accum.gaps.push({ kind: 'lo', loId, observation: 'Recap offered this session.', studentQuotes: [], signals: [], recap: rec, bookkeepingOnly: true });
+          // Accept ⇒ stage the GO block for this turn; decline/unclear ⇒
+          // the brain is told the verdict so it acknowledges and moves on.
+          if (verdict === 'accept') pendingRecapGoRef.current = { loId, loTitle: entry.loTitle };
+          else recapReply = verdict;
+          scheduleProfileFlush();
+        }
+      }
+
+      // ── Recap: consume the one-turn carriers + run the detour clock ──
+      // ONCE per logical turn, like the classification above — the
+      // validator-retry loop below rebuilds the brain body per attempt, so
+      // consuming the refs in there would drop the offer/go block from the
+      // retry that actually reaches the brain and bump the detour clock
+      // once per attempt. These three locals are read (never written) by
+      // the `input` literal, so every attempt of this turn carries exactly
+      // the same recap blocks.
+      let recapOfferForTurn: { loTitle: string; soft?: true } | undefined;
+      let recapGoForTurn: { loTitle: string } | undefined;
+      let recapWrapForTurn: true | undefined;
+      if (TUTOR_RECAP_OFFER) {
+        // GO / detour clock FIRST: a go accepted this turn starts the
+        // recap, and the armed-offer re-check below must see that.
+        if (pendingRecapGoRef.current) {
+          // Consent given: the recap runs in free mode, and ledger events
+          // with no segment LO attribute to the recap's LO until it returns.
+          recapGoForTurn = { loTitle: pendingRecapGoRef.current.loTitle };
+          activeRecapRef.current = { ...pendingRecapGoRef.current, startedAtMs: Date.now(), turns: 0, wrapNudged: false, wrapNudgedAtTurn: 0, overrunLogged: false, goSeen: false };
+          activeLedgerLoRef.current = pendingRecapGoRef.current.loId;
+          pendingRecapGoRef.current = null;
+        } else if (activeRecapRef.current) {
+          const a = activeRecapRef.current;
+          a.turns += 1;
+          const over = a.turns >= RECAP_WRAP_TURNS || Date.now() - a.startedAtMs >= RECAP_WRAP_MS;
+          if (over && !a.wrapNudged) {
+            a.wrapNudged = true;
+            a.wrapNudgedAtTurn = a.turns;
+            recapWrapForTurn = true;
+            onDebugEvent?.('recap_wrap_nudged', `lo="${a.loId}" turns=${a.turns}`);
+          } else if (a.wrapNudged && !a.overrunLogged && a.turns >= a.wrapNudgedAtTurn + RECAP_OVERRUN_TURNS) {
+            // Telemetry only — the recap has outstayed its nudge. Counted
+            // from the nudge itself, not from RECAP_WRAP_TURNS, so a recap
+            // nudged by the TIME bound at turn 2 is judged the same way.
+            a.overrunLogged = true;
+            onDebugEvent?.('recap_overrun', `lo="${a.loId}" turns=${a.turns}`);
+          }
+        }
+        const armed = pendingRecapOfferRef.current;
+        if (armed) {
+          pendingRecapOfferRef.current = null;
+          // Re-check at consume time: arming and sending are different
+          // moments, and a recap may have started (or another offer gone
+          // pending) in between. A stale armed offer is DROPPED, never
+          // queued — a question asked about a struggle two topics ago is
+          // worse than no question.
+          const anyPending = [...recapRef.current.values()].some((e) => e.outcome === 'pending');
+          if (activeRecapRef.current || anyPending || recapRef.current.has(armed.loId)) {
+            onDebugEvent?.('recap_offer_armed', `lo="${armed.loId}" dropped=${activeRecapRef.current ? 'recap-active' : anyPending ? 'offer-pending' : 'already-offered'}`);
+          } else {
+            // The offer is only RECORDED once it actually rides a turn —
+            // an armed-but-never-sent offer leaves no pending entry.
+            recapRef.current.set(armed.loId, { source: armed.source, offeredAtMs: Date.now(), outcome: 'pending', loTitle: armed.loTitle });
+            recapOfferForTurn = { loTitle: armed.loTitle, ...(armed.soft ? { soft: true as const } : {}) };
+            recapOfferSentThisTurnRef.current = { loId: armed.loId, loTitle: armed.loTitle, source: armed.source, soft: armed.soft };
+          }
+        }
+      }
+
+      // ── <session_struggles>: WRAP-GATED (final review 2026-09-07) ────
+      // The ledger block instructs the brain to call close_session_notes with
+      // these ids. Attached on EVERY turn (the shipped behaviour) it is a
+      // wrap-up instruction sitting in the middle of a lesson, tens of turns
+      // before anything is wrapping — the brain can act on it early and end a
+      // session that was not ending. It now rides only a turn that carries a
+      // wrap signal. Computed ONCE per turn, like the recap carriers above, so
+      // every validator-retry attempt of this turn sends the same block.
+      const wrapByRecap = !!recapWrapForTurn;
+      const wrapBySegment = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.kind === 'recap';
+      const wrapElapsedMin = Math.max(0, (Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current)) / 60000);
+      const wrapByTime = wrapElapsedMin >= sessionMaxMinutes * 0.75;
+      const wrapByUtterance = isWrapUtterance(transcript);
+      const wrapSignal = wrapByRecap || wrapBySegment || wrapByTime || wrapByUtterance;
+      const ledgerFlagsForTurn = TUTOR_CLOSE_NOTES && wrapSignal
+        ? [...ledgerRef.current.entries()]
+            .filter(([k, v]) => !k.startsWith('prereq:') && v.detections >= 1 && !v.recovered)
+            .sort((a, b) => b[1].detections - a[1].detections)
+            .slice(0, 3)
+            .map(([loId, v]) => ({ loId, title: loTitleFor(loId), detections: v.detections }))
+        : undefined;
+      if (ledgerFlagsForTurn?.length) {
+        const wrapReason = [
+          wrapByUtterance ? 'utterance' : '',
+          wrapBySegment ? 'recap-segment' : '',
+          wrapByRecap ? 'recap-wrap' : '',
+          wrapByTime ? `time>=75% (${wrapElapsedMin.toFixed(1)}/${sessionMaxMinutes}m)` : '',
+        ].filter(Boolean).join('+');
+        onDebugEvent?.('session_struggles_attached', `reason=${wrapReason} los=[${ledgerFlagsForTurn.map((f) => `${f.loId}:${f.detections}`).join(',')}]`);
+      }
+
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
         // CORRECTED tool call (e.g. show_collision with proper momentum)
@@ -9660,8 +10922,12 @@ export function VoiceTutorRealtime({
             // AND demo embeds).
             if (TUTOR_FIRST_SESSION_TIP && firstSessionTipPendingRef.current) {
               firstSessionTipPendingRef.current = false;
-              openingDirective +=
-                ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to arrive, and that a quiet spot helps you hear them clearly. Once, briefly, then never mention it again.';
+              // Text mode has no mic and no "quiet spot" — that's voice
+              // advice. Same one-shot latch/debug event, typed-reply wording.
+              const tipText = sessionMode === 'text'
+                ? ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to appear. Do not mention talking, speaking, listening or a microphone.'
+                : ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to arrive, and that a quiet spot helps you hear them clearly. Once, briefly, then never mention it again.';
+              openingDirective += tipText;
               try {
                 window.localStorage.setItem('evelyn-first-session-tip-done', 'yes');
               } catch { /* storage unavailable — tip may repeat next session */ }
@@ -9730,14 +10996,14 @@ export function VoiceTutorRealtime({
         // Fresh attempt — clear the aborted flag; only an AbortError this
         // attempt re-sets it (see the RESTORE-after-noise guard).
         brainTurnAbortedRef.current = false;
-        const brainFetchInit: RequestInit = {
-          method: 'POST',
-          // Demo gate (2026-08-29): thread the partner embed token so gated
-          // brain turns pass for cross-origin partner embeds; retail/demo
-          // surfaces pass via the demo-grant cookie instead.
-          headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
-          signal: brainAbort.signal,
-          body: JSON.stringify({
+        // Holistic-pedagogy round (spec §B): the per-turn brain body is
+        // built as a named object rather than inline in JSON.stringify —
+        // the recap blocks it carries are decided once per turn above the
+        // retry loop, and naming the body keeps that seam legible. Every
+        // field is otherwise unchanged — undefined fields are dropped by
+        // JSON.stringify, so with TUTOR_RECAP_OFFER off the request is
+        // byte-identical to pre-round.
+        const input = {
             systemPrompt: claudeSystemPromptRef.current,
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
@@ -9800,7 +11066,9 @@ export function VoiceTutorRealtime({
             // When a future mid-session subject-change feature ships,
             // STOP sending this on/after the change (⇒ sticky fail open)
             // — see project_lever_a_tools_filter.md.
-            subject,
+            // Open-scope demo (2026-09-10): the subject changes mid-session,
+            // so withhold it ⇒ resolveToolSubjects(undefined) ⇒ fail open.
+            subject: openScope ? undefined : subject,
             // Adaptive-pacing v1 dedup state. Empty arrays for sessions
             // that haven't shown any generated problems yet — fine,
             // pipeline treats absent + empty identically.
@@ -9899,7 +11167,34 @@ export function VoiceTutorRealtime({
                   },
                 }
               : undefined,
-          }),
+            // ── Recap blocks (spec §B) ──────────────────────────────────
+            // All four decided ONCE per turn above the retry loop, so a
+            // killed attempt's replacement carries the identical blocks.
+            // Flag off ⇒ all four are undefined ⇒ JSON.stringify drops
+            // them ⇒ the request is byte-identical to pre-round.
+            recapOffer: recapOfferForTurn,
+            // Task 13 (2026-09-07): what the deterministic ledger holds for
+            // this session — the brain's close_session_notes call was
+            // grounded only in its own recollection ("all locked in" while
+            // the ledger had two detections, live 2026-09-06). Same
+            // TUTOR_CLOSE_NOTES gate as the rest of the close-notes path, so
+            // flag-off is byte-identical. Recovered LOs are excluded.
+            // FINAL REVIEW 2026-09-07: wrap-gated — decided once per turn
+            // above the retry loop (`ledgerFlagsForTurn`). Undefined on an
+            // ordinary mid-lesson turn ⇒ the field is absent from the body.
+            ledgerFlags: ledgerFlagsForTurn,
+            recapGo: recapGoForTurn,
+            recapWrap: recapWrapForTurn,
+            recapReply,
+        };
+        const brainFetchInit: RequestInit = {
+          method: 'POST',
+          // Demo gate (2026-08-29): thread the partner embed token so gated
+          // brain turns pass for cross-origin partner embeds; retail/demo
+          // surfaces pass via the demo-grant cookie instead.
+          headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+          signal: brainAbort.signal,
+          body: JSON.stringify(input),
         };
         let res = await fetch('/api/tutor/brain/stream', brainFetchInit);
         pacingTelemetryRef.current = [];
@@ -9937,6 +11232,12 @@ export function VoiceTutorRealtime({
           // fallback's modality split (typed ⇒ text bubble, voice ⇒ spoken).
           onDebugEvent?.('brain_http_error', `status=${res.status}`);
           if (currentTurnTypedRef.current) {
+            // Text mode: the composer gates on this — a typed turn that
+            // couldn't reach the brain over HTTP means the route is down,
+            // not that the student needs to try speaking again. Guarded on
+            // sessionMode so a voice session's in-session text fallback
+            // (also a typed turn) never fires an extra state update.
+            if (sessionMode === 'text') setBrainReachable(false);
             const msg = "I'm having trouble reaching my brain right now — give me a moment and try again.";
             transcriptRef.current = [
               ...transcriptRef.current,
@@ -9967,6 +11268,8 @@ export function VoiceTutorRealtime({
           objectiveCorrectThisTurnRef.current = null;
           return;
         }
+        // The fetch succeeded — the brain route is reachable again.
+        if (sessionMode === 'text') setBrainReachable(true);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -9974,6 +11277,17 @@ export function VoiceTutorRealtime({
         const toolNamesThisAttempt: string[] = [];
         const toolArgsThisAttempt: Array<Record<string, unknown>> = [];
         const rejectionsThisAttempt: Array<{ action: string; reason: string }> = [];
+        // Live check 6 nets (per attempt): which authored segment cards
+        // rendered, whether a PROBLEM card came from show_segment_card (the
+        // generate_problem-unrendered guard downgrades to a drop when it did),
+        // the text of every render (for spoken-number coverage), the attempt
+        // start (so only THIS turn's advance can trigger the auto-card), and
+        // the one-shot latch for the synthetic tail.
+        const segmentCardsRenderedThisAttempt: string[] = [];
+        let segmentCardRenderedThisAttempt = false;
+        const renderedTextsThisAttempt: string[] = [];
+        const attemptStartMs = Date.now();
+        let syntheticTailDrained = false;
         // Stamped ids of every render this attempt actually dispatched.
         // If the attempt is killed, these are rolled back so no orphaned
         // figure survives the dropped narration (see rollbackKilledRenders).
@@ -10535,14 +11849,80 @@ export function VoiceTutorRealtime({
           await performKill();
         };
 
+        // Live check 6 (2026-09-07, portal-63ee9f2c): synthetic tail. When the
+        // brain's stream is fully drained and the attempt is alive, the runtime
+        // may append tool calls of its own, processed by the SAME branch as
+        // brain tool calls (validators, catalog, render-sync, telemetry):
+        //  (a) auto card on advance — the brain advanced into a segment with an
+        //      authored card (try_yourself / misconception_check /
+        //      worked_example / extension) and rendered nothing for it, so the
+        //      question lived only in speech (the misconception check at
+        //      07:06:27Z painted nothing; the deferred new page never fired);
+        //  (b) spoken problem boarded — the turn posed a numeric problem in
+        //      speech and its numbers are not on the board (three word
+        //      problems over numberless templates, 06:47–06:55Z).
+        // Never a kill: the audio has played; a late card beats no card.
+        const buildSyntheticTail = (): Array<{ type: string; [k: string]: unknown }> => {
+          const out: Array<{ type: string; [k: string]: unknown }> = [];
+          if (attemptKilled) return out;
+          try {
+            const plan = lessonPlanRef.current;
+            const adv = lastAdvanceRef.current;
+            const normWs = (t: string) => t.replace(/\s+/g, ' ').trim();
+            if (TUTOR_AUTO_SEGMENT_CARD && plan && adv && adv.atMs >= attemptStartMs
+                && !segmentCardsRenderedThisAttempt.includes(adv.segId)
+                && !completedSegmentIdsRef.current.has(adv.segId)) {
+              const seg = plan.segments.find((sg) => sg.id === adv.segId);
+              const truth = seg ? getSegmentTruth(seg) : null;
+              const alreadyRendered = !!truth?.problemText && renderedTextsThisAttempt.some((t) => normWs(t) === normWs(truth.problemText ?? ''));
+              if (truth?.problemText && !alreadyRendered) {
+                out.push({ type: 'tool-call', name: 'show_segment_card', args: { segmentId: adv.segId }, synthetic: 'auto_card_on_advance' });
+                onDebugEvent?.('auto_card_on_advance', `${adv.segId} (${truth.kind}) — advanced without rendering the authored card`);
+              }
+            }
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0) {
+              const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
+              const hit = detectSpokenProblem(attemptSentences, boardTexts);
+              if (hit) {
+                out.push({ type: 'tool-call', name: 'show_problem', args: { statement: hit.statement, title: 'Question', format: 'free-response' }, synthetic: 'spoken_problem_boarded' });
+                onDebugEvent?.('spoken_problem_boarded', `${hit.numbers.length} number(s), ${hit.covered.length} on board — "${hit.statement.slice(0, 80)}"`);
+              }
+            }
+            // (c) Live check 7: a spoken equation the tutor CLAIMS is on the board
+            // ("the full equation now reads $5x - 15 = 2x + 9$") but is not.
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0) {
+              const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
+              const claim = detectSpokenEquationClaim(attemptSentences, boardTexts);
+              if (claim) {
+                // Label from the equation itself: a fixed label ("Equation") would
+                // collide with itself on the next claim and be rejected.
+                const plain = claim.latex.replace(/\\[a-zA-Z]+/g, ' ').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+                out.push({ type: 'tool-call', name: 'show_equation', args: { latex: claim.latex, label: `Now: ${plain}` }, synthetic: 'spoken_equation_boarded' });
+                onDebugEvent?.('spoken_equation_boarded', `"${claim.latex.slice(0, 60)}" — claimed on the board, was not`);
+              }
+            }
+          } catch (err) {
+            console.warn('[brain-orchestrator] synthetic tail failed:', err);
+          }
+          return out;
+        };
         try {
           while (true) {
             await tryForceKill();
             const { done, value } = await reader.read();
             // R49: any frame — even a keepalive — proves the stream is alive.
             stallState.lastFrameAt = Date.now();
-            if (done) break;
-            buf += decoder.decode(value, { stream: true });
+            if (done) {
+              if (syntheticTailDrained) break;
+              syntheticTailDrained = true;
+              const tail = buildSyntheticTail();
+              if (tail.length === 0) break;
+              // Re-enter the frame parser with runtime-authored frames; the
+              // next read() returns done again and the latch breaks the loop.
+              buf += tail.map((ev) => `data: ${JSON.stringify(ev)}\n\n`).join('');
+            } else {
+              buf += decoder.decode(value, { stream: true });
+            }
             let idx;
             while ((idx = buf.indexOf('\n\n')) >= 0) {
               const block = buf.slice(0, idx);
@@ -10582,6 +11962,15 @@ export function VoiceTutorRealtime({
                   // greeting-only sentence got voiced. The student then
                   // replied "hello" thinking the session had restarted.
                   const isFirstSentenceOfTurn = totalSentenceCount === 0;
+                  // Correction-note re-check spoken as bare arithmetic (live
+                  // 2026-09-05: "20% of 120 is 24; 20% of 15 is 3." opened the
+                  // turn). Only on a note-carrying turn's FIRST sentence, so
+                  // ordinary number talk is never touched.
+                  if (isFirstSentenceOfTurn && correctionNoteThisTurn && isBareArithmeticRecheck(sentence)) {
+                    console.warn('[brain-orchestrator] dropped bare arithmetic re-check:', JSON.stringify(sentence.slice(0, 100)));
+                    onDebugEvent?.('correction_recheck_dropped', sentence.slice(0, 80));
+                    continue;
+                  }
                   if (isFirstSentenceOfTurn && hasPriorTutorTurn) {
                     // \b after the greeting word so "Heyo" / "Hilarious" /
                     // "Howdoyou" don't get falsely stripped as "Hey" / "Hi" /
@@ -10683,11 +12072,12 @@ export function VoiceTutorRealtime({
                   // the FIRST attempt of a turn; retries are already
                   // corrections, not confused walkbacks.
                   if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionHit) {
-                    const reason =
-                      `You started self-correcting mid-turn ("${updatedSentence.slice(0, 120)}"). ` +
-                      `That's confusing for the student to hear. Re-emit your response cleanly: ` +
-                      `recompute the answer first, then speak ONLY the correct version. ` +
-                      `Do not narrate your own confusion or backtrack out loud.`;
+                    const reason = buildSelfCorrectionRetryReason({
+                      sentence: updatedSentence,
+                      studentUtterance: transcript ?? '',
+                      problemStatement: currentProblemRef.current?.statement,
+                      lastBoardEquation: turnEquationsRef.current[turnEquationsRef.current.length - 1],
+                    });
                     rejectionsThisAttempt.push({ action: 'mid_turn_self_correction', reason });
                     judgeRetriesUsed++;
                     await performKill();
@@ -10706,7 +12096,9 @@ export function VoiceTutorRealtime({
                   // wrong; a retry ACKNOWLEDGING the error states TRUE
                   // arithmetic and passes), capped by judgeRetriesUsed.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
-                    const arith = checkArithmeticClaims(updatedSentence);
+                    const arith = checkArithmeticClaims(updatedSentence, {
+                      normalizeSpokenWords: TUTOR_SPOKEN_NUMBER_GUARDS,
+                    });
                     if (arith.verdict !== 'ok') {
                       const reason =
                         arith.verdict === 'false_denial'
@@ -10769,6 +12161,8 @@ export function VoiceTutorRealtime({
                       sentence: updatedSentence,
                       denied: deniedAnswersRef.current,
                       currentTurn: studentTurnCounterRef.current,
+                      normalizeSpokenWords: TUTOR_SPOKEN_NUMBER_GUARDS,
+                      problemKey: problemKeyForDenial(currentProblemRef.current?.statement),
                     });
                     if (rev.verdict === 'reversal') {
                       deniedAnswersRef.current = deniedAnswersRef.current.filter(
@@ -10845,17 +12239,35 @@ export function VoiceTutorRealtime({
                   // no false-positive class — so it may kill.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const praiseContradictionTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
-                    const praiseContradiction = detectPraiseContradiction(praiseContradictionTextSoFar);
+                    // Spec §D.3: the student's utterance scopes the widened
+                    // bare-praise branch to the SAME claim (a denial naming a
+                    // DIFFERENT value must stay quiet). With the flag OFF the
+                    // widening is switched off at the detector — this is a
+                    // KILL path, so flag-off must be byte-identical to the
+                    // pre-widening detector, not merely unscoped.
+                    const praiseContradiction = detectPraiseContradiction(
+                      praiseContradictionTextSoFar,
+                      TUTOR_FALSE_PRAISE_OPENER
+                        ? { studentUtterance: transcript }
+                        : { bareDenialWidening: false },
+                    );
                     if (praiseContradiction) {
-                      const { affirmed } = praiseContradiction;
-                      const reason =
-                        `Your opener affirmed "${affirmed}" but your own explanation says "not ${affirmed}". ` +
-                        `Re-deliver the turn with the verdict and explanation agreeing — open with the TRUE verdict.`;
+                      const { affirmed, branch } = praiseContradiction;
+                      // The bare-denial branch affirmed PROSE, not a value —
+                      // the value-shaped reason ('you affirmed "X" … says "not
+                      // X"') would quote a clause the turn never negated, so
+                      // the brain would be re-delivering against a nonsense
+                      // instruction. Describe the actual shape instead.
+                      const reason = branch === 'bare-denial'
+                        ? `Your opener praised the student's answer, then a later sentence denied it in the same turn. `
+                          + `Re-emit: open with the TRUE verdict for what they said, then guide.`
+                        : `Your opener affirmed "${affirmed}" but your own explanation says "not ${affirmed}". `
+                          + `Re-deliver the turn with the verdict and explanation agreeing — open with the TRUE verdict.`;
                       rejectionsThisAttempt.push({ action: 'praise_contradiction', reason });
                       judgeRetriesUsed++;
                       await performKill();
-                      console.warn(`[brain-orchestrator] deterministic praise-contradiction check: affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
-                      onDebugEvent?.('praise_contradiction_kill', `affirmed=${affirmed}`);
+                      console.warn(`[brain-orchestrator] deterministic praise-contradiction check (${branch}): affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
+                      onDebugEvent?.('praise_contradiction_kill', `branch=${branch} affirmed=${affirmed}`);
                       continue;
                     }
                   }
@@ -10868,11 +12280,20 @@ export function VoiceTutorRealtime({
                   // so praised intermediate steps stay safe. Per-sentence,
                   // like praise-contradiction above.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && TUTOR_FALSE_ASSERTION_KILL) {
+                    // Live MCQ choices, same construction as the praise-echo
+                    // and inverse-verdict sites below. Without them, an MCQ
+                    // card whose verified answer is the letter "C" made every
+                    // correct numeric assertion disagree — portal-704e3e01
+                    // @1113.7s killed "Exactly. $x = 9$ — that's choice *C*."
+                    const faChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                      : undefined;
                     const fa = checkFalseFinalAssertion({
                       sentence: updatedSentence,
                       problemStatement: currentProblemRef.current?.statement,
-                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+                      verifiedExpectedAnswer: liveCardKey(currentProblemRef.current),
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
+                      choices: faChoices,
                     });
                     if (fa.verdict === 'false_assertion') {
                       // Issue A: last turn's board-anchor note (planted because that
@@ -10885,15 +12306,182 @@ export function VoiceTutorRealtime({
                         console.warn(`[brain-orchestrator] false-assertion DOWNGRADED (stale anchor — unboarded question last turn): ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected}`);
                         onDebugEvent?.('false_assertion_downgraded_stale_anchor', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)}`);
                       } else {
+                        // Verdict preservation (portal-704e3e01): if this
+                        // attempt had already graded the student, tell the
+                        // retry it must grade again. Without this the retry
+                        // answers the rejection by saying nothing about the
+                        // student's answer at all and opening on new content.
+                        const killedTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                        const carriedVerdict = TUTOR_VERDICT_REPLANT_ON_KILL && hasVerdictOpener(killedTextSoFar);
                         const reason =
                           `You asserted ${fa.answerVar} = ${fa.asserted}, but the verified answer for the active problem is ${fa.expected}. ` +
-                          `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`;
+                          `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`
+                          + (carriedVerdict ? VERDICT_REPLANT_CLAUSE : '');
                         rejectionsThisAttempt.push({ action: 'false_final_assertion', reason });
                         judgeRetriesUsed++;
                         await performKill();
                         console.warn(`[brain-orchestrator] false-assertion check: asserted ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected} — kill + retry`);
                         onDebugEvent?.('false_assertion_kill', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)} (${fa.matchReason})`);
+                        if (carriedVerdict) onDebugEvent?.('verdict_replant_requested', `${fa.answerVar}=${fa.asserted}`);
                         continue;
+                      }
+                    }
+                  }
+                  // Grading-truth derivations, HOISTED here from the
+                  // inverse-verdict block below (spec §D.4): the false-praise
+                  // guard immediately after needs the same three, and there
+                  // must be exactly ONE copy of the 2-minute freshness logic.
+                  // Pure ref reads, no side effects, and no `await` runs
+                  // between here and the inverse-verdict site (every kill
+                  // branch in between `continue`s), so the values the
+                  // inverse-verdict check sees are unchanged.
+                  const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                    ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                    : undefined;
+                  // 2026-08-17 (portal-e3af265a): with NO active problem
+                  // card, a recent computable board expression's value is a
+                  // deterministically-verified expected answer for the
+                  // pending "what does that equal?" — the exact hole the
+                  // "Not quite" to a correct 13 fell through. An active
+                  // card always wins; the value expires after 2 minutes
+                  // (see pendingComputableEquationRef's doc).
+                  const pendingEq = !currentProblemRef.current
+                    && pendingComputableEquationRef.current
+                    && Date.now() - pendingComputableEquationRef.current.armedAtMs < 120_000
+                    ? pendingComputableEquationRef.current
+                    : null;
+                  // R58b (live, portal-14e07a20): a SPEECH-posed problem
+                  // ("work out $2x - y$ when x = -4, y = 3", no card ever
+                  // rendered) blind-solve-verified its answer into
+                  // pendingGeneratedAnswerRef — where it sat unconsumed
+                  // while the student's correct "-11" was denied against
+                  // a stale card. The student answers the most recently
+                  // POSED problem: when the staged answer is NEWER than
+                  // the tracked card (or there is no card), it is the
+                  // grading truth. Same 2-minute freshness bound as
+                  // pendingEq.
+                  const pendingSpoken = pendingGeneratedAnswerRef.current?.expectedAnswer
+                    && typeof pendingGeneratedAnswerRef.current.atMs === 'number'
+                    && Date.now() - pendingGeneratedAnswerRef.current.atMs < 120_000
+                    && (pendingGeneratedAnswerRef.current.atMs > (currentProblemRef.current?.trackedAtMs ?? 0))
+                    ? pendingGeneratedAnswerRef.current
+                    : null;
+                  // False-praise-opener check (spec §D.2/§D.4, third live
+                  // praise-then-reverse instance, 2026-09-05 QA turn 5): the
+                  // opener is BARE praise ("Right, let's check the reasoning
+                  // behind it…") over an answer the verified key already
+                  // disagrees with — praise-contradiction needs a later
+                  // walk-back and praise-echo needs a value IN the opener, so
+                  // neither can see it, but the ground truth was on the table
+                  // before any later text streamed. Exact mirror of the
+                  // inverse-verdict gate below (`!attemptText` = this
+                  // attempt's FIRST sentence, plus `attempt === 0` so a retry
+                  // never re-kills on the same evidence), and the same tier
+                  // split: a VERIFIED expected answer may kill, an unverified
+                  // card answer is advisory (correction note, never a kill).
+                  // Posed-computation grounding (live 2026-09-06, portal-4bbe5d91):
+                  // after a show_problem → segment-card substitution the brain
+                  // asked "what is -2 × (-4)?" against a board showing
+                  // 8 - 3(2x-4) + 5x. A × / ÷ question whose operands do not
+                  // exist in the problem, the student's words, or this
+                  // session's equations is killed and re-asked against the board.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt === 0 && currentProblemRef.current?.statement) {
+                    const ungrounded = findUngroundedComputation(updatedSentence, [
+                      currentProblemRef.current.statement,
+                      transcript ?? '',
+                      turnEquationsRef.current.join(' \n '),
+                    ]);
+                    if (ungrounded) {
+                      const reason = ungrounded.op === 'distribute'
+                        ? `You asked the student to distribute ${ungrounded.a}, but no coefficient ${ungrounded.a} sits in front of a parenthesis in the problem on the board (${currentProblemRef.current.statement.slice(0, 120)}). ` +
+                          `Re-emit: name the coefficient that is actually there, with its sign.`
+                        : `You posed ${ungrounded.a} ${ungrounded.op} ${ungrounded.b}, but ${ungrounded.missing.join(' and ')} ${ungrounded.missing.length === 1 ? 'does' : 'do'} not appear in the problem on the board (${currentProblemRef.current.statement.slice(0, 120)}). ` +
+                          `Re-emit: pose the sub-step using ONLY the numbers actually in that problem.`;
+                      rejectionsThisAttempt.push({ action: 'posed_computation_ungrounded', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] posed computation ungrounded: "${updatedSentence.slice(0, 80)}" missing=${ungrounded.missing.join(',')}`);
+                      onDebugEvent?.('posed_computation_kill', `${ungrounded.op === 'distribute' ? `distribute ${ungrounded.a}` : `${ungrounded.a} ${ungrounded.op} ${ungrounded.b}`} missing=${ungrounded.missing.join(',')}`);
+                      continue;
+                    }
+                  }
+                  // Authored-ending contradiction guard (live 2026-09-06,
+                  // portal-3a024b75): "105 = 105 → no solution" affirmed
+                  // against an authored "Infinitely many solutions
+                  // (identity)". Deterministic and subject-free — compare
+                  // the tutor's stated solution-count class against the
+                  // authored answer's class.
+                  if (TUTOR_AUTHORED_ENDING_GUARD && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt === 0) {
+                    const seg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+                    const truth = seg ? getSegmentTruth(seg) : null;
+                    const authoredAnswer = truth?.expectedAnswer && problemMatchesAuthored(currentProblemRef.current?.statement, truth.problemText)
+                      ? truth.expectedAnswer : undefined;
+                    const contra = findAuthoredEndingContradiction({ sentence: updatedSentence, authoredAnswer });
+                    if (contra) {
+                      const reason =
+                        `The authored answer for this problem is "${authoredAnswer}" (${contra.authored} solution(s)); your sentence classified it as "${contra.stated}". ` +
+                        `Re-derive from the authored answer and re-speak the verdict — and if the student's classification was actually right, say so plainly.`;
+                      rejectionsThisAttempt.push({ action: 'authored_ending_contradiction', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      onDebugEvent?.('authored_ending_kill', `stated=${contra.stated} authored=${contra.authored} · ${updatedSentence.slice(0, 80)}`);
+                      continue;
+                    }
+                  }
+                  if (TUTOR_FALSE_PRAISE_OPENER && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText && attempt === 0) {
+                    const fp = checkFalsePraiseOpener({
+                      sentence: updatedSentence,
+                      studentUtterance: transcript,
+                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? liveCardKey(currentProblemRef.current) ?? pendingEq?.display,
+                      unverifiedCardAnswer: liveUnverifiedKey(currentProblemRef.current),
+                      choices: mcqChoices,
+                      spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
+                      problemContext: pendingSpoken?.statement ?? currentProblemRef.current?.statement ?? pendingEq?.latex,
+                      // Only the utterance ledger knows whether THIS student
+                      // turn was an answer attempt at all; a scaffolding
+                      // sub-question's answer must never be judged against the
+                      // card's final key (that is the false kill Task 7's fix
+                      // round closed). Deliberately NOT derived from
+                      // pendingSpoken/pendingEq/trackedAtMs — those say which
+                      // key is freshest, never whether the student was
+                      // answering the card as a whole.
+                      finalAnswerTurn: lastStudentVerificationRef.current?.isVerification === true
+                        && lastStudentVerificationRef.current.turn === pacingTurnCounterRef.current,
+                    });
+                    // Live check 6: praise + agreement on a final-answer turn
+                    // settles the tracked problem — retire its key so later
+                    // answers to NEWER questions are never graded against it.
+                    if (fp.agreed && !pendingSpoken && currentProblemRef.current?.expectedAnswer && !currentProblemRef.current.resolvedAtMs
+                        && lastStudentVerificationRef.current?.isVerification === true
+                        && lastStudentVerificationRef.current.turn === pacingTurnCounterRef.current) {
+                      currentProblemRef.current.resolvedAtMs = Date.now();
+                      onDebugEvent?.('active_problem_resolved', `key "${(fp.expected ?? '').slice(0, 30)}" settled by "${(transcript ?? '').slice(0, 40)}" (${fp.matchReason ?? ''})`);
+                    }
+                    if (fp.verdict === 'false_praise') {
+                      const reason =
+                        `The student answered "${(transcript ?? '').slice(0, 80)}", but the verified answer is ${fp.expected}; your opener affirmed it. ` +
+                        `Re-emit: open with the TRUE verdict for what they said, then guide them toward the right answer without revealing it outright.`;
+                      rejectionsThisAttempt.push({ action: 'false_praise_opener', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] false-praise-opener: "${updatedSentence.slice(0, 60)}" after student "${(transcript ?? '').slice(0, 40)}" vs verified ${fp.expected} — kill + retry`);
+                      onDebugEvent?.('false_praise_opener_kill', `student=${(transcript ?? '').slice(0, 40)} verified=${fp.expected?.slice(0, 40)} (${fp.matchReason})`);
+                      continue;
+                    }
+                    if (fp.verdict === 'advisory_false_praise') {
+                      onDebugEvent?.('false_praise_opener_advisory', `student=${(transcript ?? '').slice(0, 40)} card=${fp.expected?.slice(0, 40)}`);
+                      // Correction note, never a kill (the card answer is
+                      // brain-claimed, not verified — it might itself be
+                      // wrong). Same ref, same "never clobber a kill-class
+                      // note" rule and same safety-valve wording as the
+                      // advisory_false_denial tier below.
+                      if (!pendingJudgeCorrectionNoteRef.current) {
+                        pendingJudgeCorrectionNoteRef.current =
+                          `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may NOT match the intended answer "${fp.expected}" — re-check and, if they were wrong, correct them rather than leaving the praise standing. ` +
+                          `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
+                          `Either way, NEVER narrate the act of checking ("re-checking my last correction", "that check was correct", "nothing to walk back") — the student must never learn a check happened.`;
+                        armCorrectionNoteDeadline();   // same deadline as every other plant site
+                        onDebugEvent?.('false_praise_opener_correction_note_planted', `card=${fp.expected?.slice(0, 40)}`);
                       }
                     }
                   }
@@ -10943,42 +12531,11 @@ export function VoiceTutorRealtime({
                   // could match the denial pattern and kill an otherwise-good turn that never
                   // denied the student's actual answer at all.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText) {
-                    const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
-                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
-                      : undefined;
-                    // 2026-08-17 (portal-e3af265a): with NO active problem
-                    // card, a recent computable board expression's value is a
-                    // deterministically-verified expected answer for the
-                    // pending "what does that equal?" — the exact hole the
-                    // "Not quite" to a correct 13 fell through. An active
-                    // card always wins; the value expires after 2 minutes
-                    // (see pendingComputableEquationRef's doc).
-                    const pendingEq = !currentProblemRef.current
-                      && pendingComputableEquationRef.current
-                      && Date.now() - pendingComputableEquationRef.current.armedAtMs < 120_000
-                      ? pendingComputableEquationRef.current
-                      : null;
-                    // R58b (live, portal-14e07a20): a SPEECH-posed problem
-                    // ("work out $2x - y$ when x = -4, y = 3", no card ever
-                    // rendered) blind-solve-verified its answer into
-                    // pendingGeneratedAnswerRef — where it sat unconsumed
-                    // while the student's correct "-11" was denied against
-                    // a stale card. The student answers the most recently
-                    // POSED problem: when the staged answer is NEWER than
-                    // the tracked card (or there is no card), it is the
-                    // grading truth. Same 2-minute freshness bound as
-                    // pendingEq.
-                    const pendingSpoken = pendingGeneratedAnswerRef.current?.expectedAnswer
-                      && typeof pendingGeneratedAnswerRef.current.atMs === 'number'
-                      && Date.now() - pendingGeneratedAnswerRef.current.atMs < 120_000
-                      && (pendingGeneratedAnswerRef.current.atMs > (currentProblemRef.current?.trackedAtMs ?? 0))
-                      ? pendingGeneratedAnswerRef.current
-                      : null;
                     const inv = checkInverseVerdict({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
-                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
-                      unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
+                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? liveCardKey(currentProblemRef.current) ?? pendingEq?.display,
+                      unverifiedCardAnswer: liveUnverifiedKey(currentProblemRef.current),
                       choices: mcqChoices,
                       // R49: currency context for the spoken-money
                       // reconciliation. Sourced from the LIVE problem
@@ -11051,7 +12608,7 @@ export function VoiceTutorRealtime({
                         const turnNow = studentTurnCounterRef.current;
                         deniedAnswersRef.current = [
                           ...deniedAnswersRef.current.filter((d) => d.phrase !== deniedPhrase && turnNow - d.turn <= 6),
-                          { phrase: deniedPhrase, turn: turnNow },
+                          { phrase: deniedPhrase, turn: turnNow, problemKey: problemKeyForDenial(currentProblemRef.current?.statement) },
                         ].slice(-3);
                         onDebugEvent?.('denied_answer_stashed', `"${deniedPhrase}" turn=${turnNow}`);
                       }
@@ -11177,7 +12734,8 @@ export function VoiceTutorRealtime({
                   // enough; orchestrator-side filtering is the safety
                   // net. Detect canonical leak patterns and drop the
                   // sentence from TTS + transcript without retrying.
-                  // Generic patterns only — no subject content.
+                  // Generic patterns only — no subject content. Added
+                  // 2026-09-04: structural markup rule (portal-704e3e01).
                   // R58 additions (live, portal-9c73c826 "'Um, let me
                   // think' isn't an answer yet — no verdict, just give
                   // her room", portal-dc11fac1 "it doesn't have a
@@ -11194,23 +12752,26 @@ export function VoiceTutorRealtime({
                   // legitimate teaching content ("Ready to try
                   // classifying one yourself?", "your check was
                   // right"); only the meta COLLOCATIONS are dropped.
-                  const metaNarrationRe = /^\s*(?:the student\b|the active problem\b|let me mark\b|since the student\b|the runtime\b|the system\b|that'?s? a greenlight\b|re-?checking my\b)/i
-                    .test(updatedSentence)
-                    || /\bactive problem\b|\bgreenlight to advance\b|\bmark (?:it|this|the)? *(?:segment )?complete\b|\b(?:current|active) *segment\s*[Ii][Dd]?\b|\bcanonicaltext\b|\btool[_ ]result\b/i
-                    .test(updatedSentence)
-                    || /\bthe student\b|\bno verdict\b|\bisn'?t (?:quite )?an answer\b|\bnot an answer\b|\bmy (?:last|earlier|previous) correction\b|\bmy correction was\b|\bnothing to walk back\b|\bno correction (?:is )?needed\b|\brequest pattern\b|\bclassify (?:away|silently)\b|\bgive (?:her|him|them) (?:room|space)\b|\bautomated review\b/i
-                    .test(updatedSentence)
-                    // 2026-08-31 (Haiku observation round): spoken self-audit
-                    // collocations that slipped the lists above — "I need to
-                    // check myself first / my prior turn", "Let me compute:
-                    // 8+8+5+5", "So my 'Not quite' was correct". Colon after
-                    // "compute" is load-bearing: "Let me compute the area
-                    // together" is legitimate teaching and must survive.
-                    || /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i
-                    .test(updatedSentence);
+                  const metaNarrationRe = isMetaNarration(updatedSentence, {
+                    structural: TUTOR_META_NARRATION_STRUCTURAL,
+                  });
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  // Homework announcement with nothing behind it (live
+                  // 2026-09-05: no practice locator; live 2026-09-06: a
+                  // locator existed but nothing was ever assigned).
+                  // 2026-09-07: gated on an assignment finalized THIS
+                  // session, not on the locator — live 2026-09-06 the tutor
+                  // announced a card that did not exist. Two reasons to
+                  // drop: nothing is assigned, OR the runtime already spoke
+                  // the pointer itself (the model repeating it would tell
+                  // the student the same thing twice).
+                  if ((!assignedPracticeRef.current || homeworkPointerSpokenRef.current) && isHomeworkAnnouncement(updatedSentence)) {
+                    console.warn('[brain-orchestrator] dropped homework announcement (nothing assigned, or the runtime already announced it):', JSON.stringify(updatedSentence.slice(0, 100)));
+                    onDebugEvent?.('homework_announce_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
                   // Ghost-step filter. If the brain narrates "Step N"
@@ -11588,6 +13149,12 @@ export function VoiceTutorRealtime({
                   }
                   toolNamesThisAttempt.push(name);
                   toolArgsThisAttempt.push(args);
+                  // Live check 6: text of this attempt's renders, for spoken-number
+                  // coverage. The whole args payload, not just statement/latex —
+                  // a sketch's labels ("AB = 6") are board numbers too.
+                  if (/^(?:show_|draw_|plot_|render_)/.test(name)) {
+                    try { renderedTextsThisAttempt.push(JSON.stringify(args).slice(0, 2000)); } catch { /* unserialisable args — skip */ }
+                  }
                   // Round-17 (2026-07-17): improvised / student-brought
                   // answer verification. The tool contract has the brain
                   // declare its derived answer on any free-form
@@ -11701,6 +13268,17 @@ export function VoiceTutorRealtime({
                         })
                         .catch(() => { /* verification is best-effort */ });
                     }
+                  }
+                  // Kill scope (portal-704e3e01 @1414.3s). Once this attempt
+                  // is killed its speech is gone, so any lesson-STATE tool
+                  // still arriving would advance the lesson on a turn the
+                  // student never heard. Renders deliberately still dispatch
+                  // (TUTOR_KEEP_VALIDATED_ON_KILL owns that decision). The
+                  // retry re-emits the advance if it still means it.
+                  if (TUTOR_KILL_WITHHOLDS_ADVANCE && attemptKilled && shouldWithholdAfterKill(name)) {
+                    console.warn(`[brain-orchestrator] withholding lesson-state tool "${name}" — attempt already killed`);
+                    onDebugEvent?.('kill_withheld_lesson_tool', name);
+                    continue;
                   }
                   totalToolNamesSeen.push(name);
                   // #4: a Skip turn that actually advances is a legit
@@ -12177,19 +13755,63 @@ export function VoiceTutorRealtime({
                         // 2026-05-02 retest where harder {12,14,16,18,20}
                         // problem became the original {2,4,6,8,10} card
                         // because both were "find the mean".
-                        if (!targetsDiverge && !newPageInTurn && !generateProblemInTurn) {
+                        // Substitution gate (portal-704e3e01). The two
+                        // pre-existing conditions are unchanged; the gate adds
+                        // the two cases where substituting guarantees the
+                        // orchestrator will kill its own override.
+                        const lastStudentTextForSub = ([...transcriptRef.current]
+                          .reverse()
+                          .find((e) => e.role === 'student')?.text ?? '');
+                        const subDecision = shouldSubstituteShowProblem({
+                          targetsDiverge,
+                          newPageInTurn,
+                          generateProblemInTurn,
+                          segmentComplete: TUTOR_SUBSTITUTE_GATE && !!segId && completedSegmentIdsRef.current.has(segId),
+                          studentAskedForAnother: TUTOR_SUBSTITUTE_GATE && detectAnotherProblemRequest(lastStudentTextForSub),
+                        });
+                        if (subDecision.substitute) {
                           console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
                           onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
                           name = 'show_segment_card';
                           args = { segmentId: segId };
-                        } else if (!targetsDiverge && newPageInTurn) {
+                        } else if (subDecision.skipReason === 'new-page-in-turn') {
                           console.log(`[brain-orchestrator] show_problem on segment "${segId}" with matching target but new_page in turn — fresh-context render, NOT substituting.`);
                           onDebugEvent?.('show_problem_substitute_bypass', `new_page-in-turn; segId="${segId}" target="${brainTarget}"`);
+                          // Fall through to dispatch the brain's
+                          // free-form show_problem as-is.
+                        } else if (subDecision.skipReason === 'segment-complete'
+                                || subDecision.skipReason === 'student-asked-for-another') {
+                          console.log(`[brain-orchestrator] show_problem substitution SKIPPED (${subDecision.skipReason}) for segment "${segId}" — dispatching the brain's own card.`);
+                          onDebugEvent?.('show_problem_substitution_skipped', `${subDecision.skipReason}; segId="${segId}"`);
                           // Fall through to dispatch the brain's
                           // free-form show_problem as-is.
                         }
                       }
                     }
+                  }
+                  // Kill scope, SECOND pass (portal-704e3e01 @1414.3s). The
+                  // gate at the tool funnel above runs BEFORE the four
+                  // `name = 'show_segment_card'` rewrites between it and here
+                  // (the show_worked_example and show_problem substitutions).
+                  // show_problem / show_worked_example are deliberately NOT
+                  // withheld after a kill — a validated render survives a
+                  // dropped narration — but once one has been REWRITTEN into
+                  // show_segment_card it is a lesson-state tool, and letting
+                  // it dispatch puts the authored segment card on the board on
+                  // the strength of a turn the student never heard. That is
+                  // the same half of the incident the first gate exists to
+                  // stop. Re-testing here (rather than moving the gate down)
+                  // keeps the first gate's behaviour for directly-emitted
+                  // lesson-state tools exactly as it was: those already
+                  // `continue`d above and can never reach this line, so this
+                  // check only ever fires on a rewritten name.
+                  // The `continue` targets the same enclosing per-SSE-line
+                  // loop as the first gate — `for (const line of
+                  // block.split('\n'))` — there is no intervening loop.
+                  if (TUTOR_KILL_WITHHOLDS_ADVANCE && attemptKilled && shouldWithholdAfterKill(name)) {
+                    console.warn(`[brain-orchestrator] withholding lesson-state tool "${name}" (rewritten after the kill) — attempt already killed`);
+                    onDebugEvent?.('kill_withheld_lesson_tool', name);
+                    continue;
                   }
                   // Lever A — show_segment_card resolution. Brain emits a
                   // segment id; the runtime pulls authored data from the
@@ -12274,6 +13896,24 @@ export function VoiceTutorRealtime({
                         // the snapshot filter would hide it on the
                         // next turn. Idempotent — same segId is fine.
                         catalogRef.current.setCurrentSegment(segId);
+                        // Live check 6 (§6): an authored MCQ try_yourself rendered
+                        // as a stem with no choices, and the brain said "That's
+                        // option B" about options the student never saw. Carry
+                        // the authored choices as answerChoices (letter = id).
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const segAny = seg as any;
+                        const authoredChoices: Array<{ letter: string; text: string }> | null =
+                          truth.kind === 'try_yourself' && segAny.responseFormat === 'mcq'
+                            && Array.isArray(segAny.choices) && segAny.choices.length > 0
+                            ? segAny.choices.map((c: { id?: string; text?: string }, i: number) => ({
+                                letter: String(c.id ?? String.fromCharCode(65 + i)).toUpperCase(),
+                                text: stripWbEmphasisText(String(c.text ?? '')),
+                              }))
+                            : null;
+                        segmentCardRenderedThisAttempt = true;
+                        segmentCardsRenderedThisAttempt.push(segId);
+                        renderedTextsThisAttempt.push(truth.problemText);
+                        if (authoredChoices) onDebugEvent?.('show_segment_card_mcq_choices', `${segId}: ${authoredChoices.map((c) => c.letter).join('')}`);
                         resolvedCmd = {
                           action: 'showProblem',
                           problem: {
@@ -12281,7 +13921,8 @@ export function VoiceTutorRealtime({
                             // (cmd = resolvedCmd ?? map(...)), so authored text
                             // needs its own emphasis strip.
                             statement: stripWbEmphasisText(truth.problemText),
-                            format: 'free-response',
+                            format: authoredChoices ? 'multiple-choice' : 'free-response',
+                            ...(authoredChoices ? { answerChoices: authoredChoices } : {}),
                             title: truth.kind === 'try_yourself' ? 'Try Yourself'
                               : truth.kind === 'worked_example' ? 'Worked Example'
                               : truth.kind === 'misconception_check' ? 'Check'
@@ -12381,6 +14022,7 @@ export function VoiceTutorRealtime({
                           } as unknown as any;
                           console.log(`[brain-orchestrator] show_segment_card resolved (${seg.kind}): ${segId} → "${body.slice(0, 60)}…"`);
                           onDebugEvent?.('show_segment_card_resolved', `${segId} (${seg.kind})`);
+                          segmentCardsRenderedThisAttempt.push(segId);
                         } else {
                           console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
                           onDebugEvent?.('show_segment_card_no_truth', segId);
@@ -12825,6 +14467,18 @@ export function VoiceTutorRealtime({
         // what I have for you." → stop=end_turn → frozen session). Surface
         // as a rejection so the retry renders the canonicalText.
         if (!attemptKilled
+            && generatedProblemReceivedThisAttempt
+            && !toolNamesThisAttempt.includes('show_problem')
+            && segmentCardRenderedThisAttempt) {
+          // Live check 6 (§2, 07:04:25Z): the brain fetched a bank problem AND
+          // rendered the authored try card in the same turn; the student saw a
+          // correct card and heard the first sentences. Killing the turn cut
+          // the audio and repainted the same card 11 s later. The generated
+          // problem is simply unused — drop its staged answer so it can never
+          // grade the authored card, and let the turn stand.
+          if (pendingGeneratedAnswerRef.current) pendingGeneratedAnswerRef.current = null;
+          onDebugEvent?.('generate_problem_unused_dropped', `authored card rendered (${segmentCardsRenderedThisAttempt.join(',')}) — generated problem discarded, no kill`);
+        } else if (!attemptKilled
             && generatedProblemReceivedThisAttempt
             && !toolNamesThisAttempt.includes('show_problem')) {
           rejectionsThisAttempt.push({
@@ -13342,10 +14996,30 @@ export function VoiceTutorRealtime({
             const questionContext = studentAnswer
               ? [...runHistory].reverse().find((m) => m.role === 'assistant')?.content?.slice(-1200)
               : undefined;
+            // authoredSolution = the lesson author's ground truth for the
+            // tracked problem, when the board's current problem matches
+            // the authored segment. Without this the judge grounds every
+            // claim against the whiteboard even when the whiteboard
+            // itself carries the tutor's own wrong derivation (2026-09-06
+            // live check 3, portal-3a024b75: board showed "x = 5.5" and
+            // the judge passed every later claim against it).
+            const judgeSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+            const judgeTruth = judgeSeg ? getSegmentTruth(judgeSeg) : null;
+            const authoredSolution = judgeTruth && problemMatchesAuthored(currentProblemRef.current?.statement, judgeTruth.problemText)
+              ? [
+                  `Problem: ${judgeTruth.problemText}`,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ...(Array.isArray((judgeSeg as any)?.steps) ? [`Steps: ${((judgeSeg as any).steps as string[]).join(' | ')}`] : []),
+                  ...(judgeTruth.expectedAnswer ? [`Answer: ${judgeTruth.expectedAnswer}`] : []),
+                ].join('\n').slice(0, 1500)
+              : undefined;
+            if (authoredSolution) {
+              onDebugEvent?.('judge_authored_solution', authoredSolution.slice(0, 80));
+            }
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}) }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -13501,7 +15175,7 @@ export function VoiceTutorRealtime({
                 if (advisoryIssues.length > 0) {
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
                     advisoryIssues.map((i) => i.claim.slice(0, 80)));
-                  onDebugEvent?.('judge_advisory_flag', `${advisoryIssues.length} issue(s): ${advisoryIssues[0].claim.slice(0, 60)}…`);
+                  onDebugEvent?.('judge_advisory_flag', `${advisoryIssues.length} issue(s): ${advisoryIssues[0].claim.slice(0, 60)}… · why: ${(advisoryIssues[0].why ?? '').slice(0, 120)}`);
                   // Fix C (2026-08-10 root cause, session portal-7cfa226c):
                   // advisories used to dead-end here — logged and dropped,
                   // no student-visible effect at all, even when the flagged
@@ -13531,8 +15205,27 @@ export function VoiceTutorRealtime({
                   const noteworthyAdvisoryIssues = advisoryIssues.filter(
                     (i) => hasMathExpression(i.claim) || DENIAL_RE.test(i.claim),
                   );
-                  if (noteworthyAdvisoryIssues.length > 0) {
-                    const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim));
+                  // Live 2026-09-06 (portal-4bbe5d91): the judge flagged a
+                  // CORRECT "Not quite" (the student had a sign error against a
+                  // verified generated-problem key); the note was delivered and
+                  // the brain retracted a right verdict ("you had the setup
+                  // exactly right, my mistake"). When the flagged claim is a
+                  // denial and the deterministic key says the student really
+                  // disagreed with it, the judge is the one that is wrong.
+                  const judgeVerifiedKey = verifiedKeyForJudgeGate({
+                    pending: pendingGeneratedAnswerRef.current,
+                    current: currentProblemRef.current,
+                    boardText: boardSummary,
+                  });
+                  const denialFlagged = noteworthyAdvisoryIssues.some((i) => DENIAL_RE.test(i.claim));
+                  const denialVerifiedRight = denialFlagged && !!judgeVerifiedKey
+                    && studentDisagreesWithVerified(transcript ?? '', judgeVerifiedKey, currentProblemRef.current?.choiceOptions);
+                  if (denialFlagged && !denialVerifiedRight) judgeFlaggedDenialThisTurnRef.current = true;
+                  if (denialVerifiedRight) {
+                    onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
+                  }
+                  if (noteworthyAdvisoryIssues.length > 0 && !denialVerifiedRight) {
+                    const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim), transcript);
                     if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
                       armCorrectionNoteDeadline();   // R50 T3
@@ -13541,6 +15234,7 @@ export function VoiceTutorRealtime({
                   }
                 }
                 if (killIssues.length > 0) {
+                  if (killIssues.some((i) => DENIAL_RE.test(i.claim))) judgeFlaggedDenialThisTurnRef.current = true;
                   const summary = killIssues.map((i, idx) =>
                     `(${idx + 1}) Claim: "${i.claim.slice(0, 120)}" — ${i.why.slice(0, 200)}`
                   ).join(' ');
@@ -13563,7 +15257,7 @@ export function VoiceTutorRealtime({
                   // hand and can own a false reject. Advisory stays advisory:
                   // no kill, no re-narration; the note itself instructs
                   // silent continue when the brain stands by its claim.
-                  const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim));
+                  const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim), transcript);
                   if (correctionNote) {
                     pendingJudgeCorrectionNoteRef.current = correctionNote;
                     armCorrectionNoteDeadline();   // R50 T3
@@ -13795,6 +15489,36 @@ export function VoiceTutorRealtime({
 
       const ms = Date.now() - t0;
       const fullText = aggregatedFullText.trim();
+      // ── Ledger: deferred soft stuck cue, vetoed by a correct verdict ──
+      {
+        const pendingStuck = pendingStuckCueRef.current;
+        pendingStuckCueRef.current = null;
+        if (pendingStuck) {
+          if (objectiveCorrectThisTurnRef.current) onDebugEvent?.('stuck_cue_vetoed', 'turn credited correct');
+          else feedLedger('stuck_cue', undefined, pendingStuck.segId);
+        }
+      }
+      // ── Recap: was the offer actually voiced? (live probes 2026-09-05) ──
+      // The block asked for an offer; the brain may have answered the
+      // student's "I'm stuck" with a sub-question instead. An unvoiced offer
+      // must not sit 'pending' — the next utterance would be consumed as a
+      // reply to a question nobody heard. Withdraw it and re-arm (bounded).
+      {
+        const sent = recapOfferSentThisTurnRef.current;
+        recapOfferSentThisTurnRef.current = null;
+        if (sent) {
+          const entry = recapRef.current.get(sent.loId);
+          if (entry && entry.outcome === 'pending' && !isRecapOfferVoiced(fullText)) {
+            const attempts = (recapOfferAttemptsRef.current.get(sent.loId) ?? 0) + 1;
+            recapOfferAttemptsRef.current.set(sent.loId, attempts);
+            recapRef.current.delete(sent.loId);
+            const reArm = attempts < RECAP_OFFER_MAX_ATTEMPTS && !activeRecapRef.current && !pendingRecapOfferRef.current;
+            if (reArm) pendingRecapOfferRef.current = { loId: sent.loId, loTitle: sent.loTitle, source: sent.source, soft: sent.soft };
+            console.log(`[VoiceTutorRealtime] recap offer unvoiced lo="${sent.loId}" attempt=${attempts} ${reArm ? 're-armed' : 'dropped'}`);
+            onDebugEvent?.('recap_offer_unvoiced', `lo="${sent.loId}" attempt=${attempts} ${reArm ? 're-armed' : 'dropped'}`);
+          }
+        }
+      }
       console.log(
         `[brain-orchestrator] turn ok in ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · ` +
         `first_sentence=${firstSentenceMs}ms · text="${fullText.slice(0, 80)}${fullText.length > 80 ? '…' : ''}" · ` +
@@ -13942,6 +15666,40 @@ export function VoiceTutorRealtime({
       // R2 E2: substantive final question + zero content board writes →
       // plant a board-anchor note for the next turn. Independent of the
       // cadence triggers (own ref) — both can fire on the same turn.
+      // Live check 6: does this turn leave a question open for the student?
+      // (Read by the correction-note deadline; cleared by the next real
+      // student turn.) A pure nudge/cover turn ends in a question too — the
+      // hold is still right: the student is expected to speak next.
+      openTutorQuestionRef.current = /\?\s*$/.test(fullText.trim()) || !!lastQuestionSentence(fullText) ? Date.now() : null;
+      // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
+      // substantive turns, improvised three worked examples in speech, then
+      // jumped over both authored worked_example segments. The parent's
+      // `segment_overlong` telemetry saw it and could do nothing. Plant one
+      // runtime note per hook/concept segment at the same threshold.
+      if (TUTOR_SEGMENT_OVERLONG_NOTE && totalSentenceCount > 0) {
+        const segIdNow = currentSegmentIdRef.current;
+        const st = turnsInSegmentRef.current;
+        if (st.segId !== segIdNow) turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false };
+        const cur = turnsInSegmentRef.current;
+        cur.turns += 1;
+        const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
+        const kindNow = (segNow?.kind ?? '').toLowerCase();
+        if (!cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
+          cur.noted = true;
+          const plan = lessonPlanRef.current;
+          const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
+          const nextSeg = plan && idx >= 0 ? plan.segments[idx + 1] : undefined;
+          const nextHint = nextSeg
+            ? `The next segment is "${nextSeg.id}" (${nextSeg.kind}); call advance_lesson({to: "next"}) and show_segment_card({segmentId: "${nextSeg.id}"}) in the same turn.`
+            : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
+          pendingRuntimeNoteRef.current =
+            `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
+            `First finish the problem in play — give the student the verdict on what they just said and close that problem out. Then move the lesson forward: ${nextHint} ` +
+            `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. ` +
+            `Apply this silently; never mention this note.`;
+          onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
+        }
+      }
       if (TUTOR_BOARD_ANCHOR_NET) {
         const finalQuestion = lastQuestionSentence(fullText);
         const paintedContent = totalToolNamesSeen.some((n) => isBoardContentTool(n));
@@ -14006,6 +15764,23 @@ export function VoiceTutorRealtime({
             onDebugEvent?.(
               'quantities_unanchored',
               `${q.missing.length}/${q.considered} spoken value(s) never reached the board: ${q.missing.join(', ')}`,
+            );
+          }
+        }
+        // The CONTRADICTION companion to the coverage check above. Coverage
+        // asks "did the spoken number reach the board?"; this asks "does the
+        // board DISAGREE?" — portal-9a9b7c09 painted the correct total and
+        // spoke the wrong one in the same turn, twice.
+        if (TUTOR_BOARD_CONTRADICTION) {
+          const bc = detectBoardContradiction({
+            turnText: fullText,
+            renderedText: turnRenderPayloadTextRef.current,
+          });
+          if (bc.verdict === 'contradiction') {
+            console.warn(`[brain-orchestrator] board contradiction: "${bc.expr}" board=${bc.boardValue} spoken=${bc.spokenValue}`);
+            onDebugEvent?.(
+              'board_contradiction',
+              `${bc.expr} · board=${bc.boardValue} spoken=${bc.spokenValue}`,
             );
           }
         }
@@ -14172,6 +15947,13 @@ export function VoiceTutorRealtime({
                 && studentIncorrectStreakRef.current.count > 0) {
               studentIncorrectStreakRef.current = { segId, count: 0 };
             }
+            // Struggle ledger (spec §A): a correct answer is recovery on
+            // this LO — clears the "still struggling" mark without erasing
+            // the detection history.
+            if (TUTOR_STRUGGLE_LEDGER) {
+              const ledgerLo = (segId ? loForSegment(segId) : null) ?? activeLedgerLoRef.current;
+              if (ledgerLo) markRecovered(ledgerRef.current, ledgerLo);
+            }
             logPacing(`streak-correct seg="${segId}" count=${studentStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
             if (decision.objective && objectiveSignal) {
@@ -14226,10 +16008,22 @@ export function VoiceTutorRealtime({
               logPacing(`segment-mastered seg="${segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
               onDebugEvent?.('pacing_segment_mastered', `seg="${segId}" streak=${studentStreakRef.current.count}`);
             }
+          } else if (decision.credit === 'incorrect' && judgeFlaggedDenialThisTurnRef.current) {
+            // Task 7 (live 2026-09-06, portal-4bbe5d91-adjacent): the judge
+            // flagged THIS turn's denial as ungrounded (and the deterministic
+            // gate did not overrule it) — the tutor's own mis-grading must
+            // not become the student's incorrect streak or a ledger entry.
+            onDebugEvent?.('pacing_credit_withheld', 'judge flagged this denial — not counted against the student');
           } else if (decision.credit === 'incorrect') {
             const priorIncCount = studentIncorrectStreakRef.current.segId === segId
               ? studentIncorrectStreakRef.current.count : 0;
             studentIncorrectStreakRef.current = { segId, count: priorIncCount + 1 };
+            // Struggle ledger (spec §A): a wrong answer is one struggle
+            // event on this segment's LO; a SECOND consecutive one is a
+            // failure to recover after the tutor's correction. Attribute to
+            // the segment the student actually ANSWERED on (segId, the
+            // turn-start snapshot) — the brain may have advanced mid-turn.
+            feedLedger(priorIncCount >= 1 ? 'no_recovery' : 'wrong', undefined, segId || undefined);
             if (studentStreakRef.current.segId === segId
                 && studentStreakRef.current.count > 0) {
               studentStreakRef.current = { segId, count: 0 };
@@ -14451,14 +16245,14 @@ export function VoiceTutorRealtime({
       if (
         TUTOR_CLIENT_RULE8_REPAIR &&
         shouldClientRequestRepair({
-          serverToolCount: totalToolNamesSeen.length,
+          serverToolCount: countBoardRenderTools(totalToolNamesSeen),
           paintedCount: totalPaintedCount,
           sentenceCount: turnNarrationRef.current.length,
         })
       ) {
         const repairTurn = pageTurnRef.current;
         const repairSentences = [...turnNarrationRef.current];
-        const repairToolCount = totalToolNamesSeen.length;
+        const repairToolCount = countBoardRenderTools(totalToolNamesSeen);
         onDebugEvent?.('rule8_client_repair', `requesting: sent=${repairToolCount} painted=0 sentences=${repairSentences.length}`);
         void (async () => {
           try {
@@ -14623,7 +16417,18 @@ export function VoiceTutorRealtime({
         // line and called abort() itself — if that abort somehow lands
         // here (non-AbortError-shaped) instead of the isAbort branch above,
         // don't double-speak a second "repeat that?" on top of it.
-        if (escalationGaveUpRef.current) {
+        // Live 2026-09-05 (portal-620a92a4): the OPENER's fetch failed
+        // client-side ("Failed to fetch" — a network blip at t+1.5s), nothing
+        // was spoken, a fallback card rendered, and the student sat for five
+        // minutes before restarting. Retry the opener exactly once.
+        const isNetworkFailure = err instanceof TypeError && /failed to fetch|load failed|network/i.test(err.message);
+        if (transcript === '[start lesson]' && isNetworkFailure && !openerRetryUsedRef.current && audibleSentenceCount === 0) {
+          openerRetryUsedRef.current = true;
+          onDebugEvent?.('opener_retry', `after ${err.message}`);
+          setTimeout(() => {
+            void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+          }, OPENER_RETRY_DELAY_MS);
+        } else if (escalationGaveUpRef.current) {
           onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
         } else if (audibleSentenceCount > 0) {
           // R47 Task 3d (live incident portal-1349716e, 2:49 PM): the
@@ -15040,6 +16845,16 @@ export function VoiceTutorRealtime({
         console.log(`[brain-orchestrator] MCQ letter homophone normalized: ${JSON.stringify(transcript)} → "${normalized}"`);
         onDebugEvent?.('mcq_letter_normalized', `"${transcript.trim()}" → "${normalized}"`);
         transcript = normalized;
+      }
+      // Letter ↔ content reconciliation (live 2026-09-05, portal-51b667f1):
+      // "…stratified sampling, so option B" with B misheard for D. When the
+      // utterance names BOTH a letter and one choice's content and they
+      // disagree, the content wins — the letter is the fragile channel.
+      const reconciled = reconcileMcqLetterWithContent(transcript, currentProblemRef.current.choiceOptions ?? []);
+      if (reconciled) {
+        console.log(`[brain-orchestrator] MCQ letter reconciled with named content: ${reconciled.from} → ${reconciled.to} (${JSON.stringify(reconciled.content)})`);
+        onDebugEvent?.('mcq_letter_reconciled', `${reconciled.from}→${reconciled.to} content="${reconciled.content.slice(0, 40)}" said="${transcript.trim().slice(0, 60)}"`);
+        transcript = reconciled.rewritten;
       }
     }
     // Task X10: stamp this turn's input modality for the honest fallback.
@@ -16107,6 +17922,9 @@ export function VoiceTutorRealtime({
     vadPrefixPaddingMs,
     reconnectEnabled,
     useRealtimeV2,
+    // Task 10 e2e finding (2026-09-19): text mode must never auto-arm the
+    // mic — see textMode's doc comment on RealtimeConfig.
+    textMode: sessionMode === 'text',
     // Demo gate (2026-08-29): partner embeds authenticate the gated
     // realtime-token route via their embed token (cross-origin iframes
     // can't rely on the demo-grant cookie).
@@ -16117,6 +17935,7 @@ export function VoiceTutorRealtime({
           instructions: RELAY_MODE_PROMPT,
           onUserTranscript: handleStudentTranscriptForBrain,
           ttsProvider,
+          silentSecondsPerWord,
           cartesiaVoiceId,
           cartesiaVoiceSpeed,
           speakingRate,
@@ -16284,7 +18103,9 @@ export function VoiceTutorRealtime({
   // resolved stage to derive inputAuthority).
   // Only open the perception WS once the production WS is connected — this
   // avoids issuing a mic-permission prompt before the user clicks Start.
-  const perceptionEnabled = perceptionStage >= 0 && realtime.isConnected;
+  // Text mode (Task 5): never opens perception at all — no mic, no
+  // getUserMedia prompt, ever.
+  const perceptionEnabled = sessionMode !== 'text' && perceptionStage >= 0 && realtime.isConnected;
 
   // Keep production WS state in a ref so the perception onTranscript callback
   // can tag every log with what the production WS was doing at the moment
@@ -16541,6 +18362,9 @@ export function VoiceTutorRealtime({
       if (micNoticeGateTimerRef.current) clearTimeout(micNoticeGateTimerRef.current);
       micNoticeGateTimerRef.current = setTimeout(() => {
         micNoticeGateTimerRef.current = null;
+        // Task 5: no mic in text mode — never surface the deferred
+        // "quiet but finite" noise-floor nag there.
+        if (sessionMode === 'text') { pendingMicNoticeRef.current = null; return; }
         if (micEverHeardRef.current) {
           pendingMicNoticeRef.current = null;
           return;
@@ -18389,7 +20213,7 @@ export function VoiceTutorRealtime({
       perceptionWS.disconnect();
       perceptionWS.connect();
     }
-    if (hasStartedRef.current && !isMicMutedRef.current) {
+    if (sessionMode !== 'text' && hasStartedRef.current && !isMicMutedRef.current) {
       realtime.stopListening();
       realtime.startListening();
     }
@@ -18397,7 +20221,7 @@ export function VoiceTutorRealtime({
     setMicNotice(`Switched to ${label.slice(0, 40)} — say something to test it.`);
     if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
     micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 12000);
-  }, [micSwitchOffer, perceptionInk2, perceptionWS, realtime, onDebugEvent]);
+  }, [micSwitchOffer, perceptionInk2, perceptionWS, realtime, onDebugEvent, sessionMode]);
 
   // ── Stage 2 dev-only test triggers ────────────────────────────────
   // window.__tutorForceFalseBargein() — fully synthetic cancel+restore
@@ -18663,6 +20487,14 @@ export function VoiceTutorRealtime({
           weakTopics: Array.from(weaknessesRef.current.entries())
             .map(([topic, count]) => ({ topic, count }))
             .sort((a, b) => b.count - a.count),
+          // Holistic-pedagogy round (spec §C.1): homework the tutor assigned
+          // this session (in-session tool call, or the commit-route fallback).
+          // Undefined when nothing was assigned ⇒ the summary card is absent.
+          assignedPractice: assignedPracticeRef.current ?? undefined,
+          // Fix round 1 (spec §C.6): the ref is only ever set when a locator
+          // exists, so this is present whenever assignedPractice is — the page
+          // names the real place instead of a hardcoded "Practice tab".
+          practiceLocator: assignedPracticeRef.current ? practiceLocator : undefined,
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         setSpeakingRate,
@@ -18888,6 +20720,18 @@ export function VoiceTutorRealtime({
               ...openerCtx,
               agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
             });
+            // Continuity clause (spec §C.6) — ONE deterministic callback:
+            // homework result → next-time intent → recap offer. Only the
+            // returning-subscribed journeys get it; diagnostic / trial / new /
+            // resume-live / resume-stale never do (a first meeting has no
+            // continuity to speak of, and resume-stale already spends its one
+            // opening move on the re-orient clause — hence the two branches
+            // below can never co-occur).
+            const continuity = TUTOR_RECAP_OFFER
+              && learnerExtrasRef.current
+              && (beh.journey === 'subscribed-returning' || beh.journey === 'node-revisit' || beh.journey === 'course-complete')
+              ? pickContinuityClause(learnerExtrasRef.current)
+              : null;
             // Resume-stale nuance: the student HAD started this lesson but
             // the checkpoint was too old to restore — prepend the one-line
             // re-orient instruction to the same directive (no new machinery;
@@ -18895,7 +20739,28 @@ export function VoiceTutorRealtime({
             const baseDirective =
               beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
-                : openerClause;
+                : continuity && openerClause
+                  ? `${continuity.clause} ${openerClause}`
+                  : openerClause;
+            // Fix round 1 — every side effect of the continuity clause hangs
+            // off whether the clause LANDED in the directive, not off whether
+            // one was picked: with no opener clause there is nothing to
+            // prepend to, so nothing is spoken and nothing may be recorded.
+            const landedContinuity = continuity && openerClause ? continuity : null;
+            continuityClauseRef.current = landedContinuity?.clause ?? null;
+            if (landedContinuity?.recapOffer) armSessionStartRecap(landedContinuity.recapOffer);
+            // Homework acknowledgement (spec §B.7): `acknowledgedAt` is a
+            // permanent one-way DB write, so only the clause the tutor will
+            // actually speak may trigger it. pickContinuityClause's precedence
+            // puts homework FIRST, so a landed clause + non-empty homework ⇒
+            // the landed clause IS the homework clause.
+            // ONLY homework[0]: pickContinuityClause names exactly that one
+            // assignment (`input.homework?.[0]`). Acknowledging the rest would
+            // permanently mark assignments the tutor never mentioned.
+            const ackHomework = landedContinuity ? learnerExtrasRef.current?.homework?.[0] : undefined;
+            if (ackHomework) {
+              homeworkAckIdsRef.current = [ackHomework.assignmentId];
+            }
             // Teacher persona: the one-sentence introduce-yourself directive
             // is stashed SEPARATELY (rides the first brain turn only — see
             // the attach site) and ONLY for first-meeting journeys. Pickups,
@@ -18930,6 +20795,11 @@ export function VoiceTutorRealtime({
           level,
           studentPreferences,
           realtimeV2: useRealtimeV2,
+          // Text-only mode (Task 6): appends the <text_mode> clause when the
+          // session prop is 'text'. Byte-identical for 'voice' (the default).
+          inputMode: sessionMode,
+          // Open-scope demo (2026-09-10): appends the Rule 7(b) override.
+          ...(openScope ? { openScope: true } : {}),
           // R49: withdraw the bare-board licence for the OPENING turn only.
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
@@ -19036,6 +20906,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // a second trigger after the session has started is a harmless no-op.
   const resumeContinue = useCallback(() => {
     if (hasStarted || !resumeState) return;
+    // Resume is a start action (portal-00fa1bb7 telemetry fix-round-2). The
+    // "Continue lesson" overlay and the mic-dock resume tap both land here,
+    // and neither reaches the embed's other latch: start_tap is emitted only
+    // by handleMicClick, and TutorSession seeds sessionStartedDispatchedRef
+    // to true when resumeState is set, so 'evelyn:session-started' is
+    // deliberately suppressed on a resumed mount. Without this the embed
+    // never latches and a resumed session — real transcript, real cost —
+    // persists nothing at all. The hasStarted early-return above guarantees
+    // this fires exactly once per real resume.
+    onDebugEvent?.('start_tap', 'action=resume_continue');
     hasStartedRef.current = true;
     setHasStarted(true);
     // Task E1 / demo time-box: stamp the actual session start for the demo-stop
@@ -19059,7 +20939,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       { silent: true, bypassMidUtteranceGuard: true },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasStarted, resumeState, onSessionStarted, realtime, handleStudentTranscriptForBrain]);
+  }, [hasStarted, resumeState, onSessionStarted, onDebugEvent, realtime, handleStudentTranscriptForBrain]);
   resumeContinueRef.current = resumeContinue;
 
   // Hard-stop cap (time-box): a wall-clock timer that ends the session when
@@ -19112,6 +20992,22 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const pendingGestureStartRef = useRef(false);
 
   const handleMicClick = useCallback(() => {
+    // Task 5: text mode has no mic-start path at all. The pre-start center
+    // orb (SessionStage) isn't sessionMode-aware and calls straight into
+    // this handler via onOrbStart/startSession — in text mode route that
+    // tap to focus the composer instead of running the voice mic-kickoff
+    // sequence (warmup overlay, brain greet-kickoff, startListening). The
+    // real start gesture in text mode is the first typed submit (parity
+    // logic lives at the composer's onSubmit, which stamps
+    // voiceSessionStartedAtMsRef / calls onSessionStartedRef.current?.() /
+    // realtime.unlockAudio() itself). unlockAudio() still runs here so the
+    // tap's own gesture stack keeps iOS's audio-unlock requirement satisfied
+    // even though this tap isn't the one that starts the session.
+    if (sessionMode === 'text') {
+      realtime.unlockAudio();
+      studentTextInputRef.current?.focus();
+      return;
+    }
     // 2026-08-17 triage (portal-96a436f0): the old if/else-if chain here let a
     // PRE-START tap resolve to the stop-listening toggle whenever the relay
     // had reached 'listening' on its own (pre-start blur/unmute leaks used to
@@ -19147,6 +21043,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     } else if (tapAction === 'interrupt') {
       realtime.interrupt();
       // Respect the student's muted state even when interrupting the tutor.
+      // (sessionMode is 'text' never reaches here — the text-mode branch at
+      // the top of this callback returns before tapAction is resolved; TS
+      // narrows sessionMode to 'voice' for the rest of this function.)
       if (!isMicMuted) realtime.startListening();
     } else if (tapAction === 'start') {
       // On first click, send context-aware greeting to get tutor's introduction.
@@ -19175,7 +21074,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // NOT this overlay — see onWarmupOverlayChange's doc comment). Only
         // this branch shows the full-stage "joining" overlay; it's cleared
         // by the effect near isWarmingUp's declaration the moment audio
-        // actually starts (or the watchdog gives up).
+        // actually starts (or the watchdog gives up). Text sessions start
+        // from the typed-submit path and never reach this branch —
+        // handleMicClick returns early for sessionMode 'text' above (TS
+        // narrows sessionMode to 'voice' for the rest of this function), so
+        // this overlay can never show in text mode.
         setShowWarmupOverlay(true);
         // R32 T9: arm the watchdog. Stashed below per-branch only where the
         // kickoff is a known literal string safely re-sendable through
@@ -19242,9 +21145,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
                 agendaItemCount,
               });
               if (rebuilt) {
+                // Task 20: re-prepend the SAME continuity clause the seed
+                // chose (stashed in continuityClauseRef) — the rebuild would
+                // otherwise silently drop it. Mutually exclusive with the
+                // stale-reorient branch: resume-stale is excluded from the
+                // continuity journeys, so the ref is null on that path.
                 openingDirectiveRef.current = openerStaleReorientRef.current
                   ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${rebuilt}`
-                  : rebuilt;
+                  : continuityClauseRef.current
+                    ? `${continuityClauseRef.current} ${rebuilt}`
+                    : rebuilt;
               }
             }
           }
@@ -19270,7 +21180,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // If the student hit the Mute button BEFORE clicking Start, honour that
       // the whole way through — send the greeting but do not open the mic.
       // They can unmute whenever they're ready; startListening fires from
-      // toggleMicMute's unmute branch.
+      // toggleMicMute's unmute branch. (sessionMode 'text' never reaches
+      // here — see the early return at the top of this callback.)
       if (!isMicMuted) {
         realtime.startListening();
       } else {
@@ -19293,7 +21204,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // tapAction === 'none' (mid-session, relay down): nothing actionable —
     // the start_tap event above is the whole point, so the tap is no longer
     // an invisible no-op.
-  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind, sessionMode]);
 
   // Keep the handle's startSession pointed at the CURRENT handleMicClick
   // closure — it reads hasStarted / isMicMuted / realtime.state, so a stale
@@ -19324,8 +21235,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Resume conversation
   const handleResume = useCallback(() => {
     setIsPaused(false);
-    realtime.startListening();
-  }, [realtime]);
+    if (sessionMode !== 'text') realtime.startListening();
+  }, [realtime, sessionMode]);
 
   // Toggle mute student mic. Side effects run OUTSIDE a setState updater (which
   // runs during render) — calling other setStates there throws "update during
@@ -19390,7 +21301,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // before the session began, which is the state the dead-session tap
       // bug fed on. The pre-start mute is still honoured the original way:
       // the Start tap's own branch checks isMicMuted and startListening()s.
-      if (hasStartedRef.current) {
+      if (sessionMode !== 'text' && hasStartedRef.current) {
         realtime.startListening();
       } else {
         console.log('[VoiceTutorRealtime] Unmute before Start — mic opens with the Start tap');
@@ -19399,7 +21310,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       onDebugEvent?.('mic_unmute', 'Student unmuted mic');
     }
     setIsMicMuted(newMuted);
-  }, [realtime, onDebugEvent]);
+  }, [realtime, onDebugEvent, sessionMode]);
 
   // ===== Start-gate: keep the perception mic MUTED until explicit Start =====
   // The perception WS connects warm on mount (perceptionEnabled, above) so
@@ -19604,7 +21515,19 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }
     // final: carries the transcript + generates the session summary
     // (intermediate flushes already persisted deltas incrementally).
-    void commitSessionToProfile({ final: true });
+    // Live 2026-09-05 (portal-51b667f1, 36 min): the final commit fired
+    // fire-and-forget and the embed host tore the iframe down on the
+    // session_ended signal that followed — the profile's last write was an
+    // intermediate flush three minutes earlier (no summary, no next-time
+    // intent, no auto-assign). Await it, bounded, so a normal commit lands
+    // before the exit and a wedged one cannot hold the End button hostage.
+    // keepalive is requested too; the commit drops it when the payload is
+    // over the browser's keepalive cap (a long transcript) — see the size
+    // guard inside commitSessionToProfile.
+    await Promise.race([
+      commitSessionToProfile({ final: true, keepalive: true }).catch(() => {}),
+      new Promise<void>((resolve) => setTimeout(resolve, FINAL_COMMIT_MAX_WAIT_MS)),
+    ]);
     onEndSession?.();
   };
   // Expose "ensure muted" to the brain orchestrator (defined above toggleMicMute)
@@ -19996,7 +21919,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
 
               Pre-start is UNTOUCHED: that is still the real start button and
               must keep every button affordance. */}
-          {TUTOR_DOCK_STATE_ONLY && hasStarted ? (
+          {sessionMode !== 'text' && (TUTOR_DOCK_STATE_ONLY && hasStarted ? (
             <div
               aria-hidden
               data-testid="tutor-mic-state"
@@ -20029,7 +21952,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           >
             {stateUI.icon}
           </button>
-          )}
+          ))}
 
           {/* R34 T4: Manual mic send affordance — a companion button beside
               the mic rather than rewiring the mic's own state machine (the
@@ -20067,10 +21990,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           {/* Caption slot (one-line merged bar) replaces the state text when
               provided; otherwise the legacy state text, hidden on mobile to
               free room for the input. The mic button's color/pulse conveys
-              state either way. */}
+              state either way. Text mode: captionSlot is always null (TutorSession
+              gates dockCaptionEl on sessionMode), and there is no mic to have a
+              state — render nothing rather than fall through to the mic-state
+              text, so the composer row carries no mic-state text at all. */}
           {captionSlot ? (
             <div className="flex-1 min-w-0">{captionSlot}</div>
-          ) : (
+          ) : sessionMode === 'text' ? null : (
             <div className="hidden md:block min-w-0">
               <p className="text-sm font-medium text-gray-700 truncate">{stateUI.text}</p>
               {stateUI.subtext && (
@@ -20271,6 +22197,18 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               onSessionStartedRef.current?.();
               realtime.unlockAudio();
             }
+            // Text-only tutor (2026-09-19): this path stamped the timer/audio
+            // parity above but never flipped hasStarted, unlike the handle's
+            // sendTextMessage (runGestureSessionStart, ~line 20401) — the
+            // harness's first typed submit in text mode landed with
+            // hasStarted still false. Reuse that exact latch here. Text-mode
+            // only: voice-typed-first never flipped hasStarted before this
+            // fix (only the mic tap / handle path did), so gating on
+            // sessionMode keeps voice behavior unchanged.
+            if (sessionMode === 'text' && !hasStartedRef.current && !resumeState) {
+              hasStartedRef.current = true;
+              setHasStarted(true);
+            }
             // Send to AI. input.value was already cleared at the top of
             // this handler before the plan-from-text await so the box
             // empties immediately on submit, not at end of flow.
@@ -20281,6 +22219,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         }}
       >
         <input
+          ref={studentTextInputRef}
           name="studentText"
           type="text"
           // Suppress the browser's autofill/history dropdown (it surfaced prior
@@ -20293,19 +22232,26 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           spellCheck={false}
           data-1p-ignore
           data-lpignore="true"
-          placeholder="Type here if you can't speak..."
+          placeholder={sessionMode === 'text' ? 'Type your answer… Enter to send' : "Type here if you can't speak..."}
           // 16px font-size on mobile — anything smaller triggers iOS Safari's
           // auto-zoom on focus, which makes the entire page appear zoomed in
           // and pushes the send button off-screen. text-base = 16px.
           className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-          disabled={!realtime.isConnected}
+          autoFocus={sessionMode === 'text'}
+          // Text mode: the composer must never brick. A brain-fetch failure
+          // used to disable this input via brainReachable, and the only
+          // re-enable path was another brain fetch — which a disabled input
+          // can never trigger (one-way door). brainReachable now drives only
+          // the inline hint below, never the disabled state.
+          disabled={sessionMode === 'text' ? false : !realtime.isConnected}
           onFocus={() => {
             studentTypingRef.current = true;
             // Mute mic while typing to prevent it picking up speech
-            if (!isMicMuted && realtime.isConnected) {
+            if (sessionMode !== 'text' && !isMicMuted && realtime.isConnected) {
               realtime.muteInput();
             }
           }}
+          onChange={() => { if (sessionMode === 'text') armIdleNudge(); }}
           onBlur={() => {
             studentTypingRef.current = false;
             // Resume mic when done typing (only if student hasn't manually
@@ -20313,7 +22259,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // the session starts there is no mic to resume — startListening
             // here pushed the relay into 'listening' pre-start, arming the
             // dead-Start-tap bug.
-            if (!isMicMuted && realtime.isConnected && hasStartedRef.current) {
+            if (sessionMode !== 'text' && !isMicMuted && realtime.isConnected && hasStartedRef.current) {
               realtime.startListening();
             }
           }}
@@ -20321,11 +22267,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         <button
           type="submit"
           className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30"
-          disabled={!realtime.isConnected}
+          disabled={sessionMode === 'text' ? false : !realtime.isConnected}
         >
           <Send className="w-4 h-4" />
         </button>
       </form>
+
+      {/* Brain-hiccup hint (text mode only) — the composer stays live through
+          a brain-fetch failure now, so this is advisory only, not a gate.
+          Clears itself on the next successful brain fetch (setBrainReachable(true)
+          in the brain-orchestrator's HTTP-success path). */}
+      {sessionMode === 'text' && !brainReachable && (
+        <span className="order-last w-full md:w-auto text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded flex-shrink-0">
+          Connection hiccup — try sending again
+        </span>
+      )}
 
       {/* Controls on the right */}
       <div className="flex items-center gap-2 flex-shrink-0">
@@ -20335,7 +22291,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             "dual microphone icons / choice paralysis"). Mute-BEFORE-start is
             still honored end-to-end for anyone already muted — handleMicClick's
             `if (!isMicMuted)` guard is untouched. */}
-        {showsDockMuteButton({ hasStarted, isPaused }) && (
+        {sessionMode !== 'text' && showsDockMuteButton({ hasStarted, isPaused }) && (
           <button
             onClick={toggleMicMute}
             className={`p-2 rounded-lg text-sm ${isMicMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}

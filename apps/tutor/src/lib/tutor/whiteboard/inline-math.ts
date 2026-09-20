@@ -126,6 +126,32 @@ function looksLikeMath(inner: string): boolean {
  *  the left class covers the period-right-after-closing-math shape; the
  *  [A-Z][a-z] right side keeps decimals ("3.14") and initialisms ("U.S.A.")
  *  untouched. */
+/**
+ * Is this "latex" field actually a plain-prose sentence? Live 2026-09-18
+ * (portal-7cefb23d, a pharmacy-technician worked example): the brain filled a
+ * showSolution step's `result` with "Less waiting at the counter", the card
+ * handed it to the display-math renderer, and KaTeX painted
+ * "Lesswaitingatthecounter" — math mode drops spaces and italicises. Callers
+ * that receive brain-authored equation fields for non-STEM lessons use this
+ * to route prose to the text renderer instead.
+ *
+ * Prose = no LaTeX/math signal at all (no `\ ^ _ { } $`, no relation
+ * `= < > ≤ ≥ ≠`, no arithmetic operator between operands) AND at least
+ * three whitespace-separated words AND a real word of 4+ letters. Anything
+ * with a math signal stays math; short fragments like "2x" or "sin x" stay
+ * math (a 3-letter function name is not a prose word).
+ */
+export function isProseNotLatex(latex: string): boolean {
+  const t = (latex ?? '').trim();
+  if (!t) return false;
+  if (/[\\^_{}$]/.test(t)) return false;
+  if (/[=<>≤≥≠±×÷]/.test(t)) return false;
+  if (/\S\s*[+\-*/]\s*\S/.test(t) && /\d/.test(t) && !/[a-zA-Z]{4,}/.test(t)) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 3) return false;
+  return /[A-Za-z]{4,}/.test(t);
+}
+
 export function normalizeSentenceGaps(text: string): string {
   return text.replace(/([\w$])\.([A-Z][a-z])/g, '$1. $2');
 }
@@ -398,10 +424,25 @@ export function decodeHtmlEntities(s: string): string {
 // Split a string into alternating plain-text and math segments.
 // Math is anything between matched single $...$ that doesn't include whitespace-only
 // content, doesn't span across a newline, and passes the looksLikeMath check.
-/** `forceMath` (2026-07-15, Q pin): skip the currency guard — every balanced
- *  $...$ pair is math. For contexts where the text comes from a prompt that
- *  guarantees $...$ means LaTeX (the question-gist route), where the guard's
- *  conservatism otherwise leaves simple math like "$2 - x$" as literal text. */
+/** A $…$ span whose inner text reads as PROSE that opened with a money
+ *  amount — "$120 give a different result than on $100" pairs the two
+ *  currency signs into one bogus math span. Shape: a bare amount, then
+ *  whitespace, then a real word (3+ letters) somewhere, and no LaTeX
+ *  command (a `\text{…}` or `\times` span is math however it starts).
+ *  Live check 6 (2026-09-07, portal-63ee9f2c): the Q-pin gist echoed the
+ *  tutor's spoken prices and `forceMath` rendered them as math. */
+export function looksLikeCurrencySpan(inner: string): boolean {
+  return /^\s*\d[\d,]*(?:\.\d+)?\s+\S/.test(inner)
+    && /[A-Za-z]{3,}/.test(inner)
+    && !/\\[A-Za-z]+/.test(inner);
+}
+
+/** `forceMath` (2026-07-15, Q pin): relax the currency guard — a balanced
+ *  $...$ pair is math even when `looksLikeMath` is unsure ("$2 - x$"), for
+ *  contexts where the text comes from a prompt that says $...$ means LaTeX
+ *  (the question-gist route). Since 2026-09-07 it still yields to a span
+ *  that is unmistakably two currency amounts around prose
+ *  (`looksLikeCurrencySpan`) — the gist echoes spoken prices verbatim. */
 export function segment(text: string, forceMath = false): Array<{ kind: 'text' | 'math'; body: string }> {
   if (!text) return [];
   const out: Array<{ kind: 'text' | 'math'; body: string }> = [];
@@ -435,7 +476,7 @@ export function segment(text: string, forceMath = false): Array<{ kind: 'text' |
     // opening $ as a literal character and resume scanning AFTER it (do
     // NOT consume the closing $, which may pair legitimately with a
     // later $ later in the string).
-    if (!forceMath && !looksLikeMath(inner)) {
+    if (!looksLikeMath(inner) && (!forceMath || looksLikeCurrencySpan(inner))) {
       out.push({ kind: 'text', body: text.slice(i, dollar + 1) });
       i = dollar + 1;
       continue;

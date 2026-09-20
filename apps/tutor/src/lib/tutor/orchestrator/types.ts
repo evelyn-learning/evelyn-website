@@ -27,6 +27,15 @@ export interface RealtimeHandle {
      *  is off OR the leaf has no concepts authored, which is most of them. */
     conceptsCovered: string[];
     weakTopics: Array<{ topic: string; count: number }>;
+    /** Holistic-pedagogy round (spec §C.1) — practice the tutor assigned
+     *  this session (in-session `close_session_notes`, or the commit
+     *  route's fallback auto-assign). Undefined when nothing was assigned;
+     *  the end-of-session card is absent in that case. */
+    assignedPractice?: Array<{ loId: string; title: string; count: number }>;
+    /** Fix round 1 (spec §C.6) — the host-supplied place that practice lands
+     *  ("Unit 2 · Practice"). Present exactly when `assignedPractice` is: the
+     *  engine only surfaces an assignment it can point the student at. */
+    practiceLocator?: string;
   };
   /** Phase 3: step the session-level depth preference. Negative =
    *  more depth / slower teaching. Positive = less depth. Clamped

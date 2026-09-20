@@ -46,6 +46,8 @@ import {
   ShowQuizPayloadSchema,
   ShowConceptMapPayloadSchema,
   FrqRubricSchema,
+  AssignedPracticeRequestSchema,
+  AssignedPracticeResponseSchema,
 } from '@evelyn/portal-contract/v1';
 
 // ---------------------------------------------------------------------------
@@ -284,6 +286,30 @@ test('GradeFreeResponseResponse — part-by-part validates', () =>
   }, 'grade-resp'));
 test('FrqRubric — parts validate', () =>
   ok(FrqRubricSchema, { parts: [{ criterionId: 'c1', maxPoints: 2, scoringCriteria: 'states H0/Ha', modelResponse: 'H0: p=0.5' }] }, 'rubric'));
+
+console.log('\nAssigned practice (v1.15.0 — homework read, spec §C.8):');
+test('AssignedPracticeRequest — studentId only', () =>
+  ok(AssignedPracticeRequestSchema, { studentId: 's' }, 'assigned-req-min'));
+test('AssignedPracticeRequest — with courseId + includeAcknowledged', () =>
+  ok(AssignedPracticeRequestSchema, { studentId: 's', courseId: 'ap-statistics', includeAcknowledged: true }, 'assigned-req-full'));
+test('AssignedPracticeRequest — missing studentId rejected', () =>
+  bad(AssignedPracticeRequestSchema, { courseId: 'ap-statistics' }, 'assigned-req-bad'));
+test('AssignedPracticeResponse — assignments with status validate', () =>
+  ok(AssignedPracticeResponseSchema, {
+    assignments: [{
+      assignmentId: 'a1',
+      sessionId: 's1',
+      assignedAt: '2026-09-05T00:00:00.000Z',
+      locator: 'Unit 2 · Practice',
+      los: [{
+        loId: 'apstats.normal-distribution',
+        title: 'Normal distribution',
+        reason: 'still shaky on z-scores',
+        items: [{ id: 'p1', source: 'plan-try-yourself', problemText: 'try this' }],
+        status: { attempted: 1, correct: 1, total: 1, lastAttemptAt: '2026-09-05T01:00:00.000Z' },
+      }],
+    }],
+  }, 'assigned-resp'));
 
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failed} failed\n`);

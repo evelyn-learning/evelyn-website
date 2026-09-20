@@ -47,10 +47,10 @@ const defaultSettings: SiteSettingsData = {
   companyName: "Evelyn Learning",
   companyTagline: "AI-Powered Learning Solutions for Education",
   companyDescription:
-    "Evelyn Learning provides enterprise-grade AI solutions for education. We offer 24 AI-powered learning products across 8 categories, plus comprehensive implementation services. Our solutions are white-label ready, FERPA/COPPA/GDPR compliant, and designed by educators for data-driven learning outcomes.",
+    "Evelyn Learning provides enterprise-grade AI solutions for education. We offer 25 AI-powered learning products across 8 categories, plus comprehensive implementation services. Our solutions are white-label ready, FERPA/COPPA/GDPR compliant, and designed by educators for data-driven learning outcomes.",
   differentiators: [
     "300+ educators on our team who understand pedagogy, not just technology",
-    "24 AI products with live demos available",
+    "25 AI products with live demos available",
     "100% white-label ready - students never see our brand",
     "Deployment in less than 1 week",
     "24/7 support included",
@@ -141,7 +141,7 @@ function buildFAQSection(): string {
     {
       question: "Do you offer white-label solutions?",
       answer:
-        "Yes! All 24 of our products are 100% white-label ready. Your students will see your branding, colors, and logo—never ours. This is included at no extra cost.",
+        "Yes! All 25 of our products are 100% white-label ready. Your students will see your branding, colors, and logo—never ours. This is included at no extra cost.",
     },
     {
       question: "How does pricing work?",
@@ -199,7 +199,7 @@ export function buildSystemPrompt(
 - This helps users scan and find important information quickly
 
 **For broad questions like "What products/services do you offer?":**
-- Give a brief SUMMARY, not a full list (e.g., "We have 24 AI products across 8 categories including **tutoring**, **assessment**, **content creation**, and **analytics**")
+- Give a brief SUMMARY, not a full list (e.g., "We have 25 AI products across 8 categories including **tutoring**, **assessment**, **content creation**, and **analytics**")
 - Ask what area interests them rather than listing everything
 - Example: "We offer AI tools for **tutoring**, **assessment**, **content authoring**, and **student analytics**. What challenge are you looking to solve?"
 

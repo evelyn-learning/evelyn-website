@@ -1568,6 +1568,10 @@ function TutorPage() {
       pendingTestStartRef.current = true;
       console.warn('[tutor-e2e] __tutorTestStart', JSON.stringify(cfg).slice(0, 400));
     };
+    // Ends the session through the SAME path as the End button (final profile
+    // commit → onEndSession), so the harness can exercise close-of-session
+    // behaviour (close_session_notes, auto-assign fallback, nextSessionIntent).
+    w.__tutorEndSession = () => { realtimeHandleRef.current?.endSession?.(); };
     w.__tutorSendText = (text: string) => {
       if (!realtimeHandleRef.current) { console.warn('[tutor-e2e] __tutorSendText: handle not ready'); return; }
       console.warn('[tutor-e2e] __tutorSendText', JSON.stringify(text).slice(0, 120));
@@ -3109,6 +3113,10 @@ function TutorPage() {
                 />
               )
             ) : inputMode === 'text' ? (
+              // LEGACY pre-brain text path — NOT the partner text-only mode. The real text
+              // mode is resolveSessionMode() + sessionMode==='text' in the embed session
+              // (docs/superpowers/specs/2026-09-19-text-only-tutor-mode-design.md). Do not
+              // extend this branch; it bypasses the brain and the whiteboard.
               <form onSubmit={handleSubmit} className="flex gap-3">
                 <input
                   ref={inputRef}
@@ -3166,7 +3174,11 @@ function TutorPage() {
 
   // Render summary stage
   // Pull what was covered + how far the lesson plan got + minutes used.
-  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? { topicsCovered: [], conceptsCovered: [], weakTopics: [] };
+  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? ({
+    topicsCovered: [],
+    conceptsCovered: [],
+    weakTopics: [],
+  } as ReturnType<NonNullable<NonNullable<typeof realtimeHandleRef.current>['getSessionSummary']>>);
   const segmentsCompletedIdx = lessonProgress.plan
     ? lessonProgress.plan.segments.findIndex((s) => s.id === lessonProgress.currentSegmentId)
     : -1;
@@ -3234,6 +3246,16 @@ function TutorPage() {
             </ul>
           </div>
         )}
+
+        {/* Holistic-pedagogy round (spec §C.1) — homework the tutor assigned
+            during the session. Absent unless a practice-assign succeeded. */}
+        {sessionSummary.assignedPractice?.length ? (
+          <div className="mt-4 text-sm">
+            <span className="font-medium">Homework:</span>{' '}
+            {sessionSummary.assignedPractice.map((a) => `${a.count} questions on ${a.title}`).join(' · ')}
+            {sessionSummary.practiceLocator ? ` — find them under ${sessionSummary.practiceLocator}.` : ' — find them in your Practice tab.'}
+          </div>
+        ) : null}
 
         {/* Areas to revisit (only when present) */}
         {sessionSummary.weakTopics.length > 0 && (

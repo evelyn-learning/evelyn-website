@@ -1,3 +1,8 @@
+/**
+ * Browser events the embed posts to its parent window (window.parent.postMessage).
+ * These are the ONLY push events today; there is no outbound webhook delivery
+ * yet. Keep in sync with src/app/tutor-portal/embed/page.tsx.
+ */
 export interface WebhookEvent {
   event: string;
   trigger: string;
@@ -6,21 +11,11 @@ export interface WebhookEvent {
 }
 
 export const webhookEvents: WebhookEvent[] = [
-  { event: 'session.started', trigger: 'Student begins tutoring', category: 'Session Lifecycle', keyFields: ['session_id', 'student_id', 'subject', 'topic', 'level', 'input_mode', 'timestamp'] },
-  { event: 'session.active', trigger: 'First student message sent', category: 'Session Lifecycle', keyFields: ['session_id', 'student_id', 'timestamp'] },
-  { event: 'session.paused', trigger: 'Student pauses session', category: 'Session Lifecycle', keyFields: ['session_id', 'pause_reason', 'elapsed_seconds'] },
-  { event: 'session.resumed', trigger: 'Student resumes session', category: 'Session Lifecycle', keyFields: ['session_id', 'pause_duration_seconds'] },
-  { event: 'session.ended', trigger: 'Session completes or times out', category: 'Session Lifecycle', keyFields: ['session_id', 'duration', 'message_count', 'whiteboard_items', 'token_usage', 'end_reason'] },
-  { event: 'session.abandoned', trigger: 'Student leaves without ending', category: 'Session Lifecycle', keyFields: ['session_id', 'last_activity_timestamp', 'duration'] },
-  { event: 'session.transcript', trigger: 'Full transcript available (post-session)', category: 'Session Lifecycle', keyFields: ['session_id', 'transcript[]', 'whiteboard_commands[]'] },
-  { event: 'usage.summary', trigger: 'End-of-session cost breakdown', category: 'Usage', keyFields: ['session_id', 'input_tokens', 'output_tokens', 'audio_tokens', 'estimated_cost'] },
-  { event: 'usage.daily', trigger: 'Daily aggregate for partner', category: 'Usage', keyFields: ['date', 'total_sessions', 'total_minutes', 'total_cost', 'unique_students'] },
-  { event: 'whiteboard.generated', trigger: 'Whiteboard visual created', category: 'Content', keyFields: ['session_id', 'command_type', 'page_number', 'timestamp'] },
-  { event: 'homework.uploaded', trigger: 'Student uploads homework photo', category: 'Content', keyFields: ['session_id', 'student_id', 'extraction_status', 'problem_count'] },
-  { event: 'homework.extracted', trigger: 'Problems extracted from photo', category: 'Content', keyFields: ['session_id', 'problems[]', 'confidence_score'] },
-  { event: 'student.milestone', trigger: 'Student demonstrates mastery of a concept', category: 'Learning', keyFields: ['session_id', 'student_id', 'concept_id', 'milestone_type'] },
-  { event: 'error.session', trigger: 'Session-level error', category: 'Errors', keyFields: ['session_id', 'error_code', 'error_message', 'recoverable'] },
-  { event: 'error.voice', trigger: 'Voice engine error (connection, transcription)', category: 'Errors', keyFields: ['session_id', 'error_type', 'fallback_action'] },
+  { event: 'evelyn:session_started', trigger: 'The student starts the session', category: 'Session lifecycle', keyFields: ['session_id', 'started_at_ms?'] },
+  { event: 'evelyn:progress', trigger: 'Every lesson-segment change', category: 'Session lifecycle', keyFields: ['session_id', 'lesson_progress { lessonPlanId, segments[], currentSegmentId, completedSegmentIds[], currentSegmentLabel?, percent? }', 'practice?'] },
+  { event: 'evelyn:session_ended', trigger: 'The student ends the session, or the time cap ends it', category: 'Session lifecycle', keyFields: ['session_id', 'duration (wall-clock seconds)', 'message_count', 'whiteboard_items', 'milestone', 'lesson_progress?', 'ended_reason? ("time_limit")', 'end_intent? ("finish" | "discard")'] },
+  { event: 'evelyn:expand', trigger: 'The tutor asks the host for more room', category: 'Layout', keyFields: [] },
+  { event: 'evelyn:collapse', trigger: 'The tutor releases the extra room', category: 'Layout', keyFields: [] },
 ];
 
 export const webhookCategories = [...new Set(webhookEvents.map((e) => e.category))];

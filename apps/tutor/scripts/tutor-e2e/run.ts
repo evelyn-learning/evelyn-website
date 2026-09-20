@@ -39,6 +39,36 @@ const PROFILE_BEHAVIORS: Record<StudentProfile, string> = {
 };
 
 const BASE_URL = process.env.TUTOR_E2E_URL || 'http://localhost:3006';
+// Task 10 (text-only tutor mode): when set, drive the scenario through a
+// minted partner embed (/tutor-portal/embed?token=…) instead of the /tutor
+// picker page — see scripts/mint-embed-token.ts. The embed page has no
+// setup step (config comes from the token), so there is no
+// __tutorTestStart counterpart there; navigation/kickoff below branch on
+// this.
+const EMBED_TOKEN = process.env.TUTOR_E2E_EMBED_TOKEN;
+/** Unverified peek at the embed token's `input_mode` claim (mint-time only —
+ *  never used for auth). Drives two harness-side decisions: (1) skip the
+ *  voice-only synthetic `[start lesson]` kickoff for a text-mode session —
+ *  text mode's real start gesture is the first typed message (see
+ *  VoiceTutorRealtime's handleMicClick text-mode early-return and its
+ *  handleRef.sendTextMessage runGestureSessionStart parity comment); (2)
+ *  scope the mic/warmup-kickoff debug-event assertion to
+ *  text-mode runs only, so the voice-mode embed regression run
+ *  (arith-long-division) — which legitimately fires those events — isn't
+ *  spuriously failed by a check meant for text mode. */
+function decodeEmbedTokenPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    return JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+const EMBED_INPUT_MODE = EMBED_TOKEN ? decodeEmbedTokenPayload(EMBED_TOKEN)?.input_mode : undefined;
+const EMBED_TEXT_MODE = EMBED_INPUT_MODE === 'text';
 // Silent TTS by default (Crimsora v2 Phase 2E): automated runs must not
 // burn Cartesia/OpenAI credits on audio nobody hears. The zero-filled
 // silent buffers still drive sentence-start/drain, so render-sync works
@@ -60,6 +90,22 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
   if (!scenarioName) { console.error('Usage: npm run test:tutor-e2e -- <scenario-name> [--headed]'); process.exit(1); }
+
+  // Task 10 fix round 1: a mis-minted or garbled TUTOR_E2E_EMBED_TOKEN must
+  // not silently skip the text-mode assertions — EMBED_TEXT_MODE would just
+  // read false and the run would look like an ordinary passing voice-mode
+  // run instead of surfacing the bad token. Log the decoded claim and fail
+  // fast on anything that isn't 'text', 'voice', or absent (a voice-mode
+  // mint correctly omits input_mode — see mint-embed-token.ts).
+  if (EMBED_TOKEN) {
+    log(`embed token input_mode=${EMBED_INPUT_MODE ?? '(absent → voice)'}`);
+    if (EMBED_INPUT_MODE !== undefined && EMBED_INPUT_MODE !== 'text' && EMBED_INPUT_MODE !== 'voice') {
+      console.error(
+        `FATAL: TUTOR_E2E_EMBED_TOKEN decodes to input_mode=${JSON.stringify(EMBED_INPUT_MODE)} — expected 'text', 'voice', or absent. Check --mode on mint-embed-token.ts (or the token payload itself).`,
+      );
+      process.exit(1);
+    }
+  }
 
   // Load scenario.
   let scenario: Scenario;
@@ -189,12 +235,28 @@ async function main() {
   const SETTLE_MS = 7500;
 
   try {
-    log(`navigating to ${BASE_URL}/tutor?tts=${TTS_PARAM}`);
-    await page.goto(`${BASE_URL}/tutor?tts=${TTS_PARAM}`, { waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => typeof window.__tutorTestStart === 'function', { timeout: 30_000 });
+    const url = EMBED_TOKEN
+      ? `${BASE_URL}/tutor-portal/embed?token=${encodeURIComponent(EMBED_TOKEN)}`
+      : `${BASE_URL}/tutor?tts=${TTS_PARAM}`;
+    // Redact the signed token from the log — it's a full session credential,
+    // not just an opaque id. The real url (with token) still goes to page.goto.
+    const loggedUrl = EMBED_TOKEN
+      ? `${BASE_URL}/tutor-portal/embed?token=<redacted>`
+      : url;
+    log(`navigating to ${loggedUrl}`);
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-    log(`starting session: ${JSON.stringify(scenario.start)}`);
-    await page.evaluate((cfg) => window.__tutorTestStart(cfg), scenario.start);
+    if (EMBED_TOKEN) {
+      // Embed sessions have no setup/picker step — config comes straight
+      // from the token, and TutorSession is already mounted/connecting by
+      // the time the hooks land. No __tutorTestStart counterpart to wait
+      // for or call.
+      await page.waitForFunction(() => typeof window.__tutorSendText === 'function', { timeout: 30_000 });
+    } else {
+      await page.waitForFunction(() => typeof window.__tutorTestStart === 'function', { timeout: 30_000 });
+      log(`starting session: ${JSON.stringify(scenario.start)}`);
+      await page.evaluate((cfg) => window.__tutorTestStart(cfg), scenario.start);
+    }
 
     // Wait for the realtime handle + WS to be ready.
     log('waiting for connect…');
@@ -205,16 +267,25 @@ async function main() {
     }
     await sleep(3000); // WS settle
 
-    // Drive the kickoff explicitly — the real flow fires it on the mic click
-    // (handleMicClick), which doesn't happen headless. '[start lesson]' is the
-    // same synthetic kickoff transcript; bracketed → treated as silent.
-    log('kickoff: [start lesson]');
-    {
+    if (EMBED_TEXT_MODE) {
+      // Text mode has no mic-tap kickoff to simulate: handleMicClick's
+      // sessionMode==='text' branch returns before ever reaching the
+      // '[start lesson]' path, and handleRef.sendTextMessage's
+      // runGestureSessionStart only fires for a REAL (non-bracketed)
+      // message — exactly what the first seedTurn/testTurn `say` is. So the
+      // first real turn below IS the start gesture; skip the synthetic
+      // kickoff to match production text-mode behavior.
+      log('text mode: skipping [start lesson] kickoff (first real turn starts the session)');
+    } else {
+      // Drive the kickoff explicitly — the real flow fires it on the mic click
+      // (handleMicClick), which doesn't happen headless. '[start lesson]' is the
+      // same synthetic kickoff transcript; bracketed → treated as silent.
+      log('kickoff: [start lesson]');
       const before = (await getState()).turnsCompleted;
       await page.evaluate(() => window.__tutorSendText('[start lesson]'));
       await waitForTurn(before, 120_000, '[start lesson]');
+      await shot('after-kickoff');
     }
-    await shot('after-kickoff');
 
     const runTurn = async (t: ScenarioTurn, kind: string, i: number) => {
       const label = `${kind}-${i}`;
@@ -285,6 +356,15 @@ async function main() {
       for (const t of scenario.testTurns) { await runTurn(t, 'test', i++); }
     }
 
+    if (scenario.endSession) {
+      log('ending session via __tutorEndSession (End-button path)');
+      await page.evaluate(() => (window as unknown as { __tutorEndSession?: () => void }).__tutorEndSession?.());
+      // The final commit is a POST the page fires on the way out; give it and
+      // the route's auto-assign fallback time to land before the dump.
+      await sleep(10_000);
+      await shot('session-ended');
+    }
+
     if (typeof scenario.reloadAfterTurn === 'number') {
       log('resume check: hard reload');
       await page.reload({ waitUntil: 'domcontentloaded' });
@@ -337,6 +417,71 @@ async function main() {
       fs.writeFileSync(path.join(outDir, 'debug-events.json'), JSON.stringify(dbg, null, 2));
       log(`saved debug-events.json (${(dbg as unknown[]).length} events)`);
     } catch (e) { anomalies.push(`debug-events dump failed: ${(e as Error).message}`); }
+
+    // Task 10 — text-mode assertions. Gated on EMBED_TEXT_MODE (not merely
+    // EMBED_TOKEN): the voice-mode embed regression run (arith-long-division)
+    // ALSO sets TUTOR_E2E_EMBED_TOKEN, and legitimately fires mic/warmup-kickoff
+    // events — a check meant to catch text mode leaking voice machinery must
+    // not fail that run. A failure here sets a non-zero exit code (distinct
+    // from the general `anomalies` list, which never affects exit status).
+    if (EMBED_TEXT_MODE) {
+      try {
+        const finalState = (await page.evaluate(() => window.__tutorTestState())) as {
+          transcript?: Array<{ role: string; text: string }>;
+          debugEvents?: Array<{ type: string }>;
+          whiteboardCommandCount?: number;
+        };
+        const failures: string[] = [];
+        // Event names checked against what the engine actually emits
+        // (VoiceTutorRealtime.tsx onDebugEvent call sites), not the
+        // brief's original guess — 'getUserMedia' and 'warmup_overlay' are
+        // not real event names and never matched anything:
+        //   mic            — shared_mic (the real getUserMedia mic-open/close
+        //                    lifecycle — this is the event Task 10's first
+        //                    run actually caught) plus the mic_* family
+        //                    (mic_mute/mic_unmute/mic_device_switch) and
+        //                    MicSilentWarning; all voice-only, gated on
+        //                    sessionMode !== 'text' at every call site.
+        //   warmup_(rekick|failed) — the voice-only mic-kickoff retry/failure
+        //                    family (warmup_rekick, warmup_rekick_skipped_busy
+        //                    — substring match — warmup_failed), fired only
+        //                    from handleMicClick's 'start' branch / the R32 T9
+        //                    watchdog, both unreachable in text mode
+        //                    (handleMicClick returns early for sessionMode
+        //                    'text'). Both families already reach the embed's
+        //                    debugEvents — EMBED_DEBUG_EVENT_PREFIXES
+        //                    (embed/page.tsx) already lists 'mic_', 'shared_mic',
+        //                    and 'warmup_', so no allowlist change was needed.
+        const badEvent = (finalState.debugEvents ?? []).find((e) => /mic|warmup_(rekick|failed)/i.test(e.type));
+        if (badEvent) {
+          failures.push(`text-mode assertion: forbidden debug event "${badEvent.type}" (mic/warmup-kickoff events must never fire in text mode)`);
+        }
+        // Liveness: an empty/missing debugEvents array would pass the check
+        // above vacuously (no event to find is not the same as "no mic
+        // activity, verified") — fail loudly instead of silently.
+        const eventCount = (finalState.debugEvents ?? []).length;
+        if (eventCount === 0) {
+          failures.push('text-mode assertion: debugEvents is empty — the hook or state capture is not working, not a real pass');
+        }
+        const tutorTurns = (finalState.transcript ?? []).filter((t) => t.role === 'tutor').length;
+        if (tutorTurns < 2) {
+          failures.push(`text-mode assertion: only ${tutorTurns} tutor transcript entr${tutorTurns === 1 ? 'y' : 'ies'} (need >= 2)`);
+        }
+        const boardCommands = finalState.whiteboardCommandCount ?? 0;
+        if (boardCommands === 0) {
+          failures.push('text-mode assertion: 0 board commands rendered');
+        }
+        if (failures.length > 0) {
+          failures.forEach((f) => { anomalies.push(f); log(`FAIL ${f}`); });
+          process.exitCode = 1;
+        } else {
+          log(`text-mode assertions PASSED (tutor turns=${tutorTurns}, board commands=${boardCommands}, debugEvents=${eventCount}, no mic/warmup-kickoff events)`);
+        }
+      } catch (e) {
+        anomalies.push(`text-mode assertion check failed: ${(e as Error).message}`);
+        process.exitCode = 1;
+      }
+    }
 
     // Jank-probe dump (layout shifts, long tasks, scroll events) → perf.json.
     try {

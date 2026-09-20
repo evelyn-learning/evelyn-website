@@ -74,13 +74,13 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     companyDescription: {
       type: String,
       default:
-        "Evelyn Learning provides enterprise-grade AI solutions for education. We offer 24 AI-powered learning products across 8 categories, plus comprehensive implementation services. Our solutions are white-label ready, FERPA/COPPA/GDPR compliant, and designed by educators for data-driven learning outcomes.",
+        "Evelyn Learning provides enterprise-grade AI solutions for education. We offer 25 AI-powered learning products across 8 categories, plus comprehensive implementation services. Our solutions are white-label ready, FERPA/COPPA/GDPR compliant, and designed by educators for data-driven learning outcomes.",
     },
     differentiators: {
       type: [String],
       default: [
         "300+ educators on our team who understand pedagogy, not just technology",
-        "24 AI products with live demos available",
+        "25 AI products with live demos available",
         "100% white-label ready - students never see our brand",
         "Deployment in less than 1 week",
         "24/7 support included",

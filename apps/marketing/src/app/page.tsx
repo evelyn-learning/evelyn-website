@@ -393,12 +393,10 @@ function AIProductsSection() {
             </div>
           </Link>
 
-          {/* PageVault - Hero Card */}
-          <a
-            href="https://pagevault.us"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 p-8 md:p-10 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+          {/* Evelyn Academy - Hero Card */}
+          <Link
+            href="/products/academy"
+            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-700 p-8 md:p-10 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]"
           >
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -408,30 +406,31 @@ function AIProductsSection() {
               {/* Badge */}
               <div className="flex items-center gap-3 mb-6">
                 <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                  External Product
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  Interactive Demo
                 </span>
               </div>
 
               {/* Icon */}
               <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
-                {'\uD83D\uDCDA'}
+                {'\uD83C\uDFEB'}
               </div>
 
               {/* Content */}
               <h3 className="text-2xl md:text-3xl font-bold mb-3">
-                PageVault
+                Evelyn Academy
               </h3>
-              <p className="text-emerald-100 text-base md:text-lg leading-relaxed mb-6 max-w-md">
-                A secure digital library platform built for publishers. Deliver your eBooks with enterprise-grade protection while giving readers a premium experience.
+              <p className="text-indigo-100 text-base md:text-lg leading-relaxed mb-6 max-w-md">
+                Your own branded AI learning platform — courses, practice, mock exams and progress reports, with a voice tutor teaching every lesson. Built from your syllabus.
               </p>
 
               {/* CTA */}
               <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full font-medium group-hover:bg-white/30 transition-colors">
-                Visit Site
+                Explore the academy
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
-          </a>
+          </Link>
         </div>
 
         {/* Popular Products Grid */}

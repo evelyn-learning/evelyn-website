@@ -17,11 +17,10 @@ Unlike text-only AI chatbots, the Voice Tutor replicates the experience of sitti
 ### Core Capabilities
 
 #### 1. Real-Time Voice Conversation
-Students interact through natural speech. The AI tutor listens, understands, and responds conversationally — no typing required. Two voice engine tiers are available:
+Students interact through natural speech. The AI tutor listens, understands, and responds conversationally — no typing required. One voice engine powers every deployment:
 
-- **Standard Engine** — Turn-by-turn voice pipeline with ~1.5s response time. High-quality speech recognition, AI reasoning, and natural speech synthesis. Cost-effective for large-scale deployments. **$0.06/minute.**
-- **Premium Engine** — Ultra-low-latency voice with sub-400ms response time. Seamless turn-taking with natural interruptions, emotional expressiveness, and 8 voice options. Ideal for premium tutoring tiers and competitive exam prep. **$0.25/minute.**
-- **Text-only mode** — Students type, tutor responds in text. Full whiteboard support. **$0.02/minute.**
+- **Voice Tutor** — Sub-400ms response time, natural turn-taking with interruptions, structured pedagogy engine with adaptive pacing, full whiteboard, 50+ languages. **$0.15 per voice tutoring minute** ($0.12 for text-only sessions), with no setup or platform fees.
+- **Text-only mode** — Students type, tutor responds in text. Full whiteboard support. **$0.12/minute.**
 
 Both voice engines support 50+ languages, natural turn-taking, and multiple voice options.
 
@@ -149,7 +148,7 @@ The Voice Tutor is designed around evidence-based teaching practices:
 |---|---|
 | 6-12 months to build whiteboard alone | Launch in weeks |
 | 19 visual renderers to develop and maintain | Battle-tested rendering engine |
-| Voice engine integration and tuning | Production-grade, two tiers (Standard + Premium) |
+| Voice engine integration and tuning | Production-grade voice stack, tuned for tutoring |
 | Ongoing AI prompt engineering | Continuously refined pedagogy |
 | Multi-stage validation layers to build | Built-in quality assurance |
 | Your team maintains it all | We handle updates and improvements |

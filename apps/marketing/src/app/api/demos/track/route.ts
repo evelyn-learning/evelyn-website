@@ -183,7 +183,9 @@ export async function POST(request: NextRequest) {
     // On "view" events, ensure a DemoSession record exists so the session
     // appears in the admin Session Explorer even if the user never interacts.
     // Also update lastActivity so stale sessions surface recent visits.
-    if (eventType === "view") {
+    // "try"/"complete" events reuse the same upsert so a voice/text mode
+    // sent as metadata.mode lands on the session summary.
+    if (eventType === "view" || eventType === "try" || eventType === "complete") {
       try {
         await DemoSession.findOneAndUpdate(
           { sessionId, productId },
@@ -203,6 +205,9 @@ export async function POST(request: NextRequest) {
             },
             $set: {
               "summary.lastActivity": now,
+              ...(metadata?.mode === "voice" || metadata?.mode === "text"
+                ? { "summary.mode": metadata.mode }
+                : {}),
             },
           },
           { upsert: true }

@@ -50,8 +50,32 @@
  * the affirmed token ("$f'(x) = 2x$") is a restatement, not a
  * contradiction.
  *
- * Pure module — no imports, no side effects. Never throws.
+ * BARE-PRAISE SHAPE (spec §D.3, 2026-09-05 QA session turn 5 — the third
+ * live praise-then-reverse instance): the opener praised with NO value at
+ * all ("Right, let's check the reasoning behind it.") and a later sentence
+ * denied the student's answer ("…so x=9 isn't quite it here."). Both
+ * branches above are blind to it — there is no `not <affirmed phrase>` (the
+ * affirmed capture is a prose clause, never re-negated verbatim) and no math
+ * token to run the substitution scan on. The third branch below therefore
+ * fires on a PROSE opener capture only (`isMathValueToken` false, so the two
+ * branches above are untouched) when a later sentence carries a denial that
+ * is about the SAME claim: it either names a value matching the student's own
+ * utterance, or names no value at all (a bare "Not quite —" can only be about
+ * what the student just said).
+ *
+ * Same-claim scoping is what keeps the two-part shape quiet: "Right on the
+ * roots — two and three. Not quite on the vertex: it should be (1, -4)…"
+ * denies a DIFFERENT value than the one praised, so it never enters. And a
+ * denial-SHAPED rhetorical aside ("Not quite the same thing happens with
+ * negatives…") is excluded by continuation word, not by value — it names no
+ * value, so the "no value named" arm would otherwise swallow it. Exclusions
+ * are the only lever this branch tunes on: the fire conditions are fixed.
+ *
+ * Imports are pure sibling modules only (a regex constant and a string
+ * normalizer) — no side effects. Never throws.
  */
+import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
+import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 
 export const PRAISE_OPENER_RE =
   /^\s*(?:right|yes|exactly|correct|perfect|spot on|that'?s (?:right|correct|it))\s*[—–,.:!-]\s*([^!?\n]{1,120}?)[.!?](?:\s|$)/i;
@@ -115,7 +139,103 @@ function findEqualitiesInMath(text: string): Array<{ lhs: string; rhsNorm: strin
   return out;
 }
 
-export function detectPraiseContradiction(turnText: string): { affirmed: string } | null {
+/** Denials the shared DENIAL_RE (anchored, opener-shaped) does not carry —
+ *  the clause-final forms the live instance used ("…so x=9 isn't quite it
+ *  here."). Unanchored on purpose: in this shape the denial lands mid-sentence
+ *  after the substitution, not at the start of one. */
+const BARE_DENIAL_RE = /\b(?:isn'?t\s+(?:quite\s+)?(?:it|right|correct)|not\s+quite\s+(?:it|right)|that'?s\s+not\s+(?:it|right|correct))\b/i;
+
+/** A denial-shaped opening that is actually a rhetorical COMPARISON ("not
+ *  quite the same thing happens with negatives…", "not quite like the last
+ *  one") — it denies nothing the student said. Excluded before the value test
+ *  because such an aside typically names no value, which the "no value named"
+ *  arm would otherwise read as a bare denial of the student's answer. This is
+ *  the exact aside class VoiceTutorRealtime's inverse-verdict gate documents. */
+const DENIAL_ASIDE_RE = /\b(?:not\s+quite|isn'?t\s+quite)\s+(?:the\s+same|similar|like|as)\b/i;
+
+/** A denial framed as a HYPOTHETICAL or a FORWARD warning — "if someone said
+ *  the slope is negative, that's not correct", "careful on the next one…",
+ *  "a common mistake is…". It denies a claim nobody made, so it is never a
+ *  verdict on this student's answer, whether or not a value is named (fix
+ *  round 1, Important 1). Applied to BOTH arms of the branch for that reason. */
+const DENIAL_HYPOTHETICAL_RE =
+  /\b(?:if\s+(?:someone|you|a\s+student)|careful|watch\s+(?:out\s+)?(?:for|on)|on\s+the\s+next|a\s+common\s+mistake|students\s+often|would(?:n'?t)?\s+be)\b/i;
+
+/** A denial scoped to a PART of the work ("your sign ON THE second term
+ *  isn't quite right") rather than to the answer as a whole. Applied to the
+ *  value-free arm ONLY: with no value named, "a bare denial can only be
+ *  about what the student just said" is exactly the assumption a part-scoped
+ *  denial breaks (fix round 1, Important 1). The same-value arm has positive
+ *  evidence the denial is about the student's own number, so it is not
+ *  weakened here — the live instance 3 denies "on the other side, so x=9
+ *  isn't quite it" and must keep firing. */
+const PART_SCOPE_RE = /\b(?:on|for|in|with)\s+(?:the|your)\s+\w+/i;
+
+/** Digits, decimals, fractions, or a $…$ span — "a value was named". */
+const VALUE_TOKEN_RE = /\d+(?:[./]\d+)?|\$[^$]+\$/g;
+
+/** Abbreviations whose trailing period is not a sentence end (fix round 1,
+ *  minor 3). Without this, "…roughly 30 percent, i.e. not quite right." splits
+ *  into a value-bearing fragment and a value-FREE denial fragment, and the
+ *  value-free arm then reads that fragment as a bare denial of the student's
+ *  answer. */
+const ABBREV_TAIL_RE = /(?:^|\s)(?:vs|e\.g|i\.e|approx|etc)\.$/i;
+
+function splitSentences(text: string): string[] {
+  const parts = text.split(/(?<=[.!?])\s+/);
+  const merged: string[] = [];
+  for (const part of parts) {
+    if (merged.length > 0 && ABBREV_TAIL_RE.test(merged[merged.length - 1])) {
+      merged[merged.length - 1] += ' ' + part;
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged.map((s) => s.trim()).filter(Boolean);
+}
+
+/** Spoken numerals → digits, then strip currency/whitespace and a leading
+ *  "x=" style variable label, so "x equals nine" and "x=9" compare. */
+function normValue(s: string): string {
+  return spokenNumbersToDigits(s).toLowerCase().replace(/[$\s]/g, '').replace(/^[a-z]'?=/, '');
+}
+
+/** Does a value named in the denial refer to what the student said?
+ *
+ *  Equality, or a SUFFIX match on a token boundary. The suffix arm exists so
+ *  a labelled utterance ("x equals nine" → "xequals9") still matches a bare
+ *  "9"; the boundary condition is what stops it matching a DIFFERENT number
+ *  that merely ends the same way (fix round 1, Important 2: "one hundred
+ *  nineteen" → "119" must NOT match a denial naming "9"). The character
+ *  immediately before the matched suffix must therefore not be a digit —
+ *  "xequals9" passes ("s"), "119" does not ("1"). */
+function matchesStudentValue(named: string, studentVal: string): boolean {
+  if (!named) return false;
+  if (named === studentVal) return true;
+  if (!studentVal.endsWith(named)) return false;
+  const prev = studentVal[studentVal.length - named.length - 1];
+  return prev !== undefined && !/\d/.test(prev);
+}
+
+/** @param opts.studentUtterance  the utterance the turn is grading — scopes
+ *   the §D.3 branch to the SAME claim.
+ *  @param opts.bareDenialWidening  set FALSE to disable the §D.3 branch
+ *   entirely and get byte-identical pre-widening behaviour. Defaults to true
+ *   (the module's spec behaviour); the orchestrator passes false when
+ *   `TUTOR_FALSE_PRAISE_OPENER` is off, so that flag is a true kill switch for
+ *   the widening as well as for the false-praise-opener guard — a kill path
+ *   whose switch only half-disables it is the trap this repo keeps re-learning. */
+/** Which of the three shapes fired. The caller needs it because the kill
+ *  REASON differs: 'negation' and 'substitution' both have an affirmed VALUE
+ *  the turn later contradicts, while 'bare-denial' affirmed prose and the
+ *  contradiction is a later denial of the student's answer — describing that
+ *  as "you praised value X then asserted a different one" is nonsense. */
+export type PraiseContradictionBranch = 'negation' | 'substitution' | 'bare-denial';
+
+export function detectPraiseContradiction(
+  turnText: string,
+  opts?: { studentUtterance?: string; bareDenialWidening?: boolean },
+): { affirmed: string; branch: PraiseContradictionBranch } | null {
   const m = turnText.match(PRAISE_OPENER_RE);
   if (!m) return null;
   const affirmed = m[1].replace(/\*/g, '').trim().replace(/\s+/g, ' ');
@@ -130,7 +250,7 @@ export function detectPraiseContradiction(turnText: string): { affirmed: string 
   // for word-ending tokens (still rejects "not one halves" as a match for
   // "one half") while correctly closing after symbol-ending tokens.
   const contra = new RegExp(`\\bnot\\s+${escaped}(?!\\w)`, 'i');
-  if (contra.test(rest)) return { affirmed };
+  if (contra.test(rest)) return { affirmed, branch: 'negation' };
 
   if (isMathValueToken(affirmed)) {
     const affirmedNorm = normalizeMathToken(affirmed);
@@ -142,7 +262,36 @@ export function detectPraiseContradiction(turnText: string): { affirmed: string 
       finalRhsNorm = eq.rhsNorm;
     }
     if (qualifies && finalRhsNorm !== null && finalRhsNorm !== affirmedNorm) {
-      return { affirmed };
+      return { affirmed, branch: 'substitution' };
+    }
+  }
+
+  // Spec §D.3 — bare praise opener (prose capture, not a math token) followed
+  // by a denial that either names the student's own value or names NO value.
+  if (opts?.bareDenialWidening !== false && !isMathValueToken(affirmed)) {
+    const sentences = splitSentences(rest);
+    const studentVal = opts?.studentUtterance ? normValue(opts.studentUtterance) : '';
+    for (const s of sentences) {
+      // Where the denial sits, so "before the denial marker" is answerable.
+      // DENIAL_RE is anchored, so an opener-shaped denial is always at 0.
+      const bare = BARE_DENIAL_RE.exec(s);
+      const denialIdx = DENIAL_RE.test(s) ? 0 : (bare ? bare.index : -1);
+      if (denialIdx < 0) continue;
+      // Exclusions below (never fire conditions): each one only ever skips.
+      // A comparison aside, not a verdict.
+      if (DENIAL_ASIDE_RE.test(s)) continue;
+      // A hypothetical or a forward warning — denies a claim nobody made.
+      if (DENIAL_HYPOTHETICAL_RE.test(s)) continue;
+      const named = (s.match(VALUE_TOKEN_RE) ?? []).map(normValue);
+      if (named.length === 0) {
+        // Value-free arm only: a denial scoped to a PART of the work is not
+        // a verdict on the whole answer. "Before the denial marker" is what
+        // makes it part-scoping rather than an unrelated later clause.
+        const partScope = PART_SCOPE_RE.exec(s);
+        if (partScope && partScope.index < denialIdx) continue;
+        return { affirmed, branch: 'bare-denial' };
+      }
+      if (studentVal && named.some((v) => matchesStudentValue(v, studentVal))) return { affirmed, branch: 'bare-denial' };
     }
   }
 

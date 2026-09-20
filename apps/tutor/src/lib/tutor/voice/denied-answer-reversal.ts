@@ -25,9 +25,16 @@
  *    MAX_AGE_TURNS student turns.
  */
 
+import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
+
 export interface DeniedAnswer {
   phrase: string;
   turn: number;
+  /** The active problem the denial was about (statement prefix). A later
+   *  assertion of the same phrase on a DIFFERENT problem is not a reversal
+   *  (live 2026-09-06, Noah: "4" denied on 64÷16, then "4" was the correct
+   *  answer to 24÷6 and the guard killed the affirmation). */
+  problemKey?: string;
 }
 
 const DEFAULT_MAX_AGE_TURNS = 6;
@@ -42,6 +49,16 @@ function normalize(text: string): string {
     .replace(/[^a-z0-9\s/.-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** Opener-shape normalization. Unlike normalize(), this PRESERVES dashes and
+ *  sentence terminators: they are the signal that the value terminates the
+ *  opening clause ("Right. Twelve — …") rather than being predicated upon
+ *  ("Right, 12 is a common denominator"). Stripping them caused false
+ *  reversals on ordinary teaching speech. */
+function normalizeForOpener(text: string, spokenWords: boolean): string {
+  const t = spokenWords ? spokenNumbersToDigits(text ?? '') : (text ?? '');
+  return t.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
 /** A short, answer-like student utterance worth tracking when denied —
@@ -64,24 +81,98 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Praise/denial openers a tutor grades with. A reversal in a math session is
+ *  almost always "<verdict>. <value>" — portal-9a9b7c09 @763.6s said
+ *  "Right. Twelve —" after denying a correct 12 fifteen seconds earlier, and
+ *  none of the prose assertion shapes below matched it. */
+const VERDICT_OPENER = String.raw`exactly|right|correct|precisely|yes|nice|perfect|that'?s it`;
+
+const OPENER_SHAPE_RE = (p: string) => new RegExp(
+  `^\\s*(?:${VERDICT_OPENER})\\b[\\s.,!]*\\b${p}\\b\\s*(?:[—–-]|[.!?]|$)`, 'i');
+
+/** Contrast / conditional markers that turn a mention of X into commentary
+ *  ABOUT X rather than an assertion OF X. Checked in the clause before the
+ *  phrase and in the few words right after it. */
+// Bare "not|never|would|could|might" were dropped from the BEFORE regex
+// (2026-09-07 review): tested against up to 80 chars of the whole preceding
+// clause, a hedge word anywhere earlier in the clause suppressed a genuine
+// reversal — "That's not confusing, it's the central executive after all."
+// The adjacent-negation check above already handles "not the X" directly.
+// 2026-09-07 (Task 6 fix round): generalization markers — "remember that an
+// identity always has infinitely many solutions", "whenever both sides
+// simplify to the same thing" — state a general rule ABOUT the class, not a
+// verdict on THIS problem, and were false-killing correct teaching turns in
+// the authored-ending guard (authored-ending.ts, which shares this check).
+const MENTION_BEFORE_RE = /\b(?:only\s+when|only\s+if|when|if|unless|whereas|while|versus|vs\.?|compared\s+(?:to|with)|as\s+opposed\s+to|rather\s+than|instead\s+of|unlike|whenever|remember|recall|in\s+general|generally|usually|typically|by\s+definition)\b/;
+const MENTION_AFTER_RE = /^\s*(?:only\s+(?:when|if)|when|if|unless|would|could|might|versus|vs\.?|whereas)\b/;
+
+/** `sentence` and `phrase` are already normalized the same way (Task 6 calls
+ *  this with its own normalized text). A conditional/contrastive mention of
+ *  the phrase — "infinite solutions only when the two sides were identical",
+ *  "unlike infinite solutions", "if both sides matched, the answer is
+ *  infinite solutions" — is commentary ABOUT the denied answer, not an
+ *  assertion OF it (2026-09-06, portal-3a024b75: this killed a correct
+ *  denial-reaffirming explanation as a reversal). */
+export function isExplanatoryMention(sentence: string, phrase: string): boolean {
+  const m = new RegExp(`\\b${escapeRe(phrase)}\\b`).exec(sentence);
+  if (!m) return false;
+  const before = sentence.slice(0, m.index);
+  const clauseStart = Math.max(before.lastIndexOf('. '), before.lastIndexOf('; '), before.lastIndexOf(': '), before.lastIndexOf(' - '), before.lastIndexOf(' — '));
+  const clause = before.slice(clauseStart + 1).slice(-80);
+  if (MENTION_BEFORE_RE.test(clause)) return true;
+  const after = sentence.slice(m.index + m[0].length, m.index + m[0].length + 40);
+  return MENTION_AFTER_RE.test(after);
+}
+
+/** Stable key for "the problem this denial was about": the statement's
+ *  first 80 normalised chars. Undefined when no problem is active, which
+ *  keeps the pre-existing (unscoped) behaviour for problem-less turns. */
+export function problemKeyForDenial(statement: string | undefined | null): string | undefined {
+  const s = (statement ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return s ? s.slice(0, 80) : undefined;
+}
+
 export function checkDeniedAnswerReversal(args: {
   sentence: string;
   denied: DeniedAnswer[];
   currentTurn: number;
   maxAgeTurns?: number;
+  normalizeSpokenWords?: boolean;
+  /** The active problem NOW; a denial recorded on another problem is skipped. */
+  problemKey?: string;
 }): { verdict: 'ok' } | { verdict: 'reversal'; phrase: string; turn: number } {
   const maxAge = args.maxAgeTurns ?? DEFAULT_MAX_AGE_TURNS;
-  const sentence = normalize(args.sentence);
+  const sentence = normalize(
+    args.normalizeSpokenWords === true ? spokenNumbersToDigits(args.sentence) : args.sentence,
+  );
   if (!sentence) return { verdict: 'ok' };
   for (const d of args.denied) {
     if (!d.phrase) continue;
     if (d.turn >= args.currentTurn) continue;             // the denial's own turn
     if (args.currentTurn - d.turn > maxAge) continue;     // stale — student moved on
-    const p = escapeRe(d.phrase);
+    if (d.problemKey && args.problemKey && d.problemKey !== args.problemKey) continue; // different problem
+    // The stash holds the STUDENT's text (usually digits) and the tutor
+    // reverses in words; normalize the phrase the same way as the sentence.
+    const phrase = normalize(
+      args.normalizeSpokenWords === true ? spokenNumbersToDigits(d.phrase) : d.phrase,
+    );
+    if (!phrase) continue;
+    const p = escapeRe(phrase);
     if (!new RegExp(`\\b${p}\\b`).test(sentence)) continue;
     // Negation anywhere adjacent to the phrase → a denial re-statement, not
     // a reversal ("it's not the central executive").
     if (new RegExp(`\\b(?:not|isn'?t|wasn'?t|instead of|rather than|unlike|never)\\s+(?:the\\s+|a\\s+|an\\s+)?${p}\\b`).test(sentence)) continue;
+    // A conditional/contrastive mention of the phrase is commentary ABOUT
+    // it, not an assertion OF it (2026-09-06, portal-3a024b75).
+    if (isExplanatoryMention(sentence, phrase)) continue;
+    // Test the verdict-opener shape against lighter normalization that preserves
+    // dashes and terminators — they signal the value terminates the opening clause.
+    if (args.normalizeSpokenWords === true) {
+      const openerSentence = normalizeForOpener(args.sentence, true);
+      if (OPENER_SHAPE_RE(p).test(openerSentence)) {
+        return { verdict: 'reversal', phrase: d.phrase, turn: d.turn };
+      }
+    }
     const assertion = new RegExp(
       `(?:\\b(?:it'?s|it\\s+is|that'?s|that\\s+is|this\\s+is|the\\s+answer\\s+is|resolution\\s+is|belongs?\\s+to)\\s+(?:the\\s+|a\\s+|an\\s+)?${p}\\b` +
       `|\\b${p}\\s+after\\s+all\\b` +

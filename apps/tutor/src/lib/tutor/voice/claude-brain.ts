@@ -23,17 +23,21 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, ABBREV_TAIL_RE } from './sentence-spacing';
+import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
  *  the stored transcript. The meta pass is flag-gated — off ⇒ identical to
  *  the pre-R49b single strip. */
-const scrubTutorText = (t: string): string =>
-  TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
+const scrubTutorText = (raw: string): string => {
+  // HTML tag leak (2026-09-18) runs first and unconditionally — see sentence-spacing.ts.
+  const t = stripHtmlBreakTags(raw);
+  return TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
+};
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
+import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggles-block';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -83,9 +87,10 @@ const FALLBACK_BREAKER_MS =
   Number(process.env.TUTOR_BRAIN_FALLBACK_BREAKER_SECONDS || 300) * 1000;
 let brainFallbackLatchedUntil = 0;
 
-function brainCallTargets(modelOverride?: string): RoleClient[] {
+/** Exported for test:brain-fallback-permission only. */
+export function brainCallTargets(modelOverride?: string, allowFallback = true): RoleClient[] {
   if (modelOverride) return [{ ...brainModel, model: modelOverride }];
-  if (!brainFallbackModel) return [brainModel];
+  if (!brainFallbackModel || !allowFallback) return [brainModel];
   return Date.now() < brainFallbackLatchedUntil
     ? [brainFallbackModel, brainModel]
     : [brainModel, brainFallbackModel];
@@ -120,12 +125,13 @@ function paramsForTarget<T extends { model: string }>(target: RoleClient, params
 async function openBrainStream(
   buildParams: (target: RoleClient) => Parameters<Anthropic['messages']['stream']>[0],
   modelOverride?: string,
+  allowFallback = true,
 ): Promise<{
   events: AsyncGenerator<Anthropic.MessageStreamEvent>;
   finalMessage: () => Promise<Anthropic.Message>;
   target: RoleClient;
 }> {
-  const targets = brainCallTargets(modelOverride);
+  const targets = brainCallTargets(modelOverride, allowFallback);
   let lastErr: unknown;
   for (let i = 0; i < targets.length; i++) {
     const target = targets[i];
@@ -158,8 +164,9 @@ async function openBrainStream(
 async function createBrainMessage(
   params: Anthropic.MessageCreateParamsNonStreaming,
   modelOverride?: string,
+  allowFallback = true,
 ): Promise<{ response: Anthropic.Message; target: RoleClient }> {
-  const targets = brainCallTargets(modelOverride);
+  const targets = brainCallTargets(modelOverride, allowFallback);
   let lastErr: unknown;
   for (let i = 0; i < targets.length; i++) {
     const target = targets[i];
@@ -249,6 +256,20 @@ export interface BrainTurnInput {
    *  arrived from a completed full-length mock to review their misses.
    *  Absent ⇒ `<mock_review>` block omitted ⇒ userContent byte-identical. */
   mockReview?: MockReviewContext;
+  /** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives.
+   *  All volatile per-turn user content, never the cached system prefix.
+   *  Absent ⇒ no block ⇒ userContent byte-identical. */
+  recapOffer?: { loTitle: string; soft?: boolean };
+  recapGo?: { loTitle: string };
+  recapWrap?: boolean;
+  recapReply?: 'accept' | 'decline' | 'unclear';
+  /** Task 13 (2026-09-07): the deterministic struggle ledger's top flags for
+   *  THIS session, rendered as `<session_struggles>` in the per-turn user
+   *  content so close_session_notes is grounded in evidence, not in the
+   *  brain's recollection. Absent/empty ⇒ no block ⇒ userContent
+   *  byte-identical. Suppressed on a turn that already carries a
+   *  `<recap_offer>` — that offer owns the turn. */
+  ledgerFlags?: LedgerFlag[];
   /** Teacher-persona mid-session style salience (flag
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
    *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
@@ -380,6 +401,11 @@ export interface BrainTurnInput {
   };
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
+  /** Provider failover permission for THIS turn (2026-09-19). Default true.
+   *  Partner-embed turns pass false so a student's session data never
+   *  reaches the fallback provider (a non-US sub-processor) — the partner's
+   *  DPA lists only the primary. Retail /tutor keeps the fallback. */
+  allowFallback?: boolean;
   /** Optional override (defaults to 1500). */
   maxTokens?: number;
   /** Optional async resolver for tool_result content. Default behavior
@@ -1456,6 +1482,41 @@ export function formatMockReviewBlock(ctx?: MockReviewContext): string {
   return `<mock_review>\n${body}\n</mock_review>\n\n`;
 }
 
+/** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives —
+ *  offer/go/wrap/reply-note blocks. Exported for scripts/test-recap-blocks.ts
+ *  so the block text is testable without running a whole brain turn. */
+export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 'recapGo' | 'recapWrap' | 'recapReply' | 'ledgerFlags'>): string {
+  // Defense in depth: loTitle is spliced directly into the block body, so a
+  // title containing '<' or '>' could close the block early or open a
+  // fake one (e.g. '</recap_offer><recap_go>...'). Strip angle brackets and
+  // collapse whitespace here even though the stream route already sanitizes
+  // its own input — formatRecapBlocks is exported and callable directly.
+  const cleanTitle = (t: string) => t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+  let out = '';
+  if (input.recapOffer) {
+    const t = cleanTitle(input.recapOffer.loTitle);
+    out += `<recap_offer>\nPRIORITY THIS TURN. You have now seen the student stumble more than once on: ${t}. In THIS turn, after responding to what they just said, offer a short recap of that idea: say in one sentence that you think a quick two- to three-minute recap might help, ask whether they want it now, then STOP and wait for their answer. Do not begin the recap in this turn. This offer outranks the one-sub-question rule for THIS turn: do not pose a new lesson question — acknowledge what they said in one sentence, make the offer, ask, stop. Speak from what you observed; never say a record or system shows they are weak.${input.recapOffer.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}\n</recap_offer>\n\n`;
+  }
+  // Task 13: the ledger's own view of the session. Only on turns WITHOUT a
+  // recap offer — the offer is a PRIORITY-THIS-TURN directive and already
+  // owns the objective it names; two competing mandates in one turn is how
+  // the goodbye turn loses the offer.
+  if (!input.recapOffer) out += formatSessionStrugglesBlock(input.ledgerFlags);
+  if (input.recapGo) {
+    const t = cleanTitle(input.recapGo.loTitle);
+    out += `<recap_go>\nThe student accepted a recap of ${t}. Do it now: first call advance_lesson({to:"free"}), then run a recall-first recap — ask them to say what they remember, fix the one idea that was wrong, then one short check they do themselves. Keep it under about three minutes. When they get the check right (or after two tries), call advance_lesson({to:"next"}) to return to the lesson and say you are picking up where you left off.\n</recap_go>\n\n`;
+  }
+  if (input.recapWrap) {
+    out += `<recap_wrap>\nWrap the recap now: one sentence of closure, then call advance_lesson({to:"next"}) to return to the lesson.\n</recap_wrap>\n\n`;
+  }
+  if (input.recapReply === 'decline') {
+    out += `<recap_offer_reply>\nThe student declined the recap you offered. Do not ask again this session; carry on with the lesson and keep weaving quick checks of that idea into the material as it comes up.\n</recap_offer_reply>\n\n`;
+  } else if (input.recapReply === 'unclear') {
+    out += `<recap_offer_reply>\nThe student's reply to your recap offer was unclear. Do not re-ask; respond to what they actually said and continue the lesson.\n</recap_offer_reply>\n\n`;
+  }
+  return out;
+}
+
 /**
  * Run one turn of the brain. The caller passes the latest student utterance
  * plus context, gets back a structured response with all text + tool calls
@@ -1512,8 +1573,15 @@ function buildBrainMessages(
   conversationHistory: BrainTurnInput['conversationHistory'],
   userContent: string,
 ): Anthropic.MessageParam[] {
-  const lastIdx = conversationHistory.length - 1;
-  const history: Anthropic.MessageParam[] = conversationHistory.map((m, i) =>
+  // Live 2026-09-06 (portal-4bbe5d91): a killed-and-retried assistant turn
+  // left an EMPTY transcript entry; it became the last history message, got
+  // the cache_control marker, and the API refused the whole turn with 400
+  // "cache_control cannot be set for empty text blocks" — the student saw
+  // "trouble reaching my brain". Empty messages carry nothing worth
+  // sending; drop them before choosing where the cache marker lands.
+  const nonEmpty = conversationHistory.filter((m) => typeof m.content === 'string' && m.content.trim().length > 0);
+  const lastIdx = nonEmpty.length - 1;
+  const history: Anthropic.MessageParam[] = nonEmpty.map((m, i) =>
     i === lastIdx
       ? {
           role: m.role,
@@ -1563,6 +1631,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (mockReviewBlock) {
     console.log('[mock-review] mock_review block attached');
   }
+  // Holistic-pedagogy round: one-turn recap directives. '' when none set.
+  const recapBlocks = formatRecapBlocks(input);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1603,6 +1673,10 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   const userContent =
+    // Recap directives lead the message (live probes 2026-09-05: buried
+    // after seven other blocks, the offer lost to the stuck rule 3 turns in
+    // a row). Position is the cheapest lever on directive compliance.
+    recapBlocks +
     profileBlock +
     openingDirectiveBlock +
     studentMarksBlock +
@@ -1660,7 +1734,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    }, input.model);
+    }, input.model, input.allowFallback !== false);
     totalUsage.model = servedBy.model;
 
     totalUsage.inputTokens += response.usage.input_tokens;
@@ -1768,6 +1842,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (mockReviewBlock) {
     console.log('[mock-review] mock_review block attached');
   }
+  // Holistic-pedagogy round: one-turn recap directives. '' when none set.
+  const recapBlocks = formatRecapBlocks(input);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1802,6 +1878,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   const userContent =
+    // Recap directives lead the message (live probes 2026-09-05: buried
+    // after seven other blocks, the offer lost to the stuck rule 3 turns in
+    // a row). Position is the cheapest lever on directive compliance.
+    recapBlocks +
     profileBlock +
     openingDirectiveBlock +
     studentMarksBlock +
@@ -1868,7 +1948,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    }), input.model);
+    }), input.model, input.allowFallback !== false);
     totalUsage.model = opened.target.model;
 
     for await (const event of opened.events) {
@@ -2059,7 +2139,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           },
         ],
         messages,
-      }), input.model);
+      }), input.model, input.allowFallback !== false);
       const rescueBuffer = new SentenceBuffer();
       for await (const event of rescueOpened.events) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

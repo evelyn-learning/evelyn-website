@@ -110,6 +110,12 @@ export interface SystemPromptContext {
   subject?: string;
   topic?: string;
   level?: string;
+  /** Open-scope session (2026-09-10, marketing demo embed): the configured
+   *  subject/topic is a STARTING POINT, not a boundary. Renders an override
+   *  block after the scope stamp so Rule 7(b)'s off-domain deflection is
+   *  replaced by "honor every switch via propose_plan_swap". Absent/false
+   *  ⇒ prompt byte-identical to before. */
+  openScope?: boolean;
   /** Deployment branding (D2C / B2B / white-label). Defaults to Evelyn
    *  when omitted. Pass a different record to swap product identity,
    *  contact info, scope statement, etc. without touching the engine. */
@@ -183,6 +189,9 @@ export interface SystemPromptContext {
    *  flag-gated orchestrator (VoiceTutorRealtime under
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER) populates it. */
   teacherPersona?: TeacherPersonaWire;
+
+  /** Text-only session (partner claim). The student types and reads. */
+  inputMode?: 'voice' | 'text';
 }
 
 /**
@@ -664,6 +673,12 @@ For physics, math, biology, and chemistry visuals, use the structured tools list
 
 **Board values are canonical — correct a student's misquote, never adopt it.** The same rule applies in reverse: when a STUDENT restates a problem, figure, or given and their numbers or labels conflict with what is actually on the board (the board snapshot / authored text in your context), do NOT silently switch to their version. Check their restatement against the board, point out the mismatch briefly and kindly, and continue with the board's values. Silently computing with a student's misremembered value produces a conclusion that contradicts what they can see on the board — from that point every answer, check, and comparison is wrong twice over. A student's restatement is a thing to VERIFY against the board, not a replacement source of truth. (This is about misquotes of the CURRENT problem — a student explicitly bringing a NEW problem of their own is different and welcome.)
 
+**Every problem you pose with numbers must be on the board in the SAME turn.** If you say "a 12-ounce jar costs $3.60 and a 20-ounce jar costs $6.00 — which is the better deal?", those numbers must be on a card that turn — \`show_segment_card\` for an authored segment, otherwise \`show_problem\` with the exact statement you spoke. A numberless template (\`price/ounces = price/ounces\`) does NOT count: the student cannot re-read numbers that live only in speech. If a "Question" card appears that you did not call for, the runtime boarded your spoken problem — treat it as the active problem and grade against it.
+
+**A valid method is never "corrected" to your preferred one.** When clearing fractions, ANY common multiple of the denominators works — if the student says "multiply by 12" or "by 20" where the LCD is 6 or 10, affirm that it works, then (optionally) note the LCD as the tidier choice. Never open with "Actually, the LCD is…" as if the student were wrong; the same rule applies to any correct alternative route (subtracting from the other side first, distributing before or after clearing).
+
+**Hook and concept segments are short — at most 4 turns — and never the place to improvise worked examples.** When you are ready to demonstrate a problem, \`advance_lesson\` into the plan's \`worked_example\` segment and render ITS authored card; do not teach a different problem of your own in the hook and then skip the authored one.
+
 **Worked-example segments require an INTERACTIVE walkthrough, not a static dump.** When the active segment is a \`worked_example\` (it has a \`steps\` array in its authored content), your job is to walk the student through each step one at a time:
 - Render the authored card via \`show_segment_card\`.
 - Narrate / ask the FIRST step interactively. Wait for the student's response (an answer, a "got it", a question).
@@ -811,7 +826,7 @@ When the lesson context shows an agenda-item label for the segment you are enter
 
 You have two tools for silently noting student weaknesses: \`record_gap\` (for learning objectives in the active plan) and \`flag_prerequisite_gap\` (for foundational concepts the active plan does NOT teach but the student is missing). Read each tool's description for trigger conditions. These fire silently — the student does not hear or see them. They populate the student's persistent profile, feed back into future sessions as part of \`<student_profile>\`, and surface to the student between sessions as a "weak areas" practice section.
 
-Trigger discipline matters more than coverage. Most wrong answers are slips, not gaps. Fire only when an error reveals a real misunderstanding (the student's reasoning, not just their answer, is broken), the student verbalized confusion tied to a specific concept, the student couldn't recover after a hint, or the same kind of error has repeated within the segment. Do NOT fire on a single self-corrected mistake, on a misheard / mistyped answer, or on a question about the wording of the problem. Per session, fire at most once per (loId, distinct issue) for \`record_gap\` and once per concept_label for \`flag_prerequisite_gap\`.
+Trigger discipline matters more than coverage. Most wrong answers are slips, not gaps. Fire only when an error reveals a real misunderstanding (the student's reasoning, not just their answer, is broken), the student verbalized confusion tied to a specific concept, the student couldn't recover after a hint, or the same kind of error has repeated within the segment. Do NOT fire on a single self-corrected mistake, on a misheard / mistyped answer, or on a question about the wording of the problem. Fire once per distinct issue. If the SAME issue returns later in the session, fire the tool AGAIN with recurrence:true — a recurrence is how the system learns a gap is real and not a slip; it is never a duplicate.
 
 Choose between the two tools by asking: "Is the missing piece a learning objective in THIS plan?" If yes, \`record_gap\` with the exact loId from \`<lesson_plan>\`. If no — it's something the plan builds on but doesn't teach — \`flag_prerequisite_gap\` with a 3–6 word teacher-style label.
 
@@ -832,12 +847,19 @@ These complement the gap tools. A confirmed gap might fire BOTH a gap tool AND a
 
 The orchestrator handles all the gates: warmup, rate limits, baseline-loId validation, dedup. Your job is to NOTICE the moment and call the tool — don't second-guess whether it's "worth it." Content that matches an existing baseline entry or prior overlay is silently deduped — re-firing the same idea across sessions just bumps a "reinforced" counter on the existing entry, which is the desirable cross-session signal, not a duplicate-error.
 
+### Closing the session (silent)
+
+A goodbye turn is: call the tool below, then one or two sentences of farewell. Never narrate what kind of turn this is or what it does not need — that is your reasoning, not speech.
+
+You have one more silent tool, \`close_session_notes\`, for the end of a session. When the session is wrapping — the student says they are done, you reach the recap, the time budget is nearly spent, or they say goodbye — call it ONCE, and call it BEFORE your goodbye sentence, never after it. Give it the one or two objectives where you saw REAL difficulty this session (slips are not homework), one plain sentence the student will read beside those questions, and what you intend to open with next time (you will be reminded of it, so mean it). About THIS SESSION'S practice: never state yourself where it is waiting, how many questions there are, or that any were set — the runtime announces that itself, in its own sentence, when something was actually assigned, and it says nothing when nothing was. So do not mention today's homework or practice in any form in your goodbye: no promise of questions, no "check your practice tab", nothing. (This is about the practice set at the END of this session only. If your opening directive asks you to check the homework from LAST session, do that — it is a different thing, and it is already assigned.)
+
 ### "I'm stuck" / "walk me through it" / "break it down" requests (HARD RULE)
 
 When the student asks you to break a problem down or says they're stuck (often via the I'm stuck button — synthetic utterance shape: "I'm stuck on this — can you break it down?"), you MUST take a Socratic approach to GUIDE them to the answer, NOT REVEAL it. Specifically:
 
 - Acknowledge briefly ("no worries", "let's go step by step").
 - Ask the FIRST sub-question in the reasoning chain. ONE sub-question.
+- Exception: when this turn carries a \`<recap_offer>\` block, the offer REPLACES the sub-question — acknowledge briefly, offer the short recap, ask whether they want it, and stop.
 - WAIT for the student's answer. Do NOT continue to the second sub-question, the answer, or any subsequent step in the same turn.
 - Do NOT emit a \`show_equation\` / \`show_problem\` revealing the final answer or any intermediate solved value before the student has engaged with the sub-question. You may render a card showing the GIVENS or the SETUP (e.g., the formula template with blanks) but NEVER the worked-out result.
 - Do NOT say "Exactly", "Yes", "Right", "Correct", or any affirmation word in this turn. The student has not given an answer yet — affirming would be a self-affirmation hallucination. The brain's own prior tool-call output is NOT an answer the student gave.
@@ -1557,6 +1579,60 @@ export const STALE_CHECKPOINT_REORIENT_CLAUSE =
   "restore — re-orient them briefly (one line of 'we were working on X') before the opener; " +
   'do not run full get-to-know-you calibration.';
 
+import type { HomeworkStatus } from '@/lib/tutor/practice-assign/status';
+import type { RecapCandidate } from '@/lib/tutor/learner-model/recap-candidate';
+
+export interface ContinuityInput { homework?: HomeworkStatus[]; nextTimeIntent?: string; recapCandidate?: RecapCandidate | null }
+
+const ONE_MOVE = 'This is your ONE continuity move for the opening — do not add a second callback or any recap of past sessions beyond it. ';
+
+/** Oxford-comma join: 1 title as-is, 2 as "A and B", 3+ as "A, B, and C". */
+function joinTitles(titles: string[]): string {
+  if (titles.length <= 2) return titles.join(' and ');
+  return `${titles.slice(0, -1).join(', ')}, and ${titles[titles.length - 1]}`;
+}
+
+function recapOfferSentence(c: RecapCandidate, lead: string): string {
+  return `${lead}ask whether they would like a two-minute recap of ${c.title} before today's lesson or to go straight in, then wait for their answer before the day's hook.${c.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}`;
+}
+
+/** The offer as its OWN short sentence, used wherever a preceding sentence
+ *  (the homework check, or honoring the next-time intent) is instructed to
+ *  stand alone as ONE sentence — the ask-and-wait must never be folded into
+ *  that same sentence, or "ONE sentence" and "ask ... then wait" contradict. */
+function secondSentenceOffer(c: RecapCandidate): string {
+  return `Then, in a second short sentence, ask whether they would like a two-minute recap of ${c.title} before today's lesson or to go straight in, and wait for their answer before the day's hook.${c.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}`;
+}
+
+/** Spec §C.6 precedence: homework result → next-time intent → recap offer.
+ *  Deterministic — the brain never has to choose between them. */
+export function pickContinuityClause(input: ContinuityInput): { clause: string; recapOffer?: { loId: string; loTitle: string; soft: boolean } } | null {
+  const hw = input.homework?.[0];
+  const cand = input.recapCandidate ?? null;
+  const offer = cand ? { loId: cand.loId, loTitle: cand.title, soft: cand.soft } : undefined;
+  if (hw) {
+    const title = joinTitles(hw.los.map((l) => l.title));
+    if (hw.overall === 'done') {
+      return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: they got the homework done well (${title}) — acknowledge that specifically, then move into today's content.` };
+    }
+    const check = hw.overall === 'untouched'
+      ? `they did not get to the homework on ${title} — ask lightly, with no guilt.`
+      : `their homework on ${title} was only partly done or went shakily — say so kindly.`;
+    if (offer) return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: ${check} ${secondSentenceOffer(cand!)}`, recapOffer: offer };
+    return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: ${check} Then continue into today's content.` };
+  }
+  if (input.nextTimeIntent) {
+    const intentText = input.nextTimeIntent.replace(/"/g, "'");
+    const base = `${ONE_MOVE}You said last time you would start with "${intentText}" — honor that in your opening, in ONE sentence.`;
+    if (offer) return { clause: `${base} ${secondSentenceOffer(cand!)}`, recapOffer: offer };
+    return { clause: base };
+  }
+  if (offer) {
+    return { clause: `${ONE_MOVE}Your continuity sentence this session is an OFFER: mention that ${cand!.title} gave them some trouble last time (or that it is a good moment to revisit it), and ${recapOfferSentence(cand!, '')}`, recapOffer: offer };
+  }
+  return null;
+}
+
 /**
  * Pure helper: given a SystemPromptContext, returns the session-wide prose
  * that routes a student's self-report about themselves down TWO channels,
@@ -1764,6 +1840,14 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   if (context.subject || context.topic) {
     prompt += `(This is the authoritative session scope. Apply Rule 7 against THESE values, not against any topic that appears in the <student_profile> block — that block is historical only.)\n`;
   }
+  if (context.openScope) {
+    // Open-scope demo (2026-09-10): the student may take the session
+    // anywhere. Overrides Rule 7(b) explicitly — the rule text above still
+    // says "note the scope and offer to end"; this block wins because it is
+    // later in the prompt and names the rule it supersedes.
+    prompt += `\n### Open-scope session — OVERRIDES Rule 7(b)\n`;
+    prompt += `This is an open demo session. The configured subject/topic above is only where the session STARTED — it is NOT a boundary. The student may switch to ANY subject or topic at ANY time, and every such request is an in-scope Rule 7 path (a) switch: call propose_plan_swap with a 3-8 word targetSubTopic and, when the new topic belongs to a different subject, also pass targetSubject (a plain subject word such as "math", "physics", "chemistry", "biology", "history", "english"). Never deflect, never say the session is scoped to something else, never offer to end the session so they can start another. Keep teaching the new topic right away from your own knowledge while the new plan loads; the plan's first segment becomes active on the next turn. Off-topic chatter that is not a learning request (shopping, personal questions) is still redirected to learning as usual.\n`;
+  }
 
   if (context.studentName) {
     prompt += `Student Name: ${context.studentName}\n`;
@@ -1894,7 +1978,17 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
     prompt += `\n\n**Never put the answer on the board for a question you are about to ask (HARD RULE).** Before you render anything, check what you are about to ASK. If the value, label, or result you are asking the student to produce would be visible on the board when the question lands, do not render it — render the setup and leave the result blank or as "?". A live session failed this: the tutor moved to a SECOND method to re-derive a balance, drew the new page with the previous method's answer already marked on it in green ("Wednesday: $3.75"), and then asked "who wins, and by how much?" — whose answer was that number. **Re-deriving by another method means the answer is unknown again for the purposes of that derivation.** The whole value of a second method is the student reaching the same place by a different route; carrying the first method's result onto the second method's board deletes the exercise. The same rule governs speech: do not state one part of an answer in the same breath as asking for the rest ("Team Plus's total pull is fifteen — what does Team Minus add up to?" hands over half the work). Give the setup, ask the question, and let the board fill in as they answer.\n`;
   }
 
-  return prompt;
+  // Text-mode clause (Task 6) — the student is typing and reading, not
+  // speaking. Additive/gated exactly like the clauses above: only appended
+  // when the caller passes inputMode: 'text' (VoiceTutorRealtime forwards
+  // its sessionMode prop). Absent/'voice' ⇒ prompt byte-identical to before.
+  const textModeClause = context.inputMode === 'text'
+    ? '\n<text_mode>\nThis student is TYPING and READING, not speaking. Write, do not narrate: no "say", "hear", "listen" phrasing. ' +
+      'Keep every turn short (one idea, then a question). Keep math in the same $…$ delimiters so the board and the chat render identically. ' +
+      'Never ask the student to speak or to use a microphone.\n</text_mode>\n'
+    : '';
+
+  return prompt + textModeClause;
 }
 
 /** Compose grade profile + voice cadence + analogies + humor into one

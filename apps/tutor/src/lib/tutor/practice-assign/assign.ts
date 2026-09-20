@@ -1,0 +1,94 @@
+/**
+ * assignPractice — shared server helper for homework assignment (spec
+ * §C.2-C.3). Used by BOTH the practice-assign route (brain-tool-driven,
+ * `auto: false`) and the commit-time fallback in
+ * student-profile/[id]/route.ts (`auto: true`). Resolves items via
+ * `resolveAssignmentItems` (which never generates — see resolve.ts) and
+ * upserts one PracticeAssignment record per session.
+ */
+import connectDB from '@core/db';
+import { EvidenceEventModel } from '@/models';
+import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
+import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
+import { resolveAssignmentItems } from './resolve';
+import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
+
+const MAX_LOS = 2;
+
+export async function assignPractice(input: {
+  profileId: string;
+  partnerId: string;
+  externalStudentId: string;
+  sessionId: string;
+  lessonPlanId?: string;
+  courseId?: string;
+  loIds: string[];
+  reason: string;
+  locator?: string;
+  nextTimeIntent?: string;
+  subject?: string;
+  auto: boolean;
+  status?: 'draft' | 'assigned';
+  trigger?: string;
+}): Promise<{ assigned: Array<{ loId: string; title: string; count: number }>; assignmentId: string; status: 'draft' | 'assigned' } | null> {
+  const plan = input.lessonPlanId ? await getLessonPlan(input.lessonPlanId) : null;
+  const titleFor = (loId: string): string => {
+    const lo = plan?.los.find((l) => l.id === loId);
+    return lo?.shortTitle ?? lo?.description ?? loId;
+  };
+  const loIds = [...new Set(input.loIds.filter((id) => typeof id === 'string' && id.length > 0))].slice(0, MAX_LOS);
+  if (loIds.length === 0) return null;
+  await connectDB();
+  const seen = await EvidenceEventModel.find({ studentId: input.profileId, loId: { $in: loIds }, itemId: { $exists: true } }).select('itemId').lean();
+  const seenItemIds = [...new Set(seen.map((r) => r.itemId).filter((x): x is string => typeof x === 'string'))];
+  const hints = await getLearnerHints(input.externalStudentId, input.subject, input.partnerId);
+  const los = await resolveAssignmentItems(
+    { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '' },
+    mongoPracticeSources(),
+  );
+  if (los.length === 0) return null;
+  // Caps enforced HERE (not at each call site) so both the direct route and
+  // the commit-time fallback — whose synthesized reason can run long off a
+  // plan LO's full `description` — inherit them uniformly.
+  const reason = input.reason.trim().slice(0, 240);
+  const locator = input.locator?.trim().slice(0, 80) || undefined;
+  const nextTimeIntent = input.nextTimeIntent?.trim().slice(0, 200) || undefined;
+  if (input.status === 'draft') {
+    const result = await upsertDraft({
+      studentId: input.profileId,
+      partnerId: input.partnerId,
+      sessionId: input.sessionId,
+      lessonPlanId: input.lessonPlanId,
+      courseId: input.courseId,
+      los: los.map((l) => ({ ...l, reason })),
+      nextTimeIntent,
+      locator,
+      auto: true,
+      triggers: input.trigger ? [input.trigger] : [],
+    });
+    // Fix round 1 (Important — ownership check): this `sessionId` belongs
+    // to a DIFFERENT student's record. Never surface it — behave exactly
+    // like "nothing to assign" (the draft route turns this into a 204).
+    if ('ownerMismatch' in result) return null;
+    const { rec, alreadyAssigned } = result;
+    // alreadyAssigned ⇒ upsertDraft wrote nothing and returned the
+    // EXISTING record untouched — summarize what was actually persisted
+    // (rec.los), never the items just re-resolved locally, which were
+    // never written and may no longer match.
+    return { assignmentId: rec._id, assigned: summarizeAssignmentLos(rec.los), status: alreadyAssigned ? 'assigned' : 'draft' };
+  }
+  const rec = await upsertAssignment({
+    studentId: input.profileId,
+    partnerId: input.partnerId,
+    sessionId: input.sessionId,
+    lessonPlanId: input.lessonPlanId,
+    courseId: input.courseId,
+    los: los.map((l) => ({ ...l, reason })),
+    nextTimeIntent,
+    locator,
+    auto: input.auto,
+    assignedAt: new Date(),
+  });
+  return { assignmentId: rec._id, assigned: summarizeAssignmentLos(rec.los), status: 'assigned' };
+}

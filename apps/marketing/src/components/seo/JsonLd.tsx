@@ -298,3 +298,44 @@ export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps) {
     />
   );
 }
+
+interface VideoObjectJsonLdProps {
+  name: string;
+  description: string;
+  /** Site-relative paths, e.g. /videos/tour.mp4 */
+  contentPath: string;
+  thumbnailPath: string;
+  /** Page the video is embedded on, site-relative. */
+  pagePath: string;
+  uploadDate: string; // ISO date
+  duration: string; // ISO 8601, e.g. PT55S
+}
+
+export function VideoObjectJsonLd({
+  name,
+  description,
+  contentPath,
+  thumbnailPath,
+  pagePath,
+  uploadDate,
+  duration,
+}: VideoObjectJsonLdProps) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name,
+    description,
+    thumbnailUrl: `${SITE_URL}${thumbnailPath}`,
+    contentUrl: `${SITE_URL}${contentPath}`,
+    embedUrl: `${SITE_URL}${pagePath}`,
+    uploadDate,
+    duration,
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}

@@ -72,10 +72,10 @@ function ComplianceBadgesSection() {
       color: 'purple'
     },
     {
-      name: 'SOC 2 Type II',
-      fullName: 'Service Organization Control 2',
-      description: 'Security practices aligned with SOC 2 standards',
-      icon: '✓',
+      name: 'Security Overview',
+      fullName: 'Documented controls, no third-party certification yet',
+      description: 'We do not hold a SOC 2 report. Our controls are documented in a security overview available on request.',
+      icon: '📄',
       color: 'slate'
     },
     {
@@ -145,32 +145,32 @@ function DataSecuritySection() {
   const practices = [
     {
       title: 'Encryption at Rest & In Transit',
-      description: 'All data is encrypted using AES-256 encryption at rest and TLS 1.3 for data in transit.',
+      description: 'All traffic is encrypted in transit with TLS 1.2/1.3. Database-level encryption at rest is on our roadmap; ask us for the current status before relying on it.',
       icon: '🔐'
     },
     {
       title: 'Access Control',
-      description: 'Role-based access control (RBAC) with principle of least privilege. Multi-factor authentication required.',
+      description: 'Production access is limited to named Evelyn Learning engineers. Admin dashboards require Google sign-in restricted to an allowlist of staff accounts.',
       icon: '🔑'
     },
     {
       title: 'Data Isolation',
-      description: 'Multi-tenant architecture with strict data isolation. Your data never mixes with other clients.',
+      description: 'Each white-label brand runs on its own database. Partner API access uses per-partner secrets that can be rotated on request.',
       icon: '🏠'
     },
     {
       title: 'Audit Logging',
-      description: 'Comprehensive audit trails for all data access and system changes. Logs retained for compliance.',
+      description: 'Application and session logs are retained for troubleshooting and quality review. Formal audit trails of data access are on our roadmap.',
       icon: '📋'
     },
     {
-      title: 'Regular Penetration Testing',
-      description: 'Third-party security assessments and penetration testing conducted annually.',
+      title: 'Security Testing',
+      description: 'Dependencies are scanned for known vulnerabilities. No third-party penetration test has been completed yet; one is planned before our first district contract.',
       icon: '🔍'
     },
     {
       title: 'Secure Development',
-      description: 'Secure SDLC practices including code reviews, static analysis, and dependency scanning.',
+      description: 'Code review before release, typed codebase with automated test suites, scripted deployments verified after each release.',
       icon: '💻'
     }
   ];
@@ -203,30 +203,30 @@ function DataSecuritySection() {
 function InfrastructureSection() {
   const features = [
     {
-      title: 'Cloud Infrastructure',
+      title: 'Infrastructure',
       points: [
-        'Hosted on AWS with SOC 2 certified data centers',
-        'US-based data residency by default',
-        'EU data residency available for GDPR compliance',
-        'Geographic redundancy across multiple availability zones'
+        'Hosted on dedicated virtual servers running Ubuntu LTS',
+        'HTTPS everywhere with TLS 1.2/1.3 and automatically renewed certificates',
+        'Signed, short-lived session tokens for embedded tutoring sessions',
+        'Rate limits and daily quotas per partner and per endpoint'
       ]
     },
     {
       title: 'Monitoring & Response',
       points: [
-        '24/7 automated security monitoring',
-        'Real-time threat detection and alerting',
-        'Incident response team with defined SLAs',
-        'Regular disaster recovery testing'
+        'Process supervision with automatic restart and health checks',
+        'Session-level telemetry reviewed for quality and abuse',
+        'Partners notified within 72 hours of a confirmed security incident',
+        'Named engineering owner for incident response'
       ]
     },
     {
       title: 'Backup & Recovery',
       points: [
-        'Automated daily backups with 30-day retention',
-        'Point-in-time recovery capability',
-        'Cross-region backup replication',
-        'Documented recovery procedures'
+        'Scripted, repeatable deployments from version-controlled releases',
+        'Session data exportable to partners on request',
+        'Automated off-site database backups are being put in place; ask us for current status',
+        'Documented rollback procedure for every release'
       ]
     }
   ];
@@ -338,10 +338,10 @@ function VendorSecuritySection() {
       dataPolicy: 'API data not used for training. Zero data retention available.'
     },
     {
-      name: 'AWS',
-      logo: '☁️',
-      certifications: ['SOC 2 Type II', 'ISO 27001', 'FedRAMP'],
-      dataPolicy: 'Customer data ownership. Regional data residency options.'
+      name: 'Cartesia (speech)',
+      logo: '🎙️',
+      certifications: ['See provider trust page'],
+      dataPolicy: 'Processes tutor speech and student audio for the session only. Full sub-processor list available on request.'
     }
   ];
 

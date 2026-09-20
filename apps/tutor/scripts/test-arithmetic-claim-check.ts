@@ -92,6 +92,55 @@ expectVerdict("", 'ok');
 expectVerdict("no numbers here at all", 'ok');
 expectVerdict("great job, let's keep going!", 'ok');
 
+// ---------- Chained operators (portal-9a9b7c09) ----------
+// ─── portal-9a9b7c09 @451.1s — the sum is 182, the tutor said 38 ───
+{
+  const r = checkArithmeticClaims(
+    "Right. Sixteen plus nine plus nine plus four plus one-forty-four — that's *thirty-eight*.",
+    { normalizeSpokenWords: true },
+  );
+  check('portal-9a9b7c09: spoken chained sum, false total → false_assertion',
+    r.verdict === 'false_assertion', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims("Right. 16 + 9 + 9 + 4 + 144 = 38", { normalizeSpokenWords: true });
+  check('same claim in digits → false_assertion', r.verdict === 'false_assertion', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims("Right. 16 + 9 + 9 + 4 + 144 — that's 182.", { normalizeSpokenWords: true });
+  check('the CORRECT total → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims('2 * 3 * 4 is 26', { normalizeSpokenWords: true });
+  check('chained product, wrong → false_assertion', r.verdict === 'false_assertion', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims('2 * 3 * 4 is 24', { normalizeSpokenWords: true });
+  check('chained product, right → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+// ─── FALSE-KILL REGRESSIONS: mixed operators must never be judged ───
+{
+  const r = checkArithmeticClaims('16 + 9 * 2 is 50', { normalizeSpokenWords: true });
+  check('mixed operators are NEVER judged (precedence) → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims('3 + 4 * 5 + 6 is 100', { normalizeSpokenWords: true });
+  check('mixed operators, longer chain → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims('16 plus 9 plus 9 plus 4 plus 144', { normalizeSpokenWords: true });
+  check('a chain with no claimed total → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+// ─── the existing binary behaviour is untouched with the flag off ───
+{
+  const r = checkArithmeticClaims("Close — 18 - 3 isn't 15 — try that subtraction again.");
+  check('binary false_denial still fires with no opts', r.verdict === 'false_denial', JSON.stringify(r));
+}
+{
+  const r = checkArithmeticClaims('18 - 3 is 14.');
+  check('binary false_assertion still fires with no opts', r.verdict === 'false_assertion', JSON.stringify(r));
+}
+
 // ---------- Never throws ----------
 try {
   checkArithmeticClaims(null as unknown as string);

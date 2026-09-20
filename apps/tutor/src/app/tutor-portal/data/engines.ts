@@ -1,3 +1,5 @@
+import { pricing } from './pricing';
+
 export interface VoiceEngine {
   id: string;
   name: string;
@@ -10,7 +12,7 @@ export interface VoiceEngine {
   bestFor: string;
 }
 
-// We now ship a single engine — the claude-brain orchestrator. The earlier
+// We ship a single engine at a single per-minute rate (see pricing.ts) — the claude-brain orchestrator. The earlier
 // Standard / Premium tier split has been retired: every embed and demo
 // surface routes to the same engine. Token `engine` fields from existing
 // partners are still accepted for backwards compatibility but no longer
@@ -22,8 +24,11 @@ export const voiceEngines: VoiceEngine[] = [
     description:
       'Conversational voice tutor with a structured pedagogy engine. Low-latency turn-taking, full whiteboard (equations, diagrams, tables, problems, concept maps), multi-language support, and per-student adaptive pacing.',
     latency: '<400ms',
-    costPerMinute: 0.25,
-    ourCostPerMinute: 0.35,
+    // Single source of truth for the list price is pricing.ts — never hardcode it here
+    // (a hardcoded 0.10 outlived the 2026-09-18 price change on the landing card).
+    costPerMinute: pricing.perMinuteUsd,
+    // Measured 2026-09-17: brain ≈ $0.10–0.12/active-min (LLM only) + ≈ $0.025 voice.
+    ourCostPerMinute: 0.125,
     features: [
       'Sub-400ms response latency with natural interruptions',
       'Structured pedagogy engine (Socratic-first, adaptive pacing)',
@@ -40,11 +45,6 @@ export const voiceEngines: VoiceEngine[] = [
   },
 ];
 
-export const textOnlyPricing = {
-  costPerMinute: 0.02,
-  ourCostPerMinute: 0.005,
-  description: 'Text-based chat with full whiteboard support. No voice — students type questions and read responses.',
-};
 
 export function getEngine(id: string): VoiceEngine | undefined {
   return voiceEngines.find((e) => e.id === id);

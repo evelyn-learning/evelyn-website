@@ -77,7 +77,6 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
   "topic": "algebra-2",
   "level": "11-12",
   "session_goal": "test-prep",
-  "engine": "standard",
   "locale": "ar-DZ",
   "branding": {
     "primary_color": "#1E40AF",
@@ -88,6 +87,10 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
   "exp": 1735689600
 }
 ```
+
+### 2.2a Text-Only Sessions
+
+When `input_mode: "text"` is set, the tutor operates as a typed chat interface with full whiteboard support. The transcript panel stays open beside the board, the student types messages in a composer at the bottom, and the tutor's replies appear sentence by sentence as the board renders visuals in real time. Text sessions bill at $0.12/min, lower than voice at $0.15/min.
 
 ### 2.3 Configuration Parameters
 
@@ -101,8 +104,7 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
 | `level` | string | Yes | Grade level (K-2, 3-5, 6-8, 9-10, 11-12, AP, college) |
 | `session_goal` | string | No | practice, homework-help, concept-review, test-prep, catch-up, challenge |
 | `locale` | string | No | BCP 47 locale code for voice language (default: en-US) |
-| `engine` | string | No | Voice engine tier: "standard" or "premium" (default: "standard") |
-| `input_mode` | string | No | "voice" (default) or "text" |
+| `input_mode` | string | No | "voice" (default) or "text" — honoured since 2026-09: "text" runs the tutor as a typed chat with the whiteboard, no microphone |
 | `voice` | string | No | Voice selection (coral, shimmer, alloy, ash, ballad, echo, sage, verse) |
 | `curriculum_module` | string | No | ID of custom knowledge module to load |
 | `branding` | object | No | Visual customization (colors, logo, product name) |
@@ -120,11 +122,11 @@ Evelyn sends event data to your configured webhook endpoint in real-time.
 
 | Event | Trigger | Key Payload Fields |
 |-------|---------|-------------------|
-| `session.started` | Student begins tutoring | session_id, student_id, subject, topic, level, input_mode, timestamp |
+| `session.started` | Student begins tutoring | session_id, student_id, subject, topic, level, input_mode, mode, timestamp |
 | `session.active` | First student message sent | session_id, student_id, timestamp |
 | `session.paused` | Student pauses session | session_id, pause_reason, elapsed_seconds |
 | `session.resumed` | Student resumes session | session_id, pause_duration_seconds |
-| `session.ended` | Session completes or times out | session_id, duration, message_count, whiteboard_items, token_usage, end_reason |
+| `session.ended` | Session completes or times out | session_id, duration, message_count, whiteboard_items, mode, token_usage, end_reason |
 | `session.abandoned` | Student leaves without ending | session_id, last_activity_timestamp, duration |
 | `session.transcript` | Full transcript available (post-session) | session_id, transcript[], whiteboard_commands[] |
 | `usage.summary` | End-of-session cost breakdown | session_id, input_tokens, output_tokens, audio_tokens, estimated_cost |
@@ -149,6 +151,7 @@ Evelyn sends event data to your configured webhook endpoint in real-time.
     "subject": "math",
     "topic": "quadratic-functions",
     "level": "11-12",
+    "mode": "voice",
     "duration_seconds": 1847,
     "message_count": 24,
     "whiteboard_items": 8,
@@ -228,47 +231,15 @@ Uploaded modules are processed, indexed, and available for use within 15 minutes
 
 ## 5. Voice Engine
 
-The Voice Tutor offers two voice engine tiers. Both support the full whiteboard (all 19 visual types), 50+ languages, and session analytics. Partners select the engine via the `engine` embed parameter.
+The Voice Tutor ships ONE engine at ONE rate: **$0.15 per tutoring minute** for voice sessions ($0.12 per minute for text-only sessions), no setup fee, no monthly platform fee, no minimum commitment. Every minute includes the full whiteboard (all visual types), 50+ languages, adaptive pedagogy, per-student learning gaps and the partner API. Minutes are metered per session and billed monthly in arrears; volume pricing is available from 50,000 minutes/month.
 
-### Standard Engine
-
-| Attribute | Specification |
-|-----------|--------------|
-| **Response latency** | ~1.5 seconds between student speech and tutor response |
-| **Architecture** | Turn-by-turn pipeline: speech recognition, AI reasoning (Claude Sonnet 4), speech synthesis |
-| **Speech quality** | Natural speech synthesis with 4 voice options |
-| **Languages supported** | 50+ languages including Arabic, French, English, Spanish, Hindi, Urdu, Turkish, Mandarin, Portuguese, German, and many more |
-| **Code-switching** | Supports different languages for speech vs. whiteboard notation |
-| **Audio format** | High-fidelity PCM audio at 24kHz sample rate |
-| **Best for** | Cost-sensitive deployments, large student populations, structured tutoring |
-| **Price** | $0.06/minute |
-
-### Premium Engine
-
-| Attribute | Specification |
-|-----------|--------------|
-| **Response latency** | Sub-400ms from end of student speech to start of tutor audio |
-| **Architecture** | Single streaming connection handling speech recognition, reasoning, and synthesis simultaneously |
-| **Speech quality** | Natural prosody, emotional expressiveness, 8 voice options |
-| **Turn-taking** | Intelligent voice activity detection; handles mid-sentence interruptions gracefully |
-| **Languages supported** | 50+ languages including Arabic, French, English, Spanish, Hindi, Urdu, Turkish, Mandarin, Portuguese, German, Japanese, Korean, and many more |
-| **Code-switching** | Seamless mid-sentence switching between languages (e.g., Darja speech with French mathematical terms) |
-| **Audio format** | High-fidelity PCM audio at 24kHz sample rate |
-| **Best for** | Premium tutoring experiences, competitive exam prep, conversational fluency |
-| **Price** | $0.25/minute |
-
-### Shared Characteristics
-
-- **Concurrent sessions**: Horizontally scalable — no per-partner concurrency limits
-- **Uptime SLA**: 99.9% availability
-- **Automatic reconnection** on network interruptions
-- **Graceful degradation** to text mode if voice connection is lost
-- **Noise filtering** and echo cancellation
-- **Duplicate response prevention**
-- **Multi-stage content validation** for whiteboard accuracy
-- **Text-only mode**: Available at $0.02/minute with full whiteboard support (no voice)
-
----
+| | Voice Tutor |
+|---|---|
+| **Latency** | <400ms response, natural interruptions |
+| **Price** | $0.15 / minute (voice) |
+| **Text-only sessions** | $0.12 / minute |
+| **30-minute session** | $4.50 |
+| **Fixed fees** | None |
 
 ## 6. Branding & Customization
 
@@ -338,7 +309,18 @@ All endpoints require the `X-API-Key` header with your partner API key.
 | `GET` | `/sessions/:id/transcript` | Get full transcript with timestamps |
 | `GET` | `/sessions/:id/whiteboard` | Get whiteboard command history |
 | `GET` | `/sessions/:id/replay` | Get session replay data (transcript + whiteboard + timing) |
+| `GET` | `/sessions/summary` | Get summarized session data for display and analytics |
 | `DELETE` | `/sessions/:id` | Delete a session and all associated data |
+
+#### Sessions Summary Response Fields
+
+The `/sessions/summary` endpoint returns a list of session summaries with the following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `sessionId` | string | Yes | Unique session identifier |
+| `durationSec` | number | Optional | Total session duration in seconds; absent when the session has no transcript |
+| `mode` | string | Optional | "voice" or "text"; text sessions bill at the text rate |
 
 ### Students
 
@@ -401,7 +383,7 @@ Partners receive a sandbox environment for development and testing:
 
 - **Sandbox URL**: `https://tutor-sandbox.evelynlearning.com/embed`
 - **Sandbox API**: `https://api-sandbox.evelynlearning.com/v1`
-- **Voice engine**: Standard engine (Premium available in production)
+- **Voice engine**: same engine as production; 300 free tutoring minutes, 30 min max per session
 - **Rate limits**: 100 sessions/month, 30 minutes/session, 10 concurrent sessions
 - **API keys**: Separate sandbox keys provided on approval
 - **Webhook testing**: Sandbox events sent to your configured endpoint

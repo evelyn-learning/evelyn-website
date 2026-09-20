@@ -8,6 +8,8 @@ export const CLIENT_SHOWCASE_IDS: ClientShowcase[] = [
   // Passcode-gated CPHQ proposal deck. Instrumented 2026-08-13, after the
   // link went to NAHQ — there is no history before that date to read.
   { productId: 'nahq', name: 'NAHQ — Adaptive CPHQ Prep', url: '/showcase/nahq' },
+  // Passcode-gated Academy proposal deck for the 2026-09-18 call.
+  { productId: 'united-trade-school', name: 'United Trade School — Evelyn Academy', url: '/showcase/united-trade-school' },
   { productId: 'hugo-mentors', name: 'Hugo Mentors', url: '/showcase/hugo-mentors' },
   { productId: 'explorer-academy', name: 'Explorer Academy', url: '/showcase/explorer-academy' },
   { productId: 'rocketship', name: 'Rocketship Innovation School', url: '/showcase/rocketship' },

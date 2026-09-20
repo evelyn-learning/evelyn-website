@@ -38,6 +38,15 @@ export async function GET(request: NextRequest) {
           views: { $sum: { $cond: [{ $eq: ["$eventType", "view"] }, 1, 0] } },
           tries: { $sum: { $cond: [{ $eq: ["$eventType", "try"] }, 1, 0] } },
           completes: { $sum: { $cond: [{ $eq: ["$eventType", "complete"] }, 1, 0] } },
+          textTries: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$eventType", "try"] }, { $eq: ["$metadata.mode", "text"] }] },
+                1,
+                0,
+              ],
+            },
+          },
           uniqueSessions: { $addToSet: "$sessionId" },
         },
       },
@@ -48,6 +57,7 @@ export async function GET(request: NextRequest) {
           views: 1,
           tries: 1,
           completes: 1,
+          textTries: 1,
           uniqueUsers: { $size: "$uniqueSessions" },
           conversionRate: {
             $cond: [

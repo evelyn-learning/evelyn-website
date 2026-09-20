@@ -27,6 +27,10 @@
  *    sentence with no hypothetical framing ("if", "suppose", "what if",
  *    "imagine", "were", "would") — a counterfactual walkthrough of a wrong
  *    value is legitimate teaching.
+ *  - Only the LAST asserted equality in the sentence is judged, and the
+ *    variable must not be preceded by a digit or '.'. Both guard the
+ *    tutor's own working steps: "3x = 30 … gives x = 10" asserts two
+ *    values and only the second is the answer (portal-704e3e01).
  *  - The comparison reuses matchUtteranceToAnswer and fires ONLY on a
  *    full-parse 'disagree' — 'agree' and 'unknown' are always ok, so an
  *    unparseable or equivalent-notation value can never kill.
@@ -68,9 +72,20 @@ export function checkFalseFinalAssertion(args: {
   verifiedExpectedAnswer?: string;
   /** R49 currency reconciliation, mirrored from inverse-verdict-check. */
   spokenMoneyEnabled?: boolean;
+  /** Live MCQ choices, same shape the praise-echo check builds. Without
+   *  these, a verified answer that is a choice LETTER is compared against
+   *  the tutor's numeric assertion and always disagrees — portal-704e3e01
+   *  @1113.7s killed "Exactly. $x = 9$ — that's choice *C*." on a card
+   *  whose verified answer was the string "C". */
+  choices?: Array<{ letter: string; text: string }>;
 }): FalseAssertionResult {
   const verified = (args.verifiedExpectedAnswer ?? '').trim();
   if (!verified) return OK;
+  // Safety net independent of the caller: a bare single letter is an MCQ
+  // key, and the value this module extracts is always numeric — there is
+  // no comparison to make, so never claim one. Belt-and-braces with the
+  // `choices` passthrough below.
+  if (/^[A-Za-z]$/.test(verified)) return OK;
   const answerVar = extractAnswerVariable(args.problemStatement ?? '');
   if (!answerVar) return OK;
   const sentence = args.sentence ?? '';
@@ -81,20 +96,33 @@ export function checkFalseFinalAssertion(args: {
   // anything longer (an expression continuing with + / −) is a WORKING
   // step, not a final value, and must not be judged. (answerVar is a
   // letter plus optional primes — no regex-special characters to escape.)
+  //
+  // Left boundary excludes digits and '.' as well as letters (live,
+  // portal-704e3e01 @1414.3s): with [^a-zA-Z] a COEFFICIENT satisfied it,
+  // so "3x = 30" read as "x = 30" and killed the correct sentence
+  // "Exactly. $3x = 30$ divided by $3$ gives $x = 10$." The suite's
+  // "intermediate step" case only passed because its 3x = 13 sat at the
+  // end of the sentence, where the trailing '.' trips the [\d./] lookahead.
   const esc = answerVar;
   const assertRe = new RegExp(
-    `(?:^|[^a-zA-Z])\\$?${esc}\\$?\\s*(?:=|equals)\\s*\\$?` +
+    `(?:^|[^a-zA-Z0-9.])\\$?${esc}\\$?\\s*(?:=|equals)\\s*\\$?` +
     `(-?\\d+(?:\\.\\d+)?(?:\\s*/\\s*-?\\d+(?:\\.\\d+)?)?|\\\\d?frac\\{-?\\d+\\}\\{-?\\d+\\})` +
     // No trailing digit/fraction continuation, and no arithmetic operator
     // after the value (with the whitespace INSIDE the lookahead — a `\s*`
     // before a negative lookahead backtracks to zero-width and defeats it).
     `\\$?(?![\\d./])(?!\\s*(?:[+*×·]|-\\s|\\\\cdot|\\\\times))`,
+    'g',
   );
-  const m = sentence.match(assertRe);
-  if (!m) return OK;
+  // LAST assertion only. A turn that shows its work ("3x = 30 … gives
+  // x = 10") asserts several values; the terminal one is what the student
+  // takes away, and judging an earlier working step against the verified
+  // FINAL answer is guaranteed to disagree. Requires the 'g' flag above.
+  const all = [...sentence.matchAll(assertRe)];
+  if (all.length === 0) return OK;
+  const m = all[all.length - 1];
   const asserted = m[1].replace(/\\d?frac\{(-?\d+)\}\{(-?\d+)\}/, '$1/$2').replace(/\s+/g, '');
 
-  const cmp = matchUtteranceToAnswer(asserted, verified, undefined, {
+  const cmp = matchUtteranceToAnswer(asserted, verified, args.choices, {
     monetary: args.spokenMoneyEnabled === true,
   });
   if (cmp.verdict === 'disagree') {

@@ -1,0 +1,141 @@
+{
+  "fade": 0.4,
+  "voGain": 1.3,
+  "scenes": [
+    {
+      "file": "<work-dir>/introcard.png",
+      "dur": 3.0,
+      "label": "Intro card"
+    },
+    {
+      "file": "<work-dir>/ui/lessons.webm",
+      "start": 0.4,
+      "dur": 7.0,
+      "speed": 1.2,
+      "label": "Your courses",
+      "labelImage": "<work-dir>/labels/label-0.png"
+    },
+    {
+      "file": "<work-dir>/session/lesson-voiced.mkv",
+      "start": 73.9,
+      "dur": 16.2,
+      "speed": 1,
+      "useAudio": true,
+      "audioDur": 14.5,
+      "audioGain": 0.8,
+      "label": "Live lesson",
+      "labelImage": "<work-dir>/labels/label-1.png",
+      "audioLead": -1.0
+    },
+    {
+      "file": "<work-dir>/ui/practice.webm",
+      "start": 1.0,
+      "dur": 8.0,
+      "speed": 1.15,
+      "label": "Practice & quizzes",
+      "labelImage": "<work-dir>/labels/label-2.png"
+    },
+    {
+      "file": "<work-dir>/ui/mock.webm",
+      "start": 4.6,
+      "dur": 4.5,
+      "speed": 1.5,
+      "label": "Timed mock exams",
+      "labelImage": "<work-dir>/labels/label-3.png"
+    },
+    {
+      "file": "<work-dir>/ui/mock.webm",
+      "start": 23.0,
+      "dur": 3.2,
+      "speed": 1,
+      "label": "Score report",
+      "labelImage": "<work-dir>/labels/label-4.png"
+    },
+    {
+      "file": "<work-dir>/ui/overview.webm",
+      "start": 0.8,
+      "dur": 6.0,
+      "speed": 1.15,
+      "label": "Mastery & progress",
+      "labelImage": "<work-dir>/labels/label-5.png"
+    },
+    {
+      "file": "<work-dir>/ui/brand-academy.webm",
+      "start": 1.6,
+      "dur": 1.8,
+      "speed": 1,
+      "label": "Brand A",
+      "labelImage": "<work-dir>/labels/label-6.png"
+    },
+    {
+      "file": "<work-dir>/ui/brand-crimsora.webm",
+      "start": 2.2,
+      "dur": 1.8,
+      "speed": 1,
+      "label": "Brand B",
+      "labelImage": "<work-dir>/labels/label-7.png"
+    },
+    {
+      "file": "<work-dir>/ui/brand-evelyn.webm",
+      "start": 2.2,
+      "dur": 1.8,
+      "speed": 1,
+      "label": "Brand C",
+      "labelImage": "<work-dir>/labels/label-8.png"
+    },
+    {
+      "file": "<work-dir>/ui/admin.webm",
+      "start": 1.0,
+      "dur": 5.0,
+      "speed": 1.1,
+      "label": "Admin dashboard",
+      "labelImage": "<work-dir>/labels/label-9.png"
+    }
+  ],
+  "endcard": {
+    "image": "<work-dir>/endcard.png",
+    "dur": 4.5
+  },
+  "vo": [
+    {
+      "file": "<work-dir>/vo/fast/a1-hook.mp3",
+      "at": 0.4
+    },
+    {
+      "file": "<work-dir>/vo/fast/a2-study.mp3",
+      "at": 5.6
+    },
+    {
+      "file": "<work-dir>/vo/fast/a3-handoff.mp3",
+      "at": 9.2
+    },
+    {
+      "file": "<work-dir>/vo/fast/a4-practice.mp3",
+      "at": 25.4
+    },
+    {
+      "file": "<work-dir>/vo/fast/a5-mock.mp3",
+      "at": 33.1
+    },
+    {
+      "file": "<work-dir>/vo/fast/a6-progress.mp3",
+      "at": 40.0
+    },
+    {
+      "file": "<work-dir>/vo/fast/a7-brand.mp3",
+      "at": 45.4
+    },
+    {
+      "file": "<work-dir>/vo/fast/a8-admin.mp3",
+      "at": 49.8
+    },
+    {
+      "file": "<work-dir>/vo/fast/a9-cta.mp3",
+      "at": 54.3
+    }
+  ],
+  "music": {
+    "file": "<work-dir>/music/bed.mp3",
+    "gain": 0.09
+  }
+}

@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { isThinSession, countRealStudentTurns } from '@/lib/tutor/student-profile/thin-session';
 import {
   getOrCreateStudentProfile,
   saveStudentProfile,
@@ -28,7 +29,9 @@ import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/stud
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
-import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
+import { getLearnerContext } from '@/lib/tutor/learner-model/context-block';
+import { assignPractice } from '@/lib/tutor/practice-assign/assign';
+import { findAssignmentBySession, acknowledgeAssignments, finalizeDraft, summarizeAssignmentLos } from '@/lib/tutor/practice-assign/store';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -80,7 +83,26 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   // byte-identical to the pre-Task-17 shape for every existing caller.
   const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
   if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId) {
-    responseBody.learnerContext = await getLearnerContextBlock(profileId, lessonPlanId);
+    // Task 15 — `goals` carries the client's `Goal:`-prefixed social-thread
+    // notes (pipe-separated, at most 2) and `subject` scopes the ability-band
+    // hint read. Both are optional; absent ⇒ those lines simply don't render.
+    // `learnerExtras` is the STRUCTURED twin of the block (recap candidate,
+    // homework, intent) for the orchestrator, which has to act on those facts
+    // rather than just speak from them.
+    const params = new URL(req.url).searchParams;
+    const goalNotes = (params.get('goals') ?? '')
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 2);
+    const lc = await getLearnerContext(profileId, lessonPlanId, {
+      partnerId: partnerIdForInternalRoute(auth),
+      externalStudentId: id,
+      subject: params.get('subject') ?? undefined,
+      socialGoalNotes: goalNotes,
+    });
+    responseBody.learnerContext = lc.block;
+    responseBody.learnerExtras = lc.extras;
   }
   return NextResponse.json(responseBody);
 }
@@ -108,6 +130,16 @@ interface CommitBody {
     signals?: string[];
     /** Legacy field — old clients may still post this. Mapped to observation. */
     description?: string;
+    /** Holistic-pedagogy round: ledger recurrence count this increment. */
+    recurrences?: number;
+    /** True when the orchestrator inferred this gap from behaviour. */
+    inferred?: boolean;
+    /** Consent-gated recap outcome for this gap this increment. */
+    recap?: { offered: number; outcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling' };
+    /** True when this entry carries ONLY recap/recurrence bookkeeping for a
+     *  gap the session already recorded. The store merges those counters into
+     *  an existing active gap and never creates one — see RecordGapInput. */
+    bookkeepingOnly?: boolean;
   }>;
   /** Full transcript for the summary generator. */
   transcript?: Array<{ role: 'student' | 'tutor'; text: string }>;
@@ -139,6 +171,20 @@ interface CommitBody {
     streakAtComplete?: number;
     turns?: number;
   }>;
+  /** Spec §C.3 — close_session_notes.nextTimeIntent (final commit only). */
+  nextSessionIntent?: string;
+  /** Spec §C.6 — embed-config practice locator, stamped on any auto-assigned
+   *  homework record (Task 10). Absent ⇒ record stays behind the gate. */
+  practiceLocator?: string;
+  /** Spec §C.4 — assignment ids whose homework line rendered at boot; the
+   *  final commit acknowledges them (Task 10). */
+  homeworkAcknowledged?: string[];
+  /** Task 11 — present on the FINAL commit of a session that ends via one
+   *  of these three exits (never `close_tool`, which finalizes through its
+   *  own `practice-assign/finalize` route call, not the profile commit).
+   *  When present, this commit finalizes the session's draft homework
+   *  (if any) BEFORE the Spec §C.3 fallback runs. */
+  finalizeHomework?: { source: 'end' | 'pagehide' | 'time_cap' };
 }
 
 /** Task 11 — client-supplied cap so a runaway/misbehaving client can't
@@ -153,6 +199,11 @@ const MAX_SEGMENT_OUTCOMES_PER_COMMIT = 100;
  *  outcome. The server drops them even if a client sends one, rather than
  *  trusting client-side filtering alone. */
 const EVALUATIVE_SEGMENT_KINDS = new Set<string>(['try_yourself', 'misconception_check']);
+
+/** Holistic-pedagogy round — allowed recap outcome values. Validated defensively
+ *  at the profile commit route to prevent un-narrowed client strings from
+ *  reaching the store layer. */
+const RECAP_OUTCOMES = new Set(['accepted', 'declined', 'improved', 'still_struggling']);
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -259,7 +310,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // evidence, which is the right behavior.
   profile = resolveSettledGaps(profile);
   if (Array.isArray(body.gaps)) {
-    for (const g of body.gaps) {
+    // Stable partition: every REAL gap entry is recorded before any
+    // bookkeeping-only one. Within a single commit the recap offer can be
+    // pushed before the gap it annotates exists on the profile; processed in
+    // wire order, that offer would hit "no active match" and be dropped.
+    const orderedGaps = [
+      ...body.gaps.filter((g) => g.bookkeepingOnly !== true),
+      ...body.gaps.filter((g) => g.bookkeepingOnly === true),
+    ];
+    for (const g of orderedGaps) {
       const observation = g.observation ?? g.description ?? '';
       if (!observation) continue; // skip malformed entries
       // Default kind for legacy callers that only sent loId+description.
@@ -274,6 +333,19 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         studentQuotes: g.studentQuotes ?? [],
         signals: (g.signals ?? []) as GapSignalCode[],
         sessionId: body.sessionId,
+        recurrences: typeof g.recurrences === 'number' && g.recurrences > 0 ? Math.min(g.recurrences, 20) : undefined,
+        inferred: g.inferred === true,
+        recap: g.recap && typeof g.recap.offered === 'number'
+          ? {
+              offered: Math.max(0, Math.min(g.recap.offered, 5)),
+              outcome: typeof g.recap.outcome === 'string' && RECAP_OUTCOMES.has(g.recap.outcome)
+                ? (g.recap.outcome as 'accepted' | 'declined' | 'improved' | 'still_struggling')
+                : undefined,
+            }
+          : undefined,
+        // Trust boundary: only the literal `true` enables the bookkeeping
+        // path, matching this file's validation style for client-supplied flags.
+        bookkeepingOnly: g.bookkeepingOnly === true,
       });
     }
   }
@@ -285,9 +357,98 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     profile = applyCrossSessionPromotion(profile, body.masteryDeltas, body.sessionId);
   }
 
+  // Persist nextSessionIntent to profile (Spec §C.3). Final commit only.
+  if (typeof body.nextSessionIntent === 'string' && body.nextSessionIntent.trim()) {
+    profile = {
+      ...profile,
+      nextSessionIntent: { text: body.nextSessionIntent.trim().slice(0, 200), sessionId: body.sessionId, at: new Date().toISOString() },
+    };
+  }
+
+  // Task 11 — final-commit draft finalize. Runs BEFORE the Spec §C.3
+  // fallback below: an exit via `end` / `pagehide` / `time_cap` (never
+  // `close_tool`, which finalizes through its own
+  // `practice-assign/finalize` route call) promotes THIS session's drafted
+  // homework (if any) to 'assigned'. Best-effort: a failure here never
+  // fails the commit, and falls through to the §C.3 fallback below exactly
+  // as if `finalizeHomework` had been absent.
+  let autoAssigned: Array<{ loId: string; title: string; count: number }> | undefined;
+  let finalizedLocator: string | undefined;
+  if (body.finalizeHomework && ['end', 'pagehide', 'time_cap'].includes(body.finalizeHomework.source)) {
+    try {
+      // Fix round 1 (Important — ownership check) — scope to `profileId`
+      // (already resolved above) so this commit can only finalize ITS OWN
+      // session's draft: see `store.ts`'s `sessionScopeFilter` doc comment.
+      const rec = await finalizeDraft(
+        body.sessionId,
+        {
+          nextTimeIntent: body.nextSessionIntent,
+          locator: body.practiceLocator,
+          source: body.finalizeHomework.source,
+        },
+        profileId,
+      );
+      if (rec) {
+        autoAssigned = summarizeAssignmentLos(rec.los);
+        finalizedLocator = rec.locator;
+        console.log(`[student-profile] finalized draft homework session=${body.sessionId} source=${body.finalizeHomework.source}`);
+      }
+    } catch (e) {
+      console.error('[student-profile] finalize draft failed', e);
+    }
+  }
+
+  // Spec §C.3 fallback: FINAL commit, nothing assigned this session (either
+  // by a brain tool call OR the finalize-draft step above), and the session
+  // produced a recurrence or a well-signalled gap → auto-assign the top LO.
+  // Best-effort: a failure here never fails the commit.
+  if (!autoAssigned && body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length) {
+    const candidates = body.gaps
+      .filter((g) => (g.kind ?? 'lo') === 'lo' && g.loId && ((g.recurrences ?? 0) >= 1 || (g.signals?.length ?? 0) >= 2))
+      .sort((a, b) => ((b.recurrences ?? 0) - (a.recurrences ?? 0)) || ((b.signals?.length ?? 0) - (a.signals?.length ?? 0)));
+    if (candidates.length) {
+      try {
+        // `sessionId` is a unique index on PracticeAssignment (Task 9), which
+        // is the incidental TOCTOU mitigation between a tool-time
+        // practice-assign write and this fallback: if both race, this check
+        // can pass for both, but the loser's upsertAssignment hits a
+        // duplicate-key error rather than a second record — caught below.
+        const existing = await findAssignmentBySession(body.sessionId);
+        if (!existing) {
+          const plan = body.lessonPlanId ? await getLessonPlan(body.lessonPlanId) : null;
+          const lo = plan?.los.find((l) => l.id === candidates[0].loId);
+          // Cap the title BEFORE building the sentence so the synthesized
+          // reason stays readable rather than truncating mid-sentence when a
+          // plan LO has only a long `description` (assignPractice caps the
+          // whole reason string too, as a backstop).
+          const title = (lo?.shortTitle ?? lo?.description ?? candidates[0].loId!).slice(0, 120);
+          const out = await assignPractice({
+            profileId, partnerId: partnerIdForInternalRoute(auth), externalStudentId: id, sessionId: body.sessionId,
+            lessonPlanId: body.lessonPlanId, loIds: [candidates[0].loId!],
+            reason: `Your tutor noticed ${title} needed more practice this session.`,
+            locator: body.practiceLocator, nextTimeIntent: body.nextSessionIntent, subject: body.subject, auto: true,
+          });
+          if (out) { autoAssigned = out.assigned; console.log(`[student-profile] auto-assigned homework session=${body.sessionId} ${JSON.stringify(out.assigned)}`); }
+        }
+      } catch (e) { console.error('[student-profile] auto-assign failed', e); }
+    }
+  }
+  if (Array.isArray(body.homeworkAcknowledged) && body.homeworkAcknowledged.length) {
+    acknowledgeAssignments(body.homeworkAcknowledged.filter((x): x is string => typeof x === 'string').slice(0, 10))
+      .catch((e) => console.error('[student-profile] acknowledge failed', e));
+  }
+
   let summaryError: string | undefined;
   let summary: string | undefined;
-  if (body.generateNotes !== false && Array.isArray(body.transcript) && body.transcript.length > 0) {
+  // Thin session (live 2026-09-05): one real student utterance in five
+  // minutes got a full narrative summary, and the NEXT opener built "last
+  // time we looked at…" on it. Under the floor: no summary (no LLM spend
+  // either) and the row is flagged so the prior-sessions block skips it.
+  const thin = Array.isArray(body.transcript) && isThinSession(body.transcript);
+  if (thin && Array.isArray(body.transcript) && body.transcript.length > 0) {
+    console.log(`[student-profile] thin session ${body.sessionId}: ${countRealStudentTurns(body.transcript)} real student turn(s) — no summary`);
+  }
+  if (body.generateNotes !== false && !thin && Array.isArray(body.transcript) && body.transcript.length > 0) {
     try {
       const lessonPlan = body.lessonPlanId ? await getLessonPlan(body.lessonPlanId) : null;
       const summaryInput: SessionSummaryInput = {
@@ -325,6 +486,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     lessonPlanId: body.lessonPlanId,
     losTouched: body.losTouched ?? [],
     summary,
+    ...(thin && Array.isArray(body.transcript) ? { thin: true } : {}),
     durationMinutes: body.durationMinutes,
     masteryDeltas: body.masteryDeltas,
     notesOverlaysAddedThisSession: body.notesOverlaysAddedThisSession,
@@ -337,5 +499,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     profile: saved,
     summary,
     summaryError,
+    ...(autoAssigned ? { assigned: autoAssigned, assignedPractice: autoAssigned } : {}),
+    ...(finalizedLocator ? { practiceLocator: finalizedLocator } : {}),
   });
 }

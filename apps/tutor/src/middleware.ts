@@ -7,8 +7,13 @@ export function middleware(request: NextRequest) {
 
   // tutor.evelynlearning.com or tutor.localhost → rewrite to /tutor-portal/*
   // Skip API routes — they live at /api/* and don't need rewriting
+  // A path that already carries the /tutor-portal prefix passes through
+  // unchanged (2026-09-14): the demo page server-renders its iframe src as
+  // /tutor-portal/embed (window is unavailable during SSR, and React does not
+  // patch a mismatched attribute on hydration), and double-prefixing it to
+  // /tutor-portal/tutor-portal/embed 404'd the demo frame on this host.
   if (hostname === 'tutor.evelynlearning.com' || hostname === 'tutor.localhost') {
-    if (!request.nextUrl.pathname.startsWith('/api/')) {
+    if (!request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/tutor-portal')) {
       const url = request.nextUrl.clone();
       url.pathname = `/tutor-portal${url.pathname === '/' ? '' : url.pathname}`;
       return NextResponse.rewrite(url);
@@ -18,7 +23,7 @@ export function middleware(request: NextRequest) {
 
   // tutor-sandbox.evelynlearning.com → same rewrite (sandbox flag added via header)
   if (hostname === 'tutor-sandbox.evelynlearning.com') {
-    if (!request.nextUrl.pathname.startsWith('/api/')) {
+    if (!request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/tutor-portal')) {
       const url = request.nextUrl.clone();
       url.pathname = `/tutor-portal${url.pathname === '/' ? '' : url.pathname}`;
       const response = NextResponse.rewrite(url);

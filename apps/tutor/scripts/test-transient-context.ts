@@ -131,6 +131,12 @@ function main() {
     assert.equal(renderTransientContextBlock({ socialMemory: undefined, progressDigest: undefined }), null);
   });
 
+  // Pin updated 2026-09-06: R28 (5c41b6a8, "first-turn overhaul") moved
+  // progress notes OUT of the session opener ("A returning student's
+  // progress can power a warm opener…" → "…mid-session aside… keep them
+  // OUT of the session opener") without updating this pin. Deliberate,
+  // documented pedagogy fix (verbose recap-y first turns), not a
+  // regression — re-pinned to the current instruction text.
   test('full fixture renders the exact expected block', () => {
     const out = renderTransientContextBlock({
       socialMemory: [THREAD_FULL, THREAD_BARE],
@@ -143,7 +149,7 @@ function main() {
       '- [interest] Plays football on weekends (last used 2026-06-20)',
       '- Has a younger sister',
       '',
-      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student\'s progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes.',
+      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. Progress notes can power a warm mid-session aside ("X units in — great pace") but NEVER guilt about pace or time away — and keep them OUT of the session opener, which belongs to this session\'s content. Never recite this list, and never mention that any of this information is stored or remembered in notes.',
       '</student_context_transient>',
     ].join('\n');
     assert.equal(out, expected);
@@ -194,13 +200,23 @@ function main() {
   // ── 1c: lastOpener (opener-recency part A) ────────────────────────────
   console.log('\nrenderTransientContextBlock — lastOpener:');
 
+  // Pin updated 2026-09-06: R28 changed the shared USAGE_INSTRUCTION (see
+  // above), and R29 (85ce9abb, "concrete continuity sentence") further
+  // reworded the opening-kinds list — dropping the history-flavored kinds
+  // ("last-session callback", "progress-arc note", "social/interest hook")
+  // in favor of present-session shapes each preceded by exactly ONE
+  // concrete continuity sentence, per that commit's documented correction
+  // to R28 (students liked being remembered; R28's trim had gone too
+  // sparse). Neither commit updated this pin. Both are deliberate,
+  // documented pedagogy edits that preserve the intent (vary the opening
+  // move, ban recap) — re-pinned to the current instruction text.
   test('lastOpener alone renders the block (line + extended instruction)', () => {
     const out = renderTransientContextBlock({ lastOpener: LAST_OPENER });
     const expected = [
       '<student_context_transient>',
       `last session's opener (do NOT repeat): [warm-resume] ${LAST_OPENER.digest}`,
       '',
-      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student\'s progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes. Open THIS session with a DIFFERENT KIND of opening than the last one above. Opening kinds: a last-session callback (\"we nailed X, today Y\"), a progress-arc note (\"X units in\"), a social/interest hook, a cold intriguing puzzle or claim, or a what-if scenario. If the last opener was one of these, pick ANOTHER this time — do not re-run the same move in new words. The lesson\'s authored problem may be the same; your way IN must not be. Keep it warm either way — dropping the greeting or jumping in colder is NOT acceptable variation.',
+      'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. Progress notes can power a warm mid-session aside ("X units in — great pace") but NEVER guilt about pace or time away — and keep them OUT of the session opener, which belongs to this session\'s content. Never recite this list, and never mention that any of this information is stored or remembered in notes. Open THIS session with a DIFFERENT KIND of opening than the last one above, anchored in THIS session\'s content. Opening kinds: a cold intriguing puzzle or claim, a what-if scenario, a concrete scenario on the board, or a pointed question — each preceded by ONE short concrete continuity sentence ("last time we did X"). That continuity sentence is NOT itself an opening kind: it never counts as repeating a previous opener, and it never expands into a recap. If the last opener was one of these kinds, pick ANOTHER this time — do not re-run the same move in new words. The lesson\'s authored problem may be the same; your way IN must not be. Keep it warm either way — dropping the greeting or jumping in colder is NOT acceptable variation.',
       '</student_context_transient>',
     ].join('\n');
     assert.equal(out, expected);

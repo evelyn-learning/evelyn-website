@@ -34,6 +34,7 @@ interface DemoStats {
   completes: number;
   uniqueUsers: number;
   conversionRate: number;
+  textTries?: number;
 }
 
 interface DailyData {
@@ -285,6 +286,9 @@ export function DemoAnalyticsDashboard() {
                     <th className="py-3 text-right font-medium text-gray-500">
                       Try Rate
                     </th>
+                    <th className="py-3 text-right font-medium text-gray-500">
+                      Text share
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -321,6 +325,9 @@ export function DemoAnalyticsDashboard() {
                         >
                           {demo.conversionRate.toFixed(1)}%
                         </span>
+                      </td>
+                      <td className="py-3 text-right text-gray-700">
+                        {demo.textTries ? Math.round(100 * demo.textTries / demo.tries) + '%' : '–'}
                       </td>
                     </tr>
                   ))}
@@ -509,6 +516,7 @@ interface SessionSummary {
     messageCount: number;
     toolsUsed: string[];
     lastActivity: string;
+    mode?: 'voice' | 'text';
   };
   deviceType: string;
   location?: {
@@ -727,8 +735,21 @@ function SessionRow({
         <td className="py-3 text-gray-700 whitespace-nowrap">
           {timeAgo(session.summary?.lastActivity || session.startedAt)}
         </td>
-        <td className="py-3">
-          <p className="font-medium text-gray-900">{session.productTitle}</p>
+        <td className="py-3 text-left">
+          <p className="font-medium text-gray-900">
+            {session.productTitle}
+            {session.summary?.mode ? (
+              <span
+                className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${
+                  session.summary.mode === 'text'
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {session.summary.mode}
+              </span>
+            ) : null}
+          </p>
         </td>
         <td className="py-3 text-right text-gray-700">
           {formatDuration(session.duration)}

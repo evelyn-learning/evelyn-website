@@ -33,7 +33,11 @@ import { POST as practicePOST } from '@/app/api/portal/v1/practice/route';
 import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
 import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
+import { GET as sessionsSummaryGET } from '@/app/api/portal/v1/sessions/summary/route';
+import { parseSummaryIds, summarizeTutorSession, activeSeconds, isCostVisiblePartner } from '@/lib/tutor/portal/session-summary';
+import { SessionSummarySchema } from '@evelyn/portal-contract/v1';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
+import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
 
 const SECRET = 'secret-a';
 const PARTNER = 'portalA';
@@ -208,6 +212,79 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(json.reason, 'sessionId required');
   });
 
+  console.log('\nSessions summary read (v1.16.0 — auth + validation + pure summarizer; 200 path needs a DB):\n');
+  await test('sessions/summary GET without signature → 401', async () => {
+    const { status } = await call(sessionsSummaryGET, unsigned('GET', '/api/portal/v1/sessions/summary?ids=x'));
+    assert.strictEqual(status, 401);
+  });
+  await test('sessions/summary GET signed but no ids → 400', async () => {
+    const { status, json } = await call(sessionsSummaryGET, signed('GET', '/api/portal/v1/sessions/summary'));
+    assert.strictEqual(status, 400);
+    assert.ok(String(json.reason).startsWith('ids required'));
+  });
+  await test('sessions/summary GET with 51 ids → 400 (contract cap)', async () => {
+    const ids = Array.from({ length: 51 }, (_, i) => `s${i}`).join(',');
+    const { status } = await call(sessionsSummaryGET, signed('GET', `/api/portal/v1/sessions/summary?ids=${ids}`));
+    assert.strictEqual(status, 400);
+  });
+  await test('parseSummaryIds trims, de-dupes, caps at 50, rejects empty', async () => {
+    assert.deepStrictEqual(parseSummaryIds(' a, b ,a,,'), ['a', 'b']);
+    assert.strictEqual(parseSummaryIds(''), null);
+    assert.strictEqual(parseSummaryIds(null), null);
+    assert.strictEqual(parseSummaryIds(Array.from({ length: 51 }, (_, i) => `s${i}`).join(',')), null);
+    assert.strictEqual(parseSummaryIds(Array.from({ length: 50 }, (_, i) => `s${i}`).join(','))?.length, 50);
+  });
+  await test('activeSeconds sums capped gaps — immune to idle tabs, last-leg overwrites and reused ids', async () => {
+    assert.strictEqual(activeSeconds([]), 0);
+    assert.strictEqual(activeSeconds([{ timestamp: '2026-09-06T23:13:32Z' }]), 0);
+    // 3-minute first leg, then a resume 30 minutes later (real gap 27 min → capped 10), then 20 min of work
+    assert.strictEqual(activeSeconds([{ timestamp: '2026-09-06T23:13:32Z' }, { timestamp: '2026-09-06T23:16:32Z' }, { timestamp: '2026-09-06T23:43:32Z' }, { timestamp: '2026-09-07T00:03:32Z' }]), 180 + 600 + 600);
+    // session id reused two days later: the 2-day gap counts as 10 minutes
+    assert.strictEqual(activeSeconds([{ timestamp: '2026-08-26T00:31:00Z' }, { timestamp: '2026-08-26T00:41:00Z' }, { timestamp: '2026-08-28T02:00:00Z' }, { timestamp: '2026-08-28T02:05:00Z' }]), 600 + 600 + 300);
+    const s = summarizeTutorSession({ sessionId: 'x', status: 'abandoned', startedAt: '2026-08-27T00:58:00Z', duration: 21571, transcript: [] });
+    assert.ok(!('durationSec' in s)); // idle abandoned tab: no transcript ⇒ no duration at all
+  });
+  await test('summarizeTutorSession counts roles, never emits clientIp, tolerates sparse rows', async () => {
+    const full = summarizeTutorSession({
+      sessionId: 'portal-a', status: 'completed', startedAt: new Date('2026-09-04T03:47:36.007Z'), endedAt: new Date('2026-09-04T04:01:37.630Z'),
+      duration: 842, transcript: [{ role: 'tutor', timestamp: '2026-09-04T03:47:43Z' }, { role: 'student', timestamp: '2026-09-04T03:48:21Z' }, { role: 'system', timestamp: '2026-09-04T03:48:30Z' }, { role: 'student', timestamp: '2026-09-04T04:00:56Z' }],
+      whiteboardItemCount: 26, estimatedCost: 1.9946, location: { city: 'Brentwood', region: 'California', country: 'US' },
+      ...({ clientIp: '107.205.15.119' } as object),
+    });
+    assert.ok(SessionSummarySchema.safeParse(full).success);
+    assert.strictEqual(full.studentTurns, 2);
+    assert.strictEqual(full.tutorTurns, 1);
+    assert.strictEqual(full.boardItems, 26);
+    assert.strictEqual(full.durationSec, 38 + 9 + 600); // gaps 38s, 9s, 746s (capped at 600)
+    assert.strictEqual(full.endedAt, '2026-09-04T04:01:37.630Z');
+    assert.deepStrictEqual(full.location, { city: 'Brentwood', region: 'California', country: 'US' });
+    assert.ok(!('clientIp' in full));
+    const sparse = summarizeTutorSession({ sessionId: 'portal-b', status: 'abandoned', startedAt: '2026-08-30T23:20:09.100Z', whiteboardCommands: [{}, {}] });
+    assert.ok(SessionSummarySchema.safeParse(sparse).success);
+    assert.strictEqual(sparse.studentTurns, 0);
+    assert.strictEqual(sparse.boardItems, 2);
+    assert.strictEqual(sparse.estimatedCostUsd, 0);
+    assert.ok(!('endedAt' in sparse) && !('durationSec' in sparse) && !('location' in sparse));
+    // v1.17.0: third-party partners never receive the internal cost estimate.
+    const hidden = summarizeTutorSession({ sessionId: 'portal-c', status: 'completed', startedAt: '2026-09-15T06:50:00.000Z', estimatedCost: 1.99 }, { includeCost: false });
+    assert.ok(!('estimatedCostUsd' in hidden));
+    assert.ok(SessionSummarySchema.safeParse(hidden).success);
+    assert.strictEqual(summarizeTutorSession({ sessionId: 'portal-d', status: 'completed', startedAt: '2026-09-15T06:50:00.000Z', estimatedCost: 1.99 }).estimatedCostUsd, 1.99);
+    // Partner allowlist: first-party tenants by default, env override, negative control.
+    assert.strictEqual(isCostVisiblePartner('crimsora', {}), true);
+    assert.strictEqual(isCostVisiblePartner('evelyntutor', {}), true);
+    assert.strictEqual(isCostVisiblePartner('kanzoo', {}), false);
+    assert.strictEqual(isCostVisiblePartner('kanzoo', { PORTAL_SESSION_COST_PARTNERS: 'kanzoo, crimsora' }), true);
+    assert.strictEqual(isCostVisiblePartner('crimsora', { PORTAL_SESSION_COST_PARTNERS: 'kanzoo' }), false);
+    // v1.18.0: mode carries TutorSession.inputMode; absent when the row predates it.
+    const textMode = summarizeTutorSession({ sessionId: 'portal-e', status: 'completed', startedAt: '2026-09-19T06:50:00.000Z', inputMode: 'text' });
+    assert.strictEqual(textMode.mode, 'text');
+    assert.ok(SessionSummarySchema.safeParse(textMode).success);
+    const noMode = summarizeTutorSession({ sessionId: 'portal-f', status: 'completed', startedAt: '2026-09-19T06:50:00.000Z' });
+    assert.ok(!('mode' in noMode));
+    assert.ok(SessionSummarySchema.safeParse(noMode).success);
+  });
+
   console.log('\nReview-plan (auth + validation only — 200 path composes via an LLM-backed expander):\n');
   await test('review-plan POST without signature → 401', async () => {
     const { status } = await call(reviewPlanPOST, unsigned('POST', '/api/portal/v1/review-plan'));
@@ -221,6 +298,17 @@ const ctxBody = (studentId: string) => ({
   await test('review-plan POST empty los array → 400', async () => {
     const body = { studentId: 'portalA:reviewer', los: [] };
     const { status } = await call(reviewPlanPOST, signed('POST', '/api/portal/v1/review-plan', body));
+    assert.strictEqual(status, 400);
+  });
+
+  console.log('\nAssigned-practice (v1.15.0 — auth + validation only; 200 path needs a DB):\n');
+  await test('assigned-practice POST without signature → 401', async () => {
+    const { status } = await call(assignedPracticePOST, unsigned('POST', '/api/portal/v1/assigned-practice'));
+    assert.strictEqual(status, 401);
+  });
+  await test('assigned-practice POST malformed (missing studentId) → 400', async () => {
+    const body = { courseId: 'ap-statistics' };
+    const { status } = await call(assignedPracticePOST, signed('POST', '/api/portal/v1/assigned-practice', body));
     assert.strictEqual(status, 400);
   });
 

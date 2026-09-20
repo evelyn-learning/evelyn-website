@@ -2,81 +2,89 @@ import { webhookEvents, webhookCategories } from '../../data/webhook-events';
 import { CodeBlock } from '../components/CodeBlock';
 import { Callout } from '../components/Callout';
 
-export default function WebhooksPage() {
+export default function EventsPage() {
   return (
     <div>
-      <h1 className="mb-2 text-3xl font-bold text-slate-900">Webhooks</h1>
+      <h1 className="mb-2 text-3xl font-bold text-slate-900">Events</h1>
       <p className="mb-8 text-lg text-slate-600">
-        Receive real-time events as tutoring sessions progress.
+        The embed posts events to your page as the session progresses. Your backend then pulls the
+        authoritative facts from the API.
       </p>
 
-      <h2 className="mb-3 mt-8 text-xl font-semibold text-slate-900">Setup</h2>
+      <h2 className="mb-3 mt-8 text-xl font-semibold text-slate-900">How events arrive</h2>
       <p className="mb-4 text-sm text-slate-600">
-        Register a webhook endpoint via the API:
+        Every event is a <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">window.parent.postMessage({'{'} type, data {'}'})</code>{' '}
+        from the iframe. Always check <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">event.origin</code>{' '}
+        before trusting a message.
       </p>
-      <CodeBlock language="bash">{`curl -X POST https://api.evelynlearning.com/v1/webhooks \\
-  -H "X-API-Key: YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{ "url": "https://your-app.com/webhooks/evelyn", "events": ["session.ended", "usage.summary"] }'`}</CodeBlock>
+      <CodeBlock language="javascript" title="Host page">{`window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://tutor.evelynlearning.com') return;
+  const msg = event.data;
+  if (!msg || typeof msg.type !== 'string' || !msg.type.startsWith('evelyn:')) return;
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Payload Format</h2>
-      <CodeBlock language="json" title="Example: session.ended">{`{
-  "event": "session.ended",
-  "timestamp": "2026-10-15T14:30:00Z",
-  "partner_id": "algerian-bac",
+  switch (msg.type) {
+    case 'evelyn:session_started': /* { session_id, started_at_ms? } */ break;
+    case 'evelyn:progress':        /* { session_id, lesson_progress, practice? } */ break;
+    case 'evelyn:session_ended':
+      fetch('/api/tutor-session-ended', {          // your endpoint
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(msg.data),
+      });
+      break;
+  }
+});`}</CodeBlock>
+
+      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Payload: session_ended</h2>
+      <CodeBlock language="json">{`{
+  "type": "evelyn:session_ended",
   "data": {
-    "session_id": "sess_abc123",
-    "student_id": "stu_xyz789",
-    "subject": "math",
-    "topic": "quadratic-functions",
-    "level": "11-12",
-    "duration_seconds": 1847,
+    "session_id": "duc-sess-9012",
+    "duration": 1847,
     "message_count": 24,
     "whiteboard_items": 8,
-    "end_reason": "student_ended",
-    "token_usage": {
-      "input_audio_tokens": 14200,
-      "output_audio_tokens": 21800,
-      "input_text_tokens": 48500,
-      "output_text_tokens": 18200
+    "milestone": "recap_reached",
+    "lesson_progress": {
+      "lessonPlanId": "plan_8f3a…",
+      "currentSegmentId": "seg-recap",
+      "completedSegmentIds": ["seg-hook", "seg-concept-1", "seg-example-1", "seg-try-1"],
+      "currentSegmentLabel": "Recap",
+      "percent": 100
     },
-    "estimated_cost_usd": 1.23,
-    "metadata": {
-      "class_id": "math-11b"
-    }
+    "end_intent": "finish"
   }
 }`}</CodeBlock>
+      <ul className="mb-6 space-y-1 text-sm text-slate-600">
+        <li><code className="text-xs">duration</code> — wall-clock seconds since the session started. For billing use <code className="text-xs">durationSec</code> from <code className="text-xs">GET /sessions/summary</code> (active minutes).</li>
+        <li><code className="text-xs">milestone</code> — <code className="text-xs">none</code>, <code className="text-xs">first_concept_complete</code>, <code className="text-xs">first_try_yourself_success</code>, <code className="text-xs">recap_reached</code>.</li>
+        <li><code className="text-xs">ended_reason</code> — present only as <code className="text-xs">&quot;time_limit&quot;</code> when the <code className="text-xs">max_duration_minutes</code> cap ended the session.</li>
+        <li><code className="text-xs">end_intent</code> — <code className="text-xs">finish</code> or <code className="text-xs">discard</code> when the student chose; absent on a plain End/Pause.</li>
+      </ul>
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Events</h2>
-      <p className="mb-6 text-sm text-slate-600">
-        {webhookEvents.length} events across {webhookCategories.length} categories.
-      </p>
-
+      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">All events</h2>
       {webhookCategories.map((category) => {
         const events = webhookEvents.filter((e) => e.category === category);
         return (
-          <div key={category} className="mt-8">
+          <div key={category} className="mt-6">
             <h3 className="mb-3 text-lg font-semibold text-slate-900">{category}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-slate-200 text-left">
                     <th className="pb-3 pr-4 font-medium text-slate-500">Event</th>
-                    <th className="pb-3 pr-4 font-medium text-slate-500">Trigger</th>
-                    <th className="pb-3 font-medium text-slate-500">Key Fields</th>
+                    <th className="pb-3 pr-4 font-medium text-slate-500">Fires when</th>
+                    <th className="pb-3 font-medium text-slate-500">data</th>
                   </tr>
                 </thead>
                 <tbody>
                   {events.map((e) => (
                     <tr key={e.event} className="border-b border-slate-100">
                       <td className="py-2.5 pr-4">
-                        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono">
-                          {e.event}
-                        </code>
+                        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono">{e.event}</code>
                       </td>
                       <td className="py-2.5 pr-4 text-slate-600">{e.trigger}</td>
                       <td className="py-2.5 text-slate-500">
-                        {e.keyFields.map((f, i) => (
+                        {e.keyFields.length === 0 ? '—' : e.keyFields.map((f, i) => (
                           <span key={f}>
                             <code className="text-xs">{f}</code>
                             {i < e.keyFields.length - 1 && ', '}
@@ -92,25 +100,20 @@ export default function WebhooksPage() {
         );
       })}
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Security</h2>
+      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Then pull the facts</h2>
       <p className="mb-4 text-sm text-slate-600">
-        All webhooks are signed with HMAC-SHA256 using your webhook secret. Verify the{' '}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">X-Evelyn-Signature</code>{' '}
-        header before processing. See{' '}
-        <a href="/docs/authentication" className="text-blue-600 underline">Authentication</a> for
-        verification code examples.
+        Events are signals, not the record. After <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">session_ended</code>{' '}
+        your backend should call the signed API:
       </p>
+      <CodeBlock language="bash">{`GET /api/portal/v1/sessions/summary?ids=duc-sess-9012   # active minutes, turns, board items
+GET /api/portal/v1/gaps?studentId=stu_abc123             # learning gaps
+GET /api/portal/v1/mastery?studentId=stu_abc123          # mastery per objective
+POST /api/portal/v1/assigned-practice                     # homework the tutor set`}</CodeBlock>
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Retry Policy</h2>
-      <p className="text-sm text-slate-600">
-        Failed deliveries (non-2xx response) are retried with exponential backoff: 1 minute, 5
-        minutes, 30 minutes, 2 hours, 24 hours. After 5 failed attempts, the event is logged and
-        available via <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /webhooks/:id/events</code>.
-      </p>
-
-      <Callout type="tip" title="Testing">
-        Use <code>POST /webhooks/:id/test</code> to send a test event and verify your endpoint is
-        configured correctly.
+      <Callout type="info" title="Server-side webhooks">
+        Outbound webhook delivery to your server (for example <code>session.ended</code> pushed to a URL
+        you register) is on the roadmap. Today the browser event plus an API pull is the supported
+        pattern, and it is what our own platforms use.
       </Callout>
     </div>
   );

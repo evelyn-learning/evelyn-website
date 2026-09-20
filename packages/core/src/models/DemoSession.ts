@@ -14,6 +14,7 @@ export interface IDemoSessionSummary {
   messageCount: number;
   toolsUsed: string[];
   lastActivity: Date;
+  mode?: 'voice' | 'text';
 }
 
 export interface IDemoSession extends Document {
@@ -89,6 +90,7 @@ const DemoSessionSchema = new Schema<IDemoSession>(
       messageCount: { type: Number, default: 0 },
       toolsUsed: { type: [String], default: [] },
       lastActivity: { type: Date, default: Date.now },
+      mode: { type: String, enum: ['voice', 'text'] },
     },
     deviceType: {
       type: String,

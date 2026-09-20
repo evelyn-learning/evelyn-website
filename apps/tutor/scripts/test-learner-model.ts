@@ -2541,13 +2541,13 @@ async function runLearnerContextBlockPureTests() {
 
   // 1 strong + 1 developing-due LO + 1 gap: shape + key substrings.
   {
-    const block = renderLearnerContextBlock(
-      [
+    const block = renderLearnerContextBlock({
+      los: [
         { loId: 'lo-strong', title: 'Slope-intercept form', estimate: 0.9, confidence: 'high', reviewDue: false },
         { loId: 'lo-dev', title: 'Quadratic factoring', estimate: 0.3, confidence: 'low', reviewDue: true },
       ],
-      [{ label: 'lo-dev', observation: 'Mixes up the sign when factoring a negative constant term.' }],
-    );
+      gaps: [{ label: 'lo-dev', observation: 'Mixes up the sign when factoring a negative constant term.' }],
+    });
     assert(!!block, 'renderLearnerContextBlock: 1 strong + 1 developing-due LO + 1 gap → non-null');
     assert(
       !!block && block.startsWith('<learner_context>') && block.endsWith('</learner_context>'),
@@ -2562,19 +2562,19 @@ async function runLearnerContextBlockPureTests() {
 
   // both-empty → null.
   {
-    const block = renderLearnerContextBlock([], []);
+    const block = renderLearnerContextBlock({ los: [], gaps: [] });
     assert(block === null, 'renderLearnerContextBlock: both LOs and gaps empty → null');
   }
 
   // LO-only (no gaps) and gap-only (no LOs) still render — null is reserved
   // for the both-empty case.
   {
-    const loOnly = renderLearnerContextBlock(
-      [{ loId: 'lo-a', title: 'LO A', estimate: 0.9, confidence: 'high', reviewDue: false }],
-      [],
-    );
+    const loOnly = renderLearnerContextBlock({
+      los: [{ loId: 'lo-a', title: 'LO A', estimate: 0.9, confidence: 'high', reviewDue: false }],
+      gaps: [],
+    });
     assert(!!loOnly && !loOnly.includes('Active gaps'), 'renderLearnerContextBlock: LO-only input omits the gaps section but still renders');
-    const gapOnly = renderLearnerContextBlock([], [{ label: 'lo-a', observation: 'obs' }]);
+    const gapOnly = renderLearnerContextBlock({ los: [], gaps: [{ label: 'lo-a', observation: 'obs' }] });
     assert(!!gapOnly && !gapOnly.includes('current standing'), 'renderLearnerContextBlock: gap-only input omits the LO section but still renders');
   }
 
@@ -2584,7 +2584,7 @@ async function runLearnerContextBlockPureTests() {
       loId: `lo-${i}`, title: `LO ${i}`, estimate: 0.9, confidence: 'high', reviewDue: false,
     }));
     const manyGaps = Array.from({ length: 5 }, (_, i) => ({ label: `gap-${i}`, observation: `obs ${i}` }));
-    const block = renderLearnerContextBlock(manyLos, manyGaps);
+    const block = renderLearnerContextBlock({ los: manyLos, gaps: manyGaps });
     const loLines = (block ?? '').split('\n').filter((l) => /^- LO \d+:/.test(l));
     const gapLines = (block ?? '').split('\n').filter((l) => /^- gap-\d+:/.test(l));
     assert(loLines.length === 8, `renderLearnerContextBlock: caps at 8 LOs (got ${loLines.length})`);
@@ -2594,7 +2594,7 @@ async function runLearnerContextBlockPureTests() {
   // Gap observation clipped at 160 chars.
   {
     const longObs = 'x'.repeat(200);
-    const block = renderLearnerContextBlock([], [{ label: 'lo-a', observation: longObs }]);
+    const block = renderLearnerContextBlock({ los: [], gaps: [{ label: 'lo-a', observation: longObs }] });
     const gapLine = (block ?? '').split('\n').find((l) => l.startsWith('- lo-a:'))!;
     // "- lo-a: " prefix (8 chars) + clipped body (160 + ellipsis).
     assert(gapLine.length <= 8 + 161, `renderLearnerContextBlock: long gap observation is clipped (line length ${gapLine.length})`);

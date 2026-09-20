@@ -27,8 +27,12 @@ import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT } from '@/lib/tutor/orchestrator/flags';
+import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
-import { cartesiaSpeedForVoiceId } from '@core/voice/cartesia-voice-registry';
+import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
+import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
+import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -48,6 +52,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',
+  // 2026-09-10: mid-session topic switch in the embed. 'propose_plan_swap'
+  // is the brain's tool call (now emitted even when dropped); 'plan_swap_'
+  // covers the embed handler's applied/failed outcomes.
+  'propose_plan_swap', 'plan_swap_',
   // Round-6e: the round-6b AEC/route diagnostics never persisted for portal
   // sessions — this whitelist silently ate them, so the app-switch reverb
   // investigation ran blind. stage3_ covers the timeout-resume recovery.
@@ -79,11 +87,16 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'brain_', 'judge', 'tool_call', 'verdict_', 'render_sync', 'cover_silent',
   'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
   //   R58: solver-dispute correction note + false-final-assertion kill:
-  'improvised_mismatch_note_planted', 'false_assertion_kill',
+  'improvised_mismatch_note_planted', 'false_assertion_kill', 'verdict_replant_requested',
   //   R58: student-declared hold family (armed/active/swallowed/resumed/
   //   check_in) + first-session tip + noise-floor nudge:
   'student_hold_', 'first_session_tip', 'noise_floor_',
   'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
+  // Final review 2026-09-07: session_struggles_attached — the <session_struggles>
+  // ledger block is now WRAP-GATED, so this row is the record of WHY it rode a
+  // given turn (utterance / recap segment / recap wrap / ≥75% of the budget).
+  // Without it a close_session_notes call has no visible trigger.
+  'session_struggles',
   // Agenda rail (2026-08-10): agenda_rail_active — one line per fresh plan
   // start, proves the opener resolved a non-zero agenda item count (rail
   // preview clause armed). No card is ever dispatched.
@@ -149,7 +162,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // (a tutor stating something false is the single most important thing to
   // have a record of, and NONE of it was being kept).
   'qpin_', 'segment_overlong', 'posed_problem_unboarded',
-  'quantities_unanchored', 'map_pins_', 'image_upload',
+  'quantities_unanchored', 'board_contradiction', 'map_pins_', 'image_upload',
   'whiteboard_false_claim', 'fact_wrong', 'wrong_final_answer',
   'answer_miscorrection', 'spoken_card_mismatch', 'voice_board_mismatch',
   'context_loss', 'uncertain_transcript', 'noise_filtered',
@@ -163,8 +176,12 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'nonanswer_praise_retry', 'kill_suppressed_final_attempt',
   //   why something vanished from the board:
   'killed_render', 'figure_evolve_removed', 'prescribed_render',
+  //   portal-704e3e01 (2026-09-04): a lesson-STATE tool withheld because its
+  //   turn was already killed (kill-scope.ts) — the advance/mark_complete
+  //   counterpart to the killed_render family above.
+  'kill_withheld_lesson_tool',
   //   whether the card matched what was said (content drift):
-  'show_problem_', 'show_segment_card', 'show_worked_example',
+  'show_problem_', 'show_problem_substitution_skipped', 'show_segment_card', 'show_worked_example',
   'problem_equation_drift', 'board_anchor_flagged', 'meta_narration_dropped',
   //   pedagogy advisories:
   'bare_praise_ending_advisory', 'affirmative_no_advance_advisory',
@@ -198,6 +215,63 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'student_turn_coalesced',
   //   the "give me a moment" think-time hold armed for a turn:
   'think_time_hold_set',
+  // portal-704e3e01 (2026-09-04): page retitled from the problem that actually
+  // renders instead of the authored one from segment advance time.
+  'auto_newpage_retitled_from_render',
+  // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
+  'gap_inferred', 'gap_recurred',
+  'recap_offer_armed', 'recap_offer_reply', 'recap_started', 'recap_returned',
+  'recap_wrap_nudged', 'recap_overrun', 'recap_offer_unvoiced',
+  'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed', 'practice_assign_skipped',
+  'homework_announce_dropped', 'stuck_cue_ignored', 'stuck_cue_vetoed', 'opener_retry',
+  'mcq_letter_reconciled', 'correction_recheck_dropped', 'embed_config', 'practice_assign_fallback', 'judge_advisory_suppressed', 'posed_computation_kill',
+  'profile_commit_final', 'profile_commit_keepalive_skipped',
+  'homework_checked',
+  'false_praise_opener_kill', 'false_praise_opener_advisory',
+  // Task 8: the advisory tier's note only lands when the slot is free — this
+  // is what separates "advisory fired" from "the brain was actually told".
+  'false_praise_opener_correction_note_planted',
+  // R1 2026-09-07: the label-duplicate drop was invisible in embed sessions for months
+  'show_equation_label',
+  // Task 6, live-check-3 fixes round (2026-09-07): authored_ending_kill — the
+  // seed's authored solution-count verdict contradiction guard's trail.
+  'authored_ending',
+  // Live check 6 nets (2026-09-07, portal-63ee9f2c): spoken problem boarded,
+  // auto card on advance, settled-key retirement, generated-problem drop,
+  // correction-note hold on an open question, segment-overlong runtime note,
+  // MCQ choices on authored cards.
+  'spoken_problem_boarded', 'auto_card_on_advance', 'active_problem_resolved',
+  'generate_problem_unused_dropped', 'judge_correction_note_timeout_held',
+  'segment_overlong_note', 'show_segment_card_mcq_choices', 'spoken_equation_boarded',
+  // Task 7, live-check-3 fixes round (2026-09-07): pacing_credit_withheld —
+  // the judge-flagged-denial withhold that keeps the tutor's own mis-grading
+  // out of the student's incorrect streak / struggle ledger. Already covered
+  // by the broader 'pacing_' prefix above; named explicitly per-family so the
+  // coverage gate documents the decision rather than relying on that prefix's
+  // breadth.
+  'pacing_credit',
+  // Task 12, live-check-3 fixes round (2026-09-07): practice_draft_upserted /
+  // practice_draft_empty / practice_draft_failed — homework drafted DURING
+  // the session on recurrence / recap still-struggling / incorrect streak.
+  'practice_draft',
+  // Task 13 fix round 1 (2026-09-07): homework_pointer_spoken — the ONE
+  // runtime-spoken sentence that tells the student what was assigned and
+  // where. The brain never says it (it cannot see the close tool's result on
+  // the brain path), so this event is the only record that it was said.
+  'homework_pointer',
+  // Task 14, live-check-3 fixes round (2026-09-07): homework_state_rehydrated /
+  // homework_state_rehydrate_failed — a resumed page reloading the drafted-LO
+  // set + struggle ledger from the server (page memory is lost on resume).
+  'homework_state',
+  // Task 15, live-check-3 fixes round (2026-09-07): action_pin_set — the
+  // homework action pin landing on the board at close.
+  'action_pin',
+  // Task 16, live-check-3 fixes round (2026-09-07): resume_board_seeded /
+  // resume_board_seed_mismatch — addendum A6 investigation hook: what the
+  // resume-seed replay actually rebuilt into the catalog (persisted commands
+  // vs catalog items/pages), so a resume that scrolls to a remembered card
+  // while the catalog offers only one feature leaves a record.
+  'resume_board',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
@@ -270,6 +344,13 @@ interface EmbedConfig {
    *  token; absent/false = not a trial. Only consumed when
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   is_trial?: boolean;
+  /** Open-scope session (2026-09-10). When true the student may change the
+   *  subject/topic at any point: the brain's propose_plan_swap is honored
+   *  (it was silently dropped in the embed before — no handler was wired),
+   *  the swap may cross subjects, and the prompt's Rule 7(b) off-domain
+   *  deflection is overridden. The marketing demo widget sets it; enrolled
+   *  academy sessions do not, and stay scoped to their lesson node. */
+  open_scope?: boolean;
   /** Explicit session-target kind for the opening behavior. 'diagnostic'
    *  makes the opener/calibration no-op AND keeps the completion-gate/
    *  demo-stop machinery off the session — the academy's diagnostic
@@ -292,6 +373,11 @@ interface EmbedConfig {
    *  field existed. Only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is
    *  on. */
   readiness_note?: string;
+  /** Spec §C.7 — where tutor-assigned practice lands in the academy UI
+   *  ("Unit 2 · Practice"). Presence = the academy renders the homework card. */
+  practice_locator?: string;
+  /** Spec §C.7 — the student's stated goal, composed by the academy. */
+  goal_note?: string;
   /** Task WS3 — the completed mock attempt to review. When session_goal is
    *  'mock-review' the engine fetches the missed-item review context for this
    *  attempt and threads it to the brain. Absent ⇒ plain mock-review greeting
@@ -381,7 +467,12 @@ function EmbedSession() {
 }
 
 function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedToken?: string }) {
-  const subject = config.subject;
+  const openScope = config.open_scope === true;
+  // Open-scope (2026-09-10): subject + lessonPlanId become STATE so a
+  // mid-session plan swap can move both. For every non-open-scope token
+  // neither setter is ever called and the values equal the old consts.
+  const [subject, setSubject] = useState(config.subject);
+  const [lessonPlanId, setLessonPlanId] = useState<string | undefined>(config.curriculum_module || undefined);
   const level = config.level;
   const topic = config.topic || '';
   const studentName = config.student_name || '';
@@ -390,7 +481,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // accidental missing field must NOT silently flip lessons into practice
   // mode (the portal always sends the field; sandbox/QA mints may not).
   const sessionGoal: SessionGoal = config.session_goal || 'concept-review';
-  const inputMode: InputMode = config.input_mode || 'voice';
+  // Text-only tutor (2026-09-19): partner-level, from the signed claim only.
+  const sessionMode = resolveSessionMode(config.input_mode, process.env.NEXT_PUBLIC_TUTOR_TEXT_MODE);
+  // Persisted/reported inputMode must be the RESOLVED mode, not the raw
+  // claim: with the kill switch off, a text-claim token runs as voice, and
+  // billing/reporting must reflect what actually ran, not what was asked for.
+  const inputMode: InputMode = sessionMode;
   const voiceEngine: InternalEngine = mapEngine(config.engine);
   // R38: an openai-provider teacher voice was silently discarded (only the
   // cartesia branch below read teacher.voice) — honor its voiceId ahead of
@@ -406,8 +502,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // that prior behavior exactly — backward-compatible for existing partners.
   const teacherVoice = config.teacher?.voice;
   const useCartesiaVoice = teacherVoice?.provider === 'cartesia' && !!teacherVoice.voiceId;
-  const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice ? 'cartesia' : 'realtime';
-  const cartesiaVoiceId = useCartesiaVoice ? teacherVoice.voiceId : undefined;
+  // 2026-09-15 (Kanzoo sandbox): a token with NO teacher voice at all now
+  // defaults to Cartesia with the registry's default voice, so a partner that
+  // omits `teacher` hears the same natural voice as every first-party surface
+  // instead of the OpenAI Realtime fallback. An explicit openai persona voice
+  // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
+  const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice;
+  if (useCartesiaDefault && typeof window !== 'undefined') {
+    // Served-artifact marker for this behavior (Rule 4) + a breadcrumb when a
+    // partner token arrives without a persona.
+    console.info('[embed] tts-default-cartesia: no teacher persona in token');
+  }
+  const ttsProvider = resolveTtsProvider(null, useCartesiaVoice || useCartesiaDefault ? 'cartesia' : undefined, sessionMode);
+  const cartesiaVoiceId = useCartesiaVoice
+    ? teacherVoice.voiceId
+    : useCartesiaDefault
+      ? CARTESIA_DEFAULT_VOICE_ID
+      : undefined;
   // R38 Task 6 fix round: the embed supplies a raw voiceId (not a
   // teacherId), so resolveCartesiaVoice()'s teacher-keyed lookup never runs
   // here — cartesiaSpeedForVoiceId scans by id instead. Elena/Katie is the
@@ -471,6 +582,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const resumeSeedGuardRef = useRef(createSeedGuard());
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
+  // Task 10 (tutor-e2e, text-only mode): mirrors TutorSession's internal
+  // brain-busy signal (onBrainBusyChange) so the dev-only __tutorTestState
+  // hook below can expose it — the e2e harness's waitForTurn() polls this to
+  // know when a brain turn has started/settled.
+  const [brainBusy, setBrainBusy] = useState(false);
   const sessionStartRef = useRef(new Date());
   // Phase-0 instrumentation (humanlike-latency plan): the embed surface never
   // wired onDebugEvent, so portal sessions persisted ZERO debug events and
@@ -479,10 +595,53 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // turn — not the full /tutor-page firehose (real-student volume).
   const debugEventsRef = useRef<Array<{ type: string; message: string; timestamp: string; data?: Record<string, unknown> }>>([]);
   const lastSavedDebugCountRef = useRef(0);
+  // Task 12/13 (portal-00fa1bb7 / -5bc0fc1e / -c3007206): latches the moment
+  // this session became real, from WHICHEVER of THREE signals fires first
+  // (fix-round-3 renamed this from a name that named only one of them).
+  // Three rounds each closed one named entry point and uncovered another —
+  // enumerating entry points was the wrong shape of fix, so the third
+  // source latches on the INVARIANT instead: a session is one where the
+  // tutor actually did something, and every path that costs money ends in a
+  // brain turn, which produces transcript. That closes every present and
+  // future entry point without naming any of them.
+  //  - start_tap (VTR fires it on every orb/mic tap, see resolveStartTap):
+  //    covers a tap that FAILS to start — the dead-start class this whole
+  //    telemetry effort exists to diagnose. session-started never fires for
+  //    that case, so latching on it alone would silently drop dead starts.
+  //  - evelyn:session-started (window event, listened for below): covers
+  //    gesture/typed-first-message starts, which never emit start_tap.
+  //  - transcript GROWTH past the resume baseline (effect further below,
+  //    fix-round-3 backstop, baselined in fix-round-4): the "Continue
+  //    lesson" overlay resume, the resume-await toolbar (Draw / Text note /
+  //    Camera — interactive and gated on nothing during that window) and a
+  //    restored try-yourself card all end in a real, costed brain turn
+  //    while bypassing both signals above. This is the ONE latch source
+  //    that is not an enumeration — it closes the class, not an instance.
+  //    It is `> resumeState.transcript.length`, not `> 0`, because a resume
+  //    DOES restore transcript at mount with no gesture (VTR's resume-seed
+  //    effect calls onTranscriptUpdate straight into this page's
+  //    setTranscript); `> 0` made merely PREVIEWING a resumable session
+  //    latch, and the resulting abandoned save overwrote the real prior
+  //    session's duration/endedAt/status.
+  // Keep all three: start_tap and session-started fire EARLIER than the
+  // first transcript entry, so the early-flush window opens sooner and a
+  // session that dies between tap and first turn still gets its row. The
+  // transcript latch is the backstop, not a replacement. `=== null` on each
+  // setter means the first signal wins and the rest are no-ops.
+  const sessionEngagedAtRef = useRef<number | null>(null);
+  // Single definition of the gate (fix-round-1: the reviewer flagged the
+  // duplicated three-line check at the two write sites below). A page load
+  // is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206): hold every
+  // tutorsessions write until sessionEngagedAtRef latches, so a load that
+  // neither taps, starts, resumes, nor produces transcript writes nothing.
+  const sessionNotYetEngaged = () => TUTOR_DEFER_SESSION_DOC && sessionEngagedAtRef.current === null;
   // 2026-08-07: signature matches VTR's onDebugEvent — the third `data` arg
   // used to be silently dropped here (every embed event persisted without its
   // structured payload). Message truncation mirrors /tutor's collector.
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
+    if (type === 'start_tap' && sessionEngagedAtRef.current === null) {
+      sessionEngagedAtRef.current = Date.now();
+    }
     if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
     debugEventsRef.current.push({
       type,
@@ -507,6 +666,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // Mutually exclusive with a non-null resumeState (resolveResumeOutcome
   // never returns both). Only consumed when the pedagogy flag is on.
   const [checkpointStale, setCheckpointStale] = useState(false);
+  // Boot telemetry (live check 2026-09-06): which of the Plan 2 claims the
+  // host actually minted. Presence only — never the values.
+  useEffect(() => {
+    if (!config) return;
+    addDebugEvent('embed_config', `practice_locator=${config.practice_locator ? 'yes' : 'no'} goal_note=${config.goal_note ? 'yes' : 'no'} readiness_note=${config.readiness_note ? 'yes' : 'no'}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.practice_locator, config?.goal_note]);
   useEffect(() => {
     if (!wantsResume) return;
     let cancelled = false;
@@ -601,6 +767,18 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned') => {
     const now = new Date();
     const duration = Math.round((now.getTime() - sessionStartRef.current.getTime()) / 1000);
+    // A page load is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206).
+    // The session-usage upsert runs on mount, so browsing the partner's lesson
+    // menu minted one abandoned row per click — indistinguishable from a real
+    // failed start. sessionNotYetEngaged() latches on WHICHEVER of start_tap,
+    // evelyn:session-started, or transcript growth past the resume baseline
+    // fires first (see
+    // sessionEngagedAtRef above) — a tap that never became a session must
+    // still get its row and its telemetry, and so must a session resumed or
+    // engaged through a path that never taps or dispatches at all.
+    if (sessionNotYetEngaged()) {
+      return;
+    }
     // Slim base: everything except transcript/whiteboard — always fits the
     // sendBeacon/keepalive body quota, so the end-of-session facts
     // (endedAt, duration, counts, cost) survive even when the full payload
@@ -639,6 +817,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         };
       })(),
     };
+    // Snapshot the debug-event delta BEFORE building the payload, but do not
+    // advance the high-water mark until the events are actually handed off.
+    const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
+    const debugEventsHighWater = lastSavedDebugCountRef.current + newDebugEvents.length;
     const payload = {
       ...basePayload,
       ...(transcript.length > 0 ? {
@@ -664,15 +846,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
           ...(typeof sourceMessageIndex === 'number' && sourceMessageIndex >= 0 ? { sourceMessageIndex } : {}),
         })),
       } : {}),
-      // Delta-append allowlisted debug events (same batching convention as
-      // the /tutor page: count advances at send, at-most-once best-effort).
-      ...(() => {
-        const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
-        lastSavedDebugCountRef.current = debugEventsRef.current.length;
-        return newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {};
-      })(),
+      // Delta-append allowlisted debug events. The high-water mark is NOT
+      // advanced here — see commitDebugEvents() below.
+      ...(newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {}),
     };
     const body = JSON.stringify(payload);
+
+    /** Advance the delta high-water mark. Called ONLY once the events have
+     *  actually been handed off — sendBeacon returned true, or a fetch was
+     *  issued with `body` (which carries them). Never on a basePayload
+     *  fallback: basePayload has no debugEvents, so advancing there loses the
+     *  delta forever. That used to be survivable because the fallback could
+     *  fire at most once per session; visibilitychange → hidden now calls
+     *  saveSession('abandoned') on EVERY tab-hide, so a long session could
+     *  drop several deltas — in the round whose whole point is telemetry
+     *  survival. Best-effort remains at-most-once by design: a fetch that is
+     *  issued and then fails still counts as handed off. */
+    const commitDebugEvents = () => { lastSavedDebugCountRef.current = debugEventsHighWater; };
 
     if (status === 'active') {
       fetch('/api/tutor/session-usage', {
@@ -680,6 +870,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
+      commitDebugEvents();   // issued WITH the events
       return;
     }
 
@@ -689,7 +880,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // 47-minute transcript vanished on 2026-07-13. Fall back to the slim
       // summary, which always fits; the transcript itself is already in the
       // DB courtesy of the periodic flush above.
-      if (!navigator.sendBeacon('/api/tutor/session-usage', body)) {
+      if (navigator.sendBeacon('/api/tutor/session-usage', body)) {
+        commitDebugEvents();   // accepted WITH the events
+      } else {
+        // Slim fallback carries NO debugEvents — leave the high-water mark
+        // where it is so the delta rides the next save instead of vanishing.
         navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(basePayload));
       }
       return;
@@ -706,6 +901,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         body,
         keepalive: true,
       }).catch(() => {});
+      commitDebugEvents();   // issued WITH the events
     } else {
       fetch('/api/tutor/session-usage', {
         method: 'POST',
@@ -718,6 +914,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
+      commitDebugEvents();   // the second fetch carries the events
     }
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken]);
 
@@ -820,6 +1017,18 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         ...(practiceStatsRef.current ? { practice: practiceStatsRef.current } : {}),
       },
     }, '*');
+
+    // A page load is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206).
+    // lessonPlanId (config.curriculum_module) can be set at mount, so a plan
+    // load — and this checkpoint — used to fire before any engagement signal,
+    // independently of saveSession's gate. Same latch (sessionNotYetEngaged,
+    // see sessionEngagedAtRef above), same reasoning: hold the write until
+    // the session actually engages (tap, start, resume, or transcript); the
+    // postMessage above still tells the parent frame the plan loaded, which
+    // is not a DB write.
+    if (sessionNotYetEngaged()) {
+      return;
+    }
 
     // Identity fields included so this upsert inserts validly if it lands
     // before the first full save (required-field validation on insert).
@@ -928,6 +1137,22 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // at iframe mount. Additive protocol message; older portals ignore it.
   useEffect(() => {
     const onStarted = (e: Event) => {
+      // Fix-round-1 (portal-00fa1bb7 etc.): a second signal that can latch
+      // sessionEngagedAtRef — first-writer-wins, matching the addDebugEvent
+      // setter above. Covers gesture/typed-first-message starts (typed
+      // message, agenda pick), which never emit start_tap. NOT the resume
+      // path: TutorSession seeds sessionStartedDispatchedRef to true
+      // whenever resumeState is set, so this event is deliberately
+      // suppressed on every resumed mount — resumeContinue() now emits
+      // start_tap directly instead (fix-round-2), and a resume-await
+      // toolbar action or restored try-yourself card that bypasses BOTH of
+      // those still latches on the transcript backstop (fix-round-3, effect
+      // further below — measured against the resume baseline, not zero,
+      // since a resumed mount seeds the restored transcript with no
+      // gesture).
+      if (sessionEngagedAtRef.current === null) {
+        sessionEngagedAtRef.current = Date.now();
+      }
       const startedAtMs = (e as CustomEvent<{ startedAtMs?: number }>).detail?.startedAtMs;
       window.parent.postMessage(
         {
@@ -946,12 +1171,74 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     return () => window.removeEventListener('evelyn:session-started', onStarted);
   }, [sessionId]);
 
-  // Save as abandoned on page unload
+  // Third latch, and the only one that is not an enumeration (fix-round-3,
+  // portal-00fa1bb7 / -5bc0fc1e / -c3007206). A session is one where the
+  // tutor actually did something, and every path that costs money — mic
+  // tap, typed first message, agenda pick, "Continue lesson", the student
+  // tools cluster during a resume-await window, a restored try-yourself
+  // card — ends in a brain turn, which produces transcript. Latching on
+  // that closes every present and future entry point without naming any of
+  // them. Three earlier rounds each closed one named path and found
+  // another.
+  //
+  // Fix-round-4 — measured against a BASELINE, not against zero. A resume
+  // DOES restore transcript, contrary to what this comment claimed through
+  // round 3: VoiceTutorRealtime's resume-seed effect (the one-time
+  // `resumeContentSeededRef` effect) runs at MOUNT, with no user gesture,
+  // and does `onTranscriptUpdate([...resumeState.transcript])` — wired
+  // through TutorSession's pass-through handleVoiceTranscriptUpdate to this
+  // page's setTranscript. So latching on `> 0` made merely OPENING a
+  // resumable session engage the gate. The row isn't newly minted (a resume
+  // reuses config.session_id), but the preview-and-close then overwrote the
+  // real prior session's duration/endedAt/status with an 'abandoned' save
+  // timed from this mount — reopening the same hole from the other side: a
+  // false POSITIVE, where rounds 1-3 were fighting false negatives.
+  //
+  // The baseline is exactly what the seed will write, and it is race-free:
+  // the first render of <TutorSession> is gated on `resumeReady` (see the
+  // early return below), and the checkpoint effect calls setResumeState
+  // before setResumeReady(true) in the same continuation, so resumeState is
+  // final before VTR — and therefore its seed — can mount. setResumeState
+  // has exactly one call site, so it never moves afterwards.
+  //   pure load of a resumable session → length === baseline  → no latch
+  //   any live turn (fresh or resumed) → length  >  baseline  → latch
+  //   fresh session                    → baseline 0, first turn latches
+  const resumedTranscriptBaseline = resumeState?.transcript.length ?? 0;
+  useEffect(() => {
+    if (transcript.length > resumedTranscriptBaseline && sessionEngagedAtRef.current === null) {
+      sessionEngagedAtRef.current = Date.now();
+    }
+  }, [transcript.length, resumedTranscriptBaseline]);
+
+  // Save as abandoned on page unload.
+  // beforeunload alone is not enough: this page runs in an IFRAME on the
+  // partner's site, where it is the least reliably delivered unload event.
+  // pagehide fires on bfcache navigation and iframe teardown; a
+  // visibilitychange to 'hidden' is the only signal on mobile tab-kill.
+  // All three funnel into the same idempotent saveSession('abandoned'):
+  // lastSavedDebugCountRef advances synchronously once the events are handed
+  // off (so a second call's debug-event delta is empty; it deliberately does
+  // NOT advance when the oversized-body fallback drops them, which is why a
+  // per-tab-hide 'abandoned' save can no longer lose a delta) and
+  // transcript/whiteboardCommands are $set to the client's current full array
+  // on the server, not $push — replaying the same array twice is a no-op, not
+  // a duplicate.
   useEffect(() => {
     if (sessionEnded) return;
-    const handleBeforeUnload = () => saveSession('abandoned');
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    const handleUnload = () => saveSession('abandoned');
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') saveSession('abandoned');
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    if (TUTOR_TELEMETRY_SURVIVAL) {
+      window.addEventListener('pagehide', handleUnload);
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [sessionEnded, saveSession]);
 
   // Periodic active flush every 30s while the session runs, so an abnormal
@@ -973,6 +1260,134 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     const interval = setInterval(() => saveSessionRef.current('active'), 30_000);
     return () => clearInterval(interval);
   }, [sessionEnded]);
+
+  // Early-window flush (portal-00fa1bb7): the first debug events arrive
+  // within ~2s of the student's first start tap, and a dead-start page is
+  // gone well before the 30s tick, so without this every dead start
+  // persists nothing at all. Measured from sessionEngagedAtRef — latched on
+  // WHICHEVER of start_tap (in addDebugEvent), evelyn:session-started (in
+  // the onStarted listener), or transcript growth past the resume baseline
+  // (the effect above) fires first — NOT from mount: a load with none of
+  // the three is
+  // plain navigation and should mint no save; a tap that never became a
+  // session is exactly the dead-start case this exists to capture, so it
+  // must flush. The first two fire earlier than the transcript backstop, so
+  // most sessions still open this window at the true engagement moment.
+  useEffect(() => {
+    if (!TUTOR_TELEMETRY_SURVIVAL || sessionEnded) return;
+    const t = setInterval(() => {
+      const tapAt = sessionEngagedAtRef.current;
+      if (tapAt === null) return; // no tap yet — nothing to flush early
+      if (shouldFlushEarly({
+        eventCount: debugEventsRef.current.length,
+        lastFlushedCount: lastSavedDebugCountRef.current,
+        msSinceMount: Date.now() - tapAt,
+      })) {
+        saveSessionRef.current('active');
+      }
+    }, 2_000);
+    return () => clearInterval(t);
+  }, [sessionEnded]);
+
+  // Mid-session plan swap (2026-09-10). Mirrors /tutor's
+  // handleProposePlanSwap: the brain emits propose_plan_swap, the server
+  // resolves a plan (curated match → generated), and we route the new id
+  // into the lessonPlanId prop so VoiceTutorRealtime's existing effect
+  // loads it. Before this the embed passed no handler and every swap was
+  // dropped on the floor (embed-1788926441238 and every demo before it).
+  // In open-scope sessions the swap may cross subjects, so `subject` state
+  // follows the resolved plan — the progress strip, tool filter and any
+  // later mint see the subject the student is actually studying.
+  //
+  // HOOK ORDER (live 2026-09-18, Crimsora resume → "This page couldn't
+  // load"): this useCallback used to sit BELOW the `sessionEnded` /
+  // `!resumeReady` early returns. On a resume, resumeReady starts false,
+  // the first render exited before this hook, and the render after it
+  // flipped true called one more hook than before — React #310 — and the
+  // whole embed died on Next's error page. Every resume since 9a70301a hit
+  // it. All hooks must precede the early returns; keep this one here.
+  const handleProposePlanSwap = useCallback(
+    async ({ targetSubTopic, targetSubject, reason }: { targetSubTopic: string; targetSubject?: string; reason?: string }): Promise<void> => {
+      try {
+        const res = await fetch('/api/tutor/swap-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetSubTopic,
+            subject,
+            grade: level,
+            // Scoped sessions keep their topic boundary; open-scope drops it.
+            topic: openScope ? undefined : (topic || undefined),
+            openScope,
+            targetSubject: openScope ? targetSubject : undefined,
+            reason,
+          }),
+        });
+        if (!res.ok) {
+          addDebugEvent('plan_swap_failed', `status=${res.status} target="${targetSubTopic}"`);
+          return;
+        }
+        const data = await res.json();
+        const newPlanId = data?.plan?.id;
+        if (typeof newPlanId !== 'string' || !newPlanId) {
+          addDebugEvent('plan_swap_failed', `missing plan id target="${targetSubTopic}"`);
+          return;
+        }
+        const newPlanSubject = typeof data?.plan?.subject === 'string' ? data.plan.subject : '';
+        const newPlanTitle = typeof data?.plan?.title === 'string' ? data.plan.title : '';
+        addDebugEvent(
+          'plan_swap_applied',
+          `plan=${newPlanId} source=${data?.source ?? '?'} title="${newPlanTitle}" subject=${newPlanSubject || subject}`,
+        );
+        if (openScope && newPlanSubject && newPlanSubject !== subject) setSubject(newPlanSubject);
+        setLessonPlanId(newPlanId);
+      } catch (err) {
+        addDebugEvent('plan_swap_failed', `threw: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    },
+    [subject, level, topic, openScope, addDebugEvent],
+  );
+
+  // ── Dev-only e2e test hooks (Playwright harness) ──────────────────────────
+  // Task 10 (text-only tutor mode): mirrors the NODE_ENV-guarded window hooks
+  // /tutor defines at page.tsx:1575-1601, so scripts/tutor-e2e/run.ts can
+  // drive an embed session the same way — window.__tutorSendText(text) to
+  // dispatch a typed student turn, window.__tutorTestState() to poll
+  // observable state. Embed sessions have no picker/start step (the config
+  // comes straight from the token), so there is no __tutorTestStart
+  // counterpart here: TutorSession is already mounted and connecting by the
+  // time this effect runs. HOOK ORDER: must sit above the sessionEnded /
+  // !resumeReady early returns (see the HOOK ORDER comment on
+  // handleProposePlanSwap above) — kept directly below it for that reason.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    w.__tutorSendText = (text: string) => {
+      if (!sessionHandleRef.current) { console.warn('[tutor-e2e] __tutorSendText: handle not ready'); return; }
+      console.warn('[tutor-e2e] __tutorSendText', JSON.stringify(text).slice(0, 120));
+      sessionHandleRef.current.sendTextMessage(text);
+    };
+    w.__tutorTestState = () => ({
+      brainBusy,
+      connected: !!sessionHandleRef.current,
+      error,
+      // e2e telemetry: full debug-event stream, same shape /tutor exposes —
+      // the assertion block in run.ts (active only when
+      // TUTOR_E2E_EMBED_TOKEN is set) scans this for mic/getUserMedia/
+      // warmup_overlay events, which text mode must never emit.
+      debugEvents: debugEventsRef.current,
+      // e2e: full per-turn transcript (untruncated), same shape /tutor
+      // exposes via transcriptStateRef.
+      transcript: transcript.map((e) => ({ role: e.role, text: e.text, streaming: e.streaming === true, revising: e.revising === true })),
+      // e2e: board-render count for the text-mode assertion (fail if 0).
+      // Not part of /tutor's __tutorTestState shape — embed already tracks
+      // this mirror locally (onWhiteboardCommand above), so exposing it here
+      // needs no new plumbing.
+      whiteboardCommandCount: whiteboardCommands.length,
+    });
+    return () => { delete w.__tutorSendText; delete w.__tutorTestState; };
+  }, [brainBusy, error, transcript, whiteboardCommands]);
 
   // Session ended view
   if (sessionEnded) {
@@ -1014,6 +1429,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     </div>
   ) : undefined;
 
+
   return (
     <div style={brandStyle}>
       <TutorSession
@@ -1035,10 +1451,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         sessionGoal={sessionGoal}
         mockReview={mockReview}
         refetchMockReview={refetchMockReview}
-        lessonPlanId={config.curriculum_module || undefined}
+        lessonPlanId={lessonPlanId}
+        onProposePlanSwap={handleProposePlanSwap}
+        openScope={openScope}
         voice={openAIVoice}
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}
+        sessionMode={sessionMode}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         sessionMaxMinutes={maxDuration}
@@ -1048,8 +1467,18 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}
         readinessNote={config.readiness_note}
+        practiceLocator={config.practice_locator}
+        goalNote={config.goal_note}
         onOpenerRecord={handleOpenerRecord}
         onBrainUsage={handleBrainUsage}
+        // Dev/test only: the __tutorTestState hook above (already
+        // NODE_ENV-guarded) is the only reader of `brainBusy`, and the e2e
+        // harness's waitForTurn() polls it for BOTH voice and text bundles
+        // (scripts/tutor-e2e/run.ts, hero-capture.ts) — so this cannot be
+        // gated on sessionMode without breaking voice e2e runs. Gating on
+        // NODE_ENV instead keeps production (voice AND text) byte-identical
+        // to before this task: no extra state update wired in prod either way.
+        onBrainBusyChange={process.env.NODE_ENV !== 'production' ? setBrainBusy : undefined}
         onDebugEvent={addDebugEvent}
         handleRef={sessionHandleRef}
         isTrial={config.is_trial === true}

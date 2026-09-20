@@ -10,7 +10,7 @@
  * turn N, assert X as the answer at a later turn → provable
  * self-contradiction → kill + credit the student.
  */
-import {
+import { problemKeyForDenial,
   extractDeniableAnswer,
   checkDeniedAnswerReversal,
 } from '../src/lib/tutor/voice/denied-answer-reversal';
@@ -92,6 +92,199 @@ check(
   checkDeniedAnswerReversal({ sentence: "It's the phonological loop.", denied, currentTurn: 14 }),
   { verdict: 'ok' },
 );
+
+// ─── portal-9a9b7c09: denied a CORRECT "12" @748.6s, affirmed it @763.6s ───
+check(
+  'portal-9a9b7c09: spoken "Twelve" reverses a stashed "12"',
+  checkDeniedAnswerReversal({
+    sentence: 'Right. Twelve — five plus nineteen is twenty-four, and twenty-four over two is twelve.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+check(
+  'verdict opener + bare digit value is a reversal shape',
+  checkDeniedAnswerReversal({
+    sentence: 'Right. 12 — five plus nineteen is twenty-four.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+check(
+  'verdict opener + bare terminal value is a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Right. Twelve.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+// Deliberately missed: "Exactly. Twelve it is." — the value is predicated upon
+// by "is", so it does not terminate the opening clause. Guards must fail closed.
+check(
+  '"Exactly. Twelve it is." is NOT a reversal (miss is deliberate)',
+  checkDeniedAnswerReversal({
+    sentence: 'Exactly. Twelve it is.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+// ─── FAIL CLOSED: a bare mention while teaching is not a reversal ───
+check(
+  'hypothetical mention is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'If it were twelve, the interquartile range would change.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'negated restatement is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: "It's not twelve — look at the upper half again.",
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'descriptive mention is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Look at the twelve on the board and compare it to the median.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+// ─── False-positive regression tests: opener + predicated value ───
+check(
+  'verdict opener + predicated value "is a common denominator" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Right, 12 is a common denominator here, but not what we need for this problem.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "of the 15 students" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Yes, 12 of the 15 students in that study got it right, which is interesting.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "minutes left" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: "Nice, 12 minutes left in the session, let's keep going.",
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "is divisible by" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Correct, 12 is divisible by both 3 and 4.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "of the fifteen apples" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Right, twelve of the fifteen apples were rotten, so we discard those first.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+
+// 2026-09-06 live check 3 (portal-3a024b75): "Right — no solution… infinite
+// solutions only when the two sides were identical from the start" MENTIONS
+// the denied phrase inside a conditional clause; it does not assert it.
+{
+  const denied = [{ phrase: 'infinite solutions', turn: 3 }];
+  check(
+    'conditional mention after the phrase is not a reversal',
+    checkDeniedAnswerReversal({
+      sentence: 'Right — no solution here. Infinite solutions only when the two sides were identical from the start, like our phone-bill trap.',
+      denied, currentTurn: 5,
+    }).verdict,
+    'ok',
+  );
+  check(
+    'contrast before the phrase is not a reversal',
+    checkDeniedAnswerReversal({ sentence: "Unlike infinite solutions, this one leaves a false statement.", denied, currentTurn: 5 }).verdict,
+    'ok',
+  );
+  check(
+    'a real reversal still fires',
+    checkDeniedAnswerReversal({ sentence: "Exactly — it's infinite solutions after all.", denied, currentTurn: 5 }).verdict,
+    'reversal',
+  );
+  check(
+    'hypothetical clause is not a reversal',
+    checkDeniedAnswerReversal({ sentence: 'If both sides matched, the answer is infinite solutions.', denied, currentTurn: 5 }).verdict,
+    'ok',
+  );
+}
+
+// 2026-09-07 review: MENTION_BEFORE_RE's bare "not|never|would|could|might"
+// were too broad — a hedge word ANYWHERE earlier in the (up to 80-char)
+// preceding clause suppressed a genuine reversal, even when it had nothing
+// to do with the denied phrase. These must still fire as reversals.
+{
+  const denied = [{ phrase: 'central executive', turn: 13 }];
+  check(
+    '"not" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "That's not confusing, it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+  check(
+    '"never" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "Never mind the distractor, it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+  check(
+    '"would" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "It would help to review, but it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+  check(
+    '"might" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "This might seem odd, but it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+}
+
+// 2026-09-06 live (Noah): the same phrase on a DIFFERENT problem is not a reversal.
+{
+  const k1 = problemKeyForDenial('64 ÷ 16'); const k2 = problemKeyForDenial('24 ÷ 6');
+  const denied = [{ phrase: '4', turn: 8, problemKey: k1 }];
+  check('same problem ⇒ reversal', checkDeniedAnswerReversal({ sentence: "Actually the answer is 4.", denied, currentTurn: 10, problemKey: k1 }).verdict, 'reversal');
+  check('different problem ⇒ ok', checkDeniedAnswerReversal({ sentence: "Right — the answer is 4.", denied, currentTurn: 10, problemKey: k2 }).verdict, 'ok');
+  check('no key on the denial ⇒ unscoped (legacy)', checkDeniedAnswerReversal({ sentence: "Actually the answer is 4.", denied: [{ phrase: '4', turn: 8 }], currentTurn: 10, problemKey: k2 }).verdict, 'reversal');
+}
 
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);

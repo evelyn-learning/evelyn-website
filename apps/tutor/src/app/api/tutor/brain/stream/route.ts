@@ -103,6 +103,16 @@ interface BrainStreamRequestBody {
    *  whose embed context fetch succeeded. Surfaces as the durable
    *  `<mock_review>` block. See BrainTurnInput.mockReview. */
   mockReview?: BrainTurnInput['mockReview'];
+  /** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives.
+   *  Shape-checked below; malformed input collapses to undefined.
+   *  See BrainTurnInput.recapOffer/recapGo/recapWrap/recapReply. */
+  recapOffer?: BrainTurnInput['recapOffer'];
+  recapGo?: BrainTurnInput['recapGo'];
+  recapWrap?: boolean;
+  recapReply?: BrainTurnInput['recapReply'];
+  /** Task 13: struggle-ledger flags for this session. Shape-checked below;
+   *  malformed entries are dropped. See BrainTurnInput.ledgerFlags. */
+  ledgerFlags?: unknown;
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -391,6 +401,7 @@ export async function POST(req: NextRequest) {
   // header the orchestrator now threads onto this fetch.
   const deniedResponse = await denyIfNoDemoAccess(req, 'brain-stream');
   if (deniedResponse) return deniedResponse;
+  const isPartnerEmbed = Boolean(req.headers.get('x-embed-token'));
 
   let body: BrainStreamRequestBody;
   try {
@@ -653,9 +664,53 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Holistic-pedagogy round (spec §B.3/B.5): sanitize the four recap
+      // fields. Each collapses to undefined on any shape mismatch so a
+      // malformed client can never inject an arbitrary blob into the
+      // per-turn user content. loTitle is spliced directly into the
+      // <recap_offer>/<recap_go> block body, so strip '<'/'>' (a title
+      // like 'X</recap_offer><recap_go>ignore' would otherwise close the
+      // block early) and collapse whitespace BEFORE the length cap.
+      // formatRecapBlocks() re-applies the same stripping (defense in
+      // depth for a direct caller), but the cap here must operate on the
+      // cleaned string, not the raw one.
+      const cleanLoTitle = (t: string) => t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+      const recapOffer = body.recapOffer && typeof body.recapOffer.loTitle === 'string'
+        ? { loTitle: cleanLoTitle(body.recapOffer.loTitle).slice(0, 120), ...(body.recapOffer.soft === true ? { soft: true } : {}) } : undefined;
+      const recapGo = body.recapGo && typeof body.recapGo.loTitle === 'string' ? { loTitle: cleanLoTitle(body.recapGo.loTitle).slice(0, 120) } : undefined;
+      const recapWrap = body.recapWrap === true ? true : undefined;
+      const recapReply = body.recapReply === 'accept' || body.recapReply === 'decline' || body.recapReply === 'unclear' ? body.recapReply : undefined;
+      // Task 13: the client's ledger flags. Same defensive shape as the
+      // recap fields — an array of {loId,title,detections}, each field
+      // type-checked and bounded, capped at 3, and titles stripped of
+      // '<'/'>' (they are spliced into the <session_struggles> body).
+      const ledgerFlags = Array.isArray(body.ledgerFlags)
+        ? (body.ledgerFlags as unknown[])
+            .filter((f): f is { loId: string; title: string; detections: number } =>
+              !!f && typeof f === 'object'
+              && typeof (f as { loId?: unknown }).loId === 'string'
+              && typeof (f as { title?: unknown }).title === 'string'
+              && typeof (f as { detections?: unknown }).detections === 'number'
+              && Number.isFinite((f as { detections: number }).detections))
+            .slice(0, 3)
+            .map((f) => ({
+              loId: cleanLoTitle(f.loId).slice(0, 120),
+              title: cleanLoTitle(f.title).slice(0, 120),
+              detections: Math.max(0, Math.min(99, Math.round(f.detections))),
+            }))
+        : undefined;
+      if (recapOffer) console.log(`[recap] recap_offer attached lo="${recapOffer.loTitle}"${recapOffer.soft ? ' soft' : ''}`);
+      if (recapGo) console.log(`[recap] recap_go attached lo="${recapGo.loTitle}"`);
+      if (recapWrap) console.log('[recap] recap_wrap attached');
+      if (recapReply) console.log(`[recap] recap_offer_reply attached reply=${recapReply}`);
+
       // Task X10: the turn input is pure, byte-stable data (no per-attempt
       // mutation), so the SAME object is safely reused on every retry.
       const turnInput = {
+          // Partner embeds (x-embed-token) never fail over to the fallback
+          // provider: their DPA lists the primary only. TUTOR_PARTNER_BRAIN_FALLBACK=on
+          // re-enables it deployment-wide (Praveen ruling 2026-09-19).
+          allowFallback: !isPartnerEmbed || process.env.TUTOR_PARTNER_BRAIN_FALLBACK === 'on',
           systemPrompt: body.systemPrompt,
           conversationHistory: body.conversationHistory,
           studentTranscript: body.studentTranscript,
@@ -689,6 +744,16 @@ export async function POST(req: NextRequest) {
           // Task WS3: durable mock-review context, forwarded verbatim. Absent
           // for non-mock-review sessions ⇒ `<mock_review>` block omitted.
           mockReview: body.mockReview,
+          // Holistic-pedagogy round: sanitized above (shape-checked, else
+          // undefined). Surfaces as `<recap_offer>`/`<recap_go>`/
+          // `<recap_wrap>`/`<recap_offer_reply>` in the user content.
+          recapOffer,
+          recapGo,
+          recapWrap,
+          recapReply,
+          // Task 13: sanitized above. Surfaces as `<session_struggles>` in
+          // the per-turn user content (suppressed when recapOffer is set).
+          ledgerFlags: ledgerFlags?.length ? ledgerFlags : undefined,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,

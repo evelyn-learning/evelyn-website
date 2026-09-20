@@ -87,10 +87,10 @@ export default function SandboxPage() {
       <div className="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className="mb-2 text-sm font-medium text-slate-700">Sandbox includes:</p>
         <ul className="space-y-1 text-sm text-slate-500">
-          <li>Standard voice engine</li>
-          <li>{sandboxLimits.maxSessionsPerMonth} sessions/month, {sandboxLimits.maxSessionDurationMinutes} min max each</li>
-          <li>Up to {sandboxLimits.maxModuleUploads} curriculum module uploads</li>
-          <li>Full webhook and API access</li>
+          <li>Same engine and whiteboard as production</li>
+          <li>{sandboxLimits.freeMinutes} free tutoring minutes, {sandboxLimits.maxSessionDurationMinutes} min max per session</li>
+          <li>Your own signed partner keys</li>
+          <li>Partner API and end-of-session events</li>
           <li>No credit card required</li>
         </ul>
       </div>

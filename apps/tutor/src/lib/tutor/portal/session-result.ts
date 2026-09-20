@@ -51,6 +51,7 @@ import {
 import { extractSocialThreads } from './extract-social-threads';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
+import { findAssignmentBySession } from '@/lib/tutor/practice-assign/store';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {
@@ -311,6 +312,33 @@ export async function emitSessionResult(
     req.renderedArtifacts ??
     (opts.loadArtifacts ? extractRenderedArtifacts(await opts.loadArtifacts(req.sessionId)) : { quizzes: [], conceptMaps: [] });
 
+  // v1.15.0 — best-effort homework echo (authoritative read = assigned-practice route).
+  // Fix round 1 (Important I1) — sessionId is a bare partner-supplied
+  // string (SessionEmitRequestSchema has no format constraint), and a
+  // session-id collision across students/partners is a known, OBSERVED
+  // prod behaviour (see the 2026-09-04 triage's log-only ruling). Scope to
+  // the resolved profileId — the same id every other student-keyed store
+  // touched by this function uses — so a colliding sessionId can never
+  // echo another student's homework (LOs, free-text reason, item ids) or
+  // nextSessionIntent back to the caller.
+  const rawAssignment = await findAssignmentBySession(req.sessionId).catch(() => null);
+  const assignment = rawAssignment && rawAssignment.studentId === profileId ? rawAssignment : null;
+  const assignedPractice = assignment && assignment.locator
+    ? assignment.los.map((l) => ({ loId: l.loId, title: l.title, itemIds: l.items.map((i) => i.id), reason: l.reason, assignedAt: assignment.assignedAt.toISOString() }))
+    : undefined;
+  // Fix round 2 (Important I1) — the profile's `nextSessionIntent` is
+  // whatever session last wrote it, which can be months old and unrelated
+  // to this emit (e.g. a later session that closed with no new intent).
+  // The renderer's own `<learner_context>` guard scopes by recency
+  // (`context-block.ts`'s INTENT_MAX_AGE_DAYS); this wire echo instead
+  // scopes by IDENTITY — only surface the profile fallback when it was
+  // this very session's final commit that wrote it (`sessionId` stamped in
+  // `student-profile/[id]/route.ts`). Otherwise the profile note is stale
+  // for THIS emit and must not be echoed as if it were.
+  const nextSessionIntent =
+    assignment?.nextTimeIntent ??
+    (profile.nextSessionIntent?.sessionId === req.sessionId ? profile.nextSessionIntent.text : undefined);
+
   const base: Omit<SessionResult, 'learningStateDelta'> = {
     sessionId: req.sessionId,
     studentId: req.studentId,
@@ -319,6 +347,8 @@ export async function emitSessionResult(
     milestone: req.milestone ?? 'none',
     notesTouched: req.notesTouched,
     renderedArtifacts: artifacts,
+    ...(assignedPractice ? { assignedPractice } : {}),
+    ...(nextSessionIntent ? { nextSessionIntent } : {}),
   };
 
   // Checkpoint mode — no mutation, just a current-state snapshot.

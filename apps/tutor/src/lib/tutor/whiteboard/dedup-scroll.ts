@@ -18,9 +18,16 @@
 export function shouldScrollToDedupedItem(args: {
   itemPageTitle: string | undefined;
   currentPageTitle: string;
+  /** Live check 7 (portal-8ed0fb65, 11:00:52Z): the brain re-showed the
+   *  problem card to return to it after a long detour ON THE SAME PAGE; the
+   *  card sat two screens up and the student kept looking at the detour's
+   *  last steps. Items rendered after it on its page = how buried it is;
+   *  two or more later items ⇒ scroll. Omitted ⇒ the old same-page rule. */
+  itemsAfterOnPage?: number;
 }): boolean {
   const item = (args.itemPageTitle ?? '').trim().toLowerCase();
   const current = args.currentPageTitle.trim().toLowerCase();
   if (!item || !current) return false;
-  return item !== current;
+  if (item !== current) return true;
+  return (args.itemsAfterOnPage ?? 0) >= 2;
 }

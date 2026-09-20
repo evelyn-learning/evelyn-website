@@ -10,7 +10,7 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment, autoWrapLatex, normalizeSentenceGaps } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -415,6 +415,48 @@ console.log('\n=== Known 3-letter fn names + comma args are math ===');
   // Long / unknown fn names still stay literal — "cost(x)" is prose-like.
   const m = mathBodies('The $cost(x) of it$ is high.');
   check('unknown 4-letter fn name stays literal', m.length === 0);
+}
+
+
+// Live check 6 (2026-09-07, portal-63ee9f2c): the Q-pin renders with
+// forceMath; a gist echoing two spoken prices paired them into one math span.
+{
+  const { looksLikeCurrencySpan } = require('../src/lib/tutor/whiteboard/inline-math');
+  const gist = 'Why does a 20% decrease on $120 give a different result than on $100?';
+  const forced = segment(gist, true);
+  check('forceMath: currency pair stays text', forced.every((p) => p.kind === 'text'), JSON.stringify(forced));
+  check('forceMath: "$2 - x$" still math', segment('What is $2 - x$ when x is 5?', true).some((p) => p.kind === 'math' && p.body === '2 - x'));
+  check('forceMath: "$1.12p = 560$" still math', segment('Solve $1.12p = 560$?', true).some((p) => p.kind === 'math' && p.body === '1.12p = 560'));
+  check('forceMath: "$12 \\times 3$" still math', segment('Compute $12 \\times 3$.', true).some((p) => p.kind === 'math'));
+  check('currencySpan: "5 and " yes', looksLikeCurrencySpan('5 and ') === true);
+  check('currencySpan: "2 - x" no', looksLikeCurrencySpan('2 - x') === false);
+  check('currencySpan: "\\text{price} per 12" no', looksLikeCurrencySpan('\\text{price} per 12') === false);
+}
+
+// isProseNotLatex — live 2026-09-18 (portal-7cefb23d, pharmacy-tech worked
+// example): showSolution step `result` = "Less waiting at the counter" went
+// through the display-math renderer and painted as "Lesswaitingatthecounter".
+{
+  const prose = [
+    'Less waiting at the counter',
+    'Technicians handle routine tasks, freeing pharmacists for clinical review.',
+    '150 prescriptions daily',
+    'Lipitor is the brand name for atorvastatin',
+  ];
+  for (const t of prose) check(`prose: "${t}"`, isProseNotLatex(t) === true);
+  const math = [
+    'x = 2y + 3',
+    '\\frac{a}{b} = c',
+    '2x',
+    '3 \\times 4 = 12',
+    'F = ma',
+    'sin x',
+    'v_0 t + \\frac{1}{2} a t^2',
+    '\\text{Total} = 150 \\text{ prescriptions}',
+    '$5 + $3 = $8',
+    '',
+  ];
+  for (const t of math) check(`not prose: "${t}"`, isProseNotLatex(t) === false);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

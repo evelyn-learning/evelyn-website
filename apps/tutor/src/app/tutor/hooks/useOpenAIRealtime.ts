@@ -94,6 +94,13 @@ export interface WhiteboardCommandResult {
    */
   manifests?: Array<FeatureManifestEntry[] | undefined>;
   /**
+   * Task 13 (2026-09-07): a free-text line the handler wants the model to
+   * read in the tool_result — currently only close_session_notes, which
+   * reports whether an assignment was actually created and where it landed.
+   * The model may not speak about homework unless this says one exists.
+   */
+  note?: string;
+  /**
    * If a show_* call was a duplicate of an existing item (same args),
    * the entry at the matching index carries the existing itemId + the
    * already-registered features. The Realtime hook surfaces this as a
@@ -150,6 +157,19 @@ export interface RealtimeConfig {
    *  response.create the GA gpt-realtime path uses. Default false ⇒
    *  byte-identical to the existing gpt-realtime behavior. */
   useRealtimeV2?: boolean;
+  /** Text-only tutor mode (2026-09-19, Task 10 e2e finding). When true,
+   *  sendTextMessage must NOT arm shouldListenRef — the "mic should
+   *  auto-start after AI responds" intent below is voice-mode-only. Without
+   *  this gate, playNextAudio's drain branch (which fires even for the
+   *  'silent' TTS provider's zero-filled buffers, since text mode still
+   *  drives sentence-start/drain for render-sync) called startListening()
+   *  after EVERY typed turn, opening a real getUserMedia capture in a
+   *  session that is supposed to never touch the mic — caught by the
+   *  tutor-e2e harness's text-mode assertion (a live "shared_mic: opened…
+   *  device=…" event on an embed session driven entirely through
+   *  __tutorSendText, no mic gesture at all). Default false ⇒
+   *  byte-identical to prior behavior for voice sessions. */
+  textMode?: boolean;
   /** Override the whiteboard tools registered in the realtime session.
    *  When omitted the hook registers the full WHITEBOARD_TOOLS; realtime-2
    *  passes a subject-filtered subset so an off-subject session doesn't
@@ -311,6 +331,9 @@ export interface RealtimeConfig {
      *    (sentence-start, drain, AudioBufferSource 'ended') fires with
      *    plausible timing. Automated harnesses only. */
     ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
+    /** Seconds of silence fabricated per word when ttsProvider === 'silent'.
+     *  Harness default 0.15 (fast); text-only sessions pass a reading pace. */
+    silentSecondsPerWord?: number;
     /** Cartesia voice id to send with each /api/tutor/tts-cartesia request
      *  (Task 3). Ignored unless ttsProvider === 'cartesia'. Resolved by the
      *  caller via resolveCartesiaVoice() (src/lib/tutor/voice/
@@ -690,6 +713,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
     reconnectEnabled = false,
     useRealtimeV2 = false,
+    textMode = false,
     embedToken,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
@@ -1075,6 +1099,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     ttsProviderRef.current = relayMode?.ttsProvider ?? 'realtime';
   }, [relayMode?.ttsProvider]);
+  // Mirrored via a ref + effect like ttsProviderRef so a mid-session prop
+  // change would take effect on the next dispatch.
+  const silentSecondsPerWordRef = useRef<number>(
+    relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD,
+  );
+  useEffect(() => {
+    silentSecondsPerWordRef.current = relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD;
+  }, [relayMode?.silentSecondsPerWord]);
   // Cartesia migration Phase 2, Task 3: voiceId for /api/tutor/tts-cartesia
   // requests. Session-static in practice (one teacher persona per session),
   // but mirrored via a ref + effect like ttsProviderRef so a mid-session
@@ -1879,6 +1911,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               existingItemId: string;
               existingFeatures: Array<{ target: string; canonical: string; kind: string; description?: string }>;
             } | null = null;
+            let note: string | null = null;
             let boardSnapshot: Array<{
               itemId: string;
               action: string;
@@ -1907,6 +1940,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   }
                   if (Array.isArray(result.boardSnapshot)) {
                     boardSnapshot = result.boardSnapshot;
+                  }
+                  if (typeof result.note === 'string' && result.note) {
+                    note = result.note;
                   }
                 }
               } catch (err) {
@@ -1974,6 +2010,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                         success: true,
                         message: `Displayed ${funcName.replace('show_', '')} on whiteboard`,
                         ...(assignedId ? { id: assignedId } : {}),
+                        // Task 13: the handler's own word on what the tool
+                        // did (close_session_notes: assigned / nothing).
+                        ...(note ? { note } : {}),
                         ...(manifest
                           ? {
                               features: manifest.map((f) => ({
@@ -2854,8 +2893,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return;
     }
 
-    // Mark session as active — mic should auto-start after AI responds
-    shouldListenRef.current = true;
+    // Mark session as active — mic should auto-start after AI responds.
+    // Text mode (Task 10 finding): never arm this — it made playNextAudio's
+    // drain branch call startListening() after every typed turn, opening a
+    // real mic capture in a mode that must never touch it (see textMode's
+    // doc comment on RealtimeConfig).
+    if (!textMode) shouldListenRef.current = true;
     lastUserInputRef.current = Date.now();
     consecutiveRejectionsRef.current = 0; // Fresh student input breaks the rejection cascade
 
@@ -2910,7 +2953,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }));
 
     updateState('processing');
-  }, [updateState]);
+  }, [updateState, textMode]);
   // Latest-fn-in-a-ref idiom (cf. startListeningRef) — connect's onopen
   // (defined earlier in the file) flushes pendingTypedRef through this ref
   // so it always calls the current sendTextMessage, not a stale closure.
@@ -3034,7 +3077,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     if (ttsProviderRef.current === 'silent') {
       const words = trimmed.split(/\s+/).filter(Boolean).length || 1;
       const samples = Math.max(
-        Math.round(words * SILENT_TTS_SECONDS_PER_WORD * 24000),
+        Math.round(words * silentSecondsPerWordRef.current * 24000),
         Math.round(0.1 * 24000), // ≥100ms floor so 'ended' timing stays sane
       );
       const promise = Promise.resolve(new Float32Array(samples));

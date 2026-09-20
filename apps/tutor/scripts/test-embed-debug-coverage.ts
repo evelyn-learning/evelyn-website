@@ -53,7 +53,7 @@ const DELIBERATELY_EXCLUDED = new Set<string>([
   'show_dedup_skip', 'visual_dedup_drop', 'within_batch_dual_emit_dedup',
   'duplicate_sentence_dropped', 'duplicate_newpage_strip', 'link_dropped',
   'equation_duplicate_definition', 'equation_prose_filler',
-  'show_equation_label_duplicate_silent', 'scribble_reject_empty_silent',
+  'scribble_reject_empty_silent',
   'scribble_reject_no_match_silent', 'scribble_page_fallback',
   'scrollTo_page_fallback', 'scrollTo_reject_no_match',
   'continuation_guard_strip_newpage', 'tutor_context_strip_newpage',
@@ -71,7 +71,9 @@ const DELIBERATELY_EXCLUDED = new Set<string>([
   // Dev/manual/authoring surfaces that never run for a student.
   'dev_forced_kill', 'manual_buffered', 'manual_mode_toggled',
   'manual_send_armed', 'manual_sent', 'rt2_lesson_plan_injected',
-  'confirm_plan_los', 'propose_plan_swap', 'sketch_request', 'sketch_resolved',
+  // 'propose_plan_swap' left this list 2026-09-10: the embed now persists it
+  // (prefix added alongside the wired swap handler).
+  'confirm_plan_los', 'sketch_request', 'sketch_resolved',
   'sketch_dropped', 'sketch_fallback_card', 'student_mark', 'student_mark_dropped',
   'student_mark_idle_send',
   // Routine scroll/page bookkeeping — fires on ordinary navigation, says

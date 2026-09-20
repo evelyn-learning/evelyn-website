@@ -33,6 +33,7 @@ import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
 import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
+import { homeworkPinText } from '@/lib/tutor/action-pin-text';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
@@ -45,6 +46,7 @@ import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
+import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
@@ -66,6 +68,12 @@ const TUTOR_QUESTION_PIN = process.env.NEXT_PUBLIC_TUTOR_QUESTION_PIN !== 'off';
 // ON by default per the standing rule — R49 shipped two severe fixes dark and
 // prod kept the bugs.
 const TUTOR_QPIN_CLEAR_ON_ANSWER = process.env.NEXT_PUBLIC_TUTOR_QPIN_CLEAR_ON_ANSWER !== 'off';
+// Task 15: homework action pin — board-bottom sibling of the Q-pin, shown
+// when a homework assignment is finalized this session with a locator to
+// send the student to. Kill switch, same pattern as above. Default ON per
+// the standing rule (R49 shipped two severe fixes dark and prod kept the
+// bugs).
+const TUTOR_ACTION_PIN = process.env.NEXT_PUBLIC_TUTOR_ACTION_PIN !== 'off';
 
 /** Loose normalization for matching the caption-sync reveal against the
  *  question sentence (display text and spoken text differ in punctuation
@@ -106,6 +114,8 @@ export interface TutorSessionProps {
   voice: OpenAIVoice;
   voiceEngine: TutorSessionVoiceEngine;
   ttsProvider?: VTRProps['ttsProvider'];
+  /** Text-only tutor mode (partner token claim). Default 'voice'. */
+  sessionMode?: SessionMode;
   /** Cartesia voice id (Task 3). Only consumed when ttsProvider === 'cartesia'. */
   cartesiaVoiceId?: VTRProps['cartesiaVoiceId'];
   /** Per-voice Cartesia speed offset (R38 Task 6). Forwarded straight to the
@@ -139,6 +149,8 @@ export interface TutorSessionProps {
    *  transient carrier as socialMemory/progressDigest/lastOpener). Forwarded
    *  to the runtime, typed from VoiceTutorRealtime to avoid drift. */
   readinessNote?: VTRProps['readinessNote'];
+  practiceLocator?: VTRProps['practiceLocator'];
+  goalNote?: VTRProps['goalNote'];
   /** Opener-recency (part A) — fires once when this session's own opener
    *  record is captured. Forwarded to the runtime. */
   onOpenerRecord?: VTRProps['onOpenerRecord'];
@@ -146,6 +158,8 @@ export interface TutorSessionProps {
    *  flow). Forwarded to the runtime, typed from VoiceTutorRealtime to
    *  avoid drift. Only consumed when TUTOR_PEDAGOGY_OPENER is on. */
   isTrial?: VTRProps['isTrial'];
+  /** Open-scope demo (2026-09-10) — forwarded to the runtime. */
+  openScope?: VTRProps['openScope'];
   /** Explicit session-target kind (embed `target_kind` / dev hook) —
    *  'diagnostic' makes the opening behavior no-op. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. Only consumed
@@ -196,6 +210,14 @@ export interface TutorSessionProps {
   onUsageUpdate?: VTRProps['onUsageUpdate'];
   /** A1: per-attempt claude-brain token usage (see VoiceTutorRealtime). */
   onBrainUsage?: VTRProps['onBrainUsage'];
+  /** Task 10 (tutor-e2e, text-only mode): mirrors the brain-busy signal
+   *  (VoiceTutorRealtime's onTutorBusy) out to the parent. TutorSession
+   *  already tracks this internally (handleTutorBusy → isProcessing, used
+   *  only for the ink-fade/board-active-turn bookkeeping below) but never
+   *  surfaced it — the embed page has no other way to know a turn is in
+   *  flight, which the e2e harness's waitForTurn() quiescence poll needs.
+   *  Optional; omitting it is byte-identical to before this prop existed. */
+  onBrainBusyChange?: (busy: boolean) => void;
   onDebugEvent?: VTRProps['onDebugEvent'];
   onTrackInteraction?: VTRProps['onTrackInteraction'];
   onTranscriptionStatus?: VTRProps['onTranscriptionStatus'];
@@ -223,13 +245,13 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
-    onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
+    onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
-    socialMemory, progressDigest, lastOpener, readinessNote, onOpenerRecord, isTrial,
+    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, goalNote, onOpenerRecord, isTrial, openScope,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
   } = props;
@@ -457,7 +479,8 @@ export default function TutorSession(props: TutorSessionProps) {
     if (!busy && prevBusyRef.current) setInkEpoch((e) => e + 1);
     prevBusyRef.current = busy;
     setIsProcessing(busy);
-  }, []);
+    onBrainBusyChange?.(busy);
+  }, [onBrainBusyChange]);
 
   const handleTranscriptionStatus = useCallback<NonNullable<VTRProps['onTranscriptionStatus']>>((status, errorType) => {
     setVoiceTrouble(status === 'failed'
@@ -661,6 +684,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onTryYourselfAnswer={handleTryYourselfAnswer}
         suppressEmptyState
         chrome="minimal"
+        allowHorizontalScroll={sessionMode === 'text'}
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}
         onStudentMark={studentMarksOn ? handleStudentMark : undefined}
@@ -689,6 +713,8 @@ export default function TutorSession(props: TutorSessionProps) {
     <TranscriptView
       transcript={transcript}
       isProcessing={isProcessing}
+      emptyHint={sessionMode === 'text' ? 'Type below to begin!' : undefined}
+      stickToBottom={sessionMode === 'text'}
       onQuickAnswer={(text) => {
         realtimeHandleRef.current?.stopSpeaking();
         realtimeHandleRef.current?.sendTextMessage(text);
@@ -804,7 +830,7 @@ export default function TutorSession(props: TutorSessionProps) {
     text: preStartDockCaption({ started, muted: voiceState === 'muted' }),
     cls: voiceState === 'muted' ? 'text-slate-500' : started ? 'text-slate-400' : 'text-slate-500',
   };
-  const dockCaptionEl = statusOverride ? (
+  const dockCaptionEl = sessionMode === 'text' ? null : statusOverride ? (
     <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
   ) : liveCaption ? (
     // R42 (2026-08-10): click target shrunk to the caption text itself —
@@ -1008,6 +1034,12 @@ export default function TutorSession(props: TutorSessionProps) {
       setVoiceHiccup(null);
     }
   }, [voiceState, voiceHiccup]);
+  // Task 15: homework action pin — set once when a homework assignment is
+  // finalized this session with a locator (see `onHomeworkAssigned` on the
+  // VTR element below). Unlike the Q-pin/hiccup-pin above, this does NOT
+  // clear on segment or transcript changes — it stays on the board until
+  // the student dismisses it or the session ends.
+  const [homeworkPin, setHomeworkPin] = useState<string | null>(null);
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -1174,6 +1206,23 @@ export default function TutorSession(props: TutorSessionProps) {
     </div>
   ) : undefined;
 
+  // Task 15: homework action pin — board-bottom sibling of the Q-pin, shown
+  // once a homework assignment is finalized this session with a locator.
+  const actionPinEl = homeworkPin ? (
+    <div className="ss-cap w-full flex items-center gap-2 rounded-xl bg-emerald-50/95 border border-emerald-200 shadow-md px-3 py-1.5" data-testid="action-pin">
+      <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-emerald-500 text-white text-[10px] font-bold">H</span>
+      <span className="min-w-0 text-sm font-medium leading-snug text-emerald-900">{homeworkPin}</span>
+      <button
+        type="button"
+        aria-label="Dismiss homework pin"
+        onClick={() => setHomeworkPin(null)}
+        className="shrink-0 grid place-items-center w-5 h-5 rounded-md text-emerald-700/70 hover:bg-emerald-100 hover:text-emerald-900"
+      >
+        ✕
+      </button>
+    </div>
+  ) : undefined;
+
   // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef
   // endSession = TTS hard-stop + recording finalize + final profile commit)
   // — calling onEndSession directly would skip the final transcript commit.
@@ -1238,8 +1287,11 @@ export default function TutorSession(props: TutorSessionProps) {
         progressDigest={progressDigest}
         lastOpener={lastOpener}
         readinessNote={readinessNote}
+        practiceLocator={practiceLocator}
+        goalNote={goalNote}
         onOpenerRecord={onOpenerRecord}
         isTrial={isTrial}
+        openScope={openScope}
         targetKind={targetKind}
         checkpointStale={checkpointStale}
         teacherPersona={teacherPersona}
@@ -1256,6 +1308,13 @@ export default function TutorSession(props: TutorSessionProps) {
         onUsageUpdate={handleUsage}
         onBrainUsage={onBrainUsage}
         onDebugEvent={onDebugEvent}
+        onHomeworkAssigned={(a) => {
+          const t = homeworkPinText(a);
+          if (TUTOR_ACTION_PIN && t) {
+            setHomeworkPin(t);
+            onDebugEvent?.('action_pin_set', t.slice(0, 80));
+          }
+        }}
         onError={(err) => setError(err.message)}
         onTranscriptionStatus={handleTranscriptionStatus}
         onEndSession={handleEndSession}
@@ -1266,6 +1325,8 @@ export default function TutorSession(props: TutorSessionProps) {
         claudeBrainMode={voiceEngine === 'claude-brain'}
         useRealtimeV2={voiceEngine === 'realtime-2'}
         ttsProvider={ttsProvider}
+        sessionMode={sessionMode}
+        silentSecondsPerWord={sessionMode === 'text' ? textModeSecondsPerWord(process.env.NEXT_PUBLIC_TUTOR_TEXT_MODE_SPW) : undefined}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
@@ -1413,7 +1474,14 @@ export default function TutorSession(props: TutorSessionProps) {
       </button>
       <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
       {pacingMenuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
+        // Text mode: the "Adjust the lesson" menu (opened via the Pace pill
+        // or the ⋯ button — both toggle this one menu) was rendering at the
+        // SAME z-50 as the pinned transcript panel; since the panel mounts
+        // later in SessionStage's JSX, equal z-index ties resolve to DOM
+        // order and the panel painted on top, opening the menu "under" it
+        // (owner desktop test, re-review 2026-09-19). z-[60] in text mode
+        // clears the panel; voice keeps the original z-50 untouched.
+        <div className={`absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 text-sm ${sessionMode === 'text' ? 'z-[60]' : 'z-50'}`}>
           <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
           {/* #7 hybrid (2026-07-17): Harder/Easier are now a STANDING
               preference, not a one-shot "give me a harder one" utterance.
@@ -1512,7 +1580,12 @@ export default function TutorSession(props: TutorSessionProps) {
               correctable without reopening). setManualMic (imperative
               handle) sends any buffered turn when leaving Manual — see
               VoiceTutorRealtime. */}
-          {TUTOR_MANUAL_MIC && (
+          {/* Text mode has no mic at all — TUTOR_MANUAL_MIC's Auto/Manual
+              toggle would be pure dead chrome there (owner desktop test,
+              re-review 2026-09-19). Voice: byte-identical (the added check
+              is `sessionMode !== 'text'`, which is always true for voice
+              since sessionMode defaults to 'voice'). */}
+          {TUTOR_MANUAL_MIC && sessionMode !== 'text' && (
             <>
               <div className="my-1 border-t border-slate-100" />
               <div className="px-3 pt-1 pb-1.5 flex items-center justify-between">
@@ -1631,6 +1704,7 @@ export default function TutorSession(props: TutorSessionProps) {
         <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
       )}
       <SessionStage
+        sessionMode={sessionMode}
         lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : topicLabel}
         subtitle={
           lessonProgress.plan
@@ -1659,6 +1733,7 @@ export default function TutorSession(props: TutorSessionProps) {
         questionPin={questionPinEl}
         questionPinKey={questionPinEl && questionPin ? questionPin.turnId : undefined}
         hiccupPin={hiccupPinEl}
+        actionPin={actionPinEl}
         voiceState={voiceState}
         warmupOverlay={warmupOverlay}
         micLevelRef={micLevelRef}

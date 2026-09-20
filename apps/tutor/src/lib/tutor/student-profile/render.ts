@@ -106,7 +106,10 @@ export function renderStudentProfileBlock(
   // The active session's subject + topic are stamped in the system
   // prompt's "Current Session Context" block. Do not let an entry
   // below override that ground truth.
+  // Thin sessions (thin-session.ts) are accounting rows, not history: a
+  // "last time" built on one misleads the opener (live 2026-09-05).
   const recent = profile.recentSessions
+    .filter((s) => !s.thin)
     .slice(-RECENT_SESSIONS_SHOWN)
     .reverse();
   if (recent.length) {
