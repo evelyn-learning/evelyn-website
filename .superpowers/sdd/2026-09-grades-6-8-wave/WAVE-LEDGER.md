@@ -321,3 +321,26 @@ Remaining, in order: engine deploy → seed 4 banks (`seed-problem-bank.ts --cou
 tunnel :2710 open, baseline problembanks 7,483 / grade-8 0) → academy `./deploy-crimsora.sh` + `./deploy-evelyntutor.com.sh`
 → on box ingest + seed-teachers + fetch-cache clear + `build:web` + pm2 restart (both dirs) → IndexNow → push both
 mains → `PRACTICE_QUESTIONS_CLAIM` bump from the prod count (expect ~8,430 → "8,000+") in the same academy deploy.
+
+## ✅ GRADE 8 SHIPPED 2026-09-19 23:15–23:45 IST — verified by direct query, not by script output
+
+Praveen approved the deploy chain at ~22:55 (the first `./deploy-tutor.sh` was refused by the session's auto-mode
+classifier). Order run: `./deploy-tutor.sh` from the worktree (`c289d2c3`; box BUILD_ID == local
+`qrIoiKqWhAaFZaXDd3GUl`; 122 env keys incl. `ADMIN_GOOGLE_EMAILS` + `TUTOR_LEARNER_CONTEXT`; `/`, `/demo`, `/embed`
+200; pm2 evelyn-tutor online, 0 restarts) → four `seed-problem-bank.ts --course=grade-8-*` over the :2710 tunnel
+(234 + 231 + 235 + 235 = 935 upserted; problembanks 7,483 → **8,418**, every row `verifiedAt`, 40 LOs/course, min
+4/LO, max 6) → `PRACTICE_QUESTIONS_CLAIM` 6,300+ → 8,000+ (`fc8e718`) → `./deploy-crimsora.sh` +
+`./deploy-evelyntutor.com.sh` → on-box `npm run ingest` (crimsora: courses 27 → 31, coursenodes 1,143 → 1,303;
+evelyntutor: 39 / 1,266; pruned 0) → `seed-teachers.ts` (GRADE_8_MATH/SCIENCE → Mr. Ravi, ELA/GEO → Ms. Robin, matched
+1 each; `defaultTeacherId` set on all four in both DBs) → fetch-cache + image-cache clear, `build:web`, pm2 restart,
+`pm2 save` (both dirs) → IndexNow. Live: crimsora sitemap 1,197 → **1,361** (+164 = 41 × 4), `/courses`,
+`/courses/ms`, `/courses/ms/grade-8-{math,ela}` 200, `/courses` names Grade 8. evelyntutor.com is the funnel brand:
+no `/courses`, sitemap 321 both before and after (no grade-6 either) — expected, not a regression. Both mains
+pushed: engine `origin/main` = `c289d2c3`, academy `origin/main` = `fc8e718`; root checkouts fast-forwarded.
+
+Traps this ship added: (1) the worktree's `.env.local.production` had drifted 2 keys behind root == live — hash-diff
+worktree/root/box BEFORE every engine deploy; (2) a `pm2 restart` + build on the box must be sent as a script file
+(`ssh host bash -s < file`), not an inline heredoc inside `{ }` — zsh's eval mangled two attempts; (3) running
+`ping-indexnow.mjs` after sourcing the box's `.env.local` returned 403 — the deploy script runs it LOCALLY with the
+script's defaults; do the same; (4) the integration suite flakes under a concurrent `next build` — rerun alone before
+believing a red.
