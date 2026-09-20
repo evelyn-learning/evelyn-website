@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-rational-irrational-numbers-001",
+    "loId": "m8math.rational-and-irrational-numbers",
+    "cedCode": "M8MATH-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A rational number is a number that can be written as a fraction of two integers. Which of the following is a rational number?",
+    "choices": [
+      "π",
+      "√2",
+      "√10",
+      "5/3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for a number that can be expressed as one integer divided by another integer.",
+      "A fraction written with a numerator and denominator is already in the form needed for a rational number."
+    ]
+  },
+  {
+    "id": "m8math-rational-irrational-numbers-002",
+    "loId": "m8math.rational-and-irrational-numbers",
+    "cedCode": "M8MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A decimal that terminates stops at some point, and a decimal that repeats has a block of digits that comes back unchanged forever. Divide 5 by 8 to find the decimal form of the fraction 5/8. Based on what you find, is 5/8 rational or irrational, and why?",
+    "choices": [
+      "Rational, because the decimal terminates",
+      "Rational, because the decimal repeats a block",
+      "Irrational, because it contains the digit 5",
+      "Irrational, because division does not produce repeating decimals"
+    ],
+    "answer": "A",
+    "hints": [
+      "Perform the division 5 ÷ 8 and watch what the decimal does after a few digits.",
+      "Every fraction of two integers produces either a terminating decimal or a repeating decimal."
+    ]
+  },
+  {
+    "id": "m8math-rational-irrational-numbers-003",
+    "loId": "m8math.rational-and-irrational-numbers",
+    "cedCode": "M8MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A perfect square is a whole number that is the product of a whole number with itself, such as 49 = 7 × 7. The perfect squares include 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, and so on. Look at the number √121. Is this number rational or irrational, and why?",
+    "choices": [
+      "Rational, because square roots of even numbers are always rational",
+      "Rational, because 11 × 11 = 121, so √121 = 11",
+      "Irrational, because it is written with a square root sign",
+      "Irrational, because 121 is a three-digit number"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether 121 appears on the list of perfect squares.",
+      "When the number under the root sign is a perfect square, the square root is a whole number."
+    ]
+  },
+  {
+    "id": "m8math-rational-irrational-numbers-004",
+    "loId": "m8math.rational-and-irrational-numbers",
+    "cedCode": "M8MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Look at the decimal 0.123123123..., where the block 123 repeats forever. Now look at the decimal 0.123456789101112131415..., where the counting pattern continues forever but no block repeats. Which one is rational and which one is irrational? Explain your reasoning by connecting each to the definition of rational and irrational numbers.",
+    "choices": [
+      "Both are rational, because both have a clear pattern",
+      "The first is irrational because it goes on forever; the second is rational because it follows a counting rule",
+      "The first is rational because it repeats forever; the second is irrational because no block repeats forever",
+      "Both are irrational, because neither can be written as a simple fraction"
+    ],
+    "answer": "C",
+    "hints": [
+      "Repeating means the same block comes back unchanged, not just that the number has any pattern.",
+      "A rational number's decimal either terminates or has a repeating block that returns exactly the same way each time."
+    ]
+  },
+  {
+    "id": "m8math-rational-irrational-numbers-005",
+    "loId": "m8math.rational-and-irrational-numbers",
+    "cedCode": "M8MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that 22/7 and π are the same number because they are both close to 3.14. Explain why this claim is wrong by classifying each number as rational or irrational and describing what their decimals actually do.",
+    "choices": [
+      "Both are irrational because neither can be expressed as the ratio of two integers, so their decimal expansions never end or repeat in a pattern",
+      "Both are rational because they both have decimal forms that approximate 3.14 and round to the same value when expressed to two decimal places",
+      "22/7 is irrational because it is a fraction written with a slash; π is rational because it is a well-known mathematical constant found in geometry",
+      "22/7 is rational with a repeating decimal; π is irrational with a non-repeating, non-terminating decimal"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether 22/7 can be written as a fraction of two integers, and divide to see what its decimal does.",
+      "Being close in value does not make two numbers the same type; look at what their actual decimal expansions do."
+    ]
+  },
+  {
+    "id": "m8math-rational-irrational-numbers-006",
+    "loId": "m8math.rational-and-irrational-numbers",
+    "cedCode": "M8MATH-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Consider the set of square roots: √36, √37, √38, √39, √40, √41, √42, √43, √44, √45. Using the rule that √n is rational when n is a perfect square and irrational when n is not a perfect square, which one of these roots is rational? Then explain why all the others are irrational by identifying the nearest perfect squares that fall before and after each non-perfect-square number.",
+    "choices": [
+      "√36 is rational because 6 × 6 = 36; the others are irrational because they fall between perfect squares and no whole number times itself equals any of them",
+      "√40 is rational because when simplified it equals 2√10, which is a product of a whole number and a square root; the others are irrational because they cannot be written in simplified radical form",
+      "√44 is rational because 44 lies exactly halfway between 36 and 52, placing it at the midpoint of consecutive even perfect squares in the set",
+      "√45 is rational because 45 is very close to 49, which is a perfect square, so the proximity makes √45 expressible as a ratio of two integers"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write out or recall the perfect squares: 1, 4, 9, 16, 25, 36, 49, 64, etc., and check which number in your set appears on this list.",
+      "Being close to a perfect square does not make a number itself a perfect square; the rule depends on exact equality."
+    ]
+  },
+  {
+    "id": "m8math-square-roots-cube-roots-001",
+    "loId": "m8math.square-roots-and-cube-roots",
+    "cedCode": "M8MATH-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate √144. Remember that a square root asks: which number, when squared, gives the value under the radical sign?",
+    "choices": [
+      "72",
+      "12",
+      "24",
+      "288"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check your answer by squaring it: does your number times itself equal 144?",
+      "Think about the perfect-square ladder: 11² = 121 and 13² = 169, so the answer is between them."
+    ]
+  },
+  {
+    "id": "m8math-square-roots-cube-roots-002",
+    "loId": "m8math.square-roots-and-cube-roots",
+    "cedCode": "M8MATH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cube has a volume of 216 cubic inches. The volume of a cube is the side length cubed (V = s³). What is the side length of the cube, in inches?",
+    "choices": [
+      "8",
+      "9",
+      "6",
+      "72"
+    ],
+    "answer": "C",
+    "hints": [
+      "You need to find the cube root of 216, written ∛216. Remember that the little 3 on the radical sign tells you it is a cube root.",
+      "Check your answer by cubing it: multiply your number by itself, then multiply that result by your number again. It should equal 216."
+    ]
+  },
+  {
+    "id": "m8math-square-roots-cube-roots-003",
+    "loId": "m8math.square-roots-and-cube-roots",
+    "cedCode": "M8MATH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is NOT a perfect square? A perfect square is a whole number whose square root is also a whole number.",
+    "choices": [
+      "81",
+      "100",
+      "196",
+      "150"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check each option by asking: is there a whole number that, when squared, gives this value?",
+      "The perfect-square ladder includes 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225. Look for which number is missing from this list."
+    ]
+  },
+  {
+    "id": "m8math-square-roots-cube-roots-004",
+    "loId": "m8math.square-roots-and-cube-roots",
+    "cedCode": "M8MATH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for all values of x: x² = 64. Remember that when you solve an equation of the form x² = p, you must find every number whose square equals p, not just the positive root.",
+    "choices": [
+      "x = 8 or x = −8",
+      "x = 8 only",
+      "x = 32 or x = −32",
+      "x = 4 or x = −4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Test whether both positive and negative solutions work by squaring each one. For example, does (−8)² really equal 64?",
+      "A negative times a negative gives a positive, so a negative number squared can equal a positive number. Both solutions should make the original equation true."
+    ]
+  },
+  {
+    "id": "m8math-square-roots-cube-roots-005",
+    "loId": "m8math.square-roots-and-cube-roots",
+    "cedCode": "M8MATH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x³ = −125. Remember that a cube root undoes cubing, and that when you multiply three negative numbers together, the result is negative.",
+    "choices": [
+      "x = 5",
+      "x = −5",
+      "x = 5 or x = −5",
+      "x = −41.67"
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the perfect-cube ladder to find a number whose cube is −125. The cube root of −125 is the number that, when cubed, gives −125.",
+      "Unlike square equations, a cubic equation x³ = p has exactly one real solution. Check your answer by computing (−5) × (−5) × (−5) and verifying it equals −125."
+    ]
+  },
+  {
+    "id": "m8math-square-roots-cube-roots-006",
+    "loId": "m8math.square-roots-and-cube-roots",
+    "cedCode": "M8MATH-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is told that √2 is irrational and is asked to explain why. She argues that \"√2 is irrational because 2 is not on the perfect-square ladder.\" A student then asks: \"Why does that matter? Why doesn't the fact that 2 is not on the ladder tell us that √2 is simply a fraction?\" Which of the following is the correct continuation of the explanation?",
+    "choices": [
+      "2 is not on the perfect-square ladder, which means √2 is not a whole number. Since the perfect-square ladder contains all whole numbers, √2 must fall somewhere between two whole numbers, and therefore cannot be rational.",
+      "2 is not on the perfect-square ladder, so √2 must be negative. Negative numbers can never be written as fractions, making them irrational by definition.",
+      "2 is not on the perfect-square ladder, so √2 is not a whole number. Additionally, from work with fractions, √2 is not a fraction either, because if it were a fraction, its decimal form would eventually repeat or end, but √2's decimal does not. Therefore √2 is irrational.",
+      "2 is not on the perfect-square ladder, which means 2 lacks any factors that would allow it to be expressed as a ratio of two integers. Since fractions are ratios of integers and √2 cannot satisfy this requirement, √2 cannot be written as a fraction and must be irrational."
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall that a fraction written as a decimal either ends (like 3/8 = 0.375) or eventually repeats (like 1/3 = 0.333...). Think about what you know about the decimal form of √2.",
+      "An irrational number is one that is not a whole number AND not a fraction. Just because 2 is not a perfect square does not automatically rule out that √2 could be a fraction—you need the additional fact about decimals to do that."
+    ]
+  },
+  {
+    "id": "m8math-estimating-locating-irrational-numbers-001",
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "cedCode": "M8MATH-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Between which two consecutive whole numbers does √90 lie? Use the perfect squares you already know to trap the root.",
+    "choices": [
+      "7 and 8",
+      "8 and 9",
+      "9 and 10",
+      "10 and 11"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the perfect square just below 90 and the one just above it.",
+      "9² = 81 and 10² = 100 — compare these to 90."
+    ]
+  },
+  {
+    "id": "m8math-estimating-locating-irrational-numbers-002",
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "cedCode": "M8MATH-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is estimating √28 to one decimal place. She has already trapped it between 5 and 6. Which decimal, when squared, lands closest to 28 and is therefore the best one-decimal estimate of √28?",
+    "choices": [
+      "5.7",
+      "5.2",
+      "5.5",
+      "5.3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Square 5.2 and 5.3 and see which result is nearer to 28.",
+      "5.3 × 5.3 = 28.09, only a little over 28."
+    ]
+  },
+  {
+    "id": "m8math-estimating-locating-irrational-numbers-003",
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "cedCode": "M8MATH-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gardener wants to mark the point for √24 on a number line that is divided into tenths between 4 and 5. Which decimal value is the best one-decimal estimate for placing the dot, based on squaring test candidates?",
+    "choices": [
+      "4.9",
+      "4.5",
+      "4.8",
+      "5.0"
+    ],
+    "answer": "A",
+    "hints": [
+      "Square 4.8 and 4.9 to see which is closer to 24.",
+      "4.9 × 4.9 = 24.01, extremely close to 24."
+    ]
+  },
+  {
+    "id": "m8math-estimating-locating-irrational-numbers-004",
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "cedCode": "M8MATH-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four numbers are listed: 6.9, √50, 7.3, and π². Using one-decimal estimates for the root (trap and square candidates) and the truncation π ≈ 3.14 for π², put all four numbers in order from least to greatest.",
+    "choices": [
+      "6.9 < 7.3 < √50 < π²",
+      "6.9 < √50 < 7.3 < π²",
+      "√50 < 6.9 < 7.3 < π²",
+      "6.9 < √50 < π² < 7.3"
+    ],
+    "answer": "B",
+    "hints": [
+      "Estimate √50 to tenths first — trap it between 7 and 8, then square 7.1.",
+      "Truncate π to 3.14 and square it to see how large π² really is."
+    ]
+  },
+  {
+    "id": "m8math-estimating-locating-irrational-numbers-005",
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "cedCode": "M8MATH-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A square window pane has an area of 75 square inches. Estimate the side length to one decimal place, then use that estimate to find the total length of trim needed to go around all four sides of the window.",
+    "choices": [
+      "32.0 inches",
+      "34.4 inches",
+      "34.8 inches",
+      "36.0 inches"
+    ],
+    "answer": "C",
+    "hints": [
+      "Trap √75 between the perfect squares 64 and 81, then square 8.6 and 8.7 to see which is closer.",
+      "Multiply your one-decimal side estimate by 4 for the total trim."
+    ]
+  },
+  {
+    "id": "m8math-estimating-locating-irrational-numbers-006",
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "cedCode": "M8MATH-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "To compare √26 and 5.2, a student reasons: 'Since 26 is bigger than 5.2, √26 must be bigger than 5.2.' Evaluate this reasoning and identify the correct comparison based on squaring the decimal.",
+    "choices": [
+      "The reasoning is invalid; since 26 sits between 25 and 36, √26 must equal exactly 5.2.",
+      "The reasoning is valid; comparing the numbers under the operations directly shows that √26 is bigger than 5.2.",
+      "The reasoning is invalid; squaring 5.2 gives 25.04, which is less than 26, so √26 is greater than 5.2.",
+      "The reasoning is invalid; squaring 5.2 gives 27.04, which is more than 26, so √26 is less than 5.2."
+    ],
+    "answer": "D",
+    "hints": [
+      "Square the decimal 5.2 and compare that result to 26.",
+      "For positive numbers, the one whose square is larger is the larger number."
+    ]
+  },
+  {
+    "id": "m8math-repeating-decimals-to-fractions-001",
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "cedCode": "M8MATH-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the decimal 0.4222…, the digit 4 never repeats, but the digits after it loop forever. Identify the repeating block in this decimal.",
+    "choices": [
+      "2",
+      "42",
+      "422",
+      "4"
+    ],
+    "answer": "A",
+    "hints": [
+      "The repeating block is only the group of digits that loops forever.",
+      "Look at what comes after the digit that does not repeat."
+    ]
+  },
+  {
+    "id": "m8math-repeating-decimals-to-fractions-002",
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "cedCode": "M8MATH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A container holds 0.4444… liters of juice, where the digit 4 repeats forever. Write this amount as a fraction in lowest terms.",
+    "choices": [
+      "4/10",
+      "4/9",
+      "44/99",
+      "4/90"
+    ],
+    "answer": "B",
+    "hints": [
+      "Let x equal the decimal, then multiply by 10 to shift past one repeating digit.",
+      "Subtract x from 10x so the repeating tails cancel, then solve for x."
+    ]
+  },
+  {
+    "id": "m8math-repeating-decimals-to-fractions-003",
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "cedCode": "M8MATH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A signal repeats its pattern every two digits, giving the decimal 0.181818…, where 18 repeats forever. Write this decimal as a fraction in lowest terms.",
+    "choices": [
+      "9/50",
+      "18/99",
+      "2/11",
+      "18/100"
+    ],
+    "answer": "C",
+    "hints": [
+      "Since the repeating block has two digits, multiply x by 100 before subtracting.",
+      "After subtracting, reduce the fraction by dividing top and bottom by their common factor."
+    ]
+  },
+  {
+    "id": "m8math-repeating-decimals-to-fractions-004",
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "cedCode": "M8MATH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The decimal 0.7333… has a lead digit of 7 that never repeats, followed by a block of just the digit 3 that repeats forever. Which fraction in lowest terms equals this decimal?",
+    "choices": [
+      "11/90",
+      "73/99",
+      "7/9",
+      "11/15"
+    ],
+    "answer": "D",
+    "hints": [
+      "Since the 7 doesn't repeat, you'll need two shifted copies of x before subtracting.",
+      "Multiply by 10 and by 100, then subtract those two copies so the tails cancel."
+    ]
+  },
+  {
+    "id": "m8math-repeating-decimals-to-fractions-005",
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "cedCode": "M8MATH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student converts 0.545454…, where 54 repeats forever, into a fraction. The student writes x = 0.5454…, then multiplies by 10 to get 10x = 5.454…, and subtracts 10x minus x to get 9x = 4.9091…, so x = 4.9091 divided by 9. Which statement correctly identifies the student's mistake and gives the correct fraction?",
+    "choices": [
+      "The student should have multiplied by 100 since the block has two digits; the correct fraction is 6/11.",
+      "The student subtracted x from 10x instead of 10x from x, reversing the sign of the difference; the correct fraction is 5/9.",
+      "The student needed two shifted copies of the decimal because a lead digit precedes the repeat; the correct fraction is 6/11.",
+      "The student's method was correct, but 4.9091 divided by 9 should be evaluated as a repeating decimal instead of rounded, giving 5/9."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check how many digits are in the repeating block before deciding the multiplier.",
+      "The tails only cancel exactly when the multiplier matches the length of the block."
+    ]
+  },
+  {
+    "id": "m8math-repeating-decimals-to-fractions-006",
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "cedCode": "M8MATH-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "When converting a fraction to a decimal by long division, dividing by 11 means every remainder must be one of the numbers 0 through 10, so the decimal must terminate or start repeating within 11 division steps. Using this same remainder reasoning, what can be said about dividing by 7?",
+    "choices": [
+      "The decimal must terminate or start repeating within 11 steps, since that limit applies to every divisor.",
+      "The decimal must terminate or start repeating within 7 steps, since remainders are limited to 0 through 6.",
+      "The decimal will always terminate, since 7 is a prime number.",
+      "The decimal will never repeat, since 7 is not a factor of 10."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about how many different remainder values are possible when dividing by 7.",
+      "The number of possible remainders sets the maximum steps before a repeat must occur."
+    ]
+  }
+]

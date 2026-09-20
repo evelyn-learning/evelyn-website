@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-constructing-linear-models-from-descriptions-001",
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "cedCode": "M8MATH-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the linear model y = mx + b, which letter represents the rate of change (the number that is attached to 'per' or 'each' in the story)?",
+    "choices": [
+      "m",
+      "b",
+      "y",
+      "x"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what multiplies the x in the equation.",
+      "The rate is the number tied to words like 'per,' 'each,' or 'every.'"
+    ]
+  },
+  {
+    "id": "m8math-constructing-linear-models-from-descriptions-002",
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "cedCode": "M8MATH-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A savings account starts with $150 and receives $25 every month. Which equation models the total amount y (in dollars) after x months?",
+    "choices": [
+      "y = 150x + 25",
+      "y = 25x + 150",
+      "y = 150x - 25",
+      "y = 25x - 150"
+    ],
+    "answer": "B",
+    "hints": [
+      "Identify which number happens 'once' (the starting amount) and which number happens 'every' month.",
+      "The number attached to 'every month' should multiply x."
+    ]
+  },
+  {
+    "id": "m8math-constructing-linear-models-from-descriptions-003",
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "cedCode": "M8MATH-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A car's fuel tank contains 45 liters when full. Driving uses 8 liters per hour. Write a linear model for the fuel remaining y (in liters) after x hours of driving. What is the value of b in your model?",
+    "choices": [
+      "−8",
+      "8",
+      "45",
+      "−45"
+    ],
+    "answer": "C",
+    "hints": [
+      "The value b is the starting amount—the amount of fuel at the very beginning, when x = 0.",
+      "The starting amount should be positive because the tank really does start with 45 liters."
+    ]
+  },
+  {
+    "id": "m8math-constructing-linear-models-from-descriptions-004",
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "cedCode": "M8MATH-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's savings account has $80 in it. Every week, they withdraw $6 for lunch. Write the linear model y = mx + b for the amount y (in dollars) remaining after x weeks. Then evaluate the model at x = 3 to predict the amount after three weeks.",
+    "choices": [
+      "y = 6x + 80; after 3 weeks there is $98",
+      "y = −80x + 6; after 3 weeks there is −$234",
+      "y = 80x − 6; after 3 weeks there is $234",
+      "y = −6x + 80; after 3 weeks there is $62"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: a withdrawal takes money away, so the rate of change must be negative.",
+      "Check your equation by plugging in x = 0 (should give $80) and x = 1 (should give $80 minus one withdrawal)."
+    ]
+  },
+  {
+    "id": "m8math-constructing-linear-models-from-descriptions-005",
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "cedCode": "M8MATH-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A plumber charges $85 just to come out and look at the problem, plus $60 for every hour of work. Which equation correctly models the total cost y (in dollars) for a job that takes x hours of work? Explain your reasoning by describing what each number represents.",
+    "choices": [
+      "y = 60x + 85 because the visit fee ($85) happens once and the hourly rate ($60) happens once per hour",
+      "y = 85x + 60 because the plumber charges $85 per hour for working x hours, plus a one-time $60 service fee",
+      "y = 60 + 85x because the initial cost of $60 is added to the product of the hourly rate $85 and the number of hours x",
+      "y = 85 + 60x because the visit fee and hourly charges are both multiplied by the hours worked"
+    ],
+    "answer": "A",
+    "hints": [
+      "Separate the two different jobs: one number happens once, one number is attached to 'per hour.'",
+      "The starting amount (b) should be the cost at x = 0 hours, when the plumber has just arrived but not yet worked."
+    ]
+  },
+  {
+    "id": "m8math-constructing-linear-models-from-descriptions-006",
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "cedCode": "M8MATH-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A sports league collects team registration fees to fund operations. Each team pays a one-time registration fee of $40. In addition, every time a team plays a game, the league charges that team $8 per game. Let x be the number of games played and y be the total amount a single team has paid the league (in dollars). Write the linear model for y. At what value of x does the model predict a team will have paid exactly $120 total?",
+    "choices": [
+      "y = 40x + 8; at x = 3",
+      "y = 8x + 40; at x = 10",
+      "y = 8x + 40; at x = 3",
+      "y = 40x + 8; at x = 10"
+    ],
+    "answer": "B",
+    "hints": [
+      "First, build the model by identifying which number is m (the rate per game) and which is b (the one-time fee).",
+      "Then substitute y = 120 into your equation and solve for x to find when the total cost reaches $120."
+    ]
+  },
+  {
+    "id": "m8math-describing-sketching-qualitative-graphs-001",
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "cedCode": "M8MATH-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows the amount of gas in a car's tank, in gallons, against time, in minutes, during a road trip. One piece of the graph is completely flat at a height of 10 gallons for 20 minutes. What does this flat piece tell you about the tank during that time?",
+    "choices": [
+      "The car is traveling exactly 10 miles because the flat line represents the distance covered over that time",
+      "The tank is holding steady at 10 gallons because gas is not being added or used up",
+      "The car is being refueled at a steady rate because the graph shows the gas level rising steadily",
+      "The car has run out of gas, so the flat segment simply shows the tank sitting empty the whole time"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what a flat height of 10 gallons means for the amount of gas, not for the car's motion.",
+      "Remember a graph of gas in the tank is not a picture of the road trip itself."
+    ]
+  },
+  {
+    "id": "m8math-describing-sketching-qualitative-graphs-002",
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "cedCode": "M8MATH-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows the height of water in a pool, in inches, against time, in minutes, as it drains. From minute 0 to minute 5, the height falls in a straight line from 40 inches to 25 inches. From minute 5 to minute 15, the height falls in a straight line from 25 inches to 0 inches. Which piece shows the water level dropping at a faster rate?",
+    "choices": [
+      "The piece from minute 5 to minute 15, since it drops 25 inches total, more than the first piece's 15 inches",
+      "The piece from minute 5 to minute 15, because it covers a longer time period so it must include more total change",
+      "The piece from minute 0 to minute 5, since it drops 15 inches in 5 minutes, a faster rate than the second piece",
+      "Both pieces show the same rate because the water level falls in a straight line the whole time"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the change in height by the number of minutes for each piece to compare rates.",
+      "A piece that covers more total change over more time is not automatically the faster one."
+    ]
+  },
+  {
+    "id": "m8math-describing-sketching-qualitative-graphs-003",
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "cedCode": "M8MATH-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hiker's elevation above sea level is graphed against time. For the first 10 minutes, the hiker climbs a steep, rocky section where progress is fast at first and then slows down sharply as the trail gets harder. Which best describes this piece of the graph?",
+    "choices": [
+      "Constant and curved, because the trail's difficulty keeps changing during the climb",
+      "Increasing and straight, because the elevation is rising the entire ten minutes",
+      "Decreasing and curved, because the hiker's progress is slowing down over time",
+      "Increasing and curved, because the elevation is rising but the rate of climb is not steady"
+    ],
+    "answer": "D",
+    "hints": [
+      "Fast then slow means the rate of change is not staying the same, which draws a curve.",
+      "A piece that keeps rising is increasing, no matter how the speed of the rise changes."
+    ]
+  },
+  {
+    "id": "m8math-describing-sketching-qualitative-graphs-004",
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "cedCode": "M8MATH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows the number of pages Marco has read, against time in minutes, while doing his homework. The graph climbs in a straight line from (0, 0) to (15, 30), stays flat from (15, 30) to (25, 30), climbs in a straight line from (25, 30) to (40, 70), then stays flat from (40, 70) to (50, 70). How many total minutes was Marco not reading, and how many pages had he read by the end of the graph?",
+    "choices": [
+      "20 minutes not reading; 70 pages read by the end",
+      "35 minutes not reading; 70 pages read by the end",
+      "20 minutes not reading; 100 pages read by the end",
+      "10 minutes not reading; 70 pages read by the end"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add up the widths of every flat piece to find the total stopped time.",
+      "The pages read at the end is the height of the very last point on the graph."
+    ]
+  },
+  {
+    "id": "m8math-describing-sketching-qualitative-graphs-005",
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "cedCode": "M8MATH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Talia rides her skateboard downhill from a hilltop park to her house, so her distance from the park increases the whole trip. She goes fast at first, coasting down the steep top of the hill, and then slows down more and more as the hill flattens out near the bottom, until she reaches a level street and rolls at a constant speed the rest of the way home. Which description of her distance from the park, against time, matches this story?",
+    "choices": [
+      "A straight rising piece the whole way, since she is moving away from the park the entire trip",
+      "A curve rising steeply at first, then leveling off, followed by a straight rising piece",
+      "A curve that rises slowly at first and then steeply, followed by a flat piece",
+      "A straight piece that falls at a steady rate, followed by a curve that flattens out"
+    ],
+    "answer": "B",
+    "hints": [
+      "Fast-then-slow while still moving away from the park draws a curve, not a straight line.",
+      "A constant speed on the level street at the end draws a straight piece."
+    ]
+  },
+  {
+    "id": "m8math-describing-sketching-qualitative-graphs-006",
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "cedCode": "M8MATH-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A tank's water level is graphed against time. It falls in a straight line from (0, 50) to (10, 20), stays flat from (10, 20) to (18, 20), then falls in a curve from (18, 20) to (30, 0) that starts fast and slows down near the end. A student claims, 'The tank drains at a steady rate for the entire 30 minutes.' Which statement correctly explains why the student's claim is wrong?",
+    "choices": [
+      "The student is wrong because the tank never actually reaches 0 gallons at minute 30",
+      "The student is wrong because the water level should rise during the first 10 minutes, not fall",
+      "The rate isn't steady: there's a flat piece from minute 10 to 18 and a curved final piece",
+      "The student is wrong because the flat piece means the tank is being refilled, not paused"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check every piece of the graph, not just the first one, for whether it's flat, straight, or curved.",
+      "A truly steady drain would mean every piece is a straight line with no flat section in between."
+    ]
+  },
+  {
+    "id": "m8math-interpreting-using-linear-models-001",
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "cedCode": "M8MATH-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A vending machine's cost model is y = 0.75x + 2, where x is the number of snacks bought and y is the total cost in dollars. What does the 0.75 mean in this situation?",
+    "choices": [
+      "Every purchase, no matter how many snacks, costs $0.75.",
+      "The total cost before buying any snacks is $0.75.",
+      "Each additional snack adds $0.75 to the total cost.",
+      "The machine charges a one-time $0.75 fee regardless of snacks bought."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at which number is multiplied by x in the equation.",
+      "The rate of change always carries a 'per' unit, like dollars per snack."
+    ]
+  },
+  {
+    "id": "m8math-interpreting-using-linear-models-002",
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "cedCode": "M8MATH-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A plant's height is measured weekly. The table shows weeks x: 0, 1, 2, 3 and height in cm y: 20, 23, 26, 29. Which statement correctly identifies the initial value and the rate of change from this table?",
+    "choices": [
+      "Initial value 3 cm; rate of change 20 cm per week.",
+      "Initial value 23 cm; rate of change 3 cm per week.",
+      "Initial value 20 cm; rate of change 20 cm per week.",
+      "Initial value 20 cm; rate of change 3 cm per week."
+    ],
+    "answer": "D",
+    "hints": [
+      "The initial value is the y-value sitting beside x = 0.",
+      "The rate of change is the jump from one row to the next, not a total height."
+    ]
+  },
+  {
+    "id": "m8math-interpreting-using-linear-models-003",
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "cedCode": "M8MATH-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gym membership follows the model y = 15x + 40, where x is the number of months since joining and y is the total amount paid in dollars, including the one-time enrollment fee. What is the total amount paid after 6 months?",
+    "choices": [
+      "$130",
+      "$90",
+      "$145",
+      "$55"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute 6 into the x slot of the equation.",
+      "Don't forget to include the initial value along with the rate's contribution."
+    ]
+  },
+  {
+    "id": "m8math-interpreting-using-linear-models-004",
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "cedCode": "M8MATH-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hot air balloon's altitude is modeled by y = -8x + 240, where x is the number of minutes after it begins descending and y is its altitude in meters. After how many minutes will the balloon be at an altitude of 80 meters?",
+    "choices": [
+      "15 minutes",
+      "20 minutes",
+      "30 minutes",
+      "10 minutes"
+    ],
+    "answer": "B",
+    "hints": [
+      "Altitude is measured in meters, so 80 belongs in the y slot, not the x slot.",
+      "Subtract 240 from both sides first, then divide by -8."
+    ]
+  },
+  {
+    "id": "m8math-interpreting-using-linear-models-005",
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "cedCode": "M8MATH-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A candle's height is modeled by y = -0.4x + 15, where x is the number of hours since it was lit and y is its height in centimeters. A student is asked, 'After how many hours will the candle be 7 cm tall?' The student writes: y = -0.4(7) + 15 = -2.8 + 15 = 12.2, and answers '12.2 hours.' Which statement explains what went wrong?",
+    "choices": [
+      "The student's arithmetic was correct because x = 7 gives 12.2, so the only mistake was labeling the units as hours instead of centimeters.",
+      "The student should have substituted 15 for x, since 15 is the initial height needed to find how many hours have passed.",
+      "The student substituted 7 for x instead of y; since height is a y-value, 7 should replace y and be solved for x.",
+      "The student needed to add 0.4 instead of multiplying it, since the negative rate should be added directly to the starting height."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check which unit the number 7 actually carries in the question.",
+      "Height is always a y-value, not an x-value, in this model."
+    ]
+  },
+  {
+    "id": "m8math-interpreting-using-linear-models-006",
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "cedCode": "M8MATH-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A candle burns according to the model y = -1.5x + 18, where x is the number of hours since it was lit and y is the candle's height in centimeters. The candle is completely burned out when its height reaches 0 cm. After how many hours will the candle be completely burned out?",
+    "choices": [
+      "27 hours",
+      "18 hours",
+      "1.5 hours",
+      "12 hours"
+    ],
+    "answer": "D",
+    "hints": [
+      "Set y equal to 0 and solve the resulting two-step equation for x.",
+      "The candle starts at 18 cm and loses 1.5 cm for every hour that passes."
+    ]
+  },
+  {
+    "id": "m8math-rate-of-change-initial-value-from-tables-graphs-001",
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "cedCode": "M8MATH-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two points on a line are (3, 10) and (5, 18). What is the rate of change, m, between these two points?",
+    "choices": [
+      "0.25",
+      "8",
+      "2",
+      "4"
+    ],
+    "answer": "D",
+    "hints": [
+      "Rate of change is the change in y divided by the change in x.",
+      "Subtract the y-values in the same order you subtract the x-values, then divide."
+    ]
+  },
+  {
+    "id": "m8math-rate-of-change-initial-value-from-tables-graphs-002",
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "cedCode": "M8MATH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A table shows the number of hours a plumber works, x, and the total charge in dollars, y. When x = 3, y = 19, and when x = 7, y = 31. The table has no row for x = 0. What is the initial value b in the equation y = mx + b for this data?",
+    "choices": [
+      "10",
+      "3",
+      "19",
+      "12"
+    ],
+    "answer": "A",
+    "hints": [
+      "First find m using the two rows given, then use one row to back out b with b = y - mx.",
+      "The rate of change and the initial value are different numbers — m is not the same as b."
+    ]
+  },
+  {
+    "id": "m8math-rate-of-change-initial-value-from-tables-graphs-003",
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "cedCode": "M8MATH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A graph of a candle's height in centimeters, y, over time in hours, x, shows the line crossing the y-axis at the point (0, 24) and also passing through the point (6, 12). What is the initial value b for this line?",
+    "choices": [
+      "12",
+      "24",
+      "-2",
+      "6"
+    ],
+    "answer": "B",
+    "hints": [
+      "The initial value is the y-value exactly where x equals 0.",
+      "Don't mix up a point further along the line with the point at x = 0."
+    ]
+  },
+  {
+    "id": "m8math-rate-of-change-initial-value-from-tables-graphs-004",
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "cedCode": "M8MATH-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A table lists the number of items produced, x, and the total production cost in dollars, y. When x = 4, y = 30; when x = 8, y = 46; and when x = 12, y = 62. The table does not include a row for x = 0. Which equation y = mx + b matches this data?",
+    "choices": [
+      "y = 16x + 14",
+      "y = 4x + 30",
+      "y = 4x + 14",
+      "y = 4x - 2"
+    ],
+    "answer": "C",
+    "hints": [
+      "Use two rows to find m first by dividing the change in y by the change in x, not just reading the jump.",
+      "Once you have m, pick one row you trust and use b = y - mx, then check your equation with the leftover row."
+    ]
+  },
+  {
+    "id": "m8math-rate-of-change-initial-value-from-tables-graphs-005",
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "cedCode": "M8MATH-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A moving company charges a flat fee plus an hourly rate for local moves. A 2-hour move costs $130 total, and a 6-hour move costs $250 total. In the equation y = mx + b, where y is the total cost and x is the number of hours, what is the flat fee, b, in dollars?",
+    "choices": [
+      "120",
+      "30",
+      "130",
+      "70"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the hourly rate m first from the two totals given, then use it to back out the flat fee from one of the moves.",
+      "The flat fee is not the same as the hourly rate, and it is not just the total cost of one move."
+    ]
+  },
+  {
+    "id": "m8math-rate-of-change-initial-value-from-tables-graphs-006",
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "cedCode": "M8MATH-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows the temperature in degrees Fahrenheit, y, of food left on a counter, plotted against the number of minutes, x, since it started cooling. The horizontal axis is cut off and only shows times from 12 minutes onward, so the graph does not show what happens at x = 0. The line passes through the grid points (12, 50) and (18, 41). Using the equation of this line, what would the temperature have been at the moment cooling started, when x = 0?",
+    "choices": [
+      "68",
+      "50",
+      "41",
+      "-1.5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the rate of change m from the two points first, remembering the temperature is falling.",
+      "Once you have m, use b = y - mx with one of the given points to find the temperature at x = 0."
+    ]
+  }
+]

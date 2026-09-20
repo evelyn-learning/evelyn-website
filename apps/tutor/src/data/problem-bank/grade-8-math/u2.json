@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-product-quotient-power-of-a-power-rules-001",
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "cedCode": "M8MATH-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which expression is equivalent to 10⁶ × 10²? Remember: when you multiply powers with the same base, you count the total number of factors.",
+    "choices": [
+      "10⁸",
+      "10¹²",
+      "10⁴",
+      "20⁸"
+    ],
+    "answer": "A",
+    "hints": [
+      "The base stays 10—it does not change.",
+      "Six factors of 10 plus two more factors of 10 gives how many total factors?"
+    ]
+  },
+  {
+    "id": "m8math-product-quotient-power-of-a-power-rules-002",
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "cedCode": "M8MATH-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that x⁷ ÷ x³ = x⁴. Write out the expanded form of x⁷ ÷ x³ (seven factors of x divided by three factors of x) and use it to verify whether the student's answer is correct or incorrect.",
+    "choices": [
+      "The student is incorrect; seven factors on top minus three factors on the bottom leaves ten factors.",
+      "The student is correct; seven factors on top minus three factors on the bottom leaves four factors.",
+      "The student is correct; the exponents 7 and 3 multiply to give 4.",
+      "The student is incorrect; you cannot divide powers because the rules only work for multiplication."
+    ],
+    "answer": "B",
+    "hints": [
+      "Expanded form of x⁷ is x × x × x × x × x × x × x; expanded form of x³ is x × x × x. When you divide, how many factors are left after canceling?",
+      "Counting factors tells you what subtraction means: take away three factors from seven factors."
+    ]
+  },
+  {
+    "id": "m8math-product-quotient-power-of-a-power-rules-003",
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "cedCode": "M8MATH-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student needs to simplify 3⁴ × 5² but does not see an exponent rule that applies. Explain why the product rule (add exponents) does not work here, and then calculate the value of 3⁴ × 5² by evaluating each power separately.",
+    "choices": [
+      "The bases are different (3 and 5), so you must multiply exponents instead; 3⁴ × 5² = 3⁸ = 6561.",
+      "The exponents are different (4 and 2), so you cannot add exponents; 3⁴ × 5² = 12 × 10 = 120.",
+      "The bases are different (3 and 5), so you cannot add exponents; 3⁴ × 5² = 81 × 25 = 2025.",
+      "The exponents are different (4 and 2), so you must multiply the bases; 3⁴ × 5² = 15⁶."
+    ],
+    "answer": "C",
+    "hints": [
+      "The product rule only works when both powers share the same base. What are the two bases here?",
+      "If the bases do not match, expand and count does not work—you have to multiply the numbers out separately."
+    ]
+  },
+  {
+    "id": "m8math-product-quotient-power-of-a-power-rules-004",
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "cedCode": "M8MATH-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify (2³)² × 2² to a single power of 2. First, use the power-of-a-power rule on (2³)² to write it as a single power, then use the product rule to finish.",
+    "choices": [
+      "2⁶",
+      "2⁷",
+      "2¹¹",
+      "2⁸"
+    ],
+    "answer": "D",
+    "hints": [
+      "Start with (2³)²: two groups of three factors each is 2 × 3 = 6 factors total, so (2³)² = 2⁶.",
+      "Now you have 2⁶ × 2², two powers with the same base; six factors plus two more factors is how many?"
+    ]
+  },
+  {
+    "id": "m8math-product-quotient-power-of-a-power-rules-005",
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "cedCode": "M8MATH-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist writes down the expression 10⁵ ÷ (10²)². To simplify, the scientist first evaluates the denominator using the power-of-a-power rule. Write the simplified single power and then verify your answer by computing the actual values: 10⁵ ÷ (10²)² should equal your single power.",
+    "choices": [
+      "10¹; the value is 10.",
+      "10³; the value is 1000.",
+      "10⁷; the value is 10,000,000.",
+      "10⁻¹; the value is 0.1."
+    ],
+    "answer": "A",
+    "hints": [
+      "Work the denominator first: (10²)² means 2 groups of 2 factors, so 2 × 2 = 4 factors total. The denominator is 10⁴.",
+      "Now divide: 10⁵ ÷ 10⁴. Five factors of 10 on top, four underneath, four pairs cancel—how many factors are left?"
+    ]
+  },
+  {
+    "id": "m8math-product-quotient-power-of-a-power-rules-006",
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "cedCode": "M8MATH-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 2 × (2⁴)² ÷ 2⁵ step-by-step. Note that 2 is the same as 2¹. First, rewrite the expression using exponents so all factors of 2 are written as powers. Then use the exponent rules—power-of-a-power first, then product, then quotient—to simplify to a single power of 2.",
+    "choices": [
+      "2⁵",
+      "2⁴",
+      "2⁶",
+      "2³"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rewrite 2 as 2¹, so the expression is 2¹ × (2⁴)² ÷ 2⁵. Next, apply the power-of-a-power rule to (2⁴)²: what single power does it equal?",
+      "After the power-of-a-power step, you have 2¹ × 2⁸ ÷ 2⁵. Use the product rule to combine 2¹ × 2⁸, then the quotient rule to divide by 2⁵."
+    ]
+  },
+  {
+    "id": "m8math-zero-negative-exponents-001",
+    "loId": "m8math.zero-and-negative-exponents",
+    "cedCode": "M8MATH-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of 7⁰?",
+    "choices": [
+      "7",
+      "0",
+      "1",
+      "-1"
+    ],
+    "answer": "C",
+    "hints": [
+      "Any nonzero number divided by itself equals 1.",
+      "Think about what 7⁰ means using the quotient rule: 7¹ ÷ 7¹."
+    ]
+  },
+  {
+    "id": "m8math-zero-negative-exponents-002",
+    "loId": "m8math.zero-and-negative-exponents",
+    "cedCode": "M8MATH-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 3⁻². Express your answer as a fraction.",
+    "choices": [
+      "-1/9",
+      "-9",
+      "9",
+      "1/9"
+    ],
+    "answer": "D",
+    "hints": [
+      "A negative exponent means take the reciprocal of the positive power.",
+      "The base is positive, so the result cannot be negative."
+    ]
+  },
+  {
+    "id": "m8math-zero-negative-exponents-003",
+    "loId": "m8math.zero-and-negative-exponents",
+    "cedCode": "M8MATH-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two students are asked to find the value of 5⁻¹. One student says the answer is -5 because the exponent is negative. Explain why this student is wrong and find the correct value.",
+    "choices": [
+      "The student is wrong because the sign of a power comes from the base, not the exponent. The correct value is 1/5.",
+      "The student is wrong because negative exponents always give fractions. The correct value is -1/5.",
+      "The student is wrong because a negative exponent makes the number smaller, not negative. The correct value is 5.",
+      "The student is right; the answer is definitely -5 because the exponent is negative."
+    ],
+    "answer": "A",
+    "hints": [
+      "Only the base determines the sign of the final answer.",
+      "A negative exponent tells you to flip the fraction, not to make the answer negative."
+    ]
+  },
+  {
+    "id": "m8math-zero-negative-exponents-004",
+    "loId": "m8math.zero-and-negative-exponents",
+    "cedCode": "M8MATH-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Calculate 2³ × 2⁻⁵ by first using the product rule to combine the exponents, then simplify. Express your answer as a fraction.",
+    "choices": [
+      "-8",
+      "1/4",
+      "32",
+      "-1/4"
+    ],
+    "answer": "B",
+    "hints": [
+      "Add the exponents: 3 + (−5) = ?",
+      "Once you have the new exponent, remember that a negative exponent means reciprocal of the positive power."
+    ]
+  },
+  {
+    "id": "m8math-zero-negative-exponents-005",
+    "loId": "m8math.zero-and-negative-exponents",
+    "cedCode": "M8MATH-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of (1/3)⁻²? You may find it helpful to first compute (1/3)² and then take the reciprocal.",
+    "choices": [
+      "-9",
+      "1/9",
+      "9",
+      "-1/9"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start by squaring the fraction: (1/3)² = ?",
+      "Then take the reciprocal of your result to handle the negative exponent."
+    ]
+  },
+  {
+    "id": "m8math-zero-negative-exponents-006",
+    "loId": "m8math.zero-and-negative-exponents",
+    "cedCode": "M8MATH-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is building a sequence using powers of 2. The sequence starts with 2⁴ = 16, then 2³ = 8, then 2² = 4, and so on, with each power going down by 1 in the exponent. If this pattern continues, what will be the value after 2⁰? Support your answer by showing what value comes next in the sequence (that is, find 2⁻¹) and explain how it fits the pattern of the sequence.",
+    "choices": [
+      "The value after 2⁰ is 2⁻¹ = 1/2, but this breaks the pattern because the sequence cannot have negative exponents.",
+      "The value after 2⁰ is 2⁻¹ = -1. Negative exponents produce negative numbers, so each term becomes negative.",
+      "The value after 2⁰ is 2⁻¹ = 0. Once the exponent becomes negative, all remaining terms are zero.",
+      "The value after 2⁰ is 2⁻¹ = 1/2. The sequence divides by 2 each step, so from 2⁰ = 1, dividing by 2 gives 1/2."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at the pattern: 16, 8, 4. What operation moves from one term to the next?",
+      "If 2⁰ = 1 and the pattern continues to divide by 2, what do you get?"
+    ]
+  },
+  {
+    "id": "m8math-operations-in-scientific-notation-001",
+    "loId": "m8math.operations-in-scientific-notation",
+    "cedCode": "M8MATH-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scientist multiplies 2 × 10³ by 4 × 10². She wants the product written correctly in scientific notation, with a coefficient between 1 and 10.",
+    "choices": [
+      "8 × 10¹",
+      "8 × 10⁶",
+      "6 × 10⁵",
+      "8 × 10⁵"
+    ],
+    "answer": "D",
+    "hints": [
+      "Multiply the coefficients together and add the exponents separately.",
+      "Check whether the coefficient of 8 is already between 1 and 10 — no renormalizing is needed here."
+    ]
+  },
+  {
+    "id": "m8math-operations-in-scientific-notation-002",
+    "loId": "m8math.operations-in-scientific-notation",
+    "cedCode": "M8MATH-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An office recycles 9 × 10⁸ sheets of paper in total, spread evenly across 3 × 10² recycling bins. Find how many sheets are stored in each bin, written in scientific notation.",
+    "choices": [
+      "3 × 10⁶",
+      "3 × 10¹⁰",
+      "3 × 10¹⁶",
+      "6 × 10⁶"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the coefficients and subtract the exponents — do not add or multiply them.",
+      "9 ÷ 3 gives the coefficient; 8 − 2 gives the exponent."
+    ]
+  },
+  {
+    "id": "m8math-operations-in-scientific-notation-003",
+    "loId": "m8math.operations-in-scientific-notation",
+    "cedCode": "M8MATH-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A warehouse stores 5 × 10³ boxes of electronics and 2 × 10² boxes of accessories. Find the total number of boxes stored, written in scientific notation.",
+    "choices": [
+      "7 × 10⁵",
+      "5.2 × 10³",
+      "5.2 × 10²",
+      "7 × 10³"
+    ],
+    "answer": "B",
+    "hints": [
+      "Before adding, rewrite one number so both powers of 10 match.",
+      "2 × 10² needs its decimal point shifted to become a number times 10³."
+    ]
+  },
+  {
+    "id": "m8math-operations-in-scientific-notation-004",
+    "loId": "m8math.operations-in-scientific-notation",
+    "cedCode": "M8MATH-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A factory manufactures 6 × 10⁵ parts every day, and it runs for 5 × 10² days without stopping. Find the total number of parts manufactured, written correctly in scientific notation with a coefficient between 1 and 10.",
+    "choices": [
+      "3 × 10⁷",
+      "30 × 10⁷",
+      "3 × 10⁸",
+      "1.1 × 10⁸"
+    ],
+    "answer": "C",
+    "hints": [
+      "Multiply the coefficients and add the exponents first, then check if the coefficient is still less than 10.",
+      "6 × 5 = 30, which is too big to be a coefficient — it needs one more renormalizing step."
+    ]
+  },
+  {
+    "id": "m8math-operations-in-scientific-notation-005",
+    "loId": "m8math.operations-in-scientific-notation",
+    "cedCode": "M8MATH-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "App A sends 3.4 × 10⁷ messages and App B sends 5 × 10⁶ messages in one day, and a shared server processes messages at a rate of 2 × 10³ messages per second. Find how many seconds the server needs to process all of the combined messages, written in scientific notation.",
+    "choices": [
+      "4.2 × 10⁴",
+      "3.9 × 10⁴",
+      "1.95 × 10¹⁰",
+      "1.95 × 10⁴"
+    ],
+    "answer": "D",
+    "hints": [
+      "First match exponents to add the two message counts, then divide by the processing rate.",
+      "5 × 10⁶ must be rewritten with an exponent of 7 before it can be added to 3.4 × 10⁷."
+    ]
+  },
+  {
+    "id": "m8math-operations-in-scientific-notation-006",
+    "loId": "m8math.operations-in-scientific-notation",
+    "cedCode": "M8MATH-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student multiplies 7 × 10⁻³ by 5 × 10⁻² on a calculator, and the screen displays the result as 3.5E-4. The student wants to know whether this display is the correct product written in proper scientific notation.",
+    "choices": [
+      "Correct, because renormalizing 35 × 10⁻⁵ by moving the decimal one place gives 3.5 × 10⁻⁴, matching the display.",
+      "Incorrect, because the exponents should have been multiplied, giving 7 × 10⁻⁶ as the true product before renormalizing.",
+      "Incorrect, because the coefficients should not be multiplied when both exponents are negative, so the coefficient should stay at 35.",
+      "Correct, but only because negative exponents make renormalization move the decimal in the opposite direction from positive exponents."
+    ],
+    "answer": "A",
+    "hints": [
+      "Work out the raw product first, then check whether its coefficient needs to be renormalized.",
+      "Renormalizing always divides the coefficient by 10 and raises the exponent by 1, whether the exponent is positive or negative."
+    ]
+  },
+  {
+    "id": "m8math-writing-comparing-numbers-in-scientific-notation-001",
+    "loId": "m8math.scientific-notation",
+    "cedCode": "M8MATH-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student writes the number 6,300,000 in scientific notation. Scientific notation requires a form a × 10ⁿ, where the coefficient a is at least 1 and less than 10, and n counts how many places the decimal point moved from the end of the original number. Which choice below is correctly written in scientific notation and represents 6,300,000?",
+    "choices": [
+      "63 × 10⁵",
+      "6.3 × 10⁶",
+      "0.63 × 10⁷",
+      "6.3 × 10⁵"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check that the coefficient has exactly one nonzero digit before the decimal point.",
+      "Count how many places the decimal point moves from the very end of 6,300,000 to just after the first digit."
+    ]
+  },
+  {
+    "id": "m8math-writing-comparing-numbers-in-scientific-notation-002",
+    "loId": "m8math.scientific-notation",
+    "cedCode": "M8MATH-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dust mite measures about 0.00025 meters in length. A biologist wants to record this measurement in scientific notation, with a coefficient between 1 and 10 multiplied by a power of ten. Which choice correctly expresses this length in scientific notation?",
+    "choices": [
+      "25 × 10⁻⁵",
+      "2.5 × 10⁴",
+      "2.5 × 10⁻⁴",
+      "2.5 × 10⁻⁵"
+    ],
+    "answer": "C",
+    "hints": [
+      "Move the decimal point to just after the first nonzero digit and count the moves.",
+      "A number smaller than 1 needs a negative exponent."
+    ]
+  },
+  {
+    "id": "m8math-writing-comparing-numbers-in-scientific-notation-003",
+    "loId": "m8math.scientific-notation",
+    "cedCode": "M8MATH-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A shipping company reports that its largest warehouse holds about 7.4 × 10⁵ boxes of inventory. A manager wants to see this figure written out in standard form to include in a report. Which of the following is the correct standard form of 7.4 × 10⁵?",
+    "choices": [
+      "7,400",
+      "74,000",
+      "7,400,000",
+      "740,000"
+    ],
+    "answer": "D",
+    "hints": [
+      "The exponent tells how many places to move the decimal point.",
+      "A positive exponent means the point moves to the right, making the number larger."
+    ]
+  },
+  {
+    "id": "m8math-writing-comparing-numbers-in-scientific-notation-004",
+    "loId": "m8math.scientific-notation",
+    "cedCode": "M8MATH-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A company's main data center stores about 2 × 10⁹ files, while a small business server stores about 4 × 10⁵ files. A technician wants to know about how many times as many files the data center stores compared to the small business server.",
+    "choices": [
+      "5 × 10³",
+      "1 × 10⁴",
+      "2 × 10⁴",
+      "8 × 10⁴"
+    ],
+    "answer": "A",
+    "hints": [
+      "First divide the powers of ten to see how many times larger that part alone makes the number.",
+      "Then divide the coefficients (2 ÷ 4) and combine that result with the power-of-ten answer."
+    ]
+  },
+  {
+    "id": "m8math-writing-comparing-numbers-in-scientific-notation-005",
+    "loId": "m8math.scientific-notation",
+    "cedCode": "M8MATH-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to write 0.0000067 in scientific notation. He counts that the decimal point moves 6 places and writes his final answer as 6.7 × 10⁶. Which choice below gives the correct scientific notation for 0.0000067 along with the right reason for fixing his mistake?",
+    "choices": [
+      "6.7 × 10⁶, because moving the decimal point six places always gives a positive exponent",
+      "6.7 × 10⁻⁶, because a number smaller than 1 must have a negative exponent",
+      "0.67 × 10⁻⁵, because the coefficient can be smaller than 1 as long as the exponent is adjusted",
+      "67 × 10⁻⁷, because both nonzero digits must appear in front of the decimal point"
+    ],
+    "answer": "B",
+    "hints": [
+      "The size of the original number, not just the count of decimal moves, decides whether the exponent is positive or negative.",
+      "Check that the coefficient has exactly one nonzero digit before the decimal point."
+    ]
+  },
+  {
+    "id": "m8math-writing-comparing-numbers-in-scientific-notation-006",
+    "loId": "m8math.scientific-notation",
+    "cedCode": "M8MATH-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A swimming pool contains about 4 × 10²⁵ molecules of water, and a single raindrop contains about 5 × 10¹⁸ molecules of water. A student wants to estimate about how many times as many molecules of water the pool contains compared to the raindrop.",
+    "choices": [
+      "1.25 × 10⁷",
+      "8 × 10⁷",
+      "8 × 10⁶",
+      "8 × 10⁵"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the powers of ten first by subtracting exponents, then divide the coefficients separately.",
+      "If dividing the coefficients gives a number less than 1, shift it back into a valid coefficient between 1 and 10 by adjusting the power of ten."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-identifying-functions-001",
+    "loId": "m8math.identifying-functions",
+    "cedCode": "M8MATH-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A function is a rule that assigns exactly one output to each input. Which description matches this definition?",
+    "choices": [
+      "A rule where each input produces exactly one output.",
+      "A rule where each input can produce two or more different outputs.",
+      "A rule where every output must be paired with only one input.",
+      "A rule where the input and output must be the same number."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the machine analogy: when you press a button, how many things should drop out?",
+      "The restriction is on what the input does, not on how many inputs can share an output."
+    ]
+  },
+  {
+    "id": "m8math-identifying-functions-002",
+    "loId": "m8math.identifying-functions",
+    "cedCode": "M8MATH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mapping diagram shows inputs on the left and outputs on the right, with arrows connecting them. In the diagram, input 3 has an arrow to 11, input 5 has an arrow to 19, and input 7 has an arrow to 11. Does this mapping diagram represent a function?",
+    "choices": [
+      "No, because two different inputs (3 and 7) both point to the same output (11).",
+      "Yes, because each input has exactly one arrow leaving it.",
+      "No, because the outputs are not all different from one another.",
+      "Yes, because there are more inputs than outputs."
+    ],
+    "answer": "B",
+    "hints": [
+      "Scan the inputs for repeats. Does any input appear more than once?",
+      "Remember that two inputs sharing the same output is allowed—the rule only limits what each button does."
+    ]
+  },
+  {
+    "id": "m8math-identifying-functions-003",
+    "loId": "m8math.identifying-functions",
+    "cedCode": "M8MATH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A set of ordered pairs is given: (2, 5), (4, 9), (6, 13), (8, 17). In these pairs, the input is the first number and the output is the second number. Is this set a function?",
+    "choices": [
+      "No, because the outputs are all different.",
+      "No, because the inputs are all different.",
+      "Yes, because each input appears exactly once with one output.",
+      "Yes, because the outputs form a pattern that increases by 4."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at the first number in each pair—does any input repeat?",
+      "The rule does not require a formula or pattern in the outputs, only that each input gives one answer."
+    ]
+  },
+  {
+    "id": "m8math-identifying-functions-004",
+    "loId": "m8math.identifying-functions",
+    "cedCode": "M8MATH-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four points are plotted on a coordinate plane at (1, 6), (3, 6), (5, 10), and (3, 14). The x-coordinate of each point is the input and the y-coordinate is the output. Identify which input fails the function test and explain why these four points do not form the graph of a function.",
+    "choices": [
+      "Input 6 fails the function test because it serves as an output value for two different input values, which violates the requirement that each input maps to exactly one output.",
+      "The points fail the function test because they do not lie on a straight line, meaning there is no single linear rule that connects all four points together.",
+      "Input 1 fails the function test because when we substitute it into the relation, its output of 6 is identical to the output of input 3, so the correspondence between inputs and outputs is not unique and consistent.",
+      "Input 3 fails because it appears in two points with different outputs (6 and 14)."
+    ],
+    "answer": "D",
+    "hints": [
+      "Write down all the inputs (the x-coordinates) in order and look for a repeat.",
+      "When an input repeats, check whether it has different outputs—if it does, the rule breaks."
+    ]
+  },
+  {
+    "id": "m8math-identifying-functions-005",
+    "loId": "m8math.identifying-functions",
+    "cedCode": "M8MATH-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A table shows inputs and outputs: input 10 gives output 25, input 15 gives output 40, input 20 gives output 55, and input 25 gives output 70. If one more row is added to the table with input 15 again, what must the output be for the table to remain a function?",
+    "choices": [
+      "The output must be 40, because input 15 already produced that output.",
+      "Any number other than 40, so that the two outputs for input 15 are different.",
+      "Any number at all, since inputs are allowed to repeat.",
+      "The output cannot be determined without knowing the formula."
+    ],
+    "answer": "A",
+    "hints": [
+      "If the same input appears twice in a function, what must be true about its outputs?",
+      "Each input assigns exactly one output, so the same input cannot give two different answers."
+    ]
+  },
+  {
+    "id": "m8math-identifying-functions-006",
+    "loId": "m8math.identifying-functions",
+    "cedCode": "M8MATH-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows five plotted points: (−2, 8), (0, 2), (2, 8), (3, 17), and (−2, 5). A student claims that if the point (−2, 5) is removed, the remaining four points will form the graph of a function. A second student disagrees and says that removing that one point will not fix the problem. Who is correct, and why?",
+    "choices": [
+      "The first student is correct; removing (−2, 5) makes the remaining points lie on a straight line.",
+      "The first student is correct; removing (−2, 5) leaves no repeated x-coordinates, so each input has exactly one output.",
+      "The second student is correct; even after removing (−2, 5), there are still two points with the same x-coordinate.",
+      "The second student is correct; the points (0, 2) and (3, 17) still share the same y-coordinate, breaking the function."
+    ],
+    "answer": "B",
+    "hints": [
+      "After erasing (−2, 5), list all the x-coordinates of the remaining points and check whether any input repeats.",
+      "Remember that sharing a y-coordinate (output) is allowed—only a repeated x-coordinate (input) with different y-coordinates breaks the rule."
+    ]
+  },
+  {
+    "id": "m8math-comparing-functions-in-different-representations-001",
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "cedCode": "M8MATH-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A city's water tank is described by the equation g = 3t + 500, where g is the number of gallons in the tank and t is the number of minutes that have passed. What is the rate of change and what is the initial value of this function?",
+    "choices": [
+      "Rate of change 500 gallons per minute; initial value 500 gallons",
+      "Rate of change 500 gallons per minute; initial value 3 gallons",
+      "Rate of change 3 gallons per minute; initial value 3 gallons",
+      "Rate of change 3 gallons per minute; initial value 500 gallons"
+    ],
+    "answer": "D",
+    "hints": [
+      "In y = mx + b, the number multiplied by the variable is the rate of change.",
+      "The number that stands alone tells you the starting amount, before any time passes."
+    ]
+  },
+  {
+    "id": "m8math-comparing-functions-in-different-representations-002",
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "cedCode": "M8MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A candle's height in centimeters is recorded as it burns: at 0 minutes it is 18 cm, at 3 minutes it is 15 cm, at 6 minutes it is 12 cm, and at 9 minutes it is 9 cm. What is the rate of change of the candle's height over time?",
+    "choices": [
+      "-1 cm per minute",
+      "-3 cm per minute",
+      "1 cm per minute",
+      "-6 cm per minute"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the change in height between two rows and divide by the change in minutes.",
+      "Since the candle is getting shorter, the rate of change should be negative."
+    ]
+  },
+  {
+    "id": "m8math-comparing-functions-in-different-representations-003",
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "cedCode": "M8MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows a bus's distance from its starting garage, with minutes on the horizontal axis and miles on the vertical axis. The line crosses the vertical axis at 5 miles and passes through the point (2, 17). What are the initial value and rate of change for this function?",
+    "choices": [
+      "Initial value 5 miles; rate of change 8.5 miles per minute",
+      "Initial value 5 miles; rate of change 6 miles per minute",
+      "Initial value 17 miles; rate of change 6 miles per minute",
+      "Initial value 5 miles; rate of change 12 miles per minute"
+    ],
+    "answer": "B",
+    "hints": [
+      "The initial value is read where the line crosses the vertical axis, not at the marked point.",
+      "Subtract the two y-values before dividing by the run to get the rate."
+    ]
+  },
+  {
+    "id": "m8math-comparing-functions-in-different-representations-004",
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "cedCode": "M8MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two ride-sharing apps calculate trip cost. App R's cost follows the equation c = 2.5m + 3, where c is dollars and m is miles. App S's cost is shown in a table: at 0 miles the cost is $5, at 4 miles the cost is $13, and at 8 miles the cost is $21. Which statement correctly compares the two apps?",
+    "choices": [
+      "App S starts higher and charges more per mile",
+      "App R starts higher, but App S charges more per mile",
+      "App S starts higher, but App R charges more per mile",
+      "App R starts higher and charges more per mile"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find App S's rate and initial value from the table before comparing.",
+      "Compare the two initial values first, then compare the two rates separately."
+    ]
+  },
+  {
+    "id": "m8math-comparing-functions-in-different-representations-005",
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "cedCode": "M8MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two water tanks are being filled. Tank A's volume follows the equation v = 8t + 40, where v is liters and t is minutes. Tank B's volume is shown in a table: at 0 minutes it has 100 liters, at 5 minutes it has 130 liters, and at 10 minutes it has 160 liters. After how many minutes will both tanks have the same volume?",
+    "choices": [
+      "20 minutes",
+      "15 minutes",
+      "60 minutes",
+      "30 minutes"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the rate and initial value for each tank from its own representation.",
+      "Divide the starting gap between the two tanks by how much the gap shrinks each minute."
+    ]
+  },
+  {
+    "id": "m8math-comparing-functions-in-different-representations-006",
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "cedCode": "M8MATH-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A tutoring service, Plan X, charges according to the equation p = 4h + 20, where p is dollars and h is hours. Plan Y's price is shown in a table: at 0 hours it costs $35, at 3 hours it costs $47, and at 6 hours it costs $59. Which statement is true about these two plans?",
+    "choices": [
+      "Plan Y always costs $15 more than Plan X, and the two plans never charge the same price",
+      "The two plans charge the same price after 5 hours, since both totals equal $40 at that time",
+      "Plan X will eventually cost more than Plan Y because its hourly rate of $4 exceeds Plan Y's $3",
+      "Plan Y grows faster than Plan X since it increases by $12 every three hours, faster than X's rate"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate Plan Y's rate of change from the table and compare it to Plan X's rate.",
+      "Think about what happens to the gap between two starting values when the rates are exactly equal."
+    ]
+  },
+  {
+    "id": "m8math-linear-vs-nonlinear-functions-001",
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "cedCode": "M8MATH-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The equation y = mx + b describes every function in the linear family, where m and b can be any numbers, including negative numbers, decimals, or zero — as long as x itself stays plain, never squared or cubed. Which of these equations belongs to the linear family?",
+    "choices": [
+      "y = x² + 4",
+      "y = 7x - 3",
+      "y = 2x³",
+      "y = x · x - 1"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether x is raised to a power higher than 1 in each equation.",
+      "y = mx + b requires x to appear only as a plain, single power."
+    ]
+  },
+  {
+    "id": "m8math-linear-vs-nonlinear-functions-002",
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "cedCode": "M8MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A vending machine's total cost depends on the number of snacks bought. The table gives pairs (number of snacks, total cost in dollars): (1, 2), (2, 4), (3, 6), (4, 9). Determine whether this table represents a linear function by checking the rate of change between every pair of neighboring rows.",
+    "choices": [
+      "Linear, because the cost rises steadily from 2 to 4 to 6 to 9 dollars as the snack count goes up",
+      "Linear, because the rate of change from row 1 to row 2 is 2 dollars per snack, which proves linearity",
+      "Nonlinear, because the rate of change is 2, 2, then 3 — not constant across every row",
+      "Nonlinear, because the snack counts increase by 1 each time while the costs do not increase evenly"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compute the rate of change separately for rows 1-2, 2-3, and 3-4.",
+      "A function is linear only if that rate matches in every single pair of rows, not just the first pair."
+    ]
+  },
+  {
+    "id": "m8math-linear-vs-nonlinear-functions-003",
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "cedCode": "M8MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Consider the equation y = x² + 6. A student argues this equation is linear because it can be written as something times x, plus a constant, matching the y = mx + b pattern with the constant term at the end. Which statement correctly explains the flaw in the student's reasoning?",
+    "choices": [
+      "The equation is not linear because the right-hand side has no separate x term at all, so it cannot match the y = mx + b pattern",
+      "The equation is not linear because the constant 6 is too large in value to fit inside the standard y = mx + b equation form",
+      "The equation is actually linear because it ends with a constant term, which matches the b at the end of y = mx + b",
+      "The equation is not linear because x is squared, not multiplied by a plain number; the y = mx + b family only allows a plain x"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at how x appears in the equation, not just what comes after the plus sign.",
+      "Squaring x changes the whole shape of the rule, even though a constant is still added at the end."
+    ]
+  },
+  {
+    "id": "m8math-linear-vs-nonlinear-functions-004",
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "cedCode": "M8MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gym membership's total cost over time is recorded as pairs (months, total cost in dollars): (0, 50), (3, 95), (7, 155). Since the months don't increase by the same amount each time, determine whether this table represents a linear function by finding the rate of change between each pair of neighboring points.",
+    "choices": [
+      "Linear, because both rates of change equal 15 dollars per month",
+      "Nonlinear, because the y-values change by different amounts, 45 then 60",
+      "Linear, because the total cost always increases as months increase",
+      "Nonlinear, because the x-values do not increase by the same amount each time"
+    ],
+    "answer": "A",
+    "hints": [
+      "Since the x-steps are uneven, divide each y-change by its matching x-change before comparing.",
+      "Comparing the raw y-changes alone only works when the x-steps are all the same size."
+    ]
+  },
+  {
+    "id": "m8math-linear-vs-nonlinear-functions-005",
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "cedCode": "M8MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A square garden bed has area A = s², where s is the side length in feet. Using side lengths 2, 3, 4, and 5 feet gives areas 4, 9, 16, and 25 square feet. A gardener draws a straight line through the points (2, 4) and (3, 9) and uses its rate of change to predict the area when s = 5. Which statement correctly evaluates the gardener's method?",
+    "choices": [
+      "The line correctly predicts area 25 at s = 5, because the rate of change from (2,4) to (3,9) stays the same, showing A = s² is linear",
+      "The line predicts area 19 at s = 5, but the actual area is 25, showing the rate of change is not constant so A = s² is nonlinear",
+      "The line predicts area 20 at s = 5, because using the slope from the first two points gives a matching area, so A = s² is linear",
+      "The gardener's method fails only because two points alone can never be used to determine the equation of any straight line at all"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the rate of change between the two given points, then use it to predict two more steps ahead.",
+      "Compare that predicted value to the actual area at s = 5 to see whether the rate stayed the same."
+    ]
+  },
+  {
+    "id": "m8math-linear-vs-nonlinear-functions-006",
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "cedCode": "M8MATH-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A function has the input-output pairs (0, 0), (1, 1), (2, 8), (3, 27). A student claims this function could be written in the form y = mx + b because y = 0 when x = 0, meaning b = 0, and says that alone is enough evidence to call the function linear. Which statement correctly identifies the flaw and classifies the function?",
+    "choices": [
+      "The claim is wrong; the function is nonlinear simply because it starts at the point (0,0) rather than at a positive b value",
+      "The claim is correct; since b equals 0, the equation y = mx must automatically apply to any pattern that starts at the origin",
+      "The claim is wrong; the rate of change is 1, then 7, then 19, which are not equal, so the function is nonlinear even though b = 0",
+      "The claim is correct; the rate of change stays constant at 1 between each and every pair of consecutive points in the table"
+    ],
+    "answer": "C",
+    "hints": [
+      "Having b = 0 only tells you where a linear graph would cross the y-axis; it doesn't skip the rate-of-change test.",
+      "Calculate the change in y between each consecutive pair of points to see if it stays the same."
+    ]
+  },
+  {
+    "id": "m8math-volume-of-cylinders-cones-spheres-001",
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "cedCode": "M8MATH-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cylindrical water tank has a radius of 2 m and a height of 5 m. Using V = πr²h and π ≈ 3.14, what is the volume of the tank?",
+    "choices": [
+      "20.9 m³",
+      "31.4 m³",
+      "62.8 m³",
+      "33.5 m³"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that a cylinder's volume formula squares the radius before multiplying by π and the height.",
+      "Watch out for formulas that use a fraction like one-third or four-thirds — those belong to cones and spheres, not cylinders."
+    ]
+  },
+  {
+    "id": "m8math-volume-of-cylinders-cones-spheres-002",
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "cedCode": "M8MATH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paper cone-shaped cup has a radius of 3 cm and a height of 8 cm. Using V = (1/3)πr²h and π ≈ 3.14, what is its volume, to the nearest tenth?",
+    "choices": [
+      "113.0 cm³",
+      "226.1 cm³",
+      "18.8 cm³",
+      "75.4 cm³"
+    ],
+    "answer": "D",
+    "hints": [
+      "A cone's formula is the cylinder formula with an extra factor of one third.",
+      "The radius given, 3 cm, does not need to be halved — only a diameter needs that step."
+    ]
+  },
+  {
+    "id": "m8math-volume-of-cylinders-cones-spheres-003",
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "cedCode": "M8MATH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A ball has a diameter of 10 cm. Using V = (4/3)πr³ and π ≈ 3.14, what is its volume, to the nearest whole number?",
+    "choices": [
+      "523 cm³",
+      "4187 cm³",
+      "105 cm³",
+      "393 cm³"
+    ],
+    "answer": "A",
+    "hints": [
+      "A sphere's formula needs the radius, not the diameter, so check whether the given measurement needs to be halved first.",
+      "The radius gets cubed (r × r × r), not squared, in the sphere formula."
+    ]
+  },
+  {
+    "id": "m8math-volume-of-cylinders-cones-spheres-004",
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "cedCode": "M8MATH-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cylindrical vase has a radius of 5 cm and holds 942 cm³ of water. Using π ≈ 3.14, find the height of the vase. Then determine the volume of a cone that has the same radius and the same height as the vase.",
+    "choices": [
+      "942 cm³",
+      "314 cm³",
+      "235.5 cm³",
+      "157 cm³"
+    ],
+    "answer": "B",
+    "hints": [
+      "First use the cylinder's volume and radius to solve backwards for the height.",
+      "Once you know the height, remember a cone with the same radius and height holds exactly one third as much as the cylinder."
+    ]
+  },
+  {
+    "id": "m8math-volume-of-cylinders-cones-spheres-005",
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "cedCode": "M8MATH-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cone-shaped paper cup has a volume of 301.44 cm³ and a height of 18 cm. Using V = (1/3)πr²h and π ≈ 3.14, what is the diameter of the cup's circular opening?",
+    "choices": [
+      "16 cm",
+      "4 cm",
+      "8 cm",
+      "4.6 cm"
+    ],
+    "answer": "C",
+    "hints": [
+      "Solve for r² first by clearing out the one-third, π, and height, then take the square root to get the radius.",
+      "The diameter is twice the radius — don't stop at the radius when the question asks for the diameter."
+    ]
+  },
+  {
+    "id": "m8math-volume-of-cylinders-cones-spheres-006",
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "cedCode": "M8MATH-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A specialty ice cream shop sells two cone-shaped cups that have the same height. Cup B has a radius twice as large as Cup A's radius. If Cup A holds 50.24 cm³ of ice cream, how much does Cup B hold?",
+    "choices": [
+      "150.72 cm³",
+      "100.48 cm³",
+      "401.92 cm³",
+      "200.96 cm³"
+    ],
+    "answer": "D",
+    "hints": [
+      "Since the height stays the same, only the r² part of the cone formula changes when the radius doubles.",
+      "Squaring a doubled radius, (2r)², gives four times the original r², not two times."
+    ]
+  }
+]

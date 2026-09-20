@@ -1,0 +1,439 @@
+[
+  {
+    "id": "m8math-fitting-a-line-to-a-scatter-plot-001",
+    "loId": "m8math.fitting-a-line-to-a-scatter-plot",
+    "cedCode": "M8MATH-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot shows points that cluster in a straight upward path from left to right with no bending or curving. Which statement correctly describes whether a line of fit should be drawn on this plot?",
+    "choices": [
+      "A line of fit should not be drawn because drawing a line by eye is not precise enough.",
+      "A line of fit should not be drawn because some points are scattered instead of forming a perfect line.",
+      "A line of fit should be drawn only if the points touch a grid intersection.",
+      "A line of fit should be drawn because the points follow a straight-line pattern."
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall the first rule: fit a line only when the cloud looks like a line.",
+      "Check whether the points follow a straight-line path or show a curve or no pattern."
+    ]
+  },
+  {
+    "id": "m8math-fitting-a-line-to-a-scatter-plot-002",
+    "loId": "m8math.fitting-a-line-to-a-scatter-plot",
+    "cedCode": "M8MATH-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student draws a line of fit through a scatter plot. When she counts the points, she finds that 6 out of 8 points sit above the line and only 2 sit below. What should she do?",
+    "choices": [
+      "Adjust the line by sliding or rotating the ruler so the counts become closer to balanced.",
+      "Keep the line because she has drawn it carefully by eye.",
+      "Erase the line because it is impossible for a line of fit to have unequal counts.",
+      "Add more data points above the line to match the points below."
+    ],
+    "answer": "A",
+    "hints": [
+      "One of the two checks for a good fit is about how many points sit on each side of the line.",
+      "Think about what 'about as many above as below' means for a line in the middle of the cloud."
+    ]
+  },
+  {
+    "id": "m8math-fitting-a-line-to-a-scatter-plot-003",
+    "loId": "m8math.fitting-a-line-to-a-scatter-plot",
+    "cedCode": "M8MATH-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A line of fit is drawn on a scatter plot, and you need to find its equation. The line crosses the grid at the point (3, 8), but the closest data point is (3, 10), which sits above the line. Should you use the point (3, 10) or the point (3, 8) when you calculate the slope?",
+    "choices": [
+      "Use (3, 10) because it is a data point from the original scatter plot.",
+      "Use (3, 8) because that point actually sits on the drawn line.",
+      "Use both points and average them to find the true slope.",
+      "Use whichever point is easier to read from the graph."
+    ],
+    "answer": "B",
+    "hints": [
+      "You need two points that sit ON your drawn line, not two data points.",
+      "The line of fit stands for the whole pattern, so the points you use for the equation must be from the line itself."
+    ]
+  },
+  {
+    "id": "m8math-fitting-a-line-to-a-scatter-plot-004",
+    "loId": "m8math.fitting-a-line-to-a-scatter-plot",
+    "cedCode": "M8MATH-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot shows six data points: (1, 5), (2, 8), (3, 11), (4, 14), (5, 17), and (6, 20). A student draws a line of fit that crosses the grid at (1, 4) and (5, 16). Calculate the equation of this line and then use it to find the vertical gap between the data point (3, 11) and the line.",
+    "choices": [
+      "The equation is y = 4x + 0, and the vertical gap is 1 unit.",
+      "The equation is y = 3x + 1, and the vertical gap is 2 units.",
+      "The equation is y = 3x + 1, and the vertical gap is 1 unit.",
+      "The equation is y = 2x + 2, and the vertical gap is 3 units."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the slope using the two points on the line: m = (change in y) ÷ (change in x).",
+      "Once you have the equation, substitute x = 3 to find the y-value on the line, then compare it to the data point's y-value."
+    ]
+  },
+  {
+    "id": "m8math-fitting-a-line-to-a-scatter-plot-005",
+    "loId": "m8math.fitting-a-line-to-a-scatter-plot",
+    "cedCode": "M8MATH-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot has ten data points that climb from left to right in a roughly straight pattern. Two students, Morgan and Devon, each draw a line of fit by eye. Morgan's line passes through (2, 10) and (8, 40), giving the equation y = 5x. Devon's line passes through (3, 12) and (9, 42), giving the equation y = 5x − 3. Both students count and find that their lines have about five points above and five points below. What can you conclude about these two lines?",
+    "choices": [
+      "Both lines can be good fits because a line of fit is an estimate of the pattern, not an exact fact, and different people may draw slightly different lines that both pass the fit checks.",
+      "Only Morgan's line is correct because the equation y = 5x has a slope that is the true slope of the data, making it the only valid choice.",
+      "Only Devon's line is correct because it has a negative y-intercept value, which produces a better separation of points above and below the line.",
+      "Neither line is correct because they have different y-intercepts, which means the two students must have measured the data points differently and at least one made a calculation error."
+    ],
+    "answer": "A",
+    "hints": [
+      "A line of fit is an estimate of the pattern, not a unique answer. Two careful people fitting the same cloud by eye can end up with slightly different lines.",
+      "Check whether both lines satisfy the two fit checks: vertical gaps are small, and roughly half the points lie above and half below."
+    ]
+  },
+  {
+    "id": "m8math-scatter-plots-association-001",
+    "loId": "m8math.scatter-plots-and-association",
+    "cedCode": "M8MATH-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot is created from data about students' ages and their heights. Each student in the data set is plotted as one dot. If there are 24 students total, how many dots should appear on the scatter plot?",
+    "choices": [
+      "24 dots",
+      "12 dots",
+      "48 dots",
+      "6 dots"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember: one individual = one dot on a scatter plot.",
+      "Think about the relationship between the number of students and the number of dots."
+    ]
+  },
+  {
+    "id": "m8math-scatter-plots-association-002",
+    "loId": "m8math.scatter-plots-and-association",
+    "cedCode": "M8MATH-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A teacher plots the number of minutes students studied for a test on the horizontal axis and their test scores on the vertical axis. The dots form a cloud that rises from the lower left to the upper right. What does this pattern tell you about the association between study time and test score?",
+    "choices": [
+      "Negative association, because studying too long causes scores to drop",
+      "Positive association, because more study time tends to go with higher test scores",
+      "No association, because test scores depend only on prior knowledge",
+      "Positive association, because the horizontal axis is always independent"
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the cloud from left to right—does it climb, fall, or stay flat?",
+      "When a dot at the left has a low y-value and a dot at the right has a high y-value, what is the tilt?"
+    ]
+  },
+  {
+    "id": "m8math-scatter-plots-association-003",
+    "loId": "m8math.scatter-plots-and-association",
+    "cedCode": "M8MATH-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Six friends recorded the outside temperature in degrees Celsius and how many ice-cream cones their shop sold that day. The six pairs are (10, 8), (12, 15), (15, 22), (18, 25), (20, 30), (22, 28). Counting the pairs given, how many dots will be plotted on the scatter plot?",
+    "choices": [
+      "22 dots",
+      "12 dots",
+      "6 dots",
+      "3 dots"
+    ],
+    "answer": "C",
+    "hints": [
+      "Count the number of pairs listed in the data.",
+      "Each pair represents one friend's two measurements, so each pair becomes one dot."
+    ]
+  },
+  {
+    "id": "m8math-scatter-plots-association-004",
+    "loId": "m8math.scatter-plots-and-association",
+    "cedCode": "M8MATH-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot shows 20 cars. The horizontal axis displays the car's age in years, running from 0 to 12. The vertical axis displays the car's resale price in thousands of dollars, running from 0 to 30. The dots fall from the upper left toward the lower right, staying inside a straight band with no bend. Two dots sit noticeably lower than all the others: one at (3, 8) and one at (5, 4), even though most cars that age sell for much higher prices. Describe the association, the shape of the pattern, and any outliers.",
+    "choices": [
+      "No association with a linear pattern; the two low dots prove there is no pattern",
+      "Positive association with a nonlinear pattern; no outliers because the dots fall",
+      "Negative association with a nonlinear pattern; the low prices are clusters, not outliers",
+      "Negative association with a linear pattern; two outliers at (3, 8) and (5, 4)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Determine the tilt by reading the cloud from left to right. Does it climb or fall?",
+      "Ask whether the band is straight or bent. Then decide: do the two unusually low dots sit far from where other dots that age are found?"
+    ]
+  },
+  {
+    "id": "m8math-scatter-plots-association-005",
+    "loId": "m8math.scatter-plots-and-association",
+    "cedCode": "M8MATH-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A coach collects bivariate data on 15 swimmers: the number of hours each swimmer trained last week and the time in seconds each swimmer took to complete a 100-meter race. The scatter plot shows all 15 dots clustered tightly between 10 and 20 hours of training. Within that cluster, swimmers who trained more hours tend to have faster times. However, one swimmer trained only 3 hours and posted a race time of 62 seconds, which is faster than swimmers who trained 15 hours. Why should the coach describe the overall pattern as showing a negative association (more training with faster times), even though one dot does not fit?",
+    "choices": [
+      "Association describes the tendency of the whole cloud, not any single dot, so one outlier does not erase the pattern the other 14 dots show",
+      "The outlier proves the coach is wrong about the association because it contradicts the definition of what makes a pattern true and valid",
+      "One outlier is enough to overturn the entire association since a single counterexample disproves any pattern in bivariate data",
+      "The coach should discard the outlier from the dataset before analyzing association, because outliers have no place in any statistical description"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what 'tend to' means when describing association—does it mean every single dot, or the overall cloud?",
+      "Can one dot that does not fit the pattern erase an association that 14 other dots clearly show?"
+    ]
+  },
+  {
+    "id": "m8math-scatter-plots-association-006",
+    "loId": "m8math.scatter-plots-and-association",
+    "cedCode": "M8MATH-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A biologist measures 12 plants in a greenhouse after one month of growth. For each plant, the biologist records how much direct sunlight it received, in hours per day, and the plant's final height in centimeters. The data pairs are (2, 8), (3, 10), (3, 12), (4, 14), (5, 16), (6, 18), (6, 19), (7, 21), (8, 22), (9, 25), (10, 26), (10, 27). When the biologist sets up the scatter plot, she decides to start the vertical axis (height) at 5 centimeters instead of 0, and end it at 30 centimeters. She also starts the horizontal axis (sunlight) at 0 and ends it at 12 hours. After plotting all 12 points and examining the cloud, she asks: \"Does this show a linear pattern, and if so, what association?\" Which statement answers both parts of her question correctly?",
+    "choices": [
+      "Yes, the pattern is linear with a negative association; the band is straight even though some dots wander",
+      "Yes, the pattern is linear with a positive association; the dots stay in a straight band and tend to climb from left to right",
+      "No, the pattern is nonlinear because not every dot sits exactly on one line",
+      "No, the pattern is nonlinear because the vertical axis does not start at zero"
+    ],
+    "answer": "B",
+    "hints": [
+      "Linear means the dots follow a straight band, not that they sit perfectly on one line. Do the scattered points stay inside a straight band or does the band bend?",
+      "For association, read the cloud from left to right. As sunlight hours increase from left to right, do the heights tend to climb, fall, or stay mixed?"
+    ]
+  },
+  {
+    "id": "m8math-using-a-linear-model-with-bivariate-data-001",
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "cedCode": "M8MATH-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A fitted line through data showing study hours and test scores has the equation y = 8x + 40, where x is hours studied and y is the test score. What does the slope 8 tell you?",
+    "choices": [
+      "The starting score with no study time is 8 points",
+      "A student who studies 8 hours will score 40 points",
+      "Each additional hour of study goes with about 8 more points on the test",
+      "The test score changes by a total of 8 points across all students"
+    ],
+    "answer": "C",
+    "hints": [
+      "The slope is a per-unit change: how much y changes when x increases by 1.",
+      "Say both units out loud with the slope—points per hour—to hear the complete meaning."
+    ]
+  },
+  {
+    "id": "m8math-using-a-linear-model-with-bivariate-data-002",
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "cedCode": "M8MATH-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot shows the daily temperature in degrees Fahrenheit (x) and the number of cold drinks sold at a café (y). The data were collected on days between 65°F and 85°F. The fitted line is y = 4x − 200. What does the intercept −200 mean in context?",
+    "choices": [
+      "The line cannot be used for prediction because the intercept is negative and does not match the context of the problem",
+      "When temperature drops by 1 degree, the model predicts cold drink sales will drop by 200 drinks, but this is outside the range where the fit was tested",
+      "At a temperature of 0°F the café would have sold negative 200 drinks according to the equation, which is impossible since no drinks were actually recorded at that temperature",
+      "The model predicts about negative 200 drinks at 0°F, but no day in the data was that cold, so this is outside where the line was checked"
+    ],
+    "answer": "D",
+    "hints": [
+      "The intercept is what the model gives at x = 0; check whether the data actually include x = 0.",
+      "An intercept value that falls outside the data span is still a number the equation gives—it just was not tested against real measurements."
+    ]
+  },
+  {
+    "id": "m8math-using-a-linear-model-with-bivariate-data-003",
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "cedCode": "M8MATH-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer measured the heights of corn plants at weekly intervals from 2 weeks to 10 weeks after planting. The fitted line through the data is y = 5.2x + 3, where x is weeks after planting and y is height in inches. Use the model to predict the height of a plant at 6 weeks after planting.",
+    "choices": [
+      "About 34.2 inches",
+      "About 35 inches",
+      "About 30 inches",
+      "About 38 inches"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute x = 6 into the equation y = 5.2x + 3.",
+      "Compute 5.2 times 6 first, then add 3 to find the predicted height."
+    ]
+  },
+  {
+    "id": "m8math-using-a-linear-model-with-bivariate-data-004",
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "cedCode": "M8MATH-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scatter plot shows the engine size in liters (x, ranging from 1.5 to 4.0) and highway fuel economy in miles per gallon (y) for ten compact cars. The fitted line is y = −7x + 45. One student uses this line to predict the fuel economy of a car with a 3.0-liter engine. Another student wants to predict for a 6.0-liter engine. Explain why the first prediction is reliable but the second prediction should be flagged as unreliable.",
+    "choices": [
+      "The first prediction uses a 3.0-liter engine which is smaller than 4.0 liters, while the second prediction exceeds 4.0 liters and therefore predicts a negative fuel economy that is physically impossible",
+      "The 3.0-liter engine size falls within the 1.5-to-4.0-liter data span, so the line has been tested there; the 6.0-liter size is outside the data, so it is extrapolation and cannot be trusted",
+      "The first prediction falls near the middle of the data range and uses the average slope, but the second prediction requires extending the pattern beyond any engine sizes the model was built from",
+      "The first car's engine size is close to values in the original data, making interpolation reasonable, while the second car's engine size requires extrapolation into a region where the relationship has not been verified"
+    ],
+    "answer": "B",
+    "hints": [
+      "A fitted line has earned trust only across the span of x-values where data were actually collected.",
+      "Extrapolation means using the line at an x-value beyond the smallest and largest x in the data; the pattern may not hold out there."
+    ]
+  },
+  {
+    "id": "m8math-using-a-linear-model-with-bivariate-data-005",
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "cedCode": "M8MATH-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pet store recorded the age (x, in months) and weight (y, in ounces) of puppies of the same breed. The ages in the sample ranged from 2 to 10 months. The fitted line is y = 12x + 8. A staff member computes the prediction for a 6-month-old puppy as y = 12(6) + 8 = 80 ounces and writes down that answer. What two facts should the staff member mention about this prediction?",
+    "choices": [
+      "The prediction comes from substituting 6 into the equation correctly, and the negative slope would mean weight decreases with age, so the prediction must be checked against what actually happens in the real data",
+      "The prediction is about 80 ounces, and the model says each additional month adds about 12 ounces, so the prediction is based on the slope",
+      "The prediction is about 80 ounces, and because 6 months is inside the 2-to-10-month data span, this prediction is one the model has been tested against",
+      "The prediction comes from the equation y = 12(6) + 8, and since the y-intercept is 8 ounces, the staff member should note that newborn puppies weigh about 8 ounces at birth"
+    ],
+    "answer": "C",
+    "hints": [
+      "After you compute the y-value, check whether the x-value you used falls inside or outside the data span.",
+      "A prediction inside the data span is reliable; one outside is extrapolation and should be flagged."
+    ]
+  },
+  {
+    "id": "m8math-using-a-linear-model-with-bivariate-data-006",
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "cedCode": "M8MATH-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A coffee shop recorded the outdoor temperature in degrees Celsius (x) and the number of cups of hot coffee sold that day (y). Data were collected on days from 5°C to 20°C. The fitted line is y = −3x + 85. A barista uses this line to make two predictions: (1) for 10°C, she gets y = −3(10) + 85 = 55 cups; (2) for 30°C, she gets y = −3(30) + 85 = −5 cups. Which prediction should the barista report with confidence, which should she flag, and why?",
+    "choices": [
+      "Report the 10°C prediction because it gives a positive cup count that makes sense; flag the 30°C prediction because negative cups sold is impossible and shows the model broke down at that temperature",
+      "Report the 30°C prediction (−5 cups) with confidence because both calculations are correct and the negative number indicates the boundary where hot coffee sales end for the season",
+      "Flag both predictions because the slope is negative and negative results mean the model is unreliable for any temperature outside a narrow middle range where coffee sales exist",
+      "Report the 10°C prediction (55 cups) with confidence because 10°C is inside the 5-to-20°C data span; flag the 30°C prediction because 30°C is outside the data span and the negative result signals an impossible extrapolation"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check each x-value against the data span (5 to 20). Is it inside or outside?",
+      "When extrapolation produces an impossible result like negative cups sold, that is a signal the line has been stretched too far and should not be used."
+    ]
+  },
+  {
+    "id": "m8math-two-way-tables-relative-frequencies-001",
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "cedCode": "M8MATH-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A two-way table shows results from 40 students who were asked whether they have a pet and whether they have a chore. Of the 24 students who have a pet, 18 also have a chore. Which computation correctly finds the row relative frequency of having a chore among students who have a pet?",
+    "choices": [
+      "18 ÷ 40 = 0.45",
+      "18 ÷ 24 = 0.75",
+      "24 ÷ 18 ≈ 1.33",
+      "24 ÷ 40 = 0.60"
+    ],
+    "answer": "B",
+    "hints": [
+      "Row relative frequency divides a cell by its row's total, not by the grand total.",
+      "Identify which number is the total for pet-owning students before dividing."
+    ]
+  },
+  {
+    "id": "m8math-two-way-tables-relative-frequencies-002",
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "cedCode": "M8MATH-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A survey of 45 middle schoolers asked whether they play a musical instrument and whether they are in the school band. Of the 28 students who play an instrument, 19 are in band. Of the 17 students who do not play an instrument, 5 are in band. How many students play an instrument but are NOT in band?",
+    "choices": [
+      "11",
+      "19",
+      "9",
+      "12"
+    ],
+    "answer": "C",
+    "hints": [
+      "The row total for playing an instrument is already known; find the missing cell inside that row.",
+      "Subtract the students who are in band from the total who play an instrument."
+    ]
+  },
+  {
+    "id": "m8math-two-way-tables-relative-frequencies-003",
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "cedCode": "M8MATH-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a survey of 50 students, 32 walk to school and 24 of them eat breakfast at home. What is the row relative frequency of eating breakfast at home among students who walk to school?",
+    "choices": [
+      "1.33",
+      "0.48",
+      "0.60",
+      "0.75"
+    ],
+    "answer": "D",
+    "hints": [
+      "Row relative frequency divides by the total of the group named in the question.",
+      "The walking group's total is 32, not the grand total of 50."
+    ]
+  },
+  {
+    "id": "m8math-two-way-tables-relative-frequencies-004",
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "cedCode": "M8MATH-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A survey of 60 eighth graders asks whether they have a part-time job and whether they play a musical instrument. Of the 35 students with a job, 21 play an instrument. Of the 25 students without a job, 20 play an instrument. Which statement is best supported by the row relative frequencies?",
+    "choices": [
+      "Students without a job tend to play an instrument, because 20 ÷ 25 = 0.80 is greater than 21 ÷ 35 = 0.60.",
+      "Students with a job tend to play an instrument, because 21 is a larger raw count than 20.",
+      "There is no association, because both row relative frequencies round to about 0.70 on average.",
+      "Students without a job tend to play an instrument, because 20 ÷ 35 = 0.57 is greater than 21 ÷ 60 = 0.35."
+    ],
+    "answer": "A",
+    "hints": [
+      "Find each row's relative frequency for playing an instrument, then compare the two groups' relative frequencies, not their raw counts.",
+      "A larger raw count in a larger group does not automatically mean a stronger association."
+    ]
+  },
+  {
+    "id": "m8math-two-way-tables-relative-frequencies-005",
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "cedCode": "M8MATH-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A two-way table sorts 50 students by whether they have a savings account and whether they do household chores. The savings-yes row totals 30 students, with 21 doing chores and 9 not. The savings-no row totals 20 students, with 9 doing chores and 11 not. A classmate claims: 'Since 21 students with a savings account do chores, compared to only 9 without one, students with a savings account tend to do chores.' Which response correctly evaluates this claim?",
+    "choices": [
+      "The claim is completely correct as stated, because comparing the raw counts of 21 students who do chores versus 9 who do chores is a fair way to compare any two groups regardless of their size.",
+      "The conclusion happens to be right, but the reasoning is flawed since the groups differ in size; row relative frequencies, 21÷30 = 0.70 versus 9÷20 = 0.45, confirm a possible association.",
+      "The claim is wrong because the row relative frequencies are actually equal, since 21÷30 = 0.45 and 9÷20 = 0.45, showing that savings account status has no association with doing chores at all.",
+      "The claim's reasoning is flawed, but no association exists once the totals are compared correctly, since 21÷50 = 0.42 and 9÷50 = 0.18 are the true relative frequencies to use."
+    ],
+    "answer": "B",
+    "hints": [
+      "Raw counts can't be compared fairly when the two groups being compared aren't the same size.",
+      "Divide each chores-yes cell by its own row total, not by the grand total, before comparing."
+    ]
+  },
+  {
+    "id": "m8math-two-way-tables-relative-frequencies-006",
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "cedCode": "M8MATH-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a survey of 80 eighth graders, 0.75 of the 40 students who play video games also do homework daily, and 0.50 of the 40 students who do not play video games also do homework daily. A classmate says these two relative frequencies show a possible association only because both row totals happen to be the same size, 40 each, so the equal sizes are what make the comparison valid. Which statement correctly assesses the classmate's reasoning?",
+    "choices": [
+      "There is no association because 0.75 and 0.50 are both closer to 1 than 0, so both groups mostly do homework daily.",
+      "The classmate is correct: relative frequencies can only be compared fairly when the row totals are the same size, so this is a valid association.",
+      "The classmate is wrong that row totals must be equal; comparing relative frequencies never requires equal group sizes, and 0.75 ≠ 0.50 shows a possible association.",
+      "The classmate is wrong; the two relative frequencies must instead be divided by the grand total of 80 before comparing, giving 0.375 and 0.25, which shows no association."
+    ],
+    "answer": "C",
+    "hints": [
+      "Comparing relative frequencies works even when the two row totals aren't equal.",
+      "Once a cell has already been divided by its row total, dividing by the grand total again is not part of the recipe."
+    ]
+  }
+]

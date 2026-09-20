@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-systems-word-problems-001",
+    "loId": "m8math.systems-word-problems",
+    "cedCode": "M8MATH-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You are setting up a system of equations to model a situation with two unknowns. Before you write any equations, what is the essential first step you must complete?",
+    "choices": [
+      "Decide whether each variable represents a count, a measurement, or a price, then assign letters based on that category",
+      "Write a sentence that defines what each letter stands for, including its unit",
+      "Identify all the numbers given in the problem and list them in order from smallest to largest value",
+      "Determine which solution method you will use by checking whether the coefficients are integers or fractions"
+    ],
+    "answer": "B",
+    "hints": [
+      "This step must happen before any equation is written.",
+      "Think about why unnamed letters lead to wrong equations."
+    ]
+  },
+  {
+    "id": "m8math-systems-word-problems-002",
+    "loId": "m8math.systems-word-problems",
+    "cedCode": "M8MATH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A parking garage charges $5 to enter plus $3 per hour parked. A different garage charges $12 to enter plus $1 per hour parked. You are setting up equations where h is the number of hours and c is the total cost in dollars. Write the equation for the first garage.",
+    "choices": [
+      "c = 8h",
+      "c = 5h + 3",
+      "c = 5 + 3h",
+      "h = 5 + 3c"
+    ],
+    "answer": "C",
+    "hints": [
+      "The dollars paid once go by themselves; the dollars paid per unit multiply the variable.",
+      "A fixed charge plus a rate per hour has the form: total cost equals the fixed amount plus (rate times hours)."
+    ]
+  },
+  {
+    "id": "m8math-systems-word-problems-003",
+    "loId": "m8math.systems-word-problems",
+    "cedCode": "M8MATH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A school cafeteria sold 200 lunch boxes total: sandwiches for $6 each and salads for $4 each, bringing in $1000. You name s as the number of sandwiches and l as the number of salads. Which fact becomes the equation s + l = 200?",
+    "choices": [
+      "The number of people who bought sandwiches",
+      "The total dollars collected",
+      "The price difference between a sandwich and a salad",
+      "The total number of lunch boxes sold"
+    ],
+    "answer": "D",
+    "hints": [
+      "This equation adds two counts together, not two money amounts.",
+      "One total is a number of items; the other total is dollars."
+    ]
+  },
+  {
+    "id": "m8math-systems-word-problems-004",
+    "loId": "m8math.systems-word-problems",
+    "cedCode": "M8MATH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two internet plans charge per month. Plan X costs $25 plus $2 per movie downloaded, so y = 25 + 2x. Plan Y costs $15 plus $4 per movie downloaded, so y = 15 + 4x. Both equations are already solved for y. Set the right sides equal and solve to find at how many downloads both plans cost the same.",
+    "choices": [
+      "5 downloads",
+      "10 downloads",
+      "15 downloads",
+      "20 downloads"
+    ],
+    "answer": "A",
+    "hints": [
+      "When both equations are solved for the same variable, set the right sides equal and solve.",
+      "You will subtract 2x from both sides and then solve for x."
+    ]
+  },
+  {
+    "id": "m8math-systems-word-problems-005",
+    "loId": "m8math.systems-word-problems",
+    "cedCode": "M8MATH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A fruit stand sells apples for $2 per pound and oranges for $3 per pound. You define a as pounds of apples and o as pounds of oranges. The stand sold a total of 40 pounds and collected $105. You write the count fact as o = 40 - a and the money fact as 2a + 3o = 105. Substitute the count fact into the money fact to get one equation in one variable.",
+    "choices": [
+      "2a + 3(105 - a) = 40",
+      "2a + 3(40 - a) = 105",
+      "2(40 - a) + 3o = 105",
+      "40 + 2a = 105 - 3a"
+    ],
+    "answer": "B",
+    "hints": [
+      "Drop the expression 40 - a in place of o in the money equation.",
+      "Do not swap the two totals; 40 is pounds and 105 is dollars."
+    ]
+  },
+  {
+    "id": "m8math-systems-word-problems-006",
+    "loId": "m8math.systems-word-problems",
+    "cedCode": "M8MATH-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A concert venue sold 300 tickets: adult tickets for $15 and student tickets for $10. The revenue was $4000. Let a be adult tickets and s be student tickets. One student writes the equations a + s = 300 and 15a + 10s = 4000, then substitutes to get 15a + 10(300 - a) = 4000. After distributing, the student writes 15a + 3000 - 10a = 4000. Solve this equation to find a, and then explain whether the answer makes sense in the story.",
+    "choices": [
+      "a = 100; this makes sense because 100 is a whole number and a positive amount",
+      "a = 200; this makes sense because 200 is larger than 100",
+      "a = 200; this makes sense because 200 is a whole number and fewer than 300 total tickets",
+      "a = 80; this makes sense because the student tickets cost less than adult tickets"
+    ],
+    "answer": "C",
+    "hints": [
+      "Collect like terms: 15a and -10a combine to 5a. Then solve 5a + 3000 = 4000.",
+      "For a ticket count to make sense, it must be a whole number, positive, and not exceed the total."
+    ]
+  },
+  {
+    "id": "m8math-solutions-of-systems-as-intersection-points-001",
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "cedCode": "M8MATH-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A system of two linear equations is graphed on the same coordinate plane. Which statement correctly describes the solution of that system?",
+    "choices": [
+      "The x-value that makes the first equation true, ignoring the second equation",
+      "Any ordered pair that makes at least one of the two equations true",
+      "The one ordered pair (x, y) that makes both equations true at the same time",
+      "The point where either line crosses the x-axis"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what it means for a pair to satisfy two equations together, not just one.",
+      "A pair that passes only one equation is not enough to be called the solution of the system."
+    ]
+  },
+  {
+    "id": "m8math-solutions-of-systems-as-intersection-points-002",
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "cedCode": "M8MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A system consists of the equations y = x + 4 and 2x + y = 10. A student wants to check whether the pair (2, 6) is the solution of this system by substituting x = 2 and y = 6 into each equation.",
+    "choices": [
+      "(2, 6) satisfies neither equation, so it is not the solution",
+      "(2, 6) satisfies only the first equation, so it is not the solution",
+      "(2, 6) satisfies only the second equation, so it is not the solution",
+      "(2, 6) satisfies both equations, so it is the solution of the system"
+    ],
+    "answer": "D",
+    "hints": [
+      "Substitute x = 2 and y = 6 into the first equation and see if it comes out true.",
+      "Then substitute the same values into the second equation — both checks must pass."
+    ]
+  },
+  {
+    "id": "m8math-solutions-of-systems-as-intersection-points-003",
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "cedCode": "M8MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of the equation y = 2x - 1 is a line on a coordinate plane. Which ordered pair is a point on this line?",
+    "choices": [
+      "(3, 5)",
+      "(2, 5)",
+      "(0, 0)",
+      "(1, 2)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute the x-value from each pair into the equation and compare the result to the given y-value.",
+      "A point is on the line only when the equation comes out true for that pair."
+    ]
+  },
+  {
+    "id": "m8math-solutions-of-systems-as-intersection-points-004",
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "cedCode": "M8MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A system has the equations y = x + 2 and 2x + y = 11. Four students each propose a different ordered pair as the solution of this system, but only one pair makes BOTH equations true at the same time. Determine which pair is the actual solution.",
+    "choices": [
+      "(4, 6)",
+      "(3, 5)",
+      "(1, 9)",
+      "(0, 4)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Test each pair in both equations; a true solution must pass both tests, not just one.",
+      "Some pairs make only one of the equations true — that alone does not make them the solution."
+    ]
+  },
+  {
+    "id": "m8math-solutions-of-systems-as-intersection-points-005",
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "cedCode": "M8MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two lines are graphed on a coordinate plane: Line A is the graph of y = x + 1, and Line B is the graph of y = -2x + 13. A student reads the point where the two lines cross as (5, 4). Decide whether this reading is correct by checking the pair in the equations.",
+    "choices": [
+      "Yes, because substituting x = 5, y = 4 into y = -2x + 13 gives 4, which matches",
+      "No, because substituting x = 5, y = 4 into y = x + 1 gives 5, not 4, so the pair fails the first equation",
+      "No, because substituting x = 5, y = 4 into y = x + 1 gives 6, not 4, so the pair fails the first equation",
+      "Yes, because the pair (5, 4) makes both equations true when checked"
+    ],
+    "answer": "C",
+    "hints": [
+      "Substitute the point into each equation separately and compute carefully.",
+      "A crossing point must make both equations true — check each equation before deciding."
+    ]
+  },
+  {
+    "id": "m8math-solutions-of-systems-as-intersection-points-006",
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "cedCode": "M8MATH-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The equation x + 2y = 12 has infinitely many solutions, including (2, 5), (4, 4), (0, 6), and (6, 3) — each pair makes x + 2y = 12 true. A second equation, y = x - 3, is now paired with it to form a system of two equations. Since the solution of the system must satisfy both equations at once, which of these four pairs is the solution?",
+    "choices": [
+      "(2, 5)",
+      "(4, 4)",
+      "(0, 6)",
+      "(6, 3)"
+    ],
+    "answer": "D",
+    "hints": [
+      "All four pairs already work in the first equation — but a system requires passing both equations.",
+      "Substitute each pair into y = x - 3 and see which one also comes out true."
+    ]
+  },
+  {
+    "id": "m8math-solving-systems-by-graphing-001",
+    "loId": "m8math.solving-systems-by-graphing",
+    "cedCode": "M8MATH-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A system of two linear equations is graphed, and the two lines never touch no matter how far they are extended in either direction. Both lines have the same slope but different y-intercepts. Based on this fact alone, how many solutions does the system have?",
+    "choices": [
+      "One solution exists, but it must be estimated because the lines never intersect at an exact point",
+      "One solution exists, located precisely where the y-intercepts happen to be equal",
+      "Infinitely many solutions exist, since having equal slopes makes the two lines identical",
+      "No solution, since two lines with equal slope and different intercepts never intersect"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what a solution to a system means: a point that lies on both lines at once.",
+      "Equal slope means the vertical gap between the lines never changes as you move across."
+    ]
+  },
+  {
+    "id": "m8math-solving-systems-by-graphing-002",
+    "loId": "m8math.solving-systems-by-graphing",
+    "cedCode": "M8MATH-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Line A is given by y = x + 2 and Line B is given by y = -x + 6. Both are graphed on the same coordinate axes, each starting at its y-intercept and then stepping according to its slope. At which point do the two lines cross?",
+    "choices": [
+      "(2, 4)",
+      "(4, 2)",
+      "(3, 5)",
+      "(1, 3)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Plot each line from its y-intercept and slope, then look for the grid point where both lines pass through.",
+      "Remember to read a crossing point as (x, y): the x-value first, then the y-value."
+    ]
+  },
+  {
+    "id": "m8math-solving-systems-by-graphing-003",
+    "loId": "m8math.solving-systems-by-graphing",
+    "cedCode": "M8MATH-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Without graphing either line, determine how many solutions the following system has: 4x + 2y = 10 and y = -2x + 5.",
+    "choices": [
+      "No solution, because the slopes match but the y-intercepts differ",
+      "Infinitely many solutions, because both equations describe the same line",
+      "Exactly one solution, found where the two lines cross",
+      "No solution, because dividing 4x + 2y = 10 by 2 changes the line"
+    ],
+    "answer": "B",
+    "hints": [
+      "Try rewriting the first equation in y = mx + b form by dividing every term by the same number.",
+      "Once both equations are in the same form, compare their slopes and y-intercepts directly."
+    ]
+  },
+  {
+    "id": "m8math-solving-systems-by-graphing-004",
+    "loId": "m8math.solving-systems-by-graphing",
+    "cedCode": "M8MATH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A system consists of the equations 3x + 2y = 8 and 3x + 2y = 2. A student wants to determine how many solutions this system has without graphing either line. What is true about this system?",
+    "choices": [
+      "One solution, found by setting 8 equal to 2 and solving for x",
+      "Infinitely many solutions, because both equations use the same left side expression",
+      "No solution, because no pair (x, y) can make 3x + 2y equal to both 8 and 2",
+      "One solution, but it must be estimated since the equations are not in y = mx + b form"
+    ],
+    "answer": "C",
+    "hints": [
+      "For any single point (x, y), the expression 3x + 2y works out to just one number.",
+      "One number cannot equal two different values at the same time."
+    ]
+  },
+  {
+    "id": "m8math-solving-systems-by-graphing-005",
+    "loId": "m8math.solving-systems-by-graphing",
+    "cedCode": "M8MATH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gym offers two membership plans. Plan A costs $10 to join plus $4 per visit, so its total cost is y = 4x + 10. Plan B costs $2 to join plus $6 per visit, so its total cost is y = 6x + 2. Both lines are graphed on the same axes, each starting at its y-intercept and stepping by its slope. After how many visits do the two plans cost the same, and what is that cost?",
+    "choices": [
+      "4 visits, $30",
+      "2 visits, $18",
+      "5 visits, $30",
+      "4 visits, $26"
+    ],
+    "answer": "D",
+    "hints": [
+      "Set the two cost expressions equal to each other and solve for the number of visits.",
+      "Once you know the number of visits, substitute it into either original equation to find the matching cost."
+    ]
+  },
+  {
+    "id": "m8math-solving-systems-by-graphing-006",
+    "loId": "m8math.solving-systems-by-graphing",
+    "cedCode": "M8MATH-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "To solve the system y = 3x - 4 and 6y = 18x - 24 by graphing, one student converts the second equation by dividing every term by 6, getting y = 3x - 4. Another student instead divides only the constant term by 6, getting y = 18x - 4. Which student's conversion is correct, and what does the correct conversion reveal about the system?",
+    "choices": [
+      "The first student is correct; both equations describe the same line, so there are infinitely many solutions",
+      "The first student is correct; the two lines have different slopes, so there is exactly one solution",
+      "The second student is correct; the two lines are parallel, so there is no solution",
+      "The second student is correct; both equations describe the same line, so there are infinitely many solutions"
+    ],
+    "answer": "A",
+    "hints": [
+      "Dividing an equation by a number means dividing every single term, not just one of them.",
+      "After rewriting correctly, compare the slope and y-intercept of both equations to classify the system."
+    ]
+  },
+  {
+    "id": "m8math-solving-simple-systems-by-substitution-001",
+    "loId": "m8math.solving-systems-by-substitution",
+    "cedCode": "M8MATH-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In solving a system of equations by substitution, a student first finds the value of x. To finish the problem, the student needs to find the matching value of y by plugging that x-value into one of the original equations. Which term names this step?",
+    "choices": [
+      "back-substitution",
+      "solution of a system",
+      "substitution",
+      "checking the solution"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what happens right after you find x — you still need y.",
+      "This is different from checking, which comes after both values are already found."
+    ]
+  },
+  {
+    "id": "m8math-solving-simple-systems-by-substitution-002",
+    "loId": "m8math.solving-systems-by-substitution",
+    "cedCode": "M8MATH-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system of equations y = 3x - 2 and y = x + 4, which are both already solved for y. What is the x-coordinate of the point where these two equations are true at the same time?",
+    "choices": [
+      "1",
+      "3",
+      "6",
+      "-3"
+    ],
+    "answer": "B",
+    "hints": [
+      "Since both equations equal y, set the right sides equal to each other first.",
+      "Solve the resulting one-variable equation carefully, watching how each term moves across the equals sign."
+    ]
+  },
+  {
+    "id": "m8math-solving-simple-systems-by-substitution-003",
+    "loId": "m8math.solving-systems-by-substitution",
+    "cedCode": "M8MATH-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A system has one equation solved for y: y = 4x - 5, and a second equation: 2x + 3y = 11. Before solving for x, a student wants to substitute the expression for y into the second equation. Which equation correctly shows this substitution step?",
+    "choices": [
+      "2x + 3 + 4x - 5 = 11",
+      "2x + 3(4x) - 5 = 11",
+      "2x + 3(4x - 5) = 11",
+      "2x + 4x - 15 = 11"
+    ],
+    "answer": "C",
+    "hints": [
+      "Whatever y equals must be substituted as a whole expression, not just part of it.",
+      "Use parentheses so the number outside multiplies every term inside."
+    ]
+  },
+  {
+    "id": "m8math-solving-simple-systems-by-substitution-004",
+    "loId": "m8math.solving-systems-by-substitution",
+    "cedCode": "M8MATH-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system y = 3x + 1 and 2x + 3y = 25 using substitution. Find the ordered pair (x, y) that makes both equations true.",
+    "choices": [
+      "(3, 10)",
+      "(7, 2)",
+      "(2, 6)",
+      "(2, 7)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Substitute the expression for y into the equation that isn't already solved for y, then distribute carefully before combining terms.",
+      "Once you find x, plug it back into the equation already solved for y to get the matching y-value."
+    ]
+  },
+  {
+    "id": "m8math-solving-simple-systems-by-substitution-005",
+    "loId": "m8math.solving-systems-by-substitution",
+    "cedCode": "M8MATH-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Account A has a balance of y = 50x + 200 dollars after x weeks, and Account B has a balance of y = 30x + 300 dollars after x weeks. Find the exact week and balance at which the two accounts have the same amount of money.",
+    "choices": [
+      "(5, 450)",
+      "(5, 250)",
+      "(10, 700)",
+      "(2, 360)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set the two balance expressions equal to each other since both describe y at the same time x.",
+      "Once you know the week, substitute it back into either original equation to find the matching balance."
+    ]
+  },
+  {
+    "id": "m8math-solving-simple-systems-by-substitution-006",
+    "loId": "m8math.solving-systems-by-substitution",
+    "cedCode": "M8MATH-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two elevators' heights above the ground are modeled by y = 4x - 1 and y = 2x + 4, where x is the time in seconds and y is the height in feet. Find the exact time and height at which the two elevators are at the same height, keeping in mind that reading a graph might only give an estimate if the crossing point falls between grid lines.",
+    "choices": [
+      "(2, 8)",
+      "(2.5, 9)",
+      "(5, 19)",
+      "(3, 11)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Set the two expressions for y equal and solve for x before rounding anything.",
+      "A graph might only estimate this crossing, but solving algebraically gives the exact value, even if it isn't a whole number."
+    ]
+  }
+]

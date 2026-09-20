@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-deriving-y-mx-y-mx-b-001",
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "cedCode": "M8MATH-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A line has the equation y = 3x + 5. What is the value of b, the y-intercept, and what does it represent?",
+    "choices": [
+      "b = 3, the height of the line where it crosses the y-axis",
+      "b = 5, the height of the line where it crosses the y-axis",
+      "b = 5, the steepness of the line",
+      "b = 3, the steepness of the line"
+    ],
+    "answer": "B",
+    "hints": [
+      "In y = mx + b, which number stands alone without x?",
+      "The y-intercept is where the line crosses the y-axis, which happens at x = 0."
+    ]
+  },
+  {
+    "id": "m8math-deriving-y-mx-y-mx-b-002",
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "cedCode": "M8MATH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A line passes through the origin and through the point (5, 15). Use a slope triangle from the origin to this point to find the slope, then write the equation of the line.",
+    "choices": [
+      "y = 5x",
+      "y = 15x",
+      "y = 3x",
+      "y = 3x + 5"
+    ],
+    "answer": "C",
+    "hints": [
+      "For a slope triangle, rise over run means the change in y divided by the change in x.",
+      "A line through the origin has the form y = mx, with no constant added on."
+    ]
+  },
+  {
+    "id": "m8math-deriving-y-mx-y-mx-b-003",
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "cedCode": "M8MATH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a graph, a line crosses the y-axis at (0, −2) and passes through the point (3, 4). What is the slope of the line?",
+    "choices": [
+      "4",
+      "−2",
+      "3",
+      "2"
+    ],
+    "answer": "D",
+    "hints": [
+      "The slope triangle runs from (0, −2) to (3, 4). Count the rise and the run.",
+      "Rise is the change in y-values; run is the change in x-values. Rise over run gives the slope."
+    ]
+  },
+  {
+    "id": "m8math-deriving-y-mx-y-mx-b-004",
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "cedCode": "M8MATH-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A graph shows a line that crosses the y-axis at (0, 6) and passes through the point (2, 0). Derive the equation of this line by first finding the slope, then writing y = mx + b with both numbers in their correct slots.",
+    "choices": [
+      "y = −3x + 6",
+      "y = 6x − 3",
+      "y = 3x + 6",
+      "y = −6x + 2"
+    ],
+    "answer": "A",
+    "hints": [
+      "The rise from (0, 6) to (2, 0) is negative because the line falls. The run is 2.",
+      "The number that rides with x is the slope m. The number that stands alone is b, the y-intercept."
+    ]
+  },
+  {
+    "id": "m8math-deriving-y-mx-y-mx-b-005",
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "cedCode": "M8MATH-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two lines are shown on a graph. Line P passes through the origin and the point (4, 12). Line Q crosses the y-axis at (0, −8) and has the same slope as Line P. Write the equation of Line Q.",
+    "choices": [
+      "y = 4x − 8",
+      "y = 3x − 8",
+      "y = −8x + 3",
+      "y = 3x + 4"
+    ],
+    "answer": "B",
+    "hints": [
+      "First find the slope of Line P using the two points on it. That same slope is m for Line Q.",
+      "Line Q crosses the y-axis at (0, −8), so b = −8. Use y = mx + b with both m and b."
+    ]
+  },
+  {
+    "id": "m8math-deriving-y-mx-y-mx-b-006",
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "cedCode": "M8MATH-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is asked to write the equation of a line that crosses the y-axis at (0, 2), passes through (3, 8), and has a slope of 2. The student writes y = 2x + 3. Identify the error in this equation, and explain why it is wrong using the y-intercept and one of the given points.",
+    "choices": [
+      "The slope m is wrong; it should be 8, not 2. Checking with the point (3, 8): y = 8(3) + 2 = 26, but the graph shows (3, 8).",
+      "The slope m is wrong; it should be 3, not 2. Checking with the point (0, 2): y = 3(0) + 2 = 2, so the y-intercept is correct.",
+      "The y-intercept b is wrong; it should be 2, not 3. Checking with the point (3, 8): y = 2(3) + 3 = 9, but the graph shows (3, 8).",
+      "The y-intercept b is wrong; it should be 3, not 2. Checking with the point (3, 8): y = 2(3) + 2 = 8, which matches the graph."
+    ],
+    "answer": "C",
+    "hints": [
+      "Put x = 0 into the student's equation and into the correct equation. Which one gives y = 2?",
+      "Also check whether y = 2x + 3 actually gives y = 8 when x = 3. Does it match the point on the graph?"
+    ]
+  },
+  {
+    "id": "m8math-slope-similar-triangles-001",
+    "loId": "m8math.slope-from-similar-triangles",
+    "cedCode": "M8MATH-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A slope triangle is drawn on a line, with a run of 4 and a rise of 12. What is the slope of this line?",
+    "choices": [
+      "12",
+      "4",
+      "3",
+      "1/3"
+    ],
+    "answer": "C",
+    "hints": [
+      "Slope is calculated by dividing rise by run.",
+      "The rise is the vertical leg and the run is the horizontal leg."
+    ]
+  },
+  {
+    "id": "m8math-slope-similar-triangles-002",
+    "loId": "m8math.slope-from-similar-triangles",
+    "cedCode": "M8MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A line passes through the points (2, 3) and (5, 9). To find the slope, you subtract to find the run and rise. After you subtract, what division will you perform?",
+    "choices": [
+      "9 ÷ 3",
+      "5 ÷ 2",
+      "3 ÷ 6",
+      "6 ÷ 3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Run is the change in x-coordinates: subtract the first x from the second x.",
+      "Rise is the change in y-coordinates: subtract the first y from the second y."
+    ]
+  },
+  {
+    "id": "m8math-slope-similar-triangles-003",
+    "loId": "m8math.slope-from-similar-triangles",
+    "cedCode": "M8MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two slope triangles are drawn on the same line. One has a rise of 3 and a run of 2. A second triangle on the same line has a rise of 15 and a run of 10. What can you conclude about these two triangles and their slopes?",
+    "choices": [
+      "The slopes are the same because one triangle is the other scaled up by 5.",
+      "The slopes are different because the triangles are different sizes.",
+      "The first triangle has slope 3/2 and the second has slope 15/10, which are not equal.",
+      "The triangles are not similar because their sides have different lengths."
+    ],
+    "answer": "A",
+    "hints": [
+      "Similar triangles have the same shape at different sizes, with the same angles.",
+      "Check whether the larger triangle's legs are all multiplied by the same scale factor from the smaller triangle."
+    ]
+  },
+  {
+    "id": "m8math-slope-similar-triangles-004",
+    "loId": "m8math.slope-from-similar-triangles",
+    "cedCode": "M8MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A line passes through the point (1, 6) and has a slope of -2. You want to verify this slope by drawing a slope triangle from (1, 6) to another point on the line. If you move 3 units to the right from (1, 6), what will be the y-coordinate of the point you land on, and why?",
+    "choices": [
+      "y = 12, because the slope of -2 means you go down 2 for every 1 across, and across 3 means down 6",
+      "y = 0, because with a slope of -2 and a run of 3, the rise is -6, so 6 + (-6) = 0",
+      "y = 3, because you moved 3 units horizontally, so you move 3 units vertically too",
+      "y = 9, because -2 times 3 equals -6, and 6 - 6 = 0, wait that gives y = 0"
+    ],
+    "answer": "B",
+    "hints": [
+      "A slope of -2 means the rise is -2 for every 1 unit of run.",
+      "Multiply the slope by the run to find the total rise, then add that rise to the starting y-coordinate."
+    ]
+  },
+  {
+    "id": "m8math-slope-similar-triangles-005",
+    "loId": "m8math.slope-from-similar-triangles",
+    "cedCode": "M8MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student drew two slope triangles on a line and found that the first one had rise 4 and run 6, giving a slope of 4/6. The second triangle on the same line had rise 10 and run 15. The student computed the slope as 10/15 and got a different answer in lowest terms. Explain what went wrong and what the student should have concluded.",
+    "choices": [
+      "The student made an arithmetic error when subtracting the coordinates; 4/6 reduced is not equal to 10/15 reduced, so the slopes must differ.",
+      "Nothing went wrong with the calculation; the slopes are genuinely different because the two triangles have different dimensions and are not similar figures.",
+      "The student failed to recognize that both fractions simplify to 2/3, so the slopes are the same, which proves the triangles are similar with a scale factor of 2.5.",
+      "The student should have multiplied the numerators and denominators together instead of simplifying each fraction separately to compare them."
+    ],
+    "answer": "C",
+    "hints": [
+      "Try simplifying 4/6 by dividing numerator and denominator by their greatest common factor.",
+      "Try simplifying 10/15 the same way and see if you get the same result."
+    ]
+  },
+  {
+    "id": "m8math-slope-similar-triangles-006",
+    "loId": "m8math.slope-from-similar-triangles",
+    "cedCode": "M8MATH-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A line passes through (-5, 8) and (1, -4). To find the slope, a student set up the calculation as (1 - (-5)) on top and (-4 - 8) on the bottom. Another student set up the same calculation but switched which point went first: (-5 - 1) on top and (8 - (-4)) on the bottom. Will both setups give the same slope? Prove your answer by computing both and explaining what happens to the scale factor.",
+    "choices": [
+      "No, the first setup gives slope -2 and the second gives slope -0.5 because switching the points always produces the reciprocal of the original slope.",
+      "Yes, both setups give slope 2; slope is always positive regardless of the direction traveled because it represents the steepness of the line itself.",
+      "No, the first gives slope -2 and the second gives slope 2, because reversing the point order reverses only the sign of one numerator or denominator.",
+      "Yes, both give slope -2; the second setup computes rise and run with opposite signs, but the negatives cancel."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compute rise and run for the first setup: (1 - (-5)) and (-4 - 8), then divide.",
+      "Compute rise and run for the second setup: (-5 - 1) and (8 - (-4)), then divide and notice what happens when both the numerator and denominator are negative."
+    ]
+  },
+  {
+    "id": "m8math-comparing-proportional-relationships-001",
+    "loId": "m8math.comparing-proportional-relationships",
+    "cedCode": "M8MATH-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two printing shops charge proportional prices for photo prints. Shop A's price follows the equation c = 0.25n, where c is the cost in dollars and n is the number of prints ordered. What is Shop A's unit rate, in dollars per print?",
+    "choices": [
+      "0.25 dollars per print",
+      "4 dollars per print",
+      "1 dollar per print",
+      "25 dollars per print"
+    ],
+    "answer": "A",
+    "hints": [
+      "In y = kx, the number multiplying x is the unit rate.",
+      "Check by multiplying: does 0.25 times 1 print give a sensible cost?"
+    ]
+  },
+  {
+    "id": "m8math-comparing-proportional-relationships-002",
+    "loId": "m8math.comparing-proportional-relationships",
+    "cedCode": "M8MATH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A video streaming plan's cost is graphed as a straight line through the origin and through the point (8, 20), where hours streamed are on the horizontal axis and dollars are on the vertical axis. What is the unit rate of this plan, in dollars per hour?",
+    "choices": [
+      "0.4 dollars per hour",
+      "2.5 dollars per hour",
+      "12 dollars per hour",
+      "28 dollars per hour"
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the marked point as (x, y) and divide y by x.",
+      "Keep dollars on top and hours on the bottom, since the rate is dollars per one hour."
+    ]
+  },
+  {
+    "id": "m8math-comparing-proportional-relationships-003",
+    "loId": "m8math.comparing-proportional-relationships",
+    "cedCode": "M8MATH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A copy machine prints 150 pages in 6 minutes at a constant rate. What is the unit rate of the copy machine, in pages per minute?",
+    "choices": [
+      "144 pages per minute",
+      "0.04 pages per minute",
+      "25 pages per minute",
+      "900 pages per minute"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the total pages by the total minutes to find pages for one minute.",
+      "The unit rate should answer 'how many pages print in ONE minute'."
+    ]
+  },
+  {
+    "id": "m8math-comparing-proportional-relationships-004",
+    "loId": "m8math.comparing-proportional-relationships",
+    "cedCode": "M8MATH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two water tanks drain at constant rates. Tank A's drainage is graphed as a straight line through the origin and through the point (5, 40), where minutes are on the horizontal axis and gallons drained are on the vertical axis. Tank B drains according to the equation g = 7.5m, where g is gallons drained and m is minutes. Which tank drains faster, and by how much per minute?",
+    "choices": [
+      "Tank B, by 7.5 gallons per minute",
+      "Tank B, by 0.5 gallons per minute",
+      "Tank A, by 8 gallons per minute",
+      "Tank A, by 0.5 gallons per minute"
+    ],
+    "answer": "D",
+    "hints": [
+      "Extract each tank's rate first: divide y by x for the graph, and read the coefficient in the equation.",
+      "Subtract the smaller rate from the larger rate to find the difference, not just report one full rate."
+    ]
+  },
+  {
+    "id": "m8math-comparing-proportional-relationships-005",
+    "loId": "m8math.comparing-proportional-relationships",
+    "cedCode": "M8MATH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two faucets fill buckets at constant rates. Faucet A's flow is shown by a table: minutes 3, 6, and 9 paired with gallons 9, 18, and 27. Faucet B is advertised as filling at 150 gallons per hour. Which faucet fills faster, and by how much per minute?",
+    "choices": [
+      "Faucet A, by 0.5 gallons per minute",
+      "Faucet B, because 150 is greater than 3",
+      "Faucet A, by 3 gallons per minute",
+      "Faucet B, by 2.5 gallons per minute"
+    ],
+    "answer": "A",
+    "hints": [
+      "Convert one rate so both are measured per minute before comparing them.",
+      "There are 60 minutes in an hour."
+    ]
+  },
+  {
+    "id": "m8math-comparing-proportional-relationships-006",
+    "loId": "m8math.comparing-proportional-relationships",
+    "cedCode": "M8MATH-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two rideshare apps charge proportional fares based on distance. App M's fare is graphed as a straight line through the origin and through the point (5, 50), where miles are on the horizontal axis and dollars are on the vertical axis, using a vertical axis that counts by 20s so the line appears very steep. App N charges according to the equation f = 11.5d, where f is the fare in dollars and d is miles traveled. A student looks at the two pictures and claims App M must be more expensive per mile because its line looks steeper. Which app is actually more expensive per mile, and by how much?",
+    "choices": [
+      "App M, by $1.50 per mile",
+      "App N, by $1.50 per mile",
+      "App N, by $10.00 per mile",
+      "App M, by $11.50 per mile"
+    ],
+    "answer": "B",
+    "hints": [
+      "A graph's steepness only tells the truth about the rate when both lines are drawn on the same axis scale.",
+      "Extract each rate by dividing y by x or reading the coefficient, then subtract the two rates."
+    ]
+  },
+  {
+    "id": "m8math-unit-rate-as-slope-001",
+    "loId": "m8math.unit-rate-as-slope",
+    "cedCode": "M8MATH-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On the graph of a proportional relationship, a student starts at any point on the line and moves 1 unit to the right. Then she moves straight up until she lands back on the line. What is the name of this second, upward move?",
+    "choices": [
+      "Unit rate",
+      "Run",
+      "Slope",
+      "Rise"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which direction each vocabulary word describes.",
+      "One move goes sideways along the x-axis; the other goes vertically to get back on the line."
+    ]
+  },
+  {
+    "id": "m8math-unit-rate-as-slope-002",
+    "loId": "m8math.unit-rate-as-slope",
+    "cedCode": "M8MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A print shop charges customers based on how many photos they order. The table shows: 3 photos costs $1.50, 6 photos costs $3.00, and 10 photos costs $5.00. Graphed with number of photos across and cost up, the points lie on a straight line through the origin. What is the slope of this line, in dollars per photo?",
+    "choices": [
+      "$0.50 per photo",
+      "$2.00 per photo",
+      "$1.50 per photo",
+      "$5.00 per photo"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the cost by the number of photos for any single row of the table.",
+      "Check that dividing gives the same result in every row before you pick your answer."
+    ]
+  },
+  {
+    "id": "m8math-unit-rate-as-slope-003",
+    "loId": "m8math.unit-rate-as-slope",
+    "cedCode": "M8MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The equation y = 4x describes a proportional relationship between x and y. Starting at the point (3, 12) on this line, a student moves 1 unit to the right and then straight up until she lands back on the line. At which point does she land?",
+    "choices": [
+      "(4, 13)",
+      "(4, 16)",
+      "(4, 48)",
+      "(3, 16)"
+    ],
+    "answer": "B",
+    "hints": [
+      "The slope tells you exactly how much y increases when x increases by 1.",
+      "Find the slope from the equation first, then add it to the starting y-value."
+    ]
+  },
+  {
+    "id": "m8math-unit-rate-as-slope-004",
+    "loId": "m8math.unit-rate-as-slope",
+    "cedCode": "M8MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A candle burns at a steady rate. The relationship between minutes burned, x, and inches melted, y, is proportional, and its graph is a straight line through the origin and through the point (8, 2). Using this information, how many inches of the candle will have melted after 30 minutes?",
+    "choices": [
+      "0.25 inches",
+      "15 inches",
+      "7.5 inches",
+      "2 inches"
+    ],
+    "answer": "C",
+    "hints": [
+      "First use the given point to find the slope, which is inches melted per minute.",
+      "Then multiply that slope by 30 to find the total inches melted."
+    ]
+  },
+  {
+    "id": "m8math-unit-rate-as-slope-005",
+    "loId": "m8math.unit-rate-as-slope",
+    "cedCode": "M8MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is studying a proportional relationship between minutes, x, and stickers printed, y. She looks at the point (5, 15) on the graph and concludes that the slope of the line is 15, since that is the y-value at that point. Which statement correctly identifies her error and gives the true slope?",
+    "choices": [
+      "The slope is 20, because the slope is the sum of the x and y values at the point, 5 + 15.",
+      "The slope is 15, because the slope equals the y-value of any point on the line.",
+      "The slope is 5, because the run of 5 units is itself the slope of the line.",
+      "The slope is 3, because 15 is the rise for a run of 5, so each unit of run gets 15 ÷ 5 = 3 of rise."
+    ],
+    "answer": "D",
+    "hints": [
+      "Slope is the rise for a run of exactly 1 unit, not the rise for whatever run the point happens to have.",
+      "Divide the y-value by the x-value to spread the rise across a single unit of run."
+    ]
+  },
+  {
+    "id": "m8math-unit-rate-as-slope-006",
+    "loId": "m8math.unit-rate-as-slope",
+    "cedCode": "M8MATH-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two hoses fill separate tanks at steady, proportional rates. Hose A fills its tank so that after 6 minutes there are 9 gallons in the tank. Hose B fills its tank so that after 10 minutes there are 14 gallons in the tank. Both relationships graph as straight lines through the origin. Which hose has the steeper line, and what is that hose's slope in gallons per minute?",
+    "choices": [
+      "Hose A, at 1.5 gallons per minute",
+      "Hose B, at 1.4 gallons per minute",
+      "Hose A, at 9 gallons per minute",
+      "Hose B, at 14 gallons per minute"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find each hose's unit rate by dividing gallons by minutes for its own tank.",
+      "Compare the two unit rates you calculated to see which line climbs faster."
+    ]
+  }
+]

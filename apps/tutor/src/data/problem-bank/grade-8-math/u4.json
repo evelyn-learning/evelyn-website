@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-one-none-or-infinitely-many-solutions-001",
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "cedCode": "M8MATH-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When you solve a linear equation and simplify it until you reach 7 = 7, what does this tell you about the number of solutions?",
+    "choices": [
+      "The equation has infinitely many solutions because 7 = 7 is a true statement with no variable in it.",
+      "The equation has exactly one solution, which is x = 7, because the sides are equal when x takes that value.",
+      "The equation has no solution because the variable disappeared from the equation during simplification.",
+      "The equation has one solution for each side of the equals sign, since both sides equal 7."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what happens when both sides of the equation become the same number.",
+      "Remember: when the variable vanishes and you have a true leftover, the equation is satisfied by every value of x."
+    ]
+  },
+  {
+    "id": "m8math-one-none-or-infinitely-many-solutions-002",
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "cedCode": "M8MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the equation 6x + 4 = 6x - 2 by simplifying both sides and collecting variable terms. What do you conclude about the number of solutions this equation has?",
+    "choices": [
+      "One solution: x = 4",
+      "No solution, because 4 = -2 is a false statement",
+      "Infinitely many solutions, because 4 = -2 is false",
+      "One solution: x = -2"
+    ],
+    "answer": "B",
+    "hints": [
+      "Subtract 6x from both sides to see what remains after the variable terms cancel.",
+      "Ask yourself: is the statement you are left with true or false? Does it contain any x?"
+    ]
+  },
+  {
+    "id": "m8math-one-none-or-infinitely-many-solutions-003",
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "cedCode": "M8MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student simplifies the equation 2(x + 5) = 2x + 10 and gets 2x + 10 = 2x + 10. The student then subtracts 2x from both sides and arrives at 10 = 10. The student says, 'This means x = 10, so there is one solution.' Explain why the student's conclusion about the number of solutions is incorrect.",
+    "choices": [
+      "The statement 10 = 10 is false, which indicates the equation has no solution rather than one specific solution.",
+      "The student incorrectly matched the leftover number 10 to the value of x instead of recognizing that the absence of a variable means the statement applies to every value of x.",
+      "The statement 10 = 10 has no x in it, so it is true for every value of x, not just x = 10. The equation has infinitely many solutions.",
+      "The student made an error in the distribution step and should have gotten 2x + 5 = 2x + 10 before subtracting 2x from both sides."
+    ],
+    "answer": "C",
+    "hints": [
+      "When the variable disappears and you are left with a true statement, every number works, not just one.",
+      "The statement 10 = 10 is about numbers, not about x. What does a true leftover mean for solutions?"
+    ]
+  },
+  {
+    "id": "m8math-one-none-or-infinitely-many-solutions-004",
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "cedCode": "M8MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Distribute and simplify both sides of the equation 3(x - 4) + 12 = 3x, then collect all variable terms on the left side. Based on the shape of the result, how many solutions does the equation have, and why?",
+    "choices": [
+      "One solution, x = 0, because simplifying the left side to 3x and subtracting 3x from both sides produces 0 = 0, which is satisfied only when the variable equals zero.",
+      "One solution, x = 4, because the left side contains the constant term -4 from inside the parentheses, which becomes the unique solution when isolated.",
+      "No solution, because when you simplify both sides and combine like terms, the remaining equation 0 = 0 contains no variable and therefore cannot be satisfied by any value.",
+      "Infinitely many solutions, because after simplifying both sides and subtracting 3x, you get 0 = 0, which is true for all x."
+    ],
+    "answer": "D",
+    "hints": [
+      "Expand the left side first: 3(x - 4) + 12 becomes 3x - 12 + 12. Then combine like terms.",
+      "When you subtract 3x from both sides, what is left? Is that statement true or false, and does it contain x?"
+    ]
+  },
+  {
+    "id": "m8math-one-none-or-infinitely-many-solutions-005",
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "cedCode": "M8MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two equations are being solved. Equation A is 5x + 8 = 5x + 3, and Equation B is 7x + 8 = 5x + 3. Without fully solving either equation, explain which one has a solution and which does not by comparing the variable terms on each side.",
+    "choices": [
+      "Equation A has no solution because the x terms match (both are 5x) but the constants are different; Equation B has exactly one solution because the x terms are different.",
+      "Equation B has no solution because matching x terms on both sides means the constants must be equal; Equation A has one solution because 5x and 7x differ.",
+      "Equation A has a solution because both sides have identical x terms that will cancel; Equation B has no solution because the different x terms will never balance.",
+      "Both equations have solutions because both contain x terms and constants on both sides of the equals sign."
+    ],
+    "answer": "A",
+    "hints": [
+      "When the x terms on both sides are identical after simplifying, what does that tell you about whether a solution can exist?",
+      "If the x terms match and the constants differ, will the two sides ever be equal no matter what x you choose?"
+    ]
+  },
+  {
+    "id": "m8math-one-none-or-infinitely-many-solutions-006",
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "cedCode": "M8MATH-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is solving the equation 4(2x - 1) - 3x = 5x - 4. The student distributes to get 8x - 4 - 3x = 5x - 4, then combines like terms on the left to get 5x - 4 = 5x - 4. The student then says, 'The two sides are exactly the same, so x can be anything, and there are infinitely many solutions.' Verify that the student's answer is correct by choosing a specific value for x, substituting it into the original equation, and checking whether both sides are equal.",
+    "choices": [
+      "When x = 0, the left side is 4(0 - 1) - 0 = -4 and the right side is 0 - 4 = -4, so they are equal. The student is correct.",
+      "All of these checks confirm the student's answer because they all show that the original equation is true for different values of x.",
+      "When x = 2, the left side is 4(4 - 1) - 6 = 6 and the right side is 10 - 4 = 6, so they are equal. The student is correct.",
+      "When x = 1, the left side is 4(2 - 1) - 3 = 1 and the right side is 5 - 4 = 1, so they are equal. The student is correct."
+    ],
+    "answer": "B",
+    "hints": [
+      "Pick one value and carefully substitute it into the original equation on both sides. Does the left side equal the right side for that value?",
+      "Remember: if the original equation is satisfied by multiple different values of x, that supports the conclusion of infinitely many solutions."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-distribution-like-terms-001",
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "cedCode": "M8MATH-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Consider the expression -4(x - 6). According to the distributive property, every term inside the parentheses must be multiplied by the factor outside, including its sign. Which expanded form correctly represents -4(x - 6)?",
+    "choices": [
+      "-4x - 24",
+      "-4x + 24",
+      "-4x - 6",
+      "4x - 24"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply the -4 by both the x and the -6 separately.",
+      "Remember: a negative times a negative gives a positive."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-distribution-like-terms-002",
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "cedCode": "M8MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is solving the equation 4x - 2(x - 5) = 3(x + 1) for x. Before combining any like terms, the student must first expand both parentheses correctly, distributing each factor to every term inside its bracket. Which equation shows the correct result of this expansion, before any terms are combined?",
+    "choices": [
+      "4x - 2x + 5 = 3x + 3",
+      "4x - 2x - 10 = 3x + 3",
+      "4x - 2x + 10 = 3x + 3",
+      "4x - 2x + 10 = 3x + 1"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the sign that results from multiplying -2 by -5.",
+      "Make sure the 3 on the right multiplies both the x and the 1."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-distribution-like-terms-003",
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "cedCode": "M8MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 2(x - 3) + 5 = 3x - 4. Expand the parentheses, combine any like terms on each side, and then isolate x to find its value.",
+    "choices": [
+      "-3",
+      "6",
+      "5",
+      "3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Distribute the 2 across both terms inside the parentheses before combining.",
+      "After expanding, combine -6 and 5 on the left side before moving variable terms."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-distribution-like-terms-004",
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "cedCode": "M8MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: -2(x - 3) + 4x = 3(x + 1) - 1. Expand both parentheses carefully, watching the sign of the negative multiplier, then combine like terms on each side before isolating x.",
+    "choices": [
+      "4",
+      "-8",
+      "3",
+      "10"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribute -2 across both x and -3, remembering a negative times a negative is positive.",
+      "After expanding, combine the constant terms on the right side before collecting the variable terms."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-distribution-like-terms-005",
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "cedCode": "M8MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student solves 5(x - 2) - x = 3(x + 4) by first distributing the 5, then combining like terms, and finally isolating x. What is the correct value of x that makes both sides of the original equation equal?",
+    "choices": [
+      "14",
+      "22",
+      "2",
+      "11"
+    ],
+    "answer": "B",
+    "hints": [
+      "Distribute the 5 across both terms inside its parentheses before combining with the -x term.",
+      "After expanding, combine 5x and -x on the left side into one term before collecting variables."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-distribution-like-terms-006",
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "cedCode": "M8MATH-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: -2(x - 4) + 3x = -3(x + 1) + 5x + 2. Distribute each negative multiplier carefully, combine like terms separately on each side, and then collect the variable terms to isolate x.",
+    "choices": [
+      "3",
+      "-7",
+      "9",
+      "-9"
+    ],
+    "answer": "C",
+    "hints": [
+      "Watch the sign changes when distributing -2 and -3 across their parentheses.",
+      "After expanding, combine terms on each side fully before moving variables to one side."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-rational-coefficients-001",
+    "loId": "m8math.equations-with-rational-coefficients",
+    "cedCode": "M8MATH-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An equation contains the terms x/4 and x/6, and a student wants to multiply every term by the least common denominator (LCD) to clear the fractions. What is the LCD that should be used?",
+    "choices": [
+      "6",
+      "24",
+      "12",
+      "10"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about which number both 4 and 6 divide into without leaving a remainder.",
+      "The LCD is the smallest such number, not just any common multiple."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-rational-coefficients-002",
+    "loId": "m8math.equations-with-rational-coefficients",
+    "cedCode": "M8MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To solve (1/3)x - 4 = (1/2)x + 1, a student multiplies every term on both sides by the LCD of 3 and 2, which is 6. Which equation correctly shows the result of this step?",
+    "choices": [
+      "6x - 24 = 6x + 6",
+      "2x - 4 = 3x + 1",
+      "2x - 24 = 3x + 1",
+      "2x - 24 = 3x + 6"
+    ],
+    "answer": "D",
+    "hints": [
+      "Every term on both sides must be multiplied by 6, even the plain numbers -4 and 1.",
+      "Check that 6 times (1/3)x gives 2x and 6 times (1/2)x gives 3x."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-rational-coefficients-003",
+    "loId": "m8math.equations-with-rational-coefficients",
+    "cedCode": "M8MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 0.3x + 0.7 = 0.1x + 1.5, working with the decimals directly without clearing them first.",
+    "choices": [
+      "4",
+      "2",
+      "8",
+      "11"
+    ],
+    "answer": "A",
+    "hints": [
+      "Combine the x-terms on one side and the number terms on the other before dividing.",
+      "Divide 0.8 by 0.2 by treating them as the decimals they are, not by ignoring the decimal point."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-rational-coefficients-004",
+    "loId": "m8math.equations-with-rational-coefficients",
+    "cedCode": "M8MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: (3/4)x - 1/2 = (1/4)x + 2.",
+    "choices": [
+      "3",
+      "5",
+      "10",
+      "-5"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply every term, including the constants, by the LCD of 4 before collecting like terms.",
+      "After clearing fractions, collect the variable terms on one side and the numbers on the other."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-rational-coefficients-005",
+    "loId": "m8math.equations-with-rational-coefficients",
+    "cedCode": "M8MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gym's cost equation for a promotion is 0.6x - 1.4 = 0.2x + 2.2, where x represents the number of months. Solve for x.",
+    "choices": [
+      "2",
+      "0.9",
+      "9",
+      "18"
+    ],
+    "answer": "C",
+    "hints": [
+      "Combine the x-terms and the constant terms separately before dividing.",
+      "Divide 3.6 by the correct decimal coefficient of x, not by a whole number that drops the decimal point."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-rational-coefficients-006",
+    "loId": "m8math.equations-with-rational-coefficients",
+    "cedCode": "M8MATH-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student solves (5/6)x + 2 = (1/3)x - 1 by multiplying every term by the LCD, 6, and gets 5x + 2 = 2x - 1, which leads to x = -1. Substituting x = -1 into the original equation shows the two sides do not match. What is the correct solution, and what mistake caused the error?",
+    "choices": [
+      "x = -18; the student needed to multiply every term by 12, not 6, since 12 is also a common denominator",
+      "x = -1; the student's equation is fully correct because only the fractional terms need the LCD",
+      "x = -6; the student's only mistake was a sign error when moving the 2x term to the left side",
+      "x = -6; the student forgot to multiply the constants 2 and -1 by 6, which should have become 12 and -6"
+    ],
+    "answer": "D",
+    "hints": [
+      "Multiply the whole-number terms 2 and -1 by 6 just like the fraction terms.",
+      "Substitute x = -1 back into the original equation to see whether both sides truly match."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-variables-on-both-sides-001",
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "cedCode": "M8MATH-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "To solve 5x + 2 = 3x + 9, a student wants to collect the variable terms onto one side by subtracting the smaller variable term from both sides, so the coefficient that remains stays positive. Which move correctly does this?",
+    "choices": [
+      "Subtract 9 from both sides, leaving 5x - 7 = 3x",
+      "Subtract 5x from both sides, leaving 2 = -2x + 9",
+      "Add 3x to both sides, leaving 8x + 2 = 9",
+      "Subtract 3x from both sides, leaving 2x + 2 = 9"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the coefficients 5 and 3 to see which is smaller.",
+      "Subtracting the smaller coefficient from both sides keeps the remaining x-term positive."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-variables-on-both-sides-002",
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "cedCode": "M8MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 2x + 7 = 5x - 2. What is the value of x?",
+    "choices": [
+      "3",
+      "-3",
+      "9",
+      "5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Collect the x-terms on the side with the larger coefficient by subtracting 2x from both sides.",
+      "Once the variable is on one side, clear the constant before dividing."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-variables-on-both-sides-003",
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "cedCode": "M8MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Amir is solving 8x + 1 = 3x + 16. He correctly subtracts 3x from both sides and writes 5x + 1 = 16. What should Amir do next to finish solving for x?",
+    "choices": [
+      "Divide both sides by 5, then subtract 1 from both sides",
+      "Subtract 1 from both sides, then divide both sides by 5",
+      "Subtract 16 from both sides, then divide both sides by 5",
+      "Add 3x back to both sides, then divide both sides by 5"
+    ],
+    "answer": "B",
+    "hints": [
+      "A two-step equation is finished by clearing the constant first and dividing by the coefficient last.",
+      "Dividing before removing the +1 would divide only part of the left side."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-variables-on-both-sides-004",
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "cedCode": "M8MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Plot A starts with 12 bags of soil and gains 3 bags every day. Plot B starts with 2 bags of soil and gains 5 bags every day. After how many days will the two plots have the same number of bags of soil?",
+    "choices": [
+      "2",
+      "10",
+      "5",
+      "4"
+    ],
+    "answer": "C",
+    "hints": [
+      "Write an equation with the starting amounts as constants and the daily gains as coefficients of the variable.",
+      "Collect the variable terms on one side, then finish it like a two-step equation."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-variables-on-both-sides-005",
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "cedCode": "M8MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student solving 5x + 9 = 3x - 7 for x writes the next line as 8x + 9 = -7, explaining that the 3x term was moved to the left side. Which statement correctly evaluates this step?",
+    "choices": [
+      "The step is correct because both variable terms are positive, so combining like terms on one side of the equation is always valid regardless of which side each term originally appeared on",
+      "The step is correct because when a term crosses the equals sign it keeps its original sign, so the 3x on the right becomes +3x on the left, resulting in 8x + 9 = -7",
+      "The step is incorrect because the constant +9 should have been moved to the right side at the same time as 3x, which would give 8x = -16 directly instead of 8x + 9 = -7",
+      "The step is incorrect because subtracting 3x from both sides removes it from the right side and leaves 2x, not 8x, on the left, so the next line should be 2x + 9 = -7"
+    ],
+    "answer": "D",
+    "hints": [
+      "A term never keeps its sign when it appears to switch sides; the real operation is subtracting it from both sides.",
+      "Check what actually happens to the right side's 3x when 3x is subtracted from both sides."
+    ]
+  },
+  {
+    "id": "m8math-equations-with-variables-on-both-sides-006",
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "cedCode": "M8MATH-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Consider the equation -2x + 15 = -7x + 5. Following the guideline of subtracting the smaller variable term first so the remaining coefficient of x is positive, which equation results from that first move?",
+    "choices": [
+      "5x + 15 = 5",
+      "-5x + 5 = 15",
+      "5x + 10 = 5",
+      "-9x + 15 = 5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare -2 and -7 as signed numbers to decide which one is actually smaller.",
+      "Subtracting a negative term from both sides is the same as adding its opposite to both sides."
+    ]
+  }
+]

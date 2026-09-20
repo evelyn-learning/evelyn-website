@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-pythagorean-applications-distance-between-points-001",
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "cedCode": "M8MATH-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a right triangle, the side across from the right angle is called the hypotenuse. A right triangle has legs of length 3 and 4. What is the hypotenuse?",
+    "choices": [
+      "12",
+      "7",
+      "1",
+      "5"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use a² + b² = c² with a = 3 and b = 4.",
+      "The hypotenuse is the longest side, so check that your answer is bigger than both 3 and 4."
+    ]
+  },
+  {
+    "id": "m8math-pythagorean-applications-distance-between-points-002",
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "cedCode": "M8MATH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular television screen is 24 inches wide and 18 inches tall. The screen's diagonal is measured from the bottom-left corner to the top-right corner. To the nearest whole inch, how long is the diagonal?",
+    "choices": [
+      "30 inches",
+      "42 inches",
+      "21 inches",
+      "6 inches"
+    ],
+    "answer": "A",
+    "hints": [
+      "The width and height of the screen meet at a right angle. They are the two legs of the right triangle.",
+      "After you find c² = 24² + 18², trap the square root between two consecutive whole numbers and test one decimal place."
+    ]
+  },
+  {
+    "id": "m8math-pythagorean-applications-distance-between-points-003",
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "cedCode": "M8MATH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A painter leans a 17-foot ladder against a building. The base of the ladder is 8 feet away from the building. The ladder, the ground, and the wall form a right triangle, with the right angle where the wall meets the ground. How high up the wall does the ladder reach?",
+    "choices": [
+      "19 feet",
+      "15 feet",
+      "25 feet",
+      "9 feet"
+    ],
+    "answer": "B",
+    "hints": [
+      "The ladder is the hypotenuse because it is the slanted side across from the right angle.",
+      "When the hypotenuse and one leg are known, subtract: c² - a² = b², then take the square root."
+    ]
+  },
+  {
+    "id": "m8math-pythagorean-applications-distance-between-points-004",
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "cedCode": "M8MATH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a coordinate plane, point M is at (1, 2) and point N is at (7, 10). To find the distance between M and N, you can draw a right triangle by going horizontally from M to (7, 2), then vertically from (7, 2) to N. What is the distance from M to N, rounded to the nearest tenth of a unit?",
+    "choices": [
+      "8.2 units",
+      "14 units",
+      "10.0 units",
+      "11.3 units"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find Δx by subtracting the x-coordinates: 7 − 1. Find Δy by subtracting the y-coordinates: 10 − 2.",
+      "After computing c², trap the square root between two consecutive whole numbers, then narrow it with one decimal place."
+    ]
+  },
+  {
+    "id": "m8math-pythagorean-applications-distance-between-points-005",
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "cedCode": "M8MATH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular shipping box has dimensions 6 inches long, 8 inches wide, and 10 inches tall. A long gift stick is placed straight from one bottom corner of the box to the opposite top corner, passing through the inside of the box. What is the length of the space diagonal, to the nearest tenth of an inch?",
+    "choices": [
+      "13.2 inches",
+      "24 inches",
+      "10.9 inches",
+      "14.3 inches"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use two right triangles: first, find the diagonal of the bottom face (6 and 8 are the legs), and keep that result squared.",
+      "In the second triangle, use the squared bottom diagonal and the height as legs to find the space diagonal hypotenuse."
+    ]
+  },
+  {
+    "id": "m8math-pythagorean-applications-distance-between-points-006",
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "cedCode": "M8MATH-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student plots two points on a coordinate grid: R at (−3, −1) and S at (5, 4). The student plans to find the distance between R and S by computing Δx = 5 − (−3) and Δy = 4 − (−1), then using the Pythagorean theorem. After finding Δx and Δy, the student computes c² and gets 89, then estimates the distance as 9.4 units. Is the student's answer reasonable? Explain using the sanity-check rule that the hypotenuse must fall between the longer leg and the sum of the two legs.",
+    "choices": [
+      "Yes, it is reasonable. The longer leg is 8, and 9.4 is between 8 and 8 + 9 = 17.",
+      "No, it is not reasonable. The result 9.4 is less than one of the legs.",
+      "Yes, it is reasonable. The longer leg is 9, and 9.4 is between 9 and 17.",
+      "No, it is not reasonable. The result 9.4 is longer than the sum of the legs."
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate Δx and Δy first, paying careful attention to subtracting negative numbers.",
+      "Apply the sanity-check rule: the hypotenuse must be longer than the longer leg but shorter than the sum of both legs."
+    ]
+  },
+  {
+    "id": "m8math-the-pythagorean-theorem-its-converse-001",
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "cedCode": "M8MATH-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a right triangle, the hypotenuse is the side that connects the two legs and is always the longest side of the triangle. Which of the following is the correct statement of the Pythagorean theorem, where a and b are the legs and c is the hypotenuse?",
+    "choices": [
+      "a² + b² = c²",
+      "a + b = c",
+      "a² + b² = c",
+      "a + b = c²"
+    ],
+    "answer": "A",
+    "hints": [
+      "The theorem is about squares of the side lengths, not the side lengths themselves.",
+      "The hypotenuse is always the largest value and stands alone on one side of the equation."
+    ]
+  },
+  {
+    "id": "m8math-the-pythagorean-theorem-its-converse-002",
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "cedCode": "M8MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has legs measuring 5 cm and 12 cm. What is the length of the hypotenuse?",
+    "choices": [
+      "17 cm",
+      "13 cm",
+      "8.6 cm",
+      "60 cm"
+    ],
+    "answer": "B",
+    "hints": [
+      "Square each leg first, then add those squares together.",
+      "The hypotenuse must be longer than either leg, and much shorter than the sum of the two legs."
+    ]
+  },
+  {
+    "id": "m8math-the-pythagorean-theorem-its-converse-003",
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "cedCode": "M8MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has a hypotenuse of 10 inches and one leg of 6 inches. Which calculation correctly finds the length of the missing leg?",
+    "choices": [
+      "Missing leg = 10 - 6 = 4 inches",
+      "Missing leg = √(10² + 6²) = √(100 + 36) = √136 ≈ 11.7 inches",
+      "Missing leg = √(10² - 6²) = √(100 - 36) = √64 = 8 inches",
+      "Missing leg = √(10 + 6) = 4 inches"
+    ],
+    "answer": "C",
+    "hints": [
+      "The hypotenuse is the largest value, so find the other leg by subtracting its square from the hypotenuse's square.",
+      "If your answer for a leg comes out larger than the hypotenuse, you made an error."
+    ]
+  },
+  {
+    "id": "m8math-the-pythagorean-theorem-its-converse-004",
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "cedCode": "M8MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has legs of 3 units and 4 units. Four copies of this triangle are arranged inside a square that measures 7 units on each side, with one triangle placed in each corner so their legs align with the square's edges. The uncovered space in the middle forms a tilted square. Calculate the area of the tilted square and explain why it must equal 3² + 4².",
+    "choices": [
+      "24 square units; the tilted square's area equals the total area covered by the four triangles because each triangle occupies 3 × 4 ÷ 2 = 6 square units, and 4 × 6 = 24.",
+      "49 square units; the tilted square must be the same size as the outer square because the four corner triangles occupy no space and cannot reduce the total area available.",
+      "12 square units; the tilted square area equals the product of the two legs multiplied by 2 since there are two legs involved, giving us 3 × 4 × 2 = 12.",
+      "25 square units; the area equals 3² + 4² because the big square area (49) minus the four triangles' total area (24) leaves 25, which equals 9 + 16."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start by finding the area of the large square and the combined area of the four triangles, then subtract to find what is left.",
+      "The area left uncovered is the hypotenuse squared, which by the rearrangement argument must equal the sum of the leg squares."
+    ]
+  },
+  {
+    "id": "m8math-the-pythagorean-theorem-its-converse-005",
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "cedCode": "M8MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three lengths are given: 7, 24, and 25. To determine whether they form a right triangle, a student must check whether the largest value squared equals the sum of the squares of the other two. Perform this check and identify whether these lengths form a right triangle, then name which side would be the hypotenuse if they do.",
+    "choices": [
+      "Yes, they form a right triangle; 25 is the hypotenuse because 7² + 24² = 49 + 576 = 625 = 25².",
+      "No, they do not form a right triangle; 7² + 24² = 49 + 576 = 625 ≠ 625, so the equation does not balance.",
+      "Yes, they form a right triangle; 24 is the hypotenuse because it is the middle value when ordered.",
+      "No, they do not form a right triangle because 7 + 24 = 31, which is not 25."
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the converse: square the longest side by itself and compare it to the sum of the squares of the two shorter sides.",
+      "The hypotenuse is always the longest of the three lengths when a right triangle is formed."
+    ]
+  },
+  {
+    "id": "m8math-the-pythagorean-theorem-its-converse-006",
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "cedCode": "M8MATH-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has legs of 4 units and 7 units. The hypotenuse length is not a perfect square, so it must be estimated. First, identify which two consecutive perfect squares the sum of the leg squares falls between. Then, explain which estimate is closer: 8.0 or 8.1, by showing the difference between each squared estimate and the target value.",
+    "choices": [
+      "The sum 65 falls between 49 and 81; 8.0 is closer because it is a whole number and therefore simpler to use in calculations than a decimal estimate.",
+      "The sum 65 falls between 64 and 81; 8.1 is closer because 8.1² = 65.61, which is only 0.61 away from 65, while 8.0² = 64 is 1 away from 65.",
+      "The sum 65 falls between 64 and 81; 8.0 is closer because 65 - 64 = 1 and 81 - 65 = 16, so 8.0 lies in the smaller gap between consecutive perfect squares.",
+      "The sum 65 falls between 36 and 100; 8.1 is closer because the original legs 4 and 7 average to 5.5, and 8.1 represents a proportional scaling of that average value."
+    ],
+    "answer": "B",
+    "hints": [
+      "After computing 4² + 7² = 65, trap 65 between two consecutive perfect squares to narrow the range for the square root.",
+      "To compare estimates, square each candidate and measure how far the result is from your target of 65; the smaller distance means the better estimate."
+    ]
+  },
+  {
+    "id": "m8math-parallel-lines-cut-by-a-transversal-001",
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "cedCode": "M8MATH-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two parallel lines are cut by a transversal. The eight angles formed are numbered 1 to 4 at the top crossing (upper-left, upper-right, lower-left, lower-right) and 5 to 8 at the bottom crossing in the same pattern. Which pair below is correctly described as sitting in the same position at each crossing, such as both being upper-left?",
+    "choices": [
+      "Alternate exterior angles, like angle 1 and angle 8, which sit on opposite sides outside the lines",
+      "Alternate interior angles, like angle 3 and angle 6, which sit on opposite sides between the lines",
+      "Corresponding angles, like angle 1 and angle 5, which sit in the same spot at each crossing",
+      "Same-side interior angles, like angle 3 and angle 5, which sit on the same side between the lines"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether the two angles occupy the exact same corner at each crossing.",
+      "This pair type can be named just from position, without needing to know if the lines are parallel."
+    ]
+  },
+  {
+    "id": "m8math-parallel-lines-cut-by-a-transversal-002",
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "cedCode": "M8MATH-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines p and q are parallel and are cut by transversal t. The angles are numbered 1 to 4 at the top crossing (upper-left, upper-right, lower-left, lower-right) and 5 to 8 at the bottom crossing in the same pattern. Angle 1 measures 72 degrees. What is the measure of angle 6?",
+    "choices": [
+      "90 degrees",
+      "72 degrees",
+      "18 degrees",
+      "108 degrees"
+    ],
+    "answer": "D",
+    "hints": [
+      "First find angle 5, which corresponds to angle 1 across the two crossings.",
+      "Angles 5 and 6 sit next to each other on the bottom line, forming a straight line."
+    ]
+  },
+  {
+    "id": "m8math-parallel-lines-cut-by-a-transversal-003",
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "cedCode": "M8MATH-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines g and h are parallel and are cut by transversal t. The angles are numbered 1 to 4 at the top crossing (upper-left, upper-right, lower-left, lower-right) and 5 to 8 at the bottom crossing in the same pattern. Angle 2 measures 115 degrees. What is the measure of angle 7?",
+    "choices": [
+      "115 degrees",
+      "65 degrees",
+      "180 degrees",
+      "25 degrees"
+    ],
+    "answer": "A",
+    "hints": [
+      "Decide whether both angles sit outside the two lines or between them.",
+      "Angles on opposite sides of the transversal that are both exterior are equal when the lines are parallel."
+    ]
+  },
+  {
+    "id": "m8math-parallel-lines-cut-by-a-transversal-004",
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "cedCode": "M8MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lines j and k are parallel and are cut by transversal t. The angles are numbered 1 to 4 at the top crossing (upper-left, upper-right, lower-left, lower-right) and 5 to 8 at the bottom crossing in the same pattern. Angle 8 measures 105 degrees. What is the measure of angle 2?",
+    "choices": [
+      "105 degrees",
+      "75 degrees",
+      "15 degrees",
+      "165 degrees"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find angle 1 first, using the pair that is equal to angle 8 across the two crossings.",
+      "Angles 1 and 2 sit next to each other on the top line, so they form a straight line together."
+    ]
+  },
+  {
+    "id": "m8math-parallel-lines-cut-by-a-transversal-005",
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "cedCode": "M8MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lines g and h are parallel and are cut by transversal t. The angles are numbered 1 to 4 at the top crossing (upper-left, upper-right, lower-left, lower-right) and 5 to 8 at the bottom crossing in the same pattern. Angle 4, the lower-right angle at the top crossing, measures (3x + 20) degrees, and angle 5, the upper-left angle at the bottom crossing, measures (x + 40) degrees. What is the value of x?",
+    "choices": [
+      "15",
+      "30",
+      "10",
+      "5"
+    ],
+    "answer": "C",
+    "hints": [
+      "Decide whether angle 4 and angle 5 are on the same side of the transversal or on opposite sides.",
+      "Interior angles on opposite sides of the transversal are equal to each other, not supplementary."
+    ]
+  },
+  {
+    "id": "m8math-parallel-lines-cut-by-a-transversal-006",
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "cedCode": "M8MATH-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Lines c and d are cut by transversal t, but lines c and d are NOT parallel. The angles are numbered 1 to 4 at the top crossing (upper-left, upper-right, lower-left, lower-right) and 5 to 8 at the bottom crossing in the same pattern. Angle 1 measures 80 degrees and angle 5 measures 95 degrees, and someone claims this situation is impossible. Which statement correctly evaluates the claim?",
+    "choices": [
+      "The claim is correct: since corresponding angles must always match whenever two lines are cut by a transversal, lines c and d must instead be perpendicular to each other, which would explain the unequal measures",
+      "The claim is correct: corresponding angles must always be equal no matter how the two lines are drawn, so one of the two given measurements has to be a recording mistake in this diagram",
+      "The claim is wrong, but only because angle 1 and angle 5 are actually alternate interior angles in this figure rather than corresponding angles, and those need not be equal unless the lines are parallel",
+      "The claim is wrong: corresponding angles are guaranteed equal only when the two lines are parallel, and these lines are not, so 80 degrees and 95 degrees can both occur"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what the slide (translation) argument for corresponding angles depends on.",
+      "Angle 1 and angle 5 occupy the same position at each crossing, which makes them corresponding angles regardless of whether the lines are parallel."
+    ]
+  },
+  {
+    "id": "m8math-triangle-angle-sum-exterior-angles-aa-similarity-001",
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "cedCode": "M8MATH-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In triangle JKL, angle J measures 55° and angle K measures 82°. What is the measure of angle L?",
+    "choices": [
+      "125°",
+      "43°",
+      "98°",
+      "137°"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that all three interior angles of any triangle add up to a fixed total.",
+      "Subtract both given angles from that total to find the missing one."
+    ]
+  },
+  {
+    "id": "m8math-triangle-angle-sum-exterior-angles-aa-similarity-002",
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "cedCode": "M8MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In triangle RST, angle R measures 35° and angle S measures 95°. Side RT is extended past T to a new point U, forming exterior angle STU. What is the measure of exterior angle STU?",
+    "choices": [
+      "145°",
+      "50°",
+      "130°",
+      "60°"
+    ],
+    "answer": "C",
+    "hints": [
+      "An exterior angle equals the sum of the two remote interior angles — the ones that don't touch it.",
+      "Angle T is not one of the two angles you add here, since it's right next to the exterior angle."
+    ]
+  },
+  {
+    "id": "m8math-triangle-angle-sum-exterior-angles-aa-similarity-003",
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "cedCode": "M8MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Triangle MNO has angle M = 46° and angle N = 79°. Triangle PQR has angle P = 46° and angle R = 55°. A student wants to know whether the two triangles must be similar.",
+    "choices": [
+      "No, the triangles are not similar because a matching side length would also need to be confirmed.",
+      "No, the triangles are not similar because the second given angle differs, 79° versus 55°.",
+      "Yes, the triangles are similar because they each contain a 46° angle, and one matching angle is enough.",
+      "Yes, the triangles are similar because both triangles' three angles turn out to be 46°, 55°, and 79°."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the missing third angle in each triangle before deciding anything.",
+      "Two triangles are similar by AA once two angle measures match, since the third angle is then forced."
+    ]
+  },
+  {
+    "id": "m8math-triangle-angle-sum-exterior-angles-aa-similarity-004",
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "cedCode": "M8MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In triangle XYZ, side XZ is extended past Z to point W, forming exterior angle YZW. The exterior angle YZW measures (6x)°, and the two remote interior angles measure 20° and (3x + 10)°. What is the measure of the interior angle at Z?",
+    "choices": [
+      "120°",
+      "60°",
+      "40°",
+      "160°"
+    ],
+    "answer": "A",
+    "hints": [
+      "First set up and solve the equation from the exterior angle rule to find x.",
+      "The interior angle at Z is supplementary to the exterior angle, not equal to it."
+    ]
+  },
+  {
+    "id": "m8math-triangle-angle-sum-exterior-angles-aa-similarity-005",
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "cedCode": "M8MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In triangle DEF, angle D = 48° and angle E = 65°. Side DF is extended past F to point G, forming exterior angle EFG. A student claims: 'Since angle D is 48° and angle F is 67°, the exterior angle EFG must be 48 + 67 = 115°.' Is the student's reasoning correct?",
+    "choices": [
+      "Yes; angle F equals 180° − 48° − 65° = 67°, so 48 + 67 = 115° is correct.",
+      "No; the exterior angle equals the sum of the remote interior angles D and E, which is 48 + 65 = 113°.",
+      "No; the exterior angle equals 180° minus angle D alone, since only one interior angle is subtracted, giving 132°.",
+      "No; the remote interior angles are E and F since they are farthest from angle D, so the sum is 65 + 67 = 132°."
+    ],
+    "answer": "B",
+    "hints": [
+      "Angle F sits right next to the exterior angle, so it can never be one of the two angles used in the shortcut.",
+      "Identify which two interior angles don't touch the exterior angle before adding them."
+    ]
+  },
+  {
+    "id": "m8math-triangle-angle-sum-exterior-angles-aa-similarity-006",
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "cedCode": "M8MATH-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has angle A = 42°. Side AC is extended past C to point D, forming exterior angle BCD, which measures 110°. Triangle PQR has angle P = 42° and angle Q = 68°. Are triangles ABC and PQR similar?",
+    "choices": [
+      "No, because angle C in triangle ABC is 70°, which does not match either given angle in triangle PQR.",
+      "No, because triangle ABC's exterior angle of 110° does not appear anywhere in triangle PQR.",
+      "Yes, because after finding angle B = 68° from the exterior angle, both triangles have angles 42°, 68°, and 70°.",
+      "Yes, because both triangles share a 42° angle, and one matching angle is always enough for similarity."
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the exterior angle rule to find the missing angle in triangle ABC before comparing the two triangles.",
+      "AA similarity needs two matching angles, not just one, and the third angle is then automatically forced."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8math-congruence-through-rigid-motions-001",
+    "loId": "m8math.congruence-through-rigid-motions",
+    "cedCode": "M8MATH-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two figures are congruent when a sequence of rigid motions maps one onto the other. A rigid motion is a transformation that keeps every length and every angle measure unchanged. Which of the following is a rigid motion?",
+    "choices": [
+      "Any motion that makes a figure look similar to another figure",
+      "A translation (slide), a reflection (flip), or a rotation (turn)",
+      "A motion that makes a figure larger or smaller while keeping the same shape",
+      "A motion that changes the angles of a figure but keeps all side lengths equal"
+    ],
+    "answer": "B",
+    "hints": [
+      "The three types of rigid motions are translations, reflections, and rotations.",
+      "A rigid motion preserves all distances and angle measures."
+    ]
+  },
+  {
+    "id": "m8math-congruence-through-rigid-motions-002",
+    "loId": "m8math.congruence-through-rigid-motions",
+    "cedCode": "M8MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Point M is at (3, 2). It is translated right 4 units and down 3 units. What are the coordinates of the image of point M after this translation?",
+    "choices": [
+      "(-1, -1)",
+      "(1, 5)",
+      "(7, -1)",
+      "(7, 5)"
+    ],
+    "answer": "C",
+    "hints": [
+      "Apply the translation rule (x, y) → (x + 4, y - 3) by substituting x = 3 and y = 2.",
+      "Right means add to the x-coordinate; down means subtract from the y-coordinate."
+    ]
+  },
+  {
+    "id": "m8math-congruence-through-rigid-motions-003",
+    "loId": "m8math.congruence-through-rigid-motions",
+    "cedCode": "M8MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Triangle R has a horizontal side of length 5 and a vertical side of length 2. Triangle S has a horizontal side of length 10 and a vertical side of length 4. Can a sequence of rigid motions map triangle R onto triangle S?",
+    "choices": [
+      "Yes, because both triangles have the same shape.",
+      "No, because the triangles point in different directions.",
+      "Yes, because a translation can move triangle R to the location of triangle S.",
+      "No, because rigid motions never change the lengths of sides."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that translations, reflections, and rotations all keep every length unchanged.",
+      "Compare the side lengths of the two triangles carefully."
+    ]
+  },
+  {
+    "id": "m8math-congruence-through-rigid-motions-004",
+    "loId": "m8math.congruence-through-rigid-motions",
+    "cedCode": "M8MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Triangle F has vertices at (2, 1), (5, 1), and (2, 4). The triangle is first reflected across the y-axis. Then the image is translated left 3 units. What are the coordinates of the image of the vertex that started at (5, 1) after both motions are applied in order?",
+    "choices": [
+      "(-8, 1)",
+      "(-2, 1)",
+      "(-5, 1)",
+      "(2, 1)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the reflection across the y-axis first: (x, y) → (-x, y). Write down all new coordinates before doing the next motion.",
+      "Then apply the translation left 3 to the reflected coordinates, not the originals."
+    ]
+  },
+  {
+    "id": "m8math-congruence-through-rigid-motions-005",
+    "loId": "m8math.congruence-through-rigid-motions",
+    "cedCode": "M8MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Quadrilateral A has vertices (1, 2), (4, 2), (4, 5), and (1, 5). It forms a square with side length 3. Quadrilateral B has vertices (-1, 3), (-4, 3), (-4, 0), and (-1, 0). It also forms a square with side length 3. Describe a sequence of rigid motions that maps quadrilateral A onto quadrilateral B, and determine if they are congruent.",
+    "choices": [
+      "Translate left 5, then reflect across the x-axis. The quadrilaterals are congruent.",
+      "Reflect across the y-axis, then translate down 2. The quadrilaterals are congruent.",
+      "Rotate 180° about the origin, then translate left 1. The quadrilaterals are congruent.",
+      "The quadrilaterals cannot be made congruent by any sequence because they are oriented differently."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check each vertex: where does (1, 2) need to go, and which motion gets it there first?",
+      "After reflecting across the y-axis, compare the result to quadrilateral B to see what translation is needed."
+    ]
+  },
+  {
+    "id": "m8math-congruence-through-rigid-motions-006",
+    "loId": "m8math.congruence-through-rigid-motions",
+    "cedCode": "M8MATH-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle X has vertices (0, 0), (3, 0), and (0, 2). The right angle is at the origin. Triangle Y has vertices (4, 5), (4, 2), and (1, 5). To determine if they are congruent, a student measures the side lengths. Triangle X has legs of length 3 and 2. When the student measures triangle Y, one side goes from (4, 5) to (4, 2) and another goes from (4, 5) to (1, 5). Which statement is correct?",
+    "choices": [
+      "The triangles are congruent because they are both right triangles with the same area.",
+      "The triangles are not congruent because the sides point in different directions and no rotation can fix a mismatch in direction.",
+      "The triangles are congruent because both have legs of 3 and 2, and matching lengths prove a sequence of rigid motions exists.",
+      "The triangles cannot be compared until the third side of triangle Y is checked for length."
+    ],
+    "answer": "C",
+    "hints": [
+      "Measure the side from (4, 5) to (4, 2) by subtracting coordinates: 5 - 2 = 3. Measure from (4, 5) to (1, 5): 4 - 1 = 3. Do the same for triangle X.",
+      "Matching side lengths and right angles are necessary; once you confirm them, you can build a sequence by thinking about which motions rotate the legs into the right positions."
+    ]
+  },
+  {
+    "id": "m8math-translations-reflections-001",
+    "loId": "m8math.translations-and-reflections",
+    "cedCode": "M8MATH-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A point P(2, 3) is translated using the rule (x, y) → (x + 4, y − 1). What are the coordinates of P', the image of P?",
+    "choices": [
+      "P'(6, 2)",
+      "P'(6, 4)",
+      "P'(−2, 4)",
+      "P'(2, 3)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The rule tells you to add 4 to the x-coordinate and subtract 1 from the y-coordinate.",
+      "Apply the rule: new x = 2 + 4, new y = 3 − 1."
+    ]
+  },
+  {
+    "id": "m8math-translations-reflections-002",
+    "loId": "m8math.translations-and-reflections",
+    "cedCode": "M8MATH-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A horizontal line segment connects the points (1, 5) and (7, 5). The segment is translated by the rule (x, y) → (x − 3, y + 4). How long is the image of this segment?",
+    "choices": [
+      "2 units",
+      "6 units",
+      "4 units",
+      "9 units"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the length of the original segment by counting the distance between its x-coordinates.",
+      "Remember that translations preserve length — the image is the same length as the preimage."
+    ]
+  },
+  {
+    "id": "m8math-translations-reflections-003",
+    "loId": "m8math.translations-and-reflections",
+    "cedCode": "M8MATH-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Point Q(3, −2) is reflected across the y-axis to create Q'. Which statement is correct?",
+    "choices": [
+      "Q' has coordinates (3, 2) because y changes sign",
+      "Q' has coordinates (−3, 2) because both coordinates change sign",
+      "Q' has coordinates (−3, −2) because x changes sign",
+      "Q' has coordinates (3, −2) because the y-axis is horizontal"
+    ],
+    "answer": "C",
+    "hints": [
+      "When reflecting across the y-axis, the y-coordinate stays the same and the x-coordinate changes sign.",
+      "The y-axis is the mirror, so the coordinate that measures distance from the y-axis flips."
+    ]
+  },
+  {
+    "id": "m8math-translations-reflections-004",
+    "loId": "m8math.translations-and-reflections",
+    "cedCode": "M8MATH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rectangle ABCD has vertices A(1, 2), B(5, 2), C(5, 4), and D(1, 4). It is translated by the rule (x, y) → (x + 2, y − 3). After the translation, is side A'B' still parallel to side D'C', and are they still the same length?",
+    "choices": [
+      "No, one side became longer while the other became shorter",
+      "Yes, both sides are still vertical and both are 2 units long",
+      "No, the translation turned the parallel sides in different directions",
+      "Yes, both sides are still horizontal and both are 4 units long"
+    ],
+    "answer": "D",
+    "hints": [
+      "Apply the translation rule to find each image vertex, then check whether A'B' and D'C' are both horizontal.",
+      "Translations preserve both length and angle, so sides that were parallel and equal remain parallel and equal."
+    ]
+  },
+  {
+    "id": "m8math-translations-reflections-005",
+    "loId": "m8math.translations-and-reflections",
+    "cedCode": "M8MATH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Triangle PQR has vertices P(−4, 1), Q(0, 1), and R(−4, 4). The side PQ is horizontal and 4 units long. The triangle is reflected across the x-axis. In the image triangle P'Q'R', which sides are still horizontal, and what is the length of P'Q'?",
+    "choices": [
+      "P'Q' is horizontal and 4 units long; no other sides are horizontal",
+      "P'Q' and R'Q' are both horizontal and each is 4 units long",
+      "P'R' is horizontal and 4 units long; P'Q' is not horizontal",
+      "No sides of the image triangle are horizontal"
+    ],
+    "answer": "A",
+    "hints": [
+      "When reflecting across the x-axis, x stays the same and y changes sign. A horizontal side stays horizontal.",
+      "Reflections preserve length, so if PQ was 4 units long, P'Q' is also 4 units long."
+    ]
+  },
+  {
+    "id": "m8math-translations-reflections-006",
+    "loId": "m8math.translations-and-reflections",
+    "cedCode": "M8MATH-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A figure has two sides that are parallel and both run from lower-left to upper-right at a 45-degree tilt (the run equals the rise). The figure is translated by the rule (x, y) → (x − 5, y + 3). After the translation, the image sides still tilt at 45 degrees. A student claims this means the rule (x, y) → (x − 5, y + 3) must be a reflection, not a translation, because reflections preserve angles. Is the student correct? Explain your reasoning using what the rule does to direction and parallelism.",
+    "choices": [
+      "Yes, the student is correct; reflections are the only transformations that preserve angle measures and direction, so any transformation that keeps a 45-degree tilt must be a reflection rather than a translation",
+      "No, the student is incorrect; translations also preserve length, angle, and the direction of sides, so parallel sides with a specific tilt stay parallel with the same tilt",
+      "Yes, the student is correct; because the rule involves subtraction in the x-coordinate, it performs a horizontal flip across a vertical line, which is a reflection that maintains all angle measures in the figure",
+      "No, the student is incorrect; although this rule is a translation that shifts the figure left 5 and up 3, translations do not preserve angles, so the 45-degree tilt being maintained is coincidental rather than a property of the transformation"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that both translations and reflections preserve lengths, angles, and parallel sides — not just reflections.",
+      "A translation moves every point the same distance in the same direction, which keeps all sides the same length and tilt; the rule (x, y) → (x − 5, y + 3) is a slide 5 units left and 3 units up."
+    ]
+  },
+  {
+    "id": "m8math-dilations-similarity-001",
+    "loId": "m8math.dilations-and-similarity",
+    "cedCode": "M8MATH-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A dilation centered at the origin uses a scale factor of 4. The point (5, -2) is dilated using this rule. What are the coordinates of the image point?",
+    "choices": [
+      "(5, -8)",
+      "(20, -2)",
+      "(20, -8)",
+      "(1.25, -0.5)"
+    ],
+    "answer": "C",
+    "hints": [
+      "Multiply both the x-coordinate and the y-coordinate by the scale factor.",
+      "A dilation never adds or subtracts a number from the coordinates."
+    ]
+  },
+  {
+    "id": "m8math-dilations-similarity-002",
+    "loId": "m8math.dilations-and-similarity",
+    "cedCode": "M8MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A triangle has one side that measures 6 units. After a dilation from the origin, the corresponding side of the image measures 15 units. What is the scale factor of the dilation?",
+    "choices": [
+      "21",
+      "0.4",
+      "9",
+      "2.5"
+    ],
+    "answer": "D",
+    "hints": [
+      "Scale factor equals the image length divided by the original length.",
+      "Since the image is bigger than the original, k must be greater than 1."
+    ]
+  },
+  {
+    "id": "m8math-dilations-similarity-003",
+    "loId": "m8math.dilations-and-similarity",
+    "cedCode": "M8MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The point (-12, 8) is dilated from the origin using a scale factor of 1/4. Because the scale factor is positive, the image must stay in the same quadrant as the original point. What are the coordinates of the image?",
+    "choices": [
+      "(-3, 2)",
+      "(3, 2)",
+      "(-3, -2)",
+      "(-48, 32)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Dividing by 4 is the same as multiplying by 1/4.",
+      "A positive scale factor keeps a point's coordinates the same sign as before."
+    ]
+  },
+  {
+    "id": "m8math-dilations-similarity-004",
+    "loId": "m8math.dilations-and-similarity",
+    "cedCode": "M8MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has vertices A(2, 3), B(2, 6) and C(5, 3). A sequence of one dilation from the origin followed by one rigid motion maps triangle ABC onto triangle A'B'C' with vertices A'(6, -9), B'(6, -18) and C'(15, -9). Which sequence describes this mapping?",
+    "choices": [
+      "A dilation from the origin by 3, followed by a reflection across the y-axis",
+      "A dilation from the origin by 3, followed by a reflection across the x-axis",
+      "A dilation from the origin by 1/3, followed by a reflection across the x-axis",
+      "A dilation from the origin by 3, followed by a translation down 18 units"
+    ],
+    "answer": "B",
+    "hints": [
+      "First find k using a matching pair of sides, then dilate every vertex by that k.",
+      "Compare the dilated triangle to the target: check whether the x-coordinates or the y-coordinates changed sign."
+    ]
+  },
+  {
+    "id": "m8math-dilations-similarity-005",
+    "loId": "m8math.dilations-and-similarity",
+    "cedCode": "M8MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rectangle EFGH has vertices E(1, 1), F(5, 1), G(5, 3) and H(1, 3). Rectangle E'F'G'H' has vertices E'(2, 2), F'(10, 2), G'(10, 6) and H'(2, 6), and a dilation from the origin maps EFGH onto E'F'G'H'. A student claims the two rectangles are congruent because they have the same shape. Is the student correct?",
+    "choices": [
+      "No, the rectangles are not similar because the corresponding side lengths are different",
+      "Yes, the rectangles are congruent because all four angles in both rectangles are right angles",
+      "No, the rectangles are similar but not congruent because the scale factor is 2, not 1",
+      "Yes, the rectangles are congruent because a dilation always produces a congruent image"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the scale factor by comparing a pair of matching sides, image over original.",
+      "Congruent figures require a scale factor of exactly 1; equal angles alone don't guarantee equal side lengths."
+    ]
+  },
+  {
+    "id": "m8math-dilations-similarity-006",
+    "loId": "m8math.dilations-and-similarity",
+    "cedCode": "M8MATH-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle JKL is dilated from the origin and then reflected across the x-axis to produce triangle J'K'L'. Under this sequence, J(2, -4) maps to J'(3, 6). Using the same sequence, what are the coordinates of K', the image of K(2, -1)?",
+    "choices": [
+      "(2, 1)",
+      "(3, -1.5)",
+      "(1.33, 0.67)",
+      "(3, 1.5)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use J and J' together to solve for the scale factor k, since the reflection only changes the sign of the y-coordinate.",
+      "Apply the dilation first, then flip the sign of the resulting y-coordinate."
+    ]
+  },
+  {
+    "id": "m8math-rotations-about-the-origin-001",
+    "loId": "m8math.rotations-about-the-origin",
+    "cedCode": "M8MATH-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A point starts at (6, -2). If this point is rotated 90° counterclockwise about the origin, what are the coordinates of its image?",
+    "choices": [
+      "(-2, 6)",
+      "(-6, 2)",
+      "(-2, -6)",
+      "(2, 6)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall that a 90° counterclockwise turn swaps the coordinates and flips the sign of exactly one of them.",
+      "Apply the rule (x, y) → (-y, x) directly to the point (6, -2)."
+    ]
+  },
+  {
+    "id": "m8math-rotations-about-the-origin-002",
+    "loId": "m8math.rotations-about-the-origin",
+    "cedCode": "M8MATH-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Segment PQ has endpoints P(1, 4) and Q(1, 7). The segment is rotated 180° counterclockwise about the origin to form segment P'Q'. What is the length of P'Q'?",
+    "choices": [
+      "3 units",
+      "6 units",
+      "4 units",
+      "3.5 units"
+    ],
+    "answer": "A",
+    "hints": [
+      "A rotation is a rigid motion, so lengths do not change from preimage to image.",
+      "Find the length of the original segment PQ by counting units between its endpoints."
+    ]
+  },
+  {
+    "id": "m8math-rotations-about-the-origin-003",
+    "loId": "m8math.rotations-about-the-origin",
+    "cedCode": "M8MATH-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A point lies in Quadrant III of the coordinate plane. If this point is rotated 90° counterclockwise about the origin, in which quadrant does its image land?",
+    "choices": [
+      "Quadrant II",
+      "Quadrant IV",
+      "Quadrant I",
+      "Quadrant III"
+    ],
+    "answer": "B",
+    "hints": [
+      "Each 90° counterclockwise turn moves a point exactly one quadrant forward in the sequence I → II → III → IV → I.",
+      "Start at Quadrant III and move forward one step in that sequence."
+    ]
+  },
+  {
+    "id": "m8math-rotations-about-the-origin-004",
+    "loId": "m8math.rotations-about-the-origin",
+    "cedCode": "M8MATH-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has vertices A(-2, 1), B(-2, 4), and C(1, 4). The triangle is rotated 90° counterclockwise about the origin to form triangle A'B'C'. What is the length of side A'B', the image of side AB?",
+    "choices": [
+      "5 units",
+      "4 units",
+      "3 units",
+      "6 units"
+    ],
+    "answer": "C",
+    "hints": [
+      "First find the length of AB in the original triangle by counting units between A and B.",
+      "Rotations preserve side length, so A'B' must equal AB even without recomputing every coordinate."
+    ]
+  },
+  {
+    "id": "m8math-rotations-about-the-origin-005",
+    "loId": "m8math.rotations-about-the-origin",
+    "cedCode": "M8MATH-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Quadrilateral PQRS is rotated about the origin. Vertex P(2, 3) maps to P'(-3, 2), and vertex Q(5, 3) maps to Q'(-3, 5). Which rotation was applied to the quadrilateral?",
+    "choices": [
+      "90° clockwise",
+      "180° counterclockwise",
+      "270° counterclockwise",
+      "90° counterclockwise"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether the coordinates swapped places and, if so, which one changed sign.",
+      "Test the same rule on both given vertices to make sure it works for each one."
+    ]
+  },
+  {
+    "id": "m8math-rotations-about-the-origin-006",
+    "loId": "m8math.rotations-about-the-origin",
+    "cedCode": "M8MATH-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Point N lies at (0, -5) on the negative y-axis. If N is rotated 270° counterclockwise about the origin, what are the coordinates of N', the image of N?",
+    "choices": [
+      "(-5, 0)",
+      "(5, 0)",
+      "(0, 5)",
+      "(0, -5)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the 270° rule (x, y) → (y, -x) to the coordinates of N.",
+      "A point on one axis always lands on an axis after a rotation about the origin; figure out which axis and which sign."
+    ]
+  }
+]
