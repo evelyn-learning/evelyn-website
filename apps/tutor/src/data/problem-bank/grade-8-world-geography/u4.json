@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-north-america-economic-regions-trade-001",
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "cedCode": "M8GEO-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Dellmark, a steel mill sits directly on top of a large iron-ore deposit that has been mined there for over a century. Engineers say the mill cannot simply be relocated because the ore body itself is what anchors it to that spot.",
+    "choices": [
+      "The ore deposit is a locational factor, because the mill was built near a large market that buys the finished steel.",
+      "The ore deposit is a physical factor, because the place itself supplies the ore and the mill cannot carry that ore with it.",
+      "The ore deposit is a physical factor, because workers trained to mine ore have lived in the area for generations.",
+      "The ore deposit is a locational factor, because several other steel firms have also settled near the same ore body."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what the place itself supplies versus what being near something supplies.",
+      "A physical factor cannot be carried away along with the work."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-economic-regions-trade-002",
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "cedCode": "M8GEO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the invented Sorna Valley, dairy farms produce raw milk. A creamery in the valley turns that milk into blocks of cheese, which trucking firms then carry to grocery stores across the region. A separate office in the valley's main town tracks milk prices and predicts next season's cheese output. Which activity level does the creamery's cheese-making step belong to?",
+    "choices": [
+      "Tertiary, because the creamery's cheese must still be delivered to stores before anyone can buy it.",
+      "Primary, because the creamery works directly with a farm product that came straight out of the valley.",
+      "Secondary, because the creamery transforms raw milk into cheese, a different manufactured product.",
+      "Quaternary, because the creamery relies on price information to decide how much cheese to produce."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what the material was before this step began and what it becomes after it ends.",
+      "Making cheese changes the milk into a new manufactured item, which is a specific kind of change."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-economic-regions-trade-003",
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "cedCode": "M8GEO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The invented nation of Brissau sells a total of 80 billion dollars of goods abroad each year, and 20 billion dollars of that total goes to its neighbor, Kelnar. What share of Brissau's total exports abroad goes to Kelnar?",
+    "choices": [
+      "80 percent",
+      "20 percent",
+      "40 percent",
+      "25 percent"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide the flow to the one partner by the country's whole total sold abroad.",
+      "20 divided by 80 gives the fraction; convert that fraction to a percent."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-economic-regions-trade-004",
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "cedCode": "M8GEO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented Torlen Delta, a fishing fleet unloads its catch at a dock, and a cannery next to the dock cans the fish for shipment. The cannery's owners are considering moving the cannery two hundred miles inland to be closer to a larger city, while leaving the fishing fleet's home port unchanged. Based on the kind of factor pinning each step to its current spot, which statement is best supported?",
+    "choices": [
+      "The fishing step is pinned by a physical factor, the fish themselves, while the cannery is pinned by nearness to the dock and so could relocate.",
+      "Both the fishing step and the cannery step are physically pinned in place by the fish and the dock, so neither one could ever be relocated inland.",
+      "The fishing step could move inland right along with the cannery, since both steps ultimately depend on the same nearby city market for selling their finished product.",
+      "The cannery is physically pinned to the coast because canning fish requires direct access to salt water at every single stage of processing the catch."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether each step's factor is something the place itself supplies or something nearness supplies.",
+      "Run the could-it-move test separately on the fishing step and on the canning step."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-economic-regions-trade-005",
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "cedCode": "M8GEO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented countries trade only with each other and with other partners. Vantoria sells 30 billion dollars of timber to Reskell in one year, and Vantoria's total sales abroad for that year add up to 40 billion dollars. In the same year, Reskell sells 50 billion dollars of machinery to Vantoria, and Reskell's total sales abroad add up to 500 billion dollars. Which conclusion is best supported by these figures?",
+    "choices": [
+      "Reskell depends more heavily on Vantoria than Vantoria depends on Reskell, since Reskell ships fifty billion dollars of goods across the border compared to Vantoria's thirty billion.",
+      "Vantoria depends heavily on Reskell, since three quarters of its exports go there, while Reskell sends only a tenth of its own total to Vantoria.",
+      "Neither country depends on the other very much, because each one also sells goods worth billions of dollars to several other trading partners besides its immediate neighbor.",
+      "The two countries depend on each other about equally, since both countries send goods worth tens of billions of dollars across the border to one another each year."
+    ],
+    "answer": "B",
+    "hints": [
+      "Turn each flow into a share by dividing it by that country's own total sales abroad.",
+      "A country that ships a larger dollar total is not automatically the more dependent one."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-economic-regions-trade-006",
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "cedCode": "M8GEO-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The invented Pellarno Basin has four kinds of work going on inside it. Wells pump natural gas from rock deep underground. A chilling plant next to the wells cools the gas into a liquid so it takes less room on a ship. A shipping firm in the basin's port town books cargo space on tankers for the liquid gas and for other exporters. A data office in the same port town tracks worldwide gas prices and predicts how long the gas field will keep producing. A regional planner writes: 'Because gas wells anchor the whole basin, every part of this basin's economy is pinned in place by the same physical factor and none of it could ever relocate.' Which response most accurately evaluates the planner's claim?",
+    "choices": [
+      "The claim is wrong only for the data office, because tracking prices is quaternary work, while the wells, the chilling plant, and the shipping firm all sit directly on the gas deposit itself.",
+      "The claim is correct, because every one of the four steps works with gas that originally came from the same underground deposit, so all four inherit the same physical pinning.",
+      "The claim is wrong for the chilling plant, the shipping firm, and the data office, since nearness to the wells and the port pins them, not anything in the ground, so they could relocate elsewhere.",
+      "The claim is correct for the wells and the chilling plant, since both directly handle raw gas, but wrong for the shipping firm and the data office, which never touch the gas at all."
+    ],
+    "answer": "C",
+    "hints": [
+      "Classify each of the four steps separately before deciding what pins it in place.",
+      "Only the step that pumps gas out of the rock is anchored by a factor the place itself supplies; ask what pins the other three instead."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-metropolitan-regions-urban-form-001",
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "cedCode": "M8GEO-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A metropolitan area's built-up land measured 150 square kilometers at an earlier survey and 450 square kilometers at a later survey. A researcher wants to state the land growth factor between the two surveys.",
+    "choices": [
+      "The land growth factor is 1.5, meaning the built-up area grew by half again as much land",
+      "The land growth factor is 300, meaning the built-up area grew by 300 square kilometers",
+      "The land growth factor is 3, meaning the built-up area is three times as large as it was before",
+      "The land growth factor is 0.33, meaning the built-up area shrank to a third of its former size"
+    ],
+    "answer": "C",
+    "hints": [
+      "A growth factor is the later figure divided by the earlier one, not subtracted from it.",
+      "Divide 450 by 150 rather than comparing the two numbers any other way."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-metropolitan-regions-urban-form-002",
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "cedCode": "M8GEO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A metropolitan area's core holds 150,000 people on 50 square kilometers of built-up land. Its suburban ring holds 450,000 people on 450 square kilometers of built-up land, and the whole metropolitan area holds 600,000 people on 500 square kilometers. A student wants the population density of the suburban ring specifically.",
+    "choices": [
+      "about 1,333 people per square kilometer",
+      "3,000 people per square kilometer",
+      "1,200 people per square kilometer",
+      "1,000 people per square kilometer"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide the ring's own population by the ring's own land area, not the core's or the total's.",
+      "The metropolitan-wide figure of 1,200 describes neither part on its own."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-metropolitan-regions-urban-form-003",
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "cedCode": "M8GEO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the Denholt metropolitan area, the suburban ring contains 320 of the area's 400 total square kilometers of built-up land, and the ring is home to 240,000 of the area's 400,000 total residents. A geography student is asked what this comparison of shares shows about the area's urban form.",
+    "choices": [
+      "The ring holds 80 percent of the land but only 60 percent of the people, which points to a spread-out form",
+      "The ring holds 60 percent of the land but 80 percent of the people, which points to a compact form",
+      "Since the ring has more land and more people than the core, both parts share the same form",
+      "The ring's share of land equals its share of people, so the built-up area is evenly filled"
+    ],
+    "answer": "A",
+    "hints": [
+      "Turn each fraction into a percentage before comparing them: 320 of 400, and 240,000 of 400,000.",
+      "A land share bigger than the matching population share signals ground spread thin, not filled in."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-metropolitan-regions-urban-form-004",
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "cedCode": "M8GEO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A regional planner claims that because both the population and the built-up land of the Verrin metropolitan area increased between two surveys, the area's urban form must have become more spread out. At the first survey, Verrin had 500,000 people on 250 square kilometers of built-up land. At the second survey, thirty years later, it had 750,000 people on 375 square kilometers.",
+    "choices": [
+      "Density fell from 2,000 to 1,000 people per square kilometer, since the land grew faster than the population, so the planner's claim is supported",
+      "Density stayed at 2,000 people per square kilometer at both surveys, since the population and land factors are equal, so the planner's claim is not supported",
+      "Density rose from 1,500 to 2,000 people per square kilometer, since the population grew faster than the land, so the planner's claim is not supported",
+      "Density cannot be determined without knowing how the population and land are split between the core and the ring"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compute the population factor and the land factor separately before deciding whether either one outran the other.",
+      "Both totals rising is not, by itself, evidence that the density changed at all."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-metropolitan-regions-urban-form-005",
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "cedCode": "M8GEO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student argues: \"Since Washington, D.C. holds the national government, and New York holds a major seaport and a leading business center, the United States must have a single dominant metropolitan area that gathers together all of the country's key national functions.\" A classmate is asked to evaluate this claim against how major seaports, airline hubs, business centers, and the national government are actually distributed across the country.",
+    "choices": [
+      "The claim is wrong, because Washington, D.C. is only a symbolic capital while the actual seat of the national government has moved to a different metropolitan area on the West Coast",
+      "The claim is correct, because Washington, D.C. and New York have merged into one metropolitan area that concentrates the country's government, ports, airline hubs, and business centers in a single place",
+      "The claim is wrong, because government, major seaports, airline hubs, and business centers sit in different metropolitan areas across different coasts, so no single metropolitan area holds all of them",
+      "The claim is correct, because the northeastern corridor from Washington to New York has grown into one continuous metropolitan area that outranks and absorbs every other region's national functions"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each national function separately — government, ports, airline hubs, business centers — rather than treating two examples as proof of one center.",
+      "A chain of nearby centers along one coast is still only part of a country's whole urban system."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-metropolitan-regions-urban-form-006",
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "cedCode": "M8GEO-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Callowe metropolitan area holds 700,000 people on 350 square kilometers of built-up land. Its council proposes a growth boundary: no new building beyond the present 350 square kilometers, with the next 210,000 residents housed inside that boundary instead. A council member states that the boundary will only benefit residents, since it lowers infrastructure cost per household and preserves land outside the boundary, with no downsides at all.",
+    "choices": [
+      "Density cannot be computed because the population figures given describe only the metropolitan area as a whole, not the separate core and ring, so the council member's claim about infrastructure savings and preserved land cannot be checked against any actual number",
+      "Density would rise from 2,000 to 2,600 people per square kilometer; since this rise lowers the infrastructure cost per household, preserves the land outside the boundary for other uses, and keeps the same government services available to everyone, the council member's claim of no downsides is accurate",
+      "Density would fall from 2,600 to 2,000 people per square kilometer, because adding residents while holding the built-up area fixed spreads the population more thinly, so the boundary reduces crowding with no downsides, confirming the council member's claim",
+      "Density would rise from 2,000 to 2,600 people per square kilometer; this lowers per-household infrastructure costs and preserves outside land, but it also removes detached-lot options and risks higher prices inside the boundary if building lags, so the claim of no downsides is incomplete"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add the new residents to the existing population and divide by the unchanged land area to get the new figure first.",
+      "A growth-boundary evaluation names what is gained and what is given up — a claim of zero cost skips the second half."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-migration-flows-001",
+    "loId": "m8geo.north-america-migration-flows",
+    "cedCode": "M8GEO-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Region Halden recorded 6,000 arrivals and 9,000 departures over one year. Net migration is defined as arrivals minus departures for a region over one period. Determine Halden's net migration total and whether Halden is a net sending or net receiving region for the year.",
+    "choices": [
+      "+15,000, making Halden a net receiving region",
+      "+3,000, making Halden a net receiving region",
+      "-15,000, making Halden a net sending region",
+      "-3,000, making Halden a net sending region"
+    ],
+    "answer": "D",
+    "hints": [
+      "Subtract departures from arrivals, not the other way around.",
+      "A negative net migration means the region lost people through migration that year."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-migration-flows-002",
+    "loId": "m8geo.north-america-migration-flows",
+    "cedCode": "M8GEO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Region Calder recorded these moves over one year: Calder to Renmark, 4,000; Calder to Sutton, 3,000; Renmark to Calder, 5,000; Sutton to Calder, 1,000. What is Calder's net migration for the year, and is Calder a net sending or net receiving region?",
+    "choices": [
+      "-1,000, net sending",
+      "+1,000, net receiving",
+      "-2,000, net sending",
+      "+2,000, net receiving"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add every line that starts at Calder for departures, and every line that ends at Calder for arrivals, before subtracting.",
+      "Make sure your two totals together account for all four lines exactly once."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-migration-flows-003",
+    "loId": "m8geo.north-america-migration-flows",
+    "cedCode": "M8GEO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Over one year, 8,000 people moved from Region Fenwick to Region Aldric, and 2,000 people moved from Region Aldric to Region Fenwick. During that same year, Fenwick's mining industry closed several plants, cutting available jobs sharply, while Aldric's mining industry stayed the same. Determine whether the plant closures function as a push or a pull for this flow, and which region they describe.",
+    "choices": [
+      "A pull, because it describes Fenwick, the region that lost population on net",
+      "A push, because it describes Fenwick, the region that lost population on net",
+      "A push, because it describes Aldric, the region that gained population on net",
+      "A pull, because it describes Aldric, the region that gained population on net"
+    ],
+    "answer": "B",
+    "hints": [
+      "A push describes conditions in the region people are leaving; a pull describes conditions in the region they enter.",
+      "Work out which region is net sending before deciding whether the reason fits as a push or a pull."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-migration-flows-004",
+    "loId": "m8geo.north-america-migration-flows",
+    "cedCode": "M8GEO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Over one year, 9,000 people moved from Region Oberlin to Region Prewitt, and 3,000 people moved from Region Prewitt to Region Oberlin. Prewitt's downtown housing costs are the highest in the state and have been rising for years, while Oberlin's housing costs are among the lowest in the state. A local report claims people moved because Oberlin offered cheaper housing. Evaluate this claim against the flow data.",
+    "choices": [
+      "The claim fails because the report gives no evidence that housing costs differ between Oberlin and Prewitt, so the price comparison itself is not established by the data",
+      "The claim is supported because after combining both flows, Oberlin ends up with more arrivals than departures overall, matching the region where housing is cheapest",
+      "The claim fails because Oberlin is the net sending region, so cheap housing sits in the region people left, not the one they entered",
+      "The claim is supported because when the two flows are compared, Prewitt ends up losing more people than it gains overall, matching the region where housing is priciest"
+    ],
+    "answer": "C",
+    "hints": [
+      "First find each region's net migration using arrivals minus departures.",
+      "A pull explanation only survives if the condition is located in the region that gained people, not the one that lost them."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-migration-flows-005",
+    "loId": "m8geo.north-america-migration-flows",
+    "cedCode": "M8GEO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A researcher recorded all moves among three regions for one year: Ashworth to Blyth, 4,000; Ashworth to Corrin, 2,000; Blyth to Ashworth, 3,000; Blyth to Corrin, 5,000; Corrin to Ashworth, 1,000; Corrin to Blyth, 2,000. The researcher then reported these net migration figures: Ashworth -2,000, Blyth -2,000, Corrin +5,000. Using the check that all regions' net figures must add to zero, determine which region's reported net does not match the table.",
+    "choices": [
+      "All three reported nets are correct; the totals only appear off due to rounding",
+      "Ashworth's net is incorrect; recomputing from the table gives a net of -3,000, not -2,000",
+      "Blyth's net is incorrect; recomputing from the table gives a net of -1,000, not -2,000",
+      "Corrin's net is incorrect; recomputing from the table gives a net of +4,000, not +5,000"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add each region's departures and arrivals separately from every line in the table before subtracting.",
+      "The three net figures have to add to zero, since everyone who left a region arrived in another one."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-migration-flows-006",
+    "loId": "m8geo.north-america-migration-flows",
+    "cedCode": "M8GEO-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is given one year of migration data showing a net flow of 40,000 people from an interior region to a southern region. The student concludes, 'This proves the long-running shift from the interior toward the South and West that has continued for decades.' Which statement best evaluates this conclusion given only that one year of data?",
+    "choices": [
+      "The conclusion overreaches: a claim about a movement running for decades requires many years of data all pointing the same direction, not just one year",
+      "The conclusion is fully supported, because a single year showing forty thousand people moving in the same direction is by itself direct proof that the decades-long trend is still occurring",
+      "The conclusion overreaches, because a net flow of only forty thousand people is far too small a number to represent a lasting shift between two entire major regions of the country",
+      "The conclusion is fully supported, because once the net direction of a flow is known, there is no further need to check whether push and pull reasons actually explain that movement"
+    ],
+    "answer": "A",
+    "hints": [
+      "A claim covering many decades needs evidence covering many decades.",
+      "One period of figures can only support a claim about that same period, no matter how large the flow is."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-population-patterns-001",
+    "loId": "m8geo.north-america-population-patterns",
+    "cedCode": "M8GEO-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography report gives two figures for a country called Velmont: a national density of 6 people per square kilometer, calculated using all of Velmont's land and people, and a settled-area density of 45 people per square kilometer, calculated using only the population and land inside a stated band along its coast. Which statement correctly describes what the settled-area figure measures?",
+    "choices": [
+      "The number of people for each square kilometer of land inside the stated coastal band, leaving out the land beyond it",
+      "The number of people for each square kilometer of Velmont's entire territory, including land outside the band",
+      "The percentage of Velmont's total population that lives within the coastal band",
+      "The percentage of Velmont's total land area that the coastal band covers"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check which land area is actually used in the division that produces 45.",
+      "A settled-area figure only counts the land inside the stated line, not the whole country."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-population-patterns-002",
+    "loId": "m8geo.north-america-population-patterns",
+    "cedCode": "M8GEO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Coravan has 15,000,000 people and 3,000,000 square kilometers of land. A stated band within 250 kilometers of its western coast holds 12,000,000 of those people on 400,000 square kilometers. What is the settled-area density of that coastal band?",
+    "choices": [
+      "37.5 people per square kilometer",
+      "30 people per square kilometer",
+      "5 people per square kilometer",
+      "4 people per square kilometer"
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide the band's population by the band's land area only, not the country's totals.",
+      "12,000,000 divided by 400,000 gives the settled-area figure."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-population-patterns-003",
+    "loId": "m8geo.north-america-population-patterns",
+    "cedCode": "M8GEO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Sarnak, 70 percent of the population lives inside a band that covers 60 percent of the country's land area. In Belmoor, 70 percent of the population lives inside a band that covers 15 percent of the country's land area. In which country does the national density figure most accurately describe where people actually live, and why?",
+    "choices": [
+      "Sarnak, because a larger band always contains more people no matter what percentage lives there",
+      "Belmoor, because a smaller band holding the same population share is always packed more people per square kilometer, which the national figure captures well",
+      "Sarnak, because its population share and land share are close together, meaning the settled band and the rest of the country have similar densities",
+      "Belmoor, because its population share is exactly 70 percent, the same number that determines whether an average is trustworthy"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the gap between the two shares in each country, not either share alone.",
+      "A small gap between population share and land share means the national figure is closer to honest."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-population-patterns-004",
+    "loId": "m8geo.north-america-population-patterns",
+    "cedCode": "M8GEO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Farland has 24,000,000 people and 6,000,000 square kilometers of land. Within 400 kilometers of its southern border live 21,600,000 of those people, on 1,200,000 square kilometers of land. A textbook states: 'Farland averages 4 people per square kilometer, so its population is thinly and evenly spread across the country.' Using the settled-area density and the population and land shares, which response best evaluates this claim?",
+    "choices": [
+      "The claim is not supported, but only because dividing the band's 21,600,000 people by the country's full 6,000,000 square kilometers gives 3.6 per square kilometer, a value lower than the national figure of 4, which would mean the interior is more crowded than the border area",
+      "The claim is supported, because computing 24,000,000 divided by 6,000,000 gives exactly 4 people per square kilometer, and since this matches the stated national average, the population must be spread evenly across every part of the country",
+      "The claim is not supported, because the settled band contains only 20 percent of the population while holding 90 percent of the land, meaning the national average of 4 underestimates how sparsely settled the border region truly is",
+      "The claim is not supported: 90 percent of the people live in the band at 18 per square kilometer while the remaining 10 percent occupy 80 percent of the land at a much lower density, so the national average describes neither area"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compute the band's settled-area density and compare it to the national figure of 4.",
+      "Work out both the population share and the land share the band holds before judging the claim."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-population-patterns-005",
+    "loId": "m8geo.north-america-population-patterns",
+    "cedCode": "M8GEO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two regions of a country are described. Region K: population density 55 people per square kilometer, growing season 210 days, deep soil, a large navigable river, and an ocean coast with two deep harbors. Region L: population density 6 people per square kilometer, growing season 230 days, deep soil, a large navigable river, but no coast and 850 kilometers to the nearest port. Which explanation does the data support for the density gap between the two regions?",
+    "choices": [
+      "Reachable water access explains the gap, since Region L lacks a coast and is far from a port while Region K has harbors; the growing season is ruled out because Region L's season is longer, not shorter",
+      "Growing season explains the gap, because a longer growing season should support more agriculture, yet Region K has the shorter season and higher density, showing that a shorter growing season somehow attracts more settlement despite producing less food",
+      "Soil quality explains the gap, because Region K's deep soil must be more fertile than Region L's deep soil, even though both regions are listed as having deep soil, meaning some hidden difference in soil richness accounts for the density gap",
+      "The gap cannot be explained by any physical control, because Region K and Region L share the same soil type and both have access to a large navigable river, so no physical factor differs enough to account for the density difference"
+    ],
+    "answer": "A",
+    "hints": [
+      "A physical control only counts as an explanation if it changes in the same direction as the density.",
+      "Check which listed condition actually differs between the two regions, since soil and river are the same in both."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-population-patterns-006",
+    "loId": "m8geo.north-america-population-patterns",
+    "cedCode": "M8GEO-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Quorlan has 30,000,000 people and 5,000,000 square kilometers of land. A band within 300 kilometers of its southern border holds 27,000,000 people on 1,000,000 square kilometers, where the growing season is 200 days and soil is deep. A geographer widens the band to 500 kilometers of the border, and the new band holds 28,500,000 people on 2,000,000 square kilometers; in the added ring, the growing season is only 90 days and the soil is thin. Which statement correctly interprets the effect of widening the band?",
+    "choices": [
+      "Widening the band raised its density from 27 to 14.25 people per square kilometer because more people were added than land, showing the ring is more attractive to settlement",
+      "Widening the band lowered its density from 27 to 14.25 people per square kilometer because the added ring holds only 1.5 people per square kilometer, consistent with its much shorter growing season and thinner soil",
+      "Widening the band kept the density unchanged at 27 people per square kilometer, since population and land grew in matching proportions",
+      "Widening the band lowered its density from 27 to 14.25 people per square kilometer, but this has no connection to the ring's growing season or soil since band edges are political boundaries, not physical ones"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the density of just the added ring by subtracting the original band's people and land from the new band's totals.",
+      "Compare the ring's growing season and soil to the original band's to see whether the drop in density lines up with a physical control."
+    ]
+  }
+]

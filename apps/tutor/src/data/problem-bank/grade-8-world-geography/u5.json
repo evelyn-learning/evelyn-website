@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-evaluating-population-projections-001",
+    "loId": "m8geo.evaluating-population-projections",
+    "cedCode": "M8GEO-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Velmar is a small town with 10,000 residents. Its population grew by 2 percent over the past year. If Velmar keeps growing at 2 percent a year, about how many years will it take to reach 20,000 residents?",
+    "choices": [
+      "about 17.5 years",
+      "about 70 years",
+      "about 35 years",
+      "about 140 years"
+    ],
+    "answer": "C",
+    "hints": [
+      "Rule of 70: divide 70 by the percent growth rate written as a plain number.",
+      "Check your answer by multiplying it by 2; it should come back to about 70."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-population-projections-002",
+    "loId": "m8geo.evaluating-population-projections",
+    "cedCode": "M8GEO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A regional planning report states that a town's population is projected to double in about 14 years if its current growth rate continues. Using the rule of 70, about what annual growth rate would produce that doubling time?",
+    "choices": [
+      "10 percent a year",
+      "14 percent a year",
+      "7 percent a year",
+      "5 percent a year"
+    ],
+    "answer": "D",
+    "hints": [
+      "The rule of 70 also works in reverse: divide 70 by the doubling time to get the rate.",
+      "Check a candidate rate by multiplying it by 14; it should land back on about 70."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-population-projections-003",
+    "loId": "m8geo.evaluating-population-projections",
+    "cedCode": "M8GEO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Petrell has 40,000 residents and grew by 4 percent over the past year. A local newspaper prints the headline: 'Petrell's population will hit 80,000 in 17.5 years.' Which revised statement correctly turns this claim into a testable projection rather than an unconditional prediction?",
+    "choices": [
+      "If Petrell keeps growing at 4% a year, it will reach about 80,000 in about 17.5 years.",
+      "Petrell will reach 80,000 in exactly 17.5 years because 70 divided by 4 is 17.5.",
+      "Petrell reached 40,000 in 17.5 years, so it will double again in the same time.",
+      "Petrell's population will double every 17.5 years forever, since the rate is fixed at 4%."
+    ],
+    "answer": "A",
+    "hints": [
+      "A projection has to name the condition that must keep holding true for the number to occur.",
+      "Look for the option that keeps a real 'if' and does not claim more certainty than one division supports."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-population-projections-004",
+    "loId": "m8geo.evaluating-population-projections",
+    "cedCode": "M8GEO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sarnow has 50,000 residents. Births and deaths alone are adding 1.5 percent a year to the population, and net migration is adding 500 more people a year on top of that. If both parts continue at these levels, about how many years would the rule of 70 predict for Sarnow to double?",
+    "choices": [
+      "about 47 years",
+      "about 28 years",
+      "about 70 years",
+      "about 20 years"
+    ],
+    "answer": "B",
+    "hints": [
+      "Turn the 500 migrants into a percent of Sarnow's population before combining it with the births-and-deaths rate.",
+      "Add the two rates together first, then divide 70 by that single combined rate."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-population-projections-005",
+    "loId": "m8geo.evaluating-population-projections",
+    "cedCode": "M8GEO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two research groups project the future of Holwick, a town of 30,000 people. Group A assumes the current combined rate of 4 percent a year, which includes both births/deaths and migration, continues, and calculates a doubling time of about 17.5 years. Group B assumes migration will end and only the births-and-deaths rate of 2.5 percent a year continues, calculating about 28 years. A town council report claims the two groups must have made an arithmetic error, since they disagree about the same town. What is the correct interpretation of the disagreement?",
+    "choices": [
+      "The disagreement shows growth rates are unreliable, so doubling time cannot be estimated for Holwick at all.",
+      "One group must have divided 70 incorrectly, since the same town cannot have two different doubling times.",
+      "Both divisions are correct; the groups simply assumed different things about whether migration continues.",
+      "Group B must be more accurate, since a lower growth rate always produces a more trustworthy projection."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether both teams' divisions actually close when you multiply the rate by their answer.",
+      "Compare what each team assumed about migration rather than comparing their final numbers."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-population-projections-006",
+    "loId": "m8geo.evaluating-population-projections",
+    "cedCode": "M8GEO-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Marrow's population is currently growing at 6 percent a year because of a temporary mining boom, but the growth rate is projected to fall to 1 percent a year once the mine closes in a few years. A regional report flatly states: 'Marrow will double in about 12 years.' Given that Marrow's growth rate is not expected to hold steady, what is the most defensible way to describe its doubling time?",
+    "choices": [
+      "No doubling-time estimate is possible at all once a growth rate is expected to change.",
+      "Exactly 12 years, since that is what the rule of 70 gives using today's fast growth rate.",
+      "Exactly 70 years, since the slower rate after the mine closes is the one that ultimately matters.",
+      "Somewhere between about 12 years and about 70 years, since the rate is not expected to stay fixed."
+    ],
+    "answer": "D",
+    "hints": [
+      "The rule of 70 needs one steady rate; when the rate will change, run the division at both ends.",
+      "An honest answer here names a bracket rather than picking just one end of the change."
+    ]
+  },
+  {
+    "id": "m8geo-migration-flows-their-effects-001",
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "cedCode": "M8GEO-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Country Vantor recorded 15,000 arrivals and 22,000 departures last year. Country Sethia recorded 9,000 arrivals and 4,000 departures over the same year. Using arrivals minus departures for each country, which statement correctly identifies each country's net migration status?",
+    "choices": [
+      "Both countries are net sending countries because departures were recorded for both countries last year",
+      "Vantor is a net receiving country at 7,000 and Sethia is a net sending country at -5,000",
+      "Both countries are net receiving countries because arrivals were recorded for both countries last year",
+      "Vantor is a net sending country at -7,000 and Sethia is a net receiving country at 5,000"
+    ],
+    "answer": "D",
+    "hints": [
+      "Subtract departures from arrivals for each country separately.",
+      "A negative net figure marks a country that lost more people than it gained."
+    ]
+  },
+  {
+    "id": "m8geo-migration-flows-their-effects-002",
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "cedCode": "M8GEO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A worker in Country Drenholm earns $250 a month. Moving to Country Kastel costs $1,000 in travel and fees, and moving to Country Orivane costs $1,500 in travel and fees. Which statement correctly prices these two obstacles against the mover's home pay?",
+    "choices": [
+      "The Kastel obstacle equals four months of Drenholm pay and the Orivane obstacle equals six months of Drenholm pay",
+      "The Kastel obstacle equals six months of Drenholm pay and the Orivane obstacle equals four months of Drenholm pay",
+      "Both obstacles equal the same number of months of Drenholm pay because the dollar costs are close together",
+      "The obstacles cannot be compared because they are measured in two different destination countries"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide each cost by the home country's monthly pay.",
+      "The result should be read as a number of months, not as a raw dollar figure."
+    ]
+  },
+  {
+    "id": "m8geo-migration-flows-their-effects-003",
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "cedCode": "M8GEO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two thousand people born in Country Halvorsk live in Country Renmoor, a community built up over ten years of steady arrivals. A student claims this proves that people from Halvorsk prefer Renmoor's culture to any other destination. Which response correctly evaluates this claim using how a chain migration count is meant to be read?",
+    "choices": [
+      "The claim is supported because a large established community built up over ten years of arrivals is direct proof that a genuine cultural preference exists",
+      "The claim is unsupported because the count only measures how many people from Halvorsk live there, not why they prefer it or what they are like",
+      "The claim is unsupported because chain migration can only occur in situations where no push factors or pull factors are present between the two countries at all",
+      "The claim is supported because chain migration only happens between countries that already share the same language, religion, and long-standing cultural traditions"
+    ],
+    "answer": "B",
+    "hints": [
+      "Chain migration data is a count of people, never a description of them.",
+      "Ask what the number actually measures versus what the student's claim asserts."
+    ]
+  },
+  {
+    "id": "m8geo-migration-flows-their-effects-004",
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "cedCode": "M8GEO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Workers in Country Marrowton earn $350 a month. Country Feldris shares a land border, pays $700 a month, and charges a $100 fare with no permit required. Country Quenmark pays $2,800 a month, lies overseas, costs $3,500 to reach, and requires a work permit that takes eighteen months to arrive after a job offer. Last year 18,000 people moved from Marrowton to Feldris while only 1,500 moved from Marrowton to Quenmark. Which explanation does the data best support for this difference?",
+    "choices": [
+      "Feldris took the larger flow simply because far more job openings were advertised there that year, a factor completely unrelated to travel cost, permit requirements, or how long workers had to wait for approval",
+      "Quenmark's pay gap of $2,100 a month is seven times larger than Feldris's $350 gap, so the larger flow should have gone to Quenmark instead, which means the reported migration numbers must contain an error",
+      "Quenmark's pay gap is seven times larger, but its obstacle costs ten months of home pay and delays the gain for a year and a half, while Feldris costs under one month of pay with no wait",
+      "The flow difference shows that people from Marrowton feel culturally more comfortable living in Feldris than in Quenmark, regardless of any difference in pay, travel cost, or permit wait time"
+    ],
+    "answer": "C",
+    "hints": [
+      "Price each cost as months of Marrowton pay, then add in any wait for a permit.",
+      "A larger monthly pay gap does not guarantee a larger flow once the obstacle is measured."
+    ]
+  },
+  {
+    "id": "m8geo-migration-flows-their-effects-005",
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "cedCode": "M8GEO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Country Bellmoor, 10,000 workers living abroad each send home $50 a month, and Bellmoor earned $60,000,000 from exports last year. Over the past five years Bellmoor trained 500 teachers, and 150 of them now work abroad, with 40 teaching posts unfilled at home. Which statement correctly evaluates these two measurements without combining them into a single score?",
+    "choices": [
+      "The two percentages, 10 percent from remittances and 30 percent from teacher losses, should be averaged together to 20 percent to give Bellmoor a single overall migration score for the year",
+      "Money sent home came to 10 percent of export earnings and 30 percent of trained teachers left to work abroad, so by subtracting these Bellmoor finished 20 percent behind for the year",
+      "Since the 30 percent teacher loss is larger than the 10 percent remittance gain, the loss of trained teachers completely cancels out the value of the money sent home that year",
+      "Money sent home came to 10 percent of export earnings while 30 percent of trained teachers now work abroad; these are shares of different totals and cannot be subtracted into one result"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compute each share separately before comparing the two figures.",
+      "A percentage of export earnings and a percentage of trained workers are shares of different totals."
+    ]
+  },
+  {
+    "id": "m8geo-migration-flows-their-effects-006",
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "cedCode": "M8GEO-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Last year, Country Astervale gained a net 12,000 migrants who formed 4,000 households, and the country finished 2,500 new homes. This year, the same net 12,000 migrants arrived and formed 4,000 households again, but Astervale finished 5,000 new homes instead. Comparing the two years, which statement correctly identifies what changed and what stayed the same?",
+    "choices": [
+      "The number of arriving households stayed the same both years, but the shortfall of 1,500 homes turned into a surplus of 1,000 homes because more homes were finished, showing the result depends on the building rate, not the number of arrivals",
+      "The housing shortfall disappeared because fewer households arrived in the second year than in the first, showing that it is the number of arriving households, not the number of homes finished or the construction rate, that determines whether a housing shortfall occurs in Astervale",
+      "Both years had the same shortfall because the same number of people migrated to Astervale and formed the same number of households, so finishing nearly twice as many new homes as the year before made essentially no real difference to the overall housing outcome in the country",
+      "The shortfall turned into a surplus only because the number of unfilled labor posts fell sharply that year, which is what allowed construction crews to finish far more new homes than they had been able to complete the year before"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare arriving households to homes finished separately in each year.",
+      "Check whether the number of arrivals changed between the two years, and whether the building number changed."
+    ]
+  },
+  {
+    "id": "m8geo-population-pyramids-dependency-001",
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "cedCode": "M8GEO-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography student is told that a country's population is sorted into three age bands: under 15, 15 to 64, and 65 or older. The student wants to compute the dependency ratio for this country using the standard routine. Which band should serve as the denominator in that calculation?",
+    "choices": [
+      "The 15-to-64 band, since it represents the working-age population",
+      "The under-15 band, since it represents future workers",
+      "The whole population total, since dependency is measured against everyone",
+      "The 65-and-older band, since it represents the most vulnerable dependents"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall which band sits between the two dependent bands.",
+      "The denominator should never be the total population."
+    ]
+  },
+  {
+    "id": "m8geo-population-pyramids-dependency-002",
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "cedCode": "M8GEO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Bellmoor reports that of every 100 people, 30 are under 15, 60 are 15 to 64, and 10 are 65 or older. Calculate Bellmoor's dependency ratio using the standard four-step routine.",
+    "choices": [
+      "40 dependents for every 100 working-age people",
+      "67 dependents for every 100 working-age people",
+      "40 percent of the population is dependent",
+      "30 dependents for every 100 working-age people"
+    ],
+    "answer": "B",
+    "hints": [
+      "Add the two outer bands first to get the numerator.",
+      "Divide the numerator by the working-age band, not the total population."
+    ]
+  },
+  {
+    "id": "m8geo-population-pyramids-dependency-003",
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "cedCode": "M8GEO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Kestrel Bay reports that of every 100 people, 20 are under 15, 60 are 15 to 64, and 20 are 65 or older. Based on comparing the two outer bands to each other, how should this age structure be classified?",
+    "choices": [
+      "Top-heavy, because the 65-and-over band is at least twice the size of the under-15 band",
+      "Wide-based, because the under-15 band is at least twice the size of the 65-and-over band",
+      "Column-shaped, because neither outer band is at least twice the size of the other",
+      "Wide-based, because the working-age band is the largest single band in the structure"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare only the under-15 and 65-and-over bands to each other, not to the middle band.",
+      "Check whether one outer band is at least twice the other before naming a shape."
+    ]
+  },
+  {
+    "id": "m8geo-population-pyramids-dependency-004",
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "cedCode": "M8GEO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Dunmore reports that of every 100 people, 42 are under 15, 50 are 15 to 64, and 8 are 65 or older. Compute Dunmore's dependency ratio and determine whether the youth part or the old-age part makes up the larger share of that ratio.",
+    "choices": [
+      "The ratio is 100 per 100, and the youth and old-age parts are equal at 50 each",
+      "The ratio is 50 per 100, and the youth part (42) is larger than the old-age part (8)",
+      "The ratio is 100 per 100, and the old-age part (16) is larger than the youth part (84)",
+      "The ratio is 100 per 100, and the youth part (84) is larger than the old-age part (16)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compute the dependency ratio using only the working-age band as the denominator.",
+      "Split the numerator into a youth part and an old-age part, then compare the two."
+    ]
+  },
+  {
+    "id": "m8geo-population-pyramids-dependency-005",
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "cedCode": "M8GEO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ashgrove reports that of every 100 people, 38 are under 15, 55 are 15 to 64, and 7 are 65 or older. Of the 38 people under 15, 20 are aged 5 to 14 and 18 are under 5. Which statement correctly gives both Ashgrove's dependency ratio and the number of people per 100 who will need work or training places within ten years?",
+    "choices": [
+      "The dependency ratio is about 82 per 100, and 20 people per 100 will need work or training places within ten years",
+      "The dependency ratio is about 82 per 100, and 38 people per 100 will need work or training places within ten years",
+      "The dependency ratio is about 45 per 100, and 20 people per 100 will need work or training places within ten years",
+      "The dependency ratio is about 82 per 100, and 18 people per 100 will need work or training places within ten years"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the working-age band, not the total population, as the denominator for the ratio.",
+      "Only the 5-to-14 slice crosses into the working-age band within ten years, not the whole under-15 band or the under-5 slice."
+    ]
+  },
+  {
+    "id": "m8geo-population-pyramids-dependency-006",
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "cedCode": "M8GEO-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two invented countries both report a dependency ratio of 150 dependents per 100 working-age people. Alden: of every 100 people, 54 are under 15, 40 are 15 to 64, and 6 are 65 or older. Brackwood: of every 100 people, 30 are under 15, 40 are 15 to 64, and 30 are 65 or older. Given both countries share the same ratio, what shape classification applies to each?",
+    "choices": [
+      "Alden is wide-based because its outer bands differ sharply, and Brackwood is top-heavy because its 65-and-over band dominates",
+      "Alden is wide-based because its outer bands differ sharply, and Brackwood is column-shaped because its outer bands are equal",
+      "Alden is column-shaped because its outer bands are close, and Brackwood is wide-based because its under-15 band dominates",
+      "Both Alden and Brackwood are wide-based because they share the same dependency ratio of 150 per 100"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two countries can share the same ratio without sharing the same shape.",
+      "For each country separately, compare only its two outer bands to decide the shape."
+    ]
+  },
+  {
+    "id": "m8geo-refugees-displacement-001",
+    "loId": "m8geo.refugees-and-displacement",
+    "cedCode": "M8GEO-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Marta fled fighting in her home country and crossed into a neighboring country three days ago. She has applied for protection there, but officials have not yet decided her case. Consider the two questions used to sort a displaced person's situation: whether a border was crossed, and whether a protection claim has been decided.",
+    "choices": [
+      "Refugee, because any person who flees fighting and crosses a border automatically qualifies for refugee status right away.",
+      "Asylum seeker, because she crossed an international border and her claim for protection has not yet been decided",
+      "Internally displaced person, because being forced to flee violence is what defines this term, even though she crossed into another country.",
+      "Not displaced, because a person only counts as displaced once officials have formally decided their protection claim."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check both ordered questions: border crossed, then claim decided.",
+      "A pending claim and a decided claim are counted differently even for the same person."
+    ]
+  },
+  {
+    "id": "m8geo-refugees-displacement-002",
+    "loId": "m8geo.refugees-and-displacement",
+    "cedCode": "M8GEO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An earthquake destroyed the town of Verek. The Holt family relocated 500 kilometers to a shelter in another province of the same country and has lived there for eight months while their town is rebuilt. No international border was crossed at any point in their move.",
+    "choices": [
+      "Refugees, because a natural disaster forced them from their home, and any disaster move counts as refugee status.",
+      "Asylum seekers, because traveling a long distance to reach safety is what defines this term.",
+      "Internally displaced persons, because they were forced from home but never crossed an international border",
+      "Not displaced, because finding stable shelter after eight months means a person is no longer considered displaced."
+    ],
+    "answer": "C",
+    "hints": [
+      "Distance traveled does not decide which term applies.",
+      "Ask only whether an international border was crossed."
+    ]
+  },
+  {
+    "id": "m8geo-refugees-displacement-003",
+    "loId": "m8geo.refugees-and-displacement",
+    "cedCode": "M8GEO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aydin crossed into a neighboring country after conflict reached his hometown ten months ago and asked that country for protection. Last week, authorities decided his claim in his favor. Determine which term correctly describes Aydin as of today.",
+    "choices": [
+      "Not displaced, because the claim process has now ended",
+      "Asylum seeker, because he only crossed the border ten months ago",
+      "Internally displaced person, because he originally fled conflict at home",
+      "Refugee, because his claim for protection has now been decided in his favor"
+    ],
+    "answer": "D",
+    "hints": [
+      "A decision on a specific date changes which word applies, even though nothing about the person changed.",
+      "Compare his situation now to what it was before the decision was made."
+    ]
+  },
+  {
+    "id": "m8geo-refugees-displacement-004",
+    "loId": "m8geo.refugees-and-displacement",
+    "cedCode": "M8GEO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Conflict forced 60,000 people to leave the region of Tarsin. Of these, 39,000 moved to other parts of Tarsin, 18,000 crossed the nearby border into Korva (a 30-kilometer trip requiring no visa and an $8 fare), and 3,000 traveled 950 kilometers to Palden, which requires a visa and costs $200 to reach. A news report claims: \"Most displaced people from Tarsin have sought refuge far from home.\" Evaluate this claim using the shares of the total who left.",
+    "choices": [
+      "Not supported: only 3,000 of 60,000, or 5 percent, reached Palden, while 65 percent stayed inside Tarsin",
+      "Supported: reaching Palden proves most people fled far, since crossing into Korva does not count as fleeing home",
+      "Not supported: 18,000 crossing into Korva is the largest group, so more people fled far than stayed home",
+      "Supported: the visa and cost needed to reach Palden show that distance was the main barrier faced by most people"
+    ],
+    "answer": "A",
+    "hints": [
+      "Turn each group into a percentage of the full 60,000 before judging the claim.",
+      "A claim about 'most' people requires checking the share of the group with the fewest people, not just its existence."
+    ]
+  },
+  {
+    "id": "m8geo-refugees-displacement-005",
+    "loId": "m8geo.refugees-and-displacement",
+    "cedCode": "M8GEO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two neighbors left the coastal town of Denrik in the same month. Priya's house was destroyed by a hurricane, and she moved 250 kilometers inland to a shelter in another region of her own country. Oskar moved to that same region to start a new job at a factory, unrelated to the storm. Determine which statement correctly classifies each of them.",
+    "choices": [
+      "Both are internally displaced because they moved the same distance to the same region within the same country, and matching travel distances always place two movers into the identical displacement category.",
+      "Priya is internally displaced because she was forced from home by the storm and crossed no border; Oskar is not displaced because he moved by choice for work",
+      "Priya is an asylum seeker because she lost her home in a disaster and moved to find shelter elsewhere, while Oskar is internally displaced because he relocated for a new job.",
+      "Neither is displaced, because moving within one's own country never counts as displacement no matter the reason, since displacement only applies when someone leaves their country entirely."
+    ],
+    "answer": "B",
+    "hints": [
+      "Before sorting anyone into one of the three terms, check whether they were forced to leave or chose to move.",
+      "Traveling the same distance does not mean the same classification applies to both people."
+    ]
+  },
+  {
+    "id": "m8geo-refugees-displacement-006",
+    "loId": "m8geo.refugees-and-displacement",
+    "cedCode": "M8GEO-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Eight thousand people who crossed into Kest are expected to stay only 4 months. Response X, a camp, is ready in 2 weeks, costs $40 per person per month to run, and has no setup cost. Response Y, housing in towns, is ready in 9 weeks, costs $30 per person per month, and requires a one-time setup cost of $960,000. Determine which response the stated cost criterion favors over the full 4-month stay, and explain why the cheaper-to-run option does not win here.",
+    "choices": [
+      "Response X, because it houses fewer school-age children than Response Y, and camps that serve fewer children always turn out cheaper overall regardless of the actual per-person monthly rates or setup costs involved.",
+      "Response Y, because its $30 per person monthly rate is lower than Response X's $40 per person, and a lower monthly rate always produces the lower total cost no matter how large any one-time setup expense might be.",
+      "Response X, because its total cost over 4 months ($1,280,000) is lower than Response Y's ($1,920,000), since the $960,000 setup needs 12 months of savings to pay back but the stay is only 4 months",
+      "Response Y, because the $960,000 setup cost is fully recovered within the first month once 8,000 people move in, since spreading a large expense across many people always makes it disappear almost immediately."
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the setup cost by the monthly savings to find how many months it takes to pay back, then compare that to the stated stay length.",
+      "Total both responses over the same number of months before deciding which one is actually cheaper."
+    ]
+  }
+]

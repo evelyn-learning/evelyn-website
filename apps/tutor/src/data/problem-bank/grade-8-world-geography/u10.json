@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-building-a-geographic-argument-from-data-001",
+    "loId": "m8geo.building-a-geographic-argument",
+    "cedCode": "M8GEO-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography student is told that a sentence only counts as a claim if it passes a specific test. Which statement correctly describes that test?",
+    "choices": [
+      "It restates the exact question that was asked about the dataset, without adding any new information",
+      "It includes at least one exact number pulled straight from the dataset, regardless of whether that number could be contradicted",
+      "It expresses a judgment or feeling about the data, even though no specific figure could ever prove it false",
+      "It states a specific result — like a rate, count, or comparison — that the data could actually show to be false"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what specific result would make the sentence untrue.",
+      "A sentence can include a feeling and still fail this test if no figure could contradict it."
+    ]
+  },
+  {
+    "id": "m8geo-building-a-geographic-argument-from-data-002",
+    "loId": "m8geo.building-a-geographic-argument",
+    "cedCode": "M8GEO-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two students studying the same beach town's visitor data write summary sentences. Student A writes: 'Beach access is uneven across the town's four districts.' Student B writes: 'The beach access situation here is kind of frustrating.' Which sentence is a claim that a dataset could actually test?",
+    "choices": [
+      "Student A's sentence, because a result showing that every district has about the same access rate would prove it false",
+      "Student B's sentence, because frustration is a real feeling that residents genuinely have about beach access in town",
+      "Both sentences, because each one is written as an answer to a question about the town's beach access",
+      "Neither sentence, because both are written as personal impressions that no dataset could ever confirm or contradict"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which sentence names a specific result that a dataset could contradict.",
+      "One sentence describes a feeling, not a measurable outcome."
+    ]
+  },
+  {
+    "id": "m8geo-building-a-geographic-argument-from-data-003",
+    "loId": "m8geo.building-a-geographic-argument",
+    "cedCode": "M8GEO-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher counted vehicles at one intersection in Millbrook for a single Tuesday afternoon and found heavy congestion. She then wrote: 'This intersection in Millbrook is always congested.' In which direction does this claim overreach its evidence?",
+    "choices": [
+      "Extent, because the claim covers more locations than the one intersection that was counted",
+      "Time, because a single afternoon's reading is being stretched into a claim about every day",
+      "Cause, because congestion is being attributed to a factor that was never measured",
+      "Quantifier, because 'congested' describes more vehicles than the count actually found"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the span of time the researcher actually measured to the span of time the claim covers.",
+      "The location named in the claim matches exactly what was counted, so extent is not the issue here."
+    ]
+  },
+  {
+    "id": "m8geo-building-a-geographic-argument-from-data-004",
+    "loId": "m8geo.building-a-geographic-argument",
+    "cedCode": "M8GEO-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Fernhill has two neighborhoods, each served by its own library branch. Riverside has 5,000 residents, and 2,000 of them are registered members of the Riverside branch. Hillcrest has 3,000 residents, and 300 of them are registered members of the Hillcrest branch. The Riverside branch is a 10-minute walk from the neighborhood center, and the Hillcrest branch is a 35-minute walk from its neighborhood center. A student claims: 'Residents are more likely to register for a library card at the branch that is easier to walk to.' Which sentence correctly states the reasoning connecting the evidence to this claim?",
+    "choices": [
+      "Riverside's walk is 10 minutes and Hillcrest's is 35 minutes, so the shorter walk by itself proves that distance is what causes higher registration, without needing to check how many residents actually registered at each branch",
+      "Riverside has 2,000 registered members and Hillcrest has 300, so the raw counts alone show more people overall prefer the branch with the shorter walk, without needing to account for each neighborhood's population size",
+      "2,000 of Riverside's 5,000 residents are registered, which is 40 percent, against 300 of Hillcrest's 3,000, which is 10 percent, so the branch with the shorter walk has a much higher share of residents registered",
+      "2,000 divided by 3,000 is about 67 percent, which is far higher than Hillcrest's raw registration count of 300, so Riverside residents register at a much higher rate than Hillcrest residents do"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check which population each branch's registered count should be divided by before comparing.",
+      "A correct rate uses each neighborhood's own resident total as the denominator, not the other neighborhood's total."
+    ]
+  },
+  {
+    "id": "m8geo-building-a-geographic-argument-from-data-005",
+    "loId": "m8geo.building-a-geographic-argument",
+    "cedCode": "M8GEO-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A small town removed all parking meters from its Main Street in March. Before removal, foot traffic counted at 300 pedestrians per day; after removal, in April, counted foot traffic was 450 pedestrians per day. The town council claims that removing the parking meters increased foot traffic. Which single added piece of data would do the most to strengthen or overturn this claim?",
+    "choices": [
+      "Customer satisfaction survey results from Main Street shop owners, since their opinions would reveal whether they personally believe the meter removal helped business",
+      "The exact number of parking meters removed from Main Street in March, since that count would show how large the physical change actually was",
+      "A second foot-traffic count on Main Street taken in May, since a higher count would confirm the March-to-April rise was not just a one-time blip",
+      "Foot traffic counts from the same two months on a nearby street that kept its meters, since a rise there would point away from the meters as the cause"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what result would point toward a cause other than the meters.",
+      "A figure that could only agree with the existing claim, no matter what it shows, is not the strongest one to request."
+    ]
+  },
+  {
+    "id": "m8geo-building-a-geographic-argument-from-data-006",
+    "loId": "m8geo.building-a-geographic-argument",
+    "cedCode": "M8GEO-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Pinewood County has five summer camps. At Cedar Camp, a one-week survey of 400 campers found that 280 of them reported drinking untreated lake water at least once. That same week, the camp nurse logged 60 stomach illness cases among the 400 campers, compared to 10 cases logged during the same week the previous summer, when the camp's water filter station had been working. No survey was run at the other four camps, and no camper was asked whether they specifically drank untreated water on the days they got sick. A county report then claims: 'Most campers in Pinewood County drink untreated lake water every summer, and this is causing a lasting rise in stomach illness across the county.' Which repaired claim correctly fixes every direction in which the original claim overreaches its evidence?",
+    "choices": [
+      "At Cedar Camp during the surveyed week, 280 of 400 campers (70 percent) reported drinking untreated lake water, and stomach illness cases that week were higher than the same week last year",
+      "Most campers across Pinewood County probably drink untreated lake water every summer, and this is likely causing a lasting rise in stomach illness at camps throughout the entire county",
+      "At Cedar Camp during the surveyed week, most campers drank untreated lake water, and that untreated water directly caused the rise in stomach illness cases compared to the same week last year",
+      "Across all five camps in Pinewood County, 70 percent of campers drink untreated lake water every single summer, based only on the one week that was measured at Cedar Camp"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the extent, the time span, and the cause of the claim separately — a repair can fix two of these and still overreach in the third.",
+      "Adding a hedge word like 'probably' does not change which camps or which weeks a claim actually covers."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-two-regions-with-indicators-001",
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "cedCode": "M8GEO-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A planner wants to compare two invented regions using an indicator table with physical, population, economic, and connectivity rows. Before she opens the table, she is told to write down a criterion that states what the comparison is for.",
+    "choices": [
+      "Keeping homes out of floodwater during the rainy season",
+      "Which region is doing better overall",
+      "Region Alpha has more people than Region Beta",
+      "Region Beta's exports are worth more money than Region Alpha's"
+    ],
+    "answer": "A",
+    "hints": [
+      "A criterion names a purpose the comparison serves, not a fact already sitting in the table.",
+      "Ask whether each option could be answered with a single row, or whether it just declares an overall winner or restates a fact."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-two-regions-with-indicators-002",
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "cedCode": "M8GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two invented regions, Norwick and Thale, are compared using an indicator table. Physical: 10 percent of Norwick's homes sit in a flood zone versus 25 percent of Thale's. Population: Norwick gains 800 people a year while Thale loses 200. Economic: Norwick's export concentration is 45 percent versus Thale's 20 percent. Connectivity: 70 of every 100 Norwick households have a home internet connection versus 35 of every 100 in Thale. The stated criterion is which region faces the greater challenge in reaching every household with an online government service. Which dimension of the table should be used to answer this criterion?",
+    "choices": [
+      "Physical, because flood exposure often coincides with poor infrastructure access",
+      "Connectivity, because it is the only row measuring household internet access",
+      "Population, because a growing population increases demand for online services",
+      "Economic, because export concentration affects government funding for internet service"
+    ],
+    "answer": "B",
+    "hints": [
+      "The criterion is about reaching households with an internet-based service — look for the row that directly measures that.",
+      "A dimension can sound related without actually measuring what the criterion asks about; only one row measures household internet access directly."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-two-regions-with-indicators-003",
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "cedCode": "M8GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Region Vantor earns $300 million a year from exports, of which $180 million comes from a single mineral. Region Corlin earns $250 million a year from exports, of which $50 million comes from its largest single export. Export concentration is the share of a region's total export earnings that comes from its single largest export. Which region has the higher export concentration, and what is that share?",
+    "choices": [
+      "Vantor, at 40 percent",
+      "Corlin, at 20 percent",
+      "Vantor, at 60 percent",
+      "Corlin, at 50 percent"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide each region's largest-export earnings by its total export earnings to get a share.",
+      "Compare the two resulting shares directly — the higher share, not the higher dollar amount, answers which region has the higher concentration."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-two-regions-with-indicators-004",
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "cedCode": "M8GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A housing authority compares two invented regions it groups for planning. Physical: 15 percent of Ashgrove's land is drought-prone versus 40 percent of Belmont's. Population: Ashgrove gains 2,000 people a year while Belmont loses 500. Economic: Ashgrove's export concentration is 70 percent versus Belmont's 30 percent. Connectivity: 55 of every 100 Ashgrove households have home internet versus 65 of every 100 in Belmont. The stated criterion is which region faces the greater challenge in building enough new housing to keep up with population growth. Which dimension bears on this criterion, and which region faces the greater challenge?",
+    "choices": [
+      "Connectivity; Belmont faces the greater challenge, because more of its households already have internet access",
+      "Physical; Belmont faces the greater challenge, because 40 percent of its land is drought-prone",
+      "Economic; Ashgrove faces the greater challenge, because 70 percent of its exports rely on one good",
+      "Population; Ashgrove faces the greater challenge, because it is gaining 2,000 people a year while Belmont is losing 500"
+    ],
+    "answer": "D",
+    "hints": [
+      "Only one dimension measures whether a region's population is growing or shrinking — that is the one a housing-demand criterion needs.",
+      "Set aside any dimension whose figures don't say anything about how many new people need homes."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-two-regions-with-indicators-005",
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "cedCode": "M8GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented regions are compared using an indicator table. Physical: 8 percent of Renfield's 5,000 homes sit in a flood zone versus 20 percent of Sable's 8,000 homes. Population: Renfield loses 300 people a year while Sable gains 600. Economic: Renfield's export concentration is 55 percent versus Sable's 25 percent. Connectivity: 30 of every 100 Renfield households have home internet versus 75 of every 100 in Sable. A report makes two claims from this table: on keeping homes out of floodwater, Sable faces the greater challenge; and on holding export earnings steady if the top export's price fell, Renfield faces the greater challenge. Which statement correctly evaluates these two claims?",
+    "choices": [
+      "Both claims are correct, because each one draws on the single row its own criterion names",
+      "Only the first claim is correct, because export concentration cannot be compared using percentages",
+      "Only the second claim is correct, because Sable's larger population offsets its larger flood-zone count",
+      "Both claims are incorrect, because Renfield's figures read better on more dimensions overall"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check each claim against only the row its own criterion names, not against the whole table at once.",
+      "A count of how many dimensions favor a region is not the same as a verdict on one stated criterion."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-two-regions-with-indicators-006",
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "cedCode": "M8GEO-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Region Kestrel is the set of districts that drain into one river, grouped so the river's water could be planned. Region Marlow is the set of districts served by one rail line, grouped so freight could be planned. A planning table lists, for Kestrel only, percentage of homes in a flood zone, net migration, export concentration, and home internet access. A student wants to compare Kestrel and Marlow on the criterion of which region faces the greater challenge in expanding rail freight capacity, but no rail-related figure exists for Kestrel in the table. What should the student conclude?",
+    "choices": [
+      "Marlow faces the greater challenge, because it was grouped specifically for freight planning",
+      "The comparison cannot be answered from this table, because none of Kestrel's listed rows bears on rail freight capacity",
+      "Kestrel faces the greater challenge, because its export concentration row can stand in for rail capacity",
+      "Neither region faces a greater challenge, because regions drawn for different jobs can never be compared on any criterion"
+    ],
+    "answer": "B",
+    "hints": [
+      "A criterion can only be answered using rows that actually measure what it asks about, regardless of why a region was grouped.",
+      "Being grouped for a purpose is not the same as having data that measures that purpose."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-land-use-plan-001",
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "cedCode": "M8GEO-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A town council wants to state a criterion for a new rezoning plan. A criterion must be turned into a sentence with a number in it before either plan is opened, so that a finished plan either passes or fails and anybody can check which. Which of the following statements is written as a testable criterion?",
+    "choices": [
+      "Add 250 homes and make sure the new neighborhood protects the character of the riverfront.",
+      "Add 250 homes and do not raise the number of homes inside the flood zone above the 15 there today.",
+      "Add 250 homes and build them close enough that people can reach the town center easily.",
+      "Add 250 homes and treat every stakeholder group in the town fairly."
+    ],
+    "answer": "B",
+    "hints": [
+      "A test must have a number that a finished plan either passes or fails.",
+      "Words like 'protect,' 'easily,' or 'fair' can be read more than one way, so nobody can be shown wrong."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-land-use-plan-002",
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "cedCode": "M8GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Millbrook sits along Fen Creek. The town rule states that the flood zone extends 150 meters from the creek on either side. A proposed parcel called Creekside Block runs from the creek bank back to 600 meters, and a builder plans to spread 240 new homes evenly across the block. How many of the 240 new homes would land inside the flood zone?",
+    "choices": [
+      "180 homes",
+      "120 homes",
+      "60 homes",
+      "40 homes"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find what share of the parcel's depth the flood zone covers before applying it to the homes.",
+      "150 meters out of the parcel's 600 meters of depth is one quarter of the parcel."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-land-use-plan-003",
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "cedCode": "M8GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Dunmore, a rezoning plan takes land from two groups. The 8 orchard families together own 8 orchards, and the plan takes 6 of them. The 400 townhouse households together own 400 garden plots, and the plan takes 20 of them. Measured against what each group had before the plan, which group bears the larger share of the cost?",
+    "choices": [
+      "The townhouse households, because losing 20 of 400 plots is 5 percent, which outweighs 6 orchards taken.",
+      "The townhouse households, because losing 20 plots is a larger number than the 6 orchards taken.",
+      "The orchard families, because 8 orchards is a smaller group than 400 households, so any loss counts more.",
+      "The orchard families, because losing 6 of their 8 orchards is 75 percent of what they held."
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide what each group lost by what that group started with, not by comparing raw counts.",
+      "A small group can lose almost everything it has while a large group loses almost nothing."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-land-use-plan-004",
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "cedCode": "M8GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ashford must add 180 homes. The town rule states that the flood zone extends 250 meters from Reed River. Ashford has 500 homes today, 25 of which stand inside the flood zone. Plan Rivergate places all 180 new homes on a parcel that runs from the riverbank back to 500 meters, spread evenly across it. Plan Hillcrest places all 180 new homes on a parcel that begins 300 meters from the river and runs away from it. The council's criterion is to add 180 homes and hold the number of homes inside the flood zone at 25. Which statement is the complete, checkable verdict?",
+    "choices": [
+      "Plan Hillcrest meets the criterion, holding the flood-zone count at 25 while Plan Rivergate raises it to 115.",
+      "Plan Rivergate meets the criterion, since it builds closer to the river where the town already has infrastructure in place.",
+      "Plan Hillcrest meets the criterion, holding the flood-zone count at 25 while Plan Rivergate raises it to 90.",
+      "Plan Rivergate meets the criterion, holding the flood-zone count at 25 while Plan Hillcrest raises it to 115."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether Hillcrest's parcel starts before or after the 250-meter flood-zone line before checking Rivergate's.",
+      "Remember to add the new homes found inside the zone to the 25 already there, not just report the new homes alone."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-land-use-plan-005",
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "cedCode": "M8GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Bramwell must add 150 homes, and its criterion is met by Plan Lowfield, which builds on a 40-hectare grazing common. Bramwell has three stakeholder groups: the 10 grazier families who share the 40-hectare common equally, the 18 households already inside the flood zone, and the 460 other households in town. Plan Lowfield uses all 40 hectares of the common for the 150 homes and adds no new homes inside the flood zone. A resident argues that the plan costs the 460 other households more than anyone else because that group is the largest in town. Which response correctly identifies who bears the plan's cost and why?",
+    "choices": [
+      "The cost lands on the 460 other households, because a group that large will feel any change to the town more than a small group of ten families.",
+      "The cost lands entirely on the 10 grazier families, who lose 100 percent of the common they shared, while the other two groups hold the same land and homes before and after.",
+      "The cost lands on the 18 flood-zone households, because the plan was created to reduce their flood risk, so they lose the promised protection even though their land and homes remain unchanged.",
+      "The cost is spread evenly across all three groups, because every household in Bramwell owns an equal share of the town's total land, so any change to one parcel affects everyone the same amount."
+    ],
+    "answer": "B",
+    "hints": [
+      "List what each group holds before the plan and what it holds after, rather than judging by group size.",
+      "A group that holds the same land or homes before and after pays nothing, no matter how large it is."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-land-use-plan-006",
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "cedCode": "M8GEO-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Corvale must add 400 homes, and today 40 of its homes stand inside the flood zone out of 800 total. The town rule states the flood zone extends 200 meters from Corvale Creek. Plan Eastbank places all 400 new homes on a 20-hectare parcel running from the creek bank back to 800 meters, spread evenly across it, with Elm Road along the parcel's far edge. Plan Westgate places all 400 new homes on a 40-hectare parcel that begins 250 meters from the creek and lies 900 meters from the nearest road, with homes spread across the parcel starting at that distance from the road. The council first tests the criterion 'add 400 homes and hold the flood-zone count at 40,' then afterward changes the criterion to 'every new home within 850 meters of a road.' Which statement correctly identifies the plan that passes each criterion in turn?",
+    "choices": [
+      "Plan Westgate meets both criteria, since holding the flood-zone count at 40 against Eastbank's 140 automatically means its homes, which sit farther from the creek, must also end up closer to a road than Eastbank's homes are, satisfying the 850-meter rule too.",
+      "Plan Eastbank meets both criteria, because it holds the flood-zone count near 40 by building closer to Elm Road, and its farthest home at 800 meters is well within the 850-meter road-distance limit set by the council, unlike Westgate's homes which start farther from the creek.",
+      "Plan Westgate meets the flood-zone criterion, holding the count at 40 against Eastbank's 140, but under the road-distance criterion Eastbank passes, since its farthest home is 800 meters from a road while every Westgate home is at least 900 meters away.",
+      "Plan Eastbank meets the flood-zone criterion, holding the count at 40 while Westgate raises it further, but Plan Westgate meets the road-distance criterion because its parcel begins farther from the creek than Eastbank's parcel does overall, keeping its homes within the 850-meter limit."
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the flood-zone overlay check for each parcel first, then separately check each parcel's distance to a road.",
+      "The plan that wins one criterion does not automatically win a different criterion."
+    ]
+  },
+  {
+    "id": "m8geo-scenario-analysis-for-a-changing-place-001",
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "cedCode": "M8GEO-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A planner for the town of Wrenfield first writes: \"In fifteen years, Wrenfield will have 20,000 residents.\" She then reviews the rule that a real projection must carry its condition, not just state a number as if it were guaranteed. Which revision correctly turns her sentence into a projection with its assumption attached?",
+    "choices": [
+      "Wrenfield had 20,000 residents fifteen years ago, so it will reach that number again.",
+      "Wrenfield will have 20,000 residents, because population always keeps growing every year.",
+      "IF the current growth rate holds for fifteen years, THEN Wrenfield has about 20,000 residents.",
+      "Wrenfield's yearly growth rate equals 20,000 residents added each year."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the statement names a condition that could turn out false.",
+      "A true projection carries its IF; a promise drops it."
+    ]
+  },
+  {
+    "id": "m8geo-scenario-analysis-for-a-changing-place-002",
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "cedCode": "M8GEO-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Calderbrook has 10,000 residents, and its population has been growing at 5 percent a year. A geographer wants to project the population exactly at the point where the growth rate's doubling time falls, using 70 divided by the growth rate to find that number of years.",
+    "choices": [
+      "About 10,000 residents, IF the growth rate falls to zero before 14 years",
+      "About 15,000 residents, IF the growth rate rises to 7 percent within 14 years",
+      "About 20,000 residents, because Calderbrook's population always doubles every 14 years",
+      "About 20,000 residents, IF the 5 percent growth rate holds for the full 14 years"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use 70 divided by the growth rate to find the doubling time first.",
+      "Compare the horizon given to the doubling time you calculate, and check which choice keeps the condition attached correctly."
+    ]
+  },
+  {
+    "id": "m8geo-scenario-analysis-for-a-changing-place-003",
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "cedCode": "M8GEO-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The shoreline at Bellhaven has retreated 1.5 meters per year for the past 25 years, and a lighthouse currently stands 30 meters from the shoreline. A geographer wants to state, as a properly conditioned projection, what happens to the gap between the shoreline and the lighthouse if the same yearly retreat rate continues for 20 more years.",
+    "choices": [
+      "IF the shoreline retreats 1.5 meters a year for 20 years, THEN it will have retreated 30 meters, reaching the lighthouse's current position.",
+      "IF the shoreline retreats 1.5 meters a year for 20 years, THEN the lighthouse will stand 30 meters farther from the water than it does now.",
+      "The lighthouse will be lost to erosion, because shorelines always retreat over time.",
+      "IF the shoreline retreats 3 meters a year for 20 years, THEN it will have retreated 60 meters, well past the lighthouse."
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the total retreat over 20 years before comparing it to the 30-meter gap.",
+      "Check whether the statement's direction, closer or farther, matches what erosion actually does to that gap."
+    ]
+  },
+  {
+    "id": "m8geo-scenario-analysis-for-a-changing-place-004",
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "cedCode": "M8GEO-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Harrow's Ferry has 5,000 residents, growing at 7 percent a year, which gives a doubling time of 10 years by the rule of 70. Its single access bridge has capacity for 10,000 vehicle trips a day, and today it carries 5,000 trips a day, one trip per resident. The council plans to build a second bridge exactly when resident-generated trips are projected to reach 10,000 a day, which the growth rate places at 10 years from now. A regional planner warns that a nearby employer might close, cutting 1,500 daily commuter trips regardless of how the population grows. If that closure happens, holding the population growth assumption unchanged, what happens to the projected trip count at the 10-year horizon, and does the bridge's build trigger still fire exactly at 10 years?",
+    "choices": [
+      "Projected trips stay at 10,000, because population growth is unaffected by the employer's closing",
+      "Projected trips fall to about 8,500, so the bridge would not yet need to be built at 10 years",
+      "Projected trips rise to about 11,500, since losing an employer increases car trips per resident",
+      "Projected trips fall to about 5,000, because the population growth rate also drops to zero"
+    ],
+    "answer": "B",
+    "hints": [
+      "First find the population and trip totals if growth holds for the full 10 years.",
+      "Then subtract only the commuter trips affected by the closure, leaving the growth assumption itself untouched."
+    ]
+  },
+  {
+    "id": "m8geo-scenario-analysis-for-a-changing-place-005",
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "cedCode": "M8GEO-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Oakmere has 6,000 residents using 300 library seats, a ratio of one seat per 20 people. If a planned senior housing development goes ahead, the population reaches 9,000 in 15 years, requiring 450 seats; if it does not, the population reaches 7,200, requiring 360 seats. Plan A builds 150 new seats now at $2,000 each. Plan B builds 60 seats now at $2,400 each, then builds 90 more in 8 years at the same price, but only if demand ever exceeds the first 60 seats. Which statement correctly compares the price Plan B pays for its flexibility against what it avoids losing?",
+    "choices": [
+      "Plan B saves money in both columns, so there is no trade-off to measure.",
+      "Plan B gives up $156,000 in the column where the development goes ahead, to avoid losing $60,000 in the column where it does not.",
+      "Plan B gives up $60,000 in the column where the development goes ahead, to avoid losing $156,000 in the column where it does not.",
+      "Plan A is cheaper in both columns, so the flexibility built into Plan B has no value."
+    ],
+    "answer": "C",
+    "hints": [
+      "Work out the total cost and seats delivered by each plan separately in the column where the development happens and the column where it doesn't.",
+      "The plan with flexibility should be checked against what it costs when demand turns out high, not only when it turns out low."
+    ]
+  },
+  {
+    "id": "m8geo-scenario-analysis-for-a-changing-place-006",
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "cedCode": "M8GEO-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ashworth's council is sizing a new water tower using only household use, calculated at one gallon per person per day. The town has 8,000 residents growing at 5 percent a year, which by the rule of 70 gives a 14-year doubling time, so the tower is sized for 16,000 gallons a day at that 14-year horizon. Separately, the number of days above 35 degrees Celsius has risen 1 day a year for 20 years, and the town's cannery, which employs 300 workers, has announced it will close in 6 years. If the cannery assumption is moved to \"the cannery stays open\" instead, holding the other two assumptions unchanged, what happens to the water tower's required capacity, and why?",
+    "choices": [
+      "Required capacity cannot be projected at all, because the cannery and household demand assumptions must always be tested together",
+      "Required capacity rises to about 18,400 gallons a day, because keeping the cannery open increases household water use across the town",
+      "Required capacity falls to about 12,800 gallons a day, because a working cannery draws workers away from home water use",
+      "No change, because household water demand is calculated from population alone, and the cannery's employment does not enter that calculation"
+    ],
+    "answer": "D",
+    "hints": [
+      "Trace which trend actually feeds into the number the tower's capacity is calculated from.",
+      "Ask whether the calculation for gallons per day ever used the cannery's employment figure at all."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-counts-rates-fair-comparison-001",
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "cedCode": "M8GEO-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A community report states: 'Bramwell offers its residents better access to public buses than Coldale does.' To test this claim fairly, someone needs to divide the count of buses in each town by a chosen denominator before comparing the two towns.",
+    "choices": [
+      "The number of buses itself, since a raw count needs no denominator to be compared",
+      "The land area of each town, since access is about how packed the land is",
+      "The population of each town, since access is about how well the people are served",
+      "The combined population of both towns, since adding them together removes the size difference"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether the claim is about packed land or about how well people are served.",
+      "Access and coverage claims are always about the people who need the service."
+    ]
+  },
+  {
+    "id": "m8geo-counts-rates-fair-comparison-002",
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "cedCode": "M8GEO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Dunmore has 18 public libraries and 9,000 residents. Eastwick has 8 public libraries and 4,000 residents. Compute Eastwick's library rate as libraries per 1,000 residents.",
+    "choices": [
+      "32 libraries per 1,000 people",
+      "20 libraries per 1,000 people",
+      "0.2 libraries per 1,000 people",
+      "2 libraries per 1,000 people"
+    ],
+    "answer": "D",
+    "hints": [
+      "First divide 8 by 4,000, then scale the result by 1,000.",
+      "Check your answer by multiplying it back by 4,000 to see if you get 8 again."
+    ]
+  },
+  {
+    "id": "m8geo-counts-rates-fair-comparison-003",
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "cedCode": "M8GEO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ashworth has 5,600 residents spread over 20 square kilometers. Brindle has 3,200 residents spread over 8 square kilometers. Compute Brindle's rate as people per square kilometer.",
+    "choices": [
+      "400 people per square kilometer",
+      "40 people per square kilometer",
+      "4,000 people per square kilometer",
+      "3,200 people per square kilometer"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide Brindle's population by its land area, not the other way around.",
+      "Multiply your answer by 8 and see if it returns 3,200."
+    ]
+  },
+  {
+    "id": "m8geo-counts-rates-fair-comparison-004",
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "cedCode": "M8GEO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Hollow Creek has 40 police officers, 20,000 residents, and covers 8 square kilometers. Pine Ridge has 15 police officers, 5,000 residents, and covers 25 square kilometers. A public safety report claims: 'Hollow Creek residents have better police coverage than Pine Ridge residents.' Which comparison actually tests this claim, and what does it show?",
+    "choices": [
+      "Police officers per square kilometer: Hollow Creek has 5 and Pine Ridge has 0.6, so the claim is supported -- Hollow Creek has better coverage",
+      "Police officers per 1,000 residents: Hollow Creek has 2 and Pine Ridge has 3, so the claim is not supported -- Pine Ridge has better coverage",
+      "Police officers per 1,000 residents: Hollow Creek has 2 and Pine Ridge has 3, so the claim is supported -- Hollow Creek has better coverage",
+      "Total police officers: Hollow Creek has 40 and Pine Ridge has 15, so the claim is supported -- Hollow Creek has better coverage"
+    ],
+    "answer": "B",
+    "hints": [
+      "A claim about resident coverage needs population as the denominator, not land area.",
+      "Once you compute the correct rate, check carefully which town's number is actually higher."
+    ]
+  },
+  {
+    "id": "m8geo-counts-rates-fair-comparison-005",
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "cedCode": "M8GEO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A school district is deciding how many new buses to order for next year based on total ridership needs. District A currently serves 12,000 students and District B serves 4,500 students. An administrator argues that District A needs more new buses simply because it has more total students to transport. Which statement best evaluates this reasoning?",
+    "choices": [
+      "The reasoning is flawed because comparing two districts requires converting each student count into students per square kilometer, and only the district with the higher density truly needs more new buses",
+      "The reasoning is flawed because whenever two groups differ in total size, a fair comparison always requires converting each count into a per-capita rate, such as buses needed per 1,000 students, rather than relying on raw totals",
+      "The reasoning is appropriate here, because the question is about a total number of buses needed, not a rate comparison, so the raw student count is the right tool",
+      "The reasoning is flawed because the administrator should have divided each district's student count by its land area to find population density before deciding which district needs more new buses"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether this question is really about a total or about comparing how crowded or well-served each district is.",
+      "Not every situation calls for a rate -- sometimes the raw count is exactly the right answer."
+    ]
+  },
+  {
+    "id": "m8geo-counts-rates-fair-comparison-006",
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "cedCode": "M8GEO-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Vantry has 90 nurses, 30,000 residents, and covers 6 square kilometers. Oskelund has 40 nurses, 8,000 residents, and covers 20 square kilometers. Claim 1 states: 'Vantry has a denser concentration of nurses than Oskelund.' Claim 2 states: 'Oskelund gives its residents better nurse coverage than Vantry.' Which statement correctly evaluates both claims using the rate each one actually needs?",
+    "choices": [
+      "Neither claim can be supported, because the same table of counts cannot be used to calculate both a land-based density rate and a per-capita coverage rate for the same two towns without contradicting one another",
+      "Claim 1 is supported but Claim 2 is not, because Vantry's 15 nurses per square kilometer versus Oskelund's 2 already proves greater nurse density, and a town with denser nurses must automatically serve its residents better per capita too",
+      "Claim 2 is supported but Claim 1 is not, because Oskelund's 5 nurses per 1,000 residents versus Vantry's 3 already proves better coverage per capita, and a town with better per-capita coverage must automatically have the denser concentration of nurses on its land",
+      "Claim 1 is supported, since Vantry has 15 nurses per square kilometer against 2 in Oskelund, and Claim 2 is also supported, since Oskelund has 5 nurses per 1,000 residents against 3 in Vantry, because the two claims ask different questions"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work out both rates separately -- nurses per square kilometer for Claim 1, and nurses per 1,000 residents for Claim 2.",
+      "A dense concentration on land and good coverage of people are two different questions, so one table can support both claims at once."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-choropleth-map-001",
+    "loId": "m8geo.evaluating-a-choropleth",
+    "cedCode": "M8GEO-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A choropleth map of the invented country of Balmora shades each of its provinces by average household size, sorting every province into one of several classes. Two provinces, Nessa and Orvid, happen to be shaded with the exact same tone on the map.",
+    "choices": [
+      "Nessa and Orvid must be adjacent to each other geographically, since a choropleth map only shades neighboring provinces with the same tone",
+      "Nessa and Orvid have identical average household sizes, since a choropleth map assigns identical tones only to provinces with exactly equal values",
+      "Nessa and Orvid have average household sizes that differ by more than one class width, since matching tones indicate adjacent, not identical, classes",
+      "Nessa and Orvid have average household sizes that fall within the same class, but their exact values could still differ substantially"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall what a single tone on a choropleth actually communicates about an area's value.",
+      "Two areas placed in the same class can still sit at opposite ends of that band."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-choropleth-map-002",
+    "loId": "m8geo.evaluating-a-choropleth",
+    "cedCode": "M8GEO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A choropleth of the invented country of Feldane shades its six counties by percent of workers employed in manufacturing, using three classes: under 20 percent; 20 up to but not including 45 percent; and 45 percent or more. The county values are: Arnwood 19 percent, Brindle 20 percent, Corvale 44 percent, Dunmore 45 percent, Elsworth 30 percent, and Farrow 12 percent.",
+    "choices": [
+      "Corvale and Elsworth, since both reach 20 percent and stay under 45 percent",
+      "Arnwood and Brindle, since both are close to 20 percent",
+      "Dunmore and Corvale, since both are close to 45 percent",
+      "Farrow and Elsworth, since both have moderate manufacturing percentages"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check each county's value against the lower and upper bound of each class before comparing pairs.",
+      "A value that reaches a break belongs to the class starting there, not the one below it."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-choropleth-map-003",
+    "loId": "m8geo.evaluating-a-choropleth",
+    "cedCode": "M8GEO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A choropleth of the invented country of Sorrelton shades its districts by percent of adults holding a high school diploma, using classes: under 70 percent; 70 up to but not including 85 percent; and 85 percent or more. Two districts, Pell and Quorin, are both in the middle class, at 71 percent and 84 percent. A neighboring district, Ravencroft, is in the top class at 86 percent.",
+    "choices": [
+      "The difference hidden inside the middle class, 2 points between Pell and Quorin, is smaller than the 13-point difference shown as an edge between Quorin and Ravencroft",
+      "The difference hidden inside the middle class, 13 points between Pell and Quorin, is larger than the 2-point difference shown as an edge between Quorin and Ravencroft",
+      "The difference hidden inside the middle class equals the difference shown at the break, since both spans cross exactly one class",
+      "The map cannot display either difference because percentages of adults are not whole counts of people"
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out the range inside the middle class first, then work out the gap across the top break separately.",
+      "Compare the two results directly instead of assuming which one must be larger."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-choropleth-map-004",
+    "loId": "m8geo.evaluating-a-choropleth",
+    "cedCode": "M8GEO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A choropleth of the invented country of Windermere shades its four regions by percent of land used for parks, using three classes: under 30 percent; 30 up to but not including 55 percent; and 55 percent or more. The values are: Aldermoor 28 percent, Birchwell 32 percent, Calder 54 percent, and Drummond 70 percent. A city planner claims: \"Birchwell and Calder are shaded alike, so they are close in park land, while Calder and Drummond are shaded differently, so they are far apart.\" Suppose the break at 55 is moved down to 50, and all four values stay exactly the same.",
+    "choices": [
+      "All four regions now fall into a single class together, since Aldermoor's 28, Birchwell's 32, Calder's 54, and Drummond's 70 are all captured within one broad class, which finally confirms that the planner's original claim was correct",
+      "Nothing changes at all, because both 54 and 32 remain above the lower break of 30 under the new scheme, so Birchwell and Calder stay shaded exactly alike, just as before",
+      "Calder (54) now joins Drummond in the top class while Birchwell (32) is left alone in the middle class, reversing both groupings the planner relied on, using the same four values",
+      "Birchwell (32) now moves up to join both Calder and Drummond in the top class under the revised break, which only strengthens the planner's original claim that these regions are close in park land"
+    ],
+    "answer": "C",
+    "hints": [
+      "Re-run the classification with the new break value on all four original values.",
+      "Compare the new groupings to the old ones to see which pairs of regions switch places."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-choropleth-map-005",
+    "loId": "m8geo.evaluating-a-choropleth",
+    "cedCode": "M8GEO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A choropleth of the invented country of Brackenfell shades its three provinces by NUMBER of public libraries, using classes: under 10; 10 up to but not including 30; and 30 or more (darkest). Thistledown has 32 libraries and 800,000 residents. Marrow has 18 libraries and 90,000 residents. Corbin has 8 libraries and 40,000 residents. A newspaper claims: \"Thistledown has the most libraries per resident, since it is shaded darkest on the count map.\"",
+    "choices": [
+      "Supported: Thistledown's population of 800,000 is large enough that its rate of 32 libraries per 10,000 residents is still the highest among the three provinces",
+      "Supported: since Thistledown holds the most libraries overall with 32, it must therefore also hold the highest number of libraries relative to its total population",
+      "Not supported: the libraries-per-resident rate cannot be calculated at all, because individual library visits are not recorded separately for each resident in these provinces",
+      "Not supported: per 10,000 residents Thistledown has only 0.4 libraries, the lowest of the three provinces, while Marrow and Corbin each have 2 per 10,000"
+    ],
+    "answer": "D",
+    "hints": [
+      "Convert each province's count and population into a rate per 10,000 residents before comparing them.",
+      "A large population can make a raw count look large even when the rate per resident is small."
+    ]
+  },
+  {
+    "id": "m8geo-evaluating-a-choropleth-map-006",
+    "loId": "m8geo.evaluating-a-choropleth",
+    "cedCode": "M8GEO-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A choropleth of the invented country of Thessaly shades its five zones by average commute time in minutes, using classes: under 15; 15 up to but not including 25; 25 up to but not including 35; and 35 or more (darkest). The zone values are: Renn 24, Sable 25, Torvald 34, Ulmer 35, and Vance 44. A transportation report makes two claims: (1) \"Vance's average commute is at least 35 minutes.\" (2) \"Torvald and Ulmer have nearly identical commute times, because they are shaded almost the same.\"",
+    "choices": [
+      "Claim 1 is supported, since Vance's class guarantees a value of 35 or more; claim 2 is not supported, since Torvald (34) and Ulmer (35) actually fall into different classes and are shaded differently",
+      "Both claims are supported, since choropleth classes state each zone's exact commute time directly on the map, so Vance's minutes and Torvald and Ulmer's similarity can both be read off precisely",
+      "Claim 1 is not supported, since \"at least\" statements can never be checked on a choropleth; claim 2 is supported, since neighboring classes always look visually similar",
+      "Claim 2 is supported, since Torvald and Ulmer share the same class; claim 1 is not supported, since darkest-class values could be far higher than 35"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sort each claim by whether it makes an 'at least' statement about class membership or a 'these are similar' statement about closeness.",
+      "Work out which class Torvald and which class Ulmer actually fall into before judging the second claim."
+    ]
+  },
+  {
+    "id": "m8geo-maps-as-arguments-001",
+    "loId": "m8geo.maps-as-arguments",
+    "cedCode": "M8GEO-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cartographer has a table listing rainfall totals for four towns, a table of household counts from a district survey, and a table of city populations. She then decides how many millimeters wide to draw the circle for each city's population and prints those circles on a map. Which of the following is a design choice rather than a piece of data?",
+    "choices": [
+      "The number of millimeters wide the mapmaker draws each circle on the map",
+      "The population count recorded for each city, used later to size the circles",
+      "The rainfall total measured and recorded for each town before the map was drawn",
+      "The number of households counted during a district-by-district survey"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which choices come from the table of numbers, and which come from a decision made after the numbers were recorded.",
+      "Data can be written down as raw numbers before any drawing begins."
+    ]
+  },
+  {
+    "id": "m8geo-maps-as-arguments-002",
+    "loId": "m8geo.maps-as-arguments",
+    "cedCode": "M8GEO-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A map shows population using circles whose WIDTH is set proportional to each district's population. District Mira has 1,000 residents and District Solane has 4,000 residents, so Solane's true population is four times Mira's. If the mapmaker wants the circle's AREA, not its width, to correctly show that Solane has four times Mira's population, how many times wider than Mira's circle should Solane's circle be drawn?",
+    "choices": [
+      "Four times as wide",
+      "Two times as wide",
+      "Eight times as wide",
+      "Sixteen times as wide"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that a reader judges a circle's amount by its area, not its width.",
+      "Area grows with the square of the width, so find the width whose square gives a ratio of four."
+    ]
+  },
+  {
+    "id": "m8geo-maps-as-arguments-003",
+    "loId": "m8geo.maps-as-arguments",
+    "cedCode": "M8GEO-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A health department publishes a map shading six regions by disease rate per 1,000 residents. The printed key states that the darkest shade is assigned to the region with the LOWEST rate and the lightest shade to the region with the HIGHEST rate. Region Talven has the highest disease rate of the six regions. Based on this key, how will Talven likely appear on the map, and could a reader glancing quickly be misled?",
+    "choices": [
+      "Talven will appear as one of the lightest shades, and this proves the disease data was recorded incorrectly",
+      "Talven will appear as one of the darkest shades, and a reader glancing quickly might mistakenly think Talven has a low rate",
+      "Talven will appear as one of the lightest shades, and a reader glancing quickly might mistakenly think Talven has a low rate",
+      "Talven will appear as one of the darkest shades, matching its true high rate, so no reader could be misled"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check which end of the shading the key assigns to the lowest values.",
+      "Find Talven's actual rate compared to the other five regions before deciding its shade."
+    ]
+  },
+  {
+    "id": "m8geo-maps-as-arguments-004",
+    "loId": "m8geo.maps-as-arguments",
+    "cedCode": "M8GEO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A wildlife agency counts sightings of a rare falcon in five regions of a country over one year: Region A had 10 sightings, Region B had 15, Region C had 8, and Region D had 12. A fifth region, Region E, had 40 sightings but lies outside the border drawn on the published map, which is titled 'Where the Rare Falcon Lives' and shades Region B darkest because it has the most sightings among the four regions shown. A caption claims: 'This map shows the falcon's true stronghold, since Region B stands out darkest.' Evaluate this claim.",
+    "choices": [
+      "Not supported, because the sighting counts recorded for regions A through D were entered incorrectly, making every shade on the map unreliable",
+      "Supported, because Region B has the darkest shade among the four shown regions, and the darkest shade always marks the true highest value",
+      "Supported, because the title names the falcon's habitat directly, and a map's title always states exactly what data was measured",
+      "Not supported, because Region E lies outside the map's frame yet has 40 sightings, more than any region actually shown on the map"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what number would be needed to prove the claim false, and check whether the map provides it.",
+      "Compare the counts inside the frame with any information about what lies outside it."
+    ]
+  },
+  {
+    "id": "m8geo-maps-as-arguments-005",
+    "loId": "m8geo.maps-as-arguments",
+    "cedCode": "M8GEO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A report maps average farm income across four regions of a country using a cylindrical projection, a rule that draws land farther from the equator larger than its true share of the globe. Region Norlan, far from the equator, earned 2 million dollars in farm income and appears as a very large shaded block. Region Suvara, near the equator, earned 12 million dollars and appears as a small block; the remaining two regions earned 3 million dollars each. The total farm income across all four regions is 20 million dollars. A caption states: 'Most farm wealth is concentrated in the far north region, Norlan, as shown by its large area on the map.' Evaluate this claim.",
+    "choices": [
+      "Not supported, because Norlan holds only 2 of the 20 million dollars, 10 percent, while an equal-area projection would shrink its enlarged block",
+      "Supported, because Norlan's block is the largest area on the map, and area on any map always equals a region's true data share",
+      "Not supported, because the report's title contains no numbers, so no income claim can ever be checked against any map",
+      "Supported, because Norlan sits farthest from the equator, and regions farther from the equator always generate greater real-world farm income"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute each region's share of the total 20 million dollars before judging the map's block sizes.",
+      "Consider what would happen to each region's area if the projection rule were swapped while the dollar figures stayed the same."
+    ]
+  },
+  {
+    "id": "m8geo-maps-as-arguments-006",
+    "loId": "m8geo.maps-as-arguments",
+    "cedCode": "M8GEO-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A conservation group maps deforestation using circles over three regions, with each circle's WIDTH set by the number of hectares cleared: Region Kestwood cleared 100 hectares and is drawn as a circle 2 millimeters wide, Region Dunmar cleared 900 hectares and is drawn as a circle 6 millimeters wide, and Region Ashvale cleared 3,600 hectares and is drawn as a circle 12 millimeters wide. A caption claims: 'Ashvale's deforestation problem is 36 times worse than Kestwood's, matching the 36-times difference between their circle areas.' Evaluate this claim.",
+    "choices": [
+      "Supported only by the design, because any circle sized by width automatically overstates the true ratio between two mapped values",
+      "Supported by the data, because 3600 divided by 100 equals 36, which matches the 36-times difference in circle area shown on the map",
+      "Not supported, because the map's title was never given, so no ratio claim can be verified from the page alone",
+      "Supported only by the design, because the shading was reversed, making Kestwood's smaller circle appear to represent the bigger problem"
+    ],
+    "answer": "B",
+    "hints": [
+      "Calculate the actual ratio between Ashvale's and Kestwood's hectare counts directly from the numbers given.",
+      "Check whether the width-to-area relationship in this case happens to match the real data ratio instead of assuming it always inflates."
+    ]
+  },
+  {
+    "id": "m8geo-scale-of-analysis-hidden-patterns-001",
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "cedCode": "M8GEO-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Town Ash has 20,000 homes, of which 10 percent have a home internet connection. Town Birch has 5,000 homes, of which 50 percent have a home internet connection. A student wants to find the correct combined connection rate for both towns together.",
+    "choices": [
+      "Average the two percentages, 10 percent and 50 percent, without weighting by household counts, to get a combined rate of 30 percent for both towns together.",
+      "Add the connected households in each town (2,000 in Ash and 2,500 in Birch) and divide that sum by the total number of homes (25,000).",
+      "Use the percentage of the larger town, 10 percent, as the combined rate, since Ash has 20,000 homes and far outnumbers Birch's 5,000 homes.",
+      "Use the percentage of the smaller town, 50 percent, as the combined rate, since Birch had the higher connection rate even though it has fewer homes."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about which town's size should count more in the combined figure.",
+      "Adding the two household counts and dividing once is called a weighted average."
+    ]
+  },
+  {
+    "id": "m8geo-scale-of-analysis-hidden-patterns-002",
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "cedCode": "M8GEO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Sedge County has two districts. Fenmoor has 8,000 households, of which 25 percent recycle regularly. Oakhurst has 2,000 households, of which 75 percent recycle regularly. What is the recycling rate for Sedge County as a whole, found by combining the household counts rather than the percentages?",
+    "choices": [
+      "44 percent",
+      "50 percent",
+      "35 percent",
+      "65 percent"
+    ],
+    "answer": "C",
+    "hints": [
+      "First find how many households in each district actually recycle, then combine those counts before dividing.",
+      "Averaging the two percentages directly would treat Fenmoor and Oakhurst as if they were the same size."
+    ]
+  },
+  {
+    "id": "m8geo-scale-of-analysis-hidden-patterns-003",
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "cedCode": "M8GEO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Vantry Province reports that 40 percent of households nationwide have access to high-speed internet. Based only on this national figure, a newspaper in the Cobb district claims that a typical household in Cobb has close to an even chance of having high-speed internet. Which statement correctly evaluates whether the national figure can settle the newspaper's claim about Cobb?",
+    "choices": [
+      "The claim can be settled by averaging the national figure of 40 percent with Cobb's total population size, which would adjust the rate upward to confirm the claim.",
+      "The national figure of 40 percent confirms the Cobb claim, because 40 percent is reasonably close to an even 50 percent chance for any household.",
+      "The national figure of 40 percent disproves the Cobb claim, because 40 percent is below the 50 percent threshold needed for an even chance in any household.",
+      "The national figure of 40 percent cannot settle the Cobb claim, because a figure computed over the whole nation does not describe any single district within it."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what unit the newspaper's claim is actually about.",
+      "A country-wide figure is built from many districts and does not describe any one of them by itself."
+    ]
+  },
+  {
+    "id": "m8geo-scale-of-analysis-hidden-patterns-004",
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "cedCode": "M8GEO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Region Talmira has three districts. Birchwood has 8,000 households, of which 80 percent have a home garden. Cedarton has 4,000 households, of which 20 percent have a home garden. Dunmoor has 4,000 households, of which 20 percent have a home garden. A regional report states that the garden rate for Talmira as a whole is 40 percent. Which statement correctly evaluates this reported regional figure?",
+    "choices": [
+      "The 40 percent figure is wrong; adding the households with a garden (6,400 plus 800 plus 800, which is 8,000) and dividing by all 16,000 households gives the correct regional rate of 50 percent.",
+      "The 40 percent figure is correct, since averaging 80 percent, 20 percent and 20 percent across the three districts gives 40 percent regardless of how many households each district actually has.",
+      "The 40 percent figure is wrong; the regional rate should instead equal Birchwood's own rate of 80 percent, since Birchwood has the most households of the three districts in the region.",
+      "The 40 percent figure is correct, and it also shows that home gardens are about equally common across all three districts, since 40 percent lies between the highest and lowest district rates."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the reported regional figure by adding up the actual number of gardening households in each district.",
+      "Compare that total against simply averaging the three percentages without regard to district size."
+    ]
+  },
+  {
+    "id": "m8geo-scale-of-analysis-hidden-patterns-005",
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "cedCode": "M8GEO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Kestrel County has four districts, each with 5,000 households: Bayview and Ridge each have 80 percent broadband access, while Marsh and Hollow each have 10 percent broadband access. Grouped into Water Utility Boards, Coastal (Bayview and Ridge) shows 80 percent access and Inland (Marsh and Hollow) shows 10 percent access. Grouped instead into School Boards, North (Bayview and Marsh) shows 45 percent access and South (Ridge and Hollow) shows 45 percent access. A planner who sees only the School Board figures concludes that broadband access is fairly even across Kestrel County. Which statement best evaluates this conclusion?",
+    "choices": [
+      "The conclusion is correct: because both groupings are built from the same four districts, a grouping that yields 45 percent access in both of its units must give a more accurate picture than one that yields 80 percent in one unit and only 10 percent in the other.",
+      "The conclusion is wrong: the same four districts, grouped as Coastal and Inland, show an 80-to-10 split, because the School Board grouping happens to pair a high-access district with a low-access district in each of its two units.",
+      "The conclusion is wrong: the county-wide rate should instead be recalculated as 62.5 percent, since that is the true overall average of the four districts' access rates, a single figure that the School Board grouping failed to report to the planner.",
+      "The conclusion is correct: the Water Utility Board figures showing 80 and 10 percent should be disregarded because utility boards, unlike school boards, were never designed to measure, track, or officially report broadband access rates across districts."
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out each grouping's figure by adding the two districts' actual household counts, not by averaging their percentages.",
+      "Compare which two districts get paired together in each grouping."
+    ]
+  },
+  {
+    "id": "m8geo-scale-of-analysis-hidden-patterns-006",
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "cedCode": "M8GEO-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Country Velmara has three provinces totaling 100,000 households. Province Bexley has 30,000 households with 20 percent internet access, and Province Corvin has 20,000 households with 10 percent access. Province Alta has 50,000 households, and its own access rate is not given directly. A national report states that 50 percent of all 100,000 households nationwide have internet access. A planner wants to know Alta's access rate and whether the national figure can be used to decide which single province most urgently needs a new internet kiosk.",
+    "choices": [
+      "Alta's rate is 60 percent, found by simply averaging each province's share of the 100,000 national households rather than weighting by households served; the national figure alone is enough to identify Corvin as the province most in need.",
+      "Alta's rate is 84 percent, and because it is the highest of the three provinces, the national figure of 50 percent can be used directly and without further calculation to justify placing the next kiosk in Alta.",
+      "Alta's rate is 84 percent, found by subtracting Bexley's and Corvin's served households from the nationally served total; the national figure alone cannot tell the planner which single province needs a kiosk most, since that decision needs the province-level figures.",
+      "Alta's rate cannot be determined from the information given, so the national figure of 50 percent should be used instead of province-level data, since national percentages already account for every province's households and access rate, making further province-level calculation unnecessary."
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the national total served households to work backward and find how many are served in Alta.",
+      "A decision about a single province needs a figure computed at the province scale, not the national one."
+    ]
+  }
+]

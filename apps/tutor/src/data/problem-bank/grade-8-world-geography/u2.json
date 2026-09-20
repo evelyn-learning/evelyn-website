@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-buffers-proximity-analysis-001",
+    "loId": "m8geo.buffers-and-proximity",
+    "cedCode": "M8GEO-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography teacher points out that simply saying a parcel of land is 'near' a river settles nothing, because two people could draw the near-line in two different places. A buffer is used instead to test each location. Compared with just saying a location is 'near' a feature, what problem does drawing a buffer actually solve?",
+    "choices": [
+      "It counts how many locations exist in a region so a total population figure can be reported",
+      "It shows which side of a feature a location sits on so distances no longer need to be measured",
+      "It converts straight-line distance into walking time so travel routes can be compared directly",
+      "It replaces a subjective judgment with a measured zone that every location can be tested against"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about why the word 'near' is a problem in the first place.",
+      "A buffer is described as a zone made of every point within a stated distance — what does that let you do that an opinion cannot?"
+    ]
+  },
+  {
+    "id": "m8geo-buffers-proximity-analysis-002",
+    "loId": "m8geo.buffers-and-proximity",
+    "cedCode": "M8GEO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The village of Aldercott protects its only well with a rule: no crops may be planted closer than 75 meters from the well. Field A is 60 meters from the well, Field B is exactly 75 meters from the well, and Field C is 90 meters from the well.",
+    "choices": [
+      "Field A only, because it is closer than 75 meters while Field B sits exactly on the allowed boundary",
+      "Field A and Field B, because both are within or at the 75-meter mark and so both violate the rule",
+      "Field B and Field C, because both are farther from the well than Field A is",
+      "All three fields, because the well's buffer extends outward equally in every direction"
+    ],
+    "answer": "A",
+    "hints": [
+      "The rule says 'no closer than 75 meters' — check whether a spot exactly at 75 meters counts as closer than 75.",
+      "Compare each field's distance to 75 and decide which side of the line each one falls on."
+    ]
+  },
+  {
+    "id": "m8geo-buffers-proximity-analysis-003",
+    "loId": "m8geo.buffers-and-proximity",
+    "cedCode": "M8GEO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A highway runs through the town of Millbrook. A new rule requires that houses be built no closer than 100 meters from the highway edge. A resident argues that the forbidden buffer zone across the highway is only 100 meters wide in total.",
+    "choices": [
+      "100 meters, because the stated distance applies once and is split evenly between the two sides",
+      "200 meters, because the 100-meter band applies on both sides of the highway with the road down the middle",
+      "100 meters, because a buffer drawn around a line only extends outward on a single side",
+      "50 meters, because each side of the highway only receives half of the stated 100-meter distance"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about how a buffer takes its shape from the feature it surrounds — a line has two sides.",
+      "Picture the highway as a line running down the middle of the zone, with the stated distance applied to each side separately."
+    ]
+  },
+  {
+    "id": "m8geo-buffers-proximity-analysis-004",
+    "loId": "m8geo.buffers-and-proximity",
+    "cedCode": "M8GEO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A fire station's official rule states that a household is considered served if it is within 5 kilometers of the station, measured in a straight line. A town report claims the station serves 100 percent of households, but the report actually measured using an 8-kilometer buffer instead of the rule's stated distance. The town has four neighborhoods: Elmsworth is 3 kilometers from the station with 300 households, Fenner is exactly 5 kilometers away with 150 households, Grover is 6.5 kilometers away with 200 households, and Harkness is 8 kilometers away with 100 households.",
+    "choices": [
+      "40 percent are served at the 5-kilometer radius, since Fenner at exactly 5 kilometers falls outside the rule's stated boundary",
+      "100 percent are served at the 5-kilometer radius, matching the report, because 'within' includes locations sitting exactly on the boundary",
+      "60 percent are served at the 5-kilometer radius stated in the rule, well below the report's claim, which used an 8-kilometer buffer instead",
+      "75 percent are served at the 5-kilometer radius, counting Grover as served because it is closer than the report's 8-kilometer figure"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start by fixing the buffer distance from the rule itself, not from the report's figure.",
+      "Decide whether Fenner at exactly 5 kilometers counts as within 5 kilometers, then add up served households out of the town's total of 750."
+    ]
+  },
+  {
+    "id": "m8geo-buffers-proximity-analysis-005",
+    "loId": "m8geo.buffers-and-proximity",
+    "cedCode": "M8GEO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A wetland-protection rule states: 'no dock may be built within 150 meters of the wetland edge.' Four proposed dock sites are measured: Site P at 90 meters, Site Q at exactly 150 meters, Site R at 180 meters, and Site S at 300 meters. The council is now debating whether to narrow the rule so that docks are forbidden only within 100 meters instead of 150 meters.",
+    "choices": [
+      "No site changes, because 'within 150 meters' and 'within 100 meters' both include a site sitting exactly on the boundary",
+      "Only Site P changes, flipping from blocked to allowed, since it has the smallest margin under the original 150-meter rule",
+      "Sites Q and R both change, flipping from blocked to allowed, because narrowing the buffer widens the area that counts as outside it",
+      "Only Site Q changes, flipping from blocked to allowed, since narrowing a buffer can only release locations, never pull new ones in"
+    ],
+    "answer": "D",
+    "hints": [
+      "First decide which sites are blocked under the original 150-meter rule, remembering that 'within' includes a site sitting exactly on the line.",
+      "Narrowing a buffer moves it in only one direction — think about which sites that direction could realistically free up."
+    ]
+  },
+  {
+    "id": "m8geo-buffers-proximity-analysis-006",
+    "loId": "m8geo.buffers-and-proximity",
+    "cedCode": "M8GEO-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A library's service rule states that a household counts as served if it is within 1,200 meters of the library, measured as straight-line distance. The Corrigan neighborhood sits across a canal from the library; its straight-line distance to the library is 900 meters, but the only way to actually walk there is over a single footbridge, making the real walking route 2,100 meters. The town's report classifies Corrigan as served because it falls inside the 1,200-meter buffer.",
+    "choices": [
+      "Yes, Corrigan is correctly classified as served because the rule is written in straight-line distance, though the actual walking route may be far longer than the buffer suggests",
+      "No, Corrigan should be reclassified as unserved because the walking distance of 2,100 meters exceeds the buffer, and any real route people actually travel should replace the straight-line figure in the rule",
+      "No, Corrigan should be reclassified as unserved because a properly drawn buffer must always trace the longest possible path between two locations, not the shortest straight-line segment between them",
+      "Yes, Corrigan is correctly classified as served, and the footbridge walking distance is irrelevant because a route distance between two points is always shorter than the straight-line distance separating them"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check what kind of distance the rule itself is written in before deciding whether the classification is consistent with it.",
+      "A buffer measures the direct line to the nearest part of a feature — think about whether that is the same thing as the route someone would actually walk."
+    ]
+  },
+  {
+    "id": "m8geo-change-detection-from-satellite-data-001",
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "cedCode": "M8GEO-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a land-cover comparison, a wetland's water class covered 850 hectares in the first picture and 640 hectares in the second picture, taken several years later. Following the rule that change is calculated as the second-date figure minus the first-date figure, what is the change in the water class and what does its sign indicate?",
+    "choices": [
+      "-210 hectares, a loss",
+      "+210 hectares, a gain",
+      "-210 hectares, a gain",
+      "+210 hectares, a loss"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract in the fixed order: second date first, first date second.",
+      "A negative result always signals a loss, never a gain."
+    ]
+  },
+  {
+    "id": "m8geo-change-detection-from-satellite-data-002",
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "cedCode": "M8GEO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Kestrel Marsh's study area covers 4,500 hectares. The first picture shows forest 1,500 hectares, farmland 1,600 hectares, built-up land 900 hectares, and water 500 hectares. The second picture, cloud-free over the whole area, shows forest 1,200 hectares, farmland 1,900 hectares, built-up land 900 hectares, and water 500 hectares. A student computes the four signed class changes and adds them together. What should the sum equal, and what does that value confirm?",
+    "choices": [
+      "Zero, confirming that no land within the study area changed class between the two dates",
+      "Zero, confirming the two pictures cover the same ground and no subtraction slipped",
+      "300, confirming that farmland's gain exceeded forest's loss by that amount",
+      "900, confirming that built-up land accounts for most of the study area"
+    ],
+    "answer": "B",
+    "hints": [
+      "The four signed changes should always sum to a specific value if the ground matches.",
+      "A correct balance check is about arithmetic and ground coverage, not about whether any class moved."
+    ]
+  },
+  {
+    "id": "m8geo-change-detection-from-satellite-data-003",
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "cedCode": "M8GEO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A land-cover image is built from ground squares that measure 30 meters on each side, and each square is assigned a single class. A strip of trees running along a riverbank is only 15 meters wide. Based on how resolution works, will this strip of trees be given its own forest classification in the image?",
+    "choices": [
+      "Yes, because 15 meters is wide enough to fill half of one square, which is enough for a class assignment",
+      "No, because narrow strips of vegetation are never included in any land-cover classification system",
+      "No, because the strip is narrower than one ground-resolution square, so it cannot be assigned a class of its own",
+      "Yes, because resolution limits only apply to built-up land, not to vegetation such as forest"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the strip's width to the size of one ground square.",
+      "Resolution sets the narrowest feature that can get its own class, no matter what kind of feature it is."
+    ]
+  },
+  {
+    "id": "m8geo-change-detection-from-satellite-data-004",
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "cedCode": "M8GEO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Renfrow County's study area covers 4,800 hectares. The first picture shows forest 2,000 hectares, farmland 1,900 hectares, built-up land 600 hectares, and water 300 hectares. The second picture, taken twelve years later and cloud-free over the whole area, shows forest 1,500 hectares, farmland 2,300 hectares, built-up land 700 hectares, and water 300 hectares. Forest is the only class that lost hectares, and its 500-hectare loss exactly matches the combined 400-hectare gain in farmland and 100-hectare gain in built-up land. Which additional evidence is needed to determine whether the built-up gain came directly out of forest or out of farmland instead?",
+    "choices": [
+      "The number of years between the two pictures, since more years allow more possible conversions",
+      "The total area of the study region at each date, since larger areas need more evidence to interpret",
+      "The average size of the squares used to build each picture, since resolution determines conversion type",
+      "The location of the new fields and new buildings relative to the old forest and old farmland boundaries"
+    ],
+    "answer": "D",
+    "hints": [
+      "A column of totals can match two different ground stories equally well.",
+      "What settles which story is true is where on the ground the changed hectares actually sit."
+    ]
+  },
+  {
+    "id": "m8geo-change-detection-from-satellite-data-005",
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "cedCode": "M8GEO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Dunmore Fen's study area covers 3,600 hectares. The first picture is clear over the whole area: forest 1,600 hectares, farmland 1,200 hectares, built-up land 500 hectares, water 300 hectares. The second picture, taken ten years later, has cloud sitting over 300 hectares of the area; over the 3,300 hectares it can see, it reads forest 1,300 hectares, farmland 1,200 hectares, built-up land 500 hectares, and water 300 hectares. Subtracting class by class gives changes of -300, 0, 0, and 0, which add to -300 instead of zero. What does this result indicate, and what should be done next?",
+    "choices": [
+      "The two columns cover different ground because of cloud; both columns must be re-based onto the 3,300 hectares visible in both pictures before computing change",
+      "The two columns cover different ground because the study area boundary was redrawn to exclude 300 hectares that had been reclassified as unusable land between the two survey dates",
+      "The arithmetic contains a subtraction error somewhere in the class totals, so each class difference must be recalculated by hand until the four changes sum to zero",
+      "The -300 result confirms that exactly 300 hectares of forest was permanently lost to cloud shadow damage rather than converted to farmland or built-up use"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether the mismatch amount lines up with the hectares under cloud.",
+      "A study area's boundary is fixed before either picture is classified, so its total hectares cannot shrink."
+    ]
+  },
+  {
+    "id": "m8geo-change-detection-from-satellite-data-006",
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "cedCode": "M8GEO-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A study area of 2,800 hectares was imaged in year one and again in year eleven, with both images cloud-free over the whole area. In both images, the forest class reads exactly 1,400 hectares. A local report claims that a 200-hectare tract of forest was clear-cut in year four and had fully regrown into new forest by year ten. Can the two-date land-cover table confirm or refute this reported clearing-and-regrowth event?",
+    "choices": [
+      "No, because 200 hectares is too small a change for the sensor's resolution to detect, so clearing of that size would never appear in either image's forest total",
+      "No, because the table only captures the state at two moments and cannot show any change that occurred and reversed within the gap between them",
+      "Yes, because a net change of zero in the forest class always proves that no clearing occurred anywhere within the study area during the entire eleven-year period",
+      "Yes, because the class-by-class balance check would necessarily fail if such an intermediate clearing-and-regrowth event had actually taken place at some point"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two dates give a difference, not a path of what happened in between.",
+      "A zero net change is a fact about the arithmetic, not proof about what happened on the ground."
+    ]
+  },
+  {
+    "id": "m8geo-site-selection-with-weighted-criteria-001",
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "cedCode": "M8GEO-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A county is siting a new library. One criterion states: 'The parcel must be within the county's water-service boundary.' Another states: 'Closeness to existing bus routes will be scored from 1 to 5 and count double.' Both criteria describe something true about a good library site, but they are meant to be used differently in the decision.",
+    "choices": [
+      "The water-service criterion should be treated as a weighted preference with a very high weight, since being outside the boundary is worse than any low rating could be.",
+      "Both criteria should be rated 1 to 5 and then multiplied by their own weight, since every criterion in a siting decision is always scored using the same rating-and-weight method.",
+      "The water-service criterion is a must-have: any parcel outside the boundary is removed from consideration before scoring begins, while the bus-route criterion is rated and multiplied by its weight.",
+      "The bus-route criterion is a must-have because being close to public transit is considered essential for access, while the water-service criterion should simply be rated and weighted like any other preference."
+    ],
+    "answer": "C",
+    "hints": [
+      "A must-have is answered yes or no, not with a rating on a scale.",
+      "A weighted preference is scored 1 to 5 and then multiplied by its own weight before adding."
+    ]
+  },
+  {
+    "id": "m8geo-site-selection-with-weighted-criteria-002",
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "cedCode": "M8GEO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A district is choosing land for a community garden. Two must-haves apply to every lot: it must have at least 800 square meters of open soil, and it must already have access to a public water line. Four lots have been proposed: Cobden has 900 square meters but no water access; Dunmore has 750 square meters and water access; Elsted has 850 square meters and water access; Fenway has 1,000 square meters but no water access.",
+    "choices": [
+      "All four lots, because a must-have only removes a site if it fails by a wide margin, not by a small one.",
+      "Cobden and Fenway, because they have the most open soil, which matters more than a formal water connection.",
+      "Elsted and Dunmore, because both have water access and being close to 800 square meters is near enough to the minimum.",
+      "Elsted only, because it is the only lot that meets both the size minimum and the water-access requirement."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check each lot against both must-haves separately before comparing them to each other.",
+      "A lot that fails even one must-have is removed, no matter how close it comes to meeting it."
+    ]
+  },
+  {
+    "id": "m8geo-site-selection-with-weighted-criteria-003",
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "cedCode": "M8GEO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two sites for a new clinic have already passed every must-have. The weighted preferences are distance to underserved neighborhoods, which counts 4, and cost to build, which counts 2, with ratings from 1 to 5. Site Harmon rates 4 on distance and 5 on cost. Site Ivywood rates 5 on distance and 2 on cost.",
+    "choices": [
+      "24, because distance 5 times 4 is 20 and cost 2 times 2 is 4, and 20 plus 4 is 24.",
+      "20, because distance 5 times 4 is 20, and cost is left out since it carries the smaller weight.",
+      "26, because distance 5 times 4 is 20 and cost 2 times 3 is 6, using 3 as the cost weight.",
+      "21, because distance 4 times 4 is 16 and cost 5 times 1 is 5, using Harmon's ratings by mistake."
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply each rating by its own criterion's weight, then add the two products together.",
+      "Use Ivywood's own ratings, distance 5 and cost 2, not Harmon's."
+    ]
+  },
+  {
+    "id": "m8geo-site-selection-with-weighted-criteria-004",
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "cedCode": "M8GEO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town is siting a new senior center. Two must-haves apply: the parcel must be at least 1 hectare, and it must be within 500 meters of a bus stop. Three candidate sites have been rated 1 to 5 on quiet surroundings, weight 3, and parking space, weight 4. Grantham has 1.2 hectares, is 300 meters from a bus stop, and rates 5 on quiet and 2 on parking. Halloway has 0.8 hectares, is 200 meters from a bus stop, and rates 4 on quiet and 5 on parking. Iversham has 1.5 hectares, is 700 meters from a bus stop, and rates 5 on quiet and 5 on parking.",
+    "choices": [
+      "Iversham, because it earns the highest weighted total once quiet and parking are scored, and being 200 meters past the bus-stop limit is close enough to overlook.",
+      "Grantham, because it is the only site that clears both must-have requirements; Halloway falls short on the size minimum and Iversham is too far from the bus stop to be scored at all.",
+      "Halloway, because it leads on parking, the criterion carrying the larger weight of 4, and that advantage in the weighted total outweighs falling slightly under the site's size minimum.",
+      "Iversham, because its much larger lot size and high ratings on quiet and parking make up for being outside the 500-meter bus-stop requirement, since a bigger parcel can outweigh a failed must-have."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check every site against both must-haves before any rating gets multiplied by a weight.",
+      "A site that fails one must-have is removed from the comparison no matter how it would have scored."
+    ]
+  },
+  {
+    "id": "m8geo-site-selection-with-weighted-criteria-005",
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "cedCode": "M8GEO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city already scored two qualified sites for a new fire station using three weighted preferences rated 1 to 5: response-time coverage counts 5, land cost counts 3, and room for future trucks counts 1. Cresswell rates 3 on coverage, 5 on cost, and 4 on room, giving a weighted total of 34. Dunley rates 5 on coverage, 2 on cost, and 3 on room, giving a weighted total of 33.",
+    "choices": [
+      "Cresswell wins because its total of 34 is simply a whole number greater than Dunley's 33, and once totals are compared any higher sum settles the decision no matter how the individual weights are distributed across criteria.",
+      "Cresswell wins because it leads on two of the three criteria, and leading on a majority of the criteria always outweighs a rival's lead on just one criterion, no matter how heavily that one criterion happens to be weighted.",
+      "Cresswell's advantage in land cost, a 3-point rating gap at a weight of 3 worth 9 points, combined with its 2-point edge in room for trucks worth 2 points, together outweigh Dunley's 2-point coverage edge worth 10 points by a single point.",
+      "Cresswell wins because coverage's weight of 5 should be applied to Cresswell's own rating of 3 rather than to the rating gap between the two sites, which gives Cresswell 15 points on that single criterion and pushes its total ahead of Dunley's."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare weight times rating-gap for each criterion separately, not just which site has more high numbers.",
+      "Dunley's coverage lead is worth its weight, 5, times the 2-point rating gap, not just the raw rating of 5."
+    ]
+  },
+  {
+    "id": "m8geo-site-selection-with-weighted-criteria-006",
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "cedCode": "M8GEO-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A county is choosing between two already-qualified sites, Oakden and Pemberton, for a new recycling center. Cost of paving counts 6 and is fixed, while the weight on nearness to collection routes, currently 4, is being reconsidered. Oakden rates 5 on nearness and 2 on cost; Pemberton rates 2 on nearness and 5 on cost. At the current nearness weight of 4, Oakden totals 32 and Pemberton totals 38.",
+    "choices": [
+      "3, because the student divides 18 by the cost weight of 6 instead of dividing by the coefficient 3, arriving at a weight of 3.",
+      "18, because solving 5 times the weight plus 12 equals 2 times the weight plus 30 gives 3 times the weight equals 18, and the student stops there, treating the weight itself as 18 rather than dividing by 3.",
+      "1, because the student adds each raw rating without multiplying cost by its weight of 6, solving 5 times the weight plus 2 equals 2 times the weight plus 5, which gives a weight of 1.",
+      "6, because Oakden's total, 5 times the weight plus 12, equals Pemberton's total, 2 times the weight plus 30, only when the weight is 6, since 5 times 6 plus 12 is 42 and 2 times 6 plus 30 is 42."
+    ],
+    "answer": "D",
+    "hints": [
+      "Write each site's weighted total as an expression that depends on the unknown nearness weight, then set the two expressions equal.",
+      "Keep the cost weight fixed at 6 and multiply each rating by its own weight before adding, then solve for the weight that makes the two totals match."
+    ]
+  },
+  {
+    "id": "m8geo-gis-layers-overlay-reasoning-001",
+    "loId": "m8geo.gis-layers-and-overlay",
+    "cedCode": "M8GEO-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geographic information system for a small town keeps a flood-zone layer, a road layer, and a land-use layer, all covering the same set of parcels. A student asks how a single parcel, say parcel 6, can have a value recorded in all three layers at once. Which explanation correctly describes why this is possible?",
+    "choices": [
+      "The layers are duplicate copies of one master map, so the value recorded for parcel 6 in one layer must match the value recorded in the others",
+      "Each layer records a different kind of fact about the same locations, so the same parcel carries an attribute in every layer that covers it",
+      "The system merges every layer into a single combined map before storing data, so all parcels end up sharing one common value",
+      "Only one layer is permitted to name any given parcel, so the remaining layers must leave that parcel blank"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about whether the layers are separate records or copies of each other.",
+      "Consider what a single location can carry across several different kinds of layers."
+    ]
+  },
+  {
+    "id": "m8geo-gis-layers-overlay-reasoning-002",
+    "loId": "m8geo.gis-layers-and-overlay",
+    "cedCode": "M8GEO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Millbrook keeps two layers over the same seven lots, numbered 1 through 7. The slope layer names every lot on a steep slope: lots 1, 3, 5 and 6. The utility layer names every lot connected to the power line: lots 2, 3, 5 and 7. A lot a layer does not name is outside that layer. The planning office wants the lots that are on a steep slope AND connected to the power line. Which lots satisfy this rule?",
+    "choices": [
+      "Lots 1 and 6",
+      "Lots 1, 2, 3, 5, 6 and 7",
+      "Lots 3 and 5",
+      "Lots 2 and 7"
+    ],
+    "answer": "C",
+    "hints": [
+      "Say the connector out loud before combining the two lists.",
+      "Keep only the lots that appear on both lists, not on either one."
+    ]
+  },
+  {
+    "id": "m8geo-gis-layers-overlay-reasoning-003",
+    "loId": "m8geo.gis-layers-and-overlay",
+    "cedCode": "M8GEO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Bramwell keeps two layers over the same six lots, numbered 1 through 6. The water-main layer names every lot connected to the town water main: lots 1, 2, 4 and 5. The wooded-area layer names every lot inside the protected wooded area: lots 2 and 5. A lot a layer does not name is outside that layer. A builder needs lots that are connected to the water main AND NOT inside the wooded area. Which lots qualify?",
+    "choices": [
+      "Lots 1, 3, 4 and 6",
+      "Lots 2 and 5",
+      "Lots 1, 2, 4 and 5",
+      "Lots 1 and 4"
+    ],
+    "answer": "D",
+    "hints": [
+      "Treat the wooded-area layer as removing places rather than keeping them.",
+      "First find the lots that pass the water-main condition, then apply the second condition to that shorter list."
+    ]
+  },
+  {
+    "id": "m8geo-gis-layers-overlay-reasoning-004",
+    "loId": "m8geo.gis-layers-and-overlay",
+    "cedCode": "M8GEO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Corvale keeps three layers over the same nine parcels, numbered 1 through 9. The flood layer names parcels 1, 3, 4, 6 and 8. The sewer layer names parcels 2, 3, 4, 7 and 9. The vacancy layer names parcels 3, 5, 8 and 9. A parcel a layer does not name is outside that layer. The records office needs the count of parcels that are inside the flood zone AND connected to the sewer line AND vacant. How many parcels satisfy all three conditions?",
+    "choices": [
+      "1 parcel",
+      "2 parcels",
+      "4 parcels",
+      "9 parcels"
+    ],
+    "answer": "A",
+    "hints": [
+      "Run the three conditions one at a time and keep only the parcels that survive each one.",
+      "Combining all three lists with OR instead of AND would hand back nearly every parcel in town, which is a sign something went wrong."
+    ]
+  },
+  {
+    "id": "m8geo-gis-layers-overlay-reasoning-005",
+    "loId": "m8geo.gis-layers-and-overlay",
+    "cedCode": "M8GEO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ashcombe keeps three layers over the same seven lots, numbered 1 through 7. The land-use layer records lots 1, 2, 4, 6 and 7 as vacant, with the rest built on. The trail layer names every lot accessible by trail: lots 2, 3, 4 and 6. The habitat layer names every lot inside protected habitat: lots 4 and 7. A lot a layer does not name is outside that layer. A permit requires a lot to be vacant AND accessible by trail AND NOT inside protected habitat. Which lot or lots actually satisfy all three parts of this rule?",
+    "choices": [
+      "Lots 2, 4 and 6",
+      "Lots 2 and 6",
+      "Lot 4 only",
+      "Lots 1, 2, 3, 4, 6 and 7"
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply the vacancy and trail conditions first, then use the habitat layer to remove places rather than to keep them.",
+      "A lot named by the habitat layer must fail the rule, even if it also passes the other two conditions."
+    ]
+  },
+  {
+    "id": "m8geo-gis-layers-overlay-reasoning-006",
+    "loId": "m8geo.gis-layers-and-overlay",
+    "cedCode": "M8GEO-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ashcombe's zoning office overlays two layers across ten lots, numbered 1 through 10, to find lots that are inside the industrial zone AND fronting a paved road. The original industrial-zone layer names lots 2, 4, 5, 7 and 9. The road layer names lots 1, 4, 5, 8, 9 and 10. A later survey corrects the industrial-zone layer: lot 5 is removed because it was mapped in error, and lot 6 is added because the zone actually extends there. The road layer is not changed. Using the corrected industrial-zone layer, what is the new answer set for the overlay?",
+    "choices": [
+      "Lots 4, 5 and 9",
+      "Lots 4, 6 and 9",
+      "Lots 4 and 9",
+      "Lots 2, 4, 6, 7 and 9"
+    ],
+    "answer": "C",
+    "hints": [
+      "Re-run the overlay using the corrected industrial-zone layer in place of the original one.",
+      "A lot newly added to the industrial-zone layer still has to pass the road condition to belong in the answer set."
+    ]
+  }
+]

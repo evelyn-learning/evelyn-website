@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-composite-indicators-inequality-001",
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "cedCode": "M8GEO-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Three invented countries report the percent of households with no electricity at home: Kelvara 3 percent, Mirenta 15 percent, and Oskadi 7 percent. Before ranking a column of figures, the direction that counts as best must be decided for that indicator.",
+    "choices": [
+      "Mirenta, because a larger percentage always receives rank 1 regardless of what is being measured",
+      "Kelvara, because a smaller share of households lacking electricity is the better outcome",
+      "Oskadi, because ranking three places should start from the middle value",
+      "Mirenta, because whichever country is listed first in the data automatically receives rank 1"
+    ],
+    "answer": "B",
+    "hints": [
+      "Decide which end of the column counts as best before assigning any ranks.",
+      "Having no electricity is an undesirable outcome, so think about which direction is favorable here."
+    ]
+  },
+  {
+    "id": "m8geo-composite-indicators-inequality-002",
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "cedCode": "M8GEO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two invented countries are compared across four indicators using the standard ranking routine, where each indicator is ranked separately and the ranks are averaged. Vantor's average rank comes out to 1.75, and Wexley's average rank comes out to 2.25.",
+    "choices": [
+      "Vantor, because 1.75 is closer to zero than 2.25 is",
+      "Wexley, because a higher average rank means it scored better on more indicators",
+      "Vantor, because a lower average rank is a higher position on the composite",
+      "Wexley, because higher numbers always indicate stronger performance in a composite"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that rank 1 is the best possible rank on any single indicator.",
+      "The composite scale runs opposite to ordinary number sense: think about which average reflects more first-place-type ranks."
+    ]
+  },
+  {
+    "id": "m8geo-composite-indicators-inequality-003",
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "cedCode": "M8GEO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For four invented countries compared on one indicator, an analyst reports the ranks as 1, 2, 2, and 4, with rank 1 given to the best figure in the column. Every column of four ranked places is supposed to follow a specific pattern of values.",
+    "choices": [
+      "The column is wrong because when ranking four countries the lowest rank should stop at three, since assigning a rank of four would incorrectly imply a fifth country is being compared",
+      "The ranks are fine because the two countries with rank two tied exactly on the raw figures, so skipping rank three and moving straight to rank four correctly reflects that tie",
+      "The ranks are fine because four countries only need three distinct rank values assigned among them, since one rank can be shared by tied countries while the total ranked positions still equal four",
+      "A column of four ranks must use 1 through 4 exactly once, so repeating rank 2 while skipping rank 3 means the column was not properly ranked"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether every rank from 1 to 4 appears exactly once in the column.",
+      "A repeated rank alongside a missing rank number is the sign a column check would catch."
+    ]
+  },
+  {
+    "id": "m8geo-composite-indicators-inequality-004",
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "cedCode": "M8GEO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three invented countries -- Palmira, Quenza, and Rethnos -- are compared on four indicators. Income per person: Palmira $8,000, Quenza $14,000, Rethnos $5,000. Life expectancy: Palmira 76 years, Quenza 70 years, Rethnos 79 years. Years of schooling: Palmira 10, Quenza 8, Rethnos 12. Percent of households with no clean water at home: Palmira 6 percent, Quenza 3 percent, Rethnos 9 percent. Each indicator is ranked separately, with rank 1 going to the best figure in that column. What is Palmira's average rank across all four indicators?",
+    "choices": [
+      "2.0",
+      "1.5",
+      "2.25",
+      "2.5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Decide the direction for each column first -- for 'no clean water,' a smaller percent is the better figure.",
+      "Add Palmira's four individual ranks together, then divide by four."
+    ]
+  },
+  {
+    "id": "m8geo-composite-indicators-inequality-005",
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "cedCode": "M8GEO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three invented countries -- Amsel, Bruvane, and Corta -- are ranked on four indicators, with each indicator ranked 1 to 3 using every rank exactly once in its column. A student reports the four-indicator totals as Amsel 7, Bruvane 9, and Corta 9. There is a rule for what the three totals must add up to across the whole table.",
+    "choices": [
+      "The totals are correct, since each individual total is a plausible sum of four ranks between 1 and 3",
+      "The totals cannot be correct, since three countries across four indicators must always sum to 24, not 25",
+      "The totals cannot be correct, since no country's total should ever exceed 9 across four indicators",
+      "The totals are correct, since the checksum rule only applies when all three countries have different totals"
+    ],
+    "answer": "B",
+    "hints": [
+      "For three countries and four indicators, each column of ranks adds to 1 plus 2 plus 3, which is 6.",
+      "Multiply the number of indicator columns by 6 to find what the three country totals must add up to."
+    ]
+  },
+  {
+    "id": "m8geo-composite-indicators-inequality-006",
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "cedCode": "M8GEO-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two invented countries, Talwin and Ubarra, both report income per person of $10,000 a year. Talwin's top fifth of households receives 30 percent of all income and its bottom fifth receives 10 percent. Ubarra's top fifth receives 45 percent and its bottom fifth receives 5 percent. Someone claims: 'Since both countries have identical income per person and would tie on every rank in a composite, the composite fully describes how income is distributed inside each country.' Which response correctly evaluates this claim?",
+    "choices": [
+      "The claim is wrong: Ubarra's bottom fifth actually receives more money per person than Talwin's, so the composite is understating Ubarra's true position",
+      "The claim is correct: since both countries share the same income per person, the composite already captures how that income is divided between rich and poor",
+      "The claim is wrong: both countries would tie in a composite, but Talwin's ratio is 3 times against Ubarra's 9 times, hiding a very different income spread",
+      "The claim is correct: a top-to-bottom income ratio only matters when two countries report different incomes per person, so it does not apply here"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert each bottom fifth's share into actual dollars per person by dividing the share by 20 and multiplying by income per person.",
+      "A tie on the average income does not mean the two countries look the same inside -- compare the top-fifth to bottom-fifth ratios."
+    ]
+  },
+  {
+    "id": "m8geo-connectivity-the-digital-divide-001",
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "cedCode": "M8GEO-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A district report states that Lower Ridge has a connection share of 50 percent and Crestview has a connection share of 90 percent for the same network in the same year. A community group wants to state the digital divide between the two places correctly.",
+    "choices": [
+      "The gap cannot be stated until the total number of households in each place is known",
+      "The gap shows that Lower Ridge's households are less willing to adopt the technology than Crestview's households",
+      "The percentage-point gap is 40, found by subtracting Lower Ridge's 50 percent share from Crestview's 90 percent share",
+      "The ratio between the two places is 40, found by dividing the higher share by the lower share"
+    ],
+    "answer": "C",
+    "hints": [
+      "A percentage-point gap is found by subtracting one share from the other.",
+      "A ratio is found by dividing one share by the other, not by subtracting them."
+    ]
+  },
+  {
+    "id": "m8geo-connectivity-the-digital-divide-002",
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "cedCode": "M8GEO-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a rural district, 2,500 of the district's 4,000 households have a working mobile connection this year. A planner needs both the connection share for the district and the number of households that remain unconnected.",
+    "choices": [
+      "The connection share is 62.5 percent, and 4,000 households are unconnected",
+      "The connection share is 62.5 percent, and 2,500 households are unconnected",
+      "The connection share is 37.5 percent, and 1,500 households are unconnected",
+      "The connection share is 62.5 percent, and 1,500 households are unconnected"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide the connected households by the total households to get the share.",
+      "Unconnected households equal the total minus the connected count, not the connected count itself."
+    ]
+  },
+  {
+    "id": "m8geo-connectivity-the-digital-divide-003",
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "cedCode": "M8GEO-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A telecom provider only builds a network to a village if the cost for each household comes to $300 or less. In Millbrook, a wired line needs 40 meters of cable for each household, and cable costs $6 for each meter.",
+    "choices": [
+      "Yes, the line will be built because the cost for each household is $240, under the $300 limit",
+      "No, the line will not be built because the cost for each household is $240, over the $300 limit",
+      "Yes, the line will be built because the cost for each household is $340, which the provider still allows",
+      "No, the line will not be built because the cost for each household is $360, over the $300 limit"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply the meters needed per household by the price per meter to get the cost for each household.",
+      "Compare that computed cost to the provider's $300 limit before deciding."
+    ]
+  },
+  {
+    "id": "m8geo-connectivity-the-digital-divide-004",
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "cedCode": "M8GEO-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two neighborhoods report internet data for the same year. Bramwell, a higher-income neighborhood, has 1,200 households, of which 1,080 have a connection. Fenmoor, a lower-income neighborhood, has 6,000 households, of which 3,000 have a connection. A local blog claims: \"Fenmoor's connectivity problem is far bigger than Bramwell's, because Fenmoor has 3,000 unconnected households compared to Bramwell's 120.\"",
+    "choices": [
+      "The claim is wrong because Fenmoor is five times larger than Bramwell, so its bigger unconnected count says nothing about any share gap between them",
+      "The claim is partly right: Fenmoor's share is 50 percent against Bramwell's 90 percent, and its larger size also gives it more unconnected households",
+      "The claim is fully supported because the 90 percent and 50 percent shares alone reveal that Fenmoor has thousands more unconnected households than Bramwell",
+      "The claim cannot be evaluated because raw household counts and connection-share percentages measure entirely different things and cannot be meaningfully compared without more data"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compute each neighborhood's connection share before comparing the two places.",
+      "A much larger neighborhood can hold a bigger unconnected count even when a real share gap also exists."
+    ]
+  },
+  {
+    "id": "m8geo-connectivity-the-digital-divide-005",
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "cedCode": "M8GEO-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A provider builds a network to a district only where the cost for each household comes to $600 or less. Towers cost $300,000 each and cover 60 square kilometers; line costs $8 for each meter. Silvermere has 4,000 households on 30 square kilometers, where a line needs 50 meters for each household. Oakendell has 4,000 households on 240 square kilometers, where a line needs 300 meters for each household.",
+    "choices": [
+      "Silvermere, because its smaller area meant the tower network was never extended there, leaving only the line network in place",
+      "Oakendell, because its total tower cost of $1,200,000 is too high under the rule, forcing only the line network to be built there",
+      "Oakendell, because its line cost of $2,400 per household exceeds the $600 rule while its tower cost of $300 per household stays under it",
+      "Neither district shows leapfrogging, since both the line and tower designs came in under the $600 rule in every case"
+    ],
+    "answer": "C",
+    "hints": [
+      "Price the line and the tower separately for each district and compare each to the $600 rule.",
+      "Leapfrogging shows up as a district where only the newer network's cost stays under the limit."
+    ]
+  },
+  {
+    "id": "m8geo-connectivity-the-digital-divide-006",
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "cedCode": "M8GEO-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In Calder Basin, farmers used to sell crops only by traveling to the city market, a round trip costing $15 in fare, made 8 times a year to negotiate prices as harvests came in. A mobile price-checking app arrived so farmers could check prices from home. In the same year, the region's dirt road to the city was also paved, cutting travel time in half. The survey finds farmers now make the trip 3 times a year, at the same $15 fare. A regional report claims: \"The mobile app saved farmers $75 a year in fare, calculated as 5 fewer trips at $15 each.\"",
+    "choices": [
+      "Supported: because the app arrived first in the year, it is the true cause of the drop in trips, while the road only shortened travel time",
+      "Supported: the arithmetic is correct, so the full $75 in savings must be the direct effect of the app regardless of the paved road",
+      "Not supported: the trip calculation itself is wrong, since 8 trips minus 3 trips at $15 each actually equals $60, not $75",
+      "Not supported: although $120 minus $45 does equal $75, the road paving happened the same year, so the app cannot be credited with the whole saving"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether the dollar subtraction in the report is arithmetically correct before judging the claim.",
+      "Consider whether anything besides the app changed that same year that could also explain fewer trips."
+    ]
+  },
+  {
+    "id": "m8geo-specialization-supply-chain-risk-001",
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "cedCode": "M8GEO-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two countries can each produce two goods with the same amount of monthly effort. Country Halvern can produce either 400 tons of fish or 200 barrels of oil. Country Sorbin can produce either 100 tons of fish or 100 barrels of oil. Find what one barrel of oil costs Country Halvern, measured in tons of fish given up.",
+    "choices": [
+      "200 tons of fish",
+      "0.5 tons of fish",
+      "4 tons of fish",
+      "2 tons of fish"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide Halvern's own fish output by its own oil output — don't compare across countries.",
+      "The give-up figure is found inside one country's own row, not from the other country's numbers."
+    ]
+  },
+  {
+    "id": "m8geo-specialization-supply-chain-risk-002",
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "cedCode": "M8GEO-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "With one month of effort, Kesh can produce either 500 tons of copper or 250 units of cloth. With the same effort, Dorvale can produce either 200 tons of copper or 400 units of cloth. Determine which country should specialize in producing cloth, and why.",
+    "choices": [
+      "Dorvale, because a unit of cloth costs Dorvale only 0.5 tons of copper while it costs Kesh 2 tons of copper",
+      "Kesh, because a unit of cloth costs Kesh only 0.5 tons of copper while it costs Dorvale 2 tons of copper",
+      "Dorvale, because Dorvale can produce more units of cloth overall than Kesh can",
+      "Kesh, because Kesh can produce more tons of copper overall than Dorvale can"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute what a unit of cloth costs each country in copper, using that country's own numbers.",
+      "Being able to produce more overall is not the same as giving up less."
+    ]
+  },
+  {
+    "id": "m8geo-specialization-supply-chain-risk-003",
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "cedCode": "M8GEO-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Producing one bolt of rope costs Varno 3 sacks of grain, based on what it must give up at home to make that rope. Varno instead trades for rope at an agreed rate of 2 sacks of grain per bolt, and buys 40 bolts. Find how many sacks of grain Varno saves compared with making all 40 bolts itself.",
+    "choices": [
+      "80 sacks, because 40 bolts at home would cost 160 sacks and trading costs 80 sacks",
+      "40 sacks, because 40 bolts at home would cost 120 sacks and trading costs 80 sacks",
+      "120 sacks, because Varno pays nothing for the rope once a trade rate is agreed",
+      "20 sacks, because the trade rate is 2 sacks less than the home cost per bolt, times 10 bolts traded"
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out what all 40 bolts would have cost at home, then subtract what was actually paid.",
+      "The saving equals the difference per bolt, multiplied by the full quantity traded."
+    ]
+  },
+  {
+    "id": "m8geo-specialization-supply-chain-risk-004",
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "cedCode": "M8GEO-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "With one month of effort, Country A can produce either 600 tons of wheat or 200 crates of furniture. Country B can produce either 150 tons of wheat or 300 crates of furniture. The two countries consider trading furniture at a rate of 4 tons of wheat for every crate. Evaluate whether this rate lets both sides gain compared with making furniture at home.",
+    "choices": [
+      "The rate fails, because a crate costs Country B only 0.5 tons of wheat at home, so Country B would rather pay 4 tons than sell for less",
+      "The rate works, because it falls between Country A's give-up figure of 3 tons and Country B's give-up figure of 0.5 tons per crate",
+      "The rate fails, because a crate costs Country A only 3 tons of wheat at home, so Country A would rather make its own furniture than pay 4",
+      "The rate works, because Country A produces more wheat overall and can afford to pay 4 tons per crate"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compute each country's give-up figure for one crate of furniture using its own row of the table.",
+      "A trade rate must sit between the two give-up figures for both sides to gain."
+    ]
+  },
+  {
+    "id": "m8geo-specialization-supply-chain-risk-005",
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "cedCode": "M8GEO-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A toy company's chain runs as follows: plastic pellets come from any of five suppliers, molding happens at one plant in Rellak, painting is done at three plants, and packaging happens at one plant in Dumway before toys ship through either of two ports. Last year a two-week strike closed all three painting plants at once, but the company still shipped on time by drawing down warehouse stock. A separate one-week fire at the Dumway packaging plant, however, stopped shipments completely for that week. Which stage is confirmed as a single point of failure by both its count in the chain and the stoppage actually described?",
+    "choices": [
+      "Rellak molding, because it has a count of one, even though its stoppage was not described",
+      "Painting, because painting stopped completely during the strike even though there are three plants",
+      "Plastic pellet suppliers, because five suppliers means pellets are the most important stage",
+      "Dumway packaging, because it has a count of one and its stoppage actually halted shipments"
+    ],
+    "answer": "D",
+    "hints": [
+      "A single point of failure has a count of one, but check which one's failure actually matches the events described.",
+      "Painting has three plants, so a stoppage there does not halt the whole chain even if all three stop at once."
+    ]
+  },
+  {
+    "id": "m8geo-specialization-supply-chain-risk-006",
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "cedCode": "M8GEO-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A button maker's chain runs as follows: buttons are molded at one plant in Estenvale, then shipped through the Bellou Strait, the only sea route to the assembly region, landing at either of two ports, then assembled at any of four plants. The firm buys 50,000 buttons a year. A proposed second button-molding plant would be built in the same region as Estenvale, also shipping through the Bellou Strait, and would raise the cost by $1 for every button bought. A past two-week shutdown of the Estenvale plant idled assembly, which runs 5,000 units a week, at a loss of $50 for every unit not built. Decide whether the second plant is worth its price, and what single point of failure it does or does not remove.",
+    "choices": [
+      "It breaks even against button-plant stoppages that recur more often than once per 10 years, and it does not remove the strait's single point of failure",
+      "It breaks even against button-plant stoppages that recur more often than once per 5 years, and it also removes the strait's single point of failure since both plants share it",
+      "It is not a real backup at all, because both button plants would ship through the same strait",
+      "It breaks even against button-plant stoppages that recur more often than once per 10 years, and it also removes the strait's single point of failure because the strait stage is unrelated to button molding"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the stoppage's total cost by the backup's yearly cost to find the break-even frequency.",
+      "Check separately whether the backup changes the count at the strait stage, not just at the molding stage."
+    ]
+  },
+  {
+    "id": "m8geo-where-factories-locate-001",
+    "loId": "m8geo.where-factories-locate",
+    "cedCode": "M8GEO-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A firm is comparing two possible factory sites, Site P and Site Q. Site P offers lower labor cost and lower land cost than Site Q, but Site Q offers a much lower cost for shipping the finished product to the firm's customers. Using the rule for deciding where a firm should locate, how should the firm make its decision?",
+    "choices": [
+      "Add every location factor's dollar cost at each site into one total per site, then compare the totals; the site with the lowest total wins even if it loses on some individual lines.",
+      "Choose the site that has the lowest cost on the largest number of individual lines, reasoning that winning most of the separate cost categories outweighs losing on just one or two lines.",
+      "Choose the site with the lowest labor cost, reasoning that wages are usually the single largest expense for any factory and therefore should decide the location regardless of other cost lines.",
+      "Choose the site with the lowest transport-to-market cost, reasoning that getting the finished product to customers always outweighs every other cost line in determining where a firm must ultimately locate."
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall that a single line, no matter how large, never settles a comparison by itself.",
+      "Think about how many lines a site can lose on and still finish with the lowest total."
+    ]
+  },
+  {
+    "id": "m8geo-where-factories-locate-002",
+    "loId": "m8geo.where-factories-locate",
+    "cedCode": "M8GEO-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A company packages garden soil into large bags and sells all of its output to home-improvement stores across one metropolitan region. The bagged soil is heavy, bulky, and not worth very much per pound compared to what it costs to move. For this company, which location factor is most likely to be the single largest cost line at any candidate site?",
+    "choices": [
+      "Supplier delivery cost, because bagged soil products are made from many purchased parts and components delivered to the plant for assembly.",
+      "Transport to market, because heavy, bulky, low-value products cost the most to move to customers relative to their worth.",
+      "Trained labor cost, because bagging soil requires specialized skilled workers whose extensive training makes them costly to hire and retain.",
+      "Port access cost, because bagged soil products must be shipped overseas by container ship to reach most of the company's customers."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about how a product's weight and value per pound change which cost line grows fastest.",
+      "Compare this product to a heavy item sold to one nearby destination rather than shipped far away."
+    ]
+  },
+  {
+    "id": "m8geo-where-factories-locate-003",
+    "loId": "m8geo.where-factories-locate",
+    "cedCode": "M8GEO-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A firm ships 8,000 crates of product a year, and 25 percent of those crates are sold overseas. None of the candidate sites has direct port access, so every crate destined for an overseas buyer must first travel overland to the nearest port at a cost of $15 per crate. How much is the missing port access costing this firm each year?",
+    "choices": [
+      "$2,000",
+      "$120,000",
+      "$30,000",
+      "$15,000"
+    ],
+    "answer": "C",
+    "hints": [
+      "First figure out how many of the 8,000 crates actually need the overland trip.",
+      "Only the exported share of the crates pays the $15 overland cost, not the whole shipment."
+    ]
+  },
+  {
+    "id": "m8geo-where-factories-locate-004",
+    "loId": "m8geo.where-factories-locate",
+    "cedCode": "M8GEO-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A firm assembles wireless earbuds, a light product that is worth a lot for its weight and built from many purchased parts. It is comparing three sites. Site A: labor $700,000, supplier deliveries $50,000, land and power $100,000. Site B: labor $500,000, supplier deliveries $400,000, land and power $80,000. Site C: labor $600,000, supplier deliveries $150,000, land and power $120,000. Which site does the firm choose, and what is the primary source of its cost advantage over the second-place site?",
+    "choices": [
+      "Site A, because it has the lowest land and power cost among the three sites, and land and power costs matter most for site choice.",
+      "Site C, because it has the lowest land and power cost among the three sites, so its land and power savings decide the winner.",
+      "Site B, because it has the lowest labor cost among the three sites, and labor cost is what should determine which site wins.",
+      "Site A, because its supplier-delivery savings over the second-place site outweigh its higher labor cost."
+    ],
+    "answer": "D",
+    "hints": [
+      "Add each site's three lines into one total before judging any single line.",
+      "Then subtract the winning site from the runner-up, line by line, to see which line accounts for most of the gap."
+    ]
+  },
+  {
+    "id": "m8geo-where-factories-locate-005",
+    "loId": "m8geo.where-factories-locate",
+    "cedCode": "M8GEO-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A textile-machinery firm employing 90 workers currently operates in Verrick, a town with 1,800 total jobs. It is deciding whether to move to Oakstead, a town with 9,000 total jobs where four other machinery firms already operate. At Oakstead the firm would pay $650,000 a year in wages, $180,000 in rent, and $80,000 for parts delivered from a supplier 6 kilometers away, with no training cost because skilled workers already live there. At Verrick it currently pays $500,000 in wages, $120,000 in rent, $420,000 for parts delivered from a supplier 380 kilometers away, and $180,000 a year training workers. Which statement is best supported by this information?",
+    "choices": [
+      "The firm moves to Oakstead because the neighbor lines, parts and training, save more than the ground lines, wages and rent, cost extra, and the move is five times larger a change for Verrick than for Oakstead.",
+      "The firm moves to Oakstead because its ground lines, $650,000 wages plus $180,000 rent, total less than Verrick's $500,000 wages plus $120,000 rent, and because 90 jobs equal 90 jobs at either site.",
+      "The firm stays in Verrick because its workers are already trained there, while Oakstead's would need retraining, and because moving 90 jobs to Oakstead leaves the firm's total yearly cost near $1,220,000 either way.",
+      "The firm moves to Oakstead because each individual line, including its $650,000 wages, costs less than Verrick's matching line, and because 90 jobs are a larger share of Oakstead's 9,000 total jobs than of Verrick's 1,800."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute each site's total first, then split the lines into neighbor-caused savings and ground-caused costs.",
+      "Divide the same 90 jobs by each town's own total jobs to compare the size of the change at each end."
+    ]
+  },
+  {
+    "id": "m8geo-where-factories-locate-006",
+    "loId": "m8geo.where-factories-locate",
+    "cedCode": "M8GEO-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A firm is comparing Site P and Site Q for a new plant. Site P's annual costs are: labor $520,000, supplier deliveries $180,000, transport to market $300,000, and land and power $90,000. Site Q's annual costs are: labor $480,000, supplier deliveries $260,000, transport to market $250,000, and land and power $110,000. An analyst claims that Site Q wins with a total of $1,050,000 against Site P's total of $1,090,000, a margin of $40,000. Is the analyst's claim correct?",
+    "choices": [
+      "Yes; the analyst's totals are correct as computed, and Site Q truly wins over Site P by the reported margin of $40,000.",
+      "No; recalculating each line shows Site P actually has the lower total, by $10,000, so Site P wins, not Site Q.",
+      "No; Site Q still wins over Site P, but the correctly recalculated margin between the two totals is $30,000, not $40,000 as claimed.",
+      "No; Site P wins over Site Q, but the correctly recalculated margin between the two totals is $50,000, not $40,000 as claimed."
+    ],
+    "answer": "B",
+    "hints": [
+      "Add up each site's four lines yourself rather than trusting the reported totals.",
+      "Whatever margin you get from subtracting the totals must match summing the line-by-line differences."
+    ]
+  }
+]

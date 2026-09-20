@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-coastal-risk-sea-level-change-001",
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "cedCode": "M8GEO-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Bayport's sea level currently stands 0.4 meters above the town's measuring line. Forecasters predict that an incoming storm will push a surge of 1.3 meters on top of that. What water line should Bayport use to determine which elevation bands flood?",
+    "choices": [
+      "1.7 meters, found by adding the current sea level to the storm surge",
+      "1.3 meters, the storm surge height by itself, since that is the number given in the forecast",
+      "0.4 meters, the current sea level by itself, since the surge is a separate temporary event",
+      "0.9 meters, found by subtracting the current sea level from the storm surge"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that the two stated heights stack rather than replace each other.",
+      "Check whether your answer actually uses both numbers given in the problem."
+    ]
+  },
+  {
+    "id": "m8geo-coastal-risk-sea-level-change-002",
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "cedCode": "M8GEO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Fenwick Cove sorts its residents into elevation bands: below 1 meter, between 1 and 2 meters, between 2 and 3 meters, and above 3 meters. A band counts as flooded only when the water line reaches the top of that band. If the water line calculated for an approaching storm is exactly 2.0 meters, which bands are flooded?",
+    "choices": [
+      "Below 1 meter, between 1 and 2 meters, and between 2 and 3 meters, because the water line is close to all of them",
+      "Below 1 meter and between 1 and 2 meters, because the water line reaches the top of each of these bands",
+      "Only the band between 1 and 2 meters, because that is where the water line happens to fall",
+      "All four bands, because 2.0 meters is enough water to affect the entire town"
+    ],
+    "answer": "B",
+    "hints": [
+      "A band only counts as flooded once the water reaches its top edge, not its bottom edge.",
+      "Compare 2.0 meters to the top height of each band one at a time."
+    ]
+  },
+  {
+    "id": "m8geo-coastal-risk-sea-level-change-003",
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "cedCode": "M8GEO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Corvale has three elevation bands: below 1 meter holds 150 people, between 1 and 2 meters holds 400 people, and between 2 and 3 meters holds 3,000 people. A planner argues that since raising the water line from 2 meters to 3 meters is a 50 percent increase in height, the number of newly exposed people should also be about 50 percent of the people already exposed. Is this reasoning sound?",
+    "choices": [
+      "No, because the planner should have subtracted the lower band's population from the higher band's population instead of adding the two totals together to estimate exposure",
+      "Yes, because elevation bands are evenly spaced, so a proportional height increase always produces a proportional increase in exposure",
+      "No, because the newly exposed count depends on how many people actually live in the band the rising water newly covers, not on the percentage rise in height",
+      "Yes, because the band nearest the water line always holds roughly the same population as the bands that are already flooded, so percentages carry over"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check how many people actually live in the band between 2 and 3 meters before judging the claim.",
+      "Population can jump far more, or far less, than the height change alone would suggest."
+    ]
+  },
+  {
+    "id": "m8geo-coastal-risk-sea-level-change-004",
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "cedCode": "M8GEO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Millbrook has 6,500 residents sorted into elevation bands above its measuring line: below 1 meter holds 500 people, between 1 and 2 meters holds 900 people, between 2 and 3 meters holds 1,600 people, and above 3 meters holds the rest. The sea currently stands 0.6 meters above the measuring line, and the storm being planned for is forecast to add a surge of 1.4 meters on top of that. How many people are in the flooded bands?",
+    "choices": [
+      "3,000 people, adding the bands below 1 meter, between 1 and 2 meters, and between 2 and 3 meters",
+      "500 people, only the band below 1 meter, using the surge height alone as the water line",
+      "3,500 people, the population of the band above 3 meters",
+      "1,400 people, adding the bands below 1 meter and between 1 and 2 meters"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add the two given heights together first to find the actual water line.",
+      "Then check each band's top edge against that water line, not its bottom edge."
+    ]
+  },
+  {
+    "id": "m8geo-coastal-risk-sea-level-change-005",
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "cedCode": "M8GEO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Portage Bay must protect 300 homes that sit below a 2.5-meter water line, and the council has stated one requirement: every one of the 300 homes must stay dry if the water line reaches 2.5 meters. Two proposals are on the table. Proposal A raises the living floors of all 300 homes to 2.2 meters, at a cost of $3,000 per home. Proposal B builds a seawall with its top at 2.5 meters, at a cost of $2,000,000 plus $50,000 a year to maintain. Which proposal actually meets the stated requirement?",
+    "choices": [
+      "Neither proposal meets the requirement: Proposal A raises floors below the required height, and Proposal B's wall top only equals the water line rather than exceeding it",
+      "Proposal A meets the requirement, because raising each home's floor to 2.2 meters is close enough to the 2.5-meter water line and far cheaper per home than building a seawall",
+      "Proposal B meets the requirement, because a seawall whose top sits exactly at the water line is specifically built to hold back water rising to that very level",
+      "Both proposals meet the requirement, because each plan's protective height was measured directly against the same 2.5-meter water line the council specified"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare each plan's own height directly to the required water line, not to each other's cost.",
+      "A protect structure stops working right at the height it was built to, not just below it."
+    ]
+  },
+  {
+    "id": "m8geo-coastal-risk-sea-level-change-006",
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "cedCode": "M8GEO-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Oakhaven has 400 homes in a flood-prone zone. The council initially required that all 400 homes stay dry at a water line of 2 meters, and under that requirement an accommodate plan of raised floors at 2.3 meters was the cheapest option that passed. The council has now revised the requirement to: no water may enter this zone at all, at any water line. Which response family can still meet this new requirement, and why?",
+    "choices": [
+      "Accommodate, because raised floors already proved they could meet a stated water-line requirement once before",
+      "Retreat, because it removes the homes and people from the zone entirely rather than trying to keep water out of it or raise living space above it",
+      "Protect, because a wall can always be rebuilt taller to match any new requirement without changing its basic design",
+      "Whichever family costs the least once the new requirement is applied, since price decides among all options that reach the same standard"
+    ],
+    "answer": "B",
+    "hints": [
+      "Raised floors keep water out of the building, but not out of the streets and yards of the zone.",
+      "Only one family removes people and buildings from the zone altogether, rather than holding back or rising above the water."
+    ]
+  },
+  {
+    "id": "m8geo-hazard-risk-exposure-vulnerability-001",
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "cedCode": "M8GEO-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Ferndale has 15,000 residents. Engineers have mapped the area beneath a recently burned hillside that would flood with mud if heavy rain falls, and 2,400 residents live inside that mapped area. According to the risk framework, which number is Ferndale's exposure to that landslide hazard?",
+    "choices": [
+      "15,000, the total number of residents living within Ferndale's town limits",
+      "2,400, the number of residents living inside the mapped landslide-risk area",
+      "12,600, the number of residents living outside the mapped hazard boundary",
+      "7,500, half of Ferndale's total population living near the hazard zone"
+    ],
+    "answer": "B",
+    "hints": [
+      "Exposure only counts what is inside the hazard's mapped boundary.",
+      "The town's total population includes many people who live outside the risk zone."
+    ]
+  },
+  {
+    "id": "m8geo-hazard-risk-exposure-vulnerability-002",
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "cedCode": "M8GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Riverton experiences a flood large enough to cover its entire flood zone on average once every 25 years. Planners need to convert this frequency into the hazard factor used in the risk product.",
+    "choices": [
+      "2.5%, dividing 25 by 1,000 instead of dividing 100 by 25",
+      "25%, treating the frequency number itself as the percent chance",
+      "4%, since 100 divided by 25 equals 4",
+      "40%, treating the chance as 100 divided by 2.5"
+    ],
+    "answer": "C",
+    "hints": [
+      "Chance per year equals 100 divided by the number of years between events.",
+      "Don't mistake the frequency number itself for the percentage."
+    ]
+  },
+  {
+    "id": "m8geo-hazard-risk-exposure-vulnerability-003",
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "cedCode": "M8GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Oakbridge, a storm's surge zone contains 600 homes. After the storm hit, 90 of those homes were found to be damaged. A planner wants to know Oakbridge's vulnerability to that storm.",
+    "choices": [
+      "90 homes, the raw count of homes damaged",
+      "85%, the share of exposed homes left undamaged",
+      "600 homes, the total number of homes exposed to the surge",
+      "15%, the share of the 600 exposed homes that were damaged"
+    ],
+    "answer": "D",
+    "hints": [
+      "Vulnerability is a share of the exposed, not a raw count.",
+      "Divide the number of damaged homes by the number of homes in the zone."
+    ]
+  },
+  {
+    "id": "m8geo-hazard-risk-exposure-vulnerability-004",
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "cedCode": "M8GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The same earthquake shook Dunmore and Corven with identical ground motion and the same duration of shaking. In Dunmore's shaking zone stood 900 buildings, and 45 were damaged. In Corven's shaking zone stood 1,800 buildings, and 540 were damaged. Once the difference in exposure between the two towns is accounted for, which value best represents the remaining vulnerability factor separating their outcomes?",
+    "choices": [
+      "6, the ratio of damage shares (30% in Corven divided by 5% in Dunmore), after the exposure factor of 2 is removed",
+      "12, the ratio of total buildings damaged (540 divided by 45), without adjusting for the unequal exposure",
+      "2, the ratio of the number of buildings in the two shaking zones (1,800 divided by 900)",
+      "30%, the share of Corven's exposed buildings that were damaged, considered on its own"
+    ],
+    "answer": "A",
+    "hints": [
+      "First find how much bigger Corven's exposure is than Dunmore's.",
+      "Divide the damage ratio by the exposure ratio to isolate the part caused by vulnerability."
+    ]
+  },
+  {
+    "id": "m8geo-hazard-risk-exposure-vulnerability-005",
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "cedCode": "M8GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three river towns each face a flood large enough to cover their entire flood zone. Vasterly's flood arrives on average once every 20 years, its zone holds 6,000 homes, and a survey shows 15 percent of those homes would be damaged. Winmere's flood arrives once every 8 years, its zone holds 900 homes, and 50 percent would be damaged. Oxdell's flood arrives once every 100 years, its zone holds 20,000 homes, and 40 percent would be damaged. Based on the average number of homes damaged per year that these numbers produce, which ranking from highest risk to lowest risk is correct?",
+    "choices": [
+      "Winmere, Vasterly, Oxdell, ranked by how often each town's flood arrives, from most frequent to least frequent",
+      "Oxdell, Winmere, Vasterly, based on multiplying each town's chance per year by its exposure and its vulnerability share",
+      "Oxdell, Vasterly, Winmere, ranked by how many homes sit in each flood zone, from most to least",
+      "Winmere, Oxdell, Vasterly, ranked by each town's vulnerability share, from highest to lowest"
+    ],
+    "answer": "B",
+    "hints": [
+      "Convert each frequency to a percent chance per year before comparing the towns.",
+      "Multiply all three numbers together for each town rather than ranking by just one component."
+    ]
+  },
+  {
+    "id": "m8geo-hazard-risk-exposure-vulnerability-006",
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "cedCode": "M8GEO-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A local news report claims that Newtown faces almost no flood risk because a flood large enough to cover its flood zone strikes only once every 200 years. Newtown's flood zone contains 50,000 homes, and a building survey found that 70 percent of those homes would be damaged if such a flood arrived. Which statement correctly evaluates the claim and reports Newtown's average number of homes damaged per year?",
+    "choices": [
+      "The claim is wrong: multiplying the 0.5 percent yearly chance by 70 percent alone gives about 0.5 homes damaged per year on average",
+      "The claim is correct: because the flood is so rare, its contribution to the risk product rounds down to zero no matter how many homes are exposed",
+      "The claim is wrong: multiplying the 0.5 percent yearly chance by 50,000 homes and by 70 percent gives about 175 homes damaged per year on average",
+      "The claim is correct: a 70 percent vulnerability share only counts toward risk when a flood arrives more often than once every 100 years"
+    ],
+    "answer": "C",
+    "hints": [
+      "A rare hazard factor is still multiplied by exposure and vulnerability, not treated as zero.",
+      "Convert the 200-year return period into a percent chance per year before multiplying through."
+    ]
+  },
+  {
+    "id": "m8geo-mitigation-adaptation-resilience-planning-001",
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "cedCode": "M8GEO-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A river town elevates 150 homes on concrete stilts so that when the river floods, the same floodwaters pass underneath the houses instead of entering them. Which statement correctly classifies this action and explains why?",
+    "choices": [
+      "It is adaptation, because the cost of raising homes on stilts is lower than building a dam upstream",
+      "It is mitigation, because raising the homes reduces the amount of water that the river carries downstream",
+      "It is adaptation, because the flood itself is unchanged and the homes are what changed to reduce the harm",
+      "It is mitigation, because the elevated homes make flooding happen less often in future storms"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether the flood event itself changes size or frequency, or only what happens to the houses.",
+      "The classification test does not depend on cost or on how often the event occurs."
+    ]
+  },
+  {
+    "id": "m8geo-mitigation-adaptation-resilience-planning-002",
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "cedCode": "M8GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coastal town spends $210,000 installing storm shutters on 300 households along its exposed shoreline. Using the cost-for-each-household-reached method, determine which statement correctly evaluates this action.",
+    "choices": [
+      "The action costs $300 for each household it reaches, found by dividing the number of households by the thousands spent",
+      "The action costs $210,000 for each household it reaches, because that is the total amount the town spent",
+      "The action costs $700 for each household in town, found by dividing $210,000 by shutters per home",
+      "The action costs $700 for each household it reaches, found by dividing $210,000 by 300"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide the total cost by the count of households the action actually protects.",
+      "Check your answer by multiplying it back by the household count to see if you recover $210,000."
+    ]
+  },
+  {
+    "id": "m8geo-mitigation-adaptation-resilience-planning-003",
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "cedCode": "M8GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An inland town builds a reservoir upstream that captures heavy rainfall during storms and releases the water slowly over the following week, so the river downstream never rises as high as it used to during a storm of the same size. Which classification is correct and why?",
+    "choices": [
+      "Mitigation, because the flood itself is smaller when it reaches the town, not just less harmful",
+      "Adaptation, because the reservoir keeps floodwater away from homes without changing the storm that produces it",
+      "Mitigation, because building the reservoir required expensive, large-scale engineering work by the town",
+      "Adaptation, because the reservoir's benefit only reaches households living closest to the riverbank"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether the river's flood level itself changes, or only what happens to houses when it arrives.",
+      "Cost and ambition are not part of the classification test."
+    ]
+  },
+  {
+    "id": "m8geo-mitigation-adaptation-resilience-planning-004",
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "cedCode": "M8GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Millhaven has 600 households. A flood barrier system costs $225,000 and reaches 450 households near the river. An elevation grant program costs $270,000 and raises 90 homes along the creek bank, all of which are also inside the barrier's reach. The remaining households live on the town's east ridge, out of reach of both actions. Which statement correctly evaluates the plan?",
+    "choices": [
+      "The flood barrier costs $500 per household reached, the elevation grant costs $3,000 per household reached, and 60 households on the east ridge are left in the plan's coverage gap",
+      "The flood barrier costs $500 per household reached, the elevation grant costs $3,000 per household reached, and 150 households on the east ridge are left in the plan's coverage gap",
+      "The flood barrier costs $375 per household reached, the elevation grant costs $2,700 per household reached, and 150 households on the east ridge are left in the plan's coverage gap",
+      "The flood barrier costs $500 per household reached, the elevation grant costs $3,000 per household reached, and no households are left in the plan's coverage gap because the grant households are already counted in the barrier's reach"
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide each action's cost by the number of households it actually reaches, not by the town total.",
+      "The coverage gap is found by subtracting everyone reached by any action from the full household list."
+    ]
+  },
+  {
+    "id": "m8geo-mitigation-adaptation-resilience-planning-005",
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "cedCode": "M8GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Cedar Hollow spends $360,000 clearing dense underbrush across 800 hectares of forest on a ridge above three towns: Cedar Hollow with 1,200 households, Pinedale with 800 households, and Ashcroft with 500 households. The clearing means that any wildfire starting on the ridge will burn a smaller area and produce a smaller fire reaching all three towns. Only Cedar Hollow paid for the project. Which statement correctly evaluates the cost for each household reached?",
+    "choices": [
+      "The true cost for each household is $144, found by dividing $360,000 by all 2,500 households, since Pinedale and Ashcroft benefit from the smaller fire even though neither town paid anything toward the clearing project",
+      "The true cost for each household is $300, found by dividing $360,000 by Cedar Hollow's 1,200 households, since only Cedar Hollow paid for the clearing and the other towns' households should not be counted at all",
+      "Dividing by all 2,500 households across the three towns gives $144 per household, while dividing by only Cedar Hollow's 1,200 households gives $300 per household; both figures are valid depending on which group is counted",
+      "The cost for each household cannot be calculated because mitigation actions like clearing underbrush benefit an unlimited surrounding area and therefore have no fixed or countable household total"
+    ],
+    "answer": "C",
+    "hints": [
+      "A mitigation action's benefit can reach households in towns that paid nothing toward it.",
+      "Try dividing the cost by the paying town's households and also by every household the smaller fire reaches, and compare."
+    ]
+  },
+  {
+    "id": "m8geo-mitigation-adaptation-resilience-planning-006",
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "cedCode": "M8GEO-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student evaluates Fernbridge's wildfire plan, which includes controlled burns each spring that reduce underbrush across 400 hectares, making any wildfire that starts there burn less intensely but no less often than before. The student writes: \"Since the burns don't change how often a fire starts, and firefighters use the same equipment either way, this must be adaptation, not mitigation.\" Which response correctly evaluates the student's reasoning?",
+    "choices": [
+      "The student is correct, because mitigation requires both a rarer event and a smaller event to occur together, and this action provides only one of those",
+      "The student is correct, because an action that does not reduce how often an event occurs cannot be classified as mitigation under any circumstances",
+      "The student is wrong, because the type of equipment firefighters use always determines whether an action counts as mitigation or adaptation",
+      "The student is wrong, because mitigation only requires a smaller or rarer event, and unchanged frequency does not rule out mitigation when the size drops"
+    ],
+    "answer": "D",
+    "hints": [
+      "Mitigation is a change to the cause or the size of the event, and either one alone is enough.",
+      "Checking how often an event occurs is one of the two habits that get in the way of a correct classification."
+    ]
+  },
+  {
+    "id": "m8geo-reading-climate-trend-data-001",
+    "loId": "m8geo.reading-climate-trend-data",
+    "cedCode": "M8GEO-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Harmon Station has three decade averages in its temperature record, oldest to newest: -0.4 degrees, -0.1 degrees, and +0.2 degrees departure from baseline. What is the correct step (trend) for this record, expressed as degrees per decade?",
+    "choices": [
+      "0.15 degrees per decade, found by dividing the total change of 0.6 degrees by 4",
+      "0.2 degrees per decade, found by dividing the total change of 0.6 degrees by the 3 decade averages themselves",
+      "0.6 degrees per decade, taken as the full change from the first decade average to the last without dividing by any gaps",
+      "0.3 degrees per decade, found by dividing the total change of 0.6 degrees by the 2 gaps between the 3 decade averages"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the gaps between the decade averages, not the number of decade averages listed.",
+      "Step equals the later block average minus the earlier one, divided by the number of gaps."
+    ]
+  },
+  {
+    "id": "m8geo-reading-climate-trend-data-002",
+    "loId": "m8geo.reading-climate-trend-data",
+    "cedCode": "M8GEO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Sandport keeps a temperature record using a fixed baseline average of 21 degrees Celsius. One year in the record shows a departure of -0.4 degrees. What does this departure actually tell us about that year?",
+    "choices": [
+      "The year averaged 0.4 degrees below Sandport's chosen baseline, which by itself does not tell us whether that year felt hot or cold in absolute terms",
+      "The year was measurably colder than every other year in the record, since a negative departure always marks the single coldest year regardless of how small the departure actually is",
+      "The year averaged 0.4 degrees below the freezing point of water, since departures are always measured from freezing rather than from any station-specific baseline average",
+      "The year matched the baseline almost exactly, since a departure this small is treated as zero in the record and therefore does not count as a meaningful difference"
+    ],
+    "answer": "A",
+    "hints": [
+      "A departure is a distance from a chosen baseline, not a distance from freezing or a ranking of coldest years.",
+      "A departure of 0.0 means matching the baseline exactly; anything else, however small, is a real difference from it."
+    ]
+  },
+  {
+    "id": "m8geo-reading-climate-trend-data-003",
+    "loId": "m8geo.reading-climate-trend-data",
+    "cedCode": "M8GEO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Millport Station's third decade averaged +0.3 degrees departure from its baseline. The single warmest year within that decade recorded a departure of +0.9 degrees. What is the swing for that year, and what does the swing represent?",
+    "choices": [
+      "0.6 degrees per decade, representing the long-run trend measured across the whole record rather than any single year's distance from its own decade's average",
+      "0.6 degrees above the decade average, representing how far that single year sits from the average of its own decade",
+      "1.2 degrees above the decade average, found by adding the year's departure to the decade average instead of subtracting the decade average from the year's departure",
+      "0.3 degrees above the decade average, representing the trend contributed by that single year instead of how far the year's departure sits from its decade's average"
+    ],
+    "answer": "B",
+    "hints": [
+      "Swing compares one year to the average of its own block, not to the whole record's trend.",
+      "Subtract the decade average from the year's departure to get the swing."
+    ]
+  },
+  {
+    "id": "m8geo-reading-climate-trend-data-004",
+    "loId": "m8geo.reading-climate-trend-data",
+    "cedCode": "M8GEO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Dunley Station's decade averages are +0.1, +0.3, +0.5, and +0.7 degrees departure, oldest to newest. Someone compares the coolest year of the second decade, at +0.1 degrees, to the warmest year of the third decade, at +0.9 degrees, and claims the station warmed by 0.8 degrees in just ten years, far faster than the record's real trend. What is the correct trend for the full record, and why does this comparison overstate the change between those two decades?",
+    "choices": [
+      "The trend is 0.2 degrees per decade; the comparison is invalid only because departures from different baselines cannot be compared to each other, even though both decades in this record share the very same baseline temperature",
+      "The trend is 0.8 degrees per decade; the comparison is valid because it uses the two most recent decades available in the record, so the two chosen single-year departures should be treated as representative of those decades",
+      "The trend is 0.2 degrees per decade; the comparison adds the swing of a cool year sitting below its decade average to the swing of a warm year sitting above its own decade average",
+      "The trend is 0.4 degrees per decade, found correctly by averaging the two single-year departures used in the comparison instead of subtracting the decade averages of the two decades named in the record"
+    ],
+    "answer": "C",
+    "hints": [
+      "Work out the decade-average step for the whole record first, separately from the two named years.",
+      "Check how far each of the two chosen years sits from its own decade's average before comparing them to each other."
+    ]
+  },
+  {
+    "id": "m8geo-reading-climate-trend-data-005",
+    "loId": "m8geo.reading-climate-trend-data",
+    "cedCode": "M8GEO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Kestrel Nation is made of three regions of equal area. Its national record shows the country warmed 1.2 degrees overall from the first decade to the latest. Over the same span, Northport, a subarctic region, warmed 2.1 degrees; Vale Plains, a dry interior region, warmed 0.9 degrees; and Shoal Bay, a coastal region, warmed 0.6 degrees. A news brief states: \"Since the country warmed 1.2 degrees, Shoal Bay must have warmed close to that same amount, since it is one of only three regions making up the total.\" Evaluate this claim using the figures given.",
+    "choices": [
+      "The claim is correct: since Shoal Bay is coastal, its regional figure reflects the swing rather than the trend, which happens to match the national number closely enough to be considered essentially the same value",
+      "The claim is correct: with only three regions contributing to the average, each one must warm within a few tenths of a degree of the shared national figure, since averages of few numbers cannot vary much",
+      "The claim is wrong: Shoal Bay actually warmed more than the national figure, because coastal regions always warm faster than a country's inland average due to the moderating effect of nearby ocean water",
+      "The claim is wrong: Shoal Bay warmed 0.6 degrees, half the national figure, while Northport warmed 2.1 degrees, since the national average must balance regions both above and below it"
+    ],
+    "answer": "D",
+    "hints": [
+      "The national figure is an average of the three regional figures, so the differences from it must cancel to zero.",
+      "Check whether each region's figure sits above, below, or far from the national average rather than assuming it matches."
+    ]
+  },
+  {
+    "id": "m8geo-reading-climate-trend-data-006",
+    "loId": "m8geo.reading-climate-trend-data",
+    "cedCode": "M8GEO-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Vantage Ice Station has kept a sea-ice extent record over 50 years, broken into five decade blocks. The decade averages, oldest to newest, are 620, 610, 590, 560, and 500 thousand square kilometers. A student computes the trend by subtracting the oldest block average from the newest and dividing by 5, getting a step of -24 thousand square kilometers per decade. What error did the student make, and what is the correct step?",
+    "choices": [
+      "The student divided by the number of blocks instead of the number of gaps between them; five decade averages have four gaps, so the correct step is -120 divided by 4, or -30 thousand square kilometers per decade",
+      "The student divided by the number of blocks instead of the number of gaps between them; five decade averages have six gaps, so the correct step is -120 divided by 6, or -20 thousand square kilometers per decade",
+      "The student's method was correct, since dividing the total change by the number of blocks in the record is the standard way to compute a step",
+      "The student should have divided the total change by the number of individual years in the record, 50, giving a step of -2.4 thousand square kilometers per decade"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count how many gaps sit between five decade-average points, not how many blocks there are.",
+      "Step equals the total change divided by the number of gaps between the blocks, never by the number of blocks or years themselves."
+    ]
+  }
+]

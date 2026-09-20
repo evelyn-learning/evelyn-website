@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-carrying-capacity-ecological-footprint-001",
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "cedCode": "M8GEO-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Millbrook has 50,000 hectares of productive land and 25,000 residents, and each resident's ecological footprint is 1.5 hectares per year. To decide whether Millbrook is within or beyond its own capacity, a student first divides the land by the population to get land per resident, then subtracts the footprint from that value. What is the correct result and verdict?",
+    "choices": [
+      "1.5 hectares of footprint is smaller than 2.0 hectares of land only when population doubles, so Millbrook is beyond capacity until then",
+      "1.5 hectares per resident minus 2.0 hectares leaves a shortfall of 0.5 hectares, so Millbrook is beyond its own capacity",
+      "50,000 hectares minus 25,000 residents leaves 25,000, so Millbrook has land to spare and is within its own capacity",
+      "2.0 hectares per resident minus 1.5 hectares leaves 0.5 hectares spare, so Millbrook is within its own capacity"
+    ],
+    "answer": "D",
+    "hints": [
+      "Convert the land into hectares per resident before comparing anything else.",
+      "Subtract the footprint from the land-per-resident figure, not from raw hectare or population totals."
+    ]
+  },
+  {
+    "id": "m8geo-carrying-capacity-ecological-footprint-002",
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "cedCode": "M8GEO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Fenmoor holds 36,000 hectares of productive land and has 24,000 residents, each with an ecological footprint of 1.2 hectares per year. A planner has already found that Fenmoor has 0.3 hectares spare per resident, and now wants the total hectares Fenmoor has to spare across the whole town. What is that total?",
+    "choices": [
+      "7,200 hectares, found by multiplying 0.3 hectares spare per resident by the 24,000 residents",
+      "12,000 hectares, found by subtracting the 24,000 residents directly from the 36,000 hectares of land",
+      "0.3 hectares, the spare amount per resident, without scaling that figure up to the whole town",
+      "28,800 hectares, the total land that the residents' footprints demand from the town"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the land available per resident first, then subtract the footprint from it.",
+      "Scale the per-resident gap up by multiplying by the whole population, not by subtracting population from land."
+    ]
+  },
+  {
+    "id": "m8geo-carrying-capacity-ecological-footprint-003",
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "cedCode": "M8GEO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Oakvale holds 60,000 hectares of productive land, and each resident's ecological footprint is 2.4 hectares per year. Using the same division that finds land per resident, but read the other way around, how many people can Oakvale's own land support at this footprint?",
+    "choices": [
+      "144,000 people, because 60,000 hectares multiplied by 2.4 hectares per person equals 144,000",
+      "25,000 people, because 60,000 hectares divided by 2.4 hectares per person equals 25,000",
+      "2,500 people, because a decimal was misplaced when dividing 60,000 hectares by 2.4 hectares",
+      "62,400 people, because 60,000 hectares plus 2,400 spare hectares equals 62,400"
+    ],
+    "answer": "B",
+    "hints": [
+      "This is the same division as land-per-resident, just read in the opposite direction.",
+      "Divide the total land by the footprint; don't multiply or add the two figures."
+    ]
+  },
+  {
+    "id": "m8geo-carrying-capacity-ecological-footprint-004",
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "cedCode": "M8GEO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Hollowdale has 40,000 residents, 100,000 hectares of productive land, and each resident's ecological footprint is 2.0 hectares. Marrow Fen has 30,000 residents, 42,000 hectares of productive land, and each resident's footprint is 1.5 hectares -- a smaller footprint than Hollowdale's. A student concludes that Marrow Fen must be within its own capacity because its residents use less land each. Evaluate this conclusion using both places' land per resident.",
+    "choices": [
+      "The conclusion is wrong: Hollowdale is beyond its own capacity because its 2.0-hectare footprint exceeds Marrow Fen's 1.5-hectare footprint, and its larger population of 40,000 means it needs more land than its 100,000 hectares provide",
+      "The conclusion is correct: since Marrow Fen's footprint of 1.5 hectares per resident is smaller than Hollowdale's 2.0-hectare footprint, Marrow Fen must be using its 42,000 hectares more efficiently and therefore stays closer to or within its own capacity than Hollowdale does",
+      "The conclusion is wrong: Marrow Fen holds only 1.4 hectares per resident against its 1.5-hectare footprint, so it is beyond its own capacity, while Hollowdale holds 2.5 hectares against a 2.0-hectare footprint and is within",
+      "The conclusion cannot be evaluated because Hollowdale and Marrow Fen have different population sizes, 40,000 versus 30,000 residents, so their land per resident figures are not directly comparable and no valid capacity comparison can be made between the two"
+    ],
+    "answer": "C",
+    "hints": [
+      "Work out each place's own land per resident before trusting the footprint numbers.",
+      "A smaller footprint does not by itself mean a place is closer to being within its capacity."
+    ]
+  },
+  {
+    "id": "m8geo-carrying-capacity-ecological-footprint-005",
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "cedCode": "M8GEO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Bramwell has 50,000 residents, 80,000 hectares of productive land, and a footprint of 2.0 hectares per resident. This year Bramwell begins importing food and timber equal to 0.6 hectares per resident from another region, while its footprint stays at 2.0 hectares per resident. A newsletter reports: 'Bramwell now lives within its capacity.' Evaluate this claim by comparing land used inside Bramwell's own border to the residents' total footprint demand.",
+    "choices": [
+      "True only of the residents' total footprint demand, which drops from 100,000 to 70,000 hectares after importing 0.6 hectares per resident, while land inside Bramwell's own border stays at 80,000, still short by 10,000",
+      "True in every sense, because importing 0.6 hectares per resident lowers Bramwell's footprint from 2.0 to 1.4 hectares per resident, closing the 20,000-hectare shortfall entirely and bringing the town within capacity",
+      "False in every sense, because importing land from elsewhere never changes whether a place is within or beyond its own capacity, since Bramwell's own 80,000 hectares must still supply all 100,000 hectares of demand",
+      "True only of the land inside Bramwell's border, which now shows 10,000 hectares spare; the residents' total footprint still demands 100,000 hectares, 20,000 more than Bramwell's own 80,000"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work out how much land is used inside Bramwell's border separately from what its residents' total footprint demands.",
+      "A capacity claim can be true for one boundary and false for another boundary at the same time."
+    ]
+  },
+  {
+    "id": "m8geo-carrying-capacity-ecological-footprint-006",
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "cedCode": "M8GEO-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three towns report the same year's figures. Hartwell has 20,000 residents, 50,000 hectares of productive land, and a footprint of 2.0 hectares per resident. Penrose has 35,000 residents, 49,000 hectares of productive land, and a footprint of 1.4 hectares per resident. Selkirk has 15,000 residents, 18,000 hectares of productive land, and a footprint of 1.4 hectares per resident. A student notices that Penrose and Selkirk report the same footprint and claims they must be in the same position relative to their own capacities. Determine each town's verdict and evaluate the student's claim.",
+    "choices": [
+      "The claim is wrong: Penrose sits exactly at capacity while Selkirk is 3,000 hectares beyond, because Penrose's land supplies 1.4 hectares per resident and Selkirk's supplies only 1.2, even though both footprints equal 1.4",
+      "The claim is correct: matching footprints of 1.4 hectares per resident mean Penrose and Selkirk must both be exactly at their own capacities, since identical footprints always imply identical positions relative to capacity, regardless of each town's land base",
+      "The claim is wrong: Selkirk is actually within its own capacity by 3,000 hectares, since its smaller land area of 18,000 hectares needs fewer resources overall than Penrose's much larger 49,000-hectare land area supplies",
+      "The claim is wrong: Hartwell, not Penrose or Selkirk, is the only town beyond its own capacity, because its footprint of 2.0 hectares per resident is larger than either of the other two towns' footprints of 1.4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute land per resident for each town separately before trusting the footprint numbers.",
+      "Two places can share the same footprint and still land on opposite sides of their own capacity."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-energy-sources-001",
+    "loId": "m8geo.comparing-energy-sources",
+    "cedCode": "M8GEO-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A solar array is rated at 40 megawatts, but across a full year it delivers an average of 10 megawatts once its good and bad days are counted together. A council is deciding what number to use when sizing its electricity plan.",
+    "choices": [
+      "10 megawatts is the average output across the year, counting good and bad days together, and it is the figure a plan should be sized by, while 40 is only a ceiling.",
+      "10 megawatts is the output on the single worst day of the year, so the plan should use 40 megawatts since that is what the array can reach on its best days.",
+      "10 megawatts is the extra backup power needed to replace the array on a calm day, so the plan should add 10 to the 40-megawatt rating.",
+      "10 megawatts is the rated output under ideal conditions, and 40 megawatts is the average, so the plan should use 40 for safety."
+    ],
+    "answer": "A",
+    "hints": [
+      "Rated output is a ceiling reached only under best conditions.",
+      "Average output counts the good days and the bad days together across the whole year."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-energy-sources-002",
+    "loId": "m8geo.comparing-energy-sources",
+    "cedCode": "M8GEO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ridgeport wants to build a geothermal plant, which can only be built where hot rock sits close to the surface. A survey of the ground beneath Ridgeport finds no hot rock within several kilometers of the surface, though the town does sit on a windy ridge.",
+    "choices": [
+      "The geothermal plant is compared on cost and emissions like the other sources, and it is simply ranked low because Ridgeport lacks hot rock.",
+      "The geothermal plant is crossed out of the comparison before any cost or emissions figures are considered, because it fails the siting requirement.",
+      "The geothermal plant can still be built if its emissions and land columns rate well enough to outweigh the missing hot rock.",
+      "The geothermal plant is crossed out only after being compared on every column, since siting requirements matter less than fuel cost."
+    ],
+    "answer": "B",
+    "hints": [
+      "A siting requirement is a gate a source either passes or fails, not a score it can be low on.",
+      "Crossing out happens before any other column is even looked at."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-energy-sources-003",
+    "loId": "m8geo.comparing-energy-sources",
+    "cedCode": "M8GEO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The council of Dunmore sets this goal: keep the town supplied with electricity every single hour of the year, and among whatever sources can do that, build the one that needs the least land.",
+    "choices": [
+      "Both supplying every hour and needing little land are must-haves, so any source missing either one is removed before land or reliability is ever compared between the sources that remain.",
+      "Land needed is the must-have that removes any source using more than a set amount of land, and supplying every hour is only a tiebreaker among the sources that pass.",
+      "Supplying electricity every hour is the must-have that a source either satisfies or is removed from consideration for, and land needed is the criterion used to compare whichever sources remain.",
+      "Neither part of the goal is a must-have; both are simply weighed together using some formula to produce one overall score that ranks every source from best to worst."
+    ],
+    "answer": "C",
+    "hints": [
+      "A must-have is the part of the goal a source has to satisfy just to stay in the running.",
+      "Once the must-have narrows the list, the remaining part of the goal decides among survivors."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-energy-sources-004",
+    "loId": "m8geo.comparing-energy-sources",
+    "cedCode": "M8GEO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Eastmoor draws 8 megawatts of electricity at every hour of the day, all year. A solar array on the edge of town is rated at 24 megawatts and averages 6 megawatts across a year. The council's goal is to keep Eastmoor supplied every hour of the year while buying as little fuel as possible. Considering both an average day and a day when clouds block the array entirely, how large must the fuel-burning backup generator be sized to meet the goal?",
+    "choices": [
+      "The backup should be sized to 24 megawatts, matching the array's rated capacity, on the reasoning that a backup must always be able to outproduce the solar array no matter what the weather does on any given day.",
+      "The backup only needs to be sized to 2 megawatts, the amount the array falls short of the town's demand on an average day, since that is the gap it normally fills.",
+      "The backup needs no fixed size at all, since the array's yearly average of 6 megawatts already covers most of the town's 8-megawatt demand across the full year when everything is averaged together.",
+      "The backup must be sized to the full 8 megawatts the town draws, because a calm or cloudy day can drop the array's output to nearly nothing and the backup has to carry the whole load alone."
+    ],
+    "answer": "D",
+    "hints": [
+      "A backup is sized by the worst day the variable source has, not by its average day.",
+      "On a calm or cloudy day, a weather-dependent source delivers close to nothing."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-energy-sources-005",
+    "loId": "m8geo.comparing-energy-sources",
+    "cedCode": "M8GEO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Fenwick draws 15 megawatts of electricity at every hour, all year. A wind array on a nearby ridge is rated at 40 megawatts and averages 10 megawatts across the year. A truck-delivered backup generator covers whatever the array does not supply, at $180 for each megawatt-hour it burns. On a day when the array performs at its yearly average, what is the fuel bill for the backup generator that day?",
+    "choices": [
+      "$21,600, since the backup makes up 120 of the 360 megawatt-hours the town needs each day, at $180 for each one.",
+      "$64,800, since the backup should be priced for the town's full daily demand of 360 megawatt-hours, not just the shortfall.",
+      "$900, since the array falls 5 megawatts short of demand each hour, and 5 megawatts times $180 gives the daily bill.",
+      "$0, since the array's rated output of 40 megawatts already exceeds the town's 15-megawatt demand, so no backup fuel is needed."
+    ],
+    "answer": "A",
+    "hints": [
+      "First turn the town's hourly demand into a full day's worth of megawatt-hours.",
+      "Use the array's average output, not its rated output, to find what it actually supplies each day."
+    ]
+  },
+  {
+    "id": "m8geo-comparing-energy-sources-006",
+    "loId": "m8geo.comparing-energy-sources",
+    "cedCode": "M8GEO-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Norwick sits along a river that drops 55 meters through a gorge and flows all year; the town has no reliable wind and cloudy skies most of the year. Baymouth sits on a flat coastal plain with a river that drops only 2 meters over its whole length, but a steady offshore wind blows on most days of the year. Both councils are handed the same two candidates: a hydro plant, which needs a river with a fall and a steady flow and then runs steadily with no fuel to buy, and a wind array, which needs open land near a windy site, buys no fuel, but has output that varies with the weather. Both councils set the same goal: supply the town every hour of the year while buying no fuel, using whichever candidate can meet that goal.",
+    "choices": [
+      "Both towns can meet the goal with the wind array alone, since averaging its output over a full year shows it supplies enough power on average to cover both towns' demand every hour of the year, even though daily output actually swings up and down with the wind depending on how strongly it blows each day.",
+      "Norwick can meet the goal with the hydro plant, since its river has a fall and flows all year; Baymouth cannot meet the goal with either candidate, because its river fails the fall requirement and the wind array alone cannot supply every hour without a backup that would require buying fuel.",
+      "Norwick should build the wind array despite its calm and cloudy weather, because the array needs no fuel to run and its rated capacity alone is assumed to guarantee enough output no matter how calm the wind is on any single day throughout the entire year.",
+      "Baymouth can meet the goal with the hydro plant, since a river with a fall of 2 meters over its length is enough of a drop to run a small hydro plant steadily and supply the town every hour throughout the year without ever needing to buy any fuel."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check the siting column for hydro in each town before comparing anything else about the candidates.",
+      "A variable source alone cannot guarantee every hour, and any backup for it would need fuel, which conflicts with a 'no fuel' goal."
+    ]
+  },
+  {
+    "id": "m8geo-food-systems-food-security-001",
+    "loId": "m8geo.food-systems-and-food-security",
+    "cedCode": "M8GEO-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student compares two grain farms and says: 'Farm X harvested 5,000 tons this year and Farm Y harvested 1,000 tons, so Farm X is the stronger farming system.' Farm X planted 1,000 hectares of land, while Farm Y planted only 100 hectares.",
+    "choices": [
+      "Farm X must use less water for each ton of grain it produces, and that lower water use is why its total harvest ends up larger",
+      "Farm X's total harvest is larger partly because it planted ten times more land; the harvests should be divided by hectares before comparing them",
+      "Farm Y's smaller total harvest proves that its soil is naturally less fertile than Farm X's soil, since more fertile land always yields more tons overall",
+      "Farm X's total harvest already accounts for the difference in land size, so comparing the two totals directly without adjusting for hectares is entirely valid"
+    ],
+    "answer": "B",
+    "hints": [
+      "A total is not the same thing as a rate.",
+      "Think about what number each harvest should be divided by before the two farms are compared."
+    ]
+  },
+  {
+    "id": "m8geo-food-systems-food-security-002",
+    "loId": "m8geo.food-systems-and-food-security",
+    "cedCode": "M8GEO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Dellwood Farm planted 250 hectares and harvested 750 tons of grain. Baymoor Farm planted 600 hectares and harvested 2,100 tons of grain. A district officer wants to know which farm gets more food off each hectare it plants.",
+    "choices": [
+      "Baymoor Farm, because its total harvest of 2,100 tons is larger",
+      "Dellwood Farm, at 3 tons of grain for each hectare",
+      "Baymoor Farm, at 3.5 tons of grain for each hectare",
+      "Dellwood Farm, because it needs fewer hectares to operate"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide each farm's harvest by its own hectares planted, not by the other farm's numbers.",
+      "Baymoor: 2,100 divided by 600. Dellwood: 750 divided by 250."
+    ]
+  },
+  {
+    "id": "m8geo-food-systems-food-security-003",
+    "loId": "m8geo.food-systems-and-food-security",
+    "cedCode": "M8GEO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Feldon region has 50,000 people. Its farms harvest 40,000 tons of grain a year, and 5,000 tons come in from outside the region. Of the total available, 10,000 tons are sold out of the region, and 3,000 tons are held back for seed and animal feed or lost in storage and transport. Find the tons of grain left for people to eat and the kilograms available for each person.",
+    "choices": [
+      "22,000 tons are left, which is 440 kilograms for each person",
+      "45,000 tons are left, which is 900 kilograms for each person",
+      "40,000 tons are left, which is 800 kilograms for each person",
+      "32,000 tons are left, which is 640 kilograms for each person"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add what comes in and subtract what is sold out and what never reaches people, in that order.",
+      "Once you have tons left for people, divide by the population and convert tons to kilograms."
+    ]
+  },
+  {
+    "id": "m8geo-food-systems-food-security-004",
+    "loId": "m8geo.food-systems-and-food-security",
+    "cedCode": "M8GEO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two irrigated grain districts report their yearly figures. Larkhollow planted 800 hectares, harvested 3,200 tons, and used 9,600 thousand cubic meters of irrigation water; a soil survey four years ago found 40 hectares with salt buildup, and this year's survey finds 136 hectares. Sanmoor planted the same 800 hectares, harvested 2,800 tons, used 5,600 thousand cubic meters of irrigation water, and has shown no salt buildup in either survey.",
+    "choices": [
+      "Larkhollow's higher yield of 4 tons for each hectare against Sanmoor's 3.5 comes with salt spreading over 3 percent of its irrigated land each year, while Sanmoor uses less water for each ton, 2 thousand cubic meters against 3",
+      "Larkhollow harvested more tons overall, used more total water, and gained more salted hectares than Sanmoor, so on every one of these measures Larkhollow simply comes out ahead, making it the stronger farming system overall",
+      "Sanmoor's yield of 3.5 tons for each hectare is lower than Larkhollow's 4 tons, and since Larkhollow shows salt buildup while Sanmoor shows none, this proves irrigation always causes salt to build up in soil over time",
+      "Larkhollow uses 2 thousand cubic meters of water for each ton of grain while Sanmoor uses 3, and this lower water use for each ton is what explains Larkhollow's higher yield of 4 tons for each hectare"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide each district's harvest and water use by its own hectares or tons before comparing them.",
+      "Find the yearly increase in salted hectares, then express it as a share of the 800 irrigated hectares."
+    ]
+  },
+  {
+    "id": "m8geo-food-systems-food-security-005",
+    "loId": "m8geo.food-systems-and-food-security",
+    "cedCode": "M8GEO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Verrin region, the monthly cost of the grain an average household buys rose from $80 a year ago to $120 today, while that household's monthly budget has stayed at $200 the whole time. Over the past five years, Verrin's harvest totals in thousands of tons were 180, 175, 60, 185, and 180. The region has one warehouse holding about one month's worth of grain and a single highway connecting it to outside suppliers.",
+    "choices": [
+      "Availability is failing, since the harvest crashed to 60,000 tons in one year, and that single low harvest year proves the region's farms cannot produce enough grain to feed its population going forward, even though most other years reached about 180,000 tons",
+      "Access is weakening, since food's share of the household budget rose from 40 percent to 60 percent, and stability is weak, since one year's harvest fell to about a third of the usual level with only one month of stored grain and one supply route",
+      "Access is weak because the harvest series swings sharply from year to year, falling from 185,000 tons to 60,000 tons in a single season, and that swinging in harvest totals is what pushed household grocery prices upward this year",
+      "Stability is strong, since the region has both a warehouse holding a month of grain and a highway connecting it to outside suppliers, and these two safeguards mean the region can fully absorb any harvest shortfall without difficulty"
+    ],
+    "answer": "B",
+    "hints": [
+      "Access is read from a price compared to a household budget, not from harvest tonnage.",
+      "Stability is read from how far the harvest series swings and what stands ready to cover a bad year."
+    ]
+  },
+  {
+    "id": "m8geo-food-systems-food-security-006",
+    "loId": "m8geo.food-systems-and-food-security",
+    "cedCode": "M8GEO-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Dunmore region has 300,000 people. Its farms harvest 90,000 tons of grain a year, and 10,000 tons come in from outside. Of that total, 15,000 tons are sold out of the region, and 5,000 tons are lost in storage or held back for seed and animal feed. The council's planning standard is 250 kilograms of grain for each person each year. Over the last five years the harvest has stayed between 88,000 and 92,000 tons, and the region keeps three months of grain in central storage. In the southern district, however, the monthly cost of a family's grain rose from $60 to $108 over the past year, while household income there has stayed near $150 a month.",
+    "choices": [
+      "Dunmore's stability is weak, since the sharp rise in the southern district's food costs from $60 to $108 a month shows that the region's overall grain harvest must be swinging unpredictably from year to year despite the five-year record",
+      "Dunmore fails availability, since its regional harvest of 90,000 tons plus 10,000 tons of imports does not reach the council's 250-kilogram-per-person standard once the 15,000 tons exported and 5,000 tons lost are subtracted, even after including the stored grain",
+      "Dunmore passes availability and stability at the regional level, but the southern district's access is failing, since food's share of income there jumped from 40 percent to 72 percent even though regional supply is steady and sufficient",
+      "Since the regional figures show adequate food supply, a stable harvest over five years, and three months of grain in storage, food security must also be fine for every household in the southern district, because regional totals guarantee equal conditions everywhere"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compute the regional availability balance and compare it to the standard before deciding whether availability passes.",
+      "A regional total can pass even while one district's price-to-income comparison shows access failing there."
+    ]
+  },
+  {
+    "id": "m8geo-water-scarcity-allocation-001",
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "cedCode": "M8GEO-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A basin authority describes one of its allocation rules this way: 'Fill the earliest-established use completely before delivering any water to a newer use, regardless of where each user sits along the river.' This rule does not consider a user's location on the river at all, only the date each use began.",
+    "choices": [
+      "Proportional cuts",
+      "Fixed shares",
+      "Priority by first use",
+      "Priority by location along the river"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what determines the order of delivery under this rule: time or location.",
+      "Two of the other rules deliver water based on where a user sits or a written volume, not on when the use began."
+    ]
+  },
+  {
+    "id": "m8geo-water-scarcity-allocation-002",
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "cedCode": "M8GEO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Sarnow River delivers 800 million cubic meters of water per year. Four users along the river together request a combined total of 1,000 million cubic meters per year. A regional report wants to express the shortfall as a percentage of the total amount requested.",
+    "choices": [
+      "80%",
+      "25%",
+      "16.7%",
+      "20%"
+    ],
+    "answer": "D",
+    "hints": [
+      "First find the shortfall in millions of cubic meters, then decide what number it should be divided by.",
+      "The phrase 'share of the promises' points to total demand as the denominator, not the available flow."
+    ]
+  },
+  {
+    "id": "m8geo-water-scarcity-allocation-003",
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "cedCode": "M8GEO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the Harrow River basin, the town of Pellwick sits directly beside the main canal and draws water through existing pipes. During a drought year the canal carries only enough to meet 60% of Pellwick's request, but the following year heavier rains raise the flow enough for Pellwick to receive its full request.",
+    "choices": [
+      "Physical scarcity, because Pellwick received more water when the basin's flow increased",
+      "Economic scarcity, because Pellwick's canal connection could not carry enough water regardless of flow",
+      "Physical scarcity, because Pellwick's water pipes were too small to deliver full demand",
+      "Economic scarcity, because the price of water rose during the drought year"
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the one-question test: would this user get more water if the basin's total flow increased?",
+      "An outcome that changes when flow changes points to one specific type of shortage."
+    ]
+  },
+  {
+    "id": "m8geo-water-scarcity-allocation-004",
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "cedCode": "M8GEO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Vantor River has an available flow of 500 million cubic meters per year. Three users draw from it in this order along the river: Corwin Farms holds a written share of 300 million cubic meters, Lindale Township holds a written share of 250, and the Fenmoor Wetlands holds a written share of 100. The basin follows a fixed-shares rule, so each user takes its full written share as the water passes it, in the order listed.",
+    "choices": [
+      "Fenmoor receives 0; Lindale receives 250, its full written share",
+      "Fenmoor receives 0; Lindale receives 200, short by 50 of its 250 share",
+      "Fenmoor receives 50; Lindale receives 200, short by 50 of its 250 share",
+      "Fenmoor receives 100, its full share; Lindale receives 150, short by 100"
+    ],
+    "answer": "B",
+    "hints": [
+      "Work through the rule in the exact order the water reaches each user, subtracting as you go.",
+      "After Corwin Farms takes its full 300, figure out exactly how much is left before Lindale takes its turn."
+    ]
+  },
+  {
+    "id": "m8geo-water-scarcity-allocation-005",
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "cedCode": "M8GEO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Cobbleton River basin uses a proportional-cuts rule: each year the available flow is divided by total demand to get one percentage, and every user receives that percentage of its request. In an average year the flow is 900 million cubic meters against a total demand of 1,000, so every user receives 90% of its request. This year a drought drops the flow to 600 million cubic meters while total demand stays at 1,000, and the town of Millbrook requests 200 million cubic meters per year.",
+    "choices": [
+      "Millbrook's delivery stays at 180 million cubic meters because proportional cuts protect written shares in dry years",
+      "Millbrook's delivery falls from 180 to 120 million cubic meters, but Millbrook alone absorbs the entire drought shortfall because it is last in line",
+      "Millbrook's delivery falls from 180 to 120 million cubic meters, a cut shared proportionally across every user in the basin, not concentrated on one",
+      "Millbrook's delivery falls to zero because the drought-year flow cannot cover all four users' written shares"
+    ],
+    "answer": "C",
+    "hints": [
+      "Calculate each year's percentage separately by dividing that year's flow by the total demand.",
+      "Recall what makes proportional cuts different from a rule built on fixed written volumes when flow drops."
+    ]
+  },
+  {
+    "id": "m8geo-water-scarcity-allocation-006",
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "cedCode": "M8GEO-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Fenwick River basin has an available flow of 700 million cubic meters per year. Three users hold written shares and draw from the river in this order: Alder Mills holds 400, Bracken Township holds 200, and Corvale Farms holds 150, for a total written demand of 750. Below the last diversion sits the Corvale Fishery, which needs 50 million cubic meters to remain viable but holds no written share. A basin report claims that under the fixed-shares rule, Alder Mills receives 400, Bracken Township receives 200, Corvale Farms receives 150, and the Corvale Fishery receives 0, and that these deliveries balance against the available flow.",
+    "choices": [
+      "The report is correct: fixed shares always deliver each user's full written amount, so Alder Mills gets 400, Bracken Township gets 200, and Corvale Farms gets 150, matching the report's figures regardless of what remains upstream",
+      "The report is correct: since 400 plus 200 plus 150 equals 700 million cubic meters exactly, the deliveries balance the available flow, and the Fishery's shortage is simply omitted because it holds no written share",
+      "The report is wrong: the Fishery should receive 50 million cubic meters because it needs less water than Corvale Farms currently loses under the fixed-shares rule, so the shortfall should shift downstream to the Fishery",
+      "The report is wrong: Corvale Farms actually receives only 100 million cubic meters, since only 100 remains after Alder Mills and Bracken Township take their shares, and the Fishery still receives 0"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add up what the report claims each user receives and compare that total to the available flow.",
+      "A rule that fills shares in the order water passes users cannot give a later user more than what is left after earlier users are served."
+    ]
+  }
+]

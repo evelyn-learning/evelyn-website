@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-north-america-climate-controls-in-action-001",
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "cedCode": "M8GEO-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography student is told that a weather station's coldest month mean is 2 degrees Celsius and its warmest month mean is 22 degrees Celsius. The student subtracts 2 from 22 to get 20. What is the correct term for that value, and what does it mainly reveal about the station?",
+    "choices": [
+      "Annual temperature range; how much ocean the arriving air has crossed",
+      "Midpoint temperature; how far north or how high up the station sits",
+      "Climate normal; how many years of data were averaged to get these means",
+      "Annual precipitation total; where the station's moisture supply originates"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtracting the coldest month from the warmest month is one of the three fixed steps taught for reading a station.",
+      "This value is not about latitude or elevation; it is about the kind of air arriving."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-climate-controls-in-action-002",
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "cedCode": "M8GEO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Station Rellow has a coldest month mean of 3 degrees Celsius and a warmest month mean of 13 degrees Celsius. Station Sarnick has a coldest month mean of -10 degrees Celsius and a warmest month mean of 24 degrees Celsius. Both stations sit at the same latitude. Which station's figures show that ocean air is in charge, and why?",
+    "choices": [
+      "Sarnick, because its warmest month of 24 degrees is much higher than Rellow's warmest month",
+      "Rellow, because its range of 10 degrees is much smaller than Sarnick's range of 34 degrees",
+      "Rellow, because its midpoint of 8 degrees is lower than Sarnick's midpoint of 7 degrees",
+      "Sarnick, because its coldest month of -10 degrees shows it is farther from open water"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start with the range, the fastest split between ocean air and land air.",
+      "A small range does not mean warm, just steady across the year."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-climate-controls-in-action-003",
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "cedCode": "M8GEO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two stations sit at the same latitude and the same elevation, on opposite sides of a single mountain range that runs north to south a short distance inland from a coast. Station Tunmoor, on the windward western slope, records 2,100 millimeters of precipitation a year. Station Urbeck, in a basin beyond the crest, records 210 millimeters a year. What does this pairing of totals demonstrate?",
+    "choices": [
+      "A latitude control, because stations farther from the equator always receive less precipitation than stations located nearer to it",
+      "A continental climate, because interior locations always receive far less precipitation than coastal locations regardless of any mountains between them",
+      "A rain shadow, because Urbeck's total is one tenth of Tunmoor's despite sitting close by across one crest",
+      "A maritime climate, because coastal stations always receive more precipitation than interior stations regardless of any mountains between them"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the two totals as a ratio, not just as a difference.",
+      "This station pair holds latitude and elevation the same and changes only which side of the crest each station sits on."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-climate-controls-in-action-004",
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "cedCode": "M8GEO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Station Vail sits high on a mid-latitude mountain, far from any ocean, with a coldest month mean of -8 degrees Celsius and a warmest month mean of 20 degrees Celsius. Station Wexlin sits near sea level far to the north, also far from any ocean, with a coldest month mean of -20 degrees Celsius and a warmest month mean of 20 degrees Celsius. A student claims both stations must be at the same latitude because their warmest months match. Using the range and midpoint of each station, evaluate this claim.",
+    "choices": [
+      "The claim is correct: since both stations are far from any ocean, their midpoints must reflect the same latitude regardless of range",
+      "The claim is correct: both stations share a warmest month of 20 degrees, which is the figure that identifies latitude",
+      "The claim is wrong: Vail's midpoint of 6 degrees is higher than Wexlin's, showing Vail must be closer to the Gulf of Mexico",
+      "The claim is wrong: Wexlin's range of 40 degrees is far wider than Vail's 28, showing latitude, not elevation, is depressing Wexlin's midpoint"
+    ],
+    "answer": "D",
+    "hints": [
+      "Matching warmest months is only one number; the routine needs range and midpoint read together.",
+      "Going far north widens the range far more than climbing a mountain does, since it takes much more off winter than off summer."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-climate-controls-in-action-005",
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "cedCode": "M8GEO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Station Yarrow sits 1,600 kilometers from the nearest ocean on open interior plains, with no mountain range between it and the Gulf of Mexico, and records 480 millimeters of precipitation a year. Station Zennor sits only 300 kilometers inland from a Pacific coast but behind the crest of a high mountain range at the same latitude, and records 220 millimeters a year. A student argues that Zennor must be wetter because it sits closer to an ocean. Does the data support this argument?",
+    "choices": [
+      "No: Zennor's total is barely half of Yarrow's, because the crest blocks Pacific moisture while Yarrow has an open route to Gulf moisture despite being farther from any coast",
+      "Yes: closeness to an ocean always produces a higher precipitation total than distance from an ocean produces, and Zennor's 220 millimeters compared to Yarrow's total confirms this general pattern",
+      "No: Yarrow is wetter because its distance from the ocean of 1,600 kilometers automatically produces more precipitation than any coastal station regardless of mountains or moisture routes involved",
+      "Yes: since Zennor sits at the same latitude as Yarrow, the two stations must draw their moisture from the same source and should therefore receive roughly the same total"
+    ],
+    "answer": "A",
+    "hints": [
+      "A barrier upwind can beat distance from the ocean, as the comparison of full routes shows.",
+      "Ask where each station's moisture could actually come from, not just how far it sits from a coastline."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-climate-controls-in-action-006",
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "cedCode": "M8GEO-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Station Abrenn currently sits on a Pacific shore at 45 degrees latitude, with a coldest month mean of 6 degrees Celsius, a warmest month mean of 16 degrees Celsius, and 2,000 millimeters of precipitation a year. Suppose Abrenn is relocated 1,000 kilometers north along the same coastline, and at the same time a mountain range rises directly inland from its new position, forcing the same moist ocean air upward right at the station itself rather than letting it pass unobstructed. Predict how the range, midpoint, and total would each change from Abrenn's original figures.",
+    "choices": [
+      "The range widens and the total collapses, because moving inland behind a mountain always produces a rain shadow effect and moving a coastal station farther north always widens its seasonal temperature swing regardless of its position relative to the ocean",
+      "The range stays small and the total climbs higher, because the station still takes its air off the ocean and the new mountain lifts that moist air upward at the station itself, while the midpoint falls due to the shift north",
+      "The midpoint stays about the same and the total collapses, because the new mountain range blocks Pacific moisture from ever reaching the relocated station, leaving it dry no matter which side of the range the station actually sits on",
+      "The range stays small and the total falls sharply, because any mountain range located near a coastal station produces a rain shadow regardless of whether that station sits on the windward or leeward side of the range"
+    ],
+    "answer": "B",
+    "hints": [
+      "A station on the windward side of a mountain gets extra lift, not a rain shadow — that only happens on the far side of the crest.",
+      "Moving north along a coastline changes the midpoint, but the station is still taking its air off the ocean, so the range should not widen much."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-hazard-regions-001",
+    "loId": "m8geo.north-america-hazard-regions",
+    "cedCode": "M8GEO-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography teacher explains that a hazard region 'says what a place should expect over many years, and nothing about this afternoon.' A student asks what this means for how a hazard region should be used.",
+    "choices": [
+      "A hazard region shows exactly which calendar day each hazard will strike, calculated from the ingredient list that scientists use to define that particular type of hazard.",
+      "A hazard region identifies where a hazard has a high long-term likelihood of occurring, but it does not predict whether an event will happen on any specific day.",
+      "A hazard region measures only the strength of the most recent event that occurred in that area, ignoring any events that happened there in earlier years.",
+      "A hazard region changes automatically every time a new building is constructed within its boundaries, since construction alters how the ingredient list applies to that place."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the difference between a long-term pattern and a single day's weather.",
+      "Consider what the ingredient list tells you about frequency over many years versus timing of one event."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-hazard-regions-002",
+    "loId": "m8geo.north-america-hazard-regions",
+    "cedCode": "M8GEO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Port Selby sits directly on a coast where the offshore ocean current keeps surface water warm year-round and the prevailing steering winds blow storms straight onto the shore. The town is far from any place where tectonic plates are meeting, and its summers are humid with frequent rain, never running dry for long.",
+    "choices": [
+      "Earthquakes, because coastal towns always sit close enough to a plate boundary to experience shaking.",
+      "Wildfires, because the humid summer rain provides enough moisture to cure fuel quickly for burning.",
+      "Hurricanes, because the town has both a coast in the storm's path and a long run of warm surface water feeding it.",
+      "Blizzards, because the steering winds that carry storms onto the coast also carry cold air and heavy snow."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each hazard's ingredient list against what the description actually supplies.",
+      "Notice which ingredient is missing for each of the other three hazards."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-hazard-regions-003",
+    "loId": "m8geo.north-america-hazard-regions",
+    "cedCode": "M8GEO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A tornado touched down in Farview County and traveled 12 kilometers across open pastureland before lifting. No homes, roads, or people were anywhere in its path, and no damage of any kind was reported afterward.",
+    "choices": [
+      "A disaster, because the pastureland itself counts as something of value, so the storm's passage across it was enough to overwhelm the land's resources.",
+      "A disaster, because any tornado that touches down and travels a measurable distance across the ground automatically counts as a disaster regardless of what it crosses.",
+      "A hazard, because the tornado must have been too weak to cause any real damage to structures, even if homes had been present in its path.",
+      "A hazard, because zero people and buildings were in the path, so there was nothing there for the event to overwhelm."
+    ],
+    "answer": "D",
+    "hints": [
+      "Classification depends on what stood in the path, not on the event's strength.",
+      "Ask whether there was anything present that could have been overwhelmed."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-hazard-regions-004",
+    "loId": "m8geo.north-america-hazard-regions",
+    "cedCode": "M8GEO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Cedar Hollow lies in a valley in the western United States, close to where tectonic plates meet; the ground has shaken noticeably several times in the past decade. Summers there are long, hot, and rainless from June through September, and dense brush covers the surrounding hillsides. Winters bring occasional light snow but little cold-air-mass activity, and the town is 900 kilometers from the nearest coastline.",
+    "choices": [
+      "Ground shaking and wildfire, because the valley sits near a plate boundary and its long rainless summers cure the brush into fuel.",
+      "Hurricanes and wildfire, because the long dry summer cures fuel and the town's distance from the coast supplies the needed storm exposure.",
+      "Ground shaking and blizzards, because the plate boundary causes shaking and the winter snow alone supplies everything a blizzard needs.",
+      "Wildfire and blizzards, because the dry summer cures fuel and the winter snow brings cold air, moisture, and wind together."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check each hazard's full ingredient list against the description, one entry at a time.",
+      "A hazard needing a coast, or needing cold air and wind together, may be missing one key ingredient here."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-hazard-regions-005",
+    "loId": "m8geo.north-america-hazard-regions",
+    "cedCode": "M8GEO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two tornadoes touched down in Aldergrove County this spring, both rated at the same strength. The first crossed 8 kilometers of open cropland with no buildings anywhere in its path and lifted without incident. The second crossed the edge of the town of Reyes, damaging 45 of the town's 60 homes and closing the elementary school; 90 residents had to relocate for six weeks while the county waited for repair crews from a neighboring state.",
+    "choices": [
+      "Both are hazards because the two tornadoes were rated at the same strength, and strength rating alone is what geographers use to decide classification.",
+      "The first is a hazard because nothing stood in its path, and the second is a disaster because Reyes could not recover using its own resources.",
+      "The first is a disaster because it touched down at all, and the second is a hazard because only 45 of the 60 homes were damaged.",
+      "Both are disasters because any tornado that damages part of a town's infrastructure automatically meets the definition, no matter what the other tornado crossed."
+    ],
+    "answer": "B",
+    "hints": [
+      "Classification comes from two readings: what was in the path, and whether it could recover on its own.",
+      "Compare what each tornado actually crossed, not how strong each one was rated."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-hazard-regions-006",
+    "loId": "m8geo.north-america-hazard-regions",
+    "cedCode": "M8GEO-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Bayshore is a coastal town in the hurricane region. Over the past 40 years, six hurricanes have made landfall directly across the undeveloped dune field just south of town, and each one was classified as a hazard because the dunes held no homes or people. The town council is now debating two separate proposals: Proposal 1 would install storm sirens and run evacuation drills for the town's existing neighborhoods, while Proposal 2 would build 500 new homes directly on the dune field the storms have been crossing.",
+    "choices": [
+      "Proposal 2, because new construction on that stretch of coast would increase the strength of future hurricanes crossing it.",
+      "Proposal 1, because sirens and evacuation drills increase the exposure that the existing neighborhoods already have.",
+      "Proposal 2, because it places homes and people directly in the path the storms have already been crossing.",
+      "Proposal 1, because evacuation drills redirect the storm's landfall path away from the developed neighborhoods."
+    ],
+    "answer": "C",
+    "hints": [
+      "Classification changes only when something new is placed in the path an event actually crosses.",
+      "Warnings and drills affect how much harm exposed people take, but they don't put anything new on an empty track."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-landform-regions-001",
+    "loId": "m8geo.north-america-landform-regions",
+    "cedCode": "M8GEO-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hiker describes a location this way: 'This spot sits 2,000 meters above sea level, but the ground around it barely rises or falls within a few kilometers.' A friend wants to know whether the location should be classified as mountain country or as a plain.",
+    "choices": [
+      "The elevation of 2,000 meters, because higher ground is always mountain country regardless of how flat or hilly the surrounding land actually turns out to be",
+      "Both readings equally, because a location can never be classified as mountain or plain unless someone also measures the surrounding rock type and vegetation cover",
+      "The local relief, because it measures how much the ground rises and falls nearby, while elevation only says how high one point sits above the sea",
+      "Neither reading, because only rock type and soil depth, not elevation or local relief, can determine whether ground counts as mountain country or a plain"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall what elevation measures versus what local relief measures.",
+      "Think about how a plain can still sit high above sea level and remain flat."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-landform-regions-002",
+    "loId": "m8geo.north-america-landform-regions",
+    "cedCode": "M8GEO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A ranger station reports that within 12 kilometers of its location, the highest ground reaches 1,900 meters and the lowest ground is 1,750 meters. Determine the local relief from these two numbers and use it to classify the surrounding terrain.",
+    "choices": [
+      "The local relief cannot be found without knowing the station's height above sea level",
+      "The local relief is 3,650 meters, so the terrain is steep mountain country",
+      "The local relief is 1,900 meters, so the terrain is mountain country at high elevation",
+      "The local relief is 150 meters, so the terrain is more likely a plain than rugged mountains"
+    ],
+    "answer": "D",
+    "hints": [
+      "Local relief is found by subtracting the lowest ground from the highest ground within a short distance.",
+      "Compare the resulting number to the kind of relief values that describe rugged mountains versus flat ground."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-landform-regions-003",
+    "loId": "m8geo.north-america-landform-regions",
+    "cedCode": "M8GEO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A transect line drawn west to east across the United States starts at the Pacific Ocean and has already crossed a narrow strip of young, steep coastal mountains and then a wide belt of high ranges that includes the Rocky Mountains. The line has not yet reached the Appalachians or the Atlantic coast. Identify which region the line is most likely crossing right now.",
+    "choices": [
+      "The Interior Plains, since the western belt lies behind the line and the eastern regions lie ahead",
+      "The Pacific coastal ranges, since the transect line has only just left the ocean's edge",
+      "The Appalachians, since enough distance has already passed since leaving the Pacific coastline",
+      "The Appalachians, since old, worn landscapes with thin soil can also occur far to the east"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the fixed west-to-east order to rule out any region the line has already passed.",
+      "Also rule out any region described as lying further east than the line has traveled."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-landform-regions-004",
+    "loId": "m8geo.north-america-landform-regions",
+    "cedCode": "M8GEO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two mountain sites are compared. Site A has summits at 2,900 meters and valley floors at 900 meters, sharp ridges, bare rock above the treeline, and a seismic station that recorded 35 felt earthquakes in the last ten years. Site B has summits at 1,200 meters and valley floors at 750 meters, rounded summits covered in forest, deep soil on the slopes, and a seismic station that recorded only 3 felt earthquakes in the last fifty years. Determine which explanation best accounts for the difference between the two sites, using both the shape of the land and the movement readings.",
+    "choices": [
+      "Site A has harder rock that resists erosion, while Site B has softer rock that wears away faster over the same span of time",
+      "Site A sits where plates are meeting now and is still being lifted, while Site B lies far from any boundary and has only been worn down",
+      "Site A is simply younger in elevation, while Site B is older in elevation, since elevation alone reveals how long ago a range formed",
+      "Site A has more local relief only because it was measured over a shorter distance than Site B, not because of any real difference in movement"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare both the shape of the land and the earthquake counts, not just one of the two readings.",
+      "Rock hardness is not something either reading given actually measures."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-landform-regions-005",
+    "loId": "m8geo.north-america-landform-regions",
+    "cedCode": "M8GEO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A field crew reports readings from an unnamed site in Canada: the ground is old, hard rock scraped nearly bare with only a thin layer of soil, dotted with many small lakes, and the local relief is low. A wide expanse of low, flat land lies to the crew's south. Identify which region fits both the ground signature and the position described.",
+    "choices": [
+      "The Interior Plains, since low local relief on its own is always enough to indicate a plain",
+      "The Western Cordillera, since high basins and flat-topped plateaus can also show thin soil and scattered lakes",
+      "The Canadian Shield, since old scraped bedrock, thin soil, low relief, and many lakes match that pattern here in Canada",
+      "The Appalachians, since old, worn landscapes with thin soil can also occur far to the east"
+    ],
+    "answer": "C",
+    "hints": [
+      "Match the rock-and-soil signature first, then check it against the position described.",
+      "Only one region taught combines old scraped bedrock, thin soil, and many lakes, and it lies in Canada."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-landform-regions-006",
+    "loId": "m8geo.north-america-landform-regions",
+    "cedCode": "M8GEO-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A site has an elevation of 2,200 meters. Within 8 kilometers of the site, the ground varies only between 2,150 and 2,260 meters. A nearby seismic station has recorded 28 felt earthquakes in the past ten years, and an active volcano stands 90 kilometers away. A geologist argues the site must be steep mountain country because of how high it sits and how much earthquake activity occurs nearby. Evaluate whether this claim is correct using the readings given.",
+    "choices": [
+      "The claim is correct, because a local relief of 110 meters by itself is large enough to fully describe steep, rugged mountain terrain",
+      "The claim is correct, because high elevation combined with frequent nearby earthquakes is by definition enough to make any location count as mountain country",
+      "The claim is wrong entirely, because frequent earthquakes and a nearby volcano actually indicate that the site lies far away from any plate boundary",
+      "The claim is wrong about the land's shape: the relief is only 110 meters, a high flat surface, though the movement readings do show plates meeting nearby"
+    ],
+    "answer": "D",
+    "hints": [
+      "Calculate the local relief from the two elevation extremes before judging the shape of the land.",
+      "Relief and movement are different kinds of evidence, and both can point to real but different facts about the same site."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-river-systems-watersheds-001",
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "cedCode": "M8GEO-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geography student claims that a town located only 10 kilometers from the Pacific coast must drain into the Pacific Ocean, simply because it sits so close to that coastline. Evaluate whether this reasoning is sound.",
+    "choices": [
+      "The claim is correct, because distances under fifty kilometers are too short for any ridge to redirect drainage",
+      "The claim is correct, because water always flows toward whichever coastline is geographically nearest to it",
+      "The claim is incorrect, because every town automatically drains toward the coast on the opposite side of the continent from its location",
+      "The claim is incorrect, because a location's side of the continental divide determines its drainage, not its distance to any coast"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask which slope of the divide the town sits on, not how far it is from either coast.",
+      "Recall that a location just a few kilometers from a coast can still drain thousands of kilometers away if a ridge stands between them."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-river-systems-watersheds-002",
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "cedCode": "M8GEO-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two branches join to form the Larn River. The Fenwick branch drains 4,500 square kilometers of land, and the Odway branch drains 7,500 square kilometers of land. Determine the upstream drainage area at the point where the two branches meet.",
+    "choices": [
+      "12,000 square kilometers, because the two branches' drainage areas add together at the confluence",
+      "7,500 square kilometers, because only the larger branch's area counts once the streams join",
+      "6,000 square kilometers, because the confluence area is the average of the two branches' areas",
+      "3,000 square kilometers, because the smaller branch's area is subtracted from the larger branch's area"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that a confluence adds the areas of the two joining branches rather than averaging or subtracting them.",
+      "Check your answer by subtracting one branch's area from your total to see if the other branch's area comes back out."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-river-systems-watersheds-003",
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "cedCode": "M8GEO-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Rainwater falls into Lake Torrance, which has a single outlet river, the Bexton, that carries all of the lake's water onward toward the sea. A student argues that once the rainwater reaches Lake Torrance, the trace of its path is finished, because it has arrived at a body of water. Evaluate this student's reasoning.",
+    "choices": [
+      "The student is right, because any body of water that receives rainfall automatically counts as the final destination of that water's path, regardless of outlets",
+      "The student is wrong, because a lake with an outlet is a gate rather than an end, so the trace must continue down the Bexton River",
+      "The student is wrong, because lake water always evaporates completely into the atmosphere before any of it can reach an outlet river like the Bexton",
+      "The student is right, because the Bexton River carries away only a small fraction of the lake's total water, leaving most of it permanently in Lake Torrance"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens to water that enters a lake that has a named outlet.",
+      "A lake only ends a trace when a description explicitly says it has no outlet at all."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-river-systems-watersheds-004",
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "cedCode": "M8GEO-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A ridge called the Corvale Divide runs along a mountain range. On its western slope, meltwater feeds the Hollis River, which flows into the Pacific-bound Terrane River. On its eastern slope, meltwater feeds the Bray River, which joins the Sandreth River, which in turn joins the Mississippi-Missouri system and eventually reaches the Gulf of Mexico. A campsite sits 3 kilometers east of the Corvale Divide's crest. A research station sits 400 kilometers west of the same crest, in a valley that still drains toward the Hollis. A hiker claims the campsite's runoff must reach the Pacific Ocean because the campsite is much closer to the Pacific coastline than the research station is. Determine which ocean the campsite's runoff actually reaches.",
+    "choices": [
+      "The Gulf of Mexico, because the campsite's much greater distance from the Pacific coastline than from the Gulf coastline automatically determines that its runoff drains toward the Gulf",
+      "The Pacific Ocean, because the campsite is much closer to the Pacific coastline than the research station is, and proximity to a coastline determines which ocean receives runoff",
+      "The Gulf of Mexico, because the campsite lies on the eastern slope of the divide, and the side of the divide, not distance to any coast, determines drainage",
+      "The Pacific Ocean, because the Bray River eventually curves west and joins the Hollis River before either river reaches the sea, merging both watersheds into one"
+    ],
+    "answer": "C",
+    "hints": [
+      "First identify which slope of the Corvale Divide the campsite actually sits on.",
+      "Distance to a coastline does not determine drainage; only the side of the ridge does."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-river-systems-watersheds-005",
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "cedCode": "M8GEO-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Oster River empties into the sea at the port town of Callow. Upstream, the Fenn branch, draining 8,000 square kilometers, and the Marlow branch, draining 12,000 square kilometers, join at the inland town of Idris to form the Oster. Farther downstream, the Coe stream, draining 5,000 square kilometers, joins the Oster at the town of Bramwell, which lies between Idris and Callow. No other stream joins the Oster anywhere. Determine what percentage of the land draining through Callow also drains through Idris, and identify which inland town, Idris or Bramwell, has more of the basin's land draining through it.",
+    "choices": [
+      "50 percent drains through Idris, and Bramwell has more of the basin's land draining through it than Idris does",
+      "20 percent drains through Idris, and Idris has more of the basin's land draining through it than Bramwell does",
+      "80 percent drains through Idris, and Idris has more of the basin's land draining through it than Bramwell does",
+      "80 percent drains through Idris, and Bramwell has more of the basin's land draining through it than Idris does"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add the branch areas at each junction moving downstream, then compare each inland town's total to the total at Callow.",
+      "Since no stream joins between Bramwell and Callow, Bramwell's drainage area equals the full basin at the mouth."
+    ]
+  },
+  {
+    "id": "m8geo-north-america-river-systems-watersheds-006",
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "cedCode": "M8GEO-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "On the mainland of Kestria, the Rennet River flows into Lake Sorrow, which has one outlet, the Fauld River, carrying all of Lake Sorrow's water onward to the Opaline Sea. A separate, smaller lake nearby, Lake Drury, has no outlet at all; every stream flowing into Lake Drury simply stays there and slowly evaporates. A cargo company is deciding whether to build a shipping depot at the mouth of the Fauld River, where it meets the Opaline Sea, or at the shore of Lake Drury, reasoning that both sites are described as endpoints of a drainage network. An engineer disagrees with treating the two sites the same way. Determine which statement best explains the engineer's disagreement.",
+    "choices": [
+      "The Fauld River's mouth is a true endpoint for the Opaline Sea watershed, but Lake Drury is a genuine dead end with no outlet, so no downstream traffic ever departs from Lake Drury the way it constantly passes the river mouth",
+      "Both sites are equally valid endpoints, because any lake, whether or not it has an outlet, always marks the completion of a drainage trace and therefore ends the movement of water toward the sea",
+      "Lake Drury is actually the better depot site, because water evaporating from it eventually falls elsewhere as rain, extending its reach farther across the region than the Fauld River's mouth, which only serves one fixed location, ever could",
+      "The Fauld River's mouth is not a true endpoint at all, because every river mouth must still be treated as another junction awaiting a further outlet downstream before the water can truly be said to have finished its journey"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what distinguishes a lake that has no outlet from a lake that drains onward through a named channel.",
+      "Consider which site actually has ongoing water and cargo traffic passing through it toward the sea."
+    ]
+  }
+]

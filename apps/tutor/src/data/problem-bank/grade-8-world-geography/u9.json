@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8geo-analyzing-a-boundary-dispute-001",
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "cedCode": "M8GEO-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two countries agree completely on the wording of their boundary treaty, which states that the line follows the center of a shared river. A survey both countries signed confirms exactly where the river's center sits today, so nobody disputes the treaty's wording or the river's current position. The two countries now want to build a new bridge across the river and need to agree on rules for shared maintenance and tolls, something their old treaty never addressed. Which resolution mechanism fits this situation?",
+    "choices": [
+      "Arbitration, because the two countries still disagree about what the treaty's wording means for how the river's center is defined",
+      "A joint survey commission, because the exact position of the river's center along this stretch still needs to be measured and marked",
+      "A new treaty, because the old agreement never covered bridge maintenance and only a newly negotiated, signed agreement can add that rule",
+      "A standing court, because the two countries have already accepted one court's authority over every boundary dispute that might arise between them"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what is actually unresolved right now: wording, position, meaning, or something never covered at all.",
+      "A missing rule can't be measured or judged into existence — only a new agreement creates one."
+    ]
+  },
+  {
+    "id": "m8geo-analyzing-a-boundary-dispute-002",
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "cedCode": "M8GEO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The boundary between Kavos and Trenda follows the middle of the Ilsa River. A survey completed 50 years ago places the river's center at one position; a survey completed last month, which both countries signed without objection, places the center 400 meters east of that position. Both countries quote the same boundary agreement and read its wording identically, and no settlement lies within 20 kilometers of the river. Which cause does this evidence support?",
+    "choices": [
+      "A resource sitting across the line",
+      "Two differing historical accounts of what was agreed",
+      "A line drawn without regard to the people living there",
+      "A feature that has moved"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two survey dates giving two different positions is the fingerprint of one specific cause.",
+      "Check whether the disagreement is about wording, position, people, or a valuable find — only one matches here."
+    ]
+  },
+  {
+    "id": "m8geo-analyzing-a-boundary-dispute-003",
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "cedCode": "M8GEO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A boundary between two countries follows the crest of a mountain range for its entire length, never departing from the ridge line even where the ridge curves sharply. Investigators want to check whether this boundary's position has ever shifted or been disputed. Which piece of evidence should they gather first?",
+    "choices": [
+      "Two dated surveys of the ridge line's position",
+      "Settlement and school, clinic, or market usage records on both sides of the line",
+      "A copy of the founding treaty's wording compared against any newer document",
+      "Records of any minerals mapped beneath the ridge"
+    ],
+    "answer": "A",
+    "hints": [
+      "The type of boundary tells you which evidence to collect first.",
+      "A boundary that follows a landform is the kind whose position can change over time and leave a dated trail."
+    ]
+  },
+  {
+    "id": "m8geo-analyzing-a-boundary-dispute-004",
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "cedCode": "M8GEO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sorvia and Undel share a straight-line boundary drawn through farmland. A joint survey conducted five years ago, signed by both countries, confirms every marker post sits exactly where the founding agreement's record places it. Both countries quote that same agreement and interpret its wording identically, and no other document exists. Families on both sides have farmed land along the line for generations without complaint. Last year, engineers mapped an aquifer beneath the line that both countries now want to tap for irrigation, and the founding agreement never mentions groundwater at all. Which cause does the evidence support, and which mechanism fits resolving the disagreement?",
+    "choices": [
+      "A feature that moved; a joint survey commission that re-marks the line on the ground",
+      "A resource sitting across the line; a new treaty negotiated and signed by both countries",
+      "Two differing historical accounts; arbitration by a jointly chosen decider",
+      "A line drawn without regard to the people living there; a standing court already accepted by both sides"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rule out the survey and document evidence first — both agree with the record, so two causes are already eliminated.",
+      "Ask what changed right before the disagreement began, and whether the agreement's wording ever covered that thing."
+    ]
+  },
+  {
+    "id": "m8geo-analyzing-a-boundary-dispute-005",
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "cedCode": "M8GEO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Renata and Ost agree completely on the wording of their boundary treaty, which states that the line runs along the base of a cliff as it stood on the day of signing, 30 years ago. A rockslide has since moved the cliff's base inward by 600 meters along a 5-kilometer stretch, and both countries accept this year's survey showing exactly where the base sits now. The signing-day survey, however, recorded the old base at only three points along that stretch and the line was never marked on the ground; Renata's map connects those three points one way and Ost's map connects them another, differing by up to 50 meters between the recorded points. What is open right now, and which mechanism fits resolving it?",
+    "choices": [
+      "What the treaty's wording actually means for where the boundary runs is open, and arbitration can settle that disagreement",
+      "Where the base of the cliff sits today along this stretch is open, and a joint survey commission can measure and mark it",
+      "Where the old base ran between the three recorded points is open, and a joint survey commission can measure and mark it",
+      "Whether the treaty's terms cover boundary changes caused by rockslides is open, and a new treaty can add that missing rule"
+    ],
+    "answer": "C",
+    "hints": [
+      "The wording pins the boundary to a specific day, not to wherever the cliff base is today.",
+      "Two accepted maps disagreeing about a position, with no disagreement over wording, points to one particular kind of opening."
+    ]
+  },
+  {
+    "id": "m8geo-analyzing-a-boundary-dispute-006",
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "cedCode": "M8GEO-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The boundary between Palmira and Kest runs along a straight surveyed line through a forest for 10 kilometers. A joint survey conducted last year, signed by both governments, confirms every marker matches the original agreement's description exactly, and both governments read the agreement's wording the same way; no other document exists. A forest ranger station and the only forest access road lie entirely on the Kest side, and 900 residents of a village on the Palmira side have used that road and station for decades without ever filing a complaint. Last month, a timber company discovered a stand of valuable old-growth trees straddling the line: 240 hectares on the Palmira side and 360 hectares on the Kest side, and both governments now want to log it. Which cause does the evidence support as the reason the disagreement began now?",
+    "choices": [
+      "Two differing historical accounts, because the wording of the joint survey agreement could plausibly be interpreted in more than one legitimate way",
+      "A line drawn without regard to the people living there, because 900 residents rely on a road and ranger station on the Kest side",
+      "A feature that moved, because the marker posts placed last year might not exactly match the original survey's description of the line",
+      "A resource sitting across the line, because the timber stand was found only last month while the road and station situation produced no complaint for decades"
+    ],
+    "answer": "D",
+    "hints": [
+      "A cause is supported by what changed right before the argument started, not by every fact present in the record.",
+      "Decades of quiet use, with no complaint, is not the mark that a line-drawn-without-regard case leaves behind."
+    ]
+  },
+  {
+    "id": "m8geo-chokepoints-strategic-location-001",
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "cedCode": "M8GEO-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chokepoint's importance starts with its 'share passing through' -- the amount moving through the passage divided by the total amount moving. Suppose 24 of the 40 fishing fleets bound for Port Ilmar cross the Kestrel Strait each season, while the rest sail open water and never come near it. What is the share of Port Ilmar's fleet traffic that depends on the Kestrel Strait?",
+    "choices": [
+      "167 percent",
+      "40 percent",
+      "16 percent",
+      "60 percent"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide the fleets that use the Strait by the total fleets, not by the fleets that don't use it.",
+      "Turn the decimal into a percent by moving the decimal point two places right."
+    ]
+  },
+  {
+    "id": "m8geo-chokepoints-strategic-location-002",
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "cedCode": "M8GEO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every week 18 barges carry timber from Camrose Mill through the Verrin Gap to the coast. If the Gap closed, an existing river route around it would add 3 days to each barge's trip, and running a barge costs $4,000 a day. What would a one-week closure of the Verrin Gap add to Camrose Mill's shipping costs?",
+    "choices": [
+      "$216,000",
+      "$72,000",
+      "$12,000",
+      "$54,000"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply the number of barges affected by the extra days first, then by the daily cost.",
+      "Make sure both the barge count and the day count are in your multiplication before adding the dollar cost."
+    ]
+  },
+  {
+    "id": "m8geo-chokepoints-strategic-location-003",
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "cedCode": "M8GEO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Rennow Fjord carries 55 percent of the fish catch bound for Dassen Bay, and there is no route around the Fjord -- a boat that cannot pass through it cannot reach Dassen Bay at all. If the Fjord closes for a month, what happens to Dassen Bay's fish supply that month?",
+    "choices": [
+      "boats take 55 percent longer to reach Dassen Bay",
+      "55 percent of Dassen Bay's usual monthly catch fails to arrive",
+      "45 percent of the catch fails to arrive, since that is the part not passing through the Fjord",
+      "the whole month's catch arrives, but delayed until the Fjord reopens"
+    ],
+    "answer": "B",
+    "hints": [
+      "With no alternate route, this is a shortfall case, not a delay case.",
+      "The missing share is the part that actually passes through the Fjord, not the part that doesn't."
+    ]
+  },
+  {
+    "id": "m8geo-chokepoints-strategic-location-004",
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "cedCode": "M8GEO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Each month 60 container ships travel from the port of Feringale to overseas markets. 45 of them pass through the Tolvane Strait, while the other 15 already sail the long route around Cape Dorne, which adds 6 days to a voyage. Running a container ship costs $18,000 a day. What would a one-month closure of the Tolvane Strait add to Feringale's total shipping bill?",
+    "choices": [
+      "$1,620,000",
+      "$6,480,000",
+      "$4,860,000",
+      "$810,000"
+    ],
+    "answer": "C",
+    "hints": [
+      "Only the ships that actually pass through the Strait are affected by its closure -- the ships already on the detour don't change their trip.",
+      "Multiply the affected ships by the extra days, then by the daily cost, in that order."
+    ]
+  },
+  {
+    "id": "m8geo-chokepoints-strategic-location-005",
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "cedCode": "M8GEO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Port Dellwyn burns 7,000 barrels of crude a day. Of that, 5,600 barrels arrive through the Sarnos Strait and the remaining 1,400 come by rail, and there is no sea route around the Strait. A pipeline company offers to deliver 2,800 barrels a day overland, never touching the Strait. If the Strait closed, what share of the daily gap would the pipeline cover?",
+    "choices": [
+      "100 percent, because the pipeline's 2,800 barrels plus the rail's 1,400 barrels together equal the port's full daily need",
+      "40 percent, because 2,800 of the total 7,000 barrels burned each day are replaced by the pipeline",
+      "20 percent, because 1,400 of the 7,000 barrels burned each day still arrive by rail, leaving only that share uncovered",
+      "50 percent, because 2,800 of the 5,600 barrels that stop arriving are replaced by the pipeline"
+    ],
+    "answer": "D",
+    "hints": [
+      "The daily gap is only the part that came through the Strait, not the port's total daily use.",
+      "Divide the pipeline's daily delivery by the size of the gap it needs to fill."
+    ]
+  },
+  {
+    "id": "m8geo-chokepoints-strategic-location-006",
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "cedCode": "M8GEO-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Bannerhall depends on the Corvin Strait for oil: the Strait carries 9,000 of the 12,000 barrels the city burns each day, with no alternate sea route around it. The city already holds a stockpile of 90,000 barrels, and it is considering adding a pipeline that would deliver 3,000 barrels a day without touching the Strait. If the Strait closed, how many days would the stockpile alone cover, and how many days would it cover if the pipeline were added?",
+    "choices": [
+      "10 days alone, and 15 days with the pipeline added",
+      "15 days alone, and 10 days with the pipeline added",
+      "7.5 days alone, and 10 days with the pipeline added",
+      "10 days alone, and 30 days with the pipeline added"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the daily gap from the Strait alone first, then divide the stockpile by that gap.",
+      "For the second answer, subtract the pipeline's delivery from the gap before dividing the stockpile into what's left."
+    ]
+  },
+  {
+    "id": "m8geo-maritime-zones-ocean-boundaries-001",
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "cedCode": "M8GEO-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Talmira is a coastal nation. A cargo ship registered in another country is sailing 15 nautical miles off Talmira's coast, simply passing through on its way to a different port. Which statement correctly identifies the zone the ship is in and what that means for Talmira's control over it?",
+    "choices": [
+      "It is in the exclusive economic zone, where Talmira controls resources such as fish and seabed minerals but the ship remains free to sail through",
+      "It is in the territorial sea, a zone extending 12 nautical miles from shore where Talmira's laws apply just as they would on land, so the ship must first obtain permission to enter",
+      "It is on the high seas, the area beginning beyond 200 nautical miles from any coastline where no nation holds authority, so Talmira has no right to regulate the ship's passage at all",
+      "It is in the exclusive economic zone, a 200-nautical-mile band where Talmira controls all shipping traffic passing through, so foreign vessels must register with Talmira before entering"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare 15 nautical miles to the 12-nautical-mile limit before deciding the zone.",
+      "Recall that the exclusive economic zone controls resources, not the right to sail across it."
+    ]
+  },
+  {
+    "id": "m8geo-maritime-zones-ocean-boundaries-002",
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "cedCode": "M8GEO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A foreign company wants to drill into the seabed for natural gas 90 nautical miles off the coast of Bendara, a coastal nation. Which statement correctly explains whether Bendara can require the company to obtain a permit?",
+    "choices": [
+      "No, because 90 nautical miles lies beyond the 12-nautical-mile territorial sea, a zone where a coastal nation's laws apply just as they do on land, so Bendara's authority ends there",
+      "Yes, because 90 nautical miles is within the 200-nautical-mile exclusive economic zone, where Bendara controls seabed resources such as oil and gas",
+      "No, because 90 nautical miles lies beyond the 200-nautical-mile exclusive economic zone, placing the drilling site on the high seas, where no single nation holds authority over resources",
+      "Yes, because 90 nautical miles lies within the 12-nautical-mile territorial sea, a zone where Bendara's laws apply exactly as they would on land, including control over seabed drilling"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether 90 nautical miles falls between 12 and 200 nautical miles.",
+      "Remember which resources the coastal state controls within the exclusive economic zone."
+    ]
+  },
+  {
+    "id": "m8geo-maritime-zones-ocean-boundaries-003",
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "cedCode": "M8GEO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two foreign boats are both 25 nautical miles off the coast of Sorlana, a coastal nation: one is a cargo ship simply passing through, and the other is a trawler with its nets down catching fish. Which statement correctly compares whether each boat needs permission from Sorlana?",
+    "choices": [
+      "Both need permission, because 25 nautical miles is within Sorlana's territorial sea, where all activity requires consent",
+      "Neither needs permission, because 25 nautical miles lies beyond the exclusive economic zone, on the high seas",
+      "The cargo ship needs no permission because it is only sailing through, but the trawler needs permission because Sorlana controls the fish within its exclusive economic zone",
+      "The trawler needs no permission because fishing is free on the high seas, but the cargo ship needs permission because Sorlana controls all traffic within 200 nautical miles"
+    ],
+    "answer": "C",
+    "hints": [
+      "Work out where 25 nautical miles falls relative to the 12- and 200-nautical-mile limits.",
+      "Remember that the exclusive economic zone lets every state's ships sail freely but reserves resources like fish for the coastal state."
+    ]
+  },
+  {
+    "id": "m8geo-maritime-zones-ocean-boundaries-004",
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "cedCode": "M8GEO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Karvo's mainland coastline runs north-south. A naturally formed island belonging to Karvo, which stays above water at high tide and supports a permanent fishing village, lies 70 nautical miles due east of that coast. A foreign trawler is fishing 260 nautical miles due east of Karvo's mainland coast, directly in line with the island. Does Karvo control the fishing at that location, and why?",
+    "choices": [
+      "No, because 260 nautical miles exceeds the 200-nautical-mile exclusive economic zone measured from the mainland's coastline, placing the trawler's location on the unregulated high seas",
+      "No, because the island's small population and limited fishing village mean it cannot generate its own exclusive economic zone under the rules for permanent habitation",
+      "Yes, because 260 nautical miles falls within 12 nautical miles of the island itself, making the trawler's location part of Karvo's territorial sea rather than open water",
+      "Yes, because Karvo's island extends the exclusive economic zone to 270 nautical miles from the mainland, and 260 nautical miles falls within that extended limit"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work out how far the island's own 200-nautical-mile zone reaches once you add its distance from the mainland.",
+      "A qualifying island's population size doesn't disqualify it — what matters is whether it supports permanent life or economic activity."
+    ]
+  },
+  {
+    "id": "m8geo-maritime-zones-ocean-boundaries-005",
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "cedCode": "M8GEO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Nolgrave and Petrassa face each other across open water, and the nearest points of their coasts are 340 nautical miles apart. A fishing ground lies 150 nautical miles from Nolgrave's coast, on the straight line between the two nearest points, so it also lies within 200 nautical miles of Petrassa's coast. Since both states could claim the ground under the 200-nautical-mile rule, which state's zone actually contains it, and why?",
+    "choices": [
+      "Nolgrave's, because the median line lies 170 nautical miles from each coast, and 150 nautical miles is less than that, placing the ground on Nolgrave's side",
+      "Petrassa's, because the fishing ground lies closer to Petrassa's coast than to the halfway point between the two coasts",
+      "Petrassa's, because 150 nautical miles from Nolgrave falls within Petrassa's 200-nautical-mile claim as well",
+      "Nolgrave's, because any point within 200 nautical miles of a coast automatically belongs to whichever state is nearer under the 200-nautical-mile rule"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the median line by dividing the total distance between the two coasts in half.",
+      "Remember that the 200-nautical-mile rule alone can't settle a point that both states can legally claim — something else has to."
+    ]
+  },
+  {
+    "id": "m8geo-maritime-zones-ocean-boundaries-006",
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "cedCode": "M8GEO-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Vantoro's mainland coast lies 210 nautical miles from a tiny rocky islet that belongs to it. The islet stays above water at high tide but is barren, with no soil or fresh water, and cannot support any permanent population or economic activity of its own. A foreign fishing boat is netting fish 205 nautical miles from Vantoro's mainland coast, directly in line with the islet. Which statement correctly explains whether Vantoro can require the boat to have a permit?",
+    "choices": [
+      "No, because a bare rock incapable of sustaining habitation or economic life generates neither a territorial sea nor an exclusive economic zone, so all water beyond 200 nautical miles from the mainland counts as unregulated high seas",
+      "Yes, because even though the islet cannot generate an exclusive economic zone as a bare rock, it still generates its own 12-nautical-mile territorial sea, and 205 nautical miles from the mainland falls within that zone",
+      "Yes, because at 205 nautical miles the boat remains within the mainland's own 200-nautical-mile exclusive economic zone, where Vantoro controls all fishing rights automatically, regardless of the islet's separate legal status",
+      "No, because although the islet still generates its own 12-nautical-mile territorial sea, that territorial sea only restricts military and commercial shipping, not small fishing boats like this one"
+    ],
+    "answer": "B",
+    "hints": [
+      "A feature that fails the test for its own economic life still loses only its exclusive economic zone, not necessarily its territorial sea.",
+      "Check whether 205 nautical miles falls within 12 nautical miles of the islet's own position, 210 nautical miles from the mainland."
+    ]
+  },
+  {
+    "id": "m8geo-transboundary-problems-cooperation-001",
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "cedCode": "M8GEO-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A country that fishes a shared stock reasons as follows: if it catches more fish, it keeps all of the extra catch for itself, but the resulting loss to the shared stock is spread across every country that fishes it, including itself. Which idea does this reasoning illustrate?",
+    "choices": [
+      "Free riding, because the country benefits from other nations' restraint while making no sacrifice of its own, letting them absorb the cost of conserving the stock",
+      "The arithmetic structure of a shared problem, where the gain from taking more stays with the taker but the cost is divided among everyone",
+      "Enforcement, because the country's catch will eventually be measured against an agreed limit, and violators can be fined or otherwise penalized for exceeding that limit",
+      "Compliance, because the country is comparing its own catch only to the limit it agreed to follow, without regard to what any other country decides to do"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about how the gain and the cost of taking more are distributed among countries.",
+      "This describes a property of the numbers, not a comment about how trustworthy the country is."
+    ]
+  },
+  {
+    "id": "m8geo-transboundary-problems-cooperation-002",
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "cedCode": "M8GEO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ostrel and Kavim share one grazing plain. If both graze at the agreed level, each feeds 750 animals over two years. If one goes high while the other stays at the agreed level, the one that went high feeds 800 and the one that stayed feeds 600. If both go high, each feeds 650. Using the comparison Ostrel can actually make on its own, what should Ostrel expect?",
+    "choices": [
+      "Ostrel should match whatever Kavim chooses, since matching keeps both countries equal",
+      "Staying at the agreed level pays Ostrel more, since 750 plus 750 is greater than 650 plus 650",
+      "Going high pays Ostrel more whichever choice Kavim makes, since 800 beats 750 and 650 beats 600",
+      "Ostrel cannot decide anything until it knows for certain what Kavim will choose"
+    ],
+    "answer": "C",
+    "hints": [
+      "Hold Kavim's choice fixed and compare Ostrel's own two options each time.",
+      "This is a comparison Ostrel can actually make by itself, without knowing Kavim's choice in advance."
+    ]
+  },
+  {
+    "id": "m8geo-transboundary-problems-cooperation-003",
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "cedCode": "M8GEO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three countries share a wetland and agreed to cap peat extraction at 200 tonnes each. A monitoring station accepted by all three measures actual extraction directly. For three straight years, the station has reported Country Y extracting 260 tonnes, and nothing about the agreement or Country Y's totals has changed in that time. Which part of the design does this pattern show is missing?",
+    "choices": [
+      "Compliance, because Country Y agreed to a figure it has failed to meet three years running",
+      "Monitoring, because the measurement cannot tell which member is over its agreed limit",
+      "A way to stop free riding, because a country that never signed is benefiting without paying any cost",
+      "Enforcement, because the same member misses its agreed figure year after year and nothing follows for it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether the measurement can already tell which country missed its target.",
+      "Ask whether anything actually changes after the same result repeats."
+    ]
+  },
+  {
+    "id": "m8geo-transboundary-problems-cooperation-004",
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "cedCode": "M8GEO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four countries share an aquifer and each withdrew 400 million liters a year before any agreement, for a total of 1,600 million liters. Three of the four sign an agreement to cut to 250 million liters each, measured by a survey all three accept; the fourth country does not sign. After the first year, the survey measures the three signers at exactly 250 each, and the non-signer's own withdrawal has risen to 500 million liters, making the aquifer's total 1,150 million liters. Which conclusion does this data best support?",
+    "choices": [
+      "The agreement lacks a way to stop free riding: the three signers cut a combined 450 million liters, but the non-signer's withdrawal rose by 100 million liters, so the aquifer's total drop is only 350 million liters",
+      "The agreement lacks monitoring: the survey cannot tell which specific country's withdrawal changed from one year to the next, so the reported totals can never be checked against any single member's individually promised figure",
+      "The agreement lacks enforcement: no fine has ever actually been charged to any of the three signers for exceeding the agreed 250 million liter limit, even though the survey measures them directly",
+      "The three signing countries are not complying with the agreement, since the aquifer's total fell by only 350 million liters instead of the full 450 million liters the three of them promised to cut"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare what the three signers promised to cut with what the aquifer actually lost overall.",
+      "Subtract the non-signer's increase from the members' combined cut to see where the missing amount comes from."
+    ]
+  },
+  {
+    "id": "m8geo-transboundary-problems-cooperation-005",
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "cedCode": "M8GEO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Halvor and Ket share one fishing ground. If both restrain, each lands 450 tonnes, for a combined 900. If one restrains while the other takes more, the one that takes more lands 500 and the restrainer lands 350. If both take more, each lands 400, for a combined 800. A student argues: \"Since 900 combined under restraint beats 800 combined when both take more, each country should simply choose to restrain.\" Which statement identifies the flaw in this argument?",
+    "choices": [
+      "The reasoning is correct because the combined total of 900 tonnes under restraint is greater than the combined total of 800 tonnes when both take more, so restraint benefits both countries",
+      "The comparison uses the everybody-restrain and everybody-take totals, but no country can pick either outcome alone — each picks its own level, and taking pays 50 tonnes more under either of Ket's choices",
+      "The reasoning ignores enforcement: without any penalty attached to taking more than the agreed level, neither country has an actual reason to keep its promise to restrain fishing",
+      "The reasoning ignores monitoring: without an independent measurement of each country's actual catch every season, neither country can verify how much fish the other one truly landed that year"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether either country can pick the everybody-restrain outcome just by making its own decision.",
+      "Compare each country's own two options under each of the other country's possible choices."
+    ]
+  },
+  {
+    "id": "m8geo-transboundary-problems-cooperation-006",
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "cedCode": "M8GEO-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Five countries share a cross-border grassland and agreed to cut grazing to 200 animal-equivalents each, down from 350 each. A joint survey team, paid for by all five, measures every country's grazing directly, and a country measured over 200 must pay into a shared restoration fund. For three straight years, the survey has measured four countries at exactly 200 and one country, Rellin, at 300, and nothing has happened to Rellin in any of those years. Total grazing on the grassland fell from 1,750 before the agreement to 1,100 in the most recent year. Which part of the design does this pattern show is missing?",
+    "choices": [
+      "A way to stop free riding, because Rellin enjoys the benefit of the other four countries' cuts to the grassland while paying none of the cost itself",
+      "Monitoring, because a survey that reports the same figure for the same country three years running cannot be trusted without a second independent source",
+      "Enforcement, because the survey already names Rellin as exceeding 200 animal-equivalents for three straight years, yet nothing has ever followed for it",
+      "Compliance, because Rellin agreed to graze at 200 animal-equivalents but has instead grazed at 300 for three consecutive years running"
+    ],
+    "answer": "C",
+    "hints": [
+      "The survey can already say exactly which country is over its limit — ask what happens after that.",
+      "Compliance is measured against the promised figure, not against which part of the design has actually failed."
+    ]
+  }
+]
