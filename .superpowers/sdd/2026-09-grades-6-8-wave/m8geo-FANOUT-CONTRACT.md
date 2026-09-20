@@ -421,11 +421,13 @@ The standards this course uses, with the wording to put in your description:
 
 > **Wording note (measured 2026-09-19, after two batch-2 agents found this table disagreeing with
 > the `los[0].description` instruction above):** the shipped `m6geo`/`m7geo`/`m8geo` seeds cite
-> NGS 9 as "on Earth surface" in 7 files and "Earth's surface" in 0; NGS 11 "Earth surface" 7/0;
-> NGS 13 "Earth surface" 4/0; NGS 7 is split ("Earth's surface" 4, "Earth surface" 2). **Use the
-> shipped precedent for your standard, and for NGS 9/11/13 that is "on Earth surface"** -- the
-> table's NGS 9 row was corrected to match; the others are left as printed because a split
-> precedent is not a rule. Re-measure in your own subject before asserting (ruling 24).
+> NGS 9 as "on Earth surface" 9 times and "Earth's surface" 0; NGS 11 "Earth surface" 7 / "Earth's" 1;
+> NGS 13 "Earth surface" 5 / 0; **NGS 7 "Earth's surface" 13 / "Earth surface" 2** (RE-MEASURED
+> later on 2026-09-19 with the seeds' escaped apostrophes `\'` normalized -- the first count
+> missed them and called NGS 7 "split"; a batch-3 agent caught it). **Use the shipped precedent for
+> your standard: NGS 9/11/13 = "on Earth surface"; NGS 7 = "Earth's surface" (the table's form).**
+> The table's NGS 9 row was corrected to match. Re-measure in your own subject before asserting
+> (ruling 24), and normalize `\'` when you grep a seed.
 | NGS 14 | how human actions modify the physical environment |
 | NGS 15 | how physical systems affect human systems |
 | NGS 16 | the changes that occur in the meaning, use, distribution and importance of resources |
