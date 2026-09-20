@@ -280,3 +280,25 @@ to write a unit file when a regenerated LO yields 0 items (it currently drops th
 multiple of the limit means truncation, whatever the exit code. **Near-miss on the restore:** a zsh loop with
 `set -- $pair` did not word-split, `cp` got an empty source, and three bank dirs sat EMPTY for one turn after I had
 already `rm`'d them; recovered from the same backups. Never `rm` a target before the copy has been verified.
+
+## Grade 8 Phase B — BANKS gated (geo/math/sci), NOTES done, ACADEMY registered (2026-09-19, same session)
+
+After the ceiling fix and a 3-attempt parse retry (`52064d05`), the Sonnet regen of every rejected LO closed the gap:
+geo 97.5% (`b5ee4a44`), math 98.7% (`9dc1e3e9`), sci 99.6% (`471e973e`) — no unit <90%, no LO <4 verified. ELA's
+Sonnet pass (28 LOs) left two LOs at 0/6 because both replies hit the 12,000-token ceiling exactly (ELA items carry
+passages, ~2× math); ceiling raised again to 16,000 (`c606d14e`) for the rerun.
+
+**Notes:** 160 baselines (`b7135bc7`) + 1,222 pointers (`86a9b725`): 296/298/312/316 per course, 7.4–7.9 per file
+(G6 shipped 1,132/160). Smoke ×4 pass, tsc clean. Two traps: `gen-topic-notes-pointers.ts` does NOT load
+`../../.env.local.production` (export `ANTHROPIC_API_KEY` first — four runs died instantly on "No API key found for
+the notes-pointers role"), and it EXITS on the first non-JSON reply, so a course needs a second pass over the plans
+that have no draft (math died at 19/40, ELA at 28/40).
+
+**Academy (worktree `.claude/worktrees/ms-grade8`, branch `ms-grade8`, cut from fetched origin/main `27e4bb6`):**
+memory's "mappings.json already carries all eight grade-6/8 rows" was WRONG — it had Grade 6 only. Registered the
+four Grade 8 courses (`f716607`) with nodes emitted by the engine's `emit-portal-course-nodes.ts` (40 each, chains
+resolve), courseMeta blurbs, teacher rows (Ravi maths/science, Robin ELA/geo — same split), catalog-nav test
+Middle School total 8→12 + `Grade 8` group. Typecheck clean, 4835 tests pass. Marketing sweep: `for-parents` said
+"grades 7–12" — stale since Grade 6 shipped on 09-03 — now "6–12". `PRACTICE_QUESTIONS_CLAIM` (6,300+) to be
+bumped from the prod count AFTER seeding. evelynlearning.com carries no MS grade/count claim (grep, showcases aside).
+Guides generating (Haiku) into `apps/web/content/guides/GRADE_8_*`.
