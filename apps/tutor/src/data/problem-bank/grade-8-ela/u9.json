@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8ela-organizing-information-into-broader-categories-001",
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "cedCode": "M8ELA-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A real category must pass two tests. A category name must be sayable in a few words, and it must hold at least two facts. Which pair of tests must a category pass to be a real category?",
+    "choices": [
+      "It answers one question better than any other pile, and it has no facts under any other name.",
+      "It has a name you can say in a few words, and it answers the most important question.",
+      "It holds at least two facts, and those facts are arranged in the right order.",
+      "It has a name you can say in a few words, and it holds at least two facts."
+    ],
+    "answer": "D",
+    "hints": [
+      "A real category has two separate requirements: one about naming and one about how many facts sit under it.",
+      "One test is about what you call it; the other is about how many facts sit under it."
+    ]
+  },
+  {
+    "id": "m8ela-organizing-information-into-broader-categories-002",
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "cedCode": "M8ELA-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A writer has collected five facts about how a smartphone battery works: how many hours it lasts, what happens inside the battery when it charges, why the battery gets warm during charging, which apps drain the battery fastest, and the chemical reaction that produces the power. The writer tries to make a category called 'Battery problems' and puts the fact about heat under it. A real category must have at least two facts under its name. Why does this category fail?",
+    "choices": [
+      "Only one fact sits under it, and a single fact is not a category.",
+      "The name 'Battery problems' does not describe what is inside it well enough because heat is not truly a problem.",
+      "The fact about heat belongs under two different questions, so it has two homes.",
+      "The name uses the word 'problems,' which is too vague and names nothing a reader could want."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what makes a real category real. The writer put one specific fact under one name. Is that enough?",
+      "How many facts must belong under a category name for it to count as a real category?"
+    ]
+  },
+  {
+    "id": "m8ela-organizing-information-into-broader-categories-003",
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "cedCode": "M8ELA-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A writer is organizing facts about different types of bread used in cooking. She has made three categories: 'Yeast breads, which rise because of yeast'; 'Breads that need baking soda'; and 'Other breads.' A real category name must tell readers what is inside it—not a vague leftover pile. Which category fails the test for a real category?",
+    "choices": [
+      "'Yeast breads, which rise because of yeast' fails because the name is too long to say in a few words.",
+      "'Other breads' fails because it names nothing and does not tell a reader what it actually holds.",
+      "'Breads that need baking soda' fails because it is too specific and does not match the scope of the other two.",
+      "All three categories pass the test, because each one describes a different way breads are made."
+    ],
+    "answer": "B",
+    "hints": [
+      "A category name should not be vague like 'Other things' or 'More information.' Why are those names a problem?",
+      "A real category name must tell a reader something specific about what is inside. Which name could apply to almost any pile of leftover facts?"
+    ]
+  },
+  {
+    "id": "m8ela-organizing-information-into-broader-categories-004",
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "cedCode": "M8ELA-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer has organized facts about preparing for a camping trip into four categories and is ready to order them: 'What to pack,' 'Where to go,' 'Who to invite,' and 'How to set up camp.' Categories should be ordered by what a reader needs to understand first. The writer starts with 'Who to invite' at the top. Why is this the wrong place for that category?",
+    "choices": [
+      "The order should follow the alphabet, and 'Who to invite' does not come first alphabetically, so it must be moved to a position that matches proper alphabetical sequence.",
+      "'Who to invite' is the least important reason people go camping, so it belongs at the end of the piece where less critical information is typically placed for reader interest.",
+      "'Who to invite' depends on knowing where the trip is going, so a section about the location should come first and explain what the place requires.",
+      "'Who to invite' comes after 'What to pack' because readers need to know what items exist before they know who will carry them."
+    ],
+    "answer": "C",
+    "hints": [
+      "Categories should be ordered by what a reader needs first. One category might lean on another—which question does a reader need answered before a later one makes sense?",
+      "If you are deciding who to invite, what would you need to know first about the place you are going?"
+    ]
+  },
+  {
+    "id": "m8ela-organizing-information-into-broader-categories-005",
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "cedCode": "M8ELA-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer has drafted a one-page guide to the three sports teams at school. Under 'Soccer Team' she wrote: when the team practices, what position she plays, and who the team plays in the championship. Under 'Basketball Team' she wrote: when the team practices and who the team plays in the championship. Under 'Tennis Team' she wrote: when the team practices. The writer is considering adding a heading over each team's section. What problem stops her from putting a heading over each one?",
+    "choices": [
+      "Three headings on a one-page guide would make the page too cluttered with signposts and not enough road, and the Tennis Team section is too short to earn its own heading.",
+      "The three teams are not really separate categories because they all share the practice time fact, so they should go under one heading instead.",
+      "The sections give different amounts of information, so they do not have the same scope and cannot all be top-level headings.",
+      "A heading over the Tennis Team section would fail because that section only tells the reader when the team practices, and one fact is not a category."
+    ],
+    "answer": "D",
+    "hints": [
+      "A heading names a category. Remember the test: a real category needs a name AND at least two facts under it.",
+      "The Tennis Team section has only one fact. Can one fact be a category?"
+    ]
+  },
+  {
+    "id": "m8ela-organizing-information-into-broader-categories-006",
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "cedCode": "M8ELA-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer is working on a three-page informative piece about how different animals hibernate. She has organized her facts into four categories: 'How bears prepare for winter,' 'How ground squirrels prepare for winter,' 'How hedgehogs prepare for winter,' and 'How bats stay alive while sleeping.' For each animal except bats, the facts repeat in the same order: where the animal finds shelter, what it eats before hibernating, and how its body temperature drops. For bats, the facts are completely different and do not parallel the others at all. The writer is deciding whether to use headings and whether to use a table. Which choice fixes both the organization and the formatting?",
+    "choices": [
+      "Keep the three parallel animal categories as three separate headings, put their facts into a table with one row per animal and three columns, and keep 'How bats stay alive while sleeping' as a separate heading and paragraph.",
+      "Keep all four categories as separate headings, because each animal is different and deserves its own section.",
+      "Combine the four categories into one big heading called 'Animal Hibernation Methods,' and write everything in a table, even though the bat facts will leave several cells empty.",
+      "Split 'How bears prepare' and 'How ground squirrels prepare' into sub-categories under a parent called 'Small mammals,' and keep the other two as separate headings, because sub-categories work better than tables for parallel information."
+    ],
+    "answer": "A",
+    "hints": [
+      "A table works when 'the same few facts repeat for several things.' Which groups of facts actually do repeat in the same fields?",
+      "A heading earns its place when a reader might want to skip to that section. Would bats fit into a table made for bears, ground squirrels, and hedgehogs?"
+    ]
+  },
+  {
+    "id": "m8ela-establishing-point-of-view-shifting-time-in-a-na-001",
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "cedCode": "M8ELA-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A narrative point of view is the choice of who tells a story and how much that teller is able to know, and it is set from the opening sentence. According to the rule for choosing between first person and third person limited, what should actually decide which one a writer picks?",
+    "choices": [
+      "Whether the main character in the story is an adult or instead a young person still growing up",
+      "Whether the events of the story happened in the past or are happening right now as they are told",
+      "Whether the story needs the reader to hear one character's own voice or also see that character from outside",
+      "Whether the story unfolds in one single setting or instead moves between several important settings throughout"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what determines the choice: the reader's access to a character's thoughts and appearance, not the calendar.",
+      "The rule is about what the reader needs to know and how they need to get it, not about the character's age or the setting."
+    ]
+  },
+  {
+    "id": "m8ela-establishing-point-of-view-shifting-time-in-a-na-002",
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "cedCode": "M8ELA-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this opening sentence of a draft narrative: \"Jordan tightened the straps on his backpack and told himself the interview would go fine, even though his hands would not stop shaking.\" Which point of view does this sentence establish?",
+    "choices": [
+      "Neither point of view, because the sentence never clearly reveals whose private thoughts and feelings are being shared",
+      "First person, because the sentence reveals what the character himself is privately thinking and feeling inside",
+      "A mix of first and third person, because the narrator both describes outside actions and reports inner thoughts directly",
+      "Third person limited, because an outside voice uses his name and pronoun while still reporting what he is thinking"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether the narrator says I, or instead uses a name and pronouns like his.",
+      "An outside voice can still report one character's private thoughts — that combination has a specific name."
+    ]
+  },
+  {
+    "id": "m8ela-establishing-point-of-view-shifting-time-in-a-na-003",
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "cedCode": "M8ELA-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A draft reads: \"Mara dropped her cleats by the bench and watched her teammates warm up in the fading light.\" The next sentence is supposed to take the reader back to that morning, three hours earlier, when Mara found out her permission slip never got signed. Which version of that next sentence correctly signals the jump so the reader knows both when and where the story has moved?",
+    "choices": [
+      "Three hours earlier, at the kitchen table before school, Mara found out her permission slip never got signed.",
+      "Mara found out her permission slip never got signed at the kitchen table before school.",
+      "Her permission slip never got signed, and she found out about it at the kitchen table before school.",
+      "At the kitchen table, her permission slip never got signed, which she found out about before school."
+    ],
+    "answer": "A",
+    "hints": [
+      "The signal needs to sit at the very front of the sentence, before anything else happens.",
+      "A strong signal names both how far back in time and where the new setting is, right away."
+    ]
+  },
+  {
+    "id": "m8ela-establishing-point-of-view-shifting-time-in-a-na-004",
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "cedCode": "M8ELA-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer is telling a story in third person limited centered on Theo, who does not know that his friend Priya is nervous about the science fair results. One draft sentence reads: \"Theo grabbed his poster board, and Priya, dreading the announcement, forced a smile.\" This sentence breaks the point of view the writer chose, because it reports a feeling Theo has no way to know. Which revision fixes the slip while keeping the story in third person limited centered on Theo?",
+    "choices": [
+      "Theo grabbed his poster board, and Priya, dreading the announcement, forced a smile as well.",
+      "Theo grabbed his poster board, and Priya forced a smile that did not quite reach her eyes.",
+      "I grabbed my poster board, and Priya, dreading the announcement, forced a smile.",
+      "Theo grabbed his poster board, dreading the announcement, and Priya forced a smile."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for a detail Theo could actually see from outside Priya, not a thought only she could report.",
+      "A good fix keeps the narrator outside Priya's head while still letting her expression hint at how she feels."
+    ]
+  },
+  {
+    "id": "m8ela-establishing-point-of-view-shifting-time-in-a-na-005",
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "cedCode": "M8ELA-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer is planning a narrative about Malik, who spends the story trying to figure out why his best friend Jonah stopped calling him back. The reader is meant to know only what Malik knows, right up until Malik works out the truth near the end. The story opens in the present at football practice, then needs to flash back briefly to a phone call from three weeks earlier. Which pair of opening and transition sentences both keeps the reader sealed inside only Malik's knowledge and correctly signals the flashback?",
+    "choices": [
+      "I ran suicides at practice until my legs burned, glancing at my phone between sets to see whether Jonah had texted back. I had called him right after the game had ended three weeks earlier, and he simply let it ring out without answering.",
+      "I ran suicides at practice until my legs burned, glancing at my phone between sets to see whether Jonah had texted back. Three weeks earlier, across town, Jonah sat alone on his porch, staring at his phone and wondering whether he should finally pick up.",
+      "I ran suicides at practice until my legs burned, glancing at my phone between sets to see whether Jonah had texted back. Three weeks earlier, sitting on my back porch, I called him after the game, and he let it ring out.",
+      "Malik ran suicides at practice until his legs burned, and across town Jonah stared at his silent phone, deciding not to answer. Three weeks earlier, Malik had called him late at night after the game ended, and Jonah let it ring out."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check both sentences: one must never tell the reader what Jonah is thinking or feeling, and the other must put a time signal at the very front.",
+      "A pair that reaches into a second character's head, even briefly, breaks the requirement that the reader learns things only when Malik does."
+    ]
+  },
+  {
+    "id": "m8ela-establishing-point-of-view-shifting-time-in-a-na-006",
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "cedCode": "M8ELA-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A narrative opens in the present at a swim meet, then correctly signals a flashback with \"Two years earlier, at the same pool, Priya's coach cut her from the team.\" The flashback runs for two more sentences describing that day. The next paragraph is meant to return to the swim meet in the present, but currently begins with no signal at all: \"Priya adjusted her goggles and stepped onto the blocks.\" What is the clearest way to fix this so the reader knows the story has returned to the present?",
+    "choices": [
+      "Add a comma after \"goggles\" to separate the two actions and slow the reader down before the jump.",
+      "Change \"stepped onto the blocks\" to \"had stepped onto the blocks\" so the verb tense alone marks the return to the present.",
+      "Repeat the coach's name from the flashback in the new sentence so the reader connects the two scenes.",
+      "Add a front signal, such as \"Back at the meet, two years later,\" so the reader knows the story returned to the present."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that a reader taken somewhere in time has to be brought back with a signal of their own, not left to guess.",
+      "The fix should be a phrase placed at the very front of the sentence, not a change to verb tense, punctuation, or a repeated name."
+    ]
+  },
+  {
+    "id": "m8ela-precise-language-domain-vocabulary-001",
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "cedCode": "M8ELA-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Vague wording is a placeholder noun, an empty verb, or a fuzzy amount that could fit more than one thing, while precise wording fits exactly one thing. A student is comparing four sentences about a dog and some mail to decide which one is precise by that rule.",
+    "choices": [
+      "The dog tore the mail into pieces before anyone saw it.",
+      "The dog did something to the mail before anyone saw it.",
+      "The dog got the mail all messed up before anyone saw it.",
+      "The dog made a lot of stuff happen to the mail today."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether each verb or noun could fit more than one action or thing.",
+      "Precise wording names exactly one action, not several possible ones."
+    ]
+  },
+  {
+    "id": "m8ela-precise-language-domain-vocabulary-002",
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "cedCode": "M8ELA-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising the sentence 'The part of the plant that makes food got a lot bigger after two weeks of light.' This sentence has both a naming hole (which part?) and an amount hole (how much bigger?). Which revision below repairs only the naming hole, leaving the amount still vague?",
+    "choices": [
+      "The part that makes food doubled in size after two weeks.",
+      "The leaf got a lot bigger after two weeks of light.",
+      "The leaf doubled in size after two weeks of light.",
+      "The part that makes food changed a lot after two weeks."
+    ],
+    "answer": "B",
+    "hints": [
+      "A naming hole is fixed with the exact name the subject uses; an amount hole is fixed with a size or direction.",
+      "Check whether the choice still contains a fuzzy amount word like 'a lot' or 'bigger.'"
+    ]
+  },
+  {
+    "id": "m8ela-precise-language-domain-vocabulary-003",
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "cedCode": "M8ELA-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to describe how many students attended the school's food drive assembly, but the student never counted attendees and has no attendance record of any kind. Which sentence avoids false precision while still giving the reader real, honest information?",
+    "choices": [
+      "About three hundred forty students attended the assembly, according to the student's estimate.",
+      "A huge number of students showed up to attend the assembly that morning.",
+      "The two-hundred-seat assembly area was completely full, with more students standing along the wall.",
+      "Roughly a third of the entire school attended the assembly that morning."
+    ],
+    "answer": "C",
+    "hints": [
+      "False precision is a specific-sounding number or fraction that nobody actually measured.",
+      "Ask what the writer actually knows for certain, not what detail sounds the most exact."
+    ]
+  },
+  {
+    "id": "m8ela-precise-language-domain-vocabulary-004",
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "cedCode": "M8ELA-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about earthquakes for classmates who have never studied plate tectonics before. The draft sentence reads: 'When one plate goes under another plate at the boundary, it causes subduction, and this builds up stress that causes an earthquake.' The word 'subduction' is a domain term this audience has not been given before. Which revision correctly applies one of the two legal moves for handling an undefined term?",
+    "choices": [
+      "When the plates interact at the boundary, subduction takes place, and the resulting stress between the two plates builds up until an earthquake eventually happens nearby.",
+      "When one plate goes under another plate at the boundary, it causes subduction, which releases magma that builds up pressure and eventually causes an earthquake.",
+      "When one plate undergoes subduction beneath another plate, the plates lock together permanently, and this locking action causes the ground to shake in an earthquake.",
+      "When one plate slides beneath another plate at the boundary — a process called subduction — built-up stress between the plates can trigger an earthquake."
+    ],
+    "answer": "D",
+    "hints": [
+      "The reader check asks whether this audience has already been given the word before you use it.",
+      "Defining a term in the same sentence it appears in is one of the two legal moves; leaving it unexplained is not."
+    ]
+  },
+  {
+    "id": "m8ela-precise-language-domain-vocabulary-005",
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "cedCode": "M8ELA-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising this sentence for a science newsletter about the human eye, written for classmates who already learned the parts of the eye in an earlier unit: 'The part that controls how much light gets in gets much bigger in the dark.' The student has not measured any specific size change. Which revision correctly repairs both the naming hole and the amount hole without inventing a number?",
+    "choices": [
+      "The pupil widens noticeably in the dark, letting more light reach the retina.",
+      "The pupil, the opening that lets light in, gets about forty percent bigger in dark.",
+      "The part that controls how much light gets in gets much bigger in the dark.",
+      "The pupil goes through a size change whenever the room becomes dark."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether the naming hole is fixed with the term this reader already knows, and whether a made-up number sneaks in.",
+      "A genuine amount fix gives a direction of change, not just a vaguer verb like 'goes through.'"
+    ]
+  },
+  {
+    "id": "m8ela-precise-language-domain-vocabulary-006",
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "cedCode": "M8ELA-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about computers for readers who have never studied any computer terms before. The draft reads: 'The thing that stores information for a long time filled up fast.' The student tries two revisions. Revision A reads: 'The long-term data repository reached capacity rapidly.' Revision B reads: 'The hard drive filled up fast.' Which statement correctly diagnoses what is still wrong with each revision and identifies the fix that solves both problems at once?",
+    "choices": [
+      "Revision A is precise because it uses domain-specific wording that sounds technical, and Revision B is too casual for this topic; the fix is to keep 'long-term data repository,' since that phrase sounds the most exact and expert choice.",
+      "Revision A only swaps in longer, formal words with no new information, and Revision B uses a term this audience has never met; the correct fix is 'The hard drive, the part that stores information permanently, filled up fast.'",
+      "Both revisions already solve the naming problem correctly, so the only issue left is the vague word 'fast,' which should be replaced with an exact number of seconds that nobody actually measured, timed, or recorded anywhere.",
+      "Revision B is already correct because 'hard drive' is shorter and simpler than 'long-term data repository,' so no further change is needed, since the sentence already fits exactly one thing for this particular reader."
+    ],
+    "answer": "B",
+    "hints": [
+      "One revision only sounds more formal without adding real information, while the other uses a term this particular reader has never met.",
+      "The correct fix combines using the plain term the reader can picture and defining the unfamiliar one in the very same sentence."
+    ]
+  },
+  {
+    "id": "m8ela-reflection-a-narrative-conclusion-001",
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "cedCode": "M8ELA-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Marcus set the trophy on the shelf and shut his bedroom door. A student wants to add one more sentence after this that is a REFLECTION — a sentence that holds the action still and says what the moment meant, rather than one that adds a new event, repeats what happened, or hands out a rule.",
+    "choices": [
+      "He then went downstairs and ate dinner alone, feeling nothing in particular about the trophy.",
+      "It took him another year to admit that the trophy meant less to him than the silence in that room.",
+      "Everyone should learn to feel proud of small victories instead of chasing bigger ones.",
+      "He had already set the trophy on the shelf and shut the door on his room a moment before this."
+    ],
+    "answer": "B",
+    "hints": [
+      "Reflection holds the action still instead of adding a new event.",
+      "Check whether the sentence names a specific judgment tied to something already in the story."
+    ]
+  },
+  {
+    "id": "m8ela-reflection-a-narrative-conclusion-002",
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "cedCode": "M8ELA-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A narrator writes: \"Standing at the bus stop with the letter still unopened, I decided I already knew what it said.\" This sentence is a reflection. Determine which vantage it is weighed from.",
+    "choices": [
+      "This is narration, not reflection, because it only describes an action the narrator is taking at the stop.",
+      "NOW, because the narrator has had years to think back on what that unopened letter turned out to mean.",
+      "THEN, because the narrator is still standing at the bus stop, weighing the letter in the moment it happens.",
+      "This is a moral, because it tells the reader what everyone should do with an unopened letter."
+    ],
+    "answer": "C",
+    "hints": [
+      "THEN stays inside the moment as it's happening; NOW steps back after time has passed.",
+      "Ask whether the narrator is still standing in the scene or looking back on it."
+    ]
+  },
+  {
+    "id": "m8ela-reflection-a-narrative-conclusion-003",
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "cedCode": "M8ELA-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Priya spent the whole bus ride staring at the cracked screen of her phone, the one her little brother had dropped that morning. The paragraph ends with this sentence: \"That morning taught me a lot about what really matters in life.\" Identify the problem with this ending sentence.",
+    "choices": [
+      "It uses the wrong vantage — it reflects from inside the scene instead of stepping outside it later.",
+      "It is more narration — it describes one more event that happens right after the bus ride ends.",
+      "It is a summary — it only repeats the fact that the phone screen was already cracked.",
+      "It has no anchor — it names no specific judgment and points at nothing this story actually showed happening."
+    ],
+    "answer": "D",
+    "hints": [
+      "An anchor is a concrete object, image, or line from the story itself.",
+      "Ask whether the sentence could be pasted onto the end of any other story and still make sense."
+    ]
+  },
+  {
+    "id": "m8ela-reflection-a-narrative-conclusion-004",
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "cedCode": "M8ELA-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ben had practiced his speech every night for two weeks, but when he stood at the podium, he skipped the ending he'd written and told the crowd, instead, about the time his grandfather taught him to fish. Choose the sentence that, added next, would be a REFLECTION that follows from this paragraph.",
+    "choices": [
+      "I still cannot explain why the fish story felt truer up there than the words I had written down.",
+      "Ben had practiced for two weeks, then abandoned his ending to talk about fishing with his grandfather instead.",
+      "Speakers should always trust their instincts over their prepared notes when they stand at a podium.",
+      "The audience clapped as Ben walked back to his seat and sat down without saying another word."
+    ],
+    "answer": "A",
+    "hints": [
+      "Eliminate any option that adds a new event, retells the paragraph, or gives a general rule.",
+      "The correct reflection should point at one concrete detail from this paragraph and say what it meant."
+    ]
+  },
+  {
+    "id": "m8ela-reflection-a-narrative-conclusion-005",
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "cedCode": "M8ELA-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For two months, Elena fed the stray cat that lived behind the laundromat, even though her landlord said no pets were allowed. The night before she moved away, she left a note taped to the dumpster: \"Her name is Biscuit. Please don't stop.\" The narrative ends with this sentence: \"So that is how Elena spent her last two months in that apartment feeding a cat named Biscuit.\" Determine which of the three ways this ending fails, and why.",
+    "choices": [
+      "It STOPS, because the last event lands and nobody weighs what feeding Biscuit or the note meant to Elena.",
+      "It SUMMARIZES, because it only repeats facts about the cat and the note the reader already has.",
+      "It MORALIZES, because it turns Elena's private choice into a rule that everyone should feed stray animals.",
+      "It succeeds as a conclusion, because it names the note as an anchor and says what leaving it meant."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask first whether the ending weighs anything, or just restates what already happened.",
+      "Compare the ending's wording to facts already given in the paragraph — is anything new added?"
+    ]
+  },
+  {
+    "id": "m8ela-reflection-a-narrative-conclusion-006",
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "cedCode": "M8ELA-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Diego lied to his coach about why he'd missed practice, and the coach never asked again. Diego kept the excuse folded up in his pocket for the rest of the season, like it might be checked. A student writes this as the reflection to follow: \"Standing there lying to my coach, I already knew that carrying that folded excuse all season would wear me down more than missing one practice ever could.\" Identify the problem with this reflection.",
+    "choices": [
+      "It is a moral — it turns Diego's private choice into a rule aimed at the reader instead of him.",
+      "It has no anchor — it points at nothing concrete that this particular story already put on the page.",
+      "It mixes vantages — it stays inside the moment of lying but claims to know how the whole season would go.",
+      "It is a summary — it only repeats the lie and the folded excuse that the reader already read."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the sentence stays in one vantage the whole way through.",
+      "A narrator inside a moment cannot already know how a longer stretch of time turned out."
+    ]
+  }
+]

@@ -1,0 +1,439 @@
+[
+  {
+    "id": "m8ela-choosing-the-medium-for-an-idea-001",
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "cedCode": "M8ELA-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that a video is always the best medium to use because it shows the most information of any of the four forms. Based on the principle that a medium's usefulness depends on the purpose it serves, what is the flaw in the student's reasoning?",
+    "choices": [
+      "Video is reader-paced, so it can never be a poor choice for teaching a procedure",
+      "A medium's quality depends on the purpose it serves, not on how much information it can show",
+      "Every medium carries the same amount of information, so none can be objectively best",
+      "A video is only weak when the audience has no screen available to them"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about whether a medium's value comes from how much it can carry, or from how well it fits a stated purpose.",
+      "Check the claim about video's pacing category before trusting any statement built on it."
+    ]
+  },
+  {
+    "id": "m8ela-choosing-the-medium-for-an-idea-002",
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "cedCode": "M8ELA-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A commuter drives to work every morning and wants to get a feel for what a busy outdoor marketplace sounds and feels like, without being able to look at any screen while driving. Which medium would best serve this purpose, and why?",
+    "choices": [
+      "A paragraph, because a written description can be reread later, and reading is generally more accurate than listening to sound in a moving car",
+      "A video, because seeing the crowd move and interact is the only way to fully capture what a lively marketplace feels like to a visitor",
+      "An audio recording, because it carries the actual market sounds and reaches a listener whose eyes and hands are busy driving",
+      "A table, because it neatly lines up the sounds and sights of the marketplace so the commuter can compare them at a glance while driving"
+    ],
+    "answer": "C",
+    "hints": [
+      "Consider whether the commuter can look at anything while driving.",
+      "Match the goal of 'getting a feel for a place' to the medium built to carry actual sound."
+    ]
+  },
+  {
+    "id": "m8ela-choosing-the-medium-for-an-idea-003",
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "cedCode": "M8ELA-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A basketball coach wants to glance at halftime and instantly find how many fouls each of twelve players has committed so far, comparing several players' totals at a glance. Which medium would best serve this purpose, and why?",
+    "choices": [
+      "An audio recording of the referee announcing each foul as it is called, so the coach can rewind to hear any specific foul",
+      "A paragraph listing each player's foul count in a sentence, so the coach can read through the counts for context",
+      "A video of the game replayed at halftime, so the coach can watch each foul as it happened",
+      "A table with each player's name and foul count listed side by side, so any player's count can be found in seconds"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what lets several numbers be compared and located instantly.",
+      "Consider which format lines values up so nothing needs to be read except the answer being sought."
+    ]
+  },
+  {
+    "id": "m8ela-choosing-the-medium-for-an-idea-004",
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "cedCode": "M8ELA-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A woodworking teacher hangs a reference above the workbench so that a student, mid-project with both hands full of sawdust-covered wood, can glance up and instantly tell which of five clamps to use for the current step, without reading anything unrelated to that step. Which medium would best serve this purpose, and why?",
+    "choices": [
+      "A labeled diagram showing the five clamps and which step each is used for, since one glance finds the right clamp without reading extra text",
+      "A paragraph describing when to use each of the five clamps, since words can explain the reasoning behind each choice",
+      "A video demonstrating a woodworker selecting and using each clamp in order, since it shows the exact hand motion for attaching each one",
+      "A two-column table listing each clamp name beside its size, since a table lets values be compared without doing arithmetic"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which candidate shows spatial relationships at a glance rather than requiring reading.",
+      "Consider that the student's hands are full, so scanning speed matters more than a full explanation."
+    ]
+  },
+  {
+    "id": "m8ela-choosing-the-medium-for-an-idea-005",
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "cedCode": "M8ELA-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A community center director wants residents to learn the exact order of steps for filling out a rebate form, and to be able to re-check step 4 by itself about sixty seconds before a submission deadline. She decides to post only a five-minute video demonstrating someone filling out the form, reasoning that watching the process is easier than reading it. What is the flaw in her reasoning?",
+    "choices": [
+      "A video cannot show the order in which the steps happen, since moving images blend together, so it fails to teach the procedure at all clearly",
+      "A video is time-based, so finding step 4 later means searching through the footage, unlike a numbered list a reader can jump straight to",
+      "A video only reaches audiences who cannot read words on a page, so it does not suit residents who are simply filling out a paper form",
+      "A video takes exactly as long to search for one particular step as a written paragraph does, so the choice of medium makes no real difference"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that time-based media arrive in the maker's order and cannot be jumped into at an exact point without searching.",
+      "Compare how re-checking one step would work in a time-based medium versus a reader-paced one."
+    ]
+  },
+  {
+    "id": "m8ela-choosing-the-medium-for-an-idea-006",
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "cedCode": "M8ELA-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A physical therapist wants a patient at home to learn the correct arm-rotation motion for a shoulder exercise, and also wants the patient to be able to check, in about five seconds while already mid-exercise, how many repetitions and holds are prescribed that day. She can only send home one single medium to cover both needs. Which choice best identifies the strongest single medium along with the trade-off it requires?",
+    "choices": [
+      "A paragraph describing both the rotation and the rep count, because words can carry a movement precisely and instantly at the same time",
+      "A table listing the daily reps and holds, because it lets the patient look up the numbers instantly and also shows the correct arm rotation through its layout",
+      "A video demonstrating the arm rotation, because a movement is best shown rather than described, though the patient must search the recording again to find the daily rep count",
+      "An audio recording naming the rotation steps and rep counts, because sound reaches a patient whose hands are occupied, and it can be re-checked as instantly as a table"
+    ],
+    "answer": "C",
+    "hints": [
+      "Weigh what each candidate can and cannot show: a movement, versus a quick number lookup.",
+      "Decide which need is harder to meet without that exact medium, then accept the cost on the other need."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-author-responds-to-opposing-views-001",
+    "loId": "m8ela.how-an-author-responds-to-opposing-views",
+    "cedCode": "M8ELA-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An opinion piece about a neighborhood recycling program includes this sentence: \"Critics say the new recycling bins are too small. They are right — the bins do fill up quickly on trash day.\" Read the sentence and think about what happens to the critics' point right after it is raised.",
+    "choices": [
+      "Refute: the author denies that the bins fill up quickly at all",
+      "Limit: the author narrows the complaint to trash day mornings only",
+      "Concede: the author grants that the bins fill up quickly and leaves the point standing",
+      "Restate: the author simply repeats the topic of recycling bins without responding"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at whether the author denies the bins fill up quickly, narrows the claim, or leaves it standing as true.",
+      "A concession grants a point fully and moves on without shrinking it."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-author-responds-to-opposing-views-002",
+    "loId": "m8ela.how-an-author-responds-to-opposing-views",
+    "cedCode": "M8ELA-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is deciding whether four statements about recess describe a topic or a position an author could argue for or against. Remember that a position is one sentence someone could actually disagree with, while a topic is just a general subject with no side to take. Choose the option below that states a position rather than a topic.",
+    "choices": [
+      "Grant Middle School should extend recess by ten minutes every school day",
+      "The topic of recess length at Grant Middle School during the school week",
+      "The topic of student opinions about recess time and its length",
+      "The topic of scheduling changes that affect recess at Grant Middle School"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether someone could actually take the opposite side of each statement.",
+      "A topic names a subject; a position names what should happen or what is true about it."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-author-responds-to-opposing-views-003",
+    "loId": "m8ela.how-an-author-responds-to-opposing-views",
+    "cedCode": "M8ELA-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A letter about a community garden's summer hours includes this passage: \"The community garden should stay open until 8 p.m. all summer. Neighbors near the garden say the late hours bring noise that keeps children awake. They are right about weeknights, when families with young children live closest to the west fence; on weekends, the west fence sits behind commercial buildings with no bedrooms nearby.\" Decide how the author responds to the neighbors' noise complaint.",
+    "choices": [
+      "Concede — the author agrees noise keeps children awake on weeknights near the west fence and never shrinks the complaint",
+      "Limit — the author grants the noise problem for weeknights near the west fence, then narrows it away from weekends",
+      "Refute — the author claims that noise has never occurred at the garden on any night, weekday or weekend, near either fence",
+      "No response — the neighbors' noise complaint appears in the letter but the author never says if it is true or false"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the noise complaint is granted at the same size the neighbors gave it, or shrunk to less than that.",
+      "Look for narrowing words that limit the complaint to certain days or one part of the fence."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-author-responds-to-opposing-views-004",
+    "loId": "m8ela.how-an-author-responds-to-opposing-views",
+    "cedCode": "M8ELA-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A column arguing for block scheduling includes this passage: \"The middle school should switch to block scheduling. Some teachers claim block periods make it harder to keep students focused for a full ninety minutes. That is simply wrong.\" A student claims the author has refuted the teachers' point in the final sentence. Decide whether the student is right, and why.",
+    "choices": [
+      "Yes, refute — stating that a claim is wrong is itself enough to count as a refutation",
+      "No, this is a limit — the author narrows the teachers' claim to only certain class periods",
+      "No — a real refutation must state what is actually the case, not just announce disagreement",
+      "Yes, concede — the author grants that focus is hard to maintain for ninety minutes"
+    ],
+    "answer": "C",
+    "hints": [
+      "A refutation has to state what is actually true instead of the opposing claim, not just call it wrong.",
+      "Announcing disagreement and proving disagreement are two different things."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-author-responds-to-opposing-views-005",
+    "loId": "m8ela.how-an-author-responds-to-opposing-views",
+    "cedCode": "M8ELA-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A letter to the town council argues that the public pool's season should be extended through Labor Day weekend. It reads in part: \"Lifeguards' union representatives note that hiring guards for the extra week costs the town nearly $3,000. That figure is accurate, and the town should budget for it every year going forward. Some residents also claim the extra week isn't worth it because attendance always crashes after school starts. Last year's daily attendance count for the week after school started was actually higher than the average day in June.\" The author answers two separate opposing points in this passage. Identify the pair of responses that correctly describes what happens to each point.",
+    "choices": [
+      "The cost figure is refuted using new information about spending while the attendance claim is conceded as accurate without challenge",
+      "Both the cost figure and the attendance claim are refuted, each countered with separate evidence drawn from last year's records",
+      "The cost figure is limited to only certain weeks of the season while the attendance claim is conceded as accurate throughout",
+      "The cost figure is conceded as accurate while the attendance claim is refuted with last year's count"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether each opposing point is granted and left standing, narrowed, or denied with a fact put against it.",
+      "The two responses in this passage are not the same move — one point survives as true, the other does not."
+    ]
+  },
+  {
+    "id": "m8ela-is-the-reasoning-sound-001",
+    "loId": "m8ela.is-the-reasoning-sound",
+    "cedCode": "M8ELA-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to check whether the reasoning in an argument is sound. She takes the reason and the claim, joins them with the word 'therefore' in the middle, and reads the whole sentence aloud.",
+    "choices": [
+      "Whether most readers encountering the argument would already agree with the claim without needing any reason at all",
+      "Whether the reason she wrote down happens to be an actually true and verifiable statement on its own",
+      "Whether the argument includes enough separate pieces of evidence to convince a skeptical reader of the claim",
+      "Whether the claim would have to be true if the reason turned out to be completely true"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what the 'therefore' sentence is testing — not the truth of the reason itself.",
+      "The link test asks about the step between reason and claim, not about proof or popularity."
+    ]
+  },
+  {
+    "id": "m8ela-is-the-reasoning-sound-002",
+    "loId": "m8ela.is-the-reasoning-sound",
+    "cedCode": "M8ELA-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Maple Street pool should stay open an hour later every night this summer. Attendance at the pool has doubled compared to last summer, according to the front desk's sign-in sheets. For this reason to lead to the claim, what unstated step would a reader have to accept?",
+    "choices": [
+      "A pool should extend its hours whenever the number of people attending it grows",
+      "The front desk's sign-in sheets are an accurate way to measure how many people attend",
+      "Attendance at the pool will keep climbing for the rest of the summer",
+      "Staying open later will not add extra costs for running the pool"
+    ],
+    "answer": "A",
+    "hints": [
+      "Say the reason and claim as one 'therefore' sentence and ask what has to be true to make it hold.",
+      "The missing step connects rising attendance to the specific decision to add hours, not to costs or future numbers."
+    ]
+  },
+  {
+    "id": "m8ela-is-the-reasoning-sound-003",
+    "loId": "m8ela.is-the-reasoning-sound",
+    "cedCode": "M8ELA-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Bayview Middle School should require every student to eat lunch in the cafeteria instead of the courtyard. Last year, the school surveyed seventh graders who had chosen on their own to eat lunch in the cafeteria, and most of them said eating there helped them make new friends. What does this evidence actually prove?",
+    "choices": [
+      "Every student at Bayview would make more friends if lunch in the cafeteria were required",
+      "Most seventh graders who chose to eat in the cafeteria last year said it helped them make friends",
+      "Eating lunch in the courtyard stops students from making friends",
+      "The cafeteria is a better place to socialize than the courtyard for any student"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check who the survey was about compared to who the claim covers.",
+      "The evidence describes students who chose the cafeteria themselves, not students who would be forced to."
+    ]
+  },
+  {
+    "id": "m8ela-is-the-reasoning-sound-004",
+    "loId": "m8ela.is-the-reasoning-sound",
+    "cedCode": "M8ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Fernwood Middle School should switch to a four-day school week. Teachers at schools that already use a four-day week report grading fewer late assignments than before. The extra day off would also give teachers time to plan more engaging lessons for their classes. Last year, a teacher at Fernwood's sister school won a statewide award for her creative four-day lesson plans, and a local news crew interviewed her about it. Which sentence strengthens neither the connection between the evidence and the reason nor the link between the reason and the claim?",
+    "choices": [
+      "The sentence claiming that the extra day off would let teachers plan more engaging lessons",
+      "The sentence reporting that four-day-week teachers grade fewer late assignments than before",
+      "The sentence about the teacher winning a statewide award and being interviewed by a news crew",
+      "The opening sentence stating that Fernwood should switch to a four-day school week"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask which sentence is testing the evidence-to-reason connection or the reason-to-claim link, and which is neither.",
+      "One sentence is true and on-topic but doesn't move the argument from reason to claim or from evidence to reason."
+    ]
+  },
+  {
+    "id": "m8ela-is-the-reasoning-sound-005",
+    "loId": "m8ela.is-the-reasoning-sound",
+    "cedCode": "M8ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Oakridge library should stop letting patrons check out board games. The games section has more overdue items than any other section in the library, and the librarian said she spends an hour every week emailing reminders about missing games. A student wrote this verdict about the argument: 'The reasoning is not sound because it's unfair to take away something so many patrons enjoy.' Is this a valid critique of the argument's reasoning?",
+    "choices": [
+      "Yes, because it shows that the evidence proves a narrower group than the claim covers",
+      "No, because the overdue-item numbers and the librarian's reminder emails do not actually support the reason given",
+      "Yes, because it correctly identifies the unstated step the writer needed but never stated",
+      "No, because it objects to the claim itself rather than naming the missing step connecting the reason to the claim"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether the verdict talks about fairness or liking the claim, or about a missing logical step.",
+      "A sound reasoning critique names a specific unstated step or scope mismatch, not a judgment about the outcome."
+    ]
+  },
+  {
+    "id": "m8ela-is-the-reasoning-sound-006",
+    "loId": "m8ela.is-the-reasoning-sound",
+    "cedCode": "M8ELA-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Every Riverside eighth grader should be required to complete a summer reading log. Two years ago, when the school offered an optional summer reading log, the fifteen students who volunteered to keep one scored higher on the fall reading test than they had the previous spring. Their teacher was also profiled in the district newsletter for her creative log design, complete with stickers and a pizza party for students who finished. Which statement best identifies why this argument's reasoning is not sound?",
+    "choices": [
+      "The reasoning is not sound because the evidence is about fifteen students who chose to keep a log two years ago, not about every eighth grader being required to keep one every year, and the newsletter sentence supports neither joint",
+      "The reasoning is not sound because requiring a summer reading log during vacation would be unfair to students who would rather spend their break relaxing instead of reading books they did not choose themselves",
+      "The reasoning is not sound because the argument offers only one piece of evidence about test scores, and a single piece of evidence can never be enough to prove any claim, no matter what it says",
+      "The reasoning is not sound because the fifteen students' higher test scores were probably caused by something else entirely, such as normal improvement over the summer, so the evidence does not even support the stated reason"
+    ],
+    "answer": "A",
+    "hints": [
+      "Separate the evidence-to-reason joint from the reason-to-claim joint before deciding which one breaks.",
+      "Check who the fifteen students were, when the log was tried, and whether the newsletter sentence proves anything about the claim at all."
+    ]
+  },
+  {
+    "id": "m8ela-where-two-texts-disagree-fact-or-interpretation-001",
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "cedCode": "M8ELA-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A disagreement of fact and a disagreement of interpretation are two different kinds of conflict between texts. Which statement correctly explains the difference between them?",
+    "choices": [
+      "A disagreement of fact is about something checkable where at least one text is wrong, while a disagreement of interpretation is about what an agreed fact means, where both texts can be accurate.",
+      "A disagreement of fact happens whenever two texts print different details about the very same event, while a disagreement of interpretation happens only when two texts print exactly the same details about that event.",
+      "A disagreement of fact is settled by carefully weighing each writer's reasoning about what happened, while a disagreement of interpretation is settled by checking an official record such as a sign-in sheet.",
+      "A disagreement of fact means that both writers are deliberately lying about what actually happened, while a disagreement of interpretation means that both writers are always telling the complete truth."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which kind of disagreement a record like a sign-in sheet could actually settle.",
+      "Recall that two texts printing merely different details are not automatically in conflict at all."
+    ]
+  },
+  {
+    "id": "m8ela-where-two-texts-disagree-fact-or-interpretation-002",
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "cedCode": "M8ELA-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A booster club newsletter reports that the school bake sale raised $180. A parent's post on the PTA page reports that the same single bake sale raised $210.",
+    "choices": [
+      "This is a disagreement of interpretation, because both writers agree on what a bake sale is meant to accomplish.",
+      "This is a disagreement of fact, because the cash box total or a receipt log could show the actual amount raised.",
+      "This is a disagreement of fact, but no record could ever be found that shows which number is correct.",
+      "This is a disagreement of interpretation, because a dollar amount collected is always a matter of personal opinion."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what a reader could go look at to check the actual amount raised.",
+      "A dollar figure is a count, not a judgment about worth."
+    ]
+  },
+  {
+    "id": "m8ela-where-two-texts-disagree-fact-or-interpretation-003",
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "cedCode": "M8ELA-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A drama club newsletter states that 150 people attended the spring play and calls that 'a packed house.' A local paper's review states that 150 people attended the same spring play and calls that 'a disappointing crowd for such a big auditorium.' Which statement correctly classifies this disagreement and names what a reader should do next?",
+    "choices": [
+      "This is a disagreement of interpretation, since the two texts print different attendance numbers, so a reader should average the two figures together.",
+      "This is a disagreement of fact, since one of the two attendance figures must be inaccurate, so a reader should check the theater's ticket records.",
+      "This is a disagreement of interpretation, since both texts agree on the attendance count, so a reader should weigh each writer's reasoning rather than search for a record.",
+      "This is a disagreement of fact, since a packed house and a disappointing crowd cannot both be true, so a reader should trust whichever source sounds more official."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check carefully whether the two texts actually print different numbers or the same number.",
+      "Interpretation disagreements are not settled by looking anything up in a record."
+    ]
+  },
+  {
+    "id": "m8ela-where-two-texts-disagree-fact-or-interpretation-004",
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "cedCode": "M8ELA-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town newsletter reports: 'The food drive ran for one week, from Monday to Friday, and volunteers packed the donations into 45 boxes by Friday night.' A church bulletin reports: 'The food drive ran for one week, from Monday to Friday, and volunteers packed the donations into 60 boxes by Friday night. The effort was one of the most impressive in years.' Which statement correctly identifies where these two texts conflict and how that conflict should be classified?",
+    "choices": [
+      "The texts do not actually conflict anywhere, because both describe the same one-week food drive running from Monday to Friday.",
+      "The texts conflict over how long the food drive lasted, which is a disagreement of fact, since both give the same days but different total box counts.",
+      "The texts conflict over whether the effort was impressive, which is a disagreement of interpretation, since Source A never comments on how impressive the drive was.",
+      "The texts conflict over the number of boxes packed, 45 versus 60, which is a disagreement of fact, since a count of the boxes could show which figure is right."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for the exact pair of sentences where one text rules the other one out.",
+      "A statement only one text makes, with nothing to contradict it, is not a conflict at all."
+    ]
+  },
+  {
+    "id": "m8ela-where-two-texts-disagree-fact-or-interpretation-005",
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "cedCode": "M8ELA-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A school newspaper article states: 'The new 25-minute lunch period is too short for students to eat and get outside, and it should be reversed.' A principal's newsletter states: 'The new lunch period is 25 minutes, and it gives students plenty of time to eat and enjoy some fresh air.' A student wants to figure out what would settle this disagreement between the two texts. What should the student do?",
+    "choices": [
+      "Recognize that no record can settle this disagreement of interpretation, so the student should weigh the reasons each writer gives instead of searching for a schedule.",
+      "Check the posted class schedule to confirm whether the lunch period is really 25 minutes long, since that official record will settle the disagreement for everyone.",
+      "Recognize that this is a disagreement of fact, since one of the two texts must be wrong about exactly how long the new lunch period actually lasts.",
+      "Time how long lunch periods lasted in past school years, since comparing those past lengths will show clearly whether 25 minutes is really enough time."
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice that both texts already state the same number of minutes for lunch.",
+      "Ask whether the real disagreement is about a number or about what that number is worth."
+    ]
+  },
+  {
+    "id": "m8ela-where-two-texts-disagree-fact-or-interpretation-006",
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "cedCode": "M8ELA-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A community center newsletter reports: 'The neighborhood can drive collected 500 cans over the weekend. That's a great turnout, and the drive should happen again next year.' A volunteer's letter to the town paper reports: 'The neighborhood can drive collected 350 cans over the weekend, mostly gathered by high school volunteers. That's a disappointing turnout, and the drive should not happen again next year.' Which statement correctly identifies every conflict between these two texts and classifies each one?",
+    "choices": [
+      "There is only one conflict, the can count, and it is a disagreement of interpretation, because donation records only show what was collected, not whether the number is good or bad.",
+      "There are two conflicts: the can count, 500 versus 350, is a disagreement of fact that donation records could settle, and whether the turnout was good is a disagreement of interpretation that no record settles.",
+      "There are two conflicts: the can count is a disagreement of interpretation since the writers simply emphasize different numbers, and whether the turnout was good is a disagreement of fact since one writer must be wrong.",
+      "There are three conflicts: the can count, the quality of the turnout, and the detail about high school volunteers, and all three are disagreements of fact that donation records could settle."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the detail about high school volunteers is actually contradicted anywhere, or just added by one text.",
+      "Sort each spot separately using the test question: what would a reader need to go look at to settle it?"
+    ]
+  }
+]

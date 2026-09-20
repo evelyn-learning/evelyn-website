@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8ela-dashes-commas-for-a-break-001",
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "cedCode": "M8ELA-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A comma and a dash can both mark a break in a sentence, but they signal different things to a reader. Which statement correctly describes what each mark does at that break?",
+    "choices": [
+      "A dash can only appear inside a compound word like \"well-known,\" while a comma is the only mark used for every break inside a sentence.",
+      "A comma signals a hard stop and throws emphasis onto the words that follow it, while a dash signals a soft pause that lets the words arrive quietly.",
+      "A dash and a comma both create the same soft pause, so choosing between them never changes how a sentence reads to a reader.",
+      "A dash signals a hard stop and throws emphasis onto the words that follow it, while a comma signals a soft pause that lets the words arrive quietly."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which mark is described as the long mark that makes a hard stop.",
+      "Consider which mark keeps a sentence moving instead of stopping the reader."
+    ]
+  },
+  {
+    "id": "m8ela-dashes-commas-for-a-break-002",
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "cedCode": "M8ELA-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writing about a rainy soccer game wants a small detail — how many minutes the game was delayed — to arrive quietly, without making the reader stop. Which sentence achieves this effect while punctuating the break correctly?",
+    "choices": [
+      "The game was delayed by rain, fifteen minutes in total.",
+      "The game was delayed by rain — fifteen minutes in total.",
+      "The game was delayed by rain fifteen minutes in total.",
+      "The game was delayed by rain, the coaches decided to wait it out."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether the added words after the mark could stand alone as their own sentence.",
+      "The soft pause mark lets a detail arrive in the same breath, without forcing a stop."
+    ]
+  },
+  {
+    "id": "m8ela-dashes-commas-for-a-break-003",
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "cedCode": "M8ELA-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wants the reader to come to a full stop and then land hard on the final two words, which reveal a surprising result. Which sentence creates that effect while punctuating the break legally?",
+    "choices": [
+      "The results came back, a perfect score.",
+      "The results came back — a perfect score.",
+      "The results came back; a perfect score.",
+      "The results came back a perfect score."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the words after the mark could stand alone as their own sentence before picking a join.",
+      "The mark wanted here creates a hard stop and throws weight onto what follows."
+    ]
+  },
+  {
+    "id": "m8ela-dashes-commas-for-a-break-004",
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "cedCode": "M8ELA-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this sentence for a paragraph about a school play: \"The curtain rose ten minutes late, the audience had already grown restless.\" This creates a comma splice, since both halves could stand alone as complete sentences. Which sentence fixes the error by using a single dash to mark the break, without changing any of the original wording?",
+    "choices": [
+      "The curtain rose ten minutes late the audience had already grown restless.",
+      "The curtain rose ten minutes late, the audience had already grown restless.",
+      "The curtain rose ten minutes late — the audience had already grown restless.",
+      "The curtain — rose ten minutes late, the audience had already grown restless."
+    ],
+    "answer": "C",
+    "hints": [
+      "The dash must come only after the first clause reaches a complete thought.",
+      "Both original clauses should stay unchanged, just separated by the mark placed in the right spot."
+    ]
+  },
+  {
+    "id": "m8ela-dashes-commas-for-a-break-005",
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "cedCode": "M8ELA-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is drafting two sentences for a paragraph about a fire drill. In the first, she wants a small detail to slide in quietly. In the second, she wants the last words to hit the reader with sudden emphasis. The two sentences she wrote are: \"The alarm rang for two full minutes, longer than usual.\" and \"Nobody flinched — not even the youngest kids.\" Which statement correctly judges whether each sentence already matches the effect she wants?",
+    "choices": [
+      "The second sentence matches, but the first does not, because a comma cannot slow a reader down the way a dash can, so the detail needs a dash instead.",
+      "Neither sentence matches the effect wanted, because the first should use a dash to slow the reader and the second should use a comma to soften its ending.",
+      "The first sentence matches, but the second does not, because the words following its dash could form a complete sentence and so needed a comma instead of a dash.",
+      "Both sentences match the effect wanted: the comma keeps the first detail quiet, and the dash makes the reader stop before the emphasized words in the second."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether the words after each mark could stand alone as a sentence — if not, the effect decides which mark is right.",
+      "Try reading each sentence aloud with the other mark in place and compare which stop matches the intended effect."
+    ]
+  },
+  {
+    "id": "m8ela-dashes-commas-for-a-break-006",
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "cedCode": "M8ELA-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: \"Although the volunteers arrived early — the tables still were not set up.\" The dash cannot stay where it is, because the words in front of it begin with the starter word \"Although\" and cannot stand alone as a complete sentence. She wants to keep a dash somewhere in this idea. Which rewrite fixes the problem while still using a dash correctly?",
+    "choices": [
+      "The volunteers arrived early — the tables still were not set up.",
+      "Although the volunteers arrived early, the tables still were not set up.",
+      "Although the volunteers arrived early — the tables — still were not set up.",
+      "The volunteers arrived early, although the tables still were not set up."
+    ],
+    "answer": "A",
+    "hints": [
+      "A dash needs a complete thought sitting right in front of it, so the starter word has to go or move.",
+      "Look for the option that removes the problem word yet still places a dash between two complete thoughts."
+    ]
+  },
+  {
+    "id": "m8ela-ellipsis-for-a-pause-or-an-omission-001",
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "cedCode": "M8ELA-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In her diary, Priya wrote a private entry with no quoted source material anywhere in it: \"I wanted to tell him the truth, but then I just... I don't know.\" Consider what job the three periods are doing in that sentence.",
+    "choices": [
+      "It shows Priya's own thought trailing off as she hesitates, since nothing outside her stops the sentence.",
+      "It shows that several words were removed from a sentence written by someone else and quoted here.",
+      "It shows a sudden interruption from outside cutting off her sentence before she can finish it.",
+      "It signals that Priya crossed out a word and replaced it with a better one instead."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether Priya is quoting a source or writing her own private thoughts.",
+      "No outside force is mentioned stopping her sentence."
+    ]
+  },
+  {
+    "id": "m8ela-ellipsis-for-a-pause-or-an-omission-002",
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "cedCode": "M8ELA-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A short story's narration reads: \"Marcus began to apologize, but the fire alarm blew the rest of his sentence away before he could finish.\" Right after that narration, the author punctuates Marcus's line as: \"I'm sorry, I never meant...\" Decide whether this punctuation matches what the narration describes.",
+    "choices": [
+      "Yes, because three periods always show a sentence stopping before it reaches its natural end, no matter the cause.",
+      "No, because the fire alarm is an outside interruption, a cut, so the line needs a dash, not three periods.",
+      "No, because three periods can only appear inside quotations taken from another source, never inside a character's own dialogue.",
+      "Yes, because the fire alarm gives Marcus time to trail off slowly, so the fade mark fits the moment perfectly."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the sentence stopped on its own or because something outside Marcus stopped it.",
+      "A fade mark and a break mark are not interchangeable, even though both mean the sentence is unfinished."
+    ]
+  },
+  {
+    "id": "m8ela-ellipsis-for-a-pause-or-an-omission-003",
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "cedCode": "M8ELA-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A city newsletter states: \"Parking downtown will remain free on weekends unless a special event is scheduled.\" A blogger's article quotes only this much from the newsletter, with no ellipsis mark at all since the quotation simply stops early: \"Parking downtown will remain free on weekends.\" Decide whether this shortened quotation is honest.",
+    "choices": [
+      "It is dishonest, because any quotation that is cut short before the sentence ends must always include an ellipsis mark to warn readers.",
+      "It is honest, because a quotation that simply stops early rather than skipping an inside chunk never requires an ellipsis mark at all.",
+      "It is dishonest, because dropping the ending changes the newsletter's claim from conditional free parking to unconditional free parking.",
+      "It is honest, because every remaining word matches the newsletter exactly and appears in the newsletter's own original order."
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the shortened version to someone who never saw the original, then read them the original, and compare the two claims.",
+      "Exact wording in the right order is only the first of two checks a quotation must pass."
+    ]
+  },
+  {
+    "id": "m8ela-ellipsis-for-a-pause-or-an-omission-004",
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "cedCode": "M8ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Elena is writing two different sentences for her essay. In the first, she is describing an interview and needs to punctuate the interviewee's own spoken words: he said \"I moved here because\" and his voice simply stopped on its own, with nothing from outside cutting him off, and he never finished the thought. In the second, she is quoting one sentence straight from a printed transcript, \"I moved here because my mother needed help, though I never expected to stay this long,\" and she wants to drop the part about his mother while keeping the rest of the transcript's exact wording and its full meaning, leaving a gap between \"because\" and \"though.\" Decide which mark belongs in the interview sentence and which belongs in the gap in the transcript quotation.",
+    "choices": [
+      "A dash in both spots, since both mark words that are missing from a sentence",
+      "A dash in the interview sentence, and three periods in the transcript gap",
+      "Three periods in the interview sentence, and a dash in the transcript gap",
+      "Three periods in the interview sentence, and three periods in the transcript gap"
+    ],
+    "answer": "D",
+    "hints": [
+      "First decide whether the interview moment is a fade or a cut from outside.",
+      "The transcript gap is a job-two situation: words are being removed from a source, not fading on their own."
+    ]
+  },
+  {
+    "id": "m8ela-ellipsis-for-a-pause-or-an-omission-005",
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "cedCode": "M8ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town's parks department sentence reads: \"The city pool will open an hour earlier this summer, a change requested by the swim team coaches, unless lifeguard staffing falls short.\" Four writers each try to quote part of this sentence while leaving out the mention of the swim team coaches. Decide which version keeps the department's exact wording in its original order and still makes the same claim the department made.",
+    "choices": [
+      "The city pool will open an hour earlier this summer ... unless lifeguard staffing falls short.",
+      "The city pool will open an hour earlier this summer, a change requested by the swim team coaches.",
+      "The city pool will open an hour earlier this summer ... lifeguard staffing falls short.",
+      "The city pool will open an hour earlier this summer, unless lifeguard staffing falls short ... requested by the swim team coaches."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check that the surviving words are in the department's original order, then check that the sentence still makes the department's original claim.",
+      "Watch for a version that drops the small word that limits the promise, and for a version that reorders whole pieces of the sentence."
+    ]
+  },
+  {
+    "id": "m8ela-ellipsis-for-a-pause-or-an-omission-006",
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "cedCode": "M8ELA-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A local news article states: \"Officials confirmed that the new highway exit will finally open next spring after years of delays.\" A student writing about this drops the opening words \"Officials confirmed that\" and begins the quotation with an ellipsis mark: Officials confirmed that \"...the new highway exit will finally open next spring after years of delays.\" Decide whether placing the ellipsis right before the first quoted word is correct here.",
+    "choices": [
+      "Yes, because omitting the introductory words \"Officials confirmed that\" from the original sentence is precisely the kind of omission the ellipsis mark is designed to signal to readers.",
+      "No, because a reader already understands a quotation starts partway into a longer sentence, so no mark is needed before the first quoted word.",
+      "No, because an ellipsis mark can only be used to show missing words in the middle of a quotation, never at its very beginning or its very end.",
+      "Yes, because placing an ellipsis at the very start of a quotation proves to readers that nothing inside the quoted sentence itself was altered or rearranged."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what a reader already assumes when they see quotation marks partway through a sentence.",
+      "The mark earns its place where a reader would otherwise think two pieces used to sit next to each other."
+    ]
+  },
+  {
+    "id": "m8ela-shifts-in-voice-mood-001",
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "cedCode": "M8ELA-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Each choice below is a complete sentence written by a student. Read all four and decide which one contains a shift in verb voice that nothing in the sentence's meaning calls for.",
+    "choices": [
+      "Ella painted the fence and then cleaned out the shed.",
+      "Ella painted the fence and then the shed was cleaned out.",
+      "The shed was cleaned out, and then the fence was painted by Ella.",
+      "Ella painted the fence, and the shed was cleaned out by the new volunteers."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the same person is doing both actions in each sentence.",
+      "A shift from active to passive is only a problem when the doer never actually changes."
+    ]
+  },
+  {
+    "id": "m8ela-shifts-in-voice-mood-002",
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "cedCode": "M8ELA-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this sentence for a school newspaper article: \"The stage crew set up the microphones, and then the amplifiers were tested by the sound engineer.\" Decide whether the sentence needs to be repaired for an inappropriate voice shift.",
+    "choices": [
+      "The sentence needs repair because the amplifiers should have been tested by the stage crew, not the sound engineer.",
+      "The sentence needs repair because a passive verb appears in a sentence that started out in the active voice.",
+      "The sentence does not need repair because the sound engineer, a different doer, genuinely performed the second action.",
+      "The sentence does not need repair because passive voice is always the correct choice when describing equipment being tested."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask who actually performed each action rather than just noticing that the verb form changed.",
+      "A voice change is only an error when the same doer is doing both actions."
+    ]
+  },
+  {
+    "id": "m8ela-shifts-in-voice-mood-003",
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "cedCode": "M8ELA-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A recipe card reads: \"Preheat the oven to 350 degrees, mix the batter in a large bowl, and then the pan gets greased before pouring.\" Choose the revision that correctly repairs the shift in this set of directions without changing anything else.",
+    "choices": [
+      "Preheat the oven to 350 degrees, the batter gets mixed in a large bowl, and grease the pan before pouring.",
+      "Preheat the oven to 350 degrees, mix the batter in a large bowl, and the pan should be greased before pouring.",
+      "The oven should be preheated to 350 degrees, mix the batter in a large bowl, and grease the pan before pouring.",
+      "Preheat the oven to 350 degrees, mix the batter in a large bowl, and grease the pan before pouring."
+    ],
+    "answer": "D",
+    "hints": [
+      "Every step in a list of directions should give the reader the same kind of instruction.",
+      "Find the one verb that broke away from the command form and put it back, leaving the rest alone."
+    ]
+  },
+  {
+    "id": "m8ela-shifts-in-voice-mood-004",
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "cedCode": "M8ELA-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this paragraph about a class project: \"Jordan built the model bridge out of craft sticks. The paint was applied by his younger sister the next day. Then Jordan tested the bridge's weight limit, and it was recorded in his notebook.\" Identify which sentence contains a voice shift that actually needs to be repaired.",
+    "choices": [
+      "\"Then Jordan tested the bridge's weight limit, and it was recorded in his notebook,\" because the same person, Jordan, most likely did both actions.",
+      "\"The paint was applied by his younger sister the next day,\" because the sister is a different doer, so it should be rewritten as \"Jordan applied the paint.\"",
+      "\"Jordan built the model bridge out of craft sticks,\" because the paragraph starts in the active voice with no reason given.",
+      "\"The paint was applied by his younger sister the next day,\" because passive voice should never describe another person's actions."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether the person named earlier in each sentence is still the one doing the later action.",
+      "A change of doer licenses a passive verb, but the same unnamed doer left out does not."
+    ]
+  },
+  {
+    "id": "m8ela-shifts-in-voice-mood-005",
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "cedCode": "M8ELA-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this journal entry: \"I wish the science fair were scheduled earlier in the year. I wish the gym was bigger so more families could attend, and I wish the judges' scores were posted the same day.\" Decide which statement correctly evaluates this passage.",
+    "choices": [
+      "The passage is correct because every wish describes something that is not true, and \"were\" appears in each verb.",
+      "The passage needs repair because \"was bigger\" should be \"were bigger,\" since that clause is just as imagined as the others.",
+      "The passage needs repair because \"were posted\" should be \"was posted\" to match the tense of the sentence before it.",
+      "The passage is correct because subjunctive mood only applies to the first wish in a list, not to the ones that follow."
+    ],
+    "answer": "B",
+    "hints": [
+      "Once a sentence sets up something imagined, that same verb form should hold for every wish that follows.",
+      "Look for the one spot where the verb slipped back to \"was\" instead of \"were.\""
+    ]
+  },
+  {
+    "id": "m8ela-shifts-in-voice-mood-006",
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "cedCode": "M8ELA-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A school newsletter draft read: \"The debate team practiced every afternoon this week, and the trophy case was cleaned by the janitor on Friday.\" A student revised it to read: \"The debate team practiced every afternoon this week, and cleaned the trophy case on Friday.\" Explain what is wrong with this student's revision.",
+    "choices": [
+      "The revision is wrong because the original sentence never shifted between active and passive voice, so there was nothing needing correction in the first place.",
+      "The revision is wrong because sentences describing school activities in a newsletter must always remain in passive voice, so shifting to active voice is never acceptable style.",
+      "The revision is wrong because it changed a licensed shift, making it falsely claim the debate team cleaned the case instead of the janitor.",
+      "The revision is wrong because it should have kept the passive phrase \"was cleaned\" and simply added \"by the debate team\" to identify who performed the cleaning."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the doer actually changed between the two halves of the original sentence.",
+      "A shift is only an error to fix if nothing in the meaning called for it; otherwise it should stay as written."
+    ]
+  },
+  {
+    "id": "m8ela-voice-mood-for-effect-001",
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "cedCode": "M8ELA-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a sentence for a school newsletter that wants readers to remember who organized a food drive, giving her full credit for the effort. The event: Maria Chen organized a food drive that collected canned goods for three weeks. Which sentence puts the actor in the subject seat so the reader walks away thinking about Maria?",
+    "choices": [
+      "The food drive that collected canned goods for three weeks was organized at the start of the month.",
+      "The food drive was organized by Maria Chen and collected canned goods for three weeks.",
+      "Maria Chen organized the food drive that collected canned goods for three weeks.",
+      "A food drive was organized, and canned goods were collected for three weeks."
+    ],
+    "answer": "C",
+    "hints": [
+      "Which sentence makes the person the subject of the main verb, not just a name mentioned somewhere?",
+      "Naming someone in a sentence isn't the same as giving them the loudest seat."
+    ]
+  },
+  {
+    "id": "m8ela-voice-mood-for-effect-002",
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "cedCode": "M8ELA-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A city inspection report notes that cracks were discovered in a bridge support beam, but the file does not say which inspector found them, and nobody currently knows who it was. Which sentence best fits a report that must stay accurate about what is and isn't known?",
+    "choices": [
+      "The inspector found cracks in the bridge support beam during last month's inspection.",
+      "Someone found cracks in the bridge support beam during last month's inspection.",
+      "The bridge support beam found cracks during last month's inspection.",
+      "Cracks were found in the bridge support beam during last month's inspection."
+    ],
+    "answer": "D",
+    "hints": [
+      "The doer isn't named in the file, so what belongs in the subject seat?",
+      "A word like 'someone' still takes the loudest position without actually naming anyone."
+    ]
+  },
+  {
+    "id": "m8ela-voice-mood-for-effect-003",
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "cedCode": "M8ELA-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student isn't sure whether her soccer team will win an upcoming tournament, since it genuinely could go either way. She wants to describe what would happen if they win without promising anything or misrepresenting the situation as already false. Which sentence correctly expresses this genuine possibility?",
+    "choices": [
+      "If the team wins the tournament, they would celebrate with a pizza party.",
+      "The team wins the tournament and celebrates with a pizza party.",
+      "They would celebrate with a pizza party once the tournament games are finished.",
+      "If the team were winning the tournament, they would celebrate with a pizza party."
+    ],
+    "answer": "A",
+    "hints": [
+      "The outcome is genuinely uncertain, not something already known to be false.",
+      "A conditional needs its 'if' condition stated somewhere in the sentence."
+    ]
+  },
+  {
+    "id": "m8ela-voice-mood-for-effect-004",
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "cedCode": "M8ELA-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph about a local library has just been describing renovations to its reading room. The next sentence needs to keep the reading room as the focus of the paragraph, though the architect who designed the changes, Lena Ruiz, should still get credit somewhere in the sentence. Which sentence accomplishes both goals?",
+    "choices": [
+      "Architect Lena Ruiz redesigned the reading room to include more natural light.",
+      "The reading room was redesigned by architect Lena Ruiz to include more natural light.",
+      "The reading room was redesigned to include more natural light at some point last year.",
+      "Someone redesigned the reading room to include more natural light, and Lena Ruiz gets credit."
+    ],
+    "answer": "B",
+    "hints": [
+      "The paragraph has been about the room, so what should sit in the subject seat this time?",
+      "Passive voice can still name the doer after 'by' without giving that person the loudest seat."
+    ]
+  },
+  {
+    "id": "m8ela-voice-mood-for-effect-005",
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "cedCode": "M8ELA-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city council member is drafting a letter about a proposed park. The land under discussion currently belongs to a private developer, and the council has no plan to acquire it this year, so the situation is not merely uncertain but known to be false right now. The letter should make that clear while still describing what the park would include if things were different. Which sentence does this correctly?",
+    "choices": [
+      "If the land was public, the park would include a walking trail and a splash pad.",
+      "If the land is public, the park would include a walking trail and a splash pad.",
+      "If the land were public, the park would include a walking trail and a splash pad.",
+      "The park includes a walking trail and a splash pad on land that could become public."
+    ],
+    "answer": "C",
+    "hints": [
+      "The land ownership isn't just uncertain — it's a fact the writer already knows is false.",
+      "A contrary-to-fact 'if' clause uses 'were' for every subject, no matter what the subject is."
+    ]
+  },
+  {
+    "id": "m8ela-voice-mood-for-effect-006",
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "cedCode": "M8ELA-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer revising a maintenance report changes the sentence \"The maintenance crew replaced the broken window before the storm hit\" to \"The window was broken before the storm hit.\" Both sentences are grammatically correct passive or active constructions, but the revision still fails the check that a reviser should always run before accepting a voice change. Which explanation correctly identifies why the revision fails?",
+    "choices": [
+      "It fails because a passive sentence always requires the doer to be stated somewhere in the sentence for the meaning to remain accurate.",
+      "It fails because passive voice should never be used once the doer is already known, since doing so hides the maintenance crew's identity.",
+      "It fails because the original active sentence should have named the storm as the true actor instead of the maintenance crew doing the work.",
+      "It fails because the revised sentence reports a different event, the window breaking, rather than the same event with a different emphasis."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare what each sentence actually claims happened to the window.",
+      "The final check asks whether only the emphasis moved between versions, or whether the facts changed too."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8ela-generating-related-research-questions-001",
+    "loId": "m8ela.generating-related-research-questions",
+    "cedCode": "M8ELA-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A sub-question is a smaller question generated from a main research question. Which of these fits the definition of a sub-question?",
+    "choices": [
+      "A question that is easier to answer than the main question",
+      "A question whose answer would belong in the report that answers the main question",
+      "A question about the same topic but on a completely different subject",
+      "A question that asks the main question over again in exactly the same words"
+    ],
+    "answer": "B",
+    "hints": [
+      "The definition says where the sub-question's answer needs to go.",
+      "Think about what makes a question part of the same project, not a different one."
+    ]
+  },
+  {
+    "id": "m8ela-generating-related-research-questions-002",
+    "loId": "m8ela.generating-related-research-questions",
+    "cedCode": "M8ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's main question is \"How did the school's new outdoor learning space change how students spend lunch time?\" The student is testing candidate sub-questions using the same-report test. Which candidate would pass the test?",
+    "choices": [
+      "How much money did the school spend building the outdoor learning space, and who approved the budget for the project?",
+      "Why do people prefer to spend time outside instead of indoors, and what psychological benefits come from outdoor time?",
+      "What do students do outside during lunch now that they did not do before the space opened?",
+      "What other schools in the district have built outdoor learning spaces, and how many students use them?"
+    ],
+    "answer": "C",
+    "hints": [
+      "The same-report test asks whether the answer would go in the report about how students spend lunch time.",
+      "The answer to a passing question should directly help explain the change the main question asks about."
+    ]
+  },
+  {
+    "id": "m8ela-generating-related-research-questions-003",
+    "loId": "m8ela.generating-related-research-questions",
+    "cedCode": "M8ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is generating sub-questions from this main question: \"How did the new community garden change what vegetables people in the neighborhood buy at stores?\" The student has already written one sub-question on the cause avenue: \"What did people buy before the community garden opened?\" Now the student needs to run the EFFECT avenue. Which is a sub-question on the effect avenue?",
+    "choices": [
+      "How long have community gardens existed in other neighborhoods, and when was the first community garden established?",
+      "What vegetables grow the same way in a community garden and on a farm, and which vegetables need different care?",
+      "How does a community garden compare to a farmers' market in the same area, and which one attracts more shoppers?",
+      "What has changed in the vegetables families prepare and eat since the garden began producing?"
+    ],
+    "answer": "D",
+    "hints": [
+      "The effect avenue asks what the main topic changed, not how it compares or started.",
+      "Look for a question that points to a result or consequence of the community garden."
+    ]
+  },
+  {
+    "id": "m8ela-generating-related-research-questions-004",
+    "loId": "m8ela.generating-related-research-questions",
+    "cedCode": "M8ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has this main question: \"How did the town opening a public swimming pool change how teenagers in the town spend summer evenings?\" The student wrote four sub-questions and labeled each one with its avenue: (1) EFFECT—\"What kinds of evening activities do teenagers do now that the pool opened?\"; (2) CAUSE—\"Where did teenagers go on summer evenings before the pool existed?\"; (3) COMPARISON—\"How is the way teenagers spend summer evenings in towns with public pools different from towns without them?\"; (4) CAUSE—\"Why was the pool built in the first place?\" The student then applied the same-report test and found that question (4) would not go in a report about how teenagers spend summer evenings. Which statement correctly describes the problems with this set?",
+    "choices": [
+      "The set is missing the change-over-time avenue, and question (4) wanders off because it drops the limit of focusing on how teenagers spend their time.",
+      "The set has a hole on the effect avenue because two questions are labeled cause, and question (4) wanders off because its answer is not about teenager behavior.",
+      "The set has too many questions total and question (4) is a restatement of another question in the set.",
+      "The set needs more comparison questions because comparison is the most important avenue for this main question."
+    ],
+    "answer": "A",
+    "hints": [
+      "Count which avenues appear in the set, and check which one is missing.",
+      "Think about what it means when a question's answer does not belong in a report about the main topic."
+    ]
+  },
+  {
+    "id": "m8ela-generating-related-research-questions-005",
+    "loId": "m8ela.generating-related-research-questions",
+    "cedCode": "M8ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is working on this main question: \"How did the construction of a new bike trail along the riverbank change who uses the park?\" The student runs the four avenues to generate sub-questions. Two sub-questions are already written: \"What kinds of people used the park in the five years before the trail was built?\" (cause avenue) and \"How do park visitors who use the trail compare with visitors who do not use it?\" (comparison avenue). When the student runs the CHANGE OVER TIME avenue, which sub-question keeps the main question's limits while opening a new direction?",
+    "choices": [
+      "How do trails in other parks attract different visitors in different seasons, and which parks have seen the biggest increases?",
+      "How has the total number of daily park visitors changed in each season since the trail opened?",
+      "When did the bike trail project start, and how long did construction take to complete before opening?",
+      "How have park visitors' opinions about the trail changed over time, and what reasons do they give for their views?"
+    ],
+    "answer": "B",
+    "hints": [
+      "The change-over-time avenue tracks how something moves or grows across a period, not when something happened.",
+      "The answer needs to tell what changed about park usage, not why the trail was built or how other parks work."
+    ]
+  },
+  {
+    "id": "m8ela-generating-related-research-questions-006",
+    "loId": "m8ela.generating-related-research-questions",
+    "cedCode": "M8ELA-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's main question is \"How did the closing of the local movie theater downtown change what people in the town do for entertainment?\" The student has generated these candidate sub-questions: (1) \"What movies were shown at the downtown theater in its last year?\" (2) \"How has the number of people going to the multiplex cinema six miles away changed since the downtown theater closed?\" (3) \"What do teenagers say they do for entertainment now instead of going to the downtown theater?\" (4) \"Which movie-theater company owns the multiplex six miles away?\" The student applies the same-report test and labels each question with the problem it has, if any. Which statement correctly identifies which candidates advance the main question and explains what is wrong with the ones that wander?",
+    "choices": [
+      "Candidates (1) and (4) advance the question because they both ask about the downtown theater directly, while candidate (2) wanders by focusing on a different location and candidate (3) wanders by limiting the scope only to teenagers.",
+      "Candidate (1) alone advances the question because it asks about what happened at the downtown theater. Candidates (2), (3), and (4) all wander—(2) for shifting focus away from the closed theater, (3) for narrowing the population to only teenagers, and (4) for asking about corporate ownership rather than entertainment habits.",
+      "Candidates (2) and (3) advance the question. Candidate (1) wanders because it asks about movies rather than entertainment. Candidate (4) wanders because it is a fact standing beside the project instead of inside it—the answer would not go in a report about how people's entertainment changed.",
+      "All four candidates advance the main question equally because each one mentions the downtown theater or entertainment in some way, and together they provide different perspectives on how the closure affected the community."
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the same-report test: would each answer go in a report about what people do for entertainment instead of going to the downtown theater?",
+      "Remember the three shapes that wander: changing the subject (fact beside the project), dropping a limit, and restating the main question."
+    ]
+  },
+  {
+    "id": "m8ela-blending-a-quotation-into-your-own-sentence-001",
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "cedCode": "M8ELA-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quotation is sometimes set down by itself as its own sentence, with nothing of the writer's own words introducing it or explaining what it shows. A reader who meets this kind of quotation has to stop and work out on their own who is speaking and why the words are there.",
+    "choices": [
+      "the fit test, because it checks whether a sentence still makes sense when the quotation is read aloud within it",
+      "a blended quotation, because it has been fitted smoothly into a sentence that the writer wrote around it",
+      "a lead-in, because it names the speaker or source before the reader ever reaches the quoted words",
+      "a dropped quotation, because it sits by itself with no words of the writer's holding it in place"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what is missing when a quotation stands with nothing of the writer's around it.",
+      "This term names a type of quotation, not a method or a piece of a sentence."
+    ]
+  },
+  {
+    "id": "m8ela-blending-a-quotation-into-your-own-sentence-002",
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "cedCode": "M8ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student researching trail safety writes this sentence in her report: 'It says that the trail closes at dusk during the winter months.' She copied the exact words from a posted trail sign but did not name the sign anywhere in her sentence.",
+    "choices": [
+      "The lead-in does not name who or what said the words, so the quotation has no owner for the reader",
+      "The lead-in changes a word inside the quotation marks, which counts as a misquotation",
+      "The lead-in uses a pronoun inside the quotation that has nothing to point to",
+      "The lead-in fails the read-aloud fit test because the sentence does not work as one sentence"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: after reading this sentence, do you know exactly whose words these are?",
+      "The problem here isn't about altered wording or grammar fit — it's about who is speaking."
+    ]
+  },
+  {
+    "id": "m8ela-blending-a-quotation-into-your-own-sentence-003",
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "cedCode": "M8ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scientist told a reporter, 'I never actually saw the results.' A student blending this into her article writes two possible sentences. Version 1: The scientist admits that 'I never actually saw the results.' Version 2: The scientist admits that she 'never actually saw the results.'",
+    "choices": [
+      "Version 1, because keeping the word 'I' inside the quotation marks preserves the scientist's exact original wording and avoids changing anything she actually said in the interview",
+      "Version 2, because leaving out 'I' and adding 'she' outside the quotation marks removes the pronoun clash while the words inside the marks stay exactly as the scientist said them",
+      "Neither version, because both need an ellipsis of three dots inserted to mark the place where the word 'I' was originally removed from the sentence",
+      "Both versions pass equally well, since the fit test only checks whether the lead-in names the speaker and does not care what pronouns appear inside the quotation marks"
+    ],
+    "answer": "B",
+    "hints": [
+      "Read each version aloud as though the quotation marks were not there and listen for who 'I' points to.",
+      "One version moves the pronoun outside the quotation marks without touching the words inside them."
+    ]
+  },
+  {
+    "id": "m8ela-blending-a-quotation-into-your-own-sentence-004",
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "cedCode": "M8ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city report states: 'The bridge inspection was completed on schedule, though two support beams showed early signs of rust.' A student is arguing that the city is quietly acknowledging a real problem with the bridge. She first drafts: 'The city report claims that two support beams showed early signs of rust.' A classmate points out that her verb choice sends the wrong signal about what the report is doing, and that dropping the first part of the sentence loses useful context.",
+    "choices": [
+      "The city report admits, 'two support beams showed early signs of rust, though the inspection was completed on schedule.'",
+      "The city report claims that two support beams showed early signs of rust, even though the inspection was completed on schedule",
+      "The city report admits that two support beams showed early signs of rust, even though the inspection was completed on schedule",
+      "The city report notes that the inspection was completed on schedule"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare 'admits' and 'claims' — one says the report recorded a fact, the other suggests the report is arguing something debatable.",
+      "Check whether the words inside the quotation marks still appear in the same order the report actually wrote them."
+    ]
+  },
+  {
+    "id": "m8ela-blending-a-quotation-into-your-own-sentence-005",
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "cedCode": "M8ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A nutrition pamphlet states: 'Athletes who skip breakfast show slower reaction times in afternoon practice.' A student blends this into her paragraph: 'The pamphlet states that athletes who skip breakfast show slower reaction times in afternoon practice.' She now needs a sentence right after it that says what the quotation shows about her own idea, rather than just repeating or decorating it.",
+    "choices": [
+      "This shows that reaction times are slower for every athlete during afternoon practice regardless of what they eat for breakfast",
+      "This shows that skipping breakfast directly causes athletes to have slower reaction times later in afternoon practice sessions",
+      "This shows that the pamphlet is simply talking about what happens to athletes during afternoon practice sessions each day",
+      "This shows that breakfast is a factor coaches can control even when other causes of afternoon fatigue are not"
+    ],
+    "answer": "D",
+    "hints": [
+      "A real point adds reasoning the quotation itself does not state, rather than saying the same thing again in different words.",
+      "Watch for an option that simply repeats the quotation's content or stretches its claim further than the pamphlet actually said."
+    ]
+  },
+  {
+    "id": "m8ela-blending-a-quotation-into-your-own-sentence-006",
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "cedCode": "M8ELA-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A wildlife survey states: 'Deer populations in the county rose sharply between 2015 and 2019, mostly because hunting permits were reduced, but the increase leveled off after a disease outbreak in 2020.' A student wants to blend only the part about the rise and its cause into her own sentence, using one of the three legal repair moves: rewriting her own words, starting or stopping the quotation at a different point, or cutting words from the middle and marking the cut with three dots.",
+    "choices": [
+      "The wildlife survey found that deer populations 'rose sharply between 2015 and 2019 ... because permits were reduced.'",
+      "The wildlife survey found that deer populations 'rose sharply between 2015 and 2019, mostly because hunting permits were reduced.'",
+      "The wildlife survey found that hunting permit reductions were the main reason deer populations 'rose sharply between 2015 and 2019.'",
+      "The wildlife survey found that deer populations rose sharply because 'hunting permits were reduced,' between 2015 and 2019"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check exactly which words the three dots are standing in for, then see whether the words right after them match what the source actually says next.",
+      "The other three versions either stop the quotation early, start it later, or move only the writer's own words around it — all of which are legal."
+    ]
+  },
+  {
+    "id": "m8ela-following-a-standard-citation-format-001",
+    "loId": "m8ela.following-a-standard-citation-format",
+    "cedCode": "M8ELA-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is starting a works-cited entry for a source written by an author named Julia Esteban. Which way of writing her name at the start of the entry follows the standard citation format for works-cited entries?",
+    "choices": [
+      "Esteban, Julia.",
+      "Julia Esteban.",
+      "Esteban Julia.",
+      "J. Esteban."
+    ],
+    "answer": "A",
+    "hints": [
+      "The list of sources is alphabetized by whichever word starts each entry.",
+      "A comma separates the last name from the first name, and a period closes the whole piece."
+    ]
+  },
+  {
+    "id": "m8ela-following-a-standard-citation-format-002",
+    "loId": "m8ela.following-a-standard-citation-format",
+    "cedCode": "M8ELA-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Devon Okoye wrote a book called Winter Along the Ridge, read straight through with no larger container, published by Hollow Creek Press in 2016. Which works-cited entry lists these pieces in the standard order with the standard punctuation?",
+    "choices": [
+      "Okoye, Devon. \"Winter Along the Ridge.\" Hollow Creek Press, 2016.",
+      "Okoye, Devon. Winter Along the Ridge. Hollow Creek Press, 2016.",
+      "Devon Okoye. Winter Along the Ridge, Hollow Creek Press, 2016.",
+      "Okoye, Devon. Winter Along the Ridge. Hollow Creek Press. 2016."
+    ],
+    "answer": "B",
+    "hints": [
+      "A book read straight through is not sitting inside anything bigger, so its own title is the one left plain and unquoted.",
+      "Check whether the mark right before the publisher's name should be a period or a comma."
+    ]
+  },
+  {
+    "id": "m8ela-following-a-standard-citation-format-003",
+    "loId": "m8ela.following-a-standard-citation-format",
+    "cedCode": "M8ELA-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A works-cited entry begins: Alvarez, Rosa. \"Building the New Pier.\" Coastal Digest, and it ends with a page range. A report borrows a sentence from page 9 of that article, and the sentence itself never names Rosa Alvarez. Which in-text reference correctly credits the material?",
+    "choices": [
+      "(Alvarez pg. 9)",
+      "(Alvarez, 9)",
+      "(Alvarez 9)",
+      "(A. Alvarez 9)"
+    ],
+    "answer": "C",
+    "hints": [
+      "The last name and the page number sit side by side with nothing between them.",
+      "The pointer uses the exact word the entry begins with, not the full name or an abbreviation like pg."
+    ]
+  },
+  {
+    "id": "m8ela-following-a-standard-citation-format-004",
+    "loId": "m8ela.following-a-standard-citation-format",
+    "cedCode": "M8ELA-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student cites a magazine article titled \"How Storms Reshape Dunes,\" written by Malik Osei, printed in a magazine called Coastal Science on pages 40 to 45, dated 11 October 2021. The student wrote this flawed entry: Malik Osei. Coastal Science. \"How Storms Reshape Dunes,\" 11 Oct. 2021, pp. 40-45. Which entry below correctly repairs the order and punctuation?",
+    "choices": [
+      "Osei, Malik. Coastal Science. \"How Storms Reshape Dunes,\" 11 Oct. 2021, pp. 40-45.",
+      "Osei, Malik. \"How Storms Reshape Dunes.\" Coastal Science, 11 October 2021, pp. 40-45.",
+      "Malik, Osei. \"How Storms Reshape Dunes.\" Coastal Science, 11 Oct. 2021, pp. 40-45.",
+      "Osei, Malik. \"How Storms Reshape Dunes.\" Coastal Science, 11 Oct. 2021, pp. 40-45."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check that the container's name comes after the title of the article, not before it.",
+      "October has more than four letters, so it should be shortened rather than spelled out."
+    ]
+  },
+  {
+    "id": "m8ela-following-a-standard-citation-format-005",
+    "loId": "m8ela.following-a-standard-citation-format",
+    "cedCode": "M8ELA-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Wei Chen wrote a web page called \"Currents Beneath the Ice,\" posted on 2 February 2020 on a site named PolarNet Journal. The site lists its publisher as Arctic Research Council, a name different from the site itself. The page's address is https://polarnetjournal.org/currents-ice, and it has no page numbers. Which works-cited entry follows the standard order and punctuation for this source?",
+    "choices": [
+      "Chen, Wei. \"Currents Beneath the Ice.\" PolarNet Journal, Arctic Research Council, 2 Feb. 2020, polarnetjournal.org/currents-ice.",
+      "Chen, Wei. \"Currents Beneath the Ice.\" PolarNet Journal, 2 Feb. 2020, polarnetjournal.org/currents-ice.",
+      "Chen, Wei. \"Currents Beneath the Ice.\" PolarNet Journal, Arctic Research Council, 2 February 2020, polarnetjournal.org/currents-ice.",
+      "Wei, Chen. \"Currents Beneath the Ice.\" PolarNet Journal, Arctic Research Council, 2 Feb. 2020, polarnetjournal.org/currents-ice."
+    ],
+    "answer": "A",
+    "hints": [
+      "The publisher is only skipped when its name matches the container's name exactly — here the two names are different.",
+      "February has more than four letters, so it should be abbreviated."
+    ]
+  },
+  {
+    "id": "m8ela-following-a-standard-citation-format-006",
+    "loId": "m8ela.following-a-standard-citation-format",
+    "cedCode": "M8ELA-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Sofia Lindqvist wrote a web page called \"Reading the Aurora,\" posted 9 December 2019 on a site named NorthLight Science. The site's listed publisher is NorthLight Media, a different organization from the site name even though the two names share a word. The page's address is https://northlightscience.com/aurora, and it carries no page numbers. Which works-cited entry correctly follows the standard order and punctuation?",
+    "choices": [
+      "Lindqvist, Sofia. \"Reading the Aurora.\" NorthLight Science, 9 Dec. 2019, northlightscience.com/aurora.",
+      "Lindqvist, Sofia. \"Reading the Aurora.\" NorthLight Science, NorthLight Media, 9 Dec. 2019, northlightscience.com/aurora.",
+      "Lindqvist, Sofia. \"Reading the Aurora.\" NorthLight Science, NorthLight Media, 9 December 2019, northlightscience.com/aurora.",
+      "Lindqvist, Sofia. Reading the Aurora. NorthLight Science, NorthLight Media, 9 Dec. 2019, northlightscience.com/aurora."
+    ],
+    "answer": "B",
+    "hints": [
+      "The publisher is dropped only when its name exactly matches the container's name — check whether these two organizations are really the same one.",
+      "December has more than four letters, so it gets shortened rather than spelled out in full."
+    ]
+  },
+  {
+    "id": "m8ela-using-search-terms-effectively-001",
+    "loId": "m8ela.using-search-terms-effectively",
+    "cedCode": "M8ELA-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student's sub-question is: \"Why did Maple Grove Library extend its weekend hours in 2022?\" She wants to turn this into search terms that follow the rule of keeping the key nouns and dropping the question words. Which set of search terms does that correctly?",
+    "choices": [
+      "library hours",
+      "Why did Maple Grove Library extend hours",
+      "Maple Grove Library weekend hours 2022",
+      "\"Why did Maple Grove Library extend its weekend hours in 2022\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Cross out words like why, did, and its — they fit pages about anything.",
+      "Check that no specific place, thing, or year from the sub-question got left out."
+    ]
+  },
+  {
+    "id": "m8ela-using-search-terms-effectively-002",
+    "loId": "m8ela.using-search-terms-effectively",
+    "cedCode": "M8ELA-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's sub-question is: \"How did attendance at Fernwood Community Pool change after the town added a splash pad in 2021?\" He is deciding which term to place inside quotation marks so a search tool treats those words as one exact phrase. Which term should he quote?",
+    "choices": [
+      "\"Fernwood town\"",
+      "\"attendance\"",
+      "\"How did attendance change\"",
+      "\"splash pad\""
+    ],
+    "answer": "D",
+    "hints": [
+      "Quotation marks are for two or more words that mean one thing side by side and something else apart.",
+      "A single word never needs quotation marks, and a full question should never be quoted."
+    ]
+  },
+  {
+    "id": "m8ela-using-search-terms-effectively-003",
+    "loId": "m8ela.using-search-terms-effectively",
+    "cedCode": "M8ELA-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's sub-question is: \"How did the number of buses running on Route 12 change after Grayson Transit added new stops in 2023?\" His search terms, Grayson Transit Route 12 buses stops, bring back pages about bus routes in many different cities. Which limiting term should he add to fix this, given what his own sub-question already tells him?",
+    "choices": [
+      "2023",
+      "Texas",
+      "interview",
+      "party bus"
+    ],
+    "answer": "A",
+    "hints": [
+      "A limiting term works best when it comes from the sub-question itself, not from somewhere new.",
+      "Look at what specific detail his sub-question already supplies that never made it into his search."
+    ]
+  },
+  {
+    "id": "m8ela-using-search-terms-effectively-004",
+    "loId": "m8ela.using-search-terms-effectively",
+    "cedCode": "M8ELA-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's sub-question is: \"How did the amount of litter collected at Silver Lake Park change after the city installed new recycling bins in 2022?\" He is comparing four possible search strings. Which one correctly keeps the key nouns, quotes only the two-word phrase that must travel together, and keeps the limiting term his own sub-question supplied?",
+    "choices": [
+      "\"How did the amount of litter change\" Silver Lake Park bins 2022",
+      "Silver Lake Park \"recycling bins\" litter 2022",
+      "Silver Lake Park recycling bins litter",
+      "Silver Lake Park \"recycling bins\" litter park"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check each string for a quoted full sentence, a missing year, or a limiting term that was never in the question.",
+      "The correct string should carry every key noun, one properly quoted phrase, and the year from the sub-question."
+    ]
+  },
+  {
+    "id": "m8ela-using-search-terms-effectively-005",
+    "loId": "m8ela.using-search-terms-effectively",
+    "cedCode": "M8ELA-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's sub-question is: \"Did the water-bottle refill stations at Cedar Ridge High School reduce the number of plastic bottles found in hallway trash cans?\" Her search brings back three results. Result 1 is marked \"Ad\" above the title: \"ClearFlow Bottles: Refill Stations for Every Budget,\" with a description listing pricing and installation packages. Result 2 carries no mark: \"Cedar Ridge High School Hallway Trash Audit: 2019 and 2023,\" with a description saying custodial staff counted plastic bottles in hallway bins in both years and explaining how the counting was done. Result 3 carries no mark: \"Top 8 Refill Stations for Schools, Compared and Linked to Buy,\" with a description comparing eight stations and offering a buy link beside each one. Which result should she open, and why?",
+    "choices": [
+      "Result 3, because it carries no sponsored mark and provides a thorough side-by-side comparison of eight refill stations, making it look like an unbiased source for her question.",
+      "Result 1, because even though it is marked as an ad, it still explains what refill stations are, lists pricing options, and could offer useful background information for her research.",
+      "Result 2, because it reports an actual count of bottles taken in the school's own hallways across both years and explains how the count was made",
+      "Result 1, because sponsored results are ranked higher by search engines for being more relevant to the search terms and therefore tend to be more trustworthy sources of information."
+    ],
+    "answer": "C",
+    "hints": [
+      "A missing mark does not prove a page is informational — check what the page offers you next.",
+      "Ask which entry answers the actual question about a number going up or down, not which one merely mentions the topic."
+    ]
+  },
+  {
+    "id": "m8ela-using-search-terms-effectively-006",
+    "loId": "m8ela.using-search-terms-effectively",
+    "cedCode": "M8ELA-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's sub-question is: \"How did the population of monarch butterflies at Thornwood Reserve change each fall since 2017?\" She searches: \"monarch butterflies\" Thornwood Reserve fall population count 2017 site:museum. Almost nothing comes back. Her sub-question never mentioned museums at all — she added that term herself, hoping for a more official source. Which revision should she try next?",
+    "choices": [
+      "Remove Thornwood Reserve, since place names rarely help narrow a search",
+      "Remove the quotation marks around \"monarch butterflies,\" since quoted phrases block matches",
+      "Remove the year 2017, since it is the narrowest term in the string",
+      "Remove the museum source-type term, since her sub-question never asked for that kind of source"
+    ],
+    "answer": "D",
+    "hints": [
+      "When almost nothing comes back, the term to drop first is the one that over-limits, not your best term.",
+      "Ask which piece of the search string actually came from her own sub-question and which one she added on her own."
+    ]
+  }
+]

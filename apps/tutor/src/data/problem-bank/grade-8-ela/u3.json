@@ -1,0 +1,452 @@
+[
+  {
+    "id": "m8ela-the-role-of-a-sentence-in-a-paragraph-001",
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "cedCode": "M8ELA-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph is being built about how certain plants spread their seeds by wind. The opening sentence states: 'Dandelions scatter their seeds over long distances because each seed is attached to a feathery structure that catches the air.' Which sentence best performs the job of defining a term that readers need to understand?",
+    "choices": [
+      "Many other plants, including maples and ashes, also use similar structures to move their seeds.",
+      "In the autumn, thousands of dandelion seeds lift from the plant and travel across fields and roads.",
+      "A structure that catches air and allows something to float or drift on the wind is called a dispersal unit.",
+      "The feathery part can break off if the seed lands in water, which limits how far it can actually travel."
+    ],
+    "answer": "C",
+    "hints": [
+      "Which choice explains what one of the key words in the opening sentence means?",
+      "Look for the sentence that tells the reader what something IS, not what it does or where it happens."
+    ]
+  },
+  {
+    "id": "m8ela-the-role-of-a-sentence-in-a-paragraph-002",
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "cedCode": "M8ELA-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this paragraph about how volcanoes form islands. The first sentence states the key concept: 'Underwater volcanoes can build islands where none existed before.' Now read this sentence: 'The island of Hawaii was formed when a volcano erupted repeatedly on the ocean floor, piling layer upon layer of cooled lava until it rose above the water.' Apply the cover test: if you remove this sentence, what does the paragraph lose?",
+    "choices": [
+      "The reader would no longer understand what the word volcano means or how it differs from other geological features.",
+      "The reader would walk away thinking all underwater volcanoes form islands without exception in every location.",
+      "The reader would no longer know where underwater volcanoes are typically located or what depths they inhabit.",
+      "The reader would still know the idea but would lose a concrete case showing it is possible to picture."
+    ],
+    "answer": "D",
+    "hints": [
+      "The cover test asks: does the paragraph lose its main idea, a definition, a picture, a boundary, or a warning?",
+      "The opening sentence is already stated. What does a concrete case add without changing whether the idea is true?"
+    ]
+  },
+  {
+    "id": "m8ela-the-role-of-a-sentence-in-a-paragraph-003",
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "cedCode": "M8ELA-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph opens with: 'Bees navigate by reading the sun's position and the Earth's magnetic field.' Later, this sentence appears: 'Honeybees in a hive also use a dance to tell other bees where flowers are, which works even on cloudy days when the sun is hidden.' Does this sentence develop the key concept or refine it? When a sentence develops a key concept, it introduces an additional case or extends the idea onto new ground. When a sentence refines a key concept, it draws a boundary around where the idea holds or makes it more exact.",
+    "choices": [
+      "It develops the key concept because it introduces an additional navigation method, extending what readers know about how bees find their way.",
+      "It refines the key concept because it shows that the sun-reading method fails when clouds block the sky and does not work on all occasions.",
+      "It develops the key concept because it explains the biological reason why bees perform dances in hives.",
+      "It refines the key concept because it limits navigation abilities to only honeybees and excludes other bee species from using these methods."
+    ],
+    "answer": "A",
+    "hints": [
+      "Does the new information send the idea onto new ground, or does it draw a boundary around where the idea holds?",
+      "After this sentence, does the paragraph claim more or claim less about how bees navigate?"
+    ]
+  },
+  {
+    "id": "m8ela-the-role-of-a-sentence-in-a-paragraph-004",
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "cedCode": "M8ELA-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph states this key concept: 'Caffeine makes it harder for people to sleep because it blocks a brain chemical that signals tiredness.' Two sentences follow. Sentence A: 'Caffeine is a stimulant found in coffee, tea, and chocolate that keeps the nervous system more alert.' Sentence B: 'A person who drinks coffee at 3 PM will still have enough caffeine in their blood at bedtime to interfere with sleep, because caffeine leaves the body slowly.' Name what job Sentence A does, then name what job Sentence B does, then explain which one develops the key concept and which one refines it.",
+    "choices": [
+      "Sentence A defines a term; Sentence B gives an example. Sentence A develops; Sentence B develops.",
+      "Sentence A defines a term; Sentence B adds a limit. Sentence A develops; Sentence B refines.",
+      "Sentence A gives an example; Sentence B adds a limit. Sentence A develops; Sentence B refines.",
+      "Sentence A defines a term; Sentence B adds a limit. Sentence A refines; Sentence B refines."
+    ],
+    "answer": "B",
+    "hints": [
+      "For Sentence A: does it explain what a word in the opening means, or does it show a case of the idea working?",
+      "For Sentence B: does it add new ground to the idea, or does it name a condition or boundary the idea has?"
+    ]
+  },
+  {
+    "id": "m8ela-the-role-of-a-sentence-in-a-paragraph-005",
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "cedCode": "M8ELA-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this paragraph. The opening sentence is the key concept: 'Memory works better when information is organized into meaningful chunks rather than stored as random items.' Here are two other sentences from the paragraph: (1) 'For instance, a phone number split into groups of three, three, and four digits is easier to remember than the same ten digits in a row.' (2) 'However, the act of organizing information into chunks takes time and effort, which is why people with severe time pressure sometimes fail to remember even familiar material.' A sentence develops a key concept when it introduces an additional case or extends the idea onto new ground. A sentence refines a key concept when it draws a boundary around where the idea holds or makes the claim more exact. Which sentence develops and which refines? Explain using these definitions.",
+    "choices": [
+      "Sentence 1 refines because it shows what chunking looks like; Sentence 2 develops because it explains why time pressure matters.",
+      "Sentence 1 refines because it makes the idea more exact by giving a specific number; Sentence 2 develops because it introduces the role of time pressure.",
+      "Sentence 1 develops because it shows a case where chunking works well; Sentence 2 refines because it names a condition where chunking may fail to happen.",
+      "Sentence 1 develops because it illustrates how chunking works in practice; Sentence 2 develops because it adds another reason memory fails."
+    ],
+    "answer": "C",
+    "hints": [
+      "Which sentence reaches the idea onto new ground (more cases), and which narrows it with a boundary or condition?",
+      "Ask: after each sentence, does the paragraph cover more ground or less ground, and does it hold more loosely or more exactly?"
+    ]
+  },
+  {
+    "id": "m8ela-the-role-of-a-sentence-in-a-paragraph-006",
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "cedCode": "M8ELA-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph states: 'Monarch butterflies migrate thousands of miles each fall to reach their winter home in Mexico.' The paragraph then includes these two sentences: (1) 'Migration is a journey that animals make at a particular season, usually following the same route year after year.' (2) 'Yet no single monarch butterfly completes the entire round trip—the monarchs that fly south in the fall die in Mexico after breeding, and their offspring are the ones that return north in the spring.' Read both sentences. Name the job each one does. Then determine whether Sentence 2 develops or refines the key concept, and explain what happens to the reader's understanding of the word 'migration' because of Sentence 2.",
+    "choices": [
+      "Sentence 1 gives a general definition of migration as an animal's seasonal journey; Sentence 2 provides a specific biological fact about monarch breeding. Sentence 2 develops the key concept. The reader learns that monarch butterflies breed in Mexico rather than in northern regions.",
+      "Sentence 1 describes what migration means in general terms; Sentence 2 introduces information about multiple generations. Sentence 2 refines the key concept. The reader understands that the monarch migration process depends on successive generations completing the full journey, not one individual butterfly.",
+      "Sentence 1 explains a term with typical characteristics; Sentence 2 identifies an exception to normal expectations. Sentence 2 develops the key concept. The reader learns that monarch butterflies have a shorter lifespan than other migrating animals, which limits how far they can travel.",
+      "Sentence 1 defines a term; Sentence 2 adds a limit. Sentence 2 refines the key concept. The reader learns that monarch migration works differently from what the word 'migration' usually suggests, because the individual butterfly does not complete the journey."
+    ],
+    "answer": "D",
+    "hints": [
+      "For Sentence 1: does it explain what a word means, or does it describe one case of something happening?",
+      "For Sentence 2: after reading it, does the opening claim now hold more narrowly, or does it reach onto new ground? What boundary does it name?"
+    ]
+  },
+  {
+    "id": "m8ela-word-choice-analogy-in-informational-text-001",
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "cedCode": "M8ELA-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A connotative word carries a feeling on top of its plain meaning. Which sentence uses a connotative word instead of a plainer one to shape the tone?",
+    "choices": [
+      "The student carefully organized her notebook before the test.",
+      "The student opened her notebook before the test.",
+      "The student put her notebook on the desk before the test.",
+      "The student meticulously arranged her notebook before the test."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for a word that does the same job as a plainer word but adds an attitude. Which word suggests care and precision in a way that 'put' or 'organized' does not?"
+    ]
+  },
+  {
+    "id": "m8ela-word-choice-analogy-in-informational-text-002",
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "cedCode": "M8ELA-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence from a park notice: 'Dog owners who ignore the leash rule are putting other visitors at risk.' If you swapped 'ignore' for the plainest word that keeps the fact, would the sentence lose an attitude? Why or why not?",
+    "choices": [
+      "Yes, because 'ignore' suggests a deliberate choice, while plainer words might suggest carelessness instead.",
+      "Yes, because 'forget' or 'overlook' are gentler words and would soften the tone.",
+      "No, because 'neglect' means exactly the same thing and carries no extra feeling.",
+      "No, because the phrase 'putting other visitors at risk' already carries all the tone the sentence needs."
+    ],
+    "answer": "A",
+    "hints": [
+      "The swap test replaces the word and asks what disappears. Does 'ignore' carry meaning about why the owner is not using a leash, or only an attitude about the action?"
+    ]
+  },
+  {
+    "id": "m8ela-word-choice-analogy-in-informational-text-003",
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "cedCode": "M8ELA-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A field-guide entry says: 'The poison dart frog's bright colors warn predators to stay away—those colors are like a neon sign in the jungle.' What does the comparison to a neon sign make clear about how the warning works?",
+    "choices": [
+      "That the frog is as bright as a human-made object and uses electricity to glow.",
+      "That the colors are impossible to miss, just as a neon sign stops traffic in the dark.",
+      "That the colors work by making the frog glow at night, the way a neon sign produces light after sunset.",
+      "That the frog's warning system is equally dangerous to predators as a neon sign is to insects attracted to light."
+    ],
+    "answer": "B",
+    "hints": [
+      "An analogy's meaning job is to explain how something works. What does a neon sign do that a poisoned predator needs to understand?"
+    ]
+  },
+  {
+    "id": "m8ela-word-choice-analogy-in-informational-text-004",
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "cedCode": "M8ELA-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A neighborhood notice reads: 'The new bus stop on Maple Street is now open. Buses arrive every 20 minutes. Please keep the shelter clean and report any damage immediately.' Then the notice adds: 'We are grateful for the community's patience during construction and excited to see this project improve your commute.' Which statement correctly describes what the second sentence does and what tone it sets?",
+    "choices": [
+      "It explains the bus stop analogy and sets a reassuring tone by promising that buses will always run on time without delays or service interruptions.",
+      "It repeats the main facts about bus schedules and shelter care in a friendlier way, but it does not meaningfully change the overall stern and directive tone established in the first sentence.",
+      "It uses connotative words like 'grateful' and 'excited' to shift the tone from businesslike to warm, showing the writer's positive attitude toward the community's help.",
+      "It is a figurative description of the bus route and creates an admiring tone toward the construction workers by highlighting their technical achievements."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the word choices in the two sentences. Which words in the second sentence are connotative—chosen over plainer ones—and what attitude do they show toward the community?"
+    ]
+  },
+  {
+    "id": "m8ela-word-choice-analogy-in-informational-text-005",
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "cedCode": "M8ELA-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A museum label describes a fossil: 'This trilobite lived 450 million years ago. It crawled along the ocean floor, hunting for food. The trilobite's armor-like shell protected it from predators, much as a knight's suit of armor protected a warrior in battle.' Name the tone of the label with a precise adjective and explain which words carry it. In your answer, address both the connotative words and the analogy.",
+    "choices": [
+      "The tone is informative because the label presents facts about the trilobite's age and behavior clearly and uses a concrete analogy to explain the function of the shell.",
+      "The tone is wry because the trilobite 'crawled' like a soldier and the knight analogy humorously mocks the creature by comparing it to something far more sophisticated.",
+      "The tone is cautionary because the label mentions predators and 'armor-like' shells to warn the reader that even protective coverings can fail and leave organisms vulnerable.",
+      "The tone is admiring because 'armor-like' and the comparison to 'a knight's suit of armor' credit the trilobite with purposeful defense, earning the adjective through word choice that respects the creature's survival."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what connotative word the writer chose instead of a plainer one. Then ask why this particular familiar thing—why a knight's armor and not just a shield or a hard covering?"
+    ]
+  },
+  {
+    "id": "m8ela-word-choice-analogy-in-informational-text-006",
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "cedCode": "M8ELA-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two versions of a school lunch notice appear below. Version A says: 'Lunch service will be disrupted on Friday due to kitchen renovation.' Version B says: 'Friday's lunch service has moved to the gym while we upgrade the kitchen.' A word's connotation is the feeling or attitude it carries beyond its literal meaning. Which statement correctly explains which version is more reassuring and why?",
+    "choices": [
+      "Version B is more reassuring because it avoids the connotative word 'disrupted' and replaces it with 'moved,' softening the sense of a problem; it also frames the renovation as an 'upgrade,' a connotative choice that presents the change positively.",
+      "Version A is more reassuring because 'disrupted' is a direct, literal word that clearly communicates the exact impact on lunch service and removes any ambiguity about what families should expect on Friday.",
+      "Version B is more reassuring because specifying the gym location gives families concrete logistical information and the word 'upgrade' carries a connotation of improvement and progress rather than the negative feeling implied by 'disrupted.'",
+      "Version A is more reassuring because it is shorter and mentions the specific reason for the change, which helps parents understand that the disruption is temporary and necessary for the school's long-term benefit."
+    ],
+    "answer": "A",
+    "hints": [
+      "Run the swap test on 'disrupted' and 'moved.' What attitude does each word carry? Which connotative word—'disrupted' or 'upgrade'—makes the tone more reassuring, and why?"
+    ]
+  },
+  {
+    "id": "m8ela-how-a-central-idea-develops-001",
+    "loId": "m8ela.how-a-central-idea-develops",
+    "cedCode": "M8ELA-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the two sentences below. Sentence 1 introduces a central idea, and Sentence 2 supports it. (1) Many birds migrate to avoid winter cold. (2) A robin that spends summer in Canada may fly all the way to Florida when the weather turns cold. What relationship does Sentence 2 have to the idea in Sentence 1?",
+    "choices": [
+      "It gives a cause, explaining that cold weather directly forces birds to migrate south instead of merely illustrating that idea.",
+      "It gives an example, letting readers see birds migrating in one specific case without changing what the idea says.",
+      "It puts a limit on the idea, showing that only certain kinds of birds, like robins, actually migrate south each winter.",
+      "It states a contradiction, since a robin flying all the way to Florida actually disproves the general idea that birds migrate."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether the sentence changes the wording of the idea or just shows it happening once.",
+      "Look for edge words like 'only' or reason words like 'because' — neither appears here."
+    ]
+  },
+  {
+    "id": "m8ela-how-a-central-idea-develops-002",
+    "loId": "m8ela.how-a-central-idea-develops",
+    "cedCode": "M8ELA-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the two sentences below. (1) Bicycle tires are pumped harder in cold weather than in warm weather. (2) Air inside a tire contracts as it cools, so a tire that was pumped to the right pressure on a warm afternoon can go noticeably softer overnight if the temperature drops. What does Sentence 2 do to the central idea in Sentence 1?",
+    "choices": [
+      "It puts a limit on the idea, restricting it to only the very coldest winter nights.",
+      "It gives an example, showing one bicycle ride where the tire went soft overnight.",
+      "It gives a cause, explaining that cooling air contracts inside the tire and lowers its pressure.",
+      "It states an unrelated idea about temperature that has nothing to do with tire pressure."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for a reason word such as 'so' that explains why something happens.",
+      "Ask whether the sentence narrows the idea to fewer cases or explains the mechanism behind it."
+    ]
+  },
+  {
+    "id": "m8ela-how-a-central-idea-develops-003",
+    "loId": "m8ela.how-a-central-idea-develops",
+    "cedCode": "M8ELA-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the two sentences below. (1) Wearing a helmet while biking greatly reduces the risk of a serious head injury. (2) A helmet only protects the rider if the straps are buckled snugly under the chin; a helmet that is loose or unbuckled can slip off completely in a crash and offer no protection at all. What relationship does Sentence 2 have to the idea in Sentence 1?",
+    "choices": [
+      "It states a completely new idea about buckles that has nothing to do with reducing head injury risk at all.",
+      "It gives a cause, explaining the reason why wearing helmets is able to reduce head injuries in the first place.",
+      "It gives an example, showing one specific case of a rider whose buckled helmet worked exactly as claimed.",
+      "It puts a limit on the idea, since the protection only holds when the straps are buckled snugly."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for edge words such as 'only' that mark a condition.",
+      "Ask whether the sentence makes the idea smaller and truer, or just shows one instance of it."
+    ]
+  },
+  {
+    "id": "m8ela-how-a-central-idea-develops-004",
+    "loId": "m8ela.how-a-central-idea-develops",
+    "cedCode": "M8ELA-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The central idea of this paragraph is introduced in Sentence 1: (1) Public libraries do more than lend books. (2) A library card holder can also borrow tools, sewing machines, and even telescopes from many library collections. (3) Libraries expanded these collections because patrons kept asking staff for items they only needed once or twice, not often enough to justify buying them. (4) A library in a small town, however, may offer only books and no such extras at all, since its budget covers little beyond the basics. Which sequence correctly names the relationship of Sentences 2, 3, and 4 to the idea in Sentence 1?",
+    "choices": [
+      "Sentence 2 is an example, Sentence 3 is a cause, and Sentence 4 is a limit.",
+      "Sentence 2 is a cause, Sentence 3 is an example, and Sentence 4 is a limit.",
+      "Sentence 2 is an example, Sentence 3 is a limit, and Sentence 4 is a cause.",
+      "Sentence 2 is a limit, Sentence 3 is a cause, and Sentence 4 is an example."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check each sentence separately: does it show a case, give a reason, or narrow the idea?",
+      "A sentence beginning with a contrast word like 'however' often signals a limit, not a cause."
+    ]
+  },
+  {
+    "id": "m8ela-how-a-central-idea-develops-005",
+    "loId": "m8ela.how-a-central-idea-develops",
+    "cedCode": "M8ELA-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The central idea of this paragraph is introduced in Sentence 1: (1) Many spices were historically valuable because they helped preserve food before refrigeration existed. (2) Salt and sugar draw water out of meat and fruit, leaving an environment too dry for the bacteria that cause spoilage to grow. (3) Pepper, cinnamon, and cloves also disguised the taste of meat that had begun to spoil, so a well-spiced dish could hide a problem instead of solving it. (4) Modern refrigerators cool food to temperatures where spoilage bacteria multiply far more slowly than at room temperature. Which sentence stops developing the central idea introduced in Sentence 1 and starts a different idea instead?",
+    "choices": [
+      "Sentence 3, because mentioning that spices could disguise spoiled taste means the paragraph is contradicting its own central claim.",
+      "Sentence 4, because it shifts to describing modern refrigeration technology rather than developing why spices were historically valuable.",
+      "Sentence 2, because giving a cause for why spices helped preserve food actually abandons the central idea entirely.",
+      "Sentence 4, because it puts a limit on the idea by showing spices are less needed today than they once were."
+    ],
+    "answer": "B",
+    "hints": [
+      "Restate the central idea after each sentence; if the restatement turns into a different topic, that sentence stopped developing the original idea.",
+      "Check whether the sentence still talks about spices at all, or has moved to a different subject entirely."
+    ]
+  },
+  {
+    "id": "m8ela-how-a-central-idea-develops-006",
+    "loId": "m8ela.how-a-central-idea-develops",
+    "cedCode": "M8ELA-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The central idea of this paragraph is introduced in Sentence 1: (1) Wooden cutting boards resist bacteria better than plastic ones do. (2) Wood contains natural compounds that kill many types of bacteria within minutes of contact, so a wiped-down wooden board is often cleaner than it looks. (3) A deep, uncleaned groove cut into either type of board can still trap food and let bacteria grow, because neither wood's natural compounds nor a quick wipe can reach into a crack that never gets scrubbed out. Sentence 3 contains the word \"because.\" Which relationship does Sentence 3 actually have to the central idea in Sentence 1?",
+    "choices": [
+      "It gives an example, since it describes one ordinary case where a wooden board behaves exactly as claimed in Sentence 1 without changing the idea.",
+      "It gives a cause, since the word \"because\" always signals the reason directly behind the central idea stated in Sentence 1.",
+      "It puts a limit on the idea, since it shows that a groove in either board can defeat the protection wood normally provides.",
+      "It states a brand new idea, since cutting-board grooves have nothing at all to do with a board's resistance to bacteria."
+    ],
+    "answer": "C",
+    "hints": [
+      "The word 'because' doesn't automatically mean the sentence explains the central idea itself — check what it's actually explaining.",
+      "Ask whether Sentence 3 makes the idea in Sentence 1 hold true in fewer cases than before."
+    ]
+  },
+  {
+    "id": "m8ela-connections-distinctions-among-ideas-001",
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "cedCode": "M8ELA-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student reads two facts about different animals printed one after another in a paragraph, with no sentence linking them, and wonders whether that counts as a connection. According to how a text connection actually works, what has to be true before two facts count as connected rather than as two neighbors?",
+    "choices": [
+      "A sentence in the text does something with the pair — comparing them, saying one works like the other, or placing both in one named group.",
+      "The two facts sit in the same paragraph, one printed right after the other, close enough that a reader naturally links them together.",
+      "The two facts describe topics that are closely related in the real world, even if no sentence ever puts them together.",
+      "The text includes a signal word such as 'both,' 'like,' or 'is a kind of' somewhere near where the two facts appear."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether some sentence DOES something with the pair, not just where the facts happen to sit.",
+      "A connection is not guaranteed by a signal word or by real-world similarity alone."
+    ]
+  },
+  {
+    "id": "m8ela-connections-distinctions-among-ideas-002",
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "cedCode": "M8ELA-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A tornado forms over land when a rotating column of air touches the ground. A waterspout is a tornado that forms over water instead. A paragraph adds a third sentence: both storms belong to one category, funnel clouds, which is why both can produce winds strong enough to damage a small boat or a house. What move does that third sentence make with the pair of storms?",
+    "choices": [
+      "It is a comparison move: checking one feature, wind strength, on both storms and reporting how they differ from each other.",
+      "It is a category move: putting both storms into one named group, funnel clouds, so that whatever is true of the group is claimed about them.",
+      "It is an analogy move: saying that one storm works the way the other one works, so understanding of one transfers to the other.",
+      "It is a distinction move: granting that the storms look alike and then turning to say they are not actually the same kind of storm."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for whether the sentence names a group and claims something true of the whole group.",
+      "This sentence isn't checking one single feature side by side or saying one storm works the way the other does."
+    ]
+  },
+  {
+    "id": "m8ela-connections-distinctions-among-ideas-003",
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "cedCode": "M8ELA-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A blacksmith heats iron until it glows, then hammers it into shape while it is soft. A potter softens clay with water so it can be shaped by hand, then leaves it to dry hard. A third sentence says the potter's clay softens the way the blacksmith's iron does, except water plays the role heat plays for the metal. What does this analogy let a reader understand that the first two sentences alone would not?",
+    "choices": [
+      "It proves that clay and iron are made of the same basic chemical elements, which is why both can be softened and reshaped.",
+      "It shows that pottery is an easier craft than blacksmithing because clay does not need to be heated before it can be shaped.",
+      "It shows that softening a material before shaping it is a step common to both crafts, with water and heat serving the same purpose in each.",
+      "It shows that a potter and a blacksmith historically learned their shaping techniques from watching one another work over many generations."
+    ],
+    "answer": "C",
+    "hints": [
+      "An analogy's payoff is whatever understanding carries over from one thing to the other.",
+      "Focus on the shared role water and heat play, not on which craft is easier or where the crafts came from historically."
+    ]
+  },
+  {
+    "id": "m8ela-connections-distinctions-among-ideas-004",
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "cedCode": "M8ELA-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A public library and a public park are both funded by local taxes and open to anyone who walks in, but a paragraph compares them on one specific question: what happens when funding runs low. A park with a shrinking budget mows the grass less often and lets a few benches go unrepaired, but it stays open and visitors can still use most of it. A library facing the same cut often has to shorten its hours or close on certain days, because the staff needed to check out books and keep the doors unlocked is the single largest cost of running one, and cutting staff means cutting the hours the doors are open. What does this comparison let a reader understand that the separate facts about libraries and parks would not?",
+    "choices": [
+      "Because parks require constant physical labor such as mowing lawns and repairing benches to stay usable, they are actually more vulnerable to funding cuts than libraries, which rely mostly on donated books that need no ongoing staff time.",
+      "Because parks and libraries are both funded by the same local tax dollars, a funding cut affects them in identical ways, reducing the quality of service each place offers by roughly the same amount overall.",
+      "Because libraries cost significantly more to operate than parks in nearly every category of expense, a city facing a budget shortfall should always choose to cut park funding first instead of library funding.",
+      "Because a library's main cost is staff time needed to keep it open, a funding cut shrinks its open hours, while a park absorbs the same cut by looking less maintained but staying open."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the one feature the paragraph checks on both places — what happens to each under a funding cut.",
+      "The payoff should explain WHY hours are at more risk for one of the two, tied to what each place's biggest cost actually is."
+    ]
+  },
+  {
+    "id": "m8ela-connections-distinctions-among-ideas-005",
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "cedCode": "M8ELA-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Bees communicate the location of flowers to each other through a 'waggle dance,' a pattern of movement that encodes both direction and distance. Ants communicate through pheromone trails, laying down a scent that other ants follow to a food source. A third sentence says both insects are eusocial, meaning they live in colonies with a reproductive queen and non-reproductive workers, and that shared social structure is part of why both species evolved ways to share information about food with the rest of the colony. A student claims that this third sentence uses an analogy to say the waggle dance works the same way as a pheromone trail. What is the actual move the sentence makes, and what did the student get wrong?",
+    "choices": [
+      "Sentence 3 makes a category move: placing bees and ants in the shared group 'eusocial' to explain both communication systems, not claiming one method works like the other.",
+      "The student is correct that sentence 3 relies on an analogy, since it claims that bees and ants use their different signals to communicate about food in the exact same way.",
+      "Sentence 3 makes a comparison move, checking which insect's communication method, the waggle dance or the pheromone trail, more accurately signals distance to a food source for the colony.",
+      "Sentence 3 makes a distinction move, granting that bees and ants both communicate about food, then showing that only bees developed the specific waggle dance behavior described earlier."
+    ],
+    "answer": "A",
+    "hints": [
+      "An analogy claims one thing works the way the other works — check whether the sentence actually says that.",
+      "Look for a named shared group and a trait claimed about the whole group, not about either insect individually."
+    ]
+  },
+  {
+    "id": "m8ela-connections-distinctions-among-ideas-006",
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "cedCode": "M8ELA-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A cargo ship crossing the ocean burns roughly three grams of fuel to move one ton of freight one kilometer. A cargo plane carrying the same ton of freight the same distance burns roughly fifty times that amount. A third sentence sets the two side by side on a different feature: a shipment that must arrive in two days instead of three weeks can be worth almost any price to the company waiting for it, which is why airfreight survives despite the huge fuel gap. The paragraph starts by comparing ships and planes on fuel burned per ton per kilometer, then shifts to comparing them on how urgently a shipment is needed. What does bringing in this second feature, rather than stopping at fuel efficiency, let a reader understand?",
+    "choices": [
+      "It shows that airfreight companies are lying about caring for fuel efficiency, since the third sentence proves that speed, not fuel cost, is their only real concern all along.",
+      "It shows that fuel efficiency alone cannot explain shipping choices, because a customer's need for speed can outweigh a large fuel-cost disadvantage in practice.",
+      "It shows that ships and planes belong to the same category of transportation, so whatever fuel figure is true for one method must also hold true for the other.",
+      "It shows that the comparison made in the first two sentences was factually incorrect and had to be corrected later on by the claim in the third sentence."
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that the paragraph does not stay on one feature — a second one gets introduced partway through.",
+      "The payoff should explain why a feature that loses on paper, fuel cost, doesn't always decide what actually happens."
+    ]
+  }
+]

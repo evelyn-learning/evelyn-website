@@ -1,0 +1,452 @@
+[
+  {
+    "id": "m8ela-comparing-the-structure-of-two-texts-001",
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "cedCode": "M8ELA-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A text's structure is the path a reader takes through the pieces of that text. Which of the following is part of structure?",
+    "choices": [
+      "The number of paragraphs in the text and how long each one is",
+      "The specific words the author uses to describe the main character",
+      "The order in which events arrive on the page and the shape that holds them",
+      "Whether the text is about a happy ending or a sad ending"
+    ],
+    "answer": "C",
+    "hints": [
+      "Structure is about how the pieces are arranged, not which words are chosen. Think about what comes first and what comes later."
+    ]
+  },
+  {
+    "id": "m8ela-comparing-the-structure-of-two-texts-002",
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "cedCode": "M8ELA-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two texts tell the same story: a girl finds her lost cat. In Text A, the girl searches the neighborhood, calls the cat's name, and then hears a meow. In Text B, a cat meows from under the porch, then the girl searches and calls before she finds it under the boards. Which statement correctly identifies the structural difference?",
+    "choices": [
+      "Text A uses more descriptive words such as adjectives and sensory details than Text B does throughout the narrative",
+      "Text A takes longer to read overall because it contains more sentences and requires more time to finish completely",
+      "Text A is about a girl searching for her pet while Text B is about a cat hiding under the porch waiting to be found",
+      "Text A arranges events in the order they happened, while Text B tells the reader the cat's location before the search begins"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask yourself: what does the reader learn first in each text? Does one text reveal where the cat is before the search happens?"
+    ]
+  },
+  {
+    "id": "m8ela-comparing-the-structure-of-two-texts-003",
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "cedCode": "M8ELA-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph is written as a single sentence with connecting words: 'The park was crowded on Saturday, so we sat on the grass instead of a bench, and nobody complained because we were all hot and tired.' The same scene is then written as a short stanza with each picture on its own line and no connecting words: 'Saturday, the park crowded. / We sat on the grass. / Nobody complained.' Which structural difference is true?",
+    "choices": [
+      "The stanza separates the pictures into lines and leaves out the connecting words and reasons",
+      "The stanza removes characters and events that the paragraph included",
+      "The stanza is shorter only because it cuts out unnecessary details",
+      "The paragraph is harder to read because it has too many 'so' and 'because' phrases"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what holds the paragraph together versus what the stanza does with the same scene. Does one connect the pieces and explain why, while the other sets them apart?"
+    ]
+  },
+  {
+    "id": "m8ela-comparing-the-structure-of-two-texts-004",
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "cedCode": "M8ELA-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two texts describe the same morning. Text A is written in chronological order and ends with the announcement that the field trip is canceled. Text B opens with the announcement of cancellation and then describes the buildup that morning—the packed lunch, the new shoes, the alarm set early. For a student reader, how does the structural difference change the meaning of the morning?",
+    "choices": [
+      "Text A makes the morning feel like wasted time and effort, while Text B makes the morning feel like preparation that will lead somewhere important",
+      "Text B makes the morning feel like wasted preparation, while Text A lets the reader experience the disappointment at the same moment as the character",
+      "Text A has better and more vivid words to describe the morning events, so the reader feels more emotionally disappointed about the cancellation",
+      "Text B is longer than Text A overall, so the reader has more time and sentences to get sad and upset about the field trip being canceled"
+    ],
+    "answer": "B",
+    "hints": [
+      "In Text A, what does the reader feel while reading about the lunch and shoes being packed? In Text B, what does the reader already know while reading those same sentences?"
+    ]
+  },
+  {
+    "id": "m8ela-comparing-the-structure-of-two-texts-005",
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "cedCode": "M8ELA-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is comparing two texts about the same afternoon at the lake. Text A says 'The sun was bright and hot, so we jumped in the water and stayed there for hours, because nobody wanted to leave.' Text B is a stanza: 'Bright sun on the water. / We jumped in. / We stayed for hours.' The student writes: 'Text A mentions the sun was hot and Text B does not say the sun was hot, so the structure is different.' Is this correct reasoning about structure? Why or why not?",
+    "choices": [
+      "Yes, because Text A includes a detail about the sun being hot while Text B does not include that detail, showing different construction",
+      "Yes, because Text A uses more adjectives and other descriptive language than Text B does, which represents a different structural approach",
+      "No, because the difference between hot and not hot is a difference in content or words, not in the order or shape of how the pieces are arranged",
+      "No, because both texts have the same number of sentences overall, so they must have the same structure and organization"
+    ],
+    "answer": "C",
+    "hints": [
+      "Test the difference with this question: Is this about the ORDER the pieces arrive in or the SHAPE that holds them? Does 'hot sun' versus no mention of temperature change when things happen or how the pieces are separated?"
+    ]
+  },
+  {
+    "id": "m8ela-comparing-the-structure-of-two-texts-006",
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "cedCode": "M8ELA-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph reads: 'When the test papers came back, Keisha looked at the grade, set the paper down without reading the comments, and walked out of the classroom, because she was too upset to look.' A stanza about the same moment is written: 'The test came back. / Keisha looked at the grade. / The paper went down. / She walked out. / No comments read.' Both have the same events in the same order, but a reader would understand Keisha's state of mind differently in each text. Explain which text makes the reader work harder to understand her emotions, and why the structure creates that difference.",
+    "choices": [
+      "The paragraph is harder to understand because it explicitly states the reason for Keisha's behavior, which removes the need for the reader to make any inferences about her emotional state.",
+      "Both texts are equally clear because they present the same sequence of events in the same order, and readers understand emotions the same way regardless of how the text is structured or punctuated.",
+      "The stanza is easier to understand because it uses shorter lines that break up the action into smaller pieces, allowing the reader to process each step of Keisha's behavior more quickly and completely.",
+      "The stanza is harder to understand because it cuts out the reason, and the reader must supply the 'because' that explains why she leaves without reading the comments."
+    ],
+    "answer": "D",
+    "hints": [
+      "The paragraph tells you why Keisha walks out. The stanza shows you the actions but makes you figure out the reason. Which structure hands the meaning to the reader, and which makes the reader find it?"
+    ]
+  },
+  {
+    "id": "m8ela-how-an-incident-provokes-a-decision-001",
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "cedCode": "M8ELA-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In narrative analysis, an incident is said to 'provoke' a character's decision. Which statement correctly explains what this means?",
+    "choices": [
+      "The incident happens immediately before the decision, regardless of any connection between the two events.",
+      "The incident is a long-standing situation, such as a job or relationship, that already existed before the story began.",
+      "The incident directly reveals something about the character's personality, the same way the decision does.",
+      "The incident changes what a character knows, can do, or must pay, and the decision depends on that change."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about the cover test: if you removed the incident, would the decision still make sense?",
+      "Provoking involves a specific kind of change to the character's situation, not just being close in time."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-incident-provokes-a-decision-002",
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "cedCode": "M8ELA-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lena had spent all summer saving for a bike, and her jar sat on her dresser with $140 in careful stacks of bills. One afternoon, her younger brother Sam ran in crying because his soccer cleats had ripped down the side an hour before his tryout. Lena looked at her jar for a moment, then counted out sixty dollars and walked with Sam to the sporting goods store instead of adding it to her bike fund that day. Which event is the incident that provokes Lena's decision?",
+    "choices": [
+      "Sam running in crying about his ripped cleats an hour before tryouts",
+      "Lena having spent all summer saving money for a new bike",
+      "Lena looking at her savings jar for a long moment before she decided",
+      "Lena's jar sitting on her dresser holding $140 in careful stacks"
+    ],
+    "answer": "A",
+    "hints": [
+      "An incident is something that happens, not a situation that was already true before the story's action started.",
+      "Ask what specific event Lena did not choose that happened right before she picked up the money."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-incident-provokes-a-decision-003",
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "cedCode": "M8ELA-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Malik had been chosen to give the closing toast at his cousin's wedding, and he had practiced it in the mirror for a week. Just before dinner, the caterer pulled him aside and said the sound system had failed and there would be no microphone for any speeches. Malik looked at his index cards, then set them on the table and said he would just walk table to table and thank each guest personally instead of giving the toast at all. What is the alternative Malik passed up when he made his decision?",
+    "choices": [
+      "Walking table to table to thank each guest personally",
+      "Giving the toast he had practiced, using his index cards",
+      "The caterer pulling him aside to tell him about the sound system",
+      "Practicing the toast in the mirror for a week before the wedding"
+    ],
+    "answer": "B",
+    "hints": [
+      "The alternative is the option the character could have chosen but did not; look for what the text shows the character considering.",
+      "Notice what object Malik holds before he sets it down — that gesture points to the option he is giving up."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-incident-provokes-a-decision-004",
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "cedCode": "M8ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Every player on the debate team had agreed to split research topics evenly, and Priya had finished hers three days early. On Tuesday, their captain forwarded an email showing that Deshawn's topic had been assigned to him twice by mistake, doubling his workload, while another teammate's topic had never been assigned at all. Priya read the email twice, then messaged the captain that she would take over the unassigned topic herself instead of using the extra three days to polish her own research. How did the incident provoke Priya's decision?",
+    "choices": [
+      "It changed what a choice would cost, because now finishing her own research early meant leaving a topic completely uncovered",
+      "It changed what Priya could do, because the assignment email made it physically impossible for her to research her own topic anymore",
+      "It changed what Priya knew, because she learned that one topic had never been assigned to anyone",
+      "It changed nothing about Priya's situation, since she had already finished her own research before the email arrived"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether the incident took away an option, gave Priya new information, or raised the price of a choice she already had.",
+      "Compare what Priya knew right after reading the email to what she knew right before it arrived."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-incident-provokes-a-decision-005",
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "cedCode": "M8ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When the power went out during science fair setup, both Owen and Grace lost the lighting for their display boards ten minutes before judges arrived. Owen shrugged, packed up his poster, and told the volunteer coordinator that without light there was no point trying to present. Grace borrowed a flashlight from the front desk, taped it to a binder clip, and propped it against her board so the judges could still read her graphs. Which statement correctly traces the cause-to-choice chain for Grace, including what her decision reveals?",
+    "choices": [
+      "Because Grace had prepared her display board more carefully than Owen all week, she decides to rig a flashlight instead of packing up her poster, which shows that preparation matters more than luck",
+      "When the power went out, both Grace and Owen lost their lighting, but the power outage itself is what reveals that Grace is more resourceful than Owen, not anything she chose to do",
+      "When the power went out, Grace decides to rig a flashlight to light her board instead of packing up her poster, which shows that she is naturally more talented at science than Owen",
+      "When the power went out, Grace decides to rig a flashlight instead of packing up her poster like Owen did, which shows she treats an obstacle as something to solve rather than a reason to quit"
+    ],
+    "answer": "D",
+    "hints": [
+      "A decision reveals character only when it's read against the specific alternative that character passed up, not by comparing outcomes across two people.",
+      "Watch for answers that credit the outage itself, or a long-standing personality trait, instead of the choice Grace actually made on the page."
+    ]
+  },
+  {
+    "id": "m8ela-how-an-incident-provokes-a-decision-006",
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "cedCode": "M8ELA-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "On Friday, Coach Alvarez announced that the county tournament had been moved up a week, cutting the team's remaining practice time in half. That same afternoon, a delivery truck backed into the gym's side door, denting it badly enough that the custodian roped off the entrance for repairs. That evening, Jordan, who had been splitting time at point guard all season, asked Coach Alvarez for extra one-on-one drills before and after every remaining practice instead of coasting through the shortened schedule like some of his teammates. Which event is the incident that provokes Jordan's decision to ask for extra drills, and why?",
+    "choices": [
+      "The tournament being moved up a week, because covering the shortened schedule with Jordan's request for extra drills only makes sense once practice time has been cut",
+      "The delivery truck denting the gym's side door, because it happened on the same day as Jordan's decision and same-day events are always the true incident",
+      "Jordan splitting time at point guard all season, because ongoing situations that motivate a character over time count as the incident that starts a story's problem",
+      "The custodian roping off the gym entrance for repairs, because the incident is always defined as whatever event occurs closest in time to the character's decision"
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the cover test to each event separately: would Jordan's request still make sense with that event removed?",
+      "An event that happens on the same day as a decision isn't automatically the cause — the decision has to be about what that event changed."
+    ]
+  },
+  {
+    "id": "m8ela-how-dialogue-propels-action-reveals-character-001",
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "cedCode": "M8ELA-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A line of dialogue can do two different jobs in a story: it can reveal something about a character, or it can propel the action by changing what happens next. Read the four statements below and choose the one that correctly explains what it means for a line to propel the action.",
+    "choices": [
+      "It changes what happens next in the story, such as causing a decision, a secret to come out, or a plan to change that would not have happened without it.",
+      "It reveals something about the speaker's personality or values through the specific words they choose, even if nothing in the plot changes as a result of the line being spoken.",
+      "It uses punctuation or tone, such as an exclamation point or a raised voice, to signal to the reader that something dramatic just happened, even though the plot itself keeps moving the same way.",
+      "It repeats information the reader already knows from earlier in the story, adding realistic detail to the scene without causing any new decision, secret, or change in the plan."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what changes after the line is spoken, not just what the line tells you about the speaker.",
+      "A line can be interesting and still do only one job instead of two."
+    ]
+  },
+  {
+    "id": "m8ela-how-dialogue-propels-action-reveals-character-002",
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "cedCode": "M8ELA-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Owen and Priya were choosing between two movies for movie night. Owen said, \"I already saw that one twice.\" Priya said, \"Then we're going with the second one on the list.\" A moment later they bought two tickets for the second movie. Use the cover test to decide which line of dialogue propels the action, and why.",
+    "choices": [
+      "\"I already saw that one twice,\" because covering it removes any reason the tickets are for the second movie.",
+      "\"Then we're going with the second one on the list,\" because covering it removes any reason the tickets are for the second movie.",
+      "\"Then we're going with the second one on the list,\" because it reveals that Owen has already seen the first movie.",
+      "\"I already saw that one twice,\" because it is the first line spoken and starts the conversation between the two friends."
+    ],
+    "answer": "B",
+    "hints": [
+      "Cover each line separately and ask whether the ticket purchase for the second movie would still make sense without it.",
+      "One line explains a personal fact about Owen; the other line is the one the tickets actually depend on."
+    ]
+  },
+  {
+    "id": "m8ela-how-dialogue-propels-action-reveals-character-003",
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "cedCode": "M8ELA-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maya told her study group, \"I already emailed the teacher about extending the deadline.\" Carlos closed his laptop, put it back in his bag, and left the room without saying a word. Based only on what Carlos does right after Maya's line, decide what his reaction reveals about him as the listener.",
+    "choices": [
+      "Carlos does not care whether the deadline gets extended, since he leaves the room without reacting to Maya's news at all.",
+      "Carlos is angry that Maya emailed the teacher without asking the group first, which is why he silently packs up and walks out.",
+      "Carlos trusts Maya's word enough to stop working right away without needing more explanation.",
+      "Carlos plans to email the teacher himself later to confirm what Maya said, so he leaves to do that right away."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look only at the actions Carlos actually takes, not at feelings the excerpt never describes.",
+      "A calm, wordless exit is different from a reaction driven by anger or by not caring."
+    ]
+  },
+  {
+    "id": "m8ela-how-dialogue-propels-action-reveals-character-004",
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "cedCode": "M8ELA-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ben had promised to walk his neighbor's dog every day while she was out of town. On Wednesday, his cousin called and invited him to a concert that night. \"I can't, I have to walk Ms. Reyes's dog,\" Ben said. His cousin said, \"Just skip it once, she won't know.\" Ben paused, then said, \"No, I told her every day. I'll bring the dog when the concert's over, we'll go later.\" He grabbed his shoes and headed out with the leash before hanging up. Choose the statement that correctly names the line that propels the action, the kind of change it causes, and what it reveals about Ben.",
+    "choices": [
+      "\"No, I told her every day. I'll bring the dog when the concert's over, we'll go later,\" which exposes a secret because it tells the cousin something new about Ms. Reyes's daily schedule, and it reveals Ben as someone who is indecisive and cannot commit to either plan.",
+      "\"I can't, I have to walk Ms. Reyes's dog,\" which changes the plan because it explains to the cousin why Ben is busy walking the dog that night instead of going to the concert, and it reveals Ben as someone who secretly puts the concert ahead of his commitment.",
+      "\"Just skip it once, she won't know,\" which exposes a secret because it lets Ben know something new about Ms. Reyes's schedule that he had not realized before, and it reveals the cousin as someone who values loyalty in friendship over convenience in daily plans.",
+      "\"No, I told her every day. I'll bring the dog when the concert's over, we'll go later,\" which changes the plan because Ben decides to walk the dog before going anywhere, and it reveals Ben as someone who keeps a promise even when offered an easy way around it."
+    ],
+    "answer": "D",
+    "hints": [
+      "Only one of these lines, when covered, would make Ben's later action with the leash stop making sense.",
+      "Match each line to the right kind of change first — decision, secret, or plan — before deciding what it reveals about Ben."
+    ]
+  },
+  {
+    "id": "m8ela-how-dialogue-propels-action-reveals-character-005",
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "cedCode": "M8ELA-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "At a family dinner, Grandma slammed her fork down and said, \"This is the worst gravy I have ever tasted!\" Dad kept eating from the same pot. A moment later, Grandma added, quietly, \"I think I left the stove on at my house.\" Dad stood up immediately, grabbed his keys, and said he'd drive her home to check. Using the cover test, choose the statement that correctly evaluates which line propels the action.",
+    "choices": [
+      "\"I think I left the stove on at my house,\" because covering it leaves no reason for Dad to stand up and grab his keys.",
+      "\"This is the worst gravy I have ever tasted!\" because it is spoken loudly and startles Dad enough to make him keep eating.",
+      "\"This is the worst gravy I have ever tasted!\" because covering it leaves no reason for Dad to keep eating from the same pot.",
+      "\"I think I left the stove on at my house,\" because it is spoken quietly, and quiet lines always propel the action more than loud ones."
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the cover test separately to the loud line and the quiet line, and see which one Dad's later action truly depends on.",
+      "A line getting a big reaction is not automatically the line that changes what happens next."
+    ]
+  },
+  {
+    "id": "m8ela-how-dialogue-propels-action-reveals-character-006",
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "cedCode": "M8ELA-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Wren and Ivy were driving to their aunt's house for a surprise party, but their aunt had already learned about it from a text her neighbor sent earlier that day. When the sisters arrived, their aunt opened the door with a knowing smile. Wren blurted, \"Surprise! We planned this whole thing!\" Their aunt hugged them both and said she had already put on her party dress that morning. Based on the cover test, choose the statement that correctly evaluates whether Wren's line propels the action.",
+    "choices": [
+      "The line propels the action, because it exposes a secret to Aunt that she did not know before, and that secret is what causes her to open the door and greet them warmly.",
+      "The line only reveals; covering it still leaves Aunt hugging the sisters in her already-worn party dress, because she had learned about the party from her neighbor's text before they arrived.",
+      "The line propels the action, because Wren's excited exclamation is the direct cause of Aunt's hug, since nothing in the excerpt suggests Aunt would have hugged the sisters without hearing it.",
+      "The line only reveals, showing that the sisters are excited about their surprise plan, but there is no evidence anywhere in the excerpt that Aunt already knew about the party before they arrived."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check what Aunt already knew and had already done before the sisters said anything at the door.",
+      "A line can be loud and exciting and still fail the cover test if the next action would have happened anyway."
+    ]
+  },
+  {
+    "id": "m8ela-strongest-textual-evidence-001",
+    "loId": "m8ela.strongest-textual-evidence",
+    "cedCode": "M8ELA-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A detail is said to pass the other-stories test well. Which statement best describes what that means?",
+    "choices": [
+      "The detail is quoted word-for-word from the text, so its exact wording alone proves the claim is true.",
+      "The detail fits the claim and almost no other explanation, so it strongly supports the claim.",
+      "The detail is the most vivid or emotional moment in the excerpt, so it must be the strongest evidence available.",
+      "The detail does not contradict the claim, though it also does not prove it, so it still counts as strong support."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about how many different stories or explanations a detail could fit.",
+      "This test is about how narrowly a detail points to one explanation, not about being quoted correctly or being dramatic."
+    ]
+  },
+  {
+    "id": "m8ela-strongest-textual-evidence-002",
+    "loId": "m8ela.strongest-textual-evidence",
+    "cedCode": "M8ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: 'Leah is hiding how angry she is at her teammate.' One sentence from the excerpt reads: 'The gym echoed with the squeak of sneakers as players warmed up before the scrimmage.' Which statement best explains why this detail is not strong evidence for the claim?",
+    "choices": [
+      "It reaches the word 'hiding' but not the word 'angry,' so it proves only half of the claim rather than Leah's true feelings.",
+      "It fits several other stories equally well, including nervousness, excitement, and boredom, so it cannot point to anger.",
+      "It describes the setting and never mentions Leah's feelings toward her teammate, so it is merely consistent with the claim.",
+      "It is too vivid and dramatic a detail to be trusted as evidence, since dramatic details are usually exaggerated or unreliable."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether this sentence is actually about Leah at all.",
+      "A detail can be true and on-topic about the scene without ever touching the claim itself."
+    ]
+  },
+  {
+    "id": "m8ela-strongest-textual-evidence-003",
+    "loId": "m8ela.strongest-textual-evidence",
+    "cedCode": "M8ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: 'Owen is more interested in the science fair than he admits.' Two true details from the excerpt: Detail 1 states, 'Owen said, \"The fair is pointless,\" and rolled his eyes when his sister brought it up.' Detail 2 states, 'Every night for two weeks, Owen's desk lamp stayed on past midnight, and his mother found stacks of graph paper covered in circuit diagrams hidden inside his backpack.' Which detail is stronger evidence for the claim, and why?",
+    "choices": [
+      "Detail 1, because it is consistent with the claim and does not contradict it, so it counts as solid supporting evidence.",
+      "Detail 1, because rolling his eyes and calling the fair pointless directly states his true opinion, proving the claim outright.",
+      "Detail 2, because it is the most emotionally striking image in the excerpt, and vivid images always make the strongest evidence.",
+      "Detail 2, because the late nights and hidden diagrams fit almost no explanation except real, hidden interest in the fair."
+    ],
+    "answer": "D",
+    "hints": [
+      "Try the other-stories test on each detail: how many explanations could fit it besides the claim?",
+      "A detail that matches the claim's exact words on the surface, like calling the fair pointless, may actually work against the claim rather than for it."
+    ]
+  },
+  {
+    "id": "m8ela-strongest-textual-evidence-004",
+    "loId": "m8ela.strongest-textual-evidence",
+    "cedCode": "M8ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Claim: 'Mia cares about the schedule change far more than she lets on, and she is actively trying to change it, not just complaining about it.' Excerpt: 'When the new practice schedule was posted, Mia glanced at it and said, \"Whatever, it doesn't matter to me.\" She spent that evening drafting a three-page proposal for an alternate schedule and left it, unsigned, in the coach's mailbox before sunrise. Later, her fists were clenched so tightly that half-moon marks showed on her palms.' Which detail most strongly supports the claim, given that the claim has two parts that both need proof?",
+    "choices": [
+      "The proposal detail, because it shows both real effort to change the schedule and an attempt to keep that effort hidden.",
+      "The clenched-fists detail, because physical tension is the most vivid sign of true feeling anywhere in the excerpt.",
+      "The proposal detail, because leaving papers in a mailbox is consistent with caring about a schedule, even without proving secrecy.",
+      "The clenched-fists detail, because visible fury by itself proves that Mia is actively trying to fix the situation."
+    ],
+    "answer": "A",
+    "hints": [
+      "Underline both halves of the claim before comparing the details: caring secretly, and taking action to fix it.",
+      "A detail that only reaches one half of a two-part claim is weaker than one that reaches both."
+    ]
+  },
+  {
+    "id": "m8ela-strongest-textual-evidence-005",
+    "loId": "m8ela.strongest-textual-evidence",
+    "cedCode": "M8ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Claim: 'Derek is not really over losing the starting position, no matter what he says at practice.' Excerpt: 'At practice, Derek clapped loudly for the new starter and shouted \"Nice throw!\" every time the ball went his way. He told the coach he was \"totally fine, just excited to help the team however I can.\" That weekend, without telling anyone, he ran extra sprints alone at the park until after dark, timing himself against the numbers the new starter had posted online.' Which detail most strongly supports the claim?",
+    "choices": [
+      "Clapping loudly and shouting encouragement, because these visible, dramatic actions in front of teammates are the clearest possible proof of how someone truly feels.",
+      "Running extra sprints alone and secretly timing himself against the new starter's numbers, because this quiet action reveals an ongoing rivalry that fits almost no other explanation.",
+      "Telling the coach he is 'totally fine, just excited to help the team,' because spoken statements like this always reveal a person's genuine feelings more reliably than actions.",
+      "Clapping loudly and shouting encouragement, because enthusiastic support for a teammate could only come from someone who has truly and completely accepted the change already."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask which detail nobody was meant to see, and what that kind of detail usually reveals.",
+      "A loud, visible reaction can fit many explanations; a quiet, secret one usually fits fewer."
+    ]
+  },
+  {
+    "id": "m8ela-strongest-textual-evidence-006",
+    "loId": "m8ela.strongest-textual-evidence",
+    "cedCode": "M8ELA-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Claim: 'The new recycling program at Bell Middle School is failing to change how students actually sort their waste, whatever the posters claim.' Excerpt: 'In September, Bell Middle installed color-coded recycling bins in every hallway and printed glossy posters explaining what belongs in each one. A hallway survey found that 90% of students could correctly name the color for paper. Custodians report that the blue paper bins are consistently among the heaviest bins collected each week, but when the bins are opened, more than half of what's inside is food wrapped in paper or greasy pizza boxes, items that ruin an entire batch of recycling. The student council has ordered a second round of posters for the spring semester.' Which detail most strongly supports the claim, given that the claim is about students' actual sorting behavior, not their knowledge of the rules?",
+    "choices": [
+      "The weight detail, because heavy bins full of material prove that students are participating enthusiastically and correctly in the program every week.",
+      "The survey detail, because knowing the correct color for paper proves that students fully understand the sorting rules and therefore must be applying them correctly.",
+      "The contamination detail, because finding food waste and pizza boxes filling the paper bins directly shows students are not sorting correctly, no matter what they know.",
+      "The survey detail, because a 90% correct-answer rate on bin colors is consistent with students sorting their waste properly and successfully every single day."
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice that the claim is about behavior, not about what students know or say they will do.",
+      "A detail can be true and about recycling without actually showing how students sort their trash; ask which detail describes real sorting outcomes."
+    ]
+  }
+]

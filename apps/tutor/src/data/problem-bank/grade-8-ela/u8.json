@@ -1,0 +1,439 @@
+[
+  {
+    "id": "m8ela-a-claim-that-answers-the-opposing-claim-001",
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "cedCode": "M8ELA-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A distinguishing claim sentence follows the shape 'Although [opposing point], [position], because [reason].' Which statement correctly describes what belongs in the although clause of a well-built distinguishing claim?",
+    "choices": [
+      "A restatement of the writer's own position turned into a question",
+      "The strongest objection the other side would actually claim as their own",
+      "A weak objection that is easy to dismiss so the writer's position looks stronger",
+      "A general statement that people disagree with the writer, without specifics"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the two tests for finding the strongest opposing point: would the other side claim it, and would it survive an easy fix?",
+      "The although clause should give a reader something real to weigh, not something easy to wave away."
+    ]
+  },
+  {
+    "id": "m8ela-a-claim-that-answers-the-opposing-claim-002",
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "cedCode": "M8ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Oakdale Middle School is deciding whether to allow students to wear headphones during independent work time. Teachers who oppose the policy say headphones make it hard to get a student's attention during a fire drill or lockdown drill, because the student cannot hear instructions. A student who supports allowing headphones is drafting a claim sentence for an essay. Which sentence is a claim that distinguishes the writer's position from the opposing claim?",
+    "choices": [
+      "Although headphones would make it harder for a student to hear instructions during a fire drill or lockdown drill, Oakdale should not keep headphones banned during independent work time, because many students focus better with music playing.",
+      "Although some teachers simply do not like the idea of headphones in class, Oakdale should allow headphones during independent work time, because many students focus better when music blocks out classroom noise.",
+      "Although headphones would make it harder for a student to hear instructions during a fire drill or lockdown drill, Oakdale should allow headphones during independent work time, because many students focus better when music blocks out classroom noise.",
+      "Although many students focus better when music blocks out classroom noise, Oakdale should allow headphones during independent work time, because teachers need to get every student's attention quickly during a drill."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cover the although part of each choice and check whether what remains still asks the school to do something specific.",
+      "Ask whether a teacher who opposes headphones would recognize the although clause as their actual concern."
+    ]
+  },
+  {
+    "id": "m8ela-a-claim-that-answers-the-opposing-claim-003",
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "cedCode": "M8ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Brightwater Middle School is deciding whether to remove its vending machines and replace them with a salad bar. Three people spoke against the change: a student said the salad bar would run out of popular toppings by second lunch, the school nurse said fresh produce costs more and lunch prices would need to rise for every student, and a teacher said a salad bar line moves more slowly than a vending machine line. A student writing in favor of the salad bar wants the although part of her claim sentence to carry the objection that would still stand even if the school fixed scheduling and staffing problems. Which claim sentence puts that strongest opposing point in the although part?",
+    "choices": [
+      "Although a salad bar line moves more slowly than a vending machine line and could shorten the time students have to eat lunch, Brightwater should replace vending machines with a salad bar, because fresh food helps students concentrate through the whole afternoon.",
+      "Although a salad bar offers more nutritious options than a vending machine and could make lunch more appealing to some students, Brightwater should replace vending machines with a salad bar, because fresh food helps students concentrate through the whole afternoon.",
+      "Although the salad bar might run out of popular toppings by second lunch, a problem that better restocking and staffing could fix, Brightwater should replace vending machines with a salad bar, because fresh food helps students concentrate through the whole afternoon.",
+      "Although switching to a salad bar means fresh produce costs more and lunch prices would need to rise for every student, Brightwater should replace vending machines with a salad bar, because fresh food helps students concentrate through the whole afternoon."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask which objection would still be a problem even after the school fixed the restocking or staffing issue.",
+      "The strongest opposing point is the one someone on the other side would call their own, not the easiest one to fix."
+    ]
+  },
+  {
+    "id": "m8ela-a-claim-that-answers-the-opposing-claim-004",
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "cedCode": "M8ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Fernwood Middle School is deciding whether to install security cameras in the hallways. Parents against the plan raised two objections: the cameras cost money that could go to new textbooks, and constant recording makes students feel like suspects instead of trusted members of the school community. A student supporting the cameras writes this claim sentence: 'Although some parents think cameras cost too much, Fernwood should not leave hallways unprotected.' Which statement correctly identifies both problems with this claim sentence?",
+    "choices": [
+      "The although part states a vague version of the objection instead of the strongest opposing point, and the middle part only denies a problem instead of naming what the school should do.",
+      "The although part correctly identifies the strongest real objection that parents raised, but the middle part fails to include a because clause that explains the writer's reasoning.",
+      "The although part concedes a point that actually supports the writer's own side, and the middle part correctly names a position the school could act on.",
+      "The although part is a dependent clause that could stand alone as a full sentence, and the middle part only denies a problem instead of naming what the school should do."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the although clause to the two specific objections parents actually raised, and ask which one would still stand if the district found more money.",
+      "Cover the although part and read what is left; ask whether it tells the school what to do instead of just what not to do."
+    ]
+  },
+  {
+    "id": "m8ela-a-claim-that-answers-the-opposing-claim-005",
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "cedCode": "M8ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Hollow Creek Middle School is voting on whether to change its mascot to an animal not used by any nearby school, since its current mascot is the same as a rival school's mascot. Some students want to keep the current mascot because changing it means buying new uniforms and repainting signs around the building. A student who wants to change the mascot writes this claim sentence: 'Although a new mascot would help Hollow Creek stand out from its rival school, Hollow Creek should change its mascot, because old uniforms can still be worn for practice after the switch.' What is wrong with the although clause in this sentence?",
+    "choices": [
+      "It states an objection to a different question than the one the claim is answering, so the two parts never make contact.",
+      "It concedes a point that is actually an argument for the writer's own position, so it fails to name a real opposing objection.",
+      "It is worded as a denial of the writer's own position rather than as a concession that names a real objection.",
+      "It restates the writer's own claim in different words without adding any new information about cost or uniforms."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether a student who wants to keep the old mascot would agree that the although clause is their point.",
+      "The although clause needs to argue against the position in the middle of the sentence, not for it."
+    ]
+  },
+  {
+    "id": "m8ela-a-claim-that-answers-the-opposing-claim-006",
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "cedCode": "M8ELA-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Pinecrest Middle School is deciding whether to extend the school day by 20 minutes to add a daily study hall. Bus company representatives say extending the day would require rewriting every bus route, which the district cannot afford this year, and students who play after-school sports say the extra 20 minutes would push every team's practice start time back. A student writes this claim sentence: 'Although Pinecrest's cafeteria menu has not changed in three years, the school should extend the day by 20 minutes to add a study hall, because grades would improve with more structured time.' What is the error in this claim sentence, and why?",
+    "choices": [
+      "The although clause is only the writer's own position restated in negative form, so it fails to acknowledge either the bus route problem or the sports schedule problem raised by real opponents.",
+      "The although clause names the strongest real objection about bus routes, but the middle part fails to state a clear position that tells the school what action to take.",
+      "The although clause raises an objection to a different question than the one the claim answers, so it never distinguishes the position from either real opposing point.",
+      "The although clause concedes a point that actually supports extending the day, since a stale cafeteria menu would give students another reason to want a longer, more varied school schedule."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the although clause is even about extending the school day.",
+      "Compare the although clause to the two real objections raised—bus routes and sports schedules—and see if it matches either one."
+    ]
+  },
+  {
+    "id": "m8ela-formal-style-in-argument-001",
+    "loId": "m8ela.formal-style-in-argument",
+    "cedCode": "M8ELA-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student argument includes this sentence, written in the student's own explaining prose rather than in a quotation or dialogue: 'The new library policy doesn't make sense.' Which formal-style break does this sentence contain?",
+    "choices": [
+      "Overstatement bigger than the thing it names",
+      "Slang that belongs to the writer's own group",
+      "The reader addressed directly as 'you'",
+      "A contraction inside an explaining sentence"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for a word formed by joining two words with an apostrophe.",
+      "The sentence does not use 'you,' an exclamation point, or an exaggerated word like 'everybody.'"
+    ]
+  },
+  {
+    "id": "m8ela-formal-style-in-argument-002",
+    "loId": "m8ela.formal-style-in-argument",
+    "cedCode": "M8ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student argument contains this sentence: 'You can't ignore the fact that our school wastes tons of paper every week.' The writer wants to revise the sentence into formal style while keeping the same meaning and the same force. Which revision does this correctly?",
+    "choices": [
+      "The school wastes large amounts of paper every week, a fact that supports starting a recycling program.",
+      "Some people might feel that our school could possibly be wasting a little paper each week.",
+      "The substantial accumulation of paper waste generated by the institution on a weekly basis is undeniable.",
+      "You cannot ignore that our school wastes tons of paper every week."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether the size of the claim is still stated accurately, not hedged away or dressed up in bigger words.",
+      "The reader should no longer be addressed as 'you,' and the contraction should be gone."
+    ]
+  },
+  {
+    "id": "m8ela-formal-style-in-argument-003",
+    "loId": "m8ela.formal-style-in-argument",
+    "cedCode": "M8ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student revised the sentence 'The dress code rules are trash, and you know they don't make sense for gym class' into this new version: 'The dress code regulations may perhaps be somewhat inconvenient for physical education in certain circumstances.' The contractions, slang, and direct address are all gone. What is the main problem with this revision?",
+    "choices": [
+      "The revision still contains a contraction inside the writer's explaining sentence.",
+      "The hedging words stack up until the sentence no longer makes a clear claim.",
+      "The revision still addresses the reader directly as 'you.'",
+      "The revision replaces the period with an exclamation point."
+    ],
+    "answer": "B",
+    "hints": [
+      "Count how many uncertainty words like 'may,' 'perhaps,' and 'somewhat' appear in a row.",
+      "Ask whether a reader could check this sentence against a specific fact."
+    ]
+  },
+  {
+    "id": "m8ela-formal-style-in-argument-004",
+    "loId": "m8ela.formal-style-in-argument",
+    "cedCode": "M8ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student argument contains this sentence: 'Lunch lines are a nightmare, and you literally cannot get food and eat within twenty minutes, so everybody ends up hungry all afternoon, which is so unfair.' The writer needs to revise it into formal style without losing the claim or weakening how strongly it lands. Which revision does this correctly?",
+    "choices": [
+      "Lunch lines might possibly take a bit longer than some students would prefer.",
+      "The extensive duration of the lunch line procurement process precludes adequate consumption time within the allotted twenty-minute interval for numerous students.",
+      "Lunch lines take so long that students cannot get food and eat within the twenty-minute period, leaving many hungry for the rest of the afternoon.",
+      "Lunch lines take so long that you cannot get food and eat within twenty minutes, leaving many students hungry all afternoon."
+    ],
+    "answer": "C",
+    "hints": [
+      "One revision keeps the exact facts, the twenty-minute period and being hungry afterward, stated at their real size.",
+      "Check each revision for a leftover 'you,' for hedging words, or for needlessly big vocabulary that hides the point."
+    ]
+  },
+  {
+    "id": "m8ela-formal-style-in-argument-005",
+    "loId": "m8ela.formal-style-in-argument",
+    "cedCode": "M8ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's argument includes this paragraph: 'The library aide explained, \"We just don't have room for a reading nook right now.\" Even so, the school could free up space by moving the old newspaper rack into storage.' The writer is checking the paragraph for formal style. Which statement correctly describes what should happen to this paragraph?",
+    "choices": [
+      "The writer's own sentence about moving the newspaper rack should be revised to address the reader as 'you,' making the suggestion feel more persuasive, while the quotation should be shortened to remove the contraction 'don't.'",
+      "The quotation should be rewritten as 'We do not have room for a reading nook right now,' replacing the contraction so it matches the formal style used in the rest of the argument.",
+      "Neither sentence needs revision because formal style rules only apply to sentences that end with an exclamation point, and neither the quotation nor the writer's sentence contains one.",
+      "The quotation should keep its exact words, including 'don't,' and the writer's own sentence about the newspaper rack should stay free of contractions and direct address."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that a quotation keeps the source's exact words even inside a formal argument.",
+      "Formal style applies to the sentences the writer uses to explain, not to words spoken by someone else."
+    ]
+  },
+  {
+    "id": "m8ela-formal-style-in-argument-006",
+    "loId": "m8ela.formal-style-in-argument",
+    "cedCode": "M8ELA-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a formal argument to the principal asking for longer library hours, and also sending a text message to a friend explaining the same idea. Inside the formal argument, the student quotes a classmate who said, 'This library closes way too early, and it's dumb.' Which statement correctly applies the formal style rule to this situation?",
+    "choices": [
+      "The writer's own explaining sentences in the argument should avoid contractions and slang, the quoted classmate's words should stay exactly as spoken, and the text message to the friend is a different kind of writing that is not held to the same standard.",
+      "Every sentence in both the formal argument and the text message to the friend must avoid contractions and slang, including the quoted classmate's words, since formal style applies to any writing that discusses a serious topic like library hours.",
+      "The quoted classmate's words should be revised to remove 'it's' and 'dumb,' replacing them with formal phrasing, and the text message to the friend should also avoid contractions so every part of the communication reads at the same formal level.",
+      "Only the text message needs to follow formal style because it will eventually be read by more people than the letter to the principal, so the argument's quoted classmate and explaining sentences can keep their casual, everyday wording."
+    ],
+    "answer": "A",
+    "hints": [
+      "A quotation inside an argument keeps the source's exact words, even casual ones.",
+      "The formal-style rule covers the sentences a writer uses to explain a case, not every piece of writing that person produces."
+    ]
+  },
+  {
+    "id": "m8ela-rebutting-with-evidence-from-credible-sources-001",
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "cedCode": "M8ELA-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When building a rebuttal, a source counts as credible for the specific question being argued when a particular condition is met. Which statement correctly describes that condition?",
+    "choices": [
+      "it is in a position to know the exact fact being disputed and has no stake in how the answer turns out",
+      "it has been shared and repeated by many people online, since wide repetition in similar wording is often mistaken for proof that a source is accurate",
+      "it uses confident, authoritative language that leaves no room for doubt, since a firm tone is often mistaken for a sign that the source truly knows the fact",
+      "it was written recently and covers the general topic the counterclaim is about, since recency and topic overlap are often mistaken for proof of direct knowledge of the fact"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the two questions used to size up a source before writing a rebuttal.",
+      "Confidence and popularity are not the same as being able to answer this one question."
+    ]
+  },
+  {
+    "id": "m8ela-rebutting-with-evidence-from-credible-sources-002",
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "cedCode": "M8ELA-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is arguing that a school should extend recess. A teacher raises this counterclaim: \"The playground already gets too crowded during recess for more students to fit safely.\" Two sources are available. Source 1 is the playground supervisor's daily headcount log, kept by the adult on duty, showing an average of 85 students against a posted district capacity limit of 150. Source 2 is a comment in a class group chat that says, \"recess is basically shoulder to shoulder every day.\" Which statement correctly identifies the source that can settle this counterclaim and explains why?",
+    "choices": [
+      "the group chat comment, because it reflects how the recess period actually feels to students who are there every day",
+      "the daily headcount log, because it is kept by the adult on duty and records actual counts against the posted capacity",
+      "the daily headcount log, because it was written by a teacher and teachers are always more credible than students",
+      "the group chat comment, because more than one student has seen and can confirm what was posted there"
+    ],
+    "answer": "B",
+    "hints": [
+      "The counterclaim makes a claim about how many students fit, so ask which source actually counts anything.",
+      "A source being run by an adult does not by itself make it credible; ask what it actually records."
+    ]
+  },
+  {
+    "id": "m8ela-rebutting-with-evidence-from-credible-sources-003",
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "cedCode": "M8ELA-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The school nurse's visit log shows that 6 students visited the office for hay fever symptoms during the two weeks after the field was mowed. A parent raises this counterclaim: \"Mowing the field makes allergies unbearable for the whole class.\" A student writes this rebuttal: \"Some parents say mowing the field makes allergies unbearable for the whole class. The nurse's log shows that during the two weeks after the mowing, mowing the field caused hardly any allergy problems at all.\" What is the problem with this rebuttal?",
+    "choices": [
+      "it never states the counterclaim before offering the nurse's log as its answer, leaving readers unsure what claim the log is meant to answer",
+      "it draws on the nurse's log, which is not in a position to know how many students showed allergy symptoms",
+      "it replaces the exact figure of six students with the vague phrase \"hardly any\" instead of stating the number the log gives",
+      "it presents the two-week window as though it applies to the whole school year instead of just the mowing period"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the exact number in the log to the wording used in the rebuttal sentence.",
+      "The two-week window is stated correctly here, so look elsewhere for the error."
+    ]
+  },
+  {
+    "id": "m8ela-rebutting-with-evidence-from-credible-sources-004",
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "cedCode": "M8ELA-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is arguing that a town should install a crosswalk light near the middle school. Some drivers raise this counterclaim: \"Very few students actually cross there, so the light isn't needed.\" Source 1 is the town traffic engineer's pedestrian count, taken by an observer stationed at the corner for one hour each morning during one week, recording between 38 and 52 students crossing each morning. Source 2 is a comment on a neighborhood app that says, \"I drive by there every day and never see more than a couple of kids.\" Which rebuttal correctly answers the counterclaim using accurate evidence from the source that can settle it?",
+    "choices": [
+      "Some drivers say very few students cross there, but the neighborhood app comment shows that only a couple of kids use the crossing each morning.",
+      "Some drivers say very few students cross there, but the town traffic engineer's count found that hardly any students avoid the crosswalk each morning.",
+      "Some drivers say very few students cross there, but the town traffic engineer's count found that the crossing is used by over fifty students every single morning of the year.",
+      "Some drivers say very few students cross there, but the town traffic engineer's count found between 38 and 52 students crossing each morning during the week it was observed."
+    ],
+    "answer": "D",
+    "hints": [
+      "Decide which source is actually a count before checking whether the numbers are stated correctly.",
+      "Check whether each option's figures and time period match exactly what the engineer's count reported."
+    ]
+  },
+  {
+    "id": "m8ela-rebutting-with-evidence-from-credible-sources-005",
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "cedCode": "M8ELA-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is arguing that a school should add a late bus. Some parents raise this counterclaim: \"Almost nobody would use a late bus, so it isn't worth the cost.\" The district's after-school sign-up sheet states: \"Across the four weeks of the pilot period in October, an average of 47 students per day signed up for after-school clubs that end after the regular bus departs.\" Which rebuttal uses this source without misquoting it or dropping the limit it comes with?",
+    "choices": [
+      "Across the four weeks of the pilot period in October, the sign-up sheet shows an average of 47 students per day signed up for clubs ending after the regular bus departs.",
+      "The sign-up sheet states, \"almost nobody stays after school,\" and cites this exact wording as proof that a late bus is not needed for any students.",
+      "The sign-up sheet shows that an average of 47 students per day sign up for after-school clubs, and this has always been true at the school.",
+      "The sign-up sheet states, \"an average of 47 students,\" but leaves out that this count only includes students who arrived by school bus that day rather than by other means."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether any quotation marks contain words the source actually used.",
+      "Check whether the four-week pilot period is kept attached to the figure or quietly dropped."
+    ]
+  },
+  {
+    "id": "m8ela-rebutting-with-evidence-from-credible-sources-006",
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "cedCode": "M8ELA-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is arguing that a school cafeteria should switch to a new food vendor. Some students raise this counterclaim: \"The current vendor's meals are already popular enough that switching isn't necessary.\" Source 1 is a survey conducted by the current vendor's own marketing department, reporting that \"94% of students love our meals.\" Source 2 is the cafeteria's daily tray-return count, kept by kitchen staff, showing that over the past month an average of 61 trays out of 210 served each day came back with more than half the food uneaten. Which choice best explains what the rebuttal should rely on and why?",
+    "choices": [
+      "an appeal to the vendor's own marketing survey, since it directly reports what percentage of students like the meals",
+      "an appeal to the tray-return count, since the vendor's survey has a stake in the answer coming out one way, while the kitchen's count does not",
+      "an appeal to both the marketing survey and the tray-return count together, since combining two sources always makes a rebuttal stronger",
+      "an appeal to the tray-return count, since it was collected by school employees, and employees are always more credible than any business"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask which source has a reason to want a particular answer, not just which one sounds official.",
+      "Adding a second, weaker source next to a strong one does not automatically help a rebuttal."
+    ]
+  },
+  {
+    "id": "m8ela-cohesion-among-claim-counterclaim-evidence-001",
+    "loId": "m8ela.cohesion-among-claim-counterclaim-and-evidence",
+    "cedCode": "M8ELA-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Mateo argues that students should be allowed to keep water bottles at their desks instead of using only the hallway fountain. The strongest objection is that some teachers say spilled water could damage classroom laptops. Mateo has confirmed that the school already issues spill-proof lids to every homeroom. Which sentence grants the true part of the teachers' objection while still ending on Mateo's own side?",
+    "choices": [
+      "While it is true that water bottles are convenient for students to carry around, spilled water could damage classroom laptops.",
+      "While it is true that the school issues spill-proof lids to every homeroom, spilled water could still damage classroom laptops during class.",
+      "While it is true that spilled water could damage classroom laptops, the school already issues spill-proof lids to every homeroom.",
+      "However, water bottles should be allowed at students' desks instead of only at the hallway fountain during class time."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check which clause holds the teachers' point and which clause holds Mateo's point.",
+      "Whatever sits in the independent clause is the part the reader remembers, so that part should be the writer's own side."
+    ]
+  },
+  {
+    "id": "m8ela-cohesion-among-claim-counterclaim-evidence-002",
+    "loId": "m8ela.cohesion-among-claim-counterclaim-and-evidence",
+    "cedCode": "M8ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Some students say a longer recess would cut into the time needed for the afternoon reading block. A writer arguing for a longer recess wants to turn back to that specific objection. Which sentence names the exact piece of the objection it is answering, rather than just announcing a turn?",
+    "choices": [
+      "Even so, the reading block already has ten unused minutes built into the schedule, so a longer recess would not cut into it.",
+      "Even so, longer recess would be good for students and would probably help most of them focus better once class starts again.",
+      "That figure leaves out how much students already enjoy their current recess time, which the survey did not actually measure at all.",
+      "However, recess is important for students' overall health and their ability to concentrate once the afternoon classes begin each day."
+    ],
+    "answer": "A",
+    "hints": [
+      "A hinge word like 'even so' only works if a specific piece of the objection follows it.",
+      "Ask which sentence actually explains why the reading block would not lose time."
+    ]
+  },
+  {
+    "id": "m8ela-cohesion-among-claim-counterclaim-evidence-003",
+    "loId": "m8ela.cohesion-among-claim-counterclaim-and-evidence",
+    "cedCode": "M8ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Elena argues that the school should let students eat lunch outside at courtyard tables instead of only in the cafeteria. Some staff object that the courtyard has no trash cans, so it would get littered. Elena has confirmed that the maintenance crew already empties three cans near the courtyard twice a day. She has also found that custodial logs show the front hallway, an indoor eating area, generated more trash complaints last month than any outdoor space did. Which pair of sentences opens her rebuttal with a correctly seated concessive clause and then brings in the custodial-log fact with a clause that says what it shows?",
+    "choices": [
+      "While it is true that the maintenance crew empties three trash cans near the courtyard twice a day, the courtyard currently has no trash cans at all. The custodial logs show the front hallway generated more trash complaints last month than any outdoor space did, though the logs do not say why.",
+      "While it is true that the courtyard currently has no trash cans, the maintenance crew already empties three cans near the courtyard twice a day. The custodial logs show the front hallway generated more trash complaints last month than any outdoor space did, which shows that indoor eating causes more litter than outdoor eating would.",
+      "While it is true that the courtyard currently has no trash cans, the maintenance crew already empties three cans near the courtyard twice a day. The custodial logs show the front hallway generated more trash complaints last month than any outdoor space did, but this comparison does not prove that eating outdoors produces less trash than eating indoors.",
+      "While it is true that eating outside would be more pleasant for students, the courtyard currently has no trash cans at all. The custodial logs show the front hallway generated more trash complaints last month than any outdoor space did, which shows that indoor eating causes more litter problems overall."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the staff's objection sits in the starter-word clause and Elena's own point sits in the independent clause.",
+      "Check whether the last sentence tells the reader what the custodial-log fact actually proves, not just the fact by itself."
+    ]
+  },
+  {
+    "id": "m8ela-cohesion-among-claim-counterclaim-evidence-004",
+    "loId": "m8ela.cohesion-among-claim-counterclaim-and-evidence",
+    "cedCode": "M8ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph argues that a school choir should meet three days a week instead of two before the winter concert: \"The choir should meet three days a week instead of two before the winter concert. Extra rehearsal would cut into students' time for homework. However, the choir should meet three days a week. Last year's group that rehearsed three days a week scored a 95 at regionals, and this year's two-day group scored an 81.\" The third sentence just repeats the claim instead of answering the homework objection, and it names nothing specific. Which revised third sentence fixes both problems?",
+    "choices": [
+      "While it is true that meeting three days a week helped last year's group score a 95, extra rehearsal would cut into homework time.",
+      "Even so, the choir should still meet three days a week, because the concert matters more than the schedule change.",
+      "Even so, the extra day would replace one of the two study-hall periods most choir students already have free, not their homework time.",
+      "Homework time matters to every student in the choir, especially during the busy weeks leading up to the winter concert."
+    ],
+    "answer": "C",
+    "hints": [
+      "A turn-back has to name the specific piece of the objection it is answering, not just restate the claim.",
+      "Watch for a sentence that grants the writer's own best reason and then still ends on the objection."
+    ]
+  },
+  {
+    "id": "m8ela-cohesion-among-claim-counterclaim-evidence-005",
+    "loId": "m8ela.cohesion-among-claim-counterclaim-and-evidence",
+    "cedCode": "M8ELA-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Kian argues that the school store should sell reusable lunch bags. He found that thirty-eight of the fifty students he surveyed said they would buy a reusable bag if it cost three dollars or less. Which sentence connects this survey result to Kian's reason without claiming more than the fifty surveyed students actually showed?",
+    "choices": [
+      "Thirty-eight of the fifty students surveyed said they would buy a reusable bag at three dollars or less, which shows that the school store would earn a profit if it priced the bags at three dollars each.",
+      "Thirty-eight of the fifty students surveyed said they would buy a reusable bag at three dollars or less, which shows that every student at the school, not just the fifty who were asked, wants to own a reusable bag.",
+      "Thirty-eight of the fifty students surveyed said they would buy a reusable bag at three dollars or less, which shows that reusable bags will completely replace plastic bags at the school within the next school year.",
+      "Thirty-eight of the fifty students surveyed said they would buy a reusable bag at three dollars or less, which shows that a three-dollar price point would likely draw enough student buyers to make the bags worth stocking."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether the claim stays limited to the fifty students who were actually surveyed.",
+      "A link that reaches beyond what the surveyed group showed is the kind that loses a careful reader's trust."
+    ]
+  }
+]

@@ -1,0 +1,439 @@
+[
+  {
+    "id": "m8ela-verbal-irony-puns-001",
+    "loId": "m8ela.verbal-irony-and-puns",
+    "cedCode": "M8ELA-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Which statement correctly describes what verbal irony is? 'When Marcus walked in soaking wet from head to toe, his friend said, \"Looks like you stayed nice and dry out there.\"'",
+    "choices": [
+      "It is verbal irony because the words sound sarcastic when you imagine someone saying them in a certain tone of voice.",
+      "It is verbal irony because the speaker is saying the opposite of what the situation shows, and we can point to both the words and the printed details that contradict them.",
+      "It is verbal irony because the friend is confused about what happened and genuinely does not realize that Marcus got soaked on the way home, so the friend is not intending to make a joke.",
+      "It is verbal irony because the speaker is deliberately choosing words that sound nice even though the speaker knows they are false and everyone will understand the reversal."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for a gap between the words a speaker chooses and the situation the passage shows on the page.",
+      "You need to point to both parts: what the words say and what the printed details show."
+    ]
+  },
+  {
+    "id": "m8ela-verbal-irony-puns-002",
+    "loId": "m8ela.verbal-irony-and-puns",
+    "cedCode": "M8ELA-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the two statements and decide which one correctly identifies a pun. A local pizza restaurant puts up a sign: 'Our new delivery service won't let you down.' The next week, a piano repair shop puts up a sign: 'We won't let your instrument down.' Both use the phrase 'let you/your down.'",
+    "choices": [
+      "Both are puns because the phrase 'let down' has two meanings: disappoint and allow something to descend.",
+      "Only the pizza shop sign is a pun because 'let down' makes sense for a delivery service bringing food to a customer's location.",
+      "Only the piano repair shop sign is a pun because 'let down' clearly refers to both disappointing someone and lowering a piano into place.",
+      "Neither is a pun because both shops are using the exact same phrase in the same way."
+    ],
+    "answer": "C",
+    "hints": [
+      "Test whether both meanings of the phrase are actually live in the situation the passage sets up.",
+      "A pun needs the situation to support both meanings at the same time; if only one meaning fits what is happening, the line is not a pun."
+    ]
+  },
+  {
+    "id": "m8ela-verbal-irony-puns-003",
+    "loId": "m8ela.verbal-irony-and-puns",
+    "cedCode": "M8ELA-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt. The science club's experiment failed. The plants in the greenhouse grew backward, and half the seedlings died. At the end-of-year assembly, the club president stands at the microphone and says, 'Our greenhouse project really grew on the school.' The audience laughs. Explain what makes this line more like a pun than like verbal irony, and what the pun does for the president's moment.",
+    "choices": [
+      "It is a pun because 'grew' is live twice—the plants literally grew in the greenhouse, and the project has made a positive impression on the school—so both meanings stay standing and help the president acknowledge the failure without sounding defeated.",
+      "It is a pun because 'grew' and 'grew on' are different phrases with different meanings, and both apply to the situation in a way that lets the president frame the disaster as something the school can remember without shame or embarrassment.",
+      "It is verbal irony because the experiment clearly did not succeed, so the president means the opposite of what she says, and she is criticizing the school for not supporting the science club well enough.",
+      "It is verbal irony because the audience laughs, which shows they understand that she is being sarcastic about the plants growing in the wrong direction instead of growing normally."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself whether one meaning must be thrown away for the line to work, or whether both meanings fit the situation and stay standing together.",
+      "If both meanings are live at once, the speaker is rewarding the listener by holding both—that is a pun. If only the opposite meaning survives, the speaker is using irony to make a point."
+    ]
+  },
+  {
+    "id": "m8ela-verbal-irony-puns-004",
+    "loId": "m8ela.verbal-irony-and-puns",
+    "cedCode": "M8ELA-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the two statements a teacher makes about the same class. Statement 1: After the class scores poorly on a surprise quiz, she tells them, 'Great work today, everyone. That was exactly the performance I was hoping for.' Statement 2: After the class scores poorly, she tells them on Friday, 'You are all absolute stars—this week you shined so brightly that I had to wear sunglasses.' Which statement uses verbal irony, and which uses a different technique entirely, and why?",
+    "choices": [
+      "Statement 1 is verbal irony because she is criticizing them while using a sarcastic tone and a gap between her words and the printed details of their poor quiz score. Statement 2 is a different technique—hyperbole—because it exaggerates beyond what could be real without a printed contradiction to support the irony.",
+      "Statement 1 is verbal irony because the printed details show they performed badly, and she means the opposite. Statement 2 is not verbal irony because it uses hyperbole (exaggeration) to say something that is impossible in reality, and it is not supported by a gap between words and situation.",
+      "Statement 2 is verbal irony because it contains more extreme language and stronger exaggeration than statement 1 does. Statement 1 is not verbal irony because it is shorter and simpler.",
+      "Both are verbal irony because in each case the teacher utters words that mean the opposite of the actual situation shown by the poor quiz score."
+    ],
+    "answer": "B",
+    "hints": [
+      "In verbal irony, you must be able to point to printed details in the passage that contradict the words. Both the words and the contradiction must be on the page.",
+      "Remember that the two moves—irony and pun—read the same way at first, but they end differently. With irony, one meaning is thrown away. With other techniques like hyperbole or exaggeration, the surface meaning is not trying to flip into its opposite at all."
+    ]
+  },
+  {
+    "id": "m8ela-verbal-irony-puns-005",
+    "loId": "m8ela.verbal-irony-and-puns",
+    "cedCode": "M8ELA-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the scene. A bakery runs a local business contest. The judges taste the entries and award the blue ribbon to a pastry chef. The chef's competitor, who brought a loaf of sourdough bread, does not place in the ribbons. The next morning the bread baker puts a new window sign in the bakery: 'Our loaves really rise to the occasion. Come taste why we make a crust above the rest.' Explain which of these labels fits the sign, what the two live meanings are (if it is a pun) or what printed detail contradicts the words (if it is verbal irony), and what attitude the baker is showing.",
+    "choices": [
+      "It is a pun. 'Crust above the rest' is live twice because it means both the baked crust on bread and a way of describing supremacy, and 'rise to the occasion' works both as dough rising and as meeting a challenge. The baker is making a joke about the loss and inviting customers to taste the bread anyway without being defeated by it.",
+      "It is verbal irony. The baker did not win the blue ribbon, so 'rise to the occasion' means the opposite: the dough failed to rise properly, and the baker is being self-critical and harsh about the contest loss.",
+      "It is a pun. 'Rise to the occasion' is live twice because bread dough rises during baking and because meeting a challenge requires rising to meet it, and 'crust above the rest' carries both the pastry meaning and the idea of excellence. The baker is winking at customers by naming the loss lightly and inviting them to taste the bread anyway.",
+      "It is verbal irony. The baker did not place in the ribbons, so she means the opposite of what she says, which means the bread is inferior to the pastry, and she is being bitter about the judges' decision."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether one meaning must be erased for the line to work, or whether both meanings stay standing together because the situation supports them both.",
+      "The baker is not erasing the loss or attacking anyone. Look for what the baker gains by holding both meanings at once: the chance to name disappointment without being defeated by it."
+    ]
+  },
+  {
+    "id": "m8ela-word-families-from-a-shared-root-001",
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "cedCode": "M8ELA-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The root -ject- comes from a Latin verb meaning 'to throw.' The prefix re- means 'back' and the prefix pro- means 'forward.' Based on the meaning of the root and the prefixes, what is the difference between reject and project?",
+    "choices": [
+      "Reject means to criticize harshly, and project means to estimate a future amount.",
+      "Reject means to throw something away forever, and project means to plan ahead.",
+      "Reject means to refuse, and project means to display on a screen.",
+      "Reject means to throw back, and project means to throw forward."
+    ],
+    "answer": "D",
+    "hints": [
+      "Focus on what the root -ject- does in both words: it always means 'throw.'",
+      "The prefix is the whole difference. What direction does re- point, and what direction does pro- point?"
+    ]
+  },
+  {
+    "id": "m8ela-word-families-from-a-shared-root-002",
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "cedCode": "M8ELA-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The root -tract- comes from a Latin verb meaning 'to pull.' You know that ex- means 'out,' re- means 'back,' and con- means 'together.' A contractor is someone who makes an agreement with another party to do work. Using the word parts, what does a contractor do with an agreement?",
+    "choices": [
+      "They pull the agreement together with another party's agreement.",
+      "They pull the agreement out from an office file and remove it permanently.",
+      "They pull the agreement backward in time to restore an earlier version of it.",
+      "They pull the agreement apart into separate pieces to divide the terms."
+    ],
+    "answer": "A",
+    "hints": [
+      "What prefix appears at the start of the word contractor? What direction does that prefix point?",
+      "Think about the root -tract-. What does it mean to pull things together in a business relationship?"
+    ]
+  },
+  {
+    "id": "m8ela-word-families-from-a-shared-root-003",
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "cedCode": "M8ELA-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The root -vert- comes from a Latin verb meaning 'to turn.' The prefix con- means 'together' and the prefix a- means 'away.' Two people in a study group had an argument, but then they talked things through and made peace. Which word describes what they did with their anger?",
+    "choices": [
+      "They averted their anger.",
+      "They converted their anger.",
+      "They perverted their anger.",
+      "They reverted their anger."
+    ],
+    "answer": "B",
+    "hints": [
+      "The root -vert- always means 'to turn.' What prefix means 'together'?",
+      "When you turn things together from one state into another, you are changing one thing into something different."
+    ]
+  },
+  {
+    "id": "m8ela-word-families-from-a-shared-root-004",
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "cedCode": "M8ELA-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The root -scrib- or -script- comes from a Latin verb meaning 'to write.' The root -cred- comes from a Latin verb meaning 'to believe.' The prefix pre- means 'before,' de- means 'down,' and in- can mean 'not.' A doctor wrote out the name and dose of a medicine on a form before the patient left the office. Which statement correctly describes what happened using word parts?",
+    "choices": [
+      "The doctor inscribed the medicine; the root -script- means write, and in- means into, so the order was written into the patient's memory.",
+      "The doctor described the medicine; the root -scrib- means write, and de- means down, so the information was written down on the form.",
+      "The doctor prescribed the medicine; the root -script- means write, and pre- means before, so the medicine was written out in advance.",
+      "The doctor discredited the old medicine; the root -cred- means believe, and dis- means not, so the patient no longer believed in it."
+    ],
+    "answer": "C",
+    "hints": [
+      "The sentence says the doctor wrote the medicine name and dose before the patient left. Which prefix means 'before'?",
+      "Remember that the root stays the same in meaning. Pre- points to time: something done in advance. De- points to position: something written down as a description."
+    ]
+  },
+  {
+    "id": "m8ela-word-families-from-a-shared-root-005",
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "cedCode": "M8ELA-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The root -port- comes from a Latin verb meaning 'to carry.' The root -vis- comes from a Latin verb meaning 'to see.' The prefix ex- means 'out' and the prefix in- can mean 'in' or 'not.' A company exported goods to another country, and the shipment was so well hidden in the cargo container that customs inspectors said it was invisible. Which two statements correctly read the word parts in these two words?",
+    "choices": [
+      "Exported means goods were carried in by the company because ex- is a prefix that indicates movement into a space, and invisible means something that can be seen very clearly even when it is obscured.",
+      "Exported means goods were sent away through a mail carrier service, and invisible means the condition of being opposite to what is visible or able to be observed.",
+      "Exported means goods were carried inside a container for storage, and invisible means something hidden inside a location where in- refers to being contained within something.",
+      "Exported means goods were carried out to another country, and invisible means something that cannot be seen because in- means not."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ex- means 'out.' What does it mean to carry something out? Now think about the root -vis-, which means 'to see.' Which job of in- makes sense: in, or not?",
+      "The sentence says the shipment could not be found by looking. Does that match 'something hidden inside,' or does it match 'something that cannot be seen'?"
+    ]
+  },
+  {
+    "id": "m8ela-word-families-from-a-shared-root-006",
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "cedCode": "M8ELA-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The root -cede-, -ceed-, and -cess- are three different spellings of one root meaning 'to go' or 'to give way.' The prefix pro- means 'forward,' re- means 'back,' se- means 'apart,' and pre- means 'before.' The spelling of the root changes across four words in this family: proceed, recede, secede, and precede. Two of these words are easily confused because they sound very similar and their prefixes point in directions that feel close. Identify the two easily-confused pair and explain why a student might mix them up if they only listened to the sound of the word instead of reading the prefix.",
+    "choices": [
+      "Proceed and precede are easily confused because they sound almost the same, but proceed means to go forward while precede means to go before, and the prefixes pro- and pre- sound similar even though they mean different directions.",
+      "Recede and secede are easily confused because they sound almost identical when spoken aloud, but recede means to go back while secede means to go apart, and both prefixes begin with the same sound so students may not distinguish them clearly.",
+      "Proceed and recede are easily confused because they both contain the root -ceed- and sound quite similar, so students who only listen may not notice that pro- points forward while re- points backward.",
+      "Precede and secede are easily confused because they both begin with the same letter sound and mean similar things related to leaving or going away, making them hard to tell apart without careful attention to spelling."
+    ],
+    "answer": "A",
+    "hints": [
+      "Say all four words aloud or in your head. Which two sound most alike to your ear, even though their meanings are different?",
+      "Think about the prefixes pro- and pre-. They sound very similar, but they point in different directions. What does each one mean? That small sound difference at the front carries a big meaning difference."
+    ]
+  },
+  {
+    "id": "m8ela-shades-of-meaning-degree-formality-001",
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "cedCode": "M8ELA-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The words firm, persistent, and resolute all describe a person who will not change a position, and all three approve of that person rather than criticize them. Which one makes the strongest claim, saying that the decision is settled all the way through and that nothing anyone offers will move it?",
+    "choices": [
+      "resolute",
+      "persistent",
+      "firm",
+      "willful"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which of the three approving words adds the idea that no counter-argument could work at all.",
+      "One of these four words actually blames rather than praises the person — rule that one out first."
+    ]
+  },
+  {
+    "id": "m8ela-shades-of-meaning-degree-formality-002",
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "cedCode": "M8ELA-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a text to a friend, a student describes her basketball coach: after the team asked to extend practice by twenty minutes, the coach said no, briefly explained her reasoning, and never brought the subject up again. The student wants to describe the coach's attitude toward that one decision without claiming more than what actually happened. Which word best fits?",
+    "choices": [
+      "persistent",
+      "firm",
+      "resolute",
+      "bullheaded"
+    ],
+    "answer": "B",
+    "hints": [
+      "The coach made the decision once and never had to repeat or defend it again, so look for the word that claims the least.",
+      "Rule out any word that blames the coach, since the student isn't criticizing her."
+    ]
+  },
+  {
+    "id": "m8ela-shades-of-meaning-degree-formality-003",
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "cedCode": "M8ELA-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a short note to her teacher about a debate partner. During practice, the partner kept insisting on using his own opening argument even after she suggested two other approaches. She wants to mildly criticize this habit, but the note needs to sound appropriate coming from a student to a teacher rather than sounding blunt, the way something said out loud might. Which word should she use?",
+    "choices": [
+      "persistent",
+      "bullheaded",
+      "willful",
+      "resolute"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two of these four words blame the partner instead of praising him — start by narrowing it to those two.",
+      "Between the two blaming words, one is described as blunt and more common in speech than in writing."
+    ]
+  },
+  {
+    "id": "m8ela-shades-of-meaning-degree-formality-004",
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "cedCode": "M8ELA-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A newspaper report describes a city council member who was voted down at two meetings but brought the same proposal back at each of the next three meetings until it finally passed. The reporter wants to give her credit for this without overstating what the facts show, and wants a word that fits the formal tone of a printed newspaper report. Which word should the reporter use?",
+    "choices": [
+      "firm",
+      "bullheaded",
+      "resolute",
+      "persistent"
+    ],
+    "answer": "D",
+    "hints": [
+      "The council member's actions involved coming back again and again over time, which points to one specific rung on the ladder.",
+      "Rule out the word that blames her, since the reporter wants to give her credit, not criticize her."
+    ]
+  },
+  {
+    "id": "m8ela-shades-of-meaning-degree-formality-005",
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "cedCode": "M8ELA-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a note that will be read aloud in person to the school principal about a classmate who ignored the same piece of feedback from three separate teachers and never adjusted his project at all. The student wants the wording to be blunt, since it will be spoken rather than written, and to claim as much as these facts actually support. Which word should the student use?",
+    "choices": [
+      "bullheaded",
+      "willful",
+      "persistent",
+      "resolute"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ignoring input from three different teachers is a stronger charge than simply insisting on his own preference.",
+      "One of these words is described as blunt and belongs more to speech than to writing, which fits a note meant to be spoken aloud."
+    ]
+  },
+  {
+    "id": "m8ela-shades-of-meaning-degree-formality-006",
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "cedCode": "M8ELA-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student drafts this sentence for a school newspaper report meant to praise a teammate: 'The teammate was bullheaded about running extra sprints after practice, even though the coach never asked her to and no one ever told her to stop.' The student still wants to give the teammate credit for repeating this on her own over many practices, but she does not want to claim that nothing could have changed the teammate's mind, since the sentence never mentions anyone trying to talk her out of it. Which word should replace bullheaded?",
+    "choices": [
+      "firm",
+      "persistent",
+      "resolute",
+      "willful"
+    ],
+    "answer": "B",
+    "hints": [
+      "The sentence describes repeated action over time, but never mentions the teammate resisting any pushback, which limits how strong a claim is fair to make.",
+      "One of these four words blames rather than praises, which is the first problem with the original sentence."
+    ]
+  },
+  {
+    "id": "m8ela-verifying-word-meaning-with-context-a-dictionary-001",
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "cedCode": "M8ELA-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Here is a dictionary entry for the word \"bark\" that lists four numbered senses (two noun meanings and two verb meanings) and a sentence that uses the word. SENTENCE: \"The sergeant would bark orders at the new recruits every morning before drills began.\" Which sense of \"bark\" does the sentence use?",
+    "choices": [
+      "the tough outer covering of a tree trunk and its branches",
+      "a sharp, loud sound that a dog makes",
+      "to speak to someone in a sharp, loud, commanding voice",
+      "to make a sharp, loud sound, the way a dog does"
+    ],
+    "answer": "C",
+    "hints": [
+      "First decide whether 'bark' is naming a thing or performing an action in this sentence.",
+      "If it's an action, ask whether the sergeant is imitating a dog or speaking loudly to give an order."
+    ]
+  },
+  {
+    "id": "m8ela-verifying-word-meaning-with-context-a-dictionary-002",
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "cedCode": "M8ELA-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Here is a dictionary entry for the word \"table\" that lists four numbered senses (two noun meanings and two verb meanings) and a sentence that uses the word. SENTENCE: \"The report included a table that listed rainfall totals for each month of the year.\" Which sense of \"table\" does the sentence use?",
+    "choices": [
+      "a piece of furniture with a flat top and legs, used for eating or working",
+      "to place dishes and utensils on a table before a meal",
+      "to postpone discussion of a proposal until a later time",
+      "an orderly arrangement of facts or numbers printed in rows and columns"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether 'table' is naming a thing or performing an action here.",
+      "If it's a noun, decide whether the sentence is about furniture or about organized information."
+    ]
+  },
+  {
+    "id": "m8ela-verifying-word-meaning-with-context-a-dictionary-003",
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "cedCode": "M8ELA-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Here is a dictionary entry for the word \"fair\" that lists four numbered senses (two adjective meanings, a noun meaning, and an adverb meaning) and a sentence that uses the word. SENTENCE: \"Even though her sister won, Maria admitted the contest had been fair since everyone followed the same rules.\" Which sense of \"fair\" does the sentence use?",
+    "choices": [
+      "treating people equally and according to the same set of rules",
+      "moderately good, acceptable, or only average in quality",
+      "an event featuring games, rides, and exhibits, usually held once a year",
+      "in a fair and sportsmanlike manner, without any cheating"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check what job 'fair' does in this sentence—does it describe a noun?",
+      "If it's an adjective, ask whether the sentence is about equal treatment or about average quality."
+    ]
+  },
+  {
+    "id": "m8ela-verifying-word-meaning-with-context-a-dictionary-004",
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "cedCode": "M8ELA-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Here is a dictionary entry for the word \"counter\" and a sentence that uses it. ENTRY: counter — (noun) 1. a long flat surface in a kitchen or store where work is done or goods are sold; (noun) 2. a device that keeps track of a number by counting; (verb) 3. to respond to an argument or a move with an opposing one; (adjective) 4. opposite in direction, opinion, or effect. SENTENCE: \"When his opponent claimed the new park would raise taxes, the mayor was quick to counter with statistics showing the opposite.\" A student picked sense 1, saying that a counter is most commonly known as a flat kitchen surface. Which choice correctly identifies the sense used here and explains why the student's reasoning was wrong?",
+    "choices": [
+      "Sense 1, a noun: 'counter' most often names the flat surface in a kitchen or store, so that is the meaning that fits here.",
+      "Sense 3, a verb: the mayor responds to the claim with statistics, so 'counter' names the action of answering an argument with an opposing one.",
+      "Sense 4, an adjective: the mayor's statistics point in the opposite direction from his opponent's claim, matching something opposite in effect.",
+      "Sense 2, a noun: since the mayor uses statistics, which are numbers, 'counter' must name a device that keeps track of a count."
+    ],
+    "answer": "B",
+    "hints": [
+      "Start by deciding what job 'counter' does in this sentence, then eliminate every sense whose label doesn't match.",
+      "Don't let the most familiar everyday meaning of a word override what its grammatical job actually is in the sentence."
+    ]
+  },
+  {
+    "id": "m8ela-verifying-word-meaning-with-context-a-dictionary-005",
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "cedCode": "M8ELA-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Here is a dictionary entry for the word \"sound\" and a sentence that uses it. ENTRY: sound — (noun) 1. something that can be heard, produced by vibrations reaching the ear; (adjective) 2. financially or physically strong, solid, or healthy; (verb) 3. to give the impression of being a certain way, based on how something is described; (verb) 4. to measure the depth of water using a weighted line or instrument. SENTENCE: \"After hearing the coach's halftime speech, the players agreed his strategy sounded promising, even though the score was still close.\" A student substituted sense 4 into the sentence and the result made no sense. Which choice correctly identifies the sense that fits and explains why?",
+    "choices": [
+      "Sense 2, an adjective: substituting it gives 'his strategy was sound, meaning solid and healthy,' which seems to fit since coaches often call strategies strong.",
+      "Sense 1, a noun: substituting it gives 'his strategy was a sound, something heard by the ear,' which seems to fit since the coach was speaking aloud.",
+      "Sense 3, a verb: substituting it gives 'his strategy gave the impression of being promising,' which keeps the sentence's original meaning.",
+      "Sense 4, a verb: substituting it gives 'his strategy sounded the depth of the water,' which seems to fit since the word 'sounded' appears in the sentence."
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the -ed ending on 'sounded' and think about what job that ending signals.",
+      "Once you know the job, substitute each remaining candidate and see which one keeps the sentence's meaning intact."
+    ]
+  },
+  {
+    "id": "m8ela-verifying-word-meaning-with-context-a-dictionary-006",
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "cedCode": "M8ELA-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Here is a dictionary entry for the word \"grave\" and a sentence that uses it. ENTRY: grave — (noun) 1. a place in the ground where a dead body is buried; (adjective) 2. very serious or dangerous, likely to cause harm or worry; (adjective) 3. serious and solemn in manner or expression, not cheerful; (verb) 4. to carve or engrave a design into a hard surface, an old-fashioned use. SENTENCE: \"The doctor's grave expression as she reviewed the test results made the family fear bad news.\" Two adjective senses could both plausibly fit at first glance. Which choice correctly identifies the sense used here and explains why it passes the substitution check?",
+    "choices": [
+      "Sense 4, a verb: substituting it gives 'her expression carved a design into the results,' fitting the old-fashioned meaning of engraving.",
+      "Sense 2, an adjective: substituting it gives 'her very serious and dangerous expression,' fitting since the family feared serious, harmful news.",
+      "Sense 1, a noun: substituting it gives 'her burial-place expression,' fitting since graves are commonly linked with death and sadness.",
+      "Sense 3, an adjective: substituting it gives 'her serious and solemn, not cheerful, expression,' which correctly describes her manner."
+    ],
+    "answer": "D",
+    "hints": [
+      "Both remaining candidates share the same part-of-speech label, so the sentence itself has to decide between them.",
+      "Substitute each definition back into the sentence and ask whether it describes her manner or describes a dangerous situation."
+    ]
+  }
+]

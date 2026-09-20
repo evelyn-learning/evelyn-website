@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8ela-active-passive-voice-001",
+    "loId": "m8ela.active-and-passive-voice",
+    "cedCode": "M8ELA-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'The teacher explained the assignment to the class.' In this sentence, who is the doer of the action? How do you know whether this sentence is in the active or passive voice?",
+    "choices": [
+      "The assignment is the doer, because it is the object of the preposition, so this is passive voice.",
+      "The class is the doer, because the class receives the explanation, so this is passive voice.",
+      "The teacher is the doer, and the teacher is also the subject, so this is active voice.",
+      "The teacher is the doer, but the subject is the class, so this is passive voice."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the verb first, then ask who or what does that action.",
+      "Compare: is the subject (the word the verb belongs to) the same as the doer?"
+    ]
+  },
+  {
+    "id": "m8ela-active-passive-voice-002",
+    "loId": "m8ela.active-and-passive-voice",
+    "cedCode": "M8ELA-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is in the passive voice? Remember that the passive voice has a specific shape: a form of 'be' (am, is, are, was, were, be, being, been) followed by the past participle (the third shape of the verb).",
+    "choices": [
+      "The dancers were rehearsing the routine all week.",
+      "The dancers being on stage was a memorable moment.",
+      "The dancers were late to the first rehearsal.",
+      "The routine was rehearsed by the dancers all week."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for the form of 'be' followed by a verb shape that cannot stand alone.",
+      "Check whether the subject receives the action or performs it."
+    ]
+  },
+  {
+    "id": "m8ela-active-passive-voice-003",
+    "loId": "m8ela.active-and-passive-voice",
+    "cedCode": "M8ELA-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'The painting was completed by the artist before the exhibition.' Identify the receiver, the doer, and the verb form. Is this sentence active or passive? How do you know?",
+    "choices": [
+      "The receiver is the painting, the doer is the artist, and it is passive because 'was completed' is 'be' plus the past participle.",
+      "The receiver is the artist, the doer is the painting, and it is passive because the verb includes a form of 'be' paired with an action word.",
+      "The receiver is the exhibition, the doer is the artist, and it is active because the artist performs the main action in the sentence.",
+      "The receiver is the painting, the doer is the artist, and it is active because the verb 'completed' shows a finished state that has been achieved."
+    ],
+    "answer": "A",
+    "hints": [
+      "The subject of the sentence is the word the verb belongs to—use that to find the receiver.",
+      "The verb shape 'completed' is the third shape of the verb (cannot stand alone), which pairs with 'be'."
+    ]
+  },
+  {
+    "id": "m8ela-active-passive-voice-004",
+    "loId": "m8ela.active-and-passive-voice",
+    "cedCode": "M8ELA-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Convert this active sentence to the passive voice: 'The principal announced the new lunch schedule during the morning meeting.' You must keep the same tense and decide whether to include or drop the doer. Write out the sentence you create and explain why your choice about the doer makes sense.",
+    "choices": [
+      "The new lunch schedule was announced during the morning meeting. The doer is dropped because 'the principal' tells the reader exactly who announced it and that detail is necessary.",
+      "The new lunch schedule was announced by the principal during the morning meeting. The doer is included because the principal is the person responsible for the announcement and readers need to know who made it.",
+      "The new lunch schedule was announced during the morning meeting. The doer is dropped because when the doer is a title or official role with clear responsibility, the identity becomes obvious and the 'by' phrase adds unnecessary weight to the sentence.",
+      "The new lunch schedule was being announced by the principal during the morning meeting. The doer is included because the original sentence is active and the doer must always appear in the passive voice to show who is performing the action."
+    ],
+    "answer": "B",
+    "hints": [
+      "The tense is past, so 'be' must be 'was'; add the past participle of 'announce' which is 'announced'.",
+      "Think about whether 'the principal' gives meaningful information to the reader or just fills a slot."
+    ]
+  },
+  {
+    "id": "m8ela-active-passive-voice-005",
+    "loId": "m8ela.active-and-passive-voice",
+    "cedCode": "M8ELA-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two sentences are written below. Read each one carefully and identify which is active, which is passive, and explain what made the second one tricky.\n\nSentence 1: 'The reporter was waiting in the lobby for an interview.'\nSentence 2: 'The interview was scheduled by the media director yesterday.'\n\nWhich sentence is passive?",
+    "choices": [
+      "Sentence 1 is passive because it uses the past participle 'waiting,' which indicates that the reporter is not actively performing a visible action in the sentence.",
+      "Both sentences are passive because both contain 'was' as the main helper verb and both describe states of being rather than actions being performed.",
+      "Sentence 2 is passive because the subject 'the interview' receives the action and the verb has the shape 'be' plus the past participle 'scheduled'.",
+      "Sentence 1 is passive because the reporter is in a state of waiting, which shows the subject experiencing a condition rather than doing the action to someone else."
+    ],
+    "answer": "C",
+    "hints": [
+      "In Sentence 1, ask yourself: can the reporter do the waiting, or is waiting being done to the reporter?",
+      "The shape to check is not just 'was'—it must be 'was' plus the past participle (third shape)."
+    ]
+  },
+  {
+    "id": "m8ela-active-passive-voice-006",
+    "loId": "m8ela.active-and-passive-voice",
+    "cedCode": "M8ELA-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this passive sentence: 'The original recipe was lost many years ago.' You want to convert it to active voice, but you realize there is a problem. What is the problem, and what does it mean you cannot do?",
+    "choices": [
+      "The problem is that the sentence is missing the information about when the recipe was lost, so you cannot write an active version until you add a time marker.",
+      "The problem is that 'lost' is not spelled correctly for a past participle. The correct form is 'lose,' so you must fix the spelling before you can convert to active.",
+      "The problem is that the sentence uses 'was' instead of 'were,' which means it is not truly passive. You can only convert sentences that follow the be-plus-third-shape rule exactly.",
+      "The problem is that there is no 'by' phrase, so you cannot find the doer. Without knowing who lost the recipe, you cannot complete an active sentence because active voice requires a doer in the subject seat."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for the doer by checking whether a 'by' phrase is present and what it tells you.",
+      "Remember: active voice must put a doer in the subject seat, but this sentence does not name one."
+    ]
+  },
+  {
+    "id": "m8ela-gerunds-participles-001",
+    "loId": "m8ela.gerunds-and-participles",
+    "cedCode": "M8ELA-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A gerund is an -ing verb form doing a noun's job in a sentence. Which sentence contains a gerund?\n\nHint 1: Find the -ing word. Hint 2: Ask whether it names a thing, or whether it describes a noun.",
+    "choices": [
+      "The instructor is dancing with the advanced students.",
+      "The dancing children spun across the gym floor.",
+      "We were dancing to the new song all evening.",
+      "Dancing at the festival was the highlight of my summer."
+    ],
+    "answer": "D",
+    "hints": [
+      "In the correct sentence, the -ing word tells you what the thing is that did something; in the others, it describes a noun or pairs with a helper verb.",
+      "Try swapping a plain noun into the slot where the -ing word sits. If the sentence still works, the -ing word is naming a thing."
+    ]
+  },
+  {
+    "id": "m8ela-gerunds-participles-002",
+    "loId": "m8ela.gerunds-and-participles",
+    "cedCode": "M8ELA-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence and identify the job of the marked word.\n\n\"Organizing the supply closet revealed piles of things nobody had used in years.\"\n\nWhat job is \"Organizing\" doing in this sentence?",
+    "choices": [
+      "It is a gerund, naming the thing that revealed all the old supplies.",
+      "It is part of the verb, paired with a helping verb that comes before it.",
+      "It is a participle, describing which supply closet was being discussed.",
+      "It is a participle, showing what the closet itself was doing."
+    ],
+    "answer": "A",
+    "hints": [
+      "First, check whether a helping verb sits directly in front of this word. Is there one?",
+      "If not, ask: does this word name a thing (what revealed the piles?), or does it describe a noun?"
+    ]
+  },
+  {
+    "id": "m8ela-gerunds-participles-003",
+    "loId": "m8ela.gerunds-and-participles",
+    "cedCode": "M8ELA-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A participle is an -ing or -ed verb form doing an adjective's job, describing a noun. Read this sentence and decide which word is a participle.\n\n\"The torn banner hung in the display case, and nobody bothered moving it for months.\"\n\nWhich word is a participle?",
+    "choices": [
+      "\"moving,\" because it tells what nobody did for months",
+      "\"torn,\" because it describes which banner hung in the case",
+      "\"hung,\" because it is the main verb of the sentence",
+      "\"bothered,\" because it is an -ed word that describes an action"
+    ],
+    "answer": "B",
+    "hints": [
+      "A participle must be attached to a noun and tell you something about that noun—which one, or what kind.",
+      "Ask yourself: which word sits right next to a noun and answers a question about it?"
+    ]
+  },
+  {
+    "id": "m8ela-gerunds-participles-004",
+    "loId": "m8ela.gerunds-and-participles",
+    "cedCode": "M8ELA-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The word \"running\" appears in both sentences below. Read them carefully and explain why \"running\" has a different job in each one.\n\nSentence 1: \"Running three miles every morning built Marcus's endurance.\"\nSentence 2: \"Marcus saw his friend running three miles every morning.\"\n\nWhich statement correctly identifies the job of \"running\" in each sentence?",
+    "choices": [
+      "In sentence 1, \"running\" is a participle describing Marcus as the subject of the action. In sentence 2, \"running\" functions as part of the main verb phrase with the helping verb saw.",
+      "In sentence 1, \"running\" is part of the verb phrase with a helping verb that shows past action. In sentence 2, \"running\" is a gerund that names the specific activity Marcus saw his friend performing.",
+      "In sentence 1, \"running\" is a gerund naming what built Marcus's endurance. In sentence 2, \"running\" is a participle describing his friend.",
+      "In both sentences, \"running\" functions identically as a participle because it carries the -ing ending and describes an ongoing activity or motion in each context."
+    ],
+    "answer": "C",
+    "hints": [
+      "For sentence 1, ask: what thing built Marcus's endurance? Try swapping a noun in that slot.",
+      "For sentence 2, ask: what does \"running\" describe? Which noun does it tell you about?"
+    ]
+  },
+  {
+    "id": "m8ela-gerunds-participles-005",
+    "loId": "m8ela.gerunds-and-participles",
+    "cedCode": "M8ELA-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence and answer the question about both verb forms.\n\n\"Mixing the concrete proved harder than the contractor anticipated, and the mixed batch sat unused in the yard.\"\n\nWhat are the jobs of both \"Mixing\" at the start and \"mixed\" in the middle of the sentence?",
+    "choices": [
+      "\"Mixing\" is part of the verb, and \"mixed\" is a gerund naming the batch.",
+      "Both \"Mixing\" and \"mixed\" are participles because they both describe something about the concrete and the batch.",
+      "\"Mixing\" is a participle describing the concrete, and \"mixed\" is part of the verb.",
+      "\"Mixing\" is a gerund naming what proved harder, and \"mixed\" is a participle describing the batch."
+    ],
+    "answer": "D",
+    "hints": [
+      "Before naming either word, use the first question: is a helper verb sitting right in front of it? If yes, stop—it is the verb.",
+      "For the second question: does the word name a thing, or does it describe a noun and answer which one or what kind?"
+    ]
+  },
+  {
+    "id": "m8ela-gerunds-participles-006",
+    "loId": "m8ela.gerunds-and-participles",
+    "cedCode": "M8ELA-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three sentences below each contain an -ing or -ed word. The same word appears in two of them, but it has a different job in each. Read all three carefully, then identify which two sentences contain the same word doing two different jobs, and name those jobs correctly.\n\nSentence A: \"The broken window in the science lab forced the principal to call a repair service.\"\nSentence B: \"The student accidentally broke the window, and nobody broke a rule while it was being fixed.\"\nSentence C: \"The janitor found broken glass scattered across the floor under the window.\"\n\nWhich pair of sentences contains the same word with two different jobs?",
+    "choices": [
+      "Sentences A and C both use \"broken\" as a participle describing a noun affected by the action.",
+      "Sentences A and B both use \"broke\" and \"broken,\" but they are different word forms so they cannot have the same job.",
+      "Sentences B and C both use \"broken,\" but in B it is part of the verb and in C it is a participle describing glass.",
+      "Sentences A and B both use \"broken,\" but in A it is a participle and in B it is part of the verb \"was being fixed.\""
+    ],
+    "answer": "A",
+    "hints": [
+      "Identify which word repeats across more than one sentence. Then check the first question for each: is a helping verb sitting directly in front of it?",
+      "For the repeated word, if no helper sits in front, run the second question: does it name a thing, or does it describe a noun? The answer will be the same both times—unless you miscounted the helpers."
+    ]
+  },
+  {
+    "id": "m8ela-infinitives-verbal-phrases-001",
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "cedCode": "M8ELA-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An infinitive is a verb form that always begins with the word 'to' followed by the plain form of a verb. Which of the following is an infinitive?",
+    "choices": [
+      "to swim",
+      "to the gym",
+      "swimming",
+      "swam"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether the word after 'to' is an action in its plain form.",
+      "An infinitive is never the main verb that runs the sentence."
+    ]
+  },
+  {
+    "id": "m8ela-infinitives-verbal-phrases-002",
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "cedCode": "M8ELA-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'Maya walked to the library after school.' The phrase 'to the library' starts with the word 'to', but is it an infinitive? Explain your reasoning by looking at the word that comes right after 'to'.",
+    "choices": [
+      "Yes, it is an infinitive because it starts with 'to' and tells where Maya went.",
+      "No, it is not an infinitive because the word after 'to' is 'the', which names a place, not an action.",
+      "Yes, it is an infinitive because 'to the library' is a phrase that describes Maya's action.",
+      "No, it is not an infinitive because infinitives always have objects that receive the action."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask yourself: can you put 'the' in front of the word after 'to'?",
+      "A prepositional phrase starting with 'to' points at a place or a person, not an action."
+    ]
+  },
+  {
+    "id": "m8ela-infinitives-verbal-phrases-003",
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "cedCode": "M8ELA-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'Jordan wants to finish his homework before dinner.' Identify the infinitive in the sentence and explain what job it does (noun, adjective, or adverb) by saying what question it answers about the sentence.",
+    "choices": [
+      "The infinitive is 'to finish', and it tells why Jordan wants something, so it does an adverb's job.",
+      "The infinitive is 'finish his homework', and it describes the noun 'homework', so it does an adjective's job.",
+      "The infinitive is 'to finish', and it names the thing Jordan wants, so it does a noun's job.",
+      "The infinitive is 'his homework', and it tells when Jordan will finish, so it does an adverb's job."
+    ],
+    "answer": "C",
+    "hints": [
+      "First, find the main verb of the sentence: 'wants'. Then ask what the infinitive names, describes, or explains.",
+      "You can swap the infinitive with a regular noun: 'Jordan wants ___ before dinner.' What would fill that blank?"
+    ]
+  },
+  {
+    "id": "m8ela-infinitives-verbal-phrases-004",
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "cedCode": "M8ELA-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'The student sitting at the front desk answered the question.' Identify the complete verbal phrase in the sentence, and then explain the single job the whole phrase does in the sentence.",
+    "choices": [
+      "The verbal phrase is 'sitting', and it functions as a noun because it names the person who answered the question, taking on the role that a noun would play in the sentence.",
+      "The verbal phrase is 'at the front desk', and it modifies the student by describing location, so it performs the role an adjective would perform by giving more information about which noun it describes.",
+      "The verbal phrase is 'sitting at the front desk answered', and it expresses the main action of the sentence, performing the role that a verb performs by showing what the subject does or is.",
+      "The verbal phrase is 'sitting at the front desk', and it tells which student answered the question, so it does an adjective's job."
+    ],
+    "answer": "D",
+    "hints": [
+      "A verbal phrase includes the verbal plus its object and modifiers, but it stops before the main sentence verb.",
+      "Ask: does the whole phrase name something, describe a noun, or tell why about the main verb?"
+    ]
+  },
+  {
+    "id": "m8ela-infinitives-verbal-phrases-005",
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "cedCode": "M8ELA-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'Marcus grabbed a rope to swing across the creek.' The infinitive phrase in this sentence is 'to swing across the creek'. Explain why this phrase does an adverb's job, not a noun's job, even though both are possible jobs for an infinitive.",
+    "choices": [
+      "It does an adverb's job because it tells why Marcus grabbed the rope, not because of its form or position alone.",
+      "It does an adverb's job because infinitive phrases always do an adverb's job when they are at the end of a sentence.",
+      "It does a noun's job because the infinitive starts with 'to', which is the marker for nouns in English.",
+      "It does an adverb's job because it modifies the word 'rope', which is the object of the main verb."
+    ],
+    "answer": "A",
+    "hints": [
+      "The job of a phrase comes from what the phrase does in its sentence, not from how the verbal is formed.",
+      "Ask yourself: does this phrase name something, describe which rope, or explain why he grabbed it?"
+    ]
+  },
+  {
+    "id": "m8ela-infinitives-verbal-phrases-006",
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "cedCode": "M8ELA-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read these two sentences: (1) 'Running a marathon requires months of training.' (2) 'The runners training for the marathon met every morning.' In sentence 1, the phrase 'Running a marathon' does a noun's job. In sentence 2, the phrase 'training for the marathon' does an adjective's job. Both phrases start with an -ing form and both contain objects. Explain why the same -ing form does different jobs in these two sentences, and describe the test you would use to determine which job a phrase does.",
+    "choices": [
+      "The same -ing word does different jobs because the noun or adjective it describes changes meaning, so you must check the form of the word after the -ing form.",
+      "The job depends on what the phrase does in its own sentence—whether it names something, describes a noun in front of it, or tells why about a verb—not on the shape of the -ing word.",
+      "The job a phrase does depends only on whether it is at the beginning or the end of the sentence, and the form of the -ing word never matters.",
+      "The same -ing word does different jobs because in sentence 1 it is a gerund and in sentence 2 it is a participle, and you can identify which one by counting the words it contains."
+    ],
+    "answer": "B",
+    "hints": [
+      "In sentence 1, ask: what names the thing that requires training? In sentence 2, ask: what does the phrase tell you about the runners?",
+      "Remember that you must name the job from what the phrase does, never from how the verbal ends."
+    ]
+  },
+  {
+    "id": "m8ela-verb-moods-001",
+    "loId": "m8ela.verb-moods",
+    "cedCode": "M8ELA-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A verb's mood tells you the job the verb form is doing in the sentence. Read each sentence and decide which mood is at work. 'Please set the timer for ten minutes.' What mood is the verb 'set' in?",
+    "choices": [
+      "Indicative, because the sentence states a fact about what the timer will do when you press the button",
+      "Imperative, because the verb is in its plain shape with no subject written in front of it",
+      "Conditional, because the sentence uses the word 'please' to show uncertainty about whether the action will happen",
+      "Interrogative, because the verb appears at the start of the sentence before the object"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at the form of the verb itself, not the words around it.",
+      "An imperative verb has the subject 'you' understood rather than written."
+    ]
+  },
+  {
+    "id": "m8ela-verb-moods-002",
+    "loId": "m8ela.verb-moods",
+    "cedCode": "M8ELA-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two sentences describe the same situation but use different verb forms. 'If it rains tomorrow, we will postpone the picnic.' 'If it rains tomorrow, we could postpone the picnic.' Which sentence is in the conditional mood, and why?",
+    "choices": [
+      "The first sentence is conditional because it starts with the word 'if' at the beginning of the clause",
+      "The first sentence is conditional because 'will postpone' is built with will plus the main verb form",
+      "The second sentence is conditional because 'could postpone' is built from could plus the plain verb",
+      "Neither sentence is conditional; both are subjunctive because they describe actions that may or may not happen"
+    ],
+    "answer": "C",
+    "hints": [
+      "The word 'if' by itself does not make a sentence conditional.",
+      "Look for would, could, might, or should sitting on the main verb."
+    ]
+  },
+  {
+    "id": "m8ela-verb-moods-003",
+    "loId": "m8ela.verb-moods",
+    "cedCode": "M8ELA-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: 'The coach requires that each swimmer arrive fifteen minutes early.' In formal English, should the verb form be 'arrive' or 'arrives'? Explain which mood is being used and why the verb takes that form.",
+    "choices": [
+      "'Arrives' is correct because the subject 'each swimmer' is a singular noun phrase that requires a singular verb",
+      "'Arrives' is correct because all that-clauses after the word 'requires' follow standard present-tense agreement rules",
+      "'Arrive' is correct because the coach is using conditional mood to suppose what swimmers should do",
+      "'Arrive' is correct; it is subjunctive mood because it is the base form in a that-clause after the word 'requires'"
+    ],
+    "answer": "D",
+    "hints": [
+      "The subject 'each swimmer' is singular, but that does not decide which form to use here.",
+      "After verbs like require, suggest, and insist, the verb takes its plain base form with no -s."
+    ]
+  },
+  {
+    "id": "m8ela-verb-moods-004",
+    "loId": "m8ela.verb-moods",
+    "cedCode": "M8ELA-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is sorting four sentences by mood. The student decides that 'I wish the concert were next weekend' is indicative because it is about a concert, which is a real thing. Identify the student's error, and explain what the correct mood is and how you know.",
+    "choices": [
+      "The student is wrong; the sentence is subjunctive because 'were' follows 'I wish' about something that is not so",
+      "The student is wrong; mood is determined by whether the sentence tells a fact or asks a question, not by the subject matter",
+      "The student is correct; any sentence about a real-world event like a concert must be indicative mood by definition",
+      "The student is wrong; the sentence is conditional because it uses 'were' to show an unfulfilled wish"
+    ],
+    "answer": "A",
+    "hints": [
+      "Mood is decided by the form of the verb, never by the topic or how the sentence sounds.",
+      "The specific verb form 'were' after a wish signals subjunctive mood in formal writing."
+    ]
+  },
+  {
+    "id": "m8ela-verb-moods-005",
+    "loId": "m8ela.verb-moods",
+    "cedCode": "M8ELA-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Compare these two sentences: 'With a stronger team, we would advance to the playoffs.' 'With a stronger team, we will advance to the playoffs.' Both sentences have a condition (a stronger team that we do not have). Which sentence is conditional and which is indicative? Explain what verb form decides the mood in each case.",
+    "choices": [
+      "Both are conditional because both sentences present a hypothetical situation in an opening phrase",
+      "The first is conditional because it uses 'would advance'; the second is indicative because 'will advance' states a plan as fact",
+      "The first is indicative because it shows what would happen; the second is conditional because 'will' is a helping verb",
+      "Neither is conditional; both are imperative because they describe requirements for the team's success"
+    ],
+    "answer": "B",
+    "hints": [
+      "Having a condition in the sentence does not make it conditional; check the verb form.",
+      "Would plus a verb signals conditional mood; will plus a verb signals indicative mood about the future."
+    ]
+  },
+  {
+    "id": "m8ela-verb-moods-006",
+    "loId": "m8ela.verb-moods",
+    "cedCode": "M8ELA-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student reads this sentence from a letter: 'Does the car need an oil change before our trip?' Then the student reads: 'The car needs an oil change before our trip.' Finally, the student reads: 'Change the oil in the car before our trip.' The student claims all three sentences are about the same topic and are therefore the same mood. Evaluate this claim and explain how the student should decide the mood of each sentence in the correct order.",
+    "choices": [
+      "The claim is correct; since all three sentences discuss the car and its maintenance, they must all express the same grammatical mood and function",
+      "The claim is wrong; the first is subjunctive because it asks a question with an inverted structure, the second is conditional because it states a requirement using auxiliary verbs, and the third is indicative because it expresses a direct command about a future action",
+      "The claim is wrong; use the four-question check in order: the first is interrogative because it asks for an answer, the second is indicative because the subject comes before the verb, and the third is imperative because the verb is in plain shape with no subject written",
+      "The claim is wrong; all three are imperative because they all function as instructions that tell someone what action should be taken regarding the car"
+    ],
+    "answer": "C",
+    "hints": [
+      "Topic or meaning settles nothing about mood; the verb form settles everything.",
+      "Run the four questions in order: Is it asking? Does it start with a plain verb? Does it carry would/could/might/should? Does it carry 'were' or a base form in a that-clause?"
+    ]
+  }
+]
