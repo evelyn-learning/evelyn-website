@@ -518,8 +518,10 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
 > the ELA contract's numbers and they do not point at the same items here. THREE agents hit
 > this independently on the first science batch: one found the numbers pointed at unrelated
 > rules, two found they pointed past the end of the list. In THIS contract the DF-3 length
-> check is **6c** and the claim-ledger build is **12 of the report section** (note that 12 in
-> the science-accuracy list is a different, unrelated rule about particles). Where a ported
+> check is **item 8 of the "Before you finish" checklist** and the claim-ledger build is
+> **item 3 of that same checklist** (corrected 2026-09-19 -- the block as ported carried the
+> SCIENCE contract's numbers, "6c" and "12", which a geo batch-1 agent found do not exist
+> here; a warning about wrong cross-references was itself a wrong cross-reference). Where a ported
 > ruling extends an "all-fiction ledger exemption" (25 and 29), this contract has no such
 > exemption -- it already requires the full ledger unconditionally, so those rulings are a
 > no-op here rather than a loosening.
