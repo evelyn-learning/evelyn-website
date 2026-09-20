@@ -77,7 +77,7 @@
  * not a guarantee, and the numeric choices are ordered by the id rule and
  * never by magnitude.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 1.1 -> 1.2, and
+ * NOTE ON prerequisites/followUps (`followUps` wired by the controller 2026-09-19 at course registration; `prerequisites` stays empty because 1.1 is the first row): the chain for this row is 1.1 -> 1.2, and
  * row 1.1 has no prerequisite. `lint-ms-plans` rejects a followUp that does
  * not resolve to a registered LO, and this exemplar is registered before row
  * 1.2 exists, so `followUps` stays empty until the full 40-row batch lands;
@@ -109,7 +109,7 @@ export const SEED_M8GEO_U1_COUNTS_RATES_AND_FAIR_COMPARISON: LessonPlan = {
     },
   ],
   prerequisites: [],
-  followUps: [],
+  followUps: ['m8geo.evaluating-a-choropleth'],
   estimatedMinutes: 22,
   segments: [
     {

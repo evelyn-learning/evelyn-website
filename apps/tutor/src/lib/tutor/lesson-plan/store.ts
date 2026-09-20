@@ -2346,6 +2346,44 @@ import { SEED_M8SCI_U10_REFLECTION_ABSORPTION_AND_TRANSMISSION } from './seeds/m
 import { SEED_M8SCI_U10_REFRACTION_BENDING_LIGHT_AT_A_BOUNDARY } from './seeds/m8sci-u10-refraction-bending-light-at-a-boundary';
 import { SEED_M8SCI_U10_LIGHT_VERSUS_SOUND_AND_THE_ELECTROMAGNETIC_SPECTRUM } from './seeds/m8sci-u10-light-versus-sound-and-the-electromagnetic-spectrum';
 import { SEED_M8SCI_U10_ANALOG_AND_DIGITAL_SIGNALS } from './seeds/m8sci-u10-analog-and-digital-signals';
+import { SEED_M8GEO_U1_EVALUATING_A_CHOROPLETH } from './seeds/m8geo-u1-evaluating-a-choropleth';
+import { SEED_M8GEO_U1_SCALE_OF_ANALYSIS_AND_HIDDEN_PATTERNS } from './seeds/m8geo-u1-scale-of-analysis-and-hidden-patterns';
+import { SEED_M8GEO_U1_MAPS_AS_ARGUMENTS } from './seeds/m8geo-u1-maps-as-arguments';
+import { SEED_M8GEO_U2_GIS_LAYERS_AND_OVERLAY } from './seeds/m8geo-u2-gis-layers-and-overlay';
+import { SEED_M8GEO_U2_BUFFERS_AND_PROXIMITY } from './seeds/m8geo-u2-buffers-and-proximity';
+import { SEED_M8GEO_U2_SITE_SELECTION_WITH_WEIGHTED_CRITERIA } from './seeds/m8geo-u2-site-selection-with-weighted-criteria';
+import { SEED_M8GEO_U2_CHANGE_DETECTION_FROM_SATELLITE_DATA } from './seeds/m8geo-u2-change-detection-from-satellite-data';
+import { SEED_M8GEO_U3_NORTH_AMERICA_LANDFORM_REGIONS } from './seeds/m8geo-u3-north-america-landform-regions';
+import { SEED_M8GEO_U3_NORTH_AMERICA_CLIMATE_CONTROLS_IN_ACTION } from './seeds/m8geo-u3-north-america-climate-controls-in-action';
+import { SEED_M8GEO_U3_NORTH_AMERICA_RIVER_SYSTEMS_AND_WATERSHEDS } from './seeds/m8geo-u3-north-america-river-systems-and-watersheds';
+import { SEED_M8GEO_U3_NORTH_AMERICA_HAZARD_REGIONS } from './seeds/m8geo-u3-north-america-hazard-regions';
+import { SEED_M8GEO_U4_NORTH_AMERICA_POPULATION_PATTERNS } from './seeds/m8geo-u4-north-america-population-patterns';
+import { SEED_M8GEO_U4_NORTH_AMERICA_MIGRATION_FLOWS } from './seeds/m8geo-u4-north-america-migration-flows';
+import { SEED_M8GEO_U4_NORTH_AMERICA_METROPOLITAN_REGIONS } from './seeds/m8geo-u4-north-america-metropolitan-regions';
+import { SEED_M8GEO_U4_NORTH_AMERICA_ECONOMIC_REGIONS_AND_TRADE } from './seeds/m8geo-u4-north-america-economic-regions-and-trade';
+import { SEED_M8GEO_U5_POPULATION_PYRAMIDS_AND_DEPENDENCY } from './seeds/m8geo-u5-population-pyramids-and-dependency';
+import { SEED_M8GEO_U5_EVALUATING_POPULATION_PROJECTIONS } from './seeds/m8geo-u5-evaluating-population-projections';
+import { SEED_M8GEO_U5_MIGRATION_FLOWS_AND_THEIR_EFFECTS } from './seeds/m8geo-u5-migration-flows-and-their-effects';
+import { SEED_M8GEO_U5_REFUGEES_AND_DISPLACEMENT } from './seeds/m8geo-u5-refugees-and-displacement';
+import { SEED_M8GEO_U6_WATER_SCARCITY_AND_ALLOCATION } from './seeds/m8geo-u6-water-scarcity-and-allocation';
+import { SEED_M8GEO_U6_COMPARING_ENERGY_SOURCES } from './seeds/m8geo-u6-comparing-energy-sources';
+import { SEED_M8GEO_U6_CARRYING_CAPACITY_AND_ECOLOGICAL_FOOTPRINT } from './seeds/m8geo-u6-carrying-capacity-and-ecological-footprint';
+import { SEED_M8GEO_U6_FOOD_SYSTEMS_AND_FOOD_SECURITY } from './seeds/m8geo-u6-food-systems-and-food-security';
+import { SEED_M8GEO_U7_READING_CLIMATE_TREND_DATA } from './seeds/m8geo-u7-reading-climate-trend-data';
+import { SEED_M8GEO_U7_COASTAL_RISK_AND_SEA_LEVEL } from './seeds/m8geo-u7-coastal-risk-and-sea-level';
+import { SEED_M8GEO_U7_MITIGATION_ADAPTATION_AND_RESILIENCE } from './seeds/m8geo-u7-mitigation-adaptation-and-resilience';
+import { SEED_M8GEO_U8_SPECIALIZATION_AND_SUPPLY_CHAIN_RISK } from './seeds/m8geo-u8-specialization-and-supply-chain-risk';
+import { SEED_M8GEO_U8_COMPOSITE_INDICATORS_AND_INEQUALITY } from './seeds/m8geo-u8-composite-indicators-and-inequality';
+import { SEED_M8GEO_U8_WHERE_FACTORIES_LOCATE } from './seeds/m8geo-u8-where-factories-locate';
+import { SEED_M8GEO_U8_CONNECTIVITY_AND_THE_DIGITAL_DIVIDE } from './seeds/m8geo-u8-connectivity-and-the-digital-divide';
+import { SEED_M8GEO_U9_ANALYZING_A_BOUNDARY_DISPUTE } from './seeds/m8geo-u9-analyzing-a-boundary-dispute';
+import { SEED_M8GEO_U9_MARITIME_ZONES_AND_OCEAN_BOUNDARIES } from './seeds/m8geo-u9-maritime-zones-and-ocean-boundaries';
+import { SEED_M8GEO_U9_TRANSBOUNDARY_PROBLEMS_AND_COOPERATION } from './seeds/m8geo-u9-transboundary-problems-and-cooperation';
+import { SEED_M8GEO_U9_CHOKEPOINTS_AND_STRATEGIC_LOCATION } from './seeds/m8geo-u9-chokepoints-and-strategic-location';
+import { SEED_M8GEO_U10_BUILDING_A_GEOGRAPHIC_ARGUMENT } from './seeds/m8geo-u10-building-a-geographic-argument';
+import { SEED_M8GEO_U10_EVALUATING_A_LAND_USE_PLAN } from './seeds/m8geo-u10-evaluating-a-land-use-plan';
+import { SEED_M8GEO_U10_COMPARING_TWO_REGIONS_WITH_INDICATORS } from './seeds/m8geo-u10-comparing-two-regions-with-indicators';
+import { SEED_M8GEO_U10_SCENARIO_ANALYSIS_FOR_A_CHANGING_PLACE } from './seeds/m8geo-u10-scenario-analysis-for-a-changing-place';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4616,6 +4654,44 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M8SCI_U10_REFRACTION_BENDING_LIGHT_AT_A_BOUNDARY,
   SEED_M8SCI_U10_LIGHT_VERSUS_SOUND_AND_THE_ELECTROMAGNETIC_SPECTRUM,
   SEED_M8SCI_U10_ANALOG_AND_DIGITAL_SIGNALS,
+  SEED_M8GEO_U1_EVALUATING_A_CHOROPLETH,
+  SEED_M8GEO_U1_SCALE_OF_ANALYSIS_AND_HIDDEN_PATTERNS,
+  SEED_M8GEO_U1_MAPS_AS_ARGUMENTS,
+  SEED_M8GEO_U2_GIS_LAYERS_AND_OVERLAY,
+  SEED_M8GEO_U2_BUFFERS_AND_PROXIMITY,
+  SEED_M8GEO_U2_SITE_SELECTION_WITH_WEIGHTED_CRITERIA,
+  SEED_M8GEO_U2_CHANGE_DETECTION_FROM_SATELLITE_DATA,
+  SEED_M8GEO_U3_NORTH_AMERICA_LANDFORM_REGIONS,
+  SEED_M8GEO_U3_NORTH_AMERICA_CLIMATE_CONTROLS_IN_ACTION,
+  SEED_M8GEO_U3_NORTH_AMERICA_RIVER_SYSTEMS_AND_WATERSHEDS,
+  SEED_M8GEO_U3_NORTH_AMERICA_HAZARD_REGIONS,
+  SEED_M8GEO_U4_NORTH_AMERICA_POPULATION_PATTERNS,
+  SEED_M8GEO_U4_NORTH_AMERICA_MIGRATION_FLOWS,
+  SEED_M8GEO_U4_NORTH_AMERICA_METROPOLITAN_REGIONS,
+  SEED_M8GEO_U4_NORTH_AMERICA_ECONOMIC_REGIONS_AND_TRADE,
+  SEED_M8GEO_U5_POPULATION_PYRAMIDS_AND_DEPENDENCY,
+  SEED_M8GEO_U5_EVALUATING_POPULATION_PROJECTIONS,
+  SEED_M8GEO_U5_MIGRATION_FLOWS_AND_THEIR_EFFECTS,
+  SEED_M8GEO_U5_REFUGEES_AND_DISPLACEMENT,
+  SEED_M8GEO_U6_WATER_SCARCITY_AND_ALLOCATION,
+  SEED_M8GEO_U6_COMPARING_ENERGY_SOURCES,
+  SEED_M8GEO_U6_CARRYING_CAPACITY_AND_ECOLOGICAL_FOOTPRINT,
+  SEED_M8GEO_U6_FOOD_SYSTEMS_AND_FOOD_SECURITY,
+  SEED_M8GEO_U7_READING_CLIMATE_TREND_DATA,
+  SEED_M8GEO_U7_COASTAL_RISK_AND_SEA_LEVEL,
+  SEED_M8GEO_U7_MITIGATION_ADAPTATION_AND_RESILIENCE,
+  SEED_M8GEO_U8_SPECIALIZATION_AND_SUPPLY_CHAIN_RISK,
+  SEED_M8GEO_U8_COMPOSITE_INDICATORS_AND_INEQUALITY,
+  SEED_M8GEO_U8_WHERE_FACTORIES_LOCATE,
+  SEED_M8GEO_U8_CONNECTIVITY_AND_THE_DIGITAL_DIVIDE,
+  SEED_M8GEO_U9_ANALYZING_A_BOUNDARY_DISPUTE,
+  SEED_M8GEO_U9_MARITIME_ZONES_AND_OCEAN_BOUNDARIES,
+  SEED_M8GEO_U9_TRANSBOUNDARY_PROBLEMS_AND_COOPERATION,
+  SEED_M8GEO_U9_CHOKEPOINTS_AND_STRATEGIC_LOCATION,
+  SEED_M8GEO_U10_BUILDING_A_GEOGRAPHIC_ARGUMENT,
+  SEED_M8GEO_U10_EVALUATING_A_LAND_USE_PLAN,
+  SEED_M8GEO_U10_COMPARING_TWO_REGIONS_WITH_INDICATORS,
+  SEED_M8GEO_U10_SCENARIO_ANALYSIS_FOR_A_CHANGING_PLACE,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
