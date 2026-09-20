@@ -71,5 +71,12 @@ export const BASELINE_M8MATH_U9_PARALLEL_LINES_CUT_BY_A_TRANSVERSAL: TopicNotesB
     { content: `Alternate interior and alternate exterior angles are equal: hop to the corresponding angle, then across the X to the vertical angle.`, kind: 'tip' },
     { content: `Same-side interior angles add to 180°. They are the one pair that adds instead of matches.`, kind: 'tip' },
     { content: `With parallel lines, all eight angles are one of two sizes that add to 180°. To solve, name the pair, write equal or add to 180, solve, then substitute back to get the angle.`, kind: 'tip' },
+    { content: `Same-side interior angles ADD to 180°, they don't equal each other. If you write them equal, you'll get the wrong answer AND fail your own check.`, kind: 'common-error' },
+    { content: `To name a pair, ask two questions in order: (1) Interior or exterior? (2) Same side or opposite sides of the transversal? The answers give you the name automatically.`, kind: 'tip' },
+    { content: `Corresponding angles are in the SAME POSITION at each crossing (e.g., both upper-left). They're not 'in different places'—they're in the same spot, just at different crossings.`, kind: 'vocab-note' },
+    { content: `After you solve for x, always substitute back into both angle expressions and check: do your two angles obey the rule (equal or add to 180°)? This catches algebra errors and wrong pair names instantly.`, kind: 'tip' },
+    { content: `All eight angles split into exactly two sizes that add to 180°. If you get a third size or your two sizes don't add to 180°, you made an error.`, kind: 'edge-case' },
+    { content: `Don't confuse 'opposite sides of the transversal' with 'on the opposite line.' Alternate pairs are on opposite sides of the transversal, but both can be interior (between the lines).`, kind: 'gotcha' },
+    { content: `Vertical angles at the same crossing are equal, but that's not a transversal rule—it's the straight-line/vertical-angle fact you already know. Use it to fill in angles at one crossing before you slide to the other.`, kind: 'vocab-note' },
   ],
 };

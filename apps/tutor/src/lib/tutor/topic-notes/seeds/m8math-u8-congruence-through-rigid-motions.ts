@@ -71,5 +71,12 @@ export const BASELINE_M8MATH_U8_CONGRUENCE_THROUGH_RIGID_MOTIONS: TopicNotesBase
     { content: `To say yes, write the sequence and check every vertex. To say no, find one length or one angle the two figures do not share, because rigid motions never change those.`, kind: 'tip' },
     { content: `Same shape but a different size is not congruent; flipped over is still congruent.`, kind: 'tip' },
     { content: `Check a chain by undoing it in reverse order and landing back on the original figure.`, kind: 'tip' },
+    { content: `Apply each motion to the OUTPUT coordinates of the previous motion, not the originals. After you translate, reflect that new set of points—not the starting points.`, kind: 'common-error' },
+    { content: `A mirror image (flipped) IS congruent. Don't reject a figure just because it faces the opposite way. A reflection is a rigid motion, so it preserves congruence.`, kind: 'gotcha' },
+    { content: `To prove NOT congruent, find ONE measurement (a side length or angle) that differs. You don't need to check everything; one mismatch disqualifies the pair.`, kind: 'tip' },
+    { content: `Same shape but different size = NOT congruent. Rigid motions never stretch or shrink. If legs are 3 and 2 in one figure and 6 and 4 in another, no sequence maps one onto the other.`, kind: 'common-error' },
+    { content: `Find side lengths using coordinates: subtract the coordinates along one axis. For (2, 2) to (5, 2), length is |5 − 2| = 3. Use this to measure before you hunt for a sequence.`, kind: 'vocab-note' },
+    { content: `A single motion (one reflection, one translation, or one rotation) counts as a sequence. You don't always need three steps—sometimes one or two work.`, kind: 'edge-case' },
+    { content: `Check your sequence by undoing it backward and landing back on the original figure. Undo the last motion first, then work backward. If you don't land on the start, the sequence is wrong.`, kind: 'tip' },
   ],
 };

@@ -72,5 +72,13 @@ export const BASELINE_M8MATH_U5_SYSTEMS_WORD_PROBLEMS: TopicNotesBaseline = {
     { content: `Two plans: cost = the amount paid once + the per-unit rate × the amount, so y = 20 + 2x. A count and a total cost: c = 120 - a for the count, and each price times its own count for the money.`, kind: 'tip' },
     { content: `Solve with the moves you already own: set two solved-for-y sides equal, drop a solved-for-one-letter equation into the other, or graph both lines and read the crossing. Then find the second coordinate.`, kind: 'tip' },
     { content: `The answer is a pair with two units, checked in BOTH original facts and against sense: a ticket count that is not a whole number means an equation was built wrong.`, kind: 'tip' },
+    { content: `Write "let x = ..." and "let y = ..." with units before you write any equation. If you skip this, you'll build the wrong equations because you won't know which number belongs with which letter.`, kind: 'common-error' },
+    { content: `A count fact and a money fact are TWO separate equations. Don't squeeze both into one. If you have "120 tickets sold for $750," write two equations: one about 120 tickets, one about $750.`, kind: 'gotcha' },
+    { content: `When you substitute, the multiplier goes around BOTH terms in the bracket: 5(120 − a) = 600 − 5a, not 600 − a. Forgetting to distribute the 5 to the −a term gives you a fractional ticket count, which signals the equation is wrong.`, kind: 'common-error' },
+    { content: `The rate that repeats for every unit goes next to the variable: y = 20 + 2x means $20 once and $2 for each x. If you write y = 20x + 2, you're saying $20 per unit and $2 once, which flips the story.`, kind: 'vocab-note' },
+    { content: `After you solve for one unknown, plug it back into one of the ORIGINAL equations to find the other. Don't just stop at x = 5; you need both numbers and both units in your answer.`, kind: 'common-error' },
+    { content: `Check your answer in BOTH original equations, not just one. If it satisfies only one, you built the system wrong.`, kind: 'tip' },
+    { content: `If your answer is a ticket count that is not a whole number, or a count that is negative, stop. The equations are wrong, not the story. Go back and reread the problem.`, kind: 'edge-case' },
+    { content: `When two equations are solved for the same letter (both solved for y), set the right sides equal: 20 + 2x = 10 + 4x. This is the fastest path to the solution.`, kind: 'tip' },
   ],
 };

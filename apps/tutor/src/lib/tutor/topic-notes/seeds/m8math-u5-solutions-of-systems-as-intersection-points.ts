@@ -70,5 +70,12 @@ export const BASELINE_M8MATH_U5_SOLUTIONS_OF_SYSTEMS_AS_INTERSECTION_POINTS: Top
     { content: `The graph of an equation is all of its solutions drawn as points, so a point on the line and a pair that satisfies the equation are the same thing.`, kind: 'tip' },
     { content: `The point where the two lines cross is on both lines, so it satisfies both equations: the crossing point IS the solution of the system.`, kind: 'tip' },
     { content: `A crossing point read off a grid is a claim. Prove it by substituting into both equations before you call it the solution.`, kind: 'tip' },
+    { content: `A solution of a system is always a PAIR (x, y), never a single number. "x = 3" alone is not the answer — you need both x AND y together, like (3, 7).`, kind: 'common-error' },
+    { content: `To check if a pair solves a system, substitute into BOTH equations, one at a time. If it passes one and fails the other, it is NOT a solution — both must be true.`, kind: 'gotcha' },
+    { content: `When you read a crossing point off a grid, you are making a claim. Always prove it by substituting the pair into both equations. A grid can lie by one square or with x and y swapped.`, kind: 'tip' },
+    { content: `Don't confuse 'on the line' with 'the solution of the system.' A point can sit on one line without being the crossing. The solution is the ONE point on BOTH lines.`, kind: 'vocab-note' },
+    { content: `The order in an ordered pair matters: (3, 4) is not the same as (4, 3). If you swap x and y by mistake, the substitution check will catch it — one or both equations will fail.`, kind: 'edge-case' },
+    { content: `One equation with two variables has infinitely many solutions (a whole line of pairs). A SYSTEM of two equations has exactly one solution (the crossing point), not zero, not many.`, kind: 'vocab-note' },
+    { content: `When you substitute a pair into an equation, do it carefully: replace x first, replace y second, follow order of operations, then compare left and right sides.`, kind: 'tip' },
   ],
 };

@@ -86,5 +86,13 @@ The student wrote: "Havren has 15 plus 35, which is 50 dependents out of 100 peo
     { content: `Because the three bands must add to 100, moving ten points out of the working-age band adds ten to the numerator and takes ten off the denominator at once, which is why 50 over 50 becomes 60 over 40 and the ratio jumps from 100 to 150.`, kind: 'tip' },
     { content: `For a ten-year question, use the slice that crosses the line: only the people already aged 5 to 14 today are in the working-age band within ten years. That says which way the pressure runs; it is not a forecast of the ratio, because births, deaths and moves all change the bands.`, kind: 'tip' },
     { content: `Dependency is a measurement of a structure, never a score for a place or for the people in it. The age lines are bookkeeping, not a claim about who works.`, kind: 'tip' },
+    { content: `**Always divide by the working-age band (15–64), never the whole population.** Dividing by 100 gives the dependent *share* (50%), not the ratio (100 per 100). They are different answers to different questions—the ratio is what you need.`, kind: 'common-error' },
+    { content: `Check your arithmetic three times: (1) bands add to 100, (2) ratio × working-age ÷ 100 = dependents, (3) dependents + working-age = 100. If any check fails, you divided the wrong way or lost a band.`, kind: 'tip' },
+    { content: `Don't use the ratio alone to predict what a place needs. Always split it into youth part and old-age part. Two countries with ratio 100 might need classrooms for one and clinics for the other.`, kind: 'gotcha' },
+    { content: `Name the shape from the two *outer* bands only (under-15 vs. 65+), not from the working-age band. If neither is twice the other, the shape is column-shaped, not determined by the middle.`, kind: 'vocab-note' },
+    { content: `Moving 10 points from the working-age band into another band makes the ratio jump 50 points, not 10. The 10 points leave the denominator and *join* the numerator at once.`, kind: 'edge-case' },
+    { content: `For a ten-year question, use the slice (e.g., aged 5–14 today), not the whole band (under-15). Only people already aged 5–14 cross into the working-age band in ten years; those under 5 are still in school.`, kind: 'common-error' },
+    { content: `Don't confuse 'dependent' (a person in the under-15 or 65+ band, by definition) with 'doesn't work' or 'is a burden.' The age lines are bookkeeping. The ratio measures structure, never judges people.`, kind: 'vocab-note' },
+    { content: `Same ratio, different shapes = opposite needs. Same shape, different ratios = same direction but different scale. Shape and ratio answer *different* questions; always report both.`, kind: 'gotcha' },
   ],
 };

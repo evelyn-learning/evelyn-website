@@ -87,5 +87,13 @@ Callant runs its water service through two water boards, West (Northwest and Sou
     { content: `Check every aggregation by multiplying back: 8 percent of 20,000 homes is 1,600, and the groupings must all add back to the same county total.`, kind: 'tip' },
     { content: `Let the decision pick the scale: a total to buy or ship is a national question, and where to put the next library, clinic or bus route is a question only the finest unit you have can answer.`, kind: 'tip' },
     { content: `These figures measure service and access in a place. They are never a score for a place or for the people who live in it.`, kind: 'tip' },
+    { content: `Always name the unit first—street, district, region, or country—before you even look at the number. A figure with no unit is not information yet.`, kind: 'tip' },
+    { content: `Never average the percentages of unequal districts. Always add the counts and divide once. Averaging 90, 15, 15, 15, 15 gives 30%, but the real figure is 60,000÷100,000 = 60%.`, kind: 'common-error' },
+    { content: `A national figure never travels downward to describe a district. A 60% national figure does not mean your district is at 60%. Get the figure for your own district instead.`, kind: 'gotcha' },
+    { content: `The same four numbers can produce a pattern or no pattern at all, depending only on how you group them. Always report which grouping you used and test whether the pattern survives a different grouping.`, kind: 'edge-case' },
+    { content: `Always report the spread—highest, lowest, and how many units sit at each end—alongside the middle figure. Two places at 60% can be built completely differently.`, kind: 'common-error' },
+    { content: `Check your aggregation by multiplying back. If 60% of 100,000 is 60,000, and your counts add to 60,000, you are right. If they don't match, you made an error.`, kind: 'tip' },
+    { content: `Match the claim to the scale first. A claim about 'most households in the country' needs the country figure. A claim about 'a household in Ostry' needs only Ostry's figure, not the country's.`, kind: 'vocab-note' },
+    { content: `The decision picks the scale. Buying for a whole country needs a national total. Deciding where to put the next clinic needs the finest unit—district, not region.`, kind: 'gotcha' },
   ],
 };

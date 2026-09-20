@@ -68,5 +68,12 @@ export const BASELINE_M8MATH_U5_SOLVING_SYSTEMS_BY_SUBSTITUTION: TopicNotesBasel
     { content: `If one equation is solved for y, put that whole expression where y sits in the other equation, in parentheses if it has more than one term, then distribute.`, kind: 'tip' },
     { content: `After finding x, back-substitute into the equation solved for y to get the second coordinate. A single number is only half the answer.`, kind: 'tip' },
     { content: `Check the pair in BOTH equations. If it fails either one, look for a dropped parenthesis or a sign that did not change.`, kind: 'tip' },
+    { content: `The solution is a **pair** (x, y), not a single number. If you find x = 5 and stop, you've only found half the answer. Always back-substitute to get y, then write both coordinates.`, kind: 'common-error' },
+    { content: `When you substitute an expression with two terms (like y = 2x − 1), wrap it in **parentheses** before it meets a coefficient. Write 3(2x − 1), not 3 × 2x − 1. Then distribute to every term inside.`, kind: 'common-error' },
+    { content: `Substitute the **expression** (the right side of the solved equation) into the other equation, not into the variable name. If y = 3x, replace y with 3x, not x with 3x.`, kind: 'gotcha' },
+    { content: `After finding one coordinate, always **check the pair in both original equations**. A point on one line is not the crossing. If it fails either equation, the slip is usually a dropped parenthesis or a sign error.`, kind: 'tip' },
+    { content: `When both equations are solved for y, you **set the right sides equal** to each other, not the left sides. You're saying y = y, so the expressions on the right must be equal.`, kind: 'vocab-note' },
+    { content: `Back-substitute into the equation that is **already solved for y** — it's the shortest path. If both equations are solved for y, either works; if only one is, use that one.`, kind: 'tip' },
+    { content: `If your substitution results in an equation that still has **both x and y** after you plug in, you substituted into the wrong variable. Stop and check which variable the solved equation is for.`, kind: 'edge-case' },
   ],
 };

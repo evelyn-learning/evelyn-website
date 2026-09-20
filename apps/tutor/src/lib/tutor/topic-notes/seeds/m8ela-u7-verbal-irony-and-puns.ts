@@ -77,5 +77,12 @@ LINE B: the same newsletter a year earlier, under a photo of the chess club tabl
     { content: `A pun is one word, or one sound, carrying two meanings at once, and both have to be live in the situation. A word that merely has a second definition somewhere is not a pun.`, kind: 'tip' },
     { content: `A pun has a job as well as a meaning: a wink at the reader who hears both, a way to name something that went badly and stay light about it, or a groan the writer wanted.`, kind: 'tip' },
     { content: `Both moves start by holding the words against the situation, and they end differently. In verbal irony you throw the surface meaning away and keep the opposite. In a pun both meanings stay standing.`, kind: 'tip' },
+    { content: `Verbal irony needs TWO halves on the page: the words somebody says AND a detail that cuts against them. If you can't point at both, you haven't found irony—you've found a guess about tone.`, kind: 'gotcha' },
+    { content: `Don't stop after naming what the speaker means. Always add the attitude: what they feel, and why they chose to say the opposite instead of straight. 'She means the opposite' is half an answer.`, kind: 'common-error' },
+    { content: `A pun is NOT just a word with two meanings in the dictionary. Both meanings must be LIVE in the situation—actually used, actually supported by what's happening around the word. One live meaning = one job = not a pun.`, kind: 'vocab-note' },
+    { content: `In verbal irony, the surface meaning DIES. In a pun, both meanings STAY ALIVE at the same time. Ask: does the sentence need me to delete a meaning, or does it get richer when I hold both?`, kind: 'edge-case' },
+    { content: `Verbal irony is not always angry or mean. It can be teasing, resigned, annoyed, or even gentle—or aimed at the speaker's own mistake. Read the details to find the real attitude.`, kind: 'common-error' },
+    { content: `A pun has a JOB: it might reward a careful reader, soften bad news, or make you groan on purpose. Name what the two meanings together DO for the speaker or the situation.`, kind: 'tip' },
+    { content: `Don't use 'ironic' for just any bad luck or coincidence ('It's ironic it rained on the car wash'). Irony needs a SPEAKER saying words that the situation contradicts. No speaker, no irony.`, kind: 'common-error' },
   ],
 };

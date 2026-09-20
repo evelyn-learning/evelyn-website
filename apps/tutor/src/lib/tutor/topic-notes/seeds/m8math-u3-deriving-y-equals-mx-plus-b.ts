@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U3_DERIVING_Y_EQUALS_MX_PLUS_B: TopicNotesBaseline 
     { content: `To write the equation from a graph, read b off the y-axis crossing, count rise over run between two grid points for m, and put m with the x and b on its own.`, kind: 'tip' },
     { content: `A line that falls from left to right has a negative slope; a line that crosses the y-axis below the origin has a negative b.`, kind: 'tip' },
     { content: `y = mx is y = mx + b with b = 0. That is why a proportional relationship must pass through the origin, and why y = 2x + 3 is linear but not proportional.`, kind: 'tip' },
+    { content: `b is where the line crosses the Y-AXIS, not the x-axis. Read b from the vertical axis. If the crossing is below the origin, b is negative.`, kind: 'common-error' },
+    { content: `m rides with x, b stands alone. Don't swap them: y = mx + b, not y = bx + m. Check by plugging in x = 0; you should get b, the y-intercept.`, kind: 'gotcha' },
+    { content: `When a line falls (slopes down left to right), the rise is negative. Don't just count the height of the triangle; check the direction. Falling line = negative slope.`, kind: 'common-error' },
+    { content: `y = mx has no + b term because b = 0 at the origin. Don't add a +0; just write y = mx. A line through (0, 0) never needs an extra number tacked on.`, kind: 'vocab-note' },
+    { content: `To find m from a graph, pick two points on grid lines (not on axes). Count the rise (up is +, down is -) and run (always +, left to right). Then divide rise by run.`, kind: 'tip' },
+    { content: `The equation y = mx + b works for ANY point (x, y) on the line. If a point on the graph doesn't match your equation, you made an error—find it before you finish.`, kind: 'tip' },
+    { content: `y = kx from last unit IS y = mx with the slope called k. Now you know k = m, and it's the ratio rise/run. Same idea, new name to match the new form.`, kind: 'vocab-note' },
   ],
 };

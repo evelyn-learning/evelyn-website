@@ -75,5 +75,13 @@ export const BASELINE_M8SCI_U10_LIGHT_VERSUS_SOUND_AND_THE_ELECTROMAGNETIC_SPECT
     { content: `Inside the visible band the same order holds: red has the longest wavelength you can see and violet the shortest. Infrared marks the red edge of the band and ultraviolet marks the violet edge.`, kind: 'tip' },
     { content: `One use each: radio for a television broadcast, microwave for an oven, infrared for the warmth off a campfire, visible for seeing, ultraviolet for the sunburn in sunlight, X-ray for the image of a broken bone, gamma for sterilizing surgical instruments.`, kind: 'tip' },
     { content: `Every electromagnetic wave travels at the same speed in empty space, so a shorter wavelength is not a faster wave. The spectrum is an order of wavelength and nothing else.`, kind: 'tip' },
+    { content: `Sound in a vacuum is not "quiet" or "muffled." There is NO sound at all. Say it that way every time.`, kind: 'vocab-note' },
+    { content: `Light does NOT need matter, but it CAN travel through matter. Don't flip it to "light cannot cross matter." Both sentences are true at once.`, kind: 'common-error' },
+    { content: `The two speed comparisons RUN OPPOSITE DIRECTIONS. Sound speeds up in water; light slows down in water. Hold both, not just one.`, kind: 'gotcha' },
+    { content: `The electromagnetic spectrum is sorted by WAVELENGTH only. Shorter wavelength ≠ faster wave and ≠ stronger wave. Don't add those assumptions.`, kind: 'common-error' },
+    { content: `Every electromagnetic wave travels at the same speed in empty space. A gamma ray and a radio wave arrive together, not at different times.`, kind: 'edge-case' },
+    { content: `Infrared is at the RED edge of visible light; ultraviolet is at the VIOLET edge. The names tell you which side they sit on. Use that to anchor the order.`, kind: 'tip' },
+    { content: `A medium is the matter a mechanical wave travels through. Light doesn't travel "through a medium of empty space." There is no medium in a vacuum.`, kind: 'vocab-note' },
+    { content: `Light travels 300,000,000 meters per second; sound travels 340 meters per second. Convert to the same units BEFORE comparing, or the numbers will confuse you.`, kind: 'tip' },
   ],
 };

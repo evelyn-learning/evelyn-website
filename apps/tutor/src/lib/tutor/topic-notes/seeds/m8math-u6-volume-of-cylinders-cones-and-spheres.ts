@@ -72,5 +72,13 @@ export const BASELINE_M8MATH_U6_VOLUME_OF_CYLINDERS_CONES_AND_SPHERES: TopicNote
     { content: `Halve a diameter before you use any formula, do r² or r³ first, and write the answer in cubic units.`, kind: 'tip' },
     { content: `To find a missing height or radius, put the known volume in and divide out everything else; a missing radius shows up as r², so take the square root last.`, kind: 'tip' },
     { content: `Check every answer by running the formula forwards again, and remember that doubling a radius multiplies a cylinder's volume by 4 and a sphere's by 8.`, kind: 'tip' },
+    { content: `If the problem gives a diameter, halve it FIRST before you put it into any formula. Cubing or squaring a diameter instead of the radius multiplies your answer way too much (by 8 for a sphere, by 4 for a cylinder).`, kind: 'common-error' },
+    { content: `Do the exponent (r² or r³) BEFORE you multiply by π, by the height, or by any fraction. Write it out: r × r or r × r × r. Never compute r × 2 or r × 3.`, kind: 'tip' },
+    { content: `A cone formula always has the (1/3). Don't drop it. If you get the same answer as the cylinder formula, you forgot it—divide your answer by 3.`, kind: 'common-error' },
+    { content: `When you work backwards (given volume, find radius or height), a missing radius lands on r², so you'll need to take a square root. A missing height is just division.`, kind: 'tip' },
+    { content: `In a cone formula, the h is always the straight-up height from the center of the base to the tip, never the slanted edge of the paper.`, kind: 'vocab-note' },
+    { content: `The answer is a volume, so it MUST have cubic units (cm³, m³, in³, mL). If you forget to include units or use square units instead, you've lost the meaning of your answer.`, kind: 'common-error' },
+    { content: `When asked for the answer 'in terms of π,' write the number, then π as a symbol (like 36π cm³), not as 3.14. When π is not mentioned, use π ≈ 3.14 and write a decimal.`, kind: 'vocab-note' },
+    { content: `Always check a backwards answer by plugging the radius or height back into the formula forwards. If you don't get the original volume, something went wrong.`, kind: 'tip' },
   ],
 };

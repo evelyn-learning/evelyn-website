@@ -89,5 +89,12 @@ SENTENCE: "By the last mile of the charity walk Dev had to strain to keep up wit
     { content: `Step four, substitute the dictionary wording back into the sentence and read the sentence from the beginning. Bend the grammar as much as you need to; what you are checking is whether the meaning still holds.`, kind: 'tip' },
     { content: `When the substitution fails, back up to the next sense under the SAME label, never to the top of the entry. The job was settled by grammar and has not changed; the only thing that turned out to be wrong was your pick among the senses in that one group.`, kind: 'tip' },
     { content: `A sense number is where that sense sits in that dictionary, not a ranking of what your sentence needs, and the meaning you already know is not a default either. The two most expensive answers are the first one printed and the one you arrived with.`, kind: 'tip' },
+    { content: `Don't pick sense 1 just because it's first. Sense 1 is where that sense sits in *that dictionary*, not a promise it's your answer. The label settles half the work; the sentence settles the other half.`, kind: 'common-error' },
+    { content: `Crossing out the wrong part-of-speech group throws away most of the entry in two seconds. If your sentence needs an action and you like a noun sense, that sense is *out*, no matter how well it fits the topic.`, kind: 'tip' },
+    { content: `The meaning you already carry for a word is not a default. When familiar sense and correct sense are both available, the substitution check is what decides. Run step four before trusting comfort.`, kind: 'gotcha' },
+    { content: `When the substitution fails, back up *inside the same label*. Your reading of the job didn't change—only your pick among the senses in that one group was wrong. Don't start over at the top of the entry.`, kind: 'edge-case' },
+    { content: `Read the *whole sentence* into step three, not just the words touching the target word. A sense can look right on a quick scan and still be wrong when the full context decides.`, kind: 'common-error' },
+    { content: `In step four, bend the grammar however you need. A definition is written to stand alone; you're checking whether the *meaning* holds, not whether the result reads smoothly.`, kind: 'vocab-note' },
+    { content: `A *label* is not the same as a *sense*. A label tells you the job (noun, verb, etc.). A sense is one numbered meaning inside that job. Most labels leave several senses standing.`, kind: 'vocab-note' },
   ],
 };

@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U8_EVIDENCE_OF_A_CHEMICAL_REACTION: TopicNotesBaseli
     { content: `Bubbles from a liquid heated to its boiling point are that liquid turning to gas: physical. Bubbles at room temperature from two substances meeting are a new gas: chemical.`, kind: 'tip' },
     { content: `Dissolving is physical. Take the water away and the same salt or sugar is back. Ice and liquid water are both H two O.`, kind: 'tip' },
     { content: `Reversible is a clue, not the rule. Cut paper does not grow back, and it is still paper. The rule is the substance and its properties.`, kind: 'tip' },
+    { content: `Don't confuse "looks different" with "new substance." Melting ice looks completely different but is the same H₂O. Rusting looks slow and quiet but is a new substance. Always compare PROPERTIES, not just appearance.`, kind: 'common-error' },
+    { content: `When you see bubbles, ask: "Is the liquid being heated to its boiling point?" If yes → physical (same liquid changing state). If no, and bubbles appear at room temperature → chemical (new gas formed).`, kind: 'tip' },
+    { content: `"Dissolving" means the solid spreads out into the liquid but is still there. To check: evaporate the liquid and the solid comes back unchanged. If no solid returns, it was not dissolving—something reacted.`, kind: 'vocab-note' },
+    { content: `Don't use "reversible" as the rule. Cut paper never grows back but is still paper (physical). The rule is always: does the same substance stay, or did a new one form? Reversing the condition is just how you TEST it.`, kind: 'gotcha' },
+    { content: `Temperature change needs a source check. Heat or cool from outside? → physical. No heater, cooler, or flame, but temperature still changed? → sign of a chemical reaction.`, kind: 'tip' },
+    { content: `A solid forming from two liquids is only a sign if nothing was cooled. If you cooled it, it might be freezing (physical), not a precipitate (chemical). Check: did you cool it?`, kind: 'edge-case' },
+    { content: `List the PROPERTIES before and after in the same language. Don't say "powder" and then "solution"—say "white solid, dull" and "clear liquid." Properties let you compare; labels hide what changed.`, kind: 'tip' },
+    { content: `One sign is a hint; two different signs agreeing is nearly certain. Don't stop after finding one. Look for a second—it confirms the verdict and makes your answer stronger.`, kind: 'tip' },
   ],
 };

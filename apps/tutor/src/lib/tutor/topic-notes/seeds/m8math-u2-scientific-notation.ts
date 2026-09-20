@@ -69,5 +69,13 @@ export const BASELINE_M8MATH_U2_SCIENTIFIC_NOTATION: TopicNotesBaseline = {
     { content: `To go back to standard form, move the point the number of places the exponent says: right for positive, left for negative, filling with zeros.`, kind: 'tip' },
     { content: 'For a size comparison, round each number to a single digit times a power of ten.', kind: 'tip' },
     { content: `How many times as large: compare the powers of ten first by subtracting exponents, then adjust by dividing the digits, and check that the small number times your multiplier gives the large one.`, kind: 'tip' },
+    { content: `Count how many places the decimal point moves, not how many zeros are in the number. 4,500,000 has five zeros but the point moves 6 places, so it's 4.5 × 10⁶, not 4.5 × 10⁵.`, kind: 'common-error' },
+    { content: `The coefficient a must satisfy 1 ≤ a < 10 — exactly one nonzero digit before the decimal point. 34 × 10⁵ and 0.34 × 10⁷ are not in scientific notation, even though they equal the same number.`, kind: 'vocab-note' },
+    { content: `Negative exponent means the number is smaller than 1. More negative (like 10⁻⁷) is much smaller than less negative (like 10⁻⁵). Don't confuse the digit in the exponent with the size of the power.`, kind: 'gotcha' },
+    { content: `To find 'how many times as large,' divide the powers of ten first (subtract the exponents), then divide the coefficients. Don't just subtract the exponents and call that the answer.`, kind: 'common-error' },
+    { content: `When moving the decimal point back to standard form, the exponent tells you how many places to move—positive means right, negative means left. Fill empty spaces with zeros.`, kind: 'tip' },
+    { content: `For estimation, round the coefficient to one digit (3.12 × 10⁸ becomes 3 × 10⁸), but keep the exponent exact. The power of ten carries the size; the single digit is the rough adjustment.`, kind: 'tip' },
+    { content: `A number between 1 and 10 (like 5, 7.3, or 9.99) has exponent 0 in scientific notation because the point doesn't need to move. 5 = 5 × 10⁰.`, kind: 'edge-case' },
+    { content: `Always check your work by converting back. If 4.5 × 10⁶ doesn't turn into 4,500,000 when you move the point, your exponent is wrong.`, kind: 'tip' },
   ],
 };

@@ -71,5 +71,12 @@ export const BASELINE_M8MATH_U4_ONE_NONE_OR_INFINITELY_MANY_SOLUTIONS: TopicNote
     { content: `a = b, such as 6 = 5, is false for every x: no solution. The two sides stay a fixed distance apart, as in 2x + 6 = 2x + 5.`, kind: 'tip' },
     { content: `The variable vanishing is not a mistake. Read what is left: true means infinitely many, false means none, and 0 = 0 never means x = 0.`, kind: 'tip' },
     { content: `Matching x terms on both sides means always true or never true; different x terms mean exactly one solution.`, kind: 'tip' },
+    { content: `When the variable vanishes and you see 0 = 0 or 6 = 6, DO NOT write x = 0 or x = 6. These statements have no x in them—they're true or false about numbers only. Read what's left: true leftover = infinitely many solutions.`, kind: 'common-error' },
+    { content: `If the x terms match after simplifying (like 2x on both sides), the equation CANNOT have exactly one solution. It's either always true (infinitely many) or never true (none). The constants decide which.`, kind: 'tip' },
+    { content: `A false leftover like 6 = 5 or -10 = 3 does NOT get 'solved.' The equation has no solution because the leftover statement is false no matter what x is. Stop there and conclude no solution.`, kind: 'gotcha' },
+    { content: `Always distribute and simplify BOTH sides fully before you look at the shapes. Hiding a matching x term on one side can trick you into thinking there's one solution when there are actually infinitely many.`, kind: 'gotcha' },
+    { content: `The three answer shapes are x = a (one), a = a (infinitely many), and a = b (none). No other form counts. If you reach something like x = 3x, keep simplifying until you hit one of these three.`, kind: 'vocab-note' },
+    { content: `When you subtract matching x terms from both sides and the variable disappears, that is NOT a sign you made an error. It's the equation telling you the answer will be infinitely many or none. Trust the leftover statement.`, kind: 'common-error' },
+    { content: `If a true statement like 0 = 0 results, every number you test will work—not just 'nice' numbers. Test x = 1, x = -5, and x = 0.5 to feel it. They all satisfy the original equation.`, kind: 'tip' },
   ],
 };

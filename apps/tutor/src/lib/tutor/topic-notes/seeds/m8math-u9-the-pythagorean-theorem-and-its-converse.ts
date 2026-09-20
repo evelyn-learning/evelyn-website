@@ -72,5 +72,12 @@ export const BASELINE_M8MATH_U9_THE_PYTHAGOREAN_THEOREM_AND_ITS_CONVERSE: TopicN
     { content: `Missing hypotenuse: add the two leg squares and take the root. Missing leg: subtract the known leg square from the hypotenuse square and take the root. A leg must come out shorter than the hypotenuse.`, kind: 'tip' },
     { content: `When the root is not a perfect square, trap it between two consecutive perfect squares and estimate to one decimal place; √65 is about 8.1.`, kind: 'tip' },
     { content: `The converse: with c the longest of three lengths, a² + b² = c² exactly means the triangle is a right triangle, and anything else means it is not.`, kind: 'tip' },
+    { content: `Don't add the leg lengths to find the hypotenuse. Add the *squares* of the legs: a² + b² = c². Legs 3 and 4 give 9 + 16 = 25, so c = 5, not 3 + 4 = 7.`, kind: 'common-error' },
+    { content: `When finding a missing LEG, always subtract: leg² = c² - (other leg)². Never add. If your leg comes out longer than the hypotenuse, you added by mistake.`, kind: 'gotcha' },
+    { content: `In the converse test, c is always the *longest* of the three given lengths. Square it by itself on one side; add the squares of the two shorter sides on the other. If they're equal, it's a right triangle.`, kind: 'vocab-note' },
+    { content: `Perfect squares under 100: 1, 4, 9, 16, 25, 36, 49, 64, 81. When a² + b² is not one of these, trap the root between two consecutive perfect squares, then test decimals to one place.`, kind: 'tip' },
+    { content: `The converse needs *exactly* equal: if a² + b² ≠ c², the triangle is not a right triangle. 'Close' does not count—20² + 21² = 841, and 29² = 841, so they match. But 5² + 6² = 61 and 8² = 64, so no.`, kind: 'edge-case' },
+    { content: `The hypotenuse is *always* the longest side of a right triangle. If you solve for a side and get an answer longer than the hypotenuse, stop and check your arithmetic.`, kind: 'tip' },
+    { content: `When you have a leg and the hypotenuse and need the other leg, identify which is which first. Write c² and subtract the known leg² — don't add. Subtract, then root.`, kind: 'common-error' },
   ],
 };

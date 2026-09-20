@@ -77,5 +77,12 @@ VERSION B: "Marisol let herself in, dropped her bag by the door, and told her be
     { content: `Nothing worse than a red face waiting means humor: you are in on the joke, and the more certain the character sounds, the harder the line lands.`, kind: 'tip' },
     { content: `Name the effect from the reader's position, never from how the character feels. A cheerful character can be walking into a trap, and a nervous one can be walking into a party.`, kind: 'tip' },
     { content: `If the reader is as much in the dark as the character, there is no gap and no dramatic irony. That is a surprise or a mystery, which is a different tool.`, kind: 'tip' },
+    { content: `Don't confuse dramatic irony with surprise. Dramatic irony means YOU already know something the character doesn't—the gap exists because you're ahead, not because you're shocked. If you were surprised along with the character, there's no gap.`, kind: 'common-error' },
+    { content: `Point at the exact line on the page where you learned the fact the character doesn't know. If you can't point, you're guessing, not analyzing dramatic irony. A hunch is not a gap.`, kind: 'tip' },
+    { content: `The gap itself is NOT the effect. The same gap—reader knows, character doesn't—can create suspense OR humor. What decides it: what will it cost the character when they find out? Real loss = suspense. Just embarrassment = humor.`, kind: 'gotcha' },
+    { content: `Name the effect from what the READER will experience, not from how the character feels or sounds. A cheerful character walking toward danger is still suspense. A nervous character about to get a surprise party is still humor.`, kind: 'common-error' },
+    { content: `Ask yourself: 'What does the writer want me to do?' If you want to warn the character, it's suspense. If you want to sit back and enjoy being ahead of them, it's humor. Your emotional position settles it.`, kind: 'tip' },
+    { content: `Don't call every gap dramatic irony. If the reader is as lost as the character, there's no gap—just a mystery or surprise. Dramatic irony requires YOU to know something the character doesn't; equal ignorance is a different tool.`, kind: 'vocab-note' },
+    { content: `The character's confidence makes the effect sharper, but it doesn't change which effect it is. A worried character in a harmless gap is still humor. Check the stakes, not the tone.`, kind: 'edge-case' },
   ],
 };

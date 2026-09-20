@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U7_RATE_OF_CHANGE_AND_INITIAL_VALUE_FROM_TABLES_AND
     { content: `If a row has x = 0, read b from it. If not, back it out from one row: b = y - mx.`, kind: 'tip' },
     { content: `The first row of a table, or the first point you can see on a graph, is not b unless its x is 0.`, kind: 'tip' },
     { content: 'Write y = mx + b, then check it against a row you did not use.', kind: 'tip' },
+    { content: `When x jumps by more than 1, always divide the y-jump by the x-jump. The y-jump alone is NOT the rate of change.`, kind: 'common-error' },
+    { content: `The first row or first visible point is NOT b unless its x-value is 0. If x ≠ 0, you must back b out using b = y − mx.`, kind: 'gotcha' },
+    { content: `Subtract in the same order for both Δy and Δx. If you do (y₂ − y₁), you must do (x₂ − x₁), not (x₁ − x₂). Mixed order flips the sign of m.`, kind: 'vocab-note' },
+    { content: `A falling line has negative m. If y decreases as x increases, your rate of change should be negative, not positive.`, kind: 'tip' },
+    { content: `After you write y = mx + b, always plug in a row you did NOT use to find m or b. Mismatches point to errors in division or backing out.`, kind: 'tip' },
+    { content: `When backing out b, watch for negative m. The formula b = y − mx becomes b = y − (negative) × x = y + (positive product), and you add instead of subtract.`, kind: 'edge-case' },
+    { content: `Two different rows must give the same m. If your two pairs disagree, you divided wrong or picked points not on the same line.`, kind: 'tip' },
   ],
 };

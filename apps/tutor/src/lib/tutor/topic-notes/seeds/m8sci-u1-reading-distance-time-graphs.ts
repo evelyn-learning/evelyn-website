@@ -77,5 +77,13 @@ export const BASELINE_M8SCI_U1_READING_DISTANCE_TIME_GRAPHS: TopicNotesBaseline 
     { content: `To compare two objects, use the same clock and the same starting point. Over a stretch of time, more distance covered means faster; at a single moment, the higher distance means farther ahead, which is a different question from faster.`, kind: 'tip' },
     { content: `Two objects can have the same average speed and records that look nothing alike, because the average only cares about the total distance and the total time.`, kind: 'tip' },
     { content: `Every speed carries a unit built from both of the units that made it: meters per second, never a bare number.`, kind: 'tip' },
+    { content: `Flat stretch = at rest (0 meters covered), not slow motion. Don't confuse "flat and calm" with "steady speed." Steady speed is a climbing stretch that rises the same amount each equal time period.`, kind: 'common-error' },
+    { content: `When comparing speeds across two stretches that last *different* amounts of time, calculate speed (distance ÷ time) for each. Don't just compare the distances or how steep they look.`, kind: 'gotcha' },
+    { content: `Average speed = total distance ÷ total time. Total time *includes* every second the object was at rest. Never average the speeds of the moving parts—that erases stopped time and weights short stretches equally with long ones.`, kind: 'common-error' },
+    { content: `"Faster" and "farther ahead" are different questions. Steeper stretch = faster during that stretch. Higher point on the graph at one moment = farther from start at that moment. Don't mix them up.`, kind: 'vocab-note' },
+    { content: `Always write the unit when you write a speed: "5 meters per second," never "5" or "5 meters" or "5 seconds." The unit comes from dividing the distance unit by the time unit.`, kind: 'vocab-note' },
+    { content: `Compare how much a stretch *climbs* (rises), not how *high* the line has reached. A line can be very high up (object far from start) but barely climbing (now moving slowly).`, kind: 'tip' },
+    { content: `If two objects start at the same place on the same clock and their records meet at a point, that moment is when one has caught up with the other—same distance from start, but they may have very different speeds at that instant.`, kind: 'edge-case' },
+    { content: `Two different-looking records can have the same average speed if they start and end at the same distance and time. The average only cares about totals, not how the trip is spread out between moving and stopped.`, kind: 'edge-case' },
   ],
 };

@@ -75,5 +75,12 @@ export const BASELINE_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS: TopicNotesBaseline =
     { content: `A limit refines the idea by drawing its edge (but, only, unless, except). It is not a contradiction and not the writer taking the idea back; the idea is now smaller and truer.`, kind: 'tip' },
     { content: `A cause refines the idea by going behind it (because, since, the reason is). An example is one case OF the idea; a cause is the reason FOR it. Do not sort by the words a sentence contains; ask what it does to the idea.`, kind: 'tip' },
     { content: `The restate test: say the idea again after each sentence and notice what changed. If it turned into a different idea, that sentence is not developing this one. Put the first version beside the last; the distance between them is the development.`, kind: 'tip' },
+    { content: `Don't confuse "supporting" with "relating." A sentence can support the idea AND be an example, a limit, OR a cause. Always ask HOW it supports, not just whether it does.`, kind: 'common-error' },
+    { content: `A limit is NOT a contradiction. Watch for edge words: but, only, unless, except, as long as. After a limit, your restatement of the idea gains a condition—the idea is smaller and truer, not taken back.`, kind: 'gotcha' },
+    { content: `Before you name a relationship, run the restate test: say the central idea in your own words AFTER each sentence. Did your wording change? How? That change tells you the relationship.`, kind: 'tip' },
+    { content: `Don't sort by words. A sentence with "because" might be a limit that explains its own condition, not a cause of the central idea. Ask: does this sentence give the reason FOR the main idea, or the reason FOR a boundary on it?`, kind: 'common-error' },
+    { content: `An example shows one case OF the idea. A cause shows the reason FOR the idea. If you can delete the sentence and say the idea in the exact same words, it's an example. If you need to add "because," it's a cause.`, kind: 'vocab-note' },
+    { content: `The developed idea at the END is what you are tracing toward, not the idea at the start. After you finish, put the first version next to the last and see the distance between them.`, kind: 'tip' },
+    { content: `If a sentence changes the idea into a completely different one, it is NOT developing the central idea—it is starting a new one. Stop there and ask whether the paragraph has two ideas instead of one.`, kind: 'edge-case' },
   ],
 };

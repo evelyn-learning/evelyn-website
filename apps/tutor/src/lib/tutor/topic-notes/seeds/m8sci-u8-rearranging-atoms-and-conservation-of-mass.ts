@@ -74,5 +74,12 @@ export const BASELINE_M8SCI_U8_REARRANGING_ATOMS_AND_CONSERVATION_OF_MASS: Topic
     { content: `A balance weighs only what is on it. In a sealed container nothing crosses the boundary, so the reading before and the reading after are the same, every time.`, kind: 'tip' },
     { content: `In an open container the reading moves by the mass of whatever crossed the boundary: it falls when a gas floats away, as when a log burns down to ash, and it rises when oxygen from the air joins a solid, as when damp iron rusts.`, kind: 'tip' },
     { content: `Mass that seems to go missing when something burns did not stop existing. It left as gas, and the wood plus the oxygen it took from the air weigh exactly as much as the ash plus those gases.`, kind: 'tip' },
+    { content: `When you count atoms, multiply molecules × atoms-per-molecule for EACH substance, then add. Don't just count molecules. "Three molecules in, two out" is fine; "three atoms in, two out" is not.`, kind: 'common-error' },
+    { content: `A balance only weighs what sits on it RIGHT NOW. When a gas floats away or arrives from outside, the reading changes—but mass didn't vanish or appear. It crossed the boundary.`, kind: 'gotcha' },
+    { content: `Don't say "rust is heavier." Say "oxygen from the air joined the iron." The extra mass came from somewhere real that crossed the boundary.`, kind: 'vocab-note' },
+    { content: `O₂ is ONE molecule with TWO atoms inside. If you have three O₂ molecules, count 3 × 2 = 6 oxygen atoms, not 3. Don't read the subscript as your atom count.`, kind: 'common-error' },
+    { content: `In a sealed container, atoms are regrouped but nothing crosses the boundary. The balance reads the same before and after, without exception, because all the atoms—old and new products—stay on the pan.`, kind: 'tip' },
+    { content: `Check your atom count twice: once by counting each substance separately, and once by tracing where each atom ended up. Two kinds of evidence that agree are much stronger than one.`, kind: 'tip' },
+    { content: `If an atom count doesn't match, it's usually because (1) you read a molecule formula as a single atom, or (2) you missed an atom that appears in two different products.`, kind: 'edge-case' },
   ],
 };

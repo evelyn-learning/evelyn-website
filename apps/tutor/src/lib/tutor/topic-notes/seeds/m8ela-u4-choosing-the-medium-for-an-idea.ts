@@ -89,5 +89,13 @@ THE CANDIDATES, THE SAME FOUR FOR BOTH:
     { content: `Audio is the one that hands over a real sound and reaches an audience whose eyes and hands are busy. Video is the one that shows a movement in the order it happens, which the other three can only describe.`, kind: 'tip' },
     { content: `Every medium costs something, and the cost is usually the advantage seen from the other side. WRONG FOR THIS PURPOSE: a ninety-second video, when the audience needs one number they can look up again next month. CORRECT: one line of text they can find in two seconds. Neither presentation is an error; the pairing is.`, kind: 'tip' },
     { content: `A disadvantage counts only when the purpose asks for the thing that is missing. Name what your choice gives up, then check that this purpose can afford to lose it.`, kind: 'tip' },
+    { content: `Don't rank mediums against each other. Always ask: "Which one serves *this* purpose?" There is no medium that is strongest for everything. The purpose decides the winner, not the medium.`, kind: 'gotcha' },
+    { content: `Write the purpose as one sentence with a verb *the audience does*, not what they learn or what they watch. Not "understand how" but "be able to look up a number in two seconds." The verb is the test every candidate fails or passes.`, kind: 'tip' },
+    { content: `Reader-paced (paragraph, table, diagram) vs. time-based (audio, video) is the first big split. If the audience needs to jump straight to one piece of information or hold two pieces side by side, time-based is already out.`, kind: 'vocab-note' },
+    { content: `A table or diagram *shows*; words *explain*. If the purpose needs a reason ("why"), a condition ("only when"), or an exception ("except for"), you need words on a page or in a voice. A table cannot say "because."`, kind: 'edge-case' },
+    { content: `Every medium gives up something. Don't just pick a winner—say out loud what you gave up. Then ask: can this purpose afford to lose it? If not, pick again.`, kind: 'common-error' },
+    { content: `A disadvantage counts only when the purpose asks for the thing that is missing. "Audio cannot show pictures" is true but irrelevant if the purpose is about *sound*.`, kind: 'gotcha' },
+    { content: `Video shows *movement in order*. If nothing in the idea moves—no steps, no travel, no hand turning—video is wasting the audience's time on channels it does not need.`, kind: 'vocab-note' },
+    { content: `Audio is the only medium that reaches an audience whose eyes and hands are busy. If the audience is walking, cooking, or holding something, and the purpose fits sound, audio wins—even if other mediums are "richer."`, kind: 'tip' },
   ],
 };

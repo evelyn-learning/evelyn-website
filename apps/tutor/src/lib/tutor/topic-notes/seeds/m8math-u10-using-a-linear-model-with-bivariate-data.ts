@@ -70,5 +70,12 @@ export const BASELINE_M8MATH_U10_USING_A_LINEAR_MODEL_WITH_BIVARIATE_DATA: Topic
     { content: `To predict, put the x-value into y = mx + b and report the result as "about"; on the graph it is the height of the line directly above that x.`, kind: 'tip' },
     { content: `A prediction can be trusted only inside the data span. Predicting past the smallest or largest x in the data is extrapolation, and it must be flagged or declined.`, kind: 'tip' },
     { content: `An impossible prediction, like a negative price, is the line telling you it has been stretched too far past the data.`, kind: 'tip' },
+    { content: `A fitted line is "about", not exact. If a data point sits off the line, that's normal—the line is a summary, not a rule the data must obey.`, kind: 'gotcha' },
+    { content: `Slope must include both units and the word "additional". Not "the slope is 1.5", but "each additional hour goes with about 1.5 cm more height" (centimeters per hour).`, kind: 'vocab-note' },
+    { content: `Don't predict outside the data span without a flag. If data run from x = 2 to x = 8, predicting at x = 20 is extrapolation—the line was never checked there.`, kind: 'common-error' },
+    { content: `An impossible answer (like negative price or negative weight) is a red flag that extrapolation has gone too far. Stop and say the model cannot be used there.`, kind: 'edge-case' },
+    { content: `The intercept (y-value at x = 0) is where the line reaches the axis, not necessarily a real data point. Check if any data actually sit near x = 0 before claiming the intercept means something in context.`, kind: 'common-error' },
+    { content: `On the graph, a prediction is the height of the line directly above the x-value. It's not a data point; it's where the line itself sits.`, kind: 'tip' },
+    { content: `Negative slope still means per-unit. The slope -90 means each additional year goes with about $90 *less*, not that the phone loses $90 total.`, kind: 'common-error' },
   ],
 };

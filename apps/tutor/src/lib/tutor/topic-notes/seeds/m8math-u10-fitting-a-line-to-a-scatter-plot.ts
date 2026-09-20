@@ -70,5 +70,13 @@ export const BASELINE_M8MATH_U10_FITTING_A_LINE_TO_A_SCATTER_PLOT: TopicNotesBas
     { content: `Get the equation from two points ON THE DRAWN LINE, far apart and easy to read; they do not have to be data points.`, kind: 'tip' },
     { content: `m is the change in y over the change in x in the same order, a falling line gives a negative m, then b = y - mx from one point, and the other point is the check.`, kind: 'tip' },
     { content: `A line drawn by eye is an estimate of the pattern, so two careful lines can differ a little and both be good fits.`, kind: 'tip' },
+    { content: `Don't read the two points for your equation from the data points on the plot. Read them from where your drawn line crosses grid lines. A data point counts only if your line actually passes through it.`, kind: 'common-error' },
+    { content: `When you subtract to find slope, subtract the y-values in the same order as the x-values (top to bottom on both). If you mix the order, you'll flip the sign of m.`, kind: 'gotcha' },
+    { content: `A good line of fit often touches no data points at all. It stands in for the whole pattern, not for any single dot. Don't aim for any particular point.`, kind: 'tip' },
+    { content: `Never force a line to pass through (0, 0). The data decide where the line goes. A line of fit that passes through the origin is a coincidence, not a rule.`, kind: 'common-error' },
+    { content: `Check 'about as many above as below' means roughly equal counts, not exactly equal. Three above and four below, or four above and three below, both pass the balance check.`, kind: 'vocab-note' },
+    { content: `The vertical gap is always measured straight up or straight down from the data point to the line, in the units of the y-axis. It's not a slant distance.`, kind: 'vocab-note' },
+    { content: `If the scatter plot points follow a curve or show no pattern at all, do not draw a line of fit. A line only makes sense when the cloud looks like a straight-line path.`, kind: 'edge-case' },
+    { content: `Two people fitting the same plot by eye may end up with slightly different lines. Both equations are fine if both lines pass the two checks: balanced counts and small gaps.`, kind: 'tip' },
   ],
 };

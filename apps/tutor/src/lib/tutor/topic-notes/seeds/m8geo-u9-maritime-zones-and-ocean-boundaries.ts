@@ -85,5 +85,13 @@ A gas field lies 160 nautical miles from Corvell's coast, on that same straight 
     { content: `Two coasts closer than 400 nautical miles apart produce an overlap, because 200 plus 200 is 400. Inside the overlap the 200 rule says yes to both states and therefore settles nothing.`, kind: 'tip' },
     { content: `The median line splits the overlap: every point on it is the same distance from the nearest point of each coast, so across 300 nautical miles it runs at 150 from each. Test a point by comparing its two distances, which must add back to the gap.`, kind: 'tip' },
     { content: `An overlap is split, not awarded. Both claims were correct, and the line is where two states start from, not a verdict that one of them was wrong.`, kind: 'tip' },
+    { content: `Don't say "international waters" for everything past 12 nautical miles. Past 12 is the exclusive economic zone (12–200 nm), where the coastal state still controls fish and seabed. Only past 200 nm is the high seas.`, kind: 'common-error' },
+    { content: `Always name the baseline you measured from, then add the distances back to check. If a point is 120 nm from Coast A across a 300 nm gap, it must be 180 nm from Coast B, and 120 + 180 = 300.`, kind: 'tip' },
+    { content: `Island size (area) does not matter. A 1 km² island 150 nm offshore moves the exclusive economic zone to 350 nm (150 + 200), same as a 1,000 km² island at the same spot.`, kind: 'gotcha' },
+    { content: `A bare rock (no people, no economic life) gets a 12 nm territorial sea but no exclusive economic zone. So a bare rock 180 nm out does not extend the zone to 380 nm.`, kind: 'edge-case' },
+    { content: `Inside an overlap, the 200 nm rule says yes twice and settles nothing. You must use the median line. Across 300 nm, the median is at 150 nm from each coast.`, kind: 'vocab-note' },
+    { content: `Test for an overlap first: if the two coasts are less than 400 nm apart, there is one (because 200 + 200 = 400). If the gap is 400 or more, no overlap exists.`, kind: 'tip' },
+    { content: `Distance and activity both matter. Two boats at 40 nm: a cargo ship needs no permit (crossing is not a resource), but a trawler does (fishing is a resource). Same zone, different answers.`, kind: 'common-error' },
+    { content: `When two coasts face each other, measure both distances from the same baseline on one coast to check your work. The distances must sum to the gap between the coasts.`, kind: 'tip' },
   ],
 };

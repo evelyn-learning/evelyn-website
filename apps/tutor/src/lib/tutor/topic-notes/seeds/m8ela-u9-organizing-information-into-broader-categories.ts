@@ -83,5 +83,13 @@ Heading "One more thing", over: "Lids do not go in the can bin."`, solution: `Tw
     { content: `When a category grows crowded, split it into sub-categories under the same broader name. Never promote a slice of one category to stand beside the whole of another.`, kind: 'tip' },
     { content: `Order the categories by what a reader needs first: what a thing is before how it works, the parts before the steps, the cause before the effect. Read only the names, from the top, and check that nothing arrives before the thing it depends on.`, kind: 'tip' },
     { content: `A heading earns its place when a reader might want to skip straight to that section, so the number of headings is the number of categories and not the number of paragraphs. A table earns its place when the same few facts repeat for several things; a story, a chain of causes and a single explanation have nothing that repeats, so a table would leave most of its cells empty.`, kind: 'tip' },
+    { content: `Don't give a heading to a single fact. One fact = not a category. Fold it under the neighbor whose question it partly answers, or cut it.`, kind: 'common-error' },
+    { content: `A heading is a label on the outside of the section, not the first sentence inside. The paragraph under it must work even if the heading is covered up.`, kind: 'gotcha' },
+    { content: `Don't confuse 'one heading per paragraph' with 'helpful.' Eleven headings over four categories tells a reader there are eleven subjects, which is false. A heading names a category, not a paragraph.`, kind: 'common-error' },
+    { content: `Before you order categories, read only the names from the top. If a name mentions something the reader hasn't met yet, that section is too early.`, kind: 'tip' },
+    { content: `A sub-category splits a crowded category into two halves under the same parent. Never promote a sub-category to stand beside the whole of another category.`, kind: 'vocab-note' },
+    { content: `Build a table only when the same few facts repeat for several things. A story, a chain of causes, or a single explanation has nothing that repeats—most cells stay empty.`, kind: 'edge-case' },
+    { content: `If a fact could fit under two different category names, one of those names has to change. No fact has two homes—it answers one question better than any other.`, kind: 'gotcha' },
+    { content: `A name like 'Other things' or 'More information' names nothing. Say the name out loud in a few words and ask: would a reader know what to expect? If not, it's not a category yet.`, kind: 'common-error' },
   ],
 };

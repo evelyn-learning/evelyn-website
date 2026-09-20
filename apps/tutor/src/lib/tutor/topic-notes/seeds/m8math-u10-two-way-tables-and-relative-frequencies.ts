@@ -71,5 +71,13 @@ export const BASELINE_M8MATH_U10_TWO_WAY_TABLES_AND_RELATIVE_FREQUENCIES: TopicN
     { content: `A raw count cannot compare groups of different sizes. Divide each cell by the total of the group the question names: the row total for a row question, the column total for a column question, never the grand total.`, kind: 'tip' },
     { content: `Compare the same relative frequency across the two groups. Clearly different, such as 0.80 against 0.40, means a possible association; about the same, such as 0.75 against 0.75, means no association.`, kind: 'tip' },
     { content: `Check by working backward: relative frequency × group total must rebuild the cell count.`, kind: 'tip' },
+    { content: `**Row question = row total divider; column question = column total divider.** Read the question carefully. If it says "of students WITH a curfew", use the curfew row total. If it says "of students WITH chores", use the chores column total. Dividing by the grand total compares nothing.`, kind: 'common-error' },
+    { content: `Raw counts from unequal groups lie. 28 > 9, but if one group has 40 students and the other has 10, the bigger group wins automatically. Always divide by the group total first: 28÷40 = 0.70 vs. 9÷10 = 0.90 tells the true story.`, kind: 'gotcha' },
+    { content: `Both row totals and column totals must add to the grand total. If they don't match, a cell is wrong—go back and check subtraction. Missing cell = its total minus what you already know.`, kind: 'tip' },
+    { content: `Relative frequencies in a row or column always add to 1. If 0.80 and 0.20, or 0.75 and 0.25, you've split one whole. If they don't add to 1, you divided by the wrong total.`, kind: 'tip' },
+    { content: `"Possible association" means the two relative frequencies are *clearly* different, like 0.80 vs. 0.40. Small differences like 0.75 vs. 0.72 are "no association." Use your judgment; the numbers tell the story.`, kind: 'vocab-note' },
+    { content: `Check your work backward: relative frequency × group total should rebuild the cell count exactly. If 0.60 × 45 ≠ 27, the division was wrong.`, kind: 'tip' },
+    { content: `The question's wording determines what you divide by. "Of students WITH a curfew" (row named) → row total. "Of students WITH chores" (column named) → column total. Always underline the group name before you divide.`, kind: 'common-error' },
+    { content: `Relative frequencies let you compare groups of different sizes fairly. A 40-student row and a 10-student row are equal partners once you divide: 0.70 and 0.90 stand on equal ground.`, kind: 'edge-case' },
   ],
 };

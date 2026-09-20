@@ -76,5 +76,13 @@ export const BASELINE_M8SCI_U5_TEMPERATURE_AND_THERMAL_ENERGY: TopicNotesBaselin
     { content: `A large total says nothing on its own about the average behind it, so the sample holding the most thermal energy is not always the hottest sample.`, kind: 'tip' },
     { content: `No thermometer can tell you how much thermal energy a sample holds. You need the reading and the amount of matter.`, kind: 'tip' },
     { content: `An object has thermal energy; it does not contain heat. Heat is the name for thermal energy moving from a warmer object to a cooler one.`, kind: 'tip' },
+    { content: `Don't say "has heat." Say "has thermal energy." Heat is thermal energy *moving* from hot to cold. Once it stops moving, it's not heat anymore.`, kind: 'vocab-note' },
+    { content: `A thermometer reads only temperature (the average per particle). It tells you nothing about thermal energy (the total). You must know BOTH the temperature AND the amount of matter to answer a thermal-energy question.`, kind: 'gotcha' },
+    { content: `When one sample is much bigger (ten times, a hundred times) and the other is much hotter (a few tens of degrees warmer), the bigger one almost always holds more thermal energy. Size usually wins over temperature at ordinary temperatures.`, kind: 'tip' },
+    { content: `"Hotter" and "more thermal energy" are NOT the same thing. The hottest sample is not automatically the one holding the most thermal energy. Always ask: how many particles are there?`, kind: 'common-error' },
+    { content: `Dividing a sample in half: temperature stays the same, thermal energy is halved. Use this test whenever you are unsure which quantity a question is asking for.`, kind: 'tip' },
+    { content: `Temperature is per particle (one average). Thermal energy is for the whole sample (one big total). These are two separate measurements — never try to answer both with a single comparison.`, kind: 'vocab-note' },
+    { content: `A large total (lots of thermal energy) does NOT mean a large average (high temperature). A pool can hold far more thermal energy than a kettle and still be much cooler.`, kind: 'gotcha' },
+    { content: `When comparing thermal energy, collect BOTH the temperature AND the amount of matter before you decide. If you have only one of those numbers, you cannot settle the question.`, kind: 'common-error' },
   ],
 };

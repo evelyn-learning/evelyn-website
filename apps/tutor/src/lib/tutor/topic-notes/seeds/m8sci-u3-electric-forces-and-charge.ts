@@ -74,5 +74,12 @@ export const BASELINE_M8SCI_U3_ELECTRIC_FORCES_AND_CHARGE: TopicNotesBaseline = 
     { content: `That is why a rubbed balloon holds on to a wall that nobody rubbed, and the wall is still neutral the whole time.`, kind: 'tip' },
     { content: `Two things set how strong an electric force is: how much charge the objects carry, and how far apart they are. More charge is stronger, more distance is weaker.`, kind: 'tip' },
     { content: `To find a factor in a set of trials, compare two trials that differ in exactly one thing. A pair that differs in two things at once settles nothing on its own.`, kind: 'tip' },
+    { content: `Neutral does NOT mean empty of charge. It means equal amounts of positive and negative charge balanced out. A neutral object still has plenty of both kinds — they just cancel.`, kind: 'vocab-note' },
+    { content: `When you rub, BOTH objects get charged with opposite kinds. Don't say 'the balloon got negative charge.' Say 'electrons moved from the hair to the balloon, so the balloon went negative AND the hair went positive by the same amount.'`, kind: 'common-error' },
+    { content: `The wall does NOT get charged when a balloon sticks to it. The wall stays neutral. Its charges just shift a tiny bit in place — nearer charges end up opposite to the balloon, and since electric force is stronger over shorter distances, the pull beats the push.`, kind: 'gotcha' },
+    { content: `To find what factor matters in a set of trials, hunt for a PAIR that differs in exactly one thing. A pair that differs in two things tells you nothing — you can't say which change caused which result.`, kind: 'tip' },
+    { content: `Electric force pushes or pulls across a gap — the objects don't have to touch. But don't worry about HOW the force crosses the gap yet; just know that it DOES.`, kind: 'edge-case' },
+    { content: `A charged object can pull on a neutral one, but electrons do NOT move from the charged object to the neutral one. Only the charges in the neutral object's surface shift a little bit, then settle back when the charged object is taken away.`, kind: 'common-error' },
+    { content: `When two rubbed objects end up with opposite charges, they don't 'attract back together' to undo the rubbing. They attract AND they both push on other nearby charged things. One rubbing, two independent charges doing two independent jobs.`, kind: 'gotcha' },
   ],
 };

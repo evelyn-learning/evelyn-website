@@ -85,5 +85,13 @@ Find the upstream drainage area at Hale, at Merrow and at Sandell, give each str
     { content: `A lake with an outlet is a gate, not an end. Everything that entered the lake leaves through that one channel, which is what makes an outlet the narrowest point in a network.`, kind: 'tip' },
     { content: `The largest inland cities sit at confluences, lake outlets and river mouths for one reason three times over: those are the points every route has to pass. A mouth adds one more thing on top, which is the transfer between river vessel and ocean vessel.`, kind: 'tip' },
     { content: `Change one input and run the trace again. Move a crest, or take one tributary out of the basin, and the destination, the shares and the best site can all change while nothing else moves at all.`, kind: 'tip' },
+    { content: `Don't stop at a lake. If the description says the lake has an outlet, trace through it. Lake Erie → Niagara → Lake Ontario → St. Lawrence → Atlantic. Miss the outlets and your answer is wrong.`, kind: 'common-error' },
+    { content: `The side of the divide decides everything. A place 5 km from the coast can drain 2,000 km away to a different ocean if a ridge blocks it. Distance to a coast is meaningless; which slope you're on is everything.`, kind: 'gotcha' },
+    { content: `At a confluence, always add the upstream drainage areas. Don't say the larger branch 'wins' or sets the total. 3,000 + 5,000 = 8,000, and you can check it backwards: 8,000 − 5,000 = 3,000.`, kind: 'common-error' },
+    { content: `To find a stream's share of the basin: divide its area by the mouth's total area, not by the nearest ocean or coast. 6,000 ÷ 20,000 = 30%, and the check is 30% × 20,000 = 6,000.`, kind: 'vocab-note' },
+    { content: `A confluence or lake outlet is a bottleneck: every drop that enters above must exit below. That is why big cities sit there—not because two rivers meet, but because everything has to pass that one point.`, kind: 'tip' },
+    { content: `When you trace a drop, rewind it backward from the mouth to the source to check every link. If it breaks apart cleanly (10,000 − 2,000 = 8,000, 8,000 − 5,000 = 3,000), the trace was right.`, kind: 'tip' },
+    { content: `Change one input (move a divide, remove a tributary) and run the entire trace again. Your answer should change if the network really changed. If it doesn't, you guessed instead of tracing.`, kind: 'tip' },
+    { content: `A river mouth is where cargo moves between river barge and ocean ship. That is why a port sits there—it is a transfer point, not just a waterfall or confluence.`, kind: 'vocab-note' },
   ],
 };

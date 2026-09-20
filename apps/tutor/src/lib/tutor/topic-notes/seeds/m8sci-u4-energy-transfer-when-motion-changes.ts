@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U4_ENERGY_TRANSFER_WHEN_MOTION_CHANGES: TopicNotesBa
     { content: `The argument in four moves: name the object and whether its kinetic energy went up or down; name the other object pushing or pulling on it and which way; say who gave, who received, and where the energy is now; then remove or change that other object and check that the change in motion moves with it.`, kind: 'tip' },
     { content: `A collision passes energy along the push the two objects put on each other while they touch, and a small share of it usually leaves as the sound you hear.`, kind: 'tip' },
     { content: `Giving energy away does not leave an object empty, and an object moving at a steady speed in a straight line is neither gaining nor losing kinetic energy.`, kind: 'tip' },
+    { content: `Don't say an object "has" or "gives" force. Force is a push or pull that EXISTS ONLY while two objects interact. Say "the bat pushes on the ball" not "the bat gives the ball force."`, kind: 'vocab-note' },
+    { content: `Slowing down IS a transfer. Don't skip it or treat it as different from speeding up. A push against motion means energy is LEAVING that object, not staying put.`, kind: 'common-error' },
+    { content: `Never say energy was "used up" or "disappeared." If an object slows, name WHERE the energy went: into another object's motion, or into warmth in the rubbing surfaces and air.`, kind: 'common-error' },
+    { content: `An object moving at steady speed in a straight line is NOT gaining or losing kinetic energy, even if forces are acting on it. Forward and backward pushes must be canceling.`, kind: 'edge-case' },
+    { content: `Check your answer by REMOVING the other object or swapping it. If the motion change disappears, you found the right energy giver or receiver. If it doesn't, your argument is just a story.`, kind: 'tip' },
+    { content: `In a collision, a small share of kinetic energy often leaves as SOUND and a tiny bit as warmth at the touch point. Say "nearly all went to the other object," not "all of it did."`, kind: 'edge-case' },
+    { content: `Direction matters: push along the motion = energy arriving (object speeds up). Push against the motion = energy leaving (object slows). This tells you which way energy flows.`, kind: 'gotcha' },
+    { content: `Giving energy away doesn't leave an object empty or broken. A cue ball that transfers its motion sits still, ready to be pushed again—it's not used up or damaged.`, kind: 'common-error' },
   ],
 };

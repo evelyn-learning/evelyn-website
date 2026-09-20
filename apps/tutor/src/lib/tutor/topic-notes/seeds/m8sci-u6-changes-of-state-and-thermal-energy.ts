@@ -76,5 +76,13 @@ export const BASELINE_M8SCI_U6_CHANGES_OF_STATE_AND_THERMAL_ENERGY: TopicNotesBa
     { content: `A change of state changes how far apart the particles are and how fast they move. The particles themselves are never broken or changed -- ice, liquid water and the gas above a boiling pan are all H two O.`, kind: 'tip' },
     { content: `Every change of state is a physical change: run the energy the other way and the original state comes straight back.`, kind: 'tip' },
     { content: `To predict what a sample will do: name it and check that it is pure, say which way the energy is moving, and ask whether it is sitting at a change-of-state temperature. If it is, the state changes and the reading holds. If it is not, the reading moves and the state stays.`, kind: 'tip' },
+    { content: `Don't say "cold enters the cup." Cold doesn't move anywhere. Say "thermal energy leaves the water and goes into the freezer." Energy always moves from warmer to cooler, never the other way.`, kind: 'vocab-note' },
+    { content: `A flat stretch on the temperature graph means the sample is AT a change-of-state temperature. If the thermometer is climbing or falling, the state is NOT changing, no matter what's happening to the substance's appearance.`, kind: 'tip' },
+    { content: `Turning the burner higher under boiling water does NOT make it hotter. It makes it boil FASTER. The water stays at 100°C because all arriving energy goes into separating particles, not speeding them up.`, kind: 'common-error' },
+    { content: `The bubbles in boiling water are NOT air. They are the liquid itself, turned to gas. Air was never dissolved in enough quantity to make those bubbles.`, kind: 'gotcha' },
+    { content: `Evaporation and boiling are NOT the same. Evaporation happens at the surface only, at any temperature below boiling. Boiling happens all through the liquid, only at boiling point, and is much faster.`, kind: 'vocab-note' },
+    { content: `When a pure substance changes state, the thermometer HOLDS STEADY. It doesn't creep up slowly or drift down. Flat means flat.`, kind: 'common-error' },
+    { content: `A change of state is always PHYSICAL, not chemical. The particles themselves never break, split, or turn into something else. Ice, liquid water, and steam are all H₂O — same substance, different spacing and motion.`, kind: 'vocab-note' },
+    { content: `The rule about steady temperature ONLY works for a PURE substance. Salt water, juice, and mixtures will NOT hold a flat stretch when they change state. Check purity first.`, kind: 'edge-case' },
   ],
 };

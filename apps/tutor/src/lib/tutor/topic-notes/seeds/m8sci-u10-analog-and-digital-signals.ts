@@ -77,5 +77,12 @@ export const BASELINE_M8SCI_U10_ANALOG_AND_DIGITAL_SIGNALS: TopicNotesBaseline =
     { content: `In a digital signal the receiver only has to decide, for each slot, above halfway or below. Small noise does not change that decision, so the receiver can send onward fresh full-strength pulses and throw the noise away.`, kind: 'tip' },
     { content: `That is the reason digital signals are copied and transmitted more reliably -- and it is the whole reason, so say it with its condition: it holds while the noise stays small next to the gap between on and off.`, kind: 'tip' },
     { content: `Once the noise is large enough to push a slot across the halfway line, the pattern is read wrongly, and the result is not a hissy message but a different one.`, kind: 'tip' },
+    { content: `Don't say "digital is better." Say "digital is *copied more reliably* because the receiver only decides on or off, and small noise doesn't change that decision." The reason is the whole thing.`, kind: 'vocab-note' },
+    { content: `Noise lands on both analog and digital signals. The difference is what happens to it next: analog copies it onward and adds more; digital discards it at every relay. Never say "digital signals don't pick up noise."`, kind: 'common-error' },
+    { content: `In analog, the HEIGHT or SHAPE is the message. In digital, which SLOTS are on or off is the message. How bright an on pulse happens to be is irrelevant in digital.`, kind: 'gotcha' },
+    { content: `The digital advantage only holds while noise is small next to the gap between on and off. If noise adds seven tenths of full strength, it can drag off slots above halfway and on slots below — then the pattern read is wrong.`, kind: 'edge-case' },
+    { content: `"Digital" doesn't mean new or electronic. A lamp flashed in an agreed code of short and long flashes is a digital signal — people used it ship-to-ship before electricity existed.`, kind: 'vocab-note' },
+    { content: `When noise corrupts a digital signal badly enough to flip an on to off or off to on, the receiver gets a different message with no warning. It's not a hissy version — it's just wrong.`, kind: 'gotcha' },
+    { content: `Always trace the noise through the signal step by step: Does it land on the shape (analog → message changes)? Or does it land on pulses but each slot stays on the right side of halfway (digital → message survives)?`, kind: 'tip' },
   ],
 };

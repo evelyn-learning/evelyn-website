@@ -68,5 +68,12 @@ export const BASELINE_M8MATH_U4_EQUATIONS_WITH_RATIONAL_COEFFICIENTS: TopicNotes
     { content: `For decimals, either work directly or multiply every term by 10 or 100, chosen by the longest decimal, and always divide by the whole coefficient, decimal point included.`, kind: 'tip' },
     { content: `After the clear, the equation has whole-number coefficients: collect the variable terms, clear the constant, divide.`, kind: 'tip' },
     { content: `Check by substituting into the ORIGINAL equation, fractions and all; a term you forgot to multiply only shows up there.`, kind: 'tip' },
+    { content: `Multiply EVERY term by the LCD, even the plain numbers with no fraction. The -2 in (2/3)x + 1/2 = (1/6)x - 2 becomes -12 when you multiply by 6, not -2. Forgetting one plain term is the mistake this lesson stops.`, kind: 'common-error' },
+    { content: `The LCD is the smallest number all denominators divide into evenly—not just any common multiple. For 3, 2, and 6, it's 6, not 12 or 18. Smaller LCD keeps your numbers smaller.`, kind: 'vocab-note' },
+    { content: `When dividing by a decimal coefficient like 0.4, don't ignore the decimal point. Dividing 1.2 by 0.4 is the same as 12 ÷ 4 = 3, not 1.2 ÷ 4 = 0.3. Shift both decimals the same way.`, kind: 'common-error' },
+    { content: `Always check your answer in the ORIGINAL equation with fractions or decimals, not the cleared one. A forgotten term won't show up in the cleared version but will fail the check in the original.`, kind: 'tip' },
+    { content: `After you clear the fractions or decimals, stop and notice you now have a regular equation with whole-number coefficients. Use the same two-step or multi-step moves you always do—nothing changes except you started with a multiplication.`, kind: 'gotcha' },
+    { content: `For decimals, you can solve directly (0.5x - 0.2x = 0.3x) OR multiply by 10 or 100 first. Both roads get the same answer. Choose 10 if the longest decimal has one place, 100 if two places.`, kind: 'edge-case' },
+    { content: `Don't confuse the coefficient with the digit inside it. In 0.4x = 1.2, the coefficient is 0.4 (a decimal number), so divide 1.2 by 0.4, not by 4. The decimal point is part of the coefficient.`, kind: 'vocab-note' },
   ],
 };

@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U3_FIELDS_FORCES_WITHOUT_CONTACT: TopicNotesBaseline
     { content: `To judge whether an investigation is evidence of a field, ask three questions: was there a real gap with nothing else able to do the job; does the effect disappear when the source is taken away; and does the effect change when the test object is moved nearer or farther?`, kind: 'tip' },
     { content: `Between trials, change one thing and keep everything else the same, or you will not know which change did the work.`, kind: 'tip' },
     { content: `Field lines are a pattern people draw to show which way a field points. They are not objects coming out of a magnet, and the field is just as real in the spaces between the drawn lines.`, kind: 'tip' },
+    { content: `Don't say a magnet "has" or "shoots" field. Say the space around the magnet "is" a field. A field is a condition of the space, not stuff inside or coming out of the magnet.`, kind: 'vocab-note' },
+    { content: `A test object reveals the field that's already there—it doesn't create it. Take the test object away and the field is unchanged. Removing the compass or iron filing doesn't erase the space's condition.`, kind: 'gotcha' },
+    { content: `Field lines are a *map we draw*, not real lines or paths. The field is just as strong between two drawn lines as it is on them. A filing placed between lines still turns.`, kind: 'common-error' },
+    { content: `For a gap to prove a non-contact force is acting, nothing else can explain the effect—not tilting the table, air movement, or the objects touching. If you can't rule out contact, the investigation proves nothing about fields.`, kind: 'tip' },
+    { content: `A field is *stronger* near its source and *weaker* far away—but it never stops. Weaker doesn't mean gone. Earth's gravity still pulls the Moon, trillions of kilometers away.`, kind: 'edge-case' },
+    { content: `To evaluate evidence for a field existing, ask three separate questions: (1) Was there a real gap with nothing touching? (2) Does the effect go away when the source is removed? (3) Does the effect change as you move the test object closer or farther? All three must be yes.`, kind: 'tip' },
+    { content: `Don't confuse 'the magnet pulled the compass toward it' with 'the compass lined up with the field where it was.' The needle's direction tells you about the field at the compass's location, not about a pull toward the magnet's location.`, kind: 'common-error' },
+    { content: `Change only one thing between trials, or you won't know which change caused the result. Comparing a rubbed charged rod to an unrubbed rod (same object, one property different) is stronger evidence than comparing a rod to a different object entirely.`, kind: 'tip' },
   ],
 };

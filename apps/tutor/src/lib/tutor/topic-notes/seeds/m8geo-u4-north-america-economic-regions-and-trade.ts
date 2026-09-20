@@ -92,5 +92,13 @@ A commentator says: "Norvane depends on Halder, and Halder barely notices Norvan
     { content: `Read a trade table down both columns before saying anything. Interdependence is the finding that both flows are large, so each place is a supplier to the other and a customer of the other at the same time.`, kind: 'tip' },
     { content: `Dependence is a share, not a total: divide each country's shipment to its partner by everything that country sells abroad. The larger shipment usually belongs to the less dependent country.`, kind: 'tip' },
     { content: `A mix is evidence about factors and never a rank. A region carries the work its soil, rock, water, workers and neighbors allow, and no region and no group of people is ahead of or behind another.`, kind: 'tip' },
+    { content: `Don't label the region — label the STEP. One region runs all four levels at once. Ask: what was the material when this step began, and what is it when the step ends? Then label that step, not the place.`, kind: 'common-error' },
+    { content: `Physical factors lock work in place; locational factors let it move. If you say a factor is physical but you can picture the work three states away, you named the wrong factor.`, kind: 'tip' },
+    { content: `A trade table has TWO columns. A claim built on one column is not a claim about trade. Read both directions before you say anything about dependence.`, kind: 'common-error' },
+    { content: `Dependence is a SHARE, not a total. Divide what one country sends to its partner by everything that country sells abroad. The bigger shipment usually comes from the LESS dependent country.`, kind: 'vocab-note' },
+    { content: `When a secondary step sits at a harbor or refinery, it's pinned by a LOCATIONAL factor (pipelines meet deep water), not by the material itself. The material can arrive by pipe or truck.`, kind: 'edge-case' },
+    { content: `Never score a region's mix as high or low, advanced or behind. A grain-and-gas mix names the soil and rock. A software mix names the workers and clients. Different factors, not different ranks.`, kind: 'gotcha' },
+    { content: `Same product family crossing the border both ways (e.g., vehicle parts south AND finished vehicles north) means one production chain on both sides, not a simple one-way supply.`, kind: 'vocab-note' },
+    { content: `Check your math on a trade table by multiplying the share back by the total. If 0.75 times 100 doesn't return 75, you divided wrong or added the columns wrong.`, kind: 'tip' },
   ],
 };

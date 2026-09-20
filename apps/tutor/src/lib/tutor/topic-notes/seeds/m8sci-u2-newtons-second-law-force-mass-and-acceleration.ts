@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U2_NEWTONS_SECOND_LAW_FORCE_MASS_AND_ACCELERATION: T
     { content: `Acceleration is not speed. A large net force means the speed is changing quickly, not that the object is moving quickly.`, kind: 'tip' },
     { content: `A net force that is not zero always produces some acceleration, however heavy the object is. Only a net force of zero leaves the motion unchanged.`, kind: 'tip' },
     { content: `To test what mass does, change only the mass: same cart, same floor, same size push in the same direction, one known mass added each trial, repeated.`, kind: 'tip' },
+    { content: `Don't say "acceleration is 5 meters per second." Say "acceleration is 5 meters per second each second." The first is a speed; the second is how much faster the object gets every single second. They are different quantities with different units.`, kind: 'vocab-note' },
+    { content: `The rule F = m × a uses the NET force, not just one push or pull. If something is pushed forward and friction pushes back, subtract the friction from the push first. A net force of zero means no acceleration, even if the push looks huge.`, kind: 'gotcha' },
+    { content: `When comparing two situations, always say "three times the mass" or "half the force," never "40 kilograms more" or "50 newtons less." The comparison that matters is the ratio, not the difference.`, kind: 'common-error' },
+    { content: `A large net force does NOT mean the object is moving fast. It means the speed is CHANGING fast. An object that just started moving can have a huge acceleration and almost zero speed at the same instant.`, kind: 'gotcha' },
+    { content: `In a fair-test investigation, change ONE thing only. If you add mass AND push harder AND move to a different floor in the same trial, you cannot tell which change caused the result. Keep everything else identical.`, kind: 'common-error' },
+    { content: `To find acceleration from force and mass, divide: acceleration = force ÷ mass. To find force from mass and acceleration, multiply: force = mass × acceleration. Use the right operation for which quantity is missing.`, kind: 'tip' },
+    { content: `Always check your answer against the rule in words: a big net force on a small mass should give a big acceleration. If your answer goes the opposite way, you divided or multiplied wrong.`, kind: 'tip' },
+    { content: `A net force that is not zero ALWAYS produces some acceleration, no matter how heavy the object is. There is no threshold or weight limit. A tiny force on a huge mass gives a tiny acceleration, not zero.`, kind: 'edge-case' },
   ],
 };

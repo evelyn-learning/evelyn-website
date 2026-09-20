@@ -75,5 +75,13 @@ export const BASELINE_M8SCI_U7_INSIDE_THE_ATOM: TopicNotesBaseline = {
     { content: `A NEUTRAL atom has exactly as many electrons as protons, so the equal and opposite charges cancel and the atom has no overall charge. The neutrons have no charge to cancel.`, kind: 'tip' },
     { content: `Change the proton count and you have a different element. Change the electron count and the atom stops being neutral, but it is the same element it always was.`, kind: 'tip' },
     { content: `To read any atom: proton count names the element; if it is neutral, the electron count matches the proton count; the neutrons add mass and no charge.`, kind: 'tip' },
+    { content: `Don't add protons and neutrons to get the atomic number. The atomic number is the proton count only. A carbon nucleus holds 6 protons and 6 neutrons (12 particles total), but carbon's atomic number is 6, not 12.`, kind: 'common-error' },
+    { content: `The nucleus is almost none of the room AND almost all of the mass—those are two opposite answers to two different questions. Don't mix them up: small size does NOT mean small mass.`, kind: 'gotcha' },
+    { content: `Electrons do NOT decide which element an atom is. Protons do. You can remove electrons and the atom stays the same element—it just stops being neutral.`, kind: 'vocab-note' },
+    { content: `A neutral atom has one electron per proton—that is what 'neutral' means. If you know the electron count of a neutral atom, you know the proton count and which element it is.`, kind: 'tip' },
+    { content: `The space inside an atom is not filled with air. Air is made of atoms. The space holds only the moving electrons and nothing else.`, kind: 'common-error' },
+    { content: `Neutrons add mass but add no charge. Changing the neutron count changes the mass but never changes which element the atom is.`, kind: 'vocab-note' },
+    { content: `To answer any atom question: First find the proton count (that names the element). Second check if it is neutral (if yes, electron count = proton count). Third, only count protons and neutrons together when the question is about mass.`, kind: 'tip' },
+    { content: `One electron is nearly 2,000 times lighter than one proton. All the electrons in an atom together barely change its mass—the mass is always in the nucleus.`, kind: 'edge-case' },
   ],
 };

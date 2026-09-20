@@ -72,5 +72,13 @@ export const BASELINE_M8MATH_U1_RATIONAL_AND_IRRATIONAL_NUMBERS: TopicNotesBasel
     { content: `A pattern is not a repeat: 0.101001000... has a rule but no repeating block, so it is irrational.`, kind: 'tip' },
     { content: `A fraction is rational no matter what it is close to: 22/7 and 3.14 are rational, and neither one is π.`, kind: 'tip' },
     { content: `Never ending is not the test, and a calculator screen cannot decide for you. Ask whether it is a fraction of integers or a root of a perfect square.`, kind: 'tip' },
+    { content: `Don't confuse "has a pattern" with "repeats." A pattern means there's a rule you can see; repeating means the exact same block comes back unchanged forever. 0.101001000... has a pattern but the block keeps growing, so it never repeats—it's irrational.`, kind: 'common-error' },
+    { content: `A root sign does NOT tell you if a number is irrational. Check what's under it: if it's a perfect square (like 9, 25, 49), the root is rational. If it's not a perfect square (like 2, 10, 50), the root is irrational. The sign is just notation.`, kind: 'gotcha' },
+    { content: `Being close to a famous irrational number (like π) doesn't make a number irrational. 22/7 and 3.14 are both fractions or terminating decimals—both rational—even though they're neighbors of π. The number that is π is the irrational one.`, kind: 'common-error' },
+    { content: `A calculator showing 10 digits doesn't mean the decimal is rational or that it's "done." Both 1/3 = 0.333... and √2 = 1.414213562... look finished on a screen. The test is whether it's a fraction of integers or a root of a perfect square, not what the screen shows.`, kind: 'tip' },
+    { content: `Memorize the perfect squares up to at least 144 (1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144). Without this list, you can't quickly tell if √n is rational or irrational. It's your tool for this whole topic.`, kind: 'tip' },
+    { content: `Don't say a repeating decimal is "irrational because the block is long" or "has too many different digits." A long repeating block is still rational—it's just a fraction in disguise. Only "never repeats" signals irrational.`, kind: 'common-error' },
+    { content: `Every number on the number line is either rational or irrational—there is no third kind. If a decimal terminates or repeats, it's rational. If it neither terminates nor repeats, it's irrational. Those two categories cover everything.`, kind: 'vocab-note' },
+    { content: `When you see √n, first check: is n a perfect square? If yes, √n is rational and you can simplify it (√9 = 3). If no, √n is irrational and you leave the root sign there. That's the only decision tree you need.`, kind: 'tip' },
   ],
 };

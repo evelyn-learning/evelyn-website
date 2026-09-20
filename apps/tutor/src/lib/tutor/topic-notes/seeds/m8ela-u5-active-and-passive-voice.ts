@@ -79,5 +79,12 @@ Sentence B (passive): "The fire alarm was pulled by a sixth grader during lunch.
     { content: `The doer is optional in the passive and rides in a "by" phrase when it appears. No "by" phrase does not mean active, and a "by" phrase that answers where or when is not a doer.`, kind: 'tip' },
     { content: `"Be" plus an -ing main verb is active ("The team was practicing"), and "be" plus a describing word is not an action at all ("The bus was late"). Neither is passive. Look for the third shape, not for "was".`, kind: 'tip' },
     { content: `Converting is a seat swap with the tense held still: receiver into the subject seat, "be" in the original tense, third shape, doer into a "by" phrase or dropped. To go back to active you need a doer, and if the passive never named one you cannot convert it without knowing who it was.`, kind: 'tip' },
+    { content: `Don't use "was" or "by" alone to spot the passive. Both show up in active sentences too. Always run the three-step test: find the verb, ask who/what does it, check if the subject IS that doer.`, kind: 'common-error' },
+    { content: `The passive verb is always TWO PARTS: a form of "be" + the third shape (past participle). If you see be + an -ing word, that's active. If you see be + a describing word, that's not an action at all.`, kind: 'gotcha' },
+    { content: `A "by" phrase only marks a doer if the thing after "by" could actually do the action. "By the door" answers where; it's not a doer. Ask "By whom?" to check.`, kind: 'vocab-note' },
+    { content: `When you convert active to passive, move the receiver into the subject seat and the doer into the "by" phrase—or drop the doer if it's vague like "somebody." Tense stays the same.`, kind: 'tip' },
+    { content: `You cannot convert a passive sentence to active if it never names a doer. "The scoreboard was reset" stays passive; you'd need to know who reset it to write the active version.`, kind: 'edge-case' },
+    { content: `The third shape of a verb (chosen, taken, written, painted) is the key to spotting passive. It cannot stand alone as the main verb; it always needs a helper. After "be", that helper is the passive.`, kind: 'vocab-note' },
+    { content: `Don't confuse the doer with the subject. The doer is whoever or whatever performs the action. The subject is the word the verb agrees with. In passive, they are different people/things.`, kind: 'common-error' },
   ],
 };

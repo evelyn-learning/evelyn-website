@@ -76,5 +76,12 @@ export const BASELINE_M8SCI_U7_READING_THE_PERIODIC_TABLE: TopicNotesBaseline = 
     { content: `The COLUMN is the family. Elements in the same group behave alike in their reactions; elements in the same period do not, because properties change gradually across a row.`, kind: 'tip' },
     { content: `The alkali metals -- the first column below hydrogen -- all react with water. The noble gases, the last column, barely react with anything.`, kind: 'tip' },
     { content: `The routine: read the square, give the address, classify from position, check that against the properties you were given, and predict from the column and nothing else.`, kind: 'tip' },
+    { content: `Period and group are **not** interchangeable — period is ROW (1–7), group is COLUMN (1–18). If your answer says period 14 or group 8, you've swapped them. Recount.`, kind: 'common-error' },
+    { content: `When you read a square, the **atomic number tells you the proton count and nothing else**. It does NOT tell you how many neutrons, electrons, or neighbors the atom has. Don't use it to predict properties directly — use the **column** for predictions.`, kind: 'vocab-note' },
+    { content: `A metalloid is **one single element, not a mixture**. Silicon is pure silicon atoms, not 'metal-stuff mixed with nonmetal-stuff.' Its properties fall between the two sets because it is a single element sitting where the properties change.`, kind: 'common-error' },
+    { content: `Do **not** predict behavior from being in the same **row** or from being close on the page. Sodium and silicon are three squares apart in the same row but behave nothing alike. **Always predict from the column** — that is the family.`, kind: 'gotcha' },
+    { content: `Hydrogen sits alone at the **top left** above group 1, but it is **not** an alkali metal. Do not say hydrogen reacts with water like lithium, sodium, and potassium do. The family starts with the element **below** hydrogen.`, kind: 'edge-case' },
+    { content: `Position (left-right on the table) and properties (shiny, bendable, conductive) must **agree**. If they disagree, you have counted to the wrong square. Recount before you report a contradiction.`, kind: 'tip' },
+    { content: `When asked to predict an element's behavior, use **only the group (column)**. Do not use the period, the atomic number, how close the numbers are, or how close the squares are on the page.`, kind: 'vocab-note' },
   ],
 };

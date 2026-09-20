@@ -70,5 +70,13 @@ export const BASELINE_M8MATH_U8_TRANSLATIONS_AND_REFLECTIONS: TopicNotesBaseline
     { content: `Lengths and angle measures are preserved: count a horizontal or vertical side before and after, or match the run and rise of a slanted side, and a right angle stays a right angle.`, kind: 'tip' },
     { content: `Parallel sides stay parallel: two sides that ran in the same direction before the motion run in the same direction after it.`, kind: 'tip' },
     { content: `Check by working backward: slide the image back or flip it across the same axis again, and the original figure must reappear.`, kind: 'tip' },
+    { content: `For reflections, the coordinate that changes sign is the one measuring distance from the mirror. Across the x-axis: y flips, x stays. Across the y-axis: x flips, y stays. Don't flip both.`, kind: 'common-error' },
+    { content: `A translation moves every point the same distance in the same direction—the rule (x, y) → (x + a, y + b) uses the same numbers a and b for all vertices. If the figure gets bigger or smaller, you didn't translate; you scaled.`, kind: 'common-error' },
+    { content: `When you apply a transformation rule, apply it to *every* vertex. Don't skip a corner or forget to include vertices at negative coordinates—the rule works on all of them the same way.`, kind: 'gotcha' },
+    { content: `After you find the image vertices, join them in the same order as the original figure. If the original went A → B → C → A, the image must go A' → B' → C' → A'. Don't scramble the order or your figure won't match.`, kind: 'tip' },
+    { content: `To check if you translated or reflected correctly, apply the *opposite* motion: slide the image back, or flip it across the same axis again. You should get the original figure back exactly.`, kind: 'tip' },
+    { content: `For a horizontal or vertical side, count grid units to check that the length is preserved. For a slanted side, match the run (left/right) and rise (up/down) before and after—if both match, the length and tilt are the same.`, kind: 'vocab-note' },
+    { content: `Negative coordinates need the sign rule too. If you translate (−2, 3) by (x, y) → (x + 5, y − 2), you get (3, 1), not (−2 + 5, −3 − 2). Treat negative numbers the same way you treat positive ones.`, kind: 'edge-case' },
+    { content: `A reflected figure is not bigger or smaller, and its sides don't change direction relative to *each other*—only relative to the axes. Two parallel sides stay parallel after a flip because they turn the same way.`, kind: 'gotcha' },
   ],
 };

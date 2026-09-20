@@ -70,5 +70,12 @@ export const BASELINE_M8MATH_U6_LINEAR_VS_NONLINEAR_FUNCTIONS: TopicNotesBaselin
     { content: `Negative m, decimal m, a subtracted constant, and b = 0 are all still linear. Doubling every row is a constant multiplier, not a constant rate.`, kind: 'tip' },
     { content: `A = s² gives (1, 1), (2, 4), (3, 9), (4, 16) with changes 3, 5, 7, and y = x³ gives changes 1, 7, 19; the rate keeps changing, so both are nonlinear and both plots bend.`, kind: 'tip' },
     { content: `One point off the line is enough: a straight line through (1, 1) and (2, 4) would put the third point at (3, 7), and the real point (3, 9) breaks it.`, kind: 'tip' },
+    { content: `Always divide when x-steps are uneven. If x goes 1, 2, 4, 8, you must divide each y-change by its x-change before deciding if the rate is constant. Raw y-changes alone will fool you.`, kind: 'common-error' },
+    { content: `Read the exponent on x first, before you look at anything else. y = x² + 5 is nonlinear because x is squared, not because of what comes after. The + 5 just slides the curve up; it doesn't straighten it.`, kind: 'gotcha' },
+    { content: `Two points always line up on a line. One point off that line is enough to prove nonlinear. Don't stop checking after the first two rows.`, kind: 'tip' },
+    { content: `Constant rate ≠ constant multiplier. If points are (1, 2), (2, 4), (3, 8), each y is double the previous y, but the rate of change is 2 then 4 then 8—not constant. This is nonlinear.`, kind: 'vocab-note' },
+    { content: `Negative m and decimal m are still linear. y = –3x + 1 and y = 0.5x are both in the y = mx + b family. The sign or decimal doesn't break the straight line.`, kind: 'edge-case' },
+    { content: `b = 0 is fine; it just means the line passes through the origin. y = 2x with no constant term is linear. A missing + b doesn't disqualify it.`, kind: 'edge-case' },
+    { content: `The y-changes in A = s² are 3, then 5, then 7—not the same. And even though the table starts low and goes up, 'going up' is not the test for linear. The rate must stay the same.`, kind: 'common-error' },
   ],
 };

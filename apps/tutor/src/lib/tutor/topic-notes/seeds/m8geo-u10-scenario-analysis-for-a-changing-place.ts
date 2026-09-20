@@ -85,5 +85,13 @@ Plan B builds 2,000 seats now at $22,000 for each seat, because a smaller order 
     { content: `Score every plan in both columns -- cost and what it delivers if the assumption holds, and the same two if it is wrong. Four figures, not two.`, kind: 'tip' },
     { content: `The plan that wins the column it was designed for is often the one that loses the other column by much more: $8,000,000 given up against $36,000,000 avoided is four and a half times as much, and that subtraction is the decision.`, kind: 'tip' },
     { content: `The assumption the verdict rests on is the one that flips the verdict when you move it while the others are held still. Check that one before the money is spent.`, kind: 'tip' },
+    { content: `Write IF-THEN every time. "48,000 people" is a promise; "IF the rate holds, THEN 48,000 people" is a projection. Drop the IF and you hide which assumption the number came from.`, kind: 'common-error' },
+    { content: `An assumption must be checkable and wrongable. "The rate holds at 3.5 percent a year" works; "the town keeps changing" does not. If nobody can go and test it or prove it false, it's not an assumption.`, kind: 'vocab-note' },
+    { content: `Move exactly ONE assumption to the bad side and re-run only THAT number. Change two at once and you cannot tell which one moved the answer. The whole point collapses.`, kind: 'gotcha' },
+    { content: `Four figures, never two. Write cost and delivery in column one (assumption holds), then cost and delivery in column two (assumption breaks). A plan that wins one column by a little can lose the other by a lot.`, kind: 'common-error' },
+    { content: `Use the right tool for each trend type: doubling time (70 ÷ percent per year) for growth, multiply by years for a rise or fall, never mix them up.`, kind: 'vocab-note' },
+    { content: `The margin is the buffer left before a plan stops working. If 240 homes sit between the flood line and 40 centimeters above it, all 240 are inside the line in twenty years only if the rise holds. Stress the rise and the margin shrinks.`, kind: 'edge-case' },
+    { content: `Subtract across the columns to price the trade. If Plan B costs $8M more in one column but $36M less in the other, it is buying insurance, not losing money. Say what the price is.`, kind: 'tip' },
+    { content: `The assumption the verdict rests on is the one that flips the winner when you move it alone. Move growth, Plan B wins; move the river, both plans keep the same verdict. So growth is what matters. Check that one first.`, kind: 'gotcha' },
   ],
 };

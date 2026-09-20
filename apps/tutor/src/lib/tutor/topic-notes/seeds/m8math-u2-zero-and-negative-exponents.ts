@@ -68,5 +68,13 @@ export const BASELINE_M8MATH_U2_ZERO_AND_NEGATIVE_EXPONENTS: TopicNotesBaseline 
     { content: `Walking the ladder down divides by the base at every step: 2¹ = 2, 2⁰ = 1, 2⁻¹ = 1/2, 2⁻² = 1/4.`, kind: 'tip' },
     { content: `A fraction base with a negative exponent flips: (1/2)⁻² = 2² = 4, which is bigger than 1.`, kind: 'tip' },
     { content: `The product and quotient rules work exactly the same with negative exponents, signs included: 3² × 3⁻⁵ = 3⁻³ = 1/27.`, kind: 'tip' },
+    { content: `A negative exponent does NOT make the answer negative. Only the BASE can make a number negative. 2⁻³ = 1/8 (positive), not -8. The exponent just tells you to divide.`, kind: 'common-error' },
+    { content: `Don't write a⁰ = 0. Every nonzero base to the power 0 equals 1, because a⁰ comes from dividing the base by itself (a³ ÷ a³ = 1).`, kind: 'common-error' },
+    { content: `When you see a⁻ⁿ, think 'reciprocal of aⁿ.' So 2⁻³ = 1/2³ = 1/8. The negative exponent flips it to a fraction; it never flips the sign of the answer.`, kind: 'vocab-note' },
+    { content: `When a fraction base gets a negative exponent, flip the fraction AND make the exponent positive: (1/2)⁻² = 2² = 4. The answer gets bigger, not smaller.`, kind: 'tip' },
+    { content: `The product and quotient rules still work when exponents are negative. Just add or subtract the exponents with their signs: 3² × 3⁻⁵ = 3^(2+(-5)) = 3⁻³.`, kind: 'tip' },
+    { content: `Walk the ladder to build intuition: 2³ = 8, 2² = 4, 2¹ = 2, 2⁰ = 1, 2⁻¹ = 1/2, 2⁻² = 1/4. Each step down divides by the base. The result shrinks but never becomes 0 or negative.`, kind: 'tip' },
+    { content: `Before you simplify, make sure the base is the same when you use product or quotient rules. You can't combine 2³ × 3⁻² because the bases are 2 and 3, not the same number.`, kind: 'gotcha' },
+    { content: `Be careful: a⁰ = 1 only when a ≠ 0. The expression 0⁰ is undefined (not in 8th grade, but avoid writing it as 1). All other nonzero bases work: 7⁰ = 1, 12⁰ = 1, (-3)⁰ = 1.`, kind: 'edge-case' },
   ],
 };

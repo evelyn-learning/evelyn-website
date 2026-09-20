@@ -69,5 +69,13 @@ export const BASELINE_M8MATH_U1_REPEATING_DECIMALS_TO_FRACTIONS: TopicNotesBasel
     { content: `Name it x, shift it, subtract, and the identical endless tails cancel: 100x - x = 99x for a two-digit block.`, kind: 'tip' },
     { content: `A lead digit that does not repeat needs two shifted copies that share a tail: 100x - 10x = 90x.`, kind: 'tip' },
     { content: `Divide, reduce to lowest terms, then check by dividing the fraction back into its decimal.`, kind: 'tip' },
+    { content: `Find the repeating block FIRST, before you pick a multiplier. Count which digits loop—that count tells you whether to multiply by 10 or 100. Get the block wrong, and every step after breaks.`, kind: 'gotcha' },
+    { content: `A lead digit is NOT part of the repeating block. In 0.8333…, the 8 comes before the loop starts, so you need TWO shifted copies (10x and 100x) to line up matching tails, not one.`, kind: 'vocab-note' },
+    { content: `When you subtract, the two decimal tails must be identical and endless on both sides—that's the whole point. If the tails don't match, you shifted by the wrong multiplier or miscounted the block.`, kind: 'tip' },
+    { content: `Don't treat a repeating decimal like a terminating one by just writing it as a fraction over 10, 100, etc. 0.7222… is NOT 72/100. The shift-and-subtract method is required because the decimal never ends.`, kind: 'common-error' },
+    { content: `Always reduce your final fraction to lowest terms. The problem asks for lowest terms, and it matters for the story: 7/11 is simpler and clearer than 14/22, even though they're the same decimal.`, kind: 'common-error' },
+    { content: `Check your answer by dividing the fraction back into a decimal. If you don't get the original repeating decimal, your block, multiplier, or arithmetic was wrong. The check tells you which.`, kind: 'tip' },
+    { content: `For a one-digit block, multiply by 10. For a two-digit block, multiply by 100. For a lead digit plus a one-digit block, you still multiply by 100 (to shift past both). The multiplier depends on the block size, not the total size.`, kind: 'vocab-note' },
+    { content: `Subtracting 100x - 10x leaves you with 90x on the left side, not 99x. A lead digit means you're subtracting two different powers of x, so the denominator changes. Count carefully.`, kind: 'common-error' },
   ],
 };

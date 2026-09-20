@@ -90,5 +90,13 @@ Test the claim, then say what would have to be true for the same map to carry it
     { content: `Which end of the shading is dark is chosen after the values are fixed, so read the key before you decide what a dark block means. A title is a sentence somebody wrote, not a measurement.`, kind: 'tip' },
     { content: `What a map leaves out leaves no mark on the page. Ask what you would need in order to show the claim is false, and if the map cannot carry it, the map does not settle the claim.`, kind: 'tip' },
     { content: `Give the verdict on the claim, never on the mapmaker. Every map makes design choices, so making them is not deceiving; the same map can carry a false claim on one table and a true claim on another.`, kind: 'tip' },
+    { content: `Don't read the SIZE of a mark as the number itself. The mark is a DRAWING made FROM the number. Always check: what rule turned the count into the width or area?`, kind: 'common-error' },
+    { content: `When a map sizes marks by WIDTH, the reader sees AREA. Doubling the width quadruples the area (2 × 2 = 4). Tripling the width gives nine times the area (3 × 3 = 9). Always square the ratio.`, kind: 'gotcha' },
+    { content: `The DATA is the table of numbers. The DESIGN is every choice after that — flattening rule, symbol size, color order, title, what the frame leaves out. Only the data can settle a claim.`, kind: 'vocab-note' },
+    { content: `To price symbol inflation: multiply (ratio the page shows) × (smaller figure in table). If the answer doesn't match the actual figure, the design is inventing a number that isn't there.`, kind: 'tip' },
+    { content: `READ THE KEY BEFORE THE TITLE. A title is a sentence someone wrote. The key tells you which shade means which value. A title can lie under an honest key.`, kind: 'common-error' },
+    { content: `Omissions leave no mark on the page. If the map stops at a border, drops a category, or hides the key, you cannot check the claim. Ask: what number would prove the claim false? If the map doesn't carry it, the map cannot settle the claim.`, kind: 'edge-case' },
+    { content: `The same map can carry a false claim on one table and a true claim on another. The verdict lives in the TABLE, not in the design. Never blame the mapmaker—test the claim against the numbers.`, kind: 'gotcha' },
+    { content: `When you run the design-swap test, change EXACTLY ONE choice and hold all the numbers still. If the impression flips and nothing in the table moved, the claim was resting on the design, not the data.`, kind: 'tip' },
   ],
 };

@@ -71,5 +71,13 @@ export const BASELINE_M8MATH_U7_INTERPRETING_AND_USING_LINEAR_MODELS: TopicNotes
     { content: `On a graph, b is where the line crosses the vertical axis, at (0, b), and m is the rise for every 1 unit of run. In a table, b is the y beside x = 0 and m is the jump from one row to the next when x goes up by 1; the y beside x = 1 is a total, not the rate.`, kind: 'tip' },
     { content: `To predict an output, substitute the given x and compute y. To find the input for a target output, substitute the target for y and solve the two-step equation for x.`, kind: 'tip' },
     { content: `The units in the question pick the slot: a number of hours or minutes is an x, a number of dollars or centimeters is a y. Check a solved x by predicting with it.`, kind: 'tip' },
+    { content: `The rate of change has TWO units (dollars per hour, cm per minute). The initial value has ONE unit (just dollars, just cm). If you write a number with no unit or the wrong unit, you haven't finished the answer.`, kind: 'vocab-note' },
+    { content: `The y-value beside x = 1 in a table is a TOTAL, not the rate of change. The rate of change is the jump from one row to the next. If y goes 8 → 14 → 20 → 26, the rate is 6, not 14.`, kind: 'common-error' },
+    { content: `READ THE UNITS IN THE QUESTION TO PICK THE SLOT. 'After 7 hours' → x = 7. '4 cm tall' → y = 4. Don't guess; the unit tells you which variable the number belongs in.`, kind: 'tip' },
+    { content: `A NEGATIVE rate of change means the line FALLS as you read left to right, and y goes down. The minus sign is direction, not just a symbol. In y = -0.5x + 12, the height drops 0.5 cm each hour.`, kind: 'gotcha' },
+    { content: `When you solve for x (e.g., 4 = -0.5x + 12), ALWAYS check your answer by predicting with it. Plug your x back into the equation and verify you get the target y. This catches sign errors and arithmetic mistakes.`, kind: 'tip' },
+    { content: `Don't confuse 'the rate' with 'the value at x = 1.' On a graph, the rate is the rise for every 1 right; it's how steep the line is. The point (1, 14) is a location, not a rate.`, kind: 'vocab-note' },
+    { content: `The initial value b sits at (0, b) on the graph and is the y beside x = 0 in the table. It's the amount BEFORE anything happens. On the graph, it's where the line crosses the vertical axis, period.`, kind: 'edge-case' },
+    { content: `When predicting or solving, show the substitution step. Write y = 6(5) + 8, not just 38. This makes it clear which number went in which slot and helps you (and your teacher) spot where an error crept in.`, kind: 'tip' },
   ],
 };

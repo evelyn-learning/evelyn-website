@@ -71,5 +71,13 @@ export const BASELINE_M8MATH_U10_SCATTER_PLOTS_AND_ASSOCIATION: TopicNotesBaseli
     { content: `Linear means the dots follow a straight band; nonlinear means the band bends. The dots do not have to sit on one line, and no line gets drawn.`, kind: 'tip' },
     { content: `A cluster is a bunch of dots with an empty gap around it. An outlier is one dot far from the pattern; name it with its coordinates and keep describing the rest.`, kind: 'tip' },
     { content: `The description is about the whole cloud. A few dots that step against the tilt, or one outlier, do not erase the association.`, kind: 'tip' },
+    { content: `Don't expect dots to sit exactly on one line. Linear means a straight BAND with wobble inside it, not a perfect line. Real data always scatters.`, kind: 'common-error' },
+    { content: `Don't let one outlier kill the association. Name it, keep it on the plot, and describe what the other dots show. One weird dot ≠ no pattern.`, kind: 'gotcha' },
+    { content: `Count your dots before you describe. Number of dots = number of individuals. If they don't match, you missed one or plotted twice.`, kind: 'tip' },
+    { content: `Association is about the whole cloud's tilt, not single dots. A few dots can go against the trend (like 8→10 minutes, time goes UP) and the association still holds.`, kind: 'vocab-note' },
+    { content: `Axes don't have to start at zero. If times run 20–30 minutes, use 18–32 on the y-axis to show the shape clearly, not 0–32.`, kind: 'tip' },
+    { content: `A cluster needs an empty gap. Dots bunched together with space between them and the rest = cluster. Dots spread across the whole range = no cluster.`, kind: 'vocab-note' },
+    { content: `Name outliers with their coordinates: (45, 9), not just 'the point on the right.' The coordinates tell the reader exactly what's unusual.`, kind: 'vocab-note' },
+    { content: `Nonlinear = the band bends, not 'dots are messy.' A curve that rises then flattens, or dips then rises, is nonlinear even if dots stay close to it.`, kind: 'common-error' },
   ],
 };

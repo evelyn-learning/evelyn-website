@@ -88,5 +88,13 @@ Which offer should Sennick take if it plans for a 30-day closure? What changes a
     { content: `Judge an offer on its cost for a year and on the share of the daily gap it covers. The gap is only what came through the passage, never everything a place uses.`, kind: 'tip' },
     { content: `A store buys days, not supply: divide the store by the daily gap. If another offer already carries part of that gap, divide by what is left, and the same store lasts longer.`, kind: 'tip' },
     { content: `Change one input and run it again. The same share with a 2-day detour and with a 32-day detour are two completely different problems.`, kind: 'tip' },
+    { content: `A share is not a loss. "60% through the passage" means 60% depends on it, NOT that 60% vanishes if it closes. Always ask: is there a way around? That answer decides everything.`, kind: 'common-error' },
+    { content: `Delay case or shortfall case? If a way around exists, measure cost in days and money. If no way around exists, measure cost in missing barrels—never run delay math on a shortfall.`, kind: 'gotcha' },
+    { content: `The daily gap is NOT everything a place uses—only what came through the closed passage. If 8,000 barrels burn daily but 6,000 came through the passage and 2,000 come overland, the gap is 6,000, not 8,000.`, kind: 'vocab-note' },
+    { content: `A stockpile buys days only, not permanent safety. 300,000 barrels ÷ 6,000 daily gap = 50 days of cover. On day 51, the gap is wide open again. Nothing changes about what a place needs after the store runs out.`, kind: 'gotcha' },
+    { content: `Judge every offer on TWO numbers: yearly cost AND the share of the daily gap it covers. A price with no coverage is meaningless, and coverage with no price is meaningless. Never choose an offer on cost alone.`, kind: 'tip' },
+    { content: `When combining offers, re-divide. If a pipeline covers 3,000 of a 6,000-barrel daily gap, the remaining gap for a stockpile to cover is now 3,000—not 6,000. The same tanks buy twice as many days.`, kind: 'edge-case' },
+    { content: `Change one input and run it again. An 80% share + 2-day detour is a $2M problem. An 80% share + 32-day detour is a $32M problem. The share never moved; the days did all the work.`, kind: 'tip' },
+    { content: `Always multiply back to check. 40 ships × 8 days × $25,000 = $8,000,000? Now divide: $8,000,000 ÷ $25,000 = 320 tanker-days; 320 ÷ 8 = 40 ships. If you don't land back on your input, something broke.`, kind: 'tip' },
   ],
 };

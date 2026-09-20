@@ -82,5 +82,13 @@ The rule for a building permit: the parcel must be vacant AND connected to the s
     { content: `Check a survivor count by elimination. Count each place out once, at the first condition it fails, and the eliminated places plus the survivors must return the total you started with.`, kind: 'tip' },
     { content: `A stack answers only the questions its layers were built to answer. If no layer records what the question asks about, say so; a layer that records something else cannot stand in for one nobody collected.`, kind: 'tip' },
     { content: `The answer set belongs to the layers and the rule, not to the places. Correct one layer and a parcel crosses in or out without moving a meter, so an overlay answer travels with the rule that produced it and the date of the layers behind it.`, kind: 'tip' },
+    { content: `AND keeps only places on BOTH lists. OR keeps places on EITHER list. Say the connector out loud before you touch anything — they give completely different answers.`, kind: 'common-error' },
+    { content: `An AND rule in a GIS overlay can NEVER grow the answer set — it can only shrink it or stay the same. If your answer set is bigger than the shortest list you're working with, stop and recheck.`, kind: 'tip' },
+    { content: `AND NOT is an EXCLUSION layer. The places it names are the ones that FAIL — they get removed, not kept. Treat it exactly like any other condition; don't leave it out because it 'sounds like' it doesn't belong.`, kind: 'gotcha' },
+    { content: `A layer only answers questions about what it records. No layer here records tree shade? Then 'the stack cannot answer that question' — don't guess by reading a different layer sideways.`, kind: 'vocab-note' },
+    { content: `Run conditions in order and carry only survivors forward — don't run every condition against the full list. This saves work AND makes your count checkable: eliminated places plus survivors must equal your starting total.`, kind: 'tip' },
+    { content: `Check your count by ELIMINATION. Count each place out once at the first condition it fails. If (eliminated + survivors) ≠ total, you double-counted something or dropped a place.`, kind: 'tip' },
+    { content: `The answer set is owned by the layers AND the rule — not by the place itself. Change the layers or the rule, and a place moves in or out without moving a meter on the map.`, kind: 'vocab-note' },
+    { content: `If two lists add up to more places than the town actually has, you read OR as AND. Check: 4 + 5 = 9 in a town of 8? The overlapping places got counted twice.`, kind: 'common-error' },
   ],
 };

@@ -76,5 +76,13 @@ export const BASELINE_M8SCI_U2_NEWTONS_THIRD_LAW_ACTION_REACTION_PAIRS: TopicNot
     { content: `To answer "why did it move", pick the one object you care about, list only the forces on THAT object, and add those. The partner force belongs to the other object and is not on the list.`, kind: 'tip' },
     { content: `To name a pair: name the two objects, write "A pushes B this way", then swap the objects and reverse the direction, keeping the size the same.`, kind: 'tip' },
     { content: `To get pushed forward, push something backward: a shoe pushes the ground back and the ground pushes the shoe forward; a rocket pushes gas down and the gas pushes the rocket up.`, kind: 'tip' },
+    { content: `Before adding any forces, write the object each one acts on. Forces add only when both act on the SAME object. The pair's two forces always act on different objects, so they never get added together.`, kind: 'common-error' },
+    { content: `A pair and balanced forces both look like equal-opposite arrows, but they are not the same. Count the objects: one object with two forces = balanced. Two objects, each pushing the other = pair. The test is always object count.`, kind: 'gotcha' },
+    { content: `The forces in a pair do not cause each other and neither comes first. They happen at the same instant, always together. Do not say 'the push causes the pushback'—say 'the push and pushback are a pair.'`, kind: 'vocab-note' },
+    { content: `A smaller mass and a larger mass push each other with equal force. The smaller one moves more, not because it was pushed harder, but because it has less inertia. Same force, different masses = different effects.`, kind: 'common-error' },
+    { content: `When you push forward, look for the pair on YOU, not on the thing you pushed. The thing moving is pushed by the partner. You stay put (or move less) because the pair force on you is real and acts on you.`, kind: 'tip' },
+    { content: `A rocket does not need anything underneath it to push against. The rocket pushes hot gas down; the gas pushes the rocket up. That pair works in empty space with no ground or air.`, kind: 'edge-case' },
+    { content: `Name a pair out loud in two matching sentences: 'A pushes B this way' and 'B pushes A the opposite way.' If your two sentences do not have the same two objects with directions flipped, the pair is wrong.`, kind: 'tip' },
+    { content: `Do not say an object 'has' a force or 'gets' a force. Say the force 'acts on' the object. A force is always between two objects, never belongs to one alone.`, kind: 'vocab-note' },
   ],
 };

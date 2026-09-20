@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U6_DENSITY_THERMAL_EXPANSION_AND_WHY_WARM_FLUIDS_RIS
     { content: `Nothing rises because it wants to. The cooler, denser fluid sinks, slides underneath the less dense fluid, and pushes it up -- one exchange, not two separate events.`, kind: 'tip' },
     { content: `One sentence covers air near a ceiling, water in the ocean and hot rock in the mantle: the denser fluid sinks and the less dense fluid is pushed up above it.`, kind: 'tip' },
     { content: `Ice is less dense than liquid water, because water expands when it freezes, so never say that a solid is always denser than its liquid.`, kind: 'tip' },
+    { content: `Don't say "the warmed fluid rises." Say "the cooler, denser fluid sinks underneath and pushes the warmer fluid up." Rising and sinking are one exchange, not two separate events.`, kind: 'common-error' },
+    { content: `Density is NOT mass, NOT size, and NOT how heavy something feels. Two samples with the same mass can have different densities if their volumes differ. A beach ball (heavy) can be less dense than a marble (light).`, kind: 'vocab-note' },
+    { content: `When you heat a sealed fluid, the MASS does not change (no particles added or removed), the VOLUME gets bigger, so the DENSITY must go down. Don't say particles swell—they stay the same size, just move farther apart.`, kind: 'common-error' },
+    { content: `If a problem gives you two masses but NO volumes, you cannot yet say which sample is denser. You need both numbers for each sample before you divide.`, kind: 'gotcha' },
+    { content: `Density does not change when you cut a sample in half. Half the mass, half the volume, same grams in every cubic centimeter. This is the test that proves density is independent of sample size.`, kind: 'edge-case' },
+    { content: `Water is weird: ice floats because ice is LESS dense than liquid water. Don't say solids are always denser than liquids—that rule breaks for water.`, kind: 'edge-case' },
+    { content: `Always check BOTH what happened to mass AND what happened to volume before you answer a density question. If only one changed, the density changed. If neither changed, the density didn't.`, kind: 'tip' },
+    { content: `The same sentence explains a heater at the bottom of a tank, ocean currents, and mantle convection: denser fluid sinks, less dense fluid is pushed up. Size doesn't matter; density difference is what matters.`, kind: 'tip' },
   ],
 };

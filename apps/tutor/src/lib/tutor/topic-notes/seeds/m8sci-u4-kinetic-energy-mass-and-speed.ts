@@ -72,5 +72,13 @@ export const BASELINE_M8SCI_U4_KINETIC_ENERGY_MASS_AND_SPEED: TopicNotesBaseline
     { content: `Compare by dividing, never by subtracting. A rise of 4 meters per second is not a factor of four; ask how many times the smaller speed fits into the larger one.`, kind: 'tip' },
     { content: `When both the mass and the speed change, work out the two factors separately and multiply them together: twice the mass and twice the speed is 2 times 4, which is eight times the energy.`, kind: 'tip' },
     { content: `To read a record of trials: write each trial down with its units, find the pair that differs in one thing only, get that one thing's factor by dividing, and apply the matching rule.`, kind: 'tip' },
+    { content: `A parked truck has ZERO kinetic energy, no matter how heavy it is. Kinetic energy requires motion. Mass alone is not energy — it's the factor that decides how much a given speed is worth.`, kind: 'common-error' },
+    { content: `When speed changes, divide to find the factor first. A change from 10 m/s to 20 m/s is NOT a factor of 10 (that's subtraction). It IS a factor of 2 (because 20 ÷ 10 = 2). Then multiply that factor by itself: 2 × 2 = 4 times the energy.`, kind: 'gotcha' },
+    { content: `Speed factor gets squared; mass factor does NOT. Double the mass = double the energy. Double the speed = 2 × 2 = four times the energy. This asymmetry is the entire point of the lesson.`, kind: 'vocab-note' },
+    { content: `To compare two objects where BOTH mass and speed differ, find each factor separately by dividing, apply the matching rule to each, then multiply the two results together. Do not add the factors.`, kind: 'tip' },
+    { content: `Always find pairs that differ in ONE thing only. A pair where both mass and speed changed tells you nothing about either rule on its own, no matter how clean the numbers look.`, kind: 'common-error' },
+    { content: `Write down the units (kilograms, meters per second) every time. It forces you to notice when you are comparing different quantities and stops you from confusing a speed change with a mass change.`, kind: 'tip' },
+    { content: `If your answer passes a size check, it is probably right. Each separate change makes energy larger, so the final answer must be at least as large as either single factor. An answer smaller than one of the factors is wrong.`, kind: 'tip' },
+    { content: `Never say 'the speed rose by X meters per second' when you are comparing kinetic energy. Say 'the speed is Y times as large.' The rise is a difference (subtraction); the factor is a ratio (division). Only the ratio matters here.`, kind: 'vocab-note' },
   ],
 };

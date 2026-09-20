@@ -79,5 +79,13 @@ Source B: a letter in the Bellwood community paper. "The new bike lane on Front 
     { content: `The test is one question: what would settle it? If you can name a record a reader could go look at, the disagreement is a matter of fact. If the only thing you can name is something both texts already state, it is a matter of interpretation.`, kind: 'tip' },
     { content: `Next step for a fact: go to the record, and until you have it say that the two accounts disagree instead of repeating whichever figure you read first. Never settle it by picking the text that sounds more official or more sure of itself.`, kind: 'tip' },
     { content: `Next step for an interpretation: checking is pointless, so weigh the reason each writer gives. And sort one spot at a time, because a single pair of texts can carry a checkable disagreement and a difference of judgment at once.`, kind: 'tip' },
+    { content: `Don't call it a conflict unless one sentence rules the other out completely. Two texts naming different details about the same event (like different people who attended) are NOT in conflict — conflict means one text has to be wrong.`, kind: 'common-error' },
+    { content: `Before you pick fact or interpretation, write down the exact pair of sentences that clash. If you can't point at two sentences where one rules the other out, you haven't found a real disagreement yet.`, kind: 'tip' },
+    { content: `A disagreement of FACT means at least one text is wrong about what happened — but wrong ≠ dishonest. A figure gets copied badly, a writer counts the wrong pile. Both can be accurate writers and still disagree on the number.`, kind: 'vocab-note' },
+    { content: `For a disagreement of interpretation, both texts print the same fact. Look for: same number, same event, opposite judgment about what it means or what it's worth.`, kind: 'gotcha' },
+    { content: `Run the test: 'What record could a reader go look at to prove one of these texts wrong?' If no record would help because both texts already state that fact, it's interpretation, not fact.`, kind: 'tip' },
+    { content: `Don't settle a fact disagreement by picking whichever text sounds more official, more certain, or closer to what you already believed. That's choosing a source, not checking a claim.`, kind: 'common-error' },
+    { content: `One pair of texts can have BOTH kinds at once. Mark every spot where one text rules the other out, then run the test on each spot separately. Don't bury a checkable disagreement by calling the whole thing opinion.`, kind: 'edge-case' },
+    { content: `For an interpretation disagreement, skip the record hunt — it won't help. Instead, weigh the reason each writer gives for their verdict. Both readings can be fair.`, kind: 'tip' },
   ],
 };

@@ -76,5 +76,13 @@ Place 2: one sentence in the school newspaper report, which students, teachers a
     { content: `Set degree from the facts. Overstating costs the reader's trust in everything else you write, and understating hides what happened.`, kind: 'tip' },
     { content: `Set formality from the reader and the place: a text to a friend, a note to a teacher, a report in the school paper, a program families read at a play.`, kind: 'tip' },
     { content: `Put the word back in the sentence and read it where it will land. If the sentence flips from giving credit to taking it away, you stepped sideways into the other pile instead of moving up or down your own ladder.`, kind: 'tip' },
+    { content: `Don't pick the strongest word on the ladder to show the most feeling. The strongest word is for the strongest facts. Devastated + everyone went anyway = you sound like you exaggerate.`, kind: 'common-error' },
+    { content: `Degree and formality are two separate dials. A word can be the right strength and still be wrong for the place. Check both before you stop.`, kind: 'gotcha' },
+    { content: `Before you move up or down the ladder, make sure you stay on the same side (praise or blame). Swapping piles and moving rungs are two different mistakes.`, kind: 'tip' },
+    { content: `Formality is not politeness and not difficulty. It is where the word sounds at home: a text to a friend vs. a school newspaper vs. a printed program. The place decides it.`, kind: 'vocab-note' },
+    { content: `Overstating kills your credibility for the rest of the piece. One exaggerated sentence makes a reader discount everything else you write, even if the rest is true.`, kind: 'gotcha' },
+    { content: `Set degree from the facts first, then formality from the reader. Do them in that order. Facts decide how much to claim; audience decides where the word lives.`, kind: 'tip' },
+    { content: `A word can be formal enough for a school newspaper and still be too strong for what actually happened. Formality and strength are not connected.`, kind: 'edge-case' },
+    { content: `Read the sentence out loud in the actual place it will be read—to a friend, in the school paper, at a program—and listen for whether it fits. Not just whether it makes sense.`, kind: 'tip' },
   ],
 };

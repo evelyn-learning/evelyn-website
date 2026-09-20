@@ -72,5 +72,13 @@ export const BASELINE_M8SCI_U8_REACTIONS_THAT_RELEASE_OR_ABSORB_THERMAL_ENERGY: 
     { content: `Judge a device in this order: DIRECTION (warming needs a releasing reaction, cooling needs an absorbing one), then HOW MUCH (does it reach the temperature asked for and stay inside the limit set), then HOW FAST (does it get there in time and last as long as it is needed).`, kind: 'tip' },
     { content: `A design that gets the direction wrong is out. Being quicker or hotter never rescues it.`, kind: 'tip' },
     { content: `How much thermal energy a reaction moves and how long it takes to move it are two different questions. Two designs can move the same total amount while one is over in moments and the other works away for hours.`, kind: 'tip' },
+    { content: `Don't say "the reaction made energy" or "created heat." Say "the reaction released energy that was already stored in the substances." Energy never appears from nowhere.`, kind: 'common-error' },
+    { content: `Don't treat cold as a substance that moves into things. Cold does not exist as a thing. In an absorbing reaction, thermal energy leaves the mixture and goes into the surroundings—your hand pulls thermal energy OUT of the pack, not the other way.`, kind: 'gotcha' },
+    { content: `Always check step 1 first: is anything outside heating or cooling it? If yes, the temperature reading tells you NOTHING about the reaction. Sunlight on the bucket, ice under the cup, a flame nearby—any of these ruins the test.`, kind: 'tip' },
+    { content: `When you compare the final temperature to the room, remember: a mixture warmer than the room CANNOT have been warmed by the room, because thermal energy only moves from warm to cold, not backwards.`, kind: 'vocab-note' },
+    { content: `Direction comes FIRST when judging a device. A design that absorbs when it should release is finished—no amount of speed or strength fixes the wrong direction.`, kind: 'common-error' },
+    { content: `Don't confuse "how much thermal energy" with "how long it lasts." Two reactions can move the same total amount of energy while one finishes in 2 minutes and the other keeps going for 5 hours. The brief asks for both.`, kind: 'edge-case' },
+    { content: `When you write your answer, name the THREE different kinds of evidence that agree on your conclusion. One temperature reading alone is not enough—you need direction, comparison to the room, and (if possible) a control sample.`, kind: 'tip' },
+    { content: `The surroundings include the container, the table, and your hand—not just the air. Thermal energy from a releasing reaction spreads into all of them, which is why the cup feels warm to the touch and not just the air around it.`, kind: 'vocab-note' },
   ],
 };

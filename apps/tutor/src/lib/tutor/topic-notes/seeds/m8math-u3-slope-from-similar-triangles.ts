@@ -71,5 +71,12 @@ export const BASELINE_M8MATH_U3_SLOPE_FROM_SIMILAR_TRIANGLES: TopicNotesBaseline
     { content: `From a graph, pick two grid points and count squares: across for run, up or down for rise.`, kind: 'tip' },
     { content: `From two given points, subtract in the same order on top and bottom: rise is second y minus first y, run is second x minus first x. Mixing the orders flips the sign.`, kind: 'tip' },
     { content: `A line that falls from left to right has a negative rise and a negative slope; the sign tells the direction and the size tells the steepness.`, kind: 'tip' },
+    { content: `Always put **rise on top, run on the bottom**. Rise ÷ run, not run ÷ rise. A steep climb should give a big slope (>1), not a tiny one (<1).`, kind: 'common-error' },
+    { content: `Use the **same point first in both subtractions**. If you go from (2, 3) to (6, 11), subtract 3 from 11 AND 2 from 6. Mixing them (11 - 2 on top, 6 - 3 on bottom) flips your sign.`, kind: 'common-error' },
+    { content: `A bigger slope triangle on the **same line** gives the **same slope**, not a bigger one. The scale factor cancels: (2k) ÷ (3k) = 2 ÷ 3 no matter what k is.`, kind: 'gotcha' },
+    { content: `The **sign of the slope tells direction** (up or down), and the **size tells steepness**. A slope of -2 falls as steeply as a slope of 2 climbs; they're opposites.`, kind: 'vocab-note' },
+    { content: `When a line **falls from left to right**, the rise is **negative**. Count down as a negative number: from (1, 7) to (4, 1), the rise is 1 - 7 = -6, not 6.`, kind: 'edge-case' },
+    { content: `A slope triangle has a **right angle where the run meets the rise**. That's by design—'across' and 'up/down' are always perpendicular, so all slope triangles on one line are similar.`, kind: 'vocab-note' },
+    { content: `**Pick grid points** when reading slope from a graph. If the line doesn't pass exactly through corners, you'll count wrong. Estimate or find two points you can count cleanly between.`, kind: 'tip' },
   ],
 };

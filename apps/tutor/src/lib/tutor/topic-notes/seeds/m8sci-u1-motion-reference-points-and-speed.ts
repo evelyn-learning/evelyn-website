@@ -73,5 +73,12 @@ export const BASELINE_M8SCI_U1_MOTION_REFERENCE_POINTS_AND_SPEED: TopicNotesBase
     { content: `Check a speed by turning the formula around: distance = speed × time. The speed multiplied by the time should give back the distance you were told.`, kind: 'tip' },
     { content: `To decide which of two objects is faster, divide each one's own distance by its own time and compare the two speeds. The greater distance does not settle it, and neither does the smaller time.`, kind: 'tip' },
     { content: `An average speed is the one steady speed that would have covered the same distance in the same time. It does not report what was happening at any single moment of the trip.`, kind: 'tip' },
+    { content: `Every motion sentence must name its reference point or it is not finished. "The passenger is moving" stops mid-thought. Say what you're comparing it to: "The passenger is moving compared with the stop sign."`, kind: 'common-error' },
+    { content: `An object can be at rest AND in motion at the exact same moment. Both are true if they name different reference points. Stop thinking one answer must be right and the other wrong.`, kind: 'gotcha' },
+    { content: `To compare speeds, divide EACH object's own distance by THAT object's own time. Never compare distances alone or times alone. A bigger distance with a much bigger time can be slower.`, kind: 'common-error' },
+    { content: `The unit matters as much as the number. "3" without a unit is meaningless—it could be 3 meters, 3 seconds, or 3 meters per second, and those are three different facts. Always write the unit.`, kind: 'vocab-note' },
+    { content: `Average speed is a whole-trip number built from two measurements: total distance and total time. It does NOT tell you what was happening at any one second. A van that waits at a light and speeds up later has the same average as one that rolls steadily, if the distance and time are the same.`, kind: 'edge-case' },
+    { content: `Check your speed answer by flipping the formula: distance = speed × time. Multiply speed by time and you should get back the distance the problem gave you. If not, you divided upside down.`, kind: 'tip' },
+    { content: `Position is distance AND direction from a reference point. Saying "the bus is 240 meters from the stop sign" is complete, but saying "the bus is 240 meters" is not—farther away in which direction from what?`, kind: 'vocab-note' },
   ],
 };

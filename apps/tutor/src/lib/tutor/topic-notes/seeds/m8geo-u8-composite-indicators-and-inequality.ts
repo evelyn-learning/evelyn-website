@@ -86,5 +86,13 @@ Esketh: income per person $12,000 a year. The top fifth receives 50 percent and 
     { content: `Change the list and the answer changes: four indicators put Corvale at 2.0 ahead of Bellun at 2.5, and adding a fifth ties them both at 2.2. Report a composite with the list it was built from, or nobody can check it.`, kind: 'tip' },
     { content: `An average says how much there is; the top fifth's share divided by the bottom fifth's share says how it is spread. Two countries at $12,000 per person can run 4 times and 10 times, so a country is never one thing inside.`, kind: 'tip' },
     { content: `All of this ranks columns of figures for a chosen list of indicators. It is a measurement, never a score for a country or for the people who live there.`, kind: 'tip' },
+    { content: `Rank 1 is the BEST rank, so a lower average rank means a higher position. Don't read the composite scale like a report card — it runs backwards from the numbers underneath.`, kind: 'common-error' },
+    { content: `Before you rank ANY column, say out loud which end is better — larger or smaller. Then check: the column must use ranks 1, 2, 3 (or 1, 2, 3, 4) exactly once each, no repeats.`, kind: 'tip' },
+    { content: `Don't add the raw figures across columns — dollars plus years plus percent equals nothing. Rank each column separately, then average the ranks. That's what lets you mix different units.`, kind: 'gotcha' },
+    { content: `The composite keeps order but throws gaps away. Rank 3 could mean 'slightly behind rank 2' or 'miles behind' — you can't tell from the average. Always say what the numbers actually show.`, kind: 'edge-case' },
+    { content: `Change the indicator list and the answer changes — that's not a flaw, it's what a composite IS. Always report the list with the result, or nobody can check it.`, kind: 'vocab-note' },
+    { content: `An average (like $12,000 per person) hides what's inside. The top-fifth to bottom-fifth ratio shows the spread: 36÷9 = 4 times versus 50÷5 = 10 times. Same average, wildly different distribution.`, kind: 'common-error' },
+    { content: `To turn an income share back into dollars per person: divide the share by 20 (because a fifth = 20% of people), then multiply by income per person. 36% ÷ 20 × $12,000 = $21,600.`, kind: 'tip' },
+    { content: `A composite is a measurement of four columns for a chosen list, never a grade on a country or the people in it. Don't say 'Bellun is less developed' — say 'on this list, Bellun ranks lower.'`, kind: 'vocab-note' },
   ],
 };

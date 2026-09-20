@@ -78,5 +78,13 @@ export const BASELINE_M8GEO_U3_NORTH_AMERICA_HAZARD_REGIONS: TopicNotesBaseline 
     { content: `An event stays a hazard until something is in its path. Classify from two readings -- the count of people and buildings in the path, and what the event did to them -- and never from how strong the event was.`, kind: 'tip' },
     { content: `A hazard region normally runs a long record of events and very few disasters. Fifteen touchdowns came out as fourteen hazards and one disaster.`, kind: 'tip' },
     { content: `To say what would change a classification, change one column and read it again. Building in the path flips it; a stronger event on empty ground and a more frequent event on empty ground do not.`, kind: 'tip' },
+    { content: `Don't ask "Is this place dangerous?" Ask "Does this place supply every entry on the list?" Two out of three ingredients is zero regions, not two thirds of one.`, kind: 'common-error' },
+    { content: `Hazard regions overlap and don't line up with each other. A place doesn't get one label—it gets a list of hazards. The same coastal stretch can be in both the hurricane region AND the tornado region.`, kind: 'gotcha' },
+    { content: `A hazard becomes a disaster when it overwhelms what's standing in the path—not when the event itself is strong. Classify from exposure (people and buildings hit) and damage done, never from how violent the weather was.`, kind: 'vocab-note' },
+    { content: `The path is the narrow strip an event actually crossed—much smaller than the whole region where it was possible. Count people and buildings in the PATH, not in the county or town.`, kind: 'vocab-note' },
+    { content: `To change a hazard-to-disaster classification, change what's standing on the track. Stronger events on empty ground stay hazards. More frequent events on empty ground stay hazards. Only buildings in the path flip it.`, kind: 'edge-case' },
+    { content: `Never work backward from damage to guess the event was strong. The file from Denwick County never recorded a single tornado strength—and didn't need to. The disaster one might have been the weakest.`, kind: 'common-error' },
+    { content: `A long record of many events with very few disasters is NORMAL for a hazard region, not a sign something is wrong. It means the region supplies the ingredients but few people live there yet.`, kind: 'gotcha' },
+    { content: `Flood damage two months after a slow, weak rainstorm is still a disaster if crews from outside are working and people are still displaced. Event strength is irrelevant—only path and outcome matter.`, kind: 'edge-case' },
   ],
 };

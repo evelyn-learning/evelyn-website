@@ -73,5 +73,12 @@ export const BASELINE_M8SCI_U7_ELEMENTS_COMPOUNDS_AND_MIXTURES: TopicNotesBaseli
     { content: `A compound is a new substance and does not keep its elements' properties. Sodium is a soft, shiny metal that reacts violently with water, chlorine is a poisonous yellow-green gas, and joined they make table salt.`, kind: 'tip' },
     { content: `A MIXTURE is two or more substances side by side and not joined, each keeping its own properties. Air is mostly nitrogen, with oxygen next, drifting among one another and joined to nothing.`, kind: 'tip' },
     { content: `Counting the kinds of atom never finishes the job. Two kinds joined is a compound; the same two kinds side by side is a mixture; one kind joined to itself is still an element.`, kind: 'tip' },
+    { content: `Don't stop at question one. Seeing two kinds of atom does NOT tell you if it's a compound or a mixture. You must always ask: are those different kinds JOINED or just sitting side by side?`, kind: 'common-error' },
+    { content: `Atoms of the SAME element joined to each other (like O₂ or N₂ gas) stay an element. Joining only makes a compound when the atoms are of DIFFERENT elements.`, kind: 'gotcha' },
+    { content: `A compound is a NEW substance. Its properties have nothing to do with its elements' properties. Don't predict—look it up. Hydrogen burns, oxygen feeds fires, water puts fires out.`, kind: 'vocab-note' },
+    { content: `In a mixture, each substance keeps being itself—it keeps its own properties and acts like it would alone. Air is mostly nitrogen gas (still nitrogen) and oxygen gas (still oxygen) sitting together, doing nothing to each other.`, kind: 'vocab-note' },
+    { content: `An atom is the smallest piece of an element that still counts as that element. Halve a gold atom and you do not have gold anymore—you have broken the element down to pieces that are not it.`, kind: 'edge-case' },
+    { content: `The same two kinds of atom can make two totally different things. Jar 1: hydrogen gas and oxygen gas side by side (mixture, both invisible gases). Jar 2: water (compound, liquid). Same atoms, different joining = different material.`, kind: 'tip' },
+    { content: `Don't say 'salt is sodium and chlorine mixed together.' Say 'salt is sodium and chlorine JOINED.' The word 'mixed' hides the difference between a compound and a real mixture.`, kind: 'vocab-note' },
   ],
 };

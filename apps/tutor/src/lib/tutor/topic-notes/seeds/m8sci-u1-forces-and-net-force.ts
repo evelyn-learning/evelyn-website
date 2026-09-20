@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U1_FORCES_AND_NET_FORCE: TopicNotesBaseline = {
     { content: `Balanced does not mean that nothing is pushing. The tug-of-war rope was not moving while two teams strained on it, because the pulls came to the same total on each side.`, kind: 'tip' },
     { content: `Movement is not evidence of a leftover force. A CHANGE in movement is. Something rolling along at a steady speed in a straight line has balanced forces on it.`, kind: 'tip' },
     { content: `Add only the forces acting ON the object you named. A force that object exerts on something else belongs on that other object's list.`, kind: 'tip' },
+    { content: `A force always needs THREE things: what pushes/pulls what, a SIZE in newtons, and a DIRECTION. '20 newtons' alone is not a complete answer. Say which way.`, kind: 'vocab-note' },
+    { content: `When forces point opposite ways, DON'T add the numbers. Take the smaller from the larger and keep the bigger one's direction. 12 N east and 7 N west = 5 N east, not 19 N.`, kind: 'common-error' },
+    { content: `Balanced forces does NOT mean nothing is pushing. The tug-of-war rope has huge pulls on both ends but doesn't move because they cancel out to zero leftover.`, kind: 'gotcha' },
+    { content: `An object moving at steady speed has BALANCED forces on it, not unbalanced. Only a CHANGE in motion (speeding up, slowing down, turning) means forces are unbalanced.`, kind: 'common-error' },
+    { content: `Add only forces acting ON your object. If the sled pushes back on the rope, that force acts on the rope, not the sled—it stays off your list.`, kind: 'gotcha' },
+    { content: `A net force of 0 newtons needs NO direction written. Any other net force MUST have a direction. '0 newtons' is complete; '5 newtons' is not.`, kind: 'vocab-note' },
+    { content: `When you combine forces, check your work TWO ways: redo the math in a different order, and ask 'what would someone watching see?' If both agree with your net force, you're right.`, kind: 'tip' },
+    { content: `The larger force does NOT simply win. A 30 N pull east against an 18 N pull west leaves 12 N east, not 30 N east. The smaller force eats into the larger one.`, kind: 'common-error' },
   ],
 };

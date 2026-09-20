@@ -72,5 +72,12 @@ export const BASELINE_M8MATH_U7_DESCRIBING_AND_SKETCHING_QUALITATIVE_GRAPHS: Top
     { content: `The graph is not a picture of the trip: flat is not flat road and falling is not downhill. Always ask what the vertical axis measures.`, kind: 'tip' },
     { content: `To sketch from a story, cut it into events, decide up, down, or flat and straight or curved for each, and draw the pieces end to end with no gaps. No equation is needed.`, kind: 'tip' },
     { content: `The width of a flat piece is how long the stop lasted; the height where a piece ends is the amount at that moment.`, kind: 'tip' },
+    { content: `Don't read a graph as a picture of the trip. Flat ≠ flat road, and falling ≠ downhill. Always check the vertical axis first — it tells you what quantity you're tracking, not what the terrain looks like.`, kind: 'gotcha' },
+    { content: `A flat piece means the quantity stays at whatever height the piece sits at. If it's flat at 3 miles, the rider is 3 miles away the whole time—not at home. The rider is at home only where the graph touches 0.`, kind: 'common-error' },
+    { content: `Read values straight off the axes—don't do extra math. The height of a flat piece IS the constant value. The width of a flat piece is the duration (subtract the start time from the end time, nothing more).`, kind: 'tip' },
+    { content: `Straight piece = linear = same change per unit time. Curved piece = nonlinear = speeding up or slowing down. Don't call a piece 'straight' unless you mean it's a straight line, not that the road is flat.`, kind: 'vocab-note' },
+    { content: `When you sketch from a story, draw pieces end to end with no gaps. The graph must cover every moment in time, from start to finish, without jumps.`, kind: 'tip' },
+    { content: `If the story says 'slowly speeds up' or 'quickly slows down,' the piece is curved, not straight. A straight line means the same amount of change every minute, which matches only 'steady' or 'constant pace' language.`, kind: 'edge-case' },
+    { content: `When a flat piece appears in the middle of a graph, the quantity is NOT changing, but time IS moving forward. Moving right always means time passes; moving down or staying flat means the quantity changes or doesn't.`, kind: 'gotcha' },
   ],
 };

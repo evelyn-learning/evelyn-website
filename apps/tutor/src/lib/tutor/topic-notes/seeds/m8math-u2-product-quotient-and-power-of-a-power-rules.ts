@@ -69,5 +69,13 @@ export const BASELINE_M8MATH_U2_PRODUCT_QUOTIENT_AND_POWER_OF_A_POWER_RULES: Top
     { content: 'Power of a power: MULTIPLY the exponents. (2³)² = 2⁶.', kind: 'tip' },
     { content: `The base never changes, and the rules only apply when the bases match. 3² × 3⁵ is 3⁷, never 9⁷; 2³ × 5² has no rule, it is just 8 × 25 = 200.`, kind: 'tip' },
     { content: `Check with values: work out the original expression and the single power as plain numbers, and they must match. A variable base such as x works the same way, and choosing a value for x lets you check it too.`, kind: 'tip' },
+    { content: `When bases don't match, there is NO rule. 2³ × 5² is not 10⁵. Expand and count: you get three 2s and two 5s, not five of the same thing. Just multiply the values: 8 × 25 = 200.`, kind: 'common-error' },
+    { content: `Don't add exponents when you see an exponent outside parentheses. (3²)⁴ means 3² as a factor four times, so you multiply 2 × 4 = 8, not add. Adding only works when there's a multiplication sign between two powers.`, kind: 'common-error' },
+    { content: `The base never changes when you apply a rule. 3² × 3⁵ = 3⁷, not 9⁷. The exponent counts factors, and those factors are all 3s, not 9s.`, kind: 'gotcha' },
+    { content: `Always expand and count when you're unsure which rule applies or whether a rule applies at all. Expanded form is your proof—it never lies.`, kind: 'tip' },
+    { content: `A variable base like x works exactly the same way as a number base. x⁴ × x³ = x⁷, just four factors of x plus three more. You can check by plugging in a number for x.`, kind: 'vocab-note' },
+    { content: `The exponent is the count of factors. 2⁵ is five 2s, not 2 × 5. If you say '2 times 5' instead of 'two to the fifth,' you'll mix up the exponent with multiplication.`, kind: 'vocab-note' },
+    { content: `In this lesson, the bigger exponent is always on top when you divide, so the subtraction is always positive. If you get a negative exponent, you made a slip—check your arithmetic.`, kind: 'edge-case' },
+    { content: `Use the value check to catch arithmetic mistakes, not to find the answer. Work out the original expression and the simplified power as plain numbers—they must match. If they don't, you made an error somewhere.`, kind: 'tip' },
   ],
 };

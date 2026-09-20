@@ -69,5 +69,11 @@ export const BASELINE_M8MATH_U4_EQUATIONS_WITH_DISTRIBUTION_AND_LIKE_TERMS: Topi
     { content: `Never combine a term with a factor that has not been distributed yet: in 6x - 2(x - 4), the -2 belongs to the bracket.`, kind: 'tip' },
     { content: `After tidying, the equation has the variable on both sides with nothing hidden: collect the variable terms, then finish as a two-step equation.`, kind: 'tip' },
     { content: `Check by substituting into BOTH sides of the original equation, brackets and all. Both sides must land on the same number.`, kind: 'tip' },
+    { content: `Don't combine a term with a coefficient that hasn't been distributed yet. In 6x - 2(x - 4), the 6x and -2 are NOT like terms—the -2 belongs to the bracket. Distribute first, then combine.`, kind: 'common-error' },
+    { content: `When a negative sign multiplies a bracket, it flips EVERY sign inside. In -2(x - 3), the -2 times -3 gives +6, not -6. Negative times negative = positive. Check each term's sign separately.`, kind: 'gotcha' },
+    { content: `The equals sign is a wall while you combine like terms. In 3x - 12 + 2x = 2x + 10 - 1, you combine left terms with left terms and right terms with right terms separately. Never combine across the equals sign.`, kind: 'vocab-note' },
+    { content: `After distributing and combining, if the variable still appears on both sides (like 5x - 12 = 2x + 9), you're back in last lesson's territory. Use the two-step method: collect variable terms first, then isolate the variable.`, kind: 'tip' },
+    { content: `Always check your answer in the ORIGINAL equation with all brackets still there. Substitute into both sides and evaluate—they must match exactly. If they don't, the error is usually a sign mistake on a negative multiplier.`, kind: 'tip' },
+    { content: `Write out the expanded form with every bracket multiplied out before you combine like terms. Don't skip the middle step—seeing 3x - 12 + 2x makes the like terms obvious and catches distribution mistakes early.`, kind: 'edge-case' },
   ],
 };

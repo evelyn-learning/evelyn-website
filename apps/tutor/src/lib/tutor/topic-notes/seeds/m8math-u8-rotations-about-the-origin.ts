@@ -71,5 +71,13 @@ export const BASELINE_M8MATH_U8_ROTATIONS_ABOUT_THE_ORIGIN: TopicNotesBaseline =
     { content: `Check the landing quadrant: counterclockwise carries quadrant I to II, then III, then IV. A point on an axis is the quickest test of direction.`, kind: 'tip' },
     { content: `A rotation preserves side lengths, angle measures and parallel sides, so the image is congruent to the original.`, kind: 'tip' },
     { content: `To name a rotation from a preimage/image pair, test the three rules on one vertex, then confirm with a second vertex.`, kind: 'tip' },
+    { content: `Don't mix up 90° counterclockwise with 90° clockwise. Counterclockwise is the default. If the problem doesn't say clockwise, use (x, y) → (-y, x). Clockwise 90° uses (y, -x) and lands in a different quadrant.`, kind: 'common-error' },
+    { content: `For a 90° turn, always SWAP the coordinates AND flip one sign. For 180°, flip BOTH signs and swap nothing. Don't flip both signs for a quarter turn—that's a half turn.`, kind: 'gotcha' },
+    { content: `Use the quadrant check as your fastest error detector. After a 90° counterclockwise turn, a point in quadrant I must land in quadrant II (negative x, positive y). If it doesn't, you used the wrong rule.`, kind: 'tip' },
+    { content: `When you identify a rotation from a preimage and image, test the rule on TWO vertices, not one. One vertex can match a rule by accident; two confirms the rotation.`, kind: 'common-error' },
+    { content: `The origin (0, 0) never moves. It's the center, not a point that rotates. Every other point swings around it and stays the same distance from it.`, kind: 'vocab-note' },
+    { content: `For quarter turns, use a point on an axis to verify direction fast: (3, 0) on the x-axis turns 90° counterclockwise to (0, 3) on the y-axis. The axis rotates up, which IS counterclockwise.`, kind: 'tip' },
+    { content: `A 180° turn lands the same way whether you go clockwise or counterclockwise. But 90° clockwise is NOT the same as 90° counterclockwise—it's the same as 270° counterclockwise.`, kind: 'edge-case' },
+    { content: `Apply your rule to EVERY vertex of the figure, not just the first one. Common error: rotate one point correctly, then forget to rotate the rest.`, kind: 'common-error' },
   ],
 };

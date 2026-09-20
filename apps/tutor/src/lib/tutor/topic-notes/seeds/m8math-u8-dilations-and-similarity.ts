@@ -71,5 +71,13 @@ export const BASELINE_M8MATH_U8_DILATIONS_AND_SIMILARITY: TopicNotesBaseline = {
     { content: `A dilation keeps the shape but changes the size, so the image is similar to the original and not congruent to it, unless k = 1.`, kind: 'tip' },
     { content: `Two figures are similar when a dilation followed by rigid motions maps one exactly onto the other. Congruent is the special case k = 1.`, kind: 'tip' },
     { content: `To describe the sequence: size first, then position. Find k and dilate, then slide, flip or turn the dilated copy onto the target and check every vertex.`, kind: 'tip' },
+    { content: `Dilation multiplies coordinates, never adds. (x, y) → (kx, ky) means multiply each coordinate by k. Don't add k to either coordinate—that's a translation, not a dilation.`, kind: 'common-error' },
+    { content: `To find k, divide new over old: image length ÷ original length. Flipping it (old ÷ new) is the most common slip. Check your answer: if the image is bigger, k > 1; if smaller, 0 < k < 1.`, kind: 'gotcha' },
+    { content: `Similar means dilation + rigid motions. Congruent means rigid motions alone (k = 1). Two figures with the same shape but different sizes are similar, not congruent.`, kind: 'vocab-note' },
+    { content: `When you dilate by a fraction like k = 1/2, still multiply—don't divide by 2. (6, 4) × 1/2 = (3, 2). Multiplying by a number less than 1 shrinks the figure.`, kind: 'common-error' },
+    { content: `A point and its image sit on the same line through the origin. If (4, 2) dilates to (2, 1), check: both lie on the line y = x/2. Use this to spot wrong answers.`, kind: 'tip' },
+    { content: `Negative coordinates stay negative after dilation. (-6, 10) with k = 1/2 gives (-3, 5). The point stays in the same quadrant; you multiply, not flip signs.`, kind: 'edge-case' },
+    { content: `Describe similarity in order: size first (find k and dilate), then position (translate, reflect, or rotate the dilated copy). Don't mix them up.`, kind: 'vocab-note' },
+    { content: `When finding k with a fractional answer (like k = 2.5 or k = 7.5), write it as a decimal or simplified fraction. Both are correct; just be consistent and check against the size.`, kind: 'tip' },
   ],
 };

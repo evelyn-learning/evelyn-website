@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U2_OPERATIONS_IN_SCIENTIFIC_NOTATION: TopicNotesBas
     { content: `A number written the ordinary way gets rewritten in scientific notation before it joins the calculation.`, kind: 'tip' },
     { content: `Choose a unit a person can picture: 1.89 × 10⁹ seconds is about 60 years, using 3.15 × 10⁷ seconds per year.`, kind: 'tip' },
     { content: `On a calculator, 6.4E4 means 6.4 × 10⁴. The E stands for "times ten to the" and is not part of the answer.`, kind: 'tip' },
+    { content: `When multiplying or dividing powers of 10, ADD or SUBTRACT the exponents—never multiply or divide them. 10³ × 10⁵ = 10⁸ (add: 3 + 5), not 10¹⁵ (multiply: 3 × 5).`, kind: 'common-error' },
+    { content: `The coefficient must stay between 1 and 10 (including 1, not including 10). If your answer is 24 × 10⁷, renormalize by dividing the coefficient by 10 and adding 1 to the exponent: 2.4 × 10⁸.`, kind: 'vocab-note' },
+    { content: `Before adding or subtracting numbers in scientific notation, match their exponents first. 3.2 × 10⁵ + 4 × 10⁴ becomes 3.2 × 10⁵ + 0.4 × 10⁵ = 3.6 × 10⁵. Don't add coefficients with different exponents.`, kind: 'gotcha' },
+    { content: `A coefficient below 1, like 0.64 × 10⁵, is not in scientific notation yet. Multiply the coefficient by 10 and subtract 1 from the exponent: 6.4 × 10⁴. The number itself doesn't change.`, kind: 'edge-case' },
+    { content: `When a problem gives a regular number like 50,000, rewrite it in scientific notation (5 × 10⁴) before mixing it with scientific notation in the same calculation.`, kind: 'tip' },
+    { content: `Read E notation on your calculator as 'times 10 to the.' So 6.4E4 = 6.4 × 10⁴. The E is not an error, a variable, or a letter to write in your final answer.`, kind: 'vocab-note' },
+    { content: `If your final answer is something like 1.89 × 10⁹ seconds and the exponent is huge, convert to a unit you can picture (like years using 3.15 × 10⁷ seconds/year). A number a human understands is always better.`, kind: 'tip' },
   ],
 };

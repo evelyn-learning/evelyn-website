@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U6_IDENTIFYING_FUNCTIONS: TopicNotesBaseline = {
     { content: 'An input repeated with the SAME output is one pair written twice, not a break.', kind: 'tip' },
     { content: `In a table, a mapping diagram, a set of ordered pairs, or plotted points, the input is the first number or the x-value; hunt for repeated inputs there.`, kind: 'tip' },
     { content: `The graph of a function is its set of (input, output) pairs drawn as points; two points stacked above the same input mean it is not a function.`, kind: 'tip' },
+    { content: `**One output per input is the ONLY test.** Don't hunt for patterns, formulas, or repeated outputs. Scan the inputs: if an input appears twice with different outputs, it fails. That's it.`, kind: 'gotcha' },
+    { content: `Two inputs sharing the same output is perfectly fine. Don't reject a table because outputs repeat (like 6, 6, 6, 6) or because two points sit side by side at the same height.`, kind: 'common-error' },
+    { content: `On a plotted graph, look **straight up and down** (same x-coordinate), not side by side. Two points at the same height but different x-values are allowed; two points stacked directly above the same x-value break the function.`, kind: 'tip' },
+    { content: `In an ordered pair **(input, output)**, the first number is the input and the second is the output. Order matters—(1, 4) and (4, 1) are different pairs and represent different rules.`, kind: 'vocab-note' },
+    { content: `If an input repeats with the *same* output, that's just one pair listed twice—still a function. Only a repeated input with *different* outputs breaks it.`, kind: 'edge-case' },
+    { content: `The rule doesn't need a formula or a pattern. A vending machine that drops a granola bar for button B4 is a function, even if the button assignments seem random.`, kind: 'common-error' },
+    { content: `**Input** = first number, x-coordinate. **Output** = second number, y-coordinate. Use this pair naming consistently across tables, diagrams, ordered pairs, and graphs.`, kind: 'vocab-note' },
   ],
 };

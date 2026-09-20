@@ -79,5 +79,13 @@ Attempt 3: "Students cannot walk to the school store and back within the lunch p
     { content: `Check both halves, never one. Same meaning AND same force. A sentence that has lost its claim is not measured, it is empty.`, kind: 'tip' },
     { content: `Formal is precise, not long. Longer words carrying the same meaning, or less of it, fail the same check the slang failed.`, kind: 'tip' },
     { content: `The rule covers the sentences you are explaining in. A quotation keeps the source's exact words, a story keeps its dialogue, and a message to a friend is a different job entirely.`, kind: 'tip' },
+    { content: `Don't confuse 'formal' with 'long' or 'fancy.' A formal revision usually stays the same length or gets shorter. If your rewrite has more words or words you'd have to look up, you're dressing up, not formalizing.`, kind: 'common-error' },
+    { content: `Contractions are only forbidden in YOUR explaining sentences, not in dialogue, quotations, or messages to friends. If you took contractions out of a story's dialogue, you broke the story, not fixed it.`, kind: 'vocab-note' },
+    { content: `When you cut overstatement, keep the fact underneath it. 'Super unfair' wrapped a fact (back corner = no sign-ups). Delete the heat word, keep the measurable claim. If your revision no longer says what actually happens, you cut too much.`, kind: 'gotcha' },
+    { content: `Replace 'you' by naming the actual group: not 'you can't hear them' but 'visitors cannot hear the students.' If you can't say who 'you' means, you haven't thought through the claim yet.`, kind: 'tip' },
+    { content: `Read your original and your revision back to back every time. If the revision is quieter but no longer says the same thing, it's not formal—it's empty. Both halves of the check have to pass.`, kind: 'edge-case' },
+    { content: `Slang is any word that belongs to your friend group, not your reader's. 'A joke,' 'trash,' 'a no-brainer'—if you'd say it to a friend but not to your principal, it's slang and it breaks the style.`, kind: 'vocab-note' },
+    { content: `An exclamation point asks the reader to *feel* your volume instead of *checking* your claim. A period keeps the reader's attention on the fact. Always use a period at the end of a sentence you're asking a reader to verify.`, kind: 'gotcha' },
+    { content: `Step one comes before you rewrite anything. Say the claim in plain words first—the one true thing your sentence has to keep. A writer who starts deleting words before naming the claim usually deletes the claim.`, kind: 'common-error' },
   ],
 };

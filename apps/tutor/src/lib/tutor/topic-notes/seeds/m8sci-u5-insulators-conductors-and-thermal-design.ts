@@ -78,5 +78,13 @@ export const BASELINE_M8SCI_U5_INSULATORS_CONDUCTORS_AND_THERMAL_DESIGN: TopicNo
     { content: `Shiny is not better. Shiny reflects radiation, which is right where you want radiation turned back and wrong where you want it soaked up.`, kind: 'tip' },
     { content: `Cold does not flow and nothing keeps the cold in. Thermal energy crosses from the warmer side to the cooler side, and an insulator slows it whichever way it is going.`, kind: 'tip' },
     { content: `The routine: name the job, the direction and the criterion; take the three mechanisms one at a time and name what blocks or boosts each; hunt for the mechanism nothing deals with, because that is the leak; check the other jobs; then compare.`, kind: 'tip' },
+    { content: `Don't say "a blanket keeps cold in" or "this cooler stops thermal energy." Insulators SLOW crossing, never STOP it. Name the direction: energy crosses from warmer to cooler, and the insulator slows it that way.`, kind: 'common-error' },
+    { content: `Shiny is NOT always better. Shiny reflects radiation—right for a thermos facing a vacuum, wrong for a solar oven soaking up sunlight. Match the surface to the job: dark absorbs, shiny reflects.`, kind: 'gotcha' },
+    { content: `A wide hollow gap in a wall is NOT insulation. The air inside warms on the hot side, rises, cools on the cold side, sinks, and circles—that is convection. Trapped air in small pockets does not circulate, so it insulates.`, kind: 'edge-case' },
+    { content: `When the thermos or solar oven question asks "what does each part do," name the MECHANISM it blocks or boosts: conduction, convection, or radiation. Don't just say "the foam keeps heat in."`, kind: 'vocab-note' },
+    { content: `A vacuum shuts down conduction and convection but does NOTHING to radiation. That is why a thermos needs BOTH a vacuum AND shiny mirror surfaces. Vacuum alone fails.`, kind: 'gotcha' },
+    { content: `For any thermal design, always hunt for the mechanism NOTHING in the design addresses. That gap is where the design leaks. Check conduction, convection, radiation in order—every time.`, kind: 'tip' },
+    { content: `When comparing two designs, compare them mechanism by mechanism against your criterion—never because one sounds fancier or one material sounds cooler.`, kind: 'common-error' },
+    { content: `An insulator does the same job in both directions. The same foam box keeps hot food hot AND keeps cold food cold. It does NOT know which way energy is flowing.`, kind: 'vocab-note' },
   ],
 };

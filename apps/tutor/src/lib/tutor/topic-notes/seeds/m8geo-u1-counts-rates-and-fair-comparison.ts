@@ -77,5 +77,13 @@ Three towns sit in the same county. "Ferris: 12,000 people, 40 square kilometers
     { content: `One table can rank places one way per square kilometer and the opposite way per 1,000 people. Both are true; the claim decides which one is the fair comparison.`, kind: 'tip' },
     { content: `Change one input and run it again. If doubling the land halves the rate while the count stands still, the count was never going to tell you.`, kind: 'tip' },
     { content: `Sometimes the count is the fair comparison: when the question is a total, do not divide.`, kind: 'tip' },
+    { content: `Read the claim before touching the table. The claim tells you the denominator: "crowded" → land area; "better access" → people; "per person" → each person. Wrong denominator = wrong answer to the wrong question.`, kind: 'gotcha' },
+    { content: `A raw count is true but misleading when you compare places of different sizes. "Ferris has more people" is a fact; "Ferris is more crowded" is not. Never use a count to support a comparison claim across places—divide it first.`, kind: 'common-error' },
+    { content: `Always invert to check: multiply the rate back by the denominator and confirm the original count returns. If it doesn't, a zero slipped in the division—almost always the culprit.`, kind: 'tip' },
+    { content: `Per 1,000 is a scaling choice, not a different kind of rate. 0.003 doctors per person and 3 doctors per 1,000 people are the same fact. Keep all places in one comparison on the same scale or you hide mistakes.`, kind: 'vocab-note' },
+    { content: `One table, two denominators, two opposite rankings—both true. Marlow's doctors per square kilometer (crowded clinic) ranks opposite to doctors per 1,000 residents (patient load). The claim decides which one is fair.`, kind: 'edge-case' },
+    { content: `If the question is a total ("How many desks to buy?" "How many vaccine doses to ship?"), the count is the right tool. Do not divide it. The routine starts with reading the claim precisely because sometimes the honest answer is: use the count.`, kind: 'edge-case' },
+    { content: `Change one input and run the routine again. If doubling the land halves the rate while the count stays the same, the count was never going to tell you which town is crowded. The denominator drives the ranking.`, kind: 'tip' },
+    { content: `Don't confuse 'per square kilometer' with 'per 1,000 people.' One measures how packed the land is; the other measures how thinly spread across residents. Same count, opposite answers—check the claim to pick the right one.`, kind: 'vocab-note' },
   ],
 };

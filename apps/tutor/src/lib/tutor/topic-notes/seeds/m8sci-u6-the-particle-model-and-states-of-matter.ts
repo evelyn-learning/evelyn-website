@@ -75,5 +75,13 @@ export const BASELINE_M8SCI_U6_THE_PARTICLE_MODEL_AND_STATES_OF_MATTER: TopicNot
     { content: `The particles themselves never grow, shrink or change. When a sample takes up more or less space, it is the spacing between the particles that changed.`, kind: 'tip' },
     { content: `What is between the particles of a gas is nothing at all -- not air. That empty space is why a gas can be pushed into a much smaller volume and a liquid cannot.`, kind: 'tip' },
     { content: `To work out any state question: ask whether the particles are touching, which settles the volume and the squashing, then ask whether each keeps the same neighbors, which settles the shape.`, kind: 'tip' },
+    { content: `Don't say particles "get bigger" or "get smaller" when a sample changes volume. The particles themselves never change size — only the spacing between them changes.`, kind: 'common-error' },
+    { content: `"Vibrate in place" is not the same as "still." Solid particles vibrate (shake back and forth) about fixed positions — they are moving, which is why the solid has temperature. Don't confuse "held to a position" with "stopped."`, kind: 'vocab-note' },
+    { content: `In a gas, the gaps between particles are empty — not filled with air or anything else. Air itself is a gas made of particles with empty space between them. Don't fill the emptiness.`, kind: 'gotcha' },
+    { content: `A single particle is not hard, soft, runny, or wispy. Those words describe what countless particles do *together*. Hardness and wispiness come from arrangement (spacing and freedom to move), not from the particles themselves.`, kind: 'common-error' },
+    { content: `Both liquids and gases flow — they are both fluids — but for the same reason: no particle is locked to its neighbors. Don't think liquids flow because particles are soft or gases because particles are light.`, kind: 'vocab-note' },
+    { content: `When a liquid moves to a new container, its *volume stays the same* but its *shape changes* to fit the container. Don't mix up volume (amount of space) with shape (outline).`, kind: 'edge-case' },
+    { content: `To explain any state question, ask two questions in order: (1) Are the particles touching? (this settles volume and squashing), then (2) Can each particle change neighbors? (this settles shape and flow). Don't try to explain everything at once.`, kind: 'tip' },
+    { content: `Particles in all three states are moving. Don't use 'movement' or 'speed' to sort the states — use whether particles are touching and whether they are free to change neighbors.`, kind: 'common-error' },
   ],
 };

@@ -77,5 +77,13 @@ ENDING: "So that is how I spent my first month on the paper writing obituaries i
     { content: `Three sentences imitate reflection and are not it: one more event, a summary of what the reader just read, and a moral aimed at the reader. A reflection says what one event meant to one narrator.`, kind: 'tip' },
     { content: `A narrative conclusion is the same move made last, in two parts: land on something concrete out of the story, then say what it came to. That is what makes an ending follow FROM the events instead of sitting on top of them.`, kind: 'tip' },
     { content: `An ending fails in three ways: it stops, it summarizes, or it moralizes. Ask in order whether it points at something in the story, whether it says what that came to for you, and whether it is still yours rather than advice.`, kind: 'tip' },
+    { content: `Reflection does NOT move the story forward. If your sentence tells what happened next, it is narration, not reflection. Stop the action, hold it still, and say what it MEANT.`, kind: 'common-error' },
+    { content: `Pick ONE vantage (then or now) and stick with it. A narrator cannot report what she decided while gluing AND know how the year turned out. Switching vantages breaks the reflection.`, kind: 'gotcha' },
+    { content: `Your reflection MUST point at something concrete the story already put on the page. If your sentence would work at the end of any story, it is not about yours. Test it: could you paste this onto somebody else's narrative?`, kind: 'tip' },
+    { content: `A moral is a RULE for the reader ('Everyone should…'). A reflection is a JUDGMENT about THIS narrator. If your ending tells the reader what to do, you've lost the person who lived the story.`, kind: 'vocab-note' },
+    { content: `Don't write 'That taught me a lot about myself.' You have announced a meaning without naming it or anchoring it. Name the actual judgment: what did you understand, and what in the story proves it?`, kind: 'common-error' },
+    { content: `A summary sounds like an ending because of the rhythm and because it arrives at the end. But it repeats what you already read. A conclusion says what the events CAME TO, not what happened.`, kind: 'edge-case' },
+    { content: `Ask your ending three questions IN ORDER: Does it point at something in the story? Does it say what that came to for me? Is it still mine, not advice? Three yeses = a real conclusion.`, kind: 'tip' },
+    { content: `An ending that STOPS just lands on an event with no weighing—the reader feels the page run out. Weigh the anchor. Say what it came to for you. Do not let the story end unfinished.`, kind: 'common-error' },
   ],
 };

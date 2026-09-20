@@ -70,5 +70,12 @@ export const BASELINE_M8MATH_U1_ESTIMATING_AND_LOCATING_IRRATIONAL_NUMBERS: Topi
     { content: `The estimate tells you where the dot goes on the number line: √50 ≈ 7.1 sits just past 7.`, kind: 'tip' },
     { content: `To order a mixed set, estimate every root and π to tenths and compare as decimals; when two are close, square the decimal and compare squares.`, kind: 'tip' },
     { content: `To estimate an expression such as π², truncate first (π ≈ 3.14) and compute second: π² ≈ 9.8, a little under 10.`, kind: 'tip' },
+    { content: `Write ≈, never =. √50 ≈ 7.1 is correct; √50 = 7.1 is wrong. Square the estimate to prove it: 7.1² = 50.41 ≠ 50.`, kind: 'vocab-note' },
+    { content: `Don't guess the decimal by feel or pick the midpoint. Always square a one-decimal candidate to see which is closer to the number under the root.`, kind: 'common-error' },
+    { content: `When comparing a decimal and a root that look close (like 1.5 and √2), square the decimal instead of estimating the root. 1.5² = 2.25 > 2, so 1.5 > √2.`, kind: 'tip' },
+    { content: `Trap the root first between two consecutive whole numbers, then refine to tenths. Never skip the trap step—it narrows your search and prevents wild guesses.`, kind: 'gotcha' },
+    { content: `Truncate (cut off) before you compute when estimating expressions like π². Use π ≈ 3.14, then square: 3.14 × 3.14 ≈ 9.8, not 9.86 or 10.`, kind: 'edge-case' },
+    { content: `Perfect squares you need to know: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144. Memorize them so you can trap any root quickly without counting.`, kind: 'tip' },
+    { content: `Place the dot by using the estimate, not the radicand. √50 ≈ 7.1 goes just past 7, not near 50 on the number line.`, kind: 'gotcha' },
   ],
 };

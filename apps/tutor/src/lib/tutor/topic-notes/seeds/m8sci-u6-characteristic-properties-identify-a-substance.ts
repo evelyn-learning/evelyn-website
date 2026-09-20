@@ -73,5 +73,13 @@ export const BASELINE_M8SCI_U6_CHARACTERISTIC_PROPERTIES_IDENTIFY_A_SUBSTANCE: T
     { content: `A pure substance is one kind of particle all the way through. It melts at one sharp temperature, holds there until the last of it is liquid, and gives that same temperature for every sample of it.`, kind: 'tip' },
     { content: `A mixture has no melting point of its own. Its melting and boiling temperatures depend on how much of each substance is in it, so a different recipe gives different readings.`, kind: 'tip' },
     { content: `To tell two look-alikes apart, hunt for one characteristic property on which they disagree, measured the same way on both.`, kind: 'tip' },
+    { content: `Don't confuse mass with density. A 60-gram block and a 30-gram block of the same substance have different masses but the same density. Density is always the mass *per cubic centimeter*, not the total mass.`, kind: 'common-error' },
+    { content: `Two facts that each depend on sample size are useless. BUT a mass *and* a volume together unlock density, which does not depend on size. Always divide: grams ÷ cubic centimeters = grams per cubic centimeter.`, kind: 'tip' },
+    { content: `One matching property is a coincidence, not an identification. You need at least two characteristic properties of *different kinds* (e.g., melting point AND density, not melting point AND color).`, kind: 'gotcha' },
+    { content: `A pure substance melts at ONE sharp temperature and holds there while it melts. If temperature climbs during melting or different scoops melt at different temperatures, it is a mixture — not a reading error, not slow heating.`, kind: 'vocab-note' },
+    { content: `Color alone never identifies anything. White and silver are so common that dozens of substances look identical. Color narrows candidates; only characteristic properties settle the question.`, kind: 'common-error' },
+    { content: `Solubility and conductivity are characteristic properties too — they do not change when your sample gets bigger or smaller. You can measure them, not just melting point and density.`, kind: 'edge-case' },
+    { content: `Crossing out mass or volume does not mean throw them away if you also have the other. Use them to compute density, then cross out the original pair and keep the density instead.`, kind: 'tip' },
+    { content: `A mixture can look identical in different scoops but *behave* differently when heated: different melting ranges or different boiling ranges. That behavior difference proves it is a mixture.`, kind: 'gotcha' },
   ],
 };

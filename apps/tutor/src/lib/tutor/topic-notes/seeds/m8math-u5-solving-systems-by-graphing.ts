@@ -69,5 +69,13 @@ export const BASELINE_M8MATH_U5_SOLVING_SYSTEMS_BY_GRAPHING: TopicNotesBaseline 
     { content: `Check the crossing point in BOTH equations; a lattice point that works in both is the exact solution.`, kind: 'tip' },
     { content: `When the crossing sits between grid lines, estimate it and say "about"; the check comes out close rather than exact, and the graph cannot do better than that.`, kind: 'tip' },
     { content: `Same slope with different y-intercepts means parallel lines and no solution; two equations that turn out to be the same line have infinitely many solutions.`, kind: 'tip' },
+    { content: `When an equation has a number in front of y (like 2y = 4x + 6), divide EVERY term by that number—not just some of them. Dividing only the constant gives you the wrong line.`, kind: 'common-error' },
+    { content: `Always graph both lines on the SAME axes. If you draw them on separate graphs, you cannot see where they cross and you cannot find the solution.`, kind: 'gotcha' },
+    { content: `Read the crossing point as (x, y): x-coordinate first (across), then y-coordinate (up). Flipping them gives you the wrong answer.`, kind: 'vocab-note' },
+    { content: `If two equations have the same left side (like 3x + 2y on both), the right sides must be equal for any solution to exist. If they are different (5 vs. 6), no solution exists—do not graph.`, kind: 'tip' },
+    { content: `A non-lattice crossing (between grid lines) gives an estimate, not an exact answer. Say 'about (1.3, 2.7)', not '(1.3, 2.7)'. The check will come out close but not exact.`, kind: 'vocab-note' },
+    { content: `Before deciding a system has no solution, always rewrite both equations in y = mx + b form. Two equations that look different might actually be the same line.`, kind: 'common-error' },
+    { content: `Check the crossing point in BOTH original equations, not just one. Both must give the same y-value for the point to be on both lines.`, kind: 'gotcha' },
+    { content: `Parallel lines have the same slope but different y-intercepts. If m is the same and b is different, the lines never meet and there is no solution—even if the graph paper is huge.`, kind: 'edge-case' },
   ],
 };

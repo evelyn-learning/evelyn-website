@@ -75,5 +75,13 @@ export const BASELINE_M8SCI_U1_VELOCITY_AND_ACCELERATION: TopicNotesBaseline = {
     { content: `Moving is not the same as accelerating. An object can travel for hours at a constant velocity and never accelerate, and an object at rest is not accelerating either.`, kind: 'tip' },
     { content: `To decide any case: write down the speed at the start and at the end, then the direction at the start and at the end. If either pair differs, the velocity changed and the object is accelerating. If neither differs, the velocity is constant.`, kind: 'tip' },
     { content: `A check that uses no definitions: a loose object resting on a smooth seat or floor slides across it during the stages where the velocity is changing, and stays put during the stages where it is not.`, kind: 'tip' },
+    { content: `Don't say "the object has acceleration" or "the object has velocity." Say "acceleration is acting on the object" or "the object's velocity is [value and direction]." Velocity and acceleration describe motion, not things an object owns.`, kind: 'vocab-note' },
+    { content: `A speedometer reads only the NUMBER part of velocity. Don't use the needle staying still as proof the velocity isn't changing. Always check the DIRECTION separately.`, kind: 'common-error' },
+    { content: `Deceleration is NOT the opposite of acceleration. It's the everyday name for ONE KIND of acceleration (the slowing-down kind). The real opposite of accelerating is CONSTANT velocity—both number AND direction stay the same.`, kind: 'gotcha' },
+    { content: `An object moving at a constant velocity—same number, same direction, for hours—is NOT accelerating at all, even if it's moving very fast. Moving ≠ accelerating.`, kind: 'edge-case' },
+    { content: `Always write velocity as TWO pieces: a number with its unit AND a direction. "3 m/s north" is velocity. "3 m/s" alone is speed. If you skip the direction, you've lost half the definition.`, kind: 'vocab-note' },
+    { content: `When a loose object (bag, water bottle, coin) slides on a seat or floor during an event, the velocity is changing during that event. When it stays still, the velocity is constant. This check needs zero math—just watch.`, kind: 'tip' },
+    { content: `The three kinds of acceleration are speeding up (number changes, direction holds), slowing down (number changes, direction holds), and turning (direction changes, number can hold or change). Don't forget turning is acceleration.`, kind: 'common-error' },
+    { content: `To decide if acceleration is happening: write speed-start, speed-end, direction-start, direction-end. If ANY of those four change, velocity changed, so acceleration happened. If none change, no acceleration.`, kind: 'tip' },
   ],
 };

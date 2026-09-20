@@ -92,5 +92,13 @@ The student wrote: "Forest 1,100 minus 1,800 is -700. Farmland 1,500 minus 1,400
     { content: `Anything narrower than one square of the picture never gets a class of its own, so a thin line of trees along a stream cannot appear as forest.`, kind: 'tip' },
     { content: `Two dates give a difference, never a path. Dividing the change by the years gives an average across the gap, not a rate for any one year, and anything that changed and changed back inside the gap leaves no mark.`, kind: 'tip' },
     { content: `A finished answer has three parts: the signed changes with the balance check, the conversion with the evidence that picked it, and the sentence saying what this pair of pictures could not see.`, kind: 'tip' },
+    { content: `Always subtract **second date minus first date**, not the other way. Reversing the order flips every sign and turns a forest loss into a forest gain.`, kind: 'common-error' },
+    { content: `The four changes **must add to zero**. If they don't, stop and find what went wrong before you say anything about conversions. An unbalanced total is a red flag, not a final answer.`, kind: 'tip' },
+    { content: `Don't pick a conversion from the gains alone. If forest loses 900 and farmland gains 600 and built-up gains 300, both stories work: forest→farmland+forest→built-up, OR forest→farmland→built-up. Look at *where* the new patches sit on the ground.`, kind: 'gotcha' },
+    { content: `A class with **zero net change** didn't stand still. It could have lost 400 hectares on one side and gained 400 on the other. The ground changed but the table shows a zero.`, kind: 'edge-case' },
+    { content: `Cloud in the second picture means the first picture's data for those hectares must also be removed. Both columns describe only the ground both pictures can see, not the full study area.`, kind: 'vocab-note' },
+    { content: `A **difference between two dates is not a rate**. 900 hectares over 9 years is an average of 100/year, but the pictures don't show when it fell or whether it fell steadily—or if some regrew and left no trace.`, kind: 'common-error' },
+    { content: `A line of trees **narrower than one picture-square cannot appear as forest** in a land-cover map. At 20-meter resolution, a 10-meter-wide stream buffer vanishes—it's too thin to get its own class.`, kind: 'edge-case' },
+    { content: `Your answer needs all three parts: (1) signed changes + balance check, (2) conversion + ground evidence, (3) one sentence on what these two pictures could not see. An answer missing part 3 sounds more certain than the data allows.`, kind: 'tip' },
   ],
 };

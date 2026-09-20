@@ -76,5 +76,12 @@ export const BASELINE_M8SCI_U9_WHAT_A_WAVE_IS: TopicNotesBaseline = {
     { content: `Both kinds carry energy, and in both kinds the medium stays where it is. The two kinds differ only in which way the medium moves.`, kind: 'tip' },
     { content: `A mechanical wave travels by one bit of matter pushing or pulling the next bit, so it needs a medium. Any matter will do -- a gas, a liquid or a solid -- but where there is no matter at all, a mechanical wave does not travel.`, kind: 'tip' },
     { content: `Light is not a mechanical wave and it crosses empty space, which is how sunlight reaches Earth. "Needs a medium" is a rule about mechanical waves.`, kind: 'tip' },
+    { content: `Don't say "the water traveled to shore." Say "the disturbance traveled; the water bobbed up and down and stayed put." Watch a floating object—if it bobs in place, the water isn't traveling with the wave.`, kind: 'common-error' },
+    { content: `Always name TWO DIRECTIONS before you call a wave transverse or longitudinal: (1) which way does the wave travel, and (2) which way does one bit of medium move. Compare them. If perpendicular = transverse. If parallel = longitudinal.`, kind: 'tip' },
+    { content: `A sound wave is NOT a "nothing goes up and down" thing. Sound IS a wave—a longitudinal one where air squeezes and stretches along the direction sound travels. Don't confuse "transverse wave" with "the definition of a wave."`, kind: 'gotcha' },
+    { content: `A mechanical wave needs a MEDIUM—any matter (gas, liquid, solid) works. Light does NOT need a medium. Don't mix them up: outer space has no mechanical waves but light travels through it fine.`, kind: 'vocab-note' },
+    { content: `Compression = squeeze. Rarefaction = spread-out region. In a longitudinal wave these alternate. Don't just say "bunched" or "spaced out"—use the actual vocabulary or you'll confuse it with density.`, kind: 'vocab-note' },
+    { content: `A CURRENT is NOT a wave. If a floating object drifts away instead of bobbing in place, matter itself is moving—that's water or air transport, not a disturbance. They look similar from far away but behave totally differently.`, kind: 'edge-case' },
+    { content: `Don't say a wave "is in" the medium or "is the medium." Say the wave "travels THROUGH" the medium. The wave is the disturbance, not the stuff. The medium is what gets disturbed.`, kind: 'vocab-note' },
   ],
 };

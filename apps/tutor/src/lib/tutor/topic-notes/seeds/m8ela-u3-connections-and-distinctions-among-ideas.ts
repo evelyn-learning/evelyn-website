@@ -75,5 +75,12 @@ export const BASELINE_M8ELA_U3_CONNECTIONS_AND_DISTINCTIONS_AMONG_IDEAS: TopicNo
     { content: `Name the move, then do the half that counts: what does the pairing let a reader understand that the two facts alone would not? Give the label a clause and the payoff a whole sentence.`, kind: 'tip' },
     { content: `The feature a writer picks for a comparison is itself information. Name the feature the comparison runs on, then ask why that feature and not another one that was available.`, kind: 'tip' },
     { content: `Do not sort by the words. "Like" does not make an analogy, "both" does not make a comparison, and a paragraph carrying none of those words can still make all three moves. Signal words tell you where to look and settle nothing.`, kind: 'tip' },
+    { content: `Two facts printed next to each other are still two separate facts unless a sentence actually does something with them. Point at the sentence that connects them before you claim there is a connection.`, kind: 'gotcha' },
+    { content: `When a sentence grants a resemblance and then turns ("both X, but..."), the point is after the turn, not before. Read past the "both" part to find where the line actually falls.`, kind: 'common-error' },
+    { content: `Signal words like "like," "both," and "is a kind of" show you where to look, but they do not decide what move the text makes. Ask what the sentence does with the pair, not what words it uses.`, kind: 'vocab-note' },
+    { content: `The pair is not always the two most obvious things. Two ideas (like "venom" and "poison") can be a pair just as easily as two animals or two events. Read what the first sentence actually puts together.`, kind: 'edge-case' },
+    { content: `Naming the move ("this is a comparison") is a label, not an analysis. Always follow the label with a clause that says what payoff the pairing gives the reader that the facts alone would not.`, kind: 'common-error' },
+    { content: `The feature a comparison runs on is itself information. If a writer compares floods on speed instead of depth, that choice tells you speed is what matters here. Name the feature, then ask why that one.`, kind: 'tip' },
+    { content: `Do not add information that is not in the text. If a paragraph distinguishes two things, it is not ranking them or saying one is better unless it explicitly does so.`, kind: 'common-error' },
   ],
 };

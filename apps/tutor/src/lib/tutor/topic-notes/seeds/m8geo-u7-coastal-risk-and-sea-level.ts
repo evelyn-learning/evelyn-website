@@ -89,5 +89,13 @@ Which plan meets the requirement, and what is the honest limit of that verdict?`
     { content: `Compare the families on three different kinds of thing: what it costs, the height it keeps working up to and for how long, and who is served, who is left out and who pays.`, kind: 'tip' },
     { content: `Test every plan against the stated requirement before you look at the price. A wall works only up to the height of its top, and a plan that buys out one band leaves the other bands where they are.`, kind: 'tip' },
     { content: `The requirement decides, not the family. Change the requirement and the winning plan changes with it.`, kind: 'tip' },
+    { content: `Always add the sea height PLUS the surge to get the water line. Don't use just the surge number from the forecast. Example: 0.5 m sea + 1.5 m surge = 2.0 m water line, not 1.5 m.`, kind: 'common-error' },
+    { content: `A band floods when water reaches its TOP edge. Water at the band's bottom edge doesn't count—the band is either fully flooded or not at all.`, kind: 'vocab-note' },
+    { content: `Always invert and add back: flooded bands + unflooded bands must equal the town total. If they don't, you dropped a band or miscounted.`, kind: 'tip' },
+    { content: `One extra meter of water can add way more people than the previous meters, or way fewer. Never scale the old exposure by the new height—re-run the band addition every time.`, kind: 'gotcha' },
+    { content: `Protect, Accommodate, and Retreat are three different kinds of answer, not three strengths of one. Don't rank them by price alone—test each against the requirement first.`, kind: 'common-error' },
+    { content: `A wall's height is its limit. If the requirement is a 3-meter water line and the wall top is 3 meters, the wall fails—it's level with the water, not above it.`, kind: 'edge-case' },
+    { content: `Changing the requirement changes which plan wins. 'All homes dry' and 'no water in streets' are different tests; a plan that passes one can fail the other.`, kind: 'conceptual' },
+    { content: `Retreat buys out only the band it targets. The other bands stay in place at their old height, so retreat alone can leave exposed homes behind.`, kind: 'edge-case' },
   ],
 };

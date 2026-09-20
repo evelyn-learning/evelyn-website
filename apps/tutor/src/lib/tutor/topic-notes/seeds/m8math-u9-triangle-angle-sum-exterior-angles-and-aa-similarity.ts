@@ -71,5 +71,12 @@ export const BASELINE_M8MATH_U9_TRIANGLE_ANGLE_SUM_EXTERIOR_ANGLES_AND_AA_SIMILA
     { content: `An exterior angle equals the sum of the two REMOTE interior angles, the two that do not touch it. The angle next door is never part of that sum.`, kind: 'tip' },
     { content: `Two matching angles force the third to match, so two matching angles are enough to say two triangles are similar (angle-angle). Compute the third angle before you judge; the listed order does not matter.`, kind: 'tip' },
     { content: `To solve: name the fact, write the equation, solve for x, then substitute back to get the angle. Both exterior-angle routes must agree.`, kind: 'tip' },
+    { content: `**Don't use the interior angle next door in the exterior angle sum.** An exterior angle equals the two *remote* interior angles—the ones that don't touch it. The adjacent interior angle sits on the same straight line, so it adds to 180° with the exterior, never into the sum.`, kind: 'common-error' },
+    { content: `Always compute the third angle before deciding if two triangles are similar. Two matching angles force the third to match, but you must find it first—it's never given for free. The order angles are listed doesn't matter.`, kind: 'tip' },
+    { content: `An **exterior angle** and its **interior angle neighbor** are supplementary (add to 180°), but an **exterior angle** equals the sum of the two **remote interior angles**. Both facts are true; use whichever route fits the problem.`, kind: 'vocab-note' },
+    { content: `When you extend a side past a vertex, the exterior angle is the angle *between the extension and the other side at that vertex*, not the full angle on the other side of the line.`, kind: 'gotcha' },
+    { content: `If the problem gives you two angles of a triangle and asks for an exterior angle, find the interior angle at that vertex first (subtract from 180), then use the straight-line rule or the remote-angle sum. Both must give the same number—that's your check.`, kind: 'tip' },
+    { content: `The parallel-line argument doesn't measure any angles—it only uses 'alternate interior angles are equal' and 'angles on a straight line sum to 180°'. That's why it proves *every* triangle has angles summing to 180°, not just the ones you drew.`, kind: 'tip' },
+    { content: `In angle-angle (AA) similarity, two matching angle measures are enough; you do *not* need to check side lengths or the third angle. But you *must* compute the third angle to confirm the match exists.`, kind: 'edge-case' },
   ],
 };

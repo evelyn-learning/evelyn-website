@@ -71,5 +71,13 @@ export const BASELINE_M8SCI_U8_SYNTHETIC_MATERIALS_FROM_NATURAL_RESOURCES: Topic
     { content: `Weighing rule one: use only the facts you are given. A fact you were not told is not a reason, however sure you feel about it.`, kind: 'tip' },
     { content: `Weighing rule two: weigh against a STATED purpose. "Better" means nothing until someone says better for what, and the same benefit and cost can point different ways for different purposes.`, kind: 'tip' },
     { content: `Natural does not mean harmless, and synthetic does not mean harmful. Both sides of the weighing come from the stated facts about the job.`, kind: 'tip' },
+    { content: `A trace is NOT finished when you name the resource and reaction. You MUST compare properties — name something the new material does that the starting resource never did. Without that step, you have not proved a new substance was made.`, kind: 'common-error' },
+    { content: `Melting, cooling, spinning, and molding are NOT chemical reactions. They change the SHAPE or FORM, not the substance. Test: if warming brings back the original, it was only a physical change — no synthetic material was made.`, kind: 'gotcha' },
+    { content: `When you weigh a benefit against a cost, START by reading the stated PURPOSE. Every answer after that has to touch that purpose. A benefit that does not matter for the stated job cannot decide the answer.`, kind: 'tip' },
+    { content: `Do NOT use facts you were not given, no matter how sure you feel. If the problem does not tell you the cost, the price, or what happens after, you cannot use it as a reason. That breaks the weighing.`, kind: 'vocab-note' },
+    { content: `Same atoms rearranged = different substance with different properties. Conservation of atoms does NOT mean conservation of substance. If atoms are joined a different way, the material is different — that's what the property list proves.`, kind: 'common-error' },
+    { content: `When you weigh a benefit against a cost, do NOT automatically say the cost wins. A cost is real, but it only outweighs the benefit if it blocks the stated purpose. A cost with a stated remedy may not stop the choice.`, kind: 'common-error' },
+    { content: `'Natural' does not mean harmless and 'synthetic' does not mean harmful. Synthetic just means 'made by a chemical reaction from a natural resource.' The material itself is judged by properties and facts, not by the word 'synthetic.'`, kind: 'vocab-note' },
+    { content: `When weighing, the same benefit and same cost can point DIFFERENT ways if the purpose changes. Check your work: if the purpose changed, would your answer flip? If not, you may have missed something.`, kind: 'tip' },
   ],
 };

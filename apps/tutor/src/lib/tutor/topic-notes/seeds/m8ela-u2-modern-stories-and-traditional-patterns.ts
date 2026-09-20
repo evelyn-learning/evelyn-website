@@ -81,5 +81,12 @@ VERSION B: "Her grandmother had said it plainly: do not put the tomato plants in
     { content: `A changed setting is a real move: the old shape in a new place makes the new place feel bigger, and it lets the writer borrow what you already expect.`, kind: 'tip' },
     { content: `A reversal or a swap is not proof that the pattern is missing. It works only because the pattern is there; the writer counted on you knowing the old shape.`, kind: 'tip' },
     { content: `Surface details are costume. A dragon does not make a story a three-trials story, and three rounds of tryouts do not stop it from being one.`, kind: 'tip' },
+    { content: `Don't confuse a costume with the bones. A dragon, a skateboard, a phone—these are clothes the pattern wears. Strip them away and ask: what actually happens in one sentence? If that sentence is one you've heard before, the pattern is there.`, kind: 'common-error' },
+    { content: `A reversed outcome doesn't mean the pattern is gone—it means the pattern is being *used*. The writer set up the old ending to make you brace for it, then went the other way. That brace only works because the pattern is there.`, kind: 'gotcha' },
+    { content: `Ask the two questions in order, and don't skip the second one. First: is the promised ending still there? If yes, move to second: are the character types in their usual roles? Only when both are yes is it a changed setting.`, kind: 'tip' },
+    { content: `The trickster and the humble helper are opposites in how they end. The trickster *loses* (gets fooled). The humble helper's help *lands on someone else*. If you're unsure which character type you're seeing, check where the story lands.`, kind: 'vocab-note' },
+    { content: `A pattern doesn't need to be named or pointed at by the writer. The shape itself is enough. Don't wait for 'this is like the old story of…'—recognize the bones and you've found it.`, kind: 'edge-case' },
+    { content: `When you strip the clothes, you're looking for the plot skeleton: who wants what, who stands in the way, what tests or warnings or tricks happen, and how it ends. Names and places fall away, but the sequence stays.`, kind: 'tip' },
+    { content: `A changed setting keeps both the bones *and* the promised ending intact. If either one changes, it's not a changed setting; it's a reversal or a swap. Check what's actually different before naming the move.`, kind: 'common-error' },
   ],
 };

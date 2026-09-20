@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U3_UNIT_RATE_AS_SLOPE: TopicNotesBaseline = {
     { content: `Slope = unit rate = k. Three names, one number, and the point at x = 1 sits at height k.`, kind: 'tip' },
     { content: `If the marked point is not at x = 1, divide rise by run: (4, 24) gives 24 ÷ 4 = 6. Never read the y-value alone, and never put run over rise.`, kind: 'tip' },
     { content: `Slope carries the units of the rate: 6 megabytes per second, 12 dollars per hour, 2.5 gallons per minute.`, kind: 'tip' },
+    { content: `Slope is rise ÷ run, NOT run ÷ rise. If a point is (5, 20), the slope is 20 ÷ 5 = 4, not 5 ÷ 20 = 0.25. Say the units out loud to catch the flip: "4 units up per 1 unit right."`, kind: 'common-error' },
+    { content: `Don't read the y-coordinate as the slope unless x = 1. The point (5, 20) does NOT have slope 20. Divide: 20 ÷ 5 = 4. The slope tells you the climb per 1 step right, not the height of that one point.`, kind: 'gotcha' },
+    { content: `Always verify proportionality BEFORE graphing. Check that y ÷ x is the same for every row in the table. If it's not, the points won't line up on a straight line through the origin.`, kind: 'tip' },
+    { content: `The slope and k are the same number. If y = 6x, then k = 6 and the slope is 6. The point (1, k) always sits on the line—that's how to spot k on a graph instantly.`, kind: 'vocab-note' },
+    { content: `When you measure slope by stepping right 1, you must count the rise carefully. From (2, 12) stepping to (3, ?), use the equation or the line's lean to find the new y-value, then subtract: rise = new y − old y.`, kind: 'tip' },
+    { content: `Slope always has units (dollars per hour, gallons per minute). If you get a number with no units, check that you divided rise by run—not the other way—and that you attached the right labels.`, kind: 'edge-case' },
+    { content: `A steeper line has a bigger slope. Slope 10 climbs faster than slope 2. If k is small (like 0.5), the line is nearly flat; if k is large (like 100), the line is nearly vertical.`, kind: 'tip' },
   ],
 };

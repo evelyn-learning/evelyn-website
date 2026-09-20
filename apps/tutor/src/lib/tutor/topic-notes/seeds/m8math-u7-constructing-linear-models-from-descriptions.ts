@@ -70,5 +70,12 @@ export const BASELINE_M8MATH_U7_CONSTRUCTING_LINEAR_MODELS_FROM_DESCRIPTIONS: To
     { content: `The number that is there once, before any x happens (a fee, a starting height, money already saved), is b and stands alone. The order of the words in the sentence does not decide which number is which; the job does.`, kind: 'tip' },
     { content: `If y goes down as x grows (burning, draining, melting), the rate is negative and the starting amount stays positive.`, kind: 'tip' },
     { content: `Check the finished equation at x = 0 (it must give b) and at x = 1 (b plus or minus one rate) before you trust it.`, kind: 'tip' },
+    { content: `Don't let sentence order trick you. The number stated first is NOT automatically m or b. Always ask: which number is 'per' each unit? That's m. Which happens once? That's b.`, kind: 'common-error' },
+    { content: `Hunt for the words 'per', 'each', 'every', or a time unit ('an hour', 'a week'). The number attached to that phrase is your rate m. If you can't find one, the rate might be hidden in a comparison like 'burns down' or 'drops'.`, kind: 'tip' },
+    { content: `If the story says y goes DOWN (burns, drains, melts, drops), then m is NEGATIVE, even if the sentence uses a positive number. The starting amount b stays positive—it's the real starting height or amount.`, kind: 'common-error' },
+    { content: `Always name x and y in words BEFORE writing the equation. Say 'x is [the count], y is [the total].' An unnamed equation is a guess that can fail.`, kind: 'tip' },
+    { content: `The starting amount b is the value of y when x = 0. Use this to check your equation: plug in x = 0 and confirm you get the starting amount, then plug in x = 1 and confirm you get starting amount ± one rate.`, kind: 'tip' },
+    { content: `When there's no 'once-only' amount mentioned (no sign-up fee, no starting balance), b = 0 and your model is y = mx, not y = mx + 0. Don't write the zero.`, kind: 'edge-case' },
+    { content: `Don't confuse 'rate of change' (how much y changes per 1 unit of x) with 'initial value' (where y starts). Rate of change is m and can be negative. Initial value is b and is where you began.`, kind: 'vocab-note' },
   ],
 };

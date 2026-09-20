@@ -74,5 +74,13 @@ export const BASELINE_M8SCI_U9_AMPLITUDE_AND_WAVE_ENERGY: TopicNotesBaseline = {
     { content: `Say which one, not how many times. Twice as tall does not mean twice the energy -- the energy grows faster than the height does, and how much faster is a question for a later course.`, kind: 'tip' },
     { content: `A bigger wave is not a faster wave. In a given material every wave travels at the same speed, so a big wave and a small one arrive together; the big one simply arrives carrying more energy.`, kind: 'tip' },
     { content: `To argue it: state the claim, name the two waves and what is held fixed, name the observation at the far end and what it took, then say which way the evidence points -- and stop.`, kind: 'tip' },
+    { content: `Energy travels WITH the wave, not in the material. Don't say "the wave pushed the water across the beach." The water stays put; the energy arrives and makes the water move. Always point to what changed at the far end to prove energy arrived.`, kind: 'vocab-note' },
+    { content: `"Bigger amplitude" and "louder sound" or "brighter light" are the same thing. If a sound is louder, its amplitude is bigger. If light is brighter, its amplitude is bigger. Use these words as synonyms for the wave type you're talking about.`, kind: 'vocab-note' },
+    { content: `The "same frequency" condition is not optional. If frequency changes too, the comparison breaks—don't guess which wave wins. Say "this comparison cannot settle the claim" and name what you'd fix.`, kind: 'common-error' },
+    { content: `Don't put a number on how much more energy. "Twice as tall" does NOT mean "twice the energy." Energy grows faster than height. Stop at "more" or "less," not "how many times."`, kind: 'gotcha' },
+    { content: `A bigger wave is NOT a faster wave. Both waves travel the same speed through the same material. The big wave just arrives with more energy packed in. Don't confuse energy carried with speed of travel.`, kind: 'common-error' },
+    { content: `Your evidence goes in the far end, not in your head. Don't say "the big wave probably has more energy." Say what you SAW happen—the object flicked off, the panel lit up, the surface got warm. No observation, no finished answer.`, kind: 'tip' },
+    { content: `If the amplitude AND the rate both changed between two waves, you can't use amplitude alone to settle which carries more energy. That's two changes at once. Don't pick a winner—say the comparison doesn't test the claim.`, kind: 'edge-case' },
+    { content: `The energy at the source (how hard you shake, how much power the bulb uses) and the energy at the far end (what moves, what breaks, what warms) are the same energy traveling. If one is bigger, the other must be too.`, kind: 'tip' },
   ],
 };

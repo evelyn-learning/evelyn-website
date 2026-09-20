@@ -68,5 +68,13 @@ export const BASELINE_M8MATH_U6_COMPARING_FUNCTIONS_IN_DIFFERENT_REPRESENTATIONS
     { content: `On a graph that does not pass through the origin, subtract before you divide: the rise is the point's height minus the crossing, not the height by itself.`, kind: 'tip' },
     { content: `Which starts higher is decided by the initial values; which grows faster is decided by the rates. They are separate questions and can have different winners.`, kind: 'tip' },
     { content: `Two functions with different winners meet after (starting gap) ÷ (rate difference) units; check by plugging that x into both and getting the same y.`, kind: 'tip' },
+    { content: `On a graph, always subtract before you divide. Rise = (point's y) − (crossing's y), not just the point's y. Then divide rise by run. If the line doesn't pass through the origin, dividing y by x at a point gives the wrong rate.`, kind: 'common-error' },
+    { content: `Don't let 'starts higher' decide 'ends higher.' Compare initial values to see who starts ahead; compare rates to see who catches up. The one that starts with less can win if it grows faster.`, kind: 'gotcha' },
+    { content: `In an equation like y = 40 + 3x or 3x + 40, the number in front of x is always the rate, and the standalone number is always the initial value—even if they're in different order than y = mx + b.`, kind: 'vocab-note' },
+    { content: `From a table, find the initial value first—it's in the row where x = 0. If there's no x = 0 row, you can't read the initial value directly; you have to calculate it using the rate and another row.`, kind: 'edge-case' },
+    { content: `To find where two functions meet, use (starting gap) ÷ (rate difference). Then check by plugging that x into both equations—if you get the same y, you're right. If the rates are equal, the functions never meet (unless they're identical).`, kind: 'tip' },
+    { content: `When you extract the rate from a table, use any two rows you want—pick the ones that are easiest to subtract. The rate comes out the same between any two rows in a linear function, so don't feel stuck using consecutive rows.`, kind: 'tip' },
+    { content: `The rate of change is 'per' something—per minute, per week, per person. The initial value is what's there 'at the start,' 'already there,' or 'to book.' These phrases in a sentence tell you which number is which.`, kind: 'vocab-note' },
+    { content: `If the starting gap shrinks to zero, that's where they meet. But after that point, the faster-growing function pulls ahead. Don't confuse 'same y-value at one moment' with 'same forever.'`, kind: 'gotcha' },
   ],
 };

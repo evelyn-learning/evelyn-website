@@ -87,5 +87,13 @@ A student writes: "Plan Southfield meets the criterion, so it is the plan, and i
     { content: `Divide each group's loss by that group's own total. Eight of 10 fields is 80 percent while 25 of 500 house lots is 5 percent, so the larger count is the far smaller bite, and the largest group can pay nothing at all.`, kind: 'tip' },
     { content: `Naming the group that bears a cost is a measurement of before and after, not a ruling that a plan is unfair. An evaluation hands the council a criterion result and an address; the deciding is theirs.`, kind: 'tip' },
     { content: `Change one input and run it again. Swap the criterion and two plans can trade places while every parcel, meter and home stays exactly where it was.`, kind: 'tip' },
+    { content: `Write the criterion with a number in it BEFORE you read either plan. 'Hold flood homes at 30' is testable; 'protect the river' is not. Write it down so you can't pick the plan you like and then find a test it passes.`, kind: 'gotcha' },
+    { content: `Always divide loss by what the group had, not by what they lost. If a group owned 100 plots and loses 4, that's 4÷100 = 4%, not 4 plots. A group with 10 fields losing 8 is 80%, which is way more than a group with 500 plots losing 25 (which is 5%).`, kind: 'common-error' },
+    { content: `The flood zone is 200 meters deep, not 200 meters total. If the zone reaches 200m from the river on both sides, a parcel that starts 150m away is partly inside—not clear. Draw or mark the boundary on the parcel every time.`, kind: 'vocab-note' },
+    { content: `State the verdict with both numbers and the comparison: not 'Plan X is better at flooding' but 'Plan X holds flood homes at 30; Plan Y raises it to 180'—that is six times as many.' Numbers make it checkable and survive arguments.`, kind: 'common-error' },
+    { content: `Meeting the criterion is only half the evaluation. Always ask every group what it had before and after. A group that keeps the same thing pays zero, no matter how big it is.`, kind: 'gotcha' },
+    { content: `Homes per hectare measures tightness of building, not total homes. 300 homes on 10 hectares = 30/hectare; 300 homes on 30 hectares = 10/hectare. Multiply back to check: 30 × 10 = 300. ✓`, kind: 'vocab-note' },
+    { content: `Change one input—the criterion, the flood zone width, or a parcel location—and run the same two plans again. Two plans can trade places while nothing moves. The winner belongs to the inputs, not the plans.`, kind: 'tip' },
+    { content: `Saying a cost lands on one group is a measurement of before and after—never a claim the plan is unfair or that the group deserves it. Hand the council the numbers; the council decides.`, kind: 'edge-case' },
   ],
 };

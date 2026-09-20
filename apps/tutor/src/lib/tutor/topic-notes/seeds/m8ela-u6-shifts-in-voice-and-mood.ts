@@ -77,5 +77,12 @@ B, from a personal narrative: "I wish the bus stop were closer to my street, and
     { content: `In a list of steps every step is a command. WRONG: "Rinse the beaker, dry it with a paper towel, and then you should record the mass." CORRECT: "Rinse the beaker, dry it with a paper towel, and record the mass."`, kind: 'tip' },
     { content: `A wish stays in the subjunctive all the way through, and "was" is the word that slips back in. WRONG: "I wish the tryout list were posted tonight and the coach was easier to read." CORRECT: "I wish the tryout list were posted tonight and the coach were easier to read."`, kind: 'tip' },
     { content: `Repair the one verb that broke away and leave everything else alone. Flattening the sentences that were working until the whole passage matches is consistent, and it instructs nobody.`, kind: 'tip' },
+    { content: `A shift is only an error if the **meaning** didn't call for it. Don't just spot a form change and assume it's wrong. Ask: did the doer change, or did something become real/imagined? If yes, the shift is licensed and stays.`, kind: 'gotcha' },
+    { content: `When the **same person does both actions**, both verbs stay active. Don't slide into passive voice halfway through. If only the form changed and the doer stayed the same, that's a slide—fix it.`, kind: 'common-error' },
+    { content: `Look for 'was' after 'I wish' or similar setup. If the sentence started in the subjunctive (imagined), every verb in that stretch has to stay imaginary. Don't let 'was' sneak back in.`, kind: 'vocab-note' },
+    { content: `In a list of instructions, every step is a command—same form, same job. If one step turns into 'you should…' or 'the thing gets done,' it reads optional. Fix that one verb, not the others.`, kind: 'edge-case' },
+    { content: `Before you repair, figure out who did the action in each half. **Different doers = licensed shift.** Same doer = inappropriate shift. The doer is the question, not the form.`, kind: 'tip' },
+    { content: `Don't rewrite three lines to hide one bad verb. Change only the verb that broke away. If you're rewriting whole sentences, you're probably deleting information the passage needed.`, kind: 'common-error' },
+    { content: `A passive sentence with a 'by' phrase ('printed by the office') names the real doer—that's a licensed shift, not an error. Don't change it just because it's passive.`, kind: 'gotcha' },
   ],
 };

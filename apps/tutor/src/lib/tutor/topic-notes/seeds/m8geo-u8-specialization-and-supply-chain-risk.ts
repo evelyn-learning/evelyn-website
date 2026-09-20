@@ -86,5 +86,13 @@ The firm can add a second cell plant, in the same region as Ostral, whose cells 
     { content: `Each side's gain is a subtraction: what the goods would have cost at home, less what they cost through the trade. The two sides count their gains in different goods, so "did both gain" is the answerable question and "who gained more" usually is not.`, kind: 'tip' },
     { content: `To find where a chain breaks, walk it stage by stage and count the choices at each one. The stage with one choice stops everything after it, whatever share of the value it carries, and a road, a strait or a port is a stage in exactly the same way as a factory.`, kind: 'tip' },
     { content: `Price a backup against the stoppage it prevents: divide the loss from one stoppage by the backup's cost for a year. And a second supplier that depends on the same single link is not a backup -- the count at that stage is still one.`, kind: 'tip' },
+    { content: `Don't compare across countries. Divide within one country's row to find what it gives up. 900 tons of grain OR 300 crates means a crate costs that country 3 tons — not a comparison to another country.`, kind: 'common-error' },
+    { content: `Being ahead in both goods doesn't mean make both goods. A country can out-produce another yet still be the more expensive maker of one good. Check the give-up figures—they always give each country exactly one good.`, kind: 'gotcha' },
+    { content: `A trade rate must sit between the two give-up figures. If it's outside that gap, one side would rather make the good at home and won't trade—the rate fails.`, kind: 'vocab-note' },
+    { content: `Count the single point of failure by how many choices exist at each stage, not by how much value flows through. One plant stops the chain; four plants let work move to three others.`, kind: 'common-error' },
+    { content: `A route (strait, port, road, tunnel) is a stage in the chain. If all suppliers at a stage depend on the same one route, adding suppliers doesn't fix that route's count of one.`, kind: 'edge-case' },
+    { content: `A backup is only real if it doesn't depend on the same single link. Two plants on opposite sides of a strait work; two plants on the same side don't—the strait count stays one.`, kind: 'gotcha' },
+    { content: `Each side counts its gain in its own good, not the other's. Buyer counts flour saved; seller counts rope gained. They're measured in different units, so 'who gained more' is usually unanswerable.`, kind: 'vocab-note' },
+    { content: `To price a backup, divide the loss from one stoppage by the backup's yearly cost. The answer tells you: the backup pays for itself if a stoppage happens more often than once in that many years.`, kind: 'tip' },
   ],
 };

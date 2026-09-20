@@ -75,5 +75,13 @@ export const BASELINE_M8SCI_U3_MAGNETIC_FORCES_AND_ELECTROMAGNETS: TopicNotesBas
     { content: `An electromagnet is stronger with more turns of wire, with more current supplied, and with an iron rod down the middle of the coil.`, kind: 'tip' },
     { content: `To read trial data: compare two trials that differ in exactly ONE thing and read the direction the result moved. A pair that differs in two things tells you nothing about either one.`, kind: 'tip' },
     { content: `To choose a next trial: take a trial already run, change only the factor you now want to test, and keep every other condition identical to it.`, kind: 'tip' },
+    { content: `Don't say 'a magnet pulls on metal.' Say 'a magnet pulls on iron, steel, nickel, and cobalt.' Aluminum and copper are metals and a magnet leaves them alone.`, kind: 'vocab-note' },
+    { content: `An unmagnetized steel paperclip gets pulled by EITHER pole of a magnet—north or south. Push-and-pull is the rule for two magnets, not for a magnet and a piece of plain steel.`, kind: 'gotcha' },
+    { content: `An electromagnet is a magnet ONLY while current flows. Cut the current and it stops being a magnet—the paperclips fall off. It is not a permanent magnet.`, kind: 'common-error' },
+    { content: `Never compare two trials that differ in two things at once. If the gap changed AND the magnet changed, that pair tells you nothing about either one—go find a different pair.`, kind: 'tip' },
+    { content: `Conclusions about magnetic force are always directions: 'stronger' or 'weaker.' Never say how many times stronger—the paperclip counts don't tell you that.`, kind: 'vocab-note' },
+    { content: `When you design a next trial, change ONLY one factor from a trial you already ran. Changing the new factor AND something else gives you a pair you cannot read.`, kind: 'common-error' },
+    { content: `Cut a bar magnet in half and you get two shorter magnets, each with a north pole and a south pole. You do not get a 'north piece' and a 'south piece.'`, kind: 'edge-case' },
+    { content: `The magnetic force reaches across a gap without the magnet and the paperclip touching. The closer the gap, the stronger the pull, until the gap is so big the pull is too weak to move anything.`, kind: 'gotcha' },
   ],
 };

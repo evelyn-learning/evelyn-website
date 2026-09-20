@@ -83,5 +83,12 @@ RESULT 3 — no mark. "The 11 Best Feeders for Outdoor Cats, Ranked." The descri
     { content: `Add a limiting term, and look in your own sub-question for it first: the place, the year, or the kind of source you want. A limit your question never asked for narrows you away from your question.`, kind: 'tip' },
     { content: `Search terms are a first draft. If the wrong meaning of a word comes back, pin that word down inside a two-word name; if almost nothing comes back, take out your narrowest term first.`, kind: 'tip' },
     { content: `Sort the results before you open any of them. A sponsored result is marked as paid, a sales result may carry no mark at all, and the giveaway is what the page offers you next. Where an entry sits on the page is not evidence about it either way.`, kind: 'tip' },
+    { content: `Don't put your whole sub-question inside quotation marks. Quote marks mean "these words must travel together in this exact order," so a full sentence almost never appears on any real page. Quote only two-word names like "bike lanes" or "animal shelter."`, kind: 'common-error' },
+    { content: `A sponsored mark tells you who paid for placement on the results page—nothing more. A page with no mark can still be selling you something. Read what the page offers you next (buying links? product rankings?) before you decide.`, kind: 'gotcha' },
+    { content: `Pull limiting terms straight from your sub-question first—the place, the year, the specific group. If your question asked about Fairvale in 2019, don't leave those out just because they seem obvious. That's where students waste searches.`, kind: 'tip' },
+    { content: `Key nouns name the specific thing, place, group, event, or year. Question words (why, how, did, does) and glue words (the, of, about) sit on pages about everything, so they don't narrow anything. Drop them.`, kind: 'vocab-note' },
+    { content: `If a search brings back the wrong meaning of a word ("seals" for rubber seals instead of animals), pin that word down by putting it in a two-word name: "harbor seals," not just "seals."`, kind: 'edge-case' },
+    { content: `Search terms are a first draft. If almost nothing comes back, remove your narrowest term first, not your best one. If the wrong stuff comes back, add a detail to pin down the ambiguous word.`, kind: 'tip' },
+    { content: `An entry's position on the results page is not evidence about whether it's reliable or relevant. Read the title, source, and description before you click. Position tells you nothing.`, kind: 'common-error' },
   ],
 };

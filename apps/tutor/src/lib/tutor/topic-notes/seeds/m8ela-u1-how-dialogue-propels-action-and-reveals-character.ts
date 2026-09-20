@@ -76,5 +76,13 @@ export const BASELINE_M8ELA_U1_HOW_DIALOGUE_PROPELS_ACTION_AND_REVEALS_CHARACTER
     { content: `The loudest line is not always the one that moves the story. Run the cover test on the quiet line and on the second line too.`, kind: 'tip' },
     { content: `A line reveals the speaker through the words chosen, and it can reveal the listener through what they do right after it. Both count as evidence, and both need the exact words.`, kind: 'tip' },
     { content: `Say both jobs in one sentence and quote the line letter for letter: when NAME says "LINE," it changes WHAT, and it shows WHO as WHAT, because WORDS.`, kind: 'tip' },
+    { content: `Don't confuse 'reveals character' with 'propels action.' A line reveals if it shows what someone is like. It propels only if the next thing that happens depends on it. A line can do one job, the other, or both—but they are not the same job.`, kind: 'vocab-note' },
+    { content: `Run the cover test on every line, not just the one that sounds important or has an exclamation mark. The quiet line, the second line, or the one about small things (keys, tape, index cards) is often the one that moves the story.`, kind: 'gotcha' },
+    { content: `When you cover a line, read at least one full sentence after it. If you only glance at the next few words, you might miss the sentence where someone does something different because of the line.`, kind: 'tip' },
+    { content: `The listener's reaction is evidence too. What the other character does after the line is said shows what the line revealed about them—don't only look at the speaker's words.`, kind: 'common-error' },
+    { content: `Quote the line exactly, word for word, including the part that does the work. If you leave off 'after tonight' or 'even if it's two sentences,' you lose the evidence for what the line reveals or changes.`, kind: 'common-error' },
+    { content: `A line propels in exactly three ways: a decision is made, a secret is exposed, or a plan is changed. After you cover a line, find the sentence where one of these three things happens. That is your proof the line propelled.`, kind: 'tip' },
+    { content: `Don't say 'the dialogue reveals.' Say which character and what it reveals about them, with the exact words that show it. 'When Marcus says X, it reveals him as Y, because Z' is complete; 'the dialogue shows emotion' is not.`, kind: 'vocab-note' },
+    { content: `If a line only reveals and does not propel, say so. That is still one real job. Don't force a propulsion where there is none; run the cover test and report what you find.`, kind: 'edge-case' },
   ],
 };

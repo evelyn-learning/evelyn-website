@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U3_COMPARING_PROPORTIONAL_RELATIONSHIPS: TopicNotes
     { content: `Match the units before comparing: a rate per hour and a rate per minute must be converted to the same unit first.`, kind: 'tip' },
     { content: `The bigger unit rate is faster, pays more, and is steeper; when y is a cost, the smaller unit rate is cheaper. Subtract the two rates to say how much more per unit.`, kind: 'tip' },
     { content: `Steeper by eye only works when both lines are on the same axes. Across two separate graphs, or a graph and an equation, only the numbers decide.`, kind: 'tip' },
+    { content: `When you divide to find the unit rate from a graph point, keep y on top: 50 ÷ 4 = 12.5, NOT 4 ÷ 50 = 0.08. If the point is (hours, dollars), dollars go on top.`, kind: 'common-error' },
+    { content: `Don't trust your eye to judge which line is steeper unless both lines are drawn on the same coordinate plane. Different axis scales make the same slope look steep or flat.`, kind: 'gotcha' },
+    { content: `Always convert unit rates to the **same** unit before comparing. 90 gallons/hour and 2.5 gallons/minute look incomparable until you change one: 90 ÷ 60 = 1.5 gallons/minute.`, kind: 'tip' },
+    { content: `In y = kx, the unit rate k is the number **in front of** x. Don't confuse it with the y-intercept (which is 0 for all proportional relationships) or any other part of the equation.`, kind: 'vocab-note' },
+    { content: `When y is a cost (dollars, price), the **smaller** unit rate is cheaper or better. When y is a distance or speed, the **bigger** unit rate is faster. Don't flip this based on context.`, kind: 'common-error' },
+    { content: `To extract a rate from a table of a proportional relationship, divide y by x in **any row**—you'll get the same answer. Pick the row with numbers easiest to divide.`, kind: 'tip' },
+    { content: `Check your comparison by plugging the same input (hours, minutes, packs) into both rates and seeing if the outputs match your answer. If 0.5 dollars/hour difference × 4 hours ≠ the actual difference shown, you made an error.`, kind: 'tip' },
   ],
 };

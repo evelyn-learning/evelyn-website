@@ -82,5 +82,11 @@ CHECK TWO. The root -vis- comes from a Latin verb meaning "to see", and the root
     { content: `One root can wear more than one spelling. -cede-, -ceed- and -cess- are one root; -mit- and -miss- are one root; -vis- and -vid- are one root. The letters move and the meaning does not, so listen for the root instead of hunting one exact string of letters.`, kind: 'tip' },
     { content: `Picking a family member by the root alone is a coin flip. Precede and proceed are both goings; describe and prescribe are both writings. In each pair, one letter at the front of the word is carrying the entire difference.`, kind: 'tip' },
     { content: `The same letters at the front can be two different prefixes. In inject, in- means in; in incorrect, it means not. Try both jobs against what the root is doing, and keep the reading the sentence can carry.`, kind: 'tip' },
+    { content: `The root is the constant—it's the part that's the SAME in every family member, so it can never tell them apart. Stop looking at the root once you've named it. The prefix is where the difference lives.`, kind: 'gotcha' },
+    { content: `Don't hunt for one exact spelling of the root. -cede-, -ceed-, -cess- are the same root. -mit- and -miss- are the same root. Listen for the meaning (go, send, see) instead of the letters, or you'll miss half the family.`, kind: 'common-error' },
+    { content: `The prefix in- does TWO different jobs and the letters won't tell you which one. One in- means 'in' (inject = throw in), the other means 'not' (incorrect = not correct). Try both against the root and the sentence.`, kind: 'vocab-note' },
+    { content: `One letter at the front can flip the meaning completely. Precede ≠ proceed. Describe ≠ prescribe. Extract ≠ retract. If you're not reading the prefix, you're guessing.`, kind: 'edge-case' },
+    { content: `Always check your assembled meaning against the sentence. The parts build a list; the sentence picks which member actually belongs. If the meaning doesn't fit the sentence, try a different prefix.`, kind: 'tip' },
+    { content: `Memorize what each prefix does as a direction: ex-/e- out, in- in, re- back, pro- forward, pre- before, se- apart, sub- under, trans- across, inter- between, con- together, de- down or away.`, kind: 'tip' },
   ],
 };

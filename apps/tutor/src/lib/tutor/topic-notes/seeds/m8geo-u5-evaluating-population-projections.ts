@@ -78,5 +78,13 @@ export const BASELINE_M8GEO_U5_EVALUATING_POPULATION_PROJECTIONS: TopicNotesBase
     { content: `To find the assumption a headline is resting on, switch the assumptions off one at a time and see which one moves the answer furthest. The quiet assumption can be worth 50 years while the one everybody argues about is worth 8.`, kind: 'tip' },
     { content: `A rate that slides is not one rate. Run the division at each end and report the bracket; the width of the bracket is the assumption, made visible.`, kind: 'tip' },
     { content: `A growth rate and a doubling time are measurements of a speed. Fast growth and slow growth are measured here, never ranked, and neither is a score for a town or for the people in it.`, kind: 'tip' },
+    { content: `Always check your division by multiplying back: doubling time × growth rate must equal 70. A slipped decimal is invisible in division but obvious in the check.`, kind: 'tip' },
+    { content: `Never write 'exactly' with a doubling time. Say 'about 35 years' because 70 is rounded. The rule of 70 gives an estimate, not a precise figure.`, kind: 'common-error' },
+    { content: `A projection says IF (condition attached); a prediction says WILL (condition dropped). Headlines always drop the condition. Write it back in before you trust the number.`, kind: 'vocab-note' },
+    { content: `When two projections of the same place give different answers, the arithmetic is almost never the problem. Compare the assumption lists instead—find the one line they don't share.`, kind: 'gotcha' },
+    { content: `To find which assumption a headline leans on most, turn each one off and rerun the division. The assumption that moves the answer furthest is the one the headline rests on—and it might not be the one everybody argues about.`, kind: 'tip' },
+    { content: `If the growth rate will change (e.g., starts at 4%, falls to 1%), don't run the rule of 70 once. Run it at each end and report the bracket: 'between about X and about Y years.'`, kind: 'edge-case' },
+    { content: `One percentage point off the growth rate is worth vastly different spans of time depending on where you start. At 1% it costs ~70 years; at 5% it costs ~14 years. This is not magic—it's the behavior of the division.`, kind: 'vocab-note' },
+    { content: `Don't confuse 'adding 2% of the original population every year' with '2% growth a year.' The second compounds (each year's 2% is on the new total); the first doesn't. The rule of 70 assumes compounding.`, kind: 'common-error' },
   ],
 };

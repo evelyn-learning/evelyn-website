@@ -73,5 +73,12 @@ export const BASELINE_M8MATH_U1_SQUARE_ROOTS_AND_CUBE_ROOTS: TopicNotesBaseline 
     { content: `The equation x² = p has TWO solutions, x = ±√p, because a negative squared is positive. The bare symbol √p names only the positive one, and a length keeps only the positive one.`, kind: 'tip' },
     { content: `The equation x³ = p, with p positive, has ONE solution, x = ∛p, because a negative cubed stays negative.`, kind: 'tip' },
     { content: `√2 is irrational: no whole number squares to 2, and its decimal never ends or repeats, so write it as √2 and leave it exact.`, kind: 'tip' },
+    { content: `√ alone always means square root (positive only). The little 3 on ∛ means cube root. Don't mix them up—they undo different operations.`, kind: 'vocab-note' },
+    { content: `When you SOLVE x² = p, write x = ±√p (two answers). When you EVALUATE √p, write only the positive one. The ± appears in equations, not under the radical sign.`, kind: 'gotcha' },
+    { content: `Always check your root by working backward: square it (or cube it) and verify you land exactly on the number under the sign. Halving is not a root.`, kind: 'tip' },
+    { content: `A negative number cubed stays negative: (-4)³ = -64, not 64. So x³ = p (with p positive) has only ONE solution, never ±. Don't copy the ± from the square case.`, kind: 'common-error' },
+    { content: `Memorize the perfect-square ladder through 225 (1, 4, 9, 16, …, 225 = 1² through 15²) and the perfect-cube ladder through 1000 (1, 8, 27, …, 1000 = 1³ through 10³). Speed matters.`, kind: 'tip' },
+    { content: `√2 is irrational because 2 is not a perfect square (it sits between 1² = 1 and 2² = 4). Write it as √2, not as a decimal—it never ends or repeats.`, kind: 'edge-case' },
+    { content: `The bare √ symbol is always positive. If a problem asks 'find all x such that x² = 49,' write x = ±7. If it asks 'what is √49?', write 7 only.`, kind: 'vocab-note' },
   ],
 };

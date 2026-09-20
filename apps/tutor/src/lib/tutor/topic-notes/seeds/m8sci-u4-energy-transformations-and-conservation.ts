@@ -76,5 +76,13 @@ export const BASELINE_M8SCI_U4_ENERGY_TRANSFORMATIONS_AND_CONSERVATION: TopicNot
     { content: `"Wasted" and "lost" are misleading words for that part. Spread out and out of reach is not the same as destroyed.`, kind: 'tip' },
     { content: `A finished answer names a form and an object holding it: "thermal energy, in the back of a charging phone and the air around it". "It was used up" names neither, so it is never a finished answer.`, kind: 'tip' },
     { content: 'Keep asking the one question -- where did it go? -- until you run out of chain.', kind: 'tip' },
+    { content: `Don't say energy "goes away" or "is used up." Always answer "where did it go?" with both a FORM (kinetic, thermal, light, etc.) and an OBJECT holding it (the wall, the air, the batteries). "Used up" names neither.`, kind: 'common-error' },
+    { content: `"Conservation of energy" is NOT a classroom rule that breaks in real situations. Friction, air resistance and rubbing do NOT destroy energy—they turn it into thermal energy spread into the surroundings. The total never changes.`, kind: 'gotcha' },
+    { content: `A finished energy chain always ends in thermal energy spread through the air, walls, or objects—ALWAYS. If your chain stops at 'the bulb glows' or 'the ball moves,' you have not finished. Keep asking where that energy goes next.`, kind: 'tip' },
+    { content: `Energy transformation ≠ energy disappearing. Transformation means the SAME energy is now in a different form, held by the same or a different object. Nothing is added, nothing is removed.`, kind: 'vocab-note' },
+    { content: `Thermal energy is NOT just 'heat.' It is the energy of jiggling particles inside the object. When an object gets warm, it has GAINED thermal energy—thermal energy moved INTO it from somewhere else in the chain.`, kind: 'vocab-note' },
+    { content: `When tracing a chain, list the OBJECTS first (batteries, wires, bulb, room, air), then the FORMS (chemical potential, electrical, light, thermal). Mixing them up makes it hard to finish the chain cleanly.`, kind: 'tip' },
+    { content: `Don't confuse 'the total energy is conserved' with 'all the energy is still useful.' Thermal energy spread thinly through a room is still energy and still counts—but no device can gather it back up to do work.`, kind: 'edge-case' },
+    { content: `The word 'lost' in 'energy is lost to friction' means 'no longer useful to us,' NOT 'gone from the world.' Check yourself: can you name the form and the object? If yes, the energy is not lost—it is just spread out and unreachable.`, kind: 'common-error' },
   ],
 };

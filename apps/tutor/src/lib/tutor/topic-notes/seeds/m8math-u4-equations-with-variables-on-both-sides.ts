@@ -69,5 +69,12 @@ export const BASELINE_M8MATH_U4_EQUATIONS_WITH_VARIABLES_ON_BOTH_SIDES: TopicNot
     { content: `A term never hops across the equals sign. If it appears to switch sides, its sign switches too, because the real move was a subtraction from both sides.`, kind: 'tip' },
     { content: `After collecting, what remains is a two-step equation: clear the constant first, then divide by the coefficient.`, kind: 'tip' },
     { content: `Check by substituting into BOTH sides of the original equation. Both sides have their own calculation now, and they must land on the same number.`, kind: 'tip' },
+    { content: `A term does not hop across the equals sign with its sign intact. If 3x is on the left and you want it on the right, you subtract 3x from BOTH sides—the sign always changes when you move a term.`, kind: 'common-error' },
+    { content: `After you collect variable terms on one side, stop and look at what you have. If the constant term is still on the same side as the variable, you haven't finished collecting yet.`, kind: 'tip' },
+    { content: `Divide by the coefficient LAST, not first. If you divide before the constant is gone, you only divide the variable term, and the equation breaks.`, kind: 'common-error' },
+    { content: `When you subtract the smaller variable term from both sides, the coefficient on the remaining variable stays positive. Subtracting the larger term leaves you with a negative coefficient and a division by a negative—doable, but one more sign to track.`, kind: 'tip' },
+    { content: `The check must use BOTH sides of the original equation. Plug your answer into the left side, work it out, then plug it into the right side, work it out. They must be equal.`, kind: 'gotcha' },
+    { content: `A 'constant term' is a plain number (like +5 or -3), and a 'variable term' is a number with the variable attached (like 3x or -7x). Don't confuse them when collecting.`, kind: 'vocab-note' },
+    { content: `Negative solutions are valid. If you solve and get x = -4, that is correct as long as both sides of the original equation are equal when you substitute x = -4. Do not assume a negative answer is wrong.`, kind: 'edge-case' },
   ],
 };

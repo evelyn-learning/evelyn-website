@@ -91,5 +91,13 @@ The in-text reference the student wrote:
     { content: `Location is the last piece: a page range for something printed, written pp. 18-23, or the web address without the https:// on the front. A whole book has no location, so its entry stops at the publisher and the year, and a publisher with the same name as its website is left out.`, kind: 'tip' },
     { content: `Dates run day, month, year, and a month longer than four letters is abbreviated: 12 Apr. 2022, but 3 June 2021.`, kind: 'tip' },
     { content: `The in-text reference is the short pointer — the author's last name and the page with nothing between them, in parentheses after the closing quotation mark and before the period: (Ruiz 20). A source with no page numbers takes the last name alone: (Nandakumar).`, kind: 'tip' },
+    { content: `The first word of your entry is what the whole list gets alphabetized by. Always invert the author's name — last name, comma, first name, period — so the last name comes first.`, kind: 'gotcha' },
+    { content: `A part of something takes quotation marks around its title. A whole thing does not. Articles and web pages are parts (they sit inside magazines and websites), so quote them. Books you read straight through are wholes, so italicize them — here, write them plain.`, kind: 'common-error' },
+    { content: `After the author and the source title, every piece is separated by a comma, not a period. One period ends the entire entry. Listen for the rhythm: period, period, then comma-comma-comma to the end.`, kind: 'tip' },
+    { content: `Location is always last. For a printed article it's the page range: pp. 18-23. For a web page it's the address without https:// at the front. For a whole book there is no location — the entry just stops after the year.`, kind: 'edge-case' },
+    { content: `Don't write out 'page' or 'pages' in your in-text reference. Write just the last name and number side by side with nothing between: (Ruiz 20), not (Ruiz, page 20).`, kind: 'common-error' },
+    { content: `If your source has no page numbers — normal for web pages — put only the author's last name in parentheses: (Nandakumar). The reference stays short because the works-cited entry is where a reader looks up the full source.`, kind: 'vocab-note' },
+    { content: `The last name in your in-text reference must match the first word of the works-cited entry exactly. The list is alphabetical by that first word, so the match is how a reader finds the right line.`, kind: 'gotcha' },
+    { content: `Months longer than four letters get abbreviated: Jan., Feb., Mar., Apr., Aug., Sept., Oct., Nov., Dec. May, June, and July are short enough to write out: 12 Apr. 2022, but 3 June 2021.`, kind: 'vocab-note' },
   ],
 };

@@ -96,5 +96,13 @@ The student wrote: "Thorn Lane is only 3 hectares, so it is out. For ownership I
     { content: `Justify by naming where the margin came from. Leading on the most criteria is not winning; the margin is made where a heavy weight meets a wide rating gap.`, kind: 'tip' },
     { content: `Change one weight and run it again, re-scoring every site. Raising a weight by 3 points is worth 3 times each site's own rating on that criterion, so it pushes sites apart rather than lifting them together.`, kind: 'tip' },
     { content: `Totals compare only inside one weighting. Weights adding to 10 put every total out of 50 and weights adding to 12 put every total out of 60, so a total from one weighting says nothing against a total from the other.`, kind: 'tip' },
+    { content: `A must-have is a yes-or-no gate, not a criterion with a very high weight. Once a site fails a must-have, it is eliminated before any scoring starts, even if it would have scored highest.`, kind: 'gotcha' },
+    { content: `Always eliminate first, then score. Run the must-haves before you touch a calculator. If you score a failing site 'anyway' to see what it would have gotten, that score is an interesting number—but it proves nothing.`, kind: 'tip' },
+    { content: `Check your weighted total by dividing it by the sum of the weights. That gives the average rating, and it must fall between the lowest and highest rating you gave that site. If it doesn't, the arithmetic slipped.`, kind: 'tip' },
+    { content: `Don't say 'this site leads on most criteria, so it wins.' Count the criteria a site leads and the score a site gets are two different calculations—they don't agree. The margin comes from where a heavy weight meets a big rating gap.`, kind: 'common-error' },
+    { content: `Never compare a weighted total from one set of weights to a weighted total from a different set of weights. The maximum changed. Read each total against its own maximum, or re-score everything under one fixed set of weights.`, kind: 'gotcha' },
+    { content: `When you change one weight and re-run the scoring, re-score all the sites, not just the one you think might win. The ranking can flip in unexpected places.`, kind: 'tip' },
+    { content: `The winner is a property of the weights, not of the site. Change the weights, change the winner. A decision that flips when one weight moves by 1 or 2 points is a close decision, worth reporting as sensitive.`, kind: 'vocab-note' },
+    { content: `A site rated 1 to 5 on every preference, with weights adding to 10, has a maximum possible total of 50. If your total is 50 but the site never scored a 5, or is out of 50 but your weights add to 12, something is wrong.`, kind: 'edge-case' },
   ],
 };

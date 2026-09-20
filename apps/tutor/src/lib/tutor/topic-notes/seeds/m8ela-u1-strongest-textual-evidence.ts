@@ -86,5 +86,12 @@ Detail 4: "In four of its nine matches the robot stopped moving before the round
     { content: `Consistent is not supporting. A detail that merely does not contradict the claim belongs at the bottom of the ranking.`, kind: 'tip' },
     { content: `Vivid is not strong. Rank by what a detail proves, not by how much you noticed it; the strongest detail is often a small, quiet one.`, kind: 'tip' },
     { content: `When two details tie, use the one-quote test: if you could cite only one, which would leave the claim standing? Cite that one.`, kind: 'tip' },
+    { content: `Don't mistake "fits the claim" for "proves the claim." A detail consistent with your claim can still do zero work for it. Run the other-stories test first: how many different stories fit this detail just as well?`, kind: 'common-error' },
+    { content: `Find the demanding word in the claim before you look at any detail. That word is what has to be proven—not a neighbor, not a hint. "Disappointed" is not the same as "upset," "planned" is not the same as "happened." Point at the exact word that does the real work.`, kind: 'tip' },
+    { content: `The loudest, most vivid detail in the passage is usually NOT the strongest evidence. Big feelings and big moments fit many stories. The strongest detail is often small and quiet—the one that fits almost nothing else.`, kind: 'gotcha' },
+    { content: `When a claim has two parts (e.g., "disappointed AND hiding it"), the strongest detail reaches BOTH parts, not just one. A detail that proves only half the claim is weaker than one that proves all of it.`, kind: 'edge-case' },
+    { content: `Use the one-quote test to break a tie: if you could cite only ONE detail and the claim has to stand on it alone, which detail would you choose? That is the strongest one.`, kind: 'tip' },
+    { content: `Don't confuse what the character SAYS with what the character DOES. Words can hide the truth. A character's action often reaches the demanding word more directly than what they claim about themselves.`, kind: 'common-error' },
+    { content: `Every detail you rank has already passed the gate—it is really on the page and really about the claim. Ranking only starts AFTER the gate. Don't waste time re-checking if a detail is true or on-topic.`, kind: 'vocab-note' },
   ],
 };

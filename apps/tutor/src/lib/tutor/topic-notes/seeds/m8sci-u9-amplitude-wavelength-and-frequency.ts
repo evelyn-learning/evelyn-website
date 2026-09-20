@@ -79,5 +79,13 @@ export const BASELINE_M8SCI_U9_AMPLITUDE_WAVELENGTH_AND_FREQUENCY: TopicNotesBas
     { content: 'For a sound, FREQUENCY is heard as PITCH and AMPLITUDE is heard as LOUDNESS.', kind: 'tip' },
     { content: `Pitch and loudness are INDEPENDENT. A shout and a whisper can sit on the very same note, and two notes far apart can be equally loud.`, kind: 'tip' },
     { content: `The number of humps you can see along a rope is about the wavelength and the length of the rope. It is never the frequency.`, kind: 'tip' },
+    { content: `Don't measure amplitude from trough bottom to crest top. That's 2× the amplitude. Always measure from the rest position to ONE extreme only, then halve any trough-to-crest height you're given.`, kind: 'common-error' },
+    { content: `Crest-to-next-trough distance is half a wavelength, not a full wavelength. The shape hasn't repeated yet—it still has to climb back up. Double it.`, kind: 'common-error' },
+    { content: `Frequency is a count per second at ONE fixed point, not the number of humps you see spread along the rope right now. More humps packed along the rope means short wavelength, not high frequency.`, kind: 'gotcha' },
+    { content: `Amplitude and wavelength both use centimeters or meters. Tell them apart by direction: amplitude goes up-and-down from rest, wavelength goes along the direction the wave travels.`, kind: 'vocab-note' },
+    { content: `Loudness and pitch are not the same thing and don't move together. A quiet high note exists; so does a loud low note. Amplitude changes loudness. Frequency changes pitch. Period.`, kind: 'common-error' },
+    { content: `After you calculate each measure, do a unit check in under 10 seconds. Amplitude and wavelength must wear distance units (cm, m). Frequency must wear hertz. Anything else is wrong on its face.`, kind: 'tip' },
+    { content: `Say the rest position out loud before you measure anything. It's the straight line, the still surface, the quiet air—the place the medium sits when the wave isn't there.`, kind: 'tip' },
+    { content: `If a count took more than 1 second, divide by the number of seconds to get frequency. 10 crests in 4 seconds is 10 ÷ 4 = 2.5 hertz. Don't skip the division.`, kind: 'edge-case' },
   ],
 };

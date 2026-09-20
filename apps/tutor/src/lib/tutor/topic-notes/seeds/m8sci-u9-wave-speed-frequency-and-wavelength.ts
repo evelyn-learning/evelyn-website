@@ -77,5 +77,13 @@ export const BASELINE_M8SCI_U9_WAVE_SPEED_FREQUENCY_AND_WAVELENGTH: TopicNotesBa
     { content: `Distance equals speed times time (distance = speed × time), which is speed equals distance divided by time (speed = distance ÷ time) turned around.`, kind: 'tip' },
     { content: `Ask "one way, or out and back?" BEFORE you multiply. An echo is a round trip: multiply, then halve. Thunder after a lightning flash is one way: multiply, and halve nothing.`, kind: 'tip' },
     { content: `Check the unit at the end. Meters per second, kept up for a number of seconds, gives meters -- a distance. A distance never comes out wearing meters per second.`, kind: 'tip' },
+    { content: `Don't say a wave "is faster" or "travels quicker" when you mean the frequency is higher. In one medium, higher frequency = shorter wavelength, same speed. A high note reaches you at the exact same time as a low note through the same air.`, kind: 'common-error' },
+    { content: `Before you multiply speed × time, stop and ask: did the wave go out-and-back (echo), or one way (thunder)? Get this wrong and your answer is off by a factor of 2, and a unit check won't catch it.`, kind: 'gotcha' },
+    { content: `The medium sets the speed—not the wave, not how loud it is, not how hard you shout. A whisper and a shout travel at 340 m/s through the same air. Loudness is amplitude, not speed.`, kind: 'vocab-note' },
+    { content: `When a wave changes medium but the source doesn't change, frequency stays the same and wavelength moves. Same source in water (faster) → longer waves. Don't flip this the way you do inside one medium.`, kind: 'edge-case' },
+    { content: `Always say the unit when you name the medium's speed. "About 340 meters per second in air." That unit is your safety net: if your final answer says meters per second when distance was asked for, it's wrong before anyone checks the math.`, kind: 'tip' },
+    { content: `A vacuum is empty space with nothing in it. Sound cannot travel through a vacuum because there are no particles to push. Light can, but that's a different lesson—don't mix them up here.`, kind: 'vocab-note' },
+    { content: `Wavelength is the distance of one complete wave, measured in meters. When frequency is given as "170 whole waves per second," use speed = frequency × wavelength to find that distance—don't confuse wavelength with period or amplitude.`, kind: 'vocab-note' },
+    { content: `When you halve a round-trip distance, you can check it by halving the time instead: if sound took 4 seconds out-and-back, it reached the wall at 2 seconds, so 340 m/s × 2 s = 680 m. Same answer by a different path = you got it right.`, kind: 'tip' },
   ],
 };
