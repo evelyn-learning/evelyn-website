@@ -473,7 +473,7 @@ Rewrite the offending wording so each item stands alone. Rules:
 ${JSON.stringify(payload, null, 2)}
 
 Return ONLY a JSON array of the same objects with the same "index" fields, no markdown fences, no commentary.`;
-  const params = { model, max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] };
+  const params = { model, max_tokens: 12000, system, messages: [{ role: 'user', content: prompt }] };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
   const text = msg.content
@@ -541,7 +541,7 @@ Rewrite ONLY problemText so it stops listing the options. Rules:
 ${JSON.stringify(payload, null, 2)}
 
 Return ONLY a JSON array of {"index": <n>, "problemText": "<rewritten>"}, no markdown fences, no commentary.`;
-  const params = { model, max_tokens: 3000, system, messages: [{ role: 'user', content: prompt }] };
+  const params = { model, max_tokens: 8000, system, messages: [{ role: 'user', content: prompt }] };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
   const text = msg.content
@@ -617,7 +617,7 @@ Rewrite ONLY the three incorrect choices of each item so that all four choices c
 ${JSON.stringify(payload, null, 2)}
 
 Return ONLY a JSON array of the same objects with the same "index" fields and the rewritten "choices" arrays, no markdown fences, no commentary.`;
-  const params = { model, max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] };
+  const params = { model, max_tokens: 12000, system, messages: [{ role: 'user', content: prompt }] };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
   const text = msg.content
@@ -744,7 +744,7 @@ async function main() {
     try {
       const params = {
         model,
-        max_tokens: 4000,
+        max_tokens: 12000,
         system: SYSTEM,
         messages: [
           {
