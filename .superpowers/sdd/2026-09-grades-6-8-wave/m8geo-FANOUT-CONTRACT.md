@@ -662,3 +662,32 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     deliberately NOT TESTED by any item, and the file says so. This is the right move and
     the right disclosure. If a row's format cannot honestly assess part of its standard,
     teach it, exclude it from the items, and record the gap where a reviewer will find it.
+
+### CONTROLLER ADDENDUM 2026-09-19 (after m8sci batch 2, eight rows; measured, not recalled)
+
+33. **A scope cell has UP TO three parts, not always three.** The 2026-09-03 ruling above says
+    "every Grade 8 scope cell has three parts". Measured on m8sci batch 2: SIX of eight cells
+    lack one — 3.3, 3.4, 4.1 and 4.4 have no lineage clause (no `m6*`/`m7*` predecessor to
+    name), 4.3 has no withheld clause. Do not invent a missing part. State its absence in one
+    sentence inside the SCOPE GUARD ("The cell carries no lineage clause") so the next reader
+    does not hunt for it.
+
+34. **Ruling 17's worked example is ELA-origin and does not describe THIS contract.** It says
+    the guard sample "happens to use row 4.2" and names "counterclaim" and "the G7
+    relevance/sufficiency tests" — those are the ELA contract's sample. In this contract the
+    guard sample is a different row. The MECHANISM of ruling 17 is unchanged and binding:
+    write your guard against your own finished body, re-grep every absence claim, and scope
+    absence claims to the authored BODY (the guard itself and the chain loIds legitimately
+    contain the neighbouring rows' words — five of eight batch-2 agents first wrote a false
+    absence clause for exactly this reason).
+
+35. **Report length: the fan-out prompt's 25-line cap covers the SUMMARY; the claim ledger
+    is appended in full below it and is exempt from the cap.** Every batch-2 agent flagged the
+    conflict and every one correctly kept the ledger. Do not trim the ledger to fit.
+
+36. **Ruling 32 (examples named in part (i) are burned for items) bites every qualitative
+    row.** Expect to build three fresh item specimens; say in the doc comment which cell
+    examples are burned so a later editor does not "helpfully" reuse one in an item. Two
+    batch-2 agents also had to LENGTHEN a key with a load-bearing clause to escape a
+    strictly-shortest tell — that is allowed when the clause is genuinely required for the
+    key to be correct; say so in the report.

@@ -19,7 +19,7 @@ longest-answer count (report it, never tune it), the blind-answer check on every
 GUARD read back against the finished body, and (math/science/geography) every number recomputed
 with digits shown.
 
-Report back in at most 25 lines: file path; DF-1 letters; DF-3 count; blind-answer findings and
+Report back in at most 25 lines (the contract's claim ledger is appended in full below that summary and is exempt from the cap): file path; DF-1 letters; DF-3 count; blind-answer findings and
 what you changed; the arithmetic ledger where the row has numbers; every place the contract or
 brief was wrong, ambiguous, or conflicted with your curriculum row (the row wins — say so).
 Do not paste the file.
