@@ -72,9 +72,8 @@
  *
  * NOTE ON prerequisites/followUps: the chain for this row is 1.4 -> 2.1 -> 2.2
  * (`forces-and-net-force` before it, `newtons-second-law-force-mass-and-acceleration`
- * after it). Both arrays are left empty here because this exemplar is
- * registered before its neighbors exist; the controller wires the chain at
- * registration.
+ * after it). Both arrays were empty while this exemplar was the only row on
+ * disk; the controller hand-wired them at course registration (2026-09-19).
  */
 
 import type { LessonPlan } from '../types';
@@ -96,8 +95,8 @@ export const SEED_M8SCI_U2_NEWTONS_FIRST_LAW_INERTIA_AND_FRICTION: LessonPlan = 
         'Explain that an object keeps its motion (at rest, or moving in a straight line at constant speed) unless a net force acts on it, that inertia grows with mass, and that friction and air resistance are the everyday forces that make moving things stop -- so the first law is not contradicted by a rolling ball slowing down (NGSS MS-PS2-2).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m8sci.forces-and-net-force'],
+  followUps: ['m8sci.newtons-second-law-force-mass-and-acceleration'],
   estimatedMinutes: 22,
   segments: [
     {

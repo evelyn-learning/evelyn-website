@@ -2308,6 +2308,44 @@ import { SEED_M8ELA_U10_GENERATING_RELATED_RESEARCH_QUESTIONS } from './seeds/m8
 import { SEED_M8ELA_U10_USING_SEARCH_TERMS_EFFECTIVELY } from './seeds/m8ela-u10-using-search-terms-effectively';
 import { SEED_M8ELA_U10_BLENDING_A_QUOTATION_INTO_YOUR_OWN_SENTENCE } from './seeds/m8ela-u10-blending-a-quotation-into-your-own-sentence';
 import { SEED_M8ELA_U10_FOLLOWING_A_STANDARD_CITATION_FORMAT } from './seeds/m8ela-u10-following-a-standard-citation-format';
+import { SEED_M8SCI_U1_MOTION_REFERENCE_POINTS_AND_SPEED } from './seeds/m8sci-u1-motion-reference-points-and-speed';
+import { SEED_M8SCI_U1_READING_DISTANCE_TIME_GRAPHS } from './seeds/m8sci-u1-reading-distance-time-graphs';
+import { SEED_M8SCI_U1_VELOCITY_AND_ACCELERATION } from './seeds/m8sci-u1-velocity-and-acceleration';
+import { SEED_M8SCI_U1_FORCES_AND_NET_FORCE } from './seeds/m8sci-u1-forces-and-net-force';
+import { SEED_M8SCI_U2_NEWTONS_SECOND_LAW_FORCE_MASS_AND_ACCELERATION } from './seeds/m8sci-u2-newtons-second-law-force-mass-and-acceleration';
+import { SEED_M8SCI_U2_NEWTONS_THIRD_LAW_ACTION_REACTION_PAIRS } from './seeds/m8sci-u2-newtons-third-law-action-reaction-pairs';
+import { SEED_M8SCI_U2_COLLISIONS_AND_DESIGNING_FOR_SAFETY } from './seeds/m8sci-u2-collisions-and-designing-for-safety';
+import { SEED_M8SCI_U3_GRAVITY_MASS_DISTANCE_AND_WEIGHT } from './seeds/m8sci-u3-gravity-mass-distance-and-weight';
+import { SEED_M8SCI_U3_ELECTRIC_FORCES_AND_CHARGE } from './seeds/m8sci-u3-electric-forces-and-charge';
+import { SEED_M8SCI_U3_MAGNETIC_FORCES_AND_ELECTROMAGNETS } from './seeds/m8sci-u3-magnetic-forces-and-electromagnets';
+import { SEED_M8SCI_U3_FIELDS_FORCES_WITHOUT_CONTACT } from './seeds/m8sci-u3-fields-forces-without-contact';
+import { SEED_M8SCI_U4_KINETIC_ENERGY_MASS_AND_SPEED } from './seeds/m8sci-u4-kinetic-energy-mass-and-speed';
+import { SEED_M8SCI_U4_POTENTIAL_ENERGY_AND_POSITION } from './seeds/m8sci-u4-potential-energy-and-position';
+import { SEED_M8SCI_U4_ENERGY_TRANSFORMATIONS_AND_CONSERVATION } from './seeds/m8sci-u4-energy-transformations-and-conservation';
+import { SEED_M8SCI_U4_ENERGY_TRANSFER_WHEN_MOTION_CHANGES } from './seeds/m8sci-u4-energy-transfer-when-motion-changes';
+import { SEED_M8SCI_U5_TEMPERATURE_AND_THERMAL_ENERGY } from './seeds/m8sci-u5-temperature-and-thermal-energy';
+import { SEED_M8SCI_U5_CONDUCTION_CONVECTION_AND_RADIATION } from './seeds/m8sci-u5-conduction-convection-and-radiation';
+import { SEED_M8SCI_U5_MASS_MATERIAL_AND_TEMPERATURE_CHANGE } from './seeds/m8sci-u5-mass-material-and-temperature-change';
+import { SEED_M8SCI_U5_INSULATORS_CONDUCTORS_AND_THERMAL_DESIGN } from './seeds/m8sci-u5-insulators-conductors-and-thermal-design';
+import { SEED_M8SCI_U6_THE_PARTICLE_MODEL_AND_STATES_OF_MATTER } from './seeds/m8sci-u6-the-particle-model-and-states-of-matter';
+import { SEED_M8SCI_U6_CHANGES_OF_STATE_AND_THERMAL_ENERGY } from './seeds/m8sci-u6-changes-of-state-and-thermal-energy';
+import { SEED_M8SCI_U6_DENSITY_THERMAL_EXPANSION_AND_WHY_WARM_FLUIDS_RISE } from './seeds/m8sci-u6-density-thermal-expansion-and-why-warm-fluids-rise';
+import { SEED_M8SCI_U6_CHARACTERISTIC_PROPERTIES_IDENTIFY_A_SUBSTANCE } from './seeds/m8sci-u6-characteristic-properties-identify-a-substance';
+import { SEED_M8SCI_U7_ELEMENTS_COMPOUNDS_AND_MIXTURES } from './seeds/m8sci-u7-elements-compounds-and-mixtures';
+import { SEED_M8SCI_U7_INSIDE_THE_ATOM } from './seeds/m8sci-u7-inside-the-atom';
+import { SEED_M8SCI_U7_READING_THE_PERIODIC_TABLE } from './seeds/m8sci-u7-reading-the-periodic-table';
+import { SEED_M8SCI_U7_MOLECULES_FORMULAS_AND_EXTENDED_STRUCTURES } from './seeds/m8sci-u7-molecules-formulas-and-extended-structures';
+import { SEED_M8SCI_U8_REARRANGING_ATOMS_AND_CONSERVATION_OF_MASS } from './seeds/m8sci-u8-rearranging-atoms-and-conservation-of-mass';
+import { SEED_M8SCI_U8_REACTIONS_THAT_RELEASE_OR_ABSORB_THERMAL_ENERGY } from './seeds/m8sci-u8-reactions-that-release-or-absorb-thermal-energy';
+import { SEED_M8SCI_U8_SYNTHETIC_MATERIALS_FROM_NATURAL_RESOURCES } from './seeds/m8sci-u8-synthetic-materials-from-natural-resources';
+import { SEED_M8SCI_U9_WHAT_A_WAVE_IS } from './seeds/m8sci-u9-what-a-wave-is';
+import { SEED_M8SCI_U9_AMPLITUDE_WAVELENGTH_AND_FREQUENCY } from './seeds/m8sci-u9-amplitude-wavelength-and-frequency';
+import { SEED_M8SCI_U9_WAVE_SPEED_FREQUENCY_AND_WAVELENGTH } from './seeds/m8sci-u9-wave-speed-frequency-and-wavelength';
+import { SEED_M8SCI_U9_AMPLITUDE_AND_WAVE_ENERGY } from './seeds/m8sci-u9-amplitude-and-wave-energy';
+import { SEED_M8SCI_U10_REFLECTION_ABSORPTION_AND_TRANSMISSION } from './seeds/m8sci-u10-reflection-absorption-and-transmission';
+import { SEED_M8SCI_U10_REFRACTION_BENDING_LIGHT_AT_A_BOUNDARY } from './seeds/m8sci-u10-refraction-bending-light-at-a-boundary';
+import { SEED_M8SCI_U10_LIGHT_VERSUS_SOUND_AND_THE_ELECTROMAGNETIC_SPECTRUM } from './seeds/m8sci-u10-light-versus-sound-and-the-electromagnetic-spectrum';
+import { SEED_M8SCI_U10_ANALOG_AND_DIGITAL_SIGNALS } from './seeds/m8sci-u10-analog-and-digital-signals';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4540,6 +4578,44 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M8ELA_U10_USING_SEARCH_TERMS_EFFECTIVELY,
   SEED_M8ELA_U10_BLENDING_A_QUOTATION_INTO_YOUR_OWN_SENTENCE,
   SEED_M8ELA_U10_FOLLOWING_A_STANDARD_CITATION_FORMAT,
+  SEED_M8SCI_U1_MOTION_REFERENCE_POINTS_AND_SPEED,
+  SEED_M8SCI_U1_READING_DISTANCE_TIME_GRAPHS,
+  SEED_M8SCI_U1_VELOCITY_AND_ACCELERATION,
+  SEED_M8SCI_U1_FORCES_AND_NET_FORCE,
+  SEED_M8SCI_U2_NEWTONS_SECOND_LAW_FORCE_MASS_AND_ACCELERATION,
+  SEED_M8SCI_U2_NEWTONS_THIRD_LAW_ACTION_REACTION_PAIRS,
+  SEED_M8SCI_U2_COLLISIONS_AND_DESIGNING_FOR_SAFETY,
+  SEED_M8SCI_U3_GRAVITY_MASS_DISTANCE_AND_WEIGHT,
+  SEED_M8SCI_U3_ELECTRIC_FORCES_AND_CHARGE,
+  SEED_M8SCI_U3_MAGNETIC_FORCES_AND_ELECTROMAGNETS,
+  SEED_M8SCI_U3_FIELDS_FORCES_WITHOUT_CONTACT,
+  SEED_M8SCI_U4_KINETIC_ENERGY_MASS_AND_SPEED,
+  SEED_M8SCI_U4_POTENTIAL_ENERGY_AND_POSITION,
+  SEED_M8SCI_U4_ENERGY_TRANSFORMATIONS_AND_CONSERVATION,
+  SEED_M8SCI_U4_ENERGY_TRANSFER_WHEN_MOTION_CHANGES,
+  SEED_M8SCI_U5_TEMPERATURE_AND_THERMAL_ENERGY,
+  SEED_M8SCI_U5_CONDUCTION_CONVECTION_AND_RADIATION,
+  SEED_M8SCI_U5_MASS_MATERIAL_AND_TEMPERATURE_CHANGE,
+  SEED_M8SCI_U5_INSULATORS_CONDUCTORS_AND_THERMAL_DESIGN,
+  SEED_M8SCI_U6_THE_PARTICLE_MODEL_AND_STATES_OF_MATTER,
+  SEED_M8SCI_U6_CHANGES_OF_STATE_AND_THERMAL_ENERGY,
+  SEED_M8SCI_U6_DENSITY_THERMAL_EXPANSION_AND_WHY_WARM_FLUIDS_RISE,
+  SEED_M8SCI_U6_CHARACTERISTIC_PROPERTIES_IDENTIFY_A_SUBSTANCE,
+  SEED_M8SCI_U7_ELEMENTS_COMPOUNDS_AND_MIXTURES,
+  SEED_M8SCI_U7_INSIDE_THE_ATOM,
+  SEED_M8SCI_U7_READING_THE_PERIODIC_TABLE,
+  SEED_M8SCI_U7_MOLECULES_FORMULAS_AND_EXTENDED_STRUCTURES,
+  SEED_M8SCI_U8_REARRANGING_ATOMS_AND_CONSERVATION_OF_MASS,
+  SEED_M8SCI_U8_REACTIONS_THAT_RELEASE_OR_ABSORB_THERMAL_ENERGY,
+  SEED_M8SCI_U8_SYNTHETIC_MATERIALS_FROM_NATURAL_RESOURCES,
+  SEED_M8SCI_U9_WHAT_A_WAVE_IS,
+  SEED_M8SCI_U9_AMPLITUDE_WAVELENGTH_AND_FREQUENCY,
+  SEED_M8SCI_U9_WAVE_SPEED_FREQUENCY_AND_WAVELENGTH,
+  SEED_M8SCI_U9_AMPLITUDE_AND_WAVE_ENERGY,
+  SEED_M8SCI_U10_REFLECTION_ABSORPTION_AND_TRANSMISSION,
+  SEED_M8SCI_U10_REFRACTION_BENDING_LIGHT_AT_A_BOUNDARY,
+  SEED_M8SCI_U10_LIGHT_VERSUS_SOUND_AND_THE_ELECTROMAGNETIC_SPECTRUM,
+  SEED_M8SCI_U10_ANALOG_AND_DIGITAL_SIGNALS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

@@ -34,7 +34,7 @@
  *     vocabulary list, not re-taught: no arrangement is ranked by how much it
  *     stores, and no item turns on which of two arrangements holds more. Row
  *     4.4 (energy transferred BETWEEN objects when motion changes) is the
- *     neighbour this row is most easily confused with, and the split is the
+ *     neighbor this row is most easily confused with, and the split is the
  *     curriculum's: this file follows energy changing FORM inside one system
  *     and never asks which object gave and which object received. No cue
  *     ball, no bat and ball, and no braking bicycle appears anywhere in it.
@@ -92,7 +92,7 @@
  * 4.4 (`potential-energy-and-position` ->
  * `energy-transformations-and-conservation` ->
  * `energy-transfer-when-motion-changes`), and both arrays below carry the
- * real neighbour loIds.
+ * real neighbor loIds.
  */
 
 import type { LessonPlan } from '../types';

@@ -78,9 +78,9 @@
  * NOTE ON prerequisites/followUps: the chain for this row is 7.4 -> 8.1 ->
  * 8.2 (`molecules-formulas-and-extended-structures` ->
  * `evidence-of-a-chemical-reaction` ->
- * `rearranging-atoms-and-conservation-of-mass`). Both arrays are empty here
- * because this exemplar is registered before its neighbors exist; the
- * controller wires the chain at registration.
+ * `rearranging-atoms-and-conservation-of-mass`). Both arrays were empty while
+ * this exemplar was the only row on disk; the controller hand-wired them at
+ * course registration (2026-09-19).
  */
 
 import type { LessonPlan } from '../types';
@@ -102,8 +102,8 @@ export const SEED_M8SCI_U8_EVIDENCE_OF_A_CHEMICAL_REACTION: LessonPlan = {
         'Compare described properties of substances before and after they interact to decide whether a new substance formed (a chemical reaction: unexpected color change, gas given off without boiling, a solid forming from two liquids, temperature or light change, a changed melting point) or whether only a physical change occurred (state, shape, size, dissolving -- the same substance in a different form), using the idea that each substance has its own characteristic properties (NGSS MS-PS1-2).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m8sci.molecules-formulas-and-extended-structures'],
+  followUps: ['m8sci.rearranging-atoms-and-conservation-of-mass'],
   estimatedMinutes: 21,
   segments: [
     {
