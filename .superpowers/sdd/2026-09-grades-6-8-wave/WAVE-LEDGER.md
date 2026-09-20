@@ -244,3 +244,25 @@ move Middle School to the capped test if not already), merge origin/main → gat
 Also fold into the merge: amend `docs/superpowers/plans/2026-09-20-next-sessions-content-and-partner-portal.md`
 (Praveen's 2026-09-19 decision: partner console at partners.evelynlearning.com + api.evelynlearning.com, not
 /tutor-portal/app/*; memory `partner-platform-domains-decision`).
+
+## Grade 8 Phase B — BANKS in progress (2026-09-19, same session)
+
+LOS files for all four courses built by `gen-los.mts` from the registered store (`571e663a`). First generation pass
+per Praveen's ruling (Haiku gen + Sonnet verify), then the verify gate (dry run), all costs informational:
+
+| course | Haiku gen | verify pass | units <90% | LOs <4 | gen $ | verify $ |
+|---|---|---|---|---|---|---|
+| m8sci | 232 items (4 LOs short) | 208/232 = 89.7% | 4 of 10 | 3 | 1.12 | 0.36 |
+| m8geo | 236 (3 short) | 178/236 = 75.4% | 10 of 10 | 8 | 0.92 | 1.20 |
+| m8math | 239 (1 short) | 208/239 = 87.0% | 8 of 10 | 1 | 0.63 | 0.57 |
+| m8ela | 230 (1 LO at 0/6) | 192/230 = 83.5% | 9 of 10 | 3 | 1.13 | 0.42 |
+
+**Finding:** the rejections are genuine WRONG KEYS from the Haiku generator (three sampled geo mismatches: two
+arithmetic key errors, one muddled stem), not verifier noise (14 of 58 geo mismatches were "unparsed→fallback",
+the rest real). The gate is ≥90% per unit and ≥4 verified per LO (G6 shipped at 96.3%). Memory's "brute-force Haiku
+regen could not close geography's gap" held again here. **Decision (controller, 2026-09-19): escalate GENERATION to
+Sonnet for every LO that drew a rejection (all 40 for geo); verification stays Sonnet.** Haiku outputs backed up in
+the session scratchpad. Praveen's Haiku-gen ruling was on cost; the per-course escalation costs ≈$3–5 per course.
+ELA's `establishing-point-of-view-and-shifting-time-in-a-narrative` yields 0/6 under BOTH models — capturing its
+per-item FAIL reasons on the Sonnet pass; likely a validation rule tripping on the LO's own wording.
+Regen runs in flight for all four; re-verify follows each.
