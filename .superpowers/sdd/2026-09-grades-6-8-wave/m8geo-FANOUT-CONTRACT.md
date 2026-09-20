@@ -414,10 +414,18 @@ The standards this course uses, with the wording to put in your description:
 | NGS 4 | the physical and human characteristics of places |
 | NGS 5 | that people create regions to interpret Earth's complexity |
 | NGS 7 | the physical processes that shape the patterns of Earth's surface |
-| NGS 9 | the characteristics, distribution and migration of human populations on Earth's surface |
+| NGS 9 | the characteristics, distribution and migration of human populations on Earth surface |
 | NGS 11 | the patterns and networks of economic interdependence on Earth's surface |
 | NGS 12 | the processes, patterns and functions of human settlement |
 | NGS 13 | how the forces of cooperation and conflict among people influence the division and control of Earth's surface |
+
+> **Wording note (measured 2026-09-19, after two batch-2 agents found this table disagreeing with
+> the `los[0].description` instruction above):** the shipped `m6geo`/`m7geo`/`m8geo` seeds cite
+> NGS 9 as "on Earth surface" in 7 files and "Earth's surface" in 0; NGS 11 "Earth surface" 7/0;
+> NGS 13 "Earth surface" 4/0; NGS 7 is split ("Earth's surface" 4, "Earth surface" 2). **Use the
+> shipped precedent for your standard, and for NGS 9/11/13 that is "on Earth surface"** -- the
+> table's NGS 9 row was corrected to match; the others are left as printed because a split
+> precedent is not a rule. Re-measure in your own subject before asserting (ruling 24).
 | NGS 14 | how human actions modify the physical environment |
 | NGS 15 | how physical systems affect human systems |
 | NGS 16 | the changes that occur in the meaning, use, distribution and importance of resources |
