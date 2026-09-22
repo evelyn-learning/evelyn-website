@@ -1,4 +1,5 @@
-import { getFullThread, listThreadIds } from "@/lib/outreach/gmail";
+import { getFullThread } from "@/lib/outreach/gmail";
+import { listThreadIds } from "./gmail-list";
 import type { Product, TouchOrigin } from "@/lib/outreach/enums";
 import { classifyThread, type SkipReason } from "./gmail-classify";
 import { upsertLeadWithTouches } from "./upsert-lead";

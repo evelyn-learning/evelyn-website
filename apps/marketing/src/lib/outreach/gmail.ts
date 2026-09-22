@@ -242,8 +242,7 @@ export async function getFullThread(threadId: string, account: string): Promise<
   }));
 }
 
-export async function listThreadIds(account: string, q: string, pageToken?: string): Promise<{ ids: string[]; nextPageToken?: string }> {
-  const gmail = await getOutreachGmail(account);
-  const res = await gmail.users.threads.list({ userId: "me", q, maxResults: 50, pageToken });
-  return { ids: (res.data.threads ?? []).map((t) => t.id ?? "").filter(Boolean), nextPageToken: res.data.nextPageToken ?? undefined };
-}
+// Paged, query-scoped thread listing (the wide-inbox Gmail search call)
+// lives in src/lib/crm/gmail-list.ts, not here — this file is guarded (see
+// scripts/test-outreach-guards.ts) so the reply watcher can never widen
+// past `threads.get` on a thread id it already has on file.
