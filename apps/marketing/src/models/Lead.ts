@@ -1,13 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, EMAIL_SOURCES, LINKEDIN_SOURCES } from "@/lib/outreach/enums";
-import type { LeadSegment, LeadStatus, TouchChannel, EmailSource, LinkedinSource } from "@/lib/outreach/enums";
+import { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, EMAIL_SOURCES, LINKEDIN_SOURCES, PRODUCTS, TOUCH_ORIGINS } from "@/lib/outreach/enums";
+import type { LeadSegment, LeadStatus, TouchChannel, EmailSource, LinkedinSource, Product, TouchOrigin } from "@/lib/outreach/enums";
 
 // Re-exported for existing server-side `@/models`/`./Lead` importers — no
 // breaking change. The canonical source is `@/lib/outreach/enums`, which is
 // mongoose-free and safe for client components to import directly (see that
 // file's header comment for why this file itself is NOT safe for them).
-export { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, EMAIL_SOURCES, LINKEDIN_SOURCES };
-export type { LeadSegment, LeadStatus, TouchChannel, EmailSource, LinkedinSource };
+export { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, EMAIL_SOURCES, LINKEDIN_SOURCES, PRODUCTS, TOUCH_ORIGINS };
+export type { LeadSegment, LeadStatus, TouchChannel, EmailSource, LinkedinSource, Product, TouchOrigin };
 
 export interface ITouch {
   at: Date;
@@ -15,6 +15,26 @@ export interface ITouch {
   direction: "outbound" | "inbound";
   summary: string;
   gmailMessageId?: string;
+  // Full-message fields (spec §1). Absent on touches written before the CRM
+  // round, which is why `summary` stays required and the UI falls back to it.
+  subject?: string;
+  body?: string;
+  from?: string;
+  to?: string;
+  // Stable per-message id used for idempotent ingest: `gmail:<messageId>`,
+  // `li:<sha1 of conversation+date+body>`, `form:<submissionId>`.
+  externalId?: string;
+  // Mailbox the message lives in (praveen@ / info@). Email only.
+  account?: string;
+  origin?: TouchOrigin;
+}
+
+export interface IOpportunity {
+  product: Product;
+  stage: string;
+  nextActionAt?: Date | null;
+  notes?: string;
+  updatedAt: Date;
 }
 
 export interface IDemoVisit {
@@ -70,6 +90,15 @@ export interface ILead extends Document {
   contactFormDraft?: { body: string } | null;
   contactPageUrl?: string;
   notes?: string;
+  // Every address ever seen for this organisation's people, lowercased.
+  // Matching input for ingest (lib/crm/match-lead.ts); decisionMaker.email
+  // is always included here as well.
+  emails: string[];
+  opportunities: IOpportunity[];
+  // Set by ingest when a thread is one outbound message with no reply — the
+  // lead is created `staged` so it shows in Review rather than Pipeline.
+  needsReview: boolean;
+  linkedinConversationIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,6 +110,24 @@ const TouchSchema = new Schema<ITouch>(
     direction: { type: String, enum: ["outbound", "inbound"], required: true },
     summary: { type: String, required: true },
     gmailMessageId: String,
+    subject: String,
+    body: String,
+    from: String,
+    to: String,
+    externalId: String,
+    account: String,
+    origin: { type: String, enum: TOUCH_ORIGINS },
+  },
+  { _id: false }
+);
+
+const OpportunitySchema = new Schema<IOpportunity>(
+  {
+    product: { type: String, enum: PRODUCTS, required: true },
+    stage: { type: String, required: true },
+    nextActionAt: { type: Date, default: null },
+    notes: String,
+    updatedAt: { type: Date, required: true },
   },
   { _id: false }
 );
@@ -146,6 +193,10 @@ const LeadSchema = new Schema<ILead>(
     },
     contactPageUrl: String,
     notes: String,
+    emails: { type: [String], default: [] },
+    opportunities: { type: [OpportunitySchema], default: [] },
+    needsReview: { type: Boolean, default: false },
+    linkedinConversationIds: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -154,6 +205,10 @@ LeadSchema.index({ status: 1, nextActionAt: 1 });
 LeadSchema.index({ segment: 1, status: 1 });
 LeadSchema.index({ demoToken: 1 }, { unique: true, sparse: true });
 LeadSchema.index({ company: 1, "decisionMaker.email": 1 });
+LeadSchema.index({ emails: 1 });
+LeadSchema.index({ "touches.externalId": 1 });
+LeadSchema.index({ "decisionMaker.linkedinUrl": 1 });
+LeadSchema.index({ "opportunities.product": 1, "opportunities.stage": 1 });
 
 export const Lead =
   mongoose.models.Lead || mongoose.model<ILead>("Lead", LeadSchema);

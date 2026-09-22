@@ -10,6 +10,8 @@ export interface IContactSubmission extends Document {
   source: string;
   status: "new" | "read" | "responded" | "archived";
   notes?: string;
+  reason?: string;
+  product?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +31,8 @@ const ContactSubmissionSchema = new Schema<IContactSubmission>(
       default: "new",
     },
     notes: { type: String },
+    reason: { type: String },
+    product: { type: String },
   },
   {
     timestamps: true,

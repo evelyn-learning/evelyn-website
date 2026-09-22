@@ -59,6 +59,32 @@ await test("legacy lead without new fields still validates", () => {
   assert.equal(l.contactFormDraft, null);
 });
 
+await test("touch accepts body/externalId/account/origin", () => {
+  const doc = new Lead({ ...base, touches: [{
+    at: new Date(), channel: "email", direction: "inbound", summary: "Reply",
+    subject: "Re: hi", body: "full text", from: "a@b.edu", to: "praveen@evelynlearning.com",
+    externalId: "gmail:18f", account: "praveen@evelynlearning.com", origin: "gmail_import",
+  }] });
+  assert.equal(doc.validateSync(), undefined);
+  assert.equal(doc.touches[0].externalId, "gmail:18f");
+});
+await test("bad touch origin rejected", () => {
+  const err = new Lead({ ...base, touches: [{ at: new Date(), channel: "email", direction: "inbound", summary: "x", origin: "carrier_pigeon" }] }).validateSync();
+  assert.ok(err?.errors["touches.0.origin"]);
+});
+await test("opportunity requires a known product", () => {
+  const ok = new Lead({ ...base, opportunities: [{ product: "voice_tutor", stage: "replied", updatedAt: new Date() }] }).validateSync();
+  assert.equal(ok, undefined);
+  const err = new Lead({ ...base, opportunities: [{ product: "jetpack", stage: "replied", updatedAt: new Date() }] }).validateSync();
+  assert.ok(err?.errors["opportunities.0.product"]);
+});
+await test("emails default to [] and needsReview to false", () => {
+  const doc = new Lead(base);
+  assert.deepEqual(doc.emails, []);
+  assert.equal(doc.needsReview, false);
+  assert.deepEqual(doc.linkedinConversationIds, []);
+});
+
 console.log(`passed: ${passed}, failed: ${failed}`);
 if (failed > 0) process.exit(1);
 })();

@@ -40,3 +40,23 @@ export type EmailSource = (typeof EMAIL_SOURCES)[number];
 
 export const LINKEDIN_SOURCES = ["research", "vendor"] as const;
 export type LinkedinSource = (typeof LINKEDIN_SOURCES)[number];
+
+export const PRODUCTS = [
+  "voice_tutor", "academy", "mock_exams", "white_label", "content_services", "other",
+] as const;
+export type Product = (typeof PRODUCTS)[number];
+
+// Public contact-form reasons. `demo` is accepted from pre-existing links
+// (`/contact?demo=true`) and normalised to `demo_request` by the API.
+export const CONTACT_REASONS = [
+  "product_inquiry", "demo_request", "partnership", "careers", "support", "other",
+] as const;
+export type ContactReason = (typeof CONTACT_REASONS)[number];
+
+// Where a touch came from — distinct from `channel` (the medium). Lets the
+// timeline show "imported from info@ sent folder" vs "console mark-sent".
+export const TOUCH_ORIGINS = [
+  "console", "contact_form", "gmail_import", "gmail_label", "gmail_watcher",
+  "linkedin_paste", "linkedin_archive", "backfill",
+] as const;
+export type TouchOrigin = (typeof TOUCH_ORIGINS)[number];

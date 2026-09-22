@@ -20,6 +20,7 @@
     "test:outreach": "npm run test:outreach-model && npm run test:outreach-job && npm run test:outreach-import && npm run test:outreach-cadence && npm run test:outreach-lead-transitions && npm run test:outreach-today-order && npm run test:outreach-recipient && npm run test:outreach-reply && npm run test:outreach-lead-edit && npm run test:outreach-research && npm run test:outreach-enrich && npm run test:outreach-guards",
     "test:outreach-lead-transitions": "npx tsx src/lib/outreach/lead-transitions.test.ts",
     "test:outreach-today-order": "npx tsx src/lib/outreach/today-order.test.ts",
-    "test:outreach-recipient": "npx tsx src/lib/outreach/recipient.test.ts"
+    "test:outreach-recipient": "npx tsx src/lib/outreach/recipient.test.ts",
+    "test:crm-models": "npx tsx src/models/Lead.test.ts && npx tsx src/models/PipelineConfig.test.ts"
   }
 }
