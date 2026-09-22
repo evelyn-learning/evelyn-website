@@ -16,6 +16,8 @@ const contactSchema = z.object({
   company: z.string().optional(),
   subject: z.string().min(3, "Subject must be at least 3 characters"),
   message: z.string().min(1, "Message is required"),
+  reason: z.enum(["product_inquiry", "demo_request", "partnership", "careers", "support", "other"]),
+  product: z.string().optional(),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -88,10 +90,13 @@ export function ContactForm() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
+
+  const reason = watch("reason");
 
   // Pre-fill form based on URL params
   useEffect(() => {
@@ -133,9 +138,22 @@ export function ContactForm() {
     if (segment) {
       setValue('message', `[segment: ${segment}]\n\n`);
     }
+
+    // Structured intent (spec §6). CTA links carry ?product= and/or
+    // ?demo=true; those set the select so the operator never types intent.
+    const reasonParam = searchParams.get('reason');
+    if (reasonParam) setValue('reason', (reasonParam === 'demo' ? 'demo_request' : reasonParam) as ContactFormData['reason']);
+    else if (demo === 'true') setValue('reason', 'demo_request');
+    else if (product) setValue('reason', 'product_inquiry');
+    if (product) setValue('product', product);
   }, [searchParams, setValue]);
 
   const onSubmit = async (data: ContactFormData) => {
+    if (data.reason === "careers") {
+      window.location.href = "/careers";
+      return;
+    }
+
     setStatus("loading");
     setErrorMessage("");
 
@@ -273,6 +291,34 @@ export function ContactForm() {
           />
         </div>
       </div>
+
+      {/* Reason */}
+      <div>
+        <label htmlFor="reason" className="block text-sm font-medium text-gray-700">
+          What is this about? <span className="text-red-500">*</span>
+        </label>
+        <select
+          {...register("reason")}
+          id="reason"
+          defaultValue=""
+          className={cn("mt-1 block w-full rounded-lg border px-4 py-3 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500", errors.reason ? "border-red-300" : "border-gray-200")}
+        >
+          <option value="" disabled>Select one</option>
+          <option value="product_inquiry">A product inquiry</option>
+          <option value="demo_request">Request a demo</option>
+          <option value="partnership">Partnership or white-label</option>
+          <option value="support">Support for an existing account</option>
+          <option value="careers">Careers / job application</option>
+          <option value="other">Something else</option>
+        </select>
+        {errors.reason && <p className="mt-1 text-sm text-red-500">Please choose a reason</p>}
+        <input type="hidden" {...register("product")} />
+      </div>
+      {reason === "careers" && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Applying for a role? Please use our <a href="/careers" className="font-semibold underline">careers page</a> so your application reaches the right team.
+        </div>
+      )}
 
       {/* Subject */}
       <div>

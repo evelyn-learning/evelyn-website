@@ -3,6 +3,8 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { connectDB } from "@core/db";
 import { ContactSubmission } from "@/models";
+import { classifyContact, productFromParam } from "@/lib/crm/classify-contact";
+import { upsertLeadWithTouches } from "@/lib/crm/upsert-lead";
 
 const contactSchema = z.object({
   name: z.string().min(2),
@@ -11,6 +13,8 @@ const contactSchema = z.object({
   company: z.string().optional(),
   subject: z.string().min(3),
   message: z.string().min(1),
+  reason: z.string().optional(),
+  product: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -21,12 +25,42 @@ export async function POST(request: NextRequest) {
     // Connect to database
     await connectDB();
 
+    const cls = classifyContact({ reason: data.reason, subject: data.subject, message: data.message });
+    const product = productFromParam(data.product ?? null);
+
     // Save to database
     const submission = await ContactSubmission.create({
       ...data,
       source: "contact-form",
       status: "new",
+      reason: cls.reason,
+      product,
     });
+
+    // Spec §6: everything except careers becomes (or extends) a lead.
+    if (!cls.isCareers) {
+      try {
+        await upsertLeadWithTouches({
+          identity: { email: data.email, name: data.name, company: data.company },
+          source: "contact-form",
+          product,
+          touches: [{
+            at: new Date(),
+            channel: "form",
+            direction: "inbound",
+            summary: `Contact form (${cls.reason}): ${data.subject}`.slice(0, 200),
+            subject: data.subject,
+            body: data.message,
+            from: data.email,
+            to: "info@evelynlearning.com",
+            externalId: `form:${submission._id}`,
+            origin: "contact_form",
+          }],
+        });
+      } catch (leadErr) {
+        console.error("[CRM] contact-form lead upsert failed:", leadErr);
+      }
+    }
 
     // Try to send email notifications (non-blocking)
     try {
