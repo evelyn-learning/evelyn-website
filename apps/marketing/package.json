@@ -21,6 +21,7 @@
     "test:outreach-lead-transitions": "npx tsx src/lib/outreach/lead-transitions.test.ts",
     "test:outreach-today-order": "npx tsx src/lib/outreach/today-order.test.ts",
     "test:outreach-recipient": "npx tsx src/lib/outreach/recipient.test.ts",
-    "test:crm-models": "npx tsx src/models/Lead.test.ts && npx tsx src/models/PipelineConfig.test.ts"
+    "test:crm-models": "npx tsx src/models/Lead.test.ts && npx tsx src/models/PipelineConfig.test.ts",
+    "test:crm-core": "npx tsx src/lib/crm/identity.test.ts && npx tsx src/lib/crm/match-lead.test.ts && npx tsx src/lib/crm/touches.test.ts"
   }
 }
