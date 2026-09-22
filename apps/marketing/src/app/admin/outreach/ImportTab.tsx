@@ -6,6 +6,8 @@ import Link from "next/link";
 interface GmailStatus { accounts?: { account: string; connected: boolean; connectedAt: string | null }[] }
 interface PageResult { nextPageToken?: string; scanned: number; kept: number; created: number; updated: number; touchesAdded: number; skipped: Record<string, number>; samples: { threadId: string; subject: string; participant: string; verdict: string }[] }
 
+const MAX_PAGES = 200;
+
 export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: GmailStatus | null; onImported: () => Promise<void> }) {
   const accounts = gmailStatus?.accounts ?? [];
   const [account, setAccount] = useState(accounts[0]?.account ?? "");
@@ -14,20 +16,42 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
   const [totals, setTotals] = useState<PageResult | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [archiveMsg, setArchiveMsg] = useState<string | null>(null);
+  // The account/days a completed dry run actually used. "Import for real" is
+  // only safe to enable when these still match the current inputs — an
+  // operator changing the account or day-count after previewing must dry-run
+  // again before the real button re-arms.
+  const [previewedFor, setPreviewedFor] = useState<{ account: string; days: number } | null>(null);
 
   // gmailStatus loads asynchronously (fetched in a useEffect one level up),
-  // so accounts is empty on first render. Once it arrives, default to the
-  // first CONNECTED account rather than leaving the select unset.
+  // so accounts is empty on first render. Whenever the account list changes,
+  // correct the selection to the first CONNECTED account if the current
+  // pick is empty or is no longer a connected entry in the list (e.g. the
+  // initial useState grabbed a disconnected first account before status
+  // loaded).
   useEffect(() => {
-    if (account) return;
-    const firstConnected = accounts.find((a) => a.connected);
-    if (firstConnected) setAccount(firstConnected.account);
-  }, [accounts, account]);
+    setAccount((current) => {
+      const stillValid = current && accounts.some((a) => a.account === current && a.connected);
+      if (stillValid) return current;
+      const firstConnected = accounts.find((a) => a.connected);
+      return firstConnected ? firstConnected.account : current;
+    });
+  }, [accounts]);
+
+  const clearPreview = () => {
+    setTotals(null);
+    setLog([]);
+    setPreviewedFor(null);
+  };
+
+  const selectedAccountConnected = accounts.find((a) => a.account === account)?.connected ?? false;
+  const canImportForReal =
+    !!totals && !!previewedFor && previewedFor.account === account && previewedFor.days === days;
 
   const run = async (dryRun: boolean) => {
     setRunning(dryRun ? "dry" : "real"); setLog([]);
     const acc: PageResult = { scanned: 0, kept: 0, created: 0, updated: 0, touchesAdded: 0, skipped: {}, samples: [] };
     let pageToken: string | undefined;
+    let pageCount = 0;
     try {
       do {
         const res = await fetch("/api/admin/outreach/ingest/gmail", {
@@ -38,23 +62,51 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
         if (!res.ok) { setLog((l) => [...l, `Error: ${data.error}`]); break; }
         const p = data as PageResult;
         acc.scanned += p.scanned; acc.kept += p.kept; acc.created += p.created; acc.updated += p.updated; acc.touchesAdded += p.touchesAdded;
-        for (const [k, v] of Object.entries(p.skipped)) acc.skipped[k] = (acc.skipped[k] ?? 0) + v;
-        if (acc.samples.length < 60) acc.samples.push(...p.samples);
+        for (const [k, v] of Object.entries(p.skipped ?? {})) acc.skipped[k] = (acc.skipped[k] ?? 0) + v;
+        if (acc.samples.length < 60) acc.samples.push(...(p.samples ?? []));
         setTotals({ ...acc }); setLog((l) => [...l, `page: scanned ${p.scanned}, kept ${p.kept}`]);
-        pageToken = p.nextPageToken;
+        pageCount += 1;
+        const nextToken = p.nextPageToken;
+        if (nextToken && nextToken === pageToken) {
+          setLog((l) => [...l, "stopped: next page token repeated the previous one"]);
+          break;
+        }
+        if (nextToken && pageCount >= MAX_PAGES) {
+          setLog((l) => [...l, `stopped: reached the ${MAX_PAGES}-page cap`]);
+          break;
+        }
+        pageToken = nextToken;
       } while (pageToken);
-      if (!dryRun) await onImported();
-    } finally { setRunning("idle"); }
+      if (dryRun) {
+        setPreviewedFor({ account, days });
+      } else {
+        await onImported();
+        setLog((l) => [...l, `done: created ${acc.created}, updated ${acc.updated}, touches ${acc.touchesAdded}`]);
+        // A completed real run is a one-shot: force a fresh dry run (with
+        // whatever inputs the operator picks next) before another real
+        // import can fire.
+        setTotals(null);
+        setPreviewedFor(null);
+      }
+    } catch (err) {
+      setLog((l) => [...l, `Error: ${err instanceof Error ? err.message : String(err)}`]);
+    } finally {
+      setRunning("idle");
+    }
   };
 
   const uploadArchive = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setArchiveMsg("Uploading…");
-    const res = await fetch("/api/admin/outreach/ingest/linkedin-archive", { method: "POST", body: fd });
-    const data = await res.json();
-    setArchiveMsg(res.ok ? JSON.stringify(data) : `Error: ${data.error}`);
-    if (res.ok && fd.get("dryRun") === "0") await onImported();
+    try {
+      const res = await fetch("/api/admin/outreach/ingest/linkedin-archive", { method: "POST", body: fd });
+      const data = await res.json();
+      setArchiveMsg(res.ok ? JSON.stringify(data) : `Error: ${data.error}`);
+      if (res.ok && fd.get("dryRun") === "0") await onImported();
+    } catch (err) {
+      setArchiveMsg(`Error: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   return (
@@ -62,12 +114,25 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
       <section className="rounded-xl bg-white p-4 shadow">
         <h3 className="mb-2 font-semibold">Gmail sent-folder import</h3>
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <select className="rounded-lg border px-2 py-1" value={account} onChange={(e) => setAccount(e.target.value)}>
+          <select
+            className="rounded-lg border px-2 py-1"
+            value={account}
+            disabled={running !== "idle"}
+            onChange={(e) => { setAccount(e.target.value); clearPreview(); }}
+          >
             {accounts.map((a) => <option key={a.account} value={a.account} disabled={!a.connected}>{a.account}{a.connected ? "" : " (not connected)"}</option>)}
           </select>
-          <label>Days <input type="number" className="w-20 rounded-lg border px-2 py-1" value={days} min={1} max={3650} onChange={(e) => setDays(Number(e.target.value))} /></label>
-          <button disabled={running !== "idle" || !account} onClick={() => run(true)} className="rounded-lg bg-gray-100 px-3 py-1 font-medium disabled:opacity-50">Dry run</button>
-          <button disabled={running !== "idle" || !totals} onClick={() => run(false)} className="rounded-lg bg-primary-600 px-3 py-1 font-medium text-white disabled:opacity-50">Import for real</button>
+          <label>Days <input
+            type="number"
+            className="w-20 rounded-lg border px-2 py-1"
+            value={days}
+            min={1}
+            max={3650}
+            disabled={running !== "idle"}
+            onChange={(e) => { setDays(Number(e.target.value)); clearPreview(); }}
+          /></label>
+          <button disabled={running !== "idle" || !account || !selectedAccountConnected} onClick={() => run(true)} className="rounded-lg bg-gray-100 px-3 py-1 font-medium disabled:opacity-50">Dry run</button>
+          <button disabled={running !== "idle" || !canImportForReal} onClick={() => run(false)} className="rounded-lg bg-primary-600 px-3 py-1 font-medium text-white disabled:opacity-50">Import for real</button>
           {accounts.some((a) => !a.connected) && (
             <a className="text-primary-600 underline" href={`/api/admin/outreach/gmail/auth?account=${accounts.find((a) => !a.connected)?.account}`}>Connect {accounts.find((a) => !a.connected)?.account}</a>
           )}
