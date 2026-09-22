@@ -67,7 +67,6 @@ export function classifyThread(messages: FullMessage[], account: string): Thread
       externalId: `gmail:${m.id}`, gmailMessageId: m.id, account, origin: "gmail_import",
     };
   });
-  if (touches.length === 0) return { keep: false, reason: "auto_reply_only" };
 
   const flagReview = touches.length === 1 && touches[0].direction === "outbound";
   return { keep: true, flagReview, identity, touches };
