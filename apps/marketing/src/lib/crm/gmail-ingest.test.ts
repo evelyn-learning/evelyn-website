@@ -1,7 +1,18 @@
 import { strict as assert } from "node:assert";
-import { ingestGmailPage, sentQuery, labelQuery } from "./gmail-ingest";
+import { ingestGmailPage, isRateLimitError, sentQuery, labelQuery, GmailRateLimitError } from "./gmail-ingest";
 import type { FullMessage } from "@/lib/outreach/gmail";
 import type { UpsertArgs } from "./upsert-lead";
+
+// No-op sleep for every fake `deps` below — these tests must run instantly,
+// never wait out a real backoff/pacing delay.
+const noopSleep = async (_ms: number) => {};
+
+// Shaped like a googleapis/gaxios error: `.status` (what `httpStatusOf`
+// reads) plus `.message`/`.errors[].reason` (what `isRateLimitError` reads
+// for the 403 quota case).
+function rateLimitError(status: 429 | 403 = 429, message = "Quota exceeded for quota metric 'Units per minute per user'"): Error {
+  return Object.assign(new Error(message), { status });
+}
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -58,6 +69,7 @@ await test("dry run: scans, classifies, tallies skips, never upserts", async () 
     listThreadIds: fakeListThreadIds(["A", "B", "C"], "next-token-1"),
     getFullThread: fakeGetFullThread({ A: threadA, B: threadB, C: threadC }),
     upsert: async (args: UpsertArgs) => { upsertCalls.push(args); return { leadId: "L1", created: true, added: 1, matchedBy: "new" as const }; },
+    sleep: noopSleep,
   };
   const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
   assert.equal(r.scanned, 3);
@@ -75,6 +87,7 @@ await test("real run: upsert called once with origin-tagged touches and gmail:<a
     listThreadIds: fakeListThreadIds(["A"], undefined),
     getFullThread: fakeGetFullThread({ A: threadA }),
     upsert: async (args: UpsertArgs) => { upsertCalls.push(args); return { leadId: "L1", created: true, added: 2, matchedBy: "new" as const }; },
+    sleep: noopSleep,
   };
   const r = await ingestGmailPage({ account: acct, query: "q", dryRun: false, origin: "gmail_label" }, deps);
   assert.equal(upsertCalls.length, 1);
@@ -93,6 +106,7 @@ await test("a thread whose getFullThread throws is skipped without aborting the 
     listThreadIds: fakeListThreadIds(["BAD", "A"], undefined),
     getFullThread: fakeGetFullThread({ BAD: new Error("boom"), A: threadA }),
     upsert: async (args: UpsertArgs) => { upsertCalls.push(args); return { leadId: "L1", created: true, added: 1, matchedBy: "new" as const }; },
+    sleep: noopSleep,
   };
   const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
   assert.equal(r.scanned, 2);
@@ -100,6 +114,84 @@ await test("a thread whose getFullThread throws is skipped without aborting the 
   assert.equal(r.errors, 1);
   assert.equal(r.samples.length, 1);
   assert.equal(r.samples[0].threadId, "A");
+});
+
+await test("isRateLimitError: true for 429, true for 403 w/ quota reason, false otherwise", () => {
+  assert.equal(isRateLimitError(rateLimitError(429, "Quota exceeded for quota metric 'Units per minute per user'")), true);
+  assert.equal(isRateLimitError(Object.assign(new Error("nope"), { status: 403, errors: [{ reason: "userRateLimitExceeded" }] })), true);
+  assert.equal(isRateLimitError(Object.assign(new Error("forbidden"), { status: 403 })), false);
+  assert.equal(isRateLimitError(new Error("boom")), false);
+  assert.equal(isRateLimitError(Object.assign(new Error("not found"), { status: 404 })), false);
+});
+
+await test("getFullThread: 429 twice then succeeds — thread kept, no error counted", async () => {
+  const upsertCalls: UpsertArgs[] = [];
+  let calls = 0;
+  const deps = {
+    listThreadIds: fakeListThreadIds(["A"], undefined),
+    getFullThread: async (_threadId: string, _account: string): Promise<FullMessage[]> => {
+      calls++;
+      if (calls <= 2) throw rateLimitError();
+      return threadA;
+    },
+    upsert: async (args: UpsertArgs) => { upsertCalls.push(args); return { leadId: "L1", created: true, added: 1, matchedBy: "new" as const }; },
+    sleep: noopSleep,
+  };
+  const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
+  assert.equal(calls, 3);
+  assert.equal(r.kept, 1);
+  assert.equal(r.errors, 0);
+});
+
+await test("getFullThread: always 429 — errors === 1 after exactly 4 calls", async () => {
+  let calls = 0;
+  const deps = {
+    listThreadIds: fakeListThreadIds(["A"], undefined),
+    getFullThread: async (_threadId: string, _account: string): Promise<FullMessage[]> => {
+      calls++;
+      throw rateLimitError();
+    },
+    upsert: async (_args: UpsertArgs) => { throw new Error("must not be called"); },
+    sleep: noopSleep,
+  };
+  const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
+  assert.equal(calls, 4);
+  assert.equal(r.errors, 1);
+  assert.equal(r.kept, 0);
+});
+
+await test("getFullThread: a non-rate-limit throw is not retried (1 call, errors === 1)", async () => {
+  let calls = 0;
+  const deps = {
+    listThreadIds: fakeListThreadIds(["A"], undefined),
+    getFullThread: async (_threadId: string, _account: string): Promise<FullMessage[]> => {
+      calls++;
+      throw new Error("boom");
+    },
+    upsert: async (_args: UpsertArgs) => { throw new Error("must not be called"); },
+    sleep: noopSleep,
+  };
+  const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
+  assert.equal(calls, 1);
+  assert.equal(r.errors, 1);
+});
+
+await test("listThreadIds throwing 429 twice: GmailRateLimitError propagates out of ingestGmailPage", async () => {
+  let calls = 0;
+  const deps = {
+    listThreadIds: async (_account: string, _q: string, _pageToken?: string) => {
+      calls++;
+      throw rateLimitError();
+    },
+    getFullThread: fakeGetFullThread({}),
+    upsert: async (_args: UpsertArgs) => { throw new Error("must not be called"); },
+    sleep: noopSleep,
+  };
+  await assert.rejects(
+    () => ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps),
+    (e: unknown) => e instanceof GmailRateLimitError && e.retryAfterMs === 60_000
+  );
+  assert.equal(calls, 2);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { isAllowedAccount } from "@/lib/outreach/gmail";
 import { PRODUCTS } from "@/lib/outreach/enums";
-import { ingestGmailPage, sentQuery } from "@/lib/crm/gmail-ingest";
+import { GmailRateLimitError, ingestGmailPage, sentQuery } from "@/lib/crm/gmail-ingest";
 
 // Only takes effect on a serverless host (Vercel etc.); this app runs under
 // pm2/next start, where the effective request timeout is the nginx proxy's
@@ -20,7 +20,7 @@ const bodySchema = z.object({
   product: z.enum(PRODUCTS).optional(),
 });
 
-// POST - import one page (≤50 threads) of a mailbox's sent folder into leads.
+// POST - import one page (≤25 threads) of a mailbox's sent folder into leads.
 // Dry-run by default: the UI loops on nextPageToken and shows counts/samples
 // before the operator runs it for real.
 export async function POST(request: NextRequest) {
@@ -37,6 +37,9 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(result);
   } catch (e) {
+    if (e instanceof GmailRateLimitError) {
+      return NextResponse.json({ error: "Gmail rate limit — retry shortly", retryAfterMs: e.retryAfterMs }, { status: 429 });
+    }
     const msg = e instanceof Error ? e.message : "ingest failed";
     const status = msg === "GMAIL_NOT_CONNECTED" ? 409 : 500;
     console.error("[CRM] gmail ingest error:", msg);

@@ -7,6 +7,10 @@ interface GmailStatus { accounts?: { account: string; connected: boolean; connec
 interface PageResult { nextPageToken?: string; scanned: number; kept: number; created: number; updated: number; touchesAdded: number; errors: number; skipped: Record<string, number>; samples: { threadId: string; subject: string; participant: string; verdict: string }[] }
 
 const MAX_PAGES = 200;
+const MAX_PAGE_RETRIES = 3;
+const MAX_RETRY_WAIT_MS = 90_000;
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: GmailStatus | null; onImported: () => Promise<void> }) {
   const accounts = gmailStatus?.accounts ?? [];
@@ -54,12 +58,30 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
     let pageCount = 0;
     try {
       do {
-        const res = await fetch("/api/admin/outreach/ingest/gmail", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ account, days, pageToken, dryRun }),
-        });
-        const data = await res.json();
-        if (!res.ok) { setLog((l) => [...l, `Error: ${data.error}`]); break; }
+        // A page can 429 on the shared per-user Gmail quota (the reply-
+        // watcher cron draws on the same budget). Retry the SAME pageToken
+        // in place — this does not advance pageCount (the 200-page cap) or
+        // touch pageToken (the repeated-token guard below), since nothing
+        // about the page itself has changed, only the account's quota.
+        let res: Response;
+        let data: unknown;
+        let rateLimitRetries = 0;
+        for (;;) {
+          res = await fetch("/api/admin/outreach/ingest/gmail", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ account, days, pageToken, dryRun }),
+          });
+          data = await res.json();
+          if (res.status === 429 && rateLimitRetries < MAX_PAGE_RETRIES) {
+            const retryAfterMs = Math.min((data as { retryAfterMs?: number }).retryAfterMs ?? MAX_RETRY_WAIT_MS, MAX_RETRY_WAIT_MS);
+            rateLimitRetries += 1;
+            setLog((l) => [...l, `rate limited — waiting ${Math.round(retryAfterMs / 1000)}s, retrying the same page`]);
+            await sleep(retryAfterMs);
+            continue;
+          }
+          break;
+        }
+        if (!res.ok) { setLog((l) => [...l, `Error: ${(data as { error?: string }).error}`]); break; }
         const p = data as PageResult;
         acc.scanned += p.scanned; acc.kept += p.kept; acc.created += p.created; acc.updated += p.updated; acc.touchesAdded += p.touchesAdded; acc.errors += p.errors ?? 0;
         for (const [k, v] of Object.entries(p.skipped ?? {})) acc.skipped[k] = (acc.skipped[k] ?? 0) + v;

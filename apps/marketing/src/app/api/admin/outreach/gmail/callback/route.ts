@@ -10,27 +10,42 @@ import { getOutreachOAuthClient, isAllowedAccount } from "@/lib/outreach/gmail";
 
 const SUCCESS_PATH = "/admin/outreach";
 
-// See the identical helper + comment in `../auth/route.ts`: behind
-// nginx/Cloudflare `req.url` reports `http://` even for an https request, so
-// redirect URLs must be built from the configured callback URL's origin, not
-// `req.url` directly.
-function appBaseUrl(req: NextRequest): string {
-  const callback = process.env.GMAIL_OUTREACH_CALLBACK_URL || "";
-  try {
-    const u = new URL(callback);
-    return `${u.protocol}//${u.host}`;
-  } catch {
-    return new URL(req.url).origin;
-  }
+// The OAuth redirect URI registered with Google
+// (`GMAIL_OUTREACH_CALLBACK_URL`) is on `www`; the admin session cookie is
+// host-only on `NEXTAUTH_URL`'s origin (the apex). Google always redirects
+// the browser back to the registered `www` host, so that request carries no
+// session cookie and the check below would 401 an operator who is, in fact,
+// logged in. `sessionOrigin` is where that cookie lives.
+function sessionOrigin(req: NextRequest): string {
+  return new URL(process.env.NEXTAUTH_URL ?? req.nextUrl.origin).origin;
 }
 
 function errorRedirect(req: NextRequest, code: string) {
-  const url = new URL(SUCCESS_PATH, appBaseUrl(req));
+  const url = new URL(SUCCESS_PATH, sessionOrigin(req));
   url.searchParams.set("gmail_error", code);
   return NextResponse.redirect(url);
 }
 
 export async function GET(req: NextRequest) {
+  // Same-path bounce to the session host, BEFORE the session check. If this
+  // request arrived on a different origin than the one holding the admin
+  // cookie (the `www` vs. apex split above), redirect the browser to the
+  // identical callback URL — same path, same `code`/`state`/`error` query
+  // params — on the session host, and return immediately without touching
+  // the session check. On the session host the origins match, so this
+  // branch is skipped and the request falls through to the (unchanged)
+  // session check below — 401 if genuinely unauthenticated, exactly as
+  // today. No loop: the second pass always has matching origins. The OAuth
+  // `state`'s TTL comfortably covers this one extra redirect hop, and the
+  // token exchange below is server-side and still uses the `www`
+  // `redirect_uri` registered with Google — this bounce only moves the
+  // browser, not the exchange.
+  const here = req.nextUrl.origin;
+  const there = sessionOrigin(req);
+  if (here !== there) {
+    return NextResponse.redirect(there + req.nextUrl.pathname + req.nextUrl.search, 302);
+  }
+
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -85,7 +100,7 @@ export async function GET(req: NextRequest) {
       { upsert: true, new: true }
     );
 
-    const redirectUrl = new URL(SUCCESS_PATH, appBaseUrl(req));
+    const redirectUrl = new URL(SUCCESS_PATH, sessionOrigin(req));
     redirectUrl.searchParams.set("gmail", "connected");
     return NextResponse.redirect(redirectUrl);
   } catch (err) {
