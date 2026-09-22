@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, RefreshCw, X } from "lucide-react";
-import type { EmailSource, LeadSegment, LeadStatus, LinkedinSource, TouchChannel } from "@/lib/outreach/enums";
+import type { EmailSource, LeadSegment, LeadStatus, LinkedinSource, Product, TouchChannel, TouchOrigin } from "@/lib/outreach/enums";
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
 import PipelineTab from "./PipelineTab";
 import FindLeadsTab from "./FindLeadsTab";
+import ImportTab from "./ImportTab";
 
 export interface LeadTouch {
   at: string;
@@ -15,6 +16,13 @@ export interface LeadTouch {
   direction: "outbound" | "inbound";
   summary: string;
   gmailMessageId?: string;
+  subject?: string;
+  body?: string;
+  from?: string;
+  to?: string;
+  externalId?: string;
+  account?: string;
+  origin?: TouchOrigin;
 }
 
 export interface LeadDraft {
@@ -61,16 +69,26 @@ export interface LeadJSON {
   contactFormDraft?: { body: string } | null;
   contactPageUrl?: string;
   notes?: string;
+  emails: string[];
+  opportunities: {
+    product: Product;
+    stage: string;
+    nextActionAt?: string | null;
+    notes?: string;
+    updatedAt: string;
+  }[];
+  needsReview: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-type TabKey = "review" | "today" | "pipeline" | "find";
+type TabKey = "review" | "today" | "pipeline" | "find" | "import";
 
 interface GmailStatus {
   connected: boolean;
   account: string;
   connectedAt: string | null;
+  accounts?: { account: string; connected: boolean; connectedAt: string | null }[];
 }
 
 export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJSON[] }) {
@@ -182,6 +200,7 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
     { key: "today", label: "Today", count: counts.due },
     { key: "pipeline", label: "Pipeline", count: counts.total },
     { key: "find", label: "Find leads" },
+    { key: "import", label: "Import" },
   ];
 
   return (
@@ -295,6 +314,7 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
         )}
         {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} />}
         {tab === "find" && <FindLeadsTab onLeadsChanged={refresh} />}
+        {tab === "import" && <ImportTab gmailStatus={gmailStatus} onImported={refresh} />}
       </main>
     </div>
   );

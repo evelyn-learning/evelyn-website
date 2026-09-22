@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Zap } from "lucide-react";
-import { LEAD_SEGMENTS, LEAD_STATUSES, type LeadStatus } from "@/lib/outreach/enums";
+import { LEAD_SEGMENTS, LEAD_STATUSES, PRODUCTS, type LeadStatus } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
+import TimelineDrawer from "./TimelineDrawer";
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   staged: "bg-gray-100 text-gray-700",
@@ -49,7 +50,9 @@ export default function PipelineTab({
 }) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [segmentFilter, setSegmentFilter] = useState<string>("all");
+  const [productFilter, setProductFilter] = useState<string>("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const setStatus = async (id: string, status: LeadStatus) => {
     setPendingId(id);
@@ -97,9 +100,10 @@ export default function PipelineTab({
     return leads.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (segmentFilter !== "all" && l.segment !== segmentFilter) return false;
+      if (productFilter !== "all" && !l.opportunities?.some((o) => o.product === productFilter)) return false;
       return true;
     });
-  }, [leads, statusFilter, segmentFilter]);
+  }, [leads, statusFilter, segmentFilter, productFilter]);
 
   return (
     <div className="space-y-4">
@@ -134,6 +138,13 @@ export default function PipelineTab({
             ))}
           </select>
         </label>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          Product
+          <select className="rounded-lg border border-gray-300 px-2 py-1 text-sm" value={productFilter} onChange={(e) => setProductFilter(e.target.value)}>
+            <option value="all">All</option>
+            {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </label>
         <span className="ml-auto text-xs text-gray-400">
           {filtered.length} of {leads.length} leads
         </span>
@@ -147,6 +158,7 @@ export default function PipelineTab({
                 "Company",
                 "Segment",
                 "Status",
+                "Products",
                 "Decision maker",
                 "Touches",
                 "Next action",
@@ -166,7 +178,7 @@ export default function PipelineTab({
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-sm text-gray-500">
+                <td colSpan={10} className="px-4 py-6 text-center text-sm text-gray-500">
                   No leads match these filters.
                 </td>
               </tr>
@@ -181,7 +193,7 @@ export default function PipelineTab({
                 return (
                   <tr key={lead._id} className="hover:bg-gray-50">
                     <td className="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
-                      {lead.company}
+                      <button className="text-left font-medium text-primary-700 hover:underline" onClick={() => setOpenId(lead._id)}>{lead.company}</button>
                     </td>
                     <td className="whitespace-nowrap px-4 py-2 text-gray-600">
                       {SEGMENT_LABELS[lead.segment] ?? lead.segment}
@@ -192,6 +204,9 @@ export default function PipelineTab({
                       >
                         {STATUS_LABELS[lead.status]}
                       </span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-2 text-xs text-gray-600">
+                      {lead.opportunities?.length ? lead.opportunities.map((o) => `${o.product}: ${o.stage}`).join(", ") : "—"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-2 text-gray-600">
                       {dm?.name || "—"}
@@ -242,6 +257,11 @@ export default function PipelineTab({
           </tbody>
         </table>
       </div>
+      {openId &&
+        (() => {
+          const l = leads.find((x) => x._id === openId);
+          return l ? <TimelineDrawer lead={l} onClose={() => setOpenId(null)} /> : null;
+        })()}
     </div>
   );
 }
