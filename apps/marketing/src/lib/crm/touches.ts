@@ -3,17 +3,36 @@ import type { LeadStatus } from "@/lib/outreach/enums";
 
 export type IncomingTouch = Omit<ITouch, "externalId"> & { externalId: string };
 
-/** Idempotent append: drop incoming touches whose externalId already exists; keep the list sorted by `at`. */
-export function mergeTouches(existing: ITouch[], incoming: IncomingTouch[]): { touches: ITouch[]; added: number } {
-  const seen = new Set(existing.map((t) => t.externalId).filter(Boolean) as string[]);
+/**
+ * Idempotent append: drop incoming touches whose externalId already exists;
+ * keep the list sorted by `at`. `fresh` carries just the newly-added touches
+ * (see applyIngestStatus's `touches` argument, which must reflect only
+ * these) without changing the meaning of `touches`/`added`.
+ */
+export function mergeTouches(
+  existing: ITouch[],
+  incoming: IncomingTouch[]
+): { touches: ITouch[]; added: number; fresh: ITouch[] } {
+  // The pre-existing reply watcher writes inbound touches keyed by
+  // `gmailMessageId` with no `externalId`, while ingest writes both
+  // `externalId: "gmail:<id>"` and `gmailMessageId`. Seed `seen` with both
+  // keys for every existing touch so a lead that's been both watched and
+  // CRM-labelled doesn't end up with two touches for the same message.
+  const seen = new Set<string>();
+  for (const t of existing) {
+    if (t.externalId) seen.add(t.externalId);
+    if (t.gmailMessageId) seen.add(`gmail:${t.gmailMessageId}`);
+  }
   const fresh: ITouch[] = [];
   for (const t of incoming) {
-    if (seen.has(t.externalId)) continue;
+    const gmailKey = t.gmailMessageId ? `gmail:${t.gmailMessageId}` : undefined;
+    if (seen.has(t.externalId) || (gmailKey && seen.has(gmailKey))) continue;
     seen.add(t.externalId);
+    if (gmailKey) seen.add(gmailKey);
     fresh.push(t);
   }
   const touches = [...existing, ...fresh].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
-  return { touches, added: fresh.length };
+  return { touches, added: fresh.length, fresh };
 }
 
 const FROZEN: LeadStatus[] = ["dead", "replied", "call_booked"];

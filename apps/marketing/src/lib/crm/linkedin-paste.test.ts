@@ -74,6 +74,15 @@ await test("touches are stable across re-parse (idempotent ids)", () => {
   assert.ok(a[0].externalId.startsWith("li:"));
   assert.equal(a[0].channel, "linkedin"); assert.equal(a[0].origin, "linkedin_paste");
 });
+await test("bodies that differ only by whitespace/case/emoji hash to the same externalId", () => {
+  const base = { from: "Skyler Scarlett", at: new Date("2026-09-19T13:28:00-07:00"), outbound: false };
+  const a = linkedinTouches({ participant: "Skyler Scarlett", messages: [{ ...base, body: "Sure, be great to connect." }] }, "skyler-scarlett");
+  const b = linkedinTouches({ participant: "Skyler Scarlett", messages: [{ ...base, body: "Sure,   be great\nto connect. 👍" }] }, "skyler-scarlett");
+  assert.equal(a[0].externalId, b[0].externalId);
+  // The touch's own `body` is left exactly as given — only the hash input is normalised.
+  assert.equal(a[0].body, "Sure, be great to connect.");
+  assert.equal(b[0].body, "Sure,   be great\nto connect. 👍");
+});
 await test("a one-word day-named reply is not swallowed as a day marker", () => {
   const txt = "Today\nJane Doe   9:05 AM\nCan you do a call?\nFriday\nWorks for me\nPraveen Tyagi   4:00 PM\nGreat";
   const r = parseLinkedinConversation(txt, { ownerName: "Praveen Tyagi", now });

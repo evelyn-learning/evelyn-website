@@ -357,6 +357,11 @@ function ReviewCard({
             <span className="inline-flex rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
               {SEGMENT_LABELS[lead.segment] ?? lead.segment}
             </span>
+            {lead.needsReview === true && (
+              <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                imported · needs review
+              </span>
+            )}
           </div>
           {lead.website && (
             <a

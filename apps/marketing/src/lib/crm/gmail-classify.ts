@@ -18,7 +18,10 @@ function displayName(addr: string): string {
 }
 
 function splitAddresses(field: string): string[] {
-  return field.split(",").map((s) => s.trim()).filter(Boolean);
+  // A display name can itself contain a comma (`"Smith, Jane" <jane@x.edu>`),
+  // so a naive split on "," yields a bare `"Smith` fragment with no "@" —
+  // drop anything that isn't a real address.
+  return field.split(",").map((s) => s.trim()).filter((a) => a.includes("@"));
 }
 
 export function classifyThread(messages: FullMessage[], account: string): ThreadVerdict {

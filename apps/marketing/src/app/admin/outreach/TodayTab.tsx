@@ -15,7 +15,7 @@ import {
   Wand2,
   UserX,
 } from "lucide-react";
-import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
+import { expectedNextChannel, isCadenceTouch, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
 import { TOUCH_CHANNELS } from "@/lib/outreach/enums";
 import type { TouchChannel } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
@@ -309,9 +309,13 @@ function LeadCard({
     }
   };
 
-  const outboundCount = lead.touches.filter((t) => t.direction === "outbound").length;
+  // Mirrors cadence.ts's own outboundCount: imported touches (a real
+  // historical thread, a LinkedIn/contact-form message) don't consume a
+  // step, so this must agree with nextChannel below or the "Touch X of N"
+  // badge and the "Next: …" label point at different slots.
+  const outboundCount = lead.touches.filter((t) => t.direction === "outbound" && isCadenceTouch(t)).length;
   const emailOutboundCount = lead.touches.filter(
-    (t) => t.direction === "outbound" && t.channel === "email"
+    (t) => t.direction === "outbound" && t.channel === "email" && isCadenceTouch(t)
   ).length;
   const nextChannel = expectedNextChannel(
     lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))

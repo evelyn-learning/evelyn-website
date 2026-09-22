@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert";
-import { applyMarkSent, expectedNextChannel } from "./cadence";
+import { applyMarkSent, expectedNextChannel, isCadenceTouch } from "./cadence";
 import { landingPathForSegment } from "./segment-landing";
+import type { TouchOrigin } from "./enums";
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -56,6 +57,27 @@ async function test(name: string, fn: () => void | Promise<void>) {
     assert.equal(expectedNextChannel([out("form")]), "linkedin");
     // inbound touches ignored
     assert.equal(expectedNextChannel([out("email"), inb]), "linkedin");
+  });
+  await test("outbound touches with an import origin do not advance the sequence", () => {
+    const imported = (origin: TouchOrigin) => ({ at: now, channel: "email" as const, direction: "outbound" as const, summary: "x", origin });
+    // Three imported outbound emails (as a real Gmail thread would carry)
+    // must not consume any of the 4 cadence steps: the next console send
+    // is still step 1 (intro), and applyMarkSent must not auto-park.
+    const touches = [imported("gmail_import"), imported("gmail_import"), imported("gmail_import")];
+    assert.equal(expectedNextChannel(touches), "email");
+    const r = applyMarkSent({ status: "contacted", touches }, "email", "actual first send", now);
+    assert.equal(r.status, "contacted");
+    assert.equal(r.nextActionAt?.getTime(), days(1).getTime());
+
+    // A legacy (origin-less) or console-origin outbound touch still counts.
+    const legacy = [out("email")];
+    assert.equal(expectedNextChannel(legacy), "linkedin");
+    const consoleTouch = [{ at: now, channel: "email", direction: "outbound", summary: "x", origin: "console" } as const];
+    assert.equal(expectedNextChannel(consoleTouch), "linkedin");
+
+    assert.equal(isCadenceTouch({ origin: undefined }), true);
+    assert.equal(isCadenceTouch({ origin: "console" }), true);
+    assert.equal(isCadenceTouch({ origin: "gmail_import" }), false);
   });
   await test("segment landing map covers every segment", async () => {
     const { LEAD_SEGMENTS } = await import("../../models/Lead");

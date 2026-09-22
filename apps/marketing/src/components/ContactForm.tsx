@@ -149,11 +149,6 @@ export function ContactForm() {
   }, [searchParams, setValue]);
 
   const onSubmit = async (data: ContactFormData) => {
-    if (data.reason === "careers") {
-      window.location.href = "/careers";
-      return;
-    }
-
     setStatus("loading");
     setErrorMessage("");
 
@@ -167,6 +162,15 @@ export function ContactForm() {
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Something went wrong");
+      }
+
+      // Spec §6: the ContactSubmission row is written for every reason
+      // (including careers) — only the lead is skipped server-side. Careers
+      // submitters still get sent on to the careers page instead of seeing
+      // the normal success state.
+      if (data.reason === "careers") {
+        window.location.href = "/careers";
+        return;
       }
 
       setStatus("success");

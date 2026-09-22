@@ -141,10 +141,22 @@ export function parseLinkedinConversation(
   return { participant, messages };
 }
 
+// Normalises a message body before hashing so the SAME conversation
+// produces the SAME externalId whether it arrives via the paste flow
+// (lines joined, emoji-only lines dropped) or the raw CSV CONTENT column
+// of an archive export: lowercase, collapse whitespace, strip emoji.
+function normalizeForHash(body: string): string {
+  return body
+    .toLowerCase()
+    .replace(/\p{Extended_Pictographic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function linkedinTouches(parsed: ParsedLinkedin, conversationKey: string, origin: "linkedin_paste" | "linkedin_archive" = "linkedin_paste"): IncomingTouch[] {
   return parsed.messages.map((m) => {
     const minute = new Date(m.at); minute.setSeconds(0, 0);
-    const id = createHash("sha1").update(`${conversationKey}|${minute.toISOString()}|${m.body}`).digest("hex").slice(0, 24);
+    const id = createHash("sha1").update(`${conversationKey}|${minute.toISOString()}|${normalizeForHash(m.body)}`).digest("hex").slice(0, 24);
     return {
       at: m.at, channel: "linkedin", direction: m.outbound ? "outbound" : "inbound",
       summary: `${m.outbound ? "Sent" : "Received"} (LinkedIn): ${m.body.slice(0, 140).replace(/\s+/g, " ")}`,

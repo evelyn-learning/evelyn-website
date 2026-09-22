@@ -7,12 +7,12 @@ import { classifyContact, productFromParam } from "@/lib/crm/classify-contact";
 import { upsertLeadWithTouches } from "@/lib/crm/upsert-lead";
 
 const contactSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
+  name: z.string().min(2).max(200),
+  email: z.string().email().max(200),
   phone: z.string().optional(),
-  company: z.string().optional(),
-  subject: z.string().min(3),
-  message: z.string().min(1),
+  company: z.string().max(200).optional(),
+  subject: z.string().min(3).max(300),
+  message: z.string().min(1).max(10_000),
   reason: z.string().optional(),
   product: z.string().optional(),
 });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             direction: "inbound",
             summary: `Contact form (${cls.reason}): ${data.subject}`.slice(0, 200),
             subject: data.subject,
-            body: data.message,
+            body: data.message.slice(0, 10_000),
             from: data.email,
             to: "info@evelynlearning.com",
             externalId: `form:${submission._id}`,

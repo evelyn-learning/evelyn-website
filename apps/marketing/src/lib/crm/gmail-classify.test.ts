@@ -57,6 +57,14 @@ await test("a CC-only external participant is a real participant, not internal",
   assert.ok(v.keep);
   if (v.keep) { assert.equal(v.identity.email, "p@x.org"); assert.equal(v.identity.name, "Pat"); }
 });
+await test("a comma-containing display name doesn't leak a junk participant", () => {
+  const v = classifyThread([m({ from: acct, to: '"Smith, Jane" <jane@x.edu>', subject: "Intro", labelIds: ["SENT"] })], acct);
+  assert.ok(v.keep);
+  if (v.keep) {
+    assert.equal(v.identity.email, "jane@x.edu");
+    assert.ok(!v.identity.email.startsWith('"'));
+  }
+});
 await test("drafts are ignored", () => {
   assert.equal(classifyThread([m({ from: acct, to: "p@x.org", labelIds: ["DRAFT"] })], acct).keep, false);
 });

@@ -5,7 +5,7 @@ import { upsertLeadWithTouches } from "./upsert-lead";
 
 export interface IngestPageResult {
   nextPageToken?: string;
-  scanned: number; kept: number; created: number; updated: number; touchesAdded: number;
+  scanned: number; kept: number; created: number; updated: number; touchesAdded: number; errors: number;
   skipped: Record<SkipReason, number>;
   samples: { threadId: string; subject: string; participant: string; verdict: string }[];
 }
@@ -32,7 +32,7 @@ export async function ingestGmailPage(
   deps: IngestGmailDeps = defaultDeps
 ): Promise<IngestPageResult> {
   const out: IngestPageResult = {
-    scanned: 0, kept: 0, created: 0, updated: 0, touchesAdded: 0,
+    scanned: 0, kept: 0, created: 0, updated: 0, touchesAdded: 0, errors: 0,
     skipped: { auto_reply_only: 0, self_notification: 0, internal: 0, machine: 0, empty: 0 }, samples: [],
   };
   const { ids, nextPageToken } = await deps.listThreadIds(args.account, args.query, args.pageToken);
@@ -48,6 +48,7 @@ export async function ingestGmailPage(
       verdict = classifyThread(msgs, args.account);
     } catch (e) {
       console.error(`[CRM] gmail ingest thread ${threadId} failed:`, e instanceof Error ? e.message : e);
+      out.errors++;
       continue;
     }
     if (!verdict.keep) {

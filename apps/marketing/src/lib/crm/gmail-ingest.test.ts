@@ -97,6 +97,7 @@ await test("a thread whose getFullThread throws is skipped without aborting the 
   const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
   assert.equal(r.scanned, 2);
   assert.equal(r.kept, 1);
+  assert.equal(r.errors, 1);
   assert.equal(r.samples.length, 1);
   assert.equal(r.samples[0].threadId, "A");
 });

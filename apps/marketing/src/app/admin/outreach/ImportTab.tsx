@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface GmailStatus { accounts?: { account: string; connected: boolean; connectedAt: string | null }[] }
-interface PageResult { nextPageToken?: string; scanned: number; kept: number; created: number; updated: number; touchesAdded: number; skipped: Record<string, number>; samples: { threadId: string; subject: string; participant: string; verdict: string }[] }
+interface PageResult { nextPageToken?: string; scanned: number; kept: number; created: number; updated: number; touchesAdded: number; errors: number; skipped: Record<string, number>; samples: { threadId: string; subject: string; participant: string; verdict: string }[] }
 
 const MAX_PAGES = 200;
 
@@ -49,7 +49,7 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
 
   const run = async (dryRun: boolean) => {
     setRunning(dryRun ? "dry" : "real"); setLog([]);
-    const acc: PageResult = { scanned: 0, kept: 0, created: 0, updated: 0, touchesAdded: 0, skipped: {}, samples: [] };
+    const acc: PageResult = { scanned: 0, kept: 0, created: 0, updated: 0, touchesAdded: 0, errors: 0, skipped: {}, samples: [] };
     let pageToken: string | undefined;
     let pageCount = 0;
     try {
@@ -61,7 +61,7 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
         const data = await res.json();
         if (!res.ok) { setLog((l) => [...l, `Error: ${data.error}`]); break; }
         const p = data as PageResult;
-        acc.scanned += p.scanned; acc.kept += p.kept; acc.created += p.created; acc.updated += p.updated; acc.touchesAdded += p.touchesAdded;
+        acc.scanned += p.scanned; acc.kept += p.kept; acc.created += p.created; acc.updated += p.updated; acc.touchesAdded += p.touchesAdded; acc.errors += p.errors ?? 0;
         for (const [k, v] of Object.entries(p.skipped ?? {})) acc.skipped[k] = (acc.skipped[k] ?? 0) + v;
         if (acc.samples.length < 60) acc.samples.push(...(p.samples ?? []));
         setTotals({ ...acc }); setLog((l) => [...l, `page: scanned ${p.scanned}, kept ${p.kept}`]);
@@ -139,7 +139,11 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
         </div>
         {totals && (
           <div className="mt-3 text-sm">
-            <div>scanned {totals.scanned} · kept {totals.kept} · created {totals.created} · updated {totals.updated} · touches {totals.touchesAdded}</div>
+            <div>
+              scanned {totals.scanned} · kept {totals.kept} · created {totals.created} · updated {totals.updated} · touches {totals.touchesAdded}
+              {" · "}
+              <span className={totals.errors > 0 ? "font-medium text-red-600" : undefined}>errors {totals.errors}</span>
+            </div>
             <div className="text-xs text-gray-600">skipped: {Object.entries(totals.skipped).map(([k, v]) => `${k} ${v}`).join(" · ") || "none"}</div>
             <ul className="mt-2 max-h-64 overflow-y-auto text-xs">
               {totals.samples.map((s) => <li key={s.threadId} className="border-b py-1"><span className="font-mono">{s.verdict}</span> — {s.subject || "(no subject)"} {s.participant && `· ${s.participant}`}</li>)}

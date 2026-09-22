@@ -64,16 +64,32 @@ export async function upsertLeadWithTouches(args: UpsertArgs) {
   }
 
   const merged = mergeTouches(lead.touches as ITouch[], args.touches);
-  lead.touches = merged.touches;
-  applyIngestStatus(lead, lead.touches, { created, flagReview: !!args.flagReview });
+
+  // The CRM-label cron re-scans `label:CRM newer_than:3d` every 15 minutes,
+  // so a no-op re-ingest (this thread has nothing new) must not re-run
+  // status effects: applyIngestStatus would otherwise flip a lead an
+  // operator has since moved to parked/contacted back to `replied` on every
+  // tick. Only reassign `lead.touches` and run status effects when there's
+  // actually something new — reassigning the (content-identical) merged
+  // array unconditionally would itself mark the document modified.
+  if (merged.added > 0) {
+    lead.touches = merged.touches;
+    applyIngestStatus(lead, merged.fresh, { created, flagReview: !!args.flagReview });
+  }
 
   if (args.product) {
     const now = new Date();
     const opp = lead.opportunities.find((o) => o.product === args.product);
-    if (opp) { opp.stage = lead.status; opp.updatedAt = now; }
-    else lead.opportunities.push({ product: args.product, stage: lead.status, nextActionAt: null, updatedAt: now });
+    if (opp) {
+      // A no-op re-ingest shouldn't churn an existing opportunity's
+      // updatedAt — only touch it when something in this ingest actually
+      // changed the lead.
+      if (merged.added > 0 || created) { opp.stage = lead.status; opp.updatedAt = now; }
+    } else {
+      lead.opportunities.push({ product: args.product, stage: lead.status, nextActionAt: null, updatedAt: now });
+    }
   }
 
-  await lead.save();
+  if (lead.isModified()) await lead.save();
   return { leadId: String(lead._id), created, added: merged.added, matchedBy };
 }
