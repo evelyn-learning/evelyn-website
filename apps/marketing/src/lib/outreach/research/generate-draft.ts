@@ -8,8 +8,9 @@
 // Drafting rules MUST match the pipeline's live candidateParams bullets in
 // ./prompts.ts (inmailBody under 500 chars, contactFormBody 100-150 words +
 // sign-off, [DEMO_LINK] literal) — keep them in sync.
-import type { TouchChannel } from "../enums";
+import type { TouchChannel, TouchOrigin } from "../enums";
 import { applyDemoLink } from "../draft-body";
+import { isCadenceTouch } from "../cadence";
 import { resolveRecipient, applyGenericGreeting } from "../recipient";
 import { RESEARCH_MODEL } from "./prompts";
 
@@ -52,9 +53,14 @@ export const GENERATE_SCHEMA = {
 // apply: final slot → breakup, anything between → bump.
 export type EmailStep = "intro" | "bump" | "breakup";
 export function emailStepFor(
-  touches: Array<{ channel: string; direction: string }>
+  touches: Array<{ channel: string; direction: string; origin?: TouchOrigin }>
 ): EmailStep {
-  const outbound = touches.filter((t) => t.direction === "outbound");
+  // Imported touches (a real historical thread, a LinkedIn/contact-form
+  // message) don't consume a cadence step — this must agree with the
+  // TodayTab "Touch X of N" badge/label, both derived from cadence touches
+  // only, or the button offers to "Generate intro email" while writing
+  // breakup copy for a lead that's actually further along.
+  const outbound = touches.filter((t) => t.direction === "outbound" && isCadenceTouch(t));
   const emailsSent = outbound.filter((t) => t.channel === "email").length;
   if (emailsSent === 0) return "intro";
   if (outbound.length >= 3) return "breakup";

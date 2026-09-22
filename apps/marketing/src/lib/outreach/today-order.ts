@@ -20,19 +20,26 @@
 // Pure and DB-free so both the client tab and any future server-side
 // ordering can share it.
 
+import { isCadenceTouch } from "./cadence";
+import type { TouchOrigin } from "./enums";
+
 export const TODAY_TIERS = ["newly_approved", "verified_email", "rest"] as const;
 export type TodayTier = (typeof TODAY_TIERS)[number];
 
 export interface TodayOrderLead {
   status: string;
-  touches: Array<{ direction: string }>;
+  touches: Array<{ direction: string; origin?: TouchOrigin }>;
   decisionMaker?: { emailVerified?: boolean } | null;
   approvedAt?: string | Date | null;
   createdAt: string | Date;
 }
 
 export function todayTier(lead: TodayOrderLead): TodayTier {
-  const contacted = lead.touches.some((t) => t.direction === "outbound");
+  // An imported touch (a real historical thread, a LinkedIn/contact-form
+  // message) isn't outreach the operator actually sent — a lead whose only
+  // touches came in via import has never been worked and still belongs in
+  // newly_approved, same as isCadenceTouch's use in cadence.ts/TodayTab.
+  const contacted = lead.touches.some((t) => t.direction === "outbound" && isCadenceTouch(t));
   if (lead.status === "approved" && !contacted) return "newly_approved";
   if (lead.decisionMaker?.emailVerified) return "verified_email";
   return "rest";

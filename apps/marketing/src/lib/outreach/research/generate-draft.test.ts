@@ -16,6 +16,9 @@ async function test(name: string, fn: () => void | Promise<void>) {
 const out = (channel: string, summary = "sent") => ({
   at: new Date("2026-08-10T17:00:00Z"), channel, direction: "outbound", summary,
 });
+const imported = (channel: string) => ({
+  at: new Date("2026-08-10T17:00:00Z"), channel, direction: "outbound", summary: "sent", origin: "gmail_import" as const,
+});
 const inb = { at: new Date("2026-08-11T17:00:00Z"), channel: "email", direction: "inbound", summary: "reply" };
 
 function lead(touches: GenerateLead["touches"] = []): GenerateLead {
@@ -49,6 +52,11 @@ function promptOf(params: Record<string, unknown>): string {
   assert.equal(emailStepFor([out("email"), out("linkedin"), out("email")]), "breakup");
   // Inbound touches ignored.
   assert.equal(emailStepFor([out("email"), inb]), "bump");
+  // A lead whose only outbound touches were imported (a real historical
+  // Gmail thread) has never had a console-sent email — still intro, not
+  // breakup, matching the TodayTab "Touch X of N" badge (both filter on
+  // isCadenceTouch).
+  assert.equal(emailStepFor([imported("email"), imported("email"), imported("email")]), "intro");
 });
 
   await test("intro email prompt: first-touch history line + intro brief", () => {

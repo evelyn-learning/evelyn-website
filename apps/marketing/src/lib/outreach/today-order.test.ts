@@ -41,6 +41,13 @@ const ids = (rows: Row[]) => rows.map((r) => r.id);
     );
   });
 
+  await test("an imported-only outbound touch does not graduate it out of newly_approved", () => {
+    // A real historical thread pulled in by Gmail import isn't outreach the
+    // operator actually sent — the lead still hasn't been worked.
+    const imported = { direction: "outbound", origin: "gmail_import" as const };
+    assert.equal(todayTier(lead("a", { touches: [imported] })), "newly_approved");
+  });
+
   await test("a contacted lead with a verified email is verified_email", () => {
     const l = lead("a", {
       status: "contacted",

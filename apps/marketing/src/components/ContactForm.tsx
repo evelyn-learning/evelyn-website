@@ -9,13 +9,16 @@ import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@core/utils";
 import { FormCaptcha } from "./FormCaptcha";
 
+// Mirrors the server-side caps in src/app/api/contact/route.ts so a
+// too-long submission shows inline validation here instead of a generic
+// 400 from the API.
 const contactSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
+  name: z.string().min(2, "Name must be at least 2 characters").max(200, "Name is too long"),
+  email: z.string().email("Please enter a valid email address").max(200, "Email is too long"),
   phone: z.string().optional(),
-  company: z.string().optional(),
-  subject: z.string().min(3, "Subject must be at least 3 characters"),
-  message: z.string().min(1, "Message is required"),
+  company: z.string().max(200, "Company name is too long").optional(),
+  subject: z.string().min(3, "Subject must be at least 3 characters").max(300, "Subject is too long"),
+  message: z.string().min(1, "Message is required").max(10_000, "Message is too long"),
   reason: z.enum(["product_inquiry", "demo_request", "partnership", "careers", "support", "other"]),
   product: z.string().optional(),
 });

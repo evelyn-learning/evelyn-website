@@ -242,7 +242,7 @@ export async function getFullThread(threadId: string, account: string): Promise<
   }));
 }
 
-// Paged, query-scoped thread listing (the wide-inbox Gmail search call)
-// lives in src/lib/crm/gmail-list.ts, not here — this file is guarded (see
-// scripts/test-outreach-guards.ts) so the reply watcher can never widen
-// past `threads.get` on a thread id it already has on file.
+// Inbox-wide listing is not allowed in this file (structural guard, see
+// scripts/test-outreach-guards.ts). The CRM's bounded label/sent queries
+// live in src/lib/crm/gmail-list.ts and are the only sanctioned call site
+// for that wider search.

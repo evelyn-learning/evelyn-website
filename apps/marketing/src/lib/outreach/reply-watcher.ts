@@ -214,7 +214,7 @@ export async function runLabelIngest(): Promise<{ account: string; kept: number;
       try {
         do {
           const r = await ingestGmailPage({ account, query: labelQuery(), pageToken, dryRun: false, origin: "gmail_label" });
-          kept += r.kept; touchesAdded += r.touchesAdded; pageToken = r.nextPageToken;
+          kept += r.kept; touchesAdded += r.touchesAdded; errors += r.errors; pageToken = r.nextPageToken;
         } while (pageToken);
       } catch (e) {
         if (e instanceof Error && e.message === "GMAIL_NOT_CONNECTED") {
