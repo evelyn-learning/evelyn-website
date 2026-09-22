@@ -6,8 +6,9 @@
 import cron, { ScheduledTask } from "node-cron";
 import { connectDB } from "@core/db";
 import { Lead, type ITouch } from "@/models";
-import { getThreadMessages, getOutreachAccount, httpStatusOf } from "./gmail";
+import { getThreadMessages, getOutreachAccount, getOutreachAccounts, httpStatusOf } from "./gmail";
 import { findInboundMessage } from "./reply-detect";
+import { ingestGmailPage, labelQuery } from "@/lib/crm/gmail-ingest";
 
 // Scheduler state lives on globalThis, NOT in module scope.
 //
@@ -186,6 +187,38 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
   return stats;
 }
 
+// Ongoing CRM ingest (spec §7): any thread the operator labels "CRM" in
+// either mailbox is imported on the same 15-minute cron. Idempotent, so the
+// 3-day window re-scanning the same threads costs Gmail calls, not
+// duplicates.
+//
+// `connected: false` for a GMAIL_NOT_CONNECTED account is the expected state
+// until that mailbox's operator finishes OAuth (e.g. info@ pre-consent) —
+// it is not counted in `errors`, so the cron log stays quiet for it and
+// only fires for a real failure or actual touches added.
+export async function runLabelIngest(): Promise<{ account: string; kept: number; touchesAdded: number; errors: number; connected: boolean }[]> {
+  const results: { account: string; kept: number; touchesAdded: number; errors: number; connected: boolean }[] = [];
+  for (const account of getOutreachAccounts()) {
+    let pageToken: string | undefined;
+    let kept = 0, touchesAdded = 0, errors = 0, connected = true;
+    try {
+      do {
+        const r = await ingestGmailPage({ account, query: labelQuery(), pageToken, dryRun: false, origin: "gmail_label" });
+        kept += r.kept; touchesAdded += r.touchesAdded; pageToken = r.nextPageToken;
+      } while (pageToken);
+    } catch (e) {
+      if (e instanceof Error && e.message === "GMAIL_NOT_CONNECTED") {
+        connected = false;
+      } else {
+        errors++;
+        console.error(`[CRM] label ingest ${account}:`, e);
+      }
+    }
+    results.push({ account, kept, touchesAdded, errors, connected });
+  }
+  return results;
+}
+
 // Start the reply watcher
 export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void {
   const st = watcherState();
@@ -209,6 +242,9 @@ export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void
           `${stats.bounced} bounced, ${stats.errors} errors, ${stats.prunedThreads} pruned, ${stats.unwatchableLeads} now unwatchable`
       );
     }
+    const label = await runLabelIngest();
+    const touched = label.reduce((n, r) => n + r.touchesAdded, 0);
+    if (touched > 0 || label.some((r) => r.errors)) console.log(`[CRM] label ingest: ${JSON.stringify(label)}`);
   });
 
   st.isWatcherRunning = true;

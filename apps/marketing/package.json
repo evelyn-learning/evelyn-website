@@ -26,6 +26,7 @@
     "test:crm-upsert-smoke": "npx tsx src/lib/crm/upsert-lead.smoke.test.ts",
     "test:crm-contact": "npx tsx src/lib/crm/classify-contact.test.ts",
     "test:crm-gmail": "npx tsx src/lib/outreach/gmail-accounts.test.ts",
-    "test:crm-gmail-classify": "npx tsx src/lib/crm/gmail-classify.test.ts"
+    "test:crm-gmail-classify": "npx tsx src/lib/crm/gmail-classify.test.ts",
+    "test:crm-gmail-ingest": "npx tsx src/lib/crm/gmail-ingest.test.ts"
   }
 }

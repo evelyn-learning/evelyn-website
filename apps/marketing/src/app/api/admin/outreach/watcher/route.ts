@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { isReplyWatcherActive, runReplyCheck } from "@/lib/outreach/reply-watcher";
+import { isReplyWatcherActive, runLabelIngest, runReplyCheck } from "@/lib/outreach/reply-watcher";
 
 // GET - reply watcher scheduler status
 export async function GET() {
@@ -22,7 +22,8 @@ export async function POST() {
     }
 
     const stats = await runReplyCheck();
-    return NextResponse.json({ success: true, stats });
+    const label = await runLabelIngest();
+    return NextResponse.json({ success: true, stats, label });
   } catch (error) {
     console.error("[OUTREACH] watcher trigger Error:", error);
     return NextResponse.json({ error: "Failed to run reply check" }, { status: 500 });
