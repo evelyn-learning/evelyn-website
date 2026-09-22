@@ -5,7 +5,7 @@ import { isSelfAddress, normalizeEmail } from "./identity";
 
 export const AUTO_REPLY_SUBJECT = "Thank you for contacting Evelyn Learning";
 export const SELF_NOTIFICATION_PREFIX = "New Contact Form Submission:";
-const MACHINE_RE = /(^|[<\s.@-])(no-?reply|notifications?|billing|calendar|mailer-daemon|postmaster|apollo\.io|hunter\.io|prospeo)/i;
+const MACHINE_RE = /(^|[<\s.@-])(no-?reply|notifications?|billing|calendar|mailer-daemon|postmaster|apollo\.io|hunter\.io|prospeo)(?![a-z])/i;
 
 export type SkipReason = "auto_reply_only" | "self_notification" | "internal" | "machine" | "empty";
 export type ThreadVerdict =
@@ -27,7 +27,7 @@ export function classifyThread(messages: FullMessage[], account: string): Thread
 
   if (msgs.some((m) => m.subject.trim().startsWith(SELF_NOTIFICATION_PREFIX))) return { keep: false, reason: "self_notification" };
 
-  const all = msgs.flatMap((m) => [...splitAddresses(m.from), ...splitAddresses(m.to)]);
+  const all = msgs.flatMap((m) => [...splitAddresses(m.from), ...splitAddresses(m.to), ...splitAddresses(m.cc)]);
   if (all.some((a) => MACHINE_RE.test(a))) return { keep: false, reason: "machine" };
 
   const external = all.filter((a) => !isSelfAddress(a));

@@ -183,7 +183,7 @@ export async function getThreadMessages(threadId: string, account?: string) {
 }
 
 export interface FullMessage {
-  id: string; threadId: string; from: string; to: string; subject: string;
+  id: string; threadId: string; from: string; to: string; cc: string; subject: string;
   date: number; labelIds: string[]; text: string; messageIdHeader: string;
 }
 
@@ -214,7 +214,7 @@ export async function getFullThread(threadId: string, account: string): Promise<
     m.payload?.headers?.find((h) => h.name?.toLowerCase() === name)?.value ?? "";
   return (res.data.messages ?? []).map((m) => ({
     id: m.id ?? "", threadId: m.threadId ?? threadId,
-    from: header(m, "from"), to: header(m, "to"), subject: header(m, "subject"),
+    from: header(m, "from"), to: header(m, "to"), cc: header(m, "cc"), subject: header(m, "subject"),
     date: Number(m.internalDate ?? 0), labelIds: m.labelIds ?? [],
     text: m.payload ? extractPlainText(m.payload as Part) : "",
     messageIdHeader: header(m, "message-id"),

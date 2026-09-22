@@ -7,7 +7,7 @@ async function test(name: string, fn: () => void | Promise<void>) {
   catch (e) { failed++; console.error(`  FAIL - ${name}`, e); }
 }
 const acct = "info@evelynlearning.com";
-const m = (o: Partial<FullMessage>): FullMessage => ({ id: "x", threadId: "t", from: "", to: "", subject: "", date: 1, labelIds: [], text: "", messageIdHeader: "", ...o });
+const m = (o: Partial<FullMessage>): FullMessage => ({ id: "x", threadId: "t", from: "", to: "", cc: "", subject: "", date: 1, labelIds: [], text: "", messageIdHeader: "", ...o });
 (async () => {
 await test("auto-reply only is skipped", () => {
   const v = classifyThread([m({ id: "1", from: acct, to: "p@x.org", subject: "Thank you for contacting Evelyn Learning", labelIds: ["SENT"] })], acct);
@@ -39,10 +39,23 @@ await test("machine senders skipped", () => {
   assert.deepEqual(classifyThread([m({ from: "no-reply@calendar.google.com", to: acct, subject: "Invite" })], acct), { keep: false, reason: "machine" });
   assert.deepEqual(classifyThread([m({ from: acct, to: "billing@apollo.io", subject: "x", labelIds: ["SENT"] })], acct), { keep: false, reason: "machine" });
 });
+await test("machine regex is word-bounded — real addresses that merely contain a keyword are not skipped", () => {
+  const v = classifyThread([m({ from: "Dean <billingsupport@realschool.edu>", to: acct, subject: "Quick idea" })], acct);
+  assert.notDeepEqual(v, { keep: false, reason: "machine" });
+});
+await test("machine regex still catches hyphenated / suffixed machine senders", () => {
+  assert.deepEqual(classifyThread([m({ from: "calendar-notifications@x.com", to: acct, subject: "Invite" })], acct), { keep: false, reason: "machine" });
+  assert.deepEqual(classifyThread([m({ from: "noreply2@x.com", to: acct, subject: "Hi" })], acct), { keep: false, reason: "machine" });
+});
 await test("single outbound with no reply is kept but flagged", () => {
   const v = classifyThread([m({ id: "9", from: "Praveen <praveen@evelynlearning.com>", to: "Dean <dean@school.edu>", subject: "Quick idea", text: "…", labelIds: ["SENT"] })], "praveen@evelynlearning.com");
   assert.ok(v.keep && v.flagReview);
   if (v.keep) { assert.equal(v.identity.email, "dean@school.edu"); assert.equal(v.identity.name, "Dean"); }
+});
+await test("a CC-only external participant is a real participant, not internal", () => {
+  const v = classifyThread([m({ from: acct, to: "praveen@evelynlearning.com", cc: "Pat <p@x.org>", subject: "Intro", labelIds: ["SENT"] })], acct);
+  assert.ok(v.keep);
+  if (v.keep) { assert.equal(v.identity.email, "p@x.org"); assert.equal(v.identity.name, "Pat"); }
 });
 await test("drafts are ignored", () => {
   assert.equal(classifyThread([m({ from: acct, to: "p@x.org", labelIds: ["DRAFT"] })], acct).keep, false);
