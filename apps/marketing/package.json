@@ -29,6 +29,7 @@
     "test:crm-gmail-classify": "npx tsx src/lib/crm/gmail-classify.test.ts",
     "test:crm-gmail-ingest": "npx tsx src/lib/crm/gmail-ingest.test.ts",
     "test:crm-linkedin": "npx tsx src/lib/crm/linkedin-paste.test.ts",
-    "test:crm-archive": "npx tsx src/lib/crm/csv.test.ts && npx tsx src/lib/crm/linkedin-archive.test.ts"
+    "test:crm-archive": "npx tsx src/lib/crm/csv.test.ts && npx tsx src/lib/crm/linkedin-archive.test.ts",
+    "test:crm-opportunity": "npx tsx src/lib/crm/opportunity.test.ts"
   }
 }
