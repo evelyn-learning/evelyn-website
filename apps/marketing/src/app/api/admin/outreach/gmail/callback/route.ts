@@ -6,7 +6,7 @@ import { connectDB } from "@core/db";
 import { OutreachToken } from "@/models";
 import { encryptToken } from "@/lib/crypto/token-encryption";
 import { verifyOAuthState } from "@/lib/google/oauth-state";
-import { getOutreachAccount, getOutreachOAuthClient } from "@/lib/outreach/gmail";
+import { getOutreachOAuthClient, isAllowedAccount } from "@/lib/outreach/gmail";
 
 const SUCCESS_PATH = "/admin/outreach";
 
@@ -58,19 +58,19 @@ export async function GET(req: NextRequest) {
     }
 
     // `login_hint` on the consent screen is only a hint — the user can switch
-    // accounts there. Verify the account that actually consented matches the
-    // configured outreach mailbox before we ever store its refresh token
-    // under that name; otherwise the wrong mailbox's token gets labelled as
-    // the outreach account (and reply-detection would classify the real
+    // accounts there. Verify the account that actually consented is one of
+    // the allowed outreach mailboxes before we ever store its refresh token
+    // under that name; otherwise an arbitrary mailbox's token gets labelled
+    // as an outreach account (and reply-detection would classify the real
     // operator's own sends as inbound replies).
     client.setCredentials(tokens);
     const gmail = google.gmail({ version: "v1", auth: client });
     const profile = await gmail.users.getProfile({ userId: "me" });
     const consentedEmail = profile.data.emailAddress?.toLowerCase();
-    const account = getOutreachAccount();
-    if (!consentedEmail || consentedEmail !== account.toLowerCase()) {
+    if (!consentedEmail || !isAllowedAccount(consentedEmail)) {
       return errorRedirect(req, "wrong_account");
     }
+    const account = consentedEmail;
 
     await connectDB();
     await OutreachToken.findOneAndUpdate(

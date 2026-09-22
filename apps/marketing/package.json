@@ -24,6 +24,7 @@
     "test:crm-models": "npx tsx src/models/Lead.test.ts && npx tsx src/models/PipelineConfig.test.ts",
     "test:crm-core": "npx tsx src/lib/crm/identity.test.ts && npx tsx src/lib/crm/match-lead.test.ts && npx tsx src/lib/crm/touches.test.ts",
     "test:crm-upsert-smoke": "npx tsx src/lib/crm/upsert-lead.smoke.test.ts",
-    "test:crm-contact": "npx tsx src/lib/crm/classify-contact.test.ts"
+    "test:crm-contact": "npx tsx src/lib/crm/classify-contact.test.ts",
+    "test:crm-gmail": "npx tsx src/lib/outreach/gmail-accounts.test.ts"
   }
 }

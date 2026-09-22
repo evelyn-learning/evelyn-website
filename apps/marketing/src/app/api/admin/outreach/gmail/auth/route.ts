@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { encodeOAuthState } from "@/lib/google/oauth-state";
-import { GMAIL_OUTREACH_SCOPES, getOutreachAccount, getOutreachOAuthClient } from "@/lib/outreach/gmail";
+import { GMAIL_OUTREACH_SCOPES, getOutreachAccount, getOutreachOAuthClient, isAllowedAccount } from "@/lib/outreach/gmail";
 
 const ERROR_PATH = "/admin/outreach";
 
@@ -42,6 +42,11 @@ export async function GET(req: NextRequest) {
   // one try/catch so a misconfigured box always redirects to
   // `?gmail_error=not_configured` instead of throwing a raw 500 out of this
   // route.
+  const account = new URL(req.url).searchParams.get("account") ?? getOutreachAccount();
+  if (!isAllowedAccount(account)) {
+    return errorRedirect(req, "unknown_account");
+  }
+
   try {
     const client = getOutreachOAuthClient();
     const url = client.generateAuthUrl({
@@ -49,7 +54,7 @@ export async function GET(req: NextRequest) {
       prompt: "consent",
       scope: GMAIL_OUTREACH_SCOPES,
       state: encodeOAuthState(),
-      login_hint: getOutreachAccount(),
+      login_hint: account,
     });
     return NextResponse.redirect(url);
   } catch (err) {

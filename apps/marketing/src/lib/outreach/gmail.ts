@@ -14,6 +14,17 @@ export function getOutreachAccount(): string {
   return process.env.GMAIL_OUTREACH_USER || "praveen@evelynlearning.com";
 }
 
+export function getOutreachAccounts(): string[] {
+  const primary = getOutreachAccount().toLowerCase();
+  const extra = (process.env.GMAIL_OUTREACH_ACCOUNTS || "")
+    .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return Array.from(new Set([primary, ...extra]));
+}
+
+export function isAllowedAccount(email: string): boolean {
+  return getOutreachAccounts().includes(email.trim().toLowerCase());
+}
+
 export function getOutreachOAuthClient() {
   const id = process.env.GMAIL_OUTREACH_CLIENT_ID;
   const secret = process.env.GMAIL_OUTREACH_CLIENT_SECRET;
@@ -22,9 +33,9 @@ export function getOutreachOAuthClient() {
   return new google.auth.OAuth2(id, secret, callback);
 }
 
-export async function getOutreachGmail(): Promise<gmail_v1.Gmail> {
+export async function getOutreachGmail(account: string = getOutreachAccount()): Promise<gmail_v1.Gmail> {
   await connectDB();
-  const doc = await OutreachToken.findOne({ account: getOutreachAccount() });
+  const doc = await OutreachToken.findOne({ account: account.toLowerCase() });
   if (!doc) throw new Error("GMAIL_NOT_CONNECTED");
   const auth = getOutreachOAuthClient();
   auth.setCredentials({ refresh_token: decryptToken(doc.refreshTokenEnc) });
@@ -150,8 +161,8 @@ export async function createOutreachDraft(args: {
   return { draftId, threadId };
 }
 
-export async function getThreadMessages(threadId: string) {
-  const gmail = await getOutreachGmail();
+export async function getThreadMessages(threadId: string, account?: string) {
+  const gmail = await getOutreachGmail(account);
   const res = await gmail.users.threads.get({
     userId: "me",
     id: threadId,
@@ -169,4 +180,49 @@ export async function getThreadMessages(threadId: string) {
     snippet: m.snippet ?? "",
     internalDate: Number(m.internalDate ?? 0),
   }));
+}
+
+export interface FullMessage {
+  id: string; threadId: string; from: string; to: string; subject: string;
+  date: number; labelIds: string[]; text: string; messageIdHeader: string;
+}
+
+type Part = { mimeType?: string | null; body?: { data?: string | null } | null; parts?: Part[] | null };
+
+/** text/plain if present anywhere in the tree; otherwise HTML stripped to text. */
+export function extractPlainText(part: Part): string {
+  const decode = (d?: string | null) => (d ? Buffer.from(d, "base64url").toString("utf8") : "");
+  const walk = (p: Part, want: string): string => {
+    if (p.mimeType === want && p.body?.data) return decode(p.body.data);
+    for (const c of p.parts ?? []) { const r = walk(c, want); if (r) return r; }
+    return "";
+  };
+  const plain = walk(part, "text/plain");
+  if (plain) return plain.replace(/\r\n/g, "\n").trim();
+  const html = walk(part, "text/html");
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li|tr|h\d)>/gi, "\n")
+    .replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n").trim();
+}
+
+export async function getFullThread(threadId: string, account: string): Promise<FullMessage[]> {
+  const gmail = await getOutreachGmail(account);
+  const res = await gmail.users.threads.get({ userId: "me", id: threadId, format: "full" });
+  const header = (m: gmail_v1.Schema$Message, name: string) =>
+    m.payload?.headers?.find((h) => h.name?.toLowerCase() === name)?.value ?? "";
+  return (res.data.messages ?? []).map((m) => ({
+    id: m.id ?? "", threadId: m.threadId ?? threadId,
+    from: header(m, "from"), to: header(m, "to"), subject: header(m, "subject"),
+    date: Number(m.internalDate ?? 0), labelIds: m.labelIds ?? [],
+    text: m.payload ? extractPlainText(m.payload as Part) : "",
+    messageIdHeader: header(m, "message-id"),
+  }));
+}
+
+export async function listThreadIds(account: string, q: string, pageToken?: string): Promise<{ ids: string[]; nextPageToken?: string }> {
+  const gmail = await getOutreachGmail(account);
+  const res = await gmail.users.threads.list({ userId: "me", q, maxResults: 50, pageToken });
+  return { ids: (res.data.threads ?? []).map((t) => t.id ?? "").filter(Boolean), nextPageToken: res.data.nextPageToken ?? undefined };
 }

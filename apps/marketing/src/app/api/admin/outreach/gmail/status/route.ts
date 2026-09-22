@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@core/db";
 import { OutreachToken, type IOutreachToken } from "@/models";
-import { getOutreachAccount } from "@/lib/outreach/gmail";
+import { getOutreachAccounts } from "@/lib/outreach/gmail";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -13,16 +13,17 @@ export async function GET() {
 
   await connectDB();
 
-  const account = getOutreachAccount();
-  const doc = await OutreachToken.findOne({ account }).lean<IOutreachToken>();
-
   // `connected: true` only means a token row exists, not that it still
   // works (it may have been revoked, or TOKEN_ENCRYPTION_KEY may have
   // rotated since). Surfacing connectedAt lets the chip show staleness
   // instead of asserting a green status forever.
+  const accounts = getOutreachAccounts();
+  const docs = await OutreachToken.find({ account: { $in: accounts } }).lean<IOutreachToken[]>();
+  const byAccount = new Map(docs.map((d) => [d.account, d]));
   return NextResponse.json({
-    connected: !!doc,
-    account,
-    connectedAt: doc?.connectedAt ? new Date(doc.connectedAt).toISOString() : null,
+    connected: byAccount.has(accounts[0]),
+    account: accounts[0],
+    connectedAt: byAccount.get(accounts[0])?.connectedAt ? new Date(byAccount.get(accounts[0])!.connectedAt).toISOString() : null,
+    accounts: accounts.map((a) => ({ account: a, connected: byAccount.has(a), connectedAt: byAccount.get(a)?.connectedAt ? new Date(byAccount.get(a)!.connectedAt).toISOString() : null })),
   });
 }
