@@ -23,6 +23,17 @@ export interface ReplayTokenPayload {
   student_id: string;
   session_id: string;
   exp: number;
+  /** Optional, mirrors the embed config's `branding` shape (see
+   *  tutor-portal/embed/page.tsx and config-params.ts) — GreenApple pilot
+   *  (task 13): when the minting API includes it, the replay page's PDF
+   *  export uses `product_name` instead of the engine's own default. Covered
+   *  by the same HMAC signature as every other claim, but purely cosmetic —
+   *  never gate an access decision on it the way partner_id/student_id are. */
+  branding?: {
+    product_name?: string;
+    primary_color?: string;
+    logo_url?: string;
+  };
 }
 
 function b64urlDecode(s: string): Buffer {

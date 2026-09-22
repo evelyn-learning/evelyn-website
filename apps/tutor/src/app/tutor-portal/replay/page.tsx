@@ -2,7 +2,7 @@ import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
 import ReplayPlayer, { TranscriptBubble } from '../../admin/tutor-sessions/components/ReplayPlayer';
-import ExportSessionPDFButton from '../../admin/tutor-sessions/components/ExportSessionPDFButton';
+import ExportSessionPDFButton from '@/components/session/ExportSessionPDFButton';
 
 /**
  * Student-facing session replay (crimsora v2 — past sessions). Loaded in the
@@ -104,6 +104,7 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
             level={s.level}
             sessionGoal={s.sessionGoal}
             studentName={s.studentName}
+            productName={payload.branding?.product_name}
           />
         </div>
 

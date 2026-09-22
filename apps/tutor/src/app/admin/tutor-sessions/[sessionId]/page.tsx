@@ -7,7 +7,7 @@ import { TutorSession } from "@/models";
 import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Target } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import ReplayPlayer from "../components/ReplayPlayer";
-import ExportSessionPDFButton from "../components/ExportSessionPDFButton";
+import ExportSessionPDFButton from "@/components/session/ExportSessionPDFButton";
 import SpokenTranscript from "../components/SpokenTranscript";
 
 interface SessionPageProps {

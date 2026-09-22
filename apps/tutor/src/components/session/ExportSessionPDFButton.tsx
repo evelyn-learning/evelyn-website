@@ -7,6 +7,13 @@
  * TutorSession record's stored transcript + whiteboardCommands instead of
  * demo interactions. Stored whiteboard commands are wrapped as
  * { action, data: {...args}, timestamp } — flattened back for the exporter.
+ *
+ * Moved from admin/tutor-sessions/components (GreenApple pilot, task 13) so
+ * the student-facing portal replay page (/tutor-portal/replay) can render it
+ * too, alongside the existing admin usages. `productName` is optional and
+ * threaded straight through to exportTutorSessionPDF's branded header/
+ * footer lines — omitted, the exporter's own "Evelyn Learning" default
+ * applies, so the admin pages are unaffected.
  */
 
 import { useState } from 'react';
@@ -34,10 +41,14 @@ interface Props {
   level?: string;
   sessionGoal?: string;
   studentName?: string;
+  /** Partner's `branding.product_name`, when the caller has one (e.g. the
+   *  portal replay page, from the replay token). Absent for admin usages —
+   *  the exporter falls back to its own default there. */
+  productName?: string;
 }
 
 export default function ExportSessionPDFButton({
-  transcript, whiteboardCommands, topic, subject, level, sessionGoal, studentName,
+  transcript, whiteboardCommands, topic, subject, level, sessionGoal, studentName, productName,
 }: Props) {
   const [exporting, setExporting] = useState(false);
 
@@ -64,7 +75,7 @@ export default function ExportSessionPDFButton({
         topic || 'Tutor Session',
         sessionGoal || 'practice',
         studentName,
-        { subject, level },
+        { subject, level, productName },
       );
     } catch (err) {
       console.error('[ExportSessionPDFButton] export failed:', err);
