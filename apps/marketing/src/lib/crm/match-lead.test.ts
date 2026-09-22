@@ -38,5 +38,19 @@ await test("newLeadFields derives company from domain when absent", () => {
   assert.equal((f.decisionMaker as { name: string }).name, "Bob Ray");
   assert.equal(f.source, "gmail:info@evelynlearning.com");
 });
+await test("website-only identity matches by domain (no email on the identity)", () => {
+  const notAcme: MatchableLead = { _id: "3", emails: [], decisionMaker: {}, website: "https://notacme.edu" };
+  const r = pickLead({ website: "https://www.acme.edu/x" }, [zed, notAcme, acme]);
+  assert.equal(r?.lead._id, "1"); assert.equal(r?.by, "domain");
+});
+await test("matchQuery website regex is anchored to a host boundary, not a bare substring", () => {
+  const q = matchQuery({ website: "https://acme.edu" }) as { $or: Array<Record<string, unknown>> };
+  assert.ok(Array.isArray(q.$or));
+  const websiteClause = q.$or.find((c) => "website" in c) as { website: RegExp } | undefined;
+  assert.ok(websiteClause, "expected an $or clause on website");
+  assert.ok(websiteClause!.website.test("https://acme.edu"));
+  assert.ok(websiteClause!.website.test("https://www.acme.edu/about"));
+  assert.ok(!websiteClause!.website.test("https://notacme.edu"));
+});
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

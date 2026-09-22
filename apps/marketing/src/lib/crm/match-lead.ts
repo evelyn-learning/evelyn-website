@@ -46,7 +46,15 @@ export function pickLead(
   return null;
 }
 
-/** Mongo filter that loads every plausible candidate for `pickLead`. */
+/**
+ * Mongo filter that loads every plausible candidate for `pickLead`.
+ *
+ * Results are candidate loaders only and MUST be passed through `pickLead`
+ * — never treat a `matchQuery` hit as a final match. The domain clauses in
+ * particular are intentionally loose (e.g. the `website` regex matches a
+ * host boundary, not an exact host) so `pickLead`'s exact `websiteDomain`
+ * equality check is the real source of truth.
+ */
 export function matchQuery(identity: ContactIdentity): Record<string, unknown> | null {
   const or: Record<string, unknown>[] = [];
   const email = identity.email ? normalizeEmail(identity.email) : "";
@@ -57,7 +65,10 @@ export function matchQuery(identity: ContactIdentity): Record<string, unknown> |
   }
   if (li) or.push({ "decisionMaker.linkedinUrl": new RegExp(escapeRe(li.replace("https://www.", "")), "i") });
   if (domain && !isFreeMailDomain(domain)) {
-    const re = new RegExp(`${escapeRe(domain)}(\\/|$)`, "i");
+    // Anchored to a host boundary: `domain` must start the string or follow
+    // "//" or ".", and must end the string or be followed by "/". This
+    // stops "abc.com" from matching a website host of "notabc.com".
+    const re = new RegExp(`(^|\\/\\/|\\.)${escapeRe(domain)}(\\/|$)`, "i");
     or.push({ website: re }, { emails: new RegExp(`@${escapeRe(domain)}$`, "i") }, { "decisionMaker.email": new RegExp(`@${escapeRe(domain)}$`, "i") });
   }
   return or.length ? { $or: or } : null;
