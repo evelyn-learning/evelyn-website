@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { parseArchive } from "@/lib/crm/linkedin-archive";
+import { parseArchiveDetailed } from "@/lib/crm/linkedin-archive";
 import { linkedinTouches } from "@/lib/crm/linkedin-paste";
 import { upsertLeadWithTouches } from "@/lib/crm/upsert-lead";
 
@@ -27,17 +27,19 @@ export async function POST(request: NextRequest) {
   const connections = form.get("connections");
   const dryRun = (form.get("dryRun") ?? "1") !== "0";
 
-  const convs = parseArchive({
+  const detail = parseArchiveDetailed({
     messagesCsv: await messages.text(),
     connectionsCsv: isFileLike(connections) ? await connections.text() : undefined,
     ownerProfileUrl: owner,
   });
+  const convs = detail.conversations;
   const out = {
     conversations: convs.length,
     imported: 0,
     created: 0,
     touchesAdded: 0,
-    skippedNoOwnerMessage: 0,
+    skippedNoOwnerMessage: detail.skippedNoOwnerMessage,
+    skippedGroup: detail.skippedGroup,
     sample: convs.slice(0, 20).map((c) => `${c.participant.name} (${c.messages.length})`),
   };
   if (dryRun) return NextResponse.json(out);
