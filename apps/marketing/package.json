@@ -31,6 +31,7 @@
     "test:crm-linkedin": "npx tsx src/lib/crm/linkedin-paste.test.ts",
     "test:crm-archive": "npx tsx src/lib/crm/csv.test.ts && npx tsx src/lib/crm/linkedin-archive.test.ts",
     "test:crm-opportunity": "npx tsx src/lib/crm/opportunity.test.ts",
+    "test:crm": "npm run test:crm-models && npm run test:crm-core && npm run test:crm-upsert-smoke && npm run test:crm-contact && npm run test:crm-gmail && npm run test:crm-gmail-classify && npm run test:crm-gmail-ingest && npm run test:crm-linkedin && npm run test:crm-archive && npm run test:crm-opportunity",
     "crm:backfill-contacts": "npx tsx scripts/crm-backfill-contact-submissions.ts"
   }
 }

@@ -2410,7 +2410,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Create: `scripts/crm-backfill-contact-submissions.ts`
 - Modify: `package.json` (`"crm:backfill-contacts": "npx tsx scripts/crm-backfill-contact-submissions.ts"`)
 
-- [ ] **Step 1: Script**
+- [x] **Step 1: Script**
 
 ```ts
 // One-off: turn historical contact-form submissions into leads/touches.
@@ -2448,7 +2448,9 @@ const apply = process.argv.includes("--apply");
 
 - [ ] **Step 2: Run** — `npm run crm:backfill-contacts` (dry) then `npm run crm:backfill-contacts -- --apply` on the local DB; second apply → `touches added 0`.
 
-- [ ] **Step 3: Commit**
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
+
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/crm-backfill-contact-submissions.ts package.json
@@ -2464,10 +2466,10 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 **Files:**
 - Modify: `package.json`, `.env.example` (or the env doc the repo uses — check `ls apps/marketing/.env*`), `docs/superpowers/plans/2026-09-21-crm-unified-timeline.md` (this file: tick boxes)
 
-- [ ] **Step 1:** Add `"test:crm": "npm run test:crm-models && npm run test:crm-core && npm run test:crm-contact && npm run test:crm-gmail && npm run test:crm-gmail-classify && npm run test:crm-linkedin && npm run test:crm-archive"` and run it: all PASS.
-- [ ] **Step 2:** Document the three new env vars in the marketing env example with placeholder values (never real ones).
-- [ ] **Step 3:** Full `npm run build`. Expected clean.
-- [ ] **Step 4:** Commit `chore(crm): aggregate test script + env docs`.
+- [x] **Step 1:** Add `"test:crm": "npm run test:crm-models && npm run test:crm-core && npm run test:crm-contact && npm run test:crm-gmail && npm run test:crm-gmail-classify && npm run test:crm-linkedin && npm run test:crm-archive"` and run it: all PASS.
+- [x] **Step 2:** Document the three new env vars in the marketing env example with placeholder values (never real ones).
+- [x] **Step 3:** Full `npm run build`. Expected clean.
+- [x] **Step 4:** Commit `chore(crm): aggregate test script + env docs`.
 - [ ] **Step 5 (deploy, separate approval):** merge to `main` → `./deploy-marketing.sh` (never `deploy-update.sh`); on prod set `GMAIL_OUTREACH_ACCOUNTS`, `LINKEDIN_OWNER_NAME`, `LINKEDIN_OWNER_PROFILE_URL`; visit `/api/admin/outreach/gmail/auth?account=info@evelynlearning.com` and consent; run Gmail dry-run for both accounts from the Import tab and review counts before the real run; run `crm:backfill-contacts -- --apply` on prod once.
 
 ---
