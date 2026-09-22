@@ -6,6 +6,9 @@ import { isAllowedAccount } from "@/lib/outreach/gmail";
 import { PRODUCTS } from "@/lib/outreach/enums";
 import { ingestGmailPage, sentQuery } from "@/lib/crm/gmail-ingest";
 
+// Only takes effect on a serverless host (Vercel etc.); this app runs under
+// pm2/next start, where the effective request timeout is the nginx proxy's
+// read timeout instead. Left in place in case the deployment target changes.
 export const maxDuration = 300;
 
 const bodySchema = z.object({

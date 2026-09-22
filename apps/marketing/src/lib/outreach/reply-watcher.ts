@@ -29,6 +29,7 @@ interface WatcherState {
   isWatcherRunning: boolean;
   watcherTask: ScheduledTask | null;
   isCheckInProgress: boolean;
+  isLabelIngestInProgress: boolean;
 }
 
 const WATCHER_STATE_KEY = Symbol.for("evelyn.outreach.replyWatcherState");
@@ -40,6 +41,7 @@ function watcherState(): WatcherState {
       isWatcherRunning: false,
       watcherTask: null,
       isCheckInProgress: false,
+      isLabelIngestInProgress: false,
     };
   }
   return g[WATCHER_STATE_KEY];
@@ -197,24 +199,35 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
 // it is not counted in `errors`, so the cron log stays quiet for it and
 // only fires for a real failure or actual touches added.
 export async function runLabelIngest(): Promise<{ account: string; kept: number; touchesAdded: number; errors: number; connected: boolean }[]> {
+  const st = watcherState();
+  if (st.isLabelIngestInProgress) {
+    console.log("[CRM] label ingest already in progress, skipping this tick");
+    return [];
+  }
+  st.isLabelIngestInProgress = true;
+
   const results: { account: string; kept: number; touchesAdded: number; errors: number; connected: boolean }[] = [];
-  for (const account of getOutreachAccounts()) {
-    let pageToken: string | undefined;
-    let kept = 0, touchesAdded = 0, errors = 0, connected = true;
-    try {
-      do {
-        const r = await ingestGmailPage({ account, query: labelQuery(), pageToken, dryRun: false, origin: "gmail_label" });
-        kept += r.kept; touchesAdded += r.touchesAdded; pageToken = r.nextPageToken;
-      } while (pageToken);
-    } catch (e) {
-      if (e instanceof Error && e.message === "GMAIL_NOT_CONNECTED") {
-        connected = false;
-      } else {
-        errors++;
-        console.error(`[CRM] label ingest ${account}:`, e);
+  try {
+    for (const account of getOutreachAccounts()) {
+      let pageToken: string | undefined;
+      let kept = 0, touchesAdded = 0, errors = 0, connected = true;
+      try {
+        do {
+          const r = await ingestGmailPage({ account, query: labelQuery(), pageToken, dryRun: false, origin: "gmail_label" });
+          kept += r.kept; touchesAdded += r.touchesAdded; pageToken = r.nextPageToken;
+        } while (pageToken);
+      } catch (e) {
+        if (e instanceof Error && e.message === "GMAIL_NOT_CONNECTED") {
+          connected = false;
+        } else {
+          errors++;
+          console.error(`[CRM] label ingest ${account}:`, e);
+        }
       }
+      results.push({ account, kept, touchesAdded, errors, connected });
     }
-    results.push({ account, kept, touchesAdded, errors, connected });
+  } finally {
+    st.isLabelIngestInProgress = false;
   }
   return results;
 }

@@ -33,13 +33,34 @@ export function getOutreachOAuthClient() {
   return new google.auth.OAuth2(id, secret, callback);
 }
 
+// Reuse the built `gmail_v1.Gmail` client (and, with it, the OAuth2Client's
+// cached access token) across calls for the same account. `google.auth.
+// OAuth2` caches its access token on the client instance, not against the
+// refresh token value — a fresh client starts cold. A paged CRM import can
+// call getFullThread/listThreadIds ~50 times per page for one account, and
+// building a brand-new client every call meant ~50 refresh-token exchanges
+// for what should be one (the token is reused for the life of the process
+// until Google expires it). Keyed by lowercased account; invalidated
+// whenever the stored refreshTokenEnc changes (re-consent) or the token doc
+// is deleted (disconnect).
+const gmailClientCache = new Map<string, { refreshTokenEnc: string; gmail: gmail_v1.Gmail }>();
+
 export async function getOutreachGmail(account: string = getOutreachAccount()): Promise<gmail_v1.Gmail> {
+  const key = account.toLowerCase();
   await connectDB();
-  const doc = await OutreachToken.findOne({ account: account.toLowerCase() });
-  if (!doc) throw new Error("GMAIL_NOT_CONNECTED");
+  const doc = await OutreachToken.findOne({ account: key });
+  if (!doc) {
+    gmailClientCache.delete(key);
+    throw new Error("GMAIL_NOT_CONNECTED");
+  }
+  const cached = gmailClientCache.get(key);
+  if (cached && cached.refreshTokenEnc === doc.refreshTokenEnc) return cached.gmail;
+
   const auth = getOutreachOAuthClient();
   auth.setCredentials({ refresh_token: decryptToken(doc.refreshTokenEnc) });
-  return google.gmail({ version: "v1", auth });
+  const gmail = google.gmail({ version: "v1", auth });
+  gmailClientCache.set(key, { refreshTokenEnc: doc.refreshTokenEnc, gmail });
+  return gmail;
 }
 
 // Subjects are LLM-written cold-email copy (em dashes, curly quotes,
