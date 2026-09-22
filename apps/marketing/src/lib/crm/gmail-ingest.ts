@@ -15,8 +15,8 @@ import { upsertLeadWithTouches } from "./upsert-lead";
 // per-thread error.
 export class GmailRateLimitError extends Error {
   retryAfterMs = 60_000;
-  constructor(message = "Gmail rate limit exceeded") {
-    super(message);
+  constructor(message = "Gmail rate limit exceeded", options?: ErrorOptions) {
+    super(message, options);
     this.name = "GmailRateLimitError";
   }
 }
@@ -37,7 +37,7 @@ export function isRateLimitError(err: unknown): boolean {
   const status = httpStatusOf(err);
   if (status === 429) return true;
   if (status === 403) {
-    return /rateLimitExceeded|userRateLimitExceeded|quotaExceeded|Quota exceeded/i.test(reasonsOf(err));
+    return /rateLimitExceeded|userRateLimitExceeded|quotaExceeded|Quota exceeded|rate limit exceeded/i.test(reasonsOf(err));
   }
   return false;
 }
@@ -79,8 +79,9 @@ async function listThreadIdsWithRetry(deps: IngestGmailDeps, account: string, qu
     await deps.sleep(2000);
     try {
       return await deps.listThreadIds(account, query, pageToken);
-    } catch {
-      throw new GmailRateLimitError();
+    } catch (e2) {
+      if (!isRateLimitError(e2)) throw e2;
+      throw new GmailRateLimitError(undefined, { cause: e2 });
     }
   }
 }

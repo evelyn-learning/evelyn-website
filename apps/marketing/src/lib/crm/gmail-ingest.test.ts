@@ -194,5 +194,25 @@ await test("listThreadIds throwing 429 twice: GmailRateLimitError propagates out
   assert.equal(calls, 2);
 });
 
+await test("listThreadIds: 429 then a plain Error — the plain Error propagates, not GmailRateLimitError", async () => {
+  let calls = 0;
+  const plainError = new Error("boom, not a rate limit");
+  const deps = {
+    listThreadIds: async (_account: string, _q: string, _pageToken?: string) => {
+      calls++;
+      if (calls === 1) throw rateLimitError();
+      throw plainError;
+    },
+    getFullThread: fakeGetFullThread({}),
+    upsert: async (_args: UpsertArgs) => { throw new Error("must not be called"); },
+    sleep: noopSleep,
+  };
+  await assert.rejects(
+    () => ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps),
+    (e: unknown) => e === plainError
+  );
+  assert.equal(calls, 2);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();
