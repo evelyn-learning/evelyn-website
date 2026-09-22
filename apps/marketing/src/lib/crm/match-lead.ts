@@ -16,7 +16,7 @@ export interface MatchableLead {
   website: string;
 }
 
-export type MatchBy = "email" | "linkedin" | "domain";
+export type MatchBy = "email" | "linkedin" | "domain" | "conversation";
 
 /** Spec §4: email → linkedin → org domain. Pure; caller loads candidates. */
 export function pickLead(

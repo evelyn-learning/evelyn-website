@@ -14,6 +14,8 @@ const bodySchema = z.object({
   company: z.string().optional(),
   product: z.enum(PRODUCTS).optional(),
   dryRun: z.boolean().optional(),
+  tzOffsetMinutes: z.number().int().min(-840).max(840).optional(),
+  now: z.string().datetime().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -23,7 +25,11 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   const b = parsed.data;
   const owner = process.env.LINKEDIN_OWNER_NAME || "Praveen Tyagi";
-  const conv = parseLinkedinConversation(b.text, { ownerName: owner });
+  const conv = parseLinkedinConversation(b.text, {
+    ownerName: owner,
+    now: b.now ? new Date(b.now) : undefined,
+    tzOffsetMinutes: b.tzOffsetMinutes,
+  });
   const participant = b.name?.trim() || conv.participant;
   if (!participant || conv.messages.length === 0) {
     return NextResponse.json({ error: "Could not find any messages in the pasted text", participant, messages: [] }, { status: 422 });

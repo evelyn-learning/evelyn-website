@@ -15,25 +15,44 @@ export interface UpsertArgs {
 
 export async function upsertLeadWithTouches(args: UpsertArgs) {
   await connectDB();
-  const q = matchQuery(args.identity);
-  const candidates: MatchableLead[] = q
-    ? (await Lead.find(q).select("_id emails decisionMaker.email decisionMaker.linkedinUrl website").lean()).map((c) => ({
-        _id: String(c._id), emails: c.emails ?? [], decisionMaker: c.decisionMaker ?? {}, website: c.website ?? "",
-      }))
-    : [];
-  const picked = pickLead(args.identity, candidates);
 
-  let lead: ILead;
+  let lead: ILead | null = null;
+  let matchedBy: MatchBy | "new" = "new";
+
+  // A LinkedIn paste/bookmarklet import keys its conversation by the
+  // profile URL when known, else the participant-name slug (see the
+  // ingest route). Without a profile URL, `matchQuery`/`pickLead` have
+  // nothing to match on (no email, no linkedinUrl) and would create a
+  // fresh lead on every re-import. The conversation key is itself a
+  // stable identity once a lead has been ingested once, so check it
+  // first — this intentionally means two different people with the same
+  // name and no profile URL share a lead (accepted tradeoff).
+  if (args.linkedinConversationId) {
+    lead = await Lead.findOne({ linkedinConversationIds: args.linkedinConversationId });
+    if (lead) matchedBy = "conversation";
+  }
+
+  if (!lead) {
+    const q = matchQuery(args.identity);
+    const candidates: MatchableLead[] = q
+      ? (await Lead.find(q).select("_id emails decisionMaker.email decisionMaker.linkedinUrl website").lean()).map((c) => ({
+          _id: String(c._id), emails: c.emails ?? [], decisionMaker: c.decisionMaker ?? {}, website: c.website ?? "",
+        }))
+      : [];
+    const picked = pickLead(args.identity, candidates);
+    if (picked) {
+      lead = (await Lead.findById(picked.lead._id))!;
+      matchedBy = picked.by;
+    }
+  }
+
   let created = false;
-  let matchedBy: MatchBy | "new";
-  if (picked) {
-    lead = (await Lead.findById(picked.lead._id))!;
-    matchedBy = picked.by;
-  } else {
+  if (!lead) {
     lead = await Lead.create(newLeadFields(args.identity, args.source));
     created = true;
     matchedBy = "new";
   }
+  if (!lead) throw new Error("upsertLeadWithTouches: unreachable — lead is always found or created above");
 
   // Grow the identity set so the next ingest matches on email directly.
   const email = args.identity.email ? normalizeEmail(args.identity.email) : "";

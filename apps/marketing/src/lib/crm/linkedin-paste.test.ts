@@ -74,5 +74,19 @@ await test("touches are stable across re-parse (idempotent ids)", () => {
   assert.ok(a[0].externalId.startsWith("li:"));
   assert.equal(a[0].channel, "linkedin"); assert.equal(a[0].origin, "linkedin_paste");
 });
+await test("a one-word day-named reply is not swallowed as a day marker", () => {
+  const txt = "Today\nJane Doe   9:05 AM\nCan you do a call?\nFriday\nWorks for me\nPraveen Tyagi   4:00 PM\nGreat";
+  const r = parseLinkedinConversation(txt, { ownerName: "Praveen Tyagi", now });
+  assert.equal(r.messages.length, 2);
+  assert.equal(r.messages[0].body, "Can you do a call?\nFriday\nWorks for me");
+  assert.equal(r.messages[1].at.toDateString(), now.toDateString());
+});
+await test("timestamps resolve in the browser's timezone, not the server's", () => {
+  const browserNow = new Date("2026-09-21T19:00:00Z");
+  const r = parseLinkedinConversation("Today\nJane Doe   9:05 AM\nhello", {
+    ownerName: "Praveen Tyagi", now: browserNow, tzOffsetMinutes: 420, // PDT
+  });
+  assert.equal(r.messages[0].at.toISOString(), "2026-09-21T16:05:00.000Z");
+});
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

@@ -10,7 +10,14 @@ interface Preview { participant: string; messages: { from: string; at: string; b
 // cookies). It opens this page with the payload in the URL fragment, which
 // never leaves the browser, and this page — same origin, admin session —
 // does the POST.
-const BOOKMARKLET = `javascript:(function(){var l=document.querySelector('.msg-s-message-list-content')||document.querySelector('.msg-s-message-list')||document.body;var a=document.querySelector('a.msg-thread__link-to-profile')||document.querySelector('.msg-entity-lockup__entity-title a');var n=(document.querySelector('.msg-entity-lockup__entity-title')||{}).innerText||'';var p={text:l.innerText,profileUrl:a?a.href:'',name:n.trim()};var s=btoa(unescape(encodeURIComponent(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');window.open('${typeof window !== "undefined" ? window.location.origin : ""}/admin/outreach/linkedin-import#'+s,'_blank');})();`;
+//
+// Built as a function of the origin (rather than a module-level constant
+// evaluated with `window.location.origin`) so the server-rendered markup
+// never differs from what the client renders on hydration — the origin is
+// only known once this component has mounted in the browser.
+function buildBookmarklet(origin: string): string {
+  return `javascript:(function(){var l=document.querySelector('.msg-s-message-list-content')||document.querySelector('.msg-s-message-list')||document.body;var a=document.querySelector('a.msg-thread__link-to-profile')||document.querySelector('.msg-entity-lockup__entity-title a');var n=(document.querySelector('.msg-entity-lockup__entity-title')||{}).innerText||'';var p={text:l.innerText,profileUrl:a?a.href:'',name:n.trim()};var s=btoa(unescape(encodeURIComponent(JSON.stringify(p)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');window.open('${origin}/admin/outreach/linkedin-import#'+s,'_blank');})();`;
+}
 
 function decodeHash(): { text: string; profileUrl: string; name: string } | null {
   try {
@@ -30,8 +37,10 @@ export default function LinkedinImport() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     const p = decodeHash();
     if (p) { setText(p.text); setProfileUrl(p.profileUrl); setName(p.name); window.history.replaceState({}, "", window.location.pathname); }
   }, []);
@@ -41,7 +50,10 @@ export default function LinkedinImport() {
     try {
       const res = await fetch("/api/admin/outreach/ingest/linkedin", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, profileUrl: profileUrl || undefined, name: name || undefined, company: company || undefined, product: product || undefined, dryRun }),
+        body: JSON.stringify({
+          text, profileUrl: profileUrl || undefined, name: name || undefined, company: company || undefined, product: product || undefined, dryRun,
+          tzOffsetMinutes: new Date().getTimezoneOffset(), now: new Date().toISOString(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) { setResult(data.error || "Failed"); return; }
@@ -50,7 +62,7 @@ export default function LinkedinImport() {
     } finally { setBusy(false); }
   };
 
-  const bookmarklet = useMemo(() => BOOKMARKLET, []);
+  const bookmarklet = useMemo(() => (origin ? buildBookmarklet(origin) : ""), [origin]);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
@@ -60,7 +72,11 @@ export default function LinkedinImport() {
       </div>
       <p className="text-sm text-gray-600">
         Drag this to your bookmarks bar, open a LinkedIn conversation, click it:&nbsp;
-        <a href={bookmarklet} className="rounded bg-gray-900 px-2 py-1 text-xs font-semibold text-white" onClick={(e) => e.preventDefault()}>Evelyn CRM ⇪</a>
+        {bookmarklet ? (
+          <a href={bookmarklet} className="rounded bg-gray-900 px-2 py-1 text-xs font-semibold text-white" onClick={(e) => e.preventDefault()}>Evelyn CRM ⇪</a>
+        ) : (
+          <span className="rounded bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-500">loading…</span>
+        )}
         &nbsp;Or paste the conversation below.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
