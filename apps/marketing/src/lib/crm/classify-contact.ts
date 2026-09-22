@@ -1,6 +1,6 @@
 import { CONTACT_REASONS, type ContactReason, type Product } from "@/lib/outreach/enums";
 
-const CAREERS_RE = /\b(resume|r[ée]sum[ée]|\bcv\b|applying|application for|job (opening|opportunity|role)|position|internship|vacancy|hiring|recruit)/i;
+const CAREERS_RE = /\b(resume|r[ée]sum[ée]|cv|applying|application for|job (opening|opportunity|role)|position|internship|vacancy|hiring|recruit(er|ing)?)\b/i;
 
 export function classifyContact(input: { reason?: string; subject: string; message: string }): { reason: ContactReason; isCareers: boolean } {
   let reason: ContactReason = "other";

@@ -20,6 +20,14 @@ await test("unknown reason -> other; ordinary inquiry not careers", () => {
   const r = classifyContact({ reason: "banana", subject: "Pricing", message: "How much per minute?" });
   assert.equal(r.reason, "other"); assert.equal(r.isCareers, false);
 });
+await test("careers keyword screen does not false-positive on 'positioning'/'recruitment'", () => {
+  const r = classifyContact({ reason: "product_inquiry", subject: "Pricing", message: "How does your market positioning compare? We are positioned to recruitment-heavy sectors." });
+  assert.equal(r.isCareers, false); assert.equal(r.reason, "product_inquiry");
+});
+await test("careers keyword screen still catches whole-word 'position'", () => {
+  const r = classifyContact({ subject: "Inquiry", message: "I am applying for the open position." });
+  assert.equal(r.isCareers, true); assert.equal(r.reason, "careers");
+});
 await test("productFromParam maps CTA slugs", () => {
   assert.equal(productFromParam("voice-tutor"), "voice_tutor");
   assert.equal(productFromParam("tutor-copilot"), "voice_tutor");
