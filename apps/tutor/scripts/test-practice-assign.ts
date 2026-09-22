@@ -154,5 +154,13 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
   const out5 = await resolveAssignmentItems({ los: [{ loId: 'A', title: 'Alpha' }], band: 'strong', seenItemIds: [], studentId: 's', courseId: 'c' }, sources);
   check('difficulty miss falls back to unfiltered retrieval', out5.length === 1 && out5[0].items.length === ASSIGN_TUNING.perLo);
 
+  // Task 12 — partner-level practice cap (GreenApple = 3). `cap` may only
+  // LOWER ASSIGN_TUNING.cap, never raise it.
+  const out6 = await resolveAssignmentItems({ los: [{ loId: 'A', title: 'Alpha' }, { loId: 'B', title: 'Beta' }], band: 'steady', seenItemIds: [], studentId: 's', courseId: 'c', cap: 3 }, sources);
+  check('cap:3 — total across LOs is capped at 3, not ASSIGN_TUNING.cap', out6.reduce((n, o) => n + o.items.length, 0) === 3, JSON.stringify(out6.map((o) => o.items.length)));
+
+  const out7 = await resolveAssignmentItems({ los: [{ loId: 'A', title: 'Alpha' }, { loId: 'B', title: 'Beta' }], band: 'steady', seenItemIds: [], studentId: 's', courseId: 'c', cap: 999 }, sources);
+  check('cap higher than ASSIGN_TUNING.cap cannot raise it (lower-only clamp)', out7.reduce((n, o) => n + o.items.length, 0) === ASSIGN_TUNING.cap, String(out7.reduce((n, o) => n + o.items.length, 0)));
+
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

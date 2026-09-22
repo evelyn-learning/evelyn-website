@@ -51,12 +51,16 @@ export async function resolveAssignmentItems(
     seenItemIds: string[];
     studentId: string;
     courseId: string;
+    /** Partner-level override (Task 12, e.g. GreenApple = 3). Can only
+     *  LOWER `ASSIGN_TUNING.cap`, never raise it — the clamp below applies
+     *  regardless of what a caller passes in. */
+    cap?: number;
   },
   sources: PracticeSources,
   retrieve: typeof retrievePractice = retrievePractice,
 ): Promise<Array<{ loId: string; title: string; items: PracticeItem[] }>> {
   const out: Array<{ loId: string; title: string; items: PracticeItem[] }> = [];
-  let remaining = ASSIGN_TUNING.cap;
+  let remaining = Math.max(0, Math.min(input.cap ?? ASSIGN_TUNING.cap, ASSIGN_TUNING.cap));
   const difficulty = difficultyForBand(input.band);
   for (const lo of input.los) {
     if (remaining <= 0) break;

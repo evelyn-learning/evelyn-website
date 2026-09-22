@@ -11,7 +11,9 @@ import { EvidenceEventModel } from '@/models';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
-import { resolveAssignmentItems } from './resolve';
+import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
+import { resolveFlag } from '@/lib/tutor/portal/flags';
+import { resolveAssignmentItems, ASSIGN_TUNING } from './resolve';
 import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
 
 const MAX_LOS = 2;
@@ -43,8 +45,22 @@ export async function assignPractice(input: {
   const seen = await EvidenceEventModel.find({ studentId: input.profileId, loId: { $in: loIds }, itemId: { $exists: true } }).select('itemId').lean();
   const seenItemIds = [...new Set(seen.map((r) => r.itemId).filter((x): x is string => typeof x === 'string'))];
   const hints = await getLearnerHints(input.externalStudentId, input.subject, input.partnerId);
+  // Task 12 — partner-level practice cap (e.g. GreenApple = 3). Loading the
+  // partner record here is best-effort: an unknown partner id, a registry
+  // read failure, or a decrypt fault must never block homework assignment —
+  // resolveAssignmentItems' own clamp (resolve.ts) already treats a missing
+  // cap as ASSIGN_TUNING.cap, so falling back to `partner = null` on any
+  // error just means "no override", not "no homework".
+  let partner: PartnerRecord | null = null;
+  try {
+    partner = await getPartner(input.partnerId);
+  } catch (err) {
+    console.error(`[practice-assign] getPartner('${input.partnerId}') failed — falling back to the default cap`, err);
+  }
+  const rawCap = Number(resolveFlag('practice_assign_cap', partner, ASSIGN_TUNING.cap));
+  const cap = Number.isFinite(rawCap) ? rawCap : ASSIGN_TUNING.cap;
   const los = await resolveAssignmentItems(
-    { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '' },
+    { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '', cap },
     mongoPracticeSources(),
   );
   if (los.length === 0) return null;

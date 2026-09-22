@@ -8,14 +8,19 @@
 
 /** Deliberately narrower than PartnerRecord — a test fixture doesn't need to invent the rest of the row. */
 export interface FlagCarrier {
-  flagOverrides: Record<string, boolean | string>;
+  flagOverrides: Record<string, boolean | string | number>;
 }
 
+// `number` joined the union in Task 12: `flagOverrides` is stored as
+// Mongoose `Mixed` (Partner.ts), so a numeric override like
+// `practice_assign_cap: 3` round-trips as a real `number`, not a stringified
+// one — `resolveFlag` must be able to carry and return that value (and take
+// a numeric `fallback`) without the caller pre-stringifying it.
 export function resolveFlag(
   name: string,
   partner: FlagCarrier | null,
-  fallback: boolean | string,
-): boolean | string {
+  fallback: boolean | string | number,
+): boolean | string | number {
   const overrides = partner?.flagOverrides;
   // `Object.hasOwn`, not a bare index read: `flagOverrides` arrives from a
   // Mongo `lean()` as an ordinary object, so `overrides['constructor']` /
