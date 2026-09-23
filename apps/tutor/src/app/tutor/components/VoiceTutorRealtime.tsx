@@ -738,8 +738,9 @@ interface VoiceTutorRealtimeProps {
    *  arrives (current=1) and whenever the brain's set_current_problem moves
    *  the student to another problem; null when a homework plan is swapped
    *  for a non-homework one. Never fires for sessions with no homework plan.
-   *  `current` is the 1-based list POSITION, not the worksheet label. */
-  onHomeworkProgress?: (p: { current: number; total: number } | null) => void;
+   *  `current` is the 1-based list POSITION, not the worksheet label;
+   *  `text` is that problem's verbatim wording (the rail shows a prefix). */
+  onHomeworkProgress?: (p: { current: number; total: number; text?: string } | null) => void;
   /** Agenda rail (2026-08-10): cached content labels for the active plan's
    *  segments, fetched by TutorSession from the rail-labels route. Mirrored
    *  to a ref (Task 5 reads it) — not otherwise consumed here yet. */
@@ -2416,7 +2417,7 @@ export function VoiceTutorRealtime({
     const total = homeworkProblems.length;
     const clamped = Math.min(Math.max(homeworkCurrentRef.current, 1), total);
     homeworkCurrentRef.current = clamped;
-    onHomeworkProgressRef.current?.({ current: clamped, total });
+    onHomeworkProgressRef.current?.({ current: clamped, total, text: homeworkProblems[clamped - 1]?.text });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeworkProblems]);
   // Notify parent whenever the plan or segment changes so it can render
@@ -6544,7 +6545,7 @@ export function VoiceTutorRealtime({
           const idx = problems.findIndex((p) => p.n === nRaw);
           const pos = idx >= 0 ? idx + 1 : Math.min(Math.max(Math.round(nRaw), 1), total);
           homeworkCurrentRef.current = pos;
-          onHomeworkProgressRef.current?.({ current: pos, total });
+          onHomeworkProgressRef.current?.({ current: pos, total, text: problems[pos - 1]?.text });
           onDebugEvent?.('homework_current_problem', `n=${nRaw} pos=${pos} total=${total}`);
         }
         continue;

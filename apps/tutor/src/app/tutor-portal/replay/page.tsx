@@ -3,6 +3,7 @@ import { TutorSession } from '@/models';
 import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
 import ReplayPlayer, { TranscriptBubble } from '../../admin/tutor-sessions/components/ReplayPlayer';
 import ExportSessionPDFButton from '@/components/session/ExportSessionPDFButton';
+import { BubbleEmphasis } from '@/app/tutor/components/inline-emphasis';
 
 /**
  * Student-facing session replay (crimsora v2 — past sessions). Loaded in the
@@ -137,7 +138,9 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
             <div className="mt-2 flex flex-wrap gap-1.5">
               {topicsCovered.map((t, i) => (
                 <span key={i} className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                  {t}
+                  {/* LaTeX-bearing topic titles (inline $…$ math) render as math,
+                      not raw source — same renderer as the transcript. */}
+                  <BubbleEmphasis text={t} />
                 </span>
               ))}
             </div>

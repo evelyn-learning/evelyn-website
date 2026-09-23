@@ -66,3 +66,13 @@ export function renderBubbleEmphasis(text: string): React.ReactNode {
       : <React.Fragment key={`t-${i}`}>{renderInlineEmphasis(p.body)}</React.Fragment>,
   );
 }
+
+/** Component form of renderBubbleEmphasis for SERVER components (e.g. the
+ *  portal replay page's topic pills). This module is 'use client', so a
+ *  server component may render its exported components but may NOT call
+ *  its plain functions — calling renderBubbleEmphasis() from the server
+ *  throws at render time ("called from the server but it is on the
+ *  client"). */
+export function BubbleEmphasis({ text }: { text: string }) {
+  return <>{renderBubbleEmphasis(text)}</>;
+}

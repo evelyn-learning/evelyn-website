@@ -17,7 +17,7 @@
  */
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
   MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks, Loader2,
@@ -207,11 +207,12 @@ export interface SessionStageProps {
    *  the backdrop absorb the second click). Absent ⇒ debug event skipped. */
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
   /** Homework mode (GreenApple round 2): the session goal, so the stage can
-   *  branch on 'homework-help'. Not rendered yet — Task 8 adds the rail. */
+   *  branch on 'homework-help' (problem rail, empty-stage copy). */
   sessionGoal?: SessionGoal;
-  /** Homework mode: current problem / total from VoiceTutorRealtime's
-   *  onHomeworkProgress; null until a homework-help plan arrives. */
-  homeworkProgress?: { current: number; total: number } | null;
+  /** Homework mode: current problem / total (+ that problem's verbatim
+   *  text) from VoiceTutorRealtime's onHomeworkProgress; null until a
+   *  homework-help plan arrives. */
+  homeworkProgress?: { current: number; total: number; text?: string } | null;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -246,7 +247,32 @@ export default function SessionStage(props: SessionStageProps) {
     agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
     boardPenActive, onToggleBoardPen, onOrbStart, onDebugEvent,
+    sessionGoal, homeworkProgress,
   } = props;
+
+  // Homework mode (GreenApple round 2): a single "Problem n of N · <text>"
+  // chip replaces the agenda rail. `railEl` is what every rail-dependent
+  // offset below keys on (row render, board top pad, qpin header
+  // clearance, tool cluster / switcher / qpin anchors, transcript panel
+  // top) so the homework chip reserves exactly the same ~40px row. Other
+  // goals: railEl === agendaRail, byte-identical behaviour.
+  const homeworkRail: ReactNode = sessionGoal === 'homework-help' && homeworkProgress
+    ? (() => {
+        const raw = (homeworkProgress.text ?? '').replace(/\s+/g, ' ').trim();
+        const snippet = raw.length > 40 ? `${raw.slice(0, 40).trimEnd()}…` : raw;
+        return (
+          <div className="flex items-center min-w-0" data-testid="homework-rail">
+            <div
+              title={raw || undefined}
+              className="shrink min-w-0 truncate whitespace-nowrap rounded-full px-2.5 py-1 text-xs bg-slate-900 text-white font-medium"
+            >
+              Problem {homeworkProgress.current} of {homeworkProgress.total}{snippet ? ` · ${snippet}` : ''}
+            </div>
+          </div>
+        );
+      })()
+    : null;
+  const railEl: ReactNode = homeworkRail ?? agendaRail;
 
   // Round-5: transient full-title reveal (see the header markup below).
   const [titleRevealed, setTitleRevealed] = useState(false);
@@ -630,7 +656,7 @@ export default function SessionStage(props: SessionStageProps) {
   // shifts its MIDPOINT down by half that difference — measured a
   // consistent 24px-low offset at every width (owner phone re-review,
   // 2026-09-19) until this was shared too.
-  const boardColumnTopPadClass = (showSwitcher && !pagerInCard) ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2');
+  const boardColumnTopPadClass = (showSwitcher && !pagerInCard) ? 'pt-12' : (railEl && !isFullscreen ? 'pt-1' : 'pt-2');
 
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
@@ -645,7 +671,7 @@ export default function SessionStage(props: SessionStageProps) {
       const stage = stageEl.getBoundingClientRect();
       // Header row, plus the in-flow agenda-rail row when present (the rail
       // sits between header and board, so "top of board" moves down with it).
-      const HEADER_CLEARANCE = 56 + (agendaRail && !isFullscreen ? 40 : 0);
+      const HEADER_CLEARANCE = 56 + (railEl && !isFullscreen ? 40 : 0);
       const DOCK_CLEARANCE = 96;    // floating tutor bar + margin
       let lowestBottom = stage.top + HEADER_CLEARANCE;
       stageEl.querySelectorAll<HTMLElement>('[data-wb-item-index], [data-wb-note]').forEach((el) => {
@@ -664,7 +690,7 @@ export default function SessionStage(props: SessionStageProps) {
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionPinKey, qpinMode, questionPin, qpinCustomPos, agendaRail, isFullscreen]);
+  }, [questionPinKey, qpinMode, questionPin, qpinCustomPos, railEl, isFullscreen]);
   const qpinDrag = useRef<{
     pointerId: number;
     startX: number;
@@ -1046,6 +1072,8 @@ export default function SessionStage(props: SessionStageProps) {
                 isFreePractice && !liveCaption ? (
                   <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
                 ) : null
+              ) : sessionGoal === 'homework-help' ? (
+                <p className="text-lg font-semibold text-slate-800">Getting your first problem ready…</p>
               ) : (
                 <>
                   <p className="text-lg font-semibold text-slate-800">Type your question below to start</p>
@@ -1247,12 +1275,12 @@ export default function SessionStage(props: SessionStageProps) {
       {/* Agenda rail (2026-08-10) — horizontal row above the board, hidden in
           fullscreen (no room); vertical variant takes over as a left overlay
           instead (same layer treatment as the tools cluster). */}
-      {agendaRail && !isFullscreen ? (
-        <div className="relative z-20 shrink-0 order-2 px-2 pt-1.5">{agendaRail}</div>
+      {railEl && !isFullscreen ? (
+        <div className="relative z-20 shrink-0 order-2 px-2 pt-1.5">{railEl}</div>
       ) : null}
-      {agendaRail && isFullscreen ? (
+      {railEl && isFullscreen ? (
         <div className="absolute left-2 top-16 bottom-24 z-20 w-44 rounded-2xl bg-white/80 backdrop-blur-md shadow-sm overflow-hidden">
-          {agendaRailVertical ?? agendaRail}
+          {homeworkRail ?? agendaRailVertical ?? agendaRail}
         </div>
       ) : null}
 
@@ -1372,7 +1400,7 @@ export default function SessionStage(props: SessionStageProps) {
           outer anchor (top/right) never moves; the FAB toggles whether the
           rest of the column renders below it, so expanding never shifts this
           overlay's position, only grows it downward. */}
-      <div className={`absolute ${agendaRail && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20`}>
+      <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2${sessionMode === 'text' ? ' md:right-[388px]' : ''} z-20`}>
         <div ref={toolsClusterRef} className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
           <div className="relative">
             <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
@@ -1447,7 +1475,7 @@ export default function SessionStage(props: SessionStageProps) {
               placement is suppressed — the compact in-card row above
               renders instead (`pagerInCard`, owner mobile-split ruling). ===== */}
       {showSwitcher && boardPages && !pagerInCard && (
-        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
+        <div ref={switcherRef} className={`absolute ${railEl && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
           <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
@@ -1553,7 +1581,7 @@ export default function SessionStage(props: SessionStageProps) {
           // rail (live-test 2026-08-10 collision report). Static class
           // literals only: Tailwind JIT cannot see interpolated names.
           className={`absolute ${
-            agendaRail && !isFullscreen
+            railEl && !isFullscreen
               ? (showSwitcher ? 'top-[140px]' : 'top-[104px]')
               : (showSwitcher ? 'top-[100px]' : 'top-16')
           } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}
@@ -1589,7 +1617,12 @@ export default function SessionStage(props: SessionStageProps) {
               stays readable through the 40%-white surface. Deliberately
               translucent at ALL times (product call, 2026-07-14) — no
               idle-fade behavior. Honors the bottom safe-area inset. ===== */}
-      <div className={`absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
+      {/* Text mode: NO md:pr-[388px] reservation on the dock (live check
+          2026-09-23) — the composer spans the full stage width; the
+          transcript panel's `bottom` already clears it (dockHeight), so
+          nothing overlaps. The other four reservation sites (board column,
+          empty-stage overlay, pins strip, warmup overlay) keep theirs. */}
+      <div className="absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none">
         {/* Text mode: span the card's width (up to 880px) instead of the
             voice dock's fixed min(96vw,640px) puck, so the composer visually
             centers on the board CARD, not on a narrow strip in the middle of
@@ -1717,7 +1750,7 @@ export default function SessionStage(props: SessionStageProps) {
       <div
         className={
           sessionMode === 'text'
-            ? `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 ${TEXT_SHEET_TOP_CLASS} pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-[calc(3.5rem_+_12px)] md:left-auto md:right-3 md:w-[360px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl flex translate-y-0 md:translate-x-0`
+            ? `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 ${TEXT_SHEET_TOP_CLASS} pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-[var(--ss-panel-top)] md:left-auto md:right-3 md:w-[360px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl flex translate-y-0 md:translate-x-0`
             : `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`
         }
         // Text mode: `bottom` must clear the floating composer bar (z-30) —
@@ -1732,7 +1765,18 @@ export default function SessionStage(props: SessionStageProps) {
         // inline style at ALL widths (the composer floats at the bottom on
         // phones too) sidesteps Tailwind's static-analysis requirement
         // entirely. Voice keeps its static `bottom-0` class, untouched.
-        style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
+        // md+ `top`: 68px (= the old static `md:top-[calc(3.5rem_+_12px)]`)
+        // plus the ~40px rail row when one renders, so the panel starts
+        // BELOW the agenda/homework rail instead of covering its right end
+        // (live check 2026-09-23). The VALUE is runtime, so it rides in a
+        // CSS variable read by the STATIC token `md:top-[var(--ss-panel-top)]`
+        // (JIT-visible, same reason as `bottom`); <md keeps
+        // TEXT_SHEET_TOP_CLASS untouched and there is no isMdUp-driven
+        // first-paint flash on phones.
+        style={sessionMode === 'text' ? {
+          bottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))`,
+          ['--ss-panel-top' as string]: `${68 + (railEl && !isFullscreen ? 40 : 0)}px`,
+        } as CSSProperties : undefined}
       >
         {/* Text mode: the sheet is pinned open, not a draggable bottom
             sheet — the grab handle implies an affordance that isn't there

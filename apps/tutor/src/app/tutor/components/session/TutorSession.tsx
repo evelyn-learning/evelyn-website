@@ -1043,7 +1043,7 @@ export default function TutorSession(props: TutorSessionProps) {
   // Homework mode (GreenApple round 2): current problem / total, reported by
   // VoiceTutorRealtime's onHomeworkProgress. Stays null for non-homework
   // plans (the callback never fires for them).
-  const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number } | null>(null);
+  const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number; text?: string } | null>(null);
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -1574,7 +1574,7 @@ export default function TutorSession(props: TutorSessionProps) {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700"
               >
-                I&rsquo;ve finished this concept
+                {sessionGoal === 'homework-help' ? <>I&rsquo;ve finished this problem</> : <>I&rsquo;ve finished this concept</>}
               </button>
             </>
           )}

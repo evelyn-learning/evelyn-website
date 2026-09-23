@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Clock, LogOut, Camera, Upload, X, Download, GripVertical } from 'lucide-react';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 
@@ -99,7 +100,21 @@ function ResizableModal({
     document.addEventListener('mouseup', onUp);
   }, [defaultWidth, defaultHeight, minWidth, minHeight]);
 
-  return (
+  // Portalled to <body> (live check 2026-09-23): SessionControls sits in
+  // the session header card, whose `backdrop-blur` (backdrop-filter) makes
+  // it the containing block for `fixed` descendants — the "fixed inset-0"
+  // backdrop was trapped inside the header strip. `mounted` keeps SSR and
+  // the first client render identical (no document on the server).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted || typeof document === 'undefined') return null;
+  // While the stage is browser-fullscreen it sits in the top layer and
+  // anything under <body> is invisible, so portal into the fullscreen
+  // element then (it has no backdrop-filter, so `fixed` is not trapped).
+  const fsDoc = document as Document & { webkitFullscreenElement?: Element | null };
+  const portalTarget = fsDoc.fullscreenElement ?? fsDoc.webkitFullscreenElement ?? document.body;
+
+  return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div
         ref={modalRef}
@@ -121,7 +136,8 @@ function ResizableModal({
           <GripVertical className="w-3 h-3 rotate-[-45deg]" />
         </div>
       </div>
-    </div>
+    </div>,
+    portalTarget,
   );
 }
 
