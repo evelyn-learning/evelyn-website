@@ -4,7 +4,7 @@
  *  Usage: npx tsx scripts/test-stage-geometry.ts */
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { textColumnGeometry, HEADER_CLEARANCE_PX, RAIL_ROW_PX, TOOLS_ROW_PX, TOOLS_PANEL_GAP_PX } from '../src/app/tutor/components/session/stage-geometry';
+import { textColumnGeometry, HEADER_CLEARANCE_PX, RAIL_ROW_PX, TOOLS_ROW_PX, TOOLS_PANEL_GAP_PX, toolsRowDefaultOpen } from '../src/app/tutor/components/session/stage-geometry';
 
 let passed = 0, failed = 0;
 const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
@@ -25,6 +25,19 @@ assert(/data-testid="tools-cluster"[^>]*flex-row/.test(stage), 'cluster is a hor
 const session = readFileSync(join(dir, 'TutorSession.tsx'), 'utf8');
 assert(session.includes('createPortal(') && session.includes('data-testid="adjust-lesson-menu"'), 'adjust-lesson menu portalled to body');
 assert(session.includes('pacingMenuPanelRef.current?.contains('), 'outside-click treats the portalled menu as inside');
+
+
+// Fix round 1: the row opens by default only where it has its own slot.
+assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: true }) === true, 'default: open in text mode at md+');
+assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: false }) === false, 'default: collapsed in text mode on phones');
+assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: true }) === false, 'default: collapsed in voice mode (md+)');
+assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: false }) === false, 'default: collapsed in voice mode (phones)');
+assert(stage.includes('useState(() => toolsRowDefaultOpen(') && stage.includes('toolsUserToggledRef.current = true'), 'stage: default from toolsRowDefaultOpen; wrench toggle marks the student choice');
+assert(!/pr-14/.test(stage.replace(/\/\/.*|\{\/\*[\s\S]*?\*\/\}/g, '')), 'stage: no pr-14 phone gutter left in code');
+const cluster = stage.slice(stage.indexOf('data-testid="tools-cluster"'));
+const clusterEnd = cluster.indexOf('===== Slim board page switcher');
+const wrenchAt = cluster.indexOf('<Wrench'), qAt = cluster.indexOf("aria-label=\"Show the tutor's question\"");
+assert(wrenchAt > qAt && wrenchAt < clusterEnd && !cluster.slice(0, clusterEnd).includes('order-last'), 'stage: wrench is last in DOM (no order-last)');
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -35,7 +35,7 @@ import {
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
-import { textColumnGeometry } from './stage-geometry';
+import { textColumnGeometry, toolsRowDefaultOpen } from './stage-geometry';
 import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import type { SessionGoal } from '@/lib/tutor/types';
 
@@ -410,7 +410,17 @@ export default function SessionStage(props: SessionStageProps) {
   // the expanded column) changes.
   // R40 (user call): default OPEN on mount — students never discovered the
   // fullscreen/tools buttons behind the bare wrench.
-  const [toolsOpen, setToolsOpen] = useState(true);
+  // Round 3 (A13, fix round 1): the cluster is now a HORIZONTAL row, which
+  // open covers the board's top strip wherever it floats over the board —
+  // so it defaults open only where it has its own slot (text mode, md+,
+  // above the transcript panel) and collapsed to the wrench elsewhere; see
+  // `toolsRowDefaultOpen`. `isMdUp` is only known after mount (it starts
+  // true), so the default is re-applied by the effect next to `isMdUp`
+  // until the student toggles the wrench themselves — after that their
+  // choice holds for the rest of the session.
+  const [toolsOpen, setToolsOpen] = useState(() => toolsRowDefaultOpen({ sessionMode, isMdUp: true }));
+  const toolsUserToggledRef = useRef(false);
+  const isMdUpRef = useRef(true);
   // R57 (user call, 2026-08-26): the cluster must STAY expanded unless the
   // student taps the wrench themselves.
   //
@@ -441,8 +451,11 @@ export default function SessionStage(props: SessionStageProps) {
   // gone it is a no-op in the common case, but it still recovers a rail the
   // student collapsed by hand before the session began, which is the friendlier
   // state to start a lesson in.
+  // Fix round 1: "re-open" now means "restore the default" (open only in
+  // text mode at md+), and a student's own wrench toggle is respected.
   useEffect(() => {
-    if (started) setToolsOpen(true);
+    if (started && !toolsUserToggledRef.current) setToolsOpen(toolsRowDefaultOpen({ sessionMode, isMdUp: isMdUpRef.current }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
   /** Auto-collapse after launching a tool — suppressed while always-open. */
   const collapseToolsAfterUse = useCallback(() => {
@@ -518,6 +531,13 @@ export default function SessionStage(props: SessionStageProps) {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
+  isMdUpRef.current = isMdUp;
+  // Tools row default (A13 fix round 1): apply it once the real width is
+  // known, and again if the width class or mode changes — never over a
+  // student's own wrench toggle.
+  useEffect(() => {
+    if (!toolsUserToggledRef.current) setToolsOpen(toolsRowDefaultOpen({ sessionMode, isMdUp }));
+  }, [sessionMode, isMdUp]);
   // Text mode, <md: the sheet's top offset as one dvh number, shared by
   // both the sheet's own (necessarily static-literal) Tailwind class and
   // the board column's inline-style bottom-clearance `calc()` below — a
@@ -965,17 +985,14 @@ export default function SessionStage(props: SessionStageProps) {
               symmetric margins instead of the 16px left gap; that's
               intended once the card is no longer flush against the panel
               gutter. */}
-          {/* pr-14 (<md, text mode only): the floating tools rail (~48px,
-              wrench/pen/Aa/camera/expand) sits at `right-2` over the
-              board's top-right corner — on the full-width phone column
-              (unlike md+, where the rail lands over the panel gutter, a
-              separate pre-existing issue not in this pass's scope) that
-              corner IS board content, so it covered whatever rendered
-              there (owner mobile test, re-review 2026-09-19). Padding
-              inside the card (not a width change) keeps the card's own
-              border/background full-width while narrowing what
-              WhiteboardCanvas actually renders into, clearing the rail. */}
-          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${sessionMode === 'text' ? 'pr-14 md:pr-0' : ''} ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>
+          {/* No right gutter (round 3, A13 fix round 1): the old `pr-14`
+              (<md, text) reserved a full-height strip for the VERTICAL tools
+              rail. The tools are now a horizontal row that starts collapsed
+              to one wrench button at the top-right on phones
+              (`toolsRowDefaultOpen`), so a full-height gutter was dead
+              padding; the wrench floats over the card's top-right corner the
+              same way it always has in voice mode. */}
+          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>
             {/* Text mode, <md: the pager moves IN the card (compact row, no
                 floating pill, no extra vertical row) — owner mobile-split
                 ruling, re-review 2026-09-19. Mirrors the floating version's
@@ -1047,17 +1064,14 @@ export default function SessionStage(props: SessionStageProps) {
           // mode centers within the now-correctly-sized box; voice keeps
           // its original `pt-14`/`pb-32`/scroll-from-top `m-auto` behavior
           // for a tall (mock-review agenda) cluster, untouched.
-          // pr-14 (<md, text mode): the same tools-rail clearance the card's
-          // own content wrapper got (Addendum 9) — without it, this
-          // overlay's box was the full card width, so its centered
-          // heading could paint under the rail (owner ruling, re-review
-          // 2026-09-19). No `md:pr-0` reset needed: the already-present
-          // `md:pr-[388px]` (the panel-gutter reservation) is itself an
-          // md:-scoped override of the same property, so it naturally
-          // wins over the base `pr-14` at md+ — same mobile-first
-          // cascade every other breakpoint swap in this file relies on.
+          // No `pr-14` on phones any more (round 3, A13 fix round 1): it
+          // mirrored the card's full-height gutter for the old VERTICAL
+          // tools rail; the tools are now a horizontal row collapsed to one
+          // wrench at the top-right on phones, and this overlay's heading is
+          // vertically centered, well below it. `md:pr-[388px]` (the
+          // panel-gutter reservation) is unchanged.
           <div
-            className={`absolute inset-0 z-[5] flex flex-col px-6 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? `${boardColumnTopPadClass} pr-14 md:pl-4 md:pr-[388px] justify-center` : 'pt-14 pb-32'}`}
+            className={`absolute inset-0 z-[5] flex flex-col px-6 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? `${boardColumnTopPadClass} md:pl-4 md:pr-[388px] justify-center` : 'pt-14 pb-32'}`}
             style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
           >
           <div className={sessionMode === 'text' ? 'w-full flex flex-col items-center' : 'm-auto w-full flex flex-col items-center'}>
@@ -1418,20 +1432,12 @@ export default function SessionStage(props: SessionStageProps) {
           T1 (2026-07-16): collapsed by default behind a single FAB — the
           always-open column occluded board content on phones (IMG_7803). The
           outer anchor (top/right) never moves; the FAB toggles whether the
-          rest of the row renders. The FAB carries `order-last` so it stays
-          pinned at the row's right edge (under the anchor) and expanding only
-          grows the row leftward — the FAB never jumps out from under the
-          pointer. */}
+          rest of the row renders. The FAB is the row's LAST child and the row
+          is right-anchored, so the FAB stays at the right edge (under the
+          anchor) and expanding only grows the row leftward — it never jumps
+          out from under the pointer, and tab order matches what is seen. */}
       <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''}`}>
         <div ref={toolsClusterRef} data-testid="tools-cluster" className="flex flex-row items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
-          <div className="relative order-last">
-            <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
-              <Wrench className="w-4 h-4" />
-            </ToolBtn>
-            {boardPenActive && !toolsOpen && (
-              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600" />
-            )}
-          </div>
           {toolsOpen && (
             <>
               <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-4 h-4" /></ToolBtn>
@@ -1469,7 +1475,7 @@ export default function SessionStage(props: SessionStageProps) {
                   </ToolBtn>
                 </>
               )}
-              {/* Separates the tools from the FAB (rendered last via order-last). */}
+              {/* Separates the tools from the FAB (the row's last child). */}
               <div className="w-px h-5 bg-slate-200 mx-0.5" />
             </>
           )}
@@ -1488,6 +1494,17 @@ export default function SessionStage(props: SessionStageProps) {
               Q
             </button>
           )}
+          {/* The wrench is LAST in DOM (keyboard order = visual order); the
+              row is right-anchored, so it stays at the right edge while the
+              tools open/close to its left. */}
+          <div className="relative">
+            <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => { toolsUserToggledRef.current = true; setToolsOpen((o) => !o); }}>
+              <Wrench className="w-4 h-4" />
+            </ToolBtn>
+            {boardPenActive && !toolsOpen && (
+              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600" />
+            )}
+          </div>
         </div>
       </div>
 
