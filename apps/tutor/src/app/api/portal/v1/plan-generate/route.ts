@@ -44,6 +44,12 @@
  * stable topic/grade-band/length-bucket equivalence class the way a typed
  * topic is; everything else — picker/full mode decision, id minting,
  * persistence, response shaping — is identical to the text-only path.
+ *
+ * Homework-help (`goal: 'homework-help'`, round 3): an upload is extracted
+ * but never classified (A1 — the classifier 422'd a real worksheet), and the
+ * student's input is enumerated BEFORE the cache chain. Only a real split
+ * builds a homework plan; a fail-open enumeration (e.g. a typed concept
+ * question) continues as an ordinary request down the normal path (A2).
  */
 
 import { NextResponse } from 'next/server';
@@ -67,7 +73,8 @@ import {
   type MaterialClassification,
 } from '@/lib/tutor/lesson-plan/material-classify';
 import { enumerateProblems, defaultEnumerateDeps, getEnumerateClient } from '@/lib/tutor/lesson-plan/enumerate-problems';
-import { buildHomeworkPlanFields } from '@/lib/tutor/lesson-plan/homework';
+import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision } from '@/lib/tutor/lesson-plan/homework';
+import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
@@ -136,7 +143,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // student's own material verbatim, never the classifier's appended
   // instruction line — only set on the materials path; the homework
   // typed-text path enumerates straight off `text` instead (see the
-  // isHomework branch below).
+  // homework enumeration below).
   let materialText: string | undefined;
 
   if (hasMaterials) {
@@ -158,17 +165,24 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // Fails OPEN (see material-classify.ts): a null classification proceeds,
     // because the alternative turns a model blip into a broken feature for a
     // student who did nothing wrong. Only an explicit `unusable` refuses.
-    classification = await classifyMaterial(
-      extracted.combinedText,
-      requestTopic ?? requestText,
-      defaultClassifyDeps(getClassifierClient()),
-    );
-    const verdict = materialVerdict(classification);
-    if (!verdict.proceed) {
-      // 422, in the same flat {error, message} shape the extraction failures
-      // above already use — the portal passes any engine 422 code through to
-      // the web unchanged, so this needs no portal change to reach the student.
-      return NextResponse.json({ error: verdict.code, message: verdict.message }, { status: 422 });
+    //
+    // Round 3 (A1): a homework-help upload skips the classifier entirely —
+    // it judged a real worksheet `unusable` and 422'd it. Enumeration below
+    // decides what that upload becomes; `classification` stays undefined, so
+    // no generation hint is appended and `materialKind` stays unset.
+    if (shouldClassifyMaterial(goal)) {
+      classification = await classifyMaterial(
+        extracted.combinedText,
+        requestTopic ?? requestText,
+        defaultClassifyDeps(getClassifierClient()),
+      );
+      const verdict = materialVerdict(classification);
+      if (!verdict.proceed) {
+        // 422, in the same flat {error, message} shape the extraction failures
+        // above already use — the portal passes any engine 422 code through to
+        // the web unchanged, so this needs no portal change to reach the student.
+        return NextResponse.json({ error: verdict.code, message: verdict.message }, { status: 422 });
+      }
     }
 
     // The extracted document text drives generation; the student's own
@@ -192,15 +206,31 @@ export const POST = withPortalAuth(async (_req, auth) => {
       kinds: extracted.materials.map((m) => m.kind),
       totalChars: extracted.combinedText.length,
     };
-  } else if (isHomework) {
-    // Homework-help, no materials (student typed/pasted their problems
-    // directly into `text`). Same reasoning as the materials-path bypass
-    // above: the student's own problems aren't a stable topic/grade-band/
-    // length-bucket equivalence class, so this is never looked up in, or
-    // written to, the generation cache. Explicit branch rather than
-    // relying on falling through to the gap-topics / steered-request
-    // branches below, which happen to skip the cache too but for
-    // unrelated reasons.
+  }
+
+  // Round 3 (A2): enumerate BEFORE the cache chain — whether this request is a
+  // homework plan or an ordinary topic request is only known after the split.
+  // Enumerate off the RAW material text (materialText), never a hint-prefixed
+  // `text`; on the typed-text path materialText is undefined and `text` IS the
+  // raw input.
+  let homeworkProblems: HomeworkProblem[] | null = null;
+  if (isHomework) {
+    const decision = homeworkPlanDecision(
+      await enumerateProblems(materialText ?? text, defaultEnumerateDeps(getEnumerateClient())),
+    );
+    if (decision.kind === 'homework') homeworkProblems = decision.problems;
+    else console.log('[plan-generate] homework-help: enumeration failed open → normal plan');
+  }
+
+  if (hasMaterials || homeworkProblems) {
+    // Materials, or a homework plan over the student's own problems: neither
+    // is a stable topic/grade-band/length-bucket equivalence class, so this
+    // is never looked up in, or written to, the generation cache (cacheKey
+    // stays undefined). Explicit branch rather than relying on falling
+    // through to the gap-topics / steered-request branches below, which
+    // happen to skip the cache too but for unrelated reasons. A homework
+    // request whose enumeration failed open is an ordinary topic request
+    // from here on and continues down the chain below.
   } else if (learner?.gapTopics.length) {
     // Known gap topics must always drive fresh, gap-aware generation —
     // mirrors the materials-path cache bypass above. A generic cached plan
@@ -251,34 +281,17 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // id that never gets persisted.
   const durablePlanId = `gen-${randomUUID()}`;
 
-  if (isHomework) {
-    // Homework-help: no Stage 1 / Stage 2 topic-LO generation. Split the
-    // student's own problems (verbatim, in order — see
-    // enumerate-problems.ts) and wrap them as the plan's one LO instead.
-    // Enumerate off the RAW material text (materialText), not `text` —
-    // on the materials path `text` carries generationHintForKind's
-    // appended instruction line, which is not part of what the student
-    // uploaded and must never be treated as (part of) a problem. On the
-    // typed-text path materialText is undefined and `text` IS the raw
-    // input (never hint-prefixed on that path), so it's the right
-    // fallback.
-    const enumerateSource = materialText ?? text;
-    const { problems, failedOpen } = await enumerateProblems(
-      enumerateSource,
-      defaultEnumerateDeps(getEnumerateClient()),
-    );
-    // failedOpen comes straight from enumerateProblems — it knows whether
-    // ITS OWN model call/parse failed, which a text-shape heuristic here
-    // could never reliably infer (a real single-line problem and a
-    // fail-open single-line problem are indistinguishable from the
-    // outside).
-    generatorOk = !failedOpen;
-    console.log(
-      `[plan-generate] homework-help: ${problems.length} problems (fail-open: ${failedOpen ? 'yes' : 'no'})`,
-    );
+  if (homeworkProblems) {
+    // Homework-help: no Stage 1 / Stage 2 topic-LO generation. Wrap the
+    // student's own problems — split above, verbatim and in order (see
+    // enumerate-problems.ts) — as the plan's one LO instead. Only a REAL
+    // split reaches here (homeworkPlanDecision); a fail-open enumeration
+    // took the normal path, so this plan's generation succeeded.
+    generatorOk = true;
+    console.log(`[plan-generate] homework-help: ${homeworkProblems.length} problems`);
 
     const fields = buildHomeworkPlanFields(
-      problems,
+      homeworkProblems,
       classification?.topicSummary || requestTopic || requestText.slice(0, 80),
       durablePlanId,
     );

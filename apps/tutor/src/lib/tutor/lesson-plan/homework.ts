@@ -14,7 +14,7 @@
  * source list without this module guessing at it.
  */
 
-import type { HomeworkProblem } from './enumerate-problems';
+import type { HomeworkProblem, EnumerateResult } from './enumerate-problems';
 import type { LearningObjective } from './types';
 
 /** `metadata.kind` marking a plan as homework-help, read by consumers
@@ -100,4 +100,25 @@ export function buildHomeworkPlanFields(
     metadata: { kind: HOMEWORK_PLAN_KIND, problems },
     los: [lo],
   };
+}
+
+/** Round 3 (A1, 2026-09-23 live check): a homework-help upload is extracted but
+ *  never classified — the classifier judged a real 10-problem worksheet
+ *  `unusable` and 422'd it. Extraction failures still refuse. Every other goal
+ *  keeps the classifier gate unchanged. */
+export function shouldClassifyMaterial(goal: string | undefined): boolean {
+  return goal !== HOMEWORK_PLAN_KIND;
+}
+
+export type HomeworkPlanDecision =
+  | { kind: 'homework'; problems: HomeworkProblem[] }
+  | { kind: 'normal'; reason: 'enumeration_failed_open' };
+
+/** Round 3 (A2): only a REAL enumeration makes a homework plan. A fail-open
+ *  result (typed concept question, unusable text) is one "problem" holding the
+ *  whole input, which produced a one-problem plan with no practice — those
+ *  requests take the normal topic path instead. */
+export function homeworkPlanDecision(r: EnumerateResult): HomeworkPlanDecision {
+  if (r.failedOpen || r.problems.length === 0) return { kind: 'normal', reason: 'enumeration_failed_open' };
+  return { kind: 'homework', problems: r.problems };
 }
