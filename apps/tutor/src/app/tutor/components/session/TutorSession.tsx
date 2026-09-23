@@ -1040,6 +1040,10 @@ export default function TutorSession(props: TutorSessionProps) {
   // clear on segment or transcript changes — it stays on the board until
   // the student dismisses it or the session ends.
   const [homeworkPin, setHomeworkPin] = useState<string | null>(null);
+  // Homework mode (GreenApple round 2): current problem / total, reported by
+  // VoiceTutorRealtime's onHomeworkProgress. Stays null for non-homework
+  // plans (the callback never fires for them).
+  const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number } | null>(null);
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -1330,6 +1334,7 @@ export default function TutorSession(props: TutorSessionProps) {
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
+        onHomeworkProgress={setHomeworkProgress}
         segmentLabels={segmentLabels}
         onTutorBusy={handleTutorBusy}
         onVoiceStateChange={setLiveVoiceState}
@@ -1705,6 +1710,8 @@ export default function TutorSession(props: TutorSessionProps) {
       )}
       <SessionStage
         sessionMode={sessionMode}
+        sessionGoal={sessionGoal}
+        homeworkProgress={homeworkProgress}
         lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : topicLabel}
         subtitle={
           lessonProgress.plan

@@ -61,6 +61,8 @@ import {
   buildOpenerFallbackCommand,
 } from '@/lib/tutor/ai/opener-fallback';
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
+import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
+import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 // Task 20 — shape of the boot route's `learnerExtras`, imported from the
@@ -732,6 +734,10 @@ interface VoiceTutorRealtimeProps {
     plan: import('@/lib/tutor/lesson-plan/types').LessonPlan | null;
     currentSegmentId: string;
   }) => void;
+  /** Homework mode (GreenApple round 2): fires when a homework-help plan
+   *  arrives (current=1) and whenever the brain's set_current_problem moves
+   *  the student to another problem. Never fires for non-homework plans. */
+  onHomeworkProgress?: (p: { current: number; total: number }) => void;
   /** Agenda rail (2026-08-10): cached content labels for the active plan's
    *  segments, fetched by TutorSession from the rail-labels route. Mirrored
    *  to a ref (Task 5 reads it) — not otherwise consumed here yet. */
@@ -1085,6 +1091,7 @@ export function VoiceTutorRealtime({
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   onLessonPlanProgress,
+  onHomeworkProgress,
   segmentLabels,
   onTutorBusy,
   onVoiceStateChange,
@@ -2367,6 +2374,41 @@ export function VoiceTutorRealtime({
   // handler below.
   const [activePlan, setActivePlan] = useState<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
   const [activeSegmentId, setActiveSegmentId] = useState<string>('');
+  // Homework mode (GreenApple round 2): the numbered problems of a
+  // homework-help plan (metadata.kind === 'homework-help'), null for every
+  // other plan. `homeworkCurrent` (1-based) is the problem the tutor is on;
+  // state drives the rail via onHomeworkProgress, the refs feed the
+  // memoised brain-body builder (same idiom as mockReviewRef). Named
+  // homework* rather than currentProblem* — currentProblemRef already
+  // tracks the generated/board problem for the verifier.
+  const homeworkProblems = useMemo<HomeworkProblem[] | null>(
+    () => (activePlan ? homeworkProblemsOf(activePlan) : null),
+    [activePlan],
+  );
+  const [homeworkCurrent, setHomeworkCurrent] = useState(1);
+  const homeworkProblemsRef = useRef<HomeworkProblem[] | null>(null);
+  const homeworkCurrentRef = useRef(1);
+  const homeworkPlanIdRef = useRef<string | null>(null);
+  const onHomeworkProgressRef = useRef(onHomeworkProgress);
+  useEffect(() => { onHomeworkProgressRef.current = onHomeworkProgress; }, [onHomeworkProgress]);
+  useEffect(() => {
+    homeworkProblemsRef.current = homeworkProblems;
+    if (!homeworkProblems) return;
+    // Plan (re)arrived: a DIFFERENT plan restarts at problem 1; the same
+    // plan re-set keeps the current problem, clamped into range. Report it
+    // so the rail renders from the first frame.
+    const planId = activePlan?.id ?? null;
+    if (planId !== homeworkPlanIdRef.current) {
+      homeworkPlanIdRef.current = planId;
+      homeworkCurrentRef.current = 1;
+    }
+    const total = homeworkProblems.length;
+    const clamped = Math.min(Math.max(homeworkCurrentRef.current, 1), total);
+    homeworkCurrentRef.current = clamped;
+    setHomeworkCurrent(clamped);
+    onHomeworkProgressRef.current?.({ current: clamped, total });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeworkProblems]);
   // Notify parent whenever the plan or segment changes so it can render
   // a progress strip outside this control row.
   const onLessonPlanProgressRef = useRef(onLessonPlanProgress);
@@ -6472,6 +6514,22 @@ export function VoiceTutorRealtime({
       // so the NEXT brain turn ships the new segment in lessonPlanContext.
       // The command itself is consumed here — it does not flow to the
       // whiteboard renderer (no visual side effect).
+      // Homework mode: the brain's set_current_problem moves the student's
+      // position in a homework-help plan. Bookkeeping only — no visual.
+      // Ignored (but still consumed) when the active plan isn't homework.
+      if (cmd.action === 'setCurrentProblem') {
+        const problems = homeworkProblemsRef.current;
+        const nRaw = Number((cmd as { n?: unknown }).n);
+        if (problems && problems.length > 0 && Number.isFinite(nRaw)) {
+          const total = problems.length;
+          const n = Math.min(Math.max(Math.round(nRaw), 1), total);
+          homeworkCurrentRef.current = n;
+          setHomeworkCurrent(n);
+          onHomeworkProgressRef.current?.({ current: n, total });
+          onDebugEvent?.('homework_current_problem', `n=${n} total=${total}`);
+        }
+        continue;
+      }
       if (cmd.action === 'advanceLesson') {
         // R44: the brain navigated itself this turn (regardless of where
         // it went, or whether resolution below succeeds) — the pending
@@ -7715,7 +7773,7 @@ export function VoiceTutorRealtime({
     // despite catalog success).
     const META_ACTIONS = new Set([
       'newPage', 'clear', 'goToPage', 'scribble', 'link', 'scrollTo',
-      'advanceLesson', 'markSegmentComplete',
+      'advanceLesson', 'markSegmentComplete', 'setCurrentProblem',
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
@@ -8497,6 +8555,7 @@ export function VoiceTutorRealtime({
     processed = processed.filter(
       (c) =>
         c.action !== 'advanceLesson' &&
+        c.action !== 'setCurrentProblem' &&
         c.action !== 'markSegmentComplete' &&
         c.action !== 'proposePlanSwap' &&
         c.action !== 'confirmPlanLos' &&
@@ -9293,9 +9352,15 @@ export function VoiceTutorRealtime({
         const extrasQuery = TUTOR_RECAP_OFFER
           ? `${subject ? `&subject=${encodeURIComponent(subject)}` : ''}${goalNotes.length ? `&goals=${encodeURIComponent(goalNotes.join('|'))}` : ''}`
           : '';
-        const url = lessonPlanId
+        // Homework mode: `goal=homework-help` makes the route suppress the
+        // "last time we did X" continuity opener. Appended only for
+        // homework-help so every other session sends the identical URL.
+        const baseUrl = lessonPlanId
           ? `/api/tutor/student-profile/${encodeURIComponent(studentId)}?lessonPlanId=${encodeURIComponent(lessonPlanId)}${extrasQuery}`
           : `/api/tutor/student-profile/${encodeURIComponent(studentId)}`;
+        const url = sessionGoal === 'homework-help'
+          ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}goal=${encodeURIComponent(sessionGoal)}`
+          : baseUrl;
         const res = await fetch(
           url,
           embedToken ? { headers: { 'x-embed-token': embedToken } } : undefined,
@@ -11059,6 +11124,12 @@ export function VoiceTutorRealtime({
             // degrade, never block). Read from the ref so a late async arrival
             // isn't missed by this memoized callback.
             mockReview: mockReviewRef.current,
+            // Homework mode: the plan's numbered problems + the student's
+            // current one. Absent for every non-homework plan (byte-identical
+            // body). Refs, not state — this callback is memoised.
+            ...(homeworkProblemsRef.current
+              ? { homework: { problems: homeworkProblemsRef.current, current: homeworkCurrentRef.current } }
+              : {}),
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
@@ -20941,6 +21012,32 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasStarted, resumeState, onSessionStarted, onDebugEvent, realtime, handleStudentTranscriptForBrain]);
   resumeContinueRef.current = resumeContinue;
+
+  // Homework mode, text sessions: the tutor speaks first. There is no mic tap
+  // in text mode and the student shouldn't have to type "hi" before the
+  // tutor reads out the problem list — so once the homework plan has
+  // arrived, run the same start sequence the mic-tap start branch runs and
+  // dispatch the '[start lesson]' opener. Fires at most once (hasStartedRef
+  // latch) and never on a resumed session (resumeContinue owns that).
+  // warmupKickoffRef is armed so the R32 T9 20s watchdog can re-kick it.
+  // No unlockAudio: this is not a user gesture, and text mode plays no TTS.
+  useEffect(() => {
+    if (sessionMode !== 'text' || sessionGoal !== 'homework-help') return;
+    if (!homeworkProblems || hasStartedRef.current || resumeState) return;
+    hasStartedRef.current = true;
+    setHasStarted(true);
+    if (voiceSessionStartedAtMsRef.current === null) {
+      voiceSessionStartedAtMsRef.current = Date.now();
+    }
+    onSessionStarted?.();
+    setIsWarmingUp(true);
+    warmupStateRef.current = createWarmupState(Date.now());
+    setWarmupFailed(false);
+    warmupKickoffRef.current = '[start lesson]';
+    onDebugEvent?.('homework_text_kickoff', `problems=${homeworkProblems.length}`);
+    void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionMode, sessionGoal, homeworkProblems, resumeState]);
 
   // Hard-stop cap (time-box): a wall-clock timer that ends the session when
   // ANY session carrying an EXPLICIT max_duration_minutes reaches its budget —

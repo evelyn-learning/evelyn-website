@@ -36,6 +36,7 @@ import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type Qpi
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
 import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
+import type { SessionGoal } from '@/lib/tutor/types';
 
 // 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
 // the resting state in place of 'listening' while the student owns the
@@ -205,6 +206,12 @@ export interface SessionStageProps {
    *  header-icon ghost-second-open bug (the old open-only icon handler let
    *  the backdrop absorb the second click). Absent ⇒ debug event skipped. */
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
+  /** Homework mode (GreenApple round 2): the session goal, so the stage can
+   *  branch on 'homework-help'. Not rendered yet — Task 8 adds the rail. */
+  sessionGoal?: SessionGoal;
+  /** Homework mode: current problem / total from VoiceTutorRealtime's
+   *  onHomeworkProgress; null until a homework-help plan arrives. */
+  homeworkProgress?: { current: number; total: number } | null;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
