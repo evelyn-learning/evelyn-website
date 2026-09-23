@@ -568,8 +568,11 @@ export default function TutorSession(props: TutorSessionProps) {
         // Only the SUCCESS send carries it (it lands on the existing echo
         // entry); the two failure sends stay meta-less and the thumbnail is
         // a local display-only entry (fix round 1).
-        const sendMeta = type === 'image' ? { image: { dataUrl: content } } : undefined;
-        const showFailedUpload = () => { if (type === 'image') addUploadDisplayEntry(content); };
+        // Fix round 2: homework-help sessions only (same gate as the persona
+        // label) so every other brand / voice session's DOM is unchanged.
+        const showThumb = type === 'image' && sessionGoal === 'homework-help';
+        const sendMeta = showThumb ? { image: { dataUrl: content } } : undefined;
+        const showFailedUpload = () => { if (showThumb) addUploadDisplayEntry(content); };
         // Round-18 (2026-07-17): instant acknowledgment. The Vision
         // extraction below takes a few seconds, during which the dock shows
         // only a generic "Thinking…" — it reads as stuck and tempts the
@@ -619,7 +622,7 @@ export default function TutorSession(props: TutorSessionProps) {
       }
     }
     onTrackInteraction?.('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
-  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry]);
+  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry, sessionGoal]);
 
   /**
    * R50 T1 — the embed's upload button was a silent no-op.
