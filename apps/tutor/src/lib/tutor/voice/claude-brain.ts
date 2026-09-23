@@ -19,6 +19,7 @@ import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 import { getSegmentTruth } from '../lesson-plan/context';
 import type { Segment } from '../lesson-plan/types';
+import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -252,6 +253,17 @@ export interface BrainTurnInput {
    *  turn and was lost on resume). Absent/false ⇒ block omitted ⇒ userContent
    *  byte-identical to before this field existed. */
   practiceMode?: boolean;
+  /** Homework-help mode (Task 5). Present only when the session is driven
+   *  by a homework-help plan (HOMEWORK_PLAN_KIND) — the client forwards the
+   *  student's own enumerated problems every turn, not just at plan-build
+   *  time, so the durable per-turn `<homework_session>` block is rendered
+   *  the same way on turn 1 and on a resumed turn 40 (no client-side
+   *  persistence of "which problem" needed — `current` rides every turn,
+   *  same durability contract as practiceMode's session_goal boot flag).
+   *  Absent ⇒ block omitted AND `set_current_problem` withheld from the
+   *  tools array ⇒ userContent + tools byte-identical to before this field
+   *  existed. */
+  homework?: { problems: HomeworkProblem[]; current: number };
   /** Task WS3: durable mock-review context — present only when the student
    *  arrived from a completed full-length mock to review their misses.
    *  Absent ⇒ `<mock_review>` block omitted ⇒ userContent byte-identical. */
@@ -1438,6 +1450,33 @@ export function formatPracticeSessionBlock(practiceMode?: boolean): string {
   return `<practice_session>\n${body}\n</practice_session>\n\n`;
 }
 
+/**
+ * Homework-help block (Task 5). Renders the durable `<homework_session>`
+ * block when the session carries the student's own enumerated problems,
+ * else ''. Lists every problem verbatim (no escaping — the text is already
+ * plain, not markdown/LaTeX-bearing) so the brain always has the full set
+ * in view, not just the current one, and names `set_current_problem` as
+ * the mechanism for announcing a move between them.
+ *
+ * Exported for the standalone probe (scripts/test-homework-session-block.ts)
+ * so the block text is testable without running a whole brain turn.
+ */
+export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): string {
+  if (!hw || !hw.problems.length) return '';
+  const n = hw.problems.length;
+  const problemLines = hw.problems.map((p) => `${p.n}. ${p.text}`).join('\n');
+  const body =
+    `This is a HOMEWORK session. The student brought these problems (verbatim). Current: Problem ${hw.current} of ${n}.\n` +
+    `${problemLines}\n` +
+    `Rules:\n` +
+    `- Work the problems in order unless the student asks to jump. One problem at a time. Before your first question about a problem, put it on the board and call set_current_problem with its number.\n` +
+    `- Ask, never tell: never state a final answer, a completed step the student has not attempted, or a full solution — even when asked outright. A stuck student gets a smaller step or a hint, not the answer.\n` +
+    `- When the student reaches an answer, have them state it, confirm it is correct or ask them to check a specific step, then move on.\n` +
+    `- When time is nearly up, close cleanly and name the problems left for next time.\n` +
+    `- The opener for a fresh session: greet in your own voice, put Problem 1 on the board, call set_current_problem with 1, and ask the first question. Do not summarise prior sessions.`;
+  return `<homework_session>\n${body}\n</homework_session>\n\n`;
+}
+
 /** Task WS3: durable mock-review mandate — the student just finished a
  *  full-length mock and is here to review their missed questions. Exported
  *  for mock-review-block.test.ts. */
@@ -1626,6 +1665,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (practiceSessionBlock) {
     console.log('[practice-mode] practice_session block attached');
   }
+  // Task 5: durable homework-help mandate. '' when not a homework session.
+  const homeworkSessionBlock = formatHomeworkSessionBlock(input.homework);
+  if (homeworkSessionBlock) {
+    console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
+  }
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -1683,6 +1727,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     styleReminderBlock +
     demoStopBlock +
     practiceSessionBlock +
+    homeworkSessionBlock +
     mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
@@ -1837,6 +1882,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (practiceSessionBlock) {
     console.log('[practice-mode] practice_session block attached');
   }
+  // Task 5: durable homework-help mandate. '' when not a homework session.
+  const homeworkSessionBlock = formatHomeworkSessionBlock(input.homework);
+  if (homeworkSessionBlock) {
+    console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
+  }
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -1888,6 +1938,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     styleReminderBlock +
     demoStopBlock +
     practiceSessionBlock +
+    homeworkSessionBlock +
     mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +

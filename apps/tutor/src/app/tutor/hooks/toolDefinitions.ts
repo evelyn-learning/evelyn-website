@@ -22,6 +22,9 @@ export interface ToolParameter {
    *  matters (e.g. signalsObserved minItems=1, studentQuotes maxItems=2). */
   minItems?: number;
   maxItems?: number;
+  /** JSON Schema numeric lower bound — passed through to Anthropic's
+   *  input_schema (e.g. a 1-based problem number that can never be 0). */
+  minimum?: number;
 }
 
 export interface ToolDefinition {
@@ -2169,6 +2172,25 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 ];
 
 /**
+ * Task 5 (homework-help): announces a move to a specific student-brought
+ * problem. Deliberately NOT part of WHITEBOARD_TOOLS — it is homework-only
+ * and offered by the brain-stream route only when the turn carries
+ * `body.homework`, so a non-homework session's tools array (and its cached
+ * prefix) is byte-identical to before this tool existed.
+ */
+export const SET_CURRENT_PROBLEM_TOOL: ToolDefinition = {
+  name: 'set_current_problem',
+  description: 'Call when you move to a problem; n is its number in the homework list. Call it before the first question about that problem.',
+  parameters: {
+    type: 'object',
+    properties: {
+      n: { type: 'integer', minimum: 1, description: 'Problem number' },
+    },
+    required: ['n'],
+  },
+};
+
+/**
  * Map a function call name + arguments to a WhiteboardCommand.
  *
  * This is the shared logic used by both useOpenAIRealtime and useGeminiLive
@@ -2924,6 +2946,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   }
   if (funcName === 'advance_lesson') {
     return { action: 'advanceLesson', to: String(funcArgs.to ?? 'next'), reason: funcArgs.reason };
+  }
+  if (funcName === 'set_current_problem') {
+    return { action: 'setCurrentProblem', n: Number(funcArgs.n) };
   }
   if (funcName === 'propose_plan_swap') {
     const targetSubTopic = typeof funcArgs.targetSubTopic === 'string' ? funcArgs.targetSubTopic.trim() : '';

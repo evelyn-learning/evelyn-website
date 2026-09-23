@@ -25,7 +25,7 @@ import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
-import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
+import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL } from '@/app/tutor/hooks/toolDefinitions';
 import {
   resolveToolSubjects,
   filterToolsForSubject,
@@ -99,6 +99,13 @@ interface BrainStreamRequestBody {
    *  embed token carried session_goal === 'practice'. Surfaces as the durable
    *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
   practiceMode?: boolean;
+  /** Homework-help context (Task 5). Present only for a homework-help
+   *  session; the student's own enumerated problems + which one is
+   *  current, forwarded every turn. Validated below (array ≤25 of
+   *  {n,text}, integer current) — anything malformed collapses to
+   *  undefined (no `<homework_session>` block, no set_current_problem
+   *  tool). See BrainTurnInput.homework. */
+  homework?: { problems: Array<{ n: number; text: string }>; current: number };
   /** Mock-review context (Task WS3). Present only for a mock-review session
    *  whose embed context fetch succeeded. Surfaces as the durable
    *  `<mock_review>` block. See BrainTurnInput.mockReview. */
@@ -603,6 +610,39 @@ export async function POST(req: NextRequest) {
             ? ` excluded=[${toolFilter.excluded.join(',')}]`
             : ''),
       );
+
+      // Task 5 (homework-help): validate body.homework — an array of
+      // ≤25 {n: int≥1, text: non-empty string} problems plus an integer
+      // current≥1. ANY shape mismatch (missing fields, wrong types, an
+      // oversized list, a non-positive n/current) collapses the WHOLE
+      // thing to undefined — same "reject rather than partially trust" as
+      // demoStop below — so a malformed client can never inject an
+      // arbitrary blob into the per-turn user content or half-render a
+      // broken problem list.
+      const homework: BrainTurnInput['homework'] = (() => {
+        const hw = body.homework;
+        if (!hw || typeof hw !== 'object') return undefined;
+        const { problems, current } = hw;
+        if (!Array.isArray(problems) || problems.length === 0 || problems.length > 25) return undefined;
+        if (!Number.isInteger(current) || current < 1) return undefined;
+        const cleaned: Array<{ n: number; text: string }> = [];
+        for (const p of problems) {
+          if (!p || typeof p !== 'object') return undefined;
+          const { n, text } = p as { n?: unknown; text?: unknown };
+          if (!Number.isInteger(n) || (n as number) < 1) return undefined;
+          if (typeof text !== 'string' || !text.trim()) return undefined;
+          cleaned.push({ n: n as number, text });
+        }
+        return { problems: cleaned, current };
+      })();
+      if (homework) {
+        console.log(`[homework] homework_session block + set_current_problem tool attached current=${homework.current}/${homework.problems.length}`);
+        // Offered only for homework-help turns, AFTER the Lever A filter —
+        // a non-homework session's tools array (and cached prefix) stays
+        // byte-identical to before this tool existed.
+        toolFilter = { ...toolFilter, tools: [...toolFilter.tools, SET_CURRENT_PROBLEM_TOOL] };
+      }
+
       // Pedagogy opener: which turns carry the opening directive. The
       // directive must appear on the first few turns of a flag-ON session
       // and then STOP (advance_lesson or turn ceiling) — this line is how a
@@ -741,6 +781,9 @@ export async function POST(req: NextRequest) {
           // a malformed client can't inject a truthy non-bool. Surfaces as the
           // `<practice_session>` block in the user content.
           practiceMode: body.practiceMode === true,
+          // Task 5: sanitized above (shape-checked, else undefined). Surfaces
+          // as the durable `<homework_session>` block in the user content.
+          homework,
           // Task WS3: durable mock-review context, forwarded verbatim. Absent
           // for non-mock-review sessions ⇒ `<mock_review>` block omitted.
           mockReview: body.mockReview,

@@ -816,6 +816,9 @@ export type WhiteboardCommand =
   | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; conics?: GeometryConic[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
   | { action: 'showGeometryConstructed'; title?: string; given?: unknown[]; steps?: unknown[]; display?: Record<string, unknown> }
   | { action: 'advanceLesson'; to: string; reason?: string }
+  // Task 5 (homework-help): the brain announces a move to a specific
+  // student-brought problem — homework-only, offered alongside advanceLesson.
+  | { action: 'setCurrentProblem'; n: number }
   | { action: 'markSegmentComplete'; segmentId: string; masteryDelta?: number; notes?: string }
   | { action: 'proposePlanSwap'; targetSubTopic: string; reason?: string }
   | { action: 'confirmPlanLos'; pickedLoIds: string[] }
