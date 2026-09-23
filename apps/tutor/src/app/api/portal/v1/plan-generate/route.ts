@@ -64,7 +64,10 @@ import {
   materialVerdict,
   generationHintForKind,
   getClassifierClient,
+  type MaterialClassification,
 } from '@/lib/tutor/lesson-plan/material-classify';
+import { enumerateProblems, defaultEnumerateDeps, getEnumerateClient } from '@/lib/tutor/lesson-plan/enumerate-problems';
+import { buildHomeworkPlanFields } from '@/lib/tutor/lesson-plan/homework';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
@@ -98,9 +101,14 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const { text: requestText, subject, grade, topic: requestTopic, locale, materials, studentId }: PlanGenerateRequest = parsed.data;
+  const { text: requestText, subject, grade, topic: requestTopic, locale, materials, studentId, goal }: PlanGenerateRequest = parsed.data;
   const sessionMinutes = clampSessionMinutes(parsed.data.sessionMinutes);
   const hasMaterials = !!materials && materials.length > 0;
+  // v1.19.0: homework-help sessions build a plan around the student's own
+  // enumerated problems instead of a generated topic — see the branch
+  // below and homework.ts. Every other `goal` value takes the unchanged
+  // topic-generation path.
+  const isHomework = goal === 'homework-help';
 
   // Learner-conditioning hints (Task 12, contract v1.13.0's optional
   // studentId): resolved BEFORE the cache branch below because whether a
@@ -119,6 +127,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
   /** Stamped on the plan so a later reader can tell a worksheet lesson from a
    *  chapter lesson without re-classifying. Display/diagnostic only. */
   let materialKind: string | undefined;
+  // Only set on the materials path below — stays undefined on the homework
+  // typed-text path, where buildHomeworkPlanFields' topicSummary falls
+  // back to requestTopic / requestText instead.
+  let classification: MaterialClassification | null | undefined;
 
   if (hasMaterials) {
     const extracted = await extractMaterials(materials!);
@@ -139,7 +151,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // Fails OPEN (see material-classify.ts): a null classification proceeds,
     // because the alternative turns a model blip into a broken feature for a
     // student who did nothing wrong. Only an explicit `unusable` refuses.
-    const classification = await classifyMaterial(
+    classification = await classifyMaterial(
       extracted.combinedText,
       requestTopic ?? requestText,
       defaultClassifyDeps(getClassifierClient()),
@@ -172,6 +184,15 @@ export const POST = withPortalAuth(async (_req, auth) => {
       kinds: extracted.materials.map((m) => m.kind),
       totalChars: extracted.combinedText.length,
     };
+  } else if (isHomework) {
+    // Homework-help, no materials (student typed/pasted their problems
+    // directly into `text`). Same reasoning as the materials-path bypass
+    // above: the student's own problems aren't a stable topic/grade-band/
+    // length-bucket equivalence class, so this is never looked up in, or
+    // written to, the generation cache. Explicit branch rather than
+    // relying on falling through to the gap-topics / steered-request
+    // branches below, which happen to skip the cache too but for
+    // unrelated reasons.
   } else if (learner?.gapTopics.length) {
     // Known gap topics must always drive fresh, gap-aware generation —
     // mirrors the materials-path cache bypass above. A generic cached plan
@@ -222,81 +243,132 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // id that never gets persisted.
   const durablePlanId = `gen-${randomUUID()}`;
 
-  const stage1 = await extractLearningObjectives(genInput);
-  if (!stage1.ok || stage1.los.length === 0) {
-    // Stage 1 failed outright — serve the canonical fallback directly.
-    // Do NOT retry via the one-shot pipeline: that would re-run Stage 1
-    // (the exact stage that just failed) and, on a retry success, hand
-    // back a mode:'full' plan that was never checked against X — an
-    // over-budget plan that breaks parity with plan-from-text. A usable
-    // 1-LO skeleton beats a second live call at synchronous request time.
-    plan = fallbackPlan(genInput, stage1.reason, durablePlanId);
-    generatorOk = false;
-  } else if (stage1.los.length > X) {
-    // Y > X: hand back a picker plan (all discovered LOs, unexpanded).
-    // The portal shows a picker UI and resolves via plan-expand (Task 5).
-    plan = buildPickerPlan({
-      input: genInput,
-      titleSuggestion: stage1.titleSuggestion,
-      los: stage1.los,
-      allowedMaxLOs: X,
-      sessionMinutes,
-      planId: durablePlanId,
+  if (isHomework) {
+    // Homework-help: no Stage 1 / Stage 2 topic-LO generation. Split the
+    // student's own problems out of `text` (verbatim, in order — see
+    // enumerate-problems.ts) and wrap them as the plan's one LO instead.
+    const problems = await enumerateProblems(text, defaultEnumerateDeps(getEnumerateClient()));
+    const trimmedInput = text.trim();
+    // enumerateProblems fails open (see its own header) by returning ONE
+    // problem holding the whole trimmed input verbatim on any parse/model
+    // failure. That result is indistinguishable from a legitimately
+    // single-problem input UNLESS the input spans more than one line — a
+    // genuine one-problem upload is one line; a worksheet the splitter
+    // choked on is not. No network/DB — pure string comparison.
+    const failedOpen =
+      problems.length === 1 && problems[0]!.text === trimmedInput && trimmedInput.includes('\n');
+    generatorOk = !failedOpen;
+    console.log(
+      `[plan-generate] homework-help: ${problems.length} problems (fail-open: ${failedOpen ? 'yes' : 'no'})`,
+    );
+
+    const fields = buildHomeworkPlanFields(
+      problems,
+      classification?.topicSummary || requestTopic || requestText.slice(0, 80),
+    );
+    const homeworkSegment: Segment = {
+      id: 'homework',
+      kind: 'concept',
+      goal: 'Work the uploaded problems in order, one at a time.',
+      keyIdeas: ['The student supplied their own problems; work through them directly, in the order given.'],
+    };
+    plan = parseLessonPlan({
+      id: durablePlanId,
+      title: 'Homework help',
+      curriculum: 'freestyle',
+      grade,
+      subject,
+      topic,
+      locale: locale ?? 'en',
+      los: fields.los,
+      estimatedMinutes: sessionMinutes,
+      segments: [homeworkSegment, buildRecapSegment(fields.los)],
+      prerequisites: [],
+      followUps: [],
+      schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
+      // allowedMaxLOs: 1 — homework-help carries exactly one wrapper LO
+      // and is never a multi-pick session; toResponse reads this straight
+      // off metadata so it reports maxPickableLos:1 instead of a fresh
+      // sessionMinutes-based compute.
+      metadata: { ...fields.metadata, allowedMaxLOs: 1 },
     });
-    generatorOk = true;
   } else {
-    // Y <= X: expand inline and assemble a full plan (mirrors
-    // generatePlanFromText's own full-plan branch, minus the redundant
-    // Stage 1 call since we already ran it above).
-    const stage2 = await expandSegmentsForLOs(stage1.los, genInput);
-    if (!stage2.ok || stage2.segments.length === 0) {
-      // Same no-retry rule as the Stage 1 failure above.
-      plan = fallbackPlan(genInput, stage2.reason, durablePlanId);
+    const stage1 = await extractLearningObjectives(genInput);
+    if (!stage1.ok || stage1.los.length === 0) {
+      // Stage 1 failed outright — serve the canonical fallback directly.
+      // Do NOT retry via the one-shot pipeline: that would re-run Stage 1
+      // (the exact stage that just failed) and, on a retry success, hand
+      // back a mode:'full' plan that was never checked against X — an
+      // over-budget plan that breaks parity with plan-from-text. A usable
+      // 1-LO skeleton beats a second live call at synchronous request time.
+      plan = fallbackPlan(genInput, stage1.reason, durablePlanId);
       generatorOk = false;
-    } else {
-      const introSegment: Segment = { id: 'intro', kind: 'hook', goal: INTRO_SEGMENT_GOAL };
-      // Plan-scope the Stage-1 LO ids + Stage-2 segment ids. The portal
-      // adopts `los[0].id` onto its CourseNode and keys its learner model
-      // on it with no course scope, so plan-local "lo-1" ids would collapse
-      // every generated course onto one set of keys.
-      const ns = namespaceGeneratedLos({
-        planId: durablePlanId,
+    } else if (stage1.los.length > X) {
+      // Y > X: hand back a picker plan (all discovered LOs, unexpanded).
+      // The portal shows a picker UI and resolves via plan-expand (Task 5).
+      plan = buildPickerPlan({
+        input: genInput,
+        titleSuggestion: stage1.titleSuggestion,
         los: stage1.los,
-        segments: stage2.segments,
+        allowedMaxLOs: X,
+        sessionMinutes,
+        planId: durablePlanId,
       });
-      try {
-        plan = parseLessonPlan({
-          id: durablePlanId,
-          title: stage1.titleSuggestion,
-          curriculum: 'freestyle',
-          grade,
-          subject,
-          topic,
-          locale: locale ?? 'en',
-          los: ns.los,
-          estimatedMinutes: sessionMinutes,
-          segments: [introSegment, ...ns.segments, buildRecapSegment(ns.los)],
-          prerequisites: [],
-          followUps: [],
-          schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
-          metadata: {
-            generatedFromText: true,
-            generatorOk: true,
-            sourceTextLength: text.length,
-            sessionMaxLOs: X,
-          },
-        });
-        generatorOk = true;
-      } catch (err) {
-        // Never log `.message` here: parseLessonPlan's Zod validation
-        // errors embed the RECEIVED values inline (document/topic-derived
-        // content, possibly student-pasted material) — not a content-safety
-        // boundary, same discipline material-extract.ts's `errorKind`
-        // enforces for its own catch sites. Constructor name only.
-        const errorKind = err instanceof Error ? err.constructor.name || 'Error' : typeof err;
-        console.warn(`[plan-generate] full-plan parse failed, serving fallback: errorType=${errorKind}`);
-        plan = fallbackPlan(genInput, `parse failed: ${errorKind}`, durablePlanId);
+      generatorOk = true;
+    } else {
+      // Y <= X: expand inline and assemble a full plan (mirrors
+      // generatePlanFromText's own full-plan branch, minus the redundant
+      // Stage 1 call since we already ran it above).
+      const stage2 = await expandSegmentsForLOs(stage1.los, genInput);
+      if (!stage2.ok || stage2.segments.length === 0) {
+        // Same no-retry rule as the Stage 1 failure above.
+        plan = fallbackPlan(genInput, stage2.reason, durablePlanId);
         generatorOk = false;
+      } else {
+        const introSegment: Segment = { id: 'intro', kind: 'hook', goal: INTRO_SEGMENT_GOAL };
+        // Plan-scope the Stage-1 LO ids + Stage-2 segment ids. The portal
+        // adopts `los[0].id` onto its CourseNode and keys its learner model
+        // on it with no course scope, so plan-local "lo-1" ids would collapse
+        // every generated course onto one set of keys.
+        const ns = namespaceGeneratedLos({
+          planId: durablePlanId,
+          los: stage1.los,
+          segments: stage2.segments,
+        });
+        try {
+          plan = parseLessonPlan({
+            id: durablePlanId,
+            title: stage1.titleSuggestion,
+            curriculum: 'freestyle',
+            grade,
+            subject,
+            topic,
+            locale: locale ?? 'en',
+            los: ns.los,
+            estimatedMinutes: sessionMinutes,
+            segments: [introSegment, ...ns.segments, buildRecapSegment(ns.los)],
+            prerequisites: [],
+            followUps: [],
+            schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
+            metadata: {
+              generatedFromText: true,
+              generatorOk: true,
+              sourceTextLength: text.length,
+              sessionMaxLOs: X,
+            },
+          });
+          generatorOk = true;
+        } catch (err) {
+          // Never log `.message` here: parseLessonPlan's Zod validation
+          // errors embed the RECEIVED values inline (document/topic-derived
+          // content, possibly student-pasted material) — not a content-safety
+          // boundary, same discipline material-extract.ts's `errorKind`
+          // enforces for its own catch sites. Constructor name only.
+          const errorKind = err instanceof Error ? err.constructor.name || 'Error' : typeof err;
+          console.warn(`[plan-generate] full-plan parse failed, serving fallback: errorType=${errorKind}`);
+          plan = fallbackPlan(genInput, `parse failed: ${errorKind}`, durablePlanId);
+          generatorOk = false;
+        }
       }
     }
   }

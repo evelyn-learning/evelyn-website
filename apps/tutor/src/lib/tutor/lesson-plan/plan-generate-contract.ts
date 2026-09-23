@@ -25,6 +25,7 @@ import {
   type PlanExpandResponse,
 } from '@evelyn/portal-contract/v1';
 import { maxLOsForBudget } from './session-budget';
+import { homeworkProblemsOf } from './homework';
 import type { LessonPlan } from './types';
 
 export {
@@ -71,6 +72,10 @@ export function toResponse(
       ? (plan.metadata.allowedMaxLOs as number)
       : maxLOsForBudget({ sessionMinutes: flags.sessionMinutes, grade: plan.grade });
   const maxPickableLos = Math.min(12, rawMaxPickableLos);
+  // v1.19.0: present only when the plan is homework-help (metadata.kind +
+  // metadata.problems, as buildHomeworkPlanFields stamps them) — absent
+  // for every other plan, matching the response schema's `kind?`/`problems?`.
+  const hw = homeworkProblemsOf(plan);
   return {
     planId: plan.id,
     title: plan.title,
@@ -80,6 +85,7 @@ export function toResponse(
     estimatedMinutes: plan.estimatedMinutes,
     generatorOk,
     cached: flags.cached,
+    ...(hw ? { kind: 'homework-help' as const, problems: hw } : {}),
   };
 }
 
