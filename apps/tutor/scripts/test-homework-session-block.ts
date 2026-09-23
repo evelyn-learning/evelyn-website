@@ -7,7 +7,8 @@
  *   - homework absent (undefined) renders NOTHING (block omitted ⇒
  *     userContent byte-identical for every non-homework session).
  *   - a populated homework context renders `<homework_session>`, the
- *     "Problem {current} of {N}" progress line, the VERBATIM problem text
+ *     "Problem {label} ({current} of {N})" progress line (current = list
+ *     POSITION, label = that problem's own number), the VERBATIM problem text
  *     (no escaping), the "never state" ask-never-tell rule, and mentions
  *     set_current_problem as the announce mechanism.
  *   - mapFunctionCallToCommand('set_current_problem', { n }) maps to the
@@ -44,7 +45,8 @@ if (block === '') fail('a populated homework context must render a block');
 
 const checks: Array<[RegExp | string, string]> = [
   ['<homework_session>', 'must open the <homework_session> tag'],
-  ['Problem 2 of 2', 'must state the current-problem progress line'],
+  ['Current: Problem 2 (2 of 2).', 'must state the current-problem progress line'],
+  ['put Problem 1 on the board, call set_current_problem with 1,', 'opener must name the FIRST problem by its number'],
   ['x+2=5', 'must include the first problem VERBATIM'],
   ['2y=8', 'must include the second problem VERBATIM'],
   [/never state/i, 'must carry the ask-never-tell "never state" rule'],
@@ -54,6 +56,26 @@ for (const [needle, desc] of checks) {
   const ok = typeof needle === 'string' ? block.includes(needle) : needle.test(block);
   if (!ok) fail(`rendered block ${desc}`);
 }
+
+// ── 2b. Non-sequential worksheet labels: current is a POSITION ───────
+const hwLabels = {
+  problems: [
+    { n: 3, text: 'a+1=4' },
+    { n: 7, text: 'b-2=9' },
+    { n: 11, text: '3c=12' },
+  ],
+  current: 2,
+};
+const labelBlock = formatHomeworkSessionBlock(hwLabels);
+console.log('\n=== homework={labels 3,7,11, current:2} ===');
+console.log(labelBlock);
+if (!labelBlock.includes('Current: Problem 7 (2 of 3).')) {
+  fail('non-sequential labels: position 2 must render as "Problem 7 (2 of 3)"');
+}
+if (!labelBlock.includes('put Problem 3 on the board, call set_current_problem with 3,')) {
+  fail('non-sequential labels: opener must use the first problem\'s own number (3), not 1');
+}
+if (!labelBlock.includes('7. b-2=9')) fail('non-sequential labels: list must keep the worksheet numbers');
 
 // ── 3. mapFunctionCallToCommand wiring ─────────────────────────────────
 console.log('\n=== mapFunctionCallToCommand(set_current_problem) ===');

@@ -2180,11 +2180,11 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
  */
 export const SET_CURRENT_PROBLEM_TOOL: ToolDefinition = {
   name: 'set_current_problem',
-  description: 'Call when you move to a problem; n is its number in the homework list. Call it before the first question about that problem.',
+  description: 'Call when you move to a problem; n is the problem\'s number as shown in the homework list. Call it before the first question about that problem.',
   parameters: {
     type: 'object',
     properties: {
-      n: { type: 'integer', minimum: 1, description: 'Problem number' },
+      n: { type: 'integer', minimum: 1, description: 'The problem\'s number as shown in the homework list' },
     },
     required: ['n'],
   },

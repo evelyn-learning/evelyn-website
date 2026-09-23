@@ -736,8 +736,10 @@ interface VoiceTutorRealtimeProps {
   }) => void;
   /** Homework mode (GreenApple round 2): fires when a homework-help plan
    *  arrives (current=1) and whenever the brain's set_current_problem moves
-   *  the student to another problem. Never fires for non-homework plans. */
-  onHomeworkProgress?: (p: { current: number; total: number }) => void;
+   *  the student to another problem; null when a homework plan is swapped
+   *  for a non-homework one. Never fires for sessions with no homework plan.
+   *  `current` is the 1-based list POSITION, not the worksheet label. */
+  onHomeworkProgress?: (p: { current: number; total: number } | null) => void;
   /** Agenda rail (2026-08-10): cached content labels for the active plan's
    *  segments, fetched by TutorSession from the rail-labels route. Mirrored
    *  to a ref (Task 5 reads it) — not otherwise consumed here yet. */
@@ -2376,24 +2378,33 @@ export function VoiceTutorRealtime({
   const [activeSegmentId, setActiveSegmentId] = useState<string>('');
   // Homework mode (GreenApple round 2): the numbered problems of a
   // homework-help plan (metadata.kind === 'homework-help'), null for every
-  // other plan. `homeworkCurrent` (1-based) is the problem the tutor is on;
-  // state drives the rail via onHomeworkProgress, the refs feed the
-  // memoised brain-body builder (same idiom as mockReviewRef). Named
+  // other plan. `homeworkCurrentRef` (1-based list POSITION, not the
+  // worksheet label) is the problem the tutor is on; the rail renders from
+  // TutorSession's onHomeworkProgress state, the refs feed the memoised
+  // brain-body builder (same idiom as mockReviewRef). Named
   // homework* rather than currentProblem* — currentProblemRef already
   // tracks the generated/board problem for the verifier.
   const homeworkProblems = useMemo<HomeworkProblem[] | null>(
     () => (activePlan ? homeworkProblemsOf(activePlan) : null),
     [activePlan],
   );
-  const [homeworkCurrent, setHomeworkCurrent] = useState(1);
   const homeworkProblemsRef = useRef<HomeworkProblem[] | null>(null);
   const homeworkCurrentRef = useRef(1);
   const homeworkPlanIdRef = useRef<string | null>(null);
   const onHomeworkProgressRef = useRef(onHomeworkProgress);
   useEffect(() => { onHomeworkProgressRef.current = onHomeworkProgress; }, [onHomeworkProgress]);
   useEffect(() => {
+    const hadHomework = homeworkProblemsRef.current !== null;
     homeworkProblemsRef.current = homeworkProblems;
-    if (!homeworkProblems) return;
+    if (!homeworkProblems) {
+      // Swapped to a non-homework plan: clear the rail.
+      if (hadHomework) {
+        homeworkPlanIdRef.current = null;
+        homeworkCurrentRef.current = 1;
+        onHomeworkProgressRef.current?.(null);
+      }
+      return;
+    }
     // Plan (re)arrived: a DIFFERENT plan restarts at problem 1; the same
     // plan re-set keeps the current problem, clamped into range. Report it
     // so the rail renders from the first frame.
@@ -2405,7 +2416,6 @@ export function VoiceTutorRealtime({
     const total = homeworkProblems.length;
     const clamped = Math.min(Math.max(homeworkCurrentRef.current, 1), total);
     homeworkCurrentRef.current = clamped;
-    setHomeworkCurrent(clamped);
     onHomeworkProgressRef.current?.({ current: clamped, total });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeworkProblems]);
@@ -2482,6 +2492,11 @@ export function VoiceTutorRealtime({
   // but no 20s auto-rekick.
   const warmupStateRef = useRef<WarmupState | null>(null);
   const warmupKickoffRef = useRef<string | null>(null);
+  // One-shot: has any gesture path called realtime.unlockAudio() yet? The
+  // homework text kickoff starts the session WITHOUT a gesture, which trips
+  // the start guards the typed-submit / runGestureSessionStart unlocks hang
+  // off — so those paths also unlock (text mode only) while this is false.
+  const audioUnlockedRef = useRef(false);
 
   // Drawer row tap: switch the tutor to a specific missed item. Stable identity
   // (reads refs) so re-firing onMockAgendaChange doesn't churn. If the item is
@@ -6521,12 +6536,16 @@ export function VoiceTutorRealtime({
         const problems = homeworkProblemsRef.current;
         const nRaw = Number((cmd as { n?: unknown }).n);
         if (problems && problems.length > 0 && Number.isFinite(nRaw)) {
+          // `n` is the problem's LABEL as shown in the homework list (the
+          // worksheet's own numbering can be 3, 7, 11…); `current` on the
+          // wire is the 1-based list POSITION. Map label → position; an
+          // unknown label falls back to treating n as a position, clamped.
           const total = problems.length;
-          const n = Math.min(Math.max(Math.round(nRaw), 1), total);
-          homeworkCurrentRef.current = n;
-          setHomeworkCurrent(n);
-          onHomeworkProgressRef.current?.({ current: n, total });
-          onDebugEvent?.('homework_current_problem', `n=${n} total=${total}`);
+          const idx = problems.findIndex((p) => p.n === nRaw);
+          const pos = idx >= 0 ? idx + 1 : Math.min(Math.max(Math.round(nRaw), 1), total);
+          homeworkCurrentRef.current = pos;
+          onHomeworkProgressRef.current?.({ current: pos, total });
+          onDebugEvent?.('homework_current_problem', `n=${nRaw} pos=${pos} total=${total}`);
         }
         continue;
       }
@@ -9316,6 +9335,10 @@ export function VoiceTutorRealtime({
   // TUTOR_PEDAGOGY_OPENER off it is never set, so the dep never changes
   // and flag-off timing is byte-identical to before.
   const [profileFetchSettled, setProfileFetchSettled] = useState(false);
+  // Unconditional (not flag-gated) settle latch for the boot profile GET —
+  // the homework text kickoff waits (bounded) on it so the first turn
+  // carries the profile block. True immediately when there's no studentId.
+  const profileSettledRef = useRef(false);
 
   // Load the student profile block at mount when a studentId is
   // configured. The block is a pre-rendered string the brain reads on
@@ -9324,6 +9347,7 @@ export function VoiceTutorRealtime({
   useEffect(() => {
     if (!studentId) {
       studentProfileBlockRef.current = '';
+      profileSettledRef.current = true;
       return;
     }
     let cancelled = false;
@@ -9430,6 +9454,7 @@ export function VoiceTutorRealtime({
         // untouched (the state would otherwise still trigger the
         // buildInstructions dep re-run below).
         if (!cancelled && TUTOR_PEDAGOGY_OPENER) setProfileFetchSettled(true);
+        profileSettledRef.current = true;
       }
     })();
     return () => { cancelled = true; };
@@ -20485,7 +20510,12 @@ export function VoiceTutorRealtime({
         warmupStateRef.current = createWarmupState(Date.now());
         warmupKickoffRef.current = null;
         setWarmupFailed(false);
-        realtime.unlockAudio();
+        realtime.unlockAudio(); audioUnlockedRef.current = true;
+      }
+      // A gesture-less start (homework text kickoff) tripped both guards
+      // above before any gesture could unlock — unlock on this first real one.
+      if (sessionMode === 'text' && !audioUnlockedRef.current) {
+        realtime.unlockAudio(); audioUnlockedRef.current = true;
       }
     };
     gestureSessionStartRef.current = runGestureSessionStart;
@@ -21004,7 +21034,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     const resumeKickoff =
       '[Session-resumed: the student reloaded mid-session; pick up exactly where you left off]';
     warmupKickoffRef.current = resumeKickoff;
-    realtime.unlockAudio();
+    realtime.unlockAudio(); audioUnlockedRef.current = true;
     handleStudentTranscriptForBrain(
       resumeKickoff,
       { silent: true, bypassMidUtteranceGuard: true },
@@ -21017,27 +21047,63 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // in text mode and the student shouldn't have to type "hi" before the
   // tutor reads out the problem list — so once the homework plan has
   // arrived, run the same start sequence the mic-tap start branch runs and
-  // dispatch the '[start lesson]' opener. Fires at most once (hasStartedRef
-  // latch) and never on a resumed session (resumeContinue owns that).
-  // warmupKickoffRef is armed so the R32 T9 20s watchdog can re-kick it.
-  // No unlockAudio: this is not a user gesture, and text mode plays no TTS.
+  // dispatch the '[start lesson]' opener. Fires at most once and never on a
+  // resumed session (resumeContinue owns that). warmupKickoffRef is armed so
+  // the R32 T9 20s watchdog can re-kick it.
+  //  - hasStarted is latched SYNCHRONOUSLY, then the dispatch waits (≤1.5s)
+  //    for the boot profile GET so the first turn carries the profile block.
+  //  - A typed submit during that wait stamps voiceSessionStartedAtMsRef;
+  //    the pending kickoff then stands down (the student already spoke).
+  //  - The pending ref survives effect re-runs (StrictMode double-invoke,
+  //    deps churn) so a cleared timer is re-armed, not lost.
+  //  - No unlockAudio here (not a gesture); the first typed submit /
+  //    gesture unlocks via audioUnlockedRef.
+  const homeworkReady = !!homeworkProblems;
+  const homeworkKickoffPendingRef = useRef(false);
   useEffect(() => {
-    if (sessionMode !== 'text' || sessionGoal !== 'homework-help') return;
-    if (!homeworkProblems || hasStartedRef.current || resumeState) return;
-    hasStartedRef.current = true;
-    setHasStarted(true);
-    if (voiceSessionStartedAtMsRef.current === null) {
-      voiceSessionStartedAtMsRef.current = Date.now();
+    if (sessionMode !== 'text' || sessionGoal !== 'homework-help' || !homeworkReady) return;
+    if (resumeState) {
+      // Resume arrived while a kickoff was pending — roll the latch back so
+      // resumeContinue (which gates on hasStarted) still owns the start.
+      if (homeworkKickoffPendingRef.current) {
+        homeworkKickoffPendingRef.current = false;
+        hasStartedRef.current = false;
+        setHasStarted(false);
+      }
+      return;
     }
-    onSessionStarted?.();
-    setIsWarmingUp(true);
-    warmupStateRef.current = createWarmupState(Date.now());
-    setWarmupFailed(false);
-    warmupKickoffRef.current = '[start lesson]';
-    onDebugEvent?.('homework_text_kickoff', `problems=${homeworkProblems.length}`);
-    void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+    if (!homeworkKickoffPendingRef.current) {
+      if (hasStartedRef.current) return;
+      hasStartedRef.current = true;
+      setHasStarted(true);
+      homeworkKickoffPendingRef.current = true;
+    }
+    let iv: ReturnType<typeof setInterval> | null = null;
+    const fire = () => {
+      if (iv) { clearInterval(iv); iv = null; }
+      if (!homeworkKickoffPendingRef.current) return;
+      homeworkKickoffPendingRef.current = false;
+      if (voiceSessionStartedAtMsRef.current !== null) {
+        onDebugEvent?.('homework_text_kickoff_skipped', 'student started first');
+        return;
+      }
+      voiceSessionStartedAtMsRef.current = Date.now();
+      onSessionStarted?.();
+      setIsWarmingUp(true);
+      warmupStateRef.current = createWarmupState(Date.now());
+      setWarmupFailed(false);
+      warmupKickoffRef.current = '[start lesson]';
+      onDebugEvent?.('homework_text_kickoff', `problems=${homeworkProblemsRef.current?.length ?? 0} profileSettled=${profileSettledRef.current}`);
+      void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+    };
+    if (profileSettledRef.current) { fire(); return; }
+    const deadline = Date.now() + 1500;
+    iv = setInterval(() => {
+      if (profileSettledRef.current || Date.now() >= deadline) fire();
+    }, 100);
+    return () => { if (iv) clearInterval(iv); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionMode, sessionGoal, homeworkProblems, resumeState]);
+  }, [sessionMode, sessionGoal, homeworkReady, resumeState]);
 
   // Hard-stop cap (time-box): a wall-clock timer that ends the session when
   // ANY session carrying an EXPLICIT max_duration_minutes reaches its budget —
@@ -21101,7 +21167,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // tap's own gesture stack keeps iOS's audio-unlock requirement satisfied
     // even though this tap isn't the one that starts the session.
     if (sessionMode === 'text') {
-      realtime.unlockAudio();
+      realtime.unlockAudio(); audioUnlockedRef.current = true;
       studentTextInputRef.current?.focus();
       return;
     }
@@ -21191,7 +21257,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // inside this handler ensures TTS chunks play audibly. Without
         // this, audio queues silently until some other gesture (like
         // unmute) inadvertently unlocks the AudioContext.
-        realtime.unlockAudio();
+        realtime.unlockAudio(); audioUnlockedRef.current = true;
         if (!claudeBrainMode) {
           const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
           realtime.sendTextMessage(greetingMessage);
@@ -21289,7 +21355,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // NOW — this is the user gesture iOS honours; the completion effect runs
       // outside any gesture and could not unlock it later.
       pendingGestureStartRef.current = true;
-      realtime.unlockAudio();
+      realtime.unlockAudio(); audioUnlockedRef.current = true;
       setIsWarmingUp(true);
       setShowWarmupOverlay(true);
       warmupStateRef.current = createWarmupState(Date.now());
@@ -22292,7 +22358,12 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             if (voiceSessionStartedAtMsRef.current === null) {
               voiceSessionStartedAtMsRef.current = Date.now();
               onSessionStartedRef.current?.();
-              realtime.unlockAudio();
+              realtime.unlockAudio(); audioUnlockedRef.current = true;
+            }
+            // Gesture-less start (homework text kickoff) stamped the guard
+            // above without a gesture — this submit is the first real one.
+            if (sessionMode === 'text' && !audioUnlockedRef.current) {
+              realtime.unlockAudio(); audioUnlockedRef.current = true;
             }
             // Text-only tutor (2026-09-19): this path stamped the timer/audio
             // parity above but never flipped hasStarted, unlike the handle's

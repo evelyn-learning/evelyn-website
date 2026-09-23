@@ -1466,14 +1466,14 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): str
   const n = hw.problems.length;
   const problemLines = hw.problems.map((p) => `${p.n}. ${p.text}`).join('\n');
   const body =
-    `This is a HOMEWORK session. The student brought these problems (verbatim). Current: Problem ${hw.current} of ${n}.\n` +
+    `This is a HOMEWORK session. The student brought these problems (verbatim). Current: Problem ${hw.problems[hw.current - 1]?.n ?? hw.current} (${hw.current} of ${n}).\n` +
     `${problemLines}\n` +
     `Rules:\n` +
     `- Work the problems in order unless the student asks to jump. One problem at a time. Before your first question about a problem, put it on the board and call set_current_problem with its number.\n` +
     `- Ask, never tell: never state a final answer, a completed step the student has not attempted, or a full solution — even when asked outright. A stuck student gets a smaller step or a hint, not the answer.\n` +
     `- When the student reaches an answer, have them state it, confirm it is correct or ask them to check a specific step, then move on.\n` +
     `- When time is nearly up, close cleanly and name the problems left for next time.\n` +
-    `- The opener for a fresh session: greet in your own voice, put Problem 1 on the board, call set_current_problem with 1, and ask the first question. Do not summarise prior sessions.`;
+    `- The opener for a fresh session: greet in your own voice, put Problem ${hw.problems[0].n} on the board, call set_current_problem with ${hw.problems[0].n}, and ask the first question. Do not summarise prior sessions.`;
   return `<homework_session>\n${body}\n</homework_session>\n\n`;
 }
 
