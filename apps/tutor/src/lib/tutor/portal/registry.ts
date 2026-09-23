@@ -42,7 +42,7 @@ export interface RawPartnerDoc {
   secrets: Array<{ ciphertext: string; keyVersion: number; label: string; expiresAt?: string }>;
   allowedEndpoints?: string[];
   limits?: { rpm: number; burst: number; dailyQuota: number | null };
-  flagOverrides?: Record<string, boolean | string>;
+  flagOverrides?: Record<string, boolean | string | number>;
 }
 
 export interface PartnerRecord {
@@ -53,7 +53,7 @@ export interface PartnerRecord {
   secrets: string[];
   allowedEndpoints: string[];
   limits: { rpm: number; burst: number; dailyQuota: number | null };
-  flagOverrides: Record<string, boolean | string>;
+  flagOverrides: Record<string, boolean | string | number>;
 }
 
 export interface RegistryDeps {

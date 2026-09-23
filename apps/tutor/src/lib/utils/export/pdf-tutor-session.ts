@@ -1631,7 +1631,7 @@ export async function exportTutorSessionPDF(
   // "Evelyn" branding when `branding.product_name` is set. Default
   // unchanged so every existing caller (admin pages, /tutor's own export)
   // keeps today's text.
-  const brandName = options?.productName?.trim() || 'Evelyn Learning';
+  const brandName = typeof options?.productName === 'string' && options.productName.trim() ? options.productName.trim() : 'Evelyn Learning';
   const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();

@@ -1,6 +1,7 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
 import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter } from '../src/lib/tutor/practice-assign/store';
+import { capForPartner } from '../src/lib/tutor/practice-assign/assign';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
 let passed = 0, failed = 0;
@@ -132,6 +133,24 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
   check('sessionScopeFilter — no studentId ⇒ sessionId-only clause', JSON.stringify(sessionScopeFilter('sess-1')) === JSON.stringify({ sessionId: 'sess-1' }));
   check('sessionScopeFilter — studentId supplied ⇒ scoped clause', JSON.stringify(sessionScopeFilter('sess-1', 'stu-1')) === JSON.stringify({ sessionId: 'sess-1', studentId: 'stu-1' }));
   check('sessionScopeFilter — omits the studentId KEY entirely when absent (not studentId: undefined)', !('studentId' in sessionScopeFilter('sess-1')));
+}
+
+// Final-review fix wave (GreenApple) — capForPartner is the pure integer≥1
+// gate in front of the practice_assign_cap flag override. Only an integer
+// ≥ 1 (number or numeric string) may take effect; a boolean, 0/""/false, or
+// a fraction falls back to ASSIGN_TUNING.cap (8). A valid override above
+// ASSIGN_TUNING.cap is clamped DOWN here (not raised) — the observable
+// total must never exceed 8.
+{
+  check('capForPartner — null partner → default cap (8)', capForPartner(null) === ASSIGN_TUNING.cap, String(capForPartner(null)));
+  check('capForPartner — numeric override 3 → 3', capForPartner({ flagOverrides: { practice_assign_cap: 3 } }) === 3);
+  check('capForPartner — numeric-string override "3" → 3', capForPartner({ flagOverrides: { practice_assign_cap: '3' } }) === 3);
+  check('capForPartner — boolean true is REJECTED (not coerced to 1) → default cap', capForPartner({ flagOverrides: { practice_assign_cap: true } }) === ASSIGN_TUNING.cap);
+  check('capForPartner — boolean false is REJECTED → default cap', capForPartner({ flagOverrides: { practice_assign_cap: false } }) === ASSIGN_TUNING.cap);
+  check('capForPartner — 0 is REJECTED (homework must not silently go to 0) → default cap', capForPartner({ flagOverrides: { practice_assign_cap: 0 } }) === ASSIGN_TUNING.cap);
+  check('capForPartner — empty string is REJECTED → default cap', capForPartner({ flagOverrides: { practice_assign_cap: '' } }) === ASSIGN_TUNING.cap);
+  check('capForPartner — fractional 2.5 is REJECTED (not floored/rounded) → default cap', capForPartner({ flagOverrides: { practice_assign_cap: 2.5 } }) === ASSIGN_TUNING.cap);
+  check('capForPartner — 999 is clamped DOWN to ASSIGN_TUNING.cap (never raised)', capForPartner({ flagOverrides: { practice_assign_cap: 999 } }) === ASSIGN_TUNING.cap, String(capForPartner({ flagOverrides: { practice_assign_cap: 999 } })));
 }
 
 (async () => {

@@ -12,11 +12,49 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
-import { resolveFlag } from '@/lib/tutor/portal/flags';
+import { resolveFlag, type FlagCarrier } from '@/lib/tutor/portal/flags';
 import { resolveAssignmentItems, ASSIGN_TUNING } from './resolve';
 import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
 
 const MAX_LOS = 2;
+
+/**
+ * capForPartner — resolves a partner's `practice_assign_cap` flag override
+ * to a safe integer cap. Pure (no Mongo), so it is unit-testable directly
+ * (see scripts/test-practice-assign.ts).
+ *
+ * Operator contract: the override takes effect only when it is an integer
+ * ≥ 1 (a number, or a numeric string — the registry round-trips it as
+ * either depending on how it was written). Anything else — a boolean
+ * (`true`/`false`, including `Number(true) === 1`), an empty string, `"0"`
+ * or `0`, a fraction like `2.5`, or an unparsable string — is REJECTED: the
+ * request falls back to `ASSIGN_TUNING.cap` and a `console.warn` names the
+ * partner id and the rejected raw value (once per call). A valid override
+ * above `ASSIGN_TUNING.cap` is clamped DOWN to it here — this is the one
+ * place that clamp happens; `resolveAssignmentItems`'s own `Math.min`
+ * (resolve.ts) is a second, redundant line of defense over the same
+ * already-clamped value, not the authoritative one — so the observable
+ * assigned-item total can never exceed `ASSIGN_TUNING.cap` regardless of
+ * what a partner's `flagOverrides` row contains.
+ *
+ * Change takes effect after the registry's in-process cache TTL (60s),
+ * an explicit `invalidatePartner()` call, or a process restart — same as
+ * any other `flagOverrides` read (see portal/registry.ts). GreenApple = 3.
+ */
+export function capForPartner(partner: (FlagCarrier & { partnerId?: string }) | null): number {
+  const rawCap = resolveFlag('practice_assign_cap', partner, ASSIGN_TUNING.cap);
+  // `typeof … === 'boolean'` must be checked before `Number(...)`: `Number(true)`
+  // is `1` and `Number(false)` is `0`, both of which would otherwise slip past
+  // the integer/≥1 check below as if they were legitimate numeric overrides.
+  const numericCap = typeof rawCap === 'boolean' ? NaN : Number(rawCap);
+  if (!Number.isInteger(numericCap) || numericCap < 1) {
+    console.warn(
+      `[practice-assign] partner '${partner?.partnerId ?? '(unknown)'}' — practice_assign_cap override rejected (must be an integer ≥ 1, as a number or numeric string): ${JSON.stringify(rawCap)}; using default cap ${ASSIGN_TUNING.cap}`,
+    );
+    return ASSIGN_TUNING.cap;
+  }
+  return Math.min(numericCap, ASSIGN_TUNING.cap);
+}
 
 export async function assignPractice(input: {
   profileId: string;
@@ -57,8 +95,7 @@ export async function assignPractice(input: {
   } catch (err) {
     console.error(`[practice-assign] getPartner('${input.partnerId}') failed — falling back to the default cap`, err);
   }
-  const rawCap = Number(resolveFlag('practice_assign_cap', partner, ASSIGN_TUNING.cap));
-  const cap = Number.isFinite(rawCap) ? rawCap : ASSIGN_TUNING.cap;
+  const cap = capForPartner(partner);
   const los = await resolveAssignmentItems(
     { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '', cap },
     mongoPracticeSources(),

@@ -33,7 +33,7 @@ export interface IPartner {
   secrets: ISealedSecretDoc[];
   allowedEndpoints: string[];
   limits: { rpm: number; burst: number; dailyQuota: number | null };
-  flagOverrides: Record<string, boolean | string>;
+  flagOverrides: Record<string, boolean | string | number>;
   metering: { plan?: string };
   createdAt: string;
   updatedAt: string;
