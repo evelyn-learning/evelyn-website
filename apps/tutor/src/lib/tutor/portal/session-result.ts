@@ -51,7 +51,7 @@ import {
 import { extractSocialThreads } from './extract-social-threads';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
-import { findAssignmentBySession } from '@/lib/tutor/practice-assign/store';
+import { findAssignmentBySession, finalizeDraft, shouldFinalizeDraftOnEmit } from '@/lib/tutor/practice-assign/store';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {
@@ -321,6 +321,14 @@ export async function emitSessionResult(
   // touched by this function uses — so a colliding sessionId can never
   // echo another student's homework (LOs, free-text reason, item ids) or
   // nextSessionIntent back to the caller.
+  // Round 3: see shouldFinalizeDraftOnEmit. Scoped to profileId like every
+  // other lookup here; best-effort — a failure must never fail the emit.
+  if (shouldFinalizeDraftOnEmit(req.status)) {
+    await finalizeDraft(req.sessionId, { source: 'sweep' }, profileId).catch((e) =>
+      console.warn('[session-result] draft finalize failed', (e as Error)?.message ?? e),
+    );
+  }
+
   const rawAssignment = await findAssignmentBySession(req.sessionId).catch(() => null);
   const assignment = rawAssignment && rawAssignment.studentId === profileId ? rawAssignment : null;
   const assignedPractice = assignment && assignment.locator

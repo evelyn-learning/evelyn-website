@@ -1,6 +1,6 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
-import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter } from '../src/lib/tutor/practice-assign/store';
+import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter, shouldFinalizeDraftOnEmit } from '../src/lib/tutor/practice-assign/store';
 import { capForPartner } from '../src/lib/tutor/practice-assign/assign';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
@@ -180,6 +180,19 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
 
   const out7 = await resolveAssignmentItems({ los: [{ loId: 'A', title: 'Alpha' }, { loId: 'B', title: 'Beta' }], band: 'steady', seenItemIds: [], studentId: 's', courseId: 'c', cap: 999 }, sources);
   check('cap higher than ASSIGN_TUNING.cap cannot raise it (lower-only clamp)', out7.reduce((n, o) => n + o.items.length, 0) === ASSIGN_TUNING.cap, String(out7.reduce((n, o) => n + o.items.length, 0)));
+
+  // Round 3 — a terminal 'completed' portal emit (academy idle sweep) finalizes
+  // the session's draft; checkpoints and aborts never do; kill switch honoured.
+  check('emit finalize: completed finalizes', shouldFinalizeDraftOnEmit('completed', undefined));
+  check('emit finalize: in_progress checkpoint never finalizes', !shouldFinalizeDraftOnEmit('in_progress', undefined));
+  check('emit finalize: aborted never finalizes', !shouldFinalizeDraftOnEmit('aborted', undefined));
+  check('emit finalize: SESSION_RESULT_FINALIZE_DRAFT=off disables', !shouldFinalizeDraftOnEmit('completed', 'off'));
+  {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/portal/session-result.ts'), 'utf8') as string;
+    const gate = src.indexOf('shouldFinalizeDraftOnEmit(req.status)');
+    const echo = src.indexOf('const rawAssignment = await findAssignmentBySession(');
+    check('wiring: session-result finalizes before the assignment echo', gate > 0 && echo > gate);
+  }
 
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

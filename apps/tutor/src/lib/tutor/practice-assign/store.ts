@@ -175,6 +175,18 @@ export function finalizePatch(
   };
 }
 
+/** Round 3: a TERMINAL 'completed' portal emit means the session is over (the
+ *  academy's idle sweep ends abandoned pilot sessions this way), so its
+ *  still-open draft becomes the assigned homework now instead of at the lazy
+ *  2h stale-draft sweep. Checkpoints ('in_progress') and discards ('aborted')
+ *  never finalize. Kill switch: SESSION_RESULT_FINALIZE_DRAFT=off. */
+export function shouldFinalizeDraftOnEmit(
+  status: 'completed' | 'in_progress' | 'aborted',
+  flag: string | undefined = process.env.SESSION_RESULT_FINALIZE_DRAFT,
+): boolean {
+  return status === 'completed' && flag !== 'off';
+}
+
 /** `studentId` scoping — see `findAssignmentBySession`'s doc comment. */
 export async function findDraftBySession(sessionId: string, studentId?: string): Promise<IPracticeAssignment | null> {
   await connectDB();
