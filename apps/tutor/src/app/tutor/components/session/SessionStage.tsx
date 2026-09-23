@@ -35,6 +35,7 @@ import {
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
+import { textColumnGeometry } from './stage-geometry';
 import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import type { SessionGoal } from '@/lib/tutor/types';
 
@@ -662,6 +663,10 @@ export default function SessionStage(props: SessionStageProps) {
   // consistent 24px-low offset at every width (owner phone re-review,
   // 2026-09-19) until this was shared too.
   const boardColumnTopPadClass = (showSwitcher && !pagerInCard) ? 'pt-12' : (railEl && !isFullscreen ? 'pt-1' : 'pt-2');
+  // Round 3 (A13): text mode's right column (md+) stacks [tool row][gap]
+  // [transcript panel] under the header; both read CSS variables set on the
+  // stage root from this one geometry so they can never overlap.
+  const textGeom = textColumnGeometry({ hasRail: !!railEl && !isFullscreen });
 
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
@@ -890,7 +895,11 @@ export default function SessionStage(props: SessionStageProps) {
 
 
   return (
-    <div ref={stageRef} className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col">
+    <div
+      ref={stageRef}
+      className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col"
+      style={sessionMode === 'text' ? ({ ['--ss-tools-top' as string]: `${textGeom.toolsTopPx}px`, ['--ss-panel-top' as string]: `${textGeom.panelTopPx}px` } as CSSProperties) : undefined}
+    >
       <style>{`
         .session-stage .ss-grid{background-image:linear-gradient(#eef2f7 1px,transparent 1px),linear-gradient(90deg,#eef2f7 1px,transparent 1px);background-size:28px 28px}
         @keyframes ss-pulse{0%{transform:scale(.85);opacity:.5}80%,100%{transform:scale(1.6);opacity:0}}
@@ -1396,20 +1405,28 @@ export default function SessionStage(props: SessionStageProps) {
         )}
       </div>
 
-      {/* ===== Student tools cluster (top-right) ===== */}
+      {/* ===== Student tools row (top-right, under End/Pause) ===== */}
+      {/* Round 3 (A13): the tools are a compact HORIZONTAL row directly under
+          the header card that holds End/Pause. Text mode md+: anchored in the
+          right column (`--ss-tools-top`, same right edge as the transcript
+          panel) and the panel's top is pushed down by the row + gap — both
+          from `textColumnGeometry`. Voice mode and phones keep the top
+          anchors below. */}
       {/* Drop below the board-page switcher when it's shown — the switcher pill
           (top-center, up to 360px wide) otherwise collides with this cluster on
           narrow screens. Mirrors the board's pt-28/pt-16 padding.
           T1 (2026-07-16): collapsed by default behind a single FAB — the
           always-open column occluded board content on phones (IMG_7803). The
           outer anchor (top/right) never moves; the FAB toggles whether the
-          rest of the column renders below it, so expanding never shifts this
-          overlay's position, only grows it downward. */}
-      <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2${sessionMode === 'text' ? ' md:right-[388px]' : ''} z-20`}>
-        <div ref={toolsClusterRef} className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
-          <div className="relative">
+          rest of the row renders. The FAB carries `order-last` so it stays
+          pinned at the row's right edge (under the anchor) and expanding only
+          grows the row leftward — the FAB never jumps out from under the
+          pointer. */}
+      <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''}`}>
+        <div ref={toolsClusterRef} data-testid="tools-cluster" className="flex flex-row items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
+          <div className="relative order-last">
             <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
-              <Wrench className="w-[18px] h-[18px]" />
+              <Wrench className="w-4 h-4" />
             </ToolBtn>
             {boardPenActive && !toolsOpen && (
               <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600" />
@@ -1417,15 +1434,14 @@ export default function SessionStage(props: SessionStageProps) {
           </div>
           {toolsOpen && (
             <>
-              <div className="w-6 h-px bg-slate-200 my-0.5" />
-              <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
+              <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-4 h-4" /></ToolBtn>
               {onToggleBoardPen && (
                 <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); collapseToolsAfterUse(); }}>
-                  <PenLine className="w-[18px] h-[18px]" />
+                  <PenLine className="w-4 h-4" />
                 </ToolBtn>
               )}
               <ToolBtn active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); collapseToolsAfterUse(); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
-              <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer" onClick={collapseToolsAfterUse}><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
+              <label title="Upload a problem" className="grid place-items-center w-8 h-8 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer" onClick={collapseToolsAfterUse}><Camera className="w-4 h-4" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
               {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
                   `hidden md:` gate also hid it inside the portal's <768px embed
                   iframe (the iframe's own viewport is what md: measures), which
@@ -1436,8 +1452,8 @@ export default function SessionStage(props: SessionStageProps) {
                   NOT wired to auto-collapse the cluster (T1) — untouched. */}
               {canFullscreen && (
                 <>
-                  <div className="w-6 h-px bg-slate-200 my-0.5" />
-                  <ToolBtn title="Full screen" onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+                  <div className="w-px h-5 bg-slate-200 mx-0.5" />
+                  <ToolBtn title="Full screen" onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-4 h-4" /></ToolBtn>
                 </>
               )}
               {/* Mobile expand (Task E8) — shown only where the native Fullscreen
@@ -1447,12 +1463,14 @@ export default function SessionStage(props: SessionStageProps) {
                   identical to pre-T1 — only its parent's visibility changed. */}
               {canExpand && (
                 <>
-                  <div className="w-6 h-px bg-slate-200 my-0.5" />
+                  <div className="w-px h-5 bg-slate-200 mx-0.5" />
                   <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); collapseToolsAfterUse(); }}>
-                    {expanded ? <Minimize2 className="w-[18px] h-[18px]" /> : <Maximize2 className="w-[18px] h-[18px]" />}
+                    {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                   </ToolBtn>
                 </>
               )}
+              {/* Separates the tools from the FAB (rendered last via order-last). */}
+              <div className="w-px h-5 bg-slate-200 mx-0.5" />
             </>
           )}
           {QPIN_AUTO_COLLAPSE && questionPin && qpinMode === 'chip' && (
@@ -1465,7 +1483,7 @@ export default function SessionStage(props: SessionStageProps) {
                 setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
                 setQpinMode('expanded');
               }}
-              className="ss-cap relative grid place-items-center w-9 h-9 rounded-xl bg-amber-400 text-white text-xs font-bold hover:bg-amber-500 after:absolute after:-inset-1 after:content-['']"
+              className="ss-cap relative grid place-items-center w-8 h-8 rounded-xl bg-amber-400 text-white text-xs font-bold hover:bg-amber-500 after:absolute after:-inset-1 after:content-['']"
             >
               Q
             </button>
@@ -1770,17 +1788,17 @@ export default function SessionStage(props: SessionStageProps) {
         // inline style at ALL widths (the composer floats at the bottom on
         // phones too) sidesteps Tailwind's static-analysis requirement
         // entirely. Voice keeps its static `bottom-0` class, untouched.
-        // md+ `top`: 68px (= the old static `md:top-[calc(3.5rem_+_12px)]`)
-        // plus the ~40px rail row when one renders, so the panel starts
-        // BELOW the agenda/homework rail instead of covering its right end
-        // (live check 2026-09-23). The VALUE is runtime, so it rides in a
-        // CSS variable read by the STATIC token `md:top-[var(--ss-panel-top)]`
-        // (JIT-visible, same reason as `bottom`); <md keeps
+        // md+ `top`: `--ss-panel-top`, set on the STAGE ROOT from
+        // `textColumnGeometry` (round 3, A13) — 68px header clearance, plus
+        // the ~40px rail row when one renders, plus the tool row and its gap
+        // (the student tools now sit directly above this panel). The VALUE is
+        // runtime, so it rides in a CSS variable read by the STATIC token
+        // `md:top-[var(--ss-panel-top)]` (JIT-visible, same reason as
+        // `bottom`); <md keeps
         // TEXT_SHEET_TOP_CLASS untouched and there is no isMdUp-driven
         // first-paint flash on phones.
         style={sessionMode === 'text' ? {
           bottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))`,
-          ['--ss-panel-top' as string]: `${68 + (railEl && !isFullscreen ? 40 : 0)}px`,
         } as CSSProperties : undefined}
       >
         {/* Text mode: the sheet is pinned open, not a draggable bottom
@@ -1996,7 +2014,7 @@ function Chip({ children, onClick, active, ghost }: { children: ReactNode; onCli
   );
 }
 function ToolBtn({ children, title, active, onClick }: { children: ReactNode; title: string; active?: boolean; onClick: () => void }) {
-  return <button title={title} onClick={onClick} className={`grid place-items-center w-9 h-9 rounded-xl ${active ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-100 text-slate-600'}`}>{children}</button>;
+  return <button title={title} onClick={onClick} className={`grid place-items-center w-8 h-8 rounded-xl ${active ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-100 text-slate-600'}`}>{children}</button>;
 }
 
 function handleImage(e: React.ChangeEvent<HTMLInputElement>, onStudentInput: (t: 'image', c: string) => void) {

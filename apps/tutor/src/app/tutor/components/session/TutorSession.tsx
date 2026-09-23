@@ -19,6 +19,7 @@
  */
 
 import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import Script from 'next/script';
 import { Play, LogOut } from 'lucide-react';
 import { InlineMathText } from '../whiteboard/InlineMathText';
@@ -397,6 +398,10 @@ export default function TutorSession(props: TutorSessionProps) {
   const realtimeHandleRef = props.handleRef ?? localHandleRef;
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pacingMenuRef = useRef<HTMLDivElement>(null);
+  // Round 3 (A13): the menu panel itself is portalled out of the header (see
+  // the render below), so it is no longer a descendant of pacingMenuRef.
+  const pacingMenuPanelRef = useRef<HTMLDivElement>(null);
+  const [pacingMenuPos, setPacingMenuPos] = useState<{ top: number; right: number } | null>(null);
   const prevBusyRef = useRef(false);
   // P2 (demo feedback R2): one-shot guard for the session-started window
   // event — onSessionStarted can fire from several VTR paths; the portal
@@ -426,7 +431,7 @@ export default function TutorSession(props: TutorSessionProps) {
   useEffect(() => {
     if (!pacingMenuOpen) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (pacingMenuRef.current && !pacingMenuRef.current.contains(e.target as Node)) {
+      if (pacingMenuRef.current && !pacingMenuRef.current.contains(e.target as Node) && !pacingMenuPanelRef.current?.contains(e.target as Node)) {
         setPacingMenuOpen(false);
       }
     };
@@ -444,6 +449,20 @@ export default function TutorSession(props: TutorSessionProps) {
       document.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('blur', onBlur);
     };
+  }, [pacingMenuOpen]);
+
+  // Round 3 (A13): the menu is portalled (below) — anchor it under its
+  // trigger's bounding rect, re-measured on resize while open. Being set only
+  // client-side, `pacingMenuPos` doubles as the portal's mounted guard.
+  useEffect(() => {
+    if (!pacingMenuOpen) { setPacingMenuPos(null); return; }
+    const place = () => {
+      const r = pacingMenuRef.current?.getBoundingClientRect();
+      if (r) setPacingMenuPos({ top: Math.round(r.bottom + 8), right: Math.max(8, Math.round(window.innerWidth - r.right)) });
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
   }, [pacingMenuOpen]);
 
   const {
@@ -1530,15 +1549,23 @@ export default function TutorSession(props: TutorSessionProps) {
           : 'Pace: normal'}
       </button>
       <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
-      {pacingMenuOpen && (
-        // Text mode: the "Adjust the lesson" menu (opened via the Pace pill
-        // or the ⋯ button — both toggle this one menu) was rendering at the
-        // SAME z-50 as the pinned transcript panel; since the panel mounts
-        // later in SessionStage's JSX, equal z-index ties resolve to DOM
-        // order and the panel painted on top, opening the menu "under" it
-        // (owner desktop test, re-review 2026-09-19). z-[60] in text mode
-        // clears the panel; voice keeps the original z-50 untouched.
-        <div className={`absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 text-sm ${sessionMode === 'text' ? 'z-[60]' : 'z-50'}`}>
+      {pacingMenuOpen && pacingMenuPos && typeof document !== 'undefined' && createPortal(
+        // The "Adjust the lesson" menu (opened via the Pace pill or the ⋯
+        // button — both toggle this one menu). It used to render in place with
+        // z-[60] (text) / z-50 (voice), but it lives inside the header row,
+        // which sits in the stage's `relative z-30` top bar — a stacking
+        // context — so no z-index could lift it above the sibling transcript
+        // panel (z-50); it opened BEHIND the panel (round 3 live check, A13).
+        // Now a portal in BOTH modes, `position: fixed` under its trigger.
+        // Target = the fullscreen element while the stage is browser-
+        // fullscreen (anything under <body> is invisible then), else <body> —
+        // same pattern as SessionControls' ResizableModal.
+        <div
+          ref={pacingMenuPanelRef}
+          data-testid="adjust-lesson-menu"
+          style={{ position: 'fixed', top: pacingMenuPos.top, right: pacingMenuPos.right }}
+          className="z-[60] w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 text-sm"
+        >
           <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
           {/* #7 hybrid (2026-07-17): Harder/Easier are now a STANDING
               preference, not a one-shot "give me a harder one" utterance.
@@ -1717,7 +1744,10 @@ export default function TutorSession(props: TutorSessionProps) {
               </button>
             </>
           )}
-        </div>
+        </div>,
+        ((document as Document & { webkitFullscreenElement?: Element | null }).fullscreenElement
+          ?? (document as Document & { webkitFullscreenElement?: Element | null }).webkitFullscreenElement
+          ?? document.body),
       )}
     </div>
   );
