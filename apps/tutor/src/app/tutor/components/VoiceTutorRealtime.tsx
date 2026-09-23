@@ -10247,28 +10247,11 @@ export function VoiceTutorRealtime({
         onTranscriptUpdate([...transcriptRef.current]);
         onDebugEvent?.('student_echo_appended', currentEcho.slice(0, 60));
       }
-      // Task 9: an upload whose extraction FAILED carries no quoted content,
-      // so no echo entry exists to hold the thumbnail. Append a historyOnly
-      // placeholder for it (thumbnail-only in the chat; a short neutral line
-      // in history/saved transcript so the tutor's "describe it" reply isn't
-      // orphaned). Dropped from THIS request's prior history below, like the
-      // echo, so the brain doesn't see two consecutive user turns.
-      const uploadPlaceholderText = '(The student uploaded an image.)';
-      let uploadPlaceholderAppended = false;
-      if (uploadImage) {
-        const placeholderEntry: TranscriptEntry = {
-          id: `student-${Date.now()}-upload`,
-          timestamp: new Date(),
-          role: 'student',
-          text: uploadPlaceholderText,
-          historyOnly: true,
-          image: uploadImage,
-        };
-        uploadImage = undefined;
-        uploadPlaceholderAppended = true;
-        transcriptRef.current = [...transcriptRef.current, placeholderEntry];
-        onTranscriptUpdate([...transcriptRef.current]);
-      }
+      // Task 9 fix round 1: an upload whose extraction FAILED has no echo to
+      // hold its thumbnail. TutorSession never attaches the image to those
+      // sends — it renders a local display-only entry instead — so nothing
+      // here adds a transcript entry that the brain history or any save path
+      // would see.
       // Convert the transcript log to the Claude conversation shape. We
       // collapse 'system' entries (greeting prompts, etc.) — they're not
       // genuine turns from Claude's perspective.
@@ -10285,8 +10268,7 @@ export function VoiceTutorRealtime({
       // within this one request (it stays for FUTURE turns).
       const priorWithoutCurrent = history.length > 0 && history[history.length - 1].role === 'user'
         && (history[history.length - 1].content === transcript
-          || (currentEcho !== null && history[history.length - 1].content === currentEcho)
-          || (uploadPlaceholderAppended && history[history.length - 1].content === uploadPlaceholderText))
+          || (currentEcho !== null && history[history.length - 1].content === currentEcho))
         ? history.slice(0, -1)
         : history;
       // Synthetic greeting prepend: the tutor system prompt has a Rule 6

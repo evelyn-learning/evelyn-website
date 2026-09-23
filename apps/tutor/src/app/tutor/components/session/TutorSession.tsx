@@ -18,7 +18,7 @@
  * (onTranscriptUpdate / onWhiteboardCommand / onMilestone / onEndSession).
  */
 
-import { useState, useCallback, useEffect, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import Script from 'next/script';
 import { Play, LogOut } from 'lucide-react';
 import { InlineMathText } from '../whiteboard/InlineMathText';
@@ -453,6 +453,31 @@ export default function TutorSession(props: TutorSessionProps) {
   } = useStudentPreferences();
 
   // --- Internal handlers ---
+  // Task 9 fix round 1: display-only thumbnail entries for uploads whose
+  // extraction failed (no echo entry exists to carry the image). Local to
+  // this component and merged ONLY into TranscriptView's list below — never
+  // into `transcript` / onTranscriptUpdate, so the brain history and every
+  // save path are exactly what they were before Task 9.
+  const [uploadDisplayEntries, setUploadDisplayEntries] = useState<TranscriptEntry[]>([]);
+  const addUploadDisplayEntry = useCallback((dataUrl: string) => {
+    setUploadDisplayEntries((prev) => [...prev, {
+      id: `upload-display-${Date.now()}`,
+      timestamp: new Date(),
+      role: 'student',
+      text: '',
+      image: { dataUrl },
+      displayOnly: true,
+    }]);
+  }, []);
+  const displayTranscript = useMemo(
+    () => (uploadDisplayEntries.length === 0
+      ? transcript
+      : [...transcript, ...uploadDisplayEntries].sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+        )),
+    [transcript, uploadDisplayEntries],
+  );
+
   const handleVoiceTranscriptUpdate = useCallback((entries: TranscriptEntry[]) => {
     setTranscript(entries);
     onTranscriptUpdate?.(entries);
@@ -540,7 +565,11 @@ export default function TutorSession(props: TutorSessionProps) {
         // Drawings are board captures, not uploads, so they keep the
         // original meta-less send. The file name isn't plumbed through
         // onUploadHomework(base64, mime), so alt falls back to the default.
+        // Only the SUCCESS send carries it (it lands on the existing echo
+        // entry); the two failure sends stay meta-less and the thumbnail is
+        // a local display-only entry (fix round 1).
         const sendMeta = type === 'image' ? { image: { dataUrl: content } } : undefined;
+        const showFailedUpload = () => { if (type === 'image') addUploadDisplayEntry(content); };
         // Round-18 (2026-07-17): instant acknowledgment. The Vision
         // extraction below takes a few seconds, during which the dock shows
         // only a generic "Thinking…" — it reads as stuck and tempts the
@@ -579,16 +608,18 @@ export default function TutorSession(props: TutorSessionProps) {
             if (data.extractedProblem && realtimeHandleRef.current) {
               realtimeHandleRef.current.sendTextMessage(`[The student ${noun} the whiteboard. It contains: "${data.extractedProblem}". Respond to what they shared.]`, sendMeta);
             } else {
-              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`, sendMeta);
+              showFailedUpload();
+              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`);
             }
           } catch {
-            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`, sendMeta);
+            showFailedUpload();
+            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`);
           }
         })();
       }
     }
     onTrackInteraction?.('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
-  }, [subject, topic, level, onTrackInteraction]);
+  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry]);
 
   /**
    * R50 T1 — the embed's upload button was a silent no-op.
@@ -718,9 +749,11 @@ export default function TutorSession(props: TutorSessionProps) {
 
   const transcriptEl = (
     <TranscriptView
-      transcript={transcript}
+      transcript={displayTranscript}
       isProcessing={isProcessing}
-      tutorLabel={teacherPersona?.name}
+      // Persona label only for homework-help sessions (GreenApple pilot);
+      // wider rollout to other persona brands is a parked follow-up.
+      tutorLabel={sessionGoal === 'homework-help' ? teacherPersona?.name : undefined}
       emptyHint={sessionMode === 'text' ? 'Type below to begin!' : undefined}
       stickToBottom={sessionMode === 'text'}
       onQuickAnswer={(text) => {

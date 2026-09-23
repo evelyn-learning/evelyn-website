@@ -89,6 +89,12 @@ export interface TranscriptEntry {
    *  transcript thumbnails are live-session only; the academy shows the
    *  stored attachment on replays). */
   image?: { dataUrl: string; name?: string };
+  /** Task 9 fix round 1: LIVE-ONLY, display-only entry (the thumbnail of an
+   *  upload whose extraction failed). Never enters VoiceTutorRealtime's
+   *  transcriptRef — TutorSession merges it into the list it hands
+   *  TranscriptView only — so it can't reach the brain history or any
+   *  save/recording/postMessage path. */
+  displayOnly?: true;
   sttConfidence?: number;
   detectedIntent?: StudentIntent;
   detectedMisconception?: string;
