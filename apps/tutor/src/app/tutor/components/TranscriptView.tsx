@@ -23,6 +23,7 @@ import { InlineMathText } from './whiteboard/InlineMathText';
 // replay TranscriptBubble (ReplayPlayer.tsx) can reuse it too — see
 // inline-emphasis.tsx for why renderBubbleText itself stays local.
 import { renderInlineEmphasis } from './inline-emphasis';
+import { ImageZoomOverlay } from './ImageZoomOverlay';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -61,6 +62,10 @@ interface TranscriptViewProps {
    *  gate doesn't work for text's un-streamed full-paragraph replies).
    *  Defaults to false/undefined so voice is byte-identical. */
   stickToBottom?: boolean;
+  /** GreenApple round-2 Task 9: the persona's name, shown as a small label
+   *  above tutor bubbles. Omitted ⇒ no label renders at all, so every
+   *  caller without a persona stays byte-identical. */
+  tutorLabel?: string;
 }
 
 /** Round-20 (2026-07-17): bubbles now render inline $…$ math via KaTeX.
@@ -206,8 +211,10 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   return 'open';
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false, tutorLabel }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Task 9: the upload thumbnail currently open in the zoom overlay.
+  const [zoomImage, setZoomImage] = useState<{ dataUrl: string; name?: string } | null>(null);
 
   // Auto-scroll to bottom when new messages arrive (or when the picker
   // mounts/unmounts) — but ONLY if the user is already near the bottom.
@@ -399,8 +406,12 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     // historyOnly entries exist purely for the brain's conversation
     // history (e.g. "(rendered: tool, tool, …)" placeholders for
     // tool-only turns). They MUST NOT render in the chat UI.
-    .filter((entry) => !entry.historyOnly)
+    // Task 9 exception: an image-bearing historyOnly entry (the upload's
+    // echo / placeholder) renders as the thumbnail ALONE — its text is the
+    // brain-facing extraction, so it's blanked here.
+    .filter((entry) => !entry.historyOnly || !!entry.image)
     .map((entry) => {
+      if (entry.historyOnly && entry.image) return { ...entry, text: '' };
       if (entry.role !== 'student') return entry;
       let stripped = entry.text.replace(/\s*\[[\s\S]*?\]\s*/g, ' ');
       // Trailing orphan `]` (no matching `[` ahead in remaining text):
@@ -412,7 +423,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         stripped = (cutFrom >= 0 ? stripped.slice(0, cutFrom + 1) : '').trim();
       }
       stripped = stripped.replace(/\s+/g, ' ').trim();
-      if (!stripped) return null;
+      if (!stripped) return entry.image ? { ...entry, text: '' } : null;
       return stripped === entry.text ? entry : { ...entry, text: stripped };
     })
     .filter((e): e is TranscriptEntry => e !== null);
@@ -527,6 +538,9 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
           entry.role === 'student' ? 'text-right' : ''
         }`}
       >
+        {entry.role === 'tutor' && tutorLabel && (
+          <p className="text-[11px] text-slate-500 mb-0.5">{tutorLabel}</p>
+        )}
         <div
           className={`inline-block max-w-[80%] p-3 rounded-lg ${
             entry.role === 'student'
@@ -534,7 +548,22 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
               : 'bg-gray-100 text-gray-800 rounded-bl-none'
           }`}
         >
-          {entry.role === 'tutor' && !entry.streaming
+          {entry.image && (
+            <button
+              type="button"
+              onClick={() => setZoomImage(entry.image ?? null)}
+              className={`block ${entry.text ? 'mb-2' : ''} ${entry.role === 'student' ? 'ml-auto' : ''}`}
+              aria-label="Enlarge uploaded image"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- live-only data: URL */}
+              <img
+                src={entry.image.dataUrl}
+                alt={entry.image.name ?? 'Uploaded image'}
+                className="h-24 rounded-lg border border-slate-200 object-cover"
+              />
+            </button>
+          )}
+          {entry.image && !entry.text ? null : entry.role === 'tutor' && !entry.streaming
             ? (() => {
                 if (!split) {
                   return (
@@ -710,6 +739,13 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         </div>
       )}
 
+      {zoomImage && (
+        <ImageZoomOverlay
+          src={zoomImage.dataUrl}
+          alt={zoomImage.name ?? 'Uploaded image'}
+          onClose={() => setZoomImage(null)}
+        />
+      )}
     </div>
   );
 }

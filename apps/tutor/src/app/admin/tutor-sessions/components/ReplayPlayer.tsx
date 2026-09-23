@@ -53,6 +53,10 @@ interface ReplayPlayerProps {
    *  route (which requires it for non-admin callers). Absent on the admin
    *  pages, where the NextAuth session authorizes the fetch instead. */
   audioToken?: string;
+  /** GreenApple round-2 Task 9: the brand's persona name (replay token
+   *  `branding.tutor_name`), shown instead of the raw "tutor" role label.
+   *  Absent ⇒ unchanged. */
+  tutorLabel?: string;
 }
 
 function formatTime(ms: number): string {
@@ -68,7 +72,7 @@ function formatTime(ms: number): string {
  *  keeping it HERE. suppressHydrationWarning on the time: the static page
  *  server-renders it, and toLocaleTimeString legitimately differs between
  *  the server's timezone and the viewer's. */
-export function TranscriptBubble({ entry }: { entry: { role: string; text: string; timestamp: string } }) {
+export function TranscriptBubble({ entry, tutorLabel }: { entry: { role: string; text: string; timestamp: string }; tutorLabel?: string }) {
   return (
     <div className={`flex ${entry.role === 'student' ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
@@ -77,7 +81,7 @@ export function TranscriptBubble({ entry }: { entry: { role: string; text: strin
           : 'bg-gray-100 text-gray-800'
       }`}>
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-[10px] font-semibold opacity-60 uppercase">{entry.role}</span>
+          <span className="text-[10px] font-semibold opacity-60 uppercase">{entry.role === 'tutor' ? (tutorLabel ?? entry.role) : entry.role}</span>
           <span className="text-[10px] opacity-40" suppressHydrationWarning>
             {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>
@@ -218,6 +222,7 @@ export default function ReplayPlayer({
   sessionId,
   hasAudio,
   audioToken,
+  tutorLabel,
 }: ReplayPlayerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1324,7 +1329,7 @@ export default function ReplayPlayer({
                 <p className="text-gray-400 text-sm text-center py-8">Press play to start replay...</p>
               )}
               {visibleMessages.map((entry, i) => (
-                <TranscriptBubble key={i} entry={entry} />
+                <TranscriptBubble key={i} entry={entry} tutorLabel={tutorLabel} />
               ))}
               <div ref={chatEndRef} />
             </div>

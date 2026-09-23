@@ -52,6 +52,11 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
     return <Refusal message="This replay link is invalid or has expired. Open the session again from your dashboard." />;
   }
   const { payload } = verdict;
+  // Task 9: branding is an unvalidated (though signed) JSON claim — only a
+  // non-empty string may become a React text child.
+  const tutorLabel = typeof payload.branding?.tutor_name === 'string' && payload.branding.tutor_name.trim()
+    ? payload.branding.tutor_name.trim()
+    : undefined;
 
   await connectDB();
   const session = await TutorSession.findOne({ sessionId: payload.session_id }).lean<
@@ -122,6 +127,7 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
           sessionId={s.sessionId}
           hasAudio={s.hasAudio}
           audioToken={token}
+          tutorLabel={tutorLabel}
         />
 
         {/* At-a-glance session stats */}
@@ -159,7 +165,7 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
               <p className="py-8 text-center text-sm text-gray-400">No messages were recorded for this session.</p>
             )}
             {sortedTranscript.map((entry, i) => (
-              <TranscriptBubble key={i} entry={entry} />
+              <TranscriptBubble key={i} entry={entry} tutorLabel={tutorLabel} />
             ))}
           </div>
         </div>

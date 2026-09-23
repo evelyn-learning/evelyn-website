@@ -3028,6 +3028,15 @@ export function VoiceTutorRealtime({
   // keep, so a valid render the student asked for doesn't vanish).
   const winningAttemptRenderedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
+  // GreenApple round-2 Task 9: uploaded images waiting to be attached as a
+  // LIVE-ONLY thumbnail to the student transcript entry their dispatch
+  // produces. Keyed by the dispatched (trimmed) transcript text rather than
+  // threaded through opts because the busy-queue / mid-utterance queue store
+  // plain strings — a keyed side table survives those paths (callBrainOnce
+  // matches by containment, so a coalesced queued turn still finds it).
+  // Consumed (removed) on attach; capped so an upload whose dispatch was
+  // dropped can't pin data URLs in memory.
+  const pendingUploadImagesRef = useRef<Array<{ key: string; image: { dataUrl: string; name?: string } }>>([]);
   // Issue E (2026-09-01, embed-1788187567764): timestamp of the most recent
   // push onto queuedTranscriptsRef via the busy-queue path below. The queue
   // itself stores plain strings (no per-entry timestamp), so this single
@@ -10184,6 +10193,20 @@ export function VoiceTutorRealtime({
         }
       }
 
+      // GreenApple round-2 Task 9: claim a parked upload image for this
+      // dispatch (containment, not equality — a busy-queue coalesce may have
+      // joined the marker with another final). Removed from the table on
+      // claim. `undefined` on every non-upload turn ⇒ nothing below changes.
+      let uploadImage: { dataUrl: string; name?: string } | undefined;
+      {
+        const parked = pendingUploadImagesRef.current;
+        const idx = parked.findIndex((p) => p.key.length > 0 && originalTranscript.includes(p.key));
+        if (idx >= 0) {
+          uploadImage = parked[idx].image;
+          parked.splice(idx, 1);
+        }
+      }
+
       const lastEntry = transcriptRef.current[transcriptRef.current.length - 1];
       if (!silent && (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== transcript)) {
         const studentEntry: TranscriptEntry = {
@@ -10191,7 +10214,9 @@ export function VoiceTutorRealtime({
           timestamp: new Date(),
           role: 'student',
           text: transcript,
+          ...(uploadImage ? { image: uploadImage } : {}),
         };
+        uploadImage = undefined;
         transcriptRef.current = [...transcriptRef.current, studentEntry];
         onTranscriptUpdate([...transcriptRef.current]);
       }
@@ -10212,10 +10237,37 @@ export function VoiceTutorRealtime({
           role: 'student',
           text: currentEcho,
           historyOnly: true,
+          // Task 9: the upload's thumbnail rides the echo entry. It stays
+          // historyOnly (TranscriptView renders an image-bearing historyOnly
+          // entry as the thumbnail alone — the extracted text is not shown).
+          ...(uploadImage ? { image: uploadImage } : {}),
         };
+        uploadImage = undefined;
         transcriptRef.current = [...transcriptRef.current, echoEntry];
         onTranscriptUpdate([...transcriptRef.current]);
         onDebugEvent?.('student_echo_appended', currentEcho.slice(0, 60));
+      }
+      // Task 9: an upload whose extraction FAILED carries no quoted content,
+      // so no echo entry exists to hold the thumbnail. Append a historyOnly
+      // placeholder for it (thumbnail-only in the chat; a short neutral line
+      // in history/saved transcript so the tutor's "describe it" reply isn't
+      // orphaned). Dropped from THIS request's prior history below, like the
+      // echo, so the brain doesn't see two consecutive user turns.
+      const uploadPlaceholderText = '(The student uploaded an image.)';
+      let uploadPlaceholderAppended = false;
+      if (uploadImage) {
+        const placeholderEntry: TranscriptEntry = {
+          id: `student-${Date.now()}-upload`,
+          timestamp: new Date(),
+          role: 'student',
+          text: uploadPlaceholderText,
+          historyOnly: true,
+          image: uploadImage,
+        };
+        uploadImage = undefined;
+        uploadPlaceholderAppended = true;
+        transcriptRef.current = [...transcriptRef.current, placeholderEntry];
+        onTranscriptUpdate([...transcriptRef.current]);
       }
       // Convert the transcript log to the Claude conversation shape. We
       // collapse 'system' entries (greeting prompts, etc.) — they're not
@@ -10233,7 +10285,8 @@ export function VoiceTutorRealtime({
       // within this one request (it stays for FUTURE turns).
       const priorWithoutCurrent = history.length > 0 && history[history.length - 1].role === 'user'
         && (history[history.length - 1].content === transcript
-          || (currentEcho !== null && history[history.length - 1].content === currentEcho))
+          || (currentEcho !== null && history[history.length - 1].content === currentEcho)
+          || (uploadPlaceholderAppended && history[history.length - 1].content === uploadPlaceholderText))
         ? history.slice(0, -1)
         : history;
       // Synthetic greeting prepend: the tutor system prompt has a Rule 6
@@ -16922,8 +16975,18 @@ export function VoiceTutorRealtime({
       // direct first call only — queue-drained follow-ups are separate
       // turns and intentionally don't carry it).
       injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
+      // GreenApple round-2 Task 9: live-only upload thumbnail (from the
+      // hook's relay branch). Parked in pendingUploadImagesRef here — the
+      // one entry point every dispatch passes — and attached to the student
+      // entry by callBrainOnce. Never forwarded to the brain.
+      image?: { dataUrl: string; name?: string };
     },
   ) => {
+    if (opts?.image) {
+      const parked = pendingUploadImagesRef.current;
+      parked.push({ key: transcript.trim(), image: opts.image });
+      if (parked.length > 3) parked.splice(0, parked.length - 3);
+    }
     // R42 (2026-08-10, session portal-cb2addf5): MCQ letter-homophone
     // normalization. Done here — the single serialized entry point every
     // voice/typed dispatch path converges on — so it's applied exactly
@@ -20528,7 +20591,7 @@ export function VoiceTutorRealtime({
           // caller's gesture stack).
           micClickRef.current?.();
         },
-        sendTextMessage: (text: string) => {
+        sendTextMessage: (text: string, meta?: { image?: { dataUrl: string; name?: string } }) => {
           // Timer + demo-cap parity for typed-first students (2026-07-10
           // audit): the session clock was keyed to the first MIC tap only,
           // so a "type here if you can't speak" student watched 0:00 all
@@ -20571,7 +20634,12 @@ export function VoiceTutorRealtime({
           // message; bracketed strings are synthetic (kickoff / reactions /
           // harness) and get the voice-style fallback path. Student-board
           // actions came from typing/clicking → typed path.
-          realtime.sendTextMessage(text, { typed: !isSynthetic });
+          // Task 9: an upload's image rides along (live-only thumbnail);
+          // every other send passes the identical meta object as before.
+          realtime.sendTextMessage(
+            text,
+            meta?.image ? { typed: !isSynthetic, image: meta.image } : { typed: !isSynthetic },
+          );
         },
         speakText: (text: string) => realtime.speakText(text),
         stopSpeaking: () => {

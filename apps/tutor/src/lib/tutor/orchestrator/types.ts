@@ -8,7 +8,10 @@ import type { TranscriptEntry } from '@/lib/tutor/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 
 export interface RealtimeHandle {
-  sendTextMessage: (text: string) => void;
+  /** `meta.image` (GreenApple round-2 Task 9): the student's uploaded image,
+   *  attached as a LIVE-ONLY thumbnail to the resulting student transcript
+   *  entry. Never reaches the brain or any persisted payload. */
+  sendTextMessage: (text: string, meta?: { image?: { dataUrl: string; name?: string } }) => void;
   /** Speak tutor-side text directly through TTS without routing
    *  through the brain. Used by the in-session lesson picker to
    *  voice its greeting bubble (the picker is a UI element rendered

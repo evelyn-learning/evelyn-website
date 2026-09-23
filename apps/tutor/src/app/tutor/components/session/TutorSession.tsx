@@ -534,6 +534,13 @@ export default function TutorSession(props: TutorSessionProps) {
         realtimeHandleRef.current.sendTextMessage(`[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`);
       } else {
         const noun = type === 'drawing' ? 'drew on' : 'uploaded an image to';
+        // GreenApple round-2 Task 9: an UPLOAD's image rides the send so the
+        // student's transcript entry shows it as a live-only thumbnail (never
+        // persisted, never sent to the brain — see TranscriptEntry.image).
+        // Drawings are board captures, not uploads, so they keep the
+        // original meta-less send. The file name isn't plumbed through
+        // onUploadHomework(base64, mime), so alt falls back to the default.
+        const sendMeta = type === 'image' ? { image: { dataUrl: content } } : undefined;
         // Round-18 (2026-07-17): instant acknowledgment. The Vision
         // extraction below takes a few seconds, during which the dock shows
         // only a generic "Thinking…" — it reads as stuck and tempts the
@@ -570,12 +577,12 @@ export default function TutorSession(props: TutorSessionProps) {
             });
             const data = await resp.json();
             if (data.extractedProblem && realtimeHandleRef.current) {
-              realtimeHandleRef.current.sendTextMessage(`[The student ${noun} the whiteboard. It contains: "${data.extractedProblem}". Respond to what they shared.]`);
+              realtimeHandleRef.current.sendTextMessage(`[The student ${noun} the whiteboard. It contains: "${data.extractedProblem}". Respond to what they shared.]`, sendMeta);
             } else {
-              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`);
+              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`, sendMeta);
             }
           } catch {
-            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`);
+            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`, sendMeta);
           }
         })();
       }
@@ -713,6 +720,7 @@ export default function TutorSession(props: TutorSessionProps) {
     <TranscriptView
       transcript={transcript}
       isProcessing={isProcessing}
+      tutorLabel={teacherPersona?.name}
       emptyHint={sessionMode === 'text' ? 'Type below to begin!' : undefined}
       stickToBottom={sessionMode === 'text'}
       onQuickAnswer={(text) => {

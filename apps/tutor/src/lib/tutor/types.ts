@@ -81,6 +81,14 @@ export interface TranscriptEntry {
   pedagogicalIntent?: PedagogicalIntent;
 
   // For student messages
+  /** GreenApple round-2 Task 9: the student's uploaded image, shown as a
+   *  thumbnail (click → zoom) on their transcript bubble. LIVE-ONLY — never
+   *  persisted: every save/recording/postMessage path serialises an explicit
+   *  field whitelist that excludes it, and the brain history is built from
+   *  `.text` only, so the data URL never leaves the browser tab (spec §0:
+   *  transcript thumbnails are live-session only; the academy shows the
+   *  stored attachment on replays). */
+  image?: { dataUrl: string; name?: string };
   sttConfidence?: number;
   detectedIntent?: StudentIntent;
   detectedMisconception?: string;

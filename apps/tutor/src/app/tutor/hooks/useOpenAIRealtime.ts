@@ -312,6 +312,11 @@ export interface RealtimeConfig {
          *  a brain-outage fallback for a typed turn renders text instead of
          *  speaking "say that again". */
         typed?: boolean;
+        /** GreenApple round-2 Task 9: the student's uploaded image riding a
+         *  relayed send, so the orchestrator can attach a live-only
+         *  thumbnail to the student transcript entry. Never sent to the
+         *  brain or persisted. */
+        image?: { dataUrl: string; name?: string };
       },
     ) => void | Promise<void>;
     /** TTS engine for voicing the brain's text in relay mode.
@@ -401,7 +406,7 @@ export interface RealtimeResult {
   muteInput: () => void;
   interrupt: () => void;
   pause: () => void;
-  sendTextMessage: (text: string, meta?: { typed?: boolean }) => void;
+  sendTextMessage: (text: string, meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } }) => void;
   injectContext: (contextText: string) => void;
   /**
    * Voice the given text through Realtime's TTS without authoring it.
@@ -848,11 +853,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // console.error; the input box gates on state-derived isConnected, which
   // lags the actual socket state, so submissions vanished). Cap 5; flushed
   // by connect()'s onopen handler on reconnect.
-  const pendingTypedRef = useRef<Array<{ text: string; meta?: { typed?: boolean } }>>([]);
+  const pendingTypedRef = useRef<Array<{ text: string; meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } } }>>([]);
   // Ref to hold sendTextMessage so connect's onopen (defined earlier in the
   // file, before sendTextMessage exists) can flush the queue above without a
   // circular dep — latest-fn-in-a-ref idiom (cf. startListeningRef above).
-  const sendTextMessageRef = useRef<(text: string, meta?: { typed?: boolean }) => void>(() => {});
+  const sendTextMessageRef = useRef<(text: string, meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } }) => void>(() => {});
   // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
   const hasAudioInBufferRef = useRef(false);
   // ── speakText queue (Phase 5 streaming brain → Realtime) ──────────────────
@@ -2878,7 +2883,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   }, [updateState, emitPlaybackStamp]);
 
   // Send text message (for testing or fallback)
-  const sendTextMessage = useCallback((text: string, meta?: { typed?: boolean }) => {
+  const sendTextMessage = useCallback((text: string, meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } }) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       // R32: typed messages used to be silently DISCARDED here (silence audit
       // §7) — the input box gates on state-derived isConnected, which lags a
@@ -2929,6 +2934,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           // text box + external typed sends) so a brain-outage fallback for
           // this turn renders text rather than speaking at a typing student.
           typed: meta?.typed === true,
+          // Task 9: only present on an upload send, so every other relay
+          // dispatch's opts object is unchanged.
+          ...(meta?.image ? { image: meta.image } : {}),
         });
       } catch (err) {
         console.error('[Realtime] sendTextMessage relay threw:', err);

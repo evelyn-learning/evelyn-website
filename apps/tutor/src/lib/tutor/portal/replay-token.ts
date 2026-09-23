@@ -33,6 +33,9 @@ export interface ReplayTokenPayload {
     product_name?: string;
     primary_color?: string;
     logo_url?: string;
+    /** GreenApple round-2 Task 9: the brand's persona name (e.g. "Homework
+     *  Helper") — the replay transcript's tutor bubble label. Cosmetic. */
+    tutor_name?: string;
   };
 }
 
