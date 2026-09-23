@@ -27,11 +27,11 @@ assert(session.includes('createPortal(') && session.includes('data-testid="adjus
 assert(session.includes('pacingMenuPanelRef.current?.contains('), 'outside-click treats the portalled menu as inside');
 
 
-// Fix round 1: the row opens by default only where it has its own slot.
+// Open by default (R40/R57) except text mode on phones.
 assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: true }) === true, 'default: open in text mode at md+');
 assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: false }) === false, 'default: collapsed in text mode on phones');
-assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: true }) === false, 'default: collapsed in voice mode (md+)');
-assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: false }) === false, 'default: collapsed in voice mode (phones)');
+assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: true }) === true, 'default: open in voice mode (md+)');
+assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: false }) === true, 'default: open in voice mode (phones)');
 assert(stage.includes('useState(() => toolsRowDefaultOpen(') && stage.includes('toolsUserToggledRef.current = true'), 'stage: default from toolsRowDefaultOpen; wrench toggle marks the student choice');
 assert(!/pr-14/.test(stage.replace(/\/\/.*|\{\/\*[\s\S]*?\*\/\}/g, '')), 'stage: no pr-14 phone gutter left in code');
 const cluster = stage.slice(stage.indexOf('data-testid="tools-cluster"'));

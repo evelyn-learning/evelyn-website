@@ -215,11 +215,15 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // raw input.
   let homeworkProblems: HomeworkProblem[] | null = null;
   if (isHomework) {
-    const decision = homeworkPlanDecision(
-      await enumerateProblems(materialText ?? text, defaultEnumerateDeps(getEnumerateClient())),
-    );
+    const enumerated = await enumerateProblems(materialText ?? text, defaultEnumerateDeps(getEnumerateClient()));
+    const decision = homeworkPlanDecision(enumerated);
     if (decision.kind === 'homework') homeworkProblems = decision.problems;
-    else console.log('[plan-generate] homework-help: enumeration failed open → normal plan');
+    else {
+      // Runbook grep: `homework-help: N problems (fail-open: yes|no)` — the
+      // success line is logged where the homework plan is built (below).
+      console.log(`[plan-generate] homework-help: ${enumerated.problems.length} problems (fail-open: yes)`);
+      console.log('[plan-generate] homework-help: enumeration failed open → normal plan');
+    }
   }
 
   if (hasMaterials || homeworkProblems) {
@@ -288,7 +292,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // split reaches here (homeworkPlanDecision); a fail-open enumeration
     // took the normal path, so this plan's generation succeeded.
     generatorOk = true;
-    console.log(`[plan-generate] homework-help: ${homeworkProblems.length} problems`);
+    console.log(`[plan-generate] homework-help: ${homeworkProblems.length} problems (fail-open: no)`);
 
     const fields = buildHomeworkPlanFields(
       homeworkProblems,

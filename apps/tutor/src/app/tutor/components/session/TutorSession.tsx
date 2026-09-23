@@ -402,6 +402,14 @@ export default function TutorSession(props: TutorSessionProps) {
   // the render below), so it is no longer a descendant of pacingMenuRef.
   const pacingMenuPanelRef = useRef<HTMLDivElement>(null);
   const [pacingMenuPos, setPacingMenuPos] = useState<{ top: number; right: number } | null>(null);
+  // Focus management for the portalled menu: focus its first item on open,
+  // hand focus back to the ⋯ trigger on close (Escape, outside click, item
+  // chosen). A close caused by window blur skips the restore — in the portal
+  // embed that blur means the student clicked the PARENT page, and focusing
+  // back into the iframe would steal their focus.
+  const pacingMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const pacingMenuClosedByBlurRef = useRef(false);
+  const pacingMenuWasOpenRef = useRef(false);
   const prevBusyRef = useRef(false);
   // P2 (demo feedback R2): one-shot guard for the session-started window
   // event — onSessionStarted can fire from several VTR paths; the portal
@@ -440,7 +448,7 @@ export default function TutorSession(props: TutorSessionProps) {
     };
     // In the portal embed, a click on the PARENT page never reaches this
     // document — but it does steal focus, so window blur is the signal.
-    const onBlur = () => setPacingMenuOpen(false);
+    const onBlur = () => { pacingMenuClosedByBlurRef.current = true; setPacingMenuOpen(false); };
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
     window.addEventListener('blur', onBlur);
@@ -450,6 +458,22 @@ export default function TutorSession(props: TutorSessionProps) {
       window.removeEventListener('blur', onBlur);
     };
   }, [pacingMenuOpen]);
+
+  // M4: open → first menu item; close → back to the ⋯ trigger (unless blur).
+  useEffect(() => {
+    if (pacingMenuOpen && pacingMenuPos) {
+      if (!pacingMenuWasOpenRef.current) {
+        pacingMenuWasOpenRef.current = true;
+        pacingMenuPanelRef.current?.querySelector<HTMLElement>('button:not([disabled]), [href], input, [tabindex]:not([tabindex="-1"])')?.focus();
+      }
+      return;
+    }
+    if (!pacingMenuOpen && pacingMenuWasOpenRef.current) {
+      pacingMenuWasOpenRef.current = false;
+      if (!pacingMenuClosedByBlurRef.current) pacingMenuTriggerRef.current?.focus();
+    }
+    pacingMenuClosedByBlurRef.current = false;
+  }, [pacingMenuOpen, pacingMenuPos]);
 
   // Round 3 (A13): the menu is portalled (below) — anchor it under its
   // trigger's bounding rect, re-measured on resize while open. Being set only
@@ -1548,7 +1572,7 @@ export default function TutorSession(props: TutorSessionProps) {
           : paceBias > 0 ? `Pace: fast${paceBias > 1 ? ` ×${paceBias}` : ''}`
           : 'Pace: normal'}
       </button>
-      <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
+      <button ref={pacingMenuTriggerRef} onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
       {pacingMenuOpen && pacingMenuPos && typeof document !== 'undefined' && createPortal(
         // The "Adjust the lesson" menu (opened via the Pace pill or the ⋯
         // button — both toggle this one menu). It used to render in place with

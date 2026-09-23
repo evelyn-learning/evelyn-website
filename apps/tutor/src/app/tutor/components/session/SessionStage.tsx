@@ -410,11 +410,11 @@ export default function SessionStage(props: SessionStageProps) {
   // the expanded column) changes.
   // R40 (user call): default OPEN on mount — students never discovered the
   // fullscreen/tools buttons behind the bare wrench.
-  // Round 3 (A13, fix round 1): the cluster is now a HORIZONTAL row, which
-  // open covers the board's top strip wherever it floats over the board —
-  // so it defaults open only where it has its own slot (text mode, md+,
-  // above the transcript panel) and collapsed to the wrench elsewhere; see
-  // `toolsRowDefaultOpen`. `isMdUp` is only known after mount (it starts
+  // Round 3 (A13): the cluster is now a HORIZONTAL row. It stays open by
+  // default in voice mode (every width) and in text mode at md+ (its own
+  // slot above the transcript panel); only text mode on phones, where the
+  // open row would cover the board card's top strip, starts collapsed to the
+  // wrench — see `toolsRowDefaultOpen`. `isMdUp` is only known after mount (it starts
   // true), so the default is re-applied by the effect next to `isMdUp`
   // until the student toggles the wrench themselves — after that their
   // choice holds for the rest of the session.
@@ -451,8 +451,8 @@ export default function SessionStage(props: SessionStageProps) {
   // gone it is a no-op in the common case, but it still recovers a rail the
   // student collapsed by hand before the session began, which is the friendlier
   // state to start a lesson in.
-  // Fix round 1: "re-open" now means "restore the default" (open only in
-  // text mode at md+), and a student's own wrench toggle is respected.
+  // Round 3 (A13): "re-open" now means "restore the default" (open except
+  // text mode on phones), and a student's own wrench toggle is respected.
   useEffect(() => {
     if (started && !toolsUserToggledRef.current) setToolsOpen(toolsRowDefaultOpen({ sessionMode, isMdUp: isMdUpRef.current }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -987,11 +987,10 @@ export default function SessionStage(props: SessionStageProps) {
               gutter. */}
           {/* No right gutter (round 3, A13 fix round 1): the old `pr-14`
               (<md, text) reserved a full-height strip for the VERTICAL tools
-              rail. The tools are now a horizontal row that starts collapsed
-              to one wrench button at the top-right on phones
+              rail. The tools are now a horizontal row that, in text mode on
+              phones, starts collapsed to one wrench button at the top-right
               (`toolsRowDefaultOpen`), so a full-height gutter was dead
-              padding; the wrench floats over the card's top-right corner the
-              same way it always has in voice mode. */}
+              padding; the wrench floats over the card's top-right corner. */}
           <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>
             {/* Text mode, <md: the pager moves IN the card (compact row, no
                 floating pill, no extra vertical row) — owner mobile-split

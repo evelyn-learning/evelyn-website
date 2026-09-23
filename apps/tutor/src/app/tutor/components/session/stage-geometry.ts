@@ -12,11 +12,11 @@ export function textColumnGeometry({ hasRail }: { hasRail: boolean }): { toolsTo
   return { toolsTopPx, panelTopPx: toolsTopPx + TOOLS_ROW_PX + TOOLS_PANEL_GAP_PX };
 }
 
-/** Round 3 (A13, fix round 1): the horizontal tools row opens by default ONLY
- *  where it has its own slot — text mode at md+, in the right column above
- *  the transcript panel. Everywhere else (voice mode on every brand, and text
- *  mode on phones) it floats over the board, so it starts collapsed to the
- *  wrench; open, it would cover the board's top strip. */
+/** Round 3 (A13): the horizontal tools row is open by default (R40/R57)
+ *  in voice mode at every width and in text mode at md+ (its own slot in the
+ *  right column above the transcript panel). The one exception is text mode
+ *  on phones, where the open row would cover the board card's top strip, so
+ *  it starts collapsed to the wrench. */
 export function toolsRowDefaultOpen({ sessionMode, isMdUp }: { sessionMode: string; isMdUp: boolean }): boolean {
-  return sessionMode === 'text' && isMdUp;
+  return sessionMode === 'voice' || (sessionMode === 'text' && isMdUp);
 }
