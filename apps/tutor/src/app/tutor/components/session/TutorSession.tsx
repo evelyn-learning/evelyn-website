@@ -1088,6 +1088,13 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime's onHomeworkProgress. Stays null for non-homework
   // plans (the callback never fires for them).
   const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number; text?: string } | null>(null);
+  // Which lesson-plan id's fetch has settled (loaded or failed). While the
+  // selected plan is still loading, a homework session shows "Getting your
+  // first problem ready…"; once it settles with no homework plan (fetch
+  // failure, or academy's freestyle fallback with no plan at all) the
+  // stage falls back to the ordinary "Type your question" copy instead of
+  // spinning forever.
+  const [settledPlanId, setSettledPlanId] = useState<string | null>(null);
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -1379,6 +1386,7 @@ export default function TutorSession(props: TutorSessionProps) {
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onHomeworkProgress={setHomeworkProgress}
+        onLessonPlanLoadSettled={setSettledPlanId}
         segmentLabels={segmentLabels}
         onTutorBusy={handleTutorBusy}
         onVoiceStateChange={setLiveVoiceState}
@@ -1756,6 +1764,7 @@ export default function TutorSession(props: TutorSessionProps) {
         sessionMode={sessionMode}
         sessionGoal={sessionGoal}
         homeworkProgress={homeworkProgress}
+        homeworkPlanPending={!!selectedLessonPlanId && settledPlanId !== selectedLessonPlanId}
         lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : topicLabel}
         subtitle={
           lessonProgress.plan

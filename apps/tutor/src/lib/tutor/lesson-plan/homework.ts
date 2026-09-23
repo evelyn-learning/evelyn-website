@@ -31,6 +31,14 @@ export interface LessonPlanLo extends LearningObjective {
   estimatedMinutes: number;
 }
 
+/** Suffix of a homework plan's single wrapper LO id. */
+export const HOMEWORK_LO_ID_SUFFIX = 'homework-lo-1' as const;
+
+/** The plan-scoped wrapper LO id for a homework plan. */
+export function homeworkLoIdFor(planId: string): string {
+  return `${planId}.${HOMEWORK_LO_ID_SUFFIX}`;
+}
+
 /** Fixed time budget for the wrapper LO — homework-help is one activity,
  *  not a paced multi-LO lesson, so this is a reasonable single estimate
  *  rather than a per-problem sum. */
@@ -72,9 +80,18 @@ export function homeworkProblemsOf(plan: { metadata?: Record<string, unknown> })
  * `subject` / `segments` / `schemaVersion` — this module only owns the
  * two fields that are specific to homework-help.
  */
-export function buildHomeworkPlanFields(problems: HomeworkProblem[], topicSummary: string): HomeworkPlanFields {
+export function buildHomeworkPlanFields(
+  problems: HomeworkProblem[],
+  topicSummary: string,
+  planId: string,
+): HomeworkPlanFields {
   const lo: LessonPlanLo = {
-    id: 'homework-lo-1',
+    // Namespaced under the plan id (like generated LOs, `${planId}.lo-N`):
+    // everything downstream keys on the LO id — stored-plan lookup by LO,
+    // practice derivedTopic, bank items, evidence events, learner-model
+    // mastery — so a fixed literal would pool every homework plan's
+    // evidence and bank items under one key.
+    id: homeworkLoIdFor(planId),
     description: 'Work the uploaded problems in order.',
     shortTitle: topicSummary,
     estimatedMinutes: HOMEWORK_LO_ESTIMATED_MINUTES,

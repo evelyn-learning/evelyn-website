@@ -35,6 +35,8 @@ const NON_CONTENT_TOOLS = new Set([
   'expand_topic_notes_theory',
   'add_topic_notes_method',
   'add_topic_notes_pointer',
+  // Homework-help rail pointer — moves the problem index, never the board.
+  'set_current_problem',
 ]);
 
 export function isBoardContentTool(name: string): boolean {

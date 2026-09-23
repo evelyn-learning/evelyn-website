@@ -94,7 +94,12 @@ export function parseEnumeration(raw: unknown): HomeworkProblem[] | null {
     const it = item as Record<string, unknown>;
     const text = typeof it.text === 'string' ? it.text.trim().slice(0, HOMEWORK_MAX_PROBLEM_CHARS) : '';
     if (!text) continue;
-    const n = typeof it.n === 'number' && Number.isFinite(it.n) ? it.n : undefined;
+    // A non-integer or < 1 `n` (e.g. sub-parts 1a/1b read back as 1.1/1.2,
+    // or a 0-based list) is treated as MISSING: the contract's
+    // PlanProblemSchema is `n: int().min(1)`, so keeping it would fail the
+    // response parse after the plan is persisted. Missing -> the whole list
+    // falls back to sequential 1..N below.
+    const n = typeof it.n === 'number' && Number.isInteger(it.n) && it.n >= 1 ? it.n : undefined;
     cleaned.push({ n, text });
   }
   if (cleaned.length === 0) return null;

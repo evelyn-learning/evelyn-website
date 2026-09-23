@@ -20,6 +20,8 @@ check('advance_lesson is withheld', shouldWithholdAfterKill('advance_lesson'));
 check('mark_segment_complete is withheld', shouldWithholdAfterKill('mark_segment_complete'));
 check('add_topic_notes_pointer is withheld', shouldWithholdAfterKill('add_topic_notes_pointer'));
 check('show_segment_card is withheld', shouldWithholdAfterKill('show_segment_card'));
+// Homework-help: the problem-rail pointer is lesson state too.
+check('set_current_problem is withheld', shouldWithholdAfterKill('set_current_problem'));
 
 // ─── renders are NOT withheld: TUTOR_KEEP_VALIDATED_ON_KILL exists so that
 //     a validated figure survives a dropped narration. ───
@@ -36,7 +38,7 @@ check('unknown tool is not withheld', !shouldWithholdAfterKill('show_some_future
 check('empty name is safe', !shouldWithholdAfterKill(''));
 
 // ─── the set is explicit and small ───
-check('LESSON_STATE_TOOLS has exactly the four', LESSON_STATE_TOOLS.size === 4, `size=${LESSON_STATE_TOOLS.size}`);
+check('LESSON_STATE_TOOLS has exactly the five', LESSON_STATE_TOOLS.size === 5, `size=${LESSON_STATE_TOOLS.size}`);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

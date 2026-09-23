@@ -1295,8 +1295,21 @@ function formatDeduplicatedShowsBlock(shows?: string[]): string {
 
 // Exported for scripts/test-active-problem-block.ts (same pattern as
 // formatPracticeSessionBlock — testable without running a brain turn).
-export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
+// Homework sessions: every <active_problem> variant licenses revealing the
+// answer "after the student has given up", which competes with
+// <homework_session>'s "never state a final answer … even when asked
+// outright". Appended to each reveal sentence (all three variants, in
+// lockstep) only when a homework block is attached this turn; every other
+// session renders byte-identically.
+export const ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX =
+  ' In a homework session this does not apply: never state the final answer; when the student gives up, give the next smallest hint instead.';
+
+export function formatActiveProblemBlock(
+  active: BrainTurnInput['activeProblem'],
+  opts?: { homework?: boolean },
+): string {
   if (!active?.statement) return '';
+  const hwReveal = opts?.homework ? ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX : '';
   // Student-brought problem: the student stated their OWN concrete problem to
   // work. Teach THEIRS via show_problem (segment_truth is suppressed this turn,
   // so there's no authored mandate competing). Crucially NOT the "verify
@@ -1316,7 +1329,7 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
         // only writers are the pipeline and the blind-solve check) — safe
         // to trust for a student-brought problem too.
         ? `\nVERIFIED expected answer (your earlier derivation, independently confirmed by the runtime's blind solve): ${active.expectedAnswer}\n` +
-          `Check the student's attempts against THIS — do not re-derive mid-conversation, and if your working starts disagreeing with it, TRUST THIS and re-check your working. Never reveal it before the student has genuinely attempted or given up.\n`
+          `Check the student's attempts against THIS — do not re-derive mid-conversation, and if your working starts disagreeing with it, TRUST THIS and re-check your working. Never reveal it before the student has genuinely attempted or given up.${hwReveal}\n`
         : '') +
       `</active_problem>\n\n`
     );
@@ -1348,7 +1361,7 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
       `Statement: ${active.statement}\n` +
       (active.expectedAnswer
         ? `\nExpected answer (declared on the card; the typed-submit auto-scorer grades against it): ${active.expectedAnswer}\n` +
-          `Check the student's attempts against THIS. If your own re-derivation disagrees, re-check your working before saying anything — and never reveal it before the student has genuinely attempted or given up.\n`
+          `Check the student's attempts against THIS. If your own re-derivation disagrees, re-check your working before saying anything — and never reveal it before the student has genuinely attempted or given up.${hwReveal}\n`
         : `\nThis card declares NO expected answer, so there is nothing pre-verified to grade against. Derive the correct answer yourself, silently, before judging any attempt — and if the student's reply doesn't parse as an answer to the card at all (a fragment, a request, "I don't know"), do NOT grade it as one: respond to what they actually said, or ask them to clarify.\n`) +
       `</active_problem>\n\n`
     );
@@ -1361,7 +1374,7 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
     `Statement: ${active.statement}\n` +
     (active.expectedAnswer
       ? `\nVERIFIED expected answer (from the problem pipeline's independent solve): ${active.expectedAnswer}\n` +
-        `Check the student's attempts against THIS. Do not re-derive the answer from scratch mid-conversation — long verification threads are where dropped factors and sign slips creep in. If your own working disagrees with this answer, TRUST THIS and re-check your working before saying anything. Never reveal it before the student has genuinely attempted or given up.\n`
+        `Check the student's attempts against THIS. Do not re-derive the answer from scratch mid-conversation — long verification threads are where dropped factors and sign slips creep in. If your own working disagrees with this answer, TRUST THIS and re-check your working before saying anything. Never reveal it before the student has genuinely attempted or given up.${hwReveal}\n`
       : '') +
     `</active_problem>\n\n`
   );
@@ -1688,7 +1701,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // anchors to the authored example (see formatActiveProblemBlock).
   const truthBlock = (truthBody && input.activeProblem?.source !== 'student')
     ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
-  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
+  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, { homework: homeworkSessionBlock !== '' });
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
@@ -1905,7 +1918,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // anchors to the authored example (see formatActiveProblemBlock).
   const truthBlock = (truthBody && input.activeProblem?.source !== 'student')
     ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
-  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem);
+  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, { homework: homeworkSessionBlock !== '' });
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);

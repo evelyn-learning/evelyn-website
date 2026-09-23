@@ -44,7 +44,7 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 /** Opener retry after a client-side fetch failure. */
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, buildOpenerClause, buildHomeworkOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
@@ -741,6 +741,11 @@ interface VoiceTutorRealtimeProps {
    *  `current` is the 1-based list POSITION, not the worksheet label;
    *  `text` is that problem's verbatim wording (the rail shows a prefix). */
   onHomeworkProgress?: (p: { current: number; total: number; text?: string } | null) => void;
+  /** Fires once the lesson-plan fetch for `lessonPlanId` has SETTLED —
+   *  loaded, not found, unusable, or failed — so the parent can stop
+   *  showing "plan on its way" copy (homework pre-start) when no plan will
+   *  ever arrive. Not fired for a cancelled (superseded) fetch. */
+  onLessonPlanLoadSettled?: (lessonPlanId: string) => void;
   /** Agenda rail (2026-08-10): cached content labels for the active plan's
    *  segments, fetched by TutorSession from the rail-labels route. Mirrored
    *  to a ref (Task 5 reads it) — not otherwise consumed here yet. */
@@ -1095,6 +1100,7 @@ export function VoiceTutorRealtime({
   cartesiaVoiceSpeed,
   onLessonPlanProgress,
   onHomeworkProgress,
+  onLessonPlanLoadSettled,
   segmentLabels,
   onTutorBusy,
   onVoiceStateChange,
@@ -2394,6 +2400,8 @@ export function VoiceTutorRealtime({
   const homeworkPlanIdRef = useRef<string | null>(null);
   const onHomeworkProgressRef = useRef(onHomeworkProgress);
   useEffect(() => { onHomeworkProgressRef.current = onHomeworkProgress; }, [onHomeworkProgress]);
+  const onLessonPlanLoadSettledRef = useRef(onLessonPlanLoadSettled);
+  useEffect(() => { onLessonPlanLoadSettledRef.current = onLessonPlanLoadSettled; }, [onLessonPlanLoadSettled]);
   useEffect(() => {
     const hadHomework = homeworkProblemsRef.current !== null;
     homeworkProblemsRef.current = homeworkProblems;
@@ -9775,6 +9783,8 @@ export function VoiceTutorRealtime({
         }
       } catch (err) {
         console.error('[VoiceTutorRealtime] lesson plan fetch failed:', err);
+      } finally {
+        if (!cancelled) onLessonPlanLoadSettledRef.current?.(lessonPlanId);
       }
     })();
     return () => { cancelled = true; };
@@ -20867,11 +20877,19 @@ export function VoiceTutorRealtime({
             // the instant it computes it, so whichever of the tap / this
             // seed lands second, the count still reaches the directive.
             openerClauseCtxRef.current = openerCtx;
-            openerStaleReorientRef.current = beh.journey === 'resume-stale';
-            const openerClause = buildOpenerClause({
-              ...openerCtx,
-              agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
-            });
+            // Homework-help: ONE generic homework opener replaces the
+            // ordinary opener, the stale re-orient and the continuity /
+            // recap clause — all of which contradict <homework_session>
+            // (greet, put the first problem up, ask). Every other goal is
+            // untouched.
+            const isHomeworkOpener = sessionGoal === 'homework-help';
+            openerStaleReorientRef.current = !isHomeworkOpener && beh.journey === 'resume-stale';
+            const openerClause = isHomeworkOpener
+              ? buildHomeworkOpenerClause(openerCtx)
+              : buildOpenerClause({
+                ...openerCtx,
+                agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
+              });
             // Continuity clause (spec §C.6) — ONE deterministic callback:
             // homework result → next-time intent → recap offer. Only the
             // returning-subscribed journeys get it; diagnostic / trial / new /
@@ -20879,7 +20897,10 @@ export function VoiceTutorRealtime({
             // continuity to speak of, and resume-stale already spends its one
             // opening move on the re-orient clause — hence the two branches
             // below can never co-occur).
-            const continuity = TUTOR_RECAP_OFFER
+            // Homework-help never picks one: no recap offer (so
+            // armSessionStartRecap never arms) and no homework ack.
+            const continuity = !isHomeworkOpener
+              && TUTOR_RECAP_OFFER
               && learnerExtrasRef.current
               && (beh.journey === 'subscribed-returning' || beh.journey === 'node-revisit' || beh.journey === 'course-complete')
               ? pickContinuityClause(learnerExtrasRef.current)
@@ -20889,7 +20910,9 @@ export function VoiceTutorRealtime({
             // re-orient instruction to the same directive (no new machinery;
             // rides the existing per-turn <opening_directive> block).
             const baseDirective =
-              beh.journey === 'resume-stale' && openerClause
+              isHomeworkOpener
+                ? openerClause
+                : beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
                 : continuity && openerClause
                   ? `${continuity.clause} ${openerClause}`
@@ -21353,7 +21376,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // Rebuild the opening directive WITH the agenda-preview clause —
             // the mount-time seed ran before this tap, so the seeded
             // directive lacks it (see openerClauseCtxRef doc).
-            if (openingDirectiveRef.current && openerClauseCtxRef.current) {
+            // Homework-help: the seeded homework opener has no agenda
+            // preview to add — never overwrite it with the ordinary opener.
+            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help') {
               const rebuilt = buildOpenerClause({
                 ...openerClauseCtxRef.current,
                 agendaItemCount,

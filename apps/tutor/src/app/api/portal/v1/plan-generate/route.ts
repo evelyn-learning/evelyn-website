@@ -280,6 +280,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     const fields = buildHomeworkPlanFields(
       problems,
       classification?.topicSummary || requestTopic || requestText.slice(0, 80),
+      durablePlanId,
     );
     const homeworkSegment: Segment = {
       id: 'homework',

@@ -1579,6 +1579,27 @@ export const STALE_CHECKPOINT_REORIENT_CLAUSE =
   "restore — re-orient them briefly (one line of 'we were working on X') before the opener; " +
   'do not run full get-to-know-you calibration.';
 
+/**
+ * Homework-help sessions (sessionGoal === 'homework-help'): the ONE opening
+ * directive, replacing buildOpenerClause's get-to-know-you / calibration /
+ * warm-resume branches AND the continuity clause (homework result, next-time
+ * intent, recap offer). Those all contradict <homework_session> ("greet, put
+ * Problem 1 on the board, ask the first question") and the homework spec's
+ * recap suppression. Same null gate as buildOpenerClause (openingPhase), so
+ * the directive exists on exactly the turns the ordinary opener would.
+ * Generic by design per feedback_generic_prompts.
+ */
+export function buildHomeworkOpenerClause(ctx: Pick<SystemPromptContext, 'openingPhase' | 'studentName'>): string | null {
+  if (!ctx.openingPhase) return null;
+  const greet = ctx.studentName
+    ? 'Open by greeting the student by name in one short sentence'
+    : 'Open by greeting the student warmly in one short sentence (no student name is available — never speak a placeholder value as if it were their name)';
+  return (
+    `${greet}, then put the first problem on the board and ask your first question about it — ` +
+    'no getting-to-know-you exchange, no calibration questions, no recap of prior sessions.'
+  );
+}
+
 import type { HomeworkStatus } from '@/lib/tutor/practice-assign/status';
 import type { RecapCandidate } from '@/lib/tutor/learner-model/recap-candidate';
 

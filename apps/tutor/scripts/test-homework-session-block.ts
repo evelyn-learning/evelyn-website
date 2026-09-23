@@ -17,7 +17,7 @@
  * Run:
  *   npx tsx scripts/test-homework-session-block.ts
  */
-import { formatHomeworkSessionBlock } from '../src/lib/tutor/voice/claude-brain';
+import { formatHomeworkSessionBlock, formatActiveProblemBlock, ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX } from '../src/lib/tutor/voice/claude-brain';
 import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
 
 let failed = false;
@@ -84,6 +84,26 @@ console.log(JSON.stringify(cmd));
 if (JSON.stringify(cmd) !== JSON.stringify({ action: 'setCurrentProblem', n: 3 })) {
   fail(`set_current_problem must map to { action: 'setCurrentProblem', n: 3 } — got ${JSON.stringify(cmd)}`);
 }
+
+// ── 4. <active_problem> reveal licence is overridden only in homework ─
+console.log('\n=== <active_problem> homework reveal suffix ===');
+const variants: Array<[string, Parameters<typeof formatActiveProblemBlock>[0]]> = [
+  ['student', { statement: 'x+2=5', expectedAnswer: 'x=3', source: 'student' }],
+  ['card', { statement: 'x+2=5', expectedAnswer: 'x=3', source: 'card' }],
+  ['pipeline', { statement: 'x+2=5', expectedAnswer: 'x=3' }],
+];
+for (const [label, active] of variants) {
+  const plain = formatActiveProblemBlock(active);
+  const plainFalse = formatActiveProblemBlock(active, { homework: false });
+  const withHw = formatActiveProblemBlock(active, { homework: true });
+  if (plain.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail(`${label}: suffix must NOT appear without homework`);
+  if (plain !== plainFalse) fail(`${label}: homework:false must render byte-identical to no opts`);
+  if (!withHw.includes(`given up.${ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX}\n`)) fail(`${label}: suffix must follow the reveal sentence in homework`);
+  if (withHw.replace(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX, '') !== plain) fail(`${label}: homework must differ ONLY by the suffix`);
+}
+// No expected answer → no reveal sentence → nothing to override.
+const noAns = formatActiveProblemBlock({ statement: 'x+2=5' }, { homework: true });
+if (noAns.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail('no expectedAnswer: suffix must not appear (no reveal sentence)');
 
 if (failed) {
   console.error('\ntest-homework-session-block: FAILED');

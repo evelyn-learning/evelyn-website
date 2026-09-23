@@ -32,6 +32,8 @@ export const NON_RENDER_TOOL_NAMES: ReadonlySet<string> = new Set([
   'expand_topic_notes_theory', 'add_topic_notes_method', 'add_topic_notes_pointer',
   'tutor_scroll_whiteboard', 'go_to_page', 'new_page', 'generate_problem',
   'clear', 'list_whiteboard_features', 'hold_for_student',
+  // Homework-help rail pointer — state only, never paints.
+  'set_current_problem',
 ]);
 
 export function countBoardRenderTools(names: string[]): number {

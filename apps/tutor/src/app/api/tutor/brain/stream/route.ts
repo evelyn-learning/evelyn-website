@@ -612,7 +612,7 @@ export async function POST(req: NextRequest) {
       );
 
       // Task 5 (homework-help): validate body.homework — an array of
-      // ≤25 {n: int≥1, text: non-empty string} problems plus an integer
+      // ≤25 {n: int≥1, text: non-empty string ≤4000 chars} problems plus an integer
       // current≥1. ANY shape mismatch (missing fields, wrong types, an
       // oversized list, a non-positive n/current) collapses the WHOLE
       // thing to undefined — same "reject rather than partially trust" as
@@ -630,7 +630,9 @@ export async function POST(req: NextRequest) {
           if (!p || typeof p !== 'object') return undefined;
           const { n, text } = p as { n?: unknown; text?: unknown };
           if (!Number.isInteger(n) || (n as number) < 1) return undefined;
-          if (typeof text !== 'string' || !text.trim()) return undefined;
+          // ≤4000 chars per problem text, matching the contract's
+          // HOMEWORK_MAX_PROBLEM_CHARS — fail closed on an oversized one.
+          if (typeof text !== 'string' || !text.trim() || text.length > 4000) return undefined;
           cleaned.push({ n: n as number, text });
         }
         return { problems: cleaned, current };

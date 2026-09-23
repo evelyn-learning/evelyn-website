@@ -11,6 +11,7 @@
  */
 import { toResponse } from '../src/lib/tutor/lesson-plan/plan-generate-contract';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
+import { buildHomeworkPlanFields, HOMEWORK_LO_ID_SUFFIX } from '../src/lib/tutor/lesson-plan/homework';
 
 let passed = 0, failed = 0;
 const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
@@ -53,6 +54,15 @@ assert(Array.isArray(hwRes.problems) && hwRes.problems.length === 2, 'homework p
 const normalRes = toResponse(normalPlan, { cached: false, sessionMinutes: 30 });
 assert(!('kind' in normalRes), 'normal plan: no kind key');
 assert(!('problems' in normalRes), 'normal plan: no problems key');
+
+// LO id is plan-scoped: two homework plans never share an LO id (every
+// downstream store — evidence, bank items, derived topic, mastery — keys on it).
+const fa = buildHomeworkPlanFields([{ n: 1, text: 'a' }], 'Topic', 'gen-aaa');
+const fb = buildHomeworkPlanFields([{ n: 1, text: 'a' }], 'Topic', 'gen-bbb');
+assert(fa.los[0].id === `gen-aaa.${HOMEWORK_LO_ID_SUFFIX}`, 'homework LO id is namespaced under the plan id');
+assert(fa.los[0].id.startsWith('gen-aaa.') && fb.los[0].id.startsWith('gen-bbb.'), 'homework LO id carries its own plan id prefix');
+assert(fa.los[0].id !== fb.los[0].id, 'two homework plans get different LO ids');
+assert(fa.los[0].id !== HOMEWORK_LO_ID_SUFFIX, 'homework LO id is not the bare shared literal');
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

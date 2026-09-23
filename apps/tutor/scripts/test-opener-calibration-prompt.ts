@@ -10,6 +10,7 @@
 import { strict as assert } from 'node:assert';
 import {
   buildOpenerClause,
+  buildHomeworkOpenerClause,
   buildSystemPrompt,
   STALE_CHECKPOINT_REORIENT_CLAUSE,
   type SystemPromptContext,
@@ -239,6 +240,28 @@ function main() {
     const c = buildOpenerClause({ ...baseCtx, openingPhase: true, agendaItemCount: 0 })!;
     assert(!c.includes('agenda rail'), 'no clause');
     assert(c.includes('Today we are going to learn'), 'plain ban present in demo branch');
+  });
+
+  // ─── Homework-help opener (GreenApple round 2, I1) ───
+  test('homework opener: null when not the opening phase', () => {
+    assert.equal(buildHomeworkOpenerClause({ openingPhase: false, studentName: 'Sam' }), null);
+    assert.equal(buildHomeworkOpenerClause({ studentName: 'Sam' }), null);
+  });
+  test('homework opener: greet by name, first problem, first question — no get-to-know / recap', () => {
+    const c = buildHomeworkOpenerClause({ openingPhase: true, studentName: 'Sam' })!;
+    assert(c.includes('greeting the student by name'), 'greets by name');
+    assert(c.includes('put the first problem on the board'), 'first problem on the board');
+    assert(c.includes('ask your first question'), 'asks the first question');
+    assert(c.includes('no getting-to-know-you exchange'), 'bans get-to-know-you');
+    assert(c.includes('no recap of prior sessions'), 'bans recap');
+    assert(!c.includes('get to know them briefly'), 'no ordinary get-to-know wording');
+    assert(!/Sam/.test(c), 'never embeds the name itself (the brain has it in context)');
+  });
+  test('homework opener: no-name variant never implies a placeholder name', () => {
+    const c = buildHomeworkOpenerClause({ openingPhase: true })!;
+    assert(!c.includes('by name in one short sentence'), 'does not demand a name');
+    assert(c.includes('never speak a placeholder value'), 'placeholder guard present');
+    assert(c.includes('no recap of prior sessions'), 'still bans recap');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

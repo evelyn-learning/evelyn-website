@@ -213,6 +213,11 @@ export interface SessionStageProps {
    *  text) from VoiceTutorRealtime's onHomeworkProgress; null until a
    *  homework-help plan arrives. */
   homeworkProgress?: { current: number; total: number; text?: string } | null;
+  /** Homework mode: true while the session's lesson plan is still being
+   *  fetched. With neither this nor homeworkProgress, no homework kickoff
+   *  will ever fire, so the pre-start copy falls back to "Type your
+   *  question below to start". */
+  homeworkPlanPending?: boolean;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -247,7 +252,7 @@ export default function SessionStage(props: SessionStageProps) {
     agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
     boardPenActive, onToggleBoardPen, onOrbStart, onDebugEvent,
-    sessionGoal, homeworkProgress,
+    sessionGoal, homeworkProgress, homeworkPlanPending,
   } = props;
 
   // Homework mode (GreenApple round 2): a single "Problem n of N · <text>"
@@ -1072,7 +1077,7 @@ export default function SessionStage(props: SessionStageProps) {
                 isFreePractice && !liveCaption ? (
                   <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
                 ) : null
-              ) : sessionGoal === 'homework-help' ? (
+              ) : sessionGoal === 'homework-help' && (homeworkProgress || homeworkPlanPending) ? (
                 <p className="text-lg font-semibold text-slate-800">Getting your first problem ready…</p>
               ) : (
                 <>

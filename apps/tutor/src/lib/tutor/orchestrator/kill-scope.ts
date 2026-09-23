@@ -26,6 +26,9 @@ export const LESSON_STATE_TOOLS: ReadonlySet<string> = new Set([
   'mark_segment_complete',
   'add_topic_notes_pointer',
   'show_segment_card',
+  // Homework-help: moves the problem rail. After a kill it would advance the
+  // rail to a problem the student never heard announced.
+  'set_current_problem',
 ]);
 
 export function shouldWithholdAfterKill(toolName: string): boolean {

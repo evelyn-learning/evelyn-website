@@ -45,6 +45,8 @@ test('meta/control tools are not content', () => {
   assert.equal(isBoardContentTool('mark_segment_complete'), false);
   assert.equal(isBoardContentTool('advance_lesson'), false);
   assert.equal(isBoardContentTool('generate_problem'), false);
+  // Homework-help rail pointer — moves the problem index, never the board.
+  assert.equal(isBoardContentTool('set_current_problem'), false);
   // R2 review-round-2 fix-3: silent profile/plan/notes tools from
   // toolDefinitions.ts — none of these paint the board either.
   assert.equal(isBoardContentTool('confirm_plan_los'), false);
