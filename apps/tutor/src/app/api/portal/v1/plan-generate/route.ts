@@ -131,6 +131,13 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // typed-text path, where buildHomeworkPlanFields' topicSummary falls
   // back to requestTopic / requestText instead.
   let classification: MaterialClassification | null | undefined;
+  // The RAW extracted material text, before generationHintForKind's hint
+  // is prepended onto `text` below. Homework enumeration must split the
+  // student's own material verbatim, never the classifier's appended
+  // instruction line — only set on the materials path; the homework
+  // typed-text path enumerates straight off `text` instead (see the
+  // isHomework branch below).
+  let materialText: string | undefined;
 
   if (hasMaterials) {
     const extracted = await extractMaterials(materials!);
@@ -169,6 +176,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // already supply an explicit `topic`) — clamped to the contract's own
     // topic length cap, see REQUEST_TOPIC_MAX_LENGTH.
     text = extracted.combinedText;
+    materialText = extracted.combinedText;
     topic = requestTopic ?? requestText.slice(0, REQUEST_TOPIC_MAX_LENGTH);
     // Tell the generator what KIND of material this is. Appended, never
     // substituted: the material text still drives the content, this only says
@@ -245,18 +253,25 @@ export const POST = withPortalAuth(async (_req, auth) => {
 
   if (isHomework) {
     // Homework-help: no Stage 1 / Stage 2 topic-LO generation. Split the
-    // student's own problems out of `text` (verbatim, in order — see
+    // student's own problems (verbatim, in order — see
     // enumerate-problems.ts) and wrap them as the plan's one LO instead.
-    const problems = await enumerateProblems(text, defaultEnumerateDeps(getEnumerateClient()));
-    const trimmedInput = text.trim();
-    // enumerateProblems fails open (see its own header) by returning ONE
-    // problem holding the whole trimmed input verbatim on any parse/model
-    // failure. That result is indistinguishable from a legitimately
-    // single-problem input UNLESS the input spans more than one line — a
-    // genuine one-problem upload is one line; a worksheet the splitter
-    // choked on is not. No network/DB — pure string comparison.
-    const failedOpen =
-      problems.length === 1 && problems[0]!.text === trimmedInput && trimmedInput.includes('\n');
+    // Enumerate off the RAW material text (materialText), not `text` —
+    // on the materials path `text` carries generationHintForKind's
+    // appended instruction line, which is not part of what the student
+    // uploaded and must never be treated as (part of) a problem. On the
+    // typed-text path materialText is undefined and `text` IS the raw
+    // input (never hint-prefixed on that path), so it's the right
+    // fallback.
+    const enumerateSource = materialText ?? text;
+    const { problems, failedOpen } = await enumerateProblems(
+      enumerateSource,
+      defaultEnumerateDeps(getEnumerateClient()),
+    );
+    // failedOpen comes straight from enumerateProblems — it knows whether
+    // ITS OWN model call/parse failed, which a text-shape heuristic here
+    // could never reliably infer (a real single-line problem and a
+    // fail-open single-line problem are indistinguishable from the
+    // outside).
     generatorOk = !failedOpen;
     console.log(
       `[plan-generate] homework-help: ${problems.length} problems (fail-open: ${failedOpen ? 'yes' : 'no'})`,

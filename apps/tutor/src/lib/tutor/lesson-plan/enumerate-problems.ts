@@ -15,12 +15,14 @@
  * comment at the top of `generate-from-text.ts`.
  *
  * ⚠ FAILS OPEN: on any parse failure or model error, `enumerateProblems`
- * returns ONE problem holding the whole trimmed input rather than
- * refusing. The alternative — refusing to build a homework plan because
- * the splitter had a bad day — turns a transient model blip into a dead
- * end for a student who uploaded a perfectly good worksheet. Getting to
- * work the sheet as one big problem is strictly better than not
- * proceeding at all.
+ * returns ONE problem holding the whole trimmed input (capped to
+ * HOMEWORK_MAX_PROBLEM_CHARS) rather than refusing, and reports this via
+ * `failedOpen: true` so callers can flag `generatorOk` accurately instead
+ * of guessing from the result's shape. The alternative — refusing to
+ * build a homework plan because the splitter had a bad day — turns a
+ * transient model blip into a dead end for a student who uploaded a
+ * perfectly good worksheet. Getting to work the sheet as one big problem
+ * is strictly better than not proceeding at all.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -28,6 +30,16 @@ import { getModelClient, resolveModel } from '../ai/model-registry';
 
 /** Hard ceiling on how many problems a single homework plan can hold. */
 export const HOMEWORK_MAX_PROBLEMS = 25;
+
+/** Hard ceiling on a single problem's `text` length — matches the portal
+ *  contract's `PlanProblemSchema.text` cap (v1.19.0). Applied to every
+ *  model-returned entry in `parseEnumeration` AND to the fail-open
+ *  single-problem text (which can otherwise be the whole extracted
+ *  material, well past 4000 chars) — without this, a long worksheet
+ *  either from the model or from the fail-open path would fail
+ *  `PlanGenerateResponseSchema.parse` in the route with an unhandled
+ *  ZodError (500) instead of degrading. */
+export const HOMEWORK_MAX_PROBLEM_CHARS = 4000;
 
 export interface HomeworkProblem {
   /** Number as printed on the sheet, or the 1-based position when the
@@ -80,7 +92,7 @@ export function parseEnumeration(raw: unknown): HomeworkProblem[] | null {
   for (const item of arr) {
     if (!item || typeof item !== 'object') continue;
     const it = item as Record<string, unknown>;
-    const text = typeof it.text === 'string' ? it.text.trim() : '';
+    const text = typeof it.text === 'string' ? it.text.trim().slice(0, HOMEWORK_MAX_PROBLEM_CHARS) : '';
     if (!text) continue;
     const n = typeof it.n === 'number' && Number.isFinite(it.n) ? it.n : undefined;
     cleaned.push({ n, text });
@@ -106,22 +118,32 @@ export interface EnumerateDeps {
   complete(system: string, user: string): Promise<string>;
 }
 
+export interface EnumerateResult {
+  problems: HomeworkProblem[];
+  /** True when the model call/parse failed and `problems` is the
+   *  deterministic one-entry fail-open result rather than a real split —
+   *  callers use this (not a text-shape heuristic) to decide
+   *  `generatorOk`. */
+  failedOpen: boolean;
+}
+
 /**
  * Split a homework upload's extracted text into discrete problems.
  * NEVER throws — on any parse failure or model error it fails open,
- * returning the whole trimmed input as a single problem (see header).
+ * returning the whole trimmed input (capped to HOMEWORK_MAX_PROBLEM_CHARS)
+ * as a single problem, with `failedOpen: true` (see header).
  */
-export async function enumerateProblems(text: string, deps: EnumerateDeps): Promise<HomeworkProblem[]> {
+export async function enumerateProblems(text: string, deps: EnumerateDeps): Promise<EnumerateResult> {
   const trimmed = text.trim();
   try {
     const raw = await deps.complete(ENUMERATE_SYSTEM_PROMPT, trimmed.slice(0, ENUMERATE_SAMPLE_CHARS));
     const parsed = parseEnumeration(parseLastJson(raw));
-    if (parsed) return parsed;
+    if (parsed) return { problems: parsed, failedOpen: false };
     console.warn('[enumerate-problems] fail-open:', 'model response had no usable problems');
   } catch (err) {
     console.warn('[enumerate-problems] fail-open:', (err as Error)?.message ?? err);
   }
-  return [{ n: 1, text: trimmed }];
+  return { problems: [{ n: 1, text: trimmed.slice(0, HOMEWORK_MAX_PROBLEM_CHARS) }], failedOpen: true };
 }
 
 /**

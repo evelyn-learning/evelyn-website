@@ -4,7 +4,7 @@
  * Usage: npx tsx scripts/test-enumerate-problems.ts
  *        (npm run test:enumerate-problems)
  */
-import { parseEnumeration, enumerateProblems, HOMEWORK_MAX_PROBLEMS } from '../src/lib/tutor/lesson-plan/enumerate-problems';
+import { parseEnumeration, enumerateProblems, HOMEWORK_MAX_PROBLEMS, HOMEWORK_MAX_PROBLEM_CHARS } from '../src/lib/tutor/lesson-plan/enumerate-problems';
 import { homeworkProblemsOf, buildHomeworkPlanFields } from '../src/lib/tutor/lesson-plan/homework';
 let passed = 0, failed = 0; const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
 (async () => {
@@ -14,11 +14,18 @@ let passed = 0, failed = 0; const assert = (c: boolean, n: string) => { c ? pass
   assert(parseEnumeration({ problems: [] }) === null, 'parse: empty → null');
   assert(parseEnumeration('nope') === null, 'parse: garbage → null');
   assert(parseEnumeration({ problems: Array.from({ length: 40 }, (_, i) => ({ text: `q${i}` })) })?.length === HOMEWORK_MAX_PROBLEMS, 'parse: capped at 25');
+  assert(parseEnumeration({ problems: [{ n: 1, text: 'x'.repeat(5000) }] })?.[0].text.length === HOMEWORK_MAX_PROBLEM_CHARS, 'parse: a single problem text is capped at 4000 chars');
   const fake = { complete: async () => '```json\n{"problems":[{"n":1,"text":"x + 2 = 5"}]}\n```' };
-  assert((await enumerateProblems('1) x + 2 = 5', fake))[0].text === 'x + 2 = 5', 'enumerate: fenced JSON parsed');
+  const okResult = await enumerateProblems('1) x + 2 = 5', fake);
+  assert(okResult.problems[0].text === 'x + 2 = 5', 'enumerate: fenced JSON parsed');
+  assert(okResult.failedOpen === false, 'enumerate: a real parse reports failedOpen=false');
   const failing = { complete: async () => { throw new Error('boom'); } };
   const fo = await enumerateProblems('whole worksheet text', failing);
-  assert(fo.length === 1 && fo[0].text === 'whole worksheet text', 'enumerate: fail-open → one problem holding the text');
+  assert(fo.problems.length === 1 && fo.problems[0].text === 'whole worksheet text', 'enumerate: fail-open → one problem holding the text');
+  assert(fo.failedOpen === true, 'enumerate: a throwing complete() reports failedOpen=true');
+  const longInput = 'y'.repeat(6000);
+  const foLong = await enumerateProblems(longInput, failing);
+  assert(foLong.problems[0].text.length === HOMEWORK_MAX_PROBLEM_CHARS, 'enumerate: fail-open text is capped at 4000 chars');
   const fields = buildHomeworkPlanFields([{ n: 1, text: 'x + 2 = 5' }], 'Linear equations');
   assert(fields.metadata.kind === 'homework-help' && fields.los.length === 1 && fields.los[0].shortTitle === 'Linear equations', 'plan fields: wrapper LO + metadata');
   assert(homeworkProblemsOf({ metadata: fields.metadata })?.[0].n === 1, 'accessor reads metadata.problems');
