@@ -168,6 +168,7 @@
     "test:math-label": "npx tsx scripts/test-math-label.ts",
     "test:practice-session-block": "npx tsx scripts/test-practice-session-block.ts",
     "test:homework-session-block": "npx tsx scripts/test-homework-session-block.ts",
+    "test:student-profile-render": "npx tsx scripts/test-student-profile-render.ts",
     "test:practice-gen-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-generated-plans.ts",
     "test:pace-preference-block": "npx tsx scripts/test-pace-preference-block.ts",
     "test:active-problem-block": "npx tsx scripts/test-active-problem-block.ts",

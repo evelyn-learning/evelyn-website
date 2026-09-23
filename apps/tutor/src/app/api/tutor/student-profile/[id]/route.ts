@@ -69,8 +69,12 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     profile,
     // Task D1: interests ride the preferences line only behind the pedagogy
     // opener flag — flag off ⇒ byte-identical block to the pre-D1 output.
+    // Task 6: homework-help sessions (`?goal=homework-help`) suppress the
+    // "last time we did X" continuity opener — the student is diving
+    // straight into a specific problem, not resuming a lesson.
     block: renderStudentProfileBlock(profile, {
       includeInterests: isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER),
+      suppressContinuityOpener: req.nextUrl.searchParams.get('goal') === 'homework-help',
     }),
     // Content variety (phase 1): per-plan seen-memory, read client-side at
     // mount to inject the <content_variety> directive for the current plan.

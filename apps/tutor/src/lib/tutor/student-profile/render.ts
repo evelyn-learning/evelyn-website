@@ -23,6 +23,14 @@ export interface RenderStudentProfileOptions {
    *  byte-identical to the pre-D1 rendering (interests deliberately omitted).
    *  Pure — the CALLER reads the flag env (isPedagogyOpenerFlagValue). */
   includeInterests?: boolean;
+  /** Task 6 (homework mode): replace the "open with a continuity callback"
+   *  directive with a one-line suppression sentence. Homework-help
+   *  sessions dive straight into the problem — a "last time we did X"
+   *  opener doesn't belong there. Everything else in the block (gaps,
+   *  mastery, prior-sessions list itself) is unaffected. Default/absent ⇒
+   *  output is byte-identical to the pre-Task-6 rendering. Pure — the
+   *  CALLER decides (the GET route sets this from `?goal=homework-help`). */
+  suppressContinuityOpener?: boolean;
 }
 
 export function renderStudentProfileBlock(
@@ -137,7 +145,12 @@ export function renderStudentProfileBlock(
   // variety instruction — made returning students' first turns a recap
   // monologue. History now weaves in AT THE MOMENT the material touches
   // it; the opener belongs to the present session.
-  lines.push(``, `Your opener gets ONE short concrete continuity sentence drawn from the prior-sessions list above ("last time we did X"), and nothing more from this block — the rest of the opening belongs to THIS session's content. When the material at hand touches an open gap above, fold the callback in AT THAT MOMENT. If the gap entry includes a "student previously said:" line, weave that EXACT phrase in when you address it ("last time you said 'X' — let's revisit why that's not quite right"). Quoting the student's own words verbatim is the most effective re-grounding move; paraphrasing the concept ("different denominators tripped you up") is weaker. Pick the single most relevant gap; do not list multiple.`);
+  lines.push(
+    ``,
+    opts?.suppressContinuityOpener
+      ? `Do not open with a recap of prior sessions.`
+      : `Your opener gets ONE short concrete continuity sentence drawn from the prior-sessions list above ("last time we did X"), and nothing more from this block — the rest of the opening belongs to THIS session's content. When the material at hand touches an open gap above, fold the callback in AT THAT MOMENT. If the gap entry includes a "student previously said:" line, weave that EXACT phrase in when you address it ("last time you said 'X' — let's revisit why that's not quite right"). Quoting the student's own words verbatim is the most effective re-grounding move; paraphrasing the concept ("different denominators tripped you up") is weaker. Pick the single most relevant gap; do not list multiple.`,
+  );
   if (activeGaps.length) {
     lines.push(``, `Keep weaving gaps in AS you teach, not just at the open: whenever the material at hand exercises an open gap above, fold in one quick check of that specific weak point (a small question or step the student does themselves) and scaffold based on what they show — never announce that a record says they are weak. If they handle a previously-gapped concept correctly, acknowledge the growth concretely and specifically (contrast with what they previously said, when a quote is available). If they stumble on it again, record it via the gap tools as usual — re-recording across sessions is how the system confirms and tracks the gap.`);
   }
