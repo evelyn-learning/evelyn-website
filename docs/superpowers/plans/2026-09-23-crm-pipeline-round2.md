@@ -81,7 +81,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d
 - Removes: `PipelineConfig`, `IPipelineConfig`, `DEFAULT_STAGES`, `applyOpportunity`, `OpportunityInput`, `GET/PUT /api/admin/outreach/pipelines`, the `setOpportunity` PATCH action.
 - Consumed later: `LeadSuppression` by Task 3; `Lead.product` by Tasks 4–9.
 
-- [ ] **Step 1: Rewrite the failing model tests**
+- [x] **Step 1: Rewrite the failing model tests**
 
 In `src/models/Lead.test.ts`, replace the `bad segment rejected` test (lines 29–32) with:
 
@@ -181,12 +181,12 @@ if (failed > 0) process.exit(1);
 })();
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npx tsx src/models/Lead.test.ts; npx tsx src/models/ResearchJob.test.ts; npx tsx src/models/LeadSuppression.test.ts`
 Expected: `Lead.test.ts` FAILS on `any segment string is accepted` (the enum still rejects `hospital`) and on both `product`/`opportunities` cases; `ResearchJob.test.ts` FAILS on `segment is open`; `LeadSuppression.test.ts` FAILS with `Cannot find module './LeadSuppression'`.
 
-- [ ] **Step 3: Open the Product and LeadSegment types**
+- [x] **Step 3: Open the Product and LeadSegment types**
 
 In `src/lib/outreach/enums.ts`, replace the `LeadSegment` alias line (currently `export type LeadSegment = (typeof LEAD_SEGMENTS)[number];`) with:
 
@@ -206,7 +206,7 @@ and replace the `Product` alias line (currently `export type Product = (typeof P
 export type Product = string;
 ```
 
-- [ ] **Step 4: Collapse opportunities to one product on the Lead schema**
+- [x] **Step 4: Collapse opportunities to one product on the Lead schema**
 
 In `src/models/Lead.ts`:
 
@@ -242,7 +242,7 @@ with
 6. Delete the index line `LeadSchema.index({ "opportunities.product": 1, "opportunities.stage": 1 });`.
 7. Leave the enums import/re-export lines exactly as they are — `PRODUCTS` and `LEAD_SEGMENTS` are still re-exported for `@/models` importers, and `Product`/`LeadSegment` are still re-exported types.
 
-- [ ] **Step 5: Open ResearchJob.segment**
+- [x] **Step 5: Open ResearchJob.segment**
 
 In `src/models/ResearchJob.ts`:
 
@@ -263,7 +263,7 @@ import {
     segment: { type: String, required: true },
 ```
 
-- [ ] **Step 6: Create the LeadSuppression model**
+- [x] **Step 6: Create the LeadSuppression model**
 
 Create `src/models/LeadSuppression.ts`:
 
@@ -319,7 +319,7 @@ export const LeadSuppression =
   mongoose.model<ILeadSuppression>("LeadSuppression", LeadSuppressionSchema);
 ```
 
-- [ ] **Step 7: Delete PipelineConfig, the pipelines route and the opportunity module**
+- [x] **Step 7: Delete PipelineConfig, the pipelines route and the opportunity module**
 
 ```bash
 git rm src/models/PipelineConfig.ts src/models/PipelineConfig.test.ts src/lib/crm/opportunity.ts src/lib/crm/opportunity.test.ts src/app/api/admin/outreach/pipelines/route.ts
@@ -339,7 +339,7 @@ export { LeadSuppression, type ILeadSuppression } from "./LeadSuppression";
 export type { ILead, ITouch, IDemoVisit, ICurrentDraft, LeadSegment, LeadStatus, TouchChannel, Product, TouchOrigin } from "./Lead";
 ```
 
-- [ ] **Step 8: Drop the opportunity write from the upsert seam**
+- [x] **Step 8: Drop the opportunity write from the upsert seam**
 
 In `src/lib/crm/upsert-lead.ts`, replace the whole `if (args.product) { ... }` block (lines 80–91) with:
 
@@ -350,7 +350,7 @@ In `src/lib/crm/upsert-lead.ts`, replace the whole `if (args.product) { ... }` b
   if (args.product && !lead.product) lead.product = args.product;
 ```
 
-- [ ] **Step 9: Remove setOpportunity and make product editable**
+- [x] **Step 9: Remove setOpportunity and make product editable**
 
 In `src/app/api/admin/outreach/leads/[id]/route.ts`:
 
@@ -385,7 +385,7 @@ const EDIT_FIELDS = [
 
 3. Delete the entire `case "setOpportunity": { ... }` block (lines 150–167).
 
-- [ ] **Step 10: Write the migration script**
+- [x] **Step 10: Write the migration script**
 
 Create `scripts/crm-migrate-round2.ts`:
 
@@ -485,7 +485,7 @@ const DEAD_COLLECTION = "pipelineconfigs";
 })();
 ```
 
-- [ ] **Step 11: Update the test scripts**
+- [x] **Step 11: Update the test scripts**
 
 In `package.json`, change `test:crm-models`, delete `test:crm-opportunity`, add `crm:migrate-round2`, and drop `test:crm-opportunity` from the `test:crm` chain:
 
@@ -495,14 +495,14 @@ In `package.json`, change `test:crm-models`, delete `test:crm-opportunity`, add 
     "crm:migrate-round2": "npx tsx scripts/crm-migrate-round2.ts",
 ```
 
-- [ ] **Step 12: Gates**
+- [x] **Step 12: Gates**
 
 Run: `npm run test:crm-models && npx tsx src/models/ResearchJob.test.ts && npm run test:crm-upsert-smoke && npx tsc --noEmit -p tsconfig.json`
 Expected: all three test files print `failed: 0` / `0 failed`; `tsc` prints nothing.
 
 > `PipelineTab`/`TimelineDrawer` still read `lead.opportunities` from the client-side `LeadJSON` type at this point. That compiles (the interface still declares the field) and cannot crash at runtime — both reads are `?.`/`?? []` guarded — and Task 6 removes them. Do not "fix" them here.
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
 ```bash
 git add src/lib/outreach/enums.ts src/models/Lead.ts src/models/Lead.test.ts src/models/LeadSuppression.ts src/models/LeadSuppression.test.ts src/models/ResearchJob.ts src/models/ResearchJob.test.ts src/models/index.ts src/models/PipelineConfig.ts src/models/PipelineConfig.test.ts src/lib/crm/opportunity.ts src/lib/crm/opportunity.test.ts src/lib/crm/upsert-lead.ts 'src/app/api/admin/outreach/leads/[id]/route.ts' src/app/api/admin/outreach/pipelines/route.ts scripts/crm-migrate-round2.ts package.json
@@ -530,7 +530,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Produces: `companyNameFor(identity: ContactIdentity): string` — explicit company → non-free-mail domain → person's name → email address → `"Unknown"` only when all are empty. `newLeadFields` uses it (so every ingest path inherits the rule).
 - Produces: `POST /api/admin/outreach/maintenance/fix-unknown-companies`, body `{ dryRun?: boolean }` (default `true`) → `{ matched: number; updated: number; samples: { id: string; from: string; to: string }[] }`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `src/lib/crm/match-lead.test.ts`, before the final `console.log`/`process.exit` line, and add `companyNameFor` to the import on line 2 (`import { pickLead, matchQuery, newLeadFields, companyNameFor, type MatchableLead } from "./match-lead";`):
 
@@ -560,12 +560,12 @@ await test("newLeadFields uses companyNameFor for a free-mail contact", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npx tsx src/lib/crm/match-lead.test.ts`
 Expected: FAILS to even import — `companyNameFor` is not exported (the run reports the module error, or every new case fails with `companyNameFor is not a function`).
 
-- [ ] **Step 3: Implement companyNameFor**
+- [x] **Step 3: Implement companyNameFor**
 
 In `src/lib/crm/match-lead.ts`, add above `newLeadFields`:
 
@@ -598,12 +598,12 @@ and replace the `company` line inside `newLeadFields` (currently `const company 
   const company = companyNameFor(identity);
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `npm run test:crm-core`
 Expected: all three files pass, `0 failed` each.
 
-- [ ] **Step 5: Add the maintenance route**
+- [x] **Step 5: Add the maintenance route**
 
 Create `src/app/api/admin/outreach/maintenance/fix-unknown-companies/route.ts`:
 
@@ -672,7 +672,7 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-- [ ] **Step 6: Gates**
+- [x] **Step 6: Gates**
 
 Run: `npm run test:crm-core && npx tsc --noEmit -p tsconfig.json`
 Expected: `0 failed` in all three core files; `tsc` prints nothing.
@@ -680,8 +680,9 @@ Expected: `0 failed` in all three core files; `tsc` prints nothing.
 - [ ] **Step 7: Manual check — deploy-time**
 
 > **Deploy-time only** (this worktree's `MONGODB_URI` is production). After deploying, from the Import tab press "Fix Unknown companies → Dry run": expect a `matched` count > 0 and samples like `Unknown → bob.ray@gmail.com`. Then "Apply" and confirm the Pipeline shows no "Unknown" rows and a second dry run reports `updated: 0`.
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/lib/crm/match-lead.ts src/lib/crm/match-lead.test.ts src/app/api/admin/outreach/maintenance/fix-unknown-companies/route.ts
@@ -711,7 +712,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Produces: `GET /api/admin/outreach/leads/deleted` → `{ deleted: { _id: string; company: string; deletedAt: string; emails: string[] }[] }` (last 100 by `deletedAt`). `POST /api/admin/outreach/leads/restore` body `{ suppressionId: string }` → `{ leadId: string }`.
 - **No change needed in the LinkedIn routes:** they already pass `linkedinConversationId` to `upsertLeadWithTouches`, and the seam maps it to `conversationKey` when building the suppression query. Do not add a second parameter.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/lib/crm/suppression.test.ts`:
 
@@ -813,12 +814,12 @@ await test("suppressed starts at 0 on a dry run", async () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npx tsx src/lib/crm/suppression.test.ts; npx tsx src/lib/crm/gmail-ingest.test.ts`
 Expected: `suppression.test.ts` FAILS with `Cannot find module './suppression'`; `gmail-ingest.test.ts` FAILS the two new cases (`r.suppressed` is `undefined`, and the suppressed run counts `updated: 1`).
 
-- [ ] **Step 3: Implement the pure module**
+- [x] **Step 3: Implement the pure module**
 
 Create `src/lib/crm/suppression.ts`:
 
@@ -891,7 +892,7 @@ export function suppressionQuery(
 }
 ```
 
-- [ ] **Step 4: Gate the upsert seam on suppression**
+- [x] **Step 4: Gate the upsert seam on suppression**
 
 In `src/lib/crm/upsert-lead.ts`:
 
@@ -942,7 +943,7 @@ export interface UpsertResult {
   }
 ```
 
-- [ ] **Step 5: Count suppressed in the ingest tally**
+- [x] **Step 5: Count suppressed in the ingest tally**
 
 In `src/lib/crm/gmail-ingest.ts`:
 
@@ -967,7 +968,7 @@ In `src/lib/crm/gmail-ingest.ts`:
     out.touchesAdded += r.added;
 ```
 
-- [ ] **Step 6: Add `action: "delete"` to the bulk route**
+- [x] **Step 6: Add `action: "delete"` to the bulk route**
 
 In `src/app/api/admin/outreach/leads/bulk/route.ts`:
 
@@ -1036,7 +1037,7 @@ import { suppressionKeysFor, type SuppressibleLead } from "@/lib/crm/suppression
 // of recreating it, and "Restore" can bring it back with its touches.
 ```
 
-- [ ] **Step 7: Add the deleted-list and restore routes**
+- [x] **Step 7: Add the deleted-list and restore routes**
 
 Create `src/app/api/admin/outreach/leads/deleted/route.ts`:
 
@@ -1123,7 +1124,7 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-- [ ] **Step 8: Register the test script**
+- [x] **Step 8: Register the test script**
 
 In `package.json`, add `test:crm-suppression` and put it in the chain:
 
@@ -1132,7 +1133,7 @@ In `package.json`, add `test:crm-suppression` and put it in the chain:
     "test:crm": "npm run test:crm-models && npm run test:crm-core && npm run test:crm-suppression && npm run test:crm-upsert-smoke && npm run test:crm-contact && npm run test:crm-gmail && npm run test:crm-gmail-classify && npm run test:crm-gmail-ingest && npm run test:crm-linkedin && npm run test:crm-archive",
 ```
 
-- [ ] **Step 9: Gates**
+- [x] **Step 9: Gates**
 
 Run: `npm run test:crm-suppression && npm run test:crm-gmail-ingest && npx tsc --noEmit -p tsconfig.json`
 Expected: both test files print `0 failed`; `tsc` prints nothing.
@@ -1140,8 +1141,9 @@ Expected: both test files print `0 failed`; `tsc` prints nothing.
 - [ ] **Step 10: Manual check — deploy-time**
 
 > **Deploy-time only.** Select three Pagevault rows in Pipeline → "Delete selected (3)" → accept the `confirm()`. They vanish from Review/Today/Pipeline. Run a Gmail dry run for the same mailbox: the counts line shows `suppressed 3` and `created 0` for those threads. From Import → "Deleted leads", press Restore on one: it reappears in Pipeline with its touches, and a further Gmail import updates it normally.
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add src/lib/crm/suppression.ts src/lib/crm/suppression.test.ts src/lib/crm/upsert-lead.ts src/lib/crm/gmail-ingest.ts src/lib/crm/gmail-ingest.test.ts src/app/api/admin/outreach/leads/bulk/route.ts src/app/api/admin/outreach/leads/deleted/route.ts src/app/api/admin/outreach/leads/restore/route.ts package.json
@@ -1170,7 +1172,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Changes: `POST /api/admin/outreach/research` accepts a `segment` that is in `LEAD_SEGMENTS` **or** in `Lead.distinct("segment")`.
 - Changes: `landingPathForSegment(segment: string): string`, backed by `Record<string, string>` with the existing `?? "/"` fallback (and no longer importing from `models/Lead`, which drags mongoose in).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `src/lib/crm/console-helpers.test.ts`:
 
@@ -1205,12 +1207,12 @@ console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0
 })();
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx tsx src/lib/crm/console-helpers.test.ts`
 Expected: FAILS with `Cannot find module './console-helpers'`.
 
-- [ ] **Step 3: Create the console-helpers module**
+- [x] **Step 3: Create the console-helpers module**
 
 Create `src/lib/crm/console-helpers.ts`:
 
@@ -1247,7 +1249,7 @@ export function mergeOptionValues(
 }
 ```
 
-- [ ] **Step 4: Add the options endpoint**
+- [x] **Step 4: Add the options endpoint**
 
 Create `src/app/api/admin/outreach/options/route.ts`:
 
@@ -1284,7 +1286,7 @@ export async function GET() {
 }
 ```
 
-- [ ] **Step 5: Open the research route's segment gate**
+- [x] **Step 5: Open the research route's segment gate**
 
 In `src/app/api/admin/outreach/research/route.ts`:
 
@@ -1327,7 +1329,7 @@ import { Lead } from "@/models";
     });
 ```
 
-- [ ] **Step 6: Make the segment landing map open**
+- [x] **Step 6: Make the segment landing map open**
 
 Replace `src/lib/outreach/segment-landing.ts` in full:
 
@@ -1359,7 +1361,7 @@ export function landingPathForSegment(segment: string): string {
 }
 ```
 
-- [ ] **Step 7: Register the test script**
+- [x] **Step 7: Register the test script**
 
 In `package.json` add `test:crm-console` and put it in the chain right after `test:crm-suppression`:
 
@@ -1373,7 +1375,7 @@ and the chain becomes:
     "test:crm": "npm run test:crm-models && npm run test:crm-core && npm run test:crm-suppression && npm run test:crm-console && npm run test:crm-upsert-smoke && npm run test:crm-contact && npm run test:crm-gmail && npm run test:crm-gmail-classify && npm run test:crm-gmail-ingest && npm run test:crm-linkedin && npm run test:crm-archive",
 ```
 
-- [ ] **Step 8: Gates**
+- [x] **Step 8: Gates**
 
 Run: `npm run test:crm-console && npm run test:outreach-cadence && npx tsc --noEmit -p tsconfig.json`
 Expected: `0 failed` in both (`cadence.test.ts` covers `landingPathForSegment` across every seed segment); `tsc` prints nothing.
@@ -1381,8 +1383,9 @@ Expected: `0 failed` in both (`cadence.test.ts` covers `landingPathForSegment` a
 - [ ] **Step 9: Manual check — deploy-time**
 
 > **Deploy-time only.** `GET /api/admin/outreach/options` returns the six seed products plus any operator-created ones, and the twelve seed segments plus any in use. Creating a research job with a segment that exists only on a lead succeeds; a nonsense segment still 400s with `Invalid segment`.
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/lib/crm/console-helpers.ts src/lib/crm/console-helpers.test.ts src/app/api/admin/outreach/options/route.ts src/app/api/admin/outreach/research/route.ts src/lib/outreach/segment-landing.ts package.json
@@ -1409,7 +1412,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Produces: `compareLeads(a: SortableLead, b: SortableLead, key: SortKey, dir: SortDir): number` with `SortKey = "company" | "segment" | "status" | "product" | "decisionMaker" | "touches" | "nextActionAt" | "lastTouchAt"` and `SortDir = "asc" | "desc"`. Strings compare with `localeCompare`; touches/dates compare numerically; empty values sort LAST in both directions.
 - Consumed by: `PipelineTab` (Task 6), `TodayTab` (Task 7).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `src/lib/crm/console-helpers.test.ts`, extend the import on line 2 to:
 
@@ -1505,12 +1508,12 @@ await test("compareLeads sorts a list end to end", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npm run test:crm-console`
 Expected: FAILS on import — `sourcePill`, `leadMatchesQuery`, `compareLeads` and `SortableLead` are not exported yet.
 
-- [ ] **Step 3: Implement the three helpers**
+- [x] **Step 3: Implement the three helpers**
 
 Append to `src/lib/crm/console-helpers.ts`:
 
@@ -1642,12 +1645,12 @@ export function compareLeads(a: SortableLead, b: SortableLead, key: SortKey, dir
 }
 ```
 
-- [ ] **Step 4: Gates**
+- [x] **Step 4: Gates**
 
 Run: `npm run test:crm-console && npx tsc --noEmit -p tsconfig.json`
 Expected: `0 failed`; `tsc` prints nothing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/crm/console-helpers.ts src/lib/crm/console-helpers.test.ts
@@ -1673,7 +1676,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Changes: `LeadJSON` gains `product?: string` and loses `opportunities`.
 - Changes: `TimelineDrawer` props become `{ lead: LeadJSON; onClose: () => void; refresh: () => Promise<void> }`.
 
-- [ ] **Step 1: Update LeadJSON**
+- [x] **Step 1: Update LeadJSON**
 
 In `src/app/admin/outreach/OutreachConsole.tsx`:
 
@@ -1690,7 +1693,7 @@ import type { EmailSource, LeadSegment, LeadStatus, LinkedinSource, TouchChannel
   product?: string;
 ```
 
-- [ ] **Step 2: Rewrite PipelineTab**
+- [x] **Step 2: Rewrite PipelineTab**
 
 Replace `src/app/admin/outreach/PipelineTab.tsx` in full:
 
@@ -2367,7 +2370,7 @@ function OtherInput({
 }
 ```
 
-- [ ] **Step 3: Show product and editable notes in the drawer**
+- [x] **Step 3: Show product and editable notes in the drawer**
 
 Replace `src/app/admin/outreach/TimelineDrawer.tsx` in full:
 
@@ -2478,7 +2481,7 @@ export default function TimelineDrawer({
 }
 ```
 
-- [ ] **Step 4: Gates**
+- [x] **Step 4: Gates**
 
 Run: `npx tsc --noEmit -p tsconfig.json && npm run test:outreach-guards && npm run build 2>&1 | tail -20`
 Expected: `tsc` prints nothing; the guard script prints `0 failed` (the new client imports are from `@/lib/crm/console-helpers` and `@/lib/outreach/enums`, never `@/models`); `npm run build` completes with no type errors.
@@ -2486,8 +2489,9 @@ Expected: `tsc` prints nothing; the guard script prints `0 failed` (the new clie
 - [ ] **Step 5: Manual check — deploy-time**
 
 > **Deploy-time only.** At a 1280px viewport the Pipeline shows every column with no horizontal scroll and the page itself does not scroll — the table body scrolls under a sticky header. Clicking "Company" sorts A→Z, again Z→A. Typing `pagevault` narrows to leads whose touch bodies mention it. Changing Product to "Other… → Homework Bot" saves, and the value then appears in every other row's Product dropdown and in the Product filter. Segment, Status and the three decision-maker fields persist across a reload. The Work-today bolt appears only on `approved`/`contacted` rows. Hovering a company shows its notes; clicking opens the drawer, where the notes textarea saves.
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/admin/outreach/PipelineTab.tsx src/app/admin/outreach/OutreachConsole.tsx src/app/admin/outreach/TimelineDrawer.tsx
@@ -2514,7 +2518,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Consumes: `sourcePill` from `@/lib/crm/console-helpers`; the existing `isCadenceTouch`, `expectedNextChannel`, `SEQUENCE_STEP_LABELS`, `MAX_OUTBOUND_TOUCHES` from `@/lib/outreach/cadence`; `SEGMENT_LABELS` from `./ReviewQueueTab`.
 - Produces: a local `CollapsibleLead` wrapper that owns the per-card `expanded` state (default `false`, not persisted) and renders `LeadCard` only when expanded. `LeadCard`'s own props and body are unchanged.
 
-- [ ] **Step 1: Extend the imports**
+- [x] **Step 1: Extend the imports**
 
 In `src/app/admin/outreach/TodayTab.tsx`:
 
@@ -2533,7 +2537,7 @@ In `src/app/admin/outreach/TodayTab.tsx`:
 import { sourcePill } from "@/lib/crm/console-helpers";
 ```
 
-- [ ] **Step 2: Route the card through the collapse wrapper**
+- [x] **Step 2: Route the card through the collapse wrapper**
 
 In the `due.map(...)` block, replace the `<LeadCard ... />` element with `<CollapsibleLead ... />`, keeping every existing prop:
 
@@ -2550,7 +2554,7 @@ In the `due.map(...)` block, replace the `<LeadCard ... />` element with `<Colla
         />
 ```
 
-- [ ] **Step 3: Add the wrapper component**
+- [x] **Step 3: Add the wrapper component**
 
 Insert this immediately above `function LeadCard({` in the same file:
 
@@ -2615,7 +2619,7 @@ function CollapsibleLead(props: LeadCardProps) {
 }
 ```
 
-- [ ] **Step 4: Gates**
+- [x] **Step 4: Gates**
 
 Run: `npx tsc --noEmit -p tsconfig.json && npm run test:outreach-guards && npm run build 2>&1 | tail -20`
 Expected: `tsc` prints nothing; guards `0 failed`; build clean.
@@ -2623,8 +2627,9 @@ Expected: `tsc` prints nothing; guards `0 failed`; build clean.
 - [ ] **Step 5: Manual check — deploy-time**
 
 > **Deploy-time only.** Today shows one row per due lead, all collapsed, each with a chevron, segment pill, source pill, "Touch N of 4", "Next: …" and the contact address. Clicking the chevron reveals the existing full card beneath it (drafts, tabs, mark-sent all behave as before); clicking again collapses it. Switching tabs and back resets everything to collapsed.
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/admin/outreach/TodayTab.tsx
@@ -2649,7 +2654,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Consumes: `GET /api/admin/outreach/leads/deleted`, `POST /api/admin/outreach/leads/restore`, `POST /api/admin/outreach/maintenance/fix-unknown-companies`, and `IngestPageResult.suppressed` from the Gmail ingest route.
 - The tab already has no product select, so there is nothing to remove there.
 
-- [ ] **Step 1: Track `suppressed` in the page tally**
+- [x] **Step 1: Track `suppressed` in the page tally**
 
 In `src/app/admin/outreach/ImportTab.tsx`:
 
@@ -2681,7 +2686,7 @@ interface PageResult { nextPageToken?: string; scanned: number; kept: number; cr
             </div>
 ```
 
-- [ ] **Step 2: Add the deleted-leads and fix-Unknown state**
+- [x] **Step 2: Add the deleted-leads and fix-Unknown state**
 
 Add to the imports at the top of the file:
 
@@ -2755,7 +2760,7 @@ Add these handlers after `uploadArchive`:
   };
 ```
 
-- [ ] **Step 3: Render the two new sections**
+- [x] **Step 3: Render the two new sections**
 
 Insert these two `<section>` blocks immediately before the closing `</div>` of the returned root element (after the existing LinkedIn section):
 
@@ -2839,7 +2844,7 @@ Insert these two `<section>` blocks immediately before the closing `</div>` of t
       </section>
 ```
 
-- [ ] **Step 4: Gates**
+- [x] **Step 4: Gates**
 
 Run: `npx tsc --noEmit -p tsconfig.json && npm run test:outreach-guards && npm run build 2>&1 | tail -20`
 Expected: `tsc` prints nothing; guards `0 failed`; build clean.
@@ -2847,8 +2852,9 @@ Expected: `tsc` prints nothing; guards `0 failed`; build clean.
 - [ ] **Step 5: Manual check — deploy-time**
 
 > **Deploy-time only.** A Gmail dry run's counts line now includes `suppressed`. "Show deleted leads" lists what was deleted with a Restore button that removes the row and brings the lead back into Pipeline. "Fix Unknown companies → Dry run" reports `matched`/`would update` with before→after samples; Apply enables only after a dry run that found something, and a second dry run afterwards reports `would update 0`.
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/app/admin/outreach/ImportTab.tsx
@@ -2874,7 +2880,7 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
 - Changes: the `product` field of both ingest route bodies becomes `z.string().trim().max(60).optional()` instead of `z.enum(PRODUCTS)`.
 - Changes: `LinkedinImport`'s product select is populated from `GET /api/admin/outreach/options`.
 
-- [ ] **Step 1: Update the failing contact test**
+- [x] **Step 1: Update the failing contact test**
 
 In `src/lib/crm/classify-contact.test.ts`, replace the `productFromParam maps CTA slugs` test body with:
 
@@ -2906,12 +2912,12 @@ await test("productFromParam returns undefined for empty or punctuation-only par
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npm run test:crm-contact`
 Expected: FAILS the three new cases — `productFromParam("essay-ai")` currently returns `"other"`, and `productFromParam("---")` returns `"other"` rather than `undefined`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `src/lib/crm/classify-contact.ts`, replace `productFromParam` (and drop the now-wrong `Record<string, Product>` annotation's implication) with:
 
@@ -2949,14 +2955,14 @@ and change the first import line to bring in `PRODUCTS` and drop the unused `Pro
 import { CONTACT_REASONS, PRODUCTS, type ContactReason } from "@/lib/outreach/enums";
 ```
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 Run: `npm run test:crm-contact`
 Expected: `0 failed`.
 
 > `src/app/api/contact/route.ts` needs no change: `const product = productFromParam(data.product ?? null);` is already a `string | undefined` passed straight into `upsertLeadWithTouches({ product })`, whose `product?: Product` is now `string`. Confirm by reading the file; do not edit it.
 
-- [ ] **Step 5: Accept free product strings at the ingest boundaries**
+- [x] **Step 5: Accept free product strings at the ingest boundaries**
 
 In `src/app/api/admin/outreach/ingest/gmail/route.ts`:
 
@@ -2981,7 +2987,7 @@ In `src/app/api/admin/outreach/ingest/linkedin/route.ts`, make the same two chan
   product: z.string().trim().max(60).optional(),
 ```
 
-- [ ] **Step 6: Load product options in the LinkedIn import page**
+- [x] **Step 6: Load product options in the LinkedIn import page**
 
 In `src/app/admin/outreach/linkedin-import/LinkedinImport.tsx`:
 
@@ -3010,7 +3016,7 @@ In `src/app/admin/outreach/linkedin-import/LinkedinImport.tsx`:
         </select>
 ```
 
-- [ ] **Step 7: Finalise the test scripts**
+- [x] **Step 7: Finalise the test scripts**
 
 Confirm `package.json` matches exactly (the chain now includes `test:crm-suppression` and `test:crm-console`, and `test:crm-opportunity` is gone):
 
@@ -3023,16 +3029,16 @@ Confirm `package.json` matches exactly (the chain now includes `test:crm-suppres
     "crm:migrate-round2": "npx tsx scripts/crm-migrate-round2.ts",
 ```
 
-- [ ] **Step 8: Full gates**
+- [x] **Step 8: Full gates**
 
 Run: `npm run test:crm && npm run test:outreach && npx tsc --noEmit -p tsconfig.json && npm run build 2>&1 | tail -20`
 Expected: every `test:crm-*` file prints `0 failed`; `test:outreach` finishes green including `test:outreach-guards` and `test:outreach-job` (whose segment case was rewritten in Task 1); `tsc` prints nothing; the build completes with no type errors.
 
-- [ ] **Step 9: Tick this plan's boxes**
+- [x] **Step 9: Tick this plan's boxes**
 
 Mark every completed step above `- [x]` and commit the plan alongside the final code change.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/lib/crm/classify-contact.ts src/lib/crm/classify-contact.test.ts src/app/api/admin/outreach/ingest/gmail/route.ts src/app/api/admin/outreach/ingest/linkedin/route.ts src/app/admin/outreach/linkedin-import/LinkedinImport.tsx package.json docs/superpowers/plans/2026-09-23-crm-pipeline-round2.md
@@ -3057,6 +3063,8 @@ Claude-Session: https://claude.ai/code/session_019ih8H7uTiiV2DFxMmBA42d"
    Expect `leads still carrying opportunities 0`. Re-running `--apply` must report `products carried 0, opportunities unset on 0` (idempotent).
 3. Set `LINKEDIN_OWNER_PROFILE_URL` in the production env (spec §8) once Praveen supplies it, then restart the app — the archive upload 500s with `LINKEDIN_OWNER_PROFILE_URL not set` until it is present. There is no `.env.local.example` in `apps/marketing`; this checklist is the record.
 4. Walk the acceptance list in the spec: delete three Pagevault leads → Gmail dry run reports them under `suppressed` → restore one; "Other… → Homework Bot" appears in every row's dropdown; Segment/Status/Decision maker survive a reload; Pipeline fits 1280px and sorts/searches; no "Unknown" companies remain after Fix Unknown; Today rows collapsed with source pills; archive upload succeeds.
+
+> Deferred to deploy-time verification (worktree env targets prod Mongo via tunnel).
 
 ---
 
