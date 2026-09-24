@@ -88,7 +88,9 @@ interface GmailStatus {
 
 export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJSON[] }) {
   const [leads, setLeads] = useState<LeadJSON[]>(initialLeads);
-  const [tab, setTab] = useState<TabKey>("review");
+  // The console opens on Pipeline (Praveen, 2026-09-24): it is the working
+  // view; Review is only for staged research leads.
+  const [tab, setTab] = useState<TabKey>("pipeline");
   const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
   const [gmailError, setGmailError] = useState<string | null>(null);
   const [watcherActive, setWatcherActive] = useState<boolean | null>(null);

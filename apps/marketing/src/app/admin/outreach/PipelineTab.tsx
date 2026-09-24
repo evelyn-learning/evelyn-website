@@ -117,8 +117,10 @@ export default function PipelineTab({
   const [deleting, setDeleting] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("company");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  // Default order = most recent conversation first (Praveen, 2026-09-24);
+  // leads with no touches sort last regardless of direction (compareLeads).
+  const [sortKey, setSortKey] = useState<SortKey>("lastTouchAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   // At most one "Other…" text box and one decision-maker editor open at a
   // time — the row is 130px wide, and two open editors never fit.
   const [otherFor, setOtherFor] = useState<{ id: string; field: "segment" | "product" } | null>(null);
