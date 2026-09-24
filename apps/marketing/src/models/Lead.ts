@@ -29,14 +29,6 @@ export interface ITouch {
   origin?: TouchOrigin;
 }
 
-export interface IOpportunity {
-  product: Product;
-  stage: string;
-  nextActionAt?: Date | null;
-  notes?: string;
-  updatedAt: Date;
-}
-
 export interface IDemoVisit {
   at: Date;
   ua: string;
@@ -94,7 +86,10 @@ export interface ILead extends Document {
   // Matching input for ingest (lib/crm/match-lead.ts); decisionMaker.email
   // is always included here as well.
   emails: string[];
-  opportunities: IOpportunity[];
+  // Round 2 §1: exactly one product per lead (was `opportunities[]`).
+  // Free string — the console's dropdown offers the seeds plus every value
+  // already present on a lead, and "Other…" writes a brand-new one.
+  product?: string;
   // Set by ingest when a thread is one outbound message with no reply — the
   // lead is created `staged` so it shows in Review rather than Pipeline.
   needsReview: boolean;
@@ -121,21 +116,10 @@ const TouchSchema = new Schema<ITouch>(
   { _id: false }
 );
 
-const OpportunitySchema = new Schema<IOpportunity>(
-  {
-    product: { type: String, enum: PRODUCTS, required: true },
-    stage: { type: String, required: true },
-    nextActionAt: { type: Date, default: null },
-    notes: String,
-    updatedAt: { type: Date, required: true },
-  },
-  { _id: false }
-);
-
 const LeadSchema = new Schema<ILead>(
   {
     company: { type: String, required: true, trim: true },
-    segment: { type: String, enum: LEAD_SEGMENTS, required: true },
+    segment: { type: String, required: true, trim: true },
     about: { type: String, default: "" },
     whyFit: { type: String, default: "" },
     useCaseHypothesis: { type: String, default: "" },
@@ -193,8 +177,8 @@ const LeadSchema = new Schema<ILead>(
     },
     contactPageUrl: String,
     notes: String,
+    product: String,
     emails: { type: [String], default: [] },
-    opportunities: { type: [OpportunitySchema], default: [] },
     needsReview: { type: Boolean, default: false },
     linkedinConversationIds: { type: [String], default: [] },
   },
@@ -208,7 +192,6 @@ LeadSchema.index({ company: 1, "decisionMaker.email": 1 });
 LeadSchema.index({ emails: 1 });
 LeadSchema.index({ "touches.externalId": 1 });
 LeadSchema.index({ "decisionMaker.linkedinUrl": 1 });
-LeadSchema.index({ "opportunities.product": 1, "opportunities.stage": 1 });
 
 export const Lead =
   mongoose.models.Lead || mongoose.model<ILead>("Lead", LeadSchema);

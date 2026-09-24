@@ -15,7 +15,11 @@ export const LEAD_SEGMENTS = [
   "school_district", "private_school", "intl_school", "library",
   "publisher", "agency", "corporate_ld", "other",
 ] as const;
-export type LeadSegment = (typeof LEAD_SEGMENTS)[number];
+// Round 2 §2: the segment list is OPEN. `LEAD_SEGMENTS` stays as the seed
+// list every dropdown starts from and as the key set of the label maps, but
+// the type is a plain string — saving a lead with a new value is what adds
+// that value to the list (see /api/admin/outreach/options).
+export type LeadSegment = string;
 
 export const LEAD_STATUSES = [
   "staged", "approved", "contacted", "replied", "call_booked", "parked", "dead",
@@ -44,7 +48,9 @@ export type LinkedinSource = (typeof LINKEDIN_SOURCES)[number];
 export const PRODUCTS = [
   "voice_tutor", "academy", "mock_exams", "white_label", "content_services", "other",
 ] as const;
-export type Product = (typeof PRODUCTS)[number];
+// Round 2 §1/§2: one product per lead, and the product list is OPEN — same
+// seed-plus-free-string rule as LEAD_SEGMENTS above.
+export type Product = string;
 
 // Public contact-form reasons. `demo` is accepted from pre-existing links
 // (`/contact?demo=true`) and normalised to `demo_request` by the API.

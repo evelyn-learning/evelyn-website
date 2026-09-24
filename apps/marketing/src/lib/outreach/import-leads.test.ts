@@ -43,12 +43,21 @@ const goodRow = () => ({
     assert.equal(docs[0].status, "staged");
   });
 
-  await test("validateLeadRows: bad segment is invalid with row error", () => {
+  await test("validateLeadRows: any segment string is accepted — the list is open (round-2 §2)", () => {
     const { docs, counts } = validateLeadRows([{ ...goodRow(), segment: "nope" }]);
+    assert.equal(counts.valid, 1);
+    assert.equal(counts.invalid, 0);
+    assert.equal(docs[0].segment, "nope");
+  });
+
+  await test("validateLeadRows: missing company is invalid with row error", () => {
+    const row = { ...goodRow() } as Record<string, unknown>;
+    delete row.company;
+    const { docs, counts } = validateLeadRows([row]);
     assert.equal(counts.valid, 0);
     assert.equal(counts.invalid, 1);
     assert.equal(docs.length, 0);
-    assert.ok(counts.errors[0].includes("Acme"));
+    assert.ok(counts.errors[0].includes("?"));
   });
 
   await test("validateLeadRows: input status contacted is overridden to staged", () => {

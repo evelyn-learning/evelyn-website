@@ -24,8 +24,8 @@ async function test(name: string, fn: () => void | Promise<void>) {
     assert.ok(new ResearchJob({ segment: "nursing_program", count: 26 }).validateSync());
   });
 
-  await test("bad segment / bad status fail", () => {
-    assert.ok(new ResearchJob({ segment: "nope", count: 5 }).validateSync());
+  await test("segment is open; bad status still fails", () => {
+    assert.equal(new ResearchJob({ segment: "nope", count: 5 }).validateSync(), undefined);
     assert.ok(new ResearchJob({ segment: "nursing_program", count: 5, status: "nope" }).validateSync());
   });
 

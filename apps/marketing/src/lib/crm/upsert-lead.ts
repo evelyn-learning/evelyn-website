@@ -77,18 +77,10 @@ export async function upsertLeadWithTouches(args: UpsertArgs) {
     applyIngestStatus(lead, merged.fresh, { created, flagReview: !!args.flagReview });
   }
 
-  if (args.product) {
-    const now = new Date();
-    const opp = lead.opportunities.find((o) => o.product === args.product);
-    if (opp) {
-      // A no-op re-ingest shouldn't churn an existing opportunity's
-      // updatedAt — only touch it when something in this ingest actually
-      // changed the lead.
-      if (merged.added > 0 || created) { opp.stage = lead.status; opp.updatedAt = now; }
-    } else {
-      lead.opportunities.push({ product: args.product, stage: lead.status, nextActionAt: null, updatedAt: now });
-    }
-  }
+  // Round 2 §1: one product per lead. The first ingest path that knows the
+  // product sets it; later ingests never overwrite it, because the operator
+  // may have corrected it in the Pipeline since.
+  if (args.product && !lead.product) lead.product = args.product;
 
   if (lead.isModified()) await lead.save();
   return { leadId: String(lead._id), created, added: merged.added, matchedBy };

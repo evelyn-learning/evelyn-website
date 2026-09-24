@@ -72,8 +72,8 @@ export {
 export { SavedLesson, type ISavedLesson } from "@core/models/SavedLesson";
 export { LessonImage, type ILessonImage } from "@core/models/LessonImage";
 export { Lead, LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, PRODUCTS, TOUCH_ORIGINS } from "./Lead";
-export type { ILead, ITouch, IOpportunity, IDemoVisit, ICurrentDraft, LeadSegment, LeadStatus, TouchChannel, Product, TouchOrigin } from "./Lead";
-export { PipelineConfig, DEFAULT_STAGES, type IPipelineConfig } from "./PipelineConfig";
+export type { ILead, ITouch, IDemoVisit, ICurrentDraft, LeadSegment, LeadStatus, TouchChannel, Product, TouchOrigin } from "./Lead";
+export { LeadSuppression, type ILeadSuppression } from "./LeadSuppression";
 export { ResearchJob } from "./ResearchJob";
 export type { IResearchJob, ICandidate } from "./ResearchJob";
 export { OutreachToken, type IOutreachToken } from "./OutreachToken";
