@@ -140,9 +140,21 @@ check(
   refollowDecision({ stickToBottom: true, userScrolledUpNow: false, lastRole: 'tutor', nearBottomNow: false }),
   true,
 );
+// Final-review fix: unlike shouldFollowToBottom's IMMEDIATE-scroll rule,
+// the re-check must NOT grant the student-message "always follow"
+// exception. lastRole often stays 'student' for the several seconds
+// between send and reply (typing indicator mounting, thinkingHint
+// growing at 4s/8s) — before this fix, a student who scrolled up during
+// that window was yanked back to the bottom by the ResizeObserver and/or
+// fonts.ready re-checks, up to three times, before the reply even landed.
 check(
-  'refollow, text mode: lastRole student, latch set → still follows (student-send rule unchanged)',
+  'refollow, text mode: lastRole student, latch SET → do NOT follow (no student-send exception in the re-check)',
   refollowDecision({ stickToBottom: true, userScrolledUpNow: true, lastRole: 'student', nearBottomNow: false }),
+  false,
+);
+check(
+  'refollow, text mode: lastRole student, latch clear → follow (still at the bottom)',
+  refollowDecision({ stickToBottom: true, userScrolledUpNow: false, lastRole: 'student', nearBottomNow: false }),
   true,
 );
 

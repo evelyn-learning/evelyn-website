@@ -64,10 +64,13 @@ export interface RefollowDecisionInput {
    *  captured back when the effect first ran. A student can scroll away
    *  in the gap between the initial scroll and fonts/layout settling;
    *  re-checking against a frozen decision would yank them back down
-   *  anyway. */
+   *  anyway. This is the ONLY thing that gates the text-mode result —
+   *  see `refollowDecision`'s doc for why `lastRole` is deliberately not
+   *  consulted here. */
   userScrolledUpNow: boolean;
-  /** Role of the most recent transcript entry, captured once when the
-   *  effect ran (it can't change again before the effect re-runs). */
+  /** Role of the most recent transcript entry. Accepted only so both call
+   *  sites can pass the same argument shape as `shouldFollowToBottom`;
+   *  NOT consumed by `refollowDecision` — see its doc comment. */
   lastRole?: 'student' | 'tutor' | 'system' | string | null;
   /** Present for signature symmetry with `shouldFollowToBottom` /
    *  possible future voice-mode re-checks; currently unused because
@@ -76,9 +79,22 @@ export interface RefollowDecisionInput {
   nearBottomNow: boolean;
 }
 
-/** Round 6 task 4, fix round 1: the fonts.ready / ResizeObserver re-check
- *  decision, evaluated fresh each time it fires (never against a frozen
- *  `shouldFollowToBottom` result from when the effect first ran).
+/** Round 6 task 4, fix round 1 + final review fix: the fonts.ready /
+ *  ResizeObserver re-check decision, evaluated fresh each time it fires
+ *  (never against a frozen `shouldFollowToBottom` result from when the
+ *  effect first ran).
+ *
+ * Deliberately does NOT grant `shouldFollowToBottom`'s "lastRole ===
+ * 'student' always follows" exception. That exception exists because
+ * SENDING a message is an intentional student action — TranscriptView's
+ * immediate scroll (and its own latch-clear right beside it) already
+ * covers it once, at send time. A re-check fires LATER, while `lastRole`
+ * is often STILL `'student'` because the reply hasn't landed yet (the
+ * typing indicator mounting, `thinkingHint` growing at 4s/8s, fonts
+ * settling) — final review caught that granting the exception here pulls
+ * a student who scrolled away back to the bottom up to three times
+ * before the reply arrives. So this path honours ONLY the live
+ * `userScrolledUpNow` latch, regardless of `lastRole`.
  *
  * Text mode only. Voice mode's near-bottom-only rule already re-runs on
  * every real scroll/wheel/touch event AND every `transcript`/`picker`
@@ -89,14 +105,7 @@ export interface RefollowDecisionInput {
 export function refollowDecision({
   stickToBottom,
   userScrolledUpNow,
-  lastRole,
-  nearBottomNow,
 }: RefollowDecisionInput): boolean {
   if (!stickToBottom) return false;
-  return shouldFollowToBottom({
-    stickToBottom: true,
-    userScrolledUp: userScrolledUpNow,
-    lastRole,
-    nearBottom: nearBottomNow,
-  });
+  return !userScrolledUpNow;
 }
