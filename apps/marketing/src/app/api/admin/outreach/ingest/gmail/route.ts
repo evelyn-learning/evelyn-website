@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { isAllowedAccount } from "@/lib/outreach/gmail";
-import { PRODUCTS } from "@/lib/outreach/enums";
 import { GmailRateLimitError, ingestGmailPage, sentQuery } from "@/lib/crm/gmail-ingest";
 
 // Only takes effect on a serverless host (Vercel etc.); this app runs under
@@ -17,7 +16,8 @@ const bodySchema = z.object({
   query: z.string().max(500).optional(),
   pageToken: z.string().optional(),
   dryRun: z.boolean().optional(),
-  product: z.enum(PRODUCTS).optional(),
+  // Round 2 §2: open product list — validated for shape, not membership.
+  product: z.string().trim().max(60).optional(),
 });
 
 // POST - import one page (≤25 threads) of a mailbox's sent folder into leads.

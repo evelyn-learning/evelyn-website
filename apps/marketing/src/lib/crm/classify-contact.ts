@@ -1,4 +1,4 @@
-import { CONTACT_REASONS, type ContactReason, type Product } from "@/lib/outreach/enums";
+import { CONTACT_REASONS, PRODUCTS, type ContactReason } from "@/lib/outreach/enums";
 
 const CAREERS_RE = /\b(resume|r[ée]sum[ée]|cv|applying|application for|job (opening|opportunity|role)|position|internship|vacancy|hiring|recruit(er|ing)?)\b/i;
 
@@ -12,7 +12,7 @@ export function classifyContact(input: { reason?: string; subject: string; messa
   return { reason: isCareers ? "careers" : reason, isCareers };
 }
 
-const PRODUCT_PARAM: Record<string, Product> = {
+const PRODUCT_PARAM: Record<string, string> = {
   "voice-tutor": "voice_tutor", "tutor-copilot": "voice_tutor", "homework-bot": "voice_tutor", "math-solver": "voice_tutor",
   academy: "academy", "evelyn-academy": "academy",
   "mock-exams": "mock_exams", "test-generator": "mock_exams",
@@ -20,7 +20,25 @@ const PRODUCT_PARAM: Record<string, Product> = {
   content: "content_services", "content-authoring": "content_services",
 };
 
-export function productFromParam(p: string | null): Product | undefined {
+/**
+ * Round 2 §2: the product list is open, so an unmapped CTA slug becomes its
+ * own product rather than collapsing into "other" — a lead from
+ * /products/essay-ai is recorded as `essay_ai`, which the Pipeline dropdown
+ * then offers to every other lead. The map above still exists for the CTAs
+ * whose slug differs from the product we sell.
+ */
+export function productFromParam(p: string | null): string | undefined {
   if (!p) return undefined;
-  return PRODUCT_PARAM[p.toLowerCase()] ?? "other";
+  const raw = p.trim().toLowerCase();
+  if (!raw) return undefined;
+  const mapped = PRODUCT_PARAM[raw];
+  if (mapped) return mapped;
+  if ((PRODUCTS as readonly string[]).includes(raw)) return raw;
+  // Round 2 (critical fix wave) §1: the request-body cap on `product` is
+  // 60 chars, but slugifying can only grow a string (collapsing runs of
+  // punctuation still leaves every alnum char), so a truncated-but-still-
+  // huge raw value could slugify past the field's practical limit. Slice
+  // after slugifying so the stored/queried value is always bounded.
+  const slug = raw.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60);
+  return slug || undefined;
 }

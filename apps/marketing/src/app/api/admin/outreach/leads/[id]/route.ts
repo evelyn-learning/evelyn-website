@@ -3,15 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@core/db";
-import { Lead, LEAD_STATUSES, type LeadStatus, PipelineConfig, DEFAULT_STAGES, type IPipelineConfig } from "@/models";
-import { PRODUCTS, type Product } from "@/lib/outreach/enums";
+import { Lead, LEAD_STATUSES, type LeadStatus } from "@/models";
 import { mergeDecisionMakerEdit, type DecisionMakerEditInput } from "@/lib/outreach/lead-edit";
 import { applyApprove, applyKill } from "@/lib/outreach/lead-transitions";
-import { applyOpportunity } from "@/lib/crm/opportunity";
 
 const EDIT_FIELDS = [
   "company",
   "segment",
+  "product",
   "about",
   "whyFit",
   "useCaseHypothesis",
@@ -89,6 +88,18 @@ export async function PATCH(
             lead.orgEmail = next || undefined;
             continue;
           }
+          if (key === "product") {
+            // Round-2 fix round 1 (item 4): the Pipeline's Product dropdown
+            // sends `null` for its "—" option to mean "clear the product",
+            // and a typed "Other…" value may be all whitespace. Either way
+            // the field should be UNSET (not stored as `null`/"" ), since
+            // `product` is optional with no default — `undefined` is what
+            // makes mongoose omit the path on save.
+            const raw = fieldsRecord.product;
+            const next = typeof raw === "string" ? raw.trim() : "";
+            lead.product = next || undefined;
+            continue;
+          }
           if (key === "decisionMaker") {
             // Merge, don't replace: the client's edit form (ReviewQueueTab
             // `EditFields`) only carries name/title/linkedinUrl/email/
@@ -144,25 +155,6 @@ export async function PATCH(
           );
         }
         lead.nextActionAt = new Date();
-        break;
-      }
-
-      case "setOpportunity": {
-        const opp = body?.opportunity as { product?: string; stage?: string; notes?: string; nextActionAt?: string | null } | undefined;
-        if (!opp || !PRODUCTS.includes(opp.product as Product) || !opp.stage) {
-          return NextResponse.json({ error: "opportunity.product and opportunity.stage are required" }, { status: 400 });
-        }
-        const cfg = await PipelineConfig.findOne({ product: opp.product }).lean<IPipelineConfig>();
-        const stages = cfg?.stages ?? DEFAULT_STAGES;
-        const result = applyOpportunity(
-          lead.opportunities,
-          { product: opp.product as Product, stage: opp.stage, notes: opp.notes, nextActionAt: opp.nextActionAt },
-          stages,
-          new Date()
-        );
-        if (!result.ok) {
-          return NextResponse.json({ error: result.error }, { status: 400 });
-        }
         break;
       }
 

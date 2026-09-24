@@ -114,6 +114,36 @@ const incoming = (over: Partial<DecisionMakerEditInput> = {}): DecisionMakerEdit
     assert.equal(merged.linkedinNotFound, true);
   });
 
+  // Round-2 fix round 1 (C1): a narrower caller (PipelineTab's row editor)
+  // can send just a subset of fields — an ABSENT key must be treated as
+  // "unchanged", not coerced to `undefined`, or it silently wipes whatever
+  // the field held (and, for linkedinUrl, wrongly clears its provenance).
+  await test("an edit with only { name } leaves every other field and all provenance untouched", () => {
+    const merged = mergeDecisionMakerEdit(existing(), { name: "New Name" });
+    assert.equal(merged.name, "New Name");
+    assert.equal(merged.title, "Program Director");
+    assert.equal(merged.email, "dsmith@acme.edu");
+    assert.equal(merged.linkedinUrl, "https://linkedin.com/in/dana");
+    assert.equal(merged.emailVerified, false);
+    assert.equal(merged.emailSource, "vendor");
+    assert.equal(merged.emailProvider, "apollo");
+    assert.equal(merged.linkedinSource, "vendor");
+    assert.equal(merged.linkedinProvider, "hunter");
+  });
+
+  await test("an edit with only { linkedinUrl: \"\" } present clears it and its provenance, leaving the rest untouched", () => {
+    const merged = mergeDecisionMakerEdit(existing(), { linkedinUrl: "" });
+    assert.equal(merged.linkedinUrl, "");
+    assert.equal(merged.linkedinSource, undefined);
+    assert.equal(merged.linkedinProvider, undefined);
+    assert.equal(merged.name, "Dana Smith");
+    assert.equal(merged.title, "Program Director");
+    assert.equal(merged.email, "dsmith@acme.edu");
+    assert.equal(merged.emailVerified, false);
+    assert.equal(merged.emailSource, "vendor");
+    assert.equal(merged.emailProvider, "apollo");
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed > 0 ? 1 : 0);
 })();

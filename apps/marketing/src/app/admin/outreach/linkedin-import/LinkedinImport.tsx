@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { PRODUCTS } from "@/lib/outreach/enums";
 
 interface Preview { participant: string; messages: { from: string; at: string; body: string; outbound: boolean }[] }
 
@@ -34,6 +33,7 @@ export default function LinkedinImport() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [product, setProduct] = useState<string>("");
+  const [productOptions, setProductOptions] = useState<string[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,6 +43,10 @@ export default function LinkedinImport() {
     setOrigin(window.location.origin);
     const p = decodeHash();
     if (p) { setText(p.text); setProfileUrl(p.profileUrl); setName(p.name); window.history.replaceState({}, "", window.location.pathname); }
+    fetch("/api/admin/outreach/options")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setProductOptions(data.products ?? []); })
+      .catch(() => {});
   }, []);
 
   const post = async (dryRun: boolean) => {
@@ -58,7 +62,13 @@ export default function LinkedinImport() {
       const data = await res.json();
       if (!res.ok) { setResult(data.error || "Failed"); return; }
       setPreview({ participant: data.participant, messages: data.messages });
-      if (!dryRun) setResult(`${data.created ? "Created" : "Updated"} lead ${data.leadId} (+${data.added} touches)`);
+      if (!dryRun) {
+        if (data.suppressed) {
+          setResult("This contact was deleted — restore it from Import → Deleted leads to import again.");
+        } else {
+          setResult(`${data.created ? "Created" : "Updated"} lead ${data.leadId} (+${data.added} touches)`);
+        }
+      }
     } finally { setBusy(false); }
   };
 
@@ -85,7 +95,7 @@ export default function LinkedinImport() {
         <input className="rounded-lg border px-3 py-2 text-sm" placeholder="Company (optional)" value={company} onChange={(e) => setCompany(e.target.value)} />
         <select className="rounded-lg border px-3 py-2 text-sm" value={product} onChange={(e) => setProduct(e.target.value)}>
           <option value="">Product (optional)</option>
-          {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {productOptions.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
       <textarea className="h-64 w-full rounded-lg border p-3 font-mono text-xs" value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste the LinkedIn conversation here" />

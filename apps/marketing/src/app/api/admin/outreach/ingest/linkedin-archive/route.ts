@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
     imported: 0,
     created: 0,
     touchesAdded: 0,
+    suppressed: 0,
     skippedNoOwnerMessage: detail.skippedNoOwnerMessage,
     skippedGroup: detail.skippedGroup,
     sample: convs.slice(0, 20).map((c) => `${c.participant.name} (${c.messages.length})`),
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
       source: "linkedin:archive",
       linkedinConversationId: key,
     });
+    if (r.suppressed) { out.suppressed++; continue; }
     out.imported++;
     if (r.created) out.created++;
     out.touchesAdded += r.added;

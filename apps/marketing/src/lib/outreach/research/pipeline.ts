@@ -299,7 +299,16 @@ export async function processJob(jobId: string, deps: PipelineDeps): Promise<voi
           job.progress.discarded++;
         } else {
           const inserted = await insertLeads(docs);
-          if (inserted.skippedDupes > 0) {
+          if (inserted.skippedSuppressed > 0) {
+            // Round 2 §3: the operator deleted this contact — do not
+            // recreate it and do not count it as a genuine insert. There is
+            // no separate progress counter for this outcome, so it is
+            // folded into skippedDupes (both mean "did not add a new lead
+            // to the pipeline").
+            candidate.status = "dupe";
+            candidate.note = "deleted by operator (suppressed)";
+            job.progress.skippedDupes++;
+          } else if (inserted.skippedDupes > 0) {
             candidate.status = "dupe";
             candidate.note = "already in pipeline";
             job.progress.skippedDupes++;

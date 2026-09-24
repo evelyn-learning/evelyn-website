@@ -35,8 +35,29 @@ await test("productFromParam maps CTA slugs", () => {
   assert.equal(productFromParam("mock-exams"), "mock_exams");
   assert.equal(productFromParam("white-label"), "white_label");
   assert.equal(productFromParam("content"), "content_services");
-  assert.equal(productFromParam("essay-ai"), "other");
   assert.equal(productFromParam(null), undefined);
+});
+await test("productFromParam keeps an unmapped CTA as its own product (round-2 §2)", () => {
+  // Was "other" — collapsing every unmapped CTA lost which page the lead
+  // came from, and the product list is open now.
+  assert.equal(productFromParam("essay-ai"), "essay_ai");
+  assert.equal(productFromParam("Virtual Labs"), "virtual_labs");
+  assert.equal(productFromParam("proctoring-suite"), "proctoring_suite");
+});
+await test("productFromParam passes a seed value through unchanged", () => {
+  assert.equal(productFromParam("voice_tutor"), "voice_tutor");
+  assert.equal(productFromParam("other"), "other");
+});
+await test("productFromParam returns undefined for empty or punctuation-only params", () => {
+  assert.equal(productFromParam(""), undefined);
+  assert.equal(productFromParam("   "), undefined);
+  assert.equal(productFromParam("---"), undefined);
+});
+await test("productFromParam bounds a long param to a <=60-char slug (round 2 critical §1)", () => {
+  const huge = "a".repeat(200);
+  const slug = productFromParam(huge);
+  assert.ok(slug !== undefined);
+  assert.ok(slug!.length <= 60);
 });
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

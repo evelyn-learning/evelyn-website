@@ -26,8 +26,13 @@ await test("valid staged lead passes validateSync", () => {
 await test("status defaults to staged", () => {
   assert.equal(new Lead(base).status, "staged");
 });
-await test("bad segment rejected", () => {
-  const err = new Lead({ ...base, segment: "hospital" }).validateSync();
+await test("any segment string is accepted — the list is open (round-2 §2)", () => {
+  const doc = new Lead({ ...base, segment: "hospital" });
+  assert.equal(doc.validateSync(), undefined);
+  assert.equal(doc.segment, "hospital");
+});
+await test("segment is still required", () => {
+  const err = new Lead({ ...base, segment: "" }).validateSync();
   assert.ok(err?.errors["segment"]);
 });
 await test("bad status rejected", () => {
@@ -72,11 +77,16 @@ await test("bad touch origin rejected", () => {
   const err = new Lead({ ...base, touches: [{ at: new Date(), channel: "email", direction: "inbound", summary: "x", origin: "carrier_pigeon" }] }).validateSync();
   assert.ok(err?.errors["touches.0.origin"]);
 });
-await test("opportunity requires a known product", () => {
-  const ok = new Lead({ ...base, opportunities: [{ product: "voice_tutor", stage: "replied", updatedAt: new Date() }] }).validateSync();
-  assert.equal(ok, undefined);
-  const err = new Lead({ ...base, opportunities: [{ product: "jetpack", stage: "replied", updatedAt: new Date() }] }).validateSync();
-  assert.ok(err?.errors["opportunities.0.product"]);
+await test("product is a free string and defaults to undefined", () => {
+  assert.equal(new Lead(base).product, undefined);
+  const doc = new Lead({ ...base, product: "homework_bot" });
+  assert.equal(doc.validateSync(), undefined);
+  assert.equal(doc.product, "homework_bot");
+});
+await test("opportunities is no longer part of the schema", () => {
+  const doc = new Lead({ ...base, opportunities: [{ product: "voice_tutor", stage: "replied", updatedAt: new Date() }] });
+  assert.equal(doc.validateSync(), undefined);
+  assert.equal((doc as unknown as Record<string, unknown>).opportunities, undefined);
 });
 await test("emails default to [] and needsReview to false", () => {
   const doc = new Lead(base);

@@ -74,10 +74,31 @@ export function matchQuery(identity: ContactIdentity): Record<string, unknown> |
   return or.length ? { $or: or } : null;
 }
 
+/**
+ * Round 2 §4. The name the operator sees in the Pipeline for a brand-new
+ * lead. "Unknown" was the old fallback for every free-mail contact, which
+ * made a whole column of leads indistinguishable; it is now reachable only
+ * when the identity carries nothing at all.
+ *
+ * Order: an explicit company → the organisation's email/website domain (never
+ * a free-mail provider) → the person's name → their email address.
+ */
+export function companyNameFor(identity: ContactIdentity): string {
+  const explicit = identity.company?.trim();
+  if (explicit) return explicit;
+  const email = identity.email ? normalizeEmail(identity.email) : "";
+  const domain = email ? emailDomain(email) : websiteDomain(identity.website ?? "");
+  if (domain && !isFreeMailDomain(domain)) return domain;
+  const name = identity.name?.trim();
+  if (name) return name;
+  if (email) return email;
+  return "Unknown";
+}
+
 export function newLeadFields(identity: ContactIdentity, source: string) {
   const email = identity.email ? normalizeEmail(identity.email) : "";
   const domain = email ? emailDomain(email) : websiteDomain(identity.website ?? "");
-  const company = identity.company?.trim() || (domain && !isFreeMailDomain(domain) ? domain : identity.name?.trim() || "Unknown");
+  const company = companyNameFor(identity);
   return {
     company,
     segment: "other",

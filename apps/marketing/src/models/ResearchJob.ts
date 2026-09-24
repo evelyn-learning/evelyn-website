@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 import {
-  LEAD_SEGMENTS, RESEARCH_JOB_STATUSES, CANDIDATE_STATUSES,
+  RESEARCH_JOB_STATUSES, CANDIDATE_STATUSES,
 } from "@/lib/outreach/enums";
 import type { LeadSegment, ResearchJobStatus, CandidateStatus } from "@/lib/outreach/enums";
 
@@ -39,7 +39,10 @@ const CandidateSchema = new Schema<ICandidate>(
 
 const ResearchJobSchema = new Schema<IResearchJob>(
   {
-    segment: { type: String, enum: LEAD_SEGMENTS, required: true },
+    // Round 2 §2: open segment list. The API route is the gate (it accepts a
+    // seed value or any value already present on a lead); the schema stays
+    // permissive so a historical job never fails to re-validate.
+    segment: { type: String, required: true },
     niche: { type: String, default: "" },
     region: { type: String, default: "" },
     count: { type: Number, required: true, min: 1, max: 25 },

@@ -14,7 +14,7 @@ const apply = process.argv.includes("--apply");
 (async () => {
   await connectDB();
   const subs = await ContactSubmission.find({}).sort({ createdAt: 1 }).lean<IContactSubmission[]>();
-  let careers = 0, leads = 0, touches = 0, failed = 0;
+  let careers = 0, leads = 0, suppressed = 0, touches = 0, failed = 0;
   for (const s of subs) {
     const cls = classifyContact({ reason: s.reason, subject: s.subject ?? "", message: s.message });
     if (cls.isCareers) { careers++; continue; }
@@ -29,13 +29,17 @@ const apply = process.argv.includes("--apply");
           externalId: `form:${s._id}`, origin: "backfill",
         }],
       });
+      // Round 2 final fix wave §7: a suppressed submission (the operator
+      // deleted this contact's lead since) isn't a lead touched — counting
+      // it under `leads` overstated how many were actually written.
+      if (r.suppressed) { suppressed++; continue; }
       leads++; touches += r.added;
     } catch (err) {
       failed++;
       console.error(`[backfill] submission ${s._id} (${s.email}) failed:`, err instanceof Error ? err.message : err);
     }
   }
-  console.log(`${apply ? "APPLIED" : "DRY RUN"}: submissions ${subs.length}, careers skipped ${careers}, leads touched ${leads}, touches added ${touches}, failed ${failed}`);
+  console.log(`${apply ? "APPLIED" : "DRY RUN"}: submissions ${subs.length}, careers skipped ${careers}, leads touched ${leads}, suppressed ${suppressed}, touches added ${touches}, failed ${failed}`);
   process.exit(failed ? 1 : 0);
 })().catch((err) => {
   console.error("[backfill] fatal:", err instanceof Error ? err.message : err);

@@ -214,5 +214,31 @@ await test("listThreadIds: 429 then a plain Error — the plain Error propagates
   assert.equal(calls, 2);
 });
 
+await test("real run: a suppressed identity counts under `suppressed`, not created/updated", async () => {
+  const deps = {
+    listThreadIds: fakeListThreadIds(["A"], undefined),
+    getFullThread: fakeGetFullThread({ A: threadA }),
+    upsert: async (_args: UpsertArgs) => ({ leadId: "", created: false, added: 0, matchedBy: "suppressed" as const, suppressed: true }),
+    sleep: noopSleep,
+  };
+  const r = await ingestGmailPage({ account: acct, query: "q", dryRun: false, origin: "gmail_import" }, deps);
+  assert.equal(r.kept, 1);
+  assert.equal(r.suppressed, 1);
+  assert.equal(r.created, 0);
+  assert.equal(r.updated, 0);
+  assert.equal(r.touchesAdded, 0);
+});
+
+await test("suppressed starts at 0 on a dry run", async () => {
+  const deps = {
+    listThreadIds: fakeListThreadIds(["A"], undefined),
+    getFullThread: fakeGetFullThread({ A: threadA }),
+    upsert: async (_args: UpsertArgs) => ({ leadId: "L1", created: true, added: 1, matchedBy: "new" as const }),
+    sleep: noopSleep,
+  };
+  const r = await ingestGmailPage({ account: acct, query: "q", dryRun: true, origin: "gmail_import" }, deps);
+  assert.equal(r.suppressed, 0);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

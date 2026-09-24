@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
-import { PRODUCTS } from "@/lib/outreach/enums";
 import { parseLinkedinConversation, linkedinTouches } from "@/lib/crm/linkedin-paste";
 import { normalizeLinkedinUrl } from "@/lib/crm/identity";
 import { upsertLeadWithTouches } from "@/lib/crm/upsert-lead";
@@ -12,7 +11,7 @@ const bodySchema = z.object({
   profileUrl: z.string().optional(),
   name: z.string().optional(),
   company: z.string().optional(),
-  product: z.enum(PRODUCTS).optional(),
+  product: z.string().trim().max(60).optional(),
   dryRun: z.boolean().optional(),
   tzOffsetMinutes: z.number().int().min(-840).max(840).optional(),
   now: z.string().datetime().optional(),

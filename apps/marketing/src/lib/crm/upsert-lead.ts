@@ -1,7 +1,8 @@
 import { connectDB } from "@core/db";
-import { Lead, type ILead, type ITouch, type Product } from "@/models";
+import { Lead, LeadSuppression, type ILead, type ITouch, type Product } from "@/models";
 import { matchQuery, newLeadFields, pickLead, type ContactIdentity, type MatchBy, type MatchableLead } from "./match-lead";
 import { mergeTouches, applyIngestStatus, type IncomingTouch } from "./touches";
+import { suppressionQuery } from "./suppression";
 import { normalizeEmail } from "./identity";
 
 export interface UpsertArgs {
@@ -13,7 +14,17 @@ export interface UpsertArgs {
   linkedinConversationId?: string;
 }
 
-export async function upsertLeadWithTouches(args: UpsertArgs) {
+export interface UpsertResult {
+  leadId: string;
+  created: boolean;
+  added: number;
+  matchedBy: MatchBy | "new" | "suppressed";
+  /** Round 2 §3: set when the identity is on the suppression list and
+   *  nothing was written. `leadId` is "" in that case. */
+  suppressed?: boolean;
+}
+
+export async function upsertLeadWithTouches(args: UpsertArgs): Promise<UpsertResult> {
   await connectDB();
 
   let lead: ILead | null = null;
@@ -48,6 +59,15 @@ export async function upsertLeadWithTouches(args: UpsertArgs) {
 
   let created = false;
   if (!lead) {
+    // Round 2 §3: matching an EXISTING lead is unaffected by suppression —
+    // only creation is blocked. Checking here (rather than at the top) keeps
+    // a restored lead importable again immediately, and means a suppressed
+    // contact who later writes from a colleague's address still lands on the
+    // existing organisation lead if one exists.
+    const sq = suppressionQuery({ ...args.identity, conversationKey: args.linkedinConversationId });
+    if (sq && (await LeadSuppression.exists(sq))) {
+      return { leadId: "", created: false, added: 0, matchedBy: "suppressed", suppressed: true };
+    }
     lead = await Lead.create(newLeadFields(args.identity, args.source));
     created = true;
     matchedBy = "new";
@@ -77,18 +97,10 @@ export async function upsertLeadWithTouches(args: UpsertArgs) {
     applyIngestStatus(lead, merged.fresh, { created, flagReview: !!args.flagReview });
   }
 
-  if (args.product) {
-    const now = new Date();
-    const opp = lead.opportunities.find((o) => o.product === args.product);
-    if (opp) {
-      // A no-op re-ingest shouldn't churn an existing opportunity's
-      // updatedAt — only touch it when something in this ingest actually
-      // changed the lead.
-      if (merged.added > 0 || created) { opp.stage = lead.status; opp.updatedAt = now; }
-    } else {
-      lead.opportunities.push({ product: args.product, stage: lead.status, nextActionAt: null, updatedAt: now });
-    }
-  }
+  // Round 2 §1: one product per lead. The first ingest path that knows the
+  // product sets it; later ingests never overwrite it, because the operator
+  // may have corrected it in the Pipeline since.
+  if (args.product && !lead.product) lead.product = args.product;
 
   if (lead.isModified()) await lead.save();
   return { leadId: String(lead._id), created, added: merged.added, matchedBy };

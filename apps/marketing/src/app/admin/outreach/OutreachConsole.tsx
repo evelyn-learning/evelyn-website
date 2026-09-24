@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, RefreshCw, X } from "lucide-react";
-import type { EmailSource, LeadSegment, LeadStatus, LinkedinSource, Product, TouchChannel, TouchOrigin } from "@/lib/outreach/enums";
+import type { EmailSource, LeadSegment, LeadStatus, LinkedinSource, TouchChannel, TouchOrigin } from "@/lib/outreach/enums";
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
 import PipelineTab from "./PipelineTab";
@@ -70,13 +70,8 @@ export interface LeadJSON {
   contactPageUrl?: string;
   notes?: string;
   emails: string[];
-  opportunities: {
-    product: Product;
-    stage: string;
-    nextActionAt?: string | null;
-    notes?: string;
-    updatedAt: string;
-  }[];
+  /** Round 2 §1: one product per lead; free string. */
+  product?: string;
   needsReview: boolean;
   createdAt: string;
   updatedAt: string;
@@ -163,6 +158,14 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
     if (!res.ok) return;
     const data = await res.json();
     setLeads(data.leads ?? []);
+  }, []);
+
+  // Round 2 final fix wave §6: an inline PATCH (segment/status/product/
+  // decision-maker/notes/work-today) already returns the updated lead, so
+  // the caller can splice it into local state instead of refetching every
+  // lead in the corpus just to redraw one row.
+  const updateLead = useCallback((lead: LeadJSON) => {
+    setLeads((prev) => prev.map((l) => (l._id === lead._id ? lead : l)));
   }, []);
 
   const checkRepliesNow = useCallback(async () => {
@@ -312,7 +315,7 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
         {tab === "today" && (
           <TodayTab leads={leads} refresh={refresh} gmailAccount={gmailStatus?.account ?? null} />
         )}
-        {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} />}
+        {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} updateLead={updateLead} />}
         {tab === "find" && <FindLeadsTab onLeadsChanged={refresh} />}
         {tab === "import" && <ImportTab gmailStatus={gmailStatus} onImported={refresh} />}
       </main>
