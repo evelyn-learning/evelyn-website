@@ -10,9 +10,14 @@ import {
   type SortDir,
   type SortKey,
 } from "@/lib/crm/console-helpers";
-import type { LeadJSON } from "./OutreachConsole";
+import type { LeadJSON, LeadTouch } from "./OutreachConsole";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
 import TimelineDrawer from "./TimelineDrawer";
+
+// Mirrors the server's cap on one bulk request (leads/bulk/route.ts
+// MAX_IDS) — checked client-side so a huge selection is rejected before the
+// confirm() dialog even appears, not after the operator has already said yes.
+const MAX_DELETE_IDS = 200;
 
 const STATUS_COLORS: Record<string, string> = {
   staged: "bg-gray-100 text-gray-700",
@@ -41,10 +46,11 @@ const PILL_TONES: Record<string, string> = {
   research: "bg-gray-100 text-gray-600",
 };
 
-// Column widths total 1216px — the usable width of the console's max-w-7xl
-// (1280px) main column minus its px-4 gutters — so the whole table fits one
-// screen at 1280 with no horizontal scroll (round-2 §6). `table-fixed` makes
-// these authoritative instead of advisory.
+// Column widths total 1200px, 16px under the console's max-w-7xl (1280px)
+// main column minus its px-4 gutters — a classic (non-overlay) scrollbar on
+// the scroll container below eats horizontal space, and without this slack
+// it forces the table into horizontal scroll (round-2 §6 fix round 1). `table-fixed`
+// makes these authoritative instead of advisory.
 const COLUMNS: { key: SortKey | null; label: string; width: number }[] = [
   { key: null, label: "", width: 36 },
   { key: "company", label: "Company", width: 190 },
@@ -54,8 +60,28 @@ const COLUMNS: { key: SortKey | null; label: string; width: number }[] = [
   { key: "decisionMaker", label: "Decision maker", width: 190 },
   { key: "touches", label: "Touches", width: 60 },
   { key: "nextActionAt", label: "Next action", width: 96 },
-  { key: "lastTouchAt", label: "Last touch", width: 234 },
+  { key: "lastTouchAt", label: "Last touch", width: 218 },
 ];
+
+/**
+ * Round-2 fix round 1 (item 5): the newest touch by timestamp, not the last
+ * array element — touches are not guaranteed to arrive in chronological
+ * order (imports/backfills can append out of order), and this must agree
+ * with `compareLeads(..., "lastTouchAt")`, which sorts on the max `at`.
+ */
+function latestTouch(touches: LeadTouch[]): LeadTouch | null {
+  let best: LeadTouch | null = null;
+  let bestTime = -Infinity;
+  for (const t of touches) {
+    const time = new Date(t.at).getTime();
+    if (Number.isNaN(time)) continue;
+    if (time >= bestTime) {
+      bestTime = time;
+      best = t;
+    }
+  }
+  return best;
+}
 
 const OTHER = "__other__";
 
@@ -86,6 +112,7 @@ export default function PipelineTab({
   const [openId, setOpenId] = useState<string | null>(null);
   const [options, setOptions] = useState<{ products: string[]; segments: string[] }>({ products: [], segments: [] });
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("company");
@@ -95,7 +122,13 @@ export default function PipelineTab({
   const [otherFor, setOtherFor] = useState<{ id: string; field: "segment" | "product" } | null>(null);
   const [otherValue, setOtherValue] = useState("");
   const [dmFor, setDmFor] = useState<string | null>(null);
-  const [dmDraft, setDmDraft] = useState({ name: "", title: "", email: "" });
+  // linkedinUrl/emailVerified ride along even though this editor has no UI
+  // for them (round-2 fix round 1, C1): mergeDecisionMakerEdit only preserves
+  // a field the payload OMITS, so if the payload included these keys at all
+  // they'd need real values — carrying the lead's current values here means
+  // the merge is a true no-op for them, exactly like ReviewQueueTab's
+  // toEditFields/EditFields form does.
+  const [dmDraft, setDmDraft] = useState({ name: "", title: "", email: "", linkedinUrl: "", emailVerified: false });
 
   const loadOptions = useCallback(async () => {
     try {
@@ -194,7 +227,12 @@ export default function PipelineTab({
       setOtherValue("");
       return;
     }
-    await saveFields(lead._id, { [field]: value }, `Failed to update ${field}`);
+    // Round-2 fix round 1 (item 4): picking "—" on Product sends `null`
+    // (not ""), which the PATCH route's `edit` action reads as "unset this
+    // field" — Product is the only optional one of the two, so this only
+    // ever applies to it (Segment has no blank option).
+    const payloadValue = field === "product" && value === "" ? null : value;
+    await saveFields(lead._id, { [field]: payloadValue }, `Failed to update ${field}`);
   };
 
   const saveOther = async () => {
@@ -220,21 +258,45 @@ export default function PipelineTab({
       name: lead.decisionMaker?.name ?? "",
       title: lead.decisionMaker?.title ?? "",
       email: lead.decisionMaker?.email ?? "",
+      linkedinUrl: lead.decisionMaker?.linkedinUrl ?? "",
+      emailVerified: lead.decisionMaker?.emailVerified ?? false,
     });
   };
 
   const saveDm = async () => {
     if (!dmFor) return;
-    // The `edit` action MERGES decisionMaker (lib/outreach/lead-edit.ts), so
-    // sending only these three fields cannot wipe the vendor-provenance
-    // history or the linkedinUrl.
-    const ok = await saveFields(dmFor, { decisionMaker: { name: dmDraft.name.trim(), title: dmDraft.title.trim(), email: dmDraft.email.trim() } }, "Failed to update decision maker");
+    // The `edit` action MERGES decisionMaker (lib/outreach/lead-edit.ts). This
+    // editor has no UI for linkedinUrl/emailVerified, so the draft carries
+    // the lead's own current values for them (stashed in startDmEdit) —
+    // sending them unchanged means the merge can't mistake "field omitted
+    // from this narrow form" for "field cleared", which would otherwise
+    // wipe the LinkedIn provenance on every name/title/email-only edit.
+    const ok = await saveFields(
+      dmFor,
+      {
+        decisionMaker: {
+          name: dmDraft.name.trim(),
+          title: dmDraft.title.trim(),
+          email: dmDraft.email.trim(),
+          linkedinUrl: dmDraft.linkedinUrl.trim(),
+          emailVerified: dmDraft.emailVerified,
+        },
+      },
+      "Failed to update decision maker"
+    );
     if (ok) setDmFor(null);
   };
 
   const deleteSelected = async () => {
     const ids = [...selected];
     if (ids.length === 0) return;
+    // Round-2 fix round 1 (item 9): check the server's cap BEFORE the
+    // confirm() dialog — an operator who says "yes" to a request that can
+    // only fail is worse than one who never sees the dialog.
+    if (ids.length > MAX_DELETE_IDS) {
+      alert(`You can delete at most ${MAX_DELETE_IDS} leads in one request; ${ids.length} are selected. Narrow the selection (filters or search) and try again.`);
+      return;
+    }
     if (
       !confirm(
         `Delete ${ids.length} lead${ids.length === 1 ? "" : "s"}? They are removed and suppressed, so a re-import will not bring them back. You can restore them from the Import tab.`
@@ -242,6 +304,7 @@ export default function PipelineTab({
     ) {
       return;
     }
+    setDeleting(true);
     try {
       const res = await fetch("/api/admin/outreach/leads/bulk", {
         method: "POST",
@@ -261,6 +324,8 @@ export default function PipelineTab({
       await loadOptions();
     } catch {
       alert("Failed to delete leads");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -282,6 +347,24 @@ export default function PipelineTab({
     });
     return rows.sort((a, b) => compareLeads(a, b, sortKey, sortDir));
   }, [leads, statusFilter, segmentFilter, productFilter, debouncedQuery, sortKey, sortDir]);
+
+  // Round-2 fix round 1 (I2): keep `selected` a subset of what's currently
+  // visible. Without this, checking rows, then narrowing the filter/search,
+  // then hitting "Delete selected" would delete leads the operator can no
+  // longer see and never re-confirmed against.
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const visible = new Set(filtered.map((l) => l._id));
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (visible.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [filtered]);
 
   const allShownSelected = filtered.length > 0 && filtered.every((l) => selected.has(l._id));
 
@@ -372,10 +455,11 @@ export default function PipelineTab({
           <button
             type="button"
             onClick={deleteSelected}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700"
+            disabled={deleting}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Trash2 className="h-4 w-4" />
-            Delete selected ({selected.size})
+            {deleting ? "Deleting…" : `Delete selected (${selected.size})`}
           </button>
         )}
         <span className="ml-auto text-xs text-gray-400">
@@ -384,11 +468,15 @@ export default function PipelineTab({
       </div>
 
       {/* Fixed-height scroll area with a sticky header (round-2 §6): the table
-          scrolls inside this box so the page itself does not. 260px is the
-          console chrome above it — header, tab bar, filter row. */}
+          scrolls inside this box so the page itself does not. 280px is the
+          console chrome above it — header, tab bar, filter row, and the
+          main column's own bottom padding (missed in the first pass, hence
+          260px there). This offset is a deploy-time measurement, not a
+          computed constant — re-check it against the live console chrome
+          if the header/tabs/filter row height ever changes. */}
       <div
         className="overflow-auto rounded-xl bg-white shadow"
-        style={{ maxHeight: "calc(100vh - 260px)" }}
+        style={{ maxHeight: "calc(100vh - 280px)" }}
       >
         <table className="w-full table-fixed divide-y divide-gray-200 text-sm">
           <colgroup>
@@ -396,11 +484,11 @@ export default function PipelineTab({
               <col key={c.label || "select"} style={{ width: `${c.width}px` }} />
             ))}
           </colgroup>
-          <thead className="sticky top-0 z-10 bg-gray-50">
+          <thead>
             <tr>
               {COLUMNS.map((c) =>
                 c.key === null ? (
-                  <th key="select" className="px-2 py-2 text-left">
+                  <th key="select" className="sticky top-0 z-10 bg-gray-50 px-2 py-2 text-left">
                     <input
                       type="checkbox"
                       aria-label="Select all shown leads"
@@ -411,7 +499,7 @@ export default function PipelineTab({
                 ) : (
                   <th
                     key={c.key}
-                    className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                    className="sticky top-0 z-10 bg-gray-50 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
                   >
                     <button
                       type="button"
@@ -442,7 +530,7 @@ export default function PipelineTab({
                 // total — a direction-filtered count here would silently
                 // disagree with the sort arrow.
                 const touchCount = lead.touches.length;
-                const lastTouch = lead.touches.length > 0 ? lead.touches[lead.touches.length - 1] : null;
+                const lastTouch = latestTouch(lead.touches);
                 const pill = sourcePill(lead.source);
                 const busy = pendingId === lead._id;
 
@@ -591,7 +679,7 @@ export default function PipelineTab({
                         <button
                           type="button"
                           onClick={() => startDmEdit(lead)}
-                          title="Click to edit name, title and email"
+                          title={[dm?.name, dm?.title, dm?.email].filter(Boolean).join(" · ") || "Click to edit name, title and email"}
                           className="block w-full truncate text-left hover:text-primary-700 hover:underline"
                         >
                           {dm?.name || "—"}

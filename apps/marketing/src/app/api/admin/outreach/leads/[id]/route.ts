@@ -88,6 +88,18 @@ export async function PATCH(
             lead.orgEmail = next || undefined;
             continue;
           }
+          if (key === "product") {
+            // Round-2 fix round 1 (item 4): the Pipeline's Product dropdown
+            // sends `null` for its "—" option to mean "clear the product",
+            // and a typed "Other…" value may be all whitespace. Either way
+            // the field should be UNSET (not stored as `null`/"" ), since
+            // `product` is optional with no default — `undefined` is what
+            // makes mongoose omit the path on save.
+            const raw = fieldsRecord.product;
+            const next = typeof raw === "string" ? raw.trim() : "";
+            lead.product = next || undefined;
+            continue;
+          }
           if (key === "decisionMaker") {
             // Merge, don't replace: the client's edit form (ReviewQueueTab
             // `EditFields`) only carries name/title/linkedinUrl/email/
