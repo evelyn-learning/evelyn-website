@@ -267,6 +267,39 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     assert.strictEqual(res.review!.find((r) => r.itemId === 'n1')!.correct, true, '25/10 should grade as 2.5');
   });
 
+  await test('numeric grader strips a variable-assignment prefix ("x=-12" grades as -12)', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '-12' };
+    const resolver: AssessmentItemResolver = async () => key;
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'prefix-1',
+        responses: [{ itemId: 'n3', loId: 'apstats.lo-n', response: { text: 'x=-12' } }] },
+      fakeDeps, resolver, 'test-partner',
+    );
+    assert.strictEqual(res.review!.find((r) => r.itemId === 'n3')!.correct, true, 'x=-12 should grade as -12');
+  });
+
+  await test('numeric grader strips a spaced variable-assignment prefix ("x = -12" grades as -12)', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '-12' };
+    const resolver: AssessmentItemResolver = async () => key;
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'prefix-2',
+        responses: [{ itemId: 'n4', loId: 'apstats.lo-n', response: { text: 'x = -12' } }] },
+      fakeDeps, resolver, 'test-partner',
+    );
+    assert.strictEqual(res.review!.find((r) => r.itemId === 'n4')!.correct, true, 'x = -12 should grade as -12');
+  });
+
+  await test('numeric grader still rejects a plain wrong value against a negative key ("12" vs -12)', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '-12' };
+    const resolver: AssessmentItemResolver = async () => key;
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'prefix-3',
+        responses: [{ itemId: 'n5', loId: 'apstats.lo-n', response: { text: '12' } }] },
+      fakeDeps, resolver, 'test-partner',
+    );
+    assert.strictEqual(res.review!.find((r) => r.itemId === 'n5')!.correct, false, '12 should NOT grade as -12');
+  });
+
   await test('review feedback carries a hint-based rationale for mcq/numeric', async () => {
     const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '5', hints: ['divide the total by n'] };
     const resolver: AssessmentItemResolver = async () => key;

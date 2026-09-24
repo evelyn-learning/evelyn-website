@@ -95,7 +95,11 @@ function norm(s: string): string {
 /** Parse a numeric answer that may be a simple fraction ("25/10" → 2.5), a
  *  percent ("2.5%" → 2.5), or a plain number. Returns NaN for prose. */
 function parseNumeric(s: string): number {
-  const t = (s ?? '').trim().replace(/%\s*$/, '').replace(/,/g, '');
+  const t = (s ?? '').trim()
+    .replace(/^[a-zA-Z]\w*\s*=\s*/, '')
+    .replace(/^\$/, '')
+    .replace(/%\s*$/, '')
+    .replace(/,/g, '');
   const frac = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
   if (frac) {
     const d = parseFloat(frac[2]);

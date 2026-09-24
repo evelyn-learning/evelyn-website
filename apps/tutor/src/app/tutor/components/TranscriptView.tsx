@@ -27,7 +27,7 @@ import { ImageZoomOverlay } from './ImageZoomOverlay';
 // GreenApple round 6, task 4: pure follow-to-bottom decision, shared between
 // the immediate scroll below and the fonts.ready / ResizeObserver re-checks
 // that fix math bubbles growing taller after KaTeX's web fonts swap in.
-import { shouldFollowToBottom, refollowDecision } from '@/lib/tutor/voice/transcript-follow';
+import { shouldFollowToBottom, refollowDecision, latchFromScrollEvent } from '@/lib/tutor/voice/transcript-follow';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -269,17 +269,38 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // to bottom unless the student deliberately scrolled away. Voice's
   // near-bottom-only rule (the `else` branch) is completely untouched.
   const userScrolledUpRef = useRef(false);
+  // Round 7, task 5: end of TranscriptView's own programmatic-scroll guard
+  // window (`performance.now() + 200`, armed by `scrollToBottom()` below).
+  // A `scroll` event the listener sees before this deadline is presumed to
+  // be an echo of our own `el.scrollTop = el.scrollHeight` write — not the
+  // student scrolling away — and is ignored via `latchFromScrollEvent`.
+  const programmaticScrollUntilRef = useRef(0);
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     let cancelled = false;
     const lastEntry = transcript[transcript.length - 1];
     const lastRole = lastEntry?.role;
+    // Round 7, task 5: the single helper for every programmatic scroll in
+    // this effect (the immediate scroll below, the fonts.ready re-check,
+    // and the ResizeObserver re-check) — arms the guard window BEFORE
+    // writing scrollTop so the `scroll` event that write dispatches lands
+    // inside it.
+    const scrollToBottom = () => {
+      programmaticScrollUntilRef.current = performance.now() + 200;
+      el.scrollTop = el.scrollHeight;
+    };
     let removeListeners: (() => void) | undefined;
     if (stickToBottom) {
-      const onScrollLikeEvent = () => {
+      const onScrollLikeEvent = (event: Event) => {
         const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-        userScrolledUpRef.current = distance > 120;
+        const latch = latchFromScrollEvent({
+          type: event.type as 'scroll' | 'wheel' | 'touchmove',
+          distanceFromBottom: distance,
+          now: performance.now(),
+          programmaticUntil: programmaticScrollUntilRef.current,
+        });
+        if (latch !== null) userScrolledUpRef.current = latch;
       };
       el.addEventListener('scroll', onScrollLikeEvent, { passive: true });
       el.addEventListener('wheel', onScrollLikeEvent, { passive: true });
@@ -307,7 +328,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       lastRole,
       nearBottom,
     });
-    if (decision) el.scrollTop = el.scrollHeight;
+    if (decision) scrollToBottom();
 
     // Math bubbles render through InlineMathText's synchronous
     // `katex.render()` with no font-load handling (unlike EquationRenderer,
@@ -331,7 +352,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       document.fonts.ready.then(() => {
         if (cancelled) return;
         if (refollowDecision({ stickToBottom, userScrolledUpNow: userScrolledUpRef.current, lastRole, nearBottomNow: true })) {
-          el.scrollTop = el.scrollHeight;
+          scrollToBottom();
         }
       });
     }
@@ -345,7 +366,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       ro = new ResizeObserver(() => {
         if (cancelled) return;
         if (refollowDecision({ stickToBottom, userScrolledUpNow: userScrolledUpRef.current, lastRole, nearBottomNow: true })) {
-          el.scrollTop = el.scrollHeight;
+          scrollToBottom();
         }
       });
       ro.observe(contentRef.current);

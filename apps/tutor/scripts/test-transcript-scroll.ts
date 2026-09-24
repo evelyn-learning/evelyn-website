@@ -33,7 +33,7 @@
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { shouldFollowToBottom, refollowDecision } from '../src/lib/tutor/voice/transcript-follow';
+import { shouldFollowToBottom, refollowDecision, latchFromScrollEvent } from '../src/lib/tutor/voice/transcript-follow';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -175,6 +175,43 @@ check(
   false,
 );
 
+// --- Part 2b: latchFromScrollEvent truth table (round 7, task 5) ----------
+//
+// TranscriptView's own programmatic `el.scrollTop = el.scrollHeight` writes
+// dispatch a native `scroll` event — measured, at the next listener tick,
+// against content that streamed in and grew the scroller by well over
+// 120px, the event falsely looked like the student deliberately scrolling
+// away. `latchFromScrollEvent` lets the listener recognize "this scroll
+// event landed inside our own programmatic scroll's 200ms guard window" and
+// ignore it (`null`) instead of latching. `wheel`/`touchmove` are always
+// real user gestures — the guard never applies to them.
+
+check(
+  'scroll event inside the guard window, far from bottom → ignore (own scroll)',
+  latchFromScrollEvent({ type: 'scroll', distanceFromBottom: 300, now: 100, programmaticUntil: 300 }) === null,
+  true,
+);
+check(
+  'scroll event after the guard window, far from bottom → latch set',
+  latchFromScrollEvent({ type: 'scroll', distanceFromBottom: 300, now: 400, programmaticUntil: 300 }) === true,
+  true,
+);
+check(
+  'wheel event inside the guard window, far from bottom → latch set (guard never applies to wheel)',
+  latchFromScrollEvent({ type: 'wheel', distanceFromBottom: 300, now: 100, programmaticUntil: 300 }) === true,
+  true,
+);
+check(
+  'scroll event after the guard window, near bottom (distance 50) → latch cleared',
+  latchFromScrollEvent({ type: 'scroll', distanceFromBottom: 50, now: 400, programmaticUntil: 300 }) === false,
+  true,
+);
+check(
+  'touchmove event inside the guard window, far from bottom → latch set (guard never applies to touchmove)',
+  latchFromScrollEvent({ type: 'touchmove', distanceFromBottom: 300, now: 100, programmaticUntil: 300 }) === true,
+  true,
+);
+
 // --- Part 3: source-wiring check --------------------------------------
 
 const transcriptViewPath = join(__dirname, '../src/app/tutor/components/TranscriptView.tsx');
@@ -229,6 +266,46 @@ checkSource(
   const ok = matches.length >= 2;
   if (!ok) failures++;
   console.log(`${ok ? 'PASS' : 'FAIL'} — refollowDecision is called at least twice (fonts.ready + ResizeObserver), found ${matches.length}`);
+}
+
+// Round 7, task 5: the listener must not falsely latch on our own
+// programmatic scroll — verify the guard's plumbing is actually wired, not
+// just that latchFromScrollEvent itself is correct in isolation.
+checkSource(
+  'TranscriptView imports latchFromScrollEvent',
+  /latchFromScrollEvent/,
+);
+checkSource(
+  'TranscriptView tracks a programmatic-scroll guard window ref',
+  /programmaticScrollUntilRef/,
+);
+{
+  // All three `el.scrollTop = el.scrollHeight` sites inside the follow-to-
+  // bottom effect (immediate scroll, fonts.ready re-check, ResizeObserver
+  // re-check) must go through one `scrollToBottom()` helper that also arms
+  // the guard window — a bare write bypasses the guard and reintroduces
+  // the false-latch bug at that site. Scoped to this one effect (via the
+  // `scrollToBottom` definition through its dependency array) so the
+  // unrelated round-6e drawer-open snap effect, which legitimately writes
+  // `el.scrollTop = el.scrollHeight` directly and isn't part of this bug,
+  // isn't caught up in the check.
+  const effectMatch = source.match(/const scrollToBottom = \(\) => \{[\s\S]*?\}, \[transcript, picker, stickToBottom\]\);/);
+  const effectBlock = effectMatch ? effectMatch[0] : '';
+  const okFound = effectBlock.length > 0;
+  if (!okFound) failures++;
+  console.log(`${okFound ? 'PASS' : 'FAIL'} — located the follow-to-bottom effect (scrollToBottom def through its dependency array)`);
+
+  const calls = effectBlock.match(/scrollToBottom\(\)/g) ?? [];
+  const okCalls = calls.length >= 3;
+  if (!okCalls) failures++;
+  console.log(`${okCalls ? 'PASS' : 'FAIL'} — scrollToBottom() called at all three scroll sites, found ${calls.length}`);
+
+  // Exactly one bare write is expected: scrollToBottom's own body. Any
+  // more means a site bypassed the helper.
+  const bareWrites = effectBlock.match(/el\.scrollTop\s*=\s*el\.scrollHeight/g) ?? [];
+  const okBare = bareWrites.length === 1;
+  if (!okBare) failures++;
+  console.log(`${okBare ? 'PASS' : 'FAIL'} — only scrollToBottom()'s own body writes el.scrollTop = el.scrollHeight directly, found ${bareWrites.length}`);
 }
 
 if (failures) {

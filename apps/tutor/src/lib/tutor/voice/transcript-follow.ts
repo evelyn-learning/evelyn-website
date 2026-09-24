@@ -109,3 +109,45 @@ export function refollowDecision({
   if (!stickToBottom) return false;
   return !userScrolledUpNow;
 }
+
+export interface LatchFromScrollEventInput {
+  /** The native event type that fired the listener. */
+  type: 'scroll' | 'wheel' | 'touchmove';
+  /** `el.scrollHeight - el.scrollTop - el.clientHeight` at the moment the
+   *  event fired. */
+  distanceFromBottom: number;
+  /** `performance.now()` at the moment the event fired. */
+  now: number;
+  /** The end of TranscriptView's own programmatic-scroll guard window
+   *  (`performance.now() + 200` armed by `scrollToBottom()` — see
+   *  TranscriptView.tsx). */
+  programmaticUntil: number;
+}
+
+/** Round 7, task 5: TranscriptView's own `el.scrollTop = el.scrollHeight`
+ *  writes (the immediate scroll, the fonts.ready re-check, and the
+ *  ResizeObserver re-check) dispatch a native `scroll` event. When that
+ *  write follows a burst of streamed content, the scroller can still be
+ *  well over 120px from the bottom the instant the event is measured
+ *  (the write hasn't fully applied / a reflow is still pending) — the
+ *  listener's old logic then falsely latched `userScrolledUpRef.current =
+ *  true`, as if the student had deliberately scrolled away, and follow-to-
+ *  bottom silently broke for the rest of the session.
+ *
+ * A `scroll` event that lands inside our own guard window is presumed to
+ * be an echo of `scrollToBottom()`'s own write, so it's ignored (`null`) —
+ * the listener must leave the latch exactly as it was. `wheel` and
+ * `touchmove` are always real user gestures (they precede any DOM
+ * mutation, not follow it) — the guard never applies to them; they always
+ * return a real boolean. Pure — no DOM access, so
+ * scripts/test-transcript-scroll.ts can assert the truth table without a
+ * browser. */
+export function latchFromScrollEvent({
+  type,
+  distanceFromBottom,
+  now,
+  programmaticUntil,
+}: LatchFromScrollEventInput): boolean | null {
+  if (type === 'scroll' && now < programmaticUntil) return null;
+  return distanceFromBottom > 120;
+}
