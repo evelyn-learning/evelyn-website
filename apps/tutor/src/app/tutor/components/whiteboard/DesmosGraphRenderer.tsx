@@ -12,6 +12,7 @@ import { useEffect, useRef, useState, useCallback, useImperativeHandle, useMemo,
 import type { GraphData, GraphFunction, GraphFunctionOfY } from '@core/knowledge/types';
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
+import { normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 
 // Color palette matching our existing design
 const COLORS = [
@@ -333,7 +334,8 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
 
       // Add shaded region
       if (data.shadedRegion) {
-        const sr = data.shadedRegion;
+        // Round 4 (E2): see normalizeShadedRegion.
+        const sr = normalizeShadedRegion(data.shadedRegion);
         const id = `shade-${exprId++}`;
         if (sr.axis === 'x') {
           // Shade between two y=f(x) curves. Use min/max so the

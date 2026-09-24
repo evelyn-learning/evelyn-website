@@ -52,6 +52,7 @@ import { extractSocialThreads } from './extract-social-threads';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { findAssignmentBySession, finalizeDraft, shouldFinalizeDraftOnEmit } from '@/lib/tutor/practice-assign/store';
+import { shouldCreateDraftOnEmit, createDraftOnEmit } from '@/lib/tutor/practice-assign/emit-draft';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {
@@ -312,6 +313,20 @@ export async function emitSessionResult(
     req.renderedArtifacts ??
     (opts.loadArtifacts ? extractRenderedArtifacts(await opts.loadArtifacts(req.sessionId)) : { quizzes: [], conceptMaps: [] });
 
+  // Round 4 (E3): a completed session whose host names where practice lands
+  // (req.practiceLocator), with a plan, gets an end-of-session draft here
+  // (or its short open client draft — or one the client finalized moments
+  // ago — is topped up); the finalize below promotes a draft. Only the
+  // GENERATION wait is bounded (top-up.ts's topUpBudgetMs, default 25 s);
+  // the retrieval, plan read and store writes around it are not, and a
+  // generator call still running at the deadline may bank its row later.
+  // Best-effort: a failure never fails the emit.
+  if (shouldCreateDraftOnEmit(req)) {
+    await createDraftOnEmit(req, { profileId, partnerId: opts.partnerId }).then(
+      (outcome) => console.log(`[session-result] end-of-session practice session=${req.sessionId} outcome=${outcome}`),
+      (e) => console.warn('[session-result] end-of-session draft failed', (e as Error)?.message ?? e),
+    );
+  }
   // v1.15.0 — best-effort homework echo (authoritative read = assigned-practice route).
   // Fix round 1 (Important I1) — sessionId is a bare partner-supplied
   // string (SessionEmitRequestSchema has no format constraint), and a
@@ -324,7 +339,7 @@ export async function emitSessionResult(
   // Round 3: see shouldFinalizeDraftOnEmit. Scoped to profileId like every
   // other lookup here; best-effort — a failure must never fail the emit.
   if (shouldFinalizeDraftOnEmit(req.status)) {
-    await finalizeDraft(req.sessionId, { source: 'sweep' }, profileId).catch((e) =>
+    await finalizeDraft(req.sessionId, { source: 'sweep', ...(req.practiceLocator ? { locator: req.practiceLocator } : {}) }, profileId).catch((e) =>
       console.warn('[session-result] draft finalize failed', (e as Error)?.message ?? e),
     );
   }

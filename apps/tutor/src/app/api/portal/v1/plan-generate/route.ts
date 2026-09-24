@@ -50,6 +50,8 @@
  * student's input is enumerated BEFORE the cache chain. Only a real split
  * builds a homework plan; a fail-open enumeration (e.g. a typed concept
  * question) continues as an ordinary request down the normal path (A2).
+ * Typed text is enumerated only when it has problem signals (round 4, E1) —
+ * a plain topic or single question skips the enumeration call entirely.
  */
 
 import { NextResponse } from 'next/server';
@@ -73,7 +75,7 @@ import {
   type MaterialClassification,
 } from '@/lib/tutor/lesson-plan/material-classify';
 import { enumerateProblems, defaultEnumerateDeps, getEnumerateClient } from '@/lib/tutor/lesson-plan/enumerate-problems';
-import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision } from '@/lib/tutor/lesson-plan/homework';
+import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, hasProblemSignals, typedEnumerationText } from '@/lib/tutor/lesson-plan/homework';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
@@ -213,9 +215,16 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // Enumerate off the RAW material text (materialText), never a hint-prefixed
   // `text`; on the typed-text path materialText is undefined and `text` IS the
   // raw input.
+  // Round 4 (E1): uploads always enumerate; typed text only with problem signals.
+  // Final fix wave (I2): the typed gate (and the enumeration input) is the
+  // request's `topic` when present, else `text` minus a host focus preamble —
+  // never the raw `text`, whose multi-line preamble read as a problem list.
+  const typedProblemText = typedEnumerationText(requestTopic, text);
+  const enumerate = isHomework && (hasMaterials || hasProblemSignals(typedProblemText));
+  if (isHomework && !enumerate) console.log('[plan-generate] homework-help: no problem signals → normal plan');
   let homeworkProblems: HomeworkProblem[] | null = null;
-  if (isHomework) {
-    const enumerated = await enumerateProblems(materialText ?? text, defaultEnumerateDeps(getEnumerateClient()));
+  if (enumerate) {
+    const enumerated = await enumerateProblems(materialText ?? typedProblemText, defaultEnumerateDeps(getEnumerateClient()));
     const decision = homeworkPlanDecision(enumerated);
     if (decision.kind === 'homework') homeworkProblems = decision.problems;
     else {

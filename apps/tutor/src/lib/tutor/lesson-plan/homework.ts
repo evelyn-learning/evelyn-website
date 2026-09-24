@@ -122,3 +122,38 @@ export function homeworkPlanDecision(r: EnumerateResult): HomeworkPlanDecision {
   if (r.failedOpen || r.problems.length === 0) return { kind: 'normal', reason: 'enumeration_failed_open' };
   return { kind: 'homework', problems: r.problems };
 }
+
+const LIST_MARKER = /(?:^|\s)(?:\d{1,2}|[a-hA-H])[.)]\s/g;
+const OPERATOR = /[=<>+−×÷/^]/;
+
+/** Round 4 (E1, 2026-09-24 live check): typed homework-help text is only worth
+ *  a problem split when it LOOKS like problems — ≥2 lines, a numbered/lettered
+ *  list, digits with an operator/relation, or ≥2 questions. A plain topic or
+ *  single question skips the extra Haiku call (it pushed typed starts past the
+ *  portal's timeout) and goes straight to normal generation. Pure. */
+export function hasProblemSignals(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (t.split(/\r?\n/).filter((l) => l.trim()).length >= 2) return true;
+  if ((t.match(LIST_MARKER) ?? []).length >= 2) return true;
+  if (/\d/.test(t) && OPERATOR.test(t)) return true;
+  return (t.match(/\?/g) ?? []).length >= 2;
+}
+
+/** Final fix wave (I2): a host may prefix the typed request with its own
+ *  focus preamble (multi-line objective bullets) and end with
+ *  `Topic: <topic>`. The preamble is the host's instruction, not the
+ *  student's problems — keep only what follows the LAST `\nTopic: ` marker.
+ *  No marker ⇒ unchanged. Pure. */
+const TOPIC_MARKER = '\nTopic: ';
+export function stripFocusPreamble(text: string): string {
+  const i = text.lastIndexOf(TOPIC_MARKER);
+  return i >= 0 ? text.slice(i + TOPIC_MARKER.length) : text;
+}
+
+/** Final fix wave (I2): what typed homework enumeration looks at — the
+ *  request's own `topic` (the student's / normalised topic) when present,
+ *  else the typed text with any focus preamble stripped. Pure. */
+export function typedEnumerationText(requestTopic: string | undefined, text: string): string {
+  return requestTopic?.trim() || stripFocusPreamble(text);
+}

@@ -151,6 +151,8 @@ export interface TutorSessionProps {
    *  to the runtime, typed from VoiceTutorRealtime to avoid drift. */
   readinessNote?: VTRProps['readinessNote'];
   practiceLocator?: VTRProps['practiceLocator'];
+  /** Round 4 (E5): the host's `tutor_opens` claim. Forwarded to the runtime. */
+  tutorOpens?: VTRProps['tutorOpens'];
   goalNote?: VTRProps['goalNote'];
   /** Opener-recency (part A) — fires once when this session's own opener
    *  record is captured. Forwarded to the runtime. */
@@ -252,7 +254,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
-    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, goalNote, onOpenerRecord, isTrial, openScope,
+    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
   } = props;
@@ -1386,6 +1388,7 @@ export default function TutorSession(props: TutorSessionProps) {
         lastOpener={lastOpener}
         readinessNote={readinessNote}
         practiceLocator={practiceLocator}
+        tutorOpens={tutorOpens}
         goalNote={goalNote}
         onOpenerRecord={onOpenerRecord}
         isTrial={isTrial}

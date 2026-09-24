@@ -18,7 +18,7 @@ import {
 } from 'mafs';
 import 'mafs/core.css';
 import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@core/knowledge/types';
-import { parseFunctionString, parseFunctionOfYString } from '@/lib/tutor/whiteboard/math-expr';
+import { parseFunctionString, parseFunctionOfYString, normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 
@@ -57,8 +57,14 @@ export function GraphRenderer({
     functionsOfY = [],
     points = [],
     annotations = [],
-    shadedRegion,
+    shadedRegion: rawShadedRegion,
   } = data;
+
+  // Round 4 (E2): resolve a mislabelled axis before anything reads it.
+  const shadedRegion = useMemo(
+    () => (rawShadedRegion ? normalizeShadedRegion(rawShadedRegion) : undefined),
+    [rawShadedRegion],
+  );
 
   // Parse y=f(x) functions
   const parsedFunctions = useMemo(() => {

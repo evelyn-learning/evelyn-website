@@ -14,7 +14,11 @@ import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
 import { resolveFlag, type FlagCarrier } from '@/lib/tutor/portal/flags';
 import { resolveAssignmentItems, ASSIGN_TUNING } from './resolve';
-import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
+import { upsertAssignment, upsertDraft, summarizeAssignmentLos, replaceDraftLos, appendAssignedLos } from './store';
+import type { IPracticeAssignment } from '@/models';
+import type { PracticeItem } from '@evelyn/portal-contract/v1';
+import type { GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
+import { topUpPractice, PRACTICE_TARGET, type TopUpInput } from './top-up';
 
 const MAX_LOS = 2;
 
@@ -71,6 +75,7 @@ export async function assignPractice(input: {
   auto: boolean;
   status?: 'draft' | 'assigned';
   trigger?: string;
+  topUp?: Omit<TopUpInput, 'target'>;
 }): Promise<{ assigned: Array<{ loId: string; title: string; count: number }>; assignmentId: string; status: 'draft' | 'assigned' } | null> {
   const plan = input.lessonPlanId ? await getLessonPlan(input.lessonPlanId) : null;
   const titleFor = (loId: string): string => {
@@ -96,10 +101,16 @@ export async function assignPractice(input: {
     console.error(`[practice-assign] getPartner('${input.partnerId}') failed — falling back to the default cap`, err);
   }
   const cap = capForPartner(partner);
-  const los = await resolveAssignmentItems(
+  let los = await resolveAssignmentItems(
     { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '', cap },
     mongoPracticeSources(),
   );
+  // Round 4 (E3): end-of-session drafts top up to PRACTICE_TARGET by
+  // generation (PRACTICE_GEN-gated inside generatePracticeItems), never above
+  // the partner cap. Every other caller passes no topUp — unchanged.
+  if (input.topUp) {
+    los = await topUpPractice(los, loIds.map((loId) => ({ loId, title: titleFor(loId) })), { ...input.topUp, target: Math.min(PRACTICE_TARGET, cap) });
+  }
   if (los.length === 0) return null;
   // Caps enforced HERE (not at each call site) so both the direct route and
   // the commit-time fallback — whose synthesized reason can run long off a
@@ -144,4 +155,68 @@ export async function assignPractice(input: {
     assignedAt: new Date(),
   });
   return { assignmentId: rec._id, assigned: summarizeAssignmentLos(rec.los), status: 'assigned' };
+}
+
+export interface TopUpDraftDeps {
+  getPartner: typeof getPartner;
+  write: typeof replaceDraftLos;
+  gen?: (o: GeneratePracticeItemsOptions) => Promise<PracticeItem[]>;
+}
+const TOP_UP_DRAFT_DEPS: TopUpDraftDeps = { getPartner, write: replaceDraftLos };
+const TOP_UP_ASSIGNED_DEPS: TopUpDraftDeps = { getPartner, write: appendAssignedLos };
+
+/** Round 4 (E3, fix round 1): an end-of-session emit that finds a client
+ *  draft still open (`status: 'draft'`) tops it up to min(PRACTICE_TARGET,
+ *  partner cap) by generating for its FIRST LO. The existing LOs, reasons and
+ *  items are kept; only new items are appended. The write is conditional on
+ *  the record still being a draft of this student (replaceDraftLos). Returns
+ *  the number of items added (0 = nothing to do / nothing generated). */
+export async function topUpDraft(
+  rec: IPracticeAssignment,
+  input: { partnerId: string; topUp: Omit<TopUpInput, 'target'> },
+  deps: TopUpDraftDeps = TOP_UP_DRAFT_DEPS,
+): Promise<number> {
+  if (rec.status !== 'draft' || rec.los.length === 0) return 0;
+  return topUpRecord(rec, input, deps);
+}
+
+/** Final fix wave (I1 safety net): the same top-up for a record a client
+ *  final commit ALREADY finalized just before the emit (the caller decides
+ *  that — emit-draft.ts's isRecentClientFinalize). Never re-opens: the write
+ *  (appendAssignedLos) leaves `status` alone and refuses once the student
+ *  has acknowledged the homework. */
+export async function topUpAssigned(
+  rec: IPracticeAssignment,
+  input: { partnerId: string; topUp: Omit<TopUpInput, 'target'> },
+  deps: TopUpDraftDeps = TOP_UP_ASSIGNED_DEPS,
+): Promise<number> {
+  if (rec.status !== 'assigned' || rec.acknowledgedAt || rec.los.length === 0) return 0;
+  return topUpRecord(rec, input, deps);
+}
+
+async function topUpRecord(
+  rec: IPracticeAssignment,
+  input: { partnerId: string; topUp: Omit<TopUpInput, 'target'> },
+  deps: TopUpDraftDeps,
+): Promise<number> {
+  let partner: PartnerRecord | null = null;
+  try {
+    partner = await deps.getPartner(input.partnerId);
+  } catch {
+    partner = null;
+  }
+  const target = Math.min(PRACTICE_TARGET, capForPartner(partner));
+  const before = rec.los.reduce((n, l) => n + l.items.length, 0);
+  if (before >= target) return 0;
+  const first = rec.los[0]!;
+  const out = await topUpPractice(
+    rec.los.map((l) => ({ loId: l.loId, title: l.title, items: l.items })),
+    [{ loId: first.loId, title: first.title }],
+    { ...input.topUp, target },
+    deps.gen, // undefined → topUpPractice's default (generatePracticeItems)
+  );
+  const added = out.reduce((n, l) => n + l.items.length, 0) - before;
+  if (added <= 0) return 0;
+  const los = rec.los.map((l) => ({ ...l, items: out.find((o) => o.loId === l.loId)?.items ?? l.items }));
+  return (await deps.write(rec.sessionId, rec.studentId, los)) ? added : 0;
 }

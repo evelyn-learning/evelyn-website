@@ -85,3 +85,34 @@ export function parseFunctionOfYString(fnStr: string): (y: number) => number {
     }
   };
 }
+
+/** Round 4 (E2, 2026-09-24 live check): the brain sent axis 'y' with bounds
+ *  ['-0.5*x + 4', 'x + 1'] — functions of x — and both renderers evaluated
+ *  them as x = g(y) (NaN, nothing painted). When the declared axis's variable
+ *  appears in neither bound but the other variable does, the other axis is
+ *  meant. `v` counts only as a standalone letter (2x yes, exp no). Pure. */
+function mentions(exprs: string[], v: 'x' | 'y'): boolean {
+  const re = new RegExp(`(^|[^A-Za-z])${v}([^A-Za-z]|$)`);
+  return exprs.some((e) => re.test(e));
+}
+
+export function resolveShadedRegionAxis(r: { axis?: string; between?: unknown }): { axis: 'x' | 'y'; corrected: boolean } {
+  const declared: 'x' | 'y' = r.axis === 'y' ? 'y' : 'x';
+  const between = Array.isArray(r.between) ? r.between.filter((b): b is string => typeof b === 'string') : [];
+  const hasX = mentions(between, 'x');
+  const hasY = mentions(between, 'y');
+  if (declared === 'y' && !hasY && hasX) return { axis: 'x', corrected: true };
+  if (declared === 'x' && !hasX && hasY) return { axis: 'y', corrected: true };
+  return { axis: declared, corrected: false };
+}
+
+let shadedAxisWarned = false;
+/** The region with its axis resolved; one console.warn per page load. */
+export function normalizeShadedRegion<T extends { axis?: string; between?: unknown }>(r: T): Omit<T, 'axis'> & { axis: 'x' | 'y' } {
+  const { axis, corrected } = resolveShadedRegionAxis(r);
+  if (corrected && !shadedAxisWarned) {
+    shadedAxisWarned = true;
+    console.warn(`[graph] shadedRegion axis corrected: ${r.axis ?? 'x'} → ${axis} (bounds are functions of ${axis})`);
+  }
+  return { ...r, axis };
+}

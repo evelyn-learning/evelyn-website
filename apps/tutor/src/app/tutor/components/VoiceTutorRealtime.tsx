@@ -385,6 +385,7 @@ import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
+import { textKickoffReady, textKickoffMessage } from '@/app/tutor/components/session/text-kickoff';
 import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
 
 /** Step 4 concept tagging. Default ON per the standing flag rule — a new
@@ -590,6 +591,9 @@ interface VoiceTutorRealtimeProps {
    *  the final profile commit. ABSENT ⇒ the brain is told nothing and says
    *  nothing about homework (a standalone /tutor session has no such UI). */
   practiceLocator?: string;
+  /** Round 4 (E5): the host's `tutor_opens` claim — in text mode the tutor
+   *  opens the session for ANY goal (round 2 did this for homework only). */
+  tutorOpens?: boolean;
   /** Holistic-pedagogy round (spec §C.7) — the student's stated goal, prose,
    *  composed by the academy. Transient session-scoped context, same carrier
    *  semantics as readinessNote: never persisted engine-side. */
@@ -1070,6 +1074,7 @@ export function VoiceTutorRealtime({
   lastOpener,
   readinessNote,
   practiceLocator,
+  tutorOpens,
   goalNote,
   onOpenerRecord,
   isTrial = false,
@@ -21124,6 +21129,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // dispatch the '[start lesson]' opener. Fires at most once and never on a
   // resumed session (resumeContinue owns that). warmupKickoffRef is armed so
   // the R32 T9 20s watchdog can re-kick it.
+  // Round 4 (E5) generalises this on the host's `tutor_opens` claim: ANY
+  // goal kicks off once its plan has loaded (or at once when planless),
+  // with the mic-tap opener — '[start lesson]' with a plan, else
+  // '[start session]'. Claim absent ⇒ homework-only, as before.
   //  - hasStarted is latched SYNCHRONOUSLY, then the dispatch waits (≤1.5s)
   //    for the boot profile GET so the first turn carries the profile block.
   //  - A typed submit during that wait stamps voiceSessionStartedAtMsRef;
@@ -21133,9 +21142,18 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   //  - No unlockAudio here (not a gesture); the first typed submit /
   //    gesture unlocks via audioUnlockedRef.
   const homeworkReady = !!homeworkProblems;
+  // Round 4 (E5): the same kickoff for ANY goal on the tutor_opens claim.
+  const kickoffReady = textKickoffReady({
+    sessionMode,
+    sessionGoal,
+    tutorOpens: tutorOpens === true,
+    homeworkReady,
+    hasPlanId: !!lessonPlanId,
+    planLoaded: !!activePlan,
+  });
   const homeworkKickoffPendingRef = useRef(false);
   useEffect(() => {
-    if (sessionMode !== 'text' || sessionGoal !== 'homework-help' || !homeworkReady) return;
+    if (!kickoffReady) return;
     if (resumeState) {
       // Resume arrived while a kickoff was pending — roll the latch back so
       // resumeContinue (which gates on hasStarted) still owns the start.
@@ -21166,9 +21184,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       setIsWarmingUp(true);
       warmupStateRef.current = createWarmupState(Date.now());
       setWarmupFailed(false);
-      warmupKickoffRef.current = '[start lesson]';
-      onDebugEvent?.('homework_text_kickoff', `problems=${homeworkProblemsRef.current?.length ?? 0} profileSettled=${profileSettledRef.current}`);
-      void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+      const kickoff = textKickoffMessage(!!lessonPlanRef.current);
+      warmupKickoffRef.current = kickoff;
+      onDebugEvent?.(homeworkReady ? 'homework_text_kickoff' : 'text_kickoff', `goal=${sessionGoal} problems=${homeworkProblemsRef.current?.length ?? 0} profileSettled=${profileSettledRef.current}`);
+      void handleStudentTranscriptForBrainRef.current?.(kickoff, { silent: true, bypassMidUtteranceGuard: true });
     };
     if (profileSettledRef.current) { fire(); return; }
     const deadline = Date.now() + 1500;
@@ -21177,7 +21196,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }, 100);
     return () => { if (iv) clearInterval(iv); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionMode, sessionGoal, homeworkReady, resumeState]);
+  }, [kickoffReady, resumeState]);
 
   // Hard-stop cap (time-box): a wall-clock timer that ends the session when
   // ANY session carrying an EXPLICIT max_duration_minutes reaches its budget —

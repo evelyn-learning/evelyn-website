@@ -5,15 +5,19 @@
  * student has already seen (evidence itemIds), then cap the whole set at
  * `cap`, weakest LO first (the caller orders `los`).
  *
- * Generate-on-exhaustion is deliberately NOT invoked here: homework must be
- * vetted bank/plan items, never a fresh LLM generation at session close.
+ * Generate-on-exhaustion is deliberately NOT invoked HERE: this resolver only
+ * ever returns vetted bank/plan items. Generation at session close happens in
+ * exactly one other place — an end-of-session emit draft (a host that names a
+ * practice locator) may be topped up to 3 items by `top-up.ts`, which calls
+ * the generator under the `PRACTICE_GEN` kill switch and its daily counters;
+ * every other caller of this resolver stays retrieval-only.
  * `retrievePractice`'s shortfall path (practice.ts ~L181-235) only fires
  * generation when it's handed a `genSources` AND the derived-topic lookup
  * succeeds — but that path's own kill switch (`PRACTICE_GEN==='on'`, checked
  * first thing inside `generatePracticeItems`) is an ENVIRONMENT setting, not
  * a structural guarantee available to this pure module. Rather than lean on
  * that external kill switch (which could be 'on' in prod for the live tutor
- * session's brain-gen), this resolver passes a `noGen` stub implementing the
+ * session's brain-gen), this resolver passes a `NO_GEN_SOURCES` stub implementing the
  * real `PracticeGenSources` shape whose `reserve` always grants 0 slots —
  * `generatePracticeItems` returns `[]` the instant `allowed <= 0`, before it
  * ever calls `generateAndVerify` or touches Anthropic/Mongo. That holds
@@ -34,7 +38,7 @@ export function difficultyForBand(band: AbilityBand): 1 | 2 | 3 {
 /** Never generates: `reserve` grants zero slots, so `generatePracticeItems`
  *  returns `[]` before any Anthropic/Mongo call regardless of the
  *  `PRACTICE_GEN` kill switch's runtime value. */
-const noGen: PracticeGenSources = {
+export const NO_GEN_SOURCES: PracticeGenSources = {
   async generateAndVerify() {
     return null;
   },
@@ -72,8 +76,8 @@ export async function resolveAssignmentItems(
       count,
       excludeIds: input.seenItemIds.slice(0, 500),
     };
-    let res = await retrieve({ ...base, difficulty }, sources, noGen);
-    if (res.items.length === 0) res = await retrieve(base, sources, noGen);
+    let res = await retrieve({ ...base, difficulty }, sources, NO_GEN_SOURCES);
+    if (res.items.length === 0) res = await retrieve(base, sources, NO_GEN_SOURCES);
     if (res.items.length === 0) continue;
     const items = res.items.slice(0, count);
     out.push({ loId: lo.loId, title: lo.title, items });
