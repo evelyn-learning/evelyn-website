@@ -53,5 +53,11 @@ await test("productFromParam returns undefined for empty or punctuation-only par
   assert.equal(productFromParam("   "), undefined);
   assert.equal(productFromParam("---"), undefined);
 });
+await test("productFromParam bounds a long param to a <=60-char slug (round 2 critical §1)", () => {
+  const huge = "a".repeat(200);
+  const slug = productFromParam(huge);
+  assert.ok(slug !== undefined);
+  assert.ok(slug!.length <= 60);
+});
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

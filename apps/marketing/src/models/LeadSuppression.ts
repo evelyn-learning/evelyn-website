@@ -12,6 +12,8 @@ export interface ILeadSuppression extends Document {
   company: string;
   emails: string[];
   linkedinUrls: string[];
+  /** Informational record only — NOT a `suppressionQuery` key (round 2
+   *  final fix wave §4; see src/lib/crm/suppression.ts). */
   gmailThreadIds: string[];
   /** LinkedIn conversation keys (profile URL, else the name slug). */
   conversationKeys: string[];
@@ -36,12 +38,13 @@ const LeadSuppressionSchema = new Schema<ILeadSuppression>(
   { timestamps: true }
 );
 
-// One index per key set: `suppressionQuery` builds an $or over exactly these
-// four arrays, and the check runs on every would-be lead creation.
+// One index per query key: `suppressionQuery` builds an $or over exactly
+// these three arrays, and the check runs on every would-be lead creation.
+// `gmailThreadIds` is stored (see the ILeadSuppression comment) but is NOT a
+// query key (round 2 final fix wave §4), so it gets no index.
 LeadSuppressionSchema.index({ emails: 1 });
 LeadSuppressionSchema.index({ linkedinUrls: 1 });
 LeadSuppressionSchema.index({ conversationKeys: 1 });
-LeadSuppressionSchema.index({ gmailThreadIds: 1 });
 LeadSuppressionSchema.index({ deletedAt: -1 });
 
 export const LeadSuppression =

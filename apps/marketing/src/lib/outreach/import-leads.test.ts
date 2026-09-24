@@ -85,6 +85,21 @@ const goodRow = () => ({
     assert.deepEqual(suppressionQueryArg, { $or: [{ emails: "dsmith@acme.edu" }] });
   });
 
+  await test("insertLeads: suppression check falls back to emails[0] when decisionMaker.email is empty (round 2 final fix wave §7)", async () => {
+    const row = { ...goodRow(), emails: ["team@acme.edu"] } as Record<string, unknown>;
+    (row.decisionMaker as Record<string, unknown>) = { ...(row.decisionMaker as Record<string, unknown>), email: "" };
+    const { docs } = validateLeadRows([row]);
+    (docs[0] as unknown as { save: () => Promise<void> }).save = async () => {};
+    let suppressionQueryArg: Record<string, unknown> | undefined;
+    const deps: InsertLeadsDeps = {
+      findDupe: async () => null,
+      suppressionExists: async (q) => { suppressionQueryArg = q; return true; },
+    };
+    const counts = await insertLeads(docs, deps);
+    assert.equal(counts.skippedSuppressed, 1);
+    assert.deepEqual(suppressionQueryArg, { $or: [{ emails: "team@acme.edu" }] });
+  });
+
   await test("insertLeads: not a dupe, not suppressed — inserted normally", async () => {
     const { docs } = validateLeadRows([goodRow()]);
     let saved = false;

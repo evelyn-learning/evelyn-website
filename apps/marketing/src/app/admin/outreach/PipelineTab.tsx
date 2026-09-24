@@ -101,9 +101,11 @@ function relativeTime(iso: string): string {
 export default function PipelineTab({
   leads,
   refresh,
+  updateLead,
 }: {
   leads: LeadJSON[];
   refresh: () => Promise<void>;
+  updateLead: (lead: LeadJSON) => void;
 }) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [segmentFilter, setSegmentFilter] = useState<string>("all");
@@ -153,6 +155,16 @@ export default function PipelineTab({
     return () => clearTimeout(t);
   }, [query]);
 
+  // Round 2 final fix wave §6: a successful PATCH already returns the
+  // updated lead — splice it into local state instead of refetching every
+  // lead just to redraw one row. Only a response with no `lead` (shouldn't
+  // happen for these actions, but this is defensive) falls back to a full
+  // refresh.
+  const applyPatchResult = async (data: { lead?: LeadJSON }) => {
+    if (data.lead) updateLead(data.lead);
+    else await refresh();
+  };
+
   const setStatus = async (id: string, status: LeadStatus) => {
     setPendingId(id);
     try {
@@ -161,12 +173,12 @@ export default function PipelineTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "setStatus", status }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         alert(data.error || "Failed to update status");
         return;
       }
-      await refresh();
+      await applyPatchResult(data);
     } catch {
       alert("Failed to update status");
     } finally {
@@ -182,14 +194,15 @@ export default function PipelineTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "edit", fields }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         alert(data.error || failure);
         return false;
       }
-      await refresh();
+      await applyPatchResult(data);
       // A brand-new "Other…" value only becomes available on every other row
-      // once the options endpoint has seen it on a lead.
+      // once the options endpoint has seen it on a lead. Cheap, so this
+      // still runs alongside the local splice above.
       await loadOptions();
       return true;
     } catch {
@@ -208,12 +221,12 @@ export default function PipelineTab({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "workToday" }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         alert(data.error || "Failed to bump lead to today");
         return;
       }
-      await refresh();
+      await applyPatchResult(data);
     } catch {
       alert("Failed to bump lead to today");
     } finally {
@@ -712,7 +725,9 @@ export default function PipelineTab({
       {openId &&
         (() => {
           const l = leads.find((x) => x._id === openId);
-          return l ? <TimelineDrawer lead={l} onClose={() => setOpenId(null)} refresh={refresh} /> : null;
+          return l ? (
+            <TimelineDrawer key={l._id} lead={l} onClose={() => setOpenId(null)} refresh={refresh} updateLead={updateLead} />
+          ) : null;
         })()}
     </div>
   );

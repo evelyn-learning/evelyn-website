@@ -160,6 +160,14 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
     setLeads(data.leads ?? []);
   }, []);
 
+  // Round 2 final fix wave §6: an inline PATCH (segment/status/product/
+  // decision-maker/notes/work-today) already returns the updated lead, so
+  // the caller can splice it into local state instead of refetching every
+  // lead in the corpus just to redraw one row.
+  const updateLead = useCallback((lead: LeadJSON) => {
+    setLeads((prev) => prev.map((l) => (l._id === lead._id ? lead : l)));
+  }, []);
+
   const checkRepliesNow = useCallback(async () => {
     setWatcherChecking(true);
     setWatcherError(null);
@@ -307,7 +315,7 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
         {tab === "today" && (
           <TodayTab leads={leads} refresh={refresh} gmailAccount={gmailStatus?.account ?? null} />
         )}
-        {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} />}
+        {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} updateLead={updateLead} />}
         {tab === "find" && <FindLeadsTab onLeadsChanged={refresh} />}
         {tab === "import" && <ImportTab gmailStatus={gmailStatus} onImported={refresh} />}
       </main>

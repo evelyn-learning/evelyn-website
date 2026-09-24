@@ -34,6 +34,11 @@ export function productFromParam(p: string | null): string | undefined {
   const mapped = PRODUCT_PARAM[raw];
   if (mapped) return mapped;
   if ((PRODUCTS as readonly string[]).includes(raw)) return raw;
-  const slug = raw.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  // Round 2 (critical fix wave) §1: the request-body cap on `product` is
+  // 60 chars, but slugifying can only grow a string (collapsing runs of
+  // punctuation still leaves every alnum char), so a truncated-but-still-
+  // huge raw value could slugify past the field's practical limit. Slice
+  // after slugifying so the stored/queried value is always bounded.
+  const slug = raw.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60);
   return slug || undefined;
 }

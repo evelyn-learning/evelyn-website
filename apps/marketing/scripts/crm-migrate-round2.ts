@@ -44,6 +44,21 @@ const DEAD_COLLECTION = "pipelineconfigs";
     console.log(`  ${String(l._id)} ${String(l.company)} -> product=${opps?.[0]?.product}`);
   }
 
+  // Round 2 final fix wave §7: two extra diagnostics an operator would
+  // otherwise have to run by hand before deciding whether the plain
+  // "carry opportunities[0].product over" step is safe — leads with more
+  // than one opportunity (a carry-over silently drops the rest) and leads
+  // that already have a product set despite still carrying opportunities
+  // (the carry-over step already skips these, but it's worth seeing the
+  // count up front).
+  const multiOpportunityLeads = await leads.countDocuments({ "opportunities.1": { $exists: true } });
+  const productAlreadySetWithOpp = await leads.countDocuments({
+    "opportunities.0.product": { $exists: true },
+    product: { $nin: ["", null] },
+  });
+  console.log(`leads with more than one opportunity: ${multiOpportunityLeads}`);
+  console.log(`leads that already have a product set despite carrying an opportunity: ${productAlreadySetWithOpp}`);
+
   const indexes = await leads.indexes();
   const hasDeadIndex = indexes.some((i) => i.name === DEAD_INDEX);
   const collections = await db.listCollections().toArray();
@@ -90,4 +105,7 @@ const DEAD_COLLECTION = "pipelineconfigs";
   console.log(`leads with a non-empty product: ${await Lead.countDocuments({ product: { $nin: ["", null] } })}`);
   await mongoose.connection.close();
   process.exit(0);
-})();
+})().catch((err) => {
+  console.error("[crm-migrate-round2] fatal:", err instanceof Error ? err.message : err);
+  process.exit(1);
+});

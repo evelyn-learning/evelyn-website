@@ -78,7 +78,15 @@ export async function insertLeads(
     // Round 2 §3: this is a second lead-creation path (import route +
     // research pipeline), so it must consult the suppression list too, or a
     // re-import/re-research could recreate a lead the operator deleted.
-    const sq = suppressionQuery({ email: doc.decisionMaker.email, linkedinUrl: doc.decisionMaker.linkedinUrl });
+    // Round 2 final fix wave §7: the tombstone's `emails` key set is built
+    // from BOTH `lead.emails` and `decisionMaker.email` (suppression.ts
+    // `suppressionKeysFor`) — a row with an `emails[]` array but no
+    // `decisionMaker.email` (a common import shape) would otherwise never
+    // match on the one key that's actually in the tombstone.
+    const sq = suppressionQuery({
+      email: doc.decisionMaker.email || doc.emails?.[0],
+      linkedinUrl: doc.decisionMaker.linkedinUrl,
+    });
     if (sq && (await deps.suppressionExists(sq))) { counts.skippedSuppressed++; continue; }
 
     await doc.save();

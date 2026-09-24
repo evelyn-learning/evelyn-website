@@ -8,10 +8,12 @@ export default function TimelineDrawer({
   lead,
   onClose,
   refresh,
+  updateLead,
 }: {
   lead: LeadJSON;
   onClose: () => void;
   refresh: () => Promise<void>;
+  updateLead: (lead: LeadJSON) => void;
 }) {
   const touches = [...lead.touches].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
   const [notes, setNotes] = useState(lead.notes ?? "");
@@ -27,13 +29,16 @@ export default function TimelineDrawer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "edit", fields: { notes } }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         alert(data.error || "Failed to save notes");
         return;
       }
       setSaved(true);
-      await refresh();
+      // Round 2 final fix wave §6: splice the updated lead into console
+      // state instead of refetching the whole corpus for a notes edit.
+      if (data.lead) updateLead(data.lead as LeadJSON);
+      else await refresh();
     } catch {
       alert("Failed to save notes");
     } finally {

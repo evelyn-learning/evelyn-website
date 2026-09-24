@@ -44,15 +44,17 @@ await test("query keys on email, linkedin url and conversation key", () => {
   ]);
 });
 
-await test("query includes gmail thread ids with $in", () => {
-  const q = suppressionQuery({ gmailThreadIds: ["18f0aa", "", "18f0bb"] }) as { $or: Record<string, unknown>[] };
-  assert.deepEqual(q.$or, [{ gmailThreadIds: { $in: ["18f0aa", "18f0bb"] } }]);
+await test("gmail thread id is NOT a query key (round 2 final fix wave §4)", () => {
+  // suppressionQuery's type doesn't even accept gmailThreadIds any more —
+  // this asserts the behavioural side: an identity with only a conversation
+  // key still queries fine, proving thread ids were never load-bearing here.
+  const q = suppressionQuery({ conversationKey: "pat-lee" }) as { $or: Record<string, unknown>[] };
+  assert.deepEqual(q.$or, [{ conversationKeys: "pat-lee" }]);
 });
 
 await test("an identity with no suppressible key gives null (never a match-all)", () => {
   assert.equal(suppressionQuery({}), null);
   assert.equal(suppressionQuery({ name: "Pat", company: "Pagevault" }), null);
-  assert.equal(suppressionQuery({ gmailThreadIds: [] }), null);
 });
 
 await test("a domain is NOT a suppression key — deleting one lead must not block a colleague", () => {

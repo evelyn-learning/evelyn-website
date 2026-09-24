@@ -194,7 +194,7 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
       const c = data.counts;
       setImportResult(
         `${dryRun ? "[dry-run] " : ""}valid ${c.valid}, invalid ${c.invalid}` +
-          (dryRun ? "" : `, inserted ${c.inserted}, dupes ${c.skippedDupes}`) +
+          (dryRun ? "" : `, inserted ${c.inserted}, dupes ${c.skippedDupes}, suppressed ${c.skippedSuppressed ?? 0}`) +
           (c.errors?.length ? ` — ${c.errors.slice(0, 3).join("; ")}` : "")
       );
       if (!dryRun) onLeadsChanged();

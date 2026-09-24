@@ -31,9 +31,17 @@ export async function POST(request: NextRequest) {
 
   try {
     await connectDB();
+    // Round 2 final fix wave §5: an unbounded scan over every "Unknown"/
+    // empty-company lead can grow without limit as more leads accumulate.
+    // Cap the batch and report how many are left so the operator can just
+    // run it again — `remaining` is computed BEFORE any writes below, so it
+    // reflects this batch's starting point, not a moving target.
+    const FIX_UNKNOWN_LIMIT = 500;
     const leads = await Lead.find(UNKNOWN_FILTER)
       .select("_id company website emails decisionMaker")
+      .limit(FIX_UNKNOWN_LIMIT)
       .lean<Pick<ILead, "_id" | "company" | "website" | "emails" | "decisionMaker">[]>();
+    const totalMatched = await Lead.countDocuments(UNKNOWN_FILTER);
 
     let updated = 0;
     const samples: { id: string; from: string; to: string }[] = [];
@@ -54,7 +62,8 @@ export async function POST(request: NextRequest) {
       updated++;
     }
 
-    return NextResponse.json({ matched: leads.length, updated, samples, dryRun });
+    const remaining = Math.max(0, totalMatched - leads.length);
+    return NextResponse.json({ matched: leads.length, updated, samples, dryRun, remaining });
   } catch (error) {
     console.error("[CRM] fix-unknown-companies Error:", error);
     return NextResponse.json({ error: "Failed to fix company names" }, { status: 500 });

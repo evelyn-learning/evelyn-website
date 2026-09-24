@@ -7,7 +7,7 @@ import { RotateCcw, Trash2, Wand2 } from "lucide-react";
 interface GmailStatus { accounts?: { account: string; connected: boolean; connectedAt: string | null }[] }
 interface PageResult { nextPageToken?: string; scanned: number; kept: number; created: number; updated: number; suppressed: number; touchesAdded: number; errors: number; skipped: Record<string, number>; samples: { threadId: string; subject: string; participant: string; verdict: string }[] }
 interface DeletedLead { _id: string; company: string; deletedAt: string; emails: string[] }
-interface FixResult { matched: number; updated: number; dryRun: boolean; samples: { id: string; from: string; to: string }[] }
+interface FixResult { matched: number; updated: number; dryRun: boolean; remaining: number; samples: { id: string; from: string; to: string }[] }
 
 const MAX_PAGES = 200;
 const MAX_PAGE_RETRIES = 3;
@@ -324,6 +324,7 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
           {fix && (
             <span className="text-xs text-gray-600">
               matched {fix.matched} · {fix.dryRun ? "would update" : "updated"} {fix.updated}
+              {fix.remaining > 0 && ` · ${fix.remaining} more beyond this batch — run again`}
             </span>
           )}
         </div>
