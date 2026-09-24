@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { pickLead, matchQuery, newLeadFields, type MatchableLead } from "./match-lead";
+import { pickLead, matchQuery, newLeadFields, companyNameFor, type MatchableLead } from "./match-lead";
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -51,6 +51,29 @@ await test("matchQuery website regex is anchored to a host boundary, not a bare 
   assert.ok(websiteClause!.website.test("https://acme.edu"));
   assert.ok(websiteClause!.website.test("https://www.acme.edu/about"));
   assert.ok(!websiteClause!.website.test("https://notacme.edu"));
+});
+await test("companyNameFor: an explicit company always wins", () => {
+  assert.equal(companyNameFor({ company: "  Acme Nursing  ", email: "bob@acme.edu", name: "Bob" }), "Acme Nursing");
+});
+await test("companyNameFor: an organisation domain beats the person's name", () => {
+  assert.equal(companyNameFor({ email: "bob@acme.edu", name: "Bob Ray" }), "acme.edu");
+  assert.equal(companyNameFor({ website: "https://www.tvs.org/about" }), "tvs.org");
+});
+await test("companyNameFor: gmail.com + a name gives the name, never Unknown", () => {
+  assert.equal(companyNameFor({ email: "Bob Ray <bob.ray@gmail.com>", name: "Bob Ray" }), "Bob Ray");
+});
+await test("companyNameFor: gmail.com with no name gives the address, never Unknown", () => {
+  assert.equal(companyNameFor({ email: "Bob.Ray@Gmail.com" }), "bob.ray@gmail.com");
+});
+await test("companyNameFor: Unknown only when there is nothing at all", () => {
+  assert.equal(companyNameFor({}), "Unknown");
+  assert.equal(companyNameFor({ company: "   ", name: "  " }), "Unknown");
+});
+await test("newLeadFields uses companyNameFor for a free-mail contact", () => {
+  const f = newLeadFields({ email: "x@gmail.com" }, "gmail:info@evelynlearning.com") as Record<string, unknown>;
+  assert.equal(f.company, "x@gmail.com");
+  const g = newLeadFields({ email: "y@gmail.com", name: "Yara Qadir" }, "contact-form") as Record<string, unknown>;
+  assert.equal(g.company, "Yara Qadir");
 });
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();
