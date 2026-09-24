@@ -594,3 +594,16 @@ check('content-poor diagram → no card', () => {
 });
 
 console.log(`\nprocess-tool-call: ${passed} checks passed`);
+
+// Live 2026-09-24 (portal-f03a80cd): "$4a = 28$" (9 chars) was rejected as
+// "missing or empty" by a bare length<10 rule. Short MATH statements pass;
+// short non-math ("hi", "?") still fail.
+import { problemStatementTooShort } from '../src/lib/tutor/whiteboard/problem-statement';
+check('show_problem short equation statement → accepted', () => {
+  const r = processToolCall('show_problem', { problem: { statement: '$4a = 28$' } });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('problemStatementTooShort: math short ok, non-math short rejected', () => {
+  const cases: Array<[string, boolean]> = [['$4a = 28$', false], ['x+3=9', false], ['7', false], ['hi', true], ['?', true], ['   ', true], ['', true], ['Solve for the width.', false]];
+  for (const [s, want] of cases) if (problemStatementTooShort(s) !== want) throw new Error(`"${s}" → ${!want ? 'accepted' : 'rejected'} expected`);
+});

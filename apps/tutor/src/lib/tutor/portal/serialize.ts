@@ -21,7 +21,10 @@ export function stripNullsDeep<T>(value: T): T {
   if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      if (v === null) continue; // drop null optionals → field absent, contract-valid
+      // `undefined` too: the Mongo driver serializes an undefined key as null
+      // (2026-09-24: generated practice items persisted `choices: null`,
+      // `cedCode: null` and the assigned-practice read 500d on the contract).
+      if (v === null || v === undefined) continue; // drop null optionals → field absent, contract-valid
       out[k] = stripNullsDeep(v);
     }
     return out as T;

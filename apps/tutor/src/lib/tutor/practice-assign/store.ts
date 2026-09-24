@@ -1,6 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import connectDB from '@core/db';
 import { PracticeAssignmentModel, type IPracticeAssignment, type IPracticeAssignmentLo } from '@/models';
+import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
+
+/** Every LO write passes through here: an item built with optional fields
+ *  left `undefined` (`choices`, `cedCode` on generated items) is persisted by
+ *  the Mongo driver as `null`, and the frozen contract (@evelyn/portal-contract
+ *  v1, optionals not nullable) then rejects the assigned-practice read with
+ *  "Expected string, received null" — the live 2026-09-24 500 that hid a
+ *  student's homework. Dropping null/undefined keys before the write keeps the
+ *  stored shape contract-valid; the read route strips again as a net. */
+export function cleanLos(los: IPracticeAssignmentLo[]): IPracticeAssignmentLo[] {
+  return stripNullsDeep(los);
+}
 
 const MS_PER_DAY = 86_400_000;
 
@@ -27,7 +39,7 @@ export async function upsertAssignment(
   const _id = existing?._id ?? a._id ?? randomUUID();
   await PracticeAssignmentModel.updateOne(
     { _id },
-    { $set: { ...a, _id }, $setOnInsert: { createdAt: new Date() } },
+    { $set: { ...a, los: cleanLos(a.los), _id }, $setOnInsert: { createdAt: new Date() } },
     { upsert: true },
   );
   return (await PracticeAssignmentModel.findById(_id).lean()) as IPracticeAssignment;
@@ -264,7 +276,7 @@ export async function upsertDraft(
   await PracticeAssignmentModel.updateOne(
     { sessionId: a.sessionId },
     {
-      $set: { ...fields, los, triggers, status: 'draft', draftedAt: existing?.draftedAt ?? new Date(), assignedAt: existing?.assignedAt ?? new Date() },
+      $set: { ...fields, los: cleanLos(los), triggers, status: 'draft', draftedAt: existing?.draftedAt ?? new Date(), assignedAt: existing?.assignedAt ?? new Date() },
       $setOnInsert: { _id, createdAt: new Date() },
     },
     { upsert: true },
@@ -285,7 +297,7 @@ export async function upsertDraft(
  *  Returns whether a draft was updated. */
 export async function replaceDraftLos(sessionId: string, studentId: string, los: IPracticeAssignmentLo[]): Promise<boolean> {
   await connectDB();
-  const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, status: 'draft' }, { $set: { los } });
+  const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, status: 'draft' }, { $set: { los: cleanLos(los) } });
   return r.modifiedCount > 0;
 }
 
@@ -298,6 +310,6 @@ export async function replaceDraftLos(sessionId: string, studentId: string, los:
  *  like every write here. Returns whether a record was updated. */
 export async function appendAssignedLos(sessionId: string, studentId: string, los: IPracticeAssignmentLo[]): Promise<boolean> {
   await connectDB();
-  const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, acknowledgedAt: { $exists: false } }, { $set: { los } });
+  const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, acknowledgedAt: { $exists: false } }, { $set: { los: cleanLos(los) } });
   return r.modifiedCount > 0;
 }

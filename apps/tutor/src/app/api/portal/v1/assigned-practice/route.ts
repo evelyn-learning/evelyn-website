@@ -7,6 +7,7 @@ import { EvidenceEventModel, PracticeAssignmentModel } from '@/models';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import { findOpenAssignments, courseIdFilter, draftStatusClause, sweepStaleDrafts } from '@/lib/tutor/practice-assign/store';
 import { computeHomeworkStatus } from '@/lib/tutor/practice-assign/status';
+import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 
 export const runtime = 'nodejs';
 
@@ -35,5 +36,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
       }),
     };
   });
-  return NextResponse.json(AssignedPracticeResponseSchema.parse({ assignments }));
+  // Persisted items can carry `null` optionals (see store.ts cleanLos); the
+  // contract declares optionals, not nullables, so strip before the parse.
+  return NextResponse.json(AssignedPracticeResponseSchema.parse(stripNullsDeep({ assignments })));
 });

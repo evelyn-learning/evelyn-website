@@ -105,6 +105,19 @@ for (const [label, active] of variants) {
 const noAns = formatActiveProblemBlock({ statement: 'x+2=5' }, { homework: true });
 if (noAns.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail('no expectedAnswer: suffix must not appear (no reveal sentence)');
 
+// Live 2026-09-24 (portal-f03a80cd): the client's segment-overlong runtime note
+// ("advance_lesson to next") fired at turn 6 of a ONE-segment homework plan and
+// the brain closed the session after problem 4 of 10. Wiring check: the note is
+// skipped whenever the session carries homework problems.
+{
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8') as string;
+  const at = src.indexOf('const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0;');
+  const window = at >= 0 ? src.slice(at, at + 1400) : '';
+  if (at < 0) fail('overlong note: homeworkSession guard missing from VoiceTutorRealtime');
+  if (!window.includes("segment_overlong_note_skipped_homework")) fail('overlong note: homework skip must be observable (debug event)');
+  if (!window.includes("if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS")) fail('overlong note: planting must be gated on !homeworkSession');
+}
+
 if (failed) {
   console.error('\ntest-homework-session-block: FAILED');
   process.exit(1);

@@ -110,6 +110,7 @@ import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/Whiteboar
 import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@core/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
+import { problemStatementTooShort } from '@/lib/tutor/whiteboard/problem-statement';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
@@ -5425,7 +5426,7 @@ export function VoiceTutorRealtime({
         // Empty/near-empty problem card is never useful. Drop regardless of
         // whether the student was greeting or asking for a problem — if the
         // tutor genuinely has a problem to show, it can retry with content.
-        if (statement.length < 10) {
+        if (problemStatementTooShort(statement)) {
           const snapshot = JSON.stringify(cmdAny.problem);
           const reason = 'show_problem was rejected because `statement` is missing or empty. ' +
             'RETRY with this EXACT shape, replacing the example content with your actual problem:\n' +
@@ -15831,7 +15832,18 @@ export function VoiceTutorRealtime({
         cur.turns += 1;
         const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
         const kindNow = (segNow?.kind ?? '').toLowerCase();
-        if (!cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
+        // Live 2026-09-24 (portal-f03a80cd): a homework plan is ONE concept segment
+        // holding every problem the student brought, so "6 turns without
+        // advancing" is its normal shape — the note made the brain advance into
+        // the recap and close the session after problem 4 of 10. In a homework
+        // session the <homework_session> block owns pacing (problem by problem);
+        // the segment-advance note never applies.
+        const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0;
+        if (homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS) {
+          cur.noted = true;
+          onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
+        }
+        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;

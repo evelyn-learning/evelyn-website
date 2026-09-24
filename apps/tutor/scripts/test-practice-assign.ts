@@ -355,10 +355,25 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     check('I1 (c) topUpAssigned: acknowledged → no-op; a draft → no-op', ack === 0 && written.calls === 1 && (await topUpAssigned({ ...assignedRec, status: 'draft' } as never, { partnerId: 'g', topUp: { studentId: 'p', topic: 't', anchorsFor: () => [] } }, { getPartner: async () => null, write: async () => true, gen } as never)) === 0);
     const storeSrc = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/practice-assign/store.ts'), 'utf8') as string;
     const app = storeSrc.slice(storeSrc.indexOf('export async function appendAssignedLos'));
-    check('I1 (c) wiring: appendAssignedLos is guarded by acknowledgedAt absent and never sets status', app.includes('acknowledgedAt: { $exists: false }') && app.includes('{ $set: { los } }') && !app.slice(0, app.indexOf('\n}\n')).includes('status'));
+    check('I1 (c) wiring: appendAssignedLos is guarded by acknowledgedAt absent and never sets status', app.includes('acknowledgedAt: { $exists: false }') && app.includes('{ $set: { los: cleanLos(los) } }') && !app.slice(0, app.indexOf('\n}\n')).includes('status'));
   }
   // Final fix wave (M2) — the top-up budget.
   check('M2: default top-up budget is 25 s', TOP_UP_BUDGET_MS === 25_000 && topUpBudgetMs(undefined) === 25_000);
   check('M2: PRACTICE_EMIT_TOPUP_BUDGET_MS overrides; junk falls back', topUpBudgetMs('30000') === 30_000 && topUpBudgetMs('0') === 25_000 && topUpBudgetMs('abc') === 25_000 && topUpBudgetMs('') === 25_000 && topUpBudgetMs('2.5') === 25_000);
+  // 2026-09-24 (portal-f03a80cd): generated items persisted `choices: null` /
+  // `cedCode: null`; the contract rejects null optionals → assigned-practice 500.
+  {
+    const { stripNullsDeep } = require('../src/lib/tutor/portal/serialize') as typeof import('../src/lib/tutor/portal/serialize');
+    const { cleanLos } = require('../src/lib/tutor/practice-assign/store') as typeof import('../src/lib/tutor/practice-assign/store');
+    const dirty = [{ loId: 'lo', title: 'T', reason: 'r', items: [{ id: 'i1', source: 'bank', problemText: 'p', choices: null, cedCode: undefined, hints: ['h'], difficulty: 2 }] }] as never;
+    const cleaned = cleanLos(dirty) as unknown as Array<{ items: Array<Record<string, unknown>> }>;
+    check('null-strip: cleanLos drops null AND undefined item keys, keeps the rest', !('choices' in cleaned[0]!.items[0]!) && !('cedCode' in cleaned[0]!.items[0]!) && cleaned[0]!.items[0]!.problemText === 'p' && (cleaned[0]!.items[0]!.hints as string[])[0] === 'h');
+    check('null-strip: stripNullsDeep walks arrays and nested objects', JSON.stringify(stripNullsDeep({ a: null, b: undefined, c: [{ d: null, e: 1 }] })) === '{"c":[{"e":1}]}');
+    const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
+    const store = fs.readFileSync(path.join(__dirname, '..', 'src/lib/tutor/practice-assign/store.ts'), 'utf8') as string;
+    check('null-strip wiring: every LO write in store.ts goes through cleanLos', (store.match(/los: cleanLos\(/g) ?? []).length === 4 && !/\$set: \{ los \} /.test(store));
+    const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/api/portal/v1/assigned-practice/route.ts'), 'utf8') as string;
+    check('null-strip wiring: the assigned-practice read strips before the contract parse', route.includes('AssignedPracticeResponseSchema.parse(stripNullsDeep({ assignments }))'));
+  }
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();
