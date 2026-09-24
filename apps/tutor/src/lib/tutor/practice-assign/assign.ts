@@ -15,6 +15,7 @@ import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
 import { resolveFlag, type FlagCarrier } from '@/lib/tutor/portal/flags';
 import { resolveAssignmentItems, ASSIGN_TUNING } from './resolve';
 import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
+import { topUpPractice, PRACTICE_TARGET, type TopUpInput } from './top-up';
 
 const MAX_LOS = 2;
 
@@ -71,6 +72,7 @@ export async function assignPractice(input: {
   auto: boolean;
   status?: 'draft' | 'assigned';
   trigger?: string;
+  topUp?: Omit<TopUpInput, 'target'>;
 }): Promise<{ assigned: Array<{ loId: string; title: string; count: number }>; assignmentId: string; status: 'draft' | 'assigned' } | null> {
   const plan = input.lessonPlanId ? await getLessonPlan(input.lessonPlanId) : null;
   const titleFor = (loId: string): string => {
@@ -96,10 +98,16 @@ export async function assignPractice(input: {
     console.error(`[practice-assign] getPartner('${input.partnerId}') failed — falling back to the default cap`, err);
   }
   const cap = capForPartner(partner);
-  const los = await resolveAssignmentItems(
+  let los = await resolveAssignmentItems(
     { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '', cap },
     mongoPracticeSources(),
   );
+  // Round 4 (E3): end-of-session drafts top up to PRACTICE_TARGET by
+  // generation (PRACTICE_GEN-gated inside generatePracticeItems), never above
+  // the partner cap. Every other caller passes no topUp — unchanged.
+  if (input.topUp) {
+    los = await topUpPractice(los, loIds.map((loId) => ({ loId, title: titleFor(loId) })), { ...input.topUp, target: Math.min(PRACTICE_TARGET, cap) });
+  }
   if (los.length === 0) return null;
   // Caps enforced HERE (not at each call site) so both the direct route and
   // the commit-time fallback — whose synthesized reason can run long off a

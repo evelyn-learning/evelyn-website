@@ -2,6 +2,8 @@
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
 import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter, shouldFinalizeDraftOnEmit } from '../src/lib/tutor/practice-assign/store';
 import { capForPartner } from '../src/lib/tutor/practice-assign/assign';
+import { topUpPractice } from '../src/lib/tutor/practice-assign/top-up';
+import { shouldCreateDraftOnEmit, draftLoIdsForEmit, homeworkAnchorItems, createDraftOnEmit } from '../src/lib/tutor/practice-assign/emit-draft';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
 let passed = 0, failed = 0;
@@ -194,5 +196,58 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     check('wiring: session-result finalizes before the assignment echo', gate > 0 && echo > gate);
   }
 
+  // Round 4 (E3) — end-of-session drafts (host names where practice lands) + generation top-up.
+  check('emit draft: completed + plan + locator creates', shouldCreateDraftOnEmit({ status: 'completed', lessonPlanId: 'p', practiceLocator: 'My Homework Help · Practice' }, undefined));
+  check('emit draft: no locator (every other host) never creates', !shouldCreateDraftOnEmit({ status: 'completed', lessonPlanId: 'p' }, undefined));
+  check('emit draft: no plan never creates', !shouldCreateDraftOnEmit({ status: 'completed', practiceLocator: 'x' }, undefined));
+  check('emit draft: a checkpoint never creates', !shouldCreateDraftOnEmit({ status: 'in_progress', lessonPlanId: 'p', practiceLocator: 'x' }, undefined));
+  check('emit draft: SESSION_RESULT_DRAFT=off disables', !shouldCreateDraftOnEmit({ status: 'completed', lessonPlanId: 'p', practiceLocator: 'x' }, 'off'));
+  const plan3 = { id: 'gen-1', los: [{ id: 'gen-1.lo-1' }, { id: 'gen-1.lo-2' }, { id: 'gen-1.lo-3' }] };
+  check('emit LOs: touched ∩ plan (no prereq:) first', JSON.stringify(draftLoIdsForEmit(plan3, ['gen-1.lo-3', 'other', 'prereq:x'])) === '["gen-1.lo-3"]');
+  check('emit LOs: nothing touched → the first two plan LOs', JSON.stringify(draftLoIdsForEmit(plan3, [])) === '["gen-1.lo-1","gen-1.lo-2"]');
+  const hwPlan = { id: 'gen-hw', los: [{ id: 'gen-hw.homework-lo-1' }], metadata: { kind: 'homework-help', problems: [{ n: 1, text: 'Solve 2x + 3 = 7' }, { n: 2, text: 'Solve 5x = 20' }] } };
+  check('emit LOs: a homework plan → its wrapper LO', JSON.stringify(draftLoIdsForEmit(hwPlan, [])) === '["gen-hw.homework-lo-1"]');
+  const hwAnchors = homeworkAnchorItems(hwPlan);
+  check('homework anchors: the worksheet problems, as plan-try-yourself anchors', hwAnchors.length === 2 && hwAnchors[0]?.problemText === 'Solve 2x + 3 = 7' && hwAnchors[0]?.source === 'plan-try-yourself');
+  {
+    const calls: Array<{ shortfall: number; anchors: number }> = [];
+    let k = 0;
+    const gen = async (o: { shortfall: number; anchorItems: unknown[] }) => {
+      calls.push({ shortfall: o.shortfall, anchors: o.anchorItems.length });
+      return Array.from({ length: Math.min(2, o.shortfall) }, () => ({ id: `g${++k}`, source: 'bank' as const, problemText: `gen ${k}` }));
+    };
+    const out = await topUpPractice([], [{ loId: 'gen-hw.homework-lo-1', title: 'HW' }], { studentId: 's', topic: 't', anchorsFor: () => hwAnchors }, gen as never);
+    check('top-up: an empty bank → 3 generated items in 2 calls', out.length === 1 && out[0]?.items.length === 3 && calls.length === 2, JSON.stringify(calls));
+    check('top-up: the first call asks for 3 and carries the worksheet anchors', calls[0]?.shortfall === 3 && calls[0]?.anchors === 2);
+    const full = [{ loId: 'A', title: 'A', items: [1, 2, 3].map((i) => ({ id: `b${i}`, source: 'bank' as const, problemText: 'q' })) }];
+    let genCalls = 0;
+    await topUpPractice(full, [{ loId: 'A', title: 'A' }], { studentId: 's', topic: 't', anchorsFor: () => [] }, (async () => { genCalls++; return []; }) as never);
+    check('top-up: a full bank never generates', genCalls === 0);
+    const off = await topUpPractice([], [{ loId: 'A', title: 'A' }], { studentId: 's', topic: 't', anchorsFor: () => [] }, (async () => []) as never);
+    check('top-up: generator returns [] (PRACTICE_GEN off / over cap) → nothing, no throw', off.length === 0);
+  }
+  {
+    const req = { sessionId: 's1', studentId: 'ext', courseId: 'open:math:9-10', status: 'completed', lessonPlanId: 'gen-hw', losTouched: [], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'My Homework Help · Practice' } as never;
+    const captured: { input?: Record<string, unknown> } = {};
+    const deps = {
+      findAssignment: async () => null,
+      getPlan: async () => hwPlan,
+      assign: async (i: Record<string, unknown>) => { captured.input = i; return { assignmentId: 'a', assigned: [], status: 'draft' as const }; },
+    };
+    check('createDraftOnEmit: creates a draft', (await createDraftOnEmit(req, { profileId: 'p', partnerId: 'greenapple' }, deps as never)) === 'created');
+    check('createDraftOnEmit: draft carries locator, session_end trigger, top-up, the wrapper LO', captured.input?.locator === 'My Homework Help · Practice' && captured.input?.trigger === 'session_end' && captured.input?.status === 'draft' && !!captured.input?.topUp && JSON.stringify(captured.input?.loIds) === '["gen-hw.homework-lo-1"]');
+    check('createDraftOnEmit: an existing assignment is left alone', (await createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, { ...deps, findAssignment: async () => ({ _id: 'x' }) } as never)) === 'exists');
+    check('createDraftOnEmit: an unknown plan does nothing', (await createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, { ...deps, getPlan: async () => null } as never)) === 'no_plan');
+  }
+  {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/portal/session-result.ts'), 'utf8') as string;
+    const create = src.indexOf('if (shouldCreateDraftOnEmit(req)) {');
+    const finalize = src.indexOf('shouldFinalizeDraftOnEmit(req.status)');
+    const echo = src.indexOf('const rawAssignment = await findAssignmentBySession(');
+    check('wiring: create → finalize → echo, in that order', create > 0 && finalize > create && echo > finalize);
+    check('wiring: finalize stamps the emit locator', src.includes("...(req.practiceLocator ? { locator: req.practiceLocator } : {})"));
+    const assignSrc = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/practice-assign/assign.ts'), 'utf8') as string;
+    check('wiring: assignPractice tops up before its empty check', assignSrc.indexOf('if (input.topUp)') > 0 && assignSrc.indexOf('if (input.topUp)') < assignSrc.indexOf('if (los.length === 0) return null;'));
+  }
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();
