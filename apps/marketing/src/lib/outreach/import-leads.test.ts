@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { sanitizeLeadRow, validateLeadRows } from "./import-leads";
+import { sanitizeLeadRow, validateLeadRows, insertLeads, type InsertLeadsDeps } from "./import-leads";
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -63,6 +63,40 @@ const goodRow = () => ({
   await test("validateLeadRows: input status contacted is overridden to staged", () => {
     const { docs } = validateLeadRows([{ ...goodRow(), status: "contacted" }]);
     assert.equal(docs[0].status, "staged");
+  });
+
+  await test("insertLeads: a suppressed email is skipped and counted, not inserted", async () => {
+    const { docs } = validateLeadRows([goodRow()]);
+    let saved = false;
+    let suppressionQueryArg: Record<string, unknown> | undefined;
+    // No real Lead/LeadSuppression model calls here — `deps` fakes both, and
+    // `.save()` is stubbed on the instance so a wiring mistake can never
+    // reach the (production) database this worktree points at.
+    (docs[0] as unknown as { save: () => Promise<void> }).save = async () => { saved = true; };
+    const deps: InsertLeadsDeps = {
+      findDupe: async () => null,
+      suppressionExists: async (q) => { suppressionQueryArg = q; return true; },
+    };
+    const counts = await insertLeads(docs, deps);
+    assert.equal(counts.skippedSuppressed, 1);
+    assert.equal(counts.inserted, 0);
+    assert.equal(counts.skippedDupes, 0);
+    assert.equal(saved, false);
+    assert.deepEqual(suppressionQueryArg, { $or: [{ emails: "dsmith@acme.edu" }] });
+  });
+
+  await test("insertLeads: not a dupe, not suppressed — inserted normally", async () => {
+    const { docs } = validateLeadRows([goodRow()]);
+    let saved = false;
+    (docs[0] as unknown as { save: () => Promise<void> }).save = async () => { saved = true; };
+    const deps: InsertLeadsDeps = {
+      findDupe: async () => null,
+      suppressionExists: async () => false,
+    };
+    const counts = await insertLeads(docs, deps);
+    assert.equal(counts.inserted, 1);
+    assert.equal(counts.skippedSuppressed, 0);
+    assert.equal(saved, true);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

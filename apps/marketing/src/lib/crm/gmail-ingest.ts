@@ -152,6 +152,7 @@ export async function ingestGmailPage(
     const touches = verdict.touches.map((t) => ({ ...t, origin: args.origin }));
     const r = await deps.upsert({
       identity: verdict.identity, touches, source: `gmail:${args.account}`, flagReview: verdict.flagReview, product: args.product,
+      gmailThreadIds: [threadId],
     });
     if (r.suppressed) out.suppressed++;
     else if (r.created) out.created++;

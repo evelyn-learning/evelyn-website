@@ -10,7 +10,8 @@ import { suppressionKeysFor, type SuppressibleLead } from "@/lib/crm/suppression
 // Cap on one request's selection. The Review queue is a human worklist, not
 // a bulk-import surface: an "approve all" over 200 leads is far more likely
 // to be a mistake than an intent, and each approval mints a demo token and
-// puts a lead in front of a real prospect.
+// puts a lead in front of a real prospect. It now also bounds `action:
+// "delete"`, which is destructive (irreversible without a manual Restore).
 const MAX_IDS = 200;
 
 // POST - apply approve/kill to many leads in one call.
@@ -77,9 +78,10 @@ export async function POST(request: NextRequest) {
         // operator sees the lead still there and can retry; if the order were
         // reversed a crash between the two would delete the lead with nothing
         // stopping the next import from recreating it, and no way to restore.
+        let created;
         try {
           const snapshot = lead.toObject();
-          await LeadSuppression.create({
+          created = await LeadSuppression.create({
             leadId: String(lead._id),
             company: lead.company || "(no company)",
             ...suppressionKeysFor(snapshot as SuppressibleLead),
@@ -96,6 +98,14 @@ export async function POST(request: NextRequest) {
           deleted.push(id);
         } catch (err) {
           console.error(`[OUTREACH] bulk delete failed to remove ${id}:`, err);
+          // Roll the tombstone back: a lead that failed to delete must not
+          // also show up as suppressed/deleted, or it would be invisible to
+          // ingest (suppressed) while still sitting in the Pipeline.
+          try {
+            await LeadSuppression.deleteOne({ _id: created._id });
+          } catch (rollbackErr) {
+            console.error(`[OUTREACH] bulk delete: tombstone rollback also failed for ${id}:`, rollbackErr);
+          }
           skipped.push({ id, reason: "delete failed" });
         }
         continue;

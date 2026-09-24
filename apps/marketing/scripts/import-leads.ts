@@ -40,7 +40,12 @@ async function main() {
   await mongoose.connect(process.env.MONGODB_URI);
   const inserted = await insertLeads(docs);
   await mongoose.disconnect();
-  console.log({ ...counts, inserted: inserted.inserted, skippedDupes: inserted.skippedDupes });
+  console.log({
+    ...counts,
+    inserted: inserted.inserted,
+    skippedDupes: inserted.skippedDupes,
+    skippedSuppressed: inserted.skippedSuppressed,
+  });
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

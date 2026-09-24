@@ -27,7 +27,12 @@ export async function POST(request: Request) {
     await connectDB();
     const inserted = await insertLeads(docs);
     return NextResponse.json({
-      counts: { ...counts, inserted: inserted.inserted, skippedDupes: inserted.skippedDupes },
+      counts: {
+        ...counts,
+        inserted: inserted.inserted,
+        skippedDupes: inserted.skippedDupes,
+        skippedSuppressed: inserted.skippedSuppressed,
+      },
     });
   } catch (error) {
     console.error("[OUTREACH] import Error:", error);

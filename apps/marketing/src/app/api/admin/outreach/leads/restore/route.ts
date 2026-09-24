@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@core/db";
 import { Lead, LeadSuppression } from "@/models";
+import { matchQuery } from "@/lib/crm/match-lead";
 
 const bodySchema = z.object({ suppressionId: z.string().min(1).max(64) });
 
@@ -29,7 +30,22 @@ export async function POST(request: NextRequest) {
     delete snapshot.__v;
     delete snapshot.createdAt;
     delete snapshot.updatedAt;
-    if (!snapshot.company) return NextResponse.json({ error: "Snapshot is not a lead" }, { status: 422 });
+    if (!snapshot.company || !snapshot.segment) {
+      return NextResponse.json({ error: "Snapshot is not a lead" }, { status: 422 });
+    }
+
+    // Idempotency: if a colleague's re-import (or a manual re-entry) already
+    // recreated this contact while it sat in Deleted, restoring must not
+    // mint a second, duplicate lead — it should just point at the one that
+    // already exists and clear the now-stale tombstone.
+    const decisionMaker = (snapshot.decisionMaker ?? {}) as { email?: string; linkedinUrl?: string };
+    const emails = Array.isArray(snapshot.emails) ? (snapshot.emails as string[]) : [];
+    const q = matchQuery({ email: decisionMaker.email || emails[0], linkedinUrl: decisionMaker.linkedinUrl });
+    const existing = q ? await Lead.findOne(q) : null;
+    if (existing) {
+      await doc.deleteOne();
+      return NextResponse.json({ leadId: String(existing._id), alreadyExisted: true });
+    }
 
     const lead = await Lead.create(snapshot);
     // Only now: while the tombstone exists the lead is unreachable by ingest,

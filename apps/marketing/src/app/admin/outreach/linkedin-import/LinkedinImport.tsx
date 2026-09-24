@@ -58,7 +58,13 @@ export default function LinkedinImport() {
       const data = await res.json();
       if (!res.ok) { setResult(data.error || "Failed"); return; }
       setPreview({ participant: data.participant, messages: data.messages });
-      if (!dryRun) setResult(`${data.created ? "Created" : "Updated"} lead ${data.leadId} (+${data.added} touches)`);
+      if (!dryRun) {
+        if (data.suppressed) {
+          setResult("This contact was deleted — restore it from Import → Deleted leads to import again.");
+        } else {
+          setResult(`${data.created ? "Created" : "Updated"} lead ${data.leadId} (+${data.added} touches)`);
+        }
+      }
     } finally { setBusy(false); }
   };
 

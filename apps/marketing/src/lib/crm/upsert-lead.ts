@@ -12,6 +12,9 @@ export interface UpsertArgs {
   product?: Product;
   flagReview?: boolean;
   linkedinConversationId?: string;
+  /** Round 2 §3: Gmail thread ids this touch came from, checked against the
+   *  suppression list alongside email/linkedin/conversation key. */
+  gmailThreadIds?: string[];
 }
 
 export interface UpsertResult {
@@ -64,7 +67,7 @@ export async function upsertLeadWithTouches(args: UpsertArgs): Promise<UpsertRes
     // a restored lead importable again immediately, and means a suppressed
     // contact who later writes from a colleague's address still lands on the
     // existing organisation lead if one exists.
-    const sq = suppressionQuery({ ...args.identity, conversationKey: args.linkedinConversationId });
+    const sq = suppressionQuery({ ...args.identity, conversationKey: args.linkedinConversationId, gmailThreadIds: args.gmailThreadIds });
     if (sq && (await LeadSuppression.exists(sq))) {
       return { leadId: "", created: false, added: 0, matchedBy: "suppressed", suppressed: true };
     }
