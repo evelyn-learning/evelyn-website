@@ -22,6 +22,7 @@ export const configParams: ConfigParam[] = [
   { name: 'target_kind', type: 'string', required: false, description: '"lessonNode" when curriculum_module is set, otherwise "freestyle"', example: '"lessonNode"' },
   { name: 'session_goal', type: 'string', required: false, description: 'homework-help, practice, concept-review (default), test-prep, catch-up, challenge, general', example: '"homework-help"' },
   { name: 'input_mode', type: 'string', required: false, description: '"voice" (default) or "text"', example: '"voice"' },
+  { name: 'tutor_opens', type: 'boolean', required: false, description: 'Text mode only: the tutor opens the session itself (any session_goal) instead of waiting for the student to type first', example: 'true' },
   { name: 'max_duration_minutes', type: 'number', required: false, description: 'Hard cap, 1–120, default 30. The session wraps up gracefully and session_ended carries ended_reason: "time_limit".', example: '30' },
   { name: 'session_id', type: 'string', required: false, description: 'Supply your own session id and the engine uses it everywhere (events, /sessions/summary). Otherwise the engine mints one.', example: '"duc-sess-9012"' },
   { name: 'resume', type: 'boolean', required: false, description: 'With the same session_id, continue the session (position, transcript, board restored) instead of starting over. Checkpoints kept 30 days.', example: 'true' },

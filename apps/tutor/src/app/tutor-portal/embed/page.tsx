@@ -351,6 +351,9 @@ interface EmbedConfig {
    *  deflection is overridden. The marketing demo widget sets it; enrolled
    *  academy sessions do not, and stay scoped to their lesson node. */
   open_scope?: boolean;
+  /** Round 4 (E5): the host wants the tutor to open text sessions itself
+   *  (any goal). Absent/false ⇒ unchanged (only homework-help auto-opens). */
+  tutor_opens?: boolean;
   /** Explicit session-target kind for the opening behavior. 'diagnostic'
    *  makes the opener/calibration no-op AND keeps the completion-gate/
    *  demo-stop machinery off the session — the academy's diagnostic
@@ -468,6 +471,7 @@ function EmbedSession() {
 
 function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedToken?: string }) {
   const openScope = config.open_scope === true;
+  const tutorOpens = config.tutor_opens === true;
   // Open-scope (2026-09-10): subject + lessonPlanId become STATE so a
   // mid-session plan swap can move both. For every non-open-scope token
   // neither setter is ever called and the values equal the old consts.
@@ -1468,6 +1472,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         lastOpener={config.last_opener}
         readinessNote={config.readiness_note}
         practiceLocator={config.practice_locator}
+        tutorOpens={tutorOpens}
         goalNote={config.goal_note}
         onOpenerRecord={handleOpenerRecord}
         onBrainUsage={handleBrainUsage}

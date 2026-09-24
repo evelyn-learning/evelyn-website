@@ -59,6 +59,7 @@
     "test:homework-routing": "npx tsx scripts/test-homework-routing.ts",
     "test:material-summary": "npx tsx scripts/test-material-summary.ts",
     "test:stage-geometry": "npx tsx scripts/test-stage-geometry.ts",
+    "test:text-kickoff": "npx tsx scripts/test-text-kickoff.ts",
     "test:segment-evidence": "npx tsx scripts/test-segment-evidence.ts",
     "smoke:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/smoke-portal-grading-live.ts",
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
