@@ -654,3 +654,29 @@ check('equationPlaceholder: placeholder shapes flagged, real math allowed', () =
   for (const s of flagged) if (equationPlaceholder(s) == null) throw new Error(`expected placeholder in: ${s}`);
   for (const s of allowed) { const t = equationPlaceholder(s); if (t != null) throw new Error(`false positive "${t}" in: ${s}`); }
 });
+
+// Final fix wave: a list word as a LABEL or real text inside a larger
+// expression is fine; only an OPERAND placeholder (adjacent to = + - \cdot
+// \times / or inside \frac) is rejected.
+check('equationPlaceholder final wave: labels / real text accepted', () => {
+  const allowed = [
+    '\\text{Answer: } x = 5', '\\text{Result: } 24\\frac{2}{9}', '\\text{Expression: } 3x+2',
+    '\\text{Value} = 12', 'P(\\text{number} > 3)', '\\text{Result}\\\\ x=3', '$\\text{Result}$',
+    '$$\\text{Answer}$$', '\\(\\text{Answer:}\\)',
+  ];
+  for (const s of allowed) {
+    const t = equationPlaceholder(s); if (t != null) throw new Error(`false positive "${t}" in: ${s}`);
+    const r = processToolCall('show_equation', { latex: s }); if (!r.ok) throw new Error(`processToolCall rejected: ${s}`);
+  }
+});
+check('equationPlaceholder final wave: operand placeholders still rejected', () => {
+  const flagged = [
+    'z = \\text{(something)} - 24\\frac{2}{9}', 'a = \\text{something}', 'x = \\text{the answer}',
+    '\\text{Answer} = \\text{Answer}', '\\frac{\\text{value}}{2}', 'y = 3 \\cdot \\text{number}',
+    '2 \\times \\text{something} = 8', '$z = \\text{answer}$',
+  ];
+  for (const s of flagged) {
+    if (equationPlaceholder(s) == null) throw new Error(`expected placeholder in: ${s}`);
+    const r = processToolCall('show_equation', { latex: s }); if (r.ok) throw new Error(`processToolCall accepted: ${s}`);
+  }
+});

@@ -96,7 +96,7 @@ assert(has('ref={boardCardRef}'), 'ref attached to the board card element');
 assert(has('const [boardWidthPx, setBoardWidthPx] = useState<number | null>(null)'), 'board card width tracked in state');
 assert(/if \(sessionMode !== 'text'\) return;/.test(code) && has('if (card) setBoardWidthPx(Math.round(card.getBoundingClientRect().width))'), 'width measured in every text-mode session, not just the rail');
 assert(has("sm:max-w-[min(88vw,var(--qpin-max-w,560px))]"), 'Q-pin max-width class reads a CSS var (mobile full-width banner untouched)');
-assert(has("'--qpin-max-w' as any") && has('qpinMaxWidthPx(boardWidthPx)'), 'Q-pin sets --qpin-max-w from the measured board card width');
+assert(has("'--qpin-max-w' as string") && has('qpinMaxWidthPx(boardWidthPx)'), 'Q-pin sets --qpin-max-w from the measured board card width');
 assert(has('qpinMaxWidthPx') && stage.includes("from './stage-geometry'") && has('qpinMaxWidthPx,'), 'qpinMaxWidthPx imported from stage-geometry');
 
 // Fold-in 1: chip row keyed on switcherInline && chipRowShown, not

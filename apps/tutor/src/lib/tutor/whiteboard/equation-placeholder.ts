@@ -47,18 +47,48 @@ function normalizeInner(inner: string): string {
     .trim();
 }
 
+/** Strip one layer of surrounding math delimiters: `$…$`, `$$…$$`, `\(…\)`, `\[…\]`. */
+function stripMathDelimiters(latex: string): string {
+  const t = latex.trim();
+  const m = t.match(/^\$\$([\s\S]*)\$\$$/) || t.match(/^\$([\s\S]*)\$$/)
+    || t.match(/^\\\(([\s\S]*)\\\)$/) || t.match(/^\\\[([\s\S]*)\\\]$/);
+  return m ? m[1].trim() : t;
+}
+
+/** Text-mode macros (not \mathrm) that read as a heading when they open the card. */
+const LEADING_LABEL_RE = /^\\(?:text|textit|textbf|textrm)\s*\{/;
+
+/**
+ * Final fix wave: a list word is a placeholder only as an OPERAND — directly
+ * adjacent (ignoring whitespace) to `=`, `+`, `-`, `\cdot`, `\times`, `/`,
+ * or inside `\frac{…}{…}`. As a function/probability argument
+ * (`P(\text{number} > 3)`) it is real text.
+ */
+const OPERAND_BEFORE_RE = /(?:=|\+|-|\\cdot|\\times|\/|\\[dt]?frac\s*\{|\}\s*\{)\s*$/;
+const OPERAND_AFTER_RE = /^\s*(?:=|\+|-|\\cdot|\\times|\/)/;
+function isOperand(before: string, after: string, fracNumerator: boolean): boolean {
+  return OPERAND_BEFORE_RE.test(before) || OPERAND_AFTER_RE.test(after) || fracNumerator;
+}
+
 /** Returns the offending placeholder token, or null when the latex is clean. */
 export function equationPlaceholder(latex: string): string | null {
-  const s = String(latex ?? '');
+  const s = stripMathDelimiters(String(latex ?? ''));
   if (!s) return null;
-  const trimmed = s.trim();
   for (const m of s.matchAll(TEXT_MACRO_RE)) {
-    // Fix round 1: a placeholder is an OPERAND inside a larger expression.
-    // A card whose whole latex is just the label (`\text{Result}`,
-    // `\text{Answer:}`) is a heading — allowed. (`??` is still caught below.)
-    if (m[0] === trimmed) continue;
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    // Fix round 1: the whole card is just the label (`\text{Result}`) → heading.
+    if (m[0] === s) continue;
+    // Final wave (b): a text macro opening the card, followed by more content,
+    // is a label (`\text{Answer: } x = 5`, `\text{Value} = 12`).
+    if (start === 0 && LEADING_LABEL_RE.test(m[0])) continue;
     const inner = normalizeInner(m[1]);
-    if (PLACEHOLDER_SET.has(inner) || MULTI_QUESTION_RE.test(inner)) return m[0];
+    if (!PLACEHOLDER_SET.has(inner) && !MULTI_QUESTION_RE.test(inner)) continue;
+    const before = s.slice(0, start);
+    const after = s.slice(end);
+    // `\frac{\text{value}}{2}`: macro fills the numerator group.
+    const fracNumerator = /\\[dt]?frac\s*\{\s*$/.test(before) && /^\s*\}\s*\{/.test(after);
+    if (isOperand(before, after, fracNumerator)) return m[0];
   }
   const q = s.match(MULTI_QUESTION_RE);
   if (q) return q[0];

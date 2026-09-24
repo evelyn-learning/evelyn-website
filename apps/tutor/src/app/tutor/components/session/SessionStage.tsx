@@ -751,7 +751,7 @@ export default function SessionStage(props: SessionStageProps) {
   // Q-pin max-width (all text-mode sessions, voice untouched): null until the
   // board card's first measurement lands, matching the class's own 560px cap.
   const qpinMaxWidthVar: CSSProperties | undefined = sessionMode === 'text' && boardWidthPx != null
-    ? ({ ['--qpin-max-w' as any]: `${qpinMaxWidthPx(boardWidthPx)}px` } as CSSProperties)
+    ? ({ ['--qpin-max-w' as string]: `${qpinMaxWidthPx(boardWidthPx)}px` } as CSSProperties)
     : undefined;
 
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
