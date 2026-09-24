@@ -4008,6 +4008,11 @@ export function VoiceTutorRealtime({
   // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
   // cadence and anchoring independently).
   const pendingBoardAnchorNoteRef = useRef<string | null>(null);
+  // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
+  // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
+  // waits out an open tutor question): the wrong figure is on the board now.
+  // Separate from pendingBoardAnchorNoteRef so it never sets anchorSuspect.
+  const pendingRedrawNoteRef = useRef<string | null>(null);
   // 2026-08-07 triage: judge kill-class survivor → next-turn correction note
   // (buildJudgeCorrectionNote). The judge stays advisory (no kill, no audio
   // chop) but its verdict now reaches the brain on the following turn so a
@@ -10601,6 +10606,12 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
       }
+      // Shaded-region redraw note — same un-held convention as the board-anchor note.
+      if (pendingRedrawNoteRef.current) {
+        runTranscript = `${pendingRedrawNoteRef.current}\n\n${runTranscript}`;
+        pendingRedrawNoteRef.current = null;
+        onDebugEvent?.('shaded_region_note_consumed', 'delivered with this turn');
+      }
       // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
       if (pendingRuntimeNoteRef.current) {
         // Live check 7: deliver only on a turn where the student is NOT mid-answer —
@@ -15890,12 +15901,10 @@ export function VoiceTutorRealtime({
       // Shaded-region net (GreenApple round 6, portal-7298bf27): the tutor
       // SAID a region is shaded but drew with a figure tool that cannot
       // shade (show_coordinate_plane / show_geometry) and no graph call
-      // carried `shadedRegion`. Same one-shot runtime-note lifecycle as the
-      // segment-overlong note; appended if that note is already pending.
+      // carried `shadedRegion`. Rides pendingRedrawNoteRef — delivered on the
+      // very next brain turn, NOT held behind an open question (fix round 1).
       if (TUTOR_SHADED_REGION_NET && shouldPlantShadedRegionNote({ speech: fullText, toolCalls: turnToolCallsSeen })) {
-        pendingRuntimeNoteRef.current = pendingRuntimeNoteRef.current
-          ? `${pendingRuntimeNoteRef.current}\n\n${SHADED_REGION_NOTE}`
-          : SHADED_REGION_NOTE;
+        pendingRedrawNoteRef.current = SHADED_REGION_NOTE;
         console.warn('[brain-orchestrator] shaded-region net: shade word spoken, no shadedRegion drawn — note planted');
         onDebugEvent?.('shaded_region_net_planted', `tools=[${totalToolNamesSeen.join(', ')}]`);
       }

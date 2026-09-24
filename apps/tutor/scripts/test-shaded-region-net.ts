@@ -55,4 +55,25 @@ check('"Shading" capitalised → plant', () => {
   assert.equal(shouldPlantShadedRegionNote({ speech: 'Shading shows the solutions.', toolCalls: [plane] }), true);
 });
 
+// Fix round 1: the redraw note must reach the very next brain turn — it may
+// NOT ride pendingRuntimeNoteRef (held up to 3 turns behind an open question).
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+check('wiring: plant site uses pendingRedrawNoteRef, never pendingRuntimeNoteRef', () => {
+  const src = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const start = src.indexOf('shouldPlantShadedRegionNote({');
+  assert.ok(start > 0, 'plant site not found');
+  const block = src.slice(start, src.indexOf('shaded_region_net_planted', start));
+  assert.ok(block.length > 0, 'plant block not found');
+  assert.ok(!block.includes('pendingRuntimeNoteRef'), 'plant site writes pendingRuntimeNoteRef (held note)');
+  assert.ok(block.includes('pendingRedrawNoteRef.current'), 'plant site does not write pendingRedrawNoteRef');
+  // Delivery is unconditional: consumed next to the board-anchor note, before the held runtime note.
+  const deliver = src.indexOf('if (pendingRedrawNoteRef.current) {');
+  assert.ok(deliver > 0, 'delivery site not found');
+  const heldIdx = src.indexOf('if (pendingRuntimeNoteRef.current) {');
+  assert.ok(deliver < heldIdx, 'redraw delivery must precede (and be outside) the held runtime-note block');
+  const deliverBlock = src.slice(deliver, src.indexOf('}', deliver));
+  assert.ok(!/openQuestionAtTurnStartRef|runtimeNoteHeldTurnsRef/.test(deliverBlock), 'redraw delivery must not be gated on an open question');
+});
+
 console.log(`\nshaded-region net: ${passed} checks passed`);
