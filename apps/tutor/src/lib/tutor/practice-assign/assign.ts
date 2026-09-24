@@ -14,7 +14,10 @@ import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
 import { resolveFlag, type FlagCarrier } from '@/lib/tutor/portal/flags';
 import { resolveAssignmentItems, ASSIGN_TUNING } from './resolve';
-import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
+import { upsertAssignment, upsertDraft, summarizeAssignmentLos, replaceDraftLos } from './store';
+import type { IPracticeAssignment } from '@/models';
+import type { PracticeItem } from '@evelyn/portal-contract/v1';
+import type { GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
 import { topUpPractice, PRACTICE_TARGET, type TopUpInput } from './top-up';
 
 const MAX_LOS = 2;
@@ -152,4 +155,45 @@ export async function assignPractice(input: {
     assignedAt: new Date(),
   });
   return { assignmentId: rec._id, assigned: summarizeAssignmentLos(rec.los), status: 'assigned' };
+}
+
+export interface TopUpDraftDeps {
+  getPartner: typeof getPartner;
+  write: typeof replaceDraftLos;
+  gen?: (o: GeneratePracticeItemsOptions) => Promise<PracticeItem[]>;
+}
+const TOP_UP_DRAFT_DEPS: TopUpDraftDeps = { getPartner, write: replaceDraftLos };
+
+/** Round 4 (E3, fix round 1): an end-of-session emit that finds a client
+ *  draft still open (`status: 'draft'`) tops it up to min(PRACTICE_TARGET,
+ *  partner cap) by generating for its FIRST LO. The existing LOs, reasons and
+ *  items are kept; only new items are appended. The write is conditional on
+ *  the record still being a draft of this student (replaceDraftLos). Returns
+ *  the number of items added (0 = nothing to do / nothing generated). */
+export async function topUpDraft(
+  rec: IPracticeAssignment,
+  input: { partnerId: string; topUp: Omit<TopUpInput, 'target'> },
+  deps: TopUpDraftDeps = TOP_UP_DRAFT_DEPS,
+): Promise<number> {
+  if (rec.status !== 'draft' || rec.los.length === 0) return 0;
+  let partner: PartnerRecord | null = null;
+  try {
+    partner = await deps.getPartner(input.partnerId);
+  } catch {
+    partner = null;
+  }
+  const target = Math.min(PRACTICE_TARGET, capForPartner(partner));
+  const before = rec.los.reduce((n, l) => n + l.items.length, 0);
+  if (before >= target) return 0;
+  const first = rec.los[0]!;
+  const out = await topUpPractice(
+    rec.los.map((l) => ({ loId: l.loId, title: l.title, items: l.items })),
+    [{ loId: first.loId, title: first.title }],
+    { ...input.topUp, target },
+    deps.gen, // undefined → topUpPractice's default (generatePracticeItems)
+  );
+  const added = out.reduce((n, l) => n + l.items.length, 0) - before;
+  if (added <= 0) return 0;
+  const los = rec.los.map((l) => ({ ...l, items: out.find((o) => o.loId === l.loId)?.items ?? l.items }));
+  return (await deps.write(rec.sessionId, rec.studentId, los)) ? added : 0;
 }

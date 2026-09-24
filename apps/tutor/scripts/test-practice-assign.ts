@@ -1,8 +1,8 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
 import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter, shouldFinalizeDraftOnEmit } from '../src/lib/tutor/practice-assign/store';
-import { capForPartner } from '../src/lib/tutor/practice-assign/assign';
-import { topUpPractice } from '../src/lib/tutor/practice-assign/top-up';
+import { capForPartner, topUpDraft } from '../src/lib/tutor/practice-assign/assign';
+import { topUpPractice, splitShortfall } from '../src/lib/tutor/practice-assign/top-up';
 import { shouldCreateDraftOnEmit, draftLoIdsForEmit, homeworkAnchorItems, createDraftOnEmit } from '../src/lib/tutor/practice-assign/emit-draft';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
@@ -218,7 +218,7 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     };
     const out = await topUpPractice([], [{ loId: 'gen-hw.homework-lo-1', title: 'HW' }], { studentId: 's', topic: 't', anchorsFor: () => hwAnchors }, gen as never);
     check('top-up: an empty bank → 3 generated items in 2 calls', out.length === 1 && out[0]?.items.length === 3 && calls.length === 2, JSON.stringify(calls));
-    check('top-up: the first call asks for 3 and carries the worksheet anchors', calls[0]?.shortfall === 3 && calls[0]?.anchors === 2);
+    check('top-up: the shortfall splits 3 → 2 + 1 (parallel), each call carrying the worksheet anchors', JSON.stringify(calls.map((c) => c.shortfall).sort()) === '[1,2]' && calls.every((c) => c.anchors === 2), JSON.stringify(calls));
     const full = [{ loId: 'A', title: 'A', items: [1, 2, 3].map((i) => ({ id: `b${i}`, source: 'bank' as const, problemText: 'q' })) }];
     let genCalls = 0;
     await topUpPractice(full, [{ loId: 'A', title: 'A' }], { studentId: 's', topic: 't', anchorsFor: () => [] }, (async () => { genCalls++; return []; }) as never);
@@ -248,6 +248,57 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     check('wiring: finalize stamps the emit locator', src.includes("...(req.practiceLocator ? { locator: req.practiceLocator } : {})"));
     const assignSrc = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/practice-assign/assign.ts'), 'utf8') as string;
     check('wiring: assignPractice tops up before its empty check', assignSrc.indexOf('if (input.topUp)') > 0 && assignSrc.indexOf('if (input.topUp)') < assignSrc.indexOf('if (los.length === 0) return null;'));
+  }
+  // Fix round 1 (E4) — parallel top-up under a budget, in-flight guard, existing drafts.
+  {
+    check('splitShortfall: 3 → [2,1], 2 → [2], 5 → [2,2], 0 → []', JSON.stringify([splitShortfall(3), splitShortfall(2), splitShortfall(5), splitShortfall(0)]) === '[[2,1],[2],[2,2],[]]');
+    const it = (id: string) => ({ id, source: 'bank' as const, problemText: id });
+    const hang = () => new Promise<never>(() => {});
+    const t0 = Date.now();
+    const kept = await topUpPractice([{ loId: 'A', title: 'A', items: [it('r1')] }], [{ loId: 'A', title: 'A' }], { studentId: 's', topic: 't', anchorsFor: () => [] }, hang as never, 40);
+    check('top-up timeout: keeps the retrieved items, returns within the budget, no throw', kept.length === 1 && kept[0]?.items.length === 1 && kept[0]?.items[0]?.id === 'r1' && Date.now() - t0 < 1000);
+    const partial = await topUpPractice([], [{ loId: 'A', title: 'A' }], { studentId: 's', topic: 't', anchorsFor: () => [] },
+      (async (o: { shortfall: number }) => (o.shortfall === 2 ? [it('p1'), it('p2')] : hang())) as never, 40);
+    check('top-up timeout: keeps the calls that already returned', partial[0]?.items.map((i) => i.id).join() === 'p1,p2');
+    let parallelPeak = 0, live = 0;
+    await topUpPractice([], [{ loId: 'A', title: 'A' }], { studentId: 's', topic: 't', anchorsFor: () => [] },
+      (async (o: { shortfall: number }) => { live++; parallelPeak = Math.max(parallelPeak, live); await new Promise((r) => setTimeout(r, 10)); live--; return o.shortfall === 2 ? [it('q1'), it('q2')] : [it('q3')]; }) as never, 1000);
+    check('top-up: the two shortfall calls run in parallel', parallelPeak === 2);
+  }
+  {
+    const req = { sessionId: 'conc-1', studentId: 'ext', courseId: 'c', status: 'completed', lessonPlanId: 'gen-1', losTouched: [], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'L' } as never;
+    let genRuns = 0;
+    const deps = {
+      findAssignment: async () => null,
+      getPlan: async () => plan3,
+      assign: async () => { genRuns++; await new Promise((r) => setTimeout(r, 20)); return { assignmentId: 'a', assigned: [], status: 'draft' as const }; },
+      topUpDraft: async () => 0,
+    };
+    const both = await Promise.all([createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, deps as never), createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, deps as never)]);
+    check('in-flight guard: two concurrent completed emits → one create/generation, both see its outcome', genRuns === 1 && both.every((o) => o === 'created'), `${genRuns} ${both}`);
+    await createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, deps as never);
+    check('in-flight guard: the entry clears once settled (a later emit runs again)', genRuns === 2);
+    const draftRec = { _id: 'd', sessionId: 'conc-2', studentId: 'p', status: 'draft', los: [{ loId: 'gen-1.lo-2', title: 'T', reason: 'r', items: [] }] };
+    let topped = 0;
+    const withDraft = { ...deps, findAssignment: async () => draftRec, topUpDraft: async () => { topped++; return 2; } };
+    check('existing open client draft → topped up (not recreated)', (await createDraftOnEmit({ ...(req as object), sessionId: 'conc-2' } as never, { profileId: 'p', partnerId: 'g' }, withDraft as never)) === 'topped_up' && topped === 1);
+    check('existing assigned record → exists, no top-up', (await createDraftOnEmit({ ...(req as object), sessionId: 'conc-3' } as never, { profileId: 'p', partnerId: 'g' }, { ...withDraft, findAssignment: async () => ({ ...draftRec, status: 'assigned' }) } as never)) === 'exists' && topped === 1);
+    check('another student\'s draft under a colliding sessionId → exists, no top-up', (await createDraftOnEmit({ ...(req as object), sessionId: 'conc-4' } as never, { profileId: 'p', partnerId: 'g' }, { ...withDraft, findAssignment: async () => ({ ...draftRec, studentId: 'someone-else' }) } as never)) === 'exists' && topped === 1);
+  }
+  {
+    const it = (id: string) => ({ id, source: 'bank' as const, problemText: id });
+    const rec = { _id: 'd', sessionId: 'sd', studentId: 'p', status: 'draft', auto: true, assignedAt: new Date(), createdAt: new Date(), los: [{ loId: 'A', title: 'A', reason: 'client reason', items: [it('c1')] }, { loId: 'B', title: 'B', reason: 'rb', items: [] }] };
+    const written: { los?: Array<{ loId: string; reason: string; items: Array<{ id: string }> }> } = {};
+    const deps = { getPartner: async () => null, write: async (_s: string, _st: string, los: never) => { written.los = los; return true; }, gen: async (o: { shortfall: number }) => Array.from({ length: o.shortfall }, (_, i) => it(`g${o.shortfall}-${i}`)) };
+    const added = await topUpDraft(rec as never, { partnerId: 'g', topUp: { studentId: 'p', topic: 't', anchorsFor: () => [] } }, deps as never);
+    check('topUpDraft: a 1-item client draft reaches 3, keeping its LOs and reasons', added === 2 && written.los?.[0]?.items.length === 3 && written.los?.[0]?.reason === 'client reason' && written.los?.length === 2, JSON.stringify(written.los));
+    let writes = 0;
+    const none = await topUpDraft({ ...rec, status: 'assigned' } as never, { partnerId: 'g', topUp: { studentId: 'p', topic: 't', anchorsFor: () => [] } }, { ...deps, write: async () => { writes++; return true; } } as never);
+    check('topUpDraft: an assigned record is a no-op', none === 0 && writes === 0);
+  }
+  {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/portal/session-result.ts'), 'utf8') as string;
+    check('wiring: the create block sits above the homework-echo comment', src.indexOf('if (shouldCreateDraftOnEmit(req)) {') < src.indexOf('// v1.15.0 — best-effort homework echo'));
   }
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

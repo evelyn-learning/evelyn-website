@@ -8,7 +8,7 @@ import type { PracticeItem, SessionEmitRequest } from '@evelyn/portal-contract/v
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { homeworkProblemsOf, homeworkLoIdFor } from '@/lib/tutor/lesson-plan/homework';
 import { findAssignmentBySession } from './store';
-import { assignPractice } from './assign';
+import { assignPractice, topUpDraft } from './assign';
 
 export const SESSION_END_REASON = 'Practice from your session.';
 const DRAFT_LOS = 2;
@@ -41,26 +41,53 @@ export function homeworkAnchorItems(plan: { id: string; metadata?: Record<string
   }));
 }
 
-export type EmitDraftOutcome = 'created' | 'exists' | 'no_plan' | 'empty';
+export type EmitDraftOutcome = 'created' | 'topped_up' | 'exists' | 'no_plan' | 'empty';
 export interface EmitDraftDeps {
   findAssignment: typeof findAssignmentBySession;
   getPlan: typeof getLessonPlan;
   assign: typeof assignPractice;
+  topUpDraft: typeof topUpDraft;
 }
-const DEFAULT_DEPS: EmitDraftDeps = { findAssignment: findAssignmentBySession, getPlan: getLessonPlan, assign: assignPractice };
+const DEFAULT_DEPS: EmitDraftDeps = { findAssignment: findAssignmentBySession, getPlan: getLessonPlan, assign: assignPractice, topUpDraft };
 
-export async function createDraftOnEmit(
+/** Fix round 1 — in-flight guard: two concurrent completed emits for one
+ *  session (the client's End and the academy sweep) share ONE create/top-up;
+ *  the second awaits the first's outcome. Entry removed when it settles. */
+const inFlight = new Map<string, Promise<EmitDraftOutcome>>();
+
+export function createDraftOnEmit(
   req: SessionEmitRequest,
   ctx: { profileId: string; partnerId: string },
   deps: EmitDraftDeps = DEFAULT_DEPS,
 ): Promise<EmitDraftOutcome> {
-  if (await deps.findAssignment(req.sessionId)) return 'exists';
+  const pending = inFlight.get(req.sessionId);
+  if (pending) return pending;
+  const p = createOrTopUp(req, ctx, deps).finally(() => inFlight.delete(req.sessionId));
+  inFlight.set(req.sessionId, p);
+  return p;
+}
+
+async function createOrTopUp(
+  req: SessionEmitRequest,
+  ctx: { profileId: string; partnerId: string },
+  deps: EmitDraftDeps,
+): Promise<EmitDraftOutcome> {
+  const existing = await deps.findAssignment(req.sessionId);
+  // An assigned (or legacy, status-less) record, or another student's record
+  // under a colliding sessionId, is never touched.
+  if (existing && (existing.status !== 'draft' || existing.studentId !== ctx.profileId)) return 'exists';
   const plan = req.lessonPlanId ? await deps.getPlan(req.lessonPlanId) : null;
-  if (!plan) return 'no_plan';
-  const loIds = draftLoIdsForEmit(plan, req.losTouched);
-  if (loIds.length === 0) return 'empty';
+  if (!plan) return existing ? 'exists' : 'no_plan';
   const wrapper = homeworkLoIdFor(plan.id);
   const anchors = homeworkAnchorItems(plan);
+  const topUp = { studentId: ctx.profileId, topic: plan.topic || plan.title, anchorsFor: (loId: string) => (loId === wrapper ? anchors : []) };
+  if (existing) {
+    // A short client draft still open: top it up; the finalize promotes it.
+    const added = await deps.topUpDraft(existing, { partnerId: ctx.partnerId, topUp });
+    return added > 0 ? 'topped_up' : 'exists';
+  }
+  const loIds = draftLoIdsForEmit(plan, req.losTouched);
+  if (loIds.length === 0) return 'empty';
   const out = await deps.assign({
     profileId: ctx.profileId,
     partnerId: ctx.partnerId,
@@ -75,7 +102,7 @@ export async function createDraftOnEmit(
     auto: true,
     status: 'draft',
     trigger: 'session_end',
-    topUp: { studentId: ctx.profileId, topic: plan.topic || plan.title, anchorsFor: (loId) => (loId === wrapper ? anchors : []) },
+    topUp,
   });
   return out ? 'created' : 'empty';
 }

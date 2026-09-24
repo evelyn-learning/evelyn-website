@@ -313,6 +313,16 @@ export async function emitSessionResult(
     req.renderedArtifacts ??
     (opts.loadArtifacts ? extractRenderedArtifacts(await opts.loadArtifacts(req.sessionId)) : { quizzes: [], conceptMaps: [] });
 
+  // Round 4 (E3): a completed session whose host names where practice lands
+  // (req.practiceLocator), with a plan, gets an end-of-session draft here
+  // (or its short open client draft is topped up); the finalize below
+  // promotes it. Bounded by top-up.ts's 12 s budget. Best-effort.
+  if (shouldCreateDraftOnEmit(req)) {
+    await createDraftOnEmit(req, { profileId, partnerId: opts.partnerId }).then(
+      (outcome) => console.log(`[session-result] end-of-session practice session=${req.sessionId} outcome=${outcome}`),
+      (e) => console.warn('[session-result] end-of-session draft failed', (e as Error)?.message ?? e),
+    );
+  }
   // v1.15.0 — best-effort homework echo (authoritative read = assigned-practice route).
   // Fix round 1 (Important I1) — sessionId is a bare partner-supplied
   // string (SessionEmitRequestSchema has no format constraint), and a
@@ -322,15 +332,6 @@ export async function emitSessionResult(
   // touched by this function uses — so a colliding sessionId can never
   // echo another student's homework (LOs, free-text reason, item ids) or
   // nextSessionIntent back to the caller.
-  // Round 4 (E3): a completed session whose host names where practice lands
-  // (req.practiceLocator), with a plan and no assignment, gets an
-  // end-of-session draft here; the finalize below promotes it. Best-effort.
-  if (shouldCreateDraftOnEmit(req)) {
-    await createDraftOnEmit(req, { profileId, partnerId: opts.partnerId }).then(
-      (outcome) => console.log(`[session-result] end-of-session practice session=${req.sessionId} outcome=${outcome}`),
-      (e) => console.warn('[session-result] end-of-session draft failed', (e as Error)?.message ?? e),
-    );
-  }
   // Round 3: see shouldFinalizeDraftOnEmit. Scoped to profileId like every
   // other lookup here; best-effort — a failure must never fail the emit.
   if (shouldFinalizeDraftOnEmit(req.status)) {

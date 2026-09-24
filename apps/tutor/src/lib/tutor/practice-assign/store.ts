@@ -277,3 +277,14 @@ export async function upsertDraft(
     alreadyAssigned: false,
   };
 }
+
+/** Round 4 (E3, fix round 1): replace a STILL-OPEN draft's LOs (the
+ *  end-of-session top-up of a short client draft). Atomic on
+ *  `{ sessionId, studentId, status: 'draft' }`, so it can never write into
+ *  another student's record or reopen one that was finalized meanwhile.
+ *  Returns whether a draft was updated. */
+export async function replaceDraftLos(sessionId: string, studentId: string, los: IPracticeAssignmentLo[]): Promise<boolean> {
+  await connectDB();
+  const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, status: 'draft' }, { $set: { los } });
+  return r.modifiedCount > 0;
+}
