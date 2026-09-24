@@ -260,6 +260,7 @@ import {
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
   TUTOR_BOARD_ANCHOR_NET,
+  TUTOR_SHADED_REGION_NET,
   BARGEIN_SUSTAIN_MS,
   OPENER_BARGEIN_SUSTAIN_MS,
   SELF_ECHO_CANCEL_IMMUNITY_MS,
@@ -293,6 +294,7 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { shouldPlantShadedRegionNote, SHADED_REGION_NOTE } from '@/lib/tutor/voice/shaded-region-net';
 import { detectBoardContradiction } from '@/lib/tutor/voice/board-contradiction';
 import { findOutOfBoundsPins, buildMapBoundsRejection, findCrowdedPins, buildCrowdedPinsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
@@ -10643,6 +10645,10 @@ export function VoiceTutorRealtime({
       // per-sentence wordCount already computed there for the dedup guard).
       let totalWordCount = 0;
       let totalToolNamesSeen: string[] = [];
+      // Shaded-region net: this turn's dispatched calls WITH args (pushed at
+      // the same site as totalToolNamesSeen) — the net needs to know whether
+      // a graph call actually carried `shadedRegion`, not just its name.
+      const turnToolCallsSeen: Array<{ name: string; args: Record<string, unknown> }> = [];
       // Rule-8 v2: renders that actually landed on the board this turn.
       // Counts assignedIds across attempts, so a killed attempt's rolled-back
       // renders still count — the client repair then UNDER-fires (skips a
@@ -13429,6 +13435,7 @@ export function VoiceTutorRealtime({
                     continue;
                   }
                   totalToolNamesSeen.push(name);
+                  turnToolCallsSeen.push({ name, args });
                   // #4: a Skip turn that actually advances is a legit
                   // "moving on" response — open the held gate the moment
                   // advance_lesson / generate_problem dispatches so the
@@ -15867,6 +15874,18 @@ export function VoiceTutorRealtime({
           console.warn('[brain-orchestrator] board-anchor net: substantive question, 0 content tools — note planted');
           onDebugEvent?.('board_anchor_flagged', `question with no board write — note planted for next turn`);
         }
+      }
+      // Shaded-region net (GreenApple round 6, portal-7298bf27): the tutor
+      // SAID a region is shaded but drew with a figure tool that cannot
+      // shade (show_coordinate_plane / show_geometry) and no graph call
+      // carried `shadedRegion`. Same one-shot runtime-note lifecycle as the
+      // segment-overlong note; appended if that note is already pending.
+      if (TUTOR_SHADED_REGION_NET && shouldPlantShadedRegionNote({ speech: fullText, toolCalls: turnToolCallsSeen })) {
+        pendingRuntimeNoteRef.current = pendingRuntimeNoteRef.current
+          ? `${pendingRuntimeNoteRef.current}\n\n${SHADED_REGION_NOTE}`
+          : SHADED_REGION_NOTE;
+        console.warn('[brain-orchestrator] shaded-region net: shade word spoken, no shadedRegion drawn — note planted');
+        onDebugEvent?.('shaded_region_net_planted', `tools=[${totalToolNamesSeen.join(', ')}]`);
       }
       // R48 Task 2: posed exercise (prompt Rule 3e — the prose/multi-part
       // sibling of the board-anchor net above, which only covers a single

@@ -413,6 +413,12 @@ export const TURN_CAP_WORDS = 110;
 // note — soft, never a kill). The prompt HARD RULE is the primary fix;
 // this catches only the zero-write case by design.
 export const TUTOR_BOARD_ANCHOR_NET = process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_NET !== 'off';
+// Shaded-region net (2026-09-24, GreenApple round 6, portal-7298bf27): the
+// tutor said "…is shaded green" over a show_coordinate_plane that cannot
+// shade. Speech uses a shade word + a non-shading figure tool + no graph call
+// carrying `shadedRegion` → one-shot runtime note to redraw with
+// show_function_graph. Pure decision: lib/tutor/voice/shaded-region-net.ts.
+export const TUTOR_SHADED_REGION_NET = process.env.NEXT_PUBLIC_TUTOR_SHADED_REGION_NET !== 'off';
 // Sustained-energy barge-in gate (2026-07-15, echo fix layer 1 — Task V1).
 // ROOT CAUSE (session portal-81f2b582): the tutor's own TTS echoes into the
 // mic, the perception VAD fires speech_started, and the stage-3 kill aborts

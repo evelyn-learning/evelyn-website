@@ -1536,7 +1536,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_coordinate_plane',
-    description: '2D coordinate plane with axes, gridlines, and any combination of labeled points, line segments, and vectors from origin. Always renders axes + ticks. For polygon-focused figures (triangles, circles, angle measures) use show_geometry instead.',
+    description: '2D coordinate plane with axes, gridlines, and any combination of labeled points, line segments, and vectors from origin. Always renders axes + ticks. For polygon-focused figures (triangles, circles, angle measures) use show_geometry instead. Cannot shade regions or half-planes. For ANY shaded region — inequality half-plane, area between curves, feasible region — use show_function_graph with `shadedRegion` instead.',
     parameters: {
       type: 'object',
       properties: {
