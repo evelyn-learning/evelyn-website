@@ -40,6 +40,7 @@ import { validateFlowchart } from '../diagrams/flowchart-validator';
 import { solveGeometry } from '../diagrams/geometry-solver';
 import { looksLikePunnett, repairPunnettHeaders } from '../validation/biology';
 import { problemStatementTooShort } from './problem-statement';
+import { equationPlaceholder, equationPlaceholderReason } from './equation-placeholder';
 
 export type WhiteboardCommandLike = Record<string, unknown> & { action: string };
 
@@ -143,6 +144,10 @@ export function processToolCall(
     if (problemStatementTooShort(statement)) {
       return { ok: false, reason: 'show_problem was rejected because `statement` is missing or empty.' };
     }
+  }
+  if (a === 'showEquation') {
+    const token = equationPlaceholder(String(c.latex ?? ''));
+    if (token) return { ok: false, reason: equationPlaceholderReason(token) };
   }
   if (a === 'showCircuit') {
     const r = validateCircuit(Array.isArray(c.components) ? c.components : [], ctx.lastStudentText ?? '');

@@ -607,3 +607,39 @@ check('problemStatementTooShort: math short ok, non-math short rejected', () => 
   const cases: Array<[string, boolean]> = [['$4a = 28$', false], ['x+3=9', false], ['7', false], ['hi', true], ['?', true], ['   ', true], ['', true], ['Solve for the width.', false]];
   for (const [s, want] of cases) if (problemStatementTooShort(s) !== want) throw new Error(`"${s}" → ${!want ? 'accepted' : 'rejected'} expected`);
 });
+
+// GreenApple round 6, Task 5 (portal-5b701ac0): the board showed
+// `z = \text{(something)} - 24\frac{2}{9}` — a placeholder written as math.
+import { equationPlaceholder } from '../src/lib/tutor/whiteboard/equation-placeholder';
+check('show_equation with \\text{(something)} placeholder → rejected', () => {
+  const r = processToolCall('show_equation', { latex: 'z = \\text{(something)} - 24\\frac{2}{9}' });
+  assert.equal(r.ok, false);
+  if (r.ok) return;
+  assert.ok(r.reason.startsWith('show_equation was rejected because the equation contains a placeholder (`'), r.reason);
+  assert.ok(r.reason.includes('never a placeholder on the board.'), r.reason);
+});
+check('show_equation `2(3)-2=?` → accepted', () => {
+  const r = processToolCall('show_equation', { latex: '2(3)-2=?' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('show_equation `x = \\frac{7}{2}` → accepted', () => {
+  const r = processToolCall('show_equation', { latex: 'x = \\frac{7}{2}' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('show_equation `\\text{Solved}` label-only → accepted', () => {
+  const r = processToolCall('show_equation', { latex: '\\text{Solved}' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('equationPlaceholder: placeholder shapes flagged, real math allowed', () => {
+  const flagged = [
+    '\\text{something}', '\\mathrm{answer}', '\\textit{[value]}', 'y = \\text{ your answer }',
+    'x = \\text{fill in}', 'x = ???', 'a + ?? = 5', 'x = (something) + 2', 'z = \\text{(TBD)}',
+    '\\text{Result}', 'k = \\text{unknown}',
+  ];
+  const allowed = [
+    '2(3)-2=?', 'x = \\frac{7}{2}', '\\text{Solved}', '(x+1)(x-2)=0', '\\text{area} = 12',
+    'f(x) = x^2', 'y = ?', '\\text{Step 1: } 2x = 8', 'v = 3 \\text{ m/s}', '(a)', 'P(\\text{heads}) = 0.5',
+  ];
+  for (const s of flagged) if (equationPlaceholder(s) == null) throw new Error(`expected placeholder in: ${s}`);
+  for (const s of allowed) { const t = equationPlaceholder(s); if (t != null) throw new Error(`false positive "${t}" in: ${s}`); }
+});

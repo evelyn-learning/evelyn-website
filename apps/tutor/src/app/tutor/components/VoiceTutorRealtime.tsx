@@ -111,6 +111,7 @@ import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@core/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { problemStatementTooShort } from '@/lib/tutor/whiteboard/problem-statement';
+import { equationPlaceholder, equationPlaceholderReason } from '@/lib/tutor/whiteboard/equation-placeholder';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
@@ -5395,6 +5396,17 @@ export function VoiceTutorRealtime({
           const reason = `Your show_equation latex contains the conversational filler "${filler}" (${latex.slice(0, 140)}). You typed a mid-thought reaction INTO the card. Never put prose fillers in latex — if you catch a mistake while writing a card, finish the latex cleanly or re-emit the whole corrected equation. Re-emit this card with pure math only.`;
           console.warn('[VoiceTutorRealtime] Dropping show_equation — prose filler in latex:', filler);
           onDebugEvent?.('equation_prose_filler', `${filler}: ${latex.slice(0, 80)}`);
+          rejected.push({ action: 'show_equation', reason });
+          return [];
+        }
+        // GreenApple round 6 (portal-5b701ac0): a placeholder word written
+        // as math — `z = \text{(something)} - 24\frac{2}{9}`. Twin of the
+        // server check in processToolCall (same reason string).
+        const placeholder = equationPlaceholder(latex);
+        if (placeholder) {
+          const reason = equationPlaceholderReason(placeholder);
+          console.warn('[VoiceTutorRealtime] Dropping show_equation — placeholder in latex:', placeholder);
+          onDebugEvent?.('equation_placeholder', `${placeholder}: ${latex.slice(0, 80)}`);
           rejected.push({ action: 'show_equation', reason });
           return [];
         }
