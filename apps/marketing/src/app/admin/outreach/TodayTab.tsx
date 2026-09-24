@@ -14,12 +14,15 @@ import {
   Sparkles,
   Wand2,
   UserX,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { expectedNextChannel, isCadenceTouch, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
 import { TOUCH_CHANNELS } from "@/lib/outreach/enums";
 import type { TouchChannel } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 import { SEGMENT_LABELS, EmailProvenanceBadge, GeneralInboxChip } from "./ReviewQueueTab";
+import { sourcePill } from "@/lib/crm/console-helpers";
 import { sortTodayLeads, todayTier, type TodayTier } from "@/lib/outreach/today-order";
 import { resolveRecipient } from "@/lib/outreach/recipient";
 
@@ -221,7 +224,7 @@ export default function TodayTab({
               {TIER_LABELS[todayTier(lead)]}
             </h2>
           )}
-        <LeadCard
+        <CollapsibleLead
           lead={lead}
           busy={pendingIds.has(lead._id)}
           onMarkSent={(channel) => markSent(lead._id, channel)}
@@ -233,6 +236,65 @@ export default function TodayTab({
         />
         </div>
       ))}
+    </div>
+  );
+}
+
+// Round 2 §7. The Today list was every lead fully expanded, which meant
+// scrolling past ~600px of card to see what else was due. The collapsed row
+// carries exactly the fields needed to decide whether to open it; expansion
+// state is per tab session and deliberately NOT persisted.
+type LeadCardProps = Parameters<typeof LeadCard>[0];
+
+function CollapsibleLead(props: LeadCardProps) {
+  const { lead } = props;
+  const [expanded, setExpanded] = useState(false);
+  const dm = lead.decisionMaker;
+  // Same expression as LeadCard's own outboundCount so the two can never
+  // disagree about the step number (imported touches don't consume a step).
+  const outboundCount = lead.touches.filter((t) => t.direction === "outbound" && isCadenceTouch(t)).length;
+  const nextChannel = expectedNextChannel(lead.touches.map((t) => ({ ...t, at: new Date(t.at) })));
+  const pill = sourcePill(lead.source);
+  const Chevron = expanded ? ChevronDown : ChevronRight;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm shadow">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-label={expanded ? `Collapse ${lead.company}` : `Expand ${lead.company}`}
+          className="shrink-0 rounded p-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+        >
+          <Chevron className="h-4 w-4" />
+        </button>
+        <span className="font-semibold text-gray-900">{lead.company}</span>
+        <span className="inline-flex rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
+          {SEGMENT_LABELS[lead.segment] ?? lead.segment}
+        </span>
+        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+          pill.tone === "gmail" ? "bg-rose-50 text-rose-700"
+            : pill.tone === "form" ? "bg-emerald-50 text-emerald-700"
+            : pill.tone === "linkedin" ? "bg-sky-50 text-sky-700"
+            : "bg-gray-100 text-gray-600"
+        }`}>
+          {pill.label}
+        </span>
+        <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+          Touch {outboundCount} of {MAX_OUTBOUND_TOUCHES}
+        </span>
+        {nextChannel !== null && (
+          <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+            Next:{" "}
+            {nextChannel === "linkedin" && dm?.linkedinNotFound
+              ? "Email (no LinkedIn profile)"
+              : SEQUENCE_STEP_LABELS[outboundCount]}
+          </span>
+        )}
+        <span className="ml-auto truncate text-xs text-gray-500">{dm?.email || lead.orgEmail || "no email on file"}</span>
+      </div>
+      {expanded && <LeadCard {...props} />}
     </div>
   );
 }
