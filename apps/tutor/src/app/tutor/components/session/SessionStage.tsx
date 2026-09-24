@@ -35,7 +35,7 @@ import {
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
-import { textColumnGeometry, toolsRowDefaultOpen } from './stage-geometry';
+import { textColumnGeometry, toolRailTopPx, toolsRowDefaultOpen } from './stage-geometry';
 import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import type { SessionGoal } from '@/lib/tutor/types';
 
@@ -457,10 +457,13 @@ export default function SessionStage(props: SessionStageProps) {
     if (started && !toolsUserToggledRef.current) setToolsOpen(toolsRowDefaultOpen({ sessionMode, isMdUp: isMdUpRef.current }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
-  /** Auto-collapse after launching a tool — suppressed while always-open. */
+  /** Auto-collapse after launching a tool — suppressed while always-open.
+   *  GreenApple round 6: text mode's tools are a collapsed-by-default rail
+   *  that opens as an overlay over the transcript's avatars, so choosing a
+   *  tool always folds it back to the wrench there. */
   const collapseToolsAfterUse = useCallback(() => {
-    if (!toolsAlwaysOpen) setToolsOpen(false);
-  }, [toolsAlwaysOpen]);
+    if (!toolsAlwaysOpen || sessionMode === 'text') setToolsOpen(false);
+  }, [toolsAlwaysOpen, sessionMode]);
   // R35 T-C: close the tools cluster on any pointerdown outside its container
   // (FAB + expanded column together — ref-containment pattern matches
   // switcherRef below). Without this, tapping the whiteboard or anywhere
@@ -682,11 +685,40 @@ export default function SessionStage(props: SessionStageProps) {
   // shifts its MIDPOINT down by half that difference — measured a
   // consistent 24px-low offset at every width (owner phone re-review,
   // 2026-09-19) until this was shared too.
-  const boardColumnTopPadClass = (showSwitcher && !pagerInCard) ? 'pt-12' : (railEl && !isFullscreen ? 'pt-1' : 'pt-2');
-  // Round 3 (A13): text mode's right column (md+) stacks [tool row][gap]
-  // [transcript panel] under the header; both read CSS variables set on the
-  // stage root from this one geometry so they can never overlap.
+  // GreenApple round 6 (text mode, md+): the page switcher no longer floats
+  // over the board top — it is slimmed to the problem chip's height and
+  // rides the chip row (in flow, right of the chip, wrapping under it only
+  // when the row does not fit), so the board drops the 48px `pt-12`
+  // floating-pager clearance. Not in fullscreen (the chip row is not
+  // rendered there — the floating pill stays) and not on phones (the pager
+  // is in the card, `pagerInCard`). Voice: never inline, byte-identical.
+  const switcherInline = sessionMode === 'text' && !pagerInCard && !isFullscreen;
+  const chipRowShown = !isFullscreen && (!!railEl || (switcherInline && showSwitcher && !!boardPages));
+  const boardColumnTopPadClass = (showSwitcher && !pagerInCard && !switcherInline) ? 'pt-12' : ((railEl || chipRowShown) && !isFullscreen ? 'pt-1' : 'pt-2');
+  // Round 3 (A13): text mode's right column (md+) reads CSS variables set on
+  // the stage root. GreenApple round 6: the transcript panel's top is the
+  // board column's CONTENT top (same top, same bottom clearance ⇒ same
+  // height) — measured from the live column, since the chip row's height
+  // depends on whether the nav wrapped. `textGeom` is only the first-paint
+  // fallback. The wrench floats inside the panel header (`toolRailTopPx`).
   const textGeom = textColumnGeometry({ hasRail: !!railEl && !isFullscreen });
+  const boardColumnRef = useRef<HTMLDivElement>(null);
+  const [boardTopPx, setBoardTopPx] = useState<number | null>(null);
+  useEffect(() => {
+    if (sessionMode !== 'text') return;
+    const col = boardColumnRef.current;
+    const stageEl = stageRef.current;
+    if (!col || !stageEl) return;
+    const measure = () => {
+      const top = col.getBoundingClientRect().top - stageEl.getBoundingClientRect().top + (parseFloat(getComputedStyle(col).paddingTop) || 0);
+      setBoardTopPx(Math.round(top));
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(col);
+    measure();
+    return () => ro.disconnect();
+  }, [sessionMode, boardColumnTopPadClass, chipRowShown]);
+  const textPanelTopPx = boardTopPx ?? textGeom.panelTopPx;
 
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
@@ -914,11 +946,98 @@ export default function SessionStage(props: SessionStageProps) {
   };
 
 
+  // Board page switcher. `inline` (GreenApple round 6, text md+): slimmed
+  // to the problem chip's height (24px: 22px buttons + 1px borders, no
+  // vertical padding, 11px label) and rendered IN FLOW on the chip row.
+  // Floating (`inline` false) is the pre-round-6 markup, byte-identical.
+  const renderSwitcher = (inline: boolean) => (boardPages ? (
+        <div ref={switcherRef} className={inline ? 'relative shrink-0 max-w-full pointer-events-auto' : `absolute ${railEl && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
+          {/* FIXED-width pill so it never jitters as titles change on page
+              turns. The middle label is a button → opens a jump-to-page list. */}
+          <div className={inline ? 'flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-sm px-0.5 w-[280px] max-w-full' : 'flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]'}>
+            <button
+              onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index - 1); }}
+              disabled={boardPages.index === 0}
+              className={`shrink-0 grid place-items-center ${inline ? 'w-6 h-[22px]' : 'w-7 h-7'} rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`}
+              title="Previous board"
+            >
+              <ChevronLeft className={inline ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+            </button>
+            <button
+              onClick={() => setSwitcherOpen((o) => !o)}
+              className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-1 ${inline ? 'h-[22px]' : 'h-7'} rounded-full hover:bg-slate-50`}
+              title="Jump to a board"
+            >
+              <span className={`truncate ${inline ? 'text-[11px]' : 'text-xs'} font-medium text-slate-700`}>
+                {formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}
+              </span>
+              <span className={`shrink-0 ${inline ? 'text-[10px]' : 'text-[11px]'} font-semibold tabular-nums text-slate-400`}>
+                {boardPages.index + 1}/{boardPages.count}
+              </span>
+              <ChevronDown className={`shrink-0 w-3.5 h-3.5 text-slate-400 transition-transform ${switcherOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <button
+              onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index + 1); }}
+              disabled={boardPages.index >= boardPages.count - 1}
+              className={`relative shrink-0 grid place-items-center ${inline ? 'w-6 h-[22px]' : 'w-7 h-7'} rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`}
+              title="Next board"
+            >
+              <ChevronRight className={inline ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+              {/* Task X5: a subtle unseen-content dot — new tutor render landed
+                  on another page while the anti-yank grace held the view here. */}
+              {boardPages.pendingIndex != null && boardPages.pendingIndex !== boardPages.index && (
+                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          {/* Jump-to-page dropdown. Outside-click close is handled by the
+              document pointerdown listener above (keyed to switcherRef). */}
+          {switcherOpen && (
+            <>
+              <div className={`absolute top-full mt-1.5 ${inline ? 'left-0 z-30' : 'left-1/2 -translate-x-1/2'} w-[min(86vw,360px)] max-h-[50vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5`}>
+                {boardPages.titles.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { boardPages.goTo(i); setSwitcherOpen(false); }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-left text-xs ${
+                      i === boardPages.index ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="shrink-0 inline-grid place-items-center w-5 h-5 rounded-full bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-500">{i + 1}</span>
+                    <span className="truncate">{formatBoardTitle(t) || `Board ${i + 1}`}</span>
+                    {boardPages.pendingIndex === i && (
+                      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" title="New content" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+  ) : null);
+
+  // Tools cluster pieces (GreenApple round 6). Voice renders exactly the
+  // pre-round-6 markup (32px buttons, vertical separators, wrench LAST);
+  // text mode uses 28px buttons, a separator that turns horizontal in the
+  // md+ vertical strip, and the wrench FIRST (see the cluster).
+  const compactTools = sessionMode === 'text';
+  const toolSepClass = sessionMode === 'text' ? 'w-px h-5 md:w-5 md:h-px bg-slate-200 mx-0.5 md:mx-0' : 'w-px h-5 bg-slate-200 mx-0.5';
+  const wrenchEl = (
+          <div className="relative">
+            <ToolBtn compact={compactTools} active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => { toolsUserToggledRef.current = true; setToolsOpen((o) => !o); }}>
+              <Wrench className={compactTools ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+            </ToolBtn>
+            {boardPenActive && !toolsOpen && (
+              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600" />
+            )}
+          </div>
+  );
+
   return (
     <div
       ref={stageRef}
       className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col"
-      style={sessionMode === 'text' ? ({ ['--ss-tools-top' as string]: `${textGeom.toolsTopPx}px`, ['--ss-panel-top' as string]: `${textGeom.panelTopPx}px` } as CSSProperties) : undefined}
+      style={sessionMode === 'text' ? ({ ['--ss-tools-top' as string]: `${toolRailTopPx(textPanelTopPx)}px`, ['--ss-panel-top' as string]: `${textPanelTopPx}px` } as CSSProperties) : undefined}
     >
       <style>{`
         .session-stage .ss-grid{background-image:linear-gradient(#eef2f7 1px,transparent 1px),linear-gradient(90deg,#eef2f7 1px,transparent 1px);background-size:28px 28px}
@@ -960,6 +1079,7 @@ export default function SessionStage(props: SessionStageProps) {
           // (`showSwitcher && !pagerInCard`) — shared with the presence
           // overlay below so their tops (and therefore vertical centers)
           // agree.
+          ref={boardColumnRef}
           className={`absolute inset-0 ${boardColumnTopPadClass} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
           style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
         >
@@ -1302,7 +1422,15 @@ export default function SessionStage(props: SessionStageProps) {
       {/* Agenda rail (2026-08-10) — horizontal row above the board, hidden in
           fullscreen (no room); vertical variant takes over as a left overlay
           instead (same layer treatment as the tools cluster). */}
-      {railEl && !isFullscreen ? (
+      {/* GreenApple round 6 (text md+): the slim page switcher joins this
+          row, right of the problem chip; `flex-wrap` drops it under the chip
+          only when the two do not fit side by side. */}
+      {switcherInline && chipRowShown && showSwitcher ? (
+        <div className="relative z-20 shrink-0 order-2 px-2 pt-1.5 flex flex-wrap items-center gap-1.5">
+          {railEl ? <div className="min-w-0 max-w-full">{railEl}</div> : null}
+          {renderSwitcher(true)}
+        </div>
+      ) : railEl && !isFullscreen ? (
         <div className="relative z-20 shrink-0 order-2 px-2 pt-1.5">{railEl}</div>
       ) : null}
       {railEl && isFullscreen ? (
@@ -1435,18 +1563,30 @@ export default function SessionStage(props: SessionStageProps) {
           is right-anchored, so the FAB stays at the right edge (under the
           anchor) and expanding only grows the row leftward — it never jumps
           out from under the pointer, and tab order matches what is seen. */}
-      <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''}`}>
-        <div ref={toolsClusterRef} data-testid="tools-cluster" className="flex flex-row items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
+      <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-5 md:z-[55]' : ''}`}>
+        <div
+          ref={toolsClusterRef}
+          data-testid="tools-cluster"
+          data-state={toolsOpen ? 'expanded' : 'collapsed'}
+          className={sessionMode === 'text'
+            ? 'flex flex-row-reverse md:flex-col items-center gap-1 rounded-xl bg-white border border-slate-200 shadow-md'
+            : 'flex flex-row items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5'}
+        >
+          {/* GreenApple round 6 (text mode): the wrench comes FIRST — the rail
+              opens downward under it at md+ (vertical strip over the
+              transcript's right edge; it reserves no space, so bubbles and
+              avatars never move) and leftward on phones (row-reverse). */}
+          {sessionMode === 'text' && wrenchEl}
           {toolsOpen && (
             <>
-              <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-4 h-4" /></ToolBtn>
+              <ToolBtn compact={compactTools} active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-4 h-4" /></ToolBtn>
               {onToggleBoardPen && (
-                <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); collapseToolsAfterUse(); }}>
+                <ToolBtn compact={compactTools} active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); collapseToolsAfterUse(); }}>
                   <PenLine className="w-4 h-4" />
                 </ToolBtn>
               )}
-              <ToolBtn active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); collapseToolsAfterUse(); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
-              <label title="Upload a problem" className="grid place-items-center w-8 h-8 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer" onClick={collapseToolsAfterUse}><Camera className="w-4 h-4" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
+              <ToolBtn compact={compactTools} active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); collapseToolsAfterUse(); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
+              <label title="Upload a problem" className={`grid place-items-center ${compactTools ? 'w-7 h-7' : 'w-8 h-8'} rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer`} onClick={collapseToolsAfterUse}><Camera className="w-4 h-4" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
               {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
                   `hidden md:` gate also hid it inside the portal's <768px embed
                   iframe (the iframe's own viewport is what md: measures), which
@@ -1457,8 +1597,8 @@ export default function SessionStage(props: SessionStageProps) {
                   NOT wired to auto-collapse the cluster (T1) — untouched. */}
               {canFullscreen && (
                 <>
-                  <div className="w-px h-5 bg-slate-200 mx-0.5" />
-                  <ToolBtn title="Full screen" onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-4 h-4" /></ToolBtn>
+                  <div className={toolSepClass} />
+                  <ToolBtn compact={compactTools} title="Full screen" onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-4 h-4" /></ToolBtn>
                 </>
               )}
               {/* Mobile expand (Task E8) — shown only where the native Fullscreen
@@ -1468,14 +1608,14 @@ export default function SessionStage(props: SessionStageProps) {
                   identical to pre-T1 — only its parent's visibility changed. */}
               {canExpand && (
                 <>
-                  <div className="w-px h-5 bg-slate-200 mx-0.5" />
-                  <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); collapseToolsAfterUse(); }}>
+                  <div className={toolSepClass} />
+                  <ToolBtn compact={compactTools} active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); collapseToolsAfterUse(); }}>
                     {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                   </ToolBtn>
                 </>
               )}
               {/* Separates the tools from the FAB (the row's last child). */}
-              <div className="w-px h-5 bg-slate-200 mx-0.5" />
+              <div className={toolSepClass} />
             </>
           )}
           {QPIN_AUTO_COLLAPSE && questionPin && qpinMode === 'chip' && (
@@ -1488,7 +1628,7 @@ export default function SessionStage(props: SessionStageProps) {
                 setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
                 setQpinMode('expanded');
               }}
-              className="ss-cap relative grid place-items-center w-8 h-8 rounded-xl bg-amber-400 text-white text-xs font-bold hover:bg-amber-500 after:absolute after:-inset-1 after:content-['']"
+              className={`ss-cap relative grid place-items-center ${compactTools ? 'w-7 h-7' : 'w-8 h-8'} rounded-xl bg-amber-400 text-white text-xs font-bold hover:bg-amber-500 after:absolute after:-inset-1 after:content-['']`}
             >
               Q
             </button>
@@ -1496,14 +1636,7 @@ export default function SessionStage(props: SessionStageProps) {
           {/* The wrench is LAST in DOM (keyboard order = visual order); the
               row is right-anchored, so it stays at the right edge while the
               tools open/close to its left. */}
-          <div className="relative">
-            <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => { toolsUserToggledRef.current = true; setToolsOpen((o) => !o); }}>
-              <Wrench className="w-4 h-4" />
-            </ToolBtn>
-            {boardPenActive && !toolsOpen && (
-              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600" />
-            )}
-          </div>
+          {sessionMode !== 'text' && wrenchEl}
         </div>
       </div>
 
@@ -1513,71 +1646,7 @@ export default function SessionStage(props: SessionStageProps) {
               suppressed (chrome="minimal"). Text mode <md: this floating
               placement is suppressed — the compact in-card row above
               renders instead (`pagerInCard`, owner mobile-split ruling). ===== */}
-      {showSwitcher && boardPages && !pagerInCard && (
-        <div ref={switcherRef} className={`absolute ${railEl && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
-          {/* FIXED-width pill so it never jitters as titles change on page
-              turns. The middle label is a button → opens a jump-to-page list. */}
-          <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
-            <button
-              onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index - 1); }}
-              disabled={boardPages.index === 0}
-              className="shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
-              title="Previous board"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setSwitcherOpen((o) => !o)}
-              className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-1 h-7 rounded-full hover:bg-slate-50"
-              title="Jump to a board"
-            >
-              <span className="truncate text-xs font-medium text-slate-700">
-                {formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}
-              </span>
-              <span className="shrink-0 text-[11px] font-semibold tabular-nums text-slate-400">
-                {boardPages.index + 1}/{boardPages.count}
-              </span>
-              <ChevronDown className={`shrink-0 w-3.5 h-3.5 text-slate-400 transition-transform ${switcherOpen ? 'rotate-180' : ''}`} />
-            </button>
-            <button
-              onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index + 1); }}
-              disabled={boardPages.index >= boardPages.count - 1}
-              className="relative shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
-              title="Next board"
-            >
-              <ChevronRight className="w-4 h-4" />
-              {/* Task X5: a subtle unseen-content dot — new tutor render landed
-                  on another page while the anti-yank grace held the view here. */}
-              {boardPages.pendingIndex != null && boardPages.pendingIndex !== boardPages.index && (
-                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          {/* Jump-to-page dropdown. Outside-click close is handled by the
-              document pointerdown listener above (keyed to switcherRef). */}
-          {switcherOpen && (
-            <>
-              <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-[min(86vw,360px)] max-h-[50vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5">
-                {boardPages.titles.map((t, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { boardPages.goTo(i); setSwitcherOpen(false); }}
-                    className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-left text-xs ${
-                      i === boardPages.index ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="shrink-0 inline-grid place-items-center w-5 h-5 rounded-full bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-500">{i + 1}</span>
-                    <span className="truncate">{formatBoardTitle(t) || `Board ${i + 1}`}</span>
-                    {boardPages.pendingIndex === i && (
-                      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" title="New content" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      {showSwitcher && boardPages && !pagerInCard && !(switcherInline && chipRowShown) && renderSwitcher(false)}
 
       {/* tool overlays */}
       {tool === 'draw' && <DrawPad onClose={() => setTool(null)} onSubmit={(d) => { onStudentInput('drawing', d); setTool(null); }} />}
@@ -2029,8 +2098,8 @@ function Chip({ children, onClick, active, ghost }: { children: ReactNode; onCli
     </button>
   );
 }
-function ToolBtn({ children, title, active, onClick }: { children: ReactNode; title: string; active?: boolean; onClick: () => void }) {
-  return <button title={title} onClick={onClick} className={`grid place-items-center w-8 h-8 rounded-xl ${active ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-100 text-slate-600'}`}>{children}</button>;
+function ToolBtn({ children, title, active, onClick, compact }: { children: ReactNode; title: string; active?: boolean; onClick: () => void; compact?: boolean }) {
+  return <button title={title} onClick={onClick} className={`grid place-items-center ${compact ? 'w-7 h-7' : 'w-8 h-8'} rounded-xl ${active ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-100 text-slate-600'}`}>{children}</button>;
 }
 
 function handleImage(e: React.ChangeEvent<HTMLInputElement>, onStudentInput: (t: 'image', c: string) => void) {
