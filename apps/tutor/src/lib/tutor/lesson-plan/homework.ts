@@ -122,3 +122,20 @@ export function homeworkPlanDecision(r: EnumerateResult): HomeworkPlanDecision {
   if (r.failedOpen || r.problems.length === 0) return { kind: 'normal', reason: 'enumeration_failed_open' };
   return { kind: 'homework', problems: r.problems };
 }
+
+const LIST_MARKER = /(?:^|\s)(?:\d{1,2}|[a-hA-H])[.)]\s/g;
+const OPERATOR = /[=<>+−×÷/^]/;
+
+/** Round 4 (E1, 2026-09-24 live check): typed homework-help text is only worth
+ *  a problem split when it LOOKS like problems — ≥2 lines, a numbered/lettered
+ *  list, digits with an operator/relation, or ≥2 questions. A plain topic or
+ *  single question skips the extra Haiku call (it pushed typed starts past the
+ *  portal's timeout) and goes straight to normal generation. Pure. */
+export function hasProblemSignals(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (t.split(/\r?\n/).filter((l) => l.trim()).length >= 2) return true;
+  if ((t.match(LIST_MARKER) ?? []).length >= 2) return true;
+  if (/\d/.test(t) && OPERATOR.test(t)) return true;
+  return (t.match(/\?/g) ?? []).length >= 2;
+}
