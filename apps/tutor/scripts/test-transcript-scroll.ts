@@ -289,7 +289,15 @@ checkSource(
   // re-check, drawer-open snap) must now go through the one helper; a
   // bare write anywhere outside the helper's own body bypasses the guard
   // and reintroduces the false-latch bug at that site.
-  const calls = source.match(/scrollToBottom\(\)/g) ?? [];
+  // Comment-only lines are stripped first so doc-comment mentions of
+  // `scrollToBottom()` (e.g. "armed by `scrollToBottom()` below") don't
+  // inflate the call count.
+  const codeOnly = source
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('//'))
+    .join('\n');
+
+  const calls = codeOnly.match(/scrollToBottom\(\)/g) ?? [];
   const okCalls = calls.length >= 4;
   if (!okCalls) failures++;
   console.log(`${okCalls ? 'PASS' : 'FAIL'} — scrollToBottom() called at all four scroll sites (follow, fonts.ready, ResizeObserver, drawer-open), found ${calls.length}`);
@@ -297,10 +305,6 @@ checkSource(
   // Exactly one bare write is expected in the whole component: the shared
   // scrollToBottom() helper's own body. Any more means some site bypassed
   // the helper (and its comment-only mentions above must not count).
-  const codeOnly = source
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('//'))
-    .join('\n');
   const bareWrites = codeOnly.match(/el\.scrollTop\s*=\s*el\.scrollHeight/g) ?? [];
   const okBare = bareWrites.length === 1;
   if (!okBare) failures++;
