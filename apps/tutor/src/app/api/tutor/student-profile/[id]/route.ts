@@ -32,6 +32,7 @@ import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReas
 import { getLearnerContext } from '@/lib/tutor/learner-model/context-block';
 import { assignPractice } from '@/lib/tutor/practice-assign/assign';
 import { findAssignmentBySession, acknowledgeAssignments, finalizeDraft, summarizeAssignmentLos } from '@/lib/tutor/practice-assign/store';
+import { emitOwnsPractice } from '@/lib/tutor/practice-assign/emit-draft';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -378,7 +379,20 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // as if `finalizeHomework` had been absent.
   let autoAssigned: Array<{ loId: string; title: string; count: number }> | undefined;
   let finalizedLocator: string | undefined;
-  if (body.finalizeHomework && ['end', 'pagehide', 'time_cap'].includes(body.finalizeHomework.source)) {
+  // Final fix wave (I1) — the VERIFIED embed token's `practice_locator` claim
+  // (auth.payload is trustworthy here: embedTokenRejectionReason above
+  // rejected any present-but-invalid token) means the host's completed
+  // session-result emit OWNS end-of-session practice: it drafts, tops up,
+  // finalizes and echoes it. This commit usually lands BEFORE that emit;
+  // finalizing here (or auto-assigning below) would hand the emit an
+  // `assigned` record it cannot top up. So both steps are skipped and the
+  // draft stays a draft. No claim ⇒ unchanged.
+  const deferToEmit = emitOwnsPractice(auth.payload);
+  const wantsFinalize = !!body.finalizeHomework && ['end', 'pagehide', 'time_cap'].includes(body.finalizeHomework.source);
+  if (deferToEmit && (wantsFinalize || (body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length > 0))) {
+    console.log(`[practice-assign] finalize deferred to emit (locator) session=${body.sessionId}`);
+  }
+  if (!deferToEmit && wantsFinalize && body.finalizeHomework) {
     try {
       // Fix round 1 (Important — ownership check) — scope to `profileId`
       // (already resolved above) so this commit can only finalize ITS OWN
@@ -406,7 +420,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // by a brain tool call OR the finalize-draft step above), and the session
   // produced a recurrence or a well-signalled gap → auto-assign the top LO.
   // Best-effort: a failure here never fails the commit.
-  if (!autoAssigned && body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length) {
+  if (!deferToEmit && !autoAssigned && body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length) {
     const candidates = body.gaps
       .filter((g) => (g.kind ?? 'lo') === 'lo' && g.loId && ((g.recurrences ?? 0) >= 1 || (g.signals?.length ?? 0) >= 2))
       .sort((a, b) => ((b.recurrences ?? 0) - (a.recurrences ?? 0)) || ((b.signals?.length ?? 0) - (a.signals?.length ?? 0)));

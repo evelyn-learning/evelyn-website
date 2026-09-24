@@ -106,7 +106,13 @@ const VISION_MAX_TOKENS_CAP = 8192;
 /* extractMaterials                                                    */
 /* ------------------------------------------------------------------ */
 
-export async function extractMaterials(materials: PlanMaterial[]): Promise<ExtractResult> {
+export async function extractMaterials(
+  materials: PlanMaterial[],
+  /** Final fix wave (M1): `skipCondense` returns the combined text raw (no
+   *  Haiku condense pass) — for callers that only sample the text and have a
+   *  tight latency cap (material-summary). Default false: unchanged. */
+  opts: { skipCondense?: boolean } = {},
+): Promise<ExtractResult> {
   if (!materials || materials.length === 0) {
     return { ok: true, materials: [], combinedText: '' };
   }
@@ -212,7 +218,7 @@ export async function extractMaterials(materials: PlanMaterial[]): Promise<Extra
 
   const combinedRaw = finalMaterials.map((m) => m.text).join('\n\n---\n\n');
   const combinedText =
-    combinedRaw.length > DEFAULT_PIPELINE_TARGET_CHARS
+    !opts.skipCondense && combinedRaw.length > DEFAULT_PIPELINE_TARGET_CHARS
       ? await condenseForPipeline(combinedRaw, { targetChars: DEFAULT_PIPELINE_TARGET_CHARS })
       : combinedRaw;
 

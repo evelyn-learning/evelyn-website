@@ -139,3 +139,21 @@ export function hasProblemSignals(text: string): boolean {
   if (/\d/.test(t) && OPERATOR.test(t)) return true;
   return (t.match(/\?/g) ?? []).length >= 2;
 }
+
+/** Final fix wave (I2): a host may prefix the typed request with its own
+ *  focus preamble (multi-line objective bullets) and end with
+ *  `Topic: <topic>`. The preamble is the host's instruction, not the
+ *  student's problems — keep only what follows the LAST `\nTopic: ` marker.
+ *  No marker ⇒ unchanged. Pure. */
+const TOPIC_MARKER = '\nTopic: ';
+export function stripFocusPreamble(text: string): string {
+  const i = text.lastIndexOf(TOPIC_MARKER);
+  return i >= 0 ? text.slice(i + TOPIC_MARKER.length) : text;
+}
+
+/** Final fix wave (I2): what typed homework enumeration looks at — the
+ *  request's own `topic` (the student's / normalised topic) when present,
+ *  else the typed text with any focus preamble stripped. Pure. */
+export function typedEnumerationText(requestTopic: string | undefined, text: string): string {
+  return requestTopic?.trim() || stripFocusPreamble(text);
+}

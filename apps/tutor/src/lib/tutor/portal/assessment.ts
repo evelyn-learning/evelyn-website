@@ -18,6 +18,8 @@
 
 import { randomUUID } from 'crypto';
 import { retrievePractice, type PracticeSources } from './practice';
+import type { PracticeGenSources } from './practice-gen';
+import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 import { emitSessionResult } from './session-result';
 import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
@@ -36,11 +38,24 @@ import type {
 
 export type AssessmentItemResolver = (itemId: string) => Promise<ResolvedAssessmentKey | null>;
 
+/** Final fix wave (I3): the calibration set is built from EXISTING content.
+ *  `retrievePractice` generates on exhaustion whenever PRACTICE_GEN=on, which
+ *  would add up to 2 sequential Sonnet calls per LO to every partner's
+ *  assessment. So the builder passes the zero-slot NO_GEN_SOURCES unless
+ *  PRACTICE_GEN_ASSESSMENT=on (a separate opt-in, default off); `undefined`
+ *  means "the real generator" (still behind PRACTICE_GEN). Pure. */
+export function assessmentGenSources(
+  flag: string | undefined = process.env.PRACTICE_GEN_ASSESSMENT,
+): PracticeGenSources | undefined {
+  return flag === 'on' ? undefined : NO_GEN_SOURCES;
+}
+
 /** Build a (stateless) calibration set: up to `maxPerLo` items per LO, drawn
  *  from existing content, with answer keys stripped. */
 export async function buildAssessment(
   req: AssessmentRequest,
   sources: PracticeSources,
+  genSources: PracticeGenSources | undefined = assessmentGenSources(),
 ): Promise<AssessmentSet> {
   const items: AssessmentItem[] = [];
   const seen = new Set<string>();
@@ -48,6 +63,7 @@ export async function buildAssessment(
     const res = await retrievePractice(
       { studentId: req.studentId, courseId: req.courseId, scope: { loId }, difficulty: req.difficulty, count: req.maxPerLo },
       sources,
+      genSources,
     );
     for (const it of res.items) {
       if (seen.has(it.id)) continue;

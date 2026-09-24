@@ -288,3 +288,16 @@ export async function replaceDraftLos(sessionId: string, studentId: string, los:
   const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, status: 'draft' }, { $set: { los } });
   return r.modifiedCount > 0;
 }
+
+/** Final fix wave (I1 safety net): add items to a record the CLIENT's final
+ *  commit already finalized moments before the emit (see emit-draft.ts's
+ *  isRecentClientFinalize). Status-agnostic on purpose — it never re-opens
+ *  (status is not in the `$set`), it only writes the topped-up LOs — and
+ *  guarded by `acknowledgedAt` absent, so homework the student has already
+ *  seen is never changed under them. Scoped to `{ sessionId, studentId }`
+ *  like every write here. Returns whether a record was updated. */
+export async function appendAssignedLos(sessionId: string, studentId: string, los: IPracticeAssignmentLo[]): Promise<boolean> {
+  await connectDB();
+  const r = await PracticeAssignmentModel.updateOne({ sessionId, studentId, acknowledgedAt: { $exists: false } }, { $set: { los } });
+  return r.modifiedCount > 0;
+}

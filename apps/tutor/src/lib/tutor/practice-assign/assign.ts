@@ -14,7 +14,7 @@ import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { getPartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
 import { resolveFlag, type FlagCarrier } from '@/lib/tutor/portal/flags';
 import { resolveAssignmentItems, ASSIGN_TUNING } from './resolve';
-import { upsertAssignment, upsertDraft, summarizeAssignmentLos, replaceDraftLos } from './store';
+import { upsertAssignment, upsertDraft, summarizeAssignmentLos, replaceDraftLos, appendAssignedLos } from './store';
 import type { IPracticeAssignment } from '@/models';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import type { GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
@@ -163,6 +163,7 @@ export interface TopUpDraftDeps {
   gen?: (o: GeneratePracticeItemsOptions) => Promise<PracticeItem[]>;
 }
 const TOP_UP_DRAFT_DEPS: TopUpDraftDeps = { getPartner, write: replaceDraftLos };
+const TOP_UP_ASSIGNED_DEPS: TopUpDraftDeps = { getPartner, write: appendAssignedLos };
 
 /** Round 4 (E3, fix round 1): an end-of-session emit that finds a client
  *  draft still open (`status: 'draft'`) tops it up to min(PRACTICE_TARGET,
@@ -176,6 +177,28 @@ export async function topUpDraft(
   deps: TopUpDraftDeps = TOP_UP_DRAFT_DEPS,
 ): Promise<number> {
   if (rec.status !== 'draft' || rec.los.length === 0) return 0;
+  return topUpRecord(rec, input, deps);
+}
+
+/** Final fix wave (I1 safety net): the same top-up for a record a client
+ *  final commit ALREADY finalized just before the emit (the caller decides
+ *  that — emit-draft.ts's isRecentClientFinalize). Never re-opens: the write
+ *  (appendAssignedLos) leaves `status` alone and refuses once the student
+ *  has acknowledged the homework. */
+export async function topUpAssigned(
+  rec: IPracticeAssignment,
+  input: { partnerId: string; topUp: Omit<TopUpInput, 'target'> },
+  deps: TopUpDraftDeps = TOP_UP_ASSIGNED_DEPS,
+): Promise<number> {
+  if (rec.status !== 'assigned' || rec.acknowledgedAt || rec.los.length === 0) return 0;
+  return topUpRecord(rec, input, deps);
+}
+
+async function topUpRecord(
+  rec: IPracticeAssignment,
+  input: { partnerId: string; topUp: Omit<TopUpInput, 'target'> },
+  deps: TopUpDraftDeps,
+): Promise<number> {
   let partner: PartnerRecord | null = null;
   try {
     partner = await deps.getPartner(input.partnerId);

@@ -315,8 +315,12 @@ export async function emitSessionResult(
 
   // Round 4 (E3): a completed session whose host names where practice lands
   // (req.practiceLocator), with a plan, gets an end-of-session draft here
-  // (or its short open client draft is topped up); the finalize below
-  // promotes it. Bounded by top-up.ts's 12 s budget. Best-effort.
+  // (or its short open client draft — or one the client finalized moments
+  // ago — is topped up); the finalize below promotes a draft. Only the
+  // GENERATION wait is bounded (top-up.ts's topUpBudgetMs, default 25 s);
+  // the retrieval, plan read and store writes around it are not, and a
+  // generator call still running at the deadline may bank its row later.
+  // Best-effort: a failure never fails the emit.
   if (shouldCreateDraftOnEmit(req)) {
     await createDraftOnEmit(req, { profileId, partnerId: opts.partnerId }).then(
       (outcome) => console.log(`[session-result] end-of-session practice session=${req.sessionId} outcome=${outcome}`),

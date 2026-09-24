@@ -3,6 +3,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parseMaterialSummary, summarizeMaterial, SUMMARY_SAMPLE_CHARS } from '../src/lib/tutor/lesson-plan/material-summary';
+import { extractMaterials } from '../src/lib/tutor/lesson-plan/material-extract';
 
 let passed = 0, failed = 0;
 const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
@@ -28,6 +29,13 @@ const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log
   assert(route.includes('extractMaterials(') && route.includes('status: 422'), 'wiring: extraction failures are 422');
   assert(route.includes("'summary_failed'") && route.includes('MaterialSummaryResponseSchema.parse('), 'wiring: 502 summary_failed; response validated');
 
+  // Final fix wave (M1): the summary route skips the condense pass.
+  assert(route.includes('extractMaterials(parsed.data.materials, { skipCondense: true })'), 'M1 wiring: material-summary extracts with skipCondense');
+  const big = 'line of worksheet text. '.repeat(1000); // ~24k chars > the 8k condense threshold
+  const raw = await extractMaterials([{ kind: 'text', data: Buffer.from(big).toString('base64') } as never], { skipCondense: true });
+  assert(raw.ok && raw.combinedText === big, 'M1: skipCondense returns the raw combined text (no Haiku call)');
+  const extractSrc = readFileSync(join(__dirname, '..', 'src/lib/tutor/lesson-plan/material-extract.ts'), 'utf8');
+  assert(extractSrc.includes('opts: { skipCondense?: boolean } = {}') && extractSrc.includes('!opts.skipCondense && combinedRaw.length > DEFAULT_PIPELINE_TARGET_CHARS'), 'M1: condense stays the default for every other caller');
   console.log(`${passed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);
 })();

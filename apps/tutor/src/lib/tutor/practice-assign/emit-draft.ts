@@ -3,12 +3,16 @@
  *  A COMPLETED emit that names where practice lands (practiceLocator — only
  *  the host that renders it sends one) and carries a plan, with no assignment
  *  yet, gets an end-of-session draft here; session-result's finalize then
- *  promotes it. Kill switch: SESSION_RESULT_DRAFT=off. */
+ *  promotes it. Final fix wave (I1): for such sessions the client's final
+ *  commit defers its finalize to this emit (emitOwnsPractice), so an open
+ *  draft is topped up here before the finalize. Kill switch:
+ *  SESSION_RESULT_DRAFT=off. */
 import type { PracticeItem, SessionEmitRequest } from '@evelyn/portal-contract/v1';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { homeworkProblemsOf, homeworkLoIdFor } from '@/lib/tutor/lesson-plan/homework';
 import { findAssignmentBySession } from './store';
-import { assignPractice, topUpDraft } from './assign';
+import { assignPractice, topUpDraft, topUpAssigned } from './assign';
+import type { IPracticeAssignment } from '@/models';
 
 export const SESSION_END_REASON = 'Practice from your session.';
 const DRAFT_LOS = 2;
@@ -19,6 +23,39 @@ export function shouldCreateDraftOnEmit(
   flag: string | undefined = process.env.SESSION_RESULT_DRAFT,
 ): boolean {
   return req.status === 'completed' && !!req.lessonPlanId && !!req.practiceLocator?.trim() && flag !== 'off';
+}
+
+/** Final fix wave (I1): when the session's VERIFIED embed token carries a
+ *  `practice_locator` claim, the host renders practice and sends a completed
+ *  session-result emit — so the EMIT owns end-of-session practice (draft →
+ *  top-up → finalize → echo). The client's final profile commit must then NOT
+ *  finalize the draft or run the §C.3 auto-assign: it used to land first,
+ *  leaving the emit an `assigned` record it could not top up. Keyed on the
+ *  claim (never a partner key); follows the emit-draft kill switch, so with
+ *  SESSION_RESULT_DRAFT=off the client finalizes exactly as before. Pure. */
+export function emitOwnsPractice(
+  claims: Record<string, unknown> | undefined,
+  flag: string | undefined = process.env.SESSION_RESULT_DRAFT,
+): boolean {
+  const loc = claims?.practice_locator;
+  return typeof loc === 'string' && !!loc.trim() && flag !== 'off';
+}
+
+/** Safety net for a client commit that finalized anyway (an older client, a
+ *  token without the claim on that request): a record the CLIENT finalized
+ *  (end / pagehide / time_cap) under 10 minutes ago, not yet acknowledged, is
+ *  still this session's end-of-session homework and may be topped up — never
+ *  re-opened. Pure. */
+export const CLIENT_FINALIZE_SOURCES: ReadonlyArray<string> = ['end', 'pagehide', 'time_cap'];
+export const CLIENT_FINALIZE_TOPUP_WINDOW_MS = 10 * 60_000;
+export function isRecentClientFinalize(
+  rec: Pick<IPracticeAssignment, 'status' | 'finalizeSource' | 'finalizedAt' | 'acknowledgedAt'>,
+  now: number = Date.now(),
+): boolean {
+  if (rec.status !== 'assigned' || rec.acknowledgedAt) return false;
+  if (!rec.finalizeSource || !CLIENT_FINALIZE_SOURCES.includes(rec.finalizeSource)) return false;
+  const at = rec.finalizedAt ? new Date(rec.finalizedAt).getTime() : NaN;
+  return Number.isFinite(at) && now - at >= 0 && now - at < CLIENT_FINALIZE_TOPUP_WINDOW_MS;
 }
 
 type PlanLike = { id: string; los: Array<{ id: string }>; metadata?: Record<string, unknown> };
@@ -47,8 +84,9 @@ export interface EmitDraftDeps {
   getPlan: typeof getLessonPlan;
   assign: typeof assignPractice;
   topUpDraft: typeof topUpDraft;
+  topUpAssigned: typeof topUpAssigned;
 }
-const DEFAULT_DEPS: EmitDraftDeps = { findAssignment: findAssignmentBySession, getPlan: getLessonPlan, assign: assignPractice, topUpDraft };
+const DEFAULT_DEPS: EmitDraftDeps = { findAssignment: findAssignmentBySession, getPlan: getLessonPlan, assign: assignPractice, topUpDraft, topUpAssigned };
 
 /** Fix round 1 — in-flight guard: two concurrent completed emits for one
  *  session (the client's End and the academy sweep) share ONE create/top-up;
@@ -73,9 +111,13 @@ async function createOrTopUp(
   deps: EmitDraftDeps,
 ): Promise<EmitDraftOutcome> {
   const existing = await deps.findAssignment(req.sessionId);
-  // An assigned (or legacy, status-less) record, or another student's record
-  // under a colliding sessionId, is never touched.
-  if (existing && (existing.status !== 'draft' || existing.studentId !== ctx.profileId)) return 'exists';
+  // Another student's record under a colliding sessionId is never touched. An
+  // assigned (or legacy, status-less) record is left alone too — except the
+  // safety net: one the client's final commit finalized moments ago
+  // (isRecentClientFinalize) is topped up in place, never re-opened.
+  if (existing && existing.studentId !== ctx.profileId) return 'exists';
+  const recentClientFinalize = !!existing && isRecentClientFinalize(existing);
+  if (existing && existing.status !== 'draft' && !recentClientFinalize) return 'exists';
   const plan = req.lessonPlanId ? await deps.getPlan(req.lessonPlanId) : null;
   if (!plan) return existing ? 'exists' : 'no_plan';
   const wrapper = homeworkLoIdFor(plan.id);
@@ -83,7 +125,10 @@ async function createOrTopUp(
   const topUp = { studentId: ctx.profileId, topic: plan.topic || plan.title, anchorsFor: (loId: string) => (loId === wrapper ? anchors : []) };
   if (existing) {
     // A short client draft still open: top it up; the finalize promotes it.
-    const added = await deps.topUpDraft(existing, { partnerId: ctx.partnerId, topUp });
+    // A just-client-finalized record: top it up where it stands.
+    const added = recentClientFinalize
+      ? await deps.topUpAssigned(existing, { partnerId: ctx.partnerId, topUp })
+      : await deps.topUpDraft(existing, { partnerId: ctx.partnerId, topUp });
     return added > 0 ? 'topped_up' : 'exists';
   }
   const loIds = draftLoIdsForEmit(plan, req.losTouched);

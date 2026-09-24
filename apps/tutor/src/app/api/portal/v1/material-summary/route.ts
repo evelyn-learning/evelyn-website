@@ -14,7 +14,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const extracted = await extractMaterials(parsed.data.materials);
+  // Final fix wave (M1): no condense pass — the summary reads only the first
+  // SUMMARY_SAMPLE_CHARS (12 000) of the raw text, and a Haiku condense of a
+  // long upload could blow the host's 15 s cap on its own.
+  const extracted = await extractMaterials(parsed.data.materials, { skipCondense: true });
   if (!extracted.ok) {
     console.log(`[material-summary] partner=${auth.partnerId} extract=${extracted.code}`);
     return NextResponse.json({ error: extracted.code, message: extracted.message }, { status: 422 });

@@ -1,9 +1,9 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
 import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter, shouldFinalizeDraftOnEmit } from '../src/lib/tutor/practice-assign/store';
-import { capForPartner, topUpDraft } from '../src/lib/tutor/practice-assign/assign';
-import { topUpPractice, splitShortfall } from '../src/lib/tutor/practice-assign/top-up';
-import { shouldCreateDraftOnEmit, draftLoIdsForEmit, homeworkAnchorItems, createDraftOnEmit } from '../src/lib/tutor/practice-assign/emit-draft';
+import { capForPartner, topUpDraft, topUpAssigned } from '../src/lib/tutor/practice-assign/assign';
+import { topUpPractice, splitShortfall, topUpBudgetMs, TOP_UP_BUDGET_MS } from '../src/lib/tutor/practice-assign/top-up';
+import { shouldCreateDraftOnEmit, draftLoIdsForEmit, homeworkAnchorItems, createDraftOnEmit, emitOwnsPractice, isRecentClientFinalize } from '../src/lib/tutor/practice-assign/emit-draft';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
 let passed = 0, failed = 0;
@@ -300,5 +300,65 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/portal/session-result.ts'), 'utf8') as string;
     check('wiring: the create block sits above the homework-echo comment', src.indexOf('if (shouldCreateDraftOnEmit(req)) {') < src.indexOf('// v1.15.0 — best-effort homework echo'));
   }
+  // Final fix wave (I1) — a locator claim hands end-of-session practice to the emit.
+  {
+    check('I1 emitOwnsPractice: a verified locator claim → the emit owns practice', emitOwnsPractice({ partner_id: 'x', practice_locator: 'My Homework Help · Practice' }, undefined));
+    check('I1 emitOwnsPractice (b): no claim → the client commit finalizes as before', !emitOwnsPractice({ partner_id: 'x' }, undefined) && !emitOwnsPractice(undefined, undefined));
+    check('I1 emitOwnsPractice: a blank / non-string claim → client-owned', !emitOwnsPractice({ practice_locator: '  ' }, undefined) && !emitOwnsPractice({ practice_locator: 7 }, undefined));
+    check('I1 emitOwnsPractice: SESSION_RESULT_DRAFT=off → client-owned again', !emitOwnsPractice({ practice_locator: 'L' }, 'off'));
+    const route = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/app/api/tutor/student-profile/[id]/route.ts'), 'utf8') as string;
+    check('I1 wiring: the claim is read from the VERIFIED token after the rejection check', route.includes('const deferToEmit = emitOwnsPractice(auth.payload);') && route.indexOf('embedTokenRejectionReason(token, auth);', route.indexOf('export async function POST')) < route.indexOf('const deferToEmit'));
+    check('I1 wiring: final-commit finalizeDraft is skipped when the emit owns practice', /if \(!deferToEmit && wantsFinalize[^)]*\) \{\s*try \{[\s\S]{0,400}finalizeDraft\(/.test(route));
+    check('I1 wiring: the §C.3 auto-assign is skipped when the emit owns practice', route.includes('if (!deferToEmit && !autoAssigned && body.generateNotes !== false'));
+    check('I1 wiring: the deferral is logged', route.includes('[practice-assign] finalize deferred to emit (locator)'));
+
+    // (a) locator present: the commit leaves the 1-item client draft as a draft;
+    // the emit tops it up and finalizes; the echo carries ≥3 items.
+    const it = (id: string) => ({ id, source: 'bank' as const, problemText: id });
+    let stored: Record<string, unknown> = { _id: 'd', sessionId: 'sa', studentId: 'p', status: 'draft', auto: true, assignedAt: new Date(), createdAt: new Date(), locator: 'L',
+      los: [{ loId: 'gen-1.lo-1', title: 'T', reason: 'client reason', items: [it('c1')] }] };
+    const commitFinalizes = !emitOwnsPractice({ practice_locator: 'L' }, undefined);
+    check('I1 (a): with the claim the final commit leaves status draft', !commitFinalizes && stored.status === 'draft');
+    const fakeWrite = async (_s: string, _st: string, los: never) => { if (stored.status !== 'draft') return false; stored = { ...stored, los }; return true; };
+    const gen = async (o: { shortfall: number }) => Array.from({ length: o.shortfall }, (_, i) => it(`g${o.shortfall}-${i}`));
+    const emitDeps = {
+      findAssignment: async () => stored,
+      getPlan: async () => ({ ...plan3, topic: 't', title: 't' }),
+      assign: async () => { throw new Error('must not create over an existing draft'); },
+      topUpDraft: (rec: never, input: never) => topUpDraft(rec, input, { getPartner: async () => null, write: fakeWrite, gen } as never),
+      topUpAssigned: async () => { throw new Error('must not take the safety net for a draft'); },
+    };
+    const req = { sessionId: 'sa', studentId: 'ext', courseId: 'c', status: 'completed', lessonPlanId: 'gen-1', losTouched: [], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'L' } as never;
+    const outcome = await createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, emitDeps as never);
+    stored = { ...stored, ...finalizePatch(stored as never, { source: 'sweep', locator: 'L' }) };
+    const echo = (stored.los as Array<{ items: Array<{ id: string }> }>).flatMap((l) => l.items.map((i) => i.id));
+    check('I1 (a): the emit tops the draft up, the finalize assigns it, the echo carries ≥3 items', outcome === 'topped_up' && stored.status === 'assigned' && echo.length >= 3, `${outcome} ${stored.status} ${echo}`);
+
+    // (c) safety net — a client commit slipped through and finalized first.
+    const now = Date.now();
+    const assignedRec = { _id: 'e', sessionId: 'sc', studentId: 'p', status: 'assigned', finalizeSource: 'end', finalizedAt: new Date(now - 60_000), auto: true, assignedAt: new Date(), createdAt: new Date(),
+      los: [{ loId: 'A', title: 'A', reason: 'r', items: [it('c1')] }] };
+    check('I1 (c) isRecentClientFinalize: end/pagehide/time_cap, < 10 min, unacknowledged', isRecentClientFinalize(assignedRec as never, now) && isRecentClientFinalize({ ...assignedRec, finalizeSource: 'pagehide' } as never, now) && isRecentClientFinalize({ ...assignedRec, finalizeSource: 'time_cap' } as never, now));
+    check('I1 (c) isRecentClientFinalize: close_tool / sweep never', !isRecentClientFinalize({ ...assignedRec, finalizeSource: 'close_tool' } as never, now) && !isRecentClientFinalize({ ...assignedRec, finalizeSource: 'sweep' } as never, now));
+    check('I1 (c) isRecentClientFinalize: ≥ 10 min old, acknowledged, a draft, or no finalizedAt → never', !isRecentClientFinalize({ ...assignedRec, finalizedAt: new Date(now - 10 * 60_000) } as never, now) && !isRecentClientFinalize({ ...assignedRec, acknowledgedAt: new Date() } as never, now) && !isRecentClientFinalize({ ...assignedRec, status: 'draft' } as never, now) && !isRecentClientFinalize({ ...assignedRec, finalizedAt: undefined } as never, now));
+    let assignedCalls = 0;
+    const netDeps = { ...emitDeps, findAssignment: async () => assignedRec, topUpDraft: async () => { throw new Error('no draft top-up'); }, topUpAssigned: async () => { assignedCalls++; return 2; } };
+    check('I1 (c): the emit tops up a just-client-finalized record', (await createDraftOnEmit({ ...(req as object), sessionId: 'sc' } as never, { profileId: 'p', partnerId: 'g' }, netDeps as never)) === 'topped_up' && assignedCalls === 1);
+    check('I1 (c): an acknowledged one is left alone', (await createDraftOnEmit({ ...(req as object), sessionId: 'sc2' } as never, { profileId: 'p', partnerId: 'g' }, { ...netDeps, findAssignment: async () => ({ ...assignedRec, acknowledgedAt: new Date() }) } as never)) === 'exists' && assignedCalls === 1);
+    check('I1 (c): a close_tool finalize is left alone', (await createDraftOnEmit({ ...(req as object), sessionId: 'sc3' } as never, { profileId: 'p', partnerId: 'g' }, { ...netDeps, findAssignment: async () => ({ ...assignedRec, finalizeSource: 'close_tool' }) } as never)) === 'exists' && assignedCalls === 1);
+    const written: { los?: Array<{ items: unknown[] }>; calls: number } = { calls: 0 };
+    const added = await topUpAssigned(assignedRec as never, { partnerId: 'g', topUp: { studentId: 'p', topic: 't', anchorsFor: () => [] } },
+      { getPartner: async () => null, write: async (_s: string, _st: string, los: never) => { written.calls++; written.los = los; return true; }, gen } as never);
+    check('I1 (c) topUpAssigned: reaches 3 items; writes LOs only (never re-opens)', added === 2 && written.los?.[0]?.items.length === 3 && written.calls === 1);
+    const ack = await topUpAssigned({ ...assignedRec, acknowledgedAt: new Date() } as never, { partnerId: 'g', topUp: { studentId: 'p', topic: 't', anchorsFor: () => [] } },
+      { getPartner: async () => null, write: async () => { written.calls++; return true; }, gen } as never);
+    check('I1 (c) topUpAssigned: acknowledged → no-op; a draft → no-op', ack === 0 && written.calls === 1 && (await topUpAssigned({ ...assignedRec, status: 'draft' } as never, { partnerId: 'g', topUp: { studentId: 'p', topic: 't', anchorsFor: () => [] } }, { getPartner: async () => null, write: async () => true, gen } as never)) === 0);
+    const storeSrc = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/lib/tutor/practice-assign/store.ts'), 'utf8') as string;
+    const app = storeSrc.slice(storeSrc.indexOf('export async function appendAssignedLos'));
+    check('I1 (c) wiring: appendAssignedLos is guarded by acknowledgedAt absent and never sets status', app.includes('acknowledgedAt: { $exists: false }') && app.includes('{ $set: { los } }') && !app.slice(0, app.indexOf('\n}\n')).includes('status'));
+  }
+  // Final fix wave (M2) — the top-up budget.
+  check('M2: default top-up budget is 25 s', TOP_UP_BUDGET_MS === 25_000 && topUpBudgetMs(undefined) === 25_000);
+  check('M2: PRACTICE_EMIT_TOPUP_BUDGET_MS overrides; junk falls back', topUpBudgetMs('30000') === 30_000 && topUpBudgetMs('0') === 25_000 && topUpBudgetMs('abc') === 25_000 && topUpBudgetMs('') === 25_000 && topUpBudgetMs('2.5') === 25_000);
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();
