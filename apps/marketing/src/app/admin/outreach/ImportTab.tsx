@@ -30,8 +30,10 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
   const [previewedFor, setPreviewedFor] = useState<{ account: string; days: number } | null>(null);
   const [deleted, setDeleted] = useState<DeletedLead[] | null>(null);
   const [deletedBusy, setDeletedBusy] = useState(false);
+  const [deletedMsg, setDeletedMsg] = useState<string | null>(null);
   const [fix, setFix] = useState<FixResult | null>(null);
   const [fixBusy, setFixBusy] = useState(false);
+  const [fixMsg, setFixMsg] = useState<string | null>(null);
 
   // gmailStatus loads asynchronously (fetched in a useEffect one level up),
   // so accounts is empty on first render. Whenever the account list changes,
@@ -145,6 +147,8 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { alert(data.error || "Failed to load deleted leads"); return; }
       setDeleted(data.deleted ?? []);
+    } catch (err) {
+      setDeletedMsg(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setDeletedBusy(false);
     }
@@ -159,10 +163,18 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { alert(data.error || "Failed to restore lead"); return; }
-      // The row is gone from the suppression list now — reload it rather than
-      // trusting local state, then refresh the console's lead list.
-      setDeleted((prev) => (prev ?? []).filter((d) => d._id !== suppressionId));
+      setDeletedMsg(
+        data.alreadyExisted
+          ? "Lead already existed — tombstone removed and linked to the existing lead."
+          : "Lead restored."
+      );
+      // Reload from the server rather than trusting local state, so the
+      // deleted list reflects the source of truth, then refresh the
+      // console's lead list.
+      await loadDeleted();
       await onImported();
+    } catch (err) {
+      setDeletedMsg(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setDeletedBusy(false);
     }
@@ -179,6 +191,8 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
       if (!res.ok) { alert(data.error || "Failed to fix company names"); return; }
       setFix(data as FixResult);
       if (!dryRun) await onImported();
+    } catch (err) {
+      setFixMsg(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setFixBusy(false);
     }
@@ -255,6 +269,9 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
         >
           {deletedBusy ? "Working…" : deleted ? "Reload" : "Show deleted leads"}
         </button>
+        {deletedMsg && (
+          <p className={`mt-2 text-xs ${deletedMsg.startsWith("Error:") ? "font-medium text-red-600" : "text-gray-600"}`}>{deletedMsg}</p>
+        )}
         {deleted && (
           deleted.length === 0 ? (
             <p className="mt-2 text-sm text-gray-500">Nothing has been deleted.</p>
@@ -310,6 +327,9 @@ export default function ImportTab({ gmailStatus, onImported }: { gmailStatus: Gm
             </span>
           )}
         </div>
+        {fixMsg && (
+          <p className={`mt-2 text-xs ${fixMsg.startsWith("Error:") ? "font-medium text-red-600" : "text-gray-600"}`}>{fixMsg}</p>
+        )}
         {fix && fix.samples.length > 0 && (
           <ul className="mt-2 max-h-48 overflow-y-auto text-xs text-gray-600">
             {fix.samples.map((s) => (
