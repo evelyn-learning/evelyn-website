@@ -47,6 +47,16 @@ export function qpinDefaultTopPx(boardTopPx: number): number {
   return boardTopPx + QPIN_BOARD_GAP_PX;
 }
 
+/** Q-pin max-width (sm+, all text-mode sessions — not just the rail): capped
+ *  to the board CARD's rendered width (the `max-w-4xl` card inside the
+ *  column, not the column itself) minus a 16px breathing margin, never wider
+ *  than the pre-round-6 560px cap nor narrower than a 160px legible floor.
+ *  Applied via a `--qpin-max-w` CSS var so the class's `sm:` prefix
+ *  (full-width banner on phones, round-6e) is untouched. */
+export function qpinMaxWidthPx(boardWidthPx: number): number {
+  return Math.max(160, Math.min(560, boardWidthPx - 16));
+}
+
 export const HEADER_CLEARANCE_PX = 68;
 export const RAIL_ROW_PX = 40;
 export const TOOLS_ROW_PX = 46;

@@ -8,7 +8,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
-  legacyTextColumnGeometry, textPanelTopFallbackPx, toolRailTopPx, qpinDefaultTopPx,
+  legacyTextColumnGeometry, textPanelTopFallbackPx, toolRailTopPx, qpinDefaultTopPx, qpinMaxWidthPx,
   HEADER_CLEARANCE_PX, RAIL_ROW_PX, TOOLS_ROW_PX, TOOLS_PANEL_GAP_PX,
   TOOL_RAIL_INSET_PX, TOOL_RAIL_BTN_PX, toolsRowDefaultOpen,
 } from '../src/app/tutor/components/session/stage-geometry';
@@ -21,6 +21,9 @@ assert(textPanelTopFallbackPx({ chipRow: false }) === 64, 'rail fallback: board/
 assert(textPanelTopFallbackPx({ chipRow: true }) === 90, 'rail fallback: 90px with the chip row (56 + 30 row + pt-1)');
 assert(toolRailTopPx(90) === 98 && TOOL_RAIL_INSET_PX === 8 && TOOL_RAIL_BTN_PX === 28, 'wrench sits 8px inside the panel header (28px button)');
 assert(qpinDefaultTopPx(90) === 98, 'Q-pin default under the rail: board top + 8px');
+assert(qpinMaxWidthPx(0) === 160, 'Q-pin max-width: floors at 160px on a near-zero board');
+assert(qpinMaxWidthPx(400) === 384, 'Q-pin max-width: board width - 16px');
+assert(qpinMaxWidthPx(900) === 560, 'Q-pin max-width: caps at the pre-round-6 560px');
 const a = legacyTextColumnGeometry({ hasRail: false });
 assert(a.toolsTopPx === HEADER_CLEARANCE_PX && a.toolsTopPx === 68 && a.panelTopPx === 68 + TOOLS_ROW_PX + TOOLS_PANEL_GAP_PX, 'legacy (flag off): tool row at 68, panel below row + gap');
 const b = legacyTextColumnGeometry({ hasRail: true });
@@ -85,6 +88,30 @@ assert(evalFalse(floating[2]) === "`shrink-0 grid place-items-center w-7 h-7 rou
   && evalFalse(floating[5]) === "`truncate text-xs font-medium text-slate-700`"
   && evalFalse(floating[6]) === "`shrink-0 text-[11px] font-semibold tabular-nums text-slate-400`", 'renderSwitcher(false) resolves to the exact voice classes');
 assert(has('? { top: `${qpinDefaultTopPx(textBoardTopPx)}px` }') && has('const HEADER_CLEARANCE = textToolRail ? textBoardTopPx :'), 'Q-pin default/auto anchors follow the rail board top');
+
+// Q-pin width clamp (folded-in task 2): board CARD width (not the column),
+// all text-mode sessions, voice untouched.
+assert(has('const boardCardRef = useRef<HTMLDivElement>(null)'), 'board card has its own ref (distinct from the column ref)');
+assert(has('ref={boardCardRef}'), 'ref attached to the board card element');
+assert(has('const [boardWidthPx, setBoardWidthPx] = useState<number | null>(null)'), 'board card width tracked in state');
+assert(/if \(sessionMode !== 'text'\) return;/.test(code) && has('if (card) setBoardWidthPx(Math.round(card.getBoundingClientRect().width))'), 'width measured in every text-mode session, not just the rail');
+assert(has("sm:max-w-[min(88vw,var(--qpin-max-w,560px))]"), 'Q-pin max-width class reads a CSS var (mobile full-width banner untouched)');
+assert(has("'--qpin-max-w' as any") && has('qpinMaxWidthPx(boardWidthPx)'), 'Q-pin sets --qpin-max-w from the measured board card width');
+assert(has('qpinMaxWidthPx') && stage.includes("from './stage-geometry'") && has('qpinMaxWidthPx,'), 'qpinMaxWidthPx imported from stage-geometry');
+
+// Fold-in 1: chip row keyed on switcherInline && chipRowShown, not
+// showSwitcher — so it doesn't jump sideways when a 2nd page appears.
+assert(has('{(switcherInline && chipRowShown) ? (') , 'chip row branch keyed on switcherInline/chipRowShown, not showSwitcher');
+assert(has('{showSwitcher ? renderSwitcher(true) : null}'), 'switcher pill still gated on showSwitcher inside the stable-padding row');
+
+// Fold-in 2: the z-[25] chip row must not block a dragged Q-pin underneath it.
+assert(has('z-[25] shrink-0 order-2 px-2 md:pl-4 md:pr-[388px] pt-1.5 flex flex-wrap items-center gap-1.5 pointer-events-none'), 'chip row itself does not capture pointer events');
+assert(has('min-w-0 max-w-full pointer-events-auto'), 'rail element inside the chip row re-enables pointer events');
+
+// Fold-in 3: useIsomorphicLayoutEffect declared after the import block.
+const importsEnd = code.lastIndexOf("import type { SessionGoal }");
+const isoDecl = code.indexOf('const useIsomorphicLayoutEffect =');
+assert(importsEnd > -1 && isoDecl > importsEnd, 'useIsomorphicLayoutEffect declared below the import block');
 
 const session = readFileSync(join(dir, 'TutorSession.tsx'), 'utf8');
 assert(session.includes('createPortal(') && session.includes('data-testid="adjust-lesson-menu"'), 'adjust-lesson menu portalled to body');

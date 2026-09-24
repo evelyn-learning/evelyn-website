@@ -35,13 +35,15 @@ import {
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
-import { legacyTextColumnGeometry, qpinDefaultTopPx, textPanelTopFallbackPx, toolRailTopPx, toolsRowDefaultOpen } from './stage-geometry';
+import {
+  legacyTextColumnGeometry, qpinDefaultTopPx, qpinMaxWidthPx, textPanelTopFallbackPx, toolRailTopPx, toolsRowDefaultOpen,
+} from './stage-geometry';
+import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
+import type { SessionGoal } from '@/lib/tutor/types';
 
 /** Layout effect on the client (measure before paint), plain effect on the
  *  server (where useLayoutEffect warns and cannot run). */
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
-import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
-import type { SessionGoal } from '@/lib/tutor/types';
 
 // 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
 // the resting state in place of 'listening' while the student owns the
@@ -716,25 +718,41 @@ export default function SessionStage(props: SessionStageProps) {
   // round-3 [tool row][gap][panel] geometry (`legacyTextColumnGeometry`).
   const legacyTextGeom = legacyTextColumnGeometry({ hasRail: !!railEl && !isFullscreen });
   const boardColumnRef = useRef<HTMLDivElement>(null);
+  // The board CARD (`max-w-4xl`, inside the column) — a separate, narrower
+  // element than the column itself, used only to clamp the Q-pin's
+  // max-width (below) to the whiteboard's own rendered width, in every
+  // text-mode session (not just the tool-rail flag). Observed by the same
+  // effect as the column's top since both fire on the same layout passes.
+  const boardCardRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [boardTopPx, setBoardTopPx] = useState<number | null>(null);
+  const [boardWidthPx, setBoardWidthPx] = useState<number | null>(null);
   useIsomorphicLayoutEffect(() => {
-    if (!textToolRail) return;
+    if (sessionMode !== 'text') return;
     const col = boardColumnRef.current;
     const stageEl = stageRef.current;
-    if (!col || !stageEl) return;
+    const card = boardCardRef.current;
     const measure = () => {
-      const top = col.getBoundingClientRect().top - stageEl.getBoundingClientRect().top + (parseFloat(getComputedStyle(col).paddingTop) || 0);
-      setBoardTopPx(Math.round(top));
+      if (textToolRail && col && stageEl) {
+        const top = col.getBoundingClientRect().top - stageEl.getBoundingClientRect().top + (parseFloat(getComputedStyle(col).paddingTop) || 0);
+        setBoardTopPx(Math.round(top));
+      }
+      if (card) setBoardWidthPx(Math.round(card.getBoundingClientRect().width));
     };
     const ro = new ResizeObserver(measure);
-    ro.observe(col);
+    if (col) ro.observe(col);
+    if (card) ro.observe(card);
     measure();
     return () => ro.disconnect();
-  }, [textToolRail, boardColumnTopPadClass, chipRowShown]);
+  }, [sessionMode, textToolRail, boardColumnTopPadClass, chipRowShown]);
   const textBoardTopPx = boardTopPx ?? textPanelTopFallbackPx({ chipRow: chipRowShown });
   const textToolsTopPx = textToolRail ? toolRailTopPx(textBoardTopPx) : legacyTextGeom.toolsTopPx;
   const textPanelTopPx = textToolRail ? textBoardTopPx : legacyTextGeom.panelTopPx;
+  // Q-pin max-width (all text-mode sessions, voice untouched): null until the
+  // board card's first measurement lands, matching the class's own 560px cap.
+  const qpinMaxWidthVar: CSSProperties | undefined = sessionMode === 'text' && boardWidthPx != null
+    ? ({ ['--qpin-max-w' as any]: `${qpinMaxWidthPx(boardWidthPx)}px` } as CSSProperties)
+    : undefined;
 
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
@@ -1134,7 +1152,10 @@ export default function SessionStage(props: SessionStageProps) {
               phones, starts collapsed to one wrench button at the top-right
               (`toolsRowDefaultOpen`), so a full-height gutter was dead
               padding; the wrench floats over the card's top-right corner. */}
-          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>
+          <div
+            ref={boardCardRef}
+            className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}
+          >
             {/* Text mode, <md: the pager moves IN the card (compact row, no
                 floating pill, no extra vertical row) — owner mobile-split
                 ruling, re-review 2026-09-19. Mirrors the floating version's
@@ -1453,11 +1474,21 @@ export default function SessionStage(props: SessionStageProps) {
           its dropdown never cross into the transcript panel. `z-[25]`: above
           the stage-level Q-pin (z-20, later in DOM) so the jump-to-page
           dropdown is never covered, still below the header card (z-30) and
-          its title reveal. */}
-      {switcherInline && chipRowShown && showSwitcher ? (
-        <div className="relative z-[25] shrink-0 order-2 px-2 md:pl-4 md:pr-[388px] pt-1.5 flex flex-wrap items-center gap-1.5">
-          {railEl ? <div className="min-w-0 max-w-full">{railEl}</div> : null}
-          {renderSwitcher(true)}
+          its title reveal.
+          Fix round 2 (task 2 fold-in): the branch is keyed on `switcherInline
+          && chipRowShown` — NOT `showSwitcher` — so the chip's own padding
+          (`md:pl-4`) is the same whether or not the switcher pill is present;
+          before, the chip sat 8px further left with 1 board page (this
+          branch false, falling to the plain `px-2` row below) and jumped
+          right the moment a 2nd page appeared. The switcher itself still
+          only renders `showSwitcher`. `pointer-events-none` on the row (its
+          padding overlaps the board) with `pointer-events-auto` restored on
+          each real control, so the row never steals a dragged Q-pin's
+          pointer underneath it. */}
+      {(switcherInline && chipRowShown) ? (
+        <div className="relative z-[25] shrink-0 order-2 px-2 md:pl-4 md:pr-[388px] pt-1.5 flex flex-wrap items-center gap-1.5 pointer-events-none">
+          {railEl ? <div className="min-w-0 max-w-full pointer-events-auto">{railEl}</div> : null}
+          {showSwitcher ? renderSwitcher(true) : null}
         </div>
       ) : railEl && !isFullscreen ? (
         <div className="relative z-20 shrink-0 order-2 px-2 pt-1.5">{railEl}</div>
@@ -1708,8 +1739,8 @@ export default function SessionStage(props: SessionStageProps) {
               e.stopPropagation();
             }
           }}
-          style={
-            qpinCustomPos
+          style={{
+            ...(qpinCustomPos
               // right:auto — the mobile full-width class sets BOTH left and
               // right; a dragged pin must not stay stretched to right-2.
               ? { left: `${qpinCustomPos.x * 100}%`, right: 'auto', top: `${qpinCustomPos.y * 100}%`, transform: 'none' }
@@ -1720,8 +1751,13 @@ export default function SessionStage(props: SessionStageProps) {
                 // default sits just under the measured board top instead.
                 : switcherInline
                   ? { top: `${qpinDefaultTopPx(textBoardTopPx)}px` }
-                  : undefined
-          }
+                  : undefined),
+            // Clamp to the whiteboard's own rendered width (all text-mode
+            // sessions; voice untouched — `qpinMaxWidthVar` is undefined
+            // there), via a CSS var so the class's `sm:` prefix (mobile
+            // full-width banner, round-6e) keeps applying below that width.
+            ...qpinMaxWidthVar,
+          }}
           // Round-6e (user call, IMG_7867): full-width bar on phones —
           // end-to-end covers less board VERTICALLY (the text wraps into
           // fewer lines) and reads as a banner rather than a floating card.
@@ -1738,7 +1774,7 @@ export default function SessionStage(props: SessionStageProps) {
             railEl && !isFullscreen
               ? (showSwitcher ? 'top-[140px]' : 'top-[104px]')
               : (showSwitcher ? 'top-[100px]' : 'top-16')
-          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}
+          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,var(--qpin-max-w,560px))] touch-none cursor-grab active:cursor-grabbing ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}
         >
           {questionPin}
         </div>
