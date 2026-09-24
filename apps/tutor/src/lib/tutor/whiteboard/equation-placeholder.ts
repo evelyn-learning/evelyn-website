@@ -28,6 +28,12 @@ const BARE_PAREN_RE = new RegExp(
 /** Two or more consecutive question marks. A lone `?` is allowed. */
 const MULTI_QUESTION_RE = /\?{2,}/;
 
+/**
+ * Fix round 1: brackets → spaces, drop ellipses, collapse whitespace, then
+ * strip trailing punctuation (`: . , ; ! ?`) and ONE leading article /
+ * possessive (`the|an|a|your|my`) so "the answer", "an answer", "Answer:"
+ * all reduce to a list word.
+ */
 function normalizeInner(inner: string): string {
   return inner
     .replace(/[()[\]<>]/g, ' ')
@@ -35,14 +41,22 @@ function normalizeInner(inner: string): string {
     .replace(/\.{2,}|…/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[:.,;!?\s]+$/, '')
+    .replace(/^(?:the|an|a|your|my)\s+/, '')
+    .trim();
 }
 
 /** Returns the offending placeholder token, or null when the latex is clean. */
 export function equationPlaceholder(latex: string): string | null {
   const s = String(latex ?? '');
   if (!s) return null;
+  const trimmed = s.trim();
   for (const m of s.matchAll(TEXT_MACRO_RE)) {
+    // Fix round 1: a placeholder is an OPERAND inside a larger expression.
+    // A card whose whole latex is just the label (`\text{Result}`,
+    // `\text{Answer:}`) is a heading — allowed. (`??` is still caught below.)
+    if (m[0] === trimmed) continue;
     const inner = normalizeInner(m[1]);
     if (PLACEHOLDER_SET.has(inner) || MULTI_QUESTION_RE.test(inner)) return m[0];
   }

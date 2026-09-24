@@ -626,19 +626,30 @@ check('show_equation `x = \\frac{7}{2}` → accepted', () => {
   const r = processToolCall('show_equation', { latex: 'x = \\frac{7}{2}' });
   if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
 });
+check('show_equation `\\text{Result}` bare label → accepted (fix round 1)', () => {
+  const r = processToolCall('show_equation', { latex: '\\text{Result}' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('show_equation `z = \\text{Answer} - 3` operand → rejected (fix round 1)', () => {
+  const r = processToolCall('show_equation', { latex: 'z = \\text{Answer} - 3' });
+  assert.equal(r.ok, false);
+});
 check('show_equation `\\text{Solved}` label-only → accepted', () => {
   const r = processToolCall('show_equation', { latex: '\\text{Solved}' });
   if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
 });
 check('equationPlaceholder: placeholder shapes flagged, real math allowed', () => {
   const flagged = [
-    '\\text{something}', '\\mathrm{answer}', '\\textit{[value]}', 'y = \\text{ your answer }',
+    'a = \\text{something}', '\\mathrm{answer} + 1', 'b - \\textit{[value]}', 'y = \\text{ your answer }',
     'x = \\text{fill in}', 'x = ???', 'a + ?? = 5', 'x = (something) + 2', 'z = \\text{(TBD)}',
-    '\\text{Result}', 'k = \\text{unknown}',
+    'k = \\text{unknown}', 'z = \\text{Answer} - 3', 'y = \\text{the answer}', 'y = \\text{an answer} + 1',
+    'x = \\text{Answer:} + 2', 'q = \\text{your value.}', 'w = \\mathrm{[the result]}',
   ];
   const allowed = [
     '2(3)-2=?', 'x = \\frac{7}{2}', '\\text{Solved}', '(x+1)(x-2)=0', '\\text{area} = 12',
     'f(x) = x^2', 'y = ?', '\\text{Step 1: } 2x = 8', 'v = 3 \\text{ m/s}', '(a)', 'P(\\text{heads}) = 0.5',
+    // Fix round 1: a card that is ONLY the label is a heading, not a placeholder operand.
+    '\\text{Result}', '\\text{Answer}', '\\text{Answer:}', '  \\text{ the answer }  ',
   ];
   for (const s of flagged) if (equationPlaceholder(s) == null) throw new Error(`expected placeholder in: ${s}`);
   for (const s of allowed) { const t = equationPlaceholder(s); if (t != null) throw new Error(`false positive "${t}" in: ${s}`); }
