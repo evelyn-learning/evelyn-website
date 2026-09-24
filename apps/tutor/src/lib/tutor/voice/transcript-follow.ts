@@ -55,3 +55,48 @@ export function shouldFollowToBottom({
   }
   return nearBottom;
 }
+
+export interface RefollowDecisionInput {
+  /** Text mode vs. voice mode — see module doc. */
+  stickToBottom: boolean;
+  /** The "scrolled up" latch read LIVE, at the moment the re-check fires
+   *  (fonts.ready resolving, or a ResizeObserver callback) — NOT a value
+   *  captured back when the effect first ran. A student can scroll away
+   *  in the gap between the initial scroll and fonts/layout settling;
+   *  re-checking against a frozen decision would yank them back down
+   *  anyway. */
+  userScrolledUpNow: boolean;
+  /** Role of the most recent transcript entry, captured once when the
+   *  effect ran (it can't change again before the effect re-runs). */
+  lastRole?: 'student' | 'tutor' | 'system' | string | null;
+  /** Present for signature symmetry with `shouldFollowToBottom` /
+   *  possible future voice-mode re-checks; currently unused because
+   *  `stickToBottom: false` short-circuits to `false` before it's read
+   *  (voice mode never re-follows after the fact — see module doc). */
+  nearBottomNow: boolean;
+}
+
+/** Round 6 task 4, fix round 1: the fonts.ready / ResizeObserver re-check
+ *  decision, evaluated fresh each time it fires (never against a frozen
+ *  `shouldFollowToBottom` result from when the effect first ran).
+ *
+ * Text mode only. Voice mode's near-bottom-only rule already re-runs on
+ * every real scroll/wheel/touch event AND every `transcript`/`picker`
+ * effect re-run — it never needed a fonts/layout re-check, and BEFORE
+ * commit 97e933bc it had none. `stickToBottom: false` here always
+ * returns `false` so voice mode's behavior stays byte-identical whether
+ * or not TranscriptView happens to call this from a voice-mode instance. */
+export function refollowDecision({
+  stickToBottom,
+  userScrolledUpNow,
+  lastRole,
+  nearBottomNow,
+}: RefollowDecisionInput): boolean {
+  if (!stickToBottom) return false;
+  return shouldFollowToBottom({
+    stickToBottom: true,
+    userScrolledUp: userScrolledUpNow,
+    lastRole,
+    nearBottom: nearBottomNow,
+  });
+}

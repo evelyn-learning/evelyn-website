@@ -27,7 +27,7 @@ import { ImageZoomOverlay } from './ImageZoomOverlay';
 // GreenApple round 6, task 4: pure follow-to-bottom decision, shared between
 // the immediate scroll below and the fonts.ready / ResizeObserver re-checks
 // that fix math bubbles growing taller after KaTeX's web fonts swap in.
-import { shouldFollowToBottom } from '@/lib/tutor/voice/transcript-follow';
+import { shouldFollowToBottom, refollowDecision } from '@/lib/tutor/voice/transcript-follow';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -315,30 +315,40 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     // land, get the scroll above, and then grow taller once KaTeX's web
     // fonts swap in — stranding the view short of the bottom (live
     // symptom: a math-bearing tutor reply appeared but the panel stayed
-    // short of the bottom). Re-apply the SAME `decision` once fonts
-    // settle — recomputing `nearBottom` here would be circular, since the
-    // font-swap growth is exactly what makes it go false.
-    if (typeof document !== 'undefined' && document.fonts?.ready) {
+    // short of the bottom).
+    //
+    // Fix round 1: this must NOT re-apply the `decision` captured above —
+    // a student can scroll away in the gap between the initial scroll and
+    // fonts settling, and re-applying a frozen "should follow" would yank
+    // them back down. `refollowDecision` reads `userScrolledUpRef.current`
+    // LIVE, at the moment fonts actually settle. Gated to text mode
+    // (`stickToBottom`) so voice mode — which never had a fonts.ready
+    // re-check before commit 97e933bc — stays byte-identical.
+    // `nearBottomNow: true` is a dummy: `refollowDecision` ignores it in
+    // text mode (text mode's rule is latch/role-based, not distance-based)
+    // and short-circuits to `false` before reading it at all in voice mode.
+    if (stickToBottom && typeof document !== 'undefined' && document.fonts?.ready) {
       document.fonts.ready.then(() => {
         if (cancelled) return;
-        if (decision) el.scrollTop = el.scrollHeight;
+        if (refollowDecision({ stickToBottom, userScrolledUpNow: userScrolledUpRef.current, lastRole, nearBottomNow: true })) {
+          el.scrollTop = el.scrollHeight;
+        }
       });
     }
 
     // Late layout growth beyond the font swap (e.g. images decoding, a
     // second reflow) — text mode only. Re-follow for as long as this
-    // effect instance is alive, gated by the LIVE "scrolled up" latch (not
-    // the captured `decision`) so a student who scrolls away mid-growth is
-    // still respected.
+    // effect instance is alive, gated by the LIVE "scrolled up" latch via
+    // the same `refollowDecision` the fonts.ready check above uses.
     let ro: ResizeObserver | undefined;
-    if (stickToBottom && typeof ResizeObserver !== 'undefined') {
+    if (stickToBottom && typeof ResizeObserver !== 'undefined' && contentRef.current) {
       ro = new ResizeObserver(() => {
         if (cancelled) return;
-        if (shouldFollowToBottom({ stickToBottom: true, userScrolledUp: userScrolledUpRef.current, lastRole, nearBottom: true })) {
+        if (refollowDecision({ stickToBottom, userScrolledUpNow: userScrolledUpRef.current, lastRole, nearBottomNow: true })) {
           el.scrollTop = el.scrollHeight;
         }
       });
-      ro.observe(contentRef.current ?? el);
+      ro.observe(contentRef.current);
     }
 
     return () => {
