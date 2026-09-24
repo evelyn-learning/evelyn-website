@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@core/db";
-import { Lead } from "@/models";
+import { Lead, LeadSuppression } from "@/models";
 import { applyApprove, applyKill } from "@/lib/outreach/lead-transitions";
+import { suppressionKeysFor, type SuppressibleLead } from "@/lib/crm/suppression";
 
 // Cap on one request's selection. The Review queue is a human worklist, not
 // a bulk-import surface: an "approve all" over 200 leads is far more likely
@@ -24,6 +25,10 @@ const MAX_IDS = 200;
 // batch is recoverable (the skipped ones are named in the response and
 // remain in the queue). Each lead is saved on its own so one bad document
 // can't roll back the rest.
+//
+// `action: "delete"` additionally writes a LeadSuppression tombstone per lead
+// before removing it, so a re-import reports the lead as `suppressed` instead
+// of recreating it, and "Restore" can bring it back with its touches.
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { action, ids } = body ?? {};
 
-    if (action !== "approve" && action !== "kill") {
+    if (action !== "approve" && action !== "kill" && action !== "delete") {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -55,6 +60,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const mintToken = () => randomBytes(8).toString("base64url");
     const updated: string[] = [];
+    const deleted: string[] = [];
     const skipped: { id: string; reason: string }[] = [];
 
     // Dedupe: the same id twice would otherwise be loaded twice, and the
@@ -63,6 +69,35 @@ export async function POST(request: NextRequest) {
       const lead = await Lead.findById(id).catch(() => null);
       if (!lead) {
         skipped.push({ id, reason: "not found" });
+        continue;
+      }
+
+      if (action === "delete") {
+        // Round 2 §3: write the tombstone FIRST. If the delete then fails the
+        // operator sees the lead still there and can retry; if the order were
+        // reversed a crash between the two would delete the lead with nothing
+        // stopping the next import from recreating it, and no way to restore.
+        try {
+          const snapshot = lead.toObject();
+          await LeadSuppression.create({
+            leadId: String(lead._id),
+            company: lead.company || "(no company)",
+            ...suppressionKeysFor(snapshot as SuppressibleLead),
+            snapshot,
+            deletedAt: now,
+          });
+        } catch (err) {
+          console.error(`[OUTREACH] bulk delete failed to suppress ${id}:`, err);
+          skipped.push({ id, reason: "suppression write failed" });
+          continue;
+        }
+        try {
+          await lead.deleteOne();
+          deleted.push(id);
+        } catch (err) {
+          console.error(`[OUTREACH] bulk delete failed to remove ${id}:`, err);
+          skipped.push({ id, reason: "delete failed" });
+        }
         continue;
       }
 
@@ -82,7 +117,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, action, updated, skipped });
+    return NextResponse.json({ success: true, action, updated, deleted, skipped });
   } catch (error) {
     console.error("[OUTREACH] bulk Error:", error);
     return NextResponse.json({ error: "Bulk update failed" }, { status: 500 });

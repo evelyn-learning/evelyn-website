@@ -88,7 +88,7 @@ async function listThreadIdsWithRetry(deps: IngestGmailDeps, account: string, qu
 
 export interface IngestPageResult {
   nextPageToken?: string;
-  scanned: number; kept: number; created: number; updated: number; touchesAdded: number; errors: number;
+  scanned: number; kept: number; created: number; updated: number; suppressed: number; touchesAdded: number; errors: number;
   skipped: Record<SkipReason, number>;
   samples: { threadId: string; subject: string; participant: string; verdict: string }[];
 }
@@ -116,7 +116,7 @@ export async function ingestGmailPage(
   deps: IngestGmailDeps = defaultDeps
 ): Promise<IngestPageResult> {
   const out: IngestPageResult = {
-    scanned: 0, kept: 0, created: 0, updated: 0, touchesAdded: 0, errors: 0,
+    scanned: 0, kept: 0, created: 0, updated: 0, suppressed: 0, touchesAdded: 0, errors: 0,
     skipped: { auto_reply_only: 0, self_notification: 0, internal: 0, machine: 0, empty: 0 }, samples: [],
   };
   const { ids, nextPageToken } = await listThreadIdsWithRetry(deps, args.account, args.query, args.pageToken);
@@ -153,7 +153,9 @@ export async function ingestGmailPage(
     const r = await deps.upsert({
       identity: verdict.identity, touches, source: `gmail:${args.account}`, flagReview: verdict.flagReview, product: args.product,
     });
-    if (r.created) out.created++; else out.updated++;
+    if (r.suppressed) out.suppressed++;
+    else if (r.created) out.created++;
+    else out.updated++;
     out.touchesAdded += r.added;
   }
   return out;
