@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@core/db";
 import { ResearchJob } from "@/models/ResearchJob";
+import { Lead } from "@/models";
 import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
 import { isResearchWorkerActive } from "@/lib/outreach/research/worker";
 
@@ -34,7 +35,8 @@ export async function POST(request: Request) {
     }
     const body = await request.json();
     const { segment, niche = "", region = "", count } = body ?? {};
-    if (!LEAD_SEGMENTS.includes(segment)) {
+    const seg = typeof segment === "string" ? segment.trim() : "";
+    if (!seg) {
       return NextResponse.json({ error: "Invalid segment" }, { status: 400 });
     }
     const n = Number(count);
@@ -42,6 +44,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "count must be an integer 1-25" }, { status: 400 });
     }
     await connectDB();
+    // Round 2 §2: the segment list is open, but not arbitrary — a value is
+    // legal if it is a seed or is already in use on a lead. That keeps a
+    // typo'd segment from silently spawning a research job nobody can find.
+    if (!(LEAD_SEGMENTS as readonly string[]).includes(seg)) {
+      const known = (await Lead.distinct("segment")) as (string | null)[];
+      if (!known.some((k) => (k ?? "").trim() === seg)) {
+        return NextResponse.json({ error: "Invalid segment" }, { status: 400 });
+      }
+    }
     const existing = await ResearchJob.findOne({ status: { $in: ["queued", "running"] } });
     if (existing) {
       return NextResponse.json(
@@ -49,7 +60,7 @@ export async function POST(request: Request) {
       );
     }
     const job = await ResearchJob.create({
-      segment, niche: String(niche).slice(0, 200), region: String(region).slice(0, 200), count: n,
+      segment: seg, niche: String(niche).slice(0, 200), region: String(region).slice(0, 200), count: n,
     });
     // Optimistic post-create check: the pre-create findOne above is a fast
     // path, not a lock, so two concurrent POSTs can both pass it and both
