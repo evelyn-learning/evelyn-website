@@ -24,6 +24,10 @@ import { InlineMathText } from './whiteboard/InlineMathText';
 // inline-emphasis.tsx for why renderBubbleText itself stays local.
 import { renderInlineEmphasis } from './inline-emphasis';
 import { ImageZoomOverlay } from './ImageZoomOverlay';
+// GreenApple round 6, task 4: pure follow-to-bottom decision, shared between
+// the immediate scroll below and the fonts.ready / ResizeObserver re-checks
+// that fix math bubbles growing taller after KaTeX's web fonts swap in.
+import { shouldFollowToBottom } from '@/lib/tutor/voice/transcript-follow';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -213,6 +217,12 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
 
 export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false, tutorLabel }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // GreenApple round 6, task 4: wraps just the message bubbles (not the
+  // portalled zoom overlay) so a ResizeObserver can watch CONTENT growth —
+  // the scroller div itself is `h-full` and never resizes as messages are
+  // added, only its scrollHeight does, which ResizeObserver can't see on
+  // that element directly.
+  const contentRef = useRef<HTMLDivElement>(null);
   // Task 9: the upload thumbnail currently open in the zoom overlay.
   const [zoomImage, setZoomImage] = useState<{ dataUrl: string; name?: string } | null>(null);
 
@@ -262,6 +272,10 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let cancelled = false;
+    const lastEntry = transcript[transcript.length - 1];
+    const lastRole = lastEntry?.role;
+    let removeListeners: (() => void) | undefined;
     if (stickToBottom) {
       const onScrollLikeEvent = () => {
         const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
@@ -270,27 +284,68 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       el.addEventListener('scroll', onScrollLikeEvent, { passive: true });
       el.addEventListener('wheel', onScrollLikeEvent, { passive: true });
       el.addEventListener('touchmove', onScrollLikeEvent, { passive: true });
-      // The student's own message just landed (or is still the latest
-      // entry while the reply is pending) — always snap to bottom and
-      // clear the "scrolled up" latch, exactly like sending a message in
-      // any standard chat UI.
-      const lastEntry = transcript[transcript.length - 1];
-      if (lastEntry?.role === 'student') {
-        userScrolledUpRef.current = false;
-        el.scrollTop = el.scrollHeight;
-      } else if (!userScrolledUpRef.current) {
-        // Tutor entry arriving or streaming: follow unless the student
-        // deliberately scrolled up to read earlier turns.
-        el.scrollTop = el.scrollHeight;
-      }
-      return () => {
+      removeListeners = () => {
         el.removeEventListener('scroll', onScrollLikeEvent);
         el.removeEventListener('wheel', onScrollLikeEvent);
         el.removeEventListener('touchmove', onScrollLikeEvent);
       };
+      // The student's own message just landed (or is still the latest
+      // entry while the reply is pending) — always clear the "scrolled
+      // up" latch, exactly like sending a message in any standard chat
+      // UI. (The actual scroll happens via the shared decision below.)
+      if (lastRole === 'student') {
+        userScrolledUpRef.current = false;
+      }
     }
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (nearBottom) el.scrollTop = el.scrollHeight;
+    // GreenApple round 6, task 4: the shared pure decision (see
+    // transcript-follow.ts) — same rule the fonts.ready / ResizeObserver
+    // re-checks below re-apply.
+    const decision = shouldFollowToBottom({
+      stickToBottom,
+      userScrolledUp: userScrolledUpRef.current,
+      lastRole,
+      nearBottom,
+    });
+    if (decision) el.scrollTop = el.scrollHeight;
+
+    // Math bubbles render through InlineMathText's synchronous
+    // `katex.render()` with no font-load handling (unlike EquationRenderer,
+    // which re-fits after `document.fonts.ready`). A math-bearing reply can
+    // land, get the scroll above, and then grow taller once KaTeX's web
+    // fonts swap in — stranding the view short of the bottom (live
+    // symptom: a math-bearing tutor reply appeared but the panel stayed
+    // short of the bottom). Re-apply the SAME `decision` once fonts
+    // settle — recomputing `nearBottom` here would be circular, since the
+    // font-swap growth is exactly what makes it go false.
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (cancelled) return;
+        if (decision) el.scrollTop = el.scrollHeight;
+      });
+    }
+
+    // Late layout growth beyond the font swap (e.g. images decoding, a
+    // second reflow) — text mode only. Re-follow for as long as this
+    // effect instance is alive, gated by the LIVE "scrolled up" latch (not
+    // the captured `decision`) so a student who scrolls away mid-growth is
+    // still respected.
+    let ro: ResizeObserver | undefined;
+    if (stickToBottom && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        if (cancelled) return;
+        if (shouldFollowToBottom({ stickToBottom: true, userScrolledUp: userScrolledUpRef.current, lastRole, nearBottom: true })) {
+          el.scrollTop = el.scrollHeight;
+        }
+      });
+      ro.observe(contentRef.current ?? el);
+    }
+
+    return () => {
+      cancelled = true;
+      removeListeners?.();
+      ro?.disconnect();
+    };
   }, [transcript, picker, stickToBottom]);
 
   // Round-6e (third attempt at "open at the latest message"): the drawer's
@@ -706,38 +761,45 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   return (
     <div
       ref={containerRef}
-      className="h-full overflow-y-auto p-4 space-y-4"
+      className="h-full overflow-y-auto p-4"
     >
-      {beforePicker.map(renderEntry)}
-      {anchor !== null && picker}
-      {afterPicker.map(renderEntry)}
+      {/* GreenApple round 6, task 4: this inner wrapper (not the scroller
+          div above) is what the ResizeObserver in the scroll effect
+          watches — the scroller is `h-full` and never resizes as content
+          grows, only its scrollHeight does. `space-y-4` moved down here
+          with the content it was already spacing. */}
+      <div ref={contentRef} className="space-y-4">
+        {beforePicker.map(renderEntry)}
+        {anchor !== null && picker}
+        {afterPicker.map(renderEntry)}
 
-      {/* Typing indicator */}
-      {isProcessing && (
-        <div className="flex gap-3">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
-            <Bot className="w-4 h-4" />
-          </div>
-          <div className="flex-1">
-            <div className="inline-block bg-gray-100 p-3 rounded-lg rounded-bl-none">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <span
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0.1s' }}
-                />
-                <span
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0.2s' }}
-                />
+        {/* Typing indicator */}
+        {isProcessing && (
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div className="flex-1">
+              <div className="inline-block bg-gray-100 p-3 rounded-lg rounded-bl-none">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.1s' }}
+                  />
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.2s' }}
+                  />
+                </div>
+                {thinkingHint && (
+                  <p className="text-xs text-gray-500 mt-1.5 italic">{thinkingHint}</p>
+                )}
               </div>
-              {thinkingHint && (
-                <p className="text-xs text-gray-500 mt-1.5 italic">{thinkingHint}</p>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {zoomImage && (
         <ImageZoomOverlay
