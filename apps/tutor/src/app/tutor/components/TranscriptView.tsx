@@ -275,21 +275,25 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // be an echo of our own `el.scrollTop = el.scrollHeight` write — not the
   // student scrolling away — and is ignored via `latchFromScrollEvent`.
   const programmaticScrollUntilRef = useRef(0);
+  // Round 7, task 5, fix round 1: hoisted out of the follow-to-bottom
+  // effect below so the drawer-open snap effect further down (which writes
+  // `el.scrollTop = el.scrollHeight` on the SAME container) can arm the
+  // same guard window — it can false-latch exactly like the three sites
+  // already fixed. Reads `containerRef.current` fresh on every call
+  // (rather than closing over one effect's `el`) so it's safe to call from
+  // any effect in this component.
+  const scrollToBottom = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    programmaticScrollUntilRef.current = performance.now() + 200;
+    el.scrollTop = el.scrollHeight;
+  };
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     let cancelled = false;
     const lastEntry = transcript[transcript.length - 1];
     const lastRole = lastEntry?.role;
-    // Round 7, task 5: the single helper for every programmatic scroll in
-    // this effect (the immediate scroll below, the fonts.ready re-check,
-    // and the ResizeObserver re-check) — arms the guard window BEFORE
-    // writing scrollTop so the `scroll` event that write dispatches lands
-    // inside it.
-    const scrollToBottom = () => {
-      programmaticScrollUntilRef.current = performance.now() + 200;
-      el.scrollTop = el.scrollHeight;
-    };
     let removeListeners: (() => void) | undefined;
     if (stickToBottom) {
       const onScrollLikeEvent = (event: Event) => {
@@ -396,8 +400,13 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     const onOpened = () => {
       setTimeout(() => {
         if (Date.now() - pendingEntryScrollAtRef.current < 1500) return;
-        const el = containerRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
+        // Round 7, task 5, fix round 1: routed through the shared
+        // scrollToBottom() helper (armed guard window) instead of a bare
+        // write — this snap dispatches a `scroll` event on the same
+        // container the follow-to-bottom effect's listener watches, and
+        // could false-latch "scrolled up" identically to the three sites
+        // fixed earlier.
+        scrollToBottom();
       }, 200);
     };
     window.addEventListener('evelyn:transcript-drawer-opened', onOpened);

@@ -300,6 +300,36 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     assert.strictEqual(res.review!.find((r) => r.itemId === 'n5')!.correct, false, '12 should NOT grade as -12');
   });
 
+  await test('numeric grader NEVER strips the "var =" prefix stripping onto the KEY — a worked-solution key falls through to the holistic judge, not a deterministic (mis)match', async () => {
+    // Real seeded try_yourself shape: the expectedAnswer is a worked
+    // solution with its OWN intermediate "var = value" assignments. Before
+    // fix round 1, parseNumeric stripped the key's leading "v_y0 = " too,
+    // parsing the key as 20 (the first intermediate value) instead of
+    // falling through — silently grading a correct final answer "5" wrong.
+    const key: ResolvedAssessmentKey = {
+      responseFormat: 'numeric',
+      expectedAnswer: 'v_y0 = 20 × 0.5 = 10 m/s. H = 100 / 20 = 5 m.',
+    };
+    const resolver: AssessmentItemResolver = async () => key;
+    let judgeCalled = false;
+    const holisticJudgeDeps: GradeDeps = {
+      async gradeRubricPart() {
+        return { pointsAwarded: 0, feedback: '' };
+      },
+      async judgeSingleAnswer() {
+        judgeCalled = true;
+        return { correct: true, feedback: 'holistic judge: 5 m matches the worked solution' };
+      },
+    };
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'prefix-4',
+        responses: [{ itemId: 'n6', loId: 'apstats.lo-n', response: { text: '5' } }] },
+      holisticJudgeDeps, resolver, 'test-partner',
+    );
+    assert.ok(judgeCalled, 'the key is not a clean single number — the deterministic path must fall through to judgeSingleAnswer');
+    assert.strictEqual(res.review!.find((r) => r.itemId === 'n6')!.correct, true, 'holistic judge result (true) must be the one that wins, not a deterministic mismatch against the stripped key');
+  });
+
   await test('review feedback carries a hint-based rationale for mcq/numeric', async () => {
     const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '5', hints: ['divide the total by n'] };
     const resolver: AssessmentItemResolver = async () => key;

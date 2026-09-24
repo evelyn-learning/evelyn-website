@@ -95,17 +95,30 @@ function norm(s: string): string {
 /** Parse a numeric answer that may be a simple fraction ("25/10" → 2.5), a
  *  percent ("2.5%" → 2.5), or a plain number. Returns NaN for prose. */
 function parseNumeric(s: string): number {
-  const t = (s ?? '').trim()
-    .replace(/^[a-zA-Z]\w*\s*=\s*/, '')
-    .replace(/^\$/, '')
-    .replace(/%\s*$/, '')
-    .replace(/,/g, '');
+  const t = (s ?? '').trim().replace(/%\s*$/, '').replace(/,/g, '');
   const frac = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
   if (frac) {
     const d = parseFloat(frac[2]);
     return d !== 0 ? parseFloat(frac[1]) / d : NaN;
   }
   return parseFloat(t);
+}
+
+/** Same as `parseNumeric`, plus stripping a leading "x = " variable-
+ *  assignment prefix or a leading "$" — e.g. "x=-12" / "x = -12" → "-12".
+ *  ONLY ever applied to the student's response text, never to
+ *  `key.expectedAnswer`: a key can be a worked-solution string with its own
+ *  intermediate "var = value" assignments (e.g. seeded try_yourself content
+ *  like "v_y0 = 20 × sin(30°) = 10 m/s. Maximum height is 5 m."). Stripping
+ *  the FIRST assignment there would parse the key as `20` instead of
+ *  falling through to the holistic-judge fallback below (`isCorrect`'s
+ *  "key isn't a clean single number" branch) — silently grading a correct
+ *  "5" as wrong against the wrong intermediate value. */
+function parseNumericResponse(s: string): number {
+  const stripped = (s ?? '').trim()
+    .replace(/^[a-zA-Z]\w*\s*=\s*/, '')
+    .replace(/^\$/, '');
+  return parseNumeric(stripped);
 }
 
 /** Grade a single response against its resolved key. Deterministic for
@@ -123,7 +136,7 @@ async function isCorrect(
   const fmt = key.responseFormat ?? 'free';
 
   if (fmt === 'numeric') {
-    const a = parseNumeric(text);
+    const a = parseNumericResponse(text);
     const b = parseNumeric(key.expectedAnswer ?? '');
     if (Number.isFinite(a) && Number.isFinite(b)) {
       const tol = Math.max(0.01, Math.abs(b) * 0.01);

@@ -280,29 +280,28 @@ checkSource(
   /programmaticScrollUntilRef/,
 );
 {
-  // All three `el.scrollTop = el.scrollHeight` sites inside the follow-to-
-  // bottom effect (immediate scroll, fonts.ready re-check, ResizeObserver
-  // re-check) must go through one `scrollToBottom()` helper that also arms
-  // the guard window — a bare write bypasses the guard and reintroduces
-  // the false-latch bug at that site. Scoped to this one effect (via the
-  // `scrollToBottom` definition through its dependency array) so the
-  // unrelated round-6e drawer-open snap effect, which legitimately writes
-  // `el.scrollTop = el.scrollHeight` directly and isn't part of this bug,
-  // isn't caught up in the check.
-  const effectMatch = source.match(/const scrollToBottom = \(\) => \{[\s\S]*?\}, \[transcript, picker, stickToBottom\]\);/);
-  const effectBlock = effectMatch ? effectMatch[0] : '';
-  const okFound = effectBlock.length > 0;
-  if (!okFound) failures++;
-  console.log(`${okFound ? 'PASS' : 'FAIL'} — located the follow-to-bottom effect (scrollToBottom def through its dependency array)`);
-
-  const calls = effectBlock.match(/scrollToBottom\(\)/g) ?? [];
-  const okCalls = calls.length >= 3;
+  // Fix round 1: `scrollToBottom()` was hoisted out of the follow-to-bottom
+  // effect to component scope so the round-6e drawer-open snap effect
+  // (which writes `el.scrollTop = el.scrollHeight` on the SAME container)
+  // can share the same guard window — it can false-latch identically to
+  // the three sites fixed in the first pass. All FOUR programmatic scroll
+  // sites (immediate follow, fonts.ready re-check, ResizeObserver
+  // re-check, drawer-open snap) must now go through the one helper; a
+  // bare write anywhere outside the helper's own body bypasses the guard
+  // and reintroduces the false-latch bug at that site.
+  const calls = source.match(/scrollToBottom\(\)/g) ?? [];
+  const okCalls = calls.length >= 4;
   if (!okCalls) failures++;
-  console.log(`${okCalls ? 'PASS' : 'FAIL'} — scrollToBottom() called at all three scroll sites, found ${calls.length}`);
+  console.log(`${okCalls ? 'PASS' : 'FAIL'} — scrollToBottom() called at all four scroll sites (follow, fonts.ready, ResizeObserver, drawer-open), found ${calls.length}`);
 
-  // Exactly one bare write is expected: scrollToBottom's own body. Any
-  // more means a site bypassed the helper.
-  const bareWrites = effectBlock.match(/el\.scrollTop\s*=\s*el\.scrollHeight/g) ?? [];
+  // Exactly one bare write is expected in the whole component: the shared
+  // scrollToBottom() helper's own body. Any more means some site bypassed
+  // the helper (and its comment-only mentions above must not count).
+  const codeOnly = source
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('//'))
+    .join('\n');
+  const bareWrites = codeOnly.match(/el\.scrollTop\s*=\s*el\.scrollHeight/g) ?? [];
   const okBare = bareWrites.length === 1;
   if (!okBare) failures++;
   console.log(`${okBare ? 'PASS' : 'FAIL'} — only scrollToBottom()'s own body writes el.scrollTop = el.scrollHeight directly, found ${bareWrites.length}`);
