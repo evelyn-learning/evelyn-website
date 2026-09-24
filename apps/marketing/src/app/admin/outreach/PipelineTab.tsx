@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Zap } from "lucide-react";
-import { LEAD_SEGMENTS, LEAD_STATUSES, PRODUCTS, type LeadStatus } from "@/lib/outreach/enums";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Check, Trash2, X, Zap } from "lucide-react";
+import { LEAD_STATUSES, type LeadStatus } from "@/lib/outreach/enums";
+import {
+  compareLeads,
+  leadMatchesQuery,
+  sourcePill,
+  type SortDir,
+  type SortKey,
+} from "@/lib/crm/console-helpers";
 import type { LeadJSON } from "./OutreachConsole";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
 import TimelineDrawer from "./TimelineDrawer";
 
-const STATUS_COLORS: Record<LeadStatus, string> = {
+const STATUS_COLORS: Record<string, string> = {
   staged: "bg-gray-100 text-gray-700",
   approved: "bg-blue-100 text-blue-700",
   contacted: "bg-amber-100 text-amber-700",
@@ -17,7 +24,7 @@ const STATUS_COLORS: Record<LeadStatus, string> = {
   dead: "bg-red-100 text-red-700",
 };
 
-const STATUS_LABELS: Record<LeadStatus, string> = {
+const STATUS_LABELS: Record<string, string> = {
   staged: "Staged",
   approved: "Approved",
   contacted: "Contacted",
@@ -27,11 +34,35 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
   dead: "Dead",
 };
 
+const PILL_TONES: Record<string, string> = {
+  gmail: "bg-rose-50 text-rose-700",
+  form: "bg-emerald-50 text-emerald-700",
+  linkedin: "bg-sky-50 text-sky-700",
+  research: "bg-gray-100 text-gray-600",
+};
+
+// Column widths total 1216px — the usable width of the console's max-w-7xl
+// (1280px) main column minus its px-4 gutters — so the whole table fits one
+// screen at 1280 with no horizontal scroll (round-2 §6). `table-fixed` makes
+// these authoritative instead of advisory.
+const COLUMNS: { key: SortKey | null; label: string; width: number }[] = [
+  { key: null, label: "", width: 36 },
+  { key: "company", label: "Company", width: 190 },
+  { key: "segment", label: "Segment", width: 130 },
+  { key: "status", label: "Status", width: 150 },
+  { key: "product", label: "Product", width: 130 },
+  { key: "decisionMaker", label: "Decision maker", width: 190 },
+  { key: "touches", label: "Touches", width: 60 },
+  { key: "nextActionAt", label: "Next action", width: 96 },
+  { key: "lastTouchAt", label: "Last touch", width: 234 },
+];
+
+const OTHER = "__other__";
+
 function relativeTime(iso: string): string {
   const date = new Date(iso);
   const diffMs = Date.now() - date.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
-
   if (diffHours < 1) {
     const mins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
     return `${mins}m ago`;
@@ -53,6 +84,41 @@ export default function PipelineTab({
   const [productFilter, setProductFilter] = useState<string>("all");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [options, setOptions] = useState<{ products: string[]; segments: string[] }>({ products: [], segments: [] });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("company");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  // At most one "Other…" text box and one decision-maker editor open at a
+  // time — the row is 130px wide, and two open editors never fit.
+  const [otherFor, setOtherFor] = useState<{ id: string; field: "segment" | "product" } | null>(null);
+  const [otherValue, setOtherValue] = useState("");
+  const [dmFor, setDmFor] = useState<string | null>(null);
+  const [dmDraft, setDmDraft] = useState({ name: "", title: "", email: "" });
+
+  const loadOptions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/outreach/options");
+      if (!res.ok) return;
+      const data = await res.json();
+      setOptions({ products: data.products ?? [], segments: data.segments ?? [] });
+    } catch {
+      // A failed options fetch leaves the dropdowns showing the lead's own
+      // value plus "Other…", which is still fully usable.
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadOptions();
+  }, [loadOptions]);
+
+  // 150ms debounce (round-2 §6): the search runs over every loaded lead and
+  // every touch body, so filtering on each keystroke is visibly janky.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 150);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const setStatus = async (id: string, status: LeadStatus) => {
     setPendingId(id);
@@ -70,6 +136,32 @@ export default function PipelineTab({
       await refresh();
     } catch {
       alert("Failed to update status");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const saveFields = async (id: string, fields: Record<string, unknown>, failure: string) => {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "edit", fields }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || failure);
+        return false;
+      }
+      await refresh();
+      // A brand-new "Other…" value only becomes available on every other row
+      // once the options endpoint has seen it on a lead.
+      await loadOptions();
+      return true;
+    } catch {
+      alert(failure);
+      return false;
     } finally {
       setPendingId(null);
     }
@@ -96,17 +188,133 @@ export default function PipelineTab({
     }
   };
 
+  const onPickOption = async (lead: LeadJSON, field: "segment" | "product", value: string) => {
+    if (value === OTHER) {
+      setOtherFor({ id: lead._id, field });
+      setOtherValue("");
+      return;
+    }
+    await saveFields(lead._id, { [field]: value }, `Failed to update ${field}`);
+  };
+
+  const saveOther = async () => {
+    if (!otherFor) return;
+    const trimmed = otherValue.trim();
+    if (!trimmed) return;
+    // Controller ruling: before saving a typed value, fold it onto an
+    // existing option's exact spelling when it matches case-insensitively —
+    // avoids "Academy" beside "academy" in the same dropdown.
+    const base = otherFor.field === "segment" ? options.segments : options.products;
+    const existing = base.find((o) => o.toLowerCase() === trimmed.toLowerCase());
+    const value = existing ?? trimmed;
+    const ok = await saveFields(otherFor.id, { [otherFor.field]: value }, `Failed to update ${otherFor.field}`);
+    if (ok) {
+      setOtherFor(null);
+      setOtherValue("");
+    }
+  };
+
+  const startDmEdit = (lead: LeadJSON) => {
+    setDmFor(lead._id);
+    setDmDraft({
+      name: lead.decisionMaker?.name ?? "",
+      title: lead.decisionMaker?.title ?? "",
+      email: lead.decisionMaker?.email ?? "",
+    });
+  };
+
+  const saveDm = async () => {
+    if (!dmFor) return;
+    // The `edit` action MERGES decisionMaker (lib/outreach/lead-edit.ts), so
+    // sending only these three fields cannot wipe the vendor-provenance
+    // history or the linkedinUrl.
+    const ok = await saveFields(dmFor, { decisionMaker: { name: dmDraft.name.trim(), title: dmDraft.title.trim(), email: dmDraft.email.trim() } }, "Failed to update decision maker");
+    if (ok) setDmFor(null);
+  };
+
+  const deleteSelected = async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (
+      !confirm(
+        `Delete ${ids.length} lead${ids.length === 1 ? "" : "s"}? They are removed and suppressed, so a re-import will not bring them back. You can restore them from the Import tab.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/outreach/leads/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "Failed to delete leads");
+        return;
+      }
+      if (Array.isArray(data.skipped) && data.skipped.length > 0) {
+        alert(`Deleted ${data.deleted?.length ?? 0}; skipped ${data.skipped.length}: ${data.skipped.map((s: { id: string; reason: string }) => `${s.id} (${s.reason})`).join(", ")}`);
+      }
+      setSelected(new Set());
+      await refresh();
+      await loadOptions();
+    } catch {
+      alert("Failed to delete leads");
+    }
+  };
+
+  const toggleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
   const filtered = useMemo(() => {
-    return leads.filter((l) => {
+    const rows = leads.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (segmentFilter !== "all" && l.segment !== segmentFilter) return false;
-      if (productFilter !== "all" && !l.opportunities?.some((o) => o.product === productFilter)) return false;
-      return true;
+      if (productFilter !== "all" && (l.product ?? "") !== productFilter) return false;
+      return leadMatchesQuery(l, debouncedQuery);
     });
-  }, [leads, statusFilter, segmentFilter, productFilter]);
+    return rows.sort((a, b) => compareLeads(a, b, sortKey, sortDir));
+  }, [leads, statusFilter, segmentFilter, productFilter, debouncedQuery, sortKey, sortDir]);
+
+  const allShownSelected = filtered.length > 0 && filtered.every((l) => selected.has(l._id));
+
+  const toggleAllShown = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allShownSelected) for (const l of filtered) next.delete(l._id);
+      else for (const l of filtered) next.add(l._id);
+      return next;
+    });
+  };
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const optionList = (kind: "segment" | "product", current?: string) => {
+    const base = kind === "segment" ? options.segments : options.products;
+    // A lead's own value must always be selectable even if the options fetch
+    // failed or the value has since been renamed away from every other lead.
+    return current && !base.includes(current) ? [current, ...base] : base;
+  };
+
+  const labelFor = (kind: "segment" | "product", value: string) =>
+    kind === "segment" ? SEGMENT_LABELS[value] ?? value : value;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-4 shadow">
         <label className="flex items-center gap-2 text-sm text-gray-700">
           Status
@@ -118,7 +326,7 @@ export default function PipelineTab({
             <option value="all">All</option>
             {LEAD_STATUSES.map((s) => (
               <option key={s} value={s}>
-                {STATUS_LABELS[s]}
+                {STATUS_LABELS[s] ?? s}
               </option>
             ))}
           </select>
@@ -131,7 +339,7 @@ export default function PipelineTab({
             onChange={(e) => setSegmentFilter(e.target.value)}
           >
             <option value="all">All</option>
-            {LEAD_SEGMENTS.map((s) => (
+            {options.segments.map((s) => (
               <option key={s} value={s}>
                 {SEGMENT_LABELS[s] ?? s}
               </option>
@@ -140,114 +348,270 @@ export default function PipelineTab({
         </label>
         <label className="flex items-center gap-2 text-sm text-gray-700">
           Product
-          <select className="rounded-lg border border-gray-300 px-2 py-1 text-sm" value={productFilter} onChange={(e) => setProductFilter(e.target.value)}>
+          <select
+            className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
+            value={productFilter}
+            onChange={(e) => setProductFilter(e.target.value)}
+          >
             <option value="all">All</option>
-            {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+            {options.products.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
           </select>
         </label>
+        <input
+          type="search"
+          className="w-64 rounded-lg border border-gray-300 px-3 py-1 text-sm"
+          placeholder="Search company, contact, notes, messages…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {selected.size > 0 && (
+          <button
+            type="button"
+            onClick={deleteSelected}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete selected ({selected.size})
+          </button>
+        )}
         <span className="ml-auto text-xs text-gray-400">
           {filtered.length} of {leads.length} leads
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl bg-white shadow">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
+      {/* Fixed-height scroll area with a sticky header (round-2 §6): the table
+          scrolls inside this box so the page itself does not. 260px is the
+          console chrome above it — header, tab bar, filter row. */}
+      <div
+        className="overflow-auto rounded-xl bg-white shadow"
+        style={{ maxHeight: "calc(100vh - 260px)" }}
+      >
+        <table className="w-full table-fixed divide-y divide-gray-200 text-sm">
+          <colgroup>
+            {COLUMNS.map((c) => (
+              <col key={c.label || "select"} style={{ width: `${c.width}px` }} />
+            ))}
+          </colgroup>
+          <thead className="sticky top-0 z-10 bg-gray-50">
             <tr>
-              {[
-                "Company",
-                "Segment",
-                "Status",
-                "Products",
-                "Decision maker",
-                "Touches",
-                "Next action",
-                "Last visit",
-                "Last touch",
-                "",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="whitespace-nowrap px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
-                >
-                  {h}
-                </th>
-              ))}
+              {COLUMNS.map((c) =>
+                c.key === null ? (
+                  <th key="select" className="px-2 py-2 text-left">
+                    <input
+                      type="checkbox"
+                      aria-label="Select all shown leads"
+                      checked={allShownSelected}
+                      onChange={toggleAllShown}
+                    />
+                  </th>
+                ) : (
+                  <th
+                    key={c.key}
+                    className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(c.key as SortKey)}
+                      className="inline-flex items-center gap-1 hover:text-gray-900"
+                    >
+                      {c.label}
+                      {sortKey === c.key && <span aria-hidden>{sortDir === "asc" ? "▲" : "▼"}</span>}
+                    </button>
+                  </th>
+                )
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-sm text-gray-500">
+                <td colSpan={COLUMNS.length} className="px-4 py-6 text-center text-sm text-gray-500">
                   No leads match these filters.
                 </td>
               </tr>
             ) : (
               filtered.map((lead) => {
                 const dm = lead.decisionMaker;
-                const outboundCount = lead.touches.filter((t) => t.direction === "outbound").length;
-                const lastVisit =
-                  lead.demoVisits.length > 0 ? lead.demoVisits[lead.demoVisits.length - 1] : null;
+                // Round-2 controller ruling: the Touches column shows the
+                // TOTAL touch count (inbound + outbound) so it matches
+                // compareLeads(..., "touches"), which sorts on the same
+                // total — a direction-filtered count here would silently
+                // disagree with the sort arrow.
+                const touchCount = lead.touches.length;
                 const lastTouch = lead.touches.length > 0 ? lead.touches[lead.touches.length - 1] : null;
+                const pill = sourcePill(lead.source);
+                const busy = pendingId === lead._id;
 
                 return (
-                  <tr key={lead._id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
-                      <button className="text-left font-medium text-primary-700 hover:underline" onClick={() => setOpenId(lead._id)}>{lead.company}</button>
+                  <tr key={lead._id} className="align-top hover:bg-gray-50">
+                    <td className="px-2 py-2">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${lead.company}`}
+                        checked={selected.has(lead._id)}
+                        onChange={() => toggleOne(lead._id)}
+                      />
                     </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-600">
-                      {SEGMENT_LABELS[lead.segment] ?? lead.segment}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[lead.status]}`}
+                    <td className="px-2 py-2 font-medium text-gray-900">
+                      <button
+                        type="button"
+                        title={lead.notes || undefined}
+                        className="block w-full truncate text-left font-medium text-primary-700 hover:underline"
+                        onClick={() => setOpenId(lead._id)}
                       >
-                        {STATUS_LABELS[lead.status]}
-                      </span>
+                        {lead.company}
+                      </button>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-xs text-gray-600">
-                      {lead.opportunities?.length ? lead.opportunities.map((o) => `${o.product}: ${o.stage}`).join(", ") : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-600">
-                      {dm?.name || "—"}
-                      {dm?.title ? ` (${dm.title})` : ""}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-600">{outboundCount}</td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-600">
-                      {lead.nextActionAt ? new Date(lead.nextActionAt).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-gray-600">
-                      {lastVisit ? relativeTime(lastVisit.at) : "—"}
-                    </td>
-                    <td className="max-w-xs truncate px-4 py-2 text-gray-600" title={lastTouch?.summary}>
-                      {lastTouch?.summary || "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2">
-                      <div className="flex items-center gap-2">
+                    <td className="px-2 py-2">
+                      {otherFor?.id === lead._id && otherFor.field === "segment" ? (
+                        <OtherInput
+                          value={otherValue}
+                          busy={busy}
+                          onChange={setOtherValue}
+                          onSave={saveOther}
+                          onCancel={() => setOtherFor(null)}
+                        />
+                      ) : (
                         <select
-                          className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
+                          className="w-full rounded-lg border border-gray-300 px-1 py-1 text-xs"
+                          value={lead.segment}
+                          disabled={busy}
+                          onChange={(e) => void onPickOption(lead, "segment", e.target.value)}
+                        >
+                          {optionList("segment", lead.segment).map((s) => (
+                            <option key={s} value={s}>
+                              {labelFor("segment", s)}
+                            </option>
+                          ))}
+                          <option value={OTHER}>Other…</option>
+                        </select>
+                      )}
+                    </td>
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-1">
+                        <select
+                          className={`w-full rounded-lg border-0 px-1 py-1 text-xs font-semibold ${STATUS_COLORS[lead.status] ?? "bg-gray-100 text-gray-700"}`}
                           value={lead.status}
-                          disabled={pendingId === lead._id}
-                          onChange={(e) => setStatus(lead._id, e.target.value as LeadStatus)}
+                          disabled={busy}
+                          onChange={(e) => void setStatus(lead._id, e.target.value as LeadStatus)}
                         >
                           {LEAD_STATUSES.map((s) => (
                             <option key={s} value={s}>
-                              {STATUS_LABELS[s]}
+                              {STATUS_LABELS[s] ?? s}
                             </option>
                           ))}
                         </select>
                         {/* parked leads are at the touch cap; reviving them past the cadence is an owner product decision — not silently supported. */}
                         {(lead.status === "approved" || lead.status === "contacted") && (
                           <button
-                            onClick={() => workToday(lead._id)}
-                            disabled={pendingId === lead._id}
-                            title="Bump this lead's next action to now"
-                            className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                            type="button"
+                            onClick={() => void workToday(lead._id)}
+                            disabled={busy}
+                            title="Work today — bump this lead's next action to now"
+                            aria-label="Work today"
+                            className="shrink-0 rounded-lg bg-gray-100 p-1 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
                           >
                             <Zap className="h-3.5 w-3.5" />
-                            Work today
                           </button>
                         )}
+                      </div>
+                    </td>
+                    <td className="px-2 py-2">
+                      {otherFor?.id === lead._id && otherFor.field === "product" ? (
+                        <OtherInput
+                          value={otherValue}
+                          busy={busy}
+                          onChange={setOtherValue}
+                          onSave={saveOther}
+                          onCancel={() => setOtherFor(null)}
+                        />
+                      ) : (
+                        <select
+                          className="w-full rounded-lg border border-gray-300 px-1 py-1 text-xs"
+                          value={lead.product ?? ""}
+                          disabled={busy}
+                          onChange={(e) => void onPickOption(lead, "product", e.target.value)}
+                        >
+                          <option value="">—</option>
+                          {optionList("product", lead.product).map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                          <option value={OTHER}>Other…</option>
+                        </select>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-gray-600">
+                      {dmFor === lead._id ? (
+                        <div className="space-y-1">
+                          <input
+                            className="w-full rounded border border-gray-300 px-1 py-0.5 text-xs"
+                            placeholder="Name"
+                            value={dmDraft.name}
+                            onChange={(e) => setDmDraft((d) => ({ ...d, name: e.target.value }))}
+                          />
+                          <input
+                            className="w-full rounded border border-gray-300 px-1 py-0.5 text-xs"
+                            placeholder="Title"
+                            value={dmDraft.title}
+                            onChange={(e) => setDmDraft((d) => ({ ...d, title: e.target.value }))}
+                          />
+                          <input
+                            className="w-full rounded border border-gray-300 px-1 py-0.5 text-xs"
+                            placeholder="Email"
+                            value={dmDraft.email}
+                            onChange={(e) => setDmDraft((d) => ({ ...d, email: e.target.value }))}
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => void saveDm()}
+                              disabled={busy}
+                              className="rounded bg-primary-600 p-1 text-white disabled:opacity-50"
+                              aria-label="Save decision maker"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDmFor(null)}
+                              className="rounded bg-gray-100 p-1 text-gray-600"
+                              aria-label="Cancel"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => startDmEdit(lead)}
+                          title="Click to edit name, title and email"
+                          className="block w-full truncate text-left hover:text-primary-700 hover:underline"
+                        >
+                          {dm?.name || "—"}
+                          {dm?.title ? ` (${dm.title})` : ""}
+                          {dm?.email ? ` · ${dm.email}` : ""}
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-gray-600">{touchCount}</td>
+                    <td className="px-2 py-2 text-gray-600">
+                      {lead.nextActionAt ? new Date(lead.nextActionAt).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-2 py-2 text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${PILL_TONES[pill.tone]}`}>
+                          {pill.label}
+                        </span>
+                        <span className="truncate" title={lastTouch?.summary}>
+                          {lastTouch ? `${relativeTime(lastTouch.at)} · ${lastTouch.summary}` : "—"}
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -260,8 +624,58 @@ export default function PipelineTab({
       {openId &&
         (() => {
           const l = leads.find((x) => x._id === openId);
-          return l ? <TimelineDrawer lead={l} onClose={() => setOpenId(null)} /> : null;
+          return l ? <TimelineDrawer lead={l} onClose={() => setOpenId(null)} refresh={refresh} /> : null;
         })()}
+    </div>
+  );
+}
+
+// The "Other…" text box that replaces a dropdown in place. Enter saves,
+// Escape cancels — the cell is too narrow for a labelled button pair.
+function OtherInput({
+  value,
+  busy,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  value: string;
+  busy: boolean;
+  onChange: (v: string) => void;
+  onSave: () => void | Promise<void>;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        autoFocus
+        className="w-full rounded border border-gray-300 px-1 py-0.5 text-xs"
+        placeholder="New value"
+        value={value}
+        disabled={busy}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") void onSave();
+          if (e.key === "Escape") onCancel();
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => void onSave()}
+        disabled={busy || !value.trim()}
+        className="shrink-0 rounded bg-primary-600 p-1 text-white disabled:opacity-50"
+        aria-label="Save new value"
+      >
+        <Check className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="shrink-0 rounded bg-gray-100 p-1 text-gray-600"
+        aria-label="Cancel"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
