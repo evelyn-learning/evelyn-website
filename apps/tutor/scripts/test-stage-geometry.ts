@@ -1,65 +1,94 @@
 /** Round 3 (A13): text-mode right column geometry; adjust-lesson menu is
  *  portalled out of the header's stacking context.
- *  GreenApple round 6: text mode — transcript panel top == board top (same
- *  height), tools collapse to a wrench inside the panel header and open as a
- *  vertical overlay strip, page nav slimmed onto the problem-chip row.
+ *  GreenApple round 6: text-mode tool rail (flag NEXT_PUBLIC_TUTOR_TEXT_TOOL_RAIL,
+ *  default ON) — transcript panel top == board top (same height), tools
+ *  collapse to a wrench inside the panel header and open as a vertical
+ *  overlay strip (md+), page nav slimmed onto the problem-chip row.
  *  Usage: npx tsx scripts/test-stage-geometry.ts */
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
-  textColumnGeometry, toolRailTopPx, HEADER_CLEARANCE_PX, RAIL_ROW_PX,
+  legacyTextColumnGeometry, textPanelTopFallbackPx, toolRailTopPx, qpinDefaultTopPx,
+  HEADER_CLEARANCE_PX, RAIL_ROW_PX, TOOLS_ROW_PX, TOOLS_PANEL_GAP_PX,
   TOOL_RAIL_INSET_PX, TOOL_RAIL_BTN_PX, toolsRowDefaultOpen,
 } from '../src/app/tutor/components/session/stage-geometry';
 
 let passed = 0, failed = 0;
 const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
 
-const a = textColumnGeometry({ hasRail: false });
-assert(a.toolsTopPx === HEADER_CLEARANCE_PX && a.toolsTopPx === 68, 'no rail: column top directly under the header (68px)');
-assert(a.panelTopPx === a.toolsTopPx, 'no rail: panel top no longer includes a tools row');
-const b = textColumnGeometry({ hasRail: true });
-assert(b.toolsTopPx === 68 + RAIL_ROW_PX, 'rail: column top below the rail row');
-assert(b.panelTopPx === b.toolsTopPx, 'rail: panel top no longer includes a tools row');
-assert(toolRailTopPx(100) === 100 + TOOL_RAIL_INSET_PX && TOOL_RAIL_BTN_PX === 28, 'wrench sits inside the panel header (28px button)');
+// ---- geometry (pure) ----
+assert(textPanelTopFallbackPx({ chipRow: false }) === 64, 'rail fallback: board/panel top 64px with no chip row (56 header + pt-2)');
+assert(textPanelTopFallbackPx({ chipRow: true }) === 90, 'rail fallback: 90px with the chip row (56 + 30 row + pt-1)');
+assert(toolRailTopPx(90) === 98 && TOOL_RAIL_INSET_PX === 8 && TOOL_RAIL_BTN_PX === 28, 'wrench sits 8px inside the panel header (28px button)');
+assert(qpinDefaultTopPx(90) === 98, 'Q-pin default under the rail: board top + 8px');
+const a = legacyTextColumnGeometry({ hasRail: false });
+assert(a.toolsTopPx === HEADER_CLEARANCE_PX && a.toolsTopPx === 68 && a.panelTopPx === 68 + TOOLS_ROW_PX + TOOLS_PANEL_GAP_PX, 'legacy (flag off): tool row at 68, panel below row + gap');
+const b = legacyTextColumnGeometry({ hasRail: true });
+assert(b.toolsTopPx === 68 + RAIL_ROW_PX && b.panelTopPx === 108 + 54, 'legacy (flag off) with rail row: 108 / 162');
 
+// Defaults: voice open (R40/R57); text rail collapsed at every width; flag off = round-3 behaviour.
+assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: true, textToolRail: true }) === false, 'rail default: collapsed at md+');
+assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: false, textToolRail: true }) === false, 'rail default: collapsed on phones');
+assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: true, textToolRail: false }) === true, 'flag off: open at md+');
+assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: false, textToolRail: false }) === false, 'flag off: collapsed on phones');
+assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: true, textToolRail: false }) === true, 'voice: open (md+)');
+assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: false, textToolRail: false }) === true, 'voice: open (phones)');
+
+// ---- source wiring (on comment-stripped code) ----
 const dir = join(__dirname, '..', 'src/app/tutor/components/session');
 const stage = readFileSync(join(dir, 'SessionStage.tsx'), 'utf8');
-const code = stage.replace(/\/\/.*|\{\/\*[\s\S]*?\*\/\}/g, '');
-assert(stage.includes("'--ss-tools-top'") && stage.includes("'--ss-panel-top'") && stage.includes('textColumnGeometry('), 'stage root sets --ss-tools-top / --ss-panel-top');
-assert(stage.includes('boardTopPx ?? textGeom.panelTopPx') && stage.includes('toolRailTopPx('), 'panel top = measured board-column content top (fallback: geometry)');
-assert(stage.includes('md:top-[var(--ss-panel-top)] md:left-auto md:right-3 md:w-[360px]'), 'text panel still reads --ss-panel-top');
-assert(stage.includes("data-state={toolsOpen ? 'expanded' : 'collapsed'}"), 'cluster exposes data-state collapsed|expanded');
-assert(/data-testid="tools-cluster"/.test(stage), 'tools-cluster testid kept');
-assert(stage.includes('md:top-[var(--ss-tools-top)] md:right-5 md:z-[55]'), 'text md+: wrench anchored in the panel header, above the panel');
-assert(stage.includes('flex flex-row items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5'), 'voice: horizontal cluster classes unchanged');
-assert(stage.includes('flex flex-row-reverse md:flex-col items-center gap-1 rounded-xl bg-white border border-slate-200 shadow-md'), 'text: vertical rail at md+');
+// JSX comments and whole-line // comments (not /* */: `accept="image/*"` would open one).
+const code = stage.replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/^\s*\/\/.*$/gm, '');
+const has = (t: string) => code.includes(t);
+
+assert(has("const textToolRail = sessionMode === 'text' && process.env.NEXT_PUBLIC_TUTOR_TEXT_TOOL_RAIL !== 'off'"), 'rail flag: every text session, default ON');
+assert(has("'--ss-tools-top'") && has("'--ss-panel-top'"), 'stage root sets --ss-tools-top / --ss-panel-top');
+assert(has('boardTopPx ?? textPanelTopFallbackPx({ chipRow: chipRowShown })'), 'panel top = measured board top; fallback from the same layout');
+assert(has('useIsomorphicLayoutEffect(() => {') && has("typeof window !== 'undefined' ? useLayoutEffect : useEffect"), 'measurement runs before paint (isomorphic layout effect)');
+assert(code.indexOf('const stageRef = useRef') < code.indexOf('useIsomorphicLayoutEffect(() => {'), 'stageRef declared before the effect that reads it');
+assert(has('textToolRail ? textBoardTopPx : legacyTextGeom.panelTopPx'), 'flag off: legacy panel top');
+assert(has('md:top-[var(--ss-panel-top)] md:left-auto md:right-3 md:w-[360px]'), 'text panel reads --ss-panel-top');
+assert(has("data-state={toolsOpen ? 'expanded' : 'collapsed'}") && has('data-testid="tools-cluster"'), 'cluster testid kept + data-state');
+assert(has("textToolRail ? ' md:top-[var(--ss-tools-top)] md:right-5 md:z-[55]' : sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''"), 'rail: wrench in the panel header above the panel; flag off: legacy anchor');
+assert(has("'flex flex-row items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5'"), 'voice/flag-off: horizontal cluster classes unchanged');
+assert(has("'flex flex-row md:flex-col items-center gap-1 rounded-2xl md:rounded-xl bg-white border border-slate-200 shadow-md p-1.5 md:p-0'"), 'rail: vertical strip md+, phone row + p-1.5 kept');
+assert(has("textToolRail ? 'w-8 h-8 md:w-7 md:h-7' : 'w-8 h-8'"), 'rail: 28px buttons md+ only, 32px on phones');
+assert(has("textToolRail ? 'relative md:order-first' : 'relative'") && !has('order-last'), 'wrench LAST in DOM; md:order-first lifts it in the rail strip');
+assert(has('`${toolSepClass} md:hidden`'), 'rail: no trailing separator in the md+ strip');
+assert(/if \(!toolsAlwaysOpen \|\| textToolRail\) setToolsOpen\(false\)/.test(code), 'rail: choosing a tool collapses');
+assert(has("textToolRail ? 'grid md:hidden' : 'grid'") && has('md:right-[54px] md:z-[55]'), 'rail: Q button outside the strip at md+, left of the wrench');
+assert(has('useState(() => toolsRowDefaultOpen(') && has('toolsUserToggledRef.current = true'), 'default from toolsRowDefaultOpen; wrench toggle marks the student choice');
+assert(!/pr-14/.test(code), 'no pr-14 phone gutter left in code');
+
+// Page nav
+assert(has('const switcherInline = textToolRail && !pagerInCard && !isFullscreen'), 'switcher inline only for the text rail at md+, not fullscreen');
+assert(has('renderSwitcher(true)') && has('renderSwitcher(false)'), 'switcher renders inline on the chip row or floating');
+assert(/boardColumnTopPadClass = \(showSwitcher && !pagerInCard && !switcherInline\) \? 'pt-12'/.test(code), 'board top pad drops the floating-pager clearance when inline');
+assert(has('relative z-[25] shrink-0 order-2 px-2 md:pl-4 md:pr-[388px] pt-1.5 flex flex-wrap items-center gap-1.5'), 'chip row: board-column width, above the Q-pin');
+assert(has("${inline ? 'left-0 right-0' : 'left-1/2 -translate-x-1/2 w-[min(86vw,360px)]'}"), 'inline dropdown matches the pill width (cannot cross the board edge)');
+// renderSwitcher(false) = the pre-round-6 floating markup, exact class strings.
+const floating = [
+  "`absolute ${railEl && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`",
+  "'flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]'",
+  "`shrink-0 grid place-items-center ${inline ? 'w-6 h-[22px]' : 'w-7 h-7'} rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`",
+  "`relative shrink-0 grid place-items-center ${inline ? 'w-6 h-[22px]' : 'w-7 h-7'} rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`",
+  "`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-1 ${inline ? 'h-[22px]' : 'h-7'} rounded-full hover:bg-slate-50`",
+  "`truncate ${inline ? 'text-[11px]' : 'text-xs'} font-medium text-slate-700`",
+  "`shrink-0 ${inline ? 'text-[10px]' : 'text-[11px]'} font-semibold tabular-nums text-slate-400`",
+  "max-h-[50vh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5`",
+];
+assert(floating.every(has), 'renderSwitcher(false): floating class strings unchanged');
+// Evaluate the inline:false branch of each template to the literal pre-round-6 strings.
+const evalFalse = (t: string) => t.replace(/\$\{inline \? '[^']*' : '([^']*)'\}/g, '$1');
+assert(evalFalse(floating[2]) === "`shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`"
+  && evalFalse(floating[4]) === "`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-1 h-7 rounded-full hover:bg-slate-50`"
+  && evalFalse(floating[5]) === "`truncate text-xs font-medium text-slate-700`"
+  && evalFalse(floating[6]) === "`shrink-0 text-[11px] font-semibold tabular-nums text-slate-400`", 'renderSwitcher(false) resolves to the exact voice classes');
+assert(has('? { top: `${qpinDefaultTopPx(textBoardTopPx)}px` }') && has('const HEADER_CLEARANCE = textToolRail ? textBoardTopPx :'), 'Q-pin default/auto anchors follow the rail board top');
+
 const session = readFileSync(join(dir, 'TutorSession.tsx'), 'utf8');
 assert(session.includes('createPortal(') && session.includes('data-testid="adjust-lesson-menu"'), 'adjust-lesson menu portalled to body');
 assert(session.includes('pacingMenuPanelRef.current?.contains('), 'outside-click treats the portalled menu as inside');
-
-// Defaults: voice open (R40/R57); text collapsed at every width.
-assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: true }) === false, 'default: collapsed in text mode at md+');
-assert(toolsRowDefaultOpen({ sessionMode: 'text', isMdUp: false }) === false, 'default: collapsed in text mode on phones');
-assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: true }) === true, 'default: open in voice mode (md+)');
-assert(toolsRowDefaultOpen({ sessionMode: 'voice', isMdUp: false }) === true, 'default: open in voice mode (phones)');
-assert(stage.includes('useState(() => toolsRowDefaultOpen(') && stage.includes('toolsUserToggledRef.current = true'), 'stage: default from toolsRowDefaultOpen; wrench toggle marks the student choice');
-assert(/if \(!toolsAlwaysOpen \|\| sessionMode === 'text'\) setToolsOpen\(false\)/.test(stage), 'text: choosing a tool collapses the rail');
-assert(!/pr-14/.test(code), 'stage: no pr-14 phone gutter left in code');
-
-// Wrench order: voice = last in DOM (row grows leftward); text = first (strip grows downward).
-const cluster = stage.slice(stage.indexOf('data-testid="tools-cluster"'));
-const clusterEnd = cluster.indexOf('===== Slim board page switcher');
-const body = cluster.slice(0, clusterEnd);
-const textWrench = body.indexOf("{sessionMode === 'text' && wrenchEl}");
-const voiceWrench = body.indexOf("{sessionMode !== 'text' && wrenchEl}");
-const qAt = body.indexOf("aria-label=\"Show the tutor's question\"");
-assert(textWrench >= 0 && textWrench < body.indexOf('toolsOpen && ('), 'text: wrench first in DOM');
-assert(voiceWrench > qAt && !body.includes('order-last'), 'voice: wrench last in DOM (no order-last)');
-
-// Page nav: inline on the chip row in text md+, slimmed; no pt-12 clearance there.
-assert(stage.includes('const switcherInline = ') && stage.includes('renderSwitcher(true)') && stage.includes('renderSwitcher(false)'), 'switcher renders inline on the chip row (text md+) or floating');
-assert(/boardColumnTopPadClass = \(showSwitcher && !pagerInCard && !switcherInline\) \? 'pt-12'/.test(stage), 'board top pad drops the floating-pager clearance when inline');
-assert(stage.includes('flex flex-wrap items-center gap-1.5'), 'chip row wraps the nav under the chip only when it does not fit');
 
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
