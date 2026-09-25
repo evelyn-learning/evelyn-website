@@ -45,5 +45,32 @@ test('inactive after the second student turn', () => {
   }), false);
 });
 
+// GameClass sandbox opener (embed-1790368730414, 2026-09-25): a homework-help
+// session launched WITH a topic (the partner passes the exact question as
+// `topic`). The synthetic '[start session]' kickoff leaves lastStudentText
+// empty, the guard treated that as "the student only said hi", rejected
+// show_problem 3×, and the validator retry loop cut the opener's audio
+// mid-sentence ("Hey Maya, here's the p—"). A homework-help session that
+// arrives with a topic IS a problem request — the guard must stand down.
+test('inactive on a homework-help opener that arrived with a topic (GameClass live bug)', () => {
+  assert.equal(computeGreetingGuard({
+    lessonPlanActive: false, priorStudentTurns: 0, lastStudentText: '', mockReviewActive: false,
+    problemContextActive: true,
+  }), false);
+});
+
+test('still active on a homework-help opener with NO topic', () => {
+  assert.equal(computeGreetingGuard({
+    lessonPlanActive: false, priorStudentTurns: 0, lastStudentText: '', mockReviewActive: false,
+    problemContextActive: false,
+  }), true);
+});
+
+test('problemContextActive is optional — omitted keeps the historical verdict', () => {
+  assert.equal(computeGreetingGuard({
+    lessonPlanActive: false, priorStudentTurns: 0, lastStudentText: 'hi', mockReviewActive: false,
+  }), true);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

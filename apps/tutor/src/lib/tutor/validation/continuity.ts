@@ -271,10 +271,21 @@ export function computeGreetingGuard(input: {
   priorStudentTurns: number;
   lastStudentText: string;
   mockReviewActive: boolean;
+  /** The session was launched as homework-help WITH a topic — the launch
+   *  context itself is the problem request (a partner "Ask the Tutor"
+   *  token carries the exact question as `topic`). The synthetic
+   *  '[start session]' kickoff leaves lastStudentText empty, which
+   *  isPureGreeting reads as "the student only said hi"; without this
+   *  exception the opener's show_problem was rejected 3× and the
+   *  validator retry loop cut the spoken opener mid-sentence
+   *  (GameClass sandbox embed-1790368730414, 2026-09-25). Optional so
+   *  older call sites keep their verdict. */
+  problemContextActive?: boolean;
 }): boolean {
   return (
     !input.lessonPlanActive &&
     !input.mockReviewActive &&
+    !input.problemContextActive &&
     input.priorStudentTurns <= 1 &&
     isPureGreeting(input.lastStudentText)
   );

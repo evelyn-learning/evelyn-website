@@ -5236,11 +5236,19 @@ export function VoiceTutorRealtime({
     // Mock-review sessions arrive with an agenda (the student's missed exam
     // items) — presenting the first one unprompted is the whole point, so the
     // greeting guard must not eat it (2026-07-21 live-gate retry/kill loop).
+    // Homework-help launched WITH a topic (partner "Ask the Tutor" tokens
+    // carry the exact question as `topic`): the launch context IS the
+    // problem request, so the opener's problem card is wanted. The
+    // synthetic '[start session]' kickoff leaves lastStudentText empty and
+    // the guard read that as a bare greeting — 3× show_problem rejection,
+    // validator retry loop, opener audio cut mid-sentence (GameClass
+    // sandbox embed-1790368730414, 2026-09-25).
     const greetingGuardActive = computeGreetingGuard({
       lessonPlanActive,
       priorStudentTurns,
       lastStudentText,
       mockReviewActive: !!mockReviewRef.current,
+      problemContextActive: sessionGoal === 'homework-help' && !!(topic && topic.trim()),
     });
 
     // Continuation guard: if the student's last utterance was clearly a

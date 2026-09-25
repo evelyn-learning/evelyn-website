@@ -1004,7 +1004,14 @@ export function InkNotesOverlay({
               position: 'absolute',
               left,
               top,
-              maxWidth: NOTE_MAX_W,
+              // measureNote wraps lines at NOTE_MAX_W of TEXT width; under the
+              // global border-box sizing the 2×4px padding below comes out of
+              // the same cap, so a measured line between 232 and 240 px
+              // re-wrapped in the DOM (an extra "m" line), the note grew a
+              // line taller than its placement box, and the next notes landed
+              // on top of it (GameClass sandbox opener, 2026-09-25). The cap
+              // must be the text width PLUS the padding.
+              maxWidth: NOTE_MAX_W + 8,
               fontFamily: 'var(--font-caveat), var(--font-kalam), cursive',
               fontSize: 22,
               lineHeight: `${NOTE_LINE_H}px`,
