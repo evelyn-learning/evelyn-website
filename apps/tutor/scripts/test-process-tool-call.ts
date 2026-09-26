@@ -594,3 +594,89 @@ check('content-poor diagram → no card', () => {
 });
 
 console.log(`\nprocess-tool-call: ${passed} checks passed`);
+
+// Live 2026-09-24 (portal-f03a80cd): "$4a = 28$" (9 chars) was rejected as
+// "missing or empty" by a bare length<10 rule. Short MATH statements pass;
+// short non-math ("hi", "?") still fail.
+import { problemStatementTooShort } from '../src/lib/tutor/whiteboard/problem-statement';
+check('show_problem short equation statement → accepted', () => {
+  const r = processToolCall('show_problem', { problem: { statement: '$4a = 28$' } });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('problemStatementTooShort: math short ok, non-math short rejected', () => {
+  const cases: Array<[string, boolean]> = [['$4a = 28$', false], ['x+3=9', false], ['7', false], ['hi', true], ['?', true], ['   ', true], ['', true], ['Solve for the width.', false]];
+  for (const [s, want] of cases) if (problemStatementTooShort(s) !== want) throw new Error(`"${s}" → ${!want ? 'accepted' : 'rejected'} expected`);
+});
+
+// GreenApple round 6, Task 5 (portal-5b701ac0): the board showed
+// `z = \text{(something)} - 24\frac{2}{9}` — a placeholder written as math.
+import { equationPlaceholder } from '../src/lib/tutor/whiteboard/equation-placeholder';
+check('show_equation with \\text{(something)} placeholder → rejected', () => {
+  const r = processToolCall('show_equation', { latex: 'z = \\text{(something)} - 24\\frac{2}{9}' });
+  assert.equal(r.ok, false);
+  if (r.ok) return;
+  assert.ok(r.reason.startsWith('show_equation was rejected because the equation contains a placeholder (`'), r.reason);
+  assert.ok(r.reason.includes('never a placeholder on the board.'), r.reason);
+});
+check('show_equation `2(3)-2=?` → accepted', () => {
+  const r = processToolCall('show_equation', { latex: '2(3)-2=?' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('show_equation `x = \\frac{7}{2}` → accepted', () => {
+  const r = processToolCall('show_equation', { latex: 'x = \\frac{7}{2}' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('show_equation `\\text{Result}` bare label → accepted (fix round 1)', () => {
+  const r = processToolCall('show_equation', { latex: '\\text{Result}' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('show_equation `z = \\text{Answer} - 3` operand → rejected (fix round 1)', () => {
+  const r = processToolCall('show_equation', { latex: 'z = \\text{Answer} - 3' });
+  assert.equal(r.ok, false);
+});
+check('show_equation `\\text{Solved}` label-only → accepted', () => {
+  const r = processToolCall('show_equation', { latex: '\\text{Solved}' });
+  if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+});
+check('equationPlaceholder: placeholder shapes flagged, real math allowed', () => {
+  const flagged = [
+    'a = \\text{something}', '\\mathrm{answer} + 1', 'b - \\textit{[value]}', 'y = \\text{ your answer }',
+    'x = \\text{fill in}', 'x = ???', 'a + ?? = 5', 'x = (something) + 2', 'z = \\text{(TBD)}',
+    'k = \\text{unknown}', 'z = \\text{Answer} - 3', 'y = \\text{the answer}', 'y = \\text{an answer} + 1',
+    'x = \\text{Answer:} + 2', 'q = \\text{your value.}', 'w = \\mathrm{[the result]}',
+  ];
+  const allowed = [
+    '2(3)-2=?', 'x = \\frac{7}{2}', '\\text{Solved}', '(x+1)(x-2)=0', '\\text{area} = 12',
+    'f(x) = x^2', 'y = ?', '\\text{Step 1: } 2x = 8', 'v = 3 \\text{ m/s}', '(a)', 'P(\\text{heads}) = 0.5',
+    // Fix round 1: a card that is ONLY the label is a heading, not a placeholder operand.
+    '\\text{Result}', '\\text{Answer}', '\\text{Answer:}', '  \\text{ the answer }  ',
+  ];
+  for (const s of flagged) if (equationPlaceholder(s) == null) throw new Error(`expected placeholder in: ${s}`);
+  for (const s of allowed) { const t = equationPlaceholder(s); if (t != null) throw new Error(`false positive "${t}" in: ${s}`); }
+});
+
+// Final fix wave: a list word as a LABEL or real text inside a larger
+// expression is fine; only an OPERAND placeholder (adjacent to = + - \cdot
+// \times / or inside \frac) is rejected.
+check('equationPlaceholder final wave: labels / real text accepted', () => {
+  const allowed = [
+    '\\text{Answer: } x = 5', '\\text{Result: } 24\\frac{2}{9}', '\\text{Expression: } 3x+2',
+    '\\text{Value} = 12', 'P(\\text{number} > 3)', '\\text{Result}\\\\ x=3', '$\\text{Result}$',
+    '$$\\text{Answer}$$', '\\(\\text{Answer:}\\)',
+  ];
+  for (const s of allowed) {
+    const t = equationPlaceholder(s); if (t != null) throw new Error(`false positive "${t}" in: ${s}`);
+    const r = processToolCall('show_equation', { latex: s }); if (!r.ok) throw new Error(`processToolCall rejected: ${s}`);
+  }
+});
+check('equationPlaceholder final wave: operand placeholders still rejected', () => {
+  const flagged = [
+    'z = \\text{(something)} - 24\\frac{2}{9}', 'a = \\text{something}', 'x = \\text{the answer}',
+    '\\text{Answer} = \\text{Answer}', '\\frac{\\text{value}}{2}', 'y = 3 \\cdot \\text{number}',
+    '2 \\times \\text{something} = 8', '$z = \\text{answer}$',
+  ];
+  for (const s of flagged) {
+    if (equationPlaceholder(s) == null) throw new Error(`expected placeholder in: ${s}`);
+    const r = processToolCall('show_equation', { latex: s }); if (r.ok) throw new Error(`processToolCall accepted: ${s}`);
+  }
+});

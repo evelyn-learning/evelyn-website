@@ -104,6 +104,23 @@ function parseNumeric(s: string): number {
   return parseFloat(t);
 }
 
+/** Same as `parseNumeric`, plus stripping a leading "x = " variable-
+ *  assignment prefix or a leading "$" — e.g. "x=-12" / "x = -12" → "-12".
+ *  ONLY ever applied to the student's response text, never to
+ *  `key.expectedAnswer`: a key can be a worked-solution string with its own
+ *  intermediate "var = value" assignments (e.g. seeded try_yourself content
+ *  like "v_y0 = 20 × sin(30°) = 10 m/s. Maximum height is 5 m."). Stripping
+ *  the FIRST assignment there would parse the key as `20` instead of
+ *  falling through to the holistic-judge fallback below (`isCorrect`'s
+ *  "key isn't a clean single number" branch) — silently grading a correct
+ *  "5" as wrong against the wrong intermediate value. */
+function parseNumericResponse(s: string): number {
+  const stripped = (s ?? '').trim()
+    .replace(/^[a-zA-Z]\w*\s*=\s*/, '')
+    .replace(/^\$/, '');
+  return parseNumeric(stripped);
+}
+
 /** Grade a single response against its resolved key. Deterministic for
  *  numeric/mcq; the single-answer judge for frq/free and image responses. */
 async function isCorrect(
@@ -119,7 +136,7 @@ async function isCorrect(
   const fmt = key.responseFormat ?? 'free';
 
   if (fmt === 'numeric') {
-    const a = parseNumeric(text);
+    const a = parseNumericResponse(text);
     const b = parseNumeric(key.expectedAnswer ?? '');
     if (Number.isFinite(a) && Number.isFinite(b)) {
       const tol = Math.max(0.01, Math.abs(b) * 0.01);

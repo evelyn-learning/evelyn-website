@@ -110,6 +110,8 @@ import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/Whiteboar
 import { LessonPlanProgress } from './LessonPlanProgress';
 import { loadModuleByParams } from '@core/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
+import { problemStatementTooShort } from '@/lib/tutor/whiteboard/problem-statement';
+import { equationPlaceholder, equationPlaceholderReason } from '@/lib/tutor/whiteboard/equation-placeholder';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
@@ -259,6 +261,7 @@ import {
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
   TUTOR_BOARD_ANCHOR_NET,
+  TUTOR_SHADED_REGION_NET,
   BARGEIN_SUSTAIN_MS,
   OPENER_BARGEIN_SUSTAIN_MS,
   SELF_ECHO_CANCEL_IMMUNITY_MS,
@@ -292,6 +295,7 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { shouldPlantShadedRegionNote, SHADED_REGION_NOTE } from '@/lib/tutor/voice/shaded-region-net';
 import { detectBoardContradiction } from '@/lib/tutor/voice/board-contradiction';
 import { findOutOfBoundsPins, buildMapBoundsRejection, findCrowdedPins, buildCrowdedPinsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
@@ -4004,6 +4008,11 @@ export function VoiceTutorRealtime({
   // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
   // cadence and anchoring independently).
   const pendingBoardAnchorNoteRef = useRef<string | null>(null);
+  // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
+  // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
+  // waits out an open tutor question): the wrong figure is on the board now.
+  // Separate from pendingBoardAnchorNoteRef so it never sets anchorSuspect.
+  const pendingRedrawNoteRef = useRef<string | null>(null);
   // 2026-08-07 triage: judge kill-class survivor → next-turn correction note
   // (buildJudgeCorrectionNote). The judge stays advisory (no kill, no audio
   // chop) but its verdict now reaches the brain on the following turn so a
@@ -5395,6 +5404,17 @@ export function VoiceTutorRealtime({
           rejected.push({ action: 'show_equation', reason });
           return [];
         }
+        // GreenApple round 6 (portal-5b701ac0): a placeholder word written
+        // as math — `z = \text{(something)} - 24\frac{2}{9}`. Twin of the
+        // server check in processToolCall (same reason string).
+        const placeholder = equationPlaceholder(latex);
+        if (placeholder) {
+          const reason = equationPlaceholderReason(placeholder);
+          console.warn('[VoiceTutorRealtime] Dropping show_equation — placeholder in latex:', placeholder);
+          onDebugEvent?.('equation_placeholder', `${placeholder}: ${latex.slice(0, 80)}`);
+          rejected.push({ action: 'show_equation', reason });
+          return [];
+        }
       }
       if (cmd.action === 'showProblem') {
         const statement = cmdAny.problem?.statement?.trim() || '';
@@ -5425,7 +5445,7 @@ export function VoiceTutorRealtime({
         // Empty/near-empty problem card is never useful. Drop regardless of
         // whether the student was greeting or asking for a problem — if the
         // tutor genuinely has a problem to show, it can retry with content.
-        if (statement.length < 10) {
+        if (problemStatementTooShort(statement)) {
           const snapshot = JSON.stringify(cmdAny.problem);
           const reason = 'show_problem was rejected because `statement` is missing or empty. ' +
             'RETRY with this EXACT shape, replacing the example content with your actual problem:\n' +
@@ -10586,6 +10606,12 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
       }
+      // Shaded-region redraw note — same un-held convention as the board-anchor note.
+      if (pendingRedrawNoteRef.current) {
+        runTranscript = `${pendingRedrawNoteRef.current}\n\n${runTranscript}`;
+        pendingRedrawNoteRef.current = null;
+        onDebugEvent?.('shaded_region_note_consumed', 'delivered with this turn');
+      }
       // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
       if (pendingRuntimeNoteRef.current) {
         // Live check 7: deliver only on a turn where the student is NOT mid-answer —
@@ -10642,6 +10668,10 @@ export function VoiceTutorRealtime({
       // per-sentence wordCount already computed there for the dedup guard).
       let totalWordCount = 0;
       let totalToolNamesSeen: string[] = [];
+      // Shaded-region net: this turn's dispatched calls WITH args (pushed at
+      // the same site as totalToolNamesSeen) — the net needs to know whether
+      // a graph call actually carried `shadedRegion`, not just its name.
+      const turnToolCallsSeen: Array<{ name: string; args: Record<string, unknown> }> = [];
       // Rule-8 v2: renders that actually landed on the board this turn.
       // Counts assignedIds across attempts, so a killed attempt's rolled-back
       // renders still count — the client repair then UNDER-fires (skips a
@@ -13428,6 +13458,7 @@ export function VoiceTutorRealtime({
                     continue;
                   }
                   totalToolNamesSeen.push(name);
+                  turnToolCallsSeen.push({ name, args });
                   // #4: a Skip turn that actually advances is a legit
                   // "moving on" response — open the held gate the moment
                   // advance_lesson / generate_problem dispatches so the
@@ -15831,7 +15862,18 @@ export function VoiceTutorRealtime({
         cur.turns += 1;
         const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
         const kindNow = (segNow?.kind ?? '').toLowerCase();
-        if (!cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
+        // Live 2026-09-24 (portal-f03a80cd): a homework plan is ONE concept segment
+        // holding every problem the student brought, so "6 turns without
+        // advancing" is its normal shape — the note made the brain advance into
+        // the recap and close the session after problem 4 of 10. In a homework
+        // session the <homework_session> block owns pacing (problem by problem);
+        // the segment-advance note never applies.
+        const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0;
+        if (homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS) {
+          cur.noted = true;
+          onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
+        }
+        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
@@ -15855,6 +15897,16 @@ export function VoiceTutorRealtime({
           console.warn('[brain-orchestrator] board-anchor net: substantive question, 0 content tools — note planted');
           onDebugEvent?.('board_anchor_flagged', `question with no board write — note planted for next turn`);
         }
+      }
+      // Shaded-region net (GreenApple round 6, portal-7298bf27): the tutor
+      // SAID a region is shaded but drew with a figure tool that cannot
+      // shade (show_coordinate_plane / show_geometry) and no graph call
+      // carried `shadedRegion`. Rides pendingRedrawNoteRef — delivered on the
+      // very next brain turn, NOT held behind an open question (fix round 1).
+      if (TUTOR_SHADED_REGION_NET && shouldPlantShadedRegionNote({ speech: fullText, toolCalls: turnToolCallsSeen })) {
+        pendingRedrawNoteRef.current = SHADED_REGION_NOTE;
+        console.warn('[brain-orchestrator] shaded-region net: shade word spoken, no shadedRegion drawn — note planted');
+        onDebugEvent?.('shaded_region_net_planted', `tools=[${totalToolNamesSeen.join(', ')}]`);
       }
       // R48 Task 2: posed exercise (prompt Rule 3e — the prose/multi-part
       // sibling of the board-anchor net above, which only covers a single

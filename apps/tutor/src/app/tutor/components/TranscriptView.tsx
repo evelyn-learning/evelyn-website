@@ -24,6 +24,10 @@ import { InlineMathText } from './whiteboard/InlineMathText';
 // inline-emphasis.tsx for why renderBubbleText itself stays local.
 import { renderInlineEmphasis } from './inline-emphasis';
 import { ImageZoomOverlay } from './ImageZoomOverlay';
+// GreenApple round 6, task 4: pure follow-to-bottom decision, shared between
+// the immediate scroll below and the fonts.ready / ResizeObserver re-checks
+// that fix math bubbles growing taller after KaTeX's web fonts swap in.
+import { shouldFollowToBottom, refollowDecision, latchFromScrollEvent } from '@/lib/tutor/voice/transcript-follow';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -213,6 +217,12 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
 
 export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false, tutorLabel }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // GreenApple round 6, task 4: wraps just the message bubbles (not the
+  // portalled zoom overlay) so a ResizeObserver can watch CONTENT growth —
+  // the scroller div itself is `h-full` and never resizes as messages are
+  // added, only its scrollHeight does, which ResizeObserver can't see on
+  // that element directly.
+  const contentRef = useRef<HTMLDivElement>(null);
   // Task 9: the upload thumbnail currently open in the zoom overlay.
   const [zoomImage, setZoomImage] = useState<{ dataUrl: string; name?: string } | null>(null);
 
@@ -259,38 +269,118 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // to bottom unless the student deliberately scrolled away. Voice's
   // near-bottom-only rule (the `else` branch) is completely untouched.
   const userScrolledUpRef = useRef(false);
+  // Round 7, task 5: end of TranscriptView's own programmatic-scroll guard
+  // window (`performance.now() + 200`, armed by `scrollToBottom()` below).
+  // A `scroll` event the listener sees before this deadline is presumed to
+  // be an echo of our own `el.scrollTop = el.scrollHeight` write — not the
+  // student scrolling away — and is ignored via `latchFromScrollEvent`.
+  const programmaticScrollUntilRef = useRef(0);
+  // Round 7, task 5, fix round 1: hoisted out of the follow-to-bottom
+  // effect below so the drawer-open snap effect further down (which writes
+  // `el.scrollTop = el.scrollHeight` on the SAME container) can arm the
+  // same guard window — it can false-latch exactly like the three sites
+  // already fixed. Reads `containerRef.current` fresh on every call
+  // (rather than closing over one effect's `el`) so it's safe to call from
+  // any effect in this component.
+  const scrollToBottom = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    programmaticScrollUntilRef.current = performance.now() + 200;
+    el.scrollTop = el.scrollHeight;
+  };
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let cancelled = false;
+    const lastEntry = transcript[transcript.length - 1];
+    const lastRole = lastEntry?.role;
+    let removeListeners: (() => void) | undefined;
     if (stickToBottom) {
-      const onScrollLikeEvent = () => {
+      const onScrollLikeEvent = (event: Event) => {
         const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-        userScrolledUpRef.current = distance > 120;
+        const latch = latchFromScrollEvent({
+          type: event.type as 'scroll' | 'wheel' | 'touchmove',
+          distanceFromBottom: distance,
+          now: performance.now(),
+          programmaticUntil: programmaticScrollUntilRef.current,
+        });
+        if (latch !== null) userScrolledUpRef.current = latch;
       };
       el.addEventListener('scroll', onScrollLikeEvent, { passive: true });
       el.addEventListener('wheel', onScrollLikeEvent, { passive: true });
       el.addEventListener('touchmove', onScrollLikeEvent, { passive: true });
-      // The student's own message just landed (or is still the latest
-      // entry while the reply is pending) — always snap to bottom and
-      // clear the "scrolled up" latch, exactly like sending a message in
-      // any standard chat UI.
-      const lastEntry = transcript[transcript.length - 1];
-      if (lastEntry?.role === 'student') {
-        userScrolledUpRef.current = false;
-        el.scrollTop = el.scrollHeight;
-      } else if (!userScrolledUpRef.current) {
-        // Tutor entry arriving or streaming: follow unless the student
-        // deliberately scrolled up to read earlier turns.
-        el.scrollTop = el.scrollHeight;
-      }
-      return () => {
+      removeListeners = () => {
         el.removeEventListener('scroll', onScrollLikeEvent);
         el.removeEventListener('wheel', onScrollLikeEvent);
         el.removeEventListener('touchmove', onScrollLikeEvent);
       };
+      // The student's own message just landed (or is still the latest
+      // entry while the reply is pending) — always clear the "scrolled
+      // up" latch, exactly like sending a message in any standard chat
+      // UI. (The actual scroll happens via the shared decision below.)
+      if (lastRole === 'student') {
+        userScrolledUpRef.current = false;
+      }
     }
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (nearBottom) el.scrollTop = el.scrollHeight;
+    // GreenApple round 6, task 4: the shared pure decision (see
+    // transcript-follow.ts) — same rule the fonts.ready / ResizeObserver
+    // re-checks below re-apply.
+    const decision = shouldFollowToBottom({
+      stickToBottom,
+      userScrolledUp: userScrolledUpRef.current,
+      lastRole,
+      nearBottom,
+    });
+    if (decision) scrollToBottom();
+
+    // Math bubbles render through InlineMathText's synchronous
+    // `katex.render()` with no font-load handling (unlike EquationRenderer,
+    // which re-fits after `document.fonts.ready`). A math-bearing reply can
+    // land, get the scroll above, and then grow taller once KaTeX's web
+    // fonts swap in — stranding the view short of the bottom (live
+    // symptom: a math-bearing tutor reply appeared but the panel stayed
+    // short of the bottom).
+    //
+    // Fix round 1: this must NOT re-apply the `decision` captured above —
+    // a student can scroll away in the gap between the initial scroll and
+    // fonts settling, and re-applying a frozen "should follow" would yank
+    // them back down. `refollowDecision` reads `userScrolledUpRef.current`
+    // LIVE, at the moment fonts actually settle. Gated to text mode
+    // (`stickToBottom`) so voice mode — which never had a fonts.ready
+    // re-check before commit 97e933bc — stays byte-identical.
+    // `nearBottomNow: true` is a dummy: `refollowDecision` ignores it in
+    // text mode (text mode's rule is latch/role-based, not distance-based)
+    // and short-circuits to `false` before reading it at all in voice mode.
+    if (stickToBottom && typeof document !== 'undefined' && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (cancelled) return;
+        if (refollowDecision({ stickToBottom, userScrolledUpNow: userScrolledUpRef.current, lastRole, nearBottomNow: true })) {
+          scrollToBottom();
+        }
+      });
+    }
+
+    // Late layout growth beyond the font swap (e.g. images decoding, a
+    // second reflow) — text mode only. Re-follow for as long as this
+    // effect instance is alive, gated by the LIVE "scrolled up" latch via
+    // the same `refollowDecision` the fonts.ready check above uses.
+    let ro: ResizeObserver | undefined;
+    if (stickToBottom && typeof ResizeObserver !== 'undefined' && contentRef.current) {
+      ro = new ResizeObserver(() => {
+        if (cancelled) return;
+        if (refollowDecision({ stickToBottom, userScrolledUpNow: userScrolledUpRef.current, lastRole, nearBottomNow: true })) {
+          scrollToBottom();
+        }
+      });
+      ro.observe(contentRef.current);
+    }
+
+    return () => {
+      cancelled = true;
+      removeListeners?.();
+      ro?.disconnect();
+    };
   }, [transcript, picker, stickToBottom]);
 
   // Round-6e (third attempt at "open at the latest message"): the drawer's
@@ -310,8 +400,13 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     const onOpened = () => {
       setTimeout(() => {
         if (Date.now() - pendingEntryScrollAtRef.current < 1500) return;
-        const el = containerRef.current;
-        if (el) el.scrollTop = el.scrollHeight;
+        // Round 7, task 5, fix round 1: routed through the shared
+        // scrollToBottom() helper (armed guard window) instead of a bare
+        // write — this snap dispatches a `scroll` event on the same
+        // container the follow-to-bottom effect's listener watches, and
+        // could false-latch "scrolled up" identically to the three sites
+        // fixed earlier.
+        scrollToBottom();
       }, 200);
     };
     window.addEventListener('evelyn:transcript-drawer-opened', onOpened);
@@ -706,38 +801,45 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   return (
     <div
       ref={containerRef}
-      className="h-full overflow-y-auto p-4 space-y-4"
+      className="h-full overflow-y-auto p-4"
     >
-      {beforePicker.map(renderEntry)}
-      {anchor !== null && picker}
-      {afterPicker.map(renderEntry)}
+      {/* GreenApple round 6, task 4: this inner wrapper (not the scroller
+          div above) is what the ResizeObserver in the scroll effect
+          watches — the scroller is `h-full` and never resizes as content
+          grows, only its scrollHeight does. `space-y-4` moved down here
+          with the content it was already spacing. */}
+      <div ref={contentRef} className="space-y-4">
+        {beforePicker.map(renderEntry)}
+        {anchor !== null && picker}
+        {afterPicker.map(renderEntry)}
 
-      {/* Typing indicator */}
-      {isProcessing && (
-        <div className="flex gap-3">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
-            <Bot className="w-4 h-4" />
-          </div>
-          <div className="flex-1">
-            <div className="inline-block bg-gray-100 p-3 rounded-lg rounded-bl-none">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <span
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0.1s' }}
-                />
-                <span
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0.2s' }}
-                />
+        {/* Typing indicator */}
+        {isProcessing && (
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100 text-purple-600">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div className="flex-1">
+              <div className="inline-block bg-gray-100 p-3 rounded-lg rounded-bl-none">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.1s' }}
+                  />
+                  <span
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.2s' }}
+                  />
+                </div>
+                {thinkingHint && (
+                  <p className="text-xs text-gray-500 mt-1.5 italic">{thinkingHint}</p>
+                )}
               </div>
-              {thinkingHint && (
-                <p className="text-xs text-gray-500 mt-1.5 italic">{thinkingHint}</p>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {zoomImage && (
         <ImageZoomOverlay
