@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   title: "Responsible Data Collection Policy",
   description:
     "How ELS Corp collects human data for AI training: informed opt-in consent, participant control, redaction of sensitive content, fair compensation, and strict use limits.",
-  alternates: { canonical: "https://evelynlearning.com/responsible-data" },
+  // www is the site's canonical host (NEXT_PUBLIC_SITE_URL, sitemap.ts); the
+  // page is served on both hosts.
+  alternates: { canonical: "https://www.evelynlearning.com/responsible-data" },
 };
 
 const LAST_UPDATED = "September 26, 2026";

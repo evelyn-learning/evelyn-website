@@ -398,12 +398,12 @@ const nextConfig: NextConfig = {
       // PAGE WITH A HYPHEN IN ITS NAME, add it to the lookahead or it will
       // be silently 308'd into /blog/<slug> → 404 on the next deploy.
       {
-        source: "/:slug((?!case-studies|tutor-portal)[a-z0-9]+-[a-z0-9-]+)",
+        source: "/:slug((?!case-studies|tutor-portal|responsible-data)[a-z0-9]+-[a-z0-9-]+)",
         destination: "/blog/:slug",
         permanent: true,
       },
       {
-        source: "/:slug((?!case-studies|tutor-portal)[a-z0-9]+-[a-z0-9-]+)/",
+        source: "/:slug((?!case-studies|tutor-portal|responsible-data)[a-z0-9]+-[a-z0-9-]+)/",
         destination: "/blog/:slug",
         permanent: true,
       },
