@@ -149,7 +149,7 @@ export function normalizeInclineForces(forces: FbdForce[], surface?: FbdSurface)
   if (!surface || surface.type !== 'inclined' || !Array.isArray(forces)) return forces;
   return forces.map((f) => {
     const n = (f.name || '').toLowerCase().trim();
-    const isNormalForce = /^(n|f[_ ]?n|normal)/i.test(n);
+    const isNormalForce = /^(n\b|f[_ ]?n\b|normal)/i.test(n);
     if (isNormalForce && f.direction === 'up') {
       return { ...f, direction: 'normal' };
     }
