@@ -88,7 +88,7 @@ function colorForForce(name: string, explicit?: string): string {
 // toward left". The phrase form exists because the model frequently fumbles
 // the sign when translating "below horizontal" into math convention; letting
 // it write the side word directly removes the foot-gun.
-function dirToAngle(dir: FbdDirection | number | string, surfaceAngle: number): number {
+export function dirToAngle(dir: FbdDirection | number | string, surfaceAngle: number): number {
   if (typeof dir === 'number') return dir;
   if (typeof dir === 'string') {
     const trimmed = dir.trim();
@@ -122,10 +122,39 @@ function dirToAngle(dir: FbdDirection | number | string, surfaceAngle: number): 
       case 'normal': return 90 + surfaceAngle;        // perpendicular to slope, outward
       case 'up-slope': return surfaceAngle;
       case 'down-slope': return 180 + surfaceAngle;
-      case 'into-surface': return -(90 + surfaceAngle);
+      // Opposite of 'normal' (90 + θ): on a rising-right slope the outward
+      // normal points up-and-left, so into-surface — pressed INTO the slope
+      // — points down-and-right. Bug fixed 2026-10-01 (GAC session
+      // portal-ffd73a9d-461a-49b0-8976-9ed288f8a796): the old
+      // -(90 + surfaceAngle) drew it down-LEFT instead. At θ = 0 both
+      // formulas agree (-90, straight down), so the horizontal case is
+      // unaffected.
+      case 'into-surface': return -(90 - surfaceAngle);
     }
   }
   return 0;
+}
+
+// Structural guard: the model sometimes writes direction "up" for the
+// normal force on an inclined surface (observed 2026-10-01, GAC session
+// portal-ffd73a9d-461a-49b0-8976-9ed288f8a796 — the tutor's tool call set
+// `N direction: 'up'` and the renderer obeyed it, drawing the normal force
+// vertical instead of perpendicular to the slope). On a ramp the physics is
+// unambiguous — the normal force is always perpendicular to the surface —
+// so the renderer corrects it rather than drawing a wrong diagram. Only the
+// normal force's "up" is touched: no other direction, and no other surface
+// type, is altered. Pure (no React) so it's testable standalone and so the
+// manifest builder (which runs outside the component) can share it.
+export function normalizeInclineForces(forces: FbdForce[], surface?: FbdSurface): FbdForce[] {
+  if (!surface || surface.type !== 'inclined' || !Array.isArray(forces)) return forces;
+  return forces.map((f) => {
+    const n = (f.name || '').toLowerCase().trim();
+    const isNormalForce = /^(n|f[_ ]?n|normal)/i.test(n);
+    if (isNormalForce && f.direction === 'up') {
+      return { ...f, direction: 'normal' };
+    }
+    return f;
+  });
 }
 
 // Row of hatched lines below a surface (ground/incline).
@@ -309,6 +338,10 @@ export default function FreeBodyDiagramRenderer({
   forces,
   notes,
 }: FreeBodyDiagramProps) {
+  // Normalize a normal force mistakenly sent as "up" on an incline before
+  // any other guard sees it (see normalizeInclineForces above).
+  forces = normalizeInclineForces(forces, surface);
+
   // Defensive guard for inclined-plane FBDs: when the brain emits BOTH the full
   // weight W (direction "down") AND its decomposed components (W_parallel /
   // W_perp via "down-slope" / "into-surface"), drop the redundant full-weight
