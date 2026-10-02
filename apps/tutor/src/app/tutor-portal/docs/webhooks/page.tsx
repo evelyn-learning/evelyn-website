@@ -25,6 +25,7 @@ export default function EventsPage() {
   switch (msg.type) {
     case 'evelyn:session_started': /* { session_id, started_at_ms? } */ break;
     case 'evelyn:progress':        /* { session_id, lesson_progress, practice? } */ break;
+    case 'evelyn:activity':        /* msg.last_student_input_at_ms (top-level; ≤ 1 per 5 s) */ break;
     case 'evelyn:session_ended':
       fetch('/api/tutor-session-ended', {          // your endpoint
         method: 'POST',
@@ -57,7 +58,7 @@ export default function EventsPage() {
       <ul className="mb-6 space-y-1 text-sm text-slate-600">
         <li><code className="text-xs">duration</code> — wall-clock seconds since the session started. For billing use <code className="text-xs">durationSec</code> from <code className="text-xs">GET /sessions/summary</code> (active minutes).</li>
         <li><code className="text-xs">milestone</code> — <code className="text-xs">none</code>, <code className="text-xs">first_concept_complete</code>, <code className="text-xs">first_try_yourself_success</code>, <code className="text-xs">recap_reached</code>.</li>
-        <li><code className="text-xs">ended_reason</code> — present only as <code className="text-xs">&quot;time_limit&quot;</code> when the <code className="text-xs">max_duration_minutes</code> cap ended the session.</li>
+        <li><code className="text-xs">ended_reason</code> — <code className="text-xs">&quot;time_limit&quot;</code> when the <code className="text-xs">max_duration_minutes</code> cap ended the session; the host&apos;s reason (<code className="text-xs">finished</code>, <code className="text-xs">minutes_exhausted</code>, <code className="text-xs">no_input</code>, <code className="text-xs">idle</code>) when your page ended it with <code className="text-xs">evelyn:host_end</code>; absent on a plain End/Pause.</li>
         <li><code className="text-xs">end_intent</code> — <code className="text-xs">finish</code> or <code className="text-xs">discard</code> when the student chose; absent on a plain End/Pause.</li>
       </ul>
 
@@ -99,6 +100,21 @@ export default function EventsPage() {
           </div>
         );
       })}
+
+      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Ending a session from your page</h2>
+      <p className="mb-4 text-sm text-slate-600">
+        To end a session yourself (your own finish button, a usage ceiling, an inactivity timeout), post{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">evelyn:host_end</code> into the iframe rather than
+        removing it. The tutor says a short goodbye, saves the session&apos;s progress, then posts{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">evelyn:session_ended</code> with{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">ended_reason</code> set to your reason. Wait a few
+        seconds for it before unmounting. Only the first message counts, and it is ignored once the student has already
+        ended the session.
+      </p>
+      <CodeBlock language="javascript" title="Host page">{`iframe.contentWindow.postMessage(
+  { type: 'evelyn:host_end', reason: 'finished' }, // 'finished' | 'minutes_exhausted' | 'no_input' | 'idle'
+  'https://tutor.evelynlearning.com',
+);`}</CodeBlock>
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Then pull the facts</h2>
       <p className="mb-4 text-sm text-slate-600">
