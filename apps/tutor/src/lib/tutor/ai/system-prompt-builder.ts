@@ -1687,9 +1687,13 @@ export function buildSelfReportClause(ctx: SystemPromptContext): string | null {
 }
 
 /**
- * Build the complete system prompt
+ * Build the system prompt as two parts. `core` (BASE_PROMPT + branding) is
+ * the same for every session of a deployment and is the cross-session cache
+ * entry; `session` is everything after it. `core + session` is the complete
+ * prompt — nothing moves, the split is only a cut point.
+ * See docs/superpowers/specs/2026-10-02-tutor-token-optimization-design.md.
  */
-export function buildSystemPrompt(context: SystemPromptContext): string {
+export function buildSystemPromptParts(context: SystemPromptContext): { core: string; session: string } {
   let prompt = BASE_PROMPT;
 
   // Lever B trim #2 redux — splice the structured-tools block, subject-
@@ -1770,6 +1774,9 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // label callers pass their own TutorBranding record.
   const branding = context.branding ?? EVELYN_BRANDING;
   prompt += `\n\n${renderBrandingBlock(branding)}\n`;
+
+  // Cut point: everything above is session-independent.
+  const core = prompt;
 
   // Pedagogy spine — grade-band behavior + voice cadence + humor.
   // Inlined once, cached in the system-prompt preamble. Read this BEFORE
@@ -2009,7 +2016,15 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
       'Never ask the student to speak or to use a microphone.\n</text_mode>\n'
     : '';
 
-  return prompt + textModeClause;
+  return { core, session: (prompt + textModeClause).slice(core.length) };
+}
+
+/**
+ * Build the complete system prompt
+ */
+export function buildSystemPrompt(context: SystemPromptContext): string {
+  const { core, session } = buildSystemPromptParts(context);
+  return core + session;
 }
 
 /** Compose grade profile + voice cadence + analogies + humor into one
