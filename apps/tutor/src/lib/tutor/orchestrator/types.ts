@@ -88,6 +88,10 @@ export interface RealtimeHandle {
    *  appended as a tutor turn and, in voice mode, spoken before
    *  onEndSession fires (bounded wait) — never a model call. */
   endSession?: (opts?: { farewell?: string }) => void;
+  /** True once endSession's teardown has started (it runs at most once per
+   *  mount). The embed's host_end listener checks it so a student-initiated
+   *  end is never relabelled with the host's reason. */
+  isEnding?: () => boolean;
   /** R34 T4: set the per-device "Manual mic" mode — buffered turn
    *  composition with tap-to-send instead of auto endpointing. The runtime
    *  persists the choice to localStorage and fires onManualMicChange so the

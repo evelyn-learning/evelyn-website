@@ -33,7 +33,7 @@ import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
-import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, type HostEndReason } from '@/lib/tutor/portal/host-end';
+import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -1067,9 +1067,15 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // handleEndSession (same pattern as TutorSession's endIntentRef). Non-null
   // also means "already ending from the host" (a second host_end is ignored).
   const hostEndReasonRef = useRef<HostEndReason | null>(null);
+  // Post-once guard: evelyn:session_ended (and the completed save) happen at
+  // most once per session, whatever mix of End / host_end / time limit calls
+  // handleEndSession (host-end fix round 1).
+  const sessionEndedPostedRef = useRef(false);
 
   // End session — save to DB + notify parent window
   const handleEndSession = useCallback((reason?: 'time_limit', endIntent?: 'finish' | 'discard') => {
+    if (sessionEndedPostedRef.current) return;
+    sessionEndedPostedRef.current = true;
     const endedReason = reason ?? hostEndReasonRef.current ?? undefined;
     // A deliberate discard (round-4 item 5) is an abandonment, not a
     // completion — keep the engine's own record consistent with the
@@ -1167,9 +1173,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       if (!isAllowedHostOrigin(event.origin, expectedOrigin)) return;
       const parsed = parseHostEnd(event.data);
       if (!parsed) return;
-      if (hostEndReasonRef.current !== null || sessionEndedRef.current) return;
-      hostEndReasonRef.current = parsed.reason;
       const h = sessionHandleRef.current;
+      if (!shouldAcceptHostEnd({
+        hostEndStarted: hostEndReasonRef.current !== null,
+        teardownStarted: h?.isEnding?.() === true,
+        sessionEndedPosted: sessionEndedPostedRef.current || sessionEndedRef.current,
+      })) return;
+      hostEndReasonRef.current = parsed.reason;
       if (h?.endSession) h.endSession({ farewell: goodbyeFor(parsed.reason) });
       else handleEndSessionRef.current();
     };

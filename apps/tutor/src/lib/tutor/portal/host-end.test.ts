@@ -11,6 +11,7 @@ import {
   goodbyeFor,
   isAllowedHostOrigin,
   shouldPostActivity,
+  shouldAcceptHostEnd,
   ACTIVITY_THROTTLE_MS,
 } from './host-end';
 
@@ -84,6 +85,14 @@ test('shouldPostActivity: throttles to one per 5 s', () => {
 
 test('shouldPostActivity: a clock that went backwards re-allows a post', () => {
   assert.equal(shouldPostActivity(10_000, 9_000), true);
+});
+
+test('shouldAcceptHostEnd: only when no end of any kind has begun', () => {
+  const idle = { hostEndStarted: false, teardownStarted: false, sessionEndedPosted: false };
+  assert.equal(shouldAcceptHostEnd(idle), true);
+  assert.equal(shouldAcceptHostEnd({ ...idle, hostEndStarted: true }), false, 'second host_end ignored');
+  assert.equal(shouldAcceptHostEnd({ ...idle, teardownStarted: true }), false, 'student End already running — never relabel');
+  assert.equal(shouldAcceptHostEnd({ ...idle, sessionEndedPosted: true }), false, 'session_ended already posted');
 });
 
 console.log(`\nhost-end: ${passed} passed, ${failed} failed`);

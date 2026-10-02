@@ -3997,6 +3997,11 @@ export function VoiceTutorRealtime({
   // End/Pause teardown — assigned every render below (see the assignment near
   // handleContinueRotation) and read by both the dock button and handleRef.
   const endSessionNowRef = useRef<(opts?: { farewell?: string }) => Promise<void>>(async () => {});
+  // End at most once per mount (host-end fix round 1): the student's End,
+  // a host_end and a double tap all run endSessionNowRef — only the first
+  // does anything. Exposed on the handle as isEnding() so the embed's
+  // host_end listener can ignore a host stop once ANY teardown has begun.
+  const endingRef = useRef(false);
   // Turn-length cap (2026-07-15): when a finished turn exceeded the hard cap
   // with zero whiteboard actions, this holds a [cadence note] that rides into
   // the NEXT brain call's transcript and is then cleared. Next-turn (not
@@ -20741,6 +20746,7 @@ export function VoiceTutorRealtime({
         setManualMic,
         resumeContinue: () => resumeContinueRef.current(),
         endSession: (opts) => { void endSessionNowRef.current(opts); },
+        isEnding: () => endingRef.current,
         getSpokenCaption: () => {
           if (!claudeBrainMode) return null;
           return captionSyncRef.current.poll(realtime.getSpokenProgress());
@@ -21822,6 +21828,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // the PLAYING AudioBufferSourceNode, not just the queue — hence
   // clearSpeechQueue + interrupt before anything else.
   endSessionNowRef.current = async (opts) => {
+    if (endingRef.current) return; // already ending — second call is a no-op
+    endingRef.current = true;
     // Review-round-1 (finding 2): session ending — any armed lazy-pending
     // is moot, and must not dangle across a session-summary/teardown race.
     clearStage2LazyPending('session ending');

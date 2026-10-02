@@ -46,6 +46,19 @@ export function isAllowedHostOrigin(eventOrigin: string, expected: string | unde
   return eventOrigin === expected;
 }
 
+/** A host_end is acted on only while NO end of any kind has begun: not a
+ *  previous host_end, not the student's End (VTR teardown already running),
+ *  and not a session whose session_ended was already posted. Otherwise a
+ *  student-initiated end would be relabelled with the host's reason, or the
+ *  session would end twice. */
+export function shouldAcceptHostEnd(state: {
+  hostEndStarted: boolean;
+  teardownStarted: boolean;
+  sessionEndedPosted: boolean;
+}): boolean {
+  return !state.hostEndStarted && !state.teardownStarted && !state.sessionEndedPosted;
+}
+
 /** `evelyn:activity` is posted at most once per this many ms. */
 export const ACTIVITY_THROTTLE_MS = 5000;
 
