@@ -273,6 +273,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // vs catalog items/pages), so a resume that scrolls to a remembered card
   // while the catalog offers only one feature leaves a record.
   'resume_board',
+  // 2026-10-02 shared prompt cache: turn-1 warm/cold signal per session.
+  'cache_start',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

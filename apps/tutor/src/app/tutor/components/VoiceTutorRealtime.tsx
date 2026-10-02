@@ -50,7 +50,8 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 /** Opener retry after a client-side fetch failure. */
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, buildOpenerClause, buildHomeworkOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
@@ -2068,6 +2069,15 @@ export function VoiceTutorRealtime({
   // Full tutor system prompt. In claudeBrainMode the brain reads this; the
   // Realtime model gets a separate, much shorter relay-only prompt.
   const claudeSystemPromptRef = useRef<string>('');
+  // Shared prompt cache: the session-independent prefix of the prompt
+  // (BASE_PROMPT + branding). Sent separately so the server can cache
+  // tools + core once for every session.
+  const claudeSystemPromptCoreRef = useRef<string>('');
+  // Tool list scope, latched: once a turn is untrusted (no plan / freestyle /
+  // open scope) the session stays on the full list — the tools array is the
+  // first thing in the cache prefix, so it must never flip back and forth.
+  const toolScopeRef = useRef<ToolScope | null>(null);
+  const cacheStartLoggedRef = useRef(false);
 
   // Commit accumulated session events to the student profile (mastery,
   // gaps, recent-session memory + auto-generated notes). Fire-and-forget;
@@ -11196,8 +11206,15 @@ export function VoiceTutorRealtime({
         // field is otherwise unchanged — undefined fields are dropped by
         // JSON.stringify, so with TUTOR_RECAP_OFFER off the request is
         // byte-identical to pre-round.
+        toolScopeRef.current = nextToolScope(toolScopeRef.current, {
+          openScope: !!openScope,
+          hasPlan: !!lessonPlanContext,
+          planId: lessonPlanContext?.plan?.id ?? '',
+        });
         const input = {
-            systemPrompt: claudeSystemPromptRef.current,
+            // Same bytes as before, cut at the core/session boundary (falls
+            // back to the single `systemPrompt` field if the cut is invalid).
+            ...splitPromptForWire(claudeSystemPromptRef.current, claudeSystemPromptCoreRef.current),
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
             // Board Map (project_tutor_board_map_design): send the FULL-board
@@ -11268,6 +11285,7 @@ export function VoiceTutorRealtime({
             // Open-scope demo (2026-09-10): the subject changes mid-session,
             // so withhold it ⇒ resolveToolSubjects(undefined) ⇒ fail open.
             subject: openScope ? undefined : subject,
+            toolScope: toolScopeRef.current,
             // Adaptive-pacing v1 dedup state. Empty arrays for sessions
             // that haven't shown any generated problems yet — fine,
             // pipeline treats absent + empty identically.
@@ -14614,6 +14632,11 @@ export function VoiceTutorRealtime({
                   // A1: surface per-attempt usage for cost telemetry (was
                   // debug-log-only, leaving brain sessions at $0 recorded).
                   if (lastUsage) {
+                    if (!cacheStartLoggedRef.current) {
+                      cacheStartLoggedRef.current = true;
+                      // Warm start = large read, small created. Cold = the reverse.
+                      onDebugEvent?.('cache_start', `read=${lastUsage.cacheReadTokens ?? 0} created=${lastUsage.cacheCreationTokens ?? 0} in=${lastUsage.inputTokens ?? 0}`);
+                    }
                     onBrainUsage?.({
                       inputTokens: lastUsage.inputTokens ?? 0,
                       outputTokens: lastUsage.outputTokens ?? 0,
@@ -15725,7 +15748,7 @@ export function VoiceTutorRealtime({
         `tools=[${totalToolNamesSeen.join(', ')}] · stop=${lastStopReason} · retries=${serverBrainRetries}${brainUnavailable ? ' BRAIN_UNAVAILABLE' : ''} · ` +
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
-      onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms · in=${lastUsage?.inputTokens ?? 0} out=${lastUsage?.outputTokens ?? 0} cr=${lastUsage?.cacheReadTokens ?? 0} cc=${lastUsage?.cacheCreationTokens ?? 0}`);
 
       // R44 (rail-bargein round, Task 2) — turn-completion seam: runs
       // exactly once per completed turn (success OR give-up; NOT on
@@ -21047,7 +21070,7 @@ export function VoiceTutorRealtime({
         }
 
         // Build system prompt using existing builder
-        const systemPrompt = buildSystemPrompt({
+        const promptParts = buildSystemPromptParts({
           module: knowledgeModule,
           studentName,
           sessionGoal,
@@ -21069,6 +21092,7 @@ export function VoiceTutorRealtime({
           ...(TUTOR_ANSWER_REVEAL_GUARD ? { answerRevealGuard: true } : {}),
           ...openerFields,
         });
+        const systemPrompt = promptParts.core + promptParts.session;
 
         // Read optional voice personality from env
         const voicePersonality = process.env.NEXT_PUBLIC_TUTOR_VOICE_PERSONALITY
@@ -21104,6 +21128,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // via the ⋯ menu is visible — confirms the new level reached the brain.
         console.log(`[VoiceTutorRealtime] system prompt (re)built — humorCeiling=${studentPreferences?.humorCeiling ?? '(default)'}`);
         claudeSystemPromptRef.current = openAIInstructions;
+        claudeSystemPromptCoreRef.current = promptParts.core;
         setInstructions(openAIInstructions);
         setIsInitialized(true);
       } catch (err) {

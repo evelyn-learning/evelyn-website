@@ -128,6 +128,7 @@
     "test:system-prompt-parts": "npx tsx scripts/test-system-prompt-parts.ts",
     "test:prompt-cache": "npx tsx scripts/test-prompt-cache.ts",
     "test:brain-system-blocks": "npx tsx scripts/test-brain-system-blocks.ts",
+    "test:client-prompt-parts": "npx tsx scripts/test-client-prompt-parts.ts",
     "test:judge-prompt": "npx tsx scripts/test-judge-question-context.ts",
     "test:judge-authored-solution": "npx tsx scripts/test-judge-authored-solution.ts",
     "test:rule8-repair": "npx tsx scripts/test-rule8-repair.ts",
