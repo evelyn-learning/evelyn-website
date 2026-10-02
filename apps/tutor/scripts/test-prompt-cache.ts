@@ -58,13 +58,16 @@ checks.push(['unknown scope value is treated as legacy', eq(allowedSubjectsForTu
 checks.push(['unknown subject → null', allowedSubjectsForTurn({ toolScope: 'subject', subject: 'Financial Literacy', hasPlan: true, planId: 'p' }) === null]);
 
 // cacheKeyLine
-const l1 = cacheKeyLine({ core: 'C', toolNames: ['a', 'b'], mode: 'filter', homework: false });
-const l2 = cacheKeyLine({ core: 'C', toolNames: ['a', 'b'], mode: 'filter', homework: false });
-const l3 = cacheKeyLine({ core: 'C', toolNames: ['a', 'b', 'c'], mode: 'failopen', homework: true });
+const ta = [{ name: 'a', description: 'one' }, { name: 'b', description: 'two' }];
+const l1 = cacheKeyLine({ core: 'C', tools: ta, mode: 'filter', homework: false });
+const l2 = cacheKeyLine({ core: 'C', tools: [{ name: 'a', description: 'one' }, { name: 'b', description: 'two' }], mode: 'filter', homework: false });
+const l3 = cacheKeyLine({ core: 'C', tools: [...ta, { name: 'c', description: 'three' }], mode: 'failopen', homework: true });
+const l4 = cacheKeyLine({ core: 'C', tools: [{ name: 'a', description: 'one' }, { name: 'b', description: 'CHANGED' }], mode: 'filter', homework: false });
 checks.push(['cache key line is deterministic', l1 === l2]);
 checks.push(['cache key line shape', /^\[cachekey\] core=[0-9a-f]{8} tools=[0-9a-f]{8} n=2 mode=filter hw=0$/.test(l1)]);
 checks.push(['different tool set → different tools hash', l1.split(' ')[2] !== l3.split(' ')[2]]);
-checks.push(['no core → core=none', cacheKeyLine({ toolNames: ['a'], mode: 'failopen', homework: false }).includes('core=none')]);
+checks.push(['same names, changed description → different tools hash', l1.split(' ')[2] !== l4.split(' ')[2]]);
+checks.push(['no core → core=none', cacheKeyLine({ tools: [{ name: 'a' }], mode: 'failopen', homework: false }).includes('core=none')]);
 
 let fail = 0;
 for (const [name, ok] of checks) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) fail++; }

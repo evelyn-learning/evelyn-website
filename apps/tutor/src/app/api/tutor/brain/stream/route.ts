@@ -663,7 +663,7 @@ export async function POST(req: NextRequest) {
       console.log(
         cacheKeyLine({
           core: prompt.core,
-          toolNames: toolFilter.tools.map((t) => t.name),
+          tools: toolFilter.tools,
           mode: toolFilter.mode,
           homework: !!homework,
         }),
