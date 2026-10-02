@@ -8,6 +8,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { buildSystemPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { PROMPT_MATRIX } from './fixtures/system-prompt-matrix';
+import { unsetServerOnlyPromptFlags } from './fixtures/browser-env';
+
+unsetServerOnlyPromptFlags(); // hash the prompt the browser builds
 
 const out: Record<string, string> = {};
 for (const [name, ctx] of Object.entries(PROMPT_MATRIX)) {

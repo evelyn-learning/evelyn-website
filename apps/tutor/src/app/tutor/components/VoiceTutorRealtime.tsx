@@ -14634,7 +14634,9 @@ export function VoiceTutorRealtime({
                   if (lastUsage) {
                     if (!cacheStartLoggedRef.current) {
                       cacheStartLoggedRef.current = true;
-                      // Warm start = large read, small created. Cold = the reverse.
+                      // Usage is summed over the turn's tool-loop passes, so read
+                      // can be large either way: classify on `created` (cold ≈ the
+                      // whole tools + core prefix, warm ≈ the session tail only).
                       onDebugEvent?.('cache_start', `read=${lastUsage.cacheReadTokens ?? 0} created=${lastUsage.cacheCreationTokens ?? 0} in=${lastUsage.inputTokens ?? 0}`);
                     }
                     onBrainUsage?.({

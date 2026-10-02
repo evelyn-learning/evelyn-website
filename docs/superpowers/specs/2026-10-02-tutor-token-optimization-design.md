@@ -198,7 +198,7 @@ start once.
 ## Measured (2026-10-02, claude-sonnet-5, `scripts/measure-prompt-cache-parts.ts`, countTokens)
 
 ```
-core            63616 tok  (185726 chars)
+core            63071 tok  (183745 chars)
 session math_g8            9146 tok
 session physics_ap         7426 tok
 session freetext_subject   23308 tok   (unrecognised subject ⇒ full diagram catalog)
@@ -217,7 +217,7 @@ tools science    45141 tok  (73/86)
 ```
 
 Session figures exclude the ≈ 1.2K-char voice wrapper the client appends. Shared entry on the
-full tool list = 63.6K + 51.6K ≈ 115K tokens. At Sonnet 5 rates ($2/MTok input; 1-hour write 2×,
+full tool list = 63.1K + 51.6K ≈ 115K tokens. At Sonnet 5 rates ($2/MTok input; 1-hour write 2×,
 read 0.1×):
 
 | | Today | Shared cache, warm | Shared cache, cold |

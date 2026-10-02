@@ -13,6 +13,7 @@ import { buildSystemPromptParts } from '@/lib/tutor/ai/system-prompt-builder';
 import { buildSystemBlocks } from '@/lib/tutor/ai/prompt-cache';
 import { WHITEBOARD_TOOLS, toAnthropicTools } from '@/app/tutor/hooks/toolDefinitions';
 import { PROMPT_MATRIX } from './fixtures/system-prompt-matrix';
+import { unsetServerOnlyPromptFlags } from './fixtures/browser-env';
 
 async function main() {
   if (process.env.PROBE_ALLOW_SPEND !== '1') throw new Error('refusing to spend: set PROBE_ALLOW_SPEND=1');
@@ -20,6 +21,12 @@ async function main() {
   if (!r.native) throw new Error(`brain resolves to a non-Anthropic endpoint (${r.model}); caching cannot be probed`);
   const { client, model } = getModelClient('brain');
   const tools = toAnthropicTools(WHITEBOARD_TOOLS);
+  // .env.local sets server-only prompt flags the browser never sees; with them
+  // set, `core` varies by subject and the probe would pay for a false FAIL.
+  unsetServerOnlyPromptFlags();
+  const coreA = buildSystemPromptParts(PROMPT_MATRIX.math_g8).core;
+  const coreB = buildSystemPromptParts(PROMPT_MATRIX.freetext_subject).core;
+  if (coreA !== coreB) throw new Error('core differs between sessions — refusing to spend (shared entry would not be shared)');
 
   const call = async (label: string, ctxName: keyof typeof PROMPT_MATRIX) => {
     const p = buildSystemPromptParts(PROMPT_MATRIX[ctxName]);
