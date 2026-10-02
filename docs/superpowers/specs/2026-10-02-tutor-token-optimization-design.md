@@ -226,4 +226,15 @@ read 0.1×):
 | Turn-1 read | 0 | ≈ 115K tok ≈ $0.023 | 0 |
 | Start cost | ≈ $0.50 | ≈ $0.05–0.06 (≈ $0.12 unrecognised subject) | ≈ $0.50 |
 
-The live two-session probe (`scripts/probe-shared-cache.ts`) has not been run yet (paid).
+The live two-session probe is recorded below.
+
+### Live probe (2026-10-02, `scripts/probe-shared-cache.ts`, real API)
+
+```
+A  session math_g8 (first)         read=0       created=123778 in=81
+B  session freetext_subject        read=114632  created=23308  in=81
+A2 session math_g8 (repeat)        read=123778  created=0      in=81
+```
+
+A different session (other student, subject, level, goal) read the 114.6K-token `tools + core`
+entry written by the first and wrote only its own 23.3K tail. Sharing works as designed.
