@@ -33,6 +33,7 @@ import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
+import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, type HostEndReason } from '@/lib/tutor/portal/host-end';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -1060,8 +1061,16 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     }).catch(() => {});
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, embedToken]);
 
+  // Host-end channel (GreenApple spec 2026-10-02 §1): the host's reason for
+  // an `evelyn:host_end`. Set BEFORE VTR's endSession() teardown runs — that
+  // handle calls onEndSession with no args, so the reason rides this ref to
+  // handleEndSession (same pattern as TutorSession's endIntentRef). Non-null
+  // also means "already ending from the host" (a second host_end is ignored).
+  const hostEndReasonRef = useRef<HostEndReason | null>(null);
+
   // End session — save to DB + notify parent window
   const handleEndSession = useCallback((reason?: 'time_limit', endIntent?: 'finish' | 'discard') => {
+    const endedReason = reason ?? hostEndReasonRef.current ?? undefined;
     // A deliberate discard (round-4 item 5) is an abandonment, not a
     // completion — keep the engine's own record consistent with the
     // portal's abort.
@@ -1079,7 +1088,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // Demo time-box (P3): additive — present ONLY when the engine's hard
         // wall-clock cap ended the session (not the student's End button), so
         // the portal can distinguish a timed-out demo from a normal finish.
-        ...(reason === 'time_limit' ? { ended_reason: 'time_limit' as const } : {}),
+        // Host-end (2026-10-02): the host's `evelyn:host_end` reason rides
+        // the same additive field ('finished' | 'minutes_exhausted' |
+        // 'no_input' | 'idle'); absent on a plain End/Pause as before.
+        ...(endedReason ? { ended_reason: endedReason } : {}),
         // Round-4 item 5 (additive): the Adaptive-menu Finish/Discard choice.
         // The portal branches on it (finish → finalize, discard → abort);
         // absent on a plain End/Pause, so older portals see no change.
@@ -1112,6 +1124,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       },
     }, '*');
   }, [saveSession, sessionId, transcript, whiteboardCommands.length]);
+  // Latest-closure mirrors for the host-end listener below (its effect
+  // subscribes once).
+  const handleEndSessionRef = useRef(handleEndSession);
+  handleEndSessionRef.current = handleEndSession;
+  const sessionEndedRef = useRef(sessionEnded);
+  sessionEndedRef.current = sessionEnded;
 
   // Task E8: mobile "expand" mode. The portal (task P6) owns the visual
   // growth — this iframe just relays the tap. SessionStage (deep inside
@@ -1133,6 +1151,30 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       window.removeEventListener('evelyn:expand', onExpand);
       window.removeEventListener('evelyn:collapse', onCollapse);
     };
+  }, []);
+
+  // Host-end channel (GreenApple spec 2026-10-02 §1): the host asks the
+  // engine to end the session itself instead of dropping the iframe, so the
+  // final flush (gaps, evidence, learner deltas) still runs. Accepted only
+  // from window.parent, origin-checked against the embedding host when it is
+  // known. Runs VTR's FULL endSession teardown with a fixed goodbye line (no
+  // model call); onEndSession → handleEndSession then posts session_ended
+  // with ended_reason = the host's reason. Once per session.
+  useEffect(() => {
+    const expectedOrigin = getEmbeddingHost();
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window.parent || window.parent === window) return;
+      if (!isAllowedHostOrigin(event.origin, expectedOrigin)) return;
+      const parsed = parseHostEnd(event.data);
+      if (!parsed) return;
+      if (hostEndReasonRef.current !== null || sessionEndedRef.current) return;
+      hostEndReasonRef.current = parsed.reason;
+      const h = sessionHandleRef.current;
+      if (h?.endSession) h.endSession({ farewell: goodbyeFor(parsed.reason) });
+      else handleEndSessionRef.current();
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   }, []);
 
   // P2 (demo feedback R2): relay the real session start (mic tap / first

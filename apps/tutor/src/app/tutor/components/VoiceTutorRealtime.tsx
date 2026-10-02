@@ -39,6 +39,12 @@ import { buildHomeworkPointerSentence } from '@/lib/tutor/voice/homework-pointer
 import { isWrapUtterance } from '@/lib/tutor/voice/session-struggles-block';
 /** End button: how long the final profile commit may hold the exit. */
 const FINAL_COMMIT_MAX_WAIT_MS = 3000;
+// Host-end goodbye (evelyn:host_end): cap on the whole goodbye (voice), the
+// window for its audio to start, and the text-mode read pause. See
+// waitForFarewell in the component.
+const FAREWELL_MAX_WAIT_MS = 5000;
+const FAREWELL_START_GRACE_MS = 2500;
+const FAREWELL_TEXT_PAUSE_MS = 1500;
 /** Chromium rejects keepalive bodies over 64 KiB; stay under with margin. */
 const KEEPALIVE_MAX_BYTES = 60_000;
 /** Opener retry after a client-side fetch failure. */
@@ -3990,7 +3996,7 @@ export function VoiceTutorRealtime({
   const continueRotationRef = useRef<(() => Promise<void>) | null>(null);
   // End/Pause teardown — assigned every render below (see the assignment near
   // handleContinueRotation) and read by both the dock button and handleRef.
-  const endSessionNowRef = useRef<() => Promise<void>>(async () => {});
+  const endSessionNowRef = useRef<(opts?: { farewell?: string }) => Promise<void>>(async () => {});
   // Turn-length cap (2026-07-15): when a finished turn exceeded the hard cap
   // with zero whiteboard actions, this holds a [cadence note] that rides into
   // the NEXT brain call's transcript and is then cleared. Next-turn (not
@@ -20729,7 +20735,7 @@ export function VoiceTutorRealtime({
         setDifficultyBias,
         setManualMic,
         resumeContinue: () => resumeContinueRef.current(),
-        endSession: () => { void endSessionNowRef.current(); },
+        endSession: (opts) => { void endSessionNowRef.current(opts); },
         getSpokenCaption: () => {
           if (!claudeBrainMode) return null;
           return captionSyncRef.current.poll(realtime.getSpokenProgress());
@@ -21810,12 +21816,37 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // 2026-07-11 round 3 (user report): End/Pause mid-speech must hard-stop
   // the PLAYING AudioBufferSourceNode, not just the queue — hence
   // clearSpeechQueue + interrupt before anything else.
-  endSessionNowRef.current = async () => {
+  endSessionNowRef.current = async (opts) => {
     // Review-round-1 (finding 2): session ending — any armed lazy-pending
     // is moot, and must not dangle across a session-summary/teardown race.
     clearStage2LazyPending('session ending');
-    try { void realtime.clearSpeechQueue(); } catch {}
+    let speechCleared: Promise<void> = Promise.resolve();
+    try { speechCleared = realtime.clearSpeechQueue(); } catch {}
     try { realtime.interrupt(); } catch {}
+    // Host-ended session (evelyn:host_end, GreenApple spec 2026-10-02 §1):
+    // a FIXED goodbye line — no model call — appended as a tutor turn
+    // BEFORE the final commit (so it lands in the saved transcript) and, in
+    // voice mode, spoken through the normal TTS path after the hard-stop
+    // above. onEndSession then waits (bounded) for it to play out below.
+    const farewell = opts?.farewell?.trim();
+    const farewellAt = Date.now();
+    if (farewell) {
+      transcriptRef.current = [
+        ...transcriptRef.current,
+        { id: `tutor-${farewellAt}-host-end`, timestamp: new Date(), role: 'tutor', text: farewell } as TranscriptEntry,
+      ];
+      onTranscriptUpdate([...transcriptRef.current]);
+      onTrackInteraction?.('message', farewell, undefined, 'tutor');
+      if (sessionMode !== 'text') {
+        // Let the cut sentence's tail drain first (clearSpeechQueue's
+        // contract) so the goodbye doesn't overlap it; bounded.
+        await Promise.race([
+          speechCleared.catch(() => {}),
+          new Promise<void>((resolve) => setTimeout(resolve, 400)),
+        ]);
+        try { realtime.speakText(farewell, pushTtsScriptForPerception(farewell)); } catch {}
+      }
+    }
     // Instant end — no recap delay, no spinner. Finalize recording and
     // commit profile in the background; the student sees the summary
     // page immediately.
@@ -21846,7 +21877,28 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       commitSessionToProfile({ final: true, keepalive: true }).catch(() => {}),
       new Promise<void>((resolve) => setTimeout(resolve, FINAL_COMMIT_MAX_WAIT_MS)),
     ]);
+    if (farewell) await waitForFarewell(farewellAt);
     onEndSession?.();
+  };
+  // Bounded wait for the host-end goodbye (above). The host gives the embed
+  // ~6 s to post session_ended before it unmounts the iframe, and the final
+  // commit (≤ FINAL_COMMIT_MAX_WAIT_MS) runs concurrently with playback, so
+  // the whole goodbye is capped at FAREWELL_MAX_WAIT_MS from when it was
+  // queued. Voice: return once the line has started AND finished speaking,
+  // or when it never started within FAREWELL_START_GRACE_MS (TTS not
+  // connected — e.g. ended before the first tap). Text: a short read pause.
+  const waitForFarewell = async (startedAt: number): Promise<void> => {
+    const deadline = startedAt + (sessionMode === 'text' ? FAREWELL_TEXT_PAUSE_MS : FAREWELL_MAX_WAIT_MS);
+    let sawSpeaking = false;
+    while (Date.now() < deadline) {
+      if (sessionMode !== 'text') {
+        const speaking = productionStateRef.current === 'speaking';
+        if (speaking) sawSpeaking = true;
+        else if (sawSpeaking) return;
+        else if (Date.now() - startedAt > FAREWELL_START_GRACE_MS) return;
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 150));
+    }
   };
   // Expose "ensure muted" to the brain orchestrator (defined above toggleMicMute)
   // for the "mute me" voice command. Mutes only if not already muted.

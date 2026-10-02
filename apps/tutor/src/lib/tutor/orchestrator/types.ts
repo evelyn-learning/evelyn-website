@@ -83,8 +83,11 @@ export interface RealtimeHandle {
    *  then onEndSession). Added 2026-07-14 for the header End/Pause control —
    *  callers must use this rather than calling onEndSession directly, or the
    *  final transcript commit is skipped. Optional: legacy handle producers
-   *  may not implement it; fall back to onEndSession if absent. */
-  endSession?: () => void;
+   *  may not implement it; fall back to onEndSession if absent.
+   *  `opts.farewell` (host-end channel, 2026-10-02): a fixed goodbye line
+   *  appended as a tutor turn and, in voice mode, spoken before
+   *  onEndSession fires (bounded wait) — never a model call. */
+  endSession?: (opts?: { farewell?: string }) => void;
   /** R34 T4: set the per-device "Manual mic" mode — buffered turn
    *  composition with tap-to-send instead of auto endpointing. The runtime
    *  persists the choice to localStorage and fires onManualMicChange so the
