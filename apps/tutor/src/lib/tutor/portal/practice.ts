@@ -21,7 +21,7 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
-import { generatePracticeItems, type PracticeGenSources } from './practice-gen';
+import { generatePracticeItems, logPracticeGenEvent, type PracticeGenSources } from './practice-gen';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -221,6 +221,9 @@ export async function retrievePractice(
             // (pre-exclusion — an anchor is a template, never itself served,
             // so a student-seen item is still a fine anchor).
             anchorItems: ordered,
+            // Visible empty/gate-failed outcomes as `[practice-gen] …` log
+            // lines (2026-10-02).
+            onDebugEvent: logPracticeGenEvent,
           },
           genSources,
         );

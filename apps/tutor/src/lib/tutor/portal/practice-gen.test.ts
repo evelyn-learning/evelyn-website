@@ -20,6 +20,9 @@ import {
   normalizeNumericAnswer,
   stripChoiceLetterPrefixes,
   pickAnchorsForSlots,
+  usableAnchor,
+  checkGeneratedAnswer,
+  DRAWING_ANCHOR_RE,
   MAX_GENERATIONS_PER_REQUEST,
   PER_STUDENT_LO_DAILY_CAP,
   GLOBAL_DAILY_CAP,
@@ -700,6 +703,106 @@ await test('gate: a prefix-only choice ("A) ") strips to empty and REJECTS the w
   };
   const out = await gateGeneratedAnswer(gen, agreeVerify());
   assert.equal(out, null, 'a choice that strips to empty must reject the whole generation, never serve mangled/blank text');
+});
+
+// ── Drawing/graphing anchors + visible empty outcomes (2026-10-02) ──
+// Observed 2026-10-02: "Graph y = 2x + 3 and mark where it crosses both
+// axes" as the anchor produced zero usable items — the generator copied the
+// drawing task and every candidate failed the typed-answer gate.
+console.log('\ndrawing anchors + debug events:\n');
+
+const drawingAnchor: PracticeItem = { ...bankAnchor, id: 'plan.graph-1', problemText: 'Graph y = 2x + 3 and mark where it crosses both axes.' };
+
+await test('usableAnchor: drawing/graphing anchors become null', () => {
+  for (const text of [
+    'Graph y = 2x + 3 and mark where it crosses both axes.',
+    'Draw a labeled free-body diagram for the block on the incline.',
+    'Plot the points (1, 2) and (3, 4).',
+    'Sketch the parabola y = x^2 - 4.',
+    'Shade the region where y > 2x.',
+    'Label the diagram with the forces acting on the box.',
+  ]) {
+    assert.equal(usableAnchor({ ...bankAnchor, problemText: text }), null, text);
+    assert.ok(DRAWING_ANCHOR_RE.test(text), text);
+  }
+});
+
+await test('usableAnchor: typed-answer anchors are kept as-is; null stays null', () => {
+  for (const text of ['Solve 2x + 3 = 7', 'Find the x-intercept of y = 2x + 3']) {
+    const a = { ...bankAnchor, problemText: text };
+    assert.equal(usableAnchor(a), a, text);
+  }
+  assert.equal(usableAnchor(null), null);
+});
+
+await test('a drawing anchor builds the skill-only (no-anchor) prompt', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen() });
+  await generatePracticeItems(baseOpts({ anchorItems: [drawingAnchor] }), sources);
+  assert.equal(sources.prompts.length, 1);
+  assert.ok(!sources.prompts[0].includes(drawingAnchor.problemText), 'the drawing anchor text must not reach the prompt');
+  assert.ok(!sources.prompts[0].includes('ANCHOR problem'), 'no anchor branch');
+  assert.ok(/brand-new LO|no existing practice/i.test(sources.prompts[0]), 'skill-only branch');
+  assert.ok(sources.prompts[0].includes(LO));
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('onDebugEvent receives practice_gen_empty when every candidate is gated out', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const events: Array<{ type: string; message: string }> = [];
+  const sources = makeStubSources({ gen: null });
+  const items = await generatePracticeItems(
+    baseOpts({ shortfall: 2, onDebugEvent: (type, message) => events.push({ type, message }) }),
+    sources,
+  );
+  assert.equal(items.length, 0);
+  const empty = events.filter((e) => e.type === 'practice_gen_empty');
+  assert.equal(empty.length, 1, JSON.stringify(events));
+  assert.ok(empty[0].message.includes(`loId=${LO}`), empty[0].message);
+  assert.ok(empty[0].message.includes(`topic=${TOPIC}`), empty[0].message);
+  assert.ok(empty[0].message.includes('attempts=2'), empty[0].message);
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('onDebugEvent: no practice_gen_empty when an item was produced', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const events: string[] = [];
+  await generatePracticeItems(baseOpts({ onDebugEvent: (type) => events.push(type) }), makeStubSources({ gen: numericGen() }));
+  assert.ok(!events.includes('practice_gen_empty'), JSON.stringify(events));
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('onDebugEvent receives practice_gen_gate_failed with the reason sources report', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const events: Array<{ type: string; message: string }> = [];
+  const sources: PracticeGenSources = {
+    async generateAndVerify(_p, _x, onGateFailed) {
+      onGateFailed?.('numeric_shape');
+      onGateFailed?.('verify_disagree');
+      return null;
+    },
+    async reserve(_s, _l, n) { return n; },
+    async persist() { /* no-op */ },
+  };
+  await generatePracticeItems(baseOpts({ onDebugEvent: (type, message) => events.push({ type, message }) }), sources);
+  const gated = events.filter((e) => e.type === 'practice_gen_gate_failed');
+  assert.equal(gated.length, 2, JSON.stringify(events));
+  assert.ok(gated[0].message.includes('reason=numeric_shape') && gated[0].message.includes(`loId=${LO}`), gated[0].message);
+  assert.ok(gated[1].message.includes('reason=verify_disagree'), gated[1].message);
+  assert.ok(events.some((e) => e.type === 'practice_gen_empty'));
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('checkGeneratedAnswer: names the gate branch that rejected', async () => {
+  assert.deepEqual(await checkGeneratedAnswer(numericGen('x', 'between 3 and 5'), agreeVerify()), { ok: false, reason: 'numeric_shape' });
+  assert.deepEqual(await checkGeneratedAnswer(numericGen('x', '42'), disagreeVerify()), { ok: false, reason: 'verify_disagree' });
+  assert.deepEqual(await checkGeneratedAnswer({ ...mcqGen(), choices: [] }, agreeVerify()), { ok: false, reason: 'mcq_no_choices' });
+  assert.deepEqual(await checkGeneratedAnswer({ ...mcqGen(), choices: ['A) ', 'B) 2'] }, agreeVerify()), { ok: false, reason: 'mcq_blank_choice' });
+  assert.deepEqual(await checkGeneratedAnswer({ ...mcqGen(), finalAnswer: 'no such choice text' }, agreeVerify()), { ok: false, reason: 'mcq_unresolved_letter' });
+  assert.deepEqual(await checkGeneratedAnswer({ ...mcqGen(), finalAnswer: 'E' }, agreeVerify()), { ok: false, reason: 'mcq_letter_out_of_range' });
+  assert.deepEqual(await checkGeneratedAnswer(mcqGen(), disagreeVerify()), { ok: false, reason: 'verify_disagree' });
+  const ok = await checkGeneratedAnswer(numericGen('x', '42'), agreeVerify());
+  assert.equal(ok.ok, true);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -323,7 +323,12 @@ export async function emitSessionResult(
   // Best-effort: a failure never fails the emit.
   if (shouldCreateDraftOnEmit(req)) {
     await createDraftOnEmit(req, { profileId, partnerId: opts.partnerId }).then(
-      (outcome) => console.log(`[session-result] end-of-session practice session=${req.sessionId} outcome=${outcome}`),
+      (outcome) => {
+        // `empty:<why>` → `outcome=empty why=<why>` (2026-10-02): the
+        // `outcome=empty` token stays greppable; why= says which empty.
+        const [head, why] = outcome.split(':');
+        console.log(`[session-result] end-of-session practice session=${req.sessionId} outcome=${head}${why ? ` why=${why}` : ''}`);
+      },
       (e) => console.warn('[session-result] end-of-session draft failed', (e as Error)?.message ?? e),
     );
   }

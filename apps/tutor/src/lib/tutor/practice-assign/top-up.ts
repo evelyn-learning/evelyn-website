@@ -29,7 +29,11 @@ const MAX_GEN_CALLS = 2;
 const PER_CALL = 2; // = practice-gen's MAX_GENERATIONS_PER_REQUEST
 
 export interface ResolvedLo { loId: string; title: string; items: PracticeItem[] }
-export interface TopUpInput { studentId: string; topic: string; target?: number; anchorsFor(loId: string): PracticeItem[] }
+export interface TopUpInput {
+  studentId: string; topic: string; target?: number; anchorsFor(loId: string): PracticeItem[];
+  /** Forwarded to generatePracticeItems (visible empty/gate-failed outcomes, 2026-10-02). */
+  onDebugEvent?: GeneratePracticeItemsOptions['onDebugEvent'];
+}
 
 /** Split a shortfall into ≤MAX_GEN_CALLS parallel requests of ≤PER_CALL. Pure. */
 export function splitShortfall(need: number): number[] {
@@ -65,7 +69,10 @@ export async function topUpPractice(
   // Each call's result lands here as it arrives; on timeout we take a snapshot.
   const arrived: PracticeItem[][] = [];
   const calls = splitShortfall(need).map((shortfall) =>
-    gen({ studentId: input.studentId, loId: first.loId, topic: input.topic, topicId: input.topic, shortfall, anchorItems })
+    gen({
+      studentId: input.studentId, loId: first.loId, topic: input.topic, topicId: input.topic, shortfall, anchorItems,
+      ...(input.onDebugEvent ? { onDebugEvent: input.onDebugEvent } : {}),
+    })
       .catch(() => [] as PracticeItem[])
       .then((got) => { arrived.push(got); }),
   );

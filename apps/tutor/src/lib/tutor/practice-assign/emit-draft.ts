@@ -13,6 +13,7 @@ import { homeworkProblemsOf, homeworkLoIdFor } from '@/lib/tutor/lesson-plan/hom
 import { findAssignmentBySession } from './store';
 import { assignPractice, topUpDraft, topUpAssigned } from './assign';
 import type { IPracticeAssignment } from '@/models';
+import { logPracticeGenEvent } from '@/lib/tutor/portal/practice-gen';
 
 export const SESSION_END_REASON = 'Practice from your session.';
 const DRAFT_LOS = 2;
@@ -78,7 +79,14 @@ export function homeworkAnchorItems(plan: { id: string; metadata?: Record<string
   }));
 }
 
-export type EmitDraftOutcome = 'created' | 'topped_up' | 'exists' | 'no_plan' | 'empty';
+/** `empty:<why>` (2026-10-02): `no_los` = the plan gave no LO to draft for;
+ *  `no_items` = assignPractice returned null — almost always retrieval +
+ *  generation produced nothing to assign (the `[practice-gen]
+ *  practice_gen_empty` / `practice_gen_gate_failed` lines logged just before
+ *  say why); assignPractice also returns null on a draft-upsert owner
+ *  mismatch (a race: the common owner mismatch returns 'exists' above). session-result logs these as
+ *  `outcome=empty why=<why>`. */
+export type EmitDraftOutcome = 'created' | 'topped_up' | 'exists' | 'no_plan' | 'empty:no_los' | 'empty:no_items';
 export interface EmitDraftDeps {
   findAssignment: typeof findAssignmentBySession;
   getPlan: typeof getLessonPlan;
@@ -122,7 +130,10 @@ async function createOrTopUp(
   if (!plan) return existing ? 'exists' : 'no_plan';
   const wrapper = homeworkLoIdFor(plan.id);
   const anchors = homeworkAnchorItems(plan);
-  const topUp = { studentId: ctx.profileId, topic: plan.topic || plan.title, anchorsFor: (loId: string) => (loId === wrapper ? anchors : []) };
+  const topUp = {
+    studentId: ctx.profileId, topic: plan.topic || plan.title, anchorsFor: (loId: string) => (loId === wrapper ? anchors : []),
+    onDebugEvent: logPracticeGenEvent,
+  };
   if (existing) {
     // A short client draft still open: top it up; the finalize promotes it.
     // A just-client-finalized record: top it up where it stands.
@@ -132,7 +143,7 @@ async function createOrTopUp(
     return added > 0 ? 'topped_up' : 'exists';
   }
   const loIds = draftLoIdsForEmit(plan, req.losTouched);
-  if (loIds.length === 0) return 'empty';
+  if (loIds.length === 0) return 'empty:no_los';
   const out = await deps.assign({
     profileId: ctx.profileId,
     partnerId: ctx.partnerId,
@@ -149,5 +160,5 @@ async function createOrTopUp(
     trigger: 'session_end',
     topUp,
   });
-  return out ? 'created' : 'empty';
+  return out ? 'created' : 'empty:no_items';
 }

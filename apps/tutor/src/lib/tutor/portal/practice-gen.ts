@@ -100,7 +100,14 @@ export interface PracticeGenSources {
    *  (the caller's already-known same-LO item hashes). Returns null when
    *  generation, verification, or the answer-shape gate failed — caller must
    *  not serve or persist. */
-  generateAndVerify(userPrompt: string, excludeHashes: string[]): Promise<{ gen: GenPayload; hash: string } | null>;
+  generateAndVerify(
+    userPrompt: string,
+    excludeHashes: string[],
+    /** Called once per rejected candidate with the gate branch that rejected
+     *  it (`GateFailReason`, or 'no_candidate' when generation itself
+     *  produced nothing) — the visible-outcome hook (2026-10-02). */
+    onGateFailed?: (reason: string) => void,
+  ): Promise<{ gen: GenPayload; hash: string } | null>;
   /** Reserve up to `n` generation slots for (studentId, loId) today, honoring
    *  the per-(student,LO) and global daily caps. Returns the number actually
    *  granted (0..n) — 0 means "over cap, generate nothing". */
@@ -131,6 +138,18 @@ export interface GeneratePracticeItemsOptions {
    *  fresh-LO edge case: the prompt falls back to the LO id + topic alone,
    *  since Practice items carry no free-text LO description at this layer). */
   anchorItems: PracticeItem[];
+  /** Visible outcomes (2026-10-02): `practice_gen_empty` (`loId=… topic=…
+   *  attempts=N`) when generation ran and produced nothing, and
+   *  `practice_gen_gate_failed` (`loId=… reason=…`) per rejected candidate.
+   *  Server callers log these (`logPracticeGenEvent`); there is no
+   *  debug-event stream server-side. */
+  onDebugEvent?: (type: string, message: string) => void;
+}
+
+/** Server-side sink for `onDebugEvent`: one `[practice-gen] <type> <message>`
+ *  log line per event (retrievePractice, the session-end draft top-up). */
+export function logPracticeGenEvent(type: string, message: string): void {
+  console.log(`[practice-gen] ${type} ${message}`);
 }
 
 /** UTC calendar day, `YYYY-MM-DD` — the counter collection's bucket key. */
@@ -335,9 +354,29 @@ export async function gateGeneratedAnswer(
   gen: GenPayload,
   verify: VerifyFn = verifyClaimedAnswer,
 ): Promise<GenPayload | null> {
+  const out = await checkGeneratedAnswer(gen, verify);
+  return out.ok ? out.gen : null;
+}
+
+/** Which branch of the answer-shape gate rejected a candidate. */
+export type GateFailReason =
+  | 'mcq_no_choices'
+  | 'mcq_blank_choice'
+  | 'mcq_unresolved_letter'
+  | 'mcq_letter_out_of_range'
+  | 'numeric_shape'
+  | 'verify_disagree';
+
+/** `gateGeneratedAnswer` with the rejecting branch named (2026-10-02, so an
+ *  empty generation is explainable in the logs). Same checks, same order. */
+export async function checkGeneratedAnswer(
+  gen: GenPayload,
+  verify: VerifyFn = verifyClaimedAnswer,
+): Promise<{ ok: true; gen: GenPayload } | { ok: false; reason: GateFailReason }> {
+  const fail = (reason: GateFailReason) => ({ ok: false as const, reason });
   if (gen.responseFormat === 'mcq') {
     const rawChoices = gen.choices ?? [];
-    if (rawChoices.length === 0) return null; // malformed mcq — nothing to grade against
+    if (rawChoices.length === 0) return fail('mcq_no_choices'); // malformed mcq — nothing to grade against
     // Strip a generator-baked-in "A) "/"A. "/"(A) "/"A - " label from every
     // choice's text when ALL choices carry one and the letters are
     // sequential from A (see `stripChoiceLetterPrefixes` doc comment) — the
@@ -345,21 +384,21 @@ export async function gateGeneratedAnswer(
     // doubled label ("B. B) 10/3"). A no-op (original array back) when the
     // all-or-nothing + sequential condition doesn't hold.
     const choiceTexts = stripChoiceLetterPrefixes(rawChoices);
-    if (choiceTexts.some((text) => text.trim().length === 0)) return null; // stripping left a blank choice — reject the whole generation rather than serve mangled text
+    if (choiceTexts.some((text) => text.trim().length === 0)) return fail('mcq_blank_choice'); // stripping left a blank choice — reject the whole generation rather than serve mangled text
     const choices = choiceTexts.map((text, i) => ({ letter: String.fromCharCode(65 + i), text }));
     const claimedLetter = resolveMcqLetter(gen.finalAnswer, choices);
-    if (!claimedLetter) return null; // claimed answer resolves to no real choice — reject
+    if (!claimedLetter) return fail('mcq_unresolved_letter'); // claimed answer resolves to no real choice — reject
     const letterIndex = claimedLetter.charCodeAt(0) - 'A'.charCodeAt(0);
-    if (letterIndex < 0 || letterIndex >= choices.length) return null; // out-of-bounds letter — reject
+    if (letterIndex < 0 || letterIndex >= choices.length) return fail('mcq_letter_out_of_range'); // out-of-bounds letter — reject
     const { agree } = await verify(gen.problemText, claimedLetter, choices);
-    if (!agree) return null;
-    return { ...gen, finalAnswer: claimedLetter, choices: choiceTexts };
+    if (!agree) return fail('verify_disagree');
+    return { ok: true, gen: { ...gen, finalAnswer: claimedLetter, choices: choiceTexts } };
   }
   const normalized = normalizeNumericAnswer(gen.finalAnswer);
-  if (!normalized) return null; // ambiguous/non-numeric shape — reject rather than guess
+  if (!normalized) return fail('numeric_shape'); // ambiguous/non-numeric shape — reject rather than guess
   const { agree } = await verify(gen.problemText, gen.finalAnswer);
-  if (!agree) return null;
-  return { ...gen, finalAnswer: normalized };
+  if (!agree) return fail('verify_disagree');
+  return { ok: true, gen: { ...gen, finalAnswer: normalized } };
 }
 
 /** Generate one candidate (shared generator) then run it through the
@@ -369,12 +408,19 @@ export async function gateGeneratedAnswer(
 async function attemptGenerateVerified(
   userPrompt: string,
   excludeHashes: string[],
+  onGateFailed?: (reason: string) => void,
 ): Promise<{ result: { gen: GenPayload; hash: string } | null; hash: string | null }> {
   const candidate = await generateCandidate(userPrompt, excludeHashes);
-  if (!candidate) return { result: null, hash: null };
-  const gated = await gateGeneratedAnswer(candidate.gen);
-  if (!gated) return { result: null, hash: candidate.hash };
-  return { result: { gen: gated, hash: candidate.hash }, hash: candidate.hash };
+  if (!candidate) {
+    onGateFailed?.('no_candidate');
+    return { result: null, hash: null };
+  }
+  const gated = await checkGeneratedAnswer(candidate.gen);
+  if (!gated.ok) {
+    onGateFailed?.(gated.reason);
+    return { result: null, hash: candidate.hash };
+  }
+  return { result: { gen: gated.gen, hash: candidate.hash }, hash: candidate.hash };
 }
 
 /** `attemptGenerateVerified` with 1 retry on failure (temperature yields a
@@ -387,11 +433,12 @@ async function attemptGenerateVerified(
 async function generateVerifiedWithRetry(
   userPrompt: string,
   excludeHashes: string[],
+  onGateFailed?: (reason: string) => void,
 ): Promise<{ gen: GenPayload; hash: string } | null> {
-  const first = await attemptGenerateVerified(userPrompt, excludeHashes);
+  const first = await attemptGenerateVerified(userPrompt, excludeHashes, onGateFailed);
   if (first.result) return first.result;
   const retryExcludeHashes = first.hash ? [...excludeHashes, first.hash] : excludeHashes;
-  const second = await attemptGenerateVerified(userPrompt, retryExcludeHashes);
+  const second = await attemptGenerateVerified(userPrompt, retryExcludeHashes, onGateFailed);
   return second.result;
 }
 
@@ -399,7 +446,7 @@ async function generateVerifiedWithRetry(
  *  Mongo caps/persistence. */
 export function practiceGenSources(): PracticeGenSources {
   return {
-    generateAndVerify: (userPrompt, excludeHashes) => generateVerifiedWithRetry(userPrompt, excludeHashes),
+    generateAndVerify: (userPrompt, excludeHashes, onGateFailed) => generateVerifiedWithRetry(userPrompt, excludeHashes, onGateFailed),
     reserve: (studentId, loId, n) => mongoReserve(studentId, loId, n),
     persist: (row) => mongoPersist(row),
   };
@@ -489,6 +536,21 @@ const PERCENT_ANSWER_CLAUSE =
   'asks for the answer "as a percent" (or "what percent...") and state finalAnswer as the percent ' +
   'numeral with a % sign (e.g. "50%"), never the decimal form ("0.5").';
 
+/** Anchors that ask the student to DRAW (graph, plot, sketch, shade, label a
+ *  diagram) can't seed a typed-answer practice item: the generator mirrors
+ *  the drawing task and every candidate fails the answer-shape gate.
+ *  Observed 2026-10-02: the anchor "Graph y = 2x + 3 and mark where it
+ *  crosses both axes" produced zero usable items. */
+export const DRAWING_ANCHOR_RE = /\b(graph|draw|sketch|plot|label (the )?(diagram|figure)|shade)\b/i;
+
+/** The anchor to prompt with: null for a drawing/graphing anchor, so the
+ *  skill-only (no-anchor) branch of `buildUserPrompt` writes a typed-answer
+ *  problem for the LO/topic instead. */
+export function usableAnchor(anchor: PracticeItem | null): PracticeItem | null {
+  if (!anchor) return null;
+  return DRAWING_ANCHOR_RE.test(anchor.problemText) ? null : anchor;
+}
+
 function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeItem | null, slotIndex: number): string {
   const difficultyLabel = opts.difficulty
     ? `difficulty bucket ${opts.difficulty} of 4 (1 = easier than typical, 4 = extension-grade)`
@@ -521,8 +583,13 @@ async function generateOne(
   excludeHashes: string[],
   slotIndex: number,
 ): Promise<PracticeItem | null> {
-  const prompt = buildUserPrompt(opts, anchor, slotIndex);
-  const result = await sources.generateAndVerify(prompt, excludeHashes);
+  // A drawing/graphing anchor takes the skill-only branch (see usableAnchor).
+  // The original anchor still supplies difficulty/cedCode defaults below.
+  const prompt = buildUserPrompt(opts, usableAnchor(anchor), slotIndex);
+  const onGateFailed = opts.onDebugEvent
+    ? (reason: string) => opts.onDebugEvent?.('practice_gen_gate_failed', `loId=${opts.loId} reason=${reason}`)
+    : undefined;
+  const result = await sources.generateAndVerify(prompt, excludeHashes, onGateFailed);
   if (!result) return null; // unverified/gate-failed — never served, never banked
   const { gen, hash } = result;
   const id = `practice-gen.${opts.loId}.${hash}`;
@@ -604,6 +671,9 @@ export async function generatePracticeItems(
     } else if (s.status === 'rejected') {
       console.warn('[practice-gen] one generation failed (degrading to fewer items):', s.reason);
     }
+  }
+  if (items.length === 0) {
+    opts.onDebugEvent?.('practice_gen_empty', `loId=${opts.loId} topic=${opts.topic} attempts=${allowed}`);
   }
   return items;
 }
