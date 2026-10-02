@@ -21856,6 +21856,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       farewellSealedRef.current = true;
       queuedTranscriptsRef.current = [];
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
+      // Same gate every other abort site sets: sentences already buffered
+      // from the cut turn must not play before the goodbye (the goodbye
+      // itself goes through realtime.speakText directly, so it is not gated).
+      speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
       if (sessionMode !== 'text') {
         isMicMutedRef.current = true;
         setIsMicMuted(true);
