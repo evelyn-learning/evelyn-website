@@ -721,6 +721,11 @@ await test('usableAnchor: drawing/graphing anchors become null', () => {
     'Sketch the parabola y = x^2 - 4.',
     'Shade the region where y > 2x.',
     'Label the diagram with the forces acting on the box.',
+    'Graphing: graph y=2x+3',
+    'Solve for the intercepts, then graph the line.',
+    'Find the vertex and sketch the curve.',
+    'Please plot these data points.',
+    '(a) Draw the triangle ABC.',
   ]) {
     assert.equal(usableAnchor({ ...bankAnchor, problemText: text }), null, text);
     assert.ok(DRAWING_ANCHOR_RE.test(text), text);
@@ -728,7 +733,13 @@ await test('usableAnchor: drawing/graphing anchors become null', () => {
 });
 
 await test('usableAnchor: typed-answer anchors are kept as-is; null stays null', () => {
-  for (const text of ['Solve 2x + 3 = 7', 'Find the x-intercept of y = 2x + 3']) {
+  for (const text of [
+    'Solve 2x + 3 = 7',
+    'Find the x-intercept of y = 2x + 3',
+    'The graph of f(x) passes through (1,2); find f(3)',
+    'A scatter plot shows the data below. What is the slope of the trend line?',
+    'The shaded region has what area?',
+  ]) {
     const a = { ...bankAnchor, problemText: text };
     assert.equal(usableAnchor(a), a, text);
   }
@@ -744,6 +755,19 @@ await test('a drawing anchor builds the skill-only (no-anchor) prompt', async ()
   assert.ok(!sources.prompts[0].includes('ANCHOR problem'), 'no anchor branch');
   assert.ok(/brand-new LO|no existing practice/i.test(sources.prompts[0]), 'skill-only branch');
   assert.ok(sources.prompts[0].includes(LO));
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('a typed-answer anchor wins the slot over a drawing anchor in the same pool', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const typed: PracticeItem = { ...bankAnchor, id: 'plan.typed-1', problemText: 'Solve 2x + 3 = 7' };
+  for (const pool of [[drawingAnchor, typed], [typed, drawingAnchor]]) {
+    const sources = makeStubSources({ gen: numericGen() });
+    await generatePracticeItems(baseOpts({ anchorItems: pool }), sources);
+    assert.equal(sources.prompts.length, 1);
+    assert.ok(sources.prompts[0].includes(typed.problemText), 'typed anchor used');
+    assert.ok(!sources.prompts[0].includes(drawingAnchor.problemText), 'drawing anchor never prompts');
+  }
   delete process.env.PRACTICE_GEN;
 });
 

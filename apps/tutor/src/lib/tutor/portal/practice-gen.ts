@@ -540,8 +540,13 @@ const PERCENT_ANSWER_CLAUSE =
  *  diagram) can't seed a typed-answer practice item: the generator mirrors
  *  the drawing task and every candidate fails the answer-shape gate.
  *  Observed 2026-10-02: the anchor "Graph y = 2x + 3 and mark where it
- *  crosses both axes" produced zero usable items. */
-export const DRAWING_ANCHOR_RE = /\b(graph|draw|sketch|plot|label (the )?(diagram|figure)|shade)\b/i;
+ *  crosses both axes" produced zero usable items.
+ *  The verb must be an INSTRUCTION — at the start of the text or of a
+ *  sentence/clause (after . ! ? : ; or the ")" of "(a)"), or after
+ *  please/then/now/and — so a problem that merely mentions a graph ("The
+ *  graph of f passes through (1, 2); find f(3)") keeps its anchor. */
+export const DRAWING_ANCHOR_RE =
+  /(?:^\s*|[.!?:;)]\s*|\b(?:please|then|now|and)\s+)(?:graph(?:s|ing|ed)?|draw(?:n|ing|s)?|sketch(?:es|ing|ed)?|plot(?:s|ting|ted)?|shad(?:e|es|ing|ed)|label (?:the )?(?:diagram|figure))\b/i;
 
 /** The anchor to prompt with: null for a drawing/graphing anchor, so the
  *  skill-only (no-anchor) branch of `buildUserPrompt` writes a typed-answer
@@ -643,7 +648,11 @@ export async function generatePracticeItems(
   // fixes). Each slot also gets a different prompt directive
   // (`slotVariationDirective`, applied inside `buildUserPrompt`) so even a
   // pool of exactly 1 anchor still steers the two generations apart.
-  const anchors = pickAnchorsForSlots(opts.anchorItems, allowed, opts.difficulty);
+  // Drawing/graphing anchors are filtered out of the pool FIRST (see
+  // usableAnchor), so a typed-answer anchor wins a slot whenever the pool has
+  // one; a pool of only drawing anchors yields null → the skill-only prompt.
+  const anchorPool = opts.anchorItems.filter((a) => usableAnchor(a) !== null);
+  const anchors = pickAnchorsForSlots(anchorPool, allowed, opts.difficulty);
   // Exclude-hash seed: every already-known same-LO item's text hash, so a
   // regeneration doesn't just reproduce existing content verbatim. Both
   // parallel generations share this same base list — there is no sibling
