@@ -33,7 +33,7 @@ import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
-import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, type HostEndReason } from '@/lib/tutor/portal/host-end';
+import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, type HostEndReason } from '@/lib/tutor/portal/host-end';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -1175,6 +1175,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  // evelyn:activity (GreenApple spec 2026-10-02 §1): additive message on a
+  // real (non-synthetic) student turn, text or voice, relayed from VTR's
+  // 'evelyn:student-activity' window event (fired where it records student
+  // engagement). Throttled to one per 5 s. The host uses it for its
+  // no-input timeout; older hosts ignore unknown types.
+  const lastActivityPostRef = useRef<number | null>(null);
+  useEffect(() => {
+    const onActivity = () => {
+      const now = Date.now();
+      if (!shouldPostActivity(lastActivityPostRef.current, now)) return;
+      lastActivityPostRef.current = now;
+      window.parent.postMessage({ type: 'evelyn:activity', last_student_input_at_ms: now }, '*');
+    };
+    window.addEventListener('evelyn:student-activity', onActivity);
+    return () => window.removeEventListener('evelyn:student-activity', onActivity);
   }, []);
 
   // P2 (demo feedback R2): relay the real session start (mic tap / first

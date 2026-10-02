@@ -17088,6 +17088,11 @@ export function VoiceTutorRealtime({
     // nudge itself) must not reset their own clock.
     if (!/^\s*\[/.test(transcript)) {
       recordStudentEngagement(idleNudgeStateRef.current);
+      // GreenApple spec 2026-10-02 §1: real student input (text or voice —
+      // both land here). A window-event bridge (like evelyn:session-started)
+      // so the embed page — the only place that posts to the host — relays
+      // it as the throttled evelyn:activity message; no listener elsewhere.
+      try { window.dispatchEvent(new Event('evelyn:student-activity')); } catch {}
       if (idleNudgeTimerRef.current) {
         clearTimeout(idleNudgeTimerRef.current);
         idleNudgeTimerRef.current = null;
