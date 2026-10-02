@@ -13,6 +13,7 @@
  * and keeps the swap from the Realtime-as-brain architecture localized.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { buildSystemBlocks } from '@/lib/tutor/ai/prompt-cache';
 import { getModelClient, getFallbackClient, stripAnthropicOnlyParams, type RoleClient } from '../ai/model-registry';
 import type { CatalogSnapshotEntry, Page } from '../whiteboard/catalog';
 import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
@@ -189,6 +190,11 @@ async function createBrainMessage(
 export interface BrainTurnInput {
   /** System prompt — tutoring style + tool-API rules. NO domain examples. */
   systemPrompt: string;
+  /** Session-independent prefix of `systemPrompt` (BASE_PROMPT + branding).
+   *  When set and a proper prefix, the request sends two system blocks so
+   *  tools + core is one cache entry shared by every session. Absent ⇒ one
+   *  block, as before. */
+  systemPromptCore?: string;
   /** Prior conversation, oldest first. Each entry is one student or tutor turn. */
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   /** What the student just said — the trigger for this turn. */
@@ -1772,24 +1778,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       thinking: { type: 'disabled' as const },
-      system: [
-        {
-          type: 'text',
-          text: input.systemPrompt,
-          // Stage 1 item 1 (2026-05-18 caching initiative): 1-hour TTL
-          // on the system+tools cached prefix (62K tok, $0.234 to
-          // create). Default 5m expires on any >5-min student pause →
-          // full re-create + cold ~62K prefill (latency stall) mid-
-          // session. 1h write premium is +$0.141 once vs avoiding a
-          // $0.234 re-create per gap — net win with ≥1 mid-session
-          // pause. Both twins (this streaming live path + the
-          // non-streaming fallback) carry it so their cache behavior
-          // stays consistent. RISK 2 refuted in Stage 0 — the prefix is
-          // byte-stable per turn, so this strictly extends a working
-          // cache; no behavioral change.
-          cache_control: { type: 'ephemeral', ttl: '1h' },
-        },
-      ],
+      // 1-hour TTL on every block: survives student pauses > 5 min, and the
+      // core block must outlive the gap between sessions (shared entry).
+      system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
       tools: toAnthropicTools(input.tools),
       messages,
     }, input.model, input.allowFallback !== false);
@@ -1992,24 +1983,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       thinking: { type: 'disabled' as const },
-      system: [
-        {
-          type: 'text',
-          text: input.systemPrompt,
-          // Stage 1 item 1 (2026-05-18 caching initiative): 1-hour TTL
-          // on the system+tools cached prefix (62K tok, $0.234 to
-          // create). Default 5m expires on any >5-min student pause →
-          // full re-create + cold ~62K prefill (latency stall) mid-
-          // session. 1h write premium is +$0.141 once vs avoiding a
-          // $0.234 re-create per gap — net win with ≥1 mid-session
-          // pause. Both twins (this streaming live path + the
-          // non-streaming fallback) carry it so their cache behavior
-          // stays consistent. RISK 2 refuted in Stage 0 — the prefix is
-          // byte-stable per turn, so this strictly extends a working
-          // cache; no behavioral change.
-          cache_control: { type: 'ephemeral', ttl: '1h' },
-        },
-      ],
+      // 1-hour TTL on every block: survives student pauses > 5 min, and the
+      // core block must outlive the gap between sessions (shared entry).
+      system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
       tools: toAnthropicTools(input.tools),
       messages,
     }), input.model, input.allowFallback !== false);
@@ -2195,13 +2171,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         model: input.model ?? BRAIN_MODEL_ID,
         max_tokens: 350, // was 250 — Sonnet 5 tokenizer headroom (see DEFAULT_MAX_TOKENS)
         thinking: { type: 'disabled' as const },
-        system: [
-          {
-            type: 'text',
-            text: input.systemPrompt,
-            cache_control: { type: 'ephemeral', ttl: '1h' },
-          },
-        ],
+        // 1-hour TTL on every block: survives student pauses > 5 min, and the
+        // core block must outlive the gap between sessions (shared entry).
+        system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
         messages,
       }), input.model, input.allowFallback !== false);
       const rescueBuffer = new SentenceBuffer();

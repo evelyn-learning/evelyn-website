@@ -27,10 +27,11 @@ import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL } from '@/app/tutor/hooks/toolDefinitions';
 import {
-  resolveToolSubjects,
   filterToolsForSubject,
   type ToolFilterResult,
 } from '@/lib/tutor/ai/tool-subject-taxonomy';
+import { resolveSystemPrompt, allowedSubjectsForTurn } from '@/lib/tutor/ai/prompt-cache';
+import { cacheKeyLine } from '@/lib/tutor/ai/prompt-cache-log';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { loBoundaryBeat, buildAdvanceBeatNote } from '@/lib/tutor/lesson-plan/rail-labels';
@@ -65,7 +66,14 @@ const BRAIN_EVENT_STALL_MS = 30_000;
 export const runtime = 'nodejs';
 
 interface BrainStreamRequestBody {
-  systemPrompt: string;
+  /** Legacy single-string prompt (old tabs, scripts). New clients send the
+   *  two parts below instead; `core + session` is the same bytes. */
+  systemPrompt?: string;
+  systemPromptCore?: string;
+  systemPromptSession?: string;
+  /** Client-latched tool list scope: 'full' once the session has ever had an
+   *  untrusted turn (no plan / freestyle / open scope). Can only widen. */
+  toolScope?: 'subject' | 'full';
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
   studentTranscript: string;
   whiteboardSnapshot: BrainTurnInput['whiteboardSnapshot'];
@@ -417,7 +425,10 @@ export async function POST(req: NextRequest) {
     return badRequest('Invalid JSON body');
   }
 
-  if (typeof body.systemPrompt !== 'string' || body.systemPrompt.length === 0) {
+  // Shared prompt cache: default ON. 'off' ⇒ core is dropped and the request
+  // carries one system block, byte-identical to the pre-split behaviour.
+  const prompt = resolveSystemPrompt(body, process.env.TUTOR_SHARED_PROMPT_CACHE !== 'off');
+  if (!prompt) {
     return badRequest('systemPrompt is required');
   }
   if (typeof body.studentTranscript !== 'string') {
@@ -468,7 +479,7 @@ export async function POST(req: NextRequest) {
   // the brain without having to log the entire prompt. One line per
   // turn — cheap. Tag is "off" when humor is disabled, otherwise one
   // of light/medium/heavy.
-  const humorMatch = body.systemPrompt.match(/<humor\s+level="(off|light|medium|heavy)"/);
+  const humorMatch = prompt.full.match(/<humor\s+level="(off|light|medium|heavy)"/);
   if (humorMatch) {
     console.log(`[humor] active=${humorMatch[1]}`);
   } else {
@@ -594,12 +605,14 @@ export async function POST(req: NextRequest) {
           excluded: [],
         };
       } else {
-        const planId = body.lessonPlanContext?.plan?.id ?? '';
-        const untrusted =
-          !body.lessonPlanContext || planId.startsWith('freestyle-');
         toolFilter = filterToolsForSubject(
           WHITEBOARD_TOOLS,
-          untrusted ? null : resolveToolSubjects(body.subject),
+          allowedSubjectsForTurn({
+            toolScope: body.toolScope,
+            subject: body.subject,
+            hasPlan: !!body.lessonPlanContext,
+            planId: body.lessonPlanContext?.plan?.id ?? '',
+          }),
         );
       }
       console.log(
@@ -644,6 +657,17 @@ export async function POST(req: NextRequest) {
         // byte-identical to before this tool existed.
         toolFilter = { ...toolFilter, tools: [...toolFilter.tools, SET_CURRENT_PROBLEM_TOOL] };
       }
+
+      // Which shared cache entry this turn can read: tools + core. One line
+      // per turn, next to [toolfilter] and [brain.stream].
+      console.log(
+        cacheKeyLine({
+          core: prompt.core,
+          toolNames: toolFilter.tools.map((t) => t.name),
+          mode: toolFilter.mode,
+          homework: !!homework,
+        }),
+      );
 
       // Pedagogy opener: which turns carry the opening directive. The
       // directive must appear on the first few turns of a flag-ON session
@@ -753,7 +777,8 @@ export async function POST(req: NextRequest) {
           // provider: their DPA lists the primary only. TUTOR_PARTNER_BRAIN_FALLBACK=on
           // re-enables it deployment-wide (Praveen ruling 2026-09-19).
           allowFallback: !isPartnerEmbed || process.env.TUTOR_PARTNER_BRAIN_FALLBACK === 'on',
-          systemPrompt: body.systemPrompt,
+          systemPrompt: prompt.full,
+          systemPromptCore: prompt.core,
           conversationHistory: body.conversationHistory,
           studentTranscript: body.studentTranscript,
           whiteboardSnapshot: body.whiteboardSnapshot,
