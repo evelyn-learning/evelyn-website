@@ -4002,6 +4002,9 @@ export function VoiceTutorRealtime({
   // does anything. Exposed on the handle as isEnding() so the embed's
   // host_end listener can ignore a host stop once ANY teardown has begun.
   const endingRef = useRef(false);
+  // Set once a host-end goodbye starts: from then on nothing reaches the
+  // brain (handleStudentTranscriptForBrain returns early) until unmount.
+  const farewellSealedRef = useRef(false);
   // Turn-length cap (2026-07-15): when a finished turn exceeded the hard cap
   // with zero whiteboard actions, this holds a [cadence note] that rides into
   // the NEXT brain call's transcript and is then cleared. Next-turn (not
@@ -17050,6 +17053,9 @@ export function VoiceTutorRealtime({
       image?: { dataUrl: string; name?: string };
     },
   ) => {
+    // Host-end goodbye under way (endSessionNowRef farewell branch): no new
+    // turn may reach the brain until unmount.
+    if (farewellSealedRef.current) return;
     if (opts?.image) {
       const parked = pendingUploadImagesRef.current;
       parked.push({ key: transcript.trim(), image: opts.image });
@@ -21844,6 +21850,17 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     const farewell = opts?.farewell?.trim();
     const farewellAt = Date.now();
     if (farewell) {
+      // Seal the session BEFORE the goodbye: abort any in-flight brain turn,
+      // drop queued turns, refuse new dispatches, and mute the mic, so
+      // nothing reaches the model or the speaker after the goodbye starts.
+      farewellSealedRef.current = true;
+      queuedTranscriptsRef.current = [];
+      try { inFlightBrainAbortRef.current?.abort(); } catch {}
+      if (sessionMode !== 'text') {
+        isMicMutedRef.current = true;
+        setIsMicMuted(true);
+        try { realtime.muteInput(); } catch {}
+      }
       transcriptRef.current = [
         ...transcriptRef.current,
         { id: `tutor-${farewellAt}-host-end`, timestamp: new Date(), role: 'tutor', text: farewell } as TranscriptEntry,
