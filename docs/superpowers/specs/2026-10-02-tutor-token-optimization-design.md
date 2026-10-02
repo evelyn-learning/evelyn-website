@@ -194,3 +194,36 @@ Also deferred: caching the per-turn tail inside a turn's tool loop; audit of BAS
 
 Every engine deploy that changes BASE or the tools makes the next session per variant a cold
 start once.
+
+## Measured (2026-10-02, claude-sonnet-5, `scripts/measure-prompt-cache-parts.ts`, countTokens)
+
+```
+core            63616 tok  (185726 chars)
+session math_g8            9146 tok
+session physics_ap         7426 tok
+session freetext_subject   23308 tok   (unrecognised subject ⇒ full diagram catalog)
+session no_name_no_topic   9406 tok
+session text_mode          9261 tok
+session open_scope         6009 tok
+session first_turn_flags   7657 tok
+session humor_override     8551 tok
+session self_report        5155 tok
+tools full       51628 tok  (86/86 tools)
+tools math       34371 tok  (55/86)     tools physics    38539 tok  (61/86)
+tools chemistry  35041 tok  (54/86)     tools biology    32312 tok  (51/86)
+tools earth      31310 tok  (48/86)     tools cs         32477 tok  (51/86)
+tools ela        33330 tok  (52/86)     tools social     32981 tok  (51/86)
+tools science    45141 tok  (73/86)
+```
+
+Session figures exclude the ≈ 1.2K-char voice wrapper the client appends. Shared entry on the
+full tool list = 63.6K + 51.6K ≈ 115K tokens. At Sonnet 5 rates ($2/MTok input; 1-hour write 2×,
+read 0.1×):
+
+| | Today | Shared cache, warm | Shared cache, cold |
+|---|---|---|---|
+| Turn-1 write | ≈ 121–138K tok ≈ $0.48–0.55 | session only: 5–9K tok ≈ $0.02–0.04 (23K ≈ $0.09 for an unrecognised subject) | as today |
+| Turn-1 read | 0 | ≈ 115K tok ≈ $0.023 | 0 |
+| Start cost | ≈ $0.50 | ≈ $0.05–0.06 (≈ $0.12 unrecognised subject) | ≈ $0.50 |
+
+The live two-session probe (`scripts/probe-shared-cache.ts`) has not been run yet (paid).
