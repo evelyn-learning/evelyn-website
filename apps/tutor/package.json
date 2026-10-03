@@ -258,6 +258,7 @@
     "test:adapters-passage": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/adapters.test.ts",
     "test:practice-gen": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/practice-gen.test.ts",
     "test:grade-resolver": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/grade-resolver.test.ts",
+    "test:answer-attempt": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/orchestrator/answer-attempt.test.ts",
     "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
     "test:fbd-directions": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/app/tutor/components/whiteboard/fbd-directions.test.ts",
     "test:host-end": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/host-end.test.ts",
