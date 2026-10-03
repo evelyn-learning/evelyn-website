@@ -28,6 +28,12 @@ const MATH_SHAPE_RE = /\d|=|(?:^|\s)[+\-−×÷*/^](?=\s|[a-z0-9(]|$)/i;
 
 const SHORT_ANSWER_MAX_WORDS = 8;
 
+/** Pure acknowledgements / yes-no fillers: short, but never an answer the
+ *  tutor could be correcting ("ok" → "Let's check your work…" is a hand-off,
+ *  not a wrong answer). Review concern on the first cut of this module. */
+const ACK_ONLY_RE =
+  /^[\s"'.!,]*(?:ok(?:ay)?|k|yes|yeah|yep|yup|no|nope|sure|fine|right|got it|i see|alright|thanks|thank you|hi|hello|um+|uh+|hmm+)(?:[\s"'.!,]+(?:ok(?:ay)?|yes|yeah|sure|fine|right|got it|i see|thanks|please))*[\s"'.!,?]*$/i;
+
 /**
  * Correction openers `readPacingVerdict` does not read (its CORRECTION_RE
  * wants "close but" with no comma and has no "not exactly"). Anchored to the
@@ -48,6 +54,7 @@ export function isAnswerAttempt(studentText: string): boolean {
   if (t.startsWith('[')) return false;
   if (isLedgerStuckCue(t)) return false;
   if (HELP_REQUEST_RE.test(t)) return false;
+  if (ACK_ONLY_RE.test(t)) return false;
   // A trailing "?" does not disqualify: "is it 4?" is an answer.
   if (MATH_SHAPE_RE.test(t)) return true;
   return t.split(/\s+/).filter(Boolean).length <= SHORT_ANSWER_MAX_WORDS;

@@ -32,6 +32,8 @@ const NON_ATTEMPTS = [
   'give me another example',
   'I still dont get it',
   'well I was thinking that the whole thing sort of moves along with the other one when you push hard',
+  // Pure acknowledgements: short, but never an answer the tutor corrects.
+  'ok', 'Yes.', 'yeah sure', 'got it', 'okay, thanks', 'Hmm',
 ];
 for (const s of NON_ATTEMPTS) test(`not an attempt: "${s}"`, () => assert.equal(isAnswerAttempt(s), false));
 test('the 20-word control sentence really is 20 words with no digits', () => {
