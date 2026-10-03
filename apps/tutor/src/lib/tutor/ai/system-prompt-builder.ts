@@ -11,6 +11,7 @@ import type { KnowledgeModule } from '@core/knowledge/types';
 import type { SessionState, SessionGoal } from '../types';
 import { formatPronunciationPrompt } from '@/data/tutor/pronunciation';
 import { getGradeProfile, renderGradeProfileBlock } from '@/lib/tutor/pedagogy/grade-profile';
+import { renderLessonContextBlock, renderQuestionBlock, type LessonContext } from '@/lib/tutor/embed/lesson-context';
 import { renderVoiceCadenceBlock } from '@/lib/tutor/pedagogy/voice-cadence';
 import { renderAnalogiesBlock } from '@/lib/tutor/pedagogy/analogies';
 import { renderHumorBlock, resolveHumorCeiling, type HumorLevel } from '@/lib/tutor/pedagogy/humor';
@@ -192,6 +193,12 @@ export interface SystemPromptContext {
 
   /** Text-only session (partner claim). The student types and reads. */
   inputMode?: 'voice' | 'text';
+  /** Host-supplied lesson context (in-flow embeds, partner spec v1.1). Rendered in the
+   *  SESSION block; absent ⇒ nothing appended. */
+  lessonContext?: LessonContext;
+  /** The student arrived mid-activity (an "Ask the tutor" moment inside a lesson they
+   *  return to). Adds the hand-back close clause; opener handled by the client. */
+  inFlow?: boolean;
 }
 
 /**
@@ -1574,6 +1581,12 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
  * machinery — the directive's opener clause (buildOpenerClause) still
  * follows it. Generic by design per feedback_generic_prompts.
  */
+/** In-flow sessions end by handing the student back to the activity they came from. */
+export const IN_FLOW_CLOSE_CLAUSE =
+  'This student came to you from a lesson in progress and goes back to it afterwards. When the help is done or the ' +
+  'student wants to go, close in ONE sentence that hands them back to what they were doing — no "see you next time", ' +
+  'no homework or practice pointers, no summary of the session.';
+
 export const STALE_CHECKPOINT_REORIENT_CLAUSE =
   'This student was mid-way through this lesson a while ago but the checkpoint is too old to ' +
   "restore — re-orient them briefly (one line of 'we were working on X') before the opener; " +
@@ -1926,6 +1939,16 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
   }
 
   // R38: Removed obsolete Multilingual Support section — contradicts Rule 5 one-language-per-session policy; STT (Ink-2 English-only) + TTS (Cartesia language:'en') cannot deliver mid-session language switching
+
+  // In-flow lesson context (partner spec v1.1): facts about the scene and the
+  // question the student was on. Session block only; absent ⇒ nothing.
+  if (context.lessonContext) {
+    prompt += renderLessonContextBlock(context.lessonContext);
+    prompt += renderQuestionBlock(context.lessonContext);
+  }
+  if (context.inFlow) {
+    prompt += `\n## Closing an in-flow session\n${IN_FLOW_CLOSE_CLAUSE}\n`;
+  }
 
   // Add pronunciation guide based on subject/topic
   const subjectForPronunciation = context.subject || context.module?.displayName || '';

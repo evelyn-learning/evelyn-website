@@ -49,6 +49,21 @@ checks.push(['tripwire detects a next.config env exposure', exposesServerOnlyPro
 checks.push(['tripwire detects a NEXT_PUBLIC_ rename in the builder', exposesServerOnlyPromptFlags('', "process.env.NEXT_PUBLIC_TUTOR_TOOL_SUBJECT_FILTER === 'true'")]);
 checks.push(['core is the bulk of the prompt (> 150K chars)', [...cores][0]?.length > 150_000]);
 
+// In-flow fields render in the SESSION part only, and absent fields change nothing (golden above).
+const inflowCtx = { ...PROMPT_MATRIX.freetext_subject, inFlow: true, lessonContext: { title: 'Own a Piece?', summary: 'Two offers on the table.', question: 'Which is equity?', studentAnswer: 'the loan', correctAnswer: 'the first offer' } } as builder.SystemPromptContext;
+if (parts) {
+  const p = parts(inflowCtx);
+  const base = parts(PROMPT_MATRIX.freetext_subject);
+  checks.push(['in-flow: core unchanged', p.core === base.core]);
+  checks.push(['in-flow: session has the lesson context block', p.session.includes('## Lesson context') && p.session.includes('Clip: Two offers on the table.')]);
+  checks.push(['in-flow: session has the question block', p.session.includes('Question: Which is equity?')]);
+  checks.push(['in-flow: session has the hand-back close clause', p.session.includes(builder.IN_FLOW_CLOSE_CLAUSE)]);
+  checks.push(['in-flow blocks sit before pronunciation/persona (inside session context)', p.session.indexOf('## Lesson context') < p.session.indexOf('## Pedagogy spine') === false && p.session.indexOf('## Lesson context') > p.session.indexOf('## Current Session Context')]);
+  const onlyCtx = parts({ ...PROMPT_MATRIX.math_g8, lessonContext: { description: 'A lesson on slopes.' } } as builder.SystemPromptContext);
+  checks.push(['lesson context without in-flow renders, no close clause', onlyCtx.session.includes('Description: A lesson on slopes.') && !onlyCtx.session.includes(builder.IN_FLOW_CLOSE_CLAUSE)]);
+  checks.push(['prompt stays generic', !/gameclass|shark|scrub/i.test(p.session)]);
+}
+
 let fail = 0;
 for (const [name, ok] of checks) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) fail++; }
 console.log(`${checks.length - fail}/${checks.length} passed`);
