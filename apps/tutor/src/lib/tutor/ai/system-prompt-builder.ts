@@ -1613,6 +1613,30 @@ export function buildHomeworkOpenerClause(ctx: Pick<SystemPromptContext, 'openin
   );
 }
 
+/**
+ * In-flow opener (the student clicked for help in the middle of an activity).
+ * No self-introduction, no calibration, no "replies take a few seconds": the
+ * student is already engaged — pick up where they are and ask. Generic by
+ * design (no partner or scene specifics; those arrive via lessonContext).
+ */
+export function buildInFlowOpenerClause(
+  ctx: Pick<SystemPromptContext, 'openingPhase' | 'studentName' | 'lessonContext' | 'inputMode'>,
+): string | null {
+  if (!ctx.openingPhase) return null;
+  const greet = ctx.studentName
+    ? 'Greet the student by name in three or four words'
+    : 'Greet the student in three or four words (no name is available — never speak a placeholder)';
+  const pickUp = ctx.lessonContext?.question
+    ? 'then pick up directly from the question the student was on and what they answered'
+    : 'then pick up directly from what they were just watching or working on (use the lesson context if present)';
+  const wording = ctx.inputMode === 'text' ? 'Write' : 'Speak';
+  return (
+    `${greet}, ${pickUp}, and ask your first question. ${wording} at most two sentences before that question. ` +
+    'Do not introduce yourself, do not explain how you work or how long replies take, do not ask them to find a ' +
+    'quiet place, and do not give an overview of the lesson — they came from it and go back to it.'
+  );
+}
+
 import type { HomeworkStatus } from '@/lib/tutor/practice-assign/status';
 import type { RecapCandidate } from '@/lib/tutor/learner-model/recap-candidate';
 

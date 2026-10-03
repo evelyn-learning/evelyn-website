@@ -51,7 +51,7 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
-import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
@@ -239,6 +239,7 @@ import {
   TUTOR_FA_STALE_ANCHOR_DOWNGRADE,
   TUTOR_STUDENT_HOLD,
   TUTOR_FIRST_SESSION_TIP,
+  TUTOR_INFLOW_ENTRY,
   TUTOR_NOISE_FLOOR_NUDGE,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
@@ -1157,6 +1158,9 @@ export function VoiceTutorRealtime({
   captionSlot,
   hideEndButton = false,
 }: VoiceTutorRealtimeProps) {
+  // In-flow entry (partner spec v1.1): flag-gated so the standard behaviour
+  // can be restored for such tokens without a partner change.
+  const isInFlow = TUTOR_INFLOW_ENTRY && inFlow;
   const [isMicMuted, setIsMicMuted] = useState(false);
   // Sync mirror of isMicMuted for the perception onTranscript callback,
   // which needs the live value synchronously to drop transcripts that were
@@ -2349,6 +2353,8 @@ export function VoiceTutorRealtime({
     // `locatorForPrompt` invariant above): flag-off, nothing may announce
     // homework, so nothing may create it either.
     if (!TUTOR_HOMEWORK_DRAFTS || !TUTOR_CLOSE_NOTES || !studentId || !lessonPlanId) return;
+    // In-flow: the host owns follow-up; nothing to assign.
+    if (isInFlow) return;
     if (loId.startsWith('prereq:')) return;
     if (!(lessonPlanRef.current?.los ?? []).some((l) => l.id === loId)) return;
     if (draftedLosRef.current.has(loId) || homeworkFinalizedRef.current) return;
@@ -7309,7 +7315,7 @@ export function VoiceTutorRealtime({
         // practice_assign_failed status=400. With drafts ON there is always
         // something to ask the finalize about (an evidence draft); with them
         // OFF there is nothing to do without brain LOs.
-        if (studentId && !closeNotesFiredRef.current && (loIds.length > 0 || TUTOR_HOMEWORK_DRAFTS)) {
+        if (studentId && !isInFlow && !closeNotesFiredRef.current && (loIds.length > 0 || TUTOR_HOMEWORK_DRAFTS)) {
           try {
             const headers = { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) };
             // No brain LOs ⇒ skip the draft POST but STILL finalize: an
@@ -11130,7 +11136,7 @@ export function VoiceTutorRealtime({
             // storage looks like a new student and repeats it once —
             // accepted trade-off (owner ruling 2026-08-28, ON for portal
             // AND demo embeds).
-            if (TUTOR_FIRST_SESSION_TIP && firstSessionTipPendingRef.current) {
+            if (TUTOR_FIRST_SESSION_TIP && !isInFlow && firstSessionTipPendingRef.current) {
               firstSessionTipPendingRef.current = false;
               // Text mode has no mic and no "quiet spot" — that's voice
               // advice. Same one-shot latch/debug event, typed-reply wording.
@@ -21003,13 +21009,16 @@ export function VoiceTutorRealtime({
             // (greet, put the first problem up, ask). Every other goal is
             // untouched.
             const isHomeworkOpener = sessionGoal === 'homework-help';
-            openerStaleReorientRef.current = !isHomeworkOpener && beh.journey === 'resume-stale';
-            const openerClause = isHomeworkOpener
-              ? buildHomeworkOpenerClause(openerCtx)
-              : buildOpenerClause({
-                ...openerCtx,
-                agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
-              });
+            openerStaleReorientRef.current = !isHomeworkOpener && !isInFlow && beh.journey === 'resume-stale';
+            // In-flow (partner spec v1.1): pick-up opener, no intro ritual.
+            const openerClause = isInFlow
+              ? buildInFlowOpenerClause({ ...openerCtx, lessonContext, inputMode: sessionMode })
+              : isHomeworkOpener
+                ? buildHomeworkOpenerClause(openerCtx)
+                : buildOpenerClause({
+                  ...openerCtx,
+                  agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
+                });
             // Continuity clause (spec §C.6) — ONE deterministic callback:
             // homework result → next-time intent → recap offer. Only the
             // returning-subscribed journeys get it; diagnostic / trial / new /
@@ -21019,7 +21028,7 @@ export function VoiceTutorRealtime({
             // below can never co-occur).
             // Homework-help never picks one: no recap offer (so
             // armSessionStartRecap never arms) and no homework ack.
-            const continuity = !isHomeworkOpener
+            const continuity = !isHomeworkOpener && !isInFlow
               && TUTOR_RECAP_OFFER
               && learnerExtrasRef.current
               && (beh.journey === 'subscribed-returning' || beh.journey === 'node-revisit' || beh.journey === 'course-complete')
@@ -21030,7 +21039,7 @@ export function VoiceTutorRealtime({
             // re-orient instruction to the same directive (no new machinery;
             // rides the existing per-turn <opening_directive> block).
             const baseDirective =
-              isHomeworkOpener
+              (isHomeworkOpener || isInFlow)
                 ? openerClause
                 : beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
@@ -21064,7 +21073,7 @@ export function VoiceTutorRealtime({
             // (session-1783615226008) and the enrolled-student re-intro.
             openingDirectiveRef.current = baseDirective;
             teacherIntroDirectiveRef.current =
-              teacherPersona && baseDirective && shouldIntroduceTeacher(beh.journey)
+              teacherPersona && baseDirective && !isInFlow && shouldIntroduceTeacher(beh.journey)
                 ? renderTeacherIntroDirective(teacherPersona, { firstTurnV2: TUTOR_FIRST_TURN_V2 })
                 : null;
             // Mid-session style salience: seed the session-static
@@ -21516,7 +21525,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // directive lacks it (see openerClauseCtxRef doc).
             // Homework-help: the seeded homework opener has no agenda
             // preview to add — never overwrite it with the ordinary opener.
-            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help') {
+            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help' && !isInFlow) {
               const rebuilt = buildOpenerClause({
                 ...openerClauseCtxRef.current,
                 agendaItemCount,
