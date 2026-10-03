@@ -550,10 +550,24 @@ export const DRAWING_ANCHOR_RE =
 
 /** True when the text INSTRUCTS the student to draw/graph/sketch/plot/shade/
  *  label a diagram (instruction-anchored — see DRAWING_ANCHOR_RE). Such an
- *  item has no typed answer, so it is neither a generation anchor nor a
- *  served practice/assessment item (practice.ts planToItems). */
+ *  is never a generation anchor; a SERVED item is dropped only when it also
+ *  has no typed-answer cue (`isDrawingOnlyItem`). */
 export function isDrawingInstruction(text: string): boolean {
   return DRAWING_ANCHOR_RE.test(text);
+}
+
+/** A typed-answer cue: a question mark or an answer-asking verb. A served
+ *  item that also carries one ("Draw the Lewis structure… How many lone
+ *  pairs?") still has something to type. */
+export const TYPED_ANSWER_CUE_RE =
+  /\?|\b(find|calculate|compute|determine|how many|how much|what is|what are|state|identify|list|solve|evaluate|give|write the equation|explain)\b/i;
+
+/** SERVING rule (practice.ts planToItems): drop a try-yourself only when it is
+ *  a drawing instruction with NO typed-answer cue — a pure "Sketch/Draw/Graph
+ *  …" whiteboard task. (The generator-anchor rule, `usableAnchor`, stays the
+ *  broader `isDrawingInstruction`: an anchor only seeds generation.) */
+export function isDrawingOnlyItem(text: string): boolean {
+  return isDrawingInstruction(text) && !TYPED_ANSWER_CUE_RE.test(text);
 }
 
 /** The anchor to prompt with: null for a drawing/graphing anchor, so the

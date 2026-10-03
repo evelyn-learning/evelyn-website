@@ -24,6 +24,7 @@ import {
   checkGeneratedAnswer,
   DRAWING_ANCHOR_RE,
   isDrawingInstruction,
+  isDrawingOnlyItem,
   MAX_GENERATIONS_PER_REQUEST,
   PER_STUDENT_LO_DAILY_CAP,
   GLOBAL_DAILY_CAP,
@@ -844,12 +845,35 @@ await test('isDrawingInstruction: instruction-anchored drawing verbs only', () =
   assert.equal(isDrawingInstruction('A 3 kg block slides down a 30° incline. Find its acceleration.'), false);
 });
 
+await test('isDrawingOnlyItem: a drawing instruction WITH a typed-answer cue is kept', () => {
+  for (const text of [
+    'Draw the Lewis structure for water (H₂O). How many lone pairs are on the oxygen?',
+    'Sketch the graph of y = x^2 - 4 and find its x-intercepts.',
+    '(a) Draw a correctly labeled AD-AS graph. (b) Calculate the change in real GDP.',
+  ]) {
+    assert.equal(isDrawingInstruction(text), true, text);
+    assert.equal(isDrawingOnlyItem(text), false, text);
+  }
+});
+
+await test('isDrawingOnlyItem: a pure drawing instruction with no cue is dropped', () => {
+  for (const text of [
+    'Sketch forces on a 3 kg block resting on a 30° incline.',
+    'Graph the line y = 2x + 1.',
+    'Draw a labeled free-body diagram for the block.',
+  ]) {
+    assert.equal(isDrawingOnlyItem(text), true, text);
+  }
+  assert.equal(isDrawingOnlyItem('A 3 kg block slides down a 30° incline. Find its acceleration.'), false);
+});
+
 const DRAWING_PLAN: PlanLite = {
   id: 'gen-fbd',
   topic: 'physics-1',
   los: [{ id: 'gen-fbd.lo-1', standard: 'P1.2' }],
   segments: [
     { kind: 'try_yourself', id: 'try-draw', problem: 'Sketch forces on a 3 kg block resting on a 30° incline.', expectedAnswer: 'gravity, normal, friction' },
+    { kind: 'try_yourself', id: 'try-fbd-q', problem: 'Draw the free-body diagram. How many forces act on the block?', expectedAnswer: '3', responseFormat: 'numeric' },
     { kind: 'try_yourself', id: 'try-a', problem: 'A 3 kg block slides down a frictionless 30° incline. Find a in m/s^2.', expectedAnswer: '4.9', responseFormat: 'numeric' },
     { kind: 'try_yourself', id: 'try-n', problem: 'Find the normal force on the 3 kg block on the 30° incline (N).', expectedAnswer: '25.5', responseFormat: 'numeric' },
   ],
@@ -861,22 +885,22 @@ const drawingPlanSources: PracticeSources = {
   async bankForTopic() { return []; },
 };
 
-await test('practice: a plan with one drawing + two numeric try-yourselves yields the two numeric items', async () => {
+await test('practice: a plan with one pure-drawing, one drawing-with-question and two numeric try-yourselves drops only the pure drawing', async () => {
   const res = await retrievePractice(
     { studentId: 's1', courseId: 'c1', scope: { loId: 'gen-fbd.lo-1' }, count: 5 },
     drawingPlanSources,
     NO_GEN_SOURCES,
   );
-  assert.deepEqual(res.items.map((i) => i.id), ['gen-fbd::try-a', 'gen-fbd::try-n']);
+  assert.deepEqual(res.items.map((i) => i.id), ['gen-fbd::try-fbd-q', 'gen-fbd::try-a', 'gen-fbd::try-n']);
 });
 
-await test('assessment: the same plan builds a calibration set without the drawing item', async () => {
+await test('assessment: the same plan builds a calibration set without the pure drawing item', async () => {
   const set = await buildAssessment(
     { studentId: 's1', courseId: 'c1', loIds: ['gen-fbd.lo-1'], maxPerLo: 5 },
     drawingPlanSources,
     NO_GEN_SOURCES,
   );
-  assert.deepEqual(set.items.map((i) => i.itemId), ['gen-fbd::try-a', 'gen-fbd::try-n']);
+  assert.deepEqual(set.items.map((i) => i.itemId), ['gen-fbd::try-fbd-q', 'gen-fbd::try-a', 'gen-fbd::try-n']);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

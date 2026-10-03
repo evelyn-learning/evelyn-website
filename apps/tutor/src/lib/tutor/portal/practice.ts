@@ -21,7 +21,7 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
-import { generatePracticeItems, logPracticeGenEvent, isDrawingInstruction, type PracticeGenSources } from './practice-gen';
+import { generatePracticeItems, logPracticeGenEvent, isDrawingOnlyItem, type PracticeGenSources } from './practice-gen';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -98,10 +98,10 @@ function planToItems(plan: PlanLite, loId: string): PracticeItem[] {
   for (const seg of plan.segments) {
     if (seg.kind !== 'try_yourself' || seg.offTopic === true || !seg.problem) continue;
     const id = plan.id ? `${plan.id}::${seg.id}` : seg.id;
-    // A drawing/graphing try-yourself ("Sketch the forces…", "Graph the
-    // line…") is a whiteboard task with no typed answer — never serve it as a
-    // practice or assessment item (buildAssessment draws from here too).
-    if (isDrawingInstruction(seg.problem)) {
+    // A pure drawing/graphing try-yourself ("Sketch the forces…", "Graph the
+    // line.") with no typed-answer cue is a whiteboard task — never serve it
+    // as a practice or assessment item (buildAssessment draws from here too).
+    if (isDrawingOnlyItem(seg.problem)) {
       console.log(`[practice] dropped drawing item ${id}`);
       continue;
     }
