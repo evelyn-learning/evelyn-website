@@ -560,7 +560,7 @@ export function isDrawingInstruction(text: string): boolean {
  *  item that also carries one ("Draw the Lewis structure… How many lone
  *  pairs?") still has something to type. */
 export const TYPED_ANSWER_CUE_RE =
-  /\?|\b(find|calculate|compute|determine|how many|how much|what is|what are|state|identify|list|solve|evaluate|give|write the equation|explain)\b/i;
+  /\?|\b(find|calculate|compute|determine|how many|how much|what is|what are|state|identify|list|solve|evaluate|give|write the equation|explain|describe)\b/i;
 
 /** SERVING rule (practice.ts planToItems): drop a try-yourself only when it is
  *  a drawing instruction with NO typed-answer cue — a pure "Sketch/Draw/Graph
