@@ -9,6 +9,7 @@
 
 import { strict as assert } from 'node:assert';
 import {
+  buildInFlowOpenerClause,
   buildOpenerClause,
   buildHomeworkOpenerClause,
   buildSystemPrompt,
@@ -262,6 +263,31 @@ function main() {
     assert(!c.includes('by name in one short sentence'), 'does not demand a name');
     assert(c.includes('never speak a placeholder value'), 'placeholder guard present');
     assert(c.includes('no recap of prior sessions'), 'still bans recap');
+  });
+
+  // ─── In-flow opener (GameClass v1.1) ───
+  test('in-flow opener: name + one pick-up sentence + question, no intro, no tip', () => {
+    const c = buildInFlowOpenerClause({ openingPhase: true, studentName: 'Maya', lessonContext: { title: 'Own a Piece?', question: 'Which is equity?' } });
+    assert.ok(c);
+    assert.match(c!, /greet .*by name/i);
+    assert.match(c!, /at most two sentences/i);
+    assert.match(c!, /question the student was on/i);
+    assert.match(c!, /do not introduce yourself/i);
+    assert.match(c!, /how long replies take/i);
+    assert.doesNotMatch(c!, /Introduce yourself simply|FIRST-SESSION TIP/);
+    assert.doesNotMatch(c!, /gameclass|shark|scrub/i);
+  });
+  test('in-flow opener without question or context still opens from the title/description', () => {
+    const c = buildInFlowOpenerClause({ openingPhase: true, studentName: 'Maya', lessonContext: { title: 'Fractions' } });
+    assert.match(c!, /what they were just watching or working on/i);
+  });
+  test('in-flow opener text mode: no listening words', () => {
+    const c = buildInFlowOpenerClause({ openingPhase: true, studentName: undefined, lessonContext: undefined, inputMode: 'text' });
+    assert.ok(c);
+    assert.doesNotMatch(c!, /\b(listen|hear|say)\b/i);
+  });
+  test('in-flow opener returns null outside the opening phase', () => {
+    assert.equal(buildInFlowOpenerClause({ openingPhase: false, studentName: 'Maya' }), null);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -26,6 +26,7 @@ import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
+import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT } from '@/lib/tutor/orchestrator/flags';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
@@ -61,6 +62,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // sessions — this whitelist silently ate them, so the app-switch reverb
   // investigation ran blind. stage3_ covers the timeout-resume recovery.
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
+  // 2026-10-02 in-flow: fixed first words spoken before the brain's first sentence.
+  'bridge_spoken', 'bridge_audio',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -307,6 +310,9 @@ interface EmbedConfig {
   student_name?: string;
   subject: string;
   topic?: string;
+  /** In-flow fields (partner spec v1.1) — validated by parseLessonContext/parseEntry, not by this type. */
+  title?: string;
+  entry?: 'in-flow';
   level: string;
   session_goal?: SessionGoal;
   engine?: 'standard' | 'premium';
@@ -478,6 +484,10 @@ function EmbedSession() {
 function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedToken?: string }) {
   const openScope = config.open_scope === true;
   const tutorOpens = config.tutor_opens === true;
+  // In-flow fields (partner spec v1.1): clamped by the parser, never rejected.
+  const rawPayload = config as unknown;
+  const lessonContext = useMemo(() => parseLessonContext(rawPayload), [rawPayload]);
+  const inFlow = useMemo(() => parseEntry(rawPayload) === 'in-flow', [rawPayload]);
   // Open-scope (2026-09-10): subject + lessonPlanId become STATE so a
   // mid-session plan swap can move both. For every non-open-scope token
   // neither setter is ever called and the values equal the old consts.
@@ -753,9 +763,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     void refetchMockReview();
   }, [sessionGoal, config.mock_attempt_id, refetchMockReview]);
 
+  // Header title: the host's short `title` when present, else the taxonomy
+  // label clamped to 80 chars (a stuffed `topic` used to show whole).
   const topicDisplayName = useMemo(
-    () => topic ? buildDisplayName(subject, level, topic) : `${subject} — ${level}`,
-    [subject, level, topic]
+    () => lessonContext?.title
+      ? lessonContext.title
+      : topic ? clampTitle(buildDisplayName(subject, level, topic)) : `${subject} — ${level}`,
+    [lessonContext?.title, subject, level, topic]
   );
 
   // Text-mode chat, the auto-greeting, voice callbacks, and homework upload
@@ -1532,6 +1546,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         lessonPlanId={lessonPlanId}
         onProposePlanSwap={handleProposePlanSwap}
         openScope={openScope}
+        lessonContext={lessonContext}
+        inFlow={inFlow}
         voice={openAIVoice}
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}

@@ -50,7 +50,9 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 /** Opener retry after a client-side fetch failure. */
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
+import { bridgeLineFor, BRIDGE_SPOKEN_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
+import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
@@ -239,6 +241,8 @@ import {
   TUTOR_FA_STALE_ANCHOR_DOWNGRADE,
   TUTOR_STUDENT_HOLD,
   TUTOR_FIRST_SESSION_TIP,
+  TUTOR_INFLOW_ENTRY,
+  TUTOR_BRIDGE_LINE,
   TUTOR_NOISE_FLOOR_NUDGE,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
@@ -296,6 +300,10 @@ import {
   TUTOR_CLOSE_NOTES,
   TUTOR_RECAP_OFFER,
 } from '@/lib/tutor/orchestrator/flags';
+
+/** How long after speaking the bridge line its audio may start and still be
+ *  attributed to the bridge (not to the brain's first sentence). */
+const BRIDGE_AUDIO_WINDOW_MS = 4000;
 import {
   shouldFireBargeInKill,
   shouldFireDeferredBargeInKill,
@@ -631,6 +639,10 @@ interface VoiceTutorRealtimeProps {
    *  pinning whiteboard tools to the starting subject. Default false ⇒ every
    *  existing session is byte-identical. */
   openScope?: boolean;
+  /** Host-supplied lesson context (in-flow embeds). Rendered in the prompt's session block. */
+  lessonContext?: LessonContext;
+  /** Student arrived mid-activity: in-flow opener/close, no intro ritual, no first-session tip. */
+  inFlow?: boolean;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -1142,6 +1154,8 @@ export function VoiceTutorRealtime({
   onBeforeTypedSubmit,
   onProposePlanSwap,
   openScope = false,
+  lessonContext,
+  inFlow = false,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -1151,6 +1165,9 @@ export function VoiceTutorRealtime({
   captionSlot,
   hideEndButton = false,
 }: VoiceTutorRealtimeProps) {
+  // In-flow entry (partner spec v1.1): flag-gated so the standard behaviour
+  // can be restored for such tokens without a partner change.
+  const isInFlow = TUTOR_INFLOW_ENTRY && inFlow;
   const [isMicMuted, setIsMicMuted] = useState(false);
   // Sync mirror of isMicMuted for the perception onTranscript callback,
   // which needs the live value synchronously to drop transcripts that were
@@ -1186,6 +1203,14 @@ export function VoiceTutorRealtime({
   // opening-directive attach in callBrainOnce. Default false so SSR and a
   // storage-blocked browser both silently skip the tip.
   const firstSessionTipPendingRef = useRef(false);
+  // Bridge line (fixed first words at the start tap): once per mount.
+  const bridgeSpokenRef = useRef(false);
+  // Set when the bridge line is handed to TTS; its FIRST sentence-start is the
+  // bridge's own audio and must not count as the brain turn's first sentence
+  // (render-sync counter, turn_latency.firstAudio). Cleared on that event or
+  // after BRIDGE_AUDIO_WINDOW_MS if the bridge never played.
+  const bridgeAudioPendingAtRef = useRef<number | null>(null);
+  const bridgeTapAtRef = useRef<number | null>(null);
   // Mount-safe localStorage read (SSR/hydration-safe: first render always
   // renders the `false` default on server + client; this effect then syncs
   // the real per-device choice once mounted — same pattern used by the
@@ -2343,6 +2368,8 @@ export function VoiceTutorRealtime({
     // `locatorForPrompt` invariant above): flag-off, nothing may announce
     // homework, so nothing may create it either.
     if (!TUTOR_HOMEWORK_DRAFTS || !TUTOR_CLOSE_NOTES || !studentId || !lessonPlanId) return;
+    // In-flow: the host owns follow-up; nothing to assign.
+    if (isInFlow) return;
     if (loId.startsWith('prereq:')) return;
     if (!(lessonPlanRef.current?.los ?? []).some((l) => l.id === loId)) return;
     if (draftedLosRef.current.has(loId) || homeworkFinalizedRef.current) return;
@@ -7294,8 +7321,8 @@ export function VoiceTutorRealtime({
         // (Kept for the gates that still refuse outright; the no-LO case is
         // now decided by the finalize's own answer below, because a draft
         // built from in-session evidence can still be promoted.)
-        if (!studentId || closeNotesFiredRef.current || (!loIds.length && !TUTOR_HOMEWORK_DRAFTS)) {
-          const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+        if (!studentId || isInFlow || closeNotesFiredRef.current || (!loIds.length && !TUTOR_HOMEWORK_DRAFTS)) {
+          const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : isInFlow ? 'in-flow' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
           onDebugEvent?.('practice_assign_skipped', `${reason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}]`);
         }
         // Task 13 (Praveen 2026-09-07): the assignment must EXIST before the
@@ -7311,7 +7338,7 @@ export function VoiceTutorRealtime({
         // practice_assign_failed status=400. With drafts ON there is always
         // something to ask the finalize about (an evidence draft); with them
         // OFF there is nothing to do without brain LOs.
-        if (studentId && !closeNotesFiredRef.current && (loIds.length > 0 || TUTOR_HOMEWORK_DRAFTS)) {
+        if (studentId && !isInFlow && !closeNotesFiredRef.current && (loIds.length > 0 || TUTOR_HOMEWORK_DRAFTS)) {
           try {
             const headers = { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) };
             // No brain LOs ⇒ skip the draft POST but STILL finalize: an
@@ -11130,6 +11157,11 @@ export function VoiceTutorRealtime({
               : openingDirectiveRef.current;
             teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
+            // The client already spoke the greeting (bridge line): the brain
+            // must not greet again on its first opening turn.
+            if (bridgeSpokenRef.current && openingDirectiveBrainTurnsRef.current === 1) {
+              openingDirective += BRIDGE_SPOKEN_DIRECTIVE;
+            }
             // R58 first-session tip: rides the first opening turn only,
             // like the teacher intro above. Keyed per-browser via
             // localStorage (set at attach time), so a returning student on
@@ -11137,7 +11169,7 @@ export function VoiceTutorRealtime({
             // storage looks like a new student and repeats it once —
             // accepted trade-off (owner ruling 2026-08-28, ON for portal
             // AND demo embeds).
-            if (TUTOR_FIRST_SESSION_TIP && firstSessionTipPendingRef.current) {
+            if (TUTOR_FIRST_SESSION_TIP && !isInFlow && firstSessionTipPendingRef.current) {
               firstSessionTipPendingRef.current = false;
               // Text mode has no mic and no "quiet spot" — that's voice
               // advice. Same one-shot latch/debug event, typed-reply wording.
@@ -18298,6 +18330,24 @@ export function VoiceTutorRealtime({
       // turn_latency: first audible sentence of the turn (first-wins; must
       // stamp BEFORE the render-sync flag gate — instrumentation is
       // unconditional).
+      // Bridge line audio: the first sentence-start within the window after
+      // the bridge was spoken belongs to the bridge, not to the brain turn.
+      // Record it as its own mark and keep it out of the per-turn counters.
+      if (bridgeAudioPendingAtRef.current !== null) {
+        const since = Date.now() - bridgeAudioPendingAtRef.current;
+        if (since > BRIDGE_AUDIO_WINDOW_MS) {
+          bridgeAudioPendingAtRef.current = null; // never played — stop waiting
+        } else if (event === 'sentence-start') {
+          bridgeAudioPendingAtRef.current = null;
+          onDebugEvent?.('bridge_audio', `start→audio=${bridgeTapAtRef.current ? Date.now() - bridgeTapAtRef.current : since}ms`);
+          return;
+        } else {
+          return; // word/drain events of the bridge itself
+        }
+      }
+      // A drain before any brain sentence has started is the bridge finishing:
+      // nothing to force-flush (force-flushing would release opener renders early).
+      if (event === 'drain' && bridgeSpokenRef.current && ttsPlaybackStartedCountRef.current === 0) return;
       if (event === 'sentence-start') {
         turnLatencyRef.current?.mark('firstAudio', Date.now());
         if (turnLatencyAwaitingAudioRef.current && turnLatencyRef.current) {
@@ -21032,13 +21082,16 @@ export function VoiceTutorRealtime({
             // (greet, put the first problem up, ask). Every other goal is
             // untouched.
             const isHomeworkOpener = sessionGoal === 'homework-help';
-            openerStaleReorientRef.current = !isHomeworkOpener && beh.journey === 'resume-stale';
-            const openerClause = isHomeworkOpener
-              ? buildHomeworkOpenerClause(openerCtx)
-              : buildOpenerClause({
-                ...openerCtx,
-                agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
-              });
+            openerStaleReorientRef.current = !isHomeworkOpener && !isInFlow && beh.journey === 'resume-stale';
+            // In-flow (partner spec v1.1): pick-up opener, no intro ritual.
+            const openerClause = isInFlow
+              ? buildInFlowOpenerClause({ ...openerCtx, lessonContext, inputMode: sessionMode })
+              : isHomeworkOpener
+                ? buildHomeworkOpenerClause(openerCtx)
+                : buildOpenerClause({
+                  ...openerCtx,
+                  agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
+                });
             // Continuity clause (spec §C.6) — ONE deterministic callback:
             // homework result → next-time intent → recap offer. Only the
             // returning-subscribed journeys get it; diagnostic / trial / new /
@@ -21048,7 +21101,7 @@ export function VoiceTutorRealtime({
             // below can never co-occur).
             // Homework-help never picks one: no recap offer (so
             // armSessionStartRecap never arms) and no homework ack.
-            const continuity = !isHomeworkOpener
+            const continuity = !isHomeworkOpener && !isInFlow
               && TUTOR_RECAP_OFFER
               && learnerExtrasRef.current
               && (beh.journey === 'subscribed-returning' || beh.journey === 'node-revisit' || beh.journey === 'course-complete')
@@ -21059,7 +21112,7 @@ export function VoiceTutorRealtime({
             // re-orient instruction to the same directive (no new machinery;
             // rides the existing per-turn <opening_directive> block).
             const baseDirective =
-              isHomeworkOpener
+              (isHomeworkOpener || isInFlow)
                 ? openerClause
                 : beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
@@ -21093,7 +21146,7 @@ export function VoiceTutorRealtime({
             // (session-1783615226008) and the enrolled-student re-intro.
             openingDirectiveRef.current = baseDirective;
             teacherIntroDirectiveRef.current =
-              teacherPersona && baseDirective && shouldIntroduceTeacher(beh.journey)
+              teacherPersona && baseDirective && !isInFlow && shouldIntroduceTeacher(beh.journey)
                 ? renderTeacherIntroDirective(teacherPersona, { firstTurnV2: TUTOR_FIRST_TURN_V2 })
                 : null;
             // Mid-session style salience: seed the session-static
@@ -21124,6 +21177,8 @@ export function VoiceTutorRealtime({
           inputMode: sessionMode,
           // Open-scope demo (2026-09-10): appends the Rule 7(b) override.
           ...(openScope ? { openScope: true } : {}),
+          ...(lessonContext ? { lessonContext } : {}),
+          ...(inFlow ? { inFlow: true } : {}),
           // R49: withdraw the bare-board licence for the OPENING turn only.
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
@@ -21497,6 +21552,28 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // this, audio queues silently until some other gesture (like
         // unmute) inadvertently unlocks the AudioContext.
         realtime.unlockAudio(); audioUnlockedRef.current = true;
+        // Bridge line: fixed first words before the brain's first sentence
+        // (no model). Once per mount; never on resume or in text mode.
+        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+          const line = bridgeLineFor({
+            studentName, title: lessonContext?.title, inFlow: isInFlow,
+            // Text mode returned above (typed start, no dead air to cover).
+            inputMode: 'voice', resume: Boolean(resumeState),
+          });
+          if (line) {
+            bridgeSpokenRef.current = true;
+            bridgeAudioPendingAtRef.current = Date.now();
+            bridgeTapAtRef.current = Date.now();
+            try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { bridgeAudioPendingAtRef.current = null; /* skip; brain follows */ }
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              { id: `tutor-${Date.now()}-bridge`, timestamp: new Date(), role: 'tutor', text: line } as TranscriptEntry,
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
+            onTrackInteraction?.('message', line, undefined, 'tutor');
+            onDebugEvent?.('bridge_spoken', line);
+          }
+        }
         if (!claudeBrainMode) {
           const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
           realtime.sendTextMessage(greetingMessage);
@@ -21543,7 +21620,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // directive lacks it (see openerClauseCtxRef doc).
             // Homework-help: the seeded homework opener has no agenda
             // preview to add — never overwrite it with the ordinary opener.
-            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help') {
+            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help' && !isInFlow) {
               const rebuilt = buildOpenerClause({
                 ...openerClauseCtxRef.current,
                 agendaItemCount,
@@ -22136,7 +22213,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Also exit warm-up when the first tutor turn lands.
   useEffect(() => {
     if (!isWarmingUp) return;
-    const hasTutorTurn = transcriptRef.current.some((t) => t.role === 'tutor' && t.text.trim());
+    // The client-spoken bridge line is not a tutor TURN — warmup (and its
+    // watchdog) must wait for the brain's first sentence.
+    const hasTutorTurn = transcriptRef.current.some((t) => t.role === 'tutor' && t.text.trim() && !t.id.endsWith('-bridge'));
     if (hasTutorTurn) setIsWarmingUp(false);
   });
 

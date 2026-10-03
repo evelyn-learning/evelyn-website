@@ -292,6 +292,14 @@ export function useCartesiaSonicWS(options: UseCartesiaSonicWSOptions): UseCarte
     };
   }, [enabled]);
 
+  // Prewarm: open the socket (and mint its token) as soon as TTS over WS is
+  // enabled, so the FIRST sentence does not pay the handshake (measured
+  // 2026-10-02: 629 ms to first audio vs ~130 ms once warm). ensureOpen is
+  // idempotent; a socket closed by idleness reopens on the next speak.
+  useEffect(() => {
+    if (enabled) void ensureOpen();
+  }, [enabled, ensureOpen]);
+
   // Stable identity — consumers fold this into useCallback dep arrays.
   return useMemo(() => ({ synthesize, cancel, prewarm }), [synthesize, cancel, prewarm]);
 }
