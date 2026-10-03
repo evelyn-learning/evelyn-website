@@ -1826,7 +1826,8 @@ export default function TutorSession(props: TutorSessionProps) {
         sessionGoal={sessionGoal}
         homeworkProgress={homeworkProgress}
         homeworkPlanPending={!!selectedLessonPlanId && settledPlanId !== selectedLessonPlanId}
-        lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : topicLabel}
+        // Host-supplied `title` (in-flow embeds) wins over the plan's title; otherwise unchanged.
+        lessonTitle={lessonContext?.title ?? (lessonProgress.plan ? lessonProgress.plan.title : topicLabel)}
         subtitle={
           lessonProgress.plan
             ? `${topicDisplayName} · grade ${lessonProgress.plan.grade}`

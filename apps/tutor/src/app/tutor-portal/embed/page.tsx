@@ -63,7 +63,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // investigation ran blind. stage3_ covers the timeout-resume recovery.
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
   // 2026-10-02 in-flow: fixed first words spoken before the brain's first sentence.
-  'bridge_spoken',
+  'bridge_spoken', 'bridge_audio',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -763,10 +763,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // Header title: the host's short `title` when present, else the taxonomy
   // label clamped to 80 chars (a stuffed `topic` used to show whole).
   const topicDisplayName = useMemo(
-    () => config.title
-      ? clampTitle(config.title)
+    () => lessonContext?.title
+      ? lessonContext.title
       : topic ? clampTitle(buildDisplayName(subject, level, topic)) : `${subject} — ${level}`,
-    [config.title, subject, level, topic]
+    [lessonContext?.title, subject, level, topic]
   );
 
   // Text-mode chat, the auto-greeting, voice callbacks, and homework upload

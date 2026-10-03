@@ -299,6 +299,10 @@ import {
   TUTOR_CLOSE_NOTES,
   TUTOR_RECAP_OFFER,
 } from '@/lib/tutor/orchestrator/flags';
+
+/** How long after speaking the bridge line its audio may start and still be
+ *  attributed to the bridge (not to the brain's first sentence). */
+const BRIDGE_AUDIO_WINDOW_MS = 4000;
 import {
   shouldFireBargeInKill,
   shouldFireDeferredBargeInKill,
@@ -1200,6 +1204,12 @@ export function VoiceTutorRealtime({
   const firstSessionTipPendingRef = useRef(false);
   // Bridge line (fixed first words at the start tap): once per mount.
   const bridgeSpokenRef = useRef(false);
+  // Set when the bridge line is handed to TTS; its FIRST sentence-start is the
+  // bridge's own audio and must not count as the brain turn's first sentence
+  // (render-sync counter, turn_latency.firstAudio). Cleared on that event or
+  // after BRIDGE_AUDIO_WINDOW_MS if the bridge never played.
+  const bridgeAudioPendingAtRef = useRef<number | null>(null);
+  const bridgeTapAtRef = useRef<number | null>(null);
   // Mount-safe localStorage read (SSR/hydration-safe: first render always
   // renders the `false` default on server + client; this effect then syncs
   // the real per-device choice once mounted — same pattern used by the
@@ -7302,8 +7312,8 @@ export function VoiceTutorRealtime({
         // (Kept for the gates that still refuse outright; the no-LO case is
         // now decided by the finalize's own answer below, because a draft
         // built from in-session evidence can still be promoted.)
-        if (!studentId || closeNotesFiredRef.current || (!loIds.length && !TUTOR_HOMEWORK_DRAFTS)) {
-          const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+        if (!studentId || isInFlow || closeNotesFiredRef.current || (!loIds.length && !TUTOR_HOMEWORK_DRAFTS)) {
+          const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : isInFlow ? 'in-flow' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
           onDebugEvent?.('practice_assign_skipped', `${reason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}]`);
         }
         // Task 13 (Praveen 2026-09-07): the assignment must EXIST before the
@@ -18284,6 +18294,24 @@ export function VoiceTutorRealtime({
       // turn_latency: first audible sentence of the turn (first-wins; must
       // stamp BEFORE the render-sync flag gate — instrumentation is
       // unconditional).
+      // Bridge line audio: the first sentence-start within the window after
+      // the bridge was spoken belongs to the bridge, not to the brain turn.
+      // Record it as its own mark and keep it out of the per-turn counters.
+      if (bridgeAudioPendingAtRef.current !== null) {
+        const since = Date.now() - bridgeAudioPendingAtRef.current;
+        if (since > BRIDGE_AUDIO_WINDOW_MS) {
+          bridgeAudioPendingAtRef.current = null; // never played — stop waiting
+        } else if (event === 'sentence-start') {
+          bridgeAudioPendingAtRef.current = null;
+          onDebugEvent?.('bridge_audio', `start→audio=${bridgeTapAtRef.current ? Date.now() - bridgeTapAtRef.current : since}ms`);
+          return;
+        } else {
+          return; // word/drain events of the bridge itself
+        }
+      }
+      // A drain before any brain sentence has started is the bridge finishing:
+      // nothing to force-flush (force-flushing would release opener renders early).
+      if (event === 'drain' && bridgeSpokenRef.current && ttsPlaybackStartedCountRef.current === 0) return;
       if (event === 'sentence-start') {
         turnLatencyRef.current?.mark('firstAudio', Date.now());
         if (turnLatencyAwaitingAudioRef.current && turnLatencyRef.current) {
@@ -21498,7 +21526,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           });
           if (line) {
             bridgeSpokenRef.current = true;
-            try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { /* skip; brain follows */ }
+            bridgeAudioPendingAtRef.current = Date.now();
+            bridgeTapAtRef.current = Date.now();
+            try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { bridgeAudioPendingAtRef.current = null; /* skip; brain follows */ }
             transcriptRef.current = [
               ...transcriptRef.current,
               { id: `tutor-${Date.now()}-bridge`, timestamp: new Date(), role: 'tutor', text: line } as TranscriptEntry,
@@ -22147,7 +22177,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Also exit warm-up when the first tutor turn lands.
   useEffect(() => {
     if (!isWarmingUp) return;
-    const hasTutorTurn = transcriptRef.current.some((t) => t.role === 'tutor' && t.text.trim());
+    // The client-spoken bridge line is not a tutor TURN — warmup (and its
+    // watchdog) must wait for the brain's first sentence.
+    const hasTutorTurn = transcriptRef.current.some((t) => t.role === 'tutor' && t.text.trim() && !t.id.endsWith('-bridge'));
     if (hasTutorTurn) setIsWarmingUp(false);
   });
 

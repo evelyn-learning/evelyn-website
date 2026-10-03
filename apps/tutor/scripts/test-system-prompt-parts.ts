@@ -58,7 +58,7 @@ if (parts) {
   checks.push(['in-flow: session has the lesson context block', p.session.includes('## Lesson context') && p.session.includes('Clip: Two offers on the table.')]);
   checks.push(['in-flow: session has the question block', p.session.includes('Question: Which is equity?')]);
   checks.push(['in-flow: session has the hand-back close clause', p.session.includes(builder.IN_FLOW_CLOSE_CLAUSE)]);
-  checks.push(['in-flow blocks sit before pronunciation/persona (inside session context)', p.session.indexOf('## Lesson context') < p.session.indexOf('## Pedagogy spine') === false && p.session.indexOf('## Lesson context') > p.session.indexOf('## Current Session Context')]);
+  checks.push(['in-flow blocks sit inside the session context section', p.session.indexOf('## Lesson context') > p.session.indexOf('## Current Session Context') && p.session.indexOf('## Pedagogy spine') < p.session.indexOf('## Lesson context')]);
   const onlyCtx = parts({ ...PROMPT_MATRIX.math_g8, lessonContext: { description: 'A lesson on slopes.' } } as builder.SystemPromptContext);
   checks.push(['lesson context without in-flow renders, no close clause', onlyCtx.session.includes('Description: A lesson on slopes.') && !onlyCtx.session.includes(builder.IN_FLOW_CLOSE_CLAUSE)]);
   checks.push(['prompt stays generic', !/gameclass|shark|scrub/i.test(p.session)]);

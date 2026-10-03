@@ -26,7 +26,8 @@ function str(v: unknown, max: number): string | undefined {
   if (typeof v !== 'string') return undefined;
   const t = v.trim();
   if (!t) return undefined;
-  return t.length > max ? t.slice(0, max) : t;
+  // Count code points so a clamp never splits a surrogate pair.
+  return t.length > max ? Array.from(t).slice(0, max).join('') : t;
 }
 
 function strList(v: unknown, maxItems: number, maxEach: number): string[] | undefined {
