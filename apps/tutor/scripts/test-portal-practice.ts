@@ -36,7 +36,9 @@ const planWithLo: PlanLite = {
   los: [{ id: LO, standard: 'AP-STATS-1.10' }],
   segments: [
     { kind: 'try_yourself', id: 'ty-1', problem: 'Find the z-score', expectedAnswer: '1.5' },
-    { kind: 'try_yourself', id: 'ty-2', problem: 'Shade the region', responseFormat: 'frq' },
+    // Typed FRQ (not a drawing instruction — G2 drops "Shade the region…"-style
+    // whiteboard tasks from served practice; covered in practice-gen.test.ts).
+    { kind: 'try_yourself', id: 'ty-2', problem: 'Explain what the shaded region represents', responseFormat: 'frq' },
     { kind: 'try_yourself', id: 'ty-off', problem: 'Off-topic bait', offTopic: true },
     { kind: 'worked_example', id: 'we-1', problem: 'not a try-yourself' },
   ],

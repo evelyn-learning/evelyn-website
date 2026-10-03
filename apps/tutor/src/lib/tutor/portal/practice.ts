@@ -21,7 +21,7 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
-import { generatePracticeItems, logPracticeGenEvent, type PracticeGenSources } from './practice-gen';
+import { generatePracticeItems, logPracticeGenEvent, isDrawingInstruction, type PracticeGenSources } from './practice-gen';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -97,11 +97,19 @@ function planToItems(plan: PlanLite, loId: string): PracticeItem[] {
   const items: PracticeItem[] = [];
   for (const seg of plan.segments) {
     if (seg.kind !== 'try_yourself' || seg.offTopic === true || !seg.problem) continue;
+    const id = plan.id ? `${plan.id}::${seg.id}` : seg.id;
+    // A drawing/graphing try-yourself ("Sketch the forces…", "Graph the
+    // line…") is a whiteboard task with no typed answer — never serve it as a
+    // practice or assessment item (buildAssessment draws from here too).
+    if (isDrawingInstruction(seg.problem)) {
+      console.log(`[practice] dropped drawing item ${id}`);
+      continue;
+    }
     items.push({
       // Qualify with the plan id so the answer key resolves to THIS plan's
       // segment (segment ids collide across plans). Bare fallback only when a
       // caller supplies an id-less PlanLite (test fixtures).
-      id: plan.id ? `${plan.id}::${seg.id}` : seg.id,
+      id,
       source: 'plan-try-yourself',
       problemText: seg.problem,
       expectedAnswer: seg.expectedAnswer,

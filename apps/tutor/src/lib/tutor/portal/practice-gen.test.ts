@@ -23,6 +23,7 @@ import {
   usableAnchor,
   checkGeneratedAnswer,
   DRAWING_ANCHOR_RE,
+  isDrawingInstruction,
   MAX_GENERATIONS_PER_REQUEST,
   PER_STUDENT_LO_DAILY_CAP,
   GLOBAL_DAILY_CAP,
@@ -35,6 +36,9 @@ import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { ProblemBank } from '@/models/ProblemBank';
 import { PracticeGenCounter } from '@/models/PracticeGenCounter';
 import * as dbModule from '@core/db';
+import { retrievePractice, type PracticeSources, type PlanLite } from './practice';
+import { buildAssessment } from './assessment';
+import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 
 let passed = 0;
 let failed = 0;
@@ -829,7 +833,52 @@ await test('checkGeneratedAnswer: names the gate branch that rejected', async ()
   assert.equal(ok.ok, true);
 });
 
+// G2 (2026-10-03): a drawing/graphing try-yourself ("Sketch forces on…",
+// "Draw a labeled free-body diagram…", "Graph the line…") can't be answered
+// in a typed practice/assessment item — it must never be SERVED.
+await test('isDrawingInstruction: instruction-anchored drawing verbs only', () => {
+  assert.equal(isDrawingInstruction('Sketch forces on a 3 kg block resting on a 30° incline.'), true);
+  assert.equal(isDrawingInstruction('Draw a labeled free-body diagram for the block.'), true);
+  assert.equal(isDrawingInstruction('Graph the line y = 2x + 1.'), true);
+  assert.equal(isDrawingInstruction('The graph of f passes through (1, 2); find f(3).'), false);
+  assert.equal(isDrawingInstruction('A 3 kg block slides down a 30° incline. Find its acceleration.'), false);
+});
+
+const DRAWING_PLAN: PlanLite = {
+  id: 'gen-fbd',
+  topic: 'physics-1',
+  los: [{ id: 'gen-fbd.lo-1', standard: 'P1.2' }],
+  segments: [
+    { kind: 'try_yourself', id: 'try-draw', problem: 'Sketch forces on a 3 kg block resting on a 30° incline.', expectedAnswer: 'gravity, normal, friction' },
+    { kind: 'try_yourself', id: 'try-a', problem: 'A 3 kg block slides down a frictionless 30° incline. Find a in m/s^2.', expectedAnswer: '4.9', responseFormat: 'numeric' },
+    { kind: 'try_yourself', id: 'try-n', problem: 'Find the normal force on the 3 kg block on the 30° incline (N).', expectedAnswer: '25.5', responseFormat: 'numeric' },
+  ],
+};
+const drawingPlanSources: PracticeSources = {
+  async plansForLoId(loId) { return loId === 'gen-fbd.lo-1' ? [DRAWING_PLAN] : []; },
+  async plansForTopic() { return []; },
+  async bankForLoId() { return []; },
+  async bankForTopic() { return []; },
+};
+
+await test('practice: a plan with one drawing + two numeric try-yourselves yields the two numeric items', async () => {
+  const res = await retrievePractice(
+    { studentId: 's1', courseId: 'c1', scope: { loId: 'gen-fbd.lo-1' }, count: 5 },
+    drawingPlanSources,
+    NO_GEN_SOURCES,
+  );
+  assert.deepEqual(res.items.map((i) => i.id), ['gen-fbd::try-a', 'gen-fbd::try-n']);
+});
+
+await test('assessment: the same plan builds a calibration set without the drawing item', async () => {
+  const set = await buildAssessment(
+    { studentId: 's1', courseId: 'c1', loIds: ['gen-fbd.lo-1'], maxPerLo: 5 },
+    drawingPlanSources,
+    NO_GEN_SOURCES,
+  );
+  assert.deepEqual(set.items.map((i) => i.itemId), ['gen-fbd::try-a', 'gen-fbd::try-n']);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
 })();
-

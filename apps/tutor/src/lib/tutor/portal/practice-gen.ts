@@ -548,12 +548,20 @@ const PERCENT_ANSWER_CLAUSE =
 export const DRAWING_ANCHOR_RE =
   /(?:^\s*|[.!?:;)]\s*|\b(?:please|then|now|and)\s+)(?:graph(?:s|ing|ed)?|draw(?:n|ing|s)?|sketch(?:es|ing|ed)?|plot(?:s|ting|ted)?|shad(?:e|es|ing|ed)|label (?:the )?(?:diagram|figure))\b/i;
 
+/** True when the text INSTRUCTS the student to draw/graph/sketch/plot/shade/
+ *  label a diagram (instruction-anchored — see DRAWING_ANCHOR_RE). Such an
+ *  item has no typed answer, so it is neither a generation anchor nor a
+ *  served practice/assessment item (practice.ts planToItems). */
+export function isDrawingInstruction(text: string): boolean {
+  return DRAWING_ANCHOR_RE.test(text);
+}
+
 /** The anchor to prompt with: null for a drawing/graphing anchor, so the
  *  skill-only (no-anchor) branch of `buildUserPrompt` writes a typed-answer
  *  problem for the LO/topic instead. */
 export function usableAnchor(anchor: PracticeItem | null): PracticeItem | null {
   if (!anchor) return null;
-  return DRAWING_ANCHOR_RE.test(anchor.problemText) ? null : anchor;
+  return isDrawingInstruction(anchor.problemText) ? null : anchor;
 }
 
 function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeItem | null, slotIndex: number): string {
