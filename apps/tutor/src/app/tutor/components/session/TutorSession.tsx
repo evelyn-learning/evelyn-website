@@ -163,6 +163,8 @@ export interface TutorSessionProps {
   isTrial?: VTRProps['isTrial'];
   /** Open-scope demo (2026-09-10) — forwarded to the runtime. */
   openScope?: VTRProps['openScope'];
+  lessonContext?: VTRProps['lessonContext'];
+  inFlow?: VTRProps['inFlow'];
   /** Explicit session-target kind (embed `target_kind` / dev hook) —
    *  'diagnostic' makes the opening behavior no-op. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. Only consumed
@@ -254,7 +256,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
-    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope,
+    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope, lessonContext, inFlow,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
   } = props;
@@ -1393,6 +1395,8 @@ export default function TutorSession(props: TutorSessionProps) {
         onOpenerRecord={onOpenerRecord}
         isTrial={isTrial}
         openScope={openScope}
+        lessonContext={lessonContext}
+        inFlow={inFlow}
         targetKind={targetKind}
         checkpointStale={checkpointStale}
         teacherPersona={teacherPersona}

@@ -50,6 +50,7 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 /** Opener retry after a client-side fetch failure. */
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
 import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -630,6 +631,10 @@ interface VoiceTutorRealtimeProps {
    *  pinning whiteboard tools to the starting subject. Default false ⇒ every
    *  existing session is byte-identical. */
   openScope?: boolean;
+  /** Host-supplied lesson context (in-flow embeds). Rendered in the prompt's session block. */
+  lessonContext?: LessonContext;
+  /** Student arrived mid-activity: in-flow opener/close, no intro ritual, no first-session tip. */
+  inFlow?: boolean;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -1141,6 +1146,8 @@ export function VoiceTutorRealtime({
   onBeforeTypedSubmit,
   onProposePlanSwap,
   openScope = false,
+  lessonContext,
+  inFlow = false,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -21088,6 +21095,8 @@ export function VoiceTutorRealtime({
           inputMode: sessionMode,
           // Open-scope demo (2026-09-10): appends the Rule 7(b) override.
           ...(openScope ? { openScope: true } : {}),
+          ...(lessonContext ? { lessonContext } : {}),
+          ...(inFlow ? { inFlow: true } : {}),
           // R49: withdraw the bare-board licence for the OPENING turn only.
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
