@@ -29,8 +29,8 @@ const ITEM_WITHOUT_PASSAGE = 'evelyn.testprep.act.english.grammar-rules.v1::try-
 
 (async () => {
 
-await test('resolveGradeItem resolves passageId -> non-empty passageText for a passage-bearing try_yourself', () => {
-  const item = resolveGradeItem(ITEM_WITH_PASSAGE);
+await test('resolveGradeItem resolves passageId -> non-empty passageText for a passage-bearing try_yourself', async () => {
+  const item = await resolveGradeItem(ITEM_WITH_PASSAGE);
   assert.ok(item, 'expected item to resolve');
   assert.ok(item!.rubric, 'expected the item to carry its rubric (sanity check on itemId)');
   assert.ok(item!.passageText && item!.passageText.length > 0, 'expected non-empty passageText');
@@ -40,8 +40,8 @@ await test('resolveGradeItem resolves passageId -> non-empty passageText for a p
   );
 });
 
-await test('resolveGradeItem leaves passageText undefined for a segment with no passageId (back-compat)', () => {
-  const item = resolveGradeItem(ITEM_WITHOUT_PASSAGE);
+await test('resolveGradeItem leaves passageText undefined for a segment with no passageId (back-compat)', async () => {
+  const item = await resolveGradeItem(ITEM_WITHOUT_PASSAGE);
   assert.ok(item, 'expected item to resolve');
   assert.equal(item!.passageText, undefined);
 });

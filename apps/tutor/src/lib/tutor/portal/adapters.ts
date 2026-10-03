@@ -8,7 +8,7 @@
 
 import connectDB from '@core/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
-import { SEED_PLANS, findStoredPlansByLoId } from '@/lib/tutor/lesson-plan/store';
+import { SEED_PLANS, findStoredPlansByLoId, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
 import type { PracticeSources, PlanLite, BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
@@ -163,19 +163,78 @@ function splitQualifiedItemId(itemId: string): { planId: string; segId: string }
   return { planId: itemId.slice(0, i), segId: itemId.slice(i + 2) };
 }
 
-/** Resolve the try-yourself segment for a qualified plan-TY item id — scoped to
- *  the NAMED plan (segment ids are not globally unique, so a whole-corpus scan
- *  returns the wrong plan's answer key). Returns null when unqualified or the
- *  plan/segment is gone. */
-function resolveTrySegment(itemId: string): SegmentTryYourself | null {
-  const q = splitQualifiedItemId(itemId);
-  if (!q) return null;
-  const plan = SEED_PLANS.find((p) => p.id === q.planId);
-  if (!plan) return null;
+/** Lookups the answer-key resolvers need beyond the in-code SEED_PLANS —
+ *  injectable so tests need no live DB. Production: `defaultItemKeyDeps`. */
+export interface ItemKeyDeps {
+  /** A Mongo-stored (runtime-generated, `gen-<uuid>…`) lesson plan by id. */
+  getStoredPlan(planId: string): Promise<LessonPlan | null>;
+  /** A non-mock ProblemBank row by its globally-unique id. */
+  findBankRow(itemId: string): Promise<IProblemBank | null>;
+}
+
+let warnedKeyLookup = false;
+/** One log line per process for a failed key lookup (DB down/unconfigured):
+ *  the resolvers degrade to null (→ 404 / ungraded), never throw. */
+function warnKeyLookupOnce(what: string, err: unknown): void {
+  if (warnedKeyLookup) return;
+  warnedKeyLookup = true;
+  console.warn(`[portal] answer-key ${what} lookup failed — resolving as unknown:`, (err as Error)?.message ?? err);
+}
+
+export const defaultItemKeyDeps: ItemKeyDeps = {
+  // getLessonPlan checks seeds then Mongo, and already returns null on a DB
+  // failure; callers only reach it for non-seed plan ids.
+  getStoredPlan: (planId) => getLessonPlan(planId),
+  async findBankRow(itemId) {
+    // Mock-form rows never resolve as a gradable item outside the mock-exam
+    // flow (Task 2, mock-exams platform).
+    await connectDB();
+    return (await ProblemBank.findOne({ id: itemId, bankScope: { $ne: 'mock' } }).lean()) as unknown as IProblemBank | null;
+  },
+};
+
+function findTrySegment(plan: LessonPlan, segId: string): SegmentTryYourself | null {
   for (const seg of plan.segments) {
-    if (seg.id === q.segId && seg.kind === 'try_yourself') return seg;
+    if (seg.id === segId && seg.kind === 'try_yourself') return seg;
   }
   return null;
+}
+
+/** Resolve the try-yourself segment for a qualified plan-TY item id — scoped to
+ *  the NAMED plan (segment ids are not globally unique, so a whole-corpus scan
+ *  returns the wrong plan's answer key). SEED_PLANS first (a seed id never
+ *  touches the DB); otherwise the Mongo-stored plan (runtime-generated
+ *  `gen-<uuid>…` courses live only there). Returns null when unqualified, the
+ *  plan/segment is gone, or the lookup fails. */
+async function resolveTrySegment(itemId: string, deps: ItemKeyDeps): Promise<SegmentTryYourself | null> {
+  const q = splitQualifiedItemId(itemId);
+  if (!q) return null;
+  const seed = SEED_PLANS.find((p) => p.id === q.planId);
+  if (seed) return findTrySegment(seed, q.segId);
+  let plan: LessonPlan | null;
+  try {
+    plan = await deps.getStoredPlan(q.planId);
+  } catch (err) {
+    warnKeyLookupOnce('stored-plan', err);
+    return null;
+  }
+  if (!plan || !Array.isArray(plan.segments)) return null;
+  const seg = findTrySegment(plan, q.segId);
+  if (!seg) return null;
+  // Stored plans round-trip through Mongo, which turns absent optionals into
+  // literal nulls (see toPlanLite above). Strip them so a `rubric: null` is
+  // "no rubric", not a crash in the grader.
+  return Object.fromEntries(Object.entries(seg).filter(([, v]) => v !== null)) as SegmentTryYourself;
+}
+
+/** Bank row by bare id, never throwing (null + one log line on failure). */
+async function resolveBankRow(itemId: string, deps: ItemKeyDeps): Promise<IProblemBank | null> {
+  try {
+    return await deps.findBankRow(itemId);
+  } catch (err) {
+    warnKeyLookupOnce('bank', err);
+    return null;
+  }
 }
 
 /** Resolve a `passageId` (and/or a Synthesis `passageIds[]` packet) to the full
@@ -203,19 +262,35 @@ export function resolvePassageText(
   return chunks.length ? chunks.join('\n\n---\n\n') : undefined;
 }
 
-/** Resolve a gradable FRQ item by id from the curated try-yourself seeds.
- *  Item ids are plan-qualified (`${planId}::${segmentId}`) so the answer key
- *  resolves to the exact authoring plan. A segment with no rubric grades via
- *  the legacy single-answer path. */
-export function resolveGradeItem(itemId: string): GradeItem | null {
-  const seg = resolveTrySegment(itemId);
-  if (!seg) return null;
+/** Resolve a gradable FRQ item by id. Plan-qualified ids
+ *  (`${planId}::${segmentId}`) resolve to the exact authoring plan's
+ *  try-yourself (seed, else Mongo-stored generated plan) and never fall
+ *  through to the bank; bare ids resolve to a ProblemBank row (e.g. the
+ *  generate-on-exhaustion `practice-gen.*` rows). A segment with no rubric
+ *  grades via the legacy single-answer path. */
+export async function resolveGradeItem(
+  itemId: string,
+  deps: ItemKeyDeps = defaultItemKeyDeps,
+): Promise<GradeItem | null> {
+  if (splitQualifiedItemId(itemId)) {
+    const seg = await resolveTrySegment(itemId, deps);
+    if (!seg) return null;
+    return {
+      itemId,
+      rubric: seg.rubric,
+      expectedAnswer: seg.expectedAnswer,
+      modelResponse: seg.modelResponse,
+      passageText: resolvePassageText(seg.passageId, seg.passageIds, seg.packetLabel),
+    };
+  }
+  const b = await resolveBankRow(itemId, deps);
+  if (!b) return null;
   return {
     itemId,
-    rubric: seg.rubric,
-    expectedAnswer: seg.expectedAnswer,
-    modelResponse: seg.modelResponse,
-    passageText: resolvePassageText(seg.passageId, seg.passageIds, seg.packetLabel),
+    expectedAnswer: b.answer,
+    rubric: undefined,
+    modelResponse: undefined,
+    passageText: resolvePassageText(b.passageId),
   };
 }
 
@@ -241,12 +316,15 @@ export interface ResolvedAssessmentKey {
   passageText?: string;
 }
 
-export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
+export async function resolveAssessmentItem(
+  itemId: string,
+  deps: ItemKeyDeps = defaultItemKeyDeps,
+): Promise<ResolvedAssessmentKey | null> {
   // Qualified id (`planId::segId`) → a plan try-yourself, scoped to the exact
   // authoring plan (carry expectedAnswer + {id,text,correct?} choices). A
   // qualified id is definitively a plan item, so never fall through to the bank.
   if (splitQualifiedItemId(itemId)) {
-    const seg = resolveTrySegment(itemId);
+    const seg = await resolveTrySegment(itemId, deps);
     if (!seg) return null;
     return {
       responseFormat: seg.responseFormat,
@@ -261,33 +339,26 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
   }
   // Bare id → ProblemBank (globally-unique ids; choices are string[]; the
   // reference `answer` is the key). No cross-plan scan (that mis-resolved keys).
-  try {
-    await connectDB();
-    // Mock-form rows never resolve as a gradable assessment item outside the
-    // mock-exam flow (Task 2, mock-exams platform).
-    const b = (await ProblemBank.findOne({ id: itemId, bankScope: { $ne: 'mock' } }).lean()) as unknown as IProblemBank | null;
-    if (b) {
-      const choices = b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t }));
-      // Bank MCQs store the correct choice LETTER in `answer`. Surface it as
-      // correctChoiceId when it's a valid bare letter within range so MCQ
-      // grading is as robust as the plan-try-yourself path (assessment.ts
-      // matches letter OR the correct choice's text).
-      let correctChoiceId: string | undefined;
-      if (b.responseFormat === 'mcq' && choices && /^[A-E]$/i.test((b.answer ?? '').trim())) {
-        const id = b.answer.trim().toUpperCase();
-        if (choices.some((c) => c.id === id)) correctChoiceId = id;
-      }
-      return {
-        responseFormat: b.responseFormat,
-        expectedAnswer: b.answer,
-        choices,
-        correctChoiceId,
-        hints: b.hints,
-        passageText: resolvePassageText(b.passageId),
-      };
+  const b = await resolveBankRow(itemId, deps);
+  if (b) {
+    const choices = b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t }));
+    // Bank MCQs store the correct choice LETTER in `answer`. Surface it as
+    // correctChoiceId when it's a valid bare letter within range so MCQ
+    // grading is as robust as the plan-try-yourself path (assessment.ts
+    // matches letter OR the correct choice's text).
+    let correctChoiceId: string | undefined;
+    if (b.responseFormat === 'mcq' && choices && /^[A-E]$/i.test((b.answer ?? '').trim())) {
+      const id = b.answer.trim().toUpperCase();
+      if (choices.some((c) => c.id === id)) correctChoiceId = id;
     }
-  } catch {
-    // DB unavailable — fall through.
+    return {
+      responseFormat: b.responseFormat,
+      expectedAnswer: b.answer,
+      choices,
+      correctChoiceId,
+      hints: b.hints,
+      passageText: resolvePassageText(b.passageId),
+    };
   }
   return null;
 }

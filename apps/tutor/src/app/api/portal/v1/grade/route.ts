@@ -15,7 +15,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const item = resolveGradeItem(parsed.data.itemId);
+  const item = await resolveGradeItem(parsed.data.itemId);
   if (!item) return NextResponse.json({ error: 'not_found', reason: 'unknown itemId' }, { status: 404 });
   const result = await gradeFreeResponse(parsed.data, item, defaultGradeDeps());
   return NextResponse.json(result);
