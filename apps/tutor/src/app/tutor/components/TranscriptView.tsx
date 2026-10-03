@@ -285,7 +285,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   const scrollToBottom = () => {
     const el = containerRef.current;
     if (!el) return;
-    programmaticScrollUntilRef.current = performance.now() + 200;
+    programmaticScrollUntilRef.current = performance.now() + 400;
     el.scrollTop = el.scrollHeight;
   };
   useEffect(() => {
@@ -303,6 +303,8 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
           distanceFromBottom: distance,
           now: performance.now(),
           programmaticUntil: programmaticScrollUntilRef.current,
+          deltaY: event.type === 'wheel' ? (event as WheelEvent).deltaY : undefined,
+          contentGrowing: lastRole === 'tutor' && lastEntry?.streaming === true,
         });
         if (latch !== null) userScrolledUpRef.current = latch;
       };

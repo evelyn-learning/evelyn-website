@@ -119,9 +119,14 @@ export interface LatchFromScrollEventInput {
   /** `performance.now()` at the moment the event fired. */
   now: number;
   /** The end of TranscriptView's own programmatic-scroll guard window
-   *  (`performance.now() + 200` armed by `scrollToBottom()` — see
+   *  (`performance.now() + 400` armed by `scrollToBottom()` — see
    *  TranscriptView.tsx). */
   programmaticUntil: number;
+  /** wheel only: the gesture's vertical delta (> 0 = scrolling DOWN). */
+  deltaY?: number;
+  /** The latest tutor entry is still streaming, i.e. the scroller is growing
+   *  under the student right now. */
+  contentGrowing?: boolean;
 }
 
 /** Round 7, task 5: TranscriptView's own `el.scrollTop = el.scrollHeight`
@@ -147,7 +152,25 @@ export function latchFromScrollEvent({
   distanceFromBottom,
   now,
   programmaticUntil,
+  deltaY,
+  contentGrowing = false,
 }: LatchFromScrollEventInput): boolean | null {
-  if (type === 'scroll' && now < programmaticUntil) return null;
+  if (type === 'scroll') {
+    if (now < programmaticUntil) return null;
+    // Live 2026-10-03 (GreenApple text session, "Re-rendering equation…"
+    // on the board): the echo of our own write landed AFTER the guard
+    // window because the main thread was busy, measured against a reply
+    // that had streamed on by far more than 120px — and latched. While the
+    // reply is still growing a `scroll` event cannot be told apart from
+    // that echo, so it never moves the latch; the student's own intent
+    // still registers through wheel/touchmove below.
+    if (contentGrowing) return null;
+    return distanceFromBottom > 120;
+  }
+  // A wheel gesture DOWN is never "scrolling away": it either reaches the
+  // bottom (clear) or is still on its way (leave the latch alone).
+  if (type === 'wheel' && typeof deltaY === 'number' && deltaY > 0) {
+    return distanceFromBottom > 120 ? null : false;
+  }
   return distanceFromBottom > 120;
 }

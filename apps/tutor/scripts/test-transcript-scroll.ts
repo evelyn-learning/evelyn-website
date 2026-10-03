@@ -212,6 +212,33 @@ check(
   true,
 );
 
+// 2026-10-03 (live GreenApple text session): ambiguous events must not latch.
+check(
+  'scroll event after the guard window while the reply is still streaming → ignored',
+  latchFromScrollEvent({ type: 'scroll', distanceFromBottom: 300, now: 900, programmaticUntil: 300, contentGrowing: true }) === null,
+  true,
+);
+check(
+  'scroll event after the guard window, reply finished, far from bottom → latch set',
+  latchFromScrollEvent({ type: 'scroll', distanceFromBottom: 300, now: 900, programmaticUntil: 300, contentGrowing: false }) === true,
+  true,
+);
+check(
+  'wheel DOWN far from bottom → latch untouched (on the way down, not scrolling away)',
+  latchFromScrollEvent({ type: 'wheel', distanceFromBottom: 300, now: 100, programmaticUntil: 0, deltaY: 40 }) === null,
+  true,
+);
+check(
+  'wheel DOWN reaching the bottom → latch cleared',
+  latchFromScrollEvent({ type: 'wheel', distanceFromBottom: 20, now: 100, programmaticUntil: 0, deltaY: 40 }) === false,
+  true,
+);
+check(
+  'wheel UP far from bottom → latch set',
+  latchFromScrollEvent({ type: 'wheel', distanceFromBottom: 300, now: 100, programmaticUntil: 0, deltaY: -40 }) === true,
+  true,
+);
+
 // --- Part 3: source-wiring check --------------------------------------
 
 const transcriptViewPath = join(__dirname, '../src/app/tutor/components/TranscriptView.tsx');
