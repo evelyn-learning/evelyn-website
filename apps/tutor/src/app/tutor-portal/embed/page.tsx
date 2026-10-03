@@ -224,6 +224,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'auto_newpage_retitled_from_render',
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
+  // 2026-10-02: ledger-only `wrong` inferred from an answer attempt the
+  // tutor corrected (portal-bf533c4b) — the row that explains a gap's signals.
+  'ledger_wrong_inferred',
   'recap_offer_armed', 'recap_offer_reply', 'recap_started', 'recap_returned',
   'recap_wrap_nudged', 'recap_overrun', 'recap_offer_unvoiced',
   'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed', 'practice_assign_skipped',

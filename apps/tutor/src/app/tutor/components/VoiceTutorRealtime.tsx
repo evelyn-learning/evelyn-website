@@ -112,6 +112,7 @@ import {
   type LedgerEventKind,
   isLedgerStuckCue,
 } from '@/lib/tutor/orchestrator/struggle-ledger';
+import { inferWrongEvent } from '@/lib/tutor/orchestrator/answer-attempt';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -2890,6 +2891,14 @@ export function VoiceTutorRealtime({
    *  live 2026-09-06 the tutor's mis-gradings became the student's
    *  "incorrect streak", a gap, a recurrence and a recap blaming them. */
   const judgeFlaggedDenialThisTurnRef = useRef(false);
+  /** 2026-10-02 (live portal-bf533c4b): the raw student utterance that
+   *  started THIS brain turn ('' for silent/bracketed turns) and whether the
+   *  pacing branch already fed a `wrong`/`no_recovery` ledger event this turn.
+   *  Read by the post-stream answer-attempt fallback — six wrong answers fed
+   *  the ledger zero `wrong` events because the only producer is the pacing
+   *  credit path, which the advisory judge can withhold. */
+  const ledgerStudentTextRef = useRef('');
+  const ledgerWrongFedThisTurnRef = useRef(false);
   /** A soft stuck cue heard this turn, fed to the ledger at turn ok unless
    *  the verdict layer credited the same turn as correct. */
   const pendingStuckCueRef = useRef<{ segId?: string } | null>(null);
@@ -10109,6 +10118,10 @@ export function VoiceTutorRealtime({
     // advisory signal stashed by a PRIOR turn must not withhold THIS turn's
     // credit.
     judgeFlaggedDenialThisTurnRef.current = false;
+    // 2026-10-02: fresh per-turn answer-attempt ledger slots (set below only
+    // for a real student turn) — a prior turn's text must never be re-read.
+    ledgerStudentTextRef.current = '';
+    ledgerWrongFedThisTurnRef.current = false;
     // R47 Task 2: fresh per-turn "completed THIS turn" list — see
     // segmentsCompletedThisTurnRef's declaration. A mark_segment_complete
     // from a PRIOR turn must not count as "predates this turn" evidence
@@ -10463,6 +10476,7 @@ export function VoiceTutorRealtime({
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
         const isSessionEndSignal = sessionEndSignalRegex.test(lower);
+        ledgerStudentTextRef.current = t;
         lastStudentVerificationRef.current = {
           turn: pacingTurnCounterRef.current,
           segId: segIdNow,
@@ -16302,6 +16316,7 @@ export function VoiceTutorRealtime({
             // the segment the student actually ANSWERED on (segId, the
             // turn-start snapshot) — the brain may have advanced mid-turn.
             feedLedger(priorIncCount >= 1 ? 'no_recovery' : 'wrong', undefined, segId || undefined);
+            ledgerWrongFedThisTurnRef.current = true;
             if (studentStreakRef.current.segId === segId
                 && studentStreakRef.current.count > 0) {
               studentStreakRef.current = { segId, count: 0 };
@@ -16371,6 +16386,27 @@ export function VoiceTutorRealtime({
               onDebugEvent?.('bare_praise_ending_advisory', `seg="${ver.segId}" tools=[${totalToolNamesSeen.join(', ')}]`);
             }
           }
+        }
+        // 2026-10-02 (live portal-bf533c4b): ledger-only `wrong` fallback.
+        // Six wrong answers to one system of equations fed ZERO `wrong`
+        // events — the branch above ran once and the advisory judge withheld
+        // it — so the gap carried STUCK_CUE alone and the partner feed's
+        // repeated_difficulty never fired. A plausible answer met by a tutor
+        // correction is a struggle event whether or not PACING credits it.
+        // The judge is deliberately not a gate here (it only withholds pacing
+        // credit); a deterministic objective-correct proof still vetoes.
+        // Pacing streak refs are NOT touched.
+        if (TUTOR_STRUGGLE_LEDGER && !ledgerWrongFedThisTurnRef.current
+            && inferWrongEvent({ studentText: ledgerStudentTextRef.current, tutorText: fullText, objectiveCorrect: !!objectiveSignal })) {
+          const segId = ver?.segId ?? currentSegmentIdRef.current;
+          const loId = segId ? loForSegment(segId) : activeLedgerLoRef.current;
+          const prior = loId
+            ? (ledgerRef.current.get(loId)?.events.filter((e) => e.kind === 'wrong' || e.kind === 'no_recovery').length ?? 0)
+            : 0;
+          feedLedger(prior >= 1 ? 'no_recovery' : 'wrong', undefined, segId || undefined);
+          ledgerWrongFedThisTurnRef.current = true;
+          console.log(`[VoiceTutorRealtime] ledger wrong inferred seg=${segId} lo=${loId}`);
+          onDebugEvent?.('ledger_wrong_inferred', `seg="${segId}" prior=${prior}`);
         }
       } catch (err) {
         console.error('[pacing] post-stream streak update threw:', err);
