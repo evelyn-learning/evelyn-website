@@ -834,6 +834,100 @@ await test('checkGeneratedAnswer: names the gate branch that rejected', async ()
   assert.equal(ok.ok, true);
 });
 
+// ── Free-text answers (2026-10-02): ordered pairs, expressions, sets and
+// short phrases ("(0, 3)", "(x+2)(x+6)", "phosphate, ribose, guanine") used to
+// fail `numeric_shape`, so such skills got NO generated practice once their
+// authored items ran out. A `free` candidate is admitted and graded by the
+// free-response judge (/grade). ──
+console.log('\nfree-text answers:\n');
+
+function freeGen(text = 'Find the y-intercept of y = 2x + 3. Give it as an ordered pair.', expectedAnswer = '(0, 3)'): GenPayload {
+  return {
+    problemText: text,
+    finalAnswer: expectedAnswer,
+    answerKind: 'free',
+    expectedAnswer,
+    modelResponse: 'Set x = 0: y = 3, so the intercept is (0, 3).',
+    teachingAnswer: 'Set x = 0 to get y = 3.',
+    responseFormat: 'numeric',
+    hints: ['Set x = 0.'],
+  };
+}
+
+await test('free: a valid free candidate passes WITHOUT a blind re-solve, answer = expectedAnswer, no choices', async () => {
+  let verifyCalls = 0;
+  const verify: VerifyFn = async () => { verifyCalls++; return { agree: false, solved: 'x' }; };
+  const out = await checkGeneratedAnswer({ ...freeGen(), choices: ['stray'] }, verify);
+  assert.equal(out.ok, true, JSON.stringify(out));
+  if (!out.ok) return;
+  assert.equal(out.gen.finalAnswer, '(0, 3)');
+  assert.equal(out.gen.answerKind, 'free');
+  assert.equal(out.gen.choices, undefined);
+  assert.equal(verifyCalls, 0, 'agreement check is numeric-only');
+});
+
+await test('free: an empty or over-long expectedAnswer fails free_shape', async () => {
+  assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: '   ' }, agreeVerify()), { ok: false, reason: 'free_shape' });
+  assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: undefined }, agreeVerify()), { ok: false, reason: 'free_shape' });
+  assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: 'x'.repeat(121) }, agreeVerify()), { ok: false, reason: 'free_shape' });
+  assert.equal((await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: 'x'.repeat(120) }, agreeVerify())).ok, true, '120 chars is the inclusive limit');
+});
+
+await test('free: a drawing-instruction free candidate fails free_shape', async () => {
+  const out = await checkGeneratedAnswer(freeGen('Graph y = 2x + 3 and label both intercepts.', '(0, 3) and (-1.5, 0)'), agreeVerify());
+  assert.deepEqual(out, { ok: false, reason: 'free_shape' });
+});
+
+await test('free: a numeric candidate (answerKind numeric) still needs agreement and still rejects a non-numeric shape', async () => {
+  const numeric: GenPayload = { ...numericGen('Solve 2x = 6.', '3'), answerKind: 'numeric' };
+  assert.deepEqual(await checkGeneratedAnswer(numeric, disagreeVerify()), { ok: false, reason: 'verify_disagree' });
+  assert.equal((await checkGeneratedAnswer(numeric, agreeVerify())).ok, true);
+  assert.deepEqual(await checkGeneratedAnswer({ ...numeric, finalAnswer: '(0, 3)' }, agreeVerify()), { ok: false, reason: 'numeric_shape' });
+});
+
+await test('free: generatePracticeItems serves a free item (responseFormat free, no choices) and persists it', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: { ...freeGen(), finalAnswer: '(0, 3)', choices: undefined } });
+  const items = await generatePracticeItems(baseOpts(), sources);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].responseFormat, 'free');
+  assert.equal(items[0].expectedAnswer, '(0, 3)');
+  assert.equal(items[0].choices, undefined);
+  assert.equal(sources.persisted.length, 1);
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('free: the real persist writes responseFormat free, answer = expectedAnswer, no choices', async () => {
+  capturedPersist = null;
+  await practiceGenSources().persist({
+    id: `practice-gen.${LO}.free1`,
+    topic: TOPIC,
+    loId: LO,
+    difficulty: 2,
+    gen: { ...freeGen(), finalAnswer: '(0, 3)' },
+  });
+  const cp = capturedPersist as CapturedUpdate | null;
+  assert.ok(cp, 'expected ProblemBank.updateOne to be called');
+  const row = cp!.update.$setOnInsert;
+  assert.equal(row.responseFormat, 'free');
+  assert.equal(row.answer, '(0, 3)');
+  assert.equal(row.choices, undefined);
+});
+
+await test('free: both prompt branches carry the answerKind instruction', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  for (const anchorItems of [[bankAnchor], []]) {
+    const sources = makeStubSources({ gen: numericGen() });
+    await generatePracticeItems(baseOpts({ anchorItems }), sources);
+    const p = sources.prompts[0];
+    assert.ok(p.includes('"answerKind"'), p);
+    assert.ok(/"numeric"/.test(p) && /"mcq"/.test(p) && /"free"/.test(p), p);
+    assert.ok(p.includes('"expectedAnswer"') && p.includes('120'), p);
+    assert.ok(p.includes('"modelResponse"'), p);
+  }
+  delete process.env.PRACTICE_GEN;
+});
+
 // G2 (2026-10-03): a drawing/graphing try-yourself ("Sketch forces on…",
 // "Draw a labeled free-body diagram…", "Graph the line…") can't be answered
 // in a typed practice/assessment item — it must never be SERVED.

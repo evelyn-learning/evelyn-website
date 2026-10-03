@@ -265,22 +265,40 @@ export interface GenPayload {
   responseFormat?: 'numeric' | 'mcq';
   hints?: string[];
   choices?: string[];
+  /** Practice-gen only (its prompt asks for these; the tutor-session prompt
+   *  does not, so they stay undefined there): the answer kind, and for
+   *  `free` the canonical short answer + optional one-line model response. */
+  answerKind?: 'numeric' | 'mcq' | 'free';
+  expectedAnswer?: string;
+  modelResponse?: string;
 }
 
 function parseGenPayload(raw: string): GenPayload | null {
   try {
     const j = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
     if (typeof j.problemText !== 'string' || !j.problemText.trim()) return null;
-    if (typeof j.finalAnswer !== 'string' || !j.finalAnswer.trim()) return null;
+    const answerKind = j.answerKind === 'free' || j.answerKind === 'mcq' || j.answerKind === 'numeric' ? j.answerKind : undefined;
+    const expectedAnswer = typeof j.expectedAnswer === 'string' ? j.expectedAnswer.trim() : undefined;
+    // A free-kind payload may carry its answer only in expectedAnswer.
+    const finalAnswer =
+      typeof j.finalAnswer === 'string' && j.finalAnswer.trim()
+        ? j.finalAnswer.trim()
+        : answerKind === 'free' && expectedAnswer
+          ? expectedAnswer
+          : '';
+    if (!finalAnswer) return null;
     const strArr = (v: unknown): string[] | undefined =>
       Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : undefined;
     return {
       problemText: j.problemText.trim(),
-      finalAnswer: j.finalAnswer.trim(),
+      finalAnswer,
       teachingAnswer: typeof j.teachingAnswer === 'string' ? j.teachingAnswer.trim() : undefined,
       responseFormat: j.responseFormat === 'mcq' ? 'mcq' : 'numeric',
       hints: strArr(j.hints),
       choices: strArr(j.choices),
+      ...(answerKind ? { answerKind } : {}),
+      ...(expectedAnswer !== undefined ? { expectedAnswer } : {}),
+      ...(typeof j.modelResponse === 'string' && j.modelResponse.trim() ? { modelResponse: j.modelResponse.trim() } : {}),
     };
   } catch {
     return null;

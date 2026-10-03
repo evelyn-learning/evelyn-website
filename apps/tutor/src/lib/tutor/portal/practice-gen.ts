@@ -183,6 +183,13 @@ async function mongoReserve(studentId: string, loId: string, n: number, now: Dat
   return allowed;
 }
 
+/** The bank/served response format of a GATED payload: `free` items are
+ *  graded by the free-response judge; otherwise mcq or numeric as before. */
+function bankResponseFormat(gen: GenPayload): 'mcq' | 'numeric' | 'free' {
+  if (gen.answerKind === 'free') return 'free';
+  return gen.responseFormat === 'mcq' ? 'mcq' : 'numeric';
+}
+
 /** Write-back: persist a verified generated item permanently into
  *  ProblemBank. `practice-gen.*` rows are LO-global by design (no
  *  `subtopic`), `license: 'internal-original'`, matching the spec's bank
@@ -202,10 +209,10 @@ async function mongoPersist(row: PracticeGenPersistRow): Promise<void> {
         difficulty: row.difficulty,
         problemText: row.gen.problemText,
         answer: row.gen.finalAnswer,
-        solutionText: row.gen.teachingAnswer,
+        solutionText: row.gen.teachingAnswer ?? row.gen.modelResponse,
         hints: row.gen.hints,
-        responseFormat: row.gen.responseFormat === 'mcq' ? 'mcq' : 'numeric',
-        choices: row.gen.choices,
+        responseFormat: bankResponseFormat(row.gen),
+        choices: row.gen.answerKind === 'free' ? undefined : row.gen.choices,
         source: { name: 'Evelyn (practice-gen runtime)' },
         license: 'internal-original',
         verifiedAt: new Date(),
@@ -365,15 +372,32 @@ export type GateFailReason =
   | 'mcq_unresolved_letter'
   | 'mcq_letter_out_of_range'
   | 'numeric_shape'
+  | 'free_shape'
   | 'verify_disagree';
 
+/** Longest canonical answer a `free` generated item may carry. */
+export const FREE_ANSWER_MAX_CHARS = 120;
+
 /** `gateGeneratedAnswer` with the rejecting branch named (2026-10-02, so an
- *  empty generation is explainable in the logs). Same checks, same order. */
+ *  empty generation is explainable in the logs). Same checks, same order.
+ *
+ *  `answerKind: 'free'` (2026-10-02): ordered pairs, expressions, sets and
+ *  short phrases are graded by the free-response judge (/grade), so they need
+ *  no number/letter shape — only a non-empty canonical `expectedAnswer` of at
+ *  most FREE_ANSWER_MAX_CHARS and a problem that is not a drawing
+ *  instruction. No blind re-solve: agreement stays numeric-only. */
 export async function checkGeneratedAnswer(
   gen: GenPayload,
   verify: VerifyFn = verifyClaimedAnswer,
 ): Promise<{ ok: true; gen: GenPayload } | { ok: false; reason: GateFailReason }> {
   const fail = (reason: GateFailReason) => ({ ok: false as const, reason });
+  if (gen.answerKind === 'free') {
+    const expected = (gen.expectedAnswer ?? '').trim();
+    if (!expected || expected.length > FREE_ANSWER_MAX_CHARS || isDrawingInstruction(gen.problemText)) {
+      return fail('free_shape');
+    }
+    return { ok: true, gen: { ...gen, finalAnswer: expected, expectedAnswer: expected, choices: undefined } };
+  }
   if (gen.responseFormat === 'mcq') {
     const rawChoices = gen.choices ?? [];
     if (rawChoices.length === 0) return fail('mcq_no_choices'); // malformed mcq — nothing to grade against
@@ -536,6 +560,21 @@ const PERCENT_ANSWER_CLAUSE =
   'asks for the answer "as a percent" (or "what percent...") and state finalAnswer as the percent ' +
   'numeral with a % sign (e.g. "50%"), never the decimal form ("0.5").';
 
+/** Free-text answers (2026-10-02): asks the generator to label each candidate
+ *  `answerKind` so answers that are not one number or a choice letter (ordered
+ *  pairs, expressions, sets, short phrases) become `free` items graded by the
+ *  free-response judge instead of failing the numeric shape gate. The
+ *  numeric/mcq output is unchanged. */
+const ANSWER_KIND_CLAUSE =
+  'Also include "answerKind" in your JSON: "numeric" when the answer is a single number, "mcq" for a ' +
+  'multiple-choice problem (keep "responseFormat" set to match for these two, exactly as before), or ' +
+  '"free" when the answer is anything else short and checkable — an ordered pair, a solution like ' +
+  '"x = -1.5 and y = 3", an expression like "(x+2)(x+6)", a set or a short phrase. For "free", also ' +
+  'include "expectedAnswer": the concise canonical answer (at most 120 characters, no working), set ' +
+  '"finalAnswer" to the same text, give no "choices", and optionally include "modelResponse": a ' +
+  'one-line full-credit response. The student types the answer, so never ask them to draw, graph, ' +
+  'plot or sketch.';
+
 /** Anchors that ask the student to DRAW (graph, plot, sketch, shade, label a
  *  diagram) can't seed a typed-answer practice item: the generator mirrors
  *  the drawing task and every candidate fails the answer-shape gate.
@@ -589,7 +628,7 @@ function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeIte
       (anchor.expectedAnswer ? `ANCHOR answer (for difficulty calibration): ${anchor.expectedAnswer}\n` : '') +
       `\nLearning objective: ${opts.loId} (topic: ${opts.topic}).\n` +
       `\nWrite ONE fresh problem testing the same skill at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ` +
-      `${slotDirective} Write the problem now.`
+      `${ANSWER_KIND_CLAUSE} ${slotDirective} Write the problem now.`
     );
   }
   // Fresh-LO edge case: zero existing practice to anchor off of. Practice
@@ -599,7 +638,7 @@ function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeIte
     `There is no existing practice problem yet for this learning objective (brand-new LO).\n` +
     `Learning objective id: ${opts.loId} (topic: ${opts.topic}).\n` +
     `Infer the likely skill this LO id names and write ONE self-contained practice problem testing ` +
-    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ${slotDirective} Write the problem now.`
+    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ${ANSWER_KIND_CLAUSE} ${slotDirective} Write the problem now.`
   );
 }
 
@@ -622,7 +661,7 @@ async function generateOne(
   const id = `practice-gen.${opts.loId}.${hash}`;
   const difficulty: Difficulty = opts.difficulty ?? anchor?.difficulty ?? DEFAULT_DIFFICULTY;
   const cedCode = opts.cedCode ?? anchor?.cedCode;
-  const responseFormat = gen.responseFormat === 'mcq' ? 'mcq' : 'numeric';
+  const responseFormat = bankResponseFormat(gen);
 
   await sources.persist({ id, topic: opts.topic, topicId: opts.topicId, loId: opts.loId, cedCode, difficulty, gen });
 
@@ -631,11 +670,12 @@ async function generateOne(
     source: 'bank',
     problemText: gen.problemText,
     // mcq → the bare LETTER, numeric → the bare number string (bank
-    // convention) — both already enforced by the answer-shape gate above.
+    // convention), free → the canonical short answer — all enforced by the
+    // answer-shape gate above.
     expectedAnswer: gen.finalAnswer,
     hints: gen.hints,
     responseFormat,
-    choices: gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
+    choices: responseFormat === 'free' ? undefined : gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
     difficulty,
     loId: opts.loId,
     cedCode,
