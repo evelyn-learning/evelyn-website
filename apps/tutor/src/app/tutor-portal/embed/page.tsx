@@ -62,6 +62,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // sessions — this whitelist silently ate them, so the app-switch reverb
   // investigation ran blind. stage3_ covers the timeout-resume recovery.
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
+  // 2026-10-02 in-flow: fixed first words spoken before the brain's first sentence.
+  'bridge_spoken',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued

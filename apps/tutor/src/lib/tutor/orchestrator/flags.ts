@@ -172,6 +172,10 @@ export const TUTOR_FIRST_SESSION_TIP =
 // session tip, no teacher intro, hand-back close, no homework drafts.
 // NEXT_PUBLIC_TUTOR_INFLOW_ENTRY=off restores the standard behaviour for such tokens.
 export const TUTOR_INFLOW_ENTRY = process.env.NEXT_PUBLIC_TUTOR_INFLOW_ENTRY !== 'off';
+
+// Bridge line: a fixed first line spoken by the client at the start tap, before
+// the first brain call. NEXT_PUBLIC_TUTOR_BRIDGE_LINE=off restores silence.
+export const TUTOR_BRIDGE_LINE = process.env.NEXT_PUBLIC_TUTOR_BRIDGE_LINE !== 'off';
 // R58 noise-floor nudge (live, portal-dd0bf3a9: AirPods with
 // noiseSuppression=undefined turned background noise into FLUENT nonsense
 // STT — "while networking distinct account revenues" — which the

@@ -51,6 +51,7 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
+import { bridgeLineFor, BRIDGE_SPOKEN_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
 import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -240,6 +241,7 @@ import {
   TUTOR_STUDENT_HOLD,
   TUTOR_FIRST_SESSION_TIP,
   TUTOR_INFLOW_ENTRY,
+  TUTOR_BRIDGE_LINE,
   TUTOR_NOISE_FLOOR_NUDGE,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
@@ -1196,6 +1198,8 @@ export function VoiceTutorRealtime({
   // opening-directive attach in callBrainOnce. Default false so SSR and a
   // storage-blocked browser both silently skip the tip.
   const firstSessionTipPendingRef = useRef(false);
+  // Bridge line (fixed first words at the start tap): once per mount.
+  const bridgeSpokenRef = useRef(false);
   // Mount-safe localStorage read (SSR/hydration-safe: first render always
   // renders the `false` default on server + client; this effect then syncs
   // the real per-device choice once mounted — same pattern used by the
@@ -11129,6 +11133,11 @@ export function VoiceTutorRealtime({
               : openingDirectiveRef.current;
             teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
+            // The client already spoke the greeting (bridge line): the brain
+            // must not greet again on its first opening turn.
+            if (bridgeSpokenRef.current && openingDirectiveBrainTurnsRef.current === 1) {
+              openingDirective += BRIDGE_SPOKEN_DIRECTIVE;
+            }
             // R58 first-session tip: rides the first opening turn only,
             // like the teacher intro above. Keyed per-browser via
             // localStorage (set at attach time), so a returning student on
@@ -21479,6 +21488,26 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // this, audio queues silently until some other gesture (like
         // unmute) inadvertently unlocks the AudioContext.
         realtime.unlockAudio(); audioUnlockedRef.current = true;
+        // Bridge line: fixed first words before the brain's first sentence
+        // (no model). Once per mount; never on resume or in text mode.
+        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+          const line = bridgeLineFor({
+            studentName, title: lessonContext?.title, inFlow: isInFlow,
+            // Text mode returned above (typed start, no dead air to cover).
+            inputMode: 'voice', resume: Boolean(resumeState),
+          });
+          if (line) {
+            bridgeSpokenRef.current = true;
+            try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { /* skip; brain follows */ }
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              { id: `tutor-${Date.now()}-bridge`, timestamp: new Date(), role: 'tutor', text: line } as TranscriptEntry,
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
+            onTrackInteraction?.('message', line, undefined, 'tutor');
+            onDebugEvent?.('bridge_spoken', line);
+          }
+        }
         if (!claudeBrainMode) {
           const greetingMessage = getInitialGreetingPrompt(sessionGoal, topic);
           realtime.sendTextMessage(greetingMessage);
