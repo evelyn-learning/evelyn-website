@@ -126,6 +126,7 @@
     "test:session-filters": "npx tsx scripts/test-session-filters.ts",
     "test:brain-fallback-permission": "npx tsx scripts/test-brain-fallback-permission.ts",
     "test:system-prompt-parts": "npx tsx scripts/test-system-prompt-parts.ts",
+    "test:lesson-context": "npx tsx scripts/test-lesson-context.ts",
     "test:prompt-cache": "npx tsx scripts/test-prompt-cache.ts",
     "test:brain-system-blocks": "npx tsx scripts/test-brain-system-blocks.ts",
     "test:brain-route-cache-blocks": "npx tsx scripts/test-brain-route-cache-blocks.ts",
