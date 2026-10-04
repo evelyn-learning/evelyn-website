@@ -960,7 +960,11 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
   // ONE turn only (cleared on next utterance arrival), so this hint
   // can't level-fire across multiple turns.
   if (state.cue) {
-    return `boredom cue detected — verbally offer "harder / skip / different topic" immediately`;
+    // 2026-10-03: no quotable label. The old text opened with a NAME for the
+    // signal, and the brain spoke that name back ("Given that boredom cue,
+    // let's not linger."). Plain second-person guidance describes the
+    // situation instead; the instruction itself is unchanged.
+    return `the student has just told you in their own words that this pace or level is not right for them — verbally offer "harder / skip / different topic" immediately`;
   }
   // Streak-based hints are EDGE-triggered: fire ONCE when count first
   // hits the threshold value, then go silent. Conversation history
@@ -1009,7 +1013,7 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
 
 /**
  * Render the `<student_state>` block. Pacing v2 surfaces counters
- * (streak, incorrect-streak, cue, segment turns, segment-mastered
+ * (streak, incorrect-streak, pace_request, segment turns, segment-mastered
  * flag) plus, when thresholds are provided AND a threshold has been
  * crossed, an advisory `hint:` line the brain treats as a directive
  * (per the system-prompt rule).
@@ -1023,7 +1027,7 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
  * Returns { block, hint } so callers (the brain stream route) can
  * also log the hint server-side for telemetry.
  */
-function formatStudentStateBlock(
+export function formatStudentStateBlock(
   state: BrainTurnInput['pacingState'],
 ): { block: string; hint: string | null } {
   if (!state) return { block: '', hint: null };
@@ -1038,7 +1042,10 @@ function formatStudentStateBlock(
   parts.push(`streak=${state.correctStreak >= 0 ? '+' : ''}${state.correctStreak}`);
   parts.push(`wrong=${state.incorrectStreak}`);
   parts.push(`segTurns=${state.segmentTurns}`);
-  if (state.cue) parts.push(`cue="${state.cue}"`);
+  // 2026-10-03: the attribute was `cue="…"` — a name the brain could (and
+  // did) say back ("Given that boredom cue, …"). `pace_request` reads as
+  // what it is: the student's own words about pace or level.
+  if (state.cue) parts.push(`pace_request="${state.cue}"`);
   if (state.segmentMastered) parts.push(`mastered="${state.segmentMastered.segId}"@${state.segmentMastered.streakAtComplete}`);
   const hint = computePacingHint(state);
   const lines = [parts.join(' ')];
