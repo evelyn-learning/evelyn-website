@@ -7,7 +7,7 @@
  *
  * Run: npx tsx scripts/test-judge-correction-note.ts
  */
-import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression, shouldConsumeJudgeCorrectionNote } from '../src/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant } from '../src/lib/tutor/voice/judge-correction-note';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -87,5 +87,21 @@ if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
   check('note pins the graded answer', /The answer you graded was "Uh, 2\."/.test(n));
   check('note still forbids narration', /NEVER narrate/.test(n));
   check('no answer ⇒ no pin sentence', !/The answer you graded/.test(buildJudgeCorrectionNote(['Not quite.']) ?? ''));
+}
+// 2026-10-03: the judge (known false-positive rate) must not replace a
+// deterministic note (relation-step witness note / exact answer-dispute
+// note) that is still waiting in the shared slot.
+{
+  const witness = '[correction note — not from the student] The line … fails at x = 6.';
+  const judge = '[correction note — not from the student] An automated review flagged …';
+  check('empty slot ⇒ plant', decideJudgeNotePlant({ enabled: true, pendingNote: null, deterministicNote: null }).plant === true);
+  check('empty slot, stale deterministic record ⇒ plant', decideJudgeNotePlant({ enabled: true, pendingNote: null, deterministicNote: witness }).plant === true);
+  check('pending judge note ⇒ plant (judge-over-judge unchanged)', decideJudgeNotePlant({ enabled: true, pendingNote: judge, deterministicNote: null }).plant === true);
+  check('pending note differs from the deterministic record (already delivered, slot refilled) ⇒ plant',
+    decideJudgeNotePlant({ enabled: true, pendingNote: judge, deterministicNote: witness }).plant === true);
+  const kept = decideJudgeNotePlant({ enabled: true, pendingNote: witness, deterministicNote: witness });
+  check('pending deterministic note ⇒ skip', kept.plant === false && kept.reason === 'deterministic-note-pending');
+  check('flag off ⇒ plant (previous behaviour)', decideJudgeNotePlant({ enabled: false, pendingNote: witness, deterministicNote: witness }).plant === true);
+  check('empty strings never match', decideJudgeNotePlant({ enabled: true, pendingNote: '', deterministicNote: '' }).plant === true);
 }
 console.log(`\nAll ${passed} judge-correction-note tests passed.`);

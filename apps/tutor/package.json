@@ -325,6 +325,11 @@
     "test:attempt-anchors": "npx tsx scripts/test-attempt-anchors.ts",
     "test:inspect-resumed": "npx tsx scripts/test-inspect-resumed.ts",
     "test:relation-sampling": "npx tsx scripts/test-relation-sampling.ts",
-    "test:relation-step-check": "npx tsx scripts/test-relation-step-check.ts"
+    "test:relation-step-check": "npx tsx scripts/test-relation-step-check.ts",
+    "test:session-active-seconds": "npx tsx scripts/test-session-active-seconds.ts",
+    "test:relation-step-note": "npx tsx scripts/test-relation-step-note.ts",
+    "test:answer-dispute-tiebreak": "npx tsx scripts/test-answer-dispute-tiebreak.ts",
+    "test:streak-claim": "npx tsx scripts/test-streak-claim.ts",
+    "test:boredom-cue": "npx tsx scripts/test-boredom-cue.ts"
   }
 }

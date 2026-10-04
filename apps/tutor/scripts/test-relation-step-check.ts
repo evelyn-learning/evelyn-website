@@ -192,4 +192,70 @@ ok(!isDeliberateWrongStepLabel('Step 2: subtract 9') && !isDeliberateWrongStepLa
   assert.doesNotThrow(() => claimedAnswerContradictsProblem({ statement: undefined as unknown as string, claimed: null as unknown as string })); n++;
 }
 
+// ── 2026-10-04: legitimate boarded lines are NOT disagreements ────────────
+{
+  const INEQ = problem(R`Solve the inequality: $2x + 3 < 13$`);
+  // Comparator class differs from the problem's: standard technique lines.
+  for (const [latex, label] of [
+    ['x = 5', 'Boundary point'], [R`2x + 3 = 13`, 'Related equation'], ['x = 0', 'Test point'],
+    ['x = 5', ''], [R`2x + 3 = 13`, 'Step 1'],
+  ] as const) {
+    const r = checkEquationRelations({ latex, label, problemRelation: INEQ, previous: null });
+    eq([r.tier, r.counted, r.boarded], ['none', false, null], `"${latex}" (${label || 'no label'}) on an inequality problem: not counted, not remembered`);
+    ok(r.skipped === 'label' || r.skipped === 'comparator-class', `"${latex}" (${label || 'no label'}): skipped`);
+  }
+  eq(checkEquationRelations({ latex: 'x = 5', label: '', problemRelation: INEQ, previous: null }).skipped, 'comparator-class', 'unlabelled = step on an inequality problem: comparator-class skip');
+  // Deliberate wrong steps / the student's work.
+  for (const label of ['Your step', 'You wrote', 'Is this right?', 'Common trap', "Sam's line", 'Outside the interval (not a solution)', 'Try this', 'First attempt', 'A guess', 'Check', 'Similar example',
+    'Boundary point', 'Test point', 'Test value', 'Check point', 'Check value', 'Test', 'Check:', 'Your try', 'Your attempt', 'Try it', 'You said', 'You got', 'You try', 'Another example', 'Maya’s work', "Student's attempt"]) {
+    const r = checkEquationRelations({ latex: 'x > 5', label, problemRelation: INEQ, previous: null });
+    eq([r.tier, r.counted, r.skipped, r.boarded], ['none', false, 'label', null], `label "${label}" is skipped`);
+  }
+  // 2026-10-04: the tutor's OWN steps are checked whatever incidental word
+  // the label carries — a wrong line under any of these is still counted.
+  for (const label of ['Worked example', 'Example 1: step 2', 'Check: divide by 2', 'Final check', 'Similar step', 'Next, try dividing by 2', 'Now you see it',
+    "Step 3 — the inequality's solution", "Inequality's solution", 'Testing the algebra', 'Step 2 (check the signs)', 'Examples', "The Equation's last step"]) {
+    const r = checkEquationRelations({ latex: 'x > 5', label, problemRelation: INEQ, previous: null });
+    eq([r.tier, r.counted, r.skipped], ['vs-problem', true, undefined], `label "${label}" is the tutor's own step: checked and counted`);
+    ok(!isDeliberateWrongStepLabel(label), `label "${label}" does not read as deliberate`);
+  }
+  {
+    const FLIP = problem(R`Solve: $-3x > 6$`);
+    const r = checkEquationRelations({ latex: 'x > -2', label: 'What if we forget to flip?', problemRelation: FLIP, previous: null });
+    eq([r.counted, r.skipped], [false, 'label'], '"What if we forget to flip?" is skipped');
+    const real = checkEquationRelations({ latex: 'x > -2', label: 'Divide by -3', problemRelation: FLIP, previous: null });
+    eq([real.tier, real.counted], ['vs-problem', true], 'the same unflipped line as a real step is still counted');
+    const none = checkEquationRelations({ latex: 'x > -2', label: '', problemRelation: FLIP, previous: null });
+    eq([none.tier, none.counted], ['vs-problem', true], 'an equation with NO label is still checked');
+  }
+  // Inequality step on an equation problem; "Similar example" equation.
+  const EQN = problem(R`Solve the equation: $2x + 3 = 13$`);
+  {
+    const r = checkEquationRelations({ latex: 'x > 5', label: 'Step 2', problemRelation: EQN, previous: null });
+    eq([r.tier, r.counted, r.skipped], ['none', false, 'comparator-class'], 'inequality step on an equation problem: not counted');
+    const sim = checkEquationRelations({ latex: R`3x - 1 = 8`, label: 'Similar example', problemRelation: EQN, previous: null });
+    eq([sim.counted, sim.skipped], [false, 'label'], '"Similar example" equation on an equation problem: skipped');
+    const wrong = checkEquationRelations({ latex: 'x = 8', label: 'Step 2', problemRelation: EQN, previous: null });
+    eq([wrong.tier, wrong.counted], ['vs-problem', true], 'a wrong = step on an equation problem is still counted');
+  }
+  // A contraction is not a possessive: "Let's …" is an ordinary label.
+  ok(!isDeliberateWrongStepLabel("Let's isolate x") && !isDeliberateWrongStepLabel("Here's step 2") && !isDeliberateWrongStepLabel("It's simpler now"), 'contractions are ordinary labels');
+  ok(isDeliberateWrongStepLabel('Sam’s line') && isDeliberateWrongStepLabel('what if?') && isDeliberateWrongStepLabel('NOT A SOLUTION'), 'curly possessive / question / not a solution');
+  ok(!isDeliberateWrongStepLabel('Solution') && !isDeliberateWrongStepLabel('Multiply by -2') && !isDeliberateWrongStepLabel('Divide both sides by 2') && !isDeliberateWrongStepLabel('Solve'), 'ordinary step labels stay checked');
+  // Adjacent tier: a class change against the previous line is not counted.
+  {
+    const adj = checkEquationRelations({ latex: 'x = 5', label: '', problemRelation: null, previous: boarded(R`2x + 3 < 13`) });
+    eq([adj.tier, adj.counted], ['adjacent', false], 'adjacent: = after an inequality is not counted');
+  }
+  // Chain tier unchanged, and the chain's entry obeys the class rule.
+  {
+    const r = checkEquationRelations({ latex: R`2x + 3 = 13 \iff x = 5`, label: 'Boundary', problemRelation: INEQ, previous: null });
+    eq(r.counted, false, 'labelled boundary chain: skipped');
+    const r2 = checkEquationRelations({ latex: R`2x + 3 = 13 \iff x = 5`, label: '', problemRelation: INEQ, previous: null });
+    eq([r2.tier, r2.counted], ['chain', false], 'correct = chain on an inequality problem: entry not counted');
+    const r3 = checkEquationRelations({ latex: R`2x + 3 = 13 \iff x = 6`, label: '', problemRelation: INEQ, previous: null });
+    eq([r3.tier, r3.counted], ['chain', true], 'a wrong ⟺ inside the card is still counted');
+  }
+}
+
 console.log(`relation-step-check: ${n} cases passed`);

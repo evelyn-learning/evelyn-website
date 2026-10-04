@@ -25,7 +25,12 @@
  *               (adds-only) relation, whose successor may be the other half.
  *
  * Skipped entirely (tier 'none'):
- *   · the label reads as a deliberate wrong step or as student work;
+ *   · the label reads as a deliberate wrong step, as the student's (or
+ *     someone's) work, or as a question / test point / boundary / other-
+ *     problem line (isDeliberateWrongStepLabel);
+ *   · the step's comparator class differs from the problem's (an `=` line on
+ *     an inequality problem is a boundary point or related equation, not a
+ *     wrong step — and the other way round);
  *   · the problem statement did not yield a relation (a word problem, a
  *     domain restriction, more than one relation): the comparator works over
  *     the reals and cannot know an integer or non-negative domain.
@@ -60,7 +65,7 @@ export interface EquationRelationCheck {
   compare: SetCompare | null;
   /** A disagreement that cannot be a legitimate step. */
   counted: boolean;
-  skipped?: 'label' | 'word-problem' | 'nothing-to-compare';
+  skipped?: 'label' | 'word-problem' | 'nothing-to-compare' | 'comparator-class';
   /** Why the problem statement yielded no relation (skipped 'word-problem'). */
   skipReason?: string;
   /** The two texts compared: reference (a) and step (b). */
@@ -70,15 +75,71 @@ export interface EquationRelationCheck {
   boarded: BoardedRelation | null;
 }
 
-const WRONG_STEP_LABEL_RE = /\b(?:mistakes?|errors?|incorrect|wrong|your\s+work|students?|spot)\b|✗/i;
+/**
+ * A label that says the line is NOT the tutor's own claimed step: the
+ * student's or a named person's work, a question or hypothetical, a
+ * trap/mistake, a test / check / boundary point, a different problem, or an
+ * explicit "not a solution". Structural (who owns the line / what kind of
+ * line it is), never topic-specific.
+ *
+ * Wrongly checking a line tells the brain to "correct" a legitimate one, so
+ * each kind is listed generously — but each entry must NAME that kind. A
+ * word that merely appears in the tutor's own step labels ("Worked example",
+ * "Check: divide by 2", "Next, try dividing by 2", "Now you see it", "the
+ * inequality's solution") exempted wrong steps from the check (2026-10-04):
+ *   · check / test    only "check|test point|value", or the whole label;
+ *   · try / attempt   only as student work: "try it / this", "first attempt",
+ *                     or with you / your;
+ *   · you / your      only "you wrote|said|got …" and "your <noun>";
+ *   · example         only another problem: "similar / another example";
+ *   · possessive      only a capitalised name ("Sam's line"), never a
+ *                     common noun ("inequality's").
+ */
+const NOT_OWN_STEP_LABEL_RE = new RegExp(
+  [
+    String.raw`\b(?:students?|what\s+if|traps?|mistakes?|errors?|wrong|incorrect|spot|boundar(?:y|ies)|guess(?:es|ed)?|not\s+a\s+solution)\b`,
+    String.raw`\b(?:check|test)\s+(?:points?|values?)\b`,
+    String.raw`^\s*(?:check|test)\s*[:.!]?\s*$`,
+    String.raw`\byours\b|\byour\s+[a-z]+`,
+    String.raw`\byou\s+(?:wrote|said|got|tried|try|answered|gave|had|put|chose|picked|did|typed|entered|thought|think|guessed)\b`,
+    String.raw`\btry\s+(?:it|this|these)\b`,
+    String.raw`\b(?:first|second|third|another|next|last|previous)\s+(?:attempt|try)\b`,
+    String.raw`\b(?:similar|another|different)\s+(?:examples?|problems?)\b`,
+    String.raw`[?？✗]`,
+  ].join('|'),
+  'i',
+);
+/** A capitalised word + 's: somebody's work, unless it is … */
+const POSSESSIVE_RE = /\b([A-Z][a-z]+)['’]s\b/g;
+/** … a contraction ("Let's", "It's") or a common noun that happens to open
+ *  the label ("Inequality's solution"). */
+const NOT_A_NAME: ReadonlySet<string> = new Set([
+  'let', 'it', 'that', 'here', 'there', 'what', 'who', 'he', 'she', 'how', 'where', 'when',
+  'inequality', 'equation', 'expression', 'problem', 'question', 'solution', 'answer', 'step', 'line',
+  'graph', 'variable', 'number', 'function', 'term', 'coefficient', 'side', 'sign', 'interval',
+  'boundary', 'point', 'value', 'set', 'example', 'today', 'tutor', 'teacher', 'part', 'method',
+]);
 
-/** Label marks the equation as a deliberate wrong step or as student work. */
+/** Label marks the equation as a deliberate wrong step, as student (or
+ *  someone's) work, or as a question / test point / boundary / other-problem
+ *  line. */
 export function isDeliberateWrongStepLabel(label: string): boolean {
-  return typeof label === 'string' && WRONG_STEP_LABEL_RE.test(label);
+  if (typeof label !== 'string' || label === '') return false;
+  if (NOT_OWN_STEP_LABEL_RE.test(label)) return true;
+  for (const m of label.matchAll(POSSESSIVE_RE)) {
+    if (!NOT_A_NAME.has(m[1].toLowerCase())) return true;
+  }
+  return false;
 }
 
 const countsAsStepError = (c: SetCompare): boolean =>
   c.verdict === 'differs' && (c.kind === 'drops' || c.kind === 'both');
+
+/** 'equation' (every comparator is =) or 'inequality'. */
+export type ComparatorClass = 'equation' | 'inequality';
+export function comparatorClassOf(rel: Relation): ComparatorClass {
+  return Array.isArray(rel?.ops) && rel.ops.length > 0 && rel.ops.every((o) => o === '=') ? 'equation' : 'inequality';
+}
 
 /** Step against the problem, then against the previous relation. */
 function checkStep(
@@ -99,6 +160,13 @@ function checkStep(
       boarded: null,
     };
   }
+  // An `=` line on an inequality problem is a boundary point / related
+  // equation / test value; an inequality on an equation problem is likewise a
+  // different kind of line. Neither is a step of the solution: not compared,
+  // not counted, and not remembered as the previous relation.
+  if (problem && comparatorClassOf(problem) !== comparatorClassOf(step.relation)) {
+    return { tier: 'none', compare: null, counted: false, skipped: 'comparator-class', referenceLatex: problem.source, stepLatex, boarded: null };
+  }
   let vsProblem: EquationRelationCheck | null = null;
   if (problem) {
     const compare = compareRelations(problem, step.relation);
@@ -117,7 +185,8 @@ function checkStep(
     return {
       tier: 'adjacent',
       compare,
-      counted: countsAsStepError(compare) && !previous.partial,
+      counted: countsAsStepError(compare) && !previous.partial
+        && comparatorClassOf(previous.relation) === comparatorClassOf(step.relation),
       referenceLatex: previous.latex,
       stepLatex,
       boarded: { latex: stepLatex, relation: step.relation, partial: compare.verdict === 'differs' && compare.kind === 'adds' },

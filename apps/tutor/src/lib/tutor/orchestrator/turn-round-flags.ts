@@ -59,3 +59,49 @@ export const TUTOR_SUBSTITUTE_SAME_ONLY =
  *  not pinned as the verified expected answer. */
 export const TUTOR_RELATION_STEP_CHECK =
   process.env.NEXT_PUBLIC_TUTOR_RELATION_STEP_CHECK !== 'off';
+
+/** A typed FIRST message in a voice session counts as the session start for
+ *  the mic control: hasStarted latches at the submit, the composer's blur
+ *  opens the mic, and the next mic tap opens the mic instead of sending a
+ *  second [start lesson]. */
+export const TUTOR_TYPED_FIRST_START =
+  process.env.NEXT_PUBLIC_TUTOR_TYPED_FIRST_START !== 'off';
+
+/** The idle-nudge stretch/timer is reset only by a DISPATCHED student turn
+ *  (or typed input); a bare speech onset defers a due nudge by a short grace
+ *  bounded by a hard ceiling, and every postponement is logged. */
+export const TUTOR_IDLE_NUDGE_DISPATCH_RESET =
+  process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE_DISPATCH_RESET !== 'off';
+
+/** A tutor sentence whose numeric streak/tally praise ("five for five",
+ *  "nine in a row") disagrees with the tracked streak is dropped from speech
+ *  and transcript (advisory-only when the sentence carries a question, a
+ *  verdict or other content). */
+export const TUTOR_STREAK_CLAIM_GUARD =
+  process.env.NEXT_PUBLIC_TUTOR_STREAK_CLAIM_GUARD !== 'off';
+
+/** Single common words in the boredom-cue list ("next", "easy", "skip",
+ *  "faster"…) count only in a request shape addressed to the tutor, not
+ *  wherever they appear in a sentence. */
+export const TUTOR_BOREDOM_CUE_REQUEST_SHAPE =
+  process.env.NEXT_PUBLIC_TUTOR_BOREDOM_CUE_REQUEST_SHAPE !== 'off';
+
+/** A counted relation-step disagreement in the `chain` / `vs-problem` tier
+ *  plants a witness correction note for the brain's NEXT turn (never a block
+ *  or a retry). Needs TUTOR_RELATION_STEP_CHECK; off ⇒ telemetry only. */
+export const TUTOR_RELATION_STEP_NOTE =
+  process.env.NEXT_PUBLIC_TUTOR_RELATION_STEP_NOTE !== 'off';
+
+/** The LLM judge does not replace a DETERMINISTIC correction note that is
+ *  still pending in the shared slot (the relation-step witness note, or an
+ *  answer-dispute note decided by exact substitution). Off ⇒ the judge
+ *  assigns the slot unconditionally, as before. */
+export const TUTOR_JUDGE_NOTE_KEEP_DETERMINISTIC =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_NOTE_KEEP_DETERMINISTIC !== 'off';
+
+/** A solver-vs-brain answer dispute is broken by exact substitution: the
+ *  answer with the problem's solution set is pinned as the verified key and
+ *  the mismatch note says so. Needs TUTOR_RELATION_STEP_CHECK; off ⇒ nothing
+ *  pinned and the "neither value is confirmed" note, as before. */
+export const TUTOR_ANSWER_DISPUTE_TIEBREAK =
+  process.env.NEXT_PUBLIC_TUTOR_ANSWER_DISPUTE_TIEBREAK !== 'off';

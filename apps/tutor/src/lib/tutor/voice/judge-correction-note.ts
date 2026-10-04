@@ -109,6 +109,34 @@ export function shouldConsumeJudgeCorrectionNote(transcript: string): boolean {
   return !/^\s*\[/.test(transcript);
 }
 
+/**
+ * May the judge plant its note in the shared correction-note slot?
+ *
+ * 2026-10-03: the slot is shared with two DETERMINISTIC notes — the
+ * relation-step witness note (relation-step-note.ts) and the answer-dispute
+ * note decided by exact substitution (answer-dispute-tiebreak.ts). Both are
+ * planted while a turn streams; the judge runs after the same turn and used
+ * to assign the slot unconditionally, replacing an exact note with one from
+ * a reviewer that has a known false-positive rate (and the witness note is
+ * never re-planted: its equation is already marked as noted).
+ *
+ * `deterministicNote` is the text of the last deterministic note planted.
+ * It is protected only while it is still the note in the slot (string
+ * identity) — once delivered or withdrawn the slot no longer equals it and
+ * the judge plants as before. Judge-over-judge replacement is unchanged.
+ */
+export function decideJudgeNotePlant(input: {
+  /** TUTOR_JUDGE_NOTE_KEEP_DETERMINISTIC. */
+  enabled: boolean;
+  pendingNote: string | null | undefined;
+  deterministicNote: string | null | undefined;
+}): { plant: true } | { plant: false; reason: 'deterministic-note-pending' } {
+  if (input?.enabled !== true) return { plant: true };
+  const pending = input.pendingNote;
+  if (!pending || !input.deterministicNote || pending !== input.deterministicNote) return { plant: true };
+  return { plant: false, reason: 'deterministic-note-pending' };
+}
+
 export function buildJudgeCorrectionNote(claims: string[], studentAnswer?: string): string | null {
   const quoted = claims
     .slice(0, MAX_CLAIMS)
