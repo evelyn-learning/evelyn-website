@@ -744,7 +744,9 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     ? '  ⚠ OFF-TOPIC SEGMENT — content redacted. Do NOT narrate this segment. Do NOT call show_segment_card on it. Do NOT advance into it. Treat it as if it does not exist; if it ended up as the current segment, immediately call generate_problem (to give the student more practice on the prior on-topic concept) or wrap up.'
     : seg
       ? Object.entries(seg)
-          .filter(([k, v]) => k !== 'id' && k !== 'kind' && k !== 'keyWithdrawn' && v !== undefined && v !== null)
+          // `keyCheck` is bookkeeping (creation-time key check), never prompt
+          // content: a verified segment prints exactly as it did before the field.
+          .filter(([k, v]) => k !== 'id' && k !== 'kind' && k !== 'keyWithdrawn' && k !== 'keyCheck' && v !== undefined && v !== null)
           .map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
           .join('\n')
       : '(unknown)';

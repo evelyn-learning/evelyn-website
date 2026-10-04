@@ -17,7 +17,7 @@ import type { FrqRubric } from '@evelyn/portal-contract/v1';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
-function toPlanLite(plan: LessonPlan): PlanLite {
+export function toPlanLite(plan: LessonPlan): PlanLite {
   const metadata = plan.metadata && typeof plan.metadata === 'object' ? plan.metadata : undefined;
   const portalPartnerId = metadata?.portalPartnerId;
   return {
@@ -69,6 +69,10 @@ function toPlanLite(plan: LessonPlan): PlanLite {
         responseFormat,
         choices,
         offTopic: s.offTopic,
+        // Creation-time key check (generated / review plans). Passed through
+        // ONLY when present, so planToItems can refuse a segment whose key
+        // was checked and not verified; absent/null (legacy) adds no field.
+        ...(s.keyCheck && typeof s.keyCheck === 'object' ? { keyCheck: s.keyCheck } : {}),
       };
     }),
   };

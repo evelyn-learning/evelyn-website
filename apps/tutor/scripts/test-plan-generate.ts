@@ -52,6 +52,12 @@ import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import type { NextRequest } from 'next/server';
 
+// Creation-time answer-key verification (plan-key-verify.ts) makes extra LIVE
+// model calls per generated plan. It has its own hermetic suite
+// (scripts/test-key-verify.ts); here it is switched off so this suite keeps
+// exercising exactly the generation behaviour it was written against.
+process.env.TUTOR_KEY_VERIFY_AT_CREATION ??= 'off';
+
 // Task 3 (Phase-2 doc ingestion) — POST /api/portal/v1/plan-generate with
 // `materials`. Fixtures are shared with test-material-extract.ts.
 const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');

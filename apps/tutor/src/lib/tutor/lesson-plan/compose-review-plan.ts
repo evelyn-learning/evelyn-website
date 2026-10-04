@@ -47,6 +47,12 @@ import {
   type GenerateFromTextInput,
 } from './generate-from-text';
 import { clampSessionMinutes } from './session-budget';
+import {
+  verifyPlanKeys,
+  finishKeyVerifyInBackground,
+  KEY_VERIFY_REVIEW_INLINE_BUDGET_MS,
+  type PlanKeyVerifyFn,
+} from './plan-key-verify';
 import { LearnerStateProjectionModel, buildLearnerStateProjectionId } from '@/models';
 import connectDB from '@core/db';
 import { TUNING } from '../learner-model/estimator';
@@ -97,6 +103,9 @@ export interface ComposeReviewInput {
   /** DI seam for tests: stage-2 expander; defaults to the real
    *  LLM-backed one (generate-from-text.ts's expandSegmentsForLOs). */
   expandFn?: typeof expandSegmentsForLOs;
+  /** DI seam for tests: the creation-time answer-key verifier
+   *  (plan-key-verify.ts). Defaults to the real blind-solve verifier. */
+  verifyKeyFn?: PlanKeyVerifyFn;
 }
 
 /** Appended to a below-threshold LO's description so the (static)
@@ -204,7 +213,23 @@ export async function composeReviewPlan(input: ComposeReviewInput): Promise<Less
     metadata: { reviewPlan: true, studentId: input.studentId },
   };
 
-  const plan = parseLessonPlan(raw);
+  // Creation-time answer-key check (TUTOR_KEY_VERIFY_AT_CREATION, default ON):
+  // every try-yourself key gets an independent blind solve BEFORE the plan is
+  // stored. Inline, up to KEY_VERIFY_REVIEW_INLINE_BUDGET_MS (the portal
+  // allows 50 s for this call). Verified → unchanged; mismatch / ill-posed /
+  // unverifiable → the segment keeps its question and has no trusted key
+  // (portal/withdrawn-items.ts `keyCheckUntrusted`); an ill-posed "-try" /
+  // "-try2" is dropped when the LO's other try-yourself is sound. Checks
+  // still running at the budget are stored untrusted and completed in the
+  // background (kv.finish).
+  const kv = await verifyPlanKeys(parseLessonPlan(raw), {
+    label: 'review-plan',
+    inlineBudgetMs: KEY_VERIFY_REVIEW_INLINE_BUDGET_MS,
+    dropIllPosed: true,
+    ...(input.verifyKeyFn ? { verify: input.verifyKeyFn } : {}),
+  });
+  const plan = kv.plan;
   await upsertLessonPlan(plan);
+  finishKeyVerifyInBackground(kv);
   return plan;
 }

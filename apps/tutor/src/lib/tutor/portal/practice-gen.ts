@@ -30,7 +30,10 @@
  *     `'on'` is OFF — safe default when unset).
  *
  * Every generated item passes independent verification AND the answer-shape
- * gate before it is ever returned or persisted. Any failure anywhere in this
+ * gate before it is ever returned or persisted — mcq/numeric by the blind
+ * re-solve (`verifyClaimedAnswer`), free-text by the shared creation-time key
+ * verifier (./key-verify.ts, 2026-10-04; free answers used to pass on shape
+ * alone and were still stamped as verified). Any failure anywhere in this
  * module (cap check, generation, verification, persistence) degrades to
  * fewer items — it must never throw out of `generatePracticeItems` itself
  * (the one exception being deliberately-injected test doubles that choose to
@@ -56,6 +59,7 @@ import {
 } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { isWithdrawnItem, logWithdrawnSkip } from './withdrawn-items';
+import { keyVerifyEnabled, verifyAnswerKey, type VerifyAnswerKeyInput, type VerifyAnswerKeyResult } from './key-verify';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -217,12 +221,26 @@ async function mongoPersist(row: PracticeGenPersistRow): Promise<void> {
         source: { name: 'Evelyn (practice-gen runtime)' },
         license: 'internal-original',
         verifiedAt: new Date(),
-        verifierModel: BRAINGEN_VERIFY_MODEL,
+        // The model whose independent solve agreed with the answer — set by
+        // the answer gate (`checkGeneratedAnswer`). Never claim a solve that
+        // did not happen: a `free` row that reaches here without one (only
+        // possible with TUTOR_KEY_VERIFY_AT_CREATION=off, or a caller that
+        // bypassed the gate) is stamped 'unverified', the same marker the
+        // seed scripts write under --no-verify. (`verifiedAt` is a required
+        // column; for such a row it is only the insert time.)
+        verifierModel: row.gen.verifierModel ?? (row.gen.answerKind === 'free' ? UNVERIFIED_MODEL : BRAINGEN_VERIFY_MODEL),
       },
     },
     { upsert: true },
   );
 }
+
+/** `verifierModel` of a bank row whose answer no independent solve confirmed. */
+export const UNVERIFIED_MODEL = 'unverified';
+
+/** Injectable independent key check for `free` answers — defaults to the
+ *  shared creation-time verifier (./key-verify.ts); tests inject a fake. */
+export type KeyVerifyFn = (input: VerifyAnswerKeyInput) => Promise<Pick<VerifyAnswerKeyResult, 'status' | 'model'>>;
 
 /** Injectable choices-aware/blind verify call, matching
  *  `verifyClaimedAnswer`'s signature — defaults to the real implementation;
@@ -361,8 +379,9 @@ export function stripChoiceLetterPrefixes(choices: string[]): string[] {
 export async function gateGeneratedAnswer(
   gen: GenPayload,
   verify: VerifyFn = verifyClaimedAnswer,
+  verifyKey: KeyVerifyFn = verifyAnswerKey,
 ): Promise<GenPayload | null> {
-  const out = await checkGeneratedAnswer(gen, verify);
+  const out = await checkGeneratedAnswer(gen, verify, verifyKey);
   return out.ok ? out.gen : null;
 }
 
@@ -374,7 +393,12 @@ export type GateFailReason =
   | 'mcq_letter_out_of_range'
   | 'numeric_shape'
   | 'free_shape'
-  | 'verify_disagree';
+  | 'verify_disagree'
+  /** `free` answer: the independent key check could not reach a verdict
+   *  (model/parse failure, or the judge could not tell) — fail closed. */
+  | 'free_unverified'
+  /** `free` item: the independent solver found the question ill-posed. */
+  | 'ill_posed';
 
 /** Longest canonical answer a `free` generated item may carry. */
 export const FREE_ANSWER_MAX_CHARS = 120;
@@ -384,12 +408,25 @@ export const FREE_ANSWER_MAX_CHARS = 120;
  *
  *  `answerKind: 'free'` (2026-10-02): ordered pairs, expressions, sets and
  *  short phrases are graded by the free-response judge (/grade), so they need
- *  no number/letter shape — only a non-empty canonical `expectedAnswer` of at
- *  most FREE_ANSWER_MAX_CHARS and a problem that is not a drawing
- *  instruction. No blind re-solve: agreement stays numeric-only. */
+ *  no number/letter shape — a non-empty canonical `expectedAnswer` of at most
+ *  FREE_ANSWER_MAX_CHARS and a problem that is not a drawing instruction.
+ *
+ *  2026-10-04: a `free` item's key is no longer trusted on shape alone. It is
+ *  independently verified (`verifyKey` → ./key-verify.ts: a blind solve that
+ *  never sees the claimed answer, then an exact / judged comparison) and the
+ *  item passes ONLY on `verified`:
+ *    mismatch → 'verify_disagree' · ill_posed → 'ill_posed' ·
+ *    unverifiable (incl. any model failure) → 'free_unverified'.
+ *  With TUTOR_KEY_VERIFY_AT_CREATION=off the check is skipped (the previous
+ *  shape-only behaviour) and the payload is marked `verifierModel:
+ *  'unverified'` so the bank row never claims a solve.
+ *
+ *  Every payload that passes carries `verifierModel`: the model whose
+ *  independent solve agreed with the answer. */
 export async function checkGeneratedAnswer(
   gen: GenPayload,
   verify: VerifyFn = verifyClaimedAnswer,
+  verifyKey: KeyVerifyFn = verifyAnswerKey,
 ): Promise<{ ok: true; gen: GenPayload } | { ok: false; reason: GateFailReason }> {
   const fail = (reason: GateFailReason) => ({ ok: false as const, reason });
   if (gen.answerKind === 'free') {
@@ -397,7 +434,20 @@ export async function checkGeneratedAnswer(
     if (!expected || expected.length > FREE_ANSWER_MAX_CHARS || isDrawingInstruction(gen.problemText)) {
       return fail('free_shape');
     }
-    return { ok: true, gen: { ...gen, finalAnswer: expected, expectedAnswer: expected, choices: undefined } };
+    let verifierModel = UNVERIFIED_MODEL;
+    if (keyVerifyEnabled()) {
+      let checked: Pick<VerifyAnswerKeyResult, 'status' | 'model'>;
+      try {
+        checked = await verifyKey({ question: gen.problemText, claimedAnswer: expected, answerFormat: 'free' });
+      } catch {
+        return fail('free_unverified'); // the verifier never throws; an injected one might — fail closed
+      }
+      if (checked.status === 'mismatch') return fail('verify_disagree');
+      if (checked.status === 'ill_posed') return fail('ill_posed');
+      if (checked.status !== 'verified') return fail('free_unverified');
+      verifierModel = checked.model || UNVERIFIED_MODEL;
+    }
+    return { ok: true, gen: { ...gen, finalAnswer: expected, expectedAnswer: expected, choices: undefined, verifierModel } };
   }
   if (gen.responseFormat === 'mcq') {
     const rawChoices = gen.choices ?? [];
@@ -417,13 +467,13 @@ export async function checkGeneratedAnswer(
     if (letterIndex < 0 || letterIndex >= choices.length) return fail('mcq_letter_out_of_range'); // out-of-bounds letter — reject
     const { agree } = await verify(gen.problemText, claimedLetter, choices);
     if (!agree) return fail('verify_disagree');
-    return { ok: true, gen: { ...gen, finalAnswer: claimedLetter, choices: choiceTexts } };
+    return { ok: true, gen: { ...gen, finalAnswer: claimedLetter, choices: choiceTexts, verifierModel: BRAINGEN_VERIFY_MODEL } };
   }
   const normalized = normalizeNumericAnswer(gen.finalAnswer);
   if (!normalized) return fail('numeric_shape'); // ambiguous/non-numeric shape — reject rather than guess
   const { agree } = await verify(gen.problemText, gen.finalAnswer);
   if (!agree) return fail('verify_disagree');
-  return { ok: true, gen: { ...gen, finalAnswer: normalized } };
+  return { ok: true, gen: { ...gen, finalAnswer: normalized, verifierModel: BRAINGEN_VERIFY_MODEL } };
 }
 
 /** Generate one candidate (shared generator) then run it through the

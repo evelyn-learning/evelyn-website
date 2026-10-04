@@ -43,7 +43,7 @@ import type {
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
 import { generatePracticeItems, logPracticeGenEvent, isDrawingOnlyItem, type PracticeGenSources } from './practice-gen';
-import { isWithdrawnItem, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
+import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -89,6 +89,9 @@ export interface PlanLite {
     responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
     choices?: Array<{ id: string; text: string; correct?: boolean }>;
     offTopic?: boolean;
+    /** Creation-time key check (generated / review plans). Present and not
+     *  `verified` ⇒ the segment is never served as a practice item. */
+    keyCheck?: { status: string } | null;
   }>;
 }
 
@@ -229,6 +232,15 @@ function planToItems(plan: PlanLite, loId: string, fallbackToRequested = false):
     // and — since the anchor pool is built from these items — never an anchor.
     if (isWithdrawnItem(id)) {
       logWithdrawnSkip(id);
+      continue;
+    }
+    // Key checked at creation and NOT verified (mismatch / ill-posed /
+    // unverifiable, incl. a check still running): same treatment as a
+    // withdrawn item — a practice item is machine-graded against its key, so
+    // an unverified key is never served, nor used as a generation anchor. A
+    // segment with no `keyCheck` (legacy / authored) is unaffected.
+    if (keyCheckUntrusted(seg)) {
+      logUnverifiedKeySkip(id, seg);
       continue;
     }
     // A pure drawing/graphing try-yourself ("Sketch the forces…", "Graph the

@@ -332,6 +332,7 @@
     "test:streak-claim": "npx tsx scripts/test-streak-claim.ts",
     "test:boredom-cue": "npx tsx scripts/test-boredom-cue.ts",
     "test:practice-plan-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-plan-scoping.ts",
-    "test:withdrawn-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-withdrawn-items.ts"
+    "test:withdrawn-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-withdrawn-items.ts",
+    "test:key-verify": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-key-verify.ts"
   }
 }

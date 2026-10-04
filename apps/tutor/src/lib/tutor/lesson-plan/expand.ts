@@ -49,6 +49,7 @@
 import { randomUUID } from 'node:crypto';
 import { getLessonPlan, upsertLessonPlan } from './store';
 import { expandSegmentsForLOs, buildRecapSegment } from './generate-from-text';
+import { verifyPlanKeys, finishKeyVerifyInBackground, KEY_VERIFY_JIT_INLINE_BUDGET_MS, type PlanKeyVerifyFn } from './plan-key-verify';
 import { parseLessonPlan } from './parser';
 import type { LessonPlan, Segment, LearningObjective } from './types';
 
@@ -74,6 +75,9 @@ export interface ExpandPlanLosInput {
    *  `planId` may be a topic-cache-served picker plan shared by
    *  concurrent students. See the module doc for the full hazard. */
   writeMode?: 'in-place' | 'clone';
+  /** DI seam for tests: the creation-time answer-key verifier
+   *  (plan-key-verify.ts). Defaults to the real blind-solve verifier. */
+  verifyKeyFn?: PlanKeyVerifyFn;
 }
 
 export interface ExpandPlanLosSuccess {
@@ -286,8 +290,22 @@ export async function expandPlanLos(input: ExpandPlanLosInput): Promise<ExpandPl
     return { ok: false, kind: 'parse_failed', reason: (err as Error).message };
   }
 
+  // Creation-time answer-key check — background (a student is waiting on
+  // this expansion; see the same call in /api/portal/v1/plan-generate). The
+  // expanded plan is stored with every checked key untrusted (`keyCheck:
+  // unverifiable (pending)`); each result is written onto the stored plan as
+  // it lands, matched on the segment's problem + key so a later re-expansion
+  // under the same plan id (priority call → full call) is never mis-stamped.
+  const kv = await verifyPlanKeys(updatedPlan, {
+    label: 'plan-expand',
+    inlineBudgetMs: KEY_VERIFY_JIT_INLINE_BUDGET_MS,
+    ...(input.verifyKeyFn ? { verify: input.verifyKeyFn } : {}),
+  });
+  updatedPlan = kv.plan;
+
   try {
     await upsertLessonPlan(updatedPlan);
+    finishKeyVerifyInBackground(kv);
   } catch (err) {
     console.warn('[expandPlanLos] upsert failed (continuing):', err);
   }

@@ -6,6 +6,7 @@
  */
 
 import {
+  type KeyCheck,
   type LessonPlan,
   type Segment,
   LESSON_PLAN_SCHEMA_VERSION,
@@ -46,6 +47,23 @@ function requireArray<T>(obj: unknown, path: string, field: string, fn: (item: u
   const v = (obj as any)?.[field];
   if (!Array.isArray(v)) throw new PlanParseError(`${path}.${field}`, 'must be an array');
   return v.map(fn);
+}
+
+const KEY_CHECK_STATUSES: ReadonlySet<string> = new Set(['verified', 'mismatch', 'ill_posed', 'unverifiable']);
+
+/** A stored `keyCheck`, or undefined when absent. A PRESENT but malformed
+ *  value (unknown status) is kept as `unverifiable` rather than dropped:
+ *  dropping it would silently turn an untrusted key back into a trusted one. */
+function parseKeyCheck(raw: unknown): KeyCheck | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const k = raw as Record<string, unknown>;
+  const status = typeof k.status === 'string' && KEY_CHECK_STATUSES.has(k.status) ? (k.status as KeyCheck['status']) : 'unverifiable';
+  return {
+    status,
+    checkedAt: typeof k.checkedAt === 'string' ? k.checkedAt : '',
+    model: typeof k.model === 'string' ? k.model : '',
+    ...(typeof k.reason === 'string' && k.reason ? { reason: k.reason } : {}),
+  };
 }
 
 function parseSegment(raw: unknown, i: number): Segment {
@@ -122,6 +140,10 @@ function parseSegment(raw: unknown, i: number): Segment {
         hints: r.hints,
         responseFormat: r.responseFormat,
         choices: r.choices,
+        // Creation-time key check. Carried ONLY when well-formed, and never
+        // as an explicit `undefined`: a segment without one must stay
+        // byte-identical to what this parser produced before the field existed.
+        ...(parseKeyCheck(r.keyCheck) ? { keyCheck: parseKeyCheck(r.keyCheck)! } : {}),
       };
     case 'misconception_check':
       return {

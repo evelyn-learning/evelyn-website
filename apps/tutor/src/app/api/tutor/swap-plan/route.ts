@@ -22,6 +22,7 @@
  * proposing a swap to something outside.
  */
 
+import { verifyPlanKeys, finishKeyVerifyInBackground, KEY_VERIFY_JIT_INLINE_BUDGET_MS } from '@/lib/tutor/lesson-plan/plan-key-verify';
 import { NextRequest, NextResponse } from 'next/server';
 import { listLessonPlans } from '@/lib/tutor/lesson-plan/store';
 import { generatePlanFromText } from '@/lib/tutor/lesson-plan/generate-from-text';
@@ -162,8 +163,15 @@ export async function POST(request: NextRequest) {
   });
   const generationMs = Date.now() - startedAt;
 
+  // Creation-time answer-key check — background (mid-session swap; see the
+  // same call in /api/portal/v1/plan-generate). The plan is stored and
+  // returned with every checked key untrusted until its own check verifies it.
+  const kv = await verifyPlanKeys(generation.plan, { label: 'swap-plan', inlineBudgetMs: KEY_VERIFY_JIT_INLINE_BUDGET_MS });
+  generation.plan = kv.plan;
+
   try {
     await upsertLessonPlan(generation.plan);
+    finishKeyVerifyInBackground(kv);
   } catch (err) {
     console.warn('[swap-plan] upsert failed (continuing):', err);
   }

@@ -55,6 +55,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { verifyPlanKeys, finishKeyVerifyInBackground, KEY_VERIFY_JIT_INLINE_BUDGET_MS } from '@/lib/tutor/lesson-plan/plan-key-verify';
 import { randomUUID } from 'node:crypto';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import {
@@ -446,6 +447,18 @@ export const POST = withPortalAuth(async (_req, auth) => {
     }),
   };
 
+  // Creation-time answer-key check (TUTOR_KEY_VERIFY_AT_CREATION, default ON).
+  // Every generated try-yourself key gets an independent blind solve. This
+  // call is on a session-start path the portal aborts at 10 s (demo) — so it
+  // does NOT wait: each checked segment is stored as `keyCheck: unverifiable
+  // (pending)`, i.e. with NO trusted key (the session derives the answer;
+  // practice does not serve it), and the real result is written onto the
+  // stored plan when it lands (kv.finish, started after the upsert below).
+  // An unverified key therefore never grades a student. Picker / fallback /
+  // homework plans have no try-yourself and pass through untouched.
+  const kv = await verifyPlanKeys(plan, { label: 'plan-generate', inlineBudgetMs: KEY_VERIFY_JIT_INLINE_BUDGET_MS });
+  plan = kv.plan;
+
   try {
     await upsertLessonPlan(plan);
   } catch (err) {
@@ -455,6 +468,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     console.error('[plan-generate] persistence failed, returning 502:', (err as Error).message);
     return NextResponse.json({ error: 'persistence_failed' }, { status: 502 });
   }
+  finishKeyVerifyInBackground(kv);
 
   // Schema-validate before responding so contract drift fails loudly
   // instead of silently shipping a malformed body to the portal.

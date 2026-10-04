@@ -39,6 +39,12 @@ import { SessionSummarySchema } from '@evelyn/portal-contract/v1';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
 import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
 
+// Creation-time answer-key verification (plan-key-verify.ts) makes extra LIVE
+// model calls per generated plan. It has its own hermetic suite
+// (scripts/test-key-verify.ts); here it is switched off so this suite keeps
+// exercising exactly the generation behaviour it was written against.
+process.env.TUTOR_KEY_VERIFY_AT_CREATION ??= 'off';
+
 const SECRET = 'secret-a';
 const PARTNER = 'portalA';
 

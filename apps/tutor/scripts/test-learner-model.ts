@@ -22,6 +22,12 @@ import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import type { LearningObjective, Segment } from '@/lib/tutor/lesson-plan/types';
 import type { GenerateFromTextInput, ExpandSegmentsResult } from '@/lib/tutor/lesson-plan/generate-from-text';
 
+// Creation-time answer-key verification (plan-key-verify.ts) makes extra LIVE
+// model calls per generated plan. It has its own hermetic suite
+// (scripts/test-key-verify.ts); here it is switched off so this suite keeps
+// exercising exactly the generation behaviour it was written against.
+process.env.TUTOR_KEY_VERIFY_AT_CREATION ??= 'off';
+
 let passed = 0;
 let failed = 0;
 function assert(cond: boolean, name: string) {

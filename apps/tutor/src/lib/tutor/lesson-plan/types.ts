@@ -173,11 +173,40 @@ export interface FrqRubric {
   parts: FrqRubricPart[];
 }
 
+/** Outcome of the creation-time answer-key check (portal/key-verify.ts):
+ *  an independent blind solve compared with the stored key.
+ *    verified     — the solve agrees with the key;
+ *    mismatch     — the solve gives a different answer (or the key is incomplete);
+ *    ill_posed    — the solver could not answer the question as written;
+ *    unverifiable — no verdict (model/parse failure, time budget exceeded, or
+ *                   the check is still running — see `reason`). */
+export type KeyCheckStatus = 'verified' | 'mismatch' | 'ill_posed' | 'unverifiable';
+
+/** Recorded ON a generated try-yourself segment when its key was checked at
+ *  creation. A stored key is trusted only when `status === 'verified'`: any
+ *  other status makes every reader treat the segment as having NO stored key
+ *  (portal/withdrawn-items.ts `effectiveSegment` / `keyCheckUntrusted`).
+ *  ABSENT on every plan stored before 2026-10-04 and on authored plans —
+ *  absence keeps the pre-existing behaviour. */
+export interface KeyCheck {
+  status: KeyCheckStatus;
+  /** ISO timestamp of the check (or of plan creation while it is pending). */
+  checkedAt: string;
+  /** Model id that did the blind solve. */
+  model: string;
+  /** Short diagnostic: why the status is what it is (`pending`,
+   *  `budget_exceeded`, the comparator/judge reason, …). Never shown to a student. */
+  reason?: string;
+}
+
 export interface SegmentTryYourself extends SegmentBase {
   kind: 'try_yourself';
   problem: string;
   /** Expected answer. The brain compares student work against this. */
   expectedAnswer?: string;
+  /** Creation-time check of `expectedAnswer` (generated + review plans only).
+   *  Present and not `verified` ⇒ the key is not trusted anywhere. */
+  keyCheck?: KeyCheck;
   /** Optional part-by-part AP rubric. When present on an FRQ, a scored quiz /
    *  practice item is graded criterion-by-criterion for partial credit
    *  (portal/grade-free-response.ts); when absent, FRQ grading falls back to

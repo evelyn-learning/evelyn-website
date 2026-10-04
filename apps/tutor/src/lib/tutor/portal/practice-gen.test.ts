@@ -31,7 +31,11 @@ import {
   type PracticeGenSources,
   type GeneratePracticeItemsOptions,
   type VerifyFn,
+  type KeyVerifyFn,
+  UNVERIFIED_MODEL,
 } from './practice-gen';
+import * as problemGeneratorModule from '../voice/problem-generator';
+import * as keyVerifyModule from './key-verify';
 import type { GenPayload } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { ProblemBank } from '@/models/ProblemBank';
@@ -854,23 +858,82 @@ function freeGen(text = 'Find the y-intercept of y = 2x + 3. Give it as an order
   };
 }
 
-await test('free: a valid free candidate passes WITHOUT a blind re-solve, answer = expectedAnswer, no choices', async () => {
-  let verifyCalls = 0;
-  const verify: VerifyFn = async () => { verifyCalls++; return { agree: false, solved: 'x' }; };
-  const out = await checkGeneratedAnswer({ ...freeGen(), choices: ['stray'] }, verify);
+/** Injected independent key check for `free` answers (./key-verify.ts) —
+ *  no Anthropic. */
+function keyVerdict(status: 'verified' | 'mismatch' | 'ill_posed' | 'unverifiable', seen?: Array<{ question: string; claimedAnswer: string }>): KeyVerifyFn {
+  return async (input) => {
+    seen?.push({ question: input.question, claimedAnswer: input.claimedAnswer });
+    return { status, model: 'fake-content-verify' };
+  };
+}
+
+// 2026-10-04 (creation-time key verification). This test used to pin the
+// opposite — "a valid free candidate passes WITHOUT a blind re-solve" — which
+// is exactly how unverified free-text keys were banked and stamped verified.
+await test('free: a valid free candidate passes ONLY when its key is independently verified; answer = expectedAnswer, no choices', async () => {
+  let numericVerifyCalls = 0;
+  const verify: VerifyFn = async () => { numericVerifyCalls++; return { agree: false, solved: 'x' }; };
+  const seen: Array<{ question: string; claimedAnswer: string }> = [];
+  const out = await checkGeneratedAnswer({ ...freeGen(), choices: ['stray'] }, verify, keyVerdict('verified', seen));
   assert.equal(out.ok, true, JSON.stringify(out));
   if (!out.ok) return;
   assert.equal(out.gen.finalAnswer, '(0, 3)');
   assert.equal(out.gen.answerKind, 'free');
   assert.equal(out.gen.choices, undefined);
-  assert.equal(verifyCalls, 0, 'agreement check is numeric-only');
+  assert.equal(numericVerifyCalls, 0, 'the numeric/mcq first-number agreement check is not used for free answers');
+  assert.deepEqual(seen, [{ question: freeGen().problemText, claimedAnswer: '(0, 3)' }], 'the key verifier ran once, on this problem and key');
+  assert.equal(out.gen.verifierModel, 'fake-content-verify', 'stamped with the model that actually solved it');
+});
+
+await test('free: mismatch → verify_disagree, ill-posed → ill_posed, unverifiable / verifier failure → free_unverified', async () => {
+  assert.deepEqual(await checkGeneratedAnswer(freeGen(), agreeVerify(), keyVerdict('mismatch')), { ok: false, reason: 'verify_disagree' });
+  assert.deepEqual(await checkGeneratedAnswer(freeGen(), agreeVerify(), keyVerdict('ill_posed')), { ok: false, reason: 'ill_posed' });
+  assert.deepEqual(await checkGeneratedAnswer(freeGen(), agreeVerify(), keyVerdict('unverifiable')), { ok: false, reason: 'free_unverified' });
+  const throwing: KeyVerifyFn = async () => { throw new Error('network down'); };
+  assert.deepEqual(await checkGeneratedAnswer(freeGen(), agreeVerify(), throwing), { ok: false, reason: 'free_unverified' });
+  assert.equal(await gateGeneratedAnswer(freeGen(), agreeVerify(), keyVerdict('mismatch')), null);
+});
+
+await test('free: the shape checks still run FIRST — a bad shape never reaches the key verifier', async () => {
+  const seen: Array<{ question: string; claimedAnswer: string }> = [];
+  assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: '  ' }, agreeVerify(), keyVerdict('verified', seen)), { ok: false, reason: 'free_shape' });
+  assert.deepEqual(await checkGeneratedAnswer(freeGen('Graph y = 2x + 3 and label both intercepts.', '(0, 3)'), agreeVerify(), keyVerdict('verified', seen)), { ok: false, reason: 'free_shape' });
+  assert.equal(seen.length, 0);
+});
+
+await test('free: TUTOR_KEY_VERIFY_AT_CREATION=off → the previous shape-only admission, marked unverified (never stamped as solved)', async () => {
+  process.env.TUTOR_KEY_VERIFY_AT_CREATION = 'off';
+  try {
+    const seen: Array<{ question: string; claimedAnswer: string }> = [];
+    const out = await checkGeneratedAnswer(freeGen(), disagreeVerify(), keyVerdict('mismatch', seen));
+    assert.equal(out.ok, true, JSON.stringify(out));
+    assert.equal(seen.length, 0, 'no key check with the flag off');
+    if (out.ok) {
+      assert.equal(out.gen.verifierModel, UNVERIFIED_MODEL);
+      const { verifierModel: _vm, ...rest } = out.gen;
+      void _vm;
+      assert.deepEqual(rest, { ...freeGen(), finalAnswer: '(0, 3)', expectedAnswer: '(0, 3)', choices: undefined }, 'otherwise exactly the pre-change payload');
+    }
+  } finally {
+    delete process.env.TUTOR_KEY_VERIFY_AT_CREATION;
+  }
+});
+
+await test('verifierModel: mcq and numeric payloads are stamped with the blind re-solve model', async () => {
+  const num = await checkGeneratedAnswer(numericGen('Solve 2x = 6.', '3'), agreeVerify());
+  const mcq = await checkGeneratedAnswer(mcqGen(), agreeVerify());
+  assert.ok(num.ok && mcq.ok);
+  if (num.ok && mcq.ok) {
+    assert.equal(num.gen.verifierModel, problemGeneratorModule.BRAINGEN_VERIFY_MODEL);
+    assert.equal(mcq.gen.verifierModel, problemGeneratorModule.BRAINGEN_VERIFY_MODEL);
+  }
 });
 
 await test('free: an empty or over-long expectedAnswer fails free_shape', async () => {
   assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: '   ' }, agreeVerify()), { ok: false, reason: 'free_shape' });
   assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: undefined }, agreeVerify()), { ok: false, reason: 'free_shape' });
   assert.deepEqual(await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: 'x'.repeat(121) }, agreeVerify()), { ok: false, reason: 'free_shape' });
-  assert.equal((await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: 'x'.repeat(120) }, agreeVerify())).ok, true, '120 chars is the inclusive limit');
+  assert.equal((await checkGeneratedAnswer({ ...freeGen(), expectedAnswer: 'x'.repeat(120) }, agreeVerify(), keyVerdict('verified'))).ok, true, '120 chars is the inclusive limit');
 });
 
 await test('free: a drawing-instruction free candidate fails free_shape', async () => {
@@ -912,6 +975,87 @@ await test('free: the real persist writes responseFormat free, answer = expected
   assert.equal(row.responseFormat, 'free');
   assert.equal(row.answer, '(0, 3)');
   assert.equal(row.choices, undefined);
+});
+
+await test('persist stamps verifierModel from the solve that happened — never a solve that did not', async () => {
+  const persistRow = async (gen: GenPayload) => {
+    capturedPersist = null;
+    await practiceGenSources().persist({ id: `practice-gen.${LO}.vm`, topic: TOPIC, loId: LO, difficulty: 2, gen });
+    return (capturedPersist as CapturedUpdate | null)!.update.$setOnInsert;
+  };
+  const verifiedFree = await checkGeneratedAnswer(freeGen(), agreeVerify(), keyVerdict('verified'));
+  assert.ok(verifiedFree.ok);
+  if (verifiedFree.ok) {
+    const row = await persistRow(verifiedFree.gen);
+    assert.equal(row.verifierModel, 'fake-content-verify');
+    assert.ok(row.verifiedAt instanceof Date);
+  }
+  // A free payload that reaches persist with NO recorded solve (flag off, or a
+  // caller that bypassed the gate) is marked unverified.
+  assert.equal((await persistRow({ ...freeGen(), finalAnswer: '(0, 3)' })).verifierModel, UNVERIFIED_MODEL);
+  assert.equal((await persistRow({ ...freeGen(), finalAnswer: '(0, 3)', verifierModel: UNVERIFIED_MODEL })).verifierModel, UNVERIFIED_MODEL);
+  // mcq / numeric: unchanged — the blind re-solve model.
+  assert.equal((await persistRow(mcqGen())).verifierModel, problemGeneratorModule.BRAINGEN_VERIFY_MODEL);
+  const gatedNumeric = await checkGeneratedAnswer(numericGen('Solve 2x = 6.', '3'), agreeVerify());
+  assert.ok(gatedNumeric.ok);
+  if (gatedNumeric.ok) assert.equal((await persistRow(gatedNumeric.gen)).verifierModel, problemGeneratorModule.BRAINGEN_VERIFY_MODEL);
+});
+
+/** Drive the REAL `practiceGenSources().generateAndVerify` (generate → gate →
+ *  1 retry) with the generator and the key verifier replaced — no Anthropic. */
+async function runRealGate(status: 'verified' | 'mismatch' | 'ill_posed' | 'unverifiable') {
+  const pg = problemGeneratorModule as unknown as { generateCandidate: unknown };
+  const kv = keyVerifyModule as unknown as { verifyAnswerKey: unknown };
+  const origGen = pg.generateCandidate;
+  const origVerify = kv.verifyAnswerKey;
+  let n = 0;
+  let keyChecks = 0;
+  pg.generateCandidate = async () => { n++; return { gen: freeGen(`Free problem ${n}: give the y-intercept as an ordered pair.`), hash: `fh${n}` }; };
+  kv.verifyAnswerKey = async () => { keyChecks++; return { status, model: 'fake-content-verify', reason: 'fake', usage: { calls: 1, inputTokens: 0, outputTokens: 0 } }; };
+  process.env.PRACTICE_GEN = 'on';
+  const events: Array<{ type: string; message: string }> = [];
+  const persisted: Array<{ id: string; gen: GenPayload }> = [];
+  try {
+    const real = practiceGenSources();
+    const sources: PracticeGenSources = {
+      generateAndVerify: real.generateAndVerify,
+      async reserve(_s, _l, want) { return want; },
+      async persist(row) { persisted.push({ id: row.id, gen: row.gen }); },
+    };
+    const items = await generatePracticeItems(
+      baseOpts({ shortfall: 1, onDebugEvent: (type, message) => events.push({ type, message }) }),
+      sources,
+    );
+    return { items, events, persisted, generations: n, keyChecks };
+  } finally {
+    pg.generateCandidate = origGen;
+    kv.verifyAnswerKey = origVerify;
+    delete process.env.PRACTICE_GEN;
+  }
+}
+
+await test('free end-to-end (real gate): a VERIFIED free item is served and banked, stamped with the verifier model', async () => {
+  const r = await runRealGate('verified');
+  assert.equal(r.items.length, 1);
+  assert.equal(r.items[0].responseFormat, 'free');
+  assert.equal(r.items[0].expectedAnswer, '(0, 3)');
+  assert.equal(r.persisted.length, 1);
+  assert.equal(r.persisted[0].gen.verifierModel, 'fake-content-verify');
+  assert.deepEqual([r.generations, r.keyChecks], [1, 1]);
+  assert.deepEqual(r.events, []);
+});
+
+await test('free end-to-end (real gate): mismatch / ill-posed / unverifiable → rejected, NOT served, NOT banked, practice_gen_gate_failed logged', async () => {
+  for (const [status, reason] of [['mismatch', 'verify_disagree'], ['ill_posed', 'ill_posed'], ['unverifiable', 'free_unverified']] as const) {
+    const r = await runRealGate(status);
+    assert.deepEqual(r.items, [], status);
+    assert.deepEqual(r.persisted, [], `${status}: nothing banked, so nothing stamped verified`);
+    assert.deepEqual([r.generations, r.keyChecks], [2, 2], `${status}: first attempt + the one retry, each checked`);
+    const gated = r.events.filter((e) => e.type === 'practice_gen_gate_failed');
+    assert.equal(gated.length, 2, JSON.stringify(r.events));
+    for (const g of gated) assert.equal(g.message, `loId=${LO} reason=${reason}`);
+    assert.ok(r.events.some((e) => e.type === 'practice_gen_empty'), status);
+  }
 });
 
 await test('free: both prompt branches carry the answerKind instruction', async () => {

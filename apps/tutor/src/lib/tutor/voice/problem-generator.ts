@@ -30,7 +30,8 @@ import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
 import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
-import { withoutWithdrawn, isWithdrawnSegment, logWithdrawnSkip } from '../portal/withdrawn-items';
+import { withoutWithdrawn, isWithdrawnSegment, keyCheckUntrusted, segmentKeyUntrusted, logWithdrawnSkip, logUnverifiedKeySkip } from '../portal/withdrawn-items';
+import { compareRelationTexts } from './relation-sampling';
 
 // Layer-2 brain-gen models. Generation + an INDEPENDENT fresh-context solve
 // for verification. Same model in fresh context is the design's decorrelation
@@ -276,6 +277,10 @@ export interface GenPayload {
   answerKind?: 'numeric' | 'mcq' | 'free';
   expectedAnswer?: string;
   modelResponse?: string;
+  /** Practice-gen only: the model whose INDEPENDENT solve agreed with this
+   *  payload's answer (set by the answer gate), or 'unverified' when the item
+   *  was admitted without one. Stamped as the bank row's `verifierModel`. */
+  verifierModel?: string;
 }
 
 function parseGenPayload(raw: string): GenPayload | null {
@@ -483,6 +488,13 @@ export function planAuthoredFallback(
       logWithdrawnSkip(`${plan.id}::${ty.id}`);
       continue;
     }
+    // Same rule for a try-yourself whose creation-time key check did not
+    // verify the key (mismatch / ill-posed / unverifiable): the stored
+    // expectedAnswer would be pinned as the verified key.
+    if (keyCheckUntrusted(ty)) {
+      logUnverifiedKeySkip(`${plan.id}::${ty.id}`, ty);
+      continue;
+    }
     const hash = simpleHash(ty.problem);
     if (excludeHashes.includes(hash)) continue;
     const tyTokens = contentTokenSet(ty.problem);
@@ -506,7 +518,8 @@ export function planAuthoredFallback(
 
 /**
  * The anchor the pipeline may use. When the anchor statement IS one of the
- * plan's withdrawn try-yourselves (answer-key audit), its answer is dropped:
+ * plan's withdrawn try-yourselves (answer-key audit) — or one whose
+ * creation-time key check did not verify the key — its answer is dropped:
  * the stored key is wrong or unreliable, and Layer 2 quotes the anchor answer
  * to the generator ("for difficulty calibration"), which would seed a fresh
  * problem from it. The statement stays (the question is still presented).
@@ -525,12 +538,12 @@ export function effectiveAnchor(
   const norm = (t: string) => t.replace(/\s+/g, ' ').trim();
   const stmt = norm(anchor.statement);
   const hit = plan.segments.some(
-    (s) => s.kind === 'try_yourself' && isWithdrawnSegment(plan.id, s.id) && norm(s.problem) === stmt,
+    (s) => s.kind === 'try_yourself' && segmentKeyUntrusted(plan.id, s) && norm(s.problem) === stmt,
   );
   if (!hit) return anchor;
   const { expectedAnswer: _dropped, ...rest } = anchor;
   void _dropped;
-  console.log('[problem-generator] anchor is a withdrawn try-yourself — anchor answer dropped');
+  console.log('[problem-generator] anchor is a withdrawn / unverified-key try-yourself — anchor answer dropped');
   return rest;
 }
 
@@ -543,13 +556,49 @@ export function effectiveAnchor(
 import { extractAnswerNumber, normMcqText, resolveMcqLetter } from './answer-primitives';
 export { extractAnswerNumber, resolveMcqLetter } from './answer-primitives';
 
+/** An inequality comparator: typed, Unicode or LaTeX. `=` is deliberately not
+ *  one — "x = 5" is a plain-number answer and keeps the numeric path. */
+const INEQUALITY_RE = /<=|>=|[<>≤≥≠]|\\(?:leq?|geq?|lt|gt|neq?)(?![a-zA-Z])/;
+
+/** Notation-only clean-up that KEEPS comparators (unlike the alphanumeric
+ *  `norm` below, under which "x > 3" and "x < 3" are the same string). */
+function normKeepComparators(s: string): string {
+  return (s ?? '')
+    .replace(/[−–—]/g, '-')
+    .replace(/≤|\\leq?(?![a-zA-Z])/g, '<=')
+    .replace(/≥|\\geq?(?![a-zA-Z])/g, '>=')
+    .replace(/\\lt(?![a-zA-Z])/g, '<')
+    .replace(/\\gt(?![a-zA-Z])/g, '>')
+    .replace(/≠|\\neq?(?![a-zA-Z])/g, '!=')
+    .replace(/\$|\\left|\\right|\\\(|\\\)/g, '')
+    .replace(/\s+/g, '')
+    .replace(/[.;,]+$/, '')
+    .toLowerCase();
+}
+
 /** Whether a generated problem's stated answer and an INDEPENDENT solve agree
  *  well enough to serve the problem to a student. Numeric → 1%-or-0.01
  *  tolerance (same rule as portal assessment grading); otherwise normalized
  *  short-exact equality (mcq letters, one-word answers). Anything that can't
  *  be matched this way returns false → the caller falls back to the authored
- *  problem (never serve an unverified generated problem). */
+ *  problem (never serve an unverified generated problem).
+ *
+ *  INEQUALITIES (2026-10-04): when either answer contains an inequality
+ *  comparator the two are compared as SOLUTION SETS (`compareRelationTexts`),
+ *  never by their first number — "−4 < x ≤ 2" and "−4 ≤ x < 2" used to
+ *  "agree" because both start with −4, and "x > 3" agreed with "x < 3". When
+ *  the relation comparator cannot read one side (interval notation, "or"
+ *  compounds, a bare number against an inequality) the answers agree only if
+ *  they are the same text after notation clean-up: fail closed. Answers with
+ *  no comparator are untouched. */
 export function answersAgree(genAnswer: string, solveAnswer: string): boolean {
+  if (INEQUALITY_RE.test(genAnswer ?? '') || INEQUALITY_RE.test(solveAnswer ?? '')) {
+    const cmp = compareRelationTexts(genAnswer ?? '', solveAnswer ?? '');
+    if (cmp.verdict === 'equivalent') return true;
+    if (cmp.verdict === 'differs') return false;
+    const ka = normKeepComparators(genAnswer);
+    return !!ka && ka === normKeepComparators(solveAnswer);
+  }
   const a = extractAnswerNumber(genAnswer);
   const b = extractAnswerNumber(solveAnswer);
   if (a !== null && b !== null) {

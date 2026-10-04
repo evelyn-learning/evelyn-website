@@ -18,6 +18,7 @@
  * back to VoiceTutorRealtime via the lessonPlanId prop flow.
  */
 
+import { verifyPlanKeys, finishKeyVerifyInBackground, KEY_VERIFY_JIT_INLINE_BUDGET_MS } from '@/lib/tutor/lesson-plan/plan-key-verify';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   extractLearningObjectives,
@@ -222,8 +223,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Creation-time answer-key check — background on this session-start path
+  // (see the same call in /api/portal/v1/plan-generate): the plan is stored
+  // and returned with every checked key untrusted (`keyCheck: unverifiable
+  // (pending)`), and each result is written onto the stored plan as it lands.
+  const kv = await verifyPlanKeys(fullPlan, { label: 'plan-from-text', inlineBudgetMs: KEY_VERIFY_JIT_INLINE_BUDGET_MS });
+  fullPlan = kv.plan;
+
   try {
     await upsertLessonPlan(fullPlan);
+    finishKeyVerifyInBackground(kv);
   } catch (err) {
     console.warn('[plan-from-text] full upsert failed (continuing):', err);
   }

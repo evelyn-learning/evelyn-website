@@ -69,5 +69,31 @@ check('1/2 vs 1/3 → disagree', answersAgree('1/2', '1/3') === false);
 check('50% vs 0.7 → disagree', answersAgree('50%', '0.7') === false);
 check('π/4 vs 0.5 → disagree', answersAgree('π/4', '0.5') === false);
 
+// ── 2026-10-04: inequalities are compared as SOLUTION SETS ──
+// answersAgree used to compare only the FIRST number in each answer, so two
+// different inequalities with the same first number "agreed" (and so did
+// "x > 3" vs "x < 3"). With a comparator present, the exact relation
+// comparator (relation-sampling.ts compareRelationTexts) decides.
+check('-4 < x \\le 2 vs -4 \\le x < 2 → disagree (same first number, different endpoints)',
+  answersAgree('-4 < x \\le 2', '-4 \\le x < 2') === false);
+check('-4 < x ≤ 2 vs -4 ≤ x < 2 → disagree', answersAgree('-4 < x ≤ 2', '-4 ≤ x < 2') === false);
+check('x > 3 vs x < 3 → disagree', answersAgree('x > 3', 'x < 3') === false);
+check('x > 3 vs x >= 3 → disagree', answersAgree('x > 3', 'x >= 3') === false);
+check('x > 3 vs x > 4 → disagree', answersAgree('x > 3', 'x > 4') === false);
+check('x > 3 vs 3 < x → agree (same set, flipped)', answersAgree('x > 3', '3 < x') === true);
+check('$x \\geq 5$ vs x >= 5 → agree (notation)', answersAgree('$x \\geq 5$', 'x >= 5') === true);
+check('x ≤ 2 vs x <= 2 → agree (notation)', answersAgree('x ≤ 2', 'x <= 2') === true);
+check('-4 < x <= 2 vs itself → agree', answersAgree('-4 < x <= 2', '-4 < x <= 2') === true);
+// Fail closed when the relation comparator cannot read a side: only the same
+// text (after notation clean-up) agrees — never the first number.
+check('x > 3 vs bare "3" → disagree (was: agreed on the first number)', answersAgree('x > 3', '3') === false);
+check('x < -2 or x > 3 vs same text → agree (unreadable compound, identical text)',
+  answersAgree('x < -2 or x > 3', 'x < -2 or x > 3') === true);
+check('x < -2 or x > 3 vs x < -2 or x > 4 → disagree', answersAgree('x < -2 or x > 3', 'x < -2 or x > 4') === false);
+// Plain numbers and equations are untouched ("=" is not an inequality).
+check('x = 5 vs 5 → agree (numeric path unchanged)', answersAgree('x = 5', '5') === true);
+check('12 vs 12.05 → agree (1 % tolerance unchanged)', answersAgree('12', '12.05') === true);
+check('12 vs 13 → disagree (unchanged)', answersAgree('12', '13') === false);
+
 console.log(`\nverify-answer-match: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

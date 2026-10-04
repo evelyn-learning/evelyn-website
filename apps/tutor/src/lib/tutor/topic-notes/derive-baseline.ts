@@ -24,6 +24,7 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { loGroupOf } from '@/lib/tutor/lesson-plan/context';
 import type { LessonPlan, Segment } from '@/lib/tutor/lesson-plan/types';
 import type { TopicNotesBaseline, TheoryEntry, MethodEntry } from './types';
+import { keyCheckUntrusted } from '@/lib/tutor/portal/withdrawn-items';
 
 /** Per-process cache of derived baselines, keyed by planId (== baselineId).
  *  Only successful derivations are cached — a miss (no stored plan, plan
@@ -45,7 +46,8 @@ function extractSegmentText(seg: Segment): string {
     case 'worked_example':
       return [seg.problem, ...(seg.steps ?? []), seg.answer].filter(Boolean).join(' ');
     case 'try_yourself':
-      return [seg.problem, seg.expectedAnswer].filter(Boolean).join(' ');
+      // A key that was checked at creation and NOT verified is not content.
+      return [seg.problem, keyCheckUntrusted(seg) ? undefined : seg.expectedAnswer].filter(Boolean).join(' ');
     case 'misconception_check':
       return seg.question ?? '';
     case 'recap':

@@ -10,7 +10,7 @@
 
 import connectDB from '@core/db';
 import { LessonPlanModel, toLessonPlan } from '@/models/LessonPlan';
-import type { LessonPlan } from './types';
+import type { KeyCheck, LessonPlan } from './types';
 import { parseLessonPlan } from './parser';
 
 import { SEED_G6_FRACTIONS_ADD_UNLIKE } from './seeds/g6-fractions-add-unlike';
@@ -5271,6 +5271,37 @@ export async function upsertLessonPlan(raw: unknown): Promise<LessonPlan> {
     { upsert: true, new: true },
   );
   return plan;
+}
+
+/**
+ * Record a late creation-time key check on ONE stored try-yourself segment
+ * (plan-key-verify.ts `finish()`), without rewriting the plan document.
+ *
+ * Targeted on purpose: the check lands seconds after the plan was stored, and
+ * by then another writer may have replaced the plan's segments (the picker's
+ * priority expand is followed by a full re-expand under the same plan id and
+ * the same segment ids). The segment is matched on id AND problem AND
+ * expectedAnswer, so a result is only ever written onto the exact content
+ * that was checked; a replaced segment simply does not match (returns false)
+ * and keeps the `keyCheck` its own generation gave it.
+ */
+export async function setSegmentKeyCheck(
+  planId: string,
+  target: { segmentId: string; problem: string; expectedAnswer: string },
+  keyCheck: KeyCheck,
+): Promise<boolean> {
+  if (seedById.has(planId)) return false; // seeds are immutable
+  await connectDB();
+  const res = await LessonPlanModel.updateOne(
+    {
+      _id: planId,
+      segments: {
+        $elemMatch: { id: target.segmentId, kind: 'try_yourself', problem: target.problem, expectedAnswer: target.expectedAnswer },
+      },
+    },
+    { $set: { 'segments.$.keyCheck': keyCheck } },
+  );
+  return res.modifiedCount === 1;
 }
 
 export async function deleteLessonPlan(id: string): Promise<boolean> {
