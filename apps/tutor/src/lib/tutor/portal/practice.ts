@@ -21,6 +21,13 @@
  * These are enforced HERE, in the pure core, so they hold for any
  * `PracticeSources` (production Mongo adapter or a test fake).
  *
+ * WITHDRAWN items (2026-10-04 answer-key audit — withdrawn-items.ts): a bank
+ * row or plan try-yourself on the withdrawn list is dropped as the pools are
+ * assembled, BEFORE de-dup / excludeIds / slicing, so it never takes a slot,
+ * never becomes a generation anchor, and the shortfall it leaves is topped up
+ * like any other. Grading of an already-issued withdrawn id is untouched
+ * (adapters.ts resolvers do not consult the list).
+ *
  * The assembly core (`retrievePractice`) takes an injectable `PracticeSources`
  * so it is unit-testable without Mongo. Phase 4 supplies concrete Mongo- and
  * lesson-plan-store-backed sources.
@@ -36,6 +43,7 @@ import type {
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
 import { generatePracticeItems, logPracticeGenEvent, isDrawingOnlyItem, type PracticeGenSources } from './practice-gen';
+import { isWithdrawnItem, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -217,6 +225,12 @@ function planToItems(plan: PlanLite, loId: string, fallbackToRequested = false):
     const itemLoId = owner ?? loId;
     const cedCode = plan.los.find((l) => l.id === itemLoId)?.standard;
     const id = plan.id ? `${plan.id}::${seg.id}` : seg.id;
+    // Withdrawn by the answer-key audit (wrong key / ill-posed): never served,
+    // and — since the anchor pool is built from these items — never an anchor.
+    if (isWithdrawnItem(id)) {
+      logWithdrawnSkip(id);
+      continue;
+    }
     // A pure drawing/graphing try-yourself ("Sketch the forces…", "Graph the
     // line.") with no typed-answer cue is a whiteboard task — never serve it
     // as a practice or assessment item (buildAssessment draws from here too).
@@ -277,7 +291,7 @@ export async function retrievePractice(
     loScopePlans = plans;
     for (const p of plans) planItems.push(...planToItems(p, loId));
     const bank = await sources.bankForLoId(loId, difficulty);
-    for (const b of bank) bankItems.push(bankToItem(b));
+    bankItems.push(...withoutWithdrawn(bank).map(bankToItem));
   } else {
     const topicId = req.scope.topicId;
     const plans = (await sources.plansForTopic(topicId)).filter((p) => planServable(p, undefined, who));
@@ -289,7 +303,7 @@ export async function retrievePractice(
       if (firstLo) planItems.push(...planToItems(p, firstLo, true));
     }
     const bank = await sources.bankForTopic(topicId, difficulty);
-    for (const b of bank) bankItems.push(bankToItem(b));
+    bankItems.push(...withoutWithdrawn(bank).map(bankToItem));
   }
 
   // De-dup by id; bank (verified) items first, then plan try-yourselves.
@@ -376,8 +390,11 @@ export async function retrievePractice(
   // (same hash -> same practice-gen.<loId>.<hash> id) as something already
   // banked-and-served to this student must not re-appear in this response.
   const availableIds = new Set(available.map((it) => it.id));
+  // A regeneration can also land on a WITHDRAWN `practice-gen.*` id (same
+  // content → same hash): the real generator already drops it, this holds
+  // for any injected one.
   const generatedDeduped = generated.filter(
-    (it) => !availableIds.has(it.id) && !(excludeSet?.has(it.id) ?? false),
+    (it) => !availableIds.has(it.id) && !(excludeSet?.has(it.id) ?? false) && !isWithdrawnItem(it.id),
   );
   const combined = [...available, ...generatedDeduped];
 

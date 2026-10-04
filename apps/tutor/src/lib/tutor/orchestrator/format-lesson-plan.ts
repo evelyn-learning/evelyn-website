@@ -3,6 +3,7 @@
  * 2026-07-05). Pure module — no component state.
  */
 import { getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
+import { NO_VERIFIED_ANSWER_LINE } from '@/lib/tutor/portal/withdrawn-items';
 
 /** Format a lesson plan + current segment into a compact context block
  *  for the realtime-2 engine. RT-2 has no brain orchestrator feeding it
@@ -33,9 +34,12 @@ export function formatLessonPlanForRealtime(
   if (Array.isArray(segRec.keyIdeas) && segRec.keyIdeas.length > 0) {
     lines.push('Key ideas: ' + segRec.keyIdeas.map((k) => String(k)).join('; '));
   }
-  const truth = getSegmentTruth(seg);
+  // plan.id lets getSegmentTruth drop the stored key of a segment the
+  // answer-key audit withdrew; the neutral line replaces "Expected answer".
+  const truth = getSegmentTruth(seg, plan.id);
   if (truth?.problemText) lines.push(`Authored problem (render verbatim): ${truth.problemText}`);
   if (truth?.expectedAnswer) lines.push(`Expected answer: ${truth.expectedAnswer}`);
+  if (truth?.keyWithdrawn) lines.push(NO_VERIFIED_ANSWER_LINE);
   lines.push('');
   lines.push(
     'Teach the CURRENT SEGMENT now. When the student finishes it, call ' +

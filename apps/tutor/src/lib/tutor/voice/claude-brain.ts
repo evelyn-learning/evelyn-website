@@ -19,6 +19,7 @@ import type { CatalogSnapshotEntry, Page } from '../whiteboard/catalog';
 import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
 import { getSegmentTruth } from '../lesson-plan/context';
+import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
@@ -729,8 +730,12 @@ export function buildContentVarietyDirective(seen: PlanContentSeen | undefined):
 export function formatLessonPlanContext(ctx: LessonPlanContext): string {
   const { plan, currentSegmentId, currentSegment, segmentIndex, completedSegmentIds, currentSegmentRailLabel } = ctx;
   const completedSet = new Set(completedSegmentIds ?? []);
+  // A segment withdrawn by the answer-key audit is dumped WITHOUT its stored
+  // key (expectedAnswer / hints / rubric / choices[].correct …). The client
+  // already strips it (buildLessonPlanContext); re-applied here so the prompt
+  // does not depend on the caller. Same object for every other segment.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const seg = currentSegment as any;
+  const seg = effectiveSegment(plan.id, currentSegment) as any;
   // Redact off-topic segment content from the current-segment dump —
   // the brain must not see the off-topic problem text because it will
   // narrate it before the runtime can refuse the render.
@@ -739,7 +744,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     ? '  ⚠ OFF-TOPIC SEGMENT — content redacted. Do NOT narrate this segment. Do NOT call show_segment_card on it. Do NOT advance into it. Treat it as if it does not exist; if it ended up as the current segment, immediately call generate_problem (to give the student more practice on the prior on-topic concept) or wrap up.'
     : seg
       ? Object.entries(seg)
-          .filter(([k, v]) => k !== 'id' && k !== 'kind' && v !== undefined && v !== null)
+          .filter(([k, v]) => k !== 'id' && k !== 'kind' && k !== 'keyWithdrawn' && v !== undefined && v !== null)
           .map(([k, v]) => `  ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
           .join('\n')
       : '(unknown)';
@@ -875,12 +880,12 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
  *       drift-check rendered tool calls, keeping prompt + runtime in
  *       lock-step. Returns '' for segments without authored truth.
  */
-export function formatSegmentTruth(seg: unknown): string {
+export function formatSegmentTruth(seg: unknown, planId: string | undefined): string {
   // Redact off-topic segment truth — the brain must not see the
   // off-topic problem text via the segment_truth block either.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((seg as any)?.offTopic === true) return '';
-  const truth = getSegmentTruth(seg as Segment | undefined);
+  const truth = getSegmentTruth(seg as Segment | undefined, planId);
   if (!truth) return '';
   const lines: string[] = [
     `kind: ${truth.kind}`,
@@ -888,6 +893,11 @@ export function formatSegmentTruth(seg: unknown): string {
   ];
   if (truth.expectedAnswer !== undefined) {
     lines.push(`expectedAnswer: ${JSON.stringify(truth.expectedAnswer)}`);
+  }
+  // Withdrawn by the answer-key audit: no key is printed (getSegmentTruth
+  // dropped it); the brain is told to derive the answer before judging.
+  if (truth.keyWithdrawn) {
+    lines.push(`answerKey: none. ${NO_VERIFIED_ANSWER_LINE}`);
   }
   lines.push(
     '',
@@ -1707,7 +1717,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
   const truthBody = input.lessonPlanContext
-    ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
+    ? formatSegmentTruth(input.lessonPlanContext.currentSegment, input.lessonPlanContext.plan.id)
     : '';
   // A student-brought problem suppresses the authored segment_truth mandate for
   // this turn — otherwise it competes with <active_problem> and the brain
@@ -1909,7 +1919,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
   const truthBody = input.lessonPlanContext
-    ? formatSegmentTruth(input.lessonPlanContext.currentSegment)
+    ? formatSegmentTruth(input.lessonPlanContext.currentSegment, input.lessonPlanContext.plan.id)
     : '';
   // A student-brought problem suppresses the authored segment_truth mandate for
   // this turn — otherwise it competes with <active_problem> and the brain

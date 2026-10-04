@@ -55,6 +55,7 @@ import {
   type GenPayload,
 } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
+import { isWithdrawnItem, logWithdrawnSkip } from './withdrawn-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -713,7 +714,12 @@ export async function generatePracticeItems(
   // Drawing/graphing anchors are filtered out of the pool FIRST (see
   // usableAnchor), so a typed-answer anchor wins a slot whenever the pool has
   // one; a pool of only drawing anchors yields null → the skill-only prompt.
-  const anchorPool = opts.anchorItems.filter((a) => usableAnchor(a) !== null);
+  // Withdrawn items (answer-key audit: wrong key / ill-posed —
+  // withdrawn-items.ts) are never anchors either: a bad item would seed more
+  // bad items. Enforced HERE so it holds for every caller's pool
+  // (retrievePractice, the session-end top-up's stored assignment items).
+  // They stay in `excludeHashes` below, so their text is not regenerated.
+  const anchorPool = opts.anchorItems.filter((a) => !isWithdrawnItem(a.id) && usableAnchor(a) !== null);
   const anchors = pickAnchorsForSlots(anchorPool, allowed, opts.difficulty);
   // Exclude-hash seed: every already-known same-LO item's text hash, so a
   // regeneration doesn't just reproduce existing content verbatim. Both
@@ -730,6 +736,12 @@ export async function generatePracticeItems(
   const seenIds = new Set<string>();
   for (const s of settled) {
     if (s.status === 'fulfilled' && s.value) {
+      if (isWithdrawnItem(s.value.id)) {
+        // Regenerated the exact content of a withdrawn bank row (same hash →
+        // same `practice-gen.<loId>.<hash>` id): never serve it.
+        logWithdrawnSkip(s.value.id);
+        continue;
+      }
       if (seenIds.has(s.value.id)) {
         // Two parallel generations landed on identical content (same hash ->
         // same id) — drop the repeat rather than return a duplicate id in

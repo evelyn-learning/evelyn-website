@@ -373,6 +373,7 @@ import {
 } from '@/lib/tutor/orchestrator/text-heuristics';
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
+import { withdrawnVerdict } from '@/lib/tutor/portal/withdrawn-items';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
@@ -11450,7 +11451,7 @@ export function VoiceTutorRealtime({
         // brain advances (clears the ref) or the student brings another.
         if (TUTOR_STUDENT_PROBLEM_GROUNDING) {
           const lastStudent = transcriptRef.current.filter((e) => e.role === 'student').slice(-1)[0]?.text ?? '';
-          const authoredText = getSegmentTruth(lessonPlanContext?.currentSegment as Parameters<typeof getSegmentTruth>[0])?.problemText ?? '';
+          const authoredText = getSegmentTruth(lessonPlanContext?.currentSegment as Parameters<typeof getSegmentTruth>[0], lessonPlanContext?.plan.id)?.problemText ?? '';
           const activeStmt = currentProblemRef.current?.statement ?? '';
           const brought = detectStudentBroughtProblem(lastStudent, authoredText, activeStmt);
           if (brought) {
@@ -12513,7 +12514,7 @@ export function VoiceTutorRealtime({
                 && !segmentCardsRenderedThisAttempt.includes(adv.segId)
                 && !completedSegmentIdsRef.current.has(adv.segId)) {
               const seg = plan.segments.find((sg) => sg.id === adv.segId);
-              const truth = seg ? getSegmentTruth(seg) : null;
+              const truth = seg ? getSegmentTruth(seg, plan.id) : null;
               const alreadyRendered = !!truth?.problemText && renderedTextsThisAttempt.some((t) => normWs(t) === normWs(truth.problemText ?? ''));
               const authoredForAuto = truth?.problemText ?? '';
               const ownDifferent = ownProblemsPaintedThisAttempt.find((st) => !sameProblemStatement(st, authoredForAuto));
@@ -13118,7 +13119,9 @@ export function VoiceTutorRealtime({
                   // sentence against the authored answer).
                   if (TUTOR_AUTHORED_ENDING_GUARD && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && freshContentAttempt) {
                     const seg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
-                    const truth = seg ? getSegmentTruth(seg) : null;
+                    // Withdrawn segment (answer-key audit): getSegmentTruth drops
+                    // the stored key → authoredAnswer undefined → guard inert.
+                    const truth = seg ? getSegmentTruth(seg, lessonPlanRef.current?.id) : null;
                     const authoredAnswer = truth?.expectedAnswer && problemMatchesAuthored(currentProblemRef.current?.statement, truth.problemText)
                       ? truth.expectedAnswer : undefined;
                     const contra = findAuthoredEndingContradiction({ sentence: updatedSentence, authoredAnswer });
@@ -14340,7 +14343,7 @@ export function VoiceTutorRealtime({
                     const segId = currentSegmentIdRef.current;
                     if (plan && segId) {
                       const seg = getSegment(plan, segId);
-                      const truth = getSegmentTruth(seg);
+                      const truth = getSegmentTruth(seg, plan.id);
                       if (truth?.problemText && truth.kind === 'worked_example') {
                         // Divergence-KILL guard, mirroring the show_problem
                         // pattern (see ~50 lines below). Silent-substitute
@@ -14436,7 +14439,7 @@ export function VoiceTutorRealtime({
                     const segId = currentSegmentIdRef.current;
                     if (plan && segId) {
                       const seg = getSegment(plan, segId);
-                      const truth = getSegmentTruth(seg);
+                      const truth = getSegmentTruth(seg, plan.id);
                       if (truth?.problemText) {
                         // Auto-substitute show_problem → show_segment_card
                         // when the active segment has authored truth, with
@@ -14727,7 +14730,7 @@ export function VoiceTutorRealtime({
                         await performKill();
                         continue;
                       }
-                      const truth = getSegmentTruth(seg);
+                      const truth = getSegmentTruth(seg, plan.id);
                       // Off-topic guard: refuse to render a try_yourself
                       // segment that's marked offTopic via passive
                       // natural-flow advance. Test plans use this to
@@ -14781,6 +14784,14 @@ export function VoiceTutorRealtime({
                         segmentCardsRenderedThisAttempt.push(segId);
                         renderedTextsThisAttempt.push(truth.problemText);
                         if (authoredChoices) onDebugEvent?.('show_segment_card_mcq_choices', `${segId}: ${authoredChoices.map((c) => c.letter).join('')}`);
+                        // Answer-key audit: this segment is presented with its
+                        // stored key dropped (getSegmentTruth) — the brain was
+                        // told to derive the answer, and no guard, card or
+                        // judge block holds the stored value.
+                        if (truth.keyWithdrawn) {
+                          console.log(`[brain-orchestrator] show_segment_card: "${plan.id}::${segId}" is withdrawn (${withdrawnVerdict(`${plan.id}::${segId}`) ?? '?'}) — presented with NO stored key`);
+                          onDebugEvent?.('show_segment_card_key_withdrawn', `${plan.id}::${segId} (${withdrawnVerdict(`${plan.id}::${segId}`) ?? '?'})`);
+                        }
                         resolvedCmd = {
                           action: 'showProblem',
                           problem: {
@@ -15183,7 +15194,7 @@ export function VoiceTutorRealtime({
                         const plan = lessonPlanRef.current;
                         if (plan && segId) {
                           const seg = getSegment(plan, segId);
-                          const truth = getSegmentTruth(seg);
+                          const truth = getSegmentTruth(seg, plan.id);
                           segmentAuthored = (truth?.problemText ?? '').trim();
                         }
                       } catch { /* lookup is best-effort */ }
@@ -16033,8 +16044,12 @@ export function VoiceTutorRealtime({
             // live check 3, portal-3a024b75: board showed "x = 5.5" and
             // the judge passed every later claim against it).
             const judgeSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
-            const judgeTruth = judgeSeg ? getSegmentTruth(judgeSeg) : null;
-            const authoredSolution = judgeTruth && problemMatchesAuthored(currentProblemRef.current?.statement, judgeTruth.problemText)
+            // Withdrawn segment (answer-key audit): there is no authored
+            // ground truth, so the block is omitted entirely
+            // (judgeTruth.keyWithdrawn) and the judge grounds as it does for
+            // any problem without one.
+            const judgeTruth = judgeSeg ? getSegmentTruth(judgeSeg, lessonPlanRef.current?.id) : null;
+            const authoredSolution = judgeTruth && !judgeTruth.keyWithdrawn && problemMatchesAuthored(currentProblemRef.current?.statement, judgeTruth.problemText)
               ? [
                   `Problem: ${judgeTruth.problemText}`,
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any

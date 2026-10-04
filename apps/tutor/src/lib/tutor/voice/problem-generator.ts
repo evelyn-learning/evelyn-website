@@ -30,6 +30,7 @@ import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
 import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
+import { withoutWithdrawn, isWithdrawnSegment, logWithdrawnSkip } from '../portal/withdrawn-items';
 
 // Layer-2 brain-gen models. Generation + an INDEPENDENT fresh-context solve
 // for verification. Same model in fresh context is the design's decorrelation
@@ -161,6 +162,10 @@ async function queryBank(
   if (excludeHashes.length > 0) {
     candidates = candidates.filter((c) => !excludeHashes.includes(simpleHash(c.problemText)));
   }
+  // Bank rows withdrawn by the answer-key audit (portal/withdrawn-items.ts)
+  // are never served — this query is the one bank read outside
+  // retrievePractice (LO-tagged `practice-gen.*` rows are eligible here).
+  candidates = withoutWithdrawn(candidates);
   if (candidates.length === 0) return null;
   const pick = candidates[Math.floor(Math.random() * candidates.length)];
   return {
@@ -440,7 +445,7 @@ function contentTokenSet(s: string): Set<string> {
  *  system-prompt rule: apologize briefly, offer to advance OR ask the
  *  student what they want next. NEVER emit a free-form show_problem
  *  in that case. */
-function planAuthoredFallback(
+export function planAuthoredFallback(
   plan: LessonPlan,
   anchorStatement: string,
   excludeHashes: string[]
@@ -470,6 +475,14 @@ function planAuthoredFallback(
     // legitimate practice content and would only get returned to be
     // rendered as a wrong-concept problem.
     if (ty.offTopic === true) continue;
+    // A try-yourself withdrawn by the answer-key audit is never re-served
+    // as the fallback problem: this path returns the STORED expectedAnswer
+    // (which the client then pins as the verified key), and that key is the
+    // thing the audit flagged.
+    if (isWithdrawnSegment(plan.id, ty.id)) {
+      logWithdrawnSkip(`${plan.id}::${ty.id}`);
+      continue;
+    }
     const hash = simpleHash(ty.problem);
     if (excludeHashes.includes(hash)) continue;
     const tyTokens = contentTokenSet(ty.problem);
@@ -489,6 +502,36 @@ function planAuthoredFallback(
     provenance: 'plan-authored',
     trackingId: best.ty.id,
   };
+}
+
+/**
+ * The anchor the pipeline may use. When the anchor statement IS one of the
+ * plan's withdrawn try-yourselves (answer-key audit), its answer is dropped:
+ * the stored key is wrong or unreliable, and Layer 2 quotes the anchor answer
+ * to the generator ("for difficulty calibration"), which would seed a fresh
+ * problem from it. The statement stays (the question is still presented).
+ * Whitespace-insensitive match; any other anchor is returned untouched.
+ *
+ * Deliberately keyed on the STATEMENT, not on where the answer came from: the
+ * brain no longer sees a withdrawn key (formatSegmentTruth), so an
+ * `anchorAnswer` it passes is its own working — but nothing verified it
+ * either, and "no answer" is always a safe calibration input.
+ */
+export function effectiveAnchor(
+  plan: LessonPlan,
+  anchor: GenerateProblemInput['anchor'],
+): GenerateProblemInput['anchor'] {
+  if (anchor.expectedAnswer === undefined) return anchor;
+  const norm = (t: string) => t.replace(/\s+/g, ' ').trim();
+  const stmt = norm(anchor.statement);
+  const hit = plan.segments.some(
+    (s) => s.kind === 'try_yourself' && isWithdrawnSegment(plan.id, s.id) && norm(s.problem) === stmt,
+  );
+  if (!hit) return anchor;
+  const { expectedAnswer: _dropped, ...rest } = anchor;
+  void _dropped;
+  console.log('[problem-generator] anchor is a withdrawn try-yourself — anchor answer dropped');
+  return rest;
 }
 
 /** extractAnswerNumber / normMcqText / resolveMcqLetter moved VERBATIM to
@@ -590,8 +633,12 @@ export interface PipelineTelemetry {
  * the ultimate fallback) unless the plan has zero try_yourselves.
  */
 export async function generateProblem(
-  input: GenerateProblemInput
+  rawInput: GenerateProblemInput
 ): Promise<{ result: GeneratedProblem | null; telemetry: PipelineTelemetry }> {
+  // One place for both callers (brain stream route + /api/tutor/generate-problem):
+  // never anchor on a withdrawn segment's answer.
+  const anchor = effectiveAnchor(rawInput.plan, rawInput.anchor);
+  const input: GenerateProblemInput = anchor === rawInput.anchor ? rawInput : { ...rawInput, anchor };
   const start = Date.now();
   const topicMeta = getTopicById(input.topic);
   const brainGenState = topicMeta?.brainGen ?? 'disabled';

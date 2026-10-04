@@ -7,6 +7,8 @@
 
 import type { LessonPlan, Segment, SegmentRecap } from './types';
 import type { LessonPlanContext } from '@/lib/tutor/voice/claude-brain';
+// Pure data module (no I/O). Relative on purpose, like its other importers.
+import { effectiveSegment } from '../portal/withdrawn-items';
 
 export function buildLessonPlanContext(
   plan: LessonPlan,
@@ -41,7 +43,9 @@ export function buildLessonPlanContext(
       estimatedMinutes: plan.estimatedMinutes,
     },
     currentSegmentId,
-    currentSegment: seg,
+    // A withdrawn segment (answer-key audit) leaves here WITHOUT its stored
+    // key — same object for every other segment. See effectiveSegment.
+    currentSegment: effectiveSegment(plan.id, seg),
     segmentIndex: plan.segments.map((s) => ({
       id: s.id,
       kind: s.kind,
@@ -73,10 +77,31 @@ export interface SegmentTruth {
   expectedAnswer?: string;
   /** Segment kind, for the prompt + reject-message context. */
   kind: Segment['kind'];
+  /** Set (only) when `<planId>::<segmentId>` was withdrawn by the answer-key
+   *  audit: the question is still presented but there is NO authored key —
+   *  `expectedAnswer` is absent, and consumers must not grade against a
+   *  stored value. */
+  keyWithdrawn?: true;
 }
 
-export function getSegmentTruth(seg: Segment | undefined): SegmentTruth | null {
-  if (!seg) return null;
+/**
+ * `planId` is REQUIRED (pass `undefined` only when there is genuinely no
+ * plan): it is what lets this — the one place every live-session consumer
+ * reads a segment's authored key from — drop the key of a segment the
+ * answer-key audit withdrew (portal/withdrawn-items.ts `effectiveSegment`).
+ * A caller that omitted it would silently serve a known-bad key, so the
+ * compiler makes every caller decide.
+ */
+export function getSegmentTruth(rawSeg: Segment | undefined, planId: string | undefined): SegmentTruth | null {
+  if (!rawSeg) return null;
+  const seg = effectiveSegment(planId, rawSeg);
+  const truth = authoredTruth(seg);
+  // `seg !== rawSeg` ⇔ effectiveSegment stripped it (it returns the same
+  // object for every non-withdrawn segment).
+  return truth && seg !== rawSeg ? { ...truth, expectedAnswer: undefined, keyWithdrawn: true } : truth;
+}
+
+function authoredTruth(seg: Segment): SegmentTruth | null {
   if (seg.kind === 'try_yourself' && typeof seg.problem === 'string' && seg.problem.length > 0) {
     return { problemText: seg.problem, expectedAnswer: seg.expectedAnswer, kind: seg.kind };
   }
@@ -325,7 +350,7 @@ export function resolveAdvanceTarget(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isConsumed = (s: any): boolean => {
     if (!consumed || consumed.size === 0) return false;
-    const truth = getSegmentTruth(s);
+    const truth = getSegmentTruth(s, plan.id);
     if (!truth?.problemText) return false;
     return consumed.has(consumedHash(truth.problemText));
   };

@@ -95,7 +95,7 @@ const lessonPlanContext: LessonPlanContext = {
   completedSegmentIds: ['intro', 'lo1-worked'],
 };
 const lessonBlock = `<lesson_plan>\n${formatLessonPlanContext(lessonPlanContext)}\n</lesson_plan>\n\n`;
-const truthBody = formatSegmentTruth(lessonPlanContext.currentSegment);
+const truthBody = formatSegmentTruth(lessonPlanContext.currentSegment, lessonPlanContext.plan.id);
 const truthBlock = truthBody ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
 
 // Representative mid-session whiteboard (a problem card + an equation + a graph).
