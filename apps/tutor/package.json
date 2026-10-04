@@ -317,6 +317,14 @@
     "test:struggle-ledger": "npx tsx scripts/test-struggle-ledger.ts",
     "test:self-correction-retry": "npx tsx scripts/test-self-correction-retry.ts",
     "test:shaded-region-net": "npx tsx scripts/test-shaded-region-net.ts",
-    "test:transcript-scroll": "npx tsx scripts/test-transcript-scroll.ts"
+    "test:transcript-scroll": "npx tsx scripts/test-transcript-scroll.ts",
+    "test:upload-flow": "npx tsx scripts/test-upload-flow.ts",
+    "test:resume-listen": "npx tsx scripts/test-resume-listen.ts",
+    "test:soft-rejections": "npx tsx scripts/test-soft-rejections.ts",
+    "test:turn-shape": "npx tsx scripts/test-turn-shape.ts",
+    "test:attempt-anchors": "npx tsx scripts/test-attempt-anchors.ts",
+    "test:inspect-resumed": "npx tsx scripts/test-inspect-resumed.ts",
+    "test:relation-sampling": "npx tsx scripts/test-relation-sampling.ts",
+    "test:relation-step-check": "npx tsx scripts/test-relation-step-check.ts"
   }
 }

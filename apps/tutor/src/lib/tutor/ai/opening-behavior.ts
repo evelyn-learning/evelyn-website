@@ -276,3 +276,48 @@ export function shouldRetireOpeningDirective(s: {
   const cap = s.maxBrainTurns ?? OPENING_DIRECTIVE_MAX_BRAIN_TURNS;
   return s.lessonAdvanced || s.brainTurnsCompleted >= cap;
 }
+
+/**
+ * What the per-turn `<opening_directive>` block should carry on this brain
+ * attempt.
+ *
+ * WHY 'followup' EXISTS: the full directive is written for the OPENING TURN
+ * ("greet them…", "FIRST, preview today's agenda…", "HARD RULE for this
+ * opening turn…") but rode every turn until the lesson advanced or the
+ * 4-turn ceiling passed. So the student's first reply — and every validator
+ * retry of the opener, each of which also burned a ceiling turn — was
+ * answered under an instruction to open the session again, and the brain
+ * re-recited the agenda (live: three consecutive turns announced the same two
+ * objectives while the board stayed empty). Once the opener has actually been
+ * SPOKEN, the remaining opening-phase turns get the slim follow-up directive
+ * instead. Retirement is unchanged (shouldRetireOpeningDirective).
+ *
+ * `openerSpoken` is "an attempt that carried the full directive finished with
+ * spoken text that was not killed" — a failed/killed opener attempt keeps the
+ * full directive for its retry.
+ */
+export type OpeningDirectiveMode = 'full' | 'followup' | 'retire';
+
+export function resolveOpeningDirectiveMode(s: {
+  /** Kill switch (NEXT_PUBLIC_TUTOR_OPENING_DIRECTIVE_ONCE !== 'off'). */
+  onceEnabled: boolean;
+  lessonAdvanced: boolean;
+  brainTurnsCompleted: number;
+  openerSpoken: boolean;
+  maxBrainTurns?: number;
+}): OpeningDirectiveMode {
+  if (shouldRetireOpeningDirective(s)) return 'retire';
+  if (s.onceEnabled && s.openerSpoken) return 'followup';
+  return 'full';
+}
+
+/**
+ * The slim directive for opening-phase turns AFTER the opener was spoken.
+ * Generic by design (no topic- or subject-specific wording).
+ */
+export const OPENING_FOLLOWUP_DIRECTIVE =
+  'The opening of this session has already been spoken: the greeting, any introduction of yourself, ' +
+  'and any preview of the agenda are done. Do not greet, introduce yourself, or announce or re-list ' +
+  'what the session will cover again. If the student has spoken, respond to what they said. If you are still getting ' +
+  'to know the student, keep it to one short question; otherwise begin teaching the first item now, ' +
+  'with it written on the board.';
