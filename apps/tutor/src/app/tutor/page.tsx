@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { TranscriptView } from './components/TranscriptView';
 import { SessionControls } from './components/SessionControls';
 import { WhiteboardCanvas } from './components/whiteboard';
+import { buildTryYourselfMarker, type TryYourselfRelationDetail } from './components/whiteboard/tryYourselfAnswer';
 import { VoiceTutor } from './components/VoiceTutor';
 import { VoiceTutorRealtime, type RealtimeHandle, type TutorResumeState } from './components/VoiceTutorRealtime';
 import { LessonPlanProgress } from './components/LessonPlanProgress';
@@ -2160,15 +2161,11 @@ function TutorPage() {
     });
   }, []);
 
-  const handleTryYourselfAnswer = useCallback((answer: string, expected: string | undefined, isCorrect: boolean | null) => {
-    const verdict =
-      isCorrect === true ? 'matches the expected answer (string-equal)'
-      : isCorrect === false ? 'does NOT match the expected answer'
-      : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
-    const marker = expected
-      ? `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. If "does NOT match", stay on this same try-yourself — give a hint, do NOT call new_page or show a different problem. If undecidable, judge algebraic equivalence yourself.]`
-      : `[try-yourself submission. The student submitted: "${answer}". No expected answer set — judge correctness yourself. If wrong, stay on this same try-yourself; do NOT advance to a new problem.]`;
-    realtimeHandleRef.current?.sendTextMessage(marker);
+  const handleTryYourselfAnswer = useCallback((answer: string, expected: string | undefined, isCorrect: boolean | null, relation?: TryYourselfRelationDetail) => {
+    // Marker text lives in ONE place (tryYourselfAnswer.ts) — this handler
+    // exists twice (TutorSession.tsx and tutor/page.tsx) and the copies must
+    // not drift.
+    realtimeHandleRef.current?.sendTextMessage(buildTryYourselfMarker(answer, expected, isCorrect, relation));
   }, []);
 
   const handleStudentInput = useCallback((type: 'text' | 'drawing' | 'image', content: string) => {

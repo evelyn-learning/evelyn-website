@@ -129,5 +129,27 @@ function check(name: string, cond: boolean, detail?: string) {
   check('non-letter utterance with live MCQ choices still fires false_praise', r.verdict === 'false_praise', JSON.stringify(r));
 }
 
+// ─── 2026-10-03: an affirmed inequality needs the problem statement ───
+{
+  // 2026-10-04: a kill needs positive evidence — the statement's one relation
+  // must be equivalent to the affirmed value (2x < 7 ⇔ x < 3.5).
+  const base = { turnTextSoFar: 'Right — $x < 3.5$.', studentUtterance: 'x \\le 3' };
+  const none = checkPraiseEcho(base);
+  check('affirmed inequality, no problemText → ok (never a kill)', none.verdict === 'ok', JSON.stringify(none));
+  const restricted = checkPraiseEcho({ ...base, problemText: 'x is a positive integer. Solve 2x < 7.' });
+  check('affirmed inequality, integer-restricted problem → ok', restricted.verdict === 'ok', JSON.stringify(restricted));
+  const plain = checkPraiseEcho({ ...base, problemText: 'Solve 2x < 7.' });
+  check('affirmed inequality, unrestricted problem → false_praise', plain.verdict === 'false_praise', JSON.stringify(plain));
+  const same = checkPraiseEcho({ turnTextSoFar: 'Right — $x < 5$.', studentUtterance: '2x < 10', problemText: 'Solve 2x < 10.' });
+  check('equivalent inequality echo → ok', same.verdict === 'ok', JSON.stringify(same));
+  // The reviewed defect: a correct affirmation on an implicit-integer problem
+  // ("more than 3 members" ⇒ x ≥ 4 and x > 3 are the same answer) was killed.
+  const implicitInt = checkPraiseEcho({ turnTextSoFar: 'Right — $x \\geq 4$.', studentUtterance: 'x > 3',
+    problemText: 'A club needs more than 3 members. Write an inequality for the number of members x.' });
+  check('implicit-integer problem: correct affirmation is NOT killed', implicitInt.verdict === 'ok', JSON.stringify(implicitInt));
+  const noEvidence = checkPraiseEcho({ turnTextSoFar: 'Right — $x \\le 3$.', studentUtterance: 'x < 3.5', problemText: 'Solve 2x < 7.' });
+  check('affirmed value not equivalent to the statement relation → ok (no evidence)', noEvidence.verdict === 'ok', JSON.stringify(noEvidence));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

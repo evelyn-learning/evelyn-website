@@ -13,9 +13,29 @@
 // is server-only (mongoose) and crashed the browser bundle (2026-08-10).
 import { resolveMcqLetter, extractAnswerNumber } from '@/lib/tutor/voice/answer-primitives';
 import { spokenMoneyMatches } from '@/lib/tutor/voice/spoken-money';
+import { compareRelations, parseRelation, extractProblemRelation, isSolvedFormRelation, formatWitness, type Relation } from '@/lib/tutor/voice/relation-sampling';
 
 export type AnswerMatchVerdict = 'agree' | 'disagree' | 'unknown';
-export interface AnswerMatchResult { verdict: AnswerMatchVerdict; reason: string }
+export interface AnswerMatchResult {
+  verdict: AnswerMatchVerdict;
+  reason: string;
+  /** Set only on a relation (inequality) `disagree`: a value of the variable
+   *  at which exactly one of the two relations holds. */
+  witness?: RelationWitness;
+}
+
+/** A counterexample separating two relations. `value` is exact ("6", "19/6"). */
+export interface RelationWitness {
+  variable: string;
+  value: string;
+  submittedHolds: boolean;
+  expectedHolds: boolean;
+}
+
+export type RelationGrade =
+  | { verdict: 'agree' }
+  | { verdict: 'disagree'; witness: RelationWitness }
+  | { verdict: 'unknown'; reason: string };
 
 /** Canonicalize a symbolic math expression to a comparable string.
  *  Returns null when the input has residue we can't account for —
@@ -265,7 +285,151 @@ export function normalizeSpokenMath(utterance: string): string {
  *  caller that has seen currency markers in the live problem (see
  *  looksMonetary) AND has the TUTOR_SPOKEN_MONEY flag on — this module
  *  stays free of env reads, matching the rest of its pure surface. */
-export interface AnswerMatchOpts { monetary?: boolean }
+export interface AnswerMatchOpts {
+  monetary?: boolean;
+  /** The live problem statement, when the caller has it. Used only by the
+   *  relation path, as the EVIDENCE a `disagree` needs: it must be a plain
+   *  "solve this relation" statement whose one relation is equivalent to the
+   *  expected answer (see gradeRelationAnswer). Anything else — a word
+   *  problem, a restricted domain, no statement — and a differing answer is
+   *  `unknown`. */
+  problemText?: string;
+  /** `false` skips the relation path entirely (the pre-2026-10-03 behaviour
+   *  for an inequality-valued answer: `unknown`). Callers whose verdict can
+   *  arm a kill and that have NO problem statement to hand pass this (via
+   *  `relationMatchOpts`). Only an opt-OUT — `true` does not override the env
+   *  kill switch. */
+  relationGrading?: boolean;
+}
+
+/** The relation-path options for a caller holding (or not holding) the
+ *  active problem's statement: with a statement, pass it through so a domain
+ *  restriction is honoured; without one, opt out of relation grading. */
+export function relationMatchOpts(problemText: string | null | undefined): Pick<AnswerMatchOpts, 'problemText' | 'relationGrading'> {
+  return typeof problemText === 'string' && problemText.trim() !== ''
+    ? { problemText }
+    : { relationGrading: false };
+}
+
+// ── exact grading of inequality answers (2026-10-03) ────────────────────────
+// Anything containing < > ≤ ≥ used to fall out of canonicalizeMathExpression
+// as unparseable, so every inequality answer was `unknown` and nothing could
+// stop a wrong one being praised (production: typed "-7<x<8" against
+// "-7 <= x < 5" → "exactly it"). relation-sampling.ts decides one-variable
+// linear relations exactly and answers `unknown` whenever it is not certain
+// it read both sides, which is this module's own discipline.
+//
+// Kill switch: NEXT_PUBLIC_TUTOR_RELATION_GRADING=off (default ON). Read per
+// call, and only by matchUtteranceToAnswer — gradeRelationAnswer itself stays
+// pure so callers that carry their own flag can use it directly.
+export function relationGradingEnabled(): boolean {
+  try { return process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING !== 'off'; } catch { return true; }
+}
+
+/** An ordering comparator in any spelling. '=' alone does NOT count: equation
+ *  answers keep today's expression path. */
+const INEQUALITY_RE = /[<>≤≥⩽⩾]|\\(?:leqslant|geqslant|leq|geq|le|ge|lt|gt)(?![a-zA-Z])/;
+
+/** THE detector for "this answer is an inequality": < > ≤ ≥ <= >= \le \leq
+ *  \ge \geq \lt \gt (and the slanted variants). One definition, shared by
+ *  the matcher and the practice card, so the two cannot disagree about which
+ *  keys take the relation path / must never be printed. */
+export function isInequalityText(text: string | null | undefined): boolean {
+  return typeof text === 'string' && INEQUALITY_RE.test(text);
+}
+
+const stripMathDelimiters = (t: string): string => t.replace(/\\\(|\\\)|\\\[|\\\]/g, ' ');
+
+/**
+ * POSITIVE evidence that the problem is a pure real-number solve with this
+ * key: the statement is a "solve this relation" statement holding exactly one
+ * relation (extractProblemRelation — which also refuses domain / extreme-value
+ * wording), and the expected answer has the same solution set as it.
+ *
+ * Why not a word list: "more than 3 members", "the number of tickets he can
+ * buy", "a counting number" restrict the answer to integers without any word
+ * a veto list could enumerate; there x > 3 and x ≥ 4 are the same answer and
+ * a real-number "differs" is false. Absence of a veto word proves nothing —
+ * only a statement we fully read, agreeing with the key, does.
+ */
+function pureSolveEvidence(problemText: string | undefined, expected: Relation): { ok: true } | { ok: false; reason: string } {
+  if (typeof problemText !== 'string' || problemText.trim() === '') return { ok: false, reason: 'no problem statement' };
+  const problem = extractProblemRelation(problemText);
+  if (!problem.ok) return { ok: false, reason: `problem statement: ${problem.reason}` };
+  const cmp = compareRelations(problem.relation, expected);
+  if (cmp.verdict !== 'equivalent') return { ok: false, reason: 'expected answer is not the solution of the stated relation' };
+  return { ok: true };
+}
+
+/**
+ * Exact comparison of a submitted/spoken relation with an expected one.
+ *
+ * `unknown` unless ALL of: `expected` contains an inequality comparator and is
+ * in SOLVED FORM; the submission, taken WHOLE (after peeling leading hedges
+ * and a trailing sentence mark), is itself an inequality that parses; both are
+ * linear in the same single variable. A relation embedded in a sentence is
+ * never cut out and force-parsed — "so twice x < 12 means …" is not the
+ * answer "x < 12".
+ *
+ * Then (2026-10-04):
+ *  - `agree`    — same solution set AND the submission is in solved form
+ *                 (isSolvedFormRelation). Needs no statement: sets equal over
+ *                 the reals are equal over any restricted domain. An
+ *                 equivalent but unsolved submission ("2x < 10", or the
+ *                 problem retyped) is `unknown` — not wrong, not finished.
+ *  - `disagree` — different solution set AND pureSolveEvidence(problemText).
+ *                 Without that evidence a differing answer is `unknown`.
+ */
+export function gradeRelationAnswer(
+  submitted: string,
+  expected: string,
+  opts?: { problemText?: string },
+): RelationGrade {
+  try {
+    const e = stripMathDelimiters(expected ?? '').trim();
+    if (!INEQUALITY_RE.test(e)) return { verdict: 'unknown', reason: 'expected is not an inequality' };
+    const expectedParse = parseRelation(e);
+    if (!expectedParse.ok) return { verdict: 'unknown', reason: `expected: ${expectedParse.reason}` };
+    if (!isSolvedFormRelation(expectedParse.relation)) return { verdict: 'unknown', reason: 'expected is not in solved form' };
+
+    const whole = stripMathDelimiters(submitted ?? '').trim().replace(/[?.!]+$/, '').trim();
+    let peeled = whole;
+    for (let i = 0; i < 4; i++) {
+      const next = peeled.replace(HEDGE_PREFIX_RE, '');
+      if (next === peeled) break;
+      peeled = next;
+    }
+    const candidates = peeled !== whole ? [whole, peeled] : [whole];
+    let lastReason = 'submission is not an inequality';
+    for (const c of candidates) {
+      if (!INEQUALITY_RE.test(c)) continue;
+      const submittedParse = parseRelation(c);
+      if (!submittedParse.ok) { lastReason = `first relation: ${submittedParse.reason}`; continue; }
+      const cmp = compareRelations(submittedParse.relation, expectedParse.relation);
+      if (cmp.verdict === 'equivalent') {
+        if (isSolvedFormRelation(submittedParse.relation)) return { verdict: 'agree' };
+        return { verdict: 'unknown', reason: 'equivalent to the expected answer but not in solved form' };
+      }
+      if (cmp.verdict === 'differs') {
+        const evidence = pureSolveEvidence(opts?.problemText, expectedParse.relation);
+        if (!evidence.ok) return { verdict: 'unknown', reason: `differs, but not provably a pure solve (${evidence.reason})` };
+        return {
+          verdict: 'disagree',
+          witness: {
+            variable: expectedParse.relation.variable,
+            value: formatWitness(cmp.witness),
+            submittedHolds: cmp.aHolds,
+            expectedHolds: cmp.bHolds,
+          },
+        };
+      }
+      lastReason = cmp.reason;
+    }
+    return { verdict: 'unknown', reason: lastReason };
+  } catch {
+    return { verdict: 'unknown', reason: 'internal failure' };
+  }
+}
 
 export function matchUtteranceToAnswer(
   utterance: string,
@@ -275,6 +439,17 @@ export function matchUtteranceToAnswer(
 ): AnswerMatchResult {
   const uRaw = normalizeSpokenMath(utterance), e = (expected ?? '').trim();
   if (!uRaw || !e) return { verdict: 'unknown', reason: 'empty side' };
+  // 0) relation path — an inequality-valued expected answer is decided
+  // exactly, from the RAW utterance (normalizeSpokenMath is built for
+  // expressions). `unknown` falls through to everything below unchanged, so
+  // an MCQ letter against a relation-valued answer still resolves there.
+  if (INEQUALITY_RE.test(e) && opts?.relationGrading !== false && relationGradingEnabled()) {
+    const g = gradeRelationAnswer(utterance, e, { problemText: opts?.problemText });
+    if (g.verdict === 'agree') return { verdict: 'agree', reason: 'relation equivalent' };
+    if (g.verdict === 'disagree') {
+      return { verdict: 'disagree', reason: `relation differs at ${g.witness.variable} = ${g.witness.value}`, witness: g.witness };
+    }
+  }
   // Fix (round-3 review Critical): assignment-form spoken answers
   // ("x equals five" → "x=5" after normalizeSpokenMath) were comparing
   // their FULL "x=5" text against a bare expected answer ("5") — both

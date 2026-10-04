@@ -26,6 +26,7 @@ import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
 import { WhiteboardCanvas } from '../whiteboard';
+import { buildTryYourselfMarker, type TryYourselfRelationDetail } from '../whiteboard/tryYourselfAnswer';
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
@@ -575,15 +576,11 @@ export default function TutorSession(props: TutorSessionProps) {
     onLessonPlanIdChange?.(id);
   }, [onLessonPlanIdChange]);
 
-  const handleTryYourselfAnswer = useCallback((answer: string, expected: string | undefined, isCorrect: boolean | null) => {
-    const verdict =
-      isCorrect === true ? 'matches the expected answer (string-equal)'
-      : isCorrect === false ? 'does NOT match the expected answer'
-      : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
-    const marker = expected
-      ? `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. If "does NOT match", stay on this same try-yourself — give a hint, do NOT call new_page or show a different problem. If undecidable, judge algebraic equivalence yourself.]`
-      : `[try-yourself submission. The student submitted: "${answer}". No expected answer set — judge correctness yourself. If wrong, stay on this same try-yourself; do NOT advance to a new problem.]`;
-    realtimeHandleRef.current?.sendTextMessage(marker);
+  const handleTryYourselfAnswer = useCallback((answer: string, expected: string | undefined, isCorrect: boolean | null, relation?: TryYourselfRelationDetail) => {
+    // Marker text lives in ONE place (tryYourselfAnswer.ts) — this handler
+    // exists twice (TutorSession.tsx and tutor/page.tsx) and the copies must
+    // not drift.
+    realtimeHandleRef.current?.sendTextMessage(buildTryYourselfMarker(answer, expected, isCorrect, relation));
   }, []);
 
   // Control channel: a navigation/selection marker for the brain (e.g. an

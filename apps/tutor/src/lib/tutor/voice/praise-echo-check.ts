@@ -28,7 +28,7 @@
  * Pure, no LLM, no side effects, never throws.
  */
 import { extractPraiseEcho, PRAISE_OPENER_RE } from '@/lib/tutor/voice/praise-contradiction';
-import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, relationMatchOpts } from '@/lib/tutor/voice/utterance-answer-match';
 
 export interface PraiseEchoResult { verdict: 'ok' | 'false_praise'; affirmed?: string; studentSaid?: string; matchReason?: string }
 
@@ -41,7 +41,14 @@ const MCQ_CAPTURE_MAX_LEN = 12;
 export function checkPraiseEcho(args: {
   turnTextSoFar: string; studentUtterance: string;
   choices?: Array<{ letter: string; text: string }>;
+  /** 2026-10-03: the active problem's statement. With it an affirmed
+   *  INEQUALITY is compared exactly with what the student said (and a domain
+   *  restriction in the statement stands that down); without it inequality
+   *  values are not compared at all — a real-number `disagree` could be
+   *  false, and a disagree here kills the turn. */
+  problemText?: string;
 }): PraiseEchoResult {
+  const relOpts = relationMatchOpts(args.problemText);
   const affirmed = extractPraiseEcho(args.turnTextSoFar);
   if (affirmed) {
     // Fix (2026-08-10, review Critical): a $-wrapped SINGLE letter a-e
@@ -95,7 +102,7 @@ export function checkPraiseEcho(args: {
     // above exists to close (a surviving multi-char capture could still
     // resolve via resolveMcqLetter's TEXT-match path against a live choice
     // whose text happens to equal the token).
-    const m = matchUtteranceToAnswer(args.studentUtterance, affirmed, undefined);
+    const m = matchUtteranceToAnswer(args.studentUtterance, affirmed, undefined, relOpts);
     if (m.verdict === 'disagree') {
       return { verdict: 'false_praise', affirmed, studentSaid: args.studentUtterance, matchReason: m.reason };
     }
@@ -129,7 +136,7 @@ export function checkPraiseEcho(args: {
     if (om) {
       const capture = om[1].replace(/\*/g, '').trim().replace(/\s+/g, ' ');
       if (capture && capture.length <= MCQ_CAPTURE_MAX_LEN) {
-        const m = matchUtteranceToAnswer(args.studentUtterance, capture, args.choices);
+        const m = matchUtteranceToAnswer(args.studentUtterance, capture, args.choices, relOpts);
         if (m.verdict === 'disagree') {
           return { verdict: 'false_praise', affirmed: capture, studentSaid: args.studentUtterance, matchReason: m.reason };
         }

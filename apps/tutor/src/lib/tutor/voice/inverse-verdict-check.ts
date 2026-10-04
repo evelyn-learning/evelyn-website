@@ -28,7 +28,7 @@
  * DENIAL_RE.test are both themselves total).
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
-import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, relationMatchOpts } from '@/lib/tutor/voice/utterance-answer-match';
 import { looksMonetary } from '@/lib/tutor/voice/spoken-money';
 
 export interface InverseVerdictResult {
@@ -51,6 +51,12 @@ export function checkInverseVerdict(args: {
   problemContext?: string;
   /** R49: TUTOR_SPOKEN_MONEY. Passed in so this module stays env-free. */
   spokenMoneyEnabled?: boolean;
+  /** 2026-10-03: the statement of the problem the expected answer BELONGS
+   *  to (not a fallback from some other source — `problemContext` may be a
+   *  bare equation). Lets an inequality answer be compared exactly while a
+   *  domain restriction in the statement stands the comparison down.
+   *  Absent ⇒ inequality answers are not graded (unknown, as before). */
+  problemText?: string;
 }): InverseVerdictResult {
   if (!DENIAL_RE.test(args.sentence ?? '')) return OK;
 
@@ -61,6 +67,7 @@ export function checkInverseVerdict(args: {
   // confirms currency markers in the live problem.
   const matchOpts = {
     monetary: args.spokenMoneyEnabled === true && looksMonetary(args.problemContext ?? ''),
+    ...relationMatchOpts(args.problemText),
   };
 
   const verified = (args.verifiedExpectedAnswer ?? '').trim();

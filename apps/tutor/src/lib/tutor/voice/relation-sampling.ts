@@ -397,6 +397,49 @@ export function parseRelation(text: string): ParseResult {
   }
 }
 
+// ── solved form ─────────────────────────────────────────────────────────────
+/** A written-out constant: 5, -5, 3.5, 20/3, -7/2, -(7/2). Arithmetic left
+ *  undone ("2 + 3", "2*3", "10/2/5") is NOT one. */
+function isPlainConstant(e: Expr): boolean {
+  const literal = (x: Expr | undefined): boolean => {
+    let cur = x;
+    for (let guard = 0; guard < 3 && cur?.kind === 'neg'; guard++) cur = cur.arg;
+    return cur?.kind === 'num' && isRational(cur.value);
+  };
+  let cur: Expr | undefined = e;
+  for (let guard = 0; guard < 3 && cur?.kind === 'neg'; guard++) cur = cur.arg;
+  if (!cur) return false;
+  if (cur.kind === 'num') return isRational(cur.value);
+  if (cur.kind === 'bin' && cur.op === '/') return literal(cur.left) && literal(cur.right);
+  return false;
+}
+
+/**
+ * True when the relation is in SOLVED FORM: exactly one part is the bare
+ * variable and every other part is a written-out constant — "x < 5", "5 > x",
+ * "-7 <= x < 5", "x = 3", "x < 20/3". Purely structural (it does not ask
+ * whether the relation is right), pure, never throws; anything malformed is
+ * simply not solved.
+ *
+ * Why: "2x < 10" has the same solution set as "x < 5", so set comparison
+ * alone calls the unsolved problem — retyped — a correct answer. Equivalence
+ * says the work so far is not wrong; only solved form says it is finished.
+ */
+export function isSolvedFormRelation(rel: Relation): boolean {
+  try {
+    if (!rel || !Array.isArray(rel.parts) || !Array.isArray(rel.ops)) return false;
+    checkOps(rel.ops, rel.parts.length);
+    let bareVariables = 0;
+    for (const part of rel.parts) {
+      if (part?.kind === 'var') bareVariables++;
+      else if (!part || !isPlainConstant(part)) return false;
+    }
+    return bareVariables === 1;
+  } catch {
+    return false;
+  }
+}
+
 // ── chains ──────────────────────────────────────────────────────────────────
 const CONNECTOR_RE = /\\(?:iff|Leftrightarrow|Longleftrightarrow)(?![a-zA-Z])|[⟺⇔]|\\(?:Rightarrow|implies|Longrightarrow)(?![a-zA-Z])|[⟹⇒]/g;
 const IFF_RE = /^(?:\\(?:iff|Leftrightarrow|Longleftrightarrow)|[⟺⇔])$/;
@@ -430,16 +473,59 @@ export function splitRelationChain(latex: string): { segments: string[]; connect
 const CMP_PRESENT_RE = /[<>=≤≥⩽⩾≠]|\\(?:leqslant|geqslant|leq|geq|le|ge|lt|gt|neq|ne)(?![a-zA-Z])/;
 const MATH_SPAN_RE = /\$\$([\s\S]+?)\$\$|\$([^$]+)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]/g;
 /** The statement must be about the relation's whole solution set. */
-const SOLVE_RE = /\b(?:solve|solving|solution|inequality|equation)\b/i;
+const SOLVE_RE = /\b(?:solve|solving|solution|inequality|inequalities|equation|find)\b/i;
 /**
  * A domain restriction or an optimisation question changes what a right
  * answer is ("x is a positive integer": x ≤ 3 is then correct for 2x < 7),
  * so the real-number comparison would be wrong.
  */
-const DOMAIN_VETO_RE = /\b(?:integers?|whole|natural|positive|negative|non-?negative|non-?zero|even|odd|prime|digits?|greatest|least|largest|smallest|maximum|minimum|most|fewest|how\s+many)\b/i;
-const WORD_RE = /[a-zA-Z]{2,}/;
-const LEFT_WORDS: readonly string[] = ['solve', 'inequality', 'equation', 'graph', 'simplify'];
-const RIGHT_WORDS: readonly string[] = ['and', 'then', 'for', 'on', 'using', 'algebraically', 'graphically'];
+export const DOMAIN_VETO_RE = /\b(?:integers?|whole|natural|positive|negative|non-?negative|non-?zero|even|odd|prime|digits?|greatest|least|largest|smallest|maximum|minimum|most|fewest|how\s+many)\b/i;
+
+/**
+ * POSITIVE evidence of a pure solve statement (2026-10-04). DOMAIN_VETO_RE is
+ * a word list, and no word list enumerates the ways prose restricts the
+ * answer: "where x is a counting number", "the number of students", "the
+ * tickets he can buy" all make x ≤ 4 the same answer as x < 5, and the
+ * real-number comparison then calls a correct answer wrong. So the rule is
+ * the other way round: once the relation is taken out, EVERY remaining word
+ * must be instruction vocabulary from this list (or the variable letter), and
+ * nothing but punctuation may remain. Anything else ⇒ not-ok.
+ */
+const INSTRUCTION_WORDS: ReadonlySet<string> = new Set([
+  'solve', 'solving', 'the', 'this', 'following', 'inequality', 'inequalities', 'equation',
+  'compound', 'linear', 'for', 'and', 'then', 'graph', 'it', 'its', 'solution', 'set', 'on',
+  'a', 'number', 'line', 'simplify', 'your', 'answer', 'find', 'all', 'values', 'of', 'that',
+  'satisfy', 'such', 'write', 'in', 'interval', 'notation', 'show', 'work', 'algebraically',
+  // "Solve the one-step inequality": how many steps, not what the answer is.
+  'one-step', 'two-step', 'multi-step',
+]);
+/** Words that are instruction only in one phrase: "a number line", "in
+ *  interval notation". "the number of students", "the number n", "a
+ *  solution" (one value, not the set) and "x in N" are not. */
+const MUST_PRECEDE: Readonly<Record<string, string>> = { number: 'line', a: 'number', in: 'interval' };
+const INSTRUCTION_TOKEN_RE = /[a-zA-Z]+(?:-[a-zA-Z]+)*/g;
+const INSTRUCTION_PUNCT_RE = /^[\s.,:;!?()"'“”‘’–—]*$/;
+
+/** Throws unless `remainder` (the statement minus its relation) is pure
+ *  instruction about solving for `variable`. */
+function requirePureInstruction(remainder: string, variable: string): void {
+  const tokens = remainder.match(INSTRUCTION_TOKEN_RE) ?? [];
+  let sawWord = false;
+  for (let k = 0; k < tokens.length; k++) {
+    if (tokens[k] === variable) continue;
+    const word = tokens[k].toLowerCase();
+    if (!INSTRUCTION_WORDS.has(word)) throw new Bail(`statement is not a pure solve instruction ("${tokens[k].slice(0, 24)}")`);
+    const next = MUST_PRECEDE[word];
+    if (next && (tokens[k + 1] ?? '').toLowerCase() !== next) {
+      throw new Bail(`statement is not a pure solve instruction ("${word}" without "${next}")`);
+    }
+    sawWord = true;
+  }
+  if (!INSTRUCTION_PUNCT_RE.test(remainder.replace(INSTRUCTION_TOKEN_RE, ' '))) {
+    throw new Bail('statement carries text besides the relation and the instruction');
+  }
+  if (sawWord && !SOLVE_RE.test(remainder)) throw new Bail('statement does not ask to solve the relation');
+}
 
 function extractOrBail(statement: string): Relation {
   if (typeof statement !== 'string') throw new Bail('not a string');
@@ -448,52 +534,49 @@ function extractOrBail(statement: string): Relation {
   if (DOMAIN_VETO_RE.test(statement)) throw new Bail('statement restricts the domain or asks for an extreme value');
   if (/\d,\d/.test(statement)) throw new Bail('digit-comma-digit is ambiguous');
 
-  // 1. Delimited maths: exactly one span carrying a comparator.
+  // 1. Delimited maths: exactly one span carrying a comparator. Any other
+  //    span may only name the variable ("Solve for $x$: …").
   const spanCandidates: string[] = [];
+  const otherSpans: string[] = [];
   const remainder = statement.replace(MATH_SPAN_RE, (_m, a?: string, b?: string, c?: string, d?: string) => {
-    const body = a ?? b ?? c ?? d ?? '';
-    if (CMP_PRESENT_RE.test(body)) spanCandidates.push(body.trim());
+    const body = (a ?? b ?? c ?? d ?? '').trim();
+    if (CMP_PRESENT_RE.test(body)) spanCandidates.push(body);
+    else otherSpans.push(body);
     return ' ';
   });
   if (spanCandidates.length > 0) {
     if (CMP_PRESENT_RE.test(remainder)) throw new Bail('relation text outside the math delimiters');
     const distinct = new Set(spanCandidates.map((c) => c.replace(/\s+/g, '')));
     if (distinct.size > 1) throw new Bail('more than one relation in the statement');
-    if (WORD_RE.test(remainder) && !SOLVE_RE.test(remainder)) throw new Bail('statement does not ask to solve the relation');
-    return parseOrBail(spanCandidates[0]);
+    const relation = parseOrBail(spanCandidates[0]);
+    if (otherSpans.some((body) => body !== relation.variable)) throw new Bail('statement carries maths besides the relation');
+    requirePureInstruction(remainder, relation.variable);
+    return relation;
   }
 
   // 2. Plain text: cut at prose words and sentence punctuation; exactly one
-  //    chunk may carry a comparator, and its neighbours must be ones that
-  //    cannot be part of the mathematics ("twice x < 5" is NOT x < 5).
+  //    chunk may carry a comparator, and everything outside that chunk must
+  //    be pure instruction ("twice x < 5" is NOT x < 5).
   const text = statement.replace(/\$/g, ' ');
   if (!CMP_PRESENT_RE.test(text)) throw new Bail('no relation in the statement');
-  type Edge = { type: 'edge' } | { type: 'punct' } | { type: 'word'; word: string };
-  const chunks: Array<{ text: string; left: Edge; right: Edge }> = [];
-  const breaker = /\\[a-zA-Z]+|[a-zA-Z]{2,}|[:;,?!\n]|\.(?=\s|$)/g;
+  const chunks: Array<{ start: number; end: number }> = [];
+  const breaker = /\\[a-zA-Z]+|[a-zA-Z]{2,}(?:-[a-zA-Z]+)*|[:;,?!\n]|\.(?=\s|$)/g;
   let last = 0;
-  let left: Edge = { type: 'edge' };
-  let sawWord = false;
   for (const m of text.matchAll(breaker)) {
     if (m[0].startsWith('\\')) continue; // a macro belongs to the mathematics
     const at = m.index ?? 0;
-    const isWord = /^[a-zA-Z]/.test(m[0]);
-    const edge: Edge = isWord ? { type: 'word', word: m[0].toLowerCase() } : { type: 'punct' };
-    if (isWord) sawWord = true;
-    chunks.push({ text: text.slice(last, at), left, right: edge });
-    left = edge;
+    chunks.push({ start: last, end: at });
     last = at + m[0].length;
   }
-  chunks.push({ text: text.slice(last), left, right: { type: 'edge' } });
+  chunks.push({ start: last, end: text.length });
 
-  const candidates = chunks.filter((c) => CMP_PRESENT_RE.test(c.text));
+  const candidates = chunks.filter((c) => CMP_PRESENT_RE.test(text.slice(c.start, c.end)));
   if (candidates.length === 0) throw new Bail('no relation in the statement');
   if (candidates.length > 1) throw new Bail('more than one relation in the statement');
   const c = candidates[0];
-  if (sawWord && !SOLVE_RE.test(text)) throw new Bail('statement does not ask to solve the relation');
-  if (c.left.type === 'word' && !LEFT_WORDS.includes(c.left.word)) throw new Bail('relation may be truncated by the preceding word');
-  if (c.right.type === 'word' && !RIGHT_WORDS.includes(c.right.word)) throw new Bail('relation may be truncated by the following word');
-  return parseOrBail(c.text.trim());
+  const relation = parseOrBail(text.slice(c.start, c.end).trim());
+  requirePureInstruction(`${text.slice(0, c.start)} ${text.slice(c.end)}`, relation.variable);
+  return relation;
 }
 
 /**

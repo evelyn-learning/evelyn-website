@@ -23,12 +23,12 @@ import { InlineMathText } from './InlineMathText';
 import {
   matchesAnswerStrict,
   resolveMcqCorrectChoice,
-  computeTryYourselfVerdict,
+  gradeTryYourself,
   type Choice,
 } from './tryYourselfAnswer';
 
-// matchesAnswerStrict / resolveMcqCorrectChoice / computeTryYourselfVerdict
-// now live in ./tryYourselfAnswer.ts (a plain .ts module, importable from a
+// matchesAnswerStrict / resolveMcqCorrectChoice / gradeTryYourself
+// live in ./tryYourselfAnswer.ts (a plain .ts module, importable from a
 // bare `tsx` test run without pulling in InlineMathText's katex CSS import).
 // Re-exported here for compatibility with any existing imports of this file.
 export { matchesAnswerStrict };
@@ -68,9 +68,15 @@ export function TryYourselfRenderer({
   // text, and (via WhiteboardCanvas's onTryYourselfAnswer relay) what the
   // brain is told — see tryYourselfAnswer.ts for the bug this fixes.
   const mcqCorrectChoice = responseFormat === 'mcq' ? resolveMcqCorrectChoice(choices, expectedAnswer) : undefined;
-  const isCorrect = submitted
-    ? computeTryYourselfVerdict(submitted, expectedAnswer, responseFormat, choices)
+  // 2026-10-03: gradeTryYourself (the same call WhiteboardCanvas's relay
+  // makes, with the same problemText) also decides a typed inequality
+  // exactly. A wrong inequality shows "Not quite." WITHOUT the key
+  // (revealExpected false); numeric and MCQ mismatches still print it.
+  const grade = submitted
+    ? gradeTryYourself(submitted, expectedAnswer, responseFormat, choices, { problemText: problem })
     : null;
+  const isCorrect = grade ? grade.verdict : null;
+  const revealExpected = grade?.revealExpected ?? false;
   // mcq can resolve a verdict purely from choices[].correct even when no
   // expectedAnswer text was authored; frq/numeric still require expectedAnswer.
   const hasVerdictSignal = responseFormat === 'mcq' ? (expectedAnswer != null || !!mcqCorrectChoice) : expectedAnswer != null;
@@ -177,7 +183,10 @@ export function TryYourselfRenderer({
           : 'text-gray-600'
         }`}>
           {isCorrect === true ? '✓ Correct!'
-          : isCorrect === false ? <>Not quite. Expected: <InlineMathText text={mcqCorrectChoice?.text ?? expectedAnswer ?? ''} /></>
+          : isCorrect === false
+            ? (revealExpected
+              ? <>Not quite. Expected: <InlineMathText text={mcqCorrectChoice?.text ?? expectedAnswer ?? ''} /></>
+              : 'Not quite.')
           : 'Submitted — the tutor is reviewing your answer.'}
         </div>
       )}

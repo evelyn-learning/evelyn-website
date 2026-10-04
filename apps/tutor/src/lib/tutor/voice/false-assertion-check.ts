@@ -37,7 +37,7 @@
  *
  * Pure module — no side effects, never throws.
  */
-import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, relationMatchOpts } from '@/lib/tutor/voice/utterance-answer-match';
 
 export interface FalseAssertionResult {
   verdict: 'ok' | 'false_assertion';
@@ -122,8 +122,11 @@ export function checkFalseFinalAssertion(args: {
   const m = all[all.length - 1];
   const asserted = m[1].replace(/\\d?frac\{(-?\d+)\}\{(-?\d+)\}/, '$1/$2').replace(/\s+/g, '');
 
+  // (answerVar came out of args.problemStatement, so a statement is always
+  // present here; relationMatchOpts keeps that true by construction.)
   const cmp = matchUtteranceToAnswer(asserted, verified, args.choices, {
     monetary: args.spokenMoneyEnabled === true,
+    ...relationMatchOpts(args.problemStatement),
   });
   if (cmp.verdict === 'disagree') {
     return { verdict: 'false_assertion', asserted, expected: verified, answerVar, matchReason: cmp.reason };

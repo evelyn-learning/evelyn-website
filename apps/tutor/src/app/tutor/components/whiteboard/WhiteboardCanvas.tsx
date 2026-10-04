@@ -22,7 +22,7 @@ import { SketchFallbackCard } from './SketchFallbackCard';
 import { RenderFallbackCard } from './RenderFallbackCard';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
-import { computeTryYourselfVerdict } from './tryYourselfAnswer';
+import { gradeTryYourself, type TryYourselfRelationDetail } from './tryYourselfAnswer';
 import EarlyMathRenderer from './EarlyMathRenderer';
 import PhonicsRenderer from './PhonicsRenderer';
 import GraphicOrganizerRenderer from './GraphicOrganizerRenderer';
@@ -198,7 +198,9 @@ interface WhiteboardCanvasProps {
    *  the answer to the brain as a synthetic student turn so the tutor
    *  can react with personalized feedback (correct → praise + advance,
    *  wrong → gentle correction). */
-  onTryYourselfAnswer?: (answer: string, expected: string | undefined, isCorrect: boolean | null) => void;
+  /** `relation` is set only when an inequality answer was graded exactly
+   *  (see gradeTryYourself); it carries the witness for a mismatch. */
+  onTryYourselfAnswer?: (answer: string, expected: string | undefined, isCorrect: boolean | null, relation?: TryYourselfRelationDetail) => void;
   /** Fires when the tutor performs an explicit "look at this" action —
    *  scrollTo a different page or a scribble to mark something. The
    *  parent uses this on mobile to auto-switch from the chat tab to
@@ -2642,8 +2644,11 @@ function TryYourselfWithBrainHookup(props: {
         // fallback) rather than comparing the submitted choice id
         // against free-text expectedAnswer directly — see that module's
         // header comment for the bug this replaced.
-        const isCorrect = computeTryYourselfVerdict(answer, props.expectedAnswer, props.responseFormat, props.choices);
-        ctx.onTryYourselfAnswer?.(answer, props.expectedAnswer, isCorrect);
+        // 2026-10-03: gradeTryYourself additionally decides a typed
+        // INEQUALITY exactly (flag NEXT_PUBLIC_TUTOR_RELATION_GRADING) and
+        // returns the witness, which the marker passes to the brain.
+        const grade = gradeTryYourself(answer, props.expectedAnswer, props.responseFormat, props.choices, { problemText: props.problem });
+        ctx.onTryYourselfAnswer?.(answer, props.expectedAnswer, grade.verdict, grade.relation);
       }}
     />
   );

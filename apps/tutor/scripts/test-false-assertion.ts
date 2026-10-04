@@ -252,5 +252,21 @@ const MCQ_CHOICES = ['A', 'B', 'C', 'D'].map((l) => ({ letter: l, text: l }));
     r.verdict === 'false_assertion', JSON.stringify(r));
 }
 
+// ─── 2026-10-03: an inequality-valued verified answer never yields a kill ───
+{
+  const r = checkFalseFinalAssertion({
+    sentence: 'So $x = 3$ works here.',
+    problemStatement: 'x is a positive integer. Solve for x: 2x < 7.',
+    verifiedExpectedAnswer: 'x \\le 3',
+  });
+  check('asserted value vs inequality key (restricted domain) → ok', r.verdict === 'ok', JSON.stringify(r));
+  const r2 = checkFalseFinalAssertion({
+    sentence: 'So $x = 9$ works here.',
+    problemStatement: 'Solve for x: 2x < 7.',
+    verifiedExpectedAnswer: 'x < 3.5',
+  });
+  check('asserted value vs inequality key (unrestricted) → ok (a value is not a relation)', r2.verdict === 'ok', JSON.stringify(r2));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

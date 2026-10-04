@@ -13,6 +13,9 @@ import {
   compareRelationTexts,
   formatWitness,
   adjudicateAnswerDispute,
+  DOMAIN_VETO_RE,
+  isSolvedFormRelation,
+  type Relation,
   type Rational,
   type SetCompare,
 } from '../src/lib/tutor/voice/relation-sampling';
@@ -291,6 +294,46 @@ eq(
   notOk('Solve x < 1,000', 'thousands separator');
   notOk('', 'empty');
   notOk(R`Solve: $x^2 < 9$`, 'non-linear problem');
+
+  // ── 2026-10-04: POSITIVE evidence — every word left once the relation is
+  //    removed must be pure-instruction vocabulary. A veto list cannot
+  //    enumerate the ways a statement restricts the answer to integers.
+  notOk('Solve 2x + 3 < 13 for x, where x is a counting number', 'integer clause, plain text');
+  notOk(R`Solve the inequality $2x + 3 < 13$, where x is the number of students.`, 'integer clause, delimited');
+  notOk(R`Sam solves the inequality $5x < 17$ for the number of tickets x he can buy.`, 'story around a delimited relation');
+  notOk(R`Solve the inequality $n + 2 > 5$ for the number of people n.`, '"the number of people"');
+  notOk(R`Solve $2x < 7$ for the number of values.`, '"number of" is never instruction, even before an allow-listed word');
+  notOk(R`Solve $2x < 7$ for the number x.`, '"number" only as "number line"');
+  notOk('Solve 2x < 7 for the number of values of x', '"number of", plain text');
+  notOk(R`Solve $2x < 7$ for $x \in \mathbb{Z}$.`, 'a second math span that is not the variable');
+  notOk(R`Solve $2x < 7$ for $n$.`, 'a math span naming another letter');
+  notOk(R`Find a solution of the inequality $2x < 7$.`, '"a solution" asks for one value');
+  notOk(R`Solve $2x < 7$ in ℤ.`, 'a symbol outside the relation');
+  notOk('Solve 2x < 7 for x in N', 'a stray letter that is not the variable');
+  notOk('Solve 2x < 7 given 3', 'a non-instruction word, plain text');
+  notOk('Problem 4. Solve 2x < 7', 'a digit outside the relation');
+  notOk(R`Tickets cost 5 dollars. Solve $5x < 17$.`, 'story sentence before the instruction');
+  notOk(R`Graph $x < 5$ on the number plane.`, '"number" not followed by "line"');
+  notOk(R`$2x < 7$ where applicable`, 'words but none of them instruction');
+
+  const isOk = (s: string, same: string, why: string): void => {
+    const r = extractProblemRelation(s);
+    ok(r.ok, `${why}: ${JSON.stringify(s)} → ${JSON.stringify(r)}`);
+    if (r.ok) eq(compareRelations(r.relation, (parseRelation(same) as { ok: true; relation: never }).relation).verdict, 'equivalent', `${why}: relation`);
+  };
+  isOk(R`Solve: $-9 \le 2x + 5 < 15$`, '-7 <= x < 5', 'pure instruction, delimited compound');
+  isOk(R`Solve the inequality: $2x + 3 < 13$`, 'x < 5', 'pure instruction');
+  isOk(R`Solve and graph: 4x + 9 ≤ 33`, 'x <= 6', 'pure instruction, plain text');
+  isOk('Solve 2x < 7.', 'x < 7/2', 'bare solve');
+  isOk('Solve 2x < 7 for x.', 'x < 7/2', 'the variable letter, plain text');
+  isOk(R`Solve for $x$: $2x < 7$`, 'x < 7/2', 'the variable letter as its own math span');
+  isOk(R`Find all x such that $2x + 3 < 13$.`, 'x < 5', 'find all … such that');
+  isOk('Find all x such that 2x + 3 < 13', 'x < 5', 'find all … such that, plain text');
+  isOk(R`Find all values of x that satisfy $2x + 3 < 13$.`, 'x < 5', 'find all values that satisfy');
+  isOk(R`Solve the following compound inequality and graph its solution set on a number line: $-9 \le 2x + 5 < 15$`, '-7 <= x < 5', 'long pure instruction');
+  isOk(R`Solve the linear inequality $2x + 3 < 13$ algebraically. Write your answer in interval notation. Show your work.`, 'x < 5', 'every allow-listed sentence');
+  isOk(R`Solve the one-step inequality: $x + 3 > 5$`, 'x > 2', 'one-step');
+  isOk(R`Solve the equation $2a + 1 = 7$ for a.`, 'a = 3', 'variable named a');
 }
 
 // ═══════════════════════════ adjudicateAnswerDispute ════════════════════════
@@ -323,6 +366,41 @@ eq(formatWitness(w(-7, 2)), '-7/2', 'negative fraction');
   const res2 = compareRelationTexts('x < 1/3', 'x < 2/3');
   ok(res2.verdict === 'differs' && res2.witness.d !== 1, `no integer between the roots → rational witness: ${JSON.stringify(res2)}`);
   if (res2.verdict === 'differs') ok(3 * res2.witness.n >= res2.witness.d && 3 * res2.witness.n < 2 * res2.witness.d, 'rational witness lies in [1/3, 2/3)');
+}
+
+// DOMAIN_VETO_RE is exported for utterance-answer-match.ts (one definition).
+ok(DOMAIN_VETO_RE.test('x is a positive integer') && DOMAIN_VETO_RE.test('the greatest value') && DOMAIN_VETO_RE.test('whole numbers'), 'DOMAIN_VETO_RE matches domain / extreme-value wording');
+ok(!DOMAIN_VETO_RE.test('Solve 2x < 7 for x.'), 'DOMAIN_VETO_RE leaves a plain statement alone');
+
+// ═══════════════════════════ solved form (2026-10-04) ═══════════════════════
+// A relation is in SOLVED FORM when exactly one part is the bare variable and
+// every other part is a plain constant. An equivalent relation that is not in
+// solved form ("2x < 10" for "x < 5") is an unfinished answer, not a right one.
+{
+  const solved = (t: string): boolean => {
+    const p = parseRelation(t);
+    assert.ok(p.ok, `solved-form fixture must parse: ${t}`);
+    return p.ok && isSolvedFormRelation(p.relation);
+  };
+  for (const t of ['x < 5', '5 > x', R`-7 \le x < 5`, '5 > x >= -7', 'x = 3', '3 = x', 'x < 20/3', 'x < -7/2', R`x \ge -\frac{7}{2}`,
+    'x <= -3.5', R`$x \leq 6$`, 'x ≥ 4', '(x) < 5', 'x < (5)', 't > 0', 'x < 6.']) {
+    ok(solved(t), `solved form: ${t}`);
+  }
+  for (const t of ['2x < 10', '2x + 3 < 13', '-x > -5', 'x + 0 < 5', 'x < 2 + 3', 'x < 2*3', '-14 <= 2x < 10', R`-9 \le 2x + 5 < 15`,
+    'x/1 < 5', '1x < 5', '-(-x) < 5', 'x < x', 'x - 5 < 0', 'x = x', R`\frac{x}{2} < 3`, '3x = 9', 'x < 10/2/5']) {
+    ok(!solved(t), `NOT solved form: ${t}`);
+  }
+  // \lt / \gt are read by the normaliser like any other spelling.
+  eq(compareRelationTexts(R`x \lt 5`, 'x < 5').verdict, 'equivalent', R`\lt is <`);
+  eq(compareRelationTexts(R`x \gt 5`, '5 < x').verdict, 'equivalent', R`\gt is >`);
+  ok(solved(R`x \lt 5`) && solved(R`-7 \lt x \lt 5`), R`\lt solved forms`);
+  // Pure and total: malformed input is simply "not solved", never a throw.
+  for (const bad of [null, undefined, {}, { variable: 'x', parts: null, ops: [] }, { variable: 'x', parts: [{ kind: 'var' }], ops: [] },
+    { variable: 'x', parts: [{ kind: 'var' }, { kind: 'num', value: { n: 1, d: 0 } }], ops: ['<'] },
+    { variable: 'x', parts: [{ kind: 'var' }, { kind: 'bogus' }], ops: ['<'] }]) {
+    eq(isSolvedFormRelation(bad as unknown as Relation), false, `malformed relation → false: ${JSON.stringify(bad)}`);
+  }
+  ok(isSolvedFormRelation({ variable: 'x', parts: [{ kind: 'var' }, { kind: 'num', value: { n: 5, d: 1 } }], ops: ['<'], source: '' }), 'hand-built x < 5');
 }
 
 console.log(`relation-sampling: all ${checks} assertions passed`);

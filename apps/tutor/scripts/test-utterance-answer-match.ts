@@ -2,7 +2,7 @@
  * Unit test for the tri-state utterance-vs-answer comparator.
  * Usage: npx tsx scripts/test-utterance-answer-match.ts
  */
-import { matchUtteranceToAnswer, canonicalizeMathExpression, normalizeSpokenMath } from '../src/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, canonicalizeMathExpression, normalizeSpokenMath, gradeRelationAnswer, relationMatchOpts } from '../src/lib/tutor/voice/utterance-answer-match';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -139,6 +139,185 @@ check('R58b: multi-assignment still refuses: "x=4, y=-2" vs 4',
   matchUtteranceToAnswer('x=4, y=-2', '4').verdict === 'unknown');
 check('R58b: fraction RHS: "so 26 over 2 = 13" vs 13 agree',
   matchUtteranceToAnswer('so 26 over 2 = 13', '13').verdict === 'agree');
+
+// — 2026-10-03: exact grading of inequality answers (flag NEXT_PUBLIC_TUTOR_RELATION_GRADING) —
+// Production: a typed "-7<x<8" against expected "-7 <= x < 5" was praised as
+// "exactly it" because any answer containing < > ≤ ≥ returned `unknown`.
+{
+  // 2026-10-04: `disagree` needs POSITIVE evidence of a pure real-number
+  // solve — a statement that extracts to one relation equivalent to the key.
+  const PURE = { problemText: 'Solve: $-9 \\le 2x + 5 < 15$' }; // ⇔ -7 ≤ x < 5
+  const S6LE = { problemText: 'Solve: $2x \\le 12$' };           // ⇔ x ≤ 6
+  const S6LT = { problemText: 'Solve: $3x < 18$' };               // ⇔ x < 6
+  const wrong = matchUtteranceToAnswer('-7<x<8', '-7 <= x < 5', undefined, PURE);
+  check('relation: the production case, with NO statement, is unknown', matchUtteranceToAnswer('-7<x<8', '-7 <= x < 5').verdict === 'unknown');
+  check('relation: the production case disagrees', wrong.verdict === 'disagree');
+  check('relation: disagree carries a witness', !!wrong.witness && wrong.witness.variable === 'x' && wrong.witness.value !== '');
+  check('relation: witness is a real counterexample (one side holds, the other does not)',
+    !!wrong.witness && wrong.witness.submittedHolds !== wrong.witness.expectedHolds);
+  check('relation: reason names the witness', /^relation differs at x = /.test(wrong.reason));
+  check('relation: reversed + LaTeX form agrees', matchUtteranceToAnswer('5 > x \\ge -7', '-7 \\le x < 5').verdict === 'agree');
+  check('relation: unicode vs LaTeX agrees', matchUtteranceToAnswer('x ≤ 6', 'x \\le 6').verdict === 'agree');
+  check('relation: $-wrapped expected agrees', matchUtteranceToAnswer('x<=6', '$x \\leq 6$').verdict === 'agree');
+  check('relation: strict vs non-strict disagrees', matchUtteranceToAnswer('x < 6', 'x \\le 6', undefined, S6LE).verdict === 'disagree');
+  check('relation: flipped comparator disagrees', matchUtteranceToAnswer('x > 6', 'x < 6', undefined, S6LT).verdict === 'disagree');
+  check('relation: leading hedge is peeled', matchUtteranceToAnswer("I think it's x < 6", 'x < 6').verdict === 'agree');
+  check('relation: trailing question mark is fine', matchUtteranceToAnswer('is it x > 6?', 'x < 6', undefined, S6LT).verdict === 'disagree');
+  check('relation: a differing pair with no statement is unknown', matchUtteranceToAnswer('x > 6', 'x < 6').verdict === 'unknown');
+
+  // ── defect 1 (2026-10-04): `agree` only for a SOLVED-FORM submission ──
+  // Card "Solve the inequality: $2x + 3 < 13$", key x < 5. An equivalent but
+  // unsolved submission is not wrong, just unfinished → unknown (the tutor
+  // decides); it must never be `agree` (✓ Correct! / false-denial kill).
+  const CARD = { problemText: 'Solve the inequality: $2x + 3 < 13$' };
+  for (const o of [undefined, CARD]) {
+    const tag = o ? 'with statement' : 'no statement';
+    check(`solved form: half-solved "2x < 10" vs key "x < 5" → unknown (${tag})`, matchUtteranceToAnswer('2x < 10', 'x < 5', undefined, o).verdict === 'unknown');
+    check(`solved form: the retyped problem "2x + 3 < 13" → unknown (${tag})`, matchUtteranceToAnswer('2x + 3 < 13', 'x < 5', undefined, o).verdict === 'unknown');
+    check(`solved form: "x < 5" → agree (${tag})`, matchUtteranceToAnswer('x < 5', 'x < 5', undefined, o).verdict === 'agree');
+    check(`solved form: reversed "5 > x" → agree (${tag})`, matchUtteranceToAnswer('5 > x', 'x < 5', undefined, o).verdict === 'agree');
+  }
+  check('solved form: "-x > -5" (variable not isolated) → unknown', matchUtteranceToAnswer('-x > -5', 'x < 5').verdict === 'unknown');
+  check('solved form: "x < 2 + 3" (arithmetic left undone) → unknown', matchUtteranceToAnswer('x < 2 + 3', 'x < 5').verdict === 'unknown');
+  check('solved form: compound half-solved "-14 <= 2x < 10" → unknown', matchUtteranceToAnswer('-14 <= 2x < 10', '-7 \\le x < 5', undefined, PURE).verdict === 'unknown');
+  check('solved form: fraction bound "x < 7/2" vs "x < 3.5" → agree', matchUtteranceToAnswer('x < 7/2', 'x < 3.5').verdict === 'agree');
+  check('solved form: an unsolved but WRONG submission still disagrees (with evidence)',
+    matchUtteranceToAnswer('2x < 12', 'x < 5', undefined, CARD).verdict === 'disagree');
+  check('solved form: the unsolved gradeRelationAnswer reason says so',
+    (() => { const g = gradeRelationAnswer('2x < 10', 'x < 5', CARD); return g.verdict === 'unknown' && /solved form/.test(g.reason); })());
+  // an EXPECTED key that is not itself in solved form grades nothing
+  check('unsolved key: equivalent solved submission → unknown', gradeRelationAnswer('x < 5', '2x < 10', { problemText: 'Solve: $2x < 10$' }).verdict === 'unknown');
+  check('unsolved key: differing submission → unknown', gradeRelationAnswer('x < 6', '2x < 10', { problemText: 'Solve: $2x < 10$' }).verdict === 'unknown');
+  check('unsolved key: identical text → unknown from the relation path', gradeRelationAnswer('2x < 10', '2x < 10').verdict === 'unknown');
+
+  // ── defect 2 (2026-10-04): no `disagree` without positive evidence ──
+  // Implicit-integer problems: no veto word, yet the real-number comparison
+  // is the wrong test. Reproduced as false "disagree" by the review.
+  const implicit: Array<[string, string, string]> = [
+    ['x > 3', 'x \\geq 4', 'A club needs more than 3 members. Write an inequality for the number of members x.'],
+    ['x <= 3', 'x < 3.4', 'Tickets cost $5 and Sam has $17. Write an inequality for the number of tickets x he can buy.'],
+    ['x ≤ 4', 'x < 5', 'Write an inequality for x, where x is a counting number less than 5.'],
+  ];
+  for (const [sub, key, stmt] of implicit) {
+    const r = matchUtteranceToAnswer(sub, key, undefined, { problemText: stmt });
+    check(`implicit-integer: "${sub}" vs "${key}" → unknown, no witness`, r.verdict === 'unknown' && r.witness === undefined);
+    check(`implicit-integer: gradeRelationAnswer "${sub}" vs "${key}" → unknown`, gradeRelationAnswer(sub, key, { problemText: stmt }).verdict === 'unknown');
+  }
+  check('evidence: statement relation NOT equivalent to the key → unknown',
+    matchUtteranceToAnswer('x < 3.5', 'x \\le 3', undefined, { problemText: 'Solve 2x < 7.' }).verdict === 'unknown');
+  check('evidence: statement with two relations → unknown',
+    matchUtteranceToAnswer('x < 6', 'x < 5', undefined, { problemText: 'Solve $2x < 10$ and $x > 0$.' }).verdict === 'unknown');
+  check('evidence: statement that does not ask to solve → unknown',
+    matchUtteranceToAnswer('x < 6', 'x < 5', undefined, { problemText: 'Maria wrote $2x < 10$ on the board.' }).verdict === 'unknown');
+  check('evidence: pure solve whose solution is the key → disagree',
+    matchUtteranceToAnswer('x < 6', 'x < 5', undefined, CARD).verdict === 'disagree');
+  check('evidence: agree stands without any statement', matchUtteranceToAnswer('x < 5', 'x < 5').verdict === 'agree');
+  check('evidence: agree stands under a domain-restricted statement (equal over the reals ⇒ equal on any domain)',
+    matchUtteranceToAnswer('3 >= x', 'x \\le 3', undefined, { problemText: 'x is a positive integer. Solve 2x < 7.' }).verdict === 'agree');
+  check('\\lt / \\gt spellings are read', matchUtteranceToAnswer('x \\lt 5', '5 \\gt x').verdict === 'agree');
+  // unknown, exactly as today, whenever the utterance is not itself a relation
+  check('relation: spoken prose is unknown', matchUtteranceToAnswer('between negative seven and five', '-7 <= x < 5').verdict === 'unknown');
+  check('relation: relation buried in a sentence is NOT force-parsed',
+    matchUtteranceToAnswer('so twice x < 12 means the boundary moves', 'x < 6').verdict === 'unknown');
+  check('relation: a bare number against an inequality is unknown', matchUtteranceToAnswer('5', 'x < 5').verdict === 'unknown');
+  check('relation: an equation against an inequality is unknown', matchUtteranceToAnswer('x = 5', 'x < 5').verdict === 'unknown');
+  check('relation: different variable is unknown', matchUtteranceToAnswer('y < 5', 'x < 5').verdict === 'unknown');
+  check('relation: unsupported expected (union) is unknown', matchUtteranceToAnswer('x < 2', 'x < 2 or x > 7').verdict === 'unknown');
+  check('relation: quadratic expected is unknown', matchUtteranceToAnswer('x^2 < 4', 'x^2 < 4').verdict === 'unknown');
+  // a domain restriction in the problem changes what a right answer is
+  check('relation: problem restricts the domain → unknown',
+    matchUtteranceToAnswer('x < 3.5', 'x \\le 3', undefined, { problemText: 'x is a positive integer. Solve 2x < 7.' }).verdict === 'unknown');
+  check('relation: same pair without the restriction disagrees',
+    matchUtteranceToAnswer('x \\le 3', 'x < 3.5', undefined, { problemText: 'Solve 2x < 7.' }).verdict === 'disagree');
+  // MCQ still resolves when the utterance is a letter
+  const ch = [{ letter: 'A', text: 'x < 5' }, { letter: 'B', text: 'x \\le 5' }];
+  check('relation: mcq letter still resolves against a relation-valued expected', matchUtteranceToAnswer('B', 'B', ch).verdict === 'agree');
+  {
+    // a letter against relation TEXT: whatever the pre-existing paths decide, unchanged
+    const on = matchUtteranceToAnswer('A', 'x \\le 5', ch);
+    process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING = 'off';
+    const off = matchUtteranceToAnswer('A', 'x \\le 5', ch);
+    delete process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING;
+    check('relation: mcq letter vs relation-text expected falls through unchanged', on.verdict === off.verdict && on.reason === off.reason);
+  }
+  // the comparator directly
+  const g = gradeRelationAnswer('-7<x<8', '-7 <= x < 5', PURE);
+  check('gradeRelationAnswer: disagree + witness', g.verdict === 'disagree' && g.witness.variable === 'x');
+  check('gradeRelationAnswer: same pair, no statement → unknown', gradeRelationAnswer('-7<x<8', '-7 <= x < 5').verdict === 'unknown');
+  check('gradeRelationAnswer: expected without an inequality is unknown', gradeRelationAnswer('x < 5', '5').verdict === 'unknown');
+  // kill switch
+  const prev = process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING;
+  process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING = 'off';
+  check('relation: flag off → unknown as before', matchUtteranceToAnswer('-7<x<8', '-7 <= x < 5', undefined, PURE).verdict === 'unknown');
+  if (prev === undefined) delete process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING;
+  else process.env.NEXT_PUBLIC_TUTOR_RELATION_GRADING = prev;
+  // non-relation answers are untouched by the new path
+  check('relation path leaves numeric alone', matchUtteranceToAnswer('15', '13').verdict === 'disagree');
+  check('relation path leaves expressions alone', matchUtteranceToAnswer('2 + 3x', '3x+2').verdict === 'agree');
+  check('relation path leaves equation-form expected alone', matchUtteranceToAnswer('5', 'x=5').verdict === 'unknown');
+}
+
+// ─── 2026-10-03 integration: opt-out, shared domain regex, key spellings ───
+{
+  // A caller with no problem statement cannot see a domain restriction, and a
+  // real-number `disagree` there can arm a kill of a correct turn.
+  check('relationGrading:false → an inequality pair is unknown (no disagree)',
+    matchUtteranceToAnswer('x < 3.5', 'x \\le 3', undefined, { relationGrading: false }).verdict === 'unknown');
+  check('relationGrading:false → an equivalent pair is unknown too (path is off, not half-on)',
+    matchUtteranceToAnswer('2x < 10', 'x < 5', undefined, { relationGrading: false }).verdict === 'unknown');
+  check('relationGrading:false leaves the numeric path alone',
+    matchUtteranceToAnswer('5', '6', undefined, { relationGrading: false }).verdict === 'disagree');
+  check('relationMatchOpts(statement) passes the statement through',
+    JSON.stringify(relationMatchOpts('Solve 2x < 7.')) === JSON.stringify({ problemText: 'Solve 2x < 7.' }));
+  check('relationMatchOpts(undefined) opts out', relationMatchOpts(undefined).relationGrading === false);
+  check('relationMatchOpts("") opts out', relationMatchOpts('').relationGrading === false);
+  check('relationMatchOpts(whitespace) opts out', relationMatchOpts('   ').relationGrading === false);
+  check('via relationMatchOpts: no statement → unknown',
+    matchUtteranceToAnswer('x < 3.5', 'x \\le 3', undefined, relationMatchOpts(undefined)).verdict === 'unknown');
+  check('via relationMatchOpts: unrestricted statement → disagree',
+    matchUtteranceToAnswer('x \\le 3', 'x < 3.5', undefined, relationMatchOpts('Solve 2x < 7.')).verdict === 'disagree');
+  check('via relationMatchOpts: integer-restricted statement → unknown',
+    matchUtteranceToAnswer('x < 3.5', 'x \\le 3', undefined, relationMatchOpts('x is a positive integer. Solve 2x < 7.')).verdict === 'unknown');
+  for (const stmt of ['Find all whole numbers n with 2n < 7.', 'x is non-negative. Solve 2x < 7.', 'How many values of x satisfy 2x < 7?']) {
+    check(`domain veto (shared DOMAIN_VETO_RE): "${stmt}" → unknown`,
+      matchUtteranceToAnswer('x < 3.5', 'x \\le 3', undefined, { problemText: stmt }).verdict === 'unknown');
+  }
+  // 2026-10-04: an integer clause no veto word can catch. Key x < 5, the
+  // student's x ≤ 4 is the SAME answer over the integers — never a disagree.
+  for (const stmt of [
+    'Solve 2x + 3 < 13 for x, where x is a counting number',
+    'Solve the inequality $2x + 3 < 13$, where x is the number of students.',
+  ]) {
+    check(`integer clause on a solve statement: "${stmt}" → unknown`,
+      matchUtteranceToAnswer('x \\le 4', 'x < 5', undefined, { problemText: stmt }).verdict === 'unknown');
+  }
+  check('integer clause: "Sam solves … for the number of tickets x he can buy." → unknown',
+    matchUtteranceToAnswer('x \\le 3', 'x < 17/5', undefined, { problemText: 'Sam solves the inequality $5x < 17$ for the number of tickets x he can buy.' }).verdict === 'unknown');
+  check('integer clause: "… for the number of people n." → unknown',
+    matchUtteranceToAnswer('n \\ge 4', 'n > 3', undefined, { problemText: 'Solve the inequality $n + 2 > 5$ for the number of people n.' }).verdict === 'unknown');
+  check('same pair on the pure statement still disagrees',
+    matchUtteranceToAnswer('x \\le 4', 'x < 5', undefined, { problemText: 'Solve the inequality: $2x + 3 < 13$' }).verdict === 'disagree');
+  check('pure "Find all x such that …" disagrees',
+    matchUtteranceToAnswer('x \\le 4', 'x < 5', undefined, { problemText: 'Find all x such that $2x + 3 < 13$.' }).verdict === 'disagree');
+  check('gradeRelationAnswer honours the same veto',
+    gradeRelationAnswer('x < 3.5', 'x \\le 3', { problemText: 'x is an integer.' }).verdict === 'unknown');
+
+  // Answer-key spellings pinned by answer-dispute-tiebreak.ts: LaTeX
+  // comparators from the solver, ASCII comparators from the brain.
+  const latexKey = '-4 \\le x < 2';
+  check('LaTeX key: ASCII submission agrees', matchUtteranceToAnswer('-4 <= x < 2', latexKey).verdict === 'agree');
+  check('LaTeX key: unicode submission agrees', matchUtteranceToAnswer('−4 ≤ x < 2', latexKey).verdict === 'agree');
+  check('LaTeX key: reversed submission agrees', matchUtteranceToAnswer('2 > x >= -4', latexKey).verdict === 'agree');
+  const tieSt = { problemText: 'Solve: $-4 < \\frac{3x+2}{-2} \\le 5$' }; // ⇔ -4 ≤ x < 2
+  check('LaTeX key: wrong bound disagrees', matchUtteranceToAnswer('-4 < x < 2', latexKey, undefined, tieSt).verdict === 'disagree');
+  const asciiKey = '-4 <= x < 20/3';
+  check('ASCII key: LaTeX submission agrees', matchUtteranceToAnswer('-4 \\le x < \\frac{20}{3}', asciiKey).verdict === 'agree');
+  check('ASCII key: ASCII submission agrees', matchUtteranceToAnswer('-4 <= x < 20/3', asciiKey).verdict === 'agree');
+  check('ASCII key: wrong bound disagrees',
+    matchUtteranceToAnswer('-4 <= x < 2', asciiKey, undefined, { problemText: 'Solve: $-12 \\le 3x < 20$' }).verdict === 'disagree');
+  check('ASCII key vs LaTeX key of the same set agree with each other',
+    matchUtteranceToAnswer('-4 \\le x < 2', '-4 <= x < 2').verdict === 'agree');
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

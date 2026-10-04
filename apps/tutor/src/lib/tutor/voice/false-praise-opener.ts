@@ -92,7 +92,7 @@
  * Tiers otherwise mirror inverse-verdict-check.ts. Pure, no LLM, never
  * throws.
  */
-import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, relationMatchOpts, isInequalityText } from '@/lib/tutor/voice/utterance-answer-match';
 import { isPureAcknowledgment } from '@/lib/tutor/voice/nonanswer-praise';
 import { looksMonetary } from '@/lib/tutor/voice/spoken-money';
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
@@ -204,19 +204,28 @@ export function studentDisagreesWithVerified(
   utterance: string,
   verified: string,
   choices?: Array<{ letter: string; text: string }>,
+  /** 2026-10-03: `problemText` = the statement of the problem `verified`
+   *  belongs to. Absent ⇒ an inequality key is not graded. */
+  opts?: { problemText?: string },
 ): boolean {
   try {
     const v = (verified ?? '').trim();
     if (!v || !isSingleValued(v) || !isAnswerShaped(utterance)) return false;
     if (!utteranceStatesValue(utterance, choices)) return false;
     if (isTermOfExpression(utterance, v)) return false;
-    const m = matchUtteranceToAnswer(utterance, v, choices, { monetary: false });
+    const m = matchUtteranceToAnswer(utterance, v, choices, { monetary: false, ...relationMatchOpts(opts?.problemText) });
     if (m.verdict === 'disagree') return true;
     if (m.verdict === 'agree') return false;
     // The matcher is built for single values; an algebraic key ("15 - 3x")
     // against a sentence that ENDS in the student's expression ("… so
     // answer is 3 - 4x") comes back unparseable. Compare the student's final
     // stated expression to the key as term multisets.
+    // Inequalities are graded by the matcher's exact relation path, which
+    // answers 'unknown' when it has no positive evidence. The term-multiset
+    // comparison below knows nothing about relations (a LaTeX "x \le 3"
+    // against "x < 3.5" read as different terms ⇒ a false disagreement that
+    // fed the judge-advisory gate), so it must not second-guess that.
+    if (isInequalityText(v) || isInequalityText(utterance)) return false;
     if (!/[a-z]/i.test(v)) return false;
     const frag = finalExpressionFragment(utterance);
     if (!frag) return false;
@@ -339,6 +348,12 @@ export function checkFalsePraiseOpener(args: {
    *  Optional and defaults to falsy, so existing callers that don't pass it
    *  keep compiling and simply never reach the value-disagree kill branch. */
   finalAnswerTurn?: boolean;
+  /** 2026-10-03: the statement of the problem the expected answer BELONGS
+   *  to (`problemContext` is the money context and may be a bare equation).
+   *  Absent ⇒ inequality answers are not graded (unknown, as before) — a
+   *  real-number `disagree` on a domain-restricted problem would be false,
+   *  and a disagree here can kill a correct turn. */
+  problemText?: string;
 }): FalsePraiseResult {
   try {
     const openerMatch = PRAISE_OPENER_STRICT_RE.exec(args.sentence ?? '');
@@ -348,10 +363,11 @@ export function checkFalsePraiseOpener(args: {
     const whSelfCorrect = selfCorrectsByWhQuestion(remainder);
     if (!isAnswerShaped(args.studentUtterance)) return OK;
     const monetary = !!args.spokenMoneyEnabled && !!args.problemContext && looksMonetary(args.problemContext);
+    const relOpts = relationMatchOpts(args.problemText);
     const verified = (args.verifiedExpectedAnswer ?? '').trim();
     if (verified) {
       if (!isSingleValued(verified)) return OK;
-      const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices, { monetary });
+      const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices, { monetary, ...relOpts });
       if (m.verdict === 'agree') return { verdict: 'ok', agreed: true, expected: verified, matchReason: m.reason };
       // A worked utterance ("2/3 = x/9, 3x = 18, x = 6") is multi-valued for
       // the comparator, but it CONCLUDES with the key — settled all the same.
@@ -395,7 +411,7 @@ export function checkFalsePraiseOpener(args: {
       // Unverified never kills regardless of MCQ/value shape, so it is
       // treated like the value path: both signals suppress the advisory.
       if (strongSelfCorrect || whSelfCorrect) return OK;
-      const m = matchUtteranceToAnswer(args.studentUtterance, unverified, args.choices, { monetary });
+      const m = matchUtteranceToAnswer(args.studentUtterance, unverified, args.choices, { monetary, ...relOpts });
       return m.verdict === 'disagree' ? { verdict: 'advisory_false_praise', expected: unverified, matchReason: m.reason } : OK;
     }
     return OK;

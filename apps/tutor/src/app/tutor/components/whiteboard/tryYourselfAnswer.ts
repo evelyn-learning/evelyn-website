@@ -35,6 +35,42 @@
  * brain-relay verdict, so all three can no longer disagree.
  */
 
+import { gradeRelationAnswer, isInequalityText, relationGradingEnabled, type RelationWitness } from '@/lib/tutor/voice/utterance-answer-match';
+
+/** Options for the exact inequality check (2026-10-03).
+ *
+ *  `relationGrading` is an explicit OPT-IN on `matchesAnswerStrict` /
+ *  `computeTryYourselfVerdict`, and that is deliberate: TryYourselfRenderer
+ *  calls the 4-argument `computeTryYourselfVerdict` and prints
+ *  "Not quite. Expected: <answer>" whenever it returns false. The owner
+ *  decision is that a wrong typed inequality must NOT reveal the answer, so a
+ *  caller may only receive `false` for an inequality if it also honours
+ *  `revealExpected` — i.e. it goes through `gradeTryYourself`, which applies
+ *  the NEXT_PUBLIC_TUTOR_RELATION_GRADING kill switch (default ON). */
+export interface RelationGradingOpts {
+  relationGrading?: boolean;
+  /** The problem statement. A WRONG verdict needs it: it must be a plain
+   *  "solve this relation" statement whose solution is the expected answer
+   *  (gradeRelationAnswer). Without that, a differing answer is undecidable. */
+  problemText?: string;
+}
+
+/** How an inequality submission was decided. Present only when it WAS
+ *  decided exactly; `witness` only on a mismatch. */
+export interface TryYourselfRelationDetail {
+  matches: boolean;
+  witness?: RelationWitness;
+}
+
+export interface TryYourselfGrade {
+  verdict: boolean | null;
+  relation?: TryYourselfRelationDetail;
+  /** Whether the card may print "Expected: …" beside "Not quite". True for a
+   *  wrong verdict, EXCEPT that an inequality key (isInequalityText) is never
+   *  revealed — whatever the response format or verdict path. */
+  revealExpected: boolean;
+}
+
 export interface Choice {
   id: string;
   text: string;
@@ -58,8 +94,45 @@ export interface Choice {
  *  Returning null in the FRQ branch keeps the renderer from showing
  *  "Not quite. Expected: X" when the answer is plausibly correct in a
  *  different form.
+ *
+ *  2026-10-03/04: with `opts.relationGrading`, an answer whose expected value
+ *  is an INEQUALITY is decided by the relation path FIRST, whatever the
+ *  response format: solved-form and the same solution set → true; a different
+ *  set on a provably pure-solve problem → false; anything else → the legacy
+ *  string compare may still say true (string-equal), never false.
  */
-export function matchesAnswerStrict(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean | null {
+export function matchesAnswerStrict(
+  submitted: string,
+  expected: string,
+  format: 'mcq' | 'frq' | 'numeric' | undefined,
+  opts?: RelationGradingOpts,
+): boolean | null {
+  return matchesAnswerDetailed(submitted, expected, format, opts).verdict;
+}
+
+function matchesAnswerDetailed(
+  submitted: string,
+  expected: string,
+  format: 'mcq' | 'frq' | 'numeric' | undefined,
+  opts?: RelationGradingOpts,
+): { verdict: boolean | null; relation?: TryYourselfRelationDetail } {
+  if (!opts?.relationGrading || !isInequalityText(expected)) {
+    return { verdict: matchesAnswerLegacy(submitted, expected, format) };
+  }
+  // Inequality key: the relation path decides FIRST, regardless of format. The
+  // numeric / choiceless-mcq string compare is whitespace- and
+  // spelling-sensitive ("x < 5" ≠ "x<5", "x \lt 5"), so its `false` is not a
+  // verdict about an inequality at all.
+  if (submitted.trim() && expected.trim()) {
+    const g = gradeRelationAnswer(submitted, expected, { problemText: opts.problemText });
+    if (g.verdict === 'agree') return { verdict: true, relation: { matches: true } };
+    if (g.verdict === 'disagree') return { verdict: false, relation: { matches: false, witness: g.witness } };
+  }
+  // Not decided exactly: string-equal may still confirm; nothing may deny.
+  return { verdict: matchesAnswerLegacy(submitted, expected, format) === true ? true : null };
+}
+
+function matchesAnswerLegacy(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean | null {
   const s = submitted.trim();
   const e = expected.trim();
   if (!s || !e) return null;
@@ -190,7 +263,18 @@ export function computeTryYourselfVerdict(
   expectedAnswer: string | undefined,
   format: 'mcq' | 'frq' | 'numeric' | undefined,
   choices?: Choice[],
+  opts?: RelationGradingOpts,
 ): boolean | null {
+  return gradeDetailed(submitted, expectedAnswer, format, choices, opts).verdict;
+}
+
+function gradeDetailed(
+  submitted: string,
+  expectedAnswer: string | undefined,
+  format: 'mcq' | 'frq' | 'numeric' | undefined,
+  choices: Choice[] | undefined,
+  opts: RelationGradingOpts | undefined,
+): { verdict: boolean | null; relation?: TryYourselfRelationDetail } {
   if (format === 'mcq' && choices && choices.length > 0) {
     const correctChoice = resolveMcqCorrectChoice(choices, expectedAnswer);
     if (!correctChoice) {
@@ -198,11 +282,86 @@ export function computeTryYourselfVerdict(
       // asserting a verdict here would mean comparing the submitted
       // CHOICE ID against free-text `expectedAnswer`, the exact
       // mismatch that caused the original bug. Defer to the brain.
-      return null;
+      return { verdict: null };
     }
     const picked = choices.find((c) => c.id === submitted || c.text === submitted);
-    if (!picked) return null;
-    return picked.id === correctChoice.id;
+    if (!picked) return { verdict: null };
+    return { verdict: picked.id === correctChoice.id };
   }
-  return expectedAnswer ? matchesAnswerStrict(submitted, expectedAnswer, format) : null;
+  return expectedAnswer ? matchesAnswerDetailed(submitted, expectedAnswer, format, opts) : { verdict: null };
+}
+
+/** The full decision for one submission: the verdict, how an inequality was
+ *  decided (with the witness), and whether the card may show the expected
+ *  answer. Same seam as `computeTryYourselfVerdict`, plus exact inequality
+ *  grading — ON unless NEXT_PUBLIC_TUTOR_RELATION_GRADING=off or the caller
+ *  passes `relationGrading: false`.
+ *
+ *  Both the card and the brain relay should call THIS, so the two cannot
+ *  disagree and the card cannot print the key for a wrong inequality. */
+export function gradeTryYourself(
+  submitted: string,
+  expectedAnswer: string | undefined,
+  format: 'mcq' | 'frq' | 'numeric' | undefined,
+  choices?: Choice[],
+  opts?: RelationGradingOpts,
+): TryYourselfGrade {
+  const relationGrading = opts?.relationGrading ?? relationGradingEnabled();
+  const inequalityKey = isInequalityText(expectedAnswer);
+  const graded = gradeDetailed(submitted, expectedAnswer, format, choices, { ...opts, relationGrading });
+  const { relation } = graded;
+  let { verdict } = graded;
+  // With relation grading OFF (kill switch / opt-out) a typed inequality goes
+  // back to the legacy string compare, whose numeric / choiceless-mcq `false`
+  // only means "the strings differ" — and this card has no way to say "Not
+  // quite" without the key. Undecidable instead; the tutor judges.
+  const byOptionIdentity = format === 'mcq' && !!choices && choices.length > 0;
+  if (inequalityKey && verdict === false && !relation && !byOptionIdentity) verdict = null;
+  // Owner rule: a wrong TYPED inequality never shows the expected answer —
+  // for any inequality key, whatever path produced the verdict. An option
+  // pick is not typed: the key is one of the choices already on the card,
+  // and a wrong pick shows the correct option as for any other MCQ.
+  const hideKey = inequalityKey && !byOptionIdentity;
+  return { verdict, ...(relation ? { relation } : {}), revealExpected: verdict === false && !relation && !hideKey };
+}
+
+/** The synthetic turn that tells the brain about a try-yourself submission.
+ *  ONE builder for both call sites (TutorSession.tsx and tutor/page.tsx held
+ *  byte-identical copies). Without `relation` the text is exactly what those
+ *  copies produced. The opening `[try-yourself submission. The student
+ *  submitted: "…". Expected:` is keyed on by marker-student-echo.ts, and
+ *  "does NOT match" by the system prompt — neither may change.
+ *
+ *  For an exactly-graded inequality the verdict is stated as a fact, and a
+ *  mismatch carries the witness so the brain can show WHY without reading
+ *  out the key. */
+export function buildTryYourselfMarker(
+  answer: string,
+  expected: string | undefined,
+  isCorrect: boolean | null,
+  relation?: TryYourselfRelationDetail,
+): string {
+  if (!expected) {
+    return `[try-yourself submission. The student submitted: "${answer}". No expected answer set — judge correctness yourself. If wrong, stay on this same try-yourself; do NOT advance to a new problem.]`;
+  }
+  const rules = `If "does NOT match", stay on this same try-yourself — give a hint, do NOT call new_page or show a different problem. If undecidable, judge algebraic equivalence yourself.`;
+  if (relation && isCorrect !== null) {
+    const w = relation.witness;
+    const witness = !w ? ''
+      : w.submittedHolds
+        ? `: at ${w.variable} = ${w.value} the student's answer holds and the expected answer does not`
+        : `: at ${w.variable} = ${w.value} the expected answer holds and the student's answer does not`;
+    const verdict = isCorrect
+      ? 'matches the expected answer (checked exactly as an inequality — the same solution set, whatever form it is written in)'
+      : `does NOT match the expected answer (checked exactly as an inequality${witness})`;
+    const exact = isCorrect
+      ? ' This verdict is exact, not a string comparison — treat the answer as correct.'
+      : ' This verdict is exact — do not praise the answer or call it correct. Use that value to help the student see what is off; do NOT state the expected answer outright.';
+    return `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. ${rules}${exact}]`;
+  }
+  const verdict =
+    isCorrect === true ? 'matches the expected answer (string-equal)'
+    : isCorrect === false ? 'does NOT match the expected answer'
+    : '(undecidable by string match — judge equivalence yourself, accepting any algebraically-correct form)';
+  return `[try-yourself submission. The student submitted: "${answer}". Expected: ${expected}. Verdict: ${verdict}. ${rules}]`;
 }

@@ -880,6 +880,11 @@ export function expectedAnswerSpokenInScripts(
 function expectedAnswerCarveOut(input: HeuristicInput): boolean {
   const expected = (input.verifiedExpectedAnswer ?? '').trim();
   if (!expected) return false;
+  // No problem statement reaches this module, so the matcher's relation path
+  // runs without a domain check. That is sound HERE because only `agree` is
+  // consumed: two inequalities equal over the reals are equal over any
+  // restricted domain. Do not start acting on `disagree` without threading
+  // the statement through (relationMatchOpts).
   if (matchUtteranceToAnswer(input.transcript, expected).verdict !== 'agree') return false;
   return !expectedAnswerSpokenInScripts(expected, input.recentTtsScripts);
 }

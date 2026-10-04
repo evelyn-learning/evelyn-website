@@ -53,7 +53,7 @@
  *  never the MCQ-letter kill branch; only DENIAL_RE/contrast exempts MCQ.
  */
 import { strict as assert } from 'node:assert';
-import { checkFalsePraiseOpener, isSingleValued, isAnswerShaped, PRAISE_OPENER_STRICT_RE } from '../src/lib/tutor/voice/false-praise-opener';
+import { checkFalsePraiseOpener, studentDisagreesWithVerified, isSingleValued, isAnswerShaped, PRAISE_OPENER_STRICT_RE } from '../src/lib/tutor/voice/false-praise-opener';
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) { if (cond) { passed++; console.log(`  ✓ ${name}`); } else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); } }
 
@@ -283,6 +283,61 @@ check('semicolon list is not single-valued', !isSingleValued('x = 2; y = 5'));
   assert.equal(isAlgebraicStep('twenty-one'), false); assert.equal(isAlgebraicStep('five'), false); assert.equal(isAlgebraicStep('12'), false);
   passed += 12;
   console.log('  ✓ LC7: step-expression shape gate (12 assertions)');
+}
+
+// ─── 2026-10-03: inequality keys need the problem statement ───
+{
+  // 2026-10-04: a kill needs positive evidence of a pure real-number solve —
+  // the statement's one relation must be equivalent to the key (2x < 7 ⇔
+  // x < 3.5). The student's "x ≤ 3" is then exactly wrong.
+  const base = { sentence: 'Exactly.', studentUtterance: 'x \\le 3', verifiedExpectedAnswer: 'x < 3.5', finalAnswerTurn: true };
+  const none = checkFalsePraiseOpener(base);
+  check('inequality key, no problemText → ok (not graded, never a kill)', none.verdict === 'ok' && !none.agreed, JSON.stringify(none));
+  const restricted = checkFalsePraiseOpener({ ...base, problemText: 'x is a positive integer. Solve 2x < 7.' });
+  check('inequality key, integer-restricted problem → ok', restricted.verdict === 'ok', JSON.stringify(restricted));
+  const plain = checkFalsePraiseOpener({ ...base, problemText: 'Solve 2x < 7.' });
+  check('inequality key, unrestricted problem, final-answer turn → false_praise', plain.verdict === 'false_praise', JSON.stringify(plain));
+  const ctxOnly = checkFalsePraiseOpener({ ...base, problemContext: 'Solve 2x < 7.' });
+  check('problemContext alone (money context) does not enable relation grading', ctxOnly.verdict === 'ok', JSON.stringify(ctxOnly));
+  // 2026-10-04: `agreed` only for a SOLVED-FORM answer. "2x < 7" is the
+  // problem retyped: equivalent, unfinished — neither agreed nor a kill.
+  const unsolved = checkFalsePraiseOpener({ ...base, studentUtterance: '2x < 7', problemText: 'Solve 2x < 7.' });
+  check('equivalent but unsolved inequality + statement → ok, NOT agreed', unsolved.verdict === 'ok' && !unsolved.agreed, JSON.stringify(unsolved));
+  const agree = checkFalsePraiseOpener({ ...base, studentUtterance: '3.5 > x', problemText: 'Solve 2x < 7.' });
+  check('equivalent solved-form inequality + statement → agreed', agree.verdict === 'ok' && agree.agreed === true, JSON.stringify(agree));
+  const mismatchedKey = checkFalsePraiseOpener({ ...base, studentUtterance: 'x < 3.5', verifiedExpectedAnswer: 'x \\le 3', problemText: 'Solve 2x < 7.' });
+  check('key not equivalent to the statement relation → ok (no evidence, never a kill)', mismatchedKey.verdict === 'ok', JSON.stringify(mismatchedKey));
+  const implicitInt = checkFalsePraiseOpener({ ...base, studentUtterance: 'x > 3', verifiedExpectedAnswer: 'x \\geq 4',
+    problemText: 'A club needs more than 3 members. Write an inequality for the number of members x.' });
+  check('implicit-integer word problem → ok (never a kill)', implicitInt.verdict === 'ok', JSON.stringify(implicitInt));
+  const unv = checkFalsePraiseOpener({ sentence: 'Exactly.', studentUtterance: 'x \\le 3', unverifiedCardAnswer: 'x < 3.5' });
+  check('unverified inequality key, no problemText → ok', unv.verdict === 'ok', JSON.stringify(unv));
+  check('studentDisagreesWithVerified: 3-arg call still works (numeric)', studentDisagreesWithVerified('5', '6') === true);
+  check('studentDisagreesWithVerified: inequality key + restricted statement → false',
+    studentDisagreesWithVerified('x < 3.5', 'x \\le 3', undefined, { problemText: 'x is a positive integer. Solve 2x < 7.' }) === false);
+  check('studentDisagreesWithVerified: inequality key, no statement → false',
+    studentDisagreesWithVerified('x < 3.5', 'x \\le 3') === false);
+  check('studentDisagreesWithVerified: inequality key + unrestricted statement → true',
+    studentDisagreesWithVerified('x \\le 3', 'x < 3.5', undefined, { problemText: 'Solve 2x < 7.' }) === true);
+  check('studentDisagreesWithVerified: key not equivalent to the statement → false',
+    studentDisagreesWithVerified('x < 3.5', 'x \\le 3', undefined, { problemText: 'Solve 2x < 7.' }) === false);
+
+  // The term-multiset fallback must not second-guess the relation path: an
+  // inequality on either side + matcher 'unknown' ⇒ no disagreement.
+  for (const [u, v] of [
+    ['x \\le 3', 'x < 3.5'], ['x \\leq 3', 'x < 3.5'], ['x \\geq 4', 'x > 3'], ['x \\lt 3', 'x \\le 3.5'],   // LaTeX
+    ['x <= 3', 'x < 3.5'], ['x >= 4', 'x > 3'], ['x < 3', 'x <= 3.5'],                                 // ASCII
+    ['x ≤ 3', 'x < 3.5'], ['x ≥ 4', 'x > 3'], ['x ≤ 3', 'x ⩽ 3.5'],                                    // Unicode
+    ['$x \\le 3$', 'x < 3.5'], ['so answer is x \\le 3', 'x < 3.5'],
+  ] as Array<[string, string]>) {
+    check(`fallback: inequality "${u}" vs key "${v}", no statement → false`, studentDisagreesWithVerified(u, v) === false);
+  }
+  check('fallback: inequality utterance vs EXPRESSION key → false', studentDisagreesWithVerified('x \\le 3', '15 - 3x') === false);
+  check('fallback: expression utterance vs inequality key → false', studentDisagreesWithVerified('so answer is 3 - 4x', 'x \\le 3') === false);
+  // Non-inequality fallback unchanged.
+  check('fallback unchanged: "3 - 4x" vs "15 - 3x" → true', studentDisagreesWithVerified('so it\'ll be 9 - 4x -6 + x so answer is 3 - 4x', '15 - 3x') === true);
+  check('fallback unchanged: same terms reordered → false', studentDisagreesWithVerified('so answer is -3x + 15', '15 - 3x') === false);
+  check('fallback unchanged: equation key "y = 2x + 1" vs "y = 3x + 1"', studentDisagreesWithVerified('so answer is 3x + 1', '2x + 1') === true);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
