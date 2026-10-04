@@ -29,6 +29,7 @@ import { LessonNudgePicker } from './components/LessonNudgePicker';
 import LessonPicker from './components/LessonPicker';
 import { type VoiceState } from './components/session/SessionStage';
 import TutorSession from './components/session/TutorSession';
+import { pageOwnsUpload } from './components/session/upload-flow';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
@@ -2471,7 +2472,13 @@ function TutorPage() {
         onProposePlanSwap={handleProposePlanSwap}
         onConfirmPlanLos={handleConfirmPlanLos}
         onBeforeTypedSubmit={handleBeforeTypedSubmit}
-        onUploadHomework={handleUploadHomework}
+        // Only the legacy `realtime` engine keeps the page-level handler (its
+        // branch is unchanged). For every other engine it wrote page-level
+        // state this layout never renders — nothing boarded, nothing sent to
+        // the brain, nothing spoken, nothing saved — so those engines pass
+        // undefined and TutorSession's own upload path runs (ack → board →
+        // extract → brain, persisted via onWhiteboardCommand above).
+        onUploadHomework={pageOwnsUpload(voiceEngine) ? handleUploadHomework : undefined}
         onLessonPlanIdChange={setSelectedLessonPlanId}
         onLessonProgressChange={setLessonProgress}
         onCompletedSegmentsChange={setCompletedSegmentIds}

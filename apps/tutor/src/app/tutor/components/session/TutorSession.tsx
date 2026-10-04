@@ -54,6 +54,11 @@ import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIN
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
+import {
+  buildStudentMediaBrainInput, buildUploadedProblemCard, classifyExtraction, studentMediaNotice,
+  extractionUsage, runWithAbortTimeout, EXTRACTION_TIMEOUT_MS,
+  type StudentMediaPhase, type StudentMediaType,
+} from './upload-flow';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
@@ -594,6 +599,22 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.sendTextMessage(marker);
   }, [realtimeHandleRef]);
 
+  // Upload/drawing status the student can SEE (voice and text sessions alike):
+  // an in-progress line while the Vision extraction runs, and — on failure —
+  // a "try again" line that does not depend on the brain turn succeeding (a
+  // network drop that kills the extraction usually kills that turn too).
+  // The token makes a stale timer/request unable to clear a newer notice.
+  const [mediaNotice, setMediaNotice] = useState<{ tone: 'progress' | 'error'; text: string } | null>(null);
+  const mediaNoticeTokenRef = useRef(0);
+  const showMediaNotice = useCallback((type: StudentMediaType, phase: StudentMediaPhase): number => {
+    const token = ++mediaNoticeTokenRef.current;
+    setMediaNotice(studentMediaNotice(type, phase));
+    if (phase !== 'analyzing') {
+      setTimeout(() => { if (mediaNoticeTokenRef.current === token) setMediaNotice(null); }, 12000);
+    }
+    return token;
+  }, []);
+
   const handleStudentInput = useCallback((type: 'text' | 'drawing' | 'image', content: string) => {
     const cmd: WhiteboardCommand = type === 'image'
       ? { action: 'showSvgDiagram', title: 'Student Upload', svg: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="290" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
@@ -605,7 +626,6 @@ export default function TutorSession(props: TutorSessionProps) {
       if (type === 'text') {
         realtimeHandleRef.current.sendTextMessage(`[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`);
       } else {
-        const noun = type === 'drawing' ? 'drew on' : 'uploaded an image to';
         // GreenApple round-2 Task 9: an UPLOAD's image rides the send so the
         // student's transcript entry shows it as a live-only thumbnail (never
         // persisted, never sent to the brain — see TranscriptEntry.image).
@@ -639,7 +659,16 @@ export default function TutorSession(props: TutorSessionProps) {
             // only reliable fix.
             : 'Got your upload — one sec while I look it over.',
         );
+        // Explicit binding: keeps the narrowed type inside the async closure.
+        const mediaType: StudentMediaType = type;
+        const noticeToken = showMediaNotice(mediaType, 'analyzing');
         (async () => {
+          // The brain-input wording, the success/unreadable/failed split and
+          // the persisted card are decided in ./upload-flow (tested by
+          // scripts/test-upload-flow.ts). A non-2xx or a network error is
+          // "failed" — it used to be reported to the brain as an unreadable
+          // image, and a thrown fetch as something the student "drew".
+          let outcome: ReturnType<typeof classifyExtraction>;
           try {
             const base64Data = content.replace(/^data:image\/[\w.+-]+;base64,/, '');
             // R50 T1: mimeType was hardcoded 'image/png'. That was true for
@@ -650,26 +679,54 @@ export default function TutorSession(props: TutorSessionProps) {
             // it straight to the vision API as `media_type`, so a GIF
             // announced as PNG is rejected. Praveen's live upload WAS a gif.
             const mimeMatch = /^data:(image\/[\w.+-]+);base64,/.exec(content);
-            const resp = await fetch('/api/tutor/extract-homework', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageData: base64Data, mimeType: mimeMatch ? mimeMatch[1] : 'image/png', subject, topic, level }),
+            // Bounded: a hung request used to leave the "reading the
+            // problem…" notice up forever. On timeout the abort rejects into
+            // the catch below — the same "failed" path as a network error.
+            const { httpOk, body } = await runWithAbortTimeout(EXTRACTION_TIMEOUT_MS, async (signal) => {
+              const resp = await fetch('/api/tutor/extract-homework', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageData: base64Data, mimeType: mimeMatch ? mimeMatch[1] : 'image/png', subject, topic, level }),
+                signal,
+              });
+              return { httpOk: resp.ok, body: await resp.json() as unknown };
             });
-            const data = await resp.json();
-            if (data.extractedProblem && realtimeHandleRef.current) {
-              realtimeHandleRef.current.sendTextMessage(`[The student ${noun} the whiteboard. It contains: "${data.extractedProblem}". Respond to what they shared.]`, sendMeta);
-            } else {
-              showFailedUpload();
-              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`);
-            }
+            // Extraction cost counts toward the session, as it did under the
+            // page-level upload handler. It goes up the brain-usage channel
+            // (the only Claude-priced one this component has); no `model`, so
+            // the host keeps pricing at the brain model it already tracks.
+            const usage = httpOk ? extractionUsage(body) : null;
+            if (usage) onBrainUsage?.(usage);
+            outcome = classifyExtraction({ httpOk, body });
           } catch {
+            outcome = classifyExtraction({ threw: true });
+          }
+          const handle = realtimeHandleRef.current;
+          if (outcome.kind === 'extracted' && handle) {
+            if (mediaNoticeTokenRef.current === noticeToken) setMediaNotice(null);
+            // Persistence: `cmd` above (the image) is on the LIVE board only.
+            // An upload's saved record is this compact text card, sent through
+            // the same channel as every tutor-drawn command so the host logs
+            // it (→ saved whiteboardCommands → replay / PDF). Not added to the
+            // local board: the student is already looking at their image.
+            if (mediaType === 'image') onWhiteboardCommand?.([buildUploadedProblemCard(outcome.problem)]);
+            handle.sendTextMessage(buildStudentMediaBrainInput(mediaType, outcome), sendMeta);
+          } else {
+            // Handle gone mid-extraction (session torn down) reads as a failure.
+            const failure = outcome.kind === 'extracted' ? { kind: 'failed' as const } : outcome;
             showFailedUpload();
-            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`);
+            if (mediaNoticeTokenRef.current === noticeToken) showMediaNotice(mediaType, failure.kind);
+            onDebugEvent?.('image_upload_failed', `${mediaType}: ${failure.kind}`);
+            handle?.sendTextMessage(buildStudentMediaBrainInput(mediaType, failure));
           }
         })();
       }
+    } else if (type !== 'text') {
+      // No live tutor handle: nothing can extract or answer. Say so instead of
+      // leaving a boarded image and silence.
+      showMediaNotice(type, 'not-ready');
     }
     onTrackInteraction?.('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
-  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry, sessionGoal]);
+  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry, sessionGoal, onWhiteboardCommand, onDebugEvent, showMediaNotice, onBrainUsage]);
 
   /**
    * R50 T1 — the embed's upload button was a silent no-op.
@@ -691,9 +748,9 @@ export default function TutorSession(props: TutorSessionProps) {
    * is what made this invisible for the life of the embed.
    */
   const handleUploadHomeworkFallback = useCallback((base64Data: string, mimeType: string) => {
-    onDebugEvent?.('image_upload', `Homework upload (embed): ${mimeType}`);
+    onDebugEvent?.('image_upload', `Homework upload${embedded ? ' (embed)' : ''}: ${mimeType}`);
     handleStudentInput('image', `data:${mimeType};base64,${base64Data}`);
-  }, [handleStudentInput, onDebugEvent]);
+  }, [handleStudentInput, onDebugEvent, embedded]);
 
   const dispatchQuick = useCallback((text: string) => {
     realtimeHandleRef.current?.stopSpeaking();
@@ -1376,6 +1433,20 @@ export default function TutorSession(props: TutorSessionProps) {
     <>
       {voiceTrouble && (
         <div className="mb-1 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 flex items-center gap-2"><span>⚠️</span><span>{voiceTrouble}</span></div>
+      )}
+      {mediaNotice && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="upload-notice"
+          data-tone={mediaNotice.tone}
+          className={`mb-1 px-3 py-1.5 rounded-md text-xs flex items-center gap-2 border ${mediaNotice.tone === 'error' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-blue-50 border-blue-200 text-blue-900'}`}
+        >
+          {mediaNotice.tone === 'error'
+            ? <span>⚠️</span>
+            : <span className="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin" aria-hidden />}
+          <span>{mediaNotice.text}</span>
+        </div>
       )}
       <VoiceTutorRealtime
         key={sessionId}
