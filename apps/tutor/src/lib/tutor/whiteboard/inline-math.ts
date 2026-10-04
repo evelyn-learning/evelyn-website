@@ -242,12 +242,21 @@ function stripTrailingPunct(chunk: string): { core: string; trail: string } {
   return m ? { core: m[1], trail: m[2] } : { core: chunk, trail: '' };
 }
 
+// A text-mode group inside maths — `\text{ or }`, `\mathrm{cm}`. Its
+// contents are words ON PURPOSE (the author marked them as text), so they
+// must not count as "prose" when deciding whether a chunk/string is maths.
+const TEXT_GROUP_RE_G = /\\(?:text(?:bf|it|rm|sf|tt|normal)?|mathrm|mathit|mathbf|mathsf|mbox|operatorname)\s*\{[^{}]*\}/g;
+
 function chunkIsProseWord(core: string): boolean {
   // Strip known math-function names AND backslash commands before
   // checking for a leftover English word — otherwise a LaTeX command
   // name like "\frac"/"\sqrt" reads as the prose word "frac"/"sqrt" and
-  // wrongly blocks it from joining a run as a neighbor chunk.
-  const stripped = core.replace(FN_NAME_ISOLATED_RE, '').replace(BACKSLASH_CMD_RE_G, '');
+  // wrongly blocks it from joining a run as a neighbor chunk. A complete
+  // text group goes first, contents and all (see TEXT_GROUP_RE_G).
+  const stripped = core
+    .replace(TEXT_GROUP_RE_G, '')
+    .replace(FN_NAME_ISOLATED_RE, '')
+    .replace(BACKSLASH_CMD_RE_G, '');
   return /[a-z]{3,}/.test(stripped);
 }
 
@@ -262,16 +271,51 @@ function chunkIsCandidate(core: string): boolean {
 
 interface Chunk { start: number; core: string; trail: string; }
 
+// Index just past the `}` matching the `{` at `open`, or -1 when the group
+// is unbalanced or runs across a line break. Escaped braces (`\{`, `\}`)
+// are literal characters, not group delimiters.
+function matchingBraceEnd(s: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === '\n') return -1;
+    if (ch === '\\') { i++; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (depth === 0) return i + 1; }
+  }
+  return -1;
+}
+
+// Split on whitespace, EXCEPT inside a balanced LaTeX argument group: a
+// `{` that directly follows a command name, a script marker or a previous
+// group (`\text{ or }`, `x_{n + 1}`, `\frac{a + b}{2}`) keeps its whole
+// group in one chunk even when it contains spaces. Live MCQ card: the
+// option `x \le -3 \text{ or } x > 5` was split into `\text{`, `or`, `}`,
+// the run ended on an unclosed brace, KaTeX threw, and the option showed
+// as raw source. A brace that is NOT an argument (prose "{see note}") or
+// that never closes splits on whitespace exactly as before.
 function tokenizeChunks(plain: string): Chunk[] {
   const chunks: Chunk[] = [];
-  const re = /\S+/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(plain))) {
-    const { core, trail } = stripTrailingPunct(m[0]);
-    chunks.push({ start: m.index, core, trail });
+  let i = 0;
+  while (i < plain.length) {
+    if (/\s/.test(plain[i])) { i++; continue; }
+    const start = i;
+    while (i < plain.length && !/\s/.test(plain[i])) {
+      if (plain[i] === '{' && i > start && /[A-Za-z_^}]/.test(plain[i - 1])) {
+        const end = matchingBraceEnd(plain, i);
+        if (end > 0) { i = end; continue; }
+      }
+      i++;
+    }
+    const { core, trail } = stripTrailingPunct(plain.slice(start, i));
+    chunks.push({ start, core, trail });
   }
   return chunks;
 }
+
+// A chunk that is, on its own, a relation or binary operator.
+const OPERATOR_CHUNK_RE = /^(?:[=<>≤≥≠+\-−*/×÷·±]|\\(?:le|leq|ge|geq|lt|gt|ne|neq|approx|equiv|sim|cong|propto|parallel|perp|cdot|times|div|pm|mp|in|notin|subset|subseteq|cup|cap|setminus|to|rightarrow|Rightarrow|implies|iff))$/;
+const SINGLE_LETTER_RE = /^[A-Za-z]$/;
 
 // TeX-special characters that alter parsing WITHOUT reliably throwing, so
 // katex.renderToString({throwOnError:true}) is not a sufficient safety net
@@ -311,6 +355,90 @@ function isValidLatex(latex: string): boolean {
   }
 }
 
+// Commands after which a SPACED `{` can only be a set literal: relations
+// and binary operators take no brace argument ("\cup {4}", "\in {1, 2}").
+const SET_CONTEXT_CMD_RE = /^(?:le|leq|ge|geq|lt|gt|ne|neq|approx|equiv|sim|cong|propto|parallel|perp|cdot|times|div|pm|mp|in|notin|ni|subset|subseteq|supset|supseteq|subsetneq|cup|cap|setminus|to|rightarrow|Rightarrow|Leftrightarrow|implies|iff|mid|colon|land|lor|wedge|vee|oplus|triangle|mapsto)$/;
+
+/**
+ * Make SET-LITERAL braces visible. In maths mode a bare `{…}` is a TeX
+ * group — KaTeX draws nothing for it — so a span containing "{1, 2, 3}"
+ * rendered "1, 2, 3": `A \cup B = {1, 2, 3}` showed "A ∪ B = 1, 2, 3", a
+ * mathematically wrong board. Every `{` that is not an ARGUMENT brace is
+ * rewritten, with its partner, to `\{ … \}`.
+ *
+ * Argument brace = directly preceded (no space) by a command name, `_`,
+ * `^`, a closing `]` or the `}` of a previous argument group — the shape
+ * tokenizeChunks keeps together. A `{` after whitespace is a set literal
+ * when what precedes the space is not a command / argument group, or is a
+ * relation/operator command (SET_CONTEXT_CMD_RE), or when the group holds a
+ * top-level comma. What is left — `\frac{1} {2}`, `\alpha {x}` — could be
+ * either, so the answer is null: the caller must NOT wrap that string.
+ * Unbalanced braces also return null (KaTeX would throw on them anyway).
+ */
+function escapeSetBraces(latex: string): string | null {
+  if (!latex.includes('{') && !latex.includes('}')) return latex;
+  const stack: Array<{ pos: number; arg: boolean }> = [];
+  const escapeAt: number[] = [];
+  let lastArgClose = -2; // index of the `}` that most recently closed an ARGUMENT group
+  // Is s[..end) ending in a command name? Returns the name, or null.
+  const cmdEndingAt = (end: number): string | null => {
+    let j = end;
+    while (j > 0 && /[A-Za-z]/.test(latex[j - 1])) j--;
+    if (j === end || j === 0 || latex[j - 1] !== '\\') return null;
+    // `\\name` is a line break followed by letters, not a command.
+    let b = 0;
+    for (let k = j - 1; k >= 0 && latex[k] === '\\'; k--) b++;
+    return b % 2 === 1 ? latex.slice(j, end) : null;
+  };
+  for (let i = 0; i < latex.length; i++) {
+    const ch = latex[i];
+    if (ch === '\\') { i++; continue; } // \{ \} \\ and the first letter of a command
+    if (ch === '{') {
+      let arg: boolean;
+      const prev = i > 0 ? latex[i - 1] : '';
+      if (prev === '_' || prev === '^' || prev === ']' || lastArgClose === i - 1 || cmdEndingAt(i) !== null) {
+        arg = true;
+      } else if (/\s/.test(prev)) {
+        let j = i;
+        while (j > 0 && /\s/.test(latex[j - 1])) j--;
+        const cmd = cmdEndingAt(j);
+        const afterArgGroup = lastArgClose === j - 1;
+        if ((cmd === null && !afterArgGroup) || (cmd !== null && SET_CONTEXT_CMD_RE.test(cmd))) {
+          arg = false;
+        } else {
+          // Ambiguous unless a top-level comma marks it as a list.
+          const end = matchingBraceEnd(latex, i);
+          if (end < 0) return null;
+          let depth = 0;
+          let comma = false;
+          for (let k = i + 1; k < end - 1; k++) {
+            if (latex[k] === '\\') { k++; continue; }
+            if (latex[k] === '{') depth++;
+            else if (latex[k] === '}') depth--;
+            else if (latex[k] === ',' && depth === 0) { comma = true; break; }
+          }
+          if (!comma) return null;
+          arg = false;
+        }
+      } else {
+        arg = false;
+      }
+      stack.push({ pos: i, arg });
+    } else if (ch === '}') {
+      const open = stack.pop();
+      if (!open) return null;
+      if (open.arg) lastArgClose = i;
+      else escapeAt.push(open.pos, i);
+    }
+  }
+  if (stack.length > 0) return null;
+  if (escapeAt.length === 0) return latex;
+  const at = new Set(escapeAt);
+  let out = '';
+  for (let i = 0; i < latex.length; i++) out += at.has(i) ? `\\${latex[i]}` : latex[i];
+  return out;
+}
+
 // Scan a plain-text (no $ in it) span for bare-LaTeX runs and wrap the
 // validated ones in $...$.
 function autoWrapPlainText(plain: string): string {
@@ -319,6 +447,25 @@ function autoWrapPlainText(plain: string): string {
 
   const candidateOk = chunks.map((c) => chunkIsCandidate(c.core));
   const strongOk = chunks.map((c) => chunkHasStrongSignal(c.core));
+
+  // A bare single-letter variable ("x" in "-3 \le x \le 5") has no mathy
+  // character, so it used to end the run and render upright between two
+  // maths fragments. It may join a run ONLY as an operand of an operator
+  // chunk whose OTHER side is also an operand — "x \le 5", "2 + x". That
+  // shape is what separates a variable from the article "a" / pronoun "I":
+  // "a \frac{1}{2} cup" has no operator, and "a \le sign" has prose on the
+  // far side of the operator, so neither joins.
+  const isLetter = chunks.map((c) => SINGLE_LETTER_RE.test(c.core));
+  const isOperator = chunks.map((c) => OPERATOR_CHUNK_RE.test(c.core));
+  const tight = (a: number, b: number) =>
+    a >= 0 && b < chunks.length && chunks[a].trail === '' &&
+    plain.slice(chunks[a].start + chunks[a].core.length, chunks[b].start) === ' ';
+  const operand = (k: number) => k >= 0 && k < chunks.length && (candidateOk[k] || isLetter[k]) && !isOperator[k];
+  const letterJoins = chunks.map((_c, k) => isLetter[k] && (
+    (isOperator[k + 1] && tight(k, k + 1) && tight(k + 1, k + 2) && operand(k + 2)) ||
+    (isOperator[k - 1] && tight(k - 1, k) && tight(k - 2, k - 1) && operand(k - 2))
+  ));
+  for (let k = 0; k < chunks.length; k++) if (letterJoins[k]) candidateOk[k] = true;
 
   let result = '';
   let cursor = 0;
@@ -361,8 +508,11 @@ function autoWrapPlainText(plain: string): string {
     // text untouched in that case. Runs that carry a real LaTeX signal
     // (lim_{x→0} …, x^2, \frac…) pass looksLikeMath's first branch and still
     // wrap as before.
-    if (isValidLatex(rawRun) && looksLikeMath(rawRun)) {
-      result += plain.slice(cursor, runStart) + `$${rawRun}$` + trailPunct;
+    // Set-literal braces in the run are made visible (see escapeSetBraces);
+    // a run it cannot settle (null) is not wrapped at all.
+    const run = escapeSetBraces(rawRun);
+    if (run !== null && isValidLatex(run) && looksLikeMath(run)) {
+      result += plain.slice(cursor, runStart) + `$${run}$` + trailPunct;
     } else {
       result += plain.slice(cursor, runEnd + trailPunct.length);
     }
@@ -374,6 +524,50 @@ function autoWrapPlainText(plain: string): string {
   return result;
 }
 
+// Short English words that, standing alone in a string, mean it is a
+// sentence and not an expression ("so x \le 5", "x \le 5 or x \ge 7").
+// Lower-case / Capitalised only — "AB", "AS" in capitals are segment names.
+// The brace/script guards keep subscripts like `v_{in}` out of it.
+const SHORT_PROSE_WORD_RE = /(?<![A-Za-z0-9_^{\\])(?:[Oo]r|[Ii]f|[Ss]o|[Ii]s|[Oo]f|[Tt]o|[Ii]n|[Oo]n|[Aa]t|[Bb]y|[Aa]s|[Ww]e|[Ii]t|[Bb]e|[Aa]n|[Nn]o|[Dd]o|[Hh]e|[Mm]e|[Mm]y|[Uu]p|[Uu]s|[Aa]m|[Gg]o)(?![A-Za-z0-9_^}])/;
+
+/** Is this (already validated) LaTeX string an expression rather than a
+ *  sentence that happens to contain a command? After removing what is
+ *  legitimately made of letters in maths — text groups (`\text{ or }`),
+ *  command names, function names — nothing word-like may remain: no run of
+ *  3+ letters containing a lower-case letter, and no short English word.
+ *  Anything that fails falls through to the partial-run pass, i.e. the
+ *  conservative behaviour, so a miss here costs nothing new. */
+function isMathsOverall(latex: string): boolean {
+  const residue = latex
+    .replace(TEXT_GROUP_RE_G, ' ')
+    .replace(BACKSLASH_CMD_RE_G, ' ')
+    .replace(FN_NAME_ISOLATED_RE, ' ');
+  // A 3+ letter run in ALL capitals is a label ("ABC" is a triangle).
+  const runs = residue.match(/[A-Za-z]{3,}/g) ?? [];
+  if (runs.some((r) => /[a-z]/.test(r))) return false;
+  return !SHORT_PROSE_WORD_RE.test(residue);
+}
+
+/** Whole-string wrap for a `$`-free string that is ONE bare expression —
+ *  the answer-choice shape (`x \le -3 \text{ or } x > 5`). Returns null
+ *  when the string is not that, so the caller runs the partial-run pass.
+ *  Requires a backslash command (the only signal that cannot be prose),
+ *  a single line (segment() treats a multi-line $ pair as literal), valid
+ *  LaTeX as a whole, and isMathsOverall. Outer whitespace and trailing
+ *  sentence punctuation stay outside the span. */
+function wrapWholeIfMaths(text: string): string | null {
+  const m = text.match(/^(\s*)([\s\S]*?)(\s*)$/);
+  if (!m) return null;
+  const { core, trail } = stripTrailingPunct(m[2]);
+  if (!core || core.includes('\n') || !BACKSLASH_CMD_RE.test(core)) return null;
+  if (!isMathsOverall(core)) return null;
+  // Set-literal braces become \{ … \}; a string that cannot be settled
+  // (null) is left to the partial-run pass.
+  const body = escapeSetBraces(core);
+  if (body === null || !isValidLatex(body) || !looksLikeMath(body)) return null;
+  return `${m[1]}$${body}$${trail}${m[3]}`;
+}
+
 /** Auto-wrap bare (un-delimited) LaTeX runs in $...$ so they reach
  *  segment()/KaTeX. See the block comment above for the heuristic and
  *  its false-positive guards. Skips over any already-$-delimited region
@@ -381,6 +575,37 @@ function autoWrapPlainText(plain: string): string {
  *  the currency guard's territory. */
 export function autoWrapLatex(text: string): string {
   if (!text) return text;
+  const enumerator = leadingEnumerator(text);
+  if (enumerator) return enumerator + wrapBareLatex(text.slice(enumerator.length));
+  return wrapBareLatex(text);
+}
+
+// A leading enumerator — option letter `A.` `B)` `(C)`, number `1.` `2)`
+// `(3)`, or a labelled number `Q1:` `Step 2:` — followed by whitespace.
+// Lower-case letters count only in a bracketed form (`a)`, `(b)`): "x. " is
+// far likelier a variable than a label.
+const ENUMERATOR_RE = /^\s*(?:\(?[A-Za-z]\)|[A-Z]\.|\(?\d{1,2}\)|\d{1,2}\.|(?:Q|Question|Step|Part|Problem|Option|Choice|Example|Case)\s?\d{1,2}[:.)])[ \t]+/;
+
+/** The enumerator prefix of `text` (with its trailing whitespace), or ''.
+ *  It must stay OUTSIDE any maths span: `$A. x \le -3$` reads as the
+ *  product "A.x" and `$Q1: x \le 3$` italicises the label. Not an
+ *  enumerator when what follows starts with an operator — "(A) \cup (B)",
+ *  "(x) \cdot 2" are operands — or when nothing follows. */
+function leadingEnumerator(text: string): string {
+  const m = ENUMERATOR_RE.exec(text);
+  if (!m) return '';
+  const rest = text.slice(m[0].length);
+  const first = /^\S+/.exec(rest)?.[0];
+  if (!first || OPERATOR_CHUNK_RE.test(stripTrailingPunct(first).core)) return '';
+  return m[0];
+}
+
+function wrapBareLatex(text: string): string {
+  if (!text) return text;
+  if (!text.includes('$')) {
+    const whole = wrapWholeIfMaths(text);
+    if (whole !== null) return whole;
+  }
   const out: string[] = [];
   let i = 0;
   while (i < text.length) {

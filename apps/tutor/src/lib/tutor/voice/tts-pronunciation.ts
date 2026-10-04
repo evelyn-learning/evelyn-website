@@ -1966,6 +1966,55 @@ const CAPS_EMPHASIS_SHORT_WORDS = new Set([
   'ARE', 'WAS', 'CAN', 'DID', 'THE', 'IS', 'TWO', 'TEN', 'OFF', 'ON',
   'UP', 'NOW',
 ]);
+/** Short logical / contrast connectives, covered as a CLASS rather than one
+ *  word at a time. Live bug: the tutor wrote the connective in capitals
+ *  ("x ≤ −3 OR x > 5", "that's the OR shape", "*OR*") and the voice spelled
+ *  "O R" — the list above had AND but not OR, because it was grown from the
+ *  words seen so far. A tutor capitalises exactly this closed class for
+ *  contrast (AND vs OR, IF vs ONLY IF, NOT, BUT), so the class is listed:
+ *  OR, NOR, AND, BUT, YET, IF, NOT.
+ *
+ *  The short PREPOSITIONS (OF, TO, BY, FOR, TOO) were in the first cut and
+ *  were removed on review: a two-letter capital pair is also a geometry
+ *  point-pair name ("Segment TO is parallel to BY"), and a preposition is
+ *  not what a tutor stresses for contrast — the collision cost more than
+ *  the emphasis was worth. The connectives that remain have the same
+ *  collision ("the radius OR is 5"), handled by isGeometricNameUse below.
+ *
+ *  "OR" is also Oregon / operating room; this file has no address-context
+ *  logic, and in tutoring speech the connective is overwhelmingly the
+ *  intended reading, so the connective wins.
+ *
+ *  Deliberately ABSENT, because each is a live content initialism — the
+ *  same collision precedent as the list above: SO (sulfur-oxide residue of
+ *  a converted chem span), NO (nitric oxide), DO (dissolved oxygen), AS
+ *  (AD/AS model), AT (A-T base pair), IN (inches / Indiana), US, IT, WHO. */
+const CAPS_CONNECTIVE_SHORT_WORDS = new Set([
+  'OR', 'NOR', 'AND', 'BUT', 'YET', 'IF', 'NOT',
+]);
+/** Is this capitalised connective really the NAME of a geometric object
+ *  (segment OR = the points O and R; angle AND)? Then it must stay in
+ *  capitals so the voice spells the letters — lowercased it was spoken as
+ *  the word: "the radius or is 5", "so or equals 5".
+ *
+ *  Two signals, either is enough:
+ *   - the word before it is a geometry noun. A noun for a TWO-point object
+ *     (segment, line, radius, …) only names a two-letter token, so the
+ *     long-standing "the line AND the circle" / "length AND width" /
+ *     "points NOT on the line" emphasis still lowercases; angle, triangle
+ *     and arc name a three-letter token too.
+ *   - what follows states a measurement or relation of a named object:
+ *     `=` / "equals" (`=` is already spoken by the time this runs), "is" +
+ *     a NUMBER, ⊥ / ∥, "is parallel", "is perpendicular". The number is
+ *     what separates "OR is 5" (a length) from "for OR, just one being true
+ *     is enough" and "OR is it 5?" (the connective). */
+const GEO_NOUN_TWO_POINT_RE = /\b(?:segment|line|ray|radius|diameter|chord|side|arc|vector|length|distance|points?|angle|triangle)\s+$/i;
+const GEO_NOUN_THREE_POINT_RE = /\b(?:angle|triangle|arc)\s+$/i;
+const GEO_RELATION_FOLLOWS_RE = /^\s*(?:=|⊥|∥|equals\b|is\s+(?:\d|parallel\b|perpendicular\b))/i;
+function isGeometricNameUse(letters: string, before: string, after: string): boolean {
+  const nounRe = letters.length === 2 ? GEO_NOUN_TWO_POINT_RE : GEO_NOUN_THREE_POINT_RE;
+  return nounRe.test(before) || GEO_RELATION_FOLLOWS_RE.test(after);
+}
 // Optional trailing `'X` / `'XX` contraction suffix — see the "Contraction
 // boundary" doc comment above (REVIEW FIX).
 const CAPS_RUN_RE = /\b[A-Z]{2,}(?:'[A-Z]{1,2})?\b/g;
@@ -1983,6 +2032,11 @@ function lowercaseCapsEmphasis(t: string, studentName?: string): string {
         if (letters === 'WORLD' && /^\s+WAR\b/.test(after)) return rawWord; // "WORLD WAR two"
       }
       return CAPS_HAS_VOWEL_RE.test(letters) ? rawWord.toLowerCase() : rawWord;
+    }
+    if (CAPS_CONNECTIVE_SHORT_WORDS.has(letters)) {
+      return isGeometricNameUse(letters, full.slice(0, offset), full.slice(offset + rawWord.length))
+        ? rawWord
+        : rawWord.toLowerCase();
     }
     return CAPS_EMPHASIS_SHORT_WORDS.has(letters) ? rawWord.toLowerCase() : rawWord;
   });

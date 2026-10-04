@@ -1206,3 +1206,112 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('The coefficient stays put.', 'The coefficient stays put.', 'coefficient-idempotent');
   console.log('OK — Round-29 (coeff)');
 }
+
+// --- Capitalised connectives ("OR" spoken as the letters O-R) ---------
+// Live session: the tutor writes the connective in capitals ("x ≤ −3 OR
+// x > 5", "*OR*") and the voice spelled it, because Rule B's short-word
+// list had AND but not OR. The short logical / contrast connectives are now
+// covered as a class (CAPS_CONNECTIVE_SHORT_WORDS in tts-pronunciation.ts).
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  // The live sentences.
+  eq("that's the OR shape locked in.", "that's the or shape locked in.", 'connective-or-shape');
+  eq('x less than or equal to minus 3 OR x greater than 5.',
+     'x less than or equal to minus 3 or x greater than 5.', 'connective-or-between-inequalities');
+  eq('for and, every condition must hold at once, but for OR, just one being true is enough',
+     'for and, every condition must hold at once, but for or, just one being true is enough',
+     'connective-or-before-comma');
+  eq('AND/OR shapes', 'and or shapes', 'connective-and-slash-or');
+  eq('Compare the AND/OR shapes on the number line.', 'Compare the and or shapes on the number line.',
+     'connective-and-slash-or-in-sentence');
+  // Markdown emphasis around the capitals, and capitals between $-spans.
+  eq("So it's *OR*, not *AND*.", "So it's or, not and.", 'connective-or-markdown-emphasis');
+  eq('$x \\le -3$ OR $x > 5$', 'x less than or equal to minus 3 or x greater than 5',
+     'connective-or-between-dollar-spans');
+  // The rest of the class.
+  eq('Neither this NOR that works.', 'Neither this nor that works.', 'connective-nor');
+  eq('Only IF both hold.', 'Only if both hold.', 'connective-if');
+  eq('It holds for every x, and YET it fails here.', 'It holds for every x, and yet it fails here.', 'connective-yet');
+  eq('This is true BUT that is NOT.', 'This is true but that is not.', 'connective-but-not');
+  // Review fix: the short PREPOSITIONS were removed from the class — a
+  // two-letter capital pair is also a geometry point-pair name (segment TO,
+  // BY, OF), and a preposition is rarely the word a tutor stresses. They
+  // are left exactly as written (expectations changed from this morning's
+  // "lowercased" for FOR / TOO / BY / OF / TO).
+  eq('It works FOR every x, and YET it fails here TOO.', 'It works FOR every x, and yet it fails here TOO.',
+     'preposition-for-too-left-alone');
+  eq('Divide BY two, not multiply BY two.', 'Divide BY two, not multiply BY two.', 'preposition-by-left-alone');
+  eq('the slope OF the line', 'the slope OF the line', 'preposition-of-left-alone');
+  eq('go TO the next step', 'go TO the next step', 'preposition-to-left-alone');
+  // A logic-gate name is the same word — the connective reading is right.
+  eq('The OR gate outputs one.', 'The or gate outputs one.', 'connective-or-gate');
+  // Negatives: genuine initialisms and the documented collisions stay
+  // spelled. NO (nitric oxide), SO (sulfur-oxide span residue), US, DO
+  // (dissolved oxygen) are deliberately NOT in the class.
+  eq('NO is a signaling molecule.', 'NO is a signaling molecule.', 'connective-neg-no');
+  eq('SO 2 is a gas.', 'SO 2 is a gas.', 'connective-neg-so');
+  eq('The US entered the war.', 'The US entered the war.', 'connective-neg-us');
+  eq('DO levels dropped in the lake.', 'DO levels dropped in the lake.', 'connective-neg-do');
+  eq('AP Calc BC uses the FTC.', 'AP Calc BC uses the FTC.', 'connective-neg-ap-bc-ftc');
+  eq('The SAT and ACT differ.', 'The SAT and ACT differ.', 'connective-neg-sat-act');
+  eq('GDP rose.', 'GDP rose.', 'connective-neg-gdp');
+  eq('the USDA says.', 'the USDA says.', 'connective-neg-usda');
+  // The student's own name in capitals is still not "emphasis".
+  {
+    const got = rewriteForTTS('Ready to keep going, OR?', { studentName: 'Or' });
+    if (/\bor\b/.test(got)) { console.error(`FAIL connective-neg-student-name: ${got}`); process.exit(1); }
+  }
+  console.log('OK — capitalised connectives (OR / NOR / IF / YET …)');
+}
+
+// --- Connective capitals that are really geometric names ---------------
+// Review finding: "OR" is also the segment from O to R. Lowercasing it made
+// the voice say "the radius or is 5". A connective keeps its capitals when
+// the word before it is a geometry noun, or what follows reads as a
+// measurement / relation of a named object.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  const keeps = (input: string, token: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (!new RegExp(`\\b${token}\\b`).test(got) || new RegExp(`\\b${token.toLowerCase()}\\b`).test(got.replace(/^\w+/, ''))) {
+      console.error(`FAIL ${name}: expected "${token}" kept in capitals\n  got:  ${got}`); process.exit(1);
+    }
+  };
+  // The three reviewed sentences.
+  eq('The radius OR is 5.', 'The radius OR is 5.', 'geo-radius-or');
+  eq('Segment TO is parallel to BY.', 'Segment TO is parallel to BY.', 'geo-segment-to-by');
+  eq('points O and R so OR = 5', 'points O and R so OR equals 5', 'geo-or-equals');
+  // Previous-word rule, across the noun list and letter case.
+  for (const noun of ['segment', 'Line', 'ray', 'radius', 'Diameter', 'chord', 'side', 'arc', 'vector', 'length', 'distance', 'points', 'point']) {
+    keeps(`Now the ${noun} OR crosses it.`, 'OR', `geo-prev-${noun.toLowerCase()}`);
+  }
+  keeps('In triangle NOT the base is longest.', 'NOT', 'geo-triangle-not');
+  keeps('So angle AND equals 30 degrees.', 'AND', 'geo-angle-and');
+  // Next-token rule.
+  keeps('We get IF = 3 here.', 'IF', 'geo-next-equals-sign');
+  keeps('So OR equals 7.', 'OR', 'geo-next-equals-word');
+  keeps('Here OR is 12 long.', 'OR', 'geo-next-is-number');
+  keeps('Here OR is 2.5 long.', 'OR', 'geo-next-is-decimal');
+  keeps('Here OR ⊥ AB.', 'OR', 'geo-next-perp-symbol');
+  keeps('Here OR ∥ AB.', 'OR', 'geo-next-parallel-symbol');
+  keeps('Here OR is parallel to AB.', 'OR', 'geo-next-is-parallel');
+  keeps('Here OR is perpendicular to AB.', 'OR', 'geo-next-is-perpendicular');
+  // …and the connective reading still wins everywhere else. "for OR, just
+  // one…" vs "OR is 5": only "is" + a NUMBER marks a measurement.
+  eq('but for OR, just one being true is enough', 'but for or, just one being true is enough', 'geo-neg-for-or');
+  eq('OR is the connective here.', 'or is the connective here.', 'geo-neg-or-is-word');
+  eq('x is 3 OR is it 5?', 'x is 3 or is it 5?', 'geo-neg-or-is-it');
+  eq('pick this OR that', 'pick this or that', 'geo-neg-plain-or');
+  // A three-letter connective after a two-point noun is not a name (a
+  // segment has two letters), so long-standing AND / NOT emphasis is intact.
+  eq('the line AND the circle', 'the line and the circle', 'geo-neg-line-and');
+  eq('the points NOT on the line', 'the points not on the line', 'geo-neg-points-not');
+  eq('length AND width', 'length and width', 'geo-neg-length-and');
+  console.log('OK — connective capitals kept for geometric names');
+}

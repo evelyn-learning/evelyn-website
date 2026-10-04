@@ -459,5 +459,203 @@ console.log('\n=== Known 3-letter fn names + comma args are math ===');
   for (const t of math) check(`not prose: "${t}"`, isProseNotLatex(t) === false);
 }
 
+console.log('\n=== Answer choices sent as bare LaTeX, no $ (live MCQ card) ===');
+{
+  // The brain sent these four option texts with NO $ delimiters. B stayed
+  // fully literal (whitespace chunking split `\text{ or }` into `\text{`,
+  // `or`, `}` and KaTeX threw on the unclosed brace), C half-rendered, and
+  // A rendered as two fragments around an upright x.
+  const whole = (t: string, name: string) => {
+    const parts = segment(autoWrapLatex(t));
+    check(`${name}: one maths span covering the whole string`,
+      parts.length === 1 && parts[0].kind === 'math' && parts[0].body === t, autoJoined(t));
+  };
+  whole('-3 \\le x \\le 5', 'option A');
+  whole('x \\le -3 \\text{ or } x > 5', 'option B');
+  whole('x < -3 \\text{ or } x \\ge 5', 'option C');
+  const d = 'No solution — the two pieces never overlap';
+  check('option D: prose untouched', autoWrapLatex(d) === d && autoMathBodies(d).length === 0, autoJoined(d));
+  // Same shapes, structurally (not these exact strings).
+  whole('y \\ge 2 \\text{ and } y < 9', 'and-compound');
+  whole('\\text{Total} = 150 \\text{ prescriptions}', 'text groups either side of a relation');
+  whole('a \\ne 0', 'single-letter operand on the left');
+  whole('\\frac{1}{2} \\le t', 'single-letter operand on the right');
+  {
+    // Trailing sentence punctuation stays outside the span.
+    const t = 'x \\le -3 \\text{ or } x > 5.';
+    check('whole-string wrap leaves trailing punctuation outside',
+      autoJoined(t) === '⟨x \\le -3 \\text{ or } x > 5⟩.', autoJoined(t));
+  }
+}
+
+console.log('\n=== Brace-aware chunking + single-letter operands inside prose ===');
+{
+  // A `\cmd{…}` group containing spaces is ONE chunk, so a maths run inside
+  // a sentence survives a `\text{ or }` in the middle of it.
+  const t = 'The answer is x \\le -3 \\text{ or } x > 5 here.';
+  check('run with a spaced \\text{} group wraps as one span inside prose',
+    autoJoined(t) === 'The answer is ⟨x \\le -3 \\text{ or } x > 5⟩ here.', autoJoined(t));
+}
+{
+  // A bare single-letter variable that is an operand of a relation joins.
+  const t = 'Subtract 3 from both sides, so x \\le 5 holds';
+  check('prose stays prose; the variable joins its relation',
+    autoJoined(t) === 'Subtract 3 from both sides, so ⟨x \\le 5⟩ holds', autoJoined(t));
+}
+{
+  const t = 'We need -3 \\le x \\le 5 for this to work.';
+  check('variable between two relations joins one span',
+    autoJoined(t) === 'We need ⟨-3 \\le x \\le 5⟩ for this to work.', autoJoined(t));
+}
+
+{
+  const t = 'Give A \\cup B in set notation';
+  check('set operands join their operator',
+    autoJoined(t) === 'Give ⟨A \\cup B⟩ in set notation', autoJoined(t));
+}
+
+console.log('\n=== Negative: prose must never be typeset as italic maths ===');
+{
+  const t = 'Use \\frac{1}{2} of the pie to share';
+  check('fraction in a sentence: only the fraction is maths',
+    autoJoined(t) === 'Use ⟨\\frac{1}{2}⟩ of the pie to share', autoJoined(t));
+}
+{
+  // The article "a" next to a maths chunk is NOT a variable.
+  const t = 'I think a \\frac{1}{2} cup is enough';
+  check('article "a" before a fraction stays prose',
+    autoJoined(t) === 'I think a ⟨\\frac{1}{2}⟩ cup is enough', autoJoined(t));
+}
+{
+  // "a" beside a relation whose other side is prose is still the article.
+  const t = 'Is that a \\le sign or not';
+  check('article "a" before a lone relation symbol stays prose',
+    autoJoined(t) === 'Is that a ⟨\\le⟩ sign or not', autoJoined(t));
+}
+{
+  // Short all-prose-word strings: no long word to trip a "3+ letters"
+  // guard, so the whole-string rule needs its short-word guard.
+  const t = 'so x \\le 5';
+  check('leading "so" is not swallowed into the span',
+    autoJoined(t) === 'so ⟨x \\le 5⟩', autoJoined(t));
+}
+{
+  // A bare (un-\text) "or" would be typeset "5orx" in maths mode — the
+  // whole string must NOT wrap; each side wraps on its own.
+  const t = 'x \\le 5 or x \\ge 7';
+  check('bare "or" stays prose between two spans',
+    autoJoined(t) === '⟨x \\le 5⟩ or ⟨x \\ge 7⟩', autoJoined(t));
+}
+{
+  const t = 'The slope is \\frac{1}{2}';
+  check('sentence ending in a fraction: only the fraction is maths',
+    autoJoined(t) === 'The slope is ⟨\\frac{1}{2}⟩', autoJoined(t));
+}
+{
+  const t = 'A is the point where the graph turns, and \\frac{1}{2} is its height';
+  check('capital-letter label in prose stays prose',
+    autoJoined(t) === 'A is the point where the graph turns, and ⟨\\frac{1}{2}⟩ is its height', autoJoined(t));
+}
+{
+  // An unbalanced brace must not glue the rest of the sentence into one chunk.
+  const t = 'Write \\text{ and then finish the sentence with x^2 here';
+  check('unbalanced \\text{ does not swallow the sentence',
+    autoJoined(t) === 'Write \\text{ and then finish the sentence with ⟨x^2⟩ here', autoJoined(t));
+}
+{
+  // Whole-string wrap never spans a line break (segment() rejects those
+  // and would show the dollars literally).
+  const t = 'x \\le 5\ny \\ge 7';
+  check('multi-line bare LaTeX: no literal $ leaks', !autoJoined(t).includes('$'), autoJoined(t));
+}
+
+console.log('\n=== Set-literal braces are never swallowed as invisible TeX groups ===');
+{
+  // Review finding: a bare `{…}` inside a maths span is a TeX GROUP — KaTeX
+  // draws nothing for it, so "A ∪ B = {1, 2, 3}" rendered "A ∪ B = 1, 2, 3".
+  // A set-literal brace that lands in a span is rewritten to \{ … \}.
+  const t = 'A \\cup B = {1, 2, 3}';
+  check('set literal after a relation keeps visible braces',
+    autoJoined(t) === '⟨A \\cup B = \\{1, 2, 3\\}⟩', autoJoined(t));
+}
+{
+  const t = 'A = {1, 2} and B = {2, 3}, so A \\cap B = {2}';
+  check('set literal at the end of a sentence run keeps visible braces',
+    autoJoined(t) === 'A = {1, 2} and B = {2, 3}, so ⟨A \\cap B = \\{2\\}⟩', autoJoined(t));
+}
+{
+  // Before the fix this was ⟨{1, 2, 3} \cup {4}⟩ (braces invisible).
+  const t = 'set {1, 2, 3} \\cup {4}';
+  check('set literals either side of an operator command keep visible braces',
+    autoJoined(t) === 'set ⟨\\{1, 2, 3\\} \\cup \\{4\\}⟩', autoJoined(t));
+}
+{
+  const t = 'x \\in {1, 2, 3}';
+  check('set literal after \\in', autoJoined(t) === '⟨x \\in \\{1, 2, 3\\}⟩', autoJoined(t));
+}
+{
+  // The invariant, over every span of a mixed bag: no unescaped `{` that is
+  // not an argument brace (directly after a command name, _, ^, ] or }).
+  const bag = [
+    'A \\cup B = {1, 2, 3}', 'A = {1, 2} and B = {2, 3}, so A \\cap B = {2}',
+    'set {1, 2, 3} \\cup {4}', 'S = {x \\in A : x > 0}', 'Give {a, b} \\subseteq {a, b, c} here',
+    '{1, 2} \\cap {2, 3} = {2}', 'P = {\\frac{1}{2}, x^{2}}',
+  ];
+  for (const t of bag) {
+    const bad = autoMathBodies(t).some((b) => {
+      for (let i = 0; i < b.length; i++) {
+        if (b[i] === '\\') { i++; continue; }
+        if (b[i] === '{' && !(i > 0 && /[A-Za-z_^}\]]/.test(b[i - 1]))) return true;
+      }
+      return false;
+    });
+    check(`no bare set brace inside a span: "${t}"`, !bad, autoJoined(t));
+  }
+}
+{
+  // Argument braces are untouched.
+  const same = (t: string, want: string, name: string) => check(name, autoJoined(t) === want, autoJoined(t));
+  same('\\frac{1}{2}', '⟨\\frac{1}{2}⟩', 'fraction argument braces untouched');
+  same('x \\le -3 \\text{ or } x > 5', '⟨x \\le -3 \\text{ or } x > 5⟩', '\\text{ or } argument braces untouched');
+  same('x^{2}', '⟨x^{2}⟩', 'superscript braces untouched');
+  same('a_{n}', '⟨a_{n}⟩', 'subscript braces untouched');
+  same('\\sqrt[3]{x} \\le 2', '⟨\\sqrt[3]{x} \\le 2⟩', 'argument brace after an optional [..] untouched');
+  same('a_{n + 1} = \\frac{a_{n}}{2}', '⟨a_{n + 1} = \\frac{a_{n}}{2}⟩', 'nested argument braces untouched');
+  same('A \\cup B = \\{1, 2, 3\\}', '⟨A \\cup B = \\{1, 2, 3\\}⟩', 'already-escaped set braces are not double-escaped');
+}
+{
+  // After a non-operator command or an argument group + SPACE, a `{` may be
+  // an argument (\frac{1} {2}) or a set literal (\alpha {1, 2}). A top-level
+  // comma decides for "set"; otherwise it is ambiguous and the run is left
+  // un-wrapped rather than risk either reading.
+  const t = 'x \\le \\alpha {1, 2}';
+  check('spaced brace with a comma list is a set literal', autoJoined(t) === '⟨x \\le \\alpha \\{1, 2\\}⟩', autoJoined(t));
+  const u = 'so \\frac{1} {2} \\le x';
+  check('ambiguous spaced brace: no span contains it', !autoMathBodies(u).some((b) => /\s\{/.test(b)), autoJoined(u));
+}
+
+console.log('\n=== A leading enumerator stays outside the maths span ===');
+{
+  const same = (t: string, want: string, name: string) => check(name, autoJoined(t) === want, autoJoined(t));
+  // Review finding: "$A. x \le -3 …$" reads as the product A·x.
+  same('A. x \\le -3 \\text{ or } x > 5', 'A. ⟨x \\le -3 \\text{ or } x > 5⟩', 'option letter "A." stays text');
+  same('Q1: x \\le 3', 'Q1: ⟨x \\le 3⟩', '"Q1:" stays text');
+  same('Step 2: 3x + 1 \\le 7', 'Step 2: ⟨3x + 1 \\le 7⟩', '"Step 2:" stays text');
+  same('B) x \\ge 2', 'B) ⟨x \\ge 2⟩', '"B)" stays text');
+  same('(C) -3 \\le x \\le 5', '(C) ⟨-3 \\le x \\le 5⟩', '"(C)" stays text');
+  same('1. x \\le 3', '1. ⟨x \\le 3⟩', '"1." stays text');
+  same('2) \\frac{1}{2} \\le t', '2) ⟨\\frac{1}{2} \\le t⟩', '"2)" stays text');
+  same('  A. x \\le 3.', '  A. ⟨x \\le 3⟩.', 'leading whitespace + trailing punctuation preserved');
+  same('D. No solution — the two pieces never overlap', 'D. No solution — the two pieces never overlap', 'prose option untouched');
+  // Negatives: these are maths, not enumerators.
+  same('A = 5 \\cdot 2', '⟨A = 5 \\cdot 2⟩', '"A = …" is a variable, not an enumerator');
+  same('A \\cup B', '⟨A \\cup B⟩', '"A \\cup B" is a set, not an enumerator');
+  same('2.5 \\le x', '⟨2.5 \\le x⟩', 'a decimal is not "2."');
+  same('(A) \\cup (B)', '⟨(A) \\cup (B)⟩', '"(A)" before an operator is an operand');
+  same('(x) \\cdot 2 \\le 8', '⟨(x) \\cdot 2 \\le 8⟩', '"(x)" before an operator is an operand');
+  same('x. y \\le 3', '⟨x. y \\le 3⟩', '"x." (lower-case letter + dot) is not an enumerator — unchanged');
+  same('A.x \\le 3', '⟨A.x \\le 3⟩', 'no space after the dot — unchanged');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
