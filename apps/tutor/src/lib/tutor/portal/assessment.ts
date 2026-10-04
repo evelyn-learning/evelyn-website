@@ -17,7 +17,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import { retrievePractice, type PracticeSources } from './practice';
+import { retrievePractice, type PracticeSources, type PracticeCaller } from './practice';
 import type { PracticeGenSources } from './practice-gen';
 import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 import { emitSessionResult } from './session-result';
@@ -51,11 +51,15 @@ export function assessmentGenSources(
 }
 
 /** Build a (stateless) calibration set: up to `maxPerLo` items per LO, drawn
- *  from existing content, with answer keys stripped. */
+ *  from existing content, with answer keys stripped. `caller` is the
+ *  authenticated partner — the same plan scoping as practice retrieval
+ *  (practice.ts: no private per-student plans, partner-stamped plans to their
+ *  own partner only, per-LO segment fidelity). */
 export async function buildAssessment(
   req: AssessmentRequest,
   sources: PracticeSources,
   genSources: PracticeGenSources | undefined = assessmentGenSources(),
+  caller?: PracticeCaller,
 ): Promise<AssessmentSet> {
   const items: AssessmentItem[] = [];
   const seen = new Set<string>();
@@ -64,6 +68,7 @@ export async function buildAssessment(
       { studentId: req.studentId, courseId: req.courseId, scope: { loId }, difficulty: req.difficulty, count: req.maxPerLo },
       sources,
       genSources,
+      caller,
     );
     for (const it of res.items) {
       if (seen.has(it.id)) continue;

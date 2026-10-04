@@ -10,7 +10,7 @@ import connectDB from '@core/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
 import { SEED_PLANS, findStoredPlansByLoId, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
-import type { PracticeSources, PlanLite, BankLite } from './practice';
+import { classifyPrivatePlan, type PracticeSources, type PracticeCaller, type PlanLite, type BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
 import { resolvePassage } from '@/lib/tutor/passages/store';
 import type { FrqRubric } from '@evelyn/portal-contract/v1';
@@ -18,8 +18,15 @@ import type { FrqRubric } from '@evelyn/portal-contract/v1';
 type Difficulty = 1 | 2 | 3 | 4;
 
 function toPlanLite(plan: LessonPlan): PlanLite {
+  const metadata = plan.metadata && typeof plan.metadata === 'object' ? plan.metadata : undefined;
+  const portalPartnerId = metadata?.portalPartnerId;
   return {
     id: plan.id,
+    // Plan scoping inputs (practice.ts `planServable`): the partner whose
+    // plan-generate request created the plan, and whether it is one
+    // student's private artefact (review / freestyle / homework).
+    partnerId: typeof portalPartnerId === 'string' && portalPartnerId.trim() ? portalPartnerId : undefined,
+    privateKind: classifyPrivatePlan(plan.id, metadata),
     // Design B (generate-on-exhaustion) topic derivation — never the
     // portal's courseId (a Mongo ObjectId hex on the real wire).
     topic: plan.topic,
@@ -96,9 +103,14 @@ async function safeBankQuery(filter: Record<string, unknown>): Promise<BankLite[
   }
 }
 
-/** Production practice sources: curated seeds + ProblemBank. */
-export function mongoPracticeSources(): PracticeSources {
+/** Production practice sources: curated seeds + stored plans + ProblemBank.
+ *  `caller` binds the authenticated partner onto the sources for code that
+ *  reaches `retrievePractice` without a caller argument of its own (the
+ *  portal routes pass it explicitly as well). The scoping rules themselves
+ *  live in practice.ts, not here. */
+export function mongoPracticeSources(caller?: PracticeCaller): PracticeSources {
   return {
+    ...(caller ? { caller } : {}),
     async plansForLoId(loId) {
       // SEED_PLANS (curated, authored content) first — ordering wins for
       // dedup below and for the exhaustion path's `.find(p => p.topic)`

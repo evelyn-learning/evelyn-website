@@ -43,7 +43,7 @@ assert.equal(assessmentGenSources('on'), undefined);
   assert.equal(reserved, 1, 'the shortfall path was reached (so the zero-slot stub is what stopped generation)');
   assert.equal(set.items.length, 0);
   const assessSrc = (await import('node:fs')).readFileSync(require('node:path').join(__dirname, '..', 'src/lib/tutor/portal/assessment.ts'), 'utf8');
-  assert.ok(assessSrc.includes('genSources: PracticeGenSources | undefined = assessmentGenSources(),') && /sources,\s*genSources,\s*\);/.test(assessSrc), 'wiring: buildAssessment threads the no-gen default into retrievePractice');
+  assert.ok(assessSrc.includes('genSources: PracticeGenSources | undefined = assessmentGenSources(),') && /sources,\s*genSources,\s*caller,\s*\);/.test(assessSrc), 'wiring: buildAssessment threads the no-gen default into retrievePractice');
   if (prevGen === undefined) delete process.env.PRACTICE_GEN; else process.env.PRACTICE_GEN = prevGen;
   if (prevAssess !== undefined) process.env.PRACTICE_GEN_ASSESSMENT = prevAssess;
   console.log('practice-assign-routes: all assertions passed');

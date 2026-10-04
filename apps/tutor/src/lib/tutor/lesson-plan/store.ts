@@ -4717,11 +4717,23 @@ export async function getLessonPlan(id: string): Promise<LessonPlan | null> {
  *  live in Mongo. Unlike `listLessonPlans`, generated plans are NOT excluded
  *  here — surfacing them for their own LOs' practice is the entire point.
  *  Uses the `los.id` index (models/LessonPlan.ts) — a point lookup, not a
- *  collection scan. Degrades to [] on any DB failure (never throws). */
+ *  collection scan. Degrades to [] on any DB failure (never throws).
+ *
+ *  Review plans (`rev-<uuid>`, `metadata.reviewPlan` — compose-review-plan.ts)
+ *  are excluded AT THE QUERY: they are one student's private plan yet carry
+ *  real, shared portal LO ids in `los[]`, so they match this lookup for every
+ *  student on that LO (the 2026-10-04 cross-brand leak) and would also eat
+ *  into the 20-row limit. The remaining scoping (partner, freestyle/homework
+ *  own-LO rule, per-LO segment fidelity) is applied to the returned plans by
+ *  portal/practice.ts, which re-checks review plans as well. */
 export async function findStoredPlansByLoId(loId: string): Promise<LessonPlan[]> {
   try {
     await connectDB();
-    const docs = await LessonPlanModel.find({ 'los.id': loId }).limit(20);
+    const docs = await LessonPlanModel.find({
+      'los.id': loId,
+      _id: { $not: /^rev-/ },
+      'metadata.reviewPlan': { $ne: true },
+    }).limit(20);
     return docs.map(toLessonPlan);
   } catch {
     return [];

@@ -14,6 +14,6 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const set = await buildAssessment(parsed.data, mongoPracticeSources());
+  const set = await buildAssessment(parsed.data, mongoPracticeSources(), undefined, { partnerId: auth.partnerId });
   return NextResponse.json(set);
 });

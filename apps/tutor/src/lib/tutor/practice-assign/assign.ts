@@ -103,7 +103,7 @@ export async function assignPractice(input: {
   const cap = capForPartner(partner);
   let los = await resolveAssignmentItems(
     { los: loIds.map((loId) => ({ loId, title: titleFor(loId) })), band: hints.band, seenItemIds, studentId: input.profileId, courseId: input.courseId ?? plan?.topic ?? '', cap },
-    mongoPracticeSources(),
+    mongoPracticeSources({ partnerId: input.partnerId }),
   );
   // Round 4 (E3): end-of-session drafts top up to PRACTICE_TARGET by
   // generation (PRACTICE_GEN-gated inside generatePracticeItems), never above

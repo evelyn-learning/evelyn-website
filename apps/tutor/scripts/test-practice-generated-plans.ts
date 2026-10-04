@@ -126,7 +126,9 @@ const VALID_SIBLING_PLAN: LessonPlan = {
     const seg = plans[0].segments.find((s) => s.kind === 'try_yourself');
     assert.ok(seg, 'try-yourself segment carried through toPlanLite');
     assert.equal(seg!.problem, 'What is the first step in risk assessment?');
-    assert.deepEqual(capturedFilter, { 'los.id': GEN_LO });
+    // The LO point lookup, minus private review plans (store.ts
+    // findStoredPlansByLoId — see scripts/test-practice-plan-scoping.ts).
+    assert.deepEqual(capturedFilter, { 'los.id': GEN_LO, _id: { $not: /^rev-/ }, 'metadata.reviewPlan': { $ne: true } });
   });
 
   await test('plansForLoId — an authored (SEED_PLANS) loId is byte-identical to pre-change SEED_PLANS-only filtering', async () => {
