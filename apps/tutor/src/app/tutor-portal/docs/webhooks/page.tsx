@@ -56,7 +56,7 @@ export default function EventsPage() {
   }
 }`}</CodeBlock>
       <ul className="mb-6 space-y-1 text-sm text-slate-600">
-        <li><code className="text-xs">duration</code> — wall-clock seconds since the session started. For billing use <code className="text-xs">durationSec</code> from <code className="text-xs">GET /sessions/summary</code> (active minutes).</li>
+        <li><code className="text-xs">duration</code> — total active seconds across the session, including earlier sittings of a resumed session. For billing use <code className="text-xs">durationSec</code> from <code className="text-xs">GET /sessions/summary</code> (active minutes).</li>
         <li><code className="text-xs">milestone</code> — <code className="text-xs">none</code>, <code className="text-xs">first_concept_complete</code>, <code className="text-xs">first_try_yourself_success</code>, <code className="text-xs">recap_reached</code>.</li>
         <li><code className="text-xs">ended_reason</code> — <code className="text-xs">&quot;time_limit&quot;</code> when the <code className="text-xs">max_duration_minutes</code> cap ended the session; the host&apos;s reason (<code className="text-xs">finished</code>, <code className="text-xs">minutes_exhausted</code>, <code className="text-xs">no_input</code>, <code className="text-xs">idle</code>) when your page ended it with <code className="text-xs">evelyn:host_end</code>; absent on a plain End/Pause.</li>
         <li><code className="text-xs">end_intent</code> — <code className="text-xs">finish</code> or <code className="text-xs">discard</code> when the student chose; absent on a plain End/Pause.</li>

@@ -123,9 +123,11 @@ async function main() {
       continue;
     }
 
-    // A RESUMED session's `duration` covers only its latest attempt while the
-    // file holds every attempt, so the ratio below reads ~2×+ for a perfectly
-    // good 24 kHz recording — rewriting its sample rate would wreck the
+    // A RESUMED session's `duration` is not a safe reference for the file's
+    // length: on docs saved before 2026-10-03 it covers only the latest
+    // attempt while the file holds every attempt (since then it is the total
+    // active seconds across all sittings), so the ratio below can read ~2×+
+    // for a perfectly good 24 kHz recording — rewriting its sample rate would wreck the
     // replay. Skip anything that shows a resume: more than one recorded
     // attempt (doc spans / sidecar anchors), or a wall span well past
     // `duration` (same test as make-session-clip.mjs).
@@ -138,7 +140,7 @@ async function main() {
       sidecarAttempts > 1 ||
       (wallSpanSec != null && wallSpanSec > durationSec + 60)
     ) {
-      console.log(`[~] ${sessionName}  resumed session (duration covers the latest attempt only) — skipping`);
+      console.log(`[~] ${sessionName}  resumed session (duration is total active seconds across all sittings, or the latest attempt only if saved before 2026-10-03 — not a safe rate reference) — skipping`);
       skipped++;
       continue;
     }

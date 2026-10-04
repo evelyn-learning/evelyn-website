@@ -9,6 +9,7 @@
  * the coarse `location` captured at session start is the most a partner gets.
  */
 import { SESSION_SUMMARY_MAX_IDS, type SessionSummary } from '@evelyn/portal-contract/v1';
+import { sessionActiveSeconds } from '../recordings/active-seconds';
 
 export interface SummarizableSession {
   sessionId: string;
@@ -16,6 +17,10 @@ export interface SummarizableSession {
   startedAt: Date | string;
   endedAt?: Date | string | null;
   duration?: number | null;
+  /** Per-attempt spans (additive, 2026-10-03). Optional: when the caller
+   *  projects them, the one-message fallback sums them; otherwise it reads
+   *  `duration`, which the session-usage route stores cumulatively. */
+  attemptSpans?: unknown;
   transcript?: Array<{ role: string; timestamp?: Date | string | null }> | null;
   whiteboardItemCount?: number | null;
   whiteboardCommands?: unknown[] | null;
@@ -88,6 +93,7 @@ export function summarizeTutorSession(
 ): SessionSummary {
   const includeCost = opts.includeCost !== false;
   const transcript = s.transcript ?? [];
+  const oneMessageSec = sessionActiveSeconds(s);
   const studentTurns = transcript.filter((m) => m.role === 'student').length;
   const tutorTurns = transcript.filter((m) => m.role === 'tutor').length;
   // whiteboardItemCount is maintained on the doc; fall back to the persisted
@@ -109,12 +115,17 @@ export function summarizeTutorSession(
     startedAt: iso(s.startedAt),
     ...(s.endedAt ? { endedAt: iso(s.endedAt) } : {}),
     // durationSec = ACTIVE seconds from the transcript when it has ≥ 2 stamped
-    // messages; the raw `duration` field only when there is no transcript to
-    // measure from (and never for an empty session).
+    // messages (the transcript is cumulative across a resumed session's
+    // sittings, so every sitting counts; the pause between two sittings is
+    // one more inter-message gap and counts up to ACTIVE_GAP_CAP_SEC). With
+    // exactly one message there is no gap to measure, so it falls back to
+    // the session's cumulative active seconds — the attempts' durations
+    // summed, not the last sitting alone (active-seconds.ts). Never emitted
+    // for an empty session.
     ...(transcript.length >= 2
       ? { durationSec: activeSeconds(transcript) }
-      : typeof s.duration === 'number' && s.duration >= 0 && transcript.length > 0
-        ? { durationSec: Math.round(s.duration) }
+      : transcript.length > 0 && oneMessageSec != null
+        ? { durationSec: Math.round(oneMessageSec) }
         : {}),
     studentTurns,
     tutorTurns,

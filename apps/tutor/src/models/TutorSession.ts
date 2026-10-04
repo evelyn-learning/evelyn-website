@@ -59,11 +59,14 @@ export interface ITutorSession extends Document {
   endedAt?: Date;
   duration?: number;
   /** Additive (2026-10-03): one entry per page-mount ATTEMPT of this session,
-   *  keyed by that mount's start. `duration` above is $set by every save and
-   *  each mount measures from its own start, so for a resumed session it
-   *  covers only the latest attempt; these spans keep every attempt
-   *  (wall span = last start + its duration − startedAt; active time = the
-   *  durations summed). See lib/tutor/recordings/session-span.ts. */
+   *  keyed by that mount's start, holding that mount's own duration.
+   *  `duration` above is the session's total ACTIVE seconds — these
+   *  durations summed, so it includes earlier sittings of a resumed session
+   *  and excludes the pauses between them (lib/tutor/recordings/
+   *  active-seconds.ts). A resumed session saved before 2026-10-03 has no
+   *  spans and its `duration` still covers only its latest attempt. The
+   *  spans also give the wall span (last start + its duration − startedAt)
+   *  and the attempt boundaries. See lib/tutor/recordings/session-span.ts. */
   attemptSpans?: Array<{ startedAt: Date; duration: number; endedAt?: Date }>;
   messageCount: number;
   whiteboardItemCount: number;

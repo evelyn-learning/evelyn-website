@@ -8,6 +8,7 @@ import { getLessonTitles, findLessonPlanIdsByTitle } from "@/lib/tutor/lesson-pl
 import { ArrowLeft, Play, Clock, MessageSquare, Layers, Search, X } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import { buildSessionFilter, parseApproxDate, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
+import { sessionActiveSeconds } from "@/lib/tutor/recordings/active-seconds";
 
 const PAGE_SIZE = 50;
 
@@ -361,7 +362,8 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">{s.level as string || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-600 font-mono">
-                        {formatDuration(s.duration as number)}
+                        {/* Active time across every sitting of a resumed session. */}
+                        {formatDuration(sessionActiveSeconds(s) ?? undefined)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">{s.messageCount as number || 0}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">{s.whiteboardItemCount as number || 0}</td>

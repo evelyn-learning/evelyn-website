@@ -4,6 +4,7 @@ import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
 import ReplayPlayer, { TranscriptBubble } from '../../admin/tutor-sessions/components/ReplayPlayer';
 import ExportSessionPDFButton from '@/components/session/ExportSessionPDFButton';
 import { BubbleEmphasis } from '@/app/tutor/components/inline-emphasis';
+import { sessionActiveSeconds } from '@/lib/tutor/recordings/active-seconds';
 
 /**
  * Student-facing session replay (crimsora v2 — past sessions). Loaded in the
@@ -81,10 +82,11 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
   const studentMessages = transcript.filter((t) => t.role === 'student').length;
   const tutorMessages = transcript.length - studentMessages;
   const whiteboardItems = (s.whiteboardCommands || []).length || s.whiteboardItemCount || 0;
-  // `duration` spans only the latest attempt for paused-and-resumed sessions;
-  // it is still the most honest "time spent" figure the doc carries.
+  // Time spent = the session's ACTIVE seconds: every sitting of a resumed
+  // session summed, pauses excluded (active-seconds.ts). Sessions recorded
+  // before attemptSpans existed show their stored `duration`.
   const durationSec: number | undefined =
-    s.duration ||
+    sessionActiveSeconds(s) ||
     (s.endedAt && s.startedAt
       ? Math.round((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 1000)
       : undefined);

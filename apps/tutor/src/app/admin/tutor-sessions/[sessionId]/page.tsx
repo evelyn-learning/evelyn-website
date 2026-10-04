@@ -6,6 +6,8 @@ import { connectDB } from "@core/db";
 import { TutorSession } from "@/models";
 import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Target } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
+import { sessionActiveSeconds } from "@/lib/tutor/recordings/active-seconds";
+import { resolveSessionSpan } from "@/lib/tutor/recordings/session-span";
 import ReplayPlayer from "../components/ReplayPlayer";
 import ExportSessionPDFButton from "@/components/session/ExportSessionPDFButton";
 import SpokenTranscript from "../components/SpokenTranscript";
@@ -48,6 +50,22 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
   const { sessionId } = await params;
   const session = await getSession(sessionId);
   if (!session) notFound();
+
+  // Duration card: ACTIVE seconds (every sitting of a resumed session summed,
+  // pauses excluded). For a resumed session the wall span — first start to
+  // last end, pauses included — is added in brackets.
+  const activeSec = sessionActiveSeconds(session);
+  const startedAtMs = session.startedAt ? new Date(session.startedAt).getTime() : NaN;
+  const span = resolveSessionSpan({
+    startedAtMs: Number.isFinite(startedAtMs) ? startedAtMs : null,
+    durationSec: session.duration,
+    attemptSpans: session.attemptSpans,
+  });
+  const durationLabel =
+    formatDuration(activeSec ?? undefined) +
+    (span.source === 'attempt-spans' && span.resumed && span.wallSpanSec != null
+      ? ` (${span.attemptCount} sittings over ${formatDuration(Math.round(span.wallSpanSec))})`
+      : '');
 
   const statusColors: Record<string, string> = {
     active: 'bg-yellow-100 text-yellow-800',
@@ -116,7 +134,7 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
           <MetaCard icon={User} label="Student" value={session.studentName || 'Anonymous'} />
           <MetaCard icon={BookOpen} label="Subject" value={`${session.subject || '-'} / ${session.topic || '-'}`} />
           <MetaCard icon={Target} label="Goal" value={session.sessionGoal || '-'} />
-          <MetaCard icon={Clock} label="Duration" value={formatDuration(session.duration)} />
+          <MetaCard icon={Clock} label="Duration" value={durationLabel} />
           <MetaCard icon={MessageSquare} label="Messages" value={`${session.messageCount || 0}`} />
           <MetaCard icon={Layers} label="Whiteboard" value={`${session.whiteboardItemCount || 0} items`} />
         </div>

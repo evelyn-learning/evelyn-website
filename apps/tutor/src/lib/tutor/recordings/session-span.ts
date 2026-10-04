@@ -1,11 +1,14 @@
 /**
  * The REAL span of a tutor session (resumed-session fix, 2026-10-03).
  *
- * `TutorSession.duration` is $set from the client on every save and each page
- * mount measures it from its OWN start, so for a resumed session it covers
- * only the latest attempt while `startedAt` stays pinned to the first. Its
- * meaning is deliberately left alone (partner-facing readers exist); this
- * module answers the two questions tooling actually has instead:
+ * `startedAt` is pinned to a session's first attempt (page mount). `duration`
+ * has had two meanings: for sessions written before the `attemptSpans` field
+ * it is whatever the LAST mount measured from its own start (latest attempt
+ * only, for a resumed embed session); for sessions written with the field it
+ * is the cumulative ACTIVE seconds across attempts (session-usage route, see
+ * active-seconds.ts). Neither is a wall span, so nothing here infers
+ * "resumed" or the wall end from `duration` once spans are recorded — this
+ * module answers the two questions tooling actually has:
  *
  *   wallSpanSec — first attempt's start → last attempt's end (the replay
  *                 timeline's real length; what transcript offsets run to).
@@ -15,17 +18,14 @@
  * Sources, best first: the additive `attemptSpans` field (session-usage
  * route), attempt boundaries derived from debug events (legacy sessions),
  * then `duration` / `endedAt − startedAt` for a single-attempt session.
- * Pure; pinned by scripts/test-attempt-anchors.ts.
+ * Pure; pinned by scripts/test-attempt-anchors.ts and
+ * scripts/test-session-active-seconds.ts.
  */
 import { deriveLegacyAttempts, type LegacyDebugEvent } from './attempt-anchors';
 import { RESUME_DETECT_SLACK_MS } from './compressed-timeline';
+import { dedupeAttemptSpans, parseAttemptSpans, sumActiveSeconds, type AttemptSpan } from './active-seconds';
 
-export interface AttemptSpan {
-  /** Epoch ms of this attempt's (page mount's) start. */
-  startedAtMs: number;
-  /** Seconds this attempt ran, as last reported by that mount. */
-  durationSec: number;
-}
+export { parseAttemptSpans, type AttemptSpan };
 
 export interface SessionSpan {
   resumed: boolean;
@@ -35,20 +35,6 @@ export interface SessionSpan {
   /** null = resumed but the per-attempt spans could not be recovered. */
   activeSec: number | null;
   source: 'attempt-spans' | 'debug-events' | 'overhang' | 'duration' | 'ended-at' | 'none';
-}
-
-/** Tolerant read of the stored `attemptSpans` array (Dates or ISO strings). */
-export function parseAttemptSpans(raw: unknown): AttemptSpan[] {
-  if (!Array.isArray(raw)) return [];
-  const out: AttemptSpan[] = [];
-  for (const r of raw) {
-    const startedAt = (r as { startedAt?: unknown } | null)?.startedAt;
-    const duration = (r as { duration?: unknown } | null)?.duration;
-    const startedAtMs = startedAt instanceof Date ? startedAt.getTime() : typeof startedAt === 'string' || typeof startedAt === 'number' ? new Date(startedAt).getTime() : NaN;
-    if (!Number.isFinite(startedAtMs) || typeof duration !== 'number' || !Number.isFinite(duration) || duration < 0) continue;
-    out.push({ startedAtMs, durationSec: duration });
-  }
-  return out.sort((a, b) => a.startedAtMs - b.startedAtMs);
 }
 
 export function resolveSessionSpan(input: {
@@ -71,7 +57,7 @@ export function resolveSessionSpan(input: {
   // 1. Recorded per-attempt spans. Only trusted as the WHOLE story when the
   //    first span starts at the session origin — a session whose first
   //    attempt predates the field has spans for its later attempts only.
-  const spans = parseAttemptSpans(input.attemptSpans);
+  const spans = dedupeAttemptSpans(parseAttemptSpans(input.attemptSpans));
   const spansComplete = spans.length > 0 && startedAtMs != null && Math.abs(spans[0].startedAtMs - startedAtMs) <= RESUME_DETECT_SLACK_MS;
   if (spansComplete && startedAtMs != null) {
     const endMs = Math.max(...spans.map((s) => s.startedAtMs + s.durationSec * 1000));
@@ -79,7 +65,7 @@ export function resolveSessionSpan(input: {
       resumed: spans.length > 1,
       attemptCount: spans.length,
       wallSpanSec: (endMs - startedAtMs) / 1000,
-      activeSec: spans.reduce((n, s) => n + s.durationSec, 0),
+      activeSec: sumActiveSeconds(spans),
       source: 'attempt-spans',
     };
   }
@@ -98,7 +84,10 @@ export function resolveSessionSpan(input: {
 
   // 3. Resumed, but the boundaries are unknowable: items run well past
   //    `duration` (the same test the replay timeline uses), or later-attempt
-  //    spans exist without the first.
+  //    spans exist without the first. The overhang test only ever decides for
+  //    a session with NO recorded spans, whose `duration` is the pre-field
+  //    last-mount figure — a cumulative `duration` always comes with spans,
+  //    which are decided above (or by `spans.length > 0` here).
   const overhang = durationSec != null && lastItemMs != null && lastItemMs > durationSec * 1000 + RESUME_DETECT_SLACK_MS;
   if (overhang || spans.length > 0) {
     const spanEndSec = spans.length > 0 && startedAtMs != null

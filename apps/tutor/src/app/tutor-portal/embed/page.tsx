@@ -24,6 +24,7 @@ import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
+import { endedDurationSeconds, readActiveSecondsField } from '@/lib/tutor/recordings/active-seconds';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
@@ -608,6 +609,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // know when a brain turn has started/settled.
   const [brainBusy, setBrainBusy] = useState(false);
   const sessionStartRef = useRef(new Date());
+  // Active seconds of this session's EARLIER attempts (page mounts), as
+  // computed by the server from the recorded attemptSpans. This mount only
+  // knows its own clock (sessionStartRef above restarts on every mount), so
+  // `evelyn:session_ended` used to report the last sitting alone for a
+  // resumed session (515 s for a 37-minute one). Learned from the resume
+  // boot's GET (`activeSeconds`) and refreshed by every session-usage POST
+  // response (`priorActiveSeconds` — authoritative: it excludes this mount's
+  // own span). 0 until either answers, i.e. a first sitting, or a failed
+  // request ⇒ this mount's duration alone, exactly the old behaviour.
+  const priorActiveSecRef = useRef(0);
+  const notePriorActive = useCallback((res: Response) => {
+    if (!res.ok) return;
+    res.json().then((j: { priorActiveSeconds?: unknown } | null) => {
+      const prior = readActiveSecondsField(j?.priorActiveSeconds);
+      if (prior != null) priorActiveSecRef.current = prior;
+    }).catch(() => {});
+  }, []);
   // Phase-0 instrumentation (humanlike-latency plan): the embed surface never
   // wired onDebugEvent, so portal sessions persisted ZERO debug events and
   // live latency baselines were uncapturable (found 2026-07-22). Persist a
@@ -703,7 +721,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
           embedToken ? { headers: { 'x-embed-token': embedToken } } : undefined,
         );
         if (res.ok) {
-          const { state: rs, hadStaleCheckpoint } = resolveResumeOutcome(await res.json());
+          const prior = await res.json();
+          // Time already spent in earlier sittings — counted whether or not
+          // the conversation itself is restorable (a stale checkpoint still
+          // writes into the same session document).
+          const priorActive = readActiveSecondsField(prior?.activeSeconds);
+          if (!cancelled && priorActive != null) priorActiveSecRef.current = priorActive;
+          const { state: rs, hadStaleCheckpoint } = resolveResumeOutcome(prior);
           if (!cancelled) {
             if (rs) setResumeState(rs);
             if (hadStaleCheckpoint) setCheckpointStale(true);
@@ -893,7 +917,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
-      }).catch(() => {});
+      }).then(notePriorActive).catch(() => {});
       commitDebugEvents();   // issued WITH the events
       return;
     }
@@ -940,7 +964,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       }).catch(() => {});
       commitDebugEvents();   // the second fetch carries the events
     }
-  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken]);
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken, notePriorActive]);
 
   // Session-quality A1 (2026-07-08): accumulate per-attempt claude-brain
   // token usage so the TutorSession record stops reading 0 tokens / $0 for
@@ -1077,8 +1101,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // survives an abrupt close (beforeunload doesn't always fire).
         ...brainUsageTotals(),
       }),
-    }).catch(() => {});
-  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, embedToken]);
+    }).then(notePriorActive).catch(() => {});
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, embedToken, notePriorActive]);
 
   // Host-end channel (GreenApple spec 2026-10-02 §1): the host's reason for
   // an `evelyn:host_end`. Set BEFORE VTR's endSession() teardown runs — that
@@ -1101,7 +1125,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // portal's abort.
     saveSession(endIntent === 'discard' ? 'abandoned' : 'completed');
     setSessionEnded(true);
-    const duration = Math.round((Date.now() - sessionStartRef.current.getTime()) / 1000);
+    // `duration` = total ACTIVE seconds across the session: this mount's own
+    // clock plus the earlier sittings of a resumed session (server-computed,
+    // see priorActiveSecRef). Posted synchronously — never waits on the save
+    // above; the prior total is whatever the server last told us.
+    const duration = endedDurationSeconds(
+      (Date.now() - sessionStartRef.current.getTime()) / 1000,
+      priorActiveSecRef.current,
+    );
     // Post message to parent window for partner integration
     window.parent.postMessage({
       type: 'evelyn:session_ended',

@@ -221,10 +221,12 @@ export interface SessionDoc {
 
 export interface Issue { severity: 'error' | 'warn' | 'info'; tag: string; message: string }
 
-// The session's REAL span. `duration` covers only the latest attempt of a
-// resumed session (each page mount measures from its own start) while
-// startedAt/transcript offsets/audio files span every attempt — dividing
-// sample counts by it flagged every resumed session as a 48 kHz capture.
+// The session's REAL span. `duration` is active seconds: the total across
+// all sittings of a resumed session (on docs saved before 2026-10-03, the
+// latest attempt only — each page mount measured from its own start), while
+// startedAt/transcript offsets span the wall clock — dividing sample counts
+// by a latest-attempt duration flagged every resumed session as a 48 kHz
+// capture.
 // Sources, best first: recorded attemptSpans, the sidecar's attempt anchors
 // (resumed yes/no), attempt boundaries derived from debug events, `duration`.
 export function sessionSpan(doc: SessionDoc, student?: AudioStats, tutor?: AudioStats): SessionSpan {
@@ -259,7 +261,7 @@ export function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioS
     issues.push({
       severity: 'info',
       tag: 'resumed-session',
-      message: `Resumed session (${span.attemptCount ?? 'unknown number of'} attempts, from ${span.source}): wall span ${span.wallSpanSec?.toFixed(1) ?? '?'}s, active ${span.activeSec?.toFixed(1) ?? '?'}s. The doc's duration (${doc.duration ?? 'n/a'}s) covers only the latest attempt — audio lengths are compared against the active span instead.`,
+      message: `Resumed session (${span.attemptCount ?? 'unknown number of'} attempts, from ${span.source}): wall span ${span.wallSpanSec?.toFixed(1) ?? '?'}s, active ${span.activeSec?.toFixed(1) ?? '?'}s. The doc's duration (${doc.duration ?? 'n/a'}s) is the total active seconds across all sittings (on sessions saved before 2026-10-03: the latest attempt only) — audio lengths are compared against the active span computed here.`,
     });
   }
 
@@ -444,7 +446,7 @@ function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, i
   out.push(`status:      ${doc.status}`);
   out.push(`startedAt:   ${fmtTime(doc.startedAt)}`);
   out.push(`endedAt:     ${fmtTime(doc.endedAt)}`);
-  out.push(`duration:    ${fmtSec(doc.duration)}  (${doc.duration?.toFixed(1) ?? '?'}s)${span.resumed ? '   ← latest attempt only' : ''}`);
+  out.push(`duration:    ${fmtSec(doc.duration)}  (${doc.duration?.toFixed(1) ?? '?'}s)${span.resumed ? '   ← total active seconds across all sittings (saved before 2026-10-03: latest attempt only)' : ''}`);
   if (span.resumed) {
     out.push(`resumed:     yes — ${span.attemptCount ?? '?'} attempts (from ${span.source})`);
     out.push(`wall span:   ${fmtSec(span.wallSpanSec)}  (${span.wallSpanSec?.toFixed(1) ?? '?'}s)`);

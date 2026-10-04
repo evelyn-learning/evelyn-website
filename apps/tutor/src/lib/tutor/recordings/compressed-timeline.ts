@@ -2,9 +2,11 @@
  * Compressed monotonic timeline (2026-07-15).
  *
  * `startedAt` is $setOnInsert-pinned to a session's FIRST attempt while
- * `duration` is $set to the LATEST attempt's span (session-usage route), so a
- * paused-and-resumed session anchors every post-resume item HOURS past the
- * scrubber's end — the student replay showed one message, "0 / 39" whiteboard
+ * `duration` holds ACTIVE seconds only — since 2026-10-03 the total across
+ * every sitting of a resumed session (pauses between sittings excluded);
+ * before that, the LATEST attempt's span alone. Either way it is shorter than
+ * the wall span, so a paused-and-resumed session anchors every post-resume
+ * item HOURS past the scrubber's end — the student replay showed one message, "0 / 39" whiteboard
  * items and an empty timeline. Instead of trusting absolute wall-clock
  * offsets, we walk all timestamped items in order and cap each inter-item gap
  * at GAP_CAP_MS (mirroring buildSpeakerSegments' 20s silence cap): a 4.5h

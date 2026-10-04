@@ -14,13 +14,16 @@ import { checkEmbedAuthAsync } from "@/lib/tutor/portal/embed-token";
 import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
 import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
 import { isStaleSessionReuse } from "@/lib/tutor/portal/session-id-reuse";
+import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
  * embed's resume boot (contract v1.2.0, E3). Returns just what rehydration
  * needs: the lesson-position checkpoint + transcript + whiteboard. Keyed on the
  * opaque sessionId. The embed enforces RESUME_MAX_AGE_MS on the checkpoint's
- * updatedAt itself.
+ * updatedAt itself. `activeSeconds` (additive, 2026-10-03) is the session's
+ * active time so far — earlier sittings summed — so a resumed mount can report
+ * a cumulative `duration` in evelyn:session_ended from its first second.
  *
  * Auth (learner-model Phase C, Task 3): a valid embed token (any partner) is
  * required in `on` mode — no expectedStudentId, since this read is keyed by
@@ -59,6 +62,7 @@ export async function GET(req: NextRequest) {
       studentName: session.studentName,
       inputMode: session.inputMode,
       startedAt: session.startedAt,
+      activeSeconds: sessionActiveSeconds(session) ?? 0,
       lessonProgress: session.lessonProgress ?? null,
       transcript: session.transcript ?? [],
       whiteboardCommands: session.whiteboardCommands ?? [],
@@ -141,7 +145,15 @@ export async function POST(req: NextRequest) {
     // the insert that creates the session document. The same lookup also
     // feeds the cross-sitting reuse check below — one indexed point lookup
     // serving both, rather than two against an identical filter.
-    const existingDoc = await TutorSession.findOne({ sessionId }, { createdAt: 1 }).lean();
+    // It also carries what the cumulative-duration arithmetic below needs
+    // (startedAt / duration / attemptSpans — small fields).
+    type ExistingDoc = { createdAt?: Date; startedAt?: Date; duration?: number; attemptSpans?: unknown } | null;
+    const readExisting = () =>
+      TutorSession.findOne(
+        { sessionId },
+        { createdAt: 1, startedAt: 1, duration: 1, attemptSpans: 1 },
+      ).lean<ExistingDoc>();
+    const existingDoc: ExistingDoc = await readExisting();
     const isNewSession = !existingDoc;
     const clientIp = isNewSession ? extractClientIp(req.headers) : undefined;
     if (clientIp) setOnInsertFields.clientIp = clientIp.slice(0, 100);
@@ -178,7 +190,24 @@ export async function POST(req: NextRequest) {
     if (body.voiceEngine !== undefined)
       updateFields.voiceEngine = body.voiceEngine;
     if (body.endedAt !== undefined) updateFields.endedAt = body.endedAt;
-    if (body.duration !== undefined) updateFields.duration = body.duration;
+    // `duration` = the session's cumulative ACTIVE seconds (2026-10-03).
+    // Each page mount ("attempt") measures `body.duration` from its OWN
+    // start, so $set-ing it verbatim made a resumed session store its last
+    // sitting only (515 s for a 37-minute session) — and partners, the
+    // replay tile and the admin list all read that. The client is trusted
+    // for its own attempt's length and nothing more: the total is rebuilt
+    // here from the recorded attemptSpans of the OTHER attempts plus this
+    // one (planAttemptSave, pure, scripts/test-session-active-seconds.ts).
+    // A single-attempt session — and the retail /tutor page, whose resume
+    // keeps the original startedAt and so stays one span — stores exactly
+    // what it stored before. A save with no usable startedAt keeps the old
+    // verbatim behaviour. `duration` is NOT put in updateFields here: it is
+    // written together with this mount's span, in the one guarded update
+    // at the bottom (see "Single atomic write").
+    const attemptStart = typeof body.startedAt === "string" ? new Date(body.startedAt) : null;
+    const attemptStartValid = !!attemptStart && Number.isFinite(attemptStart.getTime());
+    const attemptDuration =
+      typeof body.duration === "number" && Number.isFinite(body.duration) && body.duration >= 0 ? body.duration : null;
     if (body.messageCount !== undefined)
       updateFields.messageCount = body.messageCount;
     if (body.whiteboardItemCount !== undefined)
@@ -215,15 +244,6 @@ export async function POST(req: NextRequest) {
           : [],
         updatedAt: new Date(),
       };
-    }
-
-    // Build the update operation
-    const updateOp: Record<string, unknown> = {};
-    if (Object.keys(updateFields).length > 0) {
-      updateOp.$set = updateFields;
-    }
-    if (Object.keys(setOnInsertFields).length > 0) {
-      updateOp.$setOnInsert = setOnInsertFields;
     }
 
     // Append new token usage entries if provided
@@ -283,10 +303,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (Object.keys(pushOps).length > 0) {
-      updateOp.$push = pushOps;
-    }
-
     // Cross-sitting reuse DETECTION (portal-85b2c632). The partner mints embed
     // tokens that reuse a session_id across days, so a new session's transcript
     // gets appended onto a document created days earlier — three days of three
@@ -307,7 +323,7 @@ export async function POST(req: NextRequest) {
     // muddled, so the write falls through to the normal upsert below.
     // Reuses existingDoc from the isNewSession lookup above — one indexed
     // point query on { sessionId } serving both checks.
-    const existingCreatedAt = (existingDoc as { createdAt?: Date } | null)?.createdAt;
+    const existingCreatedAt = existingDoc?.createdAt;
     if (isStaleSessionReuse({ existingCreatedAt, now: new Date() })) {
       console.error(
         `[session-usage] stale session-id reuse (writing anyway): ${sessionId} was created ` +
@@ -317,45 +333,96 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const session = await TutorSession.findOneAndUpdate(
-      { sessionId },
-      updateOp,
-      { upsert: true, new: true, runValidators: true }
-    );
+    // Single atomic write (2026-10-04). The session fields, this mount's
+    // attempt span (plus the seed span of a pre-spans session) and the
+    // cumulative `duration` go out in ONE findOneAndUpdate. They used to be
+    // two writes — `$set duration`, then a best-effort span push — and a
+    // pre-spans session whose push failed (or raced a concurrent save) kept a
+    // cumulative `duration` with no spans, which the next save took for an
+    // earlier sitting and added to again, every 30 s.
+    //
+    // The span part carries a filter guard (buildAttemptSpanWrite): it only
+    // matches while the document still has the spans the plan was computed
+    // from. A miss means another save got in between — re-read, re-plan,
+    // retry. A miss shows up as `null` for an existing document (no upsert)
+    // or as a duplicate-key error on the unique sessionId for a brand-new one
+    // (two first saves racing the insert).
+    //
+    // Per-attempt span (additive, 2026-10-03): one entry per page mount, keyed
+    // by the mount's start, holding that mount's own duration. `duration` is
+    // the wall time covered by at least one of them; replay and tooling read
+    // the spans for the wall span and the attempt boundaries
+    // (lib/tutor/recordings/session-span.ts).
+    const spanEnd = body.endedAt ? new Date(body.endedAt) : null;
+    const spanEndMs = spanEnd && Number.isFinite(spanEnd.getTime()) ? spanEnd.getTime() : null;
+    const MAX_GUARDED_TRIES = 3;
+    let attemptPlan: AttemptSavePlan | null = null;
+    let session: { sessionId: string; startedAt?: Date; duration?: number; attemptSpans?: unknown } | null = null;
+    let spanWritten = false;
+    for (let tryNo = 0; !session; tryNo++) {
+      // After MAX_GUARDED_TRIES misses, save everything EXCEPT the span and
+      // `duration` (unguarded upsert, cannot miss): the transcript and the
+      // checkpoint must never be lost to contention, and a `duration` is
+      // never written without the span that explains it. The next periodic
+      // save (~30 s) records both.
+      const lastResort = tryNo >= MAX_GUARDED_TRIES;
+      const current: ExistingDoc = tryNo === 0 ? existingDoc : await readExisting();
+      attemptPlan = attemptStartValid && attemptStart
+        ? planAttemptSave({ existing: current, attemptStartMs: attemptStart.getTime(), attemptDurationSec: attemptDuration })
+        : null;
+      const spanWrite = attemptPlan && attemptStart && !lastResort
+        ? buildAttemptSpanWrite({ plan: attemptPlan, attemptStartMs: attemptStart.getTime(), endedAtMs: spanEndMs, docExists: !!current })
+        : null;
 
-    // Per-attempt span (additive, 2026-10-03). `duration` above is $set from
-    // whichever mount saved last, and each mount measures from its OWN start,
-    // so for a resumed session it covers only the latest attempt while
-    // `startedAt` stays pinned to the first. `duration` keeps that meaning
-    // (partner-facing readers exist); the per-attempt spans are recorded
-    // beside it, keyed by the mount's start, for replay and tooling.
-    // Best-effort: a failure here must never fail the save that just landed.
-    const attemptStart = typeof body.startedAt === "string" ? new Date(body.startedAt) : null;
-    if (
-      attemptStart && Number.isFinite(attemptStart.getTime()) &&
-      typeof body.duration === "number" && Number.isFinite(body.duration) && body.duration >= 0
-    ) {
+      const setFields: Record<string, unknown> = { ...updateFields, ...(spanWrite?.set ?? {}) };
+      // No span write (no usable startedAt, or a non-numeric duration): the
+      // old verbatim behaviour.
+      if (!spanWrite && !lastResort && body.duration !== undefined) setFields.duration = body.duration;
+      const pushFields: Record<string, unknown> = { ...pushOps, ...(spanWrite?.push ?? {}) };
+      const op: Record<string, unknown> = {};
+      if (Object.keys(setFields).length > 0) op.$set = setFields;
+      if (Object.keys(setOnInsertFields).length > 0) op.$setOnInsert = setOnInsertFields;
+      if (Object.keys(pushFields).length > 0) op.$push = pushFields;
+      if (spanWrite) op.$max = spanWrite.max;
+
       try {
-        const spanEnd = body.endedAt ? new Date(body.endedAt) : null;
-        const updated = await TutorSession.updateOne(
-          { sessionId, "attemptSpans.startedAt": attemptStart },
-          {
-            $set: {
-              "attemptSpans.$.duration": body.duration,
-              ...(spanEnd && Number.isFinite(spanEnd.getTime()) ? { "attemptSpans.$.endedAt": spanEnd } : {}),
-            },
-          },
+        session = await TutorSession.findOneAndUpdate(
+          { sessionId, ...(spanWrite?.filter ?? {}) },
+          op,
+          { upsert: spanWrite ? spanWrite.upsert : true, new: true, runValidators: true },
         );
-        if (updated.matchedCount === 0) {
-          // The $ne guard makes the push idempotent under concurrent saves.
-          await TutorSession.updateOne(
-            { sessionId, "attemptSpans.startedAt": { $ne: attemptStart } },
-            { $push: { attemptSpans: { startedAt: attemptStart, duration: body.duration } } },
-          );
-        }
-      } catch (spanErr) {
-        console.error("[session-usage] attempt span update failed:", spanErr);
+        spanWritten = !!session && !!spanWrite;
+      } catch (err) {
+        const duplicateKey = (err as { code?: unknown } | null)?.code === 11000;
+        if (!duplicateKey || lastResort) throw err;
       }
+      if (lastResort) {
+        console.error(`[session-usage] attempt span write did not land after ${MAX_GUARDED_TRIES} tries (saved without duration/span): ${sessionId}`);
+        attemptPlan = null; // nothing cumulative was stored — answer no figures
+        break;
+      }
+    }
+
+    // Reconcile `duration` with the spans as they stand AFTER this write
+    // (durationBehindSpans has the why): a save on an already-recorded span
+    // is not guarded on the other mounts' spans, so two mounts saving at the
+    // same moment each stored a total built on the other's previous figure
+    // (180 stored, spans 130 + 70 — measured against a real MongoDB). The
+    // spans are in the document already, so this second write cannot create
+    // a `duration` its spans do not explain; `$max`, so it never lowers.
+    // Best-effort: the save has landed, and the next one repairs it too.
+    if (spanWritten && session && attemptPlan && attemptStart) {
+      const behind = durationBehindSpans(session);
+      if (behind != null) {
+        try {
+          await TutorSession.updateOne({ sessionId }, { $max: { duration: behind } });
+        } catch (err) {
+          console.error("[session-usage] duration reconcile failed:", err);
+        }
+      }
+      // Answer from the document as written, not from the pre-write read:
+      // the figures then include whatever another mount saved in between.
+      attemptPlan = planAttemptSave({ existing: session, attemptStartMs: attemptStart.getTime(), attemptDurationSec: attemptDuration });
     }
 
     // Fire-and-forget geolocation — a down ip-api can never sink the save.
@@ -367,7 +434,22 @@ export async function POST(req: NextRequest) {
         .catch((err) => console.error("Geo lookup failed:", err));
     }
 
-    return NextResponse.json({ success: true, sessionId: session.sessionId });
+    // Additive response fields (2026-10-03), server-computed:
+    //   priorActiveSeconds — active seconds the saving mount does not itself
+    //     cover (union of all attempts minus this mount's own duration); the
+    //     embed adds its own running duration to this for evelyn:session_ended.
+    //   activeSeconds — the cumulative `duration` just stored (present only
+    //     when this save carried a duration).
+    return NextResponse.json({
+      success: true,
+      sessionId: session?.sessionId ?? sessionId,
+      ...(attemptPlan
+        ? {
+            priorActiveSeconds: attemptPlan.priorActiveSec,
+            ...(attemptPlan.activeSec != null ? { activeSeconds: attemptPlan.activeSec } : {}),
+          }
+        : {}),
+    });
   } catch (error) {
     console.error("Session usage error:", error);
 
