@@ -160,6 +160,7 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
           startedAt={session.startedAt}
           endedAt={session.endedAt}
           duration={session.duration}
+          attemptSpans={session.attemptSpans}
           studentName={session.studentName}
           subject={session.subject}
           topic={session.topic}

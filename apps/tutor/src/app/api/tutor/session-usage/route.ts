@@ -323,6 +323,41 @@ export async function POST(req: NextRequest) {
       { upsert: true, new: true, runValidators: true }
     );
 
+    // Per-attempt span (additive, 2026-10-03). `duration` above is $set from
+    // whichever mount saved last, and each mount measures from its OWN start,
+    // so for a resumed session it covers only the latest attempt while
+    // `startedAt` stays pinned to the first. `duration` keeps that meaning
+    // (partner-facing readers exist); the per-attempt spans are recorded
+    // beside it, keyed by the mount's start, for replay and tooling.
+    // Best-effort: a failure here must never fail the save that just landed.
+    const attemptStart = typeof body.startedAt === "string" ? new Date(body.startedAt) : null;
+    if (
+      attemptStart && Number.isFinite(attemptStart.getTime()) &&
+      typeof body.duration === "number" && Number.isFinite(body.duration) && body.duration >= 0
+    ) {
+      try {
+        const spanEnd = body.endedAt ? new Date(body.endedAt) : null;
+        const updated = await TutorSession.updateOne(
+          { sessionId, "attemptSpans.startedAt": attemptStart },
+          {
+            $set: {
+              "attemptSpans.$.duration": body.duration,
+              ...(spanEnd && Number.isFinite(spanEnd.getTime()) ? { "attemptSpans.$.endedAt": spanEnd } : {}),
+            },
+          },
+        );
+        if (updated.matchedCount === 0) {
+          // The $ne guard makes the push idempotent under concurrent saves.
+          await TutorSession.updateOne(
+            { sessionId, "attemptSpans.startedAt": { $ne: attemptStart } },
+            { $push: { attemptSpans: { startedAt: attemptStart, duration: body.duration } } },
+          );
+        }
+      } catch (spanErr) {
+        console.error("[session-usage] attempt span update failed:", spanErr);
+      }
+    }
+
     // Fire-and-forget geolocation — a down ip-api can never sink the save.
     if (clientIp) {
       void lookupGeo(clientIp)

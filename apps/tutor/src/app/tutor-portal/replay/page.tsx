@@ -121,6 +121,7 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
           startedAt={s.startedAt}
           endedAt={s.endedAt}
           duration={s.duration}
+          attemptSpans={s.attemptSpans}
           studentName={s.studentName}
           subject={s.subject}
           topic={s.topic}

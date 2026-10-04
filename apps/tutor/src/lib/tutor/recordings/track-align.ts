@@ -55,3 +55,29 @@ export function buildAlignedChunks(
   }
   return { aligned, samplesWritten };
 }
+
+/**
+ * A session origin older than this at recorder mount is a RESUME, not a
+ * start: the page restored the session's original `startedAt` and handed it
+ * to a brand-new recorder.
+ */
+export const STALE_ORIGIN_MS = 60_000;
+
+/**
+ * The wall-clock origin (T0) a freshly mounted recorder aligns its tracks to.
+ *
+ * Normally the session's `startedAt`, so sample 0 == session start. But a
+ * recorder's samples-written counter starts at 0 on every mount, so handing a
+ * RESUMED mount the original `startedAt` makes its first flush silence-pad
+ * the entire elapsed session (minutes to hours of zeros in one upload — which
+ * the body-size cap rejects, and the roll-back then retries forever). A stale
+ * origin is therefore re-seeded to the mount time: the attempt records from
+ * "now", and the origin it actually used travels with every chunk
+ * (`attemptStartMs`) so the server anchors the attempt (attempt-anchors.ts)
+ * and replay places it exactly. 0 = caller supplied nothing ("first audio
+ * chunk wins", unchanged).
+ */
+export function resolveRecorderOrigin(sessionStartedAtMs: number | undefined, mountMs: number): number {
+  if (!sessionStartedAtMs || !Number.isFinite(sessionStartedAtMs)) return 0;
+  return mountMs - sessionStartedAtMs > STALE_ORIGIN_MS ? mountMs : sessionStartedAtMs;
+}

@@ -58,6 +58,13 @@ export interface ITutorSession extends Document {
   startedAt: Date;
   endedAt?: Date;
   duration?: number;
+  /** Additive (2026-10-03): one entry per page-mount ATTEMPT of this session,
+   *  keyed by that mount's start. `duration` above is $set by every save and
+   *  each mount measures from its own start, so for a resumed session it
+   *  covers only the latest attempt; these spans keep every attempt
+   *  (wall span = last start + its duration − startedAt; active time = the
+   *  durations summed). See lib/tutor/recordings/session-span.ts. */
+  attemptSpans?: Array<{ startedAt: Date; duration: number; endedAt?: Date }>;
   messageCount: number;
   whiteboardItemCount: number;
   transcript: ITranscriptEntry[];
@@ -260,6 +267,15 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     duration: {
       type: Number,
+    },
+    attemptSpans: {
+      type: [
+        new Schema(
+          { startedAt: { type: Date, required: true }, duration: { type: Number, required: true }, endedAt: { type: Date } },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
     },
     messageCount: {
       type: Number,

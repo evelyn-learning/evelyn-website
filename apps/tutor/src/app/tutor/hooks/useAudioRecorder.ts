@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
-import { buildAlignedChunks, type TimedChunk } from '@/lib/tutor/recordings/track-align';
+import { useRef, useCallback, useEffect, useState } from 'react';
+import { buildAlignedChunks, resolveRecorderOrigin, type TimedChunk } from '@/lib/tutor/recordings/track-align';
 
 const SAMPLE_RATE = 24000;
 // Student-track gap threshold: mic chunks arrive continuously (~170ms
@@ -72,7 +72,15 @@ export function useAudioRecorder({
   // such that sample 0 corresponds to this moment. If the caller did not
   // supply sessionStartedAtMs, we degrade to "first audio chunk wins" — same
   // (buggy) behavior as the original implementation, kept for safety.
-  const sessionStartRef = useRef(sessionStartedAtMs ?? 0);
+  //
+  // Resume (2026-10-03): every mount of this hook is one recording ATTEMPT —
+  // the counters below restart at 0 and the server appends at the existing
+  // end of file. The origin this attempt uses rides with every chunk
+  // (attemptStartMs) so the server can anchor the attempt in the file and
+  // replay can place it; a stale origin (a resumed page handing us the
+  // ORIGINAL startedAt) is re-seeded to mount time — see resolveRecorderOrigin.
+  const [attemptOriginMs] = useState(() => resolveRecorderOrigin(sessionStartedAtMs, Date.now()));
+  const sessionStartRef = useRef(attemptOriginMs);
   // Samples written so far per track (to calculate silence gaps). The
   // student counter is what makes the student track wall-clock aligned —
   // pre-2026-07-19 it was concatenate-only, which collapsed every
@@ -88,6 +96,10 @@ export function useAudioRecorder({
     audio: ArrayBuffer | null,
     chunkIndex: number,
     finalize: boolean,
+    // Samples of THIS attempt already uploaded before this chunk. With the
+    // attempt origin it lets the server derive where the attempt begins in
+    // the file from any chunk (attempt-anchors.ts → nextAttemptAnchors).
+    attemptSamplesBefore?: number,
   ): Promise<boolean> => {
     try {
       const qs = new URLSearchParams({
@@ -96,6 +108,10 @@ export function useAudioRecorder({
         chunkIndex: String(chunkIndex),
         finalize: finalize ? 'true' : 'false',
       });
+      if (attemptSamplesBefore !== undefined && sessionStartRef.current) {
+        qs.set('attemptStartMs', String(sessionStartRef.current));
+        qs.set('attemptBytesBefore', String(attemptSamplesBefore * 2)); // PCM16
+      }
       const resp = await fetch(`/api/tutor/session-audio?${qs.toString()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
@@ -142,7 +158,7 @@ export function useAudioRecorder({
           // silence-fills the hole from wall clock — the lost audio
           // becomes silence instead of shifting the whole track early.
           // Safe: flushingRef serializes flushes, one send per track.
-          promises.push(sendChunk('student', bytes, studentChunkIndexRef.current++, false).then((ok) => {
+          promises.push(sendChunk('student', bytes, studentChunkIndexRef.current++, false, before).then((ok) => {
             if (!ok) studentSamplesWrittenRef.current = before;
           }));
         }
@@ -159,7 +175,7 @@ export function useAudioRecorder({
         tutorSamplesWrittenRef.current = result.samplesWritten;
         const bytes = float32ToPCM16Bytes(result.aligned);
         if (bytes) {
-          promises.push(sendChunk('tutor', bytes, tutorChunkIndexRef.current++, false).then((ok) => {
+          promises.push(sendChunk('tutor', bytes, tutorChunkIndexRef.current++, false, before).then((ok) => {
             if (!ok) tutorSamplesWrittenRef.current = before;
           }));
         }

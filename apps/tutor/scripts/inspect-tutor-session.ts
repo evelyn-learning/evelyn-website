@@ -29,6 +29,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 import mongoose from 'mongoose';
+import { parseAttemptAnchors, type AttemptAnchor } from '../src/lib/tutor/recordings/attempt-anchors';
+import { resolveSessionSpan, type SessionSpan } from '../src/lib/tutor/recordings/session-span';
 
 const AUDIO_BASE_DIR = process.env.TUTOR_AUDIO_DIR || '/var/data/evelyn/audio';
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -74,8 +76,8 @@ function parseDurationToMs(s: string): number {
 // ─────────────────────────────────────────────────────────────────────────────
 // Audio analysis
 // ─────────────────────────────────────────────────────────────────────────────
-interface SilenceRun { startMs: number; durMs: number }
-interface AudioStats {
+export interface SilenceRun { startMs: number; durMs: number }
+export interface AudioStats {
   exists: boolean;
   bytes: number;
   samples: number;
@@ -90,6 +92,8 @@ interface AudioStats {
   longSilenceCount: number;
   clippedSampleCount: number;
   metaSampleRate: number | null;
+  /** Per-attempt anchors from the sidecar (recordings from 2026-10-03 on). */
+  attempts: AttemptAnchor[];
 }
 
 async function analyzeAudio(filePath: string, metaPath: string): Promise<AudioStats> {
@@ -100,7 +104,7 @@ async function analyzeAudio(filePath: string, metaPath: string): Promise<AudioSt
     return {
       exists: false, bytes: 0, samples: 0, durationAt24kSec: 0, durationAt48kSec: 0,
       peakInt16: 0, peakDbfs: -Infinity, rmsInt16: 0, rmsDbfs: -Infinity, silentSamplePct: 0,
-      longSilenceRuns: [], longSilenceCount: 0, clippedSampleCount: 0, metaSampleRate: null,
+      longSilenceRuns: [], longSilenceCount: 0, clippedSampleCount: 0, metaSampleRate: null, attempts: [],
     };
   }
 
@@ -137,9 +141,11 @@ async function analyzeAudio(filePath: string, metaPath: string): Promise<AudioSt
   const rmsDbfs = rms > 0 ? 20 * Math.log10(rms / 32768) : -Infinity;
 
   let metaSampleRate: number | null = null;
+  let attempts: AttemptAnchor[] = [];
   try {
     const meta = JSON.parse(await fs.readFile(metaPath, 'utf-8'));
     if (typeof meta.sampleRate === 'number') metaSampleRate = meta.sampleRate;
+    attempts = parseAttemptAnchors(meta.attempts);
   } catch { /* meta absent — abandoned session */ }
 
   return {
@@ -157,6 +163,7 @@ async function analyzeAudio(filePath: string, metaPath: string): Promise<AudioSt
     longSilenceCount: runs.length,
     clippedSampleCount: clipped,
     metaSampleRate,
+    attempts,
   };
 }
 
@@ -189,7 +196,7 @@ async function writeWavFile(srcPath: string, dstPath: string, sampleRate: number
 // ─────────────────────────────────────────────────────────────────────────────
 // Issue detection — pure rules over the gathered data
 // ─────────────────────────────────────────────────────────────────────────────
-interface SessionDoc {
+export interface SessionDoc {
   sessionId: string;
   studentName?: string;
   subject: string;
@@ -201,21 +208,60 @@ interface SessionDoc {
   startedAt?: Date;
   endedAt?: Date;
   duration?: number;
+  attemptSpans?: Array<{ startedAt: Date; duration: number; endedAt?: Date }>;
   messageCount?: number;
   whiteboardItemCount?: number;
   transcript?: Array<{ role: string; text: string; timestamp: Date; pedagogicalIntent?: string }>;
   whiteboardCommands?: Array<{ action: string; data: Record<string, unknown>; timestamp: Date; sourceMessageIndex?: number }>;
-  debugEvents?: Array<{ type: string; message: string; timestamp: Date }>;
+  debugEvents?: Array<{ type: string; message: string; timestamp: Date; data?: Record<string, unknown> }>;
   estimatedCost?: number;
   status?: string;
   hasAudio?: boolean;
 }
 
-interface Issue { severity: 'error' | 'warn' | 'info'; tag: string; message: string }
+export interface Issue { severity: 'error' | 'warn' | 'info'; tag: string; message: string }
 
-function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioStats): Issue[] {
+// The session's REAL span. `duration` covers only the latest attempt of a
+// resumed session (each page mount measures from its own start) while
+// startedAt/transcript offsets/audio files span every attempt — dividing
+// sample counts by it flagged every resumed session as a 48 kHz capture.
+// Sources, best first: recorded attemptSpans, the sidecar's attempt anchors
+// (resumed yes/no), attempt boundaries derived from debug events, `duration`.
+export function sessionSpan(doc: SessionDoc, student?: AudioStats, tutor?: AudioStats): SessionSpan {
+  const startedAtMs = doc.startedAt ? new Date(doc.startedAt).getTime() : null;
+  const off = (d: Date) => new Date(d).getTime() - (startedAtMs ?? 0);
+  const span = resolveSessionSpan({
+    startedAtMs,
+    endedAtMs: doc.endedAt ? new Date(doc.endedAt).getTime() : null,
+    durationSec: doc.duration ?? null,
+    attemptSpans: doc.attemptSpans,
+    events: startedAtMs != null ? (doc.debugEvents ?? []).map(d => ({ type: d.type, message: d.message, data: d.data, offsetMs: off(d.timestamp) })) : [],
+    itemOffsetsMs: startedAtMs != null
+      ? [...(doc.transcript ?? []), ...(doc.debugEvents ?? []), ...(doc.whiteboardCommands ?? [])].map(i => off(i.timestamp))
+      : [],
+  });
+  // Anchors prove a resume even when the doc carries no other trace of it.
+  const anchorAttempts = Math.max(student?.attempts.length ?? 0, tutor?.attempts.length ?? 0);
+  if (!span.resumed && anchorAttempts > 1) {
+    return { ...span, resumed: true, attemptCount: anchorAttempts, activeSec: null, source: 'overhang' };
+  }
+  return span;
+}
+
+export function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioStats): Issue[] {
   const issues: Issue[] = [];
-  const durationSec = doc.duration ?? (doc.startedAt && doc.endedAt ? (new Date(doc.endedAt).getTime() - new Date(doc.startedAt).getTime()) / 1000 : null);
+  const span = sessionSpan(doc, student, tutor);
+  // What the audio tracks should add up to (pauses between attempts are not
+  // in the files) — null for a resumed session whose attempts can't be sized.
+  const durationSec = span.activeSec;
+
+  if (span.resumed) {
+    issues.push({
+      severity: 'info',
+      tag: 'resumed-session',
+      message: `Resumed session (${span.attemptCount ?? 'unknown number of'} attempts, from ${span.source}): wall span ${span.wallSpanSec?.toFixed(1) ?? '?'}s, active ${span.activeSec?.toFixed(1) ?? '?'}s. The doc's duration (${doc.duration ?? 'n/a'}s) covers only the latest attempt — audio lengths are compared against the active span instead.`,
+    });
+  }
 
   // ── Audio integrity ────────────────────────────────────────────────
   if (doc.inputMode === 'voice' || doc.voiceEngine) {
@@ -227,7 +273,16 @@ function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioStats): 
   if (student.exists && durationSec) {
     const expectedSamples = durationSec * 24000;
     const ratio = student.samples / expectedSamples;
-    if (ratio >= 1.5) {
+    if (ratio >= 1.5 && span.resumed) {
+      // A resumed session's expected length is an estimate (attempt
+      // boundaries), and the rate-rescue script decides from `duration`
+      // alone — it would mis-label this recording. Never suggest it here.
+      issues.push({
+        severity: 'warn',
+        tag: 'audio-longer-than-active-span',
+        message: `Student track is ${ratio.toFixed(2)}× the resumed session's active span (${durationSec.toFixed(1)}s). Check the attempt boundaries by ear before concluding anything about the capture rate; do NOT run rescue-tutor-audio-rates.ts on a resumed session.`,
+      });
+    } else if (ratio >= 1.5) {
       issues.push({
         severity: 'error',
         tag: 'audio-rate-mismatch',
@@ -284,11 +339,13 @@ function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioStats): 
     const startMs = new Date(doc.startedAt).getTime();
     const offsets = doc.transcript.map(t => new Date(t.timestamp).getTime() - startMs);
     const lastOffsetMs = Math.max(...offsets);
-    if (durationSec && lastOffsetMs > durationSec * 1000 + 5000) {
+    // Offsets run on the WALL clock from the first attempt's start, so the
+    // bound is the wall span — not `duration`, not the active span.
+    if (span.wallSpanSec && lastOffsetMs > span.wallSpanSec * 1000 + 5000) {
       issues.push({
         severity: 'warn',
         tag: 'transcript-overhang',
-        message: `Last transcript entry at ${(lastOffsetMs / 1000).toFixed(1)}s but session duration is ${durationSec.toFixed(1)}s.`,
+        message: `Last transcript entry at ${(lastOffsetMs / 1000).toFixed(1)}s but the session's wall span is ${span.wallSpanSec.toFixed(1)}s.`,
       });
     }
     const negOffsets = offsets.filter(o => o < 0);
@@ -334,7 +391,7 @@ function fmtTime(d?: Date) { return d ? new Date(d).toISOString() : 'n/a'; }
 function fmtSec(s?: number | null) { if (s == null) return 'n/a'; const m = Math.floor(s / 60); const r = Math.floor(s % 60); return `${m}:${String(r).padStart(2, '0')}`; }
 function fmtBytes(n: number) { return n >= 1e6 ? (n / 1e6).toFixed(2) + ' MB' : (n / 1e3).toFixed(1) + ' KB'; }
 
-function renderAudioBlock(label: string, s: AudioStats, durationSec: number | null): string {
+function renderAudioBlock(label: string, s: AudioStats, durationSec: number | null, startedAtMs: number | null = null): string {
   if (!s.exists) return `### ${label}\n  *(file missing)*\n`;
   const expectedSamples24k = durationSec ? durationSec * 24000 : null;
   const ratio = expectedSamples24k ? s.samples / expectedSamples24k : null;
@@ -343,7 +400,10 @@ function renderAudioBlock(label: string, s: AudioStats, durationSec: number | nu
     `  bytes:        ${fmtBytes(s.bytes)} (${s.bytes.toLocaleString()})`,
     `  samples:      ${s.samples.toLocaleString()}`,
     `  duration:     ${s.durationAt24kSec.toFixed(1)}s @24kHz  (${s.durationAt48kSec.toFixed(1)}s @48kHz)`,
-    expectedSamples24k != null ? `  vs session:   ratio ${ratio!.toFixed(2)}× of expected ${(expectedSamples24k).toLocaleString()} samples` : '',
+    expectedSamples24k != null ? `  vs session:   ratio ${ratio!.toFixed(2)}× of expected ${(expectedSamples24k).toLocaleString()} samples` : '  vs session:   (no expected length — the session\'s active span is unknown)',
+    s.attempts.length > 0
+      ? `  attempts:     ${s.attempts.map((a, i) => `#${i + 1} audio@${(a.byteOffset / 48000).toFixed(1)}s wall@${startedAtMs != null ? ((a.wallStartMs - startedAtMs) / 1000).toFixed(1) + 's' : new Date(a.wallStartMs).toISOString()}`).join('  ')}`
+      : '',
     `  peak:         ${s.peakInt16} (${s.peakDbfs.toFixed(1)} dBFS)${s.clippedSampleCount > 0 ? `   clipped=${s.clippedSampleCount}` : ''}`,
     `  rms:          ${s.rmsInt16.toFixed(0)} (${s.rmsDbfs.toFixed(1)} dBFS)`,
     `  silent:       ${s.silentSamplePct.toFixed(1)}% of samples below ${SILENCE_AMP_THRESHOLD}/32768`,
@@ -355,7 +415,10 @@ function renderAudioBlock(label: string, s: AudioStats, durationSec: number | nu
 
 function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, issues: Issue[]): string {
   const out: string[] = [];
-  const durationSec = doc.duration ?? (doc.startedAt && doc.endedAt ? (new Date(doc.endedAt).getTime() - new Date(doc.startedAt).getTime()) / 1000 : null);
+  const span = sessionSpan(doc, student, tutor);
+  // Audio is measured against the active span (see sessionSpan).
+  const durationSec = span.activeSec;
+  const startedAtMs = doc.startedAt ? new Date(doc.startedAt).getTime() : null;
 
   out.push(`# Session ${doc.sessionId}`);
   out.push('');
@@ -381,7 +444,12 @@ function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, i
   out.push(`status:      ${doc.status}`);
   out.push(`startedAt:   ${fmtTime(doc.startedAt)}`);
   out.push(`endedAt:     ${fmtTime(doc.endedAt)}`);
-  out.push(`duration:    ${fmtSec(durationSec)}  (${durationSec?.toFixed(1) ?? '?'}s)`);
+  out.push(`duration:    ${fmtSec(doc.duration)}  (${doc.duration?.toFixed(1) ?? '?'}s)${span.resumed ? '   ← latest attempt only' : ''}`);
+  if (span.resumed) {
+    out.push(`resumed:     yes — ${span.attemptCount ?? '?'} attempts (from ${span.source})`);
+    out.push(`wall span:   ${fmtSec(span.wallSpanSec)}  (${span.wallSpanSec?.toFixed(1) ?? '?'}s)`);
+    out.push(`active:      ${fmtSec(span.activeSec)}  (${span.activeSec?.toFixed(1) ?? '?'}s)`);
+  }
   out.push(`messages:    ${doc.messageCount ?? doc.transcript?.length ?? 0}`);
   out.push(`whiteboard:  ${doc.whiteboardItemCount ?? doc.whiteboardCommands?.length ?? 0} items`);
   out.push(`cost:        $${(doc.estimatedCost ?? 0).toFixed(3)}`);
@@ -391,8 +459,8 @@ function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, i
 
   // Audio
   out.push('## Audio quality');
-  out.push(renderAudioBlock('student.pcm16', student, durationSec));
-  out.push(renderAudioBlock('tutor.pcm16', tutor, durationSec));
+  out.push(renderAudioBlock('student.pcm16', student, durationSec, startedAtMs));
+  out.push(renderAudioBlock('tutor.pcm16', tutor, durationSec, startedAtMs));
 
   // Sync analysis cross-check
   if (student.exists && tutor.exists && durationSec) {
@@ -400,7 +468,7 @@ function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, i
     const tutorDur = tutor.samples / 24000;
     out.push('## Sync cross-check');
     out.push('```');
-    out.push(`session duration:  ${durationSec.toFixed(2)}s`);
+    out.push(`session ${span.resumed ? 'active span' : 'duration'}:  ${durationSec.toFixed(2)}s${span.resumed ? `  (resumed, ${span.attemptCount ?? '?'} attempts)` : ''}`);
     out.push(`student @24kHz:    ${studentDur.toFixed(2)}s   delta ${(studentDur - durationSec).toFixed(2)}s`);
     out.push(`tutor   @24kHz:    ${tutorDur.toFixed(2)}s   delta ${(tutorDur - durationSec).toFixed(2)}s`);
     out.push(`student / tutor:   ${(studentDur / tutorDur).toFixed(2)}×`);
@@ -575,7 +643,11 @@ async function main() {
   await mongoose.disconnect();
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+// Run only when invoked as a script — scripts/test-inspect-resumed.ts imports
+// detectIssues from this file.
+if (process.argv[1] && /inspect-tutor-session\.ts$/.test(process.argv[1])) {
+  main().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}

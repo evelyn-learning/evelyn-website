@@ -27,10 +27,25 @@
  * directly with no re-seeks. buildCompressedTimeline picks the mode per
  * session and exposes it via toAudio() / audioReseekEndsMs.
  *
+ * Attempt-mapped mode (2026-10-03) — the paragraph above is only half true:
+ * WITHIN an attempt the recorder silence-pads to wall time, so a resumed
+ * track is [attempt 1, wall-aligned][attempt 2, wall-aligned]… with only the
+ * gap BETWEEN attempts collapsed. Capping every 8s+ gap while treating the
+ * buffer as active time therefore skipped silences the audio still contains
+ * (production: audio 37s behind the timeline after one minute, 937s by the
+ * end). When the caller supplies per-track attempts (attempt-anchors.ts —
+ * from the recorder's sidecar anchors, or derived from debug events for
+ * older recordings) the timeline runs on wall time inside every attempt,
+ * collapses ONLY the stretch between attempts where no track has audio, and
+ * maps each track through its own attempts (toAudioFor). Without attempts
+ * the behaviour above is unchanged.
+ *
  * Extracted from ReplayPlayer.tsx (task C1, 2026-07-15) so this pure math can
  * be unit-tested (scripts/test-replay-scrubber.ts) without pulling in
  * ReplayPlayer's React/audio/whiteboard dependency chain.
  */
+
+import { attemptAudioLenMs, wallToAudioMs, type AudioAttempt } from './attempt-anchors';
 
 export const GAP_CAP_MS = 8_000;
 // Minimum run-out after the last item so the final reveal isn't glued to the
@@ -40,6 +55,20 @@ export const MIN_TAIL_MS = 3_000;
 // belongs to an EARLIER attempt than duration — i.e. the session was paused
 // and resumed. Slack absorbs flush/finalize timing around a normal close.
 export const RESUME_DETECT_SLACK_MS = 60_000;
+
+// Attempt starts on different tracks this close together are one remount
+// (both recorders restart on the same page mount).
+const REMOUNT_CLUSTER_MS = 2_000;
+
+export type AudioRole = 'student' | 'tutor';
+
+/** One track's attempts, for attempt-mapped mode. */
+export interface AudioTrackAttempts {
+  /** Ascending by audioStartMs (attemptsFromAnchors / deriveLegacyAttempts). */
+  attempts: AudioAttempt[];
+  /** Track length in ms when known — bounds the last attempt's audio. */
+  fileMs?: number | null;
+}
 
 export interface CompressedTimeline {
   /** Replay length in compressed ms. Always a finite, positive number — see
@@ -52,11 +81,25 @@ export interface CompressedTimeline {
    *  clamps to the END of the timeline (defensive end-anchor: a late item is
    *  recoverable, an unreachable one is not); negatives clamp to 0. */
   toCompressed: (realMs: number) => number;
-  /** Compressed offset → audio-buffer offset (ms). Wall-clock mapping for
-   *  single-attempt sessions, identity for resumed ones — see Audio note. */
+  /** Compressed offset → wall-clock offset (ms from startedAt). The inverse
+   *  of toCompressed (within a collapsed gap: linear across it). */
+  toReal: (compressedMs: number) => number;
+  /** Compressed offset → audio-buffer offset (ms), track-agnostic. Wall-clock
+   *  mapping for single-attempt sessions, identity for resumed ones — see
+   *  Audio note. In attempt-mapped mode: the furthest buffer position any
+   *  track needs at (or next after) this moment — for download-frontier
+   *  checks only; schedule sources with toAudioFor. */
   toAudio: (compressedMs: number) => number;
-  /** Compressed offsets where tick() must re-seek live audio sources (the
-   *  ends of capped gaps — wall-clock tracks only; empty for resumed). */
+  /** Compressed offset → offset in ONE track's buffer (ms), or null when that
+   *  track holds no audio for the moment (between attempts, or after the
+   *  track's attempt ran out) — the source must be stopped, not started.
+   *  Outside attempt-mapped mode this is toAudio for both tracks. */
+  toAudioFor: (role: AudioRole, compressedMs: number) => number | null;
+  /** Compressed offsets where tick() must restart live audio sources: the
+   *  ends of capped gaps (wall-clock tracks; empty for legacy resumed), and
+   *  in attempt-mapped mode every point where a track's attempt audio ends or
+   *  the next attempt begins (a source left running would play straight on
+   *  into the next attempt's bytes). */
   audioReseekEndsMs: number[];
 }
 
@@ -71,6 +114,45 @@ export interface CompressedTimelineOptions {
    *  over `hasAudio` on purpose. Optional and additive so existing callers
    *  (and E3) are unaffected. */
   hasAudio?: boolean;
+  /** Per-track attempts. Used only with hasAudio, and only when they are
+   *  safe to act on: a session that looks resumed must show at least two
+   *  attempts on some track, otherwise the legacy resumed behaviour stays
+   *  (a single known attempt cannot say where the pause was). */
+  audioTracks?: Partial<Record<AudioRole, AudioTrackAttempts>>;
+  /** The session is known to have been resumed (e.g. more than one recorded
+   *  attempt span) even though `realEndMs` covers its whole wall span, which
+   *  defeats the overhang test below. */
+  resumed?: boolean;
+}
+
+/** Wall intervals between attempts in which NO track has audio. */
+function collapsedGaps(tracks: AudioTrackAttempts[]): Array<{ startMs: number; endMs: number }> {
+  const starts: number[] = [];
+  for (const t of tracks) {
+    for (let k = 1; k < t.attempts.length; k++) {
+      // A later attempt on the SAME origin (see wallToAudioMs) is no remount gap.
+      if (t.attempts[k].wallStartMs > t.attempts[k - 1].wallStartMs) starts.push(t.attempts[k].wallStartMs);
+    }
+  }
+  starts.sort((a, b) => a - b);
+  const gaps: Array<{ startMs: number; endMs: number }> = [];
+  let prevEnd = -Infinity;
+  for (const s of starts) {
+    if (s - prevEnd <= REMOUNT_CLUSTER_MS) continue; // other track, same remount
+    // The gap opens where the LAST track to fall silent ran out of audio.
+    let audioEndMs = -Infinity;
+    for (const t of tracks) {
+      let j = -1;
+      for (let k = 0; k < t.attempts.length; k++) if (t.attempts[k].wallStartMs < s) j = k;
+      if (j < 0) continue;
+      const len = attemptAudioLenMs(t.attempts, j, t.fileMs);
+      if (Number.isFinite(len)) audioEndMs = Math.max(audioEndMs, Math.min(t.attempts[j].wallStartMs + len, s));
+    }
+    const startMs = Math.max(audioEndMs, prevEnd, 0);
+    if (Number.isFinite(audioEndMs) && s > startMs) gaps.push({ startMs, endMs: s });
+    prevEnd = s;
+  }
+  return gaps;
 }
 
 export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: number, opts?: CompressedTimelineOptions): CompressedTimeline {
@@ -82,23 +164,54 @@ export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: numb
   // timestamps), so build this pass BEFORE deciding whether to cap at all —
   // the resume check below needs `lastReal` and must NOT itself depend on the
   // cap that check is about to help choose.
-  const real: number[] = [0];
+  const itemReal: number[] = [0];
   for (const r of sorted) {
-    if (r > real[real.length - 1]) real.push(r); // skip duplicate / pre-origin timestamps
+    if (r > itemReal[itemReal.length - 1]) itemReal.push(r); // skip duplicate / pre-origin timestamps
   }
-  const lastReal = real[real.length - 1];
+  const lastReal = itemReal[itemReal.length - 1];
   // Resumed sessions must stay byte-identical to today regardless of
   // hasAudio (global constraint — the structural resumed-replay fix is a
   // later round). Only a genuinely single-attempt session with audio gets
   // the uncapped identity axis.
-  const resumed = lastReal > realEndMs + RESUME_DETECT_SLACK_MS;
-  const gapCapMs = opts?.hasAudio && !resumed ? Infinity : GAP_CAP_MS;
+  const resumed = lastReal > realEndMs + RESUME_DETECT_SLACK_MS || opts?.resumed === true;
+
+  // Attempt-mapped mode — see the block comment. Guarded: needs audio, and a
+  // resumed-looking session must show ≥2 attempts on some track.
+  const mappedTracks: Partial<Record<AudioRole, AudioTrackAttempts>> = {};
+  const mappedList: AudioTrackAttempts[] = [];
+  if (opts?.hasAudio && opts.audioTracks) {
+    for (const role of ['student', 'tutor'] as const) {
+      const t = opts.audioTracks[role];
+      if (t && t.attempts.length > 0) { mappedTracks[role] = t; mappedList.push(t); }
+    }
+  }
+  const mapped = mappedList.length > 0 && (!resumed || mappedList.some((t) => t.attempts.length > 1));
+  const gaps = mapped ? collapsedGaps(mappedList) : [];
+
+  const gapCapMs = mapped || (opts?.hasAudio && !resumed) ? Infinity : GAP_CAP_MS;
+
+  // In mapped mode the collapsed gaps' edges become anchors too, so the
+  // piecewise map breaks exactly where the audio does.
+  let real = itemReal;
+  if (gaps.length > 0) {
+    const merged = [...itemReal, ...gaps.flatMap((g) => [g.startMs, g.endMs])].sort((a, b) => a - b);
+    real = [0];
+    for (const r of merged) if (r > real[real.length - 1]) real.push(r);
+  }
+  // Compressed length of the segment real[i-1]→real[i]: inside a collapsed
+  // gap it takes its proportional share of the gap's (capped) beat.
+  const gapScale = (fromMs: number, toMs: number): number => {
+    for (const g of gaps) {
+      if (fromMs >= g.startMs && toMs <= g.endMs) return Math.min(1, GAP_CAP_MS / (g.endMs - g.startMs));
+    }
+    return 1;
+  };
 
   const comp: number[] = [0];
   const skipEndsMs: number[] = [];
   for (let i = 1; i < real.length; i++) {
     const gap = real[i] - real[i - 1];
-    const c = comp[comp.length - 1] + Math.min(gap, gapCapMs);
+    const c = comp[comp.length - 1] + (mapped ? gap * gapScale(real[i - 1], real[i]) : Math.min(gap, gapCapMs));
     if (gap > gapCapMs) skipEndsMs.push(c);
     comp.push(c);
   }
@@ -107,9 +220,11 @@ export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: numb
   // The max() matters for resumed sessions, where realEndMs (duration spans
   // only the latest attempt) can land BEFORE the last item's real offset.
   // With no items at all there is nothing to compress — keep the real length.
+  // (`real` may end on a gap edge in mapped mode; the tail is still measured
+  // from the last ITEM, so re-base it onto the last anchor.)
   const rawTotalMs = real.length === 1
     ? Math.max(realEndMs, MIN_TAIL_MS)
-    : lastComp + Math.min(Math.max(realEndMs - lastReal, MIN_TAIL_MS), gapCapMs);
+    : lastComp + Math.max(0, Math.min(Math.max(realEndMs - lastReal, MIN_TAIL_MS), gapCapMs) - (real[real.length - 1] - lastReal));
   // Guard against a malformed `startedAt`/`endedAt` (NaN dates) propagating
   // into totalMs — the same class of corrupt-data defect ab39e4a7 hit for
   // markers ("NaN% guard"). Every consumer downstream (the handle's render
@@ -158,8 +273,51 @@ export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: numb
   // is the best proxy for buffer time, so use it as-is and never re-seek
   // (playhead and buffer then advance in lockstep by construction). `resumed`
   // was already computed above (it decided gapCapMs) — reused here as-is.
-  const toAudio = (compressedMs: number): number => (resumed ? compressedMs : toReal(compressedMs));
-  const audioReseekEndsMs = resumed ? [] : skipEndsMs;
+  if (!mapped) {
+    const toAudio = (compressedMs: number): number => (resumed ? compressedMs : toReal(compressedMs));
+    const audioReseekEndsMs = resumed ? [] : skipEndsMs;
+    return { totalMs, toCompressed, toReal, toAudio, toAudioFor: (_role, compressedMs) => toAudio(compressedMs), audioReseekEndsMs };
+  }
 
-  return { totalMs, toCompressed, toAudio, audioReseekEndsMs };
+  // Attempt-mapped: each track through its own attempts. A track with no
+  // attempts of its own (file missing, or nothing derivable for it) stays on
+  // the wall clock, which is what the axis now is.
+  const toAudioFor = (role: AudioRole, compressedMs: number): number | null => {
+    const t = mappedTracks[role];
+    const wallMs = toReal(compressedMs);
+    return t ? wallToAudioMs(t.attempts, wallMs) : wallMs;
+  };
+  // Furthest buffer position any track needs now — or, where a track is
+  // silent, at its next attempt (so a frontier check waits for the bytes
+  // playback is about to need).
+  const toAudio = (compressedMs: number): number => {
+    const wallMs = toReal(compressedMs);
+    let furthest = 0;
+    for (const t of mappedList) {
+      const at = wallToAudioMs(t.attempts, wallMs);
+      const next = at ?? t.attempts.find((a) => a.wallStartMs > wallMs)?.audioStartMs ?? 0;
+      if (next > furthest) furthest = next;
+    }
+    return furthest;
+  };
+  // Restart points: wherever some track's attempt audio ends (stop it) or an
+  // attempt begins (start it at the mapped offset). That includes the FIRST
+  // attempt when it starts after the session origin: before it the track
+  // maps to null and the player stops it, and only a restart point (or a
+  // seek / pause-play) starts it again — without this, playing from zero
+  // stayed silent until the user scrubbed. A first attempt at or before the
+  // origin is dropped by the `w > 0` filter below.
+  const reseekWall = new Set<number>();
+  for (const t of mappedList) {
+    for (let k = 0; k < t.attempts.length; k++) {
+      reseekWall.add(t.attempts[k].wallStartMs);
+      const len = attemptAudioLenMs(t.attempts, k, k < t.attempts.length - 1 ? t.fileMs : null);
+      if (Number.isFinite(len)) reseekWall.add(t.attempts[k].wallStartMs + len);
+    }
+  }
+  const audioReseekEndsMs = [...new Set([...reseekWall].filter((w) => w > 0).map(toCompressed))]
+    .filter((c) => c > 0 && c < totalMs)
+    .sort((a, b) => a - b);
+
+  return { totalMs, toCompressed, toReal, toAudio, toAudioFor, audioReseekEndsMs };
 }

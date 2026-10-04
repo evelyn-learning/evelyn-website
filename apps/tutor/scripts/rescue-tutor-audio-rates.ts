@@ -46,6 +46,8 @@ interface MetaFile {
   format?: string;
   totalChunks?: number;
   finalizedAt?: string;
+  /** Per-attempt anchors written by the session-audio route (2026-10-03). */
+  attempts?: Array<{ wallStartMs: number; byteOffset: number }>;
 }
 
 async function fileSize(p: string): Promise<number | null> {
@@ -98,7 +100,7 @@ async function main() {
     // The DB stores sessionId with the `session-` prefix matching the dir name.
     const sessionDoc = await TutorSession.findOne(
       { sessionId: sessionName },
-      { projection: { duration: 1, startedAt: 1, endedAt: 1, status: 1 } },
+      { projection: { duration: 1, startedAt: 1, endedAt: 1, status: 1, attemptSpans: 1 } },
     );
 
     if (!sessionDoc) {
@@ -117,6 +119,26 @@ async function main() {
 
     if (!durationSec || durationSec <= 0) {
       console.log(`[?] ${sessionName}  no usable duration in DB — skipping`);
+      skipped++;
+      continue;
+    }
+
+    // A RESUMED session's `duration` covers only its latest attempt while the
+    // file holds every attempt, so the ratio below reads ~2×+ for a perfectly
+    // good 24 kHz recording — rewriting its sample rate would wreck the
+    // replay. Skip anything that shows a resume: more than one recorded
+    // attempt (doc spans / sidecar anchors), or a wall span well past
+    // `duration` (same test as make-session-clip.mjs).
+    const wallSpanSec = sessionDoc.startedAt && sessionDoc.endedAt
+      ? (new Date(sessionDoc.endedAt).getTime() - new Date(sessionDoc.startedAt).getTime()) / 1000
+      : null;
+    const sidecarAttempts = ((await readMeta(studentMetaPath))?.attempts ?? []).length;
+    if (
+      (Array.isArray(sessionDoc.attemptSpans) && sessionDoc.attemptSpans.length > 1) ||
+      sidecarAttempts > 1 ||
+      (wallSpanSec != null && wallSpanSec > durationSec + 60)
+    ) {
+      console.log(`[~] ${sessionName}  resumed session (duration covers the latest attempt only) — skipping`);
       skipped++;
       continue;
     }
@@ -150,6 +172,7 @@ async function main() {
         format: studentMeta.format ?? 'pcm16',
         totalChunks: studentMeta.totalChunks,
         finalizedAt: studentMeta.finalizedAt,
+        ...(studentMeta.attempts ? { attempts: studentMeta.attempts } : {}),
       };
       await fs.writeFile(studentMetaPath, JSON.stringify(updated, null, 2));
       rewritten++;

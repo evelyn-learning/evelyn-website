@@ -11,7 +11,9 @@ import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCa
 import { renderBubbleEmphasis } from '@/app/tutor/components/inline-emphasis';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
-import { buildCompressedTimeline } from '@/lib/tutor/recordings/compressed-timeline';
+import { buildCompressedTimeline, type AudioRole, type AudioTrackAttempts } from '@/lib/tutor/recordings/compressed-timeline';
+import { attemptsFromAnchors, deriveLegacyAttempts, parseAttemptAnchors, type AttemptAnchor } from '@/lib/tutor/recordings/attempt-anchors';
+import { parseAttemptSpans } from '@/lib/tutor/recordings/session-span';
 import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '@/lib/tutor/recordings/audio-segments';
 import { computeReplayBoardFit, REPLAY_BOARD_DESIGN_WIDTH_PX } from '@/lib/tutor/recordings/replay-board-fit';
 
@@ -44,6 +46,10 @@ interface ReplayPlayerProps {
   startedAt: string;
   endedAt?: string;
   duration?: number;
+  /** Additive per-attempt spans from the session doc (`attemptSpans`). Tells
+   *  the replay the session was resumed and where it really ended —
+   *  `duration` covers only the latest attempt. Absent on older sessions. */
+  attemptSpans?: unknown;
   studentName?: string;
   subject?: string;
   topic?: string;
@@ -223,6 +229,7 @@ export default function ReplayPlayer({
   hasAudio,
   audioToken,
   tutorLabel,
+  attemptSpans,
 }: ReplayPlayerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -330,6 +337,11 @@ export default function ReplayPlayer({
   // replay used to go silent with no indication; now the shortfall is a
   // visible fact in the status row.
   const [audioCoverageSec, setAudioCoverageSec] = useState<{ student: number; tutor: number } | null>(null);
+  // Per-track recording facts read off the session-audio response headers
+  // (before the first byte is decoded): the recorder's per-attempt anchors
+  // (X-Audio-Attempts; absent on older recordings) and the track length.
+  // Feeds the attempt-mapped timeline for resumed sessions.
+  const [audioTrackInfo, setAudioTrackInfo] = useState<Partial<Record<AudioRole, { anchors: AttemptAnchor[]; fileMs: number | null; sampleRate: number }>> | null>(null);
   const [audioConfirmed, setAudioConfirmed] = useState(false);
   const audioConfirmedRef = useRef(false);
   const confirmAudio = useCallback(() => {
@@ -377,7 +389,14 @@ export default function ReplayPlayer({
   // timeline's tail now. It is NOT a safe scrubber bound: for resumed
   // sessions `duration` spans only the latest attempt while item offsets are
   // measured from the first attempt's startedAt (see block comment above).
+  const spans = useMemo(() => parseAttemptSpans(attemptSpans), [attemptSpans]);
   const realEndMs = useMemo(() => {
+    // Recorded attempt spans give the true wall end (last attempt's start +
+    // its length), which `duration` cannot for a resumed session.
+    if (spans.length > 0) {
+      const spanEndMs = Math.max(...spans.map((sp) => sp.startedAtMs + sp.durationSec * 1000)) - startMs;
+      if (Number.isFinite(spanEndMs) && spanEndMs > 0) return spanEndMs;
+    }
     if (duration) return duration * 1000;
     if (endedAt) return new Date(endedAt).getTime() - startMs;
     // Fallback: use last event timestamp
@@ -387,7 +406,7 @@ export default function ReplayPlayer({
       ...debugEvents.map(d => new Date(d.timestamp).getTime()),
     ];
     return allTimestamps.length > 0 ? Math.max(...allTimestamps) - startMs + 2000 : 60000;
-  }, [duration, endedAt, startMs, transcript, whiteboardCommands, debugEvents]);
+  }, [spans, duration, endedAt, startMs, transcript, whiteboardCommands, debugEvents]);
 
   // Whether stored whiteboard timestamps are trustworthy CAPTURE times.
   // Two data generations exist:
@@ -437,8 +456,25 @@ export default function ReplayPlayer({
       ...debugEvents.map(d => new Date(d.timestamp).getTime() - startMs),
       ...(wbTimesUsable ? whiteboardCommands.map(w => new Date(w.timestamp).getTime() - startMs) : []),
     ];
-    return buildCompressedTimeline(realOffsets, realEndMs, { hasAudio: audioAvailable });
-  }, [transcript, debugEvents, whiteboardCommands, wbTimesUsable, startMs, realEndMs, audioAvailable]);
+    // Resumed sessions: per-track attempts for the wall→audio map. Recorder
+    // anchors when the sidecar has them; for older recordings, attempt
+    // boundaries derived from the debug-event trail + the track length; null
+    // from both ⇒ the track is left out and the timeline keeps its previous
+    // behaviour (see compressed-timeline.ts, attempt-mapped mode).
+    const audioTracks: Partial<Record<AudioRole, AudioTrackAttempts>> = {};
+    if (audioAvailable && audioTrackInfo) {
+      const events = debugEvents.map(d => ({ type: d.type, message: d.message, data: d.data, offsetMs: new Date(d.timestamp).getTime() - startMs }));
+      for (const role of ['student', 'tutor'] as const) {
+        const info = audioTrackInfo[role];
+        if (!info) continue;
+        const attempts = info.anchors.length > 0
+          ? attemptsFromAnchors(info.anchors, startMs, info.sampleRate)
+          : deriveLegacyAttempts({ events, itemOffsetsMs: realOffsets, fileMs: info.fileMs });
+        if (attempts && attempts.length > 0) audioTracks[role] = { attempts, fileMs: info.fileMs };
+      }
+    }
+    return buildCompressedTimeline(realOffsets, realEndMs, { hasAudio: audioAvailable, audioTracks, resumed: spans.length > 1 });
+  }, [transcript, debugEvents, whiteboardCommands, wbTimesUsable, startMs, realEndMs, audioAvailable, audioTrackInfo, spans]);
 
   const totalDurationMs = compressedTimeline.totalMs;
 
@@ -538,6 +574,8 @@ export default function ReplayPlayer({
   audioReseekEndsRef.current = compressedTimeline.audioReseekEndsMs;
   const toAudioRef = useRef(compressedTimeline.toAudio);
   toAudioRef.current = compressedTimeline.toAudio;
+  const toAudioForRef = useRef(compressedTimeline.toAudioFor);
+  toAudioForRef.current = compressedTimeline.toAudioFor;
   // Playhead frozen by an in-flight scrub debounce (task E3, Step 5): during a
   // drag we move only the visual playhead and hold the clock until the trailing
   // edge commits the audio restart. Distinct from bufferingRef (frontier wait).
@@ -606,9 +644,13 @@ export default function ReplayPlayer({
     setCurrentTimeMs(newTime);
     applyTime(newTime);
 
-    // Wall-clock audio tracks only (audioReseekEndsMs is empty for resumed
-    // sessions AND for single-attempt-with-audio, which E2 leaves uncompressed
-    // — so this scan is effectively dormant whenever audio actually plays; it
+    // Attempt-mapped (resumed) sessions: each point is where a track's attempt
+    // audio ends or its next attempt begins — the restart re-maps every track
+    // through toAudioFor, stopping one that has no audio there.
+    // Otherwise wall-clock audio tracks only (audioReseekEndsMs is empty for
+    // legacy resumed sessions AND for single-attempt-with-audio, which E2
+    // leaves uncompressed — so this scan is then effectively dormant whenever
+    // audio actually plays; it
     // remains for the pre-confirm compressed transient): crossing the END of a
     // capped gap means the sources just played only the first 8s of a longer
     // recorded silence — re-seek them at the mapped wall offset so speech after
@@ -682,6 +724,18 @@ export default function ReplayPlayer({
         tutor: tutorResp.ok ? contentLength(tutorResp) : 0,
       };
       reportProgress();
+
+      // Recording facts for the resumed-session audio map — known from the
+      // headers alone, so the timeline has them before audio is confirmed.
+      const trackInfo = (resp: Response) => {
+        if (!resp.ok) return undefined;
+        const sampleRate = intHeader(resp, 'X-Sample-Rate', 24000);
+        const bytes = contentLength(resp);
+        let anchors: AttemptAnchor[] = [];
+        try { anchors = parseAttemptAnchors(JSON.parse(resp.headers.get('X-Audio-Attempts') || 'null')); } catch { /* malformed ⇒ none */ }
+        return { anchors, fileMs: bytes !== null ? (bytes / (sampleRate * 2)) * 1000 : null, sampleRate };
+      };
+      setAudioTrackInfo({ student: trackInfo(studentResp), tutor: trackInfo(tutorResp) });
 
       // Pull exactly `n` (even) bytes off the front of a track's pending queue
       // into a fresh, standalone ArrayBuffer safe to Int16-cast.
@@ -867,8 +921,16 @@ export default function ReplayPlayer({
         const compressedMs = clockAnchorCtxRef.current !== null && ctx.state === 'running'
           ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000
           : currentTimeMsRef.current;
-        const bufSec = toAudioRef.current(compressedMs) / 1000;
-        offsetSec = Math.max(0, bufSec - nextSeg.startSec);
+        const bufMs = toAudioForRef.current(which, compressedMs);
+        if (bufMs === null) {
+          // This track has no audio for the current moment (its attempt ran
+          // out / between attempts) — don't chain into the next attempt's
+          // bytes; the re-seek point at the next attempt restarts it.
+          g.source.current = null;
+          g.waiting.current = false;
+          return;
+        }
+        offsetSec = Math.max(0, bufMs / 1000 - nextSeg.startSec);
       }
       scheduleSegmentAtRef.current(which, index + 1, offsetSec, ctx, gen);
     };
@@ -882,12 +944,16 @@ export default function ReplayPlayer({
   // bump its generation, and schedule the covering segment — or mark it
   // waiting if the frontier hasn't reached `bufferSec` yet. Touches only this
   // track, so a slower track never blocks or restarts the other.
-  const startTrackSource = useCallback((which: TrackKey, bufferSec: number, ctx: AudioContext) => {
+  const startTrackSource = useCallback((which: TrackKey, bufferSec: number | null, ctx: AudioContext) => {
     const g = trackGroup(which);
     g.gen.current++;
     const gen = g.gen.current;
     try { g.source.current?.stop(); } catch {}
     g.source.current = null;
+    // null ⇒ the track holds no audio for this moment (resumed session:
+    // between attempts, or this track's attempt ended early). Stay stopped —
+    // nothing to wait for; the next re-seek point restarts it.
+    if (bufferSec === null) { g.waiting.current = false; return; }
     const stream = g.stream.current;
     if (!stream || stream.segments.length === 0) { g.waiting.current = !(stream?.done ?? true); return; }
     const hit = findSegmentAt(stream.segments, bufferSec);
@@ -910,9 +976,12 @@ export default function ReplayPlayer({
     if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch (err) { console.warn('[ReplayPlayer] AudioContext resume failed', err); }
     }
-    const bufferSec = compressedTimeline.toAudio(offsetMs) / 1000;
-    startTrackSource('student', bufferSec, ctx);
-    startTrackSource('tutor', bufferSec, ctx);
+    // Per track: a resumed session's tracks begin each attempt at different
+    // file offsets (toAudioFor); otherwise both get the same buffer time.
+    for (const which of ['student', 'tutor'] as const) {
+      const bufferMs = compressedTimeline.toAudioFor(which, offsetMs);
+      startTrackSource(which, bufferMs === null ? null : bufferMs / 1000, ctx);
+    }
     // A4: anchor the master clock at this exact (position, ctx-time) pair.
     clockAnchorMsRef.current = offsetMs;
     clockAnchorCtxRef.current = ctx.currentTime;
@@ -948,9 +1017,9 @@ export default function ReplayPlayer({
     }
     const g = trackGroup(which);
     if (!g.waiting.current) return;
-    const bufSec = compressedTimeline.toAudio(currentTimeMsRef.current) / 1000;
-    if (g.stream.current && findSegmentAt(g.stream.current.segments, bufSec)) {
-      startTrackSource(which, bufSec, ctx);
+    const bufMs = compressedTimeline.toAudioFor(which, currentTimeMsRef.current);
+    if (bufMs !== null && g.stream.current && findSegmentAt(g.stream.current.segments, bufMs / 1000)) {
+      startTrackSource(which, bufMs / 1000, ctx);
     }
   }, [compressedTimeline, trackGroup, startTrackSource, setAudioStateBoth]);
   const onSegmentLandedRef = useRef(onSegmentLanded);
@@ -962,19 +1031,20 @@ export default function ReplayPlayer({
   // new identity mapping would reinterpret as a (smaller) real offset — a
   // backward jump of the handle, reveal, and audio. Remap it exactly through
   // OLD→real→NEW at the swap instant, in a layout effect (before paint) so
-  // nothing flickers. The OLD timeline is single-attempt here (resumed never
-  // uncompresses), so its `toAudio` == its `toReal`, giving real ms; the new
-  // identity `toCompressed` maps that straight back. We fire ONLY on the
-  // false→true edge AND only when totalMs actually changed (a real remap; for
-  // resumed sessions the memo re-runs but the mapping is unchanged, so
-  // toAudio-as-toReal would NOT hold — the totalMs guard skips those).
+  // nothing flickers. The old timeline's `toReal` gives the wall offset the
+  // playhead stood at; the new `toCompressed` maps that straight back. (This
+  // used `toAudio` as a stand-in for toReal, valid only while resumed
+  // sessions never uncompressed — attempt-mapped resumed sessions now do.)
+  // We fire ONLY on the false→true edge AND only when totalMs actually
+  // changed (a real remap; for a resumed session with no usable attempts the
+  // memo re-runs but the mapping is unchanged — the totalMs guard skips it).
   const prevTimelineRef = useRef(compressedTimeline);
   const prevAudioConfirmedRef = useRef(audioConfirmed);
   useLayoutEffect(() => {
     const prevTL = prevTimelineRef.current;
     const justConfirmed = !prevAudioConfirmedRef.current && audioConfirmed;
     if (justConfirmed && compressedTimeline.totalMs !== prevTL.totalMs) {
-      const realMs = prevTL.toAudio(currentTimeMsRef.current);
+      const realMs = prevTL.toReal(currentTimeMsRef.current);
       const remapped = compressedTimeline.toCompressed(realMs);
       currentTimeMsRef.current = remapped;
       setCurrentTimeMs(remapped);
