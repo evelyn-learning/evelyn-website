@@ -104,4 +104,60 @@ if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
   check('flag off ⇒ plant (previous behaviour)', decideJudgeNotePlant({ enabled: false, pendingNote: witness, deterministicNote: witness }).plant === true);
   check('empty strings never match', decideJudgeNotePlant({ enabled: true, pendingNote: '', deterministicNote: '' }).plant === true);
 }
+// 2026-10-04 (live, student gac-test-001): a note planted on a CORRECT
+// "Not quite. Close though." produced "let me fix that label… Good catch" —
+// the student had caught nothing. The "you were right" wording now belongs to
+// the retraction mode only (the judge said the student's answer was correct);
+// every other structured issue gets the neutral wording.
+{
+  const legacy = buildJudgeCorrectionNote(['Not quite.'], '5') ?? '';
+  check('default mode is byte-identical to the explicit legacy mode', legacy === buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'legacy' }));
+  check('legacy text unchanged: keeps its own-the-correction example', /Actually, hold on — you were right/.test(legacy));
+
+  const retraction = buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'retraction' }) ?? '';
+  check('retraction: bracketed note convention', /^\[correction note — not from the student\]/.test(retraction));
+  check('retraction: says the review found the answer correct', /answer was correct/i.test(retraction));
+  check('retraction: may tell the student they were right', /you were right/i.test(retraction));
+  check('retraction: pins the graded answer', /The answer you graded was "5"/.test(retraction));
+  check('retraction: forbids crediting a catch', /did not point (?:this|it) out/i.test(retraction));
+  check('retraction: safety valve kept', /stand by/i.test(retraction));
+  check('retraction: still forbids narration', /NEVER narrate/.test(retraction));
+  check('retraction: single line', !retraction.includes('\n'));
+
+  const neutral = buildJudgeCorrectionNote(['So $x = 11$.'], '5', { mode: 'neutral' }) ?? '';
+  check('neutral: bracketed note convention', /^\[correction note — not from the student\]/.test(neutral));
+  check('neutral: quotes the claim', neutral.includes('So $x = 11$.'));
+  check('neutral: correct your own statement plainly', /correct your own earlier statement plainly/i.test(neutral));
+  check('neutral: do not attribute the correction to the student', /do not attribute the correction to the student/i.test(neutral));
+  check('neutral: never offers "you were right" as wording to use', !/hold on — you were right/i.test(neutral));
+  check('neutral: names the phrases it forbids', /"good catch"/i.test(neutral) && /"you were right"/i.test(neutral));
+  check('neutral: does not pin a graded answer (the issue is the tutor\'s own statement)', !/The answer you graded/.test(neutral));
+  check('neutral: safety valve kept', /stand by/i.test(neutral));
+  check('neutral: still forbids narration', /NEVER narrate/.test(neutral));
+  check('neutral: single line', !neutral.includes('\n'));
+
+  const guarded = buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'legacy', guardAttribution: true }) ?? '';
+  check('legacy + guard: starts with the unchanged legacy text', guarded.startsWith(legacy));
+  check('legacy + guard: forbids crediting a catch', /did not point (?:this|it) out/i.test(guarded));
+  check('no claims ⇒ null in every mode', buildJudgeCorrectionNote([], '5', { mode: 'neutral' }) === null && buildJudgeCorrectionNote([], '5', { mode: 'retraction' }) === null);
+}
+// 2026-10-04 (review): a retraction and another flagged statement of the same
+// turn ride ONE note — the second used to be dropped.
+{
+  const both = buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'retraction', otherClaims: ['So $x = 11$.'] }) ?? '';
+  check('retraction + other: bracketed note convention', /^\[correction note — not from the student\]/.test(both));
+  check('retraction + other: carries the denial', both.includes('"Not quite."'));
+  check('retraction + other: carries the other claim', both.includes('"So $x = 11$."'));
+  check('retraction + other: retraction text first', both.indexOf('"Not quite."') < both.indexOf('"So $x = 11$."'));
+  check('retraction + other: the other claim is the tutor\'s own correction', /correct your own statement plainly/i.test(both) && /not something the student was right about/i.test(both));
+  check('retraction + other: still pins the graded answer', /The answer you graded was "5"/.test(both));
+  check('retraction + other: still forbids crediting a catch and narration', /did not point (?:this|it) out/i.test(both) && /NEVER narrate/.test(both));
+  check('retraction + other: single line', !both.includes('\n'));
+  check('retraction with no other claims is unchanged',
+    buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'retraction', otherClaims: [] }) === buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'retraction' }));
+  check('otherClaims is ignored outside retraction mode',
+    buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'neutral', otherClaims: ['So $x = 11$.'] }) === buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'neutral' })
+    && buildJudgeCorrectionNote(['Not quite.'], '5', { otherClaims: ['So $x = 11$.'] }) === buildJudgeCorrectionNote(['Not quite.'], '5'));
+}
+if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
 console.log(`\nAll ${passed} judge-correction-note tests passed.`);

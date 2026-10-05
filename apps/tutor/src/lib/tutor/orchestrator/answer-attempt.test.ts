@@ -24,10 +24,17 @@ function test(name: string, fn: () => void) {
 }
 
 console.log('\nanswer-attempt — isAnswerAttempt');
-const ATTEMPTS = ['x = 1 and y = 5', 'I think x = 2, y = 3', 'Is it x = 4, y = 2?', '4', 'a circle'];
+const ATTEMPTS = [
+  'x = 1 and y = 5', 'I think x = 2, y = 3', 'Is it x = 4, y = 2?', '4', 'a circle',
+  // CHANGED 2026-10-04 (second review pass, F9): pinned below as a NON-attempt
+  // because the ledger read it as a stuck cue. A soft cue that goes on to
+  // propose a value is an answer attempt (isHedgedValueAnswer); it no longer
+  // feeds a stuck cue, so the ledger still gets one event for the turn.
+  'I dont know, maybe x = 5?',
+];
 for (const s of ATTEMPTS) test(`attempt: "${s}"`, () => assert.equal(isAnswerAttempt(s), true));
 const NON_ATTEMPTS = [
-  'I dont know, maybe x = 5?',
+  'I dont know',
   'can you explain that again',
   'give me another example',
   'I still dont get it',

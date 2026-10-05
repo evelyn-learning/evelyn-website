@@ -137,12 +137,83 @@ export function decideJudgeNotePlant(input: {
   return { plant: false, reason: 'deterministic-note-pending' };
 }
 
-export function buildJudgeCorrectionNote(claims: string[], studentAnswer?: string): string | null {
-  const quoted = claims
+/** The clause every mode ends on (R58): the check itself is never narrated. */
+const NEVER_NARRATE =
+  `Either way, NEVER narrate the act of checking — no "re-checking my last correction", "that check was correct", "nothing to walk back", "no correction needed", and never refer to the student in the third person. The student must never learn a check happened; they only ever hear normal tutoring.`;
+
+/** 2026-10-04 (live, student gac-test-001): a note consumed on a turn where
+ *  the student had said nothing of the kind produced "let me fix that label…
+ *  Good catch". The correction is the tutor's own; the student caught nothing. */
+const NO_ATTRIBUTION =
+  `The student did not point this out — the mistake and the correction are yours alone: never thank or credit them for catching it (no "good catch", "thanks for flagging that", "well spotted").`;
+
+/**
+ * Which wording the note uses.
+ *
+ *  - 'legacy'     the text as it was before 2026-10-04 (used when the judge
+ *                 response carries no structured fields, the flag is off, or
+ *                 the judge flagged a denial without settling whether the
+ *                 student was right).
+ *  - 'retraction' the judge SAID the student's answer was correct and the
+ *                 tutor rejected it. The only mode that may tell the student
+ *                 they were right.
+ *  - 'neutral'    any other flagged statement (wrong maths, grounding, false
+ *                 praise): correct your own earlier statement plainly, and do
+ *                 not attribute the correction to the student.
+ */
+export type JudgeCorrectionNoteMode = 'legacy' | 'retraction' | 'neutral';
+
+export function buildJudgeCorrectionNote(
+  claims: string[],
+  studentAnswer?: string,
+  opts?: {
+    mode?: JudgeCorrectionNoteMode;
+    /** Append the no-attribution sentence to the LEGACY text (the other two
+     *  modes always carry it). */
+    guardAttribution?: boolean;
+    /** 'retraction' mode only: OTHER statements of the same turn the review
+     *  flagged (wrong maths, grounding). They ride the same note after the
+     *  retraction text, worded as the tutor's own correction — the judge
+     *  decision used to drop them when a retraction was present. */
+    otherClaims?: string[];
+  },
+): string | null {
+  const quote = (list: string[]) => list
     .slice(0, MAX_CLAIMS)
     .map((c) => `"${c.slice(0, MAX_CLAIM_CHARS).replace(/\s+/g, ' ').trim()}"`)
     .filter((c) => c.length > 2);
+  const quoted = quote(claims);
   if (quoted.length === 0) return null;
+  const quotedOthers = quote(opts?.otherClaims ?? []);
+  const mode = opts?.mode ?? 'legacy';
+  const graded = studentAnswer && studentAnswer.trim()
+    ? studentAnswer.trim().slice(0, 80).replace(/\s+/g, ' ')
+    : '';
+  if (mode === 'retraction') {
+    return (
+      `[correction note — not from the student] An automated review found that the student's answer was correct and that your previous turn rejected it: ${quoted.join(' and ')}. ` +
+      `Silently re-check that verdict against the question you actually asked and the student's exact words. ` +
+      (graded ? `The answer you graded was "${graded}" — re-check THAT answer, not whatever they say next. ` : '') +
+      `If you did reject a correct answer, open this turn by briefly owning the correction ("Actually, hold on — you were right: …") before continuing. ` +
+      `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
+      (quotedOthers.length > 0
+        ? `Separately, the same review flagged another statement in that turn as likely wrong: ${quotedOthers.join(' and ')}. ` +
+          `Silently re-check it against the problem and the board; if it was wrong, correct your own statement plainly in one short sentence ("Let me correct something I said: …") — that part is not something the student was right about. `
+        : '') +
+      `${NO_ATTRIBUTION} ` +
+      NEVER_NARRATE
+    );
+  }
+  if (mode === 'neutral') {
+    return (
+      `[correction note — not from the student] An automated review flagged a statement in your previous turn as likely wrong: ${quoted.join(' and ')}. ` +
+      `Silently re-check that statement against the problem and the board. ` +
+      `If it was wrong, correct your own earlier statement plainly in one short sentence ("Let me correct something I said: …") and continue. ` +
+      `Do not attribute the correction to the student: the review did not find that they were right about anything, so do not say "you were right" or "good catch", and do not change your verdict on their answer unless your own re-check shows that verdict was wrong. ` +
+      `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
+      NEVER_NARRATE
+    );
+  }
   return (
     `[correction note — not from the student] An automated review flagged your previous turn as likely mis-grading or contradicting the facts: ${quoted.join(' and ')}. ` +
     `Silently re-check that claim against the question you actually asked and the student's exact words. ` +
@@ -160,6 +231,7 @@ export function buildJudgeCorrectionNote(claims: string[], studentAnswer?: strin
     // actually written… nothing to walk back there"). The stand-by branch's
     // "do not mention this review" read as permission to describe the check
     // as long as the word "review" was avoided. Close that read explicitly.
-    `Either way, NEVER narrate the act of checking — no "re-checking my last correction", "that check was correct", "nothing to walk back", "no correction needed", and never refer to the student in the third person. The student must never learn a check happened; they only ever hear normal tutoring.`
+    NEVER_NARRATE +
+    (opts?.guardAttribution ? ` ${NO_ATTRIBUTION}` : '')
   );
 }

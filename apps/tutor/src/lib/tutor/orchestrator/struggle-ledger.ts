@@ -16,6 +16,8 @@
  * value (the academy parses GapsRead with a closed enum).
  */
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
+import { isHedgedValueAnswer } from '@/lib/tutor/orchestrator/student-turn-shape';
+import { TUTOR_TURN_SHAPE_GATE } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 export type LedgerEventKind = 'wrong' | 'no_recovery' | 'stuck_cue' | 'slow_segment' | 'confusion' | 'brain_gap';
 export interface LedgerEvent { kind: LedgerEventKind; loId: string; segId: string; atMs: number }
@@ -72,14 +74,21 @@ const SOFT_STUCK_LEAD_MAX_WORDS = 25;
  *   - explicit shapes ("I'm stuck", "walk me through") count anywhere;
  *   - soft shapes ("I don't know / get it") count only when they ARE the
  *     reply: a short utterance, or the cue leads a medium-length one;
- *   - hedge objects ("don't know if/whether/why …") never count.
+ *   - hedge objects ("don't know if/whether/why …") never count;
+ *   - (2026-10-04) a soft cue that goes on to PROPOSE A VALUE ("I don't know,
+ *     5?", "I dont know but 5") is an answer attempt, not a cue — graded by
+ *     the verdict layer like any other answer. Explicit shapes still win.
+ *
+ * @param opts.hedgedValueIsAnswer  false ⇒ the last rule is off (the
+ *   behaviour before 2026-10-04). Unset ⇒ TUTOR_TURN_SHAPE_GATE.
  */
-export function isLedgerStuckCue(text: string): boolean {
+export function isLedgerStuckCue(text: string, opts?: { hedgedValueIsAnswer?: boolean }): boolean {
   const t = (text || '').trim();
   if (!t) return false;
   if (EXPLICIT_STUCK_RE.test(t)) return true;
   const m = SOFT_STUCK_RE.exec(t);
   if (!m) return false;
+  if ((opts?.hedgedValueIsAnswer ?? TUTOR_TURN_SHAPE_GATE) && isHedgedValueAnswer(t)) return false;
   // Hedge anywhere in the utterance disqualifies a soft cue — the same
   // words are doing hedging work, not asking for help.
   if (HEDGE_RE.test(t)) return false;

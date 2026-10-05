@@ -6,6 +6,7 @@ import {
   shouldLatchStartOnTypedSubmit,
   resolveTypedFirstMicTap,
   TYPED_FIRST_SAME_GESTURE_MS,
+  shouldStartListeningOnGestureStart,
 } from '../src/lib/tutor/session/resume-listen';
 
 // Voice session, mic not muted ⇒ the resume gesture opens the recorder,
@@ -115,4 +116,30 @@ eq(resolveTypedFirstMicTap({ ...tap, sessionMode: 'text', typedFirstTapPending: 
 eq(resolveTypedFirstMicTap({ ...tap, enabled: false, typedFirstTapPending: false, sinceBlurOpenedMicMs: 10 }), { action: 'defer', reason: 'flag-off' });
 eq(resolveTypedFirstMicTap({ ...tap, sinceBlurOpenedMicMs: 10 }), { action: 'open-mic', reason: 'typed-first' });
 
-console.log(`resume-listen: 5 cases passed; typed-first: ${typedCases} cases passed`);
+// ── gesture-first start (2026-10-04): upload as the FIRST gesture ──────────
+let gestureCases = 0;
+{
+  const g = {
+    enabled: true, sessionMode: 'voice' as 'voice' | 'text', micMuted: false,
+    startLatchedNow: true, composerFocused: false, alreadyOpened: false,
+  };
+  const t = (over: Partial<typeof g>, want: { start: boolean; reason: string }) => {
+    assert.deepEqual(shouldStartListeningOnGestureStart({ ...g, ...over }), want);
+    gestureCases++;
+  };
+  // The live case: upload first, voice mode, not muted ⇒ open the mic.
+  t({}, { start: true, reason: 'ok' });
+  t({ micMuted: true }, { start: false, reason: 'muted' });
+  t({ sessionMode: 'text' }, { start: false, reason: 'text-mode' });
+  t({ sessionMode: 'text', startLatchedNow: false }, { start: false, reason: 'text-mode' });
+  t({ enabled: false }, { start: false, reason: 'flag-off' });
+  // Every later send runs the same helper — never a second open.
+  t({ startLatchedNow: false }, { start: false, reason: 'not-a-start' });
+  t({ alreadyOpened: true }, { start: false, reason: 'already-opened' });
+  // Composer focused: its focus muted the mic; its blur re-opens it.
+  t({ composerFocused: true }, { start: false, reason: 'typing' });
+  // Mute outranks the softer guards.
+  t({ micMuted: true, composerFocused: true }, { start: false, reason: 'muted' });
+}
+
+console.log(`resume-listen: 5 cases passed; typed-first: ${typedCases} cases passed; gesture-start: ${gestureCases} cases passed`);

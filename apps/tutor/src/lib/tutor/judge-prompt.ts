@@ -160,7 +160,8 @@ You check THREE kinds of factual claims:
     quotient term = x. The student proposed x — correct. Emit
     {"claim": "Not quite.", "why": "Student's proposed answer x is
     correct for the asked question; denial is a wrong judgment.",
-    "severity": "advisory"}.
+    "severity": "advisory", "studentAnswerVerdict": "correct",
+    "issueKind": "false_denial"}.
     Worked example, NO-MATCH branch (do NOT flag): same
     <tutor_question>; <student_answer> "Is it x squared?";
     <tutor_said> opens "Not quite. Remember, we compare the leading
@@ -274,7 +275,40 @@ DO NOT mark "kill" for: pedagogical phrasing, hypothetical/comparative/contrasti
 Return STRICT JSON of the form:
 {"grounded": true, "issues": []}
 or
-{"grounded": false, "issues": [{"claim": "<verbatim quote>", "why": "<explanation>", "severity": "kill" | "advisory"}]}
+{"grounded": false, "issues": [{"claim": "<verbatim quote>", "why": "<explanation>", "severity": "kill" | "advisory", "studentAnswerVerdict": "correct" | "incorrect" | "unsure" | "not_an_answer", "issueKind": "false_denial" | "false_praise" | "wrong_math" | "tone_or_wording" | "grounding" | "other"}]}
+
+Every issue carries two CLASSIFICATION fields. They state your conclusion
+so the orchestrator does not have to infer it from the quoted text:
+
+- "studentAnswerVerdict" — YOUR OWN conclusion about the answer in
+  <student_answer>, independent of what the tutor said about it:
+    "correct"        you derived the answer and the student's matches;
+    "incorrect"      you derived the answer and the student's does not;
+    "unsure"         you cannot determine it with confidence;
+    "not_an_answer"  <student_answer> is absent, or is a question, a
+                     request, an acknowledgement or a remark rather than
+                     an answer to the tutor's question.
+
+- "issueKind" — what is wrong with the quoted claim:
+    "false_denial"     the tutor rejected an answer that is correct;
+    "false_praise"     the tutor affirmed an answer that is incorrect;
+    "wrong_math"       the tutor's own arithmetic, algebra or stated
+                       fact is wrong;
+    "tone_or_wording"  the tutor's verdict on the student's answer is
+                       RIGHT and you object only to how it was put (for
+                       example "close" said of an answer that was not
+                       close, or praise that is too strong or too weak);
+    "grounding"        the claim contradicts the whiteboard, the focus
+                       card or the authored solution;
+    "other"            none of the above.
+
+The two fields must agree with each other and with your "why":
+"false_denial" requires studentAnswerVerdict "correct"; "false_praise"
+requires "incorrect". When the student's answer is incorrect and the
+tutor denied it, the denial is a correct judgment and is NOT an issue.
+If you nevertheless flag the wording of such a turn, the issue is
+"tone_or_wording" with studentAnswerVerdict "incorrect" — never
+"false_denial".
 
 The "claim" field MUST be a VERBATIM quote from <tutor_said> — copy
 the exact text that contains the issue, character-for-character. Do

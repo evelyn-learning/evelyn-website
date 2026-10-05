@@ -73,6 +73,20 @@ import {
 import { shouldStartListeningOnSessionStart, shouldLatchStartOnTypedSubmit, resolveTypedFirstMicTap } from '@/lib/tutor/session/resume-listen';
 import { detectBoredomCue } from '@/lib/tutor/orchestrator/boredom-cue';
 import { assessStreakClaim } from '@/lib/tutor/voice/streak-claim';
+// Board/flow round (2026-10-04).
+import { decideStudentProblemGrounding } from '@/lib/tutor/orchestrator/text-heuristics';
+import { decideLabelReuseOnCorrection } from '@/lib/tutor/whiteboard/soft-rejections';
+import { decideDeferredPageFlush } from '@/lib/tutor/whiteboard/deferred-page-flush';
+import { resolveEmptySegmentCard, decideEmptyCardContinuation, describeEmptySegmentCardTurn, buildObjectiveCardCommand, isObjectiveCardCommand } from '@/lib/tutor/orchestrator/empty-segment-card';
+import { shouldStartListeningOnGestureStart } from '@/lib/tutor/session/resume-listen';
+import {
+  TUTOR_PROBLEM_GROUNDING_RELATION,
+  TUTOR_LABEL_REUSE_CORRECTION_REPLACE,
+  TUTOR_EMPTY_SEGMENT_CARD_FALLBACK,
+  TUTOR_EMPTY_SEGMENT_CARD_CONTINUE,
+  TUTOR_DEFERRED_PAGE_DEDUP,
+  TUTOR_GESTURE_START_LISTENING,
+} from '@/lib/tutor/orchestrator/turn-round-flags';
 import { resolveLabelCollision, relabelCountAfter, decideUnresolvedTarget, decideSubstitutedDuplicate, sameProblemStatement, statementsReadIdentically } from '@/lib/tutor/whiteboard/soft-rejections';
 import { boardHoldsOnlyOpenerFallback, boardFallbackOnlyAfterRollback, isOpenerFallbackCommand, shouldPaintFirstRenderNow } from '@/lib/tutor/whiteboard/fallback-board';
 import { buildValidatorFeedback, TURN_CONTINUATION_ACTION } from '@/lib/tutor/orchestrator/validator-feedback';
@@ -139,7 +153,7 @@ import {
   type LedgerEventKind,
   isLedgerStuckCue,
 } from '@/lib/tutor/orchestrator/struggle-ledger';
-import { inferWrongEvent } from '@/lib/tutor/orchestrator/answer-attempt';
+import { inferWrongEvent, isBareShortAnswer } from '@/lib/tutor/orchestrator/answer-attempt';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -346,11 +360,25 @@ import { shouldPlantShadedRegionNote, SHADED_REGION_NOTE } from '@/lib/tutor/voi
 import { detectBoardContradiction } from '@/lib/tutor/voice/board-contradiction';
 import { findOutOfBoundsPins, buildMapBoundsRejection, findCrowdedPins, buildCrowdedPinsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
+// Verdict/counting round (2026-10-04): praise-then-exclusion, the judge's
+// structured verdict, short answers, questions/self-reports.
+import { decidePraiseExclusion, buildPraiseExclusionNote, isPraiseExclusionNote, shouldPlantPraiseExclusionNote, praiseExclusionNoteExpired, type PraiseExclusionNoteRecord } from '@/lib/tutor/voice/praise-exclusion';
+import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision } from '@/lib/tutor/voice/judge-issue-decision';
+import { studentTurnShape, isHedgedValueAnswer } from '@/lib/tutor/orchestrator/student-turn-shape';
+import {
+  TUTOR_PRAISE_EXCLUSION_KILL,
+  TUTOR_PRAISE_EXCLUSION_NOTE,
+  TUTOR_JUDGE_STRUCTURED_VERDICT,
+  TUTOR_CORRECTION_WIDENING,
+  TUTOR_SHORT_ANSWER_ATTEMPT,
+  TUTOR_ACK_NOT_AFFIRM,
+  TUTOR_TURN_SHAPE_GATE,
+} from '@/lib/tutor/orchestrator/turn-round-flags';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
-import { buildJudgeCorrectionNote, hasMathExpression, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
 import { extractChoiceOptions, reconcileMcqLetterWithContent, type ChoiceOption } from '@/lib/tutor/voice/mcq-letter-content';
@@ -379,7 +407,7 @@ import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-in
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
 import { shouldSubstituteShowProblem, shouldAutoCardAfterOwnProblem, refuseSilentDedupDrop } from '@/lib/tutor/orchestrator/show-problem-substitution';
 import { checkEquationRelations, syncRelationTrail, describeRelationCheck, claimedAnswerContradictsProblem, type RelationTrail } from '@/lib/tutor/voice/relation-step-check';
-import { formatWitness } from '@/lib/tutor/voice/relation-sampling';
+import { formatWitness, extractProblemRelation } from '@/lib/tutor/voice/relation-sampling';
 import { decideRelationStepNote, settleRelationStepNote, recordRelationStepNoteDispatch, relationStepNoteExpired, type RelationStepNoteRecord } from '@/lib/tutor/voice/relation-step-note';
 import { decideAnswerDisputeTiebreak, describeAnswerDisputeDecision } from '@/lib/tutor/voice/answer-dispute-tiebreak';
 import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
@@ -2986,6 +3014,11 @@ export function VoiceTutorRealtime({
   /** normalized label → times a colliding show_equation label was made
    *  unique (soft-rejections.ts). Cleared with equationLabelsThisSessionRef. */
   const equationRelabelCountsRef = useRef<Map<string, number>>(new Map());
+  /** Is the brain turn dispatching a show_equation RIGHT NOW a correction
+   *  turn? Set by callBrainOnce around that one handleWhiteboardCommand call
+   *  and cleared after it, so every other caller reads "no" (soft-rejections.ts
+   *  decideLabelReuseOnCorrection). */
+  const turnCorrectionCtxRef = useRef<{ correctionNote: boolean; speech: string }>({ correctionNote: false, speech: '' });
   const activeRecapRef = useRef<{ loId: string; loTitle: string; startedAtMs: number; turns: number; wrapNudged: boolean; wrapNudgedAtTurn: number; overrunLogged: boolean; goSeen: boolean } | null>(null);
   /** Segment → LO, using the SAME resolution the mastery-delta /
    *  segment-evidence sites use: the segment's own LO group when it
@@ -3303,7 +3336,7 @@ export function VoiceTutorRealtime({
   // most one note per boarded equation".
   const relationStepNoteRef = useRef<RelationStepNoteRecord | null>(null);
   const relationStepNotedKeysRef = useRef<Set<string>>(new Set());
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number; resolvedAtMs?: number } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; /** Student-brought problems only: the ONE relation the student asked to solve (decideStudentProblemGrounding). The relation checks prefer it over parsing `statement`. */ relation?: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number; resolvedAtMs?: number } | null>(null);
   // Live check 6 (2026-09-07) runtime nets — see the TUTOR_SPOKEN_PROBLEM_BOARD
   // flag block for the design. Rolling window of recent board text (problem
   // statements, equation latex) so the spoken-problem net can tell "numbers
@@ -3666,7 +3699,10 @@ export function VoiceTutorRealtime({
   // classification at turn-start so the post-stream code knows whether
   // to even consider streak changes. Pure-ack turns ("ok", "yeah")
   // never update the streak regardless of what the brain says next.
-  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; isSessionEndSignal: boolean; activeStatement?: string } | null>(null);
+  // shortAnswer (2026-10-04): a bare short answer ("3.", "solid.") given while
+  // a tutor question was open — counted by the post-stream pacing credit only,
+  // never by the kill guards that read isVerification as "final-answer turn".
+  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; shortAnswer?: boolean; isSessionEndSignal: boolean; activeStatement?: string } | null>(null);
   // R47 Task 1 (live incident portal-d859df30): stash from a deterministic
   // false-denial kill (arith/simplification/inverse-verdict) this turn — the
   // checker already proved the student's answer right, so the post-stream
@@ -4207,6 +4243,12 @@ export function VoiceTutorRealtime({
   // may not replace it (decideJudgeNotePlant). Never cleared: once the note
   // is delivered or withdrawn the slot no longer equals it.
   const deterministicCorrectionNoteRef = useRef<string | null>(null);
+  // 2026-10-04: the praise-exclusion note's planting record (which brain call,
+  // which problem/page) and the brain-call ordinal it is measured against —
+  // see expireStaleRelationStepNote. The ordinal counts EVERY brain call,
+  // bracketed ones included (pacingTurnCounterRef counts student turns only).
+  const praiseExclusionNoteRef = useRef<PraiseExclusionNoteRecord | null>(null);
+  const brainCallSeqRef = useRef<number>(0);
   // R50 T3: deadline for an undelivered correction note. Armed wherever a
   // note is planted; cleared wherever one is consumed or replaced.
   const correctionNoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -4281,6 +4323,33 @@ export function VoiceTutorRealtime({
   // for delivery, before a new step is checked, and before the judge decides
   // whether the slot is taken. Reads refs only.
   const expireStaleRelationStepNote = useCallback(() => {
+    // 2026-10-04 (second review pass): the praise-exclusion note has no
+    // deadline either, and bracketed turns (idle nudge, cover, start-lesson)
+    // do not consume it — it could arrive several tutor turns later saying
+    // "Your previous reply…". Same call sites, same rule plus one: it is
+    // dropped at any brain call later than the one right after the call that
+    // planted it (praiseExclusionNoteExpired).
+    try {
+      const prRec = praiseExclusionNoteRef.current;
+      if (prRec) {
+        if (pendingJudgeCorrectionNoteRef.current !== prRec.note) {
+          praiseExclusionNoteRef.current = null;   // delivered, withdrawn or replaced
+        } else if (praiseExclusionNoteExpired({
+          record: prRec,
+          pendingNote: pendingJudgeCorrectionNoteRef.current,
+          call: brainCallSeqRef.current,
+          now: {
+            statement: currentProblemRef.current?.statement ?? null,
+            epoch: servedProblemStatementsRef.current.size,
+            pageKey: catalogRef.current.getCurrentPageTitle() ?? '',
+          },
+        })) {
+          pendingJudgeCorrectionNoteRef.current = null;
+          praiseExclusionNoteRef.current = null;
+          onDebugEvent?.('praise_contradiction_exclusion_note_expired', `not delivered on the next turn, or the problem/page moved on (planted call ${prRec.plantedCall}, now ${brainCallSeqRef.current})`);
+        }
+      }
+    } catch { /* never affects the turn */ }
     try {
       const rec = relationStepNoteRef.current;
       if (!rec) return;
@@ -4528,7 +4597,7 @@ export function VoiceTutorRealtime({
             'ENGAGEMENT CHECK: The student has given several very short replies in a row ("ok", "yea", "k"). ' +
             'On your next turn, pause the march through new material and ask a diagnostic question instead. ' +
             'Pick the last concept you covered and say something like: ' +
-            '"Let me pause for a sec — in your own words, can you explain [the last concept] back to me?" ' +
+            '"Let me pause for a moment — in your own words, can you explain [the last concept] back to me?" ' +
             'Do NOT move forward to a new topic until you get a substantive answer. ' +
             'If the student still gives a short answer, offer a 30-second break or a recap.'
           );
@@ -5405,6 +5474,11 @@ export function VoiceTutorRealtime({
     // report truth to the LLM instead of lying with success:true. Hoisted
     // above the dedup filter so we can push dedup-drops into it.
     const rejected: Array<{ action: string; reason: string }> = [];
+    // Correction-turn label reuse (2026-10-04): prior equation cards this
+    // batch's corrected re-emissions supersede. Applied with the
+    // evolve-in-place removals below, and only once the replacement is
+    // actually registered on the board.
+    const correctionReplacePairs: Array<{ priorId: string; newSignature: string; label: string }> = [];
 
     const visualActionsThisTurn = visualActionsThisTurnRef.current;
     // Per-turn dedup signature. Key on action + a stable content hash
@@ -5685,7 +5759,9 @@ export function VoiceTutorRealtime({
         // Tracks ALL show_problem dispatches (bank, brain-gen,
         // plan-authored) — dedup is "don't show me anything I've
         // already seen this session," regardless of source.
-        if (statement.length >= 10) {
+        // The tagged objective card is a notice, not a practice problem:
+        // it is neither hashed nor counted as presented.
+        if (statement.length >= 10 && !isObjectiveCardCommand(cmd)) {
           // simpleHash is the same djb2 variant used in the pipeline
           // so client + server hash to the same string for the same
           // statement.
@@ -6025,7 +6101,28 @@ export function VoiceTutorRealtime({
               // turn (kill + retry that answered the validator, not the
               // student). The equation is the content and the label is
               // decoration — paint it, and make the LABEL give way.
-              const collision = resolveLabelCollision({
+              // 2026-10-04: in a CORRECTION turn the re-used label means "this
+              // replaces what I wrote" — painting "<label> (2)" left the wrong
+              // original beside its fix. Replace the earlier card instead
+              // (removal applied below with the evolve-in-place removals);
+              // any other reuse keeps the relabel.
+              const priorCard = catalogRef.current.findBySignature(seen!.signature);
+              const labelReuse = decideLabelReuseOnCorrection({
+                enabled: TUTOR_LABEL_REUSE_CORRECTION_REPLACE,
+                // Replacing removes a card: only when the tutor SAID its own
+                // writing was wrong AND the new latex is a small edit of the
+                // old. (A judge note in the turn is not evidence.)
+                tutorSpeechThisTurn: turnCorrectionCtxRef.current.speech,
+                priorLatex: seen!.originalLatex ?? '',
+                newLatex: latex,
+                priorItemId: priorCard?.itemId ?? null,
+                priorPendingRevision: !!priorCard && pendingRevisionRef.current.has(priorCard.itemId),
+              });
+              const replacePrior = labelReuse.action === 'replace' && !!priorCard;
+              if (replacePrior) {
+                correctionReplacePairs.push({ priorId: priorCard!.itemId, newSignature: signature, label: rawLabel });
+              }
+              const collision = replacePrior ? { kind: 'paint' as const, label: rawLabel, changed: false } : resolveLabelCollision({
                 enabled: TUTOR_LABEL_DUP_RELABEL,
                 rawLabel,
                 priorLabel: seen!.originalLabel,
@@ -6048,7 +6145,11 @@ export function VoiceTutorRealtime({
               }
               console.warn(`[VoiceTutorRealtime] label-duplicate equation painted with ${collision.changed ? `unique label "${collision.label}"` : 'its own (already distinct) label'}: "${rawLabel}" ~= "${seen!.originalLabel}"`);
               onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}" (painted as "${collision.label}")`);
-              onDebugEvent?.('tool_call_relabel', `show_equation "${rawLabel}" → "${collision.label}"${collision.changed ? '' : ' (labels already distinct)'} — painted, no retry`);
+              if (replacePrior) {
+                onDebugEvent?.('tool_call_replace', `show_equation "${rawLabel}" replaces ${priorCard!.itemId} (${labelReuse.reason}) — "${seen!.originalLatex.slice(0, 40)}" → "${latex.slice(0, 40)}"`);
+              } else {
+                onDebugEvent?.('tool_call_relabel', `show_equation "${rawLabel}" → "${collision.label}"${collision.changed ? '' : ' (labels already distinct)'} — painted, no retry (${labelReuse.reason})`);
+              }
               // The newest equation under this heading becomes the comparison
               // baseline. originalLabel stays the BRAIN's label so a third
               // reuse still reads as the same heading and gets the next
@@ -6779,7 +6880,8 @@ export function VoiceTutorRealtime({
           }
         } catch { /* unserialisable command — skip */ }
       }
-      if (cmd.action === 'showProblem') {
+      // (An empty-segment objective card is prose, not a problem — skipped.)
+      if (cmd.action === 'showProblem' && !isObjectiveCardCommand(cmd)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p = (cmd as any).problem;
         if (p?.statement) {
@@ -8074,7 +8176,34 @@ export function VoiceTutorRealtime({
           return true; // signature failure shouldn't suppress legitimate page
         }
       });
-      if (hasFreshTeaching) {
+      // 2026-10-04 (deferred-page-flush.ts): the batch may ALREADY open a page
+      // of its own before any content (page-grouping's synthetic newPage
+      // above, or a brain newPage). Prepending the deferred page in front of
+      // it emitted two newPages back to back — an empty page titled after the
+      // segment ("Hook: Graph linear inequalities…") ahead of the page the
+      // content landed on. Keep the batch's page (titled for the content
+      // that follows) and drop the deferred one.
+      const deferredFlush = decideDeferredPageFlush({
+        enabled: TUTOR_DEFERRED_PAGE_DEDUP,
+        batch: processed as unknown as ReadonlyArray<{ action: string; title?: string }>,
+        // A "(cont.)" page belongs to the PREVIOUS segment: there the
+        // deferred segment page is kept and the continuation page dropped.
+        ownPageIsContinuation: pageDecision.action === 'continuation',
+      });
+      let droppedContinuationPage = false;
+      if (hasFreshTeaching && deferredFlush.action === 'drop-own-page' && typeof deferredFlush.ownPageIndex === 'number') {
+        const dropIdx = deferredFlush.ownPageIndex;
+        processed = processed.filter((_, i) => i !== dropIdx);
+        droppedContinuationPage = true;
+        console.log(`[VoiceTutorRealtime] page-grouping continuation page "${deferredFlush.ownPageTitle ?? ''}" DROPPED — a deferred segment page ("${pendingAdvanceNewPageRef.current.title}") takes this batch`);
+        onDebugEvent?.('auto_newpage_continuation_dropped', `"${deferredFlush.ownPageTitle ?? ''}" — deferred segment page "${pendingAdvanceNewPageRef.current.title}" kept`);
+      }
+      if (hasFreshTeaching && deferredFlush.action === 'drop-deferred') {
+        const dropped = pendingAdvanceNewPageRef.current;
+        pendingAdvanceNewPageRef.current = null;
+        console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DROPPED → "${dropped.segmentId}" ("${dropped.title}") — batch already opens "${deferredFlush.ownPageTitle ?? ''}"`);
+        onDebugEvent?.('auto_newpage_on_advance_dropped', `${dropped.segmentId}: "${dropped.title}" — batch opens its own page "${deferredFlush.ownPageTitle ?? ''}"`);
+      } else if (hasFreshTeaching) {
         const deferred = pendingAdvanceNewPageRef.current;
         // Title from the problem that is actually about to render, not the
         // authored one this page was named after at advance time — a
@@ -8099,6 +8228,8 @@ export function VoiceTutorRealtime({
         // setCurrentPage bridge never sees it). setCurrentPage syncs the view.
         catalogRef.current.openPage({ title: pageTitle, segmentId: deferred.segmentId });
         catalogRef.current.setCurrentPage(pageTitle);
+        // The continuation page opened above is now a non-active empty page.
+        if (droppedContinuationPage) catalogRef.current.gcEmptyPages();
         console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
         onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}`);
         if (titleDecision.retitled) {
@@ -8410,6 +8541,17 @@ export function VoiceTutorRealtime({
     // lives on the active page, so removing the prior never GCs the page it now
     // occupies; a DIFFERENT page emptied by the removal is GC'd inside
     // removeByIds → gcEmptyPages, and the canvas drops the matching empty bucket.
+    // Correction-turn label reuse rides the same removal: the earlier card
+    // goes only if its replacement is now registered on the board (a
+    // replacement that was dropped downstream must not cost the original).
+    for (const pair of correctionReplacePairs) {
+      const replacement = catalogRef.current.findBySignature(pair.newSignature);
+      if (replacement && replacement.itemId !== pair.priorId) {
+        evolveReplaceIds.push(pair.priorId);
+      } else {
+        onDebugEvent?.('tool_call_replace_skipped', `"${pair.label}": replacement not on the board — kept ${pair.priorId}`);
+      }
+    }
     if (evolveReplaceIds.length > 0) {
       const unique = Array.from(new Set(evolveReplaceIds));
       const idSet = new Set(unique);
@@ -9956,7 +10098,7 @@ export function VoiceTutorRealtime({
           console.log('[VoiceTutorRealtime] resume: rehydrated active problem (try-yourself card):', statement.slice(0, 80));
           break;
         }
-        if (cmd?.action === 'showProblem' && cmd.problem?.statement) {
+        if (cmd?.action === 'showProblem' && cmd.problem?.statement && !isObjectiveCardCommand(cmd)) {
           const statement = String(cmd.problem.statement);
           currentProblemRef.current = {
             trackedAtMs: Date.now(),
@@ -10736,7 +10878,13 @@ export function VoiceTutorRealtime({
         // it down?", 9 words) classifies as verification AND any
         // brain affirmation in response false-increments the streak.
         // Observed 2026-05-06 lines session.
-        const isHelpRequest = /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
+        // 2026-10-04 (second review pass): "I don't know, 5?" matched "don't
+        // know" here, so a hedged PROPOSED VALUE was neither a verification
+        // turn nor an answer — it had no effect end to end. Such a turn is
+        // not a help request (and feeds no stuck cue below) unless it also
+        // carries an explicit help shape, which isLedgerStuckCue still reads.
+        const hedgedValueAnswer = TUTOR_TURN_SHAPE_GATE && isHedgedValueAnswer(t) && !isLedgerStuckCue(lower);
+        const isHelpRequest = !hedgedValueAnswer && /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
         // Struggle ledger (spec §A): THIS is the stuck signal, not the
         // boredom-cue site — boredomCueRegex ∩ STUCK_CUE_RE is only "skip",
         // and the I'm-stuck BUTTON's prose is suppressed there entirely by
@@ -10762,8 +10910,36 @@ export function VoiceTutorRealtime({
         // two answered problems). When the ACTIVE problem is multiple-choice,
         // a bare choice letter IS the student's answer.
         const isMcqLetterAnswer = !!currentProblemRef.current?.hasChoices && /^[a-eA-E][).\s]*$/.test(t);
-        const isVerification = !isPureAck && !isHelpRequest
+        // 2026-10-04 (live, student gac-test-001; rules + cases in
+        // orchestrator/student-turn-shape.ts and answer-attempt.ts):
+        //  · a QUESTION ("how to solve: x>5 or x<3" — the digits made it a
+        //    verification turn and "Good question" credited correct=2) or a
+        //    SELF-REPORT ("i do not know fractions operations well") is never
+        //    a verification turn, so it credits neither way and never marks
+        //    the segment demonstrated;
+        //  · a bare short answer ("3.", "5", "solid.") IS one while a tutor
+        //    question is open — it failed the length/digits/six-words test
+        //    below, so six wrong answers moved no incorrect streak.
+        // The short answer is carried in its OWN field (shortAnswer), read
+        // only by the post-stream pacing credit. isVerification also feeds
+        // the false-praise-opener KILL as "this was a final-answer turn"
+        // (finalAnswerTurn) — a one-digit answer to a scaffolding
+        // sub-question must not start being graded against the card's key
+        // there, so that input only ever narrows (the shape gate) here.
+        const turnShape = TUTOR_TURN_SHAPE_GATE ? studentTurnShape(t) : 'answer_like';
+        const isVerificationBase = !isPureAck && !isHelpRequest
           && ((t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6)) || isMcqLetterAnswer);
+        const isVerification = turnShape === 'answer_like' && isVerificationBase;
+        const shortAnswer = TUTOR_SHORT_ANSWER_ATTEMPT && !isVerification && turnShape === 'answer_like'
+          && !isPureAck && !isHelpRequest
+          // A hedged value with no digit in it ("I don't know, maybe five")
+          // fails the length/digits test above the same way a bare one does.
+          && openQuestionAtTurnStartRef.current && (isBareShortAnswer(t) || hedgedValueAnswer);
+        if (turnShape !== 'answer_like' && isVerificationBase) {
+          onDebugEvent?.('pacing_turn_shape', `${turnShape} — not a verification turn: "${t.slice(0, 60)}"`);
+        } else if (shortAnswer) {
+          onDebugEvent?.('pacing_short_answer', `open question — counted as an answer: "${t.slice(0, 40)}"`);
+        }
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
         const isSessionEndSignal = sessionEndSignalRegex.test(lower);
@@ -10772,6 +10948,7 @@ export function VoiceTutorRealtime({
           turn: pacingTurnCounterRef.current,
           segId: segIdNow,
           isVerification,
+          shortAnswer,
           isSessionEndSignal,
           // Round-22: snapshot the ACTIVE problem at answer time — the
           // post-stream solve counter previously read currentProblemRef
@@ -11021,6 +11198,7 @@ export function VoiceTutorRealtime({
       // a response to anything the student said, so the note would be
       // silently burned with no chance to ever surface the correction —
       // hold it for the next REAL student-turn response instead.
+      brainCallSeqRef.current += 1;   // one per brain call; read by the praise-exclusion note's expiry
       expireStaleRelationStepNote();
       if (pendingJudgeCorrectionNoteRef.current && shouldConsumeJudgeCorrectionNote(transcript)) {
         runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
@@ -11453,11 +11631,36 @@ export function VoiceTutorRealtime({
           const lastStudent = transcriptRef.current.filter((e) => e.role === 'student').slice(-1)[0]?.text ?? '';
           const authoredText = getSegmentTruth(lessonPlanContext?.currentSegment as Parameters<typeof getSegmentTruth>[0], lessonPlanContext?.plan.id)?.problemText ?? '';
           const activeStmt = currentProblemRef.current?.statement ?? '';
-          const brought = detectStudentBroughtProblem(lastStudent, authoredText, activeStmt);
+          // 2026-10-04 (text-heuristics.ts decideStudentProblemGrounding): the
+          // legacy detector missed "how to solve: x>5 or x<3" and later
+          // grounded on a question ABOUT the board ("how do you pronounce
+          // this problem… x greater than 3 or x less than 3"). The decision
+          // now knows those request shapes and a bare relation, never grounds
+          // on a board question or on an ANSWER to the active problem, stores
+          // the student's SENTENCE as the statement (the task verb and all
+          // givens kept) and — only for an unmistakable single "solve this"
+          // relation — the relation separately, for the relation checks.
+          // Kill switch off ⇒ the legacy detector, verbatim.
+          const grounding = decideStudentProblemGrounding({
+            enabled: TUTOR_PROBLEM_GROUNDING_RELATION,
+            studentText: lastStudent,
+            authoredText,
+            activeStatement: activeStmt,
+          });
+          const brought = TUTOR_PROBLEM_GROUNDING_RELATION
+            ? grounding.problem
+            : detectStudentBroughtProblem(lastStudent, authoredText, activeStmt);
           if (brought) {
-            currentProblemRef.current = { trackedAtMs: Date.now(), statement: brought, kind: 'generic', source: 'student' };
-            console.log(`[VoiceTutorRealtime] student-brought problem detected → grounding on it: "${brought.slice(0, 80)}"`);
+            currentProblemRef.current = { trackedAtMs: Date.now(), statement: brought, ...(TUTOR_PROBLEM_GROUNDING_RELATION && grounding.relation ? { relation: grounding.relation } : {}), kind: 'generic', source: 'student' };
+            console.log(`[VoiceTutorRealtime] student-brought problem detected (${grounding.reason}) → grounding on it: "${brought.slice(0, 80)}"`);
             onDebugEvent?.('student_problem_detected', brought.slice(0, 90));
+            onDebugEvent?.('brain_problem_grounding', `grounded reason=${grounding.reason} relation=${grounding.relation ? `"${grounding.relation.slice(0, 60)}"` : 'none'} · "${brought.slice(0, 80)}"`);
+          } else if (grounding.reason === 'board-question' || grounding.reason === 'answer-check' || grounding.reason === 'assignment-only' || grounding.reason === 'bare-problem-active' || grounding.reason === 'bare-answer-shaped') {
+            // The stand-downs worth a trail: each is a turn the legacy
+            // detector could have re-grounded on (or a relation left alone).
+            if (/\d/.test(lastStudent)) {
+              onDebugEvent?.('brain_problem_grounding', `skipped reason=${grounding.reason} active=${activeStmt ? 'yes' : 'no'} · "${lastStudent.slice(0, 80)}"`);
+            }
           }
         }
 
@@ -11895,6 +12098,9 @@ export function VoiceTutorRealtime({
         // start (so only THIS turn's advance can trigger the auto-card), and
         // the one-shot latch for the synthetic tail.
         const segmentCardsRenderedThisAttempt: string[] = [];
+        // Segment id of a show_segment_card that hit a segment with NO
+        // authored card in this attempt (empty-segment-card.ts).
+        let emptySegmentCardThisAttempt: string | null = null;
         let segmentCardRenderedThisAttempt = false;
         const renderedTextsThisAttempt: string[] = [];
         // Substitute-same-only: statements of the brain's OWN show_problem
@@ -12961,6 +13167,75 @@ export function VoiceTutorRealtime({
                       console.warn(`[brain-orchestrator] deterministic praise-contradiction check (${branch}): affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
                       onDebugEvent?.('praise_contradiction_kill', `branch=${branch} affirmed=${affirmed}`);
                       continue;
+                    }
+                  }
+                  // Praise-then-exclusion (2026-10-04, live student
+                  // gac-test-001): "5" → "Right. $5$ isn't included since the
+                  // inequality is strict — but… like $6$, satisfies…". The
+                  // student's own problem, so no key: false_praise_opener had
+                  // nothing to compare and the branches above read only a
+                  // denial AFTER the opener's captured clause.
+                  // THIS CHECK NEVER KILLS (review, same day): the first cut
+                  // killed + retried, and fired on correct tutoring ("Yes! 6
+                  // isn't in the gap between 3 and 5, so it's a solution.") —
+                  // reversing a correct affirmation and spending the turn's
+                  // one retry. It now only (i) emits its advisory event and
+                  // (ii), when the open question asked for a value that
+                  // SATISFIES, plants a neutral note for the NEXT brain turn.
+                  // The note is deterministic (the LLM judge may not replace
+                  // it), never overwrites a pending note, arms no volunteer
+                  // deadline and does not touch judgeRetriesUsed. Shape and
+                  // cases: voice/praise-exclusion.ts.
+                  if (!attemptKilled && TUTOR_PRAISE_EXCLUSION_KILL) {
+                    // A retry replaces the text an earlier attempt's note
+                    // described: withdraw that note (this turn's own — the
+                    // slot was emptied when the turn began).
+                    // Not on a CONTINUATION attempt: that one adds new content
+                    // after text that WAS delivered, so the note still
+                    // describes what the student heard.
+                    if (attempt > 0 && !attemptText && !isContinuationAttempt
+                        && isPraiseExclusionNote(pendingJudgeCorrectionNoteRef.current)
+                        && pendingJudgeCorrectionNoteRef.current === deterministicCorrectionNoteRef.current) {
+                      pendingJudgeCorrectionNoteRef.current = null;
+                      praiseExclusionNoteRef.current = null;
+                      onDebugEvent?.('praise_contradiction_exclusion_note_withdrawn', 'attempt retried — the described text was never delivered');
+                    }
+                    const exclusionTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                    const exclusionInput = {
+                      enabled: true,
+                      studentUtterance: transcript ?? '',
+                      tutorQuestion: [...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '',
+                      ackExclusion: TUTOR_ACK_NOT_AFFIRM,
+                    };
+                    const exclusion = decidePraiseExclusion({ ...exclusionInput, tutorText: exclusionTextSoFar });
+                    // Report once: only on the sentence that completes the shape.
+                    const exclusionIsNew = exclusion.action !== 'none'
+                      && (!attemptText || decidePraiseExclusion({ ...exclusionInput, tutorText: attemptText }).action === 'none');
+                    if (exclusionIsNew) {
+                      console.warn(`[brain-orchestrator] praise-then-exclusion ADVISORY (no kill, ${exclusion.reason}): "${exclusionTextSoFar.slice(0, 120)}"`);
+                      onDebugEvent?.('praise_contradiction_exclusion_advisory', `value=${exclusion.value} reason=${exclusion.reason} clause="${(exclusion.clause ?? '').slice(0, 60)}"`);
+                      if (exclusion.value && shouldPlantPraiseExclusionNote({
+                        enabled: TUTOR_PRAISE_EXCLUSION_NOTE,
+                        decision: exclusion,
+                        pendingNote: pendingJudgeCorrectionNoteRef.current,
+                      })) {
+                        const exclusionNote = buildPraiseExclusionNote(exclusion.value);
+                        pendingJudgeCorrectionNoteRef.current = exclusionNote;
+                        deterministicCorrectionNoteRef.current = exclusionNote;
+                        // "Your previous reply…" is only true on the very
+                        // next brain call, about the same problem and page:
+                        // expirePraiseExclusionNote drops it otherwise.
+                        praiseExclusionNoteRef.current = {
+                          note: exclusionNote,
+                          plantedCall: brainCallSeqRef.current,
+                          scope: {
+                            statement: currentProblemRef.current?.statement ?? '',
+                            epoch: servedProblemStatementsRef.current.size,
+                            pageKey: catalogRef.current.getCurrentPageTitle() ?? '',
+                          },
+                        };
+                        onDebugEvent?.('praise_contradiction_exclusion_note_planted', `value=${exclusion.value}`);
+                      }
                     }
                   }
                   // R58 false-final-assertion check (live, portal-71d11dac —
@@ -14901,9 +15176,49 @@ export function VoiceTutorRealtime({
                           console.log(`[brain-orchestrator] show_segment_card resolved (${seg.kind}): ${segId} → "${body.slice(0, 60)}…"`);
                           onDebugEvent?.('show_segment_card_resolved', `${segId} (${seg.kind})`);
                           segmentCardsRenderedThisAttempt.push(segId);
-                        } else {
+                        } else if (seg.kind === 'recap') {
+                          // Recap with nothing to list (or deliberately skipped
+                          // above — no LO covered yet): unchanged.
                           console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
                           onDebugEvent?.('show_segment_card_no_truth', segId);
+                        } else {
+                          // 2026-10-04 (empty-segment-card.ts): a segment with
+                          // no authored card (a generated plan's hook has
+                          // script: null) was ignored silently — the brain had
+                          // just promised "a problem of your own to try",
+                          // nothing rendered, nothing was asked: 48 s of
+                          // silence. (a) Show a compact card from the
+                          // segment's objective instead of nothing; (b) note
+                          // the miss so the end-of-attempt check below can
+                          // continue a turn that handed the student nothing.
+                          emptySegmentCardThisAttempt = segId;
+                          let loDescription = '';
+                          if (plan.los?.length) {
+                            for (const lo of plan.los) {
+                              if (segId.startsWith(`${lo.id}-`) || segId === lo.id) { loDescription = lo.description; break; }
+                            }
+                          }
+                          const fallbackCard = resolveEmptySegmentCard({
+                            enabled: TUTOR_EMPTY_SEGMENT_CARD_FALLBACK,
+                            kind: seg.kind,
+                            goal: s.goal,
+                            title: s.title,
+                            loDescription,
+                          });
+                          if (fallbackCard) {
+                            catalogRef.current.setCurrentSegment(segId);
+                            // Tagged NON-problem card: the problem tracker and
+                            // the resume rehydrator skip it (objective prose
+                            // must never become the active problem).
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            resolvedCmd = buildObjectiveCardCommand(fallbackCard, stripWbEmphasisText(fallbackCard.body)) as unknown as any;
+                            console.log(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no authored card — objective card from ${fallbackCard.source}: "${fallbackCard.body.slice(0, 60)}"`);
+                            segmentCardsRenderedThisAttempt.push(segId);
+                          } else {
+                            console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
+                          }
+                          onDebugEvent?.('show_segment_card_no_truth', fallbackCard ? `${segId} (objective card: ${fallbackCard.source})` : segId);
+                          onDebugEvent?.('tool_call_segment_card_empty', `${segId} kind=${seg.kind} fallback=${fallbackCard ? fallbackCard.source : 'none'}`);
                         }
                       } else {
                         console.warn(`[brain-orchestrator] show_segment_card: plan has no segments to fall back on.`);
@@ -15018,6 +15333,15 @@ export function VoiceTutorRealtime({
                         pageKey: catalogRef.current.getCurrentPageTitle() ?? '',
                         epoch: servedProblemStatementsRef.current.size,
                       });
+                      // A student-brought problem's statement is the student's
+                      // sentence ("how do I solve 3x + 2 = 11?"), which the
+                      // statement parser rightly refuses; when grounding
+                      // isolated the ONE relation to solve, that is the
+                      // problem relation. (New trail objects only.)
+                      const explicitProblemRelation = currentProblemRef.current?.relation;
+                      if (synced.problemChanged && explicitProblemRelation) {
+                        synced.trail.problemRelation = extractProblemRelation(explicitProblemRelation);
+                      }
                       relationTrailRef.current = synced.trail;
                       expireStaleRelationStepNote();
                       if (synced.problemChanged && synced.trail.statement) {
@@ -15104,10 +15428,26 @@ export function VoiceTutorRealtime({
                       typeof rawAnchor === 'number' && Number.isInteger(rawAnchor) && rawAnchor >= 1
                         ? rawAnchor
                         : undefined;
-                    const result = await handleWhiteboardCommand(
-                      [cmd],
-                      repairAnchor !== undefined ? { anchorSentence: repairAnchor } : undefined,
-                    );
+                    // Correction-turn context for the show_equation label rule
+                    // (decideLabelReuseOnCorrection): set for this one call,
+                    // cleared after it.
+                    if (name === 'show_equation') {
+                      turnCorrectionCtxRef.current = {
+                        correctionNote: correctionNoteThisTurn,
+                        speech: `${aggregatedFullText} ${attemptSentences.join(' ')}`.trim(),
+                      };
+                    }
+                    let result: Awaited<ReturnType<typeof handleWhiteboardCommand>>;
+                    try {
+                      result = await handleWhiteboardCommand(
+                        [cmd],
+                        repairAnchor !== undefined ? { anchorSentence: repairAnchor } : undefined,
+                      );
+                    } finally {
+                      // A throw must not leave this turn's speech armed for
+                      // a later, unrelated show_equation.
+                      turnCorrectionCtxRef.current = { correctionNote: false, speech: '' };
+                    }
                     // Relation step note: record where ITS equation landed
                     // (ids, or a dedup hit = already on the board). Settled
                     // at the end of this brain call. Ids ACCUMULATE across
@@ -16246,8 +16586,29 @@ export function VoiceTutorRealtime({
                   // is exactly the trust-critical class the correction note
                   // exists for (the note's safety-valve wording already
                   // covers a brain that re-checks and stands by its call).
+                  // 2026-10-04 (live, student gac-test-001): keying on the
+                  // claim's TEXT made every flagged "Not quite. Close though."
+                  // a suspected false denial — three were correct denials the
+                  // judge had flagged for the words "Close though", and each
+                  // planted a retraction note and withheld the incorrect
+                  // credit. The judge now states its conclusion per issue
+                  // (studentAnswerVerdict / issueKind) and
+                  // voice/judge-issue-decision.ts decides from that: a
+                  // retraction note + withheld credit only when the judge
+                  // says the student was right; tone_or_wording does nothing.
+                  // A response without the fields (or the flag off) takes the
+                  // claim-text rule below, unchanged.
+                  const advisoryDecisions = advisoryIssues.map((i) => ({
+                    claim: i.claim,
+                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory' }),
+                  }));
+                  for (const d of advisoryDecisions) {
+                    if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
+                      onDebugEvent?.('judge_issue_decision', `advisory · ${describeJudgeIssueDecision(d.decision)} · ${d.claim.slice(0, 50)}`);
+                    }
+                  }
                   const noteworthyAdvisoryIssues = advisoryIssues.filter(
-                    (i) => hasMathExpression(i.claim) || DENIAL_RE.test(i.claim),
+                    (_i, idx) => advisoryDecisions[idx].decision.plantNote,
                   );
                   // Live 2026-09-06 (portal-4bbe5d91): the judge flagged a
                   // CORRECT "Not quite" (the student had a sign error against a
@@ -16261,7 +16622,15 @@ export function VoiceTutorRealtime({
                     current: currentProblemRef.current,
                     boardText: boardSummary,
                   });
-                  const denialFlagged = noteworthyAdvisoryIssues.some((i) => DENIAL_RE.test(i.claim));
+                  // Second review pass (2026-10-04): the suppression test was
+                  // derived from withholdCredit, which lost a maths-bearing
+                  // denial of an answer the judge itself called INCORRECT (a
+                  // neutral note, nothing withheld) — its note was planted
+                  // against a verified key again. The suppression reads the
+                  // claim as HEAD did (isSuppressibleDenial); credit is still
+                  // withheld only where the decision says so.
+                  const denialFlagged = advisoryDecisions.some((d) => isSuppressibleDenial(d));
+                  const creditWithheld = advisoryDecisions.some((d) => d.decision.withholdCredit);
                   const denialVerifiedRight = denialFlagged && !!judgeVerifiedKey
                     && studentDisagreesWithVerified(transcript ?? '', judgeVerifiedKey, currentProblemRef.current?.choiceOptions, {
                       // The statement of the problem the key came from — same
@@ -16271,12 +16640,18 @@ export function VoiceTutorRealtime({
                         ? currentProblemRef.current.statement
                         : pendingGeneratedAnswerRef.current?.statement,
                     });
-                  if (denialFlagged && !denialVerifiedRight) judgeFlaggedDenialThisTurnRef.current = true;
+                  if (creditWithheld && !denialVerifiedRight) judgeFlaggedDenialThisTurnRef.current = true;
                   if (denialVerifiedRight) {
                     onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
                   }
                   if (noteworthyAdvisoryIssues.length > 0 && !denialVerifiedRight) {
-                    const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim), transcript);
+                    // Wording follows the decision: 'retraction' only when the
+                    // judge said the student was right; 'neutral' otherwise;
+                    // the pre-2026-10-04 text when the fields are missing.
+                    const advisoryNotePlan = planJudgeNote(advisoryDecisions);
+                    // buildPlannedJudgeNote = buildJudgeCorrectionNote, plus
+                    // the neutral claims appended when the plan is legacy.
+                    const advisoryCorrectionNote = buildPlannedJudgeNote(advisoryNotePlan, transcript, { guardAttribution: TUTOR_JUDGE_STRUCTURED_VERDICT });
                     // 2026-10-03: never over a pending DETERMINISTIC note
                     // (relation-step witness / exact answer dispute) — the
                     // judge has a known false-positive rate and the witness
@@ -16299,7 +16674,20 @@ export function VoiceTutorRealtime({
                   }
                 }
                 if (killIssues.length > 0) {
-                  if (killIssues.some((i) => DENIAL_RE.test(i.claim))) judgeFlaggedDenialThisTurnRef.current = true;
+                  // 2026-10-04: same decision as the advisory branch above —
+                  // credit is withheld (and a retraction worded) only when the
+                  // judge said the student was right; without the structured
+                  // fields this is the claim-text rule, unchanged.
+                  const killDecisions = killIssues.map((i) => ({
+                    claim: i.claim,
+                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill' }),
+                  }));
+                  for (const d of killDecisions) {
+                    if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
+                      onDebugEvent?.('judge_issue_decision', `kill-class · ${describeJudgeIssueDecision(d.decision)} · ${d.claim.slice(0, 50)}`);
+                    }
+                  }
+                  if (killDecisions.some((d) => d.decision.withholdCredit)) judgeFlaggedDenialThisTurnRef.current = true;
                   const summary = killIssues.map((i, idx) =>
                     `(${idx + 1}) Claim: "${i.claim.slice(0, 120)}" — ${i.why.slice(0, 200)}`
                   ).join(' ');
@@ -16322,7 +16710,8 @@ export function VoiceTutorRealtime({
                   // hand and can own a false reject. Advisory stays advisory:
                   // no kill, no re-narration; the note itself instructs
                   // silent continue when the brain stands by its claim.
-                  const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim), transcript);
+                  const killNotePlan = planJudgeNote(killDecisions);
+                  const correctionNote = buildPlannedJudgeNote(killNotePlan, transcript, { guardAttribution: TUTOR_JUDGE_STRUCTURED_VERDICT });
                   // 2026-10-03: same protection as the advisory plant above
                   // — a pending deterministic note is not replaced.
                   expireStaleRelationStepNote();
@@ -16502,6 +16891,54 @@ export function VoiceTutorRealtime({
                 onDebugEvent?.('brain_turn_continuation', `${continuation.reason} session=${turnContinuationsSessionRef.current} cap=${attemptCap} · "${attemptText.slice(0, 80)}"`);
               }
             }
+          }
+        }
+
+        // Empty segment card (empty-segment-card.ts) — one more trigger for the
+        // same continuation: this attempt asked for a segment card that has
+        // no authored content, and the turn ends with no question and no
+        // problem card ("Next up: … with a problem of your own to try." →
+        // 48 s of silence). Same channel, same counters (one per turn, two
+        // per session), its own reason text. Never stacked on the opening /
+        // fallback-board continuation above (that one already pushed its
+        // rejection, so the length check stands this down).
+        if (!attemptKilled && rejectionsThisAttempt.length === 0 && emptySegmentCardThisAttempt) {
+          const emptyCardSegId: string = emptySegmentCardThisAttempt;
+          const demoWrapPhaseNow =
+            sessionWrapMinutes != null &&
+            (sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit)) &&
+            Math.floor((Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current)) / 60000) >= sessionWrapMinutes;
+          const emptyCardTurnHasQuestion = /[?？]/.test(attemptText);
+          const emptyCardProblemPainted = segmentCardRenderedThisAttempt
+            || toolNamesThisAttempt.some((nm) => nm === 'show_problem' || nm === 'generate_problem' || nm === 'show_try_yourself' || nm === 'show_quiz');
+          const emptyCardContinuation = decideEmptyCardContinuation({
+            enabled: TUTOR_TURN_CONTINUATION && TUTOR_EMPTY_SEGMENT_CARD_CONTINUE,
+            emptyCardRequested: true,
+            turnHasQuestion: emptyCardTurnHasQuestion,
+            problemPaintedThisAttempt: emptyCardProblemPainted,
+            attemptKilled,
+            otherRejections: rejectionsThisAttempt.length,
+            retryBudgetLeft: attempt < attemptCap,
+            continuationsThisTurn: turnContinuationsUsed,
+            continuationsThisSession: turnContinuationsSessionRef.current,
+            studentInputPending: queuedTranscriptsRef.current.length > 0,
+            studentHoldArmed: TUTOR_STUDENT_HOLD && (!!pendingStudentHoldRef.current || !!studentHoldRef.current),
+            inWrapPhase: wrapSignal || demoWrapPhaseNow || closeNotesFiredRef.current,
+          });
+          onDebugEvent?.(
+            'brain_turn_incomplete',
+            `empty-segment-card "${emptyCardSegId}": question=${emptyCardTurnHasQuestion} problem=${emptyCardProblemPainted} → ${emptyCardContinuation.continue ? 'continue' : 'no-continue'} (${emptyCardContinuation.reason})`,
+          );
+          if (emptyCardContinuation.continue) {
+            turnContinuationsUsed++;
+            turnContinuationsSessionRef.current++;
+            attemptCap = continuationAttemptCap({ maxValidatorRetries: MAX_VALIDATOR_RETRIES, continuationsThisTurn: turnContinuationsUsed });
+            continuationNextAttempt = true;
+            continuationBubble = { id: attemptStreamingId, text: aggregatedFullText.trim() };
+            continuationDeliveredRef.current = { turnStartMs: t0, fromMs: Date.now() };
+            rejectionsThisAttempt.push({ action: TURN_CONTINUATION_ACTION, reason: describeEmptySegmentCardTurn(emptyCardSegId) });
+            console.warn(`[brain-orchestrator] empty-segment-card: "${emptyCardSegId}" has no authored card and the turn asked nothing — auto-continuing (attempt cap now ${attemptCap}).`);
+            onDebugEvent?.('brain_turn_continuation', `empty-segment-card "${emptyCardSegId}" session=${turnContinuationsSessionRef.current} cap=${attemptCap} · "${attemptText.slice(0, 80)}"`);
           }
         }
 
@@ -17108,11 +17545,41 @@ export function VoiceTutorRealtime({
           // Measured over 591 real tutor turns: 35 change classification —
           // 27 none→correct, 7 incorrect→none, 1 incorrect→correct, and
           // ZERO that previously had credit lose it.
-          const verdictRead = readPacingVerdict(fullText);
+          // 2026-10-04 (live, student gac-test-001): the read now also
+          // (a) refuses acknowledgements as affirmations ("Good question",
+          // "Good to know" — they credited correct=2/3 on the student's own
+          // questions), and (b) reads corrections that carry no correction
+          // word, in the head of the turn only ("Let's try that again…
+          // doesn't satisfy…", and the opposite member of a closed pair to a
+          // short answer: "below the line." → "Above the line."; praise that
+          // then excludes the student's own value — "Right. 5 isn't
+          // included…" — is credited NEITHER way). Review, same day: each
+          // reads only an unmistakable case — the predicate's subject must be
+          // the student's value. Each has its own kill switch; both off ⇒ the
+          // R53 read exactly. Cases: scripts/test-pacing-verdict.ts.
+          const verdictRead = readPacingVerdict(fullText, {
+            studentText: ledgerStudentTextRef.current,
+            ackExclusion: TUTOR_ACK_NOT_AFFIRM,
+            widenedCorrection: TUTOR_CORRECTION_WIDENING,
+          });
+          // A bare short answer to an open question counts for CREDIT here
+          // (see the turn-start classifier); it is not ver.isVerification.
+          const countsAsAnswer = !!((ver?.isVerification || ver?.shortAnswer) && fullText.length > 0);
+          if (countsAsAnswer) {
+            if (verdictRead.ackOpener && !verdictRead.isAffirm) {
+              onDebugEvent?.('pacing_ack_not_affirm', `"${fullText.slice(0, 50)}"`);
+            }
+            if (verdictRead.correctionSource === 'head' || verdictRead.correctionSource === 'restatement') {
+              onDebugEvent?.('pacing_correction_widened', `source=${verdictRead.correctionSource} student="${ledgerStudentTextRef.current.slice(0, 30)}" tutor="${fullText.slice(0, 50)}"`);
+            }
+            if (verdictRead.ownValueExcluded) {
+              onDebugEvent?.('pacing_own_value_excluded', `student="${ledgerStudentTextRef.current.slice(0, 30)}" tutor="${fullText.slice(0, 50)}"`);
+            }
+          }
           const isAffirm = verdictRead.isAffirm;
           const isCorrect = verdictRead.isCorrection;
           const decision = decidePacingCredit({
-            isVerification: !!(ver?.isVerification && fullText.length > 0),
+            isVerification: countsAsAnswer,
             isAffirm,
             isCorrect,
             objectiveSignal,
@@ -17332,7 +17799,13 @@ export function VoiceTutorRealtime({
         // credit); a deterministic objective-correct proof still vetoes.
         // Pacing streak refs are NOT touched.
         if (TUTOR_STRUGGLE_LEDGER && !ledgerWrongFedThisTurnRef.current
-            && inferWrongEvent({ studentText: ledgerStudentTextRef.current, tutorText: fullText, objectiveCorrect: !!objectiveSignal })) {
+            && inferWrongEvent({
+              studentText: ledgerStudentTextRef.current, tutorText: fullText, objectiveCorrect: !!objectiveSignal,
+              // 2026-10-04: questions / self-reports are not answer attempts;
+              // corrections without a correction word count (same switches
+              // as the pacing read above).
+              turnShapeGate: TUTOR_TURN_SHAPE_GATE, widenedCorrection: TUTOR_CORRECTION_WIDENING, ackExclusion: TUTOR_ACK_NOT_AFFIRM,
+            })) {
           const segId = ver?.segId ?? currentSegmentIdRef.current;
           const loId = segId ? loForSegment(segId) : activeLedgerLoRef.current;
           const prior = loId
@@ -21792,6 +22265,35 @@ export function VoiceTutorRealtime({
         warmupKickoffRef.current = null;
         setWarmupFailed(false);
         realtime.unlockAudio(); audioUnlockedRef.current = true;
+        // 2026-10-04: open the production mic exactly as the Start tap and
+        // the resume gesture do. startListening is the only thing that feeds
+        // the STUDENT track of the session recording; a session whose first
+        // gesture was a homework upload latched the start here and never
+        // called it — that sitting had no student recording at all. Runs
+        // once: this block is entered only on the call that latches
+        // hasStarted (the hook has no in-flight guard of its own). A focused
+        // composer keeps its mute — its blur opens the mic.
+        // Live relay state through the ref (this closure's `realtime` can be
+        // a render behind); connected = the hook's own isConnected rule.
+        const rtStateNow = productionStateRef.current;
+        const rtConnectedNow = rtStateNow !== 'disconnected' && rtStateNow !== 'connecting' && rtStateNow !== 'error';
+        const listenOnGesture = shouldStartListeningOnGestureStart({
+          enabled: TUTOR_GESTURE_START_LISTENING,
+          sessionMode: sessionMode === 'text' ? 'text' : 'voice',
+          micMuted: isMicMutedRef.current,
+          startLatchedNow: true,
+          composerFocused: studentTypingRef.current,
+          alreadyOpened: rtStateNow === 'listening',
+        });
+        // Same guard as the composer's blur: never startListening before the
+        // relay is connected — a pre-connect call pushed the relay into
+        // 'listening' and armed the dead-Start-tap bug (2026-08-17). There is
+        // no "listen once connected" intent for an already-latched start
+        // (the queued Start tap stands down once hasStarted is set), so this
+        // path skips; the composer's blur / the mic tap opens the mic.
+        const listenNow = listenOnGesture.start && rtConnectedNow;
+        onDebugEvent?.('start_listening_gesture', `start=${listenNow} reason=${listenOnGesture.start && !rtConnectedNow ? 'not-connected' : listenOnGesture.reason}`);
+        if (listenNow) realtime.startListening();
       }
       // A gesture-less start (homework text kickoff) tripped both guards
       // above before any gesture could unlock — unlock on this first real one.

@@ -105,3 +105,89 @@ export const TUTOR_JUDGE_NOTE_KEEP_DETERMINISTIC =
  *  pinned and the "neither value is confirmed" note, as before. */
 export const TUTOR_ANSWER_DISPUTE_TIEBREAK =
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_DISPUTE_TIEBREAK !== 'off';
+
+// ── Board/flow round (2026-10-04) ──────────────────────────────────────────
+
+/** Student-problem grounding recognises "how to solve …" / "solve: …" / a
+ *  bare relation, never grounds on a question ABOUT the board, and stores a
+ *  symbolic relation as the problem statement. Off ⇒ the legacy detector. */
+export const TUTOR_PROBLEM_GROUNDING_RELATION =
+  process.env.NEXT_PUBLIC_TUTOR_PROBLEM_GROUNDING_RELATION !== 'off';
+
+/** A show_equation that reuses a label with different latex in a CORRECTION
+ *  turn replaces the earlier card instead of painting "<label> (2)" beside
+ *  it. Off ⇒ always the relabel (TUTOR_LABEL_DUP_RELABEL). */
+export const TUTOR_LABEL_REUSE_CORRECTION_REPLACE =
+  process.env.NEXT_PUBLIC_TUTOR_LABEL_REUSE_CORRECTION_REPLACE !== 'off';
+
+/** show_segment_card on a segment with no authored card renders a compact
+ *  card from the segment's objective instead of being ignored silently. */
+export const TUTOR_EMPTY_SEGMENT_CARD_FALLBACK =
+  process.env.NEXT_PUBLIC_TUTOR_EMPTY_SEGMENT_CARD_FALLBACK !== 'off';
+
+/** A turn that asked for a segment card with no authored content and ended
+ *  without a question or a problem is auto-continued (shares the
+ *  turn-continuation budget: one per turn, two per session). */
+export const TUTOR_EMPTY_SEGMENT_CARD_CONTINUE =
+  process.env.NEXT_PUBLIC_TUTOR_EMPTY_SEGMENT_CARD_CONTINUE !== 'off';
+
+/** The deferred segment-advance newPage is dropped when the batch already
+ *  opens its own page before any content (no empty page in between). */
+export const TUTOR_DEFERRED_PAGE_DEDUP =
+  process.env.NEXT_PUBLIC_TUTOR_DEFERRED_PAGE_DEDUP !== 'off';
+
+/** A session started by a non-mic gesture (upload / board action / agenda
+ *  pick through the handle) opens the production mic the way the Start tap
+ *  does, so the student track is recorded. */
+export const TUTOR_GESTURE_START_LISTENING =
+  process.env.NEXT_PUBLIC_TUTOR_GESTURE_START_LISTENING !== 'off';
+
+// ── Verdict/counting round (2026-10-04) ────────────────────────────────────
+
+/** A turn that opens with an affirmation and then says the student's OWN bare
+ *  value is excluded / does not satisfy is killed and re-asked once (attempt 0
+ *  only, and only when the open question asked for a value that satisfies).
+ *  Off ⇒ no kill and no advisory event. */
+export const TUTOR_PRAISE_EXCLUSION_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_PRAISE_EXCLUSION_KILL !== 'off';
+
+/** The judge's structured fields (studentAnswerVerdict / issueKind) decide
+ *  whether a flagged issue plants a correction note and withholds credit, and
+ *  which note wording is used. Off ⇒ keyed on the claim text, as before. */
+export const TUTOR_JUDGE_STRUCTURED_VERDICT =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_STRUCTURED_VERDICT !== 'off';
+
+/** Corrections without a correction word are read in the head of the tutor's
+ *  turn ("let's try that again", "doesn't satisfy", "isn't included", and the
+ *  opposite member of a closed pair to the student's short answer) for the
+ *  pacing streak and the struggle ledger. Off ⇒ the original markers only. */
+export const TUTOR_CORRECTION_WIDENING =
+  process.env.NEXT_PUBLIC_TUTOR_CORRECTION_WIDENING !== 'off';
+
+/** A bare short answer (a number, or one to three content words) is a
+ *  verification turn while a tutor question is open. Off ⇒ the length /
+ *  digits / maths-language / six-word test only. */
+export const TUTOR_SHORT_ANSWER_ATTEMPT =
+  process.env.NEXT_PUBLIC_TUTOR_SHORT_ANSWER_ATTEMPT !== 'off';
+
+/** "Good question" / "Good to know" / "Good thinking" acknowledge the
+ *  student's move and are not affirmations of an answer. Off ⇒ any
+ *  affirmation word at the start of a head sentence counts, as before. */
+export const TUTOR_ACK_NOT_AFFIRM =
+  process.env.NEXT_PUBLIC_TUTOR_ACK_NOT_AFFIRM !== 'off';
+
+/** A student turn that is a question or a self-report of difficulty is never
+ *  a verification turn and never a ledger answer attempt (credits neither
+ *  correct nor incorrect). Off ⇒ no shape test, as before. */
+export const TUTOR_TURN_SHAPE_GATE =
+  process.env.NEXT_PUBLIC_TUTOR_TURN_SHAPE_GATE !== 'off';
+
+/** Review of the verdict/counting round (2026-10-04): the praise-then-
+ *  exclusion guard NO LONGER KILLS — TUTOR_PRAISE_EXCLUSION_KILL above now
+ *  only switches its detection (the advisory event) on or off; the name is
+ *  kept because this file is append-only. On an unmistakable detection the
+ *  guard plants a neutral correction note for the NEXT brain turn (never over
+ *  a pending note; protected from the LLM judge like the other deterministic
+ *  notes; no volunteer deadline). Off ⇒ the advisory event only. */
+export const TUTOR_PRAISE_EXCLUSION_NOTE =
+  process.env.NEXT_PUBLIC_TUTOR_PRAISE_EXCLUSION_NOTE !== 'off';

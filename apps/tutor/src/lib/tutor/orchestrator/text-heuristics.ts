@@ -97,6 +97,427 @@ export function detectStudentBroughtProblem(studentText: string, authoredText: s
   return studentText.trim();
 }
 
+// ── Student-problem grounding v2 (2026-10-04) ─────────────────────────────
+// WHY: a live session grounded the active problem on a QUESTION ABOUT the
+// board. The student's real problem, typed "how to solve: x>5 or x<3", did
+// not match WORK_INTENT_RE ("how to solve" is not a request shape it knows);
+// a later "how do you pronounce this problem… x greater than 3 or x less
+// than 3" did ("how do you" + a digit), so that mis-stated sentence became
+// <active_problem>, the brain boarded "x > 3 or x < 3", and the relation
+// checks stood down ("no relation in the statement") for four minutes.
+
+/** Request shapes WORK_INTENT_RE does not know: "how to solve …", "what is
+ *  the solution to …". (how do I / help me / can you are already covered.) */
+const SOLVE_REQUEST_RE = /\b(?:how\s+to\s+(?:solve|do|find|graph|simplify|factor|calculate|compute|evaluate|work\s+out)\b|what(?:'s|\s+is)\s+the\s+solution\s+(?:to|of|for)\b)/i;
+/** Sentence-INITIAL imperative: "solve: …", "solve this …", "please solve
+ *  for …". Sentence-initial on purpose — "so I solve this and get 5" /
+ *  "let me solve this" is the student narrating their own work (the reason
+ *  WORK_INTENT_RE excludes bare work-verbs). No lookbehind: ships to
+ *  browsers, and older Safari fails to parse one. */
+const SOLVE_IMPERATIVE_RE = /(?:^|[.!?;:,]\s+|\bplease\s+)\s*solve\s*(?::|\s+this\b|\s+for\b)/i;
+
+/** A question ABOUT what is on the board (how it is read, what it means, why
+ *  it is so) — never a new problem to work. */
+const BOARD_QUESTION_RES: RegExp[] = [
+  /\bhow\s+(?:do|would|should|can|could|does|did)\s+(?:you|i|we|one|u)\s+(?:pronounce|say|read|write|spell|call)\b/i,
+  /\bhow\s+to\s+(?:pronounce|say|read|write|spell)\b/i,
+  /\bhow\s+is\s+(?:this|that|it)\s+(?:pronounced|said|read|written|spelled)\b/i,
+  /\bwhat\s+(?:does|do|did|would)\b[^?]*\bmean\b/i,
+  /\bwhat(?:'s|\s+is)\s+(?:this|that|it)\b[^?]*\bcalled\b/i,
+  /\bwhy\b/i,
+  // Sentence-initial only: "is that x < 3?" asks about the board; "what is
+  // this: 3x + 2 = 11 — can you solve it" does not start with it.
+  /(?:^|[.!?;:,]\s+)\s*(?:(?:so|wait|but|and|oh|ok|okay|um|hmm)[\s,]+)*is\s+(?:that|it|this)\b/i,
+];
+
+export function isBoardQuestion(text: string): boolean {
+  const t = (text ?? '').trim();
+  if (!t) return false;
+  return BOARD_QUESTION_RES.some((re) => re.test(t));
+}
+
+const RELATION_CMP_RE = /(<=|>=|!=|≤|≥|≠|<|>|=)/g;
+const isCmpToken = (t: string): boolean => /^(?:<=|>=|!=|≤|≥|≠|<|>|=)$/.test(t);
+const MATH_FN_RE = /(?:sqrt|sin|cos|tan|log|ln|abs)/gi;
+/** A function name standing alone as a token ("2 sin x = 1"). */
+const isFnToken = (t: string): boolean => /^(?:sqrt|sin|cos|tan|log|ln|abs)$/i.test(t);
+/** A token that can sit inside an expression: a number, a single-letter
+ *  variable, or a run mixing them with operators ("3x+2", "x^2-4",
+ *  "2(x+5)"). Two adjacent letters make it a WORD (function names aside). */
+function isMathToken(t: string): boolean {
+  if (!t) return false;
+  const core = t.replace(MATH_FN_RE, '');
+  if (!/^[0-9a-z^+\-−*/×÷·().√π|]+$/i.test(core)) return false;
+  return !/[a-z]{2,}/i.test(core);
+}
+const hasAlnum = (t: string): boolean => /[0-9a-z]/i.test(t);
+const isConnector = (t: string): boolean => /^(?:or|and)$/i.test(t);
+const SIGNED_NUMBER_RE = /^[+\-−]?\d+(?:\.\d+)?(?:\/\d+)?$/;
+
+interface RelToken {
+  t: string;
+  /** Punctuation (":", ",", "?", …) separated this token from the next one. */
+  breakAfter: boolean;
+  /** Punctuation separated this token from the previous one. */
+  breakBefore: boolean;
+}
+
+/** One relation found in a message: operand(s) · comparator · operand(s);
+ *  a chain ("3 < x < 5") is ONE span. */
+interface RelationSpan {
+  start: number;
+  end: number;
+  text: string;
+  /** `<variable> = <number>` (either order) — the shape of a stated ANSWER
+   *  or a given value, never a problem to solve. */
+  assignment: boolean;
+  answerShaped: boolean;
+  hasVariable: boolean;
+  hasDigit: boolean;
+  /** The span's edges are not certain: an operand sat directly against the
+   *  span with no operator between ("solve for x 3x + 2 = 11"), or the span
+   *  holds a function ("2 sin x = 1", "f(x) = 2x + 1"). Good enough to know
+   *  the message holds math; NOT good enough to hand to a relation check. */
+  doubtful: boolean;
+}
+
+function tokenizeForRelations(text: string): RelToken[] {
+  const norm = (text ?? '')
+    .replace(/\$/g, ' ')
+    .replace(/\\(?:leqslant|leq|le)(?![a-zA-Z])/g, '≤')
+    .replace(/\\(?:geqslant|geq|ge)(?![a-zA-Z])/g, '≥')
+    .replace(/\\(?:neq|ne)(?![a-zA-Z])/g, '≠')
+    .replace(/\\lt(?![a-zA-Z])/g, '<')
+    .replace(/\\gt(?![a-zA-Z])/g, '>')
+    .replace(RELATION_CMP_RE, ' $1 ');
+  const out: RelToken[] = [];
+  for (const raw of norm.split(/\s+/)) {
+    if (!raw) continue;
+    if (isCmpToken(raw)) { out.push({ t: raw, breakAfter: false, breakBefore: false }); continue; }
+    const t = raw.replace(/[?!,;:.…]+$/, '').replace(/^[,;:…]+/, '');
+    const breakAfter = /[?!,;:.…]+$/.test(raw);
+    const breakBefore = /^[,;:…]+/.test(raw);
+    if (!t) {
+      // Pure punctuation: a break between its neighbours.
+      if (out.length > 0) out[out.length - 1].breakAfter = true;
+      continue;
+    }
+    out.push({ t, breakAfter, breakBefore });
+  }
+  return out;
+}
+
+function findRelationSpans(tokens: RelToken[]): RelationSpan[] {
+  const isOperand = (k: number): boolean => !isCmpToken(tokens[k].t) && hasAlnum(tokens[k].t) && !isFnToken(tokens[k].t);
+  const opEdge = /[+\-−*/×÷·^]/;
+  /** Two operands side by side with no operator between them. */
+  const juxtaposed = (a: number, b: number): boolean =>
+    isOperand(a) && isOperand(b) && !opEdge.test(tokens[a].t.slice(-1)) && !opEdge.test(tokens[b].t.charAt(0));
+  const broken = (a: number, b: number): boolean => tokens[a].breakAfter || tokens[b].breakBefore;
+  const canJoin = (k: number): boolean => !isCmpToken(tokens[k].t) && (isMathToken(tokens[k].t) || isFnToken(tokens[k].t));
+
+  const raw: Array<{ l: number; r: number; doubtful: boolean }> = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (!isCmpToken(tokens[i].t)) continue;
+    let doubtful = false;
+    let l = i;
+    while (l - 1 >= 0 && canJoin(l - 1) && !broken(l - 1, l)) {
+      if (juxtaposed(l - 1, l)) { doubtful = true; break; }
+      l--;
+    }
+    let r = i;
+    while (r + 1 < tokens.length && canJoin(r + 1) && !broken(r, r + 1)) {
+      if (juxtaposed(r, r + 1)) { doubtful = true; break; }
+      r++;
+    }
+    // Trim operator-only edges ("problem - x > 3").
+    while (l < i && !hasAlnum(tokens[l].t)) l++;
+    while (r > i && !hasAlnum(tokens[r].t)) r--;
+    if (l === i || r === i) continue; // a comparator with an empty side
+    const last = raw[raw.length - 1];
+    if (last && l <= last.r) { last.r = Math.max(last.r, r); last.doubtful = last.doubtful || doubtful; } // chain: 3 < x < 5
+    else raw.push({ l, r, doubtful });
+  }
+  return raw.map(({ l, r, doubtful }) => {
+    const rel = tokens.slice(l, r + 1).map((x) => x.t);
+    const text = rel.join(' ');
+    const operandText = rel.filter((t) => !isCmpToken(t)).join(' ').replace(MATH_FN_RE, '');
+    const sides: string[] = [];
+    const cmps: string[] = [];
+    let cur = '';
+    for (const t of rel) {
+      if (isCmpToken(t)) { sides.push(cur); cmps.push(t); cur = ''; } else cur += t;
+    }
+    sides.push(cur);
+    const loneVar = (s: string): boolean => /^[a-z]$/i.test(s);
+    const assignment = cmps.length === 1 && cmps[0] === '=' && sides.length === 2
+      && ((loneVar(sides[0]) && SIGNED_NUMBER_RE.test(sides[1])) || (loneVar(sides[1]) && SIGNED_NUMBER_RE.test(sides[0])));
+    const hasFunction = rel.some((t) => isFnToken(t)) || /[a-z]\(/i.test(text) || /(?:sqrt|sin|cos|tan|log|ln|abs)/i.test(text);
+    return {
+      start: l,
+      end: r,
+      text,
+      assignment,
+      answerShaped: sides.filter(Boolean).every((s) => /^[+\-−]?(?:[a-z]|\d+(?:\.\d+)?(?:\/\d+)?)$/i.test(s)),
+      hasVariable: /[a-z]/i.test(operandText),
+      hasDigit: /\d/.test(operandText),
+      doubtful: doubtful || hasFunction,
+    };
+  });
+}
+
+export interface SymbolicRelation {
+  /** Normalised text, comparators spaced: "x > 5 or x < 3". */
+  text: string;
+  /** Tokens of the relation (connectors included). */
+  tokenCount: number;
+  /** Every side of every comparator is a lone variable or a plain number
+   *  ("x = 5", "x > 5 or x < 3", "3 < x < 5") — the shape of an ANSWER. */
+  answerShaped: boolean;
+  hasVariable: boolean;
+  hasDigit: boolean;
+  /** Share of the message's word tokens that belong to the relation. */
+  coverage: number;
+}
+
+/**
+ * The first symbolic relation in a message: operand(s) · comparator ·
+ * operand(s), chains ("3 < x < 5") and "or"/"and" compounds included. Prose
+ * comparatives ("x greater than 3") are NOT relations — no comparator symbol.
+ * Returns null when there is none.
+ */
+export function extractSymbolicRelation(text: string): SymbolicRelation | null {
+  const tokens = tokenizeForRelations(text);
+  if (tokens.length === 0) return null;
+  const spans = findRelationSpans(tokens);
+  if (spans.length === 0) return null;
+  const wordTokens = tokens.filter((x) => isCmpToken(x.t) || hasAlnum(x.t)).length;
+  // Compound: spans separated by exactly one "or" / "and".
+  const parts = [spans[0]];
+  for (let s = 1; s < spans.length; s++) {
+    const prev = parts[parts.length - 1];
+    if (spans[s].start === prev.end + 2 && isConnector(tokens[prev.end + 1].t)) parts.push(spans[s]);
+    else break;
+  }
+  const start = parts[0].start;
+  const end = parts[parts.length - 1].end;
+  const tokenCount = end - start + 1;
+  return {
+    text: tokens.slice(start, end + 1).map((x) => x.t).join(' '),
+    tokenCount,
+    answerShaped: parts.every((p) => p.answerShaped),
+    hasVariable: parts.some((p) => p.hasVariable),
+    hasDigit: parts.some((p) => p.hasDigit),
+    coverage: wordTokens > 0 ? tokenCount / wordTokens : 0,
+  };
+}
+
+/** A message is "mostly a relation" at this share of its tokens. */
+export const BARE_RELATION_MIN_COVERAGE = 0.6;
+
+export type ProblemGroundingReason =
+  // grounded
+  | 'request-relation' | 'request-prose' | 'bare-relation'
+  // not grounded
+  | 'empty' | 'board-question' | 'answer-check' | 'assignment-only' | 'no-request' | 'no-content'
+  | 'bare-problem-active' | 'bare-answer-shaped' | 'bare-no-lead-in' | 'bare-step'
+  | 'matches-authored' | 'matches-active'
+  // kill switch off — the legacy detector decided
+  | 'legacy';
+
+export interface ProblemGroundingDecision {
+  /** The statement to ground on — the student's own SENTENCE (minus a
+   *  request lead-in), never a fragment cut out of it — or null. */
+  problem: string | null;
+  /** The one relation the student asked to SOLVE, for the downstream relation
+   *  checks only. Set only when the message holds exactly one relation, that
+   *  relation is not an assignment ("x = 4"), its edges are certain, and the
+   *  task is "solve" (not graph / evaluate / find the slope). Otherwise
+   *  undefined — the checks then read the statement, as they do for any card. */
+  relation?: string;
+  reason: ProblemGroundingReason;
+}
+
+/** The student is proposing or checking an ANSWER to the problem already on
+ *  the board — never a new problem, whatever request words surround it. */
+const ANSWER_CHECK_RE = /\bmy\s+answer\b|\bi\s+got\b|\bis\s+it\b|\bis\s+[a-z]\s*=|\bcheck\b|\bis\s+that\s+right\b/i;
+
+/** An explicit request to SOLVE: "how do I solve …", "how to solve …",
+ *  "can you (help me) solve …", "help me solve …". */
+const EXPLICIT_SOLVE_PHRASE_RE = /\b(?:how\s+(?:do|would|can|should|could)\s+(?:i|we|you|u)\s+solve|how\s+to\s+solve|(?:can|could|would|will)\s+(?:you|we|u)\s+(?:please\s+)?(?:help\s+me\s+(?:to\s+)?)?solve|help\s+me\s+(?:to\s+)?solve)\b/i;
+/** "Solve 5x - 1 = 9" opening a sentence (not after a comma — "…, solve 3x =
+ *  9 and get 3" is the student narrating). */
+const SOLVE_SENTENCE_START_RE = /(?:^|[.!?:]\s+)\s*(?:please\s+)?solve\s+(?=\S)/i;
+
+const SOLVE_TASK_RE = /\bsolv(?:e|ing)\b|\bsolutions?\b/i;
+/** Any task other than "solve this relation" — its answer is not the
+ *  relation's solution set, so no relation is handed to the checks. */
+const OTHER_TASK_RE = /\b(?:graph|plot|sketch|draw|slope|intercepts?|evaluate|simplify|factor|expand|differentiate|derivative|integrate|integral|domain|range|vertex|maximum|minimum|prove|system)\b|\bfind\b(?!\s+(?:the\s+)?solutions?\b)/i;
+
+/** BARE path only — words that say "this is a problem to work": an opening
+ *  "next problem" / "my homework says" / "problem:", or a task verb. Without
+ *  one, a relation typed on its own ("3x + 2 = 11", "6x = 18") cannot be told
+ *  from a working STEP, and it is not grounded. */
+const BARE_PROBLEM_LEAD_IN_RE = /^\s*(?:(?:the\s+)?(?:next|new|another)\s+(?:problem|question|one)\b|my\s+(?:homework|worksheet|assignment|textbook|book|teacher)\s+(?:says|asks|has|is)\b|(?:problem|question)\s*(?:\d+\s*)?:)|\b(?:solve|simplify|factor|graph|find|evaluate|expand)\b/i;
+/** BARE path only — words of someone narrating their own work. */
+const BARE_STEP_WORD_RE = /\b(?:so|then|right|therefore|because|thus|hence|i\s+(?:got|get|have|think))\b|\?\s*$/i;
+
+/** Strips the request lead-in ("can you help me", "how do I", "how to",
+ *  "please", "hey") from the front of a message; the task verb stays. Falls
+ *  back to the full text when nothing with a digit would be left. */
+function stripRequestLeadIn(text: string): string {
+  let s = text.trim();
+  for (let pass = 0; pass < 4; pass++) {
+    const before = s;
+    s = s
+      .replace(/^(?:(?:ok(?:ay)?|hi|hey|hello|so|um+|uh+|well|please|also|now)\b[\s,.!]*)+/i, '')
+      .replace(/^(?:can|could|would|will)\s+(?:you|we|u)\s+(?:please\s+)?(?:help\s+me(?:\s+(?:with|to))?\b|show\s+me\s+how\s+to\b|tell\s+me\s+how\s+to\b)?/i, '')
+      .replace(/^(?:i\s+need\s+help|help\s+me)(?:\s+(?:with|to))?\b/i, '')
+      .replace(/^how\s+(?:do|would|can|should|could)\s+(?:i|we|you|u)\b/i, '')
+      .replace(/^how\s+to\b/i, '')
+      .replace(/^[\s,:;.…]+/, '')
+      .trim();
+    if (s === before) break;
+  }
+  return /\d/.test(s) ? s : text.trim();
+}
+
+/**
+ * Did the student bring their OWN problem — and what is its statement?
+ *
+ * Governing rule: act only on the unmistakable case; otherwise the active
+ * problem stays what it was.
+ *
+ *  1. A question ABOUT the board (pronounce / read / mean / why / "is that…")
+ *     does not ground — UNLESS the same message also explicitly asks for a
+ *     relation to be solved ("why is 3x+2=11 solved by subtracting? can you
+ *     solve 5x - 1 = 9 instead"); the explicit request wins, and the
+ *     divergence test in (5) then decides whether it is a NEW problem.
+ *  2. While a problem is active, a message that proposes or checks an ANSWER
+ *     ("my answer", "I got", "is it", "is x =", "check", "is that right", or
+ *     whose only relation is `<var> = <number>`) never grounds: grounding on
+ *     it would replace the problem with its own answer. With or without an
+ *     active problem, a lone `<var> = <number>` is never a problem.
+ *  3. REQUEST path — the message asks the tutor to work something. Content:
+ *     a symbolic relation, or failing that digits (a word problem, stored
+ *     verbatim as before).
+ *  4. BARE path — no request words, the message is mostly relation(s) with a
+ *     variable and digits. Only while NO problem is active, only when the
+ *     relations are not all answer-shaped, only with a lead-in that says it
+ *     is a problem ("next problem", "my homework says", "problem:", a task
+ *     verb) and no step words ("so", "then", "right", "I got", a trailing
+ *     "?"). A relation typed on its own is NOT grounded: it reads as a step.
+ *  5. Divergence, as before: at least half of its numbers appearing in the
+ *     authored problem or the active problem means it IS that problem.
+ *
+ * The STATEMENT is always the student's sentence (minus the request lead-in)
+ * — storing only the first relation dropped the task ("graph", "find f(3)")
+ * and the rest of the givens. The relation travels separately in `relation`.
+ */
+export function decideStudentProblemGrounding(input: {
+  /** Kill switch (NEXT_PUBLIC_TUTOR_PROBLEM_GROUNDING_RELATION !== 'off');
+   *  off ⇒ detectStudentBroughtProblem decides, exactly as before. */
+  enabled: boolean;
+  studentText: string;
+  authoredText: string;
+  activeStatement: string;
+}): ProblemGroundingDecision {
+  const text = (input.studentText ?? '').trim();
+  if (!input.enabled) {
+    const legacy = detectStudentBroughtProblem(text, input.authoredText, input.activeStatement);
+    return { problem: legacy, reason: 'legacy' };
+  }
+  const no = (reason: ProblemGroundingReason): ProblemGroundingDecision => ({ problem: null, reason });
+  if (!text) return no('empty');
+
+  const active = (input.activeStatement ?? '').trim();
+  const tokens = tokenizeForRelations(text);
+  const spans = findRelationSpans(tokens).filter((s) => s.hasDigit);
+  const problemSpans = spans.filter((s) => !s.assignment);
+  const onlyAssignment = spans.length === 1 && spans[0].assignment;
+
+  const solvePhrase = EXPLICIT_SOLVE_PHRASE_RE.exec(text) ?? SOLVE_IMPERATIVE_RE.exec(text) ?? SOLVE_SENTENCE_START_RE.exec(text);
+  const explicitSolve = !!solvePhrase && problemSpans.length > 0;
+  if (!explicitSolve && isBoardQuestion(text)) return no('board-question');
+  if (active && (ANSWER_CHECK_RE.test(text) || onlyAssignment)) return no('answer-check');
+
+  const request = explicitSolve || WORK_INTENT_RE.test(text) || SOLVE_REQUEST_RE.test(text) || SOLVE_IMPERATIVE_RE.test(text);
+  let candidate: string;
+  let reason: ProblemGroundingReason;
+  /** The numbers that identify the problem, for the divergence test. */
+  let identity: string;
+  /** Set when `identity` is the one relation an explicit solve request names. */
+  let namedRelation = false;
+  if (request) {
+    if (spans.length > 0) {
+      // A lone "x = 4" with nothing else to work on is an answer or a given.
+      if (onlyAssignment) {
+        const outside = tokens.filter((_, k) => k < spans[0].start || k > spans[0].end).map((x) => x.t).join(' ');
+        if (!/\d/.test(outside)) return no('assignment-only');
+      }
+      candidate = stripRequestLeadIn(text);
+      reason = 'request-relation';
+      identity = candidate;
+      if (explicitSolve && solvePhrase) {
+        // The relation the request NAMES: the first one after "solve", else
+        // ("…, can you help me solve it") the first one in the message.
+        const after = findRelationSpans(tokenizeForRelations(text.slice(solvePhrase.index + solvePhrase[0].length)))
+          .filter((s) => s.hasDigit && !s.assignment);
+        identity = (after[0] ?? problemSpans[0]).text;
+        namedRelation = true;
+      }
+    } else if (/\d/.test(text)) { candidate = text; reason = 'request-prose'; identity = text; }
+    else return no('no-content');
+  } else {
+    if (spans.length === 0 || !spans.some((s) => s.hasVariable)) return no('no-request');
+    const wordTokens = tokens.filter((x) => isCmpToken(x.t) || hasAlnum(x.t)).length;
+    let covered = 0;
+    spans.forEach((s, k) => {
+      covered += s.end - s.start + 1;
+      const next = spans[k + 1];
+      if (next && next.start === s.end + 2 && isConnector(tokens[s.end + 1].t)) covered += 1;
+    });
+    if (wordTokens === 0 || covered / wordTokens < BARE_RELATION_MIN_COVERAGE) return no('no-request');
+    if (active) return no('bare-problem-active');
+    if (spans.every((s) => s.answerShaped)) return no('bare-answer-shaped');
+    // Review 2026-10-04: with nothing active, a student's working step
+    // ("then 3x = 9 right", "2x = 8, x = 4", "3x + 2 = 11") was grounded as a
+    // problem they brought — the legacy detector returned null for all of
+    // them (no request wording). A relation on its own is a step as often as
+    // a problem, so the bare path now needs words that say it is a problem,
+    // and none that say it is a step. (Deferring to the legacy detector here
+    // would add nothing: it requires WORK_INTENT_RE, which is the request
+    // path above.)
+    if (!BARE_PROBLEM_LEAD_IN_RE.test(text)) return no('bare-no-lead-in');
+    if (BARE_STEP_WORD_RE.test(text)) return no('bare-step');
+    candidate = text; reason = 'bare-relation'; identity = text;
+  }
+
+  // Relation against statement: an exponent is structure, not a value ("x^2 +
+  // 5x + 6 = 0" does not share its "2" with "2x + 6 = 14"). The other paths
+  // count numbers exactly as before.
+  const nums = (s: string): Set<string> =>
+    new Set(((namedRelation ? (s || '').replace(/\^\s*\{?\s*\d+\s*\}?/g, ' ') : s) || '').match(/\d+(?:\.\d+)?/g) || []);
+  const cSet = nums(identity);
+  const overlap = (other: string): number => {
+    const oSet = nums(other);
+    if (oSet.size === 0 || cSet.size === 0) return 0;
+    let m = 0; cSet.forEach((n) => { if (oSet.has(n)) m += 1; });
+    return m / cSet.size;
+  };
+  if (overlap(input.authoredText) >= 0.5) return no('matches-authored');
+  if (active && overlap(active) >= 0.5) return no('matches-active');
+
+  // `relation` — only the unmistakable case (see ProblemGroundingDecision).
+  const all = findRelationSpans(tokens);
+  const only = all.length === 1 ? all[0] : null;
+  const relation = only && only.hasDigit && !only.assignment && !only.doubtful
+    && SOLVE_TASK_RE.test(text) && !OTHER_TASK_RE.test(text)
+    ? only.text
+    : undefined;
+  return relation ? { problem: candidate, relation, reason } : { problem: candidate, reason };
+}
+
 /** FIX A backstop — decide whether a turn's first sentence is a genuine
  *  content-free opener, safe to voice ungated. The prompt rule is the
  *  primary guarantee; this re-gates a sentence-0 that looks substantive

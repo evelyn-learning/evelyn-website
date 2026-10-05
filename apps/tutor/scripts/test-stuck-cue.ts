@@ -5,7 +5,6 @@ function check(name: string, ok: boolean, detail = '') { if (ok) pass++; else { 
 const yes = [
   "I don't know",
   "I don't get it",
-  "Um, I don't know, maybe 12?",
   "I'm stuck, I don't get it",
   "Honestly I don't understand this part at all, can we slow down here please",   // cue leads, ≤25 words
   "Can you walk me through it?",
@@ -14,6 +13,12 @@ const yes = [
   "I don't understand.",
 ];
 const no = [
+  // CHANGED (second review pass 2026-10-04): "Um, I don't know, maybe 12?" was
+  // pinned as a stuck cue. A soft cue that goes on to PROPOSE A VALUE is an
+  // answer attempt (student-turn-shape.ts isHedgedValueAnswer) — it is graded
+  // by the verdict layer and feeds the ledger a `wrong` event if it is wrong.
+  "Um, I don't know, maybe 12?",
+  "I don't know, 5?", "I don't know 5", "I don't know. 7.", "I dont know but 5", "I don't know, maybe five",
   // live 2026-09-05: fillers/hedges inside long correct answers
   "So, um, idea number 2 is the experiment. Um, idea one would be the observational study. And um, the confounding variable might be um, that again, you know, maybe the kids who uh study with music, maybe they just uh, I don't know, study way more than the ones who don't. You know, you never know, so again, there's that like bias sneaking up in idea number one.",
   "Uh, yeah, let's do it. Also, um, I just had a quick doubt. I don't know if this topic comes up later in unit 3, but um, while I was, you know, I have an upcoming test on these topics, but what is the difference between random assignment and random sampling?",
@@ -24,6 +29,10 @@ const no = [
   "the derivative is 2x",
   "",
 ];
+// …and what must stay a cue: no proposed value, or an explicit help shape.
+yes.push("I don't know how to do step 2", "I don't know, can you repeat question 3", "I'm stuck, 5?");
+check('gate off: "I don\'t know, 5?" is the cue it was', isLedgerStuckCue("I don't know, 5?", { hedgedValueIsAnswer: false }) === true);
+check('gate off: "Um, I don\'t know, maybe 12?" is the cue it was', isLedgerStuckCue("Um, I don't know, maybe 12?", { hedgedValueIsAnswer: false }) === true);
 for (const s of yes) check(`stuck: "${s.slice(0, 50)}"`, isLedgerStuckCue(s) === true);
 for (const s of no) check(`not stuck: "${s.slice(0, 50)}"`, isLedgerStuckCue(s) === false);
 console.log(`${pass} passed, ${fail} failed`);

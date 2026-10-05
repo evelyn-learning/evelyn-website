@@ -14,6 +14,8 @@ import {
   decideSubstitutedDuplicate,
   sameProblemStatement,
   statementsReadIdentically,
+  decideLabelReuseOnCorrection,
+  hasSelfCorrectionMarker,
 } from '../src/lib/tutor/whiteboard/soft-rejections';
 import {
   buildValidatorFeedback,
@@ -206,5 +208,117 @@ const mixed = buildValidatorFeedback({
   attemptKilled: false, originalTranscript: 'ok', includeStudentContext: false,
 });
 ok('mixed: ordinary body', mixed.includes('structural validator rejected') && mixed.includes(`[2] ${TURN_CONTINUATION_ACTION}: stopped early`));
+
+// ── label reuse in a correction turn (2026-10-04) ──────────────────────────
+// Live: "How to read it aloud" boarded with latex "x > 3 or x < 3"; the
+// self-correction reused the label and the relabel rule painted
+// "How to read it aloud (2)" beside the wrong original.
+//
+// CHANGED (review item 3). The first version of this block pinned three
+// behaviours that deleted an earlier card on weak evidence, all reversed:
+//   · `correctionNoteThisTurn: true` alone ⇒ replace (the flag is true for
+//     ANY delivered judge note, usually about the student's verdict) — the
+//     input is gone from the rule;
+//   · loose markers ⇒ replace: "Correction: …", "That line should read …",
+//     "Actually, …", "My mistake — …", "I misspoke there." — now relabel;
+//   · no look at the two equations at all — now the new latex must be a
+//     small edit of the earlier card's.
+{
+  const PRIOR = 'x > 3 \\text{ or } x < 3';
+  const FIXED = 'x > 5 \\text{ or } x < 3';
+  const base = {
+    enabled: true, tutorSpeechThisTurn: '',
+    priorLatex: PRIOR, newLatex: FIXED,
+    priorItemId: 'showEquation-4' as string | null, priorPendingRevision: false,
+  };
+  const d = (over: Partial<typeof base>) => decideLabelReuseOnCorrection({ ...base, ...over });
+
+  // The production case.
+  {
+    const r = d({
+      tutorSpeechThisTurn: 'I notice the board says x > 3 or x < 3 in the label… let me fix that label.',
+      priorLatex: 'x > 3 or x < 3', newLatex: 'x > 5 or x < 3',
+    });
+    ok('production case ⇒ replace', r.action === 'replace' && r.reason === 'self-correction-speech');
+  }
+  // (i) first-person statements about the tutor's OWN earlier writing.
+  for (const speech of [
+    'Let me fix that card.',
+    'Let me correct that.',
+    'Let me rewrite that line.',
+    'Let me redo that.',
+    'I wrote that wrong a moment ago.',
+    'I made a mistake there.',
+    'I made an error on the board.',
+    'I made a mistake in that line.',
+    'That line was wrong.',
+    'That label is wrong.',
+    'That equation is wrong, sorry.',
+    'Scratch that, here it is again.',
+    'That line should read x greater than 5, not x greater than 3.',
+    'What I wrote should say 5, not 3.',
+  ]) {
+    const r = d({ tutorSpeechThisTurn: speech });
+    ok(`own-writing correction + small edit ⇒ replace: "${speech}"`, r.action === 'replace' && r.reason === 'self-correction-speech');
+  }
+  // The reviewer's eight false positives — every one keeps the earlier card.
+  for (const speech of [
+    "Actually, that's a great way to see it.",
+    'Good correction!',
+    'Nice self-correction there.',
+    'Your answer should say x = 4.',
+    'So the next line should read 2x = 8.',
+    'One small correction to your work: the sign.',
+    'My bad for going fast.',
+    "Now, actually, let's write step 2.",
+  ]) {
+    const r = d({ tutorSpeechThisTurn: speech });
+    ok(`not about the tutor's own writing ⇒ relabel: "${speech}"`, r.action === 'relabel' && r.reason === 'not-a-correction');
+    ok(`marker detector false: "${speech}"`, hasSelfCorrectionMarker(speech) === false);
+  }
+  // Formerly-accepted loose markers and ordinary speech.
+  for (const speech of [
+    'Correction: it is x greater than 5 or x less than 3.',
+    'That line should read x is greater than 5.',
+    'Actually, the first part is x greater than 5.',
+    'My mistake — here is the right inequality.',
+    'I misspoke there.',
+    'Now the final answer for part b.',
+    'Great, here is the next step.',
+    'That is actually a really good question.',
+    'The answer should be positive, so we keep going.',
+    'You made a mistake in that line, can you spot it?',
+    'Can you fix that line for me?',
+    '',
+  ]) {
+    const r = d({ tutorSpeechThisTurn: speech });
+    ok(`ordinary label reuse keeps the relabel: "${speech}"`, r.action === 'relabel' && r.reason === 'not-a-correction');
+  }
+  // (ii) the new equation must be a small edit of the earlier one.
+  const FIX = 'Let me fix that.';
+  ok('same label, completely different equation ⇒ a new step ⇒ relabel',
+    d({ tutorSpeechThisTurn: FIX, priorLatex: '2x + 6 = 14', newLatex: 'x = 4' }).reason === 'different-equation'
+    && d({ tutorSpeechThisTurn: FIX, priorLatex: '2x + 6 = 14', newLatex: 'x = 4' }).action === 'relabel');
+  ok('different equation: "Step" 3x + 2 = 11 → \\frac{9}{3} = x', d({ tutorSpeechThisTurn: FIX, priorLatex: '3x + 2 = 11', newLatex: '\\frac{9}{3} = x' }).action === 'relabel');
+  ok('one sign changed ⇒ replace', d({ tutorSpeechThisTurn: FIX, priorLatex: '2x - 6 = 14', newLatex: '2x + 6 = 14' }).action === 'replace');
+  ok('one side rewritten, the other identical ⇒ replace',
+    d({ tutorSpeechThisTurn: FIX, priorLatex: 'y = 3', newLatex: 'y = \\frac{12 - 3}{4 - 1}' }).action === 'replace');
+  ok('whitespace / \\left \\right differences are not differences',
+    d({ tutorSpeechThisTurn: FIX, priorLatex: '\\left( x+1 \\right)^2 = 8', newLatex: '(x + 1)^2 = 9' }).action === 'replace');
+  ok('earlier latex unknown ⇒ relabel', d({ tutorSpeechThisTurn: FIX, priorLatex: '' }).reason === 'different-equation');
+  ok('new latex unknown ⇒ relabel', d({ tutorSpeechThisTurn: FIX, newLatex: '  ' }).reason === 'different-equation');
+  // A judge note in the turn is no longer an input at all.
+  ok('correctionNoteThisTurn is not part of the rule',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    decideLabelReuseOnCorrection({ ...base, correctionNoteThisTurn: true } as any).action === 'relabel');
+  ok('prior card not addressable ⇒ relabel', d({ tutorSpeechThisTurn: FIX, priorItemId: null }).reason === 'prior-not-addressable');
+  ok('prior pending kill-recovery ⇒ relabel', d({ tutorSpeechThisTurn: FIX, priorPendingRevision: true }).reason === 'prior-pending-revision');
+  ok('kill switch ⇒ relabel', d({ enabled: false, tutorSpeechThisTurn: FIX }).reason === 'flag-off' && d({ enabled: false, tutorSpeechThisTurn: FIX }).action === 'relabel');
+  ok('marker detector: empty', hasSelfCorrectionMarker('') === false && hasSelfCorrectionMarker('   ') === false);
+  // The relabel rule itself is untouched for a non-correction reuse.
+  ok('non-correction reuse still relabels "(2)"',
+    JSON.stringify(resolveLabelCollision({ enabled: true, rawLabel: 'How to read it aloud', priorLabel: 'How to read it aloud', relabelsSoFar: 0 }))
+      === JSON.stringify({ kind: 'paint', label: 'How to read it aloud (2)', changed: true }));
+}
 
 console.log(`soft-rejections: ${n} cases passed`);

@@ -117,3 +117,44 @@ export function resolveTypedFirstMicTap(input: {
   if (input.micMuted) return { action: 'stay-muted', reason: 'muted' };
   return { action: 'open-mic', reason: 'typed-first' };
 }
+
+/**
+ * Gesture-first start (2026-10-04).
+ *
+ * WHY: a session started by uploading a homework image (no Start tap) runs
+ * runGestureSessionStart, which latches hasStarted and unlocks audio but
+ * never called startListening() — the only thing that feeds the student
+ * track of the recording. That sitting had no student recording at all.
+ *
+ * Same rule as the Start tap and the resume gesture, plus three guards:
+ *  · only on the call that LATCHES the start (the helper is idempotent and
+ *    runs on every later send);
+ *  · not while the composer has focus — its focus muted the mic on purpose
+ *    and its blur re-opens it once hasStarted is true;
+ *  · never twice from this path (startListening has no in-flight guard; a
+ *    second call while the first awaits the mic would build a second
+ *    processor).
+ */
+export type GestureListenReason = ListenOnStartReason | 'not-a-start' | 'typing' | 'already-opened';
+
+export function shouldStartListeningOnGestureStart(input: {
+  /** Kill switch (NEXT_PUBLIC_TUTOR_GESTURE_START_LISTENING !== 'off'). */
+  enabled: boolean;
+  sessionMode: 'voice' | 'text';
+  micMuted: boolean;
+  /** This call latched hasStarted (first real gesture, not a resumed session). */
+  startLatchedNow: boolean;
+  /** The typed composer currently has focus. */
+  composerFocused: boolean;
+  /** A start path (this one, or the typed-first blur / tap) already opened the mic. */
+  alreadyOpened: boolean;
+}): { start: boolean; reason: GestureListenReason } {
+  const base = shouldStartListeningOnSessionStart({
+    enabled: input.enabled, sessionMode: input.sessionMode, micMuted: input.micMuted,
+  });
+  if (!input.startLatchedNow) return { start: false, reason: input.sessionMode === 'text' ? 'text-mode' : 'not-a-start' };
+  if (!base.start) return base;
+  if (input.alreadyOpened) return { start: false, reason: 'already-opened' };
+  if (input.composerFocused) return { start: false, reason: 'typing' };
+  return { start: true, reason: 'ok' };
+}

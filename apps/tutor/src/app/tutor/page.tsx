@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
-import { MODEL_RATES, lookupModelRate } from '@/lib/tutor/ai/model-rates';
+import { computeUsageTotals, usageSaveWindow } from '@/lib/tutor/ai/usage-totals';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare, ChevronDown } from 'lucide-react';
@@ -30,7 +30,7 @@ import { LessonNudgePicker } from './components/LessonNudgePicker';
 import LessonPicker from './components/LessonPicker';
 import { type VoiceState } from './components/session/SessionStage';
 import TutorSession from './components/session/TutorSession';
-import { pageOwnsUpload } from './components/session/upload-flow';
+import { pageOwnsUpload, extractionRequestBody, classifyExtraction, buildStudentMediaBrainInput, type StudentMediaType } from './components/session/upload-flow';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
@@ -144,40 +144,10 @@ interface TokenUsage {
   model?: string;
 }
 
-// Pricing per 1M tokens — sourced from the shared rate card (model-rates.ts)
-// so every estimate in the app prices from ONE table. Brain turns run the
-// prod brain model (Sonnet 5) with the 1h-TTL prompt cache, so cacheWrite
-// uses the 1h write rate. (Was hardcoded 3/15 Sonnet 4.6-era rates, which
-// overstated Sonnet 5 brain cost ~50%.)
-const BRAIN_RATE = MODEL_RATES['claude-sonnet-5'];
-const PRICING = {
-  input: BRAIN_RATE.input,
-  output: BRAIN_RATE.output,
-  cacheRead: BRAIN_RATE.cacheRead ?? BRAIN_RATE.input * 0.1,
-  cacheWrite: BRAIN_RATE.cacheWrite1h ?? BRAIN_RATE.input * 2,
-};
-
-const REALTIME_PRICING = {
-  // OpenAI Realtime API (voice mode) — GA gpt-realtime rate card
-  audioInput: 100.0,   // $100 per 1M audio input tokens
-  audioOutput: 200.0,  // $200 per 1M audio output tokens
-  textInput: 5.0,      // $5 per 1M text input tokens
-  textOutput: 20.0,    // $20 per 1M text output tokens
-};
-
-// GPT-Realtime-2 rate card — used only when voiceEngine === 'realtime-2'.
-// Audio input is billed at the uncached rate below; the cached portion
-// (captured per-turn as inputCachedTokens) is far cheaper at $0.40/1M, so
-// the realtime-2 cost figure is a slight OVER-estimate. Compute the cached
-// saving post-hoc from the inputCachedTokens totals.
-const REALTIME_2_PRICING = {
-  audioInput: 32.0,        // $32 per 1M uncached audio input tokens
-  audioInputCached: 0.40,  // $0.40 per 1M cached audio input tokens (post-hoc)
-  audioOutput: 64.0,       // $64 per 1M audio output tokens
-  textInput: 4.0,          // $4 per 1M text input tokens
-  textOutput: 24.0,        // $24 per 1M text output tokens
-};
-
+// Pricing (the per-model rate card, the no-model fallback and the realtime
+// rate cards) and the totals/cost arithmetic live in
+// lib/tutor/ai/usage-totals.ts — shared with the session-usage route, which
+// derives the STORED totals from the stored usage entries (2026-10-04).
 
 interface ConversationMessage {
   role: 'user' | 'assistant';
@@ -661,46 +631,23 @@ function TutorPage() {
     const now = new Date();
     const startTime = sessionStartTimeRef.current || now;
     const duration = Math.round((now.getTime() - startTime.getTime()) / 1000);
-    // Cache buckets count toward billed input volume (brain turns; zero elsewhere).
-    const totalIn = tokenUsage.reduce((s, u) => s + u.inputTokens + (u.cacheReadTokens ?? 0) + (u.cacheCreationTokens ?? 0), 0);
-    const totalOut = tokenUsage.reduce((s, u) => s + u.outputTokens, 0);
+    // This sitting's totals + cost, from this page's own entries (same
+    // arithmetic as before, now shared). After a reload `tokenUsage` starts
+    // empty, so these cover THIS sitting only — the server does not store
+    // them verbatim any more: it sums the stored entries of every sitting
+    // (session-usage route, usageTotalsBehind) and only ever raises.
+    const { totalInputTokens: totalIn, totalOutputTokens: totalOut, estimatedCost } =
+      computeUsageTotals(tokenUsage, voiceEngine, { dedupe: false });
 
-    // Calculate cost with correct pricing per operation type
-    let cost = 0;
-    for (const u of tokenUsage) {
-      if (u.operation === 'realtime-response') {
-        // OpenAI Realtime: separate audio and text token pricing.
-        // realtime-2 has its own (much lower) rate card; every other
-        // realtime engine uses the GA gpt-realtime rates. The engine is
-        // fixed for the whole session, so voiceEngine is authoritative.
-        const rt = voiceEngine === 'realtime-2' ? REALTIME_2_PRICING : REALTIME_PRICING;
-        const audioIn = u.inputAudioTokens || 0;
-        const audioOut = u.outputAudioTokens || 0;
-        const textIn = u.inputTextTokens || 0;
-        const textOut = u.outputTextTokens || 0;
-        // Audio input priced at the uncached rate — for realtime-2 the
-        // cached portion (u.inputCachedTokens) is billed far cheaper, so
-        // this is a slight over-estimate; derive the saving post-hoc.
-        cost += (audioIn / 1_000_000) * rt.audioInput
-              + (audioOut / 1_000_000) * rt.audioOutput
-              + (textIn / 1_000_000) * rt.textInput
-              + (textOut / 1_000_000) * rt.textOutput;
-      } else {
-        // Model-aware pricing (registry era, 2026-08-30): brain-turn entries
-        // carry the serving model id from the stream's done event — price the
-        // model actually used (Sonnet, DeepSeek, …). Entries without a model
-        // (greeting/chat/homework + historical records) fall back to PRICING.
-        const r = lookupModelRate(u.model);
-        cost += (u.inputTokens / 1_000_000) * (r?.input ?? PRICING.input)
-              + (u.outputTokens / 1_000_000) * (r?.output ?? PRICING.output)
-              + ((u.cacheReadTokens ?? 0) / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : PRICING.cacheRead)
-              + ((u.cacheCreationTokens ?? 0) / 1_000_000) * (r ? (r.cacheWrite1h ?? 0) : PRICING.cacheWrite);
-      }
-    }
-
-    // Only push new token entries since last save
-    const newEntries = tokenUsage.slice(lastSavedTokenCountRef.current);
-    lastSavedTokenCountRef.current = tokenUsage.length;
+    // Only push new token entries since last save. The marker is a count
+    // into THIS list: when the list is now shorter than the marker it was
+    // replaced (setTokenUsage([{greeting}])) and the marker restarts at 0 —
+    // pinned above the new length it hid every entry later added below it
+    // (never sent). Re-sent entries are harmless: the route de-duplicates
+    // incoming against stored (usage-totals.ts).
+    const usageWindow = usageSaveWindow(lastSavedTokenCountRef.current, tokenUsage.length);
+    const newEntries = tokenUsage.slice(usageWindow.from);
+    lastSavedTokenCountRef.current = usageWindow.marker;
 
     // Only push new debug events since last save
     const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
@@ -725,7 +672,7 @@ function TutorPage() {
       whiteboardItemCount: whiteboardCommands.length,
       totalInputTokens: totalIn,
       totalOutputTokens: totalOut,
-      estimatedCost: Math.round(cost * 10000) / 10000,
+      estimatedCost,
       status,
       ...(newEntries.length > 0 ? { tokenUsage: newEntries.map(u => ({
         operation: u.operation,
@@ -2183,25 +2130,28 @@ function TutorPage() {
         realtimeHandleRef.current.sendTextMessage(`[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`);
         setTimeout(() => setStatusMessage(null), 1000);
       } else {
-        const noun = type === 'drawing' ? 'drew on' : 'uploaded an image to';
+        // Request body, outcome split and marker wording come from the shared
+        // upload-flow helpers — the same ones TutorSession's handleStudentInput
+        // uses — so this legacy handler cannot drift from them: mimeType from
+        // the data URL (was hardcoded PNG), `extractOnly` (this handler only
+        // uses `extractedProblem`; the route's second model call was thrown
+        // away), a non-2xx or a thrown request is "failed" rather than an
+        // unreadable image, and the several-numbered-problems instruction.
+        const mediaType: StudentMediaType = type;
         (async () => {
+          let outcome: ReturnType<typeof classifyExtraction>;
           try {
-            const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
             const resp = await fetch('/api/tutor/extract-homework', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageData: base64Data, mimeType: 'image/png', subject: selectedSubject, topic: selectedTopicId, level: selectedLevel }),
+              body: JSON.stringify(extractionRequestBody({ dataUrl: content, subject: selectedSubject, topic: selectedTopicId, level: selectedLevel })),
             });
-            const data = await resp.json();
-            setStatusMessage(null);
-            if (data.extractedProblem && realtimeHandleRef.current) {
-              realtimeHandleRef.current.sendTextMessage(`[The student ${noun} the whiteboard. It contains: "${data.extractedProblem}". Respond to what they shared.]`);
-            } else {
-              realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but the content could not be extracted. Ask them to describe what it shows.]`);
-            }
+            const body: unknown = await resp.json();
+            outcome = classifyExtraction({ httpOk: resp.ok, body });
           } catch {
-            setStatusMessage(null);
-            realtimeHandleRef.current?.sendTextMessage(`[The student ${noun} the whiteboard but it could not be analyzed. Ask them to describe what it shows.]`);
+            outcome = classifyExtraction({ threw: true });
           }
+          setStatusMessage(null);
+          realtimeHandleRef.current?.sendTextMessage(buildStudentMediaBrainInput(mediaType, outcome));
         })();
       }
     }
