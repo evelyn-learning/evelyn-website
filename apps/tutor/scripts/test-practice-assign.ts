@@ -2,7 +2,8 @@
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
 import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter, shouldFinalizeDraftOnEmit } from '../src/lib/tutor/practice-assign/store';
 import { capForPartner, topUpDraft, topUpAssigned } from '../src/lib/tutor/practice-assign/assign';
-import { topUpPractice, splitShortfall, topUpBudgetMs, TOP_UP_BUDGET_MS } from '../src/lib/tutor/practice-assign/top-up';
+import { topUpPractice, splitShortfall, topUpBudgetMs, TOP_UP_BUDGET_MS, losWithoutPractice, reportLosWithoutPractice } from '../src/lib/tutor/practice-assign/top-up';
+import { generatePracticeItems, type PracticeGenSources } from '../src/lib/tutor/portal/practice-gen';
 import { shouldCreateDraftOnEmit, draftLoIdsForEmit, homeworkAnchorItems, createDraftOnEmit, emitOwnsPractice, isRecentClientFinalize } from '../src/lib/tutor/practice-assign/emit-draft';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
@@ -374,6 +375,114 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     check('null-strip wiring: every LO write in store.ts goes through cleanLos', (store.match(/los: cleanLos\(/g) ?? []).length === 4 && !/\$set: \{ los \} /.test(store));
     const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/api/portal/v1/assigned-practice/route.ts'), 'utf8') as string;
     check('null-strip wiring: the assigned-practice read strips before the contract parse', route.includes('AssignedPracticeResponseSchema.parse(stripNullsDeep({ assignments }))'));
+  }
+  {
+    // 2026-10-04 — a Needs-Support graphing LO got no practice and no trace.
+    const it = (id: string) => ({ id, source: 'bank' as const, problemText: id });
+    const want = [{ loId: 'A', title: 'TA' }, { loId: 'B', title: 'TB' }, { loId: 'B', title: 'TB' }];
+    check('empty LOs: wanted LOs with no item (absent, or present with none), each once',
+      JSON.stringify(losWithoutPractice(want, [{ loId: 'A', items: [it('a')] }]).map((l) => l.loId)) === '["B"]'
+      && JSON.stringify(losWithoutPractice(want, [{ loId: 'A', items: [] }, { loId: 'B', items: [it('b')] }]).map((l) => l.loId)) === '["A"]'
+      && losWithoutPractice(want, [{ loId: 'A', items: [it('a')] }, { loId: 'B', items: [it('b')] }]).length === 0);
+    const seen: string[] = [];
+    const warn = console.warn; const warned: string[] = [];
+    console.warn = (...a: unknown[]) => { warned.push(a.join(' ')); };
+    try { reportLosWithoutPractice([{ loId: 'gen-1.lo-2', title: 'A title' }], { sessionId: 'S9', why: 'no bank items' }, (t, m) => seen.push(`${t}|${m}`)); } finally { console.warn = warn; }
+    check('empty LOs: one log line naming session, LO and title; one practice_draft_empty event naming the LO',
+      warned.length === 1 && warned[0]!.includes('lo_without_practice') && warned[0]!.includes('session=S9') && warned[0]!.includes('lo=gen-1.lo-2') && warned[0]!.includes('"A title"')
+      && JSON.stringify(seen) === '["practice_draft_empty|lo=gen-1.lo-2 trigger=session_end (no bank items)"]', `${warned} ${seen}`);
+
+    // top-up → generator: the drawing-LO facts reach generatePracticeItems.
+    const seenOpts: Array<Record<string, unknown>> = [];
+    const capture = async (o: Record<string, unknown>) => { seenOpts.push(o); return []; };
+    await topUpPractice([], [{ loId: 'gen-1.lo-2', title: 'LO two' }], { studentId: 's', topic: 't', anchorsFor: () => [], drawingTasksFor: (id) => id === 'gen-1.lo-2' }, capture as never);
+    check('top-up: a drawing LO forwards authoredDrawingTasks + the LO title', seenOpts.length === 2 && seenOpts.every((o) => o.authoredDrawingTasks === true && o.loTitle === 'LO two'), JSON.stringify(seenOpts));
+    seenOpts.length = 0;
+    await topUpPractice([], [{ loId: 'gen-1.lo-1', title: 'LO one' }], { studentId: 's', topic: 't', anchorsFor: () => [], drawingTasksFor: (id) => id === 'gen-1.lo-2' }, capture as never);
+    await topUpPractice([], [{ loId: 'gen-1.lo-1', title: 'LO one' }], { studentId: 's', topic: 't', anchorsFor: () => [] }, capture as never);
+    check('top-up: any other LO forwards neither (generator input unchanged)', seenOpts.length === 4 && seenOpts.every((o) => !('authoredDrawingTasks' in o) && !('loTitle' in o)), JSON.stringify(seenOpts));
+
+    // emit → top-up → the REAL generatePracticeItems (stub model): the live
+    // shape — plan LO whose only try-yourself is a drawing task, empty bank.
+    const drawPlan = {
+      id: 'gen-1', topic: 'A lesson topic', title: 'A lesson',
+      los: [{ id: 'gen-1.lo-1', description: 'First skill' }, { id: 'gen-1.lo-2', description: 'Second skill, drawn on a board' }],
+      segments: [
+        { kind: 'try_yourself', id: 'gen-1.lo-1-try', problem: 'Solve 2x = 6.' },
+        { kind: 'try_yourself', id: 'gen-1.lo-2-try', problem: 'Graph the region described and shade the included side.' },
+      ],
+    };
+    const prev = process.env.PRACTICE_GEN;
+    process.env.PRACTICE_GEN = 'on';
+    try {
+      const run = async (model: 'typed' | 'nothing', touched: string) => {
+        const prompts: string[] = [];
+        let k = 0;
+        const stub: PracticeGenSources = {
+          async generateAndVerify(prompt, _x, onGateFailed) {
+            prompts.push(prompt);
+            if (model === 'nothing') { onGateFailed?.('no_candidate'); onGateFailed?.('no_candidate'); return null; }
+            k++;
+            return { gen: { problemText: `Typed question ${k}?`, finalAnswer: String(k), responseFormat: 'numeric' as const }, hash: `h${k}` };
+          },
+          async reserve(_s, _l, n) { return n; },
+          async persist() {},
+        };
+        const recorded: Array<{ session: unknown; events: Array<{ type: string; message: string }> }> = [];
+        let assigned: Array<{ loId: string; items: unknown[] }> = [];
+        const deps = {
+          findAssignment: async () => null,
+          getPlan: async () => drawPlan,
+          // assignPractice's top-up section, with the bank empty and no Mongo.
+          assign: async (input: { loIds: string[]; sessionId: string; topUp: Parameters<typeof topUpPractice>[2] }) => {
+            const wanted = input.loIds.map((loId) => ({ loId, title: drawPlan.los.find((l) => l.id === loId)?.description ?? loId }));
+            const los = await topUpPractice([], wanted, { ...input.topUp, target: 3 }, (o) => generatePracticeItems(o, stub));
+            reportLosWithoutPractice(losWithoutPractice(wanted, los), { sessionId: input.sessionId, why: 'no bank items after end-of-session top-up' }, input.topUp.onDebugEvent);
+            assigned = los;
+            return los.length ? { assignmentId: 'a', assigned: [], status: 'draft' as const } : null;
+          },
+          recordSessionEvents: async (session: unknown, events: Array<{ type: string; message: string }>) => { recorded.push({ session, events: [...events] }); },
+        };
+        const req = { sessionId: `emit-${model}-${touched}`, studentId: 'ext-7', courseId: 'c', status: 'completed', lessonPlanId: 'gen-1', losTouched: [touched], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'L' } as never;
+        const w = console.warn; const l = console.log; console.warn = () => {}; console.log = () => {};
+        let outcome: string;
+        try { outcome = await createDraftOnEmit(req, { profileId: 'p', partnerId: 'g' }, deps as never); } finally { console.warn = w; console.log = l; }
+        return { outcome, prompts, recorded, assigned };
+      };
+      const ok = await run('typed', 'gen-1.lo-2');
+      check('emit, drawing LO: the generator is asked for a typed/choice question, with the LO title — never the brand-new-LO prompt',
+        ok.prompts.length === 3 && ok.prompts.every((p) => /existing practice tasks .* are drawing tasks/i.test(p) && p.includes('Learning objective: Second skill, drawn on a board\n') && !/brand-new LO/.test(p) && !p.includes('Graph the region described')), ok.prompts[0]?.slice(0, 160));
+      check('emit, drawing LO: the LO now ends with typed practice; nothing is recorded as empty',
+        ok.outcome === 'created' && ok.assigned.length === 1 && ok.assigned[0]!.loId === 'gen-1.lo-2' && ok.assigned[0]!.items.length === 3 && ok.recorded.length === 0, `${ok.outcome} ${JSON.stringify(ok.recorded)}`);
+      const typedLo = await run('typed', 'gen-1.lo-1');
+      check('emit, a typed LO of the same plan: the brand-new-LO prompt as before', typedLo.prompts.length > 0 && typedLo.prompts.every((p) => /brand-new LO/.test(p) && !/are drawing tasks/.test(p)));
+      const none = await run('nothing', 'gen-1.lo-2');
+      const ev = none.recorded[0]?.events ?? [];
+      check('emit, generation yields nothing: outcome empty:no_items, and the session gets the events naming the LO',
+        none.outcome === 'empty:no_items' && none.recorded.length === 1 && JSON.stringify(none.recorded[0]!.session) === '{"sessionId":"emit-nothing-gen-1.lo-2","studentId":"ext-7"}'
+        && ev.filter((e) => e.type === 'practice_gen_empty' && e.message.includes('loId=gen-1.lo-2')).length === 2
+        && ev.filter((e) => e.type === 'practice_gen_gate_failed' && e.message === 'loId=gen-1.lo-2 reason=no_candidate').length === 6
+        && ev.filter((e) => e.type === 'practice_draft_empty' && e.message === 'lo=gen-1.lo-2 trigger=session_end (no bank items after end-of-session top-up)').length === 1,
+        `${none.outcome} ${JSON.stringify(none.recorded)}`);
+
+      // An existing client draft that does not hold the touched LO.
+      const recorded: Array<{ type: string; message: string }> = [];
+      const draft = { _id: 'd', sessionId: 'emit-x', studentId: 'p', status: 'draft', los: [{ loId: 'gen-1.lo-1', title: 'First skill', reason: 'r', items: [it('c1'), it('c2'), it('c3')] }] };
+      const depsX = { findAssignment: async () => draft, getPlan: async () => drawPlan, assign: async () => { throw new Error('no create'); }, topUpDraft: async () => 0, topUpAssigned: async () => 0,
+        recordSessionEvents: async (_s: unknown, events: Array<{ type: string; message: string }>) => { recorded.push(...events); } };
+      const w = console.warn; console.warn = () => {};
+      let outX: string;
+      try { outX = await createDraftOnEmit({ sessionId: 'emit-x', studentId: 'ext-7', courseId: 'c', status: 'completed', lessonPlanId: 'gen-1', losTouched: ['gen-1.lo-2', 'gen-1.lo-1'], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'L' } as never, { profileId: 'p', partnerId: 'g' }, depsX as never); } finally { console.warn = w; }
+      check('emit, existing draft without the touched LO: that LO is named (the one that has items is not)',
+        outX === 'exists' && JSON.stringify(recorded) === '[{"type":"practice_draft_empty","message":"lo=gen-1.lo-2 trigger=session_end (not in the existing assignment; no bank items)"}]', `${outX} ${JSON.stringify(recorded)}`);
+      const thrower = { ...depsX, recordSessionEvents: async () => { throw new Error('mongo down'); } };
+      let threw = false;
+      console.warn = () => {};
+      try { await createDraftOnEmit({ sessionId: 'emit-y', studentId: 'ext-7', courseId: 'c', status: 'completed', lessonPlanId: 'gen-1', losTouched: ['gen-1.lo-2'], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'L' } as never, { profileId: 'p', partnerId: 'g' }, thrower as never); } catch { threw = true; } finally { console.warn = w; }
+      check('emit: a failing session-event write never fails the emit', !threw);
+    } finally {
+      if (prev === undefined) delete process.env.PRACTICE_GEN; else process.env.PRACTICE_GEN = prev;
+    }
   }
   console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
 })();

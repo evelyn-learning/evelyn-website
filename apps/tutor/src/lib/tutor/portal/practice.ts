@@ -203,6 +203,35 @@ function bankToItem(b: BankLite): PracticeItem {
   };
 }
 
+/**
+ * Does this plan hold a pure drawing try-yourself ("Graph the line.",
+ * `isDrawingOnlyItem`) for `loId`? Those are never served (planToItems drops
+ * them), so they never reach the generator as anchors — this is how a caller
+ * tells it that the LO's authored practice is drawing tasks
+ * (`GeneratePracticeItemsOptions.authoredDrawingTasks`), so it asks for a
+ * typed/choice question on the same skill instead of treating the LO as
+ * brand-new. True only when the LO OWNS at least one try-yourself
+ * (`segmentOwnerLoId`; in a single-LO plan that is every try-yourself) and
+ * ALL the try-yourselves it owns are drawing-only. A segment no LO can be
+ * named for (a multi-LO curated plan's bare `try-1` ids) counts for nobody:
+ * attributing it to every LO sent the drawing-skill prompt to LOs whose own
+ * practice is typed. A prompt hint only — it never decides what is served.
+ * Pure.
+ */
+export function loHasDrawingOnlyTask(
+  plan: {
+    los: ReadonlyArray<{ id: string }>;
+    segments: ReadonlyArray<{ kind: string; id: string; problem?: string; offTopic?: boolean }>;
+  },
+  loId: string,
+): boolean {
+  if (!plan.los.some((l) => l.id === loId)) return false;
+  const owned = (plan.segments ?? []).filter((seg) =>
+    seg.kind === 'try_yourself' && seg.offTopic !== true && !!seg.problem
+    && segmentOwnerLoId(plan.los, seg.id) === loId);
+  return owned.length > 0 && owned.every((seg) => isDrawingOnlyItem(seg.problem as string));
+}
+
 /** Extract on-LO try-yourself items from a plan that targets `loId`: only
  *  the try-yourselves that BELONG to `loId` (`segmentOwnerLoId`). With
  *  `fallbackToRequested` (topic scope, where the items are asked for by
@@ -345,6 +374,7 @@ export async function retrievePractice(
   // degrades to the retrieval-only result — never an error.
   let generated: PracticeItem[] = [];
   if (shortfall > 0 && 'loId' in req.scope) {
+    const loId = req.scope.loId;
     // Topic tag derived ENGINE-SIDE from the LO's owning plan — never the
     // portal's `courseId`, which is a Mongo ObjectId hex on the real wire,
     // not a topic-taxonomy id (round-1 review fix). `loScopePlans` here is
@@ -381,6 +411,10 @@ export async function retrievePractice(
             // (pre-exclusion — an anchor is a template, never itself served,
             // so a student-seen item is still a fine anchor).
             anchorItems: ordered,
+            // The LO's authored try-yourselves are drawing tasks (dropped by
+            // planToItems above, so absent from `ordered`): ask for the
+            // typed/choice form of the skill (2026-10-04).
+            ...(loScopePlans.some((p) => loHasDrawingOnlyTask(p, loId)) ? { authoredDrawingTasks: true } : {}),
             // Visible empty/gate-failed outcomes as `[practice-gen] …` log
             // lines (2026-10-02).
             onDebugEvent: logPracticeGenEvent,

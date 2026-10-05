@@ -30,7 +30,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import mongoose from 'mongoose';
 import { parseAttemptAnchors, type AttemptAnchor } from '../src/lib/tutor/recordings/attempt-anchors';
-import { resolveSessionSpan, type SessionSpan } from '../src/lib/tutor/recordings/session-span';
+import { resolveSessionSpan, parseAttemptSpans, type SessionSpan } from '../src/lib/tutor/recordings/session-span';
 
 const AUDIO_BASE_DIR = process.env.TUTOR_AUDIO_DIR || '/var/data/evelyn/audio';
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -250,6 +250,29 @@ export function sessionSpan(doc: SessionDoc, student?: AudioStats, tutor?: Audio
   return span;
 }
 
+/**
+ * The "active" figure as text — never "?" (2026-10-04).
+ *
+ * `span.activeSec` is null when a session is known to be resumed but its
+ * sittings cannot be sized. The common case is a retail /tutor session
+ * reloaded mid-way: that page keeps its original `startedAt` across the
+ * reload, so the document has ONE attempt span covering the whole wall time,
+ * while the audio sidecar's anchors show two attempts. The inspector then
+ * printed "active ?s". The one recorded span is the best figure there is —
+ * print it, and say what it is: it runs start to end, so it INCLUDES the
+ * pause around the reload (which is why the audio length checks stay skipped
+ * for such a session: `span.activeSec` itself is left null).
+ */
+export function activeSecondsText(doc: Pick<SessionDoc, 'attemptSpans'>, span: SessionSpan): { text: string; seconds: number | null; note: string } {
+  if (span.activeSec != null) return { text: `${span.activeSec.toFixed(1)}s`, seconds: span.activeSec, note: '' };
+  const recorded = parseAttemptSpans(doc.attemptSpans);
+  if (recorded.length === 1) {
+    const sec = recorded[0].durationSec;
+    return { text: `${sec.toFixed(1)}s`, seconds: sec, note: 'the one recorded attempt span — the page kept its start across the reload, so this includes the pause between sittings' };
+  }
+  return { text: 'unknown', seconds: null, note: 'the sittings could not be sized' };
+}
+
 export function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioStats): Issue[] {
   const issues: Issue[] = [];
   const span = sessionSpan(doc, student, tutor);
@@ -261,7 +284,7 @@ export function detectIssues(doc: SessionDoc, student: AudioStats, tutor: AudioS
     issues.push({
       severity: 'info',
       tag: 'resumed-session',
-      message: `Resumed session (${span.attemptCount ?? 'unknown number of'} attempts, from ${span.source}): wall span ${span.wallSpanSec?.toFixed(1) ?? '?'}s, active ${span.activeSec?.toFixed(1) ?? '?'}s. The doc's duration (${doc.duration ?? 'n/a'}s) is the total active seconds across all sittings (on sessions saved before 2026-10-03: the latest attempt only) — audio lengths are compared against the active span computed here.`,
+      message: `Resumed session (${span.attemptCount ?? 'unknown number of'} attempts, from ${span.source}): wall span ${span.wallSpanSec != null ? `${span.wallSpanSec.toFixed(1)}s` : 'unknown'}, active ${activeSecondsText(doc, span).text}${activeSecondsText(doc, span).note ? ` (${activeSecondsText(doc, span).note})` : ''}. The doc's duration (${doc.duration ?? 'n/a'}s) is the total active seconds across all sittings (on sessions saved before 2026-10-03: the latest attempt only) — audio lengths are compared against the active span computed here.`,
     });
   }
 
@@ -415,7 +438,7 @@ function renderAudioBlock(label: string, s: AudioStats, durationSec: number | nu
   ].filter(Boolean).join('\n');
 }
 
-function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, issues: Issue[]): string {
+export function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, issues: Issue[]): string {
   const out: string[] = [];
   const span = sessionSpan(doc, student, tutor);
   // Audio is measured against the active span (see sessionSpan).
@@ -446,11 +469,12 @@ function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, i
   out.push(`status:      ${doc.status}`);
   out.push(`startedAt:   ${fmtTime(doc.startedAt)}`);
   out.push(`endedAt:     ${fmtTime(doc.endedAt)}`);
-  out.push(`duration:    ${fmtSec(doc.duration)}  (${doc.duration?.toFixed(1) ?? '?'}s)${span.resumed ? '   ← total active seconds across all sittings (saved before 2026-10-03: latest attempt only)' : ''}`);
+  out.push(`duration:    ${fmtSec(doc.duration)}${doc.duration != null ? `  (${doc.duration.toFixed(1)}s)` : ''}${span.resumed ? '   ← total active seconds across all sittings (saved before 2026-10-03: latest attempt only)' : ''}`);
   if (span.resumed) {
-    out.push(`resumed:     yes — ${span.attemptCount ?? '?'} attempts (from ${span.source})`);
-    out.push(`wall span:   ${fmtSec(span.wallSpanSec)}  (${span.wallSpanSec?.toFixed(1) ?? '?'}s)`);
-    out.push(`active:      ${fmtSec(span.activeSec)}  (${span.activeSec?.toFixed(1) ?? '?'}s)`);
+    const active = activeSecondsText(doc, span);
+    out.push(`resumed:     yes — ${span.attemptCount ?? 'unknown number of'} attempts (from ${span.source})`);
+    out.push(`wall span:   ${fmtSec(span.wallSpanSec)}${span.wallSpanSec != null ? `  (${span.wallSpanSec.toFixed(1)}s)` : ''}`);
+    out.push(`active:      ${active.seconds != null ? `${fmtSec(active.seconds)}  (${active.text})` : active.text}${active.note ? `   ← ${active.note}` : ''}`);
   }
   out.push(`messages:    ${doc.messageCount ?? doc.transcript?.length ?? 0}`);
   out.push(`whiteboard:  ${doc.whiteboardItemCount ?? doc.whiteboardCommands?.length ?? 0} items`);
@@ -470,7 +494,7 @@ function renderReport(doc: SessionDoc, student: AudioStats, tutor: AudioStats, i
     const tutorDur = tutor.samples / 24000;
     out.push('## Sync cross-check');
     out.push('```');
-    out.push(`session ${span.resumed ? 'active span' : 'duration'}:  ${durationSec.toFixed(2)}s${span.resumed ? `  (resumed, ${span.attemptCount ?? '?'} attempts)` : ''}`);
+    out.push(`session ${span.resumed ? 'active span' : 'duration'}:  ${durationSec.toFixed(2)}s${span.resumed ? `  (resumed, ${span.attemptCount ?? 'unknown number of'} attempts)` : ''}`);
     out.push(`student @24kHz:    ${studentDur.toFixed(2)}s   delta ${(studentDur - durationSec).toFixed(2)}s`);
     out.push(`tutor   @24kHz:    ${tutorDur.toFixed(2)}s   delta ${(tutorDur - durationSec).toFixed(2)}s`);
     out.push(`student / tutor:   ${(studentDur / tutorDur).toFixed(2)}×`);

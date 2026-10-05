@@ -15,6 +15,7 @@ import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
 import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
 import { isStaleSessionReuse } from "@/lib/tutor/portal/session-id-reuse";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
+import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
@@ -212,12 +213,18 @@ export async function POST(req: NextRequest) {
       updateFields.messageCount = body.messageCount;
     if (body.whiteboardItemCount !== undefined)
       updateFields.whiteboardItemCount = body.whiteboardItemCount;
-    if (body.totalInputTokens !== undefined)
-      updateFields.totalInputTokens = body.totalInputTokens;
-    if (body.totalOutputTokens !== undefined)
-      updateFields.totalOutputTokens = body.totalOutputTokens;
-    if (body.estimatedCost !== undefined)
-      updateFields.estimatedCost = body.estimatedCost;
+    // Token totals + cost (2026-10-04). These three used to be `$set` from
+    // the body, and a page only knows its OWN sitting (a reload starts its
+    // usage list empty) — so a resumed session stored the last sitting's
+    // totals while `tokenUsage` still held every call. Now:
+    //   1. the page's figures go into the main write as `$max` (raise-only:
+    //      a later sitting's smaller figure can never lower the total), and
+    //   2. after the write the totals are re-derived from the stored
+    //      `tokenUsage` entries and raised to their sum (see "Reconcile the
+    //      token totals" below).
+    // A single-sitting session stores what it stored before: the page's
+    // figure only grows, and it equals the sum of its entries.
+    const totalsMax = clientTotalsMax(body);
     if (body.status !== undefined) updateFields.status = body.status;
     if (Array.isArray(body.topicsCovered)) updateFields.topicsCovered = body.topicsCovered;
     if (Array.isArray(body.conceptsCovered)) updateFields.conceptsCovered = body.conceptsCovered;
@@ -357,7 +364,10 @@ export async function POST(req: NextRequest) {
     const spanEndMs = spanEnd && Number.isFinite(spanEnd.getTime()) ? spanEnd.getTime() : null;
     const MAX_GUARDED_TRIES = 3;
     let attemptPlan: AttemptSavePlan | null = null;
-    let session: { sessionId: string; startedAt?: Date; duration?: number; attemptSpans?: unknown } | null = null;
+    let session: {
+      sessionId: string; startedAt?: Date; duration?: number; attemptSpans?: unknown;
+      tokenUsage?: unknown; voiceEngine?: unknown; totalInputTokens?: unknown; totalOutputTokens?: unknown; estimatedCost?: unknown;
+    } | null = null;
     let spanWritten = false;
     for (let tryNo = 0; !session; tryNo++) {
       // After MAX_GUARDED_TRIES misses, save everything EXCEPT the span and
@@ -383,7 +393,10 @@ export async function POST(req: NextRequest) {
       if (Object.keys(setFields).length > 0) op.$set = setFields;
       if (Object.keys(setOnInsertFields).length > 0) op.$setOnInsert = setOnInsertFields;
       if (Object.keys(pushFields).length > 0) op.$push = pushFields;
-      if (spanWrite) op.$max = spanWrite.max;
+      // `$max` paths never collide: the span write raises `duration` (and
+      // its own span), the totals raise the three total fields.
+      const maxFields: Record<string, number> = { ...(spanWrite?.max ?? {}), ...totalsMax };
+      if (Object.keys(maxFields).length > 0) op.$max = maxFields;
 
       try {
         session = await TutorSession.findOneAndUpdate(
@@ -423,6 +436,51 @@ export async function POST(req: NextRequest) {
       // Answer from the document as written, not from the pre-write read:
       // the figures then include whatever another mount saved in between.
       attemptPlan = planAttemptSave({ existing: session, attemptStartMs: attemptStart.getTime(), attemptDurationSec: attemptDuration });
+    }
+
+    // Reconcile the token totals with the usage entries as they stand AFTER
+    // this write (usageTotalsBehind has the why). `session` is the document
+    // the write returned (`new: true`), so it already holds the entries this
+    // request appended — and any a concurrent save appended before it: the
+    // sum and the entries it is a sum OF come from one and the same document
+    // state. Summing a pre-write read plus "the entries I am about to append"
+    // would instead drift whenever two saves interleave (each would store a
+    // total that misses the other's entries, and `$set` would keep the last).
+    //
+    // Why a second, raise-only write and not an update pipeline: the main
+    // write is the guarded span write — a positional `attemptSpans.$` update
+    // with `$push` / `$max` / `$setOnInsert` — and none of that can be
+    // expressed in a pipeline update without rewriting the guard that was
+    // proven against a real MongoDB yesterday. `$max` gives the same end
+    // state: entries are only ever appended, so the sum only grows, and
+    // whichever save lands last sees every entry and has the last word.
+    // Nothing is ever lowered, so this write cannot undo a concurrent one.
+    // Runs on the last-resort path too (the entries were appended there as
+    // well). Best-effort: the save has landed, and the next one repairs it.
+    if (session) {
+      const stored = session.tokenUsage;
+      const behind = usageTotalsBehind({
+        // Plain objects: a hydrated subdocument's own accessors are not its data.
+        tokenUsage: Array.isArray(stored)
+          ? stored.map((e: unknown) => (e && typeof (e as { toObject?: unknown }).toObject === "function" ? (e as { toObject: () => unknown }).toObject() : e))
+          : [],
+        voiceEngine: session.voiceEngine,
+        totalInputTokens: session.totalInputTokens,
+        totalOutputTokens: session.totalOutputTokens,
+        estimatedCost: session.estimatedCost,
+      }, {
+        // The entries THIS request appended (the tail of the returned
+        // array): duplicates are judged incoming-vs-stored, never within
+        // the batch (countedUsageEntries).
+        incoming: Array.isArray(body.tokenUsage) ? body.tokenUsage : [],
+      });
+      if (behind) {
+        try {
+          await TutorSession.updateOne({ sessionId }, { $max: behind });
+        } catch (err) {
+          console.error("[session-usage] token totals reconcile failed:", err);
+        }
+      }
     }
 
     // Fire-and-forget geolocation — a down ip-api can never sink the save.

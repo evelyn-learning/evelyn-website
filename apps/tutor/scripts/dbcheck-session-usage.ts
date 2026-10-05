@@ -39,6 +39,7 @@ async function main() {
   const { TutorSession } = await import('../src/models/TutorSession');
   const route = await import('../src/app/api/tutor/session-usage/route');
   const { sessionActiveSeconds } = await import('../src/lib/tutor/recordings/active-seconds');
+  const { computeUsageTotals } = await import('../src/lib/tutor/ai/usage-totals');
 
   await connectDB();
   const conn = mongoose.connection;
@@ -53,6 +54,8 @@ async function main() {
   // on an existing document) or hit the unique index (E11000) — proof that
   // the concurrency scenarios really exercised the retry paths.
   const seenRaces = { guardMiss: 0, duplicateKey: 0 };
+  // The document the route's LAST guarded write got back (hydrated, `new: true`) — what its totals reconcile reads.
+  let lastReturned: unknown = null;
   {
     const model = TutorSession as unknown as { findOneAndUpdate: (...a: unknown[]) => { exec: () => Promise<unknown> } };
     const original = model.findOneAndUpdate.bind(TutorSession);
@@ -63,6 +66,7 @@ async function main() {
         try {
           const r = await exec();
           if (r == null) seenRaces.guardMiss++;
+          else lastReturned = r;
           return r;
         } catch (err) {
           if ((err as { code?: unknown } | null)?.code === 11000) seenRaces.duplicateKey++;
@@ -92,7 +96,7 @@ async function main() {
     try { json = (await res.json()) as Record<string, unknown>; } catch { /* no body */ }
     return { status: res.status, json };
   }
-  type Stored = Record<string, unknown> & { duration?: number; attemptSpans?: Array<{ startedAt: Date; duration: number; endedAt?: Date }> };
+  type Stored = Record<string, unknown> & { tokenUsage?: unknown; voiceEngine?: unknown; duration?: number; attemptSpans?: Array<{ startedAt: Date; duration: number; endedAt?: Date }> };
   const docs = (sessionId: string) => col.find({ sessionId }).toArray() as unknown as Promise<Stored[]>;
   const one = async (sessionId: string): Promise<Stored> => (await docs(sessionId))[0] ?? ({} as Stored);
   const spansOf = (d: Stored) => (d.attemptSpans ?? []).map((s) => ({ start: Math.round((new Date(s.startedAt).getTime() - BASE) / 1000), duration: s.duration }));
@@ -370,6 +374,197 @@ async function main() {
     r = await post({ sessionId: s2, ...base, startedAt: at(0), duration: '12' });
     d = await one(s2);
     check('(informational) non-numeric duration with a valid startedAt', r.status < 500, { status: r.status, res: r.json, duration: d.duration, spans: d.attemptSpans });
+  }
+
+  // ── h. token totals + cost from the stored usage entries (2026-10-04) ───
+  console.log('\n[h] token totals + cost');
+  {
+    type Entry = Record<string, unknown>;
+    const brain = (sec: number, i: number, o: number, cr = 0, cw = 0, model: string | undefined = 'claude-sonnet-5'): Entry =>
+      ({ operation: 'brain-turn', timestamp: at(sec), inputTokens: i, outputTokens: o, ...(cr ? { cacheReadTokens: cr } : {}), ...(cw ? { cacheCreationTokens: cw } : {}), ...(model ? { model } : {}) });
+    const totalsOf = (d: Stored) => ({ totalInputTokens: d.totalInputTokens, totalOutputTokens: d.totalOutputTokens, estimatedCost: d.estimatedCost });
+    const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    // Concurrent appends land in an arbitrary order, and a float sum taken in a different order can round
+    // differently in the 4th decimal: tokens must match exactly, cost to the stored precision.
+    const sameTotals = (got: ReturnType<typeof totalsOf>, want: { totalInputTokens: number; totalOutputTokens: number; estimatedCost: number }) =>
+      got.totalInputTokens === want.totalInputTokens && got.totalOutputTokens === want.totalOutputTokens
+      && typeof got.estimatedCost === 'number' && Math.abs(got.estimatedCost - want.estimatedCost) <= 0.00011;
+    // What the page sends: its OWN list's totals (the shared function, dedupe off — the page's arithmetic).
+    const pageTotals = (list: Entry[], engine = 'claude-brain') => computeUsageTotals(list, engine, { dedupe: false });
+    // What must be stored: the totals of the entries actually in the document.
+    const fromStored = (d: Stored) => computeUsageTotals(d.tokenUsage, d.voiceEngine);
+    const hb = { ...base, voiceEngine: 'claude-brain' };
+    const sitting1 = [brain(5, 312, 214, 0, 126_600), brain(40, 96, 301, 126_600), brain(90, 143, 288, 126_600), brain(150, 77, 324, 126_829)];
+    const sitting2 = [brain(600, 204, 190, 0, 9_800), brain(640, 88, 412, 136_400), brain(700, 1500, 600, 30_000, 0, 'deepseek-chat'), { operation: 'greeting', timestamp: at(601), inputTokens: 900, outputTokens: 120 }];
+
+    // h1: one sitting, saved in two steps — exactly what the page computed, as before.
+    const s1 = sid('h1');
+    let r = await post({ sessionId: s1, ...hb, startedAt: at(0), duration: 60, tokenUsage: sitting1.slice(0, 2), ...pageTotals(sitting1.slice(0, 2)) });
+    let d = await one(s1);
+    check('h1 first save of a NEW session ($max totals on the upsert insert) → 200, totals = the page\'s', r.status === 200 && eq(totalsOf(d), pageTotals(sitting1.slice(0, 2))), { status: r.status, res: r.json, stored: totalsOf(d), page: pageTotals(sitting1.slice(0, 2)) });
+    r = await post({ sessionId: s1, ...hb, startedAt: at(0), duration: 160, tokenUsage: sitting1.slice(2), ...pageTotals(sitting1) });
+    d = await one(s1);
+    check('h1 single sitting: stored totals = the page\'s totals = the sum of the stored entries (unchanged behaviour)', r.status === 200 && (d.tokenUsage as unknown[]).length === 4 && eq(totalsOf(d), pageTotals(sitting1)) && eq(totalsOf(d), fromStored(d)), { stored: totalsOf(d), page: pageTotals(sitting1), fromEntries: fromStored(d) });
+    check('h1 …and the span write is untouched by the totals (one span 160, duration 160)', d.duration === 160 && JSON.stringify(spansOf(d)) === '[{"start":0,"duration":160}]', { duration: d.duration, spans: spansOf(d) });
+    r = await post({ sessionId: s1, startedAt: at(0), lessonProgress: { lessonPlanId: 'plan-1', currentSegmentId: 'seg-2', completedSegmentIds: [] } });
+    d = await one(s1);
+    check('h1 a checkpoint save (no totals, no entries) leaves the totals alone', r.status === 200 && eq(totalsOf(d), pageTotals(sitting1)), totalsOf(d));
+
+    // h2: THE DEFECT — reload mid-session; the page's list restarts empty and it sends the second sitting's totals only.
+    const s2 = sid('h2');
+    await post({ sessionId: s2, ...hb, startedAt: at(0), duration: 160, tokenUsage: sitting1, ...pageTotals(sitting1) });
+    r = await post({ sessionId: s2, ...hb, startedAt: at(0), duration: 700, tokenUsage: sitting2.slice(0, 2), ...pageTotals(sitting2.slice(0, 2)) });
+    d = await one(s2);
+    check('h2 resumed (retail /tutor, same startedAt): first save of sitting 2 → totals = sitting 1 + what sitting 2 has sent', r.status === 200 && (d.tokenUsage as unknown[]).length === 6 && eq(totalsOf(d), computeUsageTotals([...sitting1, ...sitting2.slice(0, 2)], 'claude-brain')), { stored: totalsOf(d), want: computeUsageTotals([...sitting1, ...sitting2.slice(0, 2)], 'claude-brain'), sitting2Only: pageTotals(sitting2.slice(0, 2)) });
+    r = await post({ sessionId: s2, ...hb, startedAt: at(0), duration: 760, endedAt: at(760), status: 'completed', tokenUsage: sitting2.slice(2), ...pageTotals(sitting2) });
+    d = await one(s2);
+    const both = computeUsageTotals([...sitting1, ...sitting2], 'claude-brain');
+    check('h2 final save of sitting 2 → totals cover BOTH sittings (all 8 entries), not the last sitting', r.status === 200 && (d.tokenUsage as unknown[]).length === 8 && eq(totalsOf(d), both) && eq(totalsOf(d), fromStored(d)) && (d.estimatedCost as number) > pageTotals(sitting2).estimatedCost && (d.totalOutputTokens as number) === pageTotals(sitting1).totalOutputTokens + pageTotals(sitting2).totalOutputTokens, { stored: totalsOf(d), want: both, sitting2Only: pageTotals(sitting2) });
+    {
+      // The reconcile prices from the document the write RETURNED: its entries must carry `model` (and the cache
+      // buckets), or the DeepSeek turn would be priced at the fallback (Sonnet) rate.
+      const returned = ((lastReturned as { tokenUsage?: unknown[] } | null)?.tokenUsage ?? []) as Array<{ toObject?: () => Record<string, unknown> }>;
+      const plain = returned.map((e) => (typeof e?.toObject === 'function' ? e.toObject() : (e as Record<string, unknown>)));
+      const wantModels = [...sitting1, ...sitting2].map((e) => (e.model as string | undefined) ?? null);
+      const returnedModels = plain.map((e) => (e.model as string | undefined) ?? null);
+      const storedModels = ((d.tokenUsage as Array<Record<string, unknown>>) ?? []).map((e) => (e.model as string | undefined) ?? null);
+      const noModel = computeUsageTotals(plain.map((e) => ({ ...e, model: undefined })), 'claude-brain').estimatedCost;
+      check('h2 entries on the document the write RETURNED carry `model` (as do the stored ones); cache buckets survive too', eq(returnedModels, wantModels) && eq(storedModels, wantModels) && plain[1]?.cacheReadTokens === 126_600 && plain[0]?.cacheCreationTokens === 126_600, { returnedModels, storedModels, hydratedAccessorTypeof: typeof (returned[6] as { model?: unknown })?.model });
+      check('h2 …and the model matters: the same entries priced without it cost more than what is stored', noModel > (d.estimatedCost as number) && eq(computeUsageTotals(plain, 'claude-brain'), both), { stored: d.estimatedCost, pricedWithoutModel: noModel });
+    }
+    check('h2 one span, duration 760, status completed (the guarded write still does its job)', d.duration === 760 && spansOf(d).length === 1 && d.status === 'completed', { duration: d.duration, spans: spansOf(d), status: d.status });
+
+    // h2b: resumed as a NEW mount (embed-style second span) that does send entries.
+    const s2b = sid('h2b');
+    await post({ sessionId: s2b, ...hb, startedAt: at(0), duration: 160, tokenUsage: sitting1, ...pageTotals(sitting1) });
+    r = await post({ sessionId: s2b, ...hb, startedAt: at(600), duration: 150, tokenUsage: sitting2, ...pageTotals(sitting2) });
+    d = await one(s2b);
+    check('h2b second mount pushing a new span AND entries in one write → two spans, duration 310, totals = both sittings', r.status === 200 && d.duration === 310 && spansOf(d).length === 2 && eq(totalsOf(d), both), { duration: d.duration, spans: spansOf(d), stored: totalsOf(d), want: both });
+
+    // h3: the client's figures are not trusted downwards.
+    const s3 = sid('h3');
+    r = await post({ sessionId: s3, ...hb, startedAt: at(0), duration: 30, tokenUsage: sitting1, totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 });
+    d = await one(s3);
+    check('h3 client sends zeros with its entries → stored = the sum of the entries', r.status === 200 && eq(totalsOf(d), pageTotals(sitting1)), totalsOf(d));
+    const s3b = sid('h3b');
+    r = await post({ sessionId: s3b, ...hb, startedAt: at(0), duration: 30, tokenUsage: sitting1 });
+    d = await one(s3b);
+    check('h3 client sends entries and NO totals → stored = the sum of the entries', r.status === 200 && eq(totalsOf(d), pageTotals(sitting1)), totalsOf(d));
+    const s3c = sid('h3c');
+    r = await post({ sessionId: s3c, ...hb, startedAt: at(0), duration: 30, tokenUsage: sitting1, totalInputTokens: 'lots', totalOutputTokens: -5, estimatedCost: null });
+    d = await one(s3c);
+    check('h3 non-numeric / negative / null totals are ignored (200, not a validation error) → the sum of the entries', r.status === 200 && eq(totalsOf(d), pageTotals(sitting1)), { status: r.status, res: r.json, stored: totalsOf(d) });
+    const s3d = sid('h3d');
+    r = await post({ sessionId: s3d, ...hb, startedAt: at(0), duration: 30, tokenUsage: sitting1.slice(0, 1), totalInputTokens: 999_999, totalOutputTokens: 9_999, estimatedCost: 1.5 });
+    d = await one(s3d);
+    check('h3 (by design) a client total ABOVE its stored entries is kept — raise-only; an append lost to a failed save lives only in the page\'s total', r.status === 200 && d.totalInputTokens === 999_999 && d.totalOutputTokens === 9_999 && d.estimatedCost === 1.5, totalsOf(d));
+
+    // h4: the same entries stored twice.
+    const s4 = sid('h4');
+    await post({ sessionId: s4, ...hb, startedAt: at(0), duration: 30, tokenUsage: sitting1, ...pageTotals(sitting1) });
+    r = await post({ sessionId: s4, ...hb, startedAt: at(0), duration: 60, tokenUsage: [sitting1[2], sitting1[3], brain(200, 50, 60)], ...pageTotals([...sitting1, brain(200, 50, 60)]) });
+    d = await one(s4);
+    check('h4 two entries re-sent: the array holds them twice (7), the totals count each call once', r.status === 200 && (d.tokenUsage as unknown[]).length === 7 && eq(totalsOf(d), pageTotals([...sitting1, brain(200, 50, 60)])) && eq(totalsOf(d), fromStored(d)), { entries: (d.tokenUsage as unknown[]).length, stored: totalsOf(d), want: pageTotals([...sitting1, brain(200, 50, 60)]) });
+
+    // h5: a client that sends totals and never entries (the embed).
+    const s5 = sid('h5');
+    r = await post({ sessionId: s5, ...hb, source: 'embed', startedAt: at(0), duration: 100, totalInputTokens: 5000, totalOutputTokens: 700, estimatedCost: 0.0421 });
+    d = await one(s5);
+    check('h5 totals-only client, first sitting → stored verbatim (no entries to derive from)', r.status === 200 && d.totalInputTokens === 5000 && d.totalOutputTokens === 700 && d.estimatedCost === 0.0421 && ((d.tokenUsage as unknown[]) ?? []).length === 0, totalsOf(d));
+    r = await post({ sessionId: s5, ...hb, source: 'embed', startedAt: at(0), duration: 130, totalInputTokens: 6100, totalOutputTokens: 820, estimatedCost: 0.0502 });
+    d = await one(s5);
+    check('h5 …its totals grow within the sitting', d.totalInputTokens === 6100 && d.totalOutputTokens === 820 && d.estimatedCost === 0.0502, totalsOf(d));
+    r = await post({ sessionId: s5, ...hb, source: 'embed', startedAt: at(900), duration: 40, totalInputTokens: 1200, totalOutputTokens: 150, estimatedCost: 0.0098 });
+    d = await one(s5);
+    // OBSERVATION: the embed resets its accumulator on every mount and sends no entries, so the true total
+    // (sitting 1 + sitting 2) cannot be rebuilt here. Raise-only keeps the LARGER sitting instead of the last one.
+    check('h5 (known gap) totals-only client resumed with smaller figures → NOT lowered to the last sitting; still not the sum', r.status === 200 && d.totalInputTokens === 6100 && d.totalOutputTokens === 820 && d.estimatedCost === 0.0502 && d.duration === 170, { stored: totalsOf(d), duration: d.duration, trueSumWouldBe: { totalInputTokens: 7300, totalOutputTokens: 970, estimatedCost: 0.06 } });
+
+    // h6: a stored document the old route left wrong is repaired by its next save.
+    const s6 = sid('h6');
+    await col.insertOne({ sessionId: s6, subject: 'Math', topic: 'Linear equations', level: 'Grade 8', inputMode: 'voice', voiceEngine: 'claude-brain', startedAt: new Date(at(0)), duration: 700,
+      tokenUsage: [...sitting1, ...sitting2].map((e) => ({ ...e, timestamp: new Date(e.timestamp as string) })), ...pageTotals(sitting2) });
+    r = await post({ sessionId: s6, startedAt: at(0), duration: 710 });
+    d = await one(s6);
+    check('h6 document left with the last sitting\'s totals → repaired to all its entries by the next save (no new entries needed)', r.status === 200 && eq(totalsOf(d), both), { stored: totalsOf(d), want: both });
+
+    // h7: realtime entries are priced by the session's voiceEngine.
+    const rt = [{ operation: 'realtime-response', timestamp: at(10), inputTokens: 0, outputTokens: 0, inputAudioTokens: 180_000, outputAudioTokens: 240_000, inputTextTokens: 30_000, outputTextTokens: 15_000 }];
+    const s7 = sid('h7');
+    await post({ sessionId: s7, ...base, voiceEngine: 'realtime-2', startedAt: at(0), duration: 30, tokenUsage: rt });
+    d = await one(s7);
+    check('h7 realtime-2 session, no client totals → cost from the realtime-2 rate card', d.estimatedCost === computeUsageTotals(rt, 'realtime-2').estimatedCost && d.estimatedCost !== computeUsageTotals(rt, 'realtime').estimatedCost, { stored: d.estimatedCost, rt2: computeUsageTotals(rt, 'realtime-2').estimatedCost, rt: computeUsageTotals(rt, 'realtime').estimatedCost });
+
+    // h8: concurrency — appends and totals must agree whatever the interleaving.
+    let allOk = true;
+    const seen: unknown[] = [];
+    for (let round = 0; round < 8; round++) {
+      const s = sid(`h8-${round}`);
+      // Sitting 1 stored; then two mounts (the old one and a new one) save at once, each appending its own entries
+      // and each sending ONLY its own totals — the worst case for a totals write computed from a stale read.
+      await post({ sessionId: s, ...hb, startedAt: at(0), duration: 100, tokenUsage: sitting1, ...pageTotals(sitting1) });
+      const a = [brain(1000 + round, 11, 21), brain(1010 + round, 12, 22, 5000), brain(1020 + round, 13, 23, 5000)];
+      const b = [brain(2000 + round, 31, 41, 0, 7000), brain(2010 + round, 32, 42, 7000), brain(2020 + round, 33, 43, 7000, 0, 'deepseek-chat')];
+      const rs = await Promise.all([
+        post({ sessionId: s, ...hb, startedAt: at(0), duration: 110, tokenUsage: [a[0]], ...pageTotals([...sitting1, a[0]]) }),
+        post({ sessionId: s, ...hb, startedAt: at(1000), duration: 20, tokenUsage: [b[0]], ...pageTotals([b[0]]) }),
+        post({ sessionId: s, ...hb, startedAt: at(0), duration: 120, tokenUsage: [a[1]], ...pageTotals([...sitting1, a[0], a[1]]) }),
+        post({ sessionId: s, ...hb, startedAt: at(1000), duration: 30, tokenUsage: [b[1]], ...pageTotals([b[0], b[1]]) }),
+        post({ sessionId: s, ...hb, startedAt: at(0), duration: 130, tokenUsage: [a[2]], ...pageTotals([...sitting1, ...a]) }),
+        post({ sessionId: s, ...hb, startedAt: at(1000), duration: 40, tokenUsage: [b[2]], ...pageTotals(b) }),
+      ]);
+      const ds = await docs(s);
+      const dd = ds[0] ?? ({} as Stored);
+      const want = computeUsageTotals([...sitting1, ...a, ...b], 'claude-brain');
+      const spans = spansOf(dd).sort((x, y) => x.start - y.start);
+      const ok = ds.length === 1 && rs.every((x) => x.status === 200) && (dd.tokenUsage as unknown[]).length === 10
+        && sameTotals(totalsOf(dd), want) && eq(totalsOf(dd), fromStored(dd))
+        && JSON.stringify(spans) === '[{"start":0,"duration":130},{"start":1000,"duration":40}]' && dd.duration === 170 && consistent(dd);
+      if (!ok) allOk = false;
+      seen.push({ docs: ds.length, statuses: rs.map((x) => x.status).join(','), entries: (dd.tokenUsage as unknown[])?.length, stored: totalsOf(dd), want, duration: dd.duration, spans });
+    }
+    check('h8 8 rounds × 6 parallel saves from two mounts, each appending entries: all 10 entries stored, totals = their sum, spans 130 + 40, duration 170', allOk, seen);
+
+    let allNew = true;
+    const seenNew: unknown[] = [];
+    for (let round = 0; round < 8; round++) {
+      const s = sid(`h9-${round}`);
+      const es = [0, 1, 2, 3, 4].map((k) => brain(10 + k, 100 + k, 50 + k, 1000 * k, k === 0 ? 4000 : 0));
+      const rs = await Promise.all(es.map((e, k) => post({ sessionId: s, ...hb, startedAt: at(0), duration: 10 * (k + 1), tokenUsage: [e], ...pageTotals(es.slice(0, k + 1)) })));
+      const ds = await docs(s);
+      const dd = ds[0] ?? ({} as Stored);
+      const ok = ds.length === 1 && rs.every((x) => x.status === 200) && (dd.tokenUsage as unknown[]).length === 5 && sameTotals(totalsOf(dd), pageTotals(es)) && eq(totalsOf(dd), fromStored(dd)) && dd.duration === 50;
+      if (!ok) allNew = false;
+      seenNew.push({ docs: ds.length, statuses: rs.map((x) => x.status).join(','), entries: (dd.tokenUsage as unknown[])?.length, stored: totalsOf(dd), want: pageTotals(es) });
+    }
+    check('h9 8 rounds × 5 parallel FIRST saves of a new session, each with one entry (insert race + retry): 5 entries, totals = their sum', allNew, seenNew);
+
+    // h10: 5 parallel saves on an EXISTING session, each re-sending an entry another save also sends (duplicates in the array).
+    let allDup = true;
+    const seenDup: unknown[] = [];
+    for (let round = 0; round < 8; round++) {
+      const s = sid(`h10-${round}`);
+      await post({ sessionId: s, ...hb, startedAt: at(0), duration: 100, tokenUsage: sitting1, ...pageTotals(sitting1) });
+      const es = [0, 1, 2, 3, 4].map((k) => brain(300 + 10 * k + round, 200 + k, 80 + k, 2000 * (k + 1), 0, k === 3 ? 'deepseek-chat' : 'claude-sonnet-5'));
+      // save k sends entry k AND re-sends entry k-1 (save 0 re-sends the last entry of sitting 1).
+      const rs = await Promise.all(es.map((e, k) => post({ sessionId: s, ...hb, startedAt: at(0), duration: 110 + 10 * k, tokenUsage: [k === 0 ? sitting1[3] : es[k - 1], e], ...pageTotals([...sitting1, ...es.slice(0, k + 1)]) })));
+      const ds = await docs(s);
+      const dd = ds[0] ?? ({} as Stored);
+      const want = computeUsageTotals([...sitting1, ...es], 'claude-brain');
+      const ok = ds.length === 1 && rs.every((x) => x.status === 200) && (dd.tokenUsage as unknown[]).length === 14 && sameTotals(totalsOf(dd), want) && eq(totalsOf(dd), fromStored(dd)) && dd.duration === 150 && spansOf(dd).length === 1;
+      if (!ok) allDup = false;
+      seenDup.push({ docs: ds.length, statuses: rs.map((x) => x.status).join(','), entries: (dd.tokenUsage as unknown[])?.length, stored: totalsOf(dd), want, withDuplicatesWouldBe: computeUsageTotals(dd.tokenUsage, 'claude-brain', { dedupe: false }), duration: dd.duration });
+    }
+    check('h10 8 rounds × 5 parallel saves on an existing session, each re-sending a neighbour\'s entry: 14 stored (5 duplicates), totals = the sum of the 9 DISTINCT entries', allDup, seenDup);
+
+    // h11 (informational): entries sent with NO timestamp. No client does this (the page always sends one, the embed
+    // sends no entries) — the schema then stamps each with Date.now at the write, so identical calls in one save can
+    // share a millisecond and be read as one call.
+    const s11 = sid('h11');
+    const bare = { operation: 'chat', inputTokens: 1000, outputTokens: 100 };
+    r = await post({ sessionId: s11, ...hb, startedAt: at(0), duration: 5, tokenUsage: [bare, bare, bare] });
+    d = await one(s11);
+    check('h11 (informational) three identical entries with no timestamp in one save → 200', r.status === 200 && (d.tokenUsage as unknown[]).length === 3, { stored: totalsOf(d), ifCountedThreeTimes: pageTotals([bare, bare, bare]), distinctTimestamps: new Set((d.tokenUsage as Array<{ timestamp?: Date }>).map((e) => e.timestamp?.getTime())).size });
   }
 
   check('no request in the whole run returned a 5xx', statuses.every((c) => c < 500), `${statuses.length} requests; non-200: ${statuses.filter((c) => c !== 200).join(',') || 'none'}`);

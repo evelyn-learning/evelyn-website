@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
+import { describeTokenResponse } from '@/lib/tutor/voice/token-log';
 
 export async function POST(request: NextRequest) {
   const t0 = Date.now();
@@ -116,7 +117,11 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('[Realtime Token] OpenAI response:', JSON.stringify(data, null, 2));
+    // NEVER log `data` itself: `data.value` is the ephemeral key (`ek_…`, valid
+    // for up to 2 h) and `data.session` carries the full instructions. The
+    // whole response used to be printed here (2026-10-04). describeTokenResponse
+    // is an allow-list: status, model, expiry, token present/missing.
+    console.log(`[Realtime Token] OpenAI response: ${describeTokenResponse(response.status, data, model)}`);
 
     // Response format: { value: "ek_...", expires_at: ..., session: {...} }
     return NextResponse.json({

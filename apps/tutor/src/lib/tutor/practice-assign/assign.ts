@@ -18,7 +18,7 @@ import { upsertAssignment, upsertDraft, summarizeAssignmentLos, replaceDraftLos,
 import type { IPracticeAssignment } from '@/models';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import type { GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
-import { topUpPractice, PRACTICE_TARGET, type TopUpInput } from './top-up';
+import { topUpPractice, losWithoutPractice, reportLosWithoutPractice, PRACTICE_TARGET, type TopUpInput } from './top-up';
 
 const MAX_LOS = 2;
 
@@ -109,7 +109,16 @@ export async function assignPractice(input: {
   // generation (PRACTICE_GEN-gated inside generatePracticeItems), never above
   // the partner cap. Every other caller passes no topUp — unchanged.
   if (input.topUp) {
-    los = await topUpPractice(los, loIds.map((loId) => ({ loId, title: titleFor(loId) })), { ...input.topUp, target: Math.min(PRACTICE_TARGET, cap) });
+    const wanted = loIds.map((loId) => ({ loId, title: titleFor(loId) }));
+    los = await topUpPractice(los, wanted, { ...input.topUp, target: Math.min(PRACTICE_TARGET, cap) });
+    // 2026-10-04: an LO that still has nothing after retrieval + top-up is
+    // named (log line + `practice_draft_empty` to the caller's event sink) —
+    // a struggling LO used to end the session with no practice and no trace.
+    reportLosWithoutPractice(
+      losWithoutPractice(wanted, los),
+      { sessionId: input.sessionId, why: 'no bank items after end-of-session top-up' },
+      input.topUp.onDebugEvent,
+    );
   }
   if (los.length === 0) return null;
   // Caps enforced HERE (not at each call site) so both the direct route and

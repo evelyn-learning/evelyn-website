@@ -13,6 +13,7 @@
  * Run: npm run test:practice-gen
  */
 import { strict as assert } from 'node:assert';
+import { createHash } from 'node:crypto';
 import {
   generatePracticeItems,
   practiceGenSources,
@@ -41,7 +42,7 @@ import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { ProblemBank } from '@/models/ProblemBank';
 import { PracticeGenCounter } from '@/models/PracticeGenCounter';
 import * as dbModule from '@core/db';
-import { retrievePractice, type PracticeSources, type PlanLite } from './practice';
+import { retrievePractice, loHasDrawingOnlyTask, type PracticeSources, type PlanLite } from './practice';
 import { buildAssessment } from './assessment';
 import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 
@@ -762,8 +763,257 @@ await test('a drawing anchor builds the skill-only (no-anchor) prompt', async ()
   assert.equal(sources.prompts.length, 1);
   assert.ok(!sources.prompts[0].includes(drawingAnchor.problemText), 'the drawing anchor text must not reach the prompt');
   assert.ok(!sources.prompts[0].includes('ANCHOR problem'), 'no anchor branch');
-  assert.ok(/brand-new LO|no existing practice/i.test(sources.prompts[0]), 'skill-only branch');
+  // 2026-10-04: the skill-only branch for a drawing LO is the drawing-LO
+  // prompt — it no longer claims the LO is brand-new.
+  assert.ok(!/brand-new LO|no existing practice/i.test(sources.prompts[0]), 'not the brand-new-LO prompt');
+  assert.ok(/existing practice tasks .* are drawing tasks/i.test(sources.prompts[0]), 'drawing-LO branch');
   assert.ok(sources.prompts[0].includes(LO));
+  delete process.env.PRACTICE_GEN;
+});
+
+// ── Drawing LO → typed/choice practice (2026-10-04) ──────────────────────────
+// Live: a graphing LO marked Needs Support got no practice. Its only
+// try-yourself was a drawing task (dropped before it could be an anchor), so
+// the generator got the brand-new-LO prompt and returned nothing usable
+// (`no_candidate` ×4, `practice_gen_empty`).
+const sha256 = (t: string): string => createHash('sha256').update(t).digest('hex');
+
+/** The drawing-LO prompt's own instruction (everything before the shared
+ *  answer-format clauses, which legitimately say "never ask them to draw"). */
+function drawingLoInstruction(prompt: string): string {
+  const cut = prompt.indexOf('If the correct answer to your problem is a percentage');
+  assert.ok(cut > 0, 'shared clauses follow the instruction');
+  return prompt.slice(0, cut);
+}
+
+await test('drawing LO (flag from the caller, no anchors): the prompt asks for a typed/choice question on the same skill', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen() });
+  await generatePracticeItems(
+    baseOpts({ loId: 'gen-9.lo-2', topic: 'A topic', anchorItems: [], authoredDrawingTasks: true, loTitle: 'An LO  title\nover two lines', shortfall: 2 }),
+    sources,
+  );
+  assert.equal(sources.prompts.length, 2);
+  for (const p of sources.prompts) {
+    assert.ok(/existing practice tasks .* are drawing tasks/i.test(p), p);
+    assert.ok(!/brand-new LO|no existing practice/i.test(p), 'never claims the LO is new');
+    assert.ok(/answered by typing or choosing/i.test(p), 'asks for a typed/choice form');
+    assert.ok(/SAME skill/.test(p), 'same skill');
+    assert.ok(/interpret or\s+describe/i.test(p) && /decide a property/i.test(p) && /give a value/i.test(p), 'names the three typed forms');
+    assert.ok(/Do NOT ask the student to draw, sketch, graph, plot, shade or\s+label/i.test(p), 'the no-drawing rule');
+    assert.ok(p.includes('gen-9.lo-2') && p.includes('(topic: A topic)'));
+    assert.ok(p.includes('Learning objective: An LO title over two lines\n'), 'title on one line');
+    assert.ok(p.includes('"answerKind"') && p.includes('as a percent'), 'shared answer clauses kept');
+    assert.ok(/JSON object only/.test(p));
+  }
+  assert.notEqual(sources.prompts[0], sources.prompts[1], 'per-slot directive still differs');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('drawing LO: the instruction is structural — no subject or topic word of its own', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const run = async (loId: string, topic: string) => {
+    const sources = makeStubSources({ gen: numericGen() });
+    await generatePracticeItems(baseOpts({ loId, topic, anchorItems: [], authoredDrawingTasks: true, shortfall: 1 }), sources);
+    return sources.prompts[0];
+  };
+  const a = await run('LO_A', 'TOPIC_A');
+  const b = await run('LO_B', 'TOPIC_B');
+  // Identical apart from the LO id and topic that were passed in.
+  assert.equal(a.replace('LO_A', '@').replace('TOPIC_A', '#'), b.replace('LO_B', '@').replace('TOPIC_B', '#'));
+  // And nothing in the instruction names a subject (the live LO was linear
+  // inequalities; a force diagram or a Lewis structure must read the same).
+  assert.ok(!/inequalit|linear|slope|intercept|axis|axes|coordinate|dashed|solid|force|molecul|triangle|angle/i.test(drawingLoInstruction(a)), drawingLoInstruction(a));
+  assert.ok(!a.includes('Learning objective: '), 'no title line when none was given');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('drawing LO (a drawing anchor in the pool, no flag): same branch; the drawing text and loTitle rules hold', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen() });
+  await generatePracticeItems(baseOpts({ anchorItems: [drawingAnchor], shortfall: 2 }), sources);
+  assert.equal(sources.prompts.length, 2);
+  for (const p of sources.prompts) {
+    assert.ok(/existing practice tasks .* are drawing tasks/i.test(p), p);
+    assert.ok(!p.includes(drawingAnchor.problemText), 'the drawing task text still never reaches the prompt');
+  }
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('drawing LO: verified typed/choice candidates are served and banked (mcq, numeric, free)', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const mcq: GenPayload = { problemText: 'A region is described in words. Which description matches it?', finalAnswer: 'B', responseFormat: 'mcq', choices: ['first', 'second', 'third'], answerKind: 'mcq' };
+  const numeric: GenPayload = { ...numericGen('A line is described by two stated values. Give the value where it crosses the vertical axis.', '3'), answerKind: 'numeric' };
+  const sources = makeStubSources({ perCall: [mcq, numeric] });
+  const items = await generatePracticeItems(baseOpts({ anchorItems: [], authoredDrawingTasks: true, shortfall: 2 }), sources);
+  assert.deepEqual(items.map((i) => i.responseFormat).sort(), ['mcq', 'numeric']);
+  assert.equal(sources.persisted.length, 2, 'both banked');
+  assert.ok(items.every((i) => i.id.startsWith(`practice-gen.${LO}.`) && i.loId === LO));
+  delete process.env.PRACTICE_GEN;
+});
+
+/** The REAL generateAndVerify (generate → gate → 1 retry) with the generator,
+ *  the blind re-solve and the key verifier replaced — no Anthropic. Every
+ *  generator call returns the next payload of `payloads` (last one repeats). */
+async function runRealGateWith(payloads: GenPayload[], opts: Partial<GeneratePracticeItemsOptions> = {}) {
+  const pg = problemGeneratorModule as unknown as { generateCandidate: unknown; verifyClaimedAnswer: unknown };
+  const kv = keyVerifyModule as unknown as { verifyAnswerKey: unknown };
+  const orig = { gen: pg.generateCandidate, verify: pg.verifyClaimedAnswer, key: kv.verifyAnswerKey };
+  let n = 0;
+  let solves = 0;
+  pg.generateCandidate = async () => { const gen = payloads[Math.min(n, payloads.length - 1)]; n++; return { gen, hash: `rh${n}` }; };
+  pg.verifyClaimedAnswer = async () => { solves++; return { agree: true, solved: 'same' }; };
+  kv.verifyAnswerKey = async () => { solves++; return { status: 'verified', model: 'fake-content-verify', reason: 'fake', usage: { calls: 1, inputTokens: 0, outputTokens: 0 } }; };
+  process.env.PRACTICE_GEN = 'on';
+  const events: Array<{ type: string; message: string }> = [];
+  const persisted: Array<{ id: string; gen: GenPayload }> = [];
+  try {
+    const real = practiceGenSources();
+    const sources: PracticeGenSources = {
+      generateAndVerify: real.generateAndVerify,
+      async reserve(_s, _l, want) { return want; },
+      async persist(row) { persisted.push({ id: row.id, gen: row.gen }); },
+    };
+    const items = await generatePracticeItems(
+      baseOpts({ shortfall: 1, anchorItems: [], authoredDrawingTasks: true, onDebugEvent: (type, message) => events.push({ type, message }), ...opts }),
+      sources,
+    );
+    return { items, events, persisted, generations: n, solves };
+  } finally {
+    pg.generateCandidate = orig.gen;
+    pg.verifyClaimedAnswer = orig.verify;
+    kv.verifyAnswerKey = orig.key;
+    delete process.env.PRACTICE_GEN;
+  }
+}
+
+await test('drawing LO (real gate): a generator that returns a drawing task is still rejected — free, numeric and mcq alike — and nothing is banked', async () => {
+  const drawingFree: GenPayload = { problemText: 'Graph the region and shade the side that is included.', finalAnswer: 'the upper side', responseFormat: 'numeric', answerKind: 'free', expectedAnswer: 'the upper side' };
+  const drawingNumeric: GenPayload = { ...numericGen('Sketch the line through the two stated points.', '2'), answerKind: 'numeric' };
+  const drawingMcq: GenPayload = { problemText: 'Plot the three stated points on the grid.', finalAnswer: 'A', responseFormat: 'mcq', choices: ['one', 'two'], answerKind: 'mcq' };
+  for (const [payload, reason] of [[drawingFree, 'free_shape'], [drawingNumeric, 'drawing_task'], [drawingMcq, 'drawing_task']] as const) {
+    const r = await runRealGateWith([payload]);
+    assert.deepEqual(r.items, [], reason);
+    assert.deepEqual(r.persisted, [], `${reason}: nothing banked`);
+    assert.equal(r.generations, 2, 'first attempt + the one retry');
+    assert.equal(r.solves, 0, 'a drawing task never reaches a solver — even one that would agree');
+    const gated = r.events.filter((e) => e.type === 'practice_gen_gate_failed');
+    assert.deepEqual(gated.map((g) => g.message), [`loId=${LO} reason=${reason}`, `loId=${LO} reason=${reason}`]);
+    assert.ok(r.events.some((e) => e.type === 'practice_gen_empty' && e.message.includes(`loId=${LO}`)), 'the empty outcome names the LO');
+  }
+});
+
+await test('drawing LO (real gate): a drawing task first, a typed question on the retry → the typed one is verified, served and banked', async () => {
+  const drawing: GenPayload = { ...numericGen('Sketch the line through the two stated points.', '2'), answerKind: 'numeric' };
+  const typed: GenPayload = { problemText: 'A boundary is described in words. Is the stated point included? Answer yes or no.', finalAnswer: 'yes', responseFormat: 'numeric', answerKind: 'free', expectedAnswer: 'yes' };
+  const r = await runRealGateWith([drawing, typed]);
+  assert.equal(r.items.length, 1);
+  assert.equal(r.items[0].responseFormat, 'free');
+  assert.equal(r.items[0].expectedAnswer, 'yes');
+  assert.equal(r.persisted.length, 1);
+  assert.equal(r.persisted[0].gen.verifierModel, 'fake-content-verify', 'free → the key check, stamped');
+  assert.deepEqual([r.generations, r.solves], [2, 1]);
+});
+
+await test('gate: a drawing-only numeric/mcq candidate fails drawing_task; one with a typed question still passes', async () => {
+  assert.deepEqual(await checkGeneratedAnswer(numericGen('Graph the line y = 2x + 1.', '1'), agreeVerify()), { ok: false, reason: 'drawing_task' });
+  assert.deepEqual(
+    await checkGeneratedAnswer({ problemText: 'Draw the figure described.', finalAnswer: 'A', responseFormat: 'mcq', choices: ['x', 'y'] }, agreeVerify()),
+    { ok: false, reason: 'drawing_task' },
+  );
+  assert.equal((await checkGeneratedAnswer(numericGen('The graph of f passes through (1, 2) and (3, 6). Find its slope.', '2'), agreeVerify())).ok, true);
+  assert.equal((await checkGeneratedAnswer(numericGen('Draw the free-body diagram. How many forces act on the block?', '3'), agreeVerify())).ok, true, 'a typed-answer cue keeps it');
+});
+
+await test('normal LO: the anchor prompt and the brand-new-LO prompt are byte-identical to before (golden, captured 2026-10-04 pre-change)', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const golden: Array<[string, PracticeItem[], 2 | undefined, Array<[number, string]>]> = [
+    ['anchor', [bankAnchor], 2, [
+      [1388, '4d03de832a6a8bc833186b3567bbc5a9fd1e48246e9e1d81a1c8a6a4f2e0d4d0'],
+      [1695, '511440273ee6884430fb6a20cfa6fea7b41b6b7c5ea22fdd0e73a36880877503'],
+    ]],
+    ['brand-new', [], undefined, [
+      [1375, '58fd9b8408289f0ca292a8bb4cbf41fc2aecb91f09893c149ba6165606c5116a'],
+      [1682, 'd40027ef3e3a0e50837f6533d47ae8e0a11b4cd2c171c72e58b3ff955df9e350'],
+    ]],
+  ];
+  for (const [name, anchorItems, difficulty, want] of golden) {
+    // loTitle alone must not change either prompt; only the drawing-LO branch reads it.
+    for (const extra of [{}, { loTitle: 'A title that must not appear' }, { authoredDrawingTasks: false }]) {
+      const sources = makeStubSources({ gen: null });
+      await generatePracticeItems({ studentId: 's', loId: LO, topic: TOPIC, shortfall: 2, anchorItems, difficulty, ...extra }, sources);
+      assert.deepEqual(sources.prompts.map((p) => [p.length, sha256(p)]), want, `${name} ${JSON.stringify(extra)}`);
+    }
+  }
+  // A typed anchor in the pool keeps the anchor prompt even on a drawing LO.
+  const sources = makeStubSources({ gen: null });
+  await generatePracticeItems({ studentId: 's', loId: LO, topic: TOPIC, shortfall: 2, anchorItems: [bankAnchor], difficulty: 2, authoredDrawingTasks: true, loTitle: 'x' }, sources);
+  assert.deepEqual(sources.prompts.map((p) => [p.length, sha256(p)]), golden[0][3]);
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('practice: an LO whose only try-yourself is a drawing task → generation is told so (authoredDrawingTasks), a typed LO is not', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const plan = (id: string, problem: string): PlanLite => ({
+    id, topic: 'a-topic', los: [{ id: `${id}.lo-1` }, { id: `${id}.lo-2` }],
+    segments: [
+      { kind: 'try_yourself', id: `${id}.lo-1-try`, problem: 'Solve 2x = 6.', expectedAnswer: '3', responseFormat: 'numeric' },
+      { kind: 'try_yourself', id: `${id}.lo-2-try`, problem, expectedAnswer: 'see board' },
+    ],
+  });
+  const drawPlan = plan('gen-draw', 'Graph the region described and shade the included side.');
+  const typedPlan = plan('gen-typed', 'Find the value of x when 3x = 12.');
+  assert.equal(loHasDrawingOnlyTask(drawPlan, 'gen-draw.lo-2'), true);
+  assert.equal(loHasDrawingOnlyTask(drawPlan, 'gen-draw.lo-1'), false, 'another LO of the same plan is not a drawing LO');
+  assert.equal(loHasDrawingOnlyTask(typedPlan, 'gen-typed.lo-2'), false);
+  assert.equal(loHasDrawingOnlyTask(drawPlan, 'not-in-plan'), false);
+  // Review item 4: an UNOWNED segment in a multi-LO plan (curated bare ids)
+  // was attributed to EVERY LO, so a non-drawing LO got the drawing prompt.
+  const bareMulti = {
+    los: [{ id: 'lo-1' }, { id: 'lo-2' }],
+    segments: [
+      { kind: 'try_yourself', id: 'try-1', problem: 'Graph the line y = 2x + 1.' },
+      { kind: 'try_yourself', id: 'try-2', problem: 'Solve 2x = 8.' },
+    ],
+  };
+  assert.equal(loHasDrawingOnlyTask(bareMulti, 'lo-1'), false, 'unowned drawing segment does not make lo-1 a drawing LO');
+  assert.equal(loHasDrawingOnlyTask(bareMulti, 'lo-2'), false, 'unowned drawing segment does not make lo-2 a drawing LO');
+  assert.equal(loHasDrawingOnlyTask({ los: [{ id: 'lo-1' }, { id: 'lo-2' }], segments: [{ kind: 'try_yourself', id: 'try-1', problem: 'Graph the line y = 2x + 1.' }] }, 'lo-1'), false,
+    'multi-LO plan with ONLY an unowned drawing segment: still no LO owns it');
+  assert.equal(loHasDrawingOnlyTask({ los: [{ id: 'only-lo' }], segments: [{ kind: 'try_yourself', id: 'try-1', problem: 'Graph the line y = 2x + 1.' }] }, 'only-lo'), true,
+    'single-LO drawing plan (bare ids) → true');
+  assert.equal(loHasDrawingOnlyTask({ los: [{ id: 'only-lo' }], segments: [
+    { kind: 'try_yourself', id: 'try-1', problem: 'Graph the line y = 2x + 1.' },
+    { kind: 'try_yourself', id: 'try-2', problem: 'Solve 2x = 8.' },
+  ] }, 'only-lo'), false, 'single-LO plan: ALL its try-yourselves must be drawing-only');
+  assert.equal(loHasDrawingOnlyTask({ los: [{ id: 'lo-1' }, { id: 'lo-2' }], segments: [
+    { kind: 'try_yourself', id: 'lo-1-try-a', problem: 'Graph the line y = 2x + 1.' },
+    { kind: 'try_yourself', id: 'lo-1-try-b', problem: 'Solve 2x = 8.' },
+    { kind: 'try_yourself', id: 'lo-2-try-a', problem: 'Sketch the parabola and shade below it.' },
+  ] }, 'lo-1'), false, 'an LO with one drawing and one typed try-yourself is not a drawing LO');
+  assert.equal(loHasDrawingOnlyTask({ los: [{ id: 'lo-1' }, { id: 'lo-2' }], segments: [
+    { kind: 'try_yourself', id: 'lo-1-try-a', problem: 'Solve 2x = 8.' },
+    { kind: 'try_yourself', id: 'lo-2-try-a', problem: 'Graph the line y = 2x + 1.' },
+    { kind: 'try_yourself', id: 'try-9', problem: 'Solve 3x = 9.' },
+  ] }, 'lo-2'), true, 'an LO that owns only drawing try-yourselves qualifies; an unowned typed one is ignored');
+  for (const [p, lo, wantDrawing] of [[drawPlan, 'gen-draw.lo-2', true], [typedPlan, 'gen-typed.lo-2', false], [drawPlan, 'gen-draw.lo-1', false]] as const) {
+    const src: PracticeSources = {
+      async plansForLoId(loId) { return loId.startsWith(p.id!) ? [p] : []; },
+      async plansForTopic() { return []; },
+      async bankForLoId() { return []; },
+      async bankForTopic() { return []; },
+    };
+    const gen = makeStubSources({ gen: numericGen('A typed question?', '7') });
+    const res = await retrievePractice({ studentId: 's1', courseId: 'c1', scope: { loId: lo }, count: 3 }, src, gen);
+    assert.ok(gen.prompts.length > 0, `${lo}: generation ran for the shortfall`);
+    for (const prompt of gen.prompts) {
+      assert.equal(/existing practice tasks .* are drawing tasks/i.test(prompt), wantDrawing, `${lo}: ${prompt.slice(0, 80)}`);
+    }
+    if (wantDrawing) {
+      assert.ok(res.items.length >= 1 && res.items.every((i) => i.id.startsWith('practice-gen.')), 'the drawing LO now gets typed practice');
+      assert.ok(res.items.every((i) => !isDrawingOnlyItem(i.problemText)));
+    }
+  }
   delete process.env.PRACTICE_GEN;
 });
 
@@ -1140,6 +1390,79 @@ await test('assessment: the same plan builds a calibration set without the pure 
   );
   assert.deepEqual(set.items.map((i) => i.itemId), ['gen-fbd::try-fbd-q', 'gen-fbd::try-a', 'gen-fbd::try-n']);
 });
+
+// ── problem-generator: reply parsing (2026-10-04) ────────────────────────
+// A reply that yielded no candidate used to vanish (`reason=no_candidate`
+// with nothing to read). The parser now names the reason, and tolerates the
+// two harmless deviations from "ONLY a JSON object".
+{
+  const { parseGenPayload, parseGenPayloadDetailed, describeUnusableGenReply } = problemGeneratorModule;
+  const OBJ = '{"problemText": "A rectangle is 6 in by 8 in. Find its area.", "finalAnswer": "48 square inches", "teachingAnswer": "6 × 8 = 48.", "responseFormat": "numeric", "hints": ["Area = length × width"]}';
+
+  await test('gen-parse: a bare JSON object parses exactly as before', () => {
+    assert.deepEqual(parseGenPayload(OBJ), {
+      problemText: 'A rectangle is 6 in by 8 in. Find its area.', finalAnswer: '48 square inches',
+      teachingAnswer: '6 × 8 = 48.', responseFormat: 'numeric', hints: ['Area = length × width'], choices: undefined,
+    });
+  });
+  await test('gen-parse: a whole-reply ```json fence still parses', () => {
+    assert.equal(parseGenPayload('```json\n' + OBJ + '\n```')?.finalAnswer, '48 square inches');
+  });
+  await test('gen-parse: prose before and after the object → the object is extracted', () => {
+    const r = parseGenPayload(`Here is a fresh problem:\n\n${OBJ}\n\nLet me know if you want another.`);
+    assert.equal(r?.problemText, 'A rectangle is 6 in by 8 in. Find its area.');
+    assert.equal(r?.finalAnswer, '48 square inches');
+  });
+  await test('gen-parse: prose followed by a fenced block → the object is extracted', () => {
+    assert.equal(parseGenPayload('Sure — here it is.\n```json\n' + OBJ + '\n```\nHope that helps!')?.finalAnswer, '48 square inches');
+  });
+  await test('gen-parse: braces inside strings and a non-JSON brace group in the preamble do not confuse the extraction', () => {
+    const obj = '{"problemText": "Simplify $\\\\frac{6}{8}$ — write it as {a}/{b}. A \\"}\\" is not a close.", "finalAnswer": "3/4"}';
+    const r = parseGenPayload(`Using the set {1, 2} as an anchor:\n${obj}\nDone.`);
+    assert.equal(r?.problemText, 'Simplify $\\frac{6}{8}$ — write it as {a}/{b}. A "}" is not a close.');
+    assert.equal(r?.finalAnswer, '3/4');
+  });
+  await test('gen-parse: nested objects are kept whole (the outer object is the payload)', () => {
+    const r = parseGenPayload('Note: {"problemText": "What is 2 + 2?", "finalAnswer": "4", "meta": {"k": {"deep": 1}}} trailing');
+    assert.equal(r?.finalAnswer, '4');
+  });
+  await test('gen-parse: a numeric finalAnswer is stringified (48, -2.5, 0)', () => {
+    assert.equal(parseGenPayload('{"problemText": "Area of a 6 by 8 rectangle?", "finalAnswer": 48}')?.finalAnswer, '48');
+    assert.equal(parseGenPayload('{"problemText": "Solve 2x = -5.", "finalAnswer": -2.5}')?.finalAnswer, '-2.5');
+    assert.equal(parseGenPayload('{"problemText": "What is 3 - 3?", "finalAnswer": 0}')?.finalAnswer, '0');
+  });
+  await test('gen-parse: a free-kind payload still takes its answer from expectedAnswer', () => {
+    const r = parseGenPayload('{"problemText": "Name the y-intercept.", "answerKind": "free", "expectedAnswer": "(0, 3)"}');
+    assert.equal(r?.finalAnswer, '(0, 3)');
+    assert.equal(r?.answerKind, 'free');
+  });
+  await test('gen-parse: failures name their reason', () => {
+    const reason = (raw: string) => { const r = parseGenPayloadDetailed(raw); return r.ok ? 'ok' : r.reason; };
+    assert.equal(reason('I could not write a problem for that anchor.'), 'unparseable_json');
+    assert.equal(reason(''), 'unparseable_json');
+    assert.equal(reason('[1, 2, 3]'), 'unparseable_json');
+    // Cut off at the token cap: never balances.
+    assert.equal(reason('{"problemText": "A long problem that never fin'), 'unparseable_json');
+    // NOT repaired: an unescaped backslash is invalid JSON, and guessing a repair could change the maths.
+    // (`\sqrt` here: `\s` is not a JSON escape. `\frac` / `\times` / `\nabla` DO parse — `\f`, `\t`, `\n` are escapes.)
+    assert.equal(reason('{"problemText": "Simplify $\\sqrt{8}$.", "finalAnswer": "2\\sqrt{2}"}'), 'unparseable_json');
+    assert.equal(reason('{"finalAnswer": "4"}'), 'missing_problem_text');
+    assert.equal(reason('{"problemText": "   ", "finalAnswer": "4"}'), 'missing_problem_text');
+    assert.equal(reason('{"problemText": "What is 2 + 2?"}'), 'missing_final_answer');
+    assert.equal(reason('{"problemText": "What is 2 + 2?", "finalAnswer": ""}'), 'missing_final_answer');
+    assert.equal(reason('{"problemText": "What is 2 + 2?", "finalAnswer": ["4"]}'), 'missing_final_answer');
+    assert.equal(reason('{"problemText": "What is 2 + 2?", "finalAnswer": null}'), 'missing_final_answer');
+    assert.equal(parseGenPayload('{"problemText": "What is 2 + 2?"}'), null);
+  });
+  await test('gen-parse: the log line is ONE line, carries reason + length, and caps the reply at 300 characters', () => {
+    const raw = 'Sorry,\nI cannot\r\n\tdo that.\n' + 'x'.repeat(1000);
+    const line = describeUnusableGenReply('unparseable_json', raw);
+    assert.ok(!/[\r\n\t]/.test(line), 'no line breaks or tabs');
+    assert.ok(line.startsWith(`[problem-generator] candidate_unusable reason=unparseable_json len=${raw.length} head="Sorry, I cannot do that. xxx`));
+    const head = JSON.parse(line.slice(line.indexOf('head=') + 5)) as string;
+    assert.equal(head.length, 300);
+  });
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

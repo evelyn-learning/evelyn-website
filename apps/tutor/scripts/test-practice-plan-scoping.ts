@@ -40,6 +40,7 @@ import type { PracticeGenSources } from '@/lib/tutor/portal/practice-gen';
 import { buildAssessment } from '@/lib/tutor/portal/assessment';
 import { mongoPracticeSources, resolveGradeItem, resolveAssessmentItem, type ItemKeyDeps } from '@/lib/tutor/portal/adapters';
 import { resolveAssignmentItems } from '@/lib/tutor/practice-assign/resolve';
+import { createDraftOnEmit, buildSessionEventsWrite, PRACTICE_SESSION_EVENT_TYPES, PRACTICE_SESSION_EVENTS_PER_SESSION_MAX } from '@/lib/tutor/practice-assign/emit-draft';
 import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 import { buildHomeworkPlanFields, homeworkLoIdFor } from '@/lib/tutor/lesson-plan/homework';
 import { LessonPlanModel } from '@/models/LessonPlan';
@@ -608,6 +609,64 @@ const STORED_FREESTYLE_OWN = storedPlan({
     assert.equal(key.expectedAnswer, '-2');
     assert.equal(key.responseFormat, 'numeric');
     assert.equal(key.rubric, undefined);
+  });
+
+  // ── Review 5e: the end-of-session practice events written to the session ──
+  await test('emit session-event write: matched on sessionId + the session\'s stored partner id, capped per session', async () => {
+    const now = new Date('2026-10-04T10:00:00Z');
+    const built = buildSessionEventsWrite({ sessionId: 's-1', partnerId: 'greenapple' }, [{ type: 'practice_gen_empty', message: 'x'.repeat(900) }], now);
+    assert.ok(built);
+    const w = built!;
+    // TutorSession.studentId is the embed token's student id as the BROWSER posted it (optional, absent on
+    // some sessions); the emit's studentId is what the partner's SERVER sent. Not one guaranteed id space.
+    assert.equal(JSON.stringify(Object.keys(w.filter).sort()), JSON.stringify(['$expr', 'sessionId', 'sourcePartnerId']));
+    assert.equal(w.filter.sessionId, 's-1');
+    assert.equal(w.filter.sourcePartnerId, 'greenapple');
+    assert.ok(!('studentId' in w.filter), 'never matched on the emit student id');
+    // Cap: no append once the session holds PRACTICE_SESSION_EVENTS_PER_SESSION_MAX events of these types.
+    assert.equal(PRACTICE_SESSION_EVENTS_PER_SESSION_MAX, 40);
+    const expr = JSON.stringify(w.filter.$expr);
+    assert.ok(expr.includes('"$lt"') && expr.includes('"$size"') && expr.endsWith(',40]}'), expr);
+    for (const t of PRACTICE_SESSION_EVENT_TYPES) assert.ok(expr.includes(`"${t}"`), `cap counts ${t}`);
+    const pushed = w.update.$push.debugEvents.$each;
+    assert.equal(pushed.length, 1);
+    assert.equal(pushed[0]!.message.length, 500);
+    assert.equal(pushed[0]!.timestamp, now);
+    assert.equal(buildSessionEventsWrite({ sessionId: 's-1', partnerId: '' }, [{ type: 'practice_gen_empty', message: 'm' }], now), null, 'no partner id ⇒ no write (never a sessionId-only match)');
+    assert.equal(buildSessionEventsWrite({ sessionId: 's-1', partnerId: 'g' }, [], now), null);
+  });
+
+  await test('emit session-event write: fire-and-forget — never awaited, a failure never reaches the emit', async () => {
+    const plan = { id: 'ev-1', topic: 't', title: 'T', los: [{ id: 'ev-1.lo-1', description: 'First' }, { id: 'ev-1.lo-2', description: 'Second' }], segments: [] };
+    const draft = { _id: 'd', sessionId: 'x', studentId: 'p', status: 'draft', los: [{ loId: 'ev-1.lo-1', title: 'First', reason: 'r', items: [] }] };
+    const req = (sessionId: string) => ({ sessionId, studentId: 'ext-7', courseId: 'c', status: 'completed', lessonPlanId: 'ev-1', losTouched: ['ev-1.lo-2'], masteryDeltas: [], gaps: [], notesTouched: [], practiceLocator: 'L' }) as never;
+    const base = { findAssignment: async () => draft, getPlan: async () => plan, assign: async () => { throw new Error('no create'); }, topUpDraft: async () => 0, topUpAssigned: async () => 0 };
+    const warn = console.warn; console.warn = () => {};
+    try {
+      // A write that NEVER settles must not hold the emit.
+      const calls: unknown[][] = [];
+      const hanging = { ...base, recordSessionEvents: (...args: unknown[]) => { calls.push(args); return new Promise<void>(() => {}); } };
+      const outcome = await Promise.race([
+        createDraftOnEmit(req('ev-hang'), { profileId: 'p', partnerId: 'greenapple' }, hanging as never),
+        new Promise<string>((resolve) => setTimeout(() => resolve('TIMED-OUT'), 1500)),
+      ]);
+      assert.equal(outcome, 'exists', 'the emit returned without waiting for the session-event write');
+      assert.equal(calls.length, 1);
+      assert.deepEqual(calls[0]![0], { sessionId: 'ev-hang', studentId: 'ext-7' });
+      assert.equal((calls[0]![1] as Array<{ type: string }>)[0]!.type, 'practice_draft_empty');
+      assert.deepEqual(calls[0]![2], { partnerId: 'greenapple' }, 'the verified partner id is handed to the write');
+      // Rejections and synchronous throws are caught and logged.
+      let unhandled = 0;
+      const onUnhandled = () => { unhandled++; };
+      process.on('unhandledRejection', onUnhandled);
+      const rejecting = { ...base, recordSessionEvents: async () => { throw new Error('mongo down'); } };
+      assert.equal(await createDraftOnEmit(req('ev-reject'), { profileId: 'p', partnerId: 'g' }, rejecting as never), 'exists');
+      const throwing = { ...base, recordSessionEvents: () => { throw new Error('sync boom'); } };
+      assert.equal(await createDraftOnEmit(req('ev-throw'), { profileId: 'p', partnerId: 'g' }, throwing as never), 'exists');
+      await new Promise((r) => setTimeout(r, 20));
+      process.off('unhandledRejection', onUnhandled);
+      assert.equal(unhandled, 0, 'no unhandled rejection from the detached write');
+    } finally { console.warn = warn; }
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

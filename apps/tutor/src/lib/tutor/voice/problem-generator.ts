@@ -283,23 +283,81 @@ export interface GenPayload {
   verifierModel?: string;
 }
 
-function parseGenPayload(raw: string): GenPayload | null {
+/** Why a model reply could not be turned into a candidate. */
+export type GenParseFailure = 'unparseable_json' | 'missing_problem_text' | 'missing_final_answer';
+export type GenParseResult = { ok: true; gen: GenPayload } | { ok: false; reason: GenParseFailure };
+
+/**
+ * The first balanced `{…}` in `text` that parses as a JSON object, or null.
+ * Braces inside JSON strings are not counted. An earlier brace group that is
+ * not JSON (prose such as "use {x}", LaTeX `\frac{1}{2}` in a preamble) is
+ * skipped and the scan moves on to the next `{`.
+ */
+function firstJsonObject(text: string): Record<string, unknown> | null {
+  for (let start = text.indexOf('{'); start !== -1; start = text.indexOf('{', start + 1)) {
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (ch === '\\') escaped = true;
+        else if (ch === '"') inString = false;
+        continue;
+      }
+      if (ch === '"') inString = true;
+      else if (ch === '{') depth++;
+      else if (ch === '}' && --depth === 0) {
+        try {
+          const j: unknown = JSON.parse(text.slice(start, i + 1));
+          if (j && typeof j === 'object' && !Array.isArray(j)) return j as Record<string, unknown>;
+        } catch { /* not JSON — try the next `{` */ }
+        break;
+      }
+    }
+  }
+  return null;
+}
+
+/** The reply as a JSON object: the whole reply when it is one (the prompt
+ *  asks for exactly that), else the first JSON object inside it — a reply
+ *  with a sentence before/after the object, or the object in a fenced code
+ *  block, used to be thrown away whole. */
+function replyJsonObject(raw: string): Record<string, unknown> | null {
   try {
-    const j = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
-    if (typeof j.problemText !== 'string' || !j.problemText.trim()) return null;
-    const answerKind = j.answerKind === 'free' || j.answerKind === 'mcq' || j.answerKind === 'numeric' ? j.answerKind : undefined;
-    const expectedAnswer = typeof j.expectedAnswer === 'string' ? j.expectedAnswer.trim() : undefined;
-    // A free-kind payload may carry its answer only in expectedAnswer.
-    const finalAnswer =
-      typeof j.finalAnswer === 'string' && j.finalAnswer.trim()
-        ? j.finalAnswer.trim()
-        : answerKind === 'free' && expectedAnswer
-          ? expectedAnswer
-          : '';
-    if (!finalAnswer) return null;
-    const strArr = (v: unknown): string[] | undefined =>
-      Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : undefined;
-    return {
+    const j: unknown = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
+    if (j && typeof j === 'object' && !Array.isArray(j)) return j as Record<string, unknown>;
+  } catch { /* fall through to extraction */ }
+  return firstJsonObject(raw);
+}
+
+/**
+ * Parse the generator model's reply, saying WHY when it cannot be used.
+ * Tolerant in two safe ways (2026-10-04): prose or a code fence around the
+ * JSON object, and a numeric `finalAnswer` (stringified). It does NOT repair
+ * invalid JSON (e.g. an unescaped backslash inside a string): guessing at a
+ * repair could change the problem's maths.
+ */
+export function parseGenPayloadDetailed(raw: string): GenParseResult {
+  const j = replyJsonObject(raw);
+  if (!j) return { ok: false, reason: 'unparseable_json' };
+  if (typeof j.problemText !== 'string' || !j.problemText.trim()) return { ok: false, reason: 'missing_problem_text' };
+  const answerKind = j.answerKind === 'free' || j.answerKind === 'mcq' || j.answerKind === 'numeric' ? j.answerKind : undefined;
+  const expectedAnswer = typeof j.expectedAnswer === 'string' ? j.expectedAnswer.trim() : undefined;
+  // `"finalAnswer": 48` — the model answered a numeric problem with a JSON number.
+  const claimed =
+    typeof j.finalAnswer === 'number' && Number.isFinite(j.finalAnswer)
+      ? String(j.finalAnswer)
+      : typeof j.finalAnswer === 'string' ? j.finalAnswer.trim() : '';
+  // A free-kind payload may carry its answer only in expectedAnswer.
+  const finalAnswer = claimed || (answerKind === 'free' && expectedAnswer ? expectedAnswer : '');
+  if (!finalAnswer) return { ok: false, reason: 'missing_final_answer' };
+  const strArr = (v: unknown): string[] | undefined =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : undefined;
+  return {
+    ok: true,
+    gen: {
       problemText: j.problemText.trim(),
       finalAnswer,
       teachingAnswer: typeof j.teachingAnswer === 'string' ? j.teachingAnswer.trim() : undefined,
@@ -309,10 +367,23 @@ function parseGenPayload(raw: string): GenPayload | null {
       ...(answerKind ? { answerKind } : {}),
       ...(expectedAnswer !== undefined ? { expectedAnswer } : {}),
       ...(typeof j.modelResponse === 'string' && j.modelResponse.trim() ? { modelResponse: j.modelResponse.trim() } : {}),
-    };
-  } catch {
-    return null;
-  }
+    },
+  };
+}
+
+export function parseGenPayload(raw: string): GenPayload | null {
+  const parsed = parseGenPayloadDetailed(raw);
+  return parsed.ok ? parsed.gen : null;
+}
+
+/**
+ * The ONE log line for a reply that yielded no candidate: the reason, the
+ * reply's length (a reply cut off at the token cap shows as a long reply
+ * with reason=unparseable_json) and its first 300 characters on a single
+ * line. Model output about a practice problem only — never the prompt.
+ */
+export function describeUnusableGenReply(reason: GenParseFailure, raw: string): string {
+  return `[problem-generator] candidate_unusable reason=${reason} len=${raw.length} head=${JSON.stringify(raw.replace(/\s+/g, ' ').trim().slice(0, 300))}`;
 }
 
 export interface GenAndVerifyResult {
@@ -334,8 +405,15 @@ export async function generateCandidate(
   userPrompt: string,
   excludeHashes: string[] = []
 ): Promise<GenAndVerifyResult | null> {
-  const gen = parseGenPayload(await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800));
-  if (!gen) return null;
+  const raw = await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800);
+  const parsed = parseGenPayloadDetailed(raw);
+  if (!parsed.ok) {
+    // The raw reply used to be discarded here, which left a production
+    // `practice_gen_gate_failed reason=no_candidate` with nothing to read.
+    console.warn(describeUnusableGenReply(parsed.reason, raw));
+    return null;
+  }
+  const gen = parsed.gen;
   // Cross-session dedup: never serve a problem already shown.
   const hash = simpleHash(gen.problemText);
   if (excludeHashes.includes(hash)) return null;

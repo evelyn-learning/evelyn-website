@@ -33,6 +33,43 @@ export interface TopUpInput {
   studentId: string; topic: string; target?: number; anchorsFor(loId: string): PracticeItem[];
   /** Forwarded to generatePracticeItems (visible empty/gate-failed outcomes, 2026-10-02). */
   onDebugEvent?: GeneratePracticeItemsOptions['onDebugEvent'];
+  /** True when the LO's authored practice is drawing tasks (never served, so
+   *  never among the anchors) — forwarded as `authoredDrawingTasks`, with the
+   *  LO title, so the generator writes a typed/choice question (2026-10-04). */
+  drawingTasksFor?(loId: string): boolean;
+}
+
+/** The wanted LOs that ended with NO practice item (2026-10-04) — the caller
+ *  names each one in the log / session telemetry instead of dropping it
+ *  silently. Pure. */
+export function losWithoutPractice<T extends { loId: string }>(
+  want: ReadonlyArray<T>,
+  resolved: ReadonlyArray<{ loId: string; items: ReadonlyArray<unknown> }>,
+): T[] {
+  const withItems = new Set(resolved.filter((l) => l.items.length > 0).map((l) => l.loId));
+  const seen = new Set<string>();
+  return want.filter((w) => {
+    if (withItems.has(w.loId) || seen.has(w.loId)) return false;
+    seen.add(w.loId);
+    return true;
+  });
+}
+
+/** One event per LO that got nothing: a `[practice-emit]` warn line and, when
+ *  the caller listens, the existing `practice_draft_empty` debug event (same
+ *  `lo=… trigger=…` message shape the client writes mid-session). */
+export function reportLosWithoutPractice(
+  empty: ReadonlyArray<{ loId: string; title?: string }>,
+  ctx: { sessionId?: string; why: string },
+  onDebugEvent?: GeneratePracticeItemsOptions['onDebugEvent'],
+): void {
+  for (const lo of empty) {
+    console.warn(
+      `[practice-emit] lo_without_practice${ctx.sessionId ? ` session=${ctx.sessionId}` : ''} lo=${lo.loId}` +
+      `${lo.title && lo.title !== lo.loId ? ` title=${JSON.stringify(lo.title.slice(0, 120))}` : ''} why=${ctx.why}`,
+    );
+    onDebugEvent?.('practice_draft_empty', `lo=${lo.loId} trigger=session_end (${ctx.why})`);
+  }
 }
 
 /** Split a shortfall into ≤MAX_GEN_CALLS parallel requests of ≤PER_CALL. Pure. */
@@ -72,6 +109,7 @@ export async function topUpPractice(
     gen({
       studentId: input.studentId, loId: first.loId, topic: input.topic, topicId: input.topic, shortfall, anchorItems,
       ...(input.onDebugEvent ? { onDebugEvent: input.onDebugEvent } : {}),
+      ...(input.drawingTasksFor?.(first.loId) ? { authoredDrawingTasks: true, loTitle: first.title } : {}),
     })
       .catch(() => [] as PracticeItem[])
       .then((got) => { arrived.push(got); }),

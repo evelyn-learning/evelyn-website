@@ -10,7 +10,7 @@
  *   npx tsx scripts/test-inspect-resumed.ts
  */
 import assert from 'node:assert';
-import { detectIssues, sessionSpan, type AudioStats, type SessionDoc } from './inspect-tutor-session';
+import { detectIssues, sessionSpan, activeSecondsText, renderReport, type AudioStats, type SessionDoc } from './inspect-tutor-session';
 
 let passed = 0;
 function check(label: string, fn: () => void) {
@@ -109,5 +109,71 @@ check('single-attempt session: unchanged — a 2× student track is still audio-
   assert.ok(!issues.some((i) => i.tag === 'resumed-session'));
   assert.deepStrictEqual(detectIssues(doc, audio(598), audio(598)).map((i) => i.tag), []);
 });
+
+// 2026-10-04 — a retail /tutor session reloaded mid-way: the page keeps its
+// original startedAt, so the doc has ONE span covering the whole wall time,
+// while the sidecar anchors show two recording attempts. Printed "active ?s".
+{
+  const retail: SessionDoc = {
+    ...resumed, sessionId: 'tutor-retail', debugEvents: [], duration: 2272, endedAt: at(2272),
+    transcript: transcript(1, 2270), attemptSpans: [{ startedAt: at(0), duration: 2272 }],
+  };
+  const anchors: AudioStats['attempts'] = [{ wallStartMs: T0, byteOffset: 0 }, { wallStartMs: T0 + 1_761_000, byteOffset: 84_192_000 }];
+  const studentA = audio(1754, anchors);
+  const tutorA = audio(2260, anchors);
+  const metadata = (report: string) => report.slice(report.indexOf('## Metadata'), report.indexOf('## Audio quality'));
+
+  check('resumed retail session (one span, two anchors): the active figure is the span\'s duration, never "?"', () => {
+    const span = sessionSpan(retail, studentA, tutorA);
+    assert.deepStrictEqual([span.resumed, span.attemptCount, span.activeSec], [true, 2, null], 'still resumed; sittings still unsized for the audio checks');
+    const active = activeSecondsText(retail, span);
+    assert.strictEqual(active.text, '2272.0s');
+    assert.strictEqual(active.seconds, 2272);
+    assert.ok(/one recorded attempt span/.test(active.note));
+  });
+
+  check('…the report\'s metadata block prints it (37:52, 2272.0s) and holds no "?"', () => {
+    const issues = detectIssues(retail, studentA, tutorA);
+    const meta = metadata(renderReport(retail, studentA, tutorA, issues));
+    assert.ok(/^active:\s+37:52 {2}\(2272\.0s\)/m.test(meta), meta);
+    assert.ok(/^wall span:\s+37:52 {2}\(2272\.0s\)/m.test(meta), meta);
+    assert.ok(/^resumed:\s+yes — 2 attempts/m.test(meta), meta);
+    assert.ok(!meta.includes('?'), meta);
+    const info = issues.find((i) => i.tag === 'resumed-session');
+    assert.ok(info && /active 2272\.0s \(the one recorded attempt span/.test(info.message) && !/\?s/.test(info.message), info?.message);
+  });
+
+  check('…and its audio length checks stay skipped (the span includes the reload pause; nothing is guessed)', () => {
+    const tags = detectIssues(retail, studentA, tutorA).map((i) => i.tag);
+    assert.ok(!tags.includes('audio-rate-mismatch') && !tags.includes('audio-truncated') && !tags.includes('tutor-track-short') && !tags.includes('audio-longer-than-active-span'), tags.join(','));
+  });
+
+  check('a sized resumed session prints its active seconds as before', () => {
+    const doc: SessionDoc = { ...resumed, debugEvents: [], attemptSpans: [{ startedAt: at(0), duration: 1754 }, { startedAt: at(1761.3), duration: 511 }] };
+    const span = sessionSpan(doc, student, tutor);
+    assert.deepStrictEqual(activeSecondsText(doc, span), { text: '2265.0s', seconds: 2265, note: '' });
+    const meta = metadata(renderReport(doc, student, tutor, detectIssues(doc, student, tutor)));
+    assert.ok(/^active:\s+37:45 {2}\(2265\.0s\)$/m.test(meta), meta);
+    assert.ok(!meta.includes('?'), meta);
+  });
+
+  check('resumed with NO recorded span and nothing derivable: "unknown", still never "?"', () => {
+    const doc: SessionDoc = { ...resumed, debugEvents: [] };
+    const span = sessionSpan(doc, student, tutor);
+    assert.strictEqual(span.activeSec, null);
+    assert.strictEqual(activeSecondsText(doc, span).text, 'unknown');
+    const issues = detectIssues(doc, student, tutor);
+    const meta = metadata(renderReport(doc, student, tutor, issues));
+    assert.ok(/^active:\s+unknown/m.test(meta), meta);
+    assert.ok(!meta.includes('?'), meta);
+    assert.ok(!/\?s/.test(issues.find((i) => i.tag === 'resumed-session')!.message));
+  });
+
+  check('a session with no duration at all prints n/a, not "?"', () => {
+    const doc: SessionDoc = { ...resumed, debugEvents: [], duration: undefined, endedAt: undefined, transcript: [] };
+    const meta = metadata(renderReport(doc, audio(10), audio(10), []));
+    assert.ok(/^duration:\s+n\/a$/m.test(meta) && !meta.includes('?'), meta);
+  });
+}
 
 console.log(`\n${passed} checks passed${process.exitCode ? ' — WITH FAILURES' : ''}`);

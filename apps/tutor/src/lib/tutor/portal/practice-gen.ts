@@ -143,6 +143,18 @@ export interface GeneratePracticeItemsOptions {
    *  fresh-LO edge case: the prompt falls back to the LO id + topic alone,
    *  since Practice items carry no free-text LO description at this layer). */
   anchorItems: PracticeItem[];
+  /** True when the LO's authored practice includes drawing-only tasks that
+   *  the caller withheld (practice.ts `planToItems` drops them before they can
+   *  be anchors, so the generator cannot see them in `anchorItems`). With no
+   *  typed-answer anchor to prompt from, the prompt then asks for a
+   *  typed/choice question on the same skill (`buildUserPrompt`'s drawing-LO
+   *  branch) instead of claiming the LO is brand-new. A drawing instruction
+   *  among `anchorItems` sets the same condition without this flag. */
+  authoredDrawingTasks?: boolean;
+  /** The LO's human title/description, when the caller has one. Used ONLY by
+   *  the drawing-LO branch (the LO id alone is often opaque, `<plan>.lo-2`);
+   *  the anchor and brand-new-LO prompts are unchanged by it. */
+  loTitle?: string;
   /** Visible outcomes (2026-10-02): `practice_gen_empty` (`loId=… topic=…
    *  attempts=N`) when generation ran and produced nothing, and
    *  `practice_gen_gate_failed` (`loId=… reason=…`) per rejected candidate.
@@ -398,7 +410,11 @@ export type GateFailReason =
    *  (model/parse failure, or the judge could not tell) — fail closed. */
   | 'free_unverified'
   /** `free` item: the independent solver found the question ill-posed. */
-  | 'ill_posed';
+  | 'ill_posed'
+  /** mcq / numeric item whose text is a pure drawing instruction with nothing
+   *  to type (`isDrawingOnlyItem`) — a whiteboard task, never banked. (A
+   *  `free` drawing instruction fails 'free_shape', as before.) */
+  | 'drawing_task';
 
 /** Longest canonical answer a `free` generated item may carry. */
 export const FREE_ANSWER_MAX_CHARS = 120;
@@ -449,6 +465,10 @@ export async function checkGeneratedAnswer(
     }
     return { ok: true, gen: { ...gen, finalAnswer: expected, expectedAnswer: expected, choices: undefined, verifierModel } };
   }
+  // A pure drawing task ("Graph the line.") is not a typed-answer item whatever
+  // answer the generator attached to it (2026-10-04) — the same rule that
+  // keeps an authored one from being served (practice.ts planToItems).
+  if (isDrawingOnlyItem(gen.problemText)) return fail('drawing_task');
   if (gen.responseFormat === 'mcq') {
     const rawChoices = gen.choices ?? [];
     if (rawChoices.length === 0) return fail('mcq_no_choices'); // malformed mcq — nothing to grade against
@@ -668,7 +688,54 @@ export function usableAnchor(anchor: PracticeItem | null): PracticeItem | null {
   return isDrawingInstruction(anchor.problemText) ? null : anchor;
 }
 
-function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeItem | null, slotIndex: number): string {
+/** Longest LO title carried into the drawing-LO prompt. */
+const LO_TITLE_MAX_CHARS = 240;
+
+/**
+ * Drawing-LO branch (2026-10-04). The LO's authored practice is drawing tasks
+ * (graph / sketch / plot / shade), which are never served and never anchors,
+ * so until now such an LO fell into the brand-new-LO prompt: "no practice
+ * exists, infer the skill from the id", followed by "never ask them to draw"
+ * — for a skill that IS drawing, with nothing saying what to ask instead.
+ * Live 2026-10-04 (a graphing LO, Needs Support): every attempt came back
+ * `no_candidate` and the LO got no practice.
+ *
+ * This branch states the situation and asks for the typed/choice form of the
+ * same skill. It is selected from the STRUCTURE of the LO's items (they are
+ * drawing tasks), never from the topic, and names no subject. The drawing
+ * tasks' own text is still kept out of the prompt (the generator mirrors it —
+ * see DRAWING_ANCHOR_RE).
+ */
+function buildDrawingLoPrompt(opts: GeneratePracticeItemsOptions, difficultyLabel: string, slotDirective: string): string {
+  const title = (opts.loTitle ?? '').replace(/\s+/g, ' ').trim().slice(0, LO_TITLE_MAX_CHARS);
+  return (
+    `The existing practice tasks for this learning objective are drawing tasks: the student graphs, sketches, ` +
+    `plots, shades or labels something on a whiteboard. They cannot be used here, because the student answers ` +
+    `ONLY by typing a short answer or choosing an option.\n` +
+    `Learning objective id: ${opts.loId} (topic: ${opts.topic}).\n` +
+    (title ? `Learning objective: ${title}\n` : '') +
+    `Write ONE self-contained practice problem that tests the SAME skill at ${difficultyLabel}, in a form that is ` +
+    `answered by typing or choosing. State everything the student needs inside the problem text: describe any ` +
+    `graph, figure or diagram fully in words or by its stated values. Then ask the student to interpret or ` +
+    `describe it, to decide a property of it (which part or region is included, whether a boundary or endpoint ` +
+    `is included or excluded, whether a given point or value satisfies the condition, which of several ` +
+    `descriptions matches), or to give a value read or worked out from the stated information. A property ` +
+    `decision is a good fit for multiple choice. Do NOT ask the student to draw, sketch, graph, plot, shade or ` +
+    `label anything, and do not start the problem or any sentence of it with one of those verbs. ` +
+    `${PERCENT_ANSWER_CLAUSE} ${ANSWER_KIND_CLAUSE} ${slotDirective} ` +
+    `Reply with the JSON object only — no note before or after it — and write mathematics in plain text or ` +
+    `Unicode symbols rather than backslash commands. Write the problem now.`
+  );
+}
+
+function buildUserPrompt(
+  opts: GeneratePracticeItemsOptions,
+  anchor: PracticeItem | null,
+  slotIndex: number,
+  /** The LO's authored items are drawing tasks (see buildDrawingLoPrompt).
+   *  Only consulted when there is no usable anchor. */
+  drawingLo = false,
+): string {
   const difficultyLabel = opts.difficulty
     ? `difficulty bucket ${opts.difficulty} of 4 (1 = easier than typical, 4 = extension-grade)`
     : 'a typical practice difficulty for this objective';
@@ -682,6 +749,7 @@ function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeIte
       `${ANSWER_KIND_CLAUSE} ${slotDirective} Write the problem now.`
     );
   }
+  if (drawingLo) return buildDrawingLoPrompt(opts, difficultyLabel, slotDirective);
   // Fresh-LO edge case: zero existing practice to anchor off of. Practice
   // items carry no free-text LO description at this layer, so the only
   // signal is the LO id + topic — generate from those alone.
@@ -699,10 +767,13 @@ async function generateOne(
   sources: PracticeGenSources,
   excludeHashes: string[],
   slotIndex: number,
+  drawingLo = false,
 ): Promise<PracticeItem | null> {
-  // A drawing/graphing anchor takes the skill-only branch (see usableAnchor).
+  // A drawing/graphing anchor takes the skill-only branch (see usableAnchor):
+  // the drawing-LO prompt when the LO's authored items are drawing tasks,
+  // else the brand-new-LO prompt.
   // The original anchor still supplies difficulty/cedCode defaults below.
-  const prompt = buildUserPrompt(opts, usableAnchor(anchor), slotIndex);
+  const prompt = buildUserPrompt(opts, usableAnchor(anchor), slotIndex, drawingLo);
   const onGateFailed = opts.onDebugEvent
     ? (reason: string) => opts.onDebugEvent?.('practice_gen_gate_failed', `loId=${opts.loId} reason=${reason}`)
     : undefined;
@@ -771,6 +842,12 @@ export async function generatePracticeItems(
   // They stay in `excludeHashes` below, so their text is not regenerated.
   const anchorPool = opts.anchorItems.filter((a) => !isWithdrawnItem(a.id) && usableAnchor(a) !== null);
   const anchors = pickAnchorsForSlots(anchorPool, allowed, opts.difficulty);
+  // Structural, not topical: the LO's authored items are drawing tasks —
+  // told by the caller that withheld them (authoredDrawingTasks) or visible
+  // as drawing instructions in the pool it passed. Only matters for a slot
+  // with no usable anchor (buildUserPrompt).
+  const drawingLo = opts.authoredDrawingTasks === true
+    || opts.anchorItems.some((a) => !isWithdrawnItem(a.id) && isDrawingInstruction(a.problemText));
   // Exclude-hash seed: every already-known same-LO item's text hash, so a
   // regeneration doesn't just reproduce existing content verbatim. Both
   // parallel generations share this same base list — there is no sibling
@@ -779,7 +856,7 @@ export async function generatePracticeItems(
   const excludeHashes = opts.anchorItems.map((it) => simpleHash(it.problemText));
 
   const settled = await Promise.allSettled(
-    anchors.map((anchor, i) => generateOne(opts, anchor, sources, excludeHashes, i)),
+    anchors.map((anchor, i) => generateOne(opts, anchor, sources, excludeHashes, i, drawingLo)),
   );
 
   const items: PracticeItem[] = [];

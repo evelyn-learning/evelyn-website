@@ -14,6 +14,10 @@ import { findAssignmentBySession } from './store';
 import { assignPractice, topUpDraft, topUpAssigned } from './assign';
 import type { IPracticeAssignment } from '@/models';
 import { logPracticeGenEvent } from '@/lib/tutor/portal/practice-gen';
+import { loHasDrawingOnlyTask } from '@/lib/tutor/portal/practice';
+import { losWithoutPractice, reportLosWithoutPractice } from './top-up';
+import connectDB from '@core/db';
+import { TutorSession } from '@/models/TutorSession';
 
 export const SESSION_END_REASON = 'Practice from your session.';
 const DRAFT_LOS = 2;
@@ -93,8 +97,88 @@ export interface EmitDraftDeps {
   assign: typeof assignPractice;
   topUpDraft: typeof topUpDraft;
   topUpAssigned: typeof topUpAssigned;
+  /** Appends the practice outcome events to the session's stored debug
+   *  events. Optional: injected deps without it record nothing (tests).
+   *  Called fire-and-forget (never awaited). `ctx.partnerId` is the emit's
+   *  VERIFIED partner — what the stored session is matched on. */
+  recordSessionEvents?: (session: { sessionId: string; studentId: string }, events: PracticeSessionEvent[], ctx?: { partnerId: string }) => Promise<void> | void;
 }
-const DEFAULT_DEPS: EmitDraftDeps = { findAssignment: findAssignmentBySession, getPlan: getLessonPlan, assign: assignPractice, topUpDraft, topUpAssigned };
+
+/** A practice outcome worth keeping on the session (2026-10-04). Until now
+ *  `practice_gen_empty` / `practice_gen_gate_failed` existed only as server
+ *  log lines: the session's own debug events (what the admin replay and
+ *  scripts/inspect-tutor-session.ts show) carried the client's mid-session
+ *  `practice_draft_empty` and nothing about the end-of-session attempt. */
+export interface PracticeSessionEvent { type: string; message: string }
+export const PRACTICE_SESSION_EVENT_TYPES: ReadonlyArray<string> = ['practice_gen_empty', 'practice_gen_gate_failed', 'practice_draft_empty'];
+const PRACTICE_SESSION_EVENT_MAX = 20;
+
+/** A session never accumulates more than this many events of
+ *  PRACTICE_SESSION_EVENT_TYPES from this path (repeated / swept emits). */
+export const PRACTICE_SESSION_EVENTS_PER_SESSION_MAX = 40;
+
+/**
+ * The write that appends this emit's practice events to the session's stored
+ * debug events — or null when there is nothing safe to write. Pure.
+ *
+ * MATCH: sessionId + the partner id the session itself stores
+ * (`sourcePartnerId`, stamped on insert from the embed config; the same
+ * tenancy key /api/portal/v1/sessions/summary uses). NOT the student id:
+ * `TutorSession.studentId` is the embed token's `student_id` as the BROWSER
+ * posted it (optional — absent on sessions whose page sent none, cut at 200
+ * chars), while the emit's `studentId` is the external id the partner's
+ * SERVER sent with session-result. Both normally name the same student, but
+ * nothing guarantees it, and a mismatch silently dropped every event. Session
+ * ids are known to collide across tenants, so sessionId alone is never
+ * enough: no partner id ⇒ no write.
+ *
+ * CAP: the `$expr` makes the append conditional on the session holding fewer
+ * than PRACTICE_SESSION_EVENTS_PER_SESSION_MAX events of these types — one
+ * atomic update, no read.
+ */
+export function buildSessionEventsWrite(
+  session: { sessionId: string; partnerId: string },
+  events: PracticeSessionEvent[],
+  now: Date = new Date(),
+): {
+  filter: { sessionId: string; sourcePartnerId: string; $expr: Record<string, unknown> };
+  update: { $push: { debugEvents: { $each: Array<{ type: string; message: string; timestamp: Date }> } } };
+} | null {
+  if (!session?.sessionId || !session.partnerId || !Array.isArray(events) || events.length === 0) return null;
+  return {
+    filter: {
+      sessionId: session.sessionId,
+      sourcePartnerId: session.partnerId,
+      $expr: {
+        $lt: [
+          { $size: { $filter: { input: { $ifNull: ['$debugEvents', []] }, as: 'e', cond: { $in: ['$$e.type', [...PRACTICE_SESSION_EVENT_TYPES]] } } } },
+          PRACTICE_SESSION_EVENTS_PER_SESSION_MAX,
+        ],
+      },
+    },
+    update: { $push: { debugEvents: { $each: events.map((e) => ({ type: e.type, message: e.message.slice(0, 500), timestamp: now })) } } },
+  };
+}
+
+/** Best-effort `$push` onto TutorSession.debugEvents — the same array the
+ *  client's debug events land in (session-usage route). See
+ *  buildSessionEventsWrite for the match and the cap. Never an upsert, never
+ *  throws. */
+async function mongoRecordSessionEvents(session: { sessionId: string; studentId: string }, events: PracticeSessionEvent[], ctx?: { partnerId: string }): Promise<void> {
+  const write = buildSessionEventsWrite({ sessionId: session.sessionId, partnerId: ctx?.partnerId ?? '' }, events);
+  if (!write) return;
+  try {
+    await connectDB();
+    await TutorSession.updateOne(write.filter, write.update);
+  } catch (err) {
+    console.warn('[practice-emit] could not record practice events on the session:', (err as Error)?.message ?? err);
+  }
+}
+
+const DEFAULT_DEPS: EmitDraftDeps = {
+  findAssignment: findAssignmentBySession, getPlan: getLessonPlan, assign: assignPractice, topUpDraft, topUpAssigned,
+  recordSessionEvents: mongoRecordSessionEvents,
+};
 
 /** Fix round 1 — in-flight guard: two concurrent completed emits for one
  *  session (the client's End and the academy sweep) share ONE create/top-up;
@@ -118,6 +202,38 @@ async function createOrTopUp(
   ctx: { profileId: string; partnerId: string },
   deps: EmitDraftDeps,
 ): Promise<EmitDraftOutcome> {
+  // Practice outcomes of THIS emit: logged as before, and kept so they can be
+  // stored on the session once the attempt is over. That write is
+  // FIRE-AND-FORGET: this runs on the session-result request path, and a
+  // slow or failing debug-event append must neither delay nor fail the emit.
+  const events: PracticeSessionEvent[] = [];
+  const onDebugEvent = (type: string, message: string): void => {
+    if (type.startsWith('practice_gen')) logPracticeGenEvent(type, message);
+    if (PRACTICE_SESSION_EVENT_TYPES.includes(type) && events.length < PRACTICE_SESSION_EVENT_MAX) events.push({ type, message });
+  };
+  try {
+    return await createOrTopUpInner(req, ctx, deps, onDebugEvent);
+  } finally {
+    if (events.length > 0 && deps.recordSessionEvents) {
+      const logFailure = (err: unknown): void => {
+        console.warn('[practice-emit] session-event write failed:', (err as Error)?.message ?? err);
+      };
+      try {
+        void Promise.resolve(deps.recordSessionEvents({ sessionId: req.sessionId, studentId: req.studentId }, events, { partnerId: ctx.partnerId }))
+          .catch(logFailure);
+      } catch (err) {
+        logFailure(err);
+      }
+    }
+  }
+}
+
+async function createOrTopUpInner(
+  req: SessionEmitRequest,
+  ctx: { profileId: string; partnerId: string },
+  deps: EmitDraftDeps,
+  onDebugEvent: (type: string, message: string) => void,
+): Promise<EmitDraftOutcome> {
   const existing = await deps.findAssignment(req.sessionId);
   // Another student's record under a colliding sessionId is never touched. An
   // assigned (or legacy, status-less) record is left alone too — except the
@@ -132,7 +248,11 @@ async function createOrTopUp(
   const anchors = homeworkAnchorItems(plan);
   const topUp = {
     studentId: ctx.profileId, topic: plan.topic || plan.title, anchorsFor: (loId: string) => (loId === wrapper ? anchors : []),
-    onDebugEvent: logPracticeGenEvent,
+    onDebugEvent,
+    // The plan's try-yourselves for an LO that are pure drawing tasks are never
+    // served and never anchors; say so, so the generator writes a typed/choice
+    // question on the same skill (practice-gen.ts drawing-LO branch).
+    drawingTasksFor: (loId: string) => loHasDrawingOnlyTask(plan, loId),
   };
   if (existing) {
     // A short client draft still open: top it up; the finalize promotes it.
@@ -140,6 +260,20 @@ async function createOrTopUp(
     const added = recentClientFinalize
       ? await deps.topUpAssigned(existing, { partnerId: ctx.partnerId, topUp })
       : await deps.topUpDraft(existing, { partnerId: ctx.partnerId, topUp });
+    // The record only lists LOs that HAVE items, and the top-up only adds to
+    // its first one: a touched LO that is not in it ended with no practice.
+    const planLoIds = new Set(plan.los.map((l) => l.id));
+    if (req.losTouched.some((id) => planLoIds.has(id))) {
+      const titleOf = (loId: string): string => {
+        const lo = plan.los.find((l) => l.id === loId);
+        return lo?.shortTitle ?? lo?.description ?? loId;
+      };
+      reportLosWithoutPractice(
+        losWithoutPractice(draftLoIdsForEmit(plan, req.losTouched).map((loId) => ({ loId, title: titleOf(loId) })), existing.los),
+        { sessionId: req.sessionId, why: 'not in the existing assignment; no bank items' },
+        onDebugEvent,
+      );
+    }
     return added > 0 ? 'topped_up' : 'exists';
   }
   const loIds = draftLoIdsForEmit(plan, req.losTouched);
