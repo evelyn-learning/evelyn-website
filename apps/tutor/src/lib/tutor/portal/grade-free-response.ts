@@ -16,6 +16,7 @@ import type {
   GradeFreeResponseRequest,
   GradeFreeResponseResponse,
 } from '@evelyn/portal-contract/v1';
+import { gradeNumericAnswer } from './numeric-answer-rule';
 
 /** The gradable item, resolved by the caller from its content store. */
 export interface GradeItem {
@@ -24,6 +25,9 @@ export interface GradeItem {
   rubric?: FrqRubric;
   /** Present (and no rubric) → legacy single-answer judge path. */
   expectedAnswer?: string;
+  /** The item's question text. Given to the single-answer judge so it can
+   *  hold an answer to a form / precision / constraint the question states. */
+  problemText?: string;
   /** Optional reference solution for the legacy path. */
   modelResponse?: string;
   /** Resolved stimulus text (from passageId) the response analyzes; when
@@ -43,6 +47,8 @@ export type RubricPartGrader = (args: {
 export type SingleAnswerJudge = (args: {
   expectedAnswer: string;
   response: GradeFreeResponseRequest['response'];
+  /** The question the student answered, when the item carries it. */
+  question?: string;
 }) => Promise<{ correct: boolean; feedback: string; modelResponse?: string }>;
 
 export interface GradeDeps {
@@ -92,9 +98,27 @@ export async function gradeFreeResponse(
   }
 
   // Legacy single-answer path.
+  // A plain-number key is decided by the deterministic rule (equal at the
+  // key's written precision — never "close enough"), with no model call. The
+  // rule declines when the typed answer is not a single number; that goes to
+  // the judge below.
+  if ('text' in req.response && item.expectedAnswer) {
+    const numeric = gradeNumericAnswer(item.expectedAnswer, req.response.text);
+    if (numeric.decided) {
+      const pts = numeric.correct ? 1 : 0;
+      return {
+        totalPoints: pts,
+        maxPoints: 1,
+        parts: [{ criterionId: 'overall', pointsAwarded: pts, maxPoints: 1, feedback: numeric.feedback }],
+        // Same as the judge path, which returns the expected answer here.
+        modelResponse: item.expectedAnswer,
+      };
+    }
+  }
   const judged = await deps.judgeSingleAnswer({
     expectedAnswer: item.expectedAnswer ?? '',
     response: req.response,
+    question: item.problemText,
   });
   const pointsAwarded = judged.correct ? 1 : 0;
   return {
@@ -133,7 +157,47 @@ async function callClaudeJson(system: string, user: string): Promise<Record<stri
   }
 }
 
+/** A model call that returns parsed JSON (`{}` when the reply is not JSON). */
+export type JsonModelCall = (system: string, user: string) => Promise<Record<string, unknown>>;
+
+/**
+ * Instructions for the single-answer judge. Generic by design — no topic
+ * examples (an example teaches the judge that topic, not the rule).
+ *
+ * The three rules after the first exist because the judge, given only
+ * "does it match?", accepted answers that were merely near the key and
+ * answers that broke a form the question demanded:
+ *  - equal, not close;
+ *  - a stated requirement on the answer is part of what "correct" means;
+ *  - interval bracket style is deliberately NOT enforced (owner's decision).
+ */
+export const SINGLE_ANSWER_JUDGE_SYSTEM = [
+  'You judge whether a student answer to a question is correct, given the expected answer.',
+  'Equivalence: accept an answer that says the same thing as the expected answer in a different but valid way — an equivalent expression or relation, the same value in another notation, or the same idea in the student\'s own words. When the expected answer is a worked solution, compare the student answer with its final result.',
+  'Equal, not close: an answer is correct only if it is equal to the expected answer, not merely close to it. Do not accept a numeric answer because it is near the expected value or "within rounding", unless it is the expected value written to a different valid precision that the question permits. A related but different idea is not the expected idea.',
+  'Stated requirements: when the question states a required form, precision, units or constraint on the answer (a named standard form, sign or integer constraints on coefficients, a number of decimal places, simplest form, a fraction), an answer that is otherwise equivalent but violates the stated requirement is incorrect, and the feedback must say which requirement is not met.',
+  'Intervals: when the question asks for the interval(s) on which something is increasing or decreasing, accept either bracket style (open or closed endpoints).',
+  'Feedback: one or two sentences addressed to the student.',
+  'Reply ONLY as JSON: {"correct": boolean, "feedback": string}.',
+].join('\n');
+
+/** The judge's prompt. Pure, so tests can assert on what the model is told. */
+export function buildSingleAnswerJudgePrompt(args: Parameters<SingleAnswerJudge>[0]): { system: string; user: string } {
+  const question = args.question?.trim();
+  const user = [
+    ...(question ? [`Question: ${question}`] : []),
+    `Expected answer: ${args.expectedAnswer}`,
+    `Student response: ${responseToText(args.response)}`,
+  ].join('\n\n');
+  return { system: SINGLE_ANSWER_JUDGE_SYSTEM, user };
+}
+
 export function defaultGradeDeps(): GradeDeps {
+  return makeGradeDeps(callClaudeJson);
+}
+
+/** The model-backed graders over an injectable model call (tests pass a fake). */
+export function makeGradeDeps(callJson: JsonModelCall): GradeDeps {
   return {
     async gradeRubricPart(args) {
       const system =
@@ -148,21 +212,15 @@ export function defaultGradeDeps(): GradeDeps {
         `Reference (full-credit) response: ${args.modelResponse}`,
         `Student response: ${responseToText(args.response)}`,
       ].join('\n\n');
-      const out = await callClaudeJson(system, user);
+      const out = await callJson(system, user);
       return {
         pointsAwarded: typeof out.pointsAwarded === 'number' ? out.pointsAwarded : 0,
         feedback: typeof out.feedback === 'string' ? out.feedback : '',
       };
     },
     async judgeSingleAnswer(args) {
-      const system =
-        'You judge whether a student answer matches the expected answer. ' +
-        'Reply ONLY as JSON: {"correct": boolean, "feedback": string}.';
-      const user = [
-        `Expected answer: ${args.expectedAnswer}`,
-        `Student response: ${responseToText(args.response)}`,
-      ].join('\n\n');
-      const out = await callClaudeJson(system, user);
+      const { system, user } = buildSingleAnswerJudgePrompt(args);
+      const out = await callJson(system, user);
       return {
         correct: out.correct === true,
         feedback: typeof out.feedback === 'string' ? out.feedback : '',

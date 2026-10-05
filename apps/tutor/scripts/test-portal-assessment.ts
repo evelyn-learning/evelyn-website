@@ -267,6 +267,66 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     assert.strictEqual(res.review!.find((r) => r.itemId === 'n1')!.correct, true, '25/10 should grade as 2.5');
   });
 
+  await test('numeric grader: equal at the key\'s written precision — no tolerance, no judge', async () => {
+    // [key, answer, correct]
+    const cases: Array<[string, string, boolean]> = [
+      ['5', '4.976', false], ['5', '5.024', false], ['5', '4.9', false], ['5', '5.0', true],
+      ['8', '7.998', false], ['8', '8.002', false],
+      ['10.81', '10.80', false], ['10.81', '10.811', true], ['63.62', '63.6', false],
+      ['2.50', '2.5', true], ['13/3', '4.33', true], ['13/3', '4.3', false],
+      ['1,200', '1200', true], ['1200', '1,200', true], ['1200', '1,201', false], ['2.5%', '2.5', true], ['2.5%', '2.4%', false],
+    ];
+    let judgeCalls = 0;
+    const deps: GradeDeps = {
+      async gradeRubricPart() { return { pointsAwarded: 0, feedback: '' }; },
+      async judgeSingleAnswer() { judgeCalls++; return { correct: true, feedback: 'close enough' }; },
+    };
+    const keys = new Map(cases.map(([k], i) => [`t${i}`, { responseFormat: 'numeric', expectedAnswer: k } as ResolvedAssessmentKey]));
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'tight-1',
+        responses: cases.map(([, a], i) => ({ itemId: `t${i}`, loId: 'apstats.lo-n', response: { text: a } })) },
+      deps, async (id) => keys.get(id) ?? null, 'test-partner',
+    );
+    cases.forEach(([k, a, want], i) => {
+      assert.strictEqual(res.review!.find((r) => r.itemId === `t${i}`)!.correct, want, `key ${k}, answer ${a}`);
+    });
+    assert.strictEqual(judgeCalls, 0, 'a plain-number key with a single-number answer never reaches the judge');
+  });
+
+  await test('numeric grader: an answer that is not a single number goes to the judge, with the question', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '5', problemText: 'Find the maximum height.' };
+    const seen: Array<{ expectedAnswer: string; question?: string }> = [];
+    const deps: GradeDeps = {
+      async gradeRubricPart() { return { pointsAwarded: 0, feedback: '' }; },
+      async judgeSingleAnswer(args) { seen.push({ expectedAnswer: args.expectedAnswer, question: args.question }); return { correct: true, feedback: 'ok' }; },
+    };
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'tight-2',
+        responses: [{ itemId: 'u1', loId: 'apstats.lo-n', response: { text: '5 metres' } }] },
+      deps, async () => key, 'test-partner',
+    );
+    assert.deepStrictEqual(seen, [{ expectedAnswer: '5', question: 'Find the maximum height.' }]);
+    assert.strictEqual(res.review!.find((r) => r.itemId === 'u1')!.correct, true);
+  });
+
+  await test('free-format item with a plain-number key uses the same rule (no judge)', async () => {
+    const key: ResolvedAssessmentKey = { responseFormat: 'free', expectedAnswer: '5' };
+    let judgeCalls = 0;
+    const deps: GradeDeps = {
+      async gradeRubricPart() { return { pointsAwarded: 0, feedback: '' }; },
+      async judgeSingleAnswer() { judgeCalls++; return { correct: true, feedback: 'within rounding' }; },
+    };
+    const res = await submitAssessment(
+      { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'tight-3',
+        responses: [{ itemId: 'f1', loId: 'apstats.lo-n', response: { text: '4.976' } }] },
+      deps, async () => key, 'test-partner',
+    );
+    const row = res.review!.find((r) => r.itemId === 'f1')!;
+    assert.strictEqual(row.correct, false);
+    assert.strictEqual(row.feedback, 'The expected answer is 5; 4.976 is not equal to it.');
+    assert.strictEqual(judgeCalls, 0);
+  });
+
   await test('numeric grader strips a variable-assignment prefix ("x=-12" grades as -12)', async () => {
     const key: ResolvedAssessmentKey = { responseFormat: 'numeric', expectedAnswer: '-12' };
     const resolver: AssessmentItemResolver = async () => key;

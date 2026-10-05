@@ -122,6 +122,7 @@ await test('a practice-gen.* bank id resolves via the bank lookup', async () => 
   assert.deepEqual(item, {
     itemId: BANK_ROW.id,
     expectedAnswer: '12',
+    problemText: 'Find the net force.',
     rubric: undefined,
     modelResponse: undefined,
     passageText: undefined,
@@ -189,9 +190,10 @@ const bankFilters: Array<Record<string, unknown>> = [];
   return { lean: async () => (f.id === BANK_ROW.id ? BANK_ROW : null) };
 };
 const judged: string[] = [];
+const judgedQuestions: Array<string | undefined> = [];
 (gfrModule as unknown as { defaultGradeDeps: () => gfrModule.GradeDeps }).defaultGradeDeps = () => ({
   async gradeRubricPart() { throw new Error('no rubric expected'); },
-  async judgeSingleAnswer(args) { judged.push(args.expectedAnswer); return { correct: true, feedback: 'ok' }; },
+  async judgeSingleAnswer(args) { judged.push(args.expectedAnswer); judgedQuestions.push(args.question); return { correct: true, feedback: 'ok' }; },
 });
 
 function signed(body: unknown): NextRequest {
@@ -205,25 +207,42 @@ function signed(body: unknown): NextRequest {
     body: raw,
   }) as unknown as NextRequest;
 }
-async function grade(itemId: string) {
-  const res = await gradePOST(signed({ studentId: 'portalA:s1', itemId, response: { text: '4.9' } }), undefined);
+async function grade(itemId: string, text = '4.9') {
+  const res = await gradePOST(signed({ studentId: 'portalA:s1', itemId, response: { text } }), undefined);
   return { status: res.status, json: await res.json() };
 }
 
 await test('route: a generated-plan item grades (200) against its stored key', async () => {
   judged.length = 0;
+  judgedQuestions.length = 0;
   const { status, json } = await grade('gen-x::seg-1');
   assert.equal(status, 200, JSON.stringify(json));
   assert.deepEqual(judged, ['4.9 m/s^2']);
+  assert.deepEqual(judgedQuestions, ['A 3 kg block… find a.'], 'the judge is given the item\'s question text');
 });
 
 await test('route: a practice-gen.* bank item grades (200); the bank query excludes mock rows', async () => {
   judged.length = 0;
   bankFilters.length = 0;
-  const { status } = await grade(BANK_ROW.id);
+  const { status, json } = await grade(BANK_ROW.id, '12 newtons');
   assert.equal(status, 200);
-  assert.deepEqual(judged, ['12']);
+  assert.deepEqual(judged, ['12'], 'an answer that is not a single number goes to the judge');
+  assert.equal(json.totalPoints, 1);
   assert.deepEqual(bankFilters[0], { id: BANK_ROW.id, bankScope: { $ne: 'mock' } });
+});
+
+await test('route: a plain-number key is graded by the deterministic rule — no judge call, near misses wrong', async () => {
+  judged.length = 0;
+  const near = await grade(BANK_ROW.id, '11.98');
+  assert.equal(near.status, 200);
+  assert.equal(near.json.totalPoints, 0);
+  assert.equal(near.json.maxPoints, 1);
+  assert.equal(near.json.parts[0].feedback, 'The expected answer is 12; 11.98 is not equal to it.');
+  assert.equal(near.json.modelResponse, '12');
+  const exact = await grade(BANK_ROW.id, 'F = 12.0');
+  assert.equal(exact.json.totalPoints, 1);
+  assert.equal(exact.json.parts[0].feedback, 'Correct.');
+  assert.deepEqual(judged, [], 'the judge is never called for a plain-number key and a single-number answer');
 });
 
 await test('route: a truly unknown id is still 404', async () => {

@@ -295,6 +295,7 @@ export async function resolveGradeItem(
       itemId,
       rubric: seg.rubric,
       expectedAnswer: seg.expectedAnswer,
+      problemText: seg.problem,
       modelResponse: seg.modelResponse,
       passageText: resolvePassageText(seg.passageId, seg.passageIds, seg.packetLabel),
     };
@@ -304,6 +305,7 @@ export async function resolveGradeItem(
   return {
     itemId,
     expectedAnswer: b.answer,
+    problemText: b.problemText,
     rubric: undefined,
     modelResponse: undefined,
     passageText: resolvePassageText(b.passageId),
@@ -316,6 +318,9 @@ export async function resolveGradeItem(
 export interface ResolvedAssessmentKey {
   responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
   expectedAnswer?: string;
+  /** The item's question text — for the single-answer judge only (it holds
+   *  an answer to a form / precision the question states). */
+  problemText?: string;
   choices?: Array<{ id: string; text: string }>;
   correctChoiceId?: string;
   /** Present on rubric-bearing FRQs → part-by-part partial-credit grading in a
@@ -345,6 +350,7 @@ export async function resolveAssessmentItem(
     return {
       responseFormat: seg.responseFormat,
       expectedAnswer: seg.expectedAnswer,
+      problemText: seg.problem,
       choices: seg.choices?.map((c) => ({ id: c.id, text: c.text })),
       correctChoiceId: seg.choices?.find((c) => c.correct)?.id,
       rubric: seg.rubric,
@@ -370,6 +376,7 @@ export async function resolveAssessmentItem(
     return {
       responseFormat: b.responseFormat,
       expectedAnswer: b.answer,
+      problemText: b.problemText,
       choices,
       correctChoiceId,
       hints: b.hints,

@@ -22,6 +22,7 @@ import type { PracticeGenSources } from './practice-gen';
 import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 import { emitSessionResult } from './session-result';
 import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
+import { gradeNumericAnswer } from './numeric-answer-rule';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import type { ResolvedAssessmentKey } from './adapters';
@@ -97,33 +98,23 @@ function norm(s: string): string {
   return (s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-/** Parse a numeric answer that may be a simple fraction ("25/10" → 2.5), a
- *  percent ("2.5%" → 2.5), or a plain number. Returns NaN for prose. */
-function parseNumeric(s: string): number {
-  const t = (s ?? '').trim().replace(/%\s*$/, '').replace(/,/g, '');
-  const frac = t.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
-  if (frac) {
-    const d = parseFloat(frac[2]);
-    return d !== 0 ? parseFloat(frac[1]) / d : NaN;
-  }
-  return parseFloat(t);
+/** Thousands separators out ("1,200" → "1200"); anything else untouched. */
+function stripThousands(s: string): string {
+  return (s ?? '').replace(/(\d),(?=\d{3}(?:\D|$))/g, '$1');
 }
 
-/** Same as `parseNumeric`, plus stripping a leading "x = " variable-
- *  assignment prefix or a leading "$" — e.g. "x=-12" / "x = -12" → "-12".
- *  ONLY ever applied to the student's response text, never to
- *  `key.expectedAnswer`: a key can be a worked-solution string with its own
- *  intermediate "var = value" assignments (e.g. seeded try_yourself content
- *  like "v_y0 = 20 × sin(30°) = 10 m/s. Maximum height is 5 m."). Stripping
- *  the FIRST assignment there would parse the key as `20` instead of
- *  falling through to the holistic-judge fallback below (`isCorrect`'s
- *  "key isn't a clean single number" branch) — silently grading a correct
- *  "5" as wrong against the wrong intermediate value. */
-function parseNumericResponse(s: string): number {
-  const stripped = (s ?? '').trim()
-    .replace(/^[a-zA-Z]\w*\s*=\s*/, '')
-    .replace(/^\$/, '');
-  return parseNumeric(stripped);
+/** A `numeric`-format KEY prepared for the deterministic rule: thousands
+ *  separators and a trailing "%" removed (the format says the answer is a
+ *  number, so neither changes its value here — the legacy grader stripped
+ *  both). Nothing else is stripped, and in particular never a "var ="
+ *  prefix: a key can be a worked-solution string with its own intermediate
+ *  "var = value" assignments (e.g. seeded try_yourself content like
+ *  "v_y0 = 20 × sin(30°) = 10 m/s. Maximum height is 5 m."), and stripping
+ *  the first assignment would grade against the wrong intermediate value.
+ *  Such a key is not a plain number, so the rule declines and the holistic
+ *  judge decides. */
+function numericKeyText(key: string): string {
+  return stripThousands((key ?? '').trim()).replace(/\s*%$/, '');
 }
 
 /** Grade a single response against its resolved key. Deterministic for
@@ -134,23 +125,21 @@ async function isCorrect(
   judge: GradeDeps['judgeSingleAnswer'],
 ): Promise<boolean> {
   if ('imageRef' in response) {
-    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response });
+    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response, question: key.problemText });
     return j.correct;
   }
   const text = response.text;
   const fmt = key.responseFormat ?? 'free';
 
   if (fmt === 'numeric') {
-    const a = parseNumericResponse(text);
-    const b = parseNumeric(key.expectedAnswer ?? '');
-    if (Number.isFinite(a) && Number.isFinite(b)) {
-      const tol = Math.max(0.01, Math.abs(b) * 0.01);
-      return Math.abs(a - b) <= tol;
-    }
-    // The key isn't a clean single number (prose/multi-value reference — e.g. a
-    // mis-tagged item whose answer is "Mean = 8 … SD = √10"). An exact-string
-    // compare would fail any correct response, so judge it holistically.
-    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response: { text } });
+    // The deterministic rule (numeric-answer-rule.ts): equal at the key's
+    // written precision. No tolerance — "close" is not "correct".
+    const numeric = gradeNumericAnswer(numericKeyText(key.expectedAnswer ?? ''), stripThousands(text));
+    if (numeric.decided) return numeric.correct;
+    // Not decided: the key isn't a clean single number (prose/multi-value
+    // reference — e.g. a mis-tagged item whose answer is "Mean = 8 … SD = √10"),
+    // or the response isn't one (units, words). Judge it holistically.
+    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response: { text }, question: key.problemText });
     return j.correct;
   }
 
@@ -164,7 +153,7 @@ async function isCorrect(
   }
 
   if (fmt === 'frq' || fmt === 'free') {
-    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response: { text } });
+    const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response: { text }, question: key.problemText });
     return j.correct;
   }
 
@@ -197,6 +186,7 @@ async function gradePoints(
         itemId: '',
         rubric: key.rubric,
         expectedAnswer: key.expectedAnswer,
+        problemText: key.problemText,
         modelResponse: key.modelResponse,
         passageText: key.passageText,
       },

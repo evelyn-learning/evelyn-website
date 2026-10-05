@@ -180,12 +180,12 @@ async function captureLogs<T>(fn: () => Promise<T>): Promise<{ result: T; lines:
   // -------------------------------------------------------------------------
   // The committed list
   // -------------------------------------------------------------------------
-  await test('the JSON holds exactly 359 ids, each with a verdict', () => {
+  await test('the JSON holds exactly 392 ids, each with a verdict', () => {
     const file = path.join(__dirname, '..', 'src', 'data', 'withdrawn-practice-items.json');
     const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { generatedAt: string; source: string; items: Record<string, string> };
     assert.equal(data.generatedAt, '2026-10-04');
     assert.equal(data.source, 'answer-key audit 2026-10-04');
-    assert.equal(Object.keys(data.items).length, 359);
+    assert.equal(Object.keys(data.items).length, 392);
     assert.ok(WITHDRAWN_REV_TRY in data.items);
     for (const [id, verdict] of Object.entries(data.items)) {
       assert.ok(id.length > 0 && id === id.trim(), `bad id ${JSON.stringify(id)}`);
@@ -194,7 +194,7 @@ async function captureLogs<T>(fn: () => Promise<T>): Promise<{ result: T; lines:
   });
 
   await test('isWithdrawnItem / the set reflect the JSON', () => {
-    assert.equal(WITHDRAWN_ITEM_IDS.size, 359);
+    assert.equal(WITHDRAWN_ITEM_IDS.size, 392);
     for (const id of [WITHDRAWN_BANK_ID, WITHDRAWN_GEN_TRY, WITHDRAWN_SEED_TRY, WITHDRAWN_REV_TRY]) {
       assert.equal(isWithdrawnItem(id), true, id);
     }

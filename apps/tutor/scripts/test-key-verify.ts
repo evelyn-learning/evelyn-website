@@ -96,6 +96,34 @@ async function main(): Promise<void> {
     assert.equal(det('50%', '0.5'), 'same');
   });
 
+  await test('numeric: a DECIMAL key must match to its last stated place (half-unit rule), not just within 1 %', () => {
+    // A key off by one in its last stated place is a wrong key.
+    assert.equal(det('10.81', '10.80'), 'different');
+    assert.equal(det('10.81', '10.82'), 'different');
+    assert.equal(det('63.62', '63.61'), 'different');
+    assert.equal(det('x = 10.81', '10.8162'), 'different');
+    assert.equal(det('0.50', '0.509'), 'different');
+    assert.equal(det('10.81 cm', '10.80 cm'), 'different');
+    // …while a solver's extra digits still match the key they round to.
+    assert.equal(det('4.33', '4.333'), 'same');
+    assert.equal(det('4.33', '4.3333333'), 'same');
+    assert.equal(det('4.33', '13/3'), 'same');
+    assert.equal(det('10.81', '10.8149'), 'same');
+    assert.equal(det('10.81', '10.805'), 'same', 'half-unit boundary is inclusive');
+    assert.equal(det('10.81', '10.81'), 'same');
+    assert.equal(det('2.5', '2.50'), 'same');
+    assert.equal(det('$4.50', '4.50'), 'same');
+    assert.equal(det('38.4 N·s', '38.40'), 'same');
+    assert.equal(det('38.4 N·s', '38.46 N·s'), 'different');
+    // Unchanged: a solver that states FEWER places than the key, an integer or
+    // fraction key, and the percent-vs-fraction pairing keep the old tolerance.
+    assert.equal(det('10.81', '10.8'), 'same');
+    assert.equal(det('100', '100.9'), 'same');
+    assert.equal(det('13/3', '4.33'), 'same');
+    assert.equal(det('50%', '0.5'), 'same');
+    assert.equal(det('12.5%', '0.125'), 'same');
+  });
+
   await test('numeric: anything richer than one number is NOT decided deterministically', () => {
     assert.equal(det('2x + 8', '2(x + 4)'), 'unknown');
     assert.equal(det('3 or 5', '3'), 'unknown');

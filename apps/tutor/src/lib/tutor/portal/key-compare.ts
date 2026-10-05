@@ -10,7 +10,11 @@
  * It reuses the engine's own primitives so a key is judged the way the
  * product grades a student:
  *   - `extractAnswerNumber` / `normMcqText` (voice/answer-primitives.ts) and the
- *     max(0.01, 1 %) tolerance of `answersAgree`;
+ *     max(0.01, 1 %) tolerance of `answersAgree` — except that a key WRITTEN
+ *     as a decimal must match a solve stated to at least as many places within
+ *     half a unit of the key's last place (`decimalKeyHolds`): 1 % calls
+ *     `10.80` and `10.81` the same, and a key off by one in its last stated
+ *     place is a wrong key;
  *   - `compareRelationTexts` (voice/relation-sampling.ts) for inequalities —
  *     an exact solution-set comparison, so `-4 < x <= 2` and `-4 <= x < 2`
  *     differ even though their first numbers match;
@@ -160,6 +164,10 @@ export interface SimpleNumber {
   value: number;
   unit: string; // normalised, '' when none
   percent: boolean;
+  /** Decimal places as written ("10.81" → 2, "5" → 0); 0 for a fraction. */
+  places: number;
+  /** Written as a fraction ("13/3") — an exact value. */
+  fraction: boolean;
 }
 
 /**
@@ -187,13 +195,34 @@ export function parseSimpleNumber(raw: string): SimpleNumber | null {
   const numText = m[2] != null ? `${m[1].replace(/,/g, '')}/${m[2]}` : m[1];
   const value = extractAnswerNumber(numText + (m[3] ? '%' : ''));
   if (value === null || !Number.isFinite(value)) return null;
-  return { value, unit: unitRaw.toLowerCase().replace(/[\s.·*⋅]/g, ''), percent: m[3] === '%' };
+  const fraction = m[2] != null;
+  const dot = m[1].indexOf('.');
+  const places = fraction || dot < 0 ? 0 : m[1].length - dot - 1;
+  return { value, unit: unitRaw.toLowerCase().replace(/[\s.·*⋅]/g, ''), percent: m[3] === '%', places, fraction };
 }
 
 /** The engine's `answersAgree` tolerance: max(0.01, 1 % of the solved value). */
 export function numbersAgree(key: number, solved: number): boolean {
   const tol = Math.max(0.01, Math.abs(solved) * 0.01);
   return Math.abs(key - solved) <= tol;
+}
+
+/**
+ * The decimal-key tightening. When the KEY is written as a decimal with d ≥ 1
+ * places and the solve is exact (a fraction) or stated to at least d places,
+ * the two agree only if the solve is within half a unit of the key's last
+ * place — the same half-unit rule the student grader uses
+ * (./numeric-answer-rule.ts). Returns true ("no objection") for every other
+ * pairing — an integer or fraction key, a solve stated to FEWER places than
+ * the key, a percent on one side only — which keep the `numbersAgree`
+ * tolerance: there the solver's rounding, not the key, is the coarser one.
+ */
+export function decimalKeyHolds(key: SimpleNumber, solved: SimpleNumber): boolean {
+  if (key.fraction || key.places < 1) return true;
+  if (key.percent !== solved.percent) return true;
+  if (!solved.fraction && solved.places < key.places) return true;
+  const scale = key.percent ? 0.01 : 1; // percent values are stored ÷ 100
+  return Math.abs(key.value - solved.value) <= (0.5 * 10 ** -key.places + 1e-12) * scale;
 }
 
 /** An inequality comparator, typed, Unicode or LaTeX (`\\le`, `\\geq`, …). `=` is
@@ -225,7 +254,7 @@ export function compareDeterministic(key: string, solved: string): CompareResult
   if (!a || !b) return { result: 'unknown', method: 'none', reason: 'not both single numbers' };
 
   const unitsCompatible = a.unit === b.unit || !a.unit || !b.unit;
-  let agree = numbersAgree(a.value, b.value);
+  let agree = numbersAgree(a.value, b.value) && decimalKeyHolds(a, b);
   // "50" vs "50%": one side written as a percent, the other as the bare figure.
   if (!agree && a.percent !== b.percent) {
     const av = a.percent ? a.value * 100 : a.value;
@@ -234,7 +263,7 @@ export function compareDeterministic(key: string, solved: string): CompareResult
   }
   if (agree) {
     return unitsCompatible
-      ? { result: 'same', method: 'numeric', reason: `${a.value} ≈ ${b.value} (tolerance max(0.01, 1%))` }
+      ? { result: 'same', method: 'numeric', reason: `${a.value} ≈ ${b.value} (tolerance max(0.01, 1%); a decimal key to its last place)` }
       : { result: 'unknown', method: 'numeric', reason: `numbers agree but units differ ("${a.unit}" vs "${b.unit}")` };
   }
   // Different numbers are only a deterministic "different" when the units
