@@ -59,6 +59,7 @@ import {
 } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { isWithdrawnItem, logWithdrawnSkip } from './withdrawn-items';
+import { findNearDuplicate, type ComparableItem } from './practice-similarity';
 import { keyVerifyEnabled, verifyAnswerKey, type VerifyAnswerKeyInput, type VerifyAnswerKeyResult } from './key-verify';
 
 type Difficulty = 1 | 2 | 3 | 4;
@@ -67,8 +68,24 @@ type Difficulty = 1 | 2 | 3 | 4;
 export const MAX_GENERATIONS_PER_REQUEST = 2;
 /** Per-(student, LO) daily cap (spec bound). */
 export const PER_STUDENT_LO_DAILY_CAP = 20;
-/** Global daily cap across all students/LOs (spec bound). */
+/** Global daily cap across all students/LOs (spec bound) — the default. */
 export const GLOBAL_DAILY_CAP = 500;
+/** Largest value `PRACTICE_GEN_GLOBAL_DAILY_CAP` may set. */
+export const GLOBAL_DAILY_CAP_MAX = 5000;
+
+/**
+ * The global daily cap in force: `PRACTICE_GEN_GLOBAL_DAILY_CAP` when it is a
+ * whole number from 1 to `GLOBAL_DAILY_CAP_MAX`, else the default 500 (unset,
+ * empty, not a number, a decimal, zero, negative, or above the maximum — a
+ * typo must never remove the cost ceiling or switch generation off). Read on
+ * every call, so restarting the process with the variable set is enough.
+ */
+export function globalDailyCap(env: Record<string, string | undefined> = process.env): number {
+  const raw = (env.PRACTICE_GEN_GLOBAL_DAILY_CAP ?? '').trim();
+  if (!/^\d+$/.test(raw)) return GLOBAL_DAILY_CAP;
+  const n = Number(raw);
+  return Number.isSafeInteger(n) && n >= 1 && n <= GLOBAL_DAILY_CAP_MAX ? n : GLOBAL_DAILY_CAP;
+}
 /** Fallback difficulty bucket when neither the request nor an anchor names
  *  one — mirrors problem-generator.ts's `resolveAbsoluteDifficulty` default. */
 const DEFAULT_DIFFICULTY: Difficulty = 2;
@@ -112,6 +129,8 @@ export interface PracticeGenSources {
      *  it (`GateFailReason`, or 'no_candidate' when generation itself
      *  produced nothing) — the visible-outcome hook (2026-10-02). */
     onGateFailed?: (reason: string) => void,
+    /** Aborts the slot's in-flight model calls (the request's hard limit). */
+    signal?: AbortSignal,
   ): Promise<{ gen: GenPayload; hash: string } | null>;
   /** Reserve up to `n` generation slots for (studentId, loId) today, honoring
    *  the per-(student,LO) and global daily caps. Returns the number actually
@@ -119,6 +138,11 @@ export interface PracticeGenSources {
   reserve(studentId: string, loId: string, n: number): Promise<number>;
   /** Persist one verified generated item permanently into the bank. */
   persist(row: PracticeGenPersistRow): Promise<void>;
+  /** Give back `n` of the (student, LO) slots reserved at `reservedAt` — for
+   *  a slot that produced nothing because a model call FAILED (HTTP error,
+   *  timeout, abort), never for one the gates rejected. Optional: a source
+   *  without it keeps the previous behaviour (the slot stays counted). */
+  release?(studentId: string, loId: string, n: number, reservedAt: Date): Promise<void>;
 }
 
 export interface GeneratePracticeItemsOptions {
@@ -161,7 +185,20 @@ export interface GeneratePracticeItemsOptions {
    *  Server callers log these (`logPracticeGenEvent`); there is no
    *  debug-event stream server-side. */
   onDebugEvent?: (type: string, message: string) => void;
+  /** INTERACTIVE draws only (the practice endpoint): return after this many
+   *  ms with whatever verified items are ready. Slots still running are NOT
+   *  cancelled — they finish in the background, pass the same gates and are
+   *  stored, so the next draw finds them in the bank. Omitted → wait for
+   *  every slot (session-end top-up, assessments, scripts). */
+  deadlineMs?: number;
 }
+
+/** The practice endpoint's generation deadline: a draw answers in about this
+ *  long at worst (the academy proxies it with a 60 s limit). */
+export const PRACTICE_DRAW_DEADLINE_MS = 35_000;
+/** Hard limit for one request's slots, foreground or background: at this
+ *  point the in-flight model calls are aborted. */
+export const PRACTICE_GEN_HARD_LIMIT_MS = 150_000;
 
 /** Server-side sink for `onDebugEvent`: one `[practice-gen] <type> <message>`
  *  log line per event (retrievePractice, the session-end draft top-up). */
@@ -190,7 +227,7 @@ async function mongoReserve(studentId: string, loId: string, n: number, now: Dat
   const studentCount = (studentDoc as { count?: number } | null)?.count ?? 0;
   const globalCount = (globalDoc as { count?: number } | null)?.count ?? 0;
   const studentRoom = Math.max(0, PER_STUDENT_LO_DAILY_CAP - studentCount);
-  const globalRoom = Math.max(0, GLOBAL_DAILY_CAP - globalCount);
+  const globalRoom = Math.max(0, globalDailyCap() - globalCount);
   const allowed = Math.min(n, studentRoom, globalRoom);
   if (allowed <= 0) return 0;
   await Promise.all([
@@ -198,6 +235,23 @@ async function mongoReserve(studentId: string, loId: string, n: number, now: Dat
     PracticeGenCounter.updateOne({ scopeKey: 'global', day }, { $inc: { count: allowed } }, { upsert: true }),
   ]);
   return allowed;
+}
+
+/**
+ * Give back reserved (student, LO) slots whose generation FAILED on the
+ * model call itself (2026-10-05). Only the per-(student, LO) counter is
+ * decremented: the GLOBAL counter is the cost ceiling, and a failed call may
+ * still have been billed, so it stays counted there. Without this, a provider
+ * outage or a run of timeouts used up a student's 20 a day for a skill with
+ * nothing to show for it. Never below zero; the day is the reservation's.
+ */
+async function mongoRelease(studentId: string, loId: string, n: number, reservedAt: Date): Promise<void> {
+  if (n <= 0) return;
+  await connectDB();
+  await PracticeGenCounter.updateOne(
+    { scopeKey: `${studentId}::${loId}`, day: utcDay(reservedAt), count: { $gte: n } },
+    { $inc: { count: -n } },
+  );
 }
 
 /** The bank/served response format of a GATED payload: `free` items are
@@ -302,6 +356,19 @@ export function normalizeNumericAnswer(raw: string): string | null {
     .replace(/(\d),(?=\d{3}(?:\D|$))/g, '$1')
     .replace(/(^|[^\d.])\.(\d)/g, '$10.$2');
 
+  // An exact fraction of two integers (`5/6`, `\frac{5}{13}`, `-7/3 m/s`)
+  // stays a fraction key unless it is a whole number or a terminating
+  // decimal — see `exactFractionKey`. ONLY when what follows it is nothing,
+  // or a plain unit: "4/3 π" is 4.19, not 4/3 (`isPlainUnit`).
+  const fraction = collapsed
+    .replace(/[−–]/g, '-')
+    .replace(/\\[dt]?frac\{\s*(-?\d+)\s*\}\{\s*(-?\d+)\s*\}/g, '$1/$2')
+    .replace(/^\$|\$$/g, '')
+    .match(/^(-?\d+)\s*\/\s*(-?\d+)(?:\s+(\S.*))?$/);
+  if (fraction && (fraction[3] === undefined || isPlainUnit(fraction[3]))) {
+    return exactFractionKey(Number(fraction[1]), Number(fraction[2]));
+  }
+
   const isSimpleFraction = /^-?\d+(?:\.\d+)?\s*\/\s*-?\d+(?:\.\d+)?$/.test(collapsed);
   const runs = collapsed.match(/-?\d+(?:\.\d+)?/g) ?? [];
   if (runs.length === 0) return null; // no number at all
@@ -317,7 +384,302 @@ export function normalizeNumericAnswer(raw: string): string | null {
 
   const n = extractAnswerNumber(collapsed);
   if (n === null || !Number.isFinite(n)) return null;
-  return String(n);
+  // A value COMPUTED here (a decimal fraction, a multiple of π, a root) is a
+  // floating-point number: `String(n)` of a non-terminating one is a 16-digit
+  // key ("0.8333333333333334") that no student can type. Such an answer has
+  // no plain-number key — reject it (the prompt asks for a stated precision
+  // or an exact fraction instead).
+  const text = String(n);
+  if (!PLAIN_NUMBER_RE.test(text) || decimalPlaces(text) > MAX_KEY_DECIMAL_PLACES) return null;
+  return text;
+}
+
+/** Units written with ONE letter. Any other lone letter after a fraction is
+ *  read as a variable or a constant ("3/4 x", "2/3 e"). */
+const ONE_LETTER_UNITS = new Set(['m', 's', 'g', 'L', 'l', 'N', 'J', 'W', 'V', 'A', 'K', 'C', 'F', 'h', 'T', 'Ω', 'μ']);
+
+/**
+ * Is the text after a fraction a PLAIN UNIT ("m/s", "rad", "ft/s", "of the
+ * pie", "°", "%") — so the fraction is the whole value? (2026-10-05: the
+ * first version took ANY trailing text for a unit, and "4/3 π" with an
+ * agreeing solver was stored as the key 4/3 — 1.33 for an answer of 4.19.)
+ * Only letters, "/", "°", "%", "μ" and spaces; and none of: π or "pi", a
+ * root, the constant e, a product or power sign, a digit, or a lone letter
+ * that is not a one-letter unit.
+ */
+export function isPlainUnit(trailing: string): boolean {
+  const t = (trailing ?? '').trim();
+  if (!t) return true;
+  if (!/^[A-Za-zµμΩ°%/\s]+$/.test(t)) return false; // π, √, ×, ·, ^, digits, backslashes, brackets …
+  for (const word of t.split(/[\s/]+/).filter(Boolean)) {
+    const bare = word.replace(/[°%]/g, '');
+    if (!bare) continue;
+    if (/^(?:pi|sqrt|e|exp|ln|log|sin|cos|tan|i)$/i.test(bare)) return false;
+    if (bare.length === 1 && !ONE_LETTER_UNITS.has(bare)) return false;
+  }
+  return true;
+}
+
+/** Longest decimal tail a generated numeric key may carry. */
+export const MAX_KEY_DECIMAL_PLACES = 6;
+
+function decimalPlaces(plain: string): number {
+  const dot = plain.indexOf('.');
+  return dot < 0 ? 0 : plain.length - dot - 1;
+}
+
+function gcd(a: number, b: number): number {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) [a, b] = [b, a % b];
+  return a;
+}
+
+/**
+ * The key for an answer given as a fraction of two integers (2026-10-05).
+ *
+ * `String(5 / 6)` used to be stored — "0.8333333333333334" — and under the
+ * exact numeric rule (numeric-answer-rule.ts) a student typing 0.83 or 0.833
+ * was marked wrong; only the fraction or the full float passed. The rule
+ * already has a FRACTION key form: it accepts an equal fraction (5/6, 10/12)
+ * and a decimal of two or more places equal to the key rounded to that many
+ * places (0.83, 0.833, 0.8333). So:
+ *   whole number            → "4"      (12/3)
+ *   terminating decimal     → "0.375"  (3/8 — as before)
+ *   anything else           → the reduced fraction, sign on top: "5/6", "-7/3"
+ * A zero denominator has no key.
+ */
+export function exactFractionKey(numerator: number, denominator: number): string | null {
+  if (!Number.isSafeInteger(numerator) || !Number.isSafeInteger(denominator) || denominator === 0) return null;
+  const g = gcd(numerator, denominator) || 1;
+  let num = numerator / g;
+  let den = denominator / g;
+  if (den < 0) { num = -num; den = -den; }
+  if (den === 1) return String(num);
+  let rest = den;
+  while (rest % 2 === 0) rest /= 2;
+  while (rest % 5 === 0) rest /= 5;
+  if (rest === 1) {
+    const text = String(num / den);
+    if (PLAIN_NUMBER_RE.test(text) && decimalPlaces(text) <= MAX_KEY_DECIMAL_PLACES) return text;
+  }
+  return `${num}/${den}`;
+}
+
+const NUMBER_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
+const wordOrDigit = (t: string): number => NUMBER_WORDS[t.toLowerCase()] ?? Number(t);
+
+/** The rounding a question asks for, read from its text. */
+export type StatedPrecision =
+  | { kind: 'places'; n: number }
+  | { kind: 'sigfigs'; n: number }
+  /** Rounding, an exact form or a working value ("use 3.14 for π") is asked
+   *  for, in words this does not size. */
+  | { kind: 'stated' }
+  /** "Give a decimal" / "as a decimal": a decimal is asked for, with no
+   *  rounding — the key must be the EXACT decimal. */
+  | { kind: 'decimal' };
+
+/** Decimal places named by "to the nearest <word>" — a CLOSED list. A word
+ *  not listed is not a precision at all: "the nearest star is 4.2 light
+ *  years away" states none. */
+const NEAREST_PLACES: Array<[RegExp, number]> = [
+  [/^ten-?thousandths?$/, 4],
+  [/^thousandths?$/, 3],
+  [/^(?:hundredths?|cents?|pennies|penny)$/, 2],
+  [/^tenths?$/, 1],
+  [
+    /^(?:whole|integer|one|ones|unit|units|ten|tens|hundred|hundreds|thousand|thousands|million|dollar|dollars|percent|percentage|degree|degrees|metre|metres|meter|meters|centimetre|centimetres|centimeter|centimeters|millimetre|millimetres|millimeter|millimeters|kilometre|kilometres|kilometer|kilometers|inch|inches|foot|feet|yard|yards|mile|miles|second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years|gram|grams|kilogram|kilograms|milligram|milligrams|pound|pounds|ounce|ounces|litre|litres|liter|liters|millilitre|millilitres|milliliter|milliliters|gallon|gallons|newton|newtons|joule|joules|watt|watts|volt|volts|amp|amps|ampere|amperes|ohm|ohms|kelvin|mole|moles|pascal|pascals|person|people|item|items|cm|mm|km|m|kg|g|ml|l|s|n|j|w|v|k)$/,
+    0,
+  ],
+];
+
+/** "π = 3.14", "π ≈ 3.14", "take π as 3.14", "use 3.14 for π", "22/7". */
+const WORKING_PI_RE =
+  /(?:π|\\pi\b|\bpi\b)\s*(?:=|≈|\\approx|as|to be|is)\s*(?:3\.14|22\s*\/\s*7)|(?:3\.14\d*|22\s*\/\s*7)\s+(?:for|as)\s+(?:the value of\s+)?(?:π|\\pi\b|pi\b)/i;
+
+export function statedPrecision(question: string): StatedPrecision | null {
+  const q = question ?? '';
+  // "at least two decimal places" is a floor, not the precision of the key.
+  if (/\bat least\s+(?:\d+|one|two|three|four|five|six)\s+(?:decimal|significant|sig\b|d\.\s?p|s\.\s?f)/i.test(q)) return { kind: 'stated' };
+  const places = q.match(/\b(\d+|one|two|three|four|five|six)\s*(?:decimal\s+(?:place|digit)s?|d\.\s?p\.?|dp)(?![a-z])/i);
+  if (places) return { kind: 'places', n: wordOrDigit(places[1]) };
+  const sig = q.match(/\b(\d+|one|two|three|four|five|six)\s*(?:significant\s+(?:figure|digit)s?|sig(?:nificant)?\.?\s*(?:fig|dig)s?\.?|s\.\s?f\.?|sf)(?![a-z])/i);
+  if (sig) return { kind: 'sigfigs', n: wordOrDigit(sig[1]) };
+  // "nearest 0.01", "nearest 10"
+  const nearestNumber = q.match(/\bnearest\s+(\d+(?:\.\d+)?)(?![\d.])/i);
+  if (nearestNumber) return { kind: 'places', n: decimalPlaces(nearestNumber[1]) };
+  for (const m of q.matchAll(/\bnearest\s+([a-z-]+)/gi)) {
+    const hit = NEAREST_PLACES.find(([re]) => re.test(m[1].toLowerCase()));
+    if (hit) return { kind: 'places', n: hit[1] };
+  }
+  if (/\bround(?:ed|ing)?\b|\bexact (?:value|answer|form)\b|\bas an? (?:simplified |reduced |exact )?fraction\b|\bin simplest form\b/i.test(q) || WORKING_PI_RE.test(q)) {
+    return { kind: 'stated' };
+  }
+  if (/\b(?:as|give|write|express(?:ed)?|answer)\b[^.?!]{0,40}\bdecimal\b|\bto a decimal\b|\bdecimal (?:form|answer|value)\b/i.test(q)) {
+    return { kind: 'decimal' };
+  }
+  return null;
+}
+
+function significantFigures(plain: string): number {
+  const digits = plain.replace(/^-/, '').replace('.', '').replace(/^0+/, '');
+  return digits.length;
+}
+
+/** What is known about how a numeric key was arrived at. */
+export interface PrecisionEvidence {
+  /** The generator's own `finalAnswer`, before normalisation. */
+  rawAnswer?: string;
+  /** The generator's worked solution. */
+  worked?: string;
+  /** The independent solver's reply (its own value for the answer). */
+  solved?: string;
+}
+
+/** A fraction or ratio of two integers, with at most a plain unit after it. */
+const INTEGER_RATIO_RE = /^\$?\s*(?:-?\d+\s*\/\s*-?\d+|\\[dt]?frac\{\s*-?\d+\s*\}\{\s*-?\d+\s*\})\s*\$?(?:\s+[A-Za-zµμΩ°%/\s]+)?$/;
+
+const APPROX_BEFORE = '(?:≈|≅|\\\\approx|~|\\bapprox(?:imately|\\.)?|\\babout|\\broughly|\\bnearly|\\balmost)';
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Is there EVIDENCE that `key` is a rounding of a longer value?
+ *  - anywhere (solver's reply, worked solution, the raw answer): the key
+ *    itself introduced by an approximation sign or word ("≈ 5.94",
+ *    "approximately 34.5"), or followed by an ellipsis;
+ *  - in the SOLVER'S reply only — it is the final answer and nothing else —
+ *    a number written to MORE decimal places than the key that rounds to it
+ *    ("34.4718 m/s" against the key 34.5). The worked solution is not read
+ *    this way: its intermediate values (2.54 cm per inch) can round to an
+ *    exact key (2.5) by accident.
+ * No such trace → no evidence; this never guesses from the question's topic.
+ */
+export function keyIsRounding(key: string, ev: PrecisionEvidence): boolean {
+  if (!PLAIN_NUMBER_RE.test(key)) return false;
+  const places = decimalPlaces(key);
+  const keyValue = Number(key);
+  const scale = 10 ** places;
+  const keyPattern = escapeRegExp(key.replace(/^-/, ''));
+  const approxKey = new RegExp(`${APPROX_BEFORE}\\s*\\$?\\s*[-−]?${keyPattern}(?![\\d])|(?<![\\d.])${keyPattern}\\s*(?:\\.\\.\\.|…)`, 'i');
+  const clean = (raw: string | undefined) => (raw ?? '').replace(/−/g, '-').replace(/(\d),(?=\d{3}(?:\D|$))/g, '$1');
+  for (const text of [ev.solved, ev.worked, ev.rawAnswer].map(clean)) {
+    if (text && approxKey.test(text)) return true;
+  }
+  for (const m of clean(ev.solved).matchAll(/-?\d+\.\d+/g)) {
+    if (decimalPlaces(m[0]) <= places) continue;
+    const value = Number(m[0]);
+    if (value === keyValue) continue; // 0.50 for 0.5
+    if (Math.abs(Math.round(Math.abs(value) * scale) / scale - Math.abs(keyValue)) < 1e-9) return true;
+  }
+  return false;
+}
+
+/**
+ * May this decimal KEY be graded exactly against this QUESTION? (2026-10-05)
+ *
+ * A decimal key is graded to the precision it is written to. Two of the
+ * pre-generation audit's fails were keys rounded further than the question
+ * justified, with no rounding stated: 5.94 (from "310 K") and 34.5 (from
+ * "45 m/s at 40°") — a student answering 5.9 or 34 was marked wrong.
+ *
+ * The first version of this gate judged exactness from the question's
+ * SUBJECT (any °, any trig or root, more places than the data) and rejected
+ * legitimate exact decimals: 3/8 = 0.375, 1 ÷ 8 = 0.125, sin 30° = 0.5, a
+ * temperature change of 25.5 °C, π taken as 3.14. It now rejects only what
+ * is demonstrably wrong:
+ *  - the question states a precision → the key must not be written to MORE
+ *    than that (decimal places or significant figures): "correct to 1 d.p."
+ *    with the key 0.33 is rejected;
+ *  - it states none (or only "give a decimal") → rejected only on EVIDENCE
+ *    that the key is a rounding (`keyIsRounding`: the independent solver's
+ *    value or the worked solution carries more figures, or marks the key as
+ *    approximate). No evidence — nothing to recompute from — passes;
+ *  - the generator's own answer was a fraction or ratio of integers → the
+ *    decimal is exact by construction; always passes.
+ * Whole-number and fraction keys are exact and always pass.
+ *
+ * `evidence` may be the worked-solution text alone (earlier callers).
+ */
+export function numericKeyPrecisionOk(question: string, key: string, evidence: string | PrecisionEvidence = {}): boolean {
+  if (!PLAIN_NUMBER_RE.test(key)) return true; // a fraction key
+  const places = decimalPlaces(key);
+  if (places === 0) return true;
+  const ev: PrecisionEvidence = typeof evidence === 'string' ? { worked: evidence } : evidence;
+  const stated = statedPrecision(question);
+  if (stated?.kind === 'places') return places <= stated.n;
+  if (stated?.kind === 'sigfigs') return significantFigures(key) <= stated.n;
+  if (stated?.kind === 'stated') return true;
+  if (ev.rawAnswer !== undefined && INTEGER_RATIO_RE.test(ev.rawAnswer.trim())) return true;
+  return !keyIsRounding(key, ev);
+}
+
+/**
+ * A numeric box takes ONE number: a second task that needs words cannot be
+ * typed into it (audit 2026-10-05: "Calculate the water potential … and use
+ * it to determine whether water will move into or out of the cell", key
+ * -0.6). Only an IMPERATIVE second task counts — a new sentence, or one
+ * joined on with and / then / also ("… and explain", "Then determine
+ * whether …"). The same words inside the story do not: "A scientist wants to
+ * explain a result. If … find F." and "A student must decide whether to buy
+ * 3 or 4. If each costs $2, what is the cost of 4?" each ask for one number.
+ */
+const SECOND_TASK_LEAD = String.raw`(?:[.!?;:]\s+(?:then\s+|also\s+|next,?\s+|finally,?\s+)?|\b(?:and|then|also)\s+(?:then\s+|also\s+)?(?:use\s+(?:it|this|that|them|your\s+(?:answer|result|value))\s+to\s+)?)`;
+const NUMERIC_SECOND_PART_RE = new RegExp(
+  `${SECOND_TASK_LEAD}(?:briefly\\s+)?(?:(?:determine|state|decide|say|tell)\\s+whether\\b|(?:explain|justify)\\b)` +
+    // … and state / name / identify something — unless that something IS the
+    // number asked for ("… balance the equation, and state the coefficient of
+    // Cu", "… then state how many electrons the ion has").
+    `|\\b(?:and|then|also)\\s+(?:state|describe|identify|classify|interpret|predict|name)\\b` +
+    `(?!\\s+(?:how\\s+(?:many|much)|(?:the|its)\\s+(?:number|value|coefficient|sum|total|amount|magnitude|mass|charge|ratio|probability|percent|percentage|slope|answer)\\b))`,
+  'i',
+);
+
+export function numericHasSecondPart(question: string): boolean {
+  return NUMERIC_SECOND_PART_RE.test(question ?? '');
+}
+
+/**
+ * `\( … \)`, `\[ … \]` and `$$ … $$` → `$ … $`. The practice card's maths
+ * pipeline is built around single-dollar maths; three generated items in the
+ * 2026-10-05 pre-generation showed `\(\sum_{k=1}^{6} …\)` as raw source. The
+ * prompt now asks for `$…$` only; this makes the stored text right even when
+ * the model does not comply.
+ *
+ * Three things it must not do (review, same day):
+ *  - rewrite inside backticks — `\(x\)` in a code span is literal text;
+ *  - leave a bare dollar inside the new maths: `\($5\)` is "$5" typeset, and
+ *    `$$5$` would open a second maths span, so it becomes `$\$5$`;
+ *  - touch `\\(` — an escaped backslash followed by an ordinary bracket.
+ */
+export function dollarMathDelimiters(text: string): string {
+  const inner = (body: string) => `$${body.trim().replace(/(?<!\\)\$/g, '\\$')}$`;
+  const outsideCode = (part: string) =>
+    part
+      .replace(/(?<!\\)\\\(([\s\S]+?)(?<!\\)\\\)/g, (_m, body: string) => inner(body))
+      .replace(/(?<!\\)\\\[([\s\S]+?)(?<!\\)\\\]/g, (_m, body: string) => inner(body))
+      .replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (_m, body: string) => inner(body));
+  // Odd pieces of this split are the code spans (```…``` or `…`), kept as is.
+  return (text ?? '')
+    .split(/(```[\s\S]*?```|`[^`\n]*`)/g)
+    .map((part, i) => (i % 2 === 1 ? part : outsideCode(part)))
+    .join('');
+}
+
+/** `dollarMathDelimiters` over every text field of a payload a student sees. */
+function withDollarMath(gen: GenPayload): GenPayload {
+  const fix = (t: string | undefined) => (t === undefined ? undefined : dollarMathDelimiters(t));
+  return {
+    ...gen,
+    problemText: dollarMathDelimiters(gen.problemText),
+    teachingAnswer: fix(gen.teachingAnswer),
+    hints: gen.hints?.map(dollarMathDelimiters),
+    choices: gen.choices?.map(dollarMathDelimiters),
+    expectedAnswer: fix(gen.expectedAnswer),
+    modelResponse: fix(gen.modelResponse),
+  };
 }
 
 /** Matches a leading MCQ choice-letter prefix a generator baked into its own
@@ -404,6 +766,12 @@ export type GateFailReason =
   | 'mcq_unresolved_letter'
   | 'mcq_letter_out_of_range'
   | 'numeric_shape'
+  /** A decimal key the question's stated precision / data do not justify
+   *  (`numericKeyPrecisionOk`). */
+  | 'numeric_precision'
+  /** A numeric item that also asks for something that needs words
+   *  (`numericHasSecondPart`). */
+  | 'numeric_extra_part'
   | 'free_shape'
   | 'verify_disagree'
   /** `free` answer: the independent key check could not reach a verdict
@@ -414,7 +782,11 @@ export type GateFailReason =
   /** mcq / numeric item whose text is a pure drawing instruction with nothing
    *  to type (`isDrawingOnlyItem`) — a whiteboard task, never banked. (A
    *  `free` drawing instruction fails 'free_shape', as before.) */
-  | 'drawing_task';
+  | 'drawing_task'
+  /** Nearly the same item as one the skill already has (practice-similarity.ts). */
+  | 'near_duplicate'
+  /** Nearly the same item as the other slot of the same request produced. */
+  | 'near_duplicate_sibling';
 
 /** Longest canonical answer a `free` generated item may carry. */
 export const FREE_ANSWER_MAX_CHARS = 120;
@@ -440,10 +812,13 @@ export const FREE_ANSWER_MAX_CHARS = 120;
  *  Every payload that passes carries `verifierModel`: the model whose
  *  independent solve agreed with the answer. */
 export async function checkGeneratedAnswer(
-  gen: GenPayload,
+  raw: GenPayload,
   verify: VerifyFn = verifyClaimedAnswer,
   verifyKey: KeyVerifyFn = verifyAnswerKey,
 ): Promise<{ ok: true; gen: GenPayload } | { ok: false; reason: GateFailReason }> {
+  // Maths delimiters first, so every check below and the stored row see the
+  // text the student will be shown.
+  const gen = withDollarMath(raw);
   const fail = (reason: GateFailReason) => ({ ok: false as const, reason });
   if (gen.answerKind === 'free') {
     const expected = (gen.expectedAnswer ?? '').trim();
@@ -491,26 +866,78 @@ export async function checkGeneratedAnswer(
   }
   const normalized = normalizeNumericAnswer(gen.finalAnswer);
   if (!normalized) return fail('numeric_shape'); // ambiguous/non-numeric shape — reject rather than guess
-  const { agree } = await verify(gen.problemText, gen.finalAnswer);
+  if (numericHasSecondPart(gen.problemText)) return fail('numeric_extra_part');
+  // A stated precision the key does not follow needs no solve to reject.
+  if (!numericKeyPrecisionOk(gen.problemText, normalized, { rawAnswer: gen.finalAnswer, worked: gen.teachingAnswer })) {
+    return fail('numeric_precision');
+  }
+  const { agree, solved } = await verify(gen.problemText, gen.finalAnswer);
   if (!agree) return fail('verify_disagree');
+  // The solver agreed with the answer AS WRITTEN; what is stored is the
+  // normalised key. They must be the same value, or a key goes into the bank
+  // that no solve ever agreed with ("4/3 π" → "4/3").
+  if (!normalizedKeyAgrees(normalized, gen.finalAnswer, solved)) return fail('verify_disagree');
+  // With the solver's own value in hand: is the key a rounding of it?
+  if (!numericKeyPrecisionOk(gen.problemText, normalized, { rawAnswer: gen.finalAnswer, worked: gen.teachingAnswer, solved })) {
+    return fail('numeric_precision');
+  }
   return { ok: true, gen: { ...gen, finalAnswer: normalized, verifierModel: BRAINGEN_VERIFY_MODEL } };
+}
+
+/** The value of a normalised numeric key ("0.375", "-7", "5/6"). */
+function keyValue(key: string): number | null {
+  if (PLAIN_NUMBER_RE.test(key)) return Number(key);
+  const m = /^(-?\d+)\/(\d+)$/.exec(key);
+  return m && Number(m[2]) !== 0 ? Number(m[1]) / Number(m[2]) : null;
+}
+
+/**
+ * Does the NORMALISED key have the value the solver agreed with?
+ *
+ * Verification compares the answer as the generator wrote it (the percent
+ * convention needs that — see `gateGeneratedAnswer`); the bank gets the
+ * normalised key. This closes the gap between the two: the key's value must
+ * equal the value verification read from the raw answer (`extractAnswerNumber`,
+ * which reads "50%" as 0.5 while the key is the bare 50 — both readings are
+ * accepted for a percent answer), and, when the solver's reply carries a
+ * number, be within the verifier's own tolerance of it.
+ */
+export function normalizedKeyAgrees(key: string, rawAnswer: string, solved: string | undefined): boolean {
+  const value = keyValue(key);
+  if (value === null) return false;
+  const percent = /%/.test(rawAnswer ?? '');
+  const same = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol || (percent && Math.abs(a / 100 - b) <= tol / 100 + 1e-12);
+  const rawValue = extractAnswerNumber(rawAnswer ?? '');
+  if (rawValue === null || !same(value, rawValue, 1e-9 * Math.max(1, Math.abs(value)))) return false;
+  const solvedValue = extractAnswerNumber(solved ?? '');
+  if (solvedValue === null) return true; // nothing more to compare with
+  const tol = Math.max(0.01, Math.abs(solvedValue) * 0.01);
+  return same(value, solvedValue, tol) || (percent && Math.abs(value - solvedValue * 100) <= tol * 100);
 }
 
 /** Generate one candidate (shared generator) then run it through the
  *  answer-shape gate. `hash` is returned even on gate/verify failure (null
  *  only when generation itself didn't produce a candidate at all) so a
- *  retry can exclude it. */
+ *  retry can exclude it. A FAILED model call (HTTP error, timeout, abort)
+ *  throws out of here — that is how the caller tells "the gates said no"
+ *  from "the call never answered". */
 async function attemptGenerateVerified(
   userPrompt: string,
   excludeHashes: string[],
   onGateFailed?: (reason: string) => void,
+  signal?: AbortSignal,
 ): Promise<{ result: { gen: GenPayload; hash: string } | null; hash: string | null }> {
-  const candidate = await generateCandidate(userPrompt, excludeHashes);
+  const callOpts = signal ? { signal } : {};
+  const candidate = await generateCandidate(userPrompt, excludeHashes, callOpts);
   if (!candidate) {
     onGateFailed?.('no_candidate');
     return { result: null, hash: null };
   }
-  const gated = await checkGeneratedAnswer(candidate.gen);
+  const gated = await checkGeneratedAnswer(
+    candidate.gen,
+    (problemText, claimed, choices) => verifyClaimedAnswer(problemText, claimed, choices, callOpts),
+    (input) => verifyAnswerKey(input, callOpts),
+  );
   if (!gated.ok) {
     onGateFailed?.(gated.reason);
     return { result: null, hash: candidate.hash };
@@ -529,11 +956,12 @@ async function generateVerifiedWithRetry(
   userPrompt: string,
   excludeHashes: string[],
   onGateFailed?: (reason: string) => void,
+  signal?: AbortSignal,
 ): Promise<{ gen: GenPayload; hash: string } | null> {
-  const first = await attemptGenerateVerified(userPrompt, excludeHashes, onGateFailed);
+  const first = await attemptGenerateVerified(userPrompt, excludeHashes, onGateFailed, signal);
   if (first.result) return first.result;
   const retryExcludeHashes = first.hash ? [...excludeHashes, first.hash] : excludeHashes;
-  const second = await attemptGenerateVerified(userPrompt, retryExcludeHashes, onGateFailed);
+  const second = await attemptGenerateVerified(userPrompt, retryExcludeHashes, onGateFailed, signal);
   return second.result;
 }
 
@@ -541,9 +969,10 @@ async function generateVerifiedWithRetry(
  *  Mongo caps/persistence. */
 export function practiceGenSources(): PracticeGenSources {
   return {
-    generateAndVerify: (userPrompt, excludeHashes, onGateFailed) => generateVerifiedWithRetry(userPrompt, excludeHashes, onGateFailed),
+    generateAndVerify: (userPrompt, excludeHashes, onGateFailed, signal) => generateVerifiedWithRetry(userPrompt, excludeHashes, onGateFailed, signal),
     reserve: (studentId, loId, n) => mongoReserve(studentId, loId, n),
     persist: (row) => mongoPersist(row),
+    release: (studentId, loId, n, reservedAt) => mongoRelease(studentId, loId, n, reservedAt),
   };
 }
 
@@ -607,16 +1036,73 @@ export function pickAnchorsForSlots(
  * just the numbers plugged into an identical template.
  */
 const SLOT_VARIATION_DIRECTIVES = [
-  'This is generation 1 of up to 2 for this objective — write a natural, direct framing of the skill.',
-  'This is generation 2 of up to 2 for this objective, generated in parallel with a sibling problem that ' +
-    'may share the same anchor — make this one STRUCTURALLY distinct from a straightforward retelling: ' +
-    'change which quantity is the unknown, the surface context/scenario, the givens/unknown arrangement, ' +
-    'or the specific sub-skill angle within this objective. Do not just reuse the same setup with new numbers.',
+  'This is generation 1 of up to 2 for this objective, written in parallel with a sibling that must NOT resemble it. ' +
+    'Yours is the DIRECT one: a plain statement of the task with no story around it. If the skill is practised on a ' +
+    'specific example (a substance, an organism, a function, a data set, a case), use a standard one.',
+  'This is generation 2 of up to 2 for this objective, written in parallel with a sibling that must NOT resemble it. ' +
+    'The sibling is the plain, direct statement of the task on a standard example, so yours must be STRUCTURALLY ' +
+    'distinct: change which quantity is the unknown, or work the skill in the reverse direction, or take a different ' +
+    'case or sub-skill within this objective, and set it in an applied situation. If the skill is practised on a ' +
+    'specific example (a substance, an organism, a function, a data set, a case), do NOT use the most familiar ' +
+    'textbook one — choose a different, less common example. Do not just reuse the same setup with new numbers.',
 ];
 
 function slotVariationDirective(slotIndex: number): string {
   return SLOT_VARIATION_DIRECTIVES[slotIndex % SLOT_VARIATION_DIRECTIVES.length];
 }
+
+/** Most existing items listed in a prompt, and the longest each may be. */
+const AVOID_LIST_MAX_ITEMS = 8;
+const AVOID_ITEM_MAX_CHARS = 280;
+
+/**
+ * "Do not repeat" block (2026-10-05): the texts of the skill's existing
+ * typed-answer items. Until now a prompt showed at most ONE of them (the
+ * anchor), so the generator kept re-asking the skill's other stored
+ * questions — and, told only "do not reuse the anchor's numbers or context",
+ * the anchor's own question with a clause added. Drawing tasks are left out
+ * (the generator mirrors them — see DRAWING_ANCHOR_RE), and so are withdrawn
+ * items: a wrong or ill-posed question is never put in front of the
+ * generator (they are still compared against by the near-duplicate gate).
+ */
+function avoidRepeatingClause(existing: PracticeItem[]): string {
+  const texts = existing
+    .filter((it) => !isWithdrawnItem(it.id) && !isDrawingInstruction(it.problemText))
+    .slice(0, AVOID_LIST_MAX_ITEMS)
+    .map((it) => `- ${it.problemText.replace(/\s+/g, ' ').trim().slice(0, AVOID_ITEM_MAX_CHARS)}`);
+  if (texts.length === 0) return '';
+  return (
+    `\nThe student already has these questions for this objective. Do NOT repeat or closely paraphrase any of ` +
+    `them, and do not ask for the same fact or the same result in other words — a student who has answered them ` +
+    `must still have something to work out in yours:\n${texts.join('\n')}\n`
+  );
+}
+
+/** What a practice item must be, whatever the skill (2026-10-05 audit:
+ *  vocabulary questions on a solving skill, stems that state their own
+ *  answer, a numeric box with a second "determine whether…" part). */
+const SKILL_LEVEL_CLAUSE =
+  'The problem must make the student DO the skill the objective names — solve, compute, decide or construct — at ' +
+  'the level of the course; never ask only for vocabulary or for the parts of a setup when the skill is to solve. ' +
+  'The problem text must not state or describe its own answer. A numeric problem asks for exactly ONE number and ' +
+  'nothing else: no second part to explain, justify, interpret or "determine whether" — if that part matters, make ' +
+  'the item multiple choice or "free" instead.';
+
+/** Numeric precision (2026-10-05 audit: keys 5.94 and 34.5 graded exactly on
+ *  questions that stated no rounding; 5/6 stored as 0.8333333333333334). */
+const PRECISION_CLAUSE =
+  'If the answer is a number that is not a whole number, the problem text MUST say how to give it: either a ' +
+  'rounding precision ("to the nearest tenth", "to 2 decimal places", "to 3 significant figures") with finalAnswer ' +
+  'written to exactly that precision, or "as a fraction" with finalAnswer the exact fraction (for example "5/6", ' +
+  'never its decimal expansion). Never give an answer to more figures than the problem asks for.';
+
+/** Maths notation (2026-10-05: `\(\sum …\)` printed as raw source on the card). */
+const MATH_NOTATION_CLAUSE =
+  'Write simple mathematics in plain text or Unicode; when LaTeX is needed, wrap it in single dollar signs, ' +
+  '$…$, and nothing else — never \\( … \\), \\[ … \\] or $$ … $$.';
+
+/** The clauses every branch of the prompt carries. */
+const COMMON_CLAUSES = `${SKILL_LEVEL_CLAUSE} ${PRECISION_CLAUSE} ${MATH_NOTATION_CLAUSE}`;
 
 // Round-3 review mitigation for the parked bare-decimal residual (a percent
 // question answered as "0.5" instead of "50%" would slip past
@@ -637,7 +1123,8 @@ const PERCENT_ANSWER_CLAUSE =
  *  free-response judge instead of failing the numeric shape gate. The
  *  numeric/mcq output is unchanged. */
 const ANSWER_KIND_CLAUSE =
-  'Also include "answerKind" in your JSON: "numeric" when the answer is a single number, "mcq" for a ' +
+  'Also include "answerKind" in your JSON: "numeric" when the answer is a single number: a decimal or a simple ' +
+  'fraction (for example "3/2"), never a mixed number (not "1 1/2"); "mcq" for a ' +
   'multiple-choice problem (keep "responseFormat" set to match for these two, exactly as before), or ' +
   '"free" when the answer is anything else short and checkable — an ordered pair, a solution like ' +
   '"x = -1.5 and y = 3", an expression like "(x+2)(x+6)", a set or a short phrase. For "free", also ' +
@@ -722,7 +1209,7 @@ function buildDrawingLoPrompt(opts: GeneratePracticeItemsOptions, difficultyLabe
     `descriptions matches), or to give a value read or worked out from the stated information. A property ` +
     `decision is a good fit for multiple choice. Do NOT ask the student to draw, sketch, graph, plot, shade or ` +
     `label anything, and do not start the problem or any sentence of it with one of those verbs. ` +
-    `${PERCENT_ANSWER_CLAUSE} ${ANSWER_KIND_CLAUSE} ${slotDirective} ` +
+    `${PERCENT_ANSWER_CLAUSE} ${ANSWER_KIND_CLAUSE} ${COMMON_CLAUSES} ${slotDirective} ` +
     `Reply with the JSON object only — no note before or after it — and write mathematics in plain text or ` +
     `Unicode symbols rather than backslash commands. Write the problem now.`
   );
@@ -740,13 +1227,16 @@ function buildUserPrompt(
     ? `difficulty bucket ${opts.difficulty} of 4 (1 = easier than typical, 4 = extension-grade)`
     : 'a typical practice difficulty for this objective';
   const slotDirective = slotVariationDirective(slotIndex);
+  const avoid = avoidRepeatingClause(opts.anchorItems);
   if (anchor) {
     return (
-      `ANCHOR problem (do NOT reuse its numbers or context):\n${anchor.problemText}\n` +
+      `ANCHOR problem (it shows the skill and the difficulty — do NOT reuse its numbers, its context, its example ` +
+      `or its question):\n${anchor.problemText}\n` +
       (anchor.expectedAnswer ? `ANCHOR answer (for difficulty calibration): ${anchor.expectedAnswer}\n` : '') +
       `\nLearning objective: ${opts.loId} (topic: ${opts.topic}).\n` +
+      avoid +
       `\nWrite ONE fresh problem testing the same skill at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ` +
-      `${ANSWER_KIND_CLAUSE} ${slotDirective} Write the problem now.`
+      `${ANSWER_KIND_CLAUSE} ${COMMON_CLAUSES} ${slotDirective} Write the problem now.`
     );
   }
   if (drawingLo) return buildDrawingLoPrompt(opts, difficultyLabel, slotDirective);
@@ -757,10 +1247,31 @@ function buildUserPrompt(
     `There is no existing practice problem yet for this learning objective (brand-new LO).\n` +
     `Learning objective id: ${opts.loId} (topic: ${opts.topic}).\n` +
     `Infer the likely skill this LO id names and write ONE self-contained practice problem testing ` +
-    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ${ANSWER_KIND_CLAUSE} ${slotDirective} Write the problem now.`
+    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ${ANSWER_KIND_CLAUSE} ${COMMON_CLAUSES} ${slotDirective} Write the problem now.`
   );
 }
 
+/** The answer of an item IN WORDS, for the near-duplicate comparison: a
+ *  multiple-choice answer is its option's text, never its letter. */
+function comparable(item: Pick<PracticeItem, 'problemText' | 'expectedAnswer' | 'choices'>): ComparableItem {
+  const answer = (item.expectedAnswer ?? '').trim();
+  const choice = item.choices?.find((c) => c.id === answer);
+  return { problemText: item.problemText, answerText: choice ? choice.text : answer, choices: item.choices?.map((c) => c.text) };
+}
+
+/** A gated candidate, not yet stored: the item as served and its bank row. */
+interface GeneratedCandidate {
+  item: PracticeItem;
+  row: PracticeGenPersistRow;
+}
+
+/** Generate ONE gated candidate for a slot. Nothing is stored here — the
+ *  caller stores a candidate only after comparing it with its sibling.
+ *
+ *  A candidate that nearly duplicates an item the skill already has
+ *  (practice-similarity.ts) is dropped and the slot is generated once more,
+ *  with the rejected text excluded; a second near-duplicate leaves the slot
+ *  empty. */
 async function generateOne(
   opts: GeneratePracticeItemsOptions,
   anchor: PracticeItem | null,
@@ -768,7 +1279,8 @@ async function generateOne(
   excludeHashes: string[],
   slotIndex: number,
   drawingLo = false,
-): Promise<PracticeItem | null> {
+  signal?: AbortSignal,
+): Promise<GeneratedCandidate | null> {
   // A drawing/graphing anchor takes the skill-only branch (see usableAnchor):
   // the drawing-LO prompt when the LO's authored items are drawing tasks,
   // else the brand-new-LO prompt.
@@ -777,31 +1289,58 @@ async function generateOne(
   const onGateFailed = opts.onDebugEvent
     ? (reason: string) => opts.onDebugEvent?.('practice_gen_gate_failed', `loId=${opts.loId} reason=${reason}`)
     : undefined;
-  const result = await sources.generateAndVerify(prompt, excludeHashes, onGateFailed);
-  if (!result) return null; // unverified/gate-failed — never served, never banked
-  const { gen, hash } = result;
-  const id = `practice-gen.${opts.loId}.${hash}`;
-  const difficulty: Difficulty = opts.difficulty ?? anchor?.difficulty ?? DEFAULT_DIFFICULTY;
-  const cedCode = opts.cedCode ?? anchor?.cedCode;
-  const responseFormat = bankResponseFormat(gen);
+  const existing = opts.anchorItems.map(comparable);
+  let exclude = excludeHashes;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const result = await sources.generateAndVerify(prompt, exclude, onGateFailed, signal);
+    if (!result) return null; // unverified/gate-failed — never served, never banked
+    const { gen, hash } = result;
+    const id = `practice-gen.${opts.loId}.${hash}`;
+    const difficulty: Difficulty = opts.difficulty ?? anchor?.difficulty ?? DEFAULT_DIFFICULTY;
+    const cedCode = opts.cedCode ?? anchor?.cedCode;
+    const responseFormat = bankResponseFormat(gen);
+    const item: PracticeItem = {
+      id,
+      source: 'bank',
+      problemText: gen.problemText,
+      // mcq → the bare LETTER, numeric → the bare number string or exact
+      // fraction (bank convention), free → the canonical short answer — all
+      // enforced by the answer-shape gate above.
+      expectedAnswer: gen.finalAnswer,
+      hints: gen.hints,
+      responseFormat,
+      choices: responseFormat === 'free' ? undefined : gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
+      difficulty,
+      loId: opts.loId,
+      cedCode,
+    };
+    if (findNearDuplicate(comparable(item), existing)) {
+      onGateFailed?.('near_duplicate');
+      exclude = [...exclude, hash];
+      continue;
+    }
+    return { item, row: { id, topic: opts.topic, topicId: opts.topicId, loId: opts.loId, cedCode, difficulty, gen } };
+  }
+  return null;
+}
 
-  await sources.persist({ id, topic: opts.topic, topicId: opts.topicId, loId: opts.loId, cedCode, difficulty, gen });
-
-  return {
-    id,
-    source: 'bank',
-    problemText: gen.problemText,
-    // mcq → the bare LETTER, numeric → the bare number string (bank
-    // convention), free → the canonical short answer — all enforced by the
-    // answer-shape gate above.
-    expectedAnswer: gen.finalAnswer,
-    hints: gen.hints,
-    responseFormat,
-    choices: responseFormat === 'free' ? undefined : gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
-    difficulty,
-    loId: opts.loId,
-    cedCode,
-  };
+/** What `generatePracticeItemsDetailed` did, for the caller that has to say
+ *  WHY a draw is empty. */
+export interface PracticeGenOutcome {
+  /** Verified, stored items ready when the call returned. */
+  items: PracticeItem[];
+  /** 'off' — the kill-switch is off or nothing was asked for;
+   *  'limit' — the daily cap granted no slot;
+   *  'unavailable' — the cap check itself failed;
+   *  'ran' — slots were reserved and generation ran. */
+  status: 'off' | 'limit' | 'unavailable' | 'ran';
+  /** Slots reserved for this request. */
+  reserved: number;
+  /** Slots still generating when the deadline passed (0 without a deadline). */
+  pending: number;
+  /** Settles (never rejects) when every background slot has finished and been
+   *  stored or dropped. A route hands it to `after()`; tests await it. */
+  background: Promise<void>;
 }
 
 /**
@@ -813,18 +1352,48 @@ export async function generatePracticeItems(
   opts: GeneratePracticeItemsOptions,
   sources: PracticeGenSources = practiceGenSources(),
 ): Promise<PracticeItem[]> {
-  if (!practiceGenEnabled()) return [];
+  return (await generatePracticeItemsDetailed(opts, sources)).items;
+}
+
+const DONE: Promise<void> = Promise.resolve();
+
+/**
+ * `generatePracticeItems` with the outcome spelled out, and — when
+ * `opts.deadlineMs` is set — a bounded wait (2026-10-05).
+ *
+ * A practice draw measured 15.9 s, 32.9 s and 84.2 s end to end while the
+ * portal in front of it gives up at 60 s. With a deadline the call returns
+ * the items that are verified AND stored by then; a slot still running is
+ * left to finish in the background (this server is a long-running Node
+ * process — pm2 `next start` — so work outlives the response), goes through
+ * exactly the same acceptance step (withdrawn / duplicate id / sibling
+ * near-duplicate / persist) one at a time, and is in the bank for the next
+ * draw. Its slot was reserved up front, so it is counted once; the
+ * acceptance step is the only writer, so it is never stored twice. Every
+ * slot is aborted at `PRACTICE_GEN_HARD_LIMIT_MS`.
+ *
+ * A slot whose model call FAILED (rejected promise: HTTP error, timeout,
+ * abort) gives its (student, LO) reservation back (`sources.release`); a slot
+ * the gates rejected does not — it did the work it was reserved for.
+ */
+export async function generatePracticeItemsDetailed(
+  opts: GeneratePracticeItemsOptions,
+  sources: PracticeGenSources = practiceGenSources(),
+): Promise<PracticeGenOutcome> {
+  const nothing = (status: PracticeGenOutcome['status']): PracticeGenOutcome => ({ items: [], status, reserved: 0, pending: 0, background: DONE });
+  if (!practiceGenEnabled()) return nothing('off');
   const want = Math.max(0, Math.min(opts.shortfall, MAX_GENERATIONS_PER_REQUEST));
-  if (want === 0) return [];
+  if (want === 0) return nothing('off');
 
   let allowed: number;
+  const reservedAt = new Date();
   try {
     allowed = await sources.reserve(opts.studentId, opts.loId, want);
   } catch (err) {
     console.warn('[practice-gen] cap check failed, degrading to zero generations:', err);
-    return [];
+    return nothing('unavailable');
   }
-  if (allowed <= 0) return [];
+  if (allowed <= 0) return nothing('limit');
 
   // One anchor PER SLOT — distinct when the pool has >=2 candidates, so two
   // parallel generations don't converge on the same template (see
@@ -852,38 +1421,110 @@ export async function generatePracticeItems(
   // regeneration doesn't just reproduce existing content verbatim. Both
   // parallel generations share this same base list — there is no sibling
   // hash to add up-front (the two calls run concurrently); an in-batch
-  // duplicate is instead caught by the post-generation id-dedup below.
+  // duplicate is instead caught by the acceptance step below.
   const excludeHashes = opts.anchorItems.map((it) => simpleHash(it.problemText));
 
-  const settled = await Promise.allSettled(
-    anchors.map((anchor, i) => generateOne(opts, anchor, sources, excludeHashes, i, drawingLo)),
+  type Settled = { ok: true; value: GeneratedCandidate | null } | { ok: false; reason: unknown };
+  const hardStop = new AbortController();
+  const hardTimer = setTimeout(() => hardStop.abort(), PRACTICE_GEN_HARD_LIMIT_MS);
+  (hardTimer as { unref?: () => void }).unref?.();
+  const done: Array<Settled | undefined> = anchors.map(() => undefined);
+  const slots: Array<Promise<Settled>> = anchors.map((anchor, i) =>
+    // `Promise.resolve().then` so a source that throws synchronously is a
+    // failed slot, not an exception out of this function.
+    Promise.resolve()
+      .then(() => generateOne(opts, anchor, sources, excludeHashes, i, drawingLo, hardStop.signal))
+      .then(
+        (value): Settled => ({ ok: true, value }),
+        (reason): Settled => ({ ok: false, reason }),
+      )
+      .then((s) => { done[i] = s; return s; }),
   );
+  const allSlots = Promise.all(slots).then(() => { clearTimeout(hardTimer); });
 
+  // The ONE place an item is accepted and stored. Slot order is the order of
+  // preference among slots that are ready together: a later slot that nearly
+  // duplicates an earlier one is dropped. Only what survives is stored —
+  // until 2026-10-05 each slot stored its own item before the two were ever
+  // compared, so both twins of a request went into the bank.
   const items: PracticeItem[] = [];
   const seenIds = new Set<string>();
-  for (const s of settled) {
-    if (s.status === 'fulfilled' && s.value) {
-      if (isWithdrawnItem(s.value.id)) {
-        // Regenerated the exact content of a withdrawn bank row (same hash →
-        // same `practice-gen.<loId>.<hash>` id): never serve it.
-        logWithdrawnSkip(s.value.id);
-        continue;
-      }
-      if (seenIds.has(s.value.id)) {
-        // Two parallel generations landed on identical content (same hash ->
-        // same id) — drop the repeat rather than return a duplicate id in
-        // one response.
-        console.warn('[practice-gen] parallel generations produced a duplicate id, dropping the repeat:', s.value.id);
-        continue;
-      }
-      seenIds.add(s.value.id);
-      items.push(s.value);
-    } else if (s.status === 'rejected') {
+  const accept = async (s: Settled, inBackground: boolean): Promise<void> => {
+    if (!s.ok) {
       console.warn('[practice-gen] one generation failed (degrading to fewer items):', s.reason);
+      if (sources.release) {
+        try {
+          await sources.release(opts.studentId, opts.loId, 1, reservedAt);
+        } catch (err) {
+          console.warn('[practice-gen] could not release a failed slot (it stays counted):', err);
+        }
+      }
+      return;
     }
+    if (!s.value) return;
+    const { item, row } = s.value;
+    if (isWithdrawnItem(item.id)) {
+      // Regenerated the exact content of a withdrawn bank row (same hash →
+      // same `practice-gen.<loId>.<hash>` id): never serve it.
+      logWithdrawnSkip(item.id);
+      return;
+    }
+    if (seenIds.has(item.id)) {
+      // Two parallel generations landed on identical content (same hash ->
+      // same id) — drop the repeat rather than return a duplicate id in
+      // one response.
+      console.warn('[practice-gen] parallel generations produced a duplicate id, dropping the repeat:', item.id);
+      return;
+    }
+    if (findNearDuplicate(comparable(item), items.map(comparable))) {
+      opts.onDebugEvent?.('practice_gen_gate_failed', `loId=${opts.loId} reason=near_duplicate_sibling`);
+      return;
+    }
+    try {
+      await sources.persist(row);
+    } catch (err) {
+      console.warn('[practice-gen] one generation failed (degrading to fewer items):', err);
+      return;
+    }
+    seenIds.add(item.id);
+    items.push(item);
+    if (inBackground) opts.onDebugEvent?.('practice_gen_background_stored', `loId=${opts.loId} id=${item.id}`);
+  };
+
+  const deadlineMs = opts.deadlineMs && opts.deadlineMs > 0 ? opts.deadlineMs : null;
+  if (deadlineMs !== null) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([allSlots, new Promise<void>((resolve) => { timer = setTimeout(resolve, deadlineMs); })]);
+    if (timer) clearTimeout(timer);
+  } else {
+    await allSlots;
   }
-  if (items.length === 0) {
+
+  // Which slots are late is decided ONCE, here, synchronously.
+  const late: number[] = [];
+  const ready: Settled[] = [];
+  done.forEach((s, i) => { if (s) ready.push(s); else late.push(i); });
+  for (const s of ready) await accept(s, false);
+  const served = [...items];
+
+  let background = DONE;
+  if (late.length > 0) {
+    opts.onDebugEvent?.('practice_gen_deadline', `loId=${opts.loId} deadline_ms=${deadlineMs} ready=${served.length} pending=${late.length}`);
+    // One at a time, in the order they finish; `accept` never throws, and the
+    // final catch keeps anything unexpected from becoming an unhandled rejection.
+    let chain: Promise<void> = Promise.resolve();
+    const lateDone = late.map((i) =>
+      slots[i].then((s) => {
+        chain = chain.then(() => accept(s, true));
+        return chain;
+      }),
+    );
+    background = Promise.all(lateDone).then(
+      () => undefined,
+      (err) => { console.warn('[practice-gen] background generation failed:', err); },
+    );
+  } else if (served.length === 0) {
     opts.onDebugEvent?.('practice_gen_empty', `loId=${opts.loId} topic=${opts.topic} attempts=${allowed}`);
   }
-  return items;
+  return { items: served, status: 'ran', reserved: allowed, pending: late.length, background };
 }

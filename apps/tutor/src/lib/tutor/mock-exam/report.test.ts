@@ -8,7 +8,7 @@ import {
   type MockStores,
 } from './service';
 import { FIXTURE_FORM, FIXTURE_ITEMS } from './fixtures';
-import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
+import { GradeUndeterminedError, type GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import { ensureGraded, getReport, getReview, type ReportDeps } from './report';
 import type { EvidenceInput } from '@/lib/tutor/learner-model/store';
 
@@ -235,6 +235,25 @@ async function run() {
     const inputs = capture.calls[0];
     assert.ok(!inputs.some((i) => i.itemId === 'fx-frq-1'), 'ungraded FRQ produces no evidence row (grader failure, not student evidence)');
     assert.ok(inputs.some((i) => i.itemId === 'fx-m1-1'), 'MCQ rows still emitted');
+  });
+
+  await test('a grader with no readable verdict (undetermined) is a grader FAILURE: retried, then ungraded — never a zero', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's-undetermined', ['A', 'B'], 'my proof');
+    let calls = 0;
+    const gradeDeps: GradeDeps = {
+      async gradeRubricPart() { calls += 1; throw new GradeUndeterminedError(); },
+      async judgeSingleAnswer() { return { correct: true, feedback: 'ok' }; },
+    };
+    const deps: ReportDeps = { gradeDeps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'completed');
+    assert.equal(calls, 3);
+    assert.equal(a.frqGrades![0].ungraded, true);
+    assert.deepEqual(a.frqGrades![0].parts, []);
+    assert.equal(a.footnote, 'Estimated — 1 free-response task(s) could not be graded.');
   });
 
   await test('grader failing 3x marks ungraded + footnote, still completes', async () => {

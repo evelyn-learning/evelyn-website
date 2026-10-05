@@ -26,6 +26,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
+import { parseJsonObjects } from '../ai/model-json';
 import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
 import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
@@ -74,6 +75,11 @@ export interface GenerateProblemInput {
    *  content-variety gets fresh VERIFIED practice problems regardless of the
    *  per-topic ramp. */
   forceBrainGen?: boolean;
+  /** Time budget for Layer 2 (generate + verify), ms. Default
+   *  `LIVE_BRAINGEN_BUDGET_MS`; see `brainGenWithinBudget`. */
+  brainGenBudgetMs?: number;
+  /** Test seam: the model client Layer 2 calls. */
+  brainGenClient?: TextCallClient;
 }
 
 export interface GeneratedProblem {
@@ -241,27 +247,197 @@ async function persistBrainGenProblem(
   }
 }
 
+// The "working" field comes BEFORE "finalAnswer" on purpose (2026-10-05). The
+// generator runs with thinking off (see GEN_MAX_TOKENS), so it writes the
+// object top to bottom; with "finalAnswer" straight after the problem it
+// committed to an answer before working it out — measured on a Riemann-sum
+// skill: finalAnswer "54", then a teachingAnswer that computed 42 and went on
+// "… recompute …" (4 of 4 candidates rejected by the solver). A place to work
+// first costs ~100 output tokens and no thinking budget. The field is read by
+// nothing: `parseGenPayloadDetailed` ignores it.
 const BRAINGEN_SYSTEM = `You are an expert problem author for a tutoring engine. Given an ANCHOR practice problem, write ONE fresh problem that tests the SAME underlying skill and concept at the requested difficulty, but with a DIFFERENT real-world context and different numbers/specifics — so a returning student doesn't see the same problem twice. Keep it self-contained and unambiguous.
-The problem MUST stay within the listed learning objectives. Escalating difficulty means a HARDER problem inside those same objectives — never a more advanced technique from a different topic (if the objectives are about limits, a derivative or implicit-differentiation problem is WRONG at every difficulty). A drifted problem gets rejected and wastes the student's time. The answer MUST be a single clean, checkable value: a number (with units if natural) or a short exact phrase / multiple-choice letter — NOT an open-ended discussion. Output ONLY a JSON object, no fences, no preamble:
-{"problemText": string, "finalAnswer": string (the bare checkable answer, e.g. "48 square inches" or "B"), "teachingAnswer": string (a one-to-three sentence worked solution the tutor can reference), "responseFormat": "numeric"|"mcq", "hints": string[] (1-3 short hints), "choices"?: string[] (for mcq only)}`;
+The problem MUST stay within the listed learning objectives. Escalating difficulty means a HARDER problem inside those same objectives — never a more advanced technique from a different topic (if the objectives are about limits, a derivative or implicit-differentiation problem is WRONG at every difficulty). A drifted problem gets rejected and wastes the student's time. The answer MUST be a single clean, checkable value: a number (with units if natural) or a short exact phrase / multiple-choice letter — NOT an open-ended discussion. Output ONLY a JSON object, no fences, no preamble, with the fields in THIS order:
+{"problemText": string, "working": string (solve your own problem here, step by step, BEFORE you state the answer — your scratch work, never shown to anyone; keep it brief), "finalAnswer": string (the bare checkable answer, e.g. "48 square inches" or "B" — exactly the result your working reached), "teachingAnswer": string (a one-to-three sentence worked solution the tutor can reference: the clean final version, with no second thoughts or corrections), "responseFormat": "numeric"|"mcq", "hints": string[] (1-3 short hints), "choices"?: string[] (for mcq only)}`;
 
 const BRAINGEN_VERIFY_SYSTEM = `You are a meticulous solver. Solve the problem and reply with ONLY the final answer — a single number (with units if natural) or a short phrase / the correct multiple-choice option. No working, no explanation, no restatement.`;
 
-/** One Anthropic text call → trimmed string. */
-async function callModel(model: string, system: string, user: string, maxTokens: number): Promise<string> {
-  // Each role may point at a different provider; route by which model id matched.
-  const { client } = model === braingenVerify.model ? braingenVerify : braingen;
-  const res = await client.messages.create({
-    model,
-    max_tokens: maxTokens,
-    system,
-    messages: [{ role: 'user', content: user }],
+/** Output caps, thinking and time limits for the generator and its blind
+ *  solver (2026-10-05).
+ *
+ *  The caps were 800 and 400, set when these roles ran a model that did not
+ *  think before answering. The default model for both roles now THINKS BY
+ *  DEFAULT when the request does not say otherwise, and thinking counts
+ *  against `max_tokens`: on five hard skills (Riemann sums, Lewis structures,
+ *  pedigrees, phylogenetic trees, sinusoidal models) 55 of 58 generator calls
+ *  stopped at exactly 800 output tokens — 38 with a thinking block and NO text
+ *  at all — and 3 of 30 slots produced an item.
+ *
+ *  Raising the cap to 4000 (with a retry at 12000) fixed the yield but not the
+ *  cause: the generator then spent ~1,600 output tokens and 15 s (p50) —
+ *  32 s p90, 44 s max, 85 s for one practice draw — thinking about a reply
+ *  that is ~500 tokens of JSON. Measured on the same skills with thinking
+ *  switched off for the GENERATOR: ~480 output tokens, 6.0 s p50 / 7.5 s max,
+ *  no reply cut off, same yield (every item is still checked by the
+ *  independent solver, which KEEPS its thinking — the key check is where
+ *  reasoning matters).
+ *
+ *  So: the generator sends `thinking: { type: 'disabled' }` (the same switch
+ *  the live brain uses — claude-brain.ts) with a cap sized for the reply
+ *  alone, and is never re-asked at a higher cap. The solver is unchanged
+ *  except that its one retry at `RETRY_MAX_TOKENS` is the caller's choice
+ *  (off for the live tutor session). Every call has a hard timeout — the
+ *  SDK default is 10 minutes with two silent retries. */
+export const GEN_MAX_TOKENS = 2000;
+export const VERIFY_MAX_TOKENS = 2500;
+/** Cap for the single retry of a SOLVER reply cut off at the first cap. */
+export const RETRY_MAX_TOKENS = 12000;
+/** Hard per-call timeouts (ms). */
+export const GEN_CALL_TIMEOUT_MS = 30_000;
+export const VERIFY_CALL_TIMEOUT_MS = 45_000;
+/** The live tutor session's whole budget for Layer-2 generation + verify: a
+ *  voice turn waits at most this long before the bank / authored fallback. */
+export const LIVE_BRAINGEN_BUDGET_MS = 12_000;
+
+/** The slice of the SDK this module's text calls use (tests pass a fake). */
+export interface TextCallClient {
+  messages: {
+    create(
+      body: {
+        model: string;
+        max_tokens: number;
+        system: string;
+        messages: Array<{ role: 'user'; content: string }>;
+        thinking?: { type: 'disabled' };
+      },
+      options?: { signal?: AbortSignal; timeout?: number; maxRetries?: number },
+    ): Promise<{ content: Array<{ type: string; text?: string }>; stop_reason?: string | null }>;
+  };
+}
+
+export interface TextCallOptions {
+  /** 'disabled' sends `thinking: { type: 'disabled' }`; omitted sends no
+   *  thinking parameter (the model's default). */
+  thinking?: 'disabled';
+  /** Ask ONCE more at this cap when the reply stops at the first cap. Omitted
+   *  → never re-ask (the cut-off text is returned for the parser to reject). */
+  retryMaxTokens?: number;
+  /** Aborts the in-flight request (the call rejects). */
+  signal?: AbortSignal;
+  /** Hard per-request timeout. */
+  timeoutMs?: number;
+}
+
+/** Per-pipeline call settings threaded through generate / verify. */
+export interface GenCallOptions {
+  signal?: AbortSignal;
+  /** false → a solver reply cut off at the cap is NOT re-asked at
+   *  `RETRY_MAX_TOKENS` (live tutor session). Default true. */
+  retryCutOff?: boolean;
+  /** Test seam: the client for both roles. */
+  client?: TextCallClient;
+}
+
+/** True for the API's "this model does not take that thinking setting" 400. */
+function isThinkingParamRejection(err: unknown): boolean {
+  const e = err as { status?: number; message?: string } | null;
+  return e?.status === 400 && /thinking/i.test(String(e?.message ?? ''));
+}
+
+/**
+ * One text call → trimmed reply text.
+ *
+ * A reply that stops at the token cap (`stop_reason: "max_tokens"`) is
+ * incomplete whatever it holds — possibly nothing but thinking. With
+ * `retryMaxTokens` it is requested once more at that cap; without, or when
+ * the retry is cut off too, whatever text exists is returned and the caller's
+ * parser reports it as unusable.
+ *
+ * `thinking: 'disabled'` is dropped (once, for that call) when the endpoint
+ * rejects the parameter by name, so a role pointed at a model that does not
+ * take it still answers. Exported for tests.
+ */
+export async function callTextModel(
+  client: TextCallClient,
+  model: string,
+  system: string,
+  user: string,
+  maxTokens: number,
+  opts: TextCallOptions = {},
+): Promise<string> {
+  let thinking = opts.thinking;
+  const requestOptions = {
+    ...(opts.signal ? { signal: opts.signal } : {}),
+    ...(opts.timeoutMs ? { timeout: opts.timeoutMs, maxRetries: 1 } : {}),
+  };
+  const send = (cap: number) =>
+    client.messages.create(
+      { model, max_tokens: cap, system, messages: [{ role: 'user', content: user }], ...(thinking ? { thinking: { type: thinking } } : {}) },
+      requestOptions,
+    );
+  const ask = async (cap: number) => {
+    let res;
+    try {
+      res = await send(cap);
+    } catch (err) {
+      if (!thinking || !isThinkingParamRejection(err)) throw err;
+      console.warn(`[problem-generator] thinking_param_rejected model=${model} — retrying without it`);
+      thinking = undefined;
+      res = await send(cap);
+    }
+    const text = res.content
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text ?? '')
+      .join('')
+      .trim();
+    return { text, cut: res.stop_reason === 'max_tokens' };
+  };
+  const first = await ask(maxTokens);
+  const retryCap = opts.retryMaxTokens;
+  if (!first.cut) return first.text;
+  if (!retryCap || maxTokens >= retryCap) {
+    console.warn(`[problem-generator] reply_cut_off model=${model} max_tokens=${maxTokens} text_len=${first.text.length} — not re-asked`);
+    return first.text;
+  }
+  console.warn(`[problem-generator] reply_cut_off model=${model} max_tokens=${maxTokens} text_len=${first.text.length} — retrying once at ${retryCap}`);
+  return (await ask(retryCap)).text;
+}
+
+/** Cap for the generator when its thinking is left on (see below). */
+export const GEN_MAX_TOKENS_THINKING = 4000;
+
+/**
+ * Owner's switch back to a THINKING generator, without a deploy:
+ * `TUTOR_BRAINGEN_THINKING=on` sends no thinking parameter (the model's
+ * default) with the thinking-sized cap. Anything else — including unset — is
+ * the fast default: thinking off. Read on every call. The time limits (the
+ * practice draw's deadline, the live session's budget, the per-call timeout)
+ * apply either way; a thinking generator is slower (15 s p50 measured) and
+ * more of its slots will finish in the background.
+ */
+export function generatorThinkingOn(env: Record<string, string | undefined> = process.env): boolean {
+  return env.TUTOR_BRAINGEN_THINKING === 'on';
+}
+
+/** The generator call: thinking off, reply-sized cap, never re-asked. The
+ *  `thinking` parameter is Anthropic-only, so it is left out when the role
+ *  points at another provider. */
+async function callGenerator(user: string, opts: GenCallOptions = {}): Promise<string> {
+  const thinks = generatorThinkingOn();
+  return callTextModel(opts.client ?? (braingen.client as unknown as TextCallClient), BRAINGEN_MODEL, BRAINGEN_SYSTEM, user, thinks ? GEN_MAX_TOKENS_THINKING : GEN_MAX_TOKENS, {
+    ...(braingen.native && !thinks ? { thinking: 'disabled' as const } : {}),
+    signal: opts.signal,
+    timeoutMs: GEN_CALL_TIMEOUT_MS,
   });
-  return res.content
-    .filter((b) => b.type === 'text')
-    .map((b) => (b as { type: 'text'; text: string }).text)
-    .join('')
-    .trim();
+}
+
+/** The independent solver call: the model's default thinking, one retry at
+ *  the higher cap unless the caller turned it off. */
+async function callSolver(user: string, opts: GenCallOptions = {}): Promise<string> {
+  return callTextModel(opts.client ?? (braingenVerify.client as unknown as TextCallClient), BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, user, VERIFY_MAX_TOKENS, {
+    ...(opts.retryCutOff === false ? {} : { retryMaxTokens: RETRY_MAX_TOKENS }),
+    signal: opts.signal,
+    timeoutMs: VERIFY_CALL_TIMEOUT_MS,
+  });
 }
 
 export interface GenPayload {
@@ -287,57 +463,25 @@ export interface GenPayload {
 export type GenParseFailure = 'unparseable_json' | 'missing_problem_text' | 'missing_final_answer';
 export type GenParseResult = { ok: true; gen: GenPayload } | { ok: false; reason: GenParseFailure };
 
-/**
- * The first balanced `{…}` in `text` that parses as a JSON object, or null.
- * Braces inside JSON strings are not counted. An earlier brace group that is
- * not JSON (prose such as "use {x}", LaTeX `\frac{1}{2}` in a preamble) is
- * skipped and the scan moves on to the next `{`.
- */
-function firstJsonObject(text: string): Record<string, unknown> | null {
-  for (let start = text.indexOf('{'); start !== -1; start = text.indexOf('{', start + 1)) {
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-    for (let i = start; i < text.length; i++) {
-      const ch = text[i];
-      if (inString) {
-        if (escaped) escaped = false;
-        else if (ch === '\\') escaped = true;
-        else if (ch === '"') inString = false;
-        continue;
-      }
-      if (ch === '"') inString = true;
-      else if (ch === '{') depth++;
-      else if (ch === '}' && --depth === 0) {
-        try {
-          const j: unknown = JSON.parse(text.slice(start, i + 1));
-          if (j && typeof j === 'object' && !Array.isArray(j)) return j as Record<string, unknown>;
-        } catch { /* not JSON — try the next `{` */ }
-        break;
-      }
-    }
-  }
-  return null;
-}
-
-/** The reply as a JSON object: the whole reply when it is one (the prompt
- *  asks for exactly that), else the first JSON object inside it — a reply
- *  with a sentence before/after the object, or the object in a fenced code
- *  block, used to be thrown away whole. */
+/** The reply as a JSON object: the first JSON object in it — the whole reply
+ *  when it is one (the prompt asks for exactly that), else the object inside
+ *  a sentence or a fenced code block. Shared reader (`ai/model-json.ts`), so
+ *  LaTeX backslashes inside the strings are kept as text. */
 function replyJsonObject(raw: string): Record<string, unknown> | null {
-  try {
-    const j: unknown = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim());
-    if (j && typeof j === 'object' && !Array.isArray(j)) return j as Record<string, unknown>;
-  } catch { /* fall through to extraction */ }
-  return firstJsonObject(raw);
+  return parseJsonObjects(raw)[0] ?? null;
 }
 
 /**
  * Parse the generator model's reply, saying WHY when it cannot be used.
- * Tolerant in two safe ways (2026-10-04): prose or a code fence around the
- * JSON object, and a numeric `finalAnswer` (stringified). It does NOT repair
- * invalid JSON (e.g. an unescaped backslash inside a string): guessing at a
- * repair could change the problem's maths.
+ * Tolerant in three ways: prose or a code fence around the JSON object and a
+ * numeric `finalAnswer` (2026-10-04); and LaTeX backslashes inside strings
+ * (2026-10-05). The last one was first left alone ("guessing at a repair
+ * could change the problem's maths") — but NOT repairing is what changed the
+ * maths: `\frac`, `\times`, `\nabla`, `\beta`, `\rho` are valid JSON
+ * escapes, so they parsed without error into a form feed / tab / newline /
+ * backspace / carriage return and the problem text was stored corrupt, while
+ * `\sqrt` (not an escape) threw the whole problem away. The repair only
+ * doubles the backslash of a LaTeX command; real `\n` line breaks stay.
  */
 export function parseGenPayloadDetailed(raw: string): GenParseResult {
   const j = replyJsonObject(raw);
@@ -403,9 +547,10 @@ export interface GenAndVerifyResult {
  */
 export async function generateCandidate(
   userPrompt: string,
-  excludeHashes: string[] = []
+  excludeHashes: string[] = [],
+  callOpts: GenCallOptions = {},
 ): Promise<GenAndVerifyResult | null> {
-  const raw = await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800);
+  const raw = await callGenerator(userPrompt, callOpts);
   const parsed = parseGenPayloadDetailed(raw);
   if (!parsed.ok) {
     // The raw reply used to be discarded here, which left a production
@@ -434,13 +579,14 @@ export async function generateCandidate(
  */
 export async function generateAndVerifyOnce(
   userPrompt: string,
-  excludeHashes: string[] = []
+  excludeHashes: string[] = [],
+  callOpts: GenCallOptions = {},
 ): Promise<GenAndVerifyResult | null> {
-  const candidate = await generateCandidate(userPrompt, excludeHashes);
+  const candidate = await generateCandidate(userPrompt, excludeHashes, callOpts);
   if (!candidate) return null;
   const { gen, hash } = candidate;
   // Independent solve — the verifier only sees the problem text.
-  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
+  const solved = await callSolver(gen.problemText, callOpts);
   if (!answersAgree(gen.finalAnswer, solved)) return null;
   return { gen, hash };
 }
@@ -450,11 +596,12 @@ export async function generateAndVerifyOnce(
  *  pipeline has always used. */
 export async function generateAndVerifyWithRetry(
   userPrompt: string,
-  excludeHashes: string[] = []
+  excludeHashes: string[] = [],
+  callOpts: GenCallOptions = {},
 ): Promise<GenAndVerifyResult | null> {
-  const first = await generateAndVerifyOnce(userPrompt, excludeHashes);
+  const first = await generateAndVerifyOnce(userPrompt, excludeHashes, callOpts);
   if (first) return first;
-  return generateAndVerifyOnce(userPrompt, excludeHashes); // 1 retry
+  return generateAndVerifyOnce(userPrompt, excludeHashes, callOpts); // 1 retry
 }
 
 /**
@@ -468,7 +615,8 @@ export async function generateAndVerifyWithRetry(
  */
 async function brainGenWithVerify(
   input: GenerateProblemInput,
-  absDifficulty: IProblemBank['difficulty']
+  absDifficulty: IProblemBank['difficulty'],
+  callOpts: GenCallOptions = {},
 ): Promise<GeneratedProblem | null> {
   const los = input.plan.los.map((lo) => `- ${lo.description}`).join('\n');
   const userPrompt =
@@ -477,8 +625,11 @@ async function brainGenWithVerify(
     `\nLearning objectives of this lesson:\n${los}\n` +
     `\nRequested difficulty relative to the anchor: ${input.difficulty}. Write the fresh problem now.`;
 
-  const result = await generateAndVerifyWithRetry(userPrompt, input.excludeHashes ?? []);
+  const result = await generateAndVerifyWithRetry(userPrompt, input.excludeHashes ?? [], callOpts);
   if (!result) return null;
+  // Finished after the caller's budget ran out (a client that did not honour
+  // the abort): the caller has already fallen back — serve and store nothing.
+  if (callOpts.signal?.aborted) return null;
   const { gen, hash } = result;
   // Write-back cache: store the verified problem so future requests for
   // this topic+difficulty hit the bank fast-path. Fire-and-forget.
@@ -716,13 +867,14 @@ export function mcqAnswersAgree(
 export async function verifyClaimedAnswer(
   problemText: string,
   claimedAnswer: string,
-  choices?: Array<{ letter: string; text: string }>
+  choices?: Array<{ letter: string; text: string }>,
+  callOpts: GenCallOptions = {},
 ): Promise<{ agree: boolean; solved: string }> {
   const hasChoices = Array.isArray(choices) && choices.length > 0;
   const solverInput = hasChoices
     ? `${problemText}\n\nAnswer choices:\n${choices!.map((c) => `${c.letter}) ${c.text}`).join('\n')}\n\nThis is multiple-choice: reply with ONLY the letter of the correct choice.`
     : problemText;
-  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, solverInput, 400);
+  const solved = await callSolver(solverInput, callOpts);
   const agree = hasChoices
     ? mcqAnswersAgree(claimedAnswer, solved, choices!) || answersAgree(claimedAnswer, solved)
     : answersAgree(claimedAnswer, solved);
@@ -753,6 +905,44 @@ export interface PipelineTelemetry {
   brainGenRetried?: boolean;
   /** true when Layer 2 ran but produced no usable output. */
   brainGenFailed?: boolean;
+}
+
+/**
+ * Layer 2 for the LIVE tutor session, inside a hard time budget (2026-10-05).
+ *
+ * The session's voice turn awaits this inline (brain/stream `generate_problem`).
+ * Before the caps were raised a failing generation gave up in ~10 s and the
+ * turn fell back to the bank / authored problem; with thinking-sized caps and
+ * the 12000-token re-ask it could hold the turn for 45–85 s. Here the whole
+ * of generate + verify (both attempts) gets `budgetMs`; when it runs out the
+ * in-flight request is aborted and null is returned — the pipeline's existing
+ * fallback — and a cut-off solver reply is never re-asked at the higher cap.
+ * Never throws for a timeout. `client` is the test seam.
+ */
+export async function brainGenWithinBudget(
+  input: GenerateProblemInput,
+  absDifficulty: IProblemBank['difficulty'],
+  budgetMs: number = LIVE_BRAINGEN_BUDGET_MS,
+  client?: TextCallClient,
+): Promise<GeneratedProblem | null> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const outOfTime = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(() => resolve('timeout'), budgetMs);
+  });
+  const work = brainGenWithVerify(input, absDifficulty, { signal: controller.signal, retryCutOff: false, ...(client ? { client } : {}) });
+  // Once the budget has won the race nobody awaits `work`; its abort
+  // rejection must not surface as an unhandled rejection.
+  work.catch(() => {});
+  try {
+    const first = await Promise.race([work, outOfTime]);
+    if (first !== 'timeout') return first;
+    controller.abort();
+    console.warn(`[problem-generator] brain_gen_budget_exceeded budget_ms=${budgetMs} topic=${input.topic} — falling back`);
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /**
@@ -806,7 +996,7 @@ export async function generateProblem(
   let brainGenFailed = false;
   if (brainGenState !== 'disabled' || input.forceBrainGen) {
     try {
-      const gen = await brainGenWithVerify(input, absDifficulty);
+      const gen = await brainGenWithinBudget(input, absDifficulty, input.brainGenBudgetMs ?? LIVE_BRAINGEN_BUDGET_MS, input.brainGenClient);
       if (gen) {
         return {
           result: gen,

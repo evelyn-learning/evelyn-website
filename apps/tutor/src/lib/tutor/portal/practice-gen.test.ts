@@ -36,6 +36,9 @@ import {
   UNVERIFIED_MODEL,
 } from './practice-gen';
 import * as problemGeneratorModule from '../voice/problem-generator';
+import { gradeNumericAnswer } from './numeric-answer-rule';
+import { nearDuplicateReason, findNearDuplicate, normalizeItemText } from './practice-similarity';
+import * as practiceGenModule from './practice-gen';
 import * as keyVerifyModule from './key-verify';
 import type { GenPayload } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
@@ -187,7 +190,8 @@ await test('verify-gate: unverified generation (null) is dropped, never persiste
 // ── ≤2 cap ───────────────────────────────────────────────────────
 await test('≤2 generations per request even when shortfall is larger', async () => {
   process.env.PRACTICE_GEN = 'on';
-  const sources = makeStubSources({ gen: numericGen(), allowed: MAX_GENERATIONS_PER_REQUEST });
+  // Two DIFFERENT items: identical siblings are now dropped as near-duplicates.
+  const sources = makeStubSources({ perCall: [numericGen('A tank holds 40 litres and drains 5 litres per minute. How many minutes until it is empty?', '8'), numericGen('Find the 9th term of the sequence that starts at 4 and rises by 3 each time.', '28')], allowed: MAX_GENERATIONS_PER_REQUEST });
   const items = await generatePracticeItems(baseOpts({ shortfall: 5 }), sources);
   assert.equal(sources.reserveCalls[0].n, MAX_GENERATIONS_PER_REQUEST, 'reserve is asked for at most the cap, not the raw shortfall');
   assert.equal(items.length, MAX_GENERATIONS_PER_REQUEST);
@@ -380,10 +384,13 @@ await test('vary: with >=2 anchor candidates in the pool, the two parallel slots
   const sources = makeStubSources({ gen: numericGen(), allowed: 2 });
   await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [bankAnchor, bankAnchorAlt] }), sources);
   assert.equal(sources.prompts.length, 2);
-  const slot0UsesBank = sources.prompts[0].includes(bankAnchor.problemText);
-  const slot0UsesAlt = sources.prompts[0].includes(bankAnchorAlt.problemText);
-  const slot1UsesBank = sources.prompts[1].includes(bankAnchor.problemText);
-  const slot1UsesAlt = sources.prompts[1].includes(bankAnchorAlt.problemText);
+  // The ANCHOR is the text right under the "ANCHOR problem" line (both texts
+  // also appear lower down, in the do-not-repeat list — 2026-10-05).
+  const anchorOf = (prompt: string) => prompt.split('\n')[1];
+  const slot0UsesBank = anchorOf(sources.prompts[0]) === bankAnchor.problemText;
+  const slot0UsesAlt = anchorOf(sources.prompts[0]) === bankAnchorAlt.problemText;
+  const slot1UsesBank = anchorOf(sources.prompts[1]) === bankAnchor.problemText;
+  const slot1UsesAlt = anchorOf(sources.prompts[1]) === bankAnchorAlt.problemText;
   assert.ok(slot0UsesBank !== slot0UsesAlt, 'slot 0 anchors on exactly one candidate');
   assert.ok(slot1UsesBank !== slot1UsesAlt, 'slot 1 anchors on exactly one candidate');
   assert.notEqual(slot0UsesBank, slot1UsesBank, 'the two slots must NOT anchor on the same candidate — this is the production defect (identical anchor -> near-identical siblings)');
@@ -392,7 +399,7 @@ await test('vary: with >=2 anchor candidates in the pool, the two parallel slots
 
 await test('vary: with exactly 1 anchor candidate, both slots still generate successfully (fallback anchor, no crash)', async () => {
   process.env.PRACTICE_GEN = 'on';
-  const sources = makeStubSources({ gen: numericGen(), allowed: 2 });
+  const sources = makeStubSources({ perCall: [numericGen('A tank holds 40 litres and drains 5 litres per minute. How many minutes until it is empty?', '8'), numericGen('Find the 9th term of the sequence that starts at 4 and rises by 3 each time.', '28')], allowed: 2 });
   const items = await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [bankAnchor] }), sources);
   assert.equal(items.length, 2, 'a single anchor candidate must not reduce the two parallel generations to fewer/zero');
   assert.ok(sources.prompts[0].includes(bankAnchor.problemText));
@@ -925,30 +932,34 @@ await test('gate: a drawing-only numeric/mcq candidate fails drawing_task; one w
   assert.equal((await checkGeneratedAnswer(numericGen('Draw the free-body diagram. How many forces act on the block?', '3'), agreeVerify())).ok, true, 'a typed-answer cue keeps it');
 });
 
-await test('normal LO: the anchor prompt and the brand-new-LO prompt are byte-identical to before (golden, captured 2026-10-04 pre-change)', async () => {
+await test('normal LO: loTitle / authoredDrawingTasks:false never change the anchor prompt or the brand-new-LO prompt', async () => {
+  // Was a byte-for-byte golden (captured 2026-10-04). The prompts changed on
+  // purpose on 2026-10-05 (do-not-repeat list, precision, $…$, skill-level
+  // and slot clauses — asserted in the tests below), so what is pinned here
+  // is the property the golden protected: only the drawing-LO branch reads
+  // the title.
   process.env.PRACTICE_GEN = 'on';
-  const golden: Array<[string, PracticeItem[], 2 | undefined, Array<[number, string]>]> = [
-    ['anchor', [bankAnchor], 2, [
-      [1388, '4d03de832a6a8bc833186b3567bbc5a9fd1e48246e9e1d81a1c8a6a4f2e0d4d0'],
-      [1695, '511440273ee6884430fb6a20cfa6fea7b41b6b7c5ea22fdd0e73a36880877503'],
-    ]],
-    ['brand-new', [], undefined, [
-      [1375, '58fd9b8408289f0ca292a8bb4cbf41fc2aecb91f09893c149ba6165606c5116a'],
-      [1682, 'd40027ef3e3a0e50837f6533d47ae8e0a11b4cd2c171c72e58b3ff955df9e350'],
-    ]],
-  ];
-  for (const [name, anchorItems, difficulty, want] of golden) {
-    // loTitle alone must not change either prompt; only the drawing-LO branch reads it.
-    for (const extra of [{}, { loTitle: 'A title that must not appear' }, { authoredDrawingTasks: false }]) {
-      const sources = makeStubSources({ gen: null });
-      await generatePracticeItems({ studentId: 's', loId: LO, topic: TOPIC, shortfall: 2, anchorItems, difficulty, ...extra }, sources);
-      assert.deepEqual(sources.prompts.map((p) => [p.length, sha256(p)]), want, `${name} ${JSON.stringify(extra)}`);
+  const cases: Array<[string, PracticeItem[], 2 | undefined]> = [['anchor', [bankAnchor], 2], ['brand-new', [], undefined]];
+  const promptsFor = async (o: Partial<GeneratePracticeItemsOptions>) => {
+    const sources = makeStubSources({ gen: null });
+    await generatePracticeItems({ studentId: 's', loId: LO, topic: TOPIC, shortfall: 2, anchorItems: [], ...o }, sources);
+    return sources.prompts;
+  };
+  for (const [name, anchorItems, difficulty] of cases) {
+    const base = await promptsFor({ anchorItems, difficulty });
+    assert.equal(base.length, 2);
+    assert.notEqual(base[0], base[1], 'the two slots are prompted differently');
+    for (const extra of [{ loTitle: 'A title that must not appear' }, { authoredDrawingTasks: false }]) {
+      assert.deepEqual(await promptsFor({ anchorItems, difficulty, ...extra }), base, `${name} ${JSON.stringify(extra)}`);
     }
+    assert.ok(base.every((p) => !p.includes('A title that must not appear')));
+    assert.ok(base.every((p) => p.endsWith('Write the problem now.')));
   }
+  const anchor = await promptsFor({ anchorItems: [bankAnchor], difficulty: 2 });
+  assert.ok(anchor[0].startsWith('ANCHOR problem ('));
+  assert.ok((await promptsFor({}))[0].startsWith('There is no existing practice problem yet for this learning objective (brand-new LO).'));
   // A typed anchor in the pool keeps the anchor prompt even on a drawing LO.
-  const sources = makeStubSources({ gen: null });
-  await generatePracticeItems({ studentId: 's', loId: LO, topic: TOPIC, shortfall: 2, anchorItems: [bankAnchor], difficulty: 2, authoredDrawingTasks: true, loTitle: 'x' }, sources);
-  assert.deepEqual(sources.prompts.map((p) => [p.length, sha256(p)]), golden[0][3]);
+  assert.deepEqual(await promptsFor({ anchorItems: [bankAnchor], difficulty: 2, authoredDrawingTasks: true, loTitle: 'x' }), anchor);
   delete process.env.PRACTICE_GEN;
 });
 
@@ -1443,9 +1454,6 @@ await test('assessment: the same plan builds a calibration set without the pure 
     assert.equal(reason('[1, 2, 3]'), 'unparseable_json');
     // Cut off at the token cap: never balances.
     assert.equal(reason('{"problemText": "A long problem that never fin'), 'unparseable_json');
-    // NOT repaired: an unescaped backslash is invalid JSON, and guessing a repair could change the maths.
-    // (`\sqrt` here: `\s` is not a JSON escape. `\frac` / `\times` / `\nabla` DO parse — `\f`, `\t`, `\n` are escapes.)
-    assert.equal(reason('{"problemText": "Simplify $\\sqrt{8}$.", "finalAnswer": "2\\sqrt{2}"}'), 'unparseable_json');
     assert.equal(reason('{"finalAnswer": "4"}'), 'missing_problem_text');
     assert.equal(reason('{"problemText": "   ", "finalAnswer": "4"}'), 'missing_problem_text');
     assert.equal(reason('{"problemText": "What is 2 + 2?"}'), 'missing_final_answer');
@@ -1454,6 +1462,24 @@ await test('assessment: the same plan builds a calibration set without the pure 
     assert.equal(reason('{"problemText": "What is 2 + 2?", "finalAnswer": null}'), 'missing_final_answer');
     assert.equal(parseGenPayload('{"problemText": "What is 2 + 2?"}'), null);
   });
+  await test('gen-parse: LaTeX in the JSON strings survives as text (2026-10-05)', () => {
+    // `\frac`, `\times`, `\nabla`, `\beta`, `\rho` are VALID JSON escapes: before the
+    // shared reader they parsed into form feed / tab / newline / backspace / CR + "rac"…
+    const raw = '{"problemText": "Compute $\\frac{3}{4} \\times 8$. Then find $\\nabla f$ for $\\beta = 2$, $\\rho = 3$.", "finalAnswer": "$\\frac{1}{2}$", "hints": ["Use $\\theta \\to 0$.\\nThen simplify."]}';
+    assert.ok(/[\f\t\n\b\r]/.test(JSON.parse(raw).problemText), 'precondition: a plain JSON.parse corrupts it');
+    const gen = parseGenPayload(raw)!;
+    assert.equal(gen.problemText, 'Compute $\\frac{3}{4} \\times 8$. Then find $\\nabla f$ for $\\beta = 2$, $\\rho = 3$.');
+    assert.equal(gen.finalAnswer, '$\\frac{1}{2}$');
+    assert.deepEqual(gen.hints, ['Use $\\theta \\to 0$.\nThen simplify.'], 'a real line break is still a line break');
+    assert.ok(!/[\f\t\b\r]/.test(gen.problemText + gen.finalAnswer));
+  });
+  await test('gen-parse: an invalid escape (`\\sqrt`) no longer throws the whole problem away', () => {
+    const gen = parseGenPayload('{"problemText": "Simplify $\\sqrt{8}$.", "finalAnswer": "2\\sqrt{2}"}')!;
+    assert.equal(gen.problemText, 'Simplify $\\sqrt{8}$.');
+    assert.equal(gen.finalAnswer, '2\\sqrt{2}');
+    // Already-escaped LaTeX is untouched.
+    assert.equal(parseGenPayload('{"problemText": "Simplify $\\\\sqrt{8}$ and $\\\\frac{1}{2}$.", "finalAnswer": "4"}')?.problemText, 'Simplify $\\sqrt{8}$ and $\\frac{1}{2}$.');
+  });
   await test('gen-parse: the log line is ONE line, carries reason + length, and caps the reply at 300 characters', () => {
     const raw = 'Sorry,\nI cannot\r\n\tdo that.\n' + 'x'.repeat(1000);
     const line = describeUnusableGenReply('unparseable_json', raw);
@@ -1461,6 +1487,380 @@ await test('assessment: the same plan builds a calibration set without the pure 
     assert.ok(line.startsWith(`[problem-generator] candidate_unusable reason=unparseable_json len=${raw.length} head="Sorry, I cannot do that. xxx`));
     const head = JSON.parse(line.slice(line.indexOf('head=') + 5)) as string;
     assert.equal(head.length, 300);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// 2026-10-05 — pre-generation run (185 items, 21 failed the audit; 64 % of
+// generation slots yielded an item)
+// ════════════════════════════════════════════════════════════════════════
+{
+  const {
+    normalizeNumericAnswer: norm, exactFractionKey, statedPrecision, numericKeyPrecisionOk, numericHasSecondPart,
+    dollarMathDelimiters, globalDailyCap, GLOBAL_DAILY_CAP: DEFAULT_CAP, GLOBAL_DAILY_CAP_MAX,
+  } = practiceGenModule;
+  const { callTextModel, GEN_MAX_TOKENS, VERIFY_MAX_TOKENS, RETRY_MAX_TOKENS } = problemGeneratorModule;
+
+  // ── (5) a reply cut off at the token cap ──────────────────────────────
+  const fakeClient = (replies: Array<{ text?: string; stop: string; thinkingOnly?: boolean }>) => {
+    const caps: number[] = [];
+    return {
+      caps,
+      client: {
+        messages: {
+          async create(body: { max_tokens: number }) {
+            const r = replies[Math.min(caps.length, replies.length - 1)];
+            caps.push(body.max_tokens);
+            return { stop_reason: r.stop, content: [{ type: 'thinking', thinking: '…' }, ...(r.thinkingOnly ? [] : [{ type: 'text', text: r.text ?? '' }])] };
+          },
+        },
+      },
+    };
+  };
+  const quiet = async <T>(fn: () => Promise<T>): Promise<T> => {
+    const warn = console.warn; console.warn = () => {};
+    try { return await fn(); } finally { console.warn = warn; }
+  };
+
+  await test('cut-off: the generator cap is sized for the reply alone (thinking is off); the solver cap leaves room for thinking', () => {
+    assert.ok(GEN_MAX_TOKENS >= 1500 && GEN_MAX_TOKENS <= 3000, 'a ~500-token JSON reply, with room');
+    assert.ok(VERIFY_MAX_TOKENS >= 2000 && RETRY_MAX_TOKENS > VERIFY_MAX_TOKENS);
+  });
+  await test('cut-off: a complete reply is returned as is — one call', async () => {
+    const f = fakeClient([{ text: ' {"problemText": "Q", "finalAnswer": "4"} ', stop: 'end_turn' }]);
+    assert.equal(await callTextModel(f.client, 'm', 'sys', 'user', GEN_MAX_TOKENS), '{"problemText": "Q", "finalAnswer": "4"}');
+    assert.deepEqual(f.caps, [GEN_MAX_TOKENS]);
+  });
+  await test('cut-off (solver): thinking used the whole cap, no text at all → ONE retry at the higher cap when the caller asks for it', async () => {
+    const f = fakeClient([{ stop: 'max_tokens', thinkingOnly: true }, { text: '42', stop: 'end_turn' }]);
+    assert.equal(await quiet(() => callTextModel(f.client, 'm', 'sys', 'user', VERIFY_MAX_TOKENS, { retryMaxTokens: RETRY_MAX_TOKENS })), '42');
+    assert.deepEqual(f.caps, [VERIFY_MAX_TOKENS, RETRY_MAX_TOKENS]);
+  });
+  await test('cut-off (solver): still cut off after the retry → the text is returned for the caller to reject; never a third call', async () => {
+    const f = fakeClient([{ text: 'never fin', stop: 'max_tokens' }]);
+    await quiet(() => callTextModel(f.client, 'm', 'sys', 'user', VERIFY_MAX_TOKENS, { retryMaxTokens: RETRY_MAX_TOKENS }));
+    assert.deepEqual(f.caps, [VERIFY_MAX_TOKENS, RETRY_MAX_TOKENS]);
+  });
+  await test('cut-off (generator): NEVER re-asked at a higher cap — the cut-off text goes to the parser, which rejects it', async () => {
+    const f = fakeClient([{ text: '{"problemText": "A Riemann sum with n subinterv', stop: 'max_tokens' }, { text: '{"problemText": "Q", "finalAnswer": "4"}', stop: 'end_turn' }]);
+    const text = await quiet(() => callTextModel(f.client, 'm', 'sys', 'user', GEN_MAX_TOKENS));
+    assert.deepEqual(f.caps, [GEN_MAX_TOKENS], 'one call');
+    assert.equal(problemGeneratorModule.parseGenPayloadDetailed(text).ok, false);
+    assert.equal(parseGenPayloadSafe(text), undefined);
+  });
+  function parseGenPayloadSafe(raw: string): string | undefined { return problemGeneratorModule.parseGenPayload(raw)?.problemText; }
+
+  // ── (6) fraction answers and decimal precision ────────────────────────
+  await test('fraction: 5/6 and 5/13 stay FRACTION keys — they were stored as 0.8333333333333334 / 0.38461538461538464', () => {
+    assert.equal(norm('5/6'), '5/6');
+    assert.equal(norm('5/13'), '5/13');
+    assert.equal(norm('10/26'), '5/13', 'reduced');
+    assert.equal(norm('5/6 ft/s'), '5/6', 'a unit after the fraction');
+    assert.equal(norm('\\frac{5}{6}'), '5/6');
+    assert.equal(norm('$\\frac{5}{13}$'), '5/13');
+    assert.equal(norm('−7/3'), '-7/3');
+    assert.equal(norm('7/-3'), '-7/3', 'sign on the numerator');
+    assert.equal(exactFractionKey(1, 0), null);
+    assert.equal(norm('1/0'), null);
+  });
+  await test('fraction: a whole number or terminating decimal is still a plain number (as before)', () => {
+    assert.equal(norm('12/3'), '4');
+    assert.equal(norm('1/2'), '0.5');
+    assert.equal(norm('3/8'), '0.375');
+    assert.equal(norm('-9/4'), '-2.25');
+    assert.equal(norm('48 square inches'), '48');
+    assert.equal(norm('$4.50'), '4.5');
+    assert.equal(norm('50%'), '50');
+  });
+  await test('fraction: no 16-digit float is ever a key — a computed non-terminating value is rejected', () => {
+    assert.equal(norm('2π'), null, 'was "6.283185307179586"');
+    assert.equal(norm('√2'), null, 'was "1.4142135623730951"');
+    assert.equal(norm('1.5/7'), null, 'a decimal over an integer that does not terminate');
+    assert.equal(norm('1.5/2'), '0.75');
+    for (const raw of ['5/6', '5/13', '2π', '√2', '22/7', '1/3', '100/7 m']) {
+      const key = norm(raw);
+      assert.ok(key === null || !/\.\d{7,}/.test(key), `${raw} → ${key}`);
+    }
+  });
+  await test('fraction: what a student may type against a fraction key, by the numeric rule (unchanged)', () => {
+    const ok = (key: string, answer: string) => { const r = gradeNumericAnswer(key, answer); return r.decided ? r.correct : 'undecided'; };
+    for (const a of ['5/6', '10/12', '0.83', '0.833', '0.8333', '.83']) assert.equal(ok('5/6', a), true, a);
+    for (const a of ['0.8', '0.84', '0.834', '1', '6/5']) assert.equal(ok('5/6', a), false, a);
+    for (const a of ['5/13', '10/26', '0.38', '0.385', '0.3846']) assert.equal(ok('5/13', a), true, a);
+    // Before: the float key accepted none of the answers a student would type.
+    for (const a of ['0.83', '0.833', '0.8333']) assert.equal(ok('0.8333333333333334', a), false, a);
+  });
+  await test('precision: the rounding a question states is read from its text', () => {
+    assert.deepEqual(statedPrecision('Give your answer to the nearest tenth.'), { kind: 'places', n: 1 });
+    assert.deepEqual(statedPrecision('Round to the nearest hundredth of a second.'), { kind: 'places', n: 2 });
+    assert.deepEqual(statedPrecision('to the nearest thousandth'), { kind: 'places', n: 3 });
+    assert.deepEqual(statedPrecision('to the nearest cent'), { kind: 'places', n: 2 });
+    assert.deepEqual(statedPrecision('to the nearest whole number'), { kind: 'places', n: 0 });
+    assert.deepEqual(statedPrecision('to the nearest metre'), { kind: 'places', n: 0 });
+    assert.deepEqual(statedPrecision('Give the volume to 2 decimal places.'), { kind: 'places', n: 2 });
+    assert.deepEqual(statedPrecision('correct to three decimal places'), { kind: 'places', n: 3 });
+    assert.deepEqual(statedPrecision('Answer to 3 significant figures.'), { kind: 'sigfigs', n: 3 });
+    assert.deepEqual(statedPrecision('to two sig figs'), { kind: 'sigfigs', n: 2 });
+    assert.deepEqual(statedPrecision('to the nearest star'), null, 'not a precision: the list of units is closed');
+    assert.deepEqual(statedPrecision('Round your answer appropriately.'), { kind: 'stated' });
+    assert.deepEqual(statedPrecision('Give the exact value as a fraction.'), { kind: 'stated' });
+    assert.equal(statedPrecision('Find the horizontal component of the initial velocity.'), null);
+  });
+  await test('precision: the two audited fails are rejected ON EVIDENCE — the solver\'s longer value (34.47 for the key 34.5), a "≈" in the working (5.94) — and pass once the question states the rounding', async () => {
+    const SOCCER = 'A soccer ball is kicked with an initial speed of 45 m/s at an angle of 40° above the horizontal. Find the horizontal component of the initial velocity, vₓ.';
+    const GAS = 'A rigid steel cylinder contains 2.80 mol of nitrogen at a pressure of 12.0 atm and a temperature of 310 K. Using the ideal gas law with R = 0.0821 L·atm/(mol·K), find the volume of the cylinder in litres.';
+    assert.equal(numericKeyPrecisionOk(SOCCER, '34.5', { worked: 'vx = 45cos40° = 34.5', solved: '34.47 m/s' }), false);
+    assert.equal(numericKeyPrecisionOk(SOCCER, '34.5', { worked: 'vx = 45cos40° ≈ 34.5 m/s' }), false);
+    assert.equal(numericKeyPrecisionOk(GAS, '5.94', '5.94 L V = nRT/P = 2.80(0.0821)(310)/12.0 ≈ 5.94 L'), false);
+    assert.equal(numericKeyPrecisionOk(`${SOCCER} Give your answer to the nearest tenth.`, '34.5', '≈ 34.5'), true);
+    assert.equal(numericKeyPrecisionOk(`${GAS} Give your answer to 3 significant figures.`, '5.94', '≈ 5.94'), true);
+    assert.equal(numericKeyPrecisionOk(`${GAS} Give your answer to 2 significant figures.`, '5.94', '≈ 5.94'), false, 'more figures than asked for');
+    assert.equal(numericKeyPrecisionOk(`${SOCCER} Round to the nearest whole number.`, '34.5', ''), false);
+    // At the gate: the solver's own value is the evidence.
+    const solver = (solved: string): VerifyFn => async () => ({ agree: true, solved });
+    assert.deepEqual(await checkGeneratedAnswer({ ...numericGen(SOCCER, '34.5 m/s'), teachingAnswer: 'vx = 45cos40° = 34.5 m/s' }, solver('34.4720 m/s')), { ok: false, reason: 'numeric_precision' });
+    assert.deepEqual(await checkGeneratedAnswer({ ...numericGen(SOCCER, '34.5 m/s'), teachingAnswer: 'vx = 45cos40° = 34.5 m/s' }, solver('≈ 34.5 m/s')), { ok: false, reason: 'numeric_precision' });
+    // A stated precision the key does not follow is rejected before any solve is spent.
+    let verifyCalls = 0;
+    const counting: VerifyFn = async () => { verifyCalls++; return { agree: true, solved: 'x' }; };
+    assert.deepEqual(await checkGeneratedAnswer(numericGen(`${SOCCER} Round to the nearest whole number.`, '34.5 m/s'), counting), { ok: false, reason: 'numeric_precision' });
+    assert.equal(verifyCalls, 0);
+    const passed = await checkGeneratedAnswer({ ...numericGen(`${SOCCER} Give your answer to the nearest tenth.`, '34.5 m/s') }, counting);
+    assert.equal(passed.ok && passed.gen.finalAnswer, '34.5');
+  });
+  await test('precision: whole numbers, fractions and exact decimals need no stated rounding', async () => {
+    assert.equal(numericKeyPrecisionOk('Evaluate the sum.', '336', ''), true);
+    assert.equal(numericKeyPrecisionOk('How fast is the top of the ladder sliding down?', '5/6', ''), true);
+    assert.equal(numericKeyPrecisionOk('A notebook costs $4.50. What do 3 notebooks cost, in dollars?', '13.5', '3 × 4.50 = 13.50'), true);
+    assert.equal(numericKeyPrecisionOk('Qc = [NO2]^2/[N2O4] with [NO2] = 0.030 M and [N2O4] = 0.050 M. Find Qc.', '0.018', '(0.030)^2/0.050 = 0.018'), true);
+    assert.equal(numericKeyPrecisionOk('A car travels 150 km in 4 hours. Find its average speed in km/h.', '37.5', '150/4 = 37.5'), true);
+    // Evidence of a rounding → not accepted without a stated precision.
+    assert.equal(numericKeyPrecisionOk('A car travels 100 km in 7 hours. Find its average speed in km/h.', '14.3', '100/7 ≈ 14.3'), false);
+    assert.equal(numericKeyPrecisionOk('Find ln(5).', '1.61', { worked: 'ln 5 = 1.61', solved: '1.6094' }), false);
+    // No evidence either way → passes (the gate acts only on what it can show).
+    assert.equal(numericKeyPrecisionOk('Find ln(5).', '1.61', 'ln 5 = 1.61'), true);
+    assert.equal(numericKeyPrecisionOk('A car travels 100 km in 8 hours. Find its speed.', '12.5000', '= 12.5000'), true, 'the same value written long is not a rounding');
+    const frac = await checkGeneratedAnswer(numericGen('A 13-foot ladder… how fast is the top sliding down, in ft/s? Give your answer as a fraction.', '5/6 ft/s'), agreeVerify());
+    assert.equal(frac.ok && frac.gen.finalAnswer, '5/6');
+  });
+  await test('numeric box: a second part that needs words is rejected (audit: key -0.6 "…and determine whether water moves in or out")', async () => {
+    const WATER = 'A plant cell has a solute potential of -0.8 MPa and a pressure potential of 0.2 MPa. Calculate the water potential of the cell and determine whether water moves into or out of the cell.';
+    assert.equal(numericHasSecondPart(WATER), true);
+    assert.equal(numericHasSecondPart('Find the slope and explain what it means.'), true);
+    assert.equal(numericHasSecondPart('Compute the mean, then state the units.'), true);
+    assert.equal(numericHasSecondPart('Determine the value of x for which 3x = 12.'), false);
+    assert.equal(numericHasSecondPart('Find the total number of units produced over these 7 weeks.'), false);
+    assert.deepEqual(await checkGeneratedAnswer(numericGen(WATER, '-0.6'), agreeVerify()), { ok: false, reason: 'numeric_extra_part' });
+    // The same question as a free item is fine: the judge reads words.
+    const free = await checkGeneratedAnswer({ problemText: WATER, finalAnswer: '-0.6 MPa; into the cell', answerKind: 'free', expectedAnswer: '-0.6 MPa; into the cell' }, agreeVerify(), async () => ({ status: 'verified', model: 'm' }));
+    assert.equal(free.ok, true);
+  });
+
+  // ── (7) maths delimiters ──────────────────────────────────────────────
+  await test('delimiters: \\( … \\), \\[ … \\] and $$ … $$ become $ … $ in everything the student sees', async () => {
+    assert.equal(dollarMathDelimiters('Evaluate \\(\\sum_{k=1}^{6} (3k^2 - 2k + 1)\\). Find the sum.'), 'Evaluate $\\sum_{k=1}^{6} (3k^2 - 2k + 1)$. Find the sum.');
+    assert.equal(dollarMathDelimiters('So \\[ x = \\frac{1}{2} \\] and $$y = 3$$.'), 'So $x = \\frac{1}{2}$ and $y = 3$.');
+    assert.equal(dollarMathDelimiters('Already $x^2$; an interval [0, 1) and f(x) (plain) stay.'), 'Already $x^2$; an interval [0, 1) and f(x) (plain) stay.');
+    const gated = await checkGeneratedAnswer(
+      { problemText: 'Evaluate \\(\\sum_{k=1}^{7} (2k^2 + 3k - 4)\\).', finalAnswer: '336', teachingAnswer: '\\(2\\cdot 140 + 3\\cdot 28 - 28 = 336\\)', responseFormat: 'numeric', hints: ['Split \\(\\sum\\) into three sums.'] },
+      agreeVerify(),
+    );
+    assert.ok(gated.ok);
+    if (gated.ok) {
+      assert.equal(gated.gen.problemText, 'Evaluate $\\sum_{k=1}^{7} (2k^2 + 3k - 4)$.');
+      assert.deepEqual(gated.gen.hints, ['Split $\\sum$ into three sums.']);
+      assert.equal(gated.gen.teachingAnswer, '$2\\cdot 140 + 3\\cdot 28 - 28 = 336$');
+    }
+    const mcq = await checkGeneratedAnswer({ problemText: 'Which equals \\(x^2\\)?', finalAnswer: 'B', responseFormat: 'mcq', choices: ['\\(2x\\)', '\\(x \\cdot x\\)'] }, agreeVerify());
+    assert.deepEqual(mcq.ok && mcq.gen.choices, ['$2x$', '$x \\cdot x$']);
+  });
+
+  // ── (8) twins ─────────────────────────────────────────────────────────
+  const Q = (problemText: string, answerText?: string) => ({ problemText, answerText });
+  await test('near-duplicate: the audited twins that ARE caught (real texts)', () => {
+    // word-for-word, "carries" / "has"
+    assert.equal(nearDuplicateReason(
+      Q('In a molecule of chlorine trifluoride, ClF3, the central chlorine atom is bonded to three fluorine atoms and also carries two lone pairs of electrons. Using VSEPR theory, what is the molecular geometry?', 'T-shaped'),
+      Q('In a molecule of chlorine trifluoride, ClF3, the central chlorine atom is bonded to three fluorine atoms and also has two lone pairs of electrons. Using VSEPR theory, what is the molecular geometry?', 'T-shaped'),
+    ), 'reworded');
+    // the same expression with a story wrapped round it (the twin restates it "in the form (x + a)²")
+    assert.equal(nearDuplicateReason(
+      Q('A gardener is designing a square plot and writes its area in expanded form as x² + 14x + 49 square feet, where x is the side length adjustment in feet. Rewrite this expression as a perfect square trinomial (in the form (x + a)²).', '(x + 7)²'),
+      Q('Write x² + 14x + 49 as a perfect square trinomial in factored form.', '(x + 7)²'),
+    ), 'reworded');
+    // the skill's stored question with a clause added
+    assert.equal(nearDuplicateReason(
+      Q('During cellular respiration, which stage takes place in the cytoplasm (outside the mitochondrion) and does not require oxygen to proceed?', 'Glycolysis'),
+      Q('Which stage of respiration occurs outside the mitochondrion?', 'Glycolysis'),
+    ), 'reworded');
+    assert.equal(nearDuplicateReason(
+      Q('In the electron transport chain, FADH₂ is produced by succinate dehydrogenase during the Krebs cycle and donates its electrons directly to an enzyme complex embedded in the inner mitochondrial membrane, bypassing Complex I. Which complex of the electron transport chain directly accepts electrons from FADH₂?', 'Complex II'),
+      Q('Which complex receives electrons from FADH₂?', 'Complex II'),
+    ), 'reworded');
+    // tearing / shredding a sheet of paper, one with an incidental number
+    assert.equal(nearDuplicateReason(
+      Q('You shred a sheet of paper into many thin strips using a paper shredder. What type of change is this?', 'Physical change'),
+      Q('You tear a sheet of paper into 8 small strips. What type of change is this?', 'Physical change'),
+    ), 'reworded');
+    // the answer of one contains the other's
+    assert.equal(nearDuplicateReason(
+      Q('An RNA strand contains a cytosine nucleotide. Name the three chemical components that are bonded together to form this single nucleotide.', 'Phosphate group, ribose sugar, and cytosine base'),
+      Q('A molecular biology student is analyzing a single nucleotide isolated from an RNA strand. The nucleotide contains the nitrogenous base cytosine. Name the three components that make up this cytosine nucleotide in RNA.', 'Phosphate, ribose, cytosine'),
+    ), 'reworded');
+  });
+  await test('near-duplicate: fresh items are NOT twins — same wording with different numbers, another example, another answer', () => {
+    // The ordinary computational case: same template, different data.
+    assert.equal(nearDuplicateReason(Q('A crate has a mass of 8 kg. Calculate its weight on Earth, using g = 10 m/s².', '80'), Q('A box has mass 5 kg. Calculate its weight on Earth using g = 10 m/s².', '50')), null);
+    assert.equal(nearDuplicateReason(Q('Write x² + 14x + 49 as a perfect square trinomial.', '(x + 7)²'), Q('Write x² + 8x + 16 as a perfect square trinomial.', '(x + 4)²')), null);
+    assert.equal(nearDuplicateReason(Q('Evaluate \\(\\sum_{k=1}^{6} (3k^2 - 2k + 1)\\).', '237'), Q('Evaluate \\(\\sum_{k=1}^{7} (2k^2 + 3k - 4)\\).', '336')), null);
+    // Same answer by coincidence, different question.
+    assert.equal(nearDuplicateReason(Q('You tear a sheet of paper into small strips. What type of change is this?', 'Physical change'), Q('You break a chalk stick into smaller pieces. What type of change?', 'Physical change')), null);
+    assert.equal(nearDuplicateReason(Q('What is the name of the electron carrier that accepts electrons from Complex II?', 'Ubiquinone'), Q('Which complex receives electrons from FADH₂?', 'Complex II')), null);
+    assert.equal(nearDuplicateReason(Q('Find f(3) for f(x) = 2x + 1.', '7'), Q('Solve x − 4 = 3.', '7')), null);
+  });
+  await test('near-duplicate: known limits, pinned — twins the text rule does NOT catch (missing one costs a repeat; a false positive costs the skill its practice)', () => {
+    // Audit duplicate …1yovm4 vs …ofoh7k (silicon carbide twice). The texts share
+    // too few words; this pair is what the per-slot "different example" instruction is for.
+    assert.equal(nearDuplicateReason(
+      Q('Silicon carbide (SiC), used in industrial cutting tools, consists of silicon and carbon atoms bonded together in a rigid three-dimensional lattice, with every atom covalently bonded to four neighbors throughout the entire crystal. This structure gives SiC an extremely high melting point and great hardness. Which type of solid is silicon carbide?', 'Covalent network'),
+      Q('Silicon carbide (SiC), used in cutting tools and abrasives, has an extremely high melting point (about 2700°C), is extremely hard, does not conduct electricity in any state, and will not dissolve in water or any common solvent. Based on these properties, which type of solid is silicon carbide?', 'Covalent network'),
+    ), null);
+    // …1fp48sn: the third version of the stored question shares only 3 of its 5 content words.
+    assert.equal(nearDuplicateReason(
+      Q('In muscle cells, the breakdown of glucose into pyruvate takes place in the cytoplasm, independent of oxygen availability, before any pyruvate enters a cellular organelle for further processing. Which stage of cellular respiration does this describe, and in which part of the cell does it occur?', 'Glycolysis; occurs in the cytoplasm (cytosol)'),
+      Q('Which stage of respiration occurs outside the mitochondrion?', 'Glycolysis'),
+    ), null);
+    // The same sum behind a story: a bare number ("336") cannot identify a
+    // question, and the story states the expression twice.
+    assert.equal(nearDuplicateReason(
+      Q("A factory's weekly output (in units) during the k-th week is modeled by 2k^2 + 3k - 4. The total output over the first 7 weeks is $\\sum_{k=1}^{7} (2k^2 + 3k - 4)$. Find the total number of units.", '336'),
+      Q('Evaluate the finite series given in sigma notation: \\(\\sum_{k=1}^{7} (2k^2 + 3k - 4)\\). Find the numerical value of the sum.', '336'),
+    ), null);
+  });
+  await test('near-duplicate: text normalisation folds ², ₂, \\( \\), $ and LaTeX commands', () => {
+    assert.equal(normalizeItemText('Evaluate \\(\\sum_{k=1}^{7} x²\\) for H₂O — now.'), 'evaluate sum _ k=1 ^ 7 x^2 for h2o - now.');
+    assert.equal(findNearDuplicate(Q('Find f(3) for f(x) = 2x + 1.', '7'), [Q('Solve x − 4 = 3.', '7')]), null);
+  });
+
+  const TWIN_A = numericGenFree('In a molecule of chlorine trifluoride, ClF3, the central chlorine atom is bonded to three fluorine atoms and also has two lone pairs of electrons. What is the molecular geometry?', 'T-shaped');
+  const TWIN_B = numericGenFree('In a molecule of chlorine trifluoride, ClF3, the central chlorine atom is bonded to three fluorine atoms and also carries two lone pairs of electrons. What is the molecular geometry?', 'T-shaped');
+  const OTHER = numericGenFree('Sulfur hexafluoride, SF6, has six bonding pairs and no lone pairs on the central atom. What is its molecular geometry?', 'Octahedral');
+  function numericGenFree(problemText: string, answer: string): GenPayload {
+    return { problemText, finalAnswer: answer, answerKind: 'free', expectedAnswer: answer, hints: [] };
+  }
+  await test('twins: two slots of one request that produce the same item → ONE is served and ONE is stored (both used to be stored)', async () => {
+    process.env.PRACTICE_GEN = 'on';
+    const events: string[] = [];
+    const sources = makeStubSources({ perCall: [TWIN_A, TWIN_B], allowed: 2 });
+    const items = await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [], onDebugEvent: (t, m) => events.push(`${t} ${m}`) }), sources);
+    assert.equal(items.length, 1);
+    assert.equal(items[0].problemText, TWIN_A.problemText, 'the first slot is kept');
+    assert.equal(sources.persisted.length, 1);
+    assert.equal((sources.persisted[0] as { gen: GenPayload }).gen.problemText, TWIN_A.problemText);
+    assert.deepEqual(events, [`practice_gen_gate_failed loId=${LO} reason=near_duplicate_sibling`]);
+    delete process.env.PRACTICE_GEN;
+  });
+  await test('twins: two different items are both served and stored, in slot order', async () => {
+    process.env.PRACTICE_GEN = 'on';
+    const sources = makeStubSources({ perCall: [TWIN_A, OTHER], allowed: 2 });
+    const items = await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [] }), sources);
+    assert.deepEqual(items.map((i) => i.expectedAnswer), ['T-shaped', 'Octahedral']);
+    assert.equal(sources.persisted.length, 2);
+    delete process.env.PRACTICE_GEN;
+  });
+  await test('twins: a candidate that restates an item the skill already has is regenerated ONCE (rejected text excluded), never stored', async () => {
+    process.env.PRACTICE_GEN = 'on';
+    const stored: PracticeItem = { id: 'plan::try', source: 'plan-try-yourself', problemText: 'Which stage of respiration occurs outside the mitochondrion?', expectedAnswer: 'Glycolysis', responseFormat: 'free', loId: LO };
+    const RESTATED = numericGenFree('During cellular respiration, which stage takes place in the cytoplasm (outside the mitochondrion) and does not require oxygen to proceed?', 'Glycolysis');
+    const FRESH = numericGenFree('A cell is poisoned so that its electron transport chain stops. Which stage of respiration can still make a small amount of ATP?', 'Glycolysis');
+    const events: string[] = [];
+    const ok = makeStubSources({ perCall: [RESTATED, FRESH], allowed: 1 });
+    const items = await generatePracticeItems(baseOpts({ shortfall: 1, anchorItems: [stored], onDebugEvent: (t, m) => events.push(m) }), ok);
+    assert.deepEqual(items.map((i) => i.problemText), [FRESH.problemText]);
+    assert.equal(ok.persisted.length, 1);
+    assert.deepEqual(events, [`loId=${LO} reason=near_duplicate`]);
+    assert.ok(ok.excludeHashesSeen[1].includes('hash-0'), 'the retry excludes the rejected text');
+    const never = makeStubSources({ gen: RESTATED, allowed: 1 });
+    assert.deepEqual(await generatePracticeItems(baseOpts({ shortfall: 1, anchorItems: [stored] }), never), []);
+    assert.equal(never.prompts.length, 2, 'one retry, no more');
+    assert.equal(never.persisted.length, 0);
+    delete process.env.PRACTICE_GEN;
+  });
+  await test('twins: a multiple-choice answer is compared by its option TEXT, not its letter', async () => {
+    process.env.PRACTICE_GEN = 'on';
+    const mcqA: GenPayload = { problemText: 'You tear a sheet of paper into 8 small strips. What type of change is this?', finalAnswer: 'A', responseFormat: 'mcq', choices: ['Physical change', 'Chemical change'] };
+    const mcqB: GenPayload = { problemText: 'You shred a sheet of paper into many thin strips using a paper shredder. What type of change is this?', finalAnswer: 'B', responseFormat: 'mcq', choices: ['Chemical change', 'Physical change'] };
+    const sources = makeStubSources({ perCall: [mcqA, mcqB], allowed: 2 });
+    assert.equal((await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [] }), sources)).length, 1);
+    delete process.env.PRACTICE_GEN;
+  });
+
+  await test('prompt: every branch carries the do-not-repeat list, the precision rule, $…$ only, the skill-level rule; the slots differ', async () => {
+    process.env.PRACTICE_GEN = 'on';
+    const others: PracticeItem[] = [
+      { ...bankAnchor, id: 'a1', problemText: 'Which complex receives electrons from FADH₂?' },
+      { ...bankAnchor, id: 'a2', problemText: 'Which stage of respiration occurs outside the mitochondrion?' },
+      { ...bankAnchor, id: 'a3', problemText: 'Sketch the mitochondrion and label the matrix.' },
+    ];
+    const run = async (o: Partial<GeneratePracticeItemsOptions>) => {
+      const sources = makeStubSources({ gen: null });
+      await generatePracticeItems({ studentId: 's', loId: LO, topic: TOPIC, shortfall: 2, anchorItems: [], ...o }, sources);
+      return sources.prompts;
+    };
+    const anchored = await run({ anchorItems: others });
+    const brandNew = await run({});
+    const drawing = await run({ authoredDrawingTasks: true, loTitle: 'Graph linear inequalities' });
+    for (const p of [...anchored, ...brandNew, ...drawing]) {
+      assert.match(p, /MUST say how to give it: either a rounding precision/);
+      assert.match(p, /"as a fraction" with finalAnswer the exact fraction/);
+      assert.match(p, /wrap it in single dollar signs, \$…\$, and nothing else — never \\\( … \\\), \\\[ … \\\] or \$\$ … \$\$/);
+      assert.match(p, /must make the student DO the skill the objective names/);
+      assert.match(p, /never ask only for vocabulary/);
+      assert.match(p, /must not state or describe its own answer/);
+      assert.match(p, /A numeric problem asks for exactly ONE number and nothing else/);
+    }
+    for (const p of anchored) {
+      assert.match(p, /Do NOT repeat or closely paraphrase any of them/);
+      assert.ok(p.includes('- Which complex receives electrons from FADH₂?') && p.includes('- Which stage of respiration occurs outside the mitochondrion?'));
+      assert.ok(!p.includes('Sketch the mitochondrion'), 'a drawing task is never shown to the generator');
+      assert.match(p, /do NOT reuse its numbers, its context, its example or its question/);
+    }
+    assert.ok(brandNew.every((p) => !/Do NOT repeat or closely paraphrase/.test(p)), 'nothing to list for a skill with no items');
+    for (const pair of [anchored, brandNew, drawing]) {
+      assert.match(pair[0], /generation 1 of up to 2[^]*Yours is the DIRECT one[^]*use a standard one\./);
+      assert.match(pair[1], /generation 2 of up to 2[^]*STRUCTURALLY distinct[^]*do NOT use the most familiar textbook one — choose a different, less common example/);
+    }
+    delete process.env.PRACTICE_GEN;
+  });
+
+  // ── (9) the global daily cap ──────────────────────────────────────────
+  await test('cap: PRACTICE_GEN_GLOBAL_DAILY_CAP sets the global cap; anything unusable falls back to 500; never above 5000', () => {
+    assert.equal(DEFAULT_CAP, 500);
+    assert.equal(GLOBAL_DAILY_CAP_MAX, 5000);
+    const cap = (v?: string) => globalDailyCap(v === undefined ? {} : { PRACTICE_GEN_GLOBAL_DAILY_CAP: v });
+    assert.equal(cap(), 500);
+    assert.equal(cap('2000'), 2000);
+    assert.equal(cap(' 1500 '), 1500);
+    assert.equal(cap('1'), 1);
+    assert.equal(cap('5000'), 5000);
+    for (const bad of ['', '   ', 'abc', '2k', '1e3', '12.5', '0', '-5', '5001', '100000', '99999999999999999999', 'NaN', 'Infinity', '0x10', '+50'])
+      assert.equal(cap(bad), 500, JSON.stringify(bad));
+  });
+  await test('cap: the real reserve reads it at call time — raising it admits, removing it restores 500', async () => {
+    const real = practiceGenSources();
+    stubCounter(0, 500);
+    assert.equal(await real.reserve('s-cap', LO, 2), 0, 'default 500: full');
+    process.env.PRACTICE_GEN_GLOBAL_DAILY_CAP = '2000';
+    stubCounter(0, 500);
+    assert.equal(await real.reserve('s-cap', LO, 2), 2, 'raised to 2000: room');
+    stubCounter(0, 1999);
+    assert.equal(await real.reserve('s-cap', LO, 2), 1, 'only the room that is left');
+    process.env.PRACTICE_GEN_GLOBAL_DAILY_CAP = 'lots';
+    stubCounter(0, 500);
+    assert.equal(await real.reserve('s-cap', LO, 2), 0, 'a typo is the default, not "no cap"');
+    delete process.env.PRACTICE_GEN_GLOBAL_DAILY_CAP;
+    stubCounter(0, 499);
+    assert.equal(await real.reserve('s-cap', LO, 2), 1);
   });
 }
 

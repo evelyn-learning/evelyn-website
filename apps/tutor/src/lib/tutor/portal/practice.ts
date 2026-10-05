@@ -42,7 +42,7 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
-import { generatePracticeItems, logPracticeGenEvent, isDrawingOnlyItem, type PracticeGenSources } from './practice-gen';
+import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, type PracticeGenSources, type PracticeGenOutcome } from './practice-gen';
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
@@ -298,6 +298,32 @@ function planToItems(plan: PlanLite, loId: string, fallbackToRequested = false):
 }
 
 /**
+ * Why a practice response has NO items (2026-10-05, additive — not in the v1
+ * contract schema, which ignores unknown keys):
+ *   'none_available' — structural: this skill has nothing to serve and
+ *       nothing was generated because nothing could be (generation is off,
+ *       the scope is a topic, the skill has no owning plan);
+ *   'preparing' — transient: generation ran for this request and has nothing
+ *       ready yet (the deadline passed with slots still running, both slots
+ *       were rejected by the gates, a model call failed, the cap check
+ *       failed) — asking again shortly can succeed;
+ *   'limit' — the daily generation cap granted no slot.
+ * Absent whenever `items` is non-empty.
+ */
+export type PracticeEmptyReason = 'none_available' | 'preparing' | 'limit';
+
+export type RetrievePracticeResult = RetrievePracticeResponse & { emptyReason?: PracticeEmptyReason };
+
+export interface RetrievePracticeOptions {
+  /** Bounded wait for generation (the interactive practice endpoint) — see
+   *  `GeneratePracticeItemsOptions.deadlineMs`. */
+  genDeadlineMs?: number;
+  /** Receives the promise of any generation still running when the response
+   *  is returned, so a route can keep it attached to the request (`after`). */
+  onBackground?: (work: Promise<void>) => void;
+}
+
+/**
  * Assemble practice for a request. Verified ProblemBank items first (the
  * purpose-built, answer-key-clean, globally-unique-id assessment pool), then
  * plan try-yourselves as supplement/fallback; de-duplicated by id and capped
@@ -314,7 +340,8 @@ export async function retrievePractice(
   /** The authenticated caller (partner). Omitted ⇒ `sources.caller`; neither
    *  ⇒ unknown, and partner-stamped plans are not served (fail closed). */
   caller?: PracticeCaller,
-): Promise<RetrievePracticeResponse> {
+  options: RetrievePracticeOptions = {},
+): Promise<RetrievePracticeResult> {
   const who = caller ?? sources.caller;
   const difficulty = req.difficulty;
   const planItems: PracticeItem[] = [];
@@ -373,6 +400,7 @@ export async function retrievePractice(
   // doesn't have. Any failure (kill-switch, over-cap, generation error)
   // degrades to the retrieval-only result — never an error.
   let generated: PracticeItem[] = [];
+  let genOutcome: PracticeGenOutcome | null = null;
   if (shortfall > 0 && 'loId' in req.scope) {
     const loId = req.scope.loId;
     // Topic tag derived ENGINE-SIDE from the LO's owning plan — never the
@@ -398,7 +426,7 @@ export async function retrievePractice(
     const derivedTopic = loScopePlans.find((p) => p.topic)?.topic;
     if (derivedTopic) {
       try {
-        generated = await generatePracticeItems(
+        genOutcome = await generatePracticeItemsDetailed(
           {
             studentId: req.studentId,
             loId: req.scope.loId,
@@ -418,15 +446,19 @@ export async function retrievePractice(
             // Visible empty/gate-failed outcomes as `[practice-gen] …` log
             // lines (2026-10-02).
             onDebugEvent: logPracticeGenEvent,
+            ...(options.genDeadlineMs ? { deadlineMs: options.genDeadlineMs } : {}),
           },
           genSources,
         );
+        generated = genOutcome.items;
+        if (genOutcome.pending > 0) options.onBackground?.(genOutcome.background);
       } catch (err) {
         // Belt-and-suspenders: generatePracticeItems already swallows its own
         // failures and returns [], but a thrown error here must still never
         // surface past retrievePractice.
         console.warn('[practice] generate-on-exhaustion failed, degrading to retrieval-only:', err);
         generated = [];
+        genOutcome = null;
       }
     }
   }
@@ -444,5 +476,15 @@ export async function retrievePractice(
   );
   const combined = [...available, ...generatedDeduped];
 
-  return { items: combined.slice(0, req.count) };
+  const items = combined.slice(0, req.count);
+  if (items.length > 0 || req.count <= 0) return { items };
+  return { items, emptyReason: practiceEmptyReason(genOutcome) };
+}
+
+/** See `PracticeEmptyReason`. `outcome` is null when generation was never
+ *  attempted for this request (or threw). */
+export function practiceEmptyReason(outcome: Pick<PracticeGenOutcome, 'status'> | null): PracticeEmptyReason {
+  if (!outcome || outcome.status === 'off') return 'none_available';
+  if (outcome.status === 'limit') return 'limit';
+  return 'preparing'; // 'ran' with nothing ready, or the cap check failed
 }

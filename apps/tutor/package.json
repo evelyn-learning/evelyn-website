@@ -280,6 +280,8 @@
     "test:thin-session": "npx tsx scripts/test-thin-session.ts",
     "test:stuck-cue": "npx tsx scripts/test-stuck-cue.ts",
     "test:judge-json-repair": "npx tsx scripts/test-judge-json-repair.ts",
+    "test:model-json": "npx tsx scripts/test-model-json.ts",
+    "test:practice-review6": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/practice-review6.test.ts",
     "test:homework-announce": "npx tsx scripts/test-homework-announce.ts",
     "test:recap-offer-voiced": "npx tsx scripts/test-recap-offer-voiced.ts",
     "test:recap-reply": "npx tsx scripts/test-recap-reply.ts",

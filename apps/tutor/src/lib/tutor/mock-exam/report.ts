@@ -81,7 +81,10 @@ async function gradeOneWithRetry(
 ) {
   for (let i = 0; i <= GRADE_RETRIES; i++) {
     try {
-      return await gradeFreeResponse({ studentId, itemId, response: { text: frqText } }, gradeItem, gradeDeps);
+      const graded = await gradeFreeResponse({ studentId, itemId, response: { text: frqText } }, gradeItem, gradeDeps);
+      // No readable verdict is a grader FAILURE (retry, then `ungraded`),
+      // never a zero.
+      if (!graded.undetermined) return graded;
     } catch {
       // retry
     }

@@ -21,7 +21,7 @@ import { retrievePractice, type PracticeSources, type PracticeCaller } from './p
 import type { PracticeGenSources } from './practice-gen';
 import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 import { emitSessionResult } from './session-result';
-import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
+import { gradeFreeResponse, GradeUndeterminedError, type GradeDeps } from './grade-free-response';
 import { gradeNumericAnswer } from './numeric-answer-rule';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
@@ -117,9 +117,32 @@ function numericKeyText(key: string): string {
   return stripThousands((key ?? '').trim()).replace(/\s*%$/, '');
 }
 
+/** What a learner reads on a SUBMITTED quiz for an answer the grader could
+ *  not reach a verdict on. (Practice says "… Please try again." — a
+ *  submitted quiz has no try again, so it must not say that.) */
+export const UNCHECKED_FEEDBACK = 'This answer could not be checked automatically.';
+
 /** Grade a single response against its resolved key. Deterministic for
- *  numeric/mcq; the single-answer judge for frq/free and image responses. */
+ *  numeric/mcq; the single-answer judge for frq/free and image responses.
+ *  `'unchecked'` when the judge had no readable verdict — after its own
+ *  retry AND one more whole attempt here (a submitted quiz cannot be
+ *  re-answered, so the grade is tried once more before giving up). */
 async function isCorrect(
+  key: ResolvedAssessmentKey,
+  response: AssessmentSubmission['responses'][number]['response'],
+  judge: GradeDeps['judgeSingleAnswer'],
+): Promise<boolean | 'unchecked'> {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await isCorrectJudged(key, response, judge);
+    } catch (err) {
+      if (!(err instanceof GradeUndeterminedError)) throw err;
+    }
+  }
+  return 'unchecked';
+}
+
+async function isCorrectJudged(
   key: ResolvedAssessmentKey,
   response: AssessmentSubmission['responses'][number]['response'],
   judge: GradeDeps['judgeSingleAnswer'],
@@ -165,6 +188,11 @@ interface GradeDetail {
   maxPoints: number;
   feedback?: string;
   rubricParts?: AssessmentReviewItem['rubricParts'];
+  /** The grader reached no verdict (twice). The item still scores 0 of its
+   *  maximum — the quiz's arithmetic is unchanged — but it is NOT evidence
+   *  about the learner: no evidence row, and it is left out of the mastery
+   *  delta and the candidate-gap decision. */
+  unchecked?: true;
 }
 
 /** Grade one response to POINTS + review detail (v1.4.0).
@@ -180,18 +208,35 @@ async function gradePoints(
 ): Promise<GradeDetail> {
   const fmt = key.responseFormat ?? 'free';
   if (fmt === 'frq' || fmt === 'free') {
-    const graded = await gradeFreeResponse(
-      { studentId: '', itemId: '', response },
-      {
-        itemId: '',
-        rubric: key.rubric,
-        expectedAnswer: key.expectedAnswer,
-        problemText: key.problemText,
-        modelResponse: key.modelResponse,
-        passageText: key.passageText,
-      },
-      deps,
-    );
+    const grade = () =>
+      gradeFreeResponse(
+        { studentId: '', itemId: '', response },
+        {
+          itemId: '',
+          rubric: key.rubric,
+          expectedAnswer: key.expectedAnswer,
+          problemText: key.problemText,
+          modelResponse: key.modelResponse,
+          passageText: key.passageText,
+        },
+        deps,
+      );
+    // No verdict → grade once more (2026-10-05): a submitted quiz has no
+    // retry of its own, and the result used to read "We couldn't check this
+    // answer this time. Please try again." beside a 0 that could not be
+    // retried. Still none → 0 of the item's maximum, as before, with a
+    // sentence that does not promise a retry, and no evidence.
+    let graded = await grade();
+    if (graded.undetermined) graded = await grade();
+    if (graded.undetermined) {
+      return {
+        pointsAwarded: 0,
+        maxPoints: graded.maxPoints,
+        feedback: UNCHECKED_FEEDBACK,
+        rubricParts: graded.parts.map((p) => ({ criterionId: p.criterionId, pointsAwarded: 0, maxPoints: p.maxPoints, feedback: UNCHECKED_FEEDBACK })),
+        unchecked: true,
+      };
+    }
     const feedback = graded.parts.map((p) => p.feedback).filter(Boolean).join(' ') || undefined;
     return {
       pointsAwarded: graded.totalPoints,
@@ -205,13 +250,141 @@ async function gradePoints(
       })),
     };
   }
-  const correct = await isCorrect(key, response, deps.judgeSingleAnswer);
+  const verdict = await isCorrect(key, response, deps.judgeSingleAnswer);
+  if (verdict === 'unchecked') return { pointsAwarded: 0, maxPoints: 1, feedback: UNCHECKED_FEEDBACK, unchecked: true };
+  const correct = verdict;
   // Surface a rationale in the review (the academy renders review.feedback).
   // Joins ALL of the item's hints so an incorrect answer gets a full "why",
   // not just the gentlest nudge; the correct answer is shown separately.
   const rationale = (key.hints ?? []).map((h) => h?.trim()).filter(Boolean).join(' ');
   const feedback = rationale ? (correct ? `Correct. ${rationale}` : rationale) : undefined;
   return { pointsAwarded: correct ? 1 : 0, maxPoints: 1, feedback };
+}
+
+/** Per-LO totals of a graded submission. `awarded` / `max` are the SCORE
+ *  (every item, an unchecked one at 0); `judgedAwarded` / `judgedMax` leave
+ *  out items the grader could not check and are what the learner model is
+ *  told. */
+export interface AssessmentLoTotals {
+  awarded: number;
+  max: number;
+  judgedAwarded: number;
+  judgedMax: number;
+}
+
+/**
+ * Grade every response of a submission. Pure apart from the injected graders
+ * (no store writes), so the score, the review and the evidence rows can be
+ * tested together.
+ *
+ * An item the grader could not check (see `GradeDetail.unchecked`) is in the
+ * review and in the score at 0, and produces NO evidence row: "the grader
+ * failed" says nothing about the learner.
+ */
+export async function gradeAssessmentResponses(
+  sub: Pick<AssessmentSubmission, 'sessionId' | 'responses'>,
+  deps: GradeDeps,
+  resolveItem: AssessmentItemResolver,
+  evidence: { studentId: string; partnerId: string; source: EvidenceInput['source']; occurredAt: Date },
+): Promise<{ perLo: Map<string, AssessmentLoTotals>; review: AssessmentReviewItem[]; evidenceInputs: EvidenceInput[] }> {
+  const evidenceInputs: EvidenceInput[] = [];
+  const perLo = new Map<string, AssessmentLoTotals>();
+  const review: AssessmentReviewItem[] = [];
+  for (const r of sub.responses) {
+    const agg = perLo.get(r.loId) ?? { awarded: 0, max: 0, judgedAwarded: 0, judgedMax: 0 };
+    const key = await resolveItem(r.itemId);
+    if (key) {
+      const detail = await gradePoints(key, r.response, deps);
+      agg.awarded += detail.pointsAwarded;
+      agg.max += detail.maxPoints;
+      review.push({
+        itemId: r.itemId,
+        loId: r.loId,
+        responseFormat: key.responseFormat,
+        pointsAwarded: detail.pointsAwarded,
+        maxPoints: detail.maxPoints,
+        correct: detail.maxPoints > 0 && detail.pointsAwarded >= detail.maxPoints,
+        correctChoiceId: key.correctChoiceId,
+        expectedAnswer: key.expectedAnswer,
+        feedback: detail.feedback,
+        rubricParts: detail.rubricParts,
+      });
+      if (!detail.unchecked) {
+        agg.judgedAwarded += detail.pointsAwarded;
+        agg.judgedMax += detail.maxPoints;
+        evidenceInputs.push({
+          idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
+          studentId: evidence.studentId,
+          partnerId: evidence.partnerId,
+          loId: r.loId,
+          source: evidence.source,
+          sessionId: sub.sessionId,
+          itemId: r.itemId,
+          outcome: detail.maxPoints > 0 ? detail.pointsAwarded / detail.maxPoints : 0,
+          pointsAwarded: detail.pointsAwarded,
+          maxPoints: detail.maxPoints,
+          occurredAt: evidence.occurredAt,
+        });
+      }
+    } else {
+      // Unresolved item — count it as a 1-point miss so totals stay honest.
+      agg.max += 1;
+      agg.judgedMax += 1;
+      review.push({ itemId: r.itemId, loId: r.loId, pointsAwarded: 0, maxPoints: 1, correct: false });
+      evidenceInputs.push({
+        idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
+        studentId: evidence.studentId,
+        partnerId: evidence.partnerId,
+        loId: r.loId,
+        source: evidence.source,
+        sessionId: sub.sessionId,
+        itemId: r.itemId,
+        outcome: 0,
+        pointsAwarded: 0,
+        maxPoints: 1,
+        occurredAt: evidence.occurredAt,
+      });
+    }
+    perLo.set(r.loId, agg);
+  }
+  return { perLo, review, evidenceInputs };
+}
+
+/** The score (every item) and what the learner model is told (checked items
+ *  only): a mastery delta per LO and a candidate gap for each weak one. */
+export function summarizeAssessment(perLo: Map<string, AssessmentLoTotals>): {
+  masteryDeltas: SessionEmitRequest['masteryDeltas'];
+  gaps: SessionEmitRequest['gaps'];
+  perLoScore: AssessmentScore['perLo'];
+  totalAwarded: number;
+  totalMax: number;
+} {
+  const masteryDeltas: SessionEmitRequest['masteryDeltas'] = [];
+  const gaps: SessionEmitRequest['gaps'] = [];
+  const perLoScore: AssessmentScore['perLo'] = [];
+  let totalAwarded = 0;
+  let totalMax = 0;
+  for (const [loId, { awarded, max, judgedAwarded, judgedMax }] of perLo) {
+    perLoScore.push({ loId, pointsAwarded: awarded, maxPoints: max });
+    totalAwarded += awarded;
+    totalMax += max;
+    if (judgedMax === 0) continue; // nothing on this LO could be checked
+    const frac = judgedAwarded / judgedMax;
+    // 0 → -0.8, 0.5 → 0, 1 → +0.8. applyMasteryDeltas turns this into a
+    // first-touch score at exposures 1 (deliberately low-trust).
+    masteryDeltas.push({ loId, delta: (frac - 0.5) * 1.6 });
+    if (frac < 0.5) {
+      gaps.push({
+        kind: 'lo',
+        loId,
+        observation: `Assessment: ${judgedAwarded}/${judgedMax} pts on ${loId} (preliminary).`,
+        studentQuotes: [],
+        // Single signal → confidence 0.25 → stays CANDIDATE (never auto-confirmed).
+        signals: ['INCORRECT_STREAK_2_PLUS'],
+      });
+    }
+  }
+  return { masteryDeltas, gaps, perLoScore, totalAwarded, totalMax };
 }
 
 /**
@@ -257,7 +430,6 @@ export async function submitAssessment(
           ? 'assessment'
           : 'diagnostic';
   const evidenceOccurredAt = new Date();
-  const evidenceInputs: EvidenceInput[] = [];
 
   // M1c Task 5 (fix round 1, CRITICAL 2) — resolve once, up front. Used for
   // the `diag:` evidence rows built below. NOT passed into `emitReq` further
@@ -270,60 +442,12 @@ export async function submitAssessment(
   // on emitSessionResult itself.
   const profileId = await resolveProfileIdOrRaw({ partnerId, externalStudentId: sub.studentId });
 
-  const perLo = new Map<string, { awarded: number; max: number }>();
-  const review: AssessmentReviewItem[] = [];
-  for (const r of sub.responses) {
-    const agg = perLo.get(r.loId) ?? { awarded: 0, max: 0 };
-    const key = await resolveItem(r.itemId);
-    if (key) {
-      const detail = await gradePoints(key, r.response, deps);
-      agg.awarded += detail.pointsAwarded;
-      agg.max += detail.maxPoints;
-      review.push({
-        itemId: r.itemId,
-        loId: r.loId,
-        responseFormat: key.responseFormat,
-        pointsAwarded: detail.pointsAwarded,
-        maxPoints: detail.maxPoints,
-        correct: detail.maxPoints > 0 && detail.pointsAwarded >= detail.maxPoints,
-        correctChoiceId: key.correctChoiceId,
-        expectedAnswer: key.expectedAnswer,
-        feedback: detail.feedback,
-        rubricParts: detail.rubricParts,
-      });
-      evidenceInputs.push({
-        idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
-        studentId: profileId,
-        partnerId,
-        loId: r.loId,
-        source: evidenceSource,
-        sessionId: sub.sessionId,
-        itemId: r.itemId,
-        outcome: detail.maxPoints > 0 ? detail.pointsAwarded / detail.maxPoints : 0,
-        pointsAwarded: detail.pointsAwarded,
-        maxPoints: detail.maxPoints,
-        occurredAt: evidenceOccurredAt,
-      });
-    } else {
-      // Unresolved item — count it as a 1-point miss so totals stay honest.
-      agg.max += 1;
-      review.push({ itemId: r.itemId, loId: r.loId, pointsAwarded: 0, maxPoints: 1, correct: false });
-      evidenceInputs.push({
-        idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
-        studentId: profileId,
-        partnerId,
-        loId: r.loId,
-        source: evidenceSource,
-        sessionId: sub.sessionId,
-        itemId: r.itemId,
-        outcome: 0,
-        pointsAwarded: 0,
-        maxPoints: 1,
-        occurredAt: evidenceOccurredAt,
-      });
-    }
-    perLo.set(r.loId, agg);
-  }
+  const { perLo, review, evidenceInputs } = await gradeAssessmentResponses(sub, deps, resolveItem, {
+    studentId: profileId,
+    partnerId,
+    source: evidenceSource,
+    occurredAt: evidenceOccurredAt,
+  });
 
   // Task 8 — fire-and-forget (this is a latency-sensitive submit path);
   // appendEvidence is itself best-effort and never throws.
@@ -331,31 +455,7 @@ export async function submitAssessment(
     console.error('[learner-model] assessment evidence append failed', err),
   );
 
-  const masteryDeltas: SessionEmitRequest['masteryDeltas'] = [];
-  const gaps: SessionEmitRequest['gaps'] = [];
-  const perLoScore: AssessmentScore['perLo'] = [];
-  let totalAwarded = 0;
-  let totalMax = 0;
-  for (const [loId, { awarded, max }] of perLo) {
-    perLoScore.push({ loId, pointsAwarded: awarded, maxPoints: max });
-    totalAwarded += awarded;
-    totalMax += max;
-    if (max === 0) continue;
-    const frac = awarded / max;
-    // 0 → -0.8, 0.5 → 0, 1 → +0.8. applyMasteryDeltas turns this into a
-    // first-touch score at exposures 1 (deliberately low-trust).
-    masteryDeltas.push({ loId, delta: (frac - 0.5) * 1.6 });
-    if (frac < 0.5) {
-      gaps.push({
-        kind: 'lo',
-        loId,
-        observation: `Assessment: ${awarded}/${max} pts on ${loId} (preliminary).`,
-        studentQuotes: [],
-        // Single signal → confidence 0.25 → stays CANDIDATE (never auto-confirmed).
-        signals: ['INCORRECT_STREAK_2_PLUS'],
-      });
-    }
-  }
+  const { masteryDeltas, gaps, perLoScore, totalAwarded, totalMax } = summarizeAssessment(perLo);
 
   const emitReq: SessionEmitRequest = {
     sessionId: sub.sessionId,
