@@ -34,7 +34,7 @@ import katex from 'katex';
 // WhiteboardCanvas, TranscriptView, ReplayPlayer (+ EquationRenderer's own
 // import). Any NEW top-level surface that renders InlineMathText outside
 // those trees must import 'katex/dist/katex.min.css' itself.
-import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities, preprocessKatexBody } from '@/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities, preprocessKatexBody, normalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
 
 interface InlineMathTextProps {
   text: string;
@@ -45,6 +45,13 @@ interface InlineMathTextProps {
   /** Single-line contexts (the caption ticker): never wrap. The default
    *  `whitespace-pre-wrap` overrides a parent's nowrap (live check 7). */
   nowrap?: boolean;
+  /** Turn a literal backslash-n that is unmistakably a LINE SEPARATOR into
+   *  a real line break (see normalizeLiteralLineBreaks — it leaves string
+   *  literals, paths, unknown macros and anything doubtful alone). On by
+   *  default because the board renderers print tutor-authored strings and
+   *  sessions stored before the ingestion fix must replay correctly; pass
+   *  `false` wherever the text is not tutor-authored board prose. */
+  literalLineBreaks?: boolean;
 }
 
 function Math({ latex }: { latex: string }) {
@@ -67,8 +74,22 @@ function Math({ latex }: { latex: string }) {
   return <span ref={ref} className="inline-block align-baseline" />;
 }
 
-export function InlineMathText({ text, className = '', forceMath = false, nowrap = false }: InlineMathTextProps) {
-  const parts = segment(autoWrapLatex(autoWrapUnicodeMath(decodeHtmlEntities(text))), forceMath);
+/** One `$…$` span and nothing else — what the transcript bubbles pass
+ *  (TranscriptView / inline-emphasis split the maths segments out and hand
+ *  each one over wrapped in dollars; the prose around it never comes here). */
+const LONE_DOLLAR_SPAN_RE = /^\$[^$]*\$$/;
+
+export function InlineMathText({ text, className = '', forceMath = false, nowrap = false, literalLineBreaks = true }: InlineMathTextProps) {
+  // A literal backslash-n that is a line SEPARATOR in prose becomes a real
+  // line break before anything else looks at the string (the auto-wrap pass
+  // would otherwise read "\n" as a LaTeX command). New tool calls are
+  // already fixed at ingestion; this is what makes sessions stored before
+  // that fix replay correctly. Never applied to a lone `$…$` span: that is
+  // a transcript maths segment, which may be text a STUDENT typed.
+  const source = literalLineBreaks && typeof text === 'string' && !LONE_DOLLAR_SPAN_RE.test(text)
+    ? normalizeLiteralLineBreaks(text)
+    : text;
+  const parts = segment(autoWrapLatex(autoWrapUnicodeMath(decodeHtmlEntities(source))), forceMath);
   return (
     <span className={`${nowrap ? 'whitespace-nowrap' : 'whitespace-pre-wrap'} ${className}`}>
       {parts.map((p, i) =>

@@ -62,8 +62,10 @@ export function stripInlineMathForInk(s: string): string {
     .trim();
 }
 
-/** Keys whose ENTIRE subtree must never be rewritten. Grouped by reason. */
-const SKIP_KEYS = new Set<string>([
+/** Keys whose ENTIRE subtree must never be rewritten. Grouped by reason.
+ *  Exported so inline-math.ts builds its literal-line-break skip list FROM
+ *  this one (2026-10-04) — the two lists were copies and could drift. */
+export const SKIP_KEYS: ReadonlySet<string> = new Set<string>([
   // math / expressions — asterisks are content
   'latex', 'expr', 'fn', 'formula', 'equation', 'expression',
   'substitution', 'result', 'trendLineEquation', 'expectedUnit',

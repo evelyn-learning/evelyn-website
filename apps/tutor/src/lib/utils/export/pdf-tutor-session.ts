@@ -8,6 +8,7 @@ import type jsPDF from 'jspdf';
 // helper (see its `drawOnEnabled` import from useDrawOn.ts).
 import { inkNotesEnabled, linksEnabled } from '@/app/tutor/hooks/toolDefinitions';
 import { latexToReadable, mathifyDollarSpans } from './latex-readable';
+import { normalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
 
 interface TranscriptMessage {
   id: string;
@@ -23,12 +24,20 @@ interface WhiteboardCommandData {
   [key: string]: unknown;
 }
 
-function sanitizeForPDF(text: string): string {
+/** Exported for scripts/test-literal-line-breaks.ts. */
+export function sanitizeForPDF(text: string, opts: { literalLineBreaks?: boolean } = {}): string {
   // Round-24: transcript/board prose reaches the PDF with inline $…$ LaTeX
   // intact (live bubbles mathify via KaTeX since round 20; the PDF was the
   // last raw surface). Convert here — the single choke point every text
   // sink passes through. segment() keeps currency prose untouched.
-  let s = baseSanitize(mathifyDollarSpans(text));
+  // A literal backslash-n used as a line SEPARATOR (a stored show_problem
+  // statement held the two characters between worksheet items) becomes a
+  // real line break first, so splitTextToSize breaks the line there instead
+  // of printing "\n". OPT-IN (`literalLineBreaks`), and only the sinks that
+  // print tutor-authored board prose opt in: this function is also the
+  // choke point for transcript bubbles (typed STUDENT text), table cells
+  // and code lines, where a backslash-n is content and must print as typed.
+  let s = baseSanitize(mathifyDollarSpans(opts.literalLineBreaks ? normalizeLiteralLineBreaks(text) : text));
   // Normalize Unicode punctuation to ASCII before the Latin-1 strip
   s = s.replace(/[\u2018\u2019\u201A]/g, "'");  // curly single quotes
   s = s.replace(/[\u201C\u201D\u201E]/g, '"');  // curly double quotes
@@ -1156,7 +1165,8 @@ function drawNoteCaptionLine(pdf: jsPDF, displayText: string, colorHex: string, 
   })();
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(10);
-  const sanitized = sanitizeForPDF(displayText);
+  // Tutor-authored note text (handwrite / link captions).
+  const sanitized = sanitizeForPDF(displayText, { literalLineBreaks: true });
   const wrapped = pdf.splitTextToSize(sanitized, width - 6);
   const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
   // Color dot.
@@ -1889,13 +1899,16 @@ export async function exportTutorSessionPDF(
 
   const drawWrappedText = (
     text: string, x: number, maxWidth: number,
-    opts: { size?: number; style?: string; color?: [number, number, number]; lineHeight?: number } = {}
+    // `boardProse`: the text is tutor-authored whiteboard prose (a problem
+    // statement, a diagram description) — the only kind whose literal
+    // backslash-n separators are repaired. Transcript text never sets it.
+    opts: { size?: number; style?: string; color?: [number, number, number]; lineHeight?: number; boardProse?: boolean } = {}
   ) => {
-    const { size = 9, style = 'normal', color = [74, 85, 104], lineHeight = LINE_HEIGHT } = opts;
+    const { size = 9, style = 'normal', color = [74, 85, 104], lineHeight = LINE_HEIGHT, boardProse = false } = opts;
     pdf.setFont('helvetica', style);
     pdf.setFontSize(size);
     pdf.setTextColor(...color);
-    const safe = sanitizeForPDF(text);
+    const safe = sanitizeForPDF(text, { literalLineBreaks: boardProse });
     const lines: string[] = pdf.splitTextToSize(safe, maxWidth);
     for (const line of lines) {
       addPageIfNeeded(lineHeight + 1);
@@ -2012,7 +2025,7 @@ export async function exportTutorSessionPDF(
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(8);
       pdf.setTextColor(59, 130, 246);
-      pdf.text(sanitizeForPDF(desc), margin + badgeW + 3, y);
+      pdf.text(sanitizeForPDF(desc, { literalLineBreaks: true }), margin + badgeW + 3, y);
       y += 5;
 
       // Visual rendering — also bake in any scribble annotations targeting
@@ -2110,7 +2123,7 @@ export async function exportTutorSessionPDF(
         if (cmd.action === 'showDiagram') {
           const params = (cmd.params || {}) as Record<string, unknown>;
           if (params.description) {
-            drawWrappedText(String(params.description), margin + 8, textAreaWidth - 4, { size: 8, style: 'italic', color: [100, 116, 139] });
+            drawWrappedText(String(params.description), margin + 8, textAreaWidth - 4, { size: 8, style: 'italic', color: [100, 116, 139], boardProse: true });
           }
           if (params.forces && Array.isArray(params.forces)) {
             const forceDescs = (params.forces as { magnitude?: number; direction?: number; label?: string }[])
@@ -2128,7 +2141,7 @@ export async function exportTutorSessionPDF(
         if (cmd.action === 'showProblem' && cmd.problem) {
           const prob = cmd.problem as Record<string, unknown>;
           if (prob.statement) {
-            drawWrappedText(String(prob.statement), margin + 8, textAreaWidth - 4, { size: 8, color: [55, 65, 81] });
+            drawWrappedText(String(prob.statement), margin + 8, textAreaWidth - 4, { size: 8, color: [55, 65, 81], boardProse: true });
           }
         }
       }
@@ -2263,7 +2276,7 @@ export async function exportTutorSessionPDF(
           y = newY;
         } else {
           const cmdDesc = describeWhiteboardCommand(cmd);
-          drawWrappedText(`[Whiteboard] ${cmdDesc}`, margin + 4, textAreaWidth, { size: 8, style: 'italic', color: [59, 130, 246] });
+          drawWrappedText(`[Whiteboard] ${cmdDesc}`, margin + 4, textAreaWidth, { size: 8, style: 'italic', color: [59, 130, 246], boardProse: true });
         }
       }
     }

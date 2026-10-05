@@ -3,6 +3,17 @@
  *
  * Extracts problems from uploaded homework images using Claude's vision.
  * Returns the extracted text and initial tutor response.
+ *
+ * Request flags:
+ *  - `mode: 'transcribe'` — ink OCR; one call, returns `{ extractedProblem }`.
+ *  - `extractOnly: true`  — one call (the extraction); the tutor-reply call is
+ *    skipped and `text` comes back as ''. Sent by the session upload path
+ *    (TutorSession → upload-flow.ts `extractionRequestBody`), where the brain
+ *    writes the reply itself and the generated one was discarded after adding
+ *    seconds to the student's wait. `usage` then counts the extraction alone.
+ *  - neither — the legacy page-level caller: extraction + tutor reply, with
+ *    `usage` the sum of both calls.
+ * The 200 body has the same keys in both non-transcribe modes.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -23,7 +34,7 @@ const TRANSCRIBE_PROMPT =
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageData, mimeType, subject, topic, level, conversationHistory = [], mode } = body;
+    const { imageData, mimeType, subject, topic, level, conversationHistory = [], mode, extractOnly } = body;
 
     if (!imageData) {
       return NextResponse.json({ error: 'Image data is required' }, { status: 400 });
@@ -159,6 +170,23 @@ Be precise and complete. Return ONLY valid JSON, no other text.`;
         },
       },
     ];
+
+    // Extraction-only callers stop here: same response keys, no second model
+    // call. Strictly `=== true` so a missing/odd value keeps the legacy
+    // behaviour for the caller that relies on `text`.
+    if (extractOnly === true) {
+      return NextResponse.json({
+        text: '',
+        extractedProblem: extractedProblem,
+        extracted: true,
+        whiteboardCommands,
+        problemData,
+        usage: {
+          inputTokens: extractionResponse.usage.input_tokens,
+          outputTokens: extractionResponse.usage.output_tokens,
+        },
+      });
+    }
 
     // Step 2: Generate tutor response using the extracted problem
     const tutorPrompt = `You are an expert AI tutor helping a student with their homework.

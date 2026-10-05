@@ -9,6 +9,7 @@
 import type { WhiteboardCommand, ShadedRegion } from '@core/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
 import { deepStripWbEmphasis, stripInlineMathForInk } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
+import { deepNormalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
 
 export interface ToolParameter {
   type: string;
@@ -415,7 +416,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     parameters: {
       type: 'object',
       properties: {
-        statement: { type: 'string', description: 'The full problem text as a single non-empty string. Wrap any math in inline single-dollar LaTeX ($x^2/9 + y^2/4 = 1$) — the card renders $…$ spans with KaTeX so the math matches the equation cards around it. Never use unicode math (x², √5) or display blocks (\\[…\\]); prose outside $…$ stays plain text.' },
+        statement: { type: 'string', description: 'The full problem text as a single non-empty string. Wrap any math in inline single-dollar LaTeX ($x^2/9 + y^2/4 = 1$) — the card renders $…$ spans with KaTeX so the math matches the equation cards around it. Never use unicode math (x², √5) or display blocks (\\[…\\]); prose outside $…$ stays plain text. Separate lines with real line breaks — never write the two characters backslash-n as a line break.' },
         format: { type: 'string', enum: ['multiple-choice', 'grid-in', 'free-response', 'short-answer', 'true-false'], description: 'Problem format. The renderer currently distinguishes "grid-in" (numeric input grid) from everything else (which is rendered identically based on `answerChoices` presence). Use the correct value for semantic clarity even though the visual rendering is the same outside of grid-in.' },
         answerChoices: {
           type: 'array',
@@ -2206,8 +2207,24 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   // chokepoint (all renderers inherit); math/code/data fields and lookup
   // keys are protected by wb-emphasis-strip's SKIP_KEYS, and $...$ math
   // spans plus bare multiplication/exponent asterisks survive inside prose.
+  //
+  // Literal line-break escapes (live, uploaded-worksheet session): the brain
+  // wrote the two CHARACTERS backslash + n between the items of a
+  // `show_problem` statement — LaTeX-style escaping over-applied to a line
+  // break — and the card printed them, because only maths segments ever
+  // pass through the KaTeX pre-pass that converts them. Same chokepoint,
+  // but a much narrower reach than the emphasis strip (review 2026-10-04:
+  // a backslash-n is CONTENT in string literals, paths, answer choices and
+  // table cells): only PROSE fields (LITERAL_BREAK_PROSE_KEYS in
+  // inline-math.ts — statement, problem, text, title, label, caption,
+  // hints, notes, explanation…) are looked at, and inside them only a
+  // backslash-n that is unmistakably a line separator is converted.
+  // Answer-bearing and tabular fields (answerChoices, choices, options,
+  // answer, rows, headers…) stay byte-identical, so a choice still equals
+  // the key it is compared against. Runs first so the emphasis strip sees
+  // real newlines when it pairs up $…$ spans.
   if (funcArgs && typeof funcArgs === 'object') {
-    funcArgs = deepStripWbEmphasis(funcArgs) as Record<string, any>;
+    funcArgs = deepStripWbEmphasis(deepNormalizeLiteralLineBreaks(funcArgs)) as Record<string, any>;
   }
   if (funcName === 'new_page') {
     return { action: 'newPage', title: funcArgs.title };

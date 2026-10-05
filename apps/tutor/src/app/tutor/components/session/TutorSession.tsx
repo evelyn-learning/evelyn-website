@@ -57,7 +57,7 @@ import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
 import {
   buildStudentMediaBrainInput, buildUploadedProblemCard, classifyExtraction, studentMediaNotice,
-  extractionUsage, runWithAbortTimeout, EXTRACTION_TIMEOUT_MS,
+  extractionUsage, runWithAbortTimeout, EXTRACTION_TIMEOUT_MS, extractionRequestBody, studentMediaDebugDetail,
   type StudentMediaPhase, type StudentMediaType,
 } from './upload-flow';
 
@@ -619,6 +619,12 @@ export default function TutorSession(props: TutorSessionProps) {
       ? { action: 'showSvgDiagram', title: 'Student Drawing', svg: `<svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="140" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
       : { action: 'showSvgDiagram', title: 'Student Answer', svg: `<svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="390" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/><text x="200" y="22" text-anchor="middle" font-size="11" fill="#6b7280">Student wrote:</text><text x="200" y="42" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e40af">${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</text></svg>` } as WhiteboardCommand;
     setWhiteboardCommands((prev) => [...prev, cmd]);
+    // One `image_upload` event per student image/drawing, emitted HERE because
+    // every entry point funnels through this function: the Stage's own upload
+    // control calls it directly, and the modal fallback below calls it too.
+    // It used to be emitted only by that fallback, so a Stage upload — the
+    // common one — left no event in the session's debug log.
+    if (type !== 'text') onDebugEvent?.('image_upload', studentMediaDebugDetail(type, content, !!embedded));
     if (realtimeHandleRef.current) {
       if (type === 'text') {
         realtimeHandleRef.current.sendTextMessage(`[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`);
@@ -645,7 +651,11 @@ export default function TutorSession(props: TutorSessionProps) {
         // follows once extraction returns.
         realtimeHandleRef.current?.speakText(
           type === 'drawing'
-            ? 'Got your drawing — one sec while I take a look.'
+            ? 'Got your drawing — one moment while I take a look.'
+            // "one moment", not "one sec": the TTS layer once expanded the
+            // abbreviation as the trig function and said "one secant". That
+            // rule is context-gated now (tts-pronunciation.ts), but canned
+            // copy should not lean on a pronunciation rule at all.
             // R50b (live, portal-d7825123): "read" is a HOMOGRAPH and Cartesia
             // spoke the PAST tense — "one sec while I *red* it". The drawing
             // variant never had the problem because "take a look" has no
@@ -654,7 +664,7 @@ export default function TutorSession(props: TutorSessionProps) {
             // future ack copy: the engine picks a pronunciation and there is
             // no in-band way to tell it which, so different words are the
             // only reliable fix.
-            : 'Got your upload — one sec while I look it over.',
+            : 'Got your upload — one moment while I look it over.',
         );
         // Explicit binding: keeps the narrowed type inside the async closure.
         const mediaType: StudentMediaType = type;
@@ -667,22 +677,24 @@ export default function TutorSession(props: TutorSessionProps) {
           // image, and a thrown fetch as something the student "drew".
           let outcome: ReturnType<typeof classifyExtraction>;
           try {
-            const base64Data = content.replace(/^data:image\/[\w.+-]+;base64,/, '');
-            // R50 T1: mimeType was hardcoded 'image/png'. That was true for
-            // the whiteboard-capture caller (a canvas export) but became a
-            // bug the moment the UPLOAD button was routed through here —
-            // /api/tutor/extract-homework validates mimeType against
-            // ['image/jpeg','image/png','image/gif','image/webp'] and passes
-            // it straight to the vision API as `media_type`, so a GIF
-            // announced as PNG is rejected. Praveen's live upload WAS a gif.
-            const mimeMatch = /^data:(image\/[\w.+-]+);base64,/.exec(content);
+            // The request body is built in ./upload-flow (extractionRequestBody):
+            //  - mimeType comes from the data URL. R50 T1: it was hardcoded
+            //    'image/png', true for the whiteboard-capture caller (a canvas
+            //    export) but a bug once the UPLOAD button was routed through
+            //    here — the route validates it and passes it to the vision API
+            //    as `media_type`, so a GIF announced as PNG is rejected.
+            //    Praveen's live upload WAS a gif.
+            //  - extractOnly: this path only uses `extractedProblem`, so the
+            //    route skips its second model call (the legacy tutor reply),
+            //    which added seconds to this wait and was thrown away.
+            const requestBody = JSON.stringify(extractionRequestBody({ dataUrl: content, subject, topic, level }));
             // Bounded: a hung request used to leave the "reading the
             // problem…" notice up forever. On timeout the abort rejects into
             // the catch below — the same "failed" path as a network error.
             const { httpOk, body } = await runWithAbortTimeout(EXTRACTION_TIMEOUT_MS, async (signal) => {
               const resp = await fetch('/api/tutor/extract-homework', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageData: base64Data, mimeType: mimeMatch ? mimeMatch[1] : 'image/png', subject, topic, level }),
+                body: requestBody,
                 signal,
               });
               return { httpOk: resp.ok, body: await resp.json() as unknown };
@@ -723,7 +735,7 @@ export default function TutorSession(props: TutorSessionProps) {
       showMediaNotice(type, 'not-ready');
     }
     onTrackInteraction?.('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
-  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry, sessionGoal, onWhiteboardCommand, onDebugEvent, showMediaNotice, onBrainUsage]);
+  }, [subject, topic, level, onTrackInteraction, addUploadDisplayEntry, sessionGoal, onWhiteboardCommand, onDebugEvent, showMediaNotice, onBrainUsage, embedded]);
 
   /**
    * R50 T1 — the embed's upload button was a silent no-op.
@@ -739,15 +751,16 @@ export default function TutorSession(props: TutorSessionProps) {
    *
    * Routed into `handleStudentInput('image', …)` rather than reimplemented,
    * because that path already does what an upload should: it speaks an
-   * instant "Got your upload — one sec while I look it over.", boards it
+   * instant "Got your upload — one moment while I look it over.", boards it
    * the board, extracts it, and hands the brain the extracted text. The
    * default is deliberately NOT a no-op — a prop that silently does nothing
    * is what made this invisible for the life of the embed.
    */
   const handleUploadHomeworkFallback = useCallback((base64Data: string, mimeType: string) => {
-    onDebugEvent?.('image_upload', `Homework upload${embedded ? ' (embed)' : ''}: ${mimeType}`);
+    // The `image_upload` debug event is emitted inside handleStudentInput
+    // (once, for every entry point) — not here, or this path would log two.
     handleStudentInput('image', `data:${mimeType};base64,${base64Data}`);
-  }, [handleStudentInput, onDebugEvent, embedded]);
+  }, [handleStudentInput]);
 
   const dispatchQuick = useCallback((text: string) => {
     realtimeHandleRef.current?.stopSpeaking();

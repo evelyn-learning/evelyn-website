@@ -1315,3 +1315,126 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('length AND width', 'length and width', 'geo-neg-length-and');
   console.log('OK — connective capitals kept for geometric names');
 }
+
+// --- Trig / log abbreviations only expand in a maths context -------------
+// Live: "Got your upload — one sec while I look it over." was spoken "one
+// secant". The abbreviations sin/cos/tan/sec/cot are also everyday words
+// ("a sec", "a sin", "'cos", "a tan", "a cot"), so they expand only when the
+// surrounding text is maths; a number + "sec" is the time unit.
+{
+  const failures: string[] = [];
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) failures.push(`FAIL ${name}:\n  in:   ${input}\n  got:  ${got}\n  want: ${want}`);
+  };
+  // Everyday words — never the function name.
+  eq('Got your upload — one sec while I look it over.', 'Got your upload, one sec while I look it over.', 'sec-one-sec');
+  eq('Give me a sec.', 'Give me a sec.', 'sec-a-sec');
+  eq('Just a quick sec, let me check the triangle.', 'Just a quick sec, let me check the triangle.', 'sec-quick-sec-maths-vocab');
+  eq('Hang on another sec while I read the angle.', 'Hang on another sec while I read the angle.', 'sec-another-sec');
+  eq('It would be a sin to skip this step', 'It would be a sin to skip this step', 'sin-a-sin');
+  eq("'cos it was easy", "'cos it was easy", 'cos-because');
+  eq('You got a tan on holiday', 'You got a tan on holiday', 'tan-a-tan');
+  eq('She slept on a cot', 'She slept on a cot', 'cot-a-cot');
+  eq('That would be a sin.', 'That would be a sin.', 'sin-clause-final');
+  eq('Sin embargo, Por otro lado, A pesar de.', 'Sin embargo, Por otro lado, A pesar de.', 'sin-spanish');
+  eq("with remission of sin's penalty for those who go", "with remission of sin's penalty for those who go", 'sin-possessive');
+  eq('One sec, then we find sin x.', 'One sec, then we find sine x.', 'sec-everyday-beside-real-maths');
+  eq('Take a 10-sec break.', 'Take a 10-second break.', 'sec-hyphen-compound');
+  // Evidence other than an argument: siblings, text vocabulary, consistency.
+  eq('csc/sec/cot defined as 1 over sin/cos/tan.', 'cosecant/secant/cotangent defined as 1 over sine/cosine/tangent.', 'function-list-is-not-a-rate');
+  eq('Which ratio uses opposite + hypotenuse? sin.', 'Which ratio uses opposite + hypotenuse? sine.', 'text-vocabulary');
+  eq('cos is positive in Q1 and Q4.', 'cosine is positive in Q1 and Q4.', 'is-positive');
+  eq('Type sin A as a decimal.', 'Type sine A as a decimal.', 'capital-angle-name');
+  eq('tan repeats, and sin x does too.', 'tangent repeats, and sine x does too.', 'one-utterance-stays-consistent');
+  // Review 2026-10-04: bare clause-final names after a maths-instruction
+  // lead are how a tutor actually talks ("Use sec.", "What is sin?").
+  eq('Use sec.', 'Use secant.', 'lead-use-sec');
+  eq('Now use tan.', 'Now use tangent.', 'lead-use-tan');
+  eq('Try tan instead.', 'Try tangent instead.', 'lead-try-tan-instead');
+  eq('So we need cos.', 'So we need cosine.', 'lead-need-cos');
+  eq("I think it's cos.", "I think it's cosine.", 'lead-its-cos');
+  eq('What is sin?', 'What is sine?', 'lead-what-is-sin');
+  eq("What's the cos?", "What's the cosine?", 'the-cos-question');
+  eq('Use cos here, not sin.', 'Use cosine here, not sine.', 'lead-use-here-not');
+  eq('Do you remember what sin means?', 'Do you remember what sine means?', 'what-sin-means');
+  eq('the sin is 0.5', 'the sine is 0.5', 'the-sin-is-number');
+  eq('Take the sin of both sides.', 'Take the sine of both sides.', 'the-sin-of-both-sides');
+  eq('The sin of 30 is one half.', 'The sine of 30 is one half.', 'the-sin-of-number');
+  eq('This one is called tan.', 'This one is called tangent.', 'lead-called');
+  eq('Is it sin or cos?', 'Is it sine or cosine?', 'lead-or');
+  // …and the everyday readings in the same frames stay as written.
+  eq('Hang on a sec.', 'Hang on a sec.', 'sec-hang-on');
+  eq('Give me one sec.', 'Give me one sec.', 'sec-give-me-one');
+  eq('Nice tan!', 'Nice tan!', 'tan-nice');
+  eq('That is a nice tan.', 'That is a nice tan.', 'tan-a-nice');
+  eq('We bought a cot for the baby.', 'We bought a cot for the baby.', 'cot-for-the-baby');
+  eq('The cot for the baby is new.', 'The cot for the baby is new.', 'the-cot-for');
+  eq('The sin of pride is an old theme.', 'The sin of pride is an old theme.', 'the-sin-of-no-maths');
+  eq('The tan she got faded.', 'The tan she got faded.', 'the-tan-prose');
+  eq('Wait this sec.', 'Wait this sec.', 'sec-this');
+  eq('He is tan.', 'He is tan.', 'tan-person');
+  eq('It took 5 sec × 3 trials.', 'It took 5 seconds times 3 trials.', 'sec-unit-times-sign');
+  // Number + sec is the unit — also when a multiplication follows.
+  eq('It took 5 sec x 3 trials.', 'It took 5 seconds x 3 trials.', 'sec-unit-times-number');
+  eq('It takes 5 sec to fall.', 'It takes 5 seconds to fall.', 'sec-unit-plural');
+  eq('It takes 1 sec to fall.', 'It takes 1 second to fall.', 'sec-unit-singular');
+  eq('The car goes 10 m/sec.', 'The car goes 10 meters per second.', 'sec-unit-m-per-sec');
+  eq('It drips 3 times per sec.', 'It drips 3 times per second.', 'sec-unit-per-sec');
+  eq('It climbs 20 ft/sec at first.', 'It climbs 20 ft per second at first.', 'sec-unit-slash-sec');
+  eq('$t = 5 \\text{ sec}$', 't equals 5 seconds', 'sec-unit-in-span');
+  // Real maths — every one of these is the pre-change output, unchanged.
+  const unchanged: Array<[string, string]> = [
+    ['sin x', 'sine x'],
+    ['sin(30°)', 'sine(30 degrees )'],
+    ['cos θ', 'cosine theta'],
+    ['tan 45', 'tangent 45'],
+    ['2 sin x cos x', '2 sine x cosine x'],
+    ['sec x tan x', 'secant x tangent x'],
+    ['ln 2', 'natural log 2'],
+    ['ln(x)', 'natural log(x)'],
+    ['the sine rule', 'the sine rule'],
+    ['sin squared x', 'sine squared x'],
+    ['sin² x plus cos² x equals 1', 'sine² x plus cosine² x equals 1'],
+    ['sin^2 x + cos^2 x = 1', 'sine squared x + cosine squared x equals 1'],
+    ['$\\sin^2\\theta + \\cos^2\\theta = 1$', 'sine squared theta plus cosine squared theta equals 1'],
+    ['$\\sec x \\tan x$', 'secant x tangent x'],
+    ['$y = a\\sin(bx)$', 'why equals A sine (bee x)'],
+    ['$\\ln 2$', 'natural log 2'],
+    ['$\\sin$ and $\\cos$', 'sine and cosine'],
+    ['the $\\sin$ function', 'the sine function'],
+    ['so y = sin x', 'so why equals sine x'],
+    ['= cos θ', 'equals cosine theta'],
+    ['sin of 30 degrees is one half', 'sine of 30 degrees is one half'],
+    ['the sin of 30 degrees', 'the sine of 30 degrees'],
+    ['sin is opposite over hypotenuse', 'sine is opposite over hypotenuse'],
+    ['sin, cos, and tan', 'sine, cosine, and tangent'],
+    ['SOH: sin equals opposite over hypotenuse', 'SOH: sine equals opposite over hypotenuse'],
+    ['the derivative of sin x is cos x', 'the derivative of sine x is cosine x'],
+    ['the derivative of sin is cos', 'the derivative of sine is cosine'],
+    ['take ln of both sides', 'take natural log of both sides'],
+    ['the cos graph', 'the cosine graph'],
+    ['tan θ = sin θ / cos θ', 'tangent theta equals sine theta / cosine theta'],
+    ['csc x', 'cosecant x'],
+    ['cot x', 'cotangent x'],
+    ['inverse sin of 0.5', 'inverse sine of 0.5'],
+    ['sin inverse of x', 'sine inverse of x'],
+    ['mg sin θ', 'M jee sine theta'],
+    ['$mg\\sin\\theta$', 'M jee sine theta'],
+    ['sin 2x', 'sine 2x'],
+    ['$5\\sec x$', '5 secant x'],
+    ['x = sin y', 'x equals sine why'],
+    ['cos 60°', 'cosine 60 degrees'],
+    ['tan(45°) = 1', 'tangent(45 degrees ) equals 1'],
+    ['sec²x', 'secant²x'],
+    ['1 + tan² x = sec² x', '1 + tangent² x equals secant² x'],
+    ['sin A over a', 'sine A over A'],
+    ['sin a cos b', 'sine a cosine bee'],
+    ['ln e = 1', 'natural log e equals 1'],
+    ['arcsin of x equals theta, and sin of theta equals 1.', 'arc sine of x equals theta, and sine of theta equals 1.'],
+    ['$v = 10 \\text{ m/s}$', 'v equals 10 meters per second'],
+  ];
+  for (const [input, want] of unchanged) eq(input, want, `maths-still-expands: ${input}`);
+  if (failures.length) { console.error(failures.join('\n')); console.error(`${failures.length} trig-context failures`); process.exit(1); }
+  console.log('OK — trig/log abbreviations expand only in a maths context (sec/sin/cos/tan/cot)');
+}

@@ -10,7 +10,7 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex, normalizeLiteralLineBreaks, deepNormalizeLiteralLineBreaks } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -655,6 +655,163 @@ console.log('\n=== A leading enumerator stays outside the maths span ===');
   same('(x) \\cdot 2 \\le 8', '⟨(x) \\cdot 2 \\le 8⟩', '"(x)" before an operator is an operand');
   same('x. y \\le 3', '⟨x. y \\le 3⟩', '"x." (lower-case letter + dot) is not an enumerator — unchanged');
   same('A.x \\le 3', '⟨A.x \\le 3⟩', 'no space after the dot — unchanged');
+}
+
+// ── Literal backslash-n in prose (live: a show_problem statement for an
+// uploaded worksheet arrived with the two CHARACTERS backslash + n between
+// items — the model over-applied LaTeX escaping — and the card printed them).
+// Review 2026-10-04: the first cut converted ANY backslash-n / backslash-t
+// and damaged code, paths and unknown macros. The rule is now "only the
+// unmistakable separator; when unsure, leave the text alone".
+// String.raw keeps every backslash below a real backslash character.
+{
+  const nlb = normalizeLiteralLineBreaks;
+  const eq = (name: string, got: unknown, want: unknown) =>
+    check(name, JSON.stringify(got) === JSON.stringify(want), JSON.stringify(got) === JSON.stringify(want) ? undefined : `got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);
+  const seen: string[] = [];
+  const untouched = (name: string, s: string) => { seen.push(s); eq(`untouched: ${name}`, nlb(s), s); };
+  const converts = (name: string, s: string, want: string) => { seen.push(s); eq(`converts: ${name}`, nlb(s), want); };
+
+  const stored = String.raw`Solve for the variable.\n\n1) $v - 29\frac{4}{5} = \frac{1}{5}$\n2) $-8 = c - 5$`;
+  const fixed = 'Solve for the variable.\n\n1) $v - 29\\frac{4}{5} = \\frac{1}{5}$\n2) $-8 = c - 5$';
+  converts('stored worksheet statement: literal \\n → real newlines, maths untouched', stored, fixed);
+  const production = String.raw`Solve for the variable. Round to the nearest hundredth if needed.\n\n1) $v - 29\frac{4}{5} = \frac{1}{5}$\n2) $-8 = c - 5$\n3) $n + 3 = -9$`;
+  converts('the real production string', production,
+    'Solve for the variable. Round to the nearest hundredth if needed.\n\n1) $v - 29\\frac{4}{5} = \\frac{1}{5}$\n2) $-8 = c - 5$\n3) $n + 3 = -9$');
+  check('stored worksheet statement: no literal backslash-n survives outside maths',
+    !/\\n/.test(nlb(stored).replace(/\$[^$]*\$/g, '')));
+  check('stored worksheet statement: maths spans byte-identical',
+    JSON.stringify(nlb(stored).match(/\$[^$]*\$/g)) === JSON.stringify(stored.match(/\$[^$]*\$/g)));
+  untouched('real newlines are left alone', fixed);
+  untouched('no backslash at all', 'Find x.\nThen find y.');
+
+  // LaTeX commands that start with n / t are never touched, inside or
+  // outside $…$ (bare LaTeX in prose is auto-wrapped later by the renderer).
+  for (const s of [
+    String.raw`x \neq 3`, String.raw`\nu`, String.raw`\nabla f`, String.raw`\text{no}`, String.raw`\theta`,
+    String.raw`a \ne b`, String.raw`x \not= y`, String.raw`3 \nmid 10`, String.raw`A \ni x`, String.raw`\newline`,
+    String.raw`2 \times 3`, String.raw`x \to 0`, String.raw`\tan x`, String.raw`\tau`, String.raw`\top`,
+    String.raw`\tfrac{1}{2}`, String.raw`\triangle ABC`, String.raw`\textbf{note}`, String.raw`\nRightarrow`,
+    String.raw`A \nRightarrow B`, String.raw`A \nLeftarrow B`,
+    String.raw`$x \neq 3$ and $\theta = \tfrac{\pi}{2}$`, String.raw`$\theta$`, String.raw`$\nu$ is the frequency`,
+    String.raw`the frequency (\nu) is fixed`,
+  ]) untouched(`command ${s}`, s);
+  // Review 2026-10-04 (round 2): with no "(" before it, "\nu) is" passed for
+  // the lettered item "u)" — the marker test runs before the command guard.
+  // A lone lettered marker must open the string or follow sentence
+  // punctuation; mid-sentence it needs a second lettered item beside it.
+  untouched('unparenthesised \\nu) mid-sentence', String.raw`frequency \nu) is`);
+  untouched('unparenthesised \\nu) in a sentence', String.raw`The wave (of frequency \nu) is fixed`);
+  untouched('parenthesised (frequency \\nu) is', String.raw`(frequency \nu) is`);
+  untouched('\\ne) mid-sentence, one marker only', String.raw`where a \ne) b`);
+  untouched('\\nu) glued to what follows', String.raw`Use.\nu)x`);
+
+  // LaTeX macros KaTeX does not know keep their backslash.
+  untouched('siunitx \\textcelsius', String.raw`Water boils at 100\textcelsius and room is 25\textcelsius.`);
+  untouched('\\num{…}', String.raw`About \num{12345} people`);
+  untouched('custom macro starting with n', String.raw`Use \norm{v} and \nicefrac{1}{2} here`);
+  untouched('custom macro, capitalised', String.raw`Let \nA be the set`);
+
+  // Computer-science content and paths: the escape IS the content.
+  untouched('string literal in a question', String.raw`What does print("a\nb") output?`);
+  untouched('choice a\\nb', String.raw`a\nb`);
+  untouched('choice that is only \\n', String.raw`\n`);
+  untouched('choice that is only \\t', String.raw`\t`);
+  untouched('Windows path', String.raw`C:\new\table`);
+  untouched('Windows path 2', String.raw`C:\Users\tom\notes.txt`);
+  untouched('Windows path with a digit folder', String.raw`Open C:\n2024 first`);
+  untouched('prose about escapes', String.raw`In Python, \n means newline and \t means tab.`);
+  untouched('grep', String.raw`grep '\tfoo'`);
+  untouched('backticked code', 'Call `s.split(\'\\n\')` to get the lines.');
+  untouched('quoted escape before a capitalised word', String.raw`The string "\nHello" starts with a line feed`);
+  untouched('single-quoted escape before a digit', String.raw`Then it writes '\n1' to the file`);
+  untouched('backticked escape before a list marker', 'Type `\\n1)` exactly');
+  untouched('talk about a backslash', String.raw`A backslash then n:\n1) what is it?`);
+  untouched('talk about the tab character', String.raw`The tab character.\n1) Where is it?`);
+  untouched('another escape in the same string', String.raw`First.\n1) one\r2) two\t3) three`);
+  untouched('println cue', String.raw`System.out.println prints a line.\n1) What follows?`);
+  untouched('literal backslash-t is never a separator', String.raw`a)\tx = 2`);
+  untouched('lower-case word after it', String.raw`first line\nthen the second`);
+  untouched('a doubled backslash (LaTeX row break)', String.raw`a \\n b`);
+  untouched('literal \\n inside a maths span, nothing else', String.raw`$x^2\n+ 1$`);
+
+  // The separator shapes.
+  converts('lettered items, including the one that spells \\ne',
+    String.raw`Pick one.\na) one\nb) two\nc) three\nd) four\ne) five`, 'Pick one.\na) one\nb) two\nc) three\nd) four\ne) five');
+  converts('the reviewer\'s tail', String.raw`c) three\nd) four\ne) five`, 'c) three\nd) four\ne) five');
+  converts('lettered tail with nothing before it', String.raw`\nd) four\ne) five`, '\nd) four\ne) five');
+  converts('one lettered item after a finished sentence', String.raw`Do part a first.\na) Solve it`, 'Do part a first.\na) Solve it');
+  converts('one lettered item after a colon and a space', String.raw`Parts: \nb) the second`, 'Parts: \nb) the second');
+  converts('two lettered items after plain words', String.raw`a) one\nb) two`, 'a) one\nb) two');
+  converts('"1." items', String.raw`Do these.\n1. Solve $2x = 8$\n2. Factor $x^2 - 9$`, 'Do these.\n1. Solve $2x = 8$\n2. Factor $x^2 - 9$');
+  converts('"(1)" and "(a)" items', String.raw`Parts:\n(1) first\n(a) second`, 'Parts:\n(1) first\n(a) second');
+  converts('bullets', String.raw`Remember:\n- signs\n• units\n* order`, 'Remember:\n- signs\n• units\n* order');
+  converts('capitalised word', String.raw`Part A.\nSolve for x.`, 'Part A.\nSolve for x.');
+  converts('a maths span follows', String.raw`Simplify:\n$2x + 3x$`, 'Simplify:\n$2x + 3x$');
+  converts('a digit follows', String.raw`Totals:\n12 apples`, 'Totals:\n12 apples');
+  converts('trailing separator after a sentence', String.raw`Solve for x.\n`, 'Solve for x.\n');
+  converts('doubled separator with a space between', String.raw`Read this.\n \nThen answer.`, 'Read this.\n \nThen answer.');
+  converts('CRLF escape pair → one newline', String.raw`One.\r\nTwo is next.`, 'One.\nTwo is next.');
+  converts('literal \\n inside a maths span is left for the KaTeX pre-pass',
+    String.raw`$x^2\n+ 1$ then\nNext`, String.raw`$x^2\n+ 1$ then` + '\nNext');
+  converts('currency prose is prose', String.raw`Maya has $50.\nBen has $15.`, 'Maya has $50.\nBen has $15.');
+  converts('apostrophes are not quotes', String.raw`Don't rush.\n1) Solve it\n2) Check Maya's work`, 'Don\'t rush.\n1) Solve it\n2) Check Maya\'s work');
+  converts('quoted word elsewhere does not block', String.raw`Define "slope".\n1) Find it for $y = 3x$`, 'Define "slope".\n1) Find it for $y = 3x$');
+  converts('escape velocity is physics, not an escape sequence', String.raw`Find the escape velocity.\n1) Earth\n2) Mars`, 'Find the escape velocity.\n1) Earth\n2) Mars');
+  converts('science words that are also tool names', String.raw`Fill the outer shell. Print your name.\n1) Rust forms\n2) An echo returns`, 'Fill the outer shell. Print your name.\n1) Rust forms\n2) An echo returns');
+  converts('\\neq in a maths span next to a separator', String.raw`Note $x \neq 3$.\nSolve for x.`, 'Note $x \\neq 3$.\nSolve for x.');
+
+  for (const s of seen) eq(`idempotent: ${s.slice(0, 40)}`, nlb(nlb(s)), nlb(s));
+
+  // Deep walk over tool args: ONLY prose-statement fields are converted;
+  // answer-bearing, tabular, maths, code and lookup fields stay byte-identical.
+  const sep = String.raw`One.\n1) Two`;
+  const sepFixed = 'One.\n1) Two';
+  const args = {
+    statement: String.raw`Solve.\n1) $x \neq 2$`,
+    title: sep, label: sep, caption: sep, description: sep, note: sep, notes: sep, text: sep, problem: sep,
+    explanation: sep, content: sep, question: sep, passage: sep, keyIdea: sep,
+    hints: [String.raw`Look.\nAgain`],
+    steps: [{ description: sep, explanation: sep, expression: sep }],
+    answerChoices: [{ letter: 'A', text: sep }, sep],
+    choices: [{ id: 'a', text: sep, correct: true }],
+    options: [sep], answer: sep, correctAnswer: sep, correctChoice: sep, solution: sep,
+    rows: [[sep, 'x']], headers: [sep], cells: [sep], columns: [sep], values: [sep],
+    latex: String.raw`a\nb`,
+    code: String.raw`print("a\nb")`,
+    expectedAnswer: sep,
+    smiles: String.raw`C/C=C\n1ccccc1`,
+    near: sep,
+    someUnknownKey: sep,
+    count: 3,
+  };
+  const out = deepNormalizeLiteralLineBreaks(args) as typeof args;
+  eq('deep: statement', out.statement, 'Solve.\n1) $x \\neq 2$');
+  for (const k of ['title', 'label', 'caption', 'description', 'note', 'notes', 'text', 'problem', 'explanation', 'content', 'question', 'passage', 'keyIdea'] as const) {
+    eq(`deep: prose key ${k} converted`, out[k], sepFixed);
+  }
+  eq('deep: array of strings under a prose key', out.hints[0], 'Look.\nAgain');
+  eq('deep: nested prose keys', [out.steps[0].description, out.steps[0].explanation], [sepFixed, sepFixed]);
+  eq('deep: nested maths key untouched', out.steps[0].expression, sep);
+  for (const k of ['answerChoices', 'choices', 'options', 'answer', 'correctAnswer', 'correctChoice', 'solution', 'rows', 'headers', 'cells', 'columns', 'values', 'latex', 'code', 'expectedAnswer', 'smiles', 'near', 'someUnknownKey'] as const) {
+    eq(`deep: ${k} byte-identical`, out[k], args[k]);
+  }
+  check('deep: non-strings pass through', out.count === 3);
+  check('deep: input not mutated', args.statement === String.raw`Solve.\n1) $x \neq 2$`);
+  eq('deep: a bare string is not prose-keyed', deepNormalizeLiteralLineBreaks(sep), sep);
+  eq('deep: idempotent', deepNormalizeLiteralLineBreaks(out), out);
+
+  // The reviewer's computer-science tool calls, end to end through the walk.
+  const cs = {
+    statement: String.raw`What does print("a\nb") output?`,
+    answerChoices: [String.raw`a\nb`, 'a b', String.raw`\n`, 'ab'],
+    expectedAnswer: String.raw`a\nb`,
+  };
+  eq('deep: CS show_problem byte-identical', deepNormalizeLiteralLineBreaks(cs), cs);
+  const table = { title: 'Escapes', headers: ['escape', 'meaning'], rows: [[String.raw`\n`, 'newline'], [String.raw`\t`, 'tab']] };
+  eq('deep: CS show_table byte-identical', deepNormalizeLiteralLineBreaks(table), table);
+  const quiz = { question: 'Which escape is a line feed?', options: [String.raw`\n`, String.raw`\t`], answer: String.raw`\n` };
+  eq('deep: CS show_quiz byte-identical', deepNormalizeLiteralLineBreaks(quiz), quiz);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

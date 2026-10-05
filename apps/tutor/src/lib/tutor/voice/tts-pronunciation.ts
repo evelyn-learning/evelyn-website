@@ -21,7 +21,12 @@ interface Replacement {
 /** Trigonometric function names. The TTS pronounces "sin" as the
  *  3-letter English word ("sin"), "cos" as one syllable ("kose"),
  *  etc. Expand to the spoken function name. Word-boundary regex so
- *  these don't catch matches inside other words ("sing", "tank"). */
+ *  these don't catch matches inside other words ("sing", "tank").
+ *
+ *  Only the abbreviations with NO everyday reading live in this
+ *  unconditional list (arc-forms, csc). sin / cos / tan / sec / cot are
+ *  also ordinary words ("a sin", "'cos", "a tan", "one sec", "a cot") and
+ *  go through expandTrigAbbreviations below, which needs maths evidence. */
 const TRIG_REPLACEMENTS: Replacement[] = [
   { pattern: /\barcsin\b/gi, replacement: 'arc sine' },
   { pattern: /\barccos\b/gi, replacement: 'arc cosine' },
@@ -29,15 +34,182 @@ const TRIG_REPLACEMENTS: Replacement[] = [
   { pattern: /\barccot\b/gi, replacement: 'arc cotangent' },
   { pattern: /\barcsec\b/gi, replacement: 'arc secant' },
   { pattern: /\barccsc\b/gi, replacement: 'arc cosecant' },
-  { pattern: /\bsin\b/gi, replacement: 'sine' },
-  { pattern: /\bcos\b/gi, replacement: 'cosine' },
-  { pattern: /\btan\b/gi, replacement: 'tangent' },
-  { pattern: /\bsec\b/gi, replacement: 'secant' },
   { pattern: /\bcsc\b/gi, replacement: 'cosecant' },
-  { pattern: /\bcot\b/gi, replacement: 'cotangent' },
 ];
 
-/** Logarithm / exponent shortcuts the TTS often gets wrong. */
+/** ---------------------------------------------------------------------
+ *  Context-gated trig abbreviations (live: "Got your upload — one sec
+ *  while I look it over." was spoken "one secant"; the old rule expanded
+ *  \bsec\b / \bsin\b / \bcos\b / \btan\b / \bcot\b everywhere).
+ *
+ *  Why a gate and not a phrase blocklist: the everyday readings are open-
+ *  ended ("a sec", "half a sec", "'cos it was easy", "a tan", "original
+ *  sin"), while the maths reading always carries evidence next to the
+ *  token — an ARGUMENT after it, an operator/number before it, a sibling
+ *  function beside it, or trig vocabulary in the same sentence. So the
+ *  rule expands on evidence and otherwise leaves the word alone.
+ *
+ *    1. An argument follows ("sin x", "sin(30", "cos theta", "tan 45",
+ *       "sin squared x", "sin inverse", "the cos graph") → expand, even
+ *       after an article ("y = a sin x").
+ *    2. Otherwise a determiner right before it ("a / one / the / another /
+ *       quick sec") → leave it. One exception: "the sin of …" in a text
+ *       that carries trig evidence ("the sin of the angle").
+ *    3. Otherwise expand only with other evidence: a maths token before it
+ *       ("= cos", "times sin"), a following "of" / "equals" / "is
+ *       positive", a sibling function ("sin, cos, and tan"), trig
+ *       vocabulary in the text ("sin is opposite over hypotenuse"), or
+ *       another abbreviation in the same text that expanded on its own
+ *       evidence (so one utterance never mixes "sine" and "cos"). With
+ *       none of those — which includes the bare clause-final word — it
+ *       stays as written. Under-expanding is the mild failure ("cos" is
+ *       still understood); "one secant" is not.
+ *
+ *    4. Review 2026-10-04 — rule 3's "bare clause-final word stays" lost
+ *       the commonest tutor phrasings. Two more kinds of evidence:
+ *       a) a maths-instruction LEAD right before a clause-final name
+ *          ("Use sec.", "Try tan instead.", "So we need cos.", "I think
+ *          it's cos.", "What is sin?", "…, not sin.", "called tan") and
+ *          the frame "what sin means". The everyday readings never sit in
+ *          that frame without a determiner ("use A sec", "it's A sin"),
+ *          and rule 2 still runs first.
+ *       b) after "the" (only "the" — a / an / one / this / that / quick /
+ *          nice … never expand): when "of", "is", "equals", a number or
+ *          the clause end follows, "cos" expands (no everyday "the cos"),
+ *          and so does anything asked for by name ("What's the tan?");
+ *          sin / tan / sec / cot otherwise need the sentence to carry a
+ *          digit or a maths word ("the sin is 0.5", "Take the sin of both
+ *          sides." — but "The sin of pride…", "The tan she got…" stay).
+ *
+ *  "'cos" (because) and the possessive "sin's" are blocked outright.
+ *
+ *  "sec" after a number is the time unit, handled by the unit pass
+ *  ("5 sec" → "5 seconds", "10 m/sec" → "10 meters per second"); the
+ *  remaining rate shapes ("20 ft/sec", "per sec", "10-sec") are finished
+ *  here. All of them stand down when an argument follows ("2 sec x") —
+ *  except "x" + a number, which is a multiplication sign ("5 sec x 3
+ *  trials"), not an angle.
+ *
+ *  Inside a DECLARED $…$ span there is no everyday reading, so the span
+ *  path calls this with declaredMaths=true and every abbreviation expands
+ *  (same reasoning as the in-span letter respell).
+ * ----------------------------------------------------------------- */
+const TRIG_ABBR_WORDS: Record<string, string> = {
+  sin: 'sine', cos: 'cosine', tan: 'tangent', sec: 'secant', cot: 'cotangent',
+};
+const TRIG_GREEK_SRC = 'theta|alpha|beta|gamma|delta|epsilon|lambda|omega|sigma|phi|psi|rho|tau|mu|nu|eta|pie?';
+const TRIG_FUNC_SRC = 'sin|cos|tan|sec|csc|cot|ln|log|sine|cosine|tangent|secant|cosecant|cotangent|arc\\s?(?:sin|cos|tan|sec|csc|cot|sine|cosine|tangent)';
+// What an argument looks like by the time the prose pass runs: glyphs
+// (θ, °) and carets are already words, unicode ² after a multi-letter
+// token is still a glyph. A single-letter variable excludes "I" (pronoun)
+// and takes lowercase "a" only when nothing word-like follows it ("sin a
+// cos b", "sin a." — never "wait a sec a moment").
+const TRIG_ARG_SRC = String.raw`(?:\(|\^|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]|-?\d|(?:squared|cubed|inverse|to\s+the)\b|(?:${TRIG_GREEK_SRC})\b|(?:${TRIG_FUNC_SRC})\b|[b-hj-zA-HJ-Z]\b(?!['’])|a\b(?=\s*(?:$|[.,;:!?)=+*/]|(?:plus|minus|times|over|equals|and|or|squared|cubed|${TRIG_FUNC_SRC})\b))|(?:functions?|graphs?|curves?|waves?|ratios?|values?|terms?|identity|identities|button|key)\b)`;
+const TRIG_ARG_AHEAD_RE = new RegExp(String.raw`^\s*${TRIG_ARG_SRC}`);
+const TRIG_DETERMINERS = new Set([
+  'a', 'an', 'one', 'the', 'this', 'that', 'quick', 'nice', 'another', 'any',
+  'some', 'no', 'every', 'each', 'half', 'my', 'your', 'his', 'her', 'its',
+  'our', 'their',
+]);
+// A maths token directly before the abbreviation. A hyphen only counts
+// when it is not glued to a word or digit: "10-sec" / "non-sin" are
+// compounds, "x - sin y" / "→ -sin" are a minus sign.
+const TRIG_MATHS_BEFORE_RE = /(?:[=+*/×·^(]|(?<![A-Za-z0-9])-|\d|\b(?:equals|plus|minus|times|over|by|negative|inverse|hyperbolic)|(?<!['’])\b[b-hj-zB-HJ-Z])\s*$/;
+const TRIG_WEAK_AHEAD_RE = /^\s*(?:of\b|equals\b|=|(?:is|are|was)\s+(?:positive|negative|zero|undefined|-?\d|increasing|decreasing|continuous|periodic|even\b|odd\b|opposite|adjacent|defined|the\s+(?:ratio|reciprocal|derivative|integral|inverse)))/;
+const TRIG_SIBLING_AHEAD_RE = new RegExp(String.raw`^\s*(?:,\s*(?:and\s+|or\s+)?|and\s+|or\s+|/\s*)(?:${TRIG_FUNC_SRC})\b`, 'i');
+const TRIG_SIBLING_BEHIND_RE = new RegExp(String.raw`\b(?:${TRIG_FUNC_SRC})\s*(?:,\s*(?:and\s+|or\s+)?|\s+and\s+|\s+or\s+|/\s*)$`, 'i');
+const TRIG_TEXT_VOCAB_RE = /\b(?:sine|cosine|tangent|secant|cosecant|cotangent|hypotenuse|opposite|adjacent|angles?|triangles?|theta|radians?|degrees?|derivatives?|integrals?|antiderivatives?|differentiat\w*|integrat\w*|identity|identities|trig\w*|functions?|graphs?|ratios?|reciprocals?|quadrants?|periodic\w*|numerator|denominator|unit\s+circle|sohcahtoa|soh|cah|toa|amplitude|pie?|csc|ln|arc\s?(?:sin|cos|tan|sec|csc|cot))\b/i;
+// Rule 4a: a maths-instruction lead directly before the name, and the name
+// closing its clause (optionally with one trailing adverb: "tan instead").
+// "is" counts only after an impersonal subject ("what is sin?", "it is
+// cos.") — "He is tan." is a person.
+const TRIG_LEAD_BEFORE_RE = /(?:\b(?:use[sd]?|using|need(?:s|ed)?|try|tried|trying|apply|applies|applying|means?|not|or|and|called)|\b(?:what|it|this|that|which|answer|function|ratio)\s+is|\b(?:it|what|that)['’]s)\s+$/i;
+const TRIG_CLAUSE_END_SRC = String.raw`(?:$|[.,;:!?)])`;
+const TRIG_LEAD_AHEAD_RE = new RegExp(String.raw`^\s*(?:(?:instead|here|again|first|next|now|then|too)\b\s*)?${TRIG_CLAUSE_END_SRC}`, 'i');
+const TRIG_WHAT_MEANS_BEFORE_RE = /\bwhat\s+(?:does\s+)?$/i;
+const TRIG_WHAT_MEANS_AHEAD_RE = /^\s+(?:means?|stands\s+for|is)\b/i;
+// Rule 4b: what may follow "the <name>" for the maths reading to be possible.
+const TRIG_THE_AHEAD_RE = new RegExp(String.raw`^\s*(?:(?:of|is|equals)\b|=|-?\d|${TRIG_CLAUSE_END_SRC})`, 'i');
+const TRIG_ASKED_BY_NAME_BEFORE_RE = /\bwhat(?:['’]s|\s+is|\s+was)\s+the\s+$/i;
+const TRIG_SENTENCE_MATHS_RE = /\d|\b(?:sides?|equations?|expressions?)\b/i;
+const SEC_UNIT_ARG_GUARD_SRC = String.raw`(?!\s*(?:\(|\^|[²³·/]|(?!x\s+\d)[b-hj-zB-HJ-Z]\b|(?:${TRIG_GREEK_SRC}|squared|times)\b|[θαβφ]))`;
+const TRIG_ABBR_RE = /\b(sin|cos|tan|sec|cot)\b/gi;
+
+type TrigVerdict = 'expand' | 'keep' | 'undecided' | 'undecided-of' | 'undecided-the';
+function judgeTrigAbbreviation(full: string, offset: number, len: number): TrigVerdict {
+  const before = full.slice(0, offset);
+  const after = full.slice(offset + len);
+  // "'cos it was easy" (the clipped "because"); "sin's penalty".
+  if (/['’]$/.test(before) || /^['’][A-Za-z]/.test(after)) return 'keep';
+  if (TRIG_ARG_AHEAD_RE.test(after)) return 'expand';
+  const prevWord = /([A-Za-z]+)\s*$/.exec(before)?.[1]?.toLowerCase();
+  if (prevWord === 'the' && TRIG_THE_AHEAD_RE.test(after)) {
+    // Rule 4b. "cos" has no everyday reading after "the"; a name that is
+    // asked for ("What's the tan?") is the function. The rest wait for
+    // evidence in their sentence (expandTrigAbbreviations).
+    const name = full.slice(offset, offset + len).toLowerCase();
+    return name === 'cos' || TRIG_ASKED_BY_NAME_BEFORE_RE.test(before) ? 'expand' : 'undecided-the';
+  }
+  if (prevWord && TRIG_DETERMINERS.has(prevWord)) {
+    return /^\s*of\b/.test(after) ? 'undecided-of' : 'keep';
+  }
+  // Rule 4a.
+  if (TRIG_LEAD_BEFORE_RE.test(before) && TRIG_LEAD_AHEAD_RE.test(after)) return 'expand';
+  if (TRIG_WHAT_MEANS_BEFORE_RE.test(before) && TRIG_WHAT_MEANS_AHEAD_RE.test(after)) return 'expand';
+  if (TRIG_MATHS_BEFORE_RE.test(before)
+    || TRIG_WEAK_AHEAD_RE.test(after)
+    || TRIG_SIBLING_AHEAD_RE.test(after)
+    || TRIG_SIBLING_BEHIND_RE.test(before)) {
+    return 'expand';
+  }
+  return 'undecided';
+}
+
+function expandTrigAbbreviations(t: string, declaredMaths: boolean): string {
+  // Rate / compound shapes of the time unit the number-anchored unit rule
+  // cannot see ("20 ft/sec", "1/sec", "per sec", "10-sec"). The slash form
+  // needs a number just before its unit so a function list ("tan/sec/csc")
+  // is never read as a rate.
+  t = t.replace(new RegExp(String.raw`(?<=\d\s?[A-Za-z]{0,6})\s*/\s*secs?\b${SEC_UNIT_ARG_GUARD_SRC}`, 'g'), ' per second');
+  t = t.replace(new RegExp(String.raw`\bper\s+secs?\b${SEC_UNIT_ARG_GUARD_SRC}`, 'g'), 'per second');
+  t = t.replace(/(\d)-sec\b/g, '$1-second');
+  if (declaredMaths) {
+    return t.replace(TRIG_ABBR_RE, (m: string) => TRIG_ABBR_WORDS[m.toLowerCase()]);
+  }
+  const verdicts: TrigVerdict[] = [];
+  // For 'undecided-the': does the SENTENCE around the token (the token
+  // itself aside) carry a digit or a maths word?
+  const sentenceIsMaths: boolean[] = [];
+  for (const m of t.matchAll(TRIG_ABBR_RE)) {
+    const at = m.index ?? 0;
+    verdicts.push(judgeTrigAbbreviation(t, at, m[0].length));
+    const before = t.slice(0, at);
+    const after = t.slice(at + m[0].length);
+    const start = Math.max(0, ...[...before.matchAll(/[.!?](?=\s)/g)].map((b) => (b.index ?? 0) + 1));
+    const stop = /[.!?](?=\s|$)/.exec(after);
+    const sentence = `${before.slice(start)} ${stop ? after.slice(0, stop.index) : after}`;
+    sentenceIsMaths.push(TRIG_SENTENCE_MATHS_RE.test(sentence) || TRIG_TEXT_VOCAB_RE.test(sentence.replace(TRIG_ABBR_RE, ' ')));
+  }
+  if (verdicts.length === 0) return t;
+  // Text-level evidence settles the tokens with no local evidence of their
+  // own: trig vocabulary anywhere in the text, or a sibling abbreviation
+  // that expanded on local evidence.
+  const textIsMaths = verdicts.includes('expand')
+    || TRIG_TEXT_VOCAB_RE.test(t.replace(TRIG_ABBR_RE, ' '));
+  let i = 0;
+  return t.replace(TRIG_ABBR_RE, (m: string) => {
+    const verdict = verdicts[i];
+    const inMathsSentence = sentenceIsMaths[i++];
+    const expand = verdict === 'expand'
+      || (verdict === 'undecided-the' ? inMathsSentence || textIsMaths : verdict !== 'keep' && textIsMaths);
+    return expand ? TRIG_ABBR_WORDS[m.toLowerCase()] : m;
+  });
+}
+
+/** Logarithm / exponent shortcuts the TTS often gets wrong. Lowercase "ln"
+ *  stays unconditional on purpose — unlike sec/sin/cos/tan/cot it has no
+ *  everyday reading (the street abbreviation is capitalised "Ln", which
+ *  this case-sensitive pattern never matches). */
 const MATH_FUNC_REPLACEMENTS: Replacement[] = [
   { pattern: /\bln\b/g, replacement: 'natural log' },
   // 'log' is left alone — TTS pronounces it correctly as "log".
@@ -869,6 +1041,9 @@ const SINGLE_UNIT_RULES: UnitRule[] = [
   { src: '[μµ]s', plural: 'microseconds', singular: 'microsecond' },
   { src: 'ns', plural: 'nanoseconds', singular: 'nanosecond' },
   { src: 'ms', plural: 'milliseconds', singular: 'millisecond' },
+  // "5 sec" is the time unit ("5 secant" live). Stands down when an
+  // argument follows — "2 sec x" is the secant function.
+  { src: `secs?${SEC_UNIT_ARG_GUARD_SRC}`, plural: 'seconds', singular: 'second' },
   { src: '[μµ]m', plural: 'micrometers', singular: 'micrometer' },
   { src: 'nm', plural: 'nanometers', singular: 'nanometer' },
   { src: 'mm', plural: 'millimeters', singular: 'millimeter' },
@@ -956,6 +1131,8 @@ const COMPOUND_UNIT_RULES: Array<{ re: RegExp; spoken: string }> = [
   // must not have its foreign "}" consumed.
   { re: /(?<![A-Za-z])m\/s\s*(?:²|\^\{2\}|\^2)(?![A-Za-z])/g, spoken: ' meters per second squared ' },
   { re: /(?<![A-Za-z])m\/s(?![A-Za-z0-9])/g, spoken: ' meters per second ' },
+  { re: /(?<![A-Za-z])m\/sec(?![A-Za-z0-9])/g, spoken: ' meters per second ' },
+  { re: /(?<![A-Za-z])km\/sec(?![A-Za-z0-9])/g, spoken: ' kilometers per second ' },
   { re: /(?<![A-Za-z])km\/h(?![A-Za-z])/g, spoken: ' kilometers per hour ' },
   { re: /(?<![A-Za-z])km\/s(?![A-Za-z])/g, spoken: ' kilometers per second ' },
   { re: /(?<![A-Za-z])N\s*(?:·|\\cdot\b)\s*m(?![A-Za-z])/g, spoken: ' newton meters ' },
@@ -1293,7 +1470,10 @@ function speakMathSpan(rawInner: string): string {
   const prepped = looksLikeChemistrySpan(inner)
     ? rewriteChemistrySpanForSpeech(inner)
     : rewriteUnitsForSpeech(rewriteGeneticsInSpan(inner), true);
-  return respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(prepped)))))
+  // A declared span has no everyday reading for sin/cos/tan/sec/cot, so
+  // they expand here unconditionally; the prose pass (which needs maths
+  // evidence around the token) then has nothing left to decide.
+  return expandTrigAbbreviations(respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(prepped))))), true)
     .replace(/\\[a-zA-Z]+\s*/g, ' ')
     .replace(/[[\]{}]/g, ' ')
     // Round-22: adjacent paren groups are an implied product —
@@ -2291,6 +2471,9 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // ("38°N") and plain angles ("90°") fall through to the generic rule.
   t = t.replace(/\b([HGSE])\s*°/g, '$1 naught ');
   t = t.replace(/°/g, ' degrees ');
+  // Context-gated trig abbreviations (sin/cos/tan/sec/cot) — same slot the
+  // unconditional rules used to occupy at the head of ALL_REPLACEMENTS.
+  t = expandTrigAbbreviations(t, false);
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
     t = typeof replacement === 'string'
       ? t.replace(pattern, replacement)

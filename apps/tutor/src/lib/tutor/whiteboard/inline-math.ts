@@ -14,6 +14,7 @@
  */
 
 import katex from 'katex';
+import { SKIP_KEYS } from './wb-emphasis-strip';
 
 // Reject candidate math segments that look like prose with currency.
 // Accepted shapes:
@@ -729,4 +730,251 @@ export function preprocessKatexBody(latex: string): string {
   return latex
     .replace(/\\\\(?=[a-zA-Z{])/g, '\\')
     .replace(/\\n(?![a-zA-Z])/g, '\n');
+}
+
+/**
+ * Is `\name` a command KaTeX knows? Asked of the parser itself rather than
+ * a hand-kept list: an unknown name is the one failure KaTeX reports as
+ * "Undefined control sequence"; any other outcome (it rendered, or it
+ * complained about a missing argument, as `\text` alone does) means the
+ * command exists.
+ */
+const KNOWN_COMMAND_CACHE = new Map<string, boolean>();
+function isKnownLatexCommand(name: string): boolean {
+  const cached = KNOWN_COMMAND_CACHE.get(name);
+  if (cached !== undefined) return cached;
+  let known = true;
+  try {
+    katex.renderToString(`\\${name}`, { throwOnError: true, displayMode: false, strict: false, trust: true });
+  } catch (err) {
+    known = !/undefined control sequence/i.test(String((err as Error)?.message ?? err));
+  }
+  KNOWN_COMMAND_CACHE.set(name, known);
+  return known;
+}
+
+/* ── Literal backslash-n as a LINE SEPARATOR ────────────────────────────
+ *
+ * Live: the brain's `show_problem` statement for an uploaded worksheet held
+ * the two characters `\` + `n` between sentences and numbered items (LaTeX-
+ * style escaping over-applied to a line break). `preprocessKatexBody` only
+ * ever runs on maths segments, so the card and the PDF printed them.
+ *
+ * Review 2026-10-04: the first cut converted ANY backslash-n / backslash-t
+ * that did not start a KaTeX command, and that damaged real content —
+ * string literals (`print("a\nb")`), Windows paths, prose ABOUT escapes,
+ * macros KaTeX does not know (`\textcelsius`). Backslash-n is content far
+ * more often than it is a mistake, so the rule is now: convert only the
+ * unmistakable separator, and when unsure leave the text alone.
+ *
+ * A literal backslash-n is converted only when ALL of these hold:
+ *   1. what follows it (after any further backslash-n's / spaces) has the
+ *      shape of a new line: a list marker, a capitalised word, a `$`, a
+ *      digit, or the end of the string after sentence punctuation;
+ *   2. it is not inside a quoted / backticked span or a `$…$` maths span;
+ *   3. nothing in the string says the text is ABOUT escapes or paths
+ *      (another backslash escape in prose, a drive path, the words
+ *      "newline" / "backslash" / …, a programming cue) — any of those
+ *      leaves the WHOLE string untouched.
+ * Backslash-t is never converted: a tab separator has no realistic use on
+ * the board, and every `\t…` is far likelier a LaTeX command or a path.
+ */
+
+/** Signs that the string is about escape sequences, code or file paths. */
+const ESCAPE_TOPIC_RE = new RegExp([
+  String.raw`\bnew-?lines?\b`, String.raw`\bline[- ]?feeds?\b`, String.raw`\bcarriage returns?\b`,
+  String.raw`\bescap(?:e|es|ed|ing)\b(?!\s+(?:velocit|speed|energ))`,
+  String.raw`\btab characters?\b`, String.raw`\bback-?slash(?:es)?\b`,
+  String.raw`\bstring literals?\b`, String.raw`\bregex(?:es|p)?\b`, String.raw`\bregular expressions?\b`,
+  // Language / tool names that are not also everyday or science words
+  // ("shell", "rust", "echo", "print", "puts" are — they stay out).
+  String.raw`\b(?:python|javascript|typescript|java|php|kotlin|bash|powershell|pseudocode)\b`,
+  String.raw`\bc\+\+`, String.raw`\bc#`, String.raw`\bprogramming\b`, String.raw`\bsource code\b`, String.raw`\bcode snippet\b`,
+  String.raw`\b(?:printf|println|grep|awk|cout|stdout|stdin)\b`,
+  String.raw`\bconsole\.log\b`, String.raw`\bsystem\.out\b`, 
+  // a call with a quoted argument: print("…"), s.split('…')
+  String.raw`\w\(\s*["'\x60]`,
+].join('|'), 'i');
+/** A backslash + letter in prose that is not our own token (backslash-n, or
+ *  the CRLF pair backslash-r backslash-n): another escape, a LaTeX command
+ *  outside `$…$`, or a path segment. A doubled backslash is not counted. */
+const OTHER_BACKSLASH_RE = /(?<!\\)\\(?!n)(?!r\\n)[a-zA-Z]/;
+const DRIVE_PATH_RE = /(?:^|[^a-zA-Z])[a-zA-Z]:\\/;
+
+/** `$…$` spans that are maths, by `segment`'s own rule (so currency prose —
+ *  "Maya has $50.\nBen has $15." — is the prose it is). The escape itself
+ *  must not be what makes a pair "look like maths" (a backslash is a LaTeX
+ *  signal), so the pair is judged with its backslash-n's blanked out. */
+function mathSpanRanges(text: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  let i = 0;
+  while (i < text.length) {
+    const dollar = text.indexOf('$', i);
+    if (dollar < 0) break;
+    if (dollar > 0 && text[dollar - 1] === '\\') { i = dollar + 1; continue; }
+    const close = text.indexOf('$', dollar + 1);
+    if (close < 0) break;
+    const inner = text.slice(dollar + 1, close);
+    const probe = inner.replace(/(?<!\\)(?:\\r)?\\n(?![a-z])/g, ' ').replace(/\n/g, ' ');
+    if (!inner.trim() || inner.includes('\n') || !looksLikeMath(probe)) {
+      // Not a maths span: this "$" is literal prose; the closing one may
+      // still open a real span, so resume right after the opener.
+      i = dollar + 1;
+      continue;
+    }
+    ranges.push([dollar, close + 1]);
+    i = close + 1;
+  }
+  return ranges;
+}
+
+const OPEN_QUOTES: Record<string, string> = { '"': '"', "'": "'", '`': '`', '“': '”', '‘': '’' };
+const isWordChar = (c: string | undefined) => !!c && /[A-Za-z0-9]/.test(c);
+
+/** Quoted / backticked spans: anything between matching quotes on the same
+ *  line is string or code content. An opening quote must not follow a
+ *  letter or digit (so apostrophes — don't, Maya's, students' — primes and
+ *  inch marks never open a span), and an apostrophe between two letters
+ *  never closes one. `masked` has maths spans blanked out already. */
+function quotedSpanRanges(masked: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  let i = 0;
+  while (i < masked.length) {
+    const closer = OPEN_QUOTES[masked[i]];
+    if (!closer || (masked[i] !== '`' && isWordChar(masked[i - 1]))) { i++; continue; }
+    let j = i + 1;
+    let end = -1;
+    for (; j < masked.length && masked[j] !== '\n'; j++) {
+      if (masked[j] !== closer) continue;
+      if ((closer === "'" || closer === '’') && isWordChar(masked[j - 1]) && /[A-Za-z]/.test(masked[j + 1] ?? '')) continue;
+      end = j;
+      break;
+    }
+    if (end < 0) { i++; continue; }
+    ranges.push([i, end + 1]);
+    i = end + 1;
+  }
+  return ranges;
+}
+
+/** One literal backslash-n (optionally the CRLF pair). The lookbehind
+ *  leaves a doubled backslash alone: `\\n` is a LaTeX row break followed by
+ *  the letter n. */
+const LITERAL_BREAK_RE = /(?<!\\)(?:\\r)?\\n/g;
+/** Further separators / blanks between this one and what the line starts with. */
+const BREAK_RUN_RE = /^(?:(?:\\r)?\\n|[ \r\n])*/;
+const LIST_MARKER_RE = /^(?:\d+[.)]|\((?:\d+|[a-zA-Z])\)|[-•*–−](?=[\s\d$a-zA-Z(]))/;
+/** "a) " — a lettered item. It must be followed by whitespace, and it is
+ *  trusted only where letteredMarkerAllowed says so: "\nu) is" is the
+ *  command \nu before a bracket far more often than an item "u)". */
+const LETTERED_MARKER_RE = /^[a-zA-Z]\)(?=\s)/;
+/** Every lettered marker in the string: at its start, or after a real or
+ *  literal line break. */
+const LETTERED_ITEMS_RE = /(?:^|\n|(?<!\\)\\n)[ \t]*([a-zA-Z])\)(?=\s)/g;
+
+/** Does the string hold a lettered LIST — two markers whose letters are
+ *  neighbours in the alphabet ("d)" and "e)")? */
+function hasLetteredList(text: string): boolean {
+  const codes = [...text.matchAll(LETTERED_ITEMS_RE)].map((m) => m[1].toLowerCase().charCodeAt(0));
+  return codes.some((c) => codes.includes(c + 1));
+}
+
+export function normalizeLiteralLineBreaks(text: string): string {
+  if (typeof text !== 'string' || !text.includes('\\n')) return text;
+
+  const maths = mathSpanRanges(text);
+  let masked = text;
+  for (const [a, b] of maths) masked = masked.slice(0, a) + ' '.repeat(b - a) + masked.slice(b);
+  // Whole-string vetoes: the text is about escapes, code or paths.
+  if (OTHER_BACKSLASH_RE.test(masked) || DRIVE_PATH_RE.test(masked) || ESCAPE_TOPIC_RE.test(masked)) return text;
+
+  const guarded = [...maths, ...quotedSpanRanges(masked)];
+  const isGuarded = (idx: number) => guarded.some(([a, b]) => idx >= a && idx < b);
+
+  let parenDepth = 0;
+  let scanned = 0;
+  return text.replace(LITERAL_BREAK_RE, (m: string, offset: number) => {
+    // Open "(" count in the prose before this point: "(\nu)" is a
+    // parenthesised symbol, not the list item "u)".
+    for (; scanned < offset; scanned++) {
+      if (masked[scanned] === '(') parenDepth++;
+      else if (masked[scanned] === ')' && parenDepth > 0) parenDepth--;
+    }
+    if (isGuarded(offset)) return m;
+    const after = text.slice(offset + m.length);
+    const rest = after.slice(BREAK_RUN_RE.exec(after)![0].length);
+    if (rest === '') {
+      // Trailing separator: only after a finished sentence or item, never a
+      // string that IS the escape (an answer choice "\n") or ends in one.
+      return /[.?!:;)$]\s*(?:(?:\\r)?\\n|\s)*$/.test(text.slice(0, offset)) ? '\n' : m;
+    }
+    // List markers are tested BEFORE the LaTeX-command guard: in
+    // "…\nd) four\ne) five" the last item spells the command \ne.
+    // A lettered marker counts only when it is unmistakable — it opens the
+    // string or follows sentence punctuation, or the string holds a second
+    // lettered item next to it in the alphabet. "frequency \nu) is" is
+    // neither, and falls through to the command guard below.
+    if (LIST_MARKER_RE.test(rest)) return '\n';
+    if (parenDepth === 0 && LETTERED_MARKER_RE.test(rest)
+      && (/(?:^|[.?!:;])(?:(?:\\r)?\\n|\s)*$/.test(text.slice(0, offset)) || hasLetteredList(text))) return '\n';
+    if (rest[0] === '$' || /^\d/.test(rest)) return '\n';
+    if (rest !== after) {
+      // A run of separators / blanks sits between this one and the text.
+      return /^[A-Z][A-Za-z]/.test(rest) ? '\n' : m;
+    }
+    // Letters glued to the backslash-n: a KaTeX command (\nRightarrow,
+    // \nLeftarrow…) is never a break, a capitalised word ("\nSolve") is.
+    const run = /^[a-zA-Z]*/.exec(rest)![0];
+    if (isKnownLatexCommand('n' + run)) return m;
+    return /^[A-Z][A-Za-z]/.test(rest) ? '\n' : m;
+  });
+}
+
+/** Keys whose ENTIRE subtree is left byte-identical: maths, code, data and
+ *  lookup keys (wb-emphasis-strip's SKIP_KEYS — built FROM it, so the two
+ *  cannot drift), the call-stack value fields and raw `svg`, and — review
+ *  2026-10-04 — every answer-bearing or tabular field. A choice list must
+ *  keep byte-identity with the key it is compared against (`expectedAnswer`
+ *  was skipped while `answerChoices` was rewritten, so they stopped
+ *  matching), and a table cell that IS an escape ("\n" | "newline") is the
+ *  content. */
+const LITERAL_BREAK_EXTRA_SKIP_KEYS = [
+  'frames', 'args', 'locals', 'returnValue', 'finalReturn', 'svg',
+  'answerChoices', 'choices', 'options', 'answer', 'answers', 'correctAnswer', 'correctChoice', 'solution',
+  'expected', 'value', 'values', 'rows', 'headers', 'cells', 'columns', 'resultMatrix', 'rowLabels', 'colLabels',
+  'highlights', 'lines', 'id', 'path',
+];
+const LITERAL_BREAK_SKIP_KEYS = new Set<string>([...SKIP_KEYS, ...LITERAL_BREAK_EXTRA_SKIP_KEYS]);
+
+/** The ONLY keys whose strings are converted: fields that hold a prose
+ *  statement. An allow-list, because a new tool field is far likelier to be
+ *  data than a place a model types a multi-line statement. Names checked
+ *  against WHITEBOARD_TOOLS in toolDefinitions.ts (2026-10-04). */
+export const LITERAL_BREAK_PROSE_KEYS: ReadonlySet<string> = new Set<string>([
+  'statement', 'problem', 'problemText', 'text', 'caption', 'title', 'label', 'description',
+  'hint', 'hints', 'note', 'notes', 'instruction', 'instructions', 'prompt', 'explanation',
+  'body', 'content', 'summary',
+  // further prose fields the tool schemas use
+  'question', 'passage', 'keyIdea', 'keyTakeaways', 'checkQuestion', 'tutorSays',
+]);
+
+function deepNormalizeUnderKey(value: unknown, proseKey: boolean): unknown {
+  if (typeof value === 'string') return proseKey ? normalizeLiteralLineBreaks(value) : value;
+  // An array inherits its key: hints: ["…", "…"].
+  if (Array.isArray(value)) return value.map((v) => deepNormalizeUnderKey(v, proseKey));
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = LITERAL_BREAK_SKIP_KEYS.has(k) ? v : deepNormalizeUnderKey(v, LITERAL_BREAK_PROSE_KEYS.has(k));
+    }
+    return out;
+  }
+  return value;
+}
+
+/** normalizeLiteralLineBreaks over the PROSE fields of a tool-args tree
+ *  (see LITERAL_BREAK_PROSE_KEYS); everything else is copied through.
+ *  Returns a NEW structure; never mutates the input. */
+export function deepNormalizeLiteralLineBreaks(value: unknown): unknown {
+  return deepNormalizeUnderKey(value, false);
 }
