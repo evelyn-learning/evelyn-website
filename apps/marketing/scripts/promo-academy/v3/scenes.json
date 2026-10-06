@@ -1,0 +1,145 @@
+{
+ "fade": 0.4,
+ "voGain": 1.0,
+ "frame": {
+  "w": 1636,
+  "h": 920,
+  "color": "0x0e1030"
+ },
+ "scenes": [
+  {
+   "file": "<work-dir>/introcard.png",
+   "dur": 3.0,
+   "label": "Intro card"
+  },
+  {
+   "file": "<work-dir>/ui/lessons.webm",
+   "start": 0.4,
+   "dur": 8.3,
+   "speed": 0.97,
+   "label": "Your courses",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/session/live-slice-pyth.mkv",
+   "start": 0,
+   "dur": 21.5,
+   "speed": 1,
+   "useAudio": true,
+   "audioDur": 21.45,
+   "audioGain": 1.0,
+   "label": "Live lesson",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/practice.webm",
+   "start": 1.0,
+   "dur": 7.7,
+   "speed": 1.15,
+   "label": "Practice & quizzes",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/mock.webm",
+   "start": 4.6,
+   "dur": 3.0,
+   "speed": 1.5,
+   "label": "Timed mock exams",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/mock.webm",
+   "start": 23.0,
+   "dur": 2.5,
+   "speed": 1,
+   "label": "Score report",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/overview.webm",
+   "start": 0.8,
+   "dur": 4.5,
+   "speed": 1.15,
+   "label": "Mastery & progress",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/brand-academy.webm",
+   "start": 1.6,
+   "dur": 1.85,
+   "speed": 1,
+   "label": "Brand A",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/brand-crimsora.webm",
+   "start": 2.2,
+   "dur": 1.85,
+   "speed": 1,
+   "label": "Brand B",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/brand-evelyn.webm",
+   "start": 2.2,
+   "dur": 1.8,
+   "speed": 1,
+   "label": "Brand C",
+   "frame": true
+  },
+  {
+   "file": "<work-dir>/ui/admin.webm",
+   "start": 1.0,
+   "dur": 5.15,
+   "speed": 1.05,
+   "label": "Admin dashboard",
+   "frame": true
+  }
+ ],
+ "endcard": {
+  "image": "<work-dir>/endcard.png",
+  "dur": 5.6
+ },
+ "vo": [
+  {
+   "file": "<work-dir>/vo/norm/a1-hook.wav",
+   "at": 0.4
+  },
+  {
+   "file": "<work-dir>/vo/norm/a2-study.wav",
+   "at": 5.1
+  },
+  {
+   "file": "<work-dir>/vo/norm/a3-handoff.wav",
+   "at": 8.7
+  },
+  {
+   "file": "<work-dir>/vo/norm/a4-practice.wav",
+   "at": 31.95
+  },
+  {
+   "file": "<work-dir>/vo/norm/a5-mock.wav",
+   "at": 38.95
+  },
+  {
+   "file": "<work-dir>/vo/norm/a6-progress.wav",
+   "at": 43.7
+  },
+  {
+   "file": "<work-dir>/vo/norm/a7-brand.wav",
+   "at": 47.75
+  },
+  {
+   "file": "<work-dir>/vo/norm/a8-admin.wav",
+   "at": 52.05
+  },
+  {
+   "file": "<work-dir>/vo/norm/a9-cta.wav",
+   "at": 56.8
+  }
+ ],
+ "music": {
+  "file": "<work-dir>/music/bed.mp3",
+  "gain": 0.09
+ }
+}

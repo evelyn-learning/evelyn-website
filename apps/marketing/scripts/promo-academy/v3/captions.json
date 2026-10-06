@@ -1,0 +1,153 @@
+{
+ "accent": "#4f46e5",
+ "labelColor": "#c7d2fe",
+ "band": {
+  "top": 920,
+  "color": "#0e1030"
+ },
+ "cues": [
+  {
+   "a": 0.5,
+   "b": 4.95,
+   "text": "This is Evelyn Academy — a complete learning platform,\nunder your brand."
+  },
+  {
+   "a": 5.25,
+   "b": 8.55,
+   "text": "Every lesson is taught live,\nby an AI voice tutor."
+  },
+  {
+   "a": 8.85,
+   "b": 10.85,
+   "text": "Here's the tutor, mid-lesson."
+  },
+  {
+   "a": 12.2,
+   "b": 14.2,
+   "text": "Here we've got a right triangle,"
+  },
+  {
+   "a": 14.2,
+   "b": 16.9,
+   "text": "with the right angle sitting at point B."
+  },
+  {
+   "a": 17.3,
+   "b": 20.9,
+   "text": "That's the relationship: the sum of the squares\nof the two legs"
+  },
+  {
+   "a": 20.9,
+   "b": 23.3,
+   "text": "equals the square of the hypotenuse."
+  },
+  {
+   "a": 23.7,
+   "b": 26.7,
+   "text": "That means AC squared equals 25,"
+  },
+  {
+   "a": 26.9,
+   "b": 30.4,
+   "text": "so AC itself is 5 — the hypotenuse."
+  },
+  {
+   "a": 32.1,
+   "b": 36.0,
+   "text": "Every objective has practice, quizzes\nand a unit test —"
+  },
+  {
+   "a": 36.15,
+   "b": 38.8,
+   "text": "and review is flagged the moment it's due."
+  },
+  {
+   "a": 39.1,
+   "b": 42.1,
+   "text": "Timed mock exams, scored by unit —"
+  },
+  {
+   "a": 42.25,
+   "b": 43.55,
+   "text": "and reviewed with the tutor."
+  },
+  {
+   "a": 43.85,
+   "b": 45.75,
+   "text": "You see what each learner has mastered,"
+  },
+  {
+   "a": 45.8,
+   "b": 47.65,
+   "text": "and exactly where they're stuck."
+  },
+  {
+   "a": 47.9,
+   "b": 49.1,
+   "text": "One platform."
+  },
+  {
+   "a": 49.2,
+   "b": 51.9,
+   "text": "Your name, your colors, your courses."
+  },
+  {
+   "a": 52.2,
+   "b": 56.65,
+   "text": "And your team sees every learner,\nevery session, every replay."
+  },
+  {
+   "a": 56.9,
+   "b": 59.5,
+   "text": "Bring your syllabus. We'll build your academy."
+  },
+  {
+   "a": 59.65,
+   "b": 61.2,
+   "text": "evelynlearning.com"
+  }
+ ],
+ "labels": [
+  {
+   "a": 2.8,
+   "b": 10.4,
+   "text": "Your courses"
+  },
+  {
+   "a": 10.7,
+   "b": 31.5,
+   "text": "Live lesson · Coach Riley, AI tutor",
+   "accent": true
+  },
+  {
+   "a": 31.7,
+   "b": 38.8,
+   "text": "Practice & quizzes"
+  },
+  {
+   "a": 39.1,
+   "b": 41.4,
+   "text": "Timed mock exams"
+  },
+  {
+   "a": 41.7,
+   "b": 43.5,
+   "text": "Score report"
+  },
+  {
+   "a": 43.8,
+   "b": 47.6,
+   "text": "Mastery & progress"
+  },
+  {
+   "a": 47.9,
+   "b": 51.9,
+   "text": "One platform, any brand"
+  },
+  {
+   "a": 52.2,
+   "b": 56.6,
+   "text": "Admin dashboard"
+  }
+ ]
+}

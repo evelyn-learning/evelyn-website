@@ -19,8 +19,8 @@ const AcademyPlatformDemo = dynamic(() => import('@/components/demos/AcademyPlat
  * they render only when this is set, so the page never points at a missing file.
  */
 const ACADEMY_TOUR_VIDEO: { src: string; poster: string; label: string } | null = {
-  src: '/videos/academy-tour-v2.mp4',
-  poster: '/videos/academy-tour-v2-poster.jpg',
+  src: '/videos/academy-tour-v3.mp4',
+  poster: '/videos/academy-tour-v3-poster.jpg',
   label: 'One-Minute',
 };
 
