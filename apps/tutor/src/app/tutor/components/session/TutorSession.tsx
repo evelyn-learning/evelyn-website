@@ -881,6 +881,8 @@ export default function TutorSession(props: TutorSessionProps) {
     <TranscriptView
       transcript={displayTranscript}
       isProcessing={isProcessing}
+      // Follow-to-bottom telemetry (`transcript_follow`), text mode only.
+      onDebugEvent={sessionMode === 'text' ? onDebugEvent : undefined}
       // Persona label only for homework-help sessions (GreenApple pilot);
       // wider rollout to other persona brands is a parked follow-up.
       tutorLabel={sessionGoal === 'homework-help' ? teacherPersona?.name : undefined}

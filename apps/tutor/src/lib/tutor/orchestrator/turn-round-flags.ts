@@ -307,6 +307,29 @@ export const TUTOR_TEXT_OPENER_BACKSTOP =
 export const TUTOR_TEXT_MATCH_COUNTING =
   process.env.NEXT_PUBLIC_TUTOR_TEXT_MATCH_COUNTING !== 'off';
 
+// ── Voice answer judging (2026-10-06, voice/voice-judging.ts) ──────────────
+// The server decides per request whether the levers run (TUTOR_VOICE_*); the
+// browser acts only on the frames it is sent, so those flags alone restore
+// the previous behaviour. These are the browser's own kill switches.
+
+/** Voice: while the server's parallel verdict pre-check of the student's
+ *  answer is running, a reply sentence that carries a verdict on that answer
+ *  is kept out of the speaker until the check reports (or its deadline
+ *  passes); a HIGH-confidence check that contradicts it cuts the turn before
+ *  that sentence is spoken and the turn is continued once with the checked
+ *  fact. Off ⇒ sentences are spoken as they arrive; the check still bounds
+ *  the counting path. */
+export const TUTOR_VOICE_VERDICT_HOLD =
+  process.env.NEXT_PUBLIC_TUTOR_VOICE_VERDICT_HOLD !== 'off';
+
+/** Both modes: when the judge's review found that the tutor rejected a
+ *  CORRECT answer, the retraction note asks for one plain sentence that says
+ *  the student was right about it and that the tutor was wrong to say
+ *  otherwise, before anything else (voice/judge-correction-note.ts). Off ⇒
+ *  the 2026-10-04 wording ("briefly owning the correction"). */
+export const TUTOR_RETRACTION_OWN_IT =
+  process.env.NEXT_PUBLIC_TUTOR_RETRACTION_OWN_IT !== 'off';
+
 /** Homework sessions: the tutor does not sign off, or say the homework is
  *  done, unless the student asked to stop or every problem they brought is
  *  finished (per-turn <homework_session> rule). Off ⇒ the block as before. */

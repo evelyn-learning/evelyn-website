@@ -13,6 +13,8 @@ import type { GraphData, GraphFunction, GraphFunctionOfY } from '@core/knowledge
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
+import { resolveInequalityEntry, normalizeLineStyle } from '@/lib/tutor/whiteboard/graph-inequalities';
+import { graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
 
 // Color palette matching our existing design
 const COLORS = [
@@ -174,6 +176,20 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
     const containerRef = useRef<HTMLDivElement>(null);
     const calculatorRef = useRef<Desmos.Calculator | null>(null);
     const [desmosLoaded, setDesmosLoaded] = useState(!!window.Desmos);
+    // Labelled points as board features (graph-features.ts): a transparent
+    // `data-feature` mark sits over each plotted point so a scribble can land
+    // on "origin" ON THIS GRAPH. Positions are % of the plot box, recomputed
+    // from the same math bounds applyUniformBounds() hands to Desmos.
+    const pointFeatures = useMemo(() => graphPointFeatures(data.points), [data.points]);
+    const [pointMarks, setPointMarks] = useState<Array<{ name: string; label: string; left: number; top: number }>>([]);
+    // Inequalities resolved once per data change (LaTeX + strictness come
+    // from the same parser the region check samples with).
+    const inequalities = useMemo(
+      () => (Array.isArray(data.inequalities) ? data.inequalities : [])
+        .map((entry) => resolveInequalityEntry(entry))
+        .filter((r): r is NonNullable<ReturnType<typeof resolveInequalityEntry>> => r !== null),
+      [data.inequalities],
+    );
 
     // Wait for Desmos script to load
     useEffect(() => {
@@ -254,12 +270,27 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
             else ySpan = xSpan / pxRatio;
           }
         }
+        const left = cx - xSpan / 2;
+        const top = cy + ySpan / 2;
         calculator.setMathBounds({
-          left: cx - xSpan / 2,
+          left,
           right: cx + xSpan / 2,
           bottom: cy - ySpan / 2,
-          top: cy + ySpan / 2,
+          top,
         });
+        if (pointFeatures.length > 0 && xSpan > 0 && ySpan > 0) {
+          const next = pointFeatures
+            .map((p) => ({
+              name: p.name,
+              label: p.label ?? p.description,
+              left: Math.round(((p.x - left) / xSpan) * 10000) / 100,
+              top: Math.round(((top - p.y) / ySpan) * 10000) / 100,
+            }))
+            .filter((m) => m.left >= 0 && m.left <= 100 && m.top >= 0 && m.top <= 100);
+          setPointMarks((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+        } else {
+          setPointMarks((prev) => (prev.length === 0 ? prev : []));
+        }
       };
       applyUniformBounds();
       const resizeObserver = new ResizeObserver(() => applyUniformBounds());
@@ -290,6 +321,9 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           color,
           label: fn.label || '',
           showLabel: !!fn.label,
+          // A dashed line is a boundary that is NOT included (strict
+          // inequality, asymptote). Solid is Desmos's default.
+          ...(normalizeLineStyle(fn.lineStyle) === 'dashed' ? { lineStyle: window.Desmos!.Styles.DASHED } : {}),
         });
       }
 
@@ -316,6 +350,9 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           color,
           label: fn.label || '',
           showLabel: !!fn.label,
+          // A dashed line is a boundary that is NOT included (strict
+          // inequality, asymptote). Solid is Desmos's default.
+          ...(normalizeLineStyle(fn.lineStyle) === 'dashed' ? { lineStyle: window.Desmos!.Styles.DASHED } : {}),
         });
       }
 
@@ -331,6 +368,21 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           pointSize: 9,
         });
       }
+
+      // Inequalities, drawn natively: Desmos dashes the boundary of a strict
+      // inequality and shades the side where it holds. Each one gets its own
+      // translucent fill, so where several hold the shading is visibly
+      // darker — that overlap is the solution of the system. (2026-10-06:
+      // the only shading primitive used to be `shadedRegion`, a strip between
+      // two curves, which cannot express a half-plane at all.)
+      inequalities.forEach((ineq, i) => {
+        calculator.setExpression({
+          id: `ineq-${exprId++}`,
+          latex: ineq.latex,
+          color: ineq.color || COLORS[i % COLORS.length],
+          fillOpacity: 0.22,
+        });
+      });
 
       // Add shaded region
       if (data.shadedRegion) {
@@ -412,16 +464,44 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
             the PRIMARY showGraph renderer (Desmos loaded) — the Mafs
             GraphRenderer fallback has the same fix. */}
         {data.title && <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={data.title} /></h4>}
-        <div
-          ref={containerRef}
-          className="w-full"
-          // Fixed pixel box; applyUniformBounds() pads the math bounds to this
-          // box's aspect ratio so the scale is uniform (circles stay circular).
-          style={{ height: 380, maxHeight: 450 }}
-        />
+        <div className="relative w-full">
+          <div
+            ref={containerRef}
+            className="w-full"
+            // Fixed pixel box; applyUniformBounds() pads the math bounds to this
+            // box's aspect ratio so the scale is uniform (circles stay circular).
+            style={{ height: 380, maxHeight: 450 }}
+          />
+          {/* Feature marks over the labelled points — invisible, never
+              intercept input; the scribble overlay resolves them by rect. */}
+          {pointMarks.map((m) => (
+            <div
+              key={m.name}
+              data-feature={m.name}
+              data-feature-label={m.label}
+              aria-hidden="true"
+              className="absolute pointer-events-none"
+              style={{ left: `${m.left}%`, top: `${m.top}%`, width: 30, height: 30, transform: 'translate(-50%, -50%)' }}
+            />
+          ))}
+        </div>
         {/* Legend */}
-        {(data.functions?.length || 0) + (data.functionsOfY?.length || 0) > 0 && (
+        {(data.functions?.length || 0) + (data.functionsOfY?.length || 0) + inequalities.length > 0 && (
           <div className="flex gap-4 justify-center mt-2 flex-wrap">
+            {inequalities.map((ineq, i) => (
+              <div key={`ineq-${i}`} className="flex items-center gap-2 text-sm">
+                <div
+                  className="w-4 h-3 rounded-sm border"
+                  style={{
+                    backgroundColor: `${ineq.color || COLORS[i % COLORS.length]}`,
+                    opacity: 0.45,
+                    borderStyle: ineq.strict ? 'dashed' : 'solid',
+                    borderColor: ineq.color || COLORS[i % COLORS.length],
+                  }}
+                />
+                <span><InlineMathText text={prettyMathLabel(ineq.label || ineq.pretty)} /></span>
+              </div>
+            ))}
             {(data.functions || []).filter(f => f.label).map((fn, i) => (
               <div key={`fn-${i}`} className="flex items-center gap-2 text-sm">
                 <div className="w-4 h-1 rounded" style={{ backgroundColor: fn.color || COLORS[i % COLORS.length] }} />

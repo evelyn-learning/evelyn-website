@@ -45,6 +45,7 @@ import {
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
 import { formatWorkThenMatchBlock } from './work-then-match';
+import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
@@ -483,6 +484,25 @@ export interface BrainTurnInput {
    *  is not 'off'. Streaming path only. Absent/false ⇒ blocks and events
    *  exactly as before. */
   textWorkThenMatch?: boolean;
+  /** VOICE sessions (2026-10-06, ./voice-judging.ts) — the same levers, set by
+   *  the stream route for a voice request from a browser that can act on
+   *  them. Streaming path only. All absent/false ⇒ request, user content and
+   *  events exactly as before.
+   *  `voiceTurnShape`       the `<turn_shape>` block (TUTOR_VOICE_TURN_SHAPE).
+   *  `voiceWorkThenMatch`   the spoken "work it, then match" rule in place of
+   *                         `<verdict_guard>` (TUTOR_VOICE_WORK_THEN_MATCH).
+   *  `voiceVerdictPrecheck` the pre-check, started IN PARALLEL with the brain
+   *                         call — never awaited before it. Its finding is not
+   *                         in this request; it reaches the browser as a
+   *                         `verdict-precheck` (or `verdict-precheck-none`)
+   *                         frame while the reply streams
+   *                         (TUTOR_VOICE_VERDICT_PRECHECK).
+   *  `voiceThinking`        low-effort thinking on every voice turn
+   *                         (TUTOR_VOICE_THINKING=on; default off). */
+  voiceTurnShape?: boolean;
+  voiceWorkThenMatch?: boolean;
+  voiceVerdictPrecheck?: boolean;
+  voiceThinking?: boolean;
   /** The student's own words for this turn. `studentTranscript` can carry
    *  runtime notes in front of them ("[correction note …]\n\n<words>"), and
    *  is a runtime message on a retry; the two text-mode levers above read
@@ -649,6 +669,13 @@ export type BrainStreamEvent =
    *  before display and to bound the counting path. Only sent when the check
    *  informs (not low-confidence, not failed). */
   | { type: 'verdict-precheck'; result: PublicVerdictPrecheck; ms: number }
+  /** Voice: a pre-check of this message has been started alongside the brain
+   *  call. Sent before any sentence. The browser holds back a sentence that
+   *  carries a verdict until the finding (or the frame below) arrives. */
+  | { type: 'verdict-precheck-pending' }
+  /** Voice: the parallel pre-check ended with nothing to act on (failed,
+   *  timed out, unsure). The browser releases what it held. */
+  | { type: 'verdict-precheck-none'; ms: number }
   /** Text mode "work it, then match" is on for this call. Sent before any
    *  sentence; the client then applies its opener backstop and reads credit
    *  from the checks and the match statement instead of the opener. */
@@ -2096,25 +2123,35 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // They read the student's OWN words: `studentTranscript` may carry runtime
   // notes in front of them, and is a runtime message on a retry.
   const studentSaid = (input.studentMessage ?? input.studentTranscript ?? '').trim();
-  const turnShape = input.textTurnShape === true || input.textVerdictPrecheck === true
+  // Voice (./voice-judging.ts): the same levers under their own switches.
+  const voiceWorkThenMatch = input.voiceWorkThenMatch === true && input.textWorkThenMatch !== true;
+  const turnShapeOn = input.textTurnShape === true || input.voiceTurnShape === true;
+  const voicePrecheck = input.voiceVerdictPrecheck === true && input.textVerdictPrecheck !== true;
+  const sortedShape = turnShapeOn || input.textVerdictPrecheck === true || voicePrecheck || voiceWorkThenMatch
     ? classifyTurnShape(studentSaid, lastTutorMsgForGuard)
     : null;
-  // "Work it, then match": only ever true for a text session (the route).
-  const workThenMatch = input.textWorkThenMatch === true;
+  // Voice only: a spoken conditional statement is an answer, not a question.
+  const turnShape = input.voiceTurnShape === true || voicePrecheck || voiceWorkThenMatch
+    ? adjustTurnShapeForSpeech(sortedShape, studentSaid)
+    : sortedShape;
+  // "Work it, then match": true only when the route set it for the session's mode.
+  const workThenMatch = input.textWorkThenMatch === true || voiceWorkThenMatch;
   if (workThenMatch) yield { type: 'work-then-match' };
-  const turnShapeBlock = input.textTurnShape === true
+  const turnShapeBlock = turnShapeOn
     ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
     : '';
   if (turnShapeBlock) console.log(`[turn-shape] ${turnShape?.shape} · question=${turnShape?.open?.kind}`);
   const ordinaryGuardBlock = formatVerdictGuardBlock(
     input.studentTranscript,
     lastTutorMsgForGuard,
-    input.textTurnShape === true && assentSettlesNothing(turnShape) ? { noContinuation: true } : undefined,
+    turnShapeOn && assentSettlesNothing(turnShape) ? { noContinuation: true } : undefined,
   );
   // Under the mode the rule block takes the guard's place; plain consent to
   // an offer keeps its continuation guard (nothing is being judged there).
   const verdictGuardBlock = workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
-    ? formatWorkThenMatchBlock(input.studentTranscript, turnShape)
+    ? (voiceWorkThenMatch
+      ? formatVoiceWorkThenMatchBlock(input.studentTranscript, turnShape)
+      : formatWorkThenMatchBlock(input.studentTranscript, turnShape))
     : ordinaryGuardBlock;
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : workThenMatch ? '[verdict-guard] work-then-match rule attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
@@ -2122,7 +2159,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // Text-mode thinking (streaming path only): `thinkingOn` can only fall to
   // false within a turn (deadline / token-cap re-issue below), never rise.
-  let thinkingOn = input.textThinking === true;
+  let thinkingOn = input.textThinking === true || input.voiceThinking === true;
   const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript, workThenMatch ? { workThenMatch: true } : undefined);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   // Verdict pre-check: one small call, awaited HERE — before the brain call,
@@ -2162,6 +2199,51 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       if (answerCheckBlock) console.log('[verdict-precheck] carried from the first attempt of this turn');
     }
   }
+  // Voice: the same check, started HERE and NOT awaited — the brain call
+  // below starts at once. The finding is yielded as a frame the moment it is
+  // in (between stream events), and at the latest before `done`; the call has
+  // its own hard cap and never rejects. Nothing of it is in this request.
+  // A continuation after a withheld verdict sentence re-renders the block
+  // from what the browser was sent, as a text retry does.
+  let parallelPrecheck: Promise<void> | null = null;
+  let parallelSettled: { result: VerdictPrecheckResult | null; ms: number } | null = null;
+  let parallelEmitted = false;
+  if (voicePrecheck) {
+    const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
+    if (turnShape?.answerShaped && hasContext && !assentSettlesNothing(turnShape)) {
+      const startedAt = Date.now();
+      yield { type: 'verdict-precheck-pending' };
+      parallelPrecheck = runVerdictPrecheck({
+        problems: input.homework?.problems,
+        currentProblem: input.homework?.current,
+        activeProblemStatement: input.activeProblem?.statement,
+        history: input.conversationHistory.map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : '' })),
+        openQuestion: turnShape.open?.question ?? null,
+        studentMessage: studentSaid,
+      }, { timeoutMs: voiceVerdictPrecheckTimeoutMs(), ...input.verdictPrecheckDeps }).then((result) => {
+        parallelSettled = { result, ms: Date.now() - startedAt };
+      });
+    } else if (!turnShape && input.verdictPrecheckCarry) {
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch ? { workThenMatch: true } : undefined);
+      if (answerCheckBlock) console.log('[verdict-precheck] voice: carried from the first attempt of this turn');
+    }
+  }
+  /** The parallel check's frame, once, when it is in. Null otherwise. */
+  const takeParallelPrecheckFrame = (): BrainStreamEvent | null => {
+    const settled = parallelSettled as { result: VerdictPrecheckResult | null; ms: number } | null;
+    if (!parallelPrecheck || parallelEmitted || !settled) return null;
+    parallelEmitted = true;
+    const { result, ms } = settled;
+    input.verdictPrecheckDeps?.onResult?.(result, ms);
+    const pub: PublicVerdictPrecheck | null = result ? toPublicPrecheck(result) : null;
+    const summary = pub ? `answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}` : 'no result';
+    if (pub && precheckInforms(pub)) {
+      console.log(`[verdict-precheck] voice (parallel) ${ms} ms · ${result!.model} · ${summary}`);
+      return { type: 'verdict-precheck', result: pub, ms };
+    }
+    console.log(`[verdict-precheck] voice (parallel) ${ms} ms · ${summary}${pub ? ' (not sent)' : ''}`);
+    return { type: 'verdict-precheck-none', ms };
+  };
   const userContent =
     // Recap directives lead the message (live probes 2026-09-05: buried
     // after seven other blocks, the offer lost to the stuck rule 3 turns in
@@ -2238,6 +2320,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     totalUsage.model = opened.target.model;
 
     const streamIter = opened.events[Symbol.asyncIterator]();
+    // Voice parallel pre-check: the stream read that is in flight while the
+    // check's frame is yielded (the read is kept, not re-issued).
+    let pendingStreamRead: Promise<IteratorResult<Anthropic.MessageStreamEvent>> | null = null;
     for (;;) {
       let step: IteratorResult<Anthropic.MessageStreamEvent>;
       if (thinkingOn && !shownThisIter) {
@@ -2257,6 +2342,23 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           break;
         }
         step = raced;
+      } else if (parallelPrecheck && !parallelEmitted) {
+        // Whichever comes first: the next stream event, or the check.
+        pendingStreamRead ??= streamIter.next();
+        const first = await Promise.race([
+          pendingStreamRead.then((v) => ({ step: v })),
+          parallelPrecheck.then(() => 'precheck' as const),
+        ]);
+        if (first === 'precheck') {
+          const frame = takeParallelPrecheckFrame();
+          if (frame) yield frame;
+          continue;
+        }
+        step = first.step;
+        pendingStreamRead = null;
+      } else if (pendingStreamRead) {
+        step = await pendingStreamRead;
+        pendingStreamRead = null;
       } else {
         step = await streamIter.next();
       }
@@ -2513,6 +2615,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       // Swallow — the original (toolful, textless) result is still returned.
       // Better silent failure than crashing the whole turn.
     }
+  }
+
+  // Voice parallel pre-check: its frame always precedes `done` (the browser
+  // releases a held sentence on it, and the counting path reads it). Bounded
+  // by the check's own cap, which started with the turn.
+  if (parallelPrecheck && !parallelEmitted) {
+    await parallelPrecheck;
+    const frame = takeParallelPrecheckFrame();
+    if (frame) yield frame;
   }
 
   yield {

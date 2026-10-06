@@ -38,6 +38,8 @@ import { buildCircuitManifest } from '@/app/tutor/components/whiteboard/CircuitR
 
 // Math / Stats / Data
 import { buildCoordinatePlaneManifest } from '@/app/tutor/components/whiteboard/CoordinatePlaneRenderer';
+import { describeGraphRegions, lineStyleSuffix } from '@/lib/tutor/whiteboard/graph-inequalities';
+import { graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
 import { buildStatsManifest } from '@/app/tutor/components/whiteboard/StatsRenderer';
 import { buildManipulativeManifest } from '@/app/tutor/components/whiteboard/ManipulativeRenderer';
 import { buildNumberLineManifest } from '@/app/tutor/components/whiteboard/NumberLineRenderer';
@@ -910,13 +912,20 @@ function buildGraphManifest(cmd?: { data?: Record<string, unknown> }): FeatureMa
   // the builder used to take NO args, so the brain could never re-read what
   // its own graph plots — every expression, point, and range was invisible.
   const data = (cmd?.data ?? {}) as Record<string, unknown>;
+  // 2026-10-06 (portal-897212b5): this read only `expr`, but the client
+  // converter stores a plotted function as { latex, fn } — so `plots:` was
+  // EMPTY for every live graph — and the shading was never listed at all. The
+  // tutor shaded a strip that contained the origin and then insisted the
+  // origin was outside it. Functions are read in every shape they arrive in,
+  // and inequalities / line styles / the shaded region (with its bounds) are
+  // part of the description.
   const exprOf = (f: unknown): string => {
     if (typeof f === 'string') return f;
     if (f && typeof f === 'object') {
-      const fo = f as { expr?: unknown; label?: unknown };
-      const e = typeof fo.expr === 'string' ? fo.expr : '';
+      const fo = f as { expr?: unknown; latex?: unknown; fn?: unknown; label?: unknown };
+      const e = [fo.expr, fo.latex, fo.fn].find((v): v is string => typeof v === 'string' && v.trim() !== '') ?? '';
       const l = typeof fo.label === 'string' && fo.label ? ` (${fo.label})` : '';
-      return e ? `${e}${l}` : '';
+      return e ? `${e}${l}${lineStyleSuffix(f)}` : '';
     }
     return '';
   };
@@ -926,30 +935,40 @@ function buildGraphManifest(cmd?: { data?: Record<string, unknown> }): FeatureMa
     .map(exprOf)
     .filter(Boolean)
     .slice(0, 6);
-  const points = (Array.isArray(data.points) ? data.points : [])
-    .map((p: unknown) => {
-      const po = (p ?? {}) as { x?: unknown; y?: unknown; label?: unknown };
-      if (typeof po.x === 'number' && typeof po.y === 'number') {
-        return `(${po.x}, ${po.y})${typeof po.label === 'string' && po.label ? ` ${po.label}` : ''}`;
-      }
-      return '';
-    })
-    .filter(Boolean)
+  const pointFeatures = graphPointFeatures(data.points);
+  const points = pointFeatures
+    .map((p) => `(${p.x}, ${p.y})${p.label ? ` ${p.label}` : ''}`)
     .slice(0, 6);
+  // Regions first: they are what the brain most needs to re-read and must
+  // not be the part a long plot list truncates away.
   const detail = [
+    ...describeGraphRegions(data),
     fns.length ? `plots: ${fns.join('; ')}` : '',
     points.length ? `points: ${points.join(', ')}` : '',
   ].filter(Boolean).join(' · ');
-  return [{
+  const entries: FeatureManifestEntry[] = [{
     name: 'graph',
     kind: 'object',
-    description: `the function graph (Desmos iframe)${detail ? ` — ${detail.slice(0, 280)}` : ''}`,
+    description: `the function graph (Desmos iframe)${detail ? ` — ${detail.slice(0, 520)}` : ''}`,
     labels: [
       'graph', 'the graph', 'the function graph', 'function graph',
       'desmos', 'the desmos graph', 'plot', 'the plot', 'the chart',
     ],
     scribbleable: false,
   }];
+  // Labelled points are real, markable features (graph-features.ts): the
+  // renderer lays a `data-feature` mark over each one, so "origin" resolves
+  // ON THIS GRAPH instead of on an older coordinate plane.
+  for (const p of pointFeatures) {
+    entries.push({
+      name: p.name,
+      kind: 'point',
+      description: p.description,
+      labels: p.labels,
+      ...(p.label ? { displayName: p.label } : {}),
+    });
+  }
+  return entries;
 }
 
 function buildMoleculeManifest(cmd?: { smiles?: unknown; title?: unknown }): FeatureManifestEntry[] {

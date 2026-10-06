@@ -464,7 +464,8 @@ async function main() {
     const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
     assert.match(vtr, /type\?: string \}\)\.type === 'work-then-match'/);
     assert.match(vtr, /TUTOR_TEXT_OPENER_BACKSTOP && sessionMode === 'text' && workThenMatchTurnRef\.current/);
-    assert.match(vtr, /TUTOR_TEXT_MATCH_COUNTING && sessionMode === 'text' && workThenMatchTurnRef\.current/);
+    // Counting follows the server's frame in either mode (voice since 2026-10-06).
+    assert.match(vtr, /TUTOR_TEXT_MATCH_COUNTING && workThenMatchTurnRef\.current/);
     assert.match(vtr, /readVerdictOpener\(/);
     assert.match(vtr, /resolveMatchCredit\(/);
     assert.match(vtr, /counting_disagreement/);

@@ -169,6 +169,17 @@ import { equationPlaceholder, equationPlaceholderReason } from '@/lib/tutor/whit
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
+import { gateInequalityGraph } from '@/lib/tutor/whiteboard/graph-inequalities';
+import { planScribbleTarget, isRepeatScribble } from '@/lib/tutor/whiteboard/scribble-page-policy';
+import { isAnswerRevealingKill, isAnswerBearingRenderTool, splitAnswerRevealingKilled } from '@/lib/tutor/whiteboard/kill-keep';
+import { decideHomeworkAdvance } from '@/lib/tutor/lesson-plan/homework-advance';
+import {
+  TUTOR_GRAPH_INEQUALITIES,
+  TUTOR_GRAPH_REGION_CHECK,
+  TUTOR_SCRIBBLE_STAY_ON_PAGE,
+  TUTOR_KILL_DISCARDS_ANSWER_RENDERS,
+  TUTOR_HOMEWORK_ADVANCE_GUARD,
+} from '@/lib/tutor/orchestrator/board-round-flags';
 import { validateSecantTangentGraph } from '@/lib/tutor/whiteboard/secant-tangent-validator';
 import {
   anchorWordIndex,
@@ -388,9 +399,10 @@ import {
   precheckCreditOverride,
   type PublicVerdictPrecheck,
 } from '@/lib/tutor/voice/verdict-precheck-shared';
-import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT, TUTOR_TEXT_OPENER_BACKSTOP, TUTOR_TEXT_MATCH_COUNTING } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT, TUTOR_TEXT_OPENER_BACKSTOP, TUTOR_TEXT_MATCH_COUNTING, TUTOR_VOICE_VERDICT_HOLD } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { backstopAppliesTo, isNonAnswerShape, openerBackstopFeedback, readMatchStatement, readVerdictOpener, resolveMatchCredit } from '@/lib/tutor/voice/work-then-match';
 import { classifyTurnShape, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
+import { VoiceVerdictGate, VOICE_VERDICT_HOLD_DEADLINE_MS, VOICE_VERDICT_WITHHELD_ACTION, voiceHoldAppliesTo, voiceVerdictWithheldFeedback, type VoiceVerdictCut } from '@/lib/tutor/voice/voice-judging';
 import { buildJudgeCorrectionNote, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
@@ -3248,6 +3260,16 @@ export function VoiceTutorRealtime({
   // in the finally. Cleared at the start of each brain call. (Visual dim layer
   // is phase A, on top of this.)
   const pendingRevisionRef = useRef<Set<string>>(new Set());
+  // 2026-10-06 (portal-897212b5 @229s): the subset of pendingRevisionRef whose
+  // attempt was killed for a verdict / assent reason (kill-keep.ts
+  // isAnswerRevealingKill). Those renders state the conclusion the kill
+  // withheld, so the end-of-call cleanup sweeps them instead of handing them
+  // to keep-validated — unless the retry re-emitted them (a confirm removes
+  // the id from pendingRevisionRef, so it never reaches the sweep).
+  const answerRevealKilledIdsRef = useRef<Set<string>>(new Set());
+  // Graph region check (graph-inequalities.ts): rejections already issued per
+  // problem — one soft-reject, then the graph is repaired from the problem.
+  const graphRegionRejectionsRef = useRef<Map<string, number>>(new Map());
   // Kill-recovery (B) keep-on-no-replacement (2026-06-17): true if the WINNING
   // (final) attempt of the current brain call rendered anything. Reset at the
   // top of each attempt; read in the finally to decide whether a diverged /
@@ -4858,7 +4880,7 @@ export function VoiceTutorRealtime({
   // written for the "ahead of render" case and misbehave when run after
   // it (see the seamMode guards inline). Everything else is identical
   // regardless of `opts`.
-  const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string, opts?: { seamMode?: boolean }) => {
+  const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string, opts?: { seamMode?: boolean; /** homework-advance.ts: a segment the student SKIPPED — moved past, never auto-marked completed. */ leaveIncomplete?: string }) => {
     console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
     // Live check 6 nets: remember the advance for the stream-end auto-card
     // and restart the per-segment turn counter.
@@ -4884,7 +4906,7 @@ export function VoiceTutorRealtime({
       const planLoIds = plan.los?.map((lo) => lo.id) ?? [];
       for (let i = outgoingIdx; i < targetIdx; i++) {
         const segId = plan.segments[i].id;
-        if (!completedSegmentIdsRef.current.has(segId)) {
+        if (!completedSegmentIdsRef.current.has(segId) && segId !== opts?.leaveIncomplete) {
           completedSegmentIdsRef.current.add(segId);
           mutated = true;
           // R48 Task 3: `|| held` — a segment whose explicit-complete row is
@@ -6365,6 +6387,27 @@ export function VoiceTutorRealtime({
         return [validated as unknown as WhiteboardCommand];
       }
       if (cmd.action === 'showGraph' && (cmd as any).data) {
+        // 2026-10-06 (portal-897212b5 / portal-347539a7): `inequalities` and
+        // `lineStyle` are validated + normalised, and a graph that shades a
+        // region is sampled against the active problem's own inequalities
+        // (graph-inequalities.ts). A mismatch is soft-rejected once with the
+        // offending point; an unreadable problem never blocks the graph.
+        const ineqGate = gateInequalityGraph((cmd as any).data, {
+          enabled: TUTOR_GRAPH_INEQUALITIES,
+          regionCheck: TUTOR_GRAPH_REGION_CHECK,
+          problemStatement: currentProblemRef.current?.statement,
+          boardCommands: whiteboardCommandsRef.current,
+          rejections: graphRegionRejectionsRef.current,
+        });
+        for (const note of ineqGate.notes) onDebugEvent?.('graph_ineq_check', `${note.kind}: ${note.detail}`.slice(0, 400));
+        if (!ineqGate.ok) {
+          console.warn('[VoiceTutorRealtime] showGraph inequality gate:', ineqGate.reason);
+          onDebugEvent?.('tool_call', `Rejected show_function_graph: ${ineqGate.reason}`);
+          rejected.push({ action: 'show_function_graph', reason: ineqGate.reason });
+          return [];
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (ineqGate.data !== (cmd as any).data) (cmd as any).data = ineqGate.data;
         const original = (cmd as any).data;
         // A y=f(x) `functions` entry must be a function of x. Reject a polar
         // curve r=f(θ) that the brain converted to a Cartesian-implicit form and
@@ -7138,6 +7181,36 @@ export function VoiceTutorRealtime({
             consumedHashes,
             completedSegmentIds: completedSegmentIdsRef.current,
           });
+          // 2026-10-06 (portal-897212b5 @9:15): in a homework-help plan the
+          // `homework` segment holds ALL the student's problems, and moving
+          // past it auto-marks it completed. Returning from a recap detour
+          // with advance_lesson({to:"next"}) resolved to the plan's `recap`
+          // and recorded the unsolved homework as completed. See
+          // homework-advance.ts for the four outcomes.
+          const hwAdvance = next && TUTOR_HOMEWORK_ADVANCE_GUARD
+            ? decideHomeworkAdvance({
+              isHomeworkPlan: (homeworkProblemsRef.current?.length ?? 0) > 0,
+              segmentIds: plan.segments.map((sg) => sg.id),
+              segmentKinds: Object.fromEntries(plan.segments.map((sg) => [sg.id, sg.kind])),
+              fromSegId,
+              nextSegId: next,
+              returningFromFree: !currentSegmentIdRef.current,
+              completedSegmentIds: completedSegmentIdsRef.current,
+              markedCompleteThisBatch: processed
+                .filter((pc) => (pc.action as string) === 'markSegmentComplete')
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((pc) => String((pc as any).segmentId ?? '')),
+              studentText: lastBrainCallContextRef.current?.transcript,
+              current: homeworkCurrentRef.current,
+              total: homeworkProblemsRef.current?.length ?? 0,
+            })
+            : null;
+          if (hwAdvance?.action === 'reject') {
+            console.warn(`[VoiceTutorRealtime] advance_lesson({to:"${to}"}) past the homework segment refused — not marked complete, no student request`);
+            onDebugEvent?.('advance_homework_guard', `reject to="${to}" → "${next}" from="${fromSegId}"`);
+            rejected.push({ action: 'advance_lesson', reason: hwAdvance.reason });
+            continue;
+          }
           if (next) {
             // R46 (c-ii): the student had a jump pending (e.g. "let's move
             // to the quotient law restrictions") and the brain's own
@@ -7200,7 +7273,24 @@ export function VoiceTutorRealtime({
               activeLedgerLoRef.current = null;
               scheduleProfileFlush();
             }
-            applyResolvedAdvance(plan, fromSegId, next);
+            if (hwAdvance?.action === 'resume') {
+              // Back from the detour INTO the homework segment: the cursor is
+              // restored, nothing is completed, no new page is opened (the
+              // student's problem and its work are already on the board).
+              const hwSeg = hwAdvance.homeworkSegId;
+              console.log(`[VoiceTutorRealtime] advance_lesson({to:"${to}"}) from free mode → resuming homework segment "${hwSeg}" (not completed)`);
+              onDebugEvent?.('advance_homework_guard', `resume "${hwSeg}" (to="${to}" would have landed on "${next}")`);
+              currentSegmentIdRef.current = hwSeg;
+              setActiveSegmentId(hwSeg);
+              segmentBeforeFreeRef.current = '';
+              catalogRef.current.setCurrentSegment(hwSeg);
+              turnsInSegmentRef.current = { segId: hwSeg, turns: 0, noted: false };
+            } else {
+              if (hwAdvance?.action === 'allow_skipped') {
+                onDebugEvent?.('advance_homework_guard', `skipped by student request — "${hwAdvance.homeworkSegId}" left incomplete, cursor → "${next}"`);
+              }
+              applyResolvedAdvance(plan, fromSegId, next, hwAdvance?.action === 'allow_skipped' ? { leaveIncomplete: hwAdvance.homeworkSegId } : undefined);
+            }
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
             // 2026-05-15: when `to: "next"` from the LAST segment fails
@@ -8686,12 +8776,21 @@ export function VoiceTutorRealtime({
         // Skip the increment so handwrites don't take a slot — they
         // still get cataloged and addressable, just not as a per-page
         // item index. Phase 1' of the whiteboard markup initiative.
-        if (act === 'handwrite' && o !== entry.order) {
+        // 2026-10-06 (portal-897212b5 @1220s): `entry.order` is a session-wide
+        // counter that never rewinds, but this list is PRUNED whenever an
+        // item is removed (evolve-in-place, kill rollback) — after three
+        // removals the counter `o` could no longer reach the order of
+        // anything rendered later, so a scroll to the newest graph resolved
+        // in the catalog and then silently went nowhere. A stamped id is
+        // exact; the positional count stays only for id-less commands.
+        const cId = (c as { id?: unknown }).id;
+        const isTarget = typeof cId === 'string' ? cId === targetId : o === entry.order;
+        if (act === 'handwrite' && !isTarget) {
           o += 1;
           continue;
         }
         itemIndexInPage += 1;
-        if (o === entry.order) { foundIndex = itemIndexInPage; break; }
+        if (isTarget) { foundIndex = itemIndexInPage; break; }
         o += 1;
       }
       if (foundIndex < 0) return null;
@@ -8718,9 +8817,31 @@ export function VoiceTutorRealtime({
         cmdAny._scribbleRejected = true;
         continue;
       }
-      const result = catalogRef.current.resolveTarget(raw, {
+      const resolvedBoardWide = catalogRef.current.resolveTarget(raw, {
         page: typeof cmdAny.page === 'number' ? cmdAny.page : undefined,
       });
+      // 2026-10-06 (portal-897212b5 @1063s / @1160s): a scribble on "origin"
+      // resolved board-wide to a coordinate plane on an OLD page and the
+      // auto page-switch below pulled the student off the graph the tutor
+      // had just painted. A mark stays on the page in view: retarget to a
+      // matching feature there (scribble-page-policy.ts), else drop it and
+      // tell the brain next turn.
+      const pagePlan = TUTOR_SCRIBBLE_STAY_ON_PAGE
+        ? planScribbleTarget(catalogRef.current, raw, resolvedBoardWide, {
+          explicitPage: typeof cmdAny.page === 'number' && resolvedBoardWide.ok && !resolvedBoardWide.pageFallback,
+        })
+        : null;
+      if (pagePlan?.action === 'drop') {
+        unrealizedMarkRef.current.push(pagePlan.advisory);
+        console.warn('[VoiceTutor] scribble dropped — target is on another page:', pagePlan.detail);
+        onDebugEvent?.('scribble_other_page_dropped', pagePlan.detail);
+        cmdAny._scribbleRejected = true;
+        continue;
+      }
+      if (pagePlan?.action === 'retarget') {
+        onDebugEvent?.('scribble_retargeted_in_view', `"${raw}" ${pagePlan.fromItemId} → ${pagePlan.result.itemId}/${pagePlan.result.canonical} (${pagePlan.why})`);
+      }
+      const result = pagePlan?.action === 'retarget' ? pagePlan.result : resolvedBoardWide;
       if (result.ok && result.pageFallback) {
         // Board Map fail-open: the brain page-qualified to a page that did
         // NOT contain the target, so resolution fell back to the whole board.
@@ -8824,7 +8945,11 @@ export function VoiceTutorRealtime({
           label: p.label ?? null,
         });
         return priorSig === sig;
-      });
+      })
+        // Same feature + same shape is a repeat whatever the caption says
+        // (portal-897212b5: "test point", then "test point (0,0)", both ticks
+        // on the same origin).
+        || (TUTOR_SCRIBBLE_STAY_ON_PAGE && isRepeatScribble(whiteboardCommandsRef.current, { targetId: result.itemId, targetFeature: result.canonical, shape: cmdAny.shape }));
       if (isDuplicate) {
         cmdAny._scribbleRejected = true;
         console.warn('[VoiceTutor] scribble-dedup: same target+shape+color+label already on board, silent drop');
@@ -9100,6 +9225,13 @@ export function VoiceTutorRealtime({
             '[VoiceTutor] scrollTo-resolved: target="%s" → %s (item %d, page %d)',
             raw, result.itemId, located.itemIndex, located.pageIndex,
           );
+        } else {
+          // 2026-10-06 (portal-897212b5 @1220s): the target RESOLVED in the
+          // catalog but could not be located in the command history, so no
+          // scroll was synthesised and the call vanished without a trace
+          // ("render_sync_empty_batch" was the only sign). Say so.
+          console.warn('[VoiceTutor] scrollTo dropped: resolved target "%s" → %s has no position in the command history', raw, result.itemId);
+          onDebugEvent?.('tool_call_soft_drop', `tutor_scroll_whiteboard "${raw.slice(0, 80)}" → ${result.itemId} (resolved but not locatable on a page) — call dropped, turn continues`);
         }
         continue; // original feature-name scrollTo is replaced by the synthesised pair
       }
@@ -10797,7 +10929,13 @@ export function VoiceTutorRealtime({
             const skipNextSeg = skipPlan.segments.find((s) => s.id === skipNext);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const skipNextKind = (skipNextSeg as any)?.kind ? ` (a ${(skipNextSeg as any).kind} segment)` : '';
-            applyResolvedAdvance(skipPlan, skipFromSegId, skipNext);
+            // Homework plan: the Skip button is the student's own request, so
+            // it advances — but a skipped homework segment is left incomplete
+            // (homework-advance.ts).
+            const skipLeavesHomework = TUTOR_HOMEWORK_ADVANCE_GUARD && (homeworkProblemsRef.current?.length ?? 0) > 0
+              && getSegment(skipPlan, skipFromSegId)?.kind !== 'recap';
+            if (skipLeavesHomework) onDebugEvent?.('advance_homework_guard', `skip button — "${skipFromSegId}" left incomplete, cursor → "${skipNext}"`);
+            applyResolvedAdvance(skipPlan, skipFromSegId, skipNext, skipLeavesHomework ? { leaveIncomplete: skipFromSegId } : undefined);
             // Replace the action-INSTRUCTION marker with a state FACT.
             // Still bracketed ⇒ TranscriptView strips it from the visible
             // chat; the brain reads it as the current student turn and
@@ -11922,6 +12060,18 @@ export function VoiceTutorRealtime({
             ...(sessionMode === 'text' && attempt > 0 && verdictPrecheckRef.current
               ? { verdictPrecheck: verdictPrecheckRef.current }
               : {}),
+            // Voice answer judging (2026-10-06, lib/tutor/voice/voice-judging.ts):
+            // this browser can act on the voice frames (hold a verdict
+            // sentence, cut and continue the turn), so the server may run the
+            // TUTOR_VOICE_* levers; the same two fields then ride as in text.
+            // The server ignores all three with its flags off.
+            ...(sessionMode !== 'text' ? { voiceJudging: true as const } : {}),
+            ...(sessionMode !== 'text' && attempt === 0 && transcript && !transcript.trim().startsWith('[')
+              ? { studentMessage: transcript }
+              : {}),
+            ...(sessionMode !== 'text' && attempt > 0 && verdictPrecheckRef.current
+              ? { verdictPrecheck: verdictPrecheckRef.current }
+              : {}),
             // Board Map (project_tutor_board_map_design): send the FULL-board
             // snapshot (NOT segment-scoped) + the page list. buildWhiteboardSummary
             // now owns segment-scoping — it expands current-segment + current-view
@@ -12455,6 +12605,87 @@ export function VoiceTutorRealtime({
             releaseVerdictHold();
           }, VERDICT_HOLD_CAP_MS);
         };
+        // Voice answer judging (2026-10-06, lib/tutor/voice/voice-judging.ts).
+        // While the server's parallel pre-check of the student's answer is
+        // running, a sentence that carries a VERDICT on that answer is kept in
+        // the verdict hold above — the opener and the working are spoken as
+        // they arrive — until the check reports or the deadline passes. A
+        // HIGH-confidence check that contradicts the held sentence CUTS the
+        // turn there: the sentence and what followed are never spoken, the
+        // attempt is trimmed to what was heard, and the turn is continued once
+        // (the retry hand-off below) with the checked fact. Audio already
+        // playing is NOT cut (this is not performKill). First attempt of a
+        // voice turn only; inert unless the server sends its frames.
+        const voiceGate = new VoiceVerdictGate({
+          enabled: TUTOR_VOICE_VERDICT_HOLD && sessionMode !== 'text' && attempt === 0
+            && voiceHoldAppliesTo(classifyTurnShape(transcript ?? '', String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '')), transcript ?? ''),
+          studentText: transcript ?? '',
+        });
+        let voiceVerdictCut: VoiceVerdictCut | null = null;
+        let voiceHoldDeadlineTimer: ReturnType<typeof setTimeout> | null = null;
+        const clearVoiceHoldDeadline = () => {
+          if (voiceHoldDeadlineTimer) { clearTimeout(voiceHoldDeadlineTimer); voiceHoldDeadlineTimer = null; }
+        };
+        const armVoiceHoldDeadline = () => {
+          clearVoiceHoldDeadline();
+          // Measured from the moment this attempt was sent, not from the hold.
+          const remaining = Math.max(0, attemptStartMs + VOICE_VERDICT_HOLD_DEADLINE_MS - Date.now());
+          voiceHoldDeadlineTimer = setTimeout(() => {
+            voiceHoldDeadlineTimer = null;
+            if (voiceGate.onDeadline().action === 'release') {
+              onDebugEvent?.('voice_verdict_hold_deadline', `${verdictHeld.length} sentence(s) spoken as written`);
+              releaseVerdictHold();
+            }
+          }, remaining);
+        };
+        const applyVoiceVerdictCut = (cut: VoiceVerdictCut): void => {
+          const pc = verdictPrecheckRef.current;
+          if (attemptKilled || voiceVerdictCut || !pc) return;
+          clearVoiceHoldDeadline();
+          clearVerdictCap();
+          // Held sentences that precede the withheld one are spoken; it and
+          // everything after it (held, or still behind the TTS gate) are not.
+          const at = verdictHeld.indexOf(cut.speech);
+          const before = at >= 0 ? verdictHeld.slice(0, at) : verdictHeld.slice();
+          const droppedCount = (at >= 0 ? verdictHeld.length - at : 1) + pendingSentences.length;
+          verdictHoldActive = false;
+          verdictHeld.length = 0;
+          verdictHeldText = '';
+          pendingSentences.length = 0;
+          clearVbsCap();
+          for (const h of before) {
+            if (!speakTextGated()) speakOne(h);
+          }
+          voiceVerdictCut = cut;
+          attemptText = attemptText.slice(0, cut.mark.textLen).trim();
+          attemptSentences = attemptSentences.slice(0, cut.mark.sentenceIndex);
+          chatRevealText = chatRevealText.slice(0, cut.mark.revealLen).trim();
+          // The chat bubble shows what was heard, no more.
+          const heardReveal = TUTOR_VALIDATE_BEFORE_SPEAK ? chatRevealText : attemptText;
+          transcriptRef.current = transcriptRef.current.map((e) =>
+            e.id === attemptStreamingId ? { ...e, text: heardReveal } : e,
+          );
+          onTranscriptUpdate([...transcriptRef.current]);
+          // One correction per turn, like every other verdict kill.
+          judgeRetriesUsed++;
+          verdictPrecheckKillUsedRef.current = true;
+          rejectionsThisAttempt.push({
+            action: VOICE_VERDICT_WITHHELD_ACTION,
+            reason: voiceVerdictWithheldFeedback({ kind: cut.kind, precheck: pc, studentText: transcript ?? '', heardText: attemptText, withheldSentence: cut.sentence }),
+          });
+          console.warn(`[brain-orchestrator] voice: verdict sentence contradicts the pre-check (${cut.kind}) — withheld before audio, continuing the turn:`, JSON.stringify(cut.sentence.slice(0, 80)));
+          onDebugEvent?.('voice_verdict_cut', `${cut.kind} · withheld="${cut.sentence.slice(0, 50)}" · dropped=${droppedCount} · heard=${attemptText.length} chars`);
+        };
+        const settleVoiceGate = (pc: PublicVerdictPrecheck | null): void => {
+          if (attemptKilled) return;
+          const settled = voiceGate.onPrecheck(pc);
+          if (settled.action === 'release') {
+            clearVoiceHoldDeadline();
+            releaseVerdictHold();
+          } else if (settled.action === 'cut') {
+            applyVoiceVerdictCut(settled.cut);
+          }
+        };
         // Judge-kill Stage 3.1: decide restatement-vs-correction for a
         // post-content-kill retry, using whatever opener text we've held so
         // far. Restatement (≥60% content-word overlap + no changed number)
@@ -12553,6 +12784,26 @@ export function VoiceTutorRealtime({
           // route uniformly: the gated flush (flushPending), the rolling
           // 1-deep hold release, and direct gate-open emissions.
           if (attempt === 0) {
+            // Voice answer judging: the gate decides first (see voiceGate).
+            const voiceEmit = voiceGate.onEmit(s);
+            if (voiceEmit.action === 'drop') return;
+            if (voiceEmit.action === 'cut') {
+              applyVoiceVerdictCut(voiceEmit.cut);
+              return;
+            }
+            if (voiceEmit.action === 'hold') {
+              verdictSeenThisAttempt = true;
+              if (!voiceHoldDeadlineTimer) {
+                // Its own deadline replaces the short cap of the hold above.
+                clearVerdictCap();
+                onDebugEvent?.('voice_verdict_hold_started', s.slice(0, 60));
+                armVoiceHoldDeadline();
+              }
+              verdictHoldActive = true;
+              verdictHeld.push(s);
+              verdictHeldText += (verdictHeldText ? ' ' : '') + s;
+              return;
+            }
             if (verdictHoldActive) {
               verdictHeld.push(s);
               verdictHeldText += (verdictHeldText ? ' ' : '') + s;
@@ -12918,6 +13169,9 @@ export function VoiceTutorRealtime({
                 if (ev.type === 'sentence') {
                   const sentence = (ev.text as string) || '';
                   if (!sentence.trim()) continue;
+                  // Voice answer judging: the turn was cut at a withheld
+                  // verdict sentence — nothing after it is shown or spoken.
+                  if (voiceVerdictCut) continue;
                   // Mid-session greeting filter: if the brain opens a
                   // mid-session response with "Hey/Hi/Hello [name]!"
                   // when there's already a prior tutor turn in history,
@@ -14187,6 +14441,12 @@ export function VoiceTutorRealtime({
                     // the spoken token.
                     .replace(/([A-Za-z0-9])\u0304/g, '$1 bar')
                     .replace(/[\u0300-\u036F]/g, '');
+                  // Voice answer judging: every sentence is announced to the
+                  // gate in stream order, with where the attempt stood BEFORE
+                  // it (a cut trims back to exactly there).
+                  if (!attemptKilled) {
+                    voiceGate.onSentence(trimmedSentence, sentenceForSpeech, { textLen: attemptText.length, revealLen: chatRevealText.length, sentenceIndex: attemptSentences.length });
+                  }
                   attemptText += (attemptText ? ' ' : '') + trimmedSentence;
                   // Fix B: raw per-sentence text (pre-TTS-normalization, so
                   // inline $...$ math survives) — see attemptSentences decl.
@@ -14399,6 +14659,12 @@ export function VoiceTutorRealtime({
                     if (ms > 0) await new Promise((r) => setTimeout(r, ms));
                   }
                 } else if (ev.type === 'tool-call') {
+                  // Voice answer judging: a tool call that follows a withheld
+                  // verdict sentence belongs to the reply that was cut.
+                  if (voiceVerdictCut) {
+                    onDebugEvent?.('voice_verdict_cut_tool_skipped', String(ev.name ?? ''));
+                    continue;
+                  }
                   let name = ev.name as string;
                   let args = (ev.args as Record<string, unknown>) || {};
                   // Set when the RUNTIME (not the brain) rewrites this
@@ -14612,6 +14878,18 @@ export function VoiceTutorRealtime({
                   if (TUTOR_KILL_WITHHOLDS_ADVANCE && attemptKilled && shouldWithholdAfterKill(name)) {
                     console.warn(`[brain-orchestrator] withholding lesson-state tool "${name}" — attempt already killed`);
                     onDebugEvent?.('kill_withheld_lesson_tool', name);
+                    continue;
+                  }
+                  // 2026-10-06 (portal-897212b5 @229s): this attempt was killed
+                  // for asserting a verdict / answer the student had not
+                  // earned; a board card arriving AFTER that kill is the same
+                  // assertion written down ("⇒ dashed boundary line", painted
+                  // while the retry asked "solid, or dashed?"). It does not
+                  // dispatch. The retry re-emits whatever it still needs.
+                  if (TUTOR_KILL_DISCARDS_ANSWER_RENDERS && attemptKilled
+                      && isAnswerRevealingKill(rejectionsThisAttempt) && isAnswerBearingRenderTool(name)) {
+                    console.warn(`[brain-orchestrator] withholding board render "${name}" — attempt killed for a verdict/assent reason`);
+                    onDebugEvent?.('killed_render_withheld_answer', `${name} (${rejectionsThisAttempt.map((r) => r.action).join(',')})`);
                     continue;
                   }
                   totalToolNamesSeen.push(name);
@@ -15465,10 +15743,26 @@ export function VoiceTutorRealtime({
                       // branch) so the two paths can't double-advance.
                       if (resolvedCmd) {
                         const cursorId = currentSegmentIdRef.current;
-                        if (inferAdvanceFromSegmentCard(plan.segments.map((s) => s.id), cursorId, segId)) {
+                        // Homework plan: a recap card must not, by inference,
+                        // complete the homework segment (homework-advance.ts).
+                        const hwInferred = TUTOR_HOMEWORK_ADVANCE_GUARD
+                          ? decideHomeworkAdvance({
+                            isHomeworkPlan: (homeworkProblemsRef.current?.length ?? 0) > 0,
+                            segmentIds: plan.segments.map((sg) => sg.id),
+                            segmentKinds: Object.fromEntries(plan.segments.map((sg) => [sg.id, sg.kind])),
+                            fromSegId: cursorId,
+                            nextSegId: segId,
+                            returningFromFree: false,
+                            completedSegmentIds: completedSegmentIdsRef.current,
+                            studentText: transcript,
+                          })
+                          : null;
+                        if (hwInferred && (hwInferred.action === 'reject' || hwInferred.action === 'resume')) {
+                          onDebugEvent?.('advance_homework_guard', `inferred advance "${cursorId}" → "${segId}" not applied — homework not complete`);
+                        } else if (inferAdvanceFromSegmentCard(plan.segments.map((s) => s.id), cursorId, segId)) {
                           console.log(`[brain-orchestrator] show_segment_card implies lesson advance "${cursorId}" → "${segId}" (brain skipped advance_lesson) — applying inferred advance.`);
                           onDebugEvent?.('inferred_advance_from_segment_card', `${cursorId} → ${segId}`);
-                          applyResolvedAdvance(plan, cursorId, segId);
+                          applyResolvedAdvance(plan, cursorId, segId, hwInferred?.action === 'allow_skipped' ? { leaveIncomplete: hwInferred.homeworkSegId } : undefined);
                           inferredAdvanceThisTurnRef.current = segId;
                           // R44: the board already moved via this inference —
                           // a pending verbal-jump request (if any) is now
@@ -16008,6 +16302,17 @@ export function VoiceTutorRealtime({
                     }
                     onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"`);
                   }
+                  // Voice: the check ran alongside the reply — release what
+                  // was held, or cut the turn at a sentence it contradicts.
+                  settleVoiceGate(pc);
+                } else if ((ev as { type?: string }).type === 'verdict-precheck-pending') {
+                  // Voice: a check of this answer is running on the server.
+                  voiceGate.onPending();
+                  onDebugEvent?.('verdict_precheck_pending', voiceGate.awaiting ? 'verdict sentences held until it reports' : 'no hold on this turn');
+                } else if ((ev as { type?: string }).type === 'verdict-precheck-none') {
+                  // Voice: the check failed, timed out or was unsure.
+                  onDebugEvent?.('verdict_precheck_none', `ms=${Number((ev as { ms?: number }).ms ?? 0)}`);
+                  settleVoiceGate(null);
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry
@@ -16027,7 +16332,9 @@ export function VoiceTutorRealtime({
                   // spoken self-audits reappeared in the pane despite 6
                   // filter drops). fullText remains the backfill for the
                   // empty-attemptText case the 2026-07-24 guard exists for.
-                  attemptText = ((attemptText || (ev.fullText as string)) ?? '').trim();
+                  // (A voice turn cut at a withheld verdict keeps exactly what
+                  // was heard: the server's ledger holds the withheld text.)
+                  attemptText = (voiceVerdictCut ? attemptText : ((attemptText || (ev.fullText as string)) ?? '')).trim();
                   lastUsage = ev.usage as typeof lastUsage;
                   // Task X10: carry the server's brain-unavailable + retry
                   // signals out to the post-stream empty-turn fallback.
@@ -17202,6 +17509,17 @@ export function VoiceTutorRealtime({
           }
         }
 
+        // Voice answer judging: a turn cut at a withheld verdict sentence is
+        // CONTINUED, not redone — what the student heard stays in its bubble
+        // and in the turn's text, and the next attempt appends to it (the
+        // same hand-off as a turn continuation). It spends one of the turn's
+        // ordinary retries. With nothing heard yet it is a plain retry.
+        if (voiceVerdictCut && !attemptKilled && attempt < attemptCap && aggregatedFullText.trim()) {
+          continuationNextAttempt = true;
+          continuationBubble = { id: attemptStreamingId, text: aggregatedFullText.trim() };
+          continuationDeliveredRef.current = { turnStartMs: t0, fromMs: Date.now() };
+        }
+
         // No rejections OR we've burned the retry budget → done with this turn.
         if (rejectionsThisAttempt.length === 0 || attempt === attemptCap) {
           if (rejectionsThisAttempt.length > 0) {
@@ -17342,6 +17660,12 @@ export function VoiceTutorRealtime({
               : renderIdsThisAttempt;
           const deferIds = retryRollbackTargets.filter(Boolean);
           for (const id of deferIds) pendingRevisionRef.current.add(id);
+          // Renders this attempt painted BEFORE an answer-revealing kill are
+          // remembered so the end-of-call cleanup discards them rather than
+          // keeping them as "validated" (kill-keep.ts).
+          if (TUTOR_KILL_DISCARDS_ANSWER_RENDERS && isAnswerRevealingKill(rejectionsThisAttempt)) {
+            for (const id of deferIds) answerRevealKilledIdsRef.current.add(id);
+          }
           // Phase A: dim the deferred renders during the recovery gap. They're
           // un-dimmed on confirm (restatement re-render dedup-drops) or removed
           // on cleanup (correction / abort).
@@ -17852,7 +18176,9 @@ export function VoiceTutorRealtime({
           // otherwise, else nothing. A WRONG needs the pre-check and the match
           // statement to agree — a wrong pre-check cannot mark a correct
           // answer wrong on its own (voice/work-then-match.ts).
-          const matchCounting = TUTOR_TEXT_MATCH_COUNTING && sessionMode === 'text' && workThenMatchTurnRef.current;
+          // (Voice too since 2026-10-06: the server's `work-then-match` frame
+          // is what turns this on for a turn, in either mode.)
+          const matchCounting = TUTOR_TEXT_MATCH_COUNTING && workThenMatchTurnRef.current;
           const matchCredit = matchCounting
             ? resolveMatchCredit({
                 objectiveCorrect: !!objectiveSignal,
@@ -18112,7 +18438,7 @@ export function VoiceTutorRealtime({
               hedgedDenial: { ...hedgedDenialSignalRef.current },
               // 2026-10-06, text mode "work it, then match": the resolved
               // credit decides; the tutor's opener words are not read.
-              ...(TUTOR_TEXT_MATCH_COUNTING && sessionMode === 'text' && workThenMatchTurnRef.current
+              ...(TUTOR_TEXT_MATCH_COUNTING && workThenMatchTurnRef.current
                 ? { matchCredit: resolveMatchCredit({ objectiveCorrect: !!objectiveSignal, verifiedWrong: keyVerifiedWrongThisTurnRef.current, precheck: verdictPrecheckRef.current, match: readMatchStatement(fullText, ledgerStudentTextRef.current) }).credit }
                 : {}),
             })) {
@@ -18546,6 +18872,9 @@ export function VoiceTutorRealtime({
       // of pre-retry. Mirrors rollbackKilledRenders (which is try-scoped and
       // unreachable here); kept compact since it runs on every call.
       if (pendingRevisionRef.current.size > 0) {
+        // Taken (and cleared) with the candidates so it can never outlive them.
+        const answerKilledThisCall = answerRevealKilledIdsRef.current;
+        answerRevealKilledIdsRef.current = new Set();
         const staleIds = [...pendingRevisionRef.current];
         pendingRevisionRef.current = new Set();
         // Hard-remove deferred ids off the board + mirror + id-map + catalog.
@@ -18571,7 +18900,16 @@ export function VoiceTutorRealtime({
           // winningAttemptRendered gate with per-render supersession. Un-dim
           // the kept (validated, not superseded) renders; sweep only the ones
           // a later same-slot render actually replaced.
-          const { keep, sweep } = planKillKeep(staleIds);
+          // Answer-revealing kills first: their unconfirmed renders are
+          // discarded, never "kept as validated" (a retry that re-emitted one
+          // already confirmed it, which removed it from staleIds).
+          const killedForAnswer = splitAnswerRevealingKilled(staleIds, answerKilledThisCall);
+          if (killedForAnswer.discard.length > 0) {
+            sweepDeferred(killedForAnswer.discard);
+            console.warn(`[brain-orchestrator] kill-recovery: discarded ${killedForAnswer.discard.length} render(s) of a verdict/assent-killed attempt [${killedForAnswer.discard.join(', ')}]`);
+            onDebugEvent?.('killed_render_discarded_answer', `${killedForAnswer.discard.length}: ${killedForAnswer.discard.join(',')}`);
+          }
+          const { keep, sweep } = planKillKeep(killedForAnswer.rest);
           if (keep.length > 0) {
             onWhiteboardCommand([{ action: 'reviseItems', ids: keep, revising: false }]);
             console.warn(`[brain-orchestrator] kill-recovery: kept ${keep.length} validated render(s) [${keep.join(', ')}]`);

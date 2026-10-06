@@ -1,0 +1,78 @@
+[
+  {
+    "label": "system-two-strict-inequalities",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "Solution of the system",
+      "xRange": [-6, 8],
+      "yRange": [-6, 8],
+      "inequalities": [
+        { "expr": "y < -2x + 4", "color": "#2563eb", "label": "y < -2x + 4" },
+        { "expr": "y < x/3 - 2/3", "color": "#dc2626", "label": "y < x/3 - 2/3" }
+      ],
+      "points": [
+        { "x": 2, "y": 0, "label": "(2, 0)" },
+        { "x": 0, "y": 0, "label": "origin" }
+      ]
+    }
+  },
+  {
+    "label": "mixed-strict-and-inclusive-latex",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "One dashed, one solid boundary",
+      "xRange": [-6, 6],
+      "yRange": [-6, 6],
+      "inequalities": [
+        { "expr": "y \\le \\frac{1}{2}x + 1" },
+        { "expr": "x > -2" }
+      ]
+    }
+  },
+  {
+    "label": "dashed-and-solid-function-lines",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "Line styles",
+      "xRange": [-5, 5],
+      "yRange": [-5, 5],
+      "functions": [
+        { "expr": "2x - 1", "label": "dashed: y = 2x - 1", "lineStyle": "dashed" },
+        { "expr": "-x + 2", "label": "solid: y = -x + 2" }
+      ]
+    }
+  },
+  {
+    "label": "area-between-curves-unchanged",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "Area under y = 2x on [0, 3]",
+      "xRange": [-1, 4],
+      "yRange": [-1, 7],
+      "functions": [{ "expr": "2x", "label": "y = 2x" }],
+      "shadedRegion": { "axis": "x", "between": ["2x", "0"], "from": 0, "to": 3 }
+    }
+  },
+  {
+    "label": "unreadable-inequality-rejected",
+    "tool": "show_function_graph",
+    "expect": "rejected",
+    "args": {
+      "title": "Bad entry",
+      "inequalities": [{ "expr": "y < 2t + 1" }]
+    }
+  },
+  {
+    "label": "equation-in-inequalities-rejected",
+    "tool": "show_function_graph",
+    "expect": "rejected",
+    "args": {
+      "title": "Equation, not an inequality",
+      "inequalities": [{ "expr": "y = 2x + 1" }]
+    }
+  }
+]

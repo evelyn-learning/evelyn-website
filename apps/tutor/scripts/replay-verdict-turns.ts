@@ -85,6 +85,16 @@
  *             the pre-check call alone on every answer-shaped case, per model
  *             (no brain call); writes precheck-bench.jsonl for reading.
  *
+ *   … --print-voice-hash / --print-text-hash   NO model call, no key needed:
+ *             build one request exactly as a session would send it and print
+ *             the SHA-256 of the model request (whole, and per part). Voice:
+ *             a voice-session request with the voice answer-judging fields
+ *             the route would set under the current TUTOR_VOICE_* variables
+ *             (voice/voice-judging.ts) — with all of them 'off' the hash must
+ *             equal the one this same script prints on the commit before the
+ *             voice work. Text: the text request with every text lever on —
+ *             it must not move at all. `--only <fragment>` picks the case.
+ *
  * Cost: a rebuilt request is ~120K input tokens (tools 45K + core 61K +
  * session 15K), almost all cache reads — about $0.037 per trial on
  * claude-sonnet-5. Results append to results.jsonl and a re-run skips what is
@@ -900,6 +910,74 @@ async function recount() {
   console.log(`[recount] ${rows.length} row(s) → ${out}`);
 }
 
+/**
+ * `--print-voice-hash` / `--print-text-hash`: the model request, hashed, with
+ * no model call (the client is stubbed before anything is sent). Imports only
+ * what exists on the commit before the voice work, so the same file can be
+ * run there for the comparison.
+ */
+async function printRequestHash(mode: 'voice' | 'text', c: Case, enums: Enumerations) {
+  const crypto = await import('node:crypto');
+  const { getModelClient } = await import('../src/lib/tutor/ai/model-registry');
+  const { streamBrainTurn } = await import('../src/lib/tutor/voice/claude-brain');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = getModelClient('brain').client as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let captured: any = null;
+  client.messages.stream = (params: unknown) => { captured ??= JSON.parse(JSON.stringify(params)); throw new ReplayStop(); };
+  let input = await buildInput(c, enums, mode === 'text' ? 'low' : 'off') as unknown as Record<string, unknown>;
+  let fields: Record<string, unknown> = {};
+  // Never a model call here: the text pre-check is stubbed to "no result"
+  // (so the text request carries no <answer_check>, on either commit).
+  input.verdictPrecheckDeps = { llm: async () => { throw new Error('no model call in hash mode'); } };
+  if (mode === 'voice') {
+    // A voice session: the system prompt without the text clause, none of the
+    // text levers, and what the route adds for a voice request from a browser
+    // that announces `voiceJudging` under the current TUTOR_VOICE_* variables.
+    const { buildSystemPromptParts } = await import('../src/lib/tutor/ai/system-prompt-builder');
+    const s = c.session;
+    const parts = buildSystemPromptParts({
+      module: null, studentName: s.studentId, partnerEmbed: true, sessionGoal: 'homework-help', timeRemainingMinutes: 30,
+      currentState: 'greeting', subject: s.subject, topic: s.topic, level: s.level, studentPreferences: undefined,
+      firstTurnV2: true, answerRevealGuard: true,
+    } as Parameters<typeof buildSystemPromptParts>[0]);
+    const { textThinking: _t, textThinkingDeadlineMs: _d, textTurnShape: _s, textVerdictPrecheck: _p, textWorkThenMatch: _m, ...rest } = input;
+    void _t; void _d; void _s; void _p; void _m;
+    try {
+      const vj = await import('../src/lib/tutor/voice/voice-judging');
+      fields = {
+        ...(vj.voiceTurnShapeEnabled(undefined, true) ? { voiceTurnShape: true } : {}),
+        ...(vj.voiceWorkThenMatchEnabled(undefined, true) ? { voiceWorkThenMatch: true } : {}),
+        ...(vj.voiceVerdictPrecheckEnabled(undefined, true) ? { voiceVerdictPrecheck: true } : {}),
+        ...(vj.voiceThinkingEnabled(undefined, true) ? { voiceThinking: true, textThinkingDeadlineMs: vj.VOICE_THINKING_DEADLINE_MS } : {}),
+        studentMessage: c.student,
+        // The check itself is never called here.
+        verdictPrecheckDeps: { llm: async () => { throw new Error('no model call in hash mode'); } },
+      };
+    } catch {
+      fields = {}; // the commit before the voice work: no such module, no fields
+    }
+    input = { ...rest, systemPrompt: parts.core + parts.session, systemPromptCore: parts.core, ...fields };
+  }
+  const log = console.log, warn = console.warn;
+  console.log = () => {}; console.warn = () => {};
+  try {
+    for await (const ev of streamBrainTurn(input as never)) void ev;
+  } catch (err) {
+    if (!(err instanceof ReplayStop)) { console.log = log; console.warn = warn; throw err; }
+  } finally { console.log = log; console.warn = warn; }
+  if (!captured) throw new Error('no request was built');
+  const h = (v: unknown) => crypto.createHash('sha256').update(JSON.stringify(v) ?? 'undefined').digest('hex').slice(0, 16);
+  const { tools, system, messages, ...params } = captured;
+  const last = messages[messages.length - 1];
+  const userContent = typeof last?.content === 'string' ? last.content : JSON.stringify(last?.content);
+  console.log(`[${mode}-hash] case=${c.id} student=${JSON.stringify(c.student.slice(0, 50))}`);
+  console.log(`[${mode}-hash] lever fields=${JSON.stringify(Object.keys(fields).filter((k) => k !== 'verdictPrecheckDeps' && k !== 'studentMessage'))}`);
+  console.log(`[${mode}-hash] request=${h(captured)}`);
+  console.log(`[${mode}-hash]   tools=${h(tools)} (n=${Array.isArray(tools) ? tools.length : 0}) system=${h(system)} messages=${h(messages)} user-turn=${h(userContent)} params=${h(params)} ${JSON.stringify(params)}`);
+  console.log(`[${mode}-hash]   user-turn blocks: ${[...String(userContent).matchAll(/^<([a-z_]+)>$/gm)].map((m) => m[1]).join(' ')}`);
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   if (opt('recount')) return recount();
@@ -908,6 +986,17 @@ async function main() {
   let cases = buildCases(sessions);
   if (ONLY) cases = cases.filter((c) => ONLY.split(',').some((frag) => c.id.includes(frag)));
   if (LIMIT) cases = cases.slice(0, LIMIT);
+  if (flag('print-voice-hash') || flag('print-text-hash')) {
+    // No model call: the enumerations come from the cache next to --out.
+    const file = path.join(OUT, 'enumerations.json');
+    const enums: Enumerations = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+    process.env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || 'hash-mode-no-key';
+    const c = cases.find((x) => x.cls === 'hedge' && x.session.homeworkPlan) ?? cases[0];
+    if (!c) throw new Error('no case to hash');
+    if (flag('print-voice-hash')) await printRequestHash('voice', c, enums);
+    if (flag('print-text-hash')) await printRequestHash('text', c, enums);
+    return;
+  }
   const byClass: Record<string, number> = {};
   for (const c of cases) byClass[c.cls] = (byClass[c.cls] ?? 0) + 1;
   console.log(`sessions=${sessions.length} (homework plan: ${sessions.filter((s) => s.homeworkPlan).length}) cases=${cases.length} ${JSON.stringify(byClass)}`);

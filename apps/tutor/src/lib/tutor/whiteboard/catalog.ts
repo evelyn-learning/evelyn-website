@@ -343,6 +343,12 @@ export class WhiteboardCatalog {
     this.currentTurn = Number.isFinite(turn) ? turn : 0;
   }
 
+  /** The orchestrator's turn counter as last mirrored in. Lets a caller ask
+   *  "what did THIS turn paint?" (items whose renderedAtTurn equals it). */
+  getCurrentTurn(): number {
+    return this.currentTurn;
+  }
+
   /** Open a fresh page, make it active, and return its id. The caller (the
    *  page-grouping decision module via the orchestrator) decides WHEN to
    *  open; this method only allocates + activates. A continuation page
@@ -1005,6 +1011,33 @@ export class WhiteboardCatalog {
     const res = this.ok(newest.item, newest.feature);
     if (pageFallback) res.pageFallback = true;
     return res;
+  }
+
+  /**
+   * Resolve a target ONLY among the given items — no fail-open to the rest
+   * of the board. Same exact / normalized / bare-identifier phases as
+   * resolveTarget plus its kind-word-prefix retry; deliberately NOT the
+   * token-subset fuzzy pass (a narrowed search must not invent a match).
+   * Used by scribble-page-policy to prefer a feature on the page in view.
+   */
+  resolveTargetWithin(raw: string, itemIds: ReadonlySet<string>): ResolveSuccess | null {
+    const q = normalizeToken(raw);
+    if (!q || itemIds.size === 0) return null;
+    const scoped = this.items.filter((it) => itemIds.has(it.itemId));
+    if (scoped.length === 0) return null;
+    let matches = this.collectMatches(scoped, raw, q);
+    if (matches.size === 0) {
+      const parts = q.split('-');
+      for (let cut = 1; cut < parts.length && KIND_PREFIX_STOPWORDS.has(parts[cut - 1]); cut++) {
+        matches = this.collectMatches(scoped, parts.slice(cut).join(' '), parts.slice(cut).join('-'));
+        if (matches.size > 0) break;
+      }
+    }
+    if (matches.size === 0) return null;
+    // Newest-first; prefer a match the overlay can actually mark.
+    const all = Array.from(matches.values());
+    const pick = all.find((m) => m.feature.scribbleable) ?? all[0];
+    return this.ok(pick.item, pick.feature);
   }
 
   private ok(item: CatalogItem, f: CatalogFeature): ResolveSuccess {

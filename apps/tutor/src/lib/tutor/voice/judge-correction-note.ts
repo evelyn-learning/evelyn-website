@@ -23,7 +23,7 @@
  * npx tsx scripts/test-judge-correction-note.ts
  */
 
-import { TUTOR_JUDGE_NOTE_FALSE_PRAISE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_RETRACTION_OWN_IT } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 const MAX_CLAIMS = 2;
 const MAX_CLAIM_CHARS = 160;
@@ -207,6 +207,11 @@ export function buildJudgeCorrectionNote(
     /** No sentence to recite, and never "keep your verdict". Unset ⇒
      *  TUTOR_JUDGE_NOTE_FALSE_PRAISE. False ⇒ the 2026-10-04 texts. */
     scriptless?: boolean;
+    /** 'retraction' mode only (2026-10-06): the turn opens with ONE plain
+     *  sentence that says the student was right about it and that the tutor
+     *  was wrong to say otherwise. Unset ⇒ TUTOR_RETRACTION_OWN_IT. False ⇒
+     *  the 2026-10-04 wording. */
+    ownIt?: boolean;
   },
 ): string | null {
   const quote = (list: string[]) => list
@@ -239,7 +244,12 @@ export function buildJudgeCorrectionNote(
       `[correction note — not from the student] An automated review found that the student's answer was correct and that your previous turn rejected it: ${quoted.join(' and ')}. ` +
       `Silently re-check that verdict against the question you actually asked and the student's exact words. ` +
       (graded ? `The answer you graded was "${graded}" — re-check THAT answer, not whatever they say next. ` : '') +
-      `If you did reject a correct answer, open this turn by briefly owning the correction ("Actually, hold on — you were right: …") before continuing. ` +
+      (opts?.ownIt ?? TUTOR_RETRACTION_OWN_IT
+        // 2026-10-06 (the owner's live voice session): three correct answers
+        // were told "Not quite" and none was ever taken back in so many words.
+        // The task is described, not scripted (see OWN_STATEMENT_TASK).
+        ? `If you did reject a correct answer, the first thing you say this turn — before you respond to what they say now, and directly after your opener phrase if your instructions require one — is ONE plain sentence, in your own words, that does two things: it tells them plainly "you were right" about the thing they had right, naming it, and it says that you were wrong to tell them otherwise. No hedging ("I may have", "it seems"), no softening it into a restatement of the working, and no more than that one sentence — then move on with the lesson. `
+        : `If you did reject a correct answer, open this turn by briefly owning the correction ("Actually, hold on — you were right: …") before continuing. `) +
       `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
       otherClaimsRider(quotedOthers, scriptless) +
       `${NO_ATTRIBUTION} ` +

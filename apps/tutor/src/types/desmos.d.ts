@@ -13,6 +13,8 @@ declare namespace Desmos {
     showLabel?: boolean;
     lineStyle?: typeof Styles.SOLID | typeof Styles.DASHED | typeof Styles.DOTTED;
     lineWidth?: number;
+    /** 0–1 fill for inequalities / polygons. */
+    fillOpacity?: number;
     pointSize?: number;
     pointStyle?: typeof Styles.POINT | typeof Styles.OPEN | typeof Styles.CROSS;
     dragMode?: typeof DragModes.X | typeof DragModes.Y | typeof DragModes.XY | typeof DragModes.NONE;

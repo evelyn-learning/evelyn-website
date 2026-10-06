@@ -28,6 +28,7 @@ import { validateConicGraph } from './conic-validator';
 import { validateIntersectionPoints } from './intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from './graph-consistency-validator';
 import { validateSecantTangentGraph } from './secant-tangent-validator';
+import { gateInequalityGraph } from './graph-inequalities';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from './conic-construction';
 import { validateCircuit } from '../diagrams/circuit-validator';
 import { validateCollision } from '../diagrams/collision-validator';
@@ -236,6 +237,13 @@ export function processToolCall(
     }
   }
   if (a === 'showGraph' && c.data) {
+    // Inequalities + line styles: validate / normalise (graph-inequalities.ts).
+    // No problem context on this path (render harness), so the region check
+    // has nothing to compare against and is skipped by construction.
+    const ineqGate = gateInequalityGraph(c.data, { regionCheck: false });
+    if (!ineqGate.ok) return { ok: false, reason: ineqGate.reason };
+    // `c` IS `command` (freshly built above), so this is what gets returned.
+    if (ineqGate.data !== c.data) c.data = ineqGate.data;
     const original = c.data;
     // A y=f(x) `functions` entry must be a function of x — reject a polar curve
     // converted to a Cartesian-implicit form stuffed into `functions`.

@@ -40,6 +40,14 @@ export interface ShouldFollowToBottomInput {
    *  the diagnosis in TranscriptView.tsx for why the near-bottom gate
    *  doesn't work for un-streamed full-paragraph text replies). */
   nearBottom: boolean;
+  /** Text mode, 2026-10-06. When provided, the "student's own message always
+   *  follows" exception applies only to a FRESH send (a student entry this
+   *  view has not followed yet) — not to every later re-run of the effect
+   *  while the student's message is still the newest entry. Without it a
+   *  student who sent, then deliberately scrolled up to re-read while
+   *  waiting, was pulled back down by any unrelated re-render. Omitted ⇒ the
+   *  original rule (any re-run with a student entry last follows). */
+  freshStudentSend?: boolean;
 }
 
 /** True when the transcript scroller should be snapped to `scrollHeight`
@@ -49,9 +57,11 @@ export function shouldFollowToBottom({
   userScrolledUp,
   lastRole,
   nearBottom,
+  freshStudentSend,
 }: ShouldFollowToBottomInput): boolean {
   if (stickToBottom) {
-    return lastRole === 'student' || !userScrolledUp;
+    const studentException = freshStudentSend === undefined ? lastRole === 'student' : freshStudentSend;
+    return studentException || !userScrolledUp;
   }
   return nearBottom;
 }
@@ -127,7 +137,22 @@ export interface LatchFromScrollEventInput {
   /** The latest tutor entry is still streaming, i.e. the scroller is growing
    *  under the student right now. */
   contentGrowing?: boolean;
+  /** 2026-10-06: when true, a bare `scroll` event can only SET the latch if
+   *  a real gesture stands behind it (`lastGestureAt` recent, or the pointer
+   *  is held on the scroller — a scrollbar drag). See GESTURE_WINDOW_MS. */
+  requireGesture?: boolean;
+  /** `performance.now()` of the last wheel / touch / scroll-key / pointer
+   *  press on the scroller, or null if there has been none. */
+  lastGestureAt?: number | null;
+  /** A pointer is currently pressed on the scroller (scrollbar drag, text
+   *  selection drag that autoscrolls). */
+  pointerHeld?: boolean;
 }
+
+/** How long after a wheel / touch / key / pointer event a `scroll` event is
+ *  still attributed to the student. Covers trackpad momentum and a held
+ *  PageUp; a layout shift arriving later than this is not the student. */
+export const GESTURE_WINDOW_MS = 1500;
 
 /** Round 7, task 5: TranscriptView's own `el.scrollTop = el.scrollHeight`
  *  writes (the immediate scroll, the fonts.ready re-check, and the
@@ -154,6 +179,9 @@ export function latchFromScrollEvent({
   programmaticUntil,
   deltaY,
   contentGrowing = false,
+  requireGesture = false,
+  lastGestureAt = null,
+  pointerHeld = false,
 }: LatchFromScrollEventInput): boolean | null {
   if (type === 'scroll') {
     if (now < programmaticUntil) return null;
@@ -165,7 +193,24 @@ export function latchFromScrollEvent({
     // that echo, so it never moves the latch; the student's own intent
     // still registers through wheel/touchmove below.
     if (contentGrowing) return null;
-    return distanceFromBottom > 120;
+    if (distanceFromBottom <= 120) return false;
+    // Live 2026-10-06 (portal-347539a7, text): a `scroll` event is not
+    // evidence of intent. The scroller RESIZES while the student does nothing
+    // — the panel's top follows the board's chip row (it wraps when a new
+    // page title arrives) and its bottom follows the composer's height — and
+    // the browser also emits `scroll` when it clamps or re-anchors after
+    // content above the fold changes. Any of those, landing past the guard
+    // window with the newest message more than 120px away, used to latch
+    // "the student scrolled up" for the rest of the exchange. (The session
+    // saved no scroll telemetry, so WHICH of them fired that day is not
+    // known; that the latch did not need the student is.) Only a scroll with
+    // a real gesture behind it sets the latch now.
+    if (requireGesture) {
+      const gestured = pointerHeld === true
+        || (typeof lastGestureAt === 'number' && now - lastGestureAt >= 0 && now - lastGestureAt <= GESTURE_WINDOW_MS);
+      return gestured ? true : null;
+    }
+    return true;
   }
   // A wheel gesture DOWN is never "scrolling away": it either reaches the
   // bottom (clear) or is still on its way (leave the latch alone).
@@ -173,4 +218,34 @@ export function latchFromScrollEvent({
     return distanceFromBottom > 120 ? null : false;
   }
   return distanceFromBottom > 120;
+}
+
+/** Keys that scroll a focused scroller. A keydown is recorded as a gesture so
+ *  the `scroll` event it causes is attributed to the student. */
+export const SCROLL_KEYS: ReadonlySet<string> = new Set([
+  'PageUp', 'PageDown', 'ArrowUp', 'ArrowDown', 'Home', 'End', ' ', 'Spacebar',
+]);
+
+/**
+ * Id of the newest student entry, or null. Searched from the end rather than
+ * read off the last entry: a student message and the tutor's first chunk can
+ * land in one React commit, and the send must still count.
+ */
+export function newestStudentEntryId(
+  entries: ReadonlyArray<{ id?: string; role?: string }> | null | undefined,
+): string | null {
+  if (!entries) return null;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e && e.role === 'student' && e.id) return e.id;
+  }
+  return null;
+}
+
+/**
+ * Has the student sent a message this view has not followed yet?
+ * `followedSendId` is the id of the student entry the view last snapped to.
+ */
+export function isFreshStudentSend(newestStudentId: string | null, followedSendId: string | null): boolean {
+  return !!newestStudentId && newestStudentId !== followedSendId;
 }

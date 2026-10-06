@@ -27,7 +27,8 @@ import { ImageZoomOverlay } from './ImageZoomOverlay';
 // GreenApple round 6, task 4: pure follow-to-bottom decision, shared between
 // the immediate scroll below and the fonts.ready / ResizeObserver re-checks
 // that fix math bubbles growing taller after KaTeX's web fonts swap in.
-import { shouldFollowToBottom, refollowDecision, latchFromScrollEvent } from '@/lib/tutor/voice/transcript-follow';
+import { shouldFollowToBottom, refollowDecision, latchFromScrollEvent, newestStudentEntryId, isFreshStudentSend, SCROLL_KEYS } from '@/lib/tutor/voice/transcript-follow';
+import { TUTOR_TRANSCRIPT_GESTURE_LATCH } from '@/lib/tutor/orchestrator/board-round-flags';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -70,6 +71,12 @@ interface TranscriptViewProps {
    *  above tutor bubbles. Omitted ⇒ no label renders at all, so every
    *  caller without a persona stays byte-identical. */
   tutorLabel?: string;
+  /** Optional telemetry sink (2026-10-06). The follow-to-bottom latch used to
+   *  be invisible: when the owner reported "the text did not scroll up
+   *  automatically" the saved session held no trace of what the panel had
+   *  decided. Emits `transcript_follow` when the latch is set and when a new
+   *  tutor message arrives while it is set. */
+  onDebugEvent?: (type: string, message: string) => void;
 }
 
 /** Round-20 (2026-07-17): bubbles now render inline $…$ math via KaTeX.
@@ -215,7 +222,7 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   return 'open';
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false, tutorLabel }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false, tutorLabel, onDebugEvent }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // GreenApple round 6, task 4: wraps just the message bubbles (not the
   // portalled zoom overlay) so a ResizeObserver can watch CONTENT growth —
@@ -275,6 +282,20 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
   // be an echo of our own `el.scrollTop = el.scrollHeight` write — not the
   // student scrolling away — and is ignored via `latchFromScrollEvent`.
   const programmaticScrollUntilRef = useRef(0);
+  // 2026-10-06 (portal-347539a7): what a `scroll` event needs behind it to
+  // count as the student's own — the time of the last wheel / touch / scroll
+  // key / pointer press on the scroller, and whether a pointer is held on it
+  // (scrollbar drag). See latchFromScrollEvent.
+  const lastGestureAtRef = useRef<number | null>(null);
+  const pointerHeldRef = useRef(false);
+  // The student entry this view last snapped to. A NEW id is a fresh send:
+  // it clears the latch and follows. The same id on a later re-run is not.
+  const followedSendIdRef = useRef<string | null>(null);
+  // Newest tutor entry already reported as "arrived while latched" (one
+  // telemetry line per message, not per streamed chunk).
+  const reportedUnfollowedIdRef = useRef<string | null>(null);
+  const onDebugEventRef = useRef(onDebugEvent);
+  useEffect(() => { onDebugEventRef.current = onDebugEvent; }, [onDebugEvent]);
   // Round 7, task 5, fix round 1: hoisted out of the follow-to-bottom
   // effect below so the drawer-open snap effect further down (which writes
   // `el.scrollTop = el.scrollHeight` on the SAME container) can arm the
@@ -295,32 +316,72 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     const lastEntry = transcript[transcript.length - 1];
     const lastRole = lastEntry?.role;
     let removeListeners: (() => void) | undefined;
+    // Fresh send (text mode, gesture-latch flag): a student entry this view
+    // has not snapped to yet. Undefined ⇒ the original "any re-run with a
+    // student entry last" rule (voice, or flag off).
+    let freshStudentSend: boolean | undefined;
     if (stickToBottom) {
       const onScrollLikeEvent = (event: Event) => {
+        const now = performance.now();
+        // wheel / touch ARE gestures: record before deciding, so the `scroll`
+        // events they cause are attributed to the student.
+        if (event.type !== 'scroll') lastGestureAtRef.current = now;
         const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
         const latch = latchFromScrollEvent({
           type: event.type as 'scroll' | 'wheel' | 'touchmove',
           distanceFromBottom: distance,
-          now: performance.now(),
+          now,
           programmaticUntil: programmaticScrollUntilRef.current,
           deltaY: event.type === 'wheel' ? (event as WheelEvent).deltaY : undefined,
           contentGrowing: lastRole === 'tutor' && lastEntry?.streaming === true,
+          requireGesture: TUTOR_TRANSCRIPT_GESTURE_LATCH,
+          lastGestureAt: lastGestureAtRef.current,
+          pointerHeld: pointerHeldRef.current,
         });
-        if (latch !== null) userScrolledUpRef.current = latch;
+        if (latch !== null) {
+          if (latch && !userScrolledUpRef.current) {
+            onDebugEventRef.current?.('transcript_follow', `latched by ${event.type} — ${Math.round(distance)}px above the newest message`);
+          }
+          userScrolledUpRef.current = latch;
+        }
       };
+      // Gesture bookkeeping only — these never decide the latch themselves.
+      const onPointerDown = () => { pointerHeldRef.current = true; lastGestureAtRef.current = performance.now(); };
+      const onPointerUp = () => { if (pointerHeldRef.current) lastGestureAtRef.current = performance.now(); pointerHeldRef.current = false; };
+      const onKeyDown = (event: Event) => { if (SCROLL_KEYS.has((event as KeyboardEvent).key)) lastGestureAtRef.current = performance.now(); };
       el.addEventListener('scroll', onScrollLikeEvent, { passive: true });
       el.addEventListener('wheel', onScrollLikeEvent, { passive: true });
       el.addEventListener('touchmove', onScrollLikeEvent, { passive: true });
+      el.addEventListener('pointerdown', onPointerDown, { passive: true });
+      el.addEventListener('keydown', onKeyDown);
+      window.addEventListener('pointerup', onPointerUp, { passive: true });
+      window.addEventListener('pointercancel', onPointerUp, { passive: true });
       removeListeners = () => {
         el.removeEventListener('scroll', onScrollLikeEvent);
         el.removeEventListener('wheel', onScrollLikeEvent);
         el.removeEventListener('touchmove', onScrollLikeEvent);
+        el.removeEventListener('pointerdown', onPointerDown);
+        el.removeEventListener('keydown', onKeyDown);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
       };
-      // The student's own message just landed (or is still the latest
-      // entry while the reply is pending) — always clear the "scrolled
-      // up" latch, exactly like sending a message in any standard chat
-      // UI. (The actual scroll happens via the shared decision below.)
-      if (lastRole === 'student') {
+      if (TUTOR_TRANSCRIPT_GESTURE_LATCH) {
+        // Sending a message snaps a chat to the bottom and forgets any
+        // earlier scroll-up — once per send. The id is looked for from the
+        // end of the list, so a send whose reply's first chunk landed in the
+        // same commit still counts.
+        const newestSendId = newestStudentEntryId(transcript);
+        freshStudentSend = isFreshStudentSend(newestSendId, followedSendIdRef.current);
+        if (freshStudentSend) {
+          followedSendIdRef.current = newestSendId;
+          userScrolledUpRef.current = false;
+          lastGestureAtRef.current = null; // a gesture from before the send is not about what comes after it
+        }
+      } else if (lastRole === 'student') {
+        // The student's own message just landed (or is still the latest
+        // entry while the reply is pending) — always clear the "scrolled
+        // up" latch, exactly like sending a message in any standard chat
+        // UI. (The actual scroll happens via the shared decision below.)
         userScrolledUpRef.current = false;
       }
     }
@@ -333,8 +394,15 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       userScrolledUp: userScrolledUpRef.current,
       lastRole,
       nearBottom,
+      freshStudentSend,
     });
     if (decision) scrollToBottom();
+    else if (stickToBottom && lastRole === 'tutor' && lastEntry?.id && reportedUnfollowedIdRef.current !== lastEntry.id) {
+      // A tutor message arrived and the view did NOT follow it. Say so, once
+      // per message — this is the line the 2026-10-06 report needed.
+      reportedUnfollowedIdRef.current = lastEntry.id;
+      onDebugEventRef.current?.('transcript_follow', `not following a new tutor message — student scrolled up (${Math.round(el.scrollHeight - el.scrollTop - el.clientHeight)}px above the newest message)`);
+    }
 
     // Math bubbles render through InlineMathText's synchronous
     // `katex.render()` with no font-load handling (unlike EquationRenderer,
@@ -376,6 +444,12 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         }
       });
       ro.observe(contentRef.current);
+      // 2026-10-06: the SCROLLER resizes too, with no content change — its
+      // top tracks the board's chip row (which wraps when a new page title
+      // arrives) and its bottom tracks the composer's height. A shorter
+      // scroller hides the newest lines and fires nothing the observer above
+      // can see. Same live latch decides.
+      if (TUTOR_TRANSCRIPT_GESTURE_LATCH) ro.observe(el);
     }
 
     return () => {

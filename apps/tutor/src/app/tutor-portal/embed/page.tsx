@@ -93,6 +93,14 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
   //   R58: solver-dispute correction note + false-final-assertion kill:
   'improvised_mismatch_note_planted', 'false_assertion_kill', 'verdict_replant_requested',
+  //   2026-10-06, voice answer judging (voice/voice-judging.ts): a verdict
+  //   sentence held for the parallel pre-check, released at its deadline, or
+  //   cut before audio (voice_verdict_hold_started / _hold_deadline / _cut /
+  //   _cut_tool_skipped). 'verdict_' above already covers the frames.
+  //   The same family from the text round, absent until now: the mode
+  //   announcement for a turn and the text-mode opener kill.
+  //   and what the counting path recorded from the checks.
+  'voice_verdict_', 'work_then_match', 'precheck_verdict_kill', 'counting_',
   //   R58: student-declared hold family (armed/active/swallowed/resumed/
   //   check_in) + first-session tip + noise-floor nudge:
   'student_hold_', 'first_session_tip', 'noise_floor_',
@@ -282,6 +290,14 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'resume_board',
   // 2026-10-02 shared prompt cache: turn-1 warm/cold signal per session.
   'cache_start',
+  // 2026-10-06 board / graph / flow round (portal-897212b5, portal-347539a7).
+  // graph_ineq_check — the inequality gate + region check on a graph (pass /
+  // skipped / mismatch / repaired / style aligned). scribble_other_page_dropped
+  // and scribble_retargeted_in_view — a mark that would have switched pages.
+  // ('killed_render', 'advance_', 'transcript_' and 'tool_call' above already
+  // cover killed_render_withheld_answer / _discarded_answer,
+  // advance_homework_guard, transcript_follow and the unlocatable-scroll drop.)
+  'graph_ineq_', 'scribble_other_page_', 'scribble_retargeted_',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

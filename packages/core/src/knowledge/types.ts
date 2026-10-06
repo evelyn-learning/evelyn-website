@@ -435,6 +435,18 @@ export interface GraphData {
   points?: GraphPoint[];
   annotations?: GraphAnnotation[];
   shadedRegion?: ShadedRegion;
+  /** Inequalities drawn natively (strict ⇒ dashed boundary), each shaded on
+   *  its own side; the overlap is the solution of the system. */
+  inequalities?: GraphInequality[];
+}
+
+/** One inequality in x and y on a function graph, e.g. "y < -2x + 4". */
+export interface GraphInequality {
+  expr: string; // the relation as written
+  latex?: string; // Desmos LaTeX (filled by the graph gate)
+  strict?: boolean; // boundary excluded (dashed) — filled by the graph gate
+  color?: string;
+  label?: string;
 }
 
 export interface GraphFunction {
@@ -444,6 +456,7 @@ export interface GraphFunction {
   color?: string;
   label?: string;
   domain?: [number, number];
+  lineStyle?: 'solid' | 'dashed'; // dashed = a boundary that is not included
 }
 
 export interface GraphFunctionOfY {
@@ -453,6 +466,7 @@ export interface GraphFunctionOfY {
   color?: string;
   label?: string;
   domain?: [number, number]; // y-domain
+  lineStyle?: 'solid' | 'dashed';
 }
 
 export interface ShadedRegion {

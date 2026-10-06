@@ -96,7 +96,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_function_graph',
-    description: 'Plot mathematical functions, curves, points, and shaded regions on a coordinate plane. When plotting THE CURRENT PROBLEM (the student said "this problem" / "the one we just did"), the expression must satisfy the problem\'s stated conditions — DERIVE it and VERIFY before emitting: compute f\' at every point you label a max/min (must be 0) and f\'\' at every labeled inflection (must be 0). A generic look-alike curve whose labeled features are false for its own expression is worse than no graph. LaTeX-style expressions for `expr` (use `functions` for y=f(x), `functionsOfY` for x=f(y)). For a POLAR curve r=f(θ) use show_diagram(type: "polar_graph") instead — `functions`/`functionsOfY` are Cartesian only; never convert a polar curve to a Cartesian-implicit form and put it in `functions` (an `expr` that references y is not y=f(x) and renders wrong). `points` marks a spot ON a plotted curve — always pair it with a `functions`/`functionsOfY` entry in the same call; a `points`-only call with no function renders two floating labeled dots with no curve or visible axes. For bare (x, y) data with no function to plot, use `show_scatter_plot` instead.',
+    description: 'Plot mathematical functions, curves, points, inequalities, and shaded regions on a coordinate plane. INEQUALITIES: to show the solution of an inequality or of a system of inequalities, pass `inequalities` — one entry per inequality, written as the relation itself. The tool draws each boundary (dashed when the inequality is strict, solid when it includes "or equal") and shades the side where it holds; where several overlap the shading is darker, and that overlap is the solution. Never approximate a solution region with `shadedRegion`, and do not add the boundary lines again under `functions`. When plotting THE CURRENT PROBLEM (the student said "this problem" / "the one we just did"), the expression must satisfy the problem\'s stated conditions — DERIVE it and VERIFY before emitting: compute f\' at every point you label a max/min (must be 0) and f\'\' at every labeled inflection (must be 0). A generic look-alike curve whose labeled features are false for its own expression is worse than no graph. LaTeX-style expressions for `expr` (use `functions` for y=f(x), `functionsOfY` for x=f(y)). For a POLAR curve r=f(θ) use show_diagram(type: "polar_graph") instead — `functions`/`functionsOfY` are Cartesian only; never convert a polar curve to a Cartesian-implicit form and put it in `functions` (an `expr` that references y is not y=f(x) and renders wrong). `points` marks a spot ON a plotted curve or region — always pair it with a `functions`/`functionsOfY`/`inequalities` entry in the same call; a `points`-only call with no function renders two floating labeled dots with no curve or visible axes. For bare (x, y) data with no function to plot, use `show_scatter_plot` instead.',
     parameters: {
       type: 'object',
       properties: {
@@ -115,6 +115,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
               color: { type: 'string' },
               label: { type: 'string' },
               domain: { type: 'array', items: { type: 'number' } },
+              lineStyle: { type: 'string', enum: ['solid', 'dashed'], description: 'Default solid. Use "dashed" for a line that is NOT part of what it bounds (the boundary of a strict inequality, an asymptote).' },
             },
             required: ['expr', 'label'],
           },
@@ -129,6 +130,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
               color: { type: 'string' },
               label: { type: 'string' },
               domain: { type: 'array', items: { type: 'number' } },
+              lineStyle: { type: 'string', enum: ['solid', 'dashed'], description: 'Default solid; "dashed" for a line that is not included.' },
             },
             required: ['expr', 'label'],
           },
@@ -147,9 +149,22 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
             required: ['x', 'y'],
           },
         },
+        inequalities: {
+          type: 'array',
+          description: 'Inequalities in x and y to draw and shade — the way to show the solution of an inequality or a system. One entry per inequality. Each boundary is drawn for you (dashed for < and >, solid for ≤ and ≥) and its solution side is shaded; the darker overlap is the solution of the system. Give each entry a different color.',
+          items: {
+            type: 'object',
+            properties: {
+              expr: { type: 'string', description: 'The inequality itself, plain or LaTeX, in x and y only: "y < 2x + 1", "y >= -x/2 + 3", "x > 2", "y \\le \\frac{3}{4}x". Write a fractional coefficient as x/2, (1/2)x or \\frac{1}{2}x — never 1/2x.' },
+              color: { type: 'string' },
+              label: { type: 'string' },
+            },
+            required: ['expr'],
+          },
+        },
         shadedRegion: {
           type: 'object',
-          description: 'Shade area between two curves (or between a curve and the axis baseline). For "area UNDER y = f(x) from a to b" pass between=["f(x)", "0"] — the "0" is the x-axis. CRITICAL: between MUST be an array of EXACTLY TWO expressions. If you want area under a curve to the x-axis, pass "0" as the second bound; do not omit it.',
+          description: 'ONLY for the area between two curves over an interval (area under a curve, area between two functions from a to b). It shades a bounded strip between the two bounds and nothing else — it cannot express "below this line" or the solution of an inequality; use `inequalities` for those. For "area UNDER y = f(x) from a to b" pass between=["f(x)", "0"] — the "0" is the x-axis. CRITICAL: between MUST be an array of EXACTLY TWO expressions. If you want area under a curve to the x-axis, pass "0" as the second bound; do not omit it.',
           properties: {
             axis: { type: 'string', enum: ['x', 'y'], description: "'x' when the two bounds are y=f(x) and from/to are x-values (the usual case, incl. regions between two lines); 'y' only when the bounds are x=g(y) and from/to are y-values." },
             between: { type: 'array', items: { type: 'string' }, description: 'Two LaTeX expressions naming the upper and lower (or left/right) bounds. For area-under-curve: ["f(x)", "0"].' },
@@ -247,7 +262,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_geometry',
-    description: 'Geometric figures: labeled points, segments, polygons, circles, and angle markers. Polygons need a `polygons` entry (sequence of point ids); circles need a `circles` entry (center id + radius). Omit `angle.label` to let the renderer auto-compute the measure. CRITICAL: never embed coordinate numbers in `point.label` (write "A", not "A(3, 7)") — set `showCoords: true` and the renderer will append the (x, y) tuple from the actual numeric coords. Same for segment lengths: write `label: "chord AB"` and `showLength: true` instead of "AB = √20" — the renderer computes the length so it can never disagree with the geometry. NOT for tabular content: a table structure / grid of cells (two-way table, frequency table, comparison grid) must be rendered with show_table, never sketched here — a geometry call with no real figure primitives is rejected. NOT for statistical plots either: boxplots/histograms/dotplots go through show_stats, never as labeled geometry points. Cannot shade regions or half-planes. For ANY shaded region — inequality half-plane, area between curves, feasible region — use show_function_graph with `shadedRegion` instead.',
+    description: 'Geometric figures: labeled points, segments, polygons, circles, and angle markers. Polygons need a `polygons` entry (sequence of point ids); circles need a `circles` entry (center id + radius). Omit `angle.label` to let the renderer auto-compute the measure. CRITICAL: never embed coordinate numbers in `point.label` (write "A", not "A(3, 7)") — set `showCoords: true` and the renderer will append the (x, y) tuple from the actual numeric coords. Same for segment lengths: write `label: "chord AB"` and `showLength: true` instead of "AB = √20" — the renderer computes the length so it can never disagree with the geometry. NOT for tabular content: a table structure / grid of cells (two-way table, frequency table, comparison grid) must be rendered with show_table, never sketched here — a geometry call with no real figure primitives is rejected. NOT for statistical plots either: boxplots/histograms/dotplots go through show_stats, never as labeled geometry points. Cannot shade regions or half-planes. To show where an inequality or a system of inequalities holds (half-plane, feasible region), use show_function_graph with `inequalities` instead — it draws the dashed/solid boundaries and the shading together. For the area between two curves over an interval, use show_function_graph with `shadedRegion`.',
     parameters: {
       type: 'object',
       properties: {
@@ -1537,7 +1552,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
 
   {
     name: 'show_coordinate_plane',
-    description: '2D coordinate plane with axes, gridlines, and any combination of labeled points, line segments, and vectors from origin. Always renders axes + ticks. For polygon-focused figures (triangles, circles, angle measures) use show_geometry instead. Cannot shade regions or half-planes. For ANY shaded region — inequality half-plane, area between curves, feasible region — use show_function_graph with `shadedRegion` instead.',
+    description: '2D coordinate plane with axes, gridlines, and any combination of labeled points, line segments, and vectors from origin. Always renders axes + ticks. For polygon-focused figures (triangles, circles, angle measures) use show_geometry instead. Cannot shade regions or half-planes. To show where an inequality or a system of inequalities holds (half-plane, feasible region), use show_function_graph with `inequalities` instead — it draws the dashed/solid boundaries and the shading together. For the area between two curves over an interval, use show_function_graph with `shadedRegion`.',
     parameters: {
       type: 'object',
       properties: {
@@ -2289,6 +2304,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         color: f.color,
         label: f.label,
         domain: f.domain,
+        ...(f.lineStyle ? { lineStyle: f.lineStyle } : {}),
       };
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2301,6 +2317,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         color: f.color,
         label: f.label,
         domain: f.domain,
+        ...(f.lineStyle ? { lineStyle: f.lineStyle } : {}),
       };
     });
     const xRange = (Array.isArray(funcArgs.xRange) ? funcArgs.xRange : [-5, 5]) as [number, number];
@@ -2318,6 +2335,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         functionsOfY: graphFunctionsOfY,
         points: Array.isArray(funcArgs.points) ? funcArgs.points : [],
         shadedRegion: funcArgs.shadedRegion ? funcArgs.shadedRegion as unknown as ShadedRegion : undefined,
+        // Passed through as sent; the graph gate (graph-inequalities.ts)
+        // validates and normalises them before anything is painted.
+        ...(funcArgs.inequalities != null ? { inequalities: funcArgs.inequalities } : {}),
       },
     };
   }

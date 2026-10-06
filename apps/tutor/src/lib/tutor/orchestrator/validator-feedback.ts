@@ -25,6 +25,12 @@ export const VALIDATOR_FEEDBACK_PREFIX = '[validator feedback — not from the s
  *  `show_*` rejections as render failures and cancels the turn's speech. */
 export const TURN_CONTINUATION_ACTION = 'turn_incomplete_continue';
 
+/** Synthetic rejection action for "a verdict sentence was withheld before it
+ *  was spoken — continue the turn from what was heard" (voice sessions,
+ *  voice/voice-judging.ts; the same string as VOICE_VERDICT_WITHHELD_ACTION
+ *  there, repeated so this module keeps no imports). Not prefixed `show_`. */
+export const VERDICT_WITHHELD_ACTION = 'voice_verdict_withheld';
+
 export interface ValidatorRejection { action: string; reason: string }
 
 const STUDENT_QUOTE_MAX = 600;
@@ -88,6 +94,17 @@ export function buildValidatorFeedback(input: {
       `Don't apologize; the student doesn't see this message.` +
       context
     );
+  }
+
+  // Voice: a verdict sentence was withheld before it was spoken and the turn
+  // continues from what the student heard. The reason is the whole message —
+  // it names the student's words itself and nothing was cut off or rejected
+  // by a tool validator, so neither the tool-call wording nor the speech-
+  // delivery note applies.
+  const withheldOnly =
+    !attemptKilled && rejections.length > 0 && rejections.every((r) => r.action === VERDICT_WITHHELD_ACTION);
+  if (withheldOnly) {
+    return `${VALIDATOR_FEEDBACK_PREFIX} ${rejections[0].reason}`;
   }
 
   const summarizedRejections = rejections

@@ -50,6 +50,14 @@ import { textVerdictPrecheckEnabled } from '@/lib/tutor/voice/verdict-precheck';
 import { textWorkThenMatchEnabled } from '@/lib/tutor/voice/work-then-match';
 import { sanitizePublicPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 import {
+  VOICE_THINKING_DEADLINE_MS,
+  isVoiceJudgingRequest,
+  voiceThinkingEnabled,
+  voiceTurnShapeEnabled,
+  voiceVerdictPrecheckEnabled,
+  voiceWorkThenMatchEnabled,
+} from '@/lib/tutor/voice/voice-judging';
+import {
   RULE8_PROMISE_REGEX,
   detectRepairNeed,
   generateRule8Repairs,
@@ -159,6 +167,12 @@ interface BrainStreamRequestBody {
   /** Text mode, a retry of the same turn: the public verdict pre-check this
    *  client was sent on the first attempt (validated before use). */
   verdictPrecheck?: unknown;
+  /** Voice sessions: this browser can act on the voice answer-judging frames
+   *  (hold a verdict sentence, cut and continue the turn). Only then do the
+   *  TUTOR_VOICE_* levers apply (lib/tutor/voice/voice-judging.ts); it then
+   *  also sends `studentMessage` / `verdictPrecheck` as a text session does.
+   *  An older cached browser omits it and gets the request it always got. */
+  voiceJudging?: boolean;
   /** Adaptive-pacing v1: bank IDs + brain-gen problem-text hashes
    *  already shown this session, used as exclusion filters when the
    *  brain calls `generate_problem`. The client maintains this list
@@ -877,6 +891,23 @@ export async function POST(req: NextRequest) {
           ...(textVerdictPrecheckEnabled(body.inputMode) && body.verdictPrecheck
             ? { verdictPrecheckCarry: sanitizePublicPrecheck(body.verdictPrecheck) ?? undefined }
             : {}),
+          // VOICE answer-judging levers (2026-10-06, voice-judging.ts). Every
+          // one is absent unless this is a voice request from a browser that
+          // announced `voiceJudging`, and its own TUTOR_VOICE_* switch is not
+          // off — so with all four off (or an older browser) the voice
+          // request is the pre-existing one. Never set for a text session.
+          ...(voiceTurnShapeEnabled(body.inputMode, body.voiceJudging) ? { voiceTurnShape: true } : {}),
+          ...(voiceWorkThenMatchEnabled(body.inputMode, body.voiceJudging) ? { voiceWorkThenMatch: true } : {}),
+          ...(voiceVerdictPrecheckEnabled(body.inputMode, body.voiceJudging) ? { voiceVerdictPrecheck: true } : {}),
+          ...(voiceThinkingEnabled(body.inputMode, body.voiceJudging)
+            ? { voiceThinking: true, textThinkingDeadlineMs: VOICE_THINKING_DEADLINE_MS }
+            : {}),
+          ...(isVoiceJudgingRequest(body.inputMode, body.voiceJudging) && typeof body.studentMessage === 'string' && body.studentMessage.trim()
+            ? { studentMessage: body.studentMessage.slice(0, 4000) }
+            : {}),
+          ...(voiceVerdictPrecheckEnabled(body.inputMode, body.voiceJudging) && body.verdictPrecheck
+            ? { verdictPrecheckCarry: sanitizePublicPrecheck(body.verdictPrecheck) ?? undefined }
+            : {}),
           toolResultProvider: makeToolResultProvider(
             body.lessonPlanContext,
             body.shownProblemIds ?? [],
@@ -914,7 +945,7 @@ export async function POST(req: NextRequest) {
           // far is this frame is still safely retryable.
           // (The verdict pre-check frame is the same kind of frame: it is sent
           // before any sentence and commits nothing to the student.)
-          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match') {
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;
@@ -1144,7 +1175,7 @@ export async function POST(req: NextRequest) {
           `→ tools=[${toolNames.join(', ') || '(none)'}] · sentences=${sentenceCount} ` +
           `· first_sentence=${firstSentenceMs}ms · first_tool=${firstToolMs}ms · total=${totalMs}ms ` +
           `· text="${textSnippet}${fullText.length > 120 ? '…' : ''}" ` +
-          `· stop=${stopReason} · thinking=${turnInput.textThinking ? 'on' : 'off'} · retries=${turnRetries}${gaveUp ? ' FAILED' : ''} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
+          `· stop=${stopReason} · thinking=${turnInput.textThinking || (turnInput as { voiceThinking?: boolean }).voiceThinking ? 'on' : 'off'} · retries=${turnRetries}${gaveUp ? ' FAILED' : ''} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
           (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '') +
           (clientGone ? ' (client_gone)' : '')
         );

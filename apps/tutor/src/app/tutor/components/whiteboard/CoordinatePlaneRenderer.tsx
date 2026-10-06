@@ -118,9 +118,12 @@ export function buildCoordinatePlaneManifest(props: CoordinatePlaneProps): Featu
     entries.push({
       name,
       kind: 'segment',
-      description: s.label
+      // Line style is part of what the brain must be able to re-read: a
+      // dashed boundary (strict inequality) and a solid one mean different
+      // things (2026-10-06).
+      description: (s.label
         ? `segment "${s.label}" from (${s.from.x}, ${s.from.y}) to (${s.to.x}, ${s.to.y})`
-        : `segment ${i + 1} from (${s.from.x}, ${s.from.y}) to (${s.to.x}, ${s.to.y})`,
+        : `segment ${i + 1} from (${s.from.x}, ${s.from.y}) to (${s.to.x}, ${s.to.y})`) + (s.dashed ? ' [dashed]' : ''),
       labels: Array.from(labels),
     });
   });
