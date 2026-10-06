@@ -122,6 +122,9 @@ function flagOn(value: string | undefined): boolean {
 function shapesEnabled(): boolean {
   try { return flagOn(process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_SHAPES); } catch { return true; }
 }
+function thirdPersonEnabled(): boolean {
+  try { return flagOn(process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_THIRD_PERSON); } catch { return true; }
+}
 function correctionWorkingEnabled(): boolean {
   try { return flagOn(process.env.NEXT_PUBLIC_TUTOR_CORRECTION_WORKING_DROP); } catch { return true; }
 }
@@ -273,6 +276,38 @@ function isBareSelfCheckClaim(s: string): boolean {
   return SELF_CHECK_CLAIM_RE.test(s) && !CLAIM_HAS_MORE_RE.test(s);
 }
 
+// f. Deliberation ABOUT the learner (2026-10-05, live AP Calculus BC
+// portal-40a1e217): "Let me stay focused: they're mid-step on problem 2, so I
+// should answer the active question first." reached the student as the reply.
+// The rule needs BOTH halves in one sentence:
+//   (1) the learner in the third person, in a learner-STATE frame — "they're
+//       mid-step / still on / stuck / asking / answering / working on / on
+//       problem 2", "the learner / the student / the user is | has | asked |
+//       needs …"; and
+//   (2) an instruction to SELF about the turn — "I should / I need to / I
+//       must answer | respond | address | finish | wait | stay | focus …",
+//       "let me stay focused", "let me not …".
+// Either half alone is ordinary teaching and is kept: "They're both
+// solutions.", "The user of a microscope turns the coarse focus first.",
+// "When charges are alike they're repelled, so I should expect a larger
+// angle.", "I should mention one more case.", "Let me focus on the second
+// term with you." NEXT_PUBLIC_TUTOR_META_NARRATION_THIRD_PERSON=off disables it.
+const LEARNER_THIRD_PERSON_RE = new RegExp(
+  String.raw`\bthey(?:['’]re|\s+are|\s+were)\s+(?:(?:now|still|currently|already|clearly|just|actually)\s+)*(?:mid-?(?:step|problem|question|way)|in\s+the\s+middle\s+of|stuck|confused|lost|asking|answering|working\s+(?:on|through)|on\s+(?:problem|part|question|step|item)\b|trying\s+to|struggling|guessing|not\s+(?:asking|answering|ready|done)|done\s+with|ready\s+(?:for|to))` +
+  String.raw`|\bthey\s+(?:just\s+|already\s+)?(?:asked|answered|said|typed|wrote|haven['’]?t\s+(?:answered|finished|tried)|didn['’]?t\s+(?:answer|ask|finish))\b` +
+  String.raw`|\b(?:the|this)\s+(?:learner|student|user)(?:['’]s\s+(?:answer|question|turn|message|reply|request)\b|\s+(?:is|was|has|hasn['’]?t|had|needs?|wants?|asked|said|answered|typed|wrote|seems?|just|didn['’]?t|doesn['’]?t|should|still)\b)`,
+  'i',
+);
+const SELF_INSTRUCTION_RE = new RegExp(
+  String.raw`\b(?:so\s+|and\s+|then\s+|which\s+means\s+)?i\s+(?:should(?:n['’]?t)?|need\s+to|must(?:n['’]?t)?|have\s+to|ought\s+to|can['’]?t|won['’]?t|will\s+need\s+to)\s+(?:first\s+|now\s+|just\s+|only\s+|still\s+|not\s+)*(?:answer|respond|reply|address|finish|complete|wait|stay|focus|ask|check|grade|judge|confirm|correct|redirect|handle|acknowledge|continue|keep|avoid|move|advance|switch|defer|hold|treat|give|let|stick)\b` +
+  String.raw`|\blet\s+me\s+(?:stay\s+focused|stay\s+on|not\s+\w+|refocus)\b` +
+  String.raw`|\bmy\s+(?:next\s+(?:move|step|turn)|job|task|response|reply)\s+(?:is|should|here)\b`,
+  'i',
+);
+function isLearnerDeliberation(s: string): boolean {
+  return LEARNER_THIRD_PERSON_RE.test(s) && SELF_INSTRUCTION_RE.test(s);
+}
+
 function isLeakShape(s: string): boolean {
   return isPrivateWorking(s)
     || isTurnGrading(s)
@@ -290,6 +325,7 @@ export function isMetaNarration(
   const shapes = shapesEnabled();
   if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
+  if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
   return MARKUP_RE.test(s);
 }

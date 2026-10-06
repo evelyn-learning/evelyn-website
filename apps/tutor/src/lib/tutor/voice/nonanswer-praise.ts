@@ -23,6 +23,9 @@
  * Tests: npm run test:nonanswer-praise.
  */
 
+import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { TUTOR_BARE_ASSENT_PRAISE_KILL } from '@/lib/tutor/orchestrator/turn-round-flags';
+
 /** Filler tokens stripped before matching (never load-bearing). */
 const FILLER = new Set(['um', 'uh', 'er', 'like', 'so', 'well']);
 
@@ -135,5 +138,128 @@ export function nonAnswerPraiseFeedback(studentText: string): string {
     // aloud ("'Um, let me think' isn't an answer yet — no verdict"). Same
     // clause the request branch already carries.
     `Do not narrate this classification ("isn't an answer", "no verdict") — just respond naturally.`
+  );
+}
+
+// ── 2026-10-05: praise for a bare "yes" to a question that is not yes/no ───
+//
+// 21 scripted Homework Help sessions: the student typed only "yes" while a
+// wh-question was open and the tutor affirmed it and answered its own
+// question — "What's ten percent of forty?" → "yes" → "Right. Ten percent of
+// forty is four…"; "…how would you now state the full answer…?" → "yes" →
+// "Exactly right. During dehydration synthesis…" (10 of 21 sessions).
+// `shouldKillNonAnswerPraise` excludes yes / no by design — they answer a
+// yes/no question. This is the complementary, equally narrow case:
+//   · the student's turn is ONLY yes / yeah / yep / no / nope / ok;
+//   · the tutor's last turn asked exactly the kind of question a yes or no
+//     cannot answer: its final clause is a wh-question, and NO question in
+//     that turn is a yes/no, readiness, offer or tag question;
+//   · the reply opens with an affirming VERDICT ("Right." "Exactly right."
+//     "Yes — exactly" "Nice work…"), not a discourse marker ("Right, let's…",
+//     "Okay — …", "Great, let's move on").
+// Anything else — no open question, an either/or question, a question led by
+// an auxiliary — is left alone.
+
+const BARE_ASSENT_RE = /^(?:(?:um+|uh+|oh|well|so|hmm+)[,.\s]+)*(?:yes|yeah|yep|yup|no|nope|ok|okay)[\s.!,]*$/i;
+
+/** Is the student's turn ONLY a yes / no / ok? */
+export function isBareAssent(studentText: string): boolean {
+  return BARE_ASSENT_RE.test((studentText ?? '').trim());
+}
+
+const WH_WORD_RE = /\b(?:what|which|how|why|where|when|who|whose|whom)(?:'s|’s|'re|’re)?\b/i;
+const AUX_START_RE =
+  /^(?:(?:so|now|and|but|okay|ok|alright|then|well|first|next|again)[,\s]+)*(?:is|isn'?t|are|aren'?t|was|wasn'?t|were|do|don'?t|does|doesn'?t|did|didn'?t|can|can'?t|could|couldn'?t|will|won'?t|would|wouldn'?t|should|shouldn'?t|shall|have|haven'?t|has|hasn'?t|had|may|might|am|must)\b/i;
+/** Readiness, offers and comprehension checks: a yes or no DOES answer these. */
+const READINESS_RE =
+  /\b(?:ready|shall\s+(?:we|i)|should\s+(?:we|i)|want(?:\s+to|\s+me|\s+a|\s+another)?|wanna|would\s+you\s+like|like\s+(?:to|me\s+to|a|another)|make(?:s|ing)?\s+sense|sound(?:s)?\s+(?:good|ok|okay|right|fair)|got\s+(?:it|that)|with\s+me|following|all\s+(?:good|set|clear)|clear\s+so\s+far|agree|see\s+(?:it|that|how|why|what)|need\s+(?:a|more|another|help)|okay\s+(?:to|with|if)|good\s+(?:to|with)|feel(?:ing)?\s+(?:good|ok|okay|comfortable|confident)|comfortable|any\s+questions?|still\s+there|can\s+you\s+(?:see|hear))\b/i;
+/** "…, right?" "…, yes?" "…, isn't it?" */
+const TAG_QUESTION_RE =
+  /[,—–-]\s*(?:right|yes|yeah|no|ok(?:ay)?|correct|agreed?|true|see|isn'?t\s+(?:it|that)|doesn'?t\s+it|don'?t\s+you(?:\s+think)?|wouldn'?t\s+(?:it|you)|aren'?t\s+they|can'?t\s+(?:we|you))\s*$/i;
+
+function questionSentences(text: string): string[] {
+  return (stripMarkdownEmphasis(text ?? '').match(/[^.!?\n]{4,}\?/g) ?? []).map((q) => q.replace(/\?\s*$/, '').trim());
+}
+/** The clause that actually asks: what follows the last dash / colon / semicolon. */
+function finalClause(question: string): string {
+  const parts = question.split(/\s[—–]\s|\s-\s|[:;]\s/);
+  return (parts[parts.length - 1] ?? question).trim();
+}
+
+export type QuestionKind = 'wh' | 'yes_no' | 'unclear';
+
+/** Classify ONE question sentence. 'wh' only when a yes / no plainly cannot
+ *  answer it; 'yes_no' when it plainly can; anything else 'unclear'. */
+export function classifyQuestion(question: string): QuestionKind {
+  const q = (question ?? '').replace(/\?\s*$/, '').trim();
+  if (!q) return 'unclear';
+  const clause = finalClause(q);
+  if (TAG_QUESTION_RE.test(q) || READINESS_RE.test(clause)) return 'yes_no';
+  if (AUX_START_RE.test(clause)) return 'yes_no';
+  // A short clause with no verb of asking ("ready?", "okay?", "yes?").
+  if (clause.split(/\s+/).length <= 2 && !WH_WORD_RE.test(clause)) return 'yes_no';
+  if (WH_WORD_RE.test(clause)) return 'wh';
+  return 'unclear';
+}
+
+/** The open question of the tutor's last turn, when a bare yes / no cannot
+ *  answer it and no other question of that turn could be what the student
+ *  assented to. Null otherwise. */
+export function openNonYesNoQuestion(priorTutorTurn: string): string | null {
+  const last = lastQuestionSentence(priorTutorTurn ?? '');
+  if (!last || classifyQuestion(last) !== 'wh') return null;
+  for (const q of questionSentences(priorTutorTurn)) {
+    if (classifyQuestion(q) === 'yes_no') return null;
+  }
+  return last;
+}
+
+/** An affirming VERDICT at the very start of the reply. "Right," + more
+ *  words is a discourse marker and is not matched; "Right." / "Right —" /
+ *  "Exactly" / "Yes — exactly" / "That's right" / "Nice work" are. */
+const VERDICT_OPENER_RE = new RegExp(
+  '^[*_~`\\s]*(?:' +
+    '(?:yes|yep|yeah)\\s*[,.!—–-]+\\s*(?:exactly|that\'?s\\s+(?:right|it|correct)|correct|right\\b(?=\\s*[.!—–])|you\\s+got\\s+it|perfect|spot\\s+on)' +
+    '|exactly(?:\\s+right)?\\b' +
+    '|right\\b(?=\\s*(?:[.!…]|[—–]|-\\s))' +
+    '|correct\\b(?=\\s*(?:[.!,…]|[—–]|-\\s))' +
+    '|perfect\\b(?=\\s*(?:[.!,…]|[—–]|-\\s))' +
+    '|spot[\\s-]?on\\b|nailed\\s+it\\b|bingo\\b|you(?:\'?ve)?\\s+got\\s+it\\b|you\'?re\\s+(?:exactly\\s+|absolutely\\s+)?right\\b' +
+    '|that(?:\'?s|\\s+is)\\s+(?:exactly\\s+|absolutely\\s+)?(?:right|correct|it\\b(?=\\s*[.!—–]))' +
+    '|(?:nice|great|good|excellent)\\s+(?:work|job)\\b|nicely\\s+done\\b|well\\s+done\\b' +
+  ')',
+  'i',
+);
+export function opensWithAffirmingVerdict(attemptText: string): boolean {
+  return VERDICT_OPENER_RE.test(attemptText ?? '');
+}
+
+/**
+ * Should this attempt be killed as an affirming verdict to a bare yes / no
+ * that could not have answered the open question?
+ * @param enabled  Unset ⇒ TUTOR_BARE_ASSENT_PRAISE_KILL.
+ */
+export function shouldKillBareAssentPraise(
+  studentText: string,
+  attemptText: string,
+  priorTutorTurn: string,
+  opts?: { enabled?: boolean },
+): boolean {
+  if ((opts?.enabled ?? TUTOR_BARE_ASSENT_PRAISE_KILL) !== true) return false;
+  if (!isBareAssent(studentText)) return false;
+  if (!opensWithAffirmingVerdict(attemptText)) return false;
+  return openNonYesNoQuestion(priorTutorTurn) !== null;
+}
+
+/** Retry feedback via the standard rejection channel. */
+export function bareAssentPraiseFeedback(studentText: string, priorTutorTurn: string): string {
+  const q = openNonYesNoQuestion(priorTutorTurn);
+  return (
+    `The student said only "${(studentText ?? '').trim()}"` +
+    (q ? `, and the question you had asked was "${q.slice(0, 200)}?" — a question a yes or no cannot answer. ` : '. ') +
+    `They have NOT answered it, yet you opened with an affirming verdict as if they had. ` +
+    `Re-emit your response: no verdict or praise word ("Right." / "Exactly." / "Nice work"), and do NOT answer your own question for them. ` +
+    `Invite them to answer it in their own words — re-ask it briefly or offer a smaller first step. ` +
+    `Do not narrate this ("that's not an answer", "you only said yes") — just respond naturally.`
   );
 }

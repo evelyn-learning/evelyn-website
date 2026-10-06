@@ -1,10 +1,13 @@
+import type { Metadata } from 'next';
 import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
 import ReplayPlayer, { TranscriptBubble } from '../../admin/tutor-sessions/components/ReplayPlayer';
 import ExportSessionPDFButton from '@/components/session/ExportSessionPDFButton';
+import { LocalTime } from '@/components/session/LocalTime';
 import { BubbleEmphasis } from '@/app/tutor/components/inline-emphasis';
 import { sessionActiveSeconds } from '@/lib/tutor/recordings/active-seconds';
+import { REPLAY_DOCUMENT_TITLE, partnerFrameMetadata, partnerFrameTitle } from '@/lib/tutor/portal/partner-frame-metadata';
 
 /**
  * Student-facing session replay (crimsora v2 — past sessions). Loaded in the
@@ -18,6 +21,22 @@ export const dynamic = 'force-dynamic';
 
 interface ReplayPageProps {
   searchParams: Promise<{ token?: string }>;
+}
+
+/** Document title: "Session replay", plus the partner's product name when the
+ *  token VERIFIES and carries one. An invalid token gets the bare title (the
+ *  page then renders its refusal). Never throws — a registry failure must not
+ *  take the document down with it. */
+export async function generateMetadata({ searchParams }: ReplayPageProps): Promise<Metadata> {
+  let branding: unknown;
+  try {
+    const { token } = await searchParams;
+    const verdict = await verifyReplayTokenAsync(token ?? null);
+    if (verdict.ok) branding = verdict.payload.branding;
+  } catch {
+    branding = undefined;
+  }
+  return partnerFrameMetadata(partnerFrameTitle(REPLAY_DOCUMENT_TITLE, branding));
 }
 
 function formatDuration(seconds: number): string {
@@ -101,7 +120,8 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
               {s.subject || 'Session'}{s.topic ? ` · ${s.topic}` : ''}
             </h1>
             <p className="text-sm text-gray-500">
-              {new Date(s.startedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+              {/* Viewer's zone, not the server's — see LocalTime. */}
+              <LocalTime iso={s.startedAt} kind="datetime" />
             </p>
           </div>
           <ExportSessionPDFButton

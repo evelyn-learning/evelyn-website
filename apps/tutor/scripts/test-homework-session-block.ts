@@ -95,7 +95,9 @@ const variants: Array<[string, Parameters<typeof formatActiveProblemBlock>[0]]> 
 for (const [label, active] of variants) {
   const plain = formatActiveProblemBlock(active);
   const plainFalse = formatActiveProblemBlock(active, { homework: false });
-  const withHw = formatActiveProblemBlock(active, { homework: true });
+  // partScope:false pins the reveal suffix alone; the multi-part scope
+  // sentence (2026-10-05) is covered by scripts/test-hedged-answers.ts.
+  const withHw = formatActiveProblemBlock(active, { homework: true, partScope: false });
   if (plain.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail(`${label}: suffix must NOT appear without homework`);
   if (plain !== plainFalse) fail(`${label}: homework:false must render byte-identical to no opts`);
   if (!withHw.includes(`given up.${ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX}\n`)) fail(`${label}: suffix must follow the reveal sentence in homework`);

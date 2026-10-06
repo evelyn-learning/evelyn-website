@@ -23,6 +23,8 @@
  * npx tsx scripts/test-judge-correction-note.ts
  */
 
+import { TUTOR_JUDGE_NOTE_FALSE_PRAISE } from '@/lib/tutor/orchestrator/turn-round-flags';
+
 const MAX_CLAIMS = 2;
 const MAX_CLAIM_CHARS = 160;
 
@@ -160,8 +162,34 @@ const NO_ATTRIBUTION =
  *  - 'neutral'    any other flagged statement (wrong maths, grounding, false
  *                 praise): correct your own earlier statement plainly, and do
  *                 not attribute the correction to the student.
+ *  - 'false_praise' (2026-10-05) the tutor AFFIRMED the student's answer and
+ *                 the review says that answer was wrong or was not an answer
+ *                 to the question. The error is the affirmation, so the note
+ *                 is about the STUDENT's answer: tell them plainly it was not
+ *                 right. The neutral wording pointed the tutor at "your own
+ *                 statement" and it re-affirmed the right value it had
+ *                 written without ever telling the student theirs was wrong.
  */
-export type JudgeCorrectionNoteMode = 'legacy' | 'retraction' | 'neutral';
+export type JudgeCorrectionNoteMode = 'legacy' | 'retraction' | 'neutral' | 'false_praise';
+
+/** 2026-10-05 (21 scripted sessions): six sessions spoke the literal "Let me
+ *  correct something I said: …" — the note handed the tutor a sentence and it
+ *  recited it, three times with nothing to correct, once attributing the
+ *  STUDENT's number to itself ("…gives 17, not 41 — that's on me"). The note
+ *  now describes the task; it never supplies the words. */
+const OWN_STATEMENT_TASK =
+  `If it was wrong, say in one short sentence, in your own words, what the right statement is, and continue. ` +
+  `It is your own statement: a value the student gave is THEIR value — never present it as something you said, and never present your correct value as if the student had given it.`;
+
+/** The "another statement in that turn" rider for retraction / legacy notes. */
+export function otherClaimsRider(quotedOthers: string[], scriptless: boolean): string {
+  if (quotedOthers.length === 0) return '';
+  return scriptless
+    ? `Separately, the same review flagged another statement in that turn as likely wrong: ${quotedOthers.join(' and ')}. ` +
+      `Silently re-check it against the problem and the board. ${OWN_STATEMENT_TASK} That part is not something the student was right about. `
+    : `Separately, the same review flagged another statement in that turn as likely wrong: ${quotedOthers.join(' and ')}. ` +
+      `Silently re-check it against the problem and the board; if it was wrong, correct your own statement plainly in one short sentence ("Let me correct something I said: …") — that part is not something the student was right about. `;
+}
 
 export function buildJudgeCorrectionNote(
   claims: string[],
@@ -176,6 +204,9 @@ export function buildJudgeCorrectionNote(
      *  retraction text, worded as the tutor's own correction — the judge
      *  decision used to drop them when a retraction was present. */
     otherClaims?: string[];
+    /** No sentence to recite, and never "keep your verdict". Unset ⇒
+     *  TUTOR_JUDGE_NOTE_FALSE_PRAISE. False ⇒ the 2026-10-04 texts. */
+    scriptless?: boolean;
   },
 ): string | null {
   const quote = (list: string[]) => list
@@ -189,6 +220,20 @@ export function buildJudgeCorrectionNote(
   const graded = studentAnswer && studentAnswer.trim()
     ? studentAnswer.trim().slice(0, 80).replace(/\s+/g, ' ')
     : '';
+  const scriptless = opts?.scriptless ?? TUTOR_JUDGE_NOTE_FALSE_PRAISE;
+  if (mode === 'false_praise') {
+    return (
+      `[correction note — not from the student] An automated review found that your previous turn affirmed the student's answer` +
+      (graded ? ` "${graded}"` : '') +
+      ` as correct (${quoted.join(' and ')}), and that this answer was wrong, or was not an answer to the question you had asked. ` +
+      `Silently check THAT answer — the student's, not whatever they say next — against the question you had actually asked. ` +
+      `If it does not answer that question correctly: open this turn by saying so plainly and kindly in one short sentence (their answer was not right, or did not answer the question), make clear what is right, and then re-ask or move on. ` +
+      `A value the student gave is THEIR value: never present it as something you said, and never present the correct value as if the student had given it. ` +
+      `If on re-checking the student's answer was correct, continue naturally and do not mention this review. ` +
+      (quotedOthers.length > 0 ? otherClaimsRider(quotedOthers, true) : '') +
+      NEVER_NARRATE
+    );
+  }
   if (mode === 'retraction') {
     return (
       `[correction note — not from the student] An automated review found that the student's answer was correct and that your previous turn rejected it: ${quoted.join(' and ')}. ` +
@@ -196,11 +241,18 @@ export function buildJudgeCorrectionNote(
       (graded ? `The answer you graded was "${graded}" — re-check THAT answer, not whatever they say next. ` : '') +
       `If you did reject a correct answer, open this turn by briefly owning the correction ("Actually, hold on — you were right: …") before continuing. ` +
       `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
-      (quotedOthers.length > 0
-        ? `Separately, the same review flagged another statement in that turn as likely wrong: ${quotedOthers.join(' and ')}. ` +
-          `Silently re-check it against the problem and the board; if it was wrong, correct your own statement plainly in one short sentence ("Let me correct something I said: …") — that part is not something the student was right about. `
-        : '') +
+      otherClaimsRider(quotedOthers, scriptless) +
       `${NO_ATTRIBUTION} ` +
+      NEVER_NARRATE
+    );
+  }
+  if (mode === 'neutral' && scriptless) {
+    return (
+      `[correction note — not from the student] An automated review flagged a statement in your previous turn as likely wrong: ${quoted.join(' and ')}. ` +
+      `Silently re-check that statement against the problem and the board. ` +
+      `${OWN_STATEMENT_TASK} ` +
+      `Do not credit the student for the correction: the review did not find that they were right about anything, so do not say "you were right" or "good catch". ` +
+      `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
       NEVER_NARRATE
     );
   }

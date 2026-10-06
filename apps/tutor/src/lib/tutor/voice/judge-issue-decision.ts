@@ -49,7 +49,8 @@
  * Pure; never throws.
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
-import { buildJudgeCorrectionNote, hasMathExpression } from '@/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, otherClaimsRider } from '@/lib/tutor/voice/judge-correction-note';
+import { TUTOR_JUDGE_NOTE_FALSE_PRAISE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { isDenialClaim } from '@/lib/tutor/voice/pacing-verdict';
 
 export const JUDGE_STUDENT_ANSWER_VERDICTS = ['correct', 'incorrect', 'unsure', 'not_an_answer'] as const;
@@ -80,7 +81,7 @@ export function readJudgeIssueFields(issue: unknown): JudgeIssueFields {
   };
 }
 
-export type JudgeNoteMode = 'legacy' | 'retraction' | 'neutral';
+export type JudgeNoteMode = 'legacy' | 'retraction' | 'neutral' | 'false_praise';
 
 export interface JudgeIssueDecision {
   plantNote: boolean;
@@ -98,6 +99,9 @@ export interface JudgeIssueDecision {
     | 'tone-or-wording'
     | 'denial-of-incorrect-answer'
     | 'own-statement'
+    | 'false-praise'
+    | 'statement-judged-correct'
+    | 'not-an-answer-nothing-to-correct'
     | 'not-noteworthy';
   fields: JudgeIssueFields;
 }
@@ -117,15 +121,53 @@ function legacyDecision(claim: string, severity: 'kill' | 'advisory', reason: 'f
 }
 
 /**
+ * Does the judge's OWN reason say the flagged statement is correct?
+ *
+ * 2026-10-05 (live, Geometry): reason "The tutor's statement is
+ * arithmetically correct (85 ÷ 5 = 17), but the student's previous answer is
+ * not provided…", kind=grounding — a note was planted on correct maths and
+ * the next turn "corrected" it ("…gives 17, not 41 — that's on me"; 41 was
+ * the student's number). Only an explicit statement that the tutor's
+ * statement / maths IS correct counts; "(correct), but the right side…" —
+ * one part right, another faulted — does not.
+ */
+const REASON_SAYS_CORRECT_RES: RegExp[] = [
+  /\b(?:the\s+)?tutor(?:'s|’s)?\s+(?:statement|claim|arithmetic|math(?:s|ematics)?|calculation|computation|working|explanation|reasoning|answer)\s+(?:is|was|are)\s+(?:(?:\w+ly|indeed|in\s+fact)\s+)?(?:correct|accurate|right|valid|true|sound)\b/i,
+  /\b(?:the\s+)?(?:statement|claim|arithmetic|calculation|computation)\s+(?:itself\s+)?(?:is|was)\s+(?:(?:\w+ly|indeed|in\s+fact)\s+)?(?:correct|accurate|right|valid|true|sound)\b/i,
+  /\b(?:is|are|was)\s+(?:arithmetically|mathematically|factually|numerically|technically|computationally)\s+(?:correct|accurate|right|true|sound|valid)\b/i,
+];
+export function judgeReasonSaysStatementCorrect(why: unknown): boolean {
+  if (typeof why !== 'string' || !why.trim()) return false;
+  // The first sentence carries the judge's conclusion about the statement.
+  const head = why.trim().split(/(?<=[.!?])\s+/)[0] ?? '';
+  if (/\b(?:not|isn'?t|incorrect|wrong|inaccurate|false)\b[^,;—]*$/i.test(head.split(/,?\s+but\b/i)[0] ?? '')) return false;
+  return REASON_SAYS_CORRECT_RES.some((re) => re.test(head));
+}
+
+/**
  * @param enabled  TUTOR_JUDGE_STRUCTURED_VERDICT.
+ * @param falsePraiseRound  the 2026-10-05 rows (below). Unset ⇒
+ *   TUTOR_JUDGE_NOTE_FALSE_PRAISE; false ⇒ the 2026-10-04 table exactly.
+ *
+ * 2026-10-05 additions to the table (21 scripted Homework Help sessions):
+ *   kind false_praise, verdict incorrect / not_an_answer / unsure / missing
+ *     → the FALSE-PRAISE note (the error is the affirmation of the student's
+ *       answer: say it was not right), same plant rule as before.
+ *   kind false_praise, verdict correct → the judge contradicts itself: nothing.
+ *   kind grounding / other, verdict not_an_answer → nothing: there is no
+ *     answer whose verdict could be wrong, and the "statement" was a
+ *     grounding quibble (Geometry: correct maths "corrected").
+ *   kind grounding / other / wrong_math whose own reason says the statement
+ *     IS correct → nothing.
  * @param severity the issue's class AFTER the orchestrator's overrides
  *   ('kill' = it would have been a kill before Pillar 2b made the judge
  *   advisory; those always planted a note).
  */
 export function decideJudgeIssue(input: {
   enabled: boolean;
-  issue: { claim: string; studentAnswerVerdict?: unknown; issueKind?: unknown };
+  issue: { claim: string; studentAnswerVerdict?: unknown; issueKind?: unknown; why?: unknown };
   severity: 'kill' | 'advisory';
+  falsePraiseRound?: boolean;
 }): JudgeIssueDecision {
   const claim = input?.issue?.claim ?? '';
   const severity = input?.severity === 'kill' ? 'kill' : 'advisory';
@@ -171,6 +213,21 @@ export function decideJudgeIssue(input: {
   // fault named: the tutor was doing its job.
   const denialOfWrongAnswer = claimIsDenial && answerJudgedWrong;
   if (denialOfWrongAnswer && !kind) return none('denial-of-incorrect-answer');
+  if ((input.falsePraiseRound ?? TUTOR_JUDGE_NOTE_FALSE_PRAISE) === true) {
+    if (kind === 'false_praise') {
+      // "The praise was false" and "the student was correct" cannot both hold.
+      if (verdict === 'correct') return none('judge-self-contradiction');
+      const plantPraise = severity === 'kill' || hasMathExpression(claim);
+      if (plantPraise) return { plantNote: true, noteMode: 'false_praise', withholdCredit: false, reason: 'false-praise', fields };
+      return none('not-noteworthy');
+    }
+    if (kind === 'grounding' || kind === 'other' || kind === 'wrong_math') {
+      if (judgeReasonSaysStatementCorrect(input.issue?.why)) return none('statement-judged-correct');
+    }
+    if ((kind === 'grounding' || kind === 'other') && verdict === 'not_an_answer' && !claimIsDenial) {
+      return none('not-an-answer-nothing-to-correct');
+    }
+  }
   // Everything else (false_praise, wrong_math, grounding, other): the plant
   // rule that applied before the fields existed, in the neutral wording.
   // Credit is never withheld here — the judge did not say the student was
@@ -233,6 +290,17 @@ export function planJudgeNote(
       ...(others.length > 0 ? { otherClaims: others } : {}),
     };
   }
+  // 2026-10-05: a false-praise note is about the STUDENT's answer; any other
+  // planted claim of the same pass rides it as the tutor's own statement.
+  const falsePraise = planted.filter((i) => i.decision.noteMode === 'false_praise');
+  if (falsePraise.length > 0) {
+    const others = planted.filter((i) => i.decision.noteMode !== 'false_praise').map((i) => i.claim);
+    return {
+      claims: falsePraise.map((i) => i.claim),
+      mode: 'false_praise',
+      ...(others.length > 0 ? { otherClaims: others } : {}),
+    };
+  }
   return { claims: planted.map((i) => i.claim), mode: 'neutral' };
 }
 
@@ -245,13 +313,15 @@ export function planJudgeNote(
 export function buildPlannedJudgeNote(
   plan: { claims: string[]; mode: JudgeNoteMode; otherClaims?: string[] } | null,
   studentAnswer?: string,
-  opts?: { guardAttribution?: boolean },
+  opts?: { guardAttribution?: boolean; /** Unset ⇒ TUTOR_JUDGE_NOTE_FALSE_PRAISE. */ scriptless?: boolean },
 ): string | null {
   if (!plan) return null;
+  const scriptless = opts?.scriptless ?? TUTOR_JUDGE_NOTE_FALSE_PRAISE;
   const base = buildJudgeCorrectionNote(plan.claims, studentAnswer, {
     mode: plan.mode,
     otherClaims: plan.otherClaims,
     guardAttribution: opts?.guardAttribution,
+    scriptless,
   });
   if (!base || plan.mode !== 'legacy') return base;
   const others = (plan.otherClaims ?? [])
@@ -259,6 +329,7 @@ export function buildPlannedJudgeNote(
     .map((c) => `"${String(c ?? '').slice(0, 160).replace(/\s+/g, ' ').trim()}"`)
     .filter((c) => c.length > 2);
   if (others.length === 0) return base;
+  if (scriptless) return `${base} ${otherClaimsRider(others, true).trim()}`;
   return (
     `${base} Separately, the same review flagged another statement in that turn as likely wrong: ${others.join(' and ')}. ` +
     `Silently re-check it against the problem and the board; if it was wrong, correct your own statement plainly in one short sentence ("Let me correct something I said: …") — that part is not something the student was right about.`

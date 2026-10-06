@@ -21,6 +21,7 @@
  * the JSON route remains authoritative.
  */
 import { NextRequest } from 'next/server';
+import { noProblemToolMessage } from '@/lib/tutor/ai/no-problem-rule';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
@@ -373,7 +374,9 @@ export function makeToolResultProvider(
       if (!result) {
         return JSON.stringify({
           error: 'no_problem_available',
-          message: 'No problem could be sourced. Continue without injection.',
+          // 2026-10-05: the tutor told a student "I don't have a clean
+          // follow-up problem ready" — see lib/tutor/ai/no-problem-rule.ts.
+          message: noProblemToolMessage(),
           telemetry,
         });
       }

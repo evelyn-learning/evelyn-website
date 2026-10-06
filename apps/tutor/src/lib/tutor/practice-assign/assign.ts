@@ -110,7 +110,7 @@ export async function assignPractice(input: {
   // the partner cap. Every other caller passes no topUp — unchanged.
   if (input.topUp) {
     const wanted = loIds.map((loId) => ({ loId, title: titleFor(loId) }));
-    los = await topUpPractice(los, wanted, { ...input.topUp, target: Math.min(PRACTICE_TARGET, cap) });
+    los = await topUpPractice(los, wanted, { ...input.topUp, partnerId: input.partnerId, target: Math.min(PRACTICE_TARGET, cap) });
     // 2026-10-04: an LO that still has nothing after retrieval + top-up is
     // named (log line + `practice_draft_empty` to the caller's event sink) —
     // a struggling LO used to end the session with no practice and no trace.
@@ -221,7 +221,7 @@ async function topUpRecord(
   const out = await topUpPractice(
     rec.los.map((l) => ({ loId: l.loId, title: l.title, items: l.items })),
     [{ loId: first.loId, title: first.title }],
-    { ...input.topUp, target },
+    { ...input.topUp, partnerId: input.partnerId, target },
     deps.gen, // undefined → topUpPractice's default (generatePracticeItems)
   );
   const added = out.reduce((n, l) => n + l.items.length, 0) - before;

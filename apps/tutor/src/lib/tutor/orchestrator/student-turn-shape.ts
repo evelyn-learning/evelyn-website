@@ -32,6 +32,8 @@
  * Pure; never throws.
  */
 
+import { TUTOR_HEDGED_ANSWER_WIDENING } from '@/lib/tutor/orchestrator/turn-round-flags';
+
 const WH_LEAD_RE = /^(?:how|what|why|when|where|which|who|whose)\b/i;
 const AUX_LEAD_RE = /^(?:can|could|do|does|did|is|are|was|were|should|would|will|shall|may|might)\b/i;
 /** Auxiliary + a person: a request or a question about procedure ("can you…",
@@ -77,6 +79,82 @@ const WHOLE_VALUE_RE = new RegExp(`^\\s*${TAIL_HEDGE}${PROPOSED_VALUE}\\s*[?.!]*
 /** Leads after which a directly following value is the answer: "I don't know
  *  5", "I'm not sure 5" — not "I don't get 5", "I'm bad at 5". */
 const BARE_LEAD_END_RE = /\b(?:know|sure|remember|recall|idea|clue)$/i;
+
+// ── 2026-10-05: wider proposed values (21 scripted Homework Help sessions) ──
+//
+// "I don't know, maybe 30 m/s?", "I don't know, maybe -10 < x < 2?" and "I
+// don't know, maybe 4 kcal/m^2/yr, because it's 10% twice?" were all exactly
+// right and none was a hedged VALUE to this module: a unit, an inequality and
+// a trailing reason each defeated the bare-number tail. Three additions, each
+// still "the utterance ends on ONE proposed value":
+//   - a number with a unit ("30 m/s", "9000 seconds", "4 kcal/m^2/yr", "5 meters per second");
+//   - a relation / interval / expression made only of maths tokens
+//     ("-10 < x < 2", "x = 4 or x = -2", "3x + 1", "(-10, 2)");
+//   - either of those, or a plain value, followed by a because-clause.
+// Real questions and self-reports keep their shape: "I am not good at 2 digit
+// multiplication" (two words after the number), "I don't understand the
+// second step", "which is bigger, 5 or 6?" (no relation sign).
+
+const NUM = '(?:(?:negative|minus|positive|plus)\\s+|[-−+])?\\d+(?:[.,]\\d+)?(?:\\s*/\\s*\\d+)?';
+/** One unit word, optionally with an exponent, optionally compounded with
+ *  "/", "·", "*" or "per" ("m/s", "kcal/m^2/yr", "meters per second",
+ *  "cm^3", "°C", "%"). A second free-standing word is NOT a unit ("2 digit
+ *  multiplication"). */
+const UNIT_WORD = '(?:°\\s?[a-z]{1,2}|[a-zµμΩ]{1,12}(?:\\s?\\^\\s?-?\\d+|[²³])?)';
+const UNIT = `${UNIT_WORD}(?:\\s*(?:/|·|\\*|\\bper\\b)\\s*${UNIT_WORD}){0,3}`;
+const VALUE_WITH_UNIT = `${NUM}\\s*(?:%|${UNIT})`;
+/** Words that may appear inside a spoken maths expression. Any other run of
+ *  three or more letters makes it prose. */
+const MATH_WORDS = new Set(['or', 'and', 'to', 'sqrt', 'pi', 'inf', 'infinity', 'sin', 'cos', 'tan', 'ln', 'log', 'abs', 'dne']);
+const MATH_CHARS_RE = /^[0-9a-zπ√∞\s.,+\-−*/^<>=≤≥≠()[\]|{}]+$/i;
+const RELATION_OR_OPERATOR_RE = /[<>=≤≥≠^√]|\d\s*[a-z]\b|[a-z0-9)]\s*[+\-−*/]\s*[a-z0-9(]|^[([]\s*[-−+]?[\d.]+\s*,\s*[-−+]?[\d.]+\s*[)\]]$/i;
+const MAX_EXPRESSION_CHARS = 48;
+
+/** Is `t` ONE maths expression / relation / interval and nothing else? */
+function isMathExpression(t: string): boolean {
+  const e = t.trim();
+  if (!e || e.length > MAX_EXPRESSION_CHARS) return false;
+  if (!MATH_CHARS_RE.test(e) || !/\d/.test(e)) return false;
+  for (const w of e.toLowerCase().match(/[a-zπ]+/g) ?? []) {
+    if (w.length > 2 && !MATH_WORDS.has(w)) return false;
+  }
+  return RELATION_OR_OPERATOR_RE.test(e);
+}
+
+const TAIL_SEPARATOR = '(?:[,?;!.…:]|\\s[-—–]|\\b(?:but|maybe|so))';
+const WIDE_TAIL_UNIT_RE = new RegExp(`${TAIL_SEPARATOR}\\s*${TAIL_HEDGE}${VALUE_WITH_UNIT}\\s*[?.!]*$`, 'i');
+const WIDE_WHOLE_UNIT_RE = new RegExp(`^\\s*${TAIL_HEDGE}${VALUE_WITH_UNIT}\\s*[?.!]*$`, 'i');
+/** A trailing reason: ", because it's 10% twice?" — set off by a comma /
+ *  dash, or directly after the value. */
+const BECAUSE_TAIL_RE = /\s*[,;—–-]?\s*\b(?:because|'?cause|cuz|coz|since)\b[^?]*\??\s*$/i;
+
+/** The wide forms above, tested on what follows the lead. */
+function proposesWideTailValue(t: string, leadEnd: number): boolean {
+  const lead = t.slice(0, leadEnd);
+  const fullRest = t.slice(leadEnd);
+  const candidates = [fullRest];
+  const withoutReason = fullRest.replace(BECAUSE_TAIL_RE, '');
+  if (withoutReason !== fullRest && withoutReason.trim()) candidates.push(withoutReason);
+  for (const rest of candidates) {
+    if (!rest.trim()) continue;
+    // A plain value before the reason clause ("…, maybe 5, because it's half").
+    if (rest !== fullRest && (TAIL_VALUE_RE.test(rest) || (BARE_LEAD_END_RE.test(lead.trim()) && WHOLE_VALUE_RE.test(rest)))) return true;
+    if (WIDE_TAIL_UNIT_RE.test(rest)) return true;
+    if (BARE_LEAD_END_RE.test(lead.trim()) && WIDE_WHOLE_UNIT_RE.test(rest)) return true;
+    // "…, maybe -10 < x < 2?": everything after the LAST separator-plus-hedge
+    // (or after the first separator) is one expression.
+    const body = rest.replace(/\s*[?.!]+\s*$/, '');
+    const hedgeCut = /^(.*)\b(?:maybe|perhaps|probably|i\s+think|i\s+guess|i'?d\s+say|is\s+it|i\s+got|the\s+answer\s+is)\s+(.+)$/i.exec(body);
+    if (hedgeCut && isMathExpression(hedgeCut[2].replace(/^(?:it'?s|its|like)\s+/i, ''))) return true;
+    const sepCut = /^\s*(?:[,?;!.…:]|[-—–]|but|so)\s*(.+)$/i.exec(body);
+    if (sepCut && isMathExpression(sepCut[1])) return true;
+  }
+  return false;
+}
+
+function wideEnabled(opt: boolean | undefined): boolean {
+  return opt ?? TUTOR_HEDGED_ANSWER_WIDENING;
+}
 
 /** Does the utterance end by proposing a value, after its lead? */
 function proposesTailValue(t: string, leadEnd: number): boolean {
@@ -142,14 +220,16 @@ const SELF_REPORT_RE = new RegExp(
 const HEDGED_PROPOSAL_RE = /\b(?:maybe|perhaps|probably|i\s+think|i\s+guess|i'?d\s+say|is\s+it|could\s+it\s+be|would\s+it\s+be|might\s+be)\b/i;
 
 /** Is this student turn a SELF-REPORT of difficulty? */
-export function isSelfReport(text: string): boolean {
+export function isSelfReport(text: string, opts?: { /** Unset ⇒ TUTOR_HEDGED_ANSWER_WIDENING. */ wideValues?: boolean }): boolean {
   const t = strip(text);
   if (!t || t.startsWith('[')) return false;
   const m = SELF_REPORT_RE.exec(t);
   if (!m) return false;
   if (HEDGED_PROPOSAL_RE.test(t)) return false;
   // "I don't know, 5?" / "i dont know 5" / "I forgot the sign, negative 3".
-  return !proposesTailValue(t, m[0].length);
+  if (proposesTailValue(t, m[0].length)) return false;
+  // 2026-10-05: "I don't know, 30 m/s?" / "I'm not sure, x > -10".
+  return !(wideEnabled(opts?.wideValues) && proposesWideTailValue(t, m[0].length));
 }
 
 /**
@@ -163,11 +243,40 @@ export function isSelfReport(text: string): boolean {
  * know" (so the turn was not a verification turn) and the ledger's stuck-cue
  * test counted it as stuck. Both now ask this predicate.
  */
-export function isHedgedValueAnswer(text: string): boolean {
+export function isHedgedValueAnswer(text: string, opts?: { /** Unset ⇒ TUTOR_HEDGED_ANSWER_WIDENING. */ wideValues?: boolean }): boolean {
   const t = strip(text);
   if (!t || t.startsWith('[')) return false;
   const m = SELF_REPORT_RE.exec(t);
-  return !!m && proposesTailValue(t, m[0].length);
+  if (!m) return false;
+  if (proposesTailValue(t, m[0].length)) return true;
+  return wideEnabled(opts?.wideValues) && proposesWideTailValue(t, m[0].length);
+}
+
+/** Words that mark an answer as offered without confidence. */
+const HEDGE_MARK_RE =
+  /\b(?:maybe|perhaps|probably|possibly|i\s+think|i\s+guess|i'?d\s+say|i\s+suppose|not\s+sure|could\s+it\s+be|would\s+it\s+be|might\s+be|is\s+it|i\s+(?:do\s+not|don'?t|dont)\s+know|idk)\b/i;
+const HEDGE_LEAD_WINDOW_WORDS = 8;
+
+/**
+ * Is this an ANSWER offered with a hedge — "I don't know, maybe 30 m/s?",
+ * "maybe 1/6?", "I think it's 5", "I don't know, maybe Country A for cars,
+ * because …"? Wider than `isHedgedValueAnswer` on purpose (no value shape is
+ * required): it is used only to decide whether a tutor DENIAL of the turn
+ * needs confirming before it is counted against the student
+ * (answer-attempt.ts `hedgedDenialCounts`). A question, a self-report with
+ * nothing proposed, a synthetic turn and a turn with no hedge word in its
+ * opening words are not it. Pure.
+ */
+export function isHedgedProposal(text: string): boolean {
+  const t = strip(text);
+  if (!t || t.startsWith('[')) return false;
+  if (isHedgedValueAnswer(t, { wideValues: true })) return true;
+  const lead = t.split(/\s+/).slice(0, HEDGE_LEAD_WINDOW_WORDS).join(' ');
+  if (!HEDGE_MARK_RE.test(lead)) return false;
+  if (isSelfReport(t, { wideValues: true })) return false;
+  // "is it …" / "could it be …" frames are proposals; any other question is not.
+  if (isStudentQuestion(t) && !/^(?:is|could|would|might)\s+it\b/i.test(t)) return false;
+  return true;
 }
 
 export type StudentTurnShape = 'question' | 'self_report' | 'answer_like';

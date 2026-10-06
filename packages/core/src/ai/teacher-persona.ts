@@ -24,6 +24,13 @@
 export interface TeacherPersonaWire {
   id: string;
   name: string;                 // "Ms. Priya Nair" — how the tutor introduces itself
+  /** OPTIONAL, additive (2026-10-05). True when `name` is a ROLE the tutor
+   *  plays ("Homework Helper", "Study Buddy") rather than a person's name:
+   *  the tutor then says the whole name as a role ("I'm your Homework
+   *  Helper") and never a first name taken from it. False forces the
+   *  personal-name treatment. ABSENT ⇒ decided from the name itself
+   *  (`isRoleStyleTeacherName`) — every personal name is treated as before. */
+  nameIsRole?: boolean;
   intro: string;                // 1-2 sentence student-facing brief, used in the warm intro
   bio?: string;                 // longer profile text (portal display, NOT prompt)
   subjects?: string[];
@@ -533,13 +540,25 @@ const STYLE_FIELD_LABELS: Array<[keyof NonNullable<TeacherPersonaWire['style']>,
  * Always ends with TEACHER_IDENTITY_BOUNDS_CLAUSE ({name} substituted).
  */
 export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
+  const role = isRoleStyleTeacherName(t) ? teacherRoleLabel(t.name) : null;
   const lines: string[] = [
     '<teacher_identity>',
     'This session you teach AS the specific teacher below. Speak as this person — first person, in their style — for the entire session.',
-    `Name: ${t.name}`,
-    // Spoken address (2026-07-09): honorific+name intros sounded odd
-    // ("Mr. Praveen") and the "Ms."/"Mr." period trips TTS pausing.
-    `Go by "${teacherFirstName(t.name)}" when saying your own name — never use an honorific with it.`,
+    ...(role
+      ? [
+          // A role-style name (2026-10-05): "Homework Helper" was reduced to
+          // the first name "Homework" by the go-by line below.
+          `Role: ${role}`,
+          `"${role}" is the name of your role, not a personal name. When you say who you are, say the whole ` +
+            `phrase as a role — "I'm your ${role}" — never shorten it to one word, never use any part of it ` +
+            `as a first name, and never claim or invent a personal name.`,
+        ]
+      : [
+          `Name: ${t.name}`,
+          // Spoken address (2026-07-09): honorific+name intros sounded odd
+          // ("Mr. Praveen") and the "Ms."/"Mr." period trips TTS pausing.
+          `Go by "${teacherFirstName(t.name)}" when saying your own name — never use an honorific with it.`,
+        ]),
     // Ask-only (2026-07-09): the brain kept volunteering this backstory
     // in greetings/pickups ("I keep a jar of counting beans…" on every
     // session start). It's context for direct questions, not opener copy.
@@ -561,7 +580,7 @@ export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
   if (t.boundaries) {
     lines.push(`Extra boundaries for you specifically: ${t.boundaries}`);
   }
-  lines.push(TEACHER_IDENTITY_BOUNDS_CLAUSE.replace('{name}', t.name));
+  lines.push(TEACHER_IDENTITY_BOUNDS_CLAUSE.replace('{name}', role ? `the student's ${role}` : t.name));
   lines.push('</teacher_identity>');
   return lines.join('\n');
 }
@@ -592,6 +611,26 @@ export function renderTeacherIntroDirective(
   t: TeacherPersonaWire,
   opts?: TeacherIntroDirectiveOptions,
 ): string {
+  const biographyBan =
+    `NO biography of any kind: no credentials, years of ` +
+    `experience, subject lists, personal props, anecdotes, or history — it's a hello, not a resume. ` +
+    `Your personality shows through HOW you teach, not through facts about yourself. Then get into the opener.`;
+  // Role-style name (2026-10-05): there is no first name to give — the
+  // tutor says the role, whole. Same floor as v2 (never a bare greeting).
+  if (isRoleStyleTeacherName(t)) {
+    const role = teacherRoleLabel(t.name);
+    const roleSpec = opts?.firstTurnV2
+      ? `Introduce yourself in your first turn as the student's ${role} — say "I'm your ${role}" AND, in the ` +
+        `same breath, what today is about (one warm sentence). "${role}" is a role, not a personal name: say the ` +
+        `whole phrase, never shorten it to one word, and never claim a personal name. Your first sentence must ` +
+        `never be a bare greeting: "I'm your ${role}." on its own is too thin to land — the student has just sat ` +
+        `through several seconds of silence, and a very short opener reads as a glitch rather than a teacher. ` +
+        `Give them the role and the subject together. `
+      : `Introduce yourself in your first turn as the student's ${role} — one warm greeting sentence that says ` +
+        `"I'm your ${role}". "${role}" is a role, not a personal name: say the whole phrase, never shorten it ` +
+        `to one word, and never claim a personal name. `;
+    return roleSpec + biographyBan;
+  }
   const first = teacherFirstName(t.name);
   // v1 (2026-07-09): "one warm greeting sentence, just your first name" set a
   // brevity CEILING and stacked five prohibitions against it. The brain
@@ -609,12 +648,7 @@ export function renderTeacherIntroDirective(
       `as a glitch rather than a teacher. Give them the name and the subject together. `
     : `Introduce yourself simply as ${first} in your first turn — one warm greeting sentence, just your ` +
       `first name (no honorific, no surname). `;
-  return (
-    openingSpec +
-    `NO biography of any kind: no credentials, years of ` +
-    `experience, subject lists, personal props, anecdotes, or history — it's a hello, not a resume. ` +
-    `Your personality shows through HOW you teach, not through facts about yourself. Then get into the opener.`
-  );
+  return openingSpec + biographyBan;
 }
 
 /**
@@ -643,6 +677,45 @@ export function teacherFirstName(name: string): string {
   const stripped = name.trim().replace(/^(Mr|Ms|Mrs|Mx|Dr|Prof)\.?\s+/i, '');
   const first = stripped.split(/\s+/)[0];
   return first || name.trim();
+}
+
+const HONORIFIC_RE = /^(Mr|Ms|Mrs|Mx|Dr|Prof)\.?\s+/i;
+// "Your …" / "The …" only: "An" and "My" are given names (An Nguyen, My Linh).
+const ROLE_ARTICLE_RE = /^(your|the)\s+/i;
+
+/** Last words that make a persona name a job title rather than a person
+ *  ("Homework Helper", "Math Tutor", "Study Buddy"). Only the LAST word is
+ *  compared, so a title used as a form of address before a personal name
+ *  ("Coach Riley") is not a role. */
+const ROLE_NOUNS: ReadonlySet<string> = new Set([
+  'helper', 'help', 'tutor', 'assistant', 'coach', 'teacher', 'guide', 'mentor', 'buddy', 'companion',
+  'instructor', 'advisor', 'adviser', 'aide', 'trainer', 'partner', 'pal', 'sidekick', 'expert', 'navigator',
+  'bot', 'ai',
+]);
+
+/**
+ * Pure: is this persona's name a ROLE ("Homework Helper") rather than a
+ * person's name ("Ms. Kiara")? A role is introduced whole, as a role ("I'm
+ * your Homework Helper"); taking a first name from it gave "I'm Homework".
+ *
+ *   1. the wire field `nameIsRole`, when the host sends it, decides;
+ *   2. otherwise, from the name alone: no honorific (an honorific marks a
+ *      person), and either it starts with "Your …" / "The …" or its last word is a role noun (`ROLE_NOUNS`).
+ */
+export function isRoleStyleTeacherName(t: Pick<TeacherPersonaWire, 'name' | 'nameIsRole'>): boolean {
+  if (typeof t.nameIsRole === 'boolean') return t.nameIsRole;
+  const name = (t.name ?? '').trim();
+  if (!name || HONORIFIC_RE.test(name)) return false;
+  if (ROLE_ARTICLE_RE.test(name)) return true;
+  const last = name.split(/\s+/).pop()!.toLowerCase().replace(/[^\p{L}]/gu, '');
+  return ROLE_NOUNS.has(last);
+}
+
+/** Pure: the role as it follows "your" in speech — the name without a
+ *  leading article ("Your Homework Helper" → "Homework Helper"). */
+export function teacherRoleLabel(name: string): string {
+  const trimmed = name.trim();
+  return trimmed.replace(ROLE_ARTICLE_RE, '').trim() || trimmed;
 }
 
 /**

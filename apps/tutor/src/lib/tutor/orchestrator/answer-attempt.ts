@@ -17,9 +17,9 @@
  */
 import { isLedgerStuckCue } from '@/lib/tutor/orchestrator/struggle-ledger';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
-import { isStudentQuestion, isSelfReport } from '@/lib/tutor/orchestrator/student-turn-shape';
+import { isStudentQuestion, isSelfReport, isHedgedProposal } from '@/lib/tutor/orchestrator/student-turn-shape';
 import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
-import { TUTOR_TURN_SHAPE_GATE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_TURN_SHAPE_GATE, TUTOR_HEDGED_DENIAL_NEEDS_CONFIRMATION } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Requests for help / another example: never an answer. */
 const HELP_REQUEST_RE =
@@ -154,6 +154,38 @@ export function isAnswerAttempt(studentText: string, opts?: { turnShapeGate?: bo
   return t.split(/\s+/).filter(Boolean).length <= SHORT_ANSWER_MAX_WORDS;
 }
 
+/**
+ * Does a tutor DENIAL of this student turn count against the student?
+ *
+ * 2026-10-05 (21 scripted Homework Help sessions): "I don't know, maybe
+ * 1/6?" was exactly right, the tutor answered "Not quite on √9…", and the
+ * denial went straight into the incorrect streak and the struggle ledger —
+ * the partner feed reported the student as "Needs Support". Three other
+ * sessions denied a correct hedged answer the same way. A hedge is where the
+ * tutor's reflexive "Not quite" is least reliable, so for a HEDGED proposal
+ * the denial counts only when something other than the tutor's own words
+ * agrees the answer was wrong:
+ *   - a verified answer key the student's answer disagrees with, or
+ *   - the judge reviewed the turn and found no fault with the denial.
+ * Anything else — no key, no judge pass, a judge issue on the denial —
+ * counts nothing either way. A turn that is not hedged is unaffected.
+ *
+ * @param enabled  Unset ⇒ TUTOR_HEDGED_DENIAL_NEEDS_CONFIRMATION.
+ * Pure; never throws.
+ */
+export function hedgedDenialCounts(input: {
+  enabled?: boolean;
+  studentText: string;
+  /** A verified key exists and the student's answer disagrees with it. */
+  verifiedWrong?: boolean;
+  /** The judge reviewed this tutor turn and did not fault the denial. */
+  judgeAgreedWrong?: boolean;
+}): boolean {
+  if ((input?.enabled ?? TUTOR_HEDGED_DENIAL_NEEDS_CONFIRMATION) !== true) return true;
+  if (!isHedgedProposal(input?.studentText ?? '')) return true;
+  return input?.verifiedWrong === true || input?.judgeAgreedWrong === true;
+}
+
 /** Should this turn feed a ledger `wrong` event? */
 export function inferWrongEvent(input: {
   studentText: string;
@@ -165,9 +197,14 @@ export function inferWrongEvent(input: {
   widenedCorrection?: boolean;
   /** Unset ⇒ TUTOR_ACK_NOT_AFFIRM. */
   ackExclusion?: boolean;
+  /** 2026-10-05: when the caller supplies it, a denial of a HEDGED answer is
+   *  a `wrong` event only if confirmed (see `hedgedDenialCounts`). Omitted ⇒
+   *  no such test (the behaviour before). */
+  hedgedDenial?: { enabled?: boolean; verifiedWrong?: boolean; judgeAgreedWrong?: boolean };
 }): boolean {
   if (input.objectiveCorrect) return false;
   if (!isAnswerAttempt(input.studentText, { turnShapeGate: input.turnShapeGate })) return false;
+  if (input.hedgedDenial && !hedgedDenialCounts({ ...input.hedgedDenial, studentText: input.studentText })) return false;
   const verdict = readPacingVerdict(input.tutorText, {
     studentText: input.studentText,
     widenedCorrection: input.widenedCorrection,

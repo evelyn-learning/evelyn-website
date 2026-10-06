@@ -42,7 +42,8 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
-import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, type PracticeGenSources, type PracticeGenOutcome } from './practice-gen';
+import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, practiceGenDisabledForPartner, type PracticeGenSources, type PracticeGenOutcome } from './practice-gen';
+import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } from './essay-practice';
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
@@ -67,6 +68,9 @@ export interface PlanLite {
    *  so grading resolves the right plan (segment ids are NOT globally unique
    *  across plans — `try-1` alone appears in 100+ plans). */
   id?: string;
+  /** Plan title — read only by the essay-practice fallback rule
+   *  (essay-practice.ts `isEssayPracticeNode`). */
+  title?: string;
   /** Topic id (topic-taxonomy vocabulary). Used to derive the topic tag for
    *  Design B's generate-on-exhaustion path engine-side — NEVER the portal's
    *  `courseId` (a Mongo ObjectId hex on the real wire, not a topic id). */
@@ -350,6 +354,9 @@ export async function retrievePractice(
   // can derive the topic tag from the SAME already-fetched plans (no extra
   // lookup) — empty for a topicId-scoped request.
   let loScopePlans: PlanLite[] = [];
+  // Set for an LO-scoped request on an essay-practice node: generation is
+  // skipped and an empty result reads `none_available`.
+  let essayNode = false;
 
   if ('loId' in req.scope) {
     const loId = req.scope.loId;
@@ -359,7 +366,19 @@ export async function retrievePractice(
     loScopePlans = plans;
     for (const p of plans) planItems.push(...planToItems(p, loId));
     const bank = await sources.bankForLoId(loId, difficulty);
-    bankItems.push(...withoutWithdrawn(bank).map(bankToItem));
+    // Essay-practice node (FRQ / DBQ / LEQ / SAQ): rows the on-demand
+    // generator banked here earlier are MCQ / one-number / short items, not
+    // essays — never served. Authored bank rows and the plan's rubric items
+    // are untouched.
+    essayNode = essayGenBlockEnabled() && isEssayPracticeNode(loId, plans);
+    const servableBank = essayNode
+      ? bank.filter((b) => {
+          if (!isGeneratedPracticeItemId(b.id)) return true;
+          console.log(`[practice] generated item not served on essay node ${b.id}`);
+          return false;
+        })
+      : bank;
+    bankItems.push(...withoutWithdrawn(servableBank).map(bankToItem));
   } else {
     const topicId = req.scope.topicId;
     const plans = (await sources.plansForTopic(topicId)).filter((p) => planServable(p, undefined, who));
@@ -401,7 +420,12 @@ export async function retrievePractice(
   // degrades to the retrieval-only result — never an error.
   let generated: PracticeItem[] = [];
   let genOutcome: PracticeGenOutcome | null = null;
-  if (shortfall > 0 && 'loId' in req.scope) {
+  // PRACTICE_GEN_DISABLED_PARTNERS: a listed partner is served stored items
+  // only. Skipped here (genOutcome stays null ⇒ an empty result reads
+  // `none_available`, never 'preparing' / 'limit') and again inside the
+  // generator, which every other caller goes through.
+  const genDisabledForCaller = practiceGenDisabledForPartner(who?.partnerId);
+  if (shortfall > 0 && 'loId' in req.scope && !essayNode && !genDisabledForCaller) {
     const loId = req.scope.loId;
     // Topic tag derived ENGINE-SIDE from the LO's owning plan — never the
     // portal's `courseId`, which is a Mongo ObjectId hex on the real wire,
@@ -435,6 +459,7 @@ export async function retrievePractice(
             cedCode: ordered.find((it) => it.cedCode)?.cedCode,
             difficulty,
             shortfall,
+            ...(who?.partnerId ? { partnerId: who.partnerId } : {}),
             // Anchor pool: same-LO items already assembled above
             // (pre-exclusion — an anchor is a template, never itself served,
             // so a student-seen item is still a fine anchor).

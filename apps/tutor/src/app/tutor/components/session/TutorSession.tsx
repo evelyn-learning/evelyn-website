@@ -21,7 +21,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Script from 'next/script';
-import { Play, LogOut } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { EndControl } from './EndControl';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
@@ -204,6 +205,15 @@ export interface TutorSessionProps {
    *  Adaptive-menu Finish/Discard entries — those intents only mean
    *  something to a portal listening on session_ended. */
   embedded?: boolean;
+  /** Embed UI option (lib/tutor/portal/embed-ui-options.ts): show the
+   *  "Humor" section of the ⋯ menu. Default true — unchanged for every
+   *  caller that omits it (retail /tutor, hosts with no option set). */
+  humorControl?: boolean;
+  /** Embed UI option: below `sm`, a labelled "Finish" control in the header
+   *  (finish intent) instead of the icon-only End/Pause. Only honoured when
+   *  `embedded` — the intent means nothing without a host listening.
+   *  Default false. */
+  mobileFinish?: boolean;
 
   /** Share the parent's RealtimeHandle ref instead of an internal one. The
    *  standalone /tutor page needs this: its auto-start injection, end-session
@@ -265,7 +275,10 @@ export default function TutorSession(props: TutorSessionProps) {
     socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope, lessonContext, inFlow,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
+    humorControl = true, mobileFinish,
   } = props;
+  // Embed-only (see the prop docs): the retail page can never get it.
+  const mobileFinishOn = !!embedded && mobileFinish === true;
 
   // Task E8: SessionStage's mobile "expand" button lives deep in this
   // component's slot tree and keeps its own expanded/collapsed local state.
@@ -1395,48 +1408,32 @@ export default function TutorSession(props: TutorSessionProps) {
   // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef
   // endSession = TTS hard-stop + recording finalize + final profile commit)
   // — calling onEndSession directly would skip the final transcript commit.
+  // First press arms (3s), second confirms. `intent` is 'finish' only from
+  // the small-screen Finish button (embed option `mobileFinish`) — it takes
+  // the SAME path as the ⋯ menu's "Finish lesson": stash the intent, run
+  // VTR's full endSession() teardown; handleEndSession forwards the intent.
+  const pressEndControl = (intent?: 'finish') => {
+    if (!endArmed) {
+      setEndArmed(true);
+      if (endArmTimerRef.current) clearTimeout(endArmTimerRef.current);
+      // 3s to confirm; disarm quietly if the student hesitates. Guards the
+      // 2026-07-26 trial failure: one stray tap ended a 38s demo terminally.
+      endArmTimerRef.current = setTimeout(() => setEndArmed(false), 3000);
+      return;
+    }
+    if (endArmTimerRef.current) { clearTimeout(endArmTimerRef.current); endArmTimerRef.current = null; }
+    setEndArmed(false);
+    if (intent) endIntentRef.current = intent;
+    const h = realtimeHandleRef.current;
+    if (h?.endSession) h.endSession();
+    else handleEndSession();
+  };
   const endControlEl = (
-    <button
-      onClick={() => {
-        if (!endArmed) {
-          setEndArmed(true);
-          if (endArmTimerRef.current) clearTimeout(endArmTimerRef.current);
-          // 3s to confirm; disarm quietly if the student hesitates. Guards the
-          // 2026-07-26 trial failure: one stray tap ended a 38s demo terminally.
-          endArmTimerRef.current = setTimeout(() => setEndArmed(false), 3000);
-          return;
-        }
-        if (endArmTimerRef.current) { clearTimeout(endArmTimerRef.current); endArmTimerRef.current = null; }
-        setEndArmed(false);
-        const h = realtimeHandleRef.current;
-        if (h?.endSession) h.endSession();
-        else handleEndSession();
-      }}
-      title={endArmed ? 'Tap again to end the session' : 'End or pause — your progress is saved, resume anytime'}
-      aria-label={endArmed ? 'Tap again to end the session' : 'End or pause session'}
-      className={`flex shrink-0 items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold border transition-colors ${
-        endArmed
-          ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
-          : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-      }`}
-    >
-      {/* Narrow (<sm): one fixed-width slot that swaps icon ↔ "End?" so the
-          armed state always presents TEXT (2026-07-26 trial: color-only arm
-          read as a broken button) while the pill geometry never changes —
-          the second tap lands on the same hit target (R34 rule). */}
-      <span className="inline-flex min-w-[2.25rem] justify-center sm:hidden">
-        {endArmed ? 'End?' : <LogOut className="w-3.5 h-3.5" />}
-      </span>
-      <LogOut className="hidden sm:inline-block w-3.5 h-3.5" />
-      {/* inline-block + min-w so the longer "End session?" label reserves
-          the same slot as "End / Pause" — armed/unarmed never resize the
-          pill, so the second tap always lands on the same hit target. */}
-      <span className="hidden sm:inline-block sm:min-w-[6.5rem]">{endArmed ? 'End session?' : 'End / Pause'}</span>
-      {/* Screen readers hear the arm regardless of viewport. */}
-      <span aria-live="polite" className="sr-only">
-        {endArmed ? 'Tap again to end the session' : ''}
-      </span>
-    </button>
+    <EndControl
+      armed={endArmed}
+      mobileFinish={mobileFinishOn}
+      onPress={pressEndControl}
+    />
   );
 
   const voiceInputEl = (
@@ -1809,24 +1806,29 @@ export default function TutorSession(props: TutorSessionProps) {
               </div>
             </>
           )}
-          <div className="my-1 border-t border-slate-100" />
-          <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Humor</p>
-          {HUMOR_CHOICES.filter((c) => BAND_RANK[humorBand] >= BAND_RANK[c.minBand]).map((c) => {
-            const isSel = currentHumor === c.value;
-            return (
-              <button
-                key={c.value ?? 'default'}
-                onClick={() => {
-                  if (c.value === null) clearStudentPreferenceForChip('humorCeiling');
-                  else setStudentPreferenceForChip('humorCeiling', c.value);
-                  setPacingMenuOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-xl ${isSel ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
-              >
-                <span className="inline-block w-3">{isSel ? '✓' : ''}</span> {c.label}
-              </button>
-            );
-          })}
+          {/* Hidden when the host turned the option off (embed-ui-options). */}
+          {humorControl && (
+            <>
+            <div className="my-1 border-t border-slate-100" />
+            <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Humor</p>
+            {HUMOR_CHOICES.filter((c) => BAND_RANK[humorBand] >= BAND_RANK[c.minBand]).map((c) => {
+              const isSel = currentHumor === c.value;
+              return (
+                <button
+                  key={c.value ?? 'default'}
+                  onClick={() => {
+                    if (c.value === null) clearStudentPreferenceForChip('humorCeiling');
+                    else setStudentPreferenceForChip('humorCeiling', c.value);
+                    setPacingMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl ${isSel ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
+                >
+                  <span className="inline-block w-3">{isSel ? '✓' : ''}</span> {c.label}
+                </button>
+              );
+            })}
+            </>
+          )}
           {/* Fix W4-review-1: only openai-mini honors
               voice.__experimental_controls.speed — Cartesia sonic-3.5
               ignores it (verified 2026-07-16, task-W4-report.md), and

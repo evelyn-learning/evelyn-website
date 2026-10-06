@@ -124,7 +124,7 @@ if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
   check('retraction: still forbids narration', /NEVER narrate/.test(retraction));
   check('retraction: single line', !retraction.includes('\n'));
 
-  const neutral = buildJudgeCorrectionNote(['So $x = 11$.'], '5', { mode: 'neutral' }) ?? '';
+  const neutral = buildJudgeCorrectionNote(['So $x = 11$.'], '5', { mode: 'neutral', scriptless: false }) ?? '';
   check('neutral: bracketed note convention', /^\[correction note — not from the student\]/.test(neutral));
   check('neutral: quotes the claim', neutral.includes('So $x = 11$.'));
   check('neutral: correct your own statement plainly', /correct your own earlier statement plainly/i.test(neutral));
@@ -144,7 +144,7 @@ if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
 // 2026-10-04 (review): a retraction and another flagged statement of the same
 // turn ride ONE note — the second used to be dropped.
 {
-  const both = buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'retraction', otherClaims: ['So $x = 11$.'] }) ?? '';
+  const both = buildJudgeCorrectionNote(['Not quite.'], '5', { mode: 'retraction', otherClaims: ['So $x = 11$.'], scriptless: false }) ?? '';
   check('retraction + other: bracketed note convention', /^\[correction note — not from the student\]/.test(both));
   check('retraction + other: carries the denial', both.includes('"Not quite."'));
   check('retraction + other: carries the other claim', both.includes('"So $x = 11$."'));

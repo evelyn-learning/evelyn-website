@@ -76,7 +76,8 @@ import {
   type MaterialClassification,
 } from '@/lib/tutor/lesson-plan/material-classify';
 import { enumerateProblems, defaultEnumerateDeps, getEnumerateClient } from '@/lib/tutor/lesson-plan/enumerate-problems';
-import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, hasProblemSignals, typedEnumerationText } from '@/lib/tutor/lesson-plan/homework';
+import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, typedHomeworkIsOwnMaterial, typedHomeworkPlanDecision, capObjectivesForHomework, typedEnumerationText } from '@/lib/tutor/lesson-plan/homework';
+import { TUTOR_HOMEWORK_OWN_MATERIAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
@@ -221,13 +222,26 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // request's `topic` when present, else `text` minus a host focus preamble —
   // never the raw `text`, whose multi-line preamble read as a problem list.
   const typedProblemText = typedEnumerationText(requestTopic, text);
-  const enumerate = isHomework && (hasMaterials || hasProblemSignals(typedProblemText));
+  // 2026-10-05 (21 scripted sessions): the regex gate alone sent every FRQ /
+  // essay prompt, a data question and an English sentence to a generated
+  // lesson with invented examples. Typed text is the student's own material
+  // unless it is a bare topic with no task (typedHomeworkIsOwnMaterial).
+  const typedOwnMaterial = isHomework && typedHomeworkIsOwnMaterial(typedProblemText, { enabled: TUTOR_HOMEWORK_OWN_MATERIAL });
+  const enumerate = isHomework && (hasMaterials || typedOwnMaterial);
   if (isHomework && !enumerate) console.log('[plan-generate] homework-help: no problem signals → normal plan');
   let homeworkProblems: HomeworkProblem[] | null = null;
   if (enumerate) {
     const enumerated = await enumerateProblems(materialText ?? typedProblemText, defaultEnumerateDeps(getEnumerateClient()));
-    const decision = homeworkPlanDecision(enumerated);
-    if (decision.kind === 'homework') homeworkProblems = decision.problems;
+    // A failed split of TYPED own material is still what the student brought:
+    // one problem holding their text, never a lesson about something else.
+    // Uploads (and the flag-off path) keep homeworkPlanDecision exactly.
+    const decision = TUTOR_HOMEWORK_OWN_MATERIAL
+      ? typedHomeworkPlanDecision(enumerated, { ownMaterial: typedOwnMaterial && !hasMaterials })
+      : homeworkPlanDecision(enumerated);
+    if (decision.kind === 'homework') {
+      homeworkProblems = decision.problems;
+      if (enumerated.failedOpen) console.log('[plan-generate] homework-help: enumeration failed open → one-problem homework plan over the typed text');
+    }
     else {
       // Runbook grep: `homework-help: N problems (fail-open: yes|no)` — the
       // success line is logged where the homework plan is built (below).
@@ -337,6 +351,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
     });
   } else {
     const stage1 = await extractLearningObjectives(genInput);
+    // A homework-help request (a bare topic, by now) never gets the objective
+    // picker — the student asked for help, not for a menu. Keep the first X
+    // objectives and build the full plan.
+    const homeworkNoPicker = isHomework && TUTOR_HOMEWORK_OWN_MATERIAL;
     if (!stage1.ok || stage1.los.length === 0) {
       // Stage 1 failed outright — serve the canonical fallback directly.
       // Do NOT retry via the one-shot pipeline: that would re-run Stage 1
@@ -346,7 +364,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
       // 1-LO skeleton beats a second live call at synchronous request time.
       plan = fallbackPlan(genInput, stage1.reason, durablePlanId);
       generatorOk = false;
-    } else if (stage1.los.length > X) {
+    } else if (stage1.los.length > X && !homeworkNoPicker) {
       // Y > X: hand back a picker plan (all discovered LOs, unexpanded).
       // The portal shows a picker UI and resolves via plan-expand (Task 5).
       plan = buildPickerPlan({
@@ -362,7 +380,8 @@ export const POST = withPortalAuth(async (_req, auth) => {
       // Y <= X: expand inline and assemble a full plan (mirrors
       // generatePlanFromText's own full-plan branch, minus the redundant
       // Stage 1 call since we already ran it above).
-      const stage2 = await expandSegmentsForLOs(stage1.los, genInput);
+      const fullLos = homeworkNoPicker ? capObjectivesForHomework(stage1.los, X) : stage1.los;
+      const stage2 = await expandSegmentsForLOs(fullLos, genInput);
       if (!stage2.ok || stage2.segments.length === 0) {
         // Same no-retry rule as the Stage 1 failure above.
         plan = fallbackPlan(genInput, stage2.reason, durablePlanId);
@@ -375,7 +394,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
         // every generated course onto one set of keys.
         const ns = namespaceGeneratedLos({
           planId: durablePlanId,
-          los: stage1.los,
+          los: fullLos,
           segments: stage2.segments,
         });
         try {

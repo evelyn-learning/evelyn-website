@@ -4,6 +4,7 @@
  * dump every field, only the slice useful for THIS session.
  */
 
+import { usableStudentName } from '../student-name';
 import type { StudentProfile, MasteryEntry, GapEntry } from './types';
 import { isGapStale } from './store';
 
@@ -39,7 +40,9 @@ export function renderStudentProfileBlock(
 ): string {
   if (!profile) return '';
   const lines: string[] = [`<student_profile>`];
-  if (profile.name) lines.push(`name: ${profile.name}`);
+  // Only a name a tutor may say (an account id / placeholder is no name).
+  const name = usableStudentName(profile.name);
+  if (name) lines.push(`name: ${name}`);
   if (profile.grade) lines.push(`grade: ${profile.grade}`);
   if (profile.locale) lines.push(`locale: ${profile.locale}`);
   if (profile.curriculum) lines.push(`curriculum: ${profile.curriculum}`);

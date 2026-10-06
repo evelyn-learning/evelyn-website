@@ -22,6 +22,7 @@ export function toPlanLite(plan: LessonPlan): PlanLite {
   const portalPartnerId = metadata?.portalPartnerId;
   return {
     id: plan.id,
+    title: plan.title,
     // Plan scoping inputs (practice.ts `planServable`): the partner whose
     // plan-generate request created the plan, and whether it is one
     // student's private artefact (review / freestyle / homework).
