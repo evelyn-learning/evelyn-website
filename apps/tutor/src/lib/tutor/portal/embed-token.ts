@@ -154,6 +154,26 @@ function finishEmbedVerification(
 }
 
 /**
+ * The `partner_id` CLAIM of an embed token, read WITHOUT verifying the
+ * signature. Never throws; anything unreadable ⇒ undefined (unknown partner).
+ *
+ * ⚠ Restriction-only: use this solely to decide whether to apply a rule that
+ * can only NARROW what the bearer is given (the audited-only item filter,
+ * portal/audited-items.ts). There a forged claim hurts nobody but the
+ * forger, and reading the claim directly means the rule still holds when the
+ * partner-secret registry is unreachable (verification would then fail, and
+ * a filter keyed on the verified partner would silently switch itself off).
+ * Never use it to grant access or to choose an identity namespace — that is
+ * `verifyEmbedTokenAsync` / `partnerIdForInternalRoute`.
+ */
+export function embedTokenPartnerClaim(token: string | null | undefined): string | undefined {
+  const step = verifyEmbedTokenParts(token ?? null);
+  if (!('pending' in step)) return undefined;
+  const id = step.pending.partnerId as unknown;
+  return typeof id === 'string' && id.trim() ? id : undefined;
+}
+
+/**
  * Verify an HS256 embed JWT against the ENV map only. Never throws.
  *
  * Retained for callers that cannot await and for the existing hermetic tests.

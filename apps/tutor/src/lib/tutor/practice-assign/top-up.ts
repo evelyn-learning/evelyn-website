@@ -16,6 +16,7 @@
  *  SIMILAR problem; the generator prompt forbids reusing numbers/context. */
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { generatePracticeItems, practiceGenDisabledForPartner, type GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
+import { auditedOnlyForPartner } from '@/lib/tutor/portal/audited-items';
 
 export const PRACTICE_TARGET = 3;
 export const TOP_UP_BUDGET_MS = 25_000;
@@ -103,6 +104,10 @@ export async function topUpPractice(
   // Per-partner switch: stored items only — the generator is never called
   // (so nothing is reserved against the daily caps either).
   if (practiceGenDisabledForPartner(input.partnerId)) return out.filter((l) => l.items.length > 0);
+  // Audited-only partner (PRACTICE_GEN_AUDITED_ONLY_PARTNERS): a generated
+  // top-up item would be unaudited — stored items only, as above. Holds for
+  // an injected `gen` too.
+  if (auditedOnlyForPartner(input.partnerId)) return out.filter((l) => l.items.length > 0);
   let slot = out.find((l) => l.loId === first.loId);
   if (!slot) {
     slot = { loId: first.loId, title: first.title, items: [] };

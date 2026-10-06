@@ -363,6 +363,7 @@
     "test:judge-note-false-praise": "npx tsx scripts/test-judge-note-false-praise.ts",
     "test:hedged-answers": "npx tsx scripts/test-hedged-answers.ts",
     "test:bare-assent-praise": "npx tsx scripts/test-bare-assent-praise.ts",
-    "test:homework-small-guards": "npx tsx scripts/test-homework-small-guards.ts"
+    "test:homework-small-guards": "npx tsx scripts/test-homework-small-guards.ts",
+    "test:audited-generated-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-audited-generated-items.ts"
   }
 }

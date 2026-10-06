@@ -32,6 +32,7 @@ import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
 import { withoutWithdrawn, isWithdrawnSegment, keyCheckUntrusted, segmentKeyUntrusted, logWithdrawnSkip, logUnverifiedKeySkip } from '../portal/withdrawn-items';
+import { withoutUnauditedGenerated } from '../portal/audited-items';
 import { compareRelationTexts } from './relation-sampling';
 
 // Layer-2 brain-gen models. Generation + an INDEPENDENT fresh-context solve
@@ -80,6 +81,12 @@ export interface GenerateProblemInput {
   brainGenBudgetMs?: number;
   /** Test seam: the model client Layer 2 calls. */
   brainGenClient?: TextCallClient;
+  /** The partner whose student is in this session (the route reads it off
+   *  the session's embed token). Listed in PRACTICE_GEN_AUDITED_ONLY_PARTNERS
+   *  ⇒ the bank lookup never returns a stored generated practice item
+   *  (`practice-gen.*`) that is not on the audited list
+   *  (portal/audited-items.ts). Absent ⇒ unknown, never treated as listed. */
+  partnerId?: string;
 }
 
 export interface GeneratedProblem {
@@ -113,6 +120,30 @@ function resolveAbsoluteDifficulty(
   return target as IProblemBank['difficulty'];
 }
 
+/**
+ * Which of the rows a bank query returned may be served into this session.
+ *   - not a problem already shown this session (content hash);
+ *   - not withdrawn by the answer-key audit (portal/withdrawn-items.ts) —
+ *     this query is the one bank read outside retrievePractice, and LO-tagged
+ *     `practice-gen.*` rows are eligible here;
+ *   - for a partner listed in PRACTICE_GEN_AUDITED_ONLY_PARTNERS, not a
+ *     stored generated practice item that is off the audited list
+ *     (portal/audited-items.ts). Any other partner, or none: no effect.
+ * Pure apart from the skip log lines.
+ */
+export function eligibleBankCandidates(
+  rows: IProblemBank[],
+  excludeHashes: readonly string[],
+  partnerId: string | null | undefined,
+): IProblemBank[] {
+  let candidates = rows;
+  if (excludeHashes.length > 0) {
+    candidates = candidates.filter((c) => !excludeHashes.includes(simpleHash(c.problemText)));
+  }
+  candidates = withoutWithdrawn(candidates);
+  return withoutUnauditedGenerated(candidates, partnerId, 'session-generate-problem');
+}
+
 /** Layer 1 / 3 — bank query. Returns null if no eligible row.
  *
  *  excludeHashes (2026-07-17, write-back cache): bank rows written back
@@ -127,7 +158,8 @@ async function queryBank(
   excludeIds: string[],
   excludeHashes: string[] = [],
   planScope?: string,
-  planLoIds: string[] = []
+  planLoIds: string[] = [],
+  partnerId?: string
 ): Promise<GeneratedProblem | null> {
   await connectDB();
   const filter: Record<string, unknown> = {
@@ -166,13 +198,7 @@ async function queryBank(
   let candidates = (await ProblemBank.find(filter)
     .limit(20)
     .lean()) as unknown as IProblemBank[];
-  if (excludeHashes.length > 0) {
-    candidates = candidates.filter((c) => !excludeHashes.includes(simpleHash(c.problemText)));
-  }
-  // Bank rows withdrawn by the answer-key audit (portal/withdrawn-items.ts)
-  // are never served — this query is the one bank read outside
-  // retrievePractice (LO-tagged `practice-gen.*` rows are eligible here).
-  candidates = withoutWithdrawn(candidates);
+  candidates = eligibleBankCandidates(candidates, excludeHashes, partnerId);
   if (candidates.length === 0) return null;
   const pick = candidates[Math.floor(Math.random() * candidates.length)];
   return {
@@ -979,7 +1005,7 @@ export async function generateProblem(
   // accumulate bank rows regardless of its static taxonomy coverage tag,
   // and an empty-collection miss is one cheap indexed find.
   try {
-    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes, input.planId, (input.plan.los ?? []).map((lo) => lo.id));
+    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes, input.planId, (input.plan.los ?? []).map((lo) => lo.id), input.partnerId);
     if (hit) {
       return {
         result: hit,
@@ -1031,7 +1057,7 @@ export async function generateProblem(
   // brain-gen exhaustion in case difficulty resolution shifted. Same
   // always-attempt rationale as Layer 1 (write-back cache).
   try {
-    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes, input.planId, (input.plan.los ?? []).map((lo) => lo.id));
+    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes, input.planId, (input.plan.los ?? []).map((lo) => lo.id), input.partnerId);
     if (hit) {
       return {
         result: { ...hit, provenance: 'bank-fallback' },

@@ -22,6 +22,7 @@ import {
   type Difficulty,
   type GenerateProblemInput,
 } from '@/lib/tutor/voice/problem-generator';
+import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 
 export const runtime = 'nodejs';
 
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'plan_not_found', planId: body.planId }, { status: 404 });
   }
 
+  const sessionPartnerId = embedTokenPartnerClaim(req.headers.get('x-embed-token'));
   const input: GenerateProblemInput = {
     planId: body.planId,
     plan,
@@ -66,6 +68,9 @@ export async function POST(req: NextRequest) {
     anchor: body.anchor,
     excludeIds: body.excludeIds,
     excludeHashes: body.excludeHashes,
+    // Audited-only partners (portal/audited-items.ts): which partner's
+    // student this is, off the session's embed token. No token ⇒ unknown.
+    ...(sessionPartnerId ? { partnerId: sessionPartnerId } : {}),
   };
 
   try {

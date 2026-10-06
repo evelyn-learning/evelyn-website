@@ -28,6 +28,15 @@
  * like any other. Grading of an already-issued withdrawn id is untouched
  * (adapters.ts resolvers do not consult the list).
  *
+ * AUDITED-ONLY partners (2026-10-06 — audited-items.ts,
+ * `PRACTICE_GEN_AUDITED_ONLY_PARTNERS`): for a listed caller a stored
+ * GENERATED bank row (`practice-gen.*`) that is not on the audited list is
+ * dropped at the same point, after the withdrawn rule (withdrawn wins), so it
+ * is never served and never an anchor; and nothing is generated for that
+ * caller (a fresh item is unaudited by definition). Authored bank rows and
+ * plan try-yourselves are untouched; any other caller, or an unknown one,
+ * gets exactly what it got before.
+ *
  * The assembly core (`retrievePractice`) takes an injectable `PracticeSources`
  * so it is unit-testable without Mongo. Phase 4 supplies concrete Mongo- and
  * lesson-plan-store-backed sources.
@@ -45,6 +54,7 @@ import type {
 import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, practiceGenDisabledForPartner, type PracticeGenSources, type PracticeGenOutcome } from './practice-gen';
 import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } from './essay-practice';
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
+import { auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated } from './audited-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -378,7 +388,7 @@ export async function retrievePractice(
           return false;
         })
       : bank;
-    bankItems.push(...withoutWithdrawn(servableBank).map(bankToItem));
+    bankItems.push(...withoutUnauditedGenerated(withoutWithdrawn(servableBank), who?.partnerId, 'practice-lo').map(bankToItem));
   } else {
     const topicId = req.scope.topicId;
     const plans = (await sources.plansForTopic(topicId)).filter((p) => planServable(p, undefined, who));
@@ -390,7 +400,7 @@ export async function retrievePractice(
       if (firstLo) planItems.push(...planToItems(p, firstLo, true));
     }
     const bank = await sources.bankForTopic(topicId, difficulty);
-    bankItems.push(...withoutWithdrawn(bank).map(bankToItem));
+    bankItems.push(...withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic').map(bankToItem));
   }
 
   // De-dup by id; bank (verified) items first, then plan try-yourselves.
@@ -424,7 +434,9 @@ export async function retrievePractice(
   // only. Skipped here (genOutcome stays null ⇒ an empty result reads
   // `none_available`, never 'preparing' / 'limit') and again inside the
   // generator, which every other caller goes through.
-  const genDisabledForCaller = practiceGenDisabledForPartner(who?.partnerId);
+  // PRACTICE_GEN_AUDITED_ONLY_PARTNERS: the same for a caller restricted to
+  // audited generated items — a freshly generated item is not on the list.
+  const genDisabledForCaller = practiceGenDisabledForPartner(who?.partnerId) || auditedOnlyForPartner(who?.partnerId);
   if (shortfall > 0 && 'loId' in req.scope && !essayNode && !genDisabledForCaller) {
     const loId = req.scope.loId;
     // Topic tag derived ENGINE-SIDE from the LO's owning plan — never the
@@ -497,7 +509,9 @@ export async function retrievePractice(
   // content → same hash): the real generator already drops it, this holds
   // for any injected one.
   const generatedDeduped = generated.filter(
-    (it) => !availableIds.has(it.id) && !(excludeSet?.has(it.id) ?? false) && !isWithdrawnItem(it.id),
+    (it) => !availableIds.has(it.id) && !(excludeSet?.has(it.id) ?? false) && !isWithdrawnItem(it.id)
+      // Audited-only caller: holds for any injected generator too.
+      && servableToPartner(it.id, who?.partnerId),
   );
   const combined = [...available, ...generatedDeduped];
 

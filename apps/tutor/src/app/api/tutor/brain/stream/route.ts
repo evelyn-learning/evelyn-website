@@ -23,6 +23,7 @@
 import { NextRequest } from 'next/server';
 import { noProblemToolMessage } from '@/lib/tutor/ai/no-problem-rule';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
+import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
@@ -224,7 +225,12 @@ export function makeToolResultProvider(
   // student didn't verbally ask for a level — so the preference holds even
   // when the brain forgets the <difficulty_preference> block. An explicit
   // non-'same' choice (in-the-moment student ask) is honored untouched.
-  difficultyBias?: number
+  difficultyBias?: number,
+  // Audited-only partners (portal/audited-items.ts,
+  // PRACTICE_GEN_AUDITED_ONLY_PARTNERS): the partner whose student is in
+  // this session, off the session's embed token. Undefined ⇒ unknown (retail
+  // /tutor carries no token) ⇒ never treated as listed.
+  sessionPartnerId?: string
 ): BrainTurnInput['toolResultProvider'] {
   if (!ctx) return undefined;
   // Fix (2026-08-10, code-review finding): this closure is created ONCE
@@ -387,6 +393,7 @@ export function makeToolResultProvider(
         // practice problems come out FRESH + verified regardless of the
         // per-topic brainGen ramp. Falls back to bank/authored on failure.
         forceBrainGen: TUTOR_CONTENT_VARIETY,
+        ...(sessionPartnerId ? { partnerId: sessionPartnerId } : {}),
       });
       console.log('[brain.stream:generate_problem] telemetry:', JSON.stringify(telemetry));
       if (!result) {
@@ -875,7 +882,8 @@ export async function POST(req: NextRequest) {
             body.shownProblemIds ?? [],
             body.shownProblemHashes ?? [],
             (p) => send({ type: 'generated-problem', ...p }),
-            typeof body.pacingState?.difficultyBias === 'number' ? body.pacingState.difficultyBias : undefined
+            typeof body.pacingState?.difficultyBias === 'number' ? body.pacingState.difficultyBias : undefined,
+            embedTokenPartnerClaim(req.headers.get('x-embed-token'))
           ),
       };
 

@@ -21,9 +21,13 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // Best-effort: a sweep failure must never fail the homework read.
   await sweepStaleDrafts(profileId, 2 * 60 * 60 * 1000).catch((e) => console.error('[practice-assign] sweep failed', e));
   await connectDB();
-  const records = includeAcknowledged
+  const stored = includeAcknowledged
     ? await PracticeAssignmentModel.find({ studentId: profileId, locator: { $exists: true, $ne: '' }, ...draftStatusClause(), ...(courseIdFilter(courseId) ?? {}) }).sort({ assignedAt: -1 }).limit(10).lean()
     : await findOpenAssignments(profileId, { withinDays: 21, requireLocator: true, courseId, ignoreAcknowledged: true });
+  // Homework already assigned is returned as issued: the audited-only rule
+  // (PRACTICE_GEN_AUDITED_ONLY_PARTNERS) applies to what is newly served, so
+  // a set a student has already seen never changes or disappears.
+  const records = stored;
   const itemIds = records.flatMap((a) => a.los.flatMap((l) => l.items.map((i) => i.id)));
   const rows = itemIds.length ? await EvidenceEventModel.find({ studentId: profileId, itemId: { $in: itemIds } }).select('itemId outcome occurredAt').lean() : [];
   const assignments = records.map((a) => {

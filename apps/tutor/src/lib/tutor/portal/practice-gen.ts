@@ -60,6 +60,7 @@ import {
 } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { isWithdrawnItem, logWithdrawnSkip } from './withdrawn-items';
+import { auditedOnlyForPartner } from './audited-items';
 import { findNearDuplicate, type ComparableItem } from './practice-similarity';
 import { keyVerifyEnabled, verifyAnswerKey, type VerifyAnswerKeyInput, type VerifyAnswerKeyResult } from './key-verify';
 
@@ -171,7 +172,8 @@ export interface GeneratePracticeItemsOptions {
    *  owning plan (essay-practice.ts `isEssayPracticeNode`) — generate
    *  nothing. The LO-id convention is checked here regardless. */
   essayNode?: boolean;
-  /** The requesting partner. Listed in PRACTICE_GEN_DISABLED_PARTNERS ⇒
+  /** The requesting partner. Listed in PRACTICE_GEN_AUDITED_ONLY_PARTNERS ⇒
+   *  same outcome as below (nothing generated). Listed in PRACTICE_GEN_DISABLED_PARTNERS ⇒
    *  generate nothing (no reservation, no model call). Absent ⇒ unknown
    *  caller, never treated as listed. */
   partnerId?: string;
@@ -1422,6 +1424,14 @@ export async function generatePracticeItemsDetailed(
   // Per-partner switch — before any slot is reserved.
   if (practiceGenDisabledForPartner(opts.partnerId)) {
     opts.onDebugEvent?.('practice_gen_skipped', `loId=${opts.loId} reason=partner_disabled`);
+    return nothing('off');
+  }
+  // Audited-only partner (audited-items.ts): a freshly generated item is not
+  // on the audited list, so it could never be served to this partner — do not
+  // generate (or bank) one on its behalf. Also keeps the caller's anchor pool
+  // out of any prompt. Before any slot is reserved; covers every caller.
+  if (auditedOnlyForPartner(opts.partnerId)) {
+    opts.onDebugEvent?.('practice_gen_skipped', `loId=${opts.loId} reason=partner_audited_only`);
     return nothing('off');
   }
   // Essay-practice nodes (FRQ / DBQ / LEQ / SAQ) are never filled by
