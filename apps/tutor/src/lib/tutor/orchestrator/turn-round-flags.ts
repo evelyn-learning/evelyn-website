@@ -261,3 +261,42 @@ export const TUTOR_BRAIN_STALL_RETRY =
  *  Off ⇒ the apologise-and-offer-a-choice rule. */
 export const TUTOR_NO_PROBLEM_SELF_POSE =
   process.env.NEXT_PUBLIC_TUTOR_NO_PROBLEM_SELF_POSE !== 'off';
+
+// ── Text-mode answer-judging round 2 (2026-10-06, replay of 23 sessions) ───
+
+/** A bare yes / no / ok that settles nothing — an either/or question, or a
+ *  wh-question asked after a yes/no one in the same turn — answered with an
+ *  affirming verdict, or with a reply that ends the session, is killed before
+ *  display and re-asked once (voice/nonanswer-praise.ts `ambiguousAssentKill`).
+ *  Off ⇒ only the 2026-10-05 kill (TUTOR_BARE_ASSENT_PRAISE_KILL). */
+export const TUTOR_AMBIGUOUS_ASSENT_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_AMBIGUOUS_ASSENT_KILL !== 'off';
+
+/** Text mode: a tutor opener that contradicts a HIGH-confidence verdict
+ *  pre-check of the student's message (voice/verdict-precheck-shared.ts) is
+ *  killed before display and retried once. Off ⇒ no such kill. Inert when the
+ *  server sends no pre-check (voice, TUTOR_TEXT_VERDICT_PRECHECK=off). */
+export const TUTOR_PRECHECK_VERDICT_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_PRECHECK_VERDICT_KILL !== 'off';
+
+/** Text mode: a HIGH-confidence verdict pre-check overrides the reading of the
+ *  tutor's words in the counting path — a correct answer the tutor denied is
+ *  not counted wrong, a wrong or off-target one it praised is not counted
+ *  correct, and a pre-check "incorrect" confirms the denial of a hedged
+ *  answer. Off ⇒ counting reads the tutor's words alone, as before. */
+export const TUTOR_PRECHECK_CREDIT =
+  process.env.NEXT_PUBLIC_TUTOR_PRECHECK_CREDIT !== 'off';
+
+/** Homework sessions: the tutor does not sign off, or say the homework is
+ *  done, unless the student asked to stop or every problem they brought is
+ *  finished (per-turn <homework_session> rule). Off ⇒ the block as before. */
+export const TUTOR_HOMEWORK_NO_EARLY_SIGNOFF =
+  process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_NO_EARLY_SIGNOFF !== 'off';
+
+/** The time figures the prompt carries (time remaining, the session's minute
+ *  budget) are for pacing only: the tutor never mentions time used, minutes,
+ *  limits or usage to the student. One sentence beside each figure (the
+ *  partner session prompt, <demo_stop>, <homework_session>). Off ⇒ those
+ *  texts byte for byte as before. */
+export const TUTOR_NO_TIME_TALK =
+  process.env.NEXT_PUBLIC_TUTOR_NO_TIME_TALK !== 'off';

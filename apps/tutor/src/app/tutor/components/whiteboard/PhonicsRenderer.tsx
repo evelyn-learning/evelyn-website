@@ -72,6 +72,11 @@ const SYLLABLE_MIN_FONT = 20;
  *  negative in the fixed 480 view, clipping the first/last boxes. Grow the
  *  viewBox from the content width instead — the svg scales down to the
  *  container, so a wider canvas just means slightly smaller boxes. */
+// Tool input is model-authored and only `kind` is schema-required: a missing / non-list field is an empty list, never a throw.
+function syllableList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((s): s is string => typeof s === 'string') : [];
+}
+
 function specWidth(spec: PhonicsSpec): number {
   if (spec.kind === 'sound_out') {
     const N = (spec.graphemes ?? spec.word.split('')).length || 1;
@@ -82,7 +87,7 @@ function specWidth(spec: PhonicsSpec): number {
     return Math.max(SVG_W, spec.word.length * 30 + 40);
   }
   // syllables: sized so the line still fits at the minimum font size.
-  const totalText = spec.syllables.join(' · ');
+  const totalText = syllableList(spec.syllables).join(' · ');
   return Math.max(SVG_W, Math.ceil(totalText.length * SYLLABLE_MIN_FONT * CHAR_W) + 40);
 }
 
@@ -138,9 +143,10 @@ function renderSoundOut(spec: Extract<PhonicsSpec, { kind: 'sound_out' }>, svgW:
 }
 
 function renderSyllables(spec: Extract<PhonicsSpec, { kind: 'syllables' }>, svgW: number) {
-  const N = spec.syllables.length;
+  const syllables = syllableList(spec.syllables);
+  const N = syllables.length;
   const cy = SVG_H / 2;
-  const totalText = spec.syllables.join(' · ');
+  const totalText = syllables.join(' · ');
   // Fixed 48px used to clip long words on both sides (2026-08-07 clip
   // audit — wrapping a single word reads wrong here, so instead scale the
   // font down from the estimated total width, floored at SYLLABLE_MIN_FONT
@@ -151,7 +157,7 @@ function renderSyllables(spec: Extract<PhonicsSpec, { kind: 'syllables' }>, svgW
   return (
     <g>
       <text x={svgW / 2} y={cy + fs * 0.3} fontSize={fs} textAnchor="middle" fontWeight={700} fill="#0f172a">
-        {spec.syllables.map((s, i) => (
+        {syllables.map((s, i) => (
           <tspan key={i} fill={i === spec.stressed ? '#ef4444' : '#0f172a'}>
             {s}
             {i < N - 1 && <tspan fill="#7c3aed" fontSize={fs * 0.75}>{' · '}</tspan>}
@@ -160,7 +166,7 @@ function renderSyllables(spec: Extract<PhonicsSpec, { kind: 'syllables' }>, svgW
       </text>
       <text x={svgW / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">
         {N} syllable{N === 1 ? '' : 's'}
-        {spec.stressed !== undefined && ` (stress on "${spec.syllables[spec.stressed]}")`}
+        {spec.stressed !== undefined && ` (stress on "${syllables[spec.stressed] ?? ''}")`}
       </text>
       <text x={svgW / 2} y={SVG_H - 18} fontSize={11} textAnchor="middle" fill="#94a3b8">
         {totalText}

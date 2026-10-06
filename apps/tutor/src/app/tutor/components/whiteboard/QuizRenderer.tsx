@@ -45,28 +45,30 @@ export interface QuizSpec {
 }
 
 export default function QuizRenderer({ spec }: { spec: QuizSpec }) {
+  // Tool input is model-authored and only `kind` is schema-required: a missing / non-list field is an empty list, never a throw.
+  const items = Array.isArray(spec.items) ? spec.items.filter((it) => !!it && typeof it === 'object') : [];
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
   const score = submitted
-    ? spec.items.reduce((s, item) => s + (gradeItem(item, answers[item.id]) ? 1 : 0), 0)
+    ? items.reduce((s, item) => s + (gradeItem(item, answers[item.id]) ? 1 : 0), 0)
     : 0;
 
   return (
     <div className="quiz-renderer max-w-2xl border-2 border-purple-300 bg-purple-50 rounded-lg p-4 my-2">
       <div className="flex items-center justify-between mb-3">
         <div className="text-xs font-bold uppercase tracking-wider text-purple-700">
-          {spec.title || 'Quick Quiz'} · {spec.items.length} item{spec.items.length === 1 ? '' : 's'}
+          {spec.title || 'Quick Quiz'} · {items.length} item{items.length === 1 ? '' : 's'}
         </div>
         {submitted && (
           <div className="text-sm font-bold text-purple-900">
-            Score: {score} / {spec.items.length}
+            Score: {score} / {items.length}
           </div>
         )}
       </div>
 
       <ol className="space-y-3">
-        {spec.items.map((item, idx) => {
+        {items.map((item, idx) => {
           const userAns = answers[item.id] ?? '';
           const correct = submitted ? gradeItem(item, userAns) : null;
           return (

@@ -14,47 +14,29 @@
  */
 
 import React from 'react';
+import {
+  normalizeGraphicOrganizerSpec,
+  type NormalizedGraphicOrganizerSpec,
+} from '@/lib/tutor/validation/graphic-organizer-guard';
 
 const SVG_W = 520;
 const SVG_H = 320;
 
-export type GraphicOrganizerSpec =
-  | {
-      kind: 'story_map';
-      title?: string;
-      character?: string;
-      setting?: string;
-      problem?: string;
-      solution?: string;
-    }
-  | {
-      kind: 'kwl';
-      title?: string;
-      know: string[];
-      want: string[];
-      learned: string[];
-    }
-  | {
-      kind: 't_chart';
-      title?: string;
-      leftHeader: string;
-      rightHeader: string;
-      leftItems: string[];
-      rightItems: string[];
-    }
-  | {
-      kind: 'sequence';
-      title?: string;
-      steps: string[];
-    }
-  | {
-      kind: 'cause_effect';
-      title?: string;
-      causes: string[];
-      effects: string[];
-    };
+/** The drawable shape. What the brain sends is NOT trusted to match it — the
+ *  tool schema only requires `kind` — so the component normalizes its input
+ *  (validation/graphic-organizer-guard.ts) before any layout code runs. */
+export type GraphicOrganizerSpec = NormalizedGraphicOrganizerSpec;
 
-export default function GraphicOrganizerRenderer({ spec }: { spec: GraphicOrganizerSpec }) {
+/**
+ * Never throws on a malformed spec (2026-10-05: `spec.<list>.map` on a
+ * missing list took the whole session page down). Missing lists are empty,
+ * non-text items are coerced or skipped, and a spec with nothing to show
+ * renders nothing rather than an empty frame.
+ */
+export default function GraphicOrganizerRenderer({ spec: rawSpec }: { spec: unknown }) {
+  const decision = normalizeGraphicOrganizerSpec(rawSpec);
+  if (!decision.ok) return null;
+  const spec = decision.spec;
   return (
     <div className="graphic-organizer-renderer">
       {spec.title && (
@@ -70,6 +52,13 @@ export default function GraphicOrganizerRenderer({ spec }: { spec: GraphicOrgani
       </svg>
     </div>
   );
+}
+
+/** Belt and braces for the layout functions below: they only ever receive a
+ *  normalized spec, but a list is still read through this so no future caller
+ *  can reintroduce `.map` on undefined. */
+function list(items: unknown): string[] {
+  return Array.isArray(items) ? items.filter((x): x is string => typeof x === 'string') : [];
 }
 
 function renderStoryMap(spec: Extract<GraphicOrganizerSpec, { kind: 'story_map' }>) {
@@ -114,7 +103,7 @@ function renderKWL(spec: Extract<GraphicOrganizerSpec, { kind: 'kwl' }>) {
           </foreignObject>
           <foreignObject x={c.x + 8} y={40} width={colW - 16} height={SVG_H - 66}>
             <div style={{ fontSize: 12, color: '#0f172a', lineHeight: 1.35 }}>
-              {c.items.map((item, i) => (
+              {list(c.items).map((item, i) => (
                 <div key={i} style={{ marginBottom: 4 }}>• {item}</div>
               ))}
             </div>
@@ -142,14 +131,14 @@ function renderTChart(spec: Extract<GraphicOrganizerSpec, { kind: 't_chart' }>) 
       </foreignObject>
       <foreignObject x={28} y={68} width={SVG_W / 2 - 40} height={SVG_H - 90}>
         <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.4 }}>
-          {spec.leftItems.map((it, i) => (
+          {list(spec.leftItems).map((it, i) => (
             <div key={i} style={{ marginBottom: 4 }}>• {it}</div>
           ))}
         </div>
       </foreignObject>
       <foreignObject x={SVG_W / 2 + 8} y={68} width={SVG_W / 2 - 40} height={SVG_H - 90}>
         <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.4 }}>
-          {spec.rightItems.map((it, i) => (
+          {list(spec.rightItems).map((it, i) => (
             <div key={i} style={{ marginBottom: 4 }}>• {it}</div>
           ))}
         </div>
@@ -159,13 +148,14 @@ function renderTChart(spec: Extract<GraphicOrganizerSpec, { kind: 't_chart' }>) 
 }
 
 function renderSequence(spec: Extract<GraphicOrganizerSpec, { kind: 'sequence' }>) {
-  const N = spec.steps.length;
+  const steps = list(spec.steps);
+  const N = Math.max(1, steps.length);
   const boxW = (SVG_W - 30 - (N - 1) * 24) / N;
   const cy = SVG_H / 2;
   const palette = ['#3b82f6', '#10b981', '#f59e0b', '#7c3aed', '#ef4444', '#06b6d4'];
   return (
     <g>
-      {spec.steps.map((s, i) => {
+      {steps.map((s, i) => {
         const x = 15 + i * (boxW + 24);
         const color = palette[i % palette.length];
         return (
@@ -192,11 +182,13 @@ function renderCauseEffect(spec: Extract<GraphicOrganizerSpec, { kind: 'cause_ef
   const cw = 200;
   const ew = 200;
   const padY = 30;
-  const itemH = (SVG_H - 2 * padY) / Math.max(1, Math.max(spec.causes.length, spec.effects.length));
+  const causes = list(spec.causes);
+  const effects = list(spec.effects);
+  const itemH = (SVG_H - 2 * padY) / Math.max(1, Math.max(causes.length, effects.length));
   return (
     <g>
       {/* Causes column */}
-      {spec.causes.map((c, i) => (
+      {causes.map((c, i) => (
         <g key={i}>
           <rect x={20} y={padY + i * itemH + 8} width={cw} height={itemH - 16} fill="#fff" stroke="#f59e0b" strokeWidth={2.5} rx={6} />
           <foreignObject x={28} y={padY + i * itemH + 16} width={cw - 16} height={itemH - 32}>
@@ -209,7 +201,7 @@ function renderCauseEffect(spec: Extract<GraphicOrganizerSpec, { kind: 'cause_ef
       <line x1={20 + cw + 5} y1={SVG_H / 2} x2={SVG_W - 20 - ew - 5} y2={SVG_H / 2} stroke="#0f172a" strokeWidth={2} />
       <polygon points={`${SVG_W - 20 - ew - 5},${SVG_H / 2 - 6} ${SVG_W - 20 - ew + 4},${SVG_H / 2} ${SVG_W - 20 - ew - 5},${SVG_H / 2 + 6}`} fill="#0f172a" />
       {/* Effects column */}
-      {spec.effects.map((e, i) => (
+      {effects.map((e, i) => (
         <g key={i}>
           <rect x={SVG_W - 20 - ew} y={padY + i * itemH + 8} width={ew} height={itemH - 16} fill="#fff" stroke="#10b981" strokeWidth={2.5} rx={6} />
           <foreignObject x={SVG_W - 12 - ew} y={padY + i * itemH + 16} width={ew - 16} height={itemH - 32}>

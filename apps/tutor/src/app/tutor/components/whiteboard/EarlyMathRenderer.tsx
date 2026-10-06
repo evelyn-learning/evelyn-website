@@ -441,7 +441,9 @@ function renderSkipCount(spec: Extract<EarlyMathSpec, { kind: 'skip_count' }>) {
  * narrow segment used to clip at the viewBox edge.
  */
 function BarModelRenderer({ spec }: { spec: Extract<EarlyMathSpec, { kind: 'bar_model' }> }) {
-  const { whole, parts, question } = spec;
+  const { whole, question } = spec;
+  // Tool input is model-authored and only `kind` is schema-required: a missing / non-list field is an empty list, never a throw.
+  const parts = Array.isArray(spec.parts) ? spec.parts.filter((p) => !!p && typeof p === 'object') : [];
   const totalNumeric = parts.every((p) => typeof p.value === 'number')
     ? (parts as Array<{ value: number }>).reduce((s, p) => s + p.value, 0)
     : null;

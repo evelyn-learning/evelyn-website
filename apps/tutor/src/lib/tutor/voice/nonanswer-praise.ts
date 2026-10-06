@@ -24,7 +24,7 @@
  */
 
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
-import { TUTOR_BARE_ASSENT_PRAISE_KILL } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_BARE_ASSENT_PRAISE_KILL, TUTOR_AMBIGUOUS_ASSENT_KILL } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Filler tokens stripped before matching (never load-bearing). */
 const FILLER = new Set(['um', 'uh', 'er', 'like', 'so', 'well']);
@@ -261,5 +261,187 @@ export function bareAssentPraiseFeedback(studentText: string, priorTutorTurn: st
     `Re-emit your response: no verdict or praise word ("Right." / "Exactly." / "Nice work"), and do NOT answer your own question for them. ` +
     `Invite them to answer it in their own words — re-ask it briefly or offer a smaller first step. ` +
     `Do not narrate this ("that's not an answer", "you only said yes") — just respond naturally.`
+  );
+}
+
+// ── 2026-10-06: the open question's kind, and assents that settle nothing ──
+//
+// Replay of 23 scripted text sessions with thinking on: a bare "yes" was still
+// praised in 3 of 11 sessions, and each one fell outside the kill above —
+//   · "Ready to put Problem 2's answer together fully? How would you write the
+//     complete solution to …?" → "yes" → "Right — the complete solution is …":
+//     the LAST question is a wh-question, but an earlier one in the same turn
+//     is a readiness question, so `openNonYesNoQuestion` (which wants NO
+//     yes/no question anywhere in the turn) returned null;
+//   · "Ready to move to the next homework problem, or want to wrap here?" →
+//     "yes" → "Both homework problems are done — … See you next time!": an
+//     either/or question, where a yes names neither alternative, and the
+//     session was closed on it.
+// `readOpenQuestion` names the LAST question of the tutor's turn and its kind;
+// `readBareAssent` says what a bare yes / no / ok does to it. Both feed the
+// per-turn <turn_shape> facts (turn-shape-signal.ts) and the kill below.
+
+export type OpenQuestionKind = 'wh' | 'yes_no' | 'readiness' | 'either_or' | 'unclear';
+
+export interface OpenQuestionRead {
+  /** The last question of the tutor's turn, verbatim, with its "?". */
+  question: string;
+  kind: OpenQuestionKind;
+  /** An EARLIER question of the same turn is one a yes / no can answer. */
+  earlierYesNo: boolean;
+}
+
+const OPEN_QUESTION_MAX_CHARS = 400;
+
+/** The last question of a tutor turn, verbatim: from the end of the previous
+ *  sentence to the last "?". A "." inside a number or a formula is not a
+ *  sentence end (it is not followed by white space). Null when none. */
+export function openQuestionText(priorTutorTurn: string): string | null {
+  const t = (priorTutorTurn ?? '').trim();
+  const end = t.lastIndexOf('?');
+  if (end < 0) return null;
+  const head = t.slice(0, end);
+  let start = 0;
+  const boundary = /(?:[.!?…]["')\]*_]*\s+|\n+)/g;
+  for (let m = boundary.exec(head); m; m = boundary.exec(head)) start = m.index + m[0].length;
+  const q = t.slice(start, end + 1).trim();
+  if (q.length < 5) return null;
+  return q.length > OPEN_QUESTION_MAX_CHARS ? `…${q.slice(-OPEN_QUESTION_MAX_CHARS)}` : q;
+}
+
+/** "… or not?", "an hour or so", "more or less": not a pair of alternatives. */
+const OR_NON_ALTERNATIVE_RE = /\bor\s+(?:not|so|more|less|two|both)\b|\b(?:more|sooner|one|either)\s+or\b/i;
+/** A formula on both sides of the "or" ("x = 5 or x = -2", "M or M"): the
+ *  "or" belongs to the mathematics, not to the question. */
+const OR_BETWEEN_VALUES_RE = /(?:§|[\d)])\s*,?\s+or\s+(?:§|[-−+(]?\s*\d|[a-z]\s*[=<>≤≥])/i;
+
+/** Does the question offer alternatives joined by "or", so that a bare yes or
+ *  no does not say which? */
+function offersAlternatives(question: string): boolean {
+  // Formulas out of the way first ($…$ → §) so an "or" inside one never counts.
+  const q = stripMarkdownEmphasis(question ?? '').replace(/\$[^$\n]*\$/g, '§');
+  if (!/\bor\b/i.test(q)) return false;
+  if (OR_BETWEEN_VALUES_RE.test(q)) return false;
+  return !OR_NON_ALTERNATIVE_RE.test(q);
+}
+
+const WH_LEAD_CLAUSE_RE =
+  /^(?:(?:so|now|and|but|okay|ok|alright|then|well|first|next|again)[,\s]+)*(?:what|which|how|why|where|when|who|whose|whom)\b/i;
+
+/** The last question of the tutor's turn and its kind. Null when the turn
+ *  asked nothing. */
+export function readOpenQuestion(priorTutorTurn: string): OpenQuestionRead | null {
+  const question = openQuestionText(priorTutorTurn);
+  if (!question) return null;
+  const plain = stripMarkdownEmphasis(question).replace(/\?\s*$/, '').trim();
+  const base = classifyQuestion(plain);
+  let kind: OpenQuestionKind;
+  if (offersAlternatives(plain) && !WH_LEAD_CLAUSE_RE.test(finalClause(plain))) kind = 'either_or';
+  else if (base === 'yes_no') kind = READINESS_RE.test(finalClause(plain)) ? 'readiness' : 'yes_no';
+  // "With that in mind, is it still …?" — the asking clause follows a comma.
+  else if (base === 'unclear' && AUX_START_RE.test(plain.slice(plain.lastIndexOf(',') + 1).trim())) kind = 'yes_no';
+  else kind = base;
+  const all = questionSentences(priorTutorTurn);
+  const earlierYesNo = all.slice(0, -1).some((q) => classifyQuestion(q) === 'yes_no');
+  return { question, kind, earlierYesNo };
+}
+
+/** What a bare yes / no / ok does to the open question:
+ *   'answers'       — the question is one a yes or no answers;
+ *   'not_an_answer' — a wh-question: the assent cannot answer it;
+ *   'ambiguous'     — an either/or question: it does not say which. */
+export type BareAssentReading = 'answers' | 'not_an_answer' | 'ambiguous';
+
+export function readBareAssent(
+  studentText: string,
+  priorTutorTurn: string,
+): { reading: BareAssentReading; open: OpenQuestionRead } | null {
+  if (!isBareAssent(studentText) && !isPureAcknowledgment(studentText ?? '')) return null;
+  const open = readOpenQuestion(priorTutorTurn);
+  if (!open) return null;
+  const reading: BareAssentReading =
+    open.kind === 'either_or' ? 'ambiguous' : open.kind === 'wh' ? 'not_an_answer' : 'answers';
+  return { reading, open };
+}
+
+/** A reply that ends the session: a sign-off, or a statement that the work is
+ *  all done. Tested on the reply so far, sentence by sentence. */
+const SESSION_CLOSE_RE = new RegExp(
+  '\\b(?:' +
+    'see\\s+you\\s+(?:next\\s+time|later|soon|tomorrow|then|again)' +
+    '|until\\s+next\\s+time|goodbye|bye\\s+for\\s+now|take\\s+care' +
+    '|(?:that(?:\'?s|\\s+is)|this\\s+is)\\s+(?:it|all|everything)\\s+for\\s+(?:today|now|this\\s+session)' +
+    '|that\\s+wraps\\s+(?:up\\s+)?(?:us|things|it|this|the\\s+session|today|everything|both|your\\s+homework)' +
+    '|(?:great|good|nice|awesome|excellent)\\s+(?:session|work\\s+today|job\\s+today)' +
+    '|(?:have|enjoy)\\s+(?:a|the\\s+rest\\s+of\\s+your)\\s+(?:(?:great|good|nice|wonderful|lovely)\\s+)?(?:day|night|evening|weekend)' +
+    '|come\\s+back\\s+any\\s?time' +
+    '|(?:both|all|all\\s+of\\s+your|your)\\s+(?:homework\\s+)?(?:problems|questions)\\s+are\\s+(?:now\\s+)?(?:all\\s+)?(?:done|solved|finished|complete|wrapped(?:\\s+up)?)' +
+    '|(?:your\\s+|the\\s+)?homework(?:\'?s|\\s+is)\\s+(?:all\\s+|now\\s+)?(?:done|finished|complete)' +
+    '|you(?:\'?re|\\s+are)\\s+(?:all\\s+)?(?:done|set|finished)\\s+for\\s+(?:today|now)' +
+    '|we(?:\'?re|\\s+are)\\s+(?:all\\s+)?(?:done|finished)\\s+(?:for\\s+(?:today|now)|here)' +
+  ')\\b',
+  'i',
+);
+export function isSessionCloseReply(attemptText: string): boolean {
+  return SESSION_CLOSE_RE.test(stripMarkdownEmphasis(attemptText ?? ''));
+}
+
+export type AmbiguousAssentKill =
+  /** Affirming verdict to a bare yes / no on an either/or question. */
+  | 'either_or_verdict'
+  /** Affirming verdict to a bare yes / no whose LAST open question is a
+   *  wh-question, an earlier question of the turn being yes/no. */
+  | 'earlier_question_verdict'
+  /** The reply ends the session on a bare yes / no that settled nothing. */
+  | 'ambiguous_close';
+
+/**
+ * The extension of `shouldKillBareAssentPraise` (which stays as it is): the
+ * same bare yes / no / ok, the cases that one leaves alone on purpose.
+ * Null ⇒ no kill.
+ * @param enabled  Unset ⇒ TUTOR_AMBIGUOUS_ASSENT_KILL.
+ */
+export function ambiguousAssentKill(
+  studentText: string,
+  attemptText: string,
+  priorTutorTurn: string,
+  opts?: { enabled?: boolean },
+): AmbiguousAssentKill | null {
+  if ((opts?.enabled ?? TUTOR_AMBIGUOUS_ASSENT_KILL) !== true) return null;
+  if (!isBareAssent(studentText)) return null;
+  const read = readBareAssent(studentText, priorTutorTurn);
+  if (!read || read.reading === 'answers') return null;
+  if (isSessionCloseReply(attemptText)) return 'ambiguous_close';
+  if (!opensWithAffirmingVerdict(attemptText)) return null;
+  if (read.reading === 'ambiguous') return 'either_or_verdict';
+  // A wh-question with no yes/no question before it is the original kill's.
+  return read.open.earlierYesNo ? 'earlier_question_verdict' : null;
+}
+
+/** Retry feedback via the standard rejection channel. */
+export function ambiguousAssentFeedback(kind: AmbiguousAssentKill, studentText: string, priorTutorTurn: string): string {
+  const q = readOpenQuestion(priorTutorTurn)?.question ?? '';
+  const said = `The student said only "${(studentText ?? '').trim()}"`;
+  const asked = q ? `, and the last question you had asked was "${q.slice(0, 240)}"` : '';
+  const quiet = ` Do not narrate this ("that's not an answer", "you only said yes") — just respond naturally.`;
+  if (kind === 'ambiguous_close') {
+    return (
+      `${said}${asked}. That does not tell you what they want, and you ended the session on it. ` +
+      `Re-emit your response: do NOT sign off, wrap up or say the work is finished. ` +
+      `Ask, in a few words, which they mean — or ask the open question again — and wait for their answer.` + quiet
+    );
+  }
+  if (kind === 'either_or_verdict') {
+    return (
+      `${said}${asked} — a question that offers alternatives, so a yes or no does not say which. ` +
+      `You opened with an affirming verdict as if they had answered. ` +
+      `Re-emit your response: no verdict or praise word, do not pick an alternative for them, and ask which one they mean in a few words.` + quiet
+    );
+  }
+  return (
+    `${said}${asked} — a question a yes or no cannot answer; at most they agreed to an earlier question in the same message. ` +
+    `They have NOT answered it, yet you opened with an affirming verdict and answered it yourself. ` +
+    `Re-emit your response: no verdict or praise word, and do NOT answer your own question for them. ` +
+    `Go straight to that question — ask it again briefly or offer a smaller first step.` + quiet
   );
 }

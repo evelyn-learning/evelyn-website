@@ -105,7 +105,9 @@ function renderStems(spec: Extract<WritingFrameSpec, { kind: 'sentence_stems' }>
   const LINE_H = 18;
   const availW = SVG_W - 28 - 50; // text starts at x=50, right margin 28
   let cursor = 50;
-  const blocks = spec.stems.map((s, i) => {
+  // Tool input is model-authored and only `kind` is schema-required: a missing / non-list field is an empty list, never a throw.
+  const stems = Array.isArray(spec.stems) ? spec.stems.filter((s): s is string => typeof s === 'string') : [];
+  const blocks = stems.map((s, i) => {
     const lines = wrapAt(s, 14, availW);
     const y = cursor;
     const ruleY = y + 18 + (lines.length - 1) * LINE_H + 14;

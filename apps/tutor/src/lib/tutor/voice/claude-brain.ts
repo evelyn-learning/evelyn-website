@@ -28,7 +28,21 @@ import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
-import { TUTOR_HOMEWORK_OWN_MATERIAL, TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS } from '@/lib/tutor/orchestrator/turn-round-flags';
+import {
+  TUTOR_HOMEWORK_OWN_MATERIAL,
+  TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS,
+  TUTOR_HOMEWORK_NO_EARLY_SIGNOFF,
+  TUTOR_NO_TIME_TALK,
+} from '@/lib/tutor/orchestrator/turn-round-flags';
+import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from './turn-shape-signal';
+import { runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
+import {
+  formatAnswerCheckBlock,
+  precheckInforms,
+  toPublicPrecheck,
+  type PublicVerdictPrecheck,
+  type VerdictPrecheckResult,
+} from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
@@ -446,6 +460,32 @@ export interface BrainTurnInput {
   textThinking?: boolean;
   /** Test/measurement override for TEXT_THINKING_DEADLINE_MS. */
   textThinkingDeadlineMs?: number;
+  /** Text-mode turn-shape facts (2026-10-06, ./turn-shape-signal.ts): the
+   *  open question, its kind and the shape of the student's message, as a
+   *  per-turn `<turn_shape>` block. Set by the stream route for a text-mode
+   *  session when TUTOR_TEXT_TURN_SHAPE is not 'off'. Streaming path only.
+   *  Absent/false ⇒ no block ⇒ user content exactly as before. */
+  textTurnShape?: boolean;
+  /** Text-mode verdict pre-check (2026-10-06, ./verdict-precheck.ts): an
+   *  answer-shaped message is checked by a small separate call BEFORE the
+   *  brain call, and the finding rides as a per-turn `<answer_check>` block.
+   *  Set by the stream route for a text-mode session when
+   *  TUTOR_TEXT_VERDICT_PRECHECK is not 'off'. Streaming path only.
+   *  Absent/false ⇒ no call, no block, no event. */
+  textVerdictPrecheck?: boolean;
+  /** The student's own words for this turn. `studentTranscript` can carry
+   *  runtime notes in front of them ("[correction note …]\n\n<words>"), and
+   *  is a runtime message on a retry; the two text-mode levers above read
+   *  THIS when present. Sent by a text-mode client on the first attempt of a
+   *  turn only. */
+  studentMessage?: string;
+  /** A retry of the same turn: the pre-check the client was sent on the first
+   *  attempt, echoed back so the retry carries the same `<answer_check>`
+   *  (without the correct value, which never left the server). Used only
+   *  when no fresh student message is present. */
+  verdictPrecheckCarry?: PublicVerdictPrecheck;
+  /** Test/measurement seam for the pre-check (model call, timeout, model). */
+  verdictPrecheckDeps?: VerdictPrecheckDeps & { onResult?: (r: VerdictPrecheckResult | null, ms: number) => void };
   /** Optional async resolver for tool_result content. Default behavior
    *  returns "${name} executed successfully" — fire-and-forget tools
    *  like show_problem just need an ack. For tools that produce DATA
@@ -593,6 +633,12 @@ export type BrainStreamEvent =
    *  construction: thinking text never leaves claude-brain.ts. The client
    *  keeps its typing indicator up and widens its nothing-shown window. */
   | { type: 'thinking' }
+  /** Text-mode verdict pre-check: what the independent check of the student's
+   *  message found (the public form — no correct value). Sent before any
+   *  sentence of the turn; the client uses it to stop a contradicting opener
+   *  before display and to bound the counting path. Only sent when the check
+   *  informs (not low-confidence, not failed). */
+  | { type: 'verdict-precheck'; result: PublicVerdictPrecheck; ms: number }
   /** Explicit pause directive emitted between sentences. The speakText
    *  layer waits this long before voicing the next sentence. Cancelled
    *  immediately if the student speaks (barge-in). */
@@ -1131,7 +1177,15 @@ const BARE_AFFIRMATIVE_RE =
 export function formatVerdictGuardBlock(
   transcript: string,
   lastTutorMessage?: string,
-  opts?: { /** Unset ⇒ TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS. */ hedgeRule?: boolean },
+  opts?: {
+    /** Unset ⇒ TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS. */
+    hedgeRule?: boolean;
+    /** 2026-10-06: the bare assent settles nothing (an either/or question —
+     *  "…the next problem, or wrap here?" — matches the continuation tail
+     *  too). The continuation guard would tell the brain the student AGREED;
+     *  the ordinary guard is used instead. Unset ⇒ as before. */
+    noContinuation?: boolean;
+  },
 ): string {
   const hedgeRule = opts?.hedgeRule ?? TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS;
   const t = (transcript ?? '').trim();
@@ -1145,6 +1199,7 @@ export function formatVerdictGuardBlock(
   // verdict branches would invite exactly the observed praise-and-stall).
   const bare = t.replace(/^(?:(?:um|uh|er|well|so|hmm|oh)[,\s]+)+/i, '').trim();
   if (
+    opts?.noContinuation !== true &&
     lastTutorMessage &&
     BARE_AFFIRMATIVE_RE.test(bare) &&
     CONTINUATION_QUESTION_RE.test(lastTutorMessage.trim())
@@ -1494,6 +1549,12 @@ export function formatActiveQuestionBlock(lastTutorMessage: string): string {
  * Exported for the standalone unit suite (scripts/test-demo-stop.ts) so the
  * block text is testable without running a whole brain turn.
  */
+/** 2026-10-06 (live re-test): "We've got about two minutes of homework time
+ *  logged, but I've got plenty of time left with you today." The time figures
+ *  in the prompt are for pacing; said aloud they read as a meter running. */
+export const NO_TIME_TALK_RULE =
+  ' These figures are for your pacing only: never tell the student how much time has been used or is left, and never mention minutes, time limits, quotas or usage.';
+
 export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
   if (!input) return '';
   let body: string;
@@ -1507,7 +1568,8 @@ export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
       typeof input.wrapAtMinutes === 'number' && input.minutesElapsed >= input.wrapAtMinutes;
     body = inWrap
       ? `Wrap up NOW: land the "I get it" moment if it hasn't landed yet, then summarize what they learned in 1-2 turns and end on an encouraging note. Do not start new material or open a new example — time is almost up.`
-      : `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`;
+      : `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`
+        + (TUTOR_NO_TIME_TALK ? NO_TIME_TALK_RULE : '');
   } else {
     body = `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`;
   }
@@ -1560,6 +1622,13 @@ export const HOMEWORK_OWN_MATERIAL_RULES =
   `- Use the student's own material exactly as written: their numbers, data, sentences, passages and prompts. Never replace or substitute them with different values, a different sentence or a different prompt, and never work a made-up example in place of their problem.\n` +
   `- Some problems are open-response (an essay, a thesis, a plan for a written answer, a short written response) and have no single correct answer. Coach on the student's OWN prompt: ask what they think, help them plan and draft, and respond to what they actually wrote, judging it against what the prompt asks for — not against one fixed answer. Never write the response for them, and never turn the prompt into a general lesson on its topic.\n`;
 
+/** 2026-10-06 (live re-test): "See you next time!" said in the middle of a
+ *  session, with a problem still open, and the homework declared done early. */
+export const HOMEWORK_NO_EARLY_SIGNOFF_RULE =
+  `- Do not sign off, say goodbye, or say the homework or the session is finished unless the student has asked to stop, or every problem listed above has been worked to its answer. Finishing one problem, or one part of one, is not finishing the homework: go on to the next. If you are unsure whether they want to continue, ask — do not close.\n`;
+export const HOMEWORK_NO_TIME_TALK_RULE =
+  `- Never tell the student how much time has been used or is left, and never mention minutes, time limits, quotas or usage. Timing is yours to manage silently.\n`;
+
 export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): string {
   if (!hw || !hw.problems.length) return '';
   const n = hw.problems.length;
@@ -1572,6 +1641,8 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): str
     `- Ask, never tell: never state a final answer, a completed step the student has not attempted, or a full solution — even when asked outright. A stuck student gets a smaller step or a hint, not the answer.\n` +
     `- When the student reaches an answer, have them state it, confirm it is correct or ask them to check a specific step, then move on.\n` +
     `- When time is nearly up, close cleanly and name the problems left for next time.\n` +
+    (TUTOR_NO_TIME_TALK ? HOMEWORK_NO_TIME_TALK_RULE : '') +
+    (TUTOR_HOMEWORK_NO_EARLY_SIGNOFF ? HOMEWORK_NO_EARLY_SIGNOFF_RULE : '') +
     (TUTOR_HOMEWORK_OWN_MATERIAL ? HOMEWORK_OWN_MATERIAL_RULES : '') +
     `- The opener for a fresh session: greet in your own voice, put Problem ${hw.problems[0].n} on the board, call set_current_problem with ${hw.problems[0].n}, and ask the first question. Do not summarise prior sessions.`;
   return `<homework_session>\n${body}\n</homework_session>\n\n`;
@@ -2007,7 +2078,20 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // moved ahead of lessonBlock/truthBlock. Both twins must stay in lockstep
   // (see buildBrainMessages doc comment on cache-behavior consistency).
   const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
-  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
+  // Text-mode levers (2026-10-06; streaming path only, both absent for voice).
+  // They read the student's OWN words: `studentTranscript` may carry runtime
+  // notes in front of them, and is a runtime message on a retry.
+  const studentSaid = (input.studentMessage ?? input.studentTranscript ?? '').trim();
+  const turnShape = input.textTurnShape === true || input.textVerdictPrecheck === true
+    ? classifyTurnShape(studentSaid, lastTutorMsgForGuard)
+    : null;
+  const turnShapeBlock = input.textTurnShape === true ? formatTurnShapeBlock(turnShape, studentSaid) : '';
+  if (turnShapeBlock) console.log(`[turn-shape] ${turnShape?.shape} · question=${turnShape?.open?.kind}`);
+  const verdictGuardBlock = formatVerdictGuardBlock(
+    input.studentTranscript,
+    lastTutorMsgForGuard,
+    input.textTurnShape === true && assentSettlesNothing(turnShape) ? { noContinuation: true } : undefined,
+  );
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
@@ -2017,6 +2101,43 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let thinkingOn = input.textThinking === true;
   const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
+  // Verdict pre-check: one small call, awaited HERE — before the brain call,
+  // nothing else in flight — for an answer-shaped message that has something
+  // to be checked against (an open question, or the student's own problem).
+  // A retry of the same turn re-renders the block from what the client was
+  // sent. Any failure ⇒ '' ⇒ the turn runs as it did before.
+  let answerCheckBlock = '';
+  if (input.textVerdictPrecheck === true) {
+    const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
+    if (turnShape?.answerShaped && hasContext) {
+      // Liveness: the client keeps its typing indicator up while this runs.
+      yield { type: 'thinking' };
+      const startedAt = Date.now();
+      const result = await runVerdictPrecheck({
+        problems: input.homework?.problems,
+        currentProblem: input.homework?.current,
+        activeProblemStatement: input.activeProblem?.statement,
+        history: input.conversationHistory.map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : '' })),
+        openQuestion: turnShape.open?.question ?? null,
+        studentMessage: studentSaid,
+      }, input.verdictPrecheckDeps);
+      const ms = Date.now() - startedAt;
+      input.verdictPrecheckDeps?.onResult?.(result, ms);
+      if (result) {
+        const pub = toPublicPrecheck(result);
+        console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${precheckInforms(pub) ? '' : ' (not injected)'}`);
+        if (precheckInforms(pub)) {
+          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue });
+          yield { type: 'verdict-precheck', result: pub, ms };
+        }
+      } else {
+        console.log(`[verdict-precheck] ${ms} ms · no result (not injected)`);
+      }
+    } else if (!turnShape && input.verdictPrecheckCarry) {
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry);
+      if (answerCheckBlock) console.log('[verdict-precheck] carried from the first attempt of this turn');
+    }
+  }
   const userContent =
     // Recap directives lead the message (live probes 2026-09-05: buried
     // after seven other blocks, the offer lost to the stuck rule 3 turns in
@@ -2042,6 +2163,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     textThinkingBlock +
+    turnShapeBlock +
+    answerCheckBlock +
     verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 

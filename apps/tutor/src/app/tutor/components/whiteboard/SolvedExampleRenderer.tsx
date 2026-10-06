@@ -73,7 +73,8 @@ export default function SolvedExampleRenderer({ spec }: { spec: SolvedExampleSpe
       <div className="bg-white border border-blue-200 rounded px-3 py-2 mb-3">
         <div className="text-xs font-semibold text-blue-700 mb-2">Solution</div>
         <ol className="space-y-2">
-          {spec.steps.map((s, i) => (
+          {/* Model-authored input: a missing / non-list `steps` is an empty list, never a throw. */}
+          {(Array.isArray(spec.steps) ? spec.steps.filter((s) => !!s && typeof s === 'object') : []).map((s, i) => (
             <li key={i} className="flex gap-2 text-sm">
               <span className="font-mono text-blue-600 font-semibold flex-shrink-0">{i + 1}.</span>
               <div className="flex-1">

@@ -156,6 +156,7 @@ import {
 } from '@/lib/tutor/orchestrator/struggle-ledger';
 import { inferWrongEvent, isBareShortAnswer, hedgedDenialCounts } from '@/lib/tutor/orchestrator/answer-attempt';
 import { decideDimensionalCheck } from '@/lib/tutor/validation/dimensional-gate';
+import { normalizeGraphicOrganizerSpec } from '@/lib/tutor/validation/graphic-organizer-guard';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -379,7 +380,15 @@ import {
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
-import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback, shouldKillBareAssentPraise, bareAssentPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
+import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback, shouldKillBareAssentPraise, bareAssentPraiseFeedback, ambiguousAssentKill, ambiguousAssentFeedback } from '@/lib/tutor/voice/nonanswer-praise';
+import {
+  sanitizePublicPrecheck,
+  precheckOpenerContradiction,
+  precheckContradictionFeedback,
+  precheckCreditOverride,
+  type PublicVerdictPrecheck,
+} from '@/lib/tutor/voice/verdict-precheck-shared';
+import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildJudgeCorrectionNote, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
@@ -2976,6 +2985,14 @@ export function VoiceTutorRealtime({
    *  pass over the turn. A denial of a HEDGED answer is counted against the
    *  student only with one of them (answer-attempt.ts hedgedDenialCounts). */
   const hedgedDenialSignalRef = useRef({ verifiedWrong: false, judgeAgreedWrong: false });
+  /** Text mode (2026-10-06): the server's independent check of THIS turn's
+   *  student message (voice/verdict-precheck.ts), as sent in the
+   *  `verdict-precheck` frame before any sentence. Null for voice, for a turn
+   *  that was not answer-shaped, and when the check failed or was unsure.
+   *  Read by the opener kill, the retry request and the counting path. */
+  const verdictPrecheckRef = useRef<PublicVerdictPrecheck | null>(null);
+  /** The pre-check opener kill fires at most once per turn. */
+  const verdictPrecheckKillUsedRef = useRef(false);
   /** 2026-10-05: the last turn retried after a brain stall with nothing
    *  shown (brain-stall.ts decideStallRecovery) — one retry per turn. */
   const stallRetryRef = useRef<{ transcript: string; at: number } | null>(null);
@@ -5494,6 +5511,23 @@ export function VoiceTutorRealtime({
     // evolve-in-place removals below, and only once the replacement is
     // actually registered on the board.
     const correctionReplacePairs: Array<{ priorId: string; newSignature: string; label: string }> = [];
+
+    // 2026-10-05 (live text session): show_graphic_organizer arrived without
+    // the lists its layout needs; the renderer threw and the page was replaced
+    // by "This page couldn't load". The tool input is normalized here, before
+    // dedup / id assignment / the board catalog see it; a call with nothing
+    // drawable is dropped and the turn continues
+    // (validation/graphic-organizer-guard.ts).
+    commands = commands.flatMap((cmd) => {
+      if ((cmd as { action?: string })?.action !== 'showGraphicOrganizer') return [cmd];
+      const organizer = normalizeGraphicOrganizerSpec((cmd as { spec?: unknown }).spec);
+      if (!organizer.ok) {
+        console.warn(`[VoiceTutor] show_graphic_organizer dropped (soft): ${organizer.reason}`);
+        onDebugEvent?.('tool_call_soft_drop', `show_graphic_organizer (${organizer.reason}) — call dropped, turn continues`);
+        return [];
+      }
+      return [{ ...cmd, spec: organizer.spec } as unknown as WhiteboardCommand];
+    });
 
     const visualActionsThisTurn = visualActionsThisTurnRef.current;
     // Per-turn dedup signature. Key on action + a stable content hash
@@ -10581,6 +10615,9 @@ export function VoiceTutorRealtime({
     // credit.
     judgeFlaggedDenialThisTurnRef.current = false;
     hedgedDenialSignalRef.current = { verifiedWrong: false, judgeAgreedWrong: false };
+    // 2026-10-06: a prior turn's pre-check never applies to this one.
+    verdictPrecheckRef.current = null;
+    verdictPrecheckKillUsedRef.current = false;
     // 2026-10-02: fresh per-turn answer-attempt ledger slots (set below only
     // for a real student turn) — a prior turn's text must never be re-read.
     ledgerStudentTextRef.current = '';
@@ -11853,6 +11890,19 @@ export function VoiceTutorRealtime({
             // (server flag TUTOR_TEXT_THINKING; lib/tutor/voice/text-thinking.ts).
             // Absent for voice ⇒ the body is byte-identical to before.
             ...(sessionMode === 'text' ? { inputMode: 'text' as const } : {}),
+            // Text-mode answer-judging levers (2026-10-06). First attempt of
+            // a turn: the student's own words, without the runtime notes
+            // `runTranscript` may carry in front of them (the server reads
+            // the shape of the message and runs its verdict pre-check on
+            // these). A retry of the same turn: the pre-check that came back
+            // on the first attempt, so the retry is told the same thing.
+            // Absent for voice ⇒ the body is byte-identical to before.
+            ...(sessionMode === 'text' && attempt === 0 && transcript && !transcript.trim().startsWith('[')
+              ? { studentMessage: transcript }
+              : {}),
+            ...(sessionMode === 'text' && attempt > 0 && verdictPrecheckRef.current
+              ? { verdictPrecheck: verdictPrecheckRef.current }
+              : {}),
             // Board Map (project_tutor_board_map_design): send the FULL-board
             // snapshot (NOT segment-scoped) + the page list. buildWhiteboardSummary
             // now owns segment-scoping — it expands current-segment + current-view
@@ -13722,6 +13772,40 @@ export function VoiceTutorRealtime({
                     console.warn('[brain-orchestrator] affirming verdict to a bare yes/no on a non-yes/no question — retrying:', `student="${transcript.slice(0, 20)}" text="${nonAnswerTextSoFar.slice(0, 60)}"`);
                     onDebugEvent?.('bare_assent_praise_retry', `student="${transcript.slice(0, 20)}" → "${nonAnswerTextSoFar.slice(0, 50)}"`);
                     continue;
+                  }
+                  // 2026-10-06 (replay of 23 sessions): the same bare yes / no, the
+                  // cases the kill above leaves alone on purpose — an either/or
+                  // question ("…the next problem, or wrap here?" → "yes" → the
+                  // session closed), and a wh-question asked after a readiness
+                  // question in the same turn ("Ready…? How would you write…?" →
+                  // "yes" → "Right — the complete solution is…").
+                  const ambiguousKill = !attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES
+                    ? ambiguousAssentKill(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn) : null;
+                  if (ambiguousKill) {
+                    rejectionsThisAttempt.push({ action: 'bare_assent_praise', reason: ambiguousAssentFeedback(ambiguousKill, transcript, bareAssentPriorTutorTurn) });
+                    judgeRetriesUsed++;
+                    await performKill();
+                    console.warn(`[brain-orchestrator] bare yes/no that settles nothing (${ambiguousKill}) — retrying:`, `student="${transcript.slice(0, 20)}" text="${nonAnswerTextSoFar.slice(0, 60)}"`);
+                    onDebugEvent?.('bare_assent_praise_retry', `${ambiguousKill} · student="${transcript.slice(0, 20)}" → "${nonAnswerTextSoFar.slice(0, 50)}"`);
+                    continue;
+                  }
+                  // 2026-10-06, text mode: the opener contradicts a HIGH-confidence
+                  // independent check of the student's message — a correct answer
+                  // denied ("Not quite" to the right final answer given while a
+                  // smaller step was open), a wrong one affirmed, or a message that
+                  // answers nothing affirmed. Killed before display, retried once
+                  // per turn. Inert without a pre-check (voice; flag off).
+                  if (!attemptKilled && attempt === 0 && !attemptText && !verdictPrecheckKillUsedRef.current && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const pcKill = precheckOpenerContradiction(verdictPrecheckRef.current, updatedSentence, { enabled: TUTOR_PRECHECK_VERDICT_KILL });
+                    if (pcKill && verdictPrecheckRef.current) {
+                      verdictPrecheckKillUsedRef.current = true;
+                      rejectionsThisAttempt.push({ action: 'precheck_verdict_contradiction', reason: precheckContradictionFeedback(pcKill, verdictPrecheckRef.current, transcript) });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] opener contradicts the verdict pre-check (${pcKill}) — retrying:`, `student="${transcript.slice(0, 40)}" text="${updatedSentence.slice(0, 60)}"`);
+                      onDebugEvent?.('precheck_verdict_kill', `${pcKill} · student="${transcript.slice(0, 30)}" → "${updatedSentence.slice(0, 50)}"`);
+                      continue;
+                    }
                   }
                   // Also on a continuation attempt: `transcript` is still the turn's
                   // real trigger, and praise + a revealed value to a non-answer is
@@ -15818,6 +15902,21 @@ export function VoiceTutorRealtime({
                   // the first sentence lands.
                   if (!stallState.thinking) onDebugEvent?.('brain_thinking', 'reasoning before the reply');
                   stallState.thinking = true;
+                } else if ((ev as { type?: string }).type === 'verdict-precheck') {
+                  // Text-mode verdict pre-check (2026-10-06): the server's
+                  // independent check of the student's message, sent before
+                  // any sentence of the turn. Kept for this turn only: the
+                  // opener kill below, the retry body, and the counting path.
+                  const pc = sanitizePublicPrecheck((ev as { result?: unknown }).result);
+                  if (pc) {
+                    verdictPrecheckRef.current = pc;
+                    // A check that found the answer wrong is independent
+                    // evidence for the hedged-denial rule (answer-attempt.ts).
+                    if (TUTOR_PRECHECK_CREDIT && precheckCreditOverride(pc).verifiedWrong) {
+                      hedgedDenialSignalRef.current.verifiedWrong = true;
+                    }
+                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"`);
+                  }
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry
@@ -17643,8 +17742,16 @@ export function VoiceTutorRealtime({
               onDebugEvent?.('pacing_own_value_excluded', `student="${ledgerStudentTextRef.current.slice(0, 30)}" tutor="${fullText.slice(0, 50)}"`);
             }
           }
-          const isAffirm = verdictRead.isAffirm;
-          const isCorrect = verdictRead.isCorrection;
+          // 2026-10-06, text mode: a HIGH-confidence independent check of the
+          // student's message bounds what the tutor's words may count as — a
+          // correct answer the tutor denied is not an incorrect, a wrong or
+          // off-target one it praised is not a correct. It only withholds.
+          const precheckCredit = precheckCreditOverride(verdictPrecheckRef.current, { enabled: TUTOR_PRECHECK_CREDIT });
+          if (countsAsAnswer && ((precheckCredit.suppressCorrect && verdictRead.isAffirm) || (precheckCredit.suppressIncorrect && verdictRead.isCorrection))) {
+            onDebugEvent?.('pacing_precheck_override', `${precheckCredit.reason} — tutor ${verdictRead.isCorrection ? 'denied' : 'affirmed'}, not counted · student="${ledgerStudentTextRef.current.slice(0, 40)}"`);
+          }
+          const isAffirm = verdictRead.isAffirm && !precheckCredit.suppressCorrect;
+          const isCorrect = verdictRead.isCorrection && !precheckCredit.suppressIncorrect;
           const decision = decidePacingCredit({
             isVerification: countsAsAnswer,
             isAffirm,
@@ -17873,7 +17980,11 @@ export function VoiceTutorRealtime({
         // Pacing streak refs are NOT touched.
         if (TUTOR_STRUGGLE_LEDGER && !ledgerWrongFedThisTurnRef.current
             && inferWrongEvent({
-              studentText: ledgerStudentTextRef.current, tutorText: fullText, objectiveCorrect: !!objectiveSignal,
+              studentText: ledgerStudentTextRef.current, tutorText: fullText,
+              // 2026-10-06: a pre-check that found the answer correct (or not
+              // an answer at all) vetoes the inferred `wrong`, like the proof.
+              objectiveCorrect: !!objectiveSignal
+                || precheckCreditOverride(verdictPrecheckRef.current, { enabled: TUTOR_PRECHECK_CREDIT }).suppressIncorrect,
               // 2026-10-04: questions / self-reports are not answer attempts;
               // corrections without a correction word count (same switches
               // as the pacing read above).

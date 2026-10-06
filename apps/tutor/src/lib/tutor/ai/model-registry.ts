@@ -48,7 +48,8 @@ export type ModelRole =
   | 'taxonomy'          // taxonomy generation (legacy TAXONOMY_MODEL)
   | 'content-gen'       // offline course-content generation (bank items, batch authoring scripts)
   | 'content-verify'    // offline fresh-context solve-verify gate (problem bank, mock forms)
-  | 'notes-pointers';   // topic-notes pointer enrichment (legacy POINTER_GEN_MODEL)
+  | 'notes-pointers'    // topic-notes pointer enrichment (legacy POINTER_GEN_MODEL)
+  | 'verdict-precheck'; // text-mode answer check before the brain turn (voice/verdict-precheck.ts)
 
 const DEFAULT_MODEL: Record<ModelRole, string> = {
   brain: 'claude-sonnet-4-6', // prod ships claude-sonnet-5 via TUTOR_BRAIN_MODEL
@@ -76,6 +77,7 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   'content-gen': 'claude-sonnet-5',
   'content-verify': 'claude-sonnet-5',
   'notes-pointers': 'claude-opus-5',
+  'verdict-precheck': 'claude-sonnet-5',
 };
 
 /** Pre-registry env vars that must keep working (prod env files set these). */

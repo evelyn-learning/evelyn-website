@@ -53,12 +53,42 @@
  * yes/no question in others. Read the error list; the per-class counts in
  * report.txt are the automatic ones.
  *
+ * Levers (2026-10-06, second round). `--levers none|shape|precheck` selects
+ * what rides on top of thinking, ONE setting per process (some of the
+ * switches are read when the modules load):
+ *   none      production as of a11413a8: thinking only. The round's prompt
+ *             additions (no early sign-off, no time talk) are switched off,
+ *             so the request is the deployed one byte for byte.
+ *   shape     + the <turn_shape> facts (lever 1) and the prompt additions.
+ *   precheck  + the verdict pre-check (lever 2) on top of `shape`.
+ * The arm is named <effort>, <effort>-L1, <effort>-L12. The browser's
+ * before-display kills are replayed too (`--no-kills` to skip): the reply is
+ * read sentence by sentence with the same pure functions the client uses
+ * (bare-assent praise — in production already; ambiguous assent and the
+ * pre-check contradiction — this round, arms L1 / L12 only), and on a kill
+ * the turn is retried once through `buildValidatorFeedback` exactly as the
+ * client does. The scored reply is the one a student would have been shown.
+ *   … --precheck-bench --precheck-models claude-sonnet-5:low,claude-sonnet-4-6:off
+ *             the pre-check call alone on every answer-shaped case, per model
+ *             (no brain call); writes precheck-bench.jsonl for reading.
+ *
  * Cost: a rebuilt request is ~120K input tokens (tools 45K + core 61K +
  * session 15K), almost all cache reads — about $0.037 per trial on
  * claude-sonnet-5. Results append to results.jsonl and a re-run skips what is
  * already there, so the matrix can be filled in instalments.
  */
 process.env.MONGODB_URI = 'mongodb://127.0.0.1:1/replay-no-db';
+// Lever setting, read before any module loads (see the header).
+const LEVERS = ((): 'none' | 'shape' | 'precheck' => {
+  const i = process.argv.indexOf('--levers');
+  const v = i >= 0 ? process.argv[i + 1] : 'none';
+  if (v !== 'none' && v !== 'shape' && v !== 'precheck') throw new Error(`--levers ${v}: none | shape | precheck`);
+  return v;
+})();
+if (LEVERS === 'none') {
+  process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_NO_EARLY_SIGNOFF = 'off';
+  process.env.NEXT_PUBLIC_TUTOR_NO_TIME_TALK = 'off';
+}
 process.env.TUTOR_BRAIN_MODEL = process.env.REPLAY_BRAIN_MODEL || 'claude-sonnet-5';
 process.env.TUTOR_TOOL_SUBJECT_FILTER = 'true'; // as in production
 delete process.env.TUTOR_MODEL_BRAIN_FALLBACK;
@@ -95,7 +125,10 @@ const LIMIT = Number(opt('limit', '0'));
 const ONLY = opt('only');
 const CONC = Number(opt('concurrency', '4'));
 const FULL_LOOP = flag('full-loop');
-const TAG = opt('tag', '');
+const TAG = opt('tag', '') || (LEVERS === 'shape' ? 'L1' : LEVERS === 'precheck' ? 'L12' : '');
+const NO_KILLS = flag('no-kills');
+/** `model:thinking` for the pre-check in the `precheck` arm (default: the registry role). */
+const PRECHECK_MODEL = opt('precheck-model');
 
 // ── parsing ────────────────────────────────────────────────────────────────
 
@@ -342,7 +375,16 @@ async function buildInput(c: Case, enums: Enumerations, arm: Arm) {
     textThinking: arm !== 'off',
     // Observe the raw thinking time: the production deadline would hide it.
     textThinkingDeadlineMs: 600_000,
+    // Levers: absent for `none`, so that request is the deployed one.
+    ...(LEVERS !== 'none' ? { textTurnShape: true } : {}),
+    ...(LEVERS === 'precheck' ? { textVerdictPrecheck: true } : {}),
   };
+}
+
+function precheckOverride(spec: string | undefined): { model?: string; thinking?: 'low' | 'off' | 'bare' } {
+  if (!spec) return {};
+  const [model, thinking] = spec.split(':');
+  return { model, ...(thinking === 'low' || thinking === 'off' || thinking === 'bare' ? { thinking } : {}) };
 }
 
 // ── model-call capture ─────────────────────────────────────────────────────
@@ -458,22 +500,28 @@ async function judge(lastTutor: string, student: string, reply: string): Promise
 
 // ── run ────────────────────────────────────────────────────────────────────
 
+interface KillRec { action: string; kind: string; atSentence: number; killedReply: string; retryCalls: CallRec[] }
+interface PrecheckRec {
+  ms: number; result: null | { answers: string; target: string; proposed: string; verdict: string; confidence: string; correctValue: string; model: string; inputTokens: number; outputTokens: number };
+  shape?: string; questionKind?: string; openQuestion?: string;
+}
 interface Result {
+  kill?: KillRec; precheck?: PrecheckRec; shape?: string; questionKind?: string;
   id: string; cls: Case['cls']; arm: string; run: number; plan: 'homework' | 'none'; student: string; lastTutor: string;
   reply: string; tools: Array<{ name: string; args: unknown }>; calls: CallRec[]; firstSentenceMs: number | null; totalMs: number;
   regex: Stance; judge: Stance | null; reverses: boolean; selfTalk: boolean; delibRegex: boolean; metaNarration: boolean; markupLeak: boolean;
   badMaths: boolean; expect: Stance[]; error: boolean; errorMsg?: string;
 }
 
-async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Promise<Result> {
+/** One pass through `streamBrainTurn`, capturing sentences, tools, calls. */
+async function streamOnce(input: Record<string, unknown>): Promise<{ sentences: string[]; tools: Result['tools']; calls: CallRec[]; firstSentenceMs: number | null; t0: number; errorMsg?: string; precheckPublic?: unknown }> {
   const { streamBrainTurn } = await import('../src/lib/tutor/voice/claude-brain');
-  const { isMetaNarration } = await import('../src/lib/tutor/voice/meta-narration');
-  const input = await buildInput(c, enums, arm);
   const sentences: string[] = [];
   const store = { calls: [] as CallRec[], maxCalls: FULL_LOOP ? 9 : 3, text: () => sentences.join(' ') };
   const tools: Result['tools'] = [];
   let firstSentenceMs: number | null = null;
   let errorMsg: string | undefined;
+  let precheckPublic: unknown;
   const t0 = Date.now();
   await als.run(store, async () => {
     try {
@@ -481,12 +529,81 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
       for await (const ev of streamBrainTurn(input as any)) {
         if (ev.type === 'sentence') { firstSentenceMs ??= Date.now() - t0; sentences.push(ev.text); }
         else if (ev.type === 'tool-call') tools.push({ name: ev.name, args: ev.args });
+        else if (ev.type === 'verdict-precheck') precheckPublic = ev.result;
       }
     } catch (err) {
       if (!(err instanceof ReplayStop)) errorMsg = (err as Error).message.slice(0, 300);
     }
   });
-  const totalMs = store.calls.reduce((n, k) => Math.max(n, (k.startedAt - t0) + (k.endMs ?? 0)), 0) || Date.now() - t0;
+  return { sentences, tools, calls: store.calls, firstSentenceMs, t0, errorMsg, precheckPublic };
+}
+
+/** The browser's before-display kills, replayed on the reply sentence by
+ *  sentence with the client's own pure functions. */
+async function clientKill(c: Case, sentences: string[], precheckPublic: unknown): Promise<{ action: string; kind: string; reason: string; atSentence: number } | null> {
+  if (NO_KILLS) return null;
+  const np = await import('../src/lib/tutor/voice/nonanswer-praise');
+  const ps = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+  const prior = c.lastTutor;
+  const pc = ps.sanitizePublicPrecheck(precheckPublic);
+  let soFar = '';
+  for (let i = 0; i < sentences.length; i++) {
+    soFar += (soFar ? ' ' : '') + sentences[i];
+    // In production since 2026-10-05 (all arms).
+    if (np.shouldKillBareAssentPraise(c.student, soFar, prior, { enabled: true })) {
+      return { action: 'bare_assent_praise', kind: 'wh_verdict', reason: np.bareAssentPraiseFeedback(c.student, prior), atSentence: i + 1 };
+    }
+    if (LEVERS !== 'none') {
+      const amb = np.ambiguousAssentKill(c.student, soFar, prior, { enabled: true });
+      if (amb) return { action: 'bare_assent_praise', kind: amb, reason: np.ambiguousAssentFeedback(amb, c.student, prior), atSentence: i + 1 };
+    }
+    if (LEVERS === 'precheck' && i === 0 && pc) {
+      const k = ps.precheckOpenerContradiction(pc, sentences[0], { enabled: true });
+      if (k) return { action: 'precheck_verdict_contradiction', kind: k, reason: ps.precheckContradictionFeedback(k, pc, c.student), atSentence: 1 };
+    }
+  }
+  return null;
+}
+
+async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Promise<Result> {
+  const { isMetaNarration } = await import('../src/lib/tutor/voice/meta-narration');
+  const { classifyTurnShape } = await import('../src/lib/tutor/voice/turn-shape-signal');
+  const { buildValidatorFeedback } = await import('../src/lib/tutor/orchestrator/validator-feedback');
+  const input = await buildInput(c, enums, arm);
+  let precheck: PrecheckRec | undefined;
+  const ts = classifyTurnShape(c.student, c.lastTutor);
+  if (LEVERS === 'precheck') {
+    (input as Record<string, unknown>).verdictPrecheckDeps = {
+      ...precheckOverride(PRECHECK_MODEL),
+      onResult: (r: PrecheckRec['result'], ms: number) => { precheck = { ms, result: r, shape: ts?.shape, questionKind: ts?.open?.kind, openQuestion: ts?.open?.question }; },
+    };
+  }
+  const first = await streamOnce(input as unknown as Record<string, unknown>);
+  let { sentences, tools } = first;
+  const { firstSentenceMs, t0 } = first;
+  let errorMsg = first.errorMsg;
+  let kill: KillRec | undefined;
+  const k = sentences.length ? await clientKill(c, sentences, first.precheckPublic) : null;
+  if (k) {
+    // Exactly what the client sends next: the killed attempt as an assistant
+    // turn, the rejection as a runtime turn, the pre-check carried along.
+    const killed = sentences.slice(0, k.atSentence).join(' ');
+    const retryInput = {
+      ...(input as unknown as Record<string, unknown>),
+      conversationHistory: [
+        ...input.conversationHistory,
+        { role: 'user' as const, content: c.student },
+        { role: 'assistant' as const, content: killed || '(emitted only tool calls)' },
+      ],
+      studentTranscript: buildValidatorFeedback({ rejections: [{ action: k.action, reason: k.reason }], attemptKilled: true, originalTranscript: c.student, includeStudentContext: true }),
+      ...(first.precheckPublic ? { verdictPrecheckCarry: first.precheckPublic } : {}),
+    };
+    const second = await streamOnce(retryInput);
+    kill = { action: k.action, kind: k.kind, atSentence: k.atSentence, killedReply: sentences.join(' '), retryCalls: second.calls.map((x) => ({ ...x, userContent: undefined })) };
+    sentences = second.sentences; tools = second.tools; errorMsg = second.errorMsg ?? errorMsg;
+  }
+  const store = { calls: first.calls };
+  const totalMs = store.calls.reduce((n, k2) => Math.max(n, (k2.startedAt - t0) + (k2.endMs ?? 0)), 0) || Date.now() - t0;
   const reply = sentences.join(' ').trim();
   const j = reply ? await judge(c.lastTutor, c.student, reply) : null;
   const rx = regexStance(reply);
@@ -499,7 +616,7 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
   const wrongStance = praiseIsError ? stance === 'AFFIRM' || rx === 'AFFIRM' : !c.expect.includes(stance);
   const boardAndReply = reply + ' ' + JSON.stringify(tools);
   const badMaths = !!c.badMaths && c.badMaths.test(boardAndReply);
-  const calls = store.calls.map((k, i) => (i === 0 ? k : { ...k, userContent: undefined }));
+  const calls = store.calls.map((k2, i) => (i === 0 ? k2 : { ...k2, userContent: undefined }));
   return {
     id: c.id, cls: c.cls, arm: arm + (TAG ? `-${TAG}` : ''), run,
     plan: c.session.homeworkPlan ? 'homework' : 'none', student: c.student, lastTutor: c.lastTutor.slice(-400),
@@ -508,7 +625,42 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
     metaNarration: sentences.some((sn) => isMetaNarration(sn)),
     markupLeak: /<\/?(?:invoke|parameter|function_calls|antml|tool_use|thinking)\b/i.test(reply),
     badMaths, expect: c.expect, error: !reply || wrongStance || badMaths, errorMsg,
+    ...(kill ? { kill } : {}), ...(precheck ? { precheck } : {}), shape: ts?.shape, questionKind: ts?.open?.kind,
   };
+}
+
+/** The pre-check alone, per model, on every answer-shaped case. */
+async function precheckBench(cases: Case[], enums: Enumerations) {
+  const { classifyTurnShape } = await import('../src/lib/tutor/voice/turn-shape-signal');
+  const { runVerdictPrecheck } = await import('../src/lib/tutor/voice/verdict-precheck');
+  const specs = (opt('precheck-models', 'claude-sonnet-5:low,claude-sonnet-4-6:off')!).split(',');
+  const file = path.join(OUT, 'precheck-bench.jsonl');
+  const done = new Set<string>();
+  if (fs.existsSync(file)) for (const l of fs.readFileSync(file, 'utf8').split('\n').filter(Boolean)) { const r = JSON.parse(l); if (r.result || r.timedOut) done.add(`${r.id}|${r.spec}`); }
+  const todo: Array<{ c: Case; spec: string }> = [];
+  for (const spec of specs) for (const c of cases) {
+    const ts = classifyTurnShape(c.student, c.lastTutor);
+    if (ts?.answerShaped && !done.has(`${c.id}|${spec}`)) todo.push({ c, spec });
+  }
+  console.log(`[precheck-bench] ${todo.length} call(s); answer-shaped cases: ${new Set(todo.map((t) => t.c.id)).size}`);
+  let next = 0;
+  await Promise.all(Array.from({ length: CONC }, async () => {
+    while (next < todo.length) {
+      const { c, spec } = todo[next++];
+      const input = await buildInput(c, enums, 'low');
+      const ts = classifyTurnShape(c.student, c.lastTutor)!;
+      const t0 = Date.now();
+      // The production cap is 4 s; measure the raw time here (cap 30 s) and
+      // report how many would have been cut.
+      const r = await runVerdictPrecheck({
+        problems: input.homework?.problems, currentProblem: input.homework?.current, activeProblemStatement: input.activeProblem?.statement,
+        history: input.conversationHistory, openQuestion: ts.open?.question ?? null, studentMessage: c.student,
+      }, { ...precheckOverride(spec), timeoutMs: 30_000 });
+      const ms = Date.now() - t0;
+      fs.appendFileSync(file, JSON.stringify({ id: c.id, cls: c.cls, spec, ms, shape: ts.shape, questionKind: ts.open?.kind, openQuestion: ts.open?.question, student: c.student, lastTutor: c.lastTutor.slice(-300), result: r, timedOut: !r }) + '\n');
+      console.log(`[${spec}] ${c.id} ${ms}ms ${r ? `${r.answers}/${r.verdict}/${r.confidence} proposed="${r.proposed.slice(0, 30)}" correct="${r.correctValue.slice(0, 30)}"` : 'NO RESULT'}`);
+    }
+  }));
 }
 
 function pct(xs: number[], p: number): number {
@@ -658,6 +810,7 @@ async function main() {
     return;
   }
   if (flag('cache-probe')) return cacheProbe(cases[0], enums);
+  if (flag('precheck-bench')) return precheckBench(cases, enums);
   if (flag('show-request')) {
     const input = await buildInput(cases[0], enums, ARMS[0]);
     const store = { calls: [] as CallRec[], maxCalls: 1, text: () => '' };
@@ -684,9 +837,10 @@ async function main() {
     let i = 0, spent = 0;
     const write = (r: Result) => {
       fs.appendFileSync(resultsFile, JSON.stringify(r) + '\n');
-      spent += costOf(r.calls).billed;
+      spent += costOf(r.calls).billed + costOf(r.kill?.retryCalls ?? []).billed
+        + ((r.precheck?.result?.inputTokens ?? 0) * 2 + (r.precheck?.result?.outputTokens ?? 0) * 10) / 1e6;
       const k = r.calls[0];
-      console.log(`[${armName} ${++i}/${jobs.length}] ${r.id} r${r.run} ${r.error ? 'ERR ' : 'ok  '} ${r.judge ?? r.regex} first=${k?.firstTextMs ?? '-'}ms end=${k?.endMs ?? '-'}ms out=${k?.usage?.output_tokens ?? '-'} read=${k?.usage?.cache_read_input_tokens ?? '-'} wr=${k?.usage?.cache_creation_input_tokens ?? '-'} $${spent.toFixed(2)} :: ${r.reply.slice(0, 80)}`);
+      console.log(`[${armName} ${++i}/${jobs.length}] ${r.id} r${r.run} ${r.error ? 'ERR ' : 'ok  '} ${r.judge ?? r.regex} first=${k?.firstTextMs ?? '-'}ms end=${k?.endMs ?? '-'}ms out=${k?.usage?.output_tokens ?? '-'} read=${k?.usage?.cache_read_input_tokens ?? '-'} wr=${k?.usage?.cache_creation_input_tokens ?? '-'} $${spent.toFixed(2)}${r.precheck ? ` pc=${r.precheck.ms}ms ${r.precheck.result ? `${r.precheck.result.answers}/${r.precheck.result.verdict}/${r.precheck.result.confidence}` : 'none'}` : ''}${r.kill ? ` KILL(${r.kill.kind})` : ''} :: ${r.reply.slice(0, 80)}`);
     };
     // One trial alone first: it writes the shared tools+core cache entry for
     // this thinking config; the rest then read it.

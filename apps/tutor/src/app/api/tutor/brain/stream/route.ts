@@ -44,6 +44,9 @@ import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
 import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
+import { textTurnShapeEnabled } from '@/lib/tutor/voice/turn-shape-signal';
+import { textVerdictPrecheckEnabled } from '@/lib/tutor/voice/verdict-precheck';
+import { sanitizePublicPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 import {
   RULE8_PROMISE_REGEX,
   detectRepairNeed,
@@ -147,6 +150,13 @@ interface BrainStreamRequestBody {
    *  a text turn reasons privately before it replies. The decision is made
    *  HERE, server-side, where the model request is built. */
   inputMode?: 'text' | 'voice';
+  /** Text mode, first attempt of a turn: the student's own words, without
+   *  the runtime notes `studentTranscript` may carry in front of them. Read by
+   *  the turn-shape facts and the verdict pre-check. */
+  studentMessage?: string;
+  /** Text mode, a retry of the same turn: the public verdict pre-check this
+   *  client was sent on the first attempt (validated before use). */
+  verdictPrecheck?: unknown;
   /** Adaptive-pacing v1: bank IDs + brain-gen problem-text hashes
    *  already shown this session, used as exclusion filters when the
    *  brain calls `generate_problem`. The client maintains this list
@@ -846,6 +856,17 @@ export async function POST(req: NextRequest) {
           // Text-mode thinking: on for every turn of a text session unless
           // TUTOR_TEXT_THINKING=off. False for voice ⇒ request unchanged.
           textThinking: textThinkingEnabled(body.inputMode),
+          // Text-mode answer-judging levers (2026-10-06). All three are
+          // false / undefined for voice and for an old client that sends no
+          // mode, so those requests are the pre-existing ones.
+          textTurnShape: textTurnShapeEnabled(body.inputMode),
+          textVerdictPrecheck: textVerdictPrecheckEnabled(body.inputMode),
+          ...(body.inputMode === 'text' && typeof body.studentMessage === 'string' && body.studentMessage.trim()
+            ? { studentMessage: body.studentMessage.slice(0, 4000) }
+            : {}),
+          ...(textVerdictPrecheckEnabled(body.inputMode) && body.verdictPrecheck
+            ? { verdictPrecheckCarry: sanitizePublicPrecheck(body.verdictPrecheck) ?? undefined }
+            : {}),
           toolResultProvider: makeToolResultProvider(
             body.lessonPlanContext,
             body.shownProblemIds ?? [],
@@ -880,7 +901,9 @@ export async function POST(req: NextRequest) {
           // the turn is reasoning (typing indicator stays, stall window
           // widens), but NOT counted as egress — a turn whose only output so
           // far is this frame is still safely retryable.
-          if (ev.type === 'thinking') {
+          // (The verdict pre-check frame is the same kind of frame: it is sent
+          // before any sentence and commits nothing to the student.)
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;

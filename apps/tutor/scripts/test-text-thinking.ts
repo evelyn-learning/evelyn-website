@@ -415,7 +415,7 @@ async function main() {
     assert.match(routeSrc, /textThinking: textThinkingEnabled\(body\.inputMode\)/);
   });
   await test('route: the thinking liveness frame does not count as egress (a retry stays duplication-free)', () => {
-    assert.match(routeSrc, /if \(ev\.type === 'thinking'\) \{\s*sendTelemetry\(ev\);/);
+    assert.match(routeSrc, /if \(ev\.type === 'thinking'(?: \|\| ev\.type === 'verdict-precheck')?\) \{\s*sendTelemetry\(ev\);/);
   });
   await test('client: sends inputMode only for a text session (voice body unchanged)', () => {
     assert.match(clientSrc, /\.\.\.\(sessionMode === 'text' \? \{ inputMode: 'text' as const \} : \{\}\),/);

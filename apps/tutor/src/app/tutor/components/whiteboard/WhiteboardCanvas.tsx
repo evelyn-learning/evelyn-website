@@ -20,6 +20,7 @@ import { HScrollFade } from './HScrollFade';
 import { SketchRenderer } from './SketchRenderer';
 import { SketchFallbackCard } from './SketchFallbackCard';
 import { RenderFallbackCard } from './RenderFallbackCard';
+import { BoardItemErrorBoundary } from './BoardItemErrorBoundary';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import { gradeTryYourself, type TryYourselfRelationDetail } from './tryYourselfAnswer';
@@ -1715,7 +1716,11 @@ export function WhiteboardCanvas({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data-wb-item-id={(renderableCommands[0] as any).id ?? undefined}
           >
-            <CommandRenderer command={renderableCommands[0]} />
+            {/* One bad card costs one card, not the session (BoardItemErrorBoundary). */}
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <BoardItemErrorBoundary action={renderableCommands[0].action} itemId={(renderableCommands[0] as any).id} resetKey={renderableCommands[0]}>
+              <CommandRenderer command={renderableCommands[0]} />
+            </BoardItemErrorBoundary>
             <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} seenMarkSeeds={seenMarkSeedsRef} />
             {onStudentMark && isIframeCommand(renderableCommands[0]) && (
               <div
@@ -1758,7 +1763,10 @@ export function WhiteboardCanvas({
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data-wb-item-id={(cmd as any).id ?? undefined}
                   >
-                    <CommandRenderer command={cmd} />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <BoardItemErrorBoundary action={cmd.action} itemId={(cmd as any).id} resetKey={cmd}>
+                      <CommandRenderer command={cmd} />
+                    </BoardItemErrorBoundary>
                     <ScribbleOverlays scribbles={overlays} seenMarkSeeds={seenMarkSeedsRef} />
                     {onStudentMark && isIframeCommand(cmd) && (
                       <div

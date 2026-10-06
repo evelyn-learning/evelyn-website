@@ -24,6 +24,7 @@ import { renderBrandingBlock } from './branding/render';
 import { renderTeacherPersonaBlock, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { usableStudentName } from '../student-name';
 import { applyNoProblemSelfPoseRule } from './no-problem-rule';
+import { TUTOR_NO_TIME_TALK } from '../orchestrator/turn-round-flags';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when
@@ -1963,6 +1964,12 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
 
   if (context.timeRemainingMinutes !== undefined) {
     prompt += `Time Remaining: ${context.timeRemainingMinutes} minutes\n`;
+    // 2026-10-06 (live re-test, partner text session): the tutor told a
+    // student how many minutes of "homework time" were logged. Partner
+    // sessions only — the retail prompt is unchanged.
+    if (context.partnerEmbed && TUTOR_NO_TIME_TALK) {
+      prompt += `(For your pacing only — never tell the student how much time has been used or is left, and never mention minutes, time limits, quotas or usage.)\n`;
+    }
     if (context.timeRemainingMinutes <= 5) {
       prompt += `(Note: Session ending soon - start wrapping up)\n`;
     }
