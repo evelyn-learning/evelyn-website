@@ -27,6 +27,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, resolveModel } from '../ai/model-registry';
+import { TUTOR_HOMEWORK_OWN_MATERIAL } from '../orchestrator/turn-round-flags';
 
 /** Hard ceiling on how many problems a single homework plan can hold. */
 export const HOMEWORK_MAX_PROBLEMS = 25;
@@ -56,9 +57,18 @@ const ENUMERATE_MAX_TOKENS = 4096;
  *  long worksheet/chapter while keeping every realistic problem set intact. */
 const ENUMERATE_SAMPLE_CHARS = 40_000;
 
+/** 2026-10-05: typed homework is now always split (homework.ts
+ *  `typedHomeworkIsOwnMaterial`), so the splitter meets essay / free-response
+ *  prompts and questions that carry their own data. Without this rule it may
+ *  return the bare quoted prompt and drop what the student asked for, or drop
+ *  the shared data a part depends on. Generic — no subject content. */
+const OPEN_RESPONSE_RULE = TUTOR_HOMEWORK_OWN_MATERIAL
+  ? ' Given information that several parts share (a data set, a passage, a sentence, a scenario) is repeated verbatim at the start of EACH part that needs it, so every entry can be worked on its own. A writing or free-response task (an essay, a thesis, a short written answer, a plan) is ONE entry: the prompt verbatim, followed by what the student says they need help with, in their own words. A message that states one task or question is one entry — never return an empty list for it.'
+  : '';
+
 const ENUMERATE_SYSTEM_PROMPT = `You extract the discrete problems a student has to solve from the text of their homework. Output ONLY JSON:
 {"problems":[{"n":<number as printed, or the 1-based position if unnumbered>,"text":"<the problem's full wording, verbatim, including any given values; keep math as plain text>"}]}
-Rules: keep the original order; one entry per problem or sub-part that expects its own answer; do not solve, hint, rephrase or omit; skip headings, instructions like "show your work", and answer keys; at most 25 entries.`;
+Rules: keep the original order; one entry per problem or sub-part that expects its own answer; do not solve, hint, rephrase or omit; skip headings, instructions like "show your work", and answer keys; at most 25 entries.${OPEN_RESPONSE_RULE}`;
 
 /** Last parseable JSON block wins — the parseLast convention used by
  *  TopicValidator, OpenContainerDeriver and material-classify.ts. */

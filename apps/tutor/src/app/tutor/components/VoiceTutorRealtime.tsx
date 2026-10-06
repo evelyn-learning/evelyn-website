@@ -52,6 +52,7 @@ const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
 import { bridgeLineFor, BRIDGE_SPOKEN_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
+import { usableStudentName } from '@/lib/tutor/student-name';
 import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -153,7 +154,8 @@ import {
   type LedgerEventKind,
   isLedgerStuckCue,
 } from '@/lib/tutor/orchestrator/struggle-ledger';
-import { inferWrongEvent, isBareShortAnswer } from '@/lib/tutor/orchestrator/answer-attempt';
+import { inferWrongEvent, isBareShortAnswer, hedgedDenialCounts } from '@/lib/tutor/orchestrator/answer-attempt';
+import { decideDimensionalCheck } from '@/lib/tutor/validation/dimensional-gate';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -260,7 +262,7 @@ import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
-import { shouldAbortStalledBrain } from '@/lib/tutor/voice/brain-stall';
+import { shouldAbortStalledBrain, decideStallRecovery, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 import { truncatePageTitle, retitleFromBatch } from '@/lib/tutor/whiteboard/page-title';
 
@@ -377,7 +379,7 @@ import {
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
-import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
+import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback, shouldKillBareAssentPraise, bareAssentPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
 import { buildJudgeCorrectionNote, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
@@ -1149,7 +1151,7 @@ export function VoiceTutorRealtime({
   subject,
   topic,
   level,
-  studentName,
+  studentName: rawStudentName,
   sessionId,
   sessionStartedAtMs,
   sessionGoal,
@@ -1229,6 +1231,11 @@ export function VoiceTutorRealtime({
   captionSlot,
   hideEndButton = false,
 }: VoiceTutorRealtimeProps) {
+  // The ONLY name this component prompts or speaks with (opener clauses,
+  // system prompt, bridge line, synthetic greeting turn, TTS name rules). A
+  // host that sends an account id or a placeholder as the name gets the
+  // no-name behaviour everywhere — see lib/tutor/student-name.ts.
+  const studentName = useMemo(() => usableStudentName(rawStudentName), [rawStudentName]);
   // In-flow entry (partner spec v1.1): flag-gated so the standard behaviour
   // can be restored for such tokens without a partner change.
   const isInFlow = TUTOR_INFLOW_ENTRY && inFlow;
@@ -2590,7 +2597,7 @@ export function VoiceTutorRealtime({
   const onDebugEventRef = useRef(onDebugEvent);
   useEffect(() => { onDebugEventRef.current = onDebugEvent; }, [onDebugEvent]);
   const handleStudentTranscriptForBrainRef = useRef<
-    ((transcript: string, opts?: { silent?: boolean; bypassMidUtteranceGuard?: boolean; bypassPerceptionDedupe?: boolean }) => unknown) | null
+    ((transcript: string, opts?: { silent?: boolean; bypassMidUtteranceGuard?: boolean; bypassPerceptionDedupe?: boolean; typed?: boolean }) => unknown) | null
   >(null);
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
   const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
@@ -2964,6 +2971,14 @@ export function VoiceTutorRealtime({
    *  live 2026-09-06 the tutor's mis-gradings became the student's
    *  "incorrect streak", a gap, a recurrence and a recap blaming them. */
   const judgeFlaggedDenialThisTurnRef = useRef(false);
+  /** 2026-10-05: what, other than the tutor's own words, says THIS turn's
+   *  answer was wrong — a verified key the student disagrees with, or a judge
+   *  pass over the turn. A denial of a HEDGED answer is counted against the
+   *  student only with one of them (answer-attempt.ts hedgedDenialCounts). */
+  const hedgedDenialSignalRef = useRef({ verifiedWrong: false, judgeAgreedWrong: false });
+  /** 2026-10-05: the last turn retried after a brain stall with nothing
+   *  shown (brain-stall.ts decideStallRecovery) — one retry per turn. */
+  const stallRetryRef = useRef<{ transcript: string; at: number } | null>(null);
   /** 2026-10-02 (live portal-bf533c4b): the raw student utterance that
    *  started THIS brain turn ('' for silent/bracketed turns) and whether the
    *  pacing branch already fed a `wrong`/`no_recovery` ledger event this turn.
@@ -8926,6 +8941,21 @@ export function VoiceTutorRealtime({
       });
     };
     for (const cmd of processed) {
+      // 2026-10-05 (live, Algebra 1): show_dimensional_check on the student's
+      // own `4(m+3)=2m-6` read the unknown m as MASS and painted "✗ dimensions
+      // mismatch". Outside a physical-science session, or on text with no
+      // units / quantity symbols, the call is dropped and the turn continues
+      // (validation/dimensional-gate.ts) — no card beats a false one.
+      if ((cmd.action as string) === 'showDimensionalCheck') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dim = cmd as any;
+        const dimGate = decideDimensionalCheck({ subject, topic, formula: dim.formula, expression: dim.expression, expectedUnit: dim.expectedUnit });
+        if (!dimGate.allow) {
+          console.warn(`[VoiceTutor] show_dimensional_check dropped (soft): ${dimGate.reason}`);
+          onDebugEvent?.('tool_call_soft_drop', `show_dimensional_check (${dimGate.reason}) "${String(dim.formula ?? dim.expression ?? '').slice(0, 60)}" — call dropped, turn continues`);
+          continue;
+        }
+      }
       if (cmd.action === 'scrollTo') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cmdAny = cmd as any;
@@ -10550,6 +10580,7 @@ export function VoiceTutorRealtime({
     // advisory signal stashed by a PRIOR turn must not withhold THIS turn's
     // credit.
     judgeFlaggedDenialThisTurnRef.current = false;
+    hedgedDenialSignalRef.current = { verifiedWrong: false, judgeAgreedWrong: false };
     // 2026-10-02: fresh per-turn answer-attempt ledger slots (set below only
     // for a real student turn) — a prior turn's text must never be re-read.
     ledgerStudentTextRef.current = '';
@@ -13669,6 +13700,21 @@ export function VoiceTutorRealtime({
                   // construction (closed ack-phrase list + praise-then-digit
                   // shape); see nonanswer-praise.ts.
                   const nonAnswerTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                  // 2026-10-05 (10 of 21 scripted sessions): an affirming verdict
+                  // to a bare "yes" / "no" / "ok" while the open question is one a
+                  // yes or no cannot answer ("What's ten percent of forty?" → "yes"
+                  // → "Right. Ten percent of forty is four…"). The guard below
+                  // excludes yes / no by design; this is its narrow complement
+                  // (nonanswer-praise.ts) and uses the same kill-and-retry path.
+                  const bareAssentPriorTutorTurn = String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '');
+                  if (!attemptKilled && freshContentAttempt && judgeRetriesUsed < MAX_JUDGE_RETRIES && shouldKillBareAssentPraise(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn)) {
+                    rejectionsThisAttempt.push({ action: 'bare_assent_praise', reason: bareAssentPraiseFeedback(transcript, bareAssentPriorTutorTurn) });
+                    judgeRetriesUsed++;
+                    await performKill();
+                    console.warn('[brain-orchestrator] affirming verdict to a bare yes/no on a non-yes/no question — retrying:', `student="${transcript.slice(0, 20)}" text="${nonAnswerTextSoFar.slice(0, 60)}"`);
+                    onDebugEvent?.('bare_assent_praise_retry', `student="${transcript.slice(0, 20)}" → "${nonAnswerTextSoFar.slice(0, 50)}"`);
+                    continue;
+                  }
                   // Also on a continuation attempt: `transcript` is still the turn's
                   // real trigger, and praise + a revealed value to a non-answer is
                   // wrong wherever in the turn it lands (a runtime marker such as
@@ -16642,6 +16688,7 @@ export function VoiceTutorRealtime({
                     });
                   if (creditWithheld && !denialVerifiedRight) judgeFlaggedDenialThisTurnRef.current = true;
                   if (denialVerifiedRight) {
+                    hedgedDenialSignalRef.current.verifiedWrong = true;
                     onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
                   }
                   if (noteworthyAdvisoryIssues.length > 0 && !denialVerifiedRight) {
@@ -16761,6 +16808,9 @@ export function VoiceTutorRealtime({
                   for (const i of killIssues) priorJudgeKillClaimsThisTurn.push(i.claim);
                 }
               } else {
+                // The judge reviewed this turn and faulted nothing: if the turn
+                // denied a hedged answer, the denial is confirmed (2026-10-05).
+                hedgedDenialSignalRef.current.judgeAgreedWrong = true;
                 onDebugEvent?.('judge_pass', `grounded · ${attemptText.slice(0, 50)}…`);
               }
             } else {
@@ -17706,6 +17756,12 @@ export function VoiceTutorRealtime({
             // gate did not overrule it) — the tutor's own mis-grading must
             // not become the student's incorrect streak or a ledger entry.
             onDebugEvent?.('pacing_credit_withheld', 'judge flagged this denial — not counted against the student');
+          } else if (decision.credit === 'incorrect' && !hedgedDenialCounts({ studentText: ledgerStudentTextRef.current, ...hedgedDenialSignalRef.current })) {
+            // 2026-10-05 (live, AP Calculus AB): "I don't know, maybe 1/6?" was
+            // right, was told "Not quite", and became an incorrect + a ledger
+            // wrong → feed "Needs Support". A denial of a HEDGED answer counts
+            // only when a verified key or a judge pass agrees it was wrong.
+            onDebugEvent?.('pacing_hedged_denial_unconfirmed', `student="${ledgerStudentTextRef.current.slice(0, 40)}" — denial of a hedged answer not counted (no verified key, no judge pass)`);
           } else if (decision.credit === 'incorrect') {
             const priorIncCount = studentIncorrectStreakRef.current.segId === segId
               ? studentIncorrectStreakRef.current.count : 0;
@@ -17805,6 +17861,9 @@ export function VoiceTutorRealtime({
               // corrections without a correction word count (same switches
               // as the pacing read above).
               turnShapeGate: TUTOR_TURN_SHAPE_GATE, widenedCorrection: TUTOR_CORRECTION_WIDENING, ackExclusion: TUTOR_ACK_NOT_AFFIRM,
+              // 2026-10-05: a denial of a hedged answer is a `wrong` event only
+              // when a verified key or a judge pass agrees (same rule as pacing).
+              hedgedDenial: { ...hedgedDenialSignalRef.current },
             })) {
           const segId = ver?.segId ?? currentSegmentIdRef.current;
           const loId = segId ? loForSegment(segId) : activeLedgerLoRef.current;
@@ -18160,7 +18219,38 @@ export function VoiceTutorRealtime({
           // flag) still runs unconditionally.
           onDebugEvent?.('brain_error_after_partial', `${audibleSentenceCount} sentence(s) delivered — repeat-request suppressed`);
         } else {
-          speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+          // 2026-10-05 (live, AP World History): a stall with nothing shown left
+          // a TYPED session with no reply at all — the spoken cover line shows
+          // nothing there — and two student turns in a row. Retry the same turn
+          // once; if that stalls too, say so where the student is looking.
+          const stallRecovery = decideStallRecovery({
+            stalled: stallState.stalled,
+            nothingShown: audibleSentenceCount === 0,
+            transcript,
+            lastRetry: stallRetryRef.current,
+            now: Date.now(),
+          });
+          if (stallRecovery === 'retry') {
+            const retryTyped = currentTurnTypedRef.current;
+            stallRetryRef.current = { transcript: transcript.trim(), at: Date.now() };
+            onDebugEvent?.('brain_stall_retry', `nothing shown — retrying "${transcript.slice(0, 40)}" once`);
+            setTimeout(() => {
+              // silent: the student's entry is already in the transcript.
+              void handleStudentTranscriptForBrainRef.current?.(transcript, { silent: true, typed: retryTyped, bypassMidUtteranceGuard: true, bypassPerceptionDedupe: true });
+            }, OPENER_RETRY_DELAY_MS);
+          } else if (stallRecovery === 'apology' && currentTurnTypedRef.current) {
+            onDebugEvent?.('brain_stall_apology', 'second stall — apology line shown in the transcript');
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              { id: `tutor-fallback-${Date.now()}`, role: 'tutor' as const, text: BRAIN_STALL_APOLOGY, timestamp: new Date() },
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
+          } else if (stallRecovery === 'apology') {
+            onDebugEvent?.('brain_stall_apology', 'second stall — apology line spoken');
+            speakTextRef.current?.(BRAIN_STALL_APOLOGY);
+          } else {
+            speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+          }
         }
         // Round-7+ Fix 9 (catch path): clear any residual streaming
         // entries + reset the active flag so the cursor doesn't keep
@@ -22693,6 +22783,9 @@ export function VoiceTutorRealtime({
         const promptParts = buildSystemPromptParts({
           module: knowledgeModule,
           studentName,
+          // A partner's embedded student is often pseudonymous: with no usable
+          // name the tutor must not ASK for one (the open demo embed may).
+          partnerEmbed: !!embedToken && !openScope,
           sessionGoal,
           timeRemainingMinutes: 30,
           currentState: 'greeting',

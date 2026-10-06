@@ -1,5 +1,6 @@
 'use client';
 
+import { LocalTime } from '@/components/session/LocalTime';
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { Play, Pause, RotateCcw, X, MessageSquareText } from 'lucide-react';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
@@ -75,9 +76,9 @@ function formatTime(ms: number): string {
 /** One conversation bubble (tutor left / student right, wall-clock stamp).
  *  Shared by the replay modal's progressive-reveal pane and the student
  *  replay page's static full-transcript view — keep the styling in sync by
- *  keeping it HERE. suppressHydrationWarning on the time: the static page
- *  server-renders it, and toLocaleTimeString legitimately differs between
- *  the server's timezone and the viewer's. */
+ *  keeping it HERE. The stamp goes through LocalTime: the static page
+ *  server-renders it, and formatting there showed the SERVER's zone (the
+ *  old suppressHydrationWarning kept that server text on screen). */
 export function TranscriptBubble({ entry, tutorLabel }: { entry: { role: string; text: string; timestamp: string }; tutorLabel?: string }) {
   return (
     <div className={`flex ${entry.role === 'student' ? 'justify-end' : 'justify-start'}`}>
@@ -88,9 +89,7 @@ export function TranscriptBubble({ entry, tutorLabel }: { entry: { role: string;
       }`}>
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-[10px] font-semibold opacity-60 uppercase">{entry.role === 'tutor' ? (tutorLabel ?? entry.role) : entry.role}</span>
-          <span className="text-[10px] opacity-40" suppressHydrationWarning>
-            {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </span>
+          <LocalTime iso={entry.timestamp} kind="time" className="text-[10px] opacity-40" />
         </div>
         {/* Tutor speech carries $…$ KaTeX (live round-4: replay showed raw
             \dfrac source) and *emphasis* markers (R38 task 13: was raw

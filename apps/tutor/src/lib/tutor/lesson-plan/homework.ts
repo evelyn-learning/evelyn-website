@@ -157,3 +157,131 @@ export function stripFocusPreamble(text: string): string {
 export function typedEnumerationText(requestTopic: string | undefined, text: string): string {
   return requestTopic?.trim() || stripFocusPreamble(text);
 }
+
+// ── 2026-10-05: typed homework-help text is the student's own material ─────
+//
+// 21 scripted Homework Help sessions (GreenApple sandbox): `hasProblemSignals`
+// returned false for 6 of the 21 typed questions — every FRQ / SAQ / essay
+// prompt, a statistics question carrying its own data set, an English
+// sentence to fix — and each got a multi-objective lesson with INVENTED
+// examples (the student's data 4, 8, 15, 16, 23, 42 became "45, 30, 60, 50,
+// 40, 55"); one got an objective picker. For this goal the student's text is
+// the material unless it is unmistakably a bare topic with no task.
+
+/** "(a)", "(b)", "(1)", "(ii)" — a parenthesised part marker. */
+const PAREN_MARKER = /\(\s*(?:[a-hA-H]|\d{1,2}|i{1,3}|iv|v|vi{0,3})\s*\)/;
+/** A quoted span of three or more words: the prompt / sentence / passage the
+ *  student was set. Straight or typographic quotes; an apostrophe inside a
+ *  word ("can't") never opens a span. */
+const QUOTED_SPAN =
+  /(?:^|[\s(:,;—–-])(?:"([^"]{8,})"|“([^”]{8,})”|'([^']{8,})'(?![a-z])|‘([^’]{8,})’(?![a-z]))/i;
+/** Three or more numbers in a list ("4, 8, 15, 16, 23, 42"). */
+const NUMBER_LIST = /-?\d+(?:\.\d+)?(?:\s*(?:,|;|\band\b)\s*-?\d+(?:\.\d+)?){2,}/;
+
+/** A task the student was set, as an instruction: the verb opens the text, a
+ *  sentence, or follows a colon / part marker. A gerund title ("Solving
+ *  Linear Inequalities") is not an instruction. */
+const TASK_VERB =
+  '(?:solve|find|calculate|compute|evaluate|simplify|factor(?:ise|ize)?|expand|convert|determine|identify|describe|' +
+  'explain|compare|contrast|discuss|analy[sz]e|write|fix|correct|rewrite|revise|edit|prove|show|graph|sketch|draw|' +
+  'balance|define|list|name|state|give|summari[sz]e|differentiate|integrate|derive|estimate|round|translate|label|' +
+  'classify|justify|choose|select|complete|fill|check|verify|outline|plan|draft|argue|evaluate|interpret|predict|' +
+  'construct|plot|rank|order|match|rearrange|substitute|measure|answer)';
+const TASK_INSTRUCTION = new RegExp(
+  `(?:^|[.?!:;]\\s+|\\)\\s*|\\b(?:briefly|then|and|please)\\s+)${TASK_VERB}\\b(?:\\s+\\S+){3,}`,
+  'i',
+);
+
+/** A request ABOUT a topic, with no task: "help me with fractions", "I need
+ *  help with photosynthesis", "can you teach me the quadratic formula?",
+ *  "how do I factor a quadratic?", "what is a mole?". The frame is stripped
+ *  and what is left must be a short phrase. */
+const TOPIC_FRAME = new RegExp(
+  '^(?:(?:hi|hey|hello|please|ok|okay|so|um)[,!.\\s]+)*' +
+  '(?:' +
+    "(?:can|could|would|will)\\s+(?:you|we|u)\\s+(?:please\\s+)?(?:help(?:\\s+me)?(?:\\s+(?:with|on|understand|learn|study|review|out\\s+with))?|teach(?:\\s+me)?(?:\\s+about)?|explain(?:\\s+to\\s+me)?|go\\s+over|review|cover|tell\\s+me\\s+about|show\\s+me)" +
+    "|(?:i\\s+)?(?:need|want|would\\s+like|'?d\\s+like)\\s+(?:some\\s+|a\\s+little\\s+|to\\s+get\\s+)?help\\s+(?:with|on|in|understanding|learning)" +
+    "|i\\s+(?:need|want|would\\s+like|'?d\\s+like)\\s+to\\s+(?:learn|study|review|understand|practi[cs]e|go\\s+over|work\\s+on)(?:\\s+about)?" +
+    "|i(?:'?m|\\s+am)\\s+(?:stuck|confused|lost|struggling)\\s+(?:on|with|about|in)" +
+    "|i\\s+(?:do\\s+not|don'?t|dont|can'?t|cannot)\\s+(?:understand|get)" +
+    '|help(?:\\s+me)?\\s+(?:with|on|understand|learn|study|review)' +
+    '|teach\\s+me(?:\\s+about)?|explain(?:\\s+to\\s+me)?|tell\\s+me\\s+about|let\'?s\\s+(?:do|study|review|learn|practi[cs]e|go\\s+over|work\\s+on)' +
+    '|how\\s+(?:do|can|would|should)\\s+(?:i|you|we|u)|how\\s+to|what\\s+(?:is|are|\'?s)|homework\\s+(?:help\\s+)?(?:on|about|in|for)|questions?\\s+(?:on|about)' +
+  ')\\s+',
+  'i',
+);
+const BARE_TOPIC_MAX_WORDS = 7;
+/** A long single line with no other signal is more than a topic name. */
+const LONG_TEXT_MIN_WORDS = 14;
+
+function wordsOf(t: string): number {
+  return t.split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Is this typed text a BARE TOPIC with no task — "help me with fractions",
+ * "Solving Linear Inequalities One Variable", "Grade 8 fractions", "How do I
+ * factor a quadratic?" Only then does a homework-help request take the
+ * ordinary generated-lesson path. Pure.
+ */
+export function isBareTopicRequest(text: string): boolean {
+  const t = (text || '').trim();
+  if (!t) return true;
+  if (t.split(/\r?\n/).filter((l) => l.trim()).length >= 2) return false;
+  if (PAREN_MARKER.test(t) || QUOTED_SPAN.test(t) || NUMBER_LIST.test(t)) return false;
+  if ((t.match(/\?/g) ?? []).length >= 2) return false;
+  const framed = TOPIC_FRAME.test(t);
+  const rest = t.replace(TOPIC_FRAME, '').replace(/[\s?.!]+$/g, '').trim();
+  if (framed) return wordsOf(rest) <= BARE_TOPIC_MAX_WORDS && !(/\d/.test(rest) && OPERATOR.test(rest));
+  // No request frame: a title-like phrase (no question, no instruction).
+  if (/\?/.test(t) || TASK_INSTRUCTION.test(t)) return false;
+  if (/\d/.test(t) && OPERATOR.test(t)) return false;
+  return wordsOf(t) < LONG_TEXT_MIN_WORDS;
+}
+
+/**
+ * Should typed homework-help text be treated as the student's OWN material
+ * (split into problems and coached on as written) rather than as a topic to
+ * generate a lesson about?
+ *
+ * Yes for: everything `hasProblemSignals` already accepted; parenthesised
+ * part markers "(a) … (b) …"; a quoted prompt or sentence; a list of numbers;
+ * an instruction to carry out ("Identify ONE way …", "Fix the pronoun error
+ * …"); a direct question that is not a "what is / how do I" topic request.
+ * No only for a bare topic (`isBareTopicRequest`). Pure.
+ *
+ * @param opts.enabled  false ⇒ `hasProblemSignals` alone (the behaviour
+ *   before 2026-10-05). The route passes TUTOR_HOMEWORK_OWN_MATERIAL.
+ */
+export function typedHomeworkIsOwnMaterial(text: string, opts?: { enabled?: boolean }): boolean {
+  const t = (text || '').trim();
+  if (!t) return false;
+  if (hasProblemSignals(t)) return true;
+  if (opts?.enabled === false) return false;
+  return !isBareTopicRequest(t);
+}
+
+/**
+ * `homeworkPlanDecision` for TYPED text that passed
+ * `typedHomeworkIsOwnMaterial`: when the splitter failed open, the whole
+ * typed text is still what the student brought — one problem, verbatim —
+ * never a generated lesson with other examples. Uploads and the flag-off
+ * path keep `homeworkPlanDecision` exactly. Pure.
+ */
+export function typedHomeworkPlanDecision(
+  r: EnumerateResult,
+  opts: { ownMaterial: boolean },
+): HomeworkPlanDecision {
+  const base = homeworkPlanDecision(r);
+  if (base.kind === 'homework' || !opts.ownMaterial) return base;
+  const only = r.problems[0];
+  if (!r.failedOpen || !only || !only.text.trim()) return base;
+  return { kind: 'homework', problems: [{ n: 1, text: only.text }] };
+}
+
+/** A homework-help request never returns an objective picker: when the
+ *  ordinary path discovers more objectives than the session can hold, keep
+ *  the first `max` (the order Stage 1 proposed) and build a full plan. Pure. */
+export function capObjectivesForHomework<T>(los: T[], max: number): T[] {
+  return los.slice(0, Math.max(1, max));
+}

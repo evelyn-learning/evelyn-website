@@ -11,6 +11,8 @@
  * (it bloats the file the same way prompt examples bloat the prompt).
  */
 
+import { usableStudentName } from '../student-name';
+
 interface Replacement {
   pattern: RegExp;
   // Round-21: callback form for replacements that transform a capture
@@ -2242,7 +2244,9 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // named Will keeps its clause comma because "will" is followed by a
   // word. Name is regex-escaped; length-capped as a safety valve since
   // names arrive from an unauthenticated field.
-  const studentName = opts?.studentName?.trim();
+  // usableStudentName: an account id / placeholder is not a name, so the
+  // name rules below never key on one.
+  const studentName = usableStudentName(opts?.studentName);
   if (studentName && studentName.length >= 2 && studentName.length <= 40) {
     const nm = studentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     t = t.replace(

@@ -178,7 +178,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   why a claim was killed / retried:
   'arith_claim_kill', 'simplification_verdict_kill', 'give_up_render_kill',
   'contradiction_inversion_retry', 'self_correction_retry',
-  'nonanswer_praise_retry', 'kill_suppressed_final_attempt',
+  'nonanswer_praise_retry', 'bare_assent_praise_retry', 'kill_suppressed_final_attempt',
   //   why something vanished from the board:
   'killed_render', 'figure_evolve_removed', 'prescribed_render',
   //   portal-704e3e01 (2026-09-04): a lesson-STATE tool withheld because its
@@ -298,6 +298,8 @@ const MILESTONE_RANK: Record<SessionMilestone, number> = {
   recap_reached: 3,
 };
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
+import { EMBED_DOCUMENT_TITLE, partnerFrameTitle } from '@/lib/tutor/portal/partner-frame-metadata';
+import { resolveEmbedUiOptions } from '@/lib/tutor/portal/embed-ui-options';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
@@ -412,6 +414,13 @@ interface EmbedConfig {
     homework_upload?: boolean;
     text_mode?: boolean;
     voice_mode?: boolean;
+    /** Show the "Humor" section of the in-frame ⋯ menu. Absent ⇒ the
+     *  partner default, else true (lib/tutor/portal/embed-ui-options.ts). */
+    humor_control?: boolean;
+    /** Small screens: a labelled "Finish" control in the frame header that
+     *  ends the session with `end_intent: 'finish'`. Absent ⇒ the partner
+     *  default, else false. */
+    mobile_finish?: boolean;
   };
   metadata?: Record<string, unknown>;
 }
@@ -578,6 +587,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       )
     : undefined;
   const branding = config.branding;
+  // Per-host chrome choices (Humor section, small-screen Finish control).
+  const uiOptions = useMemo(() => resolveEmbedUiOptions(config), [config]);
+  // Document title (white-label): the layout serves the neutral "Lesson";
+  // once the token is read, add the partner's own product name. Never this
+  // site's name.
+  useEffect(() => {
+    document.title = partnerFrameTitle(EMBED_DOCUMENT_TITLE, branding);
+  }, [branding]);
 
   // Apply branding color as CSS variable
   const brandStyle = branding?.primary_color
@@ -1616,6 +1633,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         headerBrand={headerBrand}
         onEndSession={handleEndSession}
         embedded
+        humorControl={uiOptions.humorControl}
+        mobileFinish={uiOptions.mobileFinish}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {

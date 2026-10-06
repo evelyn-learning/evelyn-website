@@ -22,6 +22,8 @@ import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
 import { renderBrandingBlock } from './branding/render';
 import { renderTeacherPersonaBlock, type TeacherPersonaWire } from '@core/ai/teacher-persona';
+import { usableStudentName } from '../student-name';
+import { applyNoProblemSelfPoseRule } from './no-problem-rule';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when
@@ -117,6 +119,10 @@ export interface SystemPromptContext {
    *  replaced by "honor every switch via propose_plan_swap". Absent/false
    *  ⇒ prompt byte-identical to before. */
   openScope?: boolean;
+  /** A partner's embedded session (embed token, not the open demo). Only
+   *  effect: with no usable student name the prompt says "do not ask for or
+   *  use a name" instead of "you can ask". Absent/false ⇒ unchanged. */
+  partnerEmbed?: boolean;
   /** Deployment branding (D2C / B2B / white-label). Defaults to Evelyn
    *  when omitted. Pass a different record to swap product identity,
    *  contact info, scope statement, etc. without touching the engine. */
@@ -1491,7 +1497,8 @@ Every academic response includes a whiteboard tool call — never explain withou
 export function buildOpenerClause(ctx: SystemPromptContext): string | null {
   if (!ctx.openingPhase) return null;
 
-  const noNameClause = ctx.studentName
+  // usableStudentName: an id / placeholder / e-mail in the name field is NO name.
+  const noNameClause = usableStudentName(ctx.studentName)
     ? ''
     : ' No student name is available — greet warmly without a name; never speak a placeholder value (e.g. "Trial student") as if it were the student\'s name.';
 
@@ -1604,7 +1611,7 @@ export const STALE_CHECKPOINT_REORIENT_CLAUSE =
  */
 export function buildHomeworkOpenerClause(ctx: Pick<SystemPromptContext, 'openingPhase' | 'studentName'>): string | null {
   if (!ctx.openingPhase) return null;
-  const greet = ctx.studentName
+  const greet = usableStudentName(ctx.studentName)
     ? 'Open by greeting the student by name in one short sentence'
     : 'Open by greeting the student warmly in one short sentence (no student name is available — never speak a placeholder value as if it were their name)';
   return (
@@ -1623,7 +1630,7 @@ export function buildInFlowOpenerClause(
   ctx: Pick<SystemPromptContext, 'openingPhase' | 'studentName' | 'lessonContext' | 'inputMode'>,
 ): string | null {
   if (!ctx.openingPhase) return null;
-  const greet = ctx.studentName
+  const greet = usableStudentName(ctx.studentName)
     ? 'Greet the student by name in three or four words'
     : 'Greet the student in three or four words (no name is available — never speak a placeholder)';
   const pickUp = ctx.lessonContext?.question
@@ -1745,6 +1752,11 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
     STRUCTURED_DIAGRAM_TOOLS_SENTINEL,
     renderStructuredToolsBlock(allowedForBlock),
   );
+
+  // 2026-10-05: on `no_problem_available` for a generic request the tutor
+  // poses its own similar problem or continues — it never tells the student
+  // it has none (ai/no-problem-rule.ts). Flag off ⇒ byte-identical.
+  prompt = applyNoProblemSelfPoseRule(prompt);
 
   // FIX A — retry-safe turn-opener rule. Spliced in only when the
   // fast-opener lever is on (NEXT_PUBLIC_TUTOR_BRAIN_FAST_OPENER — the
@@ -1914,10 +1926,17 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
     prompt += `This is an open demo session. The configured subject/topic above is only where the session STARTED — it is NOT a boundary. The student may switch to ANY subject or topic at ANY time, and every such request is an in-scope Rule 7 path (a) switch: call propose_plan_swap with a 3-8 word targetSubTopic and, when the new topic belongs to a different subject, also pass targetSubject (a plain subject word such as "math", "physics", "chemistry", "biology", "history", "english"). Never deflect, never say the session is scoped to something else, never offer to end the session so they can start another. Keep teaching the new topic right away from your own knowledge while the new plan loads; the plan's first segment becomes active on the next turn. Off-topic chatter that is not a learning request (shopping, personal questions) is still redirected to learning as usual.\n`;
   }
 
-  if (context.studentName) {
-    prompt += `Student Name: ${context.studentName}\n`;
+  // Only a name a tutor may SAY reaches the prompt (student-name.ts): an
+  // account id or placeholder in the field is treated as no name.
+  const studentName = usableStudentName(context.studentName);
+  if (studentName) {
+    prompt += `Student Name: ${studentName}\n`;
   } else {
-    prompt += `Student Name: (not provided - you can ask)\n`;
+    // Partner embed (2026-10-05): the student is often pseudonymous to us by
+    // the partner's design — asking them for a name is not ours to do.
+    prompt += context.partnerEmbed
+      ? `Student Name: (not provided — do not ask for or use a name)\n`
+      : `Student Name: (not provided - you can ask)\n`;
   }
 
   // Grade-level adaptation

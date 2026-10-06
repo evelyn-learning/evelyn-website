@@ -28,6 +28,7 @@ import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_HOMEWORK_OWN_MATERIAL, TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
@@ -1104,7 +1105,12 @@ const CONTINUATION_QUESTION_RE =
 const BARE_AFFIRMATIVE_RE =
   /^(?:yes|yeah|yep|yup|yas|sure|ok|okay|ready|alright|sounds good|let'?s go|let'?s do it|onwards?|next|continue|go|good|cool|fine|great|all good|(?:sure,?\s+)?why not|i guess(?:\s+so)?|guess so|i suppose(?:\s+so)?|suppose so|might as well|of course|absolutely)[\s.!,?]*$/i;
 
-export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: string): string {
+export function formatVerdictGuardBlock(
+  transcript: string,
+  lastTutorMessage?: string,
+  opts?: { /** Unset ⇒ TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS. */ hedgeRule?: boolean },
+): string {
+  const hedgeRule = opts?.hedgeRule ?? TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS;
   const t = (transcript ?? '').trim();
   // Bracketed context injections (student marks, validator feedback,
   // kill-bridge) are not spoken answers.
@@ -1138,8 +1144,17 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
     + 'The same applies when the student states a fact and asks you to confirm it ("so X is Y, right?"): re-derive it silently first, and if your derivation matches their claim, confirm it — never open with a denial you have not re-derived. '
     + 'Open with praise ("Right." / "Exactly." / "Nice.") ONLY if it is correct or equivalent in any notation or phrasing. '
     + 'A hedged correct answer is still correct — confirm it; never treat uncertainty as wrongness. '
+    // 2026-10-05 (21 scripted sessions): "I don't know, maybe 30 m/s?" was
+    // told "Not quite" in three sessions with the value exactly right — the
+    // next sentence listed "I don't know" as a non-answer and the model read
+    // the lead, not the proposal. One rule, stated once.
+    + (hedgeRule
+      ? 'A statement of not knowing that goes on to PROPOSE something ("I don\'t know, maybe X") is the answer X: check X on its merits exactly as if it had been stated plainly, and if X is right say so. Only a statement of not knowing with nothing proposed is a non-answer. '
+      : '')
     + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
-    + 'If the utterance is not an answer (a request, a question about the material, "I don\'t know", conversation): NO verdict or praise word anywhere in the turn — respond to what they actually said. '
+    + (hedgeRule
+      ? 'If the utterance is not an answer (a request, a question about the material, "I don\'t know" ALONE with nothing proposed, conversation): NO verdict or praise word anywhere in the turn — respond to what they actually said. '
+      : 'If the utterance is not an answer (a request, a question about the material, "I don\'t know", conversation): NO verdict or praise word anywhere in the turn — respond to what they actually said. ')
     + 'Classify silently: never announce the sorting aloud ("that\'s a request", "not an answer", "isn\'t an answer yet", "no verdict", "nothing to grade") — just respond ("Sure — here\'s one more."). '
     + 'Never refer to the student in the third person ("the student", "give her room") — you are talking TO them. '
     + 'Never answer your own open question and praise as if the student had answered it; if you reveal after a give-up, reveal plainly ("No worries — it\'s …"), never as an affirmation. '
@@ -1329,12 +1344,26 @@ function formatDeduplicatedShowsBlock(shows?: string[]): string {
 export const ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX =
   ' In a homework session this does not apply: never state the final answer; when the student gives up, give the next smallest hint instead.';
 
+/** 2026-10-05 (21 scripted sessions): in a multi-part homework session the
+ *  tracked problem was still part (a) while the student answered part (b);
+ *  "Check the student's attempts against THIS" then graded a right answer to
+ *  (b) against (a)'s key. Appended to each "check against THIS" sentence (all
+ *  three variants) only when a homework block is attached this turn. */
+export const ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX =
+  ' The check against this problem applies ONLY when the student\'s reply is an answer to THIS problem. The student has several problems and parts in front of them: if their reply answers a different part or problem (they name it, or it plainly fits another one), judge it against the part it actually answers — work that part out yourself — and never mark it wrong for not matching this one.';
+
 export function formatActiveProblemBlock(
   active: BrainTurnInput['activeProblem'],
-  opts?: { homework?: boolean },
+  opts?: { homework?: boolean; /** Unset ⇒ TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS. */ partScope?: boolean },
 ): string {
   if (!active?.statement) return '';
-  const hwReveal = opts?.homework ? ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX : '';
+  const partScope = opts?.homework && (opts?.partScope ?? TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS);
+  const hwReveal = (opts?.homework ? ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX : '') + (partScope ? ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX : '');
+  // No verified answer ⇒ no "check against THIS" sentence to qualify; the
+  // "verify against THIS statement only" head still needs the same scope.
+  const partOnly = partScope && !active.expectedAnswer
+    ? `\n${ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX.trim()}\n`
+    : '';
   // Student-brought problem: the student stated their OWN concrete problem to
   // work. Teach THEIRS via show_problem (segment_truth is suppressed this turn,
   // so there's no authored mandate competing). Crucially NOT the "verify
@@ -1400,7 +1429,7 @@ export function formatActiveProblemBlock(
     (active.expectedAnswer
       ? `\nVERIFIED expected answer (from the problem pipeline's independent solve): ${active.expectedAnswer}\n` +
         `Check the student's attempts against THIS. Do not re-derive the answer from scratch mid-conversation — long verification threads are where dropped factors and sign slips creep in. If your own working disagrees with this answer, TRUST THIS and re-check your working before saying anything. Never reveal it before the student has genuinely attempted or given up.${hwReveal}\n`
-      : '') +
+      : partOnly) +
     `</active_problem>\n\n`
   );
 }
@@ -1499,6 +1528,15 @@ export function formatPracticeSessionBlock(practiceMode?: boolean): string {
  * Exported for the standalone probe (scripts/test-homework-session-block.ts)
  * so the block text is testable without running a whole brain turn.
  */
+/** 2026-10-05 (21 scripted sessions): a typed statistics question had its
+ *  data set replaced by an invented one, an English sentence by a canned one,
+ *  and essay / FRQ prompts by a lesson about the topic. Two generic rules for
+ *  every homework session: the student's own givens are used as written, and
+ *  an open-response task is coached on the student's own prompt. */
+export const HOMEWORK_OWN_MATERIAL_RULES =
+  `- Use the student's own material exactly as written: their numbers, data, sentences, passages and prompts. Never replace or substitute them with different values, a different sentence or a different prompt, and never work a made-up example in place of their problem.\n` +
+  `- Some problems are open-response (an essay, a thesis, a plan for a written answer, a short written response) and have no single correct answer. Coach on the student's OWN prompt: ask what they think, help them plan and draft, and respond to what they actually wrote, judging it against what the prompt asks for — not against one fixed answer. Never write the response for them, and never turn the prompt into a general lesson on its topic.\n`;
+
 export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): string {
   if (!hw || !hw.problems.length) return '';
   const n = hw.problems.length;
@@ -1511,6 +1549,7 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): str
     `- Ask, never tell: never state a final answer, a completed step the student has not attempted, or a full solution — even when asked outright. A stuck student gets a smaller step or a hint, not the answer.\n` +
     `- When the student reaches an answer, have them state it, confirm it is correct or ask them to check a specific step, then move on.\n` +
     `- When time is nearly up, close cleanly and name the problems left for next time.\n` +
+    (TUTOR_HOMEWORK_OWN_MATERIAL ? HOMEWORK_OWN_MATERIAL_RULES : '') +
     `- The opener for a fresh session: greet in your own voice, put Problem ${hw.problems[0].n} on the board, call set_current_problem with ${hw.problems[0].n}, and ask the first question. Do not summarise prior sessions.`;
   return `<homework_session>\n${body}\n</homework_session>\n\n`;
 }

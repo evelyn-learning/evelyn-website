@@ -295,8 +295,18 @@ export const RETRY_MAX_TOKENS = 12000;
 export const GEN_CALL_TIMEOUT_MS = 30_000;
 export const VERIFY_CALL_TIMEOUT_MS = 45_000;
 /** The live tutor session's whole budget for Layer-2 generation + verify: a
- *  voice turn waits at most this long before the bank / authored fallback. */
-export const LIVE_BRAINGEN_BUDGET_MS = 12_000;
+ *  voice turn waits at most this long before the bank / authored fallback.
+ *
+ *  2026-10-05: 12 s → 15 s. The budget covers generate AND verify; the
+ *  generator alone measured p50 ≈ 7 s, p90 ≈ 9 s, max 12 s, so at 12 s an
+ *  ordinary generation had 3–5 s left for its key check and the slowest had
+ *  none (live, AP Chemistry: an 18.9 s turn that ended in "I don't have a
+ *  clean follow-up problem ready"). NOT 20 s: the brain stream sends no
+ *  frame while this tool runs, and the stall guard aborts a turn after 22 s
+ *  without a frame when nothing has been said yet (voice/brain-stall.ts
+ *  BRAIN_STALL_PRE_AUDIO_MS) — the model's own 2–5 s before the tool call
+ *  plus a 20 s budget would trade a fallback for an aborted turn. */
+export const LIVE_BRAINGEN_BUDGET_MS = 15_000;
 
 /** The slice of the SDK this module's text calls use (tests pass a fake). */
 export interface TextCallClient {

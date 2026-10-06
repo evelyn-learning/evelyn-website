@@ -54,7 +54,9 @@ assert(typedEnumerationText(undefined, `${preamble}\n\nTopic: ${problems}`) === 
 assert(stripFocusPreamble('Solve 2x + 3 = 7\nGraph y = x') === 'Solve 2x + 3 = 7\nGraph y = x', 'I2: no marker → text unchanged');
 assert(typedEnumerationText('   ', 'Topic words') === 'Topic words', 'I2: a blank topic field falls back to the text');
 assert(route.includes('const typedProblemText = typedEnumerationText(requestTopic, text);'), 'wiring: the typed gate reads the topic / stripped text');
-assert(route.includes('const enumerate = isHomework && (hasMaterials || hasProblemSignals(typedProblemText));'), 'wiring: enumeration gated on materials or problem signals');
+// 2026-10-05: the typed gate is typedHomeworkIsOwnMaterial (hasProblemSignals
+// plus the student's-own-material signals) — scripts/test-homework-own-material.ts.
+assert(route.includes('const enumerate = isHomework && (hasMaterials || typedOwnMaterial);'), 'wiring: enumeration gated on materials or typed own material');
 assert(route.includes('enumerateProblems(materialText ?? typedProblemText,'), 'wiring: typed enumeration splits the stripped text, never the preamble');
 assert(route.includes("homework-help: no problem signals → normal plan"), 'wiring: the skip is logged');
 

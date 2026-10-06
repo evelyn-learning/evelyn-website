@@ -4,6 +4,8 @@
  * student hears something within a second instead of 3–8 s of silence.
  * No model, no personalisation beyond first name and the host's short title.
  */
+import { studentFirstName } from '../student-name';
+
 const MAX_TITLE = 60;
 
 export function bridgeLineFor(a: {
@@ -14,7 +16,8 @@ export function bridgeLineFor(a: {
   resume: boolean;
 }): string | null {
   if (a.inputMode === 'text' || a.resume) return null;
-  const first = (a.studentName || '').trim().split(/\s+/)[0];
+  // An id / placeholder in the name field is no name (student-name.ts).
+  const first = studentFirstName(a.studentName);
   const greet = first ? `Hey ${first}.` : 'Hey.';
   if (a.inFlow) {
     const t = (a.title || '').trim();

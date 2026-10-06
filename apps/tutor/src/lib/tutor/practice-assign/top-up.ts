@@ -15,7 +15,7 @@
  *  Anchors (retrieved items, plus a homework plan's worksheet problems) seed a
  *  SIMILAR problem; the generator prompt forbids reusing numbers/context. */
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
-import { generatePracticeItems, type GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
+import { generatePracticeItems, practiceGenDisabledForPartner, type GeneratePracticeItemsOptions } from '@/lib/tutor/portal/practice-gen';
 
 export const PRACTICE_TARGET = 3;
 export const TOP_UP_BUDGET_MS = 25_000;
@@ -31,6 +31,10 @@ const PER_CALL = 2; // = practice-gen's MAX_GENERATIONS_PER_REQUEST
 export interface ResolvedLo { loId: string; title: string; items: PracticeItem[] }
 export interface TopUpInput {
   studentId: string; topic: string; target?: number; anchorsFor(loId: string): PracticeItem[];
+  /** The partner the assignment is for. Listed in
+   *  PRACTICE_GEN_DISABLED_PARTNERS ⇒ no top-up generation at all (stored
+   *  items only); also forwarded to the generator. */
+  partnerId?: string;
   /** Forwarded to generatePracticeItems (visible empty/gate-failed outcomes, 2026-10-02). */
   onDebugEvent?: GeneratePracticeItemsOptions['onDebugEvent'];
   /** True when the LO's authored practice is drawing tasks (never served, so
@@ -96,6 +100,9 @@ export async function topUpPractice(
   const total = out.reduce((n, l) => n + l.items.length, 0);
   const first = want[0];
   if (!first || total >= target) return out;
+  // Per-partner switch: stored items only — the generator is never called
+  // (so nothing is reserved against the daily caps either).
+  if (practiceGenDisabledForPartner(input.partnerId)) return out.filter((l) => l.items.length > 0);
   let slot = out.find((l) => l.loId === first.loId);
   if (!slot) {
     slot = { loId: first.loId, title: first.title, items: [] };
@@ -108,6 +115,7 @@ export async function topUpPractice(
   const calls = splitShortfall(need).map((shortfall) =>
     gen({
       studentId: input.studentId, loId: first.loId, topic: input.topic, topicId: input.topic, shortfall, anchorItems,
+      ...(input.partnerId ? { partnerId: input.partnerId } : {}),
       ...(input.onDebugEvent ? { onDebugEvent: input.onDebugEvent } : {}),
       ...(input.drawingTasksFor?.(first.loId) ? { authoredDrawingTasks: true, loTitle: first.title } : {}),
     })

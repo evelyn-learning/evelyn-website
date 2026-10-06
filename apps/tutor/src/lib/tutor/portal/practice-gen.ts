@@ -46,6 +46,7 @@
  */
 
 import connectDB from '@core/db';
+import { essayGenBlockEnabled, isEssayPracticeLoId, looksLikeRubricKey } from './essay-practice';
 import { ProblemBank } from '@/models/ProblemBank';
 import { PracticeGenCounter } from '@/models/PracticeGenCounter';
 import {
@@ -93,6 +94,26 @@ const DEFAULT_DIFFICULTY: Difficulty = 2;
 function practiceGenEnabled(): boolean {
   // Kill-switch: anything but the literal 'on' is OFF, including unset.
   return process.env.PRACTICE_GEN === 'on';
+}
+
+/**
+ * Per-partner switch: `PRACTICE_GEN_DISABLED_PARTNERS` = comma-separated
+ * partner ids for which on-demand generation never runs (the practice
+ * endpoint and the end-of-session top-up then serve stored items only).
+ * Read at CALL time, trimmed, case-insensitive, whole ids only; unset or
+ * empty ⇒ nobody is disabled. An absent/blank `partnerId` (unknown caller)
+ * is never "listed". Independent of the global PRACTICE_GEN kill switch,
+ * which still has to be 'on' for anyone to generate.
+ */
+export function practiceGenDisabledForPartner(
+  partnerId: string | null | undefined,
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  const raw = env.PRACTICE_GEN_DISABLED_PARTNERS;
+  if (!raw) return false;
+  const id = (partnerId ?? '').trim().toLowerCase();
+  if (!id) return false;
+  return raw.split(',').some((p) => p.trim().toLowerCase() === id);
 }
 
 /** A verified generated row ready to persist into ProblemBank. */
@@ -146,6 +167,14 @@ export interface PracticeGenSources {
 }
 
 export interface GeneratePracticeItemsOptions {
+  /** The caller established that `loId` is an essay-practice node by its
+   *  owning plan (essay-practice.ts `isEssayPracticeNode`) — generate
+   *  nothing. The LO-id convention is checked here regardless. */
+  essayNode?: boolean;
+  /** The requesting partner. Listed in PRACTICE_GEN_DISABLED_PARTNERS ⇒
+   *  generate nothing (no reservation, no model call). Absent ⇒ unknown
+   *  caller, never treated as listed. */
+  partnerId?: string;
   studentId: string;
   loId: string;
   /** Topic id (topic-taxonomy vocabulary) — tagged onto generated rows the
@@ -773,6 +802,11 @@ export type GateFailReason =
    *  (`numericHasSecondPart`). */
   | 'numeric_extra_part'
   | 'free_shape'
+  /** `free` item whose key reads like a rubric or an instruction ("Defensible
+   *  thesis on … + one accurate specific evidence", "Answers will vary") —
+   *  not an answer a student can be graded against or shown
+   *  (essay-practice.ts `looksLikeRubricKey`). */
+  | 'free_rubric_key'
   | 'verify_disagree'
   /** `free` answer: the independent key check could not reach a verdict
    *  (model/parse failure, or the judge could not tell) — fail closed. */
@@ -825,6 +859,9 @@ export async function checkGeneratedAnswer(
     if (!expected || expected.length > FREE_ANSWER_MAX_CHARS || isDrawingInstruction(gen.problemText)) {
       return fail('free_shape');
     }
+    // Checked before the independent solve: no model call is spent on a key
+    // that is a rubric sentence, and a lenient judge can never wave one through.
+    if (looksLikeRubricKey(expected)) return fail('free_rubric_key');
     let verifierModel = UNVERIFIED_MODEL;
     if (keyVerifyEnabled()) {
       let checked: Pick<VerifyAnswerKeyResult, 'status' | 'model'>;
@@ -1382,6 +1419,18 @@ export async function generatePracticeItemsDetailed(
 ): Promise<PracticeGenOutcome> {
   const nothing = (status: PracticeGenOutcome['status']): PracticeGenOutcome => ({ items: [], status, reserved: 0, pending: 0, background: DONE });
   if (!practiceGenEnabled()) return nothing('off');
+  // Per-partner switch — before any slot is reserved.
+  if (practiceGenDisabledForPartner(opts.partnerId)) {
+    opts.onDebugEvent?.('practice_gen_skipped', `loId=${opts.loId} reason=partner_disabled`);
+    return nothing('off');
+  }
+  // Essay-practice nodes (FRQ / DBQ / LEQ / SAQ) are never filled by
+  // generation — before any slot is reserved. Covers every caller (the
+  // practice endpoint and the assigned-practice top-up).
+  if (essayGenBlockEnabled() && (opts.essayNode === true || isEssayPracticeLoId(opts.loId))) {
+    opts.onDebugEvent?.('practice_gen_skipped', `loId=${opts.loId} reason=essay_node`);
+    return nothing('off');
+  }
   const want = Math.max(0, Math.min(opts.shortfall, MAX_GENERATIONS_PER_REQUEST));
   if (want === 0) return nothing('off');
 

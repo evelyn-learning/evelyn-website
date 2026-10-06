@@ -5,7 +5,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoscript,
 } from "@core/components/analytics/GoogleTagManager";
-import { EducationalOrganizationJsonLd, WebSiteJsonLd } from "@core/components/seo/JsonLd";
+import { SiteJsonLd } from "./components/SiteJsonLd";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -115,8 +115,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable} ${caveat.variable} ${kalam.variable}`} suppressHydrationWarning>
       <head>
-        <EducationalOrganizationJsonLd />
-        <WebSiteJsonLd />
+        {/* Organisation + website JSON-LD — omitted on the partner-frame
+            documents (session embed / replay); see SiteJsonLd. */}
+        <SiteJsonLd />
       </head>
       <GoogleTagManager />
       <body className="flex min-h-screen flex-col font-sans">

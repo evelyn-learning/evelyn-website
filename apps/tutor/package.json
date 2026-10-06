@@ -345,6 +345,18 @@
     "test:answer-attempt-short": "npx tsx scripts/test-answer-attempt.ts",
     "test:practice-plan-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-plan-scoping.ts",
     "test:withdrawn-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-withdrawn-items.ts",
-    "test:key-verify": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-key-verify.ts"
+    "test:key-verify": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-key-verify.ts",
+    "test:usable-student-name": "npx tsx scripts/test-usable-student-name.ts",
+    "test:teacher-role-name": "npx tsx scripts/test-teacher-role-name.ts",
+    "test:partner-frame-metadata": "npx tsx scripts/test-partner-frame-metadata.ts",
+    "test:embed-ui-options": "npx tsx scripts/test-embed-ui-options.tsx",
+    "test:essay-practice": "npx tsx scripts/test-essay-practice.ts",
+    "test:local-time": "npx tsx scripts/test-local-time.tsx",
+    "test:practice-gen-partner-switch": "npx tsx scripts/test-practice-gen-partner-switch.ts",
+    "test:homework-own-material": "npx tsx scripts/test-homework-own-material.ts",
+    "test:judge-note-false-praise": "npx tsx scripts/test-judge-note-false-praise.ts",
+    "test:hedged-answers": "npx tsx scripts/test-hedged-answers.ts",
+    "test:bare-assent-praise": "npx tsx scripts/test-bare-assent-praise.ts",
+    "test:homework-small-guards": "npx tsx scripts/test-homework-small-guards.ts"
   }
 }

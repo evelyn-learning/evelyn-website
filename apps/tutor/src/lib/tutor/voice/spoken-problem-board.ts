@@ -18,6 +18,8 @@
  * that never arrives.
  */
 
+import { TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE } from '@/lib/tutor/orchestrator/turn-round-flags';
+
 export interface SpokenProblemDetection {
   /** The spoken sentences that carry the problem, joined, discourse-stripped. */
   statement: string;
@@ -63,6 +65,44 @@ const DISCOURSE_RE =
 
 const MAX_WINDOW_SENTENCES = 3;
 
+/** 2026-10-05 (live, AP Chemistry portal-01cf022e): the tutor's own CHAT
+ *  reply was boarded as a "Question" card, twice — "Let's check that:
+ *  $30 \\times 3 = 90$, not $180$ — so the multiplier isn't quite 3. Try
+ *  recomputing…" and 'Your "x = 4" doesn't quite match what I asked — I was
+ *  looking for grams of carbon…'. A window that passes a verdict on, corrects
+ *  or quotes the student's answer is feedback, not a problem statement. Only
+ *  the window's own sentences are read, so "Not quite." followed by a fresh
+ *  problem is unaffected (a number-less verdict never enters the window), and
+ *  a real problem's "round your answer to …" does not match. */
+const VERDICT_IN_WINDOW_RE = new RegExp(
+  [
+    String.raw`\bnot\s+(?:quite|exactly|right|correct)\b`,
+    String.raw`\bisn['’]?t\s+(?:quite|right|correct|exactly)\b`,
+    String.raw`\b(?:doesn['’]?t|does\s+not|didn['’]?t|don['’]?t)\s+(?:quite\s+)?(?:match|work|check\s+out|add\s+up|agree|satisfy|fit)\b`,
+    String.raw`\b(?:that|this|it)(?:['’]s|\s+is|\s+was)\s+(?:not|incorrect|wrong|off)\b`,
+    String.raw`\b(?:incorrect|close,?\s+but)\b`,
+    String.raw`\blet['’]?s\s+(?:re-?check|check|look\s+(?:again\s+)?at|revisit)\s+(?:that|this|it|your)\b`,
+    String.raw`\btry\s+(?:(?:that|it|this)\s+again|re-?(?:computing|calculating|doing|working|checking))\b`,
+    String.raw`,\s+not\s+\$?[-−]?\d`,
+  ].join('|'),
+  'i',
+);
+const STUDENT_ANSWER_QUOTED_RE = new RegExp(
+  [
+    String.raw`\byour\s+["“'‘\`$]`,
+    String.raw`\byou\s+(?:said|wrote|typed|answered|gave\s+me|put\s+down|told\s+me)\b`,
+    String.raw`\byour\s+(?:answer|guess|value|result|response)\s+(?:of|is|was|isn['’]?t|wasn['’]?t|doesn['’]?t|does\s+not|didn['’]?t)\b`,
+  ].join('|'),
+  'i',
+);
+
+/** Does this sentence window pass a verdict on / correct / quote the
+ *  student's answer? Exported for the test. */
+export function windowIsFeedbackOnAnAnswer(statement: string): boolean {
+  const s = statement ?? '';
+  return VERDICT_IN_WINDOW_RE.test(s) || STUDENT_ANSWER_QUOTED_RE.test(s);
+}
+
 /**
  * Detect a numeric problem posed in speech whose numbers are not on the board.
  *
@@ -80,7 +120,7 @@ const MAX_WINDOW_SENTENCES = 3;
 export function detectSpokenProblem(
   sentences: string[],
   boardTexts: string[],
-  opts: { maxChars?: number } = {},
+  opts: { maxChars?: number; /** Unset ⇒ TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE. */ excludeFeedback?: boolean } = {},
 ): SpokenProblemDetection | null {
   try {
     const maxChars = opts.maxChars ?? 360;
@@ -104,6 +144,7 @@ export function detectSpokenProblem(
     }
     const statementRaw = window.join(' ');
     if (EXCLUDE_RE.test(statementRaw)) return null;
+    if ((opts.excludeFeedback ?? TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE) && windowIsFeedbackOnAnAnswer(statementRaw)) return null;
     const numbers = numericTokens(statementRaw);
     if (numbers.length < 2) return null;
     const boardNums = new Set<string>();

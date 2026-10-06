@@ -36,7 +36,10 @@ const MATH = 'So $x = 11$ after dividing by 3.';
 const PROSE = 'The line bows outward here.';
 type Sev = 'kill' | 'advisory';
 const d = (claim: string, fields: Record<string, unknown>, severity: Sev = 'advisory', enabled = true): JudgeIssueDecision =>
-  decideJudgeIssue({ enabled, issue: { claim, ...fields }, severity });
+  // falsePraiseRound:false pins the 2026-10-04 table; the 2026-10-05 rows
+  // (false-praise note, no note on a not-an-answer grounding issue or on a
+  // statement the judge itself calls correct) are in test-judge-note-false-praise.ts.
+  decideJudgeIssue({ enabled, issue: { claim, ...fields }, severity, falsePraiseRound: false });
 
 console.log('\njudge issue decision — the production case');
 
@@ -267,7 +270,7 @@ test('a retraction and another planted issue in the SAME turn: the note carries 
     { claim: DENIAL, decision: d(DENIAL, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }) },
   ]);
   assert.deepEqual(plan, { claims: [DENIAL], mode: 'retraction', otherClaims: [MATH] });
-  const note = buildJudgeCorrectionNote(plan!.claims, '5', { mode: plan!.mode, otherClaims: plan!.otherClaims }) ?? '';
+  const note = buildJudgeCorrectionNote(plan!.claims, '5', { mode: plan!.mode, otherClaims: plan!.otherClaims, scriptless: false }) ?? '';
   assert.match(note, /^\[correction note — not from the student\]/);
   assert.ok(note.includes(`"${DENIAL}"`), 'the denial');
   assert.ok(note.includes(`"${MATH}"`), 'the other claim');
@@ -294,7 +297,7 @@ test('an unverified denial (legacy wording) and a neutral issue: legacy text for
     { claim: MATH, decision: d(MATH, { issueKind: 'wrong_math', studentAnswerVerdict: 'unsure' }) },
   ]);
   assert.deepEqual(plan, { claims: [DENIAL], mode: 'legacy', otherClaims: [MATH] });
-  const note = buildPlannedJudgeNote(plan, '5', { guardAttribution: true }) ?? '';
+  const note = buildPlannedJudgeNote(plan, '5', { guardAttribution: true, scriptless: false }) ?? '';
   const legacyAlone = buildJudgeCorrectionNote([DENIAL], '5', { mode: 'legacy', guardAttribution: true }) ?? '';
   assert.ok(note.startsWith(legacyAlone), 'the legacy text for the denial, unchanged');
   const tail = note.slice(legacyAlone.length);
@@ -310,13 +313,13 @@ test('buildPlannedJudgeNote: every other plan is exactly buildJudgeCorrectionNot
     { claim: DENIAL, decision: d(DENIAL, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }) },
   ]);
   assert.equal(
-    buildPlannedJudgeNote(retraction, '5', { guardAttribution: true }),
-    buildJudgeCorrectionNote([DENIAL], '5', { mode: 'retraction', otherClaims: [MATH], guardAttribution: true }),
+    buildPlannedJudgeNote(retraction, '5', { guardAttribution: true, scriptless: false }),
+    buildJudgeCorrectionNote([DENIAL], '5', { mode: 'retraction', otherClaims: [MATH], guardAttribution: true, scriptless: false }),
   );
   const legacy = planJudgeNote([{ claim: DENIAL, decision: d(DENIAL, {}) }, { claim: MATH, decision: d(MATH, {}) }]);
-  assert.equal(buildPlannedJudgeNote(legacy, '5', { guardAttribution: false }), buildJudgeCorrectionNote([DENIAL, MATH], '5'));
+  assert.equal(buildPlannedJudgeNote(legacy, '5', { guardAttribution: false, scriptless: false }), buildJudgeCorrectionNote([DENIAL, MATH], '5'));
   const neutral = planJudgeNote([{ claim: MATH, decision: d(MATH, { issueKind: 'wrong_math' }) }]);
-  assert.equal(buildPlannedJudgeNote(neutral, '5', { guardAttribution: true }), buildJudgeCorrectionNote([MATH], '5', { mode: 'neutral', guardAttribution: true }));
+  assert.equal(buildPlannedJudgeNote(neutral, '5', { guardAttribution: true, scriptless: false }), buildJudgeCorrectionNote([MATH], '5', { mode: 'neutral', guardAttribution: true, scriptless: false }));
   assert.equal(buildPlannedJudgeNote(null, '5'), null);
 });
 test('neutral only', () => {

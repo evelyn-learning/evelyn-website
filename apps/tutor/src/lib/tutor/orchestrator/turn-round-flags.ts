@@ -191,3 +191,73 @@ export const TUTOR_TURN_SHAPE_GATE =
  *  notes; no volunteer deadline). Off ⇒ the advisory event only. */
 export const TUTOR_PRAISE_EXCLUSION_NOTE =
   process.env.NEXT_PUBLIC_TUTOR_PRAISE_EXCLUSION_NOTE !== 'off';
+
+// ── Homework Help text-session round (2026-10-05, 21 scripted sessions) ────
+
+/** Typed homework-help text is the student's own material unless it is a bare
+ *  topic with no task (lesson-plan/homework.ts `typedHomeworkIsOwnMaterial`);
+ *  a failed split of such text still makes a one-problem homework plan; a
+ *  homework-help request never returns an objective picker. Server-read.
+ *  Off ⇒ the regex gate `hasProblemSignals` alone, as before. */
+export const TUTOR_HOMEWORK_OWN_MATERIAL =
+  process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_OWN_MATERIAL !== 'off';
+
+/** Judge correction notes: a distinct false-praise wording, no note on a
+ *  grounding/other issue whose verdict is not_an_answer or whose own reason
+ *  says the statement is correct, and no sentence handed over to recite.
+ *  Off ⇒ the 2026-10-04 decision table and note texts. */
+export const TUTOR_JUDGE_NOTE_FALSE_PRAISE =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_NOTE_FALSE_PRAISE !== 'off';
+
+/** A hedged proposal with a unit, an inequality / interval / expression, or
+ *  a trailing because-clause is an answer attempt ("I don't know, maybe
+ *  30 m/s?"). Off ⇒ a bare number / choice only. */
+export const TUTOR_HEDGED_ANSWER_WIDENING =
+  process.env.NEXT_PUBLIC_TUTOR_HEDGED_ANSWER_WIDENING !== 'off';
+
+/** The tutor's denial of a HEDGED answer is counted against the student
+ *  (pacing incorrect, ledger wrong) only when a verified key or the judge
+ *  agrees the answer was wrong. Off ⇒ counted like any other denial. */
+export const TUTOR_HEDGED_DENIAL_NEEDS_CONFIRMATION =
+  process.env.NEXT_PUBLIC_TUTOR_HEDGED_DENIAL_NEEDS_CONFIRMATION !== 'off';
+
+/** Per-turn prompt wording: "I don't know" alone is a non-answer, "I don't
+ *  know, maybe X" is the answer X; and in multi-part homework the tracked
+ *  problem's key applies only to an answer to that part. Off ⇒ the previous
+ *  block texts byte for byte. */
+export const TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS =
+  process.env.NEXT_PUBLIC_TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS !== 'off';
+
+/** A bare yes / no / ok typed while the open tutor question is NOT a yes/no
+ *  question, answered with an affirming verdict opener, is killed before
+ *  display and re-asked once. Off ⇒ no such kill. */
+export const TUTOR_BARE_ASSENT_PRAISE_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_BARE_ASSENT_PRAISE_KILL !== 'off';
+
+/** Third-person reference to the learner combined with self-instruction
+ *  ("they're mid-step…, so I should…") is dropped as runtime talk. */
+export const TUTOR_META_NARRATION_THIRD_PERSON =
+  process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_THIRD_PERSON !== 'off';
+
+/** show_dimensional_check is dropped (the turn continues) unless the session
+ *  subject is a physical science and the checked text carries unit tokens. */
+export const TUTOR_DIMENSIONAL_CHECK_GATE =
+  process.env.NEXT_PUBLIC_TUTOR_DIMENSIONAL_CHECK_GATE !== 'off';
+
+/** The spoken-problem board net never boards a sentence window that carries
+ *  a verdict / correction or quotes the student's answer. */
+export const TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE =
+  process.env.NEXT_PUBLIC_TUTOR_SPOKEN_PROBLEM_VERDICT_EXCLUDE !== 'off';
+
+/** A brain stall with nothing shown retries the turn once; a second stall
+ *  shows an apology line in the transcript for typed turns (and speaks it
+ *  for voice). Off ⇒ the single spoken cover line, as before. */
+export const TUTOR_BRAIN_STALL_RETRY =
+  process.env.NEXT_PUBLIC_TUTOR_BRAIN_STALL_RETRY !== 'off';
+
+/** On `no_problem_available` for a generic request the tutor poses its own
+ *  similar problem (worked out first) or continues; it never tells the
+ *  student that no problem is ready. Server-read (prompt + tool result).
+ *  Off ⇒ the apologise-and-offer-a-choice rule. */
+export const TUTOR_NO_PROBLEM_SELF_POSE =
+  process.env.NEXT_PUBLIC_TUTOR_NO_PROBLEM_SELF_POSE !== 'off';
