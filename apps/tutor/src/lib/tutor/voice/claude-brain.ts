@@ -29,6 +29,7 @@ import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
 import { TUTOR_HOMEWORK_OWN_MATERIAL, TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
@@ -49,6 +50,9 @@ import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggle
 // Sonnet 5 turns on adaptive thinking when the field is OMITTED (adds latency,
 // bad for a live voice brain), whereas Sonnet 4.6 runs thinking-off on omit.
 // Explicit-disabled keeps both models at the same low-latency no-thinking path.
+// EXCEPTION (2026-10-06): a TEXT-mode turn on the streaming path thinks first
+// (`input.textThinking`, see ./text-thinking.ts). Voice turns, and every call
+// with the field absent/false, send the same request as before.
 // Resolution moved to the model-registry (role 'brain'); TUTOR_BRAIN_MODEL
 // still works as a legacy alias, and TUTOR_MODEL_BRAIN{,_BASE_URL,_API_KEY}
 // can point this role at any Anthropic-compatible provider per deployment.
@@ -133,6 +137,8 @@ async function openBrainStream(
 ): Promise<{
   events: AsyncGenerator<Anthropic.MessageStreamEvent>;
   finalMessage: () => Promise<Anthropic.Message>;
+  /** Cancel the underlying request (thinking deadline). */
+  abort: () => void;
   target: RoleClient;
 }> {
   const targets = brainCallTargets(modelOverride, allowFallback);
@@ -151,7 +157,12 @@ async function openBrainStream(
           yield next.value;
         }
       })();
-      return { events, finalMessage: () => stream.finalMessage(), target };
+      return {
+        events,
+        finalMessage: () => stream.finalMessage(),
+        abort: () => { try { stream.abort(); } catch { /* already finished */ } },
+        target,
+      };
     } catch (err) {
       lastErr = err;
       if (i < targets.length - 1 && isProviderFailure(err)) {
@@ -428,6 +439,13 @@ export interface BrainTurnInput {
   allowFallback?: boolean;
   /** Optional override (defaults to 1500). */
   maxTokens?: number;
+  /** Text-mode thinking (2026-10-06, ./text-thinking.ts): the model reasons
+   *  privately before it replies. Set by the stream route for a text-mode
+   *  session when TUTOR_TEXT_THINKING is not 'off'. Streaming path only.
+   *  Absent/false ⇒ request, user content and events exactly as before. */
+  textThinking?: boolean;
+  /** Test/measurement override for TEXT_THINKING_DEADLINE_MS. */
+  textThinkingDeadlineMs?: number;
   /** Optional async resolver for tool_result content. Default behavior
    *  returns "${name} executed successfully" — fire-and-forget tools
    *  like show_problem just need an ack. For tools that produce DATA
@@ -570,6 +588,11 @@ export type BrainStreamEvent =
    *  Client maps it to a `render_dropped` debug event — telemetry only,
    *  never dispatched. */
   | { type: 'render-dropped'; action: string; reason: string }
+  /** Text-mode thinking: the model has started to reason and will be silent
+   *  until it finishes. Liveness only — it carries NO content, by
+   *  construction: thinking text never leaves claude-brain.ts. The client
+   *  keeps its typing indicator up and widens its nothing-shown window. */
+  | { type: 'thinking' }
   /** Explicit pause directive emitted between sentences. The speakText
    *  layer waits this long before voicing the next sentence. Cancelled
    *  immediately if the student speaks (barge-in). */
@@ -1989,6 +2012,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
+  // Text-mode thinking (streaming path only): `thinkingOn` can only fall to
+  // false within a turn (deadline / token-cap re-issue below), never rise.
+  let thinkingOn = input.textThinking === true;
+  const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript);
+  if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   const userContent =
     // Recap directives lead the message (live probes 2026-09-05: buried
     // after seven other blocks, the offer lost to the stuck rule 3 turns in
@@ -2013,6 +2041,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     studentStateBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
+    textThinkingBlock +
     verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -2037,10 +2066,22 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // as `input_json_delta` events; we parse it once on content_block_stop.
     let currentToolUse: { id: string; name: string; rawJson: string } | null = null;
 
+    // A thinking iteration is silent until the model has finished reasoning.
+    // `shownThisIter` flips on the first text or tool-call block; until then
+    // the deadline below is armed.
+    const iterStartedAt = Date.now();
+    const thinkingDeadlineMs = input.textThinkingDeadlineMs ?? TEXT_THINKING_DEADLINE_MS;
+    const textCharsBeforeIter = accumulatedText.length;
+    let shownThisIter = false;
+    let thinkingAnnounced = false;
+    let deadlineHit = false;
+
     const opened = await openBrainStream((target) => paramsForTarget(target, {
       model: input.model ?? BRAIN_MODEL_ID,
-      max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
-      thinking: { type: 'disabled' as const },
+      // Voice / thinking off: `max_tokens` + `thinking: disabled`, as before.
+      // Text thinking: adaptive thinking + effort, with the cap raised so
+      // reasoning never has to fit inside the reply's budget.
+      ...brainThinkingParams(thinkingOn, input.maxTokens ?? DEFAULT_MAX_TOKENS),
       // 1-hour TTL on every block: survives student pauses > 5 min, and the
       // core block must outlive the gap between sessions (shared entry).
       system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
@@ -2049,17 +2090,54 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     }), input.model, input.allowFallback !== false);
     totalUsage.model = opened.target.model;
 
-    for await (const event of opened.events) {
+    const streamIter = opened.events[Symbol.asyncIterator]();
+    for (;;) {
+      let step: IteratorResult<Anthropic.MessageStreamEvent>;
+      if (thinkingOn && !shownThisIter) {
+        const pending = streamIter.next();
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const raced = await Promise.race([
+          pending,
+          new Promise<'deadline'>((resolve) => {
+            timer = setTimeout(() => resolve('deadline'), Math.max(0, thinkingDeadlineMs - (Date.now() - iterStartedAt)));
+          }),
+        ]);
+        clearTimeout(timer);
+        if (raced === 'deadline') {
+          // The abort rejects the read we are abandoning; nothing awaits it.
+          pending.catch(() => undefined);
+          deadlineHit = true;
+          break;
+        }
+        step = raced;
+      } else {
+        step = await streamIter.next();
+      }
+      if (step.done) break;
+      const event = step.value;
       if (event.type === 'content_block_start') {
         if (event.content_block.type === 'tool_use') {
+          shownThisIter = true;
           currentToolUse = {
             id: event.content_block.id,
             name: event.content_block.name,
             rawJson: '',
           };
+        } else if (
+          (event.content_block.type === 'thinking' || event.content_block.type === 'redacted_thinking') &&
+          !thinkingAnnounced
+        ) {
+          // Liveness only. Thinking blocks and their deltas are otherwise
+          // ignored by this handler: only `text_delta` becomes a sentence and
+          // only `input_json_delta` becomes tool input, so reasoning has no
+          // path to the student. The blocks ride back to the model untouched
+          // inside `finalMessage.content` below.
+          thinkingAnnounced = true;
+          yield { type: 'thinking' };
         }
       } else if (event.type === 'content_block_delta') {
         if (event.delta.type === 'text_delta') {
+          shownThisIter = true;
           accumulatedText += event.delta.text;
           for (const sentence of sentenceBuffer.push(event.delta.text)) {
             yield { type: 'sentence', text: sentence };
@@ -2116,14 +2194,44 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       }
     }
 
+    if (deadlineHit) {
+      // Reasoning ran past the deadline with nothing shown. Cut it and
+      // re-issue THIS iteration without thinking — the same request a voice
+      // turn sends — so the student waits seconds, not the model's leisure.
+      // Nothing from the cut attempt was emitted (only the liveness frame),
+      // so re-running is duplication-free. Thinking stays off for the rest of
+      // the turn; any thinking blocks already in `messages` from earlier
+      // iterations are accepted by a thinking-off request.
+      console.warn(`[text-thinking] nothing shown after ${Date.now() - iterStartedAt}ms — re-issuing iteration ${iter} without thinking`);
+      opened.abort();
+      thinkingOn = false;
+      iter--;
+      continue;
+    }
+
     // Stream finished. Pull final metadata + assistant content for the
     // next agent-loop iteration.
     const finalMessage = await opened.finalMessage();
-    lastFinalMessage = finalMessage;
     totalUsage.inputTokens += finalMessage.usage.input_tokens;
     totalUsage.outputTokens += finalMessage.usage.output_tokens;
     totalUsage.cacheReadTokens += finalMessage.usage.cache_read_input_tokens ?? 0;
     totalUsage.cacheCreationTokens += finalMessage.usage.cache_creation_input_tokens ?? 0;
+    if (thinkingStarved({
+      thinkingOn,
+      stopReason: finalMessage.stop_reason,
+      textChars: accumulatedText.length - textCharsBeforeIter,
+      toolCalls: newToolUseBlocks.length,
+    })) {
+      // Reasoning consumed the whole token cap: a thinking block and nothing
+      // else. Same recovery as the deadline — the starved attempt is dropped
+      // (not appended to `messages`) and the iteration re-issued without
+      // thinking at the normal cap. Its tokens were billed, so they count.
+      console.warn(`[text-thinking] max_tokens reached with nothing shown — re-issuing iteration ${iter} without thinking`);
+      thinkingOn = false;
+      iter--;
+      continue;
+    }
+    lastFinalMessage = finalMessage;
     lastStopReason = finalMessage.stop_reason ?? 'unknown';
 
     if (finalMessage.stop_reason !== 'tool_use' || newToolUseBlocks.length === 0) {
@@ -2227,8 +2335,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     try {
       const rescueOpened = await openBrainStream((target) => paramsForTarget(target, {
         model: input.model ?? BRAIN_MODEL_ID,
-        max_tokens: 350, // was 250 — Sonnet 5 tokenizer headroom (see DEFAULT_MAX_TOKENS)
-        thinking: { type: 'disabled' as const },
+        // 350 (was 250) — Sonnet 5 tokenizer headroom (see DEFAULT_MAX_TOKENS).
+        // Never thinks, on any turn: it exists to produce two sentences fast.
+        ...brainThinkingParams(false, 350),
         // 1-hour TTL on every block: survives student pauses > 5 min, and the
         // core block must outlive the gap between sessions (shared entry).
         system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),

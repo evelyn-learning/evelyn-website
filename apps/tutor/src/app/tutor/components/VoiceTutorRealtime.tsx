@@ -10682,7 +10682,9 @@ export function VoiceTutorRealtime({
     // TIMEOUT abort from a perception barge-in abort — without it the catch
     // would classify our own abort as a student interruption and go silent,
     // which is precisely the failure this guard exists to end.
-    const stallState = { lastFrameAt: Date.now(), spokeAnySentence: false, stalled: false };
+    // `thinking`: the server sent a `thinking` frame for this call (text-mode
+    // thinking) — the nothing-shown window is the longer one.
+    const stallState = { lastFrameAt: Date.now(), spokeAnySentence: false, stalled: false, thinking: false };
     const stallPoll = TUTOR_BRAIN_STALL_GUARD
       ? setInterval(() => {
           const inFlight = inFlightBrainAbortRef.current;
@@ -10691,6 +10693,7 @@ export function VoiceTutorRealtime({
             msSinceLastFrame: Date.now() - stallState.lastFrameAt,
             spokeAnySentence: stallState.spokeAnySentence,
             alreadyAborted: inFlight?.signal.aborted ?? true,
+            thinking: stallState.thinking,
           })) {
             stallState.stalled = true;
             onDebugEvent?.(
@@ -11845,6 +11848,11 @@ export function VoiceTutorRealtime({
             ...splitPromptForWire(claudeSystemPromptRef.current, claudeSystemPromptCoreRef.current),
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
+            // Text-mode thinking (2026-10-06): tell the server this is a text
+            // session so it can let the model reason before it replies
+            // (server flag TUTOR_TEXT_THINKING; lib/tutor/voice/text-thinking.ts).
+            // Absent for voice ⇒ the body is byte-identical to before.
+            ...(sessionMode === 'text' ? { inputMode: 'text' as const } : {}),
             // Board Map (project_tutor_board_map_design): send the FULL-board
             // snapshot (NOT segment-scoped) + the page list. buildWhiteboardSummary
             // now owns segment-scoping — it expands current-segment + current-view
@@ -15801,6 +15809,15 @@ export function VoiceTutorRealtime({
                   // only — nothing to dispatch or roll back.
                   serverToolEventsThisAttempt++;
                   onDebugEvent?.('render_dropped', `${(ev as { action?: string }).action ?? '?'} — ${(ev as { reason?: string }).reason ?? ''} (server)`);
+                } else if (ev.type === 'thinking') {
+                  // Text-mode thinking: the model is reasoning before it
+                  // replies and sends nothing while it does. The frame has no
+                  // content (reasoning never leaves the server); it only
+                  // widens this call's nothing-shown stall window. The typing
+                  // indicator is already up — isProcessing stays true until
+                  // the first sentence lands.
+                  if (!stallState.thinking) onDebugEvent?.('brain_thinking', 'reasoning before the reply');
+                  stallState.thinking = true;
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry

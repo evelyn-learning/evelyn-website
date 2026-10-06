@@ -48,11 +48,24 @@ export interface BrainStallInput {
   /** Is the call's AbortController already aborted? A perception barge-in
    *  owns that signal; a stall must never be reported on top of it. */
   alreadyAborted: boolean;
+  /** The server has said this turn is reasoning before it replies (a
+   *  `thinking` frame arrived — text-mode thinking, text-thinking.ts). The
+   *  model is silent while it reasons, so the nothing-shown window is the
+   *  longer one below. Absent/false ⇒ exactly the windows as before. */
+  thinking?: boolean;
 }
 
 /** No SSE frame for this long BEFORE any audio ⇒ the student is stranded in
  *  silence. Deliberately a fraction of the 90s brain watchdog. */
 export const BRAIN_STALL_PRE_AUDIO_MS = 22_000;
+
+/** The nothing-shown window for a turn that is reasoning first (2026-10-06).
+ *  The server cuts a deliberation that has shown nothing at 14 s and
+ *  re-issues the turn without thinking (TEXT_THINKING_DEADLINE_MS), and its
+ *  own 30 s inactivity ceiling retries a wedged upstream; this window sits
+ *  past both so the client does not abort a turn the server is already
+ *  recovering, and is still finite — a dead stream is aborted. */
+export const BRAIN_STALL_PRE_AUDIO_THINKING_MS = 35_000;
 
 /** No SSE frame for this long once the turn is already speaking. Long enough
  *  that a slow-but-alive brain finishes its turn rather than being cut. */
@@ -64,7 +77,9 @@ export function shouldAbortStalledBrain(input: BrainStallInput): boolean {
   // Re-reporting it as a stall would mislabel a student interruption and
   // could trigger a retry of a turn the student deliberately cut off.
   if (input.alreadyAborted) return false;
-  const window = input.spokeAnySentence ? BRAIN_STALL_MID_TURN_MS : BRAIN_STALL_PRE_AUDIO_MS;
+  const window = input.spokeAnySentence
+    ? BRAIN_STALL_MID_TURN_MS
+    : input.thinking ? BRAIN_STALL_PRE_AUDIO_THINKING_MS : BRAIN_STALL_PRE_AUDIO_MS;
   return input.msSinceLastFrame >= window;
 }
 

@@ -43,6 +43,7 @@ import {
 import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
+import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
 import {
   RULE8_PROMISE_REGEX,
   detectRepairNeed,
@@ -140,6 +141,12 @@ interface BrainStreamRequestBody {
   subject?: string;
   model?: string;
   maxTokens?: number;
+  /** The session's input mode. Sent only by a text-mode session ('text');
+   *  voice sessions and older clients omit it. Drives text-mode thinking
+   *  (TUTOR_TEXT_THINKING, default on — see lib/tutor/voice/text-thinking.ts):
+   *  a text turn reasons privately before it replies. The decision is made
+   *  HERE, server-side, where the model request is built. */
+  inputMode?: 'text' | 'voice';
   /** Adaptive-pacing v1: bank IDs + brain-gen problem-text hashes
    *  already shown this session, used as exclusion filters when the
    *  brain calls `generate_problem`. The client maintains this list
@@ -836,6 +843,9 @@ export async function POST(req: NextRequest) {
           tools: toolFilter.tools,
           model: body.model,
           maxTokens: body.maxTokens,
+          // Text-mode thinking: on for every turn of a text session unless
+          // TUTOR_TEXT_THINKING=off. False for voice ⇒ request unchanged.
+          textThinking: textThinkingEnabled(body.inputMode),
           toolResultProvider: makeToolResultProvider(
             body.lessonPlanContext,
             body.shownProblemIds ?? [],
@@ -865,6 +875,15 @@ export async function POST(req: NextRequest) {
           // client turn-ok log can surface it too (server log already has it).
           if (ev.type === 'done') {
             (ev as { retries?: number }).retries = turnRetries;
+          }
+          // Text-mode thinking liveness frame: forwarded so the client knows
+          // the turn is reasoning (typing indicator stays, stall window
+          // widens), but NOT counted as egress — a turn whose only output so
+          // far is this frame is still safely retryable.
+          if (ev.type === 'thinking') {
+            sendTelemetry(ev);
+            if (clientGone) break;
+            continue;
           }
           if (ev.type === 'sentence') {
             sentenceCount++;
@@ -1091,7 +1110,7 @@ export async function POST(req: NextRequest) {
           `→ tools=[${toolNames.join(', ') || '(none)'}] · sentences=${sentenceCount} ` +
           `· first_sentence=${firstSentenceMs}ms · first_tool=${firstToolMs}ms · total=${totalMs}ms ` +
           `· text="${textSnippet}${fullText.length > 120 ? '…' : ''}" ` +
-          `· stop=${stopReason} · retries=${turnRetries}${gaveUp ? ' FAILED' : ''} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
+          `· stop=${stopReason} · thinking=${turnInput.textThinking ? 'on' : 'off'} · retries=${turnRetries}${gaveUp ? ' FAILED' : ''} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
           (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '') +
           (clientGone ? ' (client_gone)' : '')
         );
