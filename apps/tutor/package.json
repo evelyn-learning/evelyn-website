@@ -122,6 +122,7 @@
     "replay:verdict-turns": "npx tsx scripts/replay-verdict-turns.ts",
     "test:turn-shape-signal": "npx tsx scripts/test-turn-shape-signal.ts",
     "test:verdict-precheck": "npx tsx scripts/test-verdict-precheck.ts",
+    "test:work-then-match": "npx tsx scripts/test-work-then-match.ts",
     "test:graphic-organizer-guard": "npx tsx scripts/test-graphic-organizer-guard.ts",
     "test:turn-latency": "npx tsx scripts/test-turn-latency.ts",
     "test:pcm-stream": "npx tsx scripts/test-pcm-stream.ts",

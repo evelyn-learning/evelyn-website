@@ -287,6 +287,26 @@ export const TUTOR_PRECHECK_VERDICT_KILL =
 export const TUTOR_PRECHECK_CREDIT =
   process.env.NEXT_PUBLIC_TUTOR_PRECHECK_CREDIT !== 'off';
 
+// ── Text mode "work it, then match" (2026-10-06, third round) ──────────────
+// Both act only on a turn for which the server announced the mode (the
+// `work-then-match` stream frame; server flag TUTOR_TEXT_WORK_THEN_MATCH), so
+// that flag alone restores the previous behaviour end to end.
+
+/** Text mode: a reply's first sentence that is only a verdict or praise
+ *  opener is dropped before display; one fused with content is killed and
+ *  retried once, and on the retry the verdict phrase is cut
+ *  (voice/work-then-match.ts). Off ⇒ replies are shown as written. */
+export const TUTOR_TEXT_OPENER_BACKSTOP =
+  process.env.NEXT_PUBLIC_TUTOR_TEXT_OPENER_BACKSTOP !== 'off';
+
+/** Text mode: the counting path (pacing credit, ledger `wrong` events) does
+ *  not read the tutor's opener. It uses a verified key, else a HIGH-confidence
+ *  pre-check, else the tutor's explicit match statement; a WRONG needs the
+ *  pre-check and the match statement to agree (voice/work-then-match.ts
+ *  `resolveMatchCredit`). Off ⇒ the tutor's words are read as before. */
+export const TUTOR_TEXT_MATCH_COUNTING =
+  process.env.NEXT_PUBLIC_TUTOR_TEXT_MATCH_COUNTING !== 'off';
+
 /** Homework sessions: the tutor does not sign off, or say the homework is
  *  done, unless the student asked to stop or every problem they brought is
  *  finished (per-turn <homework_session> rule). Off ⇒ the block as before. */

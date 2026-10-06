@@ -388,7 +388,9 @@ import {
   precheckCreditOverride,
   type PublicVerdictPrecheck,
 } from '@/lib/tutor/voice/verdict-precheck-shared';
-import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT, TUTOR_TEXT_OPENER_BACKSTOP, TUTOR_TEXT_MATCH_COUNTING } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { backstopAppliesTo, isNonAnswerShape, openerBackstopFeedback, readMatchStatement, readVerdictOpener, resolveMatchCredit } from '@/lib/tutor/voice/work-then-match';
+import { classifyTurnShape, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
 import { buildJudgeCorrectionNote, shouldConsumeJudgeCorrectionNote, decideJudgeNotePlant, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
@@ -2985,6 +2987,10 @@ export function VoiceTutorRealtime({
    *  pass over the turn. A denial of a HEDGED answer is counted against the
    *  student only with one of them (answer-attempt.ts hedgedDenialCounts). */
   const hedgedDenialSignalRef = useRef({ verifiedWrong: false, judgeAgreedWrong: false });
+  /** 2026-10-06, text mode "work it, then match": a verified KEY (not the
+   *  pre-check) disagrees with THIS turn's answer — the first rung of the
+   *  counting order in voice/work-then-match.ts `resolveMatchCredit`. */
+  const keyVerifiedWrongThisTurnRef = useRef(false);
   /** Text mode (2026-10-06): the server's independent check of THIS turn's
    *  student message (voice/verdict-precheck.ts), as sent in the
    *  `verdict-precheck` frame before any sentence. Null for voice, for a turn
@@ -2993,6 +2999,12 @@ export function VoiceTutorRealtime({
   const verdictPrecheckRef = useRef<PublicVerdictPrecheck | null>(null);
   /** The pre-check opener kill fires at most once per turn. */
   const verdictPrecheckKillUsedRef = useRef(false);
+  /** Text mode "work it, then match" (2026-10-06, voice/work-then-match.ts):
+   *  the server announced the mode for THIS turn (the `work-then-match`
+   *  frame, sent before any sentence). False for voice and when the server
+   *  flag is off — the opener backstop and the match-statement counting then
+   *  do nothing, and the turn runs as before. */
+  const workThenMatchTurnRef = useRef(false);
   /** 2026-10-05: the last turn retried after a brain stall with nothing
    *  shown (brain-stall.ts decideStallRecovery) — one retry per turn. */
   const stallRetryRef = useRef<{ transcript: string; at: number } | null>(null);
@@ -10615,9 +10627,11 @@ export function VoiceTutorRealtime({
     // credit.
     judgeFlaggedDenialThisTurnRef.current = false;
     hedgedDenialSignalRef.current = { verifiedWrong: false, judgeAgreedWrong: false };
+    keyVerifiedWrongThisTurnRef.current = false;
     // 2026-10-06: a prior turn's pre-check never applies to this one.
     verdictPrecheckRef.current = null;
     verdictPrecheckKillUsedRef.current = false;
+    workThenMatchTurnRef.current = false;
     // 2026-10-02: fresh per-turn answer-attempt ledger slots (set below only
     // for a real student turn) — a prior turn's text must never be re-read.
     ledgerStudentTextRef.current = '';
@@ -11182,6 +11196,11 @@ export function VoiceTutorRealtime({
       // and the student is waiting on each round-trip.
       const MAX_JUDGE_RETRIES = 1;
       let judgeRetriesUsed = 0;
+      // Text mode "work it, then match": the opener backstop's kill fires at
+      // most once per turn, and the student's turn shape is read once (on a
+      // retry the last assistant turn in history is the killed attempt).
+      let openerBackstopKillUsed = false;
+      let openerBackstopShape: TurnShape | null | undefined;
       // Round-7 Fix D: kill-loop escalation. Track every judge KILL
       // claim text we've already rejected in this turn. When a NEW kill
       // shares structural tokens (numbers / multi-char identifiers /
@@ -12222,6 +12241,11 @@ export function VoiceTutorRealtime({
         // (rollback scope = full attempt, original behavior).
         let renderCountAtAdvance: number | null = null;
         let attemptText = '';
+        // Text mode "work it, then match": verdict-only opening sentence(s)
+        // dropped from THIS attempt (handed back at stream end if nothing
+        // else was written), and whether the opener has been read.
+        let openerBackstopDone = false;
+        const openerBackstopHeld: string[] = [];
         // Fix B (2026-08-10 root cause, session portal-7cfa226c): parallel
         // array of the raw per-sentence text (pre-TTS-normalization, so
         // inline $...$ math survives) accumulated alongside attemptText —
@@ -12800,6 +12824,14 @@ export function VoiceTutorRealtime({
             }
           } catch (err) {
             console.warn('[brain-orchestrator] correction-working restore failed:', err);
+          }
+          // "Work it, then match": a verdict-only opener is dropped only when
+          // the rest of the reply stands on its own. Nothing else was written
+          // this attempt ⇒ hand it back rather than show an empty turn.
+          if (openerBackstopHeld.length > 0 && !attemptText.trim() && restoredFrames.length === 0) {
+            for (const text of openerBackstopHeld) restoredFrames.push({ type: 'sentence', text, synthetic: 'verdict_opener_restored' });
+            onDebugEvent?.('verdict_opener_restored', `${openerBackstopHeld.length} sentence(s) — nothing else in the reply`);
+            openerBackstopHeld.length = 0;
           }
           try {
             const plan = lessonPlanRef.current;
@@ -13818,6 +13850,60 @@ export function VoiceTutorRealtime({
                     console.warn('[brain-orchestrator] praise+reveal to a non-answer — retrying:', `student="${transcript.slice(0, 40)}" text="${nonAnswerTextSoFar.slice(0, 60)}"`);
                     onDebugEvent?.('nonanswer_praise_retry', `student="${transcript.slice(0, 30)}" → "${nonAnswerTextSoFar.slice(0, 50)}"`);
                     continue;
+                  }
+                  // 2026-10-06, text mode "work it, then match" (voice/
+                  // work-then-match.ts): the reply to a proposed answer opens
+                  // with the working, never with a verdict or praise. The prompt
+                  // asks for that; this is the deterministic backstop, BEFORE
+                  // display, and it runs after the kills above so that a reply
+                  // they would reject is retried rather than trimmed.
+                  //   - a first sentence that is ONLY a verdict / praise opener
+                  //     ("Not quite.", "Exactly!") is dropped and the rest shown;
+                  //   - one FUSED with content ("Right — the x's cancel") is
+                  //     killed and retried once with the rule named;
+                  //   - once that kill is spent (the retry, or no retry left) the
+                  //     verdict phrase is cut and the sentence shown — never a loop.
+                  // Not on a continuation (its first sentence is not the reply's
+                  // opener), not on plain consent to an offer, and never in voice.
+                  const openerBackstopFrame = typeof (ev as { synthetic?: unknown }).synthetic === 'string'
+                    && String((ev as { synthetic?: unknown }).synthetic).startsWith('verdict_opener_');
+                  if (!attemptKilled && TUTOR_TEXT_OPENER_BACKSTOP && sessionMode === 'text' && workThenMatchTurnRef.current
+                      && !isContinuationAttempt && !attemptText && !openerBackstopDone && !openerBackstopFrame) {
+                    if (openerBackstopShape === undefined) openerBackstopShape = classifyTurnShape(transcript, bareAssentPriorTutorTurn);
+                    if (!backstopAppliesTo(openerBackstopShape)) {
+                      openerBackstopDone = true;
+                    } else {
+                      const openerRead = readVerdictOpener(updatedSentence, { answerShaped: openerBackstopShape?.answerShaped === true });
+                      if (openerRead.kind === 'only') {
+                        // attemptText stays empty, so the next sentence is read
+                        // as the opener in its turn ("Yes! Exactly. …").
+                        openerBackstopHeld.push(updatedSentence);
+                        console.warn('[brain-orchestrator] verdict-only opener dropped before display:', JSON.stringify(updatedSentence.slice(0, 60)));
+                        onDebugEvent?.('verdict_opener_stripped', `"${updatedSentence.slice(0, 60)}"`);
+                        continue;
+                      }
+                      openerBackstopDone = true;
+                      if (openerRead.kind === 'fused') {
+                        if (!openerBackstopKillUsed && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt < attemptCap) {
+                          openerBackstopKillUsed = true;
+                          openerBackstopHeld.length = 0;
+                          rejectionsThisAttempt.push({ action: 'verdict_opener', reason: openerBackstopFeedback(updatedSentence, transcript, { nonAnswer: isNonAnswerShape(openerBackstopShape) }) });
+                          judgeRetriesUsed++;
+                          await performKill();
+                          console.warn('[brain-orchestrator] verdict opener fused with content — retrying:', JSON.stringify(updatedSentence.slice(0, 60)));
+                          onDebugEvent?.('verdict_opener_kill', `"${updatedSentence.slice(0, 60)}"`);
+                          continue;
+                        }
+                        if (openerRead.remainder) {
+                          // Back through the frame parser, so the cut sentence
+                          // meets every guard a model-written one does.
+                          buf = `data: ${JSON.stringify({ ...ev, text: openerRead.remainder, synthetic: 'verdict_opener_cut' })}\n\n` + buf;
+                          console.warn('[brain-orchestrator] verdict phrase cut from the opener (kill already spent):', JSON.stringify(updatedSentence.slice(0, 60)));
+                          onDebugEvent?.('verdict_opener_cut', `"${openerRead.opener}" ← "${updatedSentence.slice(0, 50)}"`);
+                          continue;
+                        }
+                      }
+                    }
                   }
                   // E2 (prod session 2026-08-06/07): card/narration numeric-
                   // match check — the "call the tool, THEN narrate a
@@ -15902,6 +15988,11 @@ export function VoiceTutorRealtime({
                   // the first sentence lands.
                   if (!stallState.thinking) onDebugEvent?.('brain_thinking', 'reasoning before the reply');
                   stallState.thinking = true;
+                } else if ((ev as { type?: string }).type === 'work-then-match') {
+                  // Text mode "work it, then match" is on for this turn (server
+                  // flag TUTOR_TEXT_WORK_THEN_MATCH). Sent before any sentence.
+                  if (!workThenMatchTurnRef.current) onDebugEvent?.('work_then_match', 'on for this turn');
+                  workThenMatchTurnRef.current = true;
                 } else if ((ev as { type?: string }).type === 'verdict-precheck') {
                   // Text-mode verdict pre-check (2026-10-06): the server's
                   // independent check of the student's message, sent before
@@ -16805,6 +16896,9 @@ export function VoiceTutorRealtime({
                   if (creditWithheld && !denialVerifiedRight) judgeFlaggedDenialThisTurnRef.current = true;
                   if (denialVerifiedRight) {
                     hedgedDenialSignalRef.current.verifiedWrong = true;
+                    // A verified KEY (not the pre-check) — the first rung of
+                    // the text-mode counting order (work-then-match.ts).
+                    keyVerifiedWrongThisTurnRef.current = true;
                     onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
                   }
                   if (noteworthyAdvisoryIssues.length > 0 && !denialVerifiedRight) {
@@ -17750,8 +17844,32 @@ export function VoiceTutorRealtime({
           if (countsAsAnswer && ((precheckCredit.suppressCorrect && verdictRead.isAffirm) || (precheckCredit.suppressIncorrect && verdictRead.isCorrection))) {
             onDebugEvent?.('pacing_precheck_override', `${precheckCredit.reason} — tutor ${verdictRead.isCorrection ? 'denied' : 'affirmed'}, not counted · student="${ledgerStudentTextRef.current.slice(0, 40)}"`);
           }
-          const isAffirm = verdictRead.isAffirm && !precheckCredit.suppressCorrect;
-          const isCorrect = verdictRead.isCorrection && !precheckCredit.suppressIncorrect;
+          // 2026-10-06, text mode "work it, then match": the reply carries no
+          // verdict opener, so credit is NOT read off the tutor's words. In
+          // order: a verified key (objectiveSignal below; a key the answer
+          // disagrees with), else a HIGH-confidence pre-check, else the tutor's
+          // explicit match statement when it is unambiguous and no check says
+          // otherwise, else nothing. A WRONG needs the pre-check and the match
+          // statement to agree — a wrong pre-check cannot mark a correct
+          // answer wrong on its own (voice/work-then-match.ts).
+          const matchCounting = TUTOR_TEXT_MATCH_COUNTING && sessionMode === 'text' && workThenMatchTurnRef.current;
+          const matchCredit = matchCounting
+            ? resolveMatchCredit({
+                objectiveCorrect: !!objectiveSignal,
+                verifiedWrong: keyVerifiedWrongThisTurnRef.current,
+                precheck: verdictPrecheckRef.current,
+                match: readMatchStatement(fullText, ledgerStudentTextRef.current),
+              })
+            : null;
+          if (matchCredit && countsAsAnswer) {
+            if (matchCredit.disagreement) {
+              onDebugEvent?.('counting_disagreement', `pre-check ${verdictPrecheckRef.current?.verdict ?? '-'}/${verdictPrecheckRef.current?.confidence ?? '-'} vs match statement "${readMatchStatement(fullText, ledgerStudentTextRef.current)}" — nothing counted · student="${ledgerStudentTextRef.current.slice(0, 40)}"`);
+            } else {
+              onDebugEvent?.('counting_match_credit', `${matchCredit.credit} (${matchCredit.source}) · student="${ledgerStudentTextRef.current.slice(0, 40)}"`);
+            }
+          }
+          const isAffirm = matchCredit ? matchCredit.credit === 'correct' : verdictRead.isAffirm && !precheckCredit.suppressCorrect;
+          const isCorrect = matchCredit ? matchCredit.credit === 'incorrect' : verdictRead.isCorrection && !precheckCredit.suppressIncorrect;
           const decision = decidePacingCredit({
             isVerification: countsAsAnswer,
             isAffirm,
@@ -17992,6 +18110,11 @@ export function VoiceTutorRealtime({
               // 2026-10-05: a denial of a hedged answer is a `wrong` event only
               // when a verified key or a judge pass agrees (same rule as pacing).
               hedgedDenial: { ...hedgedDenialSignalRef.current },
+              // 2026-10-06, text mode "work it, then match": the resolved
+              // credit decides; the tutor's opener words are not read.
+              ...(TUTOR_TEXT_MATCH_COUNTING && sessionMode === 'text' && workThenMatchTurnRef.current
+                ? { matchCredit: resolveMatchCredit({ objectiveCorrect: !!objectiveSignal, verifiedWrong: keyVerifiedWrongThisTurnRef.current, precheck: verdictPrecheckRef.current, match: readMatchStatement(fullText, ledgerStudentTextRef.current) }).credit }
+                : {}),
             })) {
           const segId = ver?.segId ?? currentSegmentIdRef.current;
           const loId = segId ? loForSegment(segId) : activeLedgerLoRef.current;

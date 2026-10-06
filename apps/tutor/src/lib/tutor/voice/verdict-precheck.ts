@@ -20,12 +20,13 @@
  * request, or a runtime turn.
  *
  * It runs BEFORE the brain call of that turn, with nothing else in flight, so
- * the whole of its latency is added to the turn. Hard cap: 4 s. A timeout, an
+ * the whole of its latency is added to the turn. Hard cap: 6 s (4 s until
+ * 2026-10-06, when it cut 19 of 91 checks in the replay). A timeout, an
  * error, a refusal, an unparsable reply or a low-confidence reply yields
  * null / nothing injected — the turn then runs exactly as it did before.
  *
  *   TUTOR_TEXT_VERDICT_PRECHECK             unset/anything ⇒ ON · 'off' ⇒ off
- *   TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS  hard cap (default 4000)
+ *   TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS  hard cap (default 6000)
  *   TUTOR_MODEL_VERDICT_PRECHECK            model id (registry role `verdict-precheck`)
  *   TUTOR_TEXT_VERDICT_PRECHECK_THINKING    'low' (adaptive thinking, low effort) | 'off' (no thinking,
  *                                           a scratch field first) | 'bare' (neither); default per model, below
@@ -46,7 +47,9 @@ import type {
   VerdictPrecheckResult,
 } from './verdict-precheck-shared';
 
-export const VERDICT_PRECHECK_TIMEOUT_MS = 4000;
+/** 2026-10-06 (third round): 4 s cut 19 of 91 checks in the end-to-end replay
+ *  (completed calls: p50 2.6 s, p90 3.3 s; the bench p90 was 6.0 s). 6 s. */
+export const VERDICT_PRECHECK_TIMEOUT_MS = 6000;
 
 /** On for a turn iff the session is text mode and the flag is not 'off'. */
 export function textVerdictPrecheckEnabled(

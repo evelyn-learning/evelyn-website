@@ -67,11 +67,11 @@ async function main() {
     assert.equal(textVerdictPrecheckEnabled('voice', undefined), false);
     assert.equal(textVerdictPrecheckEnabled(undefined, 'on'), false);
   });
-  await test('timeout: default 4000 ms; env override bounded', () => {
-    assert.equal(verdictPrecheckTimeoutMs(undefined), 4000);
+  await test('timeout: default 6000 ms (4000 until 2026-10-06); env override bounded', () => {
+    assert.equal(verdictPrecheckTimeoutMs(undefined), 6000);
     assert.equal(verdictPrecheckTimeoutMs('2500'), 2500);
-    assert.equal(verdictPrecheckTimeoutMs('5'), 4000);
-    assert.equal(verdictPrecheckTimeoutMs('nope'), 4000);
+    assert.equal(verdictPrecheckTimeoutMs('5'), 6000);
+    assert.equal(verdictPrecheckTimeoutMs('nope'), 6000);
   });
   await test('thinking setting: env wins, else per model family', () => {
     assert.equal(verdictPrecheckThinking('claude-sonnet-5', undefined), 'low');
@@ -502,8 +502,8 @@ async function main() {
   await test('client: pre-check is reset per turn, feeds the kill and the counting path', () => {
     assert.match(clientSrc, /verdictPrecheckRef\.current = null;\n\s*verdictPrecheckKillUsedRef\.current = false;/);
     assert.match(clientSrc, /precheckOpenerContradiction\(verdictPrecheckRef\.current, updatedSentence/);
-    assert.match(clientSrc, /const isAffirm = verdictRead\.isAffirm && !precheckCredit\.suppressCorrect;/);
-    assert.match(clientSrc, /const isCorrect = verdictRead\.isCorrection && !precheckCredit\.suppressIncorrect;/);
+    assert.match(clientSrc, /const isAffirm = (?:matchCredit \? matchCredit\.credit === 'correct' : )?verdictRead\.isAffirm && !precheckCredit\.suppressCorrect;/);
+    assert.match(clientSrc, /const isCorrect = (?:matchCredit \? matchCredit\.credit === 'incorrect' : )?verdictRead\.isCorrection && !precheckCredit\.suppressIncorrect;/);
     assert.match(clientSrc, /hedgedDenialSignalRef\.current\.verifiedWrong = true;\n\s*\}\n\s*onDebugEvent\?\.\('verdict_precheck'/);
     assert.match(clientSrc, /ambiguousAssentKill\(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn\)/);
   });

@@ -201,10 +201,16 @@ export function inferWrongEvent(input: {
    *  a `wrong` event only if confirmed (see `hedgedDenialCounts`). Omitted ⇒
    *  no such test (the behaviour before). */
   hedgedDenial?: { enabled?: boolean; verifiedWrong?: boolean; judgeAgreedWrong?: boolean };
+  /** 2026-10-06, text mode "work it, then match" (voice/work-then-match.ts):
+   *  the credit the counting path resolved for this turn. When supplied, the
+   *  tutor's words are NOT read here — a `wrong` event is fed only for a
+   *  resolved 'incorrect'. Omitted ⇒ the read below, as before. */
+  matchCredit?: 'correct' | 'incorrect' | 'none';
 }): boolean {
   if (input.objectiveCorrect) return false;
   if (!isAnswerAttempt(input.studentText, { turnShapeGate: input.turnShapeGate })) return false;
   if (input.hedgedDenial && !hedgedDenialCounts({ ...input.hedgedDenial, studentText: input.studentText })) return false;
+  if (input.matchCredit !== undefined) return input.matchCredit === 'incorrect';
   const verdict = readPacingVerdict(input.tutorText, {
     studentText: input.studentText,
     widenedCorrection: input.widenedCorrection,

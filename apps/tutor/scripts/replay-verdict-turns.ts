@@ -61,6 +61,19 @@
  *             so the request is the deployed one byte for byte.
  *   shape     + the <turn_shape> facts (lever 1) and the prompt additions.
  *   precheck  + the verdict pre-check (lever 2) on top of `shape`.
+ *   match     + "work it, then match" (third round, voice/work-then-match.ts)
+ *             on top of `precheck`: no verdict opener; the browser's opener
+ *             backstop (strip / kill once / cut) is replayed on the reply and
+ *             what the counting path would record is written with each row.
+ *             Arm <effort>-L12M. `--short-cache` sends the prompt-cache
+ *             markers without the 1 h TTL (cheaper cold writes; run the cases
+ *             back to back, `--concurrency 1`), and `--budget <usd>` /
+ *             `--bare-budget <usd>` stop before a trial once the spend ledger
+ *             (spend.jsonl in --out, cumulative across invocations) reaches
+ *             the figure — the second applies to bare-token turns only.
+ *   … --recount <results.jsonl> --recount-out <file>   no model call: what the
+ *             counting path would record for each recorded row, the old way
+ *             (the tutor's words) and the new (checks + match statement).
  * The arm is named <effort>, <effort>-L1, <effort>-L12. The browser's
  * before-display kills are replayed too (`--no-kills` to skip): the reply is
  * read sentence by sentence with the same pure functions the client uses
@@ -79,12 +92,14 @@
  */
 process.env.MONGODB_URI = 'mongodb://127.0.0.1:1/replay-no-db';
 // Lever setting, read before any module loads (see the header).
-const LEVERS = ((): 'none' | 'shape' | 'precheck' => {
+const LEVERS = ((): 'none' | 'shape' | 'precheck' | 'match' => {
   const i = process.argv.indexOf('--levers');
   const v = i >= 0 ? process.argv[i + 1] : 'none';
-  if (v !== 'none' && v !== 'shape' && v !== 'precheck') throw new Error(`--levers ${v}: none | shape | precheck`);
+  if (v !== 'none' && v !== 'shape' && v !== 'precheck' && v !== 'match') throw new Error(`--levers ${v}: none | shape | precheck | match`);
   return v;
 })();
+/** `precheck` and everything built on it. */
+const HAS_PRECHECK = LEVERS === 'precheck' || LEVERS === 'match';
 if (LEVERS === 'none') {
   process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_NO_EARLY_SIGNOFF = 'off';
   process.env.NEXT_PUBLIC_TUTOR_NO_TIME_TALK = 'off';
@@ -125,7 +140,11 @@ const LIMIT = Number(opt('limit', '0'));
 const ONLY = opt('only');
 const CONC = Number(opt('concurrency', '4'));
 const FULL_LOOP = flag('full-loop');
-const TAG = opt('tag', '') || (LEVERS === 'shape' ? 'L1' : LEVERS === 'precheck' ? 'L12' : '');
+const TAG = opt('tag', '') || (LEVERS === 'shape' ? 'L1' : LEVERS === 'precheck' ? 'L12' : LEVERS === 'match' ? 'L12M' : '');
+const SHORT_CACHE = flag('short-cache');
+const BUDGET = Number(opt('budget', '0'));
+const BARE_BUDGET = Number(opt('bare-budget', '0'));
+const NO_JUDGE = flag('no-judge');
 const NO_KILLS = flag('no-kills');
 /** `model:thinking` for the pre-check in the `precheck` arm (default: the registry role). */
 const PRECHECK_MODEL = opt('precheck-model');
@@ -377,7 +396,8 @@ async function buildInput(c: Case, enums: Enumerations, arm: Arm) {
     textThinkingDeadlineMs: 600_000,
     // Levers: absent for `none`, so that request is the deployed one.
     ...(LEVERS !== 'none' ? { textTurnShape: true } : {}),
-    ...(LEVERS === 'precheck' ? { textVerdictPrecheck: true } : {}),
+    ...(HAS_PRECHECK ? { textVerdictPrecheck: true } : {}),
+    ...(LEVERS === 'match' ? { textWorkThenMatch: true } : {}),
   };
 }
 
@@ -419,6 +439,18 @@ async function installCapture() {
       userContent: store.calls.length === 0 && typeof last?.content === 'string' ? last.content : undefined,
     };
     store.calls.push(rec);
+    // --short-cache: the same request with 5-minute cache markers (the model
+    // sees nothing of this; only the price of a cold write changes).
+    if (SHORT_CACHE) {
+      const strip = (v: unknown): void => {
+        if (Array.isArray(v)) { v.forEach(strip); return; }
+        if (!v || typeof v !== 'object') return;
+        const o = v as Record<string, unknown>;
+        if (o.cache_control && typeof o.cache_control === 'object') delete (o.cache_control as Record<string, unknown>).ttl;
+        for (const k of Object.keys(o)) if (k !== 'cache_control') strip(o[k]);
+      };
+      strip(params.tools); strip(params.system); strip(params.messages);
+    }
     const stream = orig(params, options);
     const inner = stream[Symbol.asyncIterator].bind(stream);
     stream[Symbol.asyncIterator] = () => {
@@ -501,12 +533,16 @@ async function judge(lastTutor: string, student: string, reply: string): Promise
 // ── run ────────────────────────────────────────────────────────────────────
 
 interface KillRec { action: string; kind: string; atSentence: number; killedReply: string; retryCalls: CallRec[] }
+/** The opener backstop as replayed (arm `match`). */
+interface BackstopRec { first: string; retry?: string; opener?: string; rawReply: string; rawRetry?: string }
+/** What the counting path would record for the turn (arm `match`). */
+interface CountingRec { match: string; credit: string; source: string; disagreement: boolean; answerAttempt: boolean; counted: string }
 interface PrecheckRec {
   ms: number; result: null | { answers: string; target: string; proposed: string; verdict: string; confidence: string; correctValue: string; model: string; inputTokens: number; outputTokens: number };
   shape?: string; questionKind?: string; openQuestion?: string;
 }
 interface Result {
-  kill?: KillRec; precheck?: PrecheckRec; shape?: string; questionKind?: string;
+  kill?: KillRec; precheck?: PrecheckRec; shape?: string; questionKind?: string; backstop?: BackstopRec; counting?: CountingRec;
   id: string; cls: Case['cls']; arm: string; run: number; plan: 'homework' | 'none'; student: string; lastTutor: string;
   reply: string; tools: Array<{ name: string; args: unknown }>; calls: CallRec[]; firstSentenceMs: number | null; totalMs: number;
   regex: Stance; judge: Stance | null; reverses: boolean; selfTalk: boolean; delibRegex: boolean; metaNarration: boolean; markupLeak: boolean;
@@ -557,7 +593,7 @@ async function clientKill(c: Case, sentences: string[], precheckPublic: unknown)
       const amb = np.ambiguousAssentKill(c.student, soFar, prior, { enabled: true });
       if (amb) return { action: 'bare_assent_praise', kind: amb, reason: np.ambiguousAssentFeedback(amb, c.student, prior), atSentence: i + 1 };
     }
-    if (LEVERS === 'precheck' && i === 0 && pc) {
+    if (HAS_PRECHECK && i === 0 && pc) {
       const k = ps.precheckOpenerContradiction(pc, sentences[0], { enabled: true });
       if (k) return { action: 'precheck_verdict_contradiction', kind: k, reason: ps.precheckContradictionFeedback(k, pc, c.student), atSentence: 1 };
     }
@@ -572,7 +608,7 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
   const input = await buildInput(c, enums, arm);
   let precheck: PrecheckRec | undefined;
   const ts = classifyTurnShape(c.student, c.lastTutor);
-  if (LEVERS === 'precheck') {
+  if (HAS_PRECHECK) {
     (input as Record<string, unknown>).verdictPrecheckDeps = {
       ...precheckOverride(PRECHECK_MODEL),
       onResult: (r: PrecheckRec['result'], ms: number) => { precheck = { ms, result: r, shape: ts?.shape, questionKind: ts?.open?.kind, openQuestion: ts?.open?.question }; },
@@ -583,7 +619,26 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
   const { firstSentenceMs, t0 } = first;
   let errorMsg = first.errorMsg;
   let kill: KillRec | undefined;
-  const k = sentences.length ? await clientKill(c, sentences, first.precheckPublic) : null;
+  let k = sentences.length ? await clientKill(c, sentences, first.precheckPublic) : null;
+  // "Work it, then match": the opener backstop, after the kills above (the
+  // client's order). A fused opener is killed once; anything else is trimmed.
+  const wtm = LEVERS === 'match' ? await import('../src/lib/tutor/voice/work-then-match') : null;
+  const backstopOn = !!wtm && !NO_KILLS && wtm.backstopAppliesTo(ts);
+  let backstop: BackstopRec | undefined;
+  if (wtm && backstopOn && sentences.length) {
+    const rawReply = sentences.join(' ');
+    if (k) {
+      backstop = { first: 'other_kill', rawReply };
+    } else {
+      const b = wtm.applyOpenerBackstop(sentences, { answerShaped: ts?.answerShaped === true, canKill: true });
+      backstop = { first: b.action, opener: b.opener, rawReply };
+      if (b.action === 'kill') {
+        k = { action: 'verdict_opener', kind: 'verdict_opener', reason: wtm.openerBackstopFeedback(sentences[b.at], c.student, { nonAnswer: wtm.isNonAnswerShape(ts) }), atSentence: b.at + 1 };
+      } else {
+        sentences = b.sentences;
+      }
+    }
+  }
   if (k) {
     // Exactly what the client sends next: the killed attempt as an assistant
     // turn, the rejection as a runtime turn, the pre-check carried along.
@@ -601,11 +656,32 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
     const second = await streamOnce(retryInput);
     kill = { action: k.action, kind: k.kind, atSentence: k.atSentence, killedReply: sentences.join(' '), retryCalls: second.calls.map((x) => ({ ...x, userContent: undefined })) };
     sentences = second.sentences; tools = second.tools; errorMsg = second.errorMsg ?? errorMsg;
+    if (wtm && backstopOn && backstop && sentences.length) {
+      // The one retry is spent: trim, never kill again.
+      const b = wtm.applyOpenerBackstop(sentences, { answerShaped: ts?.answerShaped === true, canKill: false });
+      backstop.retry = b.action; backstop.rawRetry = sentences.join(' ');
+      sentences = b.sentences;
+    }
   }
   const store = { calls: first.calls };
   const totalMs = store.calls.reduce((n, k2) => Math.max(n, (k2.startedAt - t0) + (k2.endMs ?? 0)), 0) || Date.now() - t0;
   const reply = sentences.join(' ').trim();
-  const j = reply ? await judge(c.lastTutor, c.student, reply) : null;
+  const j = reply && !NO_JUDGE ? await judge(c.lastTutor, c.student, reply) : null;
+  // What the counting path would record (arm `match`): the resolver on the
+  // DISPLAYED reply and the pre-check the browser was sent, then the client's
+  // own gates (an answer attempt; the hedged-denial rule).
+  let counting: CountingRec | undefined;
+  if (wtm) {
+    const ps = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+    const aa = await import('../src/lib/tutor/orchestrator/answer-attempt');
+    const pub = ps.sanitizePublicPrecheck(first.precheckPublic);
+    const match = wtm.readMatchStatement(reply, c.student);
+    const mc = wtm.resolveMatchCredit({ precheck: pub, match });
+    const answerAttempt = aa.isAnswerAttempt(c.student) || aa.isBareShortAnswer(c.student);
+    let counted: string = answerAttempt ? mc.credit : 'none';
+    if (counted === 'incorrect' && !aa.hedgedDenialCounts({ studentText: c.student, verifiedWrong: ps.precheckCreditOverride(pub).verifiedWrong })) counted = 'none';
+    counting = { match, credit: mc.credit, source: mc.source, disagreement: mc.disagreement, answerAttempt, counted };
+  }
   const rx = regexStance(reply);
   const stance = j?.stance ?? rx;
   // Where praise is the error (wrong answer, bare token, bare "yes", an
@@ -626,6 +702,7 @@ async function runOne(c: Case, arm: Arm, run: number, enums: Enumerations): Prom
     markupLeak: /<\/?(?:invoke|parameter|function_calls|antml|tool_use|thinking)\b/i.test(reply),
     badMaths, expect: c.expect, error: !reply || wrongStance || badMaths, errorMsg,
     ...(kill ? { kill } : {}), ...(precheck ? { precheck } : {}), shape: ts?.shape, questionKind: ts?.open?.kind,
+    ...(backstop ? { backstop } : {}), ...(counting ? { counting } : {}),
   };
 }
 
@@ -670,13 +747,14 @@ function pct(xs: number[], p: number): number {
 }
 
 // $/MTok, claude-sonnet-5: input 2, output 10, cache read 0.2, 1h cache write 4.
+const CACHE_WRITE_PRICE = SHORT_CACHE ? 2.5 : 4; // $/MTok: 5-minute vs 1-hour entry
 function costOf(calls: CallRec[]): { warm: number; billed: number } {
   let warm = 0, billed = 0;
   for (const k of calls) {
     const u = k.usage ?? {};
     const out = (u.output_tokens ?? 0) * 10 / 1e6;
     const read = (u.cache_read_input_tokens ?? 0), write = (u.cache_creation_input_tokens ?? 0), inp = (u.input_tokens ?? 0);
-    billed += out + inp * 2 / 1e6 + read * 0.2 / 1e6 + write * 4 / 1e6;
+    billed += out + inp * 2 / 1e6 + read * 0.2 / 1e6 + write * CACHE_WRITE_PRICE / 1e6;
     // Warm-session cost: what the turn costs once the prefix is cached (as it
     // is from the second turn of a live session): everything cached is a read.
     warm += out + inp * 2 / 1e6 + (read + write) * 0.2 / 1e6;
@@ -780,8 +858,51 @@ async function cacheProbe(c: Case, enums: Enumerations) {
   }
 }
 
+/**
+ * `--recount <results.jsonl> --recount-out <file>`: what the counting path
+ * would record for every recorded row, both ways, with no model call —
+ *   old  the tutor's words (readPacingVerdict) bounded by a HIGH pre-check,
+ *        plus the ledger's inferred `wrong` (the 2ba5ebb8 path);
+ *   new  resolveMatchCredit on the pre-check and the match statement.
+ * The client's `ver` snapshot is not in the recordings; "an answer attempt"
+ * (isAnswerAttempt or a bare short answer) stands in for it in both.
+ */
+async function recount() {
+  const wtm = await import('../src/lib/tutor/voice/work-then-match');
+  const ps = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+  const aa = await import('../src/lib/tutor/orchestrator/answer-attempt');
+  const pv = await import('../src/lib/tutor/voice/pacing-verdict');
+  const src = path.resolve(opt('recount')!);
+  const out = path.resolve(opt('recount-out', path.join(OUT, 'counting.jsonl'))!);
+  const rows = fs.readFileSync(src, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as Result).filter((r) => r.reply);
+  const lines: string[] = [];
+  for (const r of rows) {
+    const pr = r.precheck?.result;
+    const pubRaw = pr ? ps.sanitizePublicPrecheck({ answers: pr.answers, target: pr.target, proposed: pr.proposed, verdict: pr.verdict, confidence: pr.confidence }) : null;
+    const pub = ps.precheckInforms(pubRaw) ? pubRaw : null; // only an informing check is sent to the browser
+    const answerAttempt = aa.isAnswerAttempt(r.student) || aa.isBareShortAnswer(r.student);
+    const override = ps.precheckCreditOverride(pub);
+    // old
+    const read = pv.readPacingVerdict(r.reply, { studentText: r.student });
+    const affirm = read.isAffirm && !override.suppressCorrect;
+    const corr = read.isCorrection && !override.suppressIncorrect;
+    let old: string = !answerAttempt ? 'none' : affirm && !corr ? 'correct' : corr ? 'incorrect' : 'none';
+    if (old === 'incorrect' && !aa.hedgedDenialCounts({ studentText: r.student, verifiedWrong: override.verifiedWrong })) old = 'none';
+    if (old !== 'incorrect' && aa.inferWrongEvent({ studentText: r.student, tutorText: r.reply, objectiveCorrect: override.suppressIncorrect, hedgedDenial: { verifiedWrong: override.verifiedWrong } })) old = old === 'correct' ? 'correct+ledger_wrong' : 'ledger_wrong';
+    // new
+    const match = wtm.readMatchStatement(r.reply, r.student);
+    const mc = wtm.resolveMatchCredit({ precheck: pub, match });
+    let neu: string = answerAttempt ? mc.credit : 'none';
+    if (neu === 'incorrect' && !aa.hedgedDenialCounts({ studentText: r.student, verifiedWrong: override.verifiedWrong })) neu = 'none';
+    lines.push(JSON.stringify({ id: r.id, cls: r.cls, arm: r.arm, answerAttempt, precheck: pub ? `${pub.answers}/${pub.verdict}/${pub.confidence}` : null, old, match, credit: mc.credit, source: mc.source, disagreement: mc.disagreement, new: neu }));
+  }
+  fs.writeFileSync(out, lines.join('\n') + '\n');
+  console.log(`[recount] ${rows.length} row(s) → ${out}`);
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
+  if (opt('recount')) return recount();
   if (flag('report')) return report();
   const sessions = loadSessions();
   let cases = buildCases(sessions);
@@ -834,24 +955,43 @@ async function main() {
     const jobs: Array<{ c: Case; run: number }> = [];
     for (let run = 1; run <= RUNS; run++) for (const c of cases) if (!done.has(`${c.id}|${armName}|${run}`)) jobs.push({ c, run });
     console.log(`[${armName}] ${jobs.length} trial(s) to run`);
-    let i = 0, spent = 0;
+    // Spend ledger, cumulative across invocations (every trial, failed ones
+    // too). A pre-check cut by its cap returns no usage: it is booked at the
+    // measured mean of a completed one. The judge call is booked at $0.001.
+    const ledgerFile = path.join(OUT, 'spend.jsonl');
+    const ledgerTotal = () => (fs.existsSync(ledgerFile)
+      ? fs.readFileSync(ledgerFile, 'utf8').split('\n').filter(Boolean).reduce((n, l) => n + (JSON.parse(l).usd as number), 0) : 0);
+    let i = 0, spent = ledgerTotal();
+    if (BUDGET) console.log(`[budget] spent so far $${spent.toFixed(3)} of $${BUDGET}${BARE_BUDGET ? ` (bare-token turns stop at $${BARE_BUDGET})` : ''}`);
     const write = (r: Result) => {
       fs.appendFileSync(resultsFile, JSON.stringify(r) + '\n');
-      spent += costOf(r.calls).billed + costOf(r.kill?.retryCalls ?? []).billed
-        + ((r.precheck?.result?.inputTokens ?? 0) * 2 + (r.precheck?.result?.outputTokens ?? 0) * 10) / 1e6;
+      const usd = costOf(r.calls).billed + costOf(r.kill?.retryCalls ?? []).billed
+        + (r.precheck ? (r.precheck.result ? (r.precheck.result.inputTokens * 2 + r.precheck.result.outputTokens * 10) / 1e6 : 0.0065) : 0)
+        + (NO_JUDGE ? 0 : 0.001);
+      fs.appendFileSync(ledgerFile, JSON.stringify({ id: r.id, arm: r.arm, usd: Number(usd.toFixed(5)), at: new Date().toISOString() }) + '\n');
+      spent += usd;
       const k = r.calls[0];
-      console.log(`[${armName} ${++i}/${jobs.length}] ${r.id} r${r.run} ${r.error ? 'ERR ' : 'ok  '} ${r.judge ?? r.regex} first=${k?.firstTextMs ?? '-'}ms end=${k?.endMs ?? '-'}ms out=${k?.usage?.output_tokens ?? '-'} read=${k?.usage?.cache_read_input_tokens ?? '-'} wr=${k?.usage?.cache_creation_input_tokens ?? '-'} $${spent.toFixed(2)}${r.precheck ? ` pc=${r.precheck.ms}ms ${r.precheck.result ? `${r.precheck.result.answers}/${r.precheck.result.verdict}/${r.precheck.result.confidence}` : 'none'}` : ''}${r.kill ? ` KILL(${r.kill.kind})` : ''} :: ${r.reply.slice(0, 80)}`);
+      console.log(`[${armName} ${++i}/${jobs.length}] ${r.id} r${r.run} ${r.error ? 'ERR ' : 'ok  '} ${r.judge ?? r.regex} first=${k?.firstTextMs ?? '-'}ms end=${k?.endMs ?? '-'}ms out=${k?.usage?.output_tokens ?? '-'} read=${k?.usage?.cache_read_input_tokens ?? '-'} wr=${k?.usage?.cache_creation_input_tokens ?? '-'} $${spent.toFixed(2)}${r.precheck ? ` pc=${r.precheck.ms}ms ${r.precheck.result ? `${r.precheck.result.answers}/${r.precheck.result.verdict}/${r.precheck.result.confidence}` : 'none'}` : ''}${r.kill ? ` KILL(${r.kill.kind})` : ''}${r.backstop && r.backstop.first !== 'none' ? ` BACKSTOP(${r.backstop.first}${r.backstop.retry ? `→${r.backstop.retry}` : ''})` : ''}${r.counting ? ` count=${r.counting.counted}(${r.counting.match}/${r.counting.source})` : ''} :: ${r.reply.slice(0, 80)}`);
     };
     // One trial alone first: it writes the shared tools+core cache entry for
     // this thinking config; the rest then read it.
-    if (jobs.length) write(await runOne(jobs[0].c, arm, jobs[0].run, enums));
+    let skipped = 0;
+    const affordable = (cse: Case): boolean => {
+      // Room for one more trial (~$0.6 covers a cold prefix write).
+      if (BUDGET && spent + 0.6 > BUDGET) return false;
+      if (BARE_BUDGET && cse.cls === 'bare' && spent > BARE_BUDGET) return false;
+      return true;
+    };
+    if (jobs.length && affordable(jobs[0].c)) write(await runOne(jobs[0].c, arm, jobs[0].run, enums));
     let next = 1;
     await Promise.all(Array.from({ length: CONC }, async () => {
       while (next < jobs.length) {
         const j = jobs[next++];
+        if (!affordable(j.c)) { skipped++; continue; }
         write(await runOne(j.c, arm, j.run, enums));
       }
     }));
+    if (skipped) console.log(`[budget] ${skipped} trial(s) NOT run — spend $${spent.toFixed(2)}`);
   }
   report();
 }

@@ -44,6 +44,7 @@ import {
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
+import { formatWorkThenMatchBlock } from './work-then-match';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
@@ -473,6 +474,15 @@ export interface BrainTurnInput {
    *  TUTOR_TEXT_VERDICT_PRECHECK is not 'off'. Streaming path only.
    *  Absent/false ⇒ no call, no block, no event. */
   textVerdictPrecheck?: boolean;
+  /** Text mode "work it, then match" (2026-10-06, ./work-then-match.ts): the
+   *  reply to a proposed answer opens with the working and then states
+   *  whether the result matches what the student wrote — no verdict opener.
+   *  The rule takes the place of `<verdict_guard>`, and `<private_reasoning>`,
+   *  `<turn_shape>` and `<answer_check>` are worded to agree with it. Set by
+   *  the stream route for a text-mode session when TUTOR_TEXT_WORK_THEN_MATCH
+   *  is not 'off'. Streaming path only. Absent/false ⇒ blocks and events
+   *  exactly as before. */
+  textWorkThenMatch?: boolean;
   /** The student's own words for this turn. `studentTranscript` can carry
    *  runtime notes in front of them ("[correction note …]\n\n<words>"), and
    *  is a runtime message on a retry; the two text-mode levers above read
@@ -639,6 +649,10 @@ export type BrainStreamEvent =
    *  before display and to bound the counting path. Only sent when the check
    *  informs (not low-confidence, not failed). */
   | { type: 'verdict-precheck'; result: PublicVerdictPrecheck; ms: number }
+  /** Text mode "work it, then match" is on for this call. Sent before any
+   *  sentence; the client then applies its opener backstop and reads credit
+   *  from the checks and the match statement instead of the opener. */
+  | { type: 'work-then-match' }
   /** Explicit pause directive emitted between sentences. The speakText
    *  layer waits this long before voicing the next sentence. Cancelled
    *  immediately if the student speaks (barge-in). */
@@ -2085,21 +2099,31 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const turnShape = input.textTurnShape === true || input.textVerdictPrecheck === true
     ? classifyTurnShape(studentSaid, lastTutorMsgForGuard)
     : null;
-  const turnShapeBlock = input.textTurnShape === true ? formatTurnShapeBlock(turnShape, studentSaid) : '';
+  // "Work it, then match": only ever true for a text session (the route).
+  const workThenMatch = input.textWorkThenMatch === true;
+  if (workThenMatch) yield { type: 'work-then-match' };
+  const turnShapeBlock = input.textTurnShape === true
+    ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
+    : '';
   if (turnShapeBlock) console.log(`[turn-shape] ${turnShape?.shape} · question=${turnShape?.open?.kind}`);
-  const verdictGuardBlock = formatVerdictGuardBlock(
+  const ordinaryGuardBlock = formatVerdictGuardBlock(
     input.studentTranscript,
     lastTutorMsgForGuard,
     input.textTurnShape === true && assentSettlesNothing(turnShape) ? { noContinuation: true } : undefined,
   );
-  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
+  // Under the mode the rule block takes the guard's place; plain consent to
+  // an offer keeps its continuation guard (nothing is being judged there).
+  const verdictGuardBlock = workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
+    ? formatWorkThenMatchBlock(input.studentTranscript, turnShape)
+    : ordinaryGuardBlock;
+  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : workThenMatch ? '[verdict-guard] work-then-match rule attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // Text-mode thinking (streaming path only): `thinkingOn` can only fall to
   // false within a turn (deadline / token-cap re-issue below), never rise.
   let thinkingOn = input.textThinking === true;
-  const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript);
+  const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript, workThenMatch ? { workThenMatch: true } : undefined);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   // Verdict pre-check: one small call, awaited HERE — before the brain call,
   // nothing else in flight — for an answer-shaped message that has something
@@ -2127,14 +2151,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         const pub = toPublicPrecheck(result);
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${precheckInforms(pub) ? '' : ' (not injected)'}`);
         if (precheckInforms(pub)) {
-          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue });
+          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}) });
           yield { type: 'verdict-precheck', result: pub, ms };
         }
       } else {
         console.log(`[verdict-precheck] ${ms} ms · no result (not injected)`);
       }
     } else if (!turnShape && input.verdictPrecheckCarry) {
-      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry);
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch ? { workThenMatch: true } : undefined);
       if (answerCheckBlock) console.log('[verdict-precheck] carried from the first attempt of this turn');
     }
   }

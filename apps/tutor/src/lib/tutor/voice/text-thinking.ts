@@ -119,14 +119,25 @@ export function thinkingStarved(a: {
  * say are unchanged. '' when thinking is off or the turn is a runtime
  * dispatch (bracketed) rather than something the student wrote.
  */
-export function formatTextThinkingBlock(on: boolean, studentTranscript: string): string {
+export function formatTextThinkingBlock(
+  on: boolean,
+  studentTranscript: string,
+  opts?: {
+    /** "Work it, then match" (./work-then-match.ts): the reply opens with the
+     *  working, not with a verdict. Unset/false ⇒ the block as before. */
+    workThenMatch?: boolean;
+  },
+): string {
   const t = (studentTranscript ?? '').trim();
   if (!on || !t || t.startsWith('[')) return '';
+  const step3 = opts?.workThenMatch === true
+    ? '3. Only then write the reply. It does not open with a verdict or praise word: it opens with the working — one or two short sentences from the student\'s own problem, ending in the result — and then states, as a fact, whether that result matches what the student wrote. If the message does not answer the open question, do not treat it as though it did: no verdict of any kind, and do not work the open question out for them — respond to what they actually wrote, and ask what they meant if that is unclear.\n'
+    : '3. Only then write the reply, and open it with a verdict that matches what you found. If the message does not answer the open question, do not treat it as though it did: no verdict or praise word — respond to what they actually wrote, and ask what they meant if that is unclear.\n';
   return '<private_reasoning>\n'
     + 'You can reason privately before this reply; the student never sees that reasoning. Use it, in this order, before you write anything:\n'
     + '1. Identify exactly which question is open right now (the last thing you asked, or the part of the problem being worked) and what the student\'s message is: an answer to that question, an answer to a different question or a different part, a question or request of their own, or not an answer at all.\n'
     + '2. If the message contains an answer or a claim, work out the correct result yourself from the student\'s own problem and data before you judge it — every step, including any intermediate value you are about to state or write on the board. Then compare their result with yours; an equivalent form is the same result.\n'
-    + '3. Only then write the reply, and open it with a verdict that matches what you found. If the message does not answer the open question, do not treat it as though it did: no verdict or praise word — respond to what they actually wrote, and ask what they meant if that is unclear.\n'
+    + step3
     + '4. The reply contains only what you say to the student. Never put your plan, your sorting of their message, or any reasoning about the conversation, the turn or the lesson state into the reply.\n'
     + '</private_reasoning>\n\n';
 }

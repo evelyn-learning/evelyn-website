@@ -239,6 +239,45 @@ function shapeFact(ts: TurnShape): string {
   }
 }
 
+/** The rules for a reply that opens with the working ("work it, then match",
+ *  ./work-then-match.ts). Same facts, same sorting; only what the reply does
+ *  with an answer differs. Null ⇒ the ordinary rule applies unchanged. */
+function rulesForWorkThenMatch(ts: TurnShape): string[] | null {
+  const kind = ts.open?.kind;
+  if (ts.shape === 'bare_assent' || ts.shape === 'bare_dissent') {
+    if (kind === 'wh' || kind === 'either_or') return null;
+    return [
+      'It answers the question as asked. If that question was an offer or a check on readiness, it is consent, not an answer to grade: no verdict word — do what was agreed.',
+      'If the question had a right answer: work it in a sentence, state the result, and then say whether that agrees with their yes or no — no verdict word first.',
+    ];
+  }
+  switch (ts.shape) {
+    case 'bare_token':
+      return [
+        'Check this value against the OPEN question above — not against an earlier question, and not against the final answer of the problem unless that is what the open question asks for.',
+        'If it is a possible answer to the open question: work that step, state its result, and then say whether it is the value they gave.',
+        'If it is not a possible answer to the open question (it is the wrong kind of thing for it, or it repeats the answer to an earlier question), it is not an answer to it: no verdict of any kind, do not answer the open question for them — ask what it refers to, or ask the open question again.',
+      ];
+    case 'hedged_proposal':
+      return [
+        'It IS an answer: treat the proposed value exactly as if it had been stated plainly. Uncertainty is not wrongness.',
+        'First decide which question the proposed value answers — the open question above, or the problem being worked as a whole (its final answer, or another part of it). Work THAT, state the result, and say whether it is the value they proposed.',
+        'If the value is the final answer of the problem while your question was about a smaller step: show the remaining step briefly, reach the result, and say that it is the value they gave and that it is the final answer. Never send them back to the smaller step as though the value were wrong.',
+      ];
+    case 'check_request':
+      return [
+        'Work the question the value actually answers, state the result, and then say whether it is the value they gave. It is not an answer to the open question unless it fits that question.',
+        'If it cannot be an answer to anything on the table, say so and ask which problem or step it belongs to — no verdict of any kind.',
+      ];
+    case 'answer':
+      return [
+        'Decide which question it answers — the open question above, or another part of the problem — and work THAT from the student\'s own problem; check every value in their message against your working before you say whether it matches.',
+      ];
+    default:
+      return null;
+  }
+}
+
 function rulesFor(ts: TurnShape): string[] {
   const kind = ts.open?.kind;
   const assentLike = ts.shape === 'bare_assent' || ts.shape === 'bare_dissent' || ts.shape === 'acknowledgment';
@@ -304,12 +343,22 @@ function rulesFor(ts: TurnShape): string[] {
  * shape of the student's message, and the rules that follow from that pair.
  * '' when nothing is open or the turn is synthetic — nothing to sort.
  */
-export function formatTurnShapeBlock(ts: TurnShape | null, studentText?: string): string {
+export function formatTurnShapeBlock(
+  ts: TurnShape | null,
+  studentText?: string,
+  opts?: {
+    /** "Work it, then match" (./work-then-match.ts). Unset/false ⇒ as before. */
+    workThenMatch?: boolean;
+  },
+): string {
   if (!ts) return '';
+  const wtm = opts?.workThenMatch === true;
   const wrongSum = ts.answerShaped ? falseArithmeticIn(studentText ?? '') : null;
-  const rules = ts.open ? rulesFor(ts) : [];
+  const rules = ts.open ? ((wtm ? rulesForWorkThenMatch(ts) : null) ?? rulesFor(ts)) : [];
   if (wrongSum) {
-    rules.push('The calculation named above is wrong as written, so whatever the student built on it cannot be accepted as it stands: do not open with praise or a confirmation. Have them redo that one calculation — do not state its result for them.');
+    rules.push(wtm
+      ? 'The calculation named above is wrong as written, so whatever the student built on it cannot stand: that calculation is the step your working states. Say what they wrote for it and what it actually gives, and have them carry the corrected value forward themselves.'
+      : 'The calculation named above is wrong as written, so whatever the student built on it cannot be accepted as it stands: do not open with praise or a confirmation. Have them redo that one calculation — do not state its result for them.');
   }
   if (!rules.length) return '';
   return '<turn_shape>\n'

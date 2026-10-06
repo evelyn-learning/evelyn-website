@@ -111,9 +111,17 @@ function q(s: string): string {
  */
 export function formatAnswerCheckBlock(
   p: PublicVerdictPrecheck | null | undefined,
-  opts?: { correctValue?: string },
+  opts?: {
+    correctValue?: string;
+    /** "Work it, then match" (./work-then-match.ts): the reply opens with the
+     *  working, so the block asks for working that reaches the checked value
+     *  and a match statement that agrees with the check — not for a verdict
+     *  opener. Unset/false ⇒ the block as before. */
+    workThenMatch?: boolean;
+  },
 ): string {
   if (!precheckInforms(p)) return '';
+  if (opts?.workThenMatch === true) return formatAnswerCheckBlockWorkThenMatch(p, opts.correctValue);
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -155,6 +163,56 @@ export function formatAnswerCheckBlock(
   return head + proposed + where
     + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
     + 'What to do: say exactly what is right and what is missing or wrong. Do not open with unqualified praise, and do not open with a flat denial.\n'
+    + tail;
+}
+
+/** The same findings, worded for a reply that opens with the working. */
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string): string {
+  const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
+  const named = p.target ? ` (${p.target})` : '';
+  const head = '<answer_check>\n'
+    + 'Before this turn the student\'s message was checked independently, from their own problem and data. The student does not see this.\n';
+  const tail = 'If your own working disagrees with this check, redo it once from the student\'s own problem. If you still disagree, state no match either way: ask them to show how they got it.\n'
+    + 'Never mention this check to the student.\n'
+    + '</answer_check>\n\n';
+  if (p.answers === 'neither') {
+    return head + proposed
+      + `- It does NOT answer the question you last asked, nor the problem being worked${named}.\n`
+      + 'What to do: no verdict of any kind, and no working-out of your open question on their behalf — respond to what they wrote: ask what it refers to, or ask the open question again. Do not tell them it "is not an answer" — just ask.\n'
+      + tail;
+  }
+  const where = p.answers === 'open_question'
+    ? `- It answers: the question you last asked${named}.\n`
+    : p.answers === 'overall_problem'
+      ? `- It answers: the problem being worked${named} — NOT the smaller step you had just asked about.\n`
+      : `- It answers: a different problem or part from the one you were on${named}.\n`;
+  if (p.verdict === 'correct') {
+    // The student gave this value themselves, so stating it reveals nothing:
+    // it is what the reply's own working has to arrive at.
+    const checked = correctValue ? ` The check's own result: ${q(line(correctValue, 200))}.` : '';
+    return head + proposed + where
+      + `- Checked for that question: CORRECT.${checked}\n`
+      + (p.answers === 'overall_problem'
+        ? 'What to do: your working must reach the checked value and your match statement must agree with the check — show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Never send them back to the smaller step as though the value were wrong.\n'
+        : p.answers === 'other_part'
+          ? 'What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. State both as facts, briefly, then return to the question you asked.\n'
+          : 'What to do: your working must reach the checked value and your match statement must agree with the check — say that the result is the value they gave. Do not ask them to check it again.\n')
+      + tail;
+  }
+  if (p.verdict === 'incorrect') {
+    const value = correctValue
+      ? ` The correct value is ${q(line(correctValue, 200))} — it is there so that your own working can be held to it.`
+      : '';
+    return head + proposed + where
+      + `- Checked for that question: INCORRECT.${value}\n`
+      + (p.answers === 'other_part'
+        ? 'What to do: your working must reach the checked value and your match statement must agree with the check — it is an attempt at THAT problem or part, not at the question you asked just now. Work THAT as far as the step where their working and yours part, state that step\'s result, and say that it is not what they wrote and which step the difference is in. Do not state the result of the question you had asked.\n'
+        : 'What to do: your working must reach the checked value and your match statement must agree with the check — work as far as the step where their working and yours part, state that step\'s result, and say that it is not what they wrote and which step the difference is in. The steps after that one stay with the student.\n')
+      + tail;
+  }
+  return head + proposed + where
+    + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
+    + 'What to do: your working must reach the checked value and your match statement must agree with the check — state as facts which part your working confirms, and that the question asks for more or that a part differs. Ask for what is missing; do not supply it.\n'
     + tail;
 }
 

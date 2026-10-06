@@ -46,6 +46,7 @@ import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/l
 import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
 import { textTurnShapeEnabled } from '@/lib/tutor/voice/turn-shape-signal';
 import { textVerdictPrecheckEnabled } from '@/lib/tutor/voice/verdict-precheck';
+import { textWorkThenMatchEnabled } from '@/lib/tutor/voice/work-then-match';
 import { sanitizePublicPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 import {
   RULE8_PROMISE_REGEX,
@@ -861,6 +862,8 @@ export async function POST(req: NextRequest) {
           // mode, so those requests are the pre-existing ones.
           textTurnShape: textTurnShapeEnabled(body.inputMode),
           textVerdictPrecheck: textVerdictPrecheckEnabled(body.inputMode),
+          // "Work it, then match" (2026-10-06): text only, TUTOR_TEXT_WORK_THEN_MATCH.
+          textWorkThenMatch: textWorkThenMatchEnabled(body.inputMode),
           ...(body.inputMode === 'text' && typeof body.studentMessage === 'string' && body.studentMessage.trim()
             ? { studentMessage: body.studentMessage.slice(0, 4000) }
             : {}),
@@ -903,7 +906,7 @@ export async function POST(req: NextRequest) {
           // far is this frame is still safely retryable.
           // (The verdict pre-check frame is the same kind of frame: it is sent
           // before any sentence and commits nothing to the student.)
-          if (ev.type === 'thinking' || ev.type === 'verdict-precheck') {
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;
