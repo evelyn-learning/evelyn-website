@@ -97,3 +97,38 @@ New file name on purpose (`-v2`): the v1 URL may be cached by browsers/CDN.
 - Running the tutor engine locally for capture is not a deploy. Nothing in this
   process touches `apps/tutor`, `packages/core` or any server.
 
+
+## v3 (2026-10-05) — the Crimsora v4 feedback, applied here
+
+`academy-tour-v3.mp4` — 62.4 s, −16.1 LUFS, 7.2 MB. v2 stays in `public/videos`; the page
+points at v3. Small sources are in `v3/` (`scenes.json`, `captions.json`, `vo-script.json`,
+`prep.sh`, `gen-captions.mjs`); raw material is in `~/.evelyn/promo/academy-v3/`.
+Read "v4" in `~/Dev/academy/scripts/promo/README.md` first — this is the same recipe.
+
+1. **Captions on their own band.** Every scene except the two cards is framed
+   (`"frame": true`, 1636×920 at the top, band colour `0x0e1030`) and `gen-captions.mjs`
+   writes the scene label and the caption into the 160 px strip underneath. `v3/gen-captions.mjs`
+   is the academy repo's script plus a `labelColor` key (upstream hard-codes Crimsora's pink).
+2. **Voices swapped.** Mr. Joseph narrates; Coach Riley is the tutor.
+3. **Narration re-recorded at natural speed.** No `atempo`; `AI` written as a word. Every
+   line gain-matched to −18 LUFS (`prep.sh`); narration and tutor both measure ≈ −16 in the master.
+4. **Live slice = Geometry, "The Pythagorean Theorem & Its Converse"**, filmed on the neutral
+   brand with `CAPTURE_ZOOM=1.5` (local `GEOMETRY.defaultTeacherId` → Coach Riley for the run,
+   restored after). Praveen asked for motion, not stills: the slice is four board moments
+   joined by dissolves, each with a slow push-in — see `prep.sh` §2 for the offsets and why the
+   speech ticker is cropped. 1.6 s of silence before the tutor's first word, 1.9 s after her last.
+   Board checked for correctness: A(0,0) B(4,0) C(4,3), legs 4 and 3, hypotenuse 5, right angle at B.
+   Captions write "B" — the TTS text spells it "bee".
+   Rejected: the Crimsora v4 chemistry slice (its "gold atom" is drawn with Z = 40; gold is 79)
+   and Biology "Monohybrid Crosses" (the session opened on cellular respiration, then showed a
+   wall of text and a small pre-filled table).
+5. **UI scenes reuse the v1 raw captures** (`~/.evelyn/promo/academy-v1/ui/*.webm`); the
+   chips were overlays, so the raw footage is clean.
+6. **Poster** = master frame at 19.5 s.
+
+Engine for the capture: this repo's worktree on :3006 with a `.env.local` whose `MONGODB_URI`
+is rewritten to `mongodb://127.0.0.1:27017/academy_m3` (the root file points at the prod tunnel).
+
+Order: capture → `gen-vo.mjs vo/raw` → `prep.sh` → `assemble.mjs scenes.json out/…-nocap.mp4` →
+`gen-captions.mjs captions.json …-nocap.mp4 …-master.mp4` → web encode
+(`-crf 23 -b:a 128k -movflags +faststart`). `scenes.json` here keeps the `<work-dir>` placeholder.

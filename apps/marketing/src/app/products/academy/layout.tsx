@@ -54,11 +54,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <VideoObjectJsonLd
         name="Evelyn Academy — one-minute product tour"
         description="A walkthrough of Evelyn Academy, the white-label AI learning platform: course lessons, a live AI voice tutor lesson, practice and quizzes, timed mock exams, mastery tracking, brand theming and the admin dashboard."
-        contentPath="/videos/academy-tour-v2.mp4"
-        thumbnailPath="/videos/academy-tour-v2-poster.jpg"
+        contentPath="/videos/academy-tour-v3.mp4"
+        thumbnailPath="/videos/academy-tour-v3-poster.jpg"
         pagePath="/products/academy"
-        uploadDate="2026-09-17"
-        duration="PT58S"
+        uploadDate="2026-10-05"
+        duration="PT62S"
       />
       <BreadcrumbJsonLd
         items={[
