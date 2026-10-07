@@ -172,6 +172,8 @@ export interface TutorSessionProps {
   openScope?: VTRProps['openScope'];
   lessonContext?: VTRProps['lessonContext'];
   inFlow?: VTRProps['inFlow'];
+  prewarm?: VTRProps['prewarm'];
+  onRelayReady?: VTRProps['onRelayReady'];
   /** Explicit session-target kind (embed `target_kind` / dev hook) —
    *  'diagnostic' makes the opening behavior no-op. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. Only consumed
@@ -272,7 +274,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
-    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope, lessonContext, inFlow,
+    socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope, lessonContext, inFlow, prewarm, onRelayReady,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
     humorControl = true, mobileFinish,
@@ -1477,6 +1479,8 @@ export default function TutorSession(props: TutorSessionProps) {
         openScope={openScope}
         lessonContext={lessonContext}
         inFlow={inFlow}
+        prewarm={prewarm}
+        onRelayReady={onRelayReady}
         targetKind={targetKind}
         checkpointStale={checkpointStale}
         teacherPersona={teacherPersona}

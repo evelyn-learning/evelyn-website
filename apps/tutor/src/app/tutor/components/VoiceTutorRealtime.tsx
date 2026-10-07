@@ -743,6 +743,11 @@ interface VoiceTutorRealtimeProps {
   lessonContext?: LessonContext;
   /** Student arrived mid-activity: in-flow opener/close, no intro ritual, no first-session tip. */
   inFlow?: boolean;
+  /** Host pre-load (spec v1.1 §3 `prewarm=1`): connect and build as usual but hold the
+   *  microphone (no permission prompt in a hidden frame) until the session starts. */
+  prewarm?: boolean;
+  /** Fires once when the relay first connects (the embed posts `evelyn:ready`). */
+  onRelayReady?: () => void;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -1256,6 +1261,8 @@ export function VoiceTutorRealtime({
   openScope = false,
   lessonContext,
   inFlow = false,
+  prewarm = false,
+  onRelayReady,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -20732,7 +20739,21 @@ export function VoiceTutorRealtime({
   // avoids issuing a mic-permission prompt before the user clicks Start.
   // Text mode (Task 5): never opens perception at all — no mic, no
   // getUserMedia prompt, ever.
-  const perceptionEnabled = sessionMode !== 'text' && perceptionStage >= 0 && realtime.isConnected;
+  // Prewarm (spec v1.1 §3): the frame is warm but hidden — the STT/perception
+  // socket and its getUserMedia wait for the start, so the permission prompt
+  // lands on the student's click, not on the host's page load.
+  // The ref, not `hasStarted` (declared further down): every start path sets
+  // the ref together with setHasStarted, so the re-render that follows reads it.
+  const prewarmMicHold = prewarm && !hasStartedRef.current;
+  const perceptionEnabled = sessionMode !== 'text' && perceptionStage >= 0 && realtime.isConnected && !prewarmMicHold;
+  const relayReadyFiredRef = useRef(false);
+  const onRelayReadyRef = useRef(onRelayReady);
+  onRelayReadyRef.current = onRelayReady;
+  useEffect(() => {
+    if (!realtime.isConnected || relayReadyFiredRef.current) return;
+    relayReadyFiredRef.current = true;
+    onRelayReadyRef.current?.();
+  }, [realtime.isConnected]);
 
   // Keep production WS state in a ref so the perception onTranscript callback
   // can tag every log with what the production WS was doing at the moment

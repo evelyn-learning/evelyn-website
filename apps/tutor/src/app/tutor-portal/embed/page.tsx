@@ -29,13 +29,14 @@ import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/r
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START } from '@/lib/tutor/orchestrator/flags';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
+import { PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -65,6 +66,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
   // 2026-10-02 in-flow: fixed first words spoken before the brain's first sentence.
   'bridge_spoken', 'bridge_audio',
+  // Drop 2 (spec v1.1 §3): prewarm_ready / prewarm_expired, host_start /
+  // host_start_ignored (start_blocked rides the 'start_' prefix below).
+  'prewarm_', 'host_start',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -520,6 +524,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const rawPayload = config as unknown;
   const lessonContext = useMemo(() => parseLessonContext(rawPayload), [rawPayload]);
   const inFlow = useMemo(() => parseEntry(rawPayload) === 'in-flow', [rawPayload]);
+  // Host pre-load (spec v1.1 §3): hidden frame, mic held until evelyn:start.
+  const searchParams = useSearchParams();
+  const prewarm = TUTOR_HOST_START && isPrewarmParam(searchParams.get('prewarm'));
+  const tokenExp = useMemo(() => tokenExpSec(rawPayload), [rawPayload]);
   // Open-scope (2026-09-10): subject + lessonPlanId become STATE so a
   // mid-session plan swap can move both. For every non-open-scope token
   // neither setter is ever called and the values equal the old consts.
@@ -1276,6 +1284,95 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
+  // Host start (spec v1.1 §3, Drop 2): the host's "Ask Tutor" click posts
+  // `evelyn:start`, which runs the SAME path as the Start tap
+  // (handle.startSession → mic, audio unlock, bridge line, kickoff). Accepted
+  // once, only from window.parent on the embedding origin. A start that lands
+  // before the session component mounts waits for its handle; one that lands
+  // before the relay connects takes VTR's queued-start path. Audio started
+  // without a gesture inside the frame can be refused (some Safari): then the
+  // frame shows one "Tap to hear your tutor" button and the start runs on
+  // that tap instead.
+  const hostStartAcceptedRef = useRef(false);
+  const [startBlocked, setStartBlocked] = useState<null | 'autoplay' | 'token_expired'>(null);
+  const runHostStart = useCallback(() => {
+    const deadline = Date.now() + 60_000;
+    const tryStart = () => {
+      const h = sessionHandleRef.current;
+      if (h?.startSession) { h.startSession(); return; }
+      if (Date.now() < deadline) setTimeout(tryStart, 100);
+      else addDebugEvent('host_start_ignored', 'why=no_session_handle');
+    };
+    tryStart();
+  }, [addDebugEvent]);
+  const blockStart = useCallback((reason: 'autoplay' | 'token_expired') => {
+    setStartBlocked(reason);
+    addDebugEvent('start_blocked', `reason=${reason}`);
+    window.parent.postMessage({ type: 'evelyn:start_blocked', reason }, '*');
+  }, [addDebugEvent]);
+  useEffect(() => {
+    if (!TUTOR_HOST_START) return;
+    const expectedOrigin = getEmbeddingHost();
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window.parent || window.parent === window) return;
+      if (!isAllowedHostOrigin(event.origin, expectedOrigin)) return;
+      if (!parseHostStart(event.data)) return;
+      const decision = decideHostStart({
+        hostStartAccepted: hostStartAcceptedRef.current,
+        sessionStarted: sessionEngagedAtRef.current !== null,
+        ending: sessionHandleRef.current?.isEnding?.() === true || sessionEndedPostedRef.current,
+        tokenExpSec: tokenExp,
+        nowMs: Date.now(),
+      });
+      if (!decision.accept) {
+        addDebugEvent('host_start_ignored', `why=${decision.why}`);
+        if (decision.why === 'token_expired') blockStart('token_expired');
+        return;
+      }
+      hostStartAcceptedRef.current = true;
+      addDebugEvent('host_start', `prewarm=${prewarm}`);
+      // Autoplay probe: a throwaway AudioContext shares the frame's autoplay
+      // permission with the real one; only 'running' means audio is heard.
+      void (async () => {
+        let state: AudioContextState | 'unavailable' = 'unavailable';
+        try {
+          const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (Ctx) {
+            const probe = new Ctx();
+            await Promise.race([probe.resume().catch(() => {}), new Promise((r) => setTimeout(r, 300))]);
+            state = probe.state;
+            void probe.close().catch(() => {});
+          }
+        } catch { state = 'unavailable'; }
+        if (isAutoplayBlocked(state)) blockStart('autoplay');
+        else runHostStart();
+      })();
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [addDebugEvent, blockStart, runHostStart, prewarm, tokenExp]);
+
+  // evelyn:ready — posted once when the relay first connects (warm). Additive;
+  // hosts that never prewarm ignore it.
+  const handleRelayReady = useCallback(() => {
+    if (!TUTOR_HOST_START) return;
+    if (prewarm) addDebugEvent('prewarm_ready', 'relay connected');
+    window.parent.postMessage({ type: 'evelyn:ready' }, '*');
+  }, [prewarm, addDebugEvent]);
+
+  // A warm frame left unstarted for PREWARM_IDLE_MS reloads itself (fresh
+  // relay and provider tokens) unless the token has expired by then.
+  useEffect(() => {
+    if (!prewarm) return;
+    const t = setTimeout(() => {
+      if (hostStartAcceptedRef.current || sessionEngagedAtRef.current !== null) return;
+      const action = prewarmIdleAction(tokenExp, Date.now());
+      addDebugEvent('prewarm_expired', `action=${action}`);
+      if (action === 'reload') window.location.reload();
+    }, PREWARM_IDLE_MS);
+    return () => clearTimeout(t);
+  }, [prewarm, tokenExp, addDebugEvent]);
+
   // evelyn:activity (GreenApple spec 2026-10-02 §1): additive message on a
   // real (non-synthetic) student turn, text or voice, relayed from VTR's
   // 'evelyn:student-activity' window event (fired where it records student
@@ -1618,6 +1715,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         openScope={openScope}
         lessonContext={lessonContext}
         inFlow={inFlow}
+        prewarm={prewarm}
+        onRelayReady={handleRelayReady}
         voice={openAIVoice}
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}
@@ -1706,6 +1805,22 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
           emitProgress();
         }}
       />
+
+      {/* Host start fallback (spec v1.1 §3): audio refused without a tap in the frame. */}
+      {startBlocked === 'autoplay' && (
+        <button
+          type="button"
+          onClick={() => { setStartBlocked(null); runHostStart(); }}
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-white/90 text-lg font-semibold text-slate-800"
+        >
+          <span className="rounded-full bg-[var(--brand-color,#2563eb)] px-6 py-3 text-white shadow-lg">Tap to hear your tutor</span>
+        </button>
+      )}
+      {startBlocked === 'token_expired' && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-white/95 p-8 text-center text-sm text-slate-700">
+          This session link has expired. Please reload the page to start the tutor.
+        </div>
+      )}
 
       {/* Error toast */}
       {error && (

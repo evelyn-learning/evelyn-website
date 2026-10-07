@@ -135,6 +135,7 @@
     "test:system-prompt-parts": "npx tsx scripts/test-system-prompt-parts.ts",
     "test:lesson-context": "npx tsx scripts/test-lesson-context.ts",
     "test:inflow-wiring": "npx tsx scripts/test-inflow-wiring.ts",
+    "test:host-start": "npx tsx scripts/test-host-start.ts",
     "test:bridge-line": "npx tsx scripts/test-bridge-line.ts",
     "test:tts-prewarm-on-enable": "npx tsx scripts/test-tts-prewarm-on-enable.ts",
     "test:prompt-cache": "npx tsx scripts/test-prompt-cache.ts",
