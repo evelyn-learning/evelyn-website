@@ -176,6 +176,11 @@ export const TUTOR_INFLOW_ENTRY = process.env.NEXT_PUBLIC_TUTOR_INFLOW_ENTRY !==
 // Bridge line: a fixed first line spoken by the client at the start tap, before
 // the first brain call. NEXT_PUBLIC_TUTOR_BRIDGE_LINE=off restores silence.
 export const TUTOR_BRIDGE_LINE = process.env.NEXT_PUBLIC_TUTOR_BRIDGE_LINE !== 'off';
+
+// Host start (partner spec v1.1 §3): `prewarm=1` loads the embed warm with the mic
+// held, and the host's `evelyn:start` message runs the Start tap's path.
+// NEXT_PUBLIC_TUTOR_HOST_START=off ignores both (a prewarmed frame loads normally).
+export const TUTOR_HOST_START = process.env.NEXT_PUBLIC_TUTOR_HOST_START !== 'off';
 // R58 noise-floor nudge (live, portal-dd0bf3a9: AirPods with
 // noiseSuppression=undefined turned background noise into FLUENT nonsense
 // STT — "while networking distinct account revenues" — which the

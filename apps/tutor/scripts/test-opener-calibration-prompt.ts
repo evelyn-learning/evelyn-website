@@ -286,6 +286,18 @@ function main() {
     assert.ok(c);
     assert.doesNotMatch(c!, /\b(listen|hear|say)\b/i);
   });
+  test('in-flow opener: a student who opens with their own question gets it answered first', () => {
+    for (const lessonContext of [{ title: 'Probability', question: 'Which is more likely?' }, { title: 'Probability' }, undefined]) {
+      for (const inputMode of ['voice', 'text'] as const) {
+        const c = buildInFlowOpenerClause({ openingPhase: true, studentName: 'Maya', lessonContext, inputMode });
+        assert.match(c!, /first message .*(question|request)/i);
+        assert.match(c!, /answer (it|that) first/i);
+        assert.match(c!, /instead of the pick-up/i);
+        assert.match(c!, /not in the lesson context/i);
+        assert.doesNotMatch(c!, /\b(listen|hear|say)\b/i, `${inputMode}: no listening words`);
+      }
+    }
+  });
   test('in-flow opener returns null outside the opening phase', () => {
     assert.equal(buildInFlowOpenerClause({ openingPhase: false, studentName: 'Maya' }), null);
   });
