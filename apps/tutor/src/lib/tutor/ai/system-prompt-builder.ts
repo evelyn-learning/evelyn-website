@@ -1641,7 +1641,13 @@ export function buildInFlowOpenerClause(
   return (
     `${greet}, ${pickUp}, and ask your first question. ${wording} at most two sentences before that question. ` +
     'Do not introduce yourself, do not explain how you work or how long replies take, do not ask them to find a ' +
-    'quiet place, and do not give an overview of the lesson — they came from it and go back to it.'
+    'quiet place, and do not give an overview of the lesson — they came from it and go back to it. ' +
+    // Live 10-06: the student typed "what are the numbers on this slide?" as
+    // the first message and the opener ran its own pick-up question over it.
+    "If the student's first message is already their own question or request (not a bracketed start marker), " +
+    'answer it first instead of the pick-up: greet in a few words, then answer it from the lesson context and only then ' +
+    'ask a question. If what they asked for is not in the lesson context, tell them plainly in one sentence that you do ' +
+    'not have it and help with what you do have — never invent it.'
   );
 }
 
