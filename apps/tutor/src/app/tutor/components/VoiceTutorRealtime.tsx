@@ -23245,6 +23245,10 @@ export function VoiceTutorRealtime({
         setPracticeOverride,
         setDifficultyBias,
         setManualMic,
+        setTutorVoiceMuted: (muted: boolean) => {
+          realtime.setVoiceMuted(muted);
+          onDebugEvent?.('voice_mute', `tutor_voice muted=${muted}`);
+        },
         resumeContinue: () => resumeContinueRef.current(),
         endSession: (opts) => { void endSessionNowRef.current(opts); },
         isEnding: () => endingRef.current,

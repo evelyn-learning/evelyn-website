@@ -47,39 +47,63 @@ function main() {
   test('defaults: every host that says nothing keeps today\'s chrome', () => {
     for (const cfg of [
       undefined, null, {}, { partner_id: 'crimsora' }, { partner_id: 'academy' }, { partner_id: 'evelyntutor' },
-      { partner_id: 'kanzoo' }, { partner_id: 'gameclass' }, { partner_id: 'demo' }, { partner_id: '' },
+      { partner_id: 'kanzoo' }, { partner_id: 'demo' }, { partner_id: '' },
       { partner_id: 'crimsora', features: {} }, { partner_id: 'crimsora', features: { text_mode: true } },
       { partner_id: 'GreenApple-Other' }, { partner_id: 42 }, { features: 'x' },
     ]) {
-      assert.deepEqual(resolveEmbedUiOptions(cfg as never), { humorControl: true, mobileFinish: false }, JSON.stringify(cfg));
+      assert.deepEqual(resolveEmbedUiOptions(cfg as never), { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true }, JSON.stringify(cfg));
     }
   });
 
   test('partner default: greenapple hides Humor and gets the labelled mobile Finish with no token change', () => {
-    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'greenapple' }), { humorControl: false, mobileFinish: true });
-    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'greenapple', features: { text_mode: true } }), { humorControl: false, mobileFinish: true });
+    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'greenapple' }), { humorControl: false, mobileFinish: true, voiceMute: false, paceChip: true });
+    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'greenapple', features: { text_mode: true } }), { humorControl: false, mobileFinish: true, voiceMute: false, paceChip: true });
+  });
+
+  test('partner default: gameclass gets the tutor-voice mute and no duplicate pace pill; nobody else does', () => {
+    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'gameclass' }), { humorControl: true, mobileFinish: false, voiceMute: true, paceChip: false });
+    assert.deepEqual(
+      resolveEmbedUiOptions({ partner_id: 'gameclass', features: { voice_mute: false, pace_chip: true } }),
+      { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true },
+    );
+    assert.deepEqual(
+      resolveEmbedUiOptions({ partner_id: 'crimsora', features: { voice_mute: true, pace_chip: false } }),
+      { humorControl: true, mobileFinish: false, voiceMute: true, paceChip: false },
+    );
+  });
+  test('voice mute + pace pill are wired: option → TutorSession prop → control; mute goes through the handle', () => {
+    const embed = src('src/app/tutor-portal/embed/page.tsx');
+    const ts = src('src/app/tutor/components/session/TutorSession.tsx');
+    const hook = src('src/app/tutor/hooks/useOpenAIRealtime.ts');
+    assert.match(embed, /voiceMuteControl=\{uiOptions\.voiceMute\}/);
+    assert.match(embed, /paceChip=\{uiOptions\.paceChip\}/);
+    assert.match(ts, /voiceMuteControl = false, paceChip = true/);
+    assert.match(ts, /\{paceChip && <button/);
+    assert.match(ts, /setTutorVoiceMuted\?\.\(next\)/);
+    assert.match(hook, /if \(voiceMutedRef\.current\) \{/);
+    assert.ok(hook.includes('g.gain.value = 0;'), 'muted chunk plays through a zero gain');
   });
 
   test('explicit token fields win over the partner default, in both directions', () => {
     assert.deepEqual(
       resolveEmbedUiOptions({ partner_id: 'greenapple', features: { humor_control: true, mobile_finish: false } }),
-      { humorControl: true, mobileFinish: false },
+      { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true },
     );
     assert.deepEqual(
       resolveEmbedUiOptions({ partner_id: 'crimsora', features: { humor_control: false, mobile_finish: true } }),
-      { humorControl: false, mobileFinish: true },
+      { humorControl: false, mobileFinish: true, voiceMute: false, paceChip: true },
     );
-    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'crimsora', features: { humor_control: false } }), { humorControl: false, mobileFinish: false });
+    assert.deepEqual(resolveEmbedUiOptions({ partner_id: 'crimsora', features: { humor_control: false } }), { humorControl: false, mobileFinish: false, voiceMute: false, paceChip: true });
   });
 
   test('only real booleans count as explicit (a malformed claim falls back to the default)', () => {
     assert.deepEqual(
       resolveEmbedUiOptions({ partner_id: 'crimsora', features: { humor_control: 'false', mobile_finish: 1 } } as never),
-      { humorControl: true, mobileFinish: false },
+      { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true },
     );
     assert.deepEqual(
       resolveEmbedUiOptions({ partner_id: 'greenapple', features: { humor_control: null, mobile_finish: 'no' } } as never),
-      { humorControl: false, mobileFinish: true },
+      { humorControl: false, mobileFinish: true, voiceMute: false, paceChip: true },
     );
   });
 

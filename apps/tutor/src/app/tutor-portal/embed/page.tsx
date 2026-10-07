@@ -1755,6 +1755,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         onEndSession={handleEndSession}
         embedded
         humorControl={uiOptions.humorControl}
+        voiceMuteControl={uiOptions.voiceMute}
+        paceChip={uiOptions.paceChip}
         mobileFinish={uiOptions.mobileFinish}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}

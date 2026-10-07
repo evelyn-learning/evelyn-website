@@ -21,7 +21,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Script from 'next/script';
-import { Play } from 'lucide-react';
+import { Play, Volume2, VolumeX } from 'lucide-react';
 import { EndControl } from './EndControl';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
@@ -211,6 +211,10 @@ export interface TutorSessionProps {
    *  "Humor" section of the ⋯ menu. Default true — unchanged for every
    *  caller that omits it (retail /tutor, hosts with no option set). */
   humorControl?: boolean;
+  /** Embed UI option: a mute control for the tutor's voice in the dock. Default false. */
+  voiceMuteControl?: boolean;
+  /** Embed UI option: the "Pace: …" pill beside ⋯ (same menu). Default true. */
+  paceChip?: boolean;
   /** Embed UI option: below `sm`, a labelled "Finish" control in the header
    *  (finish intent) instead of the icon-only End/Pause. Only honoured when
    *  `embedded` — the intent means nothing without a host listening.
@@ -277,7 +281,7 @@ export default function TutorSession(props: TutorSessionProps) {
     socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope, lessonContext, inFlow, prewarm, onRelayReady,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
-    humorControl = true, mobileFinish,
+    humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
   } = props;
   // Embed-only (see the prop docs): the retail page can never get it.
   const mobileFinishOn = !!embedded && mobileFinish === true;
@@ -327,6 +331,7 @@ export default function TutorSession(props: TutorSessionProps) {
   // Drives the SessionControls timer so it counts from start, not page mount.
   const [voiceStartedAtMs, setVoiceStartedAtMs] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [tutorVoiceMuted, setTutorVoiceMuted] = useState(false);
   const [whiteboardActiveThisTurn, setWhiteboardActiveThisTurn] = useState(false);
   const [listeningHint, setListeningHint] = useState<'didnt-catch' | null>(null);
   const [boardNav, setBoardNav] = useState<BoardNav | null>(null);
@@ -1005,6 +1010,25 @@ export default function TutorSession(props: TutorSessionProps) {
     text: preStartDockCaption({ started, muted: voiceState === 'muted' }),
     cls: voiceState === 'muted' ? 'text-slate-500' : started ? 'text-slate-400' : 'text-slate-500',
   };
+  // Embed option `voiceMute`: silence the tutor's voice and read instead.
+  const voiceMuteBtn = voiceMuteControl && started ? (
+    <button
+      type="button"
+      onClick={() => {
+        const next = !tutorVoiceMuted;
+        setTutorVoiceMuted(next);
+        realtimeHandleRef.current?.setTutorVoiceMuted?.(next);
+      }}
+      aria-pressed={tutorVoiceMuted}
+      aria-label={tutorVoiceMuted ? 'Turn the tutor voice on' : 'Mute the tutor voice'}
+      title={tutorVoiceMuted ? 'Tutor voice is off — tap to turn it on' : 'Mute the tutor voice'}
+      className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors ${
+        tutorVoiceMuted ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'text-slate-500 hover:bg-slate-100'
+      }`}
+    >
+      {tutorVoiceMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+    </button>
+  ) : null;
   const dockCaptionEl = sessionMode === 'text' ? null : statusOverride ? (
     <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
   ) : liveCaption ? (
@@ -1036,6 +1060,12 @@ export default function TutorSession(props: TutorSessionProps) {
         <CaptionTicker text={liveCaption} getSpoken={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined} />
       </button>
       {voiceState === 'speaking' && <MicMeter level={0} speaking />}
+      {voiceMuteBtn}
+    </div>
+  ) : voiceMuteBtn ? (
+    <div className="w-full min-w-0 flex items-center gap-2">
+      <span className={`block min-w-0 flex-1 truncate text-xs font-medium ${dockStatus.cls}`}>{dockStatus.text}</span>
+      {voiceMuteBtn}
     </div>
   ) : (
     <span className={`block truncate text-xs font-medium ${dockStatus.cls}`}>{dockStatus.text}</span>
@@ -1648,7 +1678,7 @@ export default function TutorSession(props: TutorSessionProps) {
           Subdued neutral styling at "normal" (0), warmer amber/green +
           transient flash highlight otherwise — same as before. Tappable
           (button, not span) to open this same adaptive/session menu. */}
-      <button
+      {paceChip && <button
         type="button"
         onClick={() => setPacingMenuOpen((o) => !o)}
         aria-label={paceBias < 0 ? 'Pace: slow — tap to adjust' : paceBias > 0 ? 'Pace: fast — tap to adjust' : 'Pace: normal — tap to adjust'}
@@ -1662,7 +1692,7 @@ export default function TutorSession(props: TutorSessionProps) {
         {paceBias < 0 ? `Pace: slow${Math.abs(paceBias) > 1 ? ` ×${Math.abs(paceBias)}` : ''}`
           : paceBias > 0 ? `Pace: fast${paceBias > 1 ? ` ×${paceBias}` : ''}`
           : 'Pace: normal'}
-      </button>
+      </button>}
       <button ref={pacingMenuTriggerRef} onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
       {pacingMenuOpen && pacingMenuPos && typeof document !== 'undefined' && createPortal(
         // The "Adjust the lesson" menu (opened via the Pace pill or the ⋯

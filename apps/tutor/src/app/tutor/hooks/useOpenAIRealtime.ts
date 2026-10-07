@@ -476,6 +476,8 @@ export interface RealtimeResult {
    * (often the Unmute click) inadvertently unlocks it.
    */
   unlockAudio: () => void;
+  /** Silence (or restore) the tutor's voice without changing playback timing. */
+  setVoiceMuted: (muted: boolean) => void;
 }
 
 /**
@@ -757,6 +759,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const isPlayingRef = useRef(false);
   const currentResponseTextRef = useRef('');
   const playbackSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  // Tutor-voice mute (student control): playback runs exactly as usual — same
+  // chunks, same clocks, so captions and turn-taking keep their pacing — but
+  // the chunk reaches the output through a zero gain. No node is added to the
+  // path unless the student has used the control in this session.
+  const voiceMutedRef = useRef(false);
+  const voiceMuteGainRef = useRef<GainNode | null>(null);
   // B1 hard-cancel (2026-05-14): track the in-flight Realtime response id
   // and the set of ids we've cancelled via clearSpeechQueue. The WS
   // `response.cancel` we send is async — the server keeps streaming
@@ -1204,6 +1212,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, []);
 
+  const setVoiceMuted = useCallback((muted: boolean) => {
+    voiceMutedRef.current = muted;
+    const g = voiceMuteGainRef.current;
+    if (g) { g.gain.value = muted ? 0 : 1; return; }
+    // Muting mid-chunk: re-route the chunk that is playing through a zero gain
+    // so the voice stops now, not at the next chunk.
+    const source = playbackSourceRef.current;
+    if (!muted || !source) return;
+    try {
+      const ctx = getAudioContext();
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      source.disconnect();
+      source.connect(gain);
+      gain.connect(getPlaybackTarget(ctx));
+      voiceMuteGainRef.current = gain;
+    } catch { /* the next chunk starts muted */ }
+  }, []);
+
   // Play queued audio
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
@@ -1349,7 +1376,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // Round-5 echo fix: route to the media path so the browser's echo
     // canceller has a reference copy of what the speaker is playing. Falls
     // back to ctx.destination itself if that route is off or unavailable.
-    source.connect(getPlaybackTarget(ctx));
+    if (voiceMutedRef.current) {
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      source.connect(g);
+      g.connect(getPlaybackTarget(ctx));
+      voiceMuteGainRef.current = g;
+    } else {
+      voiceMuteGainRef.current = null;
+      source.connect(getPlaybackTarget(ctx));
+    }
     source.onended = () => {
       playNextAudio();
     };
@@ -4009,5 +4045,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     getSpokenProgress,
     signalBrainThinking,
     unlockAudio,
+    setVoiceMuted,
   };
 }

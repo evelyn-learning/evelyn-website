@@ -764,5 +764,8 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     unlockAudio: () => {
       // No-op for Gemini Live; iOS audio-unlock is a Realtime-engine concern.
     },
+    setVoiceMuted: () => {
+      // No-op for Gemini Live (not used by embeds).
+    },
   };
 }
