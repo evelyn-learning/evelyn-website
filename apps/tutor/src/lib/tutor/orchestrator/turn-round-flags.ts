@@ -419,3 +419,68 @@ export const TUTOR_TEXT_COVER_VISIBLE =
  *  a turn that is not a verdict / explanation of an answer. */
 export const TUTOR_FILLER_TIP_PLACEMENT =
   process.env.NEXT_PUBLIC_TUTOR_FILLER_TIP_PLACEMENT !== 'off';
+
+// ── 2026-10-06c: owner live text sessions on build ulDXTzMvt9QD6bzQavMsL ──
+// (portal-818996c1, portal-c301c9ad, portal-308e979f). Each defaults ON;
+// 'off' restores the behaviour of 2b58aacf for that one mechanism.
+
+/** A readiness / transition question that names the next part ("ready for
+ *  the next part, finding …?") makes THAT part the open question — in the
+ *  turn-shape facts and in the verdict pre-check. */
+export const TUTOR_READINESS_NAMED_TASK =
+  process.env.NEXT_PUBLIC_TUTOR_READINESS_NAMED_TASK !== 'off';
+
+/** The pre-check's "right for a different part" instruction: a value offered
+ *  for the part just introduced is judged against that part; the answer to
+ *  the part the student is working on is never stated or written, and the
+ *  student's value is never written as that part's result. */
+export const TUTOR_OTHER_PART_NO_GIVEAWAY =
+  process.env.NEXT_PUBLIC_TUTOR_OTHER_PART_NO_GIVEAWAY !== 'off';
+
+/** The computed check points are also evaluated in each inequality's solved
+ *  form, and the facts say a check in either equivalent form is equally right. */
+export const TUTOR_TEST_POINT_BOTH_FORMS =
+  process.env.NEXT_PUBLIC_TUTOR_TEST_POINT_BOTH_FORMS !== 'off';
+
+/** A judge reason "the tutor correctly denies / rejects / identifies …" says
+ *  the flagged statement is correct: no correction note is planted. */
+export const TUTOR_JUDGE_CORRECTLY_REASONS =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_CORRECTLY_REASONS !== 'off';
+
+/** On a turn whose verdict opener was stripped, the sentence that works the
+ *  student's answer is never dropped as a bare correction re-check. */
+export const TUTOR_KEEP_WORKING_AFTER_OPENER_STRIP =
+  process.env.NEXT_PUBLIC_TUTOR_KEEP_WORKING_AFTER_OPENER_STRIP !== 'off';
+
+/** "next question/problem/one" followed by the problem itself is a new
+ *  problem, not a pace cue. */
+export const TUTOR_NEXT_WITH_PROBLEM_NOT_CUE =
+  process.env.NEXT_PUBLIC_TUTOR_NEXT_WITH_PROBLEM_NOT_CUE !== 'off';
+
+/** Text mode: a Rule-8 repair frame is painted on arrival too (order kept). */
+export const TUTOR_TEXT_PAINT_REPAIR_ON_ARRIVAL =
+  process.env.NEXT_PUBLIC_TUTOR_TEXT_PAINT_REPAIR_ON_ARRIVAL !== 'off';
+
+/** A graph point sent with `open: true` is drawn as an open (hollow) point. */
+export const TUTOR_GRAPH_OPEN_POINTS =
+  process.env.NEXT_PUBLIC_TUTOR_GRAPH_OPEN_POINTS !== 'off';
+
+/** Homework session: a problem card for the current homework problem is
+ *  titled "Problem N" whenever its expressions or wording are the
+ *  problem's (not only on a 24-character prefix match), and a fallback
+ *  title never shows raw LaTeX source. */
+export const TUTOR_HOMEWORK_CARD_TITLE =
+  process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_CARD_TITLE !== 'off';
+
+/** An answer that only repeats an option the tutor's question just named
+ *  ("name one of those two") is not credited as a correct answer. */
+export const TUTOR_ECHO_ANSWER_NO_CREDIT =
+  process.env.NEXT_PUBLIC_TUTOR_ECHO_ANSWER_NO_CREDIT !== 'off';
+
+/** Homework (server, typed text only): an enumerated entry carrying an
+ *  equation / inequality the student never typed is not used as the problem
+ *  text — the typed text is kept verbatim instead (a safety guard; the
+ *  splitter is only ASKED to copy verbatim). Read on the server (same
+ *  variable, not inlined there). */
+export const TUTOR_HOMEWORK_VERBATIM =
+  process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_VERBATIM !== 'off';

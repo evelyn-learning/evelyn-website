@@ -76,7 +76,7 @@ import {
   type MaterialClassification,
 } from '@/lib/tutor/lesson-plan/material-classify';
 import { enumerateProblems, defaultEnumerateDeps, getEnumerateClient } from '@/lib/tutor/lesson-plan/enumerate-problems';
-import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, typedHomeworkIsOwnMaterial, typedHomeworkPlanDecision, capObjectivesForHomework, typedEnumerationText } from '@/lib/tutor/lesson-plan/homework';
+import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, typedHomeworkIsOwnMaterial, typedHomeworkPlanDecision, capObjectivesForHomework, typedEnumerationText, groundTypedProblems } from '@/lib/tutor/lesson-plan/homework';
 import { TUTOR_HOMEWORK_OWN_MATERIAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
@@ -240,6 +240,16 @@ export const POST = withPortalAuth(async (_req, auth) => {
       : homeworkPlanDecision(enumerated);
     if (decision.kind === 'homework') {
       homeworkProblems = decision.problems;
+      // 2026-10-06c: a typed split must be the student's text — an entry
+      // with an equation / inequality they never wrote is not used as their
+      // problem (homework.ts `groundTypedProblems`).
+      if (!hasMaterials && !enumerated.failedOpen) {
+        const grounded = groundTypedProblems(homeworkProblems, typedProblemText);
+        if (grounded.altered.length > 0) {
+          console.warn(`[plan-generate] homework-help: split altered the typed text (${grounded.altered.slice(0, 3).join(' | ')}) → one problem, verbatim`);
+          homeworkProblems = grounded.problems;
+        }
+      }
       if (enumerated.failedOpen) console.log('[plan-generate] homework-help: enumeration failed open → one-problem homework plan over the typed text');
     }
     else {

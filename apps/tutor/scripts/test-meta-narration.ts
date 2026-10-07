@@ -574,8 +574,11 @@ drop('system leak still caught by the reaction shape: "The system says I should 
   {
     // Wiring: the VoiceTutorRealtime call sites this simulation stands for.
     const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-    check('VTR: bare-arithmetic drops are recorded with the tracker', /isBareArithmeticRecheck\(sentence\)\) \{\s*correctionWorkingTracker\.withhold\(sentence\);/.test(vtr));
-    check('VTR: restored frames bypass the bare-arithmetic filter', /!correctionWorkingRestoredFrame && isFirstSentenceOfTurn && correctionNoteThisTurn && isBareArithmeticRecheck\(sentence\)/.test(vtr));
+    // 2026-10-06c: the drop rule is arithmetic-recheck.ts `shouldDropBareRecheck`
+    // (restored frames and a stripped opener are exempt there; tested in
+    // scripts/test-owner-session-2026-10-06c.ts).
+    check('VTR: bare-arithmetic drops are recorded with the tracker', /shouldDropBareRecheck\(\{[\s\S]{0,600}?\}\)\) \{\s*correctionWorkingTracker\.withhold\(sentence\);/.test(vtr));
+    check('VTR: restored frames bypass the bare-arithmetic filter', /shouldDropBareRecheck\(\{[\s\S]{0,400}?restoredFrame: correctionWorkingRestoredFrame,/.test(vtr));
     check('VTR: restored frames bypass the tracker', /correctionWorkingRestoredFrame\s*\?\s*false\s*:\s*correctionWorkingTracker\.isWorking\(/.test(vtr));
     check('VTR: release() is consumed and re-entered ahead of the sentence', /correctionWorkingTracker\.release\(\)/.test(vtr));
     check('VTR: markSpoken() is called where the sentence is enqueued', /correctionWorkingTracker\.markSpoken\(\)/.test(vtr));

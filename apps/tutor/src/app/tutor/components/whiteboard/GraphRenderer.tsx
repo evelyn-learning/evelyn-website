@@ -21,6 +21,7 @@ import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@core/
 import { parseFunctionString, parseFunctionOfYString, normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
+import { isOpenGraphPoint } from '@/lib/tutor/whiteboard/graph-features';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -221,6 +222,8 @@ export function GraphRenderer({
                 x={point.x}
                 y={point.y}
                 color={point.color || '#2563eb'}
+                // 2026-10-06c: a hole / excluded endpoint is drawn open.
+                {...(isOpenGraphPoint(point) ? { svgCircleProps: { style: { fill: 'white', stroke: point.color || '#2563eb', strokeWidth: 2 } } } : {})}
               />
             ))}
 

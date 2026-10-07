@@ -37,7 +37,8 @@
 
 import { computeAnchorKey, isPrimaryFigure, extractCommandTitle, subjectsDiffer } from './catalog';
 import { truncatePageTitle } from './page-title';
-import { TUTOR_PROBLEM_PAGE_TITLE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_HOMEWORK_CARD_TITLE, TUTOR_PROBLEM_PAGE_TITLE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { cardMatchesProblem, readableMathText } from '@/lib/tutor/lesson-plan/problem-text';
 
 /** A whiteboard command (loosely typed — we only read `action` + pass the
  *  whole object to computeAnchorKey). */
@@ -175,19 +176,30 @@ const PROBLEM_TITLE_HEAD_MAX = 44;
 export function problemPageTitle(
   cmd: PageGroupingCommand | undefined,
   homework?: HomeworkProblemRef,
+  /** Unset ⇒ TUTOR_HOMEWORK_CARD_TITLE; false ⇒ the rule of 2b58aacf (a
+   *  24-character prefix match, raw source in the fallback title). */
+  opts?: { homeworkCardTitle?: boolean },
 ): string | null {
   if (!cmd || !PROBLEM_CARD_ACTIONS.has(cmd.action)) return null;
   const problem = (cmd.problem ?? {}) as { statement?: unknown };
-  const raw = typeof problem.statement === 'string' ? problem.statement : typeof cmd.statement === 'string' ? cmd.statement : '';
+  const cardTitle = opts?.homeworkCardTitle ?? TUTOR_HOMEWORK_CARD_TITLE;
+  const source = typeof problem.statement === 'string' ? problem.statement : typeof cmd.statement === 'string' ? cmd.statement : '';
   if (homework && Number.isInteger(homework.n) && homework.n >= 1) {
     const own = comparableStatement(homework.text ?? '');
-    const card = comparableStatement(raw);
+    const card = comparableStatement(source);
+    // 2026-10-06c (portal-c301c9ad): the card for the student's own problem
+    // was headed with its raw LaTeX because only a 24-character prefix
+    // counted as "the same problem". Its expressions are the problem's.
     const same = !homework.text || !card
-      || own.includes(card.slice(0, 24)) || card.includes(own.slice(0, 24));
+      || (cardTitle
+        ? cardMatchesProblem(source, homework.text)
+        : own.includes(card.slice(0, 24)) || card.includes(own.slice(0, 24)));
     if (same) {
       return homework.total > 1 && homework.n <= homework.total ? `Problem ${homework.n} of ${homework.total}` : `Problem ${homework.n}`;
     }
   }
+  // A title is read, not typeset: never raw LaTeX source.
+  const raw = cardTitle ? readableTitleSource(source) : source;
   // The words in front of the first expression make the cleanest heading
   // ("Solve the system of inequalities"); a title never stops mid-expression.
   const lead = raw.replace(/[*_`]+/g, '').split(/\n/)[0].split('$')[0]
@@ -199,6 +211,53 @@ export function problemPageTitle(
   const head = raw.replace(/\$+/g, '').replace(/[*_`]+/g, '').split(/\n/)[0].replace(/\s+/g, ' ').trim();
   if (!head) return 'Problem';
   return truncatePageTitle(head, PROBLEM_TITLE_HEAD_MAX);
+}
+
+/** "Problem N" / "Problem N of M" when this problem card is the student's
+ *  homework problem (`problemPageTitle`'s homework branch), else null. */
+export function homeworkProblemTitle(
+  cmd: PageGroupingCommand | undefined,
+  homework?: HomeworkProblemRef,
+  opts?: { homeworkCardTitle?: boolean },
+): string | null {
+  if (!homework || !cmd || !PROBLEM_CARD_ACTIONS.has(cmd.action)) return null;
+  const t = problemPageTitle(cmd, homework, opts);
+  return t && /^Problem \d+(?: of \d+)?$/.test(t) ? t : null;
+}
+
+/**
+ * The title of a page the runtime opens. 2026-10-06c (portal-c301c9ad): the
+ * brain's own (stripped) new_page title wins over the runtime's — and it was
+ * raw LaTeX source, "Simplify f(x) = \\dfrac{x^2 - 9}{x - 3}", on the card of
+ * the student's own homework problem. Now: a page opened by the card of the
+ * student's homework problem is "Problem N" / "Problem N of M" whatever the
+ * brain called it; any other brain title is made readable (no LaTeX source);
+ * no brain title ⇒ the decision's own title.
+ * @param enabled unset ⇒ TUTOR_HOMEWORK_CARD_TITLE; false ⇒ the brain's
+ *   title as sent, else the decision's (the rule of 2b58aacf).
+ */
+export function newPageTitle(input: {
+  brainHint?: string;
+  decisionTitle: string;
+  firstTeaching?: PageGroupingCommand;
+  homework?: HomeworkProblemRef;
+  enabled?: boolean;
+}): string {
+  const on = input.enabled ?? TUTOR_HOMEWORK_CARD_TITLE;
+  const hint = (input.brainHint ?? '').trim();
+  if (!on) return hint || input.decisionTitle;
+  const own = homeworkProblemTitle(input.firstTeaching, input.homework, { homeworkCardTitle: true });
+  if (own) return own;
+  if (hint) return /[\\$]/.test(hint) ? (truncatePageTitle(readableMathText(hint), PROBLEM_TITLE_HEAD_MAX) || input.decisionTitle) : hint;
+  return input.decisionTitle;
+}
+
+/** The statement with each $…$ span made readable ("\\dfrac{a}{b}" →
+ *  "(a)/(b)"), the spans kept so the lead (the words before the first
+ *  expression) is still found. */
+function readableTitleSource(statement: string): string {
+  return statement.replace(/\$([^$]*)\$/g, (_m, inner: string) => `$${readableMathText(inner)}$`)
+    .replace(/\\[a-zA-Z]+/g, (m) => readableMathText(m));
 }
 
 /** Title for a freshly-opened page. Priority: segment title (on a segment

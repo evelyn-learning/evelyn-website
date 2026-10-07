@@ -20,6 +20,7 @@
 
 import { shortLabelSlug } from '@/lib/tutor/diagrams/layout';
 import { inequalityEntryText, normalizeLineStyle, parseXYExpression, parseXYRelation } from './graph-inequalities';
+import { TUTOR_GRAPH_OPEN_POINTS } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 export interface GraphPointFeature {
   /** `data-feature` value / catalog canonical name. */
@@ -36,6 +37,19 @@ export interface GraphPointFeature {
 const MAX_POINT_FEATURES = 12;
 
 const coord = (n: number): string => String(Math.round(n * 1000) / 1000);
+
+/**
+ * 2026-10-06c (portal-c301c9ad @160.5 s): the hole of a removable
+ * discontinuity was drawn as a FILLED dot labelled "hole (undefined)" — the
+ * picture said the opposite of its label. A point sent with `open: true`
+ * (a hole, an excluded endpoint) is drawn open. Pure.
+ * @param enabled unset ⇒ TUTOR_GRAPH_OPEN_POINTS.
+ */
+export function isOpenGraphPoint(raw: unknown, opts?: { enabled?: boolean }): boolean {
+  if (!(opts?.enabled ?? TUTOR_GRAPH_OPEN_POINTS)) return false;
+  const p = (raw ?? {}) as { open?: unknown };
+  return p.open === true || p.open === 'true';
+}
 
 export function graphPointFeatures(points: unknown): GraphPointFeature[] {
   if (!Array.isArray(points)) return [];
@@ -66,7 +80,7 @@ export function graphPointFeatures(points: unknown): GraphPointFeature[] {
       y: p.y,
       label,
       labels: Array.from(labels),
-      description: label ? `point "${label}" at ${at}` : `point at ${at}`,
+      description: `${isOpenGraphPoint(raw) ? 'open (hollow) ' : ''}${label ? `point "${label}" at ${at}` : `point at ${at}`}`,
     });
   });
   return out;

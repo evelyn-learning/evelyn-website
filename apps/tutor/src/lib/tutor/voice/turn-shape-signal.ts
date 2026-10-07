@@ -222,6 +222,15 @@ const KIND_FACT: Record<OpenQuestionRead['kind'], string> = {
   unclear: 'not classified',
 };
 
+/** 2026-10-06c (portal-c301c9ad @77.3 s). */
+const NAMED_TASK_KIND_FACT =
+  'a readiness question that introduces the next part — a yes or no is consent to start it; a value or working offered now is an attempt at that part';
+
+/** The rule for a value offered on a readiness question that names a part. */
+export function namedTaskRule(task: string): string {
+  return `The student is now working ${quote(task)}: the value they gave is their answer to THAT part, so judge it against that part — not against a part already done or one still to come. Never state or write the answer to that part yourself, and never write their value as that part's result unless your own working confirms it is right for that part; if it is not, ask a guiding question about what is different in that part.`;
+}
+
 function quote(s: string): string {
   return `"${s.replace(/\s+/g, ' ').replace(/"/g, "'").trim()}"`;
 }
@@ -363,13 +372,18 @@ export function formatTurnShapeBlock(
       ? 'The calculation named above is wrong as written, so whatever the student built on it cannot stand: that calculation is the step your working states. Say what they wrote for it and what it actually gives, and have them carry the corrected value forward themselves.'
       : 'The calculation named above is wrong as written, so whatever the student built on it cannot be accepted as it stands: do not open with praise or a confirmation. Have them redo that one calculation — do not state its result for them.');
   }
+  // 2026-10-06c: a readiness question that names the next part, answered
+  // with a value: the value is the student's attempt at THAT part.
+  const task = ts.open?.kind === 'readiness' && ts.answerShaped ? ts.open.namedTask : undefined;
+  if (task) rules.unshift(namedTaskRule(task));
   if (!rules.length) return '';
   return '<turn_shape>\n'
     + 'Facts about this turn, read from the text by the runtime. They describe what the message IS, not whether it is right'
     + (wrongSum ? ' — except the calculator line, which is exact' : '') + '.\n'
     + (ts.open
       ? `- The last question you asked, still open: ${quote(ts.open.question)}\n`
-        + `- Kind of question: ${KIND_FACT[ts.open.kind]}.\n`
+        + `- Kind of question: ${task ? NAMED_TASK_KIND_FACT : KIND_FACT[ts.open.kind]}.\n`
+        + (task ? `- The part it introduces: ${quote(task)}.\n` : '')
       : '')
     + `- The student's message is: ${shapeFact(ts)}.\n`
     + (wrongSum ? `- Checked by calculator: the message states ${quote(wrongSum.claim)}; in fact ${wrongSum.correct}.\n` : '')

@@ -48,6 +48,10 @@ export interface HomeworkProblem {
   n: number;
   /** The problem's full wording, verbatim, including any given values. */
   text: string;
+  /** 2026-10-06c: the splitter's own wording of this problem, kept ONLY when
+   *  it altered the student's text (`groundTypedProblems`). Stored with the
+   *  plan for diagnosis; never shown — `homeworkProblemsOf` drops it. */
+  rewritten?: string;
 }
 
 /** Same fast-pass model the rest of this pipeline uses (registry role 'plangen-fast'). */

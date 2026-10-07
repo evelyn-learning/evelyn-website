@@ -30,6 +30,7 @@
  *
  * Generic shapes only — no subject content. Pure; never throws.
  */
+import { TUTOR_NEXT_WITH_PROBLEM_NOT_CUE } from './turn-round-flags';
 
 /** The pre-fix rule, verbatim (flag-off behaviour). */
 export const LEGACY_BOREDOM_CUE_RE =
@@ -87,11 +88,32 @@ function stripFillers(prefix: string): string {
   return p.replace(/^[\s,]+/, '');
 }
 
-function inRequestShape(word: string, prefix: string, after: string): boolean {
+/**
+ * 2026-10-06c (portal-c301c9ad @222.5 s): "next question: A car accelerates
+ * from rest at 2.5 m/s² for 8 seconds. How far…" raised the pace cue, the
+ * brain was told to offer "harder / skip / a different topic", offered a
+ * switch, and then — rightly, by the out-of-scope rule — refused it. The
+ * student was not asking to skip: they were bringing the next problem.
+ * "next question / problem / one" followed by problem content — a digit, a
+ * relation or operator, or more than six words — is a new problem.
+ */
+const NEXT_CONTENT_HEAD_RE = /^\s*(?:one|problem|question|exercise|task)\b\s*(?:(?:is|please)\b\s*)?[:\-—–,.]?\s*/i;
+const PROBLEM_CONTENT_WORDS = 6;
+export function nextIsFollowedByProblem(after: string): boolean {
+  const head = NEXT_CONTENT_HEAD_RE.exec(after ?? '');
+  if (!head) return false;
+  const content = (after ?? '').slice(head[0].length).replace(/^\s*(?:please\b)?[\s,.:]*/i, '').trim();
+  if (!content) return false;
+  if (/\d/.test(content) || /[=<>≤≥+×÷*/^√∫]/.test(content)) return true;
+  return content.split(/\s+/).filter((w) => /[a-z]/i.test(w)).length > PROBLEM_CONTENT_WORDS;
+}
+
+function inRequestShape(word: string, prefix: string, after: string, opts?: { newProblemContent?: boolean }): boolean {
   const initial = FILLERS_ONLY_RE.test(prefix);
   const lead = REQUEST_LEAD_RE.test(prefix);
   const w = word.toLowerCase().replace(/\s+/g, ' ');
   if (w === 'next') {
+    if ((opts?.newProblemContent ?? TUTOR_NEXT_WITH_PROBLEM_NOT_CUE) && nextIsFollowedByProblem(after)) return false;
     if (NEXT_NOUN_RE.test(after)) return true;
     return (initial || lead) && NEXT_TAIL_RE.test(after);
   }
@@ -120,7 +142,11 @@ const COMMON_WORD_RE = /^(?:next|skip(?:\s+this)?|easy|obviously|faster|slower)$
 
 export function detectBoredomCue(
   text: string,
-  opts: { /** NEXT_PUBLIC_TUTOR_BOREDOM_CUE_REQUEST_SHAPE !== 'off' */ requestShape: boolean },
+  opts: {
+    /** NEXT_PUBLIC_TUTOR_BOREDOM_CUE_REQUEST_SHAPE !== 'off' */ requestShape: boolean;
+    /** Unset ⇒ TUTOR_NEXT_WITH_PROBLEM_NOT_CUE. */
+    newProblemContent?: boolean;
+  },
 ): BoredomCueDecision {
   const t = typeof text === 'string' ? text : '';
   if (!opts.requestShape) {
@@ -135,7 +161,7 @@ export function detectBoredomCue(
     if (!COMMON_WORD_RE.test(word)) return { cue: word, ignored };
     const prefix = clausePrefix(t, m.index);
     const after = t.slice(m.index + word.length);
-    if (inRequestShape(word, prefix, after)) return { cue: word, ignored };
+    if (inRequestShape(word, prefix, after, opts)) return { cue: word, ignored };
     ignored.push(word.toLowerCase());
   }
   return { cue: null, ignored };

@@ -39,6 +39,7 @@ import {
   type Window,
   type XYRelation,
 } from './graph-inequalities';
+import { TUTOR_TEST_POINT_BOTH_FORMS } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** The graph renderer's palette (DesmosGraphRenderer imports it from here so
  *  the colour NAMED in the facts is the colour DRAWN). */
@@ -397,8 +398,34 @@ function drawnText(f: InequalityFact): string {
   return [colour, label].filter(Boolean).join(', ');
 }
 
-function pointLine(p: PointFact): string {
-  const each = p.truths.map((t) => `${t.source} gives ${t.values}, ${t.holds ? 'true' : 'false'}`).join('; ');
+/**
+ * 2026-10-06c (portal-818996c1 @241.3 s): the student checked a point in the
+ * SOLVED form of an inequality ("0 < -2/3, false") — right — and the tutor,
+ * holding only the source-form evaluation ("0 > 2, false"), corrected them.
+ * The same point in the solved form, when that form differs from the source:
+ * "y < (1/3)x - 2/3: 0 < -2/3, false". Undefined when there is none.
+ */
+function solvedFormValues(f: InequalityFact | undefined, x: number, y: number, holds: boolean): string | undefined {
+  if (!f?.line || !f.solved) return undefined;
+  if (f.solved.replace(/\s+/g, '') === f.source.replace(/\s+/g, '')) return undefined;
+  const { a, b, c } = f.line;
+  const op = /[<>≤≥]/.exec(f.solved)?.[0];
+  if (!op) return undefined;
+  const values = Math.abs(b) > 1e-12
+    ? `${formatFactNumber(y)} ${op} ${formatFactNumber((-a * x - c) / b)}`
+    : `${formatFactNumber(x)} ${op} ${formatFactNumber(-c / a)}`;
+  return `${f.solved}: ${values}, ${holds ? 'true' : 'false'}`;
+}
+
+/** The line every point check leads to when a solved form is given. */
+export const EITHER_FORM_LINE =
+  'A point checked in either equivalent form of an inequality — as the problem states it, or solved for one variable — gives the same true or false: a check done in either form is equally right.';
+
+function pointLine(p: PointFact, facts?: InequalityFacts): string {
+  const each = p.truths.map((t, k) => {
+    const solved = facts ? solvedFormValues(facts.inequalities[k], p.x, p.y, t.holds) : undefined;
+    return `${t.source} gives ${t.values}, ${t.holds ? 'true' : 'false'}${solved ? ` (same as ${solved})` : ''}`;
+  }).join('; ');
   return `${pointText(p.x, p.y)} ${p.inSolution ? 'IS a solution' : 'is NOT a solution'}: ${each}.`;
 }
 
@@ -417,8 +444,11 @@ function regionClause(facts: InequalityFacts): string {
 export const INEQUALITY_FACTS_LEAD =
   'Computed facts about the problem on the board — rely on these, do not re-derive the region differently:';
 
-/** The facts as plain lines (no tag, no lead). */
-export function inequalityFactLines(facts: InequalityFacts): string[] {
+/** The facts as plain lines (no tag, no lead).
+ *  @param opts.bothForms  unset ⇒ TUTOR_TEST_POINT_BOTH_FORMS; false ⇒ the
+ *    check points in the source form only (the lines of 2b58aacf). */
+export function inequalityFactLines(facts: InequalityFacts, opts?: { bothForms?: boolean }): string[] {
+  const bothForms = opts?.bothForms ?? TUTOR_TEST_POINT_BOTH_FORMS;
   const many = facts.inequalities.length > 1;
   const lines: string[] = [];
   for (const f of facts.inequalities) {
@@ -438,8 +468,13 @@ export function inequalityFactLines(facts: InequalityFacts): string[] {
   }
   const region = regionClause(facts);
   if (region) lines.push(`The solution of the system is the region ${region}.`);
-  if (facts.outside) lines.push(pointLine(facts.outside));
-  if (facts.inside) lines.push(pointLine(facts.inside));
+  const withForms = bothForms ? facts : undefined;
+  if (facts.outside) lines.push(pointLine(facts.outside, withForms));
+  if (facts.inside) lines.push(pointLine(facts.inside, withForms));
+  if (bothForms && (facts.outside || facts.inside)
+      && facts.inequalities.some((f) => f.line && f.solved && f.solved.replace(/\s+/g, '') !== f.source.replace(/\s+/g, ''))) {
+    lines.push(EITHER_FORM_LINE);
+  }
   return lines;
 }
 

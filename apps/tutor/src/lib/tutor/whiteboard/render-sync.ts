@@ -15,6 +15,7 @@
  * VoiceTutorRealtime's buffer and exercised by `npm run test:render-sync`.
  * See project_tutor_render_speech_sync for the full grilled design.
  */
+import { TUTOR_TEXT_PAINT_REPAIR_ON_ARRIVAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 export interface RenderSyncEntry {
   /** Number of sentences dispatched to TTS at the moment this render was
@@ -189,8 +190,15 @@ export function shouldPaintOnArrivalInTextMode(opts: {
   bufferDepth: number;
   hasSketchRequest: boolean;
   isRepairFrame: boolean;
+  /** 2026-10-06c: a Rule-8 repair frame paints on arrival too. Its anchor is
+   *  a speech position, and a text session plays no speech, so it waited
+   *  for the stall timer (portal-c301c9ad @194.2 s → painted @200.2 s;
+   *  portal-818996c1 repair frames likewise). Order is still kept: it only
+   *  skips an EMPTY buffer. Unset ⇒ TUTOR_TEXT_PAINT_REPAIR_ON_ARRIVAL. */
+  paintRepairFrames?: boolean;
 }): boolean {
   if (!opts.enabled || !opts.isTextMode) return false;
-  if (opts.bufferDepth > 0 || opts.hasSketchRequest || opts.isRepairFrame) return false;
+  if (opts.bufferDepth > 0 || opts.hasSketchRequest) return false;
+  if (opts.isRepairFrame && !(opts.paintRepairFrames ?? TUTOR_TEXT_PAINT_REPAIR_ON_ARRIVAL)) return false;
   return true;
 }

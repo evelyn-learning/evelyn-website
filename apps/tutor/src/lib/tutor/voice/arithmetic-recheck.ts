@@ -1,3 +1,4 @@
+import { TUTOR_KEEP_WORKING_AFTER_OPENER_STRIP } from '@/lib/tutor/orchestrator/turn-round-flags';
 /**
  * A bare arithmetic re-check spoken as the FIRST sentence of a turn that
  * carried a correction note (live 2026-09-05: "20% of 120 is 24; 20% of 15
@@ -25,4 +26,32 @@ export function isBareArithmeticRecheck(sentence: string): boolean {
   if (!EQ_RE.test(s)) return false;
   const rest = s.replace(NUM_RE, ' ').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter((w) => w && !OPERATOR_WORDS.has(w));
   return rest.length <= 2;
+}
+
+/**
+ * Should this first sentence of a note-carrying turn be dropped as a bare
+ * re-check? `isBareArithmeticRecheck` on the sentence, except:
+ *  - a frame the correction-working tracker handed back (unchanged);
+ *  - 2026-10-06c (portal-c301c9ad @47.5 s): a turn whose verdict opener was
+ *    stripped. "Exactly. x²−9 = (x+3)(x−3)." lost "Exactly" to the opener
+ *    backstop, and the remainder — the working that confirmed the student's
+ *    correct answer — then met this rule as the turn's first sentence and was
+ *    dropped too: the student saw nothing about their answer. The working
+ *    left after a stripped opener is the reply's confirmation, not a re-check.
+ * @param keepAfterOpenerStrip unset ⇒ TUTOR_KEEP_WORKING_AFTER_OPENER_STRIP.
+ */
+export function shouldDropBareRecheck(input: {
+  sentence: string;
+  isFirstSentenceOfTurn: boolean;
+  correctionNoteThisTurn: boolean;
+  /** The frame is one the correction-working tracker handed back. */
+  restoredFrame: boolean;
+  /** This attempt's verdict opener was stripped (cut from the sentence, or a
+   *  verdict-only first sentence dropped). */
+  openerStripped: boolean;
+  keepAfterOpenerStrip?: boolean;
+}): boolean {
+  if (input.restoredFrame || !input.isFirstSentenceOfTurn || !input.correctionNoteThisTurn) return false;
+  if (input.openerStripped && (input.keepAfterOpenerStrip ?? TUTOR_KEEP_WORKING_AFTER_OPENER_STRIP)) return false;
+  return isBareArithmeticRecheck(input.sentence);
 }

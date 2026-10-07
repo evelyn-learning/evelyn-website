@@ -53,7 +53,7 @@
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { buildJudgeCorrectionNote, hasMathExpression, otherClaimsRider } from '@/lib/tutor/voice/judge-correction-note';
-import { TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_JUDGE_CORRECTLY_REASONS, TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { isDenialClaim } from '@/lib/tutor/voice/pacing-verdict';
 
 export const JUDGE_STUDENT_ANSWER_VERDICTS = ['correct', 'incorrect', 'unsure', 'not_an_answer'] as const;
@@ -140,10 +140,26 @@ const REASON_SAYS_CORRECT_RES: RegExp[] = [
   /\b(?:the\s+)?(?:statement|claim|arithmetic|calculation|computation)\s+(?:itself\s+)?(?:is|was)\s+(?:(?:\w+ly|indeed|in\s+fact)\s+)?(?:correct|accurate|right|valid|true|sound)\b/i,
   /\b(?:is|are|was)\s+(?:arithmetically|mathematically|factually|numerically|technically|computationally)\s+(?:correct|accurate|right|true|sound|valid)\b/i,
 ];
-export function judgeReasonSaysStatementCorrect(why: unknown): boolean {
+/**
+ * 2026-10-06c (portal-c301c9ad @38.2 s): kind=other, verdict=incorrect, why
+ * "The tutor correctly denies the student's answer. The student proposed …".
+ * The judge says the tutor was RIGHT, yet no pattern above read it, so a
+ * neutral note was planted and the next turn's confirmation of a correct
+ * answer was cut down to nothing. "The tutor (is) correctly <denies | rejects
+ * | identifies | corrects | points out | states | explains>" is the same
+ * conclusion in verb form.
+ */
+const REASON_SAYS_TUTOR_ACTED_CORRECTLY_RE =
+  /\b(?:the\s+)?tutor\s+(?:is\s+|was\s+)?correctly\s+(?:denies|denied|denying|rejects|rejected|rejecting|identifies|identified|identifying|corrects|corrected|correcting|points\s+out|pointed\s+out|pointing\s+out|states|stated|stating|explains|explained|explaining)\b/i;
+
+export function judgeReasonSaysStatementCorrect(why: unknown, opts?: { correctlyFamily?: boolean }): boolean {
   if (typeof why !== 'string' || !why.trim()) return false;
   // The first sentence carries the judge's conclusion about the statement.
   const head = why.trim().split(/(?<=[.!?])\s+/)[0] ?? '';
+  if ((opts?.correctlyFamily ?? TUTOR_JUDGE_CORRECTLY_REASONS) && REASON_SAYS_TUTOR_ACTED_CORRECTLY_RE.test(head)
+      && !/,?\s+but\b/i.test(head)) {
+    return true;
+  }
   if (/\b(?:not|isn'?t|incorrect|wrong|inaccurate|false)\b[^,;—]*$/i.test(head.split(/,?\s+but\b/i)[0] ?? '')) return false;
   return REASON_SAYS_CORRECT_RES.some((re) => re.test(head));
 }

@@ -137,7 +137,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
         points: {
           type: 'array',
-          description: 'Labeled points. Intersection points must satisfy ALL plotted equations — verified by validator.',
+          description: 'Labeled points. Intersection points must satisfy ALL plotted equations — verified by validator. Use open points (`open: true`) for holes and excluded endpoints: a point the graph does NOT include must never be drawn filled.',
           items: {
             type: 'object',
             properties: {
@@ -145,6 +145,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
               y: { type: 'number' },
               label: { type: 'string' },
               color: { type: 'string' },
+              open: { type: 'boolean', description: 'true draws an open (hollow) point: a hole in the graph (a value the function does not take there) or an excluded endpoint. Default false: a filled point, which says the point IS on the graph.' },
             },
             required: ['x', 'y'],
           },
