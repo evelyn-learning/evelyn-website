@@ -180,8 +180,10 @@ async function main() {
       + '- Inequality 2: x - 3y > 2 is the same as y < (1/3)x - 2/3. Its solutions are BELOW the line y = (1/3)x - 2/3 (the second line; drawn red, labelled "x-3y>2" on the graph). That line is DASHED: points on it are not solutions.\n'
       + '- The first and second boundary lines cross at (2, 0). That point is on both lines and is not a solution.\n'
       + '- The solution of the system is the region BELOW both lines.\n'
-      + '- (0, 0) is NOT a solution: 2x + y < 4 gives 0 < 4, true; x - 3y > 2 gives 0 > 2, false.\n'
-      + '- (0, -1) IS a solution: 2x + y < 4 gives -1 < 4, true; x - 3y > 2 gives 3 > 2, true.\n'
+      + '- (0, 0) is NOT a solution: 2x + y < 4 gives 0 < 4, true (same as y < -2x + 4: 0 < 4, true); x - 3y > 2 gives 0 > 2, false (same as y < (1/3)x - 2/3: 0 < -2/3, false).\n'
+      + '- (0, -1) IS a solution: 2x + y < 4 gives -1 < 4, true (same as y < -2x + 4: -1 < 4, true); x - 3y > 2 gives 3 > 2, true (same as y < (1/3)x - 2/3: -1 < -2/3, true).\n'
+      // 2026-10-06c (portal-818996c1): a check in the solved form is equally right.
+      + '- A point checked in either equivalent form of an inequality — as the problem states it, or solved for one variable — gives the same true or false: a check done in either form is equally right.\n'
       + 'These were computed from the problem\'s own inequalities, not read from the conversation. Whenever you say which side of a line is shaded, where the solution lies, whether a point is a solution, or name a line by its position or colour, it must agree with them. If something said earlier in this session disagrees with them — by you or by the student — the earlier statement was wrong: say so plainly in one short sentence and continue from these facts. A student whose reading agrees with these facts is right.\n'
       + '</problem_facts>\n\n');
     console.log('\n' + block);
@@ -387,7 +389,7 @@ async function main() {
     assert.match(sys, /Never return "incorrect" on the strength of one reading while another reasonable reading is right/);
     assert.ok(!/\d\s*[+\-*/=<>]|\b\d{2,}\b/.test(AMBIGUOUS_READING_RULE), 'no worked example');
     assert.ok(!/\b(?:equation|fraction|limit|inequality|algebra|calculus|physics|chemistry|slope|line)\b/i.test(AMBIGUOUS_READING_RULE));
-    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false }), VERDICT_PRECHECK_SYSTEM);
+    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false }), VERDICT_PRECHECK_SYSTEM);
   });
   await test('the pre-check is SENT that prompt', async () => {
     const seen: string[] = [];

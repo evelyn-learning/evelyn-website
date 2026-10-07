@@ -40,7 +40,8 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams, resolveModel } from '../ai/model-registry';
 import { falseArithmeticIn } from './turn-shape-signal';
-import { TUTOR_AMBIGUOUS_EXPRESSION_RULE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { readOpenQuestion } from './nonanswer-praise';
 import type {
   PrecheckConfidence,
   PrecheckTarget,
@@ -80,6 +81,9 @@ export interface VerdictPrecheckInput {
   /** Facts the runtime computed from the problem itself (a system /
    *  inequality problem: whiteboard/inequality-facts.ts), as plain text. */
   problemFacts?: string;
+  /** Unset ⇒ TUTOR_READINESS_NAMED_TASK (a readiness question that names
+   *  the next part says so under <open_question>). */
+  readinessTask?: boolean;
 }
 
 export interface VerdictPrecheckLlmRequest {
@@ -128,14 +132,31 @@ export const VERDICT_PRECHECK_SYSTEM =
 export const AMBIGUOUS_READING_RULE =
   ' AMBIGUOUS WRITING OR SPEECH. The student\'s words may reach you spoken aloud and transcribed, or typed without brackets, so what they proposed can have more than one reasonable reading (how its parts are grouped, which part a word applies to). List the reasonable readings before you compare. If ANY reasonable reading is the right answer to that question, the verdict is "correct", and correct_value gives that answer written out in full and unambiguously. Only when NO reasonable reading is right is the verdict "incorrect". Never return "incorrect" on the strength of one reading while another reasonable reading is right.';
 
+/**
+ * 2026-10-06c (portal-c301c9ad @77.3 s): the tutor's last question was "Ready
+ * to move to <the next part>, finding <its quantity>?", the student answered
+ * with a value for that part, and the check — reading a readiness question as
+ * "no question asked" — graded the value against a later part. One sentence
+ * after the "open_question" definition of step 3; generic wording.
+ */
+export const READINESS_TASK_RULE =
+  '\n   A readiness or transition question that names the next part or task (it asks whether the student is ready for, or wants to move on to, a named part, and may name what that part asks for) makes THAT part the open question: a value or working the student offers in reply is their answer to that part — "open_question", judged against that part.';
+
 /** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
- *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; false ⇒ the prompt of 2026-10-06. */
-export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean }): string {
-  if (!(opts?.ambiguousReadingRule ?? TUTOR_AMBIGUOUS_EXPRESSION_RULE)) return VERDICT_PRECHECK_SYSTEM;
+ *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; `readinessTaskRule` unset ⇒
+ *  TUTOR_READINESS_NAMED_TASK; both false ⇒ the prompt of 2026-10-06. */
+export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean }): string {
+  let system = VERDICT_PRECHECK_SYSTEM;
+  if (opts?.readinessTaskRule ?? TUTOR_READINESS_NAMED_TASK) {
+    const anchor = 'including when that question itself asks for the final answer).';
+    const i = system.indexOf(anchor);
+    if (i >= 0) system = system.slice(0, i + anchor.length) + READINESS_TASK_RULE + system.slice(i + anchor.length);
+  }
+  if (!(opts?.ambiguousReadingRule ?? TUTOR_AMBIGUOUS_EXPRESSION_RULE)) return system;
   const marker = '\n5. CONFIDENCE.';
-  const at = VERDICT_PRECHECK_SYSTEM.indexOf(marker);
-  if (at < 0) return VERDICT_PRECHECK_SYSTEM + AMBIGUOUS_READING_RULE;
-  return VERDICT_PRECHECK_SYSTEM.slice(0, at) + AMBIGUOUS_READING_RULE + VERDICT_PRECHECK_SYSTEM.slice(at);
+  const at = system.indexOf(marker);
+  if (at < 0) return system + AMBIGUOUS_READING_RULE;
+  return system.slice(0, at) + AMBIGUOUS_READING_RULE + system.slice(at);
 }
 
 /** `working` is a scratch field for a model that is NOT thinking: it is
@@ -214,7 +235,14 @@ export function buildVerdictPrecheckUser(input: VerdictPrecheckInput): string {
       + '\n</recent_conversation>',
     );
   }
-  parts.push(`<open_question>\n${input.openQuestion ? clip(input.openQuestion, 500) : '(the tutor\'s last message asked no question)'}\n</open_question>`);
+  // 2026-10-06c: a readiness question that names the next part — say which
+  // part is open, so a value for it is not read as "no question asked".
+  const namedTask = input.openQuestion && (input.readinessTask ?? TUTOR_READINESS_NAMED_TASK)
+    ? readOpenQuestion(input.openQuestion, { namedTask: true })?.namedTask
+    : undefined;
+  parts.push(`<open_question>\n${input.openQuestion ? clip(input.openQuestion, 500) : '(the tutor\'s last message asked no question)'}`
+    + (namedTask ? `\n(This readiness question introduces the next part: "${clip(namedTask, 200).replace(/"/g, "'")}". A value or working the student offers now answers that part.)` : '')
+    + '\n</open_question>');
   parts.push(`<student_message>\n${clip(input.studentMessage, 1200)}\n</student_message>`);
   // A written calculation with the wrong result: a calculator's finding, so
   // the model does not have to notice it (it did not, once — see

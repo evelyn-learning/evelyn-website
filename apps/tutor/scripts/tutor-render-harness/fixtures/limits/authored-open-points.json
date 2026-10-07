@@ -1,0 +1,34 @@
+[
+  {
+    "label": "removable-discontinuity-open-hole",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "Graph of $f(x)=\\frac{x^2-9}{x-3}$",
+      "xLabel": "x",
+      "yLabel": "y",
+      "xRange": [-2, 8],
+      "yRange": [-2, 10],
+      "functions": [{ "expr": "x+3", "label": "f(x) = x+3 (with hole at x=3)" }],
+      "points": [{ "x": 3, "y": 6, "label": "hole (undefined)", "color": "red", "open": true }]
+    }
+  },
+  {
+    "label": "piecewise-open-and-closed-endpoints",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "Open and closed endpoints",
+      "xRange": [-4, 4],
+      "yRange": [-2, 6],
+      "functions": [
+        { "expr": "x+1", "label": "y = x + 1, x < 1", "domain": [-4, 1] },
+        { "expr": "4", "label": "y = 4, x ≥ 1", "domain": [1, 4] }
+      ],
+      "points": [
+        { "x": 1, "y": 2, "label": "excluded", "open": true },
+        { "x": 1, "y": 4, "label": "included" }
+      ]
+    }
+  }
+]

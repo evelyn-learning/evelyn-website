@@ -37,7 +37,8 @@
  * Wording is generic — no subject content, no example values (repo rule).
  * Pure; never throws. `npm run test:work-then-match`.
  */
-import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_OPENER_STRIP_NOT_KILL, TUTOR_PRECHECK_ANSWER_CREDIT } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_ECHO_ANSWER_NO_CREDIT, TUTOR_OPENER_STRIP_NOT_KILL, TUTOR_PRECHECK_ANSWER_CREDIT } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { openQuestionText } from '@/lib/tutor/voice/nonanswer-praise';
 import { ACK_OPENER_RE } from '@/lib/tutor/voice/affirm-opener';
 import { assentSettlesNothing, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
 import { precheckDecides, precheckInforms, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
@@ -497,9 +498,60 @@ export function readMatchStatement(replyText: string, studentText?: string): Mat
 
 // ── after display: counting ────────────────────────────────────────────────
 
+// ── 2026-10-06c: an echo of the question's own options is not an answer ────
+//
+// portal-308e979f @332.0 s: "…the Supreme Court that struck down major
+// programs — the NIRA and AAA — … Can you name one of those two programs the
+// Court struck down?" → "The Agricultural Adjustment Act" → credited correct.
+// The question handed the student the answer; repeating it shows nothing.
+
+const ECHO_BACK_REFERENCE_RE = /\b(?:those|these|them|either|both|one\s+of|which\s+of|the\s+two|the\s+three|the\s+ones?)\b/i;
+const ECHO_ASSENT_RE = /^(?:yes|yeah|yep|no|nope|ok|okay|sure|maybe|true|false)$/i;
+const ECHO_SMALL_WORDS = new Set(['the', 'a', 'an', 'of', 'and', 'for', 'to', 'in', 'on']);
+const ECHO_MAX_WORDS = 8;
+
+function echoNorm(t: string): string {
+  return ` ${String(t ?? '').toLowerCase().replace(/[$*_`"'“”‘’]/g, '').replace(/[^\p{L}\p{N}+\-=<>/.^ ]/gu, ' ')
+    .replace(/(?<!\d)\.(?!\d)/g, ' ').replace(/\s+/g, ' ').trim()} `;
+}
+
+/**
+ * Does the student's answer only repeat something the tutor's question just
+ * named? The question sentence of the tutor's previous message — and, when it
+ * points back ("one of those two"), the sentence before it — must contain the
+ * answer (normalised: case, punctuation, a leading article), or an acronym in
+ * it must be the initials of the answer ("Agricultural Adjustment Act" ↔
+ * "AAA"). A long answer, a bare yes / no, or no question: false. Pure.
+ */
+export function echoesTutorQuestion(studentText: string, priorTutorTurn: string): boolean {
+  const prior = String(priorTutorTurn ?? '').trim();
+  const question = openQuestionText(prior);
+  if (!question) return false;
+  const answer = echoNorm(studentText).trim().replace(/^(?:the|a|an)\s+/, '');
+  if (!answer || answer.length < 2 || ECHO_ASSENT_RE.test(answer)) return false;
+  const words = answer.split(' ');
+  if (words.length > ECHO_MAX_WORDS) return false;
+  let scope = question;
+  if (ECHO_BACK_REFERENCE_RE.test(question)) {
+    const before = prior.slice(0, Math.max(0, prior.lastIndexOf(question))).trim();
+    const sentences = before.split(/(?<=[.!?…])\s+/).filter(Boolean);
+    if (sentences.length) scope = `${sentences[sentences.length - 1]} ${question}`;
+  }
+  if (echoNorm(scope).includes(` ${answer} `)) return true;
+  // An acronym in the question that spells the answer's initials.
+  const initials = String(studentText ?? '').replace(/^\s*(?:the|a|an)\s+/i, '').split(/\s+/)
+    .filter((w) => w && !ECHO_SMALL_WORDS.has(w.toLowerCase()))
+    .map((w) => w[0]).join('').toUpperCase();
+  if (initials.length >= 2 && /^[A-Z]+$/.test(initials)) {
+    const acronyms: string[] = scope.match(/\b[A-Z]{2,}\b/g) ?? [];
+    if (acronyms.includes(initials)) return true;
+  }
+  return false;
+}
+
 export interface MatchCredit {
   credit: 'correct' | 'incorrect' | 'none';
-  source: 'verified_key' | 'precheck' | 'match_statement' | 'none';
+  source: 'verified_key' | 'precheck' | 'match_statement' | 'echo' | 'none';
   /** A check and the tutor's match statement said opposite things — nothing
    *  is counted, and the caller emits a debug event. */
   disagreement: boolean;
@@ -520,6 +572,26 @@ export function resolveMatchCredit(input: {
   /** A deterministic proof this turn that the answer was right. */
   objectiveCorrect?: boolean;
   /** A verified key the student's answer disagrees with. */
+  verifiedWrong?: boolean;
+  precheck: PublicVerdictPrecheck | null | undefined;
+  match: MatchStatement;
+  /** 2026-10-06c: the student's message and the tutor's previous message —
+   *  an answer that only repeats what that question named earns no credit. */
+  echo?: { studentText: string; priorTutorTurn: string };
+  /** Unset ⇒ TUTOR_ECHO_ANSWER_NO_CREDIT. */
+  echoNoCredit?: boolean;
+}): MatchCredit {
+  const credit = resolveMatchCreditBase(input);
+  if (credit.credit === 'correct' && credit.source !== 'verified_key' && input.echo
+      && (input.echoNoCredit ?? TUTOR_ECHO_ANSWER_NO_CREDIT)
+      && echoesTutorQuestion(input.echo.studentText, input.echo.priorTutorTurn)) {
+    return { credit: 'none', source: 'echo', disagreement: false };
+  }
+  return credit;
+}
+
+function resolveMatchCreditBase(input: {
+  objectiveCorrect?: boolean;
   verifiedWrong?: boolean;
   precheck: PublicVerdictPrecheck | null | undefined;
   match: MatchStatement;

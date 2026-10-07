@@ -16,7 +16,7 @@ import { normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 import { resolveInequalityEntry, normalizeLineStyle } from '@/lib/tutor/whiteboard/graph-inequalities';
 import { GRAPH_COLORS } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_GRAPH_CURVE_FEATURES } from '@/lib/tutor/orchestrator/turn-round-flags';
-import { graphCurveFeatures, graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
+import { graphCurveFeatures, graphPointFeatures, isOpenGraphPoint } from '@/lib/tutor/whiteboard/graph-features';
 
 // Color palette matching our existing design. Defined beside the computed
 // inequality facts so the colour NAMED to the tutor is the colour drawn here.
@@ -387,6 +387,8 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           label: pt.label || '',
           showLabel: !!pt.label,
           pointSize: 9,
+          // 2026-10-06c: a hole / excluded endpoint is drawn open.
+          ...(isOpenGraphPoint(pt) ? { pointStyle: window.Desmos!.Styles.OPEN } : {}),
         });
       }
 

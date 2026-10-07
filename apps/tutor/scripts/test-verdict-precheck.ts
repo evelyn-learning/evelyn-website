@@ -134,7 +134,8 @@ async function main() {
     assert.equal(r!.correctValue, 'yyy');
     assert.equal(r!.model, 'fake-model');
     assert.equal(seen[0].system, verdictPrecheckSystem());
-    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false }), VERDICT_PRECHECK_SYSTEM);
+    // 2026-10-06c: the readiness-task sentence is a second switch on the same prompt.
+    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false }), VERDICT_PRECHECK_SYSTEM);
     assert.ok(!('correctValue' in toPublicPrecheck(r!)), 'the public form has no correct value');
   });
   await test('consistency: "equals the final answer" ⇒ a correct answer to the problem, whatever was said about the open question', async () => {

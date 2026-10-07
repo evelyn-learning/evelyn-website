@@ -351,7 +351,9 @@ test('the gate', () => {
   assert.equal(shouldPaintOnArrivalInTextMode({ ...base, enabled: false }), false);
   assert.equal(shouldPaintOnArrivalInTextMode({ ...base, bufferDepth: 1 }), false, 'never overtakes a render already waiting — order is kept');
   assert.equal(shouldPaintOnArrivalInTextMode({ ...base, hasSketchRequest: true }), false, 'a sketch keeps its asynchronous slot');
-  assert.equal(shouldPaintOnArrivalInTextMode({ ...base, isRepairFrame: true }), false);
+  // 2026-10-06c: a repair frame paints on arrival too (scripts/test-owner-session-2026-10-06c.ts);
+  // with that switch off it waits, as on this build.
+  assert.equal(shouldPaintOnArrivalInTextMode({ ...base, isRepairFrame: true, paintRepairFrames: false }), false);
 });
 
 // ── 12. the session-start answer dispute ────────────────────────────────────

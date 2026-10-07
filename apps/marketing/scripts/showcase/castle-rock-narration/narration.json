@@ -1,0 +1,50 @@
+{
+  "voices": {
+    "coach-riley": "bf0a246a-8642-498a-9950-80c35e9276b5",
+    "mr-joseph": "7d444628-dd13-442b-b687-71a6baf0c07e",
+    "mr-cole": "3e39e9a5-585c-4f5f-bac6-5e4905c51095",
+    "ms-michelle": "d7bf7d75-64b7-4c1e-86c0-79d647366587"
+  },
+  "items": {
+    "303439": {
+      "voice": "coach-riley",
+      "lines": [
+        "This question asks where the graph is negative. Negative just means below the x-axis, so we want the x values where f of x is less than zero.",
+        "A fraction can only change sign where its top or its bottom is zero. The top is zero at x equals negative two fifths, where the graph crosses the axis. The bottom is zero at x equals one half, which gives a vertical asymptote.",
+        "Those two values split the number line into three regions, so let's test a number in each. At x equals negative one, f is positive one. At zero, it's negative two. And at one, it's positive seven. Only the middle region is negative.",
+        "So the graph is negative between negative two fifths and one half, with neither end included. That's option D.",
+        "Quick check on the others. A and C are the outer regions, where the graph sits above the axis. And B has the right numbers, but with their signs swapped."
+      ]
+    },
+    "234035": {
+      "voice": "mr-joseph",
+      "lines": [
+        "The cars stick together, so this is a momentum question. The total momentum just before the collision equals the total momentum just after. And momentum has direction, so we treat it as a vector.",
+        "Momentum is mass times velocity. Car A has four hundred times fourteen, which is five thousand six hundred kilogram meters per second, pointing east. Car B has five hundred times ten, which is five thousand kilogram meters per second, pointing south.",
+        "East and south are at right angles, so the two momenta form a right triangle. The total is the diagonal. Using the Pythagorean theorem, that comes to about seven thousand five hundred and seven kilogram meters per second.",
+        "After the collision the cars move as one object of nine hundred kilograms. Divide the total momentum by nine hundred and you get eight point three meters per second. For the direction, the inverse tangent of five thousand over five thousand six hundred gives forty-two degrees south of east. That's option A.",
+        "A quick word on the others. Eleven point eight meters per second comes from adding the two momenta as plain numbers and ignoring direction. And forty-eight degrees is the same angle measured from south instead of from east."
+      ]
+    },
+    "193246": {
+      "voice": "mr-cole",
+      "lines": [
+        "An exothermic reaction gives energy out to its surroundings. So the products end up with less energy than the reactants, and the enthalpy change, delta H, is negative.",
+        "These equations show energy in two different ways. Some give delta H with a sign. Others put the energy right inside the equation. Energy on the product side was released. Energy on the reactant side was absorbed.",
+        "Equation one has delta H of negative two hundred forty-one point eight kilojoules. Negative, so it's exothermic. Equation two shows one hundred ten point five kilojoules on the product side. That energy is released, so it's exothermic too.",
+        "Equation three has ninety point two kilojoules on the reactant side, so energy goes in. That's endothermic. Equation four has delta H of positive twenty-six point five kilojoules. Positive, so it's endothermic as well.",
+        "So the two reactions that release energy are one and two. That's option A. The common slip is reading the energy in equation two as absorbed, just because it has a plus sign in front of it."
+      ]
+    },
+    "304631": {
+      "voice": "ms-michelle",
+      "lines": [
+        "Ploidy is the number of chromosome sets in a cell. Diploid, written two n, means two sets. Haploid, written n, means one set. In animals, body cells are diploid and only the gametes are haploid.",
+        "Start with the adult jellyfish, the medusa. It's diploid. It makes eggs or sperm by meiosis, which halves the chromosome number. So the gametes are haploid, n.",
+        "When an egg and a sperm join, n plus n gives a diploid zygote. The zygote divides by mitosis, which keeps the chromosome number the same. It grows into a swimming larva called a planula, so the planula is two n.",
+        "The planula settles and grows into a polyp, again by mitosis. The polyp then makes buds asexually, which is mitosis once more. Nothing has halved the chromosomes, so the budding polyp is also two n.",
+        "Putting it together: planula two n, budding polyp two n, gamete n. That's table D. The other tables either make a body stage haploid, or leave the gamete diploid."
+      ]
+    }
+  }
+}

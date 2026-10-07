@@ -16,6 +16,8 @@
 
 import type { HomeworkProblem, EnumerateResult } from './enumerate-problems';
 import type { LearningObjective } from './types';
+import { ungroundedRelations, verbatimText } from './problem-text';
+import { TUTOR_HOMEWORK_VERBATIM } from '../orchestrator/turn-round-flags';
 
 /** `metadata.kind` marking a plan as homework-help, read by consumers
  *  that need to branch on it (the brain block, the client). */
@@ -284,4 +286,45 @@ export function typedHomeworkPlanDecision(
  *  the first `max` (the order Stage 1 proposed) and build a full plan. Pure. */
 export function capObjectivesForHomework<T>(los: T[], max: number): T[] {
   return los.slice(0, Math.max(1, max));
+}
+
+// ── 2026-10-06c: the student's own text, verbatim ──────────────────────────
+//
+// portal-818996c1: the student typed a system of two inequalities; the
+// session's problem card showed "y < −2x + 4 and 2x + y < 4" — one of them
+// solved for y, the other dropped — and the tutor said both were "already
+// solved for y". The splitter is told to copy the problems verbatim
+// ("do not solve, hint, rephrase or omit") but nothing held it to that: its
+// text became the plan's problem as returned.
+
+/**
+ * Hold a TYPED split to the student's text. An entry carrying an equation or
+ * inequality that does not occur in what the student typed (in any
+ * typesetting) is not their problem as written: the split is replaced by ONE
+ * problem holding the typed text verbatim (whitespace normalised only), and
+ * the splitter's wording is kept apart in `rewritten`. A split whose entries
+ * are all grounded is returned unchanged. Uploads are not passed here (the
+ * splitter is asked to turn extracted maths into plain text, which an OCR
+ * source does not survive character for character). Pure.
+ * @param opts.enabled unset ⇒ TUTOR_HOMEWORK_VERBATIM.
+ */
+/** = enumerate-problems.ts HOMEWORK_MAX_PROBLEM_CHARS (the contract's cap);
+ *  repeated, not imported — that module carries the model client and this
+ *  one is read in the browser. */
+const TYPED_PROBLEM_MAX_CHARS = 4000;
+
+export function groundTypedProblems(
+  problems: HomeworkProblem[],
+  typedText: string,
+  opts?: { enabled?: boolean },
+): { problems: HomeworkProblem[]; altered: string[] } {
+  if (!(opts?.enabled ?? TUTOR_HOMEWORK_VERBATIM)) return { problems, altered: [] };
+  const own = verbatimText(typedText);
+  if (!own || problems.length === 0) return { problems, altered: [] };
+  const altered = problems.flatMap((p) => ungroundedRelations(p.text, own));
+  if (altered.length === 0) return { problems, altered: [] };
+  return {
+    problems: [{ n: problems.length === 1 ? problems[0].n : 1, text: own.slice(0, TYPED_PROBLEM_MAX_CHARS), rewritten: problems.map((p) => `${p.n}. ${p.text}`).join('\n') }],
+    altered,
+  };
 }

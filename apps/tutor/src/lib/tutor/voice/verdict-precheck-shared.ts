@@ -23,6 +23,7 @@
  * Pure; never throws. `npm run test:verdict-precheck`.
  */
 import { opensWithAffirmingVerdict } from '@/lib/tutor/voice/nonanswer-praise';
+import { TUTOR_OTHER_PART_NO_GIVEAWAY } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Which question the student's message answers. */
 export type PrecheckTarget =
@@ -118,10 +119,13 @@ export function formatAnswerCheckBlock(
      *  and a match statement that agrees with the check — not for a verdict
      *  opener. Unset/false ⇒ the block as before. */
     workThenMatch?: boolean;
+    /** Unset ⇒ TUTOR_OTHER_PART_NO_GIVEAWAY; false ⇒ the other-part wording
+     *  of 2b58aacf. */
+    otherPartNoGiveaway?: boolean;
   },
 ): string {
   if (!precheckInforms(p)) return '';
-  if (opts?.workThenMatch === true) return formatAnswerCheckBlockWorkThenMatch(p, opts.correctValue);
+  if (opts?.workThenMatch === true) return formatAnswerCheckBlockWorkThenMatch(p, opts.correctValue, opts);
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -147,7 +151,9 @@ export function formatAnswerCheckBlock(
       + (p.answers === 'overall_problem'
         ? 'What to do: open by crediting it explicitly as the right answer to that — never "Not quite", and never a correction for not answering the step you asked about. Then decide whether the step is still worth doing (for instance to have them show how they got there) or whether to move on.\n'
         : elsewhere
-          ? 'What to do: it is right for THAT, and it is not an answer to the question you asked just now. Say both, briefly — never "Not quite" about a value that is right for what it answers, and no praise as though it answered your question — then return to the question you asked.\n'
+          ? (otherPartNoGiveaway(opts)
+            ? OTHER_PART_CORRECT_RULE
+            : 'What to do: it is right for THAT, and it is not an answer to the question you asked just now. Say both, briefly — never "Not quite" about a value that is right for what it answers, and no praise as though it answered your question — then return to the question you asked.\n')
           : 'What to do: open by telling them it is right. Never "Not quite", and do not ask them to check it again.\n')
       + tail;
   }
@@ -166,8 +172,30 @@ export function formatAnswerCheckBlock(
     + tail;
 }
 
+// ── 2026-10-06c: right for another part — never a give-away ────────────────
+//
+// portal-c301c9ad @77.3 s: the tutor had just introduced the next part; the
+// student offered a value for it that is right only for a LATER part. The
+// block said "state both as facts", and the reply wrote "<that part> = <their
+// value>, but …" on the board — a false equation — and then supplied that
+// part's real answer. The student is working the part they offered it for.
+
+/** Unset ⇒ TUTOR_OTHER_PART_NO_GIVEAWAY. */
+function otherPartNoGiveaway(opts?: { otherPartNoGiveaway?: boolean }): boolean {
+  return opts?.otherPartNoGiveaway ?? TUTOR_OTHER_PART_NO_GIVEAWAY;
+}
+
+const OTHER_PART_GUARD =
+  'If they offered it for the part you had just introduced or are working on, that part is the one to judge it against: their value is not its answer. Never state or write the answer to the part the student is working on, and never write their value as that part\'s result — no equation, board line or sentence that gives that part\'s result as their value. Ask one guiding question about what is different in that part instead.';
+
+export const OTHER_PART_CORRECT_RULE =
+  `What to do: it is right for THAT, and it is not an answer to the question you asked just now — no "Not quite" about the value itself, and no praise as though it answered your question. ${OTHER_PART_GUARD} Otherwise (they meant THAT), say briefly that it is right for THAT and return to the question you asked.\n`;
+
+export const OTHER_PART_CORRECT_RULE_WORK_THEN_MATCH =
+  `What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. ${OTHER_PART_GUARD} Otherwise (they meant THAT), say briefly that it is right for THAT and return to the question you asked.\n`;
+
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean }): string {
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -195,7 +223,9 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
       + (p.answers === 'overall_problem'
         ? 'What to do: your working must reach the checked value and your match statement must agree with the check — show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Never send them back to the smaller step as though the value were wrong.\n'
         : p.answers === 'other_part'
-          ? 'What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. State both as facts, briefly, then return to the question you asked.\n'
+          ? (otherPartNoGiveaway(opts)
+            ? OTHER_PART_CORRECT_RULE_WORK_THEN_MATCH
+            : 'What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. State both as facts, briefly, then return to the question you asked.\n')
           : 'What to do: your working must reach the checked value and your match statement must agree with the check — say that the result is the value they gave. Do not ask them to check it again.\n')
       + tail;
   }

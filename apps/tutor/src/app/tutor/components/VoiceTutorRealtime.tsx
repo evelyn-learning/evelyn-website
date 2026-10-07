@@ -282,7 +282,7 @@ import {
   type IdleNudgePostponeReason,
 } from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
-import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
+import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
 import { shouldAbortStalledBrain, decideStallRecovery, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
@@ -418,7 +418,7 @@ import { buildJudgeCorrectionNote, shouldConsumeJudgeCorrectionNote, decideJudge
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
 import { extractChoiceOptions, reconcileMcqLetterWithContent, type ChoiceOption } from '@/lib/tutor/voice/mcq-letter-content';
-import { isBareArithmeticRecheck } from '@/lib/tutor/voice/arithmetic-recheck';
+import { shouldDropBareRecheck } from '@/lib/tutor/voice/arithmetic-recheck';
 import { findUngroundedComputation } from '@/lib/tutor/voice/posed-computation';
 import {
   WHITEBOARD_INTENT_PATTERNS,
@@ -3048,6 +3048,10 @@ export function VoiceTutorRealtime({
    *  the ledger zero `wrong` events because the only producer is the pacing
    *  credit path, which the advisory judge can withhold. */
   const ledgerStudentTextRef = useRef('');
+  /** 2026-10-06c: the tutor message the student was answering (the last
+   *  tutor turn before THIS student turn) — an answer that only repeats what
+   *  its question named is not credited (work-then-match.ts). */
+  const ledgerPriorTutorTextRef = useRef('');
   const ledgerWrongFedThisTurnRef = useRef(false);
   /** A soft stuck cue heard this turn, fed to the ledger at turn ok unless
    *  the verdict layer credited the same turn as correct. */
@@ -8314,8 +8318,17 @@ export function VoiceTutorRealtime({
       // Prefer the brain's stripped new_page title (often the most descriptive,
       // e.g. "Ellipse: Standard Form") for a fresh page; a continuation keeps
       // its "(cont.)" title.
-      const pageTitle = pageDecision.action === 'newPage' && brainNewPageTitleHint
-        ? brainNewPageTitleHint
+      // 2026-10-06c: the student's homework problem card opens "Problem N"
+      // whatever the brain called the page; a brain title is never raw LaTeX.
+      const pageTitle = pageDecision.action === 'newPage'
+        ? newPageTitle({
+            brainHint: brainNewPageTitleHint,
+            decisionTitle: pageDecision.title,
+            firstTeaching: firstTeachingCmdForGrouping,
+            ...(homeworkProblemsRef.current?.length
+              ? { homework: { n: homeworkCurrentRef.current, total: homeworkProblemsRef.current.length, text: homeworkProblemsRef.current[homeworkCurrentRef.current - 1]?.text } }
+              : {}),
+          })
         : pageDecision.title;
       const synthetic: WhiteboardCommand = { action: 'newPage', title: pageTitle };
       processed = [synthetic, ...processed];
@@ -11209,6 +11222,7 @@ export function VoiceTutorRealtime({
         // sessionEndSignalRegex definition above for scope/rationale.
         const isSessionEndSignal = sessionEndSignalRegex.test(lower);
         ledgerStudentTextRef.current = t;
+        ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {
           turn: pacingTurnCounterRef.current,
           segId: segIdNow,
@@ -13275,7 +13289,15 @@ export function VoiceTutorRealtime({
                   // tracker (withhold), which never sees it otherwise, so
                   // finish() / release() can hand it back.
                   const correctionWorkingRestoredFrame = (ev as { synthetic?: unknown }).synthetic === 'correction_working_restored';
-                  if (!correctionWorkingRestoredFrame && isFirstSentenceOfTurn && correctionNoteThisTurn && isBareArithmeticRecheck(sentence)) {
+                  // 2026-10-06c: never on a turn whose verdict opener was stripped —
+                  // what is left is the reply's working on the student's answer.
+                  if (shouldDropBareRecheck({
+                    sentence,
+                    isFirstSentenceOfTurn,
+                    correctionNoteThisTurn,
+                    restoredFrame: correctionWorkingRestoredFrame,
+                    openerStripped: (ev as { synthetic?: unknown }).synthetic === 'verdict_opener_cut' || openerBackstopHeld.length > 0,
+                  })) {
                     correctionWorkingTracker.withhold(sentence);
                     console.warn('[brain-orchestrator] dropped bare arithmetic re-check:', JSON.stringify(sentence.slice(0, 100)));
                     onDebugEvent?.('correction_recheck_dropped', sentence.slice(0, 80));
@@ -18337,6 +18359,7 @@ export function VoiceTutorRealtime({
                 verifiedWrong: keyVerifiedWrongThisTurnRef.current,
                 precheck: verdictPrecheckRef.current,
                 match: readMatchStatement(fullText, ledgerStudentTextRef.current),
+                echo: { studentText: ledgerStudentTextRef.current, priorTutorTurn: ledgerPriorTutorTextRef.current },
               })
             : null;
           if (matchCredit && countsAsAnswer) {
@@ -18591,7 +18614,7 @@ export function VoiceTutorRealtime({
               // 2026-10-06, text mode "work it, then match": the resolved
               // credit decides; the tutor's opener words are not read.
               ...(TUTOR_TEXT_MATCH_COUNTING && workThenMatchTurnRef.current
-                ? { matchCredit: resolveMatchCredit({ objectiveCorrect: !!objectiveSignal, verifiedWrong: keyVerifiedWrongThisTurnRef.current, precheck: verdictPrecheckRef.current, match: readMatchStatement(fullText, ledgerStudentTextRef.current) }).credit }
+                ? { matchCredit: resolveMatchCredit({ objectiveCorrect: !!objectiveSignal, verifiedWrong: keyVerifiedWrongThisTurnRef.current, precheck: verdictPrecheckRef.current, match: readMatchStatement(fullText, ledgerStudentTextRef.current), echo: { studentText: ledgerStudentTextRef.current, priorTutorTurn: ledgerPriorTutorTextRef.current } }).credit }
                 : {}),
             })) {
           const segId = ver?.segId ?? currentSegmentIdRef.current;

@@ -24,7 +24,7 @@
  */
 
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
-import { TUTOR_BARE_ASSENT_PRAISE_KILL, TUTOR_AMBIGUOUS_ASSENT_KILL } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_BARE_ASSENT_PRAISE_KILL, TUTOR_AMBIGUOUS_ASSENT_KILL, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Filler tokens stripped before matching (never load-bearing). */
 const FILLER = new Set(['um', 'uh', 'er', 'like', 'so', 'well']);
@@ -289,6 +289,41 @@ export interface OpenQuestionRead {
   kind: OpenQuestionKind;
   /** An EARLIER question of the same turn is one a yes / no can answer. */
   earlierYesNo: boolean;
+  /** 2026-10-06c: a readiness / transition question that NAMES the next
+   *  part or task ("Ready to move to part (b), finding …?") — the part it
+   *  names, verbatim. A value offered for that part answers THIS question. */
+  namedTask?: string;
+}
+
+/** A part / problem label with its identifier: "part (b)", "part b",
+ *  "problem 2", "question 3", "step 2", "(b)". */
+const NAMED_PART_RE = /\b(?:part|problem|question|exercise|step|item|section)\s*\(?\s*(?:[a-h]|\d{1,2}|i{1,3}|iv|v|vi{1,3})\s*\)?(?![a-z0-9])|\(\s*[a-h]\s*\)/i;
+/** A task verb with something after it ("finding f(3)", "to solve for x"). */
+const NAMED_TASK_VERB_RE =
+  /\b(?:find(?:ing)?|solv(?:e|ing)|comput(?:e|ing)|calculat(?:e|ing)|evaluat(?:e|ing)|simplif(?:y|ying)|factor(?:ing|ising|izing)?|graph(?:ing)?|plot(?:ting)?|determin(?:e|ing)|work(?:ing)?\s+out|figur(?:e|ing)\s+out|expand(?:ing)?|differentiat(?:e|ing)|integrat(?:e|ing)|prov(?:e|ing)|writ(?:e|ing)|check(?:ing)?|test(?:ing)?|sketch(?:ing)?|identify(?:ing)?|nam(?:e|ing)|draft(?:ing)?)\s+\S/i;
+/** Where the named task starts: after "ready (to move on to | for | to)",
+ *  "(shall | should) we (move on to | do | try)", "(want | like) to (try | do)". */
+const READINESS_LEAD_RE =
+  /\b(?:ready|shall\s+we|should\s+we|want\s+to|wanna|(?:would\s+you\s+)?like\s+to|let'?s)\b\s*(?:(?:to|for)\s+)?(?:(?:move|go|head|jump|get|turn|carry)\s+(?:on\s+)?(?:to|into|over\s+to)\s+|(?:do|try|tackle|start(?:\s+on)?|begin|attempt|work\s+on)\s+)?/i;
+
+/**
+ * The part a readiness / transition question names, or null. Only a SPECIFIC
+ * part counts: a label with its identifier ("part (b)", "problem 2") or a
+ * task verb with its object ("finding f(3)", "to solve for x"); "ready for
+ * the next one?" names nothing. Generic shapes only.
+ */
+export function readinessNamedTask(question: string): string | null {
+  const plain = stripMarkdownEmphasis(question ?? '').replace(/\?\s*$/, '').trim();
+  const lead = READINESS_LEAD_RE.exec(plain);
+  if (!lead) return null;
+  const rest = plain.slice(lead.index + lead[0].length).replace(/^[\s,:;—–-]+/, '').trim();
+  if (!rest) return null;
+  // The task verb may lead the remainder ("to find f(3)") — keep it.
+  const named = NAMED_PART_RE.test(rest) || NAMED_TASK_VERB_RE.test(rest);
+  if (!named) return null;
+  // "…, or do you want to stop here" — the alternative is not the task.
+  const cut = rest.split(/,?\s+or\s+(?:do\s+you|would\s+you|should\s+we|shall\s+we|want|stop|wrap|take)\b/i)[0].trim();
+  return cut.length >= 3 ? cut.slice(0, 200) : null;
 }
 
 const OPEN_QUESTION_MAX_CHARS = 400;
@@ -330,7 +365,11 @@ const WH_LEAD_CLAUSE_RE =
 
 /** The last question of the tutor's turn and its kind. Null when the turn
  *  asked nothing. */
-export function readOpenQuestion(priorTutorTurn: string): OpenQuestionRead | null {
+export function readOpenQuestion(
+  priorTutorTurn: string,
+  /** `namedTask` — unset ⇒ TUTOR_READINESS_NAMED_TASK. */
+  opts?: { namedTask?: boolean },
+): OpenQuestionRead | null {
   const question = openQuestionText(priorTutorTurn);
   if (!question) return null;
   const plain = stripMarkdownEmphasis(question).replace(/\?\s*$/, '').trim();
@@ -343,7 +382,14 @@ export function readOpenQuestion(priorTutorTurn: string): OpenQuestionRead | nul
   else kind = base;
   const all = questionSentences(priorTutorTurn);
   const earlierYesNo = all.slice(0, -1).some((q) => classifyQuestion(q) === 'yes_no');
-  return { question, kind, earlierYesNo };
+  // 2026-10-06c (portal-c301c9ad @77.3 s): "Ready to move to part (b),
+  // finding f(3)?" → "ok that'd be 3+3=6". The student was answering the
+  // part the question named; read as a bare readiness question, nothing was
+  // open and the value was graded against another part.
+  const namedTask = kind === 'readiness' && (opts?.namedTask ?? TUTOR_READINESS_NAMED_TASK)
+    ? readinessNamedTask(question)
+    : null;
+  return { question, kind, earlierYesNo, ...(namedTask ? { namedTask } : {}) };
 }
 
 /** What a bare yes / no / ok does to the open question:
