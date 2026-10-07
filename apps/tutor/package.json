@@ -350,6 +350,8 @@
     "test:deferred-page-flush": "npx tsx scripts/test-deferred-page-flush.ts",
     "test:empty-segment-card": "npx tsx scripts/test-empty-segment-card.ts",
     "test:judge-issue-decision": "npx tsx scripts/test-judge-issue-decision.ts",
+    "test:inequality-facts": "npx tsx scripts/test-inequality-facts.ts",
+    "test:owner-session-1006b": "npx tsx scripts/test-owner-session-2026-10-06b.ts",
     "test:literal-line-breaks": "npx tsx scripts/test-literal-line-breaks.ts",
     "test:praise-exclusion": "npx tsx scripts/test-praise-exclusion.ts",
     "test:token-log": "npx tsx scripts/test-token-log.ts",

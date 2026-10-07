@@ -37,6 +37,7 @@
  * Wording is generic — no subject content, no example values (repo rule).
  * Pure; never throws. `npm run test:work-then-match`.
  */
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_OPENER_STRIP_NOT_KILL, TUTOR_PRECHECK_ANSWER_CREDIT } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { ACK_OPENER_RE } from '@/lib/tutor/voice/affirm-opener';
 import { assentSettlesNothing, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
 import { precheckDecides, precheckInforms, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
@@ -78,6 +79,11 @@ const LENGTH =
  *   bare "yes" — with no praise word, but with the working the full rule asks
  *   for on an answer.
  */
+/** 2026-10-06b: an expression typed without brackets can be grouped more
+ *  than one way; a correct answer must not be denied on one grouping. */
+export const AMBIGUOUS_READING_TEXT_RULE =
+  'When what they wrote can reasonably be read as more than one expression — typed without brackets, its parts can be grouped in more than one way — and one reasonable reading is what your working gives, it IS the value they gave: say that it matches, and put the intended form on the board written out in full so you are both looking at the same expression. If you cannot tell which reading they meant, ask which one they meant. Never tell a student they are wrong on the strength of one reading of something that can be read two ways.\n';
+
 export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | null): string {
   const t = (transcript ?? '').trim();
   if (!t || t.startsWith('[')) return '';
@@ -108,6 +114,7 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'When they gave the correct FINAL answer while a smaller step was open: show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n'
     + 'When the message does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them their message "is not an answer".\n'
     + 'Work from the student\'s own problem and data, not from a value stated earlier in the conversation: an earlier line — yours included — can be wrong, and if your working now shows that one of yours was, say so plainly and use the corrected value.\n'
+    + (TUTOR_AMBIGUOUS_EXPRESSION_RULE ? AMBIGUOUS_READING_TEXT_RULE : '')
     + LENGTH.replace('Do not restate', 'The working is one or two short lines, not a derivation and not a lecture. Do not restate')
     + 'Reason silently. Your first words are addressed to the student — the working itself when their message proposed something — never deliberation about this rule, the turn or the lesson state, never an announcement that you are going to check. Never refer to the student in the third person.\n'
     + '</verdict_guard>\n\n';
@@ -169,12 +176,22 @@ function tidyRemainder(rest: string): string | null {
   return r;
 }
 
+export interface VerdictOpenerOpts {
+  answerShaped?: boolean;
+  /** 2026-10-06b: also read a WEAK word set off by a comma ("Right,
+   *  isolating … gives exactly that") as an opener when the student proposed
+   *  an answer — it escaped the backstop. Only the text-mode backstop asks
+   *  for this, and it only ever STRIPS the word (never a kill on its own:
+   *  the remainder always stands alone or the sentence was only a verdict). */
+  weakComma?: boolean;
+}
+
 /**
  * Read ONE sentence — the first of a reply — for a verdict or praise opener.
  * @param answerShaped  the student's message proposed an answer (praise of
  *   their move then counts as an opener too).
  */
-export function readVerdictOpener(sentence: string, opts?: { answerShaped?: boolean }): VerdictOpenerRead {
+export function readVerdictOpener(sentence: string, opts?: VerdictOpenerOpts): VerdictOpenerRead {
   const s = (sentence ?? '').trim();
   if (!s) return { kind: 'none' };
   let m: RegExpExecArray | null = null;
@@ -212,11 +229,11 @@ export function readVerdictOpener(sentence: string, opts?: { answerShaped?: bool
     // ("Right now…", "Close the bracket", "Correct to two places", "No worries").
     return { kind: 'none' };
   }
-  if (soft && strength === 'weak') return { kind: 'none' };
+  if (soft && strength === 'weak' && !(opts?.weakComma === true && opts?.answerShaped === true)) return { kind: 'none' };
   return fusedOrOnly(opener, after.slice((hard ?? soft)![0].length), opts);
 }
 
-function fusedOrOnly(opener: string, rest: string, opts?: { answerShaped?: boolean }): VerdictOpenerRead {
+function fusedOrOnly(opener: string, rest: string, opts?: VerdictOpenerOpts): VerdictOpenerRead {
   const remainder = tidyRemainder(rest);
   if (remainder === null) return { kind: 'only', opener };
   // "Right — that's it.", "Yes — exactly." are verdicts through and through.
@@ -239,6 +256,76 @@ export function backstopAppliesTo(ts: TurnShape | null): boolean {
     return assentSettlesNothing(ts) || (ts.open?.kind === 'yes_no' && ts.shape !== 'acknowledgment');
   }
   return ts.shape === 'check_request' || ts.shape === 'no_answer';
+}
+
+// ── 2026-10-06b: strip, do not kill ─────────────────────────────────────────
+//
+// portal-2de3c6c8 @415.7 s: "Right — at x=0, the blue line sits at y=4, and 0
+// is below that…" — a CORRECT reply to an answer the pre-check had confirmed
+// at high confidence — was killed for its opener. The retry took 9.5 s and
+// was worse (it restated the wrong region). The verdict word is the only
+// thing wrong with such a sentence, so the word is cut and the rest shown.
+
+/** Does the pre-check (HIGH confidence) say the same as this opener? */
+export function precheckAgreesWithOpener(p: PublicVerdictPrecheck | null | undefined, opener: string): boolean {
+  if (!precheckDecides(p) || p.answers === 'neither') return false;
+  const denying = /^(?:no|nope|not\b|close|so\s+close|almost|nearly|incorrect|wrong|that(?:'?s|\s+is)\s+(?:not|incorrect|wrong))/i.test((opener ?? '').trim());
+  return denying ? p.verdict === 'incorrect' : (p.verdict === 'correct' && p.answers !== 'other_part');
+}
+
+export type OpenerFusedPlan =
+  /** Cut the verdict phrase; show `remainder`. */
+  | { action: 'cut'; remainder: string; why: 'clean_cut' | 'precheck_agrees' | 'kill_spent' }
+  /** Reject the attempt and retry once with the rule named. */
+  | { action: 'kill' }
+  /** Nothing can be done safely: shown as written. */
+  | { action: 'show'; why: 'precheck_agrees' | 'kill_spent' };
+
+/**
+ * What to do with a first sentence whose verdict phrase is FUSED with
+ * content.
+ *   - the phrase can be cut cleanly → cut it (no kill);
+ *   - it cannot, but a HIGH-confidence pre-check agrees with it → shown as
+ *     written (no kill);
+ *   - it cannot, and nothing vouches for it → kill once, as before.
+ * `stripNotKill` unset ⇒ TUTOR_OPENER_STRIP_NOT_KILL; false ⇒ the rule of
+ * 2026-10-06 (kill first; cut only once the kill is spent).
+ */
+export function planFusedOpener(input: {
+  opener: string;
+  remainder: string | null;
+  precheck: PublicVerdictPrecheck | null | undefined;
+  /** A kill is still available for this turn. */
+  killAvailable: boolean;
+  stripNotKill?: boolean;
+}): OpenerFusedPlan {
+  const strip = input.stripNotKill ?? TUTOR_OPENER_STRIP_NOT_KILL;
+  if (!strip) {
+    if (input.killAvailable) return { action: 'kill' };
+    return input.remainder ? { action: 'cut', remainder: input.remainder, why: 'kill_spent' } : { action: 'show', why: 'kill_spent' };
+  }
+  const agrees = precheckAgreesWithOpener(input.precheck, input.opener);
+  if (input.remainder) return { action: 'cut', remainder: input.remainder, why: agrees ? 'precheck_agrees' : 'clean_cut' };
+  if (agrees) return { action: 'show', why: 'precheck_agrees' };
+  return input.killAvailable ? { action: 'kill' } : { action: 'show', why: 'kill_spent' };
+}
+
+// ── 2026-10-06b: a short answer in words still counts ───────────────────────
+//
+// portal-10beb4f5: "the side with origin" and "below the line" — right
+// answers, confirmed by the pre-check at high confidence — were never counted:
+// with no digit and fewer than six words the turn was not "a verification
+// turn", and with more than three words it was not a "bare short answer".
+
+/** The pre-check says this message ANSWERS the open question (or the problem
+ *  being worked) and is right or wrong, at HIGH confidence — so the turn is
+ *  an answer for counting, whatever its length. The credit itself is still
+ *  `resolveMatchCredit`'s: correct → correct; incorrect counts only when the
+ *  tutor's match statement agrees. */
+export function precheckCountsAsAnswer(p: PublicVerdictPrecheck | null | undefined, opts?: { enabled?: boolean }): boolean {
+  if (!(opts?.enabled ?? TUTOR_PRECHECK_ANSWER_CREDIT)) return false;
+  if (!precheckDecides(p)) return false;
+  return (p.answers === 'open_question' || p.answers === 'overall_problem') && (p.verdict === 'correct' || p.verdict === 'incorrect');
 }
 
 export interface OpenerBackstopResult {

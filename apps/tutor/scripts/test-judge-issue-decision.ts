@@ -39,7 +39,9 @@ const d = (claim: string, fields: Record<string, unknown>, severity: Sev = 'advi
   // falsePraiseRound:false pins the 2026-10-04 table; the 2026-10-05 rows
   // (false-praise note, no note on a not-an-answer grounding issue or on a
   // statement the judge itself calls correct) are in test-judge-note-false-praise.ts.
-  decideJudgeIssue({ enabled, issue: { claim, ...fields }, severity, falsePraiseRound: false });
+  // unsureNoNote:false likewise pins the table before 2026-10-06b; the
+  // "unsure ⇒ no note" row has its own section at the end of this file.
+  decideJudgeIssue({ enabled, issue: { claim, ...fields }, severity, falsePraiseRound: false, unsureNoNote: false });
 
 console.log('\njudge issue decision — the production case');
 
@@ -381,6 +383,57 @@ test('the judge prompt asks for both fields and names every value the decision r
 test('the prompt tells the judge that wording on a correct denial is tone_or_wording, never false_denial', () => {
   assert.match(JUDGE_SYSTEM_PROMPT, /"tone_or_wording" with studentAnswerVerdict "incorrect"/);
   assert.match(JUDGE_SYSTEM_PROMPT, /"false_denial" requires studentAnswerVerdict "correct"/);
+});
+
+console.log('\njudge issue decision — 2026-10-06b: an UNSURE judge plants nothing');
+
+// The recorded judge outputs of portal-10beb4f5 (voice) and portal-2de3c6c8
+// (text). In the voice session all four flags were on CORRECT statements.
+const now = (claim: string, fields: Record<string, unknown>, severity: Sev = 'advisory', why?: string): JudgeIssueDecision =>
+  decideJudgeIssue({ enabled: true, issue: { claim, ...fields, ...(why ? { why } : {}) }, severity });
+test('LIVE voice @411.8: kind=other verdict=unsure on a correct statement → no note (was note:neutral)', () => {
+  const claim = "the inequality says $y$ is *less than* that line's values, so the shaded region sits below the line, not above it.";
+  const r = now(claim, { issueKind: 'other', studentAnswerVerdict: 'unsure' }, 'advisory',
+    'The tutor states that for y < (1/3)x - 2/3, the shaded region is below the line. However, the whiteboard shows that the');
+  assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'judge-unsure']);
+  // The same issue under the previous table planted the neutral note.
+  const before = d(claim, { issueKind: 'other', studentAnswerVerdict: 'unsure' });
+  assert.deepEqual([before.plantNote, before.noteMode], [true, 'neutral']);
+});
+test('LIVE voice @452.7 / @474.7 / @696.1: kind=grounding verdict=not_an_answer → no note (unchanged)', () => {
+  for (const claim of [
+    'below the dashed line $y < -2x+4$',
+    "it's the region that sits *below* the first dashed line, $y < -2x + 4$, *and also* below the second dashed line",
+    'checking (0,-5) against both lines confirms it sits in the region below both dashed boundaries',
+  ]) {
+    const r = now(claim, { issueKind: 'grounding', studentAnswerVerdict: 'not_an_answer' });
+    assert.deepEqual([r.plantNote, r.withholdCredit], [false, false], claim);
+  }
+});
+test('unsure plants nothing for every kind and both severities', () => {
+  for (const k of ['wrong_math', 'grounding', 'other', 'false_praise', 'false_denial', 'tone_or_wording', undefined]) {
+    for (const sev of ['advisory', 'kill'] as const) {
+      for (const claim of [MATH, PROSE, "That doesn't work here. Plug it in."]) {
+        const r = now(claim, { studentAnswerVerdict: 'unsure', ...(k ? { issueKind: k } : {}) }, sev);
+        assert.deepEqual([r.plantNote, r.withholdCredit], [false, false], `${k}/${sev}/${claim}`);
+      }
+    }
+  }
+});
+test('the ONE case kept: a DENIAL_RE denial with an unsure verdict still gets the legacy re-check', () => {
+  assert.equal(DENIAL_RE.test(DENIAL), true);
+  for (const k of ['other', 'grounding', 'wrong_math', 'false_denial', undefined]) {
+    const r = now(DENIAL, { studentAnswerVerdict: 'unsure', ...(k ? { issueKind: k } : {}) });
+    assert.deepEqual([r.plantNote, r.noteMode, r.withholdCredit, r.reason], [true, 'legacy', true, 'denial-unverified'], String(k));
+  }
+});
+test('verdicts other than unsure are untouched by the new row', () => {
+  const r = now(MATH, { issueKind: 'wrong_math', studentAnswerVerdict: 'incorrect' });
+  assert.deepEqual([r.plantNote, r.noteMode], [true, 'neutral']);
+  const missing = now(MATH, { issueKind: 'wrong_math' });
+  assert.deepEqual([missing.plantNote, missing.noteMode], [true, 'neutral']);
+  const retract = now(DENIAL, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' });
+  assert.deepEqual([retract.plantNote, retract.noteMode, retract.withholdCredit], [true, 'retraction', true]);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

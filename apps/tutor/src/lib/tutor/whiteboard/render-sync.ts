@@ -168,3 +168,29 @@ export function shouldBypassRenderSync(opts: OpeningBypassOpts): boolean {
   if (!opts.isOpeningTurn) return false;
   return opts.rendersDispatchedThisTurn === 0;
 }
+
+/**
+ * 2026-10-06b — TEXT mode paints a render when it arrives.
+ *
+ * The sync buffer holds a render until the SPEECH that introduces it is
+ * playing. A text session plays no speech, so nothing ever advanced the
+ * anchor: each card sat until the stall timer released it, 3–9 s after its
+ * sentence was already on screen (portal-2de3c6c8: `render_sync_buffer` →
+ * `render_sync_stall_flush`). Order is kept: a batch only skips the buffer
+ * when the buffer is empty, so it can never overtake an earlier one; a sketch
+ * request keeps its asynchronous slot; a Rule-8 repair frame keeps its own
+ * anchor handling.
+ */
+export function shouldPaintOnArrivalInTextMode(opts: {
+  /** TUTOR_TEXT_PAINT_ON_ARRIVAL. */
+  enabled: boolean;
+  isTextMode: boolean;
+  /** Entries already waiting in the sync buffer. */
+  bufferDepth: number;
+  hasSketchRequest: boolean;
+  isRepairFrame: boolean;
+}): boolean {
+  if (!opts.enabled || !opts.isTextMode) return false;
+  if (opts.bufferDepth > 0 || opts.hasSketchRequest || opts.isRepairFrame) return false;
+  return true;
+}

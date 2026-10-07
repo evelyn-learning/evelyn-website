@@ -36,6 +36,8 @@ import {
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from './turn-shape-signal';
 import { runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
+import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
+import { TUTOR_INEQUALITY_FACTS } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
   precheckInforms,
@@ -514,6 +516,11 @@ export interface BrainTurnInput {
    *  (without the correct value, which never left the server). Used only
    *  when no fresh student message is present. */
   verdictPrecheckCarry?: PublicVerdictPrecheck;
+  /** 2026-10-06b: the data of the newest graph on the board that draws the
+   *  active problem's boundaries (the browser picks it). Read defensively and
+   *  only for how each line is DRAWN (colour, legend label) — the facts
+   *  themselves are computed here from `activeProblem.statement`. */
+  problemGraph?: unknown;
   /** Test/measurement seam for the pre-check (model call, timeout, model). */
   verdictPrecheckDeps?: VerdictPrecheckDeps & { onResult?: (r: VerdictPrecheckResult | null, ms: number) => void };
   /** Optional async resolver for tool_result content. Default behavior
@@ -1569,6 +1576,22 @@ export function formatActiveProblemBlock(
  *
  * Exported for scripts/test-active-problem-block.ts.
  */
+/**
+ * 2026-10-06b — the facts of a system / inequality problem, computed from the
+ * active problem's own statement (the student's current homework problem when
+ * nothing is tracked): solved forms, shaded side, crossing, a point inside and
+ * one outside. Both modes; uncached per-turn content. Null when the problem
+ * is not one this reads, or TUTOR_INEQUALITY_FACTS is off.
+ */
+export function problemFactsFor(input: Pick<BrainTurnInput, 'activeProblem' | 'homework' | 'problemGraph'>, enabled: boolean = TUTOR_INEQUALITY_FACTS): InequalityFacts | null {
+  if (!enabled) return null;
+  const statement = input.activeProblem?.statement?.trim()
+    || input.homework?.problems[(input.homework?.current ?? 0) - 1]?.text
+    || '';
+  if (!statement) return null;
+  return problemInequalityFacts(statement, input.problemGraph);
+}
+
 export function formatActiveQuestionBlock(lastTutorMessage: string): string {
   const question = lastQuestionSentence(lastTutorMessage);
   if (!question) return '';
@@ -1928,6 +1951,10 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // rendered directly after <active_problem> so the override reads in place.
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
+  // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
+  const problemFacts = problemFactsFor(input);
+  const problemFactsBlock = formatInequalityFactsBlock(problemFacts);
+  if (problemFactsBlock) console.log(`[problem-facts] block attached (${problemFacts?.inequalities.length} inequalit${problemFacts?.inequalities.length === 1 ? 'y' : 'ies'}${problemFacts?.hasGraph ? ', graph colours' : ''})`);
   const userContent =
     // Recap directives lead the message (live probes 2026-09-05: buried
     // after seven other blocks, the offer lost to the stuck rule 3 turns in
@@ -1952,6 +1979,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     studentStateBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
+    problemFactsBlock +
     verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
@@ -2157,6 +2185,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
   const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
+  // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
+  const problemFacts = problemFactsFor(input);
+  const problemFactsBlock = formatInequalityFactsBlock(problemFacts);
+  if (problemFactsBlock) console.log(`[problem-facts] block attached (${problemFacts?.inequalities.length} inequalit${problemFacts?.inequalities.length === 1 ? 'y' : 'ies'}${problemFacts?.hasGraph ? ', graph colours' : ''})`);
   // Text-mode thinking (streaming path only): `thinkingOn` can only fall to
   // false within a turn (deadline / token-cap re-issue below), never rise.
   let thinkingOn = input.textThinking === true || input.voiceThinking === true;
@@ -2181,6 +2213,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         history: input.conversationHistory.map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : '' })),
         openQuestion: turnShape.open?.question ?? null,
         studentMessage: studentSaid,
+        ...(problemFacts ? { problemFacts: formatInequalityFactsText(problemFacts) } : {}),
       }, input.verdictPrecheckDeps);
       const ms = Date.now() - startedAt;
       input.verdictPrecheckDeps?.onResult?.(result, ms);
@@ -2220,6 +2253,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         history: input.conversationHistory.map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : '' })),
         openQuestion: turnShape.open?.question ?? null,
         studentMessage: studentSaid,
+        ...(problemFacts ? { problemFacts: formatInequalityFactsText(problemFacts) } : {}),
       }, { timeoutMs: voiceVerdictPrecheckTimeoutMs(), ...input.verdictPrecheckDeps }).then((result) => {
         parallelSettled = { result, ms: Date.now() - startedAt };
       });
@@ -2268,6 +2302,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     studentStateBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
+    problemFactsBlock +
     textThinkingBlock +
     turnShapeBlock +
     answerCheckBlock +

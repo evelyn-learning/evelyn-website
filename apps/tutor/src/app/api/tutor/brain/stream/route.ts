@@ -173,6 +173,10 @@ interface BrainStreamRequestBody {
    *  also sends `studentMessage` / `verdictPrecheck` as a text session does.
    *  An older cached browser omits it and gets the request it always got. */
   voiceJudging?: boolean;
+  /** 2026-10-06b: data of the newest graph on the board that draws the active
+   *  problem's boundaries — read only for line colours / legend labels in the
+   *  computed `<problem_facts>` (claude-brain.ts `problemFactsFor`). */
+  problemGraph?: unknown;
   /** Adaptive-pacing v1: bank IDs + brain-gen problem-text hashes
    *  already shown this session, used as exclusion filters when the
    *  brain calls `generate_problem`. The client maintains this list
@@ -867,6 +871,12 @@ export async function POST(req: NextRequest) {
           // the per-turn user content (suppressed when recapOffer is set).
           ledgerFlags: ledgerFlags?.length ? ledgerFlags : undefined,
           activeProblem: body.activeProblem,
+          // A plain object of bounded size, else dropped (the facts are then
+          // stated without line colours).
+          ...(body.problemGraph && typeof body.problemGraph === 'object' && !Array.isArray(body.problemGraph)
+              && JSON.stringify(body.problemGraph).length <= 12_000
+            ? { problemGraph: body.problemGraph }
+            : {}),
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,
           pacingState: body.pacingState,

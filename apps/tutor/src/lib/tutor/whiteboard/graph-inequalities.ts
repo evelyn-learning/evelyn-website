@@ -318,6 +318,9 @@ export interface XYRelation {
   margin(x: number, y: number): number;
   /** One signed difference (left − right) per comparator. */
   boundaries: Array<{ op: RelOp; strict: boolean; diff(x: number, y: number): number }>;
+  /** The value of each part at (x, y), left to right (ops.length + 1 of
+   *  them) — "2x + y < 4" at (0, 0) is [0, 4]. NaN on a domain error. */
+  sideValues(x: number, y: number): number[];
 }
 
 export type XYParse = { ok: true; relation: XYRelation } | { ok: false; reason: string };
@@ -379,6 +382,7 @@ function buildRelation(text: string, opts: { allowEquation: boolean }): XYRelati
       return m;
     },
     boundaries,
+    sideValues: (x, y) => parts.map((p) => evalNode(p, x, y)),
   };
 }
 
@@ -495,7 +499,7 @@ const FORM_HINT =
 
 // ── sampling helpers ────────────────────────────────────────────────────────
 
-interface Window { x0: number; x1: number; y0: number; y1: number }
+export interface Window { x0: number; x1: number; y0: number; y1: number }
 
 function windowOf(data: Loose): Window {
   const ok = (r: unknown): r is [number, number] =>
@@ -530,7 +534,7 @@ function samplePoints(w: Window): Array<{ x: number; y: number; nice: boolean }>
  *  d1/d2 being one constant over scattered points (true for a rescaled or
  *  rearranged form of the same boundary). Returns the sign of that constant
  *  (+1 same orientation, −1 flipped) or null. */
-function sameBoundary(d1: (x: number, y: number) => number, d2: (x: number, y: number) => number, w: Window): 1 | -1 | null {
+export function sameBoundary(d1: (x: number, y: number) => number, d2: (x: number, y: number) => number, w: Window): 1 | -1 | null {
   const fr = [[0.137, 0.731], [0.823, 0.219], [0.412, 0.577], [0.291, 0.093], [0.659, 0.871], [0.947, 0.468], [0.058, 0.342], [0.533, 0.914], [0.774, 0.626], [0.206, 0.955], [0.618, 0.154], [0.883, 0.797]];
   let ratio: number | null = null;
   let valid = 0;
@@ -680,7 +684,7 @@ export function boardProblemInequalities(commands: ReadonlyArray<unknown>, w: Wi
 
 interface DrawnRegion { label: 'inequalities' | 'shadedRegion'; contains(x: number, y: number): boolean; margin(x: number, y: number): number }
 
-function fnText(f: unknown): string {
+export function fnText(f: unknown): string {
   if (typeof f === 'string') return f;
   if (f && typeof f === 'object') {
     const o = f as Loose;

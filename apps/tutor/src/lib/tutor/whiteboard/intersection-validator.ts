@@ -12,18 +12,21 @@
  *   1. Parse each plotted curve's expression into a numeric JS evaluator
  *      (LaTeX-ish → JS with a strict whitelist; unparseable curves cause a
  *      conservative bail-out so we never drop a point we can't verify).
- *   2. For each labeled point with a coordinate-style label, check that it
+ *   2. For each point that CLAIMS to be an intersection (its label, or the
+ *      graph's title / curve labels, says intersection / crossing / meet /
+ *      solution of the system — see isIntersectionClaim), check that it
  *      lies on at least TWO of the plotted curves within tolerance. Drop
  *      any that don't — "intersection" always means a crossing of ≥2 curves.
+ *      A point that claims nothing (a test point, a vertex) is never dropped.
  *      (For 2-curve plots this is identical to "on both"; for 3+ curves it's
  *      the pairwise rule, which is what students mean by "intersection points".)
- *   3. When the graph clearly intends to show intersections (title/labels
- *      mention "intersection", or all labeled points use coordinate-style
- *      labels), numerically find all pairwise intersections of the y=f(x)
+ *   3. When an intersection was claimed, numerically find all pairwise intersections of the y=f(x)
  *      curves over the visible viewport and backfill them, capped at 10.
  *
  * Runs client-side alongside validateConicGraph in VoiceTutorRealtime.
  */
+
+import { TUTOR_INTERSECTION_CLAIM_WORDS } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 export interface GraphFunction {
   latex?: string;
@@ -204,19 +207,65 @@ function compileCurves(data: GraphData): CompiledCurve[] | null {
   return curves;
 }
 
-function looksLikeCoordinateLabel(label?: string): boolean {
-  if (!label) return false;
-  return /\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)/.test(label);
+// 2026-10-06 (portal-2de3c6c8, text): two boundary lines and ONE point, the
+// tutor's test point "(0, 0)". With two curves and only coordinate-labelled
+// points every point used to be read as an intersection claim: the test point
+// was dropped (it is on neither line) and the true crossing (2, 0) back-filled
+// in its place — while the tutor said "the test point (0,0) is marked". A
+// coordinate label is how ANY point is labelled; it claims nothing. A point is
+// an intersection claim only when words say so: its own label, or the graph's
+// title / curve labels. Without such words nothing is dropped and nothing is
+// added.
+const INTERSECTION_WORDS_RE = /\bintersect|\bcross(?:es|ing|ings)?\b|\bmeets?\b|\bmeeting\s+point|\bcommon\s+point/i;
+/** "solution of the system" names the crossing only on a graph of EQUATIONS;
+ *  on a graph that shades inequalities the solution is a region. */
+const SYSTEM_SOLUTION_RE = /\bsolutions?\s+(?:of|to|for)\s+(?:the|this|a)\s+system\b/i;
+
+function shadesARegion(data: GraphData): boolean {
+  const ineq = (data as { inequalities?: unknown }).inequalities;
+  return (Array.isArray(ineq) && ineq.length > 0) || !!(data as { shadedRegion?: unknown }).shadedRegion;
 }
 
+function saysIntersection(text: string | undefined, data: GraphData): boolean {
+  if (!text) return false;
+  return INTERSECTION_WORDS_RE.test(text) || (SYSTEM_SOLUTION_RE.test(text) && !shadesARegion(data));
+}
+
+/** The graph's own wording (title, curve labels) says it shows a crossing. */
 function hasIntersectionContext(data: GraphData): boolean {
   const blob = [
     data.title || '',
     ...(data.functions || []).map(f => f.label || ''),
     ...(data.functionsOfY || []).map(f => f.label || ''),
-    ...(data.points || []).map(p => p.label || ''),
-  ].join(' ').toLowerCase();
-  return /\bintersect/.test(blob);
+  ].join(' ');
+  return saysIntersection(blob, data);
+}
+
+/** A label that is nothing but a coordinate pair, e.g. "(2, 0)" or "A(2, 0)". */
+function isBareCoordinateLabel(label?: string): boolean {
+  if (!label) return false;
+  return /^\s*[A-Za-z]?'?\s*\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)\s*$/.test(label);
+}
+
+/**
+ * Is this point offered as an intersection?
+ *   - its own label says so ("Intersection (2, 0)", "where they cross"), or
+ *   - the graph's wording says so AND the label is a bare coordinate pair or
+ *     empty — a point with its own words ("Test point (0, 0)", "Vertex") is
+ *     that thing, not a crossing.
+ */
+export function isIntersectionClaim(pt: GraphPoint, data: GraphData, opts?: { /** Unset ⇒ TUTOR_INTERSECTION_CLAIM_WORDS. */ wordsOnly?: boolean }): boolean {
+  if (!(opts?.wordsOnly ?? TUTOR_INTERSECTION_CLAIM_WORDS)) {
+    // Build nSxYU92obl4HOXChKRkXx: any coordinate-style label is a claim once
+    // the graph mentions "intersect" or every point is coordinate-labelled.
+    const coord = (l?: string) => !!l && /\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)/.test(l);
+    const blob = [data.title || '', ...(data.functions || []).map(f => f.label || ''), ...(data.functionsOfY || []).map(f => f.label || ''), ...(data.points || []).map(p => p.label || '')].join(' ').toLowerCase();
+    const all = (data.points || []).length > 0 && (data.points || []).every(p => coord(p.label));
+    return coord(pt.label) && (/\bintersect/.test(blob) || all);
+  }
+  if (saysIntersection(pt.label, data)) return true;
+  if (!hasIntersectionContext(data)) return false;
+  return !pt.label || !pt.label.trim() || isBareCoordinateLabel(pt.label);
 }
 
 function pointOnCurve(pt: GraphPoint, c: CompiledCurve): boolean {
@@ -315,36 +364,32 @@ export function validateIntersectionPoints(data: GraphData): GraphData {
   const points = data.points || [];
   const curveCount = (data.functions?.length || 0) + (data.functionsOfY?.length || 0);
   if (curveCount < 2) return data;
-  if (points.length === 0 && !hasIntersectionContext(data)) return data;
 
-  const intersectionFlag = hasIntersectionContext(data);
-  const allCoordStyle = points.length > 0 && points.every(p => looksLikeCoordinateLabel(p.label));
-  if (!intersectionFlag && !allCoordStyle) return data;
+  // Nothing claims a crossing ⇒ nothing is dropped and nothing is added.
+  const claimed = points.map(p => isIntersectionClaim(p, data));
+  if (!hasIntersectionContext(data) && !claimed.some(Boolean)) return data;
 
   const compiled = compileCurves(data);
   // If any curve can't be parsed, bail out — better to keep a possibly-wrong
   // label than to drop a point we couldn't verify.
   if (!compiled) return data;
 
-  // A labeled intersection point must lie on at least 2 of the plotted curves.
+  // A claimed intersection point must lie on at least 2 of the plotted curves.
   // For 2-curve plots this is identical to "on both". For 3+ curves it's the
   // pairwise rule — "highlight intersection points" almost always means every
   // place two curves cross, not just the (often empty or singleton) set where
-  // all curves meet.
+  // all curves meet. A point that claims nothing is always kept.
   const kept: GraphPoint[] = [];
   const dropped: GraphPoint[] = [];
-  for (const pt of points) {
-    // Word-labeled points ("Vertex", "Focus") may be legitimate features of
-    // a single curve; only coordinate-style labels are treated as intersection
-    // claims.
-    if (!looksLikeCoordinateLabel(pt.label)) {
+  points.forEach((pt, i) => {
+    if (!claimed[i]) {
       kept.push(pt);
-      continue;
+      return;
     }
     const onCount = compiled.reduce((n, c) => n + (pointOnCurve(pt, c) ? 1 : 0), 0);
     if (onCount >= 2) kept.push(pt);
     else dropped.push(pt);
-  }
+  });
 
   // Backfill: compute all pairwise intersections of y=f(x) curves within the
   // visible viewport, skipping ones already present. Capped so a pathological
@@ -354,7 +399,7 @@ export function validateIntersectionPoints(data: GraphData): GraphData {
   if (yOfX.length >= 2) {
     const [x0, x1] = data.xRange;
     const [y0, y1] = data.yRange;
-    const sample: GraphPoint | undefined = dropped[0] || points[0];
+    const sample: GraphPoint | undefined = dropped[0] || points.find((_, i) => claimed[i]);
     const color = sample?.color || '#16a34a';
     const isDuplicate = (x: number, y: number) =>
       kept.some(p => Math.abs(p.x - x) < 0.02 && Math.abs(p.y - y) < 0.05) ||

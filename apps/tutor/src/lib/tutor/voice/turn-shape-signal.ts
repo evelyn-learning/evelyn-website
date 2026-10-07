@@ -25,7 +25,7 @@
  * Pure — no SDK import, no I/O. `npm run test:turn-shape-signal`.
  */
 import { isAnswerAttempt, isBareShortAnswer } from '@/lib/tutor/orchestrator/answer-attempt';
-import { isHedgedProposal, isSelfReport, isStudentQuestion } from '@/lib/tutor/orchestrator/student-turn-shape';
+import { isHedgedProposal, isSelfReport, isStudentQuestion, isUncommittedAlternativesQuestion } from '@/lib/tutor/orchestrator/student-turn-shape';
 import {
   classifyNonAnswer,
   isBareAssent,
@@ -126,6 +126,9 @@ export function classifyTurnShape(studentText: string, priorTutorTurn: string): 
   });
   if (isBareAssent(t)) return done(/^(?:\W|um+|uh+|oh|well|so|hmm+)*n/i.test(t) ? 'bare_dissent' : 'bare_assent');
   if (isPureAcknowledgment(t)) return done('acknowledgment');
+  // "… is it <one thing> or <the other>?" names alternatives and commits to
+  // neither: a question — never judged, never matched (2026-10-06b).
+  if (isUncommittedAlternativesQuestion(t)) return done('question');
   if (isHedgedProposal(t) || isHedgedProse(t)) return done('hedged_proposal', hedgedProposedValue(t));
   const checked = checkRequestValue(t);
   if (checked !== null) return checked ? done('check_request', checked) : done('request');

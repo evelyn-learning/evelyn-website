@@ -169,7 +169,18 @@ import { equationPlaceholder, equationPlaceholderReason } from '@/lib/tutor/whit
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
-import { gateInequalityGraph } from '@/lib/tutor/whiteboard/graph-inequalities';
+import { gateInequalityGraph, extractProblemInequalities } from '@/lib/tutor/whiteboard/graph-inequalities';
+// 2026-10-06b (owner sessions portal-2de3c6c8 / portal-10beb4f5): computed
+// facts of a system / inequality problem, and the round's pure decisions.
+import { boardInequalityFacts, formatInequalityFactsText, spokenRegionContradiction, spokenRegionFeedback, SPOKEN_REGION_ACTION } from '@/lib/tutor/whiteboard/inequality-facts';
+import { shouldPaintOnArrivalInTextMode } from '@/lib/tutor/whiteboard/render-sync';
+import { planFusedOpener, precheckCountsAsAnswer } from '@/lib/tutor/voice/work-then-match';
+import { shouldSkipProseDispute } from '@/lib/tutor/voice/answer-dispute-tiebreak';
+import { coverPresentation, noiseTipMayRideTurn, NOISE_TIP_NOTE, TEXT_COVER_VISIBLE_LINE, THINKING_HINT_EVENT } from '@/lib/tutor/voice/cover-layer';
+import {
+  TUTOR_INEQUALITY_FACTS, TUTOR_SPOKEN_REGION_CHECK, TUTOR_OPENER_STRIP_NOT_KILL, TUTOR_PRECHECK_ANSWER_CREDIT,
+  TUTOR_TEXT_PAINT_ON_ARRIVAL, TUTOR_PROSE_DISPUTE_SKIP, TUTOR_TEXT_COVER_VISIBLE, TUTOR_FILLER_TIP_PLACEMENT,
+} from '@/lib/tutor/orchestrator/turn-round-flags';
 import { planScribbleTarget, isRepeatScribble } from '@/lib/tutor/whiteboard/scribble-page-policy';
 import { isAnswerRevealingKill, isAnswerBearingRenderTool, splitAnswerRevealingKilled } from '@/lib/tutor/whiteboard/kill-keep';
 import { decideHomeworkAdvance } from '@/lib/tutor/lesson-plan/homework-advance';
@@ -1272,6 +1283,9 @@ export function VoiceTutorRealtime({
   // Task 5: text mode has no mic at all — read as muted from the start so
   // any mic-state UI (and the startListening guards below) agree with reality.
   useEffect(() => { if (sessionMode === 'text') setIsMicMuted(true); }, [sessionMode]);
+  // 2026-10-06b: the session's mode for callbacks that must not re-create on it.
+  const textSessionRef = useRef(sessionMode === 'text');
+  textSessionRef.current = sessionMode === 'text';
   // R34 T4: per-device "Manual mic" mode — opt-in (localStorage), gated by
   // TUTOR_MANUAL_MIC. Finalized transcripts buffer instead of dispatching;
   // the student taps a ✓ send affordance to submit the combined turn.
@@ -5271,6 +5285,22 @@ export function VoiceTutorRealtime({
       rendersDispatchedThisTurnRef.current += processed.filter(isBoardRenderCommand).length;
       return;
     }
+    // 2026-10-06b: a TEXT session plays no speech, so nothing ever advances a
+    // render's speech anchor — each card waited for the stall timer, 3–9 s
+    // behind its own sentence. Paint on arrival; order is kept because a
+    // batch only skips an EMPTY buffer (render-sync.ts).
+    if (shouldPaintOnArrivalInTextMode({
+      enabled: TUTOR_TEXT_PAINT_ON_ARRIVAL,
+      isTextMode: textSessionRef.current,
+      bufferDepth: renderBufferRef.current.length,
+      hasSketchRequest: processed.some(isSketchRequestCommand),
+      isRepairFrame: anchorOverride !== undefined,
+    })) {
+      onWhiteboardCommand(processed);
+      rendersDispatchedThisTurnRef.current += processed.filter(isBoardRenderCommand).length;
+      onDebugEvent?.('render_sync_text_paint', `${processed.length} command(s) painted on arrival (text mode)`);
+      return;
+    }
     // R49 first-turn v2: the OPENING turn's first render skips the sync
     // buffer. Rule 15 licenses the brain to park a render beside a later
     // sentence "even if the board sits bare through the opening sentences",
@@ -8254,6 +8284,11 @@ export function VoiceTutorRealtime({
       studentText: lastStudentText,
       activePage: activePageView,
       currentTurn: pageTurnRef.current,
+      // 2026-10-06b: an untitled homework problem card heads its page
+      // "Problem N" / "Problem N of M" instead of "Next".
+      ...(homeworkProblemsRef.current?.length
+        ? { homeworkProblem: { n: homeworkCurrentRef.current, total: homeworkProblemsRef.current.length, text: homeworkProblemsRef.current[homeworkCurrentRef.current - 1]?.text } }
+        : {}),
       signals: {
         topicShiftDistance: topicShiftPending ? topicShiftPending.fromDistance : null,
         continuationGuardActive,
@@ -11338,6 +11373,8 @@ export function VoiceTutorRealtime({
       // most once per turn, and the student's turn shape is read once (on a
       // retry the last assistant turn in history is the killed attempt).
       let openerBackstopKillUsed = false;
+      // 2026-10-06b: the spoken-region kill (text) also fires once per turn.
+      let spokenRegionKillUsed = false;
       let openerBackstopShape: TurnShape | null | undefined;
       // Round-7 Fix D: kill-loop escalation. Track every judge KILL
       // claim text we've already rejected in this turn. When a NEW kill
@@ -11441,8 +11478,18 @@ export function VoiceTutorRealtime({
       // turn, same consumption rule as the correction note. The brain
       // phrases it in its own voice, appended to a normal answer — no
       // client line, no audio collision.
-      if (TUTOR_NOISE_FLOOR_NUDGE && pendingNoiseTipRef.current && !/^\s*\[/.test(transcript)) {
-        runTranscript =
+      // 2026-10-06b (portal-10beb4f5 @321 s): the tip landed in the middle of
+      // the explanation of an answer. It now waits for a turn whose reply is
+      // not a verdict / explanation (cover-layer.ts `noiseTipMayRideTurn`),
+      // and its wording keeps the sentence apart from the teaching.
+      const noiseTipPriorTutor = String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '');
+      if (TUTOR_NOISE_FLOOR_NUDGE && pendingNoiseTipRef.current && !/^\s*\[/.test(transcript)
+          && !noiseTipMayRideTurn(transcript, noiseTipPriorTutor)) {
+        onDebugEvent?.('noise_floor_tip_deferred', 'this reply is a verdict or an explanation — the tip waits for a turn between');
+      }
+      if (TUTOR_NOISE_FLOOR_NUDGE && pendingNoiseTipRef.current && !/^\s*\[/.test(transcript)
+          && noiseTipMayRideTurn(transcript, noiseTipPriorTutor)) {
+        runTranscript = TUTOR_FILLER_TIP_PLACEMENT ? `${NOISE_TIP_NOTE}\n\n${runTranscript}` :
           `[noise note — not from the student] There has been persistent background noise on the student's side for a while. ` +
           `After responding to what they said, add ONE short, kind sentence: a quieter spot, or turning down any nearby volume, will help you hear them clearly. ` +
           `Say it once this session and never bring it up again.\n\n${runTranscript}`;
@@ -12036,6 +12083,17 @@ export function VoiceTutorRealtime({
           hasPlan: !!lessonPlanContext,
           planId: lessonPlanContext?.plan?.id ?? '',
         });
+        // 2026-10-06b: computed facts of a system / inequality problem (which
+        // side of which line, as drawn on the newest graph). Read here once
+        // per attempt: the request carries the graph, the reply's sentences
+        // are held to the facts (text), and the judge is handed them.
+        const turnInequalityFacts = TUTOR_INEQUALITY_FACTS
+          ? boardInequalityFacts(
+            currentProblemRef.current?.statement
+              ?? homeworkProblemsRef.current?.[homeworkCurrentRef.current - 1]?.text,
+            whiteboardCommandsRef.current,
+          )
+          : null;
         const input = {
             // Same bytes as before, cut at the core/session boundary (falls
             // back to the single `systemPrompt` field if the cut is invalid).
@@ -12166,6 +12224,10 @@ export function VoiceTutorRealtime({
                   expectedAnswer: currentProblemRef.current.expectedAnswer,
                 }
               : undefined,
+            // 2026-10-06b: the newest graph that draws this problem's
+            // boundaries, so the server's computed <problem_facts> can name
+            // each line by the colour it is drawn in (inequality-facts.ts).
+            ...(turnInequalityFacts?.graph ? { problemGraph: turnInequalityFacts.graph } : {}),
             // Whiteboard markup Phase 1 (2026-05-13 audit): drain the
             // unrealized-marks buffer accumulated during the prior turn's
             // tutor_scribble silent-drops. Surfaces to the brain as the
@@ -14093,6 +14155,33 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // 2026-10-06b, text mode: a sentence that puts the solution
+                  // on the wrong side of a NAMED line ("above the red line",
+                  // "above the second line", "above both lines") contradicts
+                  // the facts computed from the problem's own inequalities
+                  // (inequality-facts.ts). Withheld before display and retried
+                  // once per turn with the fact. Voice is NOT covered here: the
+                  // only pre-audio cut is the verdict gate, which is bound to
+                  // the pre-check; in voice the facts ride the request instead.
+                  if (!attemptKilled && TUTOR_SPOKEN_REGION_CHECK && sessionMode === 'text' && turnInequalityFacts
+                      && !spokenRegionKillUsed && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt < attemptCap) {
+                    // The graph this reply itself paints may be the one whose
+                    // colours the sentence names: read the board again.
+                    const regionFactsNow = boardInequalityFacts(
+                      currentProblemRef.current?.statement ?? homeworkProblemsRef.current?.[homeworkCurrentRef.current - 1]?.text,
+                      whiteboardCommandsRef.current,
+                    )?.facts ?? turnInequalityFacts.facts;
+                    const regionHit = spokenRegionContradiction(updatedSentence, regionFactsNow);
+                    if (regionHit) {
+                      spokenRegionKillUsed = true;
+                      rejectionsThisAttempt.push({ action: SPOKEN_REGION_ACTION, reason: spokenRegionFeedback(regionHit, regionFactsNow, updatedSentence) });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn('[brain-orchestrator] sentence states the wrong side of a named line — retrying:', JSON.stringify(updatedSentence.slice(0, 90)));
+                      onDebugEvent?.('verdict_region_kill', `"${regionHit.phrase}" vs ${regionHit.about === 'all' ? 'the system' : `inequality ${regionHit.about.n}`} · "${updatedSentence.slice(0, 60)}"`);
+                      continue;
+                    }
+                  }
                   // Also on a continuation attempt: `transcript` is still the turn's
                   // real trigger, and praise + a revealed value to a non-answer is
                   // wrong wherever in the turn it lands (a runtime marker such as
@@ -14127,7 +14216,9 @@ export function VoiceTutorRealtime({
                     if (!backstopAppliesTo(openerBackstopShape)) {
                       openerBackstopDone = true;
                     } else {
-                      const openerRead = readVerdictOpener(updatedSentence, { answerShaped: openerBackstopShape?.answerShaped === true });
+                      // 2026-10-06b: the comma form ("Right, isolating … gives
+                      // exactly that") is read too; it is only ever stripped.
+                      const openerRead = readVerdictOpener(updatedSentence, { answerShaped: openerBackstopShape?.answerShaped === true, weakComma: TUTOR_OPENER_STRIP_NOT_KILL });
                       if (openerRead.kind === 'only') {
                         // attemptText stays empty, so the next sentence is read
                         // as the opener in its turn ("Yes! Exactly. …").
@@ -14138,7 +14229,19 @@ export function VoiceTutorRealtime({
                       }
                       openerBackstopDone = true;
                       if (openerRead.kind === 'fused') {
-                        if (!openerBackstopKillUsed && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt < attemptCap) {
+                        // 2026-10-06b (portal-2de3c6c8 @415.7 s): a correct,
+                        // check-confirmed reply was killed for "Right — …" and
+                        // the retry was worse. A phrase that can be cut is cut;
+                        // a kill is left for a sentence that cannot stand
+                        // without it and that no HIGH-confidence check vouches
+                        // for (work-then-match.ts `planFusedOpener`).
+                        const fusedPlan = planFusedOpener({
+                          opener: openerRead.opener,
+                          remainder: openerRead.remainder,
+                          precheck: verdictPrecheckRef.current,
+                          killAvailable: !openerBackstopKillUsed && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt < attemptCap,
+                        });
+                        if (fusedPlan.action === 'kill') {
                           openerBackstopKillUsed = true;
                           openerBackstopHeld.length = 0;
                           rejectionsThisAttempt.push({ action: 'verdict_opener', reason: openerBackstopFeedback(updatedSentence, transcript, { nonAnswer: isNonAnswerShape(openerBackstopShape) }) });
@@ -14148,13 +14251,16 @@ export function VoiceTutorRealtime({
                           onDebugEvent?.('verdict_opener_kill', `"${updatedSentence.slice(0, 60)}"`);
                           continue;
                         }
-                        if (openerRead.remainder) {
+                        if (fusedPlan.action === 'cut') {
                           // Back through the frame parser, so the cut sentence
                           // meets every guard a model-written one does.
-                          buf = `data: ${JSON.stringify({ ...ev, text: openerRead.remainder, synthetic: 'verdict_opener_cut' })}\n\n` + buf;
-                          console.warn('[brain-orchestrator] verdict phrase cut from the opener (kill already spent):', JSON.stringify(updatedSentence.slice(0, 60)));
-                          onDebugEvent?.('verdict_opener_cut', `"${openerRead.opener}" ← "${updatedSentence.slice(0, 50)}"`);
+                          buf = `data: ${JSON.stringify({ ...ev, text: fusedPlan.remainder, synthetic: 'verdict_opener_cut' })}\n\n` + buf;
+                          console.warn(`[brain-orchestrator] verdict phrase cut from the opener (${fusedPlan.why}):`, JSON.stringify(updatedSentence.slice(0, 60)));
+                          onDebugEvent?.('verdict_opener_cut', `${fusedPlan.why} · "${openerRead.opener}" ← "${updatedSentence.slice(0, 50)}"`);
                           continue;
+                        }
+                        if (fusedPlan.why === 'precheck_agrees') {
+                          onDebugEvent?.('verdict_opener_kept', `check agrees · "${updatedSentence.slice(0, 60)}"`);
                         }
                       }
                     }
@@ -14774,6 +14880,21 @@ export function VoiceTutorRealtime({
                           } else {
                             console.warn(`[VoiceTutorRealtime] improvised answer MISMATCH — claimed "${claimedAnswer.slice(0, 60)}" vs blind solve "${(v.solved ?? '').slice(0, 60)}" — nothing pinned.`);
                             onDebugEvent?.('improvised_answer_mismatch', `claimed="${claimedAnswer.slice(0, 40)}" solved="${(v.solved ?? '').slice(0, 40)}"`);
+                            // 2026-10-06b: two DESCRIPTIONS of a region can
+                            // never "agree" by comparison — no dispute, no
+                            // "trust neither" note on the student's first turn
+                            // (answer-dispute-tiebreak.ts). A system of
+                            // inequalities has its facts computed instead.
+                            const proseDispute = shouldSkipProseDispute({
+                              enabled: TUTOR_PROSE_DISPUTE_SKIP,
+                              claimed: claimedAnswer,
+                              solved: v.solved ?? '',
+                              problemIsInequalitySystem: extractProblemInequalities(claimedStatement).ok,
+                            });
+                            if (proseDispute.skip) {
+                              onDebugEvent?.('improvised_answer_dispute_skipped', `${proseDispute.why} — no note, nothing pinned`);
+                              return;
+                            }
                             // Relation adjudication + tiebreak
                             // (answer-dispute-tiebreak.ts). Which of the two
                             // answers has the problem's exact solution set?
@@ -16960,10 +17081,23 @@ export function VoiceTutorRealtime({
             if (authoredSolution) {
               onDebugEvent?.('judge_authored_solution', authoredSolution.slice(0, 80));
             }
+            // Re-read at judge time: this turn may itself have painted the
+            // graph whose colours the reply names.
+            const judgeFactsNow = TUTOR_INEQUALITY_FACTS
+              ? boardInequalityFacts(
+                currentProblemRef.current?.statement
+                  ?? homeworkProblemsRef.current?.[homeworkCurrentRef.current - 1]?.text,
+                whiteboardCommandsRef.current,
+              )
+              : null;
+            const judgeComputedFacts = judgeFactsNow ? formatInequalityFactsText(judgeFactsNow.facts).slice(0, 3800) : '';
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}) }),
+              // 2026-10-06b: computedFacts — which side of which (coloured)
+              // line holds, computed from the problem's own inequalities. The
+              // judge flagged four correct statements without them.
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -18148,7 +18282,18 @@ export function VoiceTutorRealtime({
           });
           // A bare short answer to an open question counts for CREDIT here
           // (see the turn-start classifier); it is not ver.isVerification.
-          const countsAsAnswer = !!((ver?.isVerification || ver?.shortAnswer) && fullText.length > 0);
+          // 2026-10-06b: …and so does a short answer in WORDS ("the side with
+          // the origin", "below the line") that a HIGH-confidence pre-check
+          // says answers the open question — under match counting only, so
+          // the credit is resolveMatchCredit's (correct → correct; incorrect
+          // only with the tutor's agreement), never the tutor's opener.
+          const precheckAnswerTurn = TUTOR_TEXT_MATCH_COUNTING && workThenMatchTurnRef.current
+            && !ver?.isVerification && !ver?.shortAnswer
+            && precheckCountsAsAnswer(verdictPrecheckRef.current, { enabled: TUTOR_PRECHECK_ANSWER_CREDIT });
+          if (precheckAnswerTurn && fullText.length > 0) {
+            onDebugEvent?.('counting_precheck_answer', `checked ${verdictPrecheckRef.current?.verdict} — counted as an answer: "${ledgerStudentTextRef.current.slice(0, 40)}"`);
+          }
+          const countsAsAnswer = !!((ver?.isVerification || ver?.shortAnswer || precheckAnswerTurn) && fullText.length > 0);
           if (countsAsAnswer) {
             if (verdictRead.ackOpener && !verdictRead.isAffirm) {
               onDebugEvent?.('pacing_ack_not_affirm', `"${fullText.slice(0, 50)}"`);
@@ -19201,6 +19346,16 @@ export function VoiceTutorRealtime({
           const act = decideEscalation(esState, Date.now() - dispatchedAt, esTurnIndex);
           if (act.action === 'wait') return;
           if (act.action === 'speak') {
+            // 2026-10-06b: in a TEXT session the spoken cover line is neither
+            // heard nor shown. Show a line in the typing indicator instead
+            // (TranscriptView listens for this event while it shows the dots).
+            if (coverPresentation({ textMode: textSessionRef.current, enabled: TUTOR_TEXT_COVER_VISIBLE }) === 'visible') {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent(THINKING_HINT_EVENT, { detail: { text: TEXT_COVER_VISIBLE_LINE } }));
+              }
+              onDebugEvent?.('cover_visible', `tier=${act.tier} "${TEXT_COVER_VISIBLE_LINE}"`);
+              return;
+            }
             if (Date.now() < speakTextBlockedUntilRef.current) return; // retry next tick? no — tier already consumed; acceptable
             const sid = pushTtsScriptForPerception(act.text);
             speakTextRef.current?.(act.text, sid);

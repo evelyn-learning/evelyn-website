@@ -38,6 +38,7 @@ import {
   VERDICT_PRECHECK_SCHEMA,
   VERDICT_PRECHECK_SCHEMA_WITH_WORKING,
   VERDICT_PRECHECK_SYSTEM,
+  verdictPrecheckSystem,
   type VerdictPrecheckLlm,
 } from '../src/lib/tutor/voice/verdict-precheck';
 import { hedgedDenialCounts, inferWrongEvent } from '../src/lib/tutor/orchestrator/answer-attempt';
@@ -132,7 +133,8 @@ async function main() {
     assert.equal(r!.verdict, 'correct');
     assert.equal(r!.correctValue, 'yyy');
     assert.equal(r!.model, 'fake-model');
-    assert.equal(seen[0].system, VERDICT_PRECHECK_SYSTEM);
+    assert.equal(seen[0].system, verdictPrecheckSystem());
+    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false }), VERDICT_PRECHECK_SYSTEM);
     assert.ok(!('correctValue' in toPublicPrecheck(r!)), 'the public form has no correct value');
   });
   await test('consistency: "equals the final answer" ⇒ a correct answer to the problem, whatever was said about the open question', async () => {

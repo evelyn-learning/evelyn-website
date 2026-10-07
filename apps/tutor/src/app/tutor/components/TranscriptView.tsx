@@ -6,6 +6,7 @@
  * Displays the conversation history between student and tutor.
  */
 
+import { THINKING_HINT_EVENT } from '@/lib/tutor/voice/cover-layer';
 import React, { useEffect, useRef, useState } from 'react';
 // KaTeX styles for the InlineMathText bubbles (InlineMathText itself carries
 // no CSS import so renderer files stay node-importable).
@@ -545,6 +546,17 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     const t2 = setTimeout(() => setThinkingHint('Hmm, that\'s taking a moment — feel free to type below if I missed you.'), 8000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [isProcessing]);
+  // 2026-10-06b: a TEXT session's slow-turn cover line ("Still working on
+  // it…") arrives as a window event from the runtime — the spoken cover lines
+  // are neither heard nor shown there. Shown under the dots while they are up.
+  useEffect(() => {
+    const onHint = (ev: Event) => {
+      const text = (ev as CustomEvent<{ text?: unknown }>).detail?.text;
+      if (typeof text === 'string' && text.trim()) setThinkingHint(text.trim().slice(0, 120));
+    };
+    window.addEventListener(THINKING_HINT_EVENT, onHint);
+    return () => window.removeEventListener(THINKING_HINT_EVENT, onHint);
+  }, []);
 
   if (transcript.length === 0 && !isProcessing && !picker) {
     return (

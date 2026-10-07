@@ -32,7 +32,7 @@
  * Pure; never throws.
  */
 
-import { TUTOR_HEDGED_ANSWER_WIDENING } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_ALTERNATIVES_QUESTION, TUTOR_HEDGED_ANSWER_WIDENING } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 const WH_LEAD_RE = /^(?:how|what|why|when|where|which|who|whose)\b/i;
 const AUX_LEAD_RE = /^(?:can|could|do|does|did|is|are|was|were|should|would|will|shall|may|might)\b/i;
@@ -173,10 +173,65 @@ function strip(text: string): string {
   return (text || '').trim().replace(LEAD_IN_RE, '').trim();
 }
 
+// ── 2026-10-06b (portal-10beb4f5, voice): a question that names its own
+// alternatives ───────────────────────────────────────────────────────────────
+//
+// "So is the answer for the second one … is the shaded region above the line
+// or below the line?" was sorted as an ANSWER (the "is the answer" frame plus
+// a digit elsewhere in the sentence), so the turn was judged and the tutor
+// said "that's the opposite of what you said" to a student who had said
+// nothing. A question that offers two alternatives and picks neither proposes
+// nothing — whatever its lead and however long it is.
+//
+// Kept answers: a question-form proposal with no alternatives ("is it <one
+// value>?"), a statement with a tag ("so it's <a side>, right?"), alternatives
+// that are VALUES ("is it x = 2 or x = -3?" proposes both roots), and a
+// question that goes on to commit ("… or below? I think below").
+
+const INTERROGATIVE_LEAD_RE =
+  /^(?:(?:i\s+(?:do\s+not|don'?t|dont)\s+know|not\s+sure|idk|yeah|yes|right)[,.\s]+)?(?:(?:is|are|was|were|does|do|did|should|would|will|shall|can|could|may|might|am)\b|(?:how|what|why|when|where|which|who|whose)\b|(?:either|whether)\b)/i;
+const ALTERNATIVES_RE = /((?:\S+\s+){0,4}\S+)\s+or\s+((?:\S+\s+){0,3}\S+)/gi;
+const VALUE_IN_ALTERNATIVE_RE = /\d|[=<>≤≥]/;
+const COMMITS_RE = /\b(?:i\s+think|i\s+guess|i'?d\s+say|i\s+suppose|i\s+believe|i\s+got|maybe|probably|perhaps|my\s+answer|i'?ll\s+(?:say|go\s+with)|going\s+with|must\s+be|has\s+to\s+be|so\s+(?:it'?s|it\s+is))\b/i;
+
+/** Does the turn ask "A or B?" and commit to neither? Pure; never throws. */
+export function isUncommittedAlternativesQuestion(text: string, opts?: { /** Unset ⇒ TUTOR_ALTERNATIVES_QUESTION. */ enabled?: boolean }): boolean {
+  if (!(opts?.enabled ?? TUTOR_ALTERNATIVES_QUESTION)) return false;
+  const t = strip(text);
+  if (!t || t.startsWith('[')) return false;
+  const lastQ = t.lastIndexOf('?');
+  // The question, without anything said after its question mark.
+  const asked = lastQ >= 0 ? t.slice(0, lastQ + 1) : t;
+  const after = lastQ >= 0 ? t.slice(lastQ + 1).replace(/[\s.!,]+/g, ' ').trim() : '';
+  // Something said after the question is where a commitment lives.
+  if (after && !/^(?:(?:um+|uh+|hmm+|like|i\s+(?:do\s+not|don'?t|dont)\s+know|not\s+sure|idk)\s*)+$/i.test(after)) return false;
+  if (!INTERROGATIVE_LEAD_RE.test(asked) && lastQ < 0) return false;
+  if (!INTERROGATIVE_LEAD_RE.test(asked) && wordCount(asked) > 12) return false;
+  // A hedge word anywhere ("maybe <this>, or <that>?") makes it a proposal.
+  if (COMMITS_RE.test(asked)) return false;
+  ALTERNATIVES_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  let found = false;
+  while ((m = ALTERNATIVES_RE.exec(asked)) !== null) {
+    // Alternatives that are values are a proposal of those values.
+    const left = m[1].split(/\s+/).slice(-2).join(' ');
+    const right = m[2].split(/\s+/).slice(0, 2).join(' ');
+    if (VALUE_IN_ALTERNATIVE_RE.test(left) || VALUE_IN_ALTERNATIVE_RE.test(right)) return false;
+    if (NUMBER_WORD_RE.test(left) && NUMBER_WORD_RE.test(right)) return false;
+    // "… or something", "… or so", "… or not": no second alternative named
+    // ("or not" is a yes/no question — the existing rules keep it).
+    if (/^(?:something|so|whatever|not|what|anything)\b/i.test(m[2])) continue;
+    found = true;
+    ALTERNATIVES_RE.lastIndex = m.index + m[1].length + 1;
+  }
+  return found;
+}
+
 /** Is this student turn a QUESTION (not an answer proposed in question form)? */
 export function isStudentQuestion(text: string): boolean {
   const t = strip(text);
   if (!t || t.startsWith('[')) return false;
+  if (isUncommittedAlternativesQuestion(t)) return true;
   const n = wordCount(t);
   const wh = WH_LEAD_RE.exec(t);
   if (wh) {
@@ -270,6 +325,7 @@ const HEDGE_LEAD_WINDOW_WORDS = 8;
 export function isHedgedProposal(text: string): boolean {
   const t = strip(text);
   if (!t || t.startsWith('[')) return false;
+  if (isUncommittedAlternativesQuestion(t)) return false;
   if (isHedgedValueAnswer(t, { wideValues: true })) return true;
   const lead = t.split(/\s+/).slice(0, HEDGE_LEAD_WINDOW_WORDS).join(' ');
   if (!HEDGE_MARK_RE.test(lead)) return false;

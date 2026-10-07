@@ -33,6 +33,12 @@ export interface JudgeUserContentInput {
    *  derivation, and the judge must not treat board content as true
    *  when it contradicts this block. */
   authoredSolution?: string;
+  /** Optional COMPUTED_FACTS — facts derived by the runtime from the
+   *  problem's own inequalities (whiteboard/inequality-facts.ts): which side
+   *  of which line holds, how each line is drawn, the crossing, a point
+   *  inside and one outside. The block words its own authority, so the
+   *  cached system prompt is unchanged. */
+  computedFacts?: string;
 }
 
 export function buildJudgeUserContent(body: JudgeUserContentInput): string {
@@ -48,8 +54,15 @@ export function buildJudgeUserContent(body: JudgeUserContentInput): string {
   const authoredSolutionBlock = (typeof body.authoredSolution === 'string' && body.authoredSolution.trim().length > 0)
     ? `<authored_solution>\n${body.authoredSolution.trim()}\n</authored_solution>\n\n`
     : '';
+  // 2026-10-06b: 4 of 4 judge flags in a voice session were on CORRECT
+  // statements about which side of a line is shaded (and one mis-assigned the
+  // line colours). The facts are computed, not read from the conversation.
+  const computedFactsBlock = (typeof body.computedFacts === 'string' && body.computedFacts.trim().length > 0)
+    ? `<computed_facts>\n${body.computedFacts.trim().slice(0, 3000)}\nThese facts were computed by the runtime from the problem itself and are certain. A statement by the tutor that agrees with them is correct — do not flag it, whatever else the whiteboard or the conversation suggests. A statement that contradicts them is wrong.\n</computed_facts>\n\n`
+    : '';
   return (
     `<whiteboard_state>\n${body.boardSummary || '(whiteboard is empty)'}\n</whiteboard_state>\n\n` +
+    computedFactsBlock +
     authoredSolutionBlock +
     focusBlock +
     questionBlock +

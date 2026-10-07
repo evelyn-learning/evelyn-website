@@ -36,6 +36,8 @@
  */
 
 import { computeAnchorKey, isPrimaryFigure, extractCommandTitle, subjectsDiffer } from './catalog';
+import { truncatePageTitle } from './page-title';
+import { TUTOR_PROBLEM_PAGE_TITLE } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** A whiteboard command (loosely typed — we only read `action` + pass the
  *  whole object to computeAnchorKey). */
@@ -85,6 +87,12 @@ export interface PageGroupingInput {
   currentTurn: number;
   /** Page title to prefer when a segment advance opens the page (H2). */
   segmentTitle?: string;
+  /** The student's own homework problem this batch belongs to: its 1-based
+   *  position and how many they brought. Titles a page opened for an
+   *  untitled problem card ("Problem 2 of 5"). Absent outside homework. */
+  homeworkProblem?: HomeworkProblemRef;
+  /** Unset ⇒ TUTOR_PROBLEM_PAGE_TITLE. */
+  problemPageTitle?: boolean;
   signals: PageGroupingSignals;
 }
 
@@ -147,17 +155,67 @@ function segmentAdvanceWithShow(batch: readonly PageGroupingCommand[]): boolean 
   );
 }
 
+/** `text` (the problem as the student brought it), when given, must be the
+ *  problem on the card — a side example shown mid-homework is not "Problem N". */
+export interface HomeworkProblemRef { n: number; total: number; text?: string }
+
+const comparableStatement = (t: string): string => t.toLowerCase().replace(/\\[a-z]+/g, '').replace(/[^a-z0-9<>=+\-]/g, '');
+
+const PROBLEM_CARD_ACTIONS = new Set(['showProblem', 'showTryYourself']);
+const PROBLEM_TITLE_HEAD_MAX = 44;
+
+/**
+ * Title for a page opened by an UNTITLED problem card (2026-10-06b: the first
+ * page of both owner sessions was headed "Next" — the homework problem card
+ * carries a statement and no title). The student's own homework problem is
+ * "Problem N" ("Problem N of M" when they brought several); any other problem
+ * card is headed by the words in front of its first expression, or else the
+ * start of its statement cut at a word, never ending on an operator. Null when the command is not a problem card.
+ */
+export function problemPageTitle(
+  cmd: PageGroupingCommand | undefined,
+  homework?: HomeworkProblemRef,
+): string | null {
+  if (!cmd || !PROBLEM_CARD_ACTIONS.has(cmd.action)) return null;
+  const problem = (cmd.problem ?? {}) as { statement?: unknown };
+  const raw = typeof problem.statement === 'string' ? problem.statement : typeof cmd.statement === 'string' ? cmd.statement : '';
+  if (homework && Number.isInteger(homework.n) && homework.n >= 1) {
+    const own = comparableStatement(homework.text ?? '');
+    const card = comparableStatement(raw);
+    const same = !homework.text || !card
+      || own.includes(card.slice(0, 24)) || card.includes(own.slice(0, 24));
+    if (same) {
+      return homework.total > 1 && homework.n <= homework.total ? `Problem ${homework.n} of ${homework.total}` : `Problem ${homework.n}`;
+    }
+  }
+  // The words in front of the first expression make the cleanest heading
+  // ("Solve the system of inequalities"); a title never stops mid-expression.
+  const lead = raw.replace(/[*_`]+/g, '').split(/\n/)[0].split('$')[0]
+    .replace(/\s+/g, ' ').trim()
+    .replace(/(?:[\s:,.;—–-]+|\b(?:of|for|the|a|an|and|in|to|when|if|where|that|is|by|with)\b)+$/i, '')
+    .trim();
+  if (lead.length >= 12) return truncatePageTitle(lead, PROBLEM_TITLE_HEAD_MAX);
+  // Otherwise the first line, without math delimiters or markdown emphasis.
+  const head = raw.replace(/\$+/g, '').replace(/[*_`]+/g, '').split(/\n/)[0].replace(/\s+/g, ' ').trim();
+  if (!head) return 'Problem';
+  return truncatePageTitle(head, PROBLEM_TITLE_HEAD_MAX);
+}
+
 /** Title for a freshly-opened page. Priority: segment title (on a segment
  *  advance) > first teaching command's title (via extractCommandTitle, which
- *  handles nested `data.title` etc.) > "Next". */
+ *  handles nested `data.title` etc.) > a problem card's own heading
+ *  (problemPageTitle) > "Next". */
 function pickTitle(
   firstTeaching: PageGroupingCommand | undefined,
   segmentTitle: string | undefined,
   useSegmentTitle: boolean,
+  problem?: { enabled: boolean; homework?: HomeworkProblemRef },
 ): string {
   if (useSegmentTitle && segmentTitle && segmentTitle.trim()) return segmentTitle.trim();
   const extracted = firstTeaching ? extractCommandTitle(firstTeaching) : undefined;
-  return (extracted || 'Next').trim() || 'Next';
+  if (extracted && extracted.trim()) return extracted.trim();
+  const fromProblem = problem?.enabled ? problemPageTitle(firstTeaching, problem.homework) : null;
+  return (fromProblem || 'Next').trim() || 'Next';
 }
 
 /** "Parabola" → "Parabola (cont.)"; idempotent (won't double-suffix). */
@@ -212,7 +270,10 @@ export function decidePageForBatch(input: PageGroupingInput): PageDecision {
     }
     return {
       action: 'newPage',
-      title: pickTitle(firstTeaching, segmentTitle, useSegmentTitle),
+      title: pickTitle(firstTeaching, segmentTitle, useSegmentTitle, {
+        enabled: input.problemPageTitle ?? TUTOR_PROBLEM_PAGE_TITLE,
+        homework: input.homeworkProblem,
+      }),
       reason,
       event,
       anchorKey: incomingAnchorKey,

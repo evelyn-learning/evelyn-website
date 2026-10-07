@@ -14,17 +14,13 @@ import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 import { resolveInequalityEntry, normalizeLineStyle } from '@/lib/tutor/whiteboard/graph-inequalities';
-import { graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
+import { GRAPH_COLORS } from '@/lib/tutor/whiteboard/inequality-facts';
+import { TUTOR_GRAPH_CURVE_FEATURES } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { graphCurveFeatures, graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
 
-// Color palette matching our existing design
-const COLORS = [
-  '#2563eb', // blue
-  '#dc2626', // red
-  '#16a34a', // green
-  '#9333ea', // purple
-  '#ea580c', // orange
-  '#0891b2', // cyan
-];
+// Color palette matching our existing design. Defined beside the computed
+// inequality facts so the colour NAMED to the tutor is the colour drawn here.
+const COLORS = GRAPH_COLORS;
 
 export interface DesmosGraphRef {
   screenshot: (opts?: { width?: number; height?: number }) => string | null;
@@ -182,6 +178,15 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
     // from the same math bounds applyUniformBounds() hands to Desmos.
     const pointFeatures = useMemo(() => graphPointFeatures(data.points), [data.points]);
     const [pointMarks, setPointMarks] = useState<Array<{ name: string; label: string; left: number; top: number }>>([]);
+    // 2026-10-06b: the same for each plot and inequality — one mark on a point
+    // of the curve that is in view, so a tick aimed at "y = -2x + 4" lands on
+    // this graph's line (graph-features.ts `graphCurveFeatures`).
+    const curveFeatures = useMemo(
+      () => (TUTOR_GRAPH_CURVE_FEATURES ? graphCurveFeatures(data) : []),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [JSON.stringify([data.functions, data.functionsOfY, data.inequalities])],
+    );
+    const [curveMarks, setCurveMarks] = useState<Array<{ name: string; label: string; left: number; top: number }>>([]);
     // Inequalities resolved once per data change (LaTeX + strictness come
     // from the same parser the region check samples with).
     const inequalities = useMemo(
@@ -290,6 +295,22 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           setPointMarks((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
         } else {
           setPointMarks((prev) => (prev.length === 0 ? prev : []));
+        }
+        if (curveFeatures.length > 0 && xSpan > 0 && ySpan > 0) {
+          const win = { left, right: cx + xSpan / 2, bottom: cy - ySpan / 2, top };
+          const nextCurves = curveFeatures
+            .map((c) => ({ c, at: c.anchor(win) }))
+            .filter((m): m is { c: typeof curveFeatures[number]; at: { x: number; y: number } } => m.at !== null)
+            .map(({ c, at }) => ({
+              name: c.name,
+              label: c.displayName,
+              left: Math.round(((at.x - left) / xSpan) * 10000) / 100,
+              top: Math.round(((top - at.y) / ySpan) * 10000) / 100,
+            }))
+            .filter((m) => m.left >= 0 && m.left <= 100 && m.top >= 0 && m.top <= 100);
+          setCurveMarks((prev) => (JSON.stringify(prev) === JSON.stringify(nextCurves) ? prev : nextCurves));
+        } else {
+          setCurveMarks((prev) => (prev.length === 0 ? prev : []));
         }
       };
       applyUniformBounds();
@@ -474,7 +495,7 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
           />
           {/* Feature marks over the labelled points — invisible, never
               intercept input; the scribble overlay resolves them by rect. */}
-          {pointMarks.map((m) => (
+          {[...curveMarks, ...pointMarks].map((m) => (
             <div
               key={m.name}
               data-feature={m.name}

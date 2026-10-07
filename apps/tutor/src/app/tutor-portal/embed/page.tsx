@@ -105,6 +105,12 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   check_in) + first-session tip + noise-floor nudge:
   'student_hold_', 'first_session_tip', 'noise_floor_',
   'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
+  // 2026-10-06b (portal-10beb4f5): three scribbles vanished with
+  // "no command survived processing" and NO recorded reason — the
+  // scribble_reject_* family (empty / no_match / whole_item / iframe) was not
+  // on this list. Likewise the shaded-region net (shaded_region_net_planted /
+  // _note_consumed), shipped the same day without a row here.
+  'scribble_reject_', 'shaded_region_',
   // Final review 2026-09-07: session_struggles_attached — the <session_struggles>
   // ledger block is now WRAP-GATED, so this row is the record of WHY it rode a
   // given turn (utterance / recap segment / recap wrap / ≥75% of the budget).

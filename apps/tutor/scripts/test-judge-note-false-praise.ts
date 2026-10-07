@@ -195,8 +195,18 @@ test('judgeReasonSaysStatementCorrect: only an explicit "the statement IS correc
   ]) assert.equal(judgeReasonSaysStatementCorrect(why), false, String(why));
 });
 test('a real wrong_math issue still plants (reason does not call the statement correct)', () => {
-  const d = decide({ claim: 'So $7 \\times 8 = 54$', why: 'The tutor states that 7 × 8 = 54, which is incorrect; it is 56.', issueKind: 'wrong_math', studentAnswerVerdict: 'unsure' }, 'advisory');
-  assert.deepEqual([d.plantNote, d.noteMode, d.reason], [true, 'neutral', 'own-statement']);
+  // 2026-10-06b: with studentAnswerVerdict "unsure" nothing is planted any
+  // more (TUTOR_JUDGE_UNSURE_NO_NOTE) — the same issue with any other verdict
+  // on the student's answer, or none, plants as before.
+  const issue = { claim: 'So $7 \\times 8 = 54$', why: 'The tutor states that 7 × 8 = 54, which is incorrect; it is 56.', issueKind: 'wrong_math' };
+  for (const v of ['not_an_answer', 'incorrect', 'correct']) {
+    const d = decide({ ...issue, studentAnswerVerdict: v }, 'advisory');
+    assert.deepEqual([d.plantNote, d.noteMode, d.reason], [true, 'neutral', 'own-statement'], v);
+  }
+  const before = decideJudgeIssue({ enabled: true, issue: { ...issue, studentAnswerVerdict: 'unsure' }, severity: 'advisory', unsureNoNote: false });
+  assert.deepEqual([before.plantNote, before.noteMode, before.reason], [true, 'neutral', 'own-statement']);
+  const now = decide({ ...issue, studentAnswerVerdict: 'unsure' }, 'advisory');
+  assert.deepEqual([now.plantNote, now.reason], [false, 'judge-unsure']);
 });
 test('other + incorrect + maths claim (Algebra 1, Precalculus): neutral note, as before', () => {
   for (const i of [ALGEBRA1_OTHER, PRECALC_OTHER]) {

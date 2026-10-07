@@ -273,3 +273,48 @@ export function describeAnswerDisputeDecision(d: AnswerDisputeDecision, claimed:
     return 'winner=unknown action=unchanged';
   }
 }
+
+// ── 2026-10-06b: a dispute between two DESCRIPTIONS is not a dispute ─────────
+//
+// portal-2de3c6c8 @8.7 s: the claimed answer was "Region below dashed line …
+// and below dashed line …", the blind solve "The solution is the open region
+// consisting of …". Two sentences describing the same region can never
+// "agree" by comparison, so the session opened with a "the two answers
+// differ, trust neither" note riding the student's first turn. An answer that
+// is prose has nothing a comparison can settle; and a system of inequalities
+// has a region for an answer, whose facts are computed elsewhere
+// (whiteboard/inequality-facts.ts).
+
+const MATH_WORDS_IN_VALUE = new Set(['sqrt', 'sin', 'cos', 'tan', 'log', 'and', 'or', 'pi', 'inf', 'infinity', 'the', 'is', 'all', 'real', 'numbers', 'no', 'solution', 'none', 'dne', 'undefined', 'true', 'false', 'frac', 'left', 'right', 'cdot', 'times', 'text', 'leq', 'geq', 'per']);
+const MAX_PROSE_WORDS_IN_VALUE = 3;
+
+/** Is this answer a value / expression a comparison can settle (a number, an
+ *  expression, a relation, a short labelled value, a choice letter) rather
+ *  than a description in words? */
+export function isComparableAnswer(answer: string | null | undefined): boolean {
+  const t = (answer ?? '').replace(/\$/g, ' ').trim();
+  if (!t) return false;
+  if (t.length > 120) return false;
+  const words = (t.toLowerCase().match(/[a-z]{3,}/g) ?? []).filter((w) => !MATH_WORDS_IN_VALUE.has(w));
+  return words.length <= MAX_PROSE_WORDS_IN_VALUE;
+}
+
+/**
+ * Should the "answers differ" dispute be skipped altogether? Yes when either
+ * side is prose, or the problem is a system of inequalities in two variables
+ * (`problemIsInequalitySystem`, decided by the caller with the parser the
+ * region check uses).
+ */
+export function shouldSkipProseDispute(input: {
+  /** TUTOR_PROSE_DISPUTE_SKIP. */
+  enabled: boolean;
+  claimed: string;
+  solved: string;
+  problemIsInequalitySystem?: boolean;
+}): { skip: boolean; why: 'off' | 'inequality-system' | 'claimed-is-prose' | 'solved-is-prose' | 'comparable' } {
+  if (!input.enabled) return { skip: false, why: 'off' };
+  if (input.problemIsInequalitySystem === true) return { skip: true, why: 'inequality-system' };
+  if (!isComparableAnswer(input.claimed)) return { skip: true, why: 'claimed-is-prose' };
+  if (!isComparableAnswer(input.solved)) return { skip: true, why: 'solved-is-prose' };
+  return { skip: false, why: 'comparable' };
+}

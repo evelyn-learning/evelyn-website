@@ -75,4 +75,38 @@
       "inequalities": [{ "expr": "y = 2x + 1" }]
     }
   }
+  ,
+  {
+    "label": "owner-1006b-boundary-lines-with-test-point",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "Boundary lines for both inequalities",
+      "xRange": [-6, 6],
+      "yRange": [-6, 6],
+      "functions": [
+        { "expr": "-2x+4", "label": "y = -2x + 4", "lineStyle": "dashed" },
+        { "expr": "(x-2)/3", "label": "y = (x-2)/3", "lineStyle": "dashed" }
+      ],
+      "points": [{ "x": 0, "y": 0, "label": "(0, 0)", "color": "#16a34a" }]
+    }
+  },
+  {
+    "label": "owner-1006b-lines-and-shading",
+    "tool": "show_function_graph",
+    "expect": "render",
+    "args": {
+      "title": "System: 2x+y<4 and x-3y>2",
+      "xRange": [-6, 6],
+      "yRange": [-6, 6],
+      "functions": [
+        { "expr": "-2x+4", "color": "blue", "label": "y = -2x + 4", "lineStyle": "dashed" },
+        { "expr": "(1/3)x - 2/3", "color": "green", "label": "y = (1/3)x - 2/3", "lineStyle": "dashed" }
+      ],
+      "inequalities": [
+        { "expr": "y < -2x + 4", "color": "blue", "label": "2x+y<4" },
+        { "expr": "y < (1/3)x - 2/3", "color": "green", "label": "x-3y>2" }
+      ]
+    }
+  }
 ]

@@ -54,6 +54,7 @@
  * Wording is generic — no subject content, no example values (repo rule).
  * `npm run test:voice-judging`.
  */
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { opensWithAffirmingVerdict } from '@/lib/tutor/voice/nonanswer-praise';
 import { assentSettlesNothing, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
 import {
@@ -145,6 +146,11 @@ const VOICE_CLOSE =
  * @param ts  the turn-shape read; a message that proposes nothing gets the
  *   non-answer rule alone (see work-then-match.ts `formatWorkThenMatchBlock`).
  */
+/** 2026-10-06b (portal-10beb4f5): a spoken expression has no brackets. The
+ *  student's correct answer was graded on the grouping they did not mean. */
+export const AMBIGUOUS_READING_VOICE_RULE =
+  'When what they said can reasonably be read as more than one expression — speech carries no brackets, so the same words can be grouped in more than one way — and one reasonable reading is what your working gives, it IS the value they gave: say that it matches, and put the intended form on the board written out in full so you are both looking at the same expression. If you cannot tell which reading they meant, ask which one they meant. Never tell a student they are wrong on the strength of one reading of something that can be read two ways.\n';
+
 export function formatVoiceWorkThenMatchBlock(transcript: string, ts?: TurnShape | null): string {
   const t = (transcript ?? '').trim();
   if (!t || t.startsWith('[')) return '';
@@ -175,6 +181,7 @@ export function formatVoiceWorkThenMatchBlock(transcript: string, ts?: TurnShape
     + 'When they gave the correct FINAL answer while a smaller step was open: say the remaining step briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n'
     + 'When what they said does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them that what they said "is not an answer".\n'
     + 'Work from the student\'s own problem and data, not from a value stated earlier in the conversation: an earlier line — yours included — can be wrong, and if your working now shows that one of yours was, say so plainly and use the corrected value.\n'
+    + (TUTOR_AMBIGUOUS_EXPRESSION_RULE ? AMBIGUOUS_READING_VOICE_RULE : '')
     + 'The student\'s words reach you through speech recognition: a value can arrive spelled out, split across words or slightly garbled. Read it as the value a person would have meant by those sounds before you compare.\n'
     + VOICE_SPEECH
     + VOICE_LENGTH
@@ -202,6 +209,15 @@ const INLINE_AFFIRM_RE =
  *  the statement ("…, nicely spotted."). */
 const COMMA_AFFIRM_RE =
   /^[*_~`\s"'“(]*(?:right|yes|yep|yeah|good|great|nice)\s*,\s*(?:that(?:'?s|\s+is)\s+(?:exactly\s+)?it\b|exactly\b|it\s+checks\s+out\b|you(?:'?ve)?\s+got\s+it\b|that(?:'?s|\s+is)\s+(?:right|correct)\b)/i;
+/** 2026-10-06b (portal-10beb4f5): "Good, that matches what we need." was
+ *  spoken before the check reported — a praise word, a comma, then a clause
+ *  that says the answer agrees ("that matches / works / checks out / is
+ *  right"); and praise for the student's eye ("Good eye —", "Nice catch,").
+ *  Both are verdicts on the answer and are held like any other. */
+const PRAISE_THEN_AGREES_RE =
+  /^[*_~`\s"'“(]*(?:right|yes|yep|yeah|good|great|nice|perfect|exactly|correct|okay|ok)\s*[,—–-]\s*(?:and\s+)?(?:that|this|it|which)\s+(?:all\s+)?(?:matches|works|checks\s+out|lines\s+up|fits|agrees|holds(?:\s+up)?|(?:is|'?s)\s+(?:exactly\s+)?(?:right|correct|it))\b/i;
+const PRAISE_FOR_EYE_RE =
+  /^[*_~`\s"'“(]*(?:good|nice|great|sharp|excellent)\s+(?:eye|catch|call|spot)\b\s*(?:[,—–!.:-]|$)/i;
 /** A match statement about a thing the shared reader has no word for ("the
  *  point you gave", "the region you described"): the result set against what
  *  the student said, with up to two words naming it. */
@@ -235,7 +251,7 @@ export function sentenceVerdictStance(sentence: string, studentText?: string): V
   // A plain question asserts nothing.
   if (/\?\s*$/.test(s) && !/\s[—–]\s|;\s/.test(s)) return null;
   const deny = INLINE_DENY_RE.test(s) || SPOKEN_DIFFERS_RE.test(s);
-  const affirm = !deny && (INLINE_AFFIRM_RE.test(s) || COMMA_AFFIRM_RE.test(s) || TRAILING_PRAISE_RE.test(s) || SPOKEN_MATCHES_RE.test(s));
+  const affirm = !deny && (INLINE_AFFIRM_RE.test(s) || COMMA_AFFIRM_RE.test(s) || PRAISE_THEN_AGREES_RE.test(s) || PRAISE_FOR_EYE_RE.test(s) || TRAILING_PRAISE_RE.test(s) || SPOKEN_MATCHES_RE.test(s));
   if (deny && /\b(?:actually|after\s+all)\b/i.test(s)) return null; // a reversal inside one sentence: other guards own it
   return deny ? 'deny' : affirm ? 'affirm' : null;
 }

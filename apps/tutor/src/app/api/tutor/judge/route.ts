@@ -72,6 +72,9 @@ interface JudgeRequestBody {
    *  (2026-09-06 live check 3, portal-3a024b75), and the judge must not
    *  treat board content as true when it contradicts this. */
   authoredSolution?: string;
+  /** Optional COMPUTED_FACTS — the runtime's computed facts about a system /
+   *  inequality problem (lib/tutor/whiteboard/inequality-facts.ts). */
+  computedFacts?: string;
 }
 
 interface JudgeIssue {
@@ -146,6 +149,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (typeof body.boardSummary !== 'string') return badRequest('boardSummary must be a string');
   if (body.authoredSolution !== undefined && (typeof body.authoredSolution !== 'string' || body.authoredSolution.length > 1500)) {
     return badRequest('authoredSolution must be a string ≤ 1500 chars');
+  }
+  if (body.computedFacts !== undefined && (typeof body.computedFacts !== 'string' || body.computedFacts.length > 4000)) {
+    return badRequest('computedFacts must be a string ≤ 4000 chars');
   }
   if (typeof body.spokenText !== 'string' || body.spokenText.trim().length === 0) {
     // Nothing to judge → trivially grounded.

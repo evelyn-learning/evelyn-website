@@ -19,13 +19,15 @@
  */
 
 import { ACK_PHRASES } from './ack-layer';
+import { TUTOR_FILLER_TIP_PLACEMENT, TUTOR_TEXT_COVER_VISIBLE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { classifyTurnShape } from './turn-shape-signal';
 
 export type CoverCategory =
   | 'numeric-echo' | 'question' | 'request' | 'stuck' | 'think-aloud' | 'generic';
 
 export type CoverVerdict =
   | { kind: 'cover'; category: CoverCategory }
-  | { kind: 'silent'; reason: 'backchannel' | 'student-stall' | 'continuation' | 'synthetic' }
+  | { kind: 'silent'; reason: 'backchannel' | 'student-stall' | 'continuation' | 'synthetic' | 'signoff' }
   | { kind: 'instant'; category: 'liveness' };
 
 const LIVENESS_RE =
@@ -277,7 +279,38 @@ export function extractAnswerToken(t: string): string | null {
   return extractAnswerTokenDetailed(t).token;
 }
 
-export function classifyCover(transcript: string): CoverVerdict {
+/**
+ * 2026-10-06b (portal-10beb4f5 @722 s): the student said "Yeah, I'm done."
+ * and heard "Hold on, let me look." before the goodbye. A sign-off needs no
+ * thinking filler in front of the reply to it. Short utterances only.
+ */
+const STUDENT_SIGNOFF_RE = new RegExp(
+  '^(?:(?:yeah|yes|yep|yup|ok(?:ay)?|no|nope|alright|all\\s+right|thanks|thank\\s+you|great|cool|nice|so|well|um+|uh+)[,.!\\s]+)*'
+  + '(?:'
+  + '(?:i\'?m|i\\s+am|we\'?re|we\\s+are)\\s+(?:all\\s+)?(?:done|finished|good|set)\\b'
+  + '|(?:that\'?s|that\\s+is|this\\s+is)\\s+(?:all|it|everything|enough)\\b'
+  + '|(?:good\\s?bye|bye(?:[\\s-]+bye)?|see\\s+you|see\\s+ya|talk\\s+to\\s+you\\s+later|good\\s?night)\\b'
+  + '|(?:let\'?s|we\\s+can|can\\s+we)\\s+(?:stop|end|wrap\\s+(?:it\\s+)?up|call\\s+it)\\b'
+  + '|i\\s+(?:have|need|gotta|got)\\s+to\\s+(?:go|leave|run)\\b'
+  + '|(?:thanks|thank\\s+you)[,.!\\s]+(?:that\'?s|that\\s+is)\\s+(?:all|it)\\b'
+  + ')',
+  'i',
+);
+const SIGNOFF_MAX_WORDS = 10;
+
+/** Is this short student utterance a sign-off ("I'm done", "bye")? */
+export function isStudentSignoff(transcript: string): boolean {
+  const t = (transcript ?? '').trim();
+  if (!t || t.startsWith('[')) return false;
+  if (t.split(/\s+/).length > SIGNOFF_MAX_WORDS) return false;
+  return STUDENT_SIGNOFF_RE.test(t);
+}
+
+/**
+ * @param opts.signoffSilent  no filler ahead of the reply to a sign-off.
+ *   Unset ⇒ TUTOR_FILLER_TIP_PLACEMENT.
+ */
+export function classifyCover(transcript: string, opts?: { signoffSilent?: boolean }): CoverVerdict {
   const t = transcript.trim();
   const w = words(t);
 
@@ -289,6 +322,8 @@ export function classifyCover(transcript: string): CoverVerdict {
     return { kind: 'instant', category: 'liveness' };
 
   if (STALL_RE.test(t)) return { kind: 'silent', reason: 'student-stall' };
+
+  if ((opts?.signoffSilent ?? TUTOR_FILLER_TIP_PLACEMENT) && isStudentSignoff(t)) return { kind: 'silent', reason: 'signoff' };
 
   // Backchannel: short, every word in the ack lexicon, no digits.
   if (w.length <= 4 && w.length > 0 && !/\d/.test(t) && w.every((x) => BACKCHANNEL_WORDS.has(x)))
@@ -504,3 +539,46 @@ export function decideWarmupAction(state: WarmupState, nowMs: number): 'wait' | 
   if (age >= WARMUP_REKICK_MS && !state.rekicked && !state.failed) { state.rekicked = true; return 'rekick'; }
   return 'wait';
 }
+
+// ── 2026-10-06b: where a cover line and the noise tip may go ────────────────
+
+/** The line a TEXT session shows in its typing indicator when a reply is
+ *  slow (the spoken cover lines are neither heard nor shown there). */
+export const TEXT_COVER_VISIBLE_LINE = 'Still working on it…';
+/** Window event the transcript's typing indicator listens for. */
+export const THINKING_HINT_EVENT = 'evelyn:thinking-hint';
+
+/** How a slow-turn cover line is presented: spoken (voice), or as a visible
+ *  line in the typing indicator (text). */
+export function coverPresentation(input: { textMode: boolean; enabled?: boolean }): 'spoken' | 'visible' {
+  return input.textMode && (input.enabled ?? TUTOR_TEXT_COVER_VISIBLE) ? 'visible' : 'spoken';
+}
+
+/**
+ * May the once-per-session noise tip ride THIS turn? (portal-10beb4f5 @321 s:
+ * "…so you've got it: the origin doesn't satisfy this one. By the way, a
+ * quieter spot or lower volume nearby should help me hear you more clearly.
+ * Since the test point makes…" — dropped into the middle of the explanation
+ * of an answer.) Not on a turn whose reply is a verdict or an explanation:
+ * the student proposed an answer, asked a question, asked for something or
+ * said they do not know. It waits for a turn between those — a plain "ok",
+ * a yes, a remark — and is otherwise never delivered.
+ * `enabled` unset ⇒ TUTOR_FILLER_TIP_PLACEMENT; false ⇒ any real turn, as before.
+ */
+export function noiseTipMayRideTurn(studentText: string, priorTutorTurn: string, opts?: { enabled?: boolean }): boolean {
+  const t = (studentText ?? '').trim();
+  if (!t || t.startsWith('[')) return false;
+  if (!(opts?.enabled ?? TUTOR_FILLER_TIP_PLACEMENT)) return true;
+  if (isStudentSignoff(t)) return false;
+  const ts = classifyTurnShape(t, priorTutorTurn ?? '');
+  if (!ts) return false;
+  if (ts.answerShaped) return false;
+  return ts.shape === 'bare_assent' || ts.shape === 'bare_dissent' || ts.shape === 'acknowledgment' || ts.shape === 'other';
+}
+
+/** The noise note, worded so the sentence sits apart from the teaching. */
+export const NOISE_TIP_NOTE =
+  '[noise note — not from the student] There has been persistent background noise on the student\'s side for a while. '
+  + 'In this reply, add ONE short, kind sentence: a quieter spot, or turning down any nearby volume, will help you hear them clearly. '
+  + 'Place it on its own, after you have finished responding to what they said and before your closing question — never inside an explanation and never next to a verdict on an answer. '
+  + 'Say it once this session and never bring it up again.';

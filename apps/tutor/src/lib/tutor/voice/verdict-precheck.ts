@@ -40,6 +40,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams, resolveModel } from '../ai/model-registry';
 import { falseArithmeticIn } from './turn-shape-signal';
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import type {
   PrecheckConfidence,
   PrecheckTarget,
@@ -76,6 +77,9 @@ export interface VerdictPrecheckInput {
   /** The tutor's last question, verbatim; null when none is open. */
   openQuestion: string | null;
   studentMessage: string;
+  /** Facts the runtime computed from the problem itself (a system /
+   *  inequality problem: whiteboard/inequality-facts.ts), as plain text. */
+  problemFacts?: string;
 }
 
 export interface VerdictPrecheckLlmRequest {
@@ -113,6 +117,26 @@ export const VERDICT_PRECHECK_SYSTEM =
   '4. COMPARE with your own answer to THAT question. An equivalent form, notation, ordering or unit spelling is the same answer. verdict: "correct" only when it is the complete right answer to that question; "incorrect"; "partly_correct" when the question asks for several things, or for all the values that work, and the student gave only some of them, or part is right and part is wrong; "cannot_determine" when the question has no single right answer (an opinion, an open-ended draft, a choice of what to do next) or there is not enough information to solve it.\n' +
   '5. CONFIDENCE. "high" only when it is unambiguous which question the message answers AND you solved that question completely. "medium" when either is somewhat uncertain. "low" otherwise. When answers is "neither", confidence is about that classification alone.\n' +
   'Fields, in this order: proposed_value — what the student proposed, as they wrote it. problem_final_answer — the final answer of the problem or part being worked, as YOU worked it out in step 2 (empty if it has no single answer). proposed_equals_final_answer — true when the two are the same answer. target — a short name for the question the message answers, in your own words. correct_value — the correct answer to THAT question, worked out by you; empty when answers is "neither" or the verdict is "cannot_determine".';
+
+/**
+ * 2026-10-06b (portal-10beb4f5, voice): a spoken expression arrived as words
+ * with no brackets, could be grouped two ways, and the check graded the
+ * grouping the student did not mean — a correct answer came back "incorrect"
+ * with high confidence. The same happens with typed input that leaves its
+ * brackets out. One sentence added to step 4; generic wording.
+ */
+export const AMBIGUOUS_READING_RULE =
+  ' AMBIGUOUS WRITING OR SPEECH. The student\'s words may reach you spoken aloud and transcribed, or typed without brackets, so what they proposed can have more than one reasonable reading (how its parts are grouped, which part a word applies to). List the reasonable readings before you compare. If ANY reasonable reading is the right answer to that question, the verdict is "correct", and correct_value gives that answer written out in full and unambiguously. Only when NO reasonable reading is right is the verdict "incorrect". Never return "incorrect" on the strength of one reading while another reasonable reading is right.';
+
+/** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
+ *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; false ⇒ the prompt of 2026-10-06. */
+export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean }): string {
+  if (!(opts?.ambiguousReadingRule ?? TUTOR_AMBIGUOUS_EXPRESSION_RULE)) return VERDICT_PRECHECK_SYSTEM;
+  const marker = '\n5. CONFIDENCE.';
+  const at = VERDICT_PRECHECK_SYSTEM.indexOf(marker);
+  if (at < 0) return VERDICT_PRECHECK_SYSTEM + AMBIGUOUS_READING_RULE;
+  return VERDICT_PRECHECK_SYSTEM.slice(0, at) + AMBIGUOUS_READING_RULE + VERDICT_PRECHECK_SYSTEM.slice(at);
+}
 
 /** `working` is a scratch field for a model that is NOT thinking: it is
  *  written first so the verdict follows the working. A thinking model has
@@ -174,6 +198,13 @@ export function buildVerdictPrecheckUser(input: VerdictPrecheckInput): string {
   const statement = (input.activeProblemStatement ?? '').trim();
   if (statement && !problems.some((p) => p.text.includes(statement.slice(0, 60)))) {
     parts.push(`<problem_on_the_board>\n${clip(statement, PROBLEM_MAX_CHARS)}\n</problem_on_the_board>`);
+  }
+  // 2026-10-06b: the check read the same conversation as the tutor and
+  // followed its error about which side of a line is shaded. These facts are
+  // computed from the problem's own inequalities.
+  const facts = (input.problemFacts ?? '').trim();
+  if (facts) {
+    parts.push(`<computed_facts>\n${clip(facts, 3000)}\nThese were computed from the problem itself and are certain: use them as given in step 2, even where the conversation — tutor or student — says otherwise.\n</computed_facts>`);
   }
   const recent = input.history.filter((m) => typeof m.content === 'string' && m.content.trim()).slice(-HISTORY_TURNS);
   if (recent.length > 0) {
@@ -283,7 +314,7 @@ export async function runVerdictPrecheck(
     if (!(input.studentMessage ?? '').trim()) return null;
     const llm = deps.llm ?? defaultLlm(deps);
     const call = llm({
-      system: VERDICT_PRECHECK_SYSTEM,
+      system: verdictPrecheckSystem(),
       user: buildVerdictPrecheckUser(input),
       maxTokens: 1500,
       signal: abort.signal,

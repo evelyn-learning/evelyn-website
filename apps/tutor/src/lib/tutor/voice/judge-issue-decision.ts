@@ -44,13 +44,16 @@
  *     whenever the severity is kill-class or the claim carries maths — the
  *     plant rule at HEAD; nothing withheld.
  *
+ * 2026-10-06b: verdict UNSURE → nothing, whatever the kind — except the
+ * DENIAL_RE re-check row above, which is kept (TUTOR_JUDGE_UNSURE_NO_NOTE).
+ *
  * A response with NEITHER field is handled exactly as before.
  *
  * Pure; never throws.
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { buildJudgeCorrectionNote, hasMathExpression, otherClaimsRider } from '@/lib/tutor/voice/judge-correction-note';
-import { TUTOR_JUDGE_NOTE_FALSE_PRAISE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { isDenialClaim } from '@/lib/tutor/voice/pacing-verdict';
 
 export const JUDGE_STUDENT_ANSWER_VERDICTS = ['correct', 'incorrect', 'unsure', 'not_an_answer'] as const;
@@ -102,6 +105,7 @@ export interface JudgeIssueDecision {
     | 'false-praise'
     | 'statement-judged-correct'
     | 'not-an-answer-nothing-to-correct'
+    | 'judge-unsure'
     | 'not-noteworthy';
   fields: JudgeIssueFields;
 }
@@ -168,6 +172,9 @@ export function decideJudgeIssue(input: {
   issue: { claim: string; studentAnswerVerdict?: unknown; issueKind?: unknown; why?: unknown };
   severity: 'kill' | 'advisory';
   falsePraiseRound?: boolean;
+  /** Unset ⇒ TUTOR_JUDGE_UNSURE_NO_NOTE; false ⇒ the table as it stood on
+   *  2026-10-05 (an unsure judge still planted the neutral / false-praise note). */
+  unsureNoNote?: boolean;
 }): JudgeIssueDecision {
   const claim = input?.issue?.claim ?? '';
   const severity = input?.severity === 'kill' ? 'kill' : 'advisory';
@@ -209,6 +216,13 @@ export function decideJudgeIssue(input: {
   if (kind === 'tone_or_wording') return none('tone-or-wording');
   // A flagged denial the judge could not settle either way.
   if (claimOpensWithDenial && !answerJudgedWrong && verdict !== 'correct' && kind !== 'false_praise') return recheck();
+  // 2026-10-06b (portal-10beb4f5): the judge's verdict was "unsure" and its
+  // flag was wrong — the tutor's statement was correct, and the neutral note
+  // made the next reply "correct" it mid-sentence ("wait, let's be careful —
+  // actually…"). A judge that says it is unsure has found nothing to act on.
+  // The one case kept is the line above: a claim HEAD's DENIAL_RE reads as a
+  // denial still gets the legacy re-check.
+  if ((input.unsureNoNote ?? TUTOR_JUDGE_UNSURE_NO_NOTE) === true && verdict === 'unsure') return none('judge-unsure');
   // A flagged denial of an answer the judge itself calls incorrect, with no
   // fault named: the tutor was doing its job.
   const denialOfWrongAnswer = claimIsDenial && answerJudgedWrong;

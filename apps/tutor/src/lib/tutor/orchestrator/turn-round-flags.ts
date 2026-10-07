@@ -343,3 +343,79 @@ export const TUTOR_HOMEWORK_NO_EARLY_SIGNOFF =
  *  texts byte for byte as before. */
 export const TUTOR_NO_TIME_TALK =
   process.env.NEXT_PUBLIC_TUTOR_NO_TIME_TALK !== 'off';
+
+// ── 2026-10-06b: owner live sessions portal-2de3c6c8 (text) / portal-10beb4f5 (voice) ──
+// Each defaults ON; 'off' restores the behaviour of build nSxYU92obl4HOXChKRkXx
+// for that one mechanism.
+
+/** Computed facts about a system / inequality problem (solved forms, shaded
+ *  side, crossing, an inside and an outside point) in the graph's board
+ *  description, the brain's per-turn content, the verdict pre-check and the
+ *  judge. Read on the server too (same variable, not inlined there). */
+export const TUTOR_INEQUALITY_FACTS =
+  process.env.NEXT_PUBLIC_TUTOR_INEQUALITY_FACTS !== 'off';
+
+/** A tutor sentence that states a side ("above / below the <named> line")
+ *  contradicting the computed facts is withheld and the turn retried once
+ *  with the fact (text: before display; voice: on the verdict-hold cut path). */
+export const TUTOR_SPOKEN_REGION_CHECK =
+  process.env.NEXT_PUBLIC_TUTOR_SPOKEN_REGION_CHECK !== 'off';
+
+/** A graph point is an intersection claim only when words say so; a point
+ *  that claims nothing is never dropped and nothing is back-filled. */
+export const TUTOR_INTERSECTION_CLAIM_WORDS =
+  process.env.NEXT_PUBLIC_TUTOR_INTERSECTION_CLAIM_WORDS !== 'off';
+
+/** An either/or or wh- question that names alternatives and commits to
+ *  neither is a question, not an answer. */
+export const TUTOR_ALTERNATIVES_QUESTION =
+  process.env.NEXT_PUBLIC_TUTOR_ALTERNATIVES_QUESTION !== 'off';
+
+/** No correction note is planted from a judge flag whose verdict on the
+ *  student's answer is "unsure" (the legacy denial re-check is kept). */
+export const TUTOR_JUDGE_UNSURE_NO_NOTE =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_UNSURE_NO_NOTE !== 'off';
+
+/** Text mode: a leading verdict phrase is cut from the reply's first sentence
+ *  instead of killing the turn, and a reply the high-confidence pre-check
+ *  agrees with is never killed for its opener. */
+export const TUTOR_OPENER_STRIP_NOT_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_OPENER_STRIP_NOT_KILL !== 'off';
+
+/** Pre-check prompt + per-turn rule: an expression with more than one
+ *  reasonable reading is not denied on one reading. */
+export const TUTOR_AMBIGUOUS_EXPRESSION_RULE =
+  process.env.NEXT_PUBLIC_TUTOR_AMBIGUOUS_EXPRESSION_RULE !== 'off';
+
+/** A page opened for an untitled problem card is titled "Problem N" (or
+ *  "Problem N of M") instead of "Next". */
+export const TUTOR_PROBLEM_PAGE_TITLE =
+  process.env.NEXT_PUBLIC_TUTOR_PROBLEM_PAGE_TITLE !== 'off';
+
+/** A graph's plots and inequalities are board features of that graph (marked
+ *  at the legend entry), so a mark aimed at one stays on the graph. */
+export const TUTOR_GRAPH_CURVE_FEATURES =
+  process.env.NEXT_PUBLIC_TUTOR_GRAPH_CURVE_FEATURES !== 'off';
+
+/** Short non-numeric answers are credited from a high-confidence pre-check. */
+export const TUTOR_PRECHECK_ANSWER_CREDIT =
+  process.env.NEXT_PUBLIC_TUTOR_PRECHECK_ANSWER_CREDIT !== 'off';
+
+/** Text mode: board renders are painted on arrival (no wait for speech). */
+export const TUTOR_TEXT_PAINT_ON_ARRIVAL =
+  process.env.NEXT_PUBLIC_TUTOR_TEXT_PAINT_ON_ARRIVAL !== 'off';
+
+/** The session-start answer dispute is skipped when either side is prose
+ *  (not a comparable value) or the problem is a system of inequalities. */
+export const TUTOR_PROSE_DISPUTE_SKIP =
+  process.env.NEXT_PUBLIC_TUTOR_PROSE_DISPUTE_SKIP !== 'off';
+
+/** Text mode: a slow reply shows "Still working on it…" in the typing
+ *  indicator in place of the spoken cover line. */
+export const TUTOR_TEXT_COVER_VISIBLE =
+  process.env.NEXT_PUBLIC_TUTOR_TEXT_COVER_VISIBLE !== 'off';
+
+/** Voice: no latency filler ahead of a goodbye, and the noise tip rides only
+ *  a turn that is not a verdict / explanation of an answer. */
+export const TUTOR_FILLER_TIP_PLACEMENT =
+  process.env.NEXT_PUBLIC_TUTOR_FILLER_TIP_PLACEMENT !== 'off';

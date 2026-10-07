@@ -38,7 +38,7 @@ check(
 
 // --- The bug case: y=x^3 and y=4x-x^2 with mislabeled intersections ---
 const bugCase = validateIntersectionPoints({
-  title: "Graph of y = x^3 and y = 4x − x²",
+  title: "Intersections of y = x^3 and y = 4x − x²",
   xRange: [-2.5, 4],
   yRange: [-6, 10],
   functions: [
@@ -82,7 +82,7 @@ check(
 //   y=x^3 ∩ y=2x-3x^2:  (0,0), (~0.56, ~0.18), (~-3.56, ~-45) [off-screen]
 //   y=x   ∩ y=2x-3x^2:  (0,0), (1/3, 1/3)
 const threeCurve = validateIntersectionPoints({
-  title: "Graphs of y = x^3, y = 2x - 3x^2, and y = x",
+  title: "Where y = x^3, y = 2x - 3x^2, and y = x intersect",
   xRange: [-3, 3],
   yRange: [-5, 5],
   functions: [
@@ -196,6 +196,22 @@ const unparseable = validateIntersectionPoints({
 check(
   "unparseable curve: validator bails out and keeps the point",
   (unparseable.points || []).length === 1,
+);
+
+// --- 2026-10-06 (portal-2de3c6c8): a coordinate label alone claims nothing ---
+const noClaim = validateIntersectionPoints({
+  title: "Graph of y = x^3 and y = 4x − x²",
+  xRange: [-2.5, 4],
+  yRange: [-6, 10],
+  functions: [
+    { latex: "x^3", label: "y = x^3" },
+    { latex: "4x - x^2", label: "y = 4x - x²" },
+  ],
+  points: [{ x: 4, y: 0, label: "(4, 0)" }],
+});
+check(
+  "no intersection wording: coordinate-labelled point kept, nothing added",
+  (noClaim.points || []).length === 1 && (noClaim.points || [])[0].x === 4,
 );
 
 // --- Report ---

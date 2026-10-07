@@ -39,7 +39,9 @@ import { buildCircuitManifest } from '@/app/tutor/components/whiteboard/CircuitR
 // Math / Stats / Data
 import { buildCoordinatePlaneManifest } from '@/app/tutor/components/whiteboard/CoordinatePlaneRenderer';
 import { describeGraphRegions, lineStyleSuffix } from '@/lib/tutor/whiteboard/graph-inequalities';
-import { graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
+import { graphCurveFeatures, graphPointFeatures } from '@/lib/tutor/whiteboard/graph-features';
+import { graphRegionFactParts } from '@/lib/tutor/whiteboard/inequality-facts';
+import { TUTOR_GRAPH_CURVE_FEATURES, TUTOR_INEQUALITY_FACTS } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildStatsManifest } from '@/app/tutor/components/whiteboard/StatsRenderer';
 import { buildManipulativeManifest } from '@/app/tutor/components/whiteboard/ManipulativeRenderer';
 import { buildNumberLineManifest } from '@/app/tutor/components/whiteboard/NumberLineRenderer';
@@ -941,15 +943,19 @@ function buildGraphManifest(cmd?: { data?: Record<string, unknown> }): FeatureMa
     .slice(0, 6);
   // Regions first: they are what the brain most needs to re-read and must
   // not be the part a long plot list truncates away.
+  // 2026-10-06b: what the shading MEANS — which side of which (coloured)
+  // line, the crossing, a point outside and one inside (inequality-facts.ts).
+  const regionFacts = TUTOR_INEQUALITY_FACTS ? graphRegionFactParts(data) : [];
   const detail = [
     ...describeGraphRegions(data),
+    ...regionFacts,
     fns.length ? `plots: ${fns.join('; ')}` : '',
     points.length ? `points: ${points.join(', ')}` : '',
   ].filter(Boolean).join(' · ');
   const entries: FeatureManifestEntry[] = [{
     name: 'graph',
     kind: 'object',
-    description: `the function graph (Desmos iframe)${detail ? ` — ${detail.slice(0, 520)}` : ''}`,
+    description: `the function graph (Desmos iframe)${detail ? ` — ${detail.slice(0, regionFacts.length ? 1300 : 520)}` : ''}`,
     labels: [
       'graph', 'the graph', 'the function graph', 'function graph',
       'desmos', 'the desmos graph', 'plot', 'the plot', 'the chart',
@@ -967,6 +973,19 @@ function buildGraphManifest(cmd?: { data?: Record<string, unknown> }): FeatureMa
       labels: p.labels,
       ...(p.label ? { displayName: p.label } : {}),
     });
+  }
+  // 2026-10-06b: plots and inequalities are features of THIS graph too, so a
+  // mark aimed at "y = -2x + 4" lands on the graph's curve instead of on an
+  // older equation card (graph-features.ts `graphCurveFeatures`).
+  if (TUTOR_GRAPH_CURVE_FEATURES) {
+    const taken = new Set(entries.flatMap((e) => [e.name, ...(e.labels ?? [])]).map((l) => l.toLowerCase()));
+    for (const c of graphCurveFeatures(data)) {
+      // A label a point already owns stays the point's.
+      const labels = c.labels.filter((l) => !taken.has(l.toLowerCase()));
+      if (labels.length === 0) continue;
+      for (const l of labels) taken.add(l.toLowerCase());
+      entries.push({ name: c.name, kind: 'curve', description: c.description, labels, displayName: c.displayName });
+    }
   }
   return entries;
 }
