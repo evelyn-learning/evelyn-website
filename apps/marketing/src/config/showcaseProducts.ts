@@ -10,6 +10,8 @@ export const CLIENT_SHOWCASE_IDS: ClientShowcase[] = [
   { productId: 'nahq', name: 'NAHQ — Adaptive CPHQ Prep', url: '/showcase/nahq' },
   // Passcode-gated Academy proposal deck for the 2026-09-18 call.
   { productId: 'united-trade-school', name: 'United Trade School — Evelyn Academy', url: '/showcase/united-trade-school' },
+  // Passcode-gated partner showcase: sample AI solutions for SOLARO items.
+  { productId: 'castle-rock', name: 'Castle Rock Research — AI Solutions', url: '/showcase/castle-rock' },
   { productId: 'hugo-mentors', name: 'Hugo Mentors', url: '/showcase/hugo-mentors' },
   { productId: 'explorer-academy', name: 'Explorer Academy', url: '/showcase/explorer-academy' },
   { productId: 'rocketship', name: 'Rocketship Innovation School', url: '/showcase/rocketship' },
