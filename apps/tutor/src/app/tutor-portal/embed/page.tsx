@@ -38,8 +38,8 @@ import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
 import {
   INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
-  activeSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
-  parseVideoState, reduceLessonHost, renderMomentDirective, type InactiveClock, type LessonHostEvent, type LessonHostState,
+  activeSeconds, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
+  parseVideoState, reduceLessonHost, renderMomentDirective, videoForPrompt, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
 import { parseLessonTimeline, renderLessonNow, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
@@ -1514,8 +1514,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
 
   const getLessonNow = useCallback(() => renderLessonNow({
     timeline: timelineRef.current,
-    video: lessonHostRef.current.video,
-    positionSeconds: lessonHostRef.current.positionSeconds,
+    video: videoForPrompt(lessonHostRef.current),
+    positionSeconds: currentPositionSeconds(lessonHostRef.current, Date.now()),
     resumeTool: uiOptions.videoControl,
   }), [uiOptions.videoControl]);
 

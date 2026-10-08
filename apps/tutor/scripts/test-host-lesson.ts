@@ -17,6 +17,7 @@ import {
   STANDBY_LINE,
   WAKE_GRACE_MS,
   activeSeconds,
+  currentPositionSeconds,
   inactiveMsAt,
   isStandingBy,
   markInactive,
@@ -28,6 +29,7 @@ import {
   reduceLessonHost,
   renderMomentDirective,
   shiftAnchor,
+  videoForPrompt,
   type LessonHostState,
 } from '../src/lib/tutor/portal/host-lesson';
 
@@ -106,9 +108,27 @@ test('standby: video playing ⇒ standing by; paused or ended ⇒ available', ()
   assert.equal(isStandingBy(reduceLessonHost(p, { type: 'video_state', state: 'ended', positionSeconds: null }, T + 1)), false);
 });
 
-test('standby: a missing position keeps the last known one', () => {
-  const s = pause(play(S0, T, 42), T + 1, null);
-  assert.equal(s.positionSeconds, 42);
+test('standby: a missing position keeps the last known one, advanced by the time it played', () => {
+  assert.equal(pause(pause(S0, T, 42), T + 9000, null).positionSeconds, 42);
+  assert.equal(pause(play(S0, T, 42), T + 9000, null).positionSeconds, 51);
+});
+
+test('position: a playing video is estimated from the last report; a paused one is not', () => {
+  assert.equal(currentPositionSeconds(S0, T), null);
+  const p = play(S0, T, 60);
+  assert.equal(currentPositionSeconds(p, T), 60);
+  assert.equal(currentPositionSeconds(p, T + 90_000), 150);
+  assert.equal(currentPositionSeconds(p, T - 5000), 60); // clock went backwards
+  assert.equal(currentPositionSeconds(pause(p, T + 1000, 61), T + 90_000), 61);
+  // A fresh report resets the estimate (seek, or the host's pause reply).
+  assert.equal(currentPositionSeconds(play(p, T + 10_000, 300), T + 12_000), 302);
+});
+
+test('prompt state: woken over a playing video reads as paused; otherwise the host state', () => {
+  assert.equal(videoForPrompt(S0), null);
+  assert.equal(videoForPrompt(play(S0, T)), 'playing');
+  assert.equal(videoForPrompt(reduceLessonHost(play(S0, T), { type: 'student_wake' }, T + 1)), 'paused');
+  assert.equal(videoForPrompt(pause(S0, T)), 'paused');
 });
 
 test('standby: repeated identical video_state is idempotent (Review Focus 1)', () => {
@@ -168,6 +188,7 @@ test('moment: wakes over a playing video and records its position; does not lift
   let s = reduceLessonHost(play(S0, T, 100), { type: 'moment', positionSeconds: 148 }, T + 1);
   assert.equal(isStandingBy(s), false);
   assert.equal(s.positionSeconds, 148);
+  assert.equal(currentPositionSeconds(s, T + 60_001), 208); // still "playing" until the host says otherwise
   s = reduceLessonHost(reduceLessonHost(pause(S0, T), { type: 'host_pause' }, T), { type: 'moment', positionSeconds: null }, T + 1);
   assert.equal(isStandingBy(s), true);
 });
@@ -190,6 +211,7 @@ test('moment directive: bracketed synthetic turn, facts in, generic wording', ()
   assert.match(d, /^\[The lesson video just paused at 2:28 for a teaching moment: "Chart 3"\./);
   assert.match(d, /On screen: Odds: A 45%, B 30%\./);
   assert.match(d, /Step in now: /);
+  assert.match(d, /do not answer it for the student\.\]$/);
   assert.ok(d.endsWith(']'));
   // Must NOT look like a real student gesture to VTR's sendTextMessage.
   assert.equal(/^\s*\[(?:The student (?:wrote|drew|uploaded)|Via their review-agenda menu)/i.test(d), false);
@@ -292,6 +314,7 @@ test('VTR: entering standby lets the current sentence finish (queued ones droppe
   assert.match(speechHook, /const dropQueuedSpeech = useCallback\(\(\): number =>/);
   const enter = vtr.slice(vtr.indexOf("standbySinceMsRef.current = Date.now();"), vtr.indexOf("'standby_enter'"));
   assert.match(enter, /realtime\.dropQueuedSpeech\(\)/);
+  assert.match(enter, /realtime\.releaseInput\(\)/); // released, not muted: a muted hold keeps the capture live
   assert.match(enter, /inFlightBrainAbortRef\.current\?\.abort\(\)/);
   assert.ok(!/realtime\.interrupt\(\)/.test(enter), 'no interrupt on standby entry');
 });
@@ -313,6 +336,8 @@ test('VTR: leaving standby shifts the session start anchor and reopens the mic',
 test('VTR: mic tap and typing during standby wake the tutor through the page', () => {
   assert.match(vtr, /onStudentWakeRef\.current\?\.\('mic'\);\s*if \(hasStartedRef\.current\) return;/);
   assert.ok(vtr.split("onStudentWakeRef.current?.('typing')").length - 1 >= 2, 'focus and submit');
+  // The dock's mic button is the MUTE toggle once a session runs: in standby it must wake instead.
+  assert.match(vtr, /if \(standbyRef\.current\) \{\s*onStudentWakeRef\.current\?\.\('mic'\);\s*if \(isMicMuted\) toggleMicMute\(\);\s*return;/);
 });
 
 test('VTR: per-turn lesson window and the video-host flag ride the brain request', () => {
@@ -337,6 +362,10 @@ test('VTR: resume_lesson fires only after the turn is spoken; a student turn or 
   const pump = vtr.slice(vtr.indexOf('runHostLessonPumpRef.current = () => {'), vtr.indexOf("'resume_lesson_fired'"));
   assert.match(pump, /realtime\.isSpeechPending\(\)/);
   assert.match(pump, /!perceptionMidUtteranceRef\.current/);
+  assert.match(pump, /studentTextInputRef\.current\?\.value \?\? ''\)\.trim\(\) === ''/);
+  assert.ok(!/!studentTypingRef\.current/.test(pump), 'focus alone must not block the pump (it stays after a send)');
+  const submit = vtr.slice(vtr.indexOf('onSubmit={async (e: FormEvent) => {'), vtr.indexOf("namedItem('studentText')"));
+  assert.match(submit, /resumeLessonPendingRef\.current = false;/);
 });
 
 test('resume_lesson is registered as state, not ink: no board repair, withheld after a kill', () => {
@@ -421,6 +450,8 @@ test('embed: duration excludes standby and prewarm waiting, in the save and in s
 test('embed: moments become a synthetic turn; the timeline feeds the per-turn window', () => {
   assert.match(embed, /deliverMoment\?\.\(renderMomentDirective\(/);
   assert.match(embed, /renderLessonNow\(\{/);
+  assert.match(embed, /positionSeconds: currentPositionSeconds\(lessonHostRef\.current, Date\.now\(\)\)/);
+  assert.match(embed, /video: videoForPrompt\(lessonHostRef\.current\)/);
   assert.match(embed, /getLessonNow=\{getLessonNow\}/);
   assert.match(embed, /videoHost=\{uiOptions\.videoControl\}/);
 });

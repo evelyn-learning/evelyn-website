@@ -769,6 +769,7 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     },
     // Host-video standby is an embed feature; Gemini Live is not used by embeds.
     dropQueuedSpeech: () => 0,
+    releaseInput: () => {},
     isSpeechPending: () => false,
   };
 }

@@ -110,6 +110,8 @@ export interface LessonHostState {
    *  that never sends one gets the pre-v1.2 behaviour). */
   video: VideoState | null;
   positionSeconds: number | null;
+  /** When `positionSeconds` was reported (a playing video has moved on since). */
+  positionAtMs: number | null;
   /** Between `evelyn:pause` and `evelyn:resume`. */
   hostPaused: boolean;
   /** When the student (or a moment) woke the tutor over a playing video.
@@ -118,7 +120,7 @@ export interface LessonHostState {
 }
 
 export const INITIAL_LESSON_HOST_STATE: LessonHostState = {
-  video: null, positionSeconds: null, hostPaused: false, wokeAtMs: null,
+  video: null, positionSeconds: null, positionAtMs: null, hostPaused: false, wokeAtMs: null,
 };
 
 export type LessonHostEvent =
@@ -138,7 +140,10 @@ export function reduceLessonHost(s: LessonHostState, e: LessonHostEvent, nowMs: 
       return {
         ...s,
         video: e.state,
-        positionSeconds: e.positionSeconds ?? s.positionSeconds,
+        // No position in this report: keep the last one, advanced to now if
+        // the video was playing, so a later estimate starts from the right place.
+        positionSeconds: e.positionSeconds ?? currentPositionSeconds(s, nowMs),
+        positionAtMs: nowMs,
         wokeAtMs: e.state === 'playing' && inGrace ? s.wokeAtMs : null,
       };
     }
@@ -149,14 +154,37 @@ export function reduceLessonHost(s: LessonHostState, e: LessonHostEvent, nowMs: 
     case 'student_wake':
       return s.video === 'playing' && s.wokeAtMs === null ? { ...s, wokeAtMs: nowMs } : s;
     case 'moment': {
-      const positionSeconds = e.positionSeconds ?? s.positionSeconds;
-      return s.video === 'playing' && s.wokeAtMs === null
-        ? { ...s, positionSeconds, wokeAtMs: nowMs }
-        : positionSeconds === s.positionSeconds ? s : { ...s, positionSeconds };
+      if (e.positionSeconds === null) {
+        return s.video === 'playing' && s.wokeAtMs === null ? { ...s, wokeAtMs: nowMs } : s;
+      }
+      return {
+        ...s,
+        positionSeconds: e.positionSeconds,
+        positionAtMs: nowMs,
+        wokeAtMs: s.video === 'playing' && s.wokeAtMs === null ? nowMs : s.wokeAtMs,
+      };
     }
     case 'play_command':
       return s.wokeAtMs === null ? s : { ...s, wokeAtMs: null };
   }
+}
+
+/** Where the video is now. The host reports a position when the state
+ *  changes, not continuously: while it plays, the last report plus the time
+ *  since is the best estimate (normal speed assumed; the host's next report
+ *  corrects it). A student who asks 90 s into a stretch of playback must get
+ *  the lesson at that point, not at where the stretch began. */
+export function currentPositionSeconds(s: LessonHostState, nowMs: number): number | null {
+  if (s.positionSeconds === null) return null;
+  if (s.video !== 'playing' || s.positionAtMs === null) return s.positionSeconds;
+  return s.positionSeconds + Math.max(0, nowMs - s.positionAtMs) / 1000;
+}
+
+/** The video state to tell the model. A tutor that was woken over a playing
+ *  video has asked the host to pause: describe it as paused, so the model
+ *  talks about a moment rather than a moving target. */
+export function videoForPrompt(s: LessonHostState): VideoState | null {
+  return s.video === 'playing' && s.wokeAtMs !== null ? 'paused' : s.video;
 }
 
 /** Standing by = the host hid the panel, or its video is playing and nothing woke the tutor. */
@@ -193,6 +221,9 @@ export function renderMomentDirective(m: LessonMoment): string {
   } else {
     parts.push('Step in now: in one or two sentences say what this shows, then ask one question that checks the student followed it.');
   }
+  // The moment interrupts whatever was going on: a question the tutor had
+  // asked is dropped, not answered on the student's behalf.
+  parts.push('If a question of yours was still open, leave it — do not answer it for the student.');
   return `[${parts.join(' ')}]`;
 }
 

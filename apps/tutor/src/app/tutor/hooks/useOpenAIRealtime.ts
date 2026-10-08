@@ -404,6 +404,10 @@ export interface RealtimeResult {
   startListening: () => void;
   stopListening: () => void;
   muteInput: () => void;
+  /** muteInput, then let go of the microphone itself (this hook's hold on the
+   *  shared capture) so the browser's recording indicator can go off. For
+   *  standby beside a host video; startListening() reopens it. */
+  releaseInput: () => void;
   interrupt: () => void;
   pause: () => void;
   sendTextMessage: (text: string, meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } }) => void;
@@ -2835,6 +2839,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     updateState('connected');
   }, [updateState]);
 
+  const releaseInput = useCallback(() => {
+    muteInput();
+    shouldListenRef.current = false;
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.disconnect();
+      audioProcessorRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      // Release, don't stop: tracks stop when the last holder lets go (shared-mic.ts).
+      releaseSharedMicStream(MIC_CONSUMER);
+      mediaStreamRef.current = null;
+    }
+  }, [muteInput]);
+
   // Interrupt playback
   const interrupt = useCallback(() => {
     // Stop playback. Stopping the BufferSource is not enough on the AEC
@@ -4057,6 +4075,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     startListening,
     stopListening,
     muteInput,
+    releaseInput,
     interrupt,
     pause,
     sendTextMessage,

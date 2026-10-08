@@ -21101,8 +21101,11 @@ export function VoiceTutorRealtime({
           try { void realtime.clearSpeechQueue(); } catch {}
         }
       }, 8000);
+      // RELEASE, not mute: a muted hold keeps the capture (and the browser's
+      // recording indicator) alive. The STT hook lets go through
+      // perceptionEnabled; this is the production hook's hold.
       if (sessionMode !== 'text' && hasStartedRef.current) {
-        try { realtime.muteInput(); } catch {}
+        try { realtime.releaseInput(); } catch {}
       }
       if (idleNudgeTimerRef.current) {
         clearTimeout(idleNudgeTimerRef.current);
@@ -21141,7 +21144,10 @@ export function VoiceTutorRealtime({
         !speechPending &&
         !brainBusyRef.current &&
         awaitingDispatchTimerRef.current == null &&
-        !perceptionMidUtteranceRef.current;
+        !perceptionMidUtteranceRef.current &&
+        // Text waiting in the composer: the student is writing something.
+        // (Focus alone is not a signal — it stays in the box after a send.)
+        (studentTextInputRef.current?.value ?? '').trim() === '';
       const moment = pendingMomentRef.current;
       if (moment) {
         if (now - moment.atMs > MOMENT_STALE_MS) {
@@ -25129,14 +25135,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               aria-hidden
               data-testid="tutor-mic-state"
               className={`flex-shrink-0 flex items-center justify-center ${isIsland ? 'w-6 h-6' : 'w-7 h-7'}`}
-              title={stateUI.text}
+              title={hostStandby ? 'Standing by' : stateUI.text}
             >
               <span
                 className={`
                   block rounded-full transition-all duration-200
                   ${isIsland ? 'w-2.5 h-2.5' : 'w-3 h-3'}
-                  ${stateUI.color}
-                  ${stateUI.pulse ? 'animate-pulse' : ''}
+                  ${hostStandby ? 'bg-slate-300' : stateUI.color}
+                  ${stateUI.pulse && !hostStandby ? 'animate-pulse' : ''}
                 `}
               />
             </div>
@@ -25282,6 +25288,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           e.preventDefault();
           // A submit with no focus first (e.g. a scripted one) still wakes.
           if (standbyRef.current) onStudentWakeRef.current?.('typing');
+          // The student typed after the tutor asked to resume the video:
+          // cancel now — the turn's own dispatch can be a moment away.
+          resumeLessonPendingRef.current = false;
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
           const rawText = input?.value?.trim();
           // Round-7++++ Fix Issue 5: strip LaTeX inline-math wrappers
@@ -25551,9 +25560,18 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             `if (!isMicMuted)` guard is untouched. */}
         {sessionMode !== 'text' && showsDockMuteButton({ hasStarted, isPaused }) && (
           <button
-            onClick={toggleMicMute}
-            className={`p-2 rounded-lg text-sm ${isMicMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            title={isMicMuted ? 'Unmute your mic' : 'Mute your mic'}
+            onClick={() => {
+              // Standing by: tapping the mic means "I want to ask" — wake with
+              // the mic open, never a mute toggle (the mic is already released).
+              if (standbyRef.current) {
+                onStudentWakeRef.current?.('mic');
+                if (isMicMuted) toggleMicMute();
+                return;
+              }
+              toggleMicMute();
+            }}
+            className={`p-2 rounded-lg text-sm ${isMicMuted && !hostStandby ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            title={hostStandby ? 'Ask a question' : isMicMuted ? 'Unmute your mic' : 'Mute your mic'}
           >
             {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
