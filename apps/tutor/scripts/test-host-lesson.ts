@@ -251,6 +251,33 @@ test('flag NEXT_PUBLIC_TUTOR_HOST_LESSON defaults ON', () => {
   assert.match(flags, /TUTOR_HOST_LESSON = process\.env\.NEXT_PUBLIC_TUTOR_HOST_LESSON !== 'off'/);
 });
 
+const brain = read('src/lib/tutor/voice/claude-brain.ts');
+const route = read('src/app/api/tutor/brain/stream/route.ts');
+const toolDefs = read('src/app/tutor/hooks/toolDefinitions.ts');
+
+test('brain: <lesson_video> block is rendered in BOTH turn builders, in the user content', () => {
+  assert.match(brain, /export function formatLessonVideoBlock\(/);
+  assert.match(brain, /<lesson_video>\\n\$\{/);
+  const uses = brain.split('formatLessonVideoBlock(input.lessonNow)').length - 1;
+  assert.equal(uses, 2, 'runBrainTurn and streamBrainTurn');
+  assert.equal(brain.split('lessonVideoBlock +').length - 1, 2, 'joined into both userContent strings');
+});
+
+test('route: lessonNow is bounded and videoHost appends the resume tool after the subject filter', () => {
+  assert.match(route, /LESSON_NOW_MAX_CHARS/);
+  assert.match(route, /body\.videoHost === true/);
+  assert.match(route, /RESUME_LESSON_TOOL\]/);
+  assert.ok(route.indexOf('RESUME_LESSON_TOOL]') > route.indexOf('filterToolsForSubject('), 'appended after Lever A');
+});
+
+test('tool: resume_lesson is defined outside the default catalogue and maps to resumeLesson', () => {
+  assert.match(toolDefs, /export const RESUME_LESSON_TOOL: ToolDefinition = \{\s*name: 'resume_lesson'/);
+  assert.match(toolDefs, /funcName === 'resume_lesson'/);
+  assert.match(toolDefs, /action: 'resumeLesson'/);
+  const catalogue = toolDefs.slice(toolDefs.indexOf('export const WHITEBOARD_TOOLS'), toolDefs.indexOf('export const SET_CURRENT_PROBLEM_TOOL'));
+  assert.ok(!catalogue.includes("'resume_lesson'"), 'not in the shared default tools array');
+});
+
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
 
 console.log(`\n${passed}/${passed + failed} passed`);
