@@ -181,6 +181,11 @@ export const TUTOR_BRIDGE_LINE = process.env.NEXT_PUBLIC_TUTOR_BRIDGE_LINE !== '
 // held, and the host's `evelyn:start` message runs the Start tap's path.
 // NEXT_PUBLIC_TUTOR_HOST_START=off ignores both (a prewarmed frame loads normally).
 export const TUTOR_HOST_START = process.env.NEXT_PUBLIC_TUTOR_HOST_START !== 'off';
+// One continuous lesson beside a host video (partner spec v1.2): standby while
+// the video plays or the panel is hidden, wake on a question or a moment,
+// per-turn <lesson_video> context, tutor-resumed playback.
+// NEXT_PUBLIC_TUTOR_HOST_LESSON=off ignores the v1.2 host messages entirely.
+export const TUTOR_HOST_LESSON = process.env.NEXT_PUBLIC_TUTOR_HOST_LESSON !== 'off';
 // R58 noise-floor nudge (live, portal-dd0bf3a9: AirPods with
 // noiseSuppression=undefined turned background noise into FLUENT nonsense
 // STT — "while networking distinct account revenues" — which the
