@@ -429,6 +429,14 @@ export interface RealtimeResult {
    */
   clearSpeechQueue: () => Promise<void>;
   /**
+   * Drop the sentences that have NOT started playing, and let the one being
+   * spoken finish. For standby (the host's video resumed): the tutor ends
+   * its sentence instead of being cut mid-word. Returns how many were dropped.
+   */
+  dropQueuedSpeech: () => number;
+  /** True while any tutor sentence is queued, being fetched or playing. */
+  isSpeechPending: () => boolean;
+  /**
    * Voice Perception Stage 3.1 (2026-06-16). Non-destructive snapshot of
    * the pending speakText queue — sentences that the brain emitted but
    * have NOT yet been dispatched to TTS. The currently-playing sentence
@@ -3635,6 +3643,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // dying tail — observed during round-7 judge-KILL spirals where the
   // student heard the previous attempt's last word bleeding into "Let me
   // try that a different way."
+  const dropQueuedSpeech = useCallback((): number => {
+    const dropped = speakTextQueueRef.current.length;
+    // Never heard: 'skip' them so they cannot match real student speech later.
+    for (const id of speakTextScriptIdQueueRef.current) {
+      if (id != null) emitPlaybackStamp(id, 'skip');
+    }
+    speakTextQueueRef.current = [];
+    speakTextScriptIdQueueRef.current = [];
+    return dropped;
+  }, [emitPlaybackStamp]);
+
+  const isSpeechPending = useCallback(
+    (): boolean => speakTextInFlightRef.current || speakTextQueueRef.current.length > 0 || isPlayingRef.current,
+    [],
+  );
+
   const clearSpeechQueue = useCallback((): Promise<void> => {
     // Bump the speak epoch BEFORE we clear queues — any TTS dispatch
     // currently parked at `await fetchTTSPromise` will compare against
@@ -4039,6 +4063,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     injectContext,
     speakText,
     clearSpeechQueue,
+    dropQueuedSpeech,
+    isSpeechPending,
     peekSpeechQueue,
     resumeSpeakText,
     getCurrentSentenceFraction,

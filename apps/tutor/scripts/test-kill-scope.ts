@@ -38,7 +38,8 @@ check('unknown tool is not withheld', !shouldWithholdAfterKill('show_some_future
 check('empty name is safe', !shouldWithholdAfterKill(''));
 
 // ─── the set is explicit and small ───
-check('LESSON_STATE_TOOLS has exactly the five', LESSON_STATE_TOOLS.size === 5, `size=${LESSON_STATE_TOOLS.size}`);
+check('resume_lesson is withheld', shouldWithholdAfterKill('resume_lesson'));
+check('LESSON_STATE_TOOLS has exactly the six', LESSON_STATE_TOOLS.size === 6, `size=${LESSON_STATE_TOOLS.size}`);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -29,6 +29,9 @@ export const LESSON_STATE_TOOLS: ReadonlySet<string> = new Set([
   // Homework-help: moves the problem rail. After a kill it would advance the
   // rail to a problem the student never heard announced.
   'set_current_problem',
+  // Host video: after a kill it would restart the video over a hand-back
+  // line the student never heard.
+  'resume_lesson',
 ]);
 
 export function shouldWithholdAfterKill(toolName: string): boolean {

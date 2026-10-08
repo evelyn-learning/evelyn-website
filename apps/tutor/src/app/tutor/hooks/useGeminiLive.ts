@@ -767,5 +767,8 @@ export function useGeminiLive(config: RealtimeConfig): RealtimeResult {
     setVoiceMuted: () => {
       // No-op for Gemini Live (not used by embeds).
     },
+    // Host-video standby is an embed feature; Gemini Live is not used by embeds.
+    dropQueuedSpeech: () => 0,
+    isSpeechPending: () => false,
   };
 }

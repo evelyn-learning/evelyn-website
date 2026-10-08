@@ -278,6 +278,73 @@ test('tool: resume_lesson is defined outside the default catalogue and maps to r
   assert.ok(!catalogue.includes("'resume_lesson'"), 'not in the shared default tools array');
 });
 
+const vtr = read('src/app/tutor/components/VoiceTutorRealtime.tsx');
+const types = read('src/lib/tutor/orchestrator/types.ts');
+const speechHook = read('src/app/tutor/hooks/useOpenAIRealtime.ts');
+
+test('VTR: standby releases the microphone and is flag-gated', () => {
+  assert.match(vtr, /standby\?: boolean/);
+  assert.match(vtr, /const hostStandby = TUTOR_HOST_LESSON && standby === true/);
+  assert.match(vtr, /const perceptionEnabled = [^;]*!prewarmMicHold && !hostStandby/);
+});
+
+test('VTR: entering standby lets the current sentence finish (queued ones dropped, no hard cut)', () => {
+  assert.match(speechHook, /const dropQueuedSpeech = useCallback\(\(\): number =>/);
+  const enter = vtr.slice(vtr.indexOf("standbySinceMsRef.current = Date.now();"), vtr.indexOf("'standby_enter'"));
+  assert.match(enter, /realtime\.dropQueuedSpeech\(\)/);
+  assert.match(enter, /inFlightBrainAbortRef\.current\?\.abort\(\)/);
+  assert.ok(!/realtime\.interrupt\(\)/.test(enter), 'no interrupt on standby entry');
+});
+
+test('VTR: standby stops the idle nudge, the hard-stop cap and synthetic turns', () => {
+  const nudge = vtr.slice(vtr.indexOf('const armIdleNudge = useCallback'), vtr.indexOf('armIdleNudgeRef.current = armIdleNudge'));
+  assert.match(nudge, /idleNudgeTimerRef\.current = null;\s*if \(standbyRef\.current\) return;/);
+  const cap = vtr.slice(vtr.indexOf('const capMs = sessionMaxMinutes * 60000'), vtr.indexOf("onEndSession('time_limit')"));
+  assert.match(cap, /if \(standbyRef\.current\) return;/);
+  assert.match(vtr, /if \(standbyRef\.current && opts\?\.silent\) return;/);
+});
+
+test('VTR: leaving standby shifts the session start anchor and reopens the mic', () => {
+  assert.match(vtr, /voiceSessionStartedAtMsRef\.current = shiftAnchor\(voiceSessionStartedAtMsRef\.current,/);
+  assert.match(vtr, /'standby_enter'/);
+  assert.match(vtr, /'standby_leave'/);
+});
+
+test('VTR: mic tap and typing during standby wake the tutor through the page', () => {
+  assert.match(vtr, /onStudentWakeRef\.current\?\.\('mic'\);\s*if \(hasStartedRef\.current\) return;/);
+  assert.ok(vtr.split("onStudentWakeRef.current?.('typing')").length - 1 >= 2, 'focus and submit');
+});
+
+test('VTR: per-turn lesson window and the video-host flag ride the brain request', () => {
+  assert.match(vtr, /lessonNow: TUTOR_HOST_LESSON \? getLessonNowRef\.current\?\.\(\) : undefined/);
+  assert.match(vtr, /videoHost: TUTOR_HOST_LESSON && videoHost \? true : undefined/);
+});
+
+test('VTR: a moment waits for a started, awake, idle tutor and goes stale', () => {
+  assert.match(types, /deliverMoment\?: \(directive: string\) => void/);
+  assert.match(vtr, /deliverMoment: \(directive/);
+  assert.match(vtr, /MOMENT_STALE_MS/);
+  assert.match(vtr, /hasStartedRef\.current && !standbyRef\.current && !endingRef\.current && quiet/);
+  assert.match(vtr, /'moment_delivered'/);
+  assert.match(vtr, /'moment_dropped'/);
+});
+
+test('VTR: resume_lesson fires only after the turn is spoken; a student turn or speech in progress stops it (Review Focus 5)', () => {
+  assert.match(vtr, /\(cmd\.action as string\) === 'resumeLesson'/);
+  assert.match(vtr, /'resume_lesson_fired'/);
+  assert.match(vtr, /onResumeLessonRef\.current\?\.\(\)/);
+  assert.match(vtr, /resumeLessonPendingRef\.current = false;\s*recordStudentEngagement\(idleNudgeStateRef\.current\)/);
+  const pump = vtr.slice(vtr.indexOf('runHostLessonPumpRef.current = () => {'), vtr.indexOf("'resume_lesson_fired'"));
+  assert.match(pump, /realtime\.isSpeechPending\(\)/);
+  assert.match(pump, /!perceptionMidUtteranceRef\.current/);
+});
+
+test('resume_lesson is registered as state, not ink: no board repair, withheld after a kill', () => {
+  for (const f of ['src/lib/tutor/voice/rule8-client.ts', 'src/lib/tutor/voice/question-anchor.ts', 'src/lib/tutor/orchestrator/kill-scope.ts']) {
+    assert.ok(read(f).includes("'resume_lesson'"), f);
+  }
+});
+
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
 
 console.log(`\n${passed}/${passed + failed} passed`);

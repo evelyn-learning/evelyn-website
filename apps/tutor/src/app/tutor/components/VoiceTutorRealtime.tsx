@@ -328,6 +328,7 @@ import {
   TUTOR_STUDENT_PROBLEM_GROUNDING,
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
+  TUTOR_HOST_LESSON,
   TUTOR_CONTENT_VARIETY,
   TUTOR_STT_ENGINE_INK2,
   TOPIC_NOTES_WARMUP_SEGMENTS,
@@ -438,6 +439,7 @@ import {
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { withdrawnVerdict } from '@/lib/tutor/portal/withdrawn-items';
+import { MOMENT_STALE_MS, shiftAnchor } from '@/lib/tutor/portal/host-lesson';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
@@ -748,6 +750,17 @@ interface VoiceTutorRealtimeProps {
   prewarm?: boolean;
   /** Fires once when the relay first connects (the embed posts `evelyn:ready`). */
   onRelayReady?: () => void;
+  /** Host video (partner spec v1.2): the host's video is playing or the panel is
+   *  hidden. Standing by = silent, microphone released, session clock stopped. */
+  standby?: boolean;
+  /** This session's host has a lesson video: offer the brain `resume_lesson`. */
+  videoHost?: boolean;
+  /** The lesson around the current video position, for this turn's `<lesson_video>` block. */
+  getLessonNow?: () => string | undefined;
+  /** The student started to ask (typing or the mic) while standing by. */
+  onStudentWake?: (via: 'typing' | 'mic') => void;
+  /** The tutor called `resume_lesson` and has finished speaking. */
+  onResumeLesson?: () => void;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -1263,6 +1276,11 @@ export function VoiceTutorRealtime({
   inFlow = false,
   prewarm = false,
   onRelayReady,
+  standby = false,
+  videoHost = false,
+  getLessonNow,
+  onStudentWake,
+  onResumeLesson,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -1911,6 +1929,24 @@ export function VoiceTutorRealtime({
   // planIdleNudge) and the last LOGGED postponement (event throttle).
   const idleNudgePostponeRef = useRef<{ lastReason: IdleNudgePostponeReason | null; loggedReason: IdleNudgePostponeReason | null; loggedAtMs: number }>({ lastReason: null, loggedReason: null, loggedAtMs: 0 });
   const idleNudgeLastOnsetAtRef = useRef<number | null>(null);
+  // Host video (partner spec v1.2): standing by while the host's video plays
+  // or the panel is hidden. The ref is what timers and handlers read.
+  const hostStandby = TUTOR_HOST_LESSON && standby === true;
+  const standbyRef = useRef(false);
+  standbyRef.current = hostStandby;
+  const standbySinceMsRef = useRef<number | null>(null);
+  const pendingMomentRef = useRef<{ text: string; atMs: number } | null>(null);
+  const resumeLessonPendingRef = useRef(false);
+  const resumeLessonPendingAtRef = useRef(0);
+  const resumeLessonQuietSinceRef = useRef<number | null>(null);
+  const hostLessonPumpRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const runHostLessonPumpRef = useRef<() => void>(() => {});
+  const getLessonNowRef = useRef(getLessonNow);
+  getLessonNowRef.current = getLessonNow;
+  const onStudentWakeRef = useRef(onStudentWake);
+  onStudentWakeRef.current = onStudentWake;
+  const onResumeLessonRef = useRef(onResumeLesson);
+  onResumeLessonRef.current = onResumeLesson;
 
   // R58 student-declared hold (live, portal-2f23ece4 "ignore everything I
   // say until I say candle"). PENDING is armed by the hold_for_student
@@ -7123,6 +7159,25 @@ export function VoiceTutorRealtime({
       // Homework mode: the brain's set_current_problem moves the student's
       // position in a homework-help plan. Bookkeeping only — no visual.
       // Ignored (but still consumed) when the active plan isn't homework.
+      // Host video (partner spec v1.2 §3.4): the tutor asks to resume the
+      // lesson. Bookkeeping only — the video command is posted once this
+      // turn has been spoken (host-lesson pump), unless the student speaks
+      // or types first. Ignored (but consumed) without a video host.
+      if ((cmd.action as string) === 'resumeLesson') {
+        if (TUTOR_HOST_LESSON && videoHost && !standbyRef.current) {
+          resumeLessonPendingRef.current = true;
+          resumeLessonPendingAtRef.current = Date.now();
+          resumeLessonQuietSinceRef.current = null;
+          runHostLessonPumpRef.current();
+          onDebugEvent?.('resume_lesson_called', '');
+          // Rides out on the tool_result (same carrier as close_session_notes).
+          closeNotesResultNoteRef.current ??= 'resume_lesson: the video will play when you finish speaking — say one short hand-back line and nothing else.';
+        } else {
+          onDebugEvent?.('resume_lesson_dropped', `why=${standbyRef.current ? 'standby' : 'no_video_host'}`);
+          closeNotesResultNoteRef.current ??= 'resume_lesson: there is no lesson video to resume right now — carry on.';
+        }
+        continue;
+      }
       if (cmd.action === 'setCurrentProblem') {
         const problems = homeworkProblemsRef.current;
         const nRaw = Number((cmd as { n?: unknown }).n);
@@ -8477,7 +8532,7 @@ export function VoiceTutorRealtime({
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
-      'closeSessionNotes',
+      'closeSessionNotes', 'resumeLesson',
     ]);
     // Running page title used to stamp catalog entries with the page
     // they were rendered on. Updated whenever we see a newPage in the
@@ -9351,7 +9406,8 @@ export function VoiceTutorRealtime({
         // Holistic-pedagogy round (spec §C.1): filtered UNCONDITIONALLY —
         // flag-off drops the action in the handler, so it must never reach
         // the canvas either way.
-        c.action !== 'closeSessionNotes',
+        c.action !== 'closeSessionNotes' &&
+        (c.action as string) !== 'resumeLesson',
     );
 
     // Render↔speech sync: on the brain-stream path this BUFFERS the visual
@@ -12186,6 +12242,11 @@ export function VoiceTutorRealtime({
             // Task E1: demo-only budget-aware stop (undefined when the flag
             // is off or the session is subscribed — see the block above).
             demoStop,
+            // Host video (partner spec v1.2): the lesson around the current
+            // video position, and whether to offer `resume_lesson`. Both
+            // undefined for a host without a video ⇒ body unchanged.
+            lessonNow: TUTOR_HOST_LESSON ? getLessonNowRef.current?.() : undefined,
+            videoHost: TUTOR_HOST_LESSON && videoHost ? true : undefined,
             // Task X2: durable practice-mode contract. sessionGoal rides the
             // embed token on EVERY mint (initial + resume), so deriving the
             // flag from the stable prop each turn makes the mode durable across
@@ -19449,6 +19510,9 @@ export function VoiceTutorRealtime({
     // Host-end goodbye under way (endSessionNowRef farewell branch): no new
     // turn may reach the brain until unmount.
     if (farewellSealedRef.current) return;
+    // Standing by (host video playing / panel hidden): the tutor is silent, so
+    // no synthetic turn (nudge, reaction, mark) may start one.
+    if (standbyRef.current && opts?.silent) return;
     if (opts?.image) {
       const parked = pendingUploadImagesRef.current;
       parked.push({ key: transcript.trim(), image: opts.image });
@@ -19491,6 +19555,9 @@ export function VoiceTutorRealtime({
     // delivery re-arms it. Synthetic bracketed dispatches (incl. the
     // nudge itself) must not reset their own clock.
     if (!/^\s*\[/.test(transcript)) {
+      // The student said something after the tutor asked to resume the
+      // video: answer them instead of playing over them.
+      resumeLessonPendingRef.current = false;
       recordStudentEngagement(idleNudgeStateRef.current);
       // GreenApple spec 2026-10-02 §1: real student input (text or voice —
       // both land here). A window-event bridge (like evelyn:session-started)
@@ -20768,7 +20835,7 @@ export function VoiceTutorRealtime({
   // The ref, not `hasStarted` (declared further down): every start path sets
   // the ref together with setHasStarted, so the re-render that follows reads it.
   const prewarmMicHold = prewarm && !hasStartedRef.current;
-  const perceptionEnabled = sessionMode !== 'text' && perceptionStage >= 0 && realtime.isConnected && !prewarmMicHold;
+  const perceptionEnabled = sessionMode !== 'text' && perceptionStage >= 0 && realtime.isConnected && !prewarmMicHold && !hostStandby;
   const relayReadyFiredRef = useRef(false);
   const onRelayReadyRef = useRef(onRelayReady);
   onRelayReadyRef.current = onRelayReady;
@@ -20931,6 +20998,7 @@ export function VoiceTutorRealtime({
     if (idleNudgeTimerRef.current) clearTimeout(idleNudgeTimerRef.current);
     const fireOrRecheck = () => {
       idleNudgeTimerRef.current = null;
+      if (standbyRef.current) return; // standing by: silence is expected (re-armed on leave)
       const busy =
         productionStateRef.current === 'speaking' ||
         brainBusyRef.current ||
@@ -21012,6 +21080,101 @@ export function VoiceTutorRealtime({
     idleNudgeTimerRef.current = setTimeout(fireOrRecheck, idleNudgeArmDelay);
   }, [handleStudentTranscriptForBrain, onDebugEvent]);
   armIdleNudgeRef.current = armIdleNudge;
+
+  // Host video (partner spec v1.2 §3.1, §3.6, §5): entering and leaving standby.
+  useEffect(() => {
+    if (hostStandby) {
+      standbySinceMsRef.current = Date.now();
+      resumeLessonPendingRef.current = false;
+      // Stop the turn in flight (same seal as a host-ended goodbye) but let
+      // the sentence being spoken finish; bounded, in case it never ends.
+      queuedTranscriptsRef.current = [];
+      try { inFlightBrainAbortRef.current?.abort(); } catch {}
+      speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+      let dropped = 0;
+      try { dropped = realtime.dropQueuedSpeech(); } catch {}
+      const cutTimer = setTimeout(() => {
+        if (standbyRef.current && productionStateRef.current === 'speaking') {
+          try { void realtime.clearSpeechQueue(); } catch {}
+        }
+      }, 8000);
+      if (sessionMode !== 'text' && hasStartedRef.current) {
+        try { realtime.muteInput(); } catch {}
+      }
+      if (idleNudgeTimerRef.current) {
+        clearTimeout(idleNudgeTimerRef.current);
+        idleNudgeTimerRef.current = null;
+      }
+      onDebugEventRef.current?.('standby_enter', `started=${hasStartedRef.current} droppedSentences=${dropped}`);
+      return () => clearTimeout(cutTimer);
+    }
+    const since = standbySinceMsRef.current;
+    if (since === null) return;
+    standbySinceMsRef.current = null;
+    // Every elapsed-time reader (hard-stop cap, wrap minute) subtracts this
+    // anchor from now: moving it forward keeps them on active time only.
+    voiceSessionStartedAtMsRef.current = shiftAnchor(voiceSessionStartedAtMsRef.current, since, Date.now());
+    if (hasStartedRef.current && !endingRef.current) {
+      if (sessionMode !== 'text' && !isMicMutedRef.current && !studentTypingRef.current && realtime.isConnected) {
+        try { realtime.startListening(); } catch {}
+      }
+      armIdleNudgeRef.current();
+    }
+    onDebugEventRef.current?.('standby_leave', `ms=${Date.now() - since} started=${hasStartedRef.current}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hostStandby]);
+
+  // Host-lesson pump: delivers a pending host moment, and fires a pending
+  // "resume the lesson", once the tutor is quiet. Runs only while one of the
+  // two is pending.
+  runHostLessonPumpRef.current = () => {
+    if (hostLessonPumpRef.current) return;
+    hostLessonPumpRef.current = setInterval(() => {
+      const now = Date.now();
+      let speechPending = false;
+      try { speechPending = realtime.isSpeechPending(); } catch {}
+      const quiet =
+        productionStateRef.current !== 'speaking' &&
+        !speechPending &&
+        !brainBusyRef.current &&
+        awaitingDispatchTimerRef.current == null &&
+        !perceptionMidUtteranceRef.current;
+      const moment = pendingMomentRef.current;
+      if (moment) {
+        if (now - moment.atMs > MOMENT_STALE_MS) {
+          pendingMomentRef.current = null;
+          onDebugEventRef.current?.('moment_dropped', 'why=stale');
+        } else if (hasStartedRef.current && !standbyRef.current && !endingRef.current && quiet) {
+          pendingMomentRef.current = null;
+          resumeLessonPendingRef.current = false;
+          onDebugEventRef.current?.('moment_delivered', `waitMs=${now - moment.atMs}`);
+          void handleStudentTranscriptForBrainRef.current?.(moment.text, { silent: true, bypassPerceptionDedupe: true });
+        }
+      }
+      if (resumeLessonPendingRef.current) {
+        if (now - resumeLessonPendingAtRef.current > 60_000) {
+          resumeLessonPendingRef.current = false;
+          onDebugEventRef.current?.('resume_lesson_dropped', 'why=timeout');
+        } else if (!quiet) {
+          resumeLessonQuietSinceRef.current = null;
+        } else if (resumeLessonQuietSinceRef.current === null) {
+          resumeLessonQuietSinceRef.current = now;
+        } else if (now - resumeLessonQuietSinceRef.current >= 600) {
+          resumeLessonPendingRef.current = false;
+          resumeLessonQuietSinceRef.current = null;
+          onDebugEventRef.current?.('resume_lesson_fired', '');
+          onResumeLessonRef.current?.();
+        }
+      }
+      if (!pendingMomentRef.current && !resumeLessonPendingRef.current && hostLessonPumpRef.current) {
+        clearInterval(hostLessonPumpRef.current);
+        hostLessonPumpRef.current = null;
+      }
+    }, 200);
+  };
+  useEffect(() => () => {
+    if (hostLessonPumpRef.current) clearInterval(hostLessonPumpRef.current);
+  }, []);
 
   // Stage 3 fix #4 (2026-05-28): retroactive cancel for the state-race.
   // When the user starts speaking BEFORE the tutor TTS begins,
@@ -23272,6 +23435,12 @@ export function VoiceTutorRealtime({
           realtime.setVoiceMuted(muted);
           onDebugEvent?.('voice_mute', `tutor_voice muted=${muted}`);
         },
+        deliverMoment: (directive: string) => {
+          if (!TUTOR_HOST_LESSON) return;
+          // Latest wins: a newer moment replaces one still waiting.
+          pendingMomentRef.current = { text: directive, atMs: Date.now() };
+          runHostLessonPumpRef.current();
+        },
         resumeContinue: () => resumeContinueRef.current(),
         endSession: (opts) => { void endSessionNowRef.current(opts); },
         isEnding: () => endingRef.current,
@@ -23852,6 +24021,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     const capMs = sessionMaxMinutes * 60000;
     const intervalId = setInterval(() => {
       if (hardStopFiredRef.current) return;
+      // Standing by is not session time; the anchor is shifted on leave.
+      if (standbyRef.current) return;
       const startedAtMs = voiceSessionStartedAtMsRef.current;
       if (startedAtMs === null) return; // session hasn't really started yet
       if (Date.now() - startedAtMs >= capMs) {
@@ -23894,6 +24065,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       realtime.unlockAudio(); audioUnlockedRef.current = true;
       studentTextInputRef.current?.focus();
       return;
+    }
+    // Standing by: the tap means "I want to ask". The page asks the host to
+    // pause and lifts standby; leaving standby reopens the mic. A session not
+    // started yet falls through — this tap is also its start.
+    if (standbyRef.current) {
+      onStudentWakeRef.current?.('mic');
+      if (hasStartedRef.current) return;
     }
     // Typed-first start (2026-10-03): the session was started by a typed
     // message in the composer, so this first mic tap means "open my mic" —
@@ -25099,6 +25277,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         className="order-last w-full md:order-none md:flex-1 md:w-auto flex items-center gap-2 min-w-0"
         onSubmit={async (e: FormEvent) => {
           e.preventDefault();
+          // A submit with no focus first (e.g. a scripted one) still wakes.
+          if (standbyRef.current) onStudentWakeRef.current?.('typing');
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
           const rawText = input?.value?.trim();
           // Round-7++++ Fix Issue 5: strip LaTeX inline-math wrappers
@@ -25304,6 +25484,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // the inline hint below, never the disabled state.
           disabled={sessionMode === 'text' ? false : !realtime.isConnected}
           onFocus={() => {
+            // Standing by: starting to type is starting to ask.
+            if (standbyRef.current) onStudentWakeRef.current?.('typing');
             studentTypingRef.current = true;
             // Mute mic while typing to prevent it picking up speech
             if (sessionMode !== 'text' && !isMicMuted && realtime.isConnected) {
