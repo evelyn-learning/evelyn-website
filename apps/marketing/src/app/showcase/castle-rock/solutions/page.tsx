@@ -9,7 +9,7 @@ export default function SampleSolutionsPage() {
       <div>
         <h1 className="font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Sample AI Solutions</h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-slate-700">
-          One SOLARO item from each subject. Open a solution to read it in full, or press play to have a tutor walk through it with or without voice.
+          SOLARO items from each subject. Every solution states the answer first and then works through it step by step. Open one to read it in full, or press play to have a tutor walk through it with or without voice.
         </p>
       </div>
       {SUBJECT_ORDER.map((subject) => {
@@ -27,6 +27,7 @@ export default function SampleSolutionsPage() {
                   >
                     <span className="min-w-0">
                       <span className="block font-heading text-lg font-semibold text-slate-900">{s.title}</span>
+                      {s.independent && <span className="mt-1 inline-block rounded-full border border-slate-400 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Solved without an answer key</span>}
                       <span className="mt-0.5 block text-sm text-slate-600">
                         {s.course} &middot; Item {s.itemId} &middot; {s.itemType} &middot; {s.topic}
                       </span>

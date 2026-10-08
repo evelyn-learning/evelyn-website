@@ -1,4 +1,4 @@
-import { C, Label, Layer } from "../_components/figure";
+import { C, Label, Layer, V } from "../_components/figure";
 import { Tex } from "../_components/Tex";
 import type { FigureProps, Solution } from "../_lib/types";
 
@@ -41,7 +41,7 @@ function Figure({ step, playing }: FigureProps) {
 
       <Layer at={0} step={step} playing={playing}>
         <rect x={40} y={Y(0)} width={460} height={Y(-7) - Y(0)} fill={C.roseTint} />
-        <Label x={50} y={390} fill={C.rose}>below the x-axis: f(x) &lt; 0</Label>
+        <Label x={50} y={390} fill={C.rose}>below the <V>x</V>-axis: <V>f</V>(<V>x</V>) &lt; 0</Label>
       </Layer>
 
       <line x1={40} y1={Y(0)} x2={500} y2={Y(0)} stroke={C.ink} strokeWidth={1.4} />
@@ -49,18 +49,18 @@ function Figure({ step, playing }: FigureProps) {
       {xs.filter((x) => x !== 0).map((x) => (
         <Label key={`tx${x}`} x={X(x)} y={Y(0) + 16} anchor="middle" fill={C.muted} size={12} weight={500}>{minus(x)}</Label>
       ))}
-      {[-4, 4, 8, 12].map((y) => (
+      {[-6, -4, -2, 2, 4, 6, 8, 10, 12].map((y) => (
         <Label key={`ty${y}`} x={X(0) - 7} y={Y(y) + 4} anchor="end" fill={C.muted} size={12} weight={500}>{minus(y)}</Label>
       ))}
-      <Label x={504} y={Y(0) + 4} fill={C.muted} size={12} weight={500}>x</Label>
-      <Label x={X(0)} y={13} anchor="middle" fill={C.muted} size={12} weight={500}>y</Label>
+      <Label x={504} y={Y(0) + 4} fill={C.muted} size={13} weight={500}><V>x</V></Label>
+      <Label x={X(0)} y={13} anchor="middle" fill={C.muted} size={13} weight={500}><V>y</V></Label>
 
       <Layer at={1} step={step} playing={playing}>
         <line x1={X(0.5)} y1={20} x2={X(0.5)} y2={400} stroke={C.muted} strokeWidth={1.6} strokeDasharray="6 5" />
-        <Label x={X(0.5) + 8} y={393} fill={C.muted}>x = 1/2</Label>
+        <Label x={X(0.5) + 8} y={393} fill={C.muted}><V>x</V> = 1/2</Label>
         <line x1={X(-0.4) - 2} y1={Y(0) + 6} x2={X(-0.4) - 8} y2={Y(0) + 26} stroke={C.muted} />
         <circle cx={X(-0.4)} cy={Y(0)} r={5} fill={C.ink} />
-        <Label x={X(-0.4) - 12} y={Y(0) + 40} anchor="end">x = {"−"}2/5</Label>
+        <Label x={X(-0.4) - 12} y={Y(0) + 40} anchor="end"><V>x</V> = {"−"}2/5</Label>
       </Layer>
 
       <Layer at={2} step={step} playing={playing}>
@@ -69,11 +69,11 @@ function Figure({ step, playing }: FigureProps) {
           <path className="cr-draw" pathLength={1} d={RIGHT} />
         </g>
         <circle cx={X(-1)} cy={Y(1)} r={4.5} fill={C.blue} />
-        <Label x={X(-1) - 6} y={Y(1) - 26} anchor="end" fill={C.blue}>f({"−"}1) = 1</Label>
+        <Label x={X(-1) - 6} y={Y(1) - 26} anchor="end" fill={C.blue}><V>f</V>({"−"}1) = 1</Label>
         <circle cx={X(0)} cy={Y(-2)} r={4.5} fill={C.blue} />
-        <Label x={X(0) - 8} y={Y(-2) + 25} anchor="end" fill={C.blue}>f(0) = {"−"}2</Label>
+        <Label x={X(0) - 8} y={Y(-2) + 25} anchor="end" fill={C.blue}><V>f</V>(0) = {"−"}2</Label>
         <circle cx={X(1)} cy={Y(7)} r={4.5} fill={C.blue} />
-        <Label x={X(1) + 9} y={Y(7) + 4} fill={C.blue}>f(1) = 7</Label>
+        <Label x={X(1) + 9} y={Y(7) + 4} fill={C.blue}><V>f</V>(1) = 7</Label>
       </Layer>
 
       <Layer at={3} step={step} playing={playing}>
@@ -84,7 +84,7 @@ function Figure({ step, playing }: FigureProps) {
         <circle cx={X(-0.4)} cy={Y(0)} r={5.5} fill={C.surface} stroke={C.rose} strokeWidth={2.4} />
         <circle cx={X(0.5)} cy={Y(0)} r={5.5} fill={C.surface} stroke={C.rose} strokeWidth={2.4} />
         <Label x={X(0.5) + 14} y={Y(-4) + 5} fill={C.rose}>negative for</Label>
-        <Label x={X(0.5) + 14} y={Y(-4) + 25} fill={C.rose}>{"−"}2/5 &lt; x &lt; 1/2</Label>
+        <Label x={X(0.5) + 14} y={Y(-4) + 25} fill={C.rose}>{"−"}2/5 &lt; <V>x</V> &lt; 1/2</Label>
       </Layer>
     </svg>
   );
@@ -108,7 +108,7 @@ export const math303439: Solution = {
     { label: "C", content: <Tex t={r`x<-\tfrac25`} /> },
     { label: "D", content: <Tex t={r`-\tfrac25<x<\tfrac12`} />, correct: true },
   ],
-  revealAnswerAt: 3,
+  answer: <>D: <Tex t={r`-\tfrac25<x<\tfrac12`} /></>,
   Figure,
   figureAlt:
     "Graph of f(x) = (5x+2)/(2x-1). It crosses the x-axis at x = -2/5, has a vertical asymptote at x = 1/2, and lies below the x-axis between those two values.",
@@ -117,7 +117,7 @@ export const math303439: Solution = {
     {
       title: "Turn “negative” into something you can see",
       caption:
-        "This question asks where the graph is negative. Negative just means below the x-axis, so we want the x-values where f(x) < 0.",
+        "The answer is D. Here’s why. The question asks where the graph is negative. Negative just means below the x-axis, so we want the x-values where f(x) < 0.",
       body: (
         <p>
           A graph is negative wherever it sits <strong className="text-[#cf2f68]">below the x-axis</strong>. So the question is really asking: for which values of <Tex t="x" /> is <Tex t={r`f(x)<0`} />?
@@ -197,21 +197,6 @@ export const math303439: Solution = {
           </p>
           <p>
             Neither end is included. At <Tex t={r`x=-\tfrac25`} /> the function equals zero, which is not negative, and at <Tex t={r`x=\tfrac12`} /> it does not exist.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "Why the other options fail",
-      caption:
-        "Quick check on the others. A and C are the outer regions, where the graph sits above the axis. And B has the right numbers, but with their signs swapped.",
-      body: (
-        <>
-          <p>
-            <strong>A</strong> and <strong>C</strong> are the two outer regions, where the graph is above the x-axis.
-          </p>
-          <p>
-            <strong>B</strong> uses the right numbers with the signs swapped. Take <Tex t={r`x=0.45`} />, which lies outside B. There <Tex t={r`f(0.45)=\dfrac{4.25}{-0.1}=-42.5`} />, which is negative, so B misses part of the answer.
           </p>
         </>
       ),

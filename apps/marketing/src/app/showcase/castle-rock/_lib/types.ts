@@ -23,9 +23,12 @@ export type Solution = {
   topic: string;
   title: string;
   question: ReactNode;
+  /** Empty for numerical-response and written items. */
   options: SolutionOption[];
-  /** Index of the step at which the correct option is revealed during playback. */
-  revealAnswerAt: number;
+  /** The correct answer, stated before the steps. */
+  answer: ReactNode;
+  /** True when the item came without an answer key and was solved from the question alone. */
+  independent?: boolean;
   steps: SolutionStep[];
   Figure: ComponentType<FigureProps>;
   figureAlt: string;

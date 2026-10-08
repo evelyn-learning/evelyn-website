@@ -6,7 +6,7 @@ import { SOLUTIONS } from "./_solutions";
 const POINTS = [
   {
     title: "Explained, not just answered",
-    text: "Each solution walks through the reasoning in short steps, at the reading level of the course, and says why the tempting wrong answers are wrong.",
+    text: "Each solution walks through the reasoning in short steps, at the reading level of the course, and shows the working a student needs to follow it. The answer comes first, then the reasoning.",
   },
   {
     title: "A visual built for the question",
@@ -57,7 +57,7 @@ export default function CastleRockOverviewPage() {
       <section aria-labelledby="cr-next" className="border-t border-slate-200 pt-10">
         <h2 id="cr-next" className="font-heading text-2xl font-semibold text-slate-900">Where this can go</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">
-          These first samples cover one item each from Math 30-1, Physics 30, Chemistry 30 and Biology 30. The same format extends to any SOLARO course and item type, and it sits comfortably beside a live Evelyn tutor for students who want to ask a follow-up question.
+          These first samples cover Math 30-1, Physics 30, Chemistry 30 and Biology 30. Two of them were solved from the question alone, with no answer key. The same format extends to any SOLARO course and item type, and it sits comfortably beside a live Evelyn tutor for students who want to ask a follow-up question.
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">More sections will be added to this showcase as the partnership takes shape.</p>
       </section>

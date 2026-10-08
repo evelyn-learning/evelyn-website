@@ -14,4 +14,5 @@ export type NavItem = { label: string; href: string };
 
 export const NAV: NavItem[] = [
   { label: "Sample AI Solutions", href: `${SHOWCASE.basePath}/solutions` },
+  { label: "Packet for SOLARO", href: `${SHOWCASE.basePath}/packet` },
 ];

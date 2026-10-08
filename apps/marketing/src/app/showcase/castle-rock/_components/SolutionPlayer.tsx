@@ -165,7 +165,6 @@ export default function SolutionPlayer({ solution }: { solution: Solution }) {
   };
 
   const playing = step >= 0;
-  const revealed = !playing || step >= solution.revealAnswerAt;
   const figureStep = playing ? step : steps.length;
 
   return (
@@ -179,15 +178,17 @@ export default function SolutionPlayer({ solution }: { solution: Solution }) {
           <span>Item {solution.itemId}</span>
           <span>{solution.itemType}</span>
           <span className="rounded-full border border-primary-500 px-2.5 py-0.5 text-primary-600">AI solution</span>
+          {solution.independent && <span className="rounded-full border border-slate-400 px-2.5 py-0.5 text-slate-600">Solved without an answer key</span>}
         </div>
         <h1 className="mt-2 font-heading text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">{solution.title}</h1>
       </div>
 
       <section aria-label="Question" className="rounded-xl border border-slate-200 bg-white p-5">
         <div className="text-[17px] leading-relaxed text-slate-900 [&_p]:mb-3 [&_p:last-child]:mb-0">{solution.question}</div>
+        {solution.options.length > 0 && (
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {solution.options.map((o) => {
-            const hit = revealed && o.correct;
+            const hit = o.correct;
             return (
               <li
                 key={o.label}
@@ -203,6 +204,11 @@ export default function SolutionPlayer({ solution }: { solution: Solution }) {
             );
           })}
         </ul>
+        )}
+        <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-emerald-600 bg-emerald-50 px-4 py-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Answer</span>
+          <span className="min-w-0 text-[17px] font-semibold text-slate-900">{solution.answer}</span>
+        </div>
       </section>
 
       <div className="grid items-start gap-7 lg:grid-cols-2">

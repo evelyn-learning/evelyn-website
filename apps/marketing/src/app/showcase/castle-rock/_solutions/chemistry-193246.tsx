@@ -1,4 +1,4 @@
-import { ArrowHead, C, Label, Layer } from "../_components/figure";
+import { ArrowHead, C, Label, Layer, V } from "../_components/figure";
 import { Tex } from "../_components/Tex";
 import type { FigureProps, Solution } from "../_lib/types";
 
@@ -31,7 +31,7 @@ function Figure({ step, playing }: FigureProps) {
         <rect x={LEFT} y={Y(0)} width={RIGHT - LEFT} height={Y(-280) - Y(0)} fill={C.roseTint} />
         <Label x={LEFT + 8} y={Y(0) + 22} fill={C.rose} size={13}>energy released</Label>
         <Label x={LEFT + 8} y={Y(0) + 39} fill={C.rose} size={13}>exothermic</Label>
-        <Label x={LEFT + 8} y={Y(0) + 56} fill={C.rose} size={13}>ΔH negative</Label>
+        <Label x={LEFT + 8} y={Y(0) + 56} fill={C.rose} size={13}>Δ<V>H</V> negative</Label>
       </Layer>
 
       {/* Step 2: above the reactants = energy absorbed */}
@@ -39,7 +39,7 @@ function Figure({ step, playing }: FigureProps) {
         <rect x={LEFT} y={Y(120)} width={RIGHT - LEFT} height={Y(0) - Y(120)} fill={C.blueTint} />
         <Label x={LEFT + 8} y={Y(0) - 44} fill={C.blue} size={13}>energy absorbed</Label>
         <Label x={LEFT + 8} y={Y(0) - 27} fill={C.blue} size={13}>endothermic</Label>
-        <Label x={LEFT + 8} y={Y(0) - 10} fill={C.blue} size={13}>ΔH positive</Label>
+        <Label x={LEFT + 8} y={Y(0) - 10} fill={C.blue} size={13}>Δ<V>H</V> positive</Label>
       </Layer>
 
       {/* axis and the reactant level */}
@@ -120,7 +120,7 @@ export const chemistry193246: Solution = {
     { label: "C", content: <>II and IV</> },
     { label: "D", content: <>III and IV</> },
   ],
-  revealAnswerAt: 4,
+  answer: <>A: I and II</>,
   Figure,
   figureAlt:
     "Energy chart with the reactants at zero. The products of reaction I sit 241.8 kJ below and reaction II 110.5 kJ below, so both release energy. The products of reaction III sit 90.2 kJ above and reaction IV 26.5 kJ above, so both absorb energy.",
@@ -129,7 +129,7 @@ export const chemistry193246: Solution = {
     {
       title: "Say what exothermic means",
       caption:
-        "An exothermic reaction gives energy out to its surroundings. So the products end up with less energy than the reactants, and the enthalpy change, ΔH, is negative.",
+        "The answer is A. Here’s why. An exothermic reaction gives energy out to its surroundings. So the products end up with less energy than the reactants, and the enthalpy change, ΔH, is negative.",
       body: (
         <>
           <p>
@@ -149,7 +149,7 @@ export const chemistry193246: Solution = {
         <>
           <p>The four equations show the energy change in two different ways.</p>
           <p>
-            <strong>With ΔH notation:</strong> a negative sign means exothermic, a positive sign means endothermic.
+            <strong>With <Tex t={r`\Delta H`} /> notation:</strong> a negative sign means exothermic, a positive sign means endothermic.
           </p>
           <p>
             <strong>As a term in the equation:</strong> energy written with the products was released (exothermic). Energy written with the reactants was <strong className="text-[#1d5bd0]">absorbed</strong> (endothermic).
@@ -196,7 +196,7 @@ export const chemistry193246: Solution = {
           <p>
             Only I and II release energy, so the answer is <strong>A</strong>.
           </p>
-          <p>The usual mistake is in equation II: the plus sign in front of 110.5 kJ does not mean ΔH is positive. It only says energy is one of the products.</p>
+          <p>The usual mistake is in equation II: the plus sign in front of 110.5 kJ does not mean <Tex t={r`\Delta H`} /> is positive. It only says energy is one of the products.</p>
         </>
       ),
     },
