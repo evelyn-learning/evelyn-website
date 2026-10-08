@@ -34,6 +34,15 @@ export function Label({ x, y, children, fill = C.ink, anchor = "start", size = 1
   );
 }
 
+/** A variable inside a figure label, set in italics like the maths in the text. */
+export function V({ children }: { children: ReactNode }) {
+  return (
+    <tspan fontStyle="italic" fontFamily="KaTeX_Math, 'Times New Roman', serif" fontSize="1.12em">
+      {children}
+    </tspan>
+  );
+}
+
 export function ArrowHead({ id, color }: { id: string; color: string }) {
   return (
     <marker id={id} viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">

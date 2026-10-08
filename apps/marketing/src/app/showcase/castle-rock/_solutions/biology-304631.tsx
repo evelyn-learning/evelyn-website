@@ -1,4 +1,4 @@
-import { ArrowHead, C, Label, Layer } from "../_components/figure";
+import { ArrowHead, C, Label, Layer, V } from "../_components/figure";
 import type { FigureProps, Solution } from "../_lib/types";
 
 // Six stages placed evenly round one circle, in the order the cycle runs.
@@ -44,9 +44,9 @@ function Figure({ step, playing }: FigureProps) {
       {/* Step 1: the two ploidy levels */}
       <Layer at={0} step={step} playing={playing}>
         <circle cx={22} cy={24} r={8} fill={C.blue} />
-        <Label x={36} y={29} size={14}>2n = diploid</Label>
+        <Label x={36} y={29} size={14}>2<V>n</V> = diploid</Label>
         <circle cx={22} cy={47} r={8} fill={C.amber} />
-        <Label x={36} y={52} size={14}>n = haploid</Label>
+        <Label x={36} y={52} size={14}><V>n</V> = haploid</Label>
       </Layer>
 
       {LINKS.map((link, i) => {
@@ -88,7 +88,7 @@ function Figure({ step, playing }: FigureProps) {
         return (
           <Layer key={s.key} at={s.layer} step={step} playing={playing}>
             <circle cx={p.x} cy={p.y} r={NODE} fill={fillFor(s.ploidy)} />
-            <Label x={p.x} y={p.y + 5} anchor="middle" fill={C.surface} size={15} weight={700}>{s.ploidy}</Label>
+            <Label x={p.x} y={p.y + 5} anchor="middle" fill={C.surface} size={15} weight={700}>{s.ploidy === "2n" ? "2" : ""}<V>n</V></Label>
             {s.lines.map((t, k) => (
               <Label key={t} x={lx} y={ly + k * 18} anchor={side} size={14}>{t}</Label>
             ))}
@@ -140,7 +140,7 @@ export const biology304631: Solution = {
     { label: "C", content: <PloidyTable cells={["2n", "2n", "2n"]} /> },
     { label: "D", content: <PloidyTable cells={["2n", "2n", "n"]} />, correct: true },
   ],
-  revealAnswerAt: 4,
+  answer: <>D: planula 2<i>n</i>, budding polyp 2<i>n</i>, gamete <i>n</i></>,
   Figure,
   figureAlt:
     "Jellyfish life cycle drawn as a loop. The adult medusa is diploid and makes haploid gametes by meiosis. Fertilization gives a diploid zygote, which grows by mitosis into a diploid planula larva, then a diploid polyp and budding polyp, which releases young medusae.",
@@ -149,12 +149,12 @@ export const biology304631: Solution = {
     {
       title: "Recall what ploidy means",
       caption:
-        "Ploidy is the number of chromosome sets in a cell. Diploid, written 2n, means two sets. Haploid, written n, means one set. In animals, body cells are diploid and only the gametes are haploid.",
+        "The answer is D. Here’s why. Ploidy is the number of chromosome sets in a cell. Diploid, written 2n, means two sets. Haploid, written n, means one set. In animals, body cells are diploid and only the gametes are haploid.",
       body: (
         <>
           <p>Ploidy is the number of sets of chromosomes in a cell.</p>
           <p>
-            <strong className="text-[#1d5bd0]">Diploid (2n)</strong> cells carry two sets, one from each parent. <strong className="text-[#b45309]">Haploid (n)</strong> cells carry one set.
+            <strong className="text-[#1d5bd0]">Diploid (2<i>n</i>)</strong> cells carry two sets, one from each parent. <strong className="text-[#b45309]">Haploid (<i>n</i>)</strong> cells carry one set.
           </p>
           <p>A jellyfish is an animal. In animals the body cells are diploid, and the only haploid cells are the gametes.</p>
         </>
@@ -168,7 +168,7 @@ export const biology304631: Solution = {
         <>
           <p>The adult jellyfish, called a medusa, is diploid.</p>
           <p>
-            It produces eggs or sperm by <strong>meiosis</strong>, which halves the chromosome number. So a gamete is <strong className="text-[#b45309]">n</strong>.
+            It produces eggs or sperm by <strong>meiosis</strong>, which halves the chromosome number. So a gamete is <strong className="text-[#b45309]"><i>n</i></strong>.
           </p>
         </>
       ),
@@ -179,9 +179,9 @@ export const biology304631: Solution = {
         "When an egg and a sperm join, n plus n gives a diploid zygote. The zygote divides by mitosis, which keeps the chromosome number the same. It grows into a swimming larva called a planula, so the planula is 2n.",
       body: (
         <>
-          <p>At fertilization an egg and a sperm join: n + n gives a diploid zygote.</p>
+          <p>At fertilization an egg and a sperm join: <i>n</i> + <i>n</i> gives a diploid zygote.</p>
           <p>
-            The zygote divides by <strong>mitosis</strong>, which copies every chromosome and keeps the number the same. It develops into a free-swimming larva, the planula. So the planula is <strong className="text-[#1d5bd0]">2n</strong>.
+            The zygote divides by <strong>mitosis</strong>, which copies every chromosome and keeps the number the same. It develops into a free-swimming larva, the planula. So the planula is <strong className="text-[#1d5bd0]">2<i>n</i></strong>.
           </p>
         </>
       ),
@@ -194,7 +194,7 @@ export const biology304631: Solution = {
         <>
           <p>The planula settles on a surface and grows into a polyp, again by mitosis.</p>
           <p>
-            The polyp then reproduces asexually by forming buds that break off as young medusae. Budding is also mitosis, so nothing has halved the chromosome number. The budding polyp is <strong className="text-[#1d5bd0]">2n</strong>.
+            The polyp then reproduces asexually by forming buds that break off as young medusae. Budding is also mitosis, so nothing has halved the chromosome number. The budding polyp is <strong className="text-[#1d5bd0]">2<i>n</i></strong>.
           </p>
         </>
       ),
@@ -202,15 +202,13 @@ export const biology304631: Solution = {
     {
       title: "Match the table",
       caption:
-        "Putting it together: planula 2n, budding polyp 2n, gamete n. That’s table D. The other tables either make a body stage haploid, or leave the gamete diploid.",
+        "Putting it together: planula 2n, budding polyp 2n, gamete n. That’s table D.",
       body: (
         <>
           <p>
-            Planula 2n, budding polyp 2n, gamete n. That is table <strong>D</strong>.
+            Planula 2<i>n</i>, budding polyp 2<i>n</i>, gamete <i>n</i>. That is table <strong>D</strong>.
           </p>
-          <p>
-            <strong>A</strong> and <strong>B</strong> mark the planula as haploid, but it grows from a diploid zygote by mitosis. <strong>C</strong> leaves the gamete diploid, which ignores meiosis.
-          </p>
+          <p>Only one step in the whole cycle lowers the chromosome number, and that is meiosis in the adult. Every other stage is built by mitosis from a diploid cell.</p>
         </>
       ),
     },
