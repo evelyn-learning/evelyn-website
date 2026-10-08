@@ -29,13 +29,19 @@ import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/r
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON } from '@/lib/tutor/orchestrator/flags';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
+import {
+  INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
+  activeSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
+  parseVideoState, reduceLessonHost, renderMomentDirective, type InactiveClock, type LessonHostEvent, type LessonHostState,
+} from '@/lib/tutor/portal/host-lesson';
+import { parseLessonTimeline, renderLessonNow, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
@@ -69,6 +75,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Drop 2 (spec v1.1 §3): prewarm_ready / prewarm_expired, host_start /
   // host_start_ignored (start_blocked rides the 'start_' prefix below).
   'prewarm_', 'host_start',
+  // Spec v1.2 (one continuous lesson): standby_enter / standby_leave /
+  // standby_idle_end, video_state / video_command / video_resume_unconfirmed,
+  // moment_received / moment_delivered / moment_dropped, lesson_timeline,
+  // host_pause / host_resume, student_wake, resume_lesson_called / _fired / _dropped.
+  'standby', 'video_', 'moment_', 'lesson_timeline', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -720,12 +731,33 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // tutorsessions write until sessionEngagedAtRef latches, so a load that
   // neither taps, starts, resumes, nor produces transcript writes nothing.
   const sessionNotYetEngaged = () => TUTOR_DEFER_SESSION_DOC && sessionEngagedAtRef.current === null;
+  // One continuous lesson (partner spec v1.2). The host reports its video and
+  // whether the panel is hidden; standby is derived from that (isStandingBy).
+  // The ref is the truth for handlers; the state mirrors it for rendering.
+  const lessonHostRef = useRef<LessonHostState>(INITIAL_LESSON_HOST_STATE);
+  const [lessonHost, setLessonHost] = useState<LessonHostState>(INITIAL_LESSON_HOST_STATE);
+  // Time that is not session time (spec §5): standing by, and a prewarmed
+  // frame's wait before its start. Subtracted from every reported duration.
+  const inactiveClockRef = useRef<InactiveClock>(
+    prewarm ? { totalMs: 0, sinceMs: sessionStartRef.current.getTime() } : INITIAL_INACTIVE_CLOCK,
+  );
+  const syncInactive = () => {
+    const waitingPrewarm = prewarm && sessionEngagedAtRef.current === null;
+    inactiveClockRef.current = markInactive(
+      inactiveClockRef.current,
+      waitingPrewarm || (TUTOR_HOST_LESSON && isStandingBy(lessonHostRef.current)),
+      Date.now(),
+    );
+  };
+  const syncInactiveRef = useRef(syncInactive);
+  syncInactiveRef.current = syncInactive;
   // 2026-08-07: signature matches VTR's onDebugEvent — the third `data` arg
   // used to be silently dropped here (every embed event persisted without its
   // structured payload). Message truncation mirrors /tutor's collector.
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
     if (type === 'start_tap' && sessionEngagedAtRef.current === null) {
       sessionEngagedAtRef.current = Date.now();
+      syncInactiveRef.current(); // a prewarmed frame's wait ends here
     }
     if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
     debugEventsRef.current.push({
@@ -861,7 +893,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // Mirrors the /tutor page's periodic-flush fix from 2026-04-29.
   const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned') => {
     const now = new Date();
-    const duration = Math.round((now.getTime() - sessionStartRef.current.getTime()) / 1000);
+    // Active time only (spec v1.2 §5): standing by and a prewarmed frame's
+    // wait are not session time.
+    const duration = Math.round(activeSeconds((now.getTime() - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, now.getTime()));
     // A page load is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206).
     // The session-usage upsert runs on mount, so browsing the partner's lesson
     // menu minted one abandoned row per click — indistinguishable from a real
@@ -1177,7 +1211,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // see priorActiveSecRef). Posted synchronously — never waits on the save
     // above; the prior total is whatever the server last told us.
     const duration = endedDurationSeconds(
-      (Date.now() - sessionStartRef.current.getTime()) / 1000,
+      activeSeconds((Date.now() - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, Date.now()),
       priorActiveSecRef.current,
     );
     // Post message to parent window for partner integration
@@ -1373,6 +1407,134 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     return () => clearTimeout(t);
   }, [prewarm, tokenExp, addDebugEvent]);
 
+  // ── One continuous lesson (partner spec v1.2) ──────────────────────────
+  // Standby while the host's video plays or the panel is hidden; wake on a
+  // student question or a host moment; the whole-lesson timeline feeds the
+  // per-turn <lesson_video> window; the tutor can resume the video.
+  const timelineRef = useRef<TimelineEntry[] | null>(null);
+  const lastStandbyPostedRef = useRef(false);
+  const resumeConfirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dispatchLessonHost = useCallback((e: LessonHostEvent) => {
+    const next = reduceLessonHost(lessonHostRef.current, e, Date.now());
+    if (next === lessonHostRef.current) return;
+    lessonHostRef.current = next;
+    setLessonHost(next);
+    syncInactiveRef.current();
+    // Posted on a CHANGE only: a host may report its video state very often.
+    const standingBy = isStandingBy(next);
+    if (standingBy === lastStandbyPostedRef.current) return;
+    lastStandbyPostedRef.current = standingBy;
+    window.parent.postMessage({ type: 'evelyn:standby', standing_by: standingBy }, '*');
+  }, []);
+
+  const postVideoCommand = useCallback((command: 'play' | 'pause', source: 'student' | 'tutor') => {
+    addDebugEvent('video_command', `command=${command} source=${source}`);
+    window.parent.postMessage({ type: 'evelyn:video_command', command, source }, '*');
+  }, [addDebugEvent]);
+
+  useEffect(() => {
+    if (!TUTOR_HOST_LESSON) return;
+    const expectedOrigin = getEmbeddingHost();
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window.parent || window.parent === window) return;
+      if (!isAllowedHostOrigin(event.origin, expectedOrigin)) return;
+      const video = parseVideoState(event.data);
+      if (video) {
+        const before = lessonHostRef.current.video;
+        dispatchLessonHost({ type: 'video_state', state: video.state, positionSeconds: video.positionSeconds });
+        // Persist changes of state only — a host may report its position often.
+        if (video.state !== before) addDebugEvent('video_state', `state=${video.state} pos=${video.positionSeconds ?? ''}`);
+        if (video.state === 'playing' && resumeConfirmTimerRef.current) {
+          clearTimeout(resumeConfirmTimerRef.current);
+          resumeConfirmTimerRef.current = null;
+        }
+        return;
+      }
+      const moment = parseMoment(event.data);
+      if (moment) {
+        addDebugEvent('moment_received', `kind=${moment.kind} pos=${moment.positionSeconds ?? ''}`);
+        dispatchLessonHost({ type: 'moment', positionSeconds: moment.positionSeconds });
+        sessionHandleRef.current?.deliverMoment?.(renderMomentDirective(moment));
+        return;
+      }
+      const lesson = parseLessonTimeline(event.data);
+      if (lesson) {
+        timelineRef.current = lesson.entries;
+        addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut}`);
+        return;
+      }
+      const hostPause = parseHostPause(event.data);
+      if (hostPause) {
+        addDebugEvent('host_pause', `reason=${hostPause.reason}`);
+        dispatchLessonHost({ type: 'host_pause' });
+        return;
+      }
+      if (parseHostResume(event.data)) {
+        addDebugEvent('host_resume', '');
+        dispatchLessonHost({ type: 'host_resume' });
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [addDebugEvent, dispatchLessonHost]);
+
+  const standby = TUTOR_HOST_LESSON && isStandingBy(lessonHost);
+
+  // The student started to ask (typing or the mic) while standing by: ask the
+  // host to pause, and wake now — the answer must not wait on the host.
+  const handleStudentWake = useCallback((via: 'typing' | 'mic') => {
+    const s = lessonHostRef.current;
+    if (s.hostPaused || s.video !== 'playing' || s.wokeAtMs !== null) return;
+    addDebugEvent('student_wake', `via=${via}`);
+    postVideoCommand('pause', 'student');
+    dispatchLessonHost({ type: 'student_wake' });
+  }, [addDebugEvent, postVideoCommand, dispatchLessonHost]);
+
+  // The tutor asked to resume (resume_lesson, after its hand-back line was
+  // spoken). No `playing` report within RESUME_CONFIRM_MS ⇒ stay available.
+  const handleResumeLesson = useCallback(() => {
+    const s = lessonHostRef.current;
+    if (s.video === null || s.video === 'ended' || (s.video === 'playing' && s.wokeAtMs === null)) return;
+    postVideoCommand('play', 'tutor');
+    dispatchLessonHost({ type: 'play_command' });
+    if (resumeConfirmTimerRef.current) clearTimeout(resumeConfirmTimerRef.current);
+    resumeConfirmTimerRef.current = setTimeout(() => {
+      resumeConfirmTimerRef.current = null;
+      if (lessonHostRef.current.video !== 'playing') addDebugEvent('video_resume_unconfirmed', `waitedMs=${RESUME_CONFIRM_MS}`);
+    }, RESUME_CONFIRM_MS);
+  }, [addDebugEvent, postVideoCommand, dispatchLessonHost]);
+
+  const handleVideoToggle = useCallback(() => {
+    const command = panelToggleCommand(lessonHostRef.current.video);
+    if (!command) return;
+    postVideoCommand(command, 'student');
+    if (command === 'play') dispatchLessonHost({ type: 'play_command' });
+  }, [postVideoCommand, dispatchLessonHost]);
+
+  const getLessonNow = useCallback(() => renderLessonNow({
+    timeline: timelineRef.current,
+    video: lessonHostRef.current.video,
+    positionSeconds: lessonHostRef.current.positionSeconds,
+    resumeTool: uiOptions.videoControl,
+  }), [uiOptions.videoControl]);
+
+  // Spec §5: 30 minutes of continuous standby ends the session as idle —
+  // silently (no goodbye line: the student is watching, or the panel is hidden).
+  useEffect(() => {
+    if (!standby) return;
+    const t = setTimeout(() => {
+      if (sessionEngagedAtRef.current === null || sessionEndedPostedRef.current) return;
+      const h = sessionHandleRef.current;
+      if (h?.isEnding?.() === true) return;
+      addDebugEvent('standby_idle_end', `afterMs=${STANDBY_IDLE_END_MS}`);
+      hostEndReasonRef.current = 'idle';
+      if (h?.endSession) h.endSession();
+      else handleEndSessionRef.current();
+    }, STANDBY_IDLE_END_MS);
+    return () => clearTimeout(t);
+  }, [standby, addDebugEvent]);
+
   // evelyn:activity (GreenApple spec 2026-10-02 §1): additive message on a
   // real (non-synthetic) student turn, text or voice, relayed from VTR's
   // 'evelyn:student-activity' window event (fired where it records student
@@ -1411,6 +1573,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // gesture).
       if (sessionEngagedAtRef.current === null) {
         sessionEngagedAtRef.current = Date.now();
+        syncInactiveRef.current(); // a prewarmed frame's wait ends here
       }
       const startedAtMs = (e as CustomEvent<{ startedAtMs?: number }>).detail?.startedAtMs;
       window.parent.postMessage(
@@ -1466,6 +1629,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   useEffect(() => {
     if (transcript.length > resumedTranscriptBaseline && sessionEngagedAtRef.current === null) {
       sessionEngagedAtRef.current = Date.now();
+      syncInactiveRef.current(); // a prewarmed frame's wait ends here
     }
   }, [transcript.length, resumedTranscriptBaseline]);
 
@@ -1717,6 +1881,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         inFlow={inFlow}
         prewarm={prewarm}
         onRelayReady={handleRelayReady}
+        standby={standby}
+        videoHost={uiOptions.videoControl}
+        getLessonNow={getLessonNow}
+        onStudentWake={handleStudentWake}
+        onResumeLesson={handleResumeLesson}
+        videoControl={TUTOR_HOST_LESSON && uiOptions.videoControl && lessonHost.video ? { state: lessonHost.video, onToggle: handleVideoToggle } : null}
         voice={openAIVoice}
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}

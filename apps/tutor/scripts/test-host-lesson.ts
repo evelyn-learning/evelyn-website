@@ -374,6 +374,63 @@ test('TutorSession: play/pause button beside the text box, labelled from the hos
   assert.match(vtr, /\{composerSlot\}\s*<input\s+ref=\{studentTextInputRef\}/);
 });
 
+const embed = read('src/app/tutor-portal/embed/page.tsx');
+
+test('embed: v1.2 host messages are parent-only, origin-checked and flag-gated', () => {
+  const i = embed.indexOf('parseVideoState(event.data)');
+  assert.ok(i > 0, 'parseVideoState wired');
+  const block = embed.slice(Math.max(0, i - 900), i + 200);
+  assert.match(block, /if \(!TUTOR_HOST_LESSON\) return;/);
+  assert.match(block, /event\.source !== window\.parent/);
+  assert.match(block, /isAllowedHostOrigin\(event\.origin, expectedOrigin\)/);
+  for (const p of ['parseMoment(event.data)', 'parseLessonTimeline(event.data)', 'parseHostPause(event.data)', 'parseHostResume(event.data)']) {
+    assert.ok(embed.includes(p), p);
+  }
+});
+
+test('embed: evelyn:standby is posted only when the value changes (Review Focus 1)', () => {
+  assert.match(embed, /if \(standingBy === lastStandbyPostedRef\.current\) return;/);
+  assert.match(embed, /type: 'evelyn:standby', standing_by: standingBy/);
+  assert.match(embed, /if \(next === lessonHostRef\.current\) return;/);
+});
+
+test('embed: video commands carry who asked', () => {
+  assert.match(embed, /type: 'evelyn:video_command', command, source/);
+  assert.match(embed, /postVideoCommand\('pause', 'student'\)/);
+  assert.match(embed, /postVideoCommand\('play', 'tutor'\)/);
+  assert.match(embed, /RESUME_CONFIRM_MS/);
+  assert.match(embed, /'video_resume_unconfirmed'/);
+});
+
+test('embed: 30 minutes of standby ends the session as idle, silently', () => {
+  const i = embed.indexOf('}, STANDBY_IDLE_END_MS);');
+  assert.ok(i > 0, 'idle timer');
+  const block = embed.slice(Math.max(0, i - 900), i);
+  assert.match(block, /hostEndReasonRef\.current = 'idle'/);
+  assert.match(block, /h\.endSession\(\)/);
+});
+
+test('embed: duration excludes standby and prewarm waiting, in the save and in session_ended', () => {
+  assert.equal(embed.split('activeSeconds((').length - 1, 2, 'saveSession and handleEndSession');
+  assert.match(embed, /const waitingPrewarm = prewarm && sessionEngagedAtRef\.current === null/);
+  const latches = embed.split('sessionEngagedAtRef.current = Date.now();').length - 1;
+  const synced = embed.split(/sessionEngagedAtRef\.current = Date\.now\(\);\s*syncInactiveRef\.current\(\);/).length - 1;
+  assert.ok(latches >= 3 && synced === latches, `every engagement latch closes the prewarm wait (${synced}/${latches})`);
+});
+
+test('embed: moments become a synthetic turn; the timeline feeds the per-turn window', () => {
+  assert.match(embed, /deliverMoment\?\.\(renderMomentDirective\(/);
+  assert.match(embed, /renderLessonNow\(\{/);
+  assert.match(embed, /getLessonNow=\{getLessonNow\}/);
+  assert.match(embed, /videoHost=\{uiOptions\.videoControl\}/);
+});
+
+test('embed: new telemetry events persist', () => {
+  for (const e of ['standby', 'video_', 'moment_', 'lesson_timeline', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson']) {
+    assert.ok(embed.includes(`'${e}'`), e);
+  }
+});
+
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
 
 console.log(`\n${passed}/${passed + failed} passed`);
