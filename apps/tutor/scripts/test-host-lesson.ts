@@ -345,6 +345,35 @@ test('resume_lesson is registered as state, not ink: no board repair, withheld a
   }
 });
 
+const session = read('src/app/tutor/components/session/TutorSession.tsx');
+const clock = read('src/app/tutor/components/session/HeaderClock.tsx');
+const uiOptions = read('src/lib/tutor/portal/embed-ui-options.ts');
+
+test('UI option videoControl: off by default, on for the video-lesson partner', () => {
+  assert.match(uiOptions, /videoControl: boolean;/);
+  assert.match(uiOptions, /videoControl: pick\(features\.video_control, 'videoControl'\)/);
+  assert.match(uiOptions, /gameclass: \{[^}]*videoControl: true/);
+  assert.match(uiOptions, /DEFAULT_EMBED_UI_OPTIONS[^\n]*videoControl: false/);
+});
+
+test('TutorSession: passes standby through, shows the standby line, freezes and shifts the clock', () => {
+  for (const p of ['standby={standby}', 'videoHost={videoHost}', 'getLessonNow={getLessonNow}', 'onStudentWake={onStudentWake}', 'onResumeLesson={onResumeLesson}']) {
+    assert.ok(session.includes(p), p);
+  }
+  assert.match(session, /\{STANDBY_LINE\}/);
+  assert.match(session, /setVoiceStartedAtMs\(\(prev\) => shiftAnchor\(prev, since, Date\.now\(\)\)\)/);
+  assert.equal(session.split('frozenAtMs={standbySinceMs}').length - 1, 2, 'header clock and desktop timer');
+  assert.match(clock, /frozenAtMs\?: number \| null/);
+  assert.match(clock, /if \(frozenAtMs\) return;/);
+});
+
+test('TutorSession: play/pause button beside the text box, labelled from the host state', () => {
+  assert.match(session, /videoControl\?: \{ state: VideoState; onToggle: \(\) => void \} \| null/);
+  assert.match(session, /aria-label=\{videoControl\.state === 'playing' \? 'Pause the video' : 'Play the video'\}/);
+  assert.match(session, /composerSlot=\{videoBtn\}/);
+  assert.match(vtr, /\{composerSlot\}\s*<input\s+ref=\{studentTextInputRef\}/);
+});
+
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
 
 console.log(`\n${passed}/${passed + failed} passed`);

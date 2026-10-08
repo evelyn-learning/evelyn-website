@@ -21,7 +21,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Script from 'next/script';
-import { Play, Volume2, VolumeX } from 'lucide-react';
+import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
+import { STANDBY_LINE, shiftAnchor, type VideoState } from '@/lib/tutor/portal/host-lesson';
 import { EndControl } from './EndControl';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
@@ -215,6 +216,16 @@ export interface TutorSessionProps {
   voiceMuteControl?: boolean;
   /** Embed UI option: the "Pace: …" pill beside ⋯ (same menu). Default true. */
   paceChip?: boolean;
+  /** Host video (partner spec v1.2), passed straight to the session runtime:
+   *  standing by, the per-turn lesson window, wake and tutor-resume callbacks. */
+  standby?: boolean;
+  videoHost?: boolean;
+  getLessonNow?: () => string | undefined;
+  onStudentWake?: (via: 'typing' | 'mic') => void;
+  onResumeLesson?: () => void;
+  /** Embed UI option `videoControl`: play/pause for the HOST's video beside
+   *  the text box. null until the host has reported its video state. */
+  videoControl?: { state: VideoState; onToggle: () => void } | null;
   /** Embed UI option: below `sm`, a labelled "Finish" control in the header
    *  (finish intent) instead of the icon-only End/Pause. Only honoured when
    *  `embedded` — the intent means nothing without a host listening.
@@ -282,6 +293,7 @@ export default function TutorSession(props: TutorSessionProps) {
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
     humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
+    standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, videoControl,
   } = props;
   // Embed-only (see the prop docs): the retail page can never get it.
   const mobileFinishOn = !!embedded && mobileFinish === true;
@@ -330,6 +342,21 @@ export default function TutorSession(props: TutorSessionProps) {
   // Wallclock ms when the student actually starts the voice session (mic tap).
   // Drives the SessionControls timer so it counts from start, not page mount.
   const [voiceStartedAtMs, setVoiceStartedAtMs] = useState<number | null>(null);
+  // Standby (partner spec v1.2 §5): the clock stops while standing by. On
+  // leaving, the start anchor moves forward by the standby time, so every
+  // reader of voiceStartedAtMs keeps counting active time only.
+  const [standbySinceMs, setStandbySinceMs] = useState<number | null>(null);
+  const standbySinceRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (standby) {
+      if (standbySinceRef.current === null) standbySinceRef.current = Date.now();
+    } else if (standbySinceRef.current !== null) {
+      const since = standbySinceRef.current;
+      standbySinceRef.current = null;
+      setVoiceStartedAtMs((prev) => shiftAnchor(prev, since, Date.now()));
+    }
+    setStandbySinceMs(standbySinceRef.current);
+  }, [standby]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [tutorVoiceMuted, setTutorVoiceMuted] = useState(false);
   const [whiteboardActiveThisTurn, setWhiteboardActiveThisTurn] = useState(false);
@@ -1029,7 +1056,29 @@ export default function TutorSession(props: TutorSessionProps) {
       {tutorVoiceMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
     </button>
   ) : null;
-  const dockCaptionEl = sessionMode === 'text' ? null : statusOverride ? (
+  // Embed option `videoControl` (partner spec v1.2 §3.5): play/pause for the
+  // HOST's video. Shows the host's last reported state; the click only asks —
+  // the host's own `video_state` reply is what changes it.
+  const videoBtn = videoControl ? (
+    <button
+      type="button"
+      onClick={videoControl.onToggle}
+      aria-label={videoControl.state === 'playing' ? 'Pause the video' : 'Play the video'}
+      title={videoControl.state === 'playing' ? 'Pause the video' : 'Play the video'}
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100"
+    >
+      {videoControl.state === 'playing' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+    </button>
+  ) : null;
+  const dockCaptionEl = sessionMode === 'text' ? null : standby && started ? (
+    // Standing by (partner spec v1.2 §1): the tutor is silent and not
+    // listening while the video plays. Wraps instead of truncating — a
+    // narrow side panel must show the whole line.
+    <div className="w-full min-w-0 flex items-center gap-2">
+      <span className="block min-w-0 flex-1 text-xs font-medium leading-snug text-slate-600">{STANDBY_LINE}</span>
+      {voiceMuteBtn}
+    </div>
+  ) : statusOverride ? (
     <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
   ) : liveCaption ? (
     // R42 (2026-08-10): click target shrunk to the caption text itself —
@@ -1510,6 +1559,12 @@ export default function TutorSession(props: TutorSessionProps) {
         lessonContext={lessonContext}
         inFlow={inFlow}
         prewarm={prewarm}
+        standby={standby}
+        videoHost={videoHost}
+        getLessonNow={getLessonNow}
+        onStudentWake={onStudentWake}
+        onResumeLesson={onResumeLesson}
+        composerSlot={videoBtn}
         onRelayReady={onRelayReady}
         targetKind={targetKind}
         checkpointStale={checkpointStale}
@@ -1646,6 +1701,7 @@ export default function TutorSession(props: TutorSessionProps) {
     <SessionControls
       sessionId={sessionId}
       startedAtMs={voiceStartedAtMs}
+      frozenAtMs={standbySinceMs}
       maxDuration={sessionMaxMinutes}
       onEndSession={handleEndSession}
       onUploadHomework={onUploadHomework ?? handleUploadHomeworkFallback}
@@ -1965,6 +2021,7 @@ export default function TutorSession(props: TutorSessionProps) {
         headerClock={
           <HeaderClock
             startedAtMs={voiceStartedAtMs}
+            frozenAtMs={standbySinceMs}
             maxMinutes={sessionMaxMinutes}
             countDown={!!maxDurationExplicit}
           />

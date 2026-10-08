@@ -35,6 +35,8 @@ interface SessionControlsProps {
    *  mic). The timer counts up from here. null/undefined → not started yet, so
    *  the timer stays at 0:00. */
   startedAtMs?: number | null;
+  /** Non-null while standing by: the timer shows that instant and does not tick. */
+  frozenAtMs?: number | null;
   maxDuration: number; // minutes
   onEndSession: () => void;
   onUploadHomework: (imageData: string, mimeType: string) => void;
@@ -144,6 +146,7 @@ function ResizableModal({
 export function SessionControls({
   sessionId,
   startedAtMs,
+  frozenAtMs,
   maxDuration,
   onEndSession,
   onUploadHomework,
@@ -172,12 +175,13 @@ export function SessionControls({
     }
 
     const tick = () =>
-      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
+      setElapsedSeconds(Math.max(0, Math.floor(((frozenAtMs ?? Date.now()) - startedAtMs) / 1000)));
     tick();
+    if (frozenAtMs) return;
     const interval = setInterval(tick, 1000);
 
     return () => clearInterval(interval);
-  }, [startedAtMs]);
+  }, [startedAtMs, frozenAtMs]);
 
   // Format time
   const formatTime = (seconds: number): string => {

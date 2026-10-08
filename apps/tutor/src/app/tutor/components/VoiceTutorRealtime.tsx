@@ -1075,6 +1075,8 @@ interface VoiceTutorRealtimeProps {
    *  state-text block next to the mic — [mic][caption][input][mute][end].
    *  The mic button's color/pulse still conveys the voice state. */
   captionSlot?: ReactNode;
+  /** Rendered inside the text-input row, before the input (e.g. the host-video play/pause button). */
+  composerSlot?: ReactNode;
   /** R1 dock (2026-07-14): suppress the dock's own End/Pause button — the
    *  host renders its own (header) control via handleRef.endSession, which
    *  runs the same full teardown. */
@@ -1288,6 +1290,7 @@ export function VoiceTutorRealtime({
   maxDurationExplicit = false,
   dockVariant = 'default',
   captionSlot,
+  composerSlot,
   hideEndButton = false,
 }: VoiceTutorRealtimeProps) {
   // The ONLY name this component prompts or speaks with (opener clauses,
@@ -25457,6 +25460,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           }
         }}
       >
+        {composerSlot}
         <input
           ref={studentTextInputRef}
           name="studentText"
