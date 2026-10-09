@@ -137,6 +137,7 @@
     "test:inflow-wiring": "npx tsx scripts/test-inflow-wiring.ts",
     "test:host-start": "npx tsx scripts/test-host-start.ts",
     "test:host-lesson": "npx tsx scripts/test-host-lesson.ts",
+    "test:tree-renderer": "npx tsx scripts/test-tree-renderer.tsx",
     "test:host-lesson-timeline": "npx tsx scripts/test-host-lesson-timeline.ts",
     "test:bridge-line": "npx tsx scripts/test-bridge-line.ts",
     "test:tts-prewarm-on-enable": "npx tsx scripts/test-tts-prewarm-on-enable.ts",

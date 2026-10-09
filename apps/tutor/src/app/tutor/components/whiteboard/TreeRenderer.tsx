@@ -78,9 +78,65 @@ function nodeBoxSize(node: TreeNode): { w: number; h: number; labelLines: string
   };
 }
 
+/**
+ * The model's tree, made safe to lay out. Every text field becomes a string:
+ * a NUMERIC probability (`0.75`) used to reach the fraction parser's
+ * `.trim()` and throw, so the whole tree was replaced by the "couldn't be
+ * shown" card (two live sessions, 2026-10-09). Entries that are not objects
+ * are dropped; a missing node stays missing (the layout treats it as a leaf).
+ */
+export function normalizeTreeNode(raw: unknown): TreeNode {
+  const text = (v: unknown): string | undefined =>
+    typeof v === 'string' ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : undefined;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { label: text(raw) ?? '' };
+  const r = raw as Record<string, unknown>;
+  const out: TreeNode = { label: text(r.label) ?? '' };
+  const value = text(r.value);
+  if (value !== undefined) out.value = value;
+  if (typeof r.color === 'string') out.color = r.color;
+  if (Array.isArray(r.children)) {
+    out.children = r.children
+      .filter((c): c is Record<string, unknown> => !!c && typeof c === 'object' && !Array.isArray(c))
+      .map((c) => {
+        const probability = text(c.probability);
+        return {
+          label: text(c.label) ?? '',
+          ...(probability !== undefined ? { probability } : {}),
+          node: (c.node === undefined || c.node === null ? undefined : normalizeTreeNode(c.node)) as TreeNode,
+        };
+      });
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Layout helpers
 // ---------------------------------------------------------------------------
+
+/** Widest line of a branch's label block (probability over the wrapped label). */
+function branchLabelWidth(child: { label?: string; probability?: string }): number {
+  let w = child.probability ? estimateLabelWidth(child.probability, SMALL_FONT) : 0;
+  if (child.label) {
+    for (const line of wrapLabel(child.label, BRANCH_LABEL_WRAP)) w = Math.max(w, estimateLabelWidth(line, SMALL_FONT));
+  }
+  return w;
+}
+
+/** Gap between a branch line and its label. */
+const BRANCH_LABEL_GAP = 8;
+
+/**
+ * Horizontal room a child needs. The outermost branches' labels hang outward
+ * into free space. An INNER branch's label hangs off the branch midpoint
+ * toward a neighbour, and midpoints are only half as far apart as the
+ * children: the band must be four label-widths for the label to clear the
+ * next branch whatever the neighbour's size.
+ */
+function childBandWidth(child: { label?: string; probability?: string; node?: TreeNode }, index: number, siblingCount: number): number {
+  const own = measureSubtree(child?.node);
+  if (index === 0 || index === siblingCount - 1) return own;
+  return Math.max(own, 4 * (branchLabelWidth(child) + BRANCH_LABEL_GAP));
+}
 
 /** Positioned node produced by the layout algorithm */
 interface LayoutNode {
@@ -115,7 +171,7 @@ function measureSubtree(node: TreeNode | undefined): number {
     return ownW;
   }
   const childrenWidth = node.children.reduce(
-    (sum, c) => sum + measureSubtree(c?.node),
+    (sum, c, i) => sum + childBandWidth(c, i, node.children!.length),
     0
   );
   const gaps = (node.children.length - 1) * SIBLING_GAP;
@@ -174,7 +230,7 @@ function positionNode(
       leafProbability,
     };
   }
-  const childMeasures = children.map((c) => measureSubtree(c.node));
+  const childMeasures = children.map((c, i) => childBandWidth(c, i, children.length));
   const totalChildWidth = childMeasures.reduce((a, b) => a + b, 0);
   const totalGaps = (children.length - 1) * SIBLING_GAP;
   const availableForChildren = Math.max(subtreeWidth, totalChildWidth + totalGaps);
@@ -209,10 +265,16 @@ function positionNode(
  * Branch-label anchor — mirrors the placement logic in renderTree() so
  * getBounds() can account for the estimated label extents.
  */
-function branchLabelAnchor(parent: LayoutNode, child: LayoutNode): number {
-  const dx = child.x - parent.x;
-  const offsetX = dx === 0 ? -20 : (dx > 0 ? -14 : 14);
-  return (parent.x + child.x) / 2 + offsetX;
+function branchLabelAnchor(parent: LayoutNode, child: LayoutNode): { x: number; anchor: 'start' | 'end' } {
+  // OUTSIDE the fan, never inside it: a left branch's label ends at the
+  // branch and a right (or straight-down) branch's label starts at it.
+  // Centred inside the fan, two siblings' labels landed on top of each
+  // other whenever they were wider than the gap between the branches —
+  // i.e. on almost every two-outcome probability tree.
+  const mid = (parent.x + child.x) / 2;
+  return child.x < parent.x
+    ? { x: mid - BRANCH_LABEL_GAP, anchor: 'end' }
+    : { x: mid + BRANCH_LABEL_GAP, anchor: 'start' };
 }
 
 /**
@@ -236,19 +298,12 @@ function getBounds(layout: LayoutNode): { minX: number; minY: number; maxX: numb
   for (const child of layout.children) {
     // Branch labels (probability + wrapped label lines) are centered beside
     // the branch midpoint — include their estimated extents in the bounds.
-    const anchorX = branchLabelAnchor(layout, child.layoutNode);
-    let labelHalf = 0;
-    if (child.probability) {
-      labelHalf = estimateLabelWidth(child.probability, SMALL_FONT) / 2;
-    }
-    if (child.label) {
-      for (const line of wrapLabel(child.label, BRANCH_LABEL_WRAP)) {
-        labelHalf = Math.max(labelHalf, estimateLabelWidth(line, SMALL_FONT) / 2);
-      }
-    }
-    if (labelHalf > 0) {
-      minX = Math.min(minX, anchorX - labelHalf);
-      maxX = Math.max(maxX, anchorX + labelHalf);
+    const place = branchLabelAnchor(layout, child.layoutNode);
+    const labelW = branchLabelWidth(child);
+    if (labelW > 0) {
+      // +12: lines follow the branch's slant, so some sit a little further out.
+      if (place.anchor === 'end') minX = Math.min(minX, place.x - labelW - 12);
+      else maxX = Math.max(maxX, place.x + labelW + 12);
     }
 
     const cb = getBounds(child.layoutNode);
@@ -384,16 +439,25 @@ function renderTree(
     // Branch label (probability or text) — anchor mirrored in
     // branchLabelAnchor() so getBounds() accounts for the extents.
     const midY = (y1 + y2) / 2;
-    const anchorX = branchLabelAnchor(layout, child.layoutNode);
+    const { x: anchorX, anchor: labelAnchor } = branchLabelAnchor(layout, child.layoutNode);
+    // Each line keeps its distance from the SLANTED branch (a second or
+    // third line placed straight under the first ran into the branch), and
+    // the block is centred on the branch midpoint.
+    const branchLines = child.label ? wrapLabel(child.label, BRANCH_LABEL_WRAP) : [];
+    const lineCount = (child.probability ? 1 : 0) + branchLines.length;
+    const firstY = midY - 4 - Math.max(0, lineCount - 2) * 6.5;
+    const lineX = (yy: number) => anchorX + (y2 === y1 ? 0 : ((x2 - x1) * (yy - midY)) / (y2 - y1));
+    const branchKey = `${keyPrefix}-${i}`;
 
     if (child.probability) {
       // Probability label in red
       elements.push(
         <text
           key={`${keyPrefix}-prob-${i}`}
-          x={anchorX}
-          y={midY - 4}
-          textAnchor="middle"
+          data-branch={branchKey}
+          x={lineX(firstY)}
+          y={firstY}
+          textAnchor={labelAnchor}
           fill="#dc2626"
           fontSize={SMALL_FONT}
           fontWeight={600}
@@ -403,21 +467,21 @@ function renderTree(
       );
     }
 
-    if (child.label) {
+    if (branchLines.length > 0) {
       // Branch label text — wrapped so long labels can't clip at the edge
-      const labelOffsetY = child.probability ? 12 : 0;
-      const branchLines = wrapLabel(child.label, BRANCH_LABEL_WRAP);
+      const labelY = firstY + (child.probability ? 12 : 0);
       elements.push(
         <text
           key={`${keyPrefix}-blabel-${i}`}
-          x={anchorX}
-          y={midY - 4 + labelOffsetY}
-          textAnchor="middle"
+          data-branch={branchKey}
+          x={lineX(labelY)}
+          y={labelY}
+          textAnchor={labelAnchor}
           fill="#475569"
           fontSize={SMALL_FONT}
         >
           {branchLines.map((line, li) => (
-            <tspan key={li} x={anchorX} dy={li === 0 ? 0 : 13}>
+            <tspan key={li} x={lineX(labelY + li * 13)} dy={li === 0 ? 0 : 13}>
               {line}
             </tspan>
           ))}
@@ -545,7 +609,7 @@ function renderTree(
  */
 export function buildTreeManifest(props: TreeRendererProps): FeatureManifestEntry[] {
   const entries: FeatureManifestEntry[] = [];
-  const safeRoot: TreeNode = props.root ?? { label: '' };
+  const safeRoot: TreeNode = normalizeTreeNode(props.root);
   const counter = { n: 0 };
   const leafCounter = { n: 0 };
   const visit = (
@@ -634,7 +698,7 @@ export function TreeRenderer({
     // prevents a runtime crash. The VoiceTutorRealtime handler rejects
     // invalid show_tree calls before they reach the renderer, so in the
     // common path `root` is always a real tree.
-    const safeRoot: TreeNode = root ?? { label: '' };
+    const safeRoot: TreeNode = normalizeTreeNode(root);
 
     // 1. Measure the full subtree width
     const totalWidth = measureSubtree(safeRoot);
