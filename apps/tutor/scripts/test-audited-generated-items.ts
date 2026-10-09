@@ -141,7 +141,7 @@ function countingGen() {
 
   await test('the JSON holds exactly 3216 generated ids, each marked AUDITED', () => {
     assert.equal(data.generatedAt, '2026-10-11');
-    assert.equal(data.source, 'audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read) + figure items 2026-10-09 (49: visual read) + depth job 2026-10-10 (1779: two blind solves, full read, grader test) + slope-field figure items 2026-10-10 (11: visual read)');
+    assert.equal(data.source, 'audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read) + figure items 2026-10-09 (49: visual read) + depth job 2026-10-10 (1779: two blind solves, full read, grader test) + slope-field figure items 2026-10-10 (11: visual read) + top-up 2026-10-11 (192: two blind solves, full read, grader test)');
     assert.equal(Object.keys(data.items).length, 3216);
     for (const [id, mark] of Object.entries(data.items)) {
       assert.ok(id === id.trim() && isGeneratedPracticeItemId(id), `not a generated item id: ${JSON.stringify(id)}`);
