@@ -32,6 +32,17 @@
  *   figure-export    export/problem-bank-rows.json (rows with figure {svg, alt, spec}),
  *                    review.html, png/<itemId>.png, rejected.md, summary.json
  *
+ * WRITTEN items (ingest.ts) — questions written by people or agents into local
+ * JSON files, put through the same checks. `--out` is the data folder:
+ *   ingest    <out>/packs/NNN.json + <out>/written/NNN.json → rule checks → options shuffled and
+ *             lettered in code → ONE DeepSeek blind solve per item (no other provider, no judge
+ *             model) → <out>/checked/items.jsonl + summary.json, and reading batches
+ *             <out>/read/batch-XXX.json / disputed-XXX.json (+ batches-index.json). Re-runnable:
+ *             only items not yet stored are processed (--force: all again; stored solves are
+ *             reused when the question a solver saw is unchanged). Needs --max-usd.
+ *   finalize  <out>/read/*-grades.json + --dump → <out>/final/problem-bank-rows.json,
+ *             audited-item-ids.json, dropped.json, rewrite-list.json, coverage-after.json
+ *
  * Options
  *   --out <dir>              stage files live here (required)
  *   --dump <file>            plans + bank rows ({plans, bank})        [plan, generate, audit, export, review]
@@ -156,10 +167,12 @@ export interface Args {
   maxItemsPerCall: number;
   genEffort: string;
   splitReview: boolean;
+  /** ingest: process again what an earlier run already stored. */
+  force: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const a: Args = { stage: argv[0] ?? '', out: '', minPerObjective: 2, minPerSkill: 8, concurrency: 4, retryIncomplete: false, reassessAssumptions: false, requireFigureSkill: false, emptyOnly: false, perObjective: 3, keyFirst: false, maxItemsPerCall: 6, genEffort: 'medium', splitReview: false };
+  const a: Args = { stage: argv[0] ?? '', out: '', minPerObjective: 2, minPerSkill: 8, concurrency: 4, retryIncomplete: false, reassessAssumptions: false, requireFigureSkill: false, emptyOnly: false, perObjective: 3, keyFirst: false, maxItemsPerCall: 6, genEffort: 'medium', splitReview: false, force: false };
   const num = (f: string, v: string) => {
     const n = Number(v);
     if (!Number.isFinite(n) || n < 0) throw new Error(`${f} needs a non-negative number`);
@@ -202,6 +215,7 @@ function parseArgs(argv: string[]): Args {
       case '--gen-effort': a.genEffort = val(); break;
       case '--split-review': a.splitReview = true; break;
       case '--kinds': a.kinds = val(); break;
+      case '--force': a.force = true; break;
       default: throw new Error(`unknown argument: ${f}`);
     }
   }
@@ -1429,7 +1443,8 @@ function stageReview(a: Args): void {
 
 // ── main ────────────────────────────────────────────────────────────────────
 
-/** What the figure track (figure-track.ts) borrows from this file. */
+/** What the figure track (figure-track.ts) and the written-items track
+ *  (ingest.ts) borrow from this file. */
 const FIGURE_TOOLS = {
   readJson, readJsonl, appendJsonl, need, materialOf, existingItemsOf, existingStemsByObjective, pool, openLedger, finish,
   qualityGate, twoSolverCheck, solveBlind, dropSameTasks, auditRecords, rejectedFlags, verifierOf, solverLine, qualityLine, flagText,
@@ -1449,6 +1464,12 @@ async function main(): Promise<void> {
     const { runFigureStage } = await import('./figure-track');
     return runFigureStage(a, FIGURE_TOOLS);
   }
+  if (a.stage === 'ingest' || a.stage === 'finalize') {
+    // Items written by people or agents (ingest.ts). DeepSeek is the only
+    // provider this path can call.
+    const { runIngestStage } = await import('./ingest');
+    return runIngestStage(a, FIGURE_TOOLS);
+  }
   switch (a.stage) {
     case 'figures': return stageFigures(a);
     case 'plan': return stagePlan(a);
@@ -1457,7 +1478,7 @@ async function main(): Promise<void> {
     case 'second-check': return stageSecondCheck(a);
     case 'export': return stageExport(a);
     case 'review': return stageReview(a);
-    default: throw new Error(`unknown stage "${a.stage}" — one of: figures, plan, generate, audit, second-check, export, review, figure-kinds, figure-plan, figure-generate, figure-audit, figure-export`);
+    default: throw new Error(`unknown stage "${a.stage}" — one of: figures, plan, generate, audit, second-check, export, review, ingest, finalize, figure-kinds, figure-plan, figure-generate, figure-audit, figure-export`);
   }
 }
 

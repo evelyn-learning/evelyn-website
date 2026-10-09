@@ -68,6 +68,40 @@ export function loadProviders(): Providers {
   };
 }
 
+/**
+ * DeepSeek ONLY — for a stage that must not call any other provider
+ * (`ingest`). No Anthropic key is read. The `anthropic` client of the result
+ * throws on any use, and the base URL must be a deepseek.com host, so a
+ * misconfigured entry cannot send the stage's calls elsewhere.
+ */
+export function loadDeepseekOnly(): Providers {
+  const d = readEnvKeys(path.join(WORKTREE_DIR, '.env.local.production'), [
+    'TUTOR_MODEL_BRAIN_FALLBACK',
+    'TUTOR_MODEL_BRAIN_FALLBACK_API_KEY',
+    'TUTOR_MODEL_BRAIN_FALLBACK_BASE_URL',
+  ]);
+  const missing = [
+    !d.TUTOR_MODEL_BRAIN_FALLBACK_API_KEY && 'TUTOR_MODEL_BRAIN_FALLBACK_API_KEY (.env.local.production)',
+    !d.TUTOR_MODEL_BRAIN_FALLBACK_BASE_URL && 'TUTOR_MODEL_BRAIN_FALLBACK_BASE_URL (.env.local.production)',
+  ].filter(Boolean);
+  if (missing.length > 0) throw new Error(`missing credential(s): ${missing.join('; ')}`);
+  const host = new URL(d.TUTOR_MODEL_BRAIN_FALLBACK_BASE_URL).hostname;
+  if (!/(?:^|\.)deepseek\.com$/.test(host)) throw new Error(`TUTOR_MODEL_BRAIN_FALLBACK_BASE_URL points at "${host}", not at deepseek.com — refusing to call it`);
+  const model = d.TUTOR_MODEL_BRAIN_FALLBACK || 'deepseek-chat';
+  if (!/^deepseek/.test(model)) throw new Error(`TUTOR_MODEL_BRAIN_FALLBACK is "${model}", not a DeepSeek model — refusing to call it`);
+  const refuse = new Proxy({}, {
+    get() {
+      throw new Error('this stage may call DeepSeek only — an Anthropic call was attempted');
+    },
+  }) as unknown as Anthropic;
+  return {
+    anthropic: refuse,
+    // authToken null: nothing from the shell's own ANTHROPIC_* variables is sent along.
+    deepseek: new Anthropic({ apiKey: d.TUTOR_MODEL_BRAIN_FALLBACK_API_KEY, authToken: null, baseURL: d.TUTOR_MODEL_BRAIN_FALLBACK_BASE_URL, maxRetries: 0 }),
+    models: { generate: '', tiebreak: '', judge: '', haiku: '', deepseek: model },
+  };
+}
+
 export function rateOf(model: string): Rate {
   const r = lookupModelRate(model);
   if (!r) throw new Error(`no rate for model "${model}" in src/lib/tutor/ai/model-rates.ts — refusing to call an unpriced model`);
