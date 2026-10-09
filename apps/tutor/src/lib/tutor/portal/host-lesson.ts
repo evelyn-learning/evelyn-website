@@ -261,3 +261,22 @@ export function shiftAnchor(anchorMs: number | null, standbySinceMs: number, now
   const overlap = nowMs - Math.max(standbySinceMs, anchorMs);
   return overlap > 0 ? anchorMs + overlap : anchorMs;
 }
+
+/** How often the running clock is re-posted, so a host that draws it stays in step. */
+export const CLOCK_POST_MS = 15 * 1000;
+
+/** `evelyn:clock` (tutor → host): the session clock for a host that draws it
+ *  in its own header. `active_seconds` is session time so far (standing by and
+ *  minimized time excluded); `running` says whether it is advancing right now
+ *  — the host ticks locally from the last message while it is, and shows the
+ *  value as is while it is not. `max_seconds` only when the token set a limit. */
+export function clockMessage(input: { activeSeconds: number; running: boolean; maxSeconds?: number }): {
+  type: 'evelyn:clock'; active_seconds: number; running: boolean; max_seconds?: number;
+} {
+  return {
+    type: 'evelyn:clock',
+    active_seconds: Math.max(0, Math.floor(input.activeSeconds)),
+    running: input.running,
+    ...(typeof input.maxSeconds === 'number' && input.maxSeconds > 0 ? { max_seconds: Math.floor(input.maxSeconds) } : {}),
+  };
+}

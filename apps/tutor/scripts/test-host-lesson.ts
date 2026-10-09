@@ -16,6 +16,8 @@ import {
   STANDBY_IDLE_END_MS,
   STANDBY_LINE,
   activeSeconds,
+  clockMessage,
+  CLOCK_POST_MS,
   currentPositionSeconds,
   inactiveMsAt,
   isStandingBy,
@@ -441,7 +443,7 @@ test('embed: 30 minutes of standby ends the session as idle, silently', () => {
 });
 
 test('embed: duration excludes standby and prewarm waiting, in the save and in session_ended', () => {
-  assert.equal(embed.split('activeSeconds((').length - 1, 2, 'saveSession and handleEndSession');
+  assert.equal(embed.split('activeSeconds((').length - 1, 3, 'saveSession, handleEndSession and the clock message');
   assert.match(embed, /const waitingPrewarm = prewarm && sessionEngagedAtRef\.current === null/);
   const latches = embed.split('sessionEngagedAtRef.current = Date.now();').length - 1;
   const synced = embed.split(/sessionEngagedAtRef\.current = Date\.now\(\);\s*syncInactiveRef\.current\(\);/).length - 1;
@@ -471,6 +473,28 @@ test('review fixes: opener aborted by standby clears the joining overlay; resume
   assert.equal(vtr.split(/speechKilledAtRef\.current = Date\.now\(\);\s*resumeLessonPendingRef\.current = false;/).length - 1, 2);
   assert.match(vtr, /lastVadActivityAtRef\.current > resumeLessonPendingAtRef\.current/);
   assert.match(embed, /prewarm && TUTOR_HOST_LESSON \?/); // flag off ⇒ durations exactly as before
+});
+
+test('evelyn:clock: whole active seconds, running flag, limit only when set', () => {
+  assert.equal(CLOCK_POST_MS, 15_000);
+  assert.deepEqual(clockMessage({ activeSeconds: 61.9, running: true, maxSeconds: 900 }), { type: 'evelyn:clock', active_seconds: 61, running: true, max_seconds: 900 });
+  assert.deepEqual(clockMessage({ activeSeconds: -3, running: false }), { type: 'evelyn:clock', active_seconds: 0, running: false });
+  assert.ok(!('max_seconds' in clockMessage({ activeSeconds: 1, running: true, maxSeconds: 0 })));
+});
+
+test('host header options: clock message posted on start, standby change, end and on a timer; timer / End / tools options wired', () => {
+  assert.match(embed, /window\.parent\.postMessage\(clockMessage\(\{/);
+  assert.match(embed, /running: !ended && !isStandingBy\(lessonHostRef\.current\)/);
+  assert.match(embed, /\}, \[standby, sessionEnded, postClock\]\);/);
+  assert.match(embed, /if \(!TUTOR_HOST_LESSON \|\| sessionEngagedAtRef\.current === null\) return;/);
+  for (const p of ['sessionTimer={uiOptions.sessionTimer}', 'endControlVisible={uiOptions.endControl}', 'toolsLow={uiOptions.toolsLow}']) assert.ok(embed.includes(p), p);
+  assert.match(session, /headerClock=\{!sessionTimer \? undefined : \(/);
+  assert.match(session, /hideTimer=\{!sessionTimer\}/);
+  assert.match(session, /endControl=\{endControlVisible \? endControlEl : null\}/);
+  assert.match(read('src/app/tutor/components/session/SessionStage.tsx'), /style=\{toolsLow \? \{ bottom: /);
+  assert.match(uiOptions, /sessionTimer: true, endControl: true, toolsLow: false/);
+  assert.match(uiOptions, /gameclass: \{[^}]*toolsLow: true/);
+  assert.ok(!/gameclass: \{[^}]*(sessionTimer|endControl)/.test(uiOptions), 'timer and End stay on until the host opts out per token');
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)

@@ -81,6 +81,8 @@ export interface SessionStageProps {
    *  complements (never duplicates) the `controls` slot's desktop timer. It is
    *  what let the portal drop its whole countdown ROW on mobile. */
   headerClock?: ReactNode;
+  /** Embed option `toolsLow`: anchor the tool cluster above the dock, not at the top of the board. */
+  toolsLow?: boolean;
   /** R1 (2026-07-14): End/Pause moved OUT of the dock into the header's
    *  right cluster — session-level control, conventional spot, and far from
    *  the textbox where accidental taps happen. Composed by TutorSession
@@ -252,7 +254,7 @@ const TITLE_REVEAL_MS = 4000;
 export default function SessionStage(props: SessionStageProps) {
   const {
     sessionMode = 'voice',
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -504,6 +506,18 @@ export default function SessionStage(props: SessionStageProps) {
   // unwanted extra clearance. One shared constant so the two expressions
   // (below, and at the panel's `bottom` style) cannot diverge again.
   const TEXT_DOCK_MIN_PX = 56;
+  // `toolsLow`: the tool cluster sits just above the dock, whose height
+  // varies (one row on wide panels, two on narrow) — measured, like the
+  // text-mode dock below. 0 until measured ⇒ the fallback in the style.
+  const [toolsDockPx, setToolsDockPx] = useState(0);
+  useEffect(() => {
+    if (!toolsLow || !dockRef.current) return;
+    const el = dockRef.current;
+    const ro = new ResizeObserver(() => setToolsDockPx(el.getBoundingClientRect().height));
+    ro.observe(el);
+    setToolsDockPx(el.getBoundingClientRect().height);
+    return () => ro.disconnect();
+  }, [toolsLow]);
   const [dockHeight, setDockHeight] = useState(0);
   useEffect(() => {
     if (sessionMode !== 'text' || !dockRef.current) return;
@@ -1629,7 +1643,10 @@ export default function SessionStage(props: SessionStageProps) {
           is right-anchored, so the FAB stays at the right edge (under the
           anchor) and expanding only grows the row leftward — it never jumps
           out from under the pointer, and tab order matches what is seen. */}
-      <div className={`absolute ${railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${textToolRail ? ' md:top-[var(--ss-tools-top)] md:right-5 md:z-[55]' : sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''}`}>
+      <div
+        style={toolsLow ? { bottom: `calc(${toolsDockPx || 96}px + 1.25rem + env(safe-area-inset-bottom))` } : undefined}
+        className={`absolute ${toolsLow ? '' : railEl && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20${toolsLow ? '' : textToolRail ? ' md:top-[var(--ss-tools-top)] md:right-5 md:z-[55]' : sessionMode === 'text' ? ' md:top-[var(--ss-tools-top)] md:right-3' : ''}`}
+      >
         <div
           ref={toolsClusterRef}
           data-testid="tools-cluster"

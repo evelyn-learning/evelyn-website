@@ -231,6 +231,12 @@ export interface TutorSessionProps {
    *  `embedded` — the intent means nothing without a host listening.
    *  Default false. */
   mobileFinish?: boolean;
+  /** Embed UI options: the header clock / the header End control. Default true.
+   *  Off when the host draws them in its own chrome. */
+  sessionTimer?: boolean;
+  endControlVisible?: boolean;
+  /** Embed UI option: tool cluster above the dock instead of at the top of the board. */
+  toolsLow?: boolean;
 
   /** Share the parent's RealtimeHandle ref instead of an internal one. The
    *  standalone /tutor page needs this: its auto-start injection, end-session
@@ -294,6 +300,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onPracticeStatsChange,
     humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
     standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, videoControl,
+    sessionTimer = true, endControlVisible = true, toolsLow = false,
   } = props;
   // Embed-only (see the prop docs): the retail page can never get it.
   const mobileFinishOn = !!embedded && mobileFinish === true;
@@ -1702,6 +1709,7 @@ export default function TutorSession(props: TutorSessionProps) {
       sessionId={sessionId}
       startedAtMs={voiceStartedAtMs}
       frozenAtMs={standbySinceMs}
+      hideTimer={!sessionTimer}
       maxDuration={sessionMaxMinutes}
       onEndSession={handleEndSession}
       onUploadHomework={onUploadHomework ?? handleUploadHomeworkFallback}
@@ -2018,16 +2026,17 @@ export default function TutorSession(props: TutorSessionProps) {
         agendaRail={agendaRailEl}
         agendaRailVertical={agendaRailVerticalEl}
         controls={controlsEl}
-        headerClock={
+        toolsLow={toolsLow}
+        headerClock={!sessionTimer ? undefined : (
           <HeaderClock
             startedAtMs={voiceStartedAtMs}
             frozenAtMs={standbySinceMs}
             maxMinutes={sessionMaxMinutes}
             countDown={!!maxDurationExplicit}
           />
-        }
+        )}
         adaptiveMenu={adaptiveMenuEl}
-        endControl={endControlEl}
+        endControl={endControlVisible ? endControlEl : null}
         questionPin={questionPinEl}
         questionPinKey={questionPinEl && questionPin ? questionPin.turnId : undefined}
         hiccupPin={hiccupPinEl}
