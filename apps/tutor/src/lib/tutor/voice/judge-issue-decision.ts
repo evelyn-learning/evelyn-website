@@ -54,16 +54,36 @@
  * did. Otherwise nothing (TUTOR_JUDGE_FALSE_DENIAL_GUARDS; see
  * `readJudgeTurnContext`).
  *
- * A response with NEITHER field is handled exactly as before.
+ * 2026-10-09 (local end-to-end run, scenario D): FIRST ROW of the table, for
+ * every kind and for a response with neither field. When a HIGH-confidence
+ * answer pre-check for this turn AGREES with what the tutor said, a judge
+ * issue claiming the opposite does nothing (reason
+ * `precheck-agrees-with-tutor`; the caller records
+ * `judge_precheck_disagreement`):
+ *   checked INCORRECT + the tutor denied
+ *     kind false_denial                              → nothing
+ *     the claim is a denial, and the judge calls the
+ *       answer correct or the claim states no value
+ *       of its own                                   → nothing
+ *   checked CORRECT + the tutor affirmed
+ *     kind false_praise                              → nothing
+ *     the claim is an affirmation, and the judge
+ *       calls the answer incorrect / not an answer
+ *       or the claim states no value of its own      → nothing
+ * A claim that carries a value the student did not write is the tutor's own
+ * statement and keeps its row below (TUTOR_JUDGE_PRECHECK_AGREES_GUARD).
+ *
+ * Otherwise a response with NEITHER field is handled exactly as before.
  *
  * Pure; never throws.
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { buildJudgeCorrectionNote, hasMathExpression, otherClaimsRider } from '@/lib/tutor/voice/judge-correction-note';
-import { TUTOR_JUDGE_CORRECTLY_REASONS, TUTOR_JUDGE_FALSE_DENIAL_GUARDS, TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
-import { isDenialClaim } from '@/lib/tutor/voice/pacing-verdict';
-import { isDenyingOpenerPhrase, isNonAnswerShape } from '@/lib/tutor/voice/work-then-match';
-import { opensWithDenial, precheckInforms, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
+import { TUTOR_JUDGE_CORRECTLY_REASONS, TUTOR_JUDGE_FALSE_DENIAL_GUARDS, TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_PRECHECK_AGREES_GUARD, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { isDenialClaim, readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
+import { isDenyingOpenerPhrase, isNonAnswerShape, readMatchStatement } from '@/lib/tutor/voice/work-then-match';
+import { opensWithDenial, precheckDecides, precheckInforms, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
+import { opensWithAffirmingVerdict } from '@/lib/tutor/voice/nonanswer-praise';
 import type { TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
 
 export const JUDGE_STUDENT_ANSWER_VERDICTS = ['correct', 'incorrect', 'unsure', 'not_an_answer'] as const;
@@ -119,6 +139,7 @@ export interface JudgeIssueDecision {
     | 'student-turn-not-an-answer'
     | 'claim-not-a-denial'
     | 'affirming-opener-cut'
+    | 'precheck-agrees-with-tutor'
     | 'not-noteworthy';
   fields: JudgeIssueFields;
 }
@@ -141,6 +162,16 @@ export interface JudgeTurnContext {
   /** An AFFIRMING verdict / praise opener was removed from this tutor turn
    *  before display (and so before the judge saw it). */
   affirmingOpenerCut: boolean;
+  /** 2026-10-09: the verdict of a HIGH-confidence pre-check of the student's
+   *  answer to the question asked or the problem being worked. Absent when
+   *  there was none (or the caller did not hand over the tutor's reply). */
+  precheckVerdict?: 'correct' | 'incorrect';
+  /** What the tutor's reply said of that answer; null when it said neither
+   *  or both. Present with `precheckVerdict`. */
+  tutorStance?: 'denied' | 'affirmed' | null;
+  /** The student's own words plus what the pre-check read them as proposing —
+   *  the values a bare verdict claim may repeat. Present with `precheckVerdict`. */
+  studentValues?: string;
 }
 
 /**
@@ -156,6 +187,12 @@ export function readJudgeTurnContext(input: {
   precheck: PublicVerdictPrecheck | null | undefined;
   turnShape: TurnShape | null | undefined;
   cutOpener: string | null | undefined;
+  /** 2026-10-09: the tutor's reply as displayed (after any opener cut). With
+   *  it, and a deciding pre-check, the context also says whether the two agree. */
+  replyText?: string | null;
+  /** The student's own message when `studentText` may carry a runtime note
+   *  in front of it. Unset ⇒ `studentText`. */
+  studentWords?: string | null;
 }): JudgeTurnContext {
   const said = (input?.studentText ?? '').trim();
   const studentAnswered = !said || said.startsWith('[')
@@ -164,7 +201,118 @@ export function readJudgeTurnContext(input: {
       ? input.precheck.answers !== 'neither'
       : !isNonAnswerShape(input.turnShape);
   const cut = (input?.cutOpener ?? '').trim();
-  return { studentAnswered, affirmingOpenerCut: !!cut && !isDenyingOpenerPhrase(cut) && !opensWithDenial(cut) };
+  const cutDenies = !!cut && (isDenyingOpenerPhrase(cut) || opensWithDenial(cut));
+  const base: JudgeTurnContext = { studentAnswered, affirmingOpenerCut: !!cut && !cutDenies };
+  const pc = input?.precheck;
+  if (typeof input?.replyText !== 'string' || !precheckDecides(pc)
+      || (pc.answers !== 'open_question' && pc.answers !== 'overall_problem')
+      || (pc.verdict !== 'correct' && pc.verdict !== 'incorrect')) {
+    return base;
+  }
+  const words = (input.studentWords ?? '').trim() || (said.startsWith('[') ? '' : said);
+  return {
+    ...base,
+    precheckVerdict: pc.verdict,
+    tutorStance: readTutorStance(input.replyText, words, { affirmingCut: base.affirmingOpenerCut, denyingCut: cutDenies }),
+    studentValues: `${words} ${pc.proposed ?? ''}`.trim(),
+  };
+}
+
+// ── 2026-10-09: the pre-check and the tutor agree; the judge says otherwise ─
+//
+// Local end-to-end run, scenario D. The student gave a wrong final answer
+// (pre-check: incorrect / high). The tutor said it was not what the problem
+// gives. The judge flagged that sentence — its reasoning took the student's
+// value to be right — and a correction note rode the student's next message.
+// On that next turn (pre-check: correct / high) the tutor confirmed the right
+// answer and the judge flagged the confirmation as well. Two independent
+// reads of the answer agreed each time; the third outvoted them.
+
+/** "…is correct" / "that's right" as a statement, not denied in the same breath. */
+const ASSERTS_CORRECT_RE = /\b(?:is|are|was|were|that's|that’s|it's|it’s|you're|you’re|looks|sounds)\s+(?:(?:\w+ly|indeed|all)\s+)?(?:correct|right)\b(?!\s+(?:of|at|angle|side|hand|triangle|there|here|now|after|before|next|away|up|down)\b)/i;
+const NEGATED_RE = /\b(?:not|never|isn['’]?t|aren['’]?t|wasn['’]?t|doesn['’]?t|don['’]?t|no\s+longer|incorrect|wrong)\b/i;
+
+/** Is this flagged claim an affirmation of the student's answer? */
+export function isAffirmingClaim(claim: string): boolean {
+  const c = (claim ?? '').slice(0, 200);
+  if (!c.trim() || isDenialClaim(c)) return false;
+  if (opensWithAffirmingVerdict(c)) return true;
+  const read = readPacingVerdict(c);
+  if (read.isAffirm && !read.isCorrection) return true;
+  const first = c.split(/(?<=[.!?])\s+/)[0] ?? '';
+  return ASSERTS_CORRECT_RE.test(first) && !NEGATED_RE.test(first) && !/\?\s*$/.test(first.trim());
+}
+
+/** What the reply said of the student's answer — 'denied', 'affirmed', or
+ *  null when it said neither or both. Reads the opener that was cut, the
+ *  explicit match statement, then the reply's head. */
+export function readTutorStance(
+  replyText: string,
+  studentWords: string,
+  cut?: { affirmingCut?: boolean; denyingCut?: boolean },
+): 'denied' | 'affirmed' | null {
+  const reply = replyText ?? '';
+  const match = readMatchStatement(reply, studentWords || undefined);
+  const read = readPacingVerdict(reply, studentWords ? { studentText: studentWords } : undefined);
+  const denied = cut?.denyingCut === true || match === 'differs' || (read.isCorrection && !read.isAffirm);
+  const affirmed = cut?.affirmingCut === true || match === 'matches' || (read.isAffirm && !read.isCorrection)
+    || (!read.isCorrection && isAffirmingClaim(reply));
+  if (denied === affirmed) return null;
+  return denied ? 'denied' : 'affirmed';
+}
+
+const NUMBER_RE = /\d+(?:[.,]\d+)*/g;
+
+/** Does the claim state a value the student did not write? A bare verdict
+ *  ("that is not what the problem gives", "<their value> is correct") does
+ *  not; a sentence carrying its own number is the tutor's own statement. */
+export function claimStatesOwnValue(claim: string, studentValues: string | undefined): boolean {
+  const theirs = new Set((studentValues ?? '').match(NUMBER_RE) ?? []);
+  return ((claim ?? '').match(NUMBER_RE) ?? []).some((n) => !theirs.has(n));
+}
+
+/**
+ * The 2026-10-09 row: does this issue claim the OPPOSITE of what a
+ * high-confidence pre-check and the tutor agree on?
+ */
+export function judgeContradictsAgreedPrecheck(
+  claim: string,
+  fields: JudgeIssueFields,
+  turn: JudgeTurnContext | undefined,
+): boolean {
+  if (!turn?.precheckVerdict || !turn.tutorStance) return false;
+  const { studentAnswerVerdict: verdict, issueKind: kind } = fields;
+  const bare = !claimStatesOwnValue(claim, turn.studentValues);
+  if (turn.precheckVerdict === 'incorrect' && turn.tutorStance === 'denied') {
+    if (kind === 'false_denial') return true;
+    return kind !== 'false_praise' && isDenialClaim(claim) && (verdict === 'correct' || bare);
+  }
+  if (turn.precheckVerdict === 'correct' && turn.tutorStance === 'affirmed') {
+    if (kind === 'false_praise') return true;
+    return kind !== 'false_denial' && isAffirmingClaim(claim)
+      && (verdict === 'incorrect' || verdict === 'not_an_answer' || bare);
+  }
+  return false;
+}
+
+/** One short line for the `judge_precheck_disagreement` debug event. */
+export function describePrecheckDisagreement(turn: JudgeTurnContext | undefined, d: JudgeIssueDecision): string {
+  return `pre-check ${turn?.precheckVerdict ?? '-'}/high · tutor ${turn?.tutorStance ?? '-'} · ` +
+    `judge kind=${d.fields.issueKind ?? '-'} verdict=${d.fields.studentAnswerVerdict ?? '-'} — judge not acted on`;
+}
+
+/**
+ * What the judge is told of the pre-check (its `<answer_check>` block). ''
+ * unless the check DECIDES a verdict on the question asked or the problem
+ * being worked. Carries no value beyond what the student proposed.
+ */
+export function formatJudgeAnswerCheck(p: PublicVerdictPrecheck | null | undefined, opts?: { enabled?: boolean }): string {
+  if (!(opts?.enabled ?? TUTOR_JUDGE_PRECHECK_AGREES_GUARD)) return '';
+  if (!precheckDecides(p) || (p.answers !== 'open_question' && p.answers !== 'overall_problem')) return '';
+  if (p.verdict !== 'correct' && p.verdict !== 'incorrect') return '';
+  const proposed = (p.proposed ?? '').replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+  return (proposed ? `The student proposed: "${proposed.replace(/"/g, "'")}". ` : '')
+    + `Checked independently against the problem: ${p.verdict === 'correct' ? 'CORRECT' : 'INCORRECT'} (high confidence).`;
 }
 
 /** The pre-2026-10-04 rule, keyed on the claim's text. */
@@ -254,11 +402,20 @@ export function decideJudgeIssue(input: {
   /** Unset ⇒ TUTOR_JUDGE_FALSE_DENIAL_GUARDS; false ⇒ the retraction rows as
    *  they stood on 2026-10-06 (the judge's two fields alone). */
   falseDenialGuards?: boolean;
+  /** Unset ⇒ TUTOR_JUDGE_PRECHECK_AGREES_GUARD; false ⇒ the table as it
+   *  stood on 2026-10-08 (the pre-check is not consulted). */
+  precheckAgreesGuard?: boolean;
 }): JudgeIssueDecision {
   const claim = input?.issue?.claim ?? '';
   const severity = input?.severity === 'kill' ? 'kill' : 'advisory';
   if (input?.enabled !== true) return legacyDecision(claim, severity, 'flag-off', {});
   const fields = readJudgeIssueFields(input.issue);
+  // 2026-10-09: two independent reads of the answer — a high-confidence
+  // pre-check and the tutor — agree, and this issue says the opposite.
+  if ((input.precheckAgreesGuard ?? TUTOR_JUDGE_PRECHECK_AGREES_GUARD) === true
+      && judgeContradictsAgreedPrecheck(claim, fields, input.turn)) {
+    return { plantNote: false, noteMode: 'neutral', withholdCredit: false, reason: 'precheck-agrees-with-tutor', fields };
+  }
   const { studentAnswerVerdict: verdict, issueKind: kind } = fields;
   if (!verdict && !kind) return legacyDecision(claim, severity, 'unstructured', fields);
 

@@ -39,6 +39,11 @@ export interface JudgeUserContentInput {
    *  inside and one outside. The block words its own authority, so the
    *  cached system prompt is unchanged. */
   computedFacts?: string;
+  /** Optional ANSWER_CHECK — the result of the independent high-confidence
+   *  pre-check of the student's answer for this turn (voice/judge-issue-
+   *  decision.ts `formatJudgeAnswerCheck`). Like computed_facts, the block
+   *  words its own authority, so the cached system prompt is unchanged. */
+  answerCheck?: string;
 }
 
 export function buildJudgeUserContent(body: JudgeUserContentInput): string {
@@ -60,9 +65,15 @@ export function buildJudgeUserContent(body: JudgeUserContentInput): string {
   const computedFactsBlock = (typeof body.computedFacts === 'string' && body.computedFacts.trim().length > 0)
     ? `<computed_facts>\n${body.computedFacts.trim().slice(0, 3000)}\nThese facts were computed by the runtime from the problem itself and are certain. A statement by the tutor that agrees with them is correct — do not flag it, whatever else the whiteboard or the conversation suggests. A statement that contradicts them is wrong.\n</computed_facts>\n\n`
     : '';
+  // 2026-10-09 (e2e scenario D): the judge twice concluded the opposite of a
+  // high-confidence pre-check that the tutor had followed.
+  const answerCheckBlock = (typeof body.answerCheck === 'string' && body.answerCheck.trim().length > 0)
+    ? `<answer_check>\n${body.answerCheck.trim().slice(0, 600).replace(/[<>]/g, ' ')}\nThis check of the student's answer was made independently, from the problem itself, before the tutor replied. Take its result as settled when you fill in studentAnswerVerdict. A tutor statement that agrees with it — saying an answer checked INCORRECT is not right, or confirming one checked CORRECT — is not an issue: do not flag it. A tutor statement that contradicts it is an issue. Every other statement in the turn is judged as usual.\n</answer_check>\n\n`
+    : '';
   return (
     `<whiteboard_state>\n${body.boardSummary || '(whiteboard is empty)'}\n</whiteboard_state>\n\n` +
     computedFactsBlock +
+    answerCheckBlock +
     authoredSolutionBlock +
     focusBlock +
     questionBlock +

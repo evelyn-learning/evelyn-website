@@ -20,12 +20,17 @@ import {
   isSuppressibleDenial,
   readJudgeIssueFields,
   readJudgeTurnContext,
+  readTutorStance,
+  isAffirmingClaim,
+  claimStatesOwnValue,
+  formatJudgeAnswerCheck,
+  describePrecheckDisagreement,
   describeJudgeIssueDecision,
   JUDGE_STUDENT_ANSWER_VERDICTS,
   JUDGE_ISSUE_KINDS,
   type JudgeIssueDecision,
 } from '../src/lib/tutor/voice/judge-issue-decision';
-import { JUDGE_SYSTEM_PROMPT } from '../src/lib/tutor/judge-prompt';
+import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { buildJudgeCorrectionNote, hasMathExpression } from '../src/lib/tutor/voice/judge-correction-note';
 import { DENIAL_RE } from '../src/lib/tutor/voice/simplification-verdict-check';
 
@@ -551,6 +556,157 @@ test('wiring: the orchestrator hands both judge branches the turn context, read 
   assert.ok(vtr.includes("severity: 'kill', turn: judgeTurnContext })"));
   assert.ok(vtr.includes('cutOpener: openerBackstopCutPhrase'));
   assert.equal(vtr.split('openerBackstopCutPhrase ??= openerRead.opener').length - 1, 2, 'recorded for a dropped opener and for a cut one');
+});
+
+// ── 2026-10-09: a high-confidence pre-check and the tutor agree ─────────────
+// Local end-to-end run, scenario D. Pre-check incorrect/high → the tutor said
+// the answer was not what the problem gives → the judge flagged that sentence
+// and a note rode the student's next message. Then pre-check correct/high →
+// the tutor confirmed → the judge flagged the confirmation.
+console.log('\n2026-10-09 — pre-check agrees with the tutor');
+type Ctx = NonNullable<Parameters<typeof decideJudgeIssue>[0]['turn']>;
+const PC = (verdict: string, o: Record<string, unknown> = {}) =>
+  ({ answers: 'overall_problem', target: 'the final answer', proposed: 'x = 12', verdict, confidence: 'high', ...o }) as Parameters<typeof readJudgeTurnContext>[0]['precheck'];
+const D_STUDENT_1 = 'I solved it and my final answer is x = 12.';
+const D_REPLY_1 = "That's not quite what the equation gives for $x$. What do you get when you add 9 to both sides first?";
+const D_CLAIM_1 = "That's not quite what the equation gives for $x$.";
+const D_REPLY_2 = "$x = 17$ is correct. That's the final answer for problem 1 — nice work.";
+const D_CLAIM_2 = '$x = 17$ is correct.';
+const deniedTurn = (): Ctx => readJudgeTurnContext({ studentText: D_STUDENT_1, precheck: PC('incorrect'), turnShape: null, cutOpener: null, replyText: D_REPLY_1 });
+// On the second turn the transcript carried the planted note in front of the
+// student's words, and "Right," had been cut from the reply.
+const affirmedTurn = (): Ctx => readJudgeTurnContext({
+  studentText: '[correction note — not from the student] An automated review flagged a statement…\n\nx = 17',
+  studentWords: 'x = 17', precheck: PC('correct', { proposed: 'x = 17' }), turnShape: null, cutOpener: 'Right', replyText: D_REPLY_2,
+});
+const pd = (claim: string, fields: Record<string, unknown>, turn: Ctx, severity: Sev = 'advisory', why?: string) =>
+  decideJudgeIssue({ enabled: true, issue: { claim, ...fields, ...(why ? { why } : {}) }, severity, turn });
+const KINDS = ['false_denial', 'false_praise', 'wrong_math', 'tone_or_wording', 'grounding', 'other', undefined];
+const VERDICTS = ['correct', 'incorrect', 'unsure', 'not_an_answer', undefined];
+
+test('turn context: a deciding pre-check + the reply ⇒ the verdict, the tutor\'s stance, the student\'s values', () => {
+  assert.deepEqual(deniedTurn(), { studentAnswered: true, affirmingOpenerCut: false, precheckVerdict: 'incorrect', tutorStance: 'denied', studentValues: `${D_STUDENT_1} x = 12` });
+  const a = affirmedTurn();
+  assert.deepEqual([a.precheckVerdict, a.tutorStance, a.studentValues], ['correct', 'affirmed', 'x = 17 x = 17']);
+  // Without the reply (older callers) the context is exactly what it was.
+  assert.deepEqual(readJudgeTurnContext({ studentText: D_STUDENT_1, precheck: PC('incorrect'), turnShape: null, cutOpener: null }), { studentAnswered: true, affirmingOpenerCut: false });
+  // Only a HIGH-confidence correct / incorrect on the question or the problem.
+  for (const o of [{ confidence: 'medium' }, { confidence: 'low' }, { verdict: 'partly_correct' }, { verdict: 'cannot_determine' }, { answers: 'other_part' }, { answers: 'neither' }]) {
+    const c = readJudgeTurnContext({ studentText: D_STUDENT_1, precheck: PC('incorrect', o), turnShape: null, cutOpener: null, replyText: D_REPLY_1 });
+    assert.equal(c.precheckVerdict, undefined, JSON.stringify(o));
+  }
+});
+test('tutor stance: denied / affirmed / neither', () => {
+  assert.equal(readTutorStance(D_REPLY_1, D_STUDENT_1), 'denied');
+  assert.equal(readTutorStance(D_REPLY_2, 'x = 17'), 'affirmed');
+  assert.equal(readTutorStance('That matches what you wrote.', 'x = 17'), 'affirmed');
+  assert.equal(readTutorStance('What do you get when you add 9 to both sides?', 'x = 12'), null);
+  assert.equal(readTutorStance('What would you try first?', 'x = 12', { affirmingCut: true }), 'affirmed');
+  assert.equal(readTutorStance('What would you try first?', 'x = 12', { denyingCut: true }), 'denied');
+  assert.equal(readTutorStance('', ''), null);
+  for (const c of [D_CLAIM_2, 'Exactly.', "Yes, that's right.", 'That is exactly right.']) assert.equal(isAffirmingClaim(c), true, c);
+  for (const c of [D_CLAIM_1, 'Not quite.', 'That is not correct.', 'Is that correct?', 'The point is right of the line.', MATH, '']) assert.equal(isAffirmingClaim(c), false, c);
+});
+test('LIVE row 1: pre-check incorrect/high, the tutor denied, the judge flags the denial → nothing, whatever kind and verdict it gives', () => {
+  for (const k of KINDS) for (const v of VERDICTS) {
+    if (k === 'false_praise') continue;
+    for (const sev of ['advisory', 'kill'] as const) {
+      const r = pd(D_CLAIM_1, { issueKind: k, studentAnswerVerdict: v }, deniedTurn(), sev);
+      if (!k && !v) { assert.equal(r.reason, 'precheck-agrees-with-tutor', 'a response with neither field too'); }
+      assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'precheck-agrees-with-tutor'], `${k}/${v}/${sev}`);
+      assert.equal(planJudgeNote([{ claim: D_CLAIM_1, decision: r }]), null);
+    }
+  }
+});
+test('row 1, the named shape: kind false_denial on a turn the pre-check calls incorrect → nothing, even on a claim that is not a denial', () => {
+  const r = pd('The equation gives a different value there.', { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, deniedTurn());
+  assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'precheck-agrees-with-tutor']);
+});
+test('LIVE row 2: pre-check correct/high, the tutor affirmed, the judge flags the confirmation → nothing', () => {
+  for (const k of KINDS) for (const v of VERDICTS) {
+    if (k === 'false_denial') continue;
+    for (const sev of ['advisory', 'kill'] as const) {
+      const r = pd(D_CLAIM_2, { issueKind: k, studentAnswerVerdict: v }, affirmedTurn(), sev);
+      assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'precheck-agrees-with-tutor'], `${k}/${v}/${sev}`);
+    }
+  }
+});
+test('row 2, the named shape: kind false_praise on a turn the pre-check calls correct → nothing, whatever the claim', () => {
+  const r = pd('So $x = 17$ after dividing by 4.', { issueKind: 'false_praise', studentAnswerVerdict: 'incorrect' }, affirmedTurn(), 'kill');
+  assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'precheck-agrees-with-tutor']);
+});
+test('GENUINE corrections are kept: the pre-check DISAGREES with the tutor', () => {
+  // Checked correct, the tutor denied — the retraction this table exists for.
+  const falseDenial = readJudgeTurnContext({ studentText: 'x = 17', precheck: PC('correct', { proposed: 'x = 17' }), turnShape: null, cutOpener: null, replyText: 'Not quite. Try adding 9 first.' });
+  assert.equal(falseDenial.tutorStance, 'denied');
+  const r1 = pd('Not quite.', { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, falseDenial);
+  assert.deepEqual([r1.plantNote, r1.noteMode, r1.withholdCredit, r1.reason], [true, 'retraction', true, 'false-denial']);
+  // Checked incorrect, the tutor affirmed — the false-praise note.
+  const falsePraise = readJudgeTurnContext({ studentText: 'x = 12', precheck: PC('incorrect'), turnShape: null, cutOpener: null, replyText: 'Exactly, $x = 12$ is right. What comes next?' });
+  assert.equal(falsePraise.tutorStance, 'affirmed');
+  const r2 = pd('Exactly, $x = 12$ is right.', { issueKind: 'false_praise', studentAnswerVerdict: 'incorrect' }, falsePraise);
+  assert.deepEqual([r2.plantNote, r2.noteMode, r2.reason], [true, 'false_praise', 'false-praise']);
+});
+test('GENUINE corrections are kept: the tutor\'s own maths inside an agreed turn', () => {
+  // A statement carrying a value the student did not write is the tutor's own.
+  assert.equal(claimStatesOwnValue(MATH, D_STUDENT_1), true);
+  assert.equal(claimStatesOwnValue(D_CLAIM_1, D_STUDENT_1), false);
+  assert.equal(claimStatesOwnValue(D_CLAIM_2, 'x = 17'), false);
+  const own = pd(MATH, { issueKind: 'wrong_math', studentAnswerVerdict: 'incorrect' }, deniedTurn());
+  assert.deepEqual([own.plantNote, own.noteMode, own.withholdCredit, own.reason], [true, 'neutral', false, 'own-statement']);
+  // A denial that goes on to state a value of its own keeps its row.
+  const mixed = pd('Not quite — adding 9 gives $4x = 70$.', { issueKind: 'wrong_math', studentAnswerVerdict: 'incorrect' }, deniedTurn());
+  assert.deepEqual([mixed.plantNote, mixed.noteMode, mixed.reason], [true, 'neutral', 'own-statement']);
+  // An affirmation that goes on to state a value of its own keeps its row.
+  const mixedAffirm = pd('Right, and that makes $4x = 70$.', { issueKind: 'wrong_math', studentAnswerVerdict: 'correct' }, affirmedTurn());
+  assert.deepEqual([mixedAffirm.plantNote, mixedAffirm.noteMode, mixedAffirm.reason], [true, 'neutral', 'own-statement']);
+  // false_praise on a DENIED turn / false_denial on an AFFIRMED one: not this row.
+  assert.notEqual(pd(D_CLAIM_1, { issueKind: 'false_praise', studentAnswerVerdict: 'incorrect' }, deniedTurn()).reason, 'precheck-agrees-with-tutor');
+  assert.notEqual(pd(D_CLAIM_2, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, affirmedTurn()).reason, 'precheck-agrees-with-tutor');
+});
+test('no agreement, no row: the tutor said neither, or the check did not decide', () => {
+  const noStance: Ctx = { studentAnswered: true, affirmingOpenerCut: false, precheckVerdict: 'incorrect', tutorStance: null, studentValues: 'x = 12' };
+  const r = pd(D_CLAIM_1, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, noStance);
+  assert.deepEqual([r.plantNote, r.noteMode, r.reason], [true, 'retraction', 'false-denial']);
+  const medium = readJudgeTurnContext({ studentText: D_STUDENT_1, precheck: PC('incorrect', { confidence: 'medium' }), turnShape: null, cutOpener: null, replyText: D_REPLY_1 });
+  assert.equal(pd(D_CLAIM_1, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, medium).reason, 'false-denial');
+});
+test('switch off ⇒ the table of 2026-10-08, whatever the pre-check says', () => {
+  const r = decideJudgeIssue({ enabled: true, issue: { claim: D_CLAIM_1, issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, severity: 'advisory', turn: deniedTurn(), precheckAgreesGuard: false });
+  assert.deepEqual([r.plantNote, r.noteMode, r.withholdCredit, r.reason], [true, 'retraction', true, 'false-denial']);
+  const r2 = decideJudgeIssue({ enabled: true, issue: { claim: D_CLAIM_2, issueKind: 'wrong_math', studentAnswerVerdict: 'incorrect' }, severity: 'advisory', turn: affirmedTurn(), precheckAgreesGuard: false });
+  assert.deepEqual([r2.plantNote, r2.noteMode, r2.reason], [true, 'neutral', 'own-statement']);
+  // TUTOR_JUDGE_STRUCTURED_VERDICT off is still the claim-text rule alone.
+  assert.equal(decideJudgeIssue({ enabled: false, issue: { claim: D_CLAIM_1 }, severity: 'advisory', turn: deniedTurn() }).reason, 'flag-off');
+});
+test('the advisory debug line says who agreed and what the judge claimed', () => {
+  const r = pd(D_CLAIM_1, { issueKind: 'wrong_math', studentAnswerVerdict: 'incorrect' }, deniedTurn());
+  assert.equal(describeJudgeIssueDecision(r), 'kind=wrong_math verdict=incorrect → no-note no-withhold (precheck-agrees-with-tutor)');
+  assert.equal(describePrecheckDisagreement(deniedTurn(), r), 'pre-check incorrect/high · tutor denied · judge kind=wrong_math verdict=incorrect — judge not acted on');
+});
+test('the judge is given the check: one line, only when it decides, and its own block', () => {
+  assert.equal(formatJudgeAnswerCheck(PC('incorrect')), 'The student proposed: "x = 12". Checked independently against the problem: INCORRECT (high confidence).');
+  assert.ok(formatJudgeAnswerCheck(PC('correct')).endsWith('CORRECT (high confidence).'));
+  for (const o of [{ confidence: 'medium' }, { verdict: 'partly_correct' }, { answers: 'neither' }, { answers: 'other_part' }]) assert.equal(formatJudgeAnswerCheck(PC('incorrect', o)), '', JSON.stringify(o));
+  assert.equal(formatJudgeAnswerCheck(null), '');
+  assert.equal(formatJudgeAnswerCheck(PC('incorrect'), { enabled: false }), '');
+  assert.ok(!formatJudgeAnswerCheck(PC('incorrect', { proposed: 'a <b> "c"' })).includes('<'));
+  const base = { boardSummary: 'b', spokenText: 's' };
+  const withCheck = buildJudgeUserContent({ ...base, answerCheck: formatJudgeAnswerCheck(PC('incorrect')) });
+  assert.ok(withCheck.includes('<answer_check>\nThe student proposed: "x = 12".'));
+  assert.ok(withCheck.includes('</answer_check>'));
+  // Absent ⇒ the request is byte-identical to before, and the cached system prompt never changes.
+  assert.ok(!buildJudgeUserContent(base).includes('answer_check'));
+  assert.ok(!JUDGE_SYSTEM_PROMPT.includes('answer_check'));
+});
+test('wiring: the orchestrator hands the reply to the context, records the disagreement, and sends the check to the judge', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes('replyText: attemptText,'));
+  assert.ok(vtr.includes('studentWords: ledgerStudentTextRef.current,'));
+  assert.equal(vtr.split("onDebugEvent?.('judge_precheck_disagreement'").length - 1, 2, 'advisory and kill-class');
+  assert.ok(vtr.includes('...(judgeAnswerCheck ? { answerCheck: judgeAnswerCheck } : {})'));
+  const flags = readFileSync(join(__dirname, '..', 'src/lib/tutor/orchestrator/turn-round-flags.ts'), 'utf8');
+  assert.ok(flags.includes("process.env.NEXT_PUBLIC_TUTOR_JUDGE_PRECHECK_AGREES_GUARD !== 'off'"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -75,6 +75,9 @@ interface JudgeRequestBody {
   /** Optional COMPUTED_FACTS — the runtime's computed facts about a system /
    *  inequality problem (lib/tutor/whiteboard/inequality-facts.ts). */
   computedFacts?: string;
+  /** Optional ANSWER_CHECK — the high-confidence pre-check result for this
+   *  turn, one line (voice/judge-issue-decision.ts `formatJudgeAnswerCheck`). */
+  answerCheck?: string;
 }
 
 interface JudgeIssue {
@@ -152,6 +155,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
   if (body.computedFacts !== undefined && (typeof body.computedFacts !== 'string' || body.computedFacts.length > 4000)) {
     return badRequest('computedFacts must be a string ≤ 4000 chars');
+  }
+  if (body.answerCheck !== undefined && (typeof body.answerCheck !== 'string' || body.answerCheck.length > 600)) {
+    return badRequest('answerCheck must be a string ≤ 600 chars');
   }
   if (typeof body.spokenText !== 'string' || body.spokenText.trim().length === 0) {
     // Nothing to judge → trivially grounded.

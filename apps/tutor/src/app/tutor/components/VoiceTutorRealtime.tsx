@@ -392,7 +392,7 @@ import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 // Verdict/counting round (2026-10-04): praise-then-exclusion, the judge's
 // structured verdict, short answers, questions/self-reports.
 import { decidePraiseExclusion, buildPraiseExclusionNote, isPraiseExclusionNote, shouldPlantPraiseExclusionNote, praiseExclusionNoteExpired, type PraiseExclusionNoteRecord } from '@/lib/tutor/voice/praise-exclusion';
-import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext } from '@/lib/tutor/voice/judge-issue-decision';
+import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext, describePrecheckDisagreement, formatJudgeAnswerCheck } from '@/lib/tutor/voice/judge-issue-decision';
 import { studentTurnShape, isHedgedValueAnswer } from '@/lib/tutor/orchestrator/student-turn-shape';
 import {
   TUTOR_PRAISE_EXCLUSION_KILL,
@@ -512,7 +512,9 @@ import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
-import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn } from '@/app/tutor/components/session/text-kickoff';
+import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn, decideTypedBeforeHomeworkReady, createTypedHold, type TypedHold } from '@/app/tutor/components/session/text-kickoff';
+import { TUTOR_TYPED_WAITS_FOR_HOMEWORK } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
 import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
 
 /** Step 4 concept tagging. Default ON per the standing flag rule — a new
@@ -1472,6 +1474,10 @@ export function VoiceTutorRealtime({
     enabled: !!audioRecordEnabled,
     sessionStartedAtMs,
   });
+  // 2026-10-09: a tutor that makes no sound (text mode / the `silent` TTS
+  // provider) has no audio track — its zero-filled buffers were recorded,
+  // uploaded (~2.9 MB/min) and flagged hasAudio on every text session.
+  const tutorAudioCapture = decideTutorAudioCapture({ recordEnabled: !!audioRecordEnabled, sessionMode, ttsProvider });
 
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const currentUserTextRef = useRef('');
@@ -2639,6 +2645,44 @@ export function VoiceTutorRealtime({
   );
   const homeworkProblemsRef = useRef<HomeworkProblem[] | null>(null);
   const homeworkCurrentRef = useRef(1);
+  // 2026-10-09 (e2e scenario C): a typed message sent while the homework plan
+  // is still being fetched is held, briefly, until the problems arrive
+  // (session/text-kickoff.ts) — dispatched at once it ran with no plan and no
+  // homework block, latched the tool scope to "full" for the session, and the
+  // shared prompt cache was written twice in two turns.
+  const planLoadSettledIdRef = useRef<string | null>(null);
+  const lessonPlanIdNowRef = useRef(lessonPlanId);
+  lessonPlanIdNowRef.current = lessonPlanId;
+  const [typedHeldForHomework, setTypedHeldForHomework] = useState(false);
+  const typedHoldEventRef = useRef(onDebugEvent);
+  typedHoldEventRef.current = onDebugEvent;
+  const typedHoldRef = useRef<TypedHold>(null as unknown as TypedHold);
+  if (!typedHoldRef.current) {
+    typedHoldRef.current = createTypedHold({
+      decide: (waitedMs) => decideTypedBeforeHomeworkReady({
+        enabled: TUTOR_TYPED_WAITS_FOR_HOMEWORK,
+        sessionMode,
+        sessionGoal,
+        hasPlanId: !!lessonPlanIdNowRef.current,
+        planLoadSettled: !!lessonPlanIdNowRef.current && planLoadSettledIdRef.current === lessonPlanIdNowRef.current,
+        homeworkReady: homeworkProblemsRef.current !== null,
+        waitedMs,
+      }),
+      now: () => Date.now(),
+      every: (fn) => { const iv = setInterval(fn, 50); return () => clearInterval(iv); },
+      onHeld: (held) => setTypedHeldForHomework(held),
+      onEvent: (type, message) => {
+        // The live prop, under its own name and with literal types — the
+        // embed coverage gate (scripts/test-embed-debug-coverage.ts) scans
+        // for exactly that shape.
+        const onDebugEvent = typedHoldEventRef.current;
+        if (type === 'typed_held_for_homework') onDebugEvent?.('typed_held_for_homework', message);
+        else if (type === 'typed_homework_released') onDebugEvent?.('typed_homework_released', message);
+        else onDebugEvent?.('typed_homework_wait_timeout', message);
+      },
+    });
+  }
+  useEffect(() => () => { typedHoldRef.current?.cancel(); }, []);
   const homeworkPlanIdRef = useRef<string | null>(null);
   const onHomeworkProgressRef = useRef(onHomeworkProgress);
   useEffect(() => { onHomeworkProgressRef.current = onHomeworkProgress; }, [onHomeworkProgress]);
@@ -10531,6 +10575,7 @@ export function VoiceTutorRealtime({
     servedProblemStatementsRef.current = new Set();
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
+    planLoadSettledIdRef.current = null;
     if (!lessonPlanId) {
       lessonPlanRef.current = null;
       currentSegmentIdRef.current = '';
@@ -10666,7 +10711,11 @@ export function VoiceTutorRealtime({
       } catch (err) {
         console.error('[VoiceTutorRealtime] lesson plan fetch failed:', err);
       } finally {
-        if (!cancelled) onLessonPlanLoadSettledRef.current?.(lessonPlanId);
+        if (!cancelled) {
+          // A typed message held for this plan stops waiting (text-kickoff.ts).
+          planLoadSettledIdRef.current = lessonPlanId;
+          onLessonPlanLoadSettledRef.current?.(lessonPlanId);
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -17325,14 +17374,23 @@ export function VoiceTutorRealtime({
                 ? classifyTurnShape(studentAnswer, String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? ''))
                 : null,
               cutOpener: openerBackstopCutPhrase,
+              // 2026-10-09 (e2e scenario D): with the reply in hand the
+              // context also says whether a HIGH-confidence pre-check and the
+              // tutor agree — a judge issue claiming the opposite is recorded
+              // (judge_precheck_disagreement) and not acted on.
+              replyText: attemptText,
+              studentWords: ledgerStudentTextRef.current,
             });
+            // The judge is told the check's result as well, so it has no
+            // reason to conclude the opposite in the first place.
+            const judgeAnswerCheck = formatJudgeAnswerCheck(verdictPrecheckRef.current);
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               // 2026-10-06b: computedFacts — which side of which (coloured)
               // line holds, computed from the problem's own inequalities. The
               // judge flagged four correct statements without them.
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}) }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}), ...(judgeAnswerCheck ? { answerCheck: judgeAnswerCheck } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -17535,6 +17593,9 @@ export function VoiceTutorRealtime({
                     if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
                       onDebugEvent?.('judge_issue_decision', `advisory · ${describeJudgeIssueDecision(d.decision)} · ${d.claim.slice(0, 50)}`);
                     }
+                    if (d.decision.reason === 'precheck-agrees-with-tutor') {
+                      onDebugEvent?.('judge_precheck_disagreement', `advisory · ${describePrecheckDisagreement(judgeTurnContext, d.decision)} · ${d.claim.slice(0, 50)}`);
+                    }
                   }
                   const noteworthyAdvisoryIssues = advisoryIssues.filter(
                     (_i, idx) => advisoryDecisions[idx].decision.plantNote,
@@ -17618,6 +17679,9 @@ export function VoiceTutorRealtime({
                   for (const d of killDecisions) {
                     if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
                       onDebugEvent?.('judge_issue_decision', `kill-class · ${describeJudgeIssueDecision(d.decision)} · ${d.claim.slice(0, 50)}`);
+                    }
+                    if (d.decision.reason === 'precheck-agrees-with-tutor') {
+                      onDebugEvent?.('judge_precheck_disagreement', `kill-class · ${describePrecheckDisagreement(judgeTurnContext, d.decision)} · ${d.claim.slice(0, 50)}`);
                     }
                   }
                   if (killDecisions.some((d) => d.decision.withholdCredit)) judgeFlaggedDenialThisTurnRef.current = true;
@@ -20855,7 +20919,7 @@ export function VoiceTutorRealtime({
     onTranscriptionStatus,
     onStateChange,
     onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
-    onTutorAudioChunk: audioRecordEnabled ? audioRecorder.pushTutorChunk : undefined,
+    onTutorAudioChunk: tutorAudioCapture.capture ? audioRecorder.pushTutorChunk : undefined,
     // Audio-hiccup visibility (2026-07-15): a mid-turn TTS retry/skip used to
     // read as the tutor silently freezing. Transient dock notice, auto-clears.
     onTtsIssue: (kind) => {
@@ -23602,10 +23666,14 @@ export function VoiceTutorRealtime({
           // actions came from typing/clicking → typed path.
           // Task 9: an upload's image rides along (live-only thumbnail);
           // every other send passes the identical meta object as before.
-          realtime.sendTextMessage(
+          // 2026-10-09: a real message waits (bounded) for a homework plan
+          // that is still being fetched; a synthetic one is never held.
+          const dispatchNow = () => realtime.sendTextMessage(
             text,
             meta?.image ? { typed: !isSynthetic, image: meta.image } : { typed: !isSynthetic },
           );
+          if (isSynthetic) dispatchNow();
+          else typedHoldRef.current.submit(dispatchNow);
         },
         speakText: (text: string) => realtime.speakText(text),
         stopSpeaking: () => {
@@ -25212,13 +25280,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // moment text starts arriving.
   const [streamingEntryActive, setStreamingEntryActive] = useState(false);
   useEffect(() => {
-    const composing = isWarmingUp || realtime.state === 'processing';
+    // 2026-10-09: a typed message held for the homework plan is "thinking" too.
+    const composing = isWarmingUp || realtime.state === 'processing' || typedHeldForHomework;
     if (!composing || streamingEntryActive) {
       onTutorBusy?.(false);
     } else {
       onTutorBusy?.(true);
     }
-  }, [isWarmingUp, realtime.state, onTutorBusy, streamingEntryActive]);
+  }, [isWarmingUp, realtime.state, onTutorBusy, streamingEntryActive, typedHeldForHomework]);
 
   // Q9: forward the perception-cancel transient signal to the parent
   // so it can render a visible "I heard you" flash on the input area
@@ -25699,7 +25768,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // empties immediately on submit, not at end of flow.
             // Task X10: this is the canonical TYPED path — mark it so a
             // brain-outage fallback renders text, not spoken "say that again".
-            realtime.sendTextMessage(text, { typed: true });
+            // 2026-10-09: in a text homework session whose plan is still being
+            // fetched, the dispatch (only the dispatch — everything above ran
+            // at submit time) waits, bounded, for the problems.
+            typedHoldRef.current.submit(() => realtime.sendTextMessage(text, { typed: true }));
           }
         }}
       >

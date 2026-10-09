@@ -26,9 +26,20 @@
  * below. Silence is no longer an option.
  *
  * KNOWN LIMIT, stated rather than papered over: this scans for STRING-LITERAL
- * event types. A type built from a template literal or a variable cannot be
- * seen here and would still slip through. No such call exists today; if one
- * is added, this gate does not cover it.
+ * event types — a bare literal, or (since 2026-10-09) the two literals of a
+ * `cond ? 'a' : 'b'` first argument. A type built from a template literal or
+ * a variable cannot be seen here and would still slip through (today:
+ * `perception_${…}`, covered by its prefix; `pageDecision.event` and
+ * `error.name`, not checkable here). If another is added, this gate does not
+ * cover it.
+ *
+ * 2026-10-09 — the gate had been RED on main for weeks (event types nobody
+ * had decided on), so seven new types added on a branch went unnoticed
+ * inside an already-failing test, and a partner session's stall could not be
+ * triaged. A red gate cannot report a NEW failure. The undecided backlog is
+ * now named (`UNDECIDED_BACKLOG`) and a second test fails on any orphan
+ * OUTSIDE it; the original test stays as it was, and stays red until the
+ * backlog is decided.
  *
  * Run: npx tsx scripts/test-embed-debug-coverage.ts
  */
@@ -82,6 +93,41 @@ const DELIBERATELY_EXCLUDED = new Set<string>([
   'scrollTo_page_title_match',
 ]);
 
+/**
+ * Event types that were ALREADY neither persisted nor excluded when the
+ * ratchet below was added (2026-10-09). Nobody has decided on them; this list
+ * is NOT a decision and is not a place to add a new type — a new type goes
+ * in EMBED_DEBUG_EVENT_PREFIXES or DELIBERATELY_EXCLUDED. Entries leave this
+ * list when they are decided; the stale check below enforces that.
+ */
+const UNDECIDED_BACKLOG = new Set<string>([
+  'equation_placeholder',
+  // Emitted on the server by practice generation (portal/practice-gen.ts).
+  'practice_gen_background_stored', 'practice_gen_deadline', 'practice_gen_empty',
+  'practice_gen_gate_failed', 'practice_gen_skipped',
+  // Seen only once the scan learned to read `cond ? 'a' : 'b'` arguments.
+  'rt2_judge_advisory', 'rt2_judge_kill',
+  'student_problem_grounding_show_problem', 'student_problem_grounding_worked_example',
+]);
+
+/**
+ * Types introduced by the 2026-10-08/09 text-session rounds. Pinned by name
+ * so that narrowing a prefix later cannot silently drop one.
+ */
+const TEXT_ROUND_EVENTS = [
+  // 2026-10-08: typed message vs the automatic opening turn; a failed
+  // realtime connect in a text session; the opener stall retry; the
+  // whole-answer reveal guard.
+  'opening_turn_superseded', 'typed_queued_after_opening', 'realtime_connect_failed_text',
+  'opener_stall_retry', 'whole_answer_reveal_hit', 'whole_answer_reveal_retry', 'whole_answer_reveal_fallback',
+  // 2026-10-09: a typed message held for the homework plan; the judge
+  // contradicting a pre-check the tutor agreed with.
+  'typed_held_for_homework', 'typed_homework_released', 'typed_homework_wait_timeout',
+  'judge_precheck_disagreement',
+  // Whether the tutor opened a text session, or stood down for the student.
+  'text_kickoff', 'homework_text_kickoff', 'homework_text_kickoff_skipped', 'homework_current_problem',
+];
+
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void) {
   try { fn(); passed++; console.log(`  ✓ ${name}`); }
@@ -100,11 +146,15 @@ function walk(dir: string, out: string[] = []): string[] {
 /** Every string-literal event type passed to onDebugEvent / addDebugEvent. */
 function emittedTypes(): Set<string> {
   const re = /(?:onDebugEvent\??\.?\??\(|addDebugEvent\()\s*'([a-zA-Z_][a-zA-Z_0-9]*)'/g;
+  // `onDebugEvent?.(cond ? 'a' : 'b', …)` — both literals are emitted types.
+  // The condition is a plain expression: no quote, comma or parenthesis.
+  const ternary = /(?:onDebugEvent\??\.?\??\(|addDebugEvent\()\s*[^'"`,()?]+\?\s*'([a-zA-Z_][a-zA-Z_0-9]*)'\s*:\s*'([a-zA-Z_][a-zA-Z_0-9]*)'/g;
   const out = new Set<string>();
   for (const file of walk(SRC)) {
     const text = fs.readFileSync(file, 'utf8');
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) out.add(m[1]);
+    while ((m = ternary.exec(text)) !== null) { out.add(m[1]); out.add(m[2]); }
   }
   return out;
 }
@@ -152,6 +202,36 @@ test('EVERY emitted event type is persisted or explicitly excluded', () => {
     `or add the type to DELIBERATELY_EXCLUDED in this file with a reason:\n` +
     orphans.map((o) => `    ${o}`).join('\n'),
   );
+});
+
+test('NO NEW orphan: every emitted type outside the undecided backlog is persisted or excluded', () => {
+  // The ratchet. The test above is red while the backlog is undecided, and a
+  // red test cannot report a new failure — this one can.
+  const fresh = [...emitted].filter((t) => !covered(t) && !DELIBERATELY_EXCLUDED.has(t) && !UNDECIDED_BACKLOG.has(t)).sort();
+  assert.deepEqual(
+    fresh, [],
+    `\n${fresh.length} NEW event type(s) are silently dropped for embed sessions.\n` +
+    `Add a prefix to EMBED_DEBUG_EVENT_PREFIXES (tutor-portal/embed/page.tsx) or name the type in\n` +
+    `DELIBERATELY_EXCLUDED with a reason — do NOT add it to UNDECIDED_BACKLOG:\n` +
+    fresh.map((o) => `    ${o}`).join('\n'),
+  );
+});
+
+test('the undecided backlog only shrinks (no entry that is decided, or no longer emitted)', () => {
+  const stale = [...UNDECIDED_BACKLOG].filter((t) => !emitted.has(t) || covered(t) || DELIBERATELY_EXCLUDED.has(t)).sort();
+  assert.deepEqual(stale, [], `UNDECIDED_BACKLOG entries that are now decided or gone — remove them:\n` + stale.map((s) => `    ${s}`).join('\n'));
+});
+
+test('the scan reads both literals of a conditional event type (control)', () => {
+  assert.ok(emitted.has('homework_text_kickoff') && emitted.has('text_kickoff'), 'cond ? \'a\' : \'b\' not scanned');
+  assert.ok(emitted.has('figure_redraw_replace') && emitted.has('figure_evolve_replace'));
+});
+
+test('the 2026-10-08/09 text-session events are emitted AND persisted', () => {
+  for (const t of TEXT_ROUND_EVENTS) {
+    assert.ok(emitted.has(t), `${t} is pinned here but no longer emitted — update this list`);
+    assert.ok(covered(t), `${t} must be persisted for embed sessions`);
+  }
 });
 
 test('the exclusion list has no stale entries', () => {

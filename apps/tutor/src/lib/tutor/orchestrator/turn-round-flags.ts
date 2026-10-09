@@ -501,3 +501,28 @@ export const TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL =
  *  from that tutor turn (voice/judge-issue-decision.ts). */
 export const TUTOR_JUDGE_FALSE_DENIAL_GUARDS =
   process.env.NEXT_PUBLIC_TUTOR_JUDGE_FALSE_DENIAL_GUARDS !== 'off';
+
+// ── 2026-10-09: local end-to-end run of the release candidate ──────────────
+// Each defaults ON; 'off' restores the behaviour before it for that one
+// mechanism.
+
+/** A HIGH-confidence answer pre-check that AGREES with what the tutor said
+ *  (checked incorrect + the tutor denied; checked correct + the tutor
+ *  affirmed) outranks a judge issue claiming the opposite: no note, nothing
+ *  withheld, `judge_precheck_disagreement` recorded instead; and the judge
+ *  request carries the check's result (voice/judge-issue-decision.ts). */
+export const TUTOR_JUDGE_PRECHECK_AGREES_GUARD =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_PRECHECK_AGREES_GUARD !== 'off';
+
+/** Text homework session: a first typed message sent while the homework
+ *  plan / problems are still being fetched is held (bounded) until they
+ *  arrive, so its turn runs with the homework context and the filtered tool
+ *  set (components/session/text-kickoff.ts `decideTypedBeforeHomeworkReady`). */
+export const TUTOR_TYPED_WAITS_FOR_HOMEWORK =
+  process.env.NEXT_PUBLIC_TUTOR_TYPED_WAITS_FOR_HOMEWORK !== 'off';
+
+/** A session with no audible tutor (text input mode / the `silent` TTS
+ *  provider) does not record, upload or flag a tutor audio track
+ *  (voice/tutor-audio-capture.ts). */
+export const TUTOR_NO_SILENT_AUDIO_CAPTURE =
+  process.env.NEXT_PUBLIC_TUTOR_NO_SILENT_AUDIO_CAPTURE !== 'off';

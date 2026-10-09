@@ -319,6 +319,28 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // cover killed_render_withheld_answer / _discarded_answer,
   // advance_homework_guard, transcript_follow and the unlocatable-scroll drop.)
   'graph_ineq_', 'scribble_other_page_', 'scribble_retargeted_',
+  // ⚠ 2026-10-09 — FOURTH TIME. The text-session round of 2026-10-08 added
+  // seven event types and none reached this list: the coverage gate was
+  // already red on main (an undecided backlog), so the new failures were
+  // invisible inside it, and a partner text session that stalled left no
+  // record of why. The gate now has a ratchet that fails on any NEW type
+  // while the backlog stays named (scripts/test-embed-debug-coverage.ts).
+  //   a typed message vs the automatic opening turn (opening_turn_superseded,
+  //   typed_queued_after_opening), and held for the homework plan
+  //   (typed_held_for_homework / typed_homework_released / _wait_timeout):
+  'opening_turn_superseded', 'typed_',
+  //   a failed realtime connect that a text session does not surface:
+  'realtime_connect_failed_text',
+  //   the wrong-whole-answer reveal guard (_hit / _retry / _fallback):
+  'whole_answer_reveal_',
+  //   whether the tutor opened a text session or stood down for the student
+  //   (text_kickoff, homework_text_kickoff, homework_text_kickoff_skipped),
+  //   and which homework problem the session moved to. Older than this
+  //   round, never listed; they are the first thing a homework triage asks.
+  'text_kickoff', 'homework_text_kickoff', 'homework_current_problem',
+  // ('opener_' above covers opener_stall_retry; 'judge' covers
+  // judge_precheck_disagreement — a judge issue set aside because a
+  // high-confidence answer pre-check and the tutor agreed.)
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
