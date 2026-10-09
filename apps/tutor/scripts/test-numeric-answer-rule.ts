@@ -7,9 +7,17 @@
  *     judge; anything else does, and the judge's prompt carries the question
  *     and the equal-not-close / stated-requirement rules.
  *
+ *   - scripts/fixtures/numeric-answer-cases.json — the case table shared with
+ *     the academy app (its api and web copies of the rule). Both repos pin the
+ *     table's SHA-256 and the SHA-256 of the shared reader/rule block, so a
+ *     copy cannot drift silently.
+ *
  * No model calls, no database. Run: `npm run test:numeric-answer-rule`
  */
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   gradeNumericAnswer,
   parseNumericKey,
@@ -22,6 +30,10 @@ import {
   type GradeItem,
   type JsonModelCall,
 } from '../src/lib/tutor/portal/grade-free-response';
+
+/** Pinned in BOTH repos (academy: tests/unit/numeric-answer-cases.test.ts). */
+const NUMERIC_CASES_SHA256 = '4f8fb5efde7041ec146640b4d4910d14d87e479311a7e8392c1894e847a6bbea';
+const NUMERIC_CORE_SHA256 = '547ec0227ad5d561359d21df87ab86f52542f714c7a1db45eca0d8039288ce7b';
 
 let passed = 0;
 let failed = 0;
@@ -85,9 +97,58 @@ async function main(): Promise<void> {
 
   await test('anything that is not a single number is not parsed', () => {
     for (const a of ['', 'five', '5 m', '5 meters', 'about 5', '3 or 5', '3, 5', '(2, 3)', 'x < 5', '2x', '5 = x', '1/0', '4.9 ≈ 5',
-      'x = 5 and y = 2', '3 × 10^8', '1e5', '1/2/3', '5..', 'y = x = 5']) {
+      'x = 5 and y = 2', '1/2/3', '5..', 'y = x = 5',
+      '2 or 3', '2 and 3', '2,5', '2-3', '2 x 3', '2^3', '2π', '2 m/s^2', '84.9 N', '45°', '5 = x', '2 × 10', '2 e3']) {
       assert.equal(parseStudentNumber(a), null, `"${a}"`);
     }
+  });
+
+  // 2026-10-09: the whole answer is read. Scientific notation used to be
+  // "not a single number" (left to the judge); it is now evaluated, so
+  // "2 × 10^3" is decided — right for a key of 2000, wrong for a key of 2.
+  await test('scientific notation, a leading + and thousands separators are read by their value; a mixed number is not read', () => {
+    assert.equal(parseStudentNumber('3 × 10^8')?.value, 3e8);
+    assert.equal(parseStudentNumber('1e5')?.value, 1e5);
+    for (const a of ['2 × 10^3', '2 x 10^3', '2*10^3', '2·10³', '2e3', '2E3', '2,000', '+2000']) assert.equal(parseStudentNumber(a)?.value, 2000, a);
+    assert.equal(parseStudentNumber('2 × 10⁻⁵')?.value, 0.00002);
+    assert.deepEqual(parseStudentNumber('1.2 × 10^-5'), { value: 0.000012, places: 6, fraction: false, kind: 'decimal', text: '1.2×10^-5' });
+    assert.equal(parseStudentNumber('1 × 10^-5')?.places, 5);
+    assert.deepEqual(parseStudentNumber('+10/21'), { value: 10 / 21, places: 0, fraction: true, kind: 'fraction', text: '10/21' });
+    assert.equal(parseStudentNumber('1 1/2'), null);
+    all('2', ['2 × 10^3', '2 x 10^3', '2*10^3', '2e3'], 'wrong');
+    all('2', ['2 1/2'], 'undecided');
+    all('2000', ['2 × 10^3', '2 x 10^3', '2*10^3', '2e3'], 'correct');
+    all('0.000012', ['1.2 × 10^-5', '1.23 × 10^-5'], 'correct');
+    all('0.000012', ['1 × 10^-5', '1.3 × 10^-5'], 'wrong');
+    all('10/21', ['+10/21'], 'correct');
+  });
+
+  console.log('\nshared case table (numeric-answer-cases.json):\n');
+
+  const sha = (text: string) => crypto.createHash('sha256').update(text).digest('hex');
+  const tableText = fs.readFileSync(path.join(__dirname, 'fixtures', 'numeric-answer-cases.json'), 'utf8');
+  const table = JSON.parse(tableText) as { cases: Array<{ key: string; answer: string; expect: 'accept' | 'reject'; engine: string }> };
+
+  await test('the table is the canonical one (same pinned hash as the academy repo)', () => {
+    assert.equal(sha(tableText), NUMERIC_CASES_SHA256, 'numeric-answer-cases.json changed: update the academy copy and BOTH pins');
+  });
+
+  await test('the reader/rule block is the canonical one (same pinned hash as the two academy copies)', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'tutor', 'portal', 'numeric-answer-rule.ts'), 'utf8');
+    const block = src.match(/\/\/ ── numeric-core:begin[\s\S]*?\/\/ ── numeric-core:end[^\n]*\n/);
+    assert.ok(block, 'numeric-core block markers');
+    assert.equal(sha(block[0]), NUMERIC_CORE_SHA256, 'the shared block changed: change all three copies and BOTH pins');
+  });
+
+  await test('every case: the engine verdict is the table\'s, and the rule never accepts an answer the table rejects', () => {
+    assert.ok(table.cases.length >= 300);
+    const bad: string[] = [];
+    for (const c of table.cases) {
+      const got = v(c.key, c.answer);
+      if (got !== c.engine || (c.expect === 'reject' && got === 'correct')) bad.push(`key "${c.key}" answer "${c.answer}": ${got}, want ${c.engine}`);
+      assert.ok(c.engine === 'undecided' || (c.engine === 'correct') === (c.expect === 'accept'), `inconsistent row: key "${c.key}" answer "${c.answer}"`);
+    }
+    assert.deepEqual(bad, []);
   });
 
   console.log('\nthe rule (gradeNumericAnswer):\n');
