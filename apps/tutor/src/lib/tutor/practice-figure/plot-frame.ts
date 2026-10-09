@@ -40,10 +40,15 @@ export const SERIES_COLORS = ['#1d4ed8', '#c2410c', '#0f766e', '#9d174d', '#7722
  *  here still shows ≈ 2.5 units of white at 340 px. None of them is the thin
  *  grey long-dash an asymptote is drawn with (`GUIDE_DASH`). */
 export const SERIES_DASHES = ['', '6 5', '9 5 0.1 5', '0.1 4.6', '14 5', '9 5 0.1 5 0.1 5'] as const;
-/** Asymptotes and other guide lines: thin, grey, long-dashed, butt caps. */
-export const GUIDE_COLOR = '#6b7280';
-export const GUIDE_DASH = '10 4';
-export const GUIDE_WIDTH = 1;
+/** Asymptotes and other guide lines: dark grey, long-dashed, butt caps — and
+ *  drawn over a white under-line (`GUIDE_MASK_WIDTH`), so one that lies
+ *  exactly on a gridline still shows clear paper between its dashes instead
+ *  of the gridline (2026-10-11: the old thin `#6b7280` "10 4" guide on a
+ *  gridline read as a slightly darker gridline). Thinner than any curve. */
+export const GUIDE_COLOR = '#374151';
+export const GUIDE_DASH = '11 5';
+export const GUIDE_WIDTH = 1.5;
+export const GUIDE_MASK_WIDTH = 2.6;
 
 /** One stroke pattern per curve. A lone curve is solid ("7 4" when the spec
  *  says `dashed`). With several, the curves the spec marks `dashed` take the
@@ -251,6 +256,10 @@ export interface FrameOptions {
   zeroAxes?: boolean;
   /** Stroke width of those lines (default 1.4). */
   axisWidth?: number;
+  /** `false` ⇒ no lighter gridlines between the numbered ones (default true).
+   *  For figures read by COUNTING SQUARES: a half-unit line contradicts a
+   *  stem that says "each square is 1 unit". */
+  minorGrid?: boolean;
 }
 
 export interface Frame {
@@ -329,6 +338,7 @@ export function buildFrame(o: FrameOptions): Frame {
     for (const t of ticksBetween(x0, x1, xMinorStep)) minor.push(`M${n2(X(t))},${n2(plot.y)}V${n2(plot.y + plot.h)}`);
     for (const t of xTicks) major.push(`M${n2(X(t))},${n2(plot.y)}V${n2(plot.y + plot.h)}`);
   }
+  if (o.minorGrid === false) minor.length = 0;
   if (minor.length > 0) parts.push(`<path d="${minor.join('')}" stroke="${GRID_MINOR}" stroke-width="0.7" fill="none"/>`);
   if (major.length > 0) parts.push(`<path d="${major.join('')}" stroke="${GRID_MAJOR}" stroke-width="0.9" fill="none"/>`);
   parts.push(`<rect x="${n2(plot.x)}" y="${n2(plot.y)}" width="${n2(plot.w)}" height="${n2(plot.h)}" fill="none" stroke="${FRAME}" stroke-width="1"/>`);
@@ -401,6 +411,19 @@ export interface LegendEntry {
   mark?: 'line' | 'dot';
   /** The marker of a point series (default a filled circle). */
   shape?: SeriesShape;
+  /** A DOUBLE line (two thin parallel lines — `doubleLine`): the swatch repeats it. */
+  double?: boolean;
+}
+
+/** Stroke widths of a double line: the coloured band and the white core that splits it in two. */
+export const DOUBLE_OUTER = 4.2;
+export const DOUBLE_CORE = 1.6;
+/** A curve drawn as a DOUBLE line — two thin parallel lines of one colour. A second cue for
+ *  "the other curve" that is neither a colour nor a dash (a dash already means "boundary
+ *  excluded" on an inequality graph). `d` is the path data. */
+export function doubleLine(d: string, color: string): string {
+  return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${DOUBLE_OUTER}" stroke-linejoin="round"/>`
+    + `<path d="${d}" fill="none" stroke="#ffffff" stroke-width="${DOUBLE_CORE}" stroke-linejoin="round"/>`;
 }
 
 /** A wrapping legend row block starting at `y`. Returns its SVG and height. */
@@ -409,7 +432,7 @@ export function buildLegend(entries: LegendEntry[], y: number, W: number = FIGUR
   const parts: string[] = [];
   const rowH = TICK_FS + 7;
   // A patterned swatch is long enough to show a whole repeat of its pattern.
-  const sw = entries.some((e) => e.mark !== 'dot' && e.dash) ? 34 : 18;
+  const sw = entries.some((e) => e.mark !== 'dot' && (e.dash || e.double)) ? 34 : 18;
   let x = 10;
   let row = 0;
   for (const e of entries) {
@@ -420,6 +443,7 @@ export function buildLegend(entries: LegendEntry[], y: number, W: number = FIGUR
     }
     const cy = y + row * rowH + rowH / 2;
     if (e.mark === 'dot') parts.push(e.shape && e.shape !== 'circle' ? shapeMark(e.shape, x + sw / 2, cy, 3.4, e.color) : `<circle cx="${n2(x + sw / 2)}" cy="${n2(cy)}" r="3.4" fill="${e.color}"/>`);
+    else if (e.double) parts.push(doubleLine(`M${n2(x)},${n2(cy)}H${n2(x + sw)}`, e.color));
     else if (e.dash) parts.push(`<line x1="${n2(x + 1.2)}" y1="${n2(cy)}" x2="${n2(x + sw - 1.2)}" y2="${n2(cy)}" stroke="${e.color}" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${e.dash}"/>`);
     else parts.push(`<line x1="${n2(x)}" y1="${n2(cy)}" x2="${n2(x + sw)}" y2="${n2(cy)}" stroke="${e.color}" stroke-width="2.4"${e.dashed ? ' stroke-dasharray="5 3"' : ''}/>`);
     parts.push(`<text x="${n2(x + sw + 4)}" y="${n2(cy + TICK_FS * 0.36)}" font-size="${TICK_FS}" fill="${INK}">${esc(e.label)}</text>`);

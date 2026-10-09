@@ -28,7 +28,8 @@
  * A blank is a dashed box with a question mark — the cell the item asks
  * for. The spec still carries the true sign under it, so the key can be
  * recomputed. The critical numbers are spaced EVENLY (a sign chart is not to
- * scale).
+ * scale). The dashed guide under each critical number is broken round
+ * whatever a row writes at that number, so no value looks struck through.
  */
 import { FIGURE_WIDTH, LABEL_FS, SERIES_COLORS, TICK_FS, estWidth, n2, niceStep, tickTexts, ticksBetween } from '../plot-frame';
 import type { Drawn, FigureFacts, Reader } from '../spec';
@@ -227,6 +228,9 @@ export function signChartModel(r: Reader): SignChartModel {
   return { critical, rows, variable: r.optStr(p.variable, 'variable', 4) ?? 'x', title: r.optStr(p.title, 'title', 160) };
 }
 
+/** Half the height of the gap a guide leaves round a value written at a critical number. */
+export const AT_CLEAR = 11;
+
 export function renderSignChart(r: Reader): Drawn {
   const m = signChartModel(r);
   const W = FIGURE_WIDTH;
@@ -248,7 +252,19 @@ export function renderSignChart(r: Reader): Drawn {
   m.critical.forEach((c, k) => {
     parts.push(`<line x1="${n2(xc(k))}" y1="${n2(yLine - 5)}" x2="${n2(xc(k))}" y2="${n2(yLine + 5)}" stroke="${INK}" stroke-width="1.5"/>`);
     parts.push(text(xc(k), yLine - 9, c.label, { fs: LABEL_FS, anchor: 'middle', weight: 600 }));
-    parts.push(`<path d="M${n2(xc(k))},${n2(yLine + 5)}V${n2(bottom)}" fill="none" stroke="${MUTED}" stroke-width="1" stroke-dasharray="4 3"/>`);
+    // The dashed guide under a critical number is BROKEN wherever a row writes something at that
+    // number (0, und, +, − or a "?" box): a guide running through "0" or "−" reads as a struck-out
+    // value. It stops `AT_CLEAR` above the text and starts again the same distance below it.
+    const segs: string[] = [];
+    let from = yLine + 5;
+    m.rows.forEach((row, i) => {
+      if (!row.at[k] && !row.blankAt[k]) return;
+      const cy = rowY(i) + rowH / 2;
+      if (cy - AT_CLEAR > from) segs.push(`M${n2(xc(k))},${n2(from)}V${n2(cy - AT_CLEAR)}`);
+      from = cy + AT_CLEAR;
+    });
+    if (bottom > from) segs.push(`M${n2(xc(k))},${n2(from)}V${n2(bottom)}`);
+    parts.push(`<path d="${segs.join('')}" fill="none" stroke="${MUTED}" stroke-width="1" stroke-dasharray="4 3"/>`);
   });
   m.rows.forEach((row, i) => {
     const y0 = rowY(i);

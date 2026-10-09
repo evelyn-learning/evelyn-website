@@ -291,6 +291,7 @@ export function renderFieldDiagram(r: Reader): Drawn {
     const bw = W - 24;
     const k = Math.min(bw / (m.xRange[1] - m.xRange[0]), 260 / (m.yRange[1] - m.yRange[0]));
     const w = (m.xRange[1] - m.xRange[0]) * k;
+    const w0 = w;
     const hgt = (m.yRange[1] - m.yRange[0]) * k;
     const x0 = (W - w) / 2;
     const C = (q: Pt): Pt => [x0 + (q[0] - m.xRange[0]) * k, top + (m.yRange[1] - q[1]) * k];
@@ -300,6 +301,8 @@ export function renderFieldDiagram(r: Reader): Drawn {
     const total = lines.length;
     if (total > 36) notes.push({ code: 'too_many_elements', message: `${total} field lines — more than 36 cannot be counted at 340 px (fewer linesPerUnit, or smaller charges)` });
     const d: string[] = [];
+    /** Every drawn field line, on the canvas — what a label must keep off. */
+    const drawn: Pt[][] = [];
     for (const ln of lines) {
       const cp = ln.pts.map(C);
       // Thin the polyline: keep a point when the line has turned or run on.
@@ -315,6 +318,7 @@ export function renderFieldDiagram(r: Reader): Drawn {
         }
       }
       kept.push(cp[cp.length - 1]);
+      drawn.push(cp);
       d.push(polyPath(kept));
       if (m.arrows) {
         let len = 0;
@@ -362,12 +366,66 @@ export function renderFieldDiagram(r: Reader): Drawn {
       const [cx, cy] = C([c.x, c.y]);
       parts.push(chargeSymbol(cx, cy, { positive: c.q > 0, showSign: c.showSign }, R));
       if (c.label) {
-        // On a white plate, so no field line runs through the letters.
-        const ly = cy + R + 16 > top + hgt - 2 ? cy - R - 7 : cy + R + 16;
+        // On a white plate, so no field line runs through the letters — and the plate itself is
+        // put where it cuts the FEWEST lines: under the charge when that is as clear as over it,
+        // else over it. (Not beside it: there the plate hides where the lines START, and they
+        // look as if they left the label.)
         const w = c.label === '?' ? 0 : estWidth(c.label, 12) * 0.9 + 6;
-        if (w) parts.push(`<rect x="${n2(cx - w / 2)}" y="${n2(ly - 11.5)}" width="${n2(w)}" height="15" rx="2" fill="#ffffff"/>`);
-        parts.push(lab(cx, ly, c.label, 'middle', { fs: 12, weight: 600 }));
+        const half = (w || 22) / 2;
+        const spots: Pt[] = [[cx, cy + R + 16], [cx, cy - R - 7]];
+        const cut = ([lx, ly]: Pt): number => {
+          if (lx - half < x0 + 1 || lx + half > x0 + w0 - 1 || ly - 11.5 < top + 1 || ly + 3.5 > top + hgt - 1) return Infinity;
+          const box = { x0: lx - half - 1, y0: ly - 12.5, x1: lx + half + 1, y1: ly + 4.5 };
+          let n = 0;
+          for (const ln of drawn) if (ln.some((q) => q[0] > box.x0 && q[0] < box.x1 && q[1] > box.y0 && q[1] < box.y1)) n++;
+          for (const o of m.charges) {
+            if (o === c) continue;
+            const [ox, oy] = C([o.x, o.y]);
+            if (ox + R > box.x0 && ox - R < box.x1 && oy + R > box.y0 && oy - R < box.y1) n += 10;
+          }
+          return n;
+        };
+        const cuts = spots.map(cut);
+        let best = cuts.indexOf(Math.min(...cuts));
+        if (cuts[best] > 0) {
+          // Neither is clear: look further out, in the gaps BETWEEN this charge's lines (they leave
+          // it evenly spaced, starting half a gap from the direction of its nearest neighbour) —
+          // nearest the charge first, and at each distance the gap nearest to straight down.
+          const n = Math.abs(c.q) * m.linesPerUnit;
+          let toward = 0;
+          let bd = Infinity;
+          for (const o of m.charges) {
+            const dist = Math.hypot(o.x - c.x, o.y - c.y);
+            if (o !== c && dist < bd) { bd = dist; toward = Math.atan2(o.y - c.y, o.x - c.x); }
+          }
+          const gaps = Array.from({ length: n }, (_, j) => toward + (2 * Math.PI * j) / n)
+            .sort((a, b) => Math.abs(Math.sin(a) + 1) + Math.abs(Math.cos(a)) - (Math.abs(Math.sin(b) + 1) + Math.abs(Math.cos(b))));
+          search: for (const rho of [R + 13, R + 19, R + 26, R + 34]) {
+            for (const a of gaps) {
+              const spot: Pt = [cx + (rho + half * Math.abs(Math.cos(a))) * Math.cos(a), cy - rho * Math.sin(a) + 4];
+              if (cut(spot) === 0) {
+                spots.push(spot);
+                cuts.push(0);
+                best = spots.length - 1;
+                break search;
+              }
+            }
+          }
+        }
+        const [lx, ly] = Number.isFinite(cuts[best]) ? spots[best] : spots[cy + R + 16 > top + hgt - 2 ? 1 : 0];
+        const lost = cuts[best];
+        if (Number.isFinite(lost) && lost > 1) notes.push({ code: 'labels_overlap', message: `the label "${c.label}" of a charge interrupts ${lost} field lines wherever it is put — fewer linesPerUnit, or no label` });
+        if (w) parts.push(`<rect x="${n2(lx - w / 2)}" y="${n2(ly - 11.5)}" width="${n2(w)}" height="15" rx="2" fill="#ffffff"/>`);
+        parts.push(lab(lx, ly, c.label, 'middle', { fs: 12, weight: 600 }));
       }
+    });
+    // Counting lines works when each charge's lines leave it well apart and run clear. With THREE
+    // charges they bunch in the gaps between the charges however they are started; and more than
+    // a dozen lines on one symbol leave it under 5 units apart.
+    if (m.charges.length >= 3) notes.push({ code: 'crowded', message: 'three charges: the field lines bunch between them — use this figure for direction and sign, NOT for counting lines (for line counting use one or two charges)' });
+    m.charges.forEach((c, i) => {
+      const n = Math.abs(c.q) * m.linesPerUnit;
+      if (n > 12) notes.push({ code: 'crowded', message: `charges[${i}] carries ${n} field lines — more than 12 leave its symbol under 5 units apart and cannot be counted at 340 px (fewer linesPerUnit)` });
     });
     for (const q of m.points) {
       const [px, py] = C([q.x, q.y]);
@@ -481,7 +539,9 @@ export function renderFieldDiagram(r: Reader): Drawn {
     parts.push(`<path d="M${n2(cx - Math.abs(ux) * L)},${n2(cy - Math.abs(uy) * L)}L${n2(cx + Math.abs(ux) * L)},${n2(cy + Math.abs(uy) * L)}" ${stroke(INK, 4)}/>`);
     if (m.showCurrent) {
       parts.push(head(cx + ux * 14, cy + uy * 14, ux, uy, 16, INK), `<path d="M${n2(cx + ux * 2)},${n2(cy + uy * 2)}L${n2(cx - ux * 14)},${n2(cy - uy * 14)}" ${stroke('#ffffff', 1.4)}/>`);
-      parts.push(text(horizontal ? cx + ux * (L + 12) : cx, horizontal ? cy + 4.5 : cy + uy * (L + 8) + (uy > 0 ? 10 : 0), 'I', { fs: 14, anchor: 'middle', weight: 700, italic: true }));
+      // Beyond the end of a horizontal wire; beside the arrowhead of a vertical one (beyond its end
+      // the letter fell on — and half outside — the top edge of the figure).
+      parts.push(horizontal ? text(cx + ux * (L + 12), cy + 4.5, 'I', { fs: 14, anchor: 'middle', weight: 700, italic: true }) : text(cx - 13, cy + uy * 6 + 5, 'I', { fs: 14, anchor: 'middle', weight: 700, italic: true, halo: true }));
     } else parts.push(text(horizontal ? cx + L + 6 : cx, horizontal ? cy + 4 : cy + L + 14, 'wire', { anchor: horizontal ? 'start' : 'middle' }));
     H = cy + (horizontal ? 72 : L + 20) + 8;
     if (m.showField) H = pageKey(parts, H, 'field', W);

@@ -19,7 +19,9 @@
  *   focalMarks?: boolean (true);         // F and 2F on both sides of a lens; F and C of a mirror
  *   title?: string }
  * The horizontal and vertical scales differ (as in any ray diagram); the
- * construction is exact in each. Refused when the image would be more than
+ * construction is exact in each. Height labels and the names of the focal
+ * marks are set where no ray runs behind them whenever there is such a place;
+ * the distance brackets under the figure each take a row of their own. Refused when the image would be more than
  * five times the object's size or further than six focal lengths away.
  *
  * Plane interface (light arrives from the upper left):
@@ -238,8 +240,21 @@ export function renderRayDiagram(r: Reader): Drawn {
   const Y = (v: number) => yAxis - (v / yMax) * half;
   const parts: string[] = [];
   const under: string[] = [];
-  /** Labels: drawn last, over the rays. */
+  /** Labels: drawn last, over the rays — the focal marks' names first, then the rest. */
   const over: string[] = [];
+  const overMarks: string[] = [];
+  /** Every ray drawn (solid or dashed), on the canvas — what a label keeps off. */
+  const raySegs: Array<[Pt, Pt]> = [];
+  /** How many rays pass through a box. */
+  const raysThrough = (b: { x0: number; y0: number; x1: number; y1: number }): number => raySegs.filter(([a, c]) => {
+    const n = Math.max(2, Math.ceil(Math.hypot(c[0] - a[0], c[1] - a[1]) / 2));
+    for (let i = 0; i <= n; i++) {
+      const x = a[0] + ((c[0] - a[0]) * i) / n;
+      const y = a[1] + ((c[1] - a[1]) * i) / n;
+      if (x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1) return true;
+    }
+    return false;
+  }).length;
   // Axis.
   parts.push(`<path d="M${left},${n2(yAxis)}H${right}" ${stroke(MUTED, 1.1)}/>`);
   // The element.
@@ -261,6 +276,7 @@ export function renderRayDiagram(r: Reader): Drawn {
     under.push(`<path d="${back.join('')}" ${stroke(MUTED, 1)}/><path d="${polyPath(pts)}" ${stroke(INK, 2.2)}/>`);
   }
   // Focal marks.
+  const markNames: Array<{ x: number; name: string; below: boolean; free: boolean }> = [];
   const marks: Array<[number, string]> = [];
   if (m.focalMarks) {
     if (m.mirror) marks.push([m.f > 0 ? -fa : fa, 'F'], [m.f > 0 ? -2 * fa : 2 * fa, 'C']);
@@ -272,9 +288,8 @@ export function renderRayDiagram(r: Reader): Drawn {
     // Under the axis, or over it when an arrow stands (or hangs) there.
     const blockedBelow = Math.abs(x - X(imageX)) < 12 && m.showImage && m.hI < 0;
     const blockedAbove = Math.abs(x - X(-m.dO)) < 12 || (Math.abs(x - X(imageX)) < 12 && m.showImage && m.hI > 0);
-    const y = blockedBelow && !blockedAbove ? yAxis - 7 : yAxis + 14;
     if (blockedBelow && blockedAbove) notes.push({ code: 'labels_overlap', message: `the mark "${name}" falls on both arrows` });
-    over.push(text(x, y, name, { anchor: 'middle', weight: 600, halo: true }));
+    markNames.push({ x, name, below: !(blockedBelow && !blockedAbove), free: !blockedBelow && !blockedAbove });
   }
   // Rays.
   const tip: Pt = [-m.dO, m.hO];
@@ -295,6 +310,7 @@ export function renderRayDiagram(r: Reader): Drawn {
   const rayLine = (a: Pt, b: Pt, color: string, dash: boolean, arrowAt?: number) => {
     const ca = C(a);
     const cb = C(b);
+    raySegs.push([ca, cb]);
     parts.push(`<path d="${polyPath([ca, cb])}" ${stroke(color, dash ? 1.2 : 1.7, dash ? '4 3' : undefined)}/>`);
     if (arrowAt !== undefined && Math.hypot(cb[0] - ca[0], cb[1] - ca[1]) > 22) parts.push(head(ca[0] + (cb[0] - ca[0]) * arrowAt, ca[1] + (cb[1] - ca[1]) * arrowAt, cb[0] - ca[0], cb[1] - ca[1], 7.5, color));
   };
@@ -320,6 +336,16 @@ export function renderRayDiagram(r: Reader): Drawn {
     const from = (m.element === 'diverging_lens' && k === 1) ? [-fa, 0] as Pt : (m.element === 'convex_mirror' && k === 1) ? [fa, 0] as Pt : null;
     if (from) rayLine(img, from, color, true);
   });
+  // The names of the focal marks, now that the rays are known: under the axis (or over it when an
+  // arrow stands there) — and on the OTHER side when a ray runs through the name there and not here.
+  for (const mk of markNames) {
+    const w = estWidth(mk.name, TICK_FS);
+    const boxAt = (below: boolean) => ({ x0: mk.x - w / 2 - 1, y0: (below ? yAxis + 14 : yAxis - 7) - TICK_FS * 0.8, x1: mk.x + w / 2 + 1, y1: (below ? yAxis + 14 : yAxis - 7) + 2 });
+    let below = mk.below;
+    if (mk.free && raysThrough(boxAt(below)) > 0 && raysThrough(boxAt(!below)) === 0) below = !below;
+    if (raysThrough(boxAt(below)) > 0) notes.push({ code: 'labels_overlap', message: `a ray runs through the mark "${mk.name}" on the axis` });
+    overMarks.push(text(mk.x, below ? yAxis + 14 : yAxis - 7, mk.name, { anchor: 'middle', weight: 600, halo: true }));
+  }
   // Object and image arrows.
   const arrowUp = (x: number, h: number, dashed: boolean) => {
     const xa = X(x);
@@ -329,14 +355,37 @@ export function renderRayDiagram(r: Reader): Drawn {
   };
   arrowUp(-m.dO, m.hO, false);
   if (m.showImage) arrowUp(imageX, m.hI, !m.real);
+  const plates: Array<{ x0: number; y0: number; x1: number; y1: number }> = [];
   const hLabel = (x: number, h: number, show: Show, sym: string) => {
     if (show === 'none') return;
     const s = `${sym} = ${show === 'blank' ? '?' : `${numStr(Math.abs(h), 2)} ${m.unit}`}`;
-    const leftSide = X(x) > 70;
-    // On a white plate: a ray that runs behind the label is interrupted, not struck through it.
+    // On a white plate — and the plate is put where NO ray runs behind it when there is such a
+    // place: beside the arrow at mid-height (left, then right), then beside its foot, then beyond
+    // its tip. Only when every place is crossed does a plate interrupt a ray.
     const w = estWidth(s, TICK_FS) * 0.9 + 6;
+    const midY = (Y(h) + yAxis) / 2 + 4;
+    const footY = h > 0 ? yAxis - 8 : yAxis + TICK_FS + 3;
+    const tipY = h > 0 ? Y(h) - 8 : Y(h) + TICK_FS + 8;
+    const first = X(x) > 70;
+    const spots: Array<[boolean, number]> = [[first, midY], [!first, midY], [first, footY], [!first, footY], [first, tipY], [!first, tipY]];
+    const plateOf = ([left, ty]: [boolean, number]) => {
+      const tx = X(x) + (left ? -7 : 7);
+      return { x0: left ? tx - w + 3 : tx - 3, y0: ty - TICK_FS + 1, x1: (left ? tx - w + 3 : tx - 3) + w, y1: ty + 5 };
+    };
+    const usable = (c: [boolean, number]): boolean => {
+      const b = plateOf(c);
+      // Inside the figure, off the lens or mirror, off the other arrow, off a label already set.
+      if (b.x0 < 4 || b.x1 > W - 4 || b.y0 < yAxis - half - 2 || b.y1 > yAxis + half + 2) return false;
+      if (b.x0 < ex + 14 && b.x1 > ex - 14) return false;
+      const otherX = Math.abs(X(x) - X(-m.dO)) < 1 ? (m.showImage ? X(imageX) : NaN) : X(-m.dO);
+      if (Number.isFinite(otherX) && b.x0 < otherX + 6 && b.x1 > otherX - 6) return false;
+      return !plates.some((q) => b.x0 < q.x1 + 2 && q.x0 < b.x1 + 2 && b.y0 < q.y1 + 2 && q.y0 < b.y1 + 2);
+    };
+    const clear = spots.find((c) => usable(c) && raysThrough(plateOf(c)) === 0);
+    const [leftSide, ty] = clear ?? spots[0];
+    if (!clear && raysThrough(plateOf(spots[0])) > 0) notes.push({ code: 'labels_overlap', message: `there is no place for the label "${s}" that is clear of the rays — it interrupts one` });
+    plates.push(plateOf([leftSide, ty]));
     const tx = X(x) + (leftSide ? -7 : 7);
-    const ty = (Y(h) + yAxis) / 2 + 4;
     over.push(`<rect x="${n2(leftSide ? tx - w + 3 : tx - 3)}" y="${n2(ty - TICK_FS + 1)}" width="${n2(w)}" height="${TICK_FS + 4}" fill="#ffffff"/>` + text(tx, ty, s, { anchor: leftSide ? 'end' : 'start' }));
   };
   hLabel(-m.dO, m.hO, m.show.objectHeight, 'h');
@@ -361,5 +410,5 @@ export function renderRayDiagram(r: Reader): Drawn {
   dim(0, m.mirror ? (m.f > 0 ? -fa : fa) : fa, m.show.focalLength, '', fa, 'f');
   if (!m.showImage && m.rays.length === 0 && m.show.focalLength === 'none' && !m.focalMarks) notes.push({ code: 'ambiguous_blank', message: 'neither the focal points, the rays nor the image are shown — nothing fixes the image' });
   if (m.rays.length > 0 && Math.abs(X(-m.dO) - X(0)) < 34) notes.push({ code: 'crowded', message: 'the object is drawn under 34 units from the lens or mirror — the rays crowd together' });
-  return { body: t.svg + under.join('') + parts.join('') + over.join(''), H: y + (y > yAxis + half + 14 ? 0 : -4), facts: facts(notes) };
+  return { body: t.svg + under.join('') + parts.join('') + overMarks.join('') + over.join(''), H: y + (y > yAxis + half + 14 ? 0 : -4), facts: facts(notes) };
 }

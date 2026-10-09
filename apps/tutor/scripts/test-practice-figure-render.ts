@@ -42,15 +42,16 @@ import {
 import { ExpressionError, compileExpression } from '../src/lib/tutor/practice-figure/expr';
 import { slopeFieldSamples, slopeFieldSolution } from '../src/lib/tutor/practice-figure/slope-field';
 import { MAX_FIGURE_SVG_CHARS, validateFigureSvg } from '../src/lib/tutor/practice-figure/svg-safety';
-import { GUIDE_COLOR, GUIDE_DASH, SERIES_COLORS, SERIES_DASHES, assignDashes, niceBounds, niceStep, piTickText, stepDecimals, tickText, tickTexts, ticksBetween } from '../src/lib/tutor/practice-figure/plot-frame';
-import { checkFigureLegibility } from '../src/lib/tutor/practice-figure/legibility';
+import { DOUBLE_CORE, DOUBLE_OUTER, GUIDE_COLOR, GUIDE_DASH, GUIDE_MASK_WIDTH, GUIDE_WIDTH, SERIES_COLORS, SERIES_DASHES, assignDashes, niceBounds, niceStep, piTickText, stepDecimals, tickText, tickTexts, ticksBetween } from '../src/lib/tutor/practice-figure/plot-frame';
+import { checkFigureLegibility, overlapWarnings } from '../src/lib/tutor/practice-figure/legibility';
+import { MIN_HATCH_STROKES } from '../src/lib/tutor/practice-figure/kinds/distribution';
 import { Reader } from '../src/lib/tutor/practice-figure/spec';
-import { vectorDiagramModel } from '../src/lib/tutor/practice-figure/kinds/vector-diagram';
+import { HEAD_GAP, vectorDiagramModel } from '../src/lib/tutor/practice-figure/kinds/vector-diagram';
 import { fbdLayout, freeBodyModel } from '../src/lib/tutor/practice-figure/kinds/free-body';
 import { punnettModel } from '../src/lib/tutor/practice-figure/kinds/punnett';
 import { pedigreeLayout, pedigreeModel } from '../src/lib/tutor/practice-figure/kinds/pedigree';
 import { findViolations } from './lib/svg-text-extents';
-import { FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
+import { FIGURE_FIXTURES, POLISH_FIXTURES } from './lib/practice-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -560,7 +561,7 @@ test('assignDashes: one curve is solid; several each get their own pattern; `das
   assert.equal(new Set(assignDashes([false, true, false, true, false, false])).size, 6);
 });
 
-test('function_graph: several curves differ by dash as well as colour, the legend swatch repeats the dash, an asymptote stays a thin grey guide', () => {
+test('function_graph: several curves differ by dash as well as colour, the legend swatch repeats the dash, an asymptote stays a grey dashed guide thinner than any curve', () => {
   const svg = svgOf('function_graph', {
     xRange: [-4, 4], yRange: [-6, 6],
     curves: [{ expr: 'x/2 + 1', label: 'A' }, { expr: '3 - (x - 1)^2', label: 'B' }, { expr: 'abs(x - 2)', label: 'C' }, { expr: 'x^3 - 3*x', label: 'D' }],
@@ -575,7 +576,7 @@ test('function_graph: several curves differ by dash as well as colour, the legen
   assert.deepEqual(texts(svg).slice(-4), ['A', 'B', 'C', 'D']);
   const guide = /<line [^>]*stroke="(#[0-9a-f]+)" stroke-width="([\d.]+)" stroke-dasharray="([^"]+)"\/>/.exec(svg);
   assert.ok(guide, 'the asymptote');
-  assert.ok(Number(guide[2]) <= 1.1 && guide[1] === GUIDE_COLOR && guide[3] === GUIDE_DASH);
+  assert.ok(Number(guide[2]) <= 1.6 && Number(guide[2]) < 2.2 && guide[1] === GUIDE_COLOR && guide[3] === GUIDE_DASH);
   assert.ok(!cs.some((c) => c.dash === guide[3] || c.stroke === guide[1]));
   // One curve alone is plain — nothing changes for the common case.
   assert.deepEqual(curvePaths(svgOf('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: [{ expr: 'x', label: 'f' }] })), [{ stroke: '#1d4ed8', dash: '' }]);
@@ -1060,6 +1061,344 @@ test('pedigree: standard symbols, automatic layout to three generations, numberi
   throwsSpec({ type: 'pedigree', params: { individuals: [{ id: 'a', sex: 'M', father: 'b', mother: 'c' }, { id: 'b', sex: 'M', father: 'a', mother: 'c' }, { id: 'c', sex: 'F' }] } }, /own ancestor/);
   const big = { individuals: Array.from({ length: 13 }, (_, k) => (k < 2 ? { id: `p${k}`, sex: k ? 'F' : 'M' } : { id: `k${k}`, sex: k % 2 ? 'F' : 'M', father: 'p0', mother: 'p1' })) };
   assert.ok(warn('pedigree', big).includes('too_many_elements'));
+});
+
+// ---------------------------------------------------------------------------
+// Polish round, 2026-10-11 — the weaknesses an item author and an independent
+// reader found in 153 real items. Each has a fixture that reproduces it
+// (POLISH_FIXTURES) and a test of what a reader at 340 px now sees.
+// ---------------------------------------------------------------------------
+
+console.log('\nPolish round (2026-10-11):\n');
+
+const polish = (id: string): PracticeFigureSpec => (POLISH_FIXTURES.find((f) => f.id === id) ?? assert.fail(`no fixture ${id}`)).spec;
+const numAttr = (tag: string, name: string): number => Number(new RegExp(`\\s${name}="(-?[\\d.]+)"`).exec(tag)?.[1]);
+/** Every straight piece of every `M…V…` / `M…L…` / `M…H…` path of an element list. */
+function pieces(d: string): Array<[number, number, number, number]> {
+  const out: Array<[number, number, number, number]> = [];
+  let x = 0;
+  let y = 0;
+  for (const m of d.matchAll(/([MLHVhv])(-?[\d.]+)(?:,(-?[\d.]+))?/g)) {
+    const a = Number(m[2]);
+    const b = Number(m[3]);
+    const [nx, ny] = m[1] === 'M' || m[1] === 'L' ? [a, b] : m[1] === 'H' ? [a, y] : m[1] === 'V' ? [x, a] : m[1] === 'h' ? [x + a, y] : [x, y + a];
+    if (m[1] !== 'M') out.push([x, y, nx, ny]);
+    [x, y] = [nx, ny];
+  }
+  return out;
+}
+const inPolygon = (px: number, py: number, poly: Array<[number, number]>): boolean => {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+};
+/** WCAG contrast ratio of two #rrggbb colours. */
+function contrast(a: string, b: string): number {
+  const lum = (hex: string): number => {
+    const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((p, q) => q - p);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+test('every polish fixture is clean under checkFigureLegibility unless its note says it warns', () => {
+  assert.equal(POLISH_FIXTURES.length, 21);
+  for (const fx of POLISH_FIXTURES) {
+    const w = checkFigureLegibility(fx.spec);
+    if (/warns/.test(fx.note)) assert.ok(w.length > 0, `${fx.id} should warn`);
+    else assert.deepEqual(w, [], `${fx.id}: ${w.map((x) => x.message).join(' | ')}`);
+  }
+});
+
+test('a. sign_chart: no dashed guide runs through a value written at a critical number (0, und, +, − or a "?" box)', () => {
+  for (const spec of [polish('polish-signchart-at-cells-on-guides'), ...FIGURE_FIXTURES.filter((f) => f.spec.type === 'sign_chart').map((f) => f.spec)]) {
+    const svg = renderPracticeFigure(spec).svg;
+    const guides = [...svg.matchAll(/<path d="([^"]+)" fill="none" stroke="#4b5563" stroke-width="1" stroke-dasharray="4 3"\/>/g)].flatMap((m) => pieces(m[1]));
+    assert.ok(guides.length > 0 && guides.every((g) => g[0] === g[2]), 'vertical guide pieces');
+    // What is written ON a guide: the halo'd cell texts and the "?" boxes centred on its x.
+    const cells: Array<{ x: number; y0: number; y1: number; what: string }> = [];
+    for (const m of svg.matchAll(/<text x="(-?[\d.]+)" y="(-?[\d.]+)" font-size="(\d+)"[^>]*>([^<]*)<\/text>/g)) {
+      // The values at a critical number are the texts set on a white halo (the number above the line is not).
+      if (m[0].includes('paint-order') && ['0', 'und', '+', '−'].includes(m[4]) && guides.some((g) => Math.abs(g[0] - Number(m[1])) < 0.6)) cells.push({ x: Number(m[1]), y0: Number(m[2]) - Number(m[3]) * 0.8, y1: Number(m[2]) + Number(m[3]) * 0.24, what: m[4] });
+    }
+    for (const m of svg.matchAll(/<path d="M(-?[\d.]+),(-?[\d.]+)h(-?[\d.]+)v(-?[\d.]+)h-?[\d.]+z" fill="#ffffff" stroke="#4b5563" stroke-width="1" stroke-dasharray="3 2"\/>/g)) {
+      const cx = Number(m[1]) + Number(m[3]) / 2;
+      if (guides.some((g) => Math.abs(g[0] - cx) < 0.6)) cells.push({ x: cx, y0: Number(m[2]), y1: Number(m[2]) + Number(m[4]), what: '?' });
+    }
+    const rows = (spec.params.rows as Array<{ at?: string[]; blankAt?: number[] }>);
+    assert.equal(cells.length, rows.reduce((n, r) => n + (r.at ?? []).filter(Boolean).length, 0), 'every at-cell found');
+    for (const c of cells) {
+      for (const g of guides.filter((q) => Math.abs(q[0] - c.x) < 0.6)) {
+        const [top, bottom] = [Math.min(g[1], g[3]), Math.max(g[1], g[3])];
+        assert.ok(bottom <= c.y0 - 1 || top >= c.y1 + 1, `a guide piece ${top}–${bottom} runs through "${c.what}" (${c.y0.toFixed(1)}–${c.y1.toFixed(1)})`);
+      }
+    }
+  }
+  // Nothing written at a critical number: one unbroken guide, as before.
+  const plain = svgOf('sign_chart', { critical: [1, 2], rows: [{ label: 'f', signs: ['+', '-', '+'] }] });
+  for (const m of plain.matchAll(/<path d="([^"]+)" fill="none" stroke="#4b5563" stroke-width="1" stroke-dasharray="4 3"\/>/g)) assert.equal(pieces(m[1]).length, 1);
+  // The guide still reaches the bottom rule under the last row.
+  const broken = renderPracticeFigure(polish('polish-signchart-at-cells-on-guides')).svg;
+  const [, H] = viewBox(broken);
+  const lowest = Math.max(...[...broken.matchAll(/<path d="([^"]+)" fill="none" stroke="#4b5563" stroke-width="1" stroke-dasharray="4 3"\/>/g)].flatMap((m) => pieces(m[1])).map((g) => g[3]));
+  assert.ok(Math.abs(lowest - (H - 8)) < 1.5, 'the guide ends on the bottom rule');
+});
+
+const shaftsOf = (svg: string): Array<{ tag: string; dash: string; cap: string; width: number }> =>
+  [...svg.matchAll(/<path d="M[^"]*L[^"]*" fill="none" stroke="#[0-9a-f]{6}" stroke-width="(2\.3|3)"[^>]*\/>/g)].map((m) => ({ tag: m[0], dash: /stroke-dasharray="([^"]+)"/.exec(m[0])?.[1] ?? '', cap: /stroke-linecap="([^"]+)"/.exec(m[0])?.[1] ?? 'butt', width: Number(m[1]) }));
+const headsOf = (svg: string): Array<{ tip: [number, number]; index: number; tag: string }> =>
+  [...svg.matchAll(/<polygon points="(-?[\d.]+),(-?[\d.]+) [^"]+" fill="#[0-9a-f]{6}" stroke="#ffffff" stroke-width="1" stroke-linejoin="round"\/>/g)].map((m) => ({ tip: [Number(m[1]), Number(m[2])], index: m.index as number, tag: m[0] }));
+
+test('b. vector_diagram: no half-unit gridlines unless `minorGrid: true` asks for them', () => {
+  const MINOR = 'stroke="#e9eef4"';
+  for (const f of FIGURE_FIXTURES.filter((q) => q.spec.type === 'vector_diagram')) {
+    const svg = renderPracticeFigure(f.spec).svg;
+    assert.equal(svg.includes(MINOR), f.spec.params.minorGrid === true, f.id);
+  }
+  // One vertical gridline per whole unit of x, and no more.
+  const svg = renderPracticeFigure(polish('polish-vector-four-tip-to-tail')).svg;
+  const major = /<path d="([^"]+)" stroke="#cbd5e1" stroke-width="0.9" fill="none"\/>/.exec(svg);
+  assert.ok(major);
+  assert.equal(major[1].split('M').length - 1, 11 + 9, '11 vertical (x = −1…9) and 9 horizontal (y = −1…7) lines');
+  assert.ok(renderPracticeFigure(polish('polish-vector-minor-grid-asked')).svg.includes(MINOR));
+  // Every other kind keeps its lighter lines: a shaded region is still read to the half unit.
+  assert.ok(svgOf('shaded_region', { xRange: [-2, 2], yRange: [-2, 2], region: { type: 'under_curve', expr: '1', from: -1, to: 1 } }).includes(MINOR));
+  throwsSpec({ type: 'vector_diagram', params: { xRange: [0, 4], yRange: [0, 4], minorGrid: 'yes', vectors: [{ head: [1, 1] }] } }, /minorGrid must be true or false/);
+});
+
+test('b. vector_diagram: four stroke patterns that all show at 340 px — round caps, every dot at least as long as the line is wide, every gap at least 2 units clear', () => {
+  const svg = renderPracticeFigure(polish('polish-vector-four-tip-to-tail')).svg;
+  const shafts = shaftsOf(svg);
+  assert.equal(shafts.length, 5, 'four vectors and the resultant');
+  const plain = shafts.filter((q) => q.width === 2.3);
+  assert.deepEqual(plain.map((q) => q.dash), [SERIES_DASHES[0], SERIES_DASHES[1], SERIES_DASHES[2], SERIES_DASHES[3]], 'the shared patterns, in order — the first three look as they do on every other kind');
+  assert.equal(shafts.find((q) => q.width === 3)?.dash, '', 'the resultant is solid');
+  for (const q of plain.filter((x) => x.dash)) {
+    assert.equal(q.cap, 'round', `"${q.dash}" is drawn with round caps`);
+    const nums = q.dash.split(' ').map(Number);
+    nums.forEach((v, i) => {
+      // A round cap adds half the stroke width to each end of a dash and takes it from each gap.
+      if (i % 2 === 0) assert.ok(v + q.width >= 2.3, `"${q.dash}": the mark ${v} shows ${(v + q.width).toFixed(1)} units of ink`);
+      else assert.ok(v - q.width >= 2, `"${q.dash}": the gap ${v} leaves ${(v - q.width).toFixed(1)} units of paper`);
+    });
+    // Ink along the line: at least a quarter of it, so the lightest pattern is still a line.
+    const ink = nums.filter((_, i) => i % 2 === 0).reduce((t, v) => t + v + q.width, 0) / nums.reduce((t, v) => t + v, 0);
+    assert.ok(ink >= 0.45, `"${q.dash}" inks ${(ink * 100).toFixed(0)} % of its length`);
+  }
+  // A lone dashed vector, and any dashed vector, gets the caps too.
+  assert.ok(shaftsOf(svgOf('vector_diagram', { xRange: [0, 4], yRange: [0, 4], vectors: [{ head: [3, 2], dashed: true }] }))[0].cap === 'round');
+});
+
+test('b. vector_diagram: every arrowhead is whole and distinct — drawn above every shaft on a white keyline, never two tips on one point, no tail dot on a head', () => {
+  for (const id of ['polish-vector-four-tip-to-tail', 'polish-vector-angle-arc-blank']) {
+    const svg = renderPracticeFigure(polish(id)).svg;
+    const heads = headsOf(svg);
+    const shafts = [...svg.matchAll(/<path d="M[^"]*L[^"]*" fill="none" stroke="#[0-9a-f]{6}" stroke-width="(?:2\.3|3)"[^>]*\/>/g)];
+    assert.equal(heads.length, shafts.length, `${id}: one head per arrow`);
+    assert.ok(Math.min(...heads.map((h) => h.index)) > Math.max(...shafts.map((q) => q.index as number)), `${id}: heads come after every shaft`);
+    for (let i = 0; i < heads.length; i++) for (let j = i + 1; j < heads.length; j++) {
+      assert.ok(Math.hypot(heads[i].tip[0] - heads[j].tip[0], heads[i].tip[1] - heads[j].tip[1]) >= 4, `${id}: two arrowheads end within 4 units of each other`);
+    }
+    // A tail dot never sits on a head (tip to tail, the next arrow starts ON the head before it).
+    for (const m of svg.matchAll(/<circle cx="(-?[\d.]+)" cy="(-?[\d.]+)" r="2.2"/g)) {
+      assert.ok(heads.every((h) => Math.hypot(h.tip[0] - Number(m[1]), h.tip[1] - Number(m[2])) > 3), `${id}: a tail dot on an arrowhead`);
+    }
+  }
+  // The resultant reaches its point exactly; the last vector stops HEAD_GAP short of the same point.
+  const spec = polish('polish-vector-four-tip-to-tail');
+  const heads = headsOf(renderPracticeFigure(spec).svg);
+  const m = vectorDiagramModel(new Reader('vector_diagram', spec.params));
+  assert.deepEqual(m.resultant?.head, [8, 6]);
+  const [r, d] = [heads[heads.length - 1], heads[heads.length - 2]];
+  assert.ok(Math.abs(Math.hypot(r.tip[0] - d.tip[0], r.tip[1] - d.tip[1]) - HEAD_GAP) < 0.05, 'the fourth vector stops HEAD_GAP short of the resultant\'s tip');
+  // Two arrows into one point from almost the same direction cannot be told apart: reported.
+  assert.ok(warn('vector_diagram', { xRange: [0, 8], yRange: [0, 8], vectors: [{ tail: [0, 0], head: [6, 6] }, { tail: [1, 0], head: [6, 6] }] }).includes('labels_overlap'));
+});
+
+test('b / f. vector_diagram: an optional angle arc on a vector — its size, a name, or a "?" box; nothing unless asked', () => {
+  const base = { xRange: [-5, 6], yRange: [-1, 6] };
+  const none = svgOf('vector_diagram', { ...base, vectors: [{ head: [4, 3], label: 'A' }] });
+  const arcs = (svg: string): number => [...svg.matchAll(/<path d="M[^"]+" fill="none" stroke="#111827" stroke-width="1.2"\/>/g)].length;
+  assert.equal(arcs(none), 0);
+  const bare = svgOf('vector_diagram', { ...base, vectors: [{ head: [4, 3], label: 'A', angle: true }] });
+  assert.equal(arcs(bare), 1);
+  assert.deepEqual(texts(bare).filter((t) => /°/.test(t)), [], 'an arc alone prints no size');
+  const auto = svgOf('vector_diagram', { ...base, vectors: [{ head: [4, 3], label: 'A', angle: { label: 'auto' } }] });
+  assert.ok(texts(auto).includes('36.9°'));
+  const named = svgOf('vector_diagram', { ...base, vectors: [{ head: [4, 3], angle: { label: 'θ' } }] });
+  assert.ok(texts(named).includes('θ') && !texts(named).some((t) => /36/.test(t)));
+  const blankArc = renderPracticeFigure(polish('polish-vector-angle-arc-blank')).svg;
+  assert.equal(arcs(blankArc), 2);
+  assert.ok(texts(blankArc).includes('?') && texts(blankArc).includes('36.9°'));
+  assert.ok(!texts(blankArc).some((t) => /135/.test(t)), 'the blank angle\'s size is not printed');
+  // Two arcs about one point are drawn at different radii.
+  const radii = [...blankArc.matchAll(/<path d="M(-?[\d.]+),(-?[\d.]+)L[^"]+" fill="none" stroke="#111827" stroke-width="1.2"\/>/g)].map((q) => Number(q[1]));
+  assert.ok(Math.abs(radii[0] - radii[1]) >= 6, 'different radii');
+  const m = vectorDiagramModel(new Reader('vector_diagram', polish('polish-vector-angle-arc-blank').params));
+  assert.ok(Math.abs((m.vectors[0].angle?.degrees ?? 0) - 36.869898) < 1e-5 && m.vectors[1].angle?.degrees === 135 && m.vectors[1].angle?.label === '?');
+  throwsSpec({ type: 'vector_diagram', params: { ...base, vectors: [{ head: [4, 0], angle: true }] } }, /angle: the vector points along the positive x-direction/);
+});
+
+test('c. function_graph: an asymptote on a gridline reads as a dashed line — dark, long dashes, on a white under-line, above the grid', () => {
+  assert.ok(contrast(GUIDE_COLOR, '#ffffff') >= 7, 'dark enough on paper');
+  assert.ok(contrast(GUIDE_COLOR, '#cbd5e1') >= 5, 'and against a gridline');
+  const [on, off] = GUIDE_DASH.split(' ').map(Number);
+  assert.ok(on >= 10 && off >= 4 && GUIDE_WIDTH >= 1.4 && GUIDE_WIDTH < 2.2 && GUIDE_MASK_WIDTH > GUIDE_WIDTH + 0.8);
+  const spec = polish('polish-function-asymptotes-on-gridlines');
+  const svg = renderPracticeFigure(spec).svg;
+  const grid = svg.indexOf('stroke="#cbd5e1"');
+  const pairs = [...svg.matchAll(/<line ([^>]*?) stroke="#ffffff" stroke-width="([\d.]+)"\/><line ([^>]*?) stroke="(#[0-9a-f]{6})" stroke-width="([\d.]+)" stroke-dasharray="([^"]+)"\/>/g)];
+  assert.equal(pairs.length, 3, 'each asymptote: a white under-line, then the dashes');
+  for (const m of pairs) {
+    assert.equal(m[1], m[3], 'the under-line lies exactly under the dashes');
+    assert.ok(Number(m[2]) === GUIDE_MASK_WIDTH && m[4] === GUIDE_COLOR && Number(m[5]) === GUIDE_WIDTH && m[6] === GUIDE_DASH);
+    assert.ok((m.index as number) > grid, 'drawn after (above) the grid');
+  }
+  // All three lie exactly on numbered gridlines — the case that was hard to see.
+  const major = /<path d="([^"]+)" stroke="#cbd5e1"/.exec(svg)?.[1] ?? '';
+  for (const m of pairs) {
+    const [x1, y1, x2] = ['x1', 'y1', 'x2'].map((k) => numAttr(` ${m[1]}`, k));
+    assert.ok(x1 === x2 ? major.includes(`M${x1},`) : major.includes(`,${y1}H`), 'on a gridline');
+  }
+  // Its label is set off the curve that climbs beside it (here: left of the line, not right).
+  const label = /<text x="(-?[\d.]+)" y="(-?[\d.]+)"[^>]*text-anchor="(\w+)"[^>]*>x = 2<\/text>/.exec(svg);
+  assert.ok(label && label[3] === 'end', 'the label of x = 2 is on the left of its line, clear of the branch on the right');
+  // With no curve beside it the label stays where it always was (right of the line, at the top).
+  const alone = svgOf('function_graph', { xRange: [-4, 4], yRange: [-4, 4], curves: [{ expr: '-3 + 0*x' }], asymptotes: [{ x: 1, label: 'x = 1' }] });
+  assert.ok(/text-anchor="start"[^>]*>x = 1</.test(alone));
+});
+
+test('d. distribution_curve: a small tail still reads as shaded — at least six hatch strokes of real length, and a firm line at the bound that runs on under the baseline', () => {
+  assert.ok(MIN_HATCH_STROKES >= 6);
+  const cases: Array<[string, PracticeFigureSpec]> = [
+    ['beyond 2σ and a thin strip', polish('polish-normal-tail-beyond-2-sigma')],
+    ['beyond 2.3σ', { type: 'distribution_curve', params: { axis: 'z', shade: [{ from: null, to: -2.3 }] } }],
+    ['the 79.8 blank bound', (FIGURE_FIXTURES.find((f) => f.id === 'normal-blank-bound') as (typeof FIGURE_FIXTURES)[number]).spec],
+    ['a wide middle', { type: 'distribution_curve', params: { axis: 'z', shade: [{ from: -1, to: 1 }] } }],
+  ];
+  for (const [name, spec] of cases) {
+    const svg = renderPracticeFigure(spec).svg;
+    const clips = [...svg.matchAll(/<clipPath id="([^"]+-shade\d+)"><polygon points="([^"]+)"\/><\/clipPath>/g)];
+    assert.equal(clips.length, (spec.params.shade as unknown[]).length, name);
+    for (const c of clips) {
+      const poly = c[2].split(' ').map((q) => q.split(',').map(Number) as [number, number]);
+      const hatch = new RegExp(`<g clip-path="url\\(#${c[1]}\\)"><path d="([^"]+)" fill="none" stroke="#1d4ed8" stroke-width="([\\d.]+)"/></g>`).exec(svg);
+      assert.ok(hatch, `${name}: the hatch of ${c[1]}`);
+      // Length of each hatch line that lies inside the region, by walking it.
+      let strokes = 0;
+      for (const [x1, y1, x2, y2] of pieces(hatch[1])) {
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const n = Math.ceil(len / 0.25);
+        let inside = 0;
+        for (let k = 0; k < n; k++) if (inPolygon(x1 + ((x2 - x1) * (k + 0.5)) / n, y1 + ((y2 - y1) * (k + 0.5)) / n, poly)) inside += len / n;
+        if (inside >= 4) strokes++;
+      }
+      assert.ok(strokes >= MIN_HATCH_STROKES, `${name}: ${strokes} hatch strokes of 4 units or more in ${c[1]}`);
+      assert.ok(Number(hatch[2]) >= 1, 'hatch weight');
+    }
+    // Every finite bound: a 2-unit line from the curve to BELOW the baseline.
+    const base = Math.max(...clips[0][2].split(' ').map((q) => Number(q.split(',')[1])));
+    const bounds = [...svg.matchAll(/<line x1="(-?[\d.]+)" y1="(-?[\d.]+)" x2="(-?[\d.]+)" y2="(-?[\d.]+)" stroke="#1d4ed8" stroke-width="2"\/>/g)];
+    const finite = (spec.params.shade as Array<{ from: number | null; to: number | null }>).reduce((t, q) => t + (q.from === null ? 0 : 1) + (q.to === null ? 0 : 1), 0);
+    assert.equal(bounds.length, finite, `${name}: one firm line per bound`);
+    for (const b of bounds) assert.ok(Number(b[2]) >= base + 4 && Number(b[4]) < base, `${name}: the bound line crosses the baseline`);
+  }
+  // A big region is hatched as it always was (gap 6, weight 1); only the small ones are drawn finer.
+  const wide = svgOf('distribution_curve', { axis: 'z', shade: [{ from: -1, to: 1 }] });
+  assert.ok(/-shade0\)"><path d="[^"]+" fill="none" stroke="#1d4ed8" stroke-width="1"\//.test(wide));
+  // A region too small for six strokes at any density is reported: beyond about 2.3σ the curve is
+  // under 8 units high on this drawing, and no hatch makes that read (the bound line still does).
+  assert.ok(warn('distribution_curve', { axis: 'z', shade: [{ from: 3.2, to: 3.4 }] }).includes('crowded'));
+  assert.ok(warn('distribution_curve', { axis: 'z', shade: [{ from: null, to: -2.5 }] }).includes('crowded'));
+  assert.deepEqual(warn('distribution_curve', { axis: 'z', shade: [{ from: 2, to: null }] }), []);
+});
+
+test('e. punnett_square: blank side gametes keep clear of the rotated side label — and an overlap of a "?" box with a label is a warning', () => {
+  const svg = renderPracticeFigure(polish('polish-punnett-blank-side-gametes')).svg;
+  const boxes = [...svg.matchAll(/<path d="M(-?[\d.]+),(-?[\d.]+)h(-?[\d.]+)v(-?[\d.]+)h-?[\d.]+z" fill="#ffffff" stroke="#4b5563"/g)].map((m) => ({ x0: Number(m[1]), x1: Number(m[1]) + Number(m[3]) }));
+  assert.equal(boxes.length, 2);
+  const side = /<text x="(-?[\d.]+)" y="(-?[\d.]+)" font-size="(\d+)"[^>]*transform="rotate\(-90 [^"]+\)">Mother<\/text>/.exec(svg);
+  assert.ok(side, 'the rotated side label');
+  // The rotated text occupies x − 0.8·fs … x + 0.24·fs.
+  const labelRight = Number(side[1]) + Number(side[3]) * 0.24;
+  for (const b of boxes) assert.ok(b.x0 - labelRight >= 3, `a "?" box starts ${(b.x0 - labelRight).toFixed(1)} units right of the side label`);
+  assert.ok(Number(side[1]) - Number(side[3]) * 0.8 >= 2, 'the side label is inside the figure');
+  // The same square with the gametes shown is laid out exactly as it was (no extra margin).
+  const shown = svgOf('punnett_square', { top: ['B', 'b'], side: ['B', 'b'], sideLabel: 'Mother' });
+  const blanked = svgOf('punnett_square', { top: ['B', 'b'], side: ['B', 'b'], sideLabel: 'Mother', blankSide: [0] });
+  const gridX = (s: string) => Number(/<path d="M(-?[\d.]+),[^"]+" fill="none" stroke="#111827" stroke-width="1.5"\/>/.exec(s)?.[1]);
+  assert.ok(gridX(blanked) > gridX(shown), 'room is made only when a side gamete is blank');
+  // The warning itself, on a drawing that has the collision (the layout before the fix).
+  const collide = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120"><text x="92" y="80" font-size="12" font-weight="600" text-anchor="middle" fill="#111827" transform="rotate(-90 92 80)">Mother</text>'
+    + '<path d="M91,48h22v18h-22z" fill="#ffffff" stroke="#4b5563" stroke-width="1" stroke-dasharray="3 2"/><text x="102" y="61.32" font-size="12" font-weight="700" text-anchor="middle" fill="#111827">?</text></svg>';
+  assert.deepEqual(overlapWarnings(collide).map((w) => `${w.code}: ${w.message}`), ['labels_overlap: a "?" box and "Mother" overlap']);
+  assert.deepEqual(overlapWarnings(svg), [], 'the fixed layout has no such overlap');
+  // A "?" box is not reported against its own "?".
+  assert.deepEqual(overlapWarnings(renderPracticeFigure({ type: 'sign_chart', params: { critical: [1], rows: [{ label: 'f', signs: ['+', '-'], blankSigns: [0] }] } }).svg), []);
+  // A side label longer than the grid is tall overhangs the gametes above it: reported.
+  assert.ok(warn('punnett_square', { top: ['B', 'b'], side: ['B', 'b'], sideLabel: 'Mother (heterozygous for the trait)' }).includes('labels_overlap'));
+});
+
+test('f. shaded_region: between two curves nothing is dashed — the lower curve is a double line, in the plot and in the legend; inequalities keep dashed = excluded', () => {
+  for (const id of ['shaded-between-parabola-line', 'polish-shaded-between-two-parabolas']) {
+    const svg = renderPracticeFigure((FIGURE_FIXTURES.find((f) => f.id === id) as (typeof FIGURE_FIXTURES)[number]).spec).svg;
+    assert.ok(!svg.includes('stroke-dasharray'), `${id}: no dash anywhere on a between-curves figure`);
+    const outer = new RegExp(`<path d="([^"]+)" fill="none" stroke="${SERIES_COLORS[1]}" stroke-width="${DOUBLE_OUTER}" stroke-linejoin="round"/><path d="([^"]+)" fill="none" stroke="#ffffff" stroke-width="${DOUBLE_CORE}" stroke-linejoin="round"/>`, 'g');
+    const doubles = [...svg.matchAll(outer)];
+    assert.ok(doubles.length >= 1 && doubles.every((m) => m[1] === m[2]), `${id}: the lower curve is a band with a white core along the same path`);
+    // Two lines of at least 1.2 units each, at least 1.5 apart: both show at 340 px.
+    assert.ok((DOUBLE_OUTER - DOUBLE_CORE) / 2 >= 1.2 && DOUBLE_CORE >= 1.5);
+    // The upper curve: one solid line of the usual weight.
+    assert.ok(new RegExp(`<path d="[^"]+" fill="none" stroke="${SERIES_COLORS[0]}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`).test(svg));
+  }
+  // The legend swatch of the lower curve is the same double line.
+  const labelled = renderPracticeFigure((FIGURE_FIXTURES.find((f) => f.id === 'shaded-between-parabola-line') as (typeof FIGURE_FIXTURES)[number]).spec).svg;
+  const swatch = new RegExp(`<path d="M[\\d.]+,[\\d.]+H[\\d.]+" fill="none" stroke="${SERIES_COLORS[1]}" stroke-width="${DOUBLE_OUTER}"[^>]*/><path d="M[\\d.]+,[\\d.]+H[\\d.]+" fill="none" stroke="#ffffff" stroke-width="${DOUBLE_CORE}"[^>]*/><text[^>]*>g</text>`);
+  assert.ok(swatch.test(labelled), 'the legend swatch of g is a double line');
+  // Inequalities are untouched: strict = dashed "7 4", non-strict = solid.
+  const ineq = renderPracticeFigure(polish('polish-shaded-inequalities-test-points')).svg;
+  assert.ok(new RegExp(`stroke="${SERIES_COLORS[1]}" stroke-width="2.2" stroke-dasharray="7 4"`).test(ineq), 'the strict boundary is dashed');
+  assert.ok(new RegExp(`stroke="${SERIES_COLORS[2]}" stroke-width="2.2"/>`).test(ineq), 'the non-strict boundary is solid');
+  assert.ok(!ineq.includes(`stroke-width="${DOUBLE_OUTER}"`));
+});
+
+test('f. shaded_region: optional marked points — filled or open, a letter or a "?" box beside each, drawn on top; refused outside the plot', () => {
+  const spec = polish('polish-shaded-inequalities-test-points');
+  const svg = renderPracticeFigure(spec).svg;
+  assert.deepEqual(texts(svg).filter((t) => ['A', 'B', '?'].includes(t)).sort(), ['?', 'A', 'B']);
+  const dots = [...svg.matchAll(/<circle cx="(-?[\d.]+)" cy="(-?[\d.]+)" r="3.8" fill="(#[0-9a-f]{6})" stroke="#111827" stroke-width="1.8"\/>/g)];
+  assert.deepEqual(dots.map((d) => d[3]), ['#111827', '#ffffff', '#111827'], 'A filled, B open, the third filled');
+  assert.ok(dots.every((d) => (d.index as number) > svg.lastIndexOf('</g>')), 'on top of the hatch and the boundary lines');
+  const without = svgOf('shaded_region', { ...spec.params, points: undefined });
+  assert.ok(!/r="3.8"/.test(without), 'nothing is marked unless asked');
+  assert.deepEqual(checkFigureLegibility(spec), []);
+  throwsSpec({ type: 'shaded_region', params: { ...spec.params, points: [{ x: 9, y: 0 }] } }, /points\[0\] lies outside xRange \/ yRange/);
+});
+
+test('f. titration_curve: optional lettered points ON the curve — a dot and a letter, no number, no guide line', () => {
+  const spec = polish('polish-titration-lettered-points');
+  const svg = renderPracticeFigure(spec).svg;
+  const plain = svgOf('titration_curve', { ...spec.params, points: undefined });
+  assert.deepEqual(texts(svg).filter((t) => !texts(plain).includes(t)), ['A', 'B', 'C', 'D'], 'four letters and nothing else are added');
+  assert.ok(!svg.includes('stroke-dasharray="4 3"'), 'no guide lines to the axes');
+  // Each dot sits on the curve: at the pH the chemistry gives for its volume.
+  const dots = [...svg.matchAll(/<circle cx="(-?[\d.]+)" cy="(-?[\d.]+)" r="3.8" fill="#111827"/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  assert.equal(dots.length, 4);
+  const frame = /<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" fill="none" stroke="#94a3b8"/.exec(svg);
+  assert.ok(frame);
+  const [fx0, fy0, fw, fh] = frame.slice(1).map(Number);
+  [5, 12.5, 25, 40].forEach((v, i) => {
+    assert.ok(Math.abs(dots[i][0] - (fx0 + (v / 50) * fw)) < 0.02, `point ${i} is at its volume`);
+    assert.ok(Math.abs(dots[i][1] - (fy0 + fh - (titrationPH('weak_acid', 10 ** -4.76, 0.1, 25, 0.1, v) / 14) * fh)) < 0.02, `point ${i} is on the curve`);
+  });
+  assert.deepEqual(checkFigureLegibility(spec), []);
+  throwsSpec({ type: 'titration_curve', params: { ...spec.params, points: [{ volume: 60, label: 'A' }] } }, /points\[0\]\.volume is outside 0\.\.maxVolume/);
+  // Without points the figure is byte-for-byte what it was (the pins say so for the three fixtures).
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

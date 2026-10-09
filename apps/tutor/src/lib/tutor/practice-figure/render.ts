@@ -70,8 +70,9 @@
  *   `continues: true / false` says so outright.
  *   Several curves: each gets a dash pattern as well as a colour (solid,
  *   dashed, dash-dot, dotted, …), repeated in its legend swatch; curves
- *   marked `dashed` take the broken patterns first. Asymptotes stay thin
- *   grey long-dashed guides.
+ *   marked `dashed` take the broken patterns first. Asymptotes are dark grey
+ *   long-dashed guides on a white under-line (drawn above the grid, so one on
+ *   a gridline still reads as dashes).
  *
  * motion_graph — position–time / velocity–time / acceleration–time
  *   { quantity?: 'position' | 'velocity' | 'acceleration';   // default 'position'
@@ -118,7 +119,9 @@
  *                pKa?: number (weak_acid); pKb?: number (weak_base) };
  *     titrantConcentration: number (mol/L; strong base for an acid, strong acid for a base);
  *     maxVolume?: number (mL; default ≈ 2 × equivalence);
- *     mark?: Array<'equivalence' | 'half_equivalence'> ([] — a dot and guide lines, no numbers) }
+ *     mark?: Array<'equivalence' | 'half_equivalence'> ([] — a dot and guide lines, no numbers);
+ *     points?: Array<{ volume: number (mL); label?: string }> }   // ≤ 6 dots ON the curve at those
+ *                                         //   volumes, each with its letter ("A", "B") — no numbers
  *
  * slope_field
  *   { expr: string (dy/dx in x and y) | samples: Array<{ x; y; slope } | [x, y, slope]>;
@@ -177,6 +180,7 @@ import {
   FIGURE_WIDTH,
   GUIDE_COLOR,
   GUIDE_DASH,
+  GUIDE_MASK_WIDTH,
   GUIDE_WIDTH,
   INK,
   LABEL_FS,
@@ -364,20 +368,52 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
   const marks: string[] = [];
   const labels: string[] = [];
   const facts: FigureFacts = { plot: f.plot, curveCount: 0, marks: [], curves: [] };
+  /** Labels of asymptotes, placed after the curves are sampled so none is set on a curve. */
+  interface GuideSpot { x: number; y: number; anchor: 'start' | 'end'; w: number }
+  const guideLabels: Array<{ slot: number; text: string; spots: GuideSpot[]; fallback: string }> = [];
+  /** Every sampled curve point, on the canvas. */
+  const curvePx: Array<[number, number]> = [];
 
   asymptotesIn.forEach((raw, i) => {
     const a = r.obj(raw, `asymptotes[${i}]`);
     const label = r.optStr(a.label, `asymptotes[${i}].label`, 24);
-    // A guide, not a curve: thin, grey, long-dashed — no curve pattern looks like it.
+    // A guide, not a curve: dark grey, long-dashed, thinner than a curve — no curve pattern looks
+    // like it. Each is drawn twice: a white under-line first, which hides a gridline (or an axis)
+    // lying exactly under it, then the dashes — so the gaps are clear paper and the dashes read.
+    const mask = `stroke="#ffffff" stroke-width="${GUIDE_MASK_WIDTH}"`;
     const stroke = `stroke="${GUIDE_COLOR}" stroke-width="${GUIDE_WIDTH}" stroke-dasharray="${GUIDE_DASH}"`;
     if (a.x !== undefined) {
       const x = r.num(a.x, `asymptotes[${i}].x`);
-      clipped.push(`<line x1="${n2(f.X(x))}" y1="${n2(f.plot.y)}" x2="${n2(f.X(x))}" y2="${n2(f.plot.y + f.plot.h)}" ${stroke}/>`);
-      if (label) labels.push(pointLabel(label, f.X(x) - 2, f.plot.y + TICK_FS + 12, f));
+      const at = `x1="${n2(f.X(x))}" y1="${n2(f.plot.y)}" x2="${n2(f.X(x))}" y2="${n2(f.plot.y + f.plot.h)}"`;
+      clipped.push(`<line ${at} ${mask}/><line ${at} ${stroke}/>`);
+      if (label) {
+        // Placed once the curves are known (see `guideLabels`): beside the top of the line, on the
+        // right — or the left, or at the bottom, when the curve runs up that side of it.
+        const w = estWidth(label, TICK_FS);
+        const px = f.X(x);
+        const spots: GuideSpot[] = [];
+        for (const top of [true, false]) for (const right of [px + 5 + w <= f.W - 3, !(px + 5 + w <= f.W - 3)]) {
+          const ty = top ? f.plot.y + TICK_FS + 5 : f.plot.y + f.plot.h - 7;
+          if (!right && px - 5 - w < f.plot.x + 2) continue;
+          spots.push({ x: right ? px + 5 : px - 5, y: ty, anchor: right ? 'start' : 'end', w });
+        }
+        guideLabels.push({ slot: labels.length, text: label, spots, fallback: pointLabel(label, px - 2, f.plot.y + TICK_FS + 12, f) });
+        labels.push('');
+      }
     } else if (a.y !== undefined) {
       const y = r.num(a.y, `asymptotes[${i}].y`);
-      clipped.push(`<line x1="${n2(f.plot.x)}" y1="${n2(f.Y(y))}" x2="${n2(f.plot.x + f.plot.w)}" y2="${n2(f.Y(y))}" ${stroke}/>`);
-      if (label) labels.push(`<text x="${n2(f.plot.x + f.plot.w - 4)}" y="${n2(f.Y(y) - 4)}" font-size="${TICK_FS}" font-weight="600" text-anchor="end" fill="${INK}" ${HALO}>${esc(label)}</text>`);
+      const at = `x1="${n2(f.plot.x)}" y1="${n2(f.Y(y))}" x2="${n2(f.plot.x + f.plot.w)}" y2="${n2(f.Y(y))}"`;
+      clipped.push(`<line ${at} ${mask}/><line ${at} ${stroke}/>`);
+      if (label) {
+        const w = estWidth(label, TICK_FS);
+        const py = f.Y(y);
+        const spots: GuideSpot[] = [];
+        for (const right of [true, false]) for (const above of [py - 4 - TICK_FS >= f.plot.y + 1, !(py - 4 - TICK_FS >= f.plot.y + 1)]) {
+          spots.push({ x: right ? f.plot.x + f.plot.w - 4 : f.plot.x + 4, y: above ? py - 4 : py + TICK_FS + 2, anchor: right ? 'end' : 'start', w });
+        }
+        guideLabels.push({ slot: labels.length, text: label, spots, fallback: `<text x="${n2(f.plot.x + f.plot.w - 4)}" y="${n2(py - 4)}" font-size="${TICK_FS}" font-weight="600" text-anchor="end" fill="${INK}" ${HALO}>${esc(label)}</text>` });
+        labels.push('');
+      }
     } else r.fail(`asymptotes[${i}] needs x or y`);
   });
 
@@ -458,6 +494,7 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
     const sampled = sampleCurve(pc.fn, pc.a, pc.b, yRange[0], yRange[1]);
     if (sampled.length === 0) r.fail(`curves[${i}].expr is undefined across its whole domain`);
     const d = sampled.map((branch) => polyline(branch, f)).join('');
+    for (const branch of sampled) for (const [bx, by] of branch) curvePx.push([f.X(bx), f.Y(by)]);
     clipped.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${dashAttr(dashes[pc.group])}/>`);
     // How much of it the y-range lets through (legibility report only).
     const acc = seen[pc.group];
@@ -496,6 +533,35 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
       facts.marks.push({ what: `curves[${i}].${which}`, cx: f.X(at[0]), cy: f.Y(at[1]) });
     });
   });
+  // The asymptote labels: the first spot no curve passes through (and no label before it took).
+  const taken: Array<{ x0: number; y0: number; x1: number; y1: number }> = [];
+  for (const g of guideLabels) {
+    const boxOf = (sp: GuideSpot) => ({ x0: (sp.anchor === 'end' ? sp.x - sp.w : sp.x) - 2, y0: sp.y - TICK_FS * 0.85 - 1, x1: (sp.anchor === 'end' ? sp.x : sp.x + sp.w) + 2, y1: sp.y + 3 });
+    const clearOf = (sp: GuideSpot): boolean => {
+      const b = boxOf(sp);
+      if (taken.some((q) => b.x0 < q.x1 && q.x0 < b.x1 && b.y0 < q.y1 && q.y0 < b.y1)) return false;
+      // Between two samples a steep curve can step over the box: test the joins as well.
+      for (let k = 0; k < curvePx.length; k++) {
+        const [cx, cy] = curvePx[k];
+        if (cx > b.x0 && cx < b.x1 && cy > b.y0 && cy < b.y1) return false;
+        if (k > 0) {
+          const [qx, qy] = curvePx[k - 1];
+          if (Math.abs(cx - qx) < 12 && Math.min(cx, qx) < b.x1 && Math.max(cx, qx) > b.x0 && Math.min(cy, qy) < b.y0 && Math.max(cy, qy) > b.y1) return false;
+        }
+      }
+      return true;
+    };
+    const first = g.spots[0];
+    const sp = g.spots.find(clearOf);
+    // The first spot, when clear, is drawn exactly as it always was.
+    if (!sp || sp === first) {
+      labels[g.slot] = g.fallback;
+      if (first) taken.push(boxOf(first));
+      continue;
+    }
+    taken.push(boxOf(sp));
+    labels[g.slot] = `<text x="${n2(sp.x)}" y="${n2(sp.y)}" font-size="${TICK_FS}" font-weight="600" text-anchor="${sp.anchor}" fill="${INK}" ${HALO}>${esc(g.text)}</text>`;
+  }
   groups.forEach((g, k) => {
     if (g.label) legend.push({ label: g.label, color: g.color, dashed: g.dashed, dash: dashes[k] });
     const first = pieces.findIndex((pc) => pc.group === k);
@@ -1095,6 +1161,39 @@ function renderTitrationCurve(r: Reader, uid: string): Drawn {
   };
   if (marks.includes('half_equivalence')) mark(vEq / 2, SERIES_COLORS[2], 'half-equivalence point');
   if (marks.includes('equivalence')) mark(vEq, SERIES_COLORS[1], 'equivalence point');
+  // Lettered points ON the curve ("which point is the buffer region?"): a dot at the curve's pH
+  // for that volume and a letter beside it, set off the curve — no number, no guide line.
+  const lettered = p.points === undefined || p.points === null ? [] : r.list(p.points, 'points', 0, 6);
+  const facts: FigureFacts = { plot: f.plot, curveCount: 1, marks: [], curves: [], notes: [] };
+  const placed: Array<{ x0: number; y0: number; x1: number; y1: number }> = [];
+  lettered.forEach((raw, i) => {
+    const o = r.obj(raw, `points[${i}]`);
+    const v = r.num(o.volume, `points[${i}].volume`);
+    if (v < 0 || v > vMax) r.fail(`points[${i}].volume is outside 0..maxVolume`);
+    const text = r.optStr(o.label, `points[${i}].label`, 6);
+    const x = f.X(v);
+    const y = f.Y(ph(v));
+    facts.marks.push({ what: `points[${i}]`, cx: x, cy: y });
+    parts.push(`<circle cx="${n2(x)}" cy="${n2(y)}" r="5.9" fill="#ffffff"/><circle cx="${n2(x)}" cy="${n2(y)}" r="3.8" fill="${INK}" stroke="${INK}" stroke-width="1.8"/>`);
+    if (!text) return;
+    // The curve rises to the right: up-left and down-right of a point are clear of it. Take the
+    // first of those (then the others) that stays inside the plot and off the labels before it.
+    const w = estWidth(text, LABEL_FS);
+    const options: Array<[number, number, 'start' | 'end']> = [[x - 8, y - 8, 'end'], [x + 8, y + LABEL_FS + 5, 'start'], [x + 8, y - 8, 'start'], [x - 8, y + LABEL_FS + 5, 'end']];
+    const boxOf = ([tx, ty, anchor]: [number, number, 'start' | 'end']) => ({ x0: anchor === 'end' ? tx - w : tx, y0: ty - LABEL_FS * 0.8, x1: anchor === 'end' ? tx : tx + w, y1: ty + LABEL_FS * 0.24 });
+    const fits = (b: { x0: number; y0: number; x1: number; y1: number }) => b.x0 >= f.plot.x + 2 && b.x1 <= f.plot.x + f.plot.w - 2 && b.y0 >= f.plot.y + 2 && b.y1 <= f.plot.y + f.plot.h - 2
+      && !placed.some((q) => b.x0 < q.x1 + 2 && q.x0 < b.x1 + 2 && b.y0 < q.y1 + 2 && q.y0 < b.y1 + 2);
+    const at = options.find((c) => fits(boxOf(c)));
+    if (!at) facts.notes?.push({ code: 'labels_overlap', message: `there is no clear place for the label "${text}" beside points[${i}]` });
+    const [tx, ty, anchor] = at ?? options[0];
+    placed.push(boxOf([tx, ty, anchor]), { x0: x - 6, y0: y - 6, x1: x + 6, y1: y + 6 });
+    parts.push(`<text x="${n2(tx)}" y="${n2(ty)}" font-size="${LABEL_FS}" font-weight="700" text-anchor="${anchor}" fill="${INK}" ${HALO}>${esc(text)}</text>`);
+  });
+  if (lettered.length > 0) {
+    const lg2 = buildLegend(legend, f.bottom);
+    parts.push(lg2.svg);
+    return { body: parts.join(''), H: f.bottom + lg2.height, facts };
+  }
   const lg = buildLegend(legend, f.bottom);
   parts.push(lg.svg);
   return { body: parts.join(''), H: f.bottom + lg.height };

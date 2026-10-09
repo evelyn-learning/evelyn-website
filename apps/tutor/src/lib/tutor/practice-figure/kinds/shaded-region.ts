@@ -12,19 +12,25 @@
  *   | { type: 'inequalities';               // the solution region of a·x + b·y  op  c
  *       inequalities: Array<{ a: number; b: number; op: '<' | '<=' | '>' | '>='; c: number;
  *                             label?: string }>;      // 1–5
- *       markVertices?: boolean (false) } }
+ *       markVertices?: boolean (false) };
+ *   points?: Array<{ x: number; y: number;  // ≤ 8 marked points, drawn on top (a test point, a
+ *                    label?: string;        //   corner to name, a point of a boundary). label:
+ *                    open?: boolean }> }    //   text beside the dot, "?" = a blank box
  *
  * The region is shaded by DRAWN hatch lines under a clip path (no translucent
  * fill, no pattern). A strict inequality's boundary is dashed, a non-strict
- * one solid. Nothing states an equation or an inequality unless a `label` is
- * given (it goes in the legend); corner and intersection points are marked
- * only when asked.
+ * one solid — and a dash means NOTHING ELSE on this kind: of two curves with
+ * a region between them the upper is one solid line and the lower a DOUBLE
+ * line (two thin parallel lines, repeated in its legend swatch), never a
+ * dashed one, which a student would read as "boundary excluded". Nothing
+ * states an equation or an inequality unless a `label` is given (it goes in
+ * the legend); corner and intersection points are marked only when asked.
  */
 import { compileExpression } from '../expr';
-import { SERIES_COLORS, assignDashes, buildFrame, buildLegend, dashAttr, n2, type LegendEntry } from '../plot-frame';
+import { INK, SERIES_COLORS, TICK_FS, buildFrame, buildLegend, dashAttr, doubleLine, n2, type LegendEntry } from '../plot-frame';
 import { sampleCurve } from '../sample';
 import type { Drawn, FigureFacts, Reader } from '../spec';
-import { hatched, type Box } from './draw';
+import { Placer, around, hatched, label, layoutText, segmentBoxes, type Box } from './draw';
 
 type Pt = [number, number];
 export type IneqOp = '<' | '<=' | '>' | '>=';
@@ -57,6 +63,8 @@ export interface ShadedRegionModel {
   yLabel: string;
   title?: string;
   region: Region;
+  /** Marked points drawn on top of everything (default none). */
+  points?: Array<{ x: number; y: number; label?: string; open: boolean }>;
 }
 
 export const satisfies = (q: Inequality, x: number, y: number, tol = 1e-9): boolean => {
@@ -205,6 +213,13 @@ export function shadedRegionModel(r: Reader): ShadedRegionModel {
     xLabel: r.optStr(p.xLabel, 'xLabel') ?? 'x', yLabel: r.optStr(p.yLabel, 'yLabel') ?? 'y',
     title: r.optStr(p.title, 'title', 160),
     region,
+    points: (p.points === undefined || p.points === null ? [] : r.list(p.points, 'points', 0, 8)).map((raw, i) => {
+      const o = r.obj(raw, `points[${i}]`);
+      const x = r.num(o.x, `points[${i}].x`);
+      const y = r.num(o.y, `points[${i}].y`);
+      if (x < xRange[0] || x > xRange[1] || y < yRange[0] || y > yRange[1]) r.fail(`points[${i}] lies outside xRange / yRange`);
+      return { x, y, label: r.optStr(o.label, `points[${i}].label`, 16), open: r.bool(o.open, `points[${i}].open`, false) };
+    }),
   };
 }
 
@@ -229,11 +244,8 @@ export function renderShadedRegion(r: Reader, uid: string): Drawn {
   const mark = (q: Pt, open = false) => {
     marks.push(`<circle cx="${n2(X(q[0]))}" cy="${n2(Y(q[1]))}" r="5.9" fill="#ffffff"/><circle cx="${n2(X(q[0]))}" cy="${n2(Y(q[1]))}" r="3.8" fill="${open ? '#ffffff' : '#111827'}" stroke="#111827" stroke-width="1.8"/>`);
   };
-  const curvePath = (c: RegionCurve, color: string, dash: string): string => {
-    const pieces = sampleCurve(c.fn, x0, x1, y0, y1);
-    const d = pieces.map((branch) => branch.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${n2(X(x))},${n2(Y(y))}`).join('')).join('');
-    return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${dashAttr(dash)}/>`;
-  };
+  const curveData = (c: RegionCurve): string => sampleCurve(c.fn, x0, x1, y0, y1).map((branch) => branch.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${n2(X(x))},${n2(Y(y))}`).join('')).join('');
+  const curvePath = (c: RegionCurve, color: string, dash: string): string => `<path d="${curveData(c)}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${dashAttr(dash)}/>`;
   const edge = (x: number, ya: number, yb: number) => {
     if (Math.abs(ya - yb) > 1e-9) edges.push(`<line x1="${n2(X(x))}" y1="${n2(Y(ya))}" x2="${n2(X(x))}" y2="${n2(Y(yb))}" stroke="${HATCH}" stroke-width="1.4"/>`);
   };
@@ -261,10 +273,10 @@ export function renderShadedRegion(r: Reader, uid: string): Drawn {
       const x = g.from + ((g.to - g.from) * k) / N;
       poly.push([x, g.lower.fn(x)]);
     }
-    const dashes = assignDashes([false, false]);
-    lines.push(curvePath(g.upper, SERIES_COLORS[0], dashes[0]), curvePath(g.lower, SERIES_COLORS[1], dashes[1]));
-    if (g.upper.label) legend.push({ label: g.upper.label, color: SERIES_COLORS[0], dash: dashes[0] });
-    if (g.lower.label) legend.push({ label: g.lower.label, color: SERIES_COLORS[1], dash: dashes[1] });
+    // Upper: one solid line. Lower: a DOUBLE line — not a dashed one (see the module header).
+    lines.push(curvePath(g.upper, SERIES_COLORS[0], ''), doubleLine(curveData(g.lower), SERIES_COLORS[1]));
+    if (g.upper.label) legend.push({ label: g.upper.label, color: SERIES_COLORS[0] });
+    if (g.lower.label) legend.push({ label: g.lower.label, color: SERIES_COLORS[1], double: true });
     if (g.showBounds) {
       edge(g.from, g.lower.fn(g.from), g.upper.fn(g.from));
       edge(g.to, g.lower.fn(g.to), g.upper.fn(g.to));
@@ -294,9 +306,30 @@ export function renderShadedRegion(r: Reader, uid: string): Drawn {
     if (g.inequalities.length > 4) facts.notes?.push({ code: 'too_many_elements', message: `${g.inequalities.length} boundary lines — more than 4 crowd the plot at 340 px` });
   }
   const clampY = (y: number) => Math.max(y0, Math.min(y1, y));
-  const pts = poly.map((q) => `${n2(X(q[0]))},${n2(Y(clampY(q[1])))}`).join(' ');
+  const outline = poly.map((q) => `${n2(X(q[0]))},${n2(Y(clampY(q[1])))}`).join(' ');
   const bbox: Box = { x0: f.plot.x, y0: f.plot.y, x1: f.plot.x + f.plot.w, y1: f.plot.y + f.plot.h };
-  const h = hatched(`${uid}-region`, `<polygon points="${pts}"`, bbox, '/', HATCH, { gap: 6.5, width: 1 });
+  const h = hatched(`${uid}-region`, `<polygon points="${outline}"`, bbox, '/', HATCH, { gap: 6.5, width: 1 });
+  // Marked points: on top, each on a white ring; a label is set clear of the other points.
+  const pts = m.points ?? [];
+  if (pts.length > 0) {
+    const placer = new Placer({ x0: f.plot.x + 2, y0: f.plot.y + 2, x1: f.plot.x + f.plot.w - 2, y1: f.plot.y + f.plot.h - 2 });
+    for (const q of pts) placer.block({ x0: X(q.x) - 5, y0: Y(q.y) - 5, x1: X(q.x) + 5, y1: Y(q.y) + 5 });
+    if (g.type === 'inequalities') {
+      for (let k = 0; k < g.polygon.length; k++) {
+        const a = g.polygon[k];
+        const b = g.polygon[(k + 1) % g.polygon.length];
+        placer.block(...segmentBoxes(X(a[0]), Y(a[1]), X(b[0]), Y(b[1]), 2));
+      }
+    }
+    pts.forEach((q, i) => {
+      mark([q.x, q.y], q.open);
+      facts.marks.push({ what: `points[${i}]`, cx: X(q.x), cy: Y(q.y) });
+      if (!q.label) return;
+      const c = placer.place(layoutText(q.label), TICK_FS + 1, around(X(q.x), Y(q.y), TICK_FS + 1, 1, -1, [9, 14, 20]));
+      if (!c.clean) facts.notes?.push({ code: 'labels_overlap', message: `there is no clear place for the label "${q.label}" beside points[${i}]` });
+      marks.push(label(c, q.label, { fs: TICK_FS + 1, weight: 700, fill: INK, halo: true }));
+    });
+  }
   const lg = buildLegend(legend, f.bottom);
   const defs = `<defs><clipPath id="${uid}-clip"><rect x="${n2(f.plot.x)}" y="${n2(f.plot.y)}" width="${n2(f.plot.w)}" height="${n2(f.plot.h)}"/></clipPath>${h.def}</defs>`;
   return {

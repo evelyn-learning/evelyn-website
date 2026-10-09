@@ -96,6 +96,8 @@ export function punnettModel(r: Reader): PunnettModel {
 /** Hatch per phenotype class. EVERY class is hatched, so a plain cell can only be a blank one. */
 const CLASS_HATCH: Array<HatchStyle | ''> = ['/', '\\', '-', '|'];
 const HATCH_COLOR = '#64748b';
+/** Width of the "?" box that stands for a blank side gamete. */
+const BLANK_SIDE_W = 22;
 
 export function renderPunnett(r: Reader, uid: string): Drawn {
   const m = punnettModel(r);
@@ -105,7 +107,9 @@ export function renderPunnett(r: Reader, uid: string): Drawn {
   const rows = m.side.length;
   const notes: NonNullable<FigureFacts['notes']> = [];
   const widest = Math.max(...m.cells.flat().map((c) => estWidth(c.genotype, TITLE_FS)), ...m.top.map((g) => estWidth(g, TITLE_FS)));
-  const sideW = Math.max(...m.side.map((g) => estWidth(g, TITLE_FS))) + 14;
+  // The side margin holds the gametes — and a blank one is a 22-unit "?" box, wider than a
+  // one-letter gamete: without room for it the box ran into the rotated `sideLabel`.
+  const sideW = Math.max(Math.max(...m.side.map((g) => estWidth(g, TITLE_FS))) + 14, m.blankSide.some(Boolean) ? BLANK_SIDE_W + 14 : 0);
   const leftPad = (m.sideLabel ? LABEL_FS + 10 : 6) + sideW;
   const cw = Math.min(78, (W - leftPad - 10) / cols);
   if (widest > cw - 8) notes.push({ code: 'crowded', message: `the widest genotype needs ${Math.ceil(widest)} units and a cell is ${Math.floor(cw)} wide — shorten the genotypes or use fewer gametes` });
@@ -144,7 +148,7 @@ export function renderPunnett(r: Reader, uid: string): Drawn {
   });
   m.side.forEach((g, i) => {
     const cy = y0 + (i + 0.5) * ch;
-    if (m.blankSide[i]) parts.push(blank(x0 - 18, cy, 22, 18, 12));
+    if (m.blankSide[i]) parts.push(blank(x0 - 7 - BLANK_SIDE_W / 2, cy, BLANK_SIDE_W, 18, 12));
     else parts.push(text(x0 - 8, cy + TITLE_FS * 0.36, g, { fs: TITLE_FS, anchor: 'end', weight: 700 }));
   });
   m.cells.forEach((row, i) => row.forEach((c, j) => {
@@ -182,6 +186,9 @@ export function renderPunnett(r: Reader, uid: string): Drawn {
     });
     H = y + 16 + 10;
   }
+  // The rotated side label runs the height of the grid: a longer one overhangs the top gametes
+  // and the legend.
+  if (m.sideLabel && estWidth(m.sideLabel, LABEL_FS) > ch * rows + 24) notes.push({ code: 'labels_overlap', message: `sideLabel "${m.sideLabel}" is longer than the grid is tall (${Math.floor(ch * rows)} units) — it overhangs the row of gametes above; shorten it` });
   // A blank header with nothing left in its row / column to recover it from.
   m.blankTop.forEach((b, j) => {
     if (b && m.cells.every((row) => row[j].blank)) notes.push({ code: 'ambiguous_blank', message: `blankTop: column ${j} has a blank header and every cell under it is blank — nothing fixes the gamete` });

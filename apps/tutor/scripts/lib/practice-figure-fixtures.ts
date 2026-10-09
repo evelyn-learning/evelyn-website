@@ -1016,7 +1016,7 @@ export const BATCH2_FIXTURES: FigureFixture[] = [
   },
   {
     id: 'field-three-charges-equipotentials',
-    note: 'dense: three charges of different sizes (+2, −1, +1), labels, two dashed equipotentials',
+    note: 'dense: three charges of different sizes (+2, −1, +1), labels, two dashed equipotentials — warns: with three charges the lines bunch, so it is for direction and sign, not for counting lines',
     question: 'Which charge has the greatest magnitude, and how can you tell from the field lines?',
     alt: 'Field lines of three point charges: twelve lines leave the charge q1, six arrive at q2 and six leave q3; two dashed closed curves are equipotentials.',
     spec: {
@@ -1110,7 +1110,7 @@ export const BATCH2_FIXTURES: FigureFixture[] = [
   },
   {
     id: 'solid-composite-prism-pyramid',
-    note: 'dense: a square pyramid on a square prism — hidden edges dashed, the heights of both parts and the slant height labelled',
+    note: 'dense: a square pyramid on a square prism — hidden edges dashed, the heights of both parts and the slant height labelled — warns: height AND slant height drawn inside one small pyramid crowd',
     question: 'What is the total volume of the solid?',
     alt: 'A solid made of a square-based box 6 metres wide and 4 metres high with a pyramid 4 metres high on top; the slant height of the pyramid is labelled 5 metres.',
     spec: { type: 'solid_3d', params: { solid: 'composite', bottom: 'prism', top: 'pyramid', base: 6, height: 4, topHeight: 4, unit: 'm', labels: { slant: 'auto' } } },
@@ -1190,3 +1190,161 @@ export const BATCH2_FIXTURES: FigureFixture[] = [
 ];
 
 FIGURE_FIXTURES.push(...BATCH2_FIXTURES);
+
+// ---------------------------------------------------------------------------
+// Polish round (2026-10-11): one fixture for each weakness an item author and
+// an independent reader found in 153 real items, and for the variants nobody
+// had opened as a picture. Each `note` says what it reproduces.
+// ---------------------------------------------------------------------------
+export const POLISH_FIXTURES: FigureFixture[] = [
+  {
+    id: 'polish-signchart-at-cells-on-guides',
+    note: 'a: every value written AT a critical number (0, und, +, − and a "?" box) sits on a dashed guide — the guide must break round each',
+    question: 'The sign chart is for f′ and f″. What belongs in the box?',
+    alt: 'A sign chart with three critical numbers and two rows of plus and minus signs; under each critical number a zero, "und" or a sign is written, and one of those places holds a question mark.',
+    spec: { type: 'sign_chart', params: { critical: [-2, { value: 0, label: '0' }, 3], rows: [{ label: 'f′(x)', signs: ['+', '-', '-', '+'], at: ['0', 'und', '0'] }, { label: 'f″(x)', signs: ['-', '-', '+', '+'], at: ['-', 'und', '+'], blankAt: [2] }] } },
+  },
+  {
+    id: 'polish-vector-four-tip-to-tail',
+    note: 'b: four vectors tip to tail with the resultant — four stroke patterns (the fourth is dotted), heads that meet at shared points, and no half-unit gridlines',
+    question: 'Each square of the grid is 1 unit. What are the components of the resultant R?',
+    alt: 'Four arrows joined tip to tail on a grid numbered in ones, each with its own stroke pattern, and a heavier arrow from the start of the first to the tip of the last.',
+    spec: { type: 'vector_diagram', params: { xRange: [-1, 9], yRange: [-1, 7], tipToTail: true, resultant: true, vectors: [{ components: [3, 1], label: 'a' }, { components: [1, 4], label: 'b' }, { components: [3, -2], label: 'c' }, { components: [1, 3], label: 'd' }] } },
+  },
+  {
+    id: 'polish-vector-angle-arc-blank',
+    note: 'b / f: an angle arc from the +x direction on two vectors — one with its size, one with a "?" box; vectors that end on one point from different sides',
+    question: 'Vector A has magnitude 5 and makes the angle shown with the positive x-axis. What is the angle marked "?" for vector B?',
+    alt: 'Two arrows from the origin on a grid numbered in ones. An arc marks the angle each makes with the positive x-direction; one arc is labelled with its size and the other with a question mark.',
+    spec: { type: 'vector_diagram', params: { xRange: [-5, 6], yRange: [-1, 6], vectors: [{ head: [4, 3], label: 'A', angle: { label: 'auto' } }, { head: [-3, 3], label: 'B', angle: { label: '?' } }] } },
+  },
+  {
+    id: 'polish-vector-minor-grid-asked',
+    note: 'b: `minorGrid: true` brings the half-step lines back (a vector that ends on a half unit)',
+    question: 'The lighter gridlines are half a unit apart. What is the y-component of v?',
+    alt: 'One arrow from the origin on a grid numbered in ones with lighter lines halfway between; thin dashes run across and then up to its head.',
+    spec: { type: 'vector_diagram', params: { xRange: [-1, 5], yRange: [-1, 4], minorGrid: true, vectors: [{ head: [3, 2.5], label: 'v', showComponents: true }] } },
+  },
+  {
+    id: 'polish-function-asymptotes-on-gridlines',
+    note: 'c: three asymptotes, every one exactly on a numbered gridline, one of them labelled',
+    question: 'The graph of f is shown with its asymptotes (the dashed lines). What is the equation of the horizontal asymptote?',
+    alt: 'A graph in three branches on a grid numbered in ones, with two dashed vertical guide lines and one dashed horizontal guide line.',
+    spec: { type: 'function_graph', params: { xRange: [-6, 6], yRange: [-6, 6], xStep: 1, yStep: 1, curves: [{ expr: '(2*x^2)/(x^2 - 4) - 1' }], asymptotes: [{ x: -2 }, { x: 2, label: 'x = 2' }, { y: 1 }] } },
+  },
+  {
+    id: 'polish-normal-tail-beyond-2-sigma',
+    note: 'd: a tail beyond 2σ and a thin strip far from the mean — small regions that must still read as shaded, each with a firm bound',
+    question: 'The shaded tail starts two standard deviations above the mean. About what percent of the values lie in it?',
+    alt: 'A normal curve over an axis marked from −3 to 3. The right tail beyond 2 is shaded, and so is a thin strip between −2.5 and −2.',
+    spec: { type: 'distribution_curve', params: { axis: 'z', shade: [{ from: 2, to: null }, { from: -2.5, to: -2 }] } },
+  },
+  {
+    id: 'polish-punnett-blank-side-gametes',
+    note: 'e: both side gametes blank, next to a rotated side label — the "?" boxes must not run into it',
+    question: 'The offspring genotypes are shown. What are the two gametes of the mother?',
+    alt: 'A Punnett square with two rows and two columns. The gametes along the top are B and b; the two gametes down the side are replaced by question marks; the four cells hold BB, Bb, Bb and bb.',
+    spec: { type: 'punnett_square', params: { top: ['B', 'b'], side: ['B', 'b'], blankSide: [0, 1], topLabel: 'Father  Bb', sideLabel: 'Mother' } },
+  },
+  {
+    id: 'polish-shaded-between-two-parabolas',
+    note: 'f: the region between two curves with NO labels — the lower curve is a double line, never a dashed one; two lettered points on top',
+    question: 'The region between the two curves is shaded. At which marked point do the curves meet, P or Q?',
+    alt: 'Two parabolas on a grid numbered in ones, one opening down drawn as a single line and one opening up drawn as a double line, with the region between them hatched and two points marked P and Q.',
+    spec: { type: 'shaded_region', params: { xRange: [-4, 4], yRange: [-2, 8], region: { type: 'between_curves', upper: { expr: '6 - x^2/2' }, lower: { expr: 'x^2/2 + 2' }, from: -2, to: 2 }, points: [{ x: 2, y: 4, label: 'P' }, { x: 0, y: 6, label: 'Q' }] } },
+  },
+  {
+    id: 'polish-shaded-inequalities-test-points',
+    note: 'f: a strict (dashed) and a non-strict (solid) boundary with three marked test points — one open, one a "?" label',
+    question: 'Which of the marked points are solutions of the system?',
+    alt: 'A coordinate grid with one dashed and one solid boundary line and the hatched region between them; three points are marked, two with letters and one with a question mark.',
+    spec: { type: 'shaded_region', params: { xRange: [-4, 6], yRange: [-3, 6], region: { type: 'inequalities', inequalities: [{ a: 1, b: 1, op: '<', c: 4 }, { a: -1, b: 2, op: '<=', c: 4 }] }, points: [{ x: 1, y: 1, label: 'A' }, { x: 2, y: 2, label: 'B', open: true }, { x: -2, y: 1, label: '?' }] } },
+  },
+  {
+    id: 'polish-titration-lettered-points',
+    note: 'f: four lettered points on a weak-acid curve (buffer region, half-equivalence, equivalence, excess base) — letters only, no numbers',
+    question: 'At which lettered point is the solution the best buffer?',
+    alt: 'A titration curve of pH against volume of titrant that rises slowly, then steeply, then levels off; four points on it are lettered A, B, C and D from left to right.',
+    spec: { type: 'titration_curve', params: { analyte: { type: 'weak_acid', concentration: 0.1, volume: 25, pKa: 4.76 }, titrantConcentration: 0.1, maxVolume: 50, points: [{ volume: 5, label: 'A' }, { volume: 12.5, label: 'B' }, { volume: 25, label: 'C' }, { volume: 40, label: 'D' }] } },
+  },
+  {
+    id: 'polish-ray-convex-mirror-all-labels',
+    note: 'j: a convex mirror with every label on (both heights, all three distances, F and C) — labels off the rays, brackets on separate rows',
+    question: 'Use the distances shown to find the magnification of the image.',
+    alt: 'A ray diagram of a convex mirror: an upright object arrow in front of the mirror, three rays reflecting from it, and a smaller upright dashed image arrow behind it; the object and image heights and the object, image and focal distances are labelled.',
+    spec: { type: 'ray_diagram', params: { element: 'convex_mirror', focalLength: 10, objectDistance: 15, objectHeight: 4, show: { objectDistance: 'value', imageDistance: 'value', focalLength: 'value', objectHeight: 'value', imageHeight: 'value' } } },
+  },
+  {
+    id: 'polish-solid-prism-pyramid-heights-only',
+    note: 'i: a pyramid on a prism with both heights and the base labelled and no slant — the far-side edges are left out',
+    question: 'The solid is a square pyramid on top of a square prism. What is its total volume?',
+    alt: 'A square pyramid standing on a square prism. The side of the square base, the height of the prism and the height of the pyramid are each labelled with a length in centimetres.',
+    spec: { type: 'solid_3d', params: { solid: 'composite', bottom: 'prism', top: 'pyramid', base: 8, height: 5, topHeight: 6, unit: 'cm' } },
+  },
+  // --- variants that had never been opened as a picture -----------------------
+  {
+    id: 'polish-solid-sphere',
+    note: 'never viewed: a sphere with its radius',
+    question: 'What is the volume of the sphere, in terms of π?',
+    alt: 'A sphere with a dashed equator; a radius is drawn from the centre and labelled 6 cm.',
+    spec: { type: 'solid_3d', params: { solid: 'sphere', radius: 6, unit: 'cm' } },
+  },
+  {
+    id: 'polish-solid-hemisphere-blank',
+    note: 'never viewed: a hemisphere, its radius a "?" box — warns: no dimension carries a number (the stem gives the volume)',
+    question: 'The hemisphere has a volume of 144π cm³. What is its radius?',
+    alt: 'A hemisphere resting on its flat circular face; a radius is drawn on that face and labelled with a question mark.',
+    spec: { type: 'solid_3d', params: { solid: 'hemisphere', radius: 6, unit: 'cm', labels: { radius: '?' } } },
+  },
+  {
+    id: 'polish-solid-prism-plain',
+    note: 'never viewed: a plain rectangular prism with three labelled edges',
+    question: 'What is the surface area of the rectangular prism?',
+    alt: 'A rectangular prism with its length, width and height labelled 10 cm, 4 cm and 6 cm.',
+    spec: { type: 'solid_3d', params: { solid: 'prism', length: 10, width: 4, height: 6, unit: 'cm' } },
+  },
+  {
+    id: 'polish-solid-pyramid-slant',
+    note: 'never viewed: a plain square pyramid with its height, its slant height (asked for) and its base',
+    question: 'What is the lateral surface area of the pyramid?',
+    alt: 'A square pyramid. The side of its base, its height and its slant height are labelled.',
+    spec: { type: 'solid_3d', params: { solid: 'pyramid', base: 10, height: 12, unit: 'cm', labels: { slant: 'auto' } } },
+  },
+  {
+    id: 'polish-solid-cone-on-cylinder',
+    note: 'never viewed: a cone on a cylinder, three labelled dimensions',
+    question: 'The solid is a cone on top of a cylinder. What is its volume, in terms of π?',
+    alt: 'A cone standing on a cylinder of the same radius. The radius, the height of the cylinder and the height of the cone are labelled.',
+    spec: { type: 'solid_3d', params: { solid: 'composite', bottom: 'cylinder', top: 'cone', radius: 3, height: 5, topHeight: 4, unit: 'cm' } },
+  },
+  {
+    id: 'polish-field-wire-side-view',
+    note: 'never viewed: a wire in the page carrying current upward — the field symbols on its two sides are hidden only by the key the reader must apply',
+    question: 'A long straight wire carries a current up the page. On which side of the wire does the magnetic field point into the page?',
+    alt: 'A vertical wire with an arrow showing the current flowing up the page. Circles with a dot fill the region on one side of the wire and circles with a cross the region on the other side; a key says a dot is field out of the page and a cross is field into the page.',
+    spec: { type: 'field_diagram', params: { variant: 'wire', view: 'side', current: 'up' } },
+  },
+  {
+    id: 'polish-field-wire-side-view-horizontal-no-field',
+    note: 'never viewed: a horizontal wire, current to the left, the field symbols left out (they are the question)',
+    question: 'A long straight wire carries a current to the left. What is the direction of the magnetic field at a point above the wire?',
+    alt: 'A horizontal wire with an arrow showing the current flowing to the left. Nothing else is drawn.',
+    spec: { type: 'field_diagram', params: { variant: 'wire', view: 'side', current: 'left', showField: false } },
+  },
+  {
+    id: 'polish-field-magnetic-in-plane',
+    note: 'never viewed: a magnetic field IN the plane of the page (pointing up) with a positive charge moving right; the force (out of the page) is shown',
+    question: 'What does the symbol labelled F tell you about the magnetic force on the charge?',
+    alt: 'A region of uniform magnetic field shown by parallel arrows pointing up the page, labelled B. A positive charge moves to the right with velocity v; beside it a circle with a dot is labelled F, and a key says a dot means out of the page.',
+    spec: { type: 'field_diagram', params: { variant: 'magnetic_force', field: 'up', charge: { sign: '+', velocity: 'right', label: 'q', showForce: true } } },
+  },
+  {
+    id: 'polish-field-magnetic-in-plane-force-in-plane',
+    note: 'never viewed: a field out of the page, a negative charge moving up, the force arrow (in the plane) drawn',
+    question: 'The force on the charge is shown. Is the charge positive or negative?',
+    alt: 'A region of magnetic field out of the page, drawn as dots in circles. A charge with no sign shown moves up the page with velocity v, and a dashed arrow labelled F points to the left.',
+    spec: { type: 'field_diagram', params: { variant: 'magnetic_force', field: 'out', charge: { sign: '−', velocity: 'up', showSign: false, showForce: true } } },
+  },
+];
+
+FIGURE_FIXTURES.push(...POLISH_FIXTURES);

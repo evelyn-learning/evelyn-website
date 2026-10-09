@@ -27,7 +27,9 @@
  *   range?: [min, max]; step?: number; xLabel?: string; showValues?: boolean (false) }
  *
  * Shading is by drawn hatch lines under a clip path; two shaded intervals
- * get opposite hatches.
+ * get opposite hatches. A low region (a tail beyond about 1.5σ) is hatched
+ * finer, so at least `MIN_HATCH_STROKES` strokes show in it, and every bound
+ * is a firm line that runs on a little under the baseline.
  */
 import { SERIES_COLORS, TICK_FS, buildFrame, estWidth, n2, niceBounds, niceStep, tickText } from '../plot-frame';
 import type { Drawn, FigureFacts, Reader } from '../spec';
@@ -94,6 +96,37 @@ export function distributionModel(r: Reader): DistributionModel {
 }
 
 const BLUE = SERIES_COLORS[0];
+/** Every shaded interval shows at least this many hatch strokes, each at least `MIN_STROKE_LEN` long. */
+export const MIN_HATCH_STROKES = 6;
+const MIN_STROKE_LEN = 4;
+const MIN_HATCH_GAP = 2.5;
+/** How far the line at a bound runs on under the baseline. */
+const BOUND_TICK = 5;
+
+/** How many diagonal hatch lines (spacing `gap`, laid out exactly as `hatchPath` lays them over
+ *  `bbox`) cross the region under the curve between a and b with at least `MIN_STROKE_LEN` of
+ *  their length inside it. */
+function hatchStrokes(f: { X(v: number): number; Y(v: number): number }, pdf: (x: number) => number, a: number, b: number, bbox: Box, style: string, gap: number): number {
+  const xa = f.X(a);
+  const xb = f.X(b);
+  const step = gap * Math.SQRT2;
+  const rising = style === '/';
+  // '/' lines are x + y = c, '\' lines are x − y = c — multiples of the step, anchored to the canvas.
+  const lo = rising ? bbox.x0 + bbox.y0 : bbox.x0 - bbox.y1;
+  const hi = rising ? bbox.x1 + bbox.y1 : bbox.x1 - bbox.y0;
+  const n = Math.max(8, Math.ceil((xb - xa) / 0.5));
+  let count = 0;
+  for (let c = Math.floor(lo / step) * step; c <= hi; c += step) {
+    let inside = 0;
+    for (let k = 0; k < n; k++) {
+      const x = xa + ((xb - xa) * (k + 0.5)) / n;
+      const y = rising ? c - x : x - c;
+      if (y <= bbox.y1 && y >= f.Y(pdf(a + ((b - a) * (k + 0.5)) / n))) inside += ((xb - xa) / n) * Math.SQRT2;
+    }
+    if (inside >= MIN_STROKE_LEN) count++;
+  }
+  return count;
+}
 
 export function renderDistributionCurve(r: Reader, uid: string): Drawn {
   const m = distributionModel(r);
@@ -112,6 +145,7 @@ export function renderDistributionCurve(r: Reader, uid: string): Drawn {
   const parts: string[] = [];
   const defs: string[] = [];
   const over: string[] = [];
+  const notes: NonNullable<FigureFacts['notes']> = [];
   m.shade.forEach((s, i) => {
     const a = s.from === null ? lo : s.from;
     const b = s.to === null ? hi : s.to;
@@ -123,12 +157,23 @@ export function renderDistributionCurve(r: Reader, uid: string): Drawn {
     }
     pts.push(`${n2(f.X(b))},${n2(base)}`);
     const bbox: Box = { x0: f.X(a), y0: f.plot.y, x1: f.X(b), y1: base };
-    const h = hatched(`${uid}-shade${i}`, `<polygon points="${pts.join(' ')}"`, bbox, i % 2 === 0 ? '/' : '\\', BLUE, { gap: 6, width: 1 });
+    // A LOW region (a tail beyond about 1.5σ, a sliver far from the mean) holds only two or three
+    // strokes of the usual hatch, each a few units long. It is hatched finer and a little
+    // heavier, so that at least `MIN_HATCH_STROKES` strokes of real length cross it.
+    const style = i % 2 === 0 ? '/' : '\\';
+    let gap = 6;
+    while (gap > MIN_HATCH_GAP && hatchStrokes(f, pdf, a, b, bbox, style, gap) < MIN_HATCH_STROKES) gap -= 0.5;
+    const fine = gap < 6;
+    const h = hatched(`${uid}-shade${i}`, `<polygon points="${pts.join(' ')}"`, bbox, style, BLUE, { gap, width: fine ? 1.2 : 1 });
+    const strokes = hatchStrokes(f, pdf, a, b, bbox, style, gap);
+    if (strokes < MIN_HATCH_STROKES) notes.push({ code: 'crowded', message: `shade[${i}] is so small that only ${strokes} hatch stroke${strokes === 1 ? ' fits' : 's fit'} in it — it will not read as shaded at 340 px` });
     defs.push(h.def);
     parts.push(h.svg);
     for (const [bound, isTail] of [[s.from, s.from === null], [s.to, s.to === null]] as Array<[number | null, boolean]>) {
       if (isTail || bound === null) continue;
-      parts.push(`<line x1="${n2(f.X(bound))}" y1="${n2(base)}" x2="${n2(f.X(bound))}" y2="${n2(f.Y(pdf(bound)))}" stroke="${BLUE}" stroke-width="1.5"/>`);
+      // The bound: a firm line from the curve down THROUGH the baseline (a short tick under it),
+      // so the edge of a low region is plain even where the curve is only a few units up.
+      parts.push(`<line x1="${n2(f.X(bound))}" y1="${n2(base + BOUND_TICK)}" x2="${n2(f.X(bound))}" y2="${n2(f.Y(pdf(bound)))}" stroke="${BLUE}" stroke-width="2"/>`);
       if (offTick(bound)) {
         const shown = s.label ?? (m.axis === 'z' ? numText((bound - mean) / sd, 3) : m.axis === 'x' ? numText(bound, 4) : '');
         over.push(`<line x1="${n2(f.X(bound))}" y1="${n2(base)}" x2="${n2(f.X(bound))}" y2="${n2(base + (anyNumbers ? TICK_FS + 8 : 5))}" stroke="${BLUE}" stroke-width="1.2"/>`);
@@ -169,7 +214,7 @@ export function renderDistributionCurve(r: Reader, uid: string): Drawn {
     parts.push(`<line x1="${n2(x)}" y1="${n2(base)}" x2="${n2(x)}" y2="${n2(base + 5)}" stroke="${INK}" stroke-width="1.3"/>`);
     if (s) parts.push(text(x, base + TICK_FS + 6, s, { anchor: 'middle', fill: MUTED }));
   });
-  const facts: FigureFacts = { plot: undefined, curveCount: 1, marks: [], curves: [], notes: [] };
+  const facts: FigureFacts = { plot: undefined, curveCount: 1, marks: [], curves: [], notes };
   if (m.shade.length > 2) facts.notes?.push({ code: 'too_many_elements', message: '3 shaded intervals — only two hatch directions tell regions apart' });
   return { body: `<defs>${defs.join('')}</defs>${f.svg}${parts.join('')}${over.join('')}`, H: f.bottom, facts };
 }

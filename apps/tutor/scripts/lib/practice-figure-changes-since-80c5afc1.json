@@ -1,0 +1,18 @@
+{
+ "function-rational-asymptotes": "c — asymptotes: darker, heavier, longer dashes on a white under-line (both lie on gridlines)",
+ "fix1-four-curves-dashes": "c — the y = −5 asymptote: darker, heavier, longer dashes on a white under-line",
+ "vector-two-from-origin": "b — no half-unit gridlines; arrowheads above the shafts on a white keyline; round-capped dashes; one tail dot per starting point",
+ "vector-tip-to-tail-resultant": "b — no half-unit gridlines; the head of w stops short of the point the resultant ends on; no tail dot on a head; round-capped dash-dot",
+ "vector-blank-resultant-label": "b — no half-unit gridlines; arrowheads above the shafts on a white keyline; round-capped dashes",
+ "shaded-between-parabola-line": "f — the lower curve is a double line (and so is its legend swatch), not a dashed one",
+ "signchart-first-derivative": "a — the dashed guides are broken round the values written at the critical numbers",
+ "signchart-three-rows-five-critical": "a — the dashed guides are broken round the values written at the critical numbers",
+ "signchart-blank-cell": "a — the dashed guides are broken round the values (and the \"?\" box) at the critical numbers",
+ "normal-z-between": "d — the line at each bound is heavier and runs on under the baseline",
+ "normal-x-two-tails-area": "d — the line at each bound is heavier and runs on under the baseline",
+ "normal-blank-bound": "d — a tail beyond 1.96σ: finer, heavier hatch (at least six strokes) and a firm line at the bound",
+ "ray-concave-mirror-virtual-image": "j — the two height labels are set where no ray runs behind them",
+ "field-three-charges-equipotentials": "h — the charges' labels are set in the gaps between field lines, so no plate cuts a line",
+ "field-blank-unknown-charges": "h — the label and the \"?\" box are set in gaps between field lines, so neither cuts a line",
+ "solid-composite-prism-pyramid": "i — the far-side edges of the prism and the pyramid are left out; the slant label sits lower on its line"
+}

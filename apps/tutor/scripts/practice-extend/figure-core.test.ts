@@ -5,16 +5,19 @@
  */
 import '../lib/no-db-env';
 import assert from 'node:assert/strict';
-import type { PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
+import { renderPracticeFigure, type PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
+import { FIGURE_FIXTURES } from '../lib/practice-figure-fixtures';
 import { FIGURE_QUALITY_CHECKS, FIGURE_STRICT_CHECKS, contestedFlags, qualityFlags, validateItem } from './core';
 import {
   ALL_PRACTICE_FIGURE_KINDS,
   CHECKERS,
   FigureRuleError,
   axesOf,
+  axisText,
   checkerCatalogue,
   compareDerived,
   describeFigure,
+  describeForAlt,
   examineFigureItem,
   hygieneDefects,
   normaliseSpec,
@@ -28,6 +31,7 @@ import {
   readOff,
   runChecker,
   solverQuestion,
+  svgTexts,
   validateFigureItem,
   type Derived,
   type FigureItem,
@@ -858,6 +862,161 @@ test('sample: every supported kind first, then spread over subjects; reproducibl
   const bySubject = (x: string) => s.filter((c) => c.subject === x).length;
   assert.ok(bySubject('A') <= 2 && bySubject('B') >= 2 && bySubject('C') >= 2, JSON.stringify(s.map((c) => c.subject)));
   assert.equal(pickFigureSample(pool, 99).length, 11);
+});
+
+// ── polish round 2026-10-11: π axes (g), alt descriptions (k), the redrawn kinds ──
+
+const PI = Math.PI;
+const piGraph: PracticeFigureSpec = { type: 'function_graph', params: { xRange: [-2 * PI, 2 * PI], yRange: [-2, 2], yStep: 1, xTickUnit: 'pi', xTickDivisor: 2, curves: [{ expr: 'sin(x)', label: 'f' }], points: [{ x: PI / 2, y: 1, label: 'P' }], asymptotes: [{ x: -PI }] } };
+
+test('g. axesOf reads a π axis: numbered gridlines every π ÷ divisor, one lighter line between, values on it written as multiples of π', () => {
+  const ax = axesOf(piGraph);
+  assert.ok(ax.x && ax.y);
+  assert.equal(ax.x.pi, 2);
+  assert.ok(Math.abs(ax.x.step - PI / 2) < 1e-12 && Math.abs(ax.x.minor - PI / 4) < 1e-12 && ax.x.numbered);
+  assert.ok(Math.abs(ax.x.min + 2 * PI) < 1e-12 && Math.abs(ax.x.max - 2 * PI) < 1e-12);
+  assert.equal(ax.y.pi, undefined);
+  assert.ok(onGrid(PI / 4, ax.x) && onGrid(-3 * PI / 2, ax.x) && !onGrid(1, ax.x) && !onGrid(PI / 3, ax.x));
+  assert.equal(axisText(3 * PI / 4, ax.x), '3π/4');
+  assert.equal(axisText(-PI, ax.x), '-π');
+  assert.equal(axisText(0, ax.x), '0');
+  assert.equal(axisText(2, ax.y), '2');
+  assert.equal(readOff(PI / 2, ax.x), 'π/2');
+  assert.match(readOff(1, ax.x), /^between π\/4 and π\/2 /);
+  // The same grid the renderer draws: a major line at every multiple of π/2, a minor at every π/4.
+  const svg = renderPracticeFigure(piGraph).svg;
+  const count = (stroke: string) => (new RegExp(`<path d="([^"]+)" stroke="${stroke}"`).exec(svg)?.[1].match(/M[-\d.]+,[-\d.]+V/g) ?? []).length;
+  assert.equal(count('#cbd5e1'), 9, '−2π … 2π in steps of π/2');
+  assert.equal(count('#e9eef4'), 17, 'and in steps of π/4');
+  // y can be a π axis too; a divisor needs the unit; step and unit together are refused; the range must end on ticks.
+  assert.equal(axesOf({ type: 'function_graph', params: { xRange: [-2, 2], xStep: 1, yRange: [-PI, PI], yTickUnit: 'pi', curves: [{ expr: 'atan(x)' }] } }).y?.pi, 1);
+  refused(() => axesOf({ type: 'function_graph', params: { ...piGraph.params, xStep: 1 } }), /give xStep or xTickUnit, not both/);
+  refused(() => axesOf({ type: 'function_graph', params: { ...piGraph.params, xTickUnit: 'tau' } }), /xTickUnit must be 'pi'/);
+  refused(() => axesOf({ type: 'function_graph', params: { ...piGraph.params, xTickDivisor: 2.5 } }), /xTickDivisor must be a whole number from 1 to 12/);
+  refused(() => axesOf({ type: 'function_graph', params: { ...piGraph.params, xRange: [-6.6, 6.6] } }), /both ends of the range must be multiples of the step \(π\/2/);
+  refused(() => axesOf({ type: 'function_graph', params: { ...piGraph.params, xTickUnit: undefined } }), /xStep must be given/);
+});
+
+test('g. the transcription and the checkers run on a π-tick graph directly', () => {
+  const d = describeFigure(piGraph);
+  assert.match(d.text, /x axis: label "x"; runs from -2π to 2π; numbered gridlines every π\/2 \(labelled as multiples of π\), lighter gridlines every π\/4\./);
+  assert.ok(d.readable.includes('  x = π/2: y = 1') && d.readable.includes('  x = -3π/2: y = 1') && d.readable.includes('  x = π: y = 0'));
+  assert.ok(d.readable.some((l) => /Marked point labelled "P": a filled dot at \(π\/2, 1\)\./.test(l)));
+  assert.ok(d.readable.some((l) => /Dashed vertical guide line at x = -π\./.test(l)));
+  assert.equal(value(run(piGraph, 'curve_value', { curve: 0, x: PI / 2 })), 1);
+  assert.ok(Math.abs(value(run(piGraph, 'curve_value', { curve: 0, x: -PI / 2 })) + 1) < 1e-12);
+  assert.ok(Math.abs(value(run(piGraph, 'point_coordinate', { point: 'P', want: 'x' })) - PI / 2) < 1e-9);
+  refused(() => run(piGraph, 'curve_value', { curve: 0, x: 1 }), /does not lie on a gridline/);
+  // The whole item check passes on it.
+  const exam = examineFigureItem(item(piGraph, { answer: '1', derivation: { checker: 'curve_value', args: { curve: 0, x: PI / 2 } } }));
+  assert.deepEqual(exam.defects, [], exam.defects.join(' | '));
+  assert.equal(exam.derivation.status, 'derived', exam.derivation.detail);
+  assert.match(exam.figureText ?? '', /numbered gridlines every π\/2/);
+});
+
+test('the redrawn kinds are transcribed as drawn: no half-unit grid on a vector diagram, a double (not dashed) lower curve, marked points, angle arcs, lettered titration points', () => {
+  const vec: PracticeFigureSpec = { type: 'vector_diagram', params: { xRange: [-1, 5], yRange: [-1, 5], vectors: [{ head: [3, 2], label: 'v', angle: { label: '?' } }] } };
+  assert.match(describeFigure(vec).text, /gridlines every 1\./);
+  assert.match(describeFigure({ type: 'vector_diagram', params: { ...vec.params, minorGrid: true } }).text, /gridlines every 0\.5\./);
+  assert.ok(describeFigure(vec).readable.some((l) => /an arc at its tail marks the angle it makes with the positive x-direction, measured counter-clockwise, labelled with \(blank/.test(l)));
+  assert.ok(!/33\.7|33\.69/.test(describeFigure(vec).text), 'the size of a blank angle is not transcribed');
+  // A head on a half unit is no longer "on the grid" unless the half-unit lines are drawn.
+  const half: PracticeFigureSpec = { type: 'vector_diagram', params: { xRange: [-1, 5], yRange: [-1, 5], vectors: [{ head: [3, 2.5], label: 'v' }] } };
+  refused(() => run(half, 'vec_components', { vector: 0, want: 'y' }), /not on a gridline/);
+  assert.equal(value(run({ type: 'vector_diagram', params: { ...half.params, minorGrid: true } }, 'vec_components', { vector: 0, want: 'y' })), 2.5);
+  const between: PracticeFigureSpec = { type: 'shaded_region', params: { xRange: [-4, 4], yRange: [-4, 6], region: { type: 'between_curves', upper: { expr: '4 - x^2', label: 'f' }, lower: { expr: 'x + 2', label: 'g' }, from: -2, to: 1 }, points: [{ x: 1, y: 3, label: 'P' }, { x: 0, y: 0, label: '?', open: true }] } };
+  const t = describeFigure(between);
+  assert.ok(t.readable.some((l) => /^Lower curve \(legend "g"\): a DOUBLE STRAIGHT line \(two thin parallel lines side by side/.test(l)));
+  assert.ok(!/dashed/i.test(t.text), 'nothing between two curves is called dashed');
+  assert.ok(t.readable.includes('Marked point labelled "P": a filled dot at (1, 3).'));
+  assert.ok(t.readable.some((l) => /^Marked point labelled with \(blank — a "\?" box\): an open circle at \(0, 0\)\.$/.test(l)));
+  assert.ok(t.printed.includes('point label: "P"'));
+  const titr: PracticeFigureSpec = { type: 'titration_curve', params: { analyte: { type: 'weak_acid', concentration: 0.1, volume: 25, pKa: 5 }, titrantConcentration: 0.1, maxVolume: 50, points: [{ volume: 10, label: 'B' }, { volume: 25, label: 'C' }] } };
+  const tt = describeFigure(titr);
+  assert.ok(tt.printed.includes('point label: "B"') && tt.printed.includes('point label: "C"'));
+  assert.ok(tt.readable.some((l) => /^A dot ON the curve lettered "B" at volume 10, pH between 4 and 5 .* \(no guide lines\)\.$/.test(l)));
+  assert.ok(tt.readable.some((l) => /^A dot ON the curve lettered "C" at volume 25, /.test(l)));
+});
+
+test('k. describeForAlt: specific — the kind, its components in words, and the labels printed on the figure by role', () => {
+  const chart: PracticeFigureSpec = { type: 'sign_chart', params: { critical: [-2, 1, 5], rows: [{ label: 'f′(x)', signs: ['-', '+', '-', '+'], at: ['0', '0', '0'], blankSigns: [2] }] } };
+  assert.equal(describeForAlt(chart), 'A sign chart. Printed on it: critical numbers "−2", "1", "5"; row label "f′(x)". One place is left blank, shown as a boxed question mark.');
+  assert.equal(
+    describeForAlt({ type: 'vector_diagram', params: { xRange: [-1, 9], yRange: [-1, 7], tipToTail: true, vectors: [{ components: [3, 1], label: 'a' }, { components: [1, 4], label: 'b' }] } }),
+    'A diagram of vectors drawn as arrows on a numbered grid, with two arrows. Printed on it: axis labels "x", "y"; arrow labels "a", "b".',
+  );
+  // An axis left to a layout default: `describeFigure` refuses, the alt is still made — from the picture's own text.
+  const loose: PracticeFigureSpec = { type: 'function_graph', params: { xRange: [-4, 4], yRange: [-4, 6], curves: [{ expr: 'x^2 - 2', label: 'f' }, { expr: 'x', label: 'g' }], points: [{ x: 2, y: 2 }] } };
+  refused(() => describeFigure(loose), /xStep must be given/);
+  assert.equal(describeForAlt(loose), 'A graph of curves on a coordinate grid, with two curves, one marked point. Printed on it: labels "y", "x", "f", "g".');
+  // Never longer than an alt may be.
+  const long = describeForAlt({ type: 'bar_chart', params: { categories: Array.from({ length: 24 }, (_, i) => `Category number ${i + 1} with a long name`), values: Array.from({ length: 24 }, (_, i) => i), yMin: 0, yMax: 25, yStep: 5 } });
+  assert.ok(long.length <= 600 && long.length >= 12, String(long.length));
+  const names = describeForAlt({ type: 'bar_chart', params: { categories: Array.from({ length: 24 }, (_, i) => `Item ${i + 1} of the survey list`), values: Array.from({ length: 24 }, (_, i) => i), yMin: 0, yMax: 25, yStep: 5, yLabel: 'A rather long label for the value axis of this chart', title: 'A long title that the alt does not need to repeat in full but may' } });
+  assert.ok(names.length <= 600, String(names.length));
+});
+
+/** Everything in an alt that could be a value: its quoted labels and its digits. */
+function altIsOnlyWhatIsDrawn(spec: PracticeFigureSpec, alt: string, id: string): void {
+  const drawn = svgTexts(renderPracticeFigure(spec).svg);
+  const squash = (t: string) => t.replace(/[₀-₉]/g, (c) => String('₀₁₂₃₄₅₆₇₈₉'.indexOf(c))).replace(/ₒ/g, 'o').replace(/ᵢ/g, 'i').replace(/[−–]/g, '-').replace(/\s+/g, '').toLowerCase();
+  const all = squash(drawn.join(''));
+  for (const q of alt.matchAll(/"([^"]*)"/g)) assert.ok(all.includes(squash(q[1])), `${id}: the alt names "${q[1]}", which the figure does not print`);
+  // Outside the quoted labels an alt carries no digit at all (counts are words).
+  assert.ok(!/\d/.test(alt.replace(/"[^"]*"/g, '')), `${id}: a digit outside a quoted label — ${alt}`);
+}
+
+test('k. describeForAlt is answer-safe by construction: over every fixture it names only text the rendered figure prints, and no number of its own', () => {
+  let made = 0;
+  for (const f of FIGURE_FIXTURES) {
+    const alt = describeForAlt(f.spec);
+    assert.ok(alt.length >= 12 && alt.length <= 600, `${f.id}: ${alt.length} characters`);
+    assert.ok(/^[A-Z]/.test(alt) && /\.$/.test(alt), f.id);
+    altIsOnlyWhatIsDrawn(f.spec, alt, f.id);
+    assert.equal(describeForAlt(JSON.parse(JSON.stringify(f.spec))), alt, `${f.id}: deterministic`);
+    made++;
+  }
+  assert.equal(made, FIGURE_FIXTURES.length);
+  assert.ok(made >= 129);
+});
+
+test('k. describeForAlt never includes a value the spec hides', () => {
+  /** [what is hidden, the spec, the texts that must not appear]. */
+  const cases: Array<[string, PracticeFigureSpec, string[]]> = [
+    ['a blank sign-chart cell and a blank value at a critical number', { type: 'sign_chart', params: { critical: [{ value: 0.5, label: 'a' }, 7], rows: [{ label: 'g(x)', signs: ['+', '-', '+'], at: ['und', '0'], blankSigns: [1], blankAt: [0] }] } }, ['und', '0.5', '−"', '"-"']],
+    ['a blank Punnett cell and gamete', { type: 'punnett_square', params: { top: ['T', 't'], side: ['T', 't'], blankCells: [[1, 1]], blankSide: [1], blankTop: [0] } }, ['"tt"', 'Tt', 'recessive']],
+    ['a "?" dimension of a solid', { type: 'solid_3d', params: { solid: 'cone', radius: 5, height: 12, unit: 'cm', labels: { slant: '?' } } }, ['13']],
+    ['a hidden resultant', { type: 'vector_diagram', params: { xRange: [-1, 9], yRange: [-1, 9], tipToTail: true, vectors: [{ components: [3, 1], label: 'a' }, { components: [4, 6], label: 'b' }] } }, ['resultant', '"R"', '7']],
+    ['a blank angle arc', { type: 'vector_diagram', params: { xRange: [-5, 5], yRange: [-1, 5], vectors: [{ head: [-3, 3], label: 'B', angle: { label: '?' } }] } }, ['135']],
+    ['the sign of a charge', { type: 'field_diagram', params: { variant: 'point_charges', charges: [{ x: -2, y: 0, q: 1, showSign: false, label: 'A' }, { x: 2, y: 0, q: -1, showSign: false, label: 'B' }] } }, ['"+"', '"−"', 'positive', 'negative']],
+    ['a blank image distance and height', { type: 'ray_diagram', params: { element: 'converging_lens', focalLength: 10, objectDistance: 30, objectHeight: 4, show: { objectDistance: 'value', imageDistance: 'blank', imageHeight: 'blank', objectHeight: 'value' } } }, ['15', '"2 cm"', 'real', 'inverted']],
+    ['bar values', { type: 'bar_chart', params: { categories: ['Red', 'Blue'], values: [37, 12], yMin: 0, yMax: 40, yStep: 10 } }, ['37', '12']],
+    ['an equivalence point that is not marked', { type: 'titration_curve', params: { analyte: { type: 'strong_acid', concentration: 0.1, volume: 25 }, titrantConcentration: 0.125, maxVolume: 40 } }, ['equivalence', '"20"', 'strong']],
+    ['a shaded area that is not printed', { type: 'distribution_curve', params: { mean: 500, sd: 100, shade: [{ from: 650, to: null, label: '?' }] } }, ['0.0668', '650', '6.68']],
+    ['the force on a moving charge', { type: 'field_diagram', params: { variant: 'magnetic_force', field: 'into', charge: { sign: '−', velocity: 'right' } } }, ['down', '"F"', 'force label']],
+    ['an unknown individual of a pedigree', { type: 'pedigree', params: { individuals: [{ id: 'f', sex: 'M', affected: true }, { id: 'm', sex: 'F' }, { id: 'c', sex: 'F', father: 'f', mother: 'm', unknown: true }] } }, ['recessive', 'dominant']],
+  ];
+  for (const [what, spec, never] of cases) {
+    const alt = describeForAlt(spec);
+    altIsOnlyWhatIsDrawn(spec, alt, what);
+    for (const t of never) assert.ok(!alt.includes(t), `${what}: the alt contains ${t} — ${alt}`);
+  }
+  // The same figures WITH the value shown do name it — the description follows the picture.
+  assert.ok(describeForAlt({ type: 'solid_3d', params: { solid: 'cone', radius: 5, height: 12, unit: 'cm', labels: { slant: 'auto' } } }).includes('"13 cm"'));
+  assert.ok(describeForAlt({ type: 'field_diagram', params: { variant: 'point_charges', charges: [{ x: -2, y: 0, q: 1, label: 'A' }, { x: 2, y: 0, q: -1, label: 'B' }] } }).includes('"+"'));
+});
+
+test('k. describeForAlt `hide`: a printed label that gives the answer away is left out; a value that is part of the figure itself is refused', () => {
+  const solid: PracticeFigureSpec = { type: 'solid_3d', params: { solid: 'cylinder', radius: 3, height: 8, unit: 'cm' } };
+  assert.ok(describeForAlt(solid).includes('"3 cm"') && describeForAlt(solid).includes('"8 cm"'));
+  const hidden = describeForAlt(solid, { hide: [8] });
+  assert.ok(hidden.includes('"3 cm"') && !hidden.includes('8'), hidden);
+  assert.ok(!describeForAlt(solid, { hide: ['3 CM', 8] }).includes('cm'), 'texts are matched without regard to case or spacing');
+  const chart: PracticeFigureSpec = { type: 'sign_chart', params: { critical: [-2, 1], rows: [{ label: 'f′(x)', signs: ['-', '+', '-'] }] } };
+  assert.ok(!describeForAlt(chart, { hide: ['-2'] }).includes('2'), 'a number is matched as a number (−2 printed with a real minus)');
+  assert.ok(describeForAlt(chart, { hide: ['-2'] }).includes('"1"'));
+  refused(() => describeForAlt(chart, { hide: ['sign chart'] }), /a value to hide .* is part of what the figure itself is/);
+  assert.equal(describeForAlt(chart, { hide: [] }), describeForAlt(chart));
 });
 
 console.log(`${passed} figure-core test(s) passed${process.exitCode ? ' — WITH FAILURES' : ''}`);

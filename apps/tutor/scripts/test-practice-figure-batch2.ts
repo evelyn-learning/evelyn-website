@@ -6,7 +6,10 @@
  * Under test:
  *   - adding batch 2 changed NOTHING that was there: the 72 fixtures of the
  *     nine first kinds and batch 1 still render to the very same bytes
- *     (sha-256 pinned at ca8cc0c4 in scripts/lib/practice-figure-pins-ca8cc0c4.json);
+ *     (sha-256 pinned at ca8cc0c4 in scripts/lib/practice-figure-pins-ca8cc0c4.json) — and since
+ *     the polish round of 2026-10-11, all 108 fixtures of 80c5afc1 are pinned as well
+ *     (practice-figure-pins-80c5afc1.json): the ones that round redrew are listed one by one, each
+ *     with its reason, in practice-figure-changes-since-80c5afc1.json, and nothing else may differ;
  *   - every batch-2 kind has ≥ 3 fixtures, one with a blank "?"; each uses
  *     only the pinned client vocabulary, sets no type under 10 px at 340 px,
  *     and is clean under `checkFigureLegibility` unless its note says "warns";
@@ -36,7 +39,7 @@ import { fieldAt, fieldModel, lineCounts, magneticForceDirection, traceFieldLine
 import { flowModel } from '../src/lib/tutor/practice-figure/kinds/flow-diagram';
 import { revolutionVolume, solidModel } from '../src/lib/tutor/practice-figure/kinds/solid-3d';
 import { spectrumModel } from '../src/lib/tutor/practice-figure/kinds/spectrum';
-import { BATCH2_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
+import { BATCH2_FIXTURES, FIGURE_FIXTURES, POLISH_FIXTURES } from './lib/practice-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -67,18 +70,38 @@ const fx = (id: string): PracticeFigureSpec => (BATCH2_FIXTURES.find((f) => f.id
 
 console.log('\nNothing that was there has changed:\n');
 
-test('the 72 fixtures of the first nine kinds and batch 1 render to the very same bytes as at ca8cc0c4', () => {
-  const pins = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'practice-figure-pins-ca8cc0c4.json'), 'utf8')) as Record<string, string>;
+const readJson = (name: string): Record<string, string> => JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', name), 'utf8')) as Record<string, string>;
+const sha = (spec: PracticeFigureSpec): string => createHash('sha256').update(renderPracticeFigure(spec).svg).digest('hex');
+/** The polish round of 2026-10-11 redrew these on purpose — id → why (see the 80c5afc1 test below). */
+const POLISHED = readJson('practice-figure-changes-since-80c5afc1.json');
+const POLISH_IDS = new Set(POLISH_FIXTURES.map((f) => f.id));
+
+test('the 72 fixtures of the first nine kinds and batch 1 render to the very same bytes as at ca8cc0c4 — but for the ones the polish round redrew', () => {
+  const pins = readJson('practice-figure-pins-ca8cc0c4.json');
   assert.equal(Object.keys(pins).length, 72);
-  const earlier = FIGURE_FIXTURES.filter((f) => !(BATCH2_FIGURE_KINDS as readonly string[]).includes(f.spec.type));
+  const earlier = FIGURE_FIXTURES.filter((f) => !(BATCH2_FIGURE_KINDS as readonly string[]).includes(f.spec.type) && !POLISH_IDS.has(f.id));
   assert.deepEqual(earlier.map((f) => f.id), Object.keys(pins), 'same fixtures, same order');
-  for (const f of earlier) assert.equal(createHash('sha256').update(renderPracticeFigure(f.spec).svg).digest('hex'), pins[f.id], f.id);
+  for (const f of earlier) if (!(f.id in POLISHED)) assert.equal(sha(f.spec), pins[f.id], f.id);
+});
+
+test('all 108 fixtures as they were at 80c5afc1: byte-identical, except exactly the ones listed (with the reason) as redrawn by the polish round', () => {
+  const pins = readJson('practice-figure-pins-80c5afc1.json');
+  assert.equal(Object.keys(pins).length, 108);
+  const before = FIGURE_FIXTURES.filter((f) => !POLISH_IDS.has(f.id));
+  assert.deepEqual(before.map((f) => f.id), Object.keys(pins), 'same fixtures, same order');
+  for (const id of Object.keys(POLISHED)) {
+    assert.ok(id in pins, `${id} is listed as changed but was not a fixture at 80c5afc1`);
+    assert.ok(/^[a-k] — /.test(POLISHED[id]), `${id}: the reason names the weakness (a–k) it was changed for`);
+  }
+  const changed = before.filter((f) => sha(f.spec) !== pins[f.id]).map((f) => f.id);
+  assert.deepEqual(changed, Object.keys(POLISHED), 'the fixtures that changed are exactly the listed ones, in fixture order');
+  assert.equal(changed.length, 16);
 });
 
 test('batch 2 is a list of its own: eight kinds, none of them in the earlier lists', () => {
   assert.equal(BATCH2_FIGURE_KINDS.length, 8);
   for (const k of BATCH2_FIGURE_KINDS) assert.ok(!(ALL_PRACTICE_FIGURE_KINDS as readonly string[]).includes(k), k);
-  assert.equal(FIGURE_FIXTURES.length, 72 + BATCH2_FIXTURES.length);
+  assert.equal(FIGURE_FIXTURES.length, 72 + BATCH2_FIXTURES.length + POLISH_FIXTURES.length);
   throwsSpec('pie_chart', {}, /unknown figure kind .*function_graph.*circuit_diagram.*spectrum/);
 });
 
@@ -462,6 +485,147 @@ test('spectrum: values only as asked, the reversed logarithmic PES axis, line st
   assert.ok(/<path d="M[\d.]+,[\d.]+H[\d.]+" [^>]*stroke-dasharray="5 3"/.test(cs));
   throwsSpec('spectrum', { ...cal, sample: { absorbance: 2 } }, /off the calibration line/);
   throwsSpec('spectrum', { variant: 'nmr' }, /variant must be one of/);
+});
+
+// ---------------------------------------------------------------------------
+// Polish round, 2026-10-11 — h (field lines), i (prism + pyramid), j (mirror
+// with every label on), and the variants nobody had opened as a picture.
+// ---------------------------------------------------------------------------
+
+console.log('\nPolish round (2026-10-11):\n');
+
+const anyFx = (id: string): PracticeFigureSpec => (FIGURE_FIXTURES.find((f) => f.id === id) ?? assert.fail(`no fixture ${id}`)).spec;
+/** The straight pieces of a path's data (M / L only). */
+function segments(d: string): Array<[number, number, number, number]> {
+  const out: Array<[number, number, number, number]> = [];
+  let x = 0;
+  let y = 0;
+  for (const m of d.matchAll(/([ML])(-?[\d.]+),(-?[\d.]+)/g)) {
+    if (m[1] === 'L') out.push([x, y, Number(m[2]), Number(m[3])]);
+    [x, y] = [Number(m[2]), Number(m[3])];
+  }
+  return out;
+}
+const crosses = (seg: [number, number, number, number], b: { x0: number; y0: number; x1: number; y1: number }): boolean => {
+  const n = Math.max(2, Math.ceil(Math.hypot(seg[2] - seg[0], seg[3] - seg[1]) / 0.5));
+  for (let i = 0; i <= n; i++) {
+    const x = seg[0] + ((seg[2] - seg[0]) * i) / n;
+    const y = seg[1] + ((seg[3] - seg[1]) * i) / n;
+    if (x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1) return true;
+  }
+  return false;
+};
+
+test('h. field_diagram: three point charges are flagged — for direction and sign, NOT for counting lines; one or two charges stay clean', () => {
+  const three = checkFigureLegibility(fx('field-three-charges-equipotentials'));
+  assert.deepEqual(three.map((w) => w.code), ['crowded']);
+  assert.ok(/three charges: the field lines bunch between them .* NOT for counting lines/.test(three[0].message));
+  assert.deepEqual(checkFigureLegibility(fx('field-dipole')), []);
+  assert.deepEqual(checkFigureLegibility(fx('field-blank-unknown-charges')), []);
+  // More than a dozen lines on one symbol leave it under 5 units apart: also flagged.
+  const many = checkFigureLegibility({ type: 'field_diagram', params: { variant: 'point_charges', charges: [{ x: 0, y: 0, q: 2 }] } });
+  assert.ok(many.some((w) => w.code === 'crowded' && /16 field lines/.test(w.message)));
+  assert.deepEqual(warn('field_diagram', { variant: 'point_charges', linesPerUnit: 6, charges: [{ x: 0, y: 0, q: 2 }] }), []);
+});
+
+test('h. field_diagram: the white plate under a charge\'s label cuts no field line (it is set in a gap between the lines)', () => {
+  for (const id of ['field-dipole', 'field-three-charges-equipotentials', 'field-blank-unknown-charges']) {
+    const svg = renderPracticeFigure(fx(id)).svg;
+    const lines = /<path d="([^"]+)" fill="none" stroke="#111827" stroke-width="1.25" stroke-linejoin="round"\/>/.exec(svg);
+    assert.ok(lines, `${id}: the field lines`);
+    const segs = segments(lines[1]);
+    const plates = [...svg.matchAll(/<rect x="(-?[\d.]+)" y="(-?[\d.]+)" width="([\d.]+)" height="15" rx="2" fill="#ffffff"\/>/g)].map((m) => ({ x0: Number(m[1]), y0: Number(m[2]), x1: Number(m[1]) + Number(m[3]), y1: Number(m[2]) + 15 }));
+    const labelled = (fx(id).params.charges as Array<{ label?: string }>).filter((c) => c.label && c.label !== '?').length;
+    assert.equal(plates.length, labelled, `${id}: one plate per lettered charge`);
+    for (const b of plates) assert.equal(segs.filter((q) => crosses(q, b)).length, 0, `${id}: a label plate cuts a field line`);
+    // The "?" box of an unknown charge keeps off the lines as well.
+    for (const m of svg.matchAll(/<path d="M(-?[\d.]+),(-?[\d.]+)h(-?[\d.]+)v(-?[\d.]+)h-?[\d.]+z" fill="#ffffff" stroke="#4b5563"/g)) {
+      const b = { x0: Number(m[1]), y0: Number(m[2]), x1: Number(m[1]) + Number(m[3]), y1: Number(m[2]) + Number(m[4]) };
+      assert.equal(segs.filter((q) => crosses(q, b)).length, 0, `${id}: the "?" box cuts a field line`);
+    }
+  }
+});
+
+test('i. solid_3d: a pyramid on a prism is drawn without its far-side edges; both heights drawn inside it are flagged', () => {
+  const hiddenPieces = (params: Params): number => {
+    const d = /<path d="([^"]*)" fill="none" stroke="#111827" stroke-width="1.2" stroke-dasharray="5 3"\/>/.exec(svgOf('solid_3d', params))?.[1] ?? '';
+    return segments(d).length;
+  };
+  const base = { solid: 'composite', bottom: 'prism', top: 'pyramid', base: 8, height: 5, topHeight: 6, unit: 'cm' };
+  const few = hiddenPieces(base);
+  const all = hiddenPieces({ ...base, hiddenEdges: 'all' });
+  // 'all': 3 back edges of the prism + 2 of its top + the pyramid's far edge + height line + half-base line = 8;
+  // the default leaves out the prism's three and the pyramid's far edge.
+  assert.equal(all, 8);
+  assert.equal(few, 4);
+  assert.equal(solidModel(reader('solid_3d', base)).hiddenEdges, 'few');
+  assert.equal(solidModel(reader('solid_3d', { solid: 'prism', length: 4, width: 3, height: 2 })).hiddenEdges, 'all', 'a plain prism keeps its hidden edges');
+  assert.equal(solidModel(reader('solid_3d', { solid: 'pyramid', base: 4, height: 3 })).hiddenEdges, 'all');
+  assert.equal(solidModel(reader('solid_3d', { solid: 'pyramid', base: 4, height: 3, labels: { slant: 'auto' } })).hiddenEdges, 'few', 'a pyramid with its slant height drawn drops the far edge');
+  assert.equal(hiddenPieces({ solid: 'prism', length: 4, width: 3, height: 2, hiddenEdges: 'few' }), 0);
+  throwsSpec('solid_3d', { ...base, hiddenEdges: 'none' }, /hiddenEdges must be 'all' or 'few'/);
+  // Heights and base only: clean. Height AND slant inside the small pyramid: flagged.
+  assert.deepEqual(checkFigureLegibility(anyFx('polish-solid-prism-pyramid-heights-only')), []);
+  assert.deepEqual(warn('solid_3d', { ...base, labels: { slant: 'auto' } }), ['crowded']);
+  assert.deepEqual(warn('solid_3d', { ...base, labels: { slant: 'auto', topHeight: null } }), []);
+  // The solid edges are all still there (12 visible edge pieces of a box under a pyramid).
+  const solid = /<path d="([^"]*)" fill="none" stroke="#111827" stroke-width="1.9" stroke-linejoin="round"\/>/.exec(svgOf('solid_3d', base))?.[1] ?? '';
+  assert.equal(segments(solid).length, segments(/<path d="([^"]*)" fill="none" stroke="#111827" stroke-width="1.9" stroke-linejoin="round"\/>/.exec(svgOf('solid_3d', { ...base, hiddenEdges: 'all' }))?.[1] ?? '').length);
+});
+
+test('j. ray_diagram: a mirror with every label on — no height label or focal mark has a ray behind it; each distance bracket has a row of its own', () => {
+  for (const id of ['ray-concave-mirror-virtual-image', 'polish-ray-convex-mirror-all-labels']) {
+    const spec = anyFx(id);
+    const svg = renderPracticeFigure(spec).svg;
+    assert.deepEqual(checkFigureLegibility(spec), [], id);
+    // The rays (solid and traced-back), by their three colours.
+    const rays = [...svg.matchAll(/<path d="(M[^"]+)" fill="none" stroke="#(?:1d4ed8|c2410c|0f766e)" stroke-width="(?:1\.7|1\.2)"[^>]*\/>/g)].flatMap((m) => segments(m[1]));
+    assert.ok(rays.length >= 6, `${id}: rays found`);
+    // Height labels: each a white plate with its text.
+    const plates = [...svg.matchAll(/<rect x="(-?[\d.]+)" y="(-?[\d.]+)" width="([\d.]+)" height="15" fill="#ffffff"\/><text [^>]*>(h'? = [^<]+)<\/text>/g)];
+    assert.equal(plates.length, 2, `${id}: h and h′`);
+    for (const m of plates) {
+      const b = { x0: Number(m[1]), y0: Number(m[2]), x1: Number(m[1]) + Number(m[3]), y1: Number(m[2]) + 15 };
+      assert.equal(rays.filter((q) => crosses(q, b)).length, 0, `${id}: a ray runs behind "${m[4]}"`);
+    }
+    // F and C: no ray through the letters.
+    for (const m of svg.matchAll(/<text x="(-?[\d.]+)" y="(-?[\d.]+)" font-size="11" font-weight="600" text-anchor="middle"[^>]*>(F|C)<\/text>/g)) {
+      const b = { x0: Number(m[1]) - 3.5, y0: Number(m[2]) - 8, x1: Number(m[1]) + 3.5, y1: Number(m[2]) + 1 };
+      assert.equal(rays.filter((q) => crosses(q, b)).length, 0, `${id}: a ray runs through "${m[3]}"`);
+    }
+    // Three brackets on three rows, all under the drawing.
+    const brackets = [...svg.matchAll(/<path d="M(-?[\d.]+),(-?[\d.]+)H(-?[\d.]+)M[^"]+v8M[^"]+v8" fill="none" stroke="#4b5563" stroke-width="1"\/>/g)].map((m) => Number(m[2]));
+    assert.equal(brackets.length, 3);
+    assert.equal(new Set(brackets).size, 3, `${id}: one row per bracket`);
+    assert.ok(brackets.every((y, i) => i === 0 || y - brackets[i - 1] >= 15), 'rows a line of type apart');
+    const lowestRay = Math.max(...rays.flatMap((q) => [q[1], q[3]]));
+    assert.ok(Math.min(...brackets) > lowestRay + 8, 'the brackets are below every ray');
+  }
+  // A plain lens figure with no rays keeps its labels where they always were (first choice, mid-height).
+  const calm = svgOf('ray_diagram', { element: 'converging_lens', focalLength: 10, objectDistance: 25, rays: 'none', show: { objectHeight: 'value' } });
+  assert.ok(has(calm, 'h = 3.33 cm'));
+});
+
+test('the variants nobody had opened as a picture: a vertical wire\'s "I" is inside the figure; every one renders within the canvas', () => {
+  for (const current of ['up', 'down', 'left', 'right']) {
+    const svg = svgOf('field_diagram', { variant: 'wire', view: 'side', current });
+    const m = /<text x="(-?[\d.]+)" y="(-?[\d.]+)" font-size="14"[^>]*>I<\/text>/.exec(svg);
+    const vb = /viewBox="0 0 (\d+) (\d+)"/.exec(svg);
+    assert.ok(m && vb, current);
+    assert.ok(Number(m[2]) - 14 * 0.8 >= 2 && Number(m[2]) <= Number(vb[2]) - 2 && Number(m[1]) >= 6 && Number(m[1]) <= Number(vb[1]) - 6, `current ${current}: the "I" is inside the figure`);
+  }
+  for (const id of ['polish-solid-sphere', 'polish-solid-hemisphere-blank', 'polish-solid-prism-plain', 'polish-solid-pyramid-slant', 'polish-solid-cone-on-cylinder', 'polish-field-wire-side-view', 'polish-field-wire-side-view-horizontal-no-field', 'polish-field-magnetic-in-plane', 'polish-field-magnetic-in-plane-force-in-plane']) {
+    const svg = renderPracticeFigure(anyFx(id)).svg;
+    for (const m of svg.matchAll(/<([A-Za-z][\w:-]*)((?:\s+[\w:-]+="[^"]*")*)\s*\/?>/g)) {
+      assert.ok(PINNED_ELEMENTS.includes(m[1]), `${id}: element <${m[1]}>`);
+      for (const a of m[2].matchAll(/\s([\w:-]+)="/g)) assert.ok(PINNED_ATTRS.includes(a[1]), `${id}: attribute ${a[1]}`);
+    }
+  }
+  // A "?" radius box clears the radius line it names.
+  const hemi = renderPracticeFigure(anyFx('polish-solid-hemisphere-blank')).svg;
+  const box = /<path d="M(-?[\d.]+),(-?[\d.]+)h(-?[\d.]+)v(-?[\d.]+)h/.exec(hemi);
+  const radius = /<path d="M(-?[\d.]+),(-?[\d.]+)H(-?[\d.]+)" fill="none" stroke="#111827" stroke-width="1.3"\/>/.exec(hemi);
+  assert.ok(box && radius && Number(box[2]) + Number(box[4]) <= Number(radius[2]) - 2, 'the box ends above the line');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

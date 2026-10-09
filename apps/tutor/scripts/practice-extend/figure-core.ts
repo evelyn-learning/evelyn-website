@@ -85,6 +85,16 @@ export interface Axis {
   label: string;
   /** False when the axis carries no numbers (nothing can be read off it). */
   numbered: boolean;
+  /** A π axis (`xTickUnit: 'pi'`): the numbered gridlines are at multiples of π ÷ this whole
+   *  number and are labelled "π/2", "π", … — values on it are written the same way. */
+  pi?: number;
+}
+
+/** A value as the axis prints it: a multiple of π on a π axis ("3π/4"), else the plain number. */
+export function axisText(v: number, a: Axis | undefined): string {
+  if (!a?.pi) return fmt(v);
+  const k = Math.round(v / (Math.PI / (2 * a.pi)));
+  return Math.abs(v - (k * Math.PI) / (2 * a.pi)) < 1e-6 * Math.max(1, Math.abs(v)) ? piText(k, 2 * a.pi).replace(/^−/, '-') : fmt(v);
 }
 
 function minorOf(step: number): number {
@@ -99,17 +109,27 @@ export function onGrid(v: number, a: Axis): boolean {
   return a.numbered && v >= a.min - 1e-9 && v <= a.max + 1e-9 && isMultiple(v, a.minor);
 }
 
-function explicitAxis(p: P, what: string, rangeKey: string, stepKey: string, label: string, maxIntervals: number): Axis {
+function explicitAxis(p: P, what: string, rangeKey: string, stepKey: string, label: string, maxIntervals: number, piKey?: string): Axis {
   const r = p[rangeKey];
   if (!Array.isArray(r) || r.length !== 2 || !isNum(r[0]) || !isNum(r[1]) || !(r[1] > r[0])) fail(`${rangeKey} must be given as [min, max] (the ${what} axis is never left to a default in this job)`);
   const [min, max] = r as [number, number];
+  // A π axis (function_graph `xTickUnit: 'pi'`): the tick unit takes the place of the step, exactly
+  // as in the renderer — numbered gridlines every π ÷ divisor, one lighter line halfway between.
+  if (piKey && p[`${piKey}TickUnit`] !== undefined && p[`${piKey}TickUnit`] !== null) {
+    if (p[`${piKey}TickUnit`] !== 'pi') fail(`${piKey}TickUnit must be 'pi'`);
+    if (p[stepKey] !== undefined && p[stepKey] !== null) fail(`give ${stepKey} or ${piKey}TickUnit, not both`);
+    const div = p[`${piKey}TickDivisor`] ?? 1;
+    if (!isNum(div) || !Number.isInteger(div) || div < 1 || div > 12) return fail(`${piKey}TickDivisor must be a whole number from 1 to 12`);
+    const piStep = Math.PI / div;
+    return checkedAxis({ min, max, step: piStep, minor: piStep / 2, label, numbered: true, pi: div }, `${rangeKey} / ${piKey}TickUnit`, maxIntervals);
+  }
   const step = p[stepKey];
   if (!isNum(step) || !(step > 0)) return fail(`${stepKey} must be given (the spacing of the numbered gridlines on the ${what} axis)`);
   return checkedAxis({ min, max, step, minor: minorOf(step), label, numbered: true }, `${rangeKey} / ${stepKey}`, maxIntervals);
 }
 
 function checkedAxis(a: Axis, name: string, maxIntervals: number): Axis {
-  if (!isMultiple(a.min, a.step) || !isMultiple(a.max, a.step)) fail(`${name}: both ends of the range must be multiples of the step, so the axis starts and ends on a numbered gridline`);
+  if (!isMultiple(a.min, a.step) || !isMultiple(a.max, a.step)) fail(`${name}: both ends of the range must be multiples of the step${a.pi ? ` (π${a.pi === 1 ? '' : `/${a.pi}`}, to at least 7 significant figures)` : ''}, so the axis starts and ends on a numbered gridline`);
   const n = (a.max - a.min) / a.step;
   if (n < 2 - 1e-9 || n > maxIntervals + 1e-9) fail(`${name}: the range must span between 2 and ${maxIntervals} steps (it spans ${fmt(n)}) — more cannot be numbered legibly at phone width`);
   return a;
@@ -145,7 +165,7 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
   const p = spec.params;
   switch (spec.type as FigureKind) {
     case 'function_graph':
-      return { x: explicitAxis(p, 'x', 'xRange', 'xStep', str(p.xLabel, 'x'), 12), y: explicitAxis(p, 'y', 'yRange', 'yStep', str(p.yLabel, 'y'), 14) };
+      return { x: explicitAxis(p, 'x', 'xRange', 'xStep', str(p.xLabel, 'x'), 12, 'x'), y: explicitAxis(p, 'y', 'yRange', 'yStep', str(p.yLabel, 'y'), 14, 'y') };
     case 'slope_field':
       return { x: explicitAxis(p, 'x', 'xRange', 'xStep', str(p.xLabel, 'x'), 12), y: explicitAxis(p, 'y', 'yRange', 'yStep', str(p.yLabel, 'y'), 14) };
     case 'scatter_plot':
@@ -212,10 +232,10 @@ export function readOff(v: number, a: Axis | undefined, tol = 0): string {
   if (!a || !a.numbered) return 'cannot be read (the axis has no numbers)';
   if (v > a.max + 1e-9) return 'above the top of the plotted range';
   if (v < a.min - 1e-9) return 'below the bottom of the plotted range';
-  if (isMultiple(v, a.minor)) return fmt(Math.round(v / a.minor) * a.minor);
+  if (isMultiple(v, a.minor)) return axisText(Math.round(v / a.minor) * a.minor, a);
   const lo = Math.floor(v / a.minor) * a.minor;
   const f = (v - lo) / a.minor;
-  return `between ${fmt(lo)} and ${fmt(lo + a.minor)} (${f < 1 / 3 ? `nearer ${fmt(lo)}` : f > 2 / 3 ? `nearer ${fmt(lo + a.minor)}` : 'about midway'}; not on a gridline)`;
+  return `between ${axisText(lo, a)} and ${axisText(lo + a.minor, a)} (${f < 1 / 3 ? `nearer ${axisText(lo, a)}` : f > 2 / 3 ? `nearer ${axisText(lo + a.minor, a)}` : 'about midway'}; not on a gridline)`;
 }
 
 /** A drawn pH this close to a gridline cannot be told from it (well under a pixel at phone width). */
@@ -223,7 +243,7 @@ const PH_TOL = 0.03;
 
 const axisLine = (name: string, a: Axis): string =>
   a.numbered
-    ? `${name} axis: label "${a.label}"; runs from ${fmt(a.min)} to ${fmt(a.max)}; numbered gridlines every ${fmt(a.step)}${a.minor !== a.step ? `, lighter gridlines every ${fmt(a.minor)}` : ''}.`
+    ? `${name} axis: label "${a.label}"; runs from ${axisText(a.min, a)} to ${axisText(a.max, a)}; numbered gridlines every ${axisText(a.step, a)}${a.pi ? ' (labelled as multiples of π)' : ''}${a.minor !== a.step ? `, lighter gridlines every ${axisText(a.minor, a)}` : ''}.`
     : `${name} axis: label "${a.label}"; NO numbers on it.`;
 
 // ── per-kind readers shared by the transcription and the checkers ───────────
@@ -555,7 +575,7 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
         out.push(`Curve ${i + 1}${c.label ? ` (legend "${c.label}")` : ''}, drawn as a ${c.dashed ? 'dashed' : 'solid'} line from x = ${readOff(c.from, x)} to x = ${readOff(c.to, x)}${isStraight(c, y) ? '. It is a STRAIGHT line' : ''}. Its height at each vertical gridline:`);
         for (const gx of gridValues(x, c.from, c.to)) {
           const v = shownValue(c, gx, span);
-          out.push(`  x = ${fmt(gx)}: ${Number.isFinite(v) ? `y = ${readOff(v, y)}` : 'the curve breaks here (it leaves the plot on at least one side)'}`);
+          out.push(`  x = ${axisText(gx, x)}: ${Number.isFinite(v) ? `y = ${readOff(v, y)}` : 'the curve breaks here (it leaves the plot on at least one side)'}`);
         }
         // Peaks and troughs are plain to the eye wherever they fall: their height
         // is read against the horizontal gridlines, their position only as well as the grid allows.
@@ -706,6 +726,12 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
         printed.push('legend entry: "equivalence point" (a coloured dot)');
         out.push(`A dot (legend "equivalence point") at volume ${readOff(t.vEq, x)}, pH ${readOff(t.ph(t.vEq), y, PH_TOL)}, with dashed guide lines to both axes.`);
       }
+      for (const q of Array.isArray(p.points) ? p.points : []) {
+        if (!isObj(q) || !isNum(q.volume)) continue;
+        const name = str(q.label);
+        if (name) printed.push(`point label: "${name}"`);
+        out.push(`A dot ON the curve${name ? ` lettered "${name}"` : ''} at volume ${readOff(q.volume, x)}, pH ${readOff(t.ph(q.volume), y, PH_TOL)} (no guide lines).`);
+      }
       break;
     }
     case 'slope_field': {
@@ -755,6 +781,118 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
   }
   const text = [`The figure is ${kind}.`, '', 'TEXT PRINTED ON THE FIGURE:', ...(printed.length ? printed.map((l) => `- ${l}`) : ['- (none besides the numbers along the axes)']), '', 'WHAT CAN BE READ OFF THE FIGURE:', ...out].join('\n');
   return { printed, readable: out, text };
+}
+
+// ── alt text ────────────────────────────────────────────────────────────────
+
+/** What a kind is called when `describeFigure` cannot run on the spec (an axis left to a default). */
+const ALT_KIND: Record<string, string> = {
+  function_graph: 'a graph of curves on a coordinate grid', motion_graph: 'a graph of one quantity against time', bar_chart: 'a bar chart',
+  line_plot: 'a dot plot over a number line', scatter_plot: 'a scatter plot', reaction_coordinate: 'an energy profile of a reaction',
+  titration_curve: 'a titration curve (pH against volume of titrant added)', slope_field: 'a slope field on a coordinate grid',
+};
+/** Components counted from the spec's lists — written as WORDS, so a count can never be read as a value. */
+const ALT_COUNTS: Array<[string, string, string]> = [
+  ['curves', 'curve', 'curves'], ['series', 'line', 'lines'], ['vectors', 'arrow', 'arrows'], ['forces', 'force arrow', 'force arrows'],
+  ['asymptotes', 'dashed guide line', 'dashed guide lines'], ['points', 'marked point', 'marked points'], ['angles', 'marked angle', 'marked angles'],
+  ['charges', 'point charge', 'point charges'], ['categories', 'bar', 'bars'], ['plots', 'box plot', 'box plots'], ['shade', 'shaded interval', 'shaded intervals'],
+  ['individuals', 'individual', 'individuals'], ['intervals', 'marked interval', 'marked intervals'], ['inequalities', 'boundary line', 'boundary lines'],
+];
+const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const SUBSCRIPTS: Record<string, string> = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9', 'ₒ': 'o', 'ᵢ': 'i' };
+/** Text reduced to what two renderings of one label have in common: no spaces, plain subscripts and minus. */
+const altNorm = (t: string): string => t.replace(/[₀-₉ₒᵢ]/g, (c) => SUBSCRIPTS[c] ?? c).replace(/[−–]/g, '-').replace(/\s+/g, '').toLowerCase();
+
+/** Every piece of text a rendered figure prints, in document order. */
+export function svgTexts(svg: string): string[] {
+  return [...svg.matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/g)]
+    .map((m) => m[1].replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim())
+    .filter(Boolean);
+}
+
+/**
+ * A SPECIFIC, ANSWER-SAFE description of a figure for its alt text: what kind
+ * of figure it is, how many of each component it has (in words), and the
+ * labels PRINTED on it, by role ("critical numbers −2, 0, 3; row labels
+ * f′(x), f″(x)") — and how many places are left blank.
+ *
+ * Answer-safe by construction, not by care: it is built only from text the
+ * renderer actually prints. A label is named only when it is found in the
+ * drawn SVG, so a value the spec hides (a blank cell's true sign, a "?"
+ * dimension, a hidden resultant, a charge's sign with `showSign: false`, a
+ * key with `showValues: false`) cannot appear — it is not in the picture.
+ * Nothing READ OFF the figure (heights of a curve, corner points, areas) is
+ * ever included: that is where answers live.
+ *
+ * `hide`: further texts or numbers that must not appear (the item's key, a
+ * value the stem asks for that happens to be printed as a tick or a label).
+ * Any label that contains one is left out; if one still appears, this throws.
+ *
+ * The item author still owns the alt: this is a faithful first draft of at
+ * most `ALT_LIMITS.max` characters.
+ */
+export function describeForAlt(spec: PracticeFigureSpec, opts: { hide?: Array<string | number> } = {}): string {
+  const svg = renderPracticeFigure(spec).svg;
+  const drawn = svgTexts(svg);
+  // Joined with nothing between: a label wrapped over two lines is two <text> elements.
+  const drawnNorm = altNorm(drawn.join(''));
+  let kind: string;
+  let printed: string[];
+  try {
+    const d = describeFigure(spec);
+    kind = /^The figure is (.*)\.$/.exec(d.text.split('\n')[0])?.[1] ?? ALT_KIND[spec.type] ?? `a ${spec.type.replace(/_/g, ' ')}`;
+    printed = d.printed;
+  } catch (e) {
+    if (!(e instanceof FigureRuleError)) throw e;
+    // An axis left to a layout default: the transcription refuses, the picture still has its labels.
+    kind = ALT_KIND[spec.type] ?? `a ${spec.type.replace(/_/g, ' ')}`;
+    printed = drawn.filter((t) => t !== '?' && !/^[−-]?[\d.,/π√]*$/.test(t)).map((t) => `label: "${t}"`);
+  }
+  const hide = (opts.hide ?? []).map((h) => (typeof h === 'number' ? fmt(h) : String(h).trim())).filter(Boolean);
+  const hidden = (t: string): boolean => hide.some((h) => {
+    const n = Number(h.replace(/^[−–]/, '-'));
+    if (h !== '' && Number.isFinite(n)) return numbersIn(t).some((v) => Math.abs(v - n) < 1e-9);
+    return altNorm(t).includes(altNorm(h));
+  });
+  // Group the printed labels by role, keeping only those the picture really prints.
+  const groups = new Map<string, string[]>();
+  let blanks = drawn.filter((t) => t === '?').length;
+  for (const line of printed) {
+    const at = line.indexOf(': ');
+    if (at < 0) continue;
+    const role = line.slice(0, at).replace(/\s*\(.*\)$/, '').replace(/ \d+$/, '');
+    let value = line.slice(at + 2).replace(/\s*\((?:curve|line) \d+\)$/, '').replace(/\s*\(a coloured dot\)$/, '');
+    if (value.includes('(blank')) {
+      // A blank is counted (from the picture), never named.
+      if (!/"/.test(value)) continue;
+      value = value.replace(/\(blank[^)]*\)/g, '?');
+    }
+    const quoted = [...value.matchAll(/"([^"]*)"/g)].map((q) => q[1]);
+    if (quoted.length === 0 || !quoted.every((q) => drawnNorm.includes(altNorm(q)))) continue;
+    if (hidden(value)) continue;
+    const list = groups.get(role) ?? [];
+    for (const q of quoted) if (!list.includes(q)) list.push(q);
+    groups.set(role, list);
+  }
+  const plural = (role: string, n: number): string => (n === 1 ? role : /entry$/.test(role) ? role.replace(/entry$/, 'entries') : /s$/.test(role) ? role : `${role}s`);
+  const labelled = [...groups].map(([role, vals]) => `${plural(role, vals.length)} ${vals.map((v) => `"${v}"`).join(', ')}`);
+  const counts: string[] = [];
+  for (const [key, one, many] of ALT_COUNTS) {
+    const v = spec.params[key];
+    if (Array.isArray(v) && v.length > 0) counts.push(`${v.length < COUNT_WORDS.length ? COUNT_WORDS[v.length] : 'many'} ${v.length === 1 ? one : many}`);
+  }
+  const head = `${kind.charAt(0).toUpperCase()}${kind.slice(1)}${counts.length ? `, with ${counts.join(', ')}` : ''}.`;
+  const tail = blanks > 0 ? ` ${blanks < COUNT_WORDS.length ? COUNT_WORDS[blanks].charAt(0).toUpperCase() + COUNT_WORDS[blanks].slice(1) : 'Several'} ${blanks === 1 ? 'place is' : 'places are'} left blank, shown as a boxed question mark.` : '';
+  blanks = 0;
+  let shown = labelled.slice();
+  const compose = (more: boolean): string => `${head}${shown.length ? ` Printed on it: ${shown.join('; ')}${more ? '; and further labels' : ''}.` : ''}${tail}`;
+  let alt = compose(false);
+  while (alt.length > ALT_LIMITS.max && shown.length > 0) {
+    shown = shown.slice(0, -1);
+    alt = compose(true);
+  }
+  if (hidden(alt)) fail(`describeForAlt: a value to hide (${hide.join(', ')}) is part of what the figure itself is — it cannot be left out of a description`);
+  return alt;
 }
 
 interface Lattice {
@@ -1160,6 +1298,16 @@ function planeUnit(m: { xRange: [number, number]; yRange: [number, number]; xSte
   return minorOf(step);
 }
 
+/** The gridline spacing of a vector diagram: the numbered step — the renderer draws no lighter
+ *  lines between the numbered ones unless `minorGrid: true` asks for them. */
+function vectorUnit(m: { xRange: [number, number]; yRange: [number, number]; xStep?: number; yStep?: number; minorGrid?: boolean }): number {
+  if (m.minorGrid) return planeUnit(m);
+  const span = Math.max(m.xRange[1] - m.xRange[0], m.yRange[1] - m.yRange[0]);
+  const step = m.xStep ?? m.yStep ?? (span <= 12 ? 1 : 0);
+  if (!(step > 0)) return fail('give xStep / yStep (or a range of at most 12 units), so that what lies on a gridline is decided by the spec');
+  return m.xStep && m.yStep ? Math.min(m.xStep, m.yStep) : step;
+}
+
 // unit circle ---------------------------------------------------------------
 
 const REF_VALUES: Record<string, Record<number, string>> = {
@@ -1203,7 +1351,7 @@ function ucAngle(spec: PracticeFigureSpec, a: P) {
 
 function vecArg(spec: PracticeFigureSpec, a: P, k = 'vector'): DiagramVector {
   const m = modelOf(spec, vectorDiagramModel);
-  const unit = planeUnit(m);
+  const unit = vectorUnit(m);
   let v: DiagramVector;
   if (a[k] === 'resultant') {
     if (!m.resultant) return fail('the figure draws no resultant');
@@ -1515,13 +1663,14 @@ function describeBatch1(spec: PracticeFigureSpec, printed: string[], out: string
     }
     case 'vector_diagram': {
       const m = modelOf(spec, vectorDiagramModel);
-      const unit = planeUnit(m);
+      const unit = vectorUnit(m);
       printed.push(`axis label: "${m.xLabel}"`, `axis label: "${m.yLabel}"`);
       out.push(`A grid: x from ${fmt(m.xRange[0])} to ${fmt(m.xRange[1])}, y from ${fmt(m.yRange[0])} to ${fmt(m.yRange[1])}, gridlines every ${fmt(unit)}.`);
       const at = (q: [number, number]) => (isMultiple(q[0], unit) && isMultiple(q[1], unit) ? `(${fmt(q[0])}, ${fmt(q[1])})` : `a point that is not on a grid crossing (near (${fmt(Number(q[0].toFixed(1)))}, ${fmt(Number(q[1].toFixed(1)))}))`);
       const line = (v: DiagramVector, what: string) => {
         if (v.label) printed.push(`arrow label: "${v.label}"`);
-        out.push(`${what}${v.label ? ` labelled "${v.label}"` : ' with no label'}: from ${at(v.tail)} to ${at(v.head)} (the arrowhead is at the second point)${v.showComponents ? '; thin dashes run across from its tail and then up or down to its head' : ''}.`);
+        if (v.angle?.label) printed.push(`angle label: ${v.angle.label === '?' ? BLANK : `"${v.angle.label}"`}`);
+        out.push(`${what}${v.label ? ` labelled "${v.label}"` : ' with no label'}: from ${at(v.tail)} to ${at(v.head)} (the arrowhead is at the second point)${v.showComponents ? '; thin dashes run across from its tail and then up or down to its head' : ''}${v.angle ? `; an arc at its tail marks the angle it makes with the positive x-direction, measured counter-clockwise${v.angle.label ? (v.angle.label === '?' ? `, labelled with ${BLANK}` : `, labelled "${v.angle.label}"`) : ', with no label'}` : ''}.`);
       };
       m.vectors.forEach((v, i) => line(v, `Arrow ${i + 1}, an arrow`));
       if (m.tipToTail) out.push('The arrows are joined tip to tail, in that order.');
@@ -1553,10 +1702,10 @@ function describeBatch1(spec: PracticeFigureSpec, printed: string[], out: string
       out.push(`A grid: x from ${fmt(m.xRange[0])} to ${fmt(m.xRange[1])}, y from ${fmt(m.yRange[0])} to ${fmt(m.yRange[1])}, gridlines every ${fmt(unit)}.`);
       const read = (v: number) => (isMultiple(v, unit) ? fmt(Number(v.toFixed(9))) : `between ${fmt(Math.floor(v / unit) * unit)} and ${fmt(Math.floor(v / unit) * unit + unit)} (not on a gridline)`);
       const g = m.region;
-      const table = (c: { fn: (x: number) => number; label?: string }, name: string, dashed: boolean) => {
+      const table = (c: { fn: (x: number) => number; label?: string }, name: string, double: boolean) => {
         if (c.label) printed.push(`legend entry: "${c.label}"`);
         const straight = isLine(c.fn, m.xRange[0], m.xRange[1]);
-        out.push(`${name}${c.label ? ` (legend "${c.label}")` : ''}: a ${dashed ? 'dashed' : 'solid'} ${straight ? 'STRAIGHT line' : 'curve'}. Its height at whole-number x:`);
+        out.push(`${name}${c.label ? ` (legend "${c.label}")` : ''}: a ${double ? 'DOUBLE' : 'solid'} ${straight ? 'STRAIGHT line' : 'curve'}${double ? ' (two thin parallel lines side by side — one unbroken curve, with nothing excluded)' : ''}. Its height at whole-number x:`);
         for (let x = Math.ceil(m.xRange[0]); x <= m.xRange[1]; x++) {
           const y = c.fn(x);
           if (Number.isFinite(y) && y >= m.yRange[0] && y <= m.yRange[1]) out.push(`  x = ${fmt(x)}: y = ${read(y)}`);
@@ -1593,6 +1742,10 @@ function describeBatch1(spec: PracticeFigureSpec, printed: string[], out: string
             out.push(`Marked corner of the hatched region at (${read(v[0])}, ${read(v[1])}): ${open ? 'an open circle' : 'a filled dot'}.`);
           }
         }
+      }
+      for (const q of m.points ?? []) {
+        if (q.label) printed.push(`point label: ${q.label === '?' ? BLANK : `"${q.label}"`}`);
+        out.push(`Marked point${q.label ? (q.label === '?' ? ` labelled with ${BLANK}` : ` labelled "${q.label}"`) : ''}: ${q.open ? 'an open circle' : 'a filled dot'} at (${read(q.x)}, ${read(q.y)}).`);
       }
       return 'a coordinate grid with one region shaded by hatching';
     }

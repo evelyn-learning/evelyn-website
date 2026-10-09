@@ -14,7 +14,8 @@
  *     than 4 % of the plot's width while the rest of it is cut off;
  *   - feature_on_border — a marked point, an endpoint mark or a series vertex
  *     sits on the plot border;
- *   - labels_overlap — two pieces of text overlap (estimated extents);
+ *   - labels_overlap — two pieces of text overlap, or a dashed "?" box and a
+ *     piece of text do (estimated extents);
  *   - too_many_curves — more than `MAX_CURVES` curves / series (the pieces of
  *     one function count once);
  *   - not_renderable — the spec does not draw at all (the renderer's message).
@@ -94,6 +95,42 @@ function textBoxes(svg: string): TextBox[] {
   return out;
 }
 
+/** The dashed "?" boxes of a figure (kinds/draw.ts `blank`): the box itself is a path, so the
+ *  text check alone sees only the small "?" inside it. */
+function blankBoxes(svg: string): TextBox[] {
+  const out: TextBox[] = [];
+  for (const m of svg.matchAll(/<path d="M(-?[\d.]+),(-?[\d.]+)h(-?[\d.]+)v(-?[\d.]+)h-?[\d.]+z" fill="#ffffff" stroke="#4b5563" stroke-width="1" stroke-dasharray="3 2"\/>/g)) {
+    const [x, y, w, h] = [Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4])];
+    out.push({ text: '?', x0: x, y0: y, x1: x + w, y1: y + h });
+  }
+  return out;
+}
+
+/** Text that overlaps other text, or a "?" box — from a drawn figure alone (exported for tests). */
+export function overlapWarnings(svg: string): LegibilityWarning[] {
+  const warnings: LegibilityWarning[] = [];
+  const boxes = textBoxes(svg);
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i];
+      const b = boxes[j];
+      const dx = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
+      const dy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+      if (dx > 1 && dy > 1) warnings.push({ code: 'labels_overlap', message: `"${a.text}" and "${b.text}" overlap` });
+    }
+  }
+  // A "?" box over (or under) a label: the box's own "?" lies inside it and is not counted.
+  for (const q of blankBoxes(svg)) {
+    for (const b of boxes) {
+      if (b.text === '?' && b.x0 >= q.x0 - 1 && b.x1 <= q.x1 + 1 && b.y0 >= q.y0 - 1 && b.y1 <= q.y1 + 1) continue;
+      const dx = Math.min(q.x1, b.x1) - Math.max(q.x0, b.x0);
+      const dy = Math.min(q.y1, b.y1) - Math.max(q.y0, b.y0);
+      if (dx > 1 && dy > 1) warnings.push({ code: 'labels_overlap', message: `a "?" box and "${b.text}" overlap` });
+    }
+  }
+  return warnings;
+}
+
 export function checkFigureLegibility(spec: PracticeFigureSpec): LegibilityWarning[] {
   let svg: string;
   let facts: ReturnType<typeof inspectPracticeFigure>['facts'];
@@ -126,16 +163,7 @@ export function checkFigureLegibility(spec: PracticeFigureSpec): LegibilityWarni
     }
   }
 
-  const boxes = textBoxes(svg);
-  for (let i = 0; i < boxes.length; i++) {
-    for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i];
-      const b = boxes[j];
-      const dx = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
-      const dy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
-      if (dx > 1 && dy > 1) warnings.push({ code: 'labels_overlap', message: `"${a.text}" and "${b.text}" overlap` });
-    }
-  }
+  warnings.push(...overlapWarnings(svg));
 
   for (const note of facts.notes ?? []) {
     if (!warnings.some((w) => w.code === note.code && w.message === note.message)) warnings.push({ code: note.code, message: note.message });

@@ -4,6 +4,11 @@
  * solid-of-revolution variant on axes.
  *
  * Common: { solid; unit?: string; labels?: { [dimension]: LABEL };
+ *           hiddenEdges?: 'all' | 'few';   // 'few' leaves out the dashed edges that only show
+ *                                          //   the far side of a box or pyramid. Default 'all',
+ *                                          //   except a pyramid on a prism, and a pyramid whose
+ *                                          //   slant height is drawn: 'few' (with every hidden
+ *                                          //   edge those drawings are a tangle at 340 px)
  *           notToScale?: boolean (false); title?: string }
  * LABEL = 'auto' (the value with the unit) | any text ("x", "2r") | "?" (a
  * blank box) | null (nothing). Default 'auto' for every dimension given,
@@ -55,6 +60,8 @@ export interface SolidModel {
   notToScale: boolean;
   bottom?: 'cylinder' | 'prism';
   top?: 'cone' | 'hemisphere' | 'pyramid';
+  /** 'few': the far-side edges of a box / pyramid are not drawn. */
+  hiddenEdges?: 'all' | 'few';
   revolution?: { axis: 'x' | 'y'; outer: RevCurve; inner?: RevCurve; from: number; to: number; strip: boolean; showSolid: boolean; xStep?: number; yStep?: number };
   title?: string;
 }
@@ -122,7 +129,12 @@ export function solidModel(r: Reader): SolidModel {
     if (v === null || (v === undefined && k === 'slant')) continue;
     labels[k] = v === undefined || v === 'auto' ? auto : r.str(v, `labels.${k}`, 14);
   }
-  return { ...base, dims, labels, bottom, top };
+  if (p.hiddenEdges !== undefined && p.hiddenEdges !== null && p.hiddenEdges !== 'all' && p.hiddenEdges !== 'few') r.fail("hiddenEdges must be 'all' or 'few'");
+  // A pyramid with its slant height drawn already has three dashed lines fanning out of the apex
+  // (height, slant, far edge): the far edge is the one that says least.
+  const pyramidSlant = (solid === 'pyramid' || top === 'pyramid') && labels.slant !== undefined;
+  const hiddenEdges = (p.hiddenEdges as 'all' | 'few' | undefined | null) ?? ((solid === 'composite' && bottom === 'prism') || pyramidSlant ? 'few' : 'all');
+  return { ...base, dims, labels, bottom, top, hiddenEdges };
 }
 
 // ---------------------------------------------------------------------------
@@ -269,6 +281,7 @@ export function renderSolid(r: Reader, uid: string): Drawn {
   /** True (x right, y up, z back) → canvas. */
   const P = (x: number, y: number, z = 0): Pt => [x0 + (x + z * DX) * k, yBase - (y + z * DY) * k];
   const ink: Ink = { solid: [], hidden: [], marks: [], labels: [] };
+  const few = m.hiddenEdges === 'few';
   const lineS = (...pts: Pt[]) => ink.solid.push(polyPath(pts));
   const lineH = (...pts: Pt[]) => ink.hidden.push(polyPath(pts));
   const put = (q: Pt, s: string | undefined, anchor: 'start' | 'middle' | 'end', dx = 0, dy = 0) => {
@@ -293,8 +306,10 @@ export function renderSolid(r: Reader, uid: string): Drawn {
     lineS(fl, fr, tfr, tfl, fl);
     lineS(tfl, tbl, tbr, tfr);
     lineS(fr, br, tbr);
-    lineH(fl, bl, br);
-    lineH(bl, tbl);
+    if (!few) {
+      lineH(fl, bl, br);
+      lineH(bl, tbl);
+    }
     return { fl, fr, br, tfl, tfr, tbl, tbr };
   };
   /** A pyramid on a square of side s whose front-left corner is at height y0. */
@@ -304,7 +319,7 @@ export function renderSolid(r: Reader, uid: string): Drawn {
     const centre = P(s / 2, y0, s / 2);
     lineS(fl, apex, fr);
     lineS(apex, br);
-    lineH(apex, bl);
+    if (!few) lineH(apex, bl);
     if (!onBox) {
       lineS(fl, fr, br);
       lineH(fl, bl, br);
@@ -321,7 +336,8 @@ export function renderSolid(r: Reader, uid: string): Drawn {
     if (L.slant !== undefined) {
       const fm = P(s / 2, y0);
       ink.hidden.push(polyPath([apex, fm]));
-      plate([fm[0] + (apex[0] - fm[0]) * 0.42, fm[1] + (apex[1] - fm[1]) * 0.42], L.slant);
+      // Low on the slant line, where it has drawn clear of the height line and the edges that meet at the apex.
+      plate([fm[0] + (apex[0] - fm[0]) * 0.3, fm[1] + (apex[1] - fm[1]) * 0.3], L.slant);
     }
     return { fl, fr, br };
   };
@@ -337,7 +353,7 @@ export function renderSolid(r: Reader, uid: string): Drawn {
     if (L.radius === undefined) return;
     ink.marks.push(`<path d="M${n2(e.c[0])},${n2(e.c[1])}H${n2(e.c[0] + e.rx)}" ${stroke(INK, 1.3, dy > 0 ? '5 3' : undefined)}/><circle cx="${n2(e.c[0])}" cy="${n2(e.c[1])}" r="2.4" fill="${INK}"/>`);
     if (dy > 0) put([e.c[0] + e.rx, e.c[1]], L.radius, 'start', 7, 13);
-    else put([e.c[0] + e.rx / 2, e.c[1]], L.radius, 'middle', 0, -5);
+    else put([e.c[0] + e.rx / 2, e.c[1]], L.radius, 'middle', 0, L.radius === '?' ? -9 : -5);   // a "?" box clears the line
   };
   const cone = (y0: number, h: number, heightKey: string, baseBack: 'hidden' | 'none') => {
     const e = disc(y0);
@@ -439,6 +455,9 @@ export function renderSolid(r: Reader, uid: string): Drawn {
     parts.push(text(W - 8, H + 4, 'not to scale', { anchor: 'end', fill: MUTED, italic: true }));
     H += 14;
   }
+  // A pyramid on a prism with BOTH its height and its slant height drawn: two dashed lines and two
+  // labels inside one small triangle, over the dashed back edges of the prism's top.
+  if (m.solid === 'composite' && m.top === 'pyramid' && L.slant !== undefined && L.topHeight !== undefined) notes.push({ code: 'crowded', message: 'labels: the pyramid on the prism carries both its height and its slant height — the two dashed lines and their labels crowd at 340 px; label one of them (labels.slant or labels.topHeight: null)' });
   if (Object.values(L).every((s) => s === '?' || !/\d/.test(s))) notes.push({ code: 'ambiguous_blank', message: 'labels: no dimension carries a number — nothing fixes the size of the solid' });
   return { body: parts.join(''), H, facts: facts(notes) };
 }
