@@ -302,15 +302,30 @@ function escapeRegExp(s: string): string {
  *  shared across students and are left alone). Returns per-collection
  *  deleted-row counts. Not best-effort — throws on failure like any normal
  *  async call, since the caller needs to know whether the erase actually
- *  completed. */
-export async function deleteLearnerModelData(studentId: string): Promise<Record<string, number>> {
+ *  completed.
+ *
+ *  Accepts several ids (the full student erase passes every profile id the
+ *  caller owns — see student-erase/erase.ts); an empty list deletes nothing.
+ *  `opts.partnerId` additionally restricts the EVIDENCE delete to rows
+ *  stamped with that partner or not stamped at all — evidence is the one
+ *  learner-model collection that records the partner, so it is the one
+ *  place a shared student id can still be told apart. */
+export async function deleteLearnerModelData(
+  studentId: string | readonly string[],
+  opts: { partnerId?: string } = {},
+): Promise<Record<string, number>> {
+  const ids = Array.from(new Set((typeof studentId === 'string' ? [studentId] : studentId).filter(Boolean)));
+  if (ids.length === 0) {
+    return { evidenceEvents: 0, learnerStateProjections: 0, learnerStateSnapshots: 0, eloRatings: 0 };
+  }
   await connectDB();
 
+  const byStudent = { studentId: { $in: ids } };
   const [events, projections, snapshots, eloRatings] = await Promise.all([
-    EvidenceEventModel.deleteMany({ studentId }),
-    LearnerStateProjectionModel.deleteMany({ studentId }),
-    LearnerStateSnapshotModel.deleteMany({ studentId }),
-    EloRatingModel.deleteMany({ _id: { $regex: `^student:${escapeRegExp(studentId)}\\|` } }),
+    EvidenceEventModel.deleteMany(opts.partnerId ? { ...byStudent, partnerId: { $in: [opts.partnerId, null] } } : byStudent),
+    LearnerStateProjectionModel.deleteMany(byStudent),
+    LearnerStateSnapshotModel.deleteMany(byStudent),
+    EloRatingModel.deleteMany({ _id: { $regex: `^student:(?:${ids.map(escapeRegExp).join('|')})\\|` } }),
   ]);
 
   return {

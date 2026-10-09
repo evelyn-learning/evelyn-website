@@ -104,6 +104,12 @@ export function emptyProfile(id: string): StudentProfile {
   };
 }
 
+/** Drop a profile from the in-process fallback store (student erase). The
+ *  fallback only ever holds profiles written while Mongo was unreachable. */
+export function forgetEphemeralProfile(id: string): void {
+  ephemeralStore.delete(id);
+}
+
 export async function getOrCreateStudentProfile(id: string): Promise<StudentProfile> {
   if (!id) throw new Error('getOrCreateStudentProfile: id is required');
   // DB path — falls back to ephemeral on error.

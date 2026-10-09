@@ -10,6 +10,7 @@ import type { WhiteboardCommand, ShadedRegion } from '@core/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
 import { deepStripWbEmphasis, stripInlineMathForInk } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 import { deepNormalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
+import { ACADEMIC_ONLY_FIELD_RULE, ACADEMIC_ONLY_QUOTE_RULE } from '@/lib/tutor/student-profile/academic-only';
 
 export interface ToolParameter {
   type: string;
@@ -2005,12 +2006,12 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       type: 'object',
       properties: {
         loId: { type: 'string', description: 'LO id from the active plan\'s <lesson_plan> block — must match LessonPlan.los[].id exactly.' },
-        observation: { type: 'string', description: 'Your one- to two-sentence account of what the student got wrong and (when inferable) why. Drives the weak-areas UI label and pre-session priming next time.' },
+        observation: { type: 'string', description: `Your one- to two-sentence account of what the student got wrong and (when inferable) why. Drives the weak-areas UI label and pre-session priming next time. ${ACADEMIC_ONLY_FIELD_RULE}` },
         studentQuotes: {
           type: 'array',
           items: { type: 'string' },
           maxItems: 2,
-          description: 'Verbatim student utterance(s) most diagnostic of the gap. ≤2 quotes, ≤30 words each. Pulled from this session\'s transcript. Used for "you previously said X" re-grounding next session. Optional — omit if no clean quote exists.',
+          description: `Verbatim student utterance(s) most diagnostic of the gap. ≤2 quotes, ≤30 words each. Pulled from this session's transcript. Used for "you previously said X" re-grounding next session. Optional — omit if no clean quote exists. ${ACADEMIC_ONLY_QUOTE_RULE}`,
         },
         signalsObserved: {
           type: 'array',
@@ -2036,12 +2037,12 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       type: 'object',
       properties: {
         conceptLabel: { type: 'string', description: '3–6 word teacher-style English label for the missing foundational concept. Describe the concept the way a teacher would, not the symptom. Free-form — no controlled vocabulary.' },
-        observation: { type: 'string', description: 'Your one- to two-sentence account of what the student got wrong and (when inferable) why this surfaces a prerequisite weakness rather than a current-LO gap.' },
+        observation: { type: 'string', description: `Your one- to two-sentence account of what the student got wrong and (when inferable) why this surfaces a prerequisite weakness rather than a current-LO gap. ${ACADEMIC_ONLY_FIELD_RULE}` },
         studentQuotes: {
           type: 'array',
           items: { type: 'string' },
           maxItems: 2,
-          description: 'Verbatim student utterance(s) most diagnostic of the gap. ≤2 quotes, ≤30 words each. Optional.',
+          description: `Verbatim student utterance(s) most diagnostic of the gap. ≤2 quotes, ≤30 words each. Optional. ${ACADEMIC_ONLY_QUOTE_RULE}`,
         },
         signalsObserved: {
           type: 'array',
@@ -2067,8 +2068,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       type: 'object',
       properties: {
         assignLoIds: { type: 'array', items: { type: 'string' }, maxItems: 2, description: 'LO ids from <lesson_plan> that need practice before next session. Omit or empty when none.' },
-        reason: { type: 'string', description: 'One plain sentence the student will read on their homework card, e.g. why these questions help. ≤ 30 words.' },
-        nextTimeIntent: { type: 'string', description: 'What you plan to open with next session, in ≤ 20 words — a real intention you will honor, not a platitude.' },
+        reason: { type: 'string', description: `One plain sentence the student will read on their homework card, e.g. why these questions help. ≤ 30 words. ${ACADEMIC_ONLY_FIELD_RULE}` },
+        nextTimeIntent: { type: 'string', description: `What you plan to open with next session, in ≤ 20 words — a real intention you will honor, not a platitude. ${ACADEMIC_ONLY_FIELD_RULE}` },
       },
       required: [],
     },

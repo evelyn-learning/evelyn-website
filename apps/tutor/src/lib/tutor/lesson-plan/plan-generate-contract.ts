@@ -128,6 +128,13 @@ export function generatedPlanMetadata(
      *  a chapter lesson without re-classifying. Display/diagnostic only —
      *  nothing branches on it. */
     materialKind?: string;
+    /** The profile id of the ONE student this plan was built for — set only
+     *  for plans made from that student's own typed/uploaded material
+     *  (homework-help, materials). It is what lets the student erase delete
+     *  the plan without depending on a session still pointing at it
+     *  (student-erase/erase.ts `classifyHomeworkPlan`). Never set on a
+     *  shared/cacheable plan. */
+    ownerStudentId?: string;
   },
 ): Record<string, unknown> {
   return {
@@ -140,5 +147,6 @@ export function generatedPlanMetadata(
     ...(opts.sourceKind ? { sourceKind: opts.sourceKind } : {}),
     ...(opts.materialKind ? { materialKind: opts.materialKind } : {}),
     ...(opts.materialsMeta ? { materialsMeta: opts.materialsMeta } : {}),
+    ...(opts.ownerStudentId ? { ownerStudentId: opts.ownerStudentId } : {}),
   };
 }

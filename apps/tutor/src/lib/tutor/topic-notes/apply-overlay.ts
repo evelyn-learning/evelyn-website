@@ -49,6 +49,15 @@ import {
 
 const ephemeralStore = new Map<string, StudentTopicNotes>();
 
+/** Drop every fallback notes doc of one student (student erase). Keys are
+ *  `${studentId}::${baselineId}`, matched on the stored `studentId` so one
+ *  student's id being a prefix of another's cannot over-delete. */
+export function forgetEphemeralTopicNotes(studentId: string): void {
+  for (const [key, notes] of ephemeralStore) {
+    if (notes.studentId === studentId) ephemeralStore.delete(key);
+  }
+}
+
 function emptyNotes(
   studentId: string,
   baselineId: string,

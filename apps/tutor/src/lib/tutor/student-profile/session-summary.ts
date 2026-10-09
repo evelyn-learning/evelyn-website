@@ -17,6 +17,7 @@ import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { GradeBand } from '@/lib/tutor/pedagogy/grade-profile';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import type { PlanContentFillings } from './types';
+import { ACADEMIC_ONLY_RULE } from './academic-only';
 
 const { client: anthropic, model: SUMMARY_MODEL } = getModelClient('recap');
 
@@ -36,7 +37,11 @@ export interface SessionSummaryInput {
 // SUMMARY_MODEL resolves above via the model-registry (role 'recap');
 // the legacy NOTES_MODEL env var still works as an alias.
 
-const SYSTEM = `You produce one-paragraph plain-text recaps of tutoring sessions. Calibrate vocabulary to the student's grade band (named in the user message). Stay within what the transcript shows — don't invent or extrapolate. Output the paragraph and nothing else: no markdown, no quotes, no headings, no preamble.`;
+// The recap is STORED on the student's profile (SessionMemory.summary), so
+// besides staying within the transcript it carries the academic-only rule —
+// see academic-only.ts for why "what the transcript shows" is not enough.
+// Exported so scripts/test-academic-only-rule.ts can pin the rule's presence.
+export const SESSION_SUMMARY_SYSTEM = `You produce one-paragraph plain-text recaps of tutoring sessions. Calibrate vocabulary to the student's grade band (named in the user message). Stay within what the transcript shows — don't invent or extrapolate. ${ACADEMIC_ONLY_RULE} Output the paragraph and nothing else: no markdown, no quotes, no headings, no preamble.`;
 
 export async function generateSessionSummary(input: SessionSummaryInput): Promise<string> {
   const profile = getGradeProfile(input.grade);
@@ -44,7 +49,7 @@ export async function generateSessionSummary(input: SessionSummaryInput): Promis
   const response = await anthropic.messages.create({
     model: SUMMARY_MODEL,
     max_tokens: 500,
-    system: SYSTEM,
+    system: SESSION_SUMMARY_SYSTEM,
     messages: [{ role: 'user', content: userMessage }],
   });
   const text = response.content
@@ -55,7 +60,7 @@ export async function generateSessionSummary(input: SessionSummaryInput): Promis
   return text || '(no summary)';
 }
 
-const FILLINGS_SYSTEM = `You produce a JSON object with two fields describing a tutoring session. "summary": a one-paragraph plain-text recap (grade-calibrated, only what the transcript shows, no markdown). "fillings": { "hooks": string[], "examples": string[], "problems": string[] } — SHORT descriptors (≤8 words each) of the specific opening hook/story, the worked-example contexts, and the practice-problem statements ACTUALLY USED this session. Empty arrays if none. Output ONLY the JSON object, no fences, no preamble.`;
+export const SESSION_FILLINGS_SYSTEM = `You produce a JSON object with two fields describing a tutoring session. "summary": a one-paragraph plain-text recap (grade-calibrated, only what the transcript shows, no markdown). "fillings": { "hooks": string[], "examples": string[], "problems": string[] } — SHORT descriptors (≤8 words each) of the specific opening hook/story, the worked-example contexts, and the practice-problem statements ACTUALLY USED this session. Empty arrays if none. In BOTH fields: ${ACADEMIC_ONLY_RULE} Output ONLY the JSON object, no fences, no preamble.`;
 
 /** Session recap. Default = the plain summary string wrapped in the object
  *  (fillings null), one LLM call. With extractFillings, the SAME single call
@@ -73,7 +78,7 @@ export async function generateSessionRecap(
   const response = await anthropic.messages.create({
     model: SUMMARY_MODEL,
     max_tokens: 700,
-    system: FILLINGS_SYSTEM,
+    system: SESSION_FILLINGS_SYSTEM,
     messages: [{ role: 'user', content: userMessage }],
   });
   const raw = response.content

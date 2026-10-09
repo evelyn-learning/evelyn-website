@@ -80,6 +80,7 @@ import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, 
 import { TUTOR_HOMEWORK_OWN_MATERIAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
 import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generation-cache';
@@ -464,6 +465,22 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // generatorOk is false, so a fallback skeleton is persisted (inspectable,
   // has a durable id) but never becomes the cached answer for its
   // topic/band/bucket.
+  //
+  // Owner stamp (2026-10-08): a plan built from ONE student's own material —
+  // their typed/uploaded homework problems, or an uploaded document — holds
+  // that student's text, so it records whose it is and the student erase can
+  // delete it (student-erase/erase.ts). Only when the caller named the
+  // student, and never on a topic plan: those are shared and cacheable. Same
+  // (partner, student) resolve getLearnerHints already ran above, so this
+  // mints nothing new; a failure leaves the plan unstamped, never unbuilt.
+  let ownerStudentId: string | undefined;
+  if (studentId && (homeworkProblems || hasMaterials)) {
+    try {
+      ownerStudentId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
+    } catch (err) {
+      console.error('[plan-generate] owner stamp skipped — could not resolve the student:', err);
+    }
+  }
   plan = {
     ...plan,
     id: durablePlanId,
@@ -472,6 +489,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
       generatorOk,
       portalPartnerId: auth.partnerId,
       sessionMinutes,
+      ...(ownerStudentId ? { ownerStudentId } : {}),
       ...(hasMaterials ? { sourceKind: 'materials' as const, materialsMeta, ...(materialKind ? { materialKind } : {}) } : {}),
     }),
   };

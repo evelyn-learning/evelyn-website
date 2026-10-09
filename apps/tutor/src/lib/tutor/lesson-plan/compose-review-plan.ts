@@ -210,7 +210,10 @@ export async function composeReviewPlan(input: ComposeReviewInput): Promise<Less
     segments: [...result.segments, buildRecapSegment(keptLos)],
     prerequisites: [],
     schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
-    metadata: { reviewPlan: true, studentId: input.studentId },
+    // `partnerId` is what lets the student erase delete this plan: student
+    // ids are only unique per partner, so a review plan without it cannot
+    // be attributed and is left in place (student-erase/erase.ts).
+    metadata: { reviewPlan: true, studentId: input.studentId, partnerId: input.partnerId },
   };
 
   // Creation-time answer-key check (TUTOR_KEY_VERIFY_AT_CREATION, default ON):
