@@ -186,6 +186,10 @@ export const TUTOR_HOST_START = process.env.NEXT_PUBLIC_TUTOR_HOST_START !== 'of
 // per-turn <lesson_video> context, tutor-resumed playback.
 // NEXT_PUBLIC_TUTOR_HOST_LESSON=off ignores the v1.2 host messages entirely.
 export const TUTOR_HOST_LESSON = process.env.NEXT_PUBLIC_TUTOR_HOST_LESSON !== 'off';
+// Evolve-in-place swap: a superseded figure leaves the board in the same
+// paint as its replacement instead of seconds earlier (empty board while the
+// replacement waited for its sentence). =off restores the immediate removal.
+export const TUTOR_EVOLVE_SWAP = process.env.NEXT_PUBLIC_TUTOR_EVOLVE_SWAP !== 'off';
 // R58 noise-floor nudge (live, portal-dd0bf3a9: AirPods with
 // noiseSuppression=undefined turned background noise into FLUENT nonsense
 // STT — "while networking distinct account revenues" — which the

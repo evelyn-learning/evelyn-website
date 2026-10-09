@@ -331,6 +331,7 @@ import {
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
   TUTOR_HOST_LESSON,
+  TUTOR_EVOLVE_SWAP,
   TUTOR_CONTENT_VARIETY,
   TUTOR_STT_ENGINE_INK2,
   TOPIC_NOTES_WARMUP_SEGMENTS,
@@ -443,6 +444,7 @@ import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchest
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { withdrawnVerdict } from '@/lib/tutor/portal/withdrawn-items';
 import { MOMENT_STALE_MS, shiftAnchor } from '@/lib/tutor/portal/host-lesson';
+import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeRemovalsForIds, takeStaleRemovals, type DeferredRemovals } from '@/lib/tutor/whiteboard/deferred-removals';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
@@ -1230,7 +1232,7 @@ export function VoiceTutorRealtime({
   teacherPersona,
   voice = 'shimmer',
   onTranscriptUpdate,
-  onWhiteboardCommand,
+  onWhiteboardCommand: onWhiteboardCommandProp,
   onStateChange,
   onError,
   onTranscriptionStatus,
@@ -1304,6 +1306,16 @@ export function VoiceTutorRealtime({
   // In-flow entry (partner spec v1.1): flag-gated so the standard behaviour
   // can be restored for such tokens without a partner change.
   const isInFlow = TUTOR_INFLOW_ENTRY && inFlow;
+  // Evolve-in-place swap (deferred-removals.ts): the removal of a superseded
+  // figure is parked under its replacement's id and released by the paint
+  // that carries the replacement — both land in one tick, so the board never
+  // shows the gap. Every paint in this component goes through this wrapper.
+  const deferredRemovalsRef = useRef<DeferredRemovals>(new Map());
+  const onWhiteboardCommand = useCallback((commands: WhiteboardCommand[], meta?: WhiteboardBatchMeta) => {
+    const owed = takeRemovalsForBatch(deferredRemovalsRef.current, commands);
+    if (owed.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: owed }]);
+    onWhiteboardCommandProp(commands, meta);
+  }, [onWhiteboardCommandProp]);
   const [isMicMuted, setIsMicMuted] = useState(false);
   // Sync mirror of isMicMuted for the perception onTranscript callback,
   // which needs the live value synchronously to drop transcripts that were
@@ -5538,6 +5550,10 @@ export function VoiceTutorRealtime({
     const dropped = buf.length;
     renderBufferRef.current = [];
     if (ids.length > 0) {
+      // A dropped replacement still owes its prior's removal (the catalog
+      // already treats the prior as gone).
+      const owed = takeRemovalsForIds(deferredRemovalsRef.current, ids);
+      if (owed.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: owed }]);
       const idSet = new Set(ids);
       whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -8595,6 +8611,8 @@ export function VoiceTutorRealtime({
     // after the loop and keep only the freshly-drawn one. Collected here,
     // applied below the loop (mirrors the kill-recovery rollback).
     const evolveReplaceIds: string[] = [];
+    // prior id → the render that supersedes it (for the swap-in-one-paint).
+    const evolveReplacedBy = new Map<string, string>();
     for (const cmd of processed) {
       const action = String(cmd.action);
       if (action === 'newPage') {
@@ -8775,6 +8793,7 @@ export function VoiceTutorRealtime({
         const prior = evolvePrior ?? redrawPrior;
         if (prior && prior.itemId !== id && !pendingRevisionRef.current.has(prior.itemId)) {
           evolveReplaceIds.push(prior.itemId);
+          evolveReplacedBy.set(prior.itemId, id);
           console.log(`[VoiceTutorRealtime] ${redrawPrior ? 'redraw-intent replace' : 'evolve-in-place'}: ${id} (${anchorKey}) supersedes ${prior.itemId} on ${prior.pageId ?? '(no page)'}`);
           onDebugEvent?.(redrawPrior ? 'figure_redraw_replace' : 'figure_evolve_replace', `${id} ⟵ ${prior.itemId}`);
         }
@@ -8832,6 +8851,7 @@ export function VoiceTutorRealtime({
       const replacement = catalogRef.current.findBySignature(pair.newSignature);
       if (replacement && replacement.itemId !== pair.priorId) {
         evolveReplaceIds.push(pair.priorId);
+        evolveReplacedBy.set(pair.priorId, replacement.itemId);
       } else {
         onDebugEvent?.('tool_call_replace_skipped', `"${pair.label}": replacement not on the board — kept ${pair.priorId}`);
       }
@@ -8839,7 +8859,31 @@ export function VoiceTutorRealtime({
     if (evolveReplaceIds.length > 0) {
       const unique = Array.from(new Set(evolveReplaceIds));
       const idSet = new Set(unique);
-      onWhiteboardCommand([{ action: 'removeItems', ids: unique }]);
+      // The board removal waits for the replacement's paint (it may sit in
+      // the render↔speech buffer for seconds); the bookkeeping below does
+      // not. A prior with no known replacement goes at once, as before.
+      const immediate: string[] = [];
+      const byReplacement = new Map<string, string[]>();
+      for (const priorId of unique) {
+        const replacementId = TUTOR_EVOLVE_SWAP ? evolveReplacedBy.get(priorId) : undefined;
+        if (!replacementId) { immediate.push(priorId); continue; }
+        byReplacement.set(replacementId, [...(byReplacement.get(replacementId) ?? []), priorId]);
+      }
+      if (immediate.length > 0) onWhiteboardCommandProp([{ action: 'removeItems', ids: immediate }]);
+      for (const [replacementId, priors] of byReplacement) {
+        deferRemoval(deferredRemovalsRef.current, replacementId, priors, Date.now());
+        onDebugEvent?.('figure_evolve_deferred', `${priors.join(',')} leaves with ${replacementId}`);
+      }
+      if (byReplacement.size > 0) {
+        // Backstop: a replacement that never paints must not strand its prior.
+        setTimeout(() => {
+          const stale = takeStaleRemovals(deferredRemovalsRef.current, Date.now());
+          if (stale.length > 0) {
+            onWhiteboardCommandProp([{ action: 'removeItems', ids: stale }]);
+            onDebugEventRef.current?.('figure_evolve_deferred', `stale: ${stale.join(',')} removed without a replacement paint`);
+          }
+        }, DEFERRED_REMOVAL_MAX_MS + 250);
+      }
       const beforeMirror = whiteboardCommandsRef.current.length;
       whiteboardCommandsRef.current = whiteboardCommandsRef.current.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
