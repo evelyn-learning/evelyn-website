@@ -139,10 +139,10 @@ function countingGen() {
   const file = path.join(__dirname, '..', 'src', 'data', 'audited-generated-items.json');
   const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { generatedAt: string; source: string; items: Record<string, string> };
 
-  await test('the JSON holds exactly 828 generated ids, each marked AUDITED', () => {
-    assert.equal(data.generatedAt, '2026-10-06');
-    assert.equal(data.source, 'audited generated items 2026-10-06 (production read 2026-10-06T18:36Z; pre-generation audits 2026-10-05, check 2 of the final audit, first audit + both blind passes)');
-    assert.equal(Object.keys(data.items).length, 828);
+  await test('the JSON holds exactly 1185 generated ids, each marked AUDITED', () => {
+    assert.equal(data.generatedAt, '2026-10-09');
+    assert.equal(data.source, 'audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read)');
+    assert.equal(Object.keys(data.items).length, 1185);
     for (const [id, mark] of Object.entries(data.items)) {
       assert.ok(id === id.trim() && isGeneratedPracticeItemId(id), `not a generated item id: ${JSON.stringify(id)}`);
       assert.equal(mark, 'AUDITED', id);
@@ -157,7 +157,7 @@ function countingGen() {
   });
 
   await test('isAuditedGeneratedItem / the set reflect the JSON', () => {
-    assert.equal(AUDITED_GENERATED_ITEM_IDS.size, 828);
+    assert.equal(AUDITED_GENERATED_ITEM_IDS.size, 1185);
     assert.equal(isAuditedGeneratedItem(AUDITED_ID), true);
     assert.equal(isAuditedGeneratedItem(UNLISTED_ID), false);
     assert.equal(isAuditedGeneratedItem(WITHDRAWN_GEN_ID), false);
@@ -186,9 +186,9 @@ function countingGen() {
     assert.throws(() => readAuditedIds('loId,evidence\na,b\n', 'x.csv'), /"id" column/);
   });
 
-  await test('builder: rebuilding from the published audited.csv reproduces the committed file byte for byte', () => {
-    const csvPath = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'docs', 'whitelabel', 'greenapple', 'integration', 'audited-list-2026-10-06', 'audited.csv');
-    if (!fs.existsSync(csvPath)) { console.log('    (audited.csv not present in this checkout — skipped)'); return; }
+  await test('builder: rebuilding from the combined id file reproduces the committed file byte for byte', () => {
+    const csvPath = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'docs', 'whitelabel', 'greenapple', 'integration', 'practice-extension-2026-10-09', 'coverage-run', 'final', 'audited-generated-combined.csv');
+    if (!fs.existsSync(csvPath)) { console.log('    (combined id file not present in this checkout — skipped)'); return; }
     const rebuilt = buildAuditedGeneratedList(readAuditedIds(fs.readFileSync(csvPath, 'utf8'), csvPath), data.generatedAt, data.source, WITHDRAWN_ITEM_IDS);
     assert.equal(JSON.stringify(rebuilt, null, 2) + '\n', fs.readFileSync(file, 'utf8'));
   });
