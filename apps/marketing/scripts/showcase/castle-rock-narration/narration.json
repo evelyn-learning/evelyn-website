@@ -1,0 +1,66 @@
+{
+  "voices": {
+    "coach-riley": "bf0a246a-8642-498a-9950-80c35e9276b5",
+    "mr-joseph": "7d444628-dd13-442b-b687-71a6baf0c07e",
+    "mr-cole": "3e39e9a5-585c-4f5f-bac6-5e4905c51095",
+    "ms-michelle": "d7bf7d75-64b7-4c1e-86c0-79d647366587"
+  },
+  "items": {
+    "303439": {
+      "voice": "coach-riley",
+      "lines": [
+        "The answer is D. Here's why. The question asks where the graph is negative. Negative just means below the x-axis, so we want the x values where f of x is less than zero.",
+        "A fraction can only change sign where its top or its bottom is zero. The top is zero at x equals negative two fifths, where the graph crosses the axis. The bottom is zero at x equals one half, which gives a vertical asymptote.",
+        "Those two values split the number line into three regions, so let's test a number in each. At x equals negative one, f is positive one. At zero, it's negative two. And at one, it's positive seven. Only the middle region is negative.",
+        "So the graph is negative between negative two fifths and one half, with neither end included. That's option D."
+      ]
+    },
+    "234035": {
+      "voice": "mr-joseph",
+      "lines": [
+        "The answer is A. Here's why. The cars stick together, so this is a momentum question. The total momentum just before the collision equals the total momentum just after. And momentum has direction, so we treat it as a vector.",
+        "Momentum is mass times velocity. Car A has four hundred times fourteen, which is five thousand six hundred kilogram meters per second, pointing east. Car B has five hundred times ten, which is five thousand kilogram meters per second, pointing south.",
+        "East and south are at right angles, so the two momenta form a right triangle, and the total is the diagonal. By the Pythagorean theorem, square each side and add them. Fifty-six hundred squared is thirty-one million, three hundred sixty thousand. Five thousand squared is twenty-five million. Together that's fifty-six million, three hundred sixty thousand. Take the square root, and the total momentum is about seven thousand five hundred and seven kilogram meters per second.",
+        "After the collision the cars move as one object of nine hundred kilograms. Divide the total momentum by nine hundred and you get eight point three meters per second. For the direction, the inverse tangent of five thousand over five thousand six hundred gives forty-two degrees south of east. That's option A."
+      ]
+    },
+    "193246": {
+      "voice": "mr-cole",
+      "lines": [
+        "The answer is A. Here's why. An exothermic reaction gives energy out to its surroundings. So the products end up with less energy than the reactants, and the enthalpy change, delta H, is negative.",
+        "These equations show energy in two different ways. Some give delta H with a sign. Others put the energy right inside the equation. Energy on the product side was released. Energy on the reactant side was absorbed.",
+        "Equation one has delta H of negative two hundred forty-one point eight kilojoules. Negative, so it's exothermic. Equation two shows one hundred ten point five kilojoules on the product side. That energy is released, so it's exothermic too.",
+        "Equation three has ninety point two kilojoules on the reactant side, so energy goes in. That's endothermic. Equation four has delta H of positive twenty-six point five kilojoules. Positive, so it's endothermic as well.",
+        "So the two reactions that release energy are one and two. That's option A. The common slip is reading the energy in equation two as absorbed, just because it has a plus sign in front of it."
+      ]
+    },
+    "304631": {
+      "voice": "ms-michelle",
+      "lines": [
+        "The answer is D. Here's why. Ploidy is the number of chromosome sets in a cell. Diploid, written two n, means two sets. Haploid, written n, means one set. In animals, body cells are diploid and only the gametes are haploid.",
+        "Start with the adult jellyfish, the medusa. It's diploid. It makes eggs or sperm by meiosis, which halves the chromosome number. So the gametes are haploid, n.",
+        "When an egg and a sperm join, n plus n gives a diploid zygote. The zygote divides by mitosis, which keeps the chromosome number the same. It grows into a swimming larva called a planula, so the planula is two n.",
+        "The planula settles and grows into a polyp, again by mitosis. The polyp then makes buds asexually, which is mitosis once more. Nothing has halved the chromosomes, so the budding polyp is also two n.",
+        "Putting it together: planula two n, budding polyp two n, gamete n. That's table D."
+      ]
+    },
+    "286312": {
+      "voice": "coach-riley",
+      "lines": [
+        "The answer is three point two five. Here's how to get it. The radical is already alone on the left side, so square both sides. That gives nine times x plus three on the left, and two x plus one, all squared, on the right.",
+        "Now expand. The left side becomes nine x plus twenty-seven. The right side becomes four x squared, plus four x, plus one. Move everything to one side, and you get four x squared, minus five x, minus twenty-six, equals zero.",
+        "This quadratic factors into four x minus thirteen, times x plus two. So x is thirteen over four, which is three point two five, or x is negative two.",
+        "Squaring both sides can create a solution that doesn't really work, so check both in the original equation. With three point two five, both sides equal seven point five, so it works. With negative two, the left side is three but the right side is negative three, so it fails. The solution is three point two five."
+      ]
+    },
+    "135676": {
+      "voice": "mr-joseph",
+      "lines": [
+        "The answers are four, nine, eight and seven, because the wavelength is four point nine eight times ten to the negative seven meters. Here's how. Start by listing what we know. The slit separation, d, is four point two four times ten to the negative four meters. The distance to the screen, l, is one meter. And the second fringe is two point three five millimeters from the center, so n is two.",
+        "For a double-slit pattern, the wavelength equals x times d, divided by n times l. Before we substitute, convert x into meters. Two point three five millimeters is two point three five times ten to the negative three meters.",
+        "Now substitute. On top, two point three five times ten to the negative three, times four point two four times ten to the negative four, gives nine point nine six four times ten to the negative seven. On the bottom, two times one is two. Divide, and the wavelength is four point nine eight times ten to the negative seven meters. That's about five hundred nanometers, which is visible light, so the answer is sensible.",
+        "The question wants the form a point b c, times ten to the negative d. Our value is four point nine eight times ten to the negative seven. So a is four, b is nine, c is eight, and d is seven."
+      ]
+    }
+  }
+}

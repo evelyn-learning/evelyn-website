@@ -2208,6 +2208,15 @@ export const SET_CURRENT_PROBLEM_TOOL: ToolDefinition = {
   },
 };
 
+/** Offered only to sessions whose host has a lesson video (partner spec v1.2
+ *  §3.4) — appended by the brain route after the subject filter, so every
+ *  other session's tools array (and cached prefix) is unchanged. */
+export const RESUME_LESSON_TOOL: ToolDefinition = {
+  name: 'resume_lesson',
+  description: 'Silent — the student does not hear or see this. Resumes the lesson video the student is watching beside this conversation. Call it only when your context has a <lesson_video> block and the student has shown they understand or asked to keep watching. Say one short hand-back line in the same turn; the video starts when you finish speaking, and you then stay quiet until the student asks again. Never call it while a question you asked is still unanswered.',
+  parameters: { type: 'object', properties: {}, required: [] },
+};
+
 /**
  * Map a function call name + arguments to a WhiteboardCommand.
  *
@@ -3047,6 +3056,11 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         : [],
       recurrence: funcArgs.recurrence === true,
     };
+  }
+  if (funcName === 'resume_lesson') {
+    // Bookkeeping only (no visual) and tutor-app only: cast instead of
+    // widening the shared WhiteboardCommand union in packages/core.
+    return { action: 'resumeLesson' } as unknown as WhiteboardCommand;
   }
   if (funcName === 'close_session_notes') {
     return {

@@ -27,7 +27,8 @@ import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
-import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL } from '@/app/tutor/hooks/toolDefinitions';
+import { WHITEBOARD_TOOLS, SET_CURRENT_PROBLEM_TOOL, RESUME_LESSON_TOOL } from '@/app/tutor/hooks/toolDefinitions';
+import { LESSON_NOW_MAX_CHARS } from '@/lib/tutor/portal/host-lesson-timeline';
 import {
   filterToolsForSubject,
   type ToolFilterResult,
@@ -118,6 +119,10 @@ interface BrainStreamRequestBody {
    *  undefined so a bad client can never inject an arbitrary blob.
    *  See BrainTurnInput.demoStop. */
   demoStop?: BrainTurnInput['demoStop'];
+  /** Partner spec v1.2 §4: rendered lesson window. See BrainTurnInput.lessonNow. */
+  lessonNow?: string;
+  /** Partner spec v1.2 §3.4: this session's host has a lesson video ⇒ offer `resume_lesson`. */
+  videoHost?: boolean;
   /** Practice-mode contract (Task X2). Client sends true when the session's
    *  embed token carried session_goal === 'practice'. Surfaces as the durable
    *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
@@ -705,6 +710,21 @@ export async function POST(req: NextRequest) {
         // byte-identical to before this tool existed.
         toolFilter = { ...toolFilter, tools: [...toolFilter.tools, SET_CURRENT_PROBLEM_TOOL] };
       }
+      // Host video (spec v1.2): sanitised like every other client block — a
+      // malformed client can never inject an oversized one. Fail closed.
+      const lessonNow =
+        typeof body.lessonNow === 'string' && body.lessonNow.trim() && body.lessonNow.length <= LESSON_NOW_MAX_CHARS
+          ? body.lessonNow
+          : undefined;
+      if (body.videoHost === true) {
+        // Session-stable (derived from the embed token), so a video-host
+        // session's tools array is the same on every turn and shared by all
+        // such sessions. Appended AFTER the Lever A filter, like homework.
+        toolFilter = { ...toolFilter, tools: [...toolFilter.tools, RESUME_LESSON_TOOL] };
+      }
+      if (lessonNow || body.videoHost === true) {
+        console.log(`[lesson-video] block=${lessonNow ? lessonNow.length : 0} chars resume_tool=${body.videoHost === true}`);
+      }
 
       // Which shared cache entry this turn can read: tools + core. One line
       // per turn, next to [toolfilter] and [brain.stream].
@@ -852,6 +872,7 @@ export async function POST(req: NextRequest) {
           // Task E1: sanitized above (mode enum + finite ≥0 numbers, else
           // undefined). Surfaces as `<demo_stop>` in the user content.
           demoStop,
+          lessonNow,
           // Task X2: durable practice-mode flag. Coerced to a strict boolean so
           // a malformed client can't inject a truthy non-bool. Surfaces as the
           // `<practice_session>` block in the user content.

@@ -99,6 +99,13 @@ export interface RealtimeHandle {
    *  with a non-empty buffer sends it (never drops words). Wired to the ⋯
    *  menu's Mic row (TUTOR_MANUAL_MIC-gated). */
   setManualMic: (v: boolean) => void;
+  /** Silence (or restore) the TUTOR's voice. Playback, captions and turn
+   *  timing are unchanged; only the sound is removed. Embed `voiceMute` option. */
+  setTutorVoiceMuted?: (muted: boolean) => void;
+  /** Host video (partner spec v1.2 §3.3): hand the tutor a host "moment" as a
+   *  synthetic turn. Delivered once the session is started, awake and idle;
+   *  dropped if that takes too long (the video has moved on). */
+  deliverMoment?: (directive: string) => void;
   /** Start the session from a control OUTSIDE the dock — currently the
    *  SessionStage center orb (2026-07-26 pre-start redesign). Runs the exact
    *  same path as the dock mic's own tap (handleMicClick), so the session

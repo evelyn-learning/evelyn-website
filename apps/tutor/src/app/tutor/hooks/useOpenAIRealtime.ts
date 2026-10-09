@@ -405,6 +405,10 @@ export interface RealtimeResult {
   startListening: () => void;
   stopListening: () => void;
   muteInput: () => void;
+  /** muteInput, then let go of the microphone itself (this hook's hold on the
+   *  shared capture) so the browser's recording indicator can go off. For
+   *  standby beside a host video; startListening() reopens it. */
+  releaseInput: () => void;
   interrupt: () => void;
   pause: () => void;
   sendTextMessage: (text: string, meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } }) => void;
@@ -429,6 +433,14 @@ export interface RealtimeResult {
    * input) may fire-and-forget the promise.
    */
   clearSpeechQueue: () => Promise<void>;
+  /**
+   * Drop the sentences that have NOT started playing, and let the one being
+   * spoken finish. For standby (the host's video resumed): the tutor ends
+   * its sentence instead of being cut mid-word. Returns how many were dropped.
+   */
+  dropQueuedSpeech: () => number;
+  /** True while any tutor sentence is queued, being fetched or playing. */
+  isSpeechPending: () => boolean;
   /**
    * Voice Perception Stage 3.1 (2026-06-16). Non-destructive snapshot of
    * the pending speakText queue — sentences that the brain emitted but
@@ -477,6 +489,8 @@ export interface RealtimeResult {
    * (often the Unmute click) inadvertently unlocks it.
    */
   unlockAudio: () => void;
+  /** Silence (or restore) the tutor's voice without changing playback timing. */
+  setVoiceMuted: (muted: boolean) => void;
 }
 
 /**
@@ -758,6 +772,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const isPlayingRef = useRef(false);
   const currentResponseTextRef = useRef('');
   const playbackSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  // Tutor-voice mute (student control): playback runs exactly as usual — same
+  // chunks, same clocks, so captions and turn-taking keep their pacing — but
+  // the chunk reaches the output through a zero gain. No node is added to the
+  // path unless the student has used the control in this session.
+  const voiceMutedRef = useRef(false);
+  const voiceMuteGainRef = useRef<GainNode | null>(null);
   // B1 hard-cancel (2026-05-14): track the in-flight Realtime response id
   // and the set of ids we've cancelled via clearSpeechQueue. The WS
   // `response.cancel` we send is async — the server keeps streaming
@@ -1209,6 +1229,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, []);
 
+  const setVoiceMuted = useCallback((muted: boolean) => {
+    voiceMutedRef.current = muted;
+    const g = voiceMuteGainRef.current;
+    if (g) { g.gain.value = muted ? 0 : 1; return; }
+    // Muting mid-chunk: re-route the chunk that is playing through a zero gain
+    // so the voice stops now, not at the next chunk.
+    const source = playbackSourceRef.current;
+    if (!muted || !source) return;
+    try {
+      const ctx = getAudioContext();
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      source.disconnect();
+      source.connect(gain);
+      gain.connect(getPlaybackTarget(ctx));
+      voiceMuteGainRef.current = gain;
+    } catch { /* the next chunk starts muted */ }
+  }, []);
+
   // Play queued audio
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
@@ -1354,7 +1393,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // Round-5 echo fix: route to the media path so the browser's echo
     // canceller has a reference copy of what the speaker is playing. Falls
     // back to ctx.destination itself if that route is off or unavailable.
-    source.connect(getPlaybackTarget(ctx));
+    if (voiceMutedRef.current) {
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      source.connect(g);
+      g.connect(getPlaybackTarget(ctx));
+      voiceMuteGainRef.current = g;
+    } else {
+      voiceMuteGainRef.current = null;
+      source.connect(getPlaybackTarget(ctx));
+    }
     source.onended = () => {
       playNextAudio();
     };
@@ -2804,6 +2852,20 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     updateState('connected');
   }, [updateState]);
 
+  const releaseInput = useCallback(() => {
+    muteInput();
+    shouldListenRef.current = false;
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.disconnect();
+      audioProcessorRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      // Release, don't stop: tracks stop when the last holder lets go (shared-mic.ts).
+      releaseSharedMicStream(MIC_CONSUMER);
+      mediaStreamRef.current = null;
+    }
+  }, [muteInput]);
+
   // Interrupt playback
   const interrupt = useCallback(() => {
     // Stop playback. Stopping the BufferSource is not enough on the AEC
@@ -3628,6 +3690,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // dying tail — observed during round-7 judge-KILL spirals where the
   // student heard the previous attempt's last word bleeding into "Let me
   // try that a different way."
+  const dropQueuedSpeech = useCallback((): number => {
+    const dropped = speakTextQueueRef.current.length;
+    // Never heard: 'skip' them so they cannot match real student speech later.
+    for (const id of speakTextScriptIdQueueRef.current) {
+      if (id != null) emitPlaybackStamp(id, 'skip');
+    }
+    speakTextQueueRef.current = [];
+    speakTextScriptIdQueueRef.current = [];
+    return dropped;
+  }, [emitPlaybackStamp]);
+
+  const isSpeechPending = useCallback(
+    (): boolean => speakTextInFlightRef.current || speakTextQueueRef.current.length > 0 || isPlayingRef.current,
+    [],
+  );
+
   const clearSpeechQueue = useCallback((): Promise<void> => {
     // Bump the speak epoch BEFORE we clear queues — any TTS dispatch
     // currently parked at `await fetchTTSPromise` will compare against
@@ -4026,17 +4104,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     startListening,
     stopListening,
     muteInput,
+    releaseInput,
     interrupt,
     pause,
     sendTextMessage,
     injectContext,
     speakText,
     clearSpeechQueue,
+    dropQueuedSpeech,
+    isSpeechPending,
     peekSpeechQueue,
     resumeSpeakText,
     getCurrentSentenceFraction,
     getSpokenProgress,
     signalBrainThinking,
     unlockAudio,
+    setVoiceMuted,
   };
 }

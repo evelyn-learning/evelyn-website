@@ -338,6 +338,10 @@ export interface BrainTurnInput {
    *  block ⇒ userContent byte-identical. Lives in per-turn user content,
    *  NEVER the cached system prefix. */
   styleReminder?: string;
+  /** Host video beside the session (partner spec v1.2 §4): the lesson around
+   *  the current video position, rendered client-side by renderLessonNow.
+   *  Absent ⇒ no `<lesson_video>` block ⇒ userContent byte-identical. */
+  lessonNow?: string;
   /** Targets the brain passed to tutor_scribble last turn that the
    *  runtime silently dropped (no_match / whole-item alias / iframe).
    *  Surfaces as an `<unrealized_marks>` advisory so the brain knows the
@@ -1661,6 +1665,11 @@ export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
   return `<demo_stop>\n${body}\n</demo_stop>\n\n`;
 }
 
+/** Render the `<lesson_video>` block (partner spec v1.2 §4). '' when absent. */
+export function formatLessonVideoBlock(lessonNow?: string): string {
+  return lessonNow ? `<lesson_video>\n${lessonNow}\n</lesson_video>\n\n` : '';
+}
+
 /**
  * Practice-mode contract (Task X2). Renders the durable `<practice_session>`
  * block when the session is a practice session, else ''. Placed in the
@@ -1916,6 +1925,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
   // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
   const demoStopBlock = formatDemoStopBlock(input.demoStop);
+  // Host video (spec v1.2 §4): the lesson at the current video position. '' when absent.
+  const lessonVideoBlock = formatLessonVideoBlock(input.lessonNow);
   // Task X2: durable practice-mode mandate. '' when not a practice session.
   const practiceSessionBlock = formatPracticeSessionBlock(input.practiceMode);
   if (practiceSessionBlock) {
@@ -1991,6 +2002,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
+    lessonVideoBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
@@ -2123,6 +2135,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
   // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
   const demoStopBlock = formatDemoStopBlock(input.demoStop);
+  // Host video (spec v1.2 §4): the lesson at the current video position. '' when absent.
+  const lessonVideoBlock = formatLessonVideoBlock(input.lessonNow);
   // Task X2: durable practice-mode mandate. '' when not a practice session.
   const practiceSessionBlock = formatPracticeSessionBlock(input.practiceMode);
   if (practiceSessionBlock) {
@@ -2358,6 +2372,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
+    lessonVideoBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +

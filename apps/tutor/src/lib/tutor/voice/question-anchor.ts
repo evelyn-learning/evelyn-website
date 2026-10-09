@@ -37,6 +37,8 @@ const NON_CONTENT_TOOLS = new Set([
   'add_topic_notes_pointer',
   // Homework-help rail pointer — moves the problem index, never the board.
   'set_current_problem',
+  // Host video: asks the host to play its video, never the board.
+  'resume_lesson',
 ]);
 
 export function isBoardContentTool(name: string): boolean {

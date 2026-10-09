@@ -30,6 +30,7 @@ export function HeaderClock({
   startedAtMs,
   maxMinutes,
   countDown,
+  frozenAtMs,
   className = '',
 }: {
   /** Wallclock ms when the voice session actually started (mic tap). Null
@@ -40,6 +41,10 @@ export function HeaderClock({
   maxMinutes: number;
   /** True when the host set an explicit budget (demo/trial). */
   countDown: boolean;
+  /** Non-null while the session stands by (host video playing / panel
+   *  hidden): the clock shows the elapsed time at that instant and does not
+   *  tick. Standing-by time is not session time. */
+  frozenAtMs?: number | null;
   className?: string;
 }) {
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -52,11 +57,12 @@ export function HeaderClock({
       setElapsedSec(0);
       return;
     }
-    const tick = () => setElapsedSec(Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)));
+    const tick = () => setElapsedSec(Math.max(0, Math.floor(((frozenAtMs ?? Date.now()) - startedAtMs) / 1000)));
     tick();
+    if (frozenAtMs) return;
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [startedAtMs]);
+  }, [startedAtMs, frozenAtMs]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 

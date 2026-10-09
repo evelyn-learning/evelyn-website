@@ -34,6 +34,8 @@ export const NON_RENDER_TOOL_NAMES: ReadonlySet<string> = new Set([
   'clear', 'list_whiteboard_features', 'hold_for_student',
   // Homework-help rail pointer — state only, never paints.
   'set_current_problem',
+  // Host video: asks the host to play its video — never paints.
+  'resume_lesson',
 ]);
 
 export function countBoardRenderTools(names: string[]): number {
