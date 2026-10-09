@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { buildAlignedChunks, resolveRecorderOrigin, type TimedChunk } from '@/lib/tutor/recordings/track-align';
+import { shouldSendTrackFinalize } from '@/lib/tutor/recordings/finalize-audio';
 
 const SAMPLE_RATE = 24000;
 // Student-track gap threshold: mic chunks arrive continuously (~170ms
@@ -195,11 +196,19 @@ export function useAudioRecorder({
     await flush();
 
     // Send finalize signals (empty body — the server only reads the
-    // finalize flag from the query string in this mode).
-    await Promise.all([
-      sendChunk('student', null, studentChunkIndexRef.current, true),
-      sendChunk('tutor', null, tutorChunkIndexRef.current, true),
-    ]);
+    // finalize flag from the query string in this mode). Only for a track
+    // that uploaded something in this attempt: a text session records
+    // neither track and used to send two signals for nothing (2026-10-09).
+    // Read AFTER the flush above, which sends any buffered tail.
+    const signals: Promise<boolean>[] = [];
+    if (shouldSendTrackFinalize({ chunksSent: studentChunkIndexRef.current })) {
+      signals.push(sendChunk('student', null, studentChunkIndexRef.current, true));
+    }
+    if (shouldSendTrackFinalize({ chunksSent: tutorChunkIndexRef.current })) {
+      signals.push(sendChunk('tutor', null, tutorChunkIndexRef.current, true));
+    }
+    if (signals.length === 0) return;
+    await Promise.all(signals);
 
     console.log('[AudioRecorder] Finalized audio recording for session', sessionIdRef.current);
   }, [flush, sendChunk]);

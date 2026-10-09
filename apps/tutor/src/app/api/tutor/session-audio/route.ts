@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
-import { resolveAudioFinalize } from '@/lib/tutor/recordings/finalize-audio';
+import { resolveAudioFinalize, shouldCreateAudioDir } from '@/lib/tutor/recordings/finalize-audio';
 import {
   createKeyedSerializer,
   nextAttemptAnchors,
@@ -90,8 +90,9 @@ export async function POST(request: NextRequest) {
     const safeId = sanitizeSessionId(sessionId);
     const sessionDir = path.join(AUDIO_BASE_DIR, safeId);
 
-    // Ensure directory exists
-    await fs.mkdir(sessionDir, { recursive: true });
+    // The directory is NOT created here: only a chunk that carries bytes
+    // creates it (below). A finalize signal or an empty chunk for a session
+    // with no audio used to leave an empty directory behind (2026-10-09).
 
     if (finalize) {
       // 2026-08-17 triage: the unload beacon finalizes even for sessions
@@ -144,9 +145,10 @@ export async function POST(request: NextRequest) {
     // Read raw PCM16 bytes from the body stream. Empty body → skip (the
     // client sometimes sends an empty final chunk just before finalize).
     const arrayBuffer = await request.arrayBuffer();
-    if (arrayBuffer.byteLength === 0) {
+    if (!shouldCreateAudioDir({ finalize, bodyBytes: arrayBuffer.byteLength })) {
       return NextResponse.json({ success: true, skipped: true });
     }
+    await fs.mkdir(sessionDir, { recursive: true });
 
     const buffer = Buffer.from(arrayBuffer);
     const filePath = path.join(sessionDir, `${role}.pcm16`);
