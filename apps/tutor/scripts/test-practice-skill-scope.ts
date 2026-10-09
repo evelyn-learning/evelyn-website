@@ -419,7 +419,7 @@ async function main(): Promise<void> {
     const file = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'data', 'audited-lesson-steps.json'), 'utf8')) as { generatedAt: string; source: string; items: Record<string, string> };
     const listed = Object.keys(file.items);
     // The ONE pin of the committed count — update it when the list is rebuilt.
-    assert.equal(listed.length, 685);
+    assert.equal(listed.length, 678);
     assert.equal(AUDITED_LESSON_STEP_IDS.size, listed.length);
     assert.match(file.generatedAt, /^\d{4}-\d{2}-\d{2}$/);
     assert.ok(file.source.length > 0);
