@@ -15,6 +15,9 @@
  *   - expr.ts `compileExpression` — understood completely or refused;
  *   - slope-field.ts `slopeFieldSamples` / `slopeFieldSolution`;
  *   - plot-frame.ts tick arithmetic;
+ *   - the 2026-10-09 legibility round: dash patterns and palette, one
+ *     function in pieces, end markers, dots on top, vertexDots, π ticks,
+ *     inset slope fields, and legibility.ts `checkFigureLegibility`;
  *   - bad specs fail with `PracticeFigureSpecError`, and text / colour params
  *     cannot inject markup;
  *   - `buildPracticeFigure` (what a bank row stores) against the contract.
@@ -37,7 +40,8 @@ import {
 import { ExpressionError, compileExpression } from '../src/lib/tutor/practice-figure/expr';
 import { slopeFieldSamples, slopeFieldSolution } from '../src/lib/tutor/practice-figure/slope-field';
 import { MAX_FIGURE_SVG_CHARS, validateFigureSvg } from '../src/lib/tutor/practice-figure/svg-safety';
-import { niceBounds, niceStep, stepDecimals, tickText, tickTexts, ticksBetween } from '../src/lib/tutor/practice-figure/plot-frame';
+import { GUIDE_COLOR, GUIDE_DASH, SERIES_COLORS, SERIES_DASHES, assignDashes, niceBounds, niceStep, piTickText, stepDecimals, tickText, tickTexts, ticksBetween } from '../src/lib/tutor/practice-figure/plot-frame';
+import { checkFigureLegibility } from '../src/lib/tutor/practice-figure/legibility';
 import { findViolations } from './lib/svg-text-extents';
 import { FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 
@@ -388,7 +392,7 @@ test('slopeFieldSamples: vertical is ±Infinity, undefined is NaN, and both draw
   assert.ok(Number.isNaN(at(0, 0) as number));
   assert.equal(at(1, 1), -1);
   const svg = svgOf('slope_field', { expr: '-x/y', xRange: [-1, 1], yRange: [-1, 1], gridStep: 1 });
-  const segs = (/<path d="((?:M[-\d.]+,[-\d.]+L[-\d.]+,[-\d.]+)+)" fill="none" stroke="#334155"/.exec(svg)?.[1] ?? '').match(/M[^M]+/g) ?? [];
+  const segs = (/<path d="((?:M[-\d.]+,[-\d.]+L[-\d.]+,[-\d.]+)+)" fill="none" stroke="#1d4ed8"/.exec(svg)?.[1] ?? '').match(/M[^M]+/g) ?? [];
   assert.equal(segs.length, 8, 'nine lattice points, the undefined one is skipped');
   const vertical = segs.filter((sg) => { const m = /M([-\d.]+),[-\d.]+L([-\d.]+),/.exec(sg); return !!m && m[1] === m[2]; });
   assert.equal(vertical.length, 2, 'the two points on y = 0 are vertical ticks');
@@ -490,6 +494,266 @@ test('buildPracticeFigure: what a bank row stores — picture, alt and spec — 
   assert.throws(() => buildPracticeFigure(spec, ''), /alt text is required/);
   assert.throws(() => buildPracticeFigure(spec, 'x'.repeat(601)), /longer than 600/);
   assert.throws(() => buildPracticeFigure({ type: 'nope', params: {} }, 'alt'), PracticeFigureSpecError);
+});
+
+console.log('\nLegibility round (2026-10-09 — found reading the figures at 340 px):\n');
+
+/** Every circle that is a data mark (the white halo discs excluded). */
+const dots = (svg: string): Array<{ cx: number; cy: number; fill: string; at: number }> =>
+  [...svg.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="[\d.]+" fill="(#[0-9a-f]+)" stroke=/g)].map((m) => ({ cx: Number(m[1]), cy: Number(m[2]), fill: m[3], at: m.index as number }));
+/** The curves: thick paths with no fill, in document order. */
+const curvePaths = (svg: string): Array<{ stroke: string; dash: string }> =>
+  [...svg.matchAll(/<path d="M[^"]+" fill="none" stroke="(#[0-9a-f]+)" stroke-width="2\.[24]"[^>]*?(?: stroke-dasharray="([^"]+)")?\/>/g)].map((m) => ({ stroke: m[1], dash: m[2] ?? '' }));
+const legendLines = (svg: string): Array<{ stroke: string; dash: string }> =>
+  [...svg.matchAll(/<line [^>]*stroke="(#[0-9a-f]+)" stroke-width="2\.4"[^>]*?(?: stroke-dasharray="([^"]+)")?\/>/g)].map((m) => ({ stroke: m[1], dash: m[2] ?? '' }));
+const plotRect = (svg: string): { x: number; y: number; w: number; h: number } => {
+  const m = /<clipPath id="[^"]+"><rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"\/>/.exec(svg);
+  assert.ok(m, 'a clip rect');
+  return { x: Number(m[1]), y: Number(m[2]), w: Number(m[3]), h: Number(m[4]) };
+};
+
+test('palette: every series colour is ≥ 4.5 : 1 on white and the six stay apart under simulated colour-vision deficiency', () => {
+  const lin = (c: number) => { const v = c / 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const rgb = (h: string) => [1, 3, 5].map((i) => lin(parseInt(h.slice(i, i + 2), 16)));
+  const lum = (v: number[]) => 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  // Machado, Oliveira & Fernandes (2009), severity 1.0, on linear RGB.
+  const CVD: Record<string, number[][]> = {
+    normal: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+    deuteranopia: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
+    protanopia: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+    tritanopia: [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [0.004733, 0.691367, 0.3039]],
+  };
+  const lab = (v: number[]) => {
+    const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const x = f((0.4124 * v[0] + 0.3576 * v[1] + 0.1805 * v[2]) / 0.95047);
+    const y = f(lum(v));
+    const z = f((0.0193 * v[0] + 0.1192 * v[1] + 0.9505 * v[2]) / 1.08883);
+    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+  };
+  assert.equal(SERIES_COLORS.length, 6);
+  for (const c of SERIES_COLORS) assert.ok(1.05 / (lum(rgb(c)) + 0.05) >= 4.5, `${c} contrast on white`);
+  for (const [name, m] of Object.entries(CVD)) {
+    const seen = SERIES_COLORS.map((c) => lab(m.map((row) => Math.min(1, Math.max(0, row[0] * rgb(c)[0] + row[1] * rgb(c)[1] + row[2] * rgb(c)[2])))));
+    for (let i = 0; i < seen.length; i++) for (let j = i + 1; j < seen.length; j++) {
+      const d = Math.hypot(seen[i][0] - seen[j][0], seen[i][1] - seen[j][1], seen[i][2] - seen[j][2]);
+      assert.ok(d >= 15, `${name}: ${SERIES_COLORS[i]} vs ${SERIES_COLORS[j]} ΔE ${d.toFixed(1)}`);
+    }
+  }
+  assert.equal(new Set(SERIES_DASHES).size, SERIES_DASHES.length);
+  assert.ok(!(SERIES_DASHES as readonly string[]).includes(GUIDE_DASH), 'no curve pattern is the asymptote pattern');
+});
+
+test('assignDashes: one curve is solid; several each get their own pattern; `dashed` curves take the broken ones first', () => {
+  assert.deepEqual(assignDashes([false]), ['']);
+  assert.deepEqual(assignDashes([true]), ['7 4']);
+  assert.deepEqual(assignDashes([false, false, false, false]), [SERIES_DASHES[0], SERIES_DASHES[1], SERIES_DASHES[2], SERIES_DASHES[3]]);
+  assert.deepEqual(assignDashes([false, true]), ['', SERIES_DASHES[1]]);
+  assert.deepEqual(assignDashes([true, false]), [SERIES_DASHES[1], '']);
+  assert.deepEqual(assignDashes([true, true, false]), [SERIES_DASHES[1], SERIES_DASHES[2], '']);
+  assert.equal(new Set(assignDashes([false, true, false, true, false, false])).size, 6);
+});
+
+test('function_graph: several curves differ by dash as well as colour, the legend swatch repeats the dash, an asymptote stays a thin grey guide', () => {
+  const svg = svgOf('function_graph', {
+    xRange: [-4, 4], yRange: [-6, 6],
+    curves: [{ expr: 'x/2 + 1', label: 'A' }, { expr: '3 - (x - 1)^2', label: 'B' }, { expr: 'abs(x - 2)', label: 'C' }, { expr: 'x^3 - 3*x', label: 'D' }],
+    asymptotes: [{ y: -5 }],
+  });
+  const cs = curvePaths(svg);
+  assert.equal(cs.length, 4);
+  assert.equal(cs[0].dash, '', 'the first curve is solid');
+  assert.equal(new Set(cs.map((c) => c.dash)).size, 4);
+  assert.equal(new Set(cs.map((c) => c.stroke)).size, 4);
+  assert.deepEqual(legendLines(svg), cs, 'legend swatches: same colour and same pattern, in order');
+  assert.deepEqual(texts(svg).slice(-4), ['A', 'B', 'C', 'D']);
+  const guide = /<line [^>]*stroke="(#[0-9a-f]+)" stroke-width="([\d.]+)" stroke-dasharray="([^"]+)"\/>/.exec(svg);
+  assert.ok(guide, 'the asymptote');
+  assert.ok(Number(guide[2]) <= 1.1 && guide[1] === GUIDE_COLOR && guide[3] === GUIDE_DASH);
+  assert.ok(!cs.some((c) => c.dash === guide[3] || c.stroke === guide[1]));
+  // One curve alone is plain — nothing changes for the common case.
+  assert.deepEqual(curvePaths(svgOf('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: [{ expr: 'x', label: 'f' }] })), [{ stroke: '#1d4ed8', dash: '' }]);
+  // "A solid, B dashed" as a spec wrote it stays true.
+  const ab = curvePaths(svgOf('function_graph', { xRange: [0, 2], yRange: [-2, 2], curves: [{ expr: 'sin(pi*x)', label: 'A' }, { expr: 'sin(2*pi*x)', label: 'B', dashed: true }] }));
+  assert.ok(ab[0].dash === '' && ab[1].dash !== '');
+});
+
+test('function_graph: the pieces of ONE function share colour, dash and legend entry', () => {
+  // The piece after the jump carries no label and no colour of its own.
+  const params = { xRange: [-4, 4], yRange: [-6, 6], curves: [{ expr: 'x + 2', domain: [-4, 1], to: 'closed', label: 'g' }, { expr: 'x - 3', domain: [1, 4], from: 'open' }] };
+  const svg = svgOf('function_graph', params);
+  assert.deepEqual(curvePaths(svg), [{ stroke: '#1d4ed8', dash: '' }, { stroke: '#1d4ed8', dash: '' }]);
+  assert.deepEqual(legendLines(svg), [{ stroke: '#1d4ed8', dash: '' }]);
+  assert.deepEqual(dots(svg).map((d) => d.fill), ['#1d4ed8', '#ffffff'], 'both endpoint marks in the curve\'s colour');
+  // A third, separately named curve is the SECOND curve of the figure.
+  const three = curvePaths(svgOf('function_graph', { ...params, curves: [...params.curves, { expr: '-x', label: 'k' }] }));
+  assert.deepEqual(three.map((c) => c.stroke), ['#1d4ed8', '#1d4ed8', '#c2410c']);
+  assert.deepEqual(three.map((c) => c.dash), ['', '', SERIES_DASHES[1]]);
+  // Overlapping domains, or `continues: false`, are separate curves; `continues: true` joins explicitly.
+  assert.equal(new Set(curvePaths(svgOf('function_graph', { xRange: [-4, 4], yRange: [-6, 6], curves: [{ expr: 'x' }, { expr: '-x' }] })).map((c) => c.stroke)).size, 2);
+  const apart = { ...params, curves: [params.curves[0], { ...params.curves[1], continues: false }] };
+  assert.equal(new Set(curvePaths(svgOf('function_graph', apart)).map((c) => c.stroke)).size, 2);
+  const joined = { ...params, curves: [params.curves[0], { expr: 'x - 3', label: 'right', continues: true }] };
+  assert.equal(new Set(curvePaths(svgOf('function_graph', joined)).map((c) => c.stroke)).size, 1);
+  throwsSpec({ type: 'function_graph', params: { xRange: [0, 1], yRange: [0, 1], curves: [{ expr: 'x', continues: true }] } }, /curves\[0\]\.continues/);
+});
+
+test('function_graph: a curve that stops inside the plot ends in a marker — filled unless the spec says open', () => {
+  const g = (curves: unknown[], extra: Record<string, unknown> = {}) => svgOf('function_graph', { xRange: [-4, 6], yRange: [-4, 10], curves, ...extra });
+  // No flags: both ends are inside the plot ⇒ two filled dots.
+  assert.deepEqual(dots(g([{ expr: '(x - 2)^2 - 1', domain: [-1, 5] }])).map((d) => d.fill), ['#1d4ed8', '#1d4ed8']);
+  // Flags still decide; 'none' is the explicit opt-out.
+  assert.deepEqual(dots(g([{ expr: 'x', domain: [-1, 5], from: 'open', to: 'none' }])).map((d) => d.fill), ['#ffffff']);
+  throwsSpec({ type: 'function_graph', params: { xRange: [0, 4], yRange: [0, 4], curves: [{ expr: 'x', domain: [1, 2], to: 'half' }] } }, /'open', 'closed' or 'none'/);
+  // The curve simply leaves the plot: through the side (domain end on / past xRange), or through top or bottom.
+  assert.equal(dots(g([{ expr: 'x', domain: [-4, 6] }])).length, 0);
+  assert.equal(dots(g([{ expr: 'x', domain: [-9, null] }])).length, 0);
+  assert.equal(dots(g([{ expr: 'x^3 - 3*x', domain: [-3, 3] }])).length, 0, 'y(±3) = ±18 is off the plot');
+  assert.equal(dots(g([{ expr: 'x' }])).length, 0);
+  // Pieces of one function that meet: no dot at the join (it would mark the corner), dots at the outer ends.
+  const joined = dots(g([{ expr: 'x + 1', domain: [-2, 1], label: 'f' }, { expr: '3 - x', domain: [1, 4] }]));
+  assert.equal(joined.length, 2);
+  // …but a jump gets both of its ends.
+  assert.equal(dots(g([{ expr: 'x + 1', domain: [-2, 1], label: 'f' }, { expr: '6 - x', domain: [1, 4] }])).length, 4);
+  // The mark sits exactly on the end of the drawn curve.
+  const svg = g([{ expr: '2', domain: [0, 3] }]);
+  const d = /<path d="M([\d.]+),([\d.]+)[^"]*L([\d.]+),([\d.]+)" fill="none" stroke="#1d4ed8"/.exec(svg);
+  assert.ok(d);
+  assert.deepEqual(dots(svg).map((c) => [c.cx, c.cy]), [[Number(d[1]), Number(d[2])], [Number(d[3]), Number(d[4])]]);
+});
+
+test('points and dots are drawn last, unclipped, each on a thin white ring — a point on an axis or the border reads whole', () => {
+  const fg = svgOf('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: [{ expr: 'x' }], points: [{ x: 0, y: 0, label: 'O' }, { x: 3, y: 0, open: true }] });
+  const clipEnd = fg.lastIndexOf('</g>');
+  const fd = dots(fg);
+  assert.equal(fd.length, 2);
+  assert.ok(fd.every((d) => d.at > clipEnd), 'after the clipped curves');
+  assert.ok(fd.every((d) => d.at > fg.lastIndexOf('stroke-width="1.4"/>')), 'after the axes');
+  for (const d of fd) {
+    const halo = new RegExp(`<circle cx="${d.cx}" cy="${d.cy}" r="([\\d.]+)" fill="#ffffff"/>`).exec(fg);
+    assert.ok(halo && Number(halo[1]) >= 5.5 && (halo.index as number) < d.at, 'a white disc under the mark');
+  }
+  // Motion-graph vertices at the plot corner used to be cut to a quarter by the clip path.
+  const mg = svgOf('motion_graph', { showPoints: true, series: [{ points: [[0, 0], [2, 8], [5, 8], [8, 0]] }], tRange: [0, 8], yRange: [0, 10] });
+  const md = [...mg.matchAll(/<circle cx="[\d.]+" cy="[\d.]+" r="[\d.]+" fill="#1d4ed8" stroke="#ffffff" stroke-width="1.2"\/>/g)];
+  assert.equal(md.length, 4);
+  assert.ok(md.every((m) => (m.index as number) > mg.lastIndexOf('</g>')), 'outside the clip group');
+  const sc = svgOf('scatter_plot', { points: [[0, 0], [1, 2]], xRange: [0, 2], yRange: [0, 4] });
+  assert.equal([...sc.matchAll(/<circle [^>]*stroke="#ffffff" stroke-width="1.2"\/>/g)].length, 2);
+});
+
+test('motion_graph: vertexDots draws a series without its corner dots (default unchanged); a line that stops inside the plot ends in a dot', () => {
+  const series = { points: [[1, 0], [3, 8], [6, 8], [8, 2]] };
+  const count = (params: Record<string, unknown>) => [...svgOf('motion_graph', { tRange: [0, 10], yRange: [0, 10], ...params }).matchAll(/<circle [^>]*fill="#1d4ed8"/g)].length;
+  assert.equal(count({ showPoints: true, series: [series] }), 4, 'default with showPoints: every vertex');
+  assert.equal(count({ showPoints: true, series: [{ ...series, vertexDots: 'ends' }] }), 2, 'the two ends only — the corners are not given away');
+  assert.equal(count({ showPoints: true, series: [{ ...series, vertexDots: 'none' }] }), 0);
+  assert.equal(count({ series: [{ ...series, vertexDots: 'all' }] }), 4, 'per series, without the figure-wide switch');
+  assert.equal(count({ series: [series] }), 2, 'no showPoints: the ends are inside the plot, so they are marked');
+  assert.equal(count({ series: [{ points: [[0, 0], [10, 10]] }] }), 0, 'a line that runs border to border has no marks');
+  throwsSpec({ type: 'motion_graph', params: { series: [{ ...series, vertexDots: 'some' }] } }, /vertexDots must be 'all', 'ends' or 'none'/);
+  // Several series: a pattern each, repeated in the legend.
+  const two = svgOf('motion_graph', { series: [{ label: 'Car A', points: [[0, 24], [12, -12]] }, { label: 'Car B', points: [[0, -6], [12, 18]] }] });
+  assert.deepEqual(curvePaths(two).map((c) => c.dash), ['', SERIES_DASHES[1]]);
+  assert.deepEqual(legendLines(two), curvePaths(two));
+});
+
+test('reaction_coordinate and scatter_plot: several curves / series are told apart without colour', () => {
+  const rc = svgOf('reaction_coordinate', { productsEnergy: -40, activationEnergies: [60, 35], curveLabels: ['without catalyst', 'with catalyst'] });
+  assert.deepEqual(curvePaths(rc).map((c) => c.dash), ['', SERIES_DASHES[1]]);
+  assert.deepEqual(legendLines(rc), curvePaths(rc));
+  assert.deepEqual(curvePaths(svgOf('reaction_coordinate', { productsEnergy: -40, activationEnergies: [60] })).map((c) => c.dash), ['']);
+  const sc = svgOf('scatter_plot', { points: [{ x: 1, y: 1, series: 'a' }, { x: 2, y: 2, series: 'a' }, { x: 2, y: 1, series: 'b' }, { x: 3, y: 3, series: 'c' }] });
+  assert.equal([...sc.matchAll(/<circle [^>]*fill="#1d4ed8"/g)].length, 3, 'series a: two circles + its legend dot');
+  assert.equal([...sc.matchAll(/<path d="M[^"]+z" fill="#c2410c"/g)].length, 2, 'series b: a square + its legend mark');
+  assert.equal([...sc.matchAll(/<path d="M[^"]+z" fill="#0f766e"/g)].length, 2, 'series c: a triangle + its legend mark');
+  // One series (or none named) is plain circles, as before.
+  assert.ok(!/<path d="M[^"]+z" fill=/.test(svgOf('scatter_plot', { points: [[1, 1], [2, 2]] })));
+});
+
+test('function_graph: ticks at multiples of π are labelled −π, −π/2, 0, π/2, π … only when the spec asks', () => {
+  assert.deepEqual([-4, -3, -1, 0, 1, 2, 3, 4, 6].map((k) => piTickText(k, 2)), ['−2π', '−3π/2', '−π/2', '0', 'π/2', 'π', '3π/2', '2π', '3π']);
+  assert.deepEqual([1, 2, 3, 4].map((k) => piTickText(k, 6)), ['π/6', 'π/3', 'π/2', '2π/3']);
+  const base = { xRange: [-6.5, 6.5], yRange: [-4, 4], curves: [{ expr: '3*cos(x)' }] };
+  const t = texts(svgOf('function_graph', { ...base, xTickUnit: 'pi', xTickDivisor: 2 }));
+  for (const label of ['−2π', '−3π/2', '−π', '−π/2', '0', 'π/2', 'π', '3π/2', '2π', '−4', '4']) assert.ok(t.includes(label), `${label} in ${t.join(' ')}`);
+  assert.ok(!t.some((s) => /\d\.\d/.test(s)), 'no decimals');
+  // The gridline under "π" is at x = π.
+  const svg = svgOf('function_graph', { ...base, xTickUnit: 'pi' });
+  const plot = plotRect(svg);
+  const piX = Number(/<text x="([\d.]+)"[^>]*>π<\/text>/.exec(svg)?.[1]);
+  assert.ok(Math.abs(piX - (plot.x + ((Math.PI + 6.5) / 13) * plot.w)) < 0.02);
+  assert.deepEqual(texts(svg).filter((s) => s.includes('π')), ['−2π', '−π', 'π', '2π']);
+  // Unchanged without the option — a 1.57 step is still labelled as numbers.
+  assert.ok(texts(svgOf('function_graph', { ...base, xStep: 1.57 })).includes('1.57'));
+  assert.ok(texts(svgOf('function_graph', { xRange: [-1, 1], yRange: [-4, 4], curves: [{ expr: 'x' }], yTickUnit: 'pi' })).includes('−π'));
+  throwsSpec({ type: 'function_graph', params: { ...base, xTickUnit: 'tau' } }, /xTickUnit must be 'pi'/);
+  throwsSpec({ type: 'function_graph', params: { ...base, xTickUnit: 'pi', xStep: 1 } }, /xStep or xTickUnit, not both/);
+  throwsSpec({ type: 'function_graph', params: { ...base, xTickUnit: 'pi', xTickDivisor: 2.5 } }, /xTickDivisor must be a whole number/);
+});
+
+test('slope_field: every segment lies wholly inside the plot, above the axes, and neighbours never touch', () => {
+  for (const params of [
+    { expr: 'x - y', xRange: [-4, 4], yRange: [-4, 4] },
+    { expr: '-x/y', xRange: [-4, 4], yRange: [-4, 4] },
+    { expr: '2*y*(1 - y/3)', xRange: [0, 8], yRange: [-1, 4], gridStep: [0.5, 0.5] },
+    { expr: 'y', xRange: [0, 29], yRange: [0, 29], gridStep: 1 },
+    { samples: [[0, 0, 1], [1, 0, 0], [0, 1, -1], [1, 1, 5]], xRange: [0, 1], yRange: [0, 1] },
+  ]) {
+    const svg = svgOf('slope_field', params);
+    const plot = plotRect(svg);
+    const m = /<path d="((?:M[-\d.]+,[-\d.]+L[-\d.]+,[-\d.]+)+)" fill="none" stroke="#1d4ed8" stroke-width="([\d.]+)" stroke-linecap="round"\/>/.exec(svg);
+    assert.ok(m, 'the segments');
+    const sw = Number(m[2]);
+    const segs = (m[1].match(/M[^M]+/g) ?? []).map((sg) => (/M([-\d.]+),([-\d.]+)L([-\d.]+),([-\d.]+)/.exec(sg) as RegExpExecArray).slice(1).map(Number));
+    assert.ok(segs.length >= 3);
+    for (const [ax, ay, bx, by] of segs) {
+      for (const [px, py] of [[ax, ay], [bx, by]]) {
+        assert.ok(px - sw / 2 >= plot.x && px + sw / 2 <= plot.x + plot.w && py - sw / 2 >= plot.y && py + sw / 2 <= plot.y + plot.h, `(${px}, ${py}) inside ${JSON.stringify(plot)}`);
+      }
+    }
+    // Centres are a cell apart; a segment and its round caps are shorter than the cell by a clear gap.
+    const centres = segs.map(([ax, ay, bx, by]) => [(ax + bx) / 2, (ay + by) / 2]);
+    let cell = Infinity;
+    for (let i = 0; i < centres.length; i++) for (let j = i + 1; j < centres.length; j++) cell = Math.min(cell, Math.hypot(centres[i][0] - centres[j][0], centres[i][1] - centres[j][1]));
+    const longest = Math.max(...segs.map(([ax, ay, bx, by]) => Math.hypot(bx - ax, by - ay)));
+    assert.ok(longest + sw <= cell - 1.5, `segment ${longest.toFixed(1)} + cap ${sw} in a ${cell.toFixed(1)} cell`);
+    // Drawn after the grid and the axes, on a white under-stroke.
+    assert.ok((m.index as number) > svg.lastIndexOf(`stroke="#111827" stroke-width="1.1"/>`) || !svg.includes('stroke="#111827" stroke-width="1.1"/>'));
+    assert.ok(new RegExp(`<path d="${m[1].replace(/[.]/g, '\\.')}" fill="none" stroke="#ffffff"`).test(svg.slice(0, m.index)), 'white under-stroke first');
+  }
+  // The lattice is where the spec put it — the plot grows by half a cell instead.
+  const t = texts(svgOf('slope_field', { expr: 'x - y', xRange: [-4, 4], yRange: [-4, 4] }));
+  for (const label of ['−4', '0', '4']) assert.ok(t.includes(label));
+});
+
+test('checkFigureLegibility: reports, never redraws', () => {
+  const codes = (type: string, params: Record<string, unknown>) => checkFigureLegibility({ type, params }).map((w) => w.code);
+  assert.deepEqual(codes('function_graph', { xRange: [-4, 4], yRange: [-4, 6], curves: [{ expr: 'x^2 - 2', label: 'f' }], points: [{ x: 2, y: 2, label: 'P' }] }), []);
+  // A curve the y-range cuts down to a stub.
+  assert.deepEqual(codes('function_graph', { xRange: [-10, 10], yRange: [0, 4], curves: [{ expr: 'x^2 * 30' }] }), ['curve_barely_visible']);
+  // One branch of several reduced to a stub while the rest shows.
+  assert.ok(codes('function_graph', { xRange: [-6, 6], yRange: [-0.5, 12], curves: [{ expr: '1/(x - 5.8)' }] }).includes('branch_stub'));
+  // A marked point, an endpoint mark and a series vertex on the border.
+  assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: [{ expr: 'x' }], points: [{ x: 3, y: 1 }] }), ['feature_on_border']);
+  assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [0, 3], curves: [{ expr: 'x', domain: [0, 2] }] }), ['feature_on_border']);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 0], [4, 8]] }], tRange: [0, 6], yRange: [0, 10] }), ['feature_on_border']);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[1, 1], [4, 8]] }], tRange: [0, 6], yRange: [0, 10] }), []);
+  // Two labels on top of each other.
+  assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [-3, 3], points: [{ x: 1, y: 1, label: 'first' }, { x: 1.05, y: 1.05, label: 'second' }] }), ['labels_overlap']);
+  // More than four curves (pieces of one function count once).
+  const five = ['x', 'x + 1', 'x + 2', 'x - 1', 'x - 2'].map((expr) => ({ expr }));
+  assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: five }), ['too_many_curves']);
+  assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: five.slice(0, 4) }), []);
+  // Each warning says what and where; a spec that cannot be drawn is one warning, not a throw.
+  const w = checkFigureLegibility({ type: 'function_graph', params: { xRange: [-3, 3], yRange: [-3, 3], curves: [{ expr: 'x' }], points: [{ x: 3, y: 1, label: 'Q' }] } });
+  assert.match(w[0].message, /points\[0\].*border/);
+  assert.deepEqual(codes('pie_chart', {}), ['not_renderable']);
+  // Reporting changes nothing about the picture.
+  const spec = FIGURE_FIXTURES[0].spec;
+  const before = renderPracticeFigure(spec).svg;
+  checkFigureLegibility(spec);
+  assert.equal(renderPracticeFigure(spec).svg, before);
+  for (const fx of FIGURE_FIXTURES) assert.ok(Array.isArray(checkFigureLegibility(fx.spec)), fx.id);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

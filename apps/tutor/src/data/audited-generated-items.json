@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-10-09",
-  "source": "audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read) + figure items 2026-10-09 (50: visual read)",
+  "source": "audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read) + figure items 2026-10-09 (49: visual read)",
   "items": {
     "practice-gen.alg1.order-of-operations.16tvmi1": "AUDITED",
     "practice-gen.alg1.order-of-operations.17qac6i": "AUDITED",
@@ -568,7 +568,6 @@
     "practice-gen.gen-7120b2e6-6d44-4830-b3c9-17911a809550.lo-1.1a1fjpo": "AUDITED",
     "practice-gen.gen-7120b2e6-6d44-4830-b3c9-17911a809550.lo-1.n6s4ko": "AUDITED",
     "practice-gen.gen-7120b2e6-6d44-4830-b3c9-17911a809550.lo-3.13nk645": "AUDITED",
-    "practice-gen.gen-7120b2e6-6d44-4830-b3c9-17911a809550.lo-4.1xg0cwq": "AUDITED",
     "practice-gen.gen-728bb0d5-c2db-4171-801a-09dfb2ce86ca.lo-1.qdukh8": "AUDITED",
     "practice-gen.gen-728bb0d5-c2db-4171-801a-09dfb2ce86ca.lo-1.spj6kk": "AUDITED",
     "practice-gen.gen-72a1e803-03a4-425b-844a-327115bacd27.lo-1.1cxaxv7": "AUDITED",

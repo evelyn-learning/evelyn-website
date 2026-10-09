@@ -91,6 +91,120 @@ export const FIGURE_FIXTURES: FigureFixture[] = [
       },
     },
   },
+  // --- legibility round, 2026-10-09 (one per fix) -----------------------------
+  {
+    id: 'fix1-four-curves-dashes',
+    note: 'FIX 1 — four curves: a dash pattern each as well as a colour, repeated in the legend; the asymptote stays a thin grey guide',
+    question: 'Four graphs A, B, C and D are shown. Which one is the graph of y = |x − 2|?',
+    alt: 'Four curves labelled A to D on a grid from −4 to 4 on x and −6 to 6 on y: a rising straight line, a downward parabola, a V shape and an S-shaped cubic, with a dashed horizontal guide line near the bottom.',
+    spec: {
+      type: 'function_graph',
+      params: {
+        xRange: [-4, 4], yRange: [-6, 6],
+        curves: [{ expr: 'x/2 + 1', label: 'A' }, { expr: '3 - (x - 1)^2', label: 'B' }, { expr: 'abs(x - 2)', label: 'C' }, { expr: 'x^3 - 3*x', label: 'D' }],
+        asymptotes: [{ y: -5, label: 'y = −5' }],
+      },
+    },
+  },
+  {
+    id: 'fix1-one-function-in-pieces',
+    note: 'FIX 1 — g is ONE function with a jump and a hole: both branches in one colour and dash, one legend entry; k is the second curve',
+    question: 'The graphs of g and k are shown. For which x is g discontinuous?',
+    alt: 'A piecewise curve g in three pieces — a rising segment ending in a filled dot, a lower segment starting at an open circle and ending at an open circle, and a further piece — together with a falling straight line k.',
+    spec: {
+      type: 'function_graph',
+      params: {
+        xRange: [-5, 5], yRange: [-5, 5],
+        curves: [
+          { expr: 'x + 2', domain: [-5, -1], to: 'closed', label: 'g' },
+          { expr: 'x - 2', domain: [-1, 2], from: 'open', to: 'open' },
+          { expr: 'x - 2', domain: [2, 5], from: 'open' },
+          { expr: '-x/2 + 3', label: 'k' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'fix2-ends-inside-plot',
+    note: 'FIX 2 — domains that stop inside the plot: unflagged ends get a filled dot, an excluded end an open circle; the cubic leaves through top and bottom and gets none',
+    question: 'The graph of P is drawn for −1 ≤ x ≤ 5. What is the greatest value of P on this interval?',
+    alt: 'A parabola P drawn only from x = −1 to x = 5 with a filled dot at each end, a short segment Q from a filled dot to an open circle, and a steep cubic R that runs off the top and bottom of the grid.',
+    spec: {
+      type: 'function_graph',
+      params: {
+        xRange: [-3, 7], yRange: [-4, 9],
+        curves: [
+          { expr: '(x - 2)^2 - 1', domain: [-1, 5], label: 'P' },
+          { expr: '-x/2 - 2', domain: [-2, 2], to: 'open', label: 'Q' },
+          { expr: '(x - 5)^3 + 2', domain: [3, 7], label: 'R' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'fix3-points-on-axes',
+    note: 'FIX 3 — points at the origin, on both axes, on a gridline crossing and on the border: drawn on top, each on a white ring',
+    question: 'Which labelled point is the y-intercept of the line?',
+    alt: 'A straight line on a grid from −4 to 4 with five marked points: at the origin, on the x-axis, on the y-axis, on the line, and an open circle on the right border.',
+    spec: {
+      type: 'function_graph',
+      params: {
+        xRange: [-4, 4], yRange: [-4, 4],
+        curves: [{ expr: 'x/2 + 2' }],
+        points: [{ x: 0, y: 0, label: 'O' }, { x: -4, y: 0, label: 'A' }, { x: 0, y: 2, label: 'B' }, { x: 2, y: 3, label: 'C' }, { x: 4, y: -2, open: true, label: 'D' }, { x: 3, y: 0 }],
+      },
+    },
+  },
+  {
+    id: 'fix3-motion-vertices-on-border',
+    note: 'FIX 3 — vertex dots at the plot corner and on the time axis used to be cut by the clip path',
+    question: 'The force–time graph of a push is shown. What is the impulse delivered between t = 0 and t = 8 s?',
+    alt: 'A force–time graph that rises from zero to 100 N in 2 s, holds until 6 s and falls back to zero at 8 s, with a dot at each corner.',
+    spec: {
+      type: 'motion_graph',
+      params: { series: [{ points: [[0, 0], [2, 100], [6, 100], [8, 0]] }], showPoints: true, tRange: [0, 10], yRange: [0, 140], tStep: 2, yStep: 20, yLabel: 'Force (N)' },
+    },
+  },
+  {
+    id: 'fix4-corner-without-dots',
+    note: 'FIX 4 — vertexDots: "ends" on the first series (its corners are what the question asks for); the second series keeps its dots',
+    question: 'The velocity–time graph shows a cyclist and a jogger. At what time does the cyclist stop accelerating?',
+    alt: 'A velocity–time graph with two lines: the cyclist speeds up, then holds a steady speed, then slows; the jogger moves at one steady lower speed, with a dot at each end.',
+    spec: {
+      type: 'motion_graph',
+      params: {
+        quantity: 'velocity', showPoints: true, tRange: [0, 12], yRange: [0, 12],
+        series: [
+          { label: 'cyclist', points: [[1, 2], [4, 10], [8, 10], [11, 4]], vertexDots: 'ends' },
+          { label: 'jogger', points: [[1, 4], [6, 4], [11, 4.5]] },
+        ],
+      },
+    },
+  },
+  {
+    id: 'fix5-pi-ticks',
+    note: 'FIX 5 — xTickUnit: "pi", xTickDivisor: 2 — the axis reads −2π … 2π in halves of π, not 1.57, 3.14',
+    question: 'The graph of y = 3 cos(x) is shown. What is its period?',
+    alt: 'A cosine wave of amplitude 3 on an x-axis marked in multiples of π over 2 from −2π to 2π.',
+    spec: {
+      type: 'function_graph',
+      params: { xRange: [-6.6, 6.6], yRange: [-4, 4], yStep: 1, xTickUnit: 'pi', xTickDivisor: 2, curves: [{ expr: '3*cos(x)', label: 'P' }, { expr: 'sin(2*x)', label: 'Q' }] },
+    },
+  },
+  {
+    id: 'fix6-legibility-warnings',
+    note: 'FIX 6 — drawn as specified, but checkFigureLegibility reports it: a branch cut to a stub, a point on the border, two labels overlapping',
+    question: '(authoring check only — this figure should be sent back)',
+    alt: 'A rational function with a branch that barely enters the plot at the right edge, and two labelled points almost on top of each other.',
+    spec: {
+      type: 'function_graph',
+      params: {
+        xRange: [-6, 6], yRange: [-0.5, 12],
+        curves: [{ expr: '1/(x - 5.8) + 1', label: 'f' }],
+        points: [{ x: -6, y: 4, label: 'edge' }, { x: 1, y: 6, label: 'first' }, { x: 1.1, y: 6.2, label: 'second' }],
+      },
+    },
+  },
   // --- motion_graph ---------------------------------------------------------
   {
     id: 'motion-position-piecewise',
@@ -325,6 +439,13 @@ export const FIGURE_FIXTURES: FigureFixture[] = [
       type: 'slope_field',
       params: { expr: '2*y*(1 - y/3)', xRange: [0, 8], yRange: [-1, 4], gridStep: [0.5, 0.5], yStep: 1, xLabel: 't' },
     },
+  },
+  {
+    id: 'fix7-slope-field-on-axes',
+    note: 'FIX 7 — dy/dx = y: flat segments along the x-axis and steep ones at the top and bottom rows; all inside the plot, none lost under an axis',
+    question: 'The slope field for dy/dx = y is shown with the solution through (0, 1). What happens to the solution as x decreases?',
+    alt: 'A slope field on a grid from −3 to 3 in both directions whose segments are flat along the x-axis and steepen away from it, with one rising solution curve through the point (0, 1).',
+    spec: { type: 'slope_field', params: { expr: 'y', xRange: [-3, 3], yRange: [-3, 3], gridStep: 0.5, solutionThrough: [0, 1] } },
   },
   // --- free_body_diagram ----------------------------------------------------
   {

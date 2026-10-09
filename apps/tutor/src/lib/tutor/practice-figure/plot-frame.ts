@@ -26,10 +26,69 @@ const GRID_MAJOR = '#cbd5e1';
 const GRID_MINOR = '#e9eef4';
 const FRAME = '#94a3b8';
 
-/** Series colours: dark enough on white at a 2-unit stroke, and still
- *  distinct for the common colour-vision deficiencies (blue / vermilion /
- *  green / purple / amber-brown). A legend names every series as well. */
-export const SERIES_COLORS = ['#1d4ed8', '#c2410c', '#15803d', '#7e22ce', '#92400e', '#0e7490'] as const;
+/** Series colours: blue / vermilion / bluish green / raspberry / plum /
+ *  tan. Each is at least 4.5 : 1 on white, and every pair stays apart
+ *  (CIELAB ΔE ≥ 16) under simulated deuteranopia, protanopia and tritanopia —
+ *  the old green / purple pair collapsed onto vermilion / blue there. Colour
+ *  is never the only cue: see `SERIES_DASHES` and the legend. */
+export const SERIES_COLORS = ['#1d4ed8', '#c2410c', '#0f766e', '#9d174d', '#772288', '#996644'] as const;
+
+/** Stroke patterns for the 1st, 2nd, … curve of a figure that has MORE THAN
+ *  ONE (a lone curve is solid): solid, dashed, dash-dot, dotted, long-dash,
+ *  dash-dot-dot. Written for a ≈ 2.2-unit stroke with ROUND caps — a cap adds
+ *  half the stroke width to each end, so "0.1" is a round dot and every gap
+ *  here still shows ≈ 2.5 units of white at 340 px. None of them is the thin
+ *  grey long-dash an asymptote is drawn with (`GUIDE_DASH`). */
+export const SERIES_DASHES = ['', '6 5', '9 5 0.1 5', '0.1 4.6', '14 5', '9 5 0.1 5 0.1 5'] as const;
+/** Asymptotes and other guide lines: thin, grey, long-dashed, butt caps. */
+export const GUIDE_COLOR = '#6b7280';
+export const GUIDE_DASH = '10 4';
+export const GUIDE_WIDTH = 1;
+
+/** One stroke pattern per curve. A lone curve is solid ("7 4" when the spec
+ *  says `dashed`). With several, the curves the spec marks `dashed` take the
+ *  broken patterns first, in order; the rest take what is left starting with
+ *  solid — so "A solid, B dashed" in a question stays true. */
+export function assignDashes(dashedFlags: boolean[]): string[] {
+  if (dashedFlags.length <= 1) return dashedFlags.map((d) => (d ? '7 4' : ''));
+  const n = SERIES_DASHES.length;
+  const out: string[] = new Array(dashedFlags.length).fill('');
+  const free = SERIES_DASHES.map((_, i) => i);
+  dashedFlags.forEach((d, i) => {
+    if (!d) return;
+    const k = free.findIndex((j) => j > 0);
+    out[i] = SERIES_DASHES[k >= 0 ? free.splice(k, 1)[0] : 1 + (i % (n - 1))];
+  });
+  dashedFlags.forEach((d, i) => {
+    if (d) return;
+    out[i] = SERIES_DASHES[free.length > 0 ? (free.shift() as number) : i % n];
+  });
+  return out;
+}
+
+/** ` stroke-dasharray="…"`, or nothing for a solid line. */
+export function dashAttr(dash: string | undefined): string {
+  return dash ? ` stroke-dasharray="${dash}"` : '';
+}
+
+/** Marker shapes for the 1st, 2nd, … point series of a scatter plot. */
+export const SERIES_SHAPES = ['circle', 'square', 'triangle', 'diamond', 'triangle-down', 'ring'] as const;
+export type SeriesShape = (typeof SERIES_SHAPES)[number];
+
+/** A data marker centred on (cx, cy) with a thin white ring, so it reads on
+ *  a gridline or an axis. `r` is the circle's radius; the other shapes are
+ *  sized to the same visual weight. */
+export function shapeMark(shape: SeriesShape, cx: number, cy: number, r: number, color: string): string {
+  const ring = 'stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"';
+  switch (shape) {
+    case 'square': { const h = r * 0.9; return `<path d="M${n2(cx - h)},${n2(cy - h)}h${n2(2 * h)}v${n2(2 * h)}h${n2(-2 * h)}z" fill="${color}" ${ring}/>`; }
+    case 'triangle': { const h = r * 1.25; return `<path d="M${n2(cx)},${n2(cy - h)}L${n2(cx + h)},${n2(cy + h * 0.8)}L${n2(cx - h)},${n2(cy + h * 0.8)}z" fill="${color}" ${ring}/>`; }
+    case 'triangle-down': { const h = r * 1.25; return `<path d="M${n2(cx)},${n2(cy + h)}L${n2(cx + h)},${n2(cy - h * 0.8)}L${n2(cx - h)},${n2(cy - h * 0.8)}z" fill="${color}" ${ring}/>`; }
+    case 'diamond': { const h = r * 1.3; return `<path d="M${n2(cx)},${n2(cy - h)}L${n2(cx + h)},${n2(cy)}L${n2(cx)},${n2(cy + h)}L${n2(cx - h)},${n2(cy)}z" fill="${color}" ${ring}/>`; }
+    case 'ring': return `<circle cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r + 1.4)}" fill="#ffffff"/><circle cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r - 0.4)}" fill="#ffffff" stroke="${color}" stroke-width="1.8"/>`;
+    default: return `<circle cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r)}" fill="${color}" stroke="#ffffff" stroke-width="1.2"/>`;
+  }
+}
 
 export const TICK_FS = 11;
 export const LABEL_FS = 12;
@@ -127,6 +186,17 @@ export function tickTexts(values: number[], step: number): string[] {
   return values.map((v) => tickText(v, unit));
 }
 
+/** A multiple of π as plain Unicode: `k` steps of π ÷ `divisor` →
+ *  "−π", "−π/2", "0", "π/2", "π", "3π/2", "2π". */
+export function piTickText(k: number, divisor: number): string {
+  if (k === 0) return '0';
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+  const g = gcd(Math.abs(k), divisor);
+  const num = Math.abs(k) / g;
+  const den = divisor / g;
+  return `${k < 0 ? '−' : ''}${num === 1 ? '' : num}π${den === 1 ? '' : `/${den}`}`;
+}
+
 /** Round [lo, hi] outward to multiples of a nice step — an axis that starts
  *  and ends on a numbered gridline. */
 export function niceBounds(lo: number, hi: number, maxTicks: number): { min: number; max: number; step: number } {
@@ -154,6 +224,10 @@ export interface FrameOptions {
    *  have room at this size (about one per 34 units across, 20 down). */
   xStep?: number;
   yStep?: number;
+  /** Ticks at multiples of π ÷ this whole number, labelled "π/2", "π", …
+   *  (a trigonometric axis). Takes the place of that axis's step. */
+  xPiDivisor?: number;
+  yPiDivisor?: number;
   /** Use one step for both axes when neither is given (function graphs:
    *  with equal scales the grid is then made of true squares). */
   commonStep?: boolean;
@@ -175,6 +249,8 @@ export interface FrameOptions {
   minLeft?: number;
   /** Heavy lines along x = 0 / y = 0 when they are in range (default true). */
   zeroAxes?: boolean;
+  /** Stroke width of those lines (default 1.4). */
+  axisWidth?: number;
 }
 
 export interface Frame {
@@ -201,11 +277,16 @@ export function buildFrame(o: FrameOptions): Frame {
   // The plot is about (W − 60) wide before the margins are known exactly.
   const roughPlotW = W - 60;
   const roughPlotH = roughPlotW * aspect;
-  let xStep = o.xStep && o.xStep > 0 ? o.xStep : niceStep(x1 - x0, Math.max(2, Math.floor(roughPlotW / 34)));
-  let yStep = o.yStep && o.yStep > 0 ? o.yStep : niceStep(y1 - y0, Math.max(2, Math.floor(roughPlotH / 20)));
-  if (o.commonStep && !o.xStep && !o.yStep) xStep = yStep = Math.max(xStep, yStep);
+  const xPi = o.xPiDivisor && o.xPiDivisor > 0 ? Math.round(o.xPiDivisor) : 0;
+  const yPi = o.yPiDivisor && o.yPiDivisor > 0 ? Math.round(o.yPiDivisor) : 0;
+  let xStep = xPi ? Math.PI / xPi : o.xStep && o.xStep > 0 ? o.xStep : niceStep(x1 - x0, Math.max(2, Math.floor(roughPlotW / 34)));
+  let yStep = yPi ? Math.PI / yPi : o.yStep && o.yStep > 0 ? o.yStep : niceStep(y1 - y0, Math.max(2, Math.floor(roughPlotH / 20)));
+  if (o.commonStep && !o.xStep && !o.yStep && !xPi && !yPi) xStep = yStep = Math.max(xStep, yStep);
+  /** The labels of the ticks shown on one axis. */
+  const labelsFor = (values: number[], step: number, pi: number): string[] =>
+    pi ? values.map((v) => piTickText(Math.round(v / step), pi)) : tickTexts(values, step);
   const yTicks = ticksBetween(y0, y1, yStep);
-  const yTexts = yTicks.map((t) => tickText(t, yStep));
+  const yTexts = yPi ? labelsFor(yTicks, yStep, yPi) : yTicks.map((t) => tickText(t, yStep));
   const yNumW = yNumbers ? Math.max(0, ...yTexts.map((t) => estWidth(t, TICK_FS))) : 0;
 
   const titleLines = o.title ? wrapText(o.title, W - 20, TITLE_FS) : [];
@@ -220,7 +301,7 @@ export function buildFrame(o: FrameOptions): Frame {
   const left = Math.max(o.minLeft ?? 0, 6 + (yLabelW > 0 ? yLabelW + 4 : 0) + (yNumW > 0 ? yNumW + 6 : 2));
 
   const xTicks = xNumbers ? ticksBetween(x0, x1, xStep) : [];
-  const xTexts = xTicks.map((t) => tickText(t, xStep));
+  const xTexts = xPi ? labelsFor(xTicks, xStep, xPi) : xTicks.map((t) => tickText(t, xStep));
   // Room on the right for half of the last x number.
   const lastXW = xTexts.length > 0 ? estWidth(xTexts[xTexts.length - 1], TICK_FS) : 0;
   const right = Math.max(12, Math.ceil(lastXW / 2) + 3);
@@ -253,8 +334,9 @@ export function buildFrame(o: FrameOptions): Frame {
   parts.push(`<rect x="${n2(plot.x)}" y="${n2(plot.y)}" width="${n2(plot.w)}" height="${n2(plot.h)}" fill="none" stroke="${FRAME}" stroke-width="1"/>`);
 
   if (o.zeroAxes !== false) {
-    if (y0 <= 0 && y1 >= 0) parts.push(`<line x1="${n2(plot.x)}" y1="${n2(Y(0))}" x2="${n2(plot.x + plot.w)}" y2="${n2(Y(0))}" stroke="${INK}" stroke-width="1.4"/>`);
-    if (xNumbers && x0 <= 0 && x1 >= 0) parts.push(`<line x1="${n2(X(0))}" y1="${n2(plot.y)}" x2="${n2(X(0))}" y2="${n2(plot.y + plot.h)}" stroke="${INK}" stroke-width="1.4"/>`);
+    const aw = n2(o.axisWidth && o.axisWidth > 0 ? o.axisWidth : 1.4);
+    if (y0 <= 0 && y1 >= 0) parts.push(`<line x1="${n2(plot.x)}" y1="${n2(Y(0))}" x2="${n2(plot.x + plot.w)}" y2="${n2(Y(0))}" stroke="${INK}" stroke-width="${aw}"/>`);
+    if (xNumbers && x0 <= 0 && x1 >= 0) parts.push(`<line x1="${n2(X(0))}" y1="${n2(plot.y)}" x2="${n2(X(0))}" y2="${n2(plot.y + plot.h)}" stroke="${INK}" stroke-width="${aw}"/>`);
   }
 
   // y numbers — thinned when the rows are closer than a line of type.
@@ -263,7 +345,7 @@ export function buildFrame(o: FrameOptions): Frame {
     const every = Math.max(1, Math.ceil((TICK_FS + 2) / rowPx));
     const anchor = anchorIndex(yTicks, every);
     const shown = yTicks.filter((_, i) => (i - anchor) % every === 0);
-    tickTexts(shown, yStep).forEach((text, k) => {
+    labelsFor(shown, yStep, yPi).forEach((text, k) => {
       parts.push(`<text x="${n2(plot.x - 5)}" y="${n2(Y(shown[k]) + TICK_FS * 0.36)}" font-size="${TICK_FS}" text-anchor="end" fill="${MUTED}">${esc(text)}</text>`);
     });
   }
@@ -275,7 +357,7 @@ export function buildFrame(o: FrameOptions): Frame {
     const every = Math.max(1, Math.ceil((widest + 5) / colPx));
     const anchor = anchorIndex(xTicks, every);
     const shown = xTicks.filter((_, i) => (i - anchor) % every === 0);
-    tickTexts(shown, xStep).forEach((text, k) => {
+    labelsFor(shown, xStep, xPi).forEach((text, k) => {
       parts.push(`<text x="${n2(X(shown[k]))}" y="${n2(plot.y + plot.h + TICK_FS + 3)}" font-size="${TICK_FS}" text-anchor="middle" fill="${MUTED}">${esc(text)}</text>`);
     });
     below += TICK_FS + 6;
@@ -313,8 +395,12 @@ export interface LegendEntry {
   label: string;
   color: string;
   dashed?: boolean;
+  /** The curve's own stroke pattern (`SERIES_DASHES`), repeated in the swatch. */
+  dash?: string;
   /** 'line' (default) or 'dot' for point series. */
   mark?: 'line' | 'dot';
+  /** The marker of a point series (default a filled circle). */
+  shape?: SeriesShape;
 }
 
 /** A wrapping legend row block starting at `y`. Returns its SVG and height. */
@@ -322,18 +408,21 @@ export function buildLegend(entries: LegendEntry[], y: number, W: number = FIGUR
   if (entries.length === 0) return { svg: '', height: 0 };
   const parts: string[] = [];
   const rowH = TICK_FS + 7;
+  // A patterned swatch is long enough to show a whole repeat of its pattern.
+  const sw = entries.some((e) => e.mark !== 'dot' && e.dash) ? 34 : 18;
   let x = 10;
   let row = 0;
   for (const e of entries) {
-    const w = 22 + estWidth(e.label, TICK_FS) + 14;
+    const w = sw + 4 + estWidth(e.label, TICK_FS) + 14;
     if (x > 10 && x + w > W - 6) {
       x = 10;
       row++;
     }
     const cy = y + row * rowH + rowH / 2;
-    if (e.mark === 'dot') parts.push(`<circle cx="${n2(x + 9)}" cy="${n2(cy)}" r="3.4" fill="${e.color}"/>`);
-    else parts.push(`<line x1="${n2(x)}" y1="${n2(cy)}" x2="${n2(x + 18)}" y2="${n2(cy)}" stroke="${e.color}" stroke-width="2.4"${e.dashed ? ' stroke-dasharray="5 3"' : ''}/>`);
-    parts.push(`<text x="${n2(x + 22)}" y="${n2(cy + TICK_FS * 0.36)}" font-size="${TICK_FS}" fill="${INK}">${esc(e.label)}</text>`);
+    if (e.mark === 'dot') parts.push(e.shape && e.shape !== 'circle' ? shapeMark(e.shape, x + sw / 2, cy, 3.4, e.color) : `<circle cx="${n2(x + sw / 2)}" cy="${n2(cy)}" r="3.4" fill="${e.color}"/>`);
+    else if (e.dash) parts.push(`<line x1="${n2(x + 1.2)}" y1="${n2(cy)}" x2="${n2(x + sw - 1.2)}" y2="${n2(cy)}" stroke="${e.color}" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${e.dash}"/>`);
+    else parts.push(`<line x1="${n2(x)}" y1="${n2(cy)}" x2="${n2(x + sw)}" y2="${n2(cy)}" stroke="${e.color}" stroke-width="2.4"${e.dashed ? ' stroke-dasharray="5 3"' : ''}/>`);
+    parts.push(`<text x="${n2(x + sw + 4)}" y="${n2(cy + TICK_FS * 0.36)}" font-size="${TICK_FS}" fill="${INK}">${esc(e.label)}</text>`);
     x += w;
   }
   return { svg: parts.join(''), height: (row + 1) * rowH + 4 };

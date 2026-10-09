@@ -21,7 +21,11 @@
  * the board's own renderers through `renderToStaticMarkup`):
  *   - free_body_diagram: the board's FreeBodyDiagramRenderer, post-processed
  *     into a standalone SVG (`standaloneFromMarkup`). Its picture carries
- *     over intact.
+ *     over intact — including its label placement: with four or more forces
+ *     a label can sit away from its arrow (the board puts horizontal-arrow
+ *     labels over the shaft and then de-overlaps). That is NOT fixed here:
+ *     moving the board's labels from outside means re-deriving its geometry
+ *     from markup. Fix it in the board renderer, or redraw this kind here.
  *   - every axis-based kind: drawn HERE on the shared plot frame
  *     (plot-frame.ts). The board renderers were not usable for an item a
  *     student answers by reading the figure: the motion renderer smooths a
@@ -43,20 +47,46 @@
  *   { xRange: [min, max]; yRange: [min, max];
  *     curves: Array<{ expr: string;                 // in x — see expr.ts
  *                     domain?: [min | null, max | null];   // a piece
- *                     from?: 'open' | 'closed';     // endpoint mark at domain[0]
- *                     to?: 'open' | 'closed';       // endpoint mark at domain[1]
+ *                     from?: 'open' | 'closed' | 'none';   // endpoint mark at domain[0]
+ *                     to?: 'open' | 'closed' | 'none';     // endpoint mark at domain[1]
+ *                     continues?: boolean;          // a further piece of the curve before it
  *                     label?: string; color?: '#rrggbb'; dashed?: boolean }>;
  *     points?: Array<{ x: number; y: number; label?: string; open?: boolean }>;
  *     asymptotes?: Array<{ x: number; label?: string } | { y: number; label?: string }>;
- *     xStep?: number; yStep?: number; xLabel?: string ('x'); yLabel?: string ('y') }
+ *     xStep?: number; yStep?: number; xLabel?: string ('x'); yLabel?: string ('y');
+ *     xTickUnit?: 'pi'; xTickDivisor?: 1..12 (1);   // ticks at multiples of π ÷ divisor,
+ *     yTickUnit?: 'pi'; yTickDivisor?: 1..12 (1) }  //   labelled −π, −π/2, 0, π/2, π, 2π
+ *   End marks: an end of `domain` that lies INSIDE the plot is marked — a
+ *   filled dot for an included endpoint (`'closed'`, and the default when
+ *   the flag is left out), an open circle for an excluded one (`'open'`),
+ *   nothing for `'none'`. An unflagged end has no mark when the curve simply
+ *   leaves the plot there (the end is on or beyond xRange, or its y is
+ *   outside yRange), or when the next piece of the same function carries
+ *   straight on from it. Where a function stops being DEFINED (sqrt at 0)
+ *   without a `domain` saying so, nothing is marked — give the domain.
+ *   One function in pieces: an entry with no label, a non-overlapping
+ *   domain and no colour of its own (or the same colour) is a piece of the
+ *   curve before it — same colour, same dash, one legend entry.
+ *   `continues: true / false` says so outright.
+ *   Several curves: each gets a dash pattern as well as a colour (solid,
+ *   dashed, dash-dot, dotted, …), repeated in its legend swatch; curves
+ *   marked `dashed` take the broken patterns first. Asymptotes stay thin
+ *   grey long-dashed guides.
  *
  * motion_graph — position–time / velocity–time / acceleration–time
  *   { quantity?: 'position' | 'velocity' | 'acceleration';   // default 'position'
  *     series: Array<{ points: Array<[t, value] | { t: number; value: number }>;
+ *                     vertexDots?: 'all' | 'ends' | 'none';
  *                     label?: string; color?: string; dashed?: boolean }>;
  *     interpolation?: 'linear' | 'smooth';          // default 'linear' — corners stay corners
  *     showPoints?: boolean; tRange?: [min, max]; yRange?: [min, max];
  *     tStep?: number; yStep?: number; tLabel?: string ('Time (s)'); yLabel?: string }
+ *   Dots: `showPoints: true` puts a dot on every vertex of every series.
+ *   `vertexDots` overrides that for one series — `'ends'` marks only its
+ *   first and last point (use it when the question asks WHERE a corner is:
+ *   a dot on the corner gives the answer away), `'none'` marks nothing,
+ *   `'all'` marks every vertex. With neither, a line that stops inside the
+ *   plot still ends in a dot. Several series get a dash pattern each.
  *
  * bar_chart — categorical bars on a numbered axis
  *   { categories: string[]; values: number[];       // same length, 1–24
@@ -72,6 +102,8 @@
  *     xStep?: number; yStep?: number;
  *     trendLine?: boolean | { slope: number; intercept: number };   // true = least squares
  *     showEquation?: boolean (false) }
+ *   Several named series get a marker shape each (circle, square, triangle,
+ *   diamond, …) as well as a colour.
  *
  * reaction_coordinate — energy profile (the board tool's snake_case names are accepted too)
  *   { productsEnergy: number; reactantsEnergy?: number (0);
@@ -93,12 +125,20 @@
  *     xRange: [min, max]; yRange: [min, max];
  *     gridStep?: number | [xStep, yStep]; xStep?: number; yStep?: number   // numbered ticks
  *     solutionThrough?: [x, y] (needs expr); showExpression?: boolean (false) }
+ *   The lattice covers xRange × yRange exactly; the plot is drawn half a
+ *   cell larger on every side so no segment is cut by the border.
  *
  * free_body_diagram — the board tool's own input (FreeBodyDiagramProps)
  *   { object: { shape?: 'box' | 'circle' | 'person'; label?: string; mass?: string };
  *     surface?: { type: 'horizontal' | 'inclined' | 'vertical' | 'none'; angle?: number; friction?: boolean };
  *     forces: Array<{ name: string; magnitude?: string; direction: FbdDirection | number;
  *                     color?: string; scale?: number }> }
+ *
+ * Every marked point, endpoint and vertex dot is drawn LAST, unclipped, on a
+ * thin white ring — above the curves, the grid and the axes.
+ * `checkFigureLegibility(spec)` (legibility.ts) reports what a reader would
+ * trip over (a curve cut to a stub, a mark on the border, overlapping
+ * labels, more than four curves) without changing the picture.
  *
  * Deterministic: the same spec always gives the same string. Pure apart from
  * `renderToStaticMarkup` for the one board-rendered kind. Not imported by any
@@ -116,19 +156,26 @@ import { validateFigureSvg } from './svg-safety';
 import {
   FIGURE_FONT,
   FIGURE_WIDTH,
+  GUIDE_COLOR,
+  GUIDE_DASH,
+  GUIDE_WIDTH,
   INK,
   LABEL_FS,
   MUTED,
   SERIES_COLORS,
+  SERIES_SHAPES,
   TICK_FS,
   TITLE_FS,
+  assignDashes,
   buildFrame,
   buildLegend,
+  dashAttr,
   esc,
   estWidth,
   n2,
   niceBounds,
   niceStep,
+  shapeMark,
   svgDocument,
   ticksBetween,
   tickText,
@@ -241,11 +288,28 @@ function specUid(spec: PracticeFigureSpec): string {
   return `pf${h.toString(36)}`;
 }
 
+/**
+ * What a figure's layout came to, for `checkFigureLegibility` (legibility.ts)
+ * — collected while drawing so the report can never disagree with the
+ * picture. Canvas (viewBox) coordinates.
+ */
+export interface FigureFacts {
+  plot?: { x: number; y: number; w: number; h: number };
+  /** Distinct curves / line series; the pieces of one function count once. */
+  curveCount: number;
+  /** Every marked point, endpoint mark and series vertex, named by its param. */
+  marks: Array<{ what: string; cx: number; cy: number }>;
+  /** Per curve: the share of its domain that is inside the plot, and the
+   *  branches the y-range cuts down to a stub. */
+  curves: Array<{ what: string; visibleFraction: number; stubs: number }>;
+}
+
 interface Drawn {
   /** Everything inside the root, background excluded. */
   body: string;
   H: number;
   W?: number;
+  facts?: FigureFacts;
 }
 
 const HALO = 'stroke="#ffffff" stroke-width="3" paint-order="stroke" stroke-linejoin="round"';
@@ -372,8 +436,44 @@ export function sampleCurve(
   return pieces;
 }
 
+/** The white disc under a mark: a thin ring of clear paper round it, so a
+ *  point on a gridline, an axis or the plot border still reads as a point. */
+function markHalo(cx: number, cy: number, r = 5.9): string {
+  return `<circle cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(r)}" fill="#ffffff"/>`;
+}
+
 function endpointMark(x: number, y: number, kind: 'open' | 'closed', color: string, f: Frame): string {
   return `<circle cx="${n2(f.X(x))}" cy="${n2(f.Y(y))}" r="3.8" fill="${kind === 'open' ? '#ffffff' : color}" stroke="${color}" stroke-width="1.8"/>`;
+}
+
+/** `xTickUnit: 'pi'` (+ `xTickDivisor`) → the π divisor for the frame. */
+function piDivisor(r: Reader, axis: 'x' | 'y'): number | undefined {
+  const unit = r.p[`${axis}TickUnit`];
+  const div = r.p[`${axis}TickDivisor`];
+  if (unit === undefined || unit === null) {
+    if (div !== undefined && div !== null) r.fail(`${axis}TickDivisor needs ${axis}TickUnit: 'pi'`);
+    return undefined;
+  }
+  if (unit !== 'pi') r.fail(`${axis}TickUnit must be 'pi'`);
+  if (r.p[`${axis}Step`] !== undefined && r.p[`${axis}Step`] !== null) r.fail(`give ${axis}Step or ${axis}TickUnit, not both`);
+  const d = div === undefined || div === null ? 1 : r.num(div, `${axis}TickDivisor`);
+  if (!Number.isInteger(d) || d < 1 || d > 12) r.fail(`${axis}TickDivisor must be a whole number from 1 to 12`);
+  return d;
+}
+
+type EndFlag = 'open' | 'closed' | 'none' | undefined;
+
+interface CurvePiece {
+  fn: (x: number) => number;
+  /** The part of the domain inside xRange. */
+  a: number;
+  b: number;
+  /** The domain ends as the spec gave them. */
+  d0?: number;
+  d1?: number;
+  from: EndFlag;
+  to: EndFlag;
+  group: number;
 }
 
 function renderFunctionGraph(r: Reader, uid: string): Drawn {
@@ -391,6 +491,8 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
     yRange,
     xStep: r.optStep(p.xStep, 'xStep'),
     yStep: r.optStep(p.yStep, 'yStep'),
+    xPiDivisor: piDivisor(r, 'x'),
+    yPiDivisor: piDivisor(r, 'y'),
     xLabel: r.optStr(p.xLabel, 'xLabel') ?? 'x',
     yLabel: r.optStr(p.yLabel, 'yLabel') ?? 'y',
     title: r.optStr(p.title, 'title', 160),
@@ -401,22 +503,32 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
   const parts: string[] = [clipDef(uid, f), f.svg];
   const legend: LegendEntry[] = [];
   const clipped: string[] = [];
+  // Drawn last, unclipped, in this order: white discs, marks, then text.
+  const halos: string[] = [];
   const marks: string[] = [];
+  const labels: string[] = [];
+  const facts: FigureFacts = { plot: f.plot, curveCount: 0, marks: [], curves: [] };
 
   asymptotesIn.forEach((raw, i) => {
     const a = r.obj(raw, `asymptotes[${i}]`);
     const label = r.optStr(a.label, `asymptotes[${i}].label`, 24);
+    // A guide, not a curve: thin, grey, long-dashed — no curve pattern looks like it.
+    const stroke = `stroke="${GUIDE_COLOR}" stroke-width="${GUIDE_WIDTH}" stroke-dasharray="${GUIDE_DASH}"`;
     if (a.x !== undefined) {
       const x = r.num(a.x, `asymptotes[${i}].x`);
-      clipped.push(`<line x1="${n2(f.X(x))}" y1="${n2(f.plot.y)}" x2="${n2(f.X(x))}" y2="${n2(f.plot.y + f.plot.h)}" stroke="${MUTED}" stroke-width="1.3" stroke-dasharray="6 4"/>`);
-      if (label) marks.push(pointLabel(label, f.X(x) - 2, f.plot.y + TICK_FS + 12, f));
+      clipped.push(`<line x1="${n2(f.X(x))}" y1="${n2(f.plot.y)}" x2="${n2(f.X(x))}" y2="${n2(f.plot.y + f.plot.h)}" ${stroke}/>`);
+      if (label) labels.push(pointLabel(label, f.X(x) - 2, f.plot.y + TICK_FS + 12, f));
     } else if (a.y !== undefined) {
       const y = r.num(a.y, `asymptotes[${i}].y`);
-      clipped.push(`<line x1="${n2(f.plot.x)}" y1="${n2(f.Y(y))}" x2="${n2(f.plot.x + f.plot.w)}" y2="${n2(f.Y(y))}" stroke="${MUTED}" stroke-width="1.3" stroke-dasharray="6 4"/>`);
-      if (label) marks.push(`<text x="${n2(f.plot.x + f.plot.w - 4)}" y="${n2(f.Y(y) - 4)}" font-size="${TICK_FS}" font-weight="600" text-anchor="end" fill="${INK}" ${HALO}>${esc(label)}</text>`);
+      clipped.push(`<line x1="${n2(f.plot.x)}" y1="${n2(f.Y(y))}" x2="${n2(f.plot.x + f.plot.w)}" y2="${n2(f.Y(y))}" ${stroke}/>`);
+      if (label) labels.push(`<text x="${n2(f.plot.x + f.plot.w - 4)}" y="${n2(f.Y(y) - 4)}" font-size="${TICK_FS}" font-weight="600" text-anchor="end" fill="${INK}" ${HALO}>${esc(label)}</text>`);
     } else r.fail(`asymptotes[${i}] needs x or y`);
   });
 
+  // Pass 1 — read every entry and decide which are pieces of ONE function.
+  const pieces: CurvePiece[] = [];
+  const groups: Array<{ color: string; dashed: boolean; label?: string }> = [];
+  const eps = spanX * 1e-9;
   curvesIn.forEach((raw, i) => {
     const c = r.obj(raw, `curves[${i}]`);
     let fn: (x: number) => number;
@@ -425,7 +537,6 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
     } catch (err) {
       return r.fail(`curves[${i}].expr: ${(err as Error).message}`);
     }
-    const color = r.color(c.color, SERIES_COLORS[i % SERIES_COLORS.length]);
     const dashed = r.bool(c.dashed, `curves[${i}].dashed`, false);
     let a = xRange[0];
     let b = xRange[1];
@@ -441,28 +552,98 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
       if (d1 !== undefined) b = Math.min(b, d1);
     }
     if (!(b > a)) r.fail(`curves[${i}].domain lies outside xRange`);
-    const pieces = sampleCurve(fn, a, b, yRange[0], yRange[1]);
-    if (pieces.length === 0) r.fail(`curves[${i}].expr is undefined across its whole domain`);
-    const d = pieces.map((pc) => polyline(pc, f)).join('');
-    clipped.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${dashed ? ' stroke-dasharray="7 4"' : ''}/>`);
-    // Endpoint marks sit exactly on the domain end, at the one-sided limit.
-    const endMark = (which: 'from' | 'to', at: number | undefined, inward: 1 | -1) => {
+    const flag = (which: 'from' | 'to', at: number | undefined): EndFlag => {
       const kind = c[which];
-      if (kind === undefined || kind === null) return;
-      if (kind !== 'open' && kind !== 'closed') r.fail(`curves[${i}].${which} must be 'open' or 'closed'`);
-      if (at === undefined) r.fail(`curves[${i}].${which} needs that end of domain to be a number`);
-      const x = at as number;
-      if (x < xRange[0] || x > xRange[1]) return;
-      let y = fn(x);
-      if (!Number.isFinite(y)) y = fn(x + inward * spanX * 1e-9);
-      if (!Number.isFinite(y)) r.fail(`curves[${i}].${which}: the curve has no value at x = ${x}`);
-      if (y < yRange[0] || y > yRange[1]) return;
-      marks.push(endpointMark(x, y, kind as 'open' | 'closed', color, f));
+      if (kind === undefined || kind === null) return undefined;
+      if (kind !== 'open' && kind !== 'closed' && kind !== 'none') r.fail(`curves[${i}].${which} must be 'open', 'closed' or 'none'`);
+      if (kind !== 'none' && at === undefined) r.fail(`curves[${i}].${which} needs that end of domain to be a number`);
+      return kind as EndFlag;
     };
-    endMark('from', d0, 1);
-    endMark('to', d1, -1);
     const label = r.optStr(c.label, `curves[${i}].label`, 40);
-    if (label) legend.push({ label, color, dashed });
+    const own = r.color(c.color, '');
+    // The same function, continued: said outright (`continues`), or an
+    // unnamed entry in the same colour whose domain does not overlap the
+    // pieces before it — the branch after a hole or a jump. It must not come
+    // out as a second, unexplained curve.
+    const says = c.continues === undefined || c.continues === null ? undefined : r.bool(c.continues, `curves[${i}].continues`, false);
+    if (says === true && i === 0) r.fail('curves[0].continues: there is no curve before it to continue');
+    let group = -1;
+    if (i > 0 && says !== false) {
+      const g = pieces[i - 1].group;
+      const apart = pieces.filter((q) => q.group === g).every((q) => b <= q.a + eps || a >= q.b - eps);
+      if (says === true || (!label && apart && (!own || own.toLowerCase() === groups[g].color.toLowerCase()))) group = g;
+    }
+    if (group < 0) {
+      group = groups.length;
+      groups.push({ color: own || SERIES_COLORS[group % SERIES_COLORS.length], dashed, label });
+    } else {
+      groups[group].dashed = groups[group].dashed || dashed;
+      groups[group].label = groups[group].label ?? label;
+    }
+    pieces.push({ fn, a, b, d0, d1, from: flag('from', d0), to: flag('to', d1), group });
+  });
+  const dashes = assignDashes(groups.map((g) => g.dashed));
+  facts.curveCount = groups.length;
+  const seen = groups.map(() => ({ visible: 0, total: 0, stubs: 0 }));
+
+  /** Where an end of a piece is, when it is inside the plot. */
+  const endPoint = (pc: CurvePiece, i: number, which: 'from' | 'to', explicit: boolean): [number, number] | null => {
+    const x = which === 'from' ? pc.d0 : pc.d1;
+    if (x === undefined || x < xRange[0] || x > xRange[1]) return null;
+    let y = pc.fn(x);
+    if (!Number.isFinite(y)) y = pc.fn(x + (which === 'from' ? 1 : -1) * spanX * 1e-9);
+    if (!Number.isFinite(y)) return explicit ? r.fail(`curves[${i}].${which}: the curve has no value at x = ${x}`) : null;
+    return y < yRange[0] || y > yRange[1] ? null : [x, y];
+  };
+
+  // Pass 2 — draw.
+  pieces.forEach((pc, i) => {
+    const { color } = groups[pc.group];
+    const sampled = sampleCurve(pc.fn, pc.a, pc.b, yRange[0], yRange[1]);
+    if (sampled.length === 0) r.fail(`curves[${i}].expr is undefined across its whole domain`);
+    const d = sampled.map((branch) => polyline(branch, f)).join('');
+    clipped.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${dashAttr(dashes[pc.group])}/>`);
+    // How much of it the y-range lets through (legibility report only).
+    const acc = seen[pc.group];
+    acc.total += pc.b - pc.a;
+    for (const branch of sampled) {
+      let vis = 0;
+      for (let k = 1; k < branch.length; k++) {
+        const inside = (q: [number, number]) => q[1] >= yRange[0] && q[1] <= yRange[1];
+        if (inside(branch[k - 1]) && inside(branch[k])) vis += branch[k][0] - branch[k - 1][0];
+      }
+      acc.visible += vis;
+      const extent = branch[branch.length - 1][0] - branch[0][0];
+      if (vis < spanX * 0.04 && extent > vis * 1.5) acc.stubs++;
+    }
+    // End marks sit exactly on the domain end, at the one-sided limit. An end
+    // the spec flags is drawn as flagged. An unflagged end that stops INSIDE
+    // the plot is an included endpoint (a filled dot) — unless the next piece
+    // of the same function carries straight on from it. A curve that simply
+    // leaves the plot (through a side, the top or the bottom) has no mark.
+    (['from', 'to'] as const).forEach((which) => {
+      const kind = pc[which];
+      if (kind === 'none') return;
+      const at = endPoint(pc, i, which, kind !== undefined);
+      if (!at) return;
+      if (kind === undefined) {
+        if (!(at[0] > xRange[0] + eps && at[0] < xRange[1] - eps)) return;
+        const carriesOn = pieces.some((q, j) => j !== i && q.group === pc.group && (['from', 'to'] as const).some((w) => {
+          if (q[w] !== undefined) return false;
+          const other = endPoint(q, j, w, false);
+          return !!other && Math.abs(other[0] - at[0]) <= eps && Math.abs(other[1] - at[1]) <= spanY * 1e-6;
+        }));
+        if (carriesOn) return;
+      }
+      halos.push(markHalo(f.X(at[0]), f.Y(at[1])));
+      marks.push(endpointMark(at[0], at[1], kind === 'open' ? 'open' : 'closed', color, f));
+      facts.marks.push({ what: `curves[${i}].${which}`, cx: f.X(at[0]), cy: f.Y(at[1]) });
+    });
+  });
+  groups.forEach((g, k) => {
+    if (g.label) legend.push({ label: g.label, color: g.color, dashed: g.dashed, dash: dashes[k] });
+    const first = pieces.findIndex((pc) => pc.group === k);
+    facts.curves.push({ what: g.label ? `curve "${g.label}"` : `curves[${first}]`, visibleFraction: seen[k].total > 0 ? seen[k].visible / seen[k].total : 1, stubs: seen[k].stubs });
   });
 
   pointsIn.forEach((raw, i) => {
@@ -472,15 +653,17 @@ function renderFunctionGraph(r: Reader, uid: string): Drawn {
     if (x < xRange[0] || x > xRange[1] || y < yRange[0] || y > yRange[1]) r.fail(`points[${i}] lies outside the ranges`);
     const open = r.bool(pt.open, `points[${i}].open`, false);
     const color = r.color(pt.color, INK);
+    halos.push(markHalo(f.X(x), f.Y(y)));
     marks.push(endpointMark(x, y, open ? 'open' : 'closed', color, f));
+    facts.marks.push({ what: `points[${i}]`, cx: f.X(x), cy: f.Y(y) });
     const label = r.optStr(pt.label, `points[${i}].label`, 24);
-    if (label) marks.push(pointLabel(label, f.X(x), f.Y(y), f));
+    if (label) labels.push(pointLabel(label, f.X(x), f.Y(y), f));
   });
 
-  parts.push(`<g clip-path="url(#${uid}-clip)">${clipped.join('')}</g>`, marks.join(''));
+  parts.push(`<g clip-path="url(#${uid}-clip)">${clipped.join('')}</g>`, halos.join(''), marks.join(''), labels.join(''));
   const lg = buildLegend(legend, f.bottom);
   parts.push(lg.svg);
-  return { body: parts.join(''), H: f.bottom + lg.height };
+  return { body: parts.join(''), H: f.bottom + lg.height, facts };
 }
 
 // ---------------------------------------------------------------------------
@@ -512,11 +695,14 @@ function renderMotionGraph(r: Reader, uid: string): Drawn {
     const pts = r.list(s.points, `series[${i}].points`, 2, 200)
       .map((pt, j) => readXY(r, pt, `series[${i}].points[${j}]`, 't', 'value'))
       .sort((a, b) => a[0] - b[0]);
+    const vertexDots = s.vertexDots === undefined || s.vertexDots === null ? undefined : s.vertexDots;
+    if (vertexDots !== undefined && vertexDots !== 'all' && vertexDots !== 'ends' && vertexDots !== 'none') r.fail(`series[${i}].vertexDots must be 'all', 'ends' or 'none'`);
     return {
       pts,
       label: r.optStr(s.label, `series[${i}].label`, 40),
       color: r.color(s.color, SERIES_COLORS[i % SERIES_COLORS.length]),
       dashed: r.bool(s.dashed, `series[${i}].dashed`, false),
+      vertexDots: vertexDots as 'all' | 'ends' | 'none' | undefined,
     };
   });
   const all = series.flatMap((s) => s.pts);
@@ -541,17 +727,35 @@ function renderMotionGraph(r: Reader, uid: string): Drawn {
     aspect: 0.78,
   });
   const clipped: string[] = [];
+  // Vertex dots go on top of everything, unclipped: one on the plot border
+  // (a graph that starts at the origin) is drawn whole, on a white ring.
+  const dots: string[] = [];
   const legend: LegendEntry[] = [];
-  for (const s of series) {
+  const facts: FigureFacts = { plot: f.plot, curveCount: series.length, marks: [], curves: [] };
+  const dashes = assignDashes(series.map((s) => s.dashed));
+  const inPlot = ([x, y]: [number, number]) => x >= tRange[0] && x <= tRange[1] && y >= yRange[0] && y <= yRange[1];
+  const inside = ([x, y]: [number, number]) => x > tRange[0] && x < tRange[1] && y >= yRange[0] && y <= yRange[1];
+  series.forEach((s, i) => {
     const d = interpolation === 'smooth'
       ? smoothPath(s.pts.map(([x, y]) => ({ x, y })), f.X, f.Y)
       : polyline(s.pts, f);
-    clipped.push(`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"${s.dashed ? ' stroke-dasharray="7 4"' : ''}/>`);
-    if (showPoints) for (const [x, y] of s.pts) clipped.push(`<circle cx="${n2(f.X(x))}" cy="${n2(f.Y(y))}" r="3" fill="${s.color}" stroke="#ffffff" stroke-width="1"/>`);
-    if (s.label) legend.push({ label: s.label, color: s.color, dashed: s.dashed });
-  }
+    clipped.push(`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"${dashAttr(dashes[i])}/>`);
+    // 'all' — every vertex (what showPoints gives); 'ends' — the first and
+    // last only, so a corner the question asks about is not given away;
+    // 'none'. Without either switch a line that stops INSIDE the plot still
+    // ends in a dot; one that runs to the border does not.
+    const mode = s.vertexDots ?? (showPoints ? 'all' : 'auto');
+    const last = s.pts.length - 1;
+    s.pts.forEach((pt, j) => {
+      facts.marks.push({ what: `series[${i}].points[${j}]`, cx: f.X(pt[0]), cy: f.Y(pt[1]) });
+      const isEnd = j === 0 || j === last;
+      const draw = mode === 'all' ? inPlot(pt) : mode === 'ends' ? isEnd && inPlot(pt) : mode === 'auto' ? isEnd && inside(pt) : false;
+      if (draw) dots.push(`<circle cx="${n2(f.X(pt[0]))}" cy="${n2(f.Y(pt[1]))}" r="3.2" fill="${s.color}" stroke="#ffffff" stroke-width="1.2"/>`);
+    });
+    if (s.label) legend.push({ label: s.label, color: s.color, dashed: s.dashed, dash: dashes[i] });
+  });
   const lg = buildLegend(legend, f.bottom);
-  return { body: `${clipDef(uid, f)}${f.svg}<g clip-path="url(#${uid}-clip)">${clipped.join('')}</g>${lg.svg}`, H: f.bottom + lg.height };
+  return { body: `${clipDef(uid, f)}${f.svg}<g clip-path="url(#${uid}-clip)">${clipped.join('')}</g>${dots.join('')}${lg.svg}`, H: f.bottom + lg.height, facts };
 }
 
 // ---------------------------------------------------------------------------
@@ -767,9 +971,13 @@ function renderScatterPlot(r: Reader, uid: string): Drawn {
   const names = [...new Set(pts.map((q) => q.series).filter((s): s is string => !!s))];
   if (names.length > SERIES_COLORS.length) r.fail(`at most ${SERIES_COLORS.length} series`);
   const colorOf = (s?: string) => SERIES_COLORS[s ? names.indexOf(s) : 0];
+  // Several series: a marker shape each as well as a colour.
+  const shapeOf = (s?: string) => SERIES_SHAPES[s && names.length > 1 ? names.indexOf(s) : 0];
   const clipped: string[] = [];
   const marks: string[] = [];
-  const legend: LegendEntry[] = names.map((s) => ({ label: s, color: colorOf(s), mark: 'dot' as const }));
+  const labels: string[] = [];
+  const legend: LegendEntry[] = names.map((s) => ({ label: s, color: colorOf(s), mark: 'dot' as const, shape: shapeOf(s) }));
+  const facts: FigureFacts = { plot: f.plot, curveCount: 0, marks: [], curves: [] };
 
   if (p.trendLine !== undefined && p.trendLine !== null && p.trendLine !== false) {
     let slope: number;
@@ -794,13 +1002,14 @@ function renderScatterPlot(r: Reader, uid: string): Drawn {
       legend.push({ label: `y = ${String(sig(slope)).replace('-', '−')}x ${b < 0 ? '−' : '+'} ${Math.abs(b)}`, color: INK });
     }
   }
-  for (const q of pts) {
+  pts.forEach((q, i) => {
     if (q.x < xRange[0] || q.x > xRange[1] || q.y < yRange[0] || q.y > yRange[1]) r.fail(`a point (${q.x}, ${q.y}) lies outside the ranges`);
-    marks.push(`<circle cx="${n2(f.X(q.x))}" cy="${n2(f.Y(q.y))}" r="3.6" fill="${colorOf(q.series)}" stroke="#ffffff" stroke-width="0.9"/>`);
-    if (q.label) marks.push(pointLabel(q.label, f.X(q.x), f.Y(q.y), f));
-  }
+    marks.push(shapeMark(shapeOf(q.series), f.X(q.x), f.Y(q.y), 3.6, colorOf(q.series)));
+    facts.marks.push({ what: `points[${i}]`, cx: f.X(q.x), cy: f.Y(q.y) });
+    if (q.label) labels.push(pointLabel(q.label, f.X(q.x), f.Y(q.y), f));
+  });
   const lg = buildLegend(legend, f.bottom);
-  return { body: `${clipDef(uid, f)}${f.svg}<g clip-path="url(#${uid}-clip)">${clipped.join('')}</g>${marks.join('')}${lg.svg}`, H: f.bottom + lg.height };
+  return { body: `${clipDef(uid, f)}${f.svg}<g clip-path="url(#${uid}-clip)">${clipped.join('')}</g>${marks.join('')}${labels.join('')}${lg.svg}`, H: f.bottom + lg.height, facts };
 }
 
 // ---------------------------------------------------------------------------
@@ -871,12 +1080,14 @@ function renderReactionCoordinate(r: Reader): Drawn {
     // The reactant level carried across, as the foot of the arrows.
     parts.push(`<line x1="${n2(f.X(RC_FLAT))}" y1="${n2(f.Y(R))}" x2="${n2(f.X(0.985))}" y2="${n2(f.Y(R))}" stroke="${MUTED}" stroke-width="1" stroke-dasharray="4 4"/>`);
   }
+  // Several pathways: a stroke pattern each as well as a colour.
+  const dashes = assignDashes(eas.map(() => false));
   eas.forEach((ea, i) => {
     const color = SERIES_COLORS[i % SERIES_COLORS.length];
     const pts: Array<[number, number]> = [];
     for (let k = 0; k <= 160; k++) pts.push([k / 160, level(k / 160, ea)]);
-    parts.push(`<path d="${polyline(pts, f)}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`);
-    if (curveLabels[i]) legend.push({ label: curveLabels[i], color });
+    parts.push(`<path d="${polyline(pts, f)}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"${dashAttr(dashes[i])}/>`);
+    if (curveLabels[i]) legend.push({ label: curveLabels[i], color, dash: dashes[i] });
     if (wantEa) {
       // Under its own peak, inside the hump; several curves fan out about the centre.
       const u = RC_PEAK + (i - (eas.length - 1) / 2) * 0.08;
@@ -926,7 +1137,7 @@ function renderReactionCoordinate(r: Reader): Drawn {
   }
   const lg = buildLegend(legend, H);
   parts.push(lg.svg);
-  return { body: parts.join(''), H: H + lg.height };
+  return { body: parts.join(''), H: H + lg.height, facts: { plot: f.plot, curveCount: eas.length, marks: [], curves: [] } };
 }
 
 // ---------------------------------------------------------------------------
@@ -1037,6 +1248,8 @@ function renderTitrationCurve(r: Reader, uid: string): Drawn {
 // slope_field
 // ---------------------------------------------------------------------------
 
+const SLOPE_STROKE = 1.6;
+
 function renderSlopeField(r: Reader, uid: string): Drawn {
   const p = r.p;
   const xRange = r.range(p.xRange, 'xRange');
@@ -1064,27 +1277,38 @@ function renderSlopeField(r: Reader, uid: string): Drawn {
       return { x: r.num(o.x, `samples[${i}].x`), y: r.num(o.y, `samples[${i}].y`), slope: typeof o.slope === 'number' ? o.slope : NaN };
     });
   }
-  const spanX = xRange[1] - xRange[0];
-  const spanY = yRange[1] - yRange[0];
+  // The lattice stays where the spec put it (questions name its points); the
+  // PLOT grows by half a cell on every side instead, so the outermost
+  // segments lie wholly inside the border rather than being cut by it.
+  const uniq = (vals: number[]) => [...new Set(vals.map((v) => Number(v.toPrecision(10))))].sort((a, b) => a - b);
+  const xs = uniq(samples.map((s) => s.x));
+  const ys = uniq(samples.map((s) => s.y));
+  const gap = (vals: number[], span: number) => (vals.length > 1 ? Math.min(...vals.slice(1).map((v, i) => v - vals[i])) : span / 12);
+  const stepX = gap(xs, xRange[1] - xRange[0]);
+  const stepY = gap(ys, yRange[1] - yRange[0]);
+  const fx: [number, number] = [Math.min(xRange[0], xs[0] - stepX / 2), Math.max(xRange[1], xs[xs.length - 1] + stepX / 2)];
+  const fy: [number, number] = [Math.min(yRange[0], ys[0] - stepY / 2), Math.max(yRange[1], ys[ys.length - 1] + stepY / 2)];
+  const spanX = fx[1] - fx[0];
+  const spanY = fy[1] - fy[0];
   const f = buildFrame({
-    xRange,
-    yRange,
+    xRange: fx,
+    yRange: fy,
     xStep: r.optStep(p.xStep, 'xStep'),
     yStep: r.optStep(p.yStep, 'yStep'),
     xLabel: r.optStr(p.xLabel, 'xLabel') ?? 'x',
     yLabel: r.optStr(p.yLabel, 'yLabel') ?? 'y',
     title: r.optStr(p.title, 'title', 160),
     aspect: Math.max(0.6, Math.min(1.25, spanY / spanX)),
+    // The axes step back: a segment lying along one must not vanish into it.
+    axisWidth: 1.1,
   });
-  // Segment length from the lattice spacing actually present.
-  const uniq = (vals: number[]) => [...new Set(vals.map((v) => Number(v.toPrecision(10))))].sort((a, b) => a - b);
-  const xs = uniq(samples.map((s) => s.x));
-  const ys = uniq(samples.map((s) => s.y));
+  // Segment length from the lattice spacing actually present: two thirds of
+  // a cell less the round caps, so collinear neighbours keep clear paper
+  // between them at 340 px.
   const pxPerX = f.plot.w / spanX;
   const pxPerY = f.plot.h / spanY;
-  const cellX = xs.length > 1 ? (xs[1] - xs[0]) * pxPerX : f.plot.w / 12;
-  const cellY = ys.length > 1 ? (ys[1] - ys[0]) * pxPerY : f.plot.h / 12;
-  const len = Math.max(5, Math.min(cellX, cellY) * 0.62);
+  const cell = Math.min(stepX * pxPerX, stepY * pxPerY);
+  const len = Math.max(2, Math.min(cell * 0.66, cell - SLOPE_STROKE - 2.5));
   const segs: string[] = [];
   for (const s of samples) {
     if (Number.isNaN(s.slope)) continue;
@@ -1102,19 +1326,20 @@ function renderSlopeField(r: Reader, uid: string): Drawn {
     segs.push(`M${n2(cx - (ux * len) / 2)},${n2(cy - (uy * len) / 2)}L${n2(cx + (ux * len) / 2)},${n2(cy + (uy * len) / 2)}`);
   }
   const parts: string[] = [clipDef(uid, f), f.svg];
-  const inner: string[] = [`<path d="${segs.join('')}" fill="none" stroke="#334155" stroke-width="1.4" stroke-linecap="round"/>`];
+  // Above the grid and the axes, each on a white under-stroke.
+  const inner: string[] = [`<path d="${segs.join('')}" fill="none" stroke="#ffffff" stroke-width="${SLOPE_STROKE + 2}" stroke-linecap="round"/>`, `<path d="${segs.join('')}" fill="none" stroke="${SERIES_COLORS[0]}" stroke-width="${SLOPE_STROKE}" stroke-linecap="round"/>`];
   const legend: LegendEntry[] = [];
   let dot = '';
   if (p.solutionThrough !== undefined && p.solutionThrough !== null) {
     if (!expr) r.fail('solutionThrough needs expr');
     const through = readXY(r, p.solutionThrough, 'solutionThrough', 'x', 'y');
-    const curve = slopeFieldSolution(expr as string, through, xRange, yRange);
+    const curve = slopeFieldSolution(expr as string, through, fx, fy);
     if (curve.length > 1) inner.push(`<path d="${polyline(curve, f)}" fill="none" stroke="${SERIES_COLORS[1]}" stroke-width="2.4" stroke-linejoin="round"/>`);
     dot = `<circle cx="${n2(f.X(through[0]))}" cy="${n2(f.Y(through[1]))}" r="4" fill="${SERIES_COLORS[1]}" stroke="#ffffff" stroke-width="1.2"/>`;
   }
   if (r.bool(p.showExpression, 'showExpression', false)) {
     if (!expr) r.fail('showExpression needs expr');
-    legend.push({ label: `dy/dx = ${expr}`, color: '#334155' });
+    legend.push({ label: `dy/dx = ${expr}`, color: SERIES_COLORS[0] });
   }
   parts.push(`<g clip-path="url(#${uid}-clip)">${inner.join('')}</g>${dot}`);
   const lg = buildLegend(legend, f.bottom);
@@ -1220,6 +1445,12 @@ function renderFreeBodyDiagram(r: Reader, uid: string): Drawn {
  * partial or approximate picture.
  */
 export function renderPracticeFigure(spec: PracticeFigureSpec): { svg: string } {
+  return { svg: inspectPracticeFigure(spec).svg };
+}
+
+/** `renderPracticeFigure` plus the layout facts the legibility report reads.
+ *  The picture is the same string either way. */
+export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; facts: FigureFacts } {
   const kind = typeof spec?.type === 'string' ? spec.type : String(spec?.type);
   if (!spec || typeof spec.params !== 'object' || spec.params === null || Array.isArray(spec.params)) {
     throw new PracticeFigureSpecError(kind, 'params must be an object');
@@ -1243,7 +1474,7 @@ export function renderPracticeFigure(spec: PracticeFigureSpec): { svg: string } 
   const svg = svgDocument(drawn.W ?? FIGURE_WIDTH, drawn.H, drawn.body);
   const safety = validateFigureSvg(svg);
   if (!safety.ok) throw new PracticeFigureSpecError(kind, `rendered SVG failed the safety check (${safety.issues.join(', ')})`);
-  return { svg };
+  return { svg, facts: drawn.facts ?? { curveCount: 0, marks: [], curves: [] } };
 }
 
 /**
