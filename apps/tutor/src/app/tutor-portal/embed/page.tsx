@@ -739,13 +739,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // Time that is not session time (spec §5): standing by, and a prewarmed
   // frame's wait before its start. Subtracted from every reported duration.
   const inactiveClockRef = useRef<InactiveClock>(
-    prewarm ? { totalMs: 0, sinceMs: sessionStartRef.current.getTime() } : INITIAL_INACTIVE_CLOCK,
+    prewarm && TUTOR_HOST_LESSON ? { totalMs: 0, sinceMs: sessionStartRef.current.getTime() } : INITIAL_INACTIVE_CLOCK,
   );
   const syncInactive = () => {
+    if (!TUTOR_HOST_LESSON) return; // flag off ⇒ durations exactly as before
     const waitingPrewarm = prewarm && sessionEngagedAtRef.current === null;
     inactiveClockRef.current = markInactive(
       inactiveClockRef.current,
-      waitingPrewarm || (TUTOR_HOST_LESSON && isStandingBy(lessonHostRef.current)),
+      waitingPrewarm || isStandingBy(lessonHostRef.current),
       Date.now(),
     );
   };
@@ -1418,8 +1419,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const dispatchLessonHost = useCallback((e: LessonHostEvent) => {
     const next = reduceLessonHost(lessonHostRef.current, e, Date.now());
     if (next === lessonHostRef.current) return;
+    const prev = lessonHostRef.current;
     lessonHostRef.current = next;
-    setLessonHost(next);
+    // The position is read from the ref; re-render only for what is drawn.
+    if (next.video !== prev.video || next.hostPaused !== prev.hostPaused || next.wokeAtMs !== prev.wokeAtMs) setLessonHost(next);
     syncInactiveRef.current();
     // Posted on a CHANGE only: a host may report its video state very often.
     const standingBy = isStandingBy(next);
@@ -1523,16 +1526,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // silently (no goodbye line: the student is watching, or the panel is hidden).
   useEffect(() => {
     if (!standby) return;
-    const t = setTimeout(() => {
-      if (sessionEngagedAtRef.current === null || sessionEndedPostedRef.current) return;
+    const standbyFrom = Date.now();
+    // Checked once a minute rather than one timeout: a session that only
+    // becomes engaged later in the same standby is still ended, 30 minutes
+    // after it engaged.
+    const t = setInterval(() => {
+      const engagedAt = sessionEngagedAtRef.current;
+      if (engagedAt === null || sessionEndedPostedRef.current) return;
+      if (Date.now() - Math.max(standbyFrom, engagedAt) < STANDBY_IDLE_END_MS) return;
       const h = sessionHandleRef.current;
       if (h?.isEnding?.() === true) return;
+      clearInterval(t);
       addDebugEvent('standby_idle_end', `afterMs=${STANDBY_IDLE_END_MS}`);
       hostEndReasonRef.current = 'idle';
       if (h?.endSession) h.endSession();
       else handleEndSessionRef.current();
-    }, STANDBY_IDLE_END_MS);
-    return () => clearTimeout(t);
+    }, 60_000);
+    return () => clearInterval(t);
   }, [standby, addDebugEvent]);
 
   // evelyn:activity (GreenApple spec 2026-10-02 §1): additive message on a

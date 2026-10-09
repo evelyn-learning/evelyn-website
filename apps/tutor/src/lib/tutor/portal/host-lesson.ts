@@ -23,9 +23,6 @@ export type MomentKind = (typeof MOMENT_KINDS)[number];
 
 /** Shown in the dock while standing by (spec §1). */
 export const STANDBY_LINE = 'Feel free to ask a question about anything you see.';
-/** After a student-initiated wake, a `playing` report this recent is the
- *  host's state from BEFORE it acted on our pause command — not a new play. */
-export const WAKE_GRACE_MS = 2000;
 /** The tutor's own play command must be confirmed by `video_state: playing`
  *  within this long, else the tutor stays available (spec §3.4). */
 export const RESUME_CONFIRM_MS = 3000;
@@ -115,7 +112,8 @@ export interface LessonHostState {
   /** Between `evelyn:pause` and `evelyn:resume`. */
   hostPaused: boolean;
   /** When the student (or a moment) woke the tutor over a playing video.
-   *  Non-null = awake although the last report says `playing`. */
+   *  Non-null = awake although the last report says `playing`; cleared by a
+   *  paused/ended report or a play command. */
   wokeAtMs: number | null;
 }
 
@@ -136,7 +134,6 @@ export type LessonHostEvent =
 export function reduceLessonHost(s: LessonHostState, e: LessonHostEvent, nowMs: number): LessonHostState {
   switch (e.type) {
     case 'video_state': {
-      const inGrace = s.wokeAtMs !== null && nowMs >= s.wokeAtMs && nowMs - s.wokeAtMs < WAKE_GRACE_MS;
       return {
         ...s,
         video: e.state,
@@ -144,7 +141,11 @@ export function reduceLessonHost(s: LessonHostState, e: LessonHostEvent, nowMs: 
         // the video was playing, so a later estimate starts from the right place.
         positionSeconds: e.positionSeconds ?? currentPositionSeconds(s, nowMs),
         positionAtMs: nowMs,
-        wokeAtMs: e.state === 'playing' && inGrace ? s.wokeAtMs : null,
+        // A wake outlives further `playing` reports (a host that reports its
+        // position often, or is slow to pause, must not put the tutor back
+        // to sleep in the middle of the student's question). It ends when the
+        // host reports paused/ended, or when a play command is sent.
+        wokeAtMs: e.state === 'playing' ? s.wokeAtMs : null,
       };
     }
     case 'host_pause':

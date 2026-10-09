@@ -7167,7 +7167,8 @@ export function VoiceTutorRealtime({
       // turn has been spoken (host-lesson pump), unless the student speaks
       // or types first. Ignored (but consumed) without a video host.
       if ((cmd.action as string) === 'resumeLesson') {
-        if (TUTOR_HOST_LESSON && videoHost && !standbyRef.current) {
+        // No `<lesson_video>` block this turn = the host has not reported a video.
+        if (TUTOR_HOST_LESSON && videoHost && !standbyRef.current && !!getLessonNowRef.current?.()) {
           resumeLessonPendingRef.current = true;
           resumeLessonPendingAtRef.current = Date.now();
           resumeLessonQuietSinceRef.current = null;
@@ -7176,7 +7177,7 @@ export function VoiceTutorRealtime({
           // Rides out on the tool_result (same carrier as close_session_notes).
           closeNotesResultNoteRef.current ??= 'resume_lesson: the video will play when you finish speaking — say one short hand-back line and nothing else.';
         } else {
-          onDebugEvent?.('resume_lesson_dropped', `why=${standbyRef.current ? 'standby' : 'no_video_host'}`);
+          onDebugEvent?.('resume_lesson_dropped', `why=${standbyRef.current ? 'standby' : 'no_video'}`);
           closeNotesResultNoteRef.current ??= 'resume_lesson: there is no lesson video to resume right now — carry on.';
         }
         continue;
@@ -19515,7 +19516,10 @@ export function VoiceTutorRealtime({
     if (farewellSealedRef.current) return;
     // Standing by (host video playing / panel hidden): the tutor is silent, so
     // no synthetic turn (nudge, reaction, mark) may start one.
-    if (standbyRef.current && opts?.silent) return;
+    // A kickoff (bypassMidUtteranceGuard) is exempt: a Start tap over a
+    // playing video wakes through the page, and this ref only follows on the
+    // next render — dropping the opener left the student in a 20 s "joining".
+    if (standbyRef.current && opts?.silent && !opts?.bypassMidUtteranceGuard) return;
     if (opts?.image) {
       const parked = pendingUploadImagesRef.current;
       parked.push({ key: transcript.trim(), image: opts.image });
@@ -21097,10 +21101,24 @@ export function VoiceTutorRealtime({
       let dropped = 0;
       try { dropped = realtime.dropQueuedSpeech(); } catch {}
       const cutTimer = setTimeout(() => {
-        if (standbyRef.current && productionStateRef.current === 'speaking') {
+        // isSpeechPending, not the relay state: releasing the mic below moves
+        // the state off 'speaking' while the sentence is still playing.
+        let stillSpeaking = false;
+        try { stillSpeaking = realtime.isSpeechPending(); } catch {}
+        if (standbyRef.current && stillSpeaking) {
           try { void realtime.clearSpeechQueue(); } catch {}
         }
       }, 8000);
+      // The host reported `playing` right after the start: the opener was
+      // just aborted above, so the "joining" overlay and its watchdog (re-kick
+      // at 20 s, "Trouble starting" at 40 s) must stand down with it.
+      warmupStateRef.current = null;
+      warmupKickoffRef.current = null;
+      setIsWarmingUp(false);
+      setShowWarmupOverlay(false);
+      // Perception closes now; a speech_stopped that will never arrive must
+      // not hold the host-lesson pump for the 30 s watchdog.
+      perceptionMidUtteranceRef.current = false;
       // RELEASE, not mute: a muted hold keeps the capture (and the browser's
       // recording indicator) alive. The STT hook lets go through
       // perceptionEnabled; this is the production hook's hold.
@@ -21148,6 +21166,12 @@ export function VoiceTutorRealtime({
         // Text waiting in the composer: the student is writing something.
         // (Focus alone is not a signal — it stays in the box after a send.)
         (studentTextInputRef.current?.value ?? '').trim() === '';
+      // Sound from the student since the tutor asked to resume: a short
+      // utterance is over (speech_stopped) seconds before its transcript
+      // arrives. Hold the resume that long; a dispatched turn cancels it.
+      const heardSinceResumeAsk =
+        lastVadActivityAtRef.current > resumeLessonPendingAtRef.current &&
+        now - lastVadActivityAtRef.current < 4000;
       const moment = pendingMomentRef.current;
       if (moment) {
         if (now - moment.atMs > MOMENT_STALE_MS) {
@@ -21164,7 +21188,7 @@ export function VoiceTutorRealtime({
         if (now - resumeLessonPendingAtRef.current > 60_000) {
           resumeLessonPendingRef.current = false;
           onDebugEventRef.current?.('resume_lesson_dropped', 'why=timeout');
-        } else if (!quiet) {
+        } else if (!quiet || heardSinceResumeAsk) {
           resumeLessonQuietSinceRef.current = null;
         } else if (resumeLessonQuietSinceRef.current === null) {
           resumeLessonQuietSinceRef.current = now;
@@ -21412,6 +21436,7 @@ export function VoiceTutorRealtime({
       speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
       cancelStormRef.current.recordCancel(Date.now());
       speechKilledAtRef.current = Date.now();
+      resumeLessonPendingRef.current = false; // a killed turn's resume request dies with it
       // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
       // drain so the cancel doesn't flush buffered renders — the verdict
       // decides drop (abort/re-fire) vs flush-all (resume/deliver).
@@ -22563,6 +22588,7 @@ export function VoiceTutorRealtime({
         speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
         cancelStormRef.current.recordCancel(Date.now());
         speechKilledAtRef.current = Date.now();
+        resumeLessonPendingRef.current = false; // a killed turn's resume request dies with it
         // Render↔speech sync: PAUSE the buffer before the drain (see
         // retro-cancel) — verdict decides drop vs flush-all.
         renderBufferPausedRef.current = true;
@@ -24884,6 +24910,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     if (hasTutorTurn) setIsWarmingUp(false);
   });
 
+  // A session that starts while standby stays in force (a start the host
+  // sent while its panel was hidden) opens the mic on its start path:
+  // release it again — standby entry above ran before there was a mic.
+  useEffect(() => {
+    if (hostStandby && hasStarted && sessionMode !== 'text') {
+      try { realtime.releaseInput(); } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasStarted]);
+
   // R32 T9: warmup watchdog. Every setIsWarmingUp(true) site above stamps
   // warmupStateRef fresh; while isWarmingUp is true this 5s poll drives it —
   // 20s → re-kick once (only where warmupKickoffRef holds a safely-replayable
@@ -25505,7 +25541,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               realtime.muteInput();
             }
           }}
-          onChange={() => { if (sessionMode === 'text') armIdleNudge(); }}
+          onChange={() => {
+            // The box can keep focus from an earlier send: typing still wakes.
+            if (standbyRef.current) onStudentWakeRef.current?.('typing');
+            if (sessionMode === 'text') armIdleNudge();
+          }}
           onBlur={() => {
             studentTypingRef.current = false;
             // Resume mic when done typing (only if student hasn't manually

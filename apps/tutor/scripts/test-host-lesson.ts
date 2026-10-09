@@ -15,7 +15,6 @@ import {
   RESUME_CONFIRM_MS,
   STANDBY_IDLE_END_MS,
   STANDBY_LINE,
-  WAKE_GRACE_MS,
   activeSeconds,
   currentPositionSeconds,
   inactiveMsAt,
@@ -51,7 +50,6 @@ test('constants are the spec values', () => {
   assert.equal(RESUME_CONFIRM_MS, 3000);
   assert.equal(STANDBY_IDLE_END_MS, 30 * 60 * 1000);
   assert.equal(STANDBY_LINE, 'Feel free to ask a question about anything you see.');
-  assert.ok(WAKE_GRACE_MS > 0 && WAKE_GRACE_MS <= 5000);
   assert.ok(MOMENT_STALE_MS >= 30_000);
 });
 
@@ -157,18 +155,20 @@ test('wake: a student wake over a playing video ends standby at once', () => {
   assert.equal(s.wokeAtMs, T + 100);
 });
 
-test('wake: a stale "playing" inside the grace window does not re-enter standby (Review Focus 3)', () => {
+test('wake: further "playing" reports never put the tutor back to sleep mid-question (Review Focus 3)', () => {
   let s = reduceLessonHost(play(S0, T), { type: 'student_wake' }, T + 100);
-  s = play(s, T + 100 + WAKE_GRACE_MS - 1, 5);
-  assert.equal(isStandingBy(s), false);
+  for (const dt of [150, 1900, 2100, 9000, 60_000]) {
+    s = play(s, T + dt, 5);
+    assert.equal(isStandingBy(s), false, `still awake after a playing report at +${dt} ms`);
+  }
   assert.equal(s.positionSeconds, 5);
 });
 
-test('wake: the host never confirms ⇒ still awake; a later "playing" means the student pressed play', () => {
+test('wake: over a host that never pauses, a play command (panel button or the tutor) ends it', () => {
   let s = reduceLessonHost(play(S0, T), { type: 'student_wake' }, T + 100);
+  s = play(s, T + 30_000);
   assert.equal(isStandingBy(s), false);
-  s = play(s, T + 100 + WAKE_GRACE_MS + 1);
-  assert.equal(isStandingBy(s), true);
+  assert.equal(isStandingBy(reduceLessonHost(s, { type: 'play_command' }, T + 31_000)), true);
 });
 
 test('wake: confirmed pause clears the wake; the next play stands by immediately', () => {
@@ -324,7 +324,7 @@ test('VTR: standby stops the idle nudge, the hard-stop cap and synthetic turns',
   assert.match(nudge, /idleNudgeTimerRef\.current = null;\s*if \(standbyRef\.current\) return;/);
   const cap = vtr.slice(vtr.indexOf('const capMs = sessionMaxMinutes * 60000'), vtr.indexOf("onEndSession('time_limit')"));
   assert.match(cap, /if \(standbyRef\.current\) return;/);
-  assert.match(vtr, /if \(standbyRef\.current && opts\?\.silent\) return;/);
+  assert.match(vtr, /if \(standbyRef\.current && opts\?\.silent && !opts\?\.bypassMidUtteranceGuard\) return;/); // kickoffs exempt
 });
 
 test('VTR: leaving standby shifts the session start anchor and reopens the mic', () => {
@@ -432,9 +432,10 @@ test('embed: video commands carry who asked', () => {
 });
 
 test('embed: 30 minutes of standby ends the session as idle, silently', () => {
-  const i = embed.indexOf('}, STANDBY_IDLE_END_MS);');
+  const i = embed.indexOf("addDebugEvent('standby_idle_end'");
   assert.ok(i > 0, 'idle timer');
-  const block = embed.slice(Math.max(0, i - 900), i);
+  const block = embed.slice(Math.max(0, i - 700), i + 300);
+  assert.match(block, /Date\.now\(\) - Math\.max\(standbyFrom, engagedAt\) < STANDBY_IDLE_END_MS/);
   assert.match(block, /hostEndReasonRef\.current = 'idle'/);
   assert.match(block, /h\.endSession\(\)/);
 });
@@ -460,6 +461,16 @@ test('embed: new telemetry events persist', () => {
   for (const e of ['standby', 'video_', 'moment_', 'lesson_timeline', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson']) {
     assert.ok(embed.includes(`'${e}'`), e);
   }
+});
+
+test('review fixes: opener aborted by standby clears the joining overlay; resume needs a known video; a kill or fresh speech stops it', () => {
+  const enter = vtr.slice(vtr.indexOf('standbySinceMsRef.current = Date.now();'), vtr.indexOf("'standby_enter'"));
+  assert.match(enter, /setIsWarmingUp\(false\);\s*setShowWarmupOverlay\(false\);/);
+  assert.match(enter, /warmupStateRef\.current = null;/);
+  assert.match(vtr, /videoHost && !standbyRef\.current && !!getLessonNowRef\.current\?\.\(\)/);
+  assert.equal(vtr.split(/speechKilledAtRef\.current = Date\.now\(\);\s*resumeLessonPendingRef\.current = false;/).length - 1, 2);
+  assert.match(vtr, /lastVadActivityAtRef\.current > resumeLessonPendingAtRef\.current/);
+  assert.match(embed, /prewarm && TUTOR_HOST_LESSON \?/); // flag off ⇒ durations exactly as before
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
