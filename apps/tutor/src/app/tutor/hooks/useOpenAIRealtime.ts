@@ -16,6 +16,7 @@ import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
 import { shouldSurfaceWsError, shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
+import { decideTypedDelivery, describeTokenFailure, REALTIME_CONNECT_ERROR_NAME } from '@/lib/tutor/voice/typed-delivery';
 import {
   acquireSharedMicStream,
   releaseSharedMicStream,
@@ -1082,6 +1083,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // buildInstructions, and session.update is sent whenever (a) the WS is open
   // AND (b) the instructions string has arrived — whichever completes last.
   const tokenPromiseRef = useRef<Promise<string | null> | null>(null);
+  // Why the last token request produced no client_secret ("HTTP 429", a
+  // thrown fetch message). The prefetch resolves null on failure, so without
+  // this connect() could only report "missing client_secret".
+  const tokenFailureRef = useRef<string | null>(null);
   const sessionUpdateSentRef = useRef(false);
   const currentInstructionsRef = useRef(effectiveInstructions);
   const trySendSessionUpdateRef = useRef<(() => void) | null>(null);
@@ -2153,6 +2158,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               throw new Error(`Failed to get realtime token: ${r.status}`);
             }
             const d = await r.json();
+            tokenFailureRef.current = d.client_secret ? null : `HTTP ${r.status} without client_secret`;
             return (d.client_secret as string) || null;
           })
           .catch((err) => {
@@ -2164,7 +2170,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       sb('awaiting realtime-token…');
       const client_secret = await tokenPromiseRef.current;
       if (!client_secret) {
-        throw new Error('Invalid token response: missing client_secret');
+        throw new Error(describeTokenFailure(tokenFailureRef.current));
       }
       sb('token resolved → opening WS');
       console.log('[Realtime] Got client secret, connecting...');
@@ -2324,6 +2330,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     } catch (err) {
       console.error('[Realtime] Connection error:', err);
       const error = err instanceof Error ? err : new Error('Connection failed');
+      // Named so a text session (which needs this socket for nothing) can
+      // keep it off the error banner — typed-delivery.ts. A DOMException's
+      // name is read-only; that one keeps its own name and surfaces as before.
+      try { error.name = REALTIME_CONNECT_ERROR_NAME; } catch { /* read-only */ }
       setError(error);
       onError?.(error);
       updateState('error');
@@ -2470,14 +2480,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       .then(async (r) => {
         if (!r.ok) {
           console.error('[Realtime] Token prefetch failed:', r.status, await r.text());
+          tokenFailureRef.current = `HTTP ${r.status}`;
           tokenPromiseRef.current = null;
           return null;
         }
         const d = await r.json();
+        tokenFailureRef.current = d.client_secret ? null : `HTTP ${r.status} without client_secret`;
         return (d.client_secret as string) || null;
       })
       .catch((err) => {
         console.error('[Realtime] Token prefetch threw:', err);
+        tokenFailureRef.current = err instanceof Error ? err.message : String(err);
         tokenPromiseRef.current = null;
         return null;
       });
@@ -2884,17 +2897,29 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
   // Send text message (for testing or fallback)
   const sendTextMessage = useCallback((text: string, meta?: { typed?: boolean; image?: { dataUrl: string; name?: string } }) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      // R32: typed messages used to be silently DISCARDED here (silence audit
-      // §7) — the input box gates on state-derived isConnected, which lags a
-      // dead socket, so submissions vanished with only a console.error. Queue
-      // and flush on reconnect instead (see connect()'s onopen handler).
-      if (pendingTypedRef.current.length < 5) {
-        pendingTypedRef.current.push({ text, meta });
-        console.warn(`[Realtime] WS not open — queued typed message (${pendingTypedRef.current.length})`);
-      } else {
-        console.error('[Realtime] typed-message queue full — dropping');
-      }
+    // 2026-10-08 (live text-mode partner session): a text session's typed
+    // message was parked here for an onopen that never came (the token
+    // request failed) — shown in the transcript, never answered. With the
+    // brain relay a text turn needs nothing from this socket, so it goes to
+    // the brain now ('relay', the relay branch below). It is never parked,
+    // so onopen's flush cannot deliver it a second time. Voice unchanged.
+    const delivery = decideTypedDelivery({
+      socketOpen: wsRef.current?.readyState === WebSocket.OPEN,
+      textMode,
+      relayActive: isRelayRef.current,
+      parkedCount: pendingTypedRef.current.length,
+    });
+    // R32: typed messages used to be silently DISCARDED here (silence audit
+    // §7) — the input box gates on state-derived isConnected, which lags a
+    // dead socket, so submissions vanished with only a console.error. Queue
+    // and flush on reconnect instead (see connect()'s onopen handler).
+    if (delivery === 'park') {
+      pendingTypedRef.current.push({ text, meta });
+      console.warn(`[Realtime] WS not open — queued typed message (${pendingTypedRef.current.length})`);
+      return;
+    }
+    if (delivery === 'drop') {
+      console.error('[Realtime] typed-message queue full — dropping');
       return;
     }
 
@@ -2918,7 +2943,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // bypassed the brain entirely.)
     if (isRelayRef.current) {
       try {
-        console.log('[Realtime] sendTextMessage relayed to brain, len=', text.length);
+        console.log('[Realtime] sendTextMessage relayed to brain, len=', text.length, delivery === 'relay' ? '(socket not open)' : '');
         // 2026-06-15: deliberate-input dispatches (Skip button, typed
         // form input, lesson kickoff) bypass perception's production-WS
         // suppress window AND mid-utterance guard. Both gates were
@@ -2945,8 +2970,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return;
     }
 
+    // Only 'send' (socket open) reaches here; the ref is re-read for the type.
+    const ws = wsRef.current;
+    if (!ws) return;
+
     // Add user message to conversation
-    wsRef.current.send(JSON.stringify({
+    ws.send(JSON.stringify({
       type: 'conversation.item.create',
       item: {
         type: 'message',
@@ -2956,7 +2985,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }));
 
     // Trigger response
-    wsRef.current.send(JSON.stringify({
+    ws.send(JSON.stringify({
       type: 'response.create',
     }));
 

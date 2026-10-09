@@ -29,9 +29,10 @@ import {
   readVerdictOpener,
   resolveMatchCredit,
   textWorkThenMatchEnabled,
+  WRONG_WHOLE_ANSWER_TEXT_RULE,
 } from '../src/lib/tutor/voice/work-then-match';
 import { classifyTurnShape, formatTurnShapeBlock } from '../src/lib/tutor/voice/turn-shape-signal';
-import { formatAnswerCheckBlock, type PublicVerdictPrecheck } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { formatAnswerCheckBlock, precheckOpenerContradiction, wrongWholeAnswerChecked, type PublicVerdictPrecheck } from '../src/lib/tutor/voice/verdict-precheck-shared';
 import { formatTextThinkingBlock } from '../src/lib/tutor/voice/text-thinking';
 import { VERDICT_PRECHECK_TIMEOUT_MS, verdictPrecheckTimeoutMs } from '../src/lib/tutor/voice/verdict-precheck';
 import { inferWrongEvent } from '../src/lib/tutor/orchestrator/answer-attempt';
@@ -356,6 +357,157 @@ async function main() {
     // Off ⇒ byte-identical to before.
     assert.equal(formatAnswerCheckBlock(pc({}), { correctValue: 'yyy' }), formatAnswerCheckBlock(pc({}), { correctValue: 'yyy', workThenMatch: false }));
     assert.match(formatAnswerCheckBlock(pc({})), /open by telling them it is right/);
+  });
+  // 2026-10-08 (portal-09624999 @18.0 s): a wrong answer to the WHOLE problem
+  // was met with the full working and the final result — "the step where
+  // theirs and yours part" was the final result, and the block carried it.
+  await test('<answer_check> wrong answer to the WHOLE problem: the correct value is not in the block, and the result is not to be stated', () => {
+    const p = pc({ answers: 'overall_problem', verdict: 'incorrect', target: 'the final answer' });
+    const b = formatAnswerCheckBlock(p, { correctValue: 'yyy', workThenMatch: true });
+    assert.ok(!b.includes('yyy'), 'the correct value never reaches the model on this branch');
+    assert.doesNotMatch(b, /correct value is/i);
+    assert.match(b, /the problem being worked \(the final answer\)/);
+    assert.match(b, /Checked for that question: INCORRECT\.\n/);
+    assert.match(b, /match statement must agree/i);
+    assert.match(b, /not what the problem gives/i);
+    assert.match(b, /Do NOT state the correct result/);
+    assert.match(b, /formula or expression evaluated to it/i);
+    assert.match(b, /first thing in their reasoning to re-examine/i);
+    assert.match(b, /one question/i);
+    assert.doesNotMatch(b, /working must reach the checked value/i);
+    assert.doesNotMatch(b, /state that step's result/i);
+    assert.doesNotMatch(b, BANNED_OPEN, b);
+    assert.match(b, /If you still disagree, state no match either way/);
+    assert.doesNotMatch(b, /\d|\$[^$]+\$/, 'no subject content or example values');
+    // A retry of the turn (no value to give) renders the same instruction.
+    assert.equal(formatAnswerCheckBlock(p, { workThenMatch: true }), b);
+    // Switch off ⇒ the wording of 2026-10-06, value included.
+    const off = formatAnswerCheckBlock(p, { correctValue: 'yyy', workThenMatch: true, wrongWholeAnswerNoReveal: false });
+    assert.match(off, /The correct value is "yyy"/);
+    assert.match(off, /state that step's result/);
+  });
+  await test('<answer_check> wrong STEP answer (and wrong other-part answer): exactly as before', () => {
+    for (const answers of ['open_question', 'other_part'] as const) {
+      const p = pc({ answers, verdict: 'incorrect' });
+      const on = formatAnswerCheckBlock(p, { correctValue: 'yyy', workThenMatch: true });
+      assert.equal(on, formatAnswerCheckBlock(p, { correctValue: 'yyy', workThenMatch: true, wrongWholeAnswerNoReveal: false }), answers);
+      assert.match(on, /The correct value is "yyy" — it is there so that your own working can be held to it\./, answers);
+      assert.match(on, /working must reach the checked value/, answers);
+      assert.match(on, /state that step's result/, answers);
+    }
+    // Not under the mode (voice without it): untouched.
+    const p = pc({ answers: 'overall_problem', verdict: 'incorrect' });
+    assert.match(formatAnswerCheckBlock(p, { correctValue: 'yyy' }), /The correct value is "yyy" — this is for your judgement only/);
+  });
+  await test('the rule block: a wrong answer to the whole problem is not met with the final result', () => {
+    const b = formatWorkThenMatchBlock('maybe 5?');
+    assert.ok(b.includes(WRONG_WHOLE_ANSWER_TEXT_RULE));
+    assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /WHOLE problem/);
+    assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /do not state the correct final result/i);
+    assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /first thing in their reasoning to re-examine/i);
+    assert.doesNotMatch(WRONG_WHOLE_ANSWER_TEXT_RULE, /\d\s*\S*(?:\/|%)|\$[^$]+\$/, 'no subject content or example values');
+    // It sits directly after the rule it is the exception to.
+    assert.ok(b.indexOf(WRONG_WHOLE_ANSWER_TEXT_RULE) > b.indexOf('the steps after it stay with the student'));
+    assert.ok(b.indexOf(WRONG_WHOLE_ANSWER_TEXT_RULE) < b.indexOf('When their value is right as far as it goes'));
+    // Not in the non-answer block (nothing was proposed).
+    assert.ok(!formatWorkThenMatchBlock('yes', classifyTurnShape('yes', 'What do you get?')).includes(WRONG_WHOLE_ANSWER_TEXT_RULE));
+  });
+  await test('opener-kill retry feedback: a wrong whole-problem answer is not asked for "what the working gives"', () => {
+    const f = openerBackstopFeedback('Not quite — the working gives something else.', 'I think it is zzz', { wrongWholeAnswer: true });
+    assert.match(f, /opened with a verdict or praise phrase/);
+    assert.match(f, /not what the problem gives/i);
+    assert.match(f, /without stating the correct result/i);
+    assert.match(f, /one question/i);
+    assert.doesNotMatch(f, /ending in the result of that step|what the working gives/);
+    // Unset ⇒ the feedback as before.
+    assert.match(openerBackstopFeedback('Not quite — x.', 'zzz'), /ending in the result of that step/);
+    assert.equal(wrongWholeAnswerChecked(pc({ answers: 'overall_problem', verdict: 'incorrect' })), true);
+    assert.equal(wrongWholeAnswerChecked(pc({ answers: 'overall_problem', verdict: 'incorrect', confidence: 'medium' })), true, 'whenever the block is rendered');
+    assert.equal(wrongWholeAnswerChecked(pc({ answers: 'overall_problem', verdict: 'incorrect', confidence: 'low' })), false);
+    assert.equal(wrongWholeAnswerChecked(pc({ answers: 'open_question', verdict: 'incorrect' })), false);
+    assert.equal(wrongWholeAnswerChecked(pc({ answers: 'overall_problem' })), false);
+    assert.equal(wrongWholeAnswerChecked(null), false);
+    assert.equal(wrongWholeAnswerChecked(pc({ answers: 'overall_problem', verdict: 'incorrect' }), { enabled: false }), false);
+  });
+  await test('counting: the reply this branch asks for is still read as "differs"', () => {
+    for (const reply of [
+      'Working it through does not give what you wrote. Which way does that push act?',
+      'The working does not match your answer — which direction did you take it in?',
+    ]) assert.equal(readMatchStatement(reply, 'I think it is zzz'), 'differs', reply);
+    // The new form needs "what you wrote" / "your …" after it — not any "does not give".
+    assert.equal(readMatchStatement('That does not give us enough to go on yet.', 'zzz'), 'none');
+    assert.equal(resolveMatchCredit({ precheck: pc({ answers: 'overall_problem', verdict: 'incorrect' }), match: 'differs' }).credit, 'incorrect');
+  });
+  // 2026-10-08b: live, the reply went straight to the guiding question — no
+  // match statement — and the turn logged `counting_match_credit none (none)`
+  // against a HIGH "overall_problem / incorrect" check.
+  await test('counting: a HIGH-confidence wrong answer to the WHOLE problem counts incorrect without any match statement', () => {
+    const whole = pc({ answers: 'overall_problem', verdict: 'incorrect' });
+    const r = resolveMatchCredit({ precheck: whole, match: 'none' });
+    assert.deepEqual(r, { credit: 'incorrect', source: 'precheck', disagreement: false });
+    assert.equal(resolveMatchCredit({ precheck: whole, match: 'differs' }).credit, 'incorrect');
+    // The tutor said it MATCHES: still a disagreement, nothing counted.
+    const d = resolveMatchCredit({ precheck: whole, match: 'matches' });
+    assert.equal(d.credit, 'none'); assert.equal(d.disagreement, true);
+    // Switch off ⇒ as before (the statement is required).
+    assert.equal(resolveMatchCredit({ precheck: whole, match: 'none', wrongWholeAnswerNoReveal: false }).credit, 'none');
+    // Nothing else moves: medium confidence, a wrong STEP, a wrong other part.
+    assert.equal(resolveMatchCredit({ precheck: pc({ answers: 'overall_problem', verdict: 'incorrect', confidence: 'medium' }), match: 'none' }).credit, 'none');
+    assert.equal(resolveMatchCredit({ precheck: pc({ answers: 'open_question', verdict: 'incorrect' }), match: 'none' }).credit, 'none');
+    assert.equal(resolveMatchCredit({ precheck: pc({ answers: 'other_part', verdict: 'incorrect' }), match: 'none' }).credit, 'none');
+    assert.equal(resolveMatchCredit({ precheck: pc({ answers: 'overall_problem', verdict: 'partly_correct' }), match: 'none' }).credit, 'none');
+    // A verified key still decides first.
+    assert.equal(resolveMatchCredit({ objectiveCorrect: true, precheck: whole, match: 'none' }).credit, 'correct');
+  });
+  await test('wording: the mismatch statement is the FIRST sentence, the question the second — in both blocks and the retry feedback', () => {
+    const block = formatAnswerCheckBlock(pc({ answers: 'overall_problem', verdict: 'incorrect' }), { workThenMatch: true });
+    const f0 = openerBackstopFeedback('Not quite — x.', 'zzz', { wrongWholeAnswer: true });
+    for (const t of [WRONG_WHOLE_ANSWER_TEXT_RULE, block]) {
+      const first = t.search(/FIRST sentence/), stmt = t.search(/not what the problem gives/), second = t.search(/SECOND sentence/), ask = t.search(/first thing in their reasoning to re-examine/);
+      assert.ok(first >= 0 && first < stmt && stmt < second && second < ask, t);
+      assert.match(t, /never (?:left out|skip)/i);
+    }
+    assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /not a verdict word/i);
+    // 2026-10-08c: the statement is about THEIR answer and names no working —
+    // "working the problem through does not give…" was met by narrating it.
+    for (const t of [WRONG_WHOLE_ANSWER_TEXT_RULE, block, f0]) {
+      assert.match(t, /no working at all/i, t);
+      assert.match(t, /no step, no formula, no intermediate value/i, t);
+      assert.match(t, /fact about (?:THEIR|their) answer/, t);
+      assert.doesNotMatch(t, /working the problem through|working it through/i, t);
+    }
+    const f = openerBackstopFeedback('Not quite — x.', 'zzz', { wrongWholeAnswer: true });
+    assert.ok(f.search(/first sentence/i) < f.search(/not what the problem gives/) && f.search(/not what the problem gives/) < f.search(/one question/), f);
+  });
+  await test('filters: a first sentence that states the mismatch is never dropped, cut or killed', () => {
+    const whole = pc({ answers: 'overall_problem', verdict: 'incorrect' });
+    const FIRSTS = [
+      'Your answer is not what the problem gives.',
+      'That answer isn\'t what this problem gives.',
+      'That is not what the problem gives.',
+      'Working the problem through does not give what you wrote.',
+      'Working it through doesn\'t give what you wrote.',
+      'That doesn\'t give what you wrote.',
+      'The working does not match your answer.',
+      'That is not what the working gives.',
+      'That\'s not what working it through gives.',
+    ];
+    for (const s of FIRSTS) {
+      assert.equal(readVerdictOpener(s, { answerShaped: true, weakComma: true }).kind, 'none', s);
+      const r = applyOpenerBackstop([s, 'Which part would you look at again?'], { answerShaped: true, canKill: true });
+      assert.equal(r.action, 'none', s);
+      assert.equal(precheckOpenerContradiction(whole, s), null, s);
+    }
+    // A denial word in front of it is cut; the statement itself survives, and is still read.
+    const cut = readVerdictOpener('No — working it through does not give what you wrote.', { answerShaped: true });
+    assert.equal(cut.kind, 'fused');
+    assert.equal(cut.kind === 'fused' ? cut.remainder : null, 'Working it through does not give what you wrote.');
+    assert.equal(readMatchStatement('Working it through does not give what you wrote.', 'zzz'), 'differs');
+    assert.equal(readMatchStatement('That doesn\'t give what you wrote. Which part would you look at again?', 'zzz'), 'differs');
+    for (const r of ['Your answer is not what the problem gives. Which force did you start from?', 'That isn\'t what this problem gives — which part would you check first?', 'That is not what the problem actually asks for.']) {
+      assert.equal(readMatchStatement(r, 'zzz'), 'differs', r);
+    }
+    assert.equal(readMatchStatement('Is that what the problem gives?', 'zzz'), 'none');
   });
   await test('<turn_shape>: no "say it is right" / "before any verdict word" under the mode; off ⇒ unchanged', () => {
     const cases: Array<[string, string]> = [

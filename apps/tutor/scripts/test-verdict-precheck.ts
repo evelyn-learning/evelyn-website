@@ -238,6 +238,18 @@ async function main() {
     assert.match(b, /INCORRECT\. The correct value is "yyy" — this is for your judgement only/);
     assert.match(b, /no praise word first/);
   });
+  await test('block (work it, then match): a wrong answer to the WHOLE problem carries no correct value', () => {
+    // 2026-10-08 (portal-09624999): the block handed the model the final
+    // answer and asked it to state "that step's result" — the final result.
+    const p = pc({ answers: 'overall_problem', verdict: 'incorrect', target: 'the final answer' });
+    const b = formatAnswerCheckBlock(p, { correctValue: 'yyy', workThenMatch: true });
+    assert.ok(!b.includes('yyy'), 'the correct value is absent');
+    assert.match(b, /INCORRECT\.\n/);
+    assert.match(b, /Do NOT state the correct result/);
+    assert.match(b, /Never mention this check/);
+    // The wrong answer to a STEP keeps the value and its wording.
+    assert.match(formatAnswerCheckBlock(pc({ verdict: 'incorrect' }), { correctValue: 'yyy', workThenMatch: true }), /The correct value is "yyy"/);
+  });
   await test('block: a carried check (retry) renders without the value', () => {
     const b = formatAnswerCheckBlock(pc({ verdict: 'incorrect' }));
     assert.match(b, /INCORRECT\.\n/);

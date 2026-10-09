@@ -39,7 +39,9 @@ for (const a of ['false_arithmetic_claim', 'show_equation_spoken_mismatch', 'sho
 }
 check('one answer-revealing rejection among others is enough', isAnswerRevealingKill([{ action: 'show_diagram' }, { action: 'verdict_opener' }]));
 check('no rejections / null ⇒ false', !isAnswerRevealingKill([]) && !isAnswerRevealingKill(null) && !isAnswerRevealingKill(undefined));
-check('the list is the documented thirteen', ANSWER_REVEALING_KILL_ACTIONS.size === 13);
+// 2026-10-08c: + whole_answer_reveal (voice/whole-answer-reveal.ts).
+check('whole_answer_reveal is an answer-revealing kill', isAnswerRevealingKill([{ action: 'whole_answer_reveal' }]));
+check('the list is the documented fourteen', ANSWER_REVEALING_KILL_ACTIONS.size === 14);
 
 // ── which tools ─────────────────────────────────────────────────────────────
 check('show_equation is board content', isAnswerBearingRenderTool('show_equation'));

@@ -167,6 +167,8 @@ interface BrainStreamRequestBody {
   /** Text mode, a retry of the same turn: the public verdict pre-check this
    *  client was sent on the first attempt (validated before use). */
   verdictPrecheck?: unknown;
+  /** The sealed correct value sent with that pre-check, echoed on a retry. */
+  verdictPrecheckSeal?: unknown;
   /** Voice sessions: this browser can act on the voice answer-judging frames
    *  (hold a verdict sentence, cut and continue the turn). Only then do the
    *  TUTOR_VOICE_* levers apply (lib/tutor/voice/voice-judging.ts); it then
@@ -901,6 +903,11 @@ export async function POST(req: NextRequest) {
           ...(textVerdictPrecheckEnabled(body.inputMode) && body.verdictPrecheck
             ? { verdictPrecheckCarry: sanitizePublicPrecheck(body.verdictPrecheck) ?? undefined }
             : {}),
+          // 2026-10-08c: the sealed value that came with that pre-check
+          // (opaque to the browser; voice/whole-answer-seal.ts).
+          ...(typeof body.verdictPrecheckSeal === 'string' && body.verdictPrecheckSeal.length <= 4000
+            ? { verdictPrecheckSeal: body.verdictPrecheckSeal }
+            : {}),
           // VOICE answer-judging levers (2026-10-06, voice-judging.ts). Every
           // one is absent unless this is a voice request from a browser that
           // announced `voiceJudging`, and its own TUTOR_VOICE_* switch is not
@@ -917,6 +924,11 @@ export async function POST(req: NextRequest) {
             : {}),
           ...(voiceVerdictPrecheckEnabled(body.inputMode, body.voiceJudging) && body.verdictPrecheck
             ? { verdictPrecheckCarry: sanitizePublicPrecheck(body.verdictPrecheck) ?? undefined }
+            : {}),
+          // 2026-10-08c: the sealed value that came with that pre-check
+          // (opaque to the browser; voice/whole-answer-seal.ts).
+          ...(typeof body.verdictPrecheckSeal === 'string' && body.verdictPrecheckSeal.length <= 4000
+            ? { verdictPrecheckSeal: body.verdictPrecheckSeal }
             : {}),
           toolResultProvider: makeToolResultProvider(
             body.lessonPlanContext,
@@ -955,7 +967,7 @@ export async function POST(req: NextRequest) {
           // far is this frame is still safely retryable.
           // (The verdict pre-check frame is the same kind of frame: it is sent
           // before any sentence and commits nothing to the student.)
-          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none') {
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;

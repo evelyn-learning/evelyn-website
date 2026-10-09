@@ -23,7 +23,7 @@
  * Pure; never throws. `npm run test:verdict-precheck`.
  */
 import { opensWithAffirmingVerdict } from '@/lib/tutor/voice/nonanswer-praise';
-import { TUTOR_OTHER_PART_NO_GIVEAWAY } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_OTHER_PART_NO_GIVEAWAY, TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Which question the student's message answers. */
 export type PrecheckTarget =
@@ -122,6 +122,10 @@ export function formatAnswerCheckBlock(
     /** Unset ⇒ TUTOR_OTHER_PART_NO_GIVEAWAY; false ⇒ the other-part wording
      *  of 2b58aacf. */
     otherPartNoGiveaway?: boolean;
+    /** Unset ⇒ TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL; false ⇒ a wrong answer to
+     *  the whole problem is worded like a wrong step (2026-10-06). Read only
+     *  under `workThenMatch`. */
+    wrongWholeAnswerNoReveal?: boolean;
   },
 ): string {
   if (!precheckInforms(p)) return '';
@@ -194,8 +198,38 @@ export const OTHER_PART_CORRECT_RULE =
 export const OTHER_PART_CORRECT_RULE_WORK_THEN_MATCH =
   `What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. ${OTHER_PART_GUARD} Otherwise (they meant THAT), say briefly that it is right for THAT and return to the question you asked.\n`;
 
+// ── 2026-10-08: a wrong answer to the WHOLE problem — never the result ─────
+//
+// portal-09624999 @18.0 s: the student opened a homework session with a wrong
+// final answer. The block gave the model the correct value "so that your own
+// working can be held to it" and asked it to work "as far as the step where
+// their working and yours part" and state that step's result. For an answer
+// to the whole problem that step IS the final result, so the reply worked the
+// problem and stated its answer. On this branch the value is not rendered at
+// all — what the model is not given it cannot be led to state — and the reply
+// says only that the working does not give what they wrote, then asks about
+// the first thing in their reasoning to look at again.
+
+/** Does the check say the student proposed a WRONG answer to the whole
+ *  problem? True whenever the block for it is rendered (`precheckInforms`). */
+export function wrongWholeAnswerChecked(p: PublicVerdictPrecheck | null | undefined, opts?: { enabled?: boolean }): boolean {
+  if (!(opts?.enabled ?? TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL)) return false;
+  return precheckInforms(p) && p.answers === 'overall_problem' && p.verdict === 'incorrect';
+}
+
+export const WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH =
+  'What to do: your reply is two sentences, in this order, and it contains NO working at all — no step, no formula, no intermediate value and no result, in the reply or on the board. FIRST sentence: your match statement must agree with the check — state plainly, as a fact about THEIR answer, that it is not what the problem gives. Only that: do not describe, narrate or begin to show how the problem is worked. It comes before anything else, it is never left out, and it is not folded into the question. SECOND sentence: one question that points them to the first thing in their reasoning to re-examine. Do NOT state the correct result — not in the reply and not on the board, and in no form: not the value, not a formula or expression evaluated to it, not a line of working that ends in it. Work the problem silently. The result stays theirs to find. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
+
+/** What a reply under that rule consists of — shared by every retry feedback
+ *  for it (the opener kill in work-then-match.ts, the reveal guard in
+ *  whole-answer-reveal.ts). Carries no value. */
+export const WRONG_WHOLE_ANSWER_REEMIT =
+  'Your reply is two sentences and contains no working at all — no step, no formula, no intermediate value and no result, in the reply or on the board: '
+  + 'the first sentence states plainly, as a fact about their answer, that it is not what the problem gives; '
+  + 'the second asks one question about the first thing in their reasoning to re-examine. ';
+
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean }): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean }): string {
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -230,6 +264,13 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
       + tail;
   }
   if (p.verdict === 'incorrect') {
+    if (wrongWholeAnswerChecked(p, { enabled: opts?.wrongWholeAnswerNoReveal })) {
+      // No correct value here, on the first attempt or on a retry.
+      return head + proposed + where
+        + '- Checked for that question: INCORRECT.\n'
+        + WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH
+        + tail;
+    }
     const value = correctValue
       ? ` The correct value is ${q(line(correctValue, 200))} — it is there so that your own working can be held to it.`
       : '';

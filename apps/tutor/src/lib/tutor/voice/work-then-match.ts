@@ -37,11 +37,11 @@
  * Wording is generic — no subject content, no example values (repo rule).
  * Pure; never throws. `npm run test:work-then-match`.
  */
-import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_ECHO_ANSWER_NO_CREDIT, TUTOR_OPENER_STRIP_NOT_KILL, TUTOR_PRECHECK_ANSWER_CREDIT } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_ECHO_ANSWER_NO_CREDIT, TUTOR_OPENER_STRIP_NOT_KILL, TUTOR_PRECHECK_ANSWER_CREDIT, TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { openQuestionText } from '@/lib/tutor/voice/nonanswer-praise';
 import { ACK_OPENER_RE } from '@/lib/tutor/voice/affirm-opener';
 import { assentSettlesNothing, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
-import { precheckDecides, precheckInforms, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
+import { precheckDecides, precheckInforms, wrongWholeAnswerChecked, WRONG_WHOLE_ANSWER_REEMIT, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 
 /** On for a turn iff the session is text mode and the flag is not 'off'. */
 export function textWorkThenMatchEnabled(
@@ -85,6 +85,20 @@ const LENGTH =
 export const AMBIGUOUS_READING_TEXT_RULE =
   'When what they wrote can reasonably be read as more than one expression — typed without brackets, its parts can be grouped in more than one way — and one reasonable reading is what your working gives, it IS the value they gave: say that it matches, and put the intended form on the board written out in full so you are both looking at the same expression. If you cannot tell which reading they meant, ask which one they meant. Never tell a student they are wrong on the strength of one reading of something that can be read two ways.\n';
 
+/** 2026-10-08 (portal-09624999 @18.0 s): "the step where theirs and yours
+ *  part" is the final result when what they proposed is an answer to the
+ *  whole problem — and the reply stated it. The exception to that rule.
+ *  2026-10-08b: live, the reply skipped the statement and went straight to
+ *  the question (rule 1 reads as forbidding it), so the order is spelled
+ *  out: the statement is the first sentence, the question the second.
+ *  2026-10-08c: "say that working the problem through does not give what
+ *  they wrote" was met by narrating the working — result included, two runs
+ *  of three. The statement is now about THEIR answer and names no working,
+ *  and the reply shows none. The wording is not the guard:
+ *  ./whole-answer-reveal.ts is. */
+export const WRONG_WHOLE_ANSWER_TEXT_RULE =
+  'The exception: when what they wrote is their answer to the WHOLE problem — its final result, not a step on the way — and it does not match, do not state the correct final result, and no formula or expression evaluated to it, in the reply or on the board. Rules 2 and 3 do not apply, and this reply shows NO working at all: no step, no formula, no intermediate value. The reply is two sentences, in this order. FIRST sentence: state plainly, as a fact about THEIR answer, that it is not what the problem gives — only that, with nothing of how the problem is worked; it is a full sentence, not a verdict word, so rule 1 does not exclude it, and it is never skipped or folded into the question. SECOND sentence: one question about the first thing in their reasoning to re-examine. The result stays theirs to find.\n';
+
 export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | null): string {
   const t = (transcript ?? '').trim();
   if (!t || t.startsWith('[')) return '';
@@ -111,6 +125,7 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + '3. Only then say whether that result matches what the student wrote, as a statement of fact tied to the result. When it matches: say that it is the value they gave. When it does not: say what they wrote, what the working gives, and which step the difference is in. An equivalent form, notation or phrasing is the same value. Uncertainty in how they said it is not wrongness.\n'
     + '4. Warmth is welcome AFTER the match is stated, never before it. Then one next step or question, as usual.\n'
     + 'When what they wrote does not match, your working goes as far as the step where theirs and yours part, and that step\'s result is what you state; the steps after it stay with the student.\n'
+    + (TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL ? WRONG_WHOLE_ANSWER_TEXT_RULE : '')
     + 'When their value is right as far as it goes but the question asks for more (one of several values that work, one bound of two, one part of several): say what it does satisfy and that the question asks for more, and ask for the rest. Do not supply the rest.\n'
     + 'When they gave the correct FINAL answer while a smaller step was open: show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n'
     + 'When the message does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them their message "is not an answer".\n'
@@ -267,10 +282,15 @@ export function backstopAppliesTo(ts: TurnShape | null): boolean {
 // was worse (it restated the wrong region). The verdict word is the only
 // thing wrong with such a sentence, so the word is cut and the rest shown.
 
+/** Is this opener phrase (`readVerdictOpener`'s `opener`) a denial? */
+export function isDenyingOpenerPhrase(opener: string): boolean {
+  return /^(?:no|nope|not\b|close|so\s+close|almost|nearly|incorrect|wrong|that(?:'?s|\s+is)\s+(?:not|incorrect|wrong))/i.test((opener ?? '').trim());
+}
+
 /** Does the pre-check (HIGH confidence) say the same as this opener? */
 export function precheckAgreesWithOpener(p: PublicVerdictPrecheck | null | undefined, opener: string): boolean {
   if (!precheckDecides(p) || p.answers === 'neither') return false;
-  const denying = /^(?:no|nope|not\b|close|so\s+close|almost|nearly|incorrect|wrong|that(?:'?s|\s+is)\s+(?:not|incorrect|wrong))/i.test((opener ?? '').trim());
+  const denying = isDenyingOpenerPhrase(opener);
   return denying ? p.verdict === 'incorrect' : (p.verdict === 'correct' && p.answers !== 'other_part');
 }
 
@@ -377,8 +397,11 @@ export function applyOpenerBackstop(
  *   the answer: in the first replay the general wording ("begin with the
  *   working") turned a killed "Great — let's multiply it out … what do you
  *   get?" into a retry that worked the open question out for the student.
+ * @param wrongWholeAnswer  2026-10-08: the pre-check found a wrong answer to
+ *   the whole problem (`wrongWholeAnswerChecked`). The general wording asks
+ *   for "what the working gives" — there, the final result.
  */
-export function openerBackstopFeedback(firstSentence: string, studentText: string, opts?: { nonAnswer?: boolean }): string {
+export function openerBackstopFeedback(firstSentence: string, studentText: string, opts?: { nonAnswer?: boolean; wrongWholeAnswer?: boolean }): string {
   const head = `The student wrote "${(studentText ?? '').trim().slice(0, 120)}". Your reply opened with a verdict or praise phrase ("${(firstSentence ?? '').trim().slice(0, 60)}"). `
     + 'In this text session a reply never opens that way. ';
   const quiet = 'Do not mention this note or narrate the correction — just reply naturally.';
@@ -386,6 +409,12 @@ export function openerBackstopFeedback(firstSentence: string, studentText: strin
     return head
       + 'Their message does not answer the question you asked, so there is nothing to judge and nothing for you to work out: re-emit your response without any verdict or praise word, '
       + 'and without stating the result of your open question or any part of it — ask that question again in fewer words, or ask for one smaller first step of it. '
+      + quiet;
+  }
+  if (opts?.wrongWholeAnswer === true) {
+    return head
+      + 'Re-emit your response without any verdict or praise word and without stating the correct result of the problem, or a formula or expression evaluated to it. '
+      + WRONG_WHOLE_ANSWER_REEMIT
       + quiet;
   }
   return head
@@ -408,6 +437,13 @@ const THEIRS = `(?:what\\s+you\\s+${WROTE}|the\\s+(?:${THING}\\s+)?you\\s+${WROT
 /** The working does NOT give what the student wrote. */
 const DIFFERS_RE = new RegExp(
   '(?:does\\s+not|doesn\'?t|do\\s+not|don\'?t|did\\s+not|didn\'?t)\\s+(?:quite\\s+)?(?:match|agree|equal|line\\s+up)\\b'
+  // 2026-10-08: "…does not give what you wrote" — the wording asked for on a
+  // wrong answer to the whole problem, where no result is stated to set
+  // against theirs.
+  + `|(?:does\\s+not|doesn\'?t|do\\s+not|don\'?t|did\\s+not|didn\'?t)\\s+(?:quite\\s+)?(?:give|come\\s+(?:out\\s+)?to|lead\\s+to|reach|produce)\\s+${THEIRS}`
+  // 2026-10-08c: "…is not what the problem gives" — the statement asked for
+  // now (it names no working, so it cannot be met by narrating one).
+  + '|\\b(?:not|isn\'?t)\\s+what\\s+(?:the|this|that)\\s+(?:problem|question|working|set-?up)\\s+(?:actually\\s+)?(?:gives|asks\\s+for|comes\\s+(?:out\\s+)?to|works\\s+out\\s+to|leads\\s+to|produces)\\b'
   + `|\\b(?:not|isn\'?t|aren\'?t|wasn\'?t)\\s+(?:quite\\s+)?(?:the\\s+same\\s+as\\s+|equal\\s+to\\s+)?${THEIRS}`
   + `|\\bdiffers?\\s+from\\b|\\bdifferent\\s+(?:from|than|to)\\s+${THEIRS}`
   + `|\\b(?:rather\\s+than|instead\\s+of)\\s+${THEIRS}`
@@ -562,7 +598,9 @@ export interface MatchCredit {
  *   1. a verified key (the existing deterministic paths);
  *   2. a HIGH-confidence pre-check — "correct" on its own; "incorrect" only
  *      when the tutor's match statement says the same (a wrong pre-check must
- *      not be able to mark a correct answer wrong by itself);
+ *      not be able to mark a correct answer wrong by itself) — except a wrong
+ *      answer to the WHOLE problem under the no-reveal rule, which counts
+ *      unless the tutor said that it matches;
  *   3. the tutor's explicit match statement, when it is unambiguous and no
  *      available check says otherwise;
  *   4. nothing.
@@ -580,6 +618,8 @@ export function resolveMatchCredit(input: {
   echo?: { studentText: string; priorTutorTurn: string };
   /** Unset ⇒ TUTOR_ECHO_ANSWER_NO_CREDIT. */
   echoNoCredit?: boolean;
+  /** Unset ⇒ TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL. */
+  wrongWholeAnswerNoReveal?: boolean;
 }): MatchCredit {
   const credit = resolveMatchCreditBase(input);
   if (credit.credit === 'correct' && credit.source !== 'verified_key' && input.echo
@@ -595,6 +635,7 @@ function resolveMatchCreditBase(input: {
   verifiedWrong?: boolean;
   precheck: PublicVerdictPrecheck | null | undefined;
   match: MatchStatement;
+  wrongWholeAnswerNoReveal?: boolean;
 }): MatchCredit {
   if (input.objectiveCorrect === true) return { credit: 'correct', source: 'verified_key', disagreement: false };
   if (input.verifiedWrong === true) return { credit: 'incorrect', source: 'verified_key', disagreement: false };
@@ -612,6 +653,17 @@ function resolveMatchCreditBase(input: {
         : { credit: 'correct', source: 'precheck', disagreement: false };
     }
     if (match === 'differs') return { credit: 'incorrect', source: 'precheck', disagreement: false };
+    // 2026-10-08b: a wrong answer to the WHOLE problem under the no-reveal
+    // rule. The reply is told not to state the result, so it has nothing to
+    // set against the student's value and may carry no readable match
+    // statement at all (live: straight to the guiding question → "none
+    // (none)", and the wrong answer dropped out of the streak and the
+    // ledger). The HIGH-confidence check counts on its own here — unless the
+    // tutor said outright that it matches (the disagreement below).
+    if (match === 'none' && p.answers === 'overall_problem'
+        && wrongWholeAnswerChecked(p, { enabled: input.wrongWholeAnswerNoReveal })) {
+      return { credit: 'incorrect', source: 'precheck', disagreement: false };
+    }
     return { credit: 'none', source: 'none', disagreement: match === 'matches' };
   }
   if (match === 'none') return { credit: 'none', source: 'none', disagreement: false };

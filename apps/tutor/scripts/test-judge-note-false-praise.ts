@@ -282,8 +282,8 @@ test('scriptless:false — the neutral text is the 2026-10-04 one', () => {
 console.log('\nwiring');
 test('VoiceTutorRealtime passes the whole issue (with `why`) and the graded transcript', () => {
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(vtr.includes("decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory' })"));
-  assert.ok(vtr.includes("decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill' })"));
+  assert.ok(vtr.includes("decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory', turn: judgeTurnContext })"));
+  assert.ok(vtr.includes("decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill', turn: judgeTurnContext })"));
   assert.ok(vtr.includes('buildPlannedJudgeNote(advisoryNotePlan, transcript,'));
   assert.ok(vtr.includes('buildPlannedJudgeNote(killNotePlan, transcript,'));
 });

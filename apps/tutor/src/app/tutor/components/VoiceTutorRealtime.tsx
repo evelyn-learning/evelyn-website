@@ -175,6 +175,7 @@ import { gateInequalityGraph, extractProblemInequalities } from '@/lib/tutor/whi
 import { boardInequalityFacts, formatInequalityFactsText, spokenRegionContradiction, spokenRegionFeedback, SPOKEN_REGION_ACTION } from '@/lib/tutor/whiteboard/inequality-facts';
 import { shouldPaintOnArrivalInTextMode } from '@/lib/tutor/whiteboard/render-sync';
 import { planFusedOpener, precheckCountsAsAnswer } from '@/lib/tutor/voice/work-then-match';
+import { WHOLE_ANSWER_REVEAL_ACTION, wholeAnswerRevealFeedback } from '@/lib/tutor/voice/whole-answer-reveal';
 import { shouldSkipProseDispute } from '@/lib/tutor/voice/answer-dispute-tiebreak';
 import { coverPresentation, noiseTipMayRideTurn, NOISE_TIP_NOTE, TEXT_COVER_VISIBLE_LINE, THINKING_HINT_EVENT } from '@/lib/tutor/voice/cover-layer';
 import {
@@ -285,7 +286,8 @@ import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, newPageTitle, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
-import { shouldAbortStalledBrain, decideStallRecovery, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
+import { shouldAbortStalledBrain, decideStallRecovery, shouldRetryStalledOpener, BRAIN_STALL_APOLOGY } from '@/lib/tutor/voice/brain-stall';
+import { canSubmitTyped, shouldSurfaceRealtimeError } from '@/lib/tutor/voice/typed-delivery';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 import { truncatePageTitle, retitleFromBatch } from '@/lib/tutor/whiteboard/page-title';
 
@@ -388,7 +390,7 @@ import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 // Verdict/counting round (2026-10-04): praise-then-exclusion, the judge's
 // structured verdict, short answers, questions/self-reports.
 import { decidePraiseExclusion, buildPraiseExclusionNote, isPraiseExclusionNote, shouldPlantPraiseExclusionNote, praiseExclusionNoteExpired, type PraiseExclusionNoteRecord } from '@/lib/tutor/voice/praise-exclusion';
-import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision } from '@/lib/tutor/voice/judge-issue-decision';
+import { decideJudgeIssue, planJudgeNote, buildPlannedJudgeNote, isSuppressibleDenial, describeJudgeIssueDecision, readJudgeTurnContext } from '@/lib/tutor/voice/judge-issue-decision';
 import { studentTurnShape, isHedgedValueAnswer } from '@/lib/tutor/orchestrator/student-turn-shape';
 import {
   TUTOR_PRAISE_EXCLUSION_KILL,
@@ -408,6 +410,7 @@ import {
   precheckOpenerContradiction,
   precheckContradictionFeedback,
   precheckCreditOverride,
+  wrongWholeAnswerChecked,
   type PublicVerdictPrecheck,
 } from '@/lib/tutor/voice/verdict-precheck-shared';
 import { TUTOR_PRECHECK_VERDICT_KILL, TUTOR_PRECHECK_CREDIT, TUTOR_TEXT_OPENER_BACKSTOP, TUTOR_TEXT_MATCH_COUNTING, TUTOR_VOICE_VERDICT_HOLD } from '@/lib/tutor/orchestrator/turn-round-flags';
@@ -505,7 +508,7 @@ import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
-import { textKickoffReady, textKickoffMessage } from '@/app/tutor/components/session/text-kickoff';
+import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn } from '@/app/tutor/components/session/text-kickoff';
 import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
 
 /** Step 4 concept tagging. Default ON per the standing flag rule — a new
@@ -1494,6 +1497,17 @@ export function VoiceTutorRealtime({
   // perceptionInterruptCheckpointRef gates the verdict handler so
   // only verdicts following a Stage-2 cancel trigger restore/merge.
   const inFlightBrainAbortRef = useRef<AbortController | null>(null);
+  // 2026-10-08: the brain turn the busy flag currently stands for — its
+  // trigger text, and whether a sentence of it has reached the student. Set
+  // per dispatch in handleStudentTranscriptForBrain (direct and queue-
+  // drained), cleared in its finally. Read by the composer to tell the
+  // automatic opening turn from any other turn in flight
+  // (session/text-kickoff.ts `decideTypedDuringTurn`).
+  const inFlightTurnRef = useRef<{ transcript: string; shown: boolean } | null>(null);
+  // The composer aborted the opening turn because the student typed before
+  // any of it was shown. Consumed by that turn's own catch in callBrainOnce:
+  // a silent abort — no opener retry, no stall retry, no fallback card.
+  const openerSupersededByStudentRef = useRef(false);
   const lastBrainCallContextRef = useRef<{ transcript: string; opts?: { silent?: boolean } } | null>(null);
   // Q3 timestamped-history (2026-06-16): wall-clock ms at which the
   // current/last brain turn actually started streaming (set in
@@ -3032,6 +3046,10 @@ export function VoiceTutorRealtime({
   const verdictPrecheckRef = useRef<PublicVerdictPrecheck | null>(null);
   /** The pre-check opener kill fires at most once per turn. */
   const verdictPrecheckKillUsedRef = useRef(false);
+  // 2026-10-08c: the sealed correct value that came with the pre-check
+  // (voice/whole-answer-seal.ts). Opaque here — it is only echoed back on a
+  // retry of the same turn so the server can keep guarding the result.
+  const verdictPrecheckSealRef = useRef<string | null>(null);
   /** Text mode "work it, then match" (2026-10-06, voice/work-then-match.ts):
    *  the server announced the mode for THIS turn (the `work-then-match`
    *  frame, sent before any sentence). False for voice and when the server
@@ -3056,7 +3074,8 @@ export function VoiceTutorRealtime({
   /** A soft stuck cue heard this turn, fed to the ledger at turn ok unless
    *  the verdict layer credited the same turn as correct. */
   const pendingStuckCueRef = useRef<{ segId?: string } | null>(null);
-  /** The opener's single network-failure retry (F6, 2026-09-05). */
+  /** The opener's single retry — a network failure (F6, 2026-09-05) or a
+   *  stall with nothing shown (2026-10-08); one between them. */
   const openerRetryUsedRef = useRef(false);
   /** An attempt carrying the FULL opening directive finished with spoken,
    *  un-killed text. From then on opening-phase turns get the slim follow-up
@@ -10074,11 +10093,19 @@ export function VoiceTutorRealtime({
       }
       return;
     }
+    // 2026-10-08: a text session with the brain relay needs the realtime
+    // socket for nothing — a failed connect (token or socket) is recorded,
+    // not bannered, and never reaches the parent's onError.
+    if (!shouldSurfaceRealtimeError({ errorName: error.name, textMode: sessionMode === 'text', relayActive: claudeBrainMode })) {
+      console.warn('[VoiceTutorRealtime] realtime connect failed (text mode — not surfaced):', error);
+      onDebugEvent?.('realtime_connect_failed_text', error.message);
+      return;
+    }
     console.error('[VoiceTutorRealtime] Error:', error);
     setErrorMessage(error.message);
     onDebugEvent?.('error', error.message);
     onError?.(error);
-  }, [onError, onDebugEvent, sessionMode]);
+  }, [onError, onDebugEvent, sessionMode, claudeBrainMode]);
 
   // Listen for molecule changes from the Ketcher editor
   // Use a ref to access sendTextMessage without re-creating the listener
@@ -10818,6 +10845,7 @@ export function VoiceTutorRealtime({
     // 2026-10-06: a prior turn's pre-check never applies to this one.
     verdictPrecheckRef.current = null;
     verdictPrecheckKillUsedRef.current = false;
+    verdictPrecheckSealRef.current = null;
     workThenMatchTurnRef.current = false;
     // 2026-10-02: fresh per-turn answer-attempt ledger slots (set below only
     // for a real student turn) — a prior turn's text must never be re-read.
@@ -10914,6 +10942,13 @@ export function VoiceTutorRealtime({
     // declared inside `try { }` is scoped to that block and invisible
     // from `catch { }` in JS/TS, even though both are one logical turn.
     let audibleSentenceCount = 0;
+    // 2026-10-08: this call was an opening turn the student's typed message
+    // took the place of (set in the catch; read after it, like the count above).
+    let supersededByStudent = false;
+    // A flag left over from a supersede that lost the race with the opening
+    // turn's own completion must not reach a later turn.
+    if (!isKickoffMessage(transcript)) openerSupersededByStudentRef.current = false;
+    const markInFlightTurnShown = (): void => { if (inFlightTurnRef.current) inFlightTurnRef.current.shown = true; };
     // R49 brain-stall guard. Per-call, declared beside audibleSentenceCount
     // and for the same reason: the catch below has to read it, and a `let`
     // inside the try is invisible from there. `stalled` is what separates a
@@ -11394,6 +11429,9 @@ export function VoiceTutorRealtime({
       // most once per turn, and the student's turn shape is read once (on a
       // retry the last assistant turn in history is the killed attempt).
       let openerBackstopKillUsed = false;
+      // 2026-10-08c: one retry per turn for a reply that stated the result
+      // of the whole problem (the server's `answer-reveal` frame).
+      let wholeAnswerRevealKillUsed = false;
       // 2026-10-06b: the spoken-region kill (text) also fires once per turn.
       let spokenRegionKillUsed = false;
       let openerBackstopShape: TurnShape | null | undefined;
@@ -12089,6 +12127,10 @@ export function VoiceTutorRealtime({
         // ref, signal is never aborted, fetch behaves identically.
         const brainAbort = new AbortController();
         inFlightBrainAbortRef.current = brainAbort;
+        // 2026-10-08: the student's typed message superseded this opening
+        // turn between attempts (no fetch was in flight to abort) — this
+        // attempt must not start. An aborted signal rejects the fetch at once.
+        if (openerSupersededByStudentRef.current && isKickoffMessage(transcript)) brainAbort.abort();
         // Fresh attempt — clear the aborted flag; only an AbortError this
         // attempt re-sets it (see the RESTORE-after-noise guard).
         brainTurnAbortedRef.current = false;
@@ -12150,6 +12192,12 @@ export function VoiceTutorRealtime({
               : {}),
             ...(sessionMode !== 'text' && attempt > 0 && verdictPrecheckRef.current
               ? { verdictPrecheck: verdictPrecheckRef.current }
+              : {}),
+            // 2026-10-08c, either mode: the sealed value that came with that
+            // pre-check (opaque here) — the server keeps the result of a
+            // wrongly answered whole problem out of the retry with it.
+            ...(attempt > 0 && verdictPrecheckRef.current && verdictPrecheckSealRef.current
+              ? { verdictPrecheckSeal: verdictPrecheckSealRef.current }
               : {}),
             // Board Map (project_tutor_board_map_design): send the FULL-board
             // snapshot (NOT segment-scoped) + the page list. buildWhiteboardSummary
@@ -12479,6 +12527,11 @@ export function VoiceTutorRealtime({
         // else was written), and whether the opener has been read.
         let openerBackstopDone = false;
         const openerBackstopHeld: string[] = [];
+        // 2026-10-08: the verdict / praise phrase removed from THIS attempt's
+        // opener (dropped whole, or cut from a fused sentence). The judge is
+        // shown the reply without it, so its "false denial" is checked
+        // against this (judge-issue-decision.ts `readJudgeTurnContext`).
+        let openerBackstopCutPhrase: string | null = null;
         // Fix B (2026-08-10 root cause, session portal-7cfa226c): parallel
         // array of the raw per-sentence text (pre-TTS-normalization, so
         // inline $...$ math survives) accumulated alongside attemptText —
@@ -12609,6 +12662,7 @@ export function VoiceTutorRealtime({
           const scriptId = pushTtsScriptForPerception(s);
           speakTextRef.current?.(s, scriptId);
           audibleSentenceCount++;
+          markInFlightTurnShown();
           // R49: audio is playing now — widen the stall window so a slow
           // tail is never cut out from under a turn the student is hearing.
           stallState.spokeAnySentence = true;
@@ -13166,6 +13220,7 @@ export function VoiceTutorRealtime({
             for (const text of openerBackstopHeld) restoredFrames.push({ type: 'sentence', text, synthetic: 'verdict_opener_restored' });
             onDebugEvent?.('verdict_opener_restored', `${openerBackstopHeld.length} sentence(s) — nothing else in the reply`);
             openerBackstopHeld.length = 0;
+            openerBackstopCutPhrase = null;   // shown after all
           }
           try {
             const plan = lessonPlanRef.current;
@@ -14252,6 +14307,7 @@ export function VoiceTutorRealtime({
                         // attemptText stays empty, so the next sentence is read
                         // as the opener in its turn ("Yes! Exactly. …").
                         openerBackstopHeld.push(updatedSentence);
+                        openerBackstopCutPhrase ??= openerRead.opener;
                         console.warn('[brain-orchestrator] verdict-only opener dropped before display:', JSON.stringify(updatedSentence.slice(0, 60)));
                         onDebugEvent?.('verdict_opener_stripped', `"${updatedSentence.slice(0, 60)}"`);
                         continue;
@@ -14273,7 +14329,7 @@ export function VoiceTutorRealtime({
                         if (fusedPlan.action === 'kill') {
                           openerBackstopKillUsed = true;
                           openerBackstopHeld.length = 0;
-                          rejectionsThisAttempt.push({ action: 'verdict_opener', reason: openerBackstopFeedback(updatedSentence, transcript, { nonAnswer: isNonAnswerShape(openerBackstopShape) }) });
+                          rejectionsThisAttempt.push({ action: 'verdict_opener', reason: openerBackstopFeedback(updatedSentence, transcript, { nonAnswer: isNonAnswerShape(openerBackstopShape), wrongWholeAnswer: wrongWholeAnswerChecked(verdictPrecheckRef.current) }) });
                           judgeRetriesUsed++;
                           await performKill();
                           console.warn('[brain-orchestrator] verdict opener fused with content — retrying:', JSON.stringify(updatedSentence.slice(0, 60)));
@@ -14284,6 +14340,7 @@ export function VoiceTutorRealtime({
                           // Back through the frame parser, so the cut sentence
                           // meets every guard a model-written one does.
                           buf = `data: ${JSON.stringify({ ...ev, text: fusedPlan.remainder, synthetic: 'verdict_opener_cut' })}\n\n` + buf;
+                          openerBackstopCutPhrase ??= openerRead.opener;
                           console.warn(`[brain-orchestrator] verdict phrase cut from the opener (${fusedPlan.why}):`, JSON.stringify(updatedSentence.slice(0, 60)));
                           onDebugEvent?.('verdict_opener_cut', `${fusedPlan.why} · "${openerRead.opener}" ← "${updatedSentence.slice(0, 50)}"`);
                           continue;
@@ -14651,6 +14708,7 @@ export function VoiceTutorRealtime({
                         const openerScriptId = pushTtsScriptForPerception(sentenceForSpeech);
                         speakTextRef.current?.(sentenceForSpeech, openerScriptId);
                         audibleSentenceCount++;
+                        markInFlightTurnShown();
                         // Render↔speech sync: count the fast-opener too (it
                         // bypasses speakOne but still reaches the speaker).
                         ttsDispatchedCountRef.current++;
@@ -16437,6 +16495,30 @@ export function VoiceTutorRealtime({
                   // flag TUTOR_TEXT_WORK_THEN_MATCH). Sent before any sentence.
                   if (!workThenMatchTurnRef.current) onDebugEvent?.('work_then_match', 'on for this turn');
                   workThenMatchTurnRef.current = true;
+                } else if ((ev as { type?: string }).type === 'answer-reveal') {
+                  // 2026-10-08c (voice/whole-answer-reveal.ts): under the
+                  // no-reveal rule for a wrong answer to the WHOLE problem, a
+                  // sentence or board item of this reply stated the result.
+                  // The server did not forward it and forwards nothing more
+                  // of the model's reply — only a fixed tail that reveals
+                  // nothing. First time in a turn: the attempt is discarded
+                  // and retried with the rule named (the standard kill path:
+                  // its bubble is replaced, its board renders are swept —
+                  // kill-keep.ts ANSWER_REVEALING_KILL_ACTIONS). With that
+                  // retry spent, what the server let through stands.
+                  const revealWhere = String((ev as { where?: unknown }).where ?? 'sentence');
+                  onDebugEvent?.('whole_answer_reveal_hit', `${revealWhere} withheld by the server (${String((ev as { how?: unknown }).how ?? '-')}) · attempt ${attempt}`);
+                  if (!attemptKilled && !wholeAnswerRevealKillUsed && attempt < attemptCap) {
+                    wholeAnswerRevealKillUsed = true;
+                    rejectionsThisAttempt.push({ action: WHOLE_ANSWER_REVEAL_ACTION, reason: wholeAnswerRevealFeedback(transcript) });
+                    judgeRetriesUsed++;
+                    await performKill();
+                    console.warn('[brain-orchestrator] reply stated the result of the whole problem — withheld, retrying once');
+                    onDebugEvent?.('whole_answer_reveal_retry', `student="${transcript.slice(0, 40)}"`);
+                  } else if (!attemptKilled) {
+                    console.warn('[brain-orchestrator] reply stated the result of the whole problem again — withheld; the fixed non-match statement and question close the reply');
+                    onDebugEvent?.('whole_answer_reveal_fallback', `retry spent · ${revealWhere}`);
+                  }
                 } else if ((ev as { type?: string }).type === 'verdict-precheck') {
                   // Text-mode verdict pre-check (2026-10-06): the server's
                   // independent check of the student's message, sent before
@@ -16445,6 +16527,8 @@ export function VoiceTutorRealtime({
                   const pc = sanitizePublicPrecheck((ev as { result?: unknown }).result);
                   if (pc) {
                     verdictPrecheckRef.current = pc;
+                    const seal = (ev as { seal?: unknown }).seal;
+                    verdictPrecheckSealRef.current = typeof seal === 'string' && seal ? seal : null;
                     // A check that found the answer wrong is independent
                     // evidence for the hedged-denial rule (answer-attempt.ts).
                     if (TUTOR_PRECHECK_CREDIT && precheckCreditOverride(pc).verifiedWrong) {
@@ -17120,6 +17204,19 @@ export function VoiceTutorRealtime({
               )
               : null;
             const judgeComputedFacts = judgeFactsNow ? formatInequalityFactsText(judgeFactsNow.facts).slice(0, 3800) : '';
+            // 2026-10-08 (portal-09624999 @69.9 s): what the runtime knows of
+            // this turn that the judge does not — whether the student's
+            // message was an answer at all, and whether an affirming opener
+            // was cut from the reply (spokenText is the reply AFTER the cut).
+            // A "false denial" is acted on only when these bear it out.
+            const judgeTurnContext = readJudgeTurnContext({
+              studentText: studentAnswer,
+              precheck: verdictPrecheckRef.current,
+              turnShape: studentAnswer
+                ? classifyTurnShape(studentAnswer, String([...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? ''))
+                : null,
+              cutOpener: openerBackstopCutPhrase,
+            });
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -17323,7 +17420,7 @@ export function VoiceTutorRealtime({
                   // claim-text rule below, unchanged.
                   const advisoryDecisions = advisoryIssues.map((i) => ({
                     claim: i.claim,
-                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory' }),
+                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory', turn: judgeTurnContext }),
                   }));
                   for (const d of advisoryDecisions) {
                     if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
@@ -17407,7 +17504,7 @@ export function VoiceTutorRealtime({
                   // fields this is the claim-text rule, unchanged.
                   const killDecisions = killIssues.map((i) => ({
                     claim: i.claim,
-                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill' }),
+                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill', turn: judgeTurnContext }),
                   }));
                   for (const d of killDecisions) {
                     if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
@@ -18920,13 +19017,21 @@ export function VoiceTutorRealtime({
       // Excluding it here routes a wedged stream into the brain-failure
       // branch below, so the student hears the honest cover line instead of
       // the silence the perception path deliberately keeps.
+      // 2026-10-08: an opening turn the composer aborted because the student
+      // typed before any of it was shown (text-kickoff.ts
+      // `decideTypedDuringTurn`). Silent whatever the stall guard was doing
+      // at that instant: the student's own message is about to be answered,
+      // so no opener retry, no stall retry and no "could you repeat that?".
+      supersededByStudent = openerSupersededByStudentRef.current && isKickoffMessage(transcript);
+      if (supersededByStudent) openerSupersededByStudentRef.current = false;
       const isAbort =
+        supersededByStudent || (
         !stallState.stalled && (
           (err instanceof DOMException && err.name === 'AbortError') ||
-          (err instanceof Error && /abort/i.test(err.message)));
+          (err instanceof Error && /abort/i.test(err.message))));
       if (isAbort) {
         brainTurnAbortedRef.current = true;
-        console.log('[brain-orchestrator] aborted (perception-initiated cancel)');
+        console.log(supersededByStudent ? '[brain-orchestrator] opening turn aborted (the student typed first)' : '[brain-orchestrator] aborted (perception-initiated cancel)');
         // Clean up the streaming chat entries so the cursor doesn't
         // keep blinking; do NOT speak a fallback line. (A continuation
         // aborted mid-flight keeps the already-delivered text.)
@@ -18954,6 +19059,22 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('opener_retry', `after ${err.message}`);
           setTimeout(() => {
             void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+          }, OPENER_RETRY_DELAY_MS);
+        } else if (shouldRetryStalledOpener({
+          stalled: stallState.stalled,
+          nothingShown: audibleSentenceCount === 0,
+          transcript,
+          retryUsed: openerRetryUsedRef.current,
+        })) {
+          // Live 2026-10-08 (text-mode partner session): the OPENER stalled —
+          // no SSE frame for 23 s, nothing spoken — and was never retried (the
+          // retry above is network failures only; decideStallRecovery leaves
+          // bracketed dispatches alone). Same single-use guard, same delay.
+          const openerKickoff = transcript.trim();
+          openerRetryUsedRef.current = true;
+          onDebugEvent?.('opener_stall_retry', `nothing shown — retrying ${openerKickoff} once`);
+          setTimeout(() => {
+            void handleStudentTranscriptForBrainRef.current?.(openerKickoff, { silent: true, bypassMidUtteranceGuard: true });
           }, OPENER_RETRY_DELAY_MS);
         } else if (escalationGaveUpRef.current) {
           onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
@@ -19176,7 +19297,10 @@ export function VoiceTutorRealtime({
       // (this runs after the stream/attempt loop, purely visual) — nothing
       // here touches speech. The pending flag is consumed unconditionally so
       // this can fire at most once per session, on the opener turn only.
-      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current) {
+      // 2026-10-08: not for an opening turn the student's typed message took
+      // the place of — the pending flag stays armed, so THAT turn is the
+      // opener turn (as when the student starts first).
+      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current && !supersededByStudent) {
         openingTurnPendingRef.current = false;
         if (shouldEmitOpenerFallback({
           openingPhase: true,
@@ -19743,6 +19867,7 @@ export function VoiceTutorRealtime({
       return;
     }
     setBrainBusy(true);
+    inFlightTurnRef.current = { transcript, shown: false };
     // Stage 4 regression fix (2026-06-16): show the 'processing' ("Thinking…")
     // indicator while the brain fetch is in flight. The production WS no
     // longer transcribes input (perception is the sole input authority), so
@@ -20053,11 +20178,13 @@ export function VoiceTutorRealtime({
           }
         }
         armCoverForDispatch(combined);
+        inFlightTurnRef.current = { transcript: combined, shown: false };
         await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
       }
     } finally {
       clearTimeout(watchdog);
       setBrainBusy(false);
+      inFlightTurnRef.current = null;
       // Clear the thinking indicator. No-op if TTS already promoted the
       // state to 'speaking' (signalBrainThinking only resets when still
       // 'processing'), so a turn that produced audio is unaffected; this
@@ -25111,13 +25238,40 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
                 .replace(/\\\[([^\]]*)\\\]/g, '$1')
                 .replace(/\\\$([^$]*)\\\$/g, '$1')
             : rawText;
-          if (text && realtime.isConnected) {
+          // 2026-10-08: text mode with the brain relay does not wait on the
+          // realtime connection (typed-delivery.ts) — a slow or failed token
+          // used to swallow the submit here without a trace.
+          if (text && canSubmitTyped({ isConnected: realtime.isConnected, textMode: sessionMode === 'text', relayActive: claudeBrainMode })) {
             // The student typing into this textbox is a strong signal
             // they think the system is stuck — clear any stale brain-
             // busy flag and queued transcripts so the typed turn
             // doesn't get silently swallowed behind a hung previous
             // request. Observed 2026-04-29 electricity session.
-            if (brainBusyRef.current) {
+            // 2026-10-08 (portal-09624999): that clear does not abort the
+            // turn in flight. When that turn is the automatic OPENING turn
+            // the typed message ran beside it — two overlapping brain turns,
+            // two tutor messages back to back. Now: an opening turn that has
+            // shown nothing is aborted and the student's message is the first
+            // turn; one that has already shown a sentence is left to finish,
+            // with the busy flag set, so the message queues and runs right
+            // after it. Any other turn in flight: as before.
+            const typedDuringTurn = decideTypedDuringTurn({
+              sessionMode,
+              brainBusy: brainBusyRef.current,
+              inFlightTranscript: inFlightTurnRef.current?.transcript ?? null,
+              inFlightShown: inFlightTurnRef.current?.shown === true,
+            });
+            if (typedDuringTurn === 'supersede_opening') {
+              // The busy flag stays set: the aborted turn's own handler
+              // releases it (or drains this message, if it is queued by then).
+              // No auto-replay of the kickoff either — the student has spoken.
+              openerSupersededByStudentRef.current = true;
+              warmupKickoffRef.current = null;
+              onDebugEvent?.('opening_turn_superseded', `typed before anything was shown — ${inFlightTurnRef.current?.transcript ?? ''} aborted`);
+              try { inFlightBrainAbortRef.current?.abort(); } catch { /* already gone */ }
+            } else if (typedDuringTurn === 'queue_after_opening') {
+              onDebugEvent?.('typed_queued_after_opening', 'opening turn already showing — typed message runs after it');
+            } else if (typedDuringTurn === 'force_clear') {
               console.warn('[VoiceTutor] typed input while brainBusy=true — force-clearing stale busy flag');
               setBrainBusy(false);
               queuedTranscriptsRef.current = [];

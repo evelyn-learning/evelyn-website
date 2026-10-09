@@ -123,3 +123,27 @@ export function decideStallRecovery(input: {
   const alreadyRetried = !!prev && prev.transcript === t && input.now - prev.at <= BRAIN_STALL_RETRY_WINDOW_MS;
   return alreadyRetried ? 'apology' : 'retry';
 }
+
+// ── 2026-10-08: a stalled OPENER ──────────────────────────────────────────
+//
+// Live (text-mode partner session): the opening request stalled, the 22 s
+// pre-audio abort fired, the fallback card rendered — and that was the whole
+// opening. decideStallRecovery leaves bracketed dispatches alone, and the
+// opener's own retry (F6, 2026-09-05) covered only a client-side fetch
+// failure. A stalled opener that showed nothing is retried once, on the same
+// single-use guard as F6, so an opener is never sent more than twice.
+
+export function shouldRetryStalledOpener(input: {
+  /** This call ended by the stall guard's own abort. */
+  stalled: boolean;
+  /** Nothing of this attempt reached the student (no sentence dispatched). */
+  nothingShown: boolean;
+  /** The turn's trigger text — only the session-start kickoffs qualify. */
+  transcript: string;
+  /** The opener's one retry (network failure or stall) is already spent. */
+  retryUsed: boolean;
+}): boolean {
+  if (!input.stalled || !input.nothingShown || input.retryUsed) return false;
+  const t = (input.transcript ?? '').trim();
+  return t === '[start lesson]' || t === '[start session]';
+}

@@ -484,3 +484,20 @@ export const TUTOR_ECHO_ANSWER_NO_CREDIT =
  *  variable, not inlined there). */
 export const TUTOR_HOMEWORK_VERBATIM =
   process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_VERBATIM !== 'off';
+
+// ── 2026-10-08: live text homework session portal-09624999 ─────────────────
+// Each defaults ON; 'off' restores the behaviour before it for that one
+// mechanism.
+
+/** Text mode ("work it, then match"): a wrong answer to the WHOLE problem is
+ *  told that it does not match and pointed to the first thing to re-examine;
+ *  the correct result is neither given to the model nor stated by it. */
+export const TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL =
+  process.env.NEXT_PUBLIC_TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL !== 'off';
+
+/** A judge finding "the tutor rejected a correct answer" plants its
+ *  retraction note (and withholds credit) only when the student's turn was an
+ *  answer, the flagged claim is a denial, and no affirming opener was cut
+ *  from that tutor turn (voice/judge-issue-decision.ts). */
+export const TUTOR_JUDGE_FALSE_DENIAL_GUARDS =
+  process.env.NEXT_PUBLIC_TUTOR_JUDGE_FALSE_DENIAL_GUARDS !== 'off';

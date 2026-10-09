@@ -47,14 +47,24 @@
  * 2026-10-06b: verdict UNSURE → nothing, whatever the kind — except the
  * DENIAL_RE re-check row above, which is kept (TUTOR_JUDGE_UNSURE_NO_NOTE).
  *
+ * 2026-10-08 (portal-09624999 @69.9 s): the two retraction rows also need
+ * the TURN to bear the finding out — the student's turn was an answer, and no
+ * affirming opener was cut from the tutor's reply before display; and
+ * kind=false_denial needs a claim that is a denial, as the row below it always
+ * did. Otherwise nothing (TUTOR_JUDGE_FALSE_DENIAL_GUARDS; see
+ * `readJudgeTurnContext`).
+ *
  * A response with NEITHER field is handled exactly as before.
  *
  * Pure; never throws.
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { buildJudgeCorrectionNote, hasMathExpression, otherClaimsRider } from '@/lib/tutor/voice/judge-correction-note';
-import { TUTOR_JUDGE_CORRECTLY_REASONS, TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_JUDGE_CORRECTLY_REASONS, TUTOR_JUDGE_FALSE_DENIAL_GUARDS, TUTOR_JUDGE_NOTE_FALSE_PRAISE, TUTOR_JUDGE_UNSURE_NO_NOTE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { isDenialClaim } from '@/lib/tutor/voice/pacing-verdict';
+import { isDenyingOpenerPhrase, isNonAnswerShape } from '@/lib/tutor/voice/work-then-match';
+import { opensWithDenial, precheckInforms, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
+import type { TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
 
 export const JUDGE_STUDENT_ANSWER_VERDICTS = ['correct', 'incorrect', 'unsure', 'not_an_answer'] as const;
 export type JudgeStudentAnswerVerdict = (typeof JUDGE_STUDENT_ANSWER_VERDICTS)[number];
@@ -106,8 +116,55 @@ export interface JudgeIssueDecision {
     | 'statement-judged-correct'
     | 'not-an-answer-nothing-to-correct'
     | 'judge-unsure'
+    | 'student-turn-not-an-answer'
+    | 'claim-not-a-denial'
+    | 'affirming-opener-cut'
     | 'not-noteworthy';
   fields: JudgeIssueFields;
+}
+
+// ── 2026-10-08: what the TURN says about a "false denial" ──────────────────
+//
+// portal-09624999 @69.9 s: the student's message was a question and a request
+// (pre-check: answers=neither). The tutor agreed with it — its "Good catch —"
+// was cut by the text-mode opener backstop, so the judge was shown a reply
+// with no sign of the agreement — and the judge returned kind=false_denial,
+// verdict=correct on the agreeing sentence. The decision read those two
+// fields alone: a retraction note was planted, and the next turn apologised
+// for a push-back that had never happened.
+
+/** What the runtime already knows about the turn a judge issue is about. */
+export interface JudgeTurnContext {
+  /** The student's turn proposed an answer (false: a question, a request, a
+   *  statement of not knowing, a bare assent that settles nothing, no words). */
+  studentAnswered: boolean;
+  /** An AFFIRMING verdict / praise opener was removed from this tutor turn
+   *  before display (and so before the judge saw it). */
+  affirmingOpenerCut: boolean;
+}
+
+/**
+ * Read the turn context from what the orchestrator has in hand.
+ *  - studentAnswered: the pre-check, when it informs, decides (answers ≠
+ *    neither); else the runtime's sorting (`isNonAnswerShape`); with neither,
+ *    true — as before. A turn with no student words is never an answer.
+ *  - affirmingOpenerCut: `cutOpener` is the phrase the opener backstop removed
+ *    ("Good catch", "Right"); a denying one ("Not quite") does not count.
+ */
+export function readJudgeTurnContext(input: {
+  studentText: string | null | undefined;
+  precheck: PublicVerdictPrecheck | null | undefined;
+  turnShape: TurnShape | null | undefined;
+  cutOpener: string | null | undefined;
+}): JudgeTurnContext {
+  const said = (input?.studentText ?? '').trim();
+  const studentAnswered = !said || said.startsWith('[')
+    ? false
+    : precheckInforms(input.precheck)
+      ? input.precheck.answers !== 'neither'
+      : !isNonAnswerShape(input.turnShape);
+  const cut = (input?.cutOpener ?? '').trim();
+  return { studentAnswered, affirmingOpenerCut: !!cut && !isDenyingOpenerPhrase(cut) && !opensWithDenial(cut) };
 }
 
 /** The pre-2026-10-04 rule, keyed on the claim's text. */
@@ -191,6 +248,12 @@ export function decideJudgeIssue(input: {
   /** Unset ⇒ TUTOR_JUDGE_UNSURE_NO_NOTE; false ⇒ the table as it stood on
    *  2026-10-05 (an unsure judge still planted the neutral / false-praise note). */
   unsureNoNote?: boolean;
+  /** 2026-10-08: the turn the issue is about (`readJudgeTurnContext`). Unset
+   *  ⇒ nothing is known: an answer, nothing cut. */
+  turn?: JudgeTurnContext;
+  /** Unset ⇒ TUTOR_JUDGE_FALSE_DENIAL_GUARDS; false ⇒ the retraction rows as
+   *  they stood on 2026-10-06 (the judge's two fields alone). */
+  falseDenialGuards?: boolean;
 }): JudgeIssueDecision {
   const claim = input?.issue?.claim ?? '';
   const severity = input?.severity === 'kill' ? 'kill' : 'advisory';
@@ -211,6 +274,15 @@ export function decideJudgeIssue(input: {
    *  the re-check says so; the incorrect credit is not counted meanwhile. */
   const recheck = (): JudgeIssueDecision =>
     ({ plantNote: true, noteMode: 'legacy', withholdCredit: true, reason: 'denial-unverified', fields });
+  // 2026-10-08: "you were right, I was wrong to say otherwise" needs a turn in
+  // which a correct ANSWER was actually denied. Why it was not, or null.
+  const guards = (input.falseDenialGuards ?? TUTOR_JUDGE_FALSE_DENIAL_GUARDS) === true;
+  const turnRulesOutDenial = (): 'student-turn-not-an-answer' | 'affirming-opener-cut' | null => {
+    if (!guards || !input.turn) return null;
+    if (input.turn.studentAnswered === false) return 'student-turn-not-an-answer';
+    if (input.turn.affirmingOpenerCut === true) return 'affirming-opener-cut';
+    return null;
+  };
 
   // The judge says the tutor rejected a correct answer.
   if (kind === 'false_denial') {
@@ -218,6 +290,10 @@ export function decideJudgeIssue(input: {
     // the production shape. The explicit verdict on the answer wins.
     if (answerJudgedWrong) return none('judge-self-contradiction');
     if (verdict === 'correct') {
+      // No note and nothing withheld unless the turn bears it out, and the
+      // flagged claim is itself a denial.
+      const ruledOut = turnRulesOutDenial() ?? (guards && !claimIsDenial ? 'claim-not-a-denial' : null);
+      if (ruledOut) return none(ruledOut);
       return { plantNote: true, noteMode: 'retraction', withholdCredit: true, reason: 'false-denial', fields };
     }
     // It did not commit to the student being right: no "you were right" —
@@ -225,6 +301,8 @@ export function decideJudgeIssue(input: {
     if (claimOpensWithDenial) return recheck();
   }
   if (verdict === 'correct' && claimIsDenial && kind !== 'false_praise') {
+    const ruledOut = turnRulesOutDenial();
+    if (ruledOut) return none(ruledOut);
     return { plantNote: true, noteMode: 'retraction', withholdCredit: true, reason: 'student-correct-denied', fields };
   }
   // Wording on a verdict that was itself right ("close though" on an answer

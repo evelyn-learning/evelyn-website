@@ -112,6 +112,9 @@ export const ANSWER_REVEALING_KILL_ACTIONS: ReadonlySet<string> = new Set([
   'false_simplification_denial',
   'false_final_assertion',
   'try_yourself_answer_reveal',
+  // 2026-10-08c: the reply stated the result of the whole problem
+  // (voice/whole-answer-reveal.ts).
+  'whole_answer_reveal',
 ]);
 
 /** True when any of the attempt's rejections is a verdict / assent kill. */

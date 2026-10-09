@@ -11,12 +11,16 @@
  * Run: npx tsx scripts/test-judge-issue-decision.ts
  */
 import { strict as assert } from 'node:assert';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import {
   decideJudgeIssue,
   planJudgeNote,
   buildPlannedJudgeNote,
   isSuppressibleDenial,
   readJudgeIssueFields,
+  readJudgeTurnContext,
+  describeJudgeIssueDecision,
   JUDGE_STUDENT_ANSWER_VERDICTS,
   JUDGE_ISSUE_KINDS,
   type JudgeIssueDecision,
@@ -41,7 +45,9 @@ const d = (claim: string, fields: Record<string, unknown>, severity: Sev = 'advi
   // statement the judge itself calls correct) are in test-judge-note-false-praise.ts.
   // unsureNoNote:false likewise pins the table before 2026-10-06b; the
   // "unsure ⇒ no note" row has its own section at the end of this file.
-  decideJudgeIssue({ enabled, issue: { claim, ...fields }, severity, falsePraiseRound: false, unsureNoNote: false });
+  // falseDenialGuards:false pins the table before 2026-10-08; the guards on
+  // the retraction rows have their own section at the end of this file.
+  decideJudgeIssue({ enabled, issue: { claim, ...fields }, severity, falsePraiseRound: false, unsureNoNote: false, falseDenialGuards: false });
 
 console.log('\njudge issue decision — the production case');
 
@@ -77,10 +83,18 @@ test('false_denial with the verdict unsure / missing → the LEGACY re-check not
     assert.deepEqual([r.plantNote, r.noteMode, r.withholdCredit], [true, 'legacy', true], String(v));
   }
 });
-test('false_denial is honoured even when the quoted claim does not open with a denial', () => {
-  const r = d("Hmm, let's look at that again — the answer is actually x.", { issueKind: 'false_denial', studentAnswerVerdict: 'correct' });
+test('false_denial on a claim that is not a denial: honoured before 2026-10-08, nothing since', () => {
+  // CHANGED (2026-10-08, portal-09624999 @69.9 s): this pinned a retraction
+  // for any claim the judge called false_denial. The flagged claim there was
+  // the tutor AGREEING with the student; the note made the next turn
+  // apologise for a push-back that never happened. Under the guards the
+  // claim itself has to be a denial (the sibling row always required it).
+  const claim = "Hmm, let's look at that again — the answer is actually x.";
+  const r = d(claim, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' });
   assert.equal(r.noteMode, 'retraction');
   assert.equal(r.withholdCredit, true);
+  const guarded = decideJudgeIssue({ enabled: true, issue: { claim, issueKind: 'false_denial', studentAnswerVerdict: 'correct' }, severity: 'advisory' });
+  assert.deepEqual([guarded.plantNote, guarded.withholdCredit, guarded.reason], [false, false, 'claim-not-a-denial']);
 });
 test('studentAnswerVerdict=correct on a denial claim → retraction, whatever the kind', () => {
   for (const k of ['other', 'grounding', 'wrong_math', 'tone_or_wording', undefined]) {
@@ -434,6 +448,109 @@ test('verdicts other than unsure are untouched by the new row', () => {
   assert.deepEqual([missing.plantNote, missing.noteMode], [true, 'neutral']);
   const retract = now(DENIAL, { issueKind: 'false_denial', studentAnswerVerdict: 'correct' });
   assert.deepEqual([retract.plantNote, retract.noteMode, retract.withholdCredit], [true, 'retraction', true]);
+});
+
+console.log('\njudge issue decision — 2026-10-08: a retraction needs an answer that was actually denied');
+
+// portal-09624999 @69.9 s. The student's message was a question and a request
+// (pre-check: answers=neither); the tutor agreed with it ("Good catch —" was
+// cut from the reply before display); the judge, shown the reply without its
+// opener, returned kind=false_denial verdict=correct on the sentence that
+// agreed. A retraction note was planted and the next turn opened "…and I
+// shouldn't have pushed back on that".
+const ANSWERED = { studentAnswered: true, affirmingOpenerCut: false };
+const g = (claim: string, fields: Record<string, unknown>, turn?: { studentAnswered: boolean; affirmingOpenerCut: boolean }, severity: Sev = 'advisory'): JudgeIssueDecision =>
+  decideJudgeIssue({ enabled: true, issue: { claim, ...fields }, severity, ...(turn ? { turn } : {}) });
+const FD = { issueKind: 'false_denial', studentAnswerVerdict: 'correct' };
+const AGREEING = 'That is actually the right way to find it.';
+
+test('LIVE: the tutor agreed, the opener was cut, the student had asked a question → no note, nothing withheld', () => {
+  const turn = readJudgeTurnContext({
+    studentText: 'Should I not use the other one instead? Please show both separately.',
+    precheck: { answers: 'neither', target: '', proposed: 'a request', verdict: 'cannot_determine', confidence: 'medium' },
+    turnShape: null,
+    cutOpener: 'Good catch',
+  });
+  assert.deepEqual(turn, { studentAnswered: false, affirmingOpenerCut: true });
+  const r = g(AGREEING, FD, turn);
+  assert.deepEqual([r.plantNote, r.withholdCredit], [false, false]);
+  assert.equal(planJudgeNote([{ claim: AGREEING, decision: r }]), null);
+});
+test('the genuine case is kept: an answer, a denying claim, nothing cut → retraction note + credit withheld', () => {
+  for (const turn of [ANSWERED, undefined]) {
+    for (const sev of ['advisory', 'kill'] as const) {
+      const r = g(DENIAL, FD, turn, sev);
+      assert.deepEqual([r.plantNote, r.noteMode, r.withholdCredit, r.reason], [true, 'retraction', true, 'false-denial'], `${JSON.stringify(turn)}/${sev}`);
+    }
+  }
+  const sibling = g(DENIAL, { issueKind: 'other', studentAnswerVerdict: 'correct' }, ANSWERED);
+  assert.deepEqual([sibling.plantNote, sibling.noteMode, sibling.withholdCredit, sibling.reason], [true, 'retraction', true, 'student-correct-denied']);
+});
+test('guard 1 — the student\'s turn was not an answer → nothing, with its reason', () => {
+  for (const sev of ['advisory', 'kill'] as const) {
+    const r = g(DENIAL, FD, { studentAnswered: false, affirmingOpenerCut: false }, sev);
+    assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'student-turn-not-an-answer'], sev);
+  }
+  // The sibling row (verdict correct on a denying claim, any other kind) too.
+  const sibling = g(DENIAL, { issueKind: 'other', studentAnswerVerdict: 'correct' }, { studentAnswered: false, affirmingOpenerCut: false });
+  assert.deepEqual([sibling.plantNote, sibling.withholdCredit, sibling.reason], [false, false, 'student-turn-not-an-answer']);
+});
+test('guard 2 — the claim is not a denial → nothing, with its reason', () => {
+  const r = g(AGREEING, FD, ANSWERED);
+  assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'claim-not-a-denial']);
+  // The widened denial forms the pacing read uses still count.
+  assert.equal(g("That doesn't work here. Plug it in.", FD, ANSWERED).noteMode, 'retraction');
+});
+test('guard 3 — an affirming opener was cut from this turn → nothing, with its reason', () => {
+  const r = g(DENIAL, FD, { studentAnswered: true, affirmingOpenerCut: true });
+  assert.deepEqual([r.plantNote, r.withholdCredit, r.reason], [false, false, 'affirming-opener-cut']);
+  const sibling = g(DENIAL, { issueKind: 'grounding', studentAnswerVerdict: 'correct' }, { studentAnswered: true, affirmingOpenerCut: true });
+  assert.deepEqual([sibling.plantNote, sibling.withholdCredit, sibling.reason], [false, false, 'affirming-opener-cut']);
+});
+test('the guards touch only the retraction rows', () => {
+  const nonAnswer = { studentAnswered: false, affirmingOpenerCut: true };
+  // An unsettled denial keeps its legacy re-check; the tutor's own maths its neutral note.
+  const recheck = g(DENIAL, { issueKind: 'false_denial' }, nonAnswer);
+  assert.deepEqual([recheck.plantNote, recheck.noteMode, recheck.withholdCredit], [true, 'legacy', true]);
+  const maths = g(MATH, { issueKind: 'wrong_math', studentAnswerVerdict: 'not_an_answer' }, nonAnswer);
+  assert.deepEqual([maths.plantNote, maths.noteMode, maths.withholdCredit], [true, 'neutral', false]);
+  assert.equal(g(DENIAL, { issueKind: 'false_denial', studentAnswerVerdict: 'incorrect' }, nonAnswer).reason, 'judge-self-contradiction');
+});
+test('switch off ⇒ the table before 2026-10-08, whatever the turn context says', () => {
+  const r = decideJudgeIssue({ enabled: true, issue: { claim: AGREEING, ...FD }, severity: 'advisory', turn: { studentAnswered: false, affirmingOpenerCut: true }, falseDenialGuards: false });
+  assert.deepEqual([r.plantNote, r.noteMode, r.withholdCredit, r.reason], [true, 'retraction', true, 'false-denial']);
+});
+test('turn context: what counts as an answer, and as an affirming opener that was cut', () => {
+  const p = (o: Record<string, unknown>) => ({ answers: 'open_question', target: '', proposed: 'zzz', verdict: 'correct', confidence: 'high', ...o }) as Parameters<typeof readJudgeTurnContext>[0]['precheck'];
+  const ctx = (o: Partial<Parameters<typeof readJudgeTurnContext>[0]>) => readJudgeTurnContext({ studentText: 'zzz', precheck: null, turnShape: null, cutOpener: null, ...o });
+  // Nothing known ⇒ as before: an answer, nothing cut.
+  assert.deepEqual(ctx({}), { studentAnswered: true, affirmingOpenerCut: false });
+  // The pre-check, when it informs, decides.
+  assert.equal(ctx({ precheck: p({ answers: 'neither', verdict: 'cannot_determine' }) }).studentAnswered, false);
+  assert.equal(ctx({ precheck: p({ answers: 'overall_problem' }) }).studentAnswered, true);
+  assert.equal(ctx({ precheck: p({ answers: 'neither', confidence: 'low' }) }).studentAnswered, true, 'a low-confidence check says nothing');
+  // Else the runtime's sorting of the message.
+  const shape = (shape: string) => ({ shape, open: null, answerShaped: false }) as unknown as Parameters<typeof readJudgeTurnContext>[0]['turnShape'];
+  for (const s of ['question', 'request', 'no_answer']) assert.equal(ctx({ turnShape: shape(s) }).studentAnswered, false, s);
+  assert.equal(ctx({ turnShape: { shape: 'answer', open: null, answerShaped: true } as unknown as Parameters<typeof readJudgeTurnContext>[0]['turnShape'] }).studentAnswered, true);
+  // A check that found an answer outranks the sorting.
+  assert.equal(ctx({ precheck: p({}), turnShape: shape('question') }).studentAnswered, true);
+  // No student words at all (a runtime turn).
+  for (const t of ['', '   ', '[start lesson]']) assert.equal(ctx({ studentText: t }).studentAnswered, false, JSON.stringify(t));
+  // Cut openers: affirming ones count, denying ones do not.
+  for (const o of ['Good catch', 'Right', 'Exactly', 'Yes', "That's right", 'Nice work']) assert.equal(ctx({ cutOpener: o }).affirmingOpenerCut, true, o);
+  for (const o of ['Not quite', 'No', 'Close', 'Almost', "That's not right", 'Good try', 'Incorrect', '', null]) assert.equal(ctx({ cutOpener: o }).affirmingOpenerCut, false, String(o));
+});
+test('the debug line names the new reasons', () => {
+  const r = g(AGREEING, FD, { studentAnswered: false, affirmingOpenerCut: true });
+  assert.equal(describeJudgeIssueDecision(r), 'kind=false_denial verdict=correct → no-note no-withhold (student-turn-not-an-answer)');
+});
+test('wiring: the orchestrator hands both judge branches the turn context, read after the opener backstop', () => {
+  const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  assert.ok(vtr.includes("severity: 'advisory', turn: judgeTurnContext })"));
+  assert.ok(vtr.includes("severity: 'kill', turn: judgeTurnContext })"));
+  assert.ok(vtr.includes('cutOpener: openerBackstopCutPhrase'));
+  assert.equal(vtr.split('openerBackstopCutPhrase ??= openerRead.opener').length - 1, 2, 'recorded for a dropped opener and for a cut one');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

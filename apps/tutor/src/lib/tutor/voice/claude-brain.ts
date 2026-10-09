@@ -47,6 +47,16 @@ import {
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
 import { formatWorkThenMatchBlock } from './work-then-match';
+import {
+  boardRevealsWithheldAnswer,
+  revealsWithheldAnswer,
+  wholeAnswerFallbackTail,
+  wholeAnswerRevealGuardActive,
+  WHOLE_ANSWER_BOARD_WITHHELD_REASON,
+  type WithheldAnswer,
+} from './whole-answer-reveal';
+import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
+import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
@@ -516,6 +526,10 @@ export interface BrainTurnInput {
    *  (without the correct value, which never left the server). Used only
    *  when no fresh student message is present. */
   verdictPrecheckCarry?: PublicVerdictPrecheck;
+  /** 2026-10-08c: the sealed correct value the client was sent with that
+   *  pre-check (./whole-answer-seal.ts) — opaque to the browser. It re-arms
+   *  the whole-answer reveal guard on a retry of the turn. */
+  verdictPrecheckSeal?: string;
   /** 2026-10-06b: the data of the newest graph on the board that draws the
    *  active problem's boundaries (the browser picks it). Read defensively and
    *  only for how each line is DRAWN (colour, legend label) — the facts
@@ -675,7 +689,14 @@ export type BrainStreamEvent =
    *  sentence of the turn; the client uses it to stop a contradicting opener
    *  before display and to bound the counting path. Only sent when the check
    *  informs (not low-confidence, not failed). */
-  | { type: 'verdict-precheck'; result: PublicVerdictPrecheck; ms: number }
+  | { type: 'verdict-precheck'; result: PublicVerdictPrecheck; ms: number; seal?: string }
+  /** 2026-10-08c (./whole-answer-reveal.ts): a sentence or a board tool call
+   *  of this reply stated the result of the whole problem while the no-reveal
+   *  rule was active. It was NOT forwarded, and nothing more of the model's
+   *  reply will be; a fixed tail that reveals nothing follows this frame. The
+   *  frame carries no value. The browser discards the attempt and retries
+   *  once; with that retry spent it keeps what was forwarded. */
+  | { type: 'answer-reveal'; where: 'sentence' | 'board'; how: 'number' | 'text' }
   /** Voice: a pre-check of this message has been started alongside the brain
    *  call. Sent before any sentence. The browser holds back a sentence that
    *  carries a verdict until the finding (or the frame below) arrives. */
@@ -2165,6 +2186,44 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // "Work it, then match": true only when the route set it for the session's mode.
   const workThenMatch = input.textWorkThenMatch === true || voiceWorkThenMatch;
   if (workThenMatch) yield { type: 'work-then-match' };
+  // 2026-10-08c — wrong answer to the WHOLE problem: the result never leaves
+  // this function (./whole-answer-reveal.ts). Armed once the pre-check's
+  // value is known (text: before the brain call; a retry: from the seal the
+  // browser echoes; voice: when the parallel check lands — sentences already
+  // forwarded by then are not covered). Every sentence and tool call below
+  // goes out through `guardedSentence` / the tool-call check.
+  const reveal: { withheld: WithheldAnswer | null; muted: boolean; forwarded: string[] } = { withheld: null, muted: false, forwarded: [] };
+  const armRevealGuard = (pub: PublicVerdictPrecheck | null | undefined, value: string | undefined, studentText: string): string => {
+    if (!workThenMatch || !wholeAnswerRevealGuardActive(pub, value)) return '';
+    reveal.withheld = {
+      value: String(value),
+      studentText,
+      givenText: [
+        ...(input.homework?.problems ?? []).map((p) => p.text),
+        input.activeProblem?.statement ?? '',
+        ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')),
+      ].join('\n'),
+    };
+    console.log('[whole-answer-reveal] guard armed for this request');
+    return sealWithheldAnswer({ value: String(value), studentText });
+  };
+  /** The frame and the fixed tail, once; nothing of the model's reply after it. */
+  function* revealStop(where: 'sentence' | 'board', how: 'number' | 'text' | null, matched?: string): Generator<BrainStreamEvent> {
+    reveal.muted = true;
+    console.warn(`[whole-answer-reveal] ${where} withheld (${how}; matched "${String(matched ?? '').slice(0, 40)}") — fixed tail follows`);
+    yield { type: 'answer-reveal', where: where, how: how ?? 'text' };
+    for (const text of wholeAnswerFallbackTail(reveal.forwarded)) {
+      reveal.forwarded.push(text);
+      yield { type: 'sentence', text };
+    }
+  }
+  function* guardedSentence(text: string): Generator<BrainStreamEvent> {
+    if (reveal.muted) return;
+    const hit = revealsWithheldAnswer(text, reveal.withheld);
+    if (hit.hit) { yield* revealStop('sentence', hit.how, hit.matched); return; }
+    reveal.forwarded.push(text);
+    yield { type: 'sentence', text };
+  }
   const turnShapeBlock = turnShapeOn
     ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
     : '';
@@ -2222,13 +2281,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${precheckInforms(pub) ? '' : ' (not injected)'}`);
         if (precheckInforms(pub)) {
           answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}) });
-          yield { type: 'verdict-precheck', result: pub, ms };
+          const seal = armRevealGuard(pub, result.correctValue, studentSaid);
+          yield { type: 'verdict-precheck', result: pub, ms, ...(seal ? { seal } : {}) };
         }
       } else {
         console.log(`[verdict-precheck] ${ms} ms · no result (not injected)`);
       }
     } else if (!turnShape && input.verdictPrecheckCarry) {
       answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch ? { workThenMatch: true } : undefined);
+      const carried = openWithheldAnswer(input.verdictPrecheckSeal);
+      if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       if (answerCheckBlock) console.log('[verdict-precheck] carried from the first attempt of this turn');
     }
   }
@@ -2259,6 +2321,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       });
     } else if (!turnShape && input.verdictPrecheckCarry) {
       answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch ? { workThenMatch: true } : undefined);
+      const carried = openWithheldAnswer(input.verdictPrecheckSeal);
+      if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       if (answerCheckBlock) console.log('[verdict-precheck] voice: carried from the first attempt of this turn');
     }
   }
@@ -2273,7 +2337,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const summary = pub ? `answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}` : 'no result';
     if (pub && precheckInforms(pub)) {
       console.log(`[verdict-precheck] voice (parallel) ${ms} ms · ${result!.model} · ${summary}`);
-      return { type: 'verdict-precheck', result: pub, ms };
+      const seal = armRevealGuard(pub, result!.correctValue, studentSaid);
+      return { type: 'verdict-precheck', result: pub, ms, ...(seal ? { seal } : {}) };
     }
     console.log(`[verdict-precheck] voice (parallel) ${ms} ms · ${summary}${pub ? ' (not sent)' : ''}`);
     return { type: 'verdict-precheck-none', ms };
@@ -2424,7 +2489,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           shownThisIter = true;
           accumulatedText += event.delta.text;
           for (const sentence of sentenceBuffer.push(event.delta.text)) {
-            yield { type: 'sentence', text: sentence };
+            yield* guardedSentence(sentence);
           }
         } else if (event.delta.type === 'input_json_delta' && currentToolUse) {
           currentToolUse.rawJson += event.delta.partial_json;
@@ -2434,7 +2499,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         // same response — keeps the audio→visual ordering correct (the
         // student hears "Here's the triangle" then sees the triangle pop in).
         const remaining = sentenceBuffer.flush();
-        if (remaining) yield { type: 'sentence', text: remaining };
+        if (remaining) yield* guardedSentence(remaining);
         if (currentToolUse) {
           let args: Record<string, unknown> = {};
           if (currentToolUse.rawJson) {
@@ -2456,6 +2521,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             console.warn(`[brain.stream] tool-call rejected ${tc.name}: ${validation.reason}`);
             newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: validation.reason });
             yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: validation.reason };
+            currentToolUse = null;
+          } else if (reveal.muted || (reveal.withheld && isAnswerBearingRenderTool(tc.name) && boardRevealsWithheldAnswer(args, reveal.withheld).hit)) {
+            // 2026-10-08c: a board item that writes the withheld result — or
+            // any tool call of a reply already stopped for stating it — is
+            // not dispatched. Registered like a rejected call, so the
+            // conversation contract with the model holds.
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: WHOLE_ANSWER_BOARD_WITHHELD_REASON });
+            if (!reveal.muted) {
+              const hit = boardRevealsWithheldAnswer(args, reveal.withheld);
+              yield* revealStop('board', hit.how, hit.matched);
+            }
             currentToolUse = null;
           } else {
             newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
@@ -2632,11 +2708,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
           accumulatedText += event.delta.text;
           for (const sentence of rescueBuffer.push(event.delta.text)) {
-            yield { type: 'sentence', text: sentence };
+            yield* guardedSentence(sentence);
           }
         } else if (event.type === 'content_block_stop') {
           const remaining = rescueBuffer.flush();
-          if (remaining) yield { type: 'sentence', text: remaining };
+          if (remaining) yield* guardedSentence(remaining);
         }
       }
       const rescueFinal = await rescueOpened.finalMessage();
@@ -2667,7 +2743,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     usage: totalUsage,
     // C1: keep transcript text consistent with the repaired sentences
     // (spacing repair + stage-direction strip, same as the voiced path).
-    fullText: scrubTutorText(normalizeSentenceSpacing(accumulatedText.trim())),
+    // (A reply stopped by the whole-answer reveal guard: only what was
+    // forwarded — the model's own text holds the withheld result.)
+    fullText: scrubTutorText(normalizeSentenceSpacing((reveal.muted ? reveal.forwarded.join(' ') : accumulatedText).trim())),
     toolCalls: accumulatedToolCalls,
   };
 }
