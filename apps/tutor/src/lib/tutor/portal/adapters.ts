@@ -10,7 +10,7 @@ import connectDB from '@core/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
 import { SEED_PLANS, findStoredPlansByLoId, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
-import { classifyPrivatePlan, type PracticeSources, type PracticeCaller, type PlanLite, type BankLite } from './practice';
+import { classifyPrivatePlan, isStudentOwnedPlan, type PracticeSources, type PracticeCaller, type PlanLite, type BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
 import { resolvePassage } from '@/lib/tutor/passages/store';
 import type { FrqRubric } from '@evelyn/portal-contract/v1';
@@ -28,6 +28,9 @@ export function toPlanLite(plan: LessonPlan): PlanLite {
     // student's private artefact (review / freestyle / homework).
     partnerId: typeof portalPartnerId === 'string' && portalPartnerId.trim() ? portalPartnerId : undefined,
     privateKind: classifyPrivatePlan(plan.id, metadata),
+    // Skill scope input (practice.ts `isSkillScopePlan`): a plan built from
+    // one student's material is never a course skill.
+    ...(isStudentOwnedPlan(metadata) ? { studentOwned: true } : {}),
     // Design B (generate-on-exhaustion) topic derivation — never the
     // portal's courseId (a Mongo ObjectId hex on the real wire).
     topic: plan.topic,

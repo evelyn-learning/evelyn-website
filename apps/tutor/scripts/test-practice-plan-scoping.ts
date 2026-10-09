@@ -360,11 +360,26 @@ const STORED_FREESTYLE_OWN = storedPlan({
   await test('a five-LO stored plan serves each try-yourself only under its own LO', async () => {
     for (const n of [1, 2, 3, 4, 5]) {
       const lo = `${GEN_5}.lo-${n}`;
-      const r = await retrievePractice(req(lo), new FakeSources([fiveLoPlan]));
+      // LO 1 of a generated course plan is the SKILL handle since 2026-10-08
+      // (skill scope — scripts/test-practice-skill-scope.ts); the per-LO rule
+      // for it is pinned here with the kill switch off.
+      if (n === 1) process.env.TUTOR_PRACTICE_SKILL_SCOPE = 'off';
+      const r = await retrievePractice(req(lo), new FakeSources([fiveLoPlan])).finally(() => {
+        delete process.env.TUTOR_PRACTICE_SKILL_SCOPE;
+      });
       const want = n === 2 ? [`${GEN_5}::${lo}-try`, `${GEN_5}::${lo}-try2`] : [`${GEN_5}::${lo}-try`];
       assert.deepEqual(ids(r), want, `LO ${n}`);
       assert.ok(r.items.every((i) => i.loId === lo));
     }
+  });
+
+  await test('LO 1 of that plan (the skill) draws the plan\'s own objectives only — still no other plan\'s items', async () => {
+    const lo1 = `${GEN_5}.lo-1`;
+    const r = await retrievePractice(req(lo1), new FakeSources([fiveLoPlan, reviewPlan, genPlanA]), undefined, { partnerId: 'partnerA' });
+    assert.equal(ids(r).length, 6);
+    assert.ok(ids(r).every((id) => id.startsWith(`${GEN_5}::${GEN_5}.lo-`)), ids(r).join(','));
+    assert.ok(!ids(r).includes(`${GEN_5}::bonus-challenge`));
+    assert.ok(r.items.every((i) => i.loId === lo1));
   });
 
   await test('an unattributable try-yourself of a multi-LO plan is served under NO LO (fail closed)', async () => {

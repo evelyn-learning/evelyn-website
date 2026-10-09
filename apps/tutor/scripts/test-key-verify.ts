@@ -767,7 +767,12 @@ async function main(): Promise<void> {
     for (const n of [1, 2, 3, 4]) assert.deepEqual(await practiceIds(pending.plan, n), [], `lo-${n} while pending`);
     await pending.finish!();
     const legacy = generatedPlan();
-    for (const n of [1, 2, 3, 4]) assert.deepEqual(await practiceIds(legacy, n), [`${PLAN_ID}::${tryId(n)}`], `legacy lo-${n}`);
+    // lo-1 is the skill handle of a generated plan (skill scope, 2026-10-08 —
+    // scripts/test-practice-skill-scope.ts): it draws every objective's step.
+    for (const n of [1, 2, 3, 4]) {
+      const want = n === 1 ? [1, 2, 3, 4].map((k) => `${PLAN_ID}::${tryId(k)}`) : [`${PLAN_ID}::${tryId(n)}`];
+      assert.deepEqual(await practiceIds(legacy, n), want, `legacy lo-${n}`);
+    }
     // …including a legacy plan read back from Mongo with `keyCheck: null`.
     const nulled: LessonPlan = { ...legacy, segments: legacy.segments.map((s) => (s.kind === 'try_yourself' ? ({ ...s, keyCheck: null } as unknown as Segment) : s)) };
     assert.deepEqual(await practiceIds(nulled, 2), [`${PLAN_ID}::${tryId(2)}`]);

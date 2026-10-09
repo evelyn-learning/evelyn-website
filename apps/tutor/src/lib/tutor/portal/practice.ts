@@ -37,6 +37,24 @@
  * plan try-yourselves are untouched; any other caller, or an unknown one,
  * gets exactly what it got before.
  *
+ * SKILL SCOPE (2026-10-08 — `isSkillScopePlan`, kill switch
+ * `TUTOR_PRACTICE_SKILL_SCOPE=off`): a generated course plan is ONE skill
+ * with 2–8 objectives, and the course node holds only its first LO
+ * (`gen-<uuid>.lo-1`). After the per-LO rule (3) above, practice for the
+ * skill served objective 1 alone. A request for the FIRST LO of such a plan
+ * now draws from every objective of THAT plan — each objective's
+ * try-yourselves and the bank rows stored under any of the plan's LO ids —
+ * through the same filters as before, spread across objectives
+ * (`spreadAcrossObjectives`). Rule (3) is not relaxed between plans: the
+ * extra LO ids come from the one plan the requested LO heads, and they are
+ * namespaced under its id, so no other plan's item can enter. Every item is
+ * returned with `loId` = the requested skill LO (what the portal attributes
+ * attempts, mastery and the daily cap to); the objective it came from stays
+ * readable in its id (`<planId>::<planId>.lo-K-try`). For an audited-only
+ * partner a step from objective 2..N must also be on the audited lesson-step
+ * list (audited-items.ts). A request for any other LO, or for authored
+ * content, is unchanged.
+ *
  * The assembly core (`retrievePractice`) takes an injectable `PracticeSources`
  * so it is unit-testable without Mongo. Phase 4 supplies concrete Mongo- and
  * lesson-plan-store-backed sources.
@@ -54,7 +72,7 @@ import type {
 import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, practiceGenDisabledForPartner, type PracticeGenSources, type PracticeGenOutcome } from './practice-gen';
 import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } from './essay-practice';
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
-import { auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated } from './audited-items';
+import { auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -93,6 +111,10 @@ export interface PlanLite {
    *  `classifyPrivatePlan`. A `rev-`/`freestyle-` id is recognised even when
    *  a source leaves this unset. */
   privateKind?: PrivatePlanKind;
+  /** Set when the plan was built from one student's own material or is a
+   *  owner-stamped (`isStudentOwnedPlan`) — never a course skill, so never
+   *  skill-scoped. */
+  studentOwned?: boolean;
   los: Array<{ id: string; standard?: string }>;
   segments: Array<{
     kind: string;
@@ -139,6 +161,93 @@ export function classifyPrivatePlan(
   if (metadata?.kind === 'homework-help') return 'homework';
   if (planId?.startsWith('freestyle-')) return 'freestyle';
   return undefined;
+}
+
+/**
+ * Is this stored plan tied to ONE student's material — and so never a course
+ * skill? Pure, over the stored `metadata`:
+ *   - `sourceKind: 'materials'` — built from an uploaded document;
+ *   - `ownerStudentId`          — the owner stamp (homework / materials).
+ * (Review / freestyle / homework plans are `classifyPrivatePlan`'s.)
+ * `pendingPicker` is deliberately NOT a marker: it only limits how many
+ * objectives one live session teaches, and course-skill plans with more
+ * objectives than a session holds carry it. A picker plan built from a
+ * student's material still carries `sourceKind` (and the owner stamp).
+ */
+export function isStudentOwnedPlan(metadata: Record<string, unknown> | null | undefined): boolean {
+  if (!metadata) return false;
+  return metadata.sourceKind === 'materials'
+    || (typeof metadata.ownerStudentId === 'string' && metadata.ownerStudentId.trim().length > 0);
+}
+
+/** Kill switch for skill scope (default ON). `TUTOR_PRACTICE_SKILL_SCOPE=off`
+ *  restores per-LO retrieval for every request. Server-side, read per call. */
+export function skillScopeEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  return (env.TUTOR_PRACTICE_SKILL_SCOPE ?? '').trim().toLowerCase() !== 'off';
+}
+
+/**
+ * THE SKILL-SCOPE RULE. Is `loId` the skill handle of `plan` — the first
+ * objective of a generated course plan — so that practice for it draws from
+ * all of the plan's objectives? All of:
+ *   1. the plan id starts with `gen-` (a stored plan minted by plan-generate;
+ *      authored seeds, `rev-` and `freestyle-` plans never do);
+ *   2. it is not a private artefact (`classifyPrivatePlan`: review /
+ *      homework / freestyle) and not student-owned (`isStudentOwnedPlan`:
+ *      materials / owner-stamped); a `pendingPicker` flag does not exclude;
+ *   3. it has at least two distinct LOs and EVERY one is namespaced under the
+ *      plan (`<planId>.…`) — which is what makes a cross-plan leak
+ *      impossible: the extra LO ids can only ever name this plan;
+ *   4. `loId` is the plan's FIRST LO (`los[0].id`) and that LO is
+ *      `<planId>.lo-1` — the id plan-generate mints and a course node adopts.
+ * The caller applies `planServable` (partner stamp) first. Pure.
+ */
+export function isSkillScopePlan(plan: PlanLite, loId: string): boolean {
+  if (!plan.id || !plan.id.startsWith('gen-')) return false;
+  if (plan.privateKind ?? classifyPrivatePlan(plan.id, undefined)) return false;
+  if (plan.studentOwned) return false;
+  const loIds = [...new Set(plan.los.map((l) => l.id))];
+  if (loIds.length < 2) return false;
+  if (!loIds.every((id) => id.startsWith(`${plan.id}.`))) return false;
+  return plan.los[0].id === loId && loId === `${plan.id}.lo-1`;
+}
+
+/**
+ * Order a skill's items so a set covers as many distinct objectives as
+ * possible before repeating one, and successive requests work through all of
+ * them. Deterministic: each pick takes the next item (pool order — bank
+ * first, then try-yourselves) of the objective with the FEWEST items already
+ * given to this student — already-seen ones (`seenByObjective`, the request's
+ * `excludeIds` that fall in the objective's pool) plus those picked so far —
+ * ties going to the earlier objective in plan order. Pure.
+ */
+export function spreadAcrossObjectives<T extends { id: string }>(
+  items: readonly T[],
+  objectiveOf: ReadonlyMap<string, string>,
+  objectiveOrder: readonly string[],
+  seenByObjective: ReadonlyMap<string, number> = new Map(),
+): T[] {
+  const queues = new Map<string, T[]>();
+  for (const o of objectiveOrder) queues.set(o, []);
+  for (const it of items) {
+    const o = objectiveOf.get(it.id) ?? objectiveOrder[0] ?? '';
+    if (!queues.has(o)) queues.set(o, []);
+    (queues.get(o) as T[]).push(it);
+  }
+  const given = new Map<string, number>();
+  for (const o of queues.keys()) given.set(o, seenByObjective.get(o) ?? 0);
+  const out: T[] = [];
+  while (out.length < items.length) {
+    let pick: string | null = null;
+    for (const [o, q] of queues) {
+      if (q.length === 0) continue;
+      if (pick === null || (given.get(o) as number) < (given.get(pick) as number)) pick = o;
+    }
+    if (pick === null) break;
+    out.push((queues.get(pick) as T[]).shift() as T);
+    given.set(pick, (given.get(pick) as number) + 1);
+  }
+  return out;
 }
 
 /**
@@ -367,6 +476,10 @@ export async function retrievePractice(
   // Set for an LO-scoped request on an essay-practice node: generation is
   // skipped and an empty result reads `none_available`.
   let essayNode = false;
+  // Skill scope only: the objective (plan LO id) each pooled item came from,
+  // and the plan's objectives in order. Null for every other request.
+  let skillObjectives: string[] | null = null;
+  const objectiveOf = new Map<string, string>();
 
   if ('loId' in req.scope) {
     const loId = req.scope.loId;
@@ -374,8 +487,42 @@ export async function retrievePractice(
     // contributes no items, no anchors and no generation topic.
     const plans = (await sources.plansForLoId(loId)).filter((p) => planServable(p, loId, who));
     loScopePlans = plans;
-    for (const p of plans) planItems.push(...planToItems(p, loId));
-    const bank = await sources.bankForLoId(loId, difficulty);
+    // Skill scope (see the module header): `loId` heads a generated course
+    // plan ⇒ draw from every objective of that one plan.
+    const skillPlan = skillScopeEnabled() ? plans.find((p) => isSkillScopePlan(p, loId)) : undefined;
+    if (skillPlan) skillObjectives = [...new Set(skillPlan.los.map((l) => l.id))];
+    for (const p of plans) {
+      if (p !== skillPlan || !skillObjectives) {
+        planItems.push(...planToItems(p, loId));
+        continue;
+      }
+      for (const objective of skillObjectives) {
+        const own = planToItems(p, objective);
+        // Objective 1 was servable before skill scope and is not gated; a
+        // step from objective 2..N reaches an audited-only partner only when
+        // it is on the audited lesson-step list (withdrawn already dropped).
+        const servable = objective === loId ? own : withoutUnauditedLessonSteps(own, who?.partnerId, 'practice-skill');
+        for (const it of servable) {
+          if (objectiveOf.has(it.id)) continue; // one objective per step
+          objectiveOf.set(it.id, objective);
+          // Attribution stays on the skill the student opened.
+          planItems.push({ ...it, loId });
+        }
+      }
+    }
+    let bank = await sources.bankForLoId(loId, difficulty);
+    if (skillObjectives) {
+      // Bank rows stored under any other objective of the plan. The LO ids
+      // are this plan's own (`<planId>.lo-K`), so nothing foreign matches.
+      const others = skillObjectives.filter((o) => o !== loId);
+      const more = await Promise.all(others.map((o) => sources.bankForLoId(o, difficulty)));
+      for (const b of bank) objectiveOf.set(b.id, loId);
+      more.forEach((rows, i) => {
+        for (const b of rows) if (!objectiveOf.has(b.id)) objectiveOf.set(b.id, others[i]);
+      });
+      // The row's own `loId` is re-tagged to the skill LO for the wire only.
+      bank = [...bank, ...more.flat()].map((b) => ({ ...b, loId }));
+    }
     // Essay-practice node (FRQ / DBQ / LEQ / SAQ): rows the on-demand
     // generator banked here earlier are MCQ / one-number / short items, not
     // essays — never served. Authored bank rows and the plan's rubric items
@@ -422,6 +569,22 @@ export async function retrievePractice(
   // items the retrieval pool alone couldn't supply. A thin pool degrades to
   // fewer items, never an error.
   const shortfall = Math.max(0, req.count - available.length);
+
+  // Skill scope: objective spread. `seen` counts, per objective, the pool
+  // items this student was already served (excludeIds), so the objectives
+  // they have met least come first on every draw.
+  let spread = available;
+  if (skillObjectives) {
+    const seenByObjective = new Map<string, number>();
+    if (excludeSet) {
+      for (const it of ordered) {
+        if (!excludeSet.has(it.id)) continue;
+        const o = objectiveOf.get(it.id) ?? skillObjectives[0];
+        seenByObjective.set(o, (seenByObjective.get(o) ?? 0) + 1);
+      }
+    }
+    spread = spreadAcrossObjectives(available, objectiveOf, skillObjectives, seenByObjective);
+  }
 
   // Design B (generate-on-exhaustion), Task 3: top up the shortfall with
   // verified runtime-generated items. LO-scope only — generated ids and the
@@ -513,7 +676,7 @@ export async function retrievePractice(
       // Audited-only caller: holds for any injected generator too.
       && servableToPartner(it.id, who?.partnerId),
   );
-  const combined = [...available, ...generatedDeduped];
+  const combined = [...spread, ...generatedDeduped];
 
   const items = combined.slice(0, req.count);
   if (items.length > 0 || req.count <= 0) return { items };

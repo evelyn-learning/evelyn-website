@@ -36,9 +36,14 @@
  * The list is data: regenerate src/data/audited-generated-items.json with
  * scripts/audit/build-audited-generated-list.ts. No I/O; the only input
  * besides the list is the env switch.
+ *
+ * LESSON STEPS (2026-10-08): the same switch also gates the plan
+ * try-yourselves that skill scope draws from objectives 2..N of a generated
+ * course plan — see `AUDITED_LESSON_STEP_IDS` below.
  */
 // Relative on purpose: voice/problem-generator.ts (relative-import-only) loads this too.
 import audited from '../../../data/audited-generated-items.json';
+import auditedSteps from '../../../data/audited-lesson-steps.json';
 import { isGeneratedPracticeItemId } from './essay-practice';
 import { isWithdrawnItem } from './withdrawn-items';
 
@@ -71,6 +76,55 @@ export function servableToPartner(id: string | null | undefined, partnerId: stri
   if (!isGeneratedPracticeItemId(id)) return true;
   if (!auditedOnlyForPartner(partnerId)) return true;
   return isAuditedGeneratedItem(id) && !isWithdrawnItem(id);
+}
+
+/* ------------------------------------------------------------------ */
+/* Audited lesson steps — skill scope, objectives 2..N                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Every audited lesson step: a plan try-yourself (`<planId>::<segmentId>`) on
+ * objective 2..N of a generated course plan whose answer key passed the
+ * audit. Skill scope (practice.ts) is what first makes those steps servable
+ * as practice, so for a listed partner one is served only when it is here.
+ * Objective-1 steps were servable before skill scope and are not gated.
+ * Regenerate src/data/audited-lesson-steps.json with
+ * scripts/audit/build-audited-lesson-steps.ts.
+ */
+export const AUDITED_LESSON_STEP_IDS: ReadonlySet<string> = new Set(Object.keys(auditedSteps.items as Record<string, string>));
+
+/** Is this id a lesson step that passed the audit? */
+export function isAuditedLessonStep(id: string | null | undefined): boolean {
+  return typeof id === 'string' && AUDITED_LESSON_STEP_IDS.has(id);
+}
+
+/**
+ * May the lesson step with this id, drawn from a NON-first objective through
+ * skill scope, be served to `partnerId`? False only for a listed partner when
+ * the step is off the audited list (or withdrawn — withdrawn wins). Any other
+ * partner, or an unknown caller: true. Like the generated-item rule this is
+ * not a grading rule — an id already issued still resolves.
+ */
+export function lessonStepServableToPartner(id: string | null | undefined, partnerId: string | null | undefined): boolean {
+  if (!auditedOnlyForPartner(partnerId)) return true;
+  return isAuditedLessonStep(id) && !isWithdrawnItem(id);
+}
+
+/**
+ * Drop the non-first-objective lesson steps `partnerId` may not be served.
+ * Not listed ⇒ the SAME array. One log line with the count when rows drop.
+ */
+export function withoutUnauditedLessonSteps<T extends { id: string }>(
+  items: readonly T[],
+  partnerId: string | null | undefined,
+  where: string,
+): T[] {
+  if (!auditedOnlyForPartner(partnerId)) return items as T[];
+  const kept = items.filter((it) => isAuditedLessonStep(it.id) && !isWithdrawnItem(it.id));
+  if (kept.length !== items.length) {
+    console.log(`[practice] unaudited lesson steps filtered partner=${(partnerId as string).trim().toLowerCase()} where=${where} count=${items.length - kept.length}`);
+  }
+  return kept;
 }
 
 function logFiltered(partnerId: string, where: string, count: number): void {
