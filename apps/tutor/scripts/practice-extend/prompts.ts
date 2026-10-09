@@ -8,7 +8,7 @@
  * symbols, and every stored answer is plain text).
  */
 import type { Prompt } from '../../src/lib/tutor/portal/key-verify-prompts';
-import { QUALITY_CHECKS, type QualityCheckId } from './core';
+import { FIGURE_QUALITY_CHECKS, QUALITY_CHECKS, type QualityCheck, type QualityCheckId } from './core';
 
 const obj = (properties: Record<string, unknown>) => ({
   type: 'object',
@@ -57,15 +57,17 @@ Reply as JSON with items (one entry per question) and needsFigure (one entry per
 
 // ── quality gate ────────────────────────────────────────────────────────────
 
-const qualitySystem = (checks: ReadonlyArray<(typeof QUALITY_CHECKS)[number]>) => `You review one practice question that was written for a stated learning objective of a school or college-entry course. You are shown the objective, the other objectives of the same skill, the question, its options if any, and its stored answer. You are not asked to check whether the stored answer is right — that is done separately. Judge only the quality of the question, strictly, on what is in front of you.
+const FIGURE_REVIEW_NOTE = ` The question is shown to the student together with ONE figure. You cannot see the picture; instead you are given an exact transcription of it, made by a program from the figure's data: first every piece of text that is PRINTED on the figure, then what can be READ OFF it (values at gridlines, marked points, bars, arrows). A value described as lying between two gridlines cannot be read exactly. The student sees the picture, not this transcription — so reading a value off the picture is the intended work, and a value in the transcription's read-off part is not "given away". In the checks, "the question text" always means the Question and its Options only, never the transcription.`;
 
-Answer every check below with flag true or false. Give a reason of one short sentence when the flag is true; when it is false, leave reason as an empty string. flag true always means a defect.
+const qualitySystem = (checks: readonly QualityCheck[], figure: boolean) => `You review one practice question that was written for a stated learning objective of a school or college-entry course. You are shown the objective, the other objectives of the same skill, the question, its options if any, and its stored answer.${figure ? FIGURE_REVIEW_NOTE : ''} You are not asked to check whether the stored answer is right — that is done separately. Judge only the quality of the question, strictly, on what is in front of you.
+
+Answer every check below with flag true or false. ${figure ? 'Give a reason of one short sentence for EVERY check, flagged or not — what in the question decides it.' : 'Give a reason of one short sentence when the flag is true; when it is false, leave reason as an empty string.'} flag true always means a defect.
 
 ${checks.map((c) => `- ${c.id}: ${c.question}`).join('\n')}
 
 A check that does not apply to this question (for instance an options check on a question without options) is flag false.
 
-Reply as JSON: one key per check, in the order above, each an object {"flag": true or false, "reason": "one line, or empty when the flag is false"}.`;
+Reply as JSON: one key per check, in the order above, each an object {"flag": true or false, "reason": "${figure ? 'one line' : 'one line, or empty when the flag is false'}"}.`;
 
 export interface QualityView {
   objective: string;
@@ -79,12 +81,15 @@ export interface QualityView {
   earlier: string[];
   /** Multiple choice: the mistake the author names behind each option, in order. */
   rationales?: string[];
+  /** Figure items: the code-made transcription of the figure. */
+  figureText?: string;
 }
 
 function qualityViewText(v: QualityView): string {
   const parts = [`Objective this question was written for:\n${v.objective}`];
   if (v.otherObjectives.length) parts.push(`Other objectives of the same skill:\n${v.otherObjectives.map((o) => `- ${o}`).join('\n')}`);
   parts.push(`Answer format: ${v.format === 'mcq' ? 'multiple choice' : v.format === 'numeric' ? 'the student types one number' : 'the student types a short answer'}`);
+  if (v.figureText) parts.push(`Figure shown with the question (transcription):\n${v.figureText.trim()}`);
   parts.push(`Question:\n${v.question.trim()}`);
   if (v.choices.length) {
     parts.push(`Options:\n${v.choices.map((c, i) => `${'ABCD'[i]}) ${c}`).join('\n')}`);
@@ -103,9 +108,10 @@ function qualityViewText(v: QualityView): string {
  *  checks plus whatever the first one raised — nothing else can change the outcome). */
 export function buildQualityPrompt(v: QualityView, only?: readonly QualityCheckId[]): Prompt {
   const check = obj({ flag: { type: 'boolean' }, reason: { type: 'string' } });
-  const checks = QUALITY_CHECKS.filter((c) => !only || only.includes(c.id));
+  const all: readonly QualityCheck[] = v.figureText ? FIGURE_QUALITY_CHECKS : QUALITY_CHECKS;
+  const checks = all.filter((c) => !only || only.includes(c.id));
   return {
-    system: qualitySystem(checks),
+    system: qualitySystem(checks, !!v.figureText),
     user: qualityViewText(v),
     schema: obj(Object.fromEntries(checks.map((c) => [c.id as QualityCheckId, check]))),
   };
@@ -159,10 +165,10 @@ const REBUTTAL_SYSTEM = `Two reviewers looked at the same practice question. One
 Reply as JSON: agree (true when the concern is valid for this question, false when it is not) and reason (one sentence — what in the question makes the concern valid, or why it does not apply).`;
 
 export function buildRebuttalPrompt(v: QualityView, check: QualityCheckId, concern: string): Prompt {
-  const q = QUALITY_CHECKS.find((c) => c.id === check)!;
+  const q = ([...FIGURE_QUALITY_CHECKS, ...QUALITY_CHECKS] as readonly QualityCheck[]).find((c) => c.id === check)!;
   return {
     system: REBUTTAL_SYSTEM,
-    user: `${qualityViewText(v)}\n\nThe check: ${q.question}\n\nThe concern raised: ${concern || '(no reason given)'}`,
+    user: `${qualityViewText(v)}\n\nThe check: ${q.question}\n\nThe concern raised: ${concern || '(no reason given)'}${v.figureText ? '\n\nagree = true means: yes, this question HAS that defect. agree = false means: the question does not have it.' : ''}`,
     schema: obj({ agree: { type: 'boolean' }, reason: { type: 'string' } }),
   };
 }

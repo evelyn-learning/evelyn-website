@@ -20,6 +20,18 @@
  *                 export/coverage-after-export.json
  *   review        review.md for a human reader + summary.json
  *
+ * The FIGURE track (figure-track.ts) — questions shown WITH a figure drawn by
+ * src/lib/tutor/practice-figure/render.ts, for the objectives `figures` set aside:
+ *   figure-kinds     one cheap call per skill: which supported figure kind fits each
+ *                    figure-dependent objective (--figures) → figure-kinds.json,
+ *                    supported-/unsupported-figure-objectives.json
+ *   figure-plan      --kinds <figure-kinds.json> [--sample N] [--per-objective N] → targets.jsonl
+ *   figure-generate  one call per objective: figure spec + question + derivation → generated.jsonl
+ *   figure-audit     rule checks + key recomputed from the spec → quality review → two blind
+ *                    solvers given a code-made transcription of the figure → audit.jsonl
+ *   figure-export    export/problem-bank-rows.json (rows with figure {svg, alt, spec}),
+ *                    review.html, png/<itemId>.png, rejected.md, summary.json
+ *
  * Options
  *   --out <dir>              stage files live here (required)
  *   --dump <file>            plans + bank rows ({plans, bank})        [plan, generate, audit, export, review]
@@ -67,6 +79,8 @@ import {
   GENERATION_SCHEMA,
   chunkTargets,
   planEmptyTargets,
+  FIGURE_QUALITY_CHECKS,
+  FIGURE_STRICT_CHECKS,
   QUALITY_CHECKS,
   STRICT_CHECKS,
   confirmedFlags,
@@ -91,6 +105,7 @@ import {
   type FigureMarker,
   type GeneratedItem,
   type KeyedQuestion,
+  type QualityCheck,
   type QualityFlag,
   type SolverOutcome,
   type Target,
@@ -109,8 +124,10 @@ import {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-interface Args {
+export interface Args {
   stage: string;
+  /** Figure track: the kind-selection result (figure-kinds.json). */
+  kinds?: string;
   out: string;
   dump?: string;
   coverage?: string;
@@ -184,6 +201,7 @@ function parseArgs(argv: string[]): Args {
       case '--max-items-per-call': a.maxItemsPerCall = Math.max(1, num(f, val())); break;
       case '--gen-effort': a.genEffort = val(); break;
       case '--split-review': a.splitReview = true; break;
+      case '--kinds': a.kinds = val(); break;
       default: throw new Error(`unknown argument: ${f}`);
     }
   }
@@ -208,8 +226,8 @@ function need(v: string | undefined, flag: string): string {
 
 // ── plans + bank (local dump) ───────────────────────────────────────────────
 
-interface PlanLo { id: string; description: string; shortTitle?: string }
-interface PlanSegment {
+export interface PlanLo { id: string; description: string; shortTitle?: string }
+export interface PlanSegment {
   id: string;
   kind: string;
   goal?: string | null;
@@ -219,7 +237,7 @@ interface PlanSegment {
   answer?: string | null;
   expectedAnswer?: string | null;
 }
-interface Plan {
+export interface Plan {
   _id: string;
   title: string;
   topic?: string;
@@ -228,7 +246,7 @@ interface Plan {
   segments: PlanSegment[];
   metadata?: { pendingPicker?: boolean };
 }
-interface BankRow {
+export interface BankRow {
   id: string;
   loId: string;
   problemText: string;
@@ -236,9 +254,9 @@ interface BankRow {
   choices?: unknown[];
   responseFormat?: string;
 }
-interface Dump { plans: Plan[]; bank: BankRow[] }
+export interface Dump { plans: Plan[]; bank: BankRow[] }
 
-interface ObjectiveMaterial {
+export interface ObjectiveMaterial {
   loId: string;
   description: string;
   shortTitle: string;
@@ -284,7 +302,7 @@ function existingItemsOf(plan: Plan, dump: Dump) {
 
 // ── stage: plan ─────────────────────────────────────────────────────────────
 
-interface SkillMapRow { subject: string; subject_code?: string; skill: string; title?: string }
+export interface SkillMapRow { subject: string; subject_code?: string; skill: string; title?: string }
 
 function stagePlan(a: Args): void {
   const coverage = readJson<{ skills: Array<CoverageSkill & { zeroObjectives?: string[] }> }>(need(a.coverage, '--coverage'));
@@ -390,7 +408,7 @@ function stagePlan(a: Args): void {
 
 // ── stage: figures ──────────────────────────────────────────────────────────
 
-interface FigureObjective { subject: string; skillLoId: string; title: string; objectiveLoId: string; description: string; why: string; servable: number }
+export interface FigureObjective { subject: string; skillLoId: string; title: string; objectiveLoId: string; description: string; why: string; servable: number }
 
 function figureObjectiveIds(file: string | undefined): Set<string> {
   if (!file || !fs.existsSync(file)) return new Set();
@@ -734,7 +752,7 @@ function generatedSkills(out: string): GeneratedSkill[] {
 
 // ── stage: audit / second-check ─────────────────────────────────────────────
 
-interface SolverEvidence {
+export interface SolverEvidence {
   model: string;
   working: string;
   illPosed: boolean;
@@ -749,7 +767,7 @@ interface SolverEvidence {
   error?: string;
 }
 
-interface QualityEvidence {
+export interface QualityEvidence {
   deepseek: QualityFlag[];
   haiku?: QualityFlag[];
   /** Raised by both reviewers. */
@@ -763,7 +781,7 @@ interface QualityEvidence {
 
 const rejectedFlags = (q: QualityEvidence | undefined): QualityFlag[] => q?.rejected ?? q?.confirmed ?? [];
 
-interface AuditRecord {
+export interface AuditRecord {
   id: string;
   skillLoId?: string;
   objectiveLoId?: string;
@@ -858,18 +876,21 @@ const outcomeOf = (e: SolverEvidence): SolverOutcome => ({
  */
 async function qualityGate(p: Providers, ledger: Ledger, view: QualityView, stage: string, ref: string): Promise<QualityEvidence> {
   const ctx = { format: view.format, hasEarlier: view.earlier.length > 0 };
+  // An item shown with a figure has its own checklist and strict checks.
+  const checks: readonly QualityCheck[] = view.figureText ? FIGURE_QUALITY_CHECKS : QUALITY_CHECKS;
+  const strict = view.figureText ? FIGURE_STRICT_CHECKS : STRICT_CHECKS;
   const who = { first: { provider: 'deepseek' as const, model: p.models.deepseek, name: 'deepseek' }, second: { provider: 'anthropic' as const, model: p.models.haiku, name: 'haiku' } };
   const ask = (r: (typeof who)['first' | 'second'], prompt: ReturnType<typeof buildQualityPrompt>) =>
     callJson(p, ledger, { provider: r.provider, model: r.model, system: prompt.system, user: prompt.user, schema: prompt.schema, maxTokens: 1800, stage, purpose: `quality-${r.name}`, ref });
-  const deepseek = qualityFlags(await ask(who.first, buildQualityPrompt(view)), ctx);
+  const deepseek = qualityFlags(await ask(who.first, buildQualityPrompt(view)), ctx, checks);
   // The second reviewer answers the strict checks (where its flag alone counts)
   // and every check the first one raised (where both must agree). Its view of
   // any other check could not change the outcome, so it is not asked.
-  const secondChecks = [...new Set([...STRICT_CHECKS, ...deepseek.map((f) => f.id)])];
-  const haiku = qualityFlags(await ask(who.second, buildQualityPrompt(view, secondChecks)), ctx);
+  const secondChecks = view.figureText ? undefined : [...new Set([...strict, ...deepseek.map((f) => f.id)])];
+  const haiku = qualityFlags(await ask(who.second, buildQualityPrompt(view, secondChecks)), ctx, checks);
   const confirmed = confirmedFlags(deepseek, haiku);
   const contested: NonNullable<QualityEvidence['contested']> = [];
-  for (const f of contestedFlags(deepseek, haiku)) {
+  for (const f of contestedFlags(deepseek, haiku, strict)) {
     const other = f.raisedBy === 'first' ? who.second : who.first;
     const rp = buildRebuttalPrompt(view, f.id, f.reason);
     const r = await callJson(p, ledger, { provider: other.provider, model: other.model, system: rp.system, user: rp.user, schema: rp.schema, maxTokens: 600, stage, purpose: `quality-rebuttal-${other.name}`, ref });
@@ -1217,7 +1238,7 @@ function solverLine(name: string, e: SolverEvidence | undefined): string {
   return `- ${name}: ${ans} — ${cmp}${e.assumptions ? ` — assumed: ${flat(e.assumptions)}${e.assumptionCheck ? (e.assumptionCheck.answerChanging ? ' [changes the answer]' : ' [standard for the course; does not change the answer]') : ''}` : ''}`;
 }
 
-const QUALITY_LABEL: Record<string, string> = Object.fromEntries(QUALITY_CHECKS.map((c) => [c.id, c.label]));
+const QUALITY_LABEL: Record<string, string> = Object.fromEntries([...QUALITY_CHECKS, ...FIGURE_QUALITY_CHECKS].map((c) => [c.id, c.label]));
 const flagText = (flags: QualityFlag[]) => flags.map((f) => `${QUALITY_LABEL[f.id] ?? f.id}${f.reason ? ` (${flat(f.reason)})` : ''}`).join('; ');
 
 function qualityLine(r: AuditRecord): string | undefined {
@@ -1408,11 +1429,26 @@ function stageReview(a: Args): void {
 
 // ── main ────────────────────────────────────────────────────────────────────
 
+/** What the figure track (figure-track.ts) borrows from this file. */
+const FIGURE_TOOLS = {
+  readJson, readJsonl, appendJsonl, need, materialOf, existingItemsOf, existingStemsByObjective, pool, openLedger, finish,
+  qualityGate, twoSolverCheck, solveBlind, dropSameTasks, auditRecords, rejectedFlags, verifierOf, solverLine, qualityLine, flagText,
+  countBy, ledgerTotals, REASON_TEXT, JOB_NAME,
+};
+export type FigureTools = typeof FIGURE_TOOLS;
+
 async function main(): Promise<void> {
   if (process.env.MONGODB_URI) {
     throw new Error('MONGODB_URI is set in the environment. This job never opens a database; run it with MONGODB_URI unset so nothing it imports could.');
   }
   const a = parseArgs(process.argv.slice(2));
+  if (a.stage.startsWith('figure-')) {
+    // Loaded only now, after the check above: the figure track imports the
+    // renderer, and puts an unreachable database address in the environment
+    // first (scripts/lib/no-db-env.ts) so that nothing it loads could connect.
+    const { runFigureStage } = await import('./figure-track');
+    return runFigureStage(a, FIGURE_TOOLS);
+  }
   switch (a.stage) {
     case 'figures': return stageFigures(a);
     case 'plan': return stagePlan(a);
@@ -1421,7 +1457,7 @@ async function main(): Promise<void> {
     case 'second-check': return stageSecondCheck(a);
     case 'export': return stageExport(a);
     case 'review': return stageReview(a);
-    default: throw new Error(`unknown stage "${a.stage}" — one of: figures, plan, generate, audit, second-check, export, review`);
+    default: throw new Error(`unknown stage "${a.stage}" — one of: figures, plan, generate, audit, second-check, export, review, figure-kinds, figure-plan, figure-generate, figure-audit, figure-export`);
   }
 }
 

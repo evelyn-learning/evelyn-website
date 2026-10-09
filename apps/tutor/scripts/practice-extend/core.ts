@@ -284,6 +284,12 @@ function dollarsBalanced(s: string): boolean {
   return n % 2 === 0;
 }
 
+/** `hasFigure`: the item is shown WITH a figure (the figure track), so a
+ *  stem that points at it is not a defect. */
+export interface ItemCheckOptions {
+  hasFigure?: boolean;
+}
+
 export interface ValidationContext {
   /** Every objective id of the skill. */
   skillObjectiveIds: string[];
@@ -303,7 +309,7 @@ export interface ValidationResult {
 }
 
 /** Validate one item in isolation. Returns the normalised item or the defects. */
-export function validateItem(raw: unknown, skillObjectiveIds: string[]): { item?: GeneratedItem; errors: string[]; defects: string[] } {
+export function validateItem(raw: unknown, skillObjectiveIds: string[], opts?: ItemCheckOptions): { item?: GeneratedItem; errors: string[]; defects: string[] } {
   const e: string[] = [];
   const o = (raw ?? {}) as Record<string, unknown>;
   const lo = isStr(o.objectiveLoId) ? o.objectiveLoId.trim() : '';
@@ -313,7 +319,7 @@ export function validateItem(raw: unknown, skillObjectiveIds: string[]): { item?
   const stem = isStr(o.problemText) ? o.problemText.trim() : '';
   if (stem.length < LIMITS.stemMin) e.push('problemText is missing or too short');
   if (stem.length > LIMITS.stemMax) e.push(`problemText is longer than ${LIMITS.stemMax} characters`);
-  if (referencesFigure(stem)) e.push('problemText refers to a figure, diagram or graph that is not in the text');
+  if (!opts?.hasFigure && referencesFigure(stem)) e.push('problemText refers to a figure, diagram or graph that is not in the text');
   if (!dollarsBalanced(stem)) e.push('problemText has an unclosed $ maths span');
 
   // Repair: answers and options are plain text — drop bare $ delimiters.
@@ -361,7 +367,7 @@ export function validateItem(raw: unknown, skillObjectiveIds: string[]): { item?
 
   if (e.length > 0) return { errors: e, defects: [] };
   const item: GeneratedItem = { objectiveLoId: lo, responseFormat: format as ItemFormat, problemText: stem, answer, choices, hints, solutionText, difficulty, covers, taskType, distractorRationales: rationales };
-  return { item, errors: [], defects: contentDefects(item) };
+  return { item, errors: [], defects: contentDefects(item, opts) };
 }
 
 // ── 2b. deterministic content checks ────────────────────────────────────────
@@ -391,13 +397,22 @@ function isWordedAnswer(tokens: string[]): boolean {
   return words.length >= 2 || (words.length === 1 && words[0].length >= 5);
 }
 
+/** The mathematical operators of a text, in order (minus signs unified) —
+ *  with its superscript and subscript characters, which the app's option
+ *  match also drops ("x²" would otherwise equal "x"). */
+function operatorsOf(s: string): string {
+  return (s.replace(/[\u2212\u2013]/g, '-').replace(/[\u00b7\u00d7]/g, '*').replace(/\u00f7/g, '/').match(/[+\-*/^=<>\u2264\u2265\u00b2\u00b3\u00b9\u2070-\u209f\u221a]/g) ?? []).join('');
+}
+
 /** Two option texts the app would treat as the same answer. */
 export function optionsEquivalent(a: string, b: string): boolean {
   if (normText(a) === normText(b)) return true;
   // The app's option-text match drops every non-alphanumeric character, so
   // it cannot tell "12" from "-12" or "1.2": use it for worded options only.
+  // Nor can it tell "x + y" from "x·y": for options that carry operators, the
+  // operators must be the same ones in the same order.
   const na = normMcqText(a);
-  if (na && !/\d/.test(na) && na === normMcqText(b)) return true;
+  if (na && !/\d/.test(na) && na === normMcqText(b) && operatorsOf(a) === operatorsOf(b)) return true;
   const ab = gradeNumericAnswer(a, b);
   const ba = gradeNumericAnswer(b, a);
   if ((ab.decided && ab.correct) || (ba.decided && ba.correct)) return true;
@@ -413,10 +428,10 @@ export function wordCount(s: string): number {
  * defect is never audited or exported. The wording is also what the
  * generator is told on its one retry.
  */
-export function contentDefects(it: GeneratedItem): string[] {
+export function contentDefects(it: GeneratedItem, opts?: ItemCheckOptions): string[] {
   const d: string[] = [];
   const stemTokens = wordTokens(it.problemText);
-  if (referencesFigure(it.problemText)) d.push('the question refers to a figure that is not in the text');
+  if (!opts?.hasFigure && referencesFigure(it.problemText)) d.push('the question refers to a figure that is not in the text');
   if (LEADING_STEM_RE.test(it.problemText)) d.push('the question offers an example or a hint');
   if (/\\[a-zA-Z]/.test(it.answer) || it.choices.some((c) => /\\[a-zA-Z]/.test(c))) d.push('the answer or an option contains LaTeX');
 
@@ -774,7 +789,24 @@ export const QUALITY_CHECKS = [
   { id: 'figure_workaround', label: 'a figure task turned into words', question: 'Does the objective require the student to produce or read a figure (sketch, draw, plot, a graph or diagram), which this question replaces with a verbal description? (A question done from values written out in the text is not such a replacement.)' },
 ] as const;
 
-export type QualityCheckId = (typeof QUALITY_CHECKS)[number]['id'];
+/**
+ * The checklist for an item that is shown WITH a figure. The reviewers see
+ * the question and a transcription of the figure (what is printed on it and
+ * what can be read off it). The text-only "figure turned into words" check
+ * does not apply; one figure check is added. Two further figure questions are
+ * decided mechanically (see FIGURE_STRICT_CHECKS).
+ */
+export const FIGURE_QUALITY_CHECKS = [
+  ...QUALITY_CHECKS.filter((c) => c.id !== 'figure_workaround'),
+  { id: 'figure_states_answer', label: 'something printed on the figure states the answer', question: 'Does any text PRINTED on the figure — a title, an axis label, a legend entry, a label next to a point, curve, bar or arrow, an annotation or a displayed equation — state the answer or the very value asked for, so that it is copied rather than read off the scale or worked out? (Numbers along an axis, quantities the question needs as inputs but does not ask for, and everything in the read-off part of the transcription are not such a statement.)' },
+] as const;
+
+export type QualityCheckId = (typeof QUALITY_CHECKS)[number]['id'] | (typeof FIGURE_QUALITY_CHECKS)[number]['id'];
+export interface QualityCheck {
+  id: QualityCheckId;
+  label: string;
+  question: string;
+}
 export interface QualityFlag {
   id: QualityCheckId;
   reason: string;
@@ -783,9 +815,9 @@ export interface QualityFlag {
 /** A reviewer's reply → the checks it flagged. Unknown keys are ignored; a
  *  missing or malformed check counts as not flagged. Checks that cannot
  *  apply are dropped whatever the reviewer said. */
-export function qualityFlags(reply: Record<string, unknown>, ctx: { format: string; hasEarlier: boolean }): QualityFlag[] {
+export function qualityFlags(reply: Record<string, unknown>, ctx: { format: string; hasEarlier: boolean }, checks: readonly QualityCheck[] = QUALITY_CHECKS): QualityFlag[] {
   const out: QualityFlag[] = [];
-  for (const c of QUALITY_CHECKS) {
+  for (const c of checks) {
     if (c.id === 'weak_options' && ctx.format !== 'mcq') continue;
     if (c.id === 'same_task' && !ctx.hasEarlier) continue;
     const r = reply?.[c.id];
@@ -800,11 +832,17 @@ export function qualityFlags(reply: Record<string, unknown>, ctx: { format: stri
  *  clears it: the defects that reached the accepted set under the
  *  both-must-agree rule. */
 export const STRICT_CHECKS: readonly QualityCheckId[] = ['gives_away', 'generic_task'];
+/** Figure items: BOTH reviewers answer every check, and a flag raised by one
+ *  alone is put to the other — it stands unless that one clears it with a
+ *  reason. (Whether the figure is needed at all, and whether a reading finer
+ *  than the grid is needed, are decided by code, not by a reviewer:
+ *  figure-track.ts / figure-core.ts.) */
+export const FIGURE_STRICT_CHECKS: readonly QualityCheckId[] = FIGURE_QUALITY_CHECKS.map((c) => c.id);
 
 /** Strict-check flags raised by exactly one of the two reviewers. */
-export function contestedFlags(first: QualityFlag[], second: QualityFlag[]): Array<QualityFlag & { raisedBy: 'first' | 'second' }> {
+export function contestedFlags(first: QualityFlag[], second: QualityFlag[], strict: readonly QualityCheckId[] = STRICT_CHECKS): Array<QualityFlag & { raisedBy: 'first' | 'second' }> {
   const one = (mine: QualityFlag[], theirs: QualityFlag[], raisedBy: 'first' | 'second') =>
-    mine.filter((f) => STRICT_CHECKS.includes(f.id) && !theirs.some((t) => t.id === f.id)).map((f) => ({ ...f, raisedBy }));
+    mine.filter((f) => strict.includes(f.id) && !theirs.some((t) => t.id === f.id)).map((f) => ({ ...f, raisedBy }));
   return [...one(first, second, 'first'), ...one(second, first, 'second')];
 }
 

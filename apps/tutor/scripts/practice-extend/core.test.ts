@@ -291,6 +291,13 @@ t('multiple choice: equivalent options, option = key + text, all/none of the abo
   assert.equal(defects(mcq({ choices: ['12', '-12', '1.2', '120'], answer: 'A' })), '');
   assert.equal(optionsEquivalent('3/4', '0.75'), true);
   assert.equal(optionsEquivalent('2.55', '2.56'), false);
+  // formula options that differ only in an operator are different answers
+  assert.equal(optionsEquivalent('dy/dx = x·y', 'dy/dx = x + y'), false);
+  assert.equal(optionsEquivalent('dy/dx = x − y', 'dy/dx = x/y'), false);
+  assert.equal(optionsEquivalent('dy/dx = x × y', 'dy/dx = x·y'), true);
+  assert.equal(optionsEquivalent('It increases.', 'it increases'), true);
+  assert.equal(optionsEquivalent('dy/dx = x²', 'dy/dx = x'), false);
+  assert.equal(optionsEquivalent('dy/dx = x + y', 'dy/dx = x² + y²'), false);
 });
 t('short answers: at most twelve words and no justification in the key', () => {
   assert.match(defects(free({ answer: 'one two three four five six seven eight nine ten eleven twelve thirteen' })), /longer than 12 words/);
