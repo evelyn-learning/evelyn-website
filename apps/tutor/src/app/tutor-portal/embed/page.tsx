@@ -37,8 +37,8 @@ import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
 import {
-  INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
-  activeSeconds, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
+  CLOCK_POST_MS, INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
+  activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
   parseVideoState, reduceLessonHost, renderMomentDirective, videoForPrompt, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
 import { parseLessonTimeline, renderLessonNow, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
@@ -1545,6 +1545,29 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     return () => clearInterval(t);
   }, [standby, addDebugEvent]);
 
+  // evelyn:clock — the session clock for a host that draws it in its own
+  // header (and hides ours with `features.session_timer: false`). Posted when
+  // the session starts, whenever it starts or stops advancing (standby,
+  // end), and every CLOCK_POST_MS while it runs. Additive; other hosts ignore it.
+  const postClock = useCallback((ended?: boolean) => {
+    if (!TUTOR_HOST_LESSON || sessionEngagedAtRef.current === null) return;
+    const now = Date.now();
+    window.parent.postMessage(clockMessage({
+      activeSeconds: activeSeconds((now - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, now),
+      running: !ended && !isStandingBy(lessonHostRef.current),
+      maxSeconds: maxDurationExplicit ? maxDuration * 60 : undefined,
+    }), '*');
+  }, [maxDurationExplicit, maxDuration]);
+  useEffect(() => {
+    if (!TUTOR_HOST_LESSON) return;
+    if (sessionEnded) { postClock(true); return; }
+    postClock();
+    const onStarted = () => postClock();
+    window.addEventListener('evelyn:session-started', onStarted);
+    const t = setInterval(() => postClock(), CLOCK_POST_MS);
+    return () => { clearInterval(t); window.removeEventListener('evelyn:session-started', onStarted); };
+  }, [standby, sessionEnded, postClock]);
+
   // evelyn:activity (GreenApple spec 2026-10-02 §1): additive message on a
   // real (non-synthetic) student turn, text or voice, relayed from VTR's
   // 'evelyn:student-activity' window event (fired where it records student
@@ -1938,6 +1961,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         voiceMuteControl={uiOptions.voiceMute}
         paceChip={uiOptions.paceChip}
         mobileFinish={uiOptions.mobileFinish}
+        sessionTimer={uiOptions.sessionTimer}
+        endControlVisible={uiOptions.endControl}
+        toolsLow={uiOptions.toolsLow}
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {

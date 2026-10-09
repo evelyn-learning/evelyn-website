@@ -37,6 +37,8 @@ interface SessionControlsProps {
   startedAtMs?: number | null;
   /** Non-null while standing by: the timer shows that instant and does not tick. */
   frozenAtMs?: number | null;
+  /** The host draws the clock itself (embed option `sessionTimer` off). */
+  hideTimer?: boolean;
   maxDuration: number; // minutes
   onEndSession: () => void;
   onUploadHomework: (imageData: string, mimeType: string) => void;
@@ -147,6 +149,7 @@ export function SessionControls({
   sessionId,
   startedAtMs,
   frozenAtMs,
+  hideTimer,
   maxDuration,
   onEndSession,
   onUploadHomework,
@@ -290,7 +293,7 @@ export function SessionControls({
           separated in both the legacy full-width and stage layouts. */}
       <div className="flex items-center justify-between gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
         {/* Timer */}
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2${hideTimer ? ' hidden' : ''}`}>
           <Clock
             className={`w-5 h-5 ${
               isOvertime

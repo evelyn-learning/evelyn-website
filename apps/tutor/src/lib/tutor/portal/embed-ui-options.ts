@@ -37,9 +37,23 @@ export interface EmbedUiOptions {
    *  the host has sent its first `evelyn:video_state` (partner spec v1.2).
    *  Token field: `features.video_control` (boolean). Default false. */
   videoControl: boolean;
+  /** Show the session clock in the frame's header. A host that draws the
+   *  clock in its own chrome (from the `evelyn:clock` message) turns it off.
+   *  Token field: `features.session_timer` (boolean). Default true. */
+  sessionTimer: boolean;
+  /** Show the End control in the frame's header. A host with its own end
+   *  button (which posts `evelyn:host_end`) turns it off; "Finish lesson"
+   *  stays reachable in the ⋯ menu either way.
+   *  Token field: `features.end_control` (boolean). Default true. */
+  endControl: boolean;
+  /** Anchor the board's tool cluster (the wrench) above the dock instead of
+   *  at the top of the board, where opening it ran into the lesson content
+   *  in a narrow side panel.
+   *  Token field: `features.tools_low` (boolean). Default false. */
+  toolsLow: boolean;
 }
 
-export const DEFAULT_EMBED_UI_OPTIONS: EmbedUiOptions = { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true, videoControl: false };
+export const DEFAULT_EMBED_UI_OPTIONS: EmbedUiOptions = { humorControl: true, mobileFinish: false, voiceMute: false, paceChip: true, videoControl: false, sessionTimer: true, endControl: true, toolsLow: false };
 
 /** Partner defaults — applied when the token does not say. A partner absent
  *  from this table gets `DEFAULT_EMBED_UI_OPTIONS`. */
@@ -50,7 +64,10 @@ const PARTNER_UI_DEFAULTS: Readonly<Record<string, Partial<EmbedUiOptions>>> = {
   // Side panel beside a lesson video (Skyler's review 2026-10-07): a clear
   // way to silence the tutor and read instead; one pace control, not two.
   // The panel stays open for the whole lesson (spec v1.2): video control on.
-  gameclass: { voiceMute: true, paceChip: false, videoControl: true },
+  // Tools low (Skyler's review 2026-10-09). The timer and End control stay
+  // ON by default: they move to the host's header only once the host page
+  // draws them, which it signals per token (session_timer / end_control).
+  gameclass: { voiceMute: true, paceChip: false, videoControl: true, toolsLow: true },
 };
 
 interface EmbedUiConfigLike {
@@ -72,5 +89,8 @@ export function resolveEmbedUiOptions(config: EmbedUiConfigLike | null | undefin
     voiceMute: pick(features.voice_mute, 'voiceMute'),
     paceChip: pick(features.pace_chip, 'paceChip'),
     videoControl: pick(features.video_control, 'videoControl'),
+    sessionTimer: pick(features.session_timer, 'sessionTimer'),
+    endControl: pick(features.end_control, 'endControl'),
+    toolsLow: pick(features.tools_low, 'toolsLow'),
   };
 }
