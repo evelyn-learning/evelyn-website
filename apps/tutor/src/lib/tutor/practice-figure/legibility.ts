@@ -18,6 +18,16 @@
  *   - too_many_curves — more than `MAX_CURVES` curves / series (the pieces of
  *     one function count once);
  *   - not_renderable — the spec does not draw at all (the renderer's message).
+ * and, from the batch-1 kinds' own layout (render.ts `FigureFacts.notes`):
+ *   - too_many_elements — more marks than fit at 340 px (unit-circle points
+ *     with coordinates, vectors, bins, ticks, a pedigree row, …);
+ *   - ambiguous_blank — a requested "?" leaves nothing on the figure that
+ *     fixes it (a blank gamete over a column of blank cells, a sign-chart
+ *     row with no sign given, a blank point with no angle printed);
+ *   - not_to_scale — a force arrow drawn at the minimum length;
+ *   - crowded — legible, but only just (a genotype wider than its cell, bin
+ *     edges numbered every other one);
+ *   - labels_overlap also covers a label the placer could not set clear.
  *
  * The facts come from the renderer's own layout (`inspectPracticeFigure`),
  * so the report cannot disagree with the picture. Pure, deterministic, never
@@ -32,6 +42,10 @@ export type LegibilityWarningCode =
   | 'feature_on_border'
   | 'labels_overlap'
   | 'too_many_curves'
+  | 'too_many_elements'
+  | 'ambiguous_blank'
+  | 'not_to_scale'
+  | 'crowded'
   | 'not_renderable';
 
 export interface LegibilityWarning {
@@ -121,6 +135,10 @@ export function checkFigureLegibility(spec: PracticeFigureSpec): LegibilityWarni
       const dy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
       if (dx > 1 && dy > 1) warnings.push({ code: 'labels_overlap', message: `"${a.text}" and "${b.text}" overlap` });
     }
+  }
+
+  for (const note of facts.notes ?? []) {
+    if (!warnings.some((w) => w.code === note.code && w.message === note.message)) warnings.push({ code: note.code, message: note.message });
   }
 
   if (facts.curveCount > MAX_CURVES) {

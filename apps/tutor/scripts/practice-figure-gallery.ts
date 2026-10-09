@@ -9,8 +9,13 @@
  * (already a dependency); if it cannot be loaded they are skipped and the
  * script says so.
  *
+ * PNGs: `<id>.png` is the 340 px phone column at 2× (680 px wide);
+ * `<id>-720.png` is the 720 px copy at 2× (1440 px wide).
+ *
  * Run:
- *   npx tsx scripts/practice-figure-gallery.ts [--out <dir>] [--no-png]
+ *   npx tsx scripts/practice-figure-gallery.ts [--out <dir>] [--no-png] [--only <id-prefix>[,<id-prefix>…]]
+ * `--only` re-renders the PNGs of the matching fixtures only (the HTML always
+ * holds every fixture).
  * Default <dir>:
  *   /Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration/practice-figures-2026-10-09
  */
@@ -21,8 +26,9 @@ import { validateFigureSvg } from '../src/lib/tutor/practice-figure/svg-safety';
 import { FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 
 const DEFAULT_OUT = '/Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration/practice-figures-2026-10-09';
-/** PNG width in device pixels: the 340 px phone column at 2×. */
+/** PNG widths in device pixels: the 340 px phone column and the 720 px copy, both at 2×. */
 const PNG_WIDTH = 680;
+const PNG_WIDTH_WIDE = 1440;
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -33,6 +39,8 @@ async function main(): Promise<void> {
   const outIdx = argv.indexOf('--out');
   const outDir = outIdx >= 0 && argv[outIdx + 1] ? path.resolve(argv[outIdx + 1]) : DEFAULT_OUT;
   const wantPng = !argv.includes('--no-png');
+  const onlyIdx = argv.indexOf('--only');
+  const only = onlyIdx >= 0 && argv[onlyIdx + 1] ? argv[onlyIdx + 1].split(',').filter(Boolean) : null;
   fs.mkdirSync(outDir, { recursive: true });
 
   const cards: string[] = [];
@@ -99,27 +107,33 @@ ${cards.join('\n')}
   console.log(`\nwrote ${htmlPath}  (${rendered.length} figures, ${failed} failed)`);
 
   if (wantPng) {
-    let sharp: ((input: Buffer, opts?: { density?: number }) => { resize(o: { width: number }): { png(): { toFile(p: string): Promise<unknown> } } }) | null = null;
-    try {
-      const mod = (await import('sharp')) as unknown as { default?: typeof sharp };
-      sharp = (mod.default ?? (mod as unknown as typeof sharp)) as typeof sharp;
-    } catch (err) {
-      console.log(`PNGs skipped — sharp could not be loaded (${(err as Error).message})`);
-    }
+    type Sharp = (input: Buffer, opts?: { density?: number }) => { resize(o: { width: number }): { png(): { toFile(p: string): Promise<unknown> } } };
+    const loadSharp = async (): Promise<Sharp | null> => {
+      try {
+        const mod = (await import('sharp')) as unknown as { default?: Sharp };
+        return mod.default ?? (mod as unknown as Sharp);
+      } catch (err) {
+        console.log(`PNGs skipped — sharp could not be loaded (${(err as Error).message})`);
+        return null;
+      }
+    };
+    const sharp = await loadSharp();
     if (sharp) {
       const pngDir = path.join(outDir, 'png');
       fs.mkdirSync(pngDir, { recursive: true });
       let n = 0;
       for (const { id, svg } of rendered) {
+        if (only && !only.some((prefix) => id.startsWith(prefix))) continue;
         try {
           await sharp(Buffer.from(svg), { density: 192 }).resize({ width: PNG_WIDTH }).png().toFile(path.join(pngDir, `${id}.png`));
-          n++;
+          await sharp(Buffer.from(svg), { density: 384 }).resize({ width: PNG_WIDTH_WIDE }).png().toFile(path.join(pngDir, `${id}-720.png`));
+          n += 2;
         } catch (err) {
           console.error(`  png FAIL ${id}: ${(err as Error).message}`);
           failed++;
         }
       }
-      console.log(`wrote ${n} PNGs (${PNG_WIDTH} px wide = the 340 px column at 2×) to ${pngDir}`);
+      console.log(`wrote ${n} PNGs (<id>.png ${PNG_WIDTH} px wide = the 340 px column at 2×; <id>-720.png ${PNG_WIDTH_WIDE} px = the 720 px copy at 2×) to ${pngDir}`);
     }
   }
   if (failed > 0) process.exit(1);

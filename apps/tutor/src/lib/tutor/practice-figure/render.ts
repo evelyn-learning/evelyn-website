@@ -134,6 +134,14 @@
  *     forces: Array<{ name: string; magnitude?: string; direction: FbdDirection | number;
  *                     color?: string; scale?: number }> }
  *
+ * FURTHER KINDS (batch 1, 2026-10-09 — see `BATCH1_FIGURE_KINDS` below; the
+ * params of each are documented at the top of its module under ./kinds):
+ * unit_circle, vector_diagram, free_body_diagram_v2, shaded_region,
+ * number_line, sign_chart, distribution_curve, histogram, box_plot,
+ * polar_complex, punnett_square, pedigree. Each has options that hide the
+ * very thing a question asks for (a coordinate, a resultant, a force's size,
+ * a sign, an area, a cell — drawn as a dashed "?" box where a blank is meant).
+ *
  * Every marked point, endpoint and vertex dot is drawn LAST, unclipped, on a
  * thin white ring — above the curves, the grid and the axes.
  * `checkFigureLegibility(spec)` (legibility.ts) reports what a reader would
@@ -153,6 +161,17 @@ import { solveLinePlot } from '../diagrams/catalog/kinds/line-plot';
 import { compileExpression } from './expr';
 import { slopeFieldSamples, slopeFieldSolution, type SlopeSample } from './slope-field';
 import { validateFigureSvg } from './svg-safety';
+import { sampleCurve } from './sample';
+import { renderUnitCircle } from './kinds/unit-circle';
+import { renderVectorDiagram } from './kinds/vector-diagram';
+import { renderFreeBody } from './kinds/free-body';
+import { renderShadedRegion } from './kinds/shaded-region';
+import { renderNumberLine, renderSignChart } from './kinds/number-line';
+import { renderBoxPlot, renderDistributionCurve, renderHistogram } from './kinds/distribution';
+import { renderPolarComplex } from './kinds/polar-complex';
+import { renderPunnett } from './kinds/punnett';
+import { renderPedigree } from './kinds/pedigree';
+import { HALO, PracticeFigureSpecError, Reader, type Drawn, type FigureFacts, type Params, type PracticeFigureSpec } from './spec';
 import {
   FIGURE_FONT,
   FIGURE_WIDTH,
@@ -198,84 +217,41 @@ export const PRACTICE_FIGURE_KINDS = [
 ] as const;
 export type PracticeFigureKind = (typeof PRACTICE_FIGURE_KINDS)[number];
 
-export interface PracticeFigureSpec {
-  type: string;
-  params: Record<string, unknown>;
-}
+/**
+ * Batch 1 of the further kinds (2026-10-09) — drawn by the modules under
+ * ./kinds, each a pure function of a typed, documented params object (the
+ * params of each are documented at the top of its module):
+ *   unit_circle (kinds/unit-circle.ts) · vector_diagram (kinds/vector-diagram.ts) ·
+ *   free_body_diagram_v2 (kinds/free-body.ts) · shaded_region (kinds/shaded-region.ts) ·
+ *   number_line, sign_chart (kinds/number-line.ts) ·
+ *   distribution_curve, histogram, box_plot (kinds/distribution.ts) ·
+ *   polar_complex (kinds/polar-complex.ts) · punnett_square (kinds/punnett.ts) ·
+ *   pedigree (kinds/pedigree.ts).
+ * Kept apart from `PRACTICE_FIGURE_KINDS` on purpose: that list is what the
+ * practice-extension job offers its writer model (figure-prompts.ts), and a
+ * kind belongs there only once the job has prompts and a review for it.
+ * `renderPracticeFigure` draws every kind of both lists.
+ */
+export const BATCH1_FIGURE_KINDS = [
+  'unit_circle',
+  'vector_diagram',
+  'free_body_diagram_v2',
+  'shaded_region',
+  'number_line',
+  'sign_chart',
+  'distribution_curve',
+  'histogram',
+  'box_plot',
+  'polar_complex',
+  'punnett_square',
+  'pedigree',
+] as const;
+export type Batch1FigureKind = (typeof BATCH1_FIGURE_KINDS)[number];
+export const ALL_PRACTICE_FIGURE_KINDS = [...PRACTICE_FIGURE_KINDS, ...BATCH1_FIGURE_KINDS] as const;
+export type AnyPracticeFigureKind = PracticeFigureKind | Batch1FigureKind;
 
-/** A spec this module cannot draw as written. The message names the param. */
-export class PracticeFigureSpecError extends Error {
-  constructor(public kind: string, message: string) {
-    super(`[practice-figure:${kind}] ${message}`);
-    this.name = 'PracticeFigureSpecError';
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Param readers — every one fails with the param's name.
-// ---------------------------------------------------------------------------
-
-type Params = Record<string, unknown>;
-
-class Reader {
-  constructor(public kind: string, public p: Params) {}
-  fail(message: string): never {
-    throw new PracticeFigureSpecError(this.kind, message);
-  }
-  num(v: unknown, name: string): number {
-    if (typeof v !== 'number' || !Number.isFinite(v)) this.fail(`${name} must be a finite number`);
-    return v as number;
-  }
-  optNum(v: unknown, name: string): number | undefined {
-    return v === undefined || v === null ? undefined : this.num(v, name);
-  }
-  positive(v: unknown, name: string): number {
-    const n = this.num(v, name);
-    if (!(n > 0)) this.fail(`${name} must be greater than 0`);
-    return n;
-  }
-  optStep(v: unknown, name: string): number | undefined {
-    return v === undefined || v === null ? undefined : this.positive(v, name);
-  }
-  range(v: unknown, name: string): [number, number] {
-    if (!Array.isArray(v) || v.length !== 2) this.fail(`${name} must be [min, max]`);
-    const a = this.num((v as unknown[])[0], `${name}[0]`);
-    const b = this.num((v as unknown[])[1], `${name}[1]`);
-    if (!(b > a)) this.fail(`${name} must have max greater than min`);
-    return [a, b];
-  }
-  optRange(v: unknown, name: string): [number, number] | undefined {
-    return v === undefined || v === null ? undefined : this.range(v, name);
-  }
-  str(v: unknown, name: string, max = 120): string {
-    if (typeof v !== 'string' || v.trim().length === 0) this.fail(`${name} must be a non-empty string`);
-    const s = (v as string).trim().replace(/\s+/g, ' ');
-    if (s.length > max) this.fail(`${name} is longer than ${max} characters`);
-    return s;
-  }
-  optStr(v: unknown, name: string, max = 120): string | undefined {
-    return v === undefined || v === null || v === '' ? undefined : this.str(v, name, max);
-  }
-  bool(v: unknown, name: string, dflt: boolean): boolean {
-    if (v === undefined || v === null) return dflt;
-    if (typeof v !== 'boolean') this.fail(`${name} must be true or false`);
-    return v as boolean;
-  }
-  list(v: unknown, name: string, min: number, max: number): unknown[] {
-    if (!Array.isArray(v)) this.fail(`${name} must be an array`);
-    const a = v as unknown[];
-    if (a.length < min || a.length > max) this.fail(`${name} must have between ${min} and ${max} entries (has ${a.length})`);
-    return a;
-  }
-  obj(v: unknown, name: string): Params {
-    if (!v || typeof v !== 'object' || Array.isArray(v)) this.fail(`${name} must be an object`);
-    return v as Params;
-  }
-  /** A colour is only ever a hex literal — never passed through as written. */
-  color(v: unknown, fallback: string): string {
-    return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v.trim()) ? v.trim() : fallback;
-  }
-}
+export { PracticeFigureSpecError, type FigureFacts, type PracticeFigureSpec } from './spec';
+export { sampleCurve };
 
 /** Short stable id prefix from the spec (FNV-1a) — see the module header. */
 function specUid(spec: PracticeFigureSpec): string {
@@ -287,32 +263,6 @@ function specUid(spec: PracticeFigureSpec): string {
   }
   return `pf${h.toString(36)}`;
 }
-
-/**
- * What a figure's layout came to, for `checkFigureLegibility` (legibility.ts)
- * — collected while drawing so the report can never disagree with the
- * picture. Canvas (viewBox) coordinates.
- */
-export interface FigureFacts {
-  plot?: { x: number; y: number; w: number; h: number };
-  /** Distinct curves / line series; the pieces of one function count once. */
-  curveCount: number;
-  /** Every marked point, endpoint mark and series vertex, named by its param. */
-  marks: Array<{ what: string; cx: number; cy: number }>;
-  /** Per curve: the share of its domain that is inside the plot, and the
-   *  branches the y-range cuts down to a stub. */
-  curves: Array<{ what: string; visibleFraction: number; stubs: number }>;
-}
-
-interface Drawn {
-  /** Everything inside the root, background excluded. */
-  body: string;
-  H: number;
-  W?: number;
-  facts?: FigureFacts;
-}
-
-const HALO = 'stroke="#ffffff" stroke-width="3" paint-order="stroke" stroke-linejoin="round"';
 
 function clipDef(uid: string, f: Frame): string {
   return `<defs><clipPath id="${uid}-clip"><rect x="${n2(f.plot.x)}" y="${n2(f.plot.y)}" width="${n2(f.plot.w)}" height="${n2(f.plot.h)}"/></clipPath></defs>`;
@@ -335,106 +285,6 @@ function pointLabel(text: string, px: number, py: number, f: Frame): string {
 // ---------------------------------------------------------------------------
 // function_graph
 // ---------------------------------------------------------------------------
-
-/**
- * Sample `f` over [a, b] into continuous pieces (data coordinates), breaking
- * at every discontinuity instead of joining across it:
- *   - where f is undefined (non-finite) the piece ends at the last defined x
- *     (found by bisection, so sqrt(x) starts at 0, not one sample late);
- *   - a large change between neighbouring samples is bisected: a continuous
- *     function's change shrinks with the interval, a jump's or a pole's does
- *     not — then each side is drawn up to the break (a pole runs off the
- *     plot edge; the caller clips), and never through it.
- * y is clamped to one span beyond the range so a pole cannot emit absurd
- * coordinates.
- */
-export function sampleCurve(
-  f: (x: number) => number,
-  a: number,
-  b: number,
-  yMin: number,
-  yMax: number,
-  n = 480,
-): Array<Array<[number, number]>> {
-  const span = yMax - yMin;
-  const lo = yMin - span;
-  const hi = yMax + span;
-  const clampY = (y: number) => Math.max(lo, Math.min(hi, y));
-  const pieces: Array<Array<[number, number]>> = [];
-  let cur: Array<[number, number]> = [];
-  const close = () => {
-    if (cur.length > 1) pieces.push(cur);
-    cur = [];
-  };
-  /** Last x in [defined, undefinedX) where f is still finite. */
-  const edgeOfDefinition = (defined: number, undefinedX: number): number => {
-    let l = defined;
-    let r = undefinedX;
-    for (let k = 0; k < 44; k++) {
-      const m = (l + r) / 2;
-      if (m === l || m === r) break;
-      if (Number.isFinite(f(m))) l = m;
-      else r = m;
-    }
-    return l;
-  };
-  let px = NaN;
-  let py = NaN;
-  for (let i = 0; i <= n; i++) {
-    const x = i === n ? b : a + ((b - a) * i) / n;
-    const y = f(x);
-    if (!Number.isFinite(y)) {
-      if (Number.isFinite(py)) {
-        const e = edgeOfDefinition(px, x);
-        if (e !== px) cur.push([e, clampY(f(e))]);
-      }
-      close();
-      px = x;
-      py = NaN;
-      continue;
-    }
-    if (!Number.isFinite(py)) {
-      if (i > 0) {
-        const e = edgeOfDefinition(x, px);
-        if (e !== x) cur.push([e, clampY(f(e))]);
-      }
-    } else if (Math.abs(y - py) > span * 0.2) {
-      // Bisect toward the larger change.
-      let l = px;
-      let r = x;
-      let yl = py;
-      let yr = y;
-      let jump = true;
-      for (let k = 0; k < 44; k++) {
-        const m = (l + r) / 2;
-        if (m === l || m === r) break;
-        const ym = f(m);
-        if (!Number.isFinite(ym)) break;
-        if (Math.abs(ym - yl) >= Math.abs(yr - ym)) {
-          r = m;
-          yr = ym;
-        } else {
-          l = m;
-          yl = ym;
-        }
-        if (Math.abs(yr - yl) < span * 1e-3) {
-          jump = false;
-          break;
-        }
-      }
-      if (jump) {
-        if (l !== px) cur.push([l, clampY(yl)]);
-        close();
-        if (r !== x) cur.push([r, clampY(yr)]);
-      }
-    }
-    cur.push([x, clampY(y)]);
-    px = x;
-    py = y;
-  }
-  close();
-  return pieces;
-}
 
 /** The white disc under a mark: a thin ring of clear paper round it, so a
  *  point on a gridline, an axis or the plot border still reads as a point. */
@@ -1458,7 +1308,7 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
   const r = new Reader(kind, spec.params);
   const uid = specUid(spec);
   let drawn: Drawn;
-  switch (kind as PracticeFigureKind) {
+  switch (kind as AnyPracticeFigureKind) {
     case 'function_graph': drawn = renderFunctionGraph(r, uid); break;
     case 'motion_graph': drawn = renderMotionGraph(r, uid); break;
     case 'bar_chart': drawn = renderBarChart(r); break;
@@ -1468,8 +1318,20 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
     case 'titration_curve': drawn = renderTitrationCurve(r, uid); break;
     case 'slope_field': drawn = renderSlopeField(r, uid); break;
     case 'free_body_diagram': drawn = renderFreeBodyDiagram(r, uid); break;
+    case 'unit_circle': drawn = renderUnitCircle(r); break;
+    case 'vector_diagram': drawn = renderVectorDiagram(r); break;
+    case 'free_body_diagram_v2': drawn = renderFreeBody(r); break;
+    case 'shaded_region': drawn = renderShadedRegion(r, uid); break;
+    case 'number_line': drawn = renderNumberLine(r); break;
+    case 'sign_chart': drawn = renderSignChart(r); break;
+    case 'distribution_curve': drawn = renderDistributionCurve(r, uid); break;
+    case 'histogram': drawn = renderHistogram(r); break;
+    case 'box_plot': drawn = renderBoxPlot(r); break;
+    case 'polar_complex': drawn = renderPolarComplex(r); break;
+    case 'punnett_square': drawn = renderPunnett(r, uid); break;
+    case 'pedigree': drawn = renderPedigree(r); break;
     default:
-      throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${PRACTICE_FIGURE_KINDS.join(', ')}`);
+      throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
   const svg = svgDocument(drawn.W ?? FIGURE_WIDTH, drawn.H, drawn.body);
   const safety = validateFigureSvg(svg);

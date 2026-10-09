@@ -28,6 +28,8 @@
 import { strict as assert } from 'node:assert';
 import { PracticeFigureSchema } from '@evelyn/portal-contract/v1';
 import {
+  ALL_PRACTICE_FIGURE_KINDS,
+  BATCH1_FIGURE_KINDS,
   PRACTICE_FIGURE_KINDS,
   PracticeFigureSpecError,
   buildPracticeFigure,
@@ -42,6 +44,11 @@ import { slopeFieldSamples, slopeFieldSolution } from '../src/lib/tutor/practice
 import { MAX_FIGURE_SVG_CHARS, validateFigureSvg } from '../src/lib/tutor/practice-figure/svg-safety';
 import { GUIDE_COLOR, GUIDE_DASH, SERIES_COLORS, SERIES_DASHES, assignDashes, niceBounds, niceStep, piTickText, stepDecimals, tickText, tickTexts, ticksBetween } from '../src/lib/tutor/practice-figure/plot-frame';
 import { checkFigureLegibility } from '../src/lib/tutor/practice-figure/legibility';
+import { Reader } from '../src/lib/tutor/practice-figure/spec';
+import { vectorDiagramModel } from '../src/lib/tutor/practice-figure/kinds/vector-diagram';
+import { fbdLayout, freeBodyModel } from '../src/lib/tutor/practice-figure/kinds/free-body';
+import { punnettModel } from '../src/lib/tutor/practice-figure/kinds/punnett';
+import { pedigreeLayout, pedigreeModel } from '../src/lib/tutor/practice-figure/kinds/pedigree';
 import { findViolations } from './lib/svg-text-extents';
 import { FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 
@@ -754,6 +761,305 @@ test('checkFigureLegibility: reports, never redraws', () => {
   checkFigureLegibility(spec);
   assert.equal(renderPracticeFigure(spec).svg, before);
   for (const fx of FIGURE_FIXTURES) assert.ok(Array.isArray(checkFigureLegibility(fx.spec)), fx.id);
+});
+
+// ---------------------------------------------------------------------------
+// Batch 1 (2026-10-09): unit_circle, vector_diagram, free_body_diagram_v2,
+// shaded_region, number_line / sign_chart, distribution_curve / histogram /
+// box_plot, polar_complex, punnett_square / pedigree.
+// ---------------------------------------------------------------------------
+
+console.log('\nBatch 1 kinds:\n');
+
+/** The element and attribute names of the pinned client fixture
+ *  (academy tests/fixtures/engine-practice-figures.json, 27 figures). A new
+ *  kind may use nothing outside it: the client drops a figure it would alter. */
+const PINNED_ELEMENTS = ['circle', 'clipPath', 'defs', 'g', 'line', 'marker', 'path', 'polygon', 'rect', 'svg', 'text', 'tspan'];
+const PINNED_ATTRS = ['clip-path', 'cx', 'cy', 'd', 'dominant-baseline', 'dy', 'fill', 'font-family', 'font-size', 'font-style', 'font-weight', 'height', 'id', 'marker-end', 'markerHeight', 'markerWidth', 'orient', 'paint-order', 'points', 'preserveAspectRatio', 'r', 'refX', 'refY', 'role', 'rx', 'stroke', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'stroke-width', 'text-anchor', 'transform', 'viewBox', 'width', 'x', 'x1', 'x2', 'xmlns', 'y', 'y1', 'y2'];
+const batch1 = FIGURE_FIXTURES.filter((f) => (BATCH1_FIGURE_KINDS as readonly string[]).includes(f.spec.type));
+const warn = (type: string, params: Record<string, unknown>): string[] => checkFigureLegibility({ type, params }).map((w) => w.code);
+
+test('batch 1: every new kind has ≥ 3 fixtures, one of them with a blank "?"', () => {
+  assert.equal(BATCH1_FIGURE_KINDS.length, 12);
+  assert.equal(ALL_PRACTICE_FIGURE_KINDS.length, PRACTICE_FIGURE_KINDS.length + 12);
+  for (const kind of BATCH1_FIGURE_KINDS) {
+    const mine = batch1.filter((f) => f.spec.type === kind);
+    assert.ok(mine.length >= 3, `${kind}: ${mine.length} fixtures`);
+    const blank = mine.filter((f) => /blank/.test(f.id));
+    assert.ok(blank.length >= 1, `${kind}: a fixture with a blank`);
+    for (const b of blank) assert.ok(texts(rendered.get(b.id) as string).some((t) => t.includes('?')), `${b.id} shows a "?"`);
+  }
+});
+
+test('batch 1: only the pinned client vocabulary — elements, attributes; no opacity, style, data-*, aria-*, title', () => {
+  for (const fx of batch1) {
+    const svg = rendered.get(fx.id) as string;
+    for (const m of svg.matchAll(/<([A-Za-z][\w:-]*)((?:\s+[\w:-]+="[^"]*")*)\s*\/?>/g)) {
+      assert.ok(PINNED_ELEMENTS.includes(m[1]), `${fx.id}: element <${m[1]}>`);
+      for (const a of m[2].matchAll(/\s([\w:-]+)="/g)) assert.ok(PINNED_ATTRS.includes(a[1]), `${fx.id}: attribute ${a[1]} on <${m[1]}>`);
+    }
+    assert.ok(!/opacity|<style|<title|<desc|data-|aria-|href|<pattern|Gradient|<image|<use/.test(svg), fx.id);
+  }
+});
+
+test('batch 1: every fixture is clean under checkFigureLegibility unless its note says it shows a warning', () => {
+  for (const fx of batch1) {
+    const w = checkFigureLegibility(fx.spec);
+    if (/warns/.test(fx.note)) assert.ok(w.length > 0, `${fx.id} should warn`);
+    else assert.deepEqual(w, [], `${fx.id}: ${w.map((x) => x.message).join(' | ')}`);
+  }
+});
+
+test('unit_circle: coordinates and angle sizes are printed only as asked; exact values; either coordinate can be blank', () => {
+  const one = (extra: Record<string, unknown>) => texts(svgOf('unit_circle', { angles: [{ degrees: 150, ...extra }] }));
+  assert.ok(one({}).includes('150°'));
+  assert.ok(!one({}).some((t) => t.includes('√3')), 'no coordinates by default');
+  assert.ok(one({ coords: 'show' }).includes('(−√3/2, 1/2)'));
+  assert.ok(one({ coords: 'blank_x' }).includes('(?, 1/2)'));
+  assert.ok(one({ coords: 'blank_y', name: 'P' }).includes('P(−√3/2, ?)'));
+  assert.ok(one({ coords: 'blank' }).includes('(?, ?)'));
+  assert.ok(one({ label: 'radians' }).includes('5π/6'));
+  assert.ok(!one({ label: 'none' }).some((t) => /150|π/.test(t)));
+  assert.ok(one({ label: 'blank' }).includes('?'));
+  assert.ok(one({ labelText: 'θ' }).includes('θ') && !one({ labelText: 'θ' }).includes('150°'));
+  assert.ok(texts(svgOf('unit_circle', { angles: [{ pi: [-3, 4], coords: 'show' }] })).includes('−3π/4'));
+  assert.ok(texts(svgOf('unit_circle', { angles: [{ pi: [-3, 4], coords: 'show' }] })).includes('(−√2/2, −√2/2)'));
+  assert.ok(texts(svgOf('unit_circle', { angles: [{ degrees: 20, coords: 'show' }] })).includes('(0.94, 0.34)'));
+  const q = texts(svgOf('unit_circle', { angles: [{ degrees: 40 }], quadrantLabels: true }));
+  for (const name of ['I', 'II', 'III', 'IV']) assert.ok(q.includes(name));
+  assert.ok(!one({}).includes('III'));
+  // The reference triangle and the arc are drawn only when asked.
+  assert.ok(!svgOf('unit_circle', { angles: [{ degrees: 150 }] }).includes('stroke-dasharray="4 3"'));
+  assert.ok(svgOf('unit_circle', { angles: [{ degrees: 150, triangle: true }] }).includes('stroke-dasharray="4 3"'));
+  throwsSpec({ type: 'unit_circle', params: { angles: [{ degrees: 30, pi: [1, 6] }] } }, /degrees or pi, not both/);
+  throwsSpec({ type: 'unit_circle', params: { angles: [{ degrees: 400 }] } }, /between −360° and 360°/);
+  throwsSpec({ type: 'unit_circle', params: { angles: [{ degrees: 30 }, { degrees: -330 }] } }, /same point/);
+  throwsSpec({ type: 'unit_circle', params: { angles: [{ degrees: 90, triangle: true }] } }, /no reference triangle/);
+  throwsSpec({ type: 'unit_circle', params: { angles: [] } }, /angles must have between 1 and 16/);
+  assert.deepEqual(warn('unit_circle', { angles: [{ degrees: 210, coords: 'blank', label: 'none' }] }), ['ambiguous_blank']);
+  assert.ok(warn('unit_circle', { angles: [0, 30, 45, 60, 90, 120, 135, 150, 180, 210].map((degrees) => ({ degrees, coords: 'show' })) }).includes('too_many_elements'));
+});
+
+test('vector_diagram: tails / heads, magnitude + direction, components, tip-to-tail, a resultant only when asked', () => {
+  const base = { xRange: [-1, 8], yRange: [-1, 7], vectors: [{ tail: [0, 0], head: [3, 4], label: 'a' }, { components: [4, -1], label: 'b' }] };
+  const plain = svgOf('vector_diagram', base);
+  assert.ok(texts(plain).includes('a') && texts(plain).includes('b'));
+  assert.equal((plain.match(/<polygon /g) ?? []).length, 2, 'one arrowhead per vector');
+  const withR = svgOf('vector_diagram', { ...base, resultant: true });
+  assert.equal((withR.match(/<polygon /g) ?? []).length, 3);
+  assert.ok(texts(withR).includes('R') && !texts(plain).includes('R'));
+  assert.ok(texts(svgOf('vector_diagram', { ...base, resultant: { label: 'a + b' } })).includes('a + b'));
+  // Tip-to-tail: the second vector starts where the first ends.
+  const m = vectorDiagramModel(new Reader('vector_diagram', { ...base, tipToTail: true, resultant: true }));
+  assert.deepEqual([m.vectors[1].tail, m.vectors[1].head], [[3, 4], [7, 3]]);
+  assert.deepEqual([m.resultant?.tail, m.resultant?.head], [[0, 0], [7, 3]]);
+  // Magnitude + direction.
+  const md = vectorDiagramModel(new Reader('vector_diagram', { xRange: [-6, 6], yRange: [-6, 6], vectors: [{ magnitude: 5, direction: 180 }] }));
+  assert.ok(Math.abs(md.vectors[0].head[0] + 5) < 1e-9 && Math.abs(md.vectors[0].head[1]) < 1e-9);
+  // Component dashes only when asked; several vectors differ by dash pattern, not only colour.
+  assert.ok(!plain.includes('stroke-dasharray="3 3"'));
+  assert.ok(svgOf('vector_diagram', { ...base, vectors: [{ ...base.vectors[0], showComponents: true }] }).includes('stroke-dasharray="3 3"'));
+  assert.ok(plain.includes(`stroke-dasharray="${SERIES_DASHES[1]}"`));
+  throwsSpec({ type: 'vector_diagram', params: { ...base, vectors: [{ tail: [0, 0], head: [30, 4] }] } }, /outside/);
+  throwsSpec({ type: 'vector_diagram', params: { ...base, vectors: [{ tail: [1, 1], head: [1, 1] }] } }, /zero length/);
+  throwsSpec({ type: 'vector_diagram', params: { ...base, vectors: [{ tail: [1, 1] }] } }, /head, components, or magnitude and direction/);
+  assert.ok(warn('vector_diagram', { xRange: [0, 8], yRange: [0, 8], vectors: [1, 2, 3, 4, 5, 6, 7].map((k) => ({ tail: [0, 0], head: [k, 8 - k] })) }).includes('too_many_elements'));
+});
+
+test('free_body_diagram_v2: labels at the tips, sizes only when given, lengths to scale or equal', () => {
+  const forces = [
+    { label: 'N', direction: 'up', magnitude: 60 }, { label: 'W', direction: 'down', magnitude: 60 },
+    { label: 'F', direction: 'right', magnitude: 30 }, { label: 'f', direction: 'left', magnitude: 15 },
+  ];
+  const shown = texts(svgOf('free_body_diagram_v2', { forces }));
+  assert.ok(shown.includes('N = 60 N') && shown.includes('f = 15 N'));
+  const hidden = texts(svgOf('free_body_diagram_v2', { forces: forces.map((f) => ({ ...f, showMagnitude: false })) }));
+  assert.ok(hidden.includes('N') && !hidden.some((t) => /60|30|15/.test(t)));
+  const len = (params: Record<string, unknown>) => fbdLayout(freeBodyModel(new Reader('free_body_diagram_v2', params))).lengths;
+  const prop = len({ forces });
+  assert.ok(Math.abs(prop[0] / prop[2] - 2) < 1e-9 && Math.abs(prop[2] / prop[3] - 2) < 1e-9, 'proportional to the magnitudes');
+  const equal = len({ forces, lengths: 'equal' });
+  assert.equal(new Set(equal.map((v) => v.toFixed(3))).size, 1);
+  // No magnitudes at all ⇒ equal lengths; some but not all ⇒ a spec error for 'proportional'.
+  assert.equal(new Set(len({ forces: forces.map(({ label, direction }) => ({ label, direction })) }).map((v) => v.toFixed(3))).size, 1);
+  throwsSpec({ type: 'free_body_diagram_v2', params: { forces: [{ label: 'T', direction: 40 }, forces[1]], lengths: 'proportional' } }, /every force needs a magnitude/);
+  // An arrow too small to draw to scale is drawn at the minimum length and reported.
+  assert.deepEqual(warn('free_body_diagram_v2', { forces: [{ label: 'A', direction: 'up', magnitude: 100 }, { label: 'B', direction: 'down', magnitude: 2 }] }), ['not_to_scale']);
+  // Six forces: every label is placed clear of the others.
+  const six = { object: { shape: 'block', label: 'sled' }, surface: true, forces: [...forces, { label: 'T', direction: 35, magnitude: 40, showAngle: true }, { label: 'Drag', direction: 200, magnitude: 20 }] };
+  assert.deepEqual(warn('free_body_diagram_v2', six), []);
+  assert.ok(texts(svgOf('free_body_diagram_v2', six)).includes('35°'));
+  // Incline: named directions follow the slope; the angle label can be replaced or left out.
+  const inc = { object: { shape: 'box' }, incline: { angle: 30 }, forces: [{ label: 'N', direction: 'normal' }, { label: 'W', direction: 'down' }, { label: 'f', direction: 'up-slope' }] };
+  const mi = freeBodyModel(new Reader('free_body_diagram_v2', inc));
+  assert.deepEqual(mi.forces.map((f) => f.degrees), [120, 270, 30]);
+  assert.ok(texts(svgOf('free_body_diagram_v2', inc)).includes('30°'));
+  assert.ok(texts(svgOf('free_body_diagram_v2', { ...inc, incline: { angle: 30, angleLabel: 'θ' } })).includes('θ'));
+  assert.ok(!texts(svgOf('free_body_diagram_v2', { ...inc, incline: { angle: 30, showAngle: false } })).some((t) => /30|θ/.test(t)));
+  throwsSpec({ type: 'free_body_diagram_v2', params: { forces: [{ label: 'N', direction: 'normal' }] } }, /needs an incline/);
+  throwsSpec({ type: 'free_body_diagram_v2', params: { forces: [{ label: 'N', direction: 'sideways' }] } }, /direction/);
+  throwsSpec({ type: 'free_body_diagram_v2', params: { forces: [{ label: 'N', direction: 'up', magnitude: -3 }] } }, /greater than 0/);
+});
+
+test('shaded_region: hatching by drawn lines under a clip path; strict inequalities dashed; marks only when asked', () => {
+  const under = svgOf('shaded_region', { xRange: [-1, 6], yRange: [-1, 6], region: { type: 'under_curve', expr: '0.5*x + 1', from: 0, to: 4 } });
+  assert.match(under, /<clipPath id="pf[0-9a-z]+-region"><polygon /);
+  assert.match(under, /<g clip-path="url\(#pf[0-9a-z]+-region\)"><path d="M[^"]+" fill="none"/);
+  assert.ok(!/fill-opacity|opacity|<pattern/.test(under));
+  const between = { xRange: [-3, 3], yRange: [-2, 6], region: { type: 'between_curves', upper: { expr: '4 - x^2', label: 'f' }, lower: { expr: 'x + 2', label: 'g' }, from: -2, to: 1 } };
+  assert.equal((svgOf('shaded_region', between).match(/r="3.8"/g) ?? []).length, 0);
+  assert.equal((svgOf('shaded_region', { ...between, region: { ...between.region, markIntersections: true } }).match(/r="3.8"/g) ?? []).length, 2);
+  const ineq = (op: string) => svgOf('shaded_region', { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'inequalities', inequalities: [{ a: 1, b: 1, op, c: 6 }, { a: 1, b: 0, op: '>=', c: 0 }, { a: 0, b: 1, op: '>=', c: 0 }] } });
+  assert.ok(ineq('<').includes('stroke-dasharray="7 4"') && !ineq('<=').includes('stroke-dasharray="7 4"'));
+  // Marked corners: filled, but OPEN on a strict (dashed) boundary.
+  const corners = svgOf('shaded_region', { xRange: [-1, 9], yRange: [-1, 9], region: { type: 'inequalities', markVertices: true, inequalities: [{ a: 1, b: 1, op: '<=', c: 8 }, { a: 1, b: -1, op: '<', c: 2 }, { a: 1, b: 0, op: '>=', c: 0 }, { a: 0, b: 1, op: '>=', c: 1 }] } });
+  assert.equal((corners.match(/r="3.8" fill="#ffffff"/g) ?? []).length, 2);
+  assert.equal((corners.match(/r="3.8" fill="#111827"/g) ?? []).length, 2);
+  // Nothing printed states the inequalities unless a label is given.
+  assert.ok(!texts(ineq('<=')).some((t) => /≤|≥|</.test(t)));
+  throwsSpec({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'inequalities', inequalities: [{ a: 1, b: 0, op: '>', c: 5 }, { a: 1, b: 0, op: '<', c: 2 }] } } }, /no point of the plot satisfies/);
+  throwsSpec({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'under_curve', expr: '1/(x-2)', from: 0, to: 4 } } }, /not defined/);
+  throwsSpec({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'under_curve', expr: 'x', from: 4, to: 2 } } }, /to must be greater than from/);
+  throwsSpec({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'between_curves', upper: { expr: 'x' }, lower: { expr: 'x + 1' }, from: 0, to: 3 } } }, /upper .* below .* lower/);
+  throwsSpec({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'blob' } } }, /region.type/);
+});
+
+test('number_line: open / closed ends, rays with arrows, integer and fraction ticks; sign_chart: signs, zeros and "?" cells', () => {
+  const nl = svgOf('number_line', { min: -5, max: 5, intervals: [{ from: -2, to: 3, fromOpen: true }, { from: 4, to: null }] });
+  assert.equal((nl.match(/<circle [^>]*fill="#ffffff" stroke="#1d4ed8"/g) ?? []).length, 1, 'one open end');
+  assert.equal((nl.match(/<circle [^>]*fill="#1d4ed8" stroke="#1d4ed8"/g) ?? []).length, 2, 'two closed ends');
+  for (const t of ['−5', '0', '5']) assert.ok(texts(nl).includes(t));
+  const fr = texts(svgOf('number_line', { min: 0, max: 2, denominator: 4, points: [{ x: 0.75, label: 'A' }] }));
+  for (const t of ['1/4', '1/2', '3/4', '1', '5/4', '2', 'A']) assert.ok(fr.includes(t), t);
+  assert.deepEqual(texts(svgOf('number_line', { min: -3, max: 3, labelOnly: [0, 1], points: [{ x: -2 }] })).sort(), ['0', '1']);
+  throwsSpec({ type: 'number_line', params: { min: 0, max: 5, intervals: [{ from: 3, to: 1 }] } }, /to must be greater than from/);
+  throwsSpec({ type: 'number_line', params: { min: 0, max: 5, points: [{ x: 9 }] } }, /outside min..max/);
+  throwsSpec({ type: 'number_line', params: { min: 0, max: 5, intervals: [{ from: null, to: null, fromOpen: true }] } }, /open/);
+  assert.ok(warn('number_line', { min: 0, max: 3, denominator: 12 }).includes('too_many_elements'));
+
+  const sc = { critical: [-1, 2], rows: [{ label: 'f′(x)', signs: ['+', '-', '+'], at: ['0', '0'], blankSigns: [2] }, { label: 'f″(x)', signs: ['-', '-', '+'], at: ['', 'und'] }] };
+  const st = texts(svgOf('sign_chart', sc));
+  assert.equal(st.filter((t) => t === '+').length, 2, 'the sign under the blank is not printed');
+  assert.equal(st.filter((t) => t === '−').length, 3);
+  assert.equal(st.filter((t) => t === '?').length, 1);
+  assert.ok(st.includes('f′(x)') && st.includes('−1') && st.includes('2') && st.includes('und'));
+  throwsSpec({ type: 'sign_chart', params: { critical: [-1, 2], rows: [{ label: 'f', signs: ['+', '-'] }] } }, /signs must have 3 entries/);
+  throwsSpec({ type: 'sign_chart', params: { critical: [2, -1], rows: [{ label: 'f', signs: ['+', '-', '+'] }] } }, /increasing/);
+  throwsSpec({ type: 'sign_chart', params: { critical: [1], rows: [{ label: 'f', signs: ['+', '?'] }] } }, /'\+', '-' or ''/);
+  throwsSpec({ type: 'sign_chart', params: { critical: [1], rows: [{ label: 'f', signs: ['+', ''], blankSigns: [1] }] } }, /give its true value/);
+  assert.deepEqual(warn('sign_chart', { critical: [1], rows: [{ label: 'f′', signs: ['+', '-'], at: ['0'], blankSigns: [0, 1], blankAt: [0] }] }), ['ambiguous_blank']);
+});
+
+test('distribution_curve / histogram / box_plot: no area, count or five-number value is printed unless asked', () => {
+  const dc = { shade: [{ from: -1, to: 1 }] };
+  assert.ok(!texts(svgOf('distribution_curve', dc)).some((t) => /0\.68|68/.test(t)));
+  assert.ok(texts(svgOf('distribution_curve', { ...dc, showArea: true })).includes('0.6827'));
+  for (const t of ['−3', '−1', '0', '2', '3']) assert.ok(texts(svgOf('distribution_curve', dc)).includes(t));
+  const x = texts(svgOf('distribution_curve', { mean: 100, sd: 15, shade: [{ from: 115, to: null }] }));
+  for (const t of ['55', '85', '100', '115', '145']) assert.ok(x.includes(t), t);
+  const sig = texts(svgOf('distribution_curve', { mean: 100, sd: 15, axis: 'sigma' }));
+  assert.ok(sig.includes('μ') && sig.includes('μ+2σ') && sig.includes('μ−σ') && !sig.includes('100'));
+  assert.ok(!texts(svgOf('distribution_curve', { axis: 'none', shade: [{ from: null, to: 1.5, label: 'k' }] })).some((t) => /^[−\d.]+$/.test(t)));
+  assert.match(svgOf('distribution_curve', dc), /<clipPath id="pf[0-9a-z]+-shade0"><polygon /);
+  throwsSpec({ type: 'distribution_curve', params: { sd: 0 } }, /sd must be greater than 0/);
+  throwsSpec({ type: 'distribution_curve', params: { shade: [{ from: 2, to: 1 }] } }, /to must be greater than from/);
+  throwsSpec({ type: 'distribution_curve', params: { shade: [{ from: null, to: null }] } }, /needs from or to/);
+
+  const h = { binStart: 10, binWidth: 5, counts: [2, 6, 9, 4, 1], xLabel: 'Mass (g)' };
+  const ht = texts(svgOf('histogram', h));
+  for (const t of ['10', '15', '35', 'Mass (g)', 'Frequency']) assert.ok(ht.includes(t), t);
+  assert.ok(!ht.includes('9') && texts(svgOf('histogram', { ...h, showCounts: true })).includes('9'));
+  // A blank class: a "?" box instead of the bar, its count printed nowhere, and the axis not sized by it.
+  const hb = texts(svgOf('histogram', { ...h, counts: [2, 6, 19, 4, 1], showCounts: true, blankBins: [2] }));
+  assert.ok(hb.includes('?') && !hb.includes('19') && !hb.includes('18') && hb.includes('7') && !hb.includes('8'), 'the axis stops at 7, sized by the bars that are drawn');
+  throwsSpec({ type: 'histogram', params: { ...h, counts: [2, -1] } }, /whole numbers ≥ 0/);
+  throwsSpec({ type: 'histogram', params: { ...h, binWidth: 0 } }, /binWidth must be greater than 0/);
+  assert.ok(warn('histogram', { binStart: 0, binWidth: 1, counts: new Array(15).fill(3) }).includes('too_many_elements'));
+
+  const b = { plots: [{ label: 'Class A', min: 52, q1: 61, median: 70, q3: 78, max: 95, outliers: [31] }, { label: 'Class B', min: 40, q1: 55, median: 62, q3: 71, max: 88 }], range: [30, 100], step: 10 };
+  const bt = texts(svgOf('box_plot', b));
+  assert.ok(bt.includes('Class A') && bt.includes('Class B') && bt.includes('30') && bt.includes('100'));
+  assert.ok(!bt.includes('70') || b.range[0] % 10 === 0, 'only axis numbers');
+  assert.ok(!bt.includes('61') && !bt.includes('95'));
+  assert.ok(texts(svgOf('box_plot', { ...b, showValues: true })).includes('61'));
+  throwsSpec({ type: 'box_plot', params: { plots: [{ min: 5, q1: 4, median: 6, q3: 8, max: 9 }] } }, /min ≤ q1 ≤ median ≤ q3 ≤ max/);
+  throwsSpec({ type: 'box_plot', params: { plots: [{ min: 5, q1: 6, median: 7, q3: 8, max: 9, outliers: [7] }] } }, /outlier.*outside min..max/);
+});
+
+test('polar_complex: complex plane and polar grid; construction lines and a curve r = f(θ) only when asked', () => {
+  const c = { plane: 'complex', range: 6, step: 2, points: [{ re: 3, im: 4, label: 'z' }, { re: -2, im: 1, label: 'w' }] };
+  const ct = texts(svgOf('polar_complex', c));
+  assert.ok(ct.includes('Re') && ct.includes('Im') && ct.includes('z') && ct.includes('w'));
+  assert.equal((svgOf('polar_complex', c).match(/stroke-dasharray="3 3"/g) ?? []).length, 0);
+  const withLines = svgOf('polar_complex', { ...c, points: [{ ...c.points[0], showModulus: true, showArgument: true, projections: true }] });
+  assert.ok(withLines.includes('stroke-dasharray="3 3"'));
+  assert.ok(!texts(withLines).some((t) => /^5$|53/.test(t)), 'the modulus and the argument are drawn, never printed');
+  const pl = { plane: 'polar', rMax: 4, angleStep: 30, points: [{ r: 3, theta: 120, label: 'P' }] };
+  const pt = texts(svgOf('polar_complex', pl));
+  for (const t of ['30°', '120°', '330°', '1', '4', 'P']) assert.ok(pt.includes(t), t);
+  assert.ok(texts(svgOf('polar_complex', { ...pl, angleLabels: 'radians' })).includes('2π/3'));
+  assert.ok(!texts(svgOf('polar_complex', { ...pl, angleLabels: 'none' })).some((t) => /°|π/.test(t)));
+  const curve = svgOf('polar_complex', { plane: 'polar', rMax: 4, angleStep: 45, curve: { expr: '4*cos(2*theta)' } });
+  assert.match(curve, /<path d="M[^"]{400,}" fill="none" stroke="#1d4ed8"/);
+  assert.ok(!texts(curve).some((t) => t.includes('cos')), 'the equation is not printed');
+  assert.ok(texts(svgOf('polar_complex', { plane: 'polar', rMax: 4, angleStep: 45, curve: { expr: '4*cos(2*theta)', label: 'r = 4 cos 2θ' } })).includes('r = 4 cos 2θ'));
+  throwsSpec({ type: 'polar_complex', params: { plane: 'polar', rMax: 4, angleStep: 45, curve: { expr: '4*cos(2*q)' } } }, /curve.expr/);
+  throwsSpec({ type: 'polar_complex', params: { plane: 'polar', rMax: 4, angleStep: 7, points: [] } }, /angleStep must be one of/);
+  throwsSpec({ type: 'polar_complex', params: { plane: 'polar', rMax: 4, angleStep: 30, points: [{ r: 9, theta: 0 }] } }, /outside/);
+  throwsSpec({ type: 'polar_complex', params: { plane: 'argand' } }, /plane must be 'complex' or 'polar'/);
+});
+
+test('punnett_square: cells from the gametes, any cell or header blank, phenotype hatching with a legend', () => {
+  const mono = { top: ['A', 'a'], side: ['A', 'a'] };
+  assert.deepEqual(punnettModel(new Reader('punnett_square', mono)).cells.map((row) => row.map((c) => c.genotype)), [['AA', 'Aa'], ['Aa', 'aa']]);
+  const di = punnettModel(new Reader('punnett_square', { top: ['RY', 'Ry', 'rY', 'ry'], side: ['RY', 'Ry', 'rY', 'ry'] }));
+  assert.equal(di.cells[3][0].genotype, 'RrYy');
+  assert.equal(di.cells[1][2].genotype, 'RrYy');
+  assert.equal(di.cells[3][3].genotype, 'rryy');
+  const t = texts(svgOf('punnett_square', { ...mono, blankCells: [[1, 1]], blankTop: [0] }));
+  assert.equal(t.filter((s) => s === '?').length, 2);
+  assert.ok(!t.includes('aa') && t.includes('AA') && t.filter((s) => s === 'A').length === 1);
+  const ph = svgOf('punnett_square', { ...mono, phenotypes: [{ label: 'purple flowers', genotypes: ['AA', 'Aa'] }, { label: 'white flowers', genotypes: ['aa'] }] });
+  assert.ok(texts(ph).includes('purple flowers') && texts(ph).includes('white flowers'));
+  assert.ok((ph.match(/<clipPath /g) ?? []).length >= 1 && !/<pattern|opacity/.test(ph));
+  assert.ok(!texts(svgOf('punnett_square', mono)).some((s) => /flowers/.test(s)));
+  // Every phenotype class is hatched (two clip paths for two classes, plus two legend swatches), so only a blank cell is plain.
+  assert.equal((ph.match(/<clipPath /g) ?? []).length, 4);
+  assert.equal((svgOf('punnett_square', { ...mono, blankCells: [[1, 1]], phenotypes: [{ label: 'purple flowers', genotypes: ['AA', 'Aa'] }, { label: 'white flowers', genotypes: ['aa'] }] }).match(/<clipPath /g) ?? []).length, 3, 'the blank cell is not hatched');
+  throwsSpec({ type: 'punnett_square', params: { top: ['A', 'a'], side: ['AB', 'a'] } }, /same number of alleles/);
+  throwsSpec({ type: 'punnett_square', params: { ...mono, blankCells: [[2, 0]] } }, /blankCells\[0\]/);
+  throwsSpec({ type: 'punnett_square', params: { ...mono, phenotypes: [{ label: 'x', genotypes: ['AA'] }] } }, /phenotypes do not cover/);
+  assert.deepEqual(warn('punnett_square', { ...mono, blankTop: [0], blankCells: [[0, 0], [1, 0]] }), ['ambiguous_blank']);
+});
+
+test('pedigree: standard symbols, automatic layout to three generations, numbering', () => {
+  const fam = {
+    individuals: [
+      { id: 'a', sex: 'M' }, { id: 'b', sex: 'F', affected: true },
+      { id: 'c', sex: 'F', father: 'a', mother: 'b', carrier: true }, { id: 'd', sex: 'M', father: 'a', mother: 'b', affected: true }, { id: 's', sex: 'M' },
+      { id: 'e', sex: 'F', father: 's', mother: 'c' }, { id: 'f', sex: 'M', father: 's', mother: 'c', affected: true },
+    ],
+  };
+  const svg = svgOf('pedigree', fam);
+  const t = texts(svg);
+  for (const s of ['I', 'II', 'III', '1', '2', '3']) assert.ok(t.includes(s), s);
+  const m = pedigreeModel(new Reader('pedigree', fam));
+  assert.deepEqual(m.individuals.map((i) => i.generation), [0, 0, 1, 1, 1, 2, 2]);
+  assert.deepEqual(m.generations.map((g) => g.map((i) => i.id).sort()), [['a', 'b'], ['c', 'd', 's'], ['e', 'f']]);
+  // Partners sit side by side in every generation.
+  const lay = pedigreeLayout(m);
+  for (const [x, y] of m.matings) assert.equal(Math.abs(lay.order[x] - lay.order[y]), 1, `${x}–${y}`);
+  assert.equal(m.individuals.find((i) => i.id === 'e')?.number, 'III-1');
+  assert.ok(texts(svgOf('pedigree', { individuals: fam.individuals.map((i) => (i.id === 'e' ? { ...i, unknown: true } : i)) })).includes('?'));
+  assert.ok(t.includes('affected') && t.includes('carrier'));
+  assert.ok(!texts(svgOf('pedigree', { ...fam, legend: false })).includes('affected'));
+  throwsSpec({ type: 'pedigree', params: { individuals: [{ id: 'a', sex: 'M' }, { id: 'c', sex: 'F', father: 'a', mother: 'zz' }] } }, /mother "zz" is not in the list/);
+  throwsSpec({ type: 'pedigree', params: { individuals: [{ id: 'a', sex: 'M' }, { id: 'c', sex: 'F', father: 'a' }] } }, /both parents or neither/);
+  throwsSpec({ type: 'pedigree', params: { individuals: [{ id: 'a', sex: 'F' }, { id: 'b', sex: 'F' }, { id: 'c', sex: 'F', father: 'a', mother: 'b' }] } }, /father "a" must be male/);
+  throwsSpec({ type: 'pedigree', params: { individuals: [{ id: 'a', sex: 'M' }, { id: 'a', sex: 'F' }] } }, /id "a" is used twice/);
+  throwsSpec({ type: 'pedigree', params: { individuals: [{ id: 'a', sex: 'M', father: 'b', mother: 'c' }, { id: 'b', sex: 'M', father: 'a', mother: 'c' }, { id: 'c', sex: 'F' }] } }, /own ancestor/);
+  const big = { individuals: Array.from({ length: 13 }, (_, k) => (k < 2 ? { id: `p${k}`, sex: k ? 'F' : 'M' } : { id: `k${k}`, sex: k % 2 ? 'F' : 'M', father: 'p0', mother: 'p1' })) };
+  assert.ok(warn('pedigree', big).includes('too_many_elements'));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

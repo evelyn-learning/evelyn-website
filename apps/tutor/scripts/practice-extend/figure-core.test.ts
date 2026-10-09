@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import type { PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
 import { FIGURE_QUALITY_CHECKS, FIGURE_STRICT_CHECKS, contestedFlags, qualityFlags, validateItem } from './core';
 import {
+  ALL_PRACTICE_FIGURE_KINDS,
   CHECKERS,
   FigureRuleError,
   axesOf,
@@ -333,8 +334,328 @@ test('free-body diagram checkers', () => {
   refused(() => run({ type: 'free_body_diagram', params: { forces: [{ name: 'T', magnitude: '5 N', direction: 30 }, { name: 'W', direction: 'down' }] } }, 'fbd_missing_force', { force: 'W' }), /not along the horizontal or the vertical/);
 });
 
+// ── batch 1 kinds (2026-10-09): transcription and checkers ──────────────────
+
+const B: Record<string, PracticeFigureSpec> = {
+  uc: { type: 'unit_circle', params: { angles: [{ degrees: 150, coords: 'blank_y', arc: true, name: 'P' }, { pi: [5, 4], coords: 'show' }, { degrees: 20, label: 'none' }, { degrees: 90 }] } },
+  vec: { type: 'vector_diagram', params: { xRange: [-2, 8], yRange: [-4, 8], vectors: [{ head: [3, 4], label: 'a' }, { tail: [1, 0], head: [1, -2], label: 'b' }, { components: [-1, 1], label: 'c' }], resultant: { label: '?' } } },
+  fbd2: { type: 'free_body_diagram_v2', params: { object: { shape: 'box', label: 'crate' }, forces: [{ label: 'N', direction: 'up', magnitude: 60 }, { label: 'W', direction: 'down', magnitude: 60 }, { label: 'F', direction: 'right', magnitude: 45 }, { label: 'f', direction: 'left', magnitude: 20 }] } },
+  hang: { type: 'free_body_diagram_v2', params: { object: { shape: 'dot' }, lengths: 'equal', forces: [{ label: 'T₁', direction: 30, magnitude: 80, showAngle: true }, { label: '?', direction: 150, showAngle: true }, { label: 'W', direction: 'down', magnitude: 80 }] } },
+  under: { type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'under_curve', expr: '0.5*x + 2', from: 1, to: 5 } } },
+  between: { type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'between_curves', upper: { expr: 'x/2 + 4', label: 'f' }, lower: { expr: 'x/2' }, from: 0, to: 4 } } },
+  system: { type: 'shaded_region', params: { xRange: [-1, 9], yRange: [-1, 9], region: { type: 'inequalities', markVertices: true, inequalities: [{ a: 1, b: 1, op: '<=', c: 8 }, { a: 1, b: -1, op: '<', c: 2 }, { a: 1, b: 0, op: '>=', c: 0 }, { a: 0, b: 1, op: '>=', c: 1 }] } } },
+  line: { type: 'number_line', params: { min: -1, max: 2, denominator: 4, intervals: [{ from: null, to: -0.5 }, { from: 1.25, to: null, fromOpen: true }], points: [{ x: 0.5, label: 'P' }] } },
+  seg: { type: 'number_line', params: { min: -6, max: 6, step: 1, intervals: [{ from: -3, to: 4, fromOpen: true }] } },
+  signs: { type: 'sign_chart', params: { critical: [-2, 1, 5], rows: [{ label: 'f′(x)', signs: ['-', '+', '-', '+'], at: ['0', '0', '0'], blankSigns: [2] }, { label: 'f″(x)', signs: ['+', '-', '-', '+'], at: ['0', '', 'und'] }] } },
+  normal: { type: 'distribution_curve', params: { axis: 'z', shade: [{ from: -1, to: 2 }] } },
+  tails: { type: 'distribution_curve', params: { mean: 500, sd: 100, shade: [{ from: null, to: 350 }, { from: 650, to: null, label: '?' }] } },
+  hist: { type: 'histogram', params: { binStart: 100, binWidth: 10, counts: [3, 7, 12, 6, 2], xLabel: 'Mass (g)', blankBins: [3] } },
+  box: { type: 'box_plot', params: { plots: [{ label: 'A', min: 4, q1: 12, median: 18, q3: 26, max: 36 }, { label: 'B', min: 8, q1: 10, median: 22, q3: 24, max: 30, outliers: [2, 40] }], range: [0, 40], step: 4 } },
+  complex: { type: 'polar_complex', params: { plane: 'complex', range: 6, points: [{ re: 3, im: 4, label: 'z', showModulus: true }, { re: -2, im: 1, label: 'w' }, { re: -3, im: 3 }] } },
+  polar: { type: 'polar_complex', params: { plane: 'polar', rMax: 4, angleStep: 30, points: [{ r: 3, theta: 120, label: 'P' }], curve: { expr: '4*cos(2*theta)' } } },
+  punnett: { type: 'punnett_square', params: { top: ['A', 'a'], side: ['A', 'a'], blankCells: [[1, 1]], blankTop: [0], phenotypes: [{ label: 'purple', genotypes: ['AA', 'Aa'] }, { label: 'white', genotypes: ['aa'] }] } },
+  pedigree: {
+    type: 'pedigree',
+    params: {
+      individuals: [
+        { id: 'g1', sex: 'M', affected: true }, { id: 'g2', sex: 'F' },
+        { id: 'a', sex: 'F', father: 'g1', mother: 'g2', carrier: true }, { id: 'ah', sex: 'M' }, { id: 'b', sex: 'M', father: 'g1', mother: 'g2' },
+        { id: 'a1', sex: 'M', father: 'ah', mother: 'a', affected: true }, { id: 'a2', sex: 'F', father: 'ah', mother: 'a', unknown: true },
+      ],
+    },
+  },
+};
+/** A small family: parents `[father, mother]` and children, each `'M' | 'F'` with a trailing `*` when affected. */
+const family = (father: string, mother: string, ...children: string[]): PracticeFigureSpec => ({
+  type: 'pedigree',
+  params: {
+    individuals: [
+      { id: 'f', sex: 'M', affected: father.endsWith('*') }, { id: 'm', sex: 'F', affected: mother.endsWith('*') },
+      ...children.map((c, i) => ({ id: `c${i}`, sex: c[0], affected: c.endsWith('*'), father: 'f', mother: 'm' })),
+    ],
+  },
+});
+
+test('batch 1: axes — none is left to a default, and none is needed', () => {
+  for (const spec of Object.values(B)) assert.deepEqual(axesOf(spec), {});
+  refused(() => axesOf({ type: 'pie_chart', params: {} }), /unknown figure kind/);
+  refused(() => describeFigure({ type: 'unit_circle', params: { angles: [] } }), /angles must have between 1 and 16/);
+});
+
+test('batch 1 describe: exactly what is visible — a blank is transcribed as a blank, never as its value', () => {
+  const uc = describeFigure(B.uc);
+  assert.ok(uc.text.includes('a unit circle'));
+  assert.ok(uc.printed.includes('point label: "P(−√3/2, ?)"'));
+  assert.ok(uc.printed.includes('angle label: "150°"') && uc.printed.includes('point label: "(−√2/2, −√2/2)"'));
+  assert.ok(!uc.text.includes('1/2'), 'the hidden y-coordinate of P appears nowhere');
+  assert.ok(uc.readable.some((l) => /second quadrant/.test(l)) && uc.readable.some((l) => /no angle label/.test(l)));
+
+  const vec = describeFigure(B.vec);
+  assert.ok(vec.readable.some((l) => /arrow labelled "a".*from \(0, 0\) to \(3, 4\)/.test(l)));
+  assert.ok(vec.readable.some((l) => /heavier arrow labelled "\?".*from \(0, 0\) to \(2, 3\)/.test(l)), 'the resultant is drawn, so where it ends can be read');
+  assert.ok(!describeFigure({ type: 'vector_diagram', params: { ...B.vec.params, resultant: false } }).text.includes('(2, 3)'));
+
+  const fbd = describeFigure(B.fbd2);
+  assert.ok(fbd.printed.includes('arrow label: "F = 45 N"'));
+  assert.ok(fbd.readable.some((l) => /to scale/.test(l)));
+  const hang = describeFigure(B.hang);
+  assert.ok(hang.printed.includes('arrow label: "?"') && hang.printed.includes('angle label: "30°"'));
+  assert.ok(hang.readable.some((l) => /same length/.test(l)) && !/"\? = /.test(hang.text), 'the missing size is nowhere');
+  assert.ok(hang.readable.some((l) => /arrow labelled "\?".*up and to the left.*30° above the horizontal/.test(l)));
+
+  const under = describeFigure(B.under);
+  assert.ok(under.readable.some((l) => /hatched.*between the line and the x-axis.*x = 1 to x = 5/i.test(l)));
+  assert.ok(!/0\.5\s*\*?\s*x/.test(under.text), 'no equation');
+  const sys = describeFigure(B.system);
+  assert.ok(sys.readable.some((l) => /Boundary line 2: a DASHED straight line through \(1, -1\) and \(9, 7\)/.test(l)));
+  assert.ok(sys.readable.some((l) => /corner.*\(0, 1\).*filled/.test(l)) && sys.readable.some((l) => /\(5, 3\).*open/.test(l)));
+  assert.ok(!/≤|<=|≥/.test(sys.text), 'the inequalities are not stated');
+
+  const line = describeFigure(B.line);
+  assert.ok(line.readable.some((l) => /runs on to the left.*filled.*−1\/2/.test(l)) && line.readable.some((l) => /open circle at the unnumbered tick 1 tick to the right of 1 and runs on to the right/.test(l)));
+  assert.ok(line.printed.includes('point label: "P"') && line.readable.some((l) => /filled dot at 1\/2/.test(l)));
+  assert.ok(line.readable.some((l) => /Only these ticks are numbered: −1, −1\/2, 0, 1\/2, 1, 3\/2, 2\./.test(l)), 'the thinned numbering is transcribed as drawn');
+
+  const sc = describeFigure(B.signs);
+  assert.ok(sc.readable.some((l) => /f′\(x\).*−2 and 1: \+.*1 and 5: \(blank — a "\?" box\)/.test(l)), sc.text);
+  assert.ok(sc.readable.some((l) => /f″\(x\).*at 5: und/.test(l)));
+
+  const nd = describeFigure(B.normal);
+  assert.ok(nd.readable.some((l) => /hatched from −1 to 2/i.test(l)) && !/0\.8/.test(nd.text));
+  const tails = describeFigure(B.tails);
+  assert.ok(tails.readable.some((l) => /left tail.*up to 350/i.test(l)) && tails.readable.some((l) => /marked "\?"/.test(l)));
+  assert.ok(!tails.text.includes('650'), 'the blank bound is not transcribed');
+
+  const hist = describeFigure(B.hist);
+  assert.ok(hist.readable.some((l) => /120 to 130: 12/.test(l)) && hist.readable.some((l) => /130 to 140: \(blank — a "\?" box/.test(l)));
+  assert.ok(!hist.readable.some((l) => /130 to 140: 6/.test(l)));
+
+  const box = describeFigure(B.box);
+  assert.ok(box.readable.some((l) => /"A".*whisker from 4.*box from 12 to 26.*line inside the box at 18.*whisker to 36/.test(l)));
+  assert.ok(box.readable.some((l) => /"B".*separate dots at 2 and 40/.test(l)));
+
+  const cx = describeFigure(B.complex);
+  assert.ok(cx.readable.some((l) => /"z".*\(3, 4\).*segment from the origin/.test(l)) && !/modulus|\b5\b(?!\))/.test(cx.readable.filter((l) => /"z"/.test(l)).join(' ')));
+  const pl = describeFigure(B.polar);
+  assert.ok(pl.readable.some((l) => /"P".*third circle.*120° ray/.test(l)) && pl.readable.some((l) => /curve/.test(l)) && !pl.text.includes('cos'));
+
+  const pn = describeFigure(B.punnett);
+  assert.ok(pn.readable.some((l) => /top edge.*\(blank — a "\?" box\), a\./.test(l)));
+  assert.ok(pn.readable.some((l) => /row 2.*Aa.*\(blank — a "\?" box\)/.test(l)) && !pn.text.includes('aa'));
+  assert.ok(pn.printed.includes('legend entry: "purple" (hatched /)'));
+
+  const pd = describeFigure(B.pedigree);
+  assert.ok(pd.readable.some((l) => /I-1: male, affected \(filled\); partner of I-2/.test(l)));
+  assert.ok(pd.readable.some((l) => /II-2: female, carrier \(half-filled\).*child of I-1 and I-2.*partner of II-1/.test(l) || /II-\d: female, carrier \(half-filled\)/.test(l)));
+  assert.ok(pd.readable.some((l) => /III-2: female, status not shown \("\?"\)/.test(l)));
+});
+
+test('unit circle checkers', () => {
+  rightAndWrong(B.uc, 'uc_coordinates', { angle: 0 }, '(−√3/2, 1/2)', '(√3/2, 1/2)');
+  rightAndWrong(B.uc, 'uc_coordinates', { angle: 0 }, '( -√3/2 , 1/2 )', '(1/2, −√3/2)');
+  rightAndWrong(B.uc, 'uc_coordinates', { angle: 0, want: 'y' }, '1/2', '−1/2');
+  rightAndWrong(B.uc, 'uc_reference_angle', { angle: 0 }, '30', '60');
+  rightAndWrong(B.uc, 'uc_reference_angle', { angle: 1, unit: 'radians' }, 'π/4', '5π/4');
+  rightAndWrong(B.uc, 'uc_quadrant', { angle: 0 }, 'Quadrant II', 'Quadrant III');
+  rightAndWrong(B.uc, 'uc_quadrant', { angle: 1 }, 'III', 'II');
+  rightAndWrong(B.uc, 'uc_trig_value', { angle: 0, fn: 'tan' }, '−√3/3', '√3/3');
+  rightAndWrong(B.uc, 'uc_trig_value', { angle: 1, fn: 'sin' }, '-√2/2', '√2/2');
+  rightAndWrong(B.uc, 'uc_trig_value', { angle: 0, fn: 'sec' }, '−2√3/3', '−2');
+  rightAndWrong(B.uc, 'uc_trig_value', { angle: 3, fn: 'tan' }, 'undefined', '0');
+  rightAndWrong(B.uc, 'uc_trig_value', { angle: 3, fn: 'sin' }, '1', '0');
+  refused(() => run(B.uc, 'uc_coordinates', { angle: 2 }), /not a multiple of 30° or 45°/);
+  refused(() => run(B.uc, 'uc_quadrant', { angle: 3 }), /on an axis/);
+  refused(() => run(B.uc, 'uc_coordinates', { angle: 9 }), /0-based index/);
+});
+
+test('vector diagram checkers', () => {
+  rightAndWrong(B.vec, 'vec_components', { vector: 0, want: 'x' }, '3', '4');
+  rightAndWrong(B.vec, 'vec_components', { vector: 1, want: 'y' }, '−2', '2');
+  rightAndWrong(B.vec, 'vec_components', { vector: 0, want: 'pair' }, '⟨3, 4⟩', '(4, 3)');
+  rightAndWrong(B.vec, 'vec_magnitude', { vector: 0 }, '5', '7');
+  rightAndWrong(B.vec, 'vec_direction', { vector: 1 }, '270', '90');
+  rightAndWrong(B.vec, 'vec_direction', { vector: 2 }, '135°', '45°');
+  rightAndWrong(B.vec, 'vec_resultant', { want: 'pair' }, '(2, 3)', '(3, 2)');
+  rightAndWrong(B.vec, 'vec_resultant', { want: 'x', of: [0, 1] }, '3', '2');
+  rightAndWrong(B.vec, 'vec_resultant', { want: 'magnitude', of: [0, 2] }, '5.39', '5');
+  rightAndWrong({ type: 'vector_diagram', params: { xRange: [0, 8], yRange: [0, 8], vectors: [{ head: [3, 4] }, { head: [3, 0] }] } }, 'vec_resultant', { want: 'magnitude' }, '7.211', '10');
+  refused(() => run(B.vec, 'vec_components', { vector: 7, want: 'x' }), /0-based index/);
+  refused(() => run({ type: 'vector_diagram', params: { xRange: [0, 4], yRange: [0, 4], vectors: [{ head: [1.3, 2] }] } }, 'vec_components', { vector: 0, want: 'x' }), /not on a gridline/);
+});
+
+test('free-body diagram (v2) checkers', () => {
+  rightAndWrong(B.fbd2, 'fbd2_net_force', { axis: 'x' }, '25', '65');
+  rightAndWrong(B.fbd2, 'fbd2_net_force', { axis: 'y' }, '0', '120');
+  rightAndWrong(B.fbd2, 'fbd2_net_force', { axis: 'magnitude' }, '25 N', '65 N');
+  rightAndWrong(B.hang, 'fbd2_missing_force', { force: '?' }, '80', '40');
+  rightAndWrong(B.hang, 'fbd2_missing_force', { force: 1, net: 10 }, '90', '80');
+  const incline: PracticeFigureSpec = { type: 'free_body_diagram_v2', params: { incline: { angle: 30 }, forces: [{ label: 'N', direction: 'normal' }, { label: 'W', direction: 'down', magnitude: 40 }, { label: 'f', direction: 'up-slope', magnitude: 12 }] } };
+  rightAndWrong(incline, 'fbd2_net_force', { axis: 'along' }, '−8', '8');
+  rightAndWrong(incline, 'fbd2_missing_force', { force: 'N' }, '34.64', '40');
+  refused(() => run(B.hang, 'fbd2_net_force', { axis: 'x' }), /"\?" has no printed size/);
+  refused(() => run(B.fbd2, 'fbd2_missing_force', { force: 'N' }), /is printed on the figure/);
+  refused(() => run({ type: 'free_body_diagram_v2', params: { forces: [{ label: 'T', direction: 40, magnitude: 5 }, { label: 'W', direction: 'down', magnitude: 3 }] } }, 'fbd2_net_force', { axis: 'x' }), /direction of "T" is not printed/);
+  refused(() => run({ type: 'free_body_diagram_v2', params: { forces: [{ label: 'A', direction: 'up' }, { label: 'B', direction: 'down' }] } }, 'fbd2_missing_force', { force: 'A' }), /"B" .* no printed size either/);
+});
+
+test('shaded region checkers', () => {
+  rightAndWrong(B.under, 'region_area', {}, '14', '18');
+  rightAndWrong(B.between, 'region_area', {}, '16', '20');
+  rightAndWrong(B.system, 'region_area', {}, '20.5', '41');
+  rightAndWrong(B.system, 'region_contains', { x: 2, y: 3 }, 'Yes', 'No');
+  rightAndWrong(B.system, 'region_contains', { x: 5, y: 3 }, 'no', 'yes');
+  rightAndWrong(B.system, 'region_contains', { x: 4, y: 4 }, 'yes', 'no');
+  rightAndWrong(B.system, 'region_contains', { x: 6, y: 1 }, 'no', 'yes');
+  rightAndWrong(B.under, 'region_contains', { x: 3, y: 1 }, 'yes', 'no');
+  rightAndWrong(B.under, 'region_contains', { x: 6, y: 1 }, 'no', 'yes');
+  rightAndWrong(B.system, 'region_vertex_count', {}, '4', '3');
+  const below: PracticeFigureSpec = { type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-4, 4], region: { type: 'under_curve', expr: 'x - 2', from: 0, to: 6 } } };
+  rightAndWrong(below, 'region_area', {}, '10', '6');
+  refused(() => run({ type: 'shaded_region', params: { xRange: [-3, 3], yRange: [-1, 6], region: { type: 'under_curve', expr: '4 - x^2', from: -2, to: 2 } } }, 'region_area', {}), /not a straight line/);
+  refused(() => run({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'under_curve', expr: 'x/3 + 1', from: 1, to: 5 } } }, 'region_area', {}), /not on a gridline/);
+  refused(() => run({ type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'inequalities', inequalities: [{ a: 1, b: 1, op: '<=', c: 6 }] } } }, 'region_area', {}), /edge of the plot/);
+});
+
+test('number line and sign chart checkers', () => {
+  rightAndWrong(B.seg, 'nl_interval_notation', {}, '(−3, 4]', '[−3, 4)');
+  rightAndWrong(B.seg, 'nl_interval_notation', {}, '(-3,4]', '(−3, 4)');
+  rightAndWrong(B.line, 'nl_interval_notation', {}, '(−∞, −1/2] ∪ {1/2} ∪ (5/4, ∞)', '(−∞, −1/2) ∪ {1/2} ∪ (5/4, ∞)');
+  rightAndWrong(B.line, 'nl_interval_notation', {}, '(-inf, -1/2] U {1/2} U (5/4, inf)', '(−∞, −1/2] ∪ [5/4, ∞)');
+  rightAndWrong(B.seg, 'nl_contains', { x: 4 }, 'yes', 'no');
+  rightAndWrong(B.seg, 'nl_contains', { x: -3 }, 'no', 'yes');
+  rightAndWrong(B.line, 'nl_point_value', { point: 0 }, '1/2', '1/4');
+  rightAndWrong({ type: 'number_line', params: { min: 0, max: 10, intervals: [{ from: 1, to: 4 }, { from: 3, to: 6, toOpen: true }, { from: 6, to: 8, fromOpen: true }] } }, 'nl_interval_notation', {}, '[1, 6) ∪ (6, 8]', '[1, 8]');
+  rightAndWrong({ type: 'number_line', params: { min: 0, max: 10, intervals: [{ from: 1, to: 4 }, { from: 4, to: 6, fromOpen: true }] } }, 'nl_interval_notation', {}, '[1, 6]', '[1, 4] ∪ (4, 6]');
+  refused(() => run({ type: 'number_line', params: { min: 0, max: 10 } }, 'nl_interval_notation', {}), /shows no set/);
+
+  rightAndWrong(B.signs, 'sc_sign', { row: 0, interval: 2 }, 'negative', 'positive');
+  rightAndWrong(B.signs, 'sc_sign', { row: 1, interval: 0 }, 'positive', 'negative');
+  rightAndWrong(B.signs, 'sc_local_extrema', { row: 0, which: 'max', want: 'only' }, '1', '−2');
+  rightAndWrong(B.signs, 'sc_local_extrema', { row: 0, which: 'min', want: 'all' }, 'x = −2 and x = 5', 'x = 1');
+  rightAndWrong(B.signs, 'sc_local_extrema', { row: 0, which: 'min', want: 'count' }, '2', '1');
+  rightAndWrong(B.signs, 'sc_sign_change', { row: 1, want: 'all' }, 'x = −2 and x = 5', '−2');
+  rightAndWrong(B.signs, 'sc_sign_change', { row: 1, want: 'count' }, '2', '3');
+  rightAndWrong(B.signs, 'sc_intervals', { row: 0, sign: 'positive' }, '(−2, 1) ∪ (5, ∞)', '(−∞, −2) ∪ (1, 5)');
+  refused(() => run(B.signs, 'sc_sign', { row: 0, interval: 9 }), /0-based index/);
+  refused(() => run({ type: 'sign_chart', params: { critical: [0], rows: [{ label: 'f′', signs: ['+', '-'], at: ['und'] }] } }, 'sc_local_extrema', { row: 0, which: 'max', want: 'only' }), /undefined at 0/);
+});
+
+test('distribution, histogram and box plot checkers', () => {
+  rightAndWrong(B.normal, 'normal_shaded_area', { method: 'empirical' }, '0.815', '0.8186');
+  rightAndWrong(B.normal, 'normal_shaded_area', { method: 'exact' }, '0.8186', '0.815');
+  rightAndWrong(B.normal, 'normal_shaded_area', { method: 'empirical', as: 'percent' }, '81.5 %', '0.815');
+  rightAndWrong(B.tails, 'normal_shaded_area', { method: 'exact' }, '0.1336', '0.0668');
+  rightAndWrong(B.tails, 'normal_bound', { shade: 1, end: 'from' }, '650', '350');
+  rightAndWrong(B.tails, 'normal_bound', { shade: 1, end: 'from', as: 'z' }, '1.5', '−1.5');
+  rightAndWrong({ type: 'distribution_curve', params: { mean: 70, sd: 5, shade: [{ from: 80, to: null }] } }, 'normal_shaded_area', { method: 'empirical' }, '0.025', '0.05');
+  rightAndWrong({ type: 'distribution_curve', params: { shade: [{ from: null, to: -3 }, { from: 0, to: 1 }] } }, 'normal_shaded_area', { method: 'empirical' }, '0.3415', '0.34');
+  refused(() => run(B.tails, 'normal_shaded_area', { method: 'empirical' }), /whole number of standard deviations/);
+  refused(() => run({ type: 'distribution_curve', params: {} }, 'normal_shaded_area', { method: 'exact' }), /nothing is shaded/);
+
+  rightAndWrong(B.hist, 'hist_count', { bin: 2 }, '12', '7');
+  rightAndWrong(B.hist, 'hist_count', { bin: 3 }, '6', '2');
+  rightAndWrong(B.hist, 'hist_total', {}, '30', '24');
+  rightAndWrong({ type: 'histogram', params: { ...B.hist.params, blankBins: [] } }, 'hist_modal_class', {}, '120–130', '110–120');
+  refused(() => run(B.hist, 'hist_modal_class', {}), /a class is blank/);
+  rightAndWrong(B.hist, 'hist_count_between', { from: 100, to: 120 }, '10', '22');
+  refused(() => run(B.hist, 'hist_count_between', { from: 105, to: 120 }), /not a class boundary/);
+  refused(() => run({ type: 'histogram', params: { binStart: 0, binWidth: 1, counts: [4, 4, 1] } }, 'hist_modal_class', {}), /two classes share/);
+
+  rightAndWrong(B.box, 'box_stat', { plot: 0, stat: 'median' }, '18', '22');
+  rightAndWrong(B.box, 'box_stat', { plot: 0, stat: 'q1' }, '12', '4');
+  rightAndWrong(B.box, 'box_stat', { plot: 0, stat: 'iqr' }, '14', '32');
+  rightAndWrong(B.box, 'box_stat', { plot: 0, stat: 'range' }, '32', '14');
+  rightAndWrong(B.box, 'box_stat', { plot: 1, stat: 'range' }, '38', '22');
+  rightAndWrong(B.box, 'box_compare', { stat: 'median', which: 'greatest' }, 'B', 'A');
+  rightAndWrong(B.box, 'box_compare', { stat: 'range', which: 'least' }, 'Plot A', 'Plot B');
+  refused(() => run(B.box, 'box_compare', { stat: 'iqr', which: 'least' }), /share/);
+  refused(() => run(B.box, 'box_stat', { plot: 5, stat: 'median' }), /0-based index/);
+  refused(() => run({ type: 'box_plot', params: { plots: [{ min: 1, q1: 2.3, median: 3, q3: 4, max: 5 }], range: [0, 6], step: 1 } }, 'box_stat', { plot: 0, stat: 'q1' }), /not on a gridline/);
+});
+
+test('complex plane and polar grid checkers', () => {
+  rightAndWrong(B.complex, 'pc_modulus', { point: 0 }, '5', '7');
+  rightAndWrong(B.complex, 'pc_argument', { point: 2 }, '135', '45');
+  rightAndWrong(B.complex, 'pc_argument', { point: 2, unit: 'radians' }, '3π/4', 'π/4');
+  rightAndWrong(B.complex, 'pc_sum', { points: [0, 1] }, '1 + 5i', '5 + 5i');
+  rightAndWrong(B.complex, 'pc_sum', { points: [0, 1], want: 're' }, '1', '5');
+  rightAndWrong(B.complex, 'pc_product', { points: [0, 1] }, '−10 − 5i', '−6 + 4i');
+  rightAndWrong(B.complex, 'pc_product', { points: [0, 1], want: 'im' }, '−5', '5');
+  rightAndWrong(B.complex, 'pc_product', { points: [0, 1], want: 'modulus' }, '11.18', '10');
+  rightAndWrong(B.polar, 'pc_modulus', { point: 0 }, '3', '120');
+  rightAndWrong(B.polar, 'pc_argument', { point: 0 }, '120°', '60°');
+  refused(() => run(B.complex, 'pc_sum', { points: [0] }), /two different points/);
+  refused(() => run({ type: 'polar_complex', params: { plane: 'complex', range: 6, points: [{ re: 1, im: 2 }] } }, 'pc_argument', { point: 0, unit: 'radians' }), /not a multiple of 15°/);
+});
+
+test('Punnett square checkers', () => {
+  rightAndWrong(B.punnett, 'punnett_genotype_ratio', { genotypes: ['AA', 'Aa', 'aa'] }, '1 : 2 : 1', '1 : 1 : 2');
+  rightAndWrong(B.punnett, 'punnett_phenotype_ratio', {}, '3:1', '1:3');
+  rightAndWrong(B.punnett, 'punnett_probability', { genotype: 'Aa' }, '1/2', '1/4');
+  rightAndWrong(B.punnett, 'punnett_probability', { phenotype: 'white' }, '0.25', '0.75');
+  rightAndWrong(B.punnett, 'punnett_probability', { phenotype: 'purple', as: 'percent' }, '75%', '25%');
+  rightAndWrong(B.punnett, 'punnett_cell', { row: 1, col: 1 }, 'aa', 'Aa');
+  rightAndWrong(B.punnett, 'punnett_gamete', { edge: 'top', index: 0 }, 'A', 'a');
+  const di: PracticeFigureSpec = { type: 'punnett_square', params: { top: ['RY', 'Ry', 'rY', 'ry'], side: ['RY', 'Ry', 'rY', 'ry'], phenotypes: [{ label: 'round yellow', genotypes: ['RRYY', 'RRYy', 'RrYY', 'RrYy'] }, { label: 'round green', genotypes: ['RRyy', 'Rryy'] }, { label: 'wrinkled yellow', genotypes: ['rrYY', 'rrYy'] }, { label: 'wrinkled green', genotypes: ['rryy'] }] } };
+  rightAndWrong(di, 'punnett_phenotype_ratio', {}, '9:3:3:1', '9:3:4');
+  rightAndWrong(di, 'punnett_probability', { genotype: 'RrYy' }, '1/4', '1/16');
+  refused(() => run(B.punnett, 'punnett_probability', { genotype: 'AB' }), /does not occur/);
+  refused(() => run({ type: 'punnett_square', params: { top: ['A', 'a'], side: ['A', 'a'] } }, 'punnett_phenotype_ratio', {}), /no phenotypes/);
+});
+
+test('pedigree checkers: counts, and each inheritance mode against known pedigrees', () => {
+  rightAndWrong(B.pedigree, 'pedigree_count', { status: 'affected' }, '2', '3');
+  rightAndWrong(B.pedigree, 'pedigree_count', { sex: 'F' }, '3', '4');
+  rightAndWrong(B.pedigree, 'pedigree_count', { sex: 'M', status: 'unaffected' }, '2', '4');
+  rightAndWrong(B.pedigree, 'pedigree_count', { generation: 2 }, '3', '2');
+  const modes = (spec: PracticeFigureSpec) => (['autosomal_dominant', 'autosomal_recessive', 'x_linked_dominant', 'x_linked_recessive'] as const).filter((mode) => (run(spec, 'pedigree_mode_consistent', { mode }) as { value: string }).value === 'yes');
+  // Unaffected parents, affected daughter: only autosomal recessive (an X-linked recessive daughter needs an affected father).
+  assert.deepEqual(modes(family('M', 'F', 'F*')), ['autosomal_recessive']);
+  // Unaffected parents, affected son: recessive, autosomal or X-linked.
+  assert.deepEqual(modes(family('M', 'F', 'M*')), ['autosomal_recessive', 'x_linked_recessive']);
+  // Two affected parents, an unaffected daughter: dominant and autosomal (an X-linked dominant father passes it to every daughter).
+  assert.deepEqual(modes(family('M*', 'F*', 'F')), ['autosomal_dominant']);
+  // Two affected parents, an unaffected son: dominant, either way.
+  assert.deepEqual(modes(family('M*', 'F*', 'M')), ['autosomal_dominant', 'x_linked_dominant']);
+  // Affected father, unaffected mother, affected son and unaffected daughter: not X-linked dominant.
+  assert.deepEqual(modes(family('M*', 'F', 'M*', 'F')), ['autosomal_dominant', 'autosomal_recessive', 'x_linked_recessive']);
+  // Affected mother, unaffected father, unaffected son: not X-linked recessive (every son of an affected mother is affected).
+  assert.deepEqual(modes(family('M', 'F*', 'M')), ['autosomal_dominant', 'autosomal_recessive', 'x_linked_dominant']);
+  // Affected father, unaffected mother, affected daughter and unaffected son: every mode fits.
+  assert.deepEqual(modes(family('M*', 'F', 'F*', 'M')), ['autosomal_dominant', 'autosomal_recessive', 'x_linked_dominant', 'x_linked_recessive']);
+  // Affected father, unaffected mother, unaffected daughter: not X-linked dominant.
+  assert.ok(!modes(family('M*', 'F', 'F')).includes('x_linked_dominant'));
+  // A classic three-generation X-linked recessive chart with its carriers marked: recessive only.
+  assert.deepEqual(modes(B.pedigree), ['autosomal_recessive', 'x_linked_recessive']);
+  // The same chart, with the carrier's father UNAFFECTED: a carrier daughter is still possible, but a
+  // half-filled symbol has no meaning under a dominant mode.
+  assert.ok(!modes(B.pedigree).includes('autosomal_dominant'));
+  // Three generations: affected grandfather, unaffected children, an affected granddaughter by an
+  // unrelated unaffected father — X-linked recessive is ruled out, autosomal recessive is not.
+  const skip: PracticeFigureSpec = { type: 'pedigree', params: { individuals: [{ id: 'gf', sex: 'M', affected: true }, { id: 'gm', sex: 'F' }, { id: 'd', sex: 'F', father: 'gf', mother: 'gm' }, { id: 'h', sex: 'M' }, { id: 'gd', sex: 'F', father: 'h', mother: 'd', affected: true }] } };
+  assert.deepEqual(modes(skip), ['autosomal_recessive']);
+  rightAndWrong(skip, 'pedigree_mode_consistent', { mode: 'x_linked_recessive' }, 'No', 'Yes');
+  rightAndWrong(skip, 'pedigree_only_mode', {}, 'autosomal recessive', 'X-linked recessive');
+  refused(() => run(family('M*', 'F', 'F*', 'M'), 'pedigree_only_mode', {}), /4 of the four modes fit/);
+  refused(() => run(skip, 'pedigree_mode_consistent', { mode: 'y_linked' }), /must be one of/);
+});
+
+test('batch 1: a whole item — the key is recomputed from the spec; a wrong key is a mismatch', () => {
+  const it = item(B.box, { problemText: 'The box plots show two classes. What is the interquartile range of class A?', answer: '14', alt: 'Two box plots over one numbered axis.', derivation: { checker: 'box_stat', args: { plot: 0, stat: 'iqr' } } });
+  const ok = examineFigureItem(it);
+  assert.deepEqual(ok.defects, []);
+  assert.equal(ok.derivation.status, 'derived');
+  assert.ok(ok.figureText?.includes('box plot'));
+  assert.equal(examineFigureItem({ ...it, answer: '32' }).derivation.status, 'mismatch');
+  const mc = item(B.uc, { responseFormat: 'mcq', problemText: 'The unit circle shows point P. What is the missing coordinate?', choices: ['−1/2', '1/2', '√3/2', '−√3/2'], answer: 'B', alt: 'A unit circle with marked points.', derivation: { checker: 'uc_coordinates', args: { angle: 0, want: 'y' } } });
+  assert.equal(examineFigureItem(mc).derivation.status, 'derived');
+  assert.equal(examineFigureItem({ ...mc, answer: 'A' }).derivation.status, 'mismatch');
+});
+
 test('every checker is documented for the writer, and tested above', () => {
-  const cat = checkerCatalogue();
+  const cat = checkerCatalogue(ALL_PRACTICE_FIGURE_KINDS);
+  // The writer's own prompt lists only the kinds the job generates for.
+  assert.ok(!checkerCatalogue().includes('uc_coordinates') && checkerCatalogue().includes('curve_value'));
   for (const name of Object.keys(CHECKERS)) assert.ok(cat.includes(`- ${name} `), name);
   assert.ok(FIGURE_GENERATE_SYSTEM.includes('titration_equivalence_volume'));
 });

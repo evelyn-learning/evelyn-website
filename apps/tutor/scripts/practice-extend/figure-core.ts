@@ -21,12 +21,26 @@
 import '../lib/no-db-env';
 import { compileExpression } from '../../src/lib/tutor/practice-figure/expr';
 import { SERIES_COLORS, niceBounds, niceStep, ticksBetween } from '../../src/lib/tutor/practice-figure/plot-frame';
-import { PRACTICE_FIGURE_KINDS, renderPracticeFigure, titrationPH, type PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
+import { ALL_PRACTICE_FIGURE_KINDS, BATCH1_FIGURE_KINDS, PRACTICE_FIGURE_KINDS, renderPracticeFigure, titrationPH, type AnyPracticeFigureKind, type PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
+import { PracticeFigureSpecError, Reader } from '../../src/lib/tutor/practice-figure/spec';
+import { exactTrig, fractionText, piText } from '../../src/lib/tutor/practice-figure/kinds/draw';
+import { unitCircleModel } from '../../src/lib/tutor/practice-figure/kinds/unit-circle';
+import { vectorDiagramModel, type DiagramVector } from '../../src/lib/tutor/practice-figure/kinds/vector-diagram';
+import { freeBodyModel, type FbdForce, type FreeBodyModel } from '../../src/lib/tutor/practice-figure/kinds/free-body';
+import { satisfies, shadedRegionModel, type ShadedRegionModel } from '../../src/lib/tutor/practice-figure/kinds/shaded-region';
+import { numberLineModel, signChartModel, type NumberLineModel } from '../../src/lib/tutor/practice-figure/kinds/number-line';
+import { boxPlotModel, distributionModel, histogramModel, normalArea, type BoxPlot } from '../../src/lib/tutor/practice-figure/kinds/distribution';
+import { polarComplexModel, type PlanePoint } from '../../src/lib/tutor/practice-figure/kinds/polar-complex';
+import { punnettModel } from '../../src/lib/tutor/practice-figure/kinds/punnett';
+import { pedigreeModel, type PedigreeIndividual, type PedigreeModel } from '../../src/lib/tutor/practice-figure/kinds/pedigree';
 import { slopeFieldSolution } from '../../src/lib/tutor/practice-figure/slope-field';
 import { validateItem, type GeneratedItem } from './core';
 
-export { PRACTICE_FIGURE_KINDS };
-export type FigureKind = (typeof PRACTICE_FIGURE_KINDS)[number];
+/** `PRACTICE_FIGURE_KINDS` is the list the job offers its writer (figure-prompts.ts).
+ *  The batch-1 kinds (unit circle, vectors, …) are transcribed and checked here
+ *  as well, but are not in that list until the job has prompts for them. */
+export { ALL_PRACTICE_FIGURE_KINDS, BATCH1_FIGURE_KINDS, PRACTICE_FIGURE_KINDS };
+export type FigureKind = AnyPracticeFigureKind;
 
 /** A spec, a derivation or an item that breaks a rule of this track. The
  *  message is written for the writer model (it is sent back on the retry). */
@@ -163,8 +177,14 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
     }
     case 'free_body_diagram':
       return {};
+    // Batch 1: each lays out its own grid or scale from its params (see `batch1Grid`);
+    // none has an axis that could be left to a layout default.
+    case 'unit_circle': case 'vector_diagram': case 'free_body_diagram_v2': case 'shaded_region':
+    case 'number_line': case 'sign_chart': case 'distribution_curve': case 'histogram':
+    case 'box_plot': case 'polar_complex': case 'punnett_square': case 'pedigree':
+      return {};
     default:
-      return fail(`unknown figure kind "${spec.type}" — one of ${PRACTICE_FIGURE_KINDS.join(', ')}`);
+      return fail(`unknown figure kind "${spec.type}" — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
 }
 
@@ -712,8 +732,11 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       }
       break;
     }
-    default:
-      fail(`unknown figure kind "${spec.type}"`);
+    default: {
+      const k = describeBatch1(spec, printed, out);
+      if (!k) fail(`unknown figure kind "${spec.type}"`);
+      kind = k;
+    }
   }
   const text = [`The figure is ${kind}.`, '', 'TEXT PRINTED ON THE FIGURE:', ...(printed.length ? printed.map((l) => `- ${l}`) : ['- (none besides the numbers along the axes)']), '', 'WHAT CAN BE READ OFF THE FIGURE:', ...out].join('\n');
   return { printed, readable: out, text };
@@ -909,11 +932,14 @@ export const restatesFigure = (stem: string): boolean => RESTATES_FIGURE_RE.test
 // ── 3. deterministic checkers ───────────────────────────────────────────────
 
 export type Derived =
-  | { kind: 'number'; value: number }
+  /** `approx`: an irrational or rounded value — a key matches when it is this value rounded to the key's own decimals (at least one). */
+  | { kind: 'number'; value: number; approx?: boolean }
   | { kind: 'numbers'; values: number[] }
-  | { kind: 'label'; value: string };
+  | { kind: 'label'; value: string }
+  /** An exact written form — "(−√3/2, 1/2)", "(−3, 4]", "1 + 5i", "1:2:1", "Aa": compared as text, signs and brackets included. */
+  | { kind: 'text'; value: string };
 
-export const derivedText = (d: Derived): string => (d.kind === 'number' ? fmt(d.value) : d.kind === 'numbers' ? `{${d.values.map(fmt).join(', ')}}` : d.value);
+export const derivedText = (d: Derived): string => (d.kind === 'number' ? `${fmt(d.approx ? Number(d.value.toPrecision(6)) : d.value)}${d.approx ? ' (rounded)' : ''}` : d.kind === 'numbers' ? `{${d.values.map(fmt).join(', ')}}` : d.value);
 
 interface CheckerDef {
   kinds: FigureKind[];
@@ -1067,6 +1093,1081 @@ function knownForces(spec: PracticeFigureSpec): Array<Force & { v: [number, numb
     if (!v) return fail(`the force "${f.name}" is not along the horizontal or the vertical — this checker handles only such forces`);
     return { ...f, v };
   });
+}
+
+// ── 3a. batch 1 kinds: models, transcription, checkers ──────────────────────
+//
+// unit_circle, vector_diagram, free_body_diagram_v2, shaded_region,
+// number_line, sign_chart, distribution_curve, histogram, box_plot,
+// polar_complex, punnett_square, pedigree. Each is read through the SAME
+// model the renderer draws from (src/lib/tutor/practice-figure/kinds/*.ts),
+// so the transcription and the checkers cannot disagree with the picture.
+// A blank ("?") is transcribed as a blank; the value under it is used only
+// by the checker that recomputes the key.
+
+/** The kind's model, with a renderer refusal turned into a rule error. */
+function modelOf<T>(spec: PracticeFigureSpec, build: (r: Reader) => T): T {
+  try {
+    return build(new Reader(spec.type, spec.params));
+  } catch (e) {
+    if (e instanceof PracticeFigureSpecError) return fail(e.message.replace(/^\[practice-figure:[^\]]+\]\s*/, ''));
+    throw e;
+  }
+}
+
+/** A number as it is printed on these figures: a real minus sign. */
+const mn = (v: number): string => fmt(v).replace(/^-/, '−');
+/** A number as a fraction in lowest terms when it is one with a small denominator. */
+function asFraction(v: number): string {
+  for (const d of [1, 2, 3, 4, 5, 6, 8, 10, 12]) {
+    const n = v * d;
+    if (Math.abs(n - Math.round(n)) < 1e-9) return fractionText(Math.round(n), d);
+  }
+  return mn(v);
+}
+const BLANK = '(blank — a "?" box)';
+const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
+const text = (value: string): Derived => ({ kind: 'text', value });
+const approx = (v: number): Derived => ({ kind: 'number', value: Number(v.toPrecision(12)), approx: true });
+const yesNo = (b: boolean): Derived => ({ kind: 'label', value: b ? 'yes' : 'no' });
+
+function needGrid(v: number, unit: number, what: string): number {
+  if (!Number.isFinite(v) || !isMultiple(v, unit)) fail(`${what} = ${Number.isFinite(v) ? fmt(Number(v.toPrecision(8))) : 'undefined'} is not on a gridline of the figure, so it cannot be read off exactly`);
+  return v;
+}
+/** The finest gridline spacing of a plot-frame figure whose step the renderer
+ *  fixes: the given step, or one unit when the range is at most 12 units. */
+function planeUnit(m: { xRange: [number, number]; yRange: [number, number]; xStep?: number; yStep?: number }): number {
+  const span = Math.max(m.xRange[1] - m.xRange[0], m.yRange[1] - m.yRange[0]);
+  const step = m.xStep ?? m.yStep ?? (span <= 12 ? 1 : 0);
+  if (!(step > 0)) return fail('give xStep / yStep (or a range of at most 12 units), so that what lies on a gridline is decided by the spec');
+  if (m.xStep && m.yStep && m.xStep !== m.yStep) return Math.min(minorOf(m.xStep), minorOf(m.yStep));
+  return minorOf(step);
+}
+
+// unit circle ---------------------------------------------------------------
+
+const REF_VALUES: Record<string, Record<number, string>> = {
+  sin: { 0: '0', 30: '1/2', 45: '√2/2', 60: '√3/2', 90: '1' },
+  cos: { 0: '1', 30: '√3/2', 45: '√2/2', 60: '1/2', 90: '0' },
+  tan: { 0: '0', 30: '√3/3', 45: '1', 60: '√3', 90: 'undefined' },
+  cot: { 0: 'undefined', 30: '√3', 45: '1', 60: '√3/3', 90: '0' },
+  sec: { 0: '1', 30: '2√3/3', 45: '√2', 60: '2', 90: 'undefined' },
+  csc: { 0: 'undefined', 30: '2', 45: '√2', 60: '2√3/3', 90: '1' },
+};
+const TRIG_FNS = ['sin', 'cos', 'tan', 'cot', 'sec', 'csc'] as const;
+const norm360 = (d: number): number => ((d % 360) + 360) % 360;
+/** The reference angle (0–90°) of an angle in degrees. */
+export function referenceAngle(degrees: number): number {
+  const d = norm360(degrees) % 180;
+  return Number(Math.min(d, 180 - d).toFixed(9));
+}
+function quadrantOf(degrees: number): 0 | 1 | 2 | 3 | 4 {
+  const d = norm360(degrees);
+  if (isMultiple(d, 90)) return 0;
+  return (Math.floor(d / 90) + 1) as 1 | 2 | 3 | 4;
+}
+/** An exact trig value at a multiple of 30° or 45°, as text ("−√3/2", "undefined"). */
+export function exactTrigValue(fn: (typeof TRIG_FNS)[number], degrees: number): string {
+  const ref = referenceAngle(degrees);
+  const mag = REF_VALUES[fn][ref];
+  if (mag === undefined) return fail(`the angle ${fmt(degrees)}° is not a multiple of 30° or 45° — its exact ${fn} cannot be read off a unit circle`);
+  if (mag === 'undefined' || mag === '0') return mag;
+  const rad = (degrees * Math.PI) / 180;
+  const s = Math.sin(rad);
+  const c = Math.cos(rad);
+  const v = fn === 'sin' || fn === 'csc' ? s : fn === 'cos' || fn === 'sec' ? c : s * c;
+  return v < 0 ? `−${mag}` : mag;
+}
+function ucAngle(spec: PracticeFigureSpec, a: P) {
+  const m = modelOf(spec, unitCircleModel);
+  return m.angles[argIndex(a, 'angle', m.angles.length, 'marked angle')];
+}
+
+// vectors ---------------------------------------------------------------------
+
+function vecArg(spec: PracticeFigureSpec, a: P, k = 'vector'): DiagramVector {
+  const m = modelOf(spec, vectorDiagramModel);
+  const unit = planeUnit(m);
+  let v: DiagramVector;
+  if (a[k] === 'resultant') {
+    if (!m.resultant) return fail('the figure draws no resultant');
+    v = m.resultant;
+  } else v = m.vectors[argIndex(a, k, m.vectors.length, 'vector')];
+  for (const [q, name] of [[v.tail, 'tail'], [v.head, 'head']] as Array<[[number, number], string]>) {
+    needGrid(q[0], unit, `the x-coordinate of the arrow's ${name}`);
+    needGrid(q[1], unit, `the y-coordinate of the arrow's ${name}`);
+  }
+  return v;
+}
+const comps = (v: DiagramVector): [number, number] => [Number((v.head[0] - v.tail[0]).toPrecision(12)), Number((v.head[1] - v.tail[1]).toPrecision(12))];
+const dirDegrees = (x: number, y: number): number => Number(norm360((Math.atan2(y, x) * 180) / Math.PI).toFixed(6));
+function vectorResult(x: number, y: number, want: string): Derived {
+  if (want === 'x') return num(x);
+  if (want === 'y') return num(y);
+  if (want === 'pair') return text(`(${mn(x)}, ${mn(y)})`);
+  if (want === 'magnitude') return Number.isInteger(Math.hypot(x, y)) ? num(Math.hypot(x, y)) : approx(Math.hypot(x, y));
+  if (Math.hypot(x, y) < 1e-12) return fail('the zero vector has no direction');
+  const d = dirDegrees(x, y);
+  return isMultiple(d, 15) ? num(Math.round(d)) : approx(d);
+}
+
+// free-body diagram v2 -------------------------------------------------------
+
+/** A force whose direction the student can tell from the figure: along an
+ *  axis, marked with a numeric angle arc, or along / across a marked incline. */
+function fbdReadable(m: FreeBodyModel, f: FbdForce): boolean {
+  if (isMultiple(f.degrees, 90)) return true;
+  if (f.showAngle && /^[\d.]+°$/.test(f.shownAngle)) return true;
+  return !!f.named && !!m.incline && m.incline.showAngle && /^[\d.]+°$/.test(m.incline.shownAngle);
+}
+function fbdDirectionWords(m: FreeBodyModel, f: FbdForce): string {
+  const d = f.degrees;
+  const slope: Record<string, string> = { 'up-slope': 'along the incline, up the slope', 'down-slope': 'along the incline, down the slope', normal: 'perpendicular to the incline, away from it', 'into-surface': 'perpendicular to the incline, into it' };
+  if (f.named && slope[f.named]) return `pointing ${slope[f.named]}`;
+  if (isMultiple(d, 90)) return `pointing ${['to the right', 'straight up', 'to the left', 'straight down'][Math.round(d / 90) % 4]}`;
+  const where = `${d < 180 ? 'up' : 'down'} and to the ${d > 90 && d < 270 ? 'left' : 'right'}`;
+  if (!f.showAngle) return `pointing ${where}, at an angle that is not marked`;
+  const side = f.angleFrom === 'horizontal' ? `${d < 180 ? 'above' : 'below'} the horizontal` : 'from the vertical';
+  return `pointing ${where}, ${/°$/.test(f.shownAngle) ? `${f.shownAngle} ${side}` : `at the angle marked "${f.shownAngle}" ${side}`}`;
+}
+function fbdAxis(m: FreeBodyModel, axis: string): [number, number] {
+  if (axis === 'x') return [1, 0];
+  if (axis === 'y') return [0, 1];
+  if (!m.incline) return fail(`axis "${axis}" needs an incline`);
+  const t = (m.incline.angle * Math.PI) / 180;
+  return axis === 'along' ? [Math.cos(t), Math.sin(t)] : [-Math.sin(t), Math.cos(t)];
+}
+const unitOf = (f: FbdForce): [number, number] => [Math.cos((f.degrees * Math.PI) / 180), Math.sin((f.degrees * Math.PI) / 180)];
+/** Sum of the printed forces along a unit direction; forces across it are left out. */
+function fbdSum(m: FreeBodyModel, dir: [number, number], skip?: FbdForce): number {
+  let total = 0;
+  for (const f of m.forces) {
+    if (f === skip) continue;
+    const u = unitOf(f);
+    const along = u[0] * dir[0] + u[1] * dir[1];
+    if (Math.abs(along) < 1e-9) continue;
+    if (!fbdReadable(m, f)) fail(`the direction of "${f.label}" is not printed on the figure (no angle arc), so its component cannot be worked out`);
+    if (f.magnitude === undefined || !f.showMagnitude) fail(skip ? `"${f.label}" acts along the same line and has no printed size either` : `the force "${f.label}" has no printed size`);
+    total += (f.magnitude as number) * along;
+  }
+  return total;
+}
+const roundish = (v: number): Derived => (Math.abs(v - Math.round(v * 1000) / 1000) < 1e-9 ? num(Math.round(v * 1000) / 1000 + 0) : approx(v));
+
+// shaded region --------------------------------------------------------------
+
+type Pt = [number, number];
+const polyArea = (poly: Pt[]): number => Math.abs(poly.reduce((t, q, i) => t + q[0] * poly[(i + 1) % poly.length][1] - poly[(i + 1) % poly.length][0] * q[1], 0)) / 2;
+const isLine = (f: (x: number) => number, a: number, b: number): boolean => [0.25, 0.5, 0.75].every((t) => Math.abs(f(a + (b - a) * t) - (f(a) + (f(b) - f(a)) * t)) < 1e-9 * Math.max(1, Math.abs(f(a)), Math.abs(f(b))));
+/** The region's corner points when it is a polygon with straight sides, else a refusal. */
+function regionPolygon(m: ShadedRegionModel): Pt[] {
+  const g = m.region;
+  const unit = planeUnit(m);
+  let poly: Pt[];
+  if (g.type === 'under_curve') {
+    if (!isLine(g.curve.fn, g.from, g.to)) fail('the boundary of the shaded region is not a straight line — its area cannot be found by counting or by a formula for a polygon');
+    const fa = g.curve.fn(g.from);
+    const fb = g.curve.fn(g.to);
+    poly = [[g.from, 0], [g.from, fa], [g.to, fb], [g.to, 0]];
+    if (fa * fb < 0) {
+      // The line crosses the axis inside the region: two triangles, corner at the crossing.
+      const xc = g.from + ((g.to - g.from) * fa) / (fa - fb);
+      needGrid(xc, unit, 'the point where the line crosses the x-axis');
+      poly = [[g.from, 0], [g.from, fa], [xc, 0], [g.to, fb], [g.to, 0], [xc, 0]];
+    }
+  } else if (g.type === 'between_curves') {
+    if (!isLine(g.upper.fn, g.from, g.to) || !isLine(g.lower.fn, g.from, g.to)) fail('a boundary of the shaded region is not a straight line — its area cannot be found by counting or by a formula for a polygon');
+    poly = [[g.from, g.lower.fn(g.from)], [g.from, g.upper.fn(g.from)], [g.to, g.upper.fn(g.to)], [g.to, g.lower.fn(g.to)]];
+  } else {
+    const onEdge = (q: Pt) => [m.xRange[0], m.xRange[1]].some((e) => Math.abs(q[0] - e) < 1e-9) || [m.yRange[0], m.yRange[1]].some((e) => Math.abs(q[1] - e) < 1e-9);
+    const onLine = (q: Pt) => g.inequalities.filter((k) => Math.abs(k.a * q[0] + k.b * q[1] - k.c) < 1e-7).length;
+    if (g.polygon.some((q) => onEdge(q) && onLine(q) < 2)) fail('the shaded region runs to the edge of the plot — it is not closed by the boundary lines, so its extent cannot be read');
+    poly = g.polygon.map((q): Pt => [Number(q[0].toFixed(9)), Number(q[1].toFixed(9))]);
+  }
+  poly.forEach((q) => {
+    needGrid(q[0], unit, 'the x-coordinate of a corner of the shaded region');
+    needGrid(q[1], unit, 'the y-coordinate of a corner of the shaded region');
+  });
+  return poly;
+}
+function regionArea(m: ShadedRegionModel): number {
+  const poly = regionPolygon(m);
+  // The two-triangle case is stored as a bow-tie: add the halves.
+  if (m.region.type === 'under_curve' && poly.length === 6) return polyArea(poly.slice(0, 3)) + polyArea(poly.slice(3));
+  return polyArea(poly);
+}
+function regionContains(m: ShadedRegionModel, x: number, y: number): boolean {
+  const g = m.region;
+  if (g.type === 'inequalities') return g.inequalities.every((q) => satisfies(q, x, y));
+  if (x < g.from - 1e-9 || x > g.to + 1e-9) return false;
+  const [lo, hi] = g.type === 'under_curve' ? [Math.min(0, g.curve.fn(x)), Math.max(0, g.curve.fn(x))] : [g.lower.fn(x), g.upper.fn(x)];
+  return y >= lo - 1e-9 && y <= hi + 1e-9;
+}
+
+// number line and sign chart -------------------------------------------------
+
+interface Piece { from: number; to: number; fromOpen: boolean; toOpen: boolean }
+/** The set a number line shows, as disjoint pieces in order (a point is a piece of zero length). */
+function lineSet(m: NumberLineModel): Piece[] {
+  const pieces: Piece[] = [
+    ...m.intervals.map((iv) => ({ from: iv.from ?? -Infinity, to: iv.to ?? Infinity, fromOpen: iv.from === null ? true : iv.fromOpen, toOpen: iv.to === null ? true : iv.toOpen })),
+    ...m.points.filter((q) => !q.open).map((q) => ({ from: q.x, to: q.x, fromOpen: false, toOpen: false })),
+  ].sort((a, b) => a.from - b.from || Number(a.fromOpen) - Number(b.fromOpen));
+  const out: Piece[] = [];
+  for (const pc of pieces) {
+    const last = out[out.length - 1];
+    // Joined when they overlap, or touch at a point at least one of them includes.
+    if (last && (pc.from < last.to || (pc.from === last.to && !(pc.fromOpen && last.toOpen)))) {
+      if (pc.to > last.to || (pc.to === last.to && !pc.toOpen)) {
+        last.toOpen = pc.to > last.to ? pc.toOpen : last.toOpen && pc.toOpen;
+        last.to = Math.max(last.to, pc.to);
+      }
+    } else out.push({ ...pc });
+  }
+  return out;
+}
+function intervalNotation(pieces: Piece[], show: (v: number) => string): string {
+  const end = (v: number) => (v === Infinity ? '∞' : v === -Infinity ? '−∞' : show(v));
+  return pieces.map((pc) => (pc.from === pc.to ? `{${show(pc.from)}}` : `${pc.fromOpen ? '(' : '['}${end(pc.from)}, ${end(pc.to)}${pc.toOpen ? ')' : ']'}`)).join(' ∪ ');
+}
+function signRow(spec: PracticeFigureSpec, a: P) {
+  const m = modelOf(spec, signChartModel);
+  return { m, row: m.rows[argIndex(a, 'row', m.rows.length, 'row of the chart')] };
+}
+/** Critical numbers where the row's sign differs on the two sides. */
+function signChanges(row: { signs: string[] }, m: { critical: Array<{ value: number }> }, from?: string, to?: string): number[] {
+  const out: number[] = [];
+  m.critical.forEach((c, k) => {
+    const l = row.signs[k];
+    const r = row.signs[k + 1];
+    if (!l || !r) return fail(`the sign on one side of ${fmt(c.value)} is not given in the spec`);
+    if (l !== r && (!from || (l === from && r === to))) out.push(c.value);
+  });
+  return out;
+}
+
+// distributions --------------------------------------------------------------
+
+const EMPIRICAL_CDF: Record<number, number> = { [-3]: 0.0015, [-2]: 0.025, [-1]: 0.16, 0: 0.5, 1: 0.84, 2: 0.975, 3: 0.9985 };
+function boxUnit(spec: PracticeFigureSpec): number {
+  const m = modelOf(spec, boxPlotModel);
+  return minorOf(m.step ?? niceStep(m.range[1] - m.range[0], 8));
+}
+function boxStat(b: BoxPlot, stat: string, unit: number): number {
+  const g = (v: number, what: string) => needGrid(v, unit, what);
+  switch (stat) {
+    case 'min': return g(b.min, 'the end of the left whisker');
+    case 'max': return g(b.max, 'the end of the right whisker');
+    case 'q1': return g(b.q1, 'the left edge of the box');
+    case 'q3': return g(b.q3, 'the right edge of the box');
+    case 'median': return g(b.median, 'the line inside the box');
+    case 'iqr': return g(b.q3, 'the right edge of the box') - g(b.q1, 'the left edge of the box');
+    default: return g(Math.max(b.max, ...b.outliers), 'the greatest value shown') - g(Math.min(b.min, ...b.outliers), 'the least value shown');
+  }
+}
+const BOX_STATS = ['min', 'q1', 'median', 'q3', 'max', 'iqr', 'range'] as const;
+
+// complex plane / polar grid -------------------------------------------------
+
+function planePoints(spec: PracticeFigureSpec): PlanePoint[] {
+  const m = modelOf(spec, polarComplexModel);
+  if (m.plane === 'complex') {
+    const unit = minorOf(m.step ?? (m.range <= 6 ? 1 : fail('give step (or a range of at most 6), so that what lies on a gridline is decided by the spec')));
+    m.points.forEach((q, i) => {
+      needGrid(q.re, unit, `the real part of point ${i}`);
+      needGrid(q.im, unit, `the imaginary part of point ${i}`);
+    });
+  } else {
+    m.points.forEach((q, i) => {
+      needGrid(q.r, m.rStep, `the distance of point ${i} from the pole`);
+      needGrid(q.givenTheta, m.angleStep, `the angle of point ${i}`);
+    });
+  }
+  return m.points;
+}
+function complexText(re: number, im: number): string {
+  const r = Number(re.toFixed(9));
+  const i = Number(im.toFixed(9));
+  if (i === 0) return mn(r);
+  const imag = `${Math.abs(i) === 1 ? '' : mn(Math.abs(i))}i`;
+  if (r === 0) return `${i < 0 ? '−' : ''}${imag}`;
+  return `${mn(r)} ${i < 0 ? '−' : '+'} ${imag}`;
+}
+function twoPoints(spec: PracticeFigureSpec, a: P): [PlanePoint, PlanePoint] {
+  const pts = planePoints(spec);
+  const idx = a.points;
+  if (!Array.isArray(idx) || idx.length !== 2 || idx[0] === idx[1] || !idx.every((k) => isNum(k) && Number.isInteger(k) && k >= 0 && k < pts.length)) return fail('derivation argument "points" must be the 0-based indices of two different points');
+  return [pts[idx[0] as number], pts[idx[1] as number]];
+}
+function complexResult(re: number, im: number, want: string): Derived {
+  if (want === 're') return num(re);
+  if (want === 'im') return num(im);
+  if (want === 'modulus') return Number.isInteger(Math.hypot(re, im)) ? num(Math.hypot(re, im)) : approx(Math.hypot(re, im));
+  return text(complexText(re, im));
+}
+
+// pedigree -------------------------------------------------------------------
+
+export const INHERITANCE_MODES = ['autosomal_dominant', 'autosomal_recessive', 'x_linked_dominant', 'x_linked_recessive'] as const;
+export type InheritanceMode = (typeof INHERITANCE_MODES)[number];
+
+/**
+ * Can the chart be explained by one gene inherited in this mode? True when
+ * every individual can be given a genotype such that each child received one
+ * allele from each parent (a son's X from his mother only) and every drawn
+ * status fits: a filled symbol is affected, an open one is not, a half-filled
+ * one is an unaffected heterozygote (which exists only under a recessive
+ * mode), a "?" is unconstrained. Founders may carry any genotype. Assumes
+ * full penetrance and no new mutation — the textbook reading of a pedigree.
+ * A symbol of unknown sex is tried as male and as female under X-linkage.
+ */
+export function pedigreeConsistent(m: PedigreeModel, mode: InheritanceMode): boolean {
+  const xLinked = mode.startsWith('x_linked');
+  const dominant = mode.endsWith('dominant');
+  const order = [...m.individuals].sort((a, b) => a.generation - b.generation);
+  /** State: the number of disease alleles carried, and the sex used. */
+  const state = new Map<string, { d: number; sex: 'M' | 'F' }>();
+  const fits = (ind: PedigreeIndividual, d: number, sex: 'M' | 'F'): boolean => {
+    const copies = xLinked && sex === 'M' ? 1 : 2;
+    if (d > copies) return false;
+    const affected = xLinked && sex === 'M' ? d === 1 : dominant ? d >= 1 : d === 2;
+    if (ind.unknown) return true;
+    if (ind.carrier) return !dominant && !(xLinked && sex === 'M') && d === 1;
+    return affected === ind.affected;
+  };
+  /** The numbers of disease alleles a parent in this state can pass on. */
+  const passes = (d: number, copies: number): number[] => (d === 0 ? [0] : d === copies ? [1] : [0, 1]);
+  const search = (k: number): boolean => {
+    if (k === order.length) return true;
+    const ind = order[k];
+    const sexes: Array<'M' | 'F'> = ind.sex === 'U' ? (xLinked ? ['M', 'F'] : ['F']) : [ind.sex];
+    for (const sex of sexes) {
+      let options: number[];
+      if (!ind.father) options = [0, 1, 2];
+      else {
+        const f = state.get(ind.father) as { d: number; sex: 'M' | 'F' };
+        const mo = state.get(ind.mother as string) as { d: number; sex: 'M' | 'F' };
+        const fromMother = passes(mo.d, 2);
+        // X-linked: a son gets no X from his father; a daughter gets the father's only X.
+        const fromFather = xLinked ? (sex === 'M' ? [0] : [f.d]) : passes(f.d, 2);
+        options = [...new Set(fromFather.flatMap((x) => fromMother.map((y) => x + y)))];
+      }
+      for (const d of options) {
+        if (!fits(ind, d, sex)) continue;
+        state.set(ind.id, { d, sex });
+        if (search(k + 1)) return true;
+      }
+      state.delete(ind.id);
+    }
+    return false;
+  };
+  return search(0);
+}
+const MODE_WORDS: Record<InheritanceMode, string> = { autosomal_dominant: 'autosomal dominant', autosomal_recessive: 'autosomal recessive', x_linked_dominant: 'X-linked dominant', x_linked_recessive: 'X-linked recessive' };
+
+// transcription ---------------------------------------------------------------
+
+/** Batch-1 kinds: fills `printed` and `out`, returns what kind of figure it is ('' = not one of them). */
+function describeBatch1(spec: PracticeFigureSpec, printed: string[], out: string[]): string {
+  switch (spec.type) {
+    case 'unit_circle': {
+      const m = modelOf(spec, unitCircleModel);
+      out.push(`A circle of radius 1 centred on the origin, on x and y axes${m.axisTicks ? ' with the points 1 and −1 marked on each axis' : ''}. There is no grid.`);
+      if (m.quadrantLabels) {
+        printed.push('quadrant labels: "I", "II", "III", "IV"');
+        out.push('The four quadrants are labelled I (upper right), II (upper left), III (lower left), IV (lower right).');
+      }
+      m.angles.forEach((a, i) => {
+        const q = quadrantOf(a.degrees);
+        const d = norm360(a.degrees);
+        const where = q === 0 ? `on the ${['positive x-axis', 'positive y-axis', 'negative x-axis', 'negative y-axis'][Math.round(d / 90) % 4]}` : `in the ${ORDINALS[q - 1]} quadrant`;
+        const parts = [`Marked angle ${i + 1}: its terminal side meets the circle ${where}`];
+        if (a.radius) parts.push('a radius is drawn to that point');
+        if (a.arc) parts.push(`an arc from the positive x-axis shows the rotation, ${a.degrees < 0 ? 'clockwise' : 'counter-clockwise'}`);
+        if (a.triangle) parts.push('a dashed vertical from the point to the x-axis and a right-angle mark form the reference triangle');
+        if (a.shownLabel) {
+          printed.push(`angle label: "${a.shownLabel}"`);
+          parts.push(a.shownLabel === '?' && !a.labelText ? `its size is ${BLANK}` : `angle label "${a.shownLabel}"`);
+        } else parts.push('no angle label');
+        if (a.shownCoords) {
+          printed.push(`point label: "${a.shownCoords}"`);
+          parts.push(`the point is labelled "${a.shownCoords}"${a.coords !== 'show' && a.coords !== 'hide' ? ' (a "?" stands for a coordinate left out)' : ''}`);
+        } else if (a.point) parts.push('the point is a dot with no label');
+        out.push(`${parts.join('; ')}.`);
+      });
+      return 'a unit circle with marked angles';
+    }
+    case 'vector_diagram': {
+      const m = modelOf(spec, vectorDiagramModel);
+      const unit = planeUnit(m);
+      printed.push(`axis label: "${m.xLabel}"`, `axis label: "${m.yLabel}"`);
+      out.push(`A grid: x from ${fmt(m.xRange[0])} to ${fmt(m.xRange[1])}, y from ${fmt(m.yRange[0])} to ${fmt(m.yRange[1])}, gridlines every ${fmt(unit)}.`);
+      const at = (q: [number, number]) => (isMultiple(q[0], unit) && isMultiple(q[1], unit) ? `(${fmt(q[0])}, ${fmt(q[1])})` : `a point that is not on a grid crossing (near (${fmt(Number(q[0].toFixed(1)))}, ${fmt(Number(q[1].toFixed(1)))}))`);
+      const line = (v: DiagramVector, what: string) => {
+        if (v.label) printed.push(`arrow label: "${v.label}"`);
+        out.push(`${what}${v.label ? ` labelled "${v.label}"` : ' with no label'}: from ${at(v.tail)} to ${at(v.head)} (the arrowhead is at the second point)${v.showComponents ? '; thin dashes run across from its tail and then up or down to its head' : ''}.`);
+      };
+      m.vectors.forEach((v, i) => line(v, `Arrow ${i + 1}, an arrow`));
+      if (m.tipToTail) out.push('The arrows are joined tip to tail, in that order.');
+      if (m.resultant) line(m.resultant, 'One heavier arrow');
+      return 'a diagram of vectors drawn as arrows on a numbered grid';
+    }
+    case 'free_body_diagram_v2': {
+      const m = modelOf(spec, freeBodyModel);
+      if (m.objectLabel) printed.push(`caption on the object: "${m.objectLabel}"`);
+      out.push(`The object is drawn as a ${m.shape === 'dot' ? 'dot' : m.shape === 'block' ? 'wide block' : 'box'}${m.objectLabel ? ` with the caption "${m.objectLabel}"` : ''}.`);
+      if (m.incline) {
+        if (m.incline.showAngle) printed.push(`angle label at the foot of the incline: "${m.incline.shownAngle}"`);
+        out.push(`It sits on an incline that rises to the right; the incline's angle to the horizontal is ${m.incline.showAngle ? `marked "${m.incline.shownAngle}"` : 'not marked'}.`);
+      } else out.push(m.surface ? 'It sits on a horizontal surface.' : 'No surface is drawn.');
+      if (m.axes) out.push(`A small pair of x / y axes is drawn in the corner${m.axes === 'incline' ? ', tilted so that x points up the incline' : ''}.`);
+      out.push(m.lengths === 'equal' ? 'All arrows are drawn the same length (the lengths say nothing about the sizes of the forces).' : 'Arrow lengths are drawn to scale with the printed sizes.');
+      out.push('Force arrows on the object:');
+      for (const f of m.forces) {
+        printed.push(`arrow label: "${f.shownLabel}"`);
+        if (f.showAngle) printed.push(`angle label: "${f.shownAngle}"`);
+        out.push(`  arrow labelled "${f.shownLabel}", ${fbdDirectionWords(m, f)}`);
+      }
+      return 'a free-body diagram (one object with force arrows)';
+    }
+    case 'shaded_region': {
+      const m = modelOf(spec, shadedRegionModel);
+      const unit = planeUnit(m);
+      printed.push(`axis label: "${m.xLabel}"`, `axis label: "${m.yLabel}"`);
+      out.push(`A grid: x from ${fmt(m.xRange[0])} to ${fmt(m.xRange[1])}, y from ${fmt(m.yRange[0])} to ${fmt(m.yRange[1])}, gridlines every ${fmt(unit)}.`);
+      const read = (v: number) => (isMultiple(v, unit) ? fmt(Number(v.toFixed(9))) : `between ${fmt(Math.floor(v / unit) * unit)} and ${fmt(Math.floor(v / unit) * unit + unit)} (not on a gridline)`);
+      const g = m.region;
+      const table = (c: { fn: (x: number) => number; label?: string }, name: string, dashed: boolean) => {
+        if (c.label) printed.push(`legend entry: "${c.label}"`);
+        const straight = isLine(c.fn, m.xRange[0], m.xRange[1]);
+        out.push(`${name}${c.label ? ` (legend "${c.label}")` : ''}: a ${dashed ? 'dashed' : 'solid'} ${straight ? 'STRAIGHT line' : 'curve'}. Its height at whole-number x:`);
+        for (let x = Math.ceil(m.xRange[0]); x <= m.xRange[1]; x++) {
+          const y = c.fn(x);
+          if (Number.isFinite(y) && y >= m.yRange[0] && y <= m.yRange[1]) out.push(`  x = ${fmt(x)}: y = ${read(y)}`);
+        }
+        return straight ? 'line' : 'curve';
+      };
+      if (g.type === 'under_curve') {
+        const what = table(g.curve, 'One curve', false);
+        out.push(`Hatched region: between the ${what} and the x-axis, from x = ${read(g.from)} to x = ${read(g.to)}${g.showBounds ? ' (a thin vertical edge at each end)' : ''}.`);
+      } else if (g.type === 'between_curves') {
+        table(g.upper, 'Upper curve', false);
+        table(g.lower, 'Lower curve', true);
+        out.push(`Hatched region: between the two, from x = ${read(g.from)} to x = ${read(g.to)}.`);
+        if (g.markIntersections) for (const q of g.intersections) out.push(`Marked point where the two meet: a filled dot at (${read(q[0])}, ${read(q[1])}).`);
+      } else {
+        g.inequalities.forEach((q, i) => {
+          if (q.label) printed.push(`legend entry: "${q.label}"`);
+          const strict = q.op === '<' || q.op === '>';
+          // Two grid points of the line inside the plot, so the line can be told without its equation.
+          const on: Pt[] = [];
+          for (let x = Math.ceil(m.xRange[0]); x <= m.xRange[1]; x++) {
+            if (Math.abs(q.b) < 1e-12) continue;
+            const y = (q.c - q.a * x) / q.b;
+            if (isMultiple(y, unit) && y >= m.yRange[0] && y <= m.yRange[1]) on.push([x, Number(y.toFixed(9))]);
+          }
+          const through = Math.abs(q.b) < 1e-12 ? `vertical line at x = ${read(q.c / q.a)}` : on.length >= 2 ? `straight line through (${fmt(on[0][0])}, ${fmt(on[0][1])}) and (${fmt(on[on.length - 1][0])}, ${fmt(on[on.length - 1][1])})` : 'straight line that passes through fewer than two grid crossings';
+          out.push(`Boundary line ${i + 1}${q.label ? ` (legend "${q.label}")` : ''}: a ${strict ? 'DASHED' : 'SOLID'} ${through}.`);
+        });
+        const corners = g.polygon.map((q) => `(${read(q[0])}, ${read(q[1])})`).join(', ');
+        out.push(`Hatched region: the polygon with corners ${corners}${g.polygon.some((q) => [m.xRange[0], m.xRange[1]].includes(q[0]) || [m.yRange[0], m.yRange[1]].includes(q[1])) ? ' (it runs to the edge of the plot)' : ''}.`);
+        if (g.markVertices) {
+          for (const v of g.vertices) {
+            const open = g.inequalities.some((q) => (q.op === '<' || q.op === '>') && Math.abs(q.a * v[0] + q.b * v[1] - q.c) < 1e-7);
+            out.push(`Marked corner of the hatched region at (${read(v[0])}, ${read(v[1])}): ${open ? 'an open circle' : 'a filled dot'}.`);
+          }
+        }
+      }
+      return 'a coordinate grid with one region shaded by hatching';
+    }
+    case 'number_line': {
+      const m = modelOf(spec, numberLineModel);
+      const show = spec.params.denominator ? asFraction : mn;
+      const labelled = m.ticks.filter((k) => k.text);
+      out.push(`A number line with ${m.ticks.length} evenly spaced ticks from ${show(m.min)} to ${show(m.max)} (one every ${show(m.tickSpacing)}); it runs on with an arrow at both ends.`);
+      out.push(labelled.length === m.ticks.length ? 'Every tick is numbered.' : labelled.length === 0 ? 'No tick is numbered.' : `Only these ticks are numbered: ${labelled.map((k) => k.text).join(', ')}.`);
+      /** A tick as the eye finds it: by its number, or by counting from the nearest numbered tick. */
+      const known = (v: number): string => {
+        const here = labelled.find((k) => Math.abs(k.x - v) < 1e-9);
+        if (here) return here.text;
+        if (labelled.length === 0) return `tick number ${Math.round((v - m.min) / m.tickSpacing) + 1} counted from the left end`;
+        const left = [...labelled].reverse().find((k) => k.x < v);
+        const ref = left ?? labelled[0];
+        const n = Math.round(Math.abs(v - ref.x) / m.tickSpacing);
+        return `the unnumbered tick ${n} tick${n === 1 ? '' : 's'} to the ${left ? 'right' : 'left'} of ${ref.text}`;
+      };
+      const place = (v: number): string => (isMultiple(v - m.min, m.tickSpacing) ? known(v) : `a point between two ticks (not on a tick)`);
+      for (const iv of m.intervals) {
+        const a = iv.from === null ? '' : `${iv.fromOpen ? 'an open' : 'a filled'} circle at ${place(iv.from)}`;
+        const b = iv.to === null ? '' : `${iv.toOpen ? 'an open' : 'a filled'} circle at ${place(iv.to)}`;
+        if (iv.from === null && iv.to === null) out.push('Thick segment over the whole line, running on with an arrow both ways.');
+        else if (iv.from === null) out.push(`Thick segment that runs on to the left (arrow) and ends at ${b}.`);
+        else if (iv.to === null) out.push(`Thick segment that starts at ${a} and runs on to the right (arrow).`);
+        else out.push(`Thick segment from ${a} to ${b}.`);
+      }
+      for (const q of m.points) {
+        if (q.label) printed.push(`point label: "${q.label}"`);
+        out.push(`Separate ${q.open ? 'open circle' : 'filled dot'} at ${place(q.x)}${q.label ? (q.label === '?' ? `, labelled with ${BLANK}` : ` labelled "${q.label}"`) : ''}.`);
+      }
+      return 'a number line';
+    }
+    case 'sign_chart': {
+      const m = modelOf(spec, signChartModel);
+      const c = m.critical;
+      printed.push(...c.map((k) => `critical number: "${k.label}"`), ...m.rows.map((r) => `row label: "${r.label}"`));
+      out.push(`A sign chart over a ${m.variable} line with these numbers marked, left to right (evenly spaced, not to scale): ${c.map((k) => k.label).join(', ')}.`);
+      const sign = (s: string) => (s === '+' ? '+' : s === '-' ? '−' : s || '(empty)');
+      for (const row of m.rows) {
+        const cells: string[] = [];
+        row.signs.forEach((s, k) => {
+          const where = k === 0 ? `left of ${c[0].label}` : k === c.length ? `right of ${c[c.length - 1].label}` : `between ${c[k - 1].label} and ${c[k].label}`;
+          cells.push(`${where}: ${row.blankSigns[k] ? BLANK : sign(s)}`);
+          if (k < c.length) cells.push(`at ${c[k].label}: ${row.blankAt[k] ? BLANK : sign(row.at[k])}`);
+        });
+        out.push(`Row "${row.label}": ${cells.join('; ')}.`);
+      }
+      return 'a sign chart';
+    }
+    case 'distribution_curve': {
+      const m = modelOf(spec, distributionModel);
+      if (m.xLabel) printed.push(`axis label: "${m.xLabel}"`);
+      const ticks = m.tickTexts.filter(Boolean);
+      out.push(`A bell-shaped (normal) curve, symmetric about its centre, over a horizontal axis with seven evenly spaced ticks: the centre and three on each side (one per standard deviation). ${ticks.length ? `The ticks are labelled, left to right: ${ticks.join(', ')}.` : 'The ticks carry no numbers.'}`);
+      const value = (v: number) => (m.axis === 'z' ? (v - m.mean) / m.sd : v);
+      const tickAt = (k: number) => m.tickTexts[k + 3] || `the ${k === 0 ? 'centre' : `${ORDINALS[Math.abs(k) - 1]} tick ${k < 0 ? 'left' : 'right'} of the centre`}`;
+      const bound = (v: number, label?: string): string => {
+        const z = (v - m.mean) / m.sd;
+        if (isMultiple(z, 1)) return m.axis === 'x' || m.axis === 'z' ? mn(value(v)) : tickAt(Math.round(z));
+        // Drawn to scale: a bound a hair from a tick reads as "at about" that tick.
+        const between = Math.abs(z - Math.round(z)) < 0.15 ? `very close to ${tickAt(Math.round(z))}` : `between ${tickAt(Math.floor(z))} and ${tickAt(Math.floor(z) + 1)}`;
+        if (label) return `a bound marked "${label}" (${between})`;
+        return m.axis === 'x' || m.axis === 'z' ? mn(Number(value(v).toPrecision(8))) : `an unlabelled bound ${between}`;
+      };
+      for (const s of m.shade) {
+        if (s.label) printed.push(`bound label: "${s.label}"`);
+        if (s.from === null) out.push(`Hatched left tail: everything up to ${bound(s.to as number, s.label)}.`);
+        else if (s.to === null) out.push(`Hatched right tail: everything from ${bound(s.from, s.label)} on.`);
+        else out.push(`Region under the curve hatched from ${bound(s.from, s.label)} to ${bound(s.to, s.label)}.`);
+        if (m.showArea) {
+          const area = normalArea(m.mean, m.sd, s.from, s.to).toFixed(4);
+          printed.push(`area printed at the hatched region: "${area}"`);
+        }
+      }
+      if (m.shade.length === 0) out.push('Nothing is shaded.');
+      return 'a normal distribution curve';
+    }
+    case 'histogram': {
+      const m = modelOf(spec, histogramModel);
+      if (m.xLabel) printed.push(`axis label: "${m.xLabel}"`);
+      printed.push(`axis label: "${m.yLabel}"`);
+      const unit = minorOf(m.yStep);
+      out.push(`A histogram: ${m.counts.length} classes of equal width, with a tick at each boundary on the horizontal axis: ${m.edges.map(fmt).join(', ')}${m.labelEvery > 1 ? ` (only every ${ORDINALS[m.labelEvery - 1]} boundary carries its number, starting with the first)` : ''}. Vertical axis "${m.yLabel}" from 0 to ${fmt(m.yMax)}, numbered every ${fmt(m.yStep)}${unit !== m.yStep ? `, lighter gridlines every ${fmt(unit)}` : ''}.`);
+      out.push(`Bar heights${m.showCounts ? ' (each printed above its bar)' : ''}:`);
+      m.counts.forEach((c, i) => {
+        const h = m.blank[i] ? `${BLANK.slice(0, -1)}, no bar)` : m.showCounts || isMultiple(c, unit) ? fmt(c) : `between ${fmt(Math.floor(c / unit) * unit)} and ${fmt(Math.floor(c / unit) * unit + unit)} (not on a gridline)`;
+        out.push(`  ${fmt(m.edges[i])} to ${fmt(m.edges[i + 1])}: ${h}`);
+      });
+      return 'a histogram';
+    }
+    case 'box_plot': {
+      const m = modelOf(spec, boxPlotModel);
+      const unit = boxUnit(spec);
+      if (m.xLabel) printed.push(`axis label: "${m.xLabel}"`);
+      out.push(`${m.plots.length === 1 ? 'One box plot' : `${m.plots.length} box plots, one above the other,`} over a horizontal axis from ${fmt(m.range[0])} to ${fmt(m.range[1])} with gridlines every ${fmt(unit)}.`);
+      const read = (v: number) => (m.showValues || isMultiple(v, unit) ? fmt(v) : `between ${fmt(Math.floor(v / unit) * unit)} and ${fmt(Math.floor(v / unit) * unit + unit)} (not on a gridline)`);
+      m.plots.forEach((b, i) => {
+        if (b.label) printed.push(`plot label: "${b.label}"`);
+        const name = b.label === '?' ? `Box plot ${i + 1}, labelled with ${BLANK}` : b.label ? `Box plot "${b.label}"` : `Box plot ${i + 1}`;
+        const dots = b.outliers.length ? `; separate dots at ${[...b.outliers].sort((x, y) => x - y).map(read).join(' and ')}` : '';
+        out.push(`${name}: whisker from ${read(b.min)}, box from ${read(b.q1)} to ${read(b.q3)}, line inside the box at ${read(b.median)}, whisker to ${read(b.max)}${dots}.`);
+      });
+      if (m.showValues) printed.push('the five values of each plot, above it');
+      return m.plots.length === 1 ? 'a box plot (box-and-whisker plot)' : 'a set of box plots (box-and-whisker plots) on one axis';
+    }
+    case 'polar_complex': {
+      const m = modelOf(spec, polarComplexModel);
+      const name = (q: PlanePoint, i: number) => (q.label === '?' ? `Point ${i + 1}, labelled with ${BLANK},` : q.label ? `Point "${q.label}"` : `Point ${i + 1} (no label)`);
+      m.points.forEach((q) => {
+        if (q.label) printed.push(`point label: "${q.label}"`);
+        if (q.argumentLabel) printed.push(`angle label: "${q.argumentLabel}"`);
+      });
+      if (m.plane === 'complex') {
+        const unit = minorOf(m.step ?? (m.range <= 6 ? 1 : niceStep(2 * m.range, 8)));
+        printed.push('axis label: "Re"', 'axis label: "Im"');
+        out.push(`The complex plane: a horizontal axis "Re" and a vertical axis "Im", both from ${fmt(-m.range)} to ${fmt(m.range)}, gridlines every ${fmt(unit)}.`);
+        const read = (v: number) => (isMultiple(v, unit) ? fmt(v) : `between ${fmt(Math.floor(v / unit) * unit)} and ${fmt(Math.floor(v / unit) * unit + unit)}`);
+        m.points.forEach((q, i) => {
+          const extra = [q.showModulus || q.showArgument ? 'a segment from the origin to it is drawn' : '', q.showArgument ? `an arc from the positive Re axis to that segment is drawn${q.argumentLabel ? `, labelled "${q.argumentLabel}"` : ''}` : '', q.projections ? 'dashes run from it to both axes' : ''].filter(Boolean);
+          out.push(`${name(q, i)} at (${read(q.re)}, ${read(q.im)}) — across, then up${extra.length ? `; ${extra.join('; ')}` : ''}.`);
+        });
+        return 'a complex plane with plotted numbers';
+      }
+      const circles = Math.round(m.rMax / m.rStep);
+      out.push(`A polar grid: ${circles} circles about the pole at r = ${Array.from({ length: circles }, (_, k) => fmt((k + 1) * m.rStep)).join(', ')}, and a ray every ${m.angleStep}°${m.angleLabels === 'none' ? ' (the rays carry no labels)' : `, labelled in ${m.angleLabels} round the outside${m.rayLabelStep !== m.angleStep ? ` at every ${m.rayLabelStep}°` : ''}`}. The ray to the right is 0${m.circleLabelEvery > 1 ? `; along it only every ${ORDINALS[m.circleLabelEvery - 1]} circle carries its number` : '; the circles are numbered along it'}.`);
+      if (m.angleLabels !== 'none') printed.push(`ray labels in ${m.angleLabels}`);
+      const circle = (r: number) => (r < 1e-9 ? 'at the pole' : isMultiple(r, m.rStep) ? `on the ${ORDINALS[Math.round(r / m.rStep) - 1] ?? `${Math.round(r / m.rStep)}th`} circle (r = ${fmt(Number(r.toFixed(9)))})` : `between the circles r = ${fmt(Math.floor(r / m.rStep) * m.rStep)} and r = ${fmt(Math.floor(r / m.rStep) * m.rStep + m.rStep)}`);
+      const rayName = (deg: number) => (m.angleLabels === 'radians' ? piText(deg, 180) : `${fmt(deg)}°`);
+      m.points.forEach((q, i) => {
+        const deg = norm360(q.r < 1e-9 ? 0 : q.givenTheta);
+        const ray = isMultiple(deg, m.angleStep) ? `on the ${rayName(deg)} ray` : `between the ${rayName(Math.floor(deg / m.angleStep) * m.angleStep)} and ${rayName((Math.floor(deg / m.angleStep) * m.angleStep + m.angleStep) % 360)} rays`;
+        out.push(`${name(q, i)}: ${circle(q.r)}${q.r < 1e-9 ? '' : ` ${ray}`}${q.showModulus || q.showArgument ? '; a segment from the pole to it is drawn' : ''}${q.showArgument ? '; an arc from the 0 ray to that segment is drawn' : ''}.`);
+      });
+      if (m.curve) {
+        if (m.curve.label) printed.push(`legend entry: "${m.curve.label}"`);
+        const cv = m.curve;
+        out.push(`One curve is drawn${cv.label ? ` (legend "${cv.label}")` : ''}. Where it crosses each ray (distance from the pole):`);
+        const inRange = (deg: number) => {
+          for (let t = deg; t <= cv.to + 1e-9; t += 360) if (t >= cv.from - 1e-9) return t;
+          for (let t = deg - 360; t >= cv.from - 1e-9; t -= 360) if (t <= cv.to + 1e-9) return t;
+          return null;
+        };
+        for (let deg = 0; deg < 360; deg += m.angleStep) {
+          const dist = new Set<string>();
+          const direct = inRange(deg);
+          if (direct !== null) {
+            const v = cv.fn((direct * Math.PI) / 180);
+            if (v > -1e-9) dist.add(circle(Math.abs(v)));
+          }
+          const opposite = inRange((deg + 180) % 360);
+          if (opposite !== null) {
+            const v = cv.fn((opposite * Math.PI) / 180);
+            if (v < 1e-9) dist.add(circle(Math.abs(v)));
+          }
+          out.push(`  ${rayName(deg)} ray: ${dist.size ? [...dist].join('; and ') : 'the curve does not reach this ray'}`);
+        }
+      }
+      return 'a polar grid with plotted points';
+    }
+    case 'punnett_square': {
+      const m = modelOf(spec, punnettModel);
+      if (m.topLabel) printed.push(`label above the grid: "${m.topLabel}"`);
+      if (m.sideLabel) printed.push(`label beside the grid: "${m.sideLabel}"`);
+      const head = (g: string, b: boolean) => (b ? BLANK : g);
+      out.push(`A grid of ${m.side.length} rows and ${m.top.length} columns.`);
+      out.push(`Gametes along the top edge${m.topLabel ? ` (parent "${m.topLabel}")` : ''}, left to right: ${m.top.map((g, j) => head(g, m.blankTop[j])).join(', ')}.`);
+      out.push(`Gametes down the side${m.sideLabel ? ` (parent "${m.sideLabel}")` : ''}, top to bottom: ${m.side.map((g, i) => head(g, m.blankSide[i])).join(', ')}.`);
+      out.push('Cells, left to right:');
+      m.cells.forEach((row, i) => out.push(`  row ${i + 1} (side gamete ${m.blankSide[i] ? 'blank' : `"${m.side[i]}"`}): ${row.map((c) => (c.blank ? BLANK : c.genotype)).join(' | ')}`));
+      const HATCH = ['hatched /', 'hatched \\', 'hatched —', 'hatched |'];
+      m.phenotypes.forEach((ph, k) => {
+        printed.push(`legend entry: "${ph.label}" (${HATCH[k]})`);
+        const cells = m.cells.flatMap((row, i) => row.map((c, j) => (c.phenotype === k && !c.blank ? `row ${i + 1} column ${j + 1}` : '')).filter(Boolean));
+        out.push(`Cells marked "${ph.label}" (${HATCH[k]}): ${cells.length ? cells.join(', ') : 'none'}.`);
+      });
+      if (m.phenotypes.length && m.cells.flat().some((c) => c.blank)) out.push('A blank cell carries no hatch (every phenotype class has one).');
+      return 'a Punnett square';
+    }
+    case 'pedigree': {
+      const m = modelOf(spec, pedigreeModel);
+      const byId = new Map(m.individuals.map((i) => [i.id, i]));
+      out.push(`A pedigree chart of ${m.generations.length} generations, numbered ${m.generations.map((_, g) => ['I', 'II', 'III', 'IV', 'V', 'VI'][g]).join(', ')} from the top; within a generation the individuals are numbered from the left. Squares are males, circles females${m.individuals.some((i) => i.sex === 'U') ? ', diamonds of unknown sex' : ''}; a horizontal line joins partners; children hang from a line below their parents.`);
+      if (m.legend) printed.push('key: "male", "female", "affected"', ...(m.individuals.some((i) => i.carrier) ? ['key: "carrier"'] : []), ...(m.individuals.some((i) => i.unknown) ? ['key: "not known"'] : []));
+      for (const row of m.generations) {
+        for (const ind of row) {
+          const status = ind.unknown ? 'status not shown ("?")' : ind.affected ? 'affected (filled)' : ind.carrier ? 'carrier (half-filled)' : 'unaffected (open)';
+          const parts = [`${ind.number}${ind.label ? ` (labelled "${ind.label}")` : ''}: ${ind.sex === 'M' ? 'male' : ind.sex === 'F' ? 'female' : 'sex unknown'}, ${status}`];
+          if (ind.father) parts.push(`child of ${(byId.get(ind.father) as PedigreeIndividual).number} and ${(byId.get(ind.mother as string) as PedigreeIndividual).number}`);
+          const mates = m.matings.filter((c) => c.includes(ind.id)).map((c) => (byId.get(c[0] === ind.id ? c[1] : c[0]) as PedigreeIndividual).number);
+          if (mates.length) parts.push(`partner of ${mates.join(' and ')}`);
+          out.push(`${parts.join('; ')}.`);
+        }
+      }
+      return 'a pedigree chart';
+    }
+    default:
+      return '';
+  }
+}
+
+// checkers --------------------------------------------------------------------
+
+const BATCH1_CHECKERS: Record<string, CheckerDef> = {
+  // unit_circle
+  uc_coordinates: {
+    kinds: ['unit_circle'], args: '{ angle: index, want?: pair | x | y }', returns: 'the exact coordinates of the point of a marked angle (a multiple of 30° or 45°), as "(x, y)", or one of them',
+    run: (s, a) => {
+      const ang = ucAngle(s, a);
+      const want = a.want === undefined ? 'pair' : pick(a, 'want', ['pair', 'x', 'y'] as const);
+      if (exactTrig('cos', ang.degrees) === null) return fail(`the angle ${fmt(ang.degrees)}° is not a multiple of 30° or 45° — its exact coordinates cannot be read off a unit circle`);
+      return text(want === 'x' ? ang.cosText : want === 'y' ? ang.sinText : `(${ang.cosText}, ${ang.sinText})`);
+    },
+  },
+  uc_reference_angle: {
+    kinds: ['unit_circle'], args: '{ angle: index, unit?: degrees | radians }', returns: 'the reference angle of a marked angle (its size must be printed)',
+    run: (s, a) => {
+      const ang = ucAngle(s, a);
+      if (ang.label === 'none' || ang.label === 'blank' || ang.labelText) fail('the size of that angle is not printed on the figure');
+      const ref = referenceAngle(ang.degrees);
+      if ((a.unit === undefined ? 'degrees' : pick(a, 'unit', ['degrees', 'radians'] as const)) === 'degrees') return num(ref);
+      if (!isMultiple(ref, 15)) return fail('the reference angle is not a multiple of 15° — it has no short form in radians');
+      return text(piText(Math.round(ref / 15), 12));
+    },
+  },
+  uc_quadrant: {
+    kinds: ['unit_circle'], args: '{ angle: index }', returns: 'the quadrant of the terminal side: the label "I", "II", "III" or "IV"',
+    run: (s, a) => {
+      const q = quadrantOf(ucAngle(s, a).degrees);
+      if (q === 0) return fail('the terminal side lies on an axis, not in a quadrant');
+      return { kind: 'label', value: ['I', 'II', 'III', 'IV'][q - 1] };
+    },
+  },
+  uc_trig_value: {
+    kinds: ['unit_circle'], args: `{ angle: index, fn: ${TRIG_FNS.join(' | ')} }`, returns: 'the exact value of a trigonometric function at a marked angle (a multiple of 30° or 45°), e.g. "−√3/2" or "undefined"',
+    run: (s, a) => text(exactTrigValue(pick(a, 'fn', TRIG_FNS), ucAngle(s, a).degrees)),
+  },
+  // vector_diagram
+  vec_components: {
+    kinds: ['vector_diagram'], args: '{ vector: index | "resultant", want: x | y | pair }', returns: 'a component of an arrow (head minus tail), or both as "(x, y)"',
+    run: (s, a) => { const [x, y] = comps(vecArg(s, a)); return vectorResult(x, y, pick(a, 'want', ['x', 'y', 'pair'] as const)); },
+  },
+  vec_magnitude: {
+    kinds: ['vector_diagram'], args: '{ vector: index | "resultant" }', returns: 'the length of an arrow',
+    run: (s, a) => { const [x, y] = comps(vecArg(s, a)); return vectorResult(x, y, 'magnitude'); },
+  },
+  vec_direction: {
+    kinds: ['vector_diagram'], args: '{ vector: index | "resultant" }', returns: 'the direction of an arrow in degrees, counter-clockwise from the positive x-axis (0 to 360)',
+    run: (s, a) => { const [x, y] = comps(vecArg(s, a)); return vectorResult(x, y, 'direction'); },
+  },
+  vec_resultant: {
+    kinds: ['vector_diagram'], args: '{ want: x | y | pair | magnitude | direction, of?: [indices] — all the vectors when left out }', returns: 'the sum of the listed vectors: a component, both as "(x, y)", its length or its direction in degrees',
+    run: (s, a) => {
+      const m = modelOf(s, vectorDiagramModel);
+      const of = a.of === undefined ? m.vectors.map((_, i) => i) : Array.isArray(a.of) ? (a.of as unknown[]) : fail('derivation argument "of" must be a list of vector indices');
+      if (of.length < 2 || new Set(of).size !== of.length) fail('derivation argument "of" must list at least two different vectors');
+      let x = 0;
+      let y = 0;
+      for (const k of of) {
+        const [dx, dy] = comps(vecArg(s, { vector: k }));
+        x += dx;
+        y += dy;
+      }
+      return vectorResult(Number(x.toPrecision(12)), Number(y.toPrecision(12)), pick(a, 'want', ['x', 'y', 'pair', 'magnitude', 'direction'] as const));
+    },
+  },
+  // free_body_diagram_v2
+  fbd2_net_force: {
+    kinds: ['free_body_diagram_v2'], args: '{ axis: x | y | magnitude | along | normal }', returns: 'the sum of the printed forces along the horizontal (right positive), the vertical (up positive), the incline (up-slope positive) or its normal (away from the surface positive), or the size of the total',
+    run: (s, a) => {
+      const m = modelOf(s, freeBodyModel);
+      const axis = pick(a, 'axis', ['x', 'y', 'magnitude', 'along', 'normal'] as const);
+      if (axis === 'magnitude') return roundish(Math.hypot(fbdSum(m, [1, 0]), fbdSum(m, [0, 1])));
+      return roundish(fbdSum(m, fbdAxis(m, axis)));
+    },
+  },
+  fbd2_missing_force: {
+    kinds: ['free_body_diagram_v2'], args: '{ force: label or index, net?: number — the net force along the line of that force, positive in its direction; 0 when left out }', returns: 'the size of the one force whose size is not printed, from the balance along its own line',
+    run: (s, a) => {
+      const m = modelOf(s, freeBodyModel);
+      const hit = typeof a.force === 'string' ? m.forces.filter((f) => f.label === (a.force as string).trim()) : isNum(a.force) && m.forces[a.force] ? [m.forces[a.force]] : [];
+      if (hit.length !== 1) return fail('derivation argument "force" must be the label (or 0-based index) of exactly one force');
+      const f = hit[0];
+      if (f.showMagnitude) return fail(`the size of "${f.label}" is printed on the figure`);
+      if (!fbdReadable(m, f)) fail(`the direction of "${f.label}" is not printed on the figure (no angle arc)`);
+      const net = a.net === undefined ? 0 : argNum(a, 'net');
+      const size = net - fbdSum(m, unitOf(f), f);
+      if (!(size > 1e-9)) return fail(`the balance gives ${fmt(Number(size.toFixed(6)))} for "${f.label}" — the arrow would point the other way`);
+      return roundish(size);
+    },
+  },
+  // shaded_region
+  region_area: {
+    kinds: ['shaded_region'], args: '{}', returns: 'the area of the shaded region when every side is straight and every corner is on a gridline',
+    run: (s) => num(regionArea(modelOf(s, shadedRegionModel))),
+  },
+  region_vertex_count: {
+    kinds: ['shaded_region'], args: '{}', returns: 'the number of corners of the shaded region (straight sides, corners on gridlines)',
+    run: (s) => { const m = modelOf(s, shadedRegionModel); const poly = regionPolygon(m); return num(m.region.type === 'under_curve' && poly.length === 6 ? 6 : poly.length); },
+  },
+  region_contains: {
+    kinds: ['shaded_region'], args: '{ x: number, y: number }', returns: 'the label "yes" or "no" — whether the point belongs to the shaded solution set (a point on a dashed boundary does not)',
+    run: (s, a) => {
+      const m = modelOf(s, shadedRegionModel);
+      const unit = planeUnit(m);
+      const x = needGrid(argNum(a, 'x'), unit, 'the x-coordinate of the point');
+      const y = needGrid(argNum(a, 'y'), unit, 'the y-coordinate of the point');
+      if (x < m.xRange[0] || x > m.xRange[1] || y < m.yRange[0] || y > m.yRange[1]) fail('the point is outside the plot');
+      return yesNo(regionContains(m, x, y));
+    },
+  },
+  // number_line
+  nl_interval_notation: {
+    kinds: ['number_line'], args: '{}', returns: 'the set shown, in interval notation — e.g. "(−3, 4]", "(−∞, −1/2] ∪ (5/4, ∞)", "{2}" for a single point',
+    run: (s) => {
+      const m = modelOf(s, numberLineModel);
+      const pieces = lineSet(m);
+      if (pieces.length === 0) return fail('the number line shows no set (no thick segment and no filled dot)');
+      for (const pc of pieces) for (const v of [pc.from, pc.to]) if (Number.isFinite(v)) needGrid(v - m.min, m.tickSpacing, 'an end of the set shown');
+      return text(intervalNotation(pieces, s.params.denominator ? asFraction : mn));
+    },
+  },
+  nl_contains: {
+    kinds: ['number_line'], args: '{ x: number }', returns: 'the label "yes" or "no" — whether the number belongs to the set shown',
+    run: (s, a) => {
+      const x = argNum(a, 'x');
+      return yesNo(lineSet(modelOf(s, numberLineModel)).some((pc) => (x > pc.from || (x === pc.from && !pc.fromOpen)) && (x < pc.to || (x === pc.to && !pc.toOpen))));
+    },
+  },
+  nl_point_value: {
+    kinds: ['number_line'], args: '{ point: index }', returns: 'the number at a marked point (it must sit on a tick)',
+    run: (s, a) => {
+      const m = modelOf(s, numberLineModel);
+      if (m.points.length === 0) return fail('the number line marks no separate point');
+      const q = m.points[argIndex(a, 'point', m.points.length, 'marked point')];
+      needGrid(q.x - m.min, m.tickSpacing, 'the marked point');
+      return num(q.x);
+    },
+  },
+  // sign_chart
+  sc_sign: {
+    kinds: ['sign_chart'], args: '{ row: index, interval: index — 0 is left of the first critical number }', returns: 'the label "positive" or "negative": the sign of that row on that interval',
+    run: (s, a) => {
+      const { row } = signRow(s, a);
+      const sgn = row.signs[argIndex(a, 'interval', row.signs.length, 'interval')];
+      if (!sgn) return fail('the sign on that interval is not given in the spec');
+      return { kind: 'label', value: sgn === '+' ? 'positive' : 'negative' };
+    },
+  },
+  sc_sign_change: {
+    kinds: ['sign_chart'], args: `{ row: index, want: ${WANT.join(' | ')} }`, returns: 'the critical number(s) at which that row changes sign',
+    run: (s, a) => { const { m, row } = signRow(s, a); return select(signChanges(row, m), pick(a, 'want', WANT), 'sign changes'); },
+  },
+  sc_local_extrema: {
+    kinds: ['sign_chart'], args: `{ row: index of the f′ row, which: max | min, want: ${WANT.join(' | ')} }`, returns: 'where f has a local maximum (f′ goes from + to −) or minimum (− to +), read from the f′ row',
+    run: (s, a) => {
+      const { m, row } = signRow(s, a);
+      const which = pick(a, 'which', ['max', 'min'] as const);
+      const xs = which === 'max' ? signChanges(row, m, '+', '-') : signChanges(row, m, '-', '+');
+      for (const x of xs) {
+        const k = m.critical.findIndex((c) => c.value === x);
+        if (row.at[k] === 'und') fail(`the row is undefined at ${fmt(x)} — whether f has an extremum there depends on f being defined there, which the chart does not show`);
+      }
+      return select(xs, pick(a, 'want', WANT), `local ${which === 'max' ? 'maxima' : 'minima'}`);
+    },
+  },
+  sc_intervals: {
+    kinds: ['sign_chart'], args: '{ row: index, sign: positive | negative }', returns: 'the open intervals on which that row has the sign, in interval notation',
+    run: (s, a) => {
+      const { m, row } = signRow(s, a);
+      const want = pick(a, 'sign', ['positive', 'negative'] as const) === 'positive' ? '+' : '-';
+      if (row.signs.some((x) => !x)) fail('a sign of that row is not given in the spec');
+      const pieces: Piece[] = [];
+      row.signs.forEach((sg, k) => {
+        if (sg === want) pieces.push({ from: k === 0 ? -Infinity : m.critical[k - 1].value, to: k === m.critical.length ? Infinity : m.critical[k].value, fromOpen: true, toOpen: true });
+      });
+      if (pieces.length === 0) return fail('the row never has that sign');
+      return text(intervalNotation(pieces, asFraction));
+    },
+  },
+  // distribution_curve
+  normal_shaded_area: {
+    kinds: ['distribution_curve'], args: '{ method: empirical | exact, as?: proportion | percent }', returns: 'the total shaded share of the distribution — by the 68–95–99.7 rule (every bound a whole number of standard deviations from the mean) or from the normal distribution itself',
+    run: (s, a) => {
+      const m = modelOf(s, distributionModel);
+      if (m.shade.length === 0) return fail('nothing is shaded on the curve');
+      const method = pick(a, 'method', ['empirical', 'exact'] as const);
+      const scale = (a.as === undefined ? 'proportion' : pick(a, 'as', ['proportion', 'percent'] as const)) === 'percent' ? 100 : 1;
+      let total = 0;
+      for (const sh of m.shade) {
+        if (method === 'exact') {
+          total += normalArea(m.mean, m.sd, sh.from, sh.to);
+          continue;
+        }
+        const cdf = (b: number | null, tail: number): number => {
+          if (b === null) return tail;
+          const z = (b - m.mean) / m.sd;
+          if (!isMultiple(z, 1) || Math.abs(z) > 3 + 1e-9) return fail('a bound is not a whole number of standard deviations from the mean (up to 3) — the 68–95–99.7 rule does not give that area');
+          return EMPIRICAL_CDF[Math.round(z)];
+        };
+        total += cdf(sh.to, 1) - cdf(sh.from, 0);
+      }
+      return method === 'exact' ? approx(total * scale) : num(Number((total * scale).toFixed(6)));
+    },
+  },
+  normal_bound: {
+    kinds: ['distribution_curve'], args: '{ shade: index, end: from | to, as?: x | z }', returns: 'the value at one end of a shaded interval, on the axis or as a z-score',
+    run: (s, a) => {
+      const m = modelOf(s, distributionModel);
+      if (m.shade.length === 0) return fail('nothing is shaded on the curve');
+      const sh = m.shade[argIndex(a, 'shade', m.shade.length, 'shaded interval')];
+      const b = sh[pick(a, 'end', ['from', 'to'] as const)];
+      if (b === null) return fail('that end is a tail — it has no bound');
+      return num((a.as === undefined ? 'x' : pick(a, 'as', ['x', 'z'] as const)) === 'z' ? (b - m.mean) / m.sd : b);
+    },
+  },
+  // histogram
+  hist_count: {
+    kinds: ['histogram'], args: '{ bin: index }', returns: 'the frequency of one class (for a blank class: the value under the "?")',
+    run: (s, a) => {
+      const m = modelOf(s, histogramModel);
+      const k = argIndex(a, 'bin', m.counts.length, 'class');
+      if (!m.showCounts && !m.blank[k]) needGrid(m.counts[k], minorOf(m.yStep), 'the height of that bar');
+      return num(m.counts[k]);
+    },
+  },
+  hist_total: {
+    kinds: ['histogram'], args: '{}', returns: 'the total frequency over all classes (blank classes included with their true value)',
+    run: (s) => {
+      const m = modelOf(s, histogramModel);
+      m.counts.forEach((c, i) => { if (!m.showCounts && !m.blank[i]) needGrid(c, minorOf(m.yStep), `the height of bar ${i}`); });
+      return num(m.counts.reduce((t, c) => t + c, 0));
+    },
+  },
+  hist_count_between: {
+    kinds: ['histogram'], args: '{ from: number, to: number — both class boundaries }', returns: 'the total frequency of the classes from one boundary to another',
+    run: (s, a) => {
+      const m = modelOf(s, histogramModel);
+      const idx = (v: number) => { const k = m.edges.findIndex((e) => Math.abs(e - v) < 1e-9); return k < 0 ? fail(`${fmt(v)} is not a class boundary of the histogram`) : k; };
+      const i = idx(argNum(a, 'from'));
+      const j = idx(argNum(a, 'to'));
+      if (j <= i) fail('"to" must be a boundary to the right of "from"');
+      let total = 0;
+      for (let k = i; k < j; k++) {
+        if (!m.showCounts && !m.blank[k]) needGrid(m.counts[k], minorOf(m.yStep), `the height of bar ${k}`);
+        total += m.counts[k];
+      }
+      return num(total);
+    },
+  },
+  hist_modal_class: {
+    kinds: ['histogram'], args: '{}', returns: 'the two boundaries of the tallest class',
+    run: (s) => {
+      const m = modelOf(s, histogramModel);
+      if (m.blank.some(Boolean)) fail('a class is blank — the tallest class cannot be told from the figure');
+      const top = Math.max(...m.counts);
+      const hits = m.counts.map((c, i) => (c === top ? i : -1)).filter((i) => i >= 0);
+      if (hits.length !== 1) return fail(`two classes share the greatest frequency (${hits.length} of them) — there is no single modal class`);
+      return { kind: 'numbers', values: [m.edges[hits[0]], m.edges[hits[0] + 1]] };
+    },
+  },
+  // box_plot
+  box_stat: {
+    kinds: ['box_plot'], args: `{ plot: index, stat: ${BOX_STATS.join(' | ')} }`, returns: 'a value read from one box plot (range = greatest − least value shown, outliers included; iqr = q3 − q1)',
+    run: (s, a) => {
+      const m = modelOf(s, boxPlotModel);
+      return num(boxStat(m.plots[argIndex(a, 'plot', m.plots.length, 'box plot')], pick(a, 'stat', BOX_STATS), boxUnit(s)));
+    },
+  },
+  box_compare: {
+    kinds: ['box_plot'], args: `{ stat: ${BOX_STATS.join(' | ')}, which: greatest | least }`, returns: 'the label of the box plot with the greatest (or least) value of that statistic',
+    run: (s, a) => {
+      const m = modelOf(s, boxPlotModel);
+      if (m.plots.length < 2 || m.plots.some((b) => !b.label || b.label === '?')) return fail('this needs at least two box plots, each with its own printed label');
+      const stat = pick(a, 'stat', BOX_STATS);
+      const sign = pick(a, 'which', ['greatest', 'least'] as const) === 'greatest' ? 1 : -1;
+      const vals = m.plots.map((b) => sign * boxStat(b, stat, boxUnit(s)));
+      const best = Math.max(...vals);
+      const hits = vals.map((v, i) => (Math.abs(v - best) < 1e-9 ? i : -1)).filter((i) => i >= 0);
+      if (hits.length !== 1) return fail(`${hits.length} box plots share that value — there is no single answer`);
+      return { kind: 'label', value: m.plots[hits[0]].label as string };
+    },
+  },
+  // polar_complex
+  pc_modulus: {
+    kinds: ['polar_complex'], args: '{ point: index }', returns: 'the distance of a plotted point from the origin (the modulus of the complex number)',
+    run: (s, a) => { const pts = planePoints(s); const q = pts[argIndex(a, 'point', pts.length, 'plotted point')]; return complexResult(q.re, q.im, 'modulus'); },
+  },
+  pc_argument: {
+    kinds: ['polar_complex'], args: '{ point: index, unit?: degrees | radians, range?: positive (0 to 360) | principal (−180 to 180) }', returns: 'the angle of a plotted point from the positive real axis / polar axis',
+    run: (s, a) => {
+      const pts = planePoints(s);
+      const q = pts[argIndex(a, 'point', pts.length, 'plotted point')];
+      if (q.r < 1e-9) return fail('the origin has no argument');
+      const principal = (a.range === undefined ? 'positive' : pick(a, 'range', ['positive', 'principal'] as const)) === 'principal';
+      const deg = principal ? q.theta : norm360(q.theta);
+      if ((a.unit === undefined ? 'degrees' : pick(a, 'unit', ['degrees', 'radians'] as const)) === 'degrees') return isMultiple(deg, 15) ? num(Math.round(deg)) : approx(deg);
+      if (!isMultiple(deg, 15)) return fail('the argument is not a multiple of 15° — it has no short form in radians');
+      return text(piText(Math.round(deg / 15), 12));
+    },
+  },
+  pc_sum: {
+    kinds: ['polar_complex'], args: '{ points: [index, index], want?: number | re | im | modulus }', returns: 'the sum of two plotted complex numbers, as "a + bi", or its real part, imaginary part or modulus',
+    run: (s, a) => { const [u, v] = twoPoints(s, a); return complexResult(u.re + v.re, u.im + v.im, a.want === undefined ? 'number' : pick(a, 'want', ['number', 're', 'im', 'modulus'] as const)); },
+  },
+  pc_product: {
+    kinds: ['polar_complex'], args: '{ points: [index, index], want?: number | re | im | modulus }', returns: 'the product of two plotted complex numbers, as "a + bi", or its real part, imaginary part or modulus',
+    run: (s, a) => { const [u, v] = twoPoints(s, a); return complexResult(u.re * v.re - u.im * v.im, u.re * v.im + u.im * v.re, a.want === undefined ? 'number' : pick(a, 'want', ['number', 're', 'im', 'modulus'] as const)); },
+  },
+  // punnett_square
+  punnett_genotype_ratio: {
+    kinds: ['punnett_square'], args: '{ genotypes: [the genotypes, in the order of the ratio] }', returns: 'the ratio of the listed genotypes among the cells, in lowest terms, e.g. "1:2:1"',
+    run: (s, a) => {
+      const m = modelOf(s, punnettModel);
+      const list = Array.isArray(a.genotypes) && a.genotypes.length >= 2 && a.genotypes.every((g) => typeof g === 'string') ? (a.genotypes as string[]) : fail('derivation argument "genotypes" must list at least two genotypes');
+      const all = m.cells.flat().map((c) => c.genotype);
+      const counts = list.map((g) => all.filter((x) => x === g).length);
+      counts.forEach((c, i) => { if (c === 0) fail(`the genotype "${list[i]}" does not occur in the square`); });
+      if (counts.reduce((t, c) => t + c, 0) !== all.length) fail('the listed genotypes do not cover every cell of the square');
+      return text(ratioText(counts));
+    },
+  },
+  punnett_phenotype_ratio: {
+    kinds: ['punnett_square'], args: '{}', returns: 'the ratio of the phenotype classes among the cells, in the order of the legend, in lowest terms, e.g. "3:1"',
+    run: (s) => {
+      const m = modelOf(s, punnettModel);
+      if (m.phenotypes.length < 2) return fail('the spec gives no phenotypes (at least two classes are needed for a ratio)');
+      const counts = m.phenotypes.map((_, k) => m.cells.flat().filter((c) => c.phenotype === k).length);
+      counts.forEach((c, k) => { if (c === 0) fail(`the phenotype "${m.phenotypes[k].label}" does not occur in the square`); });
+      return text(ratioText(counts));
+    },
+  },
+  punnett_probability: {
+    kinds: ['punnett_square'], args: '{ genotype: string } or { phenotype: label }, as?: fraction | percent', returns: 'the share of the cells with that genotype or phenotype (each cell equally likely)',
+    run: (s, a) => {
+      const m = modelOf(s, punnettModel);
+      const cells = m.cells.flat();
+      let hits: number;
+      if (typeof a.genotype === 'string') hits = cells.filter((c) => c.genotype === a.genotype).length;
+      else if (typeof a.phenotype === 'string') {
+        const k = m.phenotypes.findIndex((ph) => ph.label === a.phenotype);
+        if (k < 0) return fail(`the spec has no phenotype "${a.phenotype}"`);
+        hits = cells.filter((c) => c.phenotype === k).length;
+      } else return fail('give "genotype" or "phenotype"');
+      if (hits === 0) return fail('that class does not occur in the square');
+      const share = hits / cells.length;
+      return num((a.as === undefined ? 'fraction' : pick(a, 'as', ['fraction', 'percent'] as const)) === 'percent' ? share * 100 : share);
+    },
+  },
+  punnett_cell: {
+    kinds: ['punnett_square'], args: '{ row: index, col: index }', returns: 'the genotype of one cell (for a blank cell: what belongs under the "?")',
+    run: (s, a) => { const m = modelOf(s, punnettModel); return text(m.cells[argIndex(a, 'row', m.side.length, 'row')][argIndex(a, 'col', m.top.length, 'column')].genotype); },
+  },
+  punnett_gamete: {
+    kinds: ['punnett_square'], args: '{ edge: top | side, index: number }', returns: 'one gamete on an edge of the square (for a blank header: what belongs under the "?")',
+    run: (s, a) => { const m = modelOf(s, punnettModel); const list = pick(a, 'edge', ['top', 'side'] as const) === 'top' ? m.top : m.side; return text(list[argIndex(a, 'index', list.length, 'gamete')]); },
+  },
+  // pedigree
+  pedigree_count: {
+    kinds: ['pedigree'], args: '{ sex?: M | F, status?: affected | unaffected | carrier, generation?: number (1 = the top row) }', returns: 'how many individuals of the chart fit (an unaffected count includes carriers and leaves out a "?")',
+    run: (s, a) => {
+      const m = modelOf(s, pedigreeModel);
+      const sex = a.sex === undefined ? null : pick(a, 'sex', ['M', 'F'] as const);
+      const status = a.status === undefined ? null : pick(a, 'status', ['affected', 'unaffected', 'carrier'] as const);
+      const g = a.generation === undefined ? null : argNum(a, 'generation');
+      if (g !== null && (!Number.isInteger(g) || g < 1 || g > m.generations.length)) fail(`derivation argument "generation" must be from 1 to ${m.generations.length}`);
+      return num(m.individuals.filter((i) => (sex === null || i.sex === sex) && (g === null || i.generation === g - 1)
+        && (status === null || (status === 'affected' ? i.affected : status === 'carrier' ? i.carrier : !i.affected && !i.unknown))).length);
+    },
+  },
+  pedigree_mode_consistent: {
+    kinds: ['pedigree'], args: `{ mode: ${INHERITANCE_MODES.join(' | ')} }`, returns: 'the label "yes" or "no" — whether the chart can be explained by that mode of inheritance (full penetrance, no new mutation)',
+    run: (s, a) => yesNo(pedigreeConsistent(modelOf(s, pedigreeModel), pick(a, 'mode', INHERITANCE_MODES))),
+  },
+  pedigree_only_mode: {
+    kinds: ['pedigree'], args: '{}', returns: 'the one mode of inheritance, of autosomal dominant / autosomal recessive / X-linked dominant / X-linked recessive, that the chart fits — refused unless exactly one does',
+    run: (s) => {
+      const m = modelOf(s, pedigreeModel);
+      const ok = INHERITANCE_MODES.filter((mode) => pedigreeConsistent(m, mode));
+      if (ok.length !== 1) return fail(`${ok.length} of the four modes fit the chart${ok.length ? ` (${ok.map((k) => MODE_WORDS[k]).join(', ')})` : ''} — it does not single one out`);
+      return { kind: 'label', value: MODE_WORDS[ok[0]] };
+    },
+  },
+};
+
+function ratioText(counts: number[]): string {
+  const gcd = (x: number, y: number): number => (y === 0 ? x : gcd(y, x % y));
+  const g = counts.reduce((x, y) => gcd(x, y));
+  return counts.map((c) => c / g).join(':');
 }
 
 export const CHECKERS: Record<string, CheckerDef> = {
@@ -1392,6 +2493,7 @@ export const CHECKERS: Record<string, CheckerDef> = {
       return num(size);
     },
   },
+  ...BATCH1_CHECKERS,
 };
 
 /** Printing options of a kind that would put the result of a checker ON the figure. */
@@ -1418,8 +2520,8 @@ export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
 }
 
 /** The checker list as the writer is shown it, grouped by figure kind. */
-export function checkerCatalogue(): string {
-  return PRACTICE_FIGURE_KINDS.map((k) => {
+export function checkerCatalogue(kinds: readonly FigureKind[] = PRACTICE_FIGURE_KINDS): string {
+  return kinds.map((k) => {
     const mine = Object.entries(CHECKERS).filter(([, d]) => d.kinds.includes(k));
     return `${k}:\n${mine.map(([name, d]) => `  - ${name} ${d.args} → ${d.returns}`).join('\n')}`;
   }).join('\n');
@@ -1441,11 +2543,28 @@ const near = (a: number, b: number): boolean => Math.abs(a - b) <= 1e-6 * Math.m
 const sameSet = (a: number[], b: number[]): boolean => a.length === b.length && [...a].sort((x, y) => x - y).every((v, i) => near(v, [...b].sort((x, y) => x - y)[i]));
 const phrase = (s: string): string => ` ${(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `;
 
+/** A written exact form, made comparable: one minus sign, no spaces, one
+ *  spelling of ∞ and ∪, angle brackets as parentheses. Case is KEPT ("Aa" is
+ *  not "aa"); signs and the kind of bracket are kept ("(−3, 4]" is not "[−3, 4)"). */
+export function canonText(s: string): string {
+  const t = (s ?? '').replace(/[−–—]/g, '-').replace(/\s+/g, '').replace(/[⟨<]/g, '(').replace(/[⟩>]/g, ')')
+    .replace(/infinity|inf|oo/gi, '∞').replace(/(?<=[\])}])[Uu](?=[(\[{])/g, '∪').replace(/\.$/, '');
+  return /^undefined$/i.test(t) ? 'undefined' : t;
+}
+
 /** Does a written answer state the derived value? null = the text cannot be compared. */
 function states(text: string, d: Derived): boolean | null {
   if (d.kind === 'label') return phrase(text).includes(phrase(d.value));
+  if (d.kind === 'text') return canonText(text) === canonText(d.value);
   const nums = numbersIn(text);
   if (nums.length === 0) return null;
+  if (d.kind === 'number' && d.approx) {
+    // One decimal number: right when it is the value rounded to its own decimals (at least one).
+    const m = /^[^\d-]*(-?\d+(?:\.(\d+))?)[^\d]*$/.exec((text ?? '').replace(/[−–]/g, '-'));
+    if (!m) return null;
+    const decimals = m[2] ? m[2].length : 0;
+    return decimals === 0 ? near(Number(m[1]), d.value) : Math.abs(Number(m[1]) - d.value) <= 0.5 * 10 ** -decimals + 1e-9;
+  }
   if (d.kind === 'number') return nums.length === 1 ? near(nums[0], d.value) : null;
   return sameSet(nums, d.values);
 }

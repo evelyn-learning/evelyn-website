@@ -484,3 +484,350 @@ export const FIGURE_FIXTURES: FigureFixture[] = [
     },
   },
 ];
+
+/**
+ * Batch 1 (2026-10-09) — three per new kind: one simple, one dense or
+ * awkward, one with a blank "?" (its id contains "blank"). A note that says
+ * "warns" marks a fixture kept to show a legibility warning.
+ */
+export const BATCH1_FIXTURES: FigureFixture[] = [
+  // --- unit_circle ----------------------------------------------------------
+  {
+    id: 'unit-circle-one-angle',
+    note: 'one angle in degrees with its radius, arc and reference triangle; no coordinates',
+    question: 'The terminal side of the angle shown meets the unit circle at P. What is the reference angle?',
+    alt: 'A unit circle on x and y axes with one radius drawn into the second quadrant, an arc from the positive x-axis marking the angle, and a dashed vertical from the point to the x-axis.',
+    spec: { type: 'unit_circle', params: { angles: [{ degrees: 150, arc: true, triangle: true, name: 'P' }] } },
+  },
+  {
+    id: 'unit-circle-dense-radians',
+    note: 'eight angles in radians, every point with exact coordinates, quadrant names',
+    question: 'Use the unit circle to find sin(5π/4).',
+    alt: 'A unit circle with eight marked points, one every 45 degrees, each labelled with its angle in radians and its exact coordinates; the four quadrants are numbered.',
+    spec: { type: 'unit_circle', params: { quadrantLabels: true, angles: [0, 1, 2, 3, 4, 5, 6, 7].map((k) => ({ pi: [k, 4], coords: 'show' })) } },
+  },
+  {
+    id: 'unit-circle-blank-coordinate',
+    note: 'the y-coordinate of one point is the blank; a second point is complete',
+    question: 'The point at 7π/6 is shown with its y-coordinate missing. What is the missing value?',
+    alt: 'A unit circle with two marked points: one in the first quadrant with both coordinates printed, and one in the third quadrant whose y-coordinate is replaced by a question mark.',
+    spec: { type: 'unit_circle', params: { angles: [{ pi: [1, 3], coords: 'show' }, { pi: [7, 6], coords: 'blank_y', arc: true }] } },
+  },
+  // --- vector_diagram -------------------------------------------------------
+  {
+    id: 'vector-two-from-origin',
+    note: 'two labelled vectors from the origin on an integer grid',
+    question: 'What are the components of vector b?',
+    alt: 'A coordinate grid with two arrows from the origin, labelled a and b, one pointing up and to the right and one pointing down and to the right.',
+    spec: { type: 'vector_diagram', params: { xRange: [-1, 7], yRange: [-3, 5], vectors: [{ head: [3, 4], label: 'a' }, { head: [5, -2], label: 'b' }] } },
+  },
+  {
+    id: 'vector-tip-to-tail-resultant',
+    note: 'three vectors tip to tail with component dashes on one and the resultant drawn',
+    question: 'The three displacements are added tip to tail. What is the magnitude of the resultant R?',
+    alt: 'A coordinate grid with three arrows joined tip to tail and a heavier arrow from the start of the first to the end of the last, labelled R.',
+    spec: { type: 'vector_diagram', params: { xRange: [-1, 9], yRange: [-1, 8], tipToTail: true, resultant: true, vectors: [{ components: [4, 1], label: 'u', showComponents: true }, { components: [1, 4], label: 'v' }, { components: [3, -2], label: 'w' }] } },
+  },
+  {
+    id: 'vector-blank-resultant-label',
+    note: 'two forces by magnitude and direction; the resultant is drawn but its label is "?"',
+    question: 'Forces F₁ and F₂ act at the origin. What are the components of the resultant marked "?"',
+    alt: 'A coordinate grid in newtons with two arrows from the origin labelled F1 and F2 and a third heavier arrow labelled with a question mark.',
+    spec: { type: 'vector_diagram', params: { xRange: [-6, 6], yRange: [-2, 8], xLabel: 'x (N)', yLabel: 'y (N)', resultant: { label: '?' }, vectors: [{ magnitude: 5, direction: 90, label: 'F₁' }, { head: [-4, 2], label: 'F₂' }] } },
+  },
+  // --- free_body_diagram_v2 -------------------------------------------------
+  {
+    id: 'fbd2-four-forces-to-scale',
+    note: 'four forces with sizes; arrow lengths proportional',
+    question: 'What is the net horizontal force on the crate?',
+    alt: 'A free-body diagram of a crate on level ground with four labelled force arrows pointing up, down, right and left, each with its size in newtons.',
+    spec: { type: 'free_body_diagram_v2', params: { object: { shape: 'box', label: 'crate' }, surface: true, forces: [{ label: 'N', direction: 'up', magnitude: 60 }, { label: 'W', direction: 'down', magnitude: 60 }, { label: 'F', direction: 'right', magnitude: 45 }, { label: 'f', direction: 'left', magnitude: 20 }] } },
+  },
+  {
+    id: 'fbd2-six-forces-incline',
+    note: 'six forces on a 25° incline, long names, an angled rope with its angle arc, tilted axes; equal lengths',
+    question: 'Which forces have a component along the incline?',
+    alt: 'A free-body diagram of a block on a ramp inclined at 25 degrees with six labelled force arrows, one of them a rope pulling up and to the right, and a small pair of axes tilted along the ramp.',
+    spec: {
+      type: 'free_body_diagram_v2',
+      params: {
+        object: { shape: 'block' }, incline: { angle: 25 }, axes: 'incline', lengths: 'equal',
+        forces: [
+          { label: 'Normal', direction: 'normal' }, { label: 'Weight', direction: 'down' }, { label: 'Friction', direction: 'down-slope' },
+          { label: 'Push', direction: 'up-slope' }, { label: 'Rope tension', direction: 70, showAngle: true, angleFrom: 'horizontal' }, { label: 'Drag', direction: 180 },
+        ],
+      },
+    },
+  },
+  {
+    id: 'fbd2-blank-missing-force',
+    note: 'a hanging mass in equilibrium: one force is the blank; equal lengths so the picture does not give it away',
+    question: 'The sign hangs at rest. What is the size of the force marked "?"',
+    alt: 'A free-body diagram of a dot with three force arrows: two pointing up and outward at angles, one labelled with its size and one with a question mark, and one pointing straight down labelled with its size.',
+    spec: {
+      type: 'free_body_diagram_v2',
+      params: {
+        object: { shape: 'dot', label: 'sign' }, lengths: 'equal',
+        forces: [{ label: 'T₁', direction: 30, magnitude: 80, showAngle: true }, { label: '?', direction: 150, showAngle: true }, { label: 'W', direction: 'down', magnitude: 80 }],
+      },
+    },
+  },
+  // --- shaded_region --------------------------------------------------------
+  {
+    id: 'shaded-under-line',
+    note: 'area under a straight line between two bounds, integer vertices',
+    question: 'What is the area of the shaded region?',
+    alt: 'A coordinate grid with a rising straight line and the region between the line and the x-axis hatched from x = 1 to x = 5.',
+    spec: { type: 'shaded_region', params: { xRange: [-1, 7], yRange: [-1, 7], region: { type: 'under_curve', expr: '0.5*x + 2', from: 1, to: 5 } } },
+  },
+  {
+    id: 'shaded-between-parabola-line',
+    note: 'region between a parabola and a line, both labelled, intersections marked',
+    question: 'The shaded region is bounded by f and g. Between which x-values does it lie?',
+    alt: 'A coordinate grid with a downward-opening parabola and a rising straight line that cross at two marked points; the region between them is hatched.',
+    spec: { type: 'shaded_region', params: { xRange: [-4, 4], yRange: [-4, 6], region: { type: 'between_curves', upper: { expr: '4 - x^2', label: 'f' }, lower: { expr: 'x + 2', label: 'g' }, from: -2, to: 1, markIntersections: true } } },
+  },
+  {
+    id: 'shaded-inequalities-blank-label',
+    note: 'four linear inequalities (one strict, dashed); corner points marked, open on the dashed line; the legend names three of them and leaves one as "?"',
+    question: 'Three of the four inequalities of the system are named in the key. Which inequality is the one marked "?"',
+    alt: 'A coordinate grid with four boundary lines, one of them dashed, and the hatched region they enclose; its corner points are marked and a key names three of the lines.',
+    spec: {
+      type: 'shaded_region',
+      params: {
+        xRange: [-1, 9], yRange: [-1, 9],
+        region: { type: 'inequalities', markVertices: true, inequalities: [{ a: 1, b: 1, op: '<=', c: 8, label: 'x + y ≤ 8' }, { a: 1, b: -1, op: '<', c: 2, label: '?' }, { a: 1, b: 0, op: '>=', c: 0, label: 'x ≥ 0' }, { a: 0, b: 1, op: '>=', c: 1, label: 'y ≥ 1' }] },
+      },
+    },
+  },
+  // --- number_line ----------------------------------------------------------
+  {
+    id: 'numberline-compound-inequality',
+    note: 'one bounded interval, open on the left and closed on the right',
+    question: 'Which inequality has the solution set shown?',
+    alt: 'A number line from −6 to 6 with a thick segment from −3 to 4, an open circle at −3 and a filled circle at 4.',
+    spec: { type: 'number_line', params: { min: -6, max: 6, step: 1, intervals: [{ from: -3, to: 4, fromOpen: true }] } },
+  },
+  {
+    id: 'numberline-fractions-rays-points',
+    note: 'quarter ticks labelled as fractions, a ray each way, an isolated point with a label',
+    question: 'Write the set shown in interval notation.',
+    alt: 'A number line from −1 to 2 with ticks every quarter labelled as fractions, a ray to the left ending in a filled circle, a ray to the right starting at an open circle, and one labelled point between them.',
+    spec: { type: 'number_line', params: { min: -1, max: 2, denominator: 4, intervals: [{ from: null, to: -0.5 }, { from: 1.25, to: null, fromOpen: true }], points: [{ x: 0.5, label: 'P' }] } },
+  },
+  {
+    id: 'numberline-blank-unlabelled-ticks',
+    note: 'only two ticks are numbered; the marked point is the blank',
+    question: 'What number is at the point marked "?"',
+    alt: 'A number line with evenly spaced ticks of which only 0 and 1 are numbered, and one marked point to the left of 0 labelled with a question mark.',
+    spec: { type: 'number_line', params: { min: -1, max: 2, step: 1, minorStep: 0.2, labelOnly: [0, 1], points: [{ x: -0.6, label: '?' }] } },
+  },
+  // --- sign_chart -----------------------------------------------------------
+  {
+    id: 'signchart-first-derivative',
+    note: 'one row, two critical numbers',
+    question: 'The sign chart of f′ is shown. At which x does f have a local minimum?',
+    alt: 'A sign chart with one row for the first derivative: positive, then negative, then positive across two critical numbers where it is zero.',
+    spec: { type: 'sign_chart', params: { critical: [-2, 3], rows: [{ label: 'f′(x)', signs: ['+', '-', '+'], at: ['0', '0'] }] } },
+  },
+  {
+    id: 'signchart-three-rows-five-critical',
+    note: 'three rows, five critical numbers including a fraction label and an undefined value',
+    question: 'On which interval is f both decreasing and concave up?',
+    alt: 'A sign chart with rows for f, its first derivative and its second derivative across five critical numbers, with zeros and one undefined value marked.',
+    spec: {
+      type: 'sign_chart',
+      params: {
+        critical: [-3, -1, { value: 0.5, label: '1/2' }, 2, 4],
+        rows: [
+          { label: 'f(x)', signs: ['-', '+', '+', '-', '-', '+'], at: ['0', '', 'und', '0', '0'] },
+          { label: 'f′(x)', signs: ['+', '+', '-', '-', '+', '+'], at: ['', '0', 'und', '', '0'] },
+          { label: 'f″(x)', signs: ['-', '-', '-', '+', '+', '+'], at: ['', '', 'und', '0', ''] },
+        ],
+      },
+    },
+  },
+  {
+    id: 'signchart-blank-cell',
+    note: 'two rows; one sign and one value at a critical number are the blanks',
+    question: 'f′ changes sign at x = 1 as shown. What sign belongs in the blank cell of the f′ row?',
+    alt: 'A sign chart with rows for the first and second derivative across three critical numbers; one cell of the first-derivative row and one value at a critical number are replaced by question marks.',
+    spec: { type: 'sign_chart', params: { critical: [-2, 1, 5], rows: [{ label: 'f′(x)', signs: ['-', '+', '-', '+'], at: ['0', '0', '0'], blankSigns: [2] }, { label: 'f″(x)', signs: ['+', '-', '-', '+'], at: ['', 'und', '0'], blankAt: [1] }] } },
+  },
+  // --- distribution_curve ---------------------------------------------------
+  {
+    id: 'normal-z-between',
+    note: 'standard normal, z axis, shaded between −1 and 2; no area printed',
+    question: 'About what proportion of the distribution is shaded? Use the 68–95–99.7 rule.',
+    alt: 'A bell curve over a z axis from −3 to 3 with the region between z = −1 and z = 2 hatched.',
+    spec: { type: 'distribution_curve', params: { axis: 'z', shade: [{ from: -1, to: 2 }], xLabel: 'z' } },
+  },
+  {
+    id: 'normal-x-two-tails-area',
+    note: 'x axis with mean 500 and σ 100, both tails shaded at non-tick bounds, areas printed',
+    question: 'What total proportion of scores lies in the two shaded tails?',
+    alt: 'A bell curve over an axis of test scores centred on 500 with both tails hatched, the left below 350 and the right above 650, each with its area printed.',
+    spec: { type: 'distribution_curve', params: { mean: 500, sd: 100, shade: [{ from: null, to: 350 }, { from: 650, to: null }], showArea: true, xLabel: 'Test score', title: 'SAT section scores' } },
+  },
+  {
+    id: 'normal-blank-bound',
+    note: 'no numbers on the axis (σ ticks only); the right-tail bound is the blank "?"',
+    question: 'The shaded right tail holds 2.5 % of the distribution. What value belongs at the "?"',
+    alt: 'A bell curve over an axis with a tick at every standard deviation and no numbers, with the right tail hatched from a bound marked with a question mark.',
+    spec: { type: 'distribution_curve', params: { mean: 70, sd: 5, axis: 'none', shade: [{ from: 79.8, to: null, label: '?' }], xLabel: 'Height (in), mean 70, σ = 5' } },
+  },
+  // --- histogram ------------------------------------------------------------
+  {
+    id: 'histogram-masses',
+    note: 'five bins, labelled axes, no counts printed',
+    question: 'How many apples have a mass of at least 120 g?',
+    alt: 'A histogram of apple masses in five classes of width 10 grams from 100 to 150, with frequencies read from the vertical axis.',
+    spec: { type: 'histogram', params: { binStart: 100, binWidth: 10, counts: [3, 7, 12, 6, 2], xLabel: 'Mass (g)', yLabel: 'Number of apples' } },
+  },
+  {
+    id: 'histogram-dense-decimals',
+    note: 'fourteen bins of width 0.5, an empty bin, long axis labels, a title',
+    question: 'Which class is the modal class?',
+    alt: 'A histogram of reaction times with fourteen classes of width half a second, one of them empty.',
+    spec: { type: 'histogram', params: { title: 'Reaction times of 120 volunteers', binStart: 0, binWidth: 0.5, counts: [1, 4, 9, 15, 22, 19, 16, 12, 9, 0, 6, 4, 2, 1], xLabel: 'Reaction time (seconds)', yLabel: 'Number of volunteers' } },
+  },
+  {
+    id: 'histogram-blank-bin',
+    note: 'counts printed above the bars; one bin is the blank "?" (the total is in the question)',
+    question: 'The 20 students of a class took a quiz. How many scored at least 10 but less than 15?',
+    alt: 'A histogram of quiz scores in four classes of width 5 with the count printed above three bars and a question mark in place of the third bar.',
+    spec: { type: 'histogram', params: { binStart: 0, binWidth: 5, counts: [2, 5, 9, 4], showCounts: true, blankBins: [2], xLabel: 'Score', yLabel: 'Number of students' } },
+  },
+  // --- box_plot -------------------------------------------------------------
+  {
+    id: 'boxplot-single',
+    note: 'one box plot on a numbered axis',
+    question: 'What is the interquartile range of the data?',
+    alt: 'A box plot over a number line from 0 to 40 with whiskers, a box and a median line.',
+    spec: { type: 'box_plot', params: { plots: [{ min: 4, q1: 12, median: 18, q3: 26, max: 36 }], range: [0, 40], step: 4, xLabel: 'Minutes' } },
+  },
+  {
+    id: 'boxplot-four-stacked-outliers',
+    note: 'four stacked box plots with long labels and outliers on both sides',
+    question: 'Which class has the greatest median score?',
+    alt: 'Four box plots stacked over one axis of scores from 20 to 100, labelled by class, two of them with outlier dots.',
+    spec: {
+      type: 'box_plot',
+      params: {
+        range: [20, 100], step: 10, xLabel: 'Score (%)',
+        plots: [
+          { label: 'Period 1', min: 45, q1: 60, median: 70, q3: 80, max: 95, outliers: [25] },
+          { label: 'Period 2', min: 40, q1: 55, median: 65, q3: 70, max: 85 },
+          { label: 'Period 3', min: 50, q1: 65, median: 75, q3: 85, max: 90, outliers: [30, 35] },
+          { label: 'Period 4', min: 35, q1: 50, median: 60, q3: 75, max: 90 },
+        ],
+      },
+    },
+  },
+  {
+    id: 'boxplot-blank-compare-two',
+    note: 'two box plots; one label is the blank "?" (the question asks which data set it is)',
+    question: 'One box plot shows City A. Which city could the plot marked "?" show: one with a median daily high of 55, 60 or 70 °F?',
+    alt: 'Two box plots over one axis of temperatures from 40 to 90, one labelled City A and one labelled with a question mark.',
+    spec: { type: 'box_plot', params: { range: [40, 90], step: 10, xLabel: 'Daily high (°F)', plots: [{ label: 'City A', min: 45, q1: 55, median: 60, q3: 70, max: 85 }, { label: '?', min: 50, q1: 65, median: 70, q3: 75, max: 80 }] } },
+  },
+  // --- polar_complex --------------------------------------------------------
+  {
+    id: 'complex-two-points',
+    note: 'complex plane with two labelled numbers',
+    question: 'What is z + w?',
+    alt: 'A complex plane with real and imaginary axes from −6 to 6 and two labelled points, z in the first quadrant and w in the second.',
+    spec: { type: 'polar_complex', params: { plane: 'complex', range: 6, points: [{ re: 3, im: 4, label: 'z' }, { re: -2, im: 1, label: 'w' }] } },
+  },
+  {
+    id: 'polar-rose-dense-grid',
+    note: 'polar grid with rays every 15° (labelled every 30°), a four-petal rose and two points',
+    question: 'The graph of a polar curve is shown. What is the greatest value of r on the curve?',
+    alt: 'A polar grid with circles at r = 1 to 4 and rays every 15 degrees, a four-petalled rose curve, and two labelled points.',
+    spec: { type: 'polar_complex', params: { plane: 'polar', rMax: 4, angleStep: 15, curve: { expr: '4*cos(2*theta)' }, points: [{ r: 2, theta: 60, label: 'A' }, { r: 3, theta: 225, label: 'B' }] } },
+  },
+  {
+    id: 'complex-blank-modulus-argument',
+    note: 'modulus segment, argument arc labelled θ, dashed projections; the point label is the blank',
+    question: 'The complex number marked "?" is shown with its modulus and argument θ. What is its modulus?',
+    alt: 'A complex plane with one point in the second quadrant joined to the origin, an arc from the positive real axis labelled theta, dashed lines to both axes, and a question mark as the point label.',
+    spec: { type: 'polar_complex', params: { plane: 'complex', range: 6, points: [{ re: -3, im: 4, label: '?', showModulus: true, showArgument: true, argumentLabel: 'θ', projections: true }] } },
+  },
+  // --- punnett_square -------------------------------------------------------
+  {
+    id: 'punnett-monohybrid',
+    note: '2 × 2 cross with parent labels',
+    question: 'What fraction of the offspring are expected to be heterozygous?',
+    alt: 'A two-by-two Punnett square for a cross of two heterozygous parents, with the gametes A and a along the top and the side.',
+    spec: { type: 'punnett_square', params: { top: ['A', 'a'], side: ['A', 'a'], topLabel: 'Father (Aa)', sideLabel: 'Mother (Aa)' } },
+  },
+  {
+    id: 'punnett-dihybrid-phenotypes',
+    note: '4 × 4 dihybrid cross with four phenotype classes hatched and a legend',
+    question: 'What is the expected phenotype ratio of the offspring?',
+    alt: 'A four-by-four Punnett square for a dihybrid cross with sixteen genotypes, hatched in four styles by phenotype with a legend.',
+    spec: {
+      type: 'punnett_square',
+      params: {
+        top: ['RY', 'Ry', 'rY', 'ry'], side: ['RY', 'Ry', 'rY', 'ry'], topLabel: 'RrYy', sideLabel: 'RrYy',
+        phenotypes: [
+          { label: 'round, yellow', genotypes: ['RRYY', 'RRYy', 'RrYY', 'RrYy'] }, { label: 'round, green', genotypes: ['RRyy', 'Rryy'] },
+          { label: 'wrinkled, yellow', genotypes: ['rrYY', 'rrYy'] }, { label: 'wrinkled, green', genotypes: ['rryy'] },
+        ],
+      },
+    },
+  },
+  {
+    id: 'punnett-blank-gamete-and-cell',
+    note: 'X-linked cross with explicit cells; one gamete header and one cell are blanks',
+    question: 'What genotype belongs in the blank cell of the Punnett square?',
+    alt: 'A two-by-two Punnett square for an X-linked cross in which one gamete on the top edge and one cell are replaced by question marks.',
+    spec: { type: 'punnett_square', params: { top: ['Xᴬ', 'Y'], side: ['Xᴬ', 'Xᵃ'], cells: [['XᴬXᴬ', 'XᴬY'], ['XᴬXᵃ', 'XᵃY']], blankTop: [1], blankCells: [[1, 1]], topLabel: 'Father', sideLabel: 'Mother' } },
+  },
+  // --- pedigree -------------------------------------------------------------
+  {
+    id: 'pedigree-two-generations',
+    note: 'two unaffected parents with three children, one affected',
+    question: 'Individual II-3 is affected and neither parent is. Is the trait more likely dominant or recessive?',
+    alt: 'A two-generation pedigree: an unaffected couple with three children, the third of whom, a daughter, is affected.',
+    spec: { type: 'pedigree', params: { individuals: [{ id: 'f', sex: 'M' }, { id: 'm', sex: 'F' }, { id: 'c1', sex: 'M', father: 'f', mother: 'm' }, { id: 'c2', sex: 'F', father: 'f', mother: 'm' }, { id: 'c3', sex: 'F', father: 'f', mother: 'm', affected: true }] } },
+  },
+  {
+    id: 'pedigree-three-generations-14',
+    note: 'three generations, fourteen individuals, two married-in partners, carriers shown',
+    question: 'The pedigree shows an X-linked recessive trait. What is the probability that a son of III-2 is affected?',
+    alt: 'A three-generation pedigree of fourteen individuals with affected males in every generation and three females marked as carriers.',
+    spec: {
+      type: 'pedigree',
+      params: {
+        individuals: [
+          { id: 'g1', sex: 'M', affected: true }, { id: 'g2', sex: 'F' },
+          { id: 'a', sex: 'F', father: 'g1', mother: 'g2', carrier: true }, { id: 'ah', sex: 'M' },
+          { id: 'b', sex: 'M', father: 'g1', mother: 'g2' },
+          { id: 'c', sex: 'F', father: 'g1', mother: 'g2', carrier: true }, { id: 'ch', sex: 'M' },
+          { id: 'a1', sex: 'M', father: 'ah', mother: 'a', affected: true }, { id: 'a2', sex: 'F', father: 'ah', mother: 'a', carrier: true }, { id: 'a3', sex: 'M', father: 'ah', mother: 'a' },
+          { id: 'c1', sex: 'F', father: 'ch', mother: 'c' }, { id: 'c2', sex: 'M', father: 'ch', mother: 'c', affected: true }, { id: 'c3', sex: 'M', father: 'ch', mother: 'c' }, { id: 'c4', sex: 'F', father: 'ch', mother: 'c' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'pedigree-blank-unknown-individual',
+    note: 'two families joined by a marriage in generation II; the status of one grandchild is the blank "?"',
+    question: 'The trait is autosomal recessive. What is the probability that individual III-2 is affected?',
+    alt: 'A three-generation pedigree in which two sets of grandparents each have children, one child from each family marry, and one of their three children is drawn with a question mark.',
+    spec: {
+      type: 'pedigree',
+      params: {
+        individuals: [
+          { id: 'p1', sex: 'M' }, { id: 'p2', sex: 'F', affected: true }, { id: 'q1', sex: 'M', affected: true }, { id: 'q2', sex: 'F' },
+          { id: 'x1', sex: 'F', father: 'p1', mother: 'p2' }, { id: 'x2', sex: 'M', father: 'p1', mother: 'p2' },
+          { id: 'y1', sex: 'F', father: 'q1', mother: 'q2' }, { id: 'y2', sex: 'M', father: 'q1', mother: 'q2' },
+          { id: 'k1', sex: 'F', father: 'x2', mother: 'y1', affected: true }, { id: 'k2', sex: 'M', father: 'x2', mother: 'y1', unknown: true }, { id: 'k3', sex: 'F', father: 'x2', mother: 'y1' },
+        ],
+      },
+    },
+  },
+];
+
+FIGURE_FIXTURES.push(...BATCH1_FIXTURES);
