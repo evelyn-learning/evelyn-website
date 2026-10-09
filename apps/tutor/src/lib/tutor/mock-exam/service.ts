@@ -42,6 +42,7 @@ import { connectDB } from '@core/db';
 import { MockForm } from '@/models/MockForm';
 import { MockAttempt, type IMockAttempt } from '@/models/MockAttempt';
 import { ProblemBank } from '@/models/ProblemBank';
+import { withoutFigureItems } from '@/lib/tutor/portal/figure-items';
 import { getBlueprint } from './blueprints';
 import type { ExamBlueprint } from './blueprints';
 import type { SeedableItem } from './fixtures';
@@ -203,10 +204,20 @@ export function mongoMockStores(): MockStores {
     async getItems(itemIds) {
       await connectDB();
       const docs = await ProblemBank.find({ id: { $in: itemIds } }).lean();
-      const byId = new Map((docs as unknown as SeedableItem[]).map((d) => [d.id, d]));
+      // A figure item (portal/figure-items.ts) is never part of a mock form:
+      // the section payload has no figure. Dropped here — the one place the
+      // mock flow reads the bank — so serving, routing, scoring and the
+      // report all see the same items (an absent id is already tolerated).
+      const byId = new Map(mockFormRows(docs as unknown as SeedableItem[]).map((d) => [d.id, d]));
       return itemIds.map((id) => byId.get(id)).filter((it): it is SeedableItem => !!it);
     },
   };
+}
+
+/** The bank rows a mock form may use: every row but figure items. Pure
+ *  apart from the skip log line. */
+export function mockFormRows<T extends { id: string }>(rows: readonly T[]): T[] {
+  return withoutFigureItems(rows, 'mock-form');
 }
 
 // --- memoryMockStores: Maps + structuredClone on read/write, for tests + fixture ---

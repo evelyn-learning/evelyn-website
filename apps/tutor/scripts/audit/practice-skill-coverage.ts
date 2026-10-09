@@ -26,6 +26,9 @@
  *                  lesson steps from objectives 2..N.
  * --skills <file>  restrict to these skill LO ids: a JSON array of strings or
  *                  of objects carrying `loId` (course nodes) or `skillLo`.
+ * --no-figures     report as a TEXT-ONLY caller: figure items are left out.
+ *                  Default: figure items are counted, as a caller that
+ *                  accepts figures (`accepts: ['figure']`) is served them.
  * --json           print the full report as JSON (item ids included).
  * --zero-only      list only the skills that have an objective with no item.
  *
@@ -62,7 +65,7 @@ async function main(): Promise<void> {
   const positional = argv.filter((a, i) => !a.startsWith('--') && !valueFlags.has(argv[i - 1] ?? ''));
   const plansPath = flag('--plans');
   if (!positional[0] && !plansPath) {
-    console.error('usage: npx tsx scripts/audit/practice-skill-coverage.ts <dump.json> | --plans <file> [--bank <file>]  [--partner <id>] [--audited-only] [--skills <file>] [--json] [--zero-only]');
+    console.error('usage: npx tsx scripts/audit/practice-skill-coverage.ts <dump.json> | --plans <file> [--bank <file>]  [--partner <id>] [--audited-only] [--skills <file>] [--no-figures] [--json] [--zero-only]');
     process.exit(2);
   }
   let plans: unknown[];
@@ -86,10 +89,11 @@ async function main(): Promise<void> {
     : undefined;
   const partnerId = flag('--partner');
   const auditedOnly = argv.includes('--audited-only');
+  const figures = !argv.includes('--no-figures');
 
-  const rows = await skillCoverage({ plans, bank }, { partnerId, auditedOnly, skillLoIds });
+  const rows = await skillCoverage({ plans, bank }, { partnerId, auditedOnly, skillLoIds, figures });
   if (argv.includes('--json')) {
-    console.log(JSON.stringify({ partnerId: partnerId ?? null, auditedOnly, summary: summarizeCoverage(rows), skills: rows }, null, 2));
+    console.log(JSON.stringify({ partnerId: partnerId ?? null, auditedOnly, figures: figures ? 'counted (caller accepts figures)' : 'excluded (text-only caller)', summary: summarizeCoverage(rows), skills: rows }, null, 2));
     return;
   }
   const shown = argv.includes('--zero-only') ? rows.filter((r) => r.zeroObjectives.length > 0) : rows;
@@ -97,12 +101,15 @@ async function main(): Promise<void> {
     console.log(`${r.skillLoId}  ${r.title ?? ''}${r.partnerId ? `  [${r.partnerId}]` : ''}`);
     console.log(`  objectives=${r.objectives.length} servable=${r.servable} zero=${r.zeroObjectives.length}`);
     r.objectives.forEach((o, i) => {
-      console.log(`  ${o.servable === 0 ? '!' : ' '} lo-${i + 1}  servable=${o.servable} (steps ${o.servableSteps}/${o.authoredSteps}, bank ${o.servableBank})  ${o.description ?? o.loId}`);
+      console.log(`  ${o.servable === 0 ? '!' : ' '} lo-${i + 1}  servable=${o.servable} (steps ${o.servableSteps}/${o.authoredSteps}, bank ${o.servableBank}${o.servableFigures > 0 ? `, of which ${o.servableFigures} with a figure` : ''})  ${o.description ?? o.loId}`);
     });
   }
   const s = summarizeCoverage(rows);
   console.log(`\n${plans.length} plans, ${bank.length} bank rows read; partner=${partnerId ?? '(each plan\'s own)'} audited-only=${auditedOnly ? 'yes' : 'no'} skill-scope=${(process.env.TUTOR_PRACTICE_SKILL_SCOPE ?? '').trim().toLowerCase() === 'off' ? 'OFF' : 'on'}`);
-  console.log(`skills=${s.skills} objectives=${s.objectives} servable_items=${s.servable}`);
+  console.log(figures
+    ? `figure items: COUNTED — as a caller that accepts figures (accepts: ['figure']); a text-only caller gets ${s.servableFigures} fewer (--no-figures to see that view)`
+    : 'figure items: EXCLUDED — as a text-only caller (no `accepts`); drop --no-figures to count them');
+  console.log(`skills=${s.skills} objectives=${s.objectives} servable_items=${s.servable} with_figure=${s.servableFigures}`);
   console.log(`objectives_with_zero=${s.objectivesWithZero} skills_with_a_zero_objective=${s.skillsWithAZeroObjective} skills_with_nothing=${s.skillsWithNothing}`);
   if (skillLoIds) {
     const found = new Set(rows.map((r) => r.skillLoId));

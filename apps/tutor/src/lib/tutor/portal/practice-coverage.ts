@@ -15,6 +15,11 @@
  * Not modelled: the production bank query's 50-row limit per LO, and a
  * difficulty filter (coverage counts every difficulty).
  *
+ * Figure items (figure-items.ts) are counted by default — the report reads as
+ * a caller that ACCEPTS figures would be served (`accepts: ['figure']`), each
+ * figure passing the same safety check as on the wire. `figures: false`
+ * reports what a text-only caller gets: every figure item is left out.
+ *
  * `auditedOnly` reports what a partner on PRACTICE_GEN_AUDITED_ONLY_PARTNERS
  * would be served: the switch is set to the caller's partner for the duration
  * of the call and restored afterwards (and cleared for the call when
@@ -49,6 +54,9 @@ export interface CoverageOptions {
   auditedOnly?: boolean;
   /** Restrict the report to these skill LO ids (the course nodes' `loId`). */
   skillLoIds?: readonly string[];
+  /** Count figure items, as a caller that accepts figures is served them
+   *  (default true). `false` ⇒ as a text-only caller: none. */
+  figures?: boolean;
 }
 
 export interface ObjectiveCoverage {
@@ -60,6 +68,8 @@ export interface ObjectiveCoverage {
   servable: number;
   servableSteps: number;
   servableBank: number;
+  /** Of `servable`, the items that carry a figure (0 when `figures: false`). */
+  servableFigures: number;
   itemIds: string[];
 }
 
@@ -70,6 +80,8 @@ export interface SkillCoverage {
   partnerId?: string;
   objectives: ObjectiveCoverage[];
   servable: number;
+  /** Of `servable`, the items that carry a figure. */
+  servableFigures: number;
   /** LO ids of the objectives with zero servable items. */
   zeroObjectives: string[];
 }
@@ -137,6 +149,8 @@ function bankLiteFromDoc(doc: unknown): BankLite | null {
     ...(diff === 1 || diff === 2 || diff === 3 || diff === 4 ? { difficulty: diff } : {}),
     ...(str(d.loId) ? { loId: d.loId as string } : {}),
     ...(str(d.cedCode) ? { cedCode: d.cedCode as string } : {}),
+    // As stored, any shape — the retrieval core gates and validates it.
+    ...(d.figure !== undefined ? { figure: d.figure } : {}),
   };
 }
 
@@ -151,6 +165,7 @@ export async function skillCoverage(input: CoverageInput, opts: CoverageOptions 
     bankForLoId: async (loId) => bank.filter((b) => b.loId === loId),
     bankForTopic: async () => [],
   };
+  const figures = opts.figures !== false;
   const only = opts.skillLoIds ? new Set(opts.skillLoIds) : null;
   const out: SkillCoverage[] = [];
   const savedEnv = process.env[AUDITED_ONLY_PARTNERS_ENV];
@@ -169,10 +184,11 @@ export async function skillCoverage(input: CoverageInput, opts: CoverageOptions 
         delete process.env[AUDITED_ONLY_PARTNERS_ENV];
       }
       const res = await retrievePractice(
-        { studentId: 'coverage', courseId: 'coverage', scope: { loId: skillLoId }, count: 100_000 },
+        { studentId: 'coverage', courseId: 'coverage', scope: { loId: skillLoId }, count: 100_000, ...(figures ? { accepts: ['figure' as const] } : {}) },
         sources,
         NO_GEN_SOURCES,
         partnerId ? { partnerId } : undefined,
+        { allowFigures: figures },
       );
       const objectiveIds = [...new Set(plan.los.map((l) => l.id))];
       const byObjective = new Map<string, PracticeItem[]>(objectiveIds.map((o) => [o, []]));
@@ -194,6 +210,7 @@ export async function skillCoverage(input: CoverageInput, opts: CoverageOptions 
           servable: items.length,
           servableSteps: steps,
           servableBank: items.length - steps,
+          servableFigures: items.filter((it) => it.figure !== undefined).length,
           itemIds: items.map((it) => it.id),
         };
       });
@@ -204,6 +221,7 @@ export async function skillCoverage(input: CoverageInput, opts: CoverageOptions 
         ...(partnerId ? { partnerId } : {}),
         objectives,
         servable: res.items.length,
+        servableFigures: res.items.filter((it) => it.figure !== undefined).length,
         zeroObjectives: objectives.filter((o) => o.servable === 0).map((o) => o.loId),
       });
     }
@@ -220,6 +238,7 @@ export function summarizeCoverage(rows: readonly SkillCoverage[]): {
   skills: number;
   objectives: number;
   servable: number;
+  servableFigures: number;
   objectivesWithZero: number;
   skillsWithAZeroObjective: number;
   skillsWithNothing: number;
@@ -228,6 +247,7 @@ export function summarizeCoverage(rows: readonly SkillCoverage[]): {
     skills: rows.length,
     objectives: rows.reduce((n, r) => n + r.objectives.length, 0),
     servable: rows.reduce((n, r) => n + r.servable, 0),
+    servableFigures: rows.reduce((n, r) => n + r.servableFigures, 0),
     objectivesWithZero: rows.reduce((n, r) => n + r.zeroObjectives.length, 0),
     skillsWithAZeroObjective: rows.filter((r) => r.zeroObjectives.length > 0).length,
     skillsWithNothing: rows.filter((r) => r.servable === 0).length,

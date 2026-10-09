@@ -48,6 +48,7 @@
 import connectDB from '@core/db';
 import { essayGenBlockEnabled, isEssayPracticeLoId, looksLikeRubricKey } from './essay-practice';
 import { ProblemBank } from '@/models/ProblemBank';
+import { carriesFigure } from './figure-items';
 import { PracticeGenCounter } from '@/models/PracticeGenCounter';
 import {
   generateCandidate,
@@ -1416,9 +1417,16 @@ const DONE: Promise<void> = Promise.resolve();
  * the gates rejected does not — it did the work it was reserved for.
  */
 export async function generatePracticeItemsDetailed(
-  opts: GeneratePracticeItemsOptions,
+  rawOpts: GeneratePracticeItemsOptions,
   sources: PracticeGenSources = practiceGenSources(),
 ): Promise<PracticeGenOutcome> {
+  // A figure item (figure-items.ts) is never an anchor, an avoid-list entry
+  // or an exclude hash: its text depends on a picture, and what is generated
+  // here is text-only. Stripped HERE so it holds for every caller's pool
+  // (retrievePractice already passes none).
+  const opts: GeneratePracticeItemsOptions = rawOpts.anchorItems.some(carriesFigure)
+    ? { ...rawOpts, anchorItems: rawOpts.anchorItems.filter((a) => !carriesFigure(a)) }
+    : rawOpts;
   const nothing = (status: PracticeGenOutcome['status']): PracticeGenOutcome => ({ items: [], status, reserved: 0, pending: 0, background: DONE });
   if (!practiceGenEnabled()) return nothing('off');
   // Per-partner switch — before any slot is reserved.

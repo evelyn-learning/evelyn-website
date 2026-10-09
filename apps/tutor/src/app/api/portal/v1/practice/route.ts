@@ -21,7 +21,11 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // request's lifetime for Next's own shutdown handling. (Outside a request
   // scope — the endpoint tests call this handler directly — `after` throws
   // and the work simply carries on unattached; it never rejects.)
+  // `allowFigures`: this route is the one surface that may answer with figure
+  // items — and only for a request that lists `figure` in `accepts`
+  // (contract v1.21.0; practice.ts module header).
   const result = await retrievePractice(parsed.data, mongoPracticeSources(), undefined, { partnerId: auth.partnerId }, {
+    allowFigures: true,
     genDeadlineMs: PRACTICE_DRAW_DEADLINE_MS,
     onBackground: (work) => {
       try {

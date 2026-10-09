@@ -84,6 +84,20 @@ export interface IProblemBank extends Document {
   responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
   /** When responseFormat is 'mcq', the choice list. */
   choices?: string[];
+  /** OPTIONAL figure the student reads to answer the item (contract v1.21.0
+   *  `PracticeFigureSchema`): `svg` is a complete self-contained `<svg>`
+   *  (≤ 200 000 chars; practice-figure/svg-safety.ts), `alt` says what it
+   *  shows without stating the answer (≤ 600 chars), `spec` is the
+   *  `{ type, params }` it was drawn from (practice-figure/render.ts).
+   *  A row with a figure is DEFAULT-DENIED: served only by practice retrieval
+   *  to a caller that accepts figures — never by assessments, assigned
+   *  practice, the in-session bank query or mock forms
+   *  (portal/figure-items.ts). Absent on every pre-existing row. */
+  figure?: {
+    svg: string;
+    alt: string;
+    spec?: { type: string; params: Record<string, unknown> };
+  };
   /** Source attribution for license compliance + provenance. */
   source: {
     name: string;
@@ -125,6 +139,26 @@ const RubricSchema = new Schema(
   { _id: false }
 );
 
+// Figure subdocument — _id-less like the rubric above. `spec.params` is
+// free-form per figure kind (Mixed); `minimize: false` keeps an empty params
+// object, which the contract's DiagramSpec requires to be present.
+const FigureSpecSchema = new Schema(
+  {
+    type: { type: String, required: true },
+    params: { type: Schema.Types.Mixed, required: true },
+  },
+  { _id: false, minimize: false }
+);
+
+const FigureSchema = new Schema(
+  {
+    svg: { type: String, required: true, maxlength: 200_000 },
+    alt: { type: String, required: true, maxlength: 600 },
+    spec: { type: FigureSpecSchema, required: false, default: undefined },
+  },
+  { _id: false }
+);
+
 const ProblemBankSchema = new Schema<IProblemBank>(
   {
     id: { type: String, required: true, unique: true, trim: true },
@@ -148,6 +182,8 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     hints: [{ type: String }],
     responseFormat: { type: String, enum: ['mcq', 'frq', 'numeric', 'free'] },
     choices: [{ type: String }],
+    // Optional, additive, no migration — absent on every existing row.
+    figure: { type: FigureSchema, required: false, default: undefined },
     source: {
       name: { type: String, required: true },
       url: { type: String },

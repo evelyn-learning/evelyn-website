@@ -697,7 +697,7 @@ async function main(): Promise<void> {
     assert.equal(a.servable, 4);
     // The real plan: objective 3's step is withdrawn.
     assert.deepEqual(rows[1].zeroObjectives, [lo(REAL_PLAN, 3)]);
-    assert.deepEqual(summarizeCoverage(rows), { skills: 2, objectives: 7, servable: 6, objectivesWithZero: 2, skillsWithAZeroObjective: 2, skillsWithNothing: 0 });
+    assert.deepEqual(summarizeCoverage(rows), { skills: 2, objectives: 7, servable: 6, servableFigures: 0, objectivesWithZero: 2, skillsWithAZeroObjective: 2, skillsWithNothing: 0 });
 
     // Audited-only: fixture plan A has no audited step → objectives 2..4 empty,
     // and its generated row is unaudited; the real plan keeps lo-1 + lo-2.

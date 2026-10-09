@@ -381,6 +381,10 @@
     "test:bare-assent-praise": "npx tsx scripts/test-bare-assent-praise.ts",
     "test:homework-small-guards": "npx tsx scripts/test-homework-small-guards.ts",
     "test:audited-generated-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-audited-generated-items.ts",
-    "test:practice-skill-scope": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-skill-scope.ts"
+    "test:practice-skill-scope": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-skill-scope.ts",
+    "test:practice-figure-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-figure-items.ts",
+    "test:practice-figure-svg": "npx tsx scripts/test-practice-figure-svg.ts",
+    "test:practice-figure-render": "npx tsx scripts/test-practice-figure-render.ts",
+    "practice-figure-gallery": "npx tsx scripts/practice-figure-gallery.ts"
   }
 }

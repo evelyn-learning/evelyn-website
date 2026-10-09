@@ -55,6 +55,21 @@
  * list (audited-items.ts). A request for any other LO, or for authored
  * content, is unchanged.
  *
+ * FIGURE ITEMS (2026-10-09, contract v1.21.0 — figure-items.ts): a bank row
+ * that carries a `figure` cannot be answered without it, so it is DEFAULT-
+ * DENIED. It is served only when BOTH hold: the request lists `figure` in
+ * `accepts`, and the caller of `retrievePractice` passed
+ * `options.allowFigures` (the practice route does; nothing else does — so an
+ * assessment, assigned practice or any future caller that merely forwards a
+ * request can never receive one). It is then returned with its figure
+ * attached, after the stored SVG passes the safety check again; a figure that
+ * fails is withheld WITH its item. In every other case the row is dropped
+ * where the pools are assembled, after the withdrawn and audited-only rules,
+ * so it takes no slot and its shortfall is topped up like any other. A figure
+ * item is never a generation anchor or avoid-list entry (the generator writes
+ * text items), whoever asked. Skill scope and the audited-only gate apply to
+ * a figure row exactly as to any other bank row.
+ *
  * The assembly core (`retrievePractice`) takes an injectable `PracticeSources`
  * so it is unit-testable without Mongo. Phase 4 supplies concrete Mongo- and
  * lesson-plan-store-backed sources.
@@ -73,6 +88,7 @@ import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, 
 import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } from './essay-practice';
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 import { auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
+import { acceptsFigures, carriesFigure, logFigureItemSkip, servableFigure } from './figure-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -88,6 +104,17 @@ export interface BankLite {
   difficulty?: Difficulty;
   loId?: string;
   cedCode?: string;
+  /** The stored `figure` value, as found (figure-items.ts). Present in ANY
+   *  shape ⇒ the row is a figure item and is default-denied; it is validated
+   *  (`servableFigure`) before it reaches the wire. Absent ⇒ a text item. */
+  figure?: unknown;
+}
+
+/** What a bank read is for. `figures: true` only when the request may be
+ *  answered with figure items; otherwise a source should leave those rows
+ *  out of its query (the core drops any it returns regardless). */
+export interface BankQueryOptions {
+  figures?: boolean;
 }
 
 /** Lesson-plan projection the assembler needs. */
@@ -305,9 +332,9 @@ export interface PracticeSources {
   /** Plans for a topic id (topic-scope try-yourselves). */
   plansForTopic(topicId: string): Promise<PlanLite[]>;
   /** Bank rows tagged with this LO code, optional difficulty filter. */
-  bankForLoId(loId: string, difficulty?: Difficulty): Promise<BankLite[]>;
+  bankForLoId(loId: string, difficulty?: Difficulty, opts?: BankQueryOptions): Promise<BankLite[]>;
   /** Bank rows for a topic id (matches `topic` OR `topicId`), optional difficulty. */
-  bankForTopic(topicId: string, difficulty?: Difficulty): Promise<BankLite[]>;
+  bankForTopic(topicId: string, difficulty?: Difficulty, opts?: BankQueryOptions): Promise<BankLite[]>;
 }
 
 /** Map a stored bank row to the contract's PracticeItem. */
@@ -324,6 +351,32 @@ function bankToItem(b: BankLite): PracticeItem {
     loId: b.loId,
     cedCode: b.cedCode,
   };
+}
+
+/**
+ * THE FIGURE GATE (figure-items.ts). Bank rows → wire items:
+ *   - a row with no figure maps as before;
+ *   - a row with a figure, `serveFigures` false → dropped (one log line);
+ *   - a row with a figure, `serveFigures` true → returned WITH its figure
+ *     when `servableFigure` passes it, withheld otherwise (one warning).
+ * Applied after the withdrawn / audited-only filters, like them before
+ * de-dup, excludeIds and slicing.
+ */
+function bankRowsToItems(rows: readonly BankLite[], serveFigures: boolean, where: string): PracticeItem[] {
+  const items: PracticeItem[] = [];
+  for (const b of rows) {
+    if (!carriesFigure(b)) {
+      items.push(bankToItem(b));
+      continue;
+    }
+    if (!serveFigures) {
+      logFigureItemSkip(b.id, where);
+      continue;
+    }
+    const figure = servableFigure(b.id, b.figure);
+    if (figure) items.push({ ...bankToItem(b), figure });
+  }
+  return items;
 }
 
 /**
@@ -444,6 +497,11 @@ export interface RetrievePracticeOptions {
   /** Receives the promise of any generation still running when the response
    *  is returned, so a route can keep it attached to the request (`after`). */
   onBackground?: (work: Promise<void>) => void;
+  /** This caller is the practice retrieval surface and may answer with
+   *  figure items — when the request ALSO lists `figure` in `accepts`. Left
+   *  unset by every other caller (assessment, assigned practice), which is
+   *  what keeps a figure item out of them. See the module header. */
+  allowFigures?: boolean;
 }
 
 /**
@@ -467,6 +525,9 @@ export async function retrievePractice(
 ): Promise<RetrievePracticeResult> {
   const who = caller ?? sources.caller;
   const difficulty = req.difficulty;
+  // Figure items: default-deny (module header). Both conditions, or none.
+  const serveFigures = options.allowFigures === true && acceptsFigures(req);
+  const bankOpts: BankQueryOptions = { figures: serveFigures };
   const planItems: PracticeItem[] = [];
   const bankItems: PracticeItem[] = [];
   // Hoisted out of the loId branch below so the shortfall/generation section
@@ -510,12 +571,12 @@ export async function retrievePractice(
         }
       }
     }
-    let bank = await sources.bankForLoId(loId, difficulty);
+    let bank = await sources.bankForLoId(loId, difficulty, bankOpts);
     if (skillObjectives) {
       // Bank rows stored under any other objective of the plan. The LO ids
       // are this plan's own (`<planId>.lo-K`), so nothing foreign matches.
       const others = skillObjectives.filter((o) => o !== loId);
-      const more = await Promise.all(others.map((o) => sources.bankForLoId(o, difficulty)));
+      const more = await Promise.all(others.map((o) => sources.bankForLoId(o, difficulty, bankOpts)));
       for (const b of bank) objectiveOf.set(b.id, loId);
       more.forEach((rows, i) => {
         for (const b of rows) if (!objectiveOf.has(b.id)) objectiveOf.set(b.id, others[i]);
@@ -535,7 +596,7 @@ export async function retrievePractice(
           return false;
         })
       : bank;
-    bankItems.push(...withoutUnauditedGenerated(withoutWithdrawn(servableBank), who?.partnerId, 'practice-lo').map(bankToItem));
+    bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(servableBank), who?.partnerId, 'practice-lo'), serveFigures, 'practice-lo'));
   } else {
     const topicId = req.scope.topicId;
     const plans = (await sources.plansForTopic(topicId)).filter((p) => planServable(p, undefined, who));
@@ -546,8 +607,8 @@ export async function retrievePractice(
       const firstLo = p.los[0]?.id ?? '';
       if (firstLo) planItems.push(...planToItems(p, firstLo, true));
     }
-    const bank = await sources.bankForTopic(topicId, difficulty);
-    bankItems.push(...withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic').map(bankToItem));
+    const bank = await sources.bankForTopic(topicId, difficulty, bankOpts);
+    bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic'), serveFigures, 'practice-topic'));
   }
 
   // De-dup by id; bank (verified) items first, then plan try-yourselves.
@@ -637,8 +698,10 @@ export async function retrievePractice(
             ...(who?.partnerId ? { partnerId: who.partnerId } : {}),
             // Anchor pool: same-LO items already assembled above
             // (pre-exclusion — an anchor is a template, never itself served,
-            // so a student-seen item is still a fine anchor).
-            anchorItems: ordered,
+            // so a student-seen item is still a fine anchor). Never a figure
+            // item: its text leans on a picture the generated item would
+            // not have.
+            anchorItems: ordered.filter((it) => !carriesFigure(it)),
             // The LO's authored try-yourselves are drawing tasks (dropped by
             // planToItems above, so absent from `ordered`): ask for the
             // typed/choice form of the skill (2026-10-04).

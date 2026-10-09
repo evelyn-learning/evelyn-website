@@ -10,7 +10,8 @@ import connectDB from '@core/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
 import { SEED_PLANS, findStoredPlansByLoId, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
-import { classifyPrivatePlan, isStudentOwnedPlan, type PracticeSources, type PracticeCaller, type PlanLite, type BankLite } from './practice';
+import { classifyPrivatePlan, isStudentOwnedPlan, type PracticeSources, type PracticeCaller, type PlanLite, type BankLite, type BankQueryOptions } from './practice';
+import { carriesFigure, NO_FIGURE_FILTER } from './figure-items';
 import type { GradeItem } from './grade-free-response';
 import { resolvePassage } from '@/lib/tutor/passages/store';
 import type { FrqRubric } from '@evelyn/portal-contract/v1';
@@ -93,16 +94,23 @@ function toBankLite(b: IProblemBank): BankLite {
     difficulty: b.difficulty,
     loId: b.loId,
     cedCode: b.cedCode,
+    // Carried as found (any shape) — practice.ts decides whether the row is
+    // served and validates the figure before it reaches the wire.
+    ...(carriesFigure(b) ? { figure: (b as { figure?: unknown }).figure } : {}),
   };
 }
 
-async function safeBankQuery(filter: Record<string, unknown>): Promise<BankLite[]> {
+async function safeBankQuery(filter: Record<string, unknown>, opts?: BankQueryOptions): Promise<BankLite[]> {
   try {
     await connectDB();
     // Mock-form rows (bankScope:'mock') are full-length-exam-only content and
     // must never leak into practice/tutor serving — single choke point for
     // both bankForLoId and bankForTopic (Task 2, mock-exams platform).
-    const rows = (await ProblemBank.find({ ...filter, bankScope: { $ne: 'mock' } })
+    // Figure rows (figure-items.ts) are left out of the query unless this
+    // read is for a caller that accepts figures: they would only be dropped
+    // again in practice.ts, and meanwhile take slots of the 50-row limit and
+    // load SVGs nobody will see.
+    const rows = (await ProblemBank.find({ ...filter, bankScope: { $ne: 'mock' }, ...(opts?.figures === true ? {} : NO_FIGURE_FILTER) })
       .limit(50)
       .lean()) as unknown as IProblemBank[];
     return rows.map(toBankLite);
@@ -154,7 +162,7 @@ export function mongoPracticeSources(caller?: PracticeCaller): PracticeSources {
     async plansForTopic(topicId) {
       return SEED_PLANS.filter((p) => p.topic === topicId).map(toPlanLite);
     },
-    async bankForLoId(loId, difficulty?: Difficulty) {
+    async bankForLoId(loId, difficulty?: Difficulty, opts?: BankQueryOptions) {
       // Exclude tutor-session brain-gen.* rows — those are live-session
       // scratch generations (unscoped, not answer-key-vetted for standalone
       // practice) and must never surface here. practice-gen.* rows (the
@@ -162,15 +170,15 @@ export function mongoPracticeSources(caller?: PracticeCaller): PracticeSources {
       // pass through untouched.
       const filter: Record<string, unknown> = { loId, id: { $not: /^brain-gen\./ } };
       if (difficulty) filter.difficulty = difficulty;
-      return safeBankQuery(filter);
+      return safeBankQuery(filter, opts);
     },
-    async bankForTopic(topicId, difficulty?: Difficulty) {
+    async bankForTopic(topicId, difficulty?: Difficulty, opts?: BankQueryOptions) {
       const filter: Record<string, unknown> = {
         $or: [{ topic: topicId }, { topicId }],
         id: { $not: /^brain-gen\./ },
       };
       if (difficulty) filter.difficulty = difficulty;
-      return safeBankQuery(filter);
+      return safeBankQuery(filter, opts);
     },
   };
 }

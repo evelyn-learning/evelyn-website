@@ -33,6 +33,7 @@ import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
 import { withoutWithdrawn, isWithdrawnSegment, keyCheckUntrusted, segmentKeyUntrusted, logWithdrawnSkip, logUnverifiedKeySkip } from '../portal/withdrawn-items';
 import { withoutUnauditedGenerated } from '../portal/audited-items';
+import { NO_FIGURE_FILTER, withoutFigureItems } from '../portal/figure-items';
 import { compareRelationTexts } from './relation-sampling';
 
 // Layer-2 brain-gen models. Generation + an INDEPENDENT fresh-context solve
@@ -128,7 +129,10 @@ function resolveAbsoluteDifficulty(
  *     `practice-gen.*` rows are eligible here;
  *   - for a partner listed in PRACTICE_GEN_AUDITED_ONLY_PARTNERS, not a
  *     stored generated practice item that is off the audited list
- *     (portal/audited-items.ts). Any other partner, or none: no effect.
+ *     (portal/audited-items.ts). Any other partner, or none: no effect;
+ *   - not a figure item (portal/figure-items.ts): show_problem puts text on
+ *     the board, and the row's question cannot be answered without its
+ *     picture. No partner or flag changes this.
  * Pure apart from the skip log lines.
  */
 export function eligibleBankCandidates(
@@ -141,27 +145,19 @@ export function eligibleBankCandidates(
     candidates = candidates.filter((c) => !excludeHashes.includes(simpleHash(c.problemText)));
   }
   candidates = withoutWithdrawn(candidates);
-  return withoutUnauditedGenerated(candidates, partnerId, 'session-generate-problem');
+  candidates = withoutUnauditedGenerated(candidates, partnerId, 'session-generate-problem');
+  return withoutFigureItems(candidates, 'session-generate-problem');
 }
 
-/** Layer 1 / 3 — bank query. Returns null if no eligible row.
- *
- *  excludeHashes (2026-07-17, write-back cache): bank rows written back
- *  from runtime brain-gen can also have been SERVED via Layer 2 earlier in
- *  this same session (tracked by content hash, not bank _id). Without the
- *  hash filter, a later request could re-serve the same problem from the
- *  bank because its _id was never in shownProblemIds. Filtered in JS —
- *  candidates are capped at 20. */
-async function queryBank(
+/** The Mongo filter for the in-session bank read (`queryBank`). Pure, so
+ *  the serving rules it encodes are testable without a database. */
+export function sessionBankFilter(
   topic: string,
   difficulty: IProblemBank['difficulty'],
   excludeIds: string[],
-  excludeHashes: string[] = [],
   planScope?: string,
   planLoIds: string[] = [],
-  partnerId?: string
-): Promise<GeneratedProblem | null> {
-  await connectDB();
+): Record<string, unknown> {
   const filter: Record<string, unknown> = {
     topic,
     difficulty,
@@ -169,6 +165,9 @@ async function queryBank(
     // must never leak into the adaptive-pacing practice pipeline (Task 2,
     // mock-exams platform).
     bankScope: { $ne: 'mock' },
+    // Figure items never serve into a session (eligibleBankCandidates) —
+    // left out of the query too so they take none of the 20-row limit.
+    ...NO_FIGURE_FILTER,
   };
   // Lesson scoping (Round-18, tightened Round-22 after session
   // portal-cbd93b08 served course-wide corpus items into a limits lesson —
@@ -193,6 +192,28 @@ async function queryBank(
   if (excludeIds.length > 0) {
     filter._id = { $nin: excludeIds };
   }
+  return filter;
+}
+
+/** Layer 1 / 3 — bank query. Returns null if no eligible row.
+ *
+ *  excludeHashes (2026-07-17, write-back cache): bank rows written back
+ *  from runtime brain-gen can also have been SERVED via Layer 2 earlier in
+ *  this same session (tracked by content hash, not bank _id). Without the
+ *  hash filter, a later request could re-serve the same problem from the
+ *  bank because its _id was never in shownProblemIds. Filtered in JS —
+ *  candidates are capped at 20. */
+async function queryBank(
+  topic: string,
+  difficulty: IProblemBank['difficulty'],
+  excludeIds: string[],
+  excludeHashes: string[] = [],
+  planScope?: string,
+  planLoIds: string[] = [],
+  partnerId?: string
+): Promise<GeneratedProblem | null> {
+  await connectDB();
+  const filter = sessionBankFilter(topic, difficulty, excludeIds, planScope, planLoIds);
   // Random sampling within the matching set so back-to-back
   // requests don't return the same row.
   let candidates = (await ProblemBank.find(filter)
