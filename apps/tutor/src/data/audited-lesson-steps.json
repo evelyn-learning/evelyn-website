@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-10-09",
-  "source": "two-model audit 10-04/05 (594) + second check 10-09 (91) − 7 removed by the lesson-text read 10-10",
+  "source": "two-model audit 10-04/05 (594) + second check 10-09 (91) − 7 removed by the lesson-text read 10-10 − 2 rewritten by the lesson corrections and not yet re-checked 10-11",
   "items": {
     "gen-0056dad8-ddbd-40fe-8edb-8f417de9eca0::gen-0056dad8-ddbd-40fe-8edb-8f417de9eca0.lo-2-try": "AUDITED",
     "gen-01e222df-db1e-4e6b-ac3b-4ce3a0269f5e::gen-01e222df-db1e-4e6b-ac3b-4ce3a0269f5e.lo-2-try": "AUDITED",
@@ -649,7 +649,6 @@
     "gen-f5b4db7b-fc26-4d29-a02f-0f0eab6aa83b::gen-f5b4db7b-fc26-4d29-a02f-0f0eab6aa83b.lo-3-try": "AUDITED",
     "gen-f5b4db7b-fc26-4d29-a02f-0f0eab6aa83b::gen-f5b4db7b-fc26-4d29-a02f-0f0eab6aa83b.lo-4-try": "AUDITED",
     "gen-f5b4db7b-fc26-4d29-a02f-0f0eab6aa83b::gen-f5b4db7b-fc26-4d29-a02f-0f0eab6aa83b.lo-5-try": "AUDITED",
-    "gen-f5cf533c-f147-4572-b1f0-53ea99dfcaaf::gen-f5cf533c-f147-4572-b1f0-53ea99dfcaaf.lo-2-try": "AUDITED",
     "gen-f5cf533c-f147-4572-b1f0-53ea99dfcaaf::gen-f5cf533c-f147-4572-b1f0-53ea99dfcaaf.lo-4-try": "AUDITED",
     "gen-f63e66ce-b009-4bb9-af79-70f9df82590d::gen-f63e66ce-b009-4bb9-af79-70f9df82590d.lo-2-try": "AUDITED",
     "gen-f63e66ce-b009-4bb9-af79-70f9df82590d::gen-f63e66ce-b009-4bb9-af79-70f9df82590d.lo-3-try": "AUDITED",
@@ -674,7 +673,6 @@
     "gen-fd491751-c747-4ce6-9e2a-c9c964b5b08b::gen-fd491751-c747-4ce6-9e2a-c9c964b5b08b.lo-2-try": "AUDITED",
     "gen-fd491751-c747-4ce6-9e2a-c9c964b5b08b::gen-fd491751-c747-4ce6-9e2a-c9c964b5b08b.lo-3-try": "AUDITED",
     "gen-fdfcecf0-5d40-4dce-a1e2-982cf2ebd06e::gen-fdfcecf0-5d40-4dce-a1e2-982cf2ebd06e.lo-2-try": "AUDITED",
-    "gen-fe0e6fb5-d61e-4019-ac24-d0cf5724a25e::gen-fe0e6fb5-d61e-4019-ac24-d0cf5724a25e.lo-2-try": "AUDITED",
     "gen-fe0e6fb5-d61e-4019-ac24-d0cf5724a25e::gen-fe0e6fb5-d61e-4019-ac24-d0cf5724a25e.lo-4-try": "AUDITED",
     "gen-fe780827-4766-4421-927a-e1292291ca1b::gen-fe780827-4766-4421-927a-e1292291ca1b.lo-2-try": "AUDITED",
     "gen-fe780827-4766-4421-927a-e1292291ca1b::gen-fe780827-4766-4421-927a-e1292291ca1b.lo-3-try": "AUDITED",
