@@ -388,6 +388,7 @@
     "test:practice-figure-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-figure-items.ts",
     "test:practice-figure-svg": "npx tsx scripts/test-practice-figure-svg.ts",
     "test:practice-figure-render": "npx tsx scripts/test-practice-figure-render.ts",
+    "test:practice-figure-batch2": "npx tsx scripts/test-practice-figure-batch2.ts",
     "practice-figure-gallery": "npx tsx scripts/practice-figure-gallery.ts"
   }
 }

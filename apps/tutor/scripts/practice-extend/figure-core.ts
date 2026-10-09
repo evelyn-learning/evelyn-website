@@ -35,11 +35,16 @@ import { punnettModel } from '../../src/lib/tutor/practice-figure/kinds/punnett'
 import { pedigreeModel, type PedigreeIndividual, type PedigreeModel } from '../../src/lib/tutor/practice-figure/kinds/pedigree';
 import { slopeFieldSolution } from '../../src/lib/tutor/practice-figure/slope-field';
 import { validateItem, type GeneratedItem } from './core';
+import { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS, Batch2RuleError, describeBatch2, isBatch2Kind, type Batch2FigureKind } from './figure-core-batch2';
 
 /** `PRACTICE_FIGURE_KINDS` is the list the job offers its writer (figure-prompts.ts).
  *  The batch-1 kinds (unit circle, vectors, …) are transcribed and checked here
  *  as well, but are not in that list until the job has prompts for them. */
 export { ALL_PRACTICE_FIGURE_KINDS, BATCH1_FIGURE_KINDS, PRACTICE_FIGURE_KINDS };
+/** Batch 2 (circuits, cladograms, geometry, rays, fields, flows, solids, spectra): transcribed and
+ *  checked by figure-core-batch2.ts and reached through the same four functions of this file —
+ *  `axesOf`, `describeFigure`, `runChecker`, `checkerCatalogue`. */
+export { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS };
 export type FigureKind = AnyPracticeFigureKind;
 
 /** A spec, a derivation or an item that breaks a rule of this track. The
@@ -51,6 +56,15 @@ const isObj = (v: unknown): v is P => !!v && typeof v === 'object' && !Array.isA
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 function fail(m: string): never {
   throw new FigureRuleError(m);
+}
+/** Run a piece of figure-core-batch2.ts; its refusals become this file's `FigureRuleError`. */
+function viaBatch2<T>(fn: () => T): T {
+  try {
+    return fn();
+  } catch (e) {
+    if (e instanceof Batch2RuleError) return fail(e.message);
+    throw e;
+  }
 }
 
 /** A number as text: no float dust, ASCII minus. */
@@ -184,6 +198,7 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
     case 'box_plot': case 'polar_complex': case 'punnett_square': case 'pedigree':
       return {};
     default:
+      if (isBatch2Kind(spec.type)) return {};
       return fail(`unknown figure kind "${spec.type}" — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
 }
@@ -733,7 +748,7 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       break;
     }
     default: {
-      const k = describeBatch1(spec, printed, out);
+      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch2(spec, printed, out));
       if (!k) fail(`unknown figure kind "${spec.type}"`);
       kind = k;
     }
@@ -2514,15 +2529,20 @@ export interface Derivation {
  *  cannot be read off the figure. */
 export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
   const def = CHECKERS[d.checker];
+  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker];
+  if (batch2) {
+    if (!(batch2.kinds as readonly string[]).includes(spec.type)) return fail(`the checker "${d.checker}" is for ${batch2.kinds.join(' / ')}, not for ${spec.type}`);
+    return viaBatch2(() => batch2.run(spec, d.args ?? {}));
+  }
   if (!def) return fail(`unknown derivation checker "${d.checker}" — use one of the listed checkers, or "none"`);
   if (!def.kinds.includes(spec.type as FigureKind)) return fail(`the checker "${d.checker}" is for ${def.kinds.join(' / ')}, not for ${spec.type}`);
   return def.run(spec, d.args ?? {}, axesOf(spec));
 }
 
 /** The checker list as the writer is shown it, grouped by figure kind. */
-export function checkerCatalogue(kinds: readonly FigureKind[] = PRACTICE_FIGURE_KINDS): string {
+export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind> = PRACTICE_FIGURE_KINDS): string {
   return kinds.map((k) => {
-    const mine = Object.entries(CHECKERS).filter(([, d]) => d.kinds.includes(k));
+    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
     return `${k}:\n${mine.map(([name, d]) => `  - ${name} ${d.args} → ${d.returns}`).join('\n')}`;
   }).join('\n');
 }

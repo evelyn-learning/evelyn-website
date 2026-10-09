@@ -203,6 +203,7 @@ import {
   type Frame,
   type LegendEntry,
 } from './plot-frame';
+import { BATCH2_FIGURE_KINDS, renderBatch2, type Batch2FigureKind } from './kinds/batch2';
 
 export const PRACTICE_FIGURE_KINDS = [
   'function_graph',
@@ -251,6 +252,11 @@ export const ALL_PRACTICE_FIGURE_KINDS = [...PRACTICE_FIGURE_KINDS, ...BATCH1_FI
 export type AnyPracticeFigureKind = PracticeFigureKind | Batch1FigureKind;
 
 export { PracticeFigureSpecError, type FigureFacts, type PracticeFigureSpec } from './spec';
+/** Batch 2 (2026-10-09): circuit_diagram, phylogenetic_tree, geometric_figure, ray_diagram,
+ *  field_diagram, flow_diagram, solid_3d, spectrum — drawn by ./kinds/batch2.ts and the modules it
+ *  names (params documented at the top of each). Kept out of `ALL_PRACTICE_FIGURE_KINDS` for the
+ *  reason batch 1 is kept out of `PRACTICE_FIGURE_KINDS`; `renderPracticeFigure` draws them all. */
+export { BATCH2_FIGURE_KINDS, type Batch2FigureKind };
 export { sampleCurve };
 
 /** Short stable id prefix from the spec (FNV-1a) — see the module header. */
@@ -1330,8 +1336,11 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
     case 'polar_complex': drawn = renderPolarComplex(r); break;
     case 'punnett_square': drawn = renderPunnett(r, uid); break;
     case 'pedigree': drawn = renderPedigree(r); break;
-    default:
-      throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
+    default: {
+      const batch2 = renderBatch2(kind, r, uid);
+      if (!batch2) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS].join(', ')}`);
+      drawn = batch2;
+    }
   }
   const svg = svgDocument(drawn.W ?? FIGURE_WIDTH, drawn.H, drawn.body);
   const safety = validateFigureSvg(svg);

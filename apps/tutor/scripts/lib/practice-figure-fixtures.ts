@@ -831,3 +831,362 @@ export const BATCH1_FIXTURES: FigureFixture[] = [
 ];
 
 FIGURE_FIXTURES.push(...BATCH1_FIXTURES);
+
+// ---------------------------------------------------------------------------
+// Batch 2 (2026-10-09): three per kind — a simple one, a dense or awkward one,
+// and one with "?" blanks (its id says "blank").
+// ---------------------------------------------------------------------------
+export const BATCH2_FIXTURES: FigureFixture[] = [
+  // --- circuit_diagram ------------------------------------------------------
+  {
+    id: 'circuit-series-two-resistors',
+    note: 'one loop: battery, switch, two resistors in series, an ammeter',
+    question: 'What is the reading on the ammeter when the switch is closed?',
+    alt: 'A circuit with a 12 volt battery, a closed switch, a 4 ohm resistor, a 2 ohm resistor and an ammeter in one loop.',
+    spec: { type: 'circuit_diagram', params: { battery: { emf: 12 }, circuit: { series: [{ type: 'switch', name: 'S' }, { type: 'resistor', name: 'R₁', value: 4 }, { type: 'resistor', name: 'R₂', value: 2 }, { type: 'ammeter' }] } } },
+  },
+  {
+    id: 'circuit-combination-eight-components',
+    note: 'dense: series resistor, a three-branch parallel group with a switch and a nested series pair, a voltmeter across a resistor, an ammeter on the return wire',
+    question: 'With the switch closed, what is the equivalent resistance of the circuit?',
+    alt: 'A circuit with a 24 volt battery, a resistor in series with three parallel branches, a resistor with a voltmeter across it, and an ammeter.',
+    spec: {
+      type: 'circuit_diagram',
+      params: {
+        battery: { emf: 24, name: 'ε', current: 'I' },
+        circuit: { series: [
+          { type: 'resistor', name: 'R₁', value: 2 },
+          { parallel: [{ type: 'resistor', name: 'R₂', value: 12 }, { series: [{ type: 'switch', name: 'S', closed: false }, { type: 'resistor', name: 'R₃', value: 6 }] }, { type: 'bulb', name: 'B', value: 4, show: 'name' }] },
+          { parallel: [{ type: 'resistor', name: 'R₄', value: 3 }, { type: 'voltmeter' }] },
+          { type: 'ammeter', name: 'A', show: 'none' },
+        ] },
+      },
+    },
+  },
+  {
+    id: 'circuit-blank-parallel-bulbs',
+    note: 'three identical bulbs (one in series with a parallel pair) and a capacitor branch; the battery EMF and one current are blanks',
+    question: 'Bulbs A, B and C are identical. Rank the bulbs by brightness.',
+    alt: 'A circuit in which bulb A is in series with bulbs B and C, which are in parallel with each other; the battery voltage is replaced by a question mark.',
+    spec: {
+      type: 'circuit_diagram',
+      params: {
+        battery: { emf: 9, show: 'blank', current: '?' },
+        circuit: { series: [{ type: 'bulb', name: 'A', value: 6, show: 'name' }, { parallel: [{ type: 'bulb', name: 'B', value: 6, show: 'name' }, { type: 'bulb', name: 'C', value: 6, show: 'name', current: 'I₂' }, { type: 'capacitor', name: 'C₁', value: 10, show: 'blank' }] }] },
+      },
+    },
+  },
+  // --- phylogenetic_tree ----------------------------------------------------
+  {
+    id: 'phylo-five-vertebrates',
+    note: 'five tips, an outgroup, four derived traits named on the branches',
+    question: 'According to the cladogram, which trait is shared by the frog, the lizard and the mouse but not by the trout?',
+    alt: 'A cladogram of lamprey, trout, frog, lizard and mouse with four tick marks for derived traits along the branches.',
+    spec: {
+      type: 'phylogenetic_tree',
+      params: {
+        outgroup: 'Lamprey',
+        tree: { children: ['Lamprey', { traits: ['jaws'], children: ['Trout', { traits: ['four limbs'], children: ['Frog', { traits: ['amniotic egg'], children: ['Lizard', { name: 'Mouse', traits: ['hair'] }] }] }] }] },
+      },
+    },
+  },
+  {
+    id: 'phylo-nine-taxa-labelled-nodes',
+    note: 'dense: nine tips, six labelled internal nodes, a three-way split, traits listed in a key',
+    question: 'Which labelled node represents the most recent common ancestor of the crocodile and the sparrow?',
+    alt: 'A cladogram of nine animals with internal nodes labelled A to F and numbered trait marks explained in a key below the tree.',
+    spec: {
+      type: 'phylogenetic_tree',
+      params: {
+        traitStyle: 'key',
+        tree: { node: 'A', children: [
+          'Shark',
+          { node: 'B', traits: ['bony skeleton'], children: [
+            'Salmon',
+            { node: 'C', traits: ['four limbs'], children: [
+              'Salamander',
+              { node: 'D', traits: ['amniotic egg'], children: [
+                { node: 'E', traits: ['hair', 'mammary glands'], children: ['Platypus', 'Kangaroo', 'Human'] },
+                { node: 'F', children: ['Turtle', { children: ['Crocodile', { name: 'Sparrow', traits: ['feathers'] }] }] },
+              ] },
+            ] },
+          ] },
+        ] },
+      },
+    },
+  },
+  {
+    id: 'phylo-blank-tip-and-trait',
+    note: 'six plants; one tip and one trait are blanks',
+    question: 'Which group of plants belongs at the tip marked "?" — it has vascular tissue and seeds but no flowers?',
+    alt: 'A cladogram of six plant groups in which one tip label and one trait label are replaced by question marks.',
+    spec: {
+      type: 'phylogenetic_tree',
+      params: {
+        tree: { children: ['Green algae', { traits: ['embryo'], children: ['Mosses', { traits: ['vascular tissue'], children: ['Ferns', { traits: [{ label: 'seeds', blank: true }], children: [{ name: 'Conifers', blank: true }, { traits: ['flowers'], children: ['Monocots', 'Eudicots'] }] }] }] }] },
+      },
+    },
+  },
+  // --- geometric_figure -----------------------------------------------------
+  {
+    id: 'geometry-right-triangle',
+    note: 'a right triangle from its sides: two sides and one angle labelled, a right-angle mark',
+    question: 'In right triangle ABC, what is the length of side AC?',
+    alt: 'A right triangle ABC with the right angle at B, a base of 12 centimetres and a vertical side of 5 centimetres; the side AC is labelled x.',
+    spec: { type: 'geometric_figure', params: { shape: 'triangle', sides: [5, 13, 12], unit: 'cm', sideLabels: ['auto', 'x', 'auto'], angleLabels: ['θ', null, null] } },
+  },
+  {
+    id: 'geometry-circle-chords-tangent',
+    note: 'dense: a circle with a radius, three chords, a tangent to an external point, an inscribed angle, a central angle, a hatched sector and a heavy arc',
+    question: 'O is the centre of the circle and PT is tangent to the circle at T. What is the measure of angle ACB?',
+    alt: 'A circle with centre O, points A, B, C, D and T on it, a hatched sector AOB with a central angle of 80 degrees, chords from C to A and to B and from A to D, and a tangent line from T to an outside point P.',
+    spec: {
+      type: 'geometric_figure',
+      params: {
+        shape: 'circle', radius: 5, unit: 'cm',
+        points: [{ name: 'A', at: 20 }, { name: 'B', at: 100 }, { name: 'C', at: 215 }, { name: 'D', at: 255 }, { name: 'T', at: 320 }],
+        radii: [{ to: 'T', label: 'auto' }],
+        chords: [{ from: 'C', to: 'A' }, { from: 'C', to: 'B' }, { from: 'A', to: 'D' }],
+        angles: [{ vertex: 'center', from: 'A', to: 'B', label: 'auto' }, { vertex: 'C', from: 'A', to: 'B', label: 'x' }],
+        sector: { from: 'A', to: 'B' },
+        tangent: { at: 'T', length: 6, end: 'P', label: 'auto' },
+      },
+    },
+  },
+  {
+    id: 'geometry-blank-parallel-lines',
+    note: 'parallel lines and a transversal: one angle given, one an expression, one a blank',
+    question: 'Lines ℓ and m are parallel. What is the measure of the angle marked "?"',
+    alt: 'Two parallel horizontal lines cut by a slanted transversal, with one angle labelled 115 degrees, one labelled 2x plus 5 degrees and one replaced by a question mark.',
+    spec: { type: 'geometric_figure', params: { shape: 'parallel_lines', angle: 65, labels: { 1: 'auto', 4: '2x + 5°', 7: '?' } } },
+  },
+  {
+    id: 'geometry-blank-similar-triangles',
+    note: 'two similar triangles at one scale, the second rotated; one side of the second is a blank; drawn not to scale by request',
+    question: 'Triangle ABC is similar to triangle DEF. What is the length of side DF?',
+    alt: 'Two similar triangles: ABC with sides 6, 8 and 9, and a larger triangle DEF with one side 12 and one side replaced by a question mark.',
+    spec: {
+      type: 'geometric_figure',
+      params: { shape: 'similar_triangles', sides: [6, 8, 9], scale: 1.5, rotate: 25, sideLabels: [['auto', 'auto', 'auto'], [null, '?', '13.5']], angleLabels: [['α', 'β', null], ['α', 'β', null]], notToScale: true },
+    },
+  },
+  {
+    id: 'geometry-polygon-isosceles-trapezoid',
+    note: 'a polygon from coordinates: equal-side ticks, a right-angled corner would be marked; side and angle labels',
+    question: 'What is the perimeter of the isosceles trapezoid?',
+    alt: 'An isosceles trapezoid ABCD with a base of 14, a top of 8 and two equal slanted sides of 5 marked with single ticks; one base angle is labelled.',
+    spec: { type: 'geometric_figure', params: { shape: 'polygon', points: [[0, 0], [14, 0], [11, 4], [3, 4]], sideLabels: ['auto', 'auto', 'auto', null], ticks: [0, 1, 0, 1], angleLabels: ['auto', null, null, null] } },
+  },
+  // --- ray_diagram ----------------------------------------------------------
+  {
+    id: 'ray-converging-lens-real-image',
+    note: 'converging lens, object beyond 2F: three principal rays, a real inverted image, object distance and focal length given',
+    question: 'How far from the lens does the image form?',
+    alt: 'A ray diagram of a converging lens with an upright object arrow 30 centimetres to its left, three rays meeting at an inverted image on the right, and focal points marked on both sides.',
+    spec: { type: 'ray_diagram', params: { element: 'converging_lens', focalLength: 10, objectDistance: 30, objectHeight: 4, show: { objectDistance: 'value', focalLength: 'value' } } },
+  },
+  {
+    id: 'ray-concave-mirror-virtual-image',
+    note: 'awkward: object inside the focal point of a concave mirror — rays traced back (dashed) to an enlarged virtual image behind the mirror; every distance and both heights printed',
+    question: 'Is the image formed by the mirror real or virtual, and is it upright or inverted?',
+    alt: 'A ray diagram of a concave mirror with the object between the focal point and the mirror; dashed lines behind the mirror meet at a larger upright image.',
+    spec: { type: 'ray_diagram', params: { element: 'concave_mirror', focalLength: 12, objectDistance: 6, objectHeight: 3, show: { objectDistance: 'value', imageDistance: 'value', focalLength: 'value', objectHeight: 'value', imageHeight: 'value' } } },
+  },
+  {
+    id: 'ray-blank-diverging-lens',
+    note: 'diverging lens with rays 1 and 2 only; the image distance is a blank',
+    question: 'What is the image distance for this diverging lens?',
+    alt: 'A ray diagram of a diverging lens with an object 20 centimetres to its left and a smaller upright virtual image on the same side; the image distance is replaced by a question mark.',
+    spec: { type: 'ray_diagram', params: { element: 'diverging_lens', focalLength: 20, objectDistance: 20, objectHeight: 8, rays: [1, 2], show: { objectDistance: 'value', imageDistance: 'blank', focalLength: 'value' } } },
+  },
+  {
+    id: 'ray-blank-refraction-interface',
+    note: 'plane interface: incident, reflected and refracted rays; the refraction angle and the lower index are blanks',
+    question: 'A ray of light passes from air into a liquid as shown. What is the refractive index of the liquid?',
+    alt: 'A ray of light strikes a horizontal boundary between air and a liquid at 50 degrees to the normal; a reflected ray and a refracted ray bent toward the normal are shown, with the refraction angle given as 35 degrees and the index of the liquid replaced by a question mark.',
+    spec: { type: 'ray_diagram', params: { element: 'interface', n1: 1, n2: 1.336, incidentAngle: 50, media: ['air', 'liquid'], reflected: true, show: { n2: 'blank' }, angleLabels: { incident: 'auto', reflected: 'θr', refracted: 'auto' } } },
+  },
+  // --- field_diagram --------------------------------------------------------
+  {
+    id: 'field-dipole',
+    note: 'two equal and opposite point charges: eight lines each, a marked point P',
+    question: 'What is the direction of the electric field at point P?',
+    alt: 'Electric field lines running from a positive charge on the left to a negative charge on the right, with a point P marked midway between them and above.',
+    spec: { type: 'field_diagram', params: { variant: 'point_charges', charges: [{ x: -2, y: 0, q: 1 }, { x: 2, y: 0, q: -1 }], points: [{ x: 0, y: 1.6, label: 'P' }] } },
+  },
+  {
+    id: 'field-three-charges-equipotentials',
+    note: 'dense: three charges of different sizes (+2, −1, +1), labels, two dashed equipotentials',
+    question: 'Which charge has the greatest magnitude, and how can you tell from the field lines?',
+    alt: 'Field lines of three point charges: twelve lines leave the charge q1, six arrive at q2 and six leave q3; two dashed closed curves are equipotentials.',
+    spec: {
+      type: 'field_diagram',
+      params: { variant: 'point_charges', linesPerUnit: 6, charges: [{ x: -3, y: -1, q: 2, label: 'q₁' }, { x: 2, y: -1.5, q: -1, label: 'q₂' }, { x: 1, y: 2.5, q: 1, label: 'q₃' }], xRange: [-7, 6], yRange: [-5.5, 5.5], equipotentials: [[-3, 0.4], [1, 3.6]] },
+    },
+  },
+  {
+    id: 'field-blank-unknown-charges',
+    note: 'two charges whose signs are not shown (the lines and their arrowheads fix them); the label of one is a blank',
+    question: 'The field lines of two point charges are shown. The charge on the left is +3 nC. What is the charge on the right?',
+    alt: 'Field lines leave an unmarked charge on the left, twelve in all, and four of them end on a smaller unmarked charge on the right, whose label is a question mark.',
+    spec: { type: 'field_diagram', params: { variant: 'point_charges', linesPerUnit: 4, charges: [{ x: -2, y: 0, q: 3, showSign: false, label: '+3 nC' }, { x: 2.5, y: 0, q: -1, showSign: false, label: '?' }], xRange: [-6.5, 6.5], yRange: [-4.6, 4.6] } },
+  },
+  {
+    id: 'field-uniform-plates-electron',
+    note: 'uniform field between charged plates, an electron between them, plate separation and voltage printed; the force arrow is not shown',
+    question: 'What is the direction of the electric force on the electron?',
+    alt: 'Two horizontal parallel plates, the upper one positive and the lower one negative, with field arrows pointing down between them and an electron between the plates.',
+    spec: { type: 'field_diagram', params: { variant: 'uniform', direction: 'down', separation: { value: 2, unit: 'cm' }, voltage: { value: 120 }, charge: { sign: '−', label: 'e⁻' } } },
+  },
+  {
+    id: 'field-magnetic-force-negative-charge',
+    note: 'a negative charge moving right in a field into the page; the force arrow is hidden (it is the question)',
+    question: 'What is the direction of the magnetic force on the charge?',
+    alt: 'A region of magnetic field directed into the page, drawn as crosses in circles, with a negative charge moving to the right.',
+    spec: { type: 'field_diagram', params: { variant: 'magnetic_force', field: 'into', charge: { sign: '−', velocity: 'right', label: 'q' } } },
+  },
+  {
+    id: 'field-wire-cross-section',
+    note: 'a wire seen end-on carrying current out of the page: three rings with arrowheads, a point P to its right',
+    question: 'What is the direction of the magnetic field at point P?',
+    alt: 'A wire seen end-on with current out of the page, surrounded by three circular field lines with counter-clockwise arrowheads, and a point P to the right of the wire.',
+    spec: { type: 'field_diagram', params: { variant: 'wire', view: 'cross_section', current: 'out', point: { side: 'right' } } },
+  },
+  // --- flow_diagram ---------------------------------------------------------
+  {
+    id: 'flow-chain-cellular-respiration',
+    note: 'a process chain of four boxes with a label on every arrow',
+    question: 'In which stage shown is most of the ATP produced?',
+    alt: 'Four boxes joined by arrows: glucose, then pyruvate, then acetyl-CoA, then carbon dioxide and water, with the arrows labelled glycolysis, link reaction and Krebs cycle.',
+    spec: { type: 'flow_diagram', params: { variant: 'chain', nodes: [{ id: 'g', label: 'Glucose' }, { id: 'p', label: 'Pyruvate' }, { id: 'a', label: 'Acetyl-CoA' }, { id: 'c', label: 'CO₂ + H₂O' }], steps: ['glycolysis', 'link reaction', 'Krebs cycle'] } },
+  },
+  {
+    id: 'flow-food-web-nine',
+    note: 'dense: a food web of nine organisms on a three-column grid with thirteen arrows',
+    question: 'Which organism in the food web is both a secondary and a tertiary consumer?',
+    alt: 'A food web: grass, shrubs and algae at the bottom; grasshopper, rabbit and small fish above them; frog and snake above those; and a hawk at the top, joined by arrows that point from each organism to what eats it.',
+    spec: {
+      type: 'flow_diagram',
+      params: {
+        variant: 'web',
+        nodes: [
+          { id: 'hawk', label: 'Hawk', col: 1, row: 0 },
+          { id: 'snake', label: 'Snake', col: 0, row: 1 }, { id: 'frog', label: 'Frog', col: 2, row: 1 },
+          { id: 'hopper', label: 'Grasshopper', col: 0, row: 2 }, { id: 'rabbit', label: 'Rabbit', col: 1, row: 2 }, { id: 'fish', label: 'Small fish', col: 2, row: 2 },
+          { id: 'grass', label: 'Grass', col: 0, row: 3 }, { id: 'shrub', label: 'Shrubs', col: 1, row: 3 }, { id: 'algae', label: 'Algae', col: 2, row: 3 },
+        ],
+        edges: [
+          { from: 'grass', to: 'hopper' }, { from: 'grass', to: 'rabbit' }, { from: 'shrub', to: 'rabbit' }, { from: 'shrub', to: 'hopper' }, { from: 'algae', to: 'fish' },
+          { from: 'hopper', to: 'snake' }, { from: 'hopper', to: 'frog' }, { from: 'rabbit', to: 'snake' }, { from: 'rabbit', to: 'hawk' }, { from: 'fish', to: 'frog' },
+          { from: 'frog', to: 'snake' }, { from: 'snake', to: 'hawk' }, { from: 'frog', to: 'hawk' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'flow-blank-feedback-loop',
+    note: 'a feedback loop of four boxes with + / − on the arrows; one box and one sign are blanks',
+    question: 'Body temperature rises above the set point. What goes in the box marked "?", and is this loop positive or negative feedback?',
+    alt: 'A loop of four boxes joined by arrows carrying plus and minus signs: body temperature, hypothalamus, a box with a question mark, and heat loss; one arrow carries a question mark instead of a sign.',
+    spec: {
+      type: 'flow_diagram',
+      params: { variant: 'cycle', nodes: [{ id: 't', label: 'Body temperature' }, { id: 'h', label: 'Hypothalamus signal' }, { id: 's', label: 'Sweating', blank: true }, { id: 'l', label: 'Heat loss' }], steps: [{ sign: '+' }, { sign: '+' }, { sign: '+' }, { sign: '−', blank: true }] },
+    },
+  },
+  {
+    id: 'flow-blank-energy-pyramid',
+    note: 'an energy pyramid of four trophic levels; the energy at the third level is a blank',
+    question: 'About 10 % of the energy at one trophic level passes to the next. How much energy is available to the secondary consumers?',
+    alt: 'A pyramid of four stacked bars, widest at the bottom: producers with 50 000 kilojoules, primary consumers with 5 000, secondary consumers with a question mark and tertiary consumers with 50.',
+    spec: { type: 'flow_diagram', params: { variant: 'pyramid', unit: 'kJ', transferPercent: 10, levels: [{ label: 'Producers', value: 50000 }, { label: 'Primary consumers', value: 5000 }, { label: 'Secondary consumers', value: 500, show: 'blank' }, { label: 'Tertiary consumers', value: 50 }] } },
+  },
+  // --- solid_3d -------------------------------------------------------------
+  {
+    id: 'solid-cylinder',
+    note: 'a cylinder with its radius and height labelled; the back of the base is dashed',
+    question: 'What is the volume of the cylinder, in terms of π?',
+    alt: 'A cylinder with a radius of 3 centimetres marked on its top face and a height of 8 centimetres.',
+    spec: { type: 'solid_3d', params: { solid: 'cylinder', radius: 3, height: 8, unit: 'cm' } },
+  },
+  {
+    id: 'solid-composite-prism-pyramid',
+    note: 'dense: a square pyramid on a square prism — hidden edges dashed, the heights of both parts and the slant height labelled',
+    question: 'What is the total volume of the solid?',
+    alt: 'A solid made of a square-based box 6 metres wide and 4 metres high with a pyramid 4 metres high on top; the slant height of the pyramid is labelled 5 metres.',
+    spec: { type: 'solid_3d', params: { solid: 'composite', bottom: 'prism', top: 'pyramid', base: 6, height: 4, topHeight: 4, unit: 'm', labels: { slant: 'auto' } } },
+  },
+  {
+    id: 'solid-blank-cone-slant',
+    note: 'a cone with radius and height given; the slant height is a blank',
+    question: 'What is the slant height of the cone?',
+    alt: 'A cone with a base radius of 5 centimetres and a height of 12 centimetres; its slant height is replaced by a question mark.',
+    spec: { type: 'solid_3d', params: { solid: 'cone', radius: 5, height: 12, unit: 'cm', labels: { slant: '?' } } },
+  },
+  {
+    id: 'solid-triangular-prism',
+    note: 'a triangular prism: the height of the triangular face dashed with its right-angle mark',
+    question: 'What is the volume of the triangular prism?',
+    alt: 'A triangular prism whose triangular face has a base of 6 inches and a height of 4 inches, and whose length is 10 inches.',
+    spec: { type: 'solid_3d', params: { solid: 'triangular_prism', base: 6, height: 4, length: 10, unit: 'in' } },
+  },
+  {
+    id: 'solid-silo-cylinder-hemisphere',
+    note: 'a hemisphere on a cylinder, the radius written as an expression',
+    question: 'A silo is a cylinder with a hemisphere on top. Write its volume in terms of r.',
+    alt: 'A cylinder with a dome on top; the radius of the base is labelled r and the height of the cylinder 3r.',
+    spec: { type: 'solid_3d', params: { solid: 'composite', bottom: 'cylinder', top: 'hemisphere', radius: 2, height: 6, labels: { radius: 'r', height: '3r' }, notToScale: true } },
+  },
+  {
+    id: 'solid-revolution-washer',
+    note: 'solid of revolution about the x-axis: the region between y = √x and y = x² hatched, its mirror image dashed, one washer strip',
+    question: 'The region between the two curves is revolved about the x-axis. What is the volume of the solid, in terms of π?',
+    alt: 'A graph of two curves that meet at the origin and at the point 1, 1, with the region between them hatched, a thin vertical strip in the region, and the mirror image of the region drawn dashed below the x-axis.',
+    spec: { type: 'solid_3d', params: { solid: 'revolution', axis: 'x', outer: { poly: [0, 1], sqrt: true, label: 'y = √x' }, inner: { poly: [0, 0, 1], label: 'y = x²' }, from: 0, to: 1, xStep: 0.5, yStep: 0.5 } },
+  },
+  // --- spectrum -------------------------------------------------------------
+  {
+    id: 'spectrum-mass-copper',
+    note: 'a mass spectrum with two isotope peaks on a numbered abundance axis',
+    question: 'The mass spectrum of an element is shown. What is its average atomic mass?',
+    alt: 'A mass spectrum with a bar at 63 reaching about 69 percent and a bar at 65 reaching about 31 percent.',
+    spec: { type: 'spectrum', params: { variant: 'mass', peaks: [{ mz: 63, abundance: 69.2 }, { mz: 65, abundance: 30.8 }], xRange: [60, 68], yMax: 80, yStep: 10 } },
+  },
+  {
+    id: 'spectrum-pes-sodium',
+    note: 'awkward: a photoelectron spectrum over four decades of binding energy (axis increases to the left), four peaks of heights 2, 2, 6, 1, two of them close together',
+    question: 'The photoelectron spectrum of an element is shown. Which element is it?',
+    alt: 'A photoelectron spectrum with peaks at binding energies of 104, 6.84, 3.67 and 0.50 megajoules per mole and relative heights of 2, 2, 6 and 1.',
+    spec: { type: 'spectrum', params: { variant: 'pes', peaks: [{ energy: 104, electrons: 2 }, { energy: 6.84, electrons: 2 }, { energy: 3.67, electrons: 6 }, { energy: 0.5, electrons: 1 }] } },
+  },
+  {
+    id: 'spectrum-blank-mass-magnesium',
+    note: 'three isotope peaks with labels; the label of the middle one is a blank',
+    question: 'Which isotope gives the peak marked "?"',
+    alt: 'A mass spectrum with a tall bar at 24, and two short bars at 25 and 26; the first and third are labelled magnesium-24 and magnesium-26 and the second carries a question mark.',
+    spec: { type: 'spectrum', params: { variant: 'mass', peaks: [{ mz: 24, abundance: 79, label: '²⁴Mg' }, { mz: 25, abundance: 10, label: '?' }, { mz: 26, abundance: 11, label: '²⁶Mg' }], xRange: [22, 28], yMax: 100, yStep: 20 } },
+  },
+  {
+    id: 'spectrum-lines-unknown-mixture',
+    note: 'four line spectra over one wavelength axis: an unknown and three reference elements; one absorption strip',
+    question: 'Which of the elements are present in the unknown sample?',
+    alt: 'Four line spectra from 400 to 700 nanometres: an unknown sample with seven lines, hydrogen with four lines, helium with five lines, and sodium as an absorption spectrum with one line.',
+    spec: {
+      type: 'spectrum',
+      params: { variant: 'lines', rows: [
+        { label: 'Unknown', lines: [410, 434, 486, 656, 589, 447, 502] },
+        { label: 'Hydrogen', lines: [410, 434, 486, 656] },
+        { label: 'Helium', lines: [447, 471, 502, 588, 668] },
+        { label: 'Sodium (absorption)', lines: [589], kind: 'absorption' },
+      ] },
+    },
+  },
+  {
+    id: 'spectrum-absorbance-calibration',
+    note: "a Beer's-law calibration line with five points and a dashed level line at the sample's absorbance (not dropped to the axis)",
+    question: 'A sample of the same dye has the absorbance shown by the dashed line. What is its concentration?',
+    alt: 'A straight calibration line through the origin on a grid of absorbance against concentration, with five points on it and a dashed horizontal line at an absorbance of 0.6.',
+    spec: { type: 'spectrum', params: { variant: 'absorbance', slope: 1.5, xMax: 0.5, xStep: 0.1, yMax: 0.8, yStep: 0.1, points: [[0.1, 0.15], [0.2, 0.3], [0.3, 0.45], [0.4, 0.6], [0.5, 0.75]], sample: { absorbance: 0.6 }, xLabel: 'Concentration (mmol/L)' } },
+  },
+];
+
+FIGURE_FIXTURES.push(...BATCH2_FIXTURES);
