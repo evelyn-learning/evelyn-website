@@ -70,6 +70,30 @@
  * text items), whoever asked. Skill scope and the audited-only gate apply to
  * a figure row exactly as to any other bank row.
  *
+ * MISFILED MARKS (2026-10-17 — misfiled-items.ts, kill switch
+ * `TUTOR_PRACTICE_MISFILED_MARKS=off`): some older items are filed under one
+ * objective of a course skill (nearly always its first) but test a
+ * neighbouring one, and carry a mark naming the objective they test (or none).
+ *   - A request for ONE objective (an LO request that is not skill scope)
+ *     skips an item marked for anything other than the requested objective,
+ *     and gains the items marked for it that are filed under ANOTHER
+ *     objective of the same skill plan (`isCourseSkillPlan`). The sibling
+ *     objectives are read off the one plan the requested LO belongs to and
+ *     are namespaced under its id, a gained bank row must be stored under one
+ *     of them and a gained step must be a segment of a plan already servable
+ *     for this request — so nothing from another skill or plan can enter. A
+ *     gained item passes the same withdrawn / key-check / drawing / essay /
+ *     audited-generated / figure filters as any other; a gained step filed
+ *     under objective 2..N is also held to the audited lesson-step list for
+ *     an audited-only partner (the rule skill scope applies). It is returned
+ *     with its own id and the `loId` it is FILED under — neither changes.
+ *   - A SKILL request returns exactly the items it did before, every one
+ *     with the same id and `loId` (the skill LO). Only `spreadAcrossObjectives`
+ *     counts a marked item under the objective it tests, so a short set no
+ *     longer spends its "objective 1" slots on items that test objective 2.
+ *   - Topic scope, the coverage report (it reports where items are FILED),
+ *     grading and the live tutor session do not read the marks.
+ *
  * The assembly core (`retrievePractice`) takes an injectable `PracticeSources`
  * so it is unit-testable without Mongo. Phase 4 supplies concrete Mongo- and
  * lesson-plan-store-backed sources.
@@ -89,6 +113,7 @@ import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } 
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 import { auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
 import { acceptsFigures, carriesFigure, logFigureItemSkip, servableFigure } from './figure-items';
+import { MISFILED_ITEM_MARKS, idsMarkedFor, misfiledMarksEnabled, spreadObjectiveOf, withoutMisfiledFor, type MisfiledMarks } from './misfiled-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -230,13 +255,24 @@ export function skillScopeEnabled(env: Record<string, string | undefined> = proc
  * The caller applies `planServable` (partner stamp) first. Pure.
  */
 export function isSkillScopePlan(plan: PlanLite, loId: string): boolean {
+  if (!isCourseSkillPlan(plan)) return false;
+  return plan.los[0].id === loId && loId === `${plan.id}.lo-1`;
+}
+
+/**
+ * Conditions 1–3 of the skill-scope rule on their own: is `plan` a generated
+ * course skill — a `gen-` plan, not private, not student-owned, with at least
+ * two distinct LOs that are ALL namespaced under its own id? Its objectives
+ * are then siblings of one skill, and no LO id of it can name another plan.
+ * Pure.
+ */
+export function isCourseSkillPlan(plan: PlanLite): boolean {
   if (!plan.id || !plan.id.startsWith('gen-')) return false;
   if (plan.privateKind ?? classifyPrivatePlan(plan.id, undefined)) return false;
   if (plan.studentOwned) return false;
   const loIds = [...new Set(plan.los.map((l) => l.id))];
   if (loIds.length < 2) return false;
-  if (!loIds.every((id) => id.startsWith(`${plan.id}.`))) return false;
-  return plan.los[0].id === loId && loId === `${plan.id}.lo-1`;
+  return loIds.every((id) => id.startsWith(`${plan.id}.`));
 }
 
 /**
@@ -502,6 +538,9 @@ export interface RetrievePracticeOptions {
    *  unset by every other caller (assessment, assigned practice), which is
    *  what keeps a figure item out of them. See the module header. */
   allowFigures?: boolean;
+  /** The misfiled marks to apply (misfiled-items.ts). Omitted ⇒ the committed
+   *  list; tests inject their own. Ignored when the kill switch is off. */
+  misfiledMarks?: MisfiledMarks;
 }
 
 /**
@@ -541,6 +580,8 @@ export async function retrievePractice(
   // and the plan's objectives in order. Null for every other request.
   let skillObjectives: string[] | null = null;
   const objectiveOf = new Map<string, string>();
+  // Misfiled marks (module header). Null ⇒ switched off: nothing below reads them.
+  const marks: MisfiledMarks | null = misfiledMarksEnabled() ? (options.misfiledMarks ?? MISFILED_ITEM_MARKS) : null;
 
   if ('loId' in req.scope) {
     const loId = req.scope.loId;
@@ -552,9 +593,17 @@ export async function retrievePractice(
     // plan ⇒ draw from every objective of that one plan.
     const skillPlan = skillScopeEnabled() ? plans.find((p) => isSkillScopePlan(p, loId)) : undefined;
     if (skillPlan) skillObjectives = [...new Set(skillPlan.los.map((l) => l.id))];
+    // ONE objective asked for (not skill scope): the marks apply. `gainIds`
+    // are the items marked as testing it; `siblings` the other objectives of
+    // the one course skill plan it belongs to — empty unless both exist.
+    const single = marks && !skillObjectives ? marks : null;
+    const gainIds = single ? idsMarkedFor(loId, single) : null;
+    const homePlan = gainIds && gainIds.size > 0 ? plans.find((p) => isCourseSkillPlan(p) && p.los.some((l) => l.id === loId)) : undefined;
+    const siblings = homePlan ? [...new Set(homePlan.los.map((l) => l.id))].filter((o) => o !== loId) : [];
     for (const p of plans) {
       if (p !== skillPlan || !skillObjectives) {
-        planItems.push(...planToItems(p, loId));
+        const own = planToItems(p, loId);
+        planItems.push(...(single ? withoutMisfiledFor(own, loId, single) : own));
         continue;
       }
       for (const objective of skillObjectives) {
@@ -571,7 +620,34 @@ export async function retrievePractice(
         }
       }
     }
+    // Gained lesson steps: a step filed under a sibling objective and marked
+    // as testing the requested one, from a plan already servable for this
+    // request. The sibling ids are the home plan's own, so only a plan that
+    // teaches that same skill can hold one. Objective 1's step is ungated
+    // (as in skill scope); a step from objective 2..N must be audited for an
+    // audited-only partner.
+    if (homePlan && gainIds) {
+      for (const p of plans) {
+        // Only a plan that holds a marked segment is read at all (so a
+        // sibling's withdrawn step is not logged as skipped on every request).
+        if (!p.id || !p.segments.some((sg) => gainIds.has(`${p.id}::${sg.id}`))) continue;
+        for (const o of siblings) {
+          const marked = planToItems(p, o).filter((it) => gainIds.has(it.id));
+          planItems.push(...(o === homePlan.los[0].id ? marked : withoutUnauditedLessonSteps(marked, who?.partnerId, 'practice-misfiled')));
+        }
+      }
+    }
     let bank = await sources.bankForLoId(loId, difficulty, bankOpts);
+    if (single) {
+      bank = withoutMisfiledFor(bank, loId, single);
+      if (homePlan && gainIds) {
+        // Gained bank rows: stored under a sibling objective (checked on the
+        // row itself, whatever the source returned) and marked for this one.
+        const more = await Promise.all(siblings.map((o) => sources.bankForLoId(o, difficulty, bankOpts)));
+        const gained = more.flatMap((rows, i) => rows.filter((b) => b.loId === siblings[i] && gainIds.has(b.id)));
+        if (gained.length > 0) bank = [...bank, ...gained];
+      }
+    }
     if (skillObjectives) {
       // Bank rows stored under any other objective of the plan. The LO ids
       // are this plan's own (`<planId>.lo-K`), so nothing foreign matches.
@@ -583,6 +659,15 @@ export async function retrievePractice(
       });
       // The row's own `loId` is re-tagged to the skill LO for the wire only.
       bank = [...bank, ...more.flat()].map((b) => ({ ...b, loId }));
+      // Misfiled marks: the SPREAD counts a marked item under the objective
+      // it tests. `objectiveOf` feeds only the ordering below — which items
+      // are pooled, their ids and their `loId` are exactly as without marks.
+      if (marks) {
+        for (const [id, filed] of objectiveOf) {
+          const o = spreadObjectiveOf(id, filed, skillObjectives, marks);
+          if (o !== filed) objectiveOf.set(id, o);
+        }
+      }
     }
     // Essay-practice node (FRQ / DBQ / LEQ / SAQ): rows the on-demand
     // generator banked here earlier are MCQ / one-number / short items, not
