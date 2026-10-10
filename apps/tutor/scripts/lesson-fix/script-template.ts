@@ -13,6 +13,8 @@ export type Direction = 'apply' | 'revert';
 
 export interface ScriptMeta {
   direction: Direction;
+  /** File name of the script itself (for the usage lines). */
+  scriptName?: string;
   /** sha256 of the data file's bytes — the script refuses any other file. */
   dataSha256: string;
   dataFileName: string;
@@ -91,6 +93,9 @@ function planRun(data, docsById) {
     const popDoc = {};
     // Objective descriptions: stored at los.<i>.description, i found by id.
     for (const o of (plan.objectives || [])) {
+      // 'description' (the default, and the only kind in data built before
+      // short titles were supported) or 'shortTitle'.
+      const field = o.field === 'shortTitle' ? 'shortTitle' : 'description';
       counts.objectives.total += 1;
       counts.fields.total += 1;
       let why = null;
@@ -105,21 +110,21 @@ function planRun(data, docsById) {
       }
       let state = 'mismatch';
       if (!why) {
-        const v = doc.los[at].description;
+        const v = doc.los[at][field];
         if (v === fromOf(o)) state = 'change';
         else if (v === toOf(o)) state = 'already';
         else why = 'stored value differs: ' + JSON.stringify(v);
       }
       if (state === 'mismatch') {
         counts.objectives.mismatched += 1; counts.fields.mismatched += 1; planState.mismatch += 1;
-        mismatches.push({ pack: plan.pack, planId: plan.planId, segmentId: o.loId, path: 'objective.description', why: why });
+        mismatches.push({ pack: plan.pack, planId: plan.planId, segmentId: o.loId, path: 'objective.' + field, why: why });
       } else if (state === 'already') {
         counts.objectives.alreadyApplied += 1; counts.fields.alreadyApplied += 1;
       } else {
         counts.objectives.toChange += 1; counts.fields.toChange += 1; planState.change += 1;
         setFilter['los.' + at + '.id'] = o.loId;
-        setFilter['los.' + at + '.description'] = fromOf(o);
-        setDoc['los.' + at + '.description'] = toOf(o);
+        setFilter['los.' + at + '.' + field] = fromOf(o);
+        setDoc['los.' + at + '.' + field] = toOf(o);
       }
     }
     for (const s of plan.segments) {
@@ -252,7 +257,7 @@ for (const d of stored) docsById[d._id] = d;
 const run = planRun(data, docsById);
 print(line('plans', run.counts.plans));
 print(line('segments', run.counts.segments));
-print(line('objective descriptions', run.counts.objectives));
+print(line('objective fields', run.counts.objectives));
 print(line('fields', run.counts.fields));
 
 // Read-only: other stored plans that carry the same objective ids (a plan
@@ -312,11 +317,11 @@ if (!APPLY) {
 
 export function renderScript(meta: ScriptMeta): string {
   const verb = meta.direction === 'apply' ? 'Applies' : 'REVERTS';
-  const self = meta.direction === 'apply' ? 'apply-lesson-corrections.mongosh.js' : 'revert-lesson-corrections.mongosh.js';
+  const self = meta.scriptName ?? (meta.direction === 'apply' ? 'apply-lesson-corrections.mongosh.js' : 'revert-lesson-corrections.mongosh.js');
   const header = [
     `// ${verb} the reviewed lesson-text corrections ${meta.direction === 'apply' ? 'to' : 'in'} the \`lessonplans\` collection (db \`evelyn\`).`,
     `// Generated ${meta.generatedAt} by apps/tutor/scripts/lesson-fix/build-apply-script.ts — do not edit; rebuild.`,
-    `// Data: ${meta.dataFileName} (sha256 ${meta.dataSha256}) — ${meta.counts.plans} plans, ${meta.counts.segments} segments, ${meta.counts.fields} values (${meta.counts.objectives} of them objective descriptions).`,
+    `// Data: ${meta.dataFileName} (sha256 ${meta.dataSha256}) — ${meta.counts.plans} plans, ${meta.counts.segments} segments, ${meta.counts.fields} values (${meta.counts.objectives} of them objective descriptions / short titles).`,
     ...(meta.excludedPatches ? [`// INCOMPLETE: ${meta.excludedPatches} patch(es) failed validation and are NOT in the data — see apply-build-report.json.`] : []),
     '//',
     meta.direction === 'apply'
@@ -325,7 +330,7 @@ export function renderScript(meta: ScriptMeta): string {
     '// A field already in its target state is counted, not an error (re-runnable).',
     '// ANY other stored value aborts the whole run before the first write.',
     '// Writes only the listed fields, by explicit path (`segments.<i>.<field>[.<j>]`, `i` found by segment id in the stored document;',
-    '// `los.<i>.description`, `i` found by objective id);',
+    '// `los.<i>.description` / `los.<i>.shortTitle`, `i` found by objective id);',
     '// never replaces a document, a segment or an array. Does not touch `updatedAt` or any other field.',
     '// Dry run by default. APPLY=1 writes, after saving the full original documents to BACKUP (a NEW file).',
     '//',

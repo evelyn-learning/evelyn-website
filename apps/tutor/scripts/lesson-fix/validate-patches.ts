@@ -12,9 +12,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { renderDiffMarkdown } from './core';
-import { PATCH_DIR, TOOLING_DIR, validateAll } from './io';
+import { PATCH_DIR, TOOLING_DIR, assertWritable, validateAll } from './io';
 
 function main(): void {
+  assertWritable();
   const result = validateAll();
   const generatedAt = new Date().toISOString();
   fs.mkdirSync(TOOLING_DIR, { recursive: true });
@@ -35,7 +36,7 @@ function main(): void {
 
   const t = result.totals;
   const values = result.objectives.length + result.segments.reduce((a, s) => a + s.changes.length, 0);
-  console.log(`patch files ${t.files} · patches ${t.patches} · listed changes ${t.changes} · lessons ${t.plans} · segments ${result.segments.length} · objective descriptions ${result.objectives.length} · stored values to change ${values} · errors ${t.errors} · warnings ${t.warnings}`);
+  console.log(`patch files ${t.files} · patches ${t.patches} · listed changes ${t.changes} · lessons ${t.plans} · segments ${result.segments.length} · objective fields ${result.objectives.length} · stored values to change ${values} · errors ${t.errors} · warnings ${t.warnings}`);
   for (const f of result.files) console.log(`  ${f.file}: ${f.patches} patches, ${f.changes} changes, ${f.skipped} skipped by the writer`);
   for (const i of result.issues.slice(0, 60)) {
     console.log(`  ${i.level.toUpperCase()} ${i.code} ${i.file} lesson ${i.pack ?? '?'} ${i.segmentId ?? ''} ${i.path ?? ''}: ${i.message}`);

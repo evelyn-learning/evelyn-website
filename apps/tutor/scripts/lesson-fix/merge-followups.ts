@@ -13,7 +13,7 @@ import '../lib/no-db-env';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { PatchFile } from './core';
-import { FINAL_PATCH_DIR, TOOLING_DIR, WRITER_PATCH_DIR, loadPatchFiles } from './io';
+import { FINAL_PATCH_DIR, FOLLOW_UP_FILE, PASS, RECHECK2_FILE, TOOLING_DIR, WRITER_PATCH_DIR, assertWritable, loadPatchFiles } from './io';
 import { mergeFollowUps, type FollowUpPatch } from './merge-core';
 
 const RECHECK = 'recheck.json';
@@ -29,21 +29,32 @@ const REPLACE_EXISTING = [
 ];
 
 function main(): void {
+  assertWritable();
   const { files, loadIssues } = loadPatchFiles(WRITER_PATCH_DIR, [RECHECK]);
   if (loadIssues.length) {
     for (const i of loadIssues) console.error(`ERROR ${i.file}: ${i.message}`);
     process.exit(1);
   }
-  const recheck = JSON.parse(fs.readFileSync(path.join(WRITER_PATCH_DIR, RECHECK), 'utf8')) as { followUps?: { patches?: FollowUpPatch[] } };
-  const followUps = recheck.followUps?.patches ?? [];
-  const result = mergeFollowUps(files, followUps, { replaceExisting: REPLACE_EXISTING });
+  const recheck = JSON.parse(fs.readFileSync(FOLLOW_UP_FILE, 'utf8')) as { followUps?: { patches?: FollowUpPatch[] } };
+  const followUps = [...(recheck.followUps?.patches ?? [])];
+  const sources = [FOLLOW_UP_FILE];
+  if (PASS === 2 && fs.existsSync(RECHECK2_FILE)) {
+    // Every fix is based on the text after the pass-2 patch (stated by the
+    // re-check); its changes carry no `base` of their own.
+    const fixes = (JSON.parse(fs.readFileSync(RECHECK2_FILE, 'utf8')) as { fixes?: FollowUpPatch[] }).fixes ?? [];
+    for (const f of fixes) {
+      followUps.push({ ...f, item: f.item ?? `recheck2-${f.pack}`, changes: f.changes.map((c) => ({ ...c, base: c.base ?? 'after-existing-patch' })) });
+    }
+    sources.push(RECHECK2_FILE);
+  }
+  const result = mergeFollowUps(files, followUps, { replaceExisting: PASS === 1 ? REPLACE_EXISTING : [] });
 
   fs.mkdirSync(FINAL_PATCH_DIR, { recursive: true });
   for (const stale of fs.readdirSync(FINAL_PATCH_DIR).filter((f) => f.endsWith('.json'))) fs.rmSync(path.join(FINAL_PATCH_DIR, stale));
   for (const f of result.files as PatchFile[]) {
     const out = {
       subject: f.subject,
-      source: `merged by apps/tutor/scripts/lesson-fix/merge-followups.ts from patches/${f.file} + patches/${RECHECK} (followUps)`,
+      source: `merged by apps/tutor/scripts/lesson-fix/merge-followups.ts from ${path.join(WRITER_PATCH_DIR, f.file)} + ${sources.join(' + ')}`,
       patches: f.patches,
       skipped: f.skipped,
     };

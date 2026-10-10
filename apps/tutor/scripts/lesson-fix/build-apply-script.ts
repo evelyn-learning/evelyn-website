@@ -19,12 +19,12 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildApplyData } from './core';
-import { TOOLING_DIR, validateAll } from './io';
+import { APPLIED_DATA_FILES, DATA_FILE, TOOLING_DIR, assertWritable, scriptFile, validateAll } from './io';
 import { renderScript } from './script-template';
 
-export const DATA_FILE = 'lesson-corrections.data.json';
 
 function main(): void {
+  assertWritable();
   const result = validateAll();
   const excludeErrored = process.argv.includes('--exclude-errored');
   const errors = result.issues.filter((i) => i.level === 'error');
@@ -49,14 +49,16 @@ function main(): void {
   fs.writeFileSync(path.join(TOOLING_DIR, DATA_FILE), dataText);
   for (const direction of ['apply', 'revert'] as const) {
     fs.writeFileSync(
-      path.join(TOOLING_DIR, `${direction}-lesson-corrections.mongosh.js`),
-      renderScript({ direction, dataSha256, dataFileName: DATA_FILE, counts: data.counts, generatedAt, excludedPatches: excluded.length }),
+      path.join(TOOLING_DIR, scriptFile(direction)),
+      renderScript({ direction, scriptName: scriptFile(direction), dataSha256, dataFileName: DATA_FILE, counts: data.counts, generatedAt, excludedPatches: excluded.length }),
     );
   }
   const tryChanged = result.practiceImpact;
   const report = {
     generatedAt,
     dataFile: DATA_FILE,
+    scripts: { apply: scriptFile('apply'), revert: scriptFile('revert') },
+    baseline: APPLIED_DATA_FILES.length ? `the stored documents AFTER ${APPLIED_DATA_FILES.join(', ')} was applied` : 'the stored documents as first generated',
     dataSha256,
     counts: data.counts,
     patchFiles: result.files,
@@ -67,7 +69,7 @@ function main(): void {
       const objs = result.objectives.filter((o) => o.subject === subject);
       return [subject, { plans: new Set([...segs.map((s) => s.planId), ...objs.map((o) => o.planId)]).size, segments: segs.length, objectives: objs.length, fields: objs.length + segs.reduce((a, s) => a + s.changes.length, 0) }];
     })),
-    objectiveDescriptions: result.objectives.map((o) => ({ pack: o.pack, planId: o.planId, loId: o.loId, old: o.old, new: o.new })),
+    objectiveFields: result.objectives.map((o) => ({ pack: o.pack, planId: o.planId, loId: o.loId, field: o.field, old: o.old, new: o.new })),
     objectiveCopiesChanged: result.objectiveCopies.filter((c) => c.action !== 'listed'),
     cacheOrVersionBump: 'none needed — no content hash, version or updatedAt gates a cache of these plans (storage-notes.md §b); updatedAt is left untouched',
     notWrittenByTheScript: {
@@ -95,7 +97,7 @@ function main(): void {
     },
   };
   fs.writeFileSync(path.join(TOOLING_DIR, 'apply-build-report.json'), `${JSON.stringify(report, null, 1)}\n`);
-  console.log(`built for ${data.counts.plans} plans · ${data.counts.segments} segments · ${data.counts.fields} values, ${data.counts.objectives} of them objective descriptions (data sha256 ${dataSha256.slice(0, 12)}…)`);
+  console.log(`built for ${data.counts.plans} plans · ${data.counts.segments} segments · ${data.counts.fields} values, ${data.counts.objectives} of them objective descriptions / short titles (data sha256 ${dataSha256.slice(0, 12)}…)`);
   console.log(`practice steps changed: ${tryChanged.length} ${JSON.stringify(report.notWrittenByTheScript.practiceStepsChanged.byStatus)} · in expanded plans ${report.notWrittenByTheScript.practiceStepsChanged.inExpandedPlans.total}`);
   if (excluded.length) console.log(`EXCLUDED ${excluded.length} patch(es) with validation errors — see apply-build-report.json`);
   console.log(`output: ${TOOLING_DIR}`);

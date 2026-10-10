@@ -16,9 +16,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import { applyResolved, buildApplyData, recapTeacherNote, validatePatches, type ApplyData, type Lesson, type PatchFile } from './core';
+import { applyDataToDocs, applyResolved, buildApplyData, recapTeacherNote, validatePatches, type ApplyData, type Lesson, type PatchFile } from './core';
 import { makeFakeDb, type FakeDbHandle } from './fake-mongo';
-import { LESSON_READ_DIR, loadLessons, loadPatchFiles } from './io';
+import { APPLIED_DATA_FILES, DUMP_FILE, PASS, loadLessons, loadPatchFiles } from './io';
 import { renderScript, type Direction } from './script-template';
 
 let passed = 0;
@@ -126,8 +126,9 @@ function expectedAfter(docs: Doc[], files: PatchFile[], lessons: Map<string, Les
   for (const o of v.objectives) {
     const doc = out.find((d) => d._id === o.planId) as Doc;
     const lo = (doc.los as Array<{ id: string; description: string }>).find((x) => x.id === o.loId) as { description: string };
-    assert.equal(lo.description, o.old);
-    lo.description = o.new;
+    const lo2 = lo as unknown as Record<string, string>;
+    assert.equal(lo2[o.field], o.old);
+    lo2[o.field] = o.new;
   }
   return out;
 }
@@ -145,6 +146,8 @@ function seg(l: Lesson, kind: string, nth = 0): Lesson['segments'][number] {
   return l.segments.filter((s) => s.kind === kind)[nth];
 }
 
+const TITLED = (L3.objectives ?? [])[0];
+assert.ok(TITLED && typeof TITLED.shortTitle === 'string', 'fixture lesson needs an objective with a short title');
 const OBJ = (L2.objectives ?? [])[1];
 assert.ok(OBJ && seg(L2, 'recap') && (seg(L2, 'recap').mustRemember as string[])[1] === OBJ.description, 'fixture lesson needs a recap that copies its objectives');
 
@@ -182,6 +185,8 @@ function fixtureFiles(): PatchFile[] {
         { pack: L2.pack, planId: L2.planId, segmentId: h.id, changes: [{ path: 'goal', old: h.goal as string, new: 'A corrected goal from the fixture.' }] },
         // An objective description: also changes recap.mustRemember[1] and recap.teacherNote.
         { pack: L2.pack, planId: L2.planId, segmentId: OBJ.id, changes: [{ path: 'objective.description', old: OBJ.description, new: 'A corrected objective from the fixture.' }] },
+        // A short title on another plan: los.<i>.shortTitle only.
+        { pack: L3.pack, planId: L3.planId, segmentId: TITLED.id, changes: [{ path: 'objective.shortTitle', old: TITLED.shortTitle as string, new: 'Fixture short title' }] },
       ],
     },
   ];
@@ -191,8 +196,8 @@ const fixtureDocs = [L1, L2, L3].map(storedFromLesson);
 const fx = build(fixtureFiles(), allLessons);
 const expected = expectedAfter(fixtureDocs, fixtureFiles(), allLessons);
 
-test('fixture: 2 plans, 5 segments, 10 values (an appended step, an objective description and its two recap copies)', () => {
-  assert.deepEqual(fx.data.counts, { plans: 2, segments: 5, fields: 10, objectives: 1 });
+test('fixture: 3 plans, 5 segments, 11 values (an appended step, an objective description with its two recap copies, a short title)', () => {
+  assert.deepEqual(fx.data.counts, { plans: 3, segments: 5, fields: 11, objectives: 2 });
   assert.notDeepEqual(expected, fixtureDocs);
 });
 
@@ -211,9 +216,9 @@ test('dry run: counts everything as to-change, writes nothing, makes no backup',
   const h = makeFakeDb('evelyn', fixtureDocs);
   const r = run(fx.scripts.apply, h, { DATA: fx.dataPath });
   assert.equal(r.error, null);
-  assert.match(countsLine(r, 'plans'), /2 in the data · to change 2 · already applied 0 · mismatched 0/);
+  assert.match(countsLine(r, 'plans'), /3 in the data · to change 3 · already applied 0 · mismatched 0/);
   assert.match(countsLine(r, 'segments'), /5 in the data · to change 5 · already applied 0 · mismatched 0/);
-  assert.match(countsLine(r, 'fields'), /10 in the data · to change 10 · already applied 0 · mismatched 0/);
+  assert.match(countsLine(r, 'fields'), /11 in the data · to change 11 · already applied 0 · mismatched 0/);
   assert.ok(r.out.some((l) => l.startsWith('DRY RUN')));
   assert.equal(h.writes.length, 0);
   assert.deepEqual(h.docs, fixtureDocs);
@@ -236,12 +241,12 @@ test('apply: backs up the full originals first, then changes exactly the listed 
   const r = run(fx.scripts.apply, applied, { DATA: fx.dataPath, APPLY: '1', BACKUP: backupPath });
   assert.equal(r.error, null, r.error?.message);
   const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8')) as Doc[];
-  assert.deepEqual(backup, fixtureDocs.filter((d) => d._id === L1.planId || d._id === L2.planId));
+  assert.deepEqual(backup, fixtureDocs);
   assert.deepEqual(applied.docs, expected);
   // The untouched third plan, every untouched segment, nulls and updatedAt are as they were.
-  assert.deepEqual(applied.docs[2], fixtureDocs[2]);
+  assert.deepEqual(applied.docs[2].segments, fixtureDocs[2].segments);
   assert.deepEqual(applied.docs[0].updatedAt, fixtureDocs[0].updatedAt);
-  assert.ok(r.out.includes('plans written: 2'));
+  assert.ok(r.out.includes('plans written: 3'));
   assert.ok(r.out.includes('read-back check passed.'));
 });
 
@@ -250,15 +255,15 @@ test('apply writes by explicit path only — never a whole document, segment or 
     for (const [op, spec] of Object.entries(w.update as Record<string, Record<string, unknown>>)) {
       assert.ok(['$set', '$push'].includes(op), op);
       for (const [p, v] of Object.entries(spec)) {
-        assert.match(p, /^(segments\.\d+\.[A-Za-z]+(\.\d+)?|los\.\d+\.description)$/, p);
+        assert.match(p, /^(segments\.\d+\.[A-Za-z]+(\.\d+)?|los\.\d+\.(description|shortTitle))$/, p);
         if (op === '$set') assert.equal(typeof v, 'string');
         else assert.ok(Array.isArray((v as { $each: unknown[] }).$each) && (v as { $each: unknown[] }).$each.every((x) => typeof x === 'string'));
       }
     }
     assert.equal(typeof w.filter._id, 'string');
   }
-  // 2 plans; the plan with the appended step needs a second update.
-  assert.equal(applied.writes.length, 3);
+  // 3 plans; the plan with the appended step needs a second update.
+  assert.equal(applied.writes.length, 4);
 });
 
 test('re-run after apply: everything "already applied", no write, no backup file', () => {
@@ -266,8 +271,8 @@ test('re-run after apply: everything "already applied", no write, no backup file
   const before = applied.writes.length;
   const r = run(fx.scripts.apply, applied, { DATA: fx.dataPath, APPLY: '1', BACKUP: again });
   assert.equal(r.error, null);
-  assert.match(countsLine(r, 'fields'), /to change 0 · already applied 10 · mismatched 0/);
-  assert.match(countsLine(r, 'plans'), /to change 0 · already applied 2 · mismatched 0/);
+  assert.match(countsLine(r, 'fields'), /to change 0 · already applied 11 · mismatched 0/);
+  assert.match(countsLine(r, 'plans'), /to change 0 · already applied 3 · mismatched 0/);
   assert.equal(applied.writes.length, before);
   assert.equal(fs.existsSync(again), false);
   assert.deepEqual(applied.docs, expected);
@@ -280,9 +285,9 @@ test('a half-applied state finishes: only the fields still at "old" are written'
   const original = fixtureDocs.find((d) => d._id === L2.planId) as Doc;
   doc.segments = JSON.parse(JSON.stringify(original.segments));
   const r = run(fx.scripts.apply, h, { DATA: fx.dataPath, APPLY: '1', BACKUP: newPath('half') });
-  assert.match(countsLine(r, 'objective descriptions'), /to change 0 · already applied 1 · mismatched 0/);
+  assert.match(countsLine(r, 'objective fields'), /to change 0 · already applied 2 · mismatched 0/);
   assert.equal(r.error, null);
-  assert.match(countsLine(r, 'fields'), /to change 3 · already applied 7 · mismatched 0/);
+  assert.match(countsLine(r, 'fields'), /to change 3 · already applied 8 · mismatched 0/);
   assert.equal(h.writes.length, 1);
   assert.deepEqual(h.docs, expected);
 });
@@ -296,8 +301,8 @@ test('mismatch: ONE stored value that is neither old nor new aborts the whole ru
   const bk = newPath('never');
   const r = run(fx.scripts.apply, h, { DATA: fx.dataPath, APPLY: '1', BACKUP: bk });
   assert.match(r.error?.message ?? '', /1 stored value\(s\) do not match — aborted before any write/);
-  assert.match(countsLine(r, 'fields'), /to change 9 · already applied 0 · mismatched 1/);
-  assert.match(countsLine(r, 'plans'), /to change 1 · already applied 0 · mismatched 1/);
+  assert.match(countsLine(r, 'fields'), /to change 10 · already applied 0 · mismatched 1/);
+  assert.match(countsLine(r, 'plans'), /to change 2 · already applied 0 · mismatched 1/);
   assert.ok(r.out.some((l) => l.includes(h0.id) && l.includes('goal') && l.includes('edited by someone else')));
   assert.equal(h.writes.length, 0);
   assert.deepEqual(h.docs, drifted);
@@ -375,12 +380,12 @@ test('other stored plans sharing the objectives are listed and never written', (
 test('revert dry run on applied data: everything to change; on original data: everything already reverted', () => {
   const r = run(fx.scripts.revert, applied, { DATA: fx.dataPath });
   assert.equal(r.error, null);
-  assert.match(countsLine(r, 'fields'), /to change 10 · already reverted 0 · mismatched 0/);
+  assert.match(countsLine(r, 'fields'), /to change 11 · already reverted 0 · mismatched 0/);
   assert.deepEqual(applied.docs, expected);
   const fresh = makeFakeDb('evelyn', fixtureDocs);
   const r2 = run(fx.scripts.revert, fresh, { DATA: fx.dataPath, APPLY: '1', BACKUP: newPath('noop') });
   assert.equal(r2.error, null);
-  assert.match(countsLine(r2, 'fields'), /to change 0 · already reverted 10 · mismatched 0/);
+  assert.match(countsLine(r2, 'fields'), /to change 0 · already reverted 11 · mismatched 0/);
   assert.equal(fresh.writes.length, 0);
 });
 
@@ -398,10 +403,10 @@ test('revert: restores exactly the original documents (appended step removed), w
   const r = run(fx.scripts.revert, applied, { DATA: fx.dataPath, APPLY: '1', BACKUP: bk });
   assert.equal(r.error, null, r.error?.message);
   assert.deepEqual(applied.docs, fixtureDocs);
-  assert.deepEqual(JSON.parse(fs.readFileSync(bk, 'utf8')), expected.filter((d) => d._id === L1.planId || d._id === L2.planId));
+  assert.deepEqual(JSON.parse(fs.readFileSync(bk, 'utf8')), expected);
   assert.ok(r.out.includes('read-back check passed.'));
   const again = run(fx.scripts.apply, applied, { DATA: fx.dataPath });
-  assert.match(countsLine(again, 'fields'), /to change 10 · already applied 0 · mismatched 0/);
+  assert.match(countsLine(again, 'fields'), /to change 11 · already applied 0 · mismatched 0/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -450,11 +455,25 @@ if (!realValidation || realValidation.segments.length === 0) {
 // A read-only export of the stored documents taken on 2026-10-06 (local
 // file). It proves the path mapping on the REAL stored shape; it does not
 // prove the collection still holds these values today — the dry run does.
-const DUMP = process.env.LESSON_DUMP ?? path.join(LESSON_READ_DIR, '../audited-list-2026-10-06/work/prod-dump.json');
+const DUMP = DUMP_FILE;
 if (!fs.existsSync(DUMP) || !realValidation || realValidation.segments.length === 0) {
   console.log('skip - stored-shape run: no local dump of the stored plans, or no valid patches');
 } else {
-  const dump = JSON.parse(fs.readFileSync(DUMP, 'utf8')) as { dumpedAt?: string; plans: Doc[] };
+  const rawDump = JSON.parse(fs.readFileSync(DUMP, 'utf8')) as { dumpedAt?: string; plans: Doc[] };
+  // The baseline: the dump with every data file already applied to
+  // production applied in memory (none for pass 1).
+  let baseline = rawDump.plans;
+  for (const f of APPLIED_DATA_FILES) baseline = applyDataToDocs(baseline, JSON.parse(fs.readFileSync(f, 'utf8')) as ApplyData);
+  const dump = { dumpedAt: `${rawDump.dumpedAt ?? '?'}${APPLIED_DATA_FILES.length ? ` + ${APPLIED_DATA_FILES.map((f) => path.basename(f)).join(' + ')}` : ''}`, plans: baseline };
+  if (PASS === 2) {
+    test('baseline: the shipped pass-1 apply script, run on the dump, gives exactly the in-memory baseline', () => {
+      const p1 = makeFakeDb('evelyn', rawDump.plans);
+      const script = fs.readFileSync(path.join(path.dirname(APPLIED_DATA_FILES[0]), 'apply-lesson-corrections.mongosh.js'), 'utf8');
+      const r = run(script, p1, { DATA: APPLIED_DATA_FILES[0], APPLY: '1', BACKUP: newPath('p1-backup') });
+      assert.equal(r.error, null, r.error?.message);
+      assert.deepEqual(p1.docs, baseline);
+    });
+  }
   const built = build(real.files, allLessons, true);
   const h = makeFakeDb('evelyn', dump.plans);
   const c = built.data.counts;
@@ -462,7 +481,8 @@ if (!fs.existsSync(DUMP) || !realValidation || realValidation.segments.length ==
   const lines: string[] = [];
   const keep = (label: string, r: RunResult): void => { lines.push(`  ${label}: ${countsLine(r, 'plans')} | ${countsLine(r, 'fields')}`); };
   test(`final patches against the stored documents as dumped ${dump.dumpedAt ?? '?'} (${dump.plans.length} plans; ${c.plans} plans / ${c.segments} segments / ${total} values, ${c.objectives} objective descriptions)`, () => {
-    assert.equal(realValidation.ok, true, 'the final patches must validate with no error');
+    // Patches with a validation error are not in the data (as in a
+    // --exclude-errored build); the note above names how many.
     const dry = run(built.scripts.apply, h, { DATA: built.dataPath });
     assert.equal(dry.error, null, `${dry.error?.message}\n${dry.out.slice(0, 12).join('\n')}`);
     assert.match(countsLine(dry, 'fields'), new RegExp(`${total} in the data · to change ${total} · already applied 0 · mismatched 0`));

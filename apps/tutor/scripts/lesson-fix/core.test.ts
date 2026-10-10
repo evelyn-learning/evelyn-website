@@ -15,7 +15,9 @@ import {
   unbalancedMarkup,
   validatePatches,
   validateWithWaivers,
+  applyDataToDocs,
   type Change,
+  type LessonSegment,
   type Lesson,
   type PatchFile,
 } from './core';
@@ -217,7 +219,7 @@ test('an objective change resolves to los + its recap copies (mustRemember and t
   const r = validatePatches([file({ [LO1]: [{ path: 'objective.description', old: 'Find slope.', new: 'Find the slope of a line.' }] })], lessons());
   assert.equal(r.ok, true);
   assert.deepEqual(codes(r, 'warning'), []);
-  assert.deepEqual(r.objectives.map((o) => [o.loId, o.old, o.new]), [[LO1, 'Find slope.', 'Find the slope of a line.']]);
+  assert.deepEqual(r.objectives.map((o) => [o.loId, o.field, o.old, o.new]), [[LO1, 'description', 'Find slope.', 'Find the slope of a line.']]);
   assert.equal(r.segments.length, 1);
   assert.equal(r.segments[0].segmentId, 'recap');
   assert.deepEqual(r.segments[0].changes, [
@@ -227,7 +229,7 @@ test('an objective change resolves to los + its recap copies (mustRemember and t
   assert.deepEqual(r.objectiveCopies.map((c) => [c.where, c.action]), [['recap.mustRemember[0]', 'changed'], ['recap.teacherNote', 'changed'], ['los[].shortTitle', 'listed']]);
   const data = buildApplyData(r.segments, r.objectives);
   assert.deepEqual(data.counts, { plans: 1, segments: 1, fields: 3, objectives: 1 });
-  assert.deepEqual(data.plans[0].objectives, [{ loId: LO1, old: 'Find slope.', new: 'Find the slope of a line.' }]);
+  assert.deepEqual(data.plans[0].objectives, [{ loId: LO1, field: 'description', old: 'Find slope.', new: 'Find the slope of a line.' }]);
   assert.match(renderDiffMarkdown(r, 'now'), /#### objective lo-1 — description/);
 });
 
@@ -310,6 +312,53 @@ test('waivers: only a wording judgement can be waived, with a reason; stale or b
   assert.deepEqual(codes(validateWithWaivers([leak], lessons(), [{ ...w, segmentId: TRY1 }])).sort(), ['answer_in_problem', 'stale_waiver']);
   const wrongOld = file({ [TRY2]: [{ path: 'expectedAnswer', old: '6', new: '9' }] });
   assert.deepEqual(codes(validateWithWaivers([wrongOld], lessons(), [{ ...w, code: 'old_mismatch' }])).sort(), ['bad_waiver', 'old_mismatch']);
+});
+
+test('objective.shortTitle: verified like any field, alone or with the description, never copied into the recap', () => {
+  const alone = validatePatches([file({ [LO1]: [{ path: 'objective.shortTitle', old: 'Slope', new: 'Slope of a line' }] })], lessons());
+  assert.equal(alone.ok, true);
+  assert.deepEqual(alone.objectives.map((o) => [o.field, o.old, o.new]), [['shortTitle', 'Slope', 'Slope of a line']]);
+  assert.equal(alone.segments.length, 0);
+  assert.deepEqual(alone.objectiveCopies.map((c) => [c.where, c.action]), [['los[].shortTitle', 'changed']]);
+  assert.deepEqual(buildApplyData(alone.segments, alone.objectives).counts, { plans: 1, segments: 0, fields: 1, objectives: 1 });
+  const both = validatePatches([file({ [LO1]: [
+    { path: 'objective.description', old: 'Find slope.', new: 'Find the slope of a line.' },
+    { path: 'objective.shortTitle', old: 'Slope', new: 'Slope of a line' },
+  ] })], lessons());
+  assert.equal(both.ok, true);
+  assert.deepEqual(both.objectives.map((o) => o.field), ['description', 'shortTitle']);
+  assert.ok(!both.objectiveCopies.some((c) => c.action === 'listed' && c.where === 'los[].shortTitle'));
+  const mk = (changes: Change[], seg = LO1) => codes(validatePatches([file({ [seg]: changes })], lessons()));
+  assert.deepEqual(mk([{ path: 'objective.shortTitle', old: 'Slopes', new: 'x' }]), ['old_mismatch']);
+  assert.deepEqual(mk([{ path: 'objective.shortTitle', old: 'x', new: 'y' }], `${PLAN}.lo-2`), ['old_mismatch']);
+  assert.deepEqual(mk([{ path: 'objective.shortTitle', old: 'Slope', new: 'a' }, { path: 'objective.shortTitle', old: 'Slope', new: 'b' }]), ['objective_shape']);
+});
+
+test('other places that quote an old objective description (a picker list, a note) are listed, not written', () => {
+  const ls = lessons();
+  (ls.get('007') as Lesson).segments.splice(1, 0, {
+    id: 'pick-los', kind: 'concept', goal: 'Pick.', keyIdeas: [`${LO1}: Find slope.`], references: [{ kind: 'note', content: `1\t${LO1}\tFind slope.` }],
+  });
+  const r = validatePatches([file({ [LO1]: [{ path: 'objective.description', old: 'Find slope.', new: 'Find the slope of a line.' }] })], ls);
+  assert.equal(r.ok, true);
+  const listed = r.objectiveCopies.filter((c) => c.action === 'listed').map((c) => c.where);
+  assert.deepEqual(listed, ['los[].shortTitle', 'segment pick-los · keyIdeas[0]', 'segment pick-los · references[0].content', 'metadata.availableLOs']);
+  assert.ok(!r.segments.some((x) => x.segmentId === 'pick-los'));
+});
+
+test('applyDataToDocs applies a data file in memory and refuses a value that is not the old one', () => {
+  const r = validatePatches([file({
+    [WORKED]: [{ path: 'steps[2]', old: 'Slope is 6/2 = 4.', new: 'Slope is 6/2 = 3.' }, { path: 'steps[+]', old: null, new: 'Check.' }, { path: 'answer', old: '4', new: '3' }],
+    [LO1]: [{ path: 'objective.shortTitle', old: 'Slope', new: 'Slope of a line' }],
+  })], lessons());
+  const data = buildApplyData(r.segments, r.objectives);
+  const l = lesson();
+  const docs = [{ _id: PLAN, los: l.objectives, segments: l.segments }];
+  const out = applyDataToDocs(docs, data);
+  assert.deepEqual((out[0].segments as LessonSegment[])[2].steps, ['Rise is 6.', 'Run is 2.', 'Slope is 6/2 = 3.', 'Check.']);
+  assert.equal((out[0].los as Array<{ shortTitle?: string }>)[0].shortTitle, 'Slope of a line');
+  assert.equal((docs[0].segments as LessonSegment[])[2].answer, '4');
+  assert.throws(() => applyDataToDocs(out, data), /not the expected old value/);
 });
 
 console.log(`\n${passed} tests passed`);

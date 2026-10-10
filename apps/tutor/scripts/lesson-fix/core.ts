@@ -24,6 +24,10 @@
  */
 
 export const OBJECTIVE_PATH = 'objective.description';
+/** `los.<i>.shortTitle` — the 2–4 word label on progress chips and the
+ *  agenda. Not copied anywhere else inside the plan. */
+export const OBJECTIVE_TITLE_PATH = 'objective.shortTitle';
+const OBJECTIVE_PATHS: Readonly<Record<string, 'description' | 'shortTitle'>> = { [OBJECTIVE_PATH]: 'description', [OBJECTIVE_TITLE_PATH]: 'shortTitle' };
 
 export interface Change {
   path: string;
@@ -147,6 +151,8 @@ export interface ResolvedObjective {
   pack: string;
   planId: string;
   loId: string;
+  /** Which stored field of the objective: `los.<i>.<field>`. */
+  field: 'description' | 'shortTitle';
   title: string;
   file: string;
   expanded: boolean;
@@ -433,46 +439,47 @@ export function validatePatches(
       const subject = SUBJECT_NAMES[lesson.subject ?? ''] ?? pf.subject;
       const expanded = typeof lesson.pickerPlanId === 'string' && lesson.pickerPlanId.length > 0;
 
-      if (patch.changes.some((c) => isPlainObject(c) && c.path === OBJECTIVE_PATH)) {
-        if (patch.changes.length !== 1) {
-          err('objective_shape', `an objective patch has exactly one change, path "${OBJECTIVE_PATH}"`);
+      if (patch.changes.some((c) => isPlainObject(c) && typeof c.path === 'string' && c.path in OBJECTIVE_PATHS)) {
+        const fields = patch.changes.map((c) => (isPlainObject(c) && typeof c.path === 'string' ? OBJECTIVE_PATHS[c.path] : undefined));
+        if (fields.some((f) => !f) || new Set(fields).size !== fields.length) {
+          err('objective_shape', `an objective patch holds only "${OBJECTIVE_PATH}" and / or "${OBJECTIVE_TITLE_PATH}", each at most once`);
           return;
         }
-        const ch = patch.changes[0];
         const los = (lesson.objectives ?? []).filter((o) => o.id === patch.segmentId);
         if (los.length !== 1) {
           err('unknown_objective', los.length === 0 ? 'objective id not in the lesson (segmentId must be the objective id)' : 'objective id appears more than once');
           return;
         }
-        if (typeof ch.new !== 'string' || ch.new.trim() === '') {
-          err('empty_new', '"new" must be a non-empty string', OBJECTIVE_PATH);
-          return;
-        }
-        if (typeof ch.old !== 'string') {
-          err('old_not_string', '"old" must be the exact current string', OBJECTIVE_PATH);
-          return;
-        }
-        if (ch.old !== los[0].description) {
-          err('old_mismatch', `"old" is not the current value. Current: ${JSON.stringify(los[0].description)}`, OBJECTIVE_PATH);
-          return;
-        }
-        if (ch.new === ch.old) {
-          err('no_op', '"new" equals "old"', OBJECTIVE_PATH);
-          return;
-        }
-        // Descriptions are joined with "; " inside the recap note.
-        if (ch.new.includes('; ')) warn('objective_semicolon', 'the new description contains "; ", the separator used between objectives in the recap note', OBJECTIVE_PATH);
-        for (const [level, code, message] of textIssues(ch.old, ch.new, ch.old)) {
-          if (level === 'error') err(code, message, OBJECTIVE_PATH);
-          else warn(code, message, OBJECTIVE_PATH);
-        }
-        if (issues.filter((i) => i.level === 'error').length > before) return;
-        objectives.push({
-          subject, pack: patch.pack, planId: patch.planId, loId: patch.segmentId, title: lesson.title ?? '', file: pf.file, expanded,
-          old: ch.old, new: ch.new,
-          ...(typeof patch.check === 'string' ? { check: patch.check } : {}),
-          ...(typeof patch.confidence === 'string' ? { confidence: patch.confidence } : {}),
+        const pending: ResolvedObjective[] = [];
+        patch.changes.forEach((ch, k) => {
+          const field = fields[k] as 'description' | 'shortTitle';
+          const pathText = ch.path;
+          const current = los[0][field];
+          if (typeof ch.new !== 'string' || ch.new.trim() === '') return err('empty_new', '"new" must be a non-empty string', pathText);
+          if (typeof ch.old !== 'string') return err('old_not_string', '"old" must be the exact current string', pathText);
+          if (ch.old !== current) return err('old_mismatch', `"old" is not the current value. Current: ${JSON.stringify(current)}`, pathText);
+          if (ch.new === ch.old) return err('no_op', '"new" equals "old"', pathText);
+          // Descriptions are joined with "; " inside the recap note.
+          if (field === 'description' && ch.new.includes('; ')) warn('objective_semicolon', 'the new description contains "; ", the separator used between objectives in the recap note', pathText);
+          if (field === 'shortTitle') {
+            const twin = (lesson.objectives ?? []).find((o) => o.id !== patch.segmentId && o.shortTitle === ch.new);
+            if (twin) warn('short_title_duplicate', `another objective of this lesson (${twin.id}) currently has the same short title`, pathText);
+            if (ch.new.trim().split(/\s+/).length > 6) warn('short_title_long', 'a short title is a 2–4 word label', pathText);
+          }
+          for (const [level, code, message] of textIssues(ch.old, ch.new, ch.old)) {
+            if (level === 'error') err(code, message, pathText);
+            else warn(code, message, pathText);
+          }
+          pending.push({
+            subject, pack: patch.pack, planId: patch.planId, loId: patch.segmentId, field, title: lesson.title ?? '', file: pf.file, expanded,
+            old: ch.old, new: ch.new,
+            ...(typeof patch.check === 'string' ? { check: patch.check } : {}),
+            ...(typeof patch.confidence === 'string' ? { confidence: patch.confidence } : {}),
+          });
+          return undefined;
         });
+        if (issues.filter((i) => i.level === 'error').length > before) return;
+        objectives.push(...pending);
         return;
       }
 
@@ -638,8 +645,12 @@ export function validatePatches(
   }
 
   // Objective descriptions: change the stored copies inside the same plan.
-  for (const planId of [...new Set(objectives.map((o) => o.planId))]) {
-    const ofPlan = objectives.filter((o) => o.planId === planId);
+  for (const o of objectives.filter((x) => x.field === 'shortTitle')) {
+    objectiveCopies.push({ pack: o.pack, planId: o.planId, loId: o.loId, where: 'los[].shortTitle', action: 'changed', detail: 'no other copy inside the plan; progress records of past sessions keep the old label' });
+  }
+  const described = objectives.filter((x) => x.field === 'description');
+  for (const planId of [...new Set(described.map((o) => o.planId))]) {
+    const ofPlan = described.filter((o) => o.planId === planId);
     const lesson = lessonsByPack.get(ofPlan[0].pack) as Lesson;
     const recap = lesson.segments.find((x) => x.kind === 'recap');
     const list = (o: ResolvedObjective, where: string, action: ObjectiveCopy['action'], detail: string): void => {
@@ -687,8 +698,31 @@ export function validatePatches(
     }
     for (const o of ofPlan) {
       const lo = (lesson.objectives ?? []).find((x) => x.id === o.loId);
-      if (lo?.shortTitle) list(o, 'los[].shortTitle', 'listed', `not a copy of the description, left as is: ${JSON.stringify(lo.shortTitle)} — check it still fits`);
-      if (o.expanded) list(o, 'metadata.availableLOs / picker plan', 'listed', `the expanded plan's metadata.availableLOs and the picker plan ${lesson.pickerPlanId} (los, pick-los text) hold the old description — not written`);
+      if (lo?.shortTitle && !objectives.some((x) => x.field === 'shortTitle' && x.planId === planId && x.loId === o.loId)) {
+        list(o, 'los[].shortTitle', 'listed', `not a copy of the description, left as is: ${JSON.stringify(lo.shortTitle)} — check it still fits`);
+      }
+      // Any other place in this plan that quotes the old description (a
+      // picker plan's `pick-los` list, a reference note): reported, never
+      // rewritten by inference.
+      for (const sg of lesson.segments) {
+        if (sg.kind === 'recap') continue;
+        for (const [key, value] of Object.entries(sg)) {
+          if (key === 'id' || key === 'kind') continue;
+          const texts: Array<[string, string]> = [];
+          if (typeof value === 'string') texts.push([key, value]);
+          else if (Array.isArray(value)) {
+            value.forEach((v, k) => {
+              if (typeof v === 'string') texts.push([`${key}[${k}]`, v]);
+              else if (isPlainObject(v)) for (const [k2, v2] of Object.entries(v)) if (typeof v2 === 'string') texts.push([`${key}[${k}].${k2}`, v2]);
+            });
+          }
+          for (const [where, text] of texts) {
+            if (text.includes(o.old)) list(o, `segment ${sg.id} · ${where}`, 'listed', 'quotes the old description (inside a longer text) — NOT written');
+          }
+        }
+      }
+      if (o.expanded) list(o, 'metadata.availableLOs', 'listed', `the expanded plan's metadata.availableLOs[].description (copied from picker plan ${lesson.pickerPlanId}; stored only, not in the local lesson file) holds the old description — not written`);
+      if (lesson.segments.some((x) => x.id === 'pick-los')) list(o, 'metadata.availableLOs', 'listed', 'this picker plan\'s metadata.availableLOs[].description (stored only) holds the old description — not written');
     }
   }
 
@@ -782,7 +816,8 @@ export interface ApplyData {
     planId: string;
     pack: string;
     subject: string;
-    objectives: Array<{ loId: string; old: string; new: string }>;
+    /** `field` is absent in data built before short titles were supported (= description). */
+    objectives: Array<{ loId: string; field?: 'description' | 'shortTitle'; old: string; new: string }>;
     segments: Array<{ segmentId: string; kind: string; changes: ApplyChange[] }>;
   }>;
 }
@@ -805,7 +840,7 @@ export function buildApplyData(segments: readonly ResolvedSegment[], objectives:
       .map((c) => ({ field: c.field, index: c.index, append: c.append, old: c.old, new: c.new }));
     planOf(s).segments.push({ segmentId: s.segmentId, kind: s.kind, changes });
   }
-  for (const o of objectives) planOf(o).objectives.push({ loId: o.loId, old: o.old, new: o.new });
+  for (const o of objectives) planOf(o).objectives.push({ loId: o.loId, field: o.field, old: o.old, new: o.new });
   const plans = [...byPlan.values()].sort((a, b) => a.pack.localeCompare(b.pack));
   const objectiveCount = plans.reduce((a, p) => a + p.objectives.length, 0);
   return {
@@ -820,6 +855,49 @@ export function buildApplyData(segments: readonly ResolvedSegment[], objectives:
     },
     plans,
   };
+}
+
+/**
+ * The stored documents with a data file applied — the same rule as the
+ * generated script (every value must equal `old`), in memory. Used to build
+ * the baseline for a later correction set: stored = dump + applied data.
+ * Throws on the first value that does not match. Input is not mutated.
+ */
+export function applyDataToDocs<T extends { _id?: unknown }>(docs: readonly T[], data: ApplyData): T[] {
+  const out = JSON.parse(JSON.stringify(docs)) as Array<T & { los?: Array<Record<string, unknown>>; segments?: Array<Record<string, unknown>> }>;
+  for (const plan of data.plans) {
+    const doc = out.find((d) => d._id === plan.planId);
+    if (!doc) throw new Error(`applyDataToDocs: plan ${plan.planId} not in the documents`);
+    for (const o of plan.objectives ?? []) {
+      const lo = (doc.los ?? []).filter((x) => x.id === o.loId);
+      const field = o.field ?? 'description';
+      if (lo.length !== 1 || lo[0][field] !== o.old) throw new Error(`applyDataToDocs: ${plan.planId} objective ${o.loId} ${field} is not the expected old value`);
+      lo[0][field] = o.new;
+    }
+    for (const s of plan.segments) {
+      const segs = (doc.segments ?? []).filter((x) => x.id === s.segmentId);
+      if (segs.length !== 1) throw new Error(`applyDataToDocs: ${plan.planId} segment ${s.segmentId} not found once`);
+      const seg = segs[0];
+      for (const c of s.changes) {
+        const where = `${plan.planId} ${s.segmentId} ${c.field}${c.index === null ? '' : `[${c.index}]`}`;
+        if (c.index === null) {
+          if (seg[c.field] !== c.old) throw new Error(`applyDataToDocs: ${where} is not the expected old value`);
+          seg[c.field] = c.new;
+        } else {
+          const arr = seg[c.field];
+          if (!Array.isArray(arr)) throw new Error(`applyDataToDocs: ${where} is not an array`);
+          if (c.append) {
+            if (arr.length !== c.index) throw new Error(`applyDataToDocs: ${where} — array length is ${arr.length}`);
+            arr.push(c.new);
+          } else {
+            if (arr[c.index] !== c.old) throw new Error(`applyDataToDocs: ${where} is not the expected old value`);
+            arr[c.index] = c.new;
+          }
+        }
+      }
+    }
+  }
+  return out as T[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -855,7 +933,7 @@ export function renderDiffMarkdown(result: ValidationResult, generatedAt: string
   lines.push('# Lesson corrections — old vs new');
   lines.push('');
   lines.push(`Generated ${generatedAt} from ${result.totals.files} patch file(s): ${result.totals.plans} lesson(s), ${result.segments.length} segment(s), ` +
-    `${result.objectives.length} objective description(s), ${fieldCount} stored value(s) changed.`);
+    `${result.objectives.length} objective description(s) / short title(s), ${fieldCount} stored value(s) changed.`);
   lines.push('');
   if (!result.ok) {
     lines.push(`**Validation FAILED: ${result.totals.errors} error(s).** Patches with an error are NOT shown below; see validation-report.json.`);
@@ -869,7 +947,7 @@ export function renderDiffMarkdown(result: ValidationResult, generatedAt: string
 
   lines.push('## Summary');
   lines.push('');
-  lines.push('| Subject | Lessons | of which expanded plans | Segments | Objective descriptions | Values changed |');
+  lines.push('| Subject | Lessons | of which expanded plans | Segments | Objective fields | Values changed |');
   lines.push('|---|---:|---:|---:|---:|---:|');
   const row = (name: string, segs: readonly ResolvedSegment[], objs: readonly ResolvedObjective[]): string => {
     const packs = new Set([...segs.map((s) => s.pack), ...objs.map((o) => o.pack)]);
@@ -905,7 +983,7 @@ export function renderDiffMarkdown(result: ValidationResult, generatedAt: string
   lines.push('');
 
   if (result.objectiveCopies.length) {
-    lines.push('## Objective descriptions and their stored copies');
+    lines.push('## Objective descriptions, short titles and their stored copies');
     lines.push('');
     lines.push('| Lesson | Objective | Where | What was done |');
     lines.push('|---|---|---|---|');
@@ -929,7 +1007,7 @@ export function renderDiffMarkdown(result: ValidationResult, generatedAt: string
       lines.push(`Plan \`${head.planId}\``);
       lines.push('');
       for (const o of objsOfPack) {
-        lines.push(`#### objective ${shortSegment(o.planId, o.loId).replace(/^.*\.(lo-\d+)$/, '$1')} — description`);
+        lines.push(`#### objective ${shortSegment(o.planId, o.loId).replace(/^.*\.(lo-\d+)$/, '$1')} — ${o.field === 'shortTitle' ? 'short title' : 'description'}`);
         lines.push('');
         lines.push('Old:');
         lines.push('');
