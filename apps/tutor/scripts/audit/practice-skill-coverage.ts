@@ -23,7 +23,9 @@
  *                  its own stamped partner is served it.
  * --audited-only   apply the PRACTICE_GEN_AUDITED_ONLY_PARTNERS rules for the
  *                  caller: only audited generated rows, and only audited
- *                  lesson steps from objectives 2..N.
+ *                  lesson steps (every objective, objective 1 included;
+ *                  TUTOR_PRACTICE_AUDITED_ALL_STEPS=off shows the older rule,
+ *                  which gated objectives 2..N only).
  * --skills <file>  restrict to these skill LO ids: a JSON array of strings or
  *                  of objects carrying `loId` (course nodes) or `skillLo`.
  * --no-figures     report as a TEXT-ONLY caller: figure items are left out.

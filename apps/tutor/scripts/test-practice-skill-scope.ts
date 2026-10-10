@@ -14,7 +14,8 @@
  *     `TUTOR_PRACTICE_SKILL_SCOPE`;
  *   - portal/audited-items.ts + src/data/audited-lesson-steps.json +
  *     scripts/audit/build-audited-lesson-steps.ts — the audited-only gate on
- *     steps from objectives 2..N;
+ *     lesson steps (every objective since 2026-10-10 — the widened gate has
+ *     its own file, scripts/test-audited-lesson-step-gate.ts);
  *   - attribution: assessment, homework resolution, the per-(student, LO)
  *     generation cap all stay on the skill LO;
  *   - grading an objective-3 item by id (adapters.ts resolvers, unchanged);
@@ -47,6 +48,7 @@ import {
 } from '@/lib/tutor/portal/practice';
 import type { PracticeGenSources } from '@/lib/tutor/portal/practice-gen';
 import {
+  AUDITED_ALL_STEPS_ENV,
   AUDITED_LESSON_STEP_IDS,
   AUDITED_ONLY_PARTNERS_ENV,
   isAuditedLessonStep,
@@ -101,6 +103,7 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
     delete process.env.PRACTICE_GEN;
     delete process.env[FLAG];
     delete process.env[AUDITED_ONLY_PARTNERS_ENV];
+    delete process.env[AUDITED_ALL_STEPS_ENV];
   }
 }
 
@@ -413,19 +416,19 @@ async function main(): Promise<void> {
     assert.ok(ids(r).includes('ok.row'));
   });
 
-  console.log('\nAudited-only partner (lesson steps of objectives 2..N):\n');
+  console.log('\nAudited-only partner (lesson steps):\n');
 
-  await test('the committed list: every id is a non-first-objective generated step, none withdrawn, sorted', () => {
+  await test('the committed list: every id is a generated-plan step, none withdrawn, sorted', () => {
     const file = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'data', 'audited-lesson-steps.json'), 'utf8')) as { generatedAt: string; source: string; items: Record<string, string> };
     const listed = Object.keys(file.items);
     // The ONE pin of the committed count — update it when the list is rebuilt.
-    assert.equal(listed.length, 676);
+    assert.equal(listed.length, 945);
     assert.equal(AUDITED_LESSON_STEP_IDS.size, listed.length);
     assert.match(file.generatedAt, /^\d{4}-\d{2}-\d{2}$/);
     assert.ok(file.source.length > 0);
     for (const id of listed) {
       assert.equal(file.items[id], 'AUDITED');
-      assert.ok((lessonStepObjective(id) ?? 0) >= 2, id);
+      assert.ok((lessonStepObjective(id) ?? 0) >= 1, id);
       assert.ok(!WITHDRAWN_ITEM_IDS.has(id), id);
     }
     assert.deepEqual(listed, [...listed].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)));
@@ -433,13 +436,14 @@ async function main(): Promise<void> {
     assert.deepEqual(buildAuditedLessonStepList(listed, file.generatedAt, file.source, WITHDRAWN_ITEM_IDS), file);
   });
 
-  await test('builder: validates id shape, objective ≥ 2, duplicates, withdrawn; reads json / jsonl / csv with a tier filter', () => {
+  await test('builder: validates id shape, duplicates, withdrawn; reads json / jsonl / csv with a tier filter', () => {
     const none = new Set<string>();
     const good = step(A, 2);
     assert.deepEqual(Object.keys(buildAuditedLessonStepList([step(A, 3), good], '2026-10-08', 's', none).items), [good, step(A, 3)]);
     assert.throws(() => buildAuditedLessonStepList([''], 'd', 's', none), /empty id/);
-    assert.throws(() => buildAuditedLessonStepList([step(A, 1)], 'd', 's', none), /objective-1/);
-    assert.throws(() => buildAuditedLessonStepList([`${A}::${lo(B, 2)}-try`], 'd', 's', none), /not a generated-plan lesson step/);
+    // Objective 1 and the expanded-plan form were refused until 2026-10-10
+    // (scripts/test-audited-lesson-step-gate.ts covers both in full).
+    assert.deepEqual(Object.keys(buildAuditedLessonStepList([step(A, 1), `${A}::${lo(B, 2)}-try`], 'd', 's', none).items), [step(A, 1), `${A}::${lo(B, 2)}-try`]);
     assert.throws(() => buildAuditedLessonStepList([`practice-gen.${lo(A, 2)}.h`], 'd', 's', none), /not a generated-plan lesson step/);
     assert.throws(() => buildAuditedLessonStepList(['alg1-linear-equations::try-1'], 'd', 's', none), /not a generated-plan lesson step/);
     assert.throws(() => buildAuditedLessonStepList([good, good], 'd', 's', none), /duplicate/);
@@ -470,7 +474,7 @@ async function main(): Promise<void> {
     assert.deepEqual(withoutUnauditedLessonSteps(items, P1, 't'), [{ id: REAL_AUDITED }]);
   });
 
-  await test('listed partner: unaudited steps of objectives 2..N are not served; objective 1 and audited steps are', async () => {
+  await test('listed partner: unaudited steps are not served — objective 1 included; audited steps are', async () => {
     // Objectives of the real plan: lo-2 is on the audited list, lo-3 is
     // withdrawn; pick a K whose step is on NEITHER list as the unaudited one.
     const K = [4, 5, 6, 7, 8, 9].find((k) => !AUDITED_LESSON_STEP_IDS.has(step(REAL_PLAN, k)) && !WITHDRAWN_ITEM_IDS.has(step(REAL_PLAN, k))) as number;
@@ -485,7 +489,7 @@ async function main(): Promise<void> {
 
     process.env[AUDITED_ONLY_PARTNERS_ENV] = P1;
     const gated = await draw(lo(REAL_PLAN, 1), sourcesOf([real], bank));
-    assert.ok(ids(gated).includes(step(REAL_PLAN, 1)), 'objective 1 is not gated');
+    assert.equal(ids(gated).includes(step(REAL_PLAN, 1)), AUDITED_LESSON_STEP_IDS.has(step(REAL_PLAN, 1)), 'objective 1 is gated like any other step');
     assert.ok(ids(gated).includes(REAL_AUDITED), 'audited step served');
     assert.ok(ids(gated).includes('authored.row'), 'authored bank row untouched');
     for (const k of unlisted) assert.ok(!ids(gated).includes(step(REAL_PLAN, k)), `objective ${k} step is unaudited`);
@@ -496,7 +500,13 @@ async function main(): Promise<void> {
     // A partner that is not listed is unaffected by the switch.
     const other = genPlan(REAL_PLAN, K, { partnerId: P2 });
     assert.deepEqual(ids(await draw(lo(REAL_PLAN, 1), sourcesOf([other], bank), P2)), ids(open));
-    // Flag off for the listed partner: objective 1 only, as before.
+    // The older rule (TUTOR_PRACTICE_AUDITED_ALL_STEPS=off): objective 1 is
+    // not gated, objectives 2..N are.
+    process.env[AUDITED_ALL_STEPS_ENV] = 'off';
+    const older = await draw(lo(REAL_PLAN, 1), sourcesOf([real], bank));
+    assert.ok(ids(older).includes(step(REAL_PLAN, 1)));
+    for (const k of unlisted) assert.ok(!ids(older).includes(step(REAL_PLAN, k)));
+    // Skill scope off as well for the listed partner: objective 1 only, as before.
     process.env[FLAG] = 'off';
     assert.deepEqual(ids(await draw(lo(REAL_PLAN, 1), sourcesOf([real], bank))), [step(REAL_PLAN, 1)]);
   });
@@ -511,7 +521,7 @@ async function main(): Promise<void> {
       async persist() {},
     };
     const r = await retrievePractice(req(lo(A, 1), 50), sourcesOf([planA]), gen, { partnerId: P1 });
-    assert.deepEqual(ids(r), [step(A, 1)]); // fixture plan A has no audited step
+    assert.deepEqual(ids(r), []); // fixture plan A has no audited step — objective 1 included
     assert.equal(generateCalls, 0);
   });
 
@@ -699,11 +709,12 @@ async function main(): Promise<void> {
     assert.deepEqual(rows[1].zeroObjectives, [lo(REAL_PLAN, 3)]);
     assert.deepEqual(summarizeCoverage(rows), { skills: 2, objectives: 7, servable: 6, servableFigures: 0, objectivesWithZero: 2, skillsWithAZeroObjective: 2, skillsWithNothing: 0 });
 
-    // Audited-only: fixture plan A has no audited step → objectives 2..4 empty,
-    // and its generated row is unaudited; the real plan keeps lo-1 + lo-2.
+    // Audited-only: fixture plan A has no audited step → every objective
+    // empty (objective 1 included), and its generated row is unaudited; the
+    // real plan keeps lo-2, and lo-1 only once its step is on the list.
     const gated = await skillCoverage(dump, { auditedOnly: true });
-    assert.deepEqual(gated[0].objectives.map((o) => o.servable), [1, 0, 0, 0]);
-    assert.deepEqual(gated[1].objectives.map((o) => o.servable), [1, 1, 0]);
+    assert.deepEqual(gated[0].objectives.map((o) => o.servable), [0, 0, 0, 0]);
+    assert.deepEqual(gated[1].objectives.map((o) => o.servable), [AUDITED_LESSON_STEP_IDS.has(step(REAL_PLAN, 1)) ? 1 : 0, 1, 0]);
     assert.equal(process.env[AUDITED_ONLY_PARTNERS_ENV], before, 'the switch is restored');
 
     // Another partner sees none of a stamped plan; --skills restricts.

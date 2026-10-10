@@ -33,9 +33,24 @@
  * GENERATED bank row (`practice-gen.*`) that is not on the audited list is
  * dropped at the same point, after the withdrawn rule (withdrawn wins), so it
  * is never served and never an anchor; and nothing is generated for that
- * caller (a fresh item is unaudited by definition). Authored bank rows and
- * plan try-yourselves are untouched; any other caller, or an unknown one,
- * gets exactly what it got before.
+ * caller (a fresh item is unaudited by definition). Authored bank rows are
+ * untouched; any other caller, or an unknown one, gets exactly what it got
+ * before.
+ *
+ * AUDITED LESSON STEPS (2026-10-10 — `isGeneratedCoursePlan`, kill switch
+ * `TUTOR_PRACTICE_AUDITED_ALL_STEPS=off`): for a listed caller a try-yourself
+ * of a GENERATED COURSE plan (`gen-` id, not private, not student-owned) is
+ * served only when its id is on the audited lesson-step list
+ * (audited-items.ts) — whichever objective it belongs to, objective 1
+ * included, and on every path below: skill scope, a request for one
+ * objective, a misfiled gain, topic scope. That covers the "expanded" plan E
+ * that holds the lesson text for picker plan P's objectives (step id
+ * `E::P.lo-K-try`). Assessments and assigned practice draw through this
+ * function, so they get the same rule; a dropped step is never a generation
+ * anchor. The try-yourselves of authored, private (review / homework /
+ * freestyle) and student-owned plans are untouched, as is every other caller.
+ * With the switch off only the steps skill scope draws from objectives 2..N
+ * are gated (the rule before this date).
  *
  * SKILL SCOPE (2026-10-08 — `isSkillScopePlan`, kill switch
  * `TUTOR_PRACTICE_SKILL_SCOPE=off`): a generated course plan is ONE skill
@@ -51,8 +66,8 @@
  * returned with `loId` = the requested skill LO (what the portal attributes
  * attempts, mastery and the daily cap to); the objective it came from stays
  * readable in its id (`<planId>::<planId>.lo-K-try`). For an audited-only
- * partner a step from objective 2..N must also be on the audited lesson-step
- * list (audited-items.ts). A request for any other LO, or for authored
+ * partner every step must also be on the audited lesson-step list (see
+ * AUDITED LESSON STEPS above). A request for any other LO, or for authored
  * content, is unchanged.
  *
  * FIGURE ITEMS (2026-10-09, contract v1.21.0 — figure-items.ts): a bank row
@@ -83,9 +98,9 @@
  *     of them and a gained step must be a segment of a plan already servable
  *     for this request — so nothing from another skill or plan can enter. A
  *     gained item passes the same withdrawn / key-check / drawing / essay /
- *     audited-generated / figure filters as any other; a gained step filed
- *     under objective 2..N is also held to the audited lesson-step list for
- *     an audited-only partner (the rule skill scope applies). It is returned
+ *     audited-generated / figure filters as any other; a gained step is
+ *     also held to the audited lesson-step list for an audited-only partner
+ *     (the rule skill scope applies). It is returned
  *     with its own id and the `loId` it is FILED under — neither changes.
  *   - A SKILL request returns exactly the items it did before, every one
  *     with the same id and `loId` (the skill LO). Only `spreadAcrossObjectives`
@@ -111,7 +126,7 @@ import type {
 import { generatePracticeItemsDetailed, logPracticeGenEvent, isDrawingOnlyItem, practiceGenDisabledForPartner, type PracticeGenSources, type PracticeGenOutcome } from './practice-gen';
 import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } from './essay-practice';
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
-import { auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
+import { auditedAllStepsEnabled, auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
 import { acceptsFigures, carriesFigure, logFigureItemSkip, servableFigure } from './figure-items';
 import { MISFILED_ITEM_MARKS, idsMarkedFor, misfiledMarksEnabled, spreadObjectiveOf, withoutMisfiledFor, type MisfiledMarks } from './misfiled-items';
 
@@ -260,6 +275,22 @@ export function isSkillScopePlan(plan: PlanLite, loId: string): boolean {
 }
 
 /**
+ * Conditions 1–2 of the skill-scope rule on their own: is `plan` a generated
+ * course plan — a `gen-` plan that is not private (review / homework /
+ * freestyle) and not student-owned (materials / owner-stamped)? This is the
+ * plan whose try-yourselves ("lesson steps") an audited-only partner is
+ * served only from the audited lesson-step list (module header, AUDITED
+ * LESSON STEPS). It does NOT ask that the LO ids be the plan's own: an
+ * expanded plan that carries a picker plan's objective ids is one too, and
+ * so is a single-objective plan. Pure.
+ */
+export function isGeneratedCoursePlan(plan: PlanLite): boolean {
+  if (!plan.id || !plan.id.startsWith('gen-')) return false;
+  if (plan.privateKind ?? classifyPrivatePlan(plan.id, undefined)) return false;
+  return !plan.studentOwned;
+}
+
+/**
  * Conditions 1–3 of the skill-scope rule on their own: is `plan` a generated
  * course skill — a `gen-` plan, not private, not student-owned, with at least
  * two distinct LOs that are ALL namespaced under its own id? Its objectives
@@ -267,9 +298,7 @@ export function isSkillScopePlan(plan: PlanLite, loId: string): boolean {
  * Pure.
  */
 export function isCourseSkillPlan(plan: PlanLite): boolean {
-  if (!plan.id || !plan.id.startsWith('gen-')) return false;
-  if (plan.privateKind ?? classifyPrivatePlan(plan.id, undefined)) return false;
-  if (plan.studentOwned) return false;
+  if (!isGeneratedCoursePlan(plan)) return false;
   const loIds = [...new Set(plan.los.map((l) => l.id))];
   if (loIds.length < 2) return false;
   return loIds.every((id) => id.startsWith(`${plan.id}.`));
@@ -541,6 +570,9 @@ export interface RetrievePracticeOptions {
   /** The misfiled marks to apply (misfiled-items.ts). Omitted ⇒ the committed
    *  list; tests inject their own. Ignored when the kill switch is off. */
   misfiledMarks?: MisfiledMarks;
+  /** The audited lesson-step list to apply (audited-items.ts). Omitted ⇒ the
+   *  committed list; tests inject their own. */
+  auditedLessonSteps?: ReadonlySet<string>;
 }
 
 /**
@@ -582,6 +614,14 @@ export async function retrievePractice(
   const objectiveOf = new Map<string, string>();
   // Misfiled marks (module header). Null ⇒ switched off: nothing below reads them.
   const marks: MisfiledMarks | null = misfiledMarksEnabled() ? (options.misfiledMarks ?? MISFILED_ITEM_MARKS) : null;
+  // Audited lesson steps (module header): with the switch on, EVERY step of a
+  // generated course plan is held to the audited list for an audited-only
+  // caller. Any other caller, or another kind of plan: the same array back.
+  const gateEveryStep = auditedAllStepsEnabled();
+  const onAuditedList = <T extends { id: string }>(steps: T[], where: string): T[] =>
+    withoutUnauditedLessonSteps(steps, who?.partnerId, where, options.auditedLessonSteps);
+  const auditedSteps = (p: PlanLite, steps: PracticeItem[], where: string): PracticeItem[] =>
+    gateEveryStep && isGeneratedCoursePlan(p) ? onAuditedList(steps, where) : steps;
 
   if ('loId' in req.scope) {
     const loId = req.scope.loId;
@@ -602,16 +642,18 @@ export async function retrievePractice(
     const siblings = homePlan ? [...new Set(homePlan.los.map((l) => l.id))].filter((o) => o !== loId) : [];
     for (const p of plans) {
       if (p !== skillPlan || !skillObjectives) {
-        const own = planToItems(p, loId);
+        // One objective asked for — or a second plan that carries the skill
+        // LO (an expanded plan's `E::P.lo-1-try`).
+        const own = auditedSteps(p, planToItems(p, loId), 'practice-lo');
         planItems.push(...(single ? withoutMisfiledFor(own, loId, single) : own));
         continue;
       }
       for (const objective of skillObjectives) {
         const own = planToItems(p, objective);
-        // Objective 1 was servable before skill scope and is not gated; a
-        // step from objective 2..N reaches an audited-only partner only when
-        // it is on the audited lesson-step list (withdrawn already dropped).
-        const servable = objective === loId ? own : withoutUnauditedLessonSteps(own, who?.partnerId, 'practice-skill');
+        // A step reaches an audited-only partner only when it is on the
+        // audited lesson-step list (withdrawn already dropped) — objective 1
+        // included. Switch off: objective 1 is not gated, as before.
+        const servable = objective === loId && !gateEveryStep ? own : onAuditedList(own, 'practice-skill');
         for (const it of servable) {
           if (objectiveOf.has(it.id)) continue; // one objective per step
           objectiveOf.set(it.id, objective);
@@ -623,9 +665,9 @@ export async function retrievePractice(
     // Gained lesson steps: a step filed under a sibling objective and marked
     // as testing the requested one, from a plan already servable for this
     // request. The sibling ids are the home plan's own, so only a plan that
-    // teaches that same skill can hold one. Objective 1's step is ungated
-    // (as in skill scope); a step from objective 2..N must be audited for an
-    // audited-only partner.
+    // teaches that same skill can hold one. A gained step must be audited
+    // for an audited-only partner, as in skill scope (switch off: objective
+    // 1's step is not gated).
     if (homePlan && gainIds) {
       for (const p of plans) {
         // Only a plan that holds a marked segment is read at all (so a
@@ -633,7 +675,8 @@ export async function retrievePractice(
         if (!p.id || !p.segments.some((sg) => gainIds.has(`${p.id}::${sg.id}`))) continue;
         for (const o of siblings) {
           const marked = planToItems(p, o).filter((it) => gainIds.has(it.id));
-          planItems.push(...(o === homePlan.los[0].id ? marked : withoutUnauditedLessonSteps(marked, who?.partnerId, 'practice-misfiled')));
+          const ungated = o === homePlan.los[0].id && !(gateEveryStep && isGeneratedCoursePlan(p));
+          planItems.push(...(ungated ? marked : onAuditedList(marked, 'practice-misfiled')));
         }
       }
     }
@@ -690,7 +733,7 @@ export async function retrievePractice(
     // (best-effort) so callers still get a loId hint.
     for (const p of plans) {
       const firstLo = p.los[0]?.id ?? '';
-      if (firstLo) planItems.push(...planToItems(p, firstLo, true));
+      if (firstLo) planItems.push(...auditedSteps(p, planToItems(p, firstLo, true), 'practice-topic'));
     }
     const bank = await sources.bankForTopic(topicId, difficulty, bankOpts);
     bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic'), serveFigures, 'practice-topic'));

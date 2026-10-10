@@ -1,11 +1,11 @@
 /**
  * Regenerate src/data/audited-lesson-steps.json — the allow-list of lesson
- * practice steps (plan try-yourselves, item id `<planId>::<segmentId>`) on
- * objectives 2..N of a generated course plan whose answer key passed an audit
+ * practice steps (plan try-yourselves, item id `<planId>::<segmentId>`) of a
+ * generated course plan whose answer key passed an audit
  * (src/lib/tutor/portal/audited-items.ts). A partner listed in
- * PRACTICE_GEN_AUDITED_ONLY_PARTNERS is served a step from a NON-first
- * objective through skill scope (portal/practice.ts) only when it is listed
- * here. Objective-1 steps are not gated and are refused by this builder.
+ * PRACTICE_GEN_AUDITED_ONLY_PARTNERS is served a generated course plan's step
+ * as practice (portal/practice.ts — any objective, objective 1 included, on
+ * every path) only when it is listed here.
  *
  * Input: a file of ids —
  *   .json  an array of objects carrying an "id" field (or of bare id strings),
@@ -16,8 +16,11 @@
  * To take a step off the list, remove its row and re-run (or withdraw it: an
  * id on the withdrawn list is refused here, so the two lists never overlap).
  *
- * Every id must be `<gen-plan-id>::<gen-plan-id>.lo-K-…` with K ≥ 2 and the
- * same plan id on both sides; no duplicates; none on the withdrawn list.
+ * Every id must be `<gen-plan-id>::<gen-plan-id>.lo-K-…` with K ≥ 1; no
+ * duplicates; none on the withdrawn list. The two plan ids are normally the
+ * same. They differ for an "expanded" plan E that holds the lesson text for
+ * the objectives of picker plan P: the engine emits `E::P.lo-K-try`, and
+ * that is the id to list. Both sides must be `gen-` plan ids.
  *
  * Reads the input and the withdrawn list, writes one file. No database, no
  * network, no .env.
@@ -37,15 +40,23 @@ export interface AuditedLessonStepList {
   items: Record<string, 'AUDITED'>;
 }
 
-/** `<gen-plan-id>::<gen-plan-id>.lo-K-<suffix>` — the back-reference pins the
- *  segment to the plan that qualifies it. */
-const STEP_ID_RE = /^(gen-[A-Za-z0-9-]+)::\1\.lo-(\d+)-[A-Za-z0-9-]+$/;
+/** `<gen-plan-id>::<gen-plan-id>.lo-K-<suffix>`. Left: the plan that holds
+ *  the segment. Right: the plan whose objective the segment belongs to — the
+ *  same plan, or the picker plan an expanded plan was built for. */
+const STEP_ID_RE = /^(gen-[A-Za-z0-9-]+)::(gen-[A-Za-z0-9-]+)\.lo-([1-9]\d*)-[A-Za-z0-9-]+$/;
 
 /** The objective number K of a lesson-step id, or null when the id is not a
  *  generated-plan lesson step. */
 export function lessonStepObjective(id: string): number | null {
   const m = STEP_ID_RE.exec(id);
-  return m ? Number(m[2]) : null;
+  return m ? Number(m[3]) : null;
+}
+
+/** Is this the step of an expanded plan — held by one generated plan, on an
+ *  objective of another (`E::P.lo-K-…`)? False for any other id. */
+export function isExpandedPlanStep(id: string): boolean {
+  const m = STEP_ID_RE.exec(id);
+  return !!m && m[1] !== m[2];
 }
 
 /** The ids of an input file, in file order (validation happens in the
@@ -98,7 +109,6 @@ export function buildAuditedLessonStepList(
     if (!id) throw new Error(`entry ${n + 1}: empty id`);
     const k = lessonStepObjective(id);
     if (k === null) throw new Error(`entry ${n + 1}: not a generated-plan lesson step id (<gen-plan-id>::<gen-plan-id>.lo-K-…): ${id}`);
-    if (k < 2) throw new Error(`entry ${n + 1}: ${id} is an objective-${k} step — only objectives 2..N are listed (objective 1 is not gated)`);
     if (seen.has(id)) throw new Error(`entry ${n + 1}: duplicate id ${id}`);
     if (withdrawn.has(id)) throw new Error(`entry ${n + 1}: ${id} is on the withdrawn list — withdrawn wins; remove it from the input`);
     seen.add(id);
@@ -132,6 +142,8 @@ function main(): void {
   const list = buildAuditedLessonStepList(readLessonStepIds(fs.readFileSync(inPath, 'utf8'), inPath, tier), date, source, withdrawn);
   fs.writeFileSync(out, JSON.stringify(list, null, 2) + '\n');
   console.log(`wrote ${Object.keys(list.items).length} audited lesson-step ids to ${out}${tier ? ` (tier=${tier})` : ''}`);
+  const ids = Object.keys(list.items);
+  console.log(`  objective-1 steps: ${ids.filter((id) => lessonStepObjective(id) === 1).length} · expanded-plan steps (E::P.lo-K-…): ${ids.filter(isExpandedPlanStep).length}`);
   console.log(`  checked against ${withdrawn.size} withdrawn ids (${withdrawnPath}): no overlap`);
 }
 

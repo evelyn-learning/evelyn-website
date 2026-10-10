@@ -21,9 +21,11 @@
  *     generate_problem bank lookup;
  *   - on-demand generation does not run at all — a freshly generated item is
  *     by definition not on the list, so it could not be served anyway.
- * Authored bank rows, plan try-yourselves and live-session `brain-gen.*` rows
- * are not generated practice items and are untouched. Every other partner:
- * the filters return their input unchanged (same array reference).
+ * Authored bank rows, the try-yourselves of authored / private / student-owned
+ * plans and live-session `brain-gen.*` rows are not generated practice items
+ * and are untouched (the lesson steps of GENERATED course plans have their
+ * own list — see LESSON STEPS below). Every other partner: the filters return
+ * their input unchanged (same array reference).
  *
  * Withdrawn wins: the withdrawn list (withdrawn-items.ts) is applied first
  * and for every caller, and the builder refuses an id that is on both lists.
@@ -37,9 +39,10 @@
  * scripts/audit/build-audited-generated-list.ts. No I/O; the only input
  * besides the list is the env switch.
  *
- * LESSON STEPS (2026-10-08): the same switch also gates the plan
- * try-yourselves that skill scope draws from objectives 2..N of a generated
- * course plan — see `AUDITED_LESSON_STEP_IDS` below.
+ * LESSON STEPS (2026-10-08, widened 2026-10-10): the same switch also gates
+ * the plan try-yourselves of a generated course plan — every objective,
+ * objective 1 included, on every practice path. See `AUDITED_LESSON_STEP_IDS`
+ * and `auditedAllStepsEnabled` below.
  */
 // Relative on purpose: voice/problem-generator.ts (relative-import-only) loads this too.
 import audited from '../../../data/audited-generated-items.json';
@@ -79,15 +82,19 @@ export function servableToPartner(id: string | null | undefined, partnerId: stri
 }
 
 /* ------------------------------------------------------------------ */
-/* Audited lesson steps — skill scope, objectives 2..N                 */
+/* Audited lesson steps — generated course plans, every objective      */
 /* ------------------------------------------------------------------ */
 
 /**
- * Every audited lesson step: a plan try-yourself (`<planId>::<segmentId>`) on
- * objective 2..N of a generated course plan whose answer key passed the
- * audit. Skill scope (practice.ts) is what first makes those steps servable
- * as practice, so for a listed partner one is served only when it is here.
- * Objective-1 steps were servable before skill scope and are not gated.
+ * Every audited lesson step: a plan try-yourself (`<planId>::<segmentId>`) of
+ * a generated course plan whose answer key passed the audit. A listed partner
+ * is served a generated course plan's step as practice only when it is here —
+ * whichever objective it belongs to and whichever practice path asked
+ * (practice.ts `retrievePractice`: skill scope, one objective, a misfiled
+ * gain, topic scope; and so assessments and assigned practice, which draw
+ * through it). The id is the one the engine emits, so the step of an
+ * "expanded" plan E that carries picker plan P's objectives is listed as
+ * `E::P.lo-K-try`.
  * Regenerate src/data/audited-lesson-steps.json with
  * scripts/audit/build-audited-lesson-steps.ts.
  */
@@ -98,9 +105,25 @@ export function isAuditedLessonStep(id: string | null | undefined): boolean {
   return typeof id === 'string' && AUDITED_LESSON_STEP_IDS.has(id);
 }
 
+export const AUDITED_ALL_STEPS_ENV = 'TUTOR_PRACTICE_AUDITED_ALL_STEPS';
+
 /**
- * May the lesson step with this id, drawn from a NON-first objective through
- * skill scope, be served to `partnerId`? False only for a listed partner when
+ * Kill switch (default ON; only `off` disables; server-side, read per call)
+ * for the 2026-10-10 widening of the lesson-step gate. Until then only the
+ * steps skill scope drew from objectives 2..N of the skill plan were held to
+ * the list: the objective-1 step, a step asked for by its own objective, an
+ * expanded plan's step and a topic-scope step reached a listed partner with a
+ * key nobody had audited. ON: every step of a generated course plan is gated
+ * (practice.ts `isGeneratedCoursePlan`). `TUTOR_PRACTICE_AUDITED_ALL_STEPS=off`
+ * restores the narrower rule exactly.
+ */
+export function auditedAllStepsEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  return (env[AUDITED_ALL_STEPS_ENV] ?? '').trim().toLowerCase() !== 'off';
+}
+
+/**
+ * May the lesson step with this id — a step of a generated course plan (the
+ * caller decides that; practice.ts) — be served to `partnerId`? False only for a listed partner when
  * the step is off the audited list (or withdrawn — withdrawn wins). Any other
  * partner, or an unknown caller: true. Like the generated-item rule this is
  * not a grading rule — an id already issued still resolves.
@@ -111,16 +134,19 @@ export function lessonStepServableToPartner(id: string | null | undefined, partn
 }
 
 /**
- * Drop the non-first-objective lesson steps `partnerId` may not be served.
- * Not listed ⇒ the SAME array. One log line with the count when rows drop.
+ * Drop the lesson steps `partnerId` may not be served. The caller passes only
+ * steps the gate applies to (practice.ts). Not listed ⇒ the SAME array. One
+ * log line with the count when rows drop.
  */
 export function withoutUnauditedLessonSteps<T extends { id: string }>(
   items: readonly T[],
   partnerId: string | null | undefined,
   where: string,
+  /** The audited list to hold them to. Omitted ⇒ the committed one. */
+  list: ReadonlySet<string> = AUDITED_LESSON_STEP_IDS,
 ): T[] {
   if (!auditedOnlyForPartner(partnerId)) return items as T[];
-  const kept = items.filter((it) => isAuditedLessonStep(it.id) && !isWithdrawnItem(it.id));
+  const kept = items.filter((it) => list.has(it.id) && !isWithdrawnItem(it.id));
   if (kept.length !== items.length) {
     console.log(`[practice] unaudited lesson steps filtered partner=${(partnerId as string).trim().toLowerCase()} where=${where} count=${items.length - kept.length}`);
   }

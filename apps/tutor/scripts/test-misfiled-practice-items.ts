@@ -44,7 +44,7 @@ import {
   withoutMisfiledFor,
   type MisfiledMarks,
 } from '@/lib/tutor/portal/misfiled-items';
-import { AUDITED_GENERATED_ITEM_IDS, AUDITED_LESSON_STEP_IDS, AUDITED_ONLY_PARTNERS_ENV } from '@/lib/tutor/portal/audited-items';
+import { AUDITED_ALL_STEPS_ENV, AUDITED_GENERATED_ITEM_IDS, AUDITED_LESSON_STEP_IDS, AUDITED_ONLY_PARTNERS_ENV } from '@/lib/tutor/portal/audited-items';
 import { WITHDRAWN_ITEM_IDS } from '@/lib/tutor/portal/withdrawn-items';
 import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 import { buildMisfiledList, filedObjectiveOfItemId, readMisfiledRows, type MisfiledRow } from './audit/build-misfiled-list';
@@ -73,6 +73,7 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
     delete process.env[FLAG];
     delete process.env[SKILL_FLAG];
     delete process.env[AUDITED_ONLY_PARTNERS_ENV];
+    delete process.env[AUDITED_ALL_STEPS_ENV];
     delete process.env.PRACTICE_GEN;
   }
 }
@@ -364,10 +365,20 @@ const srcA = () => sourcesOf([planA, planB], bankA);
     }
   });
 
-  await test('audited-only partner: a gained generated row must be on the audited list; a gained step from objective 2..N must be on the audited step list', async () => {
+  await test('audited-only partner: a gained generated row must be on the audited list; a step — own or gained, objective 1 included — must be on the audited step list', async () => {
     process.env[AUDITED_ONLY_PARTNERS_ENV] = P1;
-    // A1_IS2 is not on the audited list ⇒ not served to the listed partner.
-    assert.deepEqual(ids(await draw(lo(A, 2), srcA(), MARKS)), [step(A, 2), step(A, 1)], 'unaudited generated rows (own and gained) are dropped; the objective-1 step is not gated');
+    const withList = (loId: string, src: PracticeSources, marks: MisfiledMarks, list: string[]) =>
+      retrievePractice(req(loId), src, NO_GEN_SOURCES, { partnerId: P1 }, { misfiledMarks: marks, auditedLessonSteps: new Set(list) });
+    // A1_IS2 is not on the audited list ⇒ not served to the listed partner;
+    // nor is either step (2026-10-10: the objective-1 step is gated too, and
+    // so is the requested objective's own step).
+    assert.deepEqual(ids(await draw(lo(A, 2), srcA(), MARKS)), [], 'unaudited generated rows and unaudited steps (own and gained) are dropped');
+    assert.deepEqual(ids(await withList(lo(A, 2), srcA(), MARKS, [step(A, 1)])), [step(A, 1)], 'the gained objective-1 step is served once it is listed');
+    assert.deepEqual(ids(await withList(lo(A, 2), srcA(), MARKS, [step(A, 2)])), [step(A, 2)]);
+    // The older rule (switch off): neither of these two steps was gated.
+    process.env[AUDITED_ALL_STEPS_ENV] = 'off';
+    assert.deepEqual(ids(await draw(lo(A, 2), srcA(), MARKS)), [step(A, 2), step(A, 1)], 'switch off: the own step and the objective-1 step are not gated');
+    delete process.env[AUDITED_ALL_STEPS_ENV];
     // A real audited generated row, filed under its plan's lo-1, marked for lo-2.
     const real = [...AUDITED_GENERATED_ITEM_IDS].find((id) => /^practice-gen\.gen-[0-9a-f-]{36}\.lo-1\./.test(id)) as string;
     const planId = /^practice-gen\.(gen-[0-9a-f-]{36})/.exec(real)?.[1] as string;
@@ -379,7 +390,11 @@ const srcA = () => sourcesOf([planA, planB], bankA);
     assert.equal(ids(res).includes(step(planId, 3)), AUDITED_LESSON_STEP_IDS.has(step(planId, 3)));
     const unaudited = genPlan(A, 4);
     const m2: MisfiledMarks = new Map<string, string | null>([[step(A, 3), lo(A, 2)]]);
-    assert.deepEqual(ids(await draw(lo(A, 2), sourcesOf([unaudited]), m2)), [step(A, 2)], 'unaudited lo-3 step is not gained by a listed partner');
+    assert.deepEqual(ids(await draw(lo(A, 2), sourcesOf([unaudited]), m2)), [], 'unaudited lo-3 step is not gained by a listed partner (nor is the unaudited own step served)');
+    assert.deepEqual(ids(await withList(lo(A, 2), sourcesOf([unaudited]), m2, [step(A, 2), step(A, 3)])), [step(A, 2), step(A, 3)], 'both listed ⇒ both served');
+    process.env[AUDITED_ALL_STEPS_ENV] = 'off';
+    assert.deepEqual(ids(await draw(lo(A, 2), sourcesOf([unaudited]), m2)), [step(A, 2)], 'switch off: the own step is not gated, the gained lo-3 step is');
+    delete process.env[AUDITED_ALL_STEPS_ENV];
     delete process.env[AUDITED_ONLY_PARTNERS_ENV];
     assert.deepEqual(ids(await draw(lo(A, 2), sourcesOf([unaudited]), m2)), [step(A, 2), step(A, 3)], '…and is by anyone else');
   });
