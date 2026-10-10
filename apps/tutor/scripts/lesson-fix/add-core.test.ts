@@ -10,7 +10,7 @@ import {
   storedSegment, textSha256, validateWritten, type AddIssue, type AddPack,
 } from './add-core';
 import { syntheticWritten } from './add-fixtures';
-import { applyCorrections, loadDumpPlans, loadExpandedIndex, loadLessonV2, loadPacks, loadPreStates } from './add-io';
+import { applyCorrections, CORRECTION_FILES, lessonSegmentsOf, loadDumpPlans, loadExpandedIndex, loadLessonV3, loadPacks, loadPreStates } from './add-io';
 import { recapTeacherNote, type LessonSegment } from './core';
 import { parseLessonPlan } from '../../src/lib/tutor/lesson-plan/parser';
 
@@ -24,7 +24,7 @@ function test(name: string, fn: () => void): void {
 type Doc = Record<string, unknown>;
 const dump = loadDumpPlans();
 const index = loadExpandedIndex();
-const lessons = index.map((e) => loadLessonV2(e.pack));
+const lessons = index.map((e) => loadLessonV3(e.pack));
 const expanded = lessons.map((l) => dump.get(l.planId) as Doc);
 const patched = applyCorrections(new Map(expanded.map((d) => [d._id as string, d])));
 const packs = loadPacks();
@@ -76,16 +76,29 @@ test('the generator formulas reproduce the stored intro goal, recap note and mus
   assert.equal(estimatedMinutesAfter(30, 3), 45);
 });
 
-test('lessons-v2 is the dump with the committed corrections applied (text and objectives), and differs from the raw dump', () => {
-  let changed = 0;
+test('baseline = dump + correction sets 1, 2 and 3: lessons-v3 is the state after sets 1–2; set 3 moves the text of 6 of the 45 and no guarded field', () => {
+  assert.equal(CORRECTION_FILES.length, 3);
+  const afterTwo = loadPreStates(CORRECTION_FILES.slice(0, 2));
+  const afterOne = loadPreStates(CORRECTION_FILES.slice(0, 1));
+  const movedBy3: string[] = [];
+  const headMovedBy2: string[] = [];
   for (const l of lessons) {
-    const p = pre.get(l.planId);
-    assert.ok(p);
-    assert.equal(p.textSha256, textSha256(l.segments), l.pack);
-    assert.deepEqual(p.los, l.objectives);
-    if (textSha256((dump.get(l.planId) as Doc).segments as Doc[]) !== p.textSha256) changed += 1;
+    const two = afterTwo.get(l.planId);
+    const three = pre.get(l.planId);
+    const one = afterOne.get(l.planId);
+    assert.ok(two && three && one);
+    assert.equal(two.textSha256, textSha256(l.segments), l.pack);
+    assert.deepEqual(two.los, l.objectives);
+    if (three.textSha256 !== two.textSha256) movedBy3.push(l.pack);
+    const head = (s: typeof two): string => JSON.stringify({ ...s, textSha256: '', segmentTextSha256: [] });
+    assert.equal(head(three), head(two), `set 3 changes a guarded field of ${l.pack}`);
+    if (head(two) !== head(one)) headMovedBy2.push(l.pack);
+    assert.equal(three.segmentTextSha256.length, three.segmentIds.length);
+    assert.equal(three.textSha256, textSha256(lessonSegmentsOf(patched.get(l.planId) as Doc)));
   }
-  assert.ok(changed > 20, `corrections changed ${changed} of the 45`);
+  assert.deepEqual(movedBy3, ['323', '339', '344', '353', '354', '358']);
+  // Set 2 reworded an objective of two plans (and with it their recap).
+  assert.deepEqual(headMovedBy2, ['320', '349']);
 });
 
 test('packs: 45 packs, 65 missing objectives numbered 6..8, template ids, practice items attached', () => {
@@ -226,7 +239,7 @@ test('apply data: the document after equals los + 4 segments per objective befor
     const parsed = parseLessonPlan({ ...after, id: after._id });
     assert.equal(parsed.los.length, 5 + k);
     assert.equal(parsed.segments.length, 22 + 4 * k);
-    assert.equal(buildAddData([plan]).counts.segments, 4 * k);
+    assert.equal(buildAddData([plan], 'x').counts.segments, 4 * k);
   }
 });
 

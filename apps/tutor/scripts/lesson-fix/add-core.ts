@@ -62,8 +62,11 @@ export interface PreState {
   pickedLoIds: string[];
   allowedMaxLOs: number;
   availableLOs: Array<{ id: string; description: string }>;
-  /** Fingerprint of the teaching text the writers matched (see `textSha256`). */
+  /** Fingerprint of the existing teaching text (see `textSha256`). */
   textSha256: string;
+  /** The same per segment, in `segmentIds` order — lets the script name the
+   *  segments whose stored text is not the expected text. */
+  segmentTextSha256: string[];
 }
 
 export const SEGMENT_SUFFIXES = ['hook', 'concept', 'worked', 'try'] as const;
@@ -122,11 +125,21 @@ export function estimatedMinutesAfter(before: number, added: number): number {
 
 const TEXT_FIELDS = ['goal', 'keyIdeas', 'problem', 'steps', 'answer', 'expectedAnswer'] as const;
 
-/** Fingerprint of a plan's teaching text. The generated script computes the
- *  same value from the stored segments (same canonical form). */
+function canonSegment(s: Record<string, unknown>): unknown[] {
+  return [s.id, s.kind, ...TEXT_FIELDS.map((f) => (s[f] === undefined ? null : s[f]))];
+}
+
+/** Fingerprint of a plan's teaching text: every segment but `intro` and
+ *  `recap` (those two are rewritten by the additions and guarded value by
+ *  value). The generated script computes the same value from the stored
+ *  segments (same canonical form). */
 export function textSha256(segments: ReadonlyArray<Record<string, unknown>>): string {
-  const canon = segments.map((s) => [s.id, s.kind, ...TEXT_FIELDS.map((f) => (s[f] === undefined ? null : s[f]))]);
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  const teaching = segments.filter((s) => s.id !== 'intro' && s.id !== 'recap');
+  return crypto.createHash('sha256').update(JSON.stringify(teaching.map(canonSegment)), 'utf8').digest('hex');
+}
+
+export function segmentTextSha256(segment: Record<string, unknown>): string {
+  return crypto.createHash('sha256').update(JSON.stringify(canonSegment(segment)), 'utf8').digest('hex');
 }
 
 /* ------------------------------------------------------------------ */
@@ -370,6 +383,8 @@ export interface AddData {
   kind: 'lesson-additions';
   database: 'evelyn';
   collection: 'lessonplans';
+  /** What must have been applied before this data (printed on a mismatch). */
+  requires: string;
   counts: { plans: number; objectives: number; segments: number };
   plans: AddPlanData[];
 }
@@ -419,13 +434,14 @@ export function buildPlanData(pack: AddPack, pre: PreState, file: WrittenFile): 
   };
 }
 
-export function buildAddData(plans: readonly AddPlanData[]): AddData {
+export function buildAddData(plans: readonly AddPlanData[], requires: string): AddData {
   const sorted = [...plans].sort((a, b) => a.pack.localeCompare(b.pack));
   return {
     formatVersion: 1,
     kind: 'lesson-additions',
     database: 'evelyn',
     collection: 'lessonplans',
+    requires,
     counts: {
       plans: sorted.length,
       objectives: sorted.reduce((a, p) => a + p.add.los.length, 0),
@@ -453,6 +469,7 @@ export function preStateOf(doc: Record<string, unknown>): PreState {
     allowedMaxLOs: meta.allowedMaxLOs as number,
     availableLOs: (meta.availableLOs as Array<{ id: string; description: string }>).map((a) => ({ id: a.id, description: a.description })),
     textSha256: textSha256(segs),
+    segmentTextSha256: segs.map(segmentTextSha256),
   };
 }
 

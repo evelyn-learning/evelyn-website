@@ -18,7 +18,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { applyDataToDocs, applyResolved, buildApplyData, recapTeacherNote, validatePatches, type ApplyData, type Lesson, type PatchFile } from './core';
 import { makeFakeDb, type FakeDbHandle } from './fake-mongo';
-import { APPLIED_DATA_FILES, DUMP_FILE, PASS, loadLessons, loadPatchFiles } from './io';
+import { APPLIED_APPLY_SCRIPTS, APPLIED_DATA_FILES, DUMP_FILE, PASS, loadLessons, loadPatchFiles } from './io';
 import { renderScript, type Direction } from './script-template';
 
 let passed = 0;
@@ -472,6 +472,16 @@ if (!fs.existsSync(DUMP) || !realValidation || realValidation.segments.length ==
       const r = run(script, p1, { DATA: APPLIED_DATA_FILES[0], APPLY: '1', BACKUP: newPath('p1-backup') });
       assert.equal(r.error, null, r.error?.message);
       assert.deepEqual(p1.docs, baseline);
+    });
+  }
+  if (PASS === 3) {
+    test('baseline: the shipped pass-1 and pass-2 apply scripts, run on the dump in order, give exactly the in-memory baseline', () => {
+      const prior = makeFakeDb('evelyn', rawDump.plans);
+      APPLIED_DATA_FILES.forEach((dataFile, i) => {
+        const r = run(fs.readFileSync(APPLIED_APPLY_SCRIPTS[i], 'utf8'), prior, { DATA: dataFile, APPLY: '1', BACKUP: newPath(`p${i + 1}-backup`) });
+        assert.equal(r.error, null, r.error?.message);
+      });
+      assert.deepEqual(prior.docs, baseline);
     });
   }
   const built = build(real.files, allLessons, true);

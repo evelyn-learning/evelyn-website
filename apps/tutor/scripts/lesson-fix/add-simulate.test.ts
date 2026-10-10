@@ -16,7 +16,8 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { buildAddData, buildPlanData, expectedAfter, validateWritten, type AddData, type AddPack } from './add-core';
 import { syntheticWritten } from './add-fixtures';
-import { applyCorrections, loadDumpPlans, loadPacks, loadPreStates } from './add-io';
+import { applyCorrections, CORRECTION_FILES, loadDumpPlans, loadPacks, loadPreStates, REQUIRES, TOOLING_DIR } from './add-io';
+import { ADD_SCRIPT_NAMES } from './add-script-template';
 import { renderAddScript, type AddDirection } from './add-script-template';
 import { makeFakeDb, type FakeDbHandle } from './fake-mongo';
 
@@ -35,7 +36,8 @@ const newPath = (stem: string): string => path.join(tmp, `${stem}-${++fileNo}.js
 const packs = loadPacks();
 const pre = loadPreStates();
 const rawDump = loadDumpPlans();
-/** Every dumped plan (360), the corrections applied: the collection as stored. */
+/** Every dumped plan (360), correction sets 1–3 applied: the collection as
+ *  stored when the additions run. */
 const collection: Doc[] = [...applyCorrections(rawDump).values()];
 assert.equal(collection.length, 360);
 
@@ -52,7 +54,7 @@ function build(list: AddPack[]): { data: AddData; dataPath: string; scripts: Rec
     assert.ok(state);
     return buildPlanData(p, state, file);
   });
-  const data = buildAddData(plans);
+  const data = buildAddData(plans, REQUIRES);
   const text = `${JSON.stringify(data, null, 1)}\n`;
   const dataPath = newPath('data');
   fs.writeFileSync(dataPath, text);
@@ -228,13 +230,14 @@ test('mismatch: plan missing; picker plan missing or worded differently (read on
   assert.equal(reworded.writes.length, 0);
 });
 
-test('existing teaching text other than the text the writers saw is reported as a NOTE, not a mismatch (uncorrected dump)', () => {
+test('existing teaching text that is not the expected text aborts the apply before any write, naming the segments (uncorrected dump)', () => {
   // The raw 10-06 dump: structure identical, corrected fields differ.
   const h = makeFakeDb('evelyn', [...rawDump.values()]);
-  const r = run(built.scripts.apply, h, { DATA: built.dataPath });
-  assert.equal(r.error, null, r.error?.message);
-  assert.ok(r.out.some((l) => /^NOTE lesson 315 .*differs from the text the writers were given/.test(l)));
-  assert.match(plansLine(r), /to change 3 .* mismatched 0/);
+  const r = run(built.scripts.apply, h, { DATA: built.dataPath, APPLY: '1', BACKUP: newPath('backup') });
+  assert.match(String(r.error?.message), /aborted before any write/);
+  assert.ok(r.out.some((l) => /lesson 315 .*\(existing text\): stored teaching text of \d+ existing segment\(s\) is not the expected text \(lo-[^)]*\) — this script needs the lesson corrections sets 1–3 applied first/.test(l)), r.out.join('\n'));
+  assert.ok(r.out.some((l) => l.startsWith('LIKELY CAUSE')));
+  assert.equal(h.writes.length, 0);
 });
 
 test('a document changed between the read and the write is not written; the run stops and says where', () => {
@@ -316,7 +319,7 @@ test('a corrected existing segment after the apply does not block the revert (ex
   (byId(h.docs, ids[0]).segments as Doc[])[2].goal = 'Corrected later.';
   const r = run(built.scripts.revert, h, { DATA: built.dataPath, APPLY: '1', BACKUP: newPath('backup') });
   assert.equal(r.error, null, r.error?.message);
-  assert.ok(r.out.some((l) => l.startsWith('NOTE lesson 315')));
+  assert.ok(r.out.some((l) => /^NOTE lesson 315 .*1 existing segment\(s\) is not the expected text \(lo-1-concept\)/.test(l)));
   assert.equal((byId(h.docs, ids[0]).segments as Doc[])[2].goal, 'Corrected later.');
   assert.equal((byId(h.docs, ids[0]).segments as Doc[]).length, 22);
 });
@@ -334,6 +337,112 @@ test('all 45 packs at once (synthetic text): apply then revert returns the colle
   assert.equal(r.error, null, r.error?.message);
   assert.equal(JSON.stringify(h.docs), JSON.stringify(collection));
 });
+
+/* ------------------------------------------------------------------ */
+/* Part 2 — the BUILT files in tooling/ (the real written text)        */
+/* ------------------------------------------------------------------ */
+
+const realData = path.join(TOOLING_DIR, 'lesson-additions.data.json');
+if (!fs.existsSync(realData)) {
+  console.log('skip - part 2: no built files in tooling/ (run build-add-script.ts)');
+} else {
+  const real = JSON.parse(fs.readFileSync(realData, 'utf8')) as AddData;
+  const scripts = { apply: fs.readFileSync(path.join(TOOLING_DIR, ADD_SCRIPT_NAMES.apply), 'utf8'), revert: fs.readFileSync(path.join(TOOLING_DIR, ADD_SCRIPT_NAMES.revert), 'utf8') };
+  const realIds = real.plans.map((p) => p.planId);
+  const realExpected = collection.map((d) => {
+    const plan = real.plans.find((p) => p.planId === d._id);
+    return plan ? expectedAfter(d, plan) : (JSON.parse(JSON.stringify(d)) as Doc);
+  });
+  const n = real.counts;
+
+  test(`built files: dry run against dump + sets 1–3 — ${n.plans} plans, ${n.objectives} objectives, ${n.segments} segments to add, no mismatch, no note, nothing written`, () => {
+    const h = fresh();
+    const r = run(scripts.apply, h, { DATA: realData });
+    assert.equal(r.error, null, `${r.error?.message}\n${r.out.join('\n')}`);
+    assert.ok(plansLine(r).includes(`${n.plans} in the data · to change ${n.plans} · already applied 0 · mismatched 0 — objectives to add ${n.objectives}, segments ${n.segments}`), plansLine(r));
+    assert.ok(r.out.includes(`picker plans (read only): ${n.plans} of ${n.plans} list the added objectives exactly as the data`));
+    assert.ok(r.out.includes('other stored plans carrying these objectives (NOT written): 0'));
+    assert.ok(!r.out.some((l) => l.startsWith('NOTE')));
+    assert.equal(h.writes.length, 0);
+    console.log(`     ${plansLine(r)}`);
+  });
+
+  test('built files: BEFORE set 3 is applied (dump + sets 1–2) the apply aborts before any write and says which set is missing', () => {
+    const before3 = [...applyCorrections(rawDump, CORRECTION_FILES.slice(0, 2)).values()];
+    const h = makeFakeDb('evelyn', before3);
+    const backup = newPath('backup');
+    const r = run(scripts.apply, h, { DATA: realData, APPLY: '1', BACKUP: backup });
+    assert.match(String(r.error?.message), /6 stored value\(s\) do not match — aborted before any write/);
+    const lines = r.out.filter((l) => l.startsWith('  lesson'));
+    assert.deepEqual(lines.map((l) => l.slice(9, 12)), ['323', '339', '344', '353', '354', '358']);
+    for (const l of lines) assert.match(l, /\(existing text\): stored teaching text of \d existing segment\(s\) is not the expected text \(lo-.*\) — this script needs the lesson corrections sets 1–3 applied first \(the last one: .*lesson-corrections-3\.data\.json\)/);
+    assert.ok(r.out.some((l) => /^LIKELY CAUSE for 6 of them: an earlier correction set is not applied yet/.test(l)));
+    assert.ok(plansLine(r).includes('to change 39 · already applied 0 · mismatched 6'), plansLine(r));
+    assert.equal(h.writes.length, 0);
+    assert.deepEqual(h.docs, before3);
+    assert.equal(fs.existsSync(backup), false);
+    console.log(`     ${plansLine(r)}`);
+    console.log(`     ${lines[0].trim().slice(0, 230)}…`);
+    console.log(`     ${r.error?.message}`);
+  });
+
+  test('built files: also aborts on the raw dump and on dump + set 1 only', () => {
+    for (const files of [[], CORRECTION_FILES.slice(0, 1)]) {
+      const h = makeFakeDb('evelyn', [...applyCorrections(rawDump, files).values()]);
+      const r = run(scripts.apply, h, { DATA: realData, APPLY: '1', BACKUP: newPath('backup') });
+      assert.match(String(r.error?.message), /aborted before any write/);
+      assert.equal(h.writes.length, 0);
+    }
+  });
+
+  test('built files: apply = independent expectation (key order too); re-run no-op; interrupted run completed by re-run; revert exact', () => {
+    const h = fresh();
+    const backup = newPath('backup');
+    const a = run(scripts.apply, h, { DATA: realData, APPLY: '1', BACKUP: backup });
+    assert.equal(a.error, null, a.error?.message);
+    assert.ok(a.out.includes(`plans written: ${n.plans}`) && a.out.includes('read-back check passed.'));
+    assert.equal(JSON.stringify(h.docs), JSON.stringify(realExpected));
+    assert.equal(h.writes.length, 2 * n.plans);
+    assert.deepEqual(JSON.parse(fs.readFileSync(backup, 'utf8')), realIds.map((id) => byId(collection, id)));
+    const untouched = h.docs.filter((d) => !realIds.includes(d._id as string));
+    assert.equal(JSON.stringify(untouched), JSON.stringify(collection.filter((d) => !realIds.includes(d._id as string))));
+    console.log(`     ${a.out.find((l) => l.startsWith('after — ')) as string}`);
+
+    h.writes.length = 0;
+    const again = run(scripts.apply, h, { DATA: realData, APPLY: '1', BACKUP: newPath('backup') });
+    assert.ok(plansLine(again).includes(`to change 0 · already applied ${n.plans} · mismatched 0`));
+    assert.equal(h.writes.length, 0);
+    console.log(`     re-run: ${plansLine(again)}`);
+
+    // Interrupted after 7 updates: three plans done, the fourth half-written.
+    const h2 = fresh();
+    let calls = 0;
+    h2.beforeUpdate = () => { calls += 1; if (calls === 8) throw new Error('connection lost'); };
+    const cut = run(scripts.apply, h2, { DATA: realData, APPLY: '1', BACKUP: newPath('backup') });
+    assert.match(String(cut.error?.message), /connection lost/);
+    h2.beforeUpdate = undefined;
+    const dry = run(scripts.apply, h2, { DATA: realData });
+    assert.ok(plansLine(dry).includes(`to change ${n.plans - 3} (1 of them half-written by an interrupted run) · already applied 3 · mismatched 0`), plansLine(dry));
+    console.log(`     interrupted, then dry run: ${plansLine(dry)}`);
+    const done = run(scripts.apply, h2, { DATA: realData, APPLY: '1', BACKUP: newPath('backup') });
+    assert.equal(done.error, null, done.error?.message);
+    assert.equal(JSON.stringify(h2.docs), JSON.stringify(realExpected));
+
+    h.writes.length = 0;
+    const rev = run(scripts.revert, h, { DATA: realData, APPLY: '1', BACKUP: newPath('backup') });
+    assert.equal(rev.error, null, rev.error?.message);
+    assert.equal(JSON.stringify(h.docs), JSON.stringify(collection));
+    console.log(`     revert: ${plansLine(rev)} → collection identical to before`);
+  });
+
+  test('built files: a mismatch in one plan (objective reworded) aborts all of them', () => {
+    const h = fresh();
+    (byId(h.docs, realIds[10]).los as Array<{ description: string }>)[0].description += '!';
+    const r = run(scripts.apply, h, { DATA: realData, APPLY: '1', BACKUP: newPath('backup') });
+    assert.match(String(r.error?.message), /aborted before any write/);
+    assert.equal(h.writes.length, 0);
+  });
+}
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n${passed} passed`);

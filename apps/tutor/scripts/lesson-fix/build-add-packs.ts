@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { isNumberWithUnit, preStateOf, SEGMENT_KINDS, SEGMENT_SUFFIXES, TEACHING_FIELDS, textSha256, type AddPack, type MissingObjective } from './add-core';
-import { ADD_DIR, applyCorrections, LESSONS_V2_DIR, loadDumpPlans, loadExpandedIndex, loadLessonV2, loadPracticeItems, PACK_DIR, WRITTEN_DIR } from './add-io';
+import { ADD_DIR, applyCorrections, CORRECTION_FILES, lessonSegmentsOf, LESSONS_V3_DIR, loadDumpPlans, loadExpandedIndex, loadLessonV3, loadPracticeItems, PACK_DIR, WRITTEN_DIR } from './add-io';
 import { containsAnswerVerbatim, markupStyleOf, type Lesson, type LessonSegment } from './core';
 
 type Doc = Record<string, unknown>;
@@ -81,8 +81,12 @@ function main(): void {
   const index = loadExpandedIndex();
   const dump = loadDumpPlans();
   const practice = loadPracticeItems();
-  const lessons = index.map((e) => loadLessonV2(e.pack));
-  const patched = applyCorrections(new Map(lessons.map((l) => [l.planId, dump.get(l.planId) as Doc])));
+  const lessons = index.map((e) => loadLessonV3(e.pack));
+  const only45 = new Map(lessons.map((l) => [l.planId, dump.get(l.planId) as Doc]));
+  // The baseline: the stored state after ALL three correction sets.
+  const patched = applyCorrections(only45);
+  // lessons-v3 is the local copy after sets 1 and 2 — checked, then set 3 on top.
+  const afterTwo = applyCorrections(only45, CORRECTION_FILES.slice(0, 2));
   fs.mkdirSync(PACK_DIR, { recursive: true });
   const rows: Array<Record<string, unknown>> = [];
   for (const lesson of lessons) {
@@ -90,9 +94,10 @@ function main(): void {
     const picker = dump.get(lesson.pickerPlanId as string) as Doc;
     if (!stored || !picker) throw new Error(`pack ${lesson.pack}: plan or picker plan not in the dump`);
     const pre = preStateOf(stored);
-    // The local lesson text must be the stored text after the corrections.
-    if (pre.textSha256 !== textSha256(lesson.segments)) throw new Error(`pack ${lesson.pack}: lessons-v2 text differs from the dump with the corrections applied`);
-    if (JSON.stringify(pre.los) !== JSON.stringify(lesson.objectives)) throw new Error(`pack ${lesson.pack}: lessons-v2 objectives differ from the stored objectives`);
+    const two = preStateOf(afterTwo.get(lesson.planId) as Doc);
+    if (two.textSha256 !== textSha256(lesson.segments)) throw new Error(`pack ${lesson.pack}: lessons-v3 text differs from the dump with correction sets 1 and 2 applied`);
+    if (JSON.stringify(two.los) !== JSON.stringify(lesson.objectives)) throw new Error(`pack ${lesson.pack}: lessons-v3 objectives differ from the dump with correction sets 1 and 2 applied`);
+    const existingSegments = lessonSegmentsOf(stored);
     const pickerLos = picker.los as Array<{ id: string; description: string; shortTitle: string }>;
     const n0 = pre.los.length;
     if (JSON.stringify(pickerLos.slice(0, n0).map((l) => l.id)) !== JSON.stringify(pre.los.map((l) => l.id))) throw new Error(`pack ${lesson.pack}: picker objectives do not start with the plan's`);
@@ -114,9 +119,9 @@ function main(): void {
       topic: stored.topic as string,
       grade: stored.grade as string,
       existingObjectives: pre.los,
-      existingSegments: lesson.segments,
+      existingSegments,
       missingObjectives: missing,
-      thisLessonMeasures: measure([lesson as Lesson]),
+      thisLessonMeasures: measure([{ segments: existingSegments }]),
       outputPath: path.join(WRITTEN_DIR, `${lesson.pack}.json`),
       outputTemplate: {
         pack: lesson.pack,
@@ -147,12 +152,16 @@ function main(): void {
   }
   fs.writeFileSync(path.join(PACK_DIR, 'index.json'), `${JSON.stringify(rows, null, 1)}\n`);
 
-  const allWithText = fs.readdirSync(LESSONS_V2_DIR).filter((f) => /^\d+\.json$/.test(f)).sort()
-    .map((f) => JSON.parse(fs.readFileSync(path.join(LESSONS_V2_DIR, f), 'utf8')) as Lesson)
+  console.log(`packs ${rows.length} · missing objectives ${rows.reduce((a, r) => a + (r.missingObjectives as number), 0)} · baseline: dump + ${CORRECTION_FILES.length} correction sets`);
+  // conventions.json is the writers' reference (measured before they wrote);
+  // it is rewritten only on request.
+  if (!process.argv.includes('--conventions')) return;
+  const allWithText = fs.readdirSync(LESSONS_V3_DIR).filter((f) => /^\d+\.json$/.test(f)).sort()
+    .map((f) => JSON.parse(fs.readFileSync(path.join(LESSONS_V3_DIR, f), 'utf8')) as Lesson)
     .filter((l) => l.segments.some((s) => s.kind === 'worked_example'));
   const subjects = [...new Set(lessons.map((l) => l.subject as string))].sort();
   const conventions = {
-    source: `${LESSONS_V2_DIR} (stored text after the 10-11 corrections)`,
+    source: `${LESSONS_V3_DIR} (stored text after correction sets 1 and 2)`,
     allLessonsWithText: measure(allWithText),
     the45ExpandedPlans: measure(lessons as Lesson[]),
     bySubjectOfThe45: Object.fromEntries(subjects.map((s) => [s, measure(lessons.filter((l) => l.subject === s) as Lesson[])])),
@@ -164,7 +173,6 @@ function main(): void {
     const counts = r.flatMap((x) => x.existingPracticeItems as number[]);
     return `  ${s}: ${r.length} plans · ${counts.length} missing objectives · with practice items ${counts.filter((c) => c > 0).length} (items ${counts.reduce((a, b) => a + b, 0)}) · figure-dependent ${r.reduce((a, x) => a + (x.figureDependent as number), 0)}`;
   });
-  console.log(`packs ${rows.length} · missing objectives ${rows.reduce((a, r) => a + (r.missingObjectives as number), 0)}`);
   console.log(bySubject.join('\n'));
   console.log(`output: ${PACK_DIR}`);
 }

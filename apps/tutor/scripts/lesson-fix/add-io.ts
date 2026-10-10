@@ -11,16 +11,27 @@ import { preStateOf, validateWritten, type AddIssue, type AddPack, type Practice
 const INTEGRATION = '/Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration';
 export const ADD_DIR = process.env.LESSON_ADD_DIR ?? path.join(INTEGRATION, 'lesson-add-2026-10-12');
 export const PACK_DIR = path.join(ADD_DIR, 'packs');
-/** Writers' output. */
+/** Writers' output — the ONLY folder the apply build reads; a file counts
+ *  only with a reader verdict `clean` for its exact bytes. */
 export const WRITTEN_DIR = path.join(ADD_DIR, 'written');
 /** Readers' verdicts, one per pack, naming the sha256 of the file read. */
 export const READ_DIR = path.join(ADD_DIR, 'read');
-/** The files after the read — the ONLY folder the apply build reads. */
-export const FINAL_DIR = path.join(ADD_DIR, 'final');
 
 export const DUMP_FILE = path.join(INTEGRATION, 'audited-list-2026-10-06/work/prod-dump.json');
-export const CORRECTIONS_FILE = path.join(INTEGRATION, 'lesson-read-2026-10-10/tooling/lesson-corrections.data.json');
-export const LESSONS_V2_DIR = path.join(INTEGRATION, 'lesson-read-2026-10-10/lessons-v2');
+/** Generated scripts, data, reports and the owner's review document. */
+export const TOOLING_DIR = path.join(ADD_DIR, 'tooling');
+const READ_2026_10_10 = path.join(INTEGRATION, 'lesson-read-2026-10-10');
+/** The correction sets, oldest first. The additions are built against the
+ *  stored state AFTER ALL of them: the dump + set 1 + set 2 + set 3. */
+export const CORRECTION_FILES: readonly string[] = [
+  path.join(READ_2026_10_10, 'tooling/lesson-corrections.data.json'),
+  path.join(READ_2026_10_10, 'tooling-pass2/lesson-corrections-2.data.json'),
+  path.join(READ_2026_10_10, 'tooling-pass3/lesson-corrections-3.data.json'),
+];
+/** What the generated script tells the operator when existing text differs. */
+export const REQUIRES = `the lesson corrections sets 1–3 applied first (the last one: ${CORRECTION_FILES[2]})`;
+/** Local copy of the lessons as stored after sets 1 and 2 (set 3 not in it). */
+export const LESSONS_V3_DIR = path.join(READ_2026_10_10, 'lessons-v3');
 export const EXPANDED_INDEX = path.join(INTEGRATION, 'lesson-read-2026-10-10/expanded-45-index.json');
 const PRACTICE_PACK_DIRS = [
   path.join(INTEGRATION, 'practice-depth-2026-10-10/packs'),
@@ -43,18 +54,25 @@ export function loadDumpPlans(): Map<string, Doc> {
   return new Map(dump.plans.map((p) => [p._id as string, p]));
 }
 
-/** Apply the committed corrections data to dumped documents IN MEMORY — the
- *  stored state after the 10-11 corrections. Every `old` must match. */
-export function applyCorrections(docs: Map<string, Doc>, data: ApplyData = readJson<ApplyData>(CORRECTIONS_FILE)): Map<string, Doc> {
+/** Apply correction data files to dumped documents IN MEMORY, in order —
+ *  by default all three sets: the stored state the additions expect. Every
+ *  `old` must match. */
+export function applyCorrections(docs: Map<string, Doc>, files: readonly string[] = CORRECTION_FILES): Map<string, Doc> {
   const out = new Map<string, Doc>();
   for (const [id, d] of docs) out.set(id, JSON.parse(JSON.stringify(d)) as Doc);
+  for (const file of files) applyOne(out, readJson<ApplyData>(file));
+  return out;
+}
+
+function applyOne(out: Map<string, Doc>, data: ApplyData): void {
   for (const plan of data.plans) {
     const doc = out.get(plan.planId);
     if (!doc) continue;
     for (const o of plan.objectives) {
-      const lo = (doc.los as Array<{ id: string; description: string }>).find((l) => l.id === o.loId);
-      if (!lo || lo.description !== o.old) throw new Error(`corrections: ${plan.planId} ${o.loId} description is not the expected old value`);
-      lo.description = o.new;
+      const field = o.field ?? 'description';
+      const lo = (doc.los as Array<Record<string, string>>).find((l) => l.id === o.loId);
+      if (!lo || lo[field] !== o.old) throw new Error(`corrections: ${plan.planId} ${o.loId} ${field} is not the expected old value`);
+      lo[field] = o.new;
     }
     for (const s of plan.segments) {
       const seg = (doc.segments as Doc[]).find((x) => x.id === s.segmentId);
@@ -76,7 +94,12 @@ export function applyCorrections(docs: Map<string, Doc>, data: ApplyData = readJ
       }
     }
   }
-  return out;
+}
+
+/** A stored document in the local lesson-file form: null fields and the
+ *  segments' `teacherNote` left out. */
+export function lessonSegmentsOf(doc: Doc): Lesson['segments'] {
+  return (doc.segments as Doc[]).map((s) => Object.fromEntries(Object.entries(s).filter(([k, v]) => v !== null && k !== 'teacherNote')) as Lesson['segments'][number]);
 }
 
 export interface ExpandedEntry {
@@ -89,8 +112,8 @@ export function loadExpandedIndex(): ExpandedEntry[] {
   return readJson<ExpandedEntry[]>(EXPANDED_INDEX);
 }
 
-export function loadLessonV2(pack: string): Lesson & { grade?: string } {
-  return readJson<Lesson & { grade?: string }>(path.join(LESSONS_V2_DIR, `${pack}.json`));
+export function loadLessonV3(pack: string): Lesson & { grade?: string } {
+  return readJson<Lesson & { grade?: string }>(path.join(LESSONS_V3_DIR, `${pack}.json`));
 }
 
 /** Practice items already written for each objective id, from the two local
@@ -136,10 +159,11 @@ export function loadPacks(dir: string = PACK_DIR): Map<string, AddPack> {
   return out;
 }
 
-/** Stored pre-state of the 45 plans: the dump with the corrections applied. */
-export function loadPreStates(): Map<string, PreState> {
-  const ids = new Set(loadExpandedIndex().map((e) => loadLessonV2(e.pack).planId));
-  const patched = applyCorrections(new Map([...loadDumpPlans()].filter(([id]) => ids.has(id))));
+/** Stored pre-state of the 45 plans: the dump with `files` applied (default:
+ *  all three correction sets). */
+export function loadPreStates(files: readonly string[] = CORRECTION_FILES): Map<string, PreState> {
+  const ids = new Set(loadExpandedIndex().map((e) => loadLessonV3(e.pack).planId));
+  const patched = applyCorrections(new Map([...loadDumpPlans()].filter(([id]) => ids.has(id))), files);
   return new Map([...patched].map(([id, d]) => [id, preStateOf(d)]));
 }
 

@@ -38,6 +38,7 @@ const DIRECTION = '__DIRECTION__';
 const EXPECTED_SHA256 = '__SHA256__';
 const EXPECTED_COUNTS = __COUNTS__;
 const TEXT_FIELDS = ['goal', 'keyIdeas', 'problem', 'steps', 'answer', 'expectedAnswer'];
+let REQUIRES = '';
 
 /* ---------- pure core (no db, no files) ---------- */
 
@@ -64,11 +65,16 @@ function show(v) {
   return s === undefined ? 'undefined' : (s.length > 160 ? s.slice(0, 160) + '…' : s);
 }
 
+function canonSegment(s) {
+  return [s.id, s.kind].concat(TEXT_FIELDS.map(function (f) { return s[f] === undefined ? null : s[f]; }));
+}
+// intro and recap are rewritten by this script and guarded value by value.
+function isTeaching(s) { return s.id !== 'intro' && s.id !== 'recap'; }
 function textSha(segments) {
-  const canon = segments.map(function (s) {
-    return [s.id, s.kind].concat(TEXT_FIELDS.map(function (f) { return s[f] === undefined ? null : s[f]; }));
-  });
-  return crypto.createHash('sha256').update(JSON.stringify(canon), 'utf8').digest('hex');
+  return crypto.createHash('sha256').update(JSON.stringify(segments.filter(isTeaching).map(canonSegment)), 'utf8').digest('hex');
+}
+function segmentSha(s) {
+  return crypto.createHash('sha256').update(JSON.stringify(canonSegment(s)), 'utf8').digest('hex');
 }
 
 // What the head of the document must hold before and after.
@@ -154,8 +160,19 @@ function classify(doc, p) {
   }
   if (headState === 'pre' && segState === 'post') problems.push(['(plan)', 'new segments are stored but the objective list is not extended — not a state this script produces']);
 
+  // Existing teaching text. Before anything of this plan is written (apply,
+  // plan untouched) it must be the expected text — the additions were written
+  // and read against it, and a pending correction set must go in first. Once
+  // the plan is partly or fully extended, or on a revert, a later correction
+  // of existing text must not block the run: it is reported, not refused.
   const existing = segState === 'post' ? segs.slice(0, cut).concat([segs[segs.length - 1]]) : segs;
-  if (segState && textSha(existing) !== p.pre.textSha256) notes.push('stored teaching text of the existing segments differs from the text the writers were given');
+  if (segState && textSha(existing) !== p.pre.textSha256) {
+    const differing = [];
+    existing.forEach(function (s, i) { if (isTeaching(s) && segmentSha(s) !== p.pre.segmentTextSha256[i]) differing.push(String(s.id).replace(/^.*\.lo-/, 'lo-')); });
+    const what = 'stored teaching text of ' + differing.length + ' existing segment(s) is not the expected text (' + differing.join(', ') + ')';
+    if (DIRECTION === 'apply' && headState === 'pre' && segState === 'pre' && problems.length === 0) problems.push(['(existing text)', what + ' — this script needs ' + REQUIRES]);
+    else notes.push(what);
+  }
   return { head: problems.length ? null : headState, segs: problems.length ? null : segState, problems: problems, notes: notes };
 }
 
@@ -252,6 +269,7 @@ const dataBytes = fs.readFileSync(dataPath);
 const sha = crypto.createHash('sha256').update(dataBytes).digest('hex');
 if (sha !== EXPECTED_SHA256) throw new Error('DATA is not the file this script was built with (sha256 ' + sha + ', expected ' + EXPECTED_SHA256 + ') — rebuild both together');
 const data = JSON.parse(dataBytes.toString('utf8'));
+REQUIRES = String(data.requires);
 if (data.formatVersion !== 1 || data.kind !== 'lesson-additions' || data.database !== 'evelyn' || data.collection !== 'lessonplans' || !Array.isArray(data.plans)) throw new Error('unexpected data file shape');
 if (data.plans.length !== EXPECTED_COUNTS.plans) throw new Error('expected ' + EXPECTED_COUNTS.plans + ' plans in the data, got ' + data.plans.length);
 const planIds = data.plans.map(function (p) { return p.planId; });
@@ -302,6 +320,8 @@ print('other stored plans carrying these objectives (NOT written): ' + related.l
 if (run.mismatches.length > 0) {
   print('MISMATCHES (' + run.mismatches.length + ') — nothing written:');
   for (const m of run.mismatches) print('  lesson ' + m.pack + ' ' + m.planId + ' ' + m.path + ': ' + m.why);
+  const textOnly = run.mismatches.filter(function (m) { return m.path === '(existing text)'; }).length;
+  if (textOnly > 0) print('LIKELY CAUSE for ' + textOnly + ' of them: an earlier correction set is not applied yet. This script needs ' + REQUIRES + '.');
   throw new Error(run.mismatches.length + ' stored value(s) do not match — aborted before any write');
 }
 
@@ -353,6 +373,7 @@ export function renderAddScript(meta: AddScriptMeta): string {
     '// Per plan, before any write: the stored objectives (id, description, shortTitle), the segment ids and kinds in order,',
     '// the intro goal, recap mustRemember + teacherNote, estimatedMinutes, metadata.pickedLoIds / allowedMaxLOs / availableLOs',
     '// must equal the expected state exactly, and the picker plan (read only) must list the added objectives as the data does.',
+    ...(apply ? ['// The EXISTING teaching text must also be the expected text (per-segment fingerprint): every earlier correction set must be applied first.'] : []),
     '// ANY other stored value aborts the whole run before the first write. A plan already in its target state is counted, not an error.',
     apply
       ? '// Writes, by explicit path only: $push los; $push segments {$each, $position: <index of recap>}; $push recap mustRemember and'
