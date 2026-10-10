@@ -274,6 +274,25 @@ test('examineFigureItem: a right key is derived, a wrong key is a mismatch, a bl
   assert.ok(/second mass is not printed/.test(err.derivation.detail));
 });
 
+test('not to scale (fix f, batch 5): the transcription says so, the checkers still work from the TRUE numbers, a blank angle stays unnamed', () => {
+  const S = (params: Record<string, unknown>): PracticeFigureSpec => ({ type: 'mechanics_setup', params });
+  const pend = S({ variant: 'pendulum', angle: 60, length: 2, notToScale: true, show: { angle: 'blank', height: 'value' } });
+  const d = describeFigure(pend);
+  assert.ok(d.text.includes('"not to scale"') && d.printed.includes('note: "not to scale"'));
+  assert.ok(!/60/.test(d.text) && !/60/.test(describeForAlt(pend)), 'the hidden angle is nowhere');
+  assert.ok(describeForAlt(pend).includes('not to scale'));
+  // h = L(1 − cos θ): 2 m at 60° rises 1 m — the angle is passed (the question states it), the length is printed.
+  rw(pend, 'pendulum_value', { want: 'rise_height', angle: 60 }, '1', '0.36');
+  refused(() => run(pend, 'pendulum_value', { want: 'rise_height' }), /angle/);
+  const proj = S({ variant: 'projectile', speed: 28, angle: 20, notToScale: true, show: { range: 'value' } });
+  assert.ok(!describeFigure(proj).text.includes('drawn to scale') && describeFigure(proj).text.includes('not to scale'));
+  assert.ok(describeFigure(S({ variant: 'projectile', speed: 28, angle: 20 })).text.includes('the path is drawn to scale'));
+  rw(proj, 'projectile_value', { want: 'range' }, '51.4', '80');
+  const inc = S({ variant: 'pulley', arrangement: 'incline', m1: 5, m2: 5, angle: 30, frictionless: true, notToScale: true });
+  rw(inc, 'pulley_value', { want: 'acceleration' }, '2.45', '4.9');
+  assert.ok(describeFigure(inc).text.includes('not to scale'));
+});
+
 test('every checker of the part was exercised', () => {
   for (const k of Object.keys(PART.checkers)) assert.ok(used.has(k), k);
 });

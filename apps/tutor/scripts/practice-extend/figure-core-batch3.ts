@@ -901,8 +901,20 @@ export function figureLetterClash(spec: PracticeFigureSpec, choices: ReadonlyArr
     for (const l of [...printed]) if (!names.has(l)) printed.delete(l);
   }
   const letters = options.filter((l) => printed.has(l));
+  // Beside a sequence strip, options that are themselves single base letters ("A", "C", "G", "T", "U") read as
+  // option letters: "B. A" and "A. C" cannot be told from the bases on the figure or from each other.
+  // `letters`: the options whose base letter is ALSO an option letter of the question (A, C in a four-option item).
+  if (spec.type === 'sequence_strip') {
+    const bases = choices.map((c) => (typeof c === 'string' ? c.trim() : '')).filter((c) => /^[ACGTU]$/.test(c));
+    if (bases.length >= 2) {
+      return {
+        letters: options.filter((l) => bases.includes(l)),
+        message: `the options ${bases.map((b) => `"${b}"`).join(', ')} are single base letters, which read as the option letters A–D beside a sequence figure — write them as words ("adenine", "cytosine", "guanine", "thymine", "uracil") or ask for a numeric / longer answer`,
+      };
+    }
+  }
   if (letters.length === 0) return null;
-  const numerals = ['phylogenetic_tree', 'spectrum', 'unit_circle'].includes(spec.type) ? ` — set letterLabels: 'numerals' (or 'roman') on the figure` : ' — relabel them with numbers, Roman numerals or letters from later in the alphabet (P, Q, R, S)';
+  const numerals = ['phylogenetic_tree', 'spectrum', 'unit_circle', 'conic_graph'].includes(spec.type) ? ` — set letterLabels: 'numerals' (or 'roman') on the figure` : ' — relabel them with numbers, Roman numerals or letters from later in the alphabet (P, Q, R, S)';
   return { letters, message: `the figure prints the label${letters.length > 1 ? 's' : ''} ${letters.map((l) => `"${l}"`).join(', ')}, which ${letters.length > 1 ? 'are' : 'is'} also ${letters.length > 1 ? 'option letters' : 'an option letter'} of the question${numerals}` };
 }
 

@@ -97,9 +97,9 @@ export async function academySanitiser(): Promise<((svg: string) => { svg: strin
  * The invariants of a set of fixtures, as tests on `test`:
  * `groups` maps a new kind or variant to the id prefix of its fixtures (≥ 3:
  * a "simple" note, a "dense" note, a "blank" id that shows a "?");
- * `fixes` lists the to-do letters that must each have a `fix4-<letter>-` fixture whose note starts "<letter>: ".
+ * `fixes` lists the to-do letters that must each have a `<fixPrefix>-<letter>-` fixture (`fix4-` by default; batch 5 passes 'fix5') whose note starts "<letter>: ".
  */
-export function fixtureInvariants(test: (name: string, fn: () => void | Promise<void>) => void, fixtures: FigureFixture[], groups: Record<string, string>, fixes: string[] = []): Map<string, string> {
+export function fixtureInvariants(test: (name: string, fn: () => void | Promise<void>) => void, fixtures: FigureFixture[], groups: Record<string, string>, fixes: string[] = [], fixPrefix = 'fix4'): Map<string, string> {
   const rendered = new Map<string, string>(fixtures.map((f) => [f.id, renderPracticeFigure(f.spec).svg]));
   test('fixture conventions: every new kind / variant has ≥ 3 fixtures (simple, dense, a blank that shows "?"); every fix has one; every fixture belongs to a group or a fix', () => {
     for (const [what, prefix] of Object.entries(groups)) {
@@ -111,8 +111,8 @@ export function fixtureInvariants(test: (name: string, fn: () => void | Promise<
       assert.ok(blank.length >= 1, `${what}: a fixture with a blank`);
       for (const b of blank) assert.ok(texts(rendered.get(b.id) as string).some((t) => t.includes('?')), `${b.id} shows a "?"`);
     }
-    for (const letter of fixes) assert.ok(fixtures.some((f) => f.id.startsWith(`fix4-${letter}-`) && f.note.startsWith(`${letter}: `)), `fix ${letter} has a fixture`);
-    for (const f of fixtures) assert.ok(/^fix4-[a-h]-/.test(f.id) || Object.values(groups).some((p) => f.id.startsWith(p)), `${f.id} belongs to no group`);
+    for (const letter of fixes) assert.ok(fixtures.some((f) => f.id.startsWith(`${fixPrefix}-${letter}-`) && f.note.startsWith(`${letter}: `)), `fix ${letter} has a fixture`);
+    for (const f of fixtures) assert.ok(new RegExp(`^${fixPrefix}-[a-k]-`).test(f.id) || Object.values(groups).some((p) => f.id.startsWith(p)), `${f.id} belongs to no group`);
     for (const f of fixtures) assert.ok(f.question.trim() && f.alt.trim() && f.note.trim(), `${f.id}: note, question and alt`);
   });
   test('only the pinned client vocabulary — no <ellipse>, <polyline>, opacity, style, data-*, aria-*, title, pattern, gradient, image, link', () => {

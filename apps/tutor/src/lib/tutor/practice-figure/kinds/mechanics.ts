@@ -10,6 +10,10 @@
  *                                         //   that is given and usually printed, else 'none'
  *     symbols?: { <quantity>: string };   // the letter printed before "=" ("v₀", "m₁", "k" …)
  *     g?: number (9.8);                   // m/s² — never printed; used for the geometry and by the checkers
+ *     notToScale?: boolean (false);       // the angle-bearing set-ups only (projectile, pendulum, pulley on an
+ *                                         //   incline): the sketch is drawn at ONE fixed shape whatever the numbers
+ *                                         //   are, and "not to scale" is printed under it — an asked-for angle or
+ *                                         //   height cannot be measured off the picture. Labels print the true values.
  *     title?: string }
  *
  * projectile — a true parabola, to scale (same scale on both axes)
@@ -37,7 +41,7 @@
  *     state?: 'stretched' | 'compressed' | 'equilibrium' — the state to draw when x is not given }
  *   quantities: k, m, x ('value' when given). The dashed line marks the equilibrium position.
  *
- * pendulum — a simple pendulum drawn at its true angle
+ * pendulum — a simple pendulum drawn at its true angle (at 35° with `notToScale`)
  *   { angle: degrees from the vertical (3–80); length?: number (m); mass?: number (kg);
  *     showVertical?: boolean (true); showArc?: boolean (false) — the dashed path of the bob;
  *     points?: Array<{ angle: degrees (signed; negative = left of the vertical); label: string }> }   // ≤ 5
@@ -97,6 +101,8 @@ export interface CircularModel { direction: 'counterclockwise' | 'clockwise'; po
 export interface MechanicsModel {
   variant: MechanicsVariant;
   g: number;
+  /** The sketch is drawn at a fixed shape, not at the angle the numbers give (and says so). */
+  notToScale?: boolean;
   title?: string;
   q: Record<string, Quantity>;
   projectile?: ProjectileModel;
@@ -146,7 +152,9 @@ export function mechanicsModel(r: Reader): MechanicsModel {
   if (!MECHANICS_VARIANTS.includes(p.variant as MechanicsVariant)) r.fail(`variant must be one of ${MECHANICS_VARIANTS.join(', ')}`);
   const variant = p.variant as MechanicsVariant;
   const g = p.g === undefined || p.g === null ? 9.8 : r.positive(p.g, 'g');
-  const base = { variant, g, title: r.optStr(p.title, 'title', 160) };
+  const notToScale = r.bool(p.notToScale, 'notToScale', false);
+  if (notToScale && !(variant === 'projectile' || variant === 'pendulum' || (variant === 'pulley' && p.arrangement === 'incline'))) r.fail('notToScale is for the set-ups drawn at an angle: projectile, pendulum, and pulley with arrangement "incline"');
+  const base = { variant, g, ...(notToScale ? { notToScale } : {}), title: r.optStr(p.title, 'title', 160) };
   const unitOf = (k: string, d: string): string => (p[k] === undefined || p[k] === null ? d : r.str(p[k], k, 8));
   const oneOf = <T extends string>(k: string, allowed: readonly T[], d: T): T => {
     const v = p[k] === undefined || p[k] === null ? d : p[k];
@@ -404,8 +412,37 @@ function coil(ax: number, ay: number, bx: number, by: number, turns = 9, amp = 8
 // The variants
 // ---------------------------------------------------------------------------
 
+/** The fixed angle a not-to-scale sketch is drawn at (degrees): projectile launch, incline, pendulum. */
+export const SCHEMATIC_ANGLES = { projectile: 50, incline: 32, pendulum: 35 } as const;
+
+/**
+ * The path a NOT-TO-SCALE projectile sketch draws: one fixed shape per kind of launch (angled from the
+ * ground, angled from a height, level from a height), whatever the numbers are. The lettered points keep
+ * their place in time (apex → apex, landing → landing, t → the same fraction of the flight).
+ */
+function schematicProjectile(pj: ProjectileModel, g: number): ProjectileModel {
+  const speed = 10;
+  const angle = pj.angle > 0 ? SCHEMATIC_ANGLES.projectile : 0;
+  const a = (angle * Math.PI) / 180;
+  const vx = speed * Math.cos(a);
+  const vy = speed * Math.sin(a);
+  const rise = (vy * vy) / (2 * g);
+  // From a height: the launch point stands 1.2 rises above the ground; level: the drop is 5/8 of the range.
+  const height = pj.height > 0 ? (angle > 0 ? 1.2 * rise : (2 * speed * speed) / (g * 2.56)) : 0;
+  const time = (vy + Math.sqrt(vy * vy + 2 * g * height)) / g;
+  const apexTime = vy / g;
+  const points = pj.points.map((pt) => {
+    const t = pj.angle > 0 && pt.t <= pj.apexTime ? (pt.t / pj.apexTime) * apexTime : apexTime + ((pt.t - pj.apexTime) / (pj.time - pj.apexTime)) * (time - apexTime);
+    return { ...pt, t: pj.angle > 0 ? t : (pt.t / pj.time) * time };
+  });
+  return { ...pj, speed, angle, height, vx, vy, time, range: vx * time, maxHeight: height + rise, apexTime, impactSpeed: Math.hypot(vx, vy - g * time), points };
+}
+
+/** The words printed under a sketch drawn with `notToScale`. */
+const scaleNote = (y: number): string => text(FIGURE_WIDTH / 2, y, 'not to scale', { anchor: 'middle', fill: MUTED, italic: true });
+
 function drawProjectile(m: MechanicsModel, top: number, notes: Notes): { svg: string; bottom: number } {
-  const pj = m.projectile as ProjectileModel;
+  const pj = m.notToScale ? schematicProjectile(m.projectile as ProjectileModel, m.g) : (m.projectile as ProjectileModel);
   const q = m.q;
   const a = (pj.angle * Math.PI) / 180;
   const ARROW = 46;
@@ -547,7 +584,7 @@ function drawPulley(m: MechanicsModel, top: number): { svg: string; bottom: numb
     return { svg, bottom: ty + 150 + 16 };
   }
   // incline
-  const th = ((q.angle.value as number) * Math.PI) / 180;
+  const th = ((m.notToScale ? SCHEMATIC_ANGLES.incline : (q.angle.value as number)) * Math.PI) / 180;
   const base = Math.min(230, 150 / Math.tan(th));
   const rise = base * Math.tan(th);
   const gy = top + rise + 32;
@@ -634,7 +671,10 @@ function drawSpring(m: MechanicsModel, top: number): { svg: string; bottom: numb
 }
 
 function drawPendulum(m: MechanicsModel, top: number, notes: Notes): { svg: string; bottom: number } {
-  const pd = m.pendulum as PendulumModel;
+  const real = m.pendulum as PendulumModel;
+  // Not to scale: the bob is drawn at one fixed angle, and every lettered position keeps its share of it.
+  const k = m.notToScale ? SCHEMATIC_ANGLES.pendulum / real.angle : 1;
+  const pd: PendulumModel = m.notToScale ? { ...real, angle: SCHEMATIC_ANGLES.pendulum, points: real.points.map((p) => ({ ...p, angle: Math.abs(p.angle - real.angle) < 1e-9 ? SCHEMATIC_ANGLES.pendulum : Math.max(-80, Math.min(80, p.angle * k)) })) } : real;
   const q = m.q;
   const th = (pd.angle * Math.PI) / 180;
   const rad = (deg: number): number => (deg * Math.PI) / 180;
@@ -807,5 +847,6 @@ export function renderMechanicsSetup(r: Reader, _uid?: string): Drawn {
         : m.variant === 'pendulum' ? drawPendulum(m, top, notes)
           : m.variant === 'collision' ? drawCollision(m, top - 8)
             : drawCircular(m, top - 14);
+  if (m.notToScale) return { body: t.svg + d.svg + scaleNote(Math.round(d.bottom) + 6), H: Math.round(d.bottom) + 16, facts: facts(notes) };
   return { body: t.svg + d.svg, H: Math.round(d.bottom), facts: facts(notes) };
 }

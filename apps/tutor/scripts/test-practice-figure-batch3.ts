@@ -36,7 +36,7 @@ import { bioModel, divisionCounts } from '../src/lib/tutor/practice-figure/kinds
 import { mapModel } from '../src/lib/tutor/practice-figure/kinds/schematic-map';
 import { barMagnetModel, magnetFieldAt } from '../src/lib/tutor/practice-figure/kinds/bar-magnet';
 import { fieldModel, traceFieldLines } from '../src/lib/tutor/practice-figure/kinds/field-diagram';
-import { BATCH3_FIXTURES, BATCH4_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
+import { BATCH3_FIXTURES, BATCH4_FIXTURES, BATCH5_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -75,9 +75,14 @@ console.log('\nNothing that was there has changed unasked:\n');
 const readJson = (name: string): Record<string, string> => JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', name), 'utf8')) as Record<string, string>;
 const sha = (spec: PracticeFigureSpec): string => createHash('sha256').update(renderPracticeFigure(spec).svg).digest('hex');
 // Batch 4 (2026-10-14) has a test file and pins of its own (test-practice-figure-batch4.ts, c9a204fa).
-const BATCH3_IDS = new Set([...BATCH3_FIXTURES, ...BATCH4_FIXTURES].map((f) => f.id));
+// Batch 5 (2026-10-16) likewise: test-practice-figure-batch5.ts, pins at b85c7ae5.
+const BATCH3_IDS = new Set([...BATCH3_FIXTURES, ...BATCH4_FIXTURES, ...BATCH5_FIXTURES].map((f) => f.id));
 /** The fourth round redrew a few earlier fixtures for its to-dos a–g — id → why; pinned against c9a204fa there. */
-const ROUND4 = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'practice-figure-changes-since-c9a204fa.json'), 'utf8')) as Record<string, string>;
+const ROUND4 = {
+  ...(JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'practice-figure-changes-since-c9a204fa.json'), 'utf8')) as Record<string, string>),
+  // … and the fifth round's (a–k), pinned against b85c7ae5 by test-practice-figure-batch5.ts.
+  ...(JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'practice-figure-changes-since-b85c7ae5.json'), 'utf8')) as Record<string, string>),
+};
 
 test('all 129 fixtures as they were at 9613fe5e: byte-identical, except exactly the ones listed (with the fix a–f) as redrawn by this round', () => {
   const pins = readJson('practice-figure-pins-9613fe5e.json');

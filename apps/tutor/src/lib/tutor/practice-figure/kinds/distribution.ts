@@ -9,8 +9,13 @@
  *                                          //   'sigma' "μ−2σ" … "μ+2σ" · 'none' nothing
  *                                          //   (default 'x'; with mean 0 and sd 1 that is z)
  *   shade?: Array<{ from: number | null; to: number | null;   // in the units of mean / sd;
- *                   label?: string }>;     //   null = that tail. `label` is printed under a
- *                                          //   bound that is not on a σ tick instead of its value
+ *                   label?: string }>;     //   null = that tail. `label` is printed under the
+ *                                          //   interval's bounds ("k", "?") instead of a value
+ *   boundLabels?: 'value' | 'blank' | 'none';   // what is printed under a bound that falls BETWEEN two σ
+ *                                          //   ticks and has no `label`: its value (axis 'x' / 'z') · a "?"
+ *                                          //   box · nothing. DEFAULT 'none' (since 2026-10-16): the bound is
+ *                                          //   usually what the question asks, or what its area is asked
+ *                                          //   for — say 'value' when the reader must be GIVEN it
  *   showArea?: boolean (false);            // print each shaded area (4 decimals) — the answer to
  *                                          //   most questions, hence off by default
  *   xLabel?: string; title?: string }
@@ -62,6 +67,8 @@ export interface DistributionModel {
   axis: 'z' | 'x' | 'sigma' | 'none';
   shade: ShadeInterval[];
   showArea: boolean;
+  /** What an unlabelled bound between two ticks prints. */
+  boundLabels: 'value' | 'blank' | 'none';
   xLabel?: string;
   title?: string;
   /** The seven texts under μ − 3σ … μ + 3σ ('' when the axis prints none). */
@@ -92,7 +99,20 @@ export function distributionModel(r: Reader): DistributionModel {
   });
   const ks = [-3, -2, -1, 0, 1, 2, 3];
   const tickTexts = ks.map((k) => (axis === 'none' ? '' : axis === 'z' ? numText(k) : axis === 'x' ? numText(mean + k * sd, 4) : k === 0 ? 'μ' : `μ${k > 0 ? '+' : '−'}${Math.abs(k) === 1 ? '' : Math.abs(k)}σ`));
-  return { mean, sd, axis, shade, showArea: r.bool(p.showArea, 'showArea', false), xLabel: r.optStr(p.xLabel, 'xLabel'), title: r.optStr(p.title, 'title', 160), tickTexts };
+  const boundLabels = (p.boundLabels ?? 'none') as DistributionModel['boundLabels'];
+  if (!['value', 'blank', 'none'].includes(boundLabels)) r.fail('boundLabels must be one of value, blank, none');
+  if (boundLabels === 'value' && axis !== 'x' && axis !== 'z') r.fail(`boundLabels: 'value' needs a numbered axis (axis: 'x' or 'z') — with axis: '${axis}' give the bound a label instead`);
+  return { mean, sd, axis, shade, boundLabels, showArea: r.bool(p.showArea, 'showArea', false), xLabel: r.optStr(p.xLabel, 'xLabel'), title: r.optStr(p.title, 'title', 160), tickTexts };
+}
+
+/** Whether a bound falls between two σ ticks (a bound ON a tick is read off the axis). */
+export const boundOffTick = (m: Pick<DistributionModel, 'mean' | 'sd'>, b: number | null): boolean => b !== null && Math.abs((b - m.mean) / m.sd - Math.round((b - m.mean) / m.sd)) > 1e-9;
+/** What is printed under a bound of a shaded interval: its label, its value, "?" — or '' (nothing). */
+export function boundText(m: DistributionModel, s: ShadeInterval, bound: number): string {
+  if (s.label) return s.label;
+  if (!boundOffTick(m, bound) || m.boundLabels === 'none') return '';
+  if (m.boundLabels === 'blank') return '?';
+  return m.axis === 'z' ? numText((bound - m.mean) / m.sd, 3) : m.axis === 'x' ? numText(bound, 4) : '';
 }
 
 const BLUE = SERIES_COLORS[0];
@@ -136,9 +156,10 @@ export function renderDistributionCurve(r: Reader, uid: string): Drawn {
   const hi = mean + 3.6 * sd;
   // A second row under the tick numbers for bounds that fall between ticks.
   const offTick = (b: number | null) => b !== null && Math.abs((b - mean) / sd - Math.round((b - mean) / sd)) > 1e-9;
-  const needsSecondRow = m.shade.some((s) => (offTick(s.from) || offTick(s.to)) && (m.axis === 'z' || m.axis === 'x' || s.label));
+  const printedUnder = m.shade.flatMap((s) => [s.from, s.to].filter((b): b is number => b !== null).map((b) => boundText(m, s, b)));
+  const needsSecondRow = printedUnder.some(Boolean);
   const anyNumbers = m.axis !== 'none';
-  const hasBlank = m.shade.some((s) => s.label === '?');
+  const hasBlank = printedUnder.includes('?');
   const bottomExtra = (anyNumbers ? TICK_FS + 8 : 8) + (needsSecondRow || m.shade.some((s) => s.label) ? TICK_FS + 4 : 0) + (hasBlank ? 8 : 0);
   const f = buildFrame({ xRange: [lo, hi], yRange: [0, 1.14], xNumbers: false, yNumbers: false, aspect: 0.46, bottomExtra, xLabel: m.xLabel, title: m.title });
   const base = f.plot.y + f.plot.h;
@@ -175,8 +196,8 @@ export function renderDistributionCurve(r: Reader, uid: string): Drawn {
       // so the edge of a low region is plain even where the curve is only a few units up.
       parts.push(`<line x1="${n2(f.X(bound))}" y1="${n2(base + BOUND_TICK)}" x2="${n2(f.X(bound))}" y2="${n2(f.Y(pdf(bound)))}" stroke="${BLUE}" stroke-width="2"/>`);
       if (offTick(bound)) {
-        const shown = s.label ?? (m.axis === 'z' ? numText((bound - mean) / sd, 3) : m.axis === 'x' ? numText(bound, 4) : '');
-        over.push(`<line x1="${n2(f.X(bound))}" y1="${n2(base)}" x2="${n2(f.X(bound))}" y2="${n2(base + (anyNumbers ? TICK_FS + 8 : 5))}" stroke="${BLUE}" stroke-width="1.2"/>`);
+        const shown = boundText(m, s, bound);
+        if (shown) over.push(`<line x1="${n2(f.X(bound))}" y1="${n2(base)}" x2="${n2(f.X(bound))}" y2="${n2(base + (anyNumbers ? TICK_FS + 8 : 5))}" stroke="${BLUE}" stroke-width="1.2"/>`);
         if (shown) over.push(label({ x: f.X(bound), y: base + (anyNumbers ? TICK_FS + 8 : 5) + TICK_FS + (shown === '?' ? 4 : 0), anchor: 'middle' }, shown, { weight: 700, fill: BLUE }));
       } else if (s.label) {
         over.push(label({ x: f.X(bound), y: base + (anyNumbers ? TICK_FS + 8 : 5) + TICK_FS + (s.label === '?' ? 4 : 0), anchor: 'middle' }, s.label, { weight: 700, fill: BLUE }));

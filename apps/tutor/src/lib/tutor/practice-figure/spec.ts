@@ -104,7 +104,7 @@ export interface FigureFacts {
   /** Kind-specific findings the renderer made while laying the figure out
    *  (too many elements for 340 px, a blank that leaves the figure ambiguous,
    *  an arrow drawn longer than to scale, …) — passed through as warnings. */
-  notes?: Array<{ code: 'too_many_elements' | 'ambiguous_blank' | 'not_to_scale' | 'labels_overlap' | 'crowded'; message: string }>;
+  notes?: Array<{ code: 'too_many_elements' | 'ambiguous_blank' | 'not_to_scale' | 'labels_overlap' | 'crowded' | 'off_grid'; message: string }>;
 }
 
 export interface Drawn {

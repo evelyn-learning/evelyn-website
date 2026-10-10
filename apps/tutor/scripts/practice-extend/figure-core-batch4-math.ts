@@ -97,7 +97,11 @@ function conicText(m: ConicModel, printed: string[], out: string[]): string {
     if (q.label) printed.push(`point label: "${q.label}"`);
     out.push(`  a marked point${q.label ? ` "${q.label}"` : ''} at ${xy(q.x, q.y)}`);
   }
-  return m.conics.length > 1 ? 'two curves on a coordinate grid' : 'a curve on a coordinate grid';
+  // Counted as drawn: the conics (never named — which conic it is can be the question) and the straight lines beside them.
+  const words = ['no', 'a', 'two', 'three', 'four'];
+  const curves = m.conics.length > 1 ? `${words[m.conics.length] ?? 'several'} curves` : m.conics.length === 1 ? 'a curve' : '';
+  const lines = m.lines.length > 1 ? `${words[m.lines.length] ?? 'several'} straight lines` : m.lines.length === 1 ? 'a straight line' : '';
+  return `${[curves, lines].filter(Boolean).join(' and ') || 'marked points'} on a coordinate grid`;
 }
 
 const conicArg = (m: ConicModel, a: P): Conic => m.conics[argIndex(a, 'conic', m.conics.length, 'conic')];

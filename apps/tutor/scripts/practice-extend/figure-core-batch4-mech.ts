@@ -44,7 +44,7 @@ function describe(spec: PracticeFigureSpec, printed: string[], out: string[]): s
     const pj = m.projectile;
     const from = pj.height > 0 ? (pj.platform === 'cliff' ? 'the top of a cliff' : 'the edge of a table') : 'level ground';
     out.push(`  a ball is launched from ${from}, ${pj.angle === 0 ? 'horizontally' : 'upward at an angle to the horizontal'}; an arrow at the launch point shows the launch velocity`);
-    out.push(`  a dashed curve shows its path${pj.angle > 0 ? ', which rises to a highest point and then falls' : ', which curves downward'} to the ground${pj.height > 0 ? ' below' : ''}; the path is drawn to scale`);
+    out.push(`  a dashed curve shows its path${pj.angle > 0 ? ', which rises to a highest point and then falls' : ', which curves downward'} to the ground${pj.height > 0 ? ' below' : ''}${m.notToScale ? '' : '; the path is drawn to scale'}`);
     const sp = pq(printed, 'launch speed', q.speed);
     if (sp) out.push(`  the launch velocity arrow is labelled ${sp}`);
     const an = pq(printed, 'launch angle', q.angle);
@@ -151,6 +151,11 @@ function describe(spec: PracticeFigureSpec, printed: string[], out: string[]): s
     }
     const ms = pq(printed, 'mass', q.mass);
     if (ms) out.push(`  beside the object: ${ms}`);
+  }
+  if (m.notToScale) {
+    // Fix f (batch 5): a fixed schematic shape — the angle and the heights cannot be measured off the sketch.
+    printed.push('note: "not to scale"');
+    out.push('  the words "not to scale" are printed under the sketch: it is a schematic — angles and lengths cannot be measured off it, only the printed values count');
   }
   return KIND_PHRASE[m.variant];
 }

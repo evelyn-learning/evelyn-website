@@ -1,0 +1,11 @@
+{
+ "bar-books-sold": "g — a bar top sits on a minor grid line, so the grid is drawn one step darker (grid strokes only)",
+ "bar-many-long-labels-negative": "g — a bar top sits on a minor grid line, so the grid is drawn one step darker (grid strokes only)",
+ "normal-x-two-tails-area": "d — the shaded bounds 350 and 650 fall between ticks and are no longer printed by default (boundLabels: 'value' prints them)",
+ "polish-normal-tail-beyond-2-sigma": "d — the shaded bound −2.5 falls between ticks and is no longer printed by default (boundLabels: 'value' prints it)",
+ "mol-dense-resonance-carbonate": "i — Roman-numeral captions I, II, III now stand on label plates",
+ "mol-blank-formal-charge-candidates": "i — Roman-numeral captions I, II now stand on label plates",
+ "heating-simple-lettered": "g — a corner temperature sits on a minor grid line, so the grid is drawn one step darker (grid strokes only)",
+ "heating-dense-water-computed": "g — a corner temperature sits on a minor grid line, so the grid is drawn one step darker (grid strokes only)",
+ "heating-short-stage-warns": "g — a corner temperature sits on a minor grid line, so the grid is drawn one step darker (grid strokes only)"
+}

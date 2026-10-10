@@ -19,12 +19,14 @@
  *     plateauLabels?: 'value' | 'blank' | 'none' ('none');    // the temperature printed at each plateau ("?" = a blank box)
  *     marks?: Array<{ x: number; label?: string }>;           // ≤ 5 dots ON the curve at those x
  *     xMax?: number; xStep?: number; yRange?: [min, max]; yStep?: number;
+ *     strongGrid?: boolean;   // the grid one step darker. Default: only when a corner or a mark sits on a
+ *                             //   LIGHTER gridline (between two numbers) — it is then read off that line
  *     tempUnit?: string ('°C'); xLabel?: string; yLabel?: string; title?: string }
  *
  * Nothing that states an answer is printed unless asked: no phase names, no
  * plateau temperatures, no heats.
  */
-import { LABEL_FS, SERIES_COLORS, TICK_FS, buildFrame, n2, niceBounds, type Frame } from '../plot-frame';
+import { LABEL_FS, SERIES_COLORS, TICK_FS, buildFrame, gridPlace, minorStepOf, n2, niceBounds, type Frame } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
 import { INK, text } from './draw';
 import { lab, numStr, type Notes, type Show, SHOWS } from './draw2';
@@ -179,12 +181,37 @@ export function heatingModel(r: Reader): HeatingModel {
 
 export const isPlateau = (s: HeatSegment): boolean => s.t0 === s.t1;
 
+/**
+ * How the grid is drawn, from where the curve's corners and marks sit: one on a LIGHTER line (between
+ * two numbers) makes the grid one step darker, so the value can be read off that line (`strongGrid`
+ * overrides). A corner of a curve given by `corners` that is on no line of an axis whose step the spec
+ * fixed is reported: it can only be estimated. A curve whose corners are all on numbered lines — and
+ * a computed curve, whose corners fall where the substance puts them — is drawn as ever.
+ */
+export function heatingGrid(m: HeatingModel, r: Reader): { strong: boolean; note?: Notes[number] } {
+  const p = r.p;
+  const asked = p.strongGrid === undefined || p.strongGrid === null ? undefined : r.bool(p.strongGrid, 'strongGrid', false);
+  const corners: Array<[number, number]> = [[m.segments[0].x0, m.segments[0].t0], ...m.segments.map((s): [number, number] => [s.x1, s.t1])];
+  const xs = m.xNumbers ? [...corners.map((c) => c[0]), ...m.marks.map((k) => k.x)] : [];
+  const ys = m.yNumbers ? corners.map((c) => c[1]) : [];
+  const places = [...xs.map((v) => gridPlace(v, m.xStep)), ...ys.map((v) => gridPlace(v, m.yStep))];
+  const strong = asked ?? places.includes('minor');
+  if (m.computed) return { strong };
+  const offX = p.xStep !== undefined && p.xStep !== null ? corners.filter((c) => m.xNumbers && gridPlace(c[0], m.xStep) === 'off').map((c) => `x = ${numStr(c[0], 3)}`) : [];
+  const offY = p.yStep !== undefined && p.yStep !== null ? [...new Set(ys.filter((v) => gridPlace(v, m.yStep) === 'off'))].map((v) => `${numStr(v, 3)} ${m.tempUnit}`) : [];
+  const off = [...offX, ...offY];
+  if (off.length === 0) return { strong };
+  return { strong, note: { code: 'off_grid', message: `corners: ${off.slice(0, 4).join(', ')}${off.length > 4 ? ', …' : ''} ${off.length === 1 ? 'is' : 'are'} on no gridline (the lines are ${numStr(minorStepOf(m.xStep), 4)} apart across and ${numStr(minorStepOf(m.yStep), 4)} ${m.tempUnit} apart up) — move the corner onto a line or change the step` } };
+}
+
 export function renderHeatingCurve(r: Reader, _uid?: string): Drawn {
   const m = heatingModel(r);
   const notes: Notes = [];
+  const grid = heatingGrid(m, r);
+  if (grid.note) notes.push(grid.note);
   const f: Frame = buildFrame({
     xRange: m.xRange, yRange: m.yRange, xStep: m.xStep, yStep: m.yStep, xLabel: m.xLabel, yLabel: m.yLabel, title: m.title,
-    xNumbers: m.xNumbers, yNumbers: m.yNumbers, zeroAxes: false, aspect: 0.82,
+    xNumbers: m.xNumbers, yNumbers: m.yNumbers, zeroAxes: false, aspect: 0.82, ...(grid.strong ? { minorGridStrong: true } : {}),
   });
   const color = SERIES_COLORS[0];
   const parts: string[] = [f.svg];

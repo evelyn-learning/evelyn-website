@@ -32,7 +32,8 @@
  *          | { type: 'ring'; atoms: id[] };       // a regular polygon, 3–8 atoms
  *   skeletal?: boolean (false);          // carbons are unlabelled corners; their hydrogens are implied
  *   highlight?: Array<{ atoms: id[]; label?: string }>;   // a dashed outline round a group (not colour)
- *   label?: string;                      // a caption under the molecule ("I", "A"; "?" = a blank box)
+ *   label?: string;                      // a caption under the molecule ("I", "A"; "?" = a blank box). Roman-numeral
+ *                                        //   captions ("I", "II", …) are set on small label plates.
  *   origin?: [x, y];                     // 'shared' only: where its (0, 0) sits in the common frame
  *   center?: id }                        // the central atom, for the geometry / polarity checkers
  *
@@ -42,7 +43,7 @@
  * Formal charge = valence electrons − 2 × lone pairs − bond orders − hydrogens;
  * a non-zero one is drawn as a ringed + or − beside its atom.
  */
-import { FIGURE_WIDTH, n2 } from '../plot-frame';
+import { FIGURE_WIDTH, estWidth, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
 import { INK, MUTED, arrow, blank, inkWidth, text, titleBlock, type Box } from './draw';
 import { SHOWS, deg, facts, head, lab, stroke, type Notes, type Pt, type Show } from './draw2';
@@ -281,6 +282,8 @@ export function moleculeModel(r: Reader): MoleculeModel {
 // ---------------------------------------------------------------------------
 
 const ATOM_FS = 15;
+/** A caption that is a Roman numeral ("I", "II", "IV") — the same rule as bio_schematic's cell labels. */
+const ROMAN_RE = /^(?=[IVX])X{0,3}(IX|IV|V?I{0,3})$/;
 const SUB = '₀₁₂₃₄';
 /** What an atom prints: its symbol with any written hydrogens, "?" for a blank, '' for a bare corner. `flip`: hydrogens first ("HO", "H₂N"). */
 export function atomText(a: MolAtom, flip = false): string {
@@ -434,6 +437,10 @@ export function renderMolecule(r: Reader): Drawn {
   const ink: Array<{ owner: string; what: string; box: Box }> = [];
   const segs: Array<{ owners: string[]; a: Pt; b: Pt }> = [];
   const dipoles: Array<{ mi: number; b: MolBond; ux: number; uy: number }> = [];
+  /** Roman-numeral captions (all of them are, and at least one is made of I or V — "X" alone is a letter): a lone "I" in a
+   *  sans-serif face reads as a tick mark, so they stand on label plates, as the cell labels of bio_schematic's division do. */
+  const captions = m.molecules.map((mol) => mol.label).filter((l): l is string => !!l && l !== '?');
+  const plated = captions.length > 0 && captions.every((l) => ROMAN_RE.test(l)) && captions.some((l) => /[IV]/.test(l));
   let y = t.top + 2;
   for (let g0 = 0; g0 < groups.length; g0 += perRow) {
     const row = groups.slice(g0, g0 + perRow);
@@ -472,13 +479,17 @@ export function renderMolecule(r: Reader): Drawn {
         if (!mol.label) return;
         const me = shared ? ext([mol]) : e;
         const cx = shared ? ox + ((me.x0 + me.x1) / 2) * L : x + pw / 2;
-        const cyCap = shared ? oy - me.y0 * L + PAD + 10 : y + rowH + 12;
-        over.push(lab(cx, cyCap, mol.label, 'middle', { fs: 12, weight: 700 }));
+        // A plate is taller than the bare numeral: it is set 5 lower so it stays clear of a charge or lone pair under an atom.
+        const cyCap = (shared ? oy - me.y0 * L + PAD + 10 : y + rowH + 12) + (plated ? 5 : 0);
+        if (plated && mol.label !== '?') {
+          const cw = Math.max(24, estWidth(mol.label, 13) + 14);
+          over.push(`<rect x="${n2(cx - cw / 2)}" y="${n2(cyCap - 13.5)}" width="${n2(cw)}" height="19" rx="4" fill="#f1f5f9" stroke="${MUTED}" stroke-width="1"/>`, text(cx, cyCap + 0.5, mol.label, { fs: 13, anchor: 'middle', weight: 700 }));
+        } else over.push(lab(cx, cyCap, mol.label, 'middle', { fs: 12, weight: 700 }));
       });
       if (gi < row.length - 1 && m.between === 'resonance') resArrow(x + pw + arrowGap / 2);
       x += pw + arrowGap;
     });
-    y += rowH + (hasCaption ? 20 : 0) + 2;
+    y += rowH + (hasCaption ? (plated ? 26 : 20) : 0) + 2;
   }
   const at = (mi: number, ai: number): Placed => placed.find((q) => q.mol === mi && q.atom === ai) as Placed;
   /** The point where a line leaving an atom towards (tx, ty) clears its label. */

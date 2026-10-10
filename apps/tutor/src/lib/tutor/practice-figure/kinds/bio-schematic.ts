@@ -53,7 +53,8 @@
  *                        | 'stroma' | 'thylakoid_lumen';        // chloroplast
  *                     label?: string | '?' | null;   // (the space's name) printed in the space
  *                     ions?: 0–24;                   // that many dots = H⁺ ions (a key says so)
- *                     pH?: number }>;                // printed "pH 5" in the space instead of dots
+ *                     pH?: number }>;                // printed "pH 5" in the space instead of dots (under the name;
+ *                                                    //   beside it in a mitochondrion's intermembrane space)
  *     synthase?: boolean (false);                    // ATP synthase in the inner / thylakoid membrane
  *     showFlow?: boolean (false);                    // an arrow through it, down the H⁺ gradient (needs synthase and a gradient)
  *     title?: string }
@@ -730,11 +731,16 @@ function renderCompartments(m: Extract<BioModel, { variant: 'compartments' }>, W
   m.spaces.forEach((sp, k) => {
     const reg = region(sp.id);
     const lines = [sp.label, sp.pH === undefined ? null : `pH ${numStr(sp.pH, 1)}`].filter((x): x is string => x !== null);
+    // The intermembrane space is a band one line of type high: its pH stands BESIDE its name, not
+    // under it (a second line would be printed across the inner membrane).
+    const oneLine = mito && sp.id === 'intermembrane_space' && lines.length === 2;
+    let lx = reg.labelAt[0];
     lines.forEach((s, i) => {
-      const y = reg.labelAt[1] + i * 15;
-      over.push(lab(reg.labelAt[0], y, s, reg.anchor, { fs: 12, weight: i === 0 && sp.label !== null ? 700 : 400, halo: true }));
-      const b = labBox(reg.labelAt[0], y, s, reg.anchor, 12);
+      const y = reg.labelAt[1] + (oneLine ? 0 : i * 15);
+      over.push(lab(lx, y, s, reg.anchor, { fs: 12, weight: i === 0 && sp.label !== null ? 700 : 400, halo: true }));
+      const b = labBox(lx, y, s, reg.anchor, 12);
       avoid.push({ x0: b.x0 - 5, y0: b.y0 - 4, x1: b.x1 + 5, y1: b.y1 + 4 });
+      if (oneLine) lx = b.x1 + 12;
     });
     if (sp.ions) {
       anyIons = true;

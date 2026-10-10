@@ -92,7 +92,9 @@
  * bar_chart — categorical bars on a numbered axis
  *   { categories: string[]; values: number[];       // same length, 1–24
  *     yLabel?: string; xLabel?: string; yMin?: number; yMax?: number; yStep?: number;
- *     showValues?: boolean (false); colors?: string[] }
+ *     showValues?: boolean (false); colors?: string[];
+ *     strongGrid?: boolean }   // the grid one step darker; default: only when a bar ends on a lighter line
+ *   A value given as null or "?" is a bar LEFT OUT: a dashed "?" box stands where it would be (2026-10-16).
  *   Grouped bars (2026-10-14): in place of `values`,
  *     series: Array<{ label: string; values: Array<number | null> }>   // 2–3 series, one value per category
  *   draws the series side by side in every category with a legend under the chart. A series is told
@@ -158,6 +160,8 @@
  * field_diagram. Params at the top of each module.
  * BATCH 4 (./kinds/batch4.ts, 2026-10-14): conic_graph, venn_diagram, probability_tree, mechanics_setup,
  * wave_diagram, energy_levels, heating_curve, electrochemical_cell, sequence_strip.
+ * BATCH 5 (./kinds/batch5.ts, 2026-10-16): replication_fork, operon_map, cell_cycle_wheel, transformer,
+ * induction_loop, doppler_wavefronts, photoelectric_setup, data_table.
  *
  * Every marked point, endpoint and vertex dot is drawn LAST, unclipped, on a
  * thin white ring — above the curves, the grid and the axes.
@@ -207,6 +211,8 @@ import {
   assignDashes,
   buildFrame,
   buildLegend,
+  gridPlace,
+  minorStepOf,
   dashAttr,
   esc,
   estWidth,
@@ -225,6 +231,7 @@ import {
 import { BATCH2_FIGURE_KINDS, renderBatch2, type Batch2FigureKind } from './kinds/batch2';
 import { BATCH3_FIGURE_KINDS, renderBatch3, type Batch3FigureKind } from './kinds/batch3';
 import { BATCH4_FIGURE_KINDS, renderBatch4, type Batch4FigureKind } from './kinds/batch4';
+import { BATCH5_FIGURE_KINDS, renderBatch5, type Batch5FigureKind } from './kinds/batch5';
 
 export const PRACTICE_FIGURE_KINDS = [
   'function_graph',
@@ -285,6 +292,9 @@ export { BATCH3_FIGURE_KINDS, type Batch3FigureKind };
  *  energy_levels, heating_curve, electrochemical_cell, sequence_strip — drawn by ./kinds/batch4.ts and the
  *  modules it names. A list of its own, for the same reason. */
 export { BATCH4_FIGURE_KINDS, type Batch4FigureKind };
+/** Batch 5 (2026-10-16): replication_fork, operon_map, cell_cycle_wheel, transformer, induction_loop,
+ *  doppler_wavefronts, photoelectric_setup, data_table — drawn by ./kinds/batch5.ts and the modules it names. */
+export { BATCH5_FIGURE_KINDS, type Batch5FigureKind };
 export { sampleCurve };
 
 /** Short stable id prefix from the spec (FNV-1a) — see the module header. */
@@ -720,6 +730,26 @@ const MAX_CAT_CHARS = 28;
 const GROUP_STYLES = ['solid', 'hatched', 'outline'] as const;
 const MAX_GROUPED_BARS = 16;
 
+/**
+ * How the value grid of a bar chart is drawn, from where the bars end: a bar that ends on a LIGHTER
+ * line (between two numbers) makes the grid one step darker (`strongGrid`: true / false overrides);
+ * a bar that ends on no line of an axis the spec fixed (yMin, yMax and yStep all given) is reported —
+ * it can only be estimated. Charts whose bars all end on numbered lines are drawn as ever.
+ */
+function barGrid(r: Reader, values: number[], f: Frame, showValues: boolean): { strong: boolean; note?: NonNullable<FigureFacts['notes']>[number] } {
+  const p = r.p;
+  const step = f.yTicks.length >= 2 ? f.yTicks[1] - f.yTicks[0] : undefined;
+  const asked = p.strongGrid === undefined || p.strongGrid === null ? undefined : r.bool(p.strongGrid, 'strongGrid', false);
+  if (step === undefined || !(step > 0)) return { strong: asked ?? false };
+  const places = values.map((v) => gridPlace(v, step));
+  const strong = asked ?? (!showValues && places.includes('minor'));
+  const fixed = [p.yMin, p.yMax, p.yStep].every((v) => typeof v === 'number');
+  const off = values.filter((_, i) => places[i] === 'off');
+  if (!fixed || showValues || off.length === 0) return { strong };
+  const list = [...new Set(off)].slice(0, 4).map((v) => tickText(v, 10 ** -decimalsOf(v))).join(', ');
+  return { strong, note: { code: 'off_grid', message: `${off.length === 1 ? 'a bar ends' : `${off.length} bars end`} on no gridline (${list}${new Set(off).size > 4 ? ', …' : ''}) — the lines are ${tickText(minorStepOf(step), minorStepOf(step))} apart; use values on a line, change yStep, or print the values (showValues)` } };
+}
+
 /** One grouped bar (or a legend swatch): solid; white with an outline and rising hatch lines; white with a heavy outline. */
 function groupedBar(x: number, y: number, w: number, h: number, k: number): string {
   const color = SERIES_COLORS[k];
@@ -749,7 +779,7 @@ function renderGroupedBarChart(r: Reader): Drawn {
   const n = cats.length;
   const series = r.list(p.series, 'series', 2, GROUP_STYLES.length).map((raw, k) => {
     const o = r.obj(raw, `series[${k}]`);
-    const values = r.list(o.values, `series[${k}].values`, n, n).map((v, i) => (v === null ? null : r.num(v, `series[${k}].values[${i}]`)));
+    const values = r.list(o.values, `series[${k}].values`, n, n).map((v, i) => (v === null || v === '?' ? null : r.num(v, `series[${k}].values[${i}]`)));
     return { label: r.str(o.label, `series[${k}].label`, 40), values };
   });
   const K = series.length;
@@ -791,9 +821,10 @@ function renderGroupedBarChart(r: Reader): Drawn {
     });
     minLeft += f.plot.x > minLeft ? 0 : 2;
   }
-  f = buildFrame({ ...base, bottomExtra, minLeft: Math.ceil(minLeft) });
+  const grid = barGrid(r, all, f, showValues);
+  f = buildFrame({ ...base, bottomExtra, minLeft: Math.ceil(minLeft), ...(grid.strong ? { minorGridStrong: true } : {}) });
   col = f.plot.w / n;
-  const notes: NonNullable<FigureFacts['notes']> = [];
+  const notes: NonNullable<FigureFacts['notes']> = grid.note ? [grid.note] : [];
   const parts: string[] = [f.svg];
   const slot = (col * 0.84) / K;
   const barW = slot - Math.min(3, slot * 0.14);
@@ -866,10 +897,16 @@ function renderBarChart(r: Reader): Drawn {
   const p = r.p;
   if (p.series !== undefined && p.series !== null) return renderGroupedBarChart(r);
   const cats = r.list(p.categories, 'categories', 1, 24).map((c, i) => r.str(c, `categories[${i}]`, 60));
+  // A bar LEFT OUT (null or "?") is drawn as a "?" box; the value axis is laid out from the bars that are drawn.
+  const rawValues: unknown[] = Array.isArray(p.values) ? (p.values as unknown[]) : [];
+  const leftOut = rawValues.map((v) => v === null || v === '?');
+  const anyLeftOut = leftOut.some(Boolean);
+  const firstDrawn = rawValues.find((v, i) => !leftOut[i]);
+  if (anyLeftOut && firstDrawn === undefined) r.fail('values: every bar is left out — there is nothing to draw');
   let fig;
   try {
     // The board's solver: validation + a round value axis that includes zero.
-    fig = solveBarChart({ categories: cats, values: p.values });
+    fig = solveBarChart({ categories: cats, values: anyLeftOut ? rawValues.map((v, i) => (leftOut[i] ? firstDrawn : v)) : p.values });
   } catch (err) {
     return r.fail((err as Error).message.replace(/^bar_chart:\s*/, ''));
   }
@@ -911,19 +948,22 @@ function renderBarChart(r: Reader): Drawn {
     });
     minLeft += f.plot.x > minLeft ? 0 : 2;
   }
-  f = buildFrame({ ...base, bottomExtra, minLeft: Math.ceil(minLeft) });
+  const grid = barGrid(r, fig.values.filter((_, i) => !leftOut[i]), f, showValues);
+  f = buildFrame({ ...base, bottomExtra, minLeft: Math.ceil(minLeft), ...(grid.strong ? { minorGridStrong: true } : {}) });
   col = f.plot.w / n;
   const parts: string[] = [f.svg];
   const barW = col * 0.68;
   const zeroY = f.Y(Math.max(yMin, Math.min(yMax, 0)));
+  const blanks: string[] = [];
   fig.values.forEach((v, i) => {
     const cx = f.plot.x + (i + 0.5) * col;
     const yv = f.Y(v);
     const top = Math.min(yv, zeroY);
     const h = Math.max(Math.abs(yv - zeroY), 0.8);
     const color = r.color(colors[i], SERIES_COLORS[0]);
-    parts.push(`<rect x="${n2(cx - barW / 2)}" y="${n2(top)}" width="${n2(barW)}" height="${n2(h)}" fill="${color}"/>`);
-    if (showValues) {
+    if (leftOut[i]) blanks.push(blankBox(cx, zeroY - 12, 20, 17, 12));
+    else parts.push(`<rect x="${n2(cx - barW / 2)}" y="${n2(top)}" width="${n2(barW)}" height="${n2(h)}" fill="${color}"/>`);
+    if (showValues && !leftOut[i]) {
       const ty = v >= 0 ? top - 4 : top + h + TICK_FS + 1;
       parts.push(`<text x="${n2(cx)}" y="${n2(ty)}" font-size="${TICK_FS}" font-weight="600" text-anchor="middle" fill="${INK}" ${HALO}>${esc(tickText(v, 10 ** -decimalsOf(v)))}</text>`);
     }
@@ -938,12 +978,16 @@ function renderBarChart(r: Reader): Drawn {
   });
   // The baseline over the bars' feet.
   parts.push(`<line x1="${n2(f.plot.x)}" y1="${n2(zeroY)}" x2="${n2(f.plot.x + f.plot.w)}" y2="${n2(zeroY)}" stroke="${INK}" stroke-width="1.4"/>`);
+  // A "?" box stands on the baseline, over it.
+  parts.push(...blanks);
   let H = f.bottom;
   if (xLabel) {
     parts.push(`<text x="${n2(f.plot.x + f.plot.w / 2)}" y="${n2(H + LABEL_FS - 2)}" font-size="${LABEL_FS}" font-weight="600" text-anchor="middle" fill="${INK}">${esc(xLabel)}</text>`);
     H += LABEL_FS + 8;
   }
-  return { body: parts.join(''), H };
+  const notes: NonNullable<FigureFacts['notes']> = grid.note ? [grid.note] : [];
+  if (blanks.length > 0 && col < 24) notes.push({ code: 'crowded', message: 'a "?" box is wider than the column of the bar it stands for — use fewer categories' });
+  return notes.length > 0 ? { body: parts.join(''), H, facts: { plot: f.plot, curveCount: 0, marks: [], curves: [], notes } } : { body: parts.join(''), H };
 }
 
 function decimalsOf(v: number): number {
@@ -1612,8 +1656,8 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
     case 'punnett_square': drawn = renderPunnett(r, uid); break;
     case 'pedigree': drawn = renderPedigree(r); break;
     default: {
-      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid) ?? renderBatch4(kind, r, uid);
-      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS, ...BATCH4_FIGURE_KINDS].join(', ')}`);
+      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid) ?? renderBatch4(kind, r, uid) ?? renderBatch5(kind, r, uid);
+      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS, ...BATCH4_FIGURE_KINDS, ...BATCH5_FIGURE_KINDS].join(', ')}`);
       drawn = later;
     }
   }

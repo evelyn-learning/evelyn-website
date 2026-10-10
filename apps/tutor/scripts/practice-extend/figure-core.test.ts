@@ -7,8 +7,11 @@ import '../lib/no-db-env';
 import assert from 'node:assert/strict';
 import { renderPracticeFigure, type PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
 import { FIGURE_FIXTURES } from '../lib/practice-figure-fixtures';
+import { FIXTURES as FIX5_MATH } from '../lib/practice-figure-fixtures-b5-fixes-math';
+import { compileExpression } from '../../src/lib/tutor/practice-figure/expr';
 import { FIGURE_QUALITY_CHECKS, FIGURE_STRICT_CHECKS, contestedFlags, qualityFlags, validateItem } from './core';
 import {
+  explicitProducts,
   ALL_PRACTICE_FIGURE_KINDS,
   CHECKERS,
   FigureRuleError,
@@ -39,6 +42,7 @@ import {
 } from './figure-core';
 import { FIGURE_GENERATE_SYSTEM, buildKindPrompt } from './figure-prompts';
 import { buildQualityPrompt } from './prompts';
+import { FIXTURES as FIX_BARS } from '../lib/practice-figure-fixtures-b5-fixes-bars';
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -303,7 +307,7 @@ test('grouped bar chart (series): transcription, alt and checkers', () => {
   assert.match(d.text, /Pink: Observed 45; Expected 50/);
   assert.match(d.text, /"Observed" \(solid\), "Expected" \(hatched\)/);
   const alt = describeForAlt(G);
-  assert.match(alt, /^A grouped bar chart, with two bars in each group, three groups of bars\./);
+  assert.match(alt, /^A grouped bar chart of "Number of plants", with two bars in each group, three groups of bars\./);
   assert.ok(!/\d/.test(alt.replace(/"[^"]*"/g, '')), alt);
   // Every plain checker reads ONE series of a grouped chart.
   rightAndWrong(G, 'bar_value', { category: 'Pink', series: 'Expected' }, '50', '45');
@@ -333,7 +337,9 @@ test('grouped bar chart (series): transcription, alt and checkers', () => {
   assert.match(describeFigure(B).text, /Pink: Observed 45; Expected \(blank — a "\?" box where the bar would be\)/);
   assert.match(describeForAlt(B), /One place is left blank, shown as a boxed question mark\./);
   refused(() => run(B, 'bar_value', { category: 'Pink', series: 'Expected' }), /left out on the figure/);
-  refused(() => run(B, 'bar_sum', { series: 'Expected' }), /left out on the figure/);
+  // (2026-10-16, fix b) A bar left out is not counted in a total of the drawn bars; naming it in a list is still refused.
+  rightAndWrong(B, 'bar_sum', { series: 'Expected' }, '50', '100');
+  refused(() => run(B, 'bar_sum', { series: 'Expected', categories: ['Red', 'Pink'] }), /left out on the figure/);
   rightAndWrong(B, 'bar_value', { category: 'Pink', series: 'Observed' }, '45', '50');
   // Through examineFigureItem: derived; showValues is refused with a bar checker; a legend name twice is a hygiene defect.
   const q = { problemText: 'The bar chart shows observed and expected counts. How many pink plants were expected?', alt: 'A grouped bar chart.', derivation: { checker: 'bar_value', args: { category: 'Pink', series: 'Expected' } } };
@@ -421,7 +427,7 @@ test('slope field: what the slopes depend on, and matching the field to its equa
   assert.equal(compareDerived(mcq('C'), d).match, false);
   rightAndWrong(of('-x/y'), 'slope_match_equation', { options: ['x/y', '-x/y', '-y/x'] }, '-x/y', 'x/y');
   rightAndWrong(of('y*(2 - y)'), 'slope_match_equation', { options: ["y' = y·(2 − y)", "y' = y·(y − 2)", "y' = x·(2 − x)"] }, "y' = y·(2 − y)", "y' = y·(y − 2)");
-  refused(() => run(S.field, 'slope_match_equation', { options: ['x - y', 'y(2 - y)'] }), /options\[1\]: .*write the multiplication explicitly/);
+  refused(() => run(S.field, 'slope_match_equation', { options: ['x - y', 'x y'] }), /options\[1\]: .*write the multiplication explicitly/);
   refused(() => run(S.field, 'slope_match_equation', { options: ['x + y', 'x*y'] }), /none of the options agrees/);
   refused(() => run(S.field, 'slope_match_equation', { options: ['x - y', '-(y - x)'] }), /2 of the options agree .* cannot tell them apart/);
   refused(() => run(S.field, 'slope_match_equation', { options: ['x - y'] }), /list of 2 to 6 expressions/);
@@ -587,7 +593,10 @@ test('batch 1 describe: exactly what is visible — a blank is transcribed as a 
   const nd = describeFigure(B.normal);
   assert.ok(nd.readable.some((l) => /hatched from −1 to 2/i.test(l)) && !/0\.8/.test(nd.text));
   const tails = describeFigure(B.tails);
-  assert.ok(tails.readable.some((l) => /left tail.*up to 350/i.test(l)) && tails.readable.some((l) => /marked "\?"/.test(l)));
+  // Round 5 (d): a bound between two ticks is not printed by default — and then not transcribed either.
+  assert.ok(tails.readable.some((l) => /left tail.*up to an unlabelled bound between 300 and 400/i.test(l)) && !tails.text.includes('350') && tails.readable.some((l) => /marked "\?"/.test(l)));
+  const given = describeFigure({ type: 'distribution_curve', params: { ...B.tails.params, boundLabels: 'value' } });
+  assert.ok(given.readable.some((l) => /left tail.*up to 350/i.test(l)) && given.printed.includes('bound label: "350"'));
   assert.ok(!tails.text.includes('650'), 'the blank bound is not transcribed');
 
   const hist = describeFigure(B.hist);
@@ -708,7 +717,10 @@ test('distribution, histogram and box plot checkers', () => {
   rightAndWrong(B.normal, 'normal_shaded_area', { method: 'empirical' }, '0.815', '0.8186');
   rightAndWrong(B.normal, 'normal_shaded_area', { method: 'exact' }, '0.8186', '0.815');
   rightAndWrong(B.normal, 'normal_shaded_area', { method: 'empirical', as: 'percent' }, '81.5 %', '0.815');
-  rightAndWrong(B.tails, 'normal_shaded_area', { method: 'exact' }, '0.1336', '0.0668');
+  // Round 5 (d): the area needs the bound GIVEN — an unprinted bound between two ticks does not settle it.
+  rightAndWrong({ type: 'distribution_curve', params: { ...B.tails.params, boundLabels: 'value' } }, 'normal_shaded_area', { method: 'exact' }, '0.1336', '0.0668');
+  refused(() => run(B.tails, 'normal_shaded_area', { method: 'exact' }), /falls between two ticks and its value is not printed \(boundLabels: 'none'\)/);
+  refused(() => run({ type: 'distribution_curve', params: { ...B.tails.params, boundLabels: 'blank' } }, 'normal_shaded_area', { method: 'exact' }), /boundLabels: 'blank'/);
   rightAndWrong(B.tails, 'normal_bound', { shade: 1, end: 'from' }, '650', '350');
   rightAndWrong(B.tails, 'normal_bound', { shade: 1, end: 'from', as: 'z' }, '1.5', '−1.5');
   rightAndWrong({ type: 'distribution_curve', params: { mean: 70, sd: 5, shade: [{ from: 80, to: null }] } }, 'normal_shaded_area', { method: 'empirical' }, '0.025', '0.05');
@@ -1178,6 +1190,126 @@ test('k. describeForAlt `hide`: a printed label that gives the answer away is le
   assert.ok(describeForAlt(chart, { hide: ['-2'] }).includes('"1"'));
   refused(() => describeForAlt(chart, { hide: ['sign chart'] }), /a value to hide .* is part of what the figure itself is/);
   assert.equal(describeForAlt(chart, { hide: [] }), describeForAlt(chart));
+});
+
+// ── round 5 (2026-10-16): d — hidden bounds of a normal curve; k — products written without a sign ──
+
+test('round 5 d. distribution_curve: a bound between two ticks is stated only when it is printed (boundLabels), in the text, the alt and the checkers', () => {
+  const z = (extra: Record<string, unknown> = {}): PracticeFigureSpec => ({ type: 'distribution_curve', params: { axis: 'z', shade: [{ from: 1.25, to: null }], ...extra } });
+  const hiddenText = describeFigure(z());
+  assert.ok(!hiddenText.text.includes('1.25') && /right tail: everything from an unlabelled bound between 1 and 2 on/i.test(hiddenText.text), hiddenText.text);
+  assert.ok(!describeForAlt(z()).includes('1.25'));
+  const blank = describeFigure(z({ boundLabels: 'blank' }));
+  assert.ok(!blank.text.includes('1.25') && /a bound marked with a blank "\?" box \(between 1 and 2\)/.test(blank.text) && blank.printed.includes('bound label: (blank — a "?" box)'), blank.text);
+  assert.ok(!describeForAlt(z({ boundLabels: 'blank' })).includes('1.25') && /One place is left blank/.test(describeForAlt(z({ boundLabels: 'blank' }))));
+  const value = describeFigure(z({ boundLabels: 'value' }));
+  assert.ok(/right tail: everything from 1\.25 on/i.test(value.text) && value.printed.includes('bound label: "1.25"'), value.text);
+  assert.ok(describeForAlt(z({ boundLabels: 'value' })).includes('"1.25"'));
+  // A bound ON a tick is read off the axis either way; a labelled bound is as before.
+  for (const b of ['value', 'blank', 'none']) assert.ok(/hatched from −1 to 2/i.test(describeFigure({ type: 'distribution_curve', params: { axis: 'z', shade: [{ from: -1, to: 2 }], boundLabels: b } }).text));
+  assert.ok(/a bound marked "k"/.test(describeFigure(z({ shade: [{ from: 1.25, to: null, label: 'k' }] })).text));
+  // Checkers: the area of a region whose bound is hidden is not settled; the hidden bound itself is the value under it.
+  rightAndWrong(z({ boundLabels: 'value' }), 'normal_shaded_area', { method: 'exact' }, '0.1056', '0.8944');
+  refused(() => run(z(), 'normal_shaded_area', { method: 'exact' }), /its value is not printed \(boundLabels: 'none'\).*set boundLabels: 'value'/);
+  refused(() => run(z({ boundLabels: 'blank' }), 'normal_shaded_area', { method: 'exact' }), /not printed/);
+  rightAndWrong(z(), 'normal_bound', { shade: 0, end: 'from' }, '1.25', '1.5');
+  rightAndWrong({ type: 'distribution_curve', params: { mean: 100, sd: 15, shade: [{ from: null, to: 87.4 }], boundLabels: 'blank' } }, 'normal_bound', { shade: 0, end: 'to', as: 'z' }, '-0.84', '0.84');
+  // An item that asks for the hidden bound passes; one whose key is an area the figure no longer settles is refused.
+  const ok = examineFigureItem(item(z(), { problemText: 'The shaded region in the figure has area 0.1056. What is the z-score at its left edge?', alt: 'A normal curve with its right tail shaded from a bound between 1 and 2.', answer: '1.25', derivation: { checker: 'normal_bound', args: { shade: 0, end: 'from' } } }));
+  assert.deepEqual(ok.defects, []);
+  const bad = examineFigureItem(item(z(), { problemText: 'What proportion of values lies in the shaded region of the figure?', alt: 'A normal curve with its right tail shaded.', answer: '0.1056', derivation: { checker: 'normal_shaded_area', args: { method: 'exact' } } }));
+  assert.ok(bad.defects.some((d) => /not printed/.test(d)), JSON.stringify(bad.defects));
+});
+
+test('round 5 k. explicitProducts: a product written without a sign is read where it reads one way only; every other form is refused or left to the parser', () => {
+  const val = (e: string): number => compileExpression(explicitProducts(e), ['x', 'y'])(3, 5);
+  const ACCEPTED: Array<[string, number]> = [
+    ['2x', 6], ['2x − y', 1], ['2xy', 30], ['xy', 15], ['yx', 15], ['x·y', 15], ['x×y', 15], ['x(y − 1)', 12], ['y(1 − y)', -20], ['(x + 1)(y − 1)', 16], ['2(x + 1)', 8],
+    ['x²', 9], ['x²y', 45], ['2x²y', 90], ['x^2y', 45], ['xy^2', 75], ['xy³', 375], ['y^2(x + 1)', 100], ['x/y', 0.6], ['2x/y', 1.2], ['x/(2y)', 0.3], ['y/x + 2x', 5 / 3 + 6],
+    ['xsin(y)', 3 * Math.sin(5)], ['ycos(x)', 5 * Math.cos(3)], ['xsqrt(y)', 3 * Math.sqrt(5)], ['xexp(y)', 3 * Math.exp(5)], ['e^x', Math.exp(3)], ['e^(2x)y', Math.exp(6) * 5], ['exp(x)y', Math.exp(3) * 5], ['x^y', 243], ['-2x', -6],
+  ];
+  for (const [e, v] of ACCEPTED) assert.ok(Math.abs(val(e) - v) < 1e-9 * Math.max(1, Math.abs(v)), `${e} → ${val(e)} (expected ${v})`);
+  // Everything the parser already read keeps its meaning: the rewrite leaves it alone or only makes the same product explicit.
+  for (const e of ['x - y', 'x + y', '-x/y', 'y*(2 - y)', 'x*y', '2*x*y', 'sin(x) + y', '3sin(x)', '(x+1)(x-2)', 'x^2 - y^2', 'sqrt(x^2 + y^2)', 'exp(-x)', 'ln(x) + abs(y)', '0.5y', 'pi*x', 'x/2', '1/(x*y)', '2^x']) {
+    assert.ok(Math.abs(val(e) - compileExpression(e.replace(/[−–]/g, '-'), ['x', 'y'])(3, 5)) < 1e-12, e);
+  }
+  const REFUSED: Array<[string, RegExp]> = [
+    ['x/2y', /division followed by an unsigned product reads two ways/], ['1/2x', /division followed by an unsigned product/], ['1/xy', /division followed by an unsigned product/], ['x/y(1 − y)', /division followed by an unsigned product/],
+    ['e^2x', /exponent followed by an unsigned product reads two ways/], ['e^xy', /exponent followed by an unsigned product/], ['2^x(y)', /exponent followed by an unsigned product/], ['(x + y)^2x', /exponent followed by an unsigned product/],
+    ['y(x)', /reads as function notation/], ['x(x)', /reads as function notation/],
+    ['x2', /unexpected/], ['sin x', /function name must be followed by/], ['sinx', /unexpected/], ['pix', /unexpected/], ['ye^x', /unexpected/], ['xe^y', /unexpected/], ['x y', /write the multiplication explicitly/], ['xt', /unexpected/], ['2x +', /ends before/],
+  ];
+  for (const [e, re] of REFUSED) assert.throws(() => val(e), (err: unknown) => re.test((err as Error).message), `${e}: ${re}`);
+});
+
+test('round 5 k. slope_match_equation takes the options as an item words them ("2xy", "x²y", "y(1 − y)"), and still refuses what reads two ways', () => {
+  const field = (FIX5_MATH.find((f) => f.id === 'fix5-k-slope-field-implicit-products') ?? assert.fail('no fixture')).spec;
+  const options = ['dy/dx = 2xy', 'dy/dx = x²y', 'dy/dx = y(1 − y)', 'dy/dx = x + 2y'];
+  rightAndWrong(field, 'slope_match_equation', { options }, 'dy/dx = 2xy', 'dy/dx = x²y');
+  const of = (expr: string): PracticeFigureSpec => ({ type: 'slope_field', params: { expr, xRange: [-2, 2], yRange: [-2, 2], xStep: 1, yStep: 1, gridStep: 0.5 } });
+  rightAndWrong(of('y*(1 - y)'), 'slope_match_equation', { options: ['y(1 − y)', 'y(y − 1)', 'x(1 − x)'] }, 'y(1 − y)', 'y(y − 1)');
+  rightAndWrong(of('x^2*y'), 'slope_match_equation', { options: ['xy²', 'x²y', '2xy'] }, 'x²y', 'xy²');
+  rightAndWrong(of('x*sin(y)'), 'slope_match_equation', { options: ["y′ = xsin(y)", "y′ = ysin(x)"] }, 'y′ = xsin(y)', 'y′ = ysin(x)');
+  refused(() => run(field, 'slope_match_equation', { options: ['2xy', 'x/2y'] }), /options\[1\]: .*division followed by an unsigned product/);
+  refused(() => run(field, 'slope_match_equation', { options: ['2xy', 'e^2x'] }), /options\[1\]: .*exponent followed by an unsigned product/);
+  refused(() => run(field, 'slope_match_equation', { options: ['2xy', 'y(x)'] }), /options\[1\]: .*function notation/);
+  refused(() => run(field, 'slope_match_equation', { options: ['2xy', 'x2y'] }), /options\[1\]: /);
+  refused(() => run(field, 'slope_match_equation', { options: ['2xy', '2yx'] }), /2 of the options agree/);
+  const exam = examineFigureItem(item(field, { problemText: 'Which differential equation could have the slope field shown?', alt: 'A slope field on a coordinate grid.', responseFormat: 'mcq', choices: options, answer: 'A', derivation: { checker: 'slope_match_equation', args: { options } } }));
+  assert.deepEqual(exam.defects, []);
+  assert.match(checkerCatalogue(['slope_field']), /"dy\/dx = 2xy".*"x\/2y".*are refused/);
+});
+
+test('fix b (2026-10-16): a bar left out as "?" and printed values — the drawn bars are read, the one left out is solved for from a total', () => {
+  const fxb = (id: string): PracticeFigureSpec => (FIX_BARS.find((f) => f.id === id) ?? assert.fail(id)).spec;
+  // A chart with ONE bar per category: was refused outright ("values must be … numbers").
+  const plain = fxb('fix5-b-bars-plain-blank-bar');
+  assert.deepEqual(hygieneDefects(plain), []);
+  const t = describeFigure(plain).text;
+  assert.match(t, /Week 3: 30\n {2}Week 4: \(blank — a "\?" box where the bar would be\)\n {2}Week 5: 25/);
+  assert.match(describeForAlt(plain), /One place is left blank, shown as a boxed question mark\./);
+  rightAndWrong(plain, 'bar_value', { category: 'Week 2' }, '35', '30');
+  refused(() => run(plain, 'bar_value', { category: 'Week 4' }), /the bar "Week 4" is left out on the figure \(a "\?" box\).*bar_missing/);
+  rightAndWrong(plain, 'bar_sum', {}, '110', '150');                                   // the drawn bars only
+  rightAndWrong(plain, 'bar_difference', { a: 'Week 2', b: 'Week 1' }, '15', '10');
+  refused(() => run(plain, 'bar_difference', { a: 'Week 4', b: 'Week 1' }), /left out on the figure/);
+  refused(() => run(plain, 'bar_ratio', { a: 'Week 1', b: 3 }), /left out on the figure/);
+  assert.deepEqual(run(plain, 'bar_extreme', { which: 'largest' }), { kind: 'label', value: 'Week 2' });
+  rightAndWrong(plain, 'bar_missing', { category: 'Week 4', total: 150 }, '40', '110');
+  rightAndWrong(plain, 'bar_missing', { category: 3, mean: 28 }, '30', '28');           // 5 × 28 − 110
+  refused(() => run(plain, 'bar_missing', { category: 'Week 4' }), /give the derivation argument "total" or "mean" \(exactly one\)/);
+  refused(() => run(plain, 'bar_missing', { category: 'Week 4', total: 150, mean: 30 }), /exactly one/);
+  refused(() => run(plain, 'bar_missing', { category: 'Week 1', total: 150 }), /the bar "Week 1" is drawn — bar_missing is for the bar left out/);
+  refused(() => run({ ...plain, params: { ...plain.params, values: [20, null, 30, '?', 25] } }, 'bar_missing', { category: 'Week 4', total: 150 }), /the bar "Week 2" is left out as well — one total cannot fix two bars/);
+  refused(() => run(plain, 'bar_missing', { category: 'Week 4', total: 150, across: 'series' }), /for a grouped bar chart/);
+  // "?" is the same as null, in a plain chart and in a series.
+  assert.equal(describeFigure({ ...plain, params: { ...plain.params, values: [20, 35, 30, '?', 25] } }).text, t);
+  // Grouped, with the values printed: every drawn bar is read from its printed value (37 and 6.5 are on no gridline),
+  // and the bar left out is found across the series of its category — energy is conserved: 6.5 + 42.5 = 49 J.
+  const energy = fxb('fix5-b-bars-values-printed-blank');
+  assert.match(describeFigure(energy).text, /Position 2: Kinetic energy \(blank — a "\?" box where the bar would be\); Gravitational potential energy 27 \(printed above the bar\)/);
+  assert.ok(describeFigure(energy).printed.some((l) => /Position 2 — Gravitational potential energy 27;/.test(l) && !/Position 2 — Kinetic/.test(l)));
+  rightAndWrong(energy, 'bar_sum', { series: 'Gravitational potential energy' }, '81.5', '82');
+  rightAndWrong(energy, 'bar_series_difference', { category: 'Position 3', a: 0, b: 1 }, '25', '-25');
+  rightAndWrong(energy, 'bar_missing', { category: 'Position 2', series: 'Kinetic energy', total: 49, across: 'series' }, '22', '27');
+  rightAndWrong(energy, 'bar_missing', { category: 'Position 2', series: 'Kinetic energy', total: 65.5 }, '22', '49');   // over the categories of its series
+  assert.deepEqual(run(energy, 'bar_series_gap_extreme', { a: 0, b: 1, which: 'largest' }), { kind: 'label', value: 'Position 1' });
+  // Without printed values the same bars are refused: they end on no gridline.
+  refused(() => run({ ...energy, params: { ...energy.params, showValues: false } }, 'bar_sum', { series: 1 }), /does not lie on a gridline/);
+  // examineFigureItem: showValues is accepted with bar_missing (and a wrong key is still a mismatch) …
+  const q = { problemText: 'The chart shows the energies of a falling ball at three positions; no energy is lost. What is its kinetic energy at position 2, in joules?', alt: describeForAlt(energy), derivation: { checker: 'bar_missing', args: { category: 'Position 2', series: 'Kinetic energy', total: 49, across: 'series' } } };
+  const ok = examineFigureItem(item(energy, { ...q, answer: '22' }));
+  assert.deepEqual(ok.defects, []);
+  assert.equal(ok.derivation.status, 'derived');
+  assert.equal(examineFigureItem(item(energy, { ...q, answer: '27' })).derivation.status, 'mismatch');
+  // … and with a sum or a difference of printed values, and with no checker when a bar is left out …
+  assert.deepEqual(examineFigureItem(item(energy, { ...q, problemText: 'The chart shows the energies of a ball. By how much does its kinetic energy at position 3 exceed its potential energy there, in joules?', answer: '25', derivation: { checker: 'bar_series_difference', args: { category: 'Position 3', a: 0, b: 1 } } })).defects, []);
+  assert.ok(!examineFigureItem(item(energy, { ...q, answer: '22', derivation: { checker: 'none', args: {} } })).defects.some((d) => /showValues/.test(d)));
+  // … but still refused where the printed number IS the answer, and with no checker on a chart with every bar drawn.
+  assert.ok(examineFigureItem(item(energy, { ...q, answer: '27', derivation: { checker: 'bar_value', args: { category: 'Position 2', series: 1 } } })).defects.some((d) => /showValues is on/.test(d)));
+  const full = { ...energy, params: { ...energy.params, series: [{ label: 'Kinetic energy', values: [6.5, 22, 37] }, { label: 'Gravitational potential energy', values: [42.5, 27, 12] }] } };
+  assert.ok(examineFigureItem(item(full, { ...q, answer: '22', derivation: { checker: 'none', args: {} } })).defects.some((d) => /showValues is on/.test(d)));
+  assert.match(checkerCatalogue(['bar_chart']), /bar_missing .*the ONE bar left out/);
 });
 
 console.log(`${passed} figure-core test(s) passed${process.exitCode ? ' — WITH FAILURES' : ''}`);

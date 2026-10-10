@@ -13,9 +13,16 @@
  *     | { type: 'parabola'; vertex: [h, k]; p: number;                     // focus is p from the vertex
  *         axis: 'x' | 'y' }                          // axis of symmetry: 'y' opens up (p > 0) / down, 'x' right / left
  *     & { label?: string;                            // legend entry
- *         show?: { [feature]: 'value' | 'mark' | 'blank' | 'none' } }>;    // every feature defaults to 'none'
+ *         show?: { [feature]: 'value' | 'mark' | 'blank' | 'none' };       // every feature defaults to 'none'
+ *         names?: { center?: string; vertex?: string; focus?: string;      // what a marked point is CALLED (≤ 4
+ *                   vertices?: [string, string]; coVertices?: [string, string];   // characters) instead of C, V, F,
+ *                   foci?: [string, string] } }>;    // V₁ V₂, B₁ B₂, F₁ F₂ — e.g. center: 'O' when "C" is an option letter
  *   lines?: Array<({ slope: number; intercept: number } | { x: number }) & { label?: string }>;   // ≤ 3, solid
- *   points?: Array<{ x: number; y: number; label?: string }> }             // ≤ 6 dots (intersections, a point P)
+ *   points?: Array<{ x: number; y: number; label?: string }>;              // ≤ 6 dots (intersections, a point P)
+ *   letterLabels?: 'numerals' | 'roman' }            // every name that is ONE capital letter (C, V, F, a point's or a
+ *                                                    // line's label, a legend entry) is printed as 1, 2, 3 … or I, II,
+ *                                                    // III … in drawing order (the conics' marks, then lines, then
+ *                                                    // points) — so none reads as an option letter of the question
  *
  * FEATURES per type, and what each `show` value draws:
  *   points — center (circle, ellipse, hyperbola) · vertices · coVertices (ellipse, hyperbola) · foci
@@ -37,6 +44,7 @@
  */
 import { FIGURE_WIDTH, GUIDE_COLOR, GUIDE_DASH, GUIDE_MASK_WIDTH, GUIDE_WIDTH, SERIES_COLORS, TICK_FS, assignDashes, buildFrame, buildLegend, dashAttr, n2, type LegendEntry } from '../plot-frame';
 import type { Drawn, FigureFacts, Params, Reader } from '../spec';
+import { readLetterLabels, type LetterLabels } from './batch3';
 import { INK, MUTED, Placer, around, blank, fractionText, numText, overlaps, segmentBoxes, text, type Box, type Candidate } from './draw';
 
 export type ConicShow = 'value' | 'mark' | 'blank' | 'none';
@@ -102,6 +110,7 @@ export interface ConicModel {
   conics: Conic[];
   lines: ConicLine[];
   points: Array<{ x: number; y: number; label?: string }>;
+  letterLabels?: LetterLabels;
 }
 
 const isInt = (v: number): boolean => Math.abs(v - Math.round(v)) < 1e-9;
@@ -163,6 +172,20 @@ function readConic(r: Reader, raw: unknown, name: string): Conic {
       show[key] = v as ConicShow;
     }
   }
+  const NAME_KEYS: Record<ConicType, readonly string[]> = { circle: ['center'], ellipse: ['center', 'vertices', 'coVertices', 'foci'], hyperbola: ['center', 'vertices', 'coVertices', 'foci'], parabola: ['vertex', 'focus'] };
+  const given: Record<string, string[]> = {};
+  if (o.names !== undefined && o.names !== null) {
+    for (const [key, v] of Object.entries(r.obj(o.names, `${name}.names`))) {
+      if (!NAME_KEYS[type].includes(key)) r.fail(`${name}.names.${key}: ${type === 'ellipse' ? 'an' : 'a'} ${type} has no such named point — one of ${NAME_KEYS[type].join(', ')}`);
+      if (key === 'center' || key === 'vertex' || key === 'focus') given[key] = [r.str(v, `${name}.names.${key}`, 4)];
+      else {
+        if (!Array.isArray(v) || v.length !== 2) r.fail(`${name}.names.${key} must be two names, e.g. ["P", "Q"]`);
+        given[key] = (v as unknown[]).map((x, j) => r.str(x, `${name}.names.${key}[${j}]`, 4));
+        if (given[key][0] === given[key][1]) r.fail(`${name}.names.${key}: the two names must differ`);
+      }
+    }
+  }
+  const nm = (key: string, j: number, dflt: string): string => given[key]?.[j] ?? dflt;
   const base = { type, r: 0, a: 0, b: 0, c: 0, p: 0, axis: 'x' as 'x' | 'y', label: r.optStr(o.label, `${name}.label`, 24), show, vertices: [] as ConicPoint[], coVertices: [] as ConicPoint[], foci: [] as ConicPoint[], asymptotes: [] as ConicLine[] };
   if (type === 'parabola') {
     const [h, k] = readPoint(r, o.vertex, `${name}.vertex`);
@@ -170,16 +193,16 @@ function readConic(r: Reader, raw: unknown, name: string): Conic {
     if (Math.abs(p) < 1e-9) r.fail(`${name}.p must not be 0 (it is the distance from the vertex to the focus)`);
     if (o.axis !== 'x' && o.axis !== 'y') r.fail(`${name}.axis must be 'x' (opens right or left) or 'y' (opens up or down)`);
     const axis = o.axis as 'x' | 'y';
-    const focus = axis === 'y' ? pt('F', h, k + p) : pt('F', h + p, k);
+    const focus = axis === 'y' ? pt(nm('focus', 0, 'F'), h, k + p) : pt(nm('focus', 0, 'F'), h + p, k);
     const directrix = axis === 'y' ? lineOf(0, k - p) : verticalLine(h - p);
     const symmetryAxis = axis === 'y' ? verticalLine(h) : lineOf(0, k);
     const four = coefficient(4 * p);
     const rhs = (v: string, by: number): string => (Math.abs(by) < 1e-12 ? `${four}${v}` : `${four}${shifted(v, by)}`);
     const equation = axis === 'y' ? `${sq('x', h)} = ${rhs('y', k)}` : `${sq('y', k)} = ${rhs('x', h)}`;
-    return { ...base, h, k, p, c: Math.abs(p), axis, vertices: [pt('V', h, k)], foci: [focus], directrix, symmetryAxis, equation };
+    return { ...base, h, k, p, c: Math.abs(p), axis, vertices: [pt(nm('vertex', 0, 'V'), h, k)], foci: [focus], directrix, symmetryAxis, equation };
   }
   const [h, k] = readPoint(r, o.center, `${name}.center`);
-  const center = pt('C', h, k);
+  const center = pt(nm('center', 0, 'C'), h, k);
   if (type === 'circle') {
     const rad = r.positive(o.radius, `${name}.radius`);
     return { ...base, h, k, r: rad, a: rad, b: rad, center, equation: `${sq('x', h)} + ${sq('y', k)} = ${numText(rad * rad, 4)}` };
@@ -195,9 +218,9 @@ function readConic(r: Reader, raw: unknown, name: string): Conic {
     const c2 = a * a - b * b;
     return {
       ...base, h, k, a, b, c: Math.sqrt(c2), axis, center,
-      vertices: [axisPoint('V₁', h, k, axis, -1, a * a), axisPoint('V₂', h, k, axis, 1, a * a)],
-      coVertices: [axisPoint('B₁', h, k, other, -1, b * b), axisPoint('B₂', h, k, other, 1, b * b)],
-      foci: [axisPoint('F₁', h, k, axis, -1, c2), axisPoint('F₂', h, k, axis, 1, c2)],
+      vertices: [axisPoint(nm('vertices', 0, 'V₁'), h, k, axis, -1, a * a), axisPoint(nm('vertices', 1, 'V₂'), h, k, axis, 1, a * a)],
+      coVertices: [axisPoint(nm('coVertices', 0, 'B₁'), h, k, other, -1, b * b), axisPoint(nm('coVertices', 1, 'B₂'), h, k, other, 1, b * b)],
+      foci: [axisPoint(nm('foci', 0, 'F₁'), h, k, axis, -1, c2), axisPoint(nm('foci', 1, 'F₂'), h, k, axis, 1, c2)],
       symmetryAxis: axis === 'x' ? lineOf(0, k) : verticalLine(h),
       equation: `${sq('x', h)}/${numText(rx * rx, 4)} + ${sq('y', k)}/${numText(ry * ry, 4)} = 1`,
     };
@@ -211,9 +234,9 @@ function readConic(r: Reader, raw: unknown, name: string): Conic {
   const m = axis === 'x' ? b / a : a / b;
   return {
     ...base, h, k, a, b, c: Math.sqrt(c2), axis, center,
-    vertices: [axisPoint('V₁', h, k, axis, -1, a * a), axisPoint('V₂', h, k, axis, 1, a * a)],
-    coVertices: [axisPoint('B₁', h, k, other, -1, b * b), axisPoint('B₂', h, k, other, 1, b * b)],
-    foci: [axisPoint('F₁', h, k, axis, -1, c2), axisPoint('F₂', h, k, axis, 1, c2)],
+    vertices: [axisPoint(nm('vertices', 0, 'V₁'), h, k, axis, -1, a * a), axisPoint(nm('vertices', 1, 'V₂'), h, k, axis, 1, a * a)],
+    coVertices: [axisPoint(nm('coVertices', 0, 'B₁'), h, k, other, -1, b * b), axisPoint(nm('coVertices', 1, 'B₂'), h, k, other, 1, b * b)],
+    foci: [axisPoint(nm('foci', 0, 'F₁'), h, k, axis, -1, c2), axisPoint(nm('foci', 1, 'F₂'), h, k, axis, 1, c2)],
     asymptotes: [lineOf(m, k - m * h), lineOf(-m, k + m * h)],
     symmetryAxis: axis === 'x' ? lineOf(0, k) : verticalLine(h),
     equation: axis === 'x' ? `${sq('x', h)}/${numText(a * a, 4)} − ${sq('y', k)}/${numText(b * b, 4)} = 1` : `${sq('y', k)}/${numText(a * a, 4)} − ${sq('x', h)}/${numText(b * b, 4)} = 1`,
@@ -263,7 +286,30 @@ export function conicModel(r: Reader): ConicModel {
     if (!inside(x, y)) r.fail(`points[${i}] (${numText(x)}, ${numText(y)}) is outside xRange / yRange`);
     return { x, y, label: r.optStr(o.label, `points[${i}].label`, 16) };
   });
-  return { xRange, yRange, xStep: r.optStep(p.xStep, 'xStep'), yStep: r.optStep(p.yStep, 'yStep'), title: r.optStr(p.title, 'title'), conics, lines, points };
+  // letterLabels: every one-capital-letter name becomes the next numeral, in drawing order.
+  const letterLabels = readLetterLabels(r);
+  if (letterLabels) {
+    const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV'];
+    let n = 0;
+    const seen = new Map<string, string>();
+    const as = <T extends string | undefined>(sv: T): T => {
+      if (sv === undefined || !/^[A-Z]$/.test(sv)) return sv;
+      if (!seen.has(sv)) { seen.set(sv, letterLabels === 'roman' ? ROMAN[n] : String(n + 1)); n++; }
+      return seen.get(sv) as T;
+    };
+    for (const c of conics) {
+      c.label = as(c.label);
+      for (const q of [...(c.center ? [c.center] : []), ...c.vertices, ...c.coVertices, ...c.foci]) q.name = as(q.name);
+    }
+    for (const l of lines) l.label = as(l.label);
+    for (const q of points) q.label = as(q.label);
+  }
+  // Two marks of one figure never share a name.
+  const names = conics.flatMap((c, i) => [...(c.center && c.show.center !== 'none' ? [c.center] : []), ...(c.show[c.type === 'parabola' ? 'vertex' : 'vertices'] !== 'none' ? c.vertices : []), ...(c.show.coVertices !== undefined && c.show.coVertices !== 'none' ? c.coVertices : []), ...(c.show[c.type === 'parabola' ? 'focus' : 'foci'] !== 'none' ? c.foci : [])].map((q) => ({ i, name: q.name })));
+  if ((p.conics as unknown[]).some((c) => (c as Params).names !== undefined && (c as Params).names !== null)) {
+    for (let a = 0; a < names.length; a++) for (let b = a + 1; b < names.length; b++) if (names[a].name === names[b].name) r.fail(`conics[${names[b].i}].names: the name "${names[b].name}" is used for two marked points — give each its own`);
+  }
+  return { xRange, yRange, xStep: r.optStep(p.xStep, 'xStep'), yStep: r.optStep(p.yStep, 'yStep'), title: r.optStr(p.title, 'title'), conics, lines, points, letterLabels };
 }
 
 /** The points where a line meets a conic (0, 1 or 2), in order of x then y. */

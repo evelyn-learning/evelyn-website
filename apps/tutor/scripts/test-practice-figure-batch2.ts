@@ -39,12 +39,13 @@ import { fieldAt, fieldModel, lineCounts, magneticForceDirection, traceFieldLine
 import { flowModel } from '../src/lib/tutor/practice-figure/kinds/flow-diagram';
 import { revolutionVolume, solidModel } from '../src/lib/tutor/practice-figure/kinds/solid-3d';
 import { spectrumModel } from '../src/lib/tutor/practice-figure/kinds/spectrum';
-import { BATCH2_FIXTURES, BATCH3_FIXTURES, BATCH4_FIXTURES, FIGURE_FIXTURES as ALL_FIXTURES, POLISH_FIXTURES } from './lib/practice-figure-fixtures';
+import { BATCH2_FIXTURES, BATCH3_FIXTURES, BATCH4_FIXTURES, BATCH5_FIXTURES, FIGURE_FIXTURES as ALL_FIXTURES, POLISH_FIXTURES } from './lib/practice-figure-fixtures';
 
 /** The fixtures this file is about: everything up to the polish round. Batch 3 (2026-10-12) has a test file of
  *  its own (test-practice-figure-batch3.ts), with pins of its own for what it redrew. */
 // Batch 4 (2026-10-14) likewise: test-practice-figure-batch4.ts, pins at c9a204fa.
-const BATCH3_IDS = new Set([...BATCH3_FIXTURES, ...BATCH4_FIXTURES].map((f) => f.id));
+// Batch 5 (2026-10-16) likewise: test-practice-figure-batch5.ts, pins at b85c7ae5.
+const BATCH3_IDS = new Set([...BATCH3_FIXTURES, ...BATCH4_FIXTURES, ...BATCH5_FIXTURES].map((f) => f.id));
 const FIGURE_FIXTURES = ALL_FIXTURES.filter((f) => !BATCH3_IDS.has(f.id));
 
 let passed = 0;
@@ -83,7 +84,7 @@ const POLISHED = readJson('practice-figure-changes-since-80c5afc1.json');
 /** The third round (2026-10-12) redrew a few more, each for a listed fix a–f — id → why. */
 const ROUND3 = readJson('practice-figure-changes-since-9613fe5e.json');
 /** The fourth round (2026-10-14) redrew a few of the earlier fixtures for its to-dos a–g — id → why. */
-const ROUND4 = readJson('practice-figure-changes-since-c9a204fa.json');
+const ROUND4 = { ...readJson('practice-figure-changes-since-c9a204fa.json'), ...readJson('practice-figure-changes-since-b85c7ae5.json') }; // and the fifth round's (a–k), pinned against b85c7ae5 by test-practice-figure-batch5.ts
 const POLISH_IDS = new Set(POLISH_FIXTURES.map((f) => f.id));
 
 test('the 72 fixtures of the first nine kinds and batch 1 render to the very same bytes as at ca8cc0c4 — but for the ones the polish round redrew', () => {

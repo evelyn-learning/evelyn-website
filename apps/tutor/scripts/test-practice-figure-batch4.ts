@@ -19,13 +19,16 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { BATCH2_FIGURE_KINDS, BATCH3_FIGURE_KINDS, BATCH4_FIGURE_KINDS, ALL_PRACTICE_FIGURE_KINDS, renderPracticeFigure, type PracticeFigureSpec } from '../src/lib/tutor/practice-figure/render';
-import { BATCH4_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
+import { BATCH4_FIXTURES, BATCH5_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 import { academySanitiser, fixtureInvariants, makeRunner, throwsSpec } from './lib/practice-figure-test-kit';
 
 const { test, finish } = makeRunner();
 const readJson = (name: string): Record<string, string> => JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', name), 'utf8')) as Record<string, string>;
 const sha = (spec: PracticeFigureSpec): string => createHash('sha256').update(renderPracticeFigure(spec).svg).digest('hex');
-const BATCH4_IDS = new Set(BATCH4_FIXTURES.map((f) => f.id));
+// Batch 5 (2026-10-16) has a test file and pins of its own (test-practice-figure-batch5.ts, b85c7ae5).
+const BATCH4_IDS = new Set([...BATCH4_FIXTURES, ...BATCH5_FIXTURES].map((f) => f.id));
+/** The fifth round redrew a few earlier fixtures for its to-dos a–k — id → why; pinned against b85c7ae5 there. */
+const ROUND5 = readJson('practice-figure-changes-since-b85c7ae5.json');
 
 console.log('\nNothing that was there has changed unasked:\n');
 
@@ -39,8 +42,8 @@ test('all 168 fixtures as they were at c9a204fa: byte-identical, except exactly 
     assert.ok(id in pins, `${id} is listed as changed but was not a fixture at c9a204fa`);
     assert.ok(/^[a-g] — /.test(redrawn[id]), `${id}: the reason names the to-do (a–g) it was changed for`);
   }
-  const changed = before.filter((f) => sha(f.spec) !== pins[f.id]).map((f) => f.id);
-  assert.deepEqual(changed, before.filter((f) => f.id in redrawn).map((f) => f.id), 'the fixtures that changed are exactly the listed ones');
+  const changed = before.filter((f) => sha(f.spec) !== pins[f.id] && !(f.id in ROUND5)).map((f) => f.id);
+  assert.deepEqual(changed, before.filter((f) => f.id in redrawn && !(f.id in ROUND5)).map((f) => f.id), 'the fixtures that changed are exactly the listed ones');
 });
 
 test('batch 4 is a list of its own: none of its kinds in the earlier lists; an unknown kind names them all', () => {

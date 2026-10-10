@@ -621,6 +621,50 @@ test('g. frustum: volume, lateral and total area, slant height', () => {
   assert.ok(/a frustum of a cone/.test(t) && t.includes('dimension label: (blank — a "?" box)') && /"3 cm" over a radius of the top circular face/.test(t) && !/\b5 cm/.test(t), t);
 });
 
+// ── round 5 (j): the frustum of a pyramid ───────────────────────────────────
+
+test('round 5 j. frustum of a pyramid: volume h/3·(A₁ + A₂ + √(A₁A₂)), lateral and total area, slant heights — worked cases', () => {
+  const f = (p: Args): PracticeFigureSpec => S('solid_3d', { solid: 'pyramid_frustum', ...p });
+  // 1. Squares 6 and 3, height 4: V = 4/3·(36 + 9 + 18) = 84; slant = √(4² + 1.5²) = √18.25.
+  const a = f({ base: 6, topBase: 3, height: 4, unit: 'cm' });
+  rw(a, 'solid_volume', {}, '84', '60');                                  // 60 = the mean of the faces × h, the classic slip
+  rw(a, 'solid_slant_height', {}, '4.272', '4');
+  rw(a, 'solid_surface_area', { part: 'lateral' }, '76.896', '153.79');   // 4 trapezia: 4·(6 + 3)/2·√18.25
+  rw(a, 'solid_surface_area', {}, '121.896', '76.896');                   // + 36 + 9
+  // 2. Squares 16 and 4, height 8: V = 8/3·(256 + 16 + 64) = 896; slant = √(8² + 6²) = 10; lateral 4·10·10 = 400; total 672.
+  const b = f({ base: 16, topBase: 4, height: 8, unit: 'm', labels: { height: '?', slant: 'auto' } });
+  rw(b, 'solid_volume', {}, '896', '1088');
+  rw(b, 'solid_slant_height', {}, '10', '8');
+  rw(b, 'solid_surface_area', { part: 'lateral' }, '400', '672');
+  rw(b, 'solid_surface_area', {}, '672', '400');
+  // 3. Squares 10 and 4, height 4: V = 4/3·(100 + 16 + 40) = 208; slant 5; lateral 4·7·5 = 140; total 256.
+  const c = f({ base: 10, topBase: 4, height: 4 });
+  rw(c, 'solid_volume', {}, '208', '232');
+  rw(c, 'solid_slant_height', {}, '5', '4');
+  rw(c, 'solid_surface_area', {}, '256', '140');
+  // 4. Rectangles 12 × 8 and 6 × 4, height 4: V = 4/3·(96 + 24 + 48) = 224; front slant √(4² + 2²) = √20, side slant √(4² + 3²) = 5;
+  //    lateral = (12 + 6)·√20 + (8 + 4)·5 = 140.498; total = + 96 + 24.
+  const d = f({ base: 12, width: 8, topBase: 6, height: 4, unit: 'cm', labels: { slant: 'auto', topWidth: 'auto' } });
+  rw(d, 'solid_volume', {}, '224', '240');
+  rw(d, 'solid_slant_height', {}, '4.472', '5');
+  rw(d, 'solid_slant_height', { face: 'side' }, '5', '4.472');
+  rw(d, 'solid_surface_area', { part: 'lateral' }, '140.498', '260.498');
+  rw(d, 'solid_surface_area', {}, '260.498', '140.498');
+  refused(() => run(a, 'solid_volume', { as: 'pi' }), /no π in its volume/);
+  refused(() => run(S('solid_3d', { solid: 'cone', radius: 3, height: 4 }), 'solid_slant_height', { face: 'side' }), /"face" is for a frustum of a pyramid only/);
+  refused(() => run(f({ base: 3, topBase: 6, height: 4 }), 'solid_volume', {}), /topBase: larger than base/);
+  // The transcription: what is printed, where; a blank stays a blank; a derived length is named only when printed.
+  const t = textOf(b);
+  assert.ok(/a frustum of a pyramid \(a pyramid with its tip cut off parallel to the base: a square bottom face/.test(t) && t.includes('dimension label: (blank — a "?" box)') && /"10 m" on a dashed line up the middle of the front sloping face/.test(t) && /"4 m" over the back edge of the top face/.test(t) && /"16 m" along the front edge of the bottom face/.test(t) && !/\b8 m/.test(t), t);
+  const td = textOf(d);
+  assert.ok(/a rectangular bottom face/.test(td) && /"8 cm" along the bottom edge running back/.test(td) && /"4 cm" beside the edge of the top face running back/.test(td) && /"4\.47 cm" on a dashed line/.test(td) && /not to scale/.test(textOf(f({ base: 12, width: 8, topBase: 6, height: 4, notToScale: true }))), td);
+  assert.ok(!/4\.27/.test(textOf(a)), 'the slant height is not printed unless asked for — and then not transcribed');
+  const ok = examineFigureItem(item(a, { problemText: 'What is the volume of the frustum of a square pyramid shown in the figure, in cubic centimetres?', alt: 'A frustum of a square pyramid with its two sides and its height labelled.', answer: '84', derivation: { checker: 'solid_volume', args: {} } }));
+  assert.deepEqual(ok.defects, []);
+  const bad = examineFigureItem(item(a, { problemText: 'What is the volume of the frustum of a square pyramid shown in the figure, in cubic centimetres?', alt: 'A frustum of a square pyramid with its two sides and its height labelled.', answer: '60', derivation: { checker: 'solid_volume', args: {} } }));
+  assert.ok(bad.defects.length > 0);
+});
+
 test('every batch-2 checker was exercised above', () => {
   for (const name of Object.keys(BATCH2_CHECKERS)) assert.ok(used.has(name), `${name} has no test`);
 });

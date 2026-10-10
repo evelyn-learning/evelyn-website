@@ -21,7 +21,7 @@
 import '../lib/no-db-env';
 import { compileExpression } from '../../src/lib/tutor/practice-figure/expr';
 import { SERIES_COLORS, niceBounds, niceStep, ticksBetween } from '../../src/lib/tutor/practice-figure/plot-frame';
-import { ALL_PRACTICE_FIGURE_KINDS, BATCH1_FIGURE_KINDS, PRACTICE_FIGURE_KINDS, renderPracticeFigure, titrationPH, type AnyPracticeFigureKind, type PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
+import { ALL_PRACTICE_FIGURE_KINDS, BATCH1_FIGURE_KINDS, PRACTICE_FIGURE_KINDS, inspectPracticeFigure, renderPracticeFigure, titrationPH, type AnyPracticeFigureKind, type PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
 import { PracticeFigureSpecError, Reader } from '../../src/lib/tutor/practice-figure/spec';
 import { exactTrig, fractionText, piText } from '../../src/lib/tutor/practice-figure/kinds/draw';
 import { unitCircleModel } from '../../src/lib/tutor/practice-figure/kinds/unit-circle';
@@ -29,7 +29,7 @@ import { vectorDiagramModel, type DiagramVector } from '../../src/lib/tutor/prac
 import { freeBodyModel, type FbdForce, type FreeBodyModel } from '../../src/lib/tutor/practice-figure/kinds/free-body';
 import { satisfies, shadedRegionModel, type ShadedRegionModel } from '../../src/lib/tutor/practice-figure/kinds/shaded-region';
 import { numberLineModel, signChartModel, type NumberLineModel } from '../../src/lib/tutor/practice-figure/kinds/number-line';
-import { boxPlotModel, distributionModel, histogramModel, normalArea, type BoxPlot } from '../../src/lib/tutor/practice-figure/kinds/distribution';
+import { boundOffTick, boundText, boxPlotModel, distributionModel, histogramModel, normalArea, type BoxPlot } from '../../src/lib/tutor/practice-figure/kinds/distribution';
 import { polarComplexModel, type PlanePoint } from '../../src/lib/tutor/practice-figure/kinds/polar-complex';
 import { punnettModel } from '../../src/lib/tutor/practice-figure/kinds/punnett';
 import { pedigreeModel, type PedigreeIndividual, type PedigreeModel } from '../../src/lib/tutor/practice-figure/kinds/pedigree';
@@ -38,6 +38,7 @@ import { validateItem, type GeneratedItem } from './core';
 import { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS, Batch2RuleError, describeBatch2, isBatch2Kind, type Batch2FigureKind } from './figure-core-batch2';
 import { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, describeBatch3, figureLetterClash, isBatch3Kind, type Batch3FigureKind } from './figure-core-batch3';
 import { BATCH4_CHECKERS, BATCH4_FIGURE_KINDS, describeBatch4, isBatch4Kind, type Batch4FigureKind } from './figure-core-batch4';
+import { BATCH5_CHECKERS, BATCH5_FIGURE_KINDS, describeBatch5, isBatch5Kind, type Batch5FigureKind } from './figure-core-batch5';
 
 /** `PRACTICE_FIGURE_KINDS` is the list the job offers its writer (figure-prompts.ts).
  *  The batch-1 kinds (unit circle, vectors, …) are transcribed and checked here
@@ -54,6 +55,9 @@ export { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, figureLetterClash };
 /** Batch 4 (conics, Venn diagrams and probability trees, mechanics set-ups, waves, energy levels, heating
  *  curves, electrochemical cells, sequence strips): figure-core-batch4.ts and its parts, reached the same way. */
 export { BATCH4_CHECKERS, BATCH4_FIGURE_KINDS };
+/** Batch 5 (replication forks, operon maps, cell-cycle wheels, transformers, induction loops, Doppler
+ *  wavefronts, photoelectric set-ups, data tables): figure-core-batch5.ts and its parts, reached the same way. */
+export { BATCH5_CHECKERS, BATCH5_FIGURE_KINDS };
 export type FigureKind = AnyPracticeFigureKind;
 
 /** A spec, a derivation or an item that breaks a rule of this track. The
@@ -227,7 +231,7 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
     case 'box_plot': case 'polar_complex': case 'punnett_square': case 'pedigree':
       return {};
     default:
-      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type) || isBatch4Kind(spec.type)) return {};
+      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type) || isBatch4Kind(spec.type) || isBatch5Kind(spec.type)) return {};
       return fail(`unknown figure kind "${spec.type}" — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
 }
@@ -645,15 +649,16 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
         if (p.showValues === true) printed.push(`the value of each bar is printed above it: ${cats.map((c, i) => `${c} — ${grouped.filter((g) => g.values[i] !== null).map((g) => `${g.label} ${fmt(g.values[i] as number)}`).join(', ')}`).join('; ')}`);
         out.push(`Each group has ${grouped.length} bars side by side, told apart by their fill and named in the legend: ${grouped.map((g, k) => `"${g.label}" (${['solid', 'hatched', 'outline only'][k]})`).join(', ')}.`);
         out.push('Groups, left to right, with the height of each bar read against the vertical axis:');
-        cats.forEach((c, i) => out.push(`  ${c}: ${grouped.map((g) => `${g.label} ${g.values[i] === null ? '(blank — a "?" box where the bar would be)' : readOff(g.values[i] as number, y)}`).join('; ')}`));
+        cats.forEach((c, i) => out.push(`  ${c}: ${grouped.map((g) => `${g.label} ${g.values[i] === null ? '(blank — a "?" box where the bar would be)' : p.showValues === true ? `${fmt(g.values[i] as number)} (printed above the bar)` : readOff(g.values[i] as number, y)}`).join('; ')}`));
         break;
       }
-      const values = (Array.isArray(p.values) ? p.values : []) as number[];
-      if (cats.length === 0 || cats.length !== values.length || !values.every(isNum)) fail('categories and values must be lists of the same length');
+      // A bar left out (null or "?") is a "?" box: a blank in the transcription, never a value.
+      const values = (Array.isArray(p.values) ? p.values : []).map((v) => (v === '?' ? null : v)) as Array<number | null>;
+      if (cats.length === 0 || cats.length !== values.length || !values.every((v) => v === null || isNum(v))) fail('categories and values must be lists of the same length');
       printed.push(`bar names under the bars: ${cats.map((c) => `"${c}"`).join(', ')}`);
-      if (p.showValues === true) printed.push(`the value of each bar is printed above it: ${cats.map((c, i) => `${c} ${fmt(values[i])}`).join(', ')}`);
+      if (p.showValues === true) printed.push(`the value of each bar is printed above it: ${cats.map((c, i) => (values[i] === null ? '' : `${c} ${fmt(values[i] as number)}`)).filter(Boolean).join(', ')}`);
       out.push('Bars, left to right, with the height of each read against the vertical axis:');
-      cats.forEach((c, i) => out.push(`  ${c}: ${readOff(values[i], y)}`));
+      cats.forEach((c, i) => out.push(`  ${c}: ${values[i] === null ? '(blank — a "?" box where the bar would be)' : p.showValues === true ? `${fmt(values[i] as number)} (printed above the bar)` : readOff(values[i] as number, y)}`));
       break;
     }
     case 'line_plot': {
@@ -795,7 +800,7 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       break;
     }
     default: {
-      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out) || describeBatch4(spec, printed, out));
+      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out) || describeBatch4(spec, printed, out) || describeBatch5(spec, printed, out));
       if (!k) fail(`unknown figure kind "${spec.type}"`);
       kind = k;
     }
@@ -823,6 +828,35 @@ const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven'
 const SUBSCRIPTS: Record<string, string> = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9', 'ₒ': 'o', 'ᵢ': 'i' };
 /** Text reduced to what two renderings of one label have in common: no spaces, plain subscripts and minus. */
 const altNorm = (t: string): string => t.replace(/[₀-₉ₒᵢ]/g, (c) => SUBSCRIPTS[c] ?? c).replace(/[−–]/g, '-').replace(/\s+/g, '').toLowerCase();
+
+const IRREGULAR_PLURALS: Record<string, string> = { mass: 'masses', radius: 'radii', axis: 'axes', locus: 'loci', focus: 'foci', vertex: 'vertices', index: 'indices' };
+function pluralNoun(w: string): string {
+  if (IRREGULAR_PLURALS[w]) return IRREGULAR_PLURALS[w];
+  if (/[^aeiou]y$/.test(w)) return w.replace(/y$/, 'ies');
+  if (/(?:s|x|z|ch|sh)$/.test(w)) return /[^s]s$/.test(w) && !/(?:us|is)$/.test(w) ? w : `${w}es`;
+  return `${w}s`;
+}
+/**
+ * The role of a label ("branch probability", "velocity before", "name under a bracket") for `n` labels: the
+ * HEAD noun takes the plural — the word before a preposition or a trailing symbol — and "a bracket" after
+ * the preposition becomes "the brackets" (one each). A role that is already plural is left as it is.
+ */
+export function altRolePlural(role: string, n: number): string {
+  if (n === 1) return role;
+  const cut = / (?:over|under|in|at|beside|above|below|on|of|before|after|between|along|round)(?: |$)/.exec(role);
+  let head = cut ? role.slice(0, cut.index) : role;
+  let tail = cut ? role.slice(cut.index) : '';
+  // A trailing symbol ("focal length f", "object distance d_o") is not the noun.
+  const sym = / (?:[A-Za-z]|\S*_\S*)$/.exec(head);
+  if (sym) {
+    tail = head.slice(sym.index) + tail;
+    head = head.slice(0, sym.index);
+  }
+  const words = head.split(' ');
+  words[words.length - 1] = pluralNoun(words[words.length - 1]);
+  const each = /^( \w+) an? (\w+)$/.exec(tail);
+  return words.join(' ') + (each ? `${each[1]} the ${pluralNoun(each[2])}` : tail);
+}
 
 /** Every piece of text a rendered figure prints, in document order. */
 export function svgTexts(svg: string): string[] {
@@ -853,7 +887,7 @@ export function svgTexts(svg: string): string[] {
  * most `ALT_LIMITS.max` characters.
  */
 export function describeForAlt(spec: PracticeFigureSpec, opts: { hide?: Array<string | number> } = {}): string {
-  const svg = renderPracticeFigure(spec).svg;
+  const { svg, facts } = inspectPracticeFigure(spec);
   const drawn = svgTexts(svg);
   // Joined with nothing between: a label wrapped over two lines is two <text> elements.
   const drawnNorm = altNorm(drawn.join(''));
@@ -895,16 +929,42 @@ export function describeForAlt(spec: PracticeFigureSpec, opts: { hide?: Array<st
     for (const q of quoted) if (!list.includes(q)) list.push(q);
     groups.set(role, list);
   }
-  const plural = (role: string, n: number): string => (n === 1 ? role : /entry$/.test(role) ? role.replace(/entry$/, 'entries') : /s$/.test(role) ? role : `${role}s`);
-  const labelled = [...groups].map(([role, vals]) => `${plural(role, vals.length)} ${vals.map((v) => `"${v}"`).join(', ')}`);
+  // The letters of a sequence strip are what it shows: each row as it is PRINTED (a hidden base is its "?").
+  if (spec.type === 'sequence_strip') {
+    const rows = Array.isArray(spec.params.rows) ? spec.params.rows.map((r) => (isObj(r) ? str(r.seq) : '')) : [];
+    const read = spec.params.variant === 'chromatogram' && spec.params.calls !== 'none' ? str(spec.params.seq) : '';
+    const hiddenAt = new Set(Array.isArray(spec.params.blank) ? spec.params.blank : []);
+    const lines = read ? [[...read.replace(/\s+/g, '')].map((ch, i) => (hiddenAt.has(i + 1) ? '?' : ch)).join('')] : rows.map((q) => q.replace(/\s+/g, ''));
+    const mine = lines.filter((q) => q && drawnNorm.includes(altNorm(q)) && !hidden(q));
+    if (mine.length) groups.set(read ? 'base letter over the peaks' : 'base letter', [...new Set(mine)]);
+  }
+  // A bar chart says what its bars measure — the label printed on the value axis (then not listed a second time).
+  const yLabel = spec.type === 'bar_chart' ? str(spec.params.yLabel) : undefined;
+  if (yLabel && /^a (grouped )?bar chart$/.test(kind) && (groups.get('axis label') ?? []).includes(yLabel)) {
+    kind = `${kind} of "${yLabel}"`;
+    const rest = (groups.get('axis label') as string[]).filter((v) => v !== yLabel);
+    if (rest.length) groups.set('axis label', rest);
+    else groups.delete('axis label');
+  }
+  const labelled = [...groups].map(([role, vals]) => `${altRolePlural(role, role.startsWith('base letter') ? 2 : vals.length)} ${vals.map((v) => `"${v}"`).join(', ')}`);
   const counts: string[] = [];
   const groupedBars = spec.type === 'bar_chart' && Array.isArray(spec.params.series);
+  const countWord = (n: number): string => (n < COUNT_WORDS.length ? COUNT_WORDS[n] : 'many');
+  // One function drawn in pieces (a jump, a hole) is ONE curve: the renderer's own grouping says so.
+  const pieces = spec.type === 'function_graph' && Array.isArray(spec.params.curves) ? spec.params.curves.length : 0;
+  if (pieces > 1 && facts.curveCount === 1) kind = `a graph of one function on a coordinate grid, drawn in ${countWord(pieces)} pieces`;
   for (const [key, one0, many0] of ALT_COUNTS) {
     // Grouped bars: `series` are the bars of a group (not lines), `categories` the groups.
     const [one, many] = !groupedBars ? [one0, many0] : key === 'series' ? ['bar in each group', 'bars in each group'] : key === 'categories' ? ['group of bars', 'groups of bars'] : [one0, many0];
     const v = spec.params[key];
-    if (Array.isArray(v) && v.length > 0) counts.push(`${v.length < COUNT_WORDS.length ? COUNT_WORDS[v.length] : 'many'} ${v.length === 1 ? one : many}`);
+    // Counted from what is DRAWN where the list is not the whole story: the curves of a function graph
+    // (pieces of one function count once), the marked points of a conic (its centre, foci, vertices too).
+    const n = spec.type === 'function_graph' && key === 'curves' ? (pieces > 1 && facts.curveCount === 1 ? 0 : facts.curveCount)
+      : spec.type === 'conic_graph' && key === 'points' ? facts.marks.length
+      : Array.isArray(v) ? v.length : 0;
+    if (n > 0) counts.push(`${countWord(n)} ${n === 1 ? one : many}`);
   }
+  if (spec.type === 'sequence_strip' && Array.isArray(spec.params.rows) && spec.params.rows.length > 0) counts.push(`${countWord(spec.params.rows.length)} ${spec.params.rows.length === 1 ? 'row' : 'rows'}`);
   const head = `${kind.charAt(0).toUpperCase()}${kind.slice(1)}${counts.length ? `, with ${counts.join(', ')}` : ''}.`;
   const tail = blanks > 0 ? ` ${blanks < COUNT_WORDS.length ? COUNT_WORDS[blanks].charAt(0).toUpperCase() + COUNT_WORDS[blanks].slice(1) : 'Several'} ${blanks === 1 ? 'place is' : 'places are'} left blank, shown as a boxed question mark.` : '';
   blanks = 0;
@@ -917,6 +977,49 @@ export function describeForAlt(spec: PracticeFigureSpec, opts: { hide?: Array<st
   }
   if (hidden(alt)) fail(`describeForAlt: a value to hide (${hide.join(', ')}) is part of what the figure itself is — it cannot be left out of a description`);
   return alt;
+}
+
+/**
+ * An expression in x and y as an item's option words it, with every product
+ * that is written WITHOUT a sign made explicit — but only where the text
+ * reads one way: "xy" → x*y, "2xy", "y(1 − y)" → y*(1 - y), "xsin(y)" →
+ * x*sin(y), "x²y" → x^2*y. Throws (the message says what to write instead)
+ * where two readings exist: a division followed by an unsigned product
+ * ("x/2y", "1/xy", "x/y(1 − y)"), an exponential whose exponent runs on
+ * ("e^2x", "e^xy", "2^x(y)"), and "y(x)" (function notation). Anything else
+ * is left for `compileExpression` to accept or refuse ("x2", "sin x", "pix").
+ * Used for option texts only — a figure's own `expr` is never rewritten.
+ */
+export function explicitProducts(expr: string): string {
+  const NAMES = ['sqrt', 'sin', 'cos', 'tan', 'abs', 'log', 'exp', 'ln'];
+  let t = expr.replace(/[−–]/g, '-').replace(/[·×]/g, '*').replace(/²/g, '^2').replace(/³/g, '^3');
+  const ambiguous = (why: string): never => { throw new Error(`cannot read expression "${expr.trim()}": ${why}`); };
+  if (/\/\s*(?:\d+\.?\d*|\.\d+|[xy])\s*(?=[A-Za-z(])/.test(t)) ambiguous('a division followed by an unsigned product reads two ways — put the divisor in brackets ("x/(2y)") or write the "*" ("(x/2)*y")');
+  if (/(?:(?<![A-Za-z])e|\d|\))\s*\^\s*-?(?:\d+\.?\d*|\.\d+)\s*(?=[A-Za-z(])/.test(t) || /\^\s*-?[xy]\s*(?=[A-Za-z(])/.test(t)) ambiguous('an exponent followed by an unsigned product reads two ways — put the exponent in brackets ("e^(2x)", "e^(x)*y")');
+  // A run of letters made only of x, y and (last) one function name is a product: "xy", "yx", "xsin".
+  t = t.replace(/[A-Za-z]+/g, (run) => {
+    const toks: string[] = [];
+    let i = 0;
+    while (i < run.length) {
+      const name = NAMES.find((n) => run.startsWith(n, i));
+      if (name && i + name.length === run.length) { toks.push(name); i += name.length; }
+      else if (run[i] === 'x' || run[i] === 'y') { toks.push(run[i]); i++; }
+      else return run;
+    }
+    return toks.join('*');
+  });
+  // x(…) / y(…): a product — unless the brackets hold just a variable (function notation).
+  t = t.replace(/(?<![A-Za-z])([xy])\s*\(/g, (whole, v: string, at: number) => {
+    let depth = 0;
+    let end = -1;
+    for (let j = at + whole.length - 1; j < t.length; j++) {
+      if (t[j] === '(') depth++;
+      else if (t[j] === ')' && --depth === 0) { end = j; break; }
+    }
+    if (end >= 0 && /^\s*[xy]\s*$/.test(t.slice(at + whole.length, end))) return ambiguous(`"${v}(${t.slice(at + whole.length, end).trim()})" reads as function notation — write the product with "*"`);
+    return `${v}*(`;
+  });
+  return t;
 }
 
 interface Lattice {
@@ -1120,7 +1223,9 @@ export function unreadableFeatures(spec: PracticeFigureSpec): string[] {
       pointsOf(spec).forEach((d, i) => { need(d.x, ax.x, `x of dot ${d.label || i + 1}`); need(d.y, ax.y, `y of dot ${d.label || i + 1}`); });
       break;
     case 'bar_chart':
-      ((Array.isArray(spec.params.values) ? spec.params.values : []) as number[]).forEach((v, i) => need(v, ax.y, `height of bar ${i + 1}`));
+      // With showValues every drawn bar carries its value: nothing has to be read off the grid.
+      if (spec.params.showValues === true) break;
+      ((Array.isArray(spec.params.values) ? spec.params.values : []) as unknown[]).forEach((v, i) => { if (isNum(v)) need(v, ax.y, `height of bar ${i + 1}`); });
       (barSeriesOf(spec) ?? []).forEach((g) => g.values.forEach((v, i) => { if (v !== null) need(v, ax.y, `height of the "${g.label}" bar of group ${i + 1}`); }));
       break;
     case 'reaction_coordinate': {
@@ -1285,30 +1390,46 @@ function dotOnGrid(d: Dot, ax: FigureAxes): Dot {
   mustBeOnGrid(d.y, ax.y, 'the y-coordinate of the point');
   return d;
 }
-/** The series of a GROUPED bar chart (`series` in place of `values`; null = a bar left out, drawn as a "?"), or null for a plain one. */
+/** The series of a GROUPED bar chart (`series` in place of `values`; null or "?" = a bar left out, drawn as a "?"), or null for a plain one. */
 function barSeriesOf(spec: PracticeFigureSpec): Array<{ label: string; values: Array<number | null> }> | null {
   const raw = spec.params.series;
   if (spec.type !== 'bar_chart' || raw === undefined || raw === null) return null;
   const n = Array.isArray(spec.params.categories) ? spec.params.categories.length : 0;
   if (!Array.isArray(raw) || raw.length < 2 || n === 0) return fail('series must be a list of 2 or 3 series, each with one value per category');
   return raw.map((g, k) => {
-    if (!isObj(g) || !str(g.label) || !Array.isArray(g.values) || g.values.length !== n || !g.values.every((v) => v === null || isNum(v))) return fail(`series[${k}] must be { label, values } with one value (or null for a bar left out) per category`);
-    return { label: str(g.label), values: g.values as Array<number | null> };
+    if (!isObj(g) || !str(g.label) || !Array.isArray(g.values) || g.values.length !== n || !g.values.every((v) => v === null || v === '?' || isNum(v))) return fail(`series[${k}] must be { label, values } with one value (or null for a bar left out) per category`);
+    return { label: str(g.label), values: g.values.map((v) => (v === '?' ? null : v)) as Array<number | null> };
   });
 }
+/** A bar as a checker meets it: `value` is null for a bar LEFT OUT (a "?" box) — it is read by nothing and counted in no total. */
+interface Bar { name: string; value: number | null; what: string }
+/** The height of a drawn bar: printed above it (showValues), else read off the grid — so it must lie on a gridline. */
+function barReading(spec: PracticeFigureSpec, v: number, ax: FigureAxes, what: string): number {
+  return spec.params.showValues === true ? v : mustBeOnGrid(v, ax.y, `the height of ${what}`);
+}
 /** The bars a checker reads: all of a plain chart, or ONE series of a grouped chart (`series` argument: its legend name or 0-based index). */
-function barsOf(spec: PracticeFigureSpec, ax: FigureAxes, a: P = {}): Array<{ name: string; value: number }> {
+function barsOf(spec: PracticeFigureSpec, ax: FigureAxes, a: P = {}): Bar[] {
   const cats = (Array.isArray(spec.params.categories) ? spec.params.categories : []).map((c) => str(c));
   const grouped = barSeriesOf(spec);
   if (grouped) {
     const g = barSeriesArg(grouped, a, 'series');
-    return cats.map((name, i) => ({ name, value: barHeight(g.values[i], ax, `the "${g.label}" bar of "${name}"`) }));
+    return cats.map((name, i) => {
+      const what = `the "${g.label}" bar of "${name}"`;
+      return { name, what, value: g.values[i] === null ? null : barReading(spec, g.values[i] as number, ax, what) };
+    });
   }
   if (a.series !== undefined) fail('derivation argument "series" is for a grouped bar chart — this chart has one bar per category');
-  const values = (Array.isArray(spec.params.values) ? spec.params.values : []) as number[];
+  const values = (Array.isArray(spec.params.values) ? spec.params.values : []) as unknown[];
   if (cats.length === 0 || cats.length !== values.length) fail('categories and values must be lists of the same length');
-  return cats.map((name, i) => ({ name, value: mustBeOnGrid(values[i], ax.y, `the height of the bar "${name}"`) }));
+  return cats.map((name, i) => {
+    const v = values[i];
+    const what = `the bar "${name}"`;
+    if (v === null || v === '?') return { name, what, value: null };
+    return { name, what, value: barReading(spec, isNum(v) ? v : fail(`values[${i}] must be a number (or null for a bar left out)`), ax, what) };
+  });
 }
+/** The bars that are drawn — a bar left out is in no total and no comparison. */
+const drawnBars = (bars: Bar[]): Array<Bar & { value: number }> => bars.filter((b): b is Bar & { value: number } => b.value !== null);
 function barSeriesArg<T extends { label: string }>(grouped: T[], a: P, k: string): T {
   const v = a[k];
   const hit = typeof v === 'string' ? grouped.filter((g) => g.label === v.trim()) : isNum(v) && grouped[v] ? [grouped[v]] : [];
@@ -1316,15 +1437,22 @@ function barSeriesArg<T extends { label: string }>(grouped: T[], a: P, k: string
   return hit[0];
 }
 /** The height of a drawn bar of a grouped chart; a bar left out ("?") has none to read. */
-function barHeight(v: number | null, ax: FigureAxes, what: string): number {
+function barHeight(spec: PracticeFigureSpec, v: number | null, ax: FigureAxes, what: string): number {
   if (v === null) return fail(`${what} is left out on the figure (a "?" box) — its height cannot be read off`);
-  return mustBeOnGrid(v, ax.y, `the height of ${what}`);
+  return barReading(spec, v, ax, what);
 }
-function barArg(bars: Array<{ name: string; value: number }>, a: P, k: string): { name: string; value: number } {
+/** The one bar an argument names (by name or 0-based index) — left out or not. */
+function barNamed(bars: Bar[], a: P, k: string): Bar {
   const v = a[k];
   const hit = typeof v === 'string' ? bars.filter((b) => b.name === v.trim()) : isNum(v) && bars[v] ? [bars[v]] : [];
   if (hit.length !== 1) return fail(`derivation argument "${k}" must be the name (or 0-based index) of exactly one bar`);
   return hit[0];
+}
+/** The one DRAWN bar an argument names; a bar left out cannot be read. */
+function barArg(bars: Bar[], a: P, k: string): Bar & { value: number } {
+  const b = barNamed(bars, a, k);
+  if (b.value === null) return fail(`${b.what} is left out on the figure (a "?" box) — its height cannot be read off (bar_missing solves for it from a total)`);
+  return b as Bar & { value: number };
 }
 function reactionOnGrid(spec: PracticeFigureSpec, ax: FigureAxes): Reaction {
   const r = reactionOf(spec);
@@ -1899,19 +2027,26 @@ function describeBatch1(spec: PracticeFigureSpec, printed: string[], out: string
       out.push(`A bell-shaped (normal) curve, symmetric about its centre, over a horizontal axis with seven evenly spaced ticks: the centre and three on each side (one per standard deviation). ${ticks.length ? `The ticks are labelled, left to right: ${ticks.join(', ')}.` : 'The ticks carry no numbers.'}`);
       const value = (v: number) => (m.axis === 'z' ? (v - m.mean) / m.sd : v);
       const tickAt = (k: number) => m.tickTexts[k + 3] || `the ${k === 0 ? 'centre' : `${ORDINALS[Math.abs(k) - 1]} tick ${k < 0 ? 'left' : 'right'} of the centre`}`;
-      const bound = (v: number, label?: string): string => {
+      const bound = (v: number, label?: string, under = ''): string => {
         const z = (v - m.mean) / m.sd;
         if (isMultiple(z, 1)) return m.axis === 'x' || m.axis === 'z' ? mn(value(v)) : tickAt(Math.round(z));
         // Drawn to scale: a bound a hair from a tick reads as "at about" that tick.
         const between = Math.abs(z - Math.round(z)) < 0.15 ? `very close to ${tickAt(Math.round(z))}` : `between ${tickAt(Math.floor(z))} and ${tickAt(Math.floor(z) + 1)}`;
         if (label) return `a bound marked "${label}" (${between})`;
-        return m.axis === 'x' || m.axis === 'z' ? mn(Number(value(v).toPrecision(8))) : `an unlabelled bound ${between}`;
+        // Only what is PRINTED under the bound is stated: a hidden value (boundLabels 'none' / 'blank') is not.
+        if (under === '?') return `a bound marked with a blank "?" box (${between})`;
+        return under ? mn(Number(value(v).toPrecision(8))) : `an unlabelled bound ${between}`;
       };
       for (const s of m.shade) {
         if (s.label) printed.push(`bound label: "${s.label}"`);
-        if (s.from === null) out.push(`Hatched left tail: everything up to ${bound(s.to as number, s.label)}.`);
-        else if (s.to === null) out.push(`Hatched right tail: everything from ${bound(s.from, s.label)} on.`);
-        else out.push(`Region under the curve hatched from ${bound(s.from, s.label)} to ${bound(s.to, s.label)}.`);
+        const b = (v: number): string => {
+          const under = s.label ? '' : boundText(m, s, v);
+          if (under) printed.push(under === '?' ? 'bound label: (blank — a "?" box)' : `bound label: "${under}"`);
+          return bound(v, s.label, under);
+        };
+        if (s.from === null) out.push(`Hatched left tail: everything up to ${b(s.to as number)}.`);
+        else if (s.to === null) out.push(`Hatched right tail: everything from ${b(s.from)} on.`);
+        else out.push(`Region under the curve hatched from ${b(s.from)} to ${b(s.to)}.`);
         if (m.showArea) {
           const area = normalArea(m.mean, m.sd, s.from, s.to).toFixed(4);
           printed.push(`area printed at the hatched region: "${area}"`);
@@ -2233,6 +2368,8 @@ const BATCH1_CHECKERS: Record<string, CheckerDef> = {
       let total = 0;
       for (const sh of m.shade) {
         if (method === 'exact') {
+          // An unlabelled bound between two ticks whose value is not printed: the figure does not say where it is.
+          for (const b of [sh.from, sh.to]) if (b !== null && !sh.label && boundOffTick(m, b) && m.boundLabels !== 'value') return fail(`a shaded bound falls between two ticks and its value is not printed (boundLabels: '${m.boundLabels}') — the figure does not settle the area; set boundLabels: 'value' when the bound is given`);
           total += normalArea(m.mean, m.sd, sh.from, sh.to);
           continue;
         }
@@ -2248,7 +2385,7 @@ const BATCH1_CHECKERS: Record<string, CheckerDef> = {
     },
   },
   normal_bound: {
-    kinds: ['distribution_curve'], args: '{ shade: index, end: from | to, as?: x | z }', returns: 'the value at one end of a shaded interval, on the axis or as a z-score',
+    kinds: ['distribution_curve'], args: '{ shade: index, end: from | to, as?: x | z }', returns: 'the value at one end of a shaded interval, on the axis or as a z-score (for a bound that is hidden or a "?": the value under it — the question must then give what fixes it, e.g. the shaded area)',
     run: (s, a) => {
       const m = modelOf(s, distributionModel);
       if (m.shade.length === 0) return fail('nothing is shaded on the curve');
@@ -2580,9 +2717,10 @@ export const CHECKERS: Record<string, CheckerDef> = {
   // bar_chart
   bar_value: { kinds: ['bar_chart'], args: '{ category: name or index, series?: legend name or index (grouped chart: required) }', returns: 'the height of one bar', run: (s, a, ax) => num(barArg(barsOf(s, ax, a), a, 'category').value) },
   bar_extreme: {
-    kinds: ['bar_chart'], args: '{ which: largest | smallest, series?: legend name or index (grouped chart: required) }', returns: 'the NAME of the tallest or shortest bar (of that series)',
+    kinds: ['bar_chart'], args: '{ which: largest | smallest, series?: legend name or index (grouped chart: required) }', returns: 'the NAME of the tallest or shortest bar (of that series) among the bars that are drawn',
     run: (s, a, ax) => {
-      const bars = barsOf(s, ax, a);
+      // A bar left out takes no part in the comparison.
+      const bars = drawnBars(barsOf(s, ax, a));
       const sign = pick(a, 'which', ['largest', 'smallest'] as const) === 'largest' ? 1 : -1;
       const best = Math.max(...bars.map((b) => sign * b.value));
       const hit = bars.filter((b) => sign * b.value === best);
@@ -2592,10 +2730,10 @@ export const CHECKERS: Record<string, CheckerDef> = {
   },
   bar_difference: { kinds: ['bar_chart'], args: '{ a: name or index, b: name or index, series?: legend name or index (grouped chart: required) }', returns: 'height of bar a minus height of bar b (within that series)', run: (s, a, ax) => num(barArg(barsOf(s, ax, a), a, 'a').value - barArg(barsOf(s, ax, a), a, 'b').value) },
   bar_sum: {
-    kinds: ['bar_chart'], args: '{ categories?: list of names or indices (all bars when left out), series?: legend name or index (grouped chart: required) }', returns: 'the sum of the heights of the listed bars (of that series)',
+    kinds: ['bar_chart'], args: '{ categories?: list of names or indices (all bars when left out), series?: legend name or index (grouped chart: required) }', returns: 'the sum of the heights of the listed bars (of that series); with no list, of every DRAWN bar — a bar left out as "?" is not counted',
     run: (s, a, ax) => {
       const bars = barsOf(s, ax, a);
-      const list = Array.isArray(a.categories) ? a.categories.map((c) => barArg(bars, { c }, 'c')) : bars;
+      const list = Array.isArray(a.categories) ? a.categories.map((c) => barArg(bars, { c }, 'c')) : drawnBars(bars);
       if (new Set(list).size !== list.length) fail('a bar is listed twice');
       return num(list.reduce((t, b) => t + b.value, 0));
     },
@@ -2605,17 +2743,47 @@ export const CHECKERS: Record<string, CheckerDef> = {
     if (b === 0) fail('bar b has height 0');
     return num(barArg(barsOf(s, ax, a), a, 'a').value / b);
   } },
+  bar_missing: {
+    kinds: ['bar_chart'], args: '{ category: name or index, series?: legend name or index (grouped chart: required), total?: number, mean?: number, across?: series | categories (grouped chart; default categories) }', returns: 'the height of the ONE bar left out as "?": the given total (or mean × the number of bars) minus the other bars — the bars of its series over the categories, or (across: series) the bars of its category over the series. The question must state the total or the mean',
+    run: (s, a, ax) => {
+      const grouped = barSeriesOf(s);
+      const across = a.across === undefined ? 'categories' : pick(a, 'across', ['series', 'categories'] as const);
+      let line: Bar[];
+      let target: Bar;
+      if (across === 'series') {
+        if (!grouped) return fail('across: "series" is for a grouped bar chart — this chart has one bar per category');
+        const cats = (Array.isArray(s.params.categories) ? s.params.categories : []).map((c) => str(c));
+        const i = cats.indexOf(barNamed(cats.map((name) => ({ name, value: 0, what: '' })), a, 'category').name);
+        const g = barSeriesArg(grouped, a, 'series');
+        line = grouped.map((o) => {
+          const what = `the "${o.label}" bar of "${cats[i]}"`;
+          return { name: o.label, what, value: o.values[i] === null ? null : barReading(s, o.values[i] as number, ax, what) };
+        });
+        target = line[grouped.indexOf(g)];
+      } else {
+        line = barsOf(s, ax, a);
+        target = barNamed(line, a, 'category');
+      }
+      if (target.value !== null) return fail(`${target.what} is drawn — bar_missing is for the bar left out as "?" (read a drawn bar with bar_value)`);
+      const others = line.filter((b) => b !== target);
+      const hidden = others.find((b) => b.value === null);
+      if (hidden) return fail(`${hidden.what} is left out as well — one total cannot fix two bars`);
+      if ((a.total === undefined) === (a.mean === undefined)) return fail('give the derivation argument "total" or "mean" (exactly one) — the number the question states');
+      const total = a.total !== undefined ? argNum(a, 'total') : argNum(a, 'mean') * line.length;
+      return num(total - others.reduce((t, b) => t + (b.value as number), 0));
+    },
+  },
   bar_series_difference: {
     kinds: ['bar_chart'], args: '{ category: name or index, a: legend name or index, b: legend name or index }', returns: 'grouped chart: in one category, the height of the bar of series a minus that of series b',
     run: (s, a, ax) => {
       const grouped = barSeriesOf(s);
       if (!grouped) return fail('bar_series_difference is for a grouped bar chart (series) — use bar_difference for a chart with one bar per category');
       const cats = (Array.isArray(s.params.categories) ? s.params.categories : []).map((c) => str(c));
-      const i = cats.indexOf(barArg(cats.map((name, k) => ({ name, value: k })), a, 'category').name);
+      const i = cats.indexOf(barArg(cats.map((name, k) => ({ name, value: k, what: `the category "${name}"` })), a, 'category').name);
       const ga = barSeriesArg(grouped, a, 'a');
       const gb = barSeriesArg(grouped, a, 'b');
       if (ga === gb) return fail('a and b are the same series');
-      return num(barHeight(ga.values[i], ax, `the "${ga.label}" bar of "${cats[i]}"`) - barHeight(gb.values[i], ax, `the "${gb.label}" bar of "${cats[i]}"`));
+      return num(barHeight(s, ga.values[i], ax, `the "${ga.label}" bar of "${cats[i]}"`) - barHeight(s, gb.values[i], ax, `the "${gb.label}" bar of "${cats[i]}"`));
     },
   },
   bar_series_gap_extreme: {
@@ -2628,9 +2796,12 @@ export const CHECKERS: Record<string, CheckerDef> = {
       const gb = barSeriesArg(grouped, a, 'b');
       if (ga === gb) return fail('a and b are the same series');
       const sign = pick(a, 'which', ['largest', 'smallest'] as const) === 'largest' ? 1 : -1;
-      const gaps = cats.map((c, i) => Math.abs(barHeight(ga.values[i], ax, `the "${ga.label}" bar of "${c}"`) - barHeight(gb.values[i], ax, `the "${gb.label}" bar of "${c}"`)));
-      const best = Math.max(...gaps.map((g) => sign * g));
-      const hit = cats.filter((_c, i) => Math.abs(sign * gaps[i] - best) < 1e-9);
+      // A category with a bar left out has no gap to compare.
+      const both = cats.map((_c, i) => ga.values[i] !== null && gb.values[i] !== null);
+      if (!both.some(Boolean)) return fail('no category has both bars drawn');
+      const gaps = cats.map((c, i) => (both[i] ? Math.abs(barHeight(s, ga.values[i], ax, `the "${ga.label}" bar of "${c}"`) - barHeight(s, gb.values[i], ax, `the "${gb.label}" bar of "${c}"`)) : NaN));
+      const best = Math.max(...gaps.filter((_g, i) => both[i]).map((g) => sign * g));
+      const hit = cats.filter((_c, i) => both[i] && Math.abs(sign * gaps[i] - best) < 1e-9);
       if (hit.length !== 1) return fail('two categories tie for that extreme');
       return { kind: 'label', value: hit[0] };
     },
@@ -2786,7 +2957,7 @@ export const CHECKERS: Record<string, CheckerDef> = {
     },
   },
   slope_match_equation: {
-    kinds: ['slope_field'], args: '{ options: list of 2–6 expressions for dy/dx in x and y, each as it is worded in the options ("x − y" or "dy/dx = x − y") }',
+    kinds: ['slope_field'], args: '{ options: list of 2–6 expressions for dy/dx in x and y, each as it is worded in the options ("x − y", "dy/dx = 2xy", "y(1 − y)", "x²y") — a product may be written without a sign where it reads one way only; "x/2y", "e^2x", "e^xy", "y(x)", "x2", "sin x" are refused: write the "*" or the brackets }',
     returns: 'the ONE listed option whose slope agrees with the drawn segment at every lattice point, as it was written — refused when none or more than one agrees (two options the lattice cannot tell apart)',
     run: (s, a, ax) => {
       const lat = latticeOf(s, ax.x!, ax.y!);
@@ -2794,10 +2965,9 @@ export const CHECKERS: Record<string, CheckerDef> = {
       if (!Array.isArray(options) || options.length < 2 || options.length > 6 || !options.every((o) => typeof o === 'string' && o.trim())) return fail('derivation argument "options" must be a list of 2 to 6 expressions for dy/dx');
       const pts = latticePoints(lat);
       const agree = (options as string[]).filter((o, i) => {
-        const body = o.replace(/^\s*(?:dy\s*\/\s*dx|y\s*[′'])\s*=\s*/i, '').replace(/[−–]/g, '-').replace(/[·×]/g, '*');
         let g: (x: number, y: number) => number;
         try {
-          g = compileExpression(body, ['x', 'y']);
+          g = compileExpression(explicitProducts(o.replace(/^\s*(?:dy\s*\/\s*dx|y\s*[′'])\s*=\s*/i, '')), ['x', 'y']);
         } catch (e) {
           return fail(`options[${i}]: ${(e as Error).message}`);
         }
@@ -2910,8 +3080,11 @@ export const CHECKERS: Record<string, CheckerDef> = {
 };
 
 /** Printing options of a kind that would put the result of a checker ON the figure. */
-const PRINTS_RESULT: Array<{ option: string; kind: FigureKind; checkers: RegExp }> = [
-  { option: 'showValues', kind: 'bar_chart', checkers: /^bar_/ },
+const PRINTS_RESULT: Array<{ option: string; kind: FigureKind; checkers: RegExp; noneUnless?: (spec: PracticeFigureSpec) => boolean }> = [
+  // Printed values state a single bar outright (bar_value, bar_extreme). A sum, a difference, a ratio or the
+  // bar left out as "?" still has to be worked out from them — so showValues is accepted with those checkers,
+  // and with no checker only when the chart has a bar left out (the question is then about that bar).
+  { option: 'showValues', kind: 'bar_chart', checkers: /^bar_(?:value|extreme)$/, noneUnless: (spec) => [spec.params.values, ...(Array.isArray(spec.params.series) ? spec.params.series.map((g) => (isObj(g) ? g.values : null)) : [])].some((vs) => Array.isArray(vs) && vs.some((v) => v === null || v === '?')) },
   { option: 'annotateValues', kind: 'reaction_coordinate', checkers: /^rc_/ },
   { option: 'showEquation', kind: 'scatter_plot', checkers: /^trend_/ },
   // The equation settles every reading of a slope field (a slope, a sign, an isocline, the matching equation).
@@ -2928,7 +3101,7 @@ export interface Derivation {
  *  cannot be read off the figure. */
 export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
   const def = CHECKERS[d.checker];
-  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker] ?? BATCH4_CHECKERS[d.checker];
+  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker] ?? BATCH4_CHECKERS[d.checker] ?? BATCH5_CHECKERS[d.checker];
   if (batch2) {
     if (!(batch2.kinds as readonly string[]).includes(spec.type)) return fail(`the checker "${d.checker}" is for ${batch2.kinds.join(' / ')}, not for ${spec.type}`);
     return viaBatch2(() => batch2.run(spec, d.args ?? {}));
@@ -2939,9 +3112,9 @@ export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
 }
 
 /** The checker list as the writer is shown it, grouped by figure kind. */
-export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind | Batch4FigureKind> = PRACTICE_FIGURE_KINDS): string {
+export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind | Batch4FigureKind | Batch5FigureKind> = PRACTICE_FIGURE_KINDS): string {
   return kinds.map((k) => {
-    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS), ...Object.entries(BATCH4_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
+    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS), ...Object.entries(BATCH4_CHECKERS), ...Object.entries(BATCH5_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
     return `${k}:\n${mine.map(([name, d]) => `  - ${name} ${d.args} → ${d.returns}`).join('\n')}`;
   }).join('\n');
 }
@@ -3082,7 +3255,7 @@ function parseJsonObject(text: unknown, name: string): P {
 /** A stem that tells the student to produce a figure. */
 const DRAW_RE = /(?:^|[.?!:;,]\s+|\b(?:then|and|to|also|please|must|should|now)\s+)(?:draw|sketch|shade|plot|construct|graph|mark|label)\b(?!\s+(?:shows?|showing|of|is|was|below|above|at\b))/i;
 /** A stem that points the student at the figure. */
-const POINTS_AT_FIGURE_RE = /\b(?:figure|graph|diagram|chart|plot|curve|profile|field|shown|line|bar|dot|arrow|axis|segment)s?\b/i;
+const POINTS_AT_FIGURE_RE = /\b(?:figure|graph|diagram|chart|plot|curve|profile|field|shown|table|line|bar|dot|arrow|axis|segment)s?\b/i;
 
 /** An option that argues for itself. */
 const OPTION_REASON_RE = /\b(?:because|since|so\s+that|therefore|thus|hence|due\s+to|as\s+a\s+result|which\s+means|owing\s+to)\b/i;
@@ -3172,7 +3345,7 @@ export function examineFigureItem(it: FigureItem): FigureExamination {
     else if (!/Label$/.test(t.where) && statesKey(t.text, false)) defects.push(`${t.where} "${t.text}" prints the answer on the figure`);
   }
   for (const pr of PRINTS_RESULT) {
-    if (it.figureSpec.type === pr.kind && it.figureSpec.params[pr.option] === true && (none || pr.checkers.test(it.derivation.checker))) {
+    if (it.figureSpec.type === pr.kind && it.figureSpec.params[pr.option] === true && (none ? !pr.noneUnless?.(it.figureSpec) : pr.checkers.test(it.derivation.checker))) {
       defects.push(`${pr.option} is on, which prints on the figure what the question asks the student to read — switch it off`);
     }
   }

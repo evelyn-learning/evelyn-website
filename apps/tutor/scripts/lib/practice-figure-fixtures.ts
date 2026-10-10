@@ -10,6 +10,7 @@
  */
 import type { PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
 import { BATCH4_FIXTURES } from './practice-figure-fixtures-batch4';
+import { BATCH5_FIXTURES } from './practice-figure-fixtures-batch5';
 
 export interface FigureFixture {
   id: string;
@@ -1744,3 +1745,6 @@ FIGURE_FIXTURES.push(...BATCH3_FIXTURES);
 /** Batch 4 (2026-10-14): practice-figure-fixtures-batch4.ts and its part files. */
 export { BATCH4_FIXTURES };
 FIGURE_FIXTURES.push(...BATCH4_FIXTURES);
+/** Batch 5 (2026-10-16): practice-figure-fixtures-batch5.ts and its part files. */
+export { BATCH5_FIXTURES };
+FIGURE_FIXTURES.push(...BATCH5_FIXTURES);

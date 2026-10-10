@@ -15,7 +15,7 @@ import '../lib/no-db-env';
 import assert from 'node:assert/strict';
 import type { PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
 import { FIXTURES } from '../lib/practice-figure-fixtures-b4-math';
-import { BATCH4_CHECKERS, FigureRuleError, axesOf, checkerCatalogue, compareDerived, describeFigure, describeForAlt, examineFigureItem, runChecker, type Derived, type FigureItem } from './figure-core';
+import { BATCH4_CHECKERS, FigureRuleError, axesOf, checkerCatalogue, compareDerived, describeFigure, describeForAlt, examineFigureItem, figureLetterClash, runChecker, type Derived, type FigureItem } from './figure-core';
 import { PART } from './figure-core-batch4-math';
 
 let passed = 0;
@@ -347,6 +347,32 @@ test('examineFigureItem: a right key passes, a wrong key is a defect, for one it
   const mcq = item(T2, { responseFormat: 'mcq', problemText: 'Use the tree diagram shown. What is the probability of drawing a red ball?', choices: ['0.28', '0.40', '0.90', '0.12'], answer: 'B', alt: 'A probability tree diagram.', derivation: { checker: 'tree_outcome', args: { label: 'Red' } } });
   assert.equal(examineFigureItem(mcq).derivation.status, 'derived');
   assert.equal(examineFigureItem({ ...mcq, answer: 'A' }).derivation.status, 'mismatch');
+});
+
+// ── round 5 (a): a conic's marks under other names ──────────────────────────
+
+test('round 5 a. conic_graph: a mark is transcribed by the name that is PRINTED (names, letterLabels); option letters no longer clash', () => {
+  const four = ['one', 'two', 'three', 'four'];
+  const plain = conic({ type: 'circle', center: [2, -1], radius: 4, show: { center: 'mark' } });
+  assert.ok(textOf(plain).includes('a marked point "C" (the centre)'));
+  assert.deepEqual(figureLetterClash(plain, four)?.letters, ['C']);
+  const named = conic({ type: 'circle', center: [2, -1], radius: 4, show: { center: 'value' }, names: { center: 'O' } });
+  assert.ok(textOf(named).includes('point label: "O (2, −1)"') && !/"C/.test(textOf(named)), textOf(named));
+  assert.equal(figureLetterClash(named, four), null);
+  assert.ok(describeForAlt(named).includes('"O (2, −1)"'));
+  const par = conic({ type: 'parabola', vertex: [0, 0], p: 2, axis: 'y', show: { vertex: 'mark', focus: 'mark' } }, { letterLabels: 'numerals', points: [{ x: 4, y: 2, label: 'A' }] });
+  const t = textOf(par);
+  assert.ok(t.includes('a marked point "1" (where the curve turns)') && t.includes('a marked point "2" (on the axis of symmetry, inside the curve)') && t.includes('point label: "3"') && !/"[VFA]"/.test(t), t);
+  assert.equal(figureLetterClash(par, ['a', 'b', 'c', 'd', 'e', 'f']), null);
+  assert.deepEqual(figureLetterClash(conic({ type: 'parabola', vertex: [0, 0], p: 2, axis: 'y', show: { focus: 'mark' } }), ['a', 'b', 'c', 'd', 'e', 'f'])?.letters, ['F']);
+  const ell = conic({ type: 'ellipse', center: [0, 0], rx: 5, ry: 3, show: { center: 'mark', foci: 'blank' }, names: { foci: ['P', 'Q'] } }, { letterLabels: 'roman' });
+  const te = textOf(ell);
+  assert.ok(te.includes('a marked point "I" (the centre)') && te.includes('point label: "II" (blank') && te.includes('point label: "III" (blank') && !te.includes('(4, 0)'), te);
+  // The checkers read the same conic whatever its marks are called.
+  rw(named, 'conic_measure', { want: 'radius' }, '4', '16');
+  rw(named, 'conic_center', {}, '(2, −1)', '(−2, 1)');
+  rw(ell, 'conic_measure', { want: 'focal_distance' }, '8', '10');
+  rw(ell, 'conic_point', { feature: 'focus', which: 1 }, '(4, 0)', '(5, 0)');
 });
 
 test('every checker of the part was exercised', () => {

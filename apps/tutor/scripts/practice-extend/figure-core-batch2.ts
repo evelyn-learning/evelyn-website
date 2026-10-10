@@ -535,16 +535,17 @@ function solidText(m: SolidModel, printed: string[], out: string[]): string {
     }
     return 'a region on axes and the solid it sweeps out when revolved';
   }
-  const names: Record<string, string> = { prism: 'a rectangular box (prism)', triangular_prism: 'a triangular prism', cylinder: 'a cylinder', cone: 'a cone', sphere: 'a sphere', hemisphere: 'a hemisphere (dome) on its flat face', pyramid: 'a pyramid on a square base', frustum: 'a frustum of a cone (a cone with its tip cut off parallel to the base: two circular faces of different sizes)' };
+  const names: Record<string, string> = { prism: 'a rectangular box (prism)', triangular_prism: 'a triangular prism', cylinder: 'a cylinder', cone: 'a cone', sphere: 'a sphere', hemisphere: 'a hemisphere (dome) on its flat face', pyramid: 'a pyramid on a square base', frustum: 'a frustum of a cone (a cone with its tip cut off parallel to the base: two circular faces of different sizes)', pyramid_frustum: `a frustum of a pyramid (a pyramid with its tip cut off parallel to the base: a ${m.dims.width === undefined ? 'square' : 'rectangular'} bottom face, a smaller ${m.dims.width === undefined ? 'square' : 'rectangular'} top face of the same shape centred over it, and four sloping faces)` };
   const what = m.solid === 'composite' ? `a ${m.top} on top of a ${m.bottom === 'prism' ? 'box with a square base' : 'cylinder'} (they share the same ${m.bottom === 'prism' ? 'square' : 'circle'})` : names[m.solid];
   if (m.notToScale) printed.push('note: "not to scale"');
   out.push(`A line drawing of ${what}; hidden edges are dashed.${m.notToScale ? ' It carries the note "not to scale".' : ''}`);
   const where: Record<string, string> = {
-    length: m.solid === 'triangular_prism' ? 'along the edge running back (the length of the prism)' : 'along the front bottom edge', width: 'along the edge running back (the depth)',
-    height: m.solid === 'triangular_prism' ? 'on the dashed height of the triangular face' : m.solid === 'composite' ? `beside the ${m.bottom === 'prism' ? 'box' : 'cylinder'} (its height)` : m.solid === 'cone' || m.solid === 'pyramid' ? 'beside the dashed line from the apex to the centre of the base (the height)' : m.solid === 'frustum' ? 'on the dashed line joining the centres of the two circular faces (the height)' : 'beside the vertical side (the height)',
-    base: m.solid === 'triangular_prism' ? 'along the base of the triangular face' : 'along the front edge of the square base', radius: m.solid === 'frustum' ? 'under a radius of the bottom circular face' : 'on a radius of the circular face',
+    length: m.solid === 'triangular_prism' ? 'along the edge running back (the length of the prism)' : 'along the front bottom edge', width: m.solid === 'pyramid_frustum' ? 'along the bottom edge running back (the depth of the bottom face)' : 'along the edge running back (the depth)',
+    topBase: 'over the back edge of the top face (the side of the top face parallel to the front)', topWidth: 'beside the edge of the top face running back (its depth)',
+    height: m.solid === 'triangular_prism' ? 'on the dashed height of the triangular face' : m.solid === 'composite' ? `beside the ${m.bottom === 'prism' ? 'box' : 'cylinder'} (its height)` : m.solid === 'cone' || m.solid === 'pyramid' ? 'beside the dashed line from the apex to the centre of the base (the height)' : m.solid === 'frustum' ? 'on the dashed line joining the centres of the two circular faces (the height)' : m.solid === 'pyramid_frustum' ? 'against a dimension line beside the solid, level with its two faces (the height; a dashed line joins the centres of the faces)' : 'beside the vertical side (the height)',
+    base: m.solid === 'triangular_prism' ? 'along the base of the triangular face' : m.solid === 'pyramid_frustum' ? 'along the front edge of the bottom face' : 'along the front edge of the square base', radius: m.solid === 'frustum' ? 'under a radius of the bottom circular face' : 'on a radius of the circular face',
     topRadius: 'over a radius of the top circular face',
-    topHeight: `against the height of the ${m.top} on top`, slant: m.solid === 'frustum' ? 'beside the slanted side (the slant height)' : `on the slant height of the ${m.top ?? m.solid}`,
+    topHeight: `against the height of the ${m.top} on top`, slant: m.solid === 'pyramid_frustum' ? 'on a dashed line up the middle of the front sloping face (its slant height)' : m.solid === 'frustum' ? 'beside the slanted side (the slant height)' : `on the slant height of the ${m.top ?? m.solid}`,
   };
   for (const [k, s] of Object.entries(m.labels)) {
     printed.push(`dimension label: ${shown(s)}`);
@@ -572,6 +573,14 @@ function solidMeasure(m: SolidModel, want: 'volume' | 'surface' | 'lateral'): { 
     case 'frustum': {
       const lat = PI * (d.radius + d.topRadius) * Math.hypot(d.height, d.radius - d.topRadius);
       return { pi: true, value: want === 'volume' ? (PI * d.height * (d.radius ** 2 + d.radius * d.topRadius + d.topRadius ** 2)) / 3 : want === 'lateral' ? lat : lat + PI * (d.radius ** 2 + d.topRadius ** 2) };
+    }
+    case 'pyramid_frustum': {
+      const w = d.width ?? d.base;
+      const tw = (w * d.topBase) / d.base;
+      const [a1, a2] = [d.base * w, d.topBase * tw];
+      // Two trapezia on the edges `base` (slant height d.slant) and two on the edges `width` (d.slantSide).
+      const lat = (d.base + d.topBase) * d.slant + (w + tw) * d.slantSide;
+      return { pi: false, value: want === 'volume' ? (d.height * (a1 + a2 + Math.sqrt(a1 * a2))) / 3 : want === 'lateral' ? lat : lat + a1 + a2 };
     }
     case 'pyramid': {
       const lat = 2 * d.base * Math.hypot(d.base / 2, d.height);
@@ -1046,8 +1055,13 @@ export const BATCH2_CHECKERS: Record<string, Batch2CheckerDef> = {
     },
   },
   solid_slant_height: {
-    kinds: ['solid_3d'], args: '{}', returns: 'the slant height of a cone, pyramid or frustum (also when it is the top of a composite)',
-    run: (s) => { const m = modelOf(s, solidModel); return m.dims.slant === undefined ? fail('this solid has no slant height') : measured(m.dims.slant); },
+    kinds: ['solid_3d'], args: '{ face?: front | side }', returns: 'the slant height of a cone, pyramid or frustum (also when it is the top of a composite); for a frustum of a pyramid: of its FRONT sloping face (face: side for a face on the edges running back — they differ only when the faces are not square)',
+    run: (s, a) => {
+      const m = modelOf(s, solidModel);
+      if (m.dims.slant === undefined) return fail('this solid has no slant height');
+      if (a.face !== undefined && m.solid !== 'pyramid_frustum') return fail('derivation argument "face" is for a frustum of a pyramid only');
+      return measured(m.solid === 'pyramid_frustum' && pick(a, 'face', ['front', 'side'] as const, 'front') === 'side' ? m.dims.slantSide : m.dims.slant);
+    },
   },
   solid_revolution_volume: {
     kinds: ['solid_3d'], args: '{ as?: pi | decimal }', returns: 'the exact volume of the solid of revolution as a fraction times π ("3π/10"): disks or washers about the x-axis, shells about the y-axis — or as a decimal',

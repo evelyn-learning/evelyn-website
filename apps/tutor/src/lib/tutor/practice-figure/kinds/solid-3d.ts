@@ -7,7 +7,7 @@
  *           hiddenEdges?: 'all' | 'few';   // 'few' leaves out the dashed edges that only show
  *                                          //   the far side of a box or pyramid. Default 'all',
  *                                          //   except a pyramid on a prism, and a pyramid whose
- *                                          //   slant height is drawn: 'few' (with every hidden
+ *                                          //   (or frustum of a pyramid whose) slant height is drawn: 'few' (with every hidden
  *                                          //   edge those drawings are a tangle at 340 px)
  *           notToScale?: boolean (false); title?: string }
  * LABEL = 'auto' (the value with the unit) | any text ("x", "2r") | "?" (a
@@ -23,6 +23,12 @@
  * solid 'frustum'          { radius; topRadius; height } // a cone cut parallel to its base: `radius` is the bottom
  *                                                        //   circle, `topRadius` the top one (either may be the
  *                                                        //   larger); labels may include slant
+ * solid 'pyramid_frustum'  { base; topBase; height;     // a pyramid cut parallel to its base: a square of side `base`
+ *                            width? }                    //   under a smaller square of side `topBase`. With `width`
+ *                                                        //   (the depth of the bottom face) both faces are rectangles
+ *                                                        //   of the same shape: the top is topBase × width·topBase/base.
+ *                                                        //   labels may include slant (the slant height of the FRONT
+ *                                                        //   face, the one on the edge `base`) and, with `width`, topWidth
  * solid 'composite'        { bottom: 'cylinder' | 'prism'; top: 'cone' | 'hemisphere' | 'pyramid';
  *                            radius | base;              // cylinder: radius. prism: a square base of side `base`
  *                            height;                     // of the bottom solid
@@ -49,7 +55,7 @@ import type { Drawn, Reader } from '../spec';
 import { INK, MUTED, hatched, text, titleBlock } from './draw';
 import { ellipseD, facts, halfEllipseD, lab, numStr, polyPath, stroke, type Notes, type Pt } from './draw2';
 
-export const SOLIDS = ['prism', 'triangular_prism', 'cylinder', 'cone', 'sphere', 'hemisphere', 'pyramid', 'composite', 'revolution', 'frustum'] as const;
+export const SOLIDS = ['prism', 'triangular_prism', 'cylinder', 'cone', 'sphere', 'hemisphere', 'pyramid', 'composite', 'revolution', 'frustum', 'pyramid_frustum'] as const;
 export type SolidName = (typeof SOLIDS)[number];
 
 export interface RevCurve { poly: number[]; sqrt: boolean; label?: string; f: (x: number) => number }
@@ -71,7 +77,7 @@ export interface SolidModel {
 
 const DIMS: Record<Exclude<SolidName, 'composite' | 'revolution'>, string[]> = {
   prism: ['length', 'width', 'height'], triangular_prism: ['base', 'height', 'length'], cylinder: ['radius', 'height'],
-  cone: ['radius', 'height'], sphere: ['radius'], hemisphere: ['radius'], pyramid: ['base', 'height'], frustum: ['radius', 'topRadius', 'height'],
+  cone: ['radius', 'height'], sphere: ['radius'], hemisphere: ['radius'], pyramid: ['base', 'height'], frustum: ['radius', 'topRadius', 'height'], pyramid_frustum: ['base', 'topBase', 'height'],
 };
 
 export function solidModel(r: Reader): SolidModel {
@@ -114,30 +120,41 @@ export function solidModel(r: Reader): SolidModel {
     if (!tops.includes(p.top as string)) r.fail(`top must be ${tops.map((s) => `'${s}'`).join(' or ')} on a ${bottom}`);
     top = p.top as SolidModel['top'];
     names = [bottom === 'cylinder' ? 'radius' : 'base', 'height', ...(top === 'hemisphere' ? [] : ['topHeight'])];
-  } else names = DIMS[solid];
+  } else names = solid === 'pyramid_frustum' && p.width !== undefined && p.width !== null ? [...DIMS[solid], 'width'] : DIMS[solid];
   const dims: Record<string, number> = {};
   for (const k of names) dims[k] = r.positive(p[k], k);
   const lo = p.labels === undefined || p.labels === null ? {} : r.obj(p.labels, 'labels');
-  const slantOk = solid === 'cone' || solid === 'pyramid' || solid === 'frustum' || top === 'cone' || top === 'pyramid';
+  const slantOk = solid === 'cone' || solid === 'pyramid' || solid === 'frustum' || solid === 'pyramid_frustum' || top === 'cone' || top === 'pyramid';
+  /** Dimensions that follow from the given ones and are printed only when asked for. */
+  const derived = [...(slantOk ? ['slant'] : []), ...(solid === 'pyramid_frustum' && dims.width !== undefined ? ['topWidth'] : [])];
+  if (solid === 'pyramid_frustum' && !(dims.topBase < dims.base)) r.fail(dims.topBase === dims.base ? 'topBase: equal to base — that is a prism, not a frustum' : 'topBase: larger than base — a frustum of a pyramid is drawn standing on its larger face (swap base and topBase)');
   if (solid === 'frustum' && dims.radius === dims.topRadius) r.fail('topRadius: equal to radius — that is a cylinder, not a frustum');
-  for (const k of Object.keys(lo)) if (!names.includes(k) && !(k === 'slant' && slantOk)) r.fail(`labels.${k}: this solid has no such dimension (${[...names, ...(slantOk ? ['slant'] : [])].join(', ')})`);
-  if (slantOk) {
+  for (const k of Object.keys(lo)) if (!names.includes(k) && !derived.includes(k)) r.fail(`labels.${k}: this solid has no such dimension (${[...names, ...derived].join(', ')})`);
+  if (solid === 'pyramid_frustum') {
+    // The front face stands on the edge `base` and leans back over half the difference of the DEPTHS;
+    // a side face stands on the edge `width` and leans in over half the difference of the sides.
+    const w = dims.width ?? dims.base;
+    const tw = (w * dims.topBase) / dims.base;
+    if (dims.width !== undefined) dims.topWidth = tw;
+    dims.slant = Math.hypot(dims.height, (w - tw) / 2);
+    dims.slantSide = Math.hypot(dims.height, (dims.base - dims.topBase) / 2);
+  } else if (slantOk) {
     const h = dims.topHeight ?? dims.height;
     const half = solid === 'frustum' ? dims.radius - dims.topRadius : dims.radius ?? dims.base / 2;
     dims.slant = Math.hypot(h, half);
   }
   const labels: Record<string, string> = {};
-  for (const k of [...names, ...(slantOk ? ['slant'] : [])]) {
+  for (const k of [...names, ...derived]) {
     const v = lo[k];
     const auto = `${numStr(dims[k], 2)}${unit ? ` ${unit}` : ''}`;
-    if (v === null || (v === undefined && k === 'slant')) continue;
+    if (v === null || (v === undefined && derived.includes(k))) continue;
     labels[k] = v === undefined || v === 'auto' ? auto : r.str(v, `labels.${k}`, 14);
   }
   if (p.hiddenEdges !== undefined && p.hiddenEdges !== null && p.hiddenEdges !== 'all' && p.hiddenEdges !== 'few') r.fail("hiddenEdges must be 'all' or 'few'");
   // A pyramid with its slant height drawn already has three dashed lines fanning out of the apex
   // (height, slant, far edge): the far edge is the one that says least.
   const pyramidSlant = (solid === 'pyramid' || top === 'pyramid') && labels.slant !== undefined;
-  const hiddenEdges = (p.hiddenEdges as 'all' | 'few' | undefined | null) ?? ((solid === 'composite' && bottom === 'prism') || pyramidSlant ? 'few' : 'all');
+  const hiddenEdges = (p.hiddenEdges as 'all' | 'few' | undefined | null) ?? ((solid === 'composite' && bottom === 'prism') || pyramidSlant || (solid === 'pyramid_frustum' && labels.slant !== undefined) ? 'few' : 'all');
   return { ...base, dims, labels, bottom, top, hiddenEdges };
 }
 
@@ -275,7 +292,7 @@ export function renderSolid(r: Reader, uid: string): Drawn {
   /** The widest radius of a round solid (a frustum's top may be the larger circle). */
   const rr = m.solid === 'frustum' ? Math.max(d.radius, d.topRadius) : d.radius;
   const footW = round ? 2 * rr : kind === 'prism' && m.solid === 'prism' ? d.length : d.base ?? d.length;
-  const depth = round ? 0 : m.solid === 'prism' ? d.width : m.solid === 'triangular_prism' ? d.length : d.base;
+  const depth = round ? 0 : m.solid === 'prism' ? d.width : m.solid === 'triangular_prism' ? d.length : m.solid === 'pyramid_frustum' ? d.width ?? d.base : d.base;
   const tall = m.solid === 'sphere' ? 2 * d.radius : m.solid === 'hemisphere' ? d.radius : m.solid === 'composite' ? d.height + (m.top === 'hemisphere' ? d.radius : d.topHeight) : d.height;
   const extW = footW + depth * DX;
   const extH = tall + depth * DY + (round ? d.radius * SQUASH : 0) + (m.solid === 'frustum' ? d.topRadius * SQUASH : 0);
@@ -460,6 +477,46 @@ export function renderSolid(r: Reader, uid: string): Drawn {
         plate([e.c[0], hi - lo >= 22 ? (lo + hi) / 2 : e.ry >= 24 ? e.c[1] - e.ry / 2 : (e.c[1] + tp.c[1]) / 2], L.height);
       }
       if (L.slant !== undefined) put(mid(on(e, th), on(tp, th)), L.slant, 'start', 8, 4);
+      break;
+    }
+    case 'pyramid_frustum': {
+      const [b, tb, h] = [d.base, d.topBase, d.height];
+      const w = d.width ?? b;
+      const tw = (w * tb) / b;
+      const [ox, oz] = [(b - tb) / 2, (w - tw) / 2];
+      const [fl, fr, bl, br] = [P(0, 0), P(b, 0), P(0, 0, w), P(b, 0, w)];
+      const [tfl, tfr, tbl, tbr] = [P(ox, h, oz), P(ox + tb, h, oz), P(ox, h, oz + tw), P(ox + tb, h, oz + tw)];
+      // Seen from the front, the right and above: the front, right and top faces always show. The left
+      // and the back face lean towards the viewer only on a very flat frustum.
+      const leftSeen = ox * DY > h * DX;
+      const backSeen = oz * DY > h;
+      lineS(fl, fr, tfr, tfl, fl);
+      lineS(tfl, tbl, tbr, tfr);
+      lineS(fr, br, tbr);
+      const far = (seen: boolean, ...pts: Pt[]) => { if (seen) lineS(...pts); else if (!few) lineH(...pts); };
+      far(leftSeen, fl, bl);
+      far(backSeen, bl, br);
+      far(leftSeen || backSeen, bl, tbl);
+      if (h * k < 44 || tb * k < 30) notes.push({ code: 'crowded', message: `${h * k < 44 ? 'height' : 'topBase'}: the frustum is drawn so ${h * k < 44 ? 'flat' : 'narrow at the top'} that its edges and labels crowd at 340 px — use less extreme proportions` });
+      put(mid(fl, fr), L.base, 'middle', 0, 16);
+      put(mid(tbl, tbr), L.topBase, 'middle', 0, L.topBase === '?' ? -11 : -6);
+      put(mid(fr, br), L.width, 'start', 7, 9);
+      put(mid(tfl, tbl), L.topWidth, 'end', -8, 2);
+      if (L.height !== undefined) {
+        // The dashed axis joins the centres of the two faces; the height is written outside, on the
+        // left, against a dimension line level with them (the right is where the depth is labelled).
+        const [c0, c1] = [P(b / 2, 0, w / 2), P(b / 2, h, w / 2)];
+        lineH(c1, c0);
+        square(c0, c1, P(b, 0, w / 2));
+        const dx = fl[0] - 13;
+        ink.marks.push(`<path d="M${n2(dx)},${n2(c1[1])}V${n2(c0[1])}M${n2(dx - 4)},${n2(c1[1])}h8M${n2(dx - 4)},${n2(c0[1])}h8" ${stroke(MUTED, 1)}/>`);
+        put([dx, (c0[1] + c1[1]) / 2], L.height, 'end', -7, 4);
+      }
+      if (L.slant !== undefined) {
+        const [a0, a1] = [mid(fl, fr), mid(tfl, tfr)];
+        ink.hidden.push(polyPath([a1, a0]));
+        plate(mid(a0, a1), L.slant);
+      }
       break;
     }
     case 'pyramid': {

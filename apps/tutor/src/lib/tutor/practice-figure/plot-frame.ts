@@ -24,6 +24,9 @@ export const INK = '#111827';
 export const MUTED = '#4b5563';
 const GRID_MAJOR = '#cbd5e1';
 const GRID_MINOR = '#e9eef4';
+/** `minorGridStrong`: both kinds of line one step darker, the hierarchy kept. */
+const GRID_MINOR_STRONG = '#cbd5e1';
+const GRID_MAJOR_STRONG = '#94a3b8';
 const FRAME = '#94a3b8';
 
 /** Series colours: blue / vermilion / bluish green / raspberry / plum /
@@ -162,6 +165,19 @@ function minorDivisions(step: number): number {
   return Math.abs(mant - 5) < 1e-6 ? 5 : 2;
 }
 
+/** The spacing of the lighter gridlines drawn between the numbered ones `step` apart. */
+export const minorStepOf = (step: number): number => step / minorDivisions(step);
+
+/**
+ * Where a plotted value sits on an axis with numbered lines `step` apart:
+ * on a numbered line, on a lighter line between two of them, or on neither
+ * (a reader can then only estimate it).
+ */
+export function gridPlace(v: number, step: number): 'major' | 'minor' | 'off' {
+  const on = (u: number): boolean => Math.abs(v / u - Math.round(v / u)) < 1e-6;
+  return on(step) ? 'major' : on(minorStepOf(step)) ? 'minor' : 'off';
+}
+
 /** Decimal places needed to write `step` exactly (0.25 → 2, 5 → 0), up to 6. */
 export function stepDecimals(step: number): number {
   for (let d = 0; d <= 6; d++) {
@@ -260,6 +276,10 @@ export interface FrameOptions {
    *  For figures read by COUNTING SQUARES: a half-unit line contradicts a
    *  stem that says "each square is 1 unit". */
   minorGrid?: boolean;
+  /** `true` ⇒ the gridlines are drawn one step darker — the lighter lines as dark as the numbered ones
+   *  usually are, the numbered ones darker still. For figures in which a plotted value has to be read
+   *  off a lighter line (a bar that ends between two numbers). Default false: drawn as ever. */
+  minorGridStrong?: boolean;
 }
 
 export interface Frame {
@@ -339,8 +359,9 @@ export function buildFrame(o: FrameOptions): Frame {
     for (const t of xTicks) major.push(`M${n2(X(t))},${n2(plot.y)}V${n2(plot.y + plot.h)}`);
   }
   if (o.minorGrid === false) minor.length = 0;
-  if (minor.length > 0) parts.push(`<path d="${minor.join('')}" stroke="${GRID_MINOR}" stroke-width="0.7" fill="none"/>`);
-  if (major.length > 0) parts.push(`<path d="${major.join('')}" stroke="${GRID_MAJOR}" stroke-width="0.9" fill="none"/>`);
+  const strong = o.minorGridStrong === true && minor.length > 0;
+  if (minor.length > 0) parts.push(`<path d="${minor.join('')}" stroke="${strong ? GRID_MINOR_STRONG : GRID_MINOR}" stroke-width="${strong ? '0.8' : '0.7'}" fill="none"/>`);
+  if (major.length > 0) parts.push(`<path d="${major.join('')}" stroke="${strong ? GRID_MAJOR_STRONG : GRID_MAJOR}" stroke-width="${strong ? '1.1' : '0.9'}" fill="none"/>`);
   parts.push(`<rect x="${n2(plot.x)}" y="${n2(plot.y)}" width="${n2(plot.w)}" height="${n2(plot.h)}" fill="none" stroke="${FRAME}" stroke-width="1"/>`);
 
   if (o.zeroAxes !== false) {

@@ -47,6 +47,8 @@ export type LegibilityWarningCode =
   | 'ambiguous_blank'
   | 'not_to_scale'
   | 'crowded'
+  /** A plotted value that sits on no gridline of an axis the spec fixed — it can only be estimated. */
+  | 'off_grid'
   | 'not_renderable';
 
 export interface LegibilityWarning {
