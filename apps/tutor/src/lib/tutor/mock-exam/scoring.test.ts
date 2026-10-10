@@ -19,10 +19,12 @@ async function run() {
     assert.equal(curveScaled(anchors, 25), 400);   // clamped
     assert.equal(curveScaled(anchors, 13), 330);
   });
-  await test('answersMatch: mcq letter, numeric tolerance, text', () => {
+  await test('answersMatch: mcq letter, numeric equality (no tolerance), text', () => {
     assert.ok(answersMatch({ responseFormat: 'mcq', answer: 'B' }, 'b'));
     assert.ok(!answersMatch({ responseFormat: 'mcq', answer: 'B' }, 'C'));
-    assert.ok(answersMatch({ responseFormat: 'numeric', answer: '42' }, '42.2'));
+    assert.ok(answersMatch({ responseFormat: 'numeric', answer: '42' }, '42.0'));
+    // Equal, never close — the full table is scripts/test-mock-exam-numeric-scoring.ts.
+    assert.ok(!answersMatch({ responseFormat: 'numeric', answer: '42' }, '42.2'));
     assert.ok(!answersMatch({ responseFormat: 'numeric', answer: '42' }, '44'));
     assert.ok(!answersMatch({ responseFormat: 'mcq', answer: 'B' }, undefined));
   });

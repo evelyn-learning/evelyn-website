@@ -1,5 +1,12 @@
 import type { ExamBlueprint, CurveAnchor } from './blueprints';
 import type { SeedableItem } from './fixtures';
+import {
+  numericRuleVerdict,
+  parseNumericKey,
+  readAnswerNumber,
+  readSingleNumber,
+  type NumberForm,
+} from '../portal/numeric-answer-rule';
 
 /** Structural subset scoring needs to check an answer against an item. */
 export interface AnswerCheckItem {
@@ -8,10 +15,48 @@ export interface AnswerCheckItem {
 }
 
 /**
+ * A numeric KEY as the shared rule reads it. A plain number (integer, decimal,
+ * fraction — the only forms scripts/seed-mock-form.ts's lint lets in) goes
+ * through the shared key parser; any other single number ("1,200", "1.2e3",
+ * "25%", "42 cm") through the shared reader, taken at its written value.
+ * `null` = the key is not one number.
+ */
+function numericKeyForm(answer: string): NumberForm | null {
+  const plain = parseNumericKey(answer);
+  if (plain) return { value: plain.value, kind: plain.form, places: plain.places };
+  const read = readSingleNumber(answer);
+  return read ? { value: read.value, kind: read.kind, places: read.places } : null;
+}
+
+/**
+ * Numeric item: the shared numeric rule (../portal/numeric-answer-rule.ts) —
+ * the answer must EQUAL the key at the precision the key is written to. No
+ * tolerance band: until 2026-10-10 this was `parseFloat` on both sides with a
+ * 1% relative tolerance, which read only the leading number ("3/2" was 3,
+ * "1,200" was 1) and accepted 42.2 for a key of 42. Do not add one back.
+ *
+ * Exam-specific, because a mock exam has no model judge to hand an undecided
+ * answer to (practice grading does):
+ *   - an answer that is not ONE number ("2 or 3", "1 1/2", words) is wrong;
+ *   - a unit after the number is ignored — the item asks for a number and
+ *     nothing here can check a unit; a percent sign leaves the value as
+ *     written ("25%" is 25);
+ *   - one key per item; a key that is not a number falls back to trimmed,
+ *     case-insensitive text equality.
+ */
+function numericAnswerMatches(answer: string, given: string): boolean {
+  const key = numericKeyForm(answer);
+  if (!key) return given.toLowerCase() === answer.toLowerCase();
+  const ans = readAnswerNumber(given);
+  if (!ans) return false;
+  return numericRuleVerdict(key, { value: ans.value, kind: ans.kind, places: ans.places });
+}
+
+/**
  * MCQ: letter compare, case-insensitive, matches on the leading letter of
- * `given` (so 'b' or 'B) foo' both match answer 'B'). Numeric: 1% relative
- * tolerance. Everything else: trimmed, case-insensitive equality.
- * `undefined`/empty `given` always fails to match.
+ * `given` (so 'b' or 'B) foo' both match answer 'B'). Numeric: the shared
+ * numeric rule, see `numericAnswerMatches`. Everything else: trimmed,
+ * case-insensitive equality. `undefined`/empty `given` always fails to match.
  */
 export function answersMatch(item: AnswerCheckItem, given: string | undefined): boolean {
   if (given === undefined) return false;
@@ -25,13 +70,7 @@ export function answersMatch(item: AnswerCheckItem, given: string | undefined): 
     return !!givenLetter && givenLetter === answerLetter;
   }
 
-  if (item.responseFormat === 'numeric') {
-    const g = parseFloat(trimmedGiven);
-    const a = parseFloat(answer);
-    if (Number.isNaN(g) || Number.isNaN(a)) return false;
-    const tolerance = Math.abs(a) * 0.01 || 1e-9;
-    return Math.abs(g - a) <= tolerance;
-  }
+  if (item.responseFormat === 'numeric') return numericAnswerMatches(answer, trimmedGiven);
 
   return trimmedGiven.toLowerCase() === answer.toLowerCase();
 }
