@@ -423,6 +423,65 @@ test('schematic_map checkers: distance by the scale bar, direction, extreme and 
   rw(blank, 'map_distance', { from: 'K', to: 'L' }, '800', '8');
 });
 
+test('round 4 (a): a labelled dotted line is transcribed with its label, a blank stays a blank; mol_hbond_line tells a hydrogen bond from a line that is not one', () => {
+  const spec = fx('fix4-a-hbond-labels');
+  const t = textOf(spec);
+  assert.ok(t.includes('A dotted line labelled "1" joins atom 3 of structure 1 to atom 1 of structure 2.') && t.includes('A dotted line labelled "2" joins atom 2 of structure 1 to atom 2 of structure 3.'), t);
+  assert.ok(describeFigure(spec).printed.includes('dotted-line label: "1"'));
+  // Line 1: H (on O) ··· O with lone pairs — a hydrogen bond. Line 2: H ··· H — not one.
+  rw(spec, 'mol_hbond_line', { line: '1' }, 'yes', 'no');
+  rw(spec, 'mol_hbond_line', { line: '2' }, 'no', 'yes');
+  rw(spec, 'mol_hbond_line', { line: 0 }, 'yes', 'no');
+  // Textbook cases: N–H···O is one; C–H···O is not; O–H···O within the reach of an oxygen WITHOUT lone pairs (H₃O⁺) is not.
+  const pair = (donorEl: string, acceptor: Args): PracticeFigureSpec => S('molecular_structure', {
+    arrangement: 'shared',
+    molecules: [{ atoms: [{ id: 'X', el: donorEl, x: 0, y: 0 }, { id: 'H', el: 'H', x: 1, y: 0 }], bonds: [{ a: 'X', b: 'H' }] }, { origin: [2.8, 0], atoms: [{ id: 'A', x: 0, y: 0, ...acceptor }, { id: 'R', el: 'C', x: 1, y: 0 }], bonds: [{ a: 'A', b: 'R' }] }],
+    hbonds: [{ from: { mol: 0, atom: 'H' }, to: { mol: 1, atom: 'A' }, label: 'X' }],
+  });
+  rw(pair('N', { el: 'O', lonePairs: 3, charge: -1 }), 'mol_hbond_line', { line: 'X' }, 'yes', 'no');
+  rw(pair('C', { el: 'O', lonePairs: 3, charge: -1 }), 'mol_hbond_line', { line: 'X' }, 'no', 'yes');
+  rw(pair('O', { el: 'C' }), 'mol_hbond_line', { line: 'X' }, 'no', 'yes');
+  rw(pair('F', { el: 'F', lonePairs: 3 }), 'mol_hbond_line', { line: 'X' }, 'yes', 'no');
+  refused(() => run(spec, 'mol_hbond_line', { line: '7' }), /no dotted line is labelled "7"/);
+  refused(() => run(fx('mol-lewis-water'), 'mol_hbond_line', { line: 0 }), /no dotted line is drawn/);
+  const blank = JSON.parse(JSON.stringify(spec)) as PracticeFigureSpec;
+  (blank.params.hbonds as Args[])[0].label = '?';
+  assert.ok(textOf(blank).includes('A dotted line labelled (blank — a "?" box) joins') && !describeFigure(blank).printed.includes('dotted-line label: "1"'));
+  assert.ok(!/"1"/.test(describeForAlt(blank)), describeForAlt(blank));
+});
+
+test('round 4 (c): magnet_north_end reads a blank magnet through the OTHER magnet — its printed poles plus force arrows, the lines in the gap, or the interaction the question states', () => {
+  const spec = fx('fix4-c-magnet-blank-interaction');
+  const t = textOf(spec);
+  assert.ok(t.includes('An arrow labelled "F" is drawn over each magnet: the two arrows point away from each other.') && t.includes('The right-hand magnet: each half holds (blank — a "?" box).') && !/right-hand magnet[^\n]*"N"/.test(t), t);
+  // Left magnet S|N, they repel → the facing end of the right magnet is N: its north end is the left one.
+  rw(spec, 'magnet_north_end', { magnet: 1 }, 'left', 'right');
+  rw(spec, 'magnet_north_end', { magnet: 0 }, 'right', 'left');
+  const two = (first: Args, second: Args, extra: Args = {}): PracticeFigureSpec => S('field_diagram', { variant: 'bar_magnet', magnets: [first, second], ...extra });
+  // Standard cases, all four: N|S + attract → the facing end of the blank magnet is the opposite pole.
+  rw(two({ north: 'right' }, { north: 'right', poles: 'blank' }, { lines: false, showInteraction: true }), 'magnet_north_end', { magnet: 1 }, 'right', 'left');
+  rw(two({ north: 'left' }, { north: 'left', poles: 'blank' }, { lines: false, showInteraction: true }), 'magnet_north_end', { magnet: 1 }, 'left', 'right');
+  rw(two({ north: 'left' }, { north: 'right', poles: 'blank' }, { lines: false, showInteraction: true }), 'magnet_north_end', { magnet: 1 }, 'right', 'left');
+  rw(two({ north: 'left', poles: 'blank' }, { north: 'left' }, { lines: false, showInteraction: true }), 'magnet_north_end', { magnet: 0 }, 'left', 'right');
+  // Lines without arrowheads: the gap shows whether they join or bend apart.
+  rw(two({ north: 'right' }, { north: 'left', poles: 'blank' }, { arrows: false }), 'magnet_north_end', { magnet: 1 }, 'left', 'right');
+  // Nothing drawn, but the question says "they attract".
+  const bare = two({ north: 'right' }, { north: 'right', poles: 'blank' }, { lines: false });
+  refused(() => run(bare, 'magnet_north_end', { magnet: 1 }), /the other magnet's poles are printed, but nothing says whether the two attract or repel/);
+  rw(bare, 'magnet_north_end', { magnet: 1, stated: 'attract' }, 'right', 'left');
+  refused(() => run(bare, 'magnet_north_end', { magnet: 1, stated: 'repel' }), /"stated" says the magnets repel, but as the figure is specified they attract/);
+  refused(() => run(fx('magnet-blank-poles'), 'magnet_north_end', { stated: 'repel' }), /there is only one magnet/);
+  // Both magnets blank: force arrows alone fix nothing.
+  refused(() => run(two({ north: 'right', poles: 'blank' }, { north: 'left', poles: 'blank' }, { lines: false, showInteraction: true }), 'magnet_north_end', { magnet: 1 }), /nothing on the figure fixes which end is north/);
+  // The item path: the key is derived, and the alt draft does not give the blank poles away.
+  const it = item(spec, { responseFormat: 'mcq', problemText: 'Two bar magnets push each other apart, as the force arrows in the figure show. Which end of the right-hand magnet is its north pole?', choices: ['the left end', 'the right end', 'neither end', 'both ends'], answer: 'A', derivation: { checker: 'magnet_north_end', args: { magnet: 1 } }, alt: 'Two bar magnets end to end with a force arrow over each; the halves of one are marked with letters and the halves of the other with boxed question marks.' });
+  assert.equal(examineFigureItem(it).derivation.status, 'derived', JSON.stringify(examineFigureItem(it)));
+  const five = textOf(fx('fix4-c-magnet-five-points'));
+  for (const l of ['K', 'L', 'M', 'R', 'T']) assert.ok(five.includes(`A dot labelled "${l}"`), l);
+  rw(fx('fix4-c-magnet-five-points'), 'magnet_field_direction', { point: 'L' }, 'left', 'right');
+  rw(fx('fix4-c-magnet-five-points'), 'magnet_field_direction', { point: 'R' }, 'right', 'left');
+});
+
 test('bar-magnet checkers: field direction, compass needles, which end is north, attract or repel', () => {
   const one = fx('magnet-single-field-lines');
   rw(one, 'magnet_field_direction', { point: 'P' }, 'left', 'right');

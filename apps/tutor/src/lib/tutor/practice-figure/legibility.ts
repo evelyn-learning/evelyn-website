@@ -159,7 +159,9 @@ export function checkFigureLegibility(spec: PracticeFigureSpec): LegibilityWarni
         Math.abs(mk.cy - y) <= BORDER_TOLERANCE ? 'top' : '',
         Math.abs(mk.cy - (y + h)) <= BORDER_TOLERANCE ? 'bottom' : '',
       ].filter(Boolean);
-      if (sides.length > 0) warnings.push({ code: 'feature_on_border', message: `${mk.what} sits on the ${sides.join(' and ')} border of the plot — widen the range past it` });
+      const out = mk.cx < x - BORDER_TOLERANCE || mk.cx > x + w + BORDER_TOLERANCE || mk.cy < y - BORDER_TOLERANCE || mk.cy > y + h + BORDER_TOLERANCE;
+      if (out && /^series\[/.test(mk.what)) warnings.push({ code: 'feature_on_border', message: `${mk.what} lies outside the plot — widen the range to include it` });
+      else if (sides.length > 0) warnings.push({ code: 'feature_on_border', message: `${mk.what} sits on the ${sides.join(' and ')} border of the plot — widen the range past it` });
     }
   }
 

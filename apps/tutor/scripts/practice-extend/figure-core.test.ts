@@ -295,11 +295,171 @@ test('scatter plot checkers', () => {
   refused(() => run({ ...S.scatter, params: { ...S.scatter.params, trendLine: undefined } }, 'trend_value', { x: 1 }), /no drawn line/);
 });
 
+test('grouped bar chart (series): transcription, alt and checkers', () => {
+  const G: PracticeFigureSpec = { type: 'bar_chart', params: { categories: ['Red', 'Pink', 'White'], series: [{ label: 'Observed', values: [30, 45, 25] }, { label: 'Expected', values: [25, 50, 25] }], yMin: 0, yMax: 60, yStep: 10, yLabel: 'Number of plants' } };
+  const d = describeFigure(G);
+  assert.match(d.text, /^The figure is a grouped bar chart\./);
+  assert.ok(d.printed.includes('legend entry: "Observed"') && d.printed.includes('legend entry: "Expected"'));
+  assert.match(d.text, /Pink: Observed 45; Expected 50/);
+  assert.match(d.text, /"Observed" \(solid\), "Expected" \(hatched\)/);
+  const alt = describeForAlt(G);
+  assert.match(alt, /^A grouped bar chart, with two bars in each group, three groups of bars\./);
+  assert.ok(!/\d/.test(alt.replace(/"[^"]*"/g, '')), alt);
+  // Every plain checker reads ONE series of a grouped chart.
+  rightAndWrong(G, 'bar_value', { category: 'Pink', series: 'Expected' }, '50', '45');
+  rightAndWrong(G, 'bar_value', { category: 0, series: 0 }, '30', '25');
+  rightAndWrong(G, 'bar_sum', { series: 'Observed' }, '100', '95');
+  rightAndWrong(G, 'bar_difference', { a: 'Pink', b: 'Red', series: 'Expected' }, '25', '15');
+  rightAndWrong(G, 'bar_ratio', { a: 'Pink', b: 'White', series: 'Expected' }, '2', '1.8');
+  assert.deepEqual(run(G, 'bar_extreme', { which: 'largest', series: 'Observed' }), { kind: 'label', value: 'Pink' });
+  rightAndWrong(G, 'bar_extreme', { which: 'smallest', series: 'Observed' }, 'White', 'Red');
+  // Between the series.
+  rightAndWrong(G, 'bar_series_difference', { category: 'Pink', a: 'Expected', b: 'Observed' }, '5', '-5');
+  rightAndWrong(G, 'bar_series_difference', { category: 'Red', a: 'Expected', b: 'Observed' }, '-5', '5');
+  const H: PracticeFigureSpec = { ...G, params: { ...G.params, series: [{ label: 'Observed', values: [30, 40, 30] }, { label: 'Expected', values: [25, 50, 25] }] } };
+  rightAndWrong(H, 'bar_series_gap_extreme', { a: 'Observed', b: 'Expected', which: 'largest' }, 'Pink', 'Red');
+  refused(() => run(G, 'bar_series_gap_extreme', { a: 'Observed', b: 'Expected', which: 'largest' }), /tie/);
+  rightAndWrong(G, 'bar_series_gap_extreme', { a: 'Observed', b: 'Expected', which: 'smallest' }, 'White', 'Pink');
+  // Refusals: no series named, an unknown one, the same one twice, a plain chart, a height off the grid.
+  refused(() => run(G, 'bar_value', { category: 'Pink' }), /"series" must be the legend name .* "Observed", "Expected"/);
+  refused(() => run(G, 'bar_value', { category: 'Pink', series: 'Predicted' }), /"series" must be the legend name/);
+  refused(() => run(G, 'bar_series_difference', { category: 'Pink', a: 'Observed', b: 0 }), /same series/);
+  refused(() => run(S.bars, 'bar_series_difference', { category: 'East', a: 0, b: 1 }), /for a grouped bar chart/);
+  refused(() => run(S.bars, 'bar_value', { category: 'East', series: 0 }), /this chart has one bar per category/);
+  refused(() => run({ ...G, params: { ...G.params, series: [{ label: 'Observed', values: [30, 43, 25] }, { label: 'Expected', values: [25, 50, 25] }] } }, 'bar_value', { category: 'Pink', series: 0 }), /does not lie on a gridline/);
+  assert.ok(unreadableFeatures({ ...G, params: { ...G.params, series: [{ label: 'Observed', values: [30, 43, 25] }, { label: 'Expected', values: [25, 50, 25] }] } }).length === 1);
+  // A bar left out: a blank in the transcription, never a value; a checker cannot read it; the others still can.
+  const B: PracticeFigureSpec = { ...G, params: { ...G.params, series: [{ label: 'Observed', values: [30, 45, 25] }, { label: 'Expected', values: [25, null, 25] }] } };
+  assert.match(describeFigure(B).text, /Pink: Observed 45; Expected \(blank — a "\?" box where the bar would be\)/);
+  assert.match(describeForAlt(B), /One place is left blank, shown as a boxed question mark\./);
+  refused(() => run(B, 'bar_value', { category: 'Pink', series: 'Expected' }), /left out on the figure/);
+  refused(() => run(B, 'bar_sum', { series: 'Expected' }), /left out on the figure/);
+  rightAndWrong(B, 'bar_value', { category: 'Pink', series: 'Observed' }, '45', '50');
+  // Through examineFigureItem: derived; showValues is refused with a bar checker; a legend name twice is a hygiene defect.
+  const q = { problemText: 'The bar chart shows observed and expected counts. How many pink plants were expected?', alt: 'A grouped bar chart.', derivation: { checker: 'bar_value', args: { category: 'Pink', series: 'Expected' } } };
+  const ok = examineFigureItem(item(G, { ...q, answer: '50' }));
+  assert.deepEqual(ok.defects, []);
+  assert.equal(ok.derivation.status, 'derived');
+  assert.equal(examineFigureItem(item(G, { ...q, answer: '45' })).derivation.status, 'mismatch');
+  assert.ok(examineFigureItem(item({ ...G, params: { ...G.params, showValues: true } }, { ...q, answer: '50' })).defects.some((x) => /showValues is on/.test(x)));
+  assert.ok(hygieneDefects({ ...G, params: { ...G.params, series: [{ label: 'Observed', values: [30, 45, 25] }, { label: 'Observed', values: [25, 50, 25] }] } }).some((x) => /twice/.test(x)));
+  assert.match(checkerCatalogue(['bar_chart']), /bar_series_difference[\s\S]*bar_series_gap_extreme/);
+});
+
 test('slope field checker', () => {
   rightAndWrong(S.field, 'slope_at', { x: 2, y: 1 }, '1', '-1');
   rightAndWrong(S.field, 'slope_at', { x: -1, y: 1 }, '-2', '2');
   refused(() => run(S.field, 'slope_at', { x: 0.5, y: 1 }), /no segment is drawn/);
   refused(() => run(S.field, 'slope_at', { x: 3, y: -3 }), /told apart by eye/);
+});
+
+test('slope field: sign of the slope in a region', () => {
+  // dy/dx = x − y: positive below the line y = x, negative above it, zero on it.
+  rightAndWrong(S.field, 'slope_sign', { region: 'below', line: { slope: 1, intercept: 0 } }, 'positive', 'negative');
+  rightAndWrong(S.field, 'slope_sign', { region: 'above', line: { slope: 1, intercept: 0 } }, 'negative', 'positive');
+  rightAndWrong(S.field, 'slope_sign', { region: 'on', line: { slope: 1, intercept: 0 } }, 'zero', 'positive');
+  rightAndWrong(S.field, 'slope_sign', { region: 'quadrant_4' }, 'positive', 'zero');
+  rightAndWrong(S.field, 'slope_sign', { region: 'quadrant_2' }, 'negative', 'positive');
+  rightAndWrong(S.field, 'slope_sign', { region: 'rectangle', xMin: 1, yMax: 0 }, 'positive', 'negative');
+  const xy: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: 'x*y' } };
+  rightAndWrong(xy, 'slope_sign', { region: 'quadrant_3' }, 'positive', 'negative');
+  rightAndWrong(xy, 'slope_sign', { region: 'quadrant_2' }, 'negative', 'positive');
+  const xOnly: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: 'x' } };
+  rightAndWrong(xOnly, 'slope_sign', { region: 'left_of', x: 0 }, 'negative', 'zero');
+  rightAndWrong(xOnly, 'slope_sign', { region: 'right_of', x: 0 }, 'positive', 'negative');
+  // As a multiple-choice item: the keyed option must be the only one that states the sign.
+  const mcq = (answer: string) => item(S.field, { responseFormat: 'mcq', choices: ['Positive', 'Negative', 'Zero', 'Undefined'], answer });
+  const d = run(S.field, 'slope_sign', { region: 'quadrant_4' });
+  assert.equal(compareDerived(mcq('A'), d).match, true);
+  assert.equal(compareDerived(mcq('B'), d).match, false);
+  // Refusals: mixed signs, an empty region, a vertical segment, a bad region.
+  refused(() => run(S.field, 'slope_sign', { region: 'quadrant_1' }), /do not share a sign \(3 rising, 3 falling, 3 flat\)/);
+  refused(() => run(S.field, 'slope_sign', { region: 'all' }), /do not share a sign/);
+  refused(() => run(S.field, 'slope_sign', { region: 'rectangle', xMin: 2.2, xMax: 2.8 }), /holds 0 drawn segments/);
+  refused(() => run({ type: 'slope_field', params: { ...S.field.params, expr: 'x/y' } }, 'slope_sign', { region: 'right_of', x: 0 }), /vertical segment/);
+  refused(() => run(S.field, 'slope_sign', { region: 'north' }), /"region" must be one of/);
+  refused(() => run(S.field, 'slope_sign', { region: 'above' }), /"line" must be \{ slope, intercept \}/);
+});
+
+test('slope field: isoclines — the line along which the slope is a given value', () => {
+  rightAndWrong(S.field, 'slope_isocline', { slope: 0 }, 'y = x', 'y = −x');
+  rightAndWrong(S.field, 'slope_isocline', { slope: 1 }, 'y = x − 1', 'y = x + 1');
+  rightAndWrong(S.field, 'slope_isocline', { slope: -2 }, 'y = x + 2', 'y = x − 2');
+  const xOnly: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: 'x - 1' } };
+  rightAndWrong(xOnly, 'slope_isocline', { slope: 0 }, 'x = 1', 'y = 1');
+  rightAndWrong(xOnly, 'slope_isocline', { slope: -2 }, 'x = −1', 'x = 1');
+  const logistic: PracticeFigureSpec = { type: 'slope_field', params: { expr: 'y + 1', xRange: [-3, 3], yRange: [-3, 3], xStep: 1, yStep: 1, gridStep: 1 } };
+  rightAndWrong(logistic, 'slope_isocline', { slope: 0 }, 'y = −1', 'y = 1');
+  // dy/dx = −x/y (circles): flat on the y-axis, vertical on the x-axis (the origin has no segment).
+  const circ: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: '-x/y' } };
+  rightAndWrong(circ, 'slope_isocline', { slope: 'vertical' }, 'y = 0', 'x = 0');
+  rightAndWrong(circ, 'slope_isocline', { slope: 0 }, 'x = 0', 'y = 0');
+  rightAndWrong(circ, 'slope_isocline', { slope: -1 }, 'y = x', 'y = −x');
+  const halfs: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: 'x - 2*y' } };
+  rightAndWrong(halfs, 'slope_isocline', { slope: 0 }, 'y = 0.5x', 'y = 2x');
+  // Refusals: the zero slopes of dy/dx = xy lie on two lines; a parabola is not a line; a slope nobody has.
+  refused(() => run({ type: 'slope_field', params: { ...S.field.params, expr: 'x*y' } }, 'slope_isocline', { slope: 0 }), /do not lie along exactly one straight line/);
+  refused(() => run({ type: 'slope_field', params: { ...S.field.params, expr: 'y - x^2' } }, 'slope_isocline', { slope: 0 }), /do not lie along exactly one straight line/);
+  refused(() => run(S.field, 'slope_isocline', { slope: 0.25 }), /no segment of slope 0\.25 is drawn/);
+  refused(() => run(S.field, 'slope_isocline', { slope: 'vertical' }), /no vertical segment is drawn/);
+});
+
+test('slope field: what the slopes depend on, and matching the field to its equation among given options', () => {
+  const of = (expr: string): PracticeFigureSpec => ({ type: 'slope_field', params: { ...S.field.params, expr } });
+  rightAndWrong(S.field, 'slope_depends_on', {}, 'both x and y', 'x only');
+  rightAndWrong(of('x/2'), 'slope_depends_on', {}, 'x only', 'y only');
+  rightAndWrong(of('1 - y'), 'slope_depends_on', {}, 'y only', 'x only');
+  rightAndWrong(of('1 - y'), 'slope_depends_on', {}, 'y only', 'both x and y');
+  refused(() => run(of('2'), 'slope_depends_on', {}), /every segment has the same slope/);
+  // Matching: the option is returned as it was worded, so the keyed choice is compared as text.
+  const options = ['dy/dx = x + y', 'dy/dx = x − y', 'dy/dx = y − x', 'dy/dx = x·y'];
+  const d = run(S.field, 'slope_match_equation', { options });
+  assert.deepEqual(d, { kind: 'text', value: 'dy/dx = x − y' });
+  const mcq = (answer: string) => item(S.field, { responseFormat: 'mcq', choices: options, answer });
+  assert.equal(compareDerived(mcq('B'), d).match, true);
+  assert.equal(compareDerived(mcq('A'), d).match, false);
+  assert.equal(compareDerived(mcq('C'), d).match, false);
+  rightAndWrong(of('-x/y'), 'slope_match_equation', { options: ['x/y', '-x/y', '-y/x'] }, '-x/y', 'x/y');
+  rightAndWrong(of('y*(2 - y)'), 'slope_match_equation', { options: ["y' = y·(2 − y)", "y' = y·(y − 2)", "y' = x·(2 − x)"] }, "y' = y·(2 − y)", "y' = y·(y − 2)");
+  refused(() => run(S.field, 'slope_match_equation', { options: ['x - y', 'y(2 - y)'] }), /options\[1\]: .*write the multiplication explicitly/);
+  refused(() => run(S.field, 'slope_match_equation', { options: ['x + y', 'x*y'] }), /none of the options agrees/);
+  refused(() => run(S.field, 'slope_match_equation', { options: ['x - y', '-(y - x)'] }), /2 of the options agree .* cannot tell them apart/);
+  refused(() => run(S.field, 'slope_match_equation', { options: ['x - y'] }), /list of 2 to 6 expressions/);
+  refused(() => run(S.field, 'slope_match_equation', { options: ['x - y', 'x +'] }), /options\[1\]/);
+});
+
+test('slope field: the drawn solution curve read at a gridline', () => {
+  // dy/dx = 1 through (0, −1): the line y = x − 1.
+  const line: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: '1', solutionThrough: [0, -1] } };
+  rightAndWrong(line, 'slope_solution_at', { x: 2 }, '1', '3');
+  // dy/dx = x through (0, −2): y = x²/2 − 2 — on a gridline at x = ±2, between gridlines at x = 1 (half-steps are minor lines).
+  const para: PracticeFigureSpec = { type: 'slope_field', params: { ...S.field.params, expr: 'x', solutionThrough: [0, -2] } };
+  rightAndWrong(para, 'slope_solution_at', { x: 2 }, '0', '2');
+  rightAndWrong(para, 'slope_solution_at', { x: -2 }, '0', '-4');
+  refused(() => run(S.field, 'slope_solution_at', { x: 1 }), /no solution curve is drawn/);
+  refused(() => run({ type: 'slope_field', params: { ...S.field.params, solutionThrough: [0, 1] } }, 'slope_solution_at', { x: 1 }), /does not lie on a gridline/);
+  refused(() => run({ type: 'slope_field', params: { ...S.field.params, expr: '-x/y', solutionThrough: [0, 2] } }, 'slope_solution_at', { x: 3 }), /does not reach x = 3/);
+});
+
+test('slope field items go through examineFigureItem like any other kind — and showExpression is refused with every slope checker', () => {
+  const q = { problemText: 'Use the slope field shown. Which statement about the slopes in the fourth quadrant is correct?', alt: 'A slope field on a coordinate grid.' };
+  const ok = examineFigureItem(item(S.field, { ...q, responseFormat: 'mcq', choices: ['Positive', 'Negative', 'Zero', 'Undefined'], answer: 'A', derivation: { checker: 'slope_sign', args: { region: 'quadrant_4' } } }));
+  assert.deepEqual(ok.defects, []);
+  assert.equal(ok.derivation.status, 'derived');
+  assert.ok(ok.svg && ok.figureText && /slope field/.test(ok.figureText));
+  const wrong = examineFigureItem(item(S.field, { ...q, responseFormat: 'mcq', choices: ['Positive', 'Negative', 'Zero', 'Undefined'], answer: 'B', derivation: { checker: 'slope_sign', args: { region: 'quadrant_4' } } }));
+  assert.equal(wrong.derivation.status, 'mismatch');
+  const options = ['dy/dx = x + y', 'dy/dx = x − y', 'dy/dx = y − x', 'dy/dx = x·y'];
+  const match = examineFigureItem(item(S.field, { problemText: 'Which differential equation could have the slope field shown?', alt: 'A slope field on a coordinate grid.', responseFormat: 'mcq', choices: options, answer: 'B', derivation: { checker: 'slope_match_equation', args: { options } } }));
+  assert.deepEqual(match.defects, []);
+  const shown = { ...S.field, params: { ...S.field.params, showExpression: true } };
+  for (const [checker, args] of [['slope_sign', { region: 'quadrant_4' }], ['slope_isocline', { slope: 0 }], ['slope_match_equation', { options }], ['slope_depends_on', {}]] as const) {
+    assert.ok(examineFigureItem(item(shown, { ...q, derivation: { checker, args } })).defects.some((x) => /showExpression is on/.test(x)), checker);
+  }
+  // The drawn alt never carries the equation or a slope.
+  const alt = describeForAlt(S.field);
+  assert.ok(!/x - y|x − y|dy\/dx/.test(alt), alt);
+  assert.match(checkerCatalogue(['slope_field']), /slope_at[\s\S]*slope_sign[\s\S]*slope_isocline[\s\S]*slope_depends_on[\s\S]*slope_match_equation[\s\S]*slope_solution_at/);
 });
 
 test('energy profile checkers', () => {
@@ -736,7 +896,7 @@ test('examine: nothing printed may state the answer', () => {
   const rc = item({ ...S.rc, params: { ...S.rc.params, annotate: ['deltaH'], annotateValues: true } }, { problemText: 'Use the energy profile shown. What is ΔH in kJ/mol?', answer: '-20', derivation: { checker: 'rc_delta_h', args: {} } });
   assert.ok(examineFigureItem(rc).defects.some((d) => /annotateValues is on/.test(d)));
   const field = item({ ...S.field, params: { ...S.field.params, showExpression: true } }, { problemText: 'In the slope field shown, what is the slope of the segment at (2, 1)?', answer: '1', derivation: { checker: 'slope_at', args: { x: 2, y: 1 } } });
-  assert.ok(examineFigureItem(field).defects.some((d) => /not generated for now|showExpression is on/.test(d)));
+  assert.ok(examineFigureItem(field).defects.some((d) => /showExpression is on/.test(d)));
 });
 
 test('examine: alt text — bounds, and it must not state the answer', () => {
@@ -807,11 +967,12 @@ test('hygiene: one legend entry per curve, no legend for a lone curve, nothing o
   assert.deepEqual([dots.params.xRange, dots.params.yRange], [[0, 10], [0, 40]]);
   assert.deepEqual(normaliseSpec(S.motion, '').params.yRange, [-6, 10]); // nothing on an edge: unchanged
   assert.ok(hygieneDefects({ type: 'function_graph', params: { curves: [{ expr: 'x', label: 'f' }, { expr: 'x + 1', label: 'f' }] } }).some((d) => /twice/.test(d)));
-  assert.ok(hygieneDefects(S.field).some((d) => /not generated for now/.test(d)));
+  // Since 2026-10-14 a slope field is generated like any other kind (the renderer no longer cuts its border segments).
+  assert.deepEqual(hygieneDefects(S.field), []);
   const four = { ...S.fbd };
   assert.ok(hygieneDefects(four).some((d) => /at most 3 forces/.test(d)));
   assert.deepEqual(hygieneDefects(S.fn), []);
-  assert.ok(examineFigureItem(item(S.field, { problemText: 'In the slope field shown, which equation fits?' })).defects.some((d) => /not generated for now/.test(d)));
+  assert.ok(!examineFigureItem(item(S.field, { problemText: 'In the slope field shown, which equation fits?' })).defects.some((d) => /not generated for now/.test(d)));
 });
 
 test('finer than the grid, by code: an underived item may not rest on off-grid features', () => {

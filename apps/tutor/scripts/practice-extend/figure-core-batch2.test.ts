@@ -557,6 +557,70 @@ test('a batch-2 item is examined like any other: the key is recomputed from the 
   assert.equal(examineFigureItem({ ...num, answer: '3' }).derivation.status, 'mismatch');
 });
 
+// ── round 4 (g): real batteries, two batteries in series, the frustum ───────
+
+test('g. circuit_source: internal resistance and two batteries — net EMF, current, terminal voltage, lost volts (textbook cases)', () => {
+  const R = (value: number, name = 'R') => ({ type: 'resistor', name, value });
+  // 1. ε = 12 V, r = 0.5 Ω, R = 5.5 Ω → I = 2 A, V = 11 V, lost volts 1 V, 22 W delivered, 2 W wasted.
+  const one = S('circuit_diagram', { battery: { emf: 12, name: 'ε', internalResistance: 0.5 }, circuit: { series: [{ type: 'ammeter', name: 'A' }, { parallel: [R(5.5), { type: 'voltmeter', name: 'V' }] }] } });
+  rw(one, 'circuit_source', { want: 'current' }, '2', '2.18');            // not ε/R
+  rw(one, 'circuit_source', { want: 'terminal_voltage' }, '11', '12');
+  rw(one, 'circuit_source', { want: 'lost_volts' }, '1', '11');
+  rw(one, 'circuit_source', { want: 'net_emf' }, '12', '11');
+  rw(one, 'circuit_source', { want: 'internal_resistance' }, '0.5', '5.5');
+  rw(one, 'circuit_source', { want: 'power_delivered' }, '22', '24');
+  rw(one, 'circuit_source', { want: 'power_wasted' }, '2', '22');
+  rw(one, 'circuit_component', { component: 'V', quantity: 'voltage' }, '11', '12');   // the voltmeter reads the terminal voltage
+  rw(one, 'circuit_component', { component: 'A', quantity: 'current' }, '2', '2.4');
+  rw(one, 'circuit_component', { component: 'battery', quantity: 'power' }, '24', '22');   // εI, the whole of it
+  refused(() => run(one, 'circuit_component', { component: 'battery', quantity: 'voltage' }), /two different things here — use circuit_source/);
+  // 2. ε = 9 V, r = 1 Ω, R = 5 Ω → 1.5 A; terminal voltage 7.5 V.
+  const two = S('circuit_diagram', { battery: { emf: 9, internalResistance: 1, internalShow: 'blank', current: '1.5 A' }, circuit: R(5) });
+  rw(two, 'circuit_source', { want: 'current' }, '1.5', '1.8');
+  rw(two, 'circuit_source', { want: 'terminal_voltage' }, '7.5', '9');
+  rw(two, 'circuit_source', { want: 'internal_resistance' }, '1', '6');
+  // 3. A 1.5 V cell with r = 0.3 Ω across a 2.7 Ω bulb → 0.5 A, 1.35 V.
+  const three = S('circuit_diagram', { battery: { emf: 1.5, internalResistance: 0.3 }, circuit: { type: 'bulb', name: 'B', value: 2.7 } });
+  rw(three, 'circuit_source', { want: 'current' }, '0.5', '0.56');
+  rw(three, 'circuit_source', { want: 'terminal_voltage' }, '1.35', '1.5');
+  // 4. Open switch: no current, so the terminal voltage is the EMF.
+  const open = S('circuit_diagram', { battery: { emf: 6, internalResistance: 2 }, circuit: { series: [{ type: 'switch', name: 'S', closed: false }, R(10)] } });
+  rw(open, 'circuit_source', { want: 'terminal_voltage' }, '6', '5');
+  rw(open, 'circuit_source', { want: 'terminal_voltage', switches: { S: true } }, '5', '6');
+  // 5. Two batteries aiding: 9 V + 3 V over 4 Ω + 2 Ω → 2 A. Opposing: 12 V − 6 V over 4.5 + 1 + 0.5 Ω → 1 A.
+  const aid = S('circuit_diagram', { battery: { emf: 9, name: 'ε₁' }, battery2: { emf: 3, name: 'ε₂' }, circuit: { series: [R(4, 'R₁'), R(2, 'R₂')] } });
+  rw(aid, 'circuit_source', { want: 'net_emf' }, '12', '6');
+  rw(aid, 'circuit_source', { want: 'current' }, '2', '1');
+  rw(aid, 'circuit_component', { component: 'R₁', quantity: 'voltage' }, '8', '6');
+  refused(() => run(aid, 'circuit_source', { want: 'lost_volts' }), /no internal resistance is drawn/);
+  const opp = S('circuit_diagram', { battery: { emf: 12, name: 'ε₁', internalResistance: 1 }, battery2: { emf: 6, name: 'ε₂', sense: 'opposing', internalResistance: 0.5 }, circuit: { series: [{ type: 'ammeter', name: 'A' }, R(4.5)] } });
+  rw(opp, 'circuit_source', { want: 'net_emf' }, '6', '18');
+  rw(opp, 'circuit_source', { want: 'current' }, '1', '3');
+  rw(opp, 'circuit_source', { want: 'internal_resistance' }, '1.5', '1');
+  rw(opp, 'circuit_source', { want: 'terminal_voltage' }, '4.5', '6');
+  rw(opp, 'circuit_equivalent_resistance', {}, '4.5', '6');               // the external circuit, as before
+  refused(() => run(fx('circuit-series-two-resistors'), 'circuit_source', { want: 'current' }), /one ideal battery — use circuit_component/);
+  // The transcription: what is drawn, a hidden r stays hidden.
+  const t2 = textOf(two);
+  assert.ok(t2.includes('internal resistance label: "r = (blank)"'), t2);
+  assert.ok(/Inside a dashed boundary with its cells is a resistor \(zigzag\)/.test(t2) && !/1 Ω/.test(t2));
+  const to = textOf(opp);
+  assert.ok(/Two batteries in series/.test(to) && /The lower battery has its \+ terminal at the bottom/.test(to) && /like terminal to like terminal/.test(to));
+  assert.ok(/\+ to −/.test(textOf(aid)) && textOf(aid).includes('battery label: "ε₂ = 3 V"'));
+});
+
+test('g. frustum: volume, lateral and total area, slant height', () => {
+  const f = S('solid_3d', { solid: 'frustum', radius: 6, topRadius: 3, height: 4, unit: 'cm', labels: { slant: '?' } });
+  rw(f, 'solid_slant_height', {}, '5', '4');
+  rw(f, 'solid_volume', { as: 'pi' }, '84π', '144π');                     // πh(R² + Rr + r²)/3 = π·4·63/3
+  rw(f, 'solid_volume', {}, '263.89', '84');
+  rw(f, 'solid_surface_area', { part: 'lateral', as: 'pi' }, '45π', '90π');   // π(R + r)s
+  rw(f, 'solid_surface_area', { as: 'pi' }, '90π', '45π');                // + π(R² + r²)
+  rw(S('solid_3d', { solid: 'frustum', radius: 2, topRadius: 5, height: 6 }), 'solid_volume', { as: 'pi' }, '78π', '150π');
+  const t = textOf(f);
+  assert.ok(/a frustum of a cone/.test(t) && t.includes('dimension label: (blank — a "?" box)') && /"3 cm" over a radius of the top circular face/.test(t) && !/\b5 cm/.test(t), t);
+});
+
 test('every batch-2 checker was exercised above', () => {
   for (const name of Object.keys(BATCH2_CHECKERS)) assert.ok(used.has(name), `${name} has no test`);
 });

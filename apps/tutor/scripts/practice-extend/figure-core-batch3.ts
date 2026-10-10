@@ -129,7 +129,10 @@ function moleculeText(m: MoleculeModel, printed: string[], out: string[]): strin
       out.push(`  A dashed outline${h.label ? ` marked "${h.label}"` : ''} encloses ${h.atoms.map((i) => names[i]).join(', ')}.`);
     });
   });
-  m.hbonds.forEach((hb) => out.push(`A dotted line joins atom ${hb.from[1] + 1} of structure ${hb.from[0] + 1} to atom ${hb.to[1] + 1} of structure ${hb.to[0] + 1}.`));
+  m.hbonds.forEach((hb) => {
+    if (hb.label && hb.label !== '?') printed.push(`dotted-line label: "${hb.label}"`);
+    out.push(`A dotted line${hb.label ? ` labelled ${shown(hb.label)}` : ''} joins atom ${hb.from[1] + 1} of structure ${hb.from[0] + 1} to atom ${hb.to[1] + 1} of structure ${hb.to[0] + 1}.`);
+  });
   return many ? 'a set of structural formulas' : 'a structural formula of a molecule';
 }
 
@@ -436,6 +439,7 @@ function magnetText(m: BarMagnetModel, printed: string[], out: string[]): string
   if (!m.lines) out.push('No field lines are drawn.');
   else if (m.arrows) out.push(`Curved field lines with arrowheads: ${m.magnets.map((mg, i) => `they leave the ${mg.north} end of ${two ? `the ${i === 0 ? 'left-hand' : 'right-hand'} magnet` : 'the magnet'} and enter its ${mg.north === 'left' ? 'right' : 'left'} end`).join('; ')}.${two ? ` In the gap between the magnets the lines ${m.interaction === 'attract' ? 'run straight across from one magnet to the other' : 'from the two facing ends bend away from each other and none crosses the gap'}.` : ''}`);
   else out.push(`Curved field lines without arrowheads loop from one end of ${two ? 'each magnet' : 'the magnet'} to the other.${two ? ` In the gap the lines ${m.interaction === 'attract' ? 'run straight across from one magnet to the other' : 'from the two facing ends bend away from each other and none crosses the gap'}.` : ''}`);
+  if (m.showInteraction) { printed.push('force label: "F"'); out.push(`An arrow labelled "F" is drawn over each magnet: the two arrows point ${m.interaction === 'attract' ? 'towards each other' : 'away from each other'}.`); }
   const at = (x: number, y: number): string => `${Math.abs(y) < 0.45 ? 'level with the magnets' : y > 0 ? 'above the line of the magnets' : 'below the line of the magnets'}, ${Math.abs(x) < 0.25 ? 'at the middle of the figure' : `${fmt(Math.abs(Number(x.toFixed(1))))} units ${x < 0 ? 'left' : 'right'} of the middle`} (a magnet is 2.4 units long)`;
   m.compasses.forEach((c) => {
     printed.push(`compass label: "${c.label}"`);
@@ -533,6 +537,24 @@ export const BATCH3_CHECKERS: Record<string, Batch3CheckerDef> = {
       const nof = (i: number) => ['N', 'O', 'F'].includes(mol.atoms[i].el);
       if (pick(a, 'want', ['donors', 'acceptors'] as const) === 'acceptors') return num(mol.atoms.filter((x, i) => nof(i) && (x.lonePairs === undefined ? x.charge <= 0 : x.lonePairs > 0)).length);
       return num(mol.atoms.reduce((t, x, i) => t + (nof(i) ? hydrogensOn(x) + bondsAt(mol, i).filter((b) => mol.atoms[b.a === i ? b.b : b.a].el === 'H').length : 0), 0));
+    },
+  },
+  mol_hbond_line: {
+    kinds: ['molecular_structure'], args: '{ line: the label printed beside a dotted line, or its 0-based index }',
+    returns: 'the label "yes" or "no" — is that dotted line a hydrogen bond? It is one when it joins a hydrogen that is bonded to N, O or F to an N, O or F atom of another molecule that carries a lone pair (an atom whose lone pairs the spec does not give counts when it is uncharged)',
+    run: (s, a) => {
+      const m = modelOf(s, moleculeModel);
+      if (m.hbonds.length === 0) return fail('no dotted line is drawn on the figure');
+      const named = typeof a.line === 'string' ? m.hbonds.filter((h) => h.label === (a.line as string).trim()) : [];
+      if (typeof a.line === 'string' && named.length !== 1) return fail(`derivation argument "line": ${named.length ? 'more than one' : 'no'} dotted line is labelled "${a.line}"`);
+      const hb = typeof a.line === 'string' ? named[0] : m.hbonds[argIndex(a, 'line', m.hbonds.length, 'dotted line')];
+      if (hb.label === '?') return fail('that dotted line is labelled with a blank — name it by its index');
+      const nof = (el: string) => ['N', 'O', 'F'].includes(el);
+      const ends = [hb.from, hb.to].map(([mi, ai]) => ({ mi, mol: m.molecules[mi], ai, atom: m.molecules[mi].atoms[ai] }));
+      const donor = (e: (typeof ends)[number]) => e.atom.el === 'H' && bondsAt(e.mol, e.ai).some((b) => nof(e.mol.atoms[b.a === e.ai ? b.b : b.a].el));
+      const acceptor = (e: (typeof ends)[number]) => nof(e.atom.el) && (e.atom.lonePairs === undefined ? e.atom.charge <= 0 : e.atom.lonePairs > 0);
+      const ok = ends[0].mi !== ends[1].mi && ((donor(ends[0]) && acceptor(ends[1])) || (donor(ends[1]) && acceptor(ends[0])));
+      return label(ok ? 'yes' : 'no');
     },
   },
   mol_formula: {
@@ -823,11 +845,23 @@ export const BATCH3_CHECKERS: Record<string, Batch3CheckerDef> = {
     },
   },
   magnet_north_end: {
-    kinds: ['field_diagram'], args: '{ magnet?: index (0) }', returns: 'the label "left" or "right": the end of that magnet that is its north pole (field lines leave it)',
+    kinds: ['field_diagram'], args: '{ magnet?: index (0), stated?: attract | repel (only when the QUESTION says what the two magnets do to each other) }',
+    returns: 'the label "left" or "right": the end of that magnet that is its north pole (field lines leave it). Its own pole letters, arrowheads on the lines or a compass needle fix it; so does the OTHER magnet when its poles are printed and the figure or the question says whether the two attract or repel (force arrows, the shape of the lines in the gap, or `stated`)',
     run: (s, a) => {
       const m = magnetOf(s);
-      const mg = m.magnets[argIndex(a, 'magnet', m.magnets.length, 'magnet')];
-      if (mg.poles !== 'value' && !(m.lines && m.arrows) && !m.compasses.some((c) => c.needle)) return fail('nothing on the figure fixes which end is north (no pole letters, no arrowheads, no needle)');
+      const i = argIndex(a, 'magnet', m.magnets.length, 'magnet');
+      const mg = m.magnets[i];
+      const stated = a.stated === undefined ? undefined : pick(a, 'stated', ['attract', 'repel'] as const);
+      if (stated !== undefined && m.magnets.length !== 2) return fail('derivation argument "stated": there is only one magnet — nothing attracts or repels it');
+      if (stated !== undefined && stated !== m.interaction) return fail(`derivation argument "stated" says the magnets ${stated}, but as the figure is specified they ${m.interaction}`);
+      const direct = mg.poles === 'value' || (m.lines && m.arrows) || m.compasses.some((c) => c.needle);
+      // Through the other magnet: its poles are printed, and something says what the facing ends do.
+      const viaOther = m.magnets.length === 2 && m.magnets[1 - i].poles === 'value' && (m.showInteraction || m.lines || stated !== undefined);
+      if (!direct && !viaOther) {
+        return fail(m.magnets.length === 2 && m.magnets[1 - i].poles === 'value'
+          ? 'nothing fixes which end is north: the other magnet\'s poles are printed, but nothing says whether the two attract or repel (no force arrows, no field lines; give `stated` when the question says it)'
+          : 'nothing on the figure fixes which end is north (no pole letters, no arrowheads, no needle)');
+      }
       return label(mg.north);
     },
   },
@@ -858,6 +892,8 @@ export function figureLetterClash(spec: PracticeFigureSpec, choices: ReadonlyArr
   const svg = renderPracticeFigure(spec).svg;
   const printed = new Set([...svg.matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/g)].map((m) => m[1].replace(/<[^>]+>/g, '').trim()).filter((t) => /^[A-Z]$/.test(t)));
   if (spec.type === 'circuit_diagram') { printed.delete('A'); printed.delete('V'); }
+  // The base letters of a sequence strip (A, C, G, T, U — batch 4) are not names either.
+  if (spec.type === 'sequence_strip') for (const b of 'ACGTU') printed.delete(b);
   if (spec.type === 'molecular_structure') {
     // Element symbols ("C", "B") are not names: only captions and group letters count.
     const m = modelOf(spec, moleculeModel);

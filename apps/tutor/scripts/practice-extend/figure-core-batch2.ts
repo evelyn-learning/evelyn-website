@@ -104,7 +104,21 @@ const TYPE_WORDS: Record<string, string> = { resistor: 'a resistor (zigzag)', bu
 function circuitText(m: CircuitModel, printed: string[], out: string[]): string {
   const b = m.battery;
   if (b.shown) printed.push(`battery label: ${shown(b.shown)}`);
-  out.push(`One battery (two cells; its + terminal is at the ${b.positiveTop ? 'top' : 'bottom'})${b.shown ? `, labelled ${shown(b.shown)}` : ', with no label'}. Conventional current leaves the + terminal.`);
+  const inside = (r: CircuitModel['battery']['internal']): string => {
+    if (!r) return '';
+    if (r.shown) printed.push(`internal resistance label: ${shown(r.shown)}`);
+    return ` Inside a dashed boundary with its cells is a resistor (zigzag)${r.shown ? ` labelled ${shown(r.shown)}` : ' with no label'}: the battery's internal resistance.`;
+  };
+  if (!m.battery2) out.push(`One battery (two cells; its + terminal is at the ${b.positiveTop ? 'top' : 'bottom'})${b.shown ? `, labelled ${shown(b.shown)}` : ', with no label'}.${inside(b.internal)} Conventional current leaves the + terminal.`);
+  else {
+    const b2 = m.battery2;
+    if (b2.shown) printed.push(`battery label: ${shown(b2.shown)}`);
+    const top2 = b.positiveTop !== b2.opposing;
+    out.push(`Two batteries in series on the left-hand wire, one under the other, each marked with its own + and −.`);
+    out.push(`  The upper battery has its + terminal at the ${b.positiveTop ? 'top' : 'bottom'}${b.shown ? ` and is labelled ${shown(b.shown)}` : ' and has no label'}.${inside(b.internal)}`);
+    out.push(`  The lower battery has its + terminal at the ${top2 ? 'top' : 'bottom'}${b2.shown ? ` and is labelled ${shown(b2.shown)}` : ' and has no label'}.${inside(b2.internal)}`);
+    out.push(`  The two are connected ${b2.opposing ? 'like terminal to like terminal (they drive current in opposite directions round the loop)' : '+ to − (they drive current the same way round the loop)'}. Conventional current leaves the + terminal of the upper battery.`);
+  }
   if (b.current) {
     printed.push(`current arrow at the battery: ${shown(b.current)}`);
     out.push(`An arrow on the wire leaving the + terminal is labelled ${shown(b.current)}.`);
@@ -153,7 +167,10 @@ function solved(m: CircuitModel, switches: unknown): CircuitSolution {
 }
 const QUANTITIES = ['current', 'voltage', 'power'] as const;
 function quantityOf(m: CircuitModel, sol: CircuitSolution, component: string, q: (typeof QUANTITIES)[number]): number {
-  if (component === 'battery') return q === 'current' ? fNum(sol.current) : q === 'voltage' ? m.battery.emf : m.battery.emf * fNum(sol.current);
+  if (component === 'battery') {
+    if (q === 'voltage' && (m.battery2 || m.battery.internal)) return fail('the "voltage of the battery" is two different things here — use circuit_source with want: net_emf or terminal_voltage');
+    return q === 'current' ? fNum(sol.current) : q === 'voltage' ? m.battery.emf : fNum(sol.emf) * fNum(sol.current);
+  }
   const st = sol.leaves[leafByName(m, component)];
   const f = q === 'current' ? st.I : q === 'voltage' ? st.V : st.P;
   if (Number.isNaN(f.n)) return fail(`the ${q} of "${component}" is not fixed by the circuit as drawn`);
@@ -518,15 +535,16 @@ function solidText(m: SolidModel, printed: string[], out: string[]): string {
     }
     return 'a region on axes and the solid it sweeps out when revolved';
   }
-  const names: Record<string, string> = { prism: 'a rectangular box (prism)', triangular_prism: 'a triangular prism', cylinder: 'a cylinder', cone: 'a cone', sphere: 'a sphere', hemisphere: 'a hemisphere (dome) on its flat face', pyramid: 'a pyramid on a square base' };
+  const names: Record<string, string> = { prism: 'a rectangular box (prism)', triangular_prism: 'a triangular prism', cylinder: 'a cylinder', cone: 'a cone', sphere: 'a sphere', hemisphere: 'a hemisphere (dome) on its flat face', pyramid: 'a pyramid on a square base', frustum: 'a frustum of a cone (a cone with its tip cut off parallel to the base: two circular faces of different sizes)' };
   const what = m.solid === 'composite' ? `a ${m.top} on top of a ${m.bottom === 'prism' ? 'box with a square base' : 'cylinder'} (they share the same ${m.bottom === 'prism' ? 'square' : 'circle'})` : names[m.solid];
   if (m.notToScale) printed.push('note: "not to scale"');
   out.push(`A line drawing of ${what}; hidden edges are dashed.${m.notToScale ? ' It carries the note "not to scale".' : ''}`);
   const where: Record<string, string> = {
     length: m.solid === 'triangular_prism' ? 'along the edge running back (the length of the prism)' : 'along the front bottom edge', width: 'along the edge running back (the depth)',
-    height: m.solid === 'triangular_prism' ? 'on the dashed height of the triangular face' : m.solid === 'composite' ? `beside the ${m.bottom === 'prism' ? 'box' : 'cylinder'} (its height)` : m.solid === 'cone' || m.solid === 'pyramid' ? 'beside the dashed line from the apex to the centre of the base (the height)' : 'beside the vertical side (the height)',
-    base: m.solid === 'triangular_prism' ? 'along the base of the triangular face' : 'along the front edge of the square base', radius: 'on a radius of the circular face',
-    topHeight: `against the height of the ${m.top} on top`, slant: `on the slant height of the ${m.top ?? m.solid}`,
+    height: m.solid === 'triangular_prism' ? 'on the dashed height of the triangular face' : m.solid === 'composite' ? `beside the ${m.bottom === 'prism' ? 'box' : 'cylinder'} (its height)` : m.solid === 'cone' || m.solid === 'pyramid' ? 'beside the dashed line from the apex to the centre of the base (the height)' : m.solid === 'frustum' ? 'on the dashed line joining the centres of the two circular faces (the height)' : 'beside the vertical side (the height)',
+    base: m.solid === 'triangular_prism' ? 'along the base of the triangular face' : 'along the front edge of the square base', radius: m.solid === 'frustum' ? 'under a radius of the bottom circular face' : 'on a radius of the circular face',
+    topRadius: 'over a radius of the top circular face',
+    topHeight: `against the height of the ${m.top} on top`, slant: m.solid === 'frustum' ? 'beside the slanted side (the slant height)' : `on the slant height of the ${m.top ?? m.solid}`,
   };
   for (const [k, s] of Object.entries(m.labels)) {
     printed.push(`dimension label: ${shown(s)}`);
@@ -551,6 +569,10 @@ function solidMeasure(m: SolidModel, want: 'volume' | 'surface' | 'lateral'): { 
     case 'cone': return { pi: true, value: want === 'volume' ? (PI * d.radius ** 2 * d.height) / 3 : want === 'lateral' ? PI * d.radius * coneL(d.radius, d.height) : PI * d.radius * (d.radius + coneL(d.radius, d.height)) };
     case 'sphere': return { pi: true, value: want === 'volume' ? (4 / 3) * PI * d.radius ** 3 : 4 * PI * d.radius ** 2 };
     case 'hemisphere': return { pi: true, value: want === 'volume' ? (2 / 3) * PI * d.radius ** 3 : want === 'lateral' ? 2 * PI * d.radius ** 2 : 3 * PI * d.radius ** 2 };
+    case 'frustum': {
+      const lat = PI * (d.radius + d.topRadius) * Math.hypot(d.height, d.radius - d.topRadius);
+      return { pi: true, value: want === 'volume' ? (PI * d.height * (d.radius ** 2 + d.radius * d.topRadius + d.topRadius ** 2)) / 3 : want === 'lateral' ? lat : lat + PI * (d.radius ** 2 + d.topRadius ** 2) };
+    }
     case 'pyramid': {
       const lat = 2 * d.base * Math.hypot(d.base / 2, d.height);
       return { pi: false, value: want === 'volume' ? (d.base ** 2 * d.height) / 3 : want === 'lateral' ? lat : lat + d.base ** 2 };
@@ -692,6 +714,19 @@ export const BATCH2_CHECKERS: Record<string, Batch2CheckerDef> = {
   circuit_component: {
     kinds: ['circuit_diagram'], args: `{ component: name | "battery", quantity: ${QUANTITIES.join(' | ')}, switches?: { name: boolean } }`, returns: 'the current through (A), the voltage across (V) or the power of (W) one component',
     run: (s, a) => { const m = modelOf(s, circuitModel); return measured(quantityOf(m, solved(m, a.switches), argStr(a, 'component'), pick(a, 'quantity', QUANTITIES))); },
+  },
+  circuit_source: {
+    kinds: ['circuit_diagram'], args: '{ want: net_emf | current | terminal_voltage | lost_volts | internal_resistance | power_delivered | power_wasted, switches?: { name: boolean } }',
+    returns: 'for a source with an internal resistance and/or two batteries in series: the net EMF (sum when aiding, difference when opposing), the current I = ε/(R + r), the terminal voltage ε − Ir, the lost volts Ir, the total internal resistance, the power delivered to the external circuit, or the power wasted inside the source',
+    run: (s, a) => {
+      const m = modelOf(s, circuitModel);
+      if (!m.battery2 && !m.battery.internal) return fail('the source is one ideal battery — use circuit_component with component "battery"');
+      const want = pick(a, 'want', ['net_emf', 'current', 'terminal_voltage', 'lost_volts', 'internal_resistance', 'power_delivered', 'power_wasted'] as const);
+      const sol = solved(m, a.switches);
+      const [e, i, r, v] = [fNum(sol.emf), fNum(sol.current), fNum(sol.internal), fNum(sol.terminal)];
+      if (r === 0 && ['lost_volts', 'internal_resistance', 'power_wasted'].includes(want)) return fail('no internal resistance is drawn');
+      return measured(want === 'net_emf' ? e : want === 'current' ? i : want === 'terminal_voltage' ? v : want === 'lost_volts' ? i * r : want === 'internal_resistance' ? r : want === 'power_delivered' ? v * i : i * i * r);
+    },
   },
   circuit_brightness_order: {
     kinds: ['circuit_diagram'], args: '{ switches?: { name: boolean } }', returns: 'the named bulbs from brightest to dimmest, e.g. "A > B = C" (by power)',
@@ -1011,7 +1046,7 @@ export const BATCH2_CHECKERS: Record<string, Batch2CheckerDef> = {
     },
   },
   solid_slant_height: {
-    kinds: ['solid_3d'], args: '{}', returns: 'the slant height of a cone or pyramid (also when it is the top of a composite)',
+    kinds: ['solid_3d'], args: '{}', returns: 'the slant height of a cone, pyramid or frustum (also when it is the top of a composite)',
     run: (s) => { const m = modelOf(s, solidModel); return m.dims.slant === undefined ? fail('this solid has no slant height') : measured(m.dims.slant); },
   },
   solid_revolution_volume: {

@@ -36,7 +36,7 @@ import { bioModel, divisionCounts } from '../src/lib/tutor/practice-figure/kinds
 import { mapModel } from '../src/lib/tutor/practice-figure/kinds/schematic-map';
 import { barMagnetModel, magnetFieldAt } from '../src/lib/tutor/practice-figure/kinds/bar-magnet';
 import { fieldModel, traceFieldLines } from '../src/lib/tutor/practice-figure/kinds/field-diagram';
-import { BATCH3_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
+import { BATCH3_FIXTURES, BATCH4_FIXTURES, FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -74,7 +74,10 @@ console.log('\nNothing that was there has changed unasked:\n');
 
 const readJson = (name: string): Record<string, string> => JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', name), 'utf8')) as Record<string, string>;
 const sha = (spec: PracticeFigureSpec): string => createHash('sha256').update(renderPracticeFigure(spec).svg).digest('hex');
-const BATCH3_IDS = new Set(BATCH3_FIXTURES.map((f) => f.id));
+// Batch 4 (2026-10-14) has a test file and pins of its own (test-practice-figure-batch4.ts, c9a204fa).
+const BATCH3_IDS = new Set([...BATCH3_FIXTURES, ...BATCH4_FIXTURES].map((f) => f.id));
+/** The fourth round redrew a few earlier fixtures for its to-dos a–g — id → why; pinned against c9a204fa there. */
+const ROUND4 = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'practice-figure-changes-since-c9a204fa.json'), 'utf8')) as Record<string, string>;
 
 test('all 129 fixtures as they were at 9613fe5e: byte-identical, except exactly the ones listed (with the fix a–f) as redrawn by this round', () => {
   const pins = readJson('practice-figure-pins-9613fe5e.json');
@@ -86,8 +89,8 @@ test('all 129 fixtures as they were at 9613fe5e: byte-identical, except exactly 
     assert.ok(id in pins, `${id} is listed as changed but was not a fixture at 9613fe5e`);
     assert.ok(/^[a-f] — /.test(redrawn[id]), `${id}: the reason names the fix (a–f) it was changed for`);
   }
-  const changed = before.filter((f) => sha(f.spec) !== pins[f.id]).map((f) => f.id);
-  assert.deepEqual(changed, Object.keys(redrawn), 'the fixtures that changed are exactly the listed ones, in fixture order');
+  const changed = before.filter((f) => sha(f.spec) !== pins[f.id] && !(f.id in ROUND4)).map((f) => f.id);
+  assert.deepEqual(changed, Object.keys(redrawn).filter((id) => !(id in ROUND4)), 'the fixtures that changed are exactly the listed ones, in fixture order');
 });
 
 test('batch 3 is a list of its own: four kinds, none in the earlier lists; bar_magnet is a variant of field_diagram', () => {
@@ -365,7 +368,9 @@ test('division: chromosome sticks counted per stage; pairing, alignment and sepa
   const strip = rendered.get('bio-division-mitosis-strip') as string;
   assert.deepEqual(texts(strip).sort(), ['X', 'Y', 'Z']);
   // One <path> per chromatid stick: 8 + 8 + 8 for 2n = 4.
-  assert.equal(count(strip, /<path [^>]*stroke-width="3\.4" stroke-linecap="round"\/>/g), 24);
+  // (Each stick is a dark stroke; a hollow one carries a white core over it — fix b of round 4 made them larger and thicker.)
+  assert.equal(count(strip, /<path [^>]*stroke="#111827" stroke-width="[\d.]+" stroke-linecap="round" stroke-linejoin="round"\/>/g), 24);
+  assert.equal(count(strip, /<path [^>]*stroke="#ffffff" stroke-width="[\d.]+" stroke-linecap="round" stroke-linejoin="round"\/>/g), 12, 'half of them hollow');
   const blank = rendered.get('bio-division-blank-stage-name') as string;
   assert.ok(has(blank, 'metaphase') && has(blank, '?') && !has(blank, 'telophase'));
   throwsSpec('bio_schematic', { variant: 'division', n: 2, cells: [{ stage: 'metaphase' }, { stage: 'metaphase_II' }] }, /cells mix stages of mitosis and of meiosis/);

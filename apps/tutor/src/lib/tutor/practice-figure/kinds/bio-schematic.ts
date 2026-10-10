@@ -42,7 +42,10 @@
  *                    label?: string | '?' | null }>;   // under the cell: a letter, or the stage's name, or a blank
  *     title?: string }
  *   A replicated chromosome is an X of two sticks; a single chromatid is one bent stick.
- *   Homologous chromosomes have the same length; one of each pair is solid, the other hollow.
+ *   Homologous chromosomes have the same length; one of each pair is solid, the other hollow
+ *   (a dark outline round a white core). The cells fill the frame — one cell is drawn large,
+ *   two share the width, three stand in a row, four make a grid — and the sticks are scaled to
+ *   the cell. A label that is a Roman numeral ("I", "II") is set on a small label plate.
  *
  * variant 'compartments' — a mitochondrion or a chloroplast as nested boxes:
  *   { organelle: 'mitochondrion' | 'chloroplast';
@@ -542,21 +545,49 @@ function renderMembrane(m: Extract<BioModel, { variant: 'membrane' }>, W: number
 // ---------------------------------------------------------------------------
 
 const CHR_LEN = [13, 9, 11];
+/** Gap between two chromosomes of a column, before scaling. */
+const GAP0 = 4;
+/** A label that is a Roman numeral ("I", "II", "IV"): a lone "I" in a sans-serif face reads as a tick mark, so these are set on a label plate. */
+const ROMAN_RE = /^(?=[IVX])X{0,3}(IX|IV|V?I{0,3})$/;
 
 function renderDivision(m: Extract<BioModel, { variant: 'division' }>, W: number, t: { svg: string; top: number }): Drawn {
   const notes: Notes = [];
   const parts: string[] = [];
   const perRow = m.cells.length <= 3 ? m.cells.length : 2;
-  const bw = Math.min(170, (W - 12) / perRow);
-  const RX = Math.min(72, bw / 2 - 6);
-  const RY = 48;
-  const rowH = 2 * RY + 30;
+  // The cells fill the frame: one cell is drawn large, two share the width, three stand in a row of
+  // tall ovals, four make a two-by-two grid; a cell with more chromosomes (n = 3) is drawn taller.
+  const bw = (W - 12) / perRow;
+  const RX = Math.min(perRow === 1 ? 150 : 84, bw / 2 - 5);
+  const RY = perRow === 1 ? 100 : perRow === 2 ? (m.n === 3 ? 74 : 64) : (m.n === 3 ? 70 : 60);
+  /** The tallest column of chromosomes a cell of this figure holds, unscaled: all 2n in a mitosis, n (pairs, or one of each pair) in a meiosis. */
+  const inColumn = m.process === 'mitosis' ? 2 * m.n : m.n;
+  const tallest = CHR_LEN.slice(0, m.n).reduce((a, b) => a + b, 0) * (inColumn / m.n) + (inColumn - 1) * GAP0;
+  /** How much larger than the base sticks the chromosomes are drawn: as large as the tallest column allows — one scale for the whole figure. */
+  const K = Math.max(1, Math.min(perRow === 1 ? 3.2 : 2.3, (2 * RY * 0.76) / tallest));
+  /** Roman-numeral labels (all of them are, and at least one is made of I or V — "X, Y, Z" are letters) stand on label plates. */
+  const labels = m.cells.map((c) => c.label).filter((l): l is string => !!l && l !== '?');
+  const plated = labels.length > 0 && labels.every((l) => ROMAN_RE.test(l)) && labels.some((l) => /[IV]/.test(l));
+  const GAP = GAP0 * K;
+  /** Stroke of a chromatid; a hollow one keeps an outline of at least 1.1 round a white core. */
+  const SW = Math.min(7.6, 3.2 + 1.3 * K);
+  const CORE = SW - 2.5;
+  const anyLabel = m.cells.some((c) => c.label);
+  const rowH = 2 * RY + (anyLabel ? 34 : 12);
   /** One chromatid stick; a hollow one (the homologue from the other parent) has a white core. */
-  const stick = (pts: Pt[], hollow: boolean): string => `<path d="${polyPath(pts)}" ${stroke(INK, 3.4)} stroke-linecap="round"/>` + (hollow ? `<path d="${polyPath(pts)}" ${stroke('#ffffff', 1.3)} stroke-linecap="round"/>` : '');
-  /** A replicated chromosome: an X, upright. */
-  const X = (cx: number, cy: number, len: number, hollow: boolean): string => stick([[cx - 2.6, cy - len / 2], [cx + 2.6, cy + len / 2]], hollow) + stick([[cx + 2.6, cy - len / 2], [cx - 2.6, cy + len / 2]], hollow);
+  const stick = (pts: Pt[], hollow: boolean): string => `<path d="${polyPath(pts)}" ${stroke(INK, SW)} stroke-linecap="round" stroke-linejoin="round"/>` + (hollow ? `<path d="${polyPath(pts)}" ${stroke('#ffffff', CORE)} stroke-linecap="round" stroke-linejoin="round"/>` : '');
+  const XW = 3.1 * K;
+  /** A replicated chromosome: an X, upright. A hollow one is ONE outline: both white cores go on after both dark strokes. */
+  const X = (cx: number, cy: number, len0: number, hollow: boolean): string => {
+    const len = len0 * K;
+    const a: Pt[] = [[cx - XW, cy - len / 2], [cx + XW, cy + len / 2]];
+    const b: Pt[] = [[cx + XW, cy - len / 2], [cx - XW, cy + len / 2]];
+    return stick(a, false) + stick(b, false) + (hollow ? [a, b].map((q) => `<path d="${polyPath(q)}" ${stroke('#ffffff', CORE)} stroke-linecap="round" stroke-linejoin="round"/>`).join('') : '');
+  };
   /** A single chromatid being pulled to the pole on side `s` (−1 left, 1 right): a V with its point leading. */
-  const V = (cx: number, cy: number, len: number, hollow: boolean, s: number): string => stick([[cx - s * len * 0.36, cy - len * 0.42], [cx + s * len * 0.2, cy], [cx - s * len * 0.36, cy + len * 0.42]], hollow);
+  const V = (cx: number, cy: number, len0: number, hollow: boolean, s: number): string => {
+    const len = len0 * K;
+    return stick([[cx - s * len * 0.36, cy - len * 0.42], [cx + s * len * 0.2, cy], [cx - s * len * 0.36, cy + len * 0.42]], hollow);
+  };
   m.cells.forEach((cell, ci) => {
     const row = Math.floor(ci / perRow);
     const inRow = Math.min(perRow, m.cells.length - row * perRow);
@@ -570,41 +601,47 @@ function renderDivision(m: Extract<BioModel, { variant: 'division' }>, W: number
       const lobe = RX * 0.58;
       const dx = RX - lobe;
       const hy = Math.sqrt(Math.max(0, lobe * lobe - dx * dx)) * (RY / lobe);
-      parts.push(`<path d="M${n2(cx)},${n2(cy - hy)}A${n2(lobe)},${n2(RY)} 0 1 0 ${n2(cx)},${n2(cy + hy)}A${n2(lobe)},${n2(RY)} 0 1 0 ${n2(cx)},${n2(cy - hy)}z" fill="#ffffff" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>`);
-    } else parts.push(`<path d="${ellipseD(cx, cy, RX, RY)}" fill="#ffffff" stroke="${INK}" stroke-width="1.8"/>`);
+      parts.push(`<path d="M${n2(cx)},${n2(cy - hy)}A${n2(lobe)},${n2(RY)} 0 1 0 ${n2(cx)},${n2(cy + hy)}A${n2(lobe)},${n2(RY)} 0 1 0 ${n2(cx)},${n2(cy - hy)}z" fill="#ffffff" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`);
+    } else parts.push(`<path d="${ellipseD(cx, cy, RX, RY)}" fill="#ffffff" stroke="${INK}" stroke-width="2.4"/>`);
     /** Chromosomes of the whole set: [pair, hollow]. Haploid cells of meiosis II take one of each pair. */
     const diploid: Array<[number, boolean]> = [];
     for (let k = 0; k < n; k++) diploid.push([k, false], [k, true]);
     const haploid: Array<[number, boolean]> = Array.from({ length: n }, (_, k) => [k, k % 2 === 1]);
     /** y of slot i of `count` in a column inside the cell. */
     const colY = (i: number, count: number, lens: number[]): number => {
-      const total = lens.reduce((a, b) => a + b, 0) + (count - 1) * 5;
+      const total = lens.reduce((a, b) => a + b, 0) * K + (count - 1) * GAP;
       let y = cy - total / 2;
-      for (let k = 0; k < i; k++) y += lens[k] + 5;
-      return y + lens[i] / 2;
+      for (let k = 0; k < i; k++) y += lens[k] * K + GAP;
+      return y + (lens[i] * K) / 2;
     };
     const spindle: string[] = [];
+    /** Half the distance between the two homologues of a pair lying side by side. */
+    const PAIR = XW + SW / 2 + 1.6;
     const pole = RX * 0.86;
     const fibre = (x: number, y: number, s: number) => spindle.push(`M${n2(cx + s * pole)},${n2(cy)}L${n2(x)},${n2(y)}`);
     const body: string[] = [];
     if (st === 'prophase' || st === 'prophase_I') {
       // Scattered inside a nuclear envelope that is breaking down (dashed).
       parts.push(`<circle cx="${n2(cx)}" cy="${n2(cy)}" r="${n2(RY * 0.74)}" ${stroke(MUTED, 1.2, '4 3')}/>`);
-      const spots: Pt[] = st === 'prophase' ? [[-14, -14], [13, -10], [-10, 12], [15, 14], [0, -24], [1, 26]] : [[-12, -13], [13, 12], [2, -1]];
-      if (st === 'prophase') diploid.forEach(([k, hollow], i) => body.push(X(cx + spots[i][0], cy + spots[i][1], CHR_LEN[k], hollow)));
-      else for (let k = 0; k < n; k++) { const [sx, sy] = n === 1 ? [0, 0] : spots[k]; body.push(X(cx + sx - 4.6, cy + sy, CHR_LEN[k], false), X(cx + sx + 4.6, cy + sy, CHR_LEN[k], true)); }
+      // Places inside the envelope, as fractions of its radius; the sticks are drawn a little smaller than on a plate so six fit.
+      const R = RY * 0.74;
+      const spots: Pt[] = st === 'prophase' ? [[-0.42, -0.4], [0.4, -0.3], [-0.34, 0.38], [0.44, 0.42], [0, -0.7], [0.04, 0.74]] : [[-0.36, -0.42], [0.36, 0.4], [0.06, -0.02]];
+      const fit = Math.min(1, (R * 0.5) / (CHR_LEN[0] * K));
+      const Xs = (x: number, y: number, len0: number, hollow: boolean): string => X(x, y, len0 * fit, hollow);
+      if (st === 'prophase') diploid.forEach(([k, hollow], i) => body.push(Xs(cx + spots[i][0] * R, cy + spots[i][1] * R, CHR_LEN[k], hollow)));
+      else for (let k = 0; k < n; k++) { const [sx, sy] = n === 1 ? [0, 0] : spots[k]; body.push(Xs(cx + sx * R - PAIR, cy + sy * R, CHR_LEN[k], false), Xs(cx + sx * R + PAIR, cy + sy * R, CHR_LEN[k], true)); }
     } else if (st === 'metaphase' || st === 'metaphase_II') {
       const set = st === 'metaphase' ? diploid : haploid;
       const lens = set.map(([k]) => CHR_LEN[k]);
-      set.forEach(([k, hollow], i) => { const y = colY(i, set.length, lens); body.push(X(cx, y, CHR_LEN[k], hollow)); fibre(cx - 3, y, -1); fibre(cx + 3, y, 1); });
+      set.forEach(([k, hollow], i) => { const y = colY(i, set.length, lens); body.push(X(cx, y, CHR_LEN[k], hollow)); fibre(cx - XW, y, -1); fibre(cx + XW, y, 1); });
     } else if (st === 'metaphase_I') {
       const lens = Array.from({ length: n }, (_, k) => CHR_LEN[k]);
       for (let k = 0; k < n; k++) {
         const y = colY(k, n, lens);
         const flip = k % 2 === 1;
-        body.push(X(cx - 6, y, CHR_LEN[k], flip), X(cx + 6, y, CHR_LEN[k], !flip));
-        fibre(cx - 9, y, -1);
-        fibre(cx + 9, y, 1);
+        body.push(X(cx - PAIR, y, CHR_LEN[k], flip), X(cx + PAIR, y, CHR_LEN[k], !flip));
+        fibre(cx - PAIR - XW, y, -1);
+        fibre(cx + PAIR + XW, y, 1);
       }
     } else if (st === 'anaphase_I' || st === 'telophase_I') {
       const lens = Array.from({ length: n }, (_, k) => CHR_LEN[k]);
@@ -613,7 +650,7 @@ function renderDivision(m: Extract<BioModel, { variant: 'division' }>, W: number
         const y = colY(k, n, lens);
         const flip = k % 2 === 1;
         body.push(X(cx - off, y, CHR_LEN[k], flip), X(cx + off, y, CHR_LEN[k], !flip));
-        if (st === 'anaphase_I') { fibre(cx - off - 3, y, -1); fibre(cx + off + 3, y, 1); }
+        if (st === 'anaphase_I') { fibre(cx - off - XW, y, -1); fibre(cx + off + XW, y, 1); }
       }
     } else {
       // anaphase / telophase of mitosis, anaphase II / telophase II: single chromatids to each pole.
@@ -623,21 +660,29 @@ function renderDivision(m: Extract<BioModel, { variant: 'division' }>, W: number
       set.forEach(([k, hollow], i) => {
         const y = colY(i, set.length, lens);
         body.push(V(cx - off, y, CHR_LEN[k], hollow, -1), V(cx + off, y, CHR_LEN[k], hollow, 1));
-        if (!pinched) { fibre(cx - off - 3, y, -1); fibre(cx + off + 3, y, 1); }
+        if (!pinched) { fibre(cx - off - XW, y, -1); fibre(cx + off + XW, y, 1); }
       });
     }
     if (pinched) {
       // A nuclear envelope re-forming round each group (dashed).
-      const count = st === 'telophase' ? 2 * n : n;
-      const ry = Math.min(RY * 0.8, count * 7.5 + 8);
-      for (const s2 of [-1, 1]) parts.push(`<path d="${ellipseD(cx + s2 * RX * 0.44, cy, 16, ry)}" ${stroke(MUTED, 1.2, '4 3')}/>`);
+      const set = st === 'telophase' ? diploid : st === 'telophase_I' ? Array.from({ length: n }, (_, k): [number, boolean] => [k, false]) : haploid;
+      const colH = set.reduce((a, [k]) => a + CHR_LEN[k] * (st === 'telophase_I' ? 1 : 0.84), 0) * K + (set.length - 1) * GAP;
+      const ry = Math.min(RY * 0.88, colH / 2 + 13);
+      const rx = Math.min(RX * 0.36, (st === 'telophase_I' ? XW : CHR_LEN[0] * K * 0.3) + SW / 2 + 11);
+      for (const s2 of [-1, 1]) parts.push(`<path d="${ellipseD(cx + s2 * RX * 0.44, cy, rx, ry)}" ${stroke(MUTED, 1.2, '4 3')}/>`);
     }
-    if (spindle.length) parts.push(`<path d="${spindle.join('')}" ${stroke('#94a3b8', 0.9)}/>`, dot(cx - pole, cy, 2.2, MUTED), dot(cx + pole, cy, 2.2, MUTED));
+    if (spindle.length) parts.push(`<path d="${spindle.join('')}" ${stroke('#94a3b8', 0.9)}/>`, dot(cx - pole, cy, 2.6, MUTED), dot(cx + pole, cy, 2.6, MUTED));
     parts.push(...body);
-    if (cell.label) parts.push(lab(cx, cy + RY + 17, cell.label, 'middle', { fs: 12, weight: 700 }));
+    if (cell.label) {
+      const ly = cy + RY + 20;
+      if (plated && cell.label !== '?') {
+        const pw = Math.max(24, estWidth(cell.label, 13) + 14);
+        parts.push(`<rect x="${n2(cx - pw / 2)}" y="${n2(ly - 14)}" width="${n2(pw)}" height="19" rx="4" fill="#f1f5f9" stroke="${MUTED}" stroke-width="1"/>`, text(cx, ly, cell.label, { fs: 13, anchor: 'middle', weight: 700 }));
+      } else parts.push(lab(cx, ly, cell.label, 'middle', { fs: 12, weight: 700 }));
+    }
   });
   const rows = Math.ceil(m.cells.length / perRow);
-  return { body: t.svg + parts.join(''), H: t.top + 4 + rows * rowH, facts: facts(notes) };
+  return { body: t.svg + parts.join(''), H: t.top + 6 + rows * rowH, facts: facts(notes) };
 }
 
 // ---------------------------------------------------------------------------

@@ -12,7 +12,10 @@
  *   compasses?: Array<{ x: number; y: number; label: string;
  *                       needle?: boolean (true) }>;      // ≤ 4; false: an empty compass (its direction is asked).
  *                                                        //   The dark half of a needle is its north-seeking end.
- *   points?: Array<{ x: number; y: number; label: string }>;   // ≤ 3 marked points
+ *   points?: Array<{ x: number; y: number; label: string }>;   // ≤ 6 marked points (kept ≥ 0.6 apart, or it warns)
+ *   showInteraction?: boolean (false);   // two magnets: a force arrow "F" over each — towards each other
+ *                                        //   (attract) or apart (repel). With the poles of ONE magnet printed
+ *                                        //   and the other's blank, that is what fixes the blank poles.
  *   title?: string }
  *
  * Coordinates: the origin is the middle of the figure, x to the right, y up.
@@ -23,7 +26,7 @@
  */
 import { FIGURE_WIDTH, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
-import { INK, blank, text, titleBlock } from './draw';
+import { INK, arrow, blank, text, titleBlock } from './draw';
 import { SHOWS, facts, head, polyPath, stroke, type Notes, type Pt, type Show } from './draw2';
 import { clearLabelSpot, fieldAt, traceFieldLines, visibleRuns } from './field-diagram';
 
@@ -41,12 +44,16 @@ export interface BarMagnetModel {
   yRange: [number, number];
   /** Two magnets: what the facing poles do. */
   interaction?: 'attract' | 'repel';
+  /** Two magnets: a force arrow drawn over each. */
+  showInteraction: boolean;
   title?: string;
 }
 
 export const MAGNET_HALF_LENGTH = 1.2;
 export const MAGNET_HALF_HEIGHT = 0.3;
 const POLE_INSET = 0.2;
+/** The colour of a force arrow (as in the other field figures); it is also labelled "F". */
+const FORCE = '#c2410c';
 
 export function barMagnetModel(r: Reader): BarMagnetModel {
   const p = r.p;
@@ -75,8 +82,9 @@ export function barMagnetModel(r: Reader): BarMagnetModel {
     return q;
   };
   const compasses = (p.compasses === undefined || p.compasses === null ? [] : r.list(p.compasses, 'compasses', 0, 4)).map((v, i) => ({ ...spot(v, `compasses[${i}]`, 0.32, 0.4), needle: r.bool((v as Record<string, unknown>).needle, `compasses[${i}].needle`, true) }));
-  const points = (p.points === undefined || p.points === null ? [] : r.list(p.points, 'points', 0, 3)).map((v, i) => spot(v, `points[${i}]`, 0.1, 0.15));
-  const m: BarMagnetModel = { variant: 'bar_magnet', magnets, poles, arrows: r.bool(p.arrows, 'arrows', true), lines: r.bool(p.lines, 'lines', true), compasses, points, xRange, yRange, title: r.optStr(p.title, 'title', 160) };
+  const points = (p.points === undefined || p.points === null ? [] : r.list(p.points, 'points', 0, 6)).map((v, i) => spot(v, `points[${i}]`, 0.1, 0.15));
+  const m: BarMagnetModel = { variant: 'bar_magnet', magnets, poles, arrows: r.bool(p.arrows, 'arrows', true), lines: r.bool(p.lines, 'lines', true), compasses, points, xRange, yRange, showInteraction: r.bool(p.showInteraction, 'showInteraction', false), title: r.optStr(p.title, 'title', 160) };
+  if (m.showInteraction && magnets.length !== 2) r.fail('showInteraction: the force arrows are those of two magnets on each other — there is only one magnet');
   if (magnets.length === 2) {
     const rightEndOfFirst = magnets[0].north === 'right' ? 'N' : 'S';
     const leftEndOfSecond = magnets[1].north === 'left' ? 'N' : 'S';
@@ -143,6 +151,21 @@ export function renderBarMagnet(r: Reader): Drawn {
     }
   });
   const obstacles = [...bodies];
+  if (m.showInteraction) {
+    // A force arrow over each magnet, on a white band so no field line runs through it; "F" at its tail.
+    m.magnets.forEach((mg, i) => {
+      const b = bodies[i];
+      const mid = (b.x0 + b.x1) / 2;
+      const y = b.y0 - 15;
+      const towardGap = i === 0 ? 1 : -1;
+      const dir = m.interaction === 'attract' ? towardGap : -towardGap;
+      const band = { x0: mid - 30, y0: y - 9, x1: mid + 30, y1: y + 9 };
+      obstacles.push(band);
+      parts.push(`<rect x="${n2(band.x0)}" y="${n2(band.y0)}" width="60" height="18" rx="3" fill="#ffffff"/>`,
+        arrow(mid - dir * 10, y, mid + dir * 26, y, { color: FORCE, width: 2.6, head: 9 }),
+        text(mid - dir * 20, y + 4.5, 'F', { fs: 13, anchor: 'middle', weight: 700, italic: true, fill: FORCE }));
+    });
+  }
   for (const c of m.compasses) {
     const [cx, cy] = C([c.x, c.y]);
     obstacles.push({ x0: cx - 12, y0: cy - 12, x1: cx + 12, y1: cy + 12 });
@@ -176,6 +199,12 @@ export function renderBarMagnet(r: Reader): Drawn {
     parts.push(`<circle cx="${n2(px)}" cy="${n2(py)}" r="3.4" fill="${INK}" stroke="#ffffff" stroke-width="1.5"/>`);
     labelled(px, py, q.label, true, 0);
   }
+  // Marked places a reader must tell apart: under 22 units they and their letters run together.
+  const spots = [...m.compasses.map((c) => ({ ...c, what: 'compass' })), ...m.points.map((q) => ({ ...q, what: 'point' }))];
+  const close: string[] = [];
+  spots.forEach((a, i) => spots.slice(i + 1).forEach((b) => { if (Math.hypot(a.x - b.x, a.y - b.y) * k < 22) close.push(`"${a.label}" and "${b.label}"`); }));
+  if (close.length) notes.push({ code: 'crowded', message: `the marked places ${close.slice(0, 3).join(', ')} are under 22 units apart at 340 px — their dots and letters run together; move them at least ${(22 / k).toFixed(1)} apart` });
+  if (spots.length > 7) notes.push({ code: 'too_many_elements', message: `${spots.length} marked points and compasses — more than 7 crowd the field lines at 340 px` });
   if (m.magnets.every((mg) => mg.poles !== 'value') && !(m.lines && m.arrows) && !m.compasses.some((c) => c.needle)) notes.push({ code: 'ambiguous_blank', message: 'no pole is named, the lines carry no arrowheads and no compass needle is drawn — nothing fixes which end is north' });
   return { body: t.svg + parts.join(''), H: top + hgt + 10, facts: facts(notes) };
 }

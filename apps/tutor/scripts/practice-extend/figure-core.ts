@@ -37,6 +37,7 @@ import { slopeFieldSolution } from '../../src/lib/tutor/practice-figure/slope-fi
 import { validateItem, type GeneratedItem } from './core';
 import { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS, Batch2RuleError, describeBatch2, isBatch2Kind, type Batch2FigureKind } from './figure-core-batch2';
 import { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, describeBatch3, figureLetterClash, isBatch3Kind, type Batch3FigureKind } from './figure-core-batch3';
+import { BATCH4_CHECKERS, BATCH4_FIGURE_KINDS, describeBatch4, isBatch4Kind, type Batch4FigureKind } from './figure-core-batch4';
 
 /** `PRACTICE_FIGURE_KINDS` is the list the job offers its writer (figure-prompts.ts).
  *  The batch-1 kinds (unit circle, vectors, …) are transcribed and checked here
@@ -50,6 +51,9 @@ export { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS };
  *  bar-magnet variant of field_diagram): figure-core-batch3.ts, reached the same way. `figureLetterClash`
  *  is the author's guard against option letters that are also labels printed on the figure. */
 export { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, figureLetterClash };
+/** Batch 4 (conics, Venn diagrams and probability trees, mechanics set-ups, waves, energy levels, heating
+ *  curves, electrochemical cells, sequence strips): figure-core-batch4.ts and its parts, reached the same way. */
+export { BATCH4_CHECKERS, BATCH4_FIGURE_KINDS };
 export type FigureKind = AnyPracticeFigureKind;
 
 /** A spec, a derivation or an item that breaks a rule of this track. The
@@ -223,7 +227,7 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
     case 'box_plot': case 'polar_complex': case 'punnett_square': case 'pedigree':
       return {};
     default:
-      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type)) return {};
+      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type) || isBatch4Kind(spec.type)) return {};
       return fail(`unknown figure kind "${spec.type}" — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
 }
@@ -632,6 +636,18 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       if (xLabel) printed.push(`axis label: "${xLabel}"`);
       axes();
       const cats = (Array.isArray(p.categories) ? p.categories : []).map((c) => str(c));
+      const grouped = barSeriesOf(spec);
+      if (grouped) {
+        // Grouped bars: the series side by side in each category, named in a legend; a bar left out is a "?" box.
+        kind = 'a grouped bar chart';
+        printed.push(`bar-group names under the groups: ${cats.map((c) => `"${c}"`).join(', ')}`);
+        grouped.forEach((g) => printed.push(`legend entry: "${g.label}"`));
+        if (p.showValues === true) printed.push(`the value of each bar is printed above it: ${cats.map((c, i) => `${c} — ${grouped.filter((g) => g.values[i] !== null).map((g) => `${g.label} ${fmt(g.values[i] as number)}`).join(', ')}`).join('; ')}`);
+        out.push(`Each group has ${grouped.length} bars side by side, told apart by their fill and named in the legend: ${grouped.map((g, k) => `"${g.label}" (${['solid', 'hatched', 'outline only'][k]})`).join(', ')}.`);
+        out.push('Groups, left to right, with the height of each bar read against the vertical axis:');
+        cats.forEach((c, i) => out.push(`  ${c}: ${grouped.map((g) => `${g.label} ${g.values[i] === null ? '(blank — a "?" box where the bar would be)' : readOff(g.values[i] as number, y)}`).join('; ')}`));
+        break;
+      }
       const values = (Array.isArray(p.values) ? p.values : []) as number[];
       if (cats.length === 0 || cats.length !== values.length || !values.every(isNum)) fail('categories and values must be lists of the same length');
       printed.push(`bar names under the bars: ${cats.map((c) => `"${c}"`).join(', ')}`);
@@ -779,7 +795,7 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       break;
     }
     default: {
-      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out));
+      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out) || describeBatch4(spec, printed, out));
       if (!k) fail(`unknown figure kind "${spec.type}"`);
       kind = k;
     }
@@ -882,7 +898,10 @@ export function describeForAlt(spec: PracticeFigureSpec, opts: { hide?: Array<st
   const plural = (role: string, n: number): string => (n === 1 ? role : /entry$/.test(role) ? role.replace(/entry$/, 'entries') : /s$/.test(role) ? role : `${role}s`);
   const labelled = [...groups].map(([role, vals]) => `${plural(role, vals.length)} ${vals.map((v) => `"${v}"`).join(', ')}`);
   const counts: string[] = [];
-  for (const [key, one, many] of ALT_COUNTS) {
+  const groupedBars = spec.type === 'bar_chart' && Array.isArray(spec.params.series);
+  for (const [key, one0, many0] of ALT_COUNTS) {
+    // Grouped bars: `series` are the bars of a group (not lines), `categories` the groups.
+    const [one, many] = !groupedBars ? [one0, many0] : key === 'series' ? ['bar in each group', 'bars in each group'] : key === 'categories' ? ['group of bars', 'groups of bars'] : [one0, many0];
     const v = spec.params[key];
     if (Array.isArray(v) && v.length > 0) counts.push(`${v.length < COUNT_WORDS.length ? COUNT_WORDS[v.length] : 'many'} ${v.length === 1 ? one : many}`);
   }
@@ -927,11 +946,52 @@ function latticeOf(spec: PracticeFigureSpec, x: Axis, y: Axis): Lattice {
   return { gx, gy, xs, ys, slope: f };
 }
 
+/** Every lattice point with the slope of its segment (NaN = nothing drawn, ±Infinity = a vertical segment). */
+function latticePoints(lat: Lattice): Array<{ x: number; y: number; m: number }> {
+  return lat.ys.flatMap((y) => lat.xs.map((x) => ({ x, y, m: lat.slope(x, y) })));
+}
+const axisMinus = (v: number): string => fmt(v).replace(/^-/, '−');
+/** The region a `slope_sign` derivation names: a membership test and its wording. */
+function slopeRegion(a: P): { inside: (x: number, y: number) => boolean; words: string } {
+  const region = a.region;
+  const E = 1e-9;
+  const optBound = (k: string, dflt: number): number => (a[k] === undefined || a[k] === null ? dflt : isNum(a[k]) ? (a[k] as number) : fail(`derivation argument "${k}" must be a number`));
+  switch (region) {
+    case 'all': return { inside: () => true, words: 'on the whole field' };
+    case 'quadrant_1': return { inside: (x, y) => x > E && y > E, words: 'in the first quadrant' };
+    case 'quadrant_2': return { inside: (x, y) => x < -E && y > E, words: 'in the second quadrant' };
+    case 'quadrant_3': return { inside: (x, y) => x < -E && y < -E, words: 'in the third quadrant' };
+    case 'quadrant_4': return { inside: (x, y) => x > E && y < -E, words: 'in the fourth quadrant' };
+    case 'above': case 'below': case 'on': {
+      const l = a.line;
+      if (!isObj(l) || !isNum(l.slope) || !isNum(l.intercept)) return fail('derivation argument "line" must be { slope, intercept } — the line y = slope·x + intercept');
+      const m = l.slope; const b = l.intercept;
+      const d = (x: number, y: number): number => y - (m * x + b);
+      const name = `the line y = ${fmt(m)}x + ${fmt(b)}`;
+      if (region === 'on') return { inside: (x, y) => Math.abs(d(x, y)) < E, words: `on ${name}` };
+      return region === 'above' ? { inside: (x, y) => d(x, y) > E, words: `above ${name}` } : { inside: (x, y) => d(x, y) < -E, words: `below ${name}` };
+    }
+    case 'left_of': case 'right_of': {
+      if (!isNum(a.x)) return fail('derivation argument "x" must be a number — the vertical line the region lies beside');
+      const c = a.x;
+      return region === 'left_of' ? { inside: (x) => x < c - E, words: `to the left of x = ${fmt(c)}` } : { inside: (x) => x > c + E, words: `to the right of x = ${fmt(c)}` };
+    }
+    case 'rectangle': {
+      const x0 = optBound('xMin', -Infinity); const x1 = optBound('xMax', Infinity); const y0 = optBound('yMin', -Infinity); const y1 = optBound('yMax', Infinity);
+      if ([x0, x1, y0, y1].every((v) => !Number.isFinite(v))) return fail('a rectangle needs at least one of xMin, xMax, yMin, yMax');
+      return { inside: (x, y) => x >= x0 - E && x <= x1 + E && y >= y0 - E && y <= y1 + E, words: 'in the rectangle given' };
+    }
+    default: return fail('derivation argument "region" must be one of all | quadrant_1 | quadrant_2 | quadrant_3 | quadrant_4 | above | below | on | left_of | right_of | rectangle');
+  }
+}
+
 // ── 2b. figure hygiene: what the job puts right itself, and what it can tell is unreadable ──
 
 /** Kinds (or cases) whose drawing was judged not good enough yet; nothing is generated for them. */
 export const RENDERER_NEEDS_WORK: Record<string, string> = {
-  slope_field: 'segments on the plot border are cut off and those on the axes are hidden under the axis lines',
+  // slope_field was listed here until 2026-10-14 ("segments on the plot border are cut off and those on the axes
+  // are hidden under the axis lines"): render.ts now draws the plot half a cell larger than the lattice and the
+  // segments above the axes (test-practice-figure-render.ts holds both), so the kind is generated like any other.
 };
 export const FBD_MAX_FORCES = 3;
 
@@ -1061,6 +1121,7 @@ export function unreadableFeatures(spec: PracticeFigureSpec): string[] {
       break;
     case 'bar_chart':
       ((Array.isArray(spec.params.values) ? spec.params.values : []) as number[]).forEach((v, i) => need(v, ax.y, `height of bar ${i + 1}`));
+      (barSeriesOf(spec) ?? []).forEach((g) => g.values.forEach((v, i) => { if (v !== null) need(v, ax.y, `height of the "${g.label}" bar of group ${i + 1}`); }));
       break;
     case 'reaction_coordinate': {
       const r = reactionOf(spec);
@@ -1224,11 +1285,40 @@ function dotOnGrid(d: Dot, ax: FigureAxes): Dot {
   mustBeOnGrid(d.y, ax.y, 'the y-coordinate of the point');
   return d;
 }
-function barsOf(spec: PracticeFigureSpec, ax: FigureAxes): Array<{ name: string; value: number }> {
+/** The series of a GROUPED bar chart (`series` in place of `values`; null = a bar left out, drawn as a "?"), or null for a plain one. */
+function barSeriesOf(spec: PracticeFigureSpec): Array<{ label: string; values: Array<number | null> }> | null {
+  const raw = spec.params.series;
+  if (spec.type !== 'bar_chart' || raw === undefined || raw === null) return null;
+  const n = Array.isArray(spec.params.categories) ? spec.params.categories.length : 0;
+  if (!Array.isArray(raw) || raw.length < 2 || n === 0) return fail('series must be a list of 2 or 3 series, each with one value per category');
+  return raw.map((g, k) => {
+    if (!isObj(g) || !str(g.label) || !Array.isArray(g.values) || g.values.length !== n || !g.values.every((v) => v === null || isNum(v))) return fail(`series[${k}] must be { label, values } with one value (or null for a bar left out) per category`);
+    return { label: str(g.label), values: g.values as Array<number | null> };
+  });
+}
+/** The bars a checker reads: all of a plain chart, or ONE series of a grouped chart (`series` argument: its legend name or 0-based index). */
+function barsOf(spec: PracticeFigureSpec, ax: FigureAxes, a: P = {}): Array<{ name: string; value: number }> {
   const cats = (Array.isArray(spec.params.categories) ? spec.params.categories : []).map((c) => str(c));
+  const grouped = barSeriesOf(spec);
+  if (grouped) {
+    const g = barSeriesArg(grouped, a, 'series');
+    return cats.map((name, i) => ({ name, value: barHeight(g.values[i], ax, `the "${g.label}" bar of "${name}"`) }));
+  }
+  if (a.series !== undefined) fail('derivation argument "series" is for a grouped bar chart — this chart has one bar per category');
   const values = (Array.isArray(spec.params.values) ? spec.params.values : []) as number[];
   if (cats.length === 0 || cats.length !== values.length) fail('categories and values must be lists of the same length');
   return cats.map((name, i) => ({ name, value: mustBeOnGrid(values[i], ax.y, `the height of the bar "${name}"`) }));
+}
+function barSeriesArg<T extends { label: string }>(grouped: T[], a: P, k: string): T {
+  const v = a[k];
+  const hit = typeof v === 'string' ? grouped.filter((g) => g.label === v.trim()) : isNum(v) && grouped[v] ? [grouped[v]] : [];
+  if (hit.length !== 1) return fail(`derivation argument "${k}" must be the legend name (or 0-based index) of exactly one series — ${grouped.map((g) => `"${g.label}"`).join(', ')}`);
+  return hit[0];
+}
+/** The height of a drawn bar of a grouped chart; a bar left out ("?") has none to read. */
+function barHeight(v: number | null, ax: FigureAxes, what: string): number {
+  if (v === null) return fail(`${what} is left out on the figure (a "?" box) — its height cannot be read off`);
+  return mustBeOnGrid(v, ax.y, `the height of ${what}`);
 }
 function barArg(bars: Array<{ name: string; value: number }>, a: P, k: string): { name: string; value: number } {
   const v = a[k];
@@ -2488,11 +2578,11 @@ export const CHECKERS: Record<string, CheckerDef> = {
     },
   },
   // bar_chart
-  bar_value: { kinds: ['bar_chart'], args: '{ category: name or index }', returns: 'the height of one bar', run: (s, a, ax) => num(barArg(barsOf(s, ax), a, 'category').value) },
+  bar_value: { kinds: ['bar_chart'], args: '{ category: name or index, series?: legend name or index (grouped chart: required) }', returns: 'the height of one bar', run: (s, a, ax) => num(barArg(barsOf(s, ax, a), a, 'category').value) },
   bar_extreme: {
-    kinds: ['bar_chart'], args: '{ which: largest | smallest }', returns: 'the NAME of the tallest or shortest bar',
+    kinds: ['bar_chart'], args: '{ which: largest | smallest, series?: legend name or index (grouped chart: required) }', returns: 'the NAME of the tallest or shortest bar (of that series)',
     run: (s, a, ax) => {
-      const bars = barsOf(s, ax);
+      const bars = barsOf(s, ax, a);
       const sign = pick(a, 'which', ['largest', 'smallest'] as const) === 'largest' ? 1 : -1;
       const best = Math.max(...bars.map((b) => sign * b.value));
       const hit = bars.filter((b) => sign * b.value === best);
@@ -2500,21 +2590,51 @@ export const CHECKERS: Record<string, CheckerDef> = {
       return { kind: 'label', value: hit[0].name };
     },
   },
-  bar_difference: { kinds: ['bar_chart'], args: '{ a: name or index, b: name or index }', returns: 'height of bar a minus height of bar b', run: (s, a, ax) => num(barArg(barsOf(s, ax), a, 'a').value - barArg(barsOf(s, ax), a, 'b').value) },
+  bar_difference: { kinds: ['bar_chart'], args: '{ a: name or index, b: name or index, series?: legend name or index (grouped chart: required) }', returns: 'height of bar a minus height of bar b (within that series)', run: (s, a, ax) => num(barArg(barsOf(s, ax, a), a, 'a').value - barArg(barsOf(s, ax, a), a, 'b').value) },
   bar_sum: {
-    kinds: ['bar_chart'], args: '{ categories?: list of names or indices (all bars when left out) }', returns: 'the sum of the heights of the listed bars',
+    kinds: ['bar_chart'], args: '{ categories?: list of names or indices (all bars when left out), series?: legend name or index (grouped chart: required) }', returns: 'the sum of the heights of the listed bars (of that series)',
     run: (s, a, ax) => {
-      const bars = barsOf(s, ax);
+      const bars = barsOf(s, ax, a);
       const list = Array.isArray(a.categories) ? a.categories.map((c) => barArg(bars, { c }, 'c')) : bars;
       if (new Set(list).size !== list.length) fail('a bar is listed twice');
       return num(list.reduce((t, b) => t + b.value, 0));
     },
   },
-  bar_ratio: { kinds: ['bar_chart'], args: '{ a: name or index, b: name or index }', returns: 'height of bar a divided by height of bar b', run: (s, a, ax) => {
-    const b = barArg(barsOf(s, ax), a, 'b').value;
+  bar_ratio: { kinds: ['bar_chart'], args: '{ a: name or index, b: name or index, series?: legend name or index (grouped chart: required) }', returns: 'height of bar a divided by height of bar b (within that series)', run: (s, a, ax) => {
+    const b = barArg(barsOf(s, ax, a), a, 'b').value;
     if (b === 0) fail('bar b has height 0');
-    return num(barArg(barsOf(s, ax), a, 'a').value / b);
+    return num(barArg(barsOf(s, ax, a), a, 'a').value / b);
   } },
+  bar_series_difference: {
+    kinds: ['bar_chart'], args: '{ category: name or index, a: legend name or index, b: legend name or index }', returns: 'grouped chart: in one category, the height of the bar of series a minus that of series b',
+    run: (s, a, ax) => {
+      const grouped = barSeriesOf(s);
+      if (!grouped) return fail('bar_series_difference is for a grouped bar chart (series) — use bar_difference for a chart with one bar per category');
+      const cats = (Array.isArray(s.params.categories) ? s.params.categories : []).map((c) => str(c));
+      const i = cats.indexOf(barArg(cats.map((name, k) => ({ name, value: k })), a, 'category').name);
+      const ga = barSeriesArg(grouped, a, 'a');
+      const gb = barSeriesArg(grouped, a, 'b');
+      if (ga === gb) return fail('a and b are the same series');
+      return num(barHeight(ga.values[i], ax, `the "${ga.label}" bar of "${cats[i]}"`) - barHeight(gb.values[i], ax, `the "${gb.label}" bar of "${cats[i]}"`));
+    },
+  },
+  bar_series_gap_extreme: {
+    kinds: ['bar_chart'], args: '{ a: legend name or index, b: legend name or index, which: largest | smallest }', returns: 'grouped chart: the NAME of the category in which the bars of series a and b differ the most (or the least) in height',
+    run: (s, a, ax) => {
+      const grouped = barSeriesOf(s);
+      if (!grouped) return fail('bar_series_gap_extreme is for a grouped bar chart (series)');
+      const cats = (Array.isArray(s.params.categories) ? s.params.categories : []).map((c) => str(c));
+      const ga = barSeriesArg(grouped, a, 'a');
+      const gb = barSeriesArg(grouped, a, 'b');
+      if (ga === gb) return fail('a and b are the same series');
+      const sign = pick(a, 'which', ['largest', 'smallest'] as const) === 'largest' ? 1 : -1;
+      const gaps = cats.map((c, i) => Math.abs(barHeight(ga.values[i], ax, `the "${ga.label}" bar of "${c}"`) - barHeight(gb.values[i], ax, `the "${gb.label}" bar of "${c}"`)));
+      const best = Math.max(...gaps.map((g) => sign * g));
+      const hit = cats.filter((_c, i) => Math.abs(sign * gaps[i] - best) < 1e-9);
+      if (hit.length !== 1) return fail('two categories tie for that extreme');
+      return { kind: 'label', value: hit[0] };
+    },
+  },
   // line_plot (dot plot)
   dot_count: {
     kinds: ['line_plot'], args: '{ value: number } or { min?: number, max?: number } (inclusive; no argument = all dots)', returns: 'how many dots sit at a value, or in a range of values',
@@ -2589,6 +2709,126 @@ export const CHECKERS: Record<string, CheckerDef> = {
       const m = lat.slope(x, y);
       if (!Number.isFinite(m) || Math.abs(m) > 3 || !isMultiple(m, 0.5)) fail(`the segment at (${fmt(x)}, ${fmt(y)}) has slope ${Number.isFinite(m) ? fmt(m) : 'undefined'} — only slopes that are multiples of 0.5 between −3 and 3 can be told apart by eye`);
       return num(m);
+    },
+  },
+  slope_sign: {
+    kinds: ['slope_field'],
+    args: '{ region: all | quadrant_1 | quadrant_2 | quadrant_3 | quadrant_4 | above | below | on | left_of | right_of | rectangle, line?: { slope, intercept } (for above / below / on: the line y = slope·x + intercept), x?: number (for left_of / right_of), xMin?, xMax?, yMin?, yMax? (rectangle, inclusive) }',
+    returns: 'positive, negative or zero — the sign every segment of the region shares (points on an axis belong to no quadrant); refused when the region holds fewer than two segments, a vertical one, or segments of different signs',
+    run: (s, a, ax) => {
+      const lat = latticeOf(s, ax.x!, ax.y!);
+      const { inside, words } = slopeRegion(a);
+      const pts = latticePoints(lat).filter((q) => inside(q.x, q.y) && !Number.isNaN(q.m));
+      if (pts.length < 2) return fail(`${words} holds ${pts.length} drawn segment${pts.length === 1 ? '' : 's'} — a sign "in the region" needs at least two`);
+      if (pts.some((q) => !Number.isFinite(q.m))) return fail(`${words} holds a vertical segment, which has no sign`);
+      const pos = pts.filter((q) => q.m > 1e-9).length;
+      const neg = pts.filter((q) => q.m < -1e-9).length;
+      const zero = pts.length - pos - neg;
+      if ([pos, neg, zero].filter((n) => n > 0).length !== 1) return fail(`the segments ${words} do not share a sign (${pos} rising, ${neg} falling, ${zero} flat)`);
+      return { kind: 'label', value: pos ? 'positive' : neg ? 'negative' : 'zero' };
+    },
+  },
+  slope_isocline: {
+    kinds: ['slope_field'], args: '{ slope: number | "vertical" }',
+    returns: 'the ONE straight line along which every segment has that slope, written "x = c", "y = c" or "y = mx + c" (m of ±1, ±2, ±0.5) — refused when the segments with that slope do not lie on exactly one such line, or fewer than two are drawn',
+    run: (s, a, ax) => {
+      const lat = latticeOf(s, ax.x!, ax.y!);
+      const vertical = a.slope === 'vertical';
+      const want = vertical ? Infinity : argNum(a, 'slope');
+      const is = (m: number): boolean => (vertical ? !Number.isNaN(m) && !Number.isFinite(m) : Number.isFinite(m) && Math.abs(m - want) < 1e-9);
+      const words = vertical ? 'vertical segments' : `segments of slope ${fmt(want)}`;
+      const key = (q: { x: number; y: number }): string => `${fmt(q.x)},${fmt(q.y)}`;
+      const all = latticePoints(lat);
+      const target = new Set(all.filter((q) => is(q.m)).map(key));
+      if (target.size < 2) return fail(`${target.size === 0 ? 'no' : 'only one'} ${vertical ? 'vertical segment' : `segment of slope ${fmt(want)}`} is drawn — a line cannot be read from that`);
+      const x0 = ax.x!.min; const x1 = ax.x!.max; const y0 = ax.y!.min; const y1 = ax.y!.max;
+      type Line = { on: (x: number, y: number) => boolean; at: (t: number) => [number, number] | null; text: string };
+      const lines: Line[] = [];
+      for (const c of lat.xs) lines.push({ on: (x) => Math.abs(x - c) < 1e-9, at: (t) => [c, y0 + t * (y1 - y0)], text: `x = ${axisMinus(c)}` });
+      for (const c of lat.ys) lines.push({ on: (_x, y) => Math.abs(y - c) < 1e-9, at: (t) => [x0 + t * (x1 - x0), c], text: `y = ${axisMinus(c)}` });
+      const span = Math.max(Math.abs(y0), Math.abs(y1)) + 2 * Math.max(Math.abs(x0), Math.abs(x1));
+      for (const m of [1, -1, 2, -2, 0.5, -0.5]) {
+        for (let c = -Math.ceil(span); c <= Math.ceil(span); c += 0.5) {
+          const mx = m === 1 ? 'x' : m === -1 ? '−x' : `${axisMinus(m)}x`;
+          lines.push({
+            on: (x, y) => Math.abs(y - (m * x + c)) < 1e-9,
+            at: (t) => { const x = x0 + t * (x1 - x0); const y = m * x + c; return y < y0 - 1e-9 || y > y1 + 1e-9 ? null : [x, y]; },
+            text: `y = ${mx}${c === 0 ? '' : c > 0 ? ` + ${fmt(c)}` : ` − ${fmt(-c)}`}`,
+          });
+        }
+      }
+      const fits = lines.filter((l) => {
+        // A lattice point where the field is undefined (0/0 — nothing drawn) does not break a line.
+        const on = all.filter((q) => l.on(q.x, q.y) && !Number.isNaN(q.m));
+        if (on.length !== target.size || !on.every((q) => target.has(key(q)))) return false;
+        // Between the lattice points too: the slope is that value all along the line.
+        for (let i = 0; i <= 40; i++) {
+          const q = l.at(i / 40);
+          const m = q ? lat.slope(q[0], q[1]) : NaN;
+          if (!Number.isNaN(m) && !is(m)) return false;
+        }
+        return true;
+      });
+      if (fits.length !== 1) return fail(`the ${words} do not lie along exactly one straight line of the forms x = c, y = c, y = mx + c (m of ±1, ±2, ±0.5)`);
+      return { kind: 'text', value: fits[0].text };
+    },
+  },
+  slope_depends_on: {
+    kinds: ['slope_field'], args: '{}',
+    returns: 'what the slopes depend on, as the lattice shows it: "x only" (every column is one slope, the columns differ), "y only" (every row is one slope, the rows differ) or "both x and y" — refused when every segment has the same slope',
+    run: (s, _a, ax) => {
+      const lat = latticeOf(s, ax.x!, ax.y!);
+      const same = (p: number, q: number): boolean => (Number.isNaN(p) && Number.isNaN(q)) || p === q || Math.abs(p - q) < 1e-9;
+      const withX = lat.ys.some((y) => lat.xs.some((x) => !same(lat.slope(x, y), lat.slope(lat.xs[0], y))));
+      const withY = lat.xs.some((x) => lat.ys.some((y) => !same(lat.slope(x, y), lat.slope(x, lat.ys[0]))));
+      if (!withX && !withY) return fail('every segment has the same slope — the field does not show a dependence on x or on y');
+      return { kind: 'label', value: withX && withY ? 'both x and y' : withX ? 'x only' : 'y only' };
+    },
+  },
+  slope_match_equation: {
+    kinds: ['slope_field'], args: '{ options: list of 2–6 expressions for dy/dx in x and y, each as it is worded in the options ("x − y" or "dy/dx = x − y") }',
+    returns: 'the ONE listed option whose slope agrees with the drawn segment at every lattice point, as it was written — refused when none or more than one agrees (two options the lattice cannot tell apart)',
+    run: (s, a, ax) => {
+      const lat = latticeOf(s, ax.x!, ax.y!);
+      const options = a.options;
+      if (!Array.isArray(options) || options.length < 2 || options.length > 6 || !options.every((o) => typeof o === 'string' && o.trim())) return fail('derivation argument "options" must be a list of 2 to 6 expressions for dy/dx');
+      const pts = latticePoints(lat);
+      const agree = (options as string[]).filter((o, i) => {
+        const body = o.replace(/^\s*(?:dy\s*\/\s*dx|y\s*[′'])\s*=\s*/i, '').replace(/[−–]/g, '-').replace(/[·×]/g, '*');
+        let g: (x: number, y: number) => number;
+        try {
+          g = compileExpression(body, ['x', 'y']);
+        } catch (e) {
+          return fail(`options[${i}]: ${(e as Error).message}`);
+        }
+        return pts.every((q) => {
+          const v = g(q.x, q.y);
+          if (Number.isNaN(q.m) || Number.isNaN(v)) return Number.isNaN(q.m) && Number.isNaN(v);
+          if (!Number.isFinite(q.m) || !Number.isFinite(v)) return !Number.isFinite(q.m) && !Number.isFinite(v);
+          return Math.abs(v - q.m) < 1e-9;
+        });
+      });
+      if (agree.length !== 1) return fail(agree.length === 0 ? 'none of the options agrees with the field at every lattice point' : `${agree.length} of the options agree with the field at every lattice point (${agree.join('; ')}) — the figure cannot tell them apart`);
+      return { kind: 'text', value: agree[0].trim() };
+    },
+  },
+  slope_solution_at: {
+    kinds: ['slope_field'], args: '{ x: number }',
+    returns: 'the height, at a vertical gridline, of the solution curve DRAWN on the field (solutionThrough) — refused when no curve is drawn, the curve does not reach that x, or its height there is not on a gridline',
+    run: (s, a, ax) => {
+      latticeOf(s, ax.x!, ax.y!);
+      const through = s.params.solutionThrough;
+      if (!Array.isArray(through) || !isNum(through[0]) || !isNum(through[1])) return fail('no solution curve is drawn on the field (solutionThrough is not given)');
+      const x = mustBeOnGrid(argNum(a, 'x'), ax.x, 'x');
+      const curve = slopeFieldSolution(str(s.params.expr), [through[0], through[1]], [ax.x!.min, ax.x!.max], [ax.y!.min, ax.y!.max]);
+      if (x < curve[0][0] - 1e-6 || x > curve[curve.length - 1][0] + 1e-6) return fail(`the drawn solution curve does not reach x = ${fmt(x)}`);
+      const v = seriesAt(curve, x);
+      if (v < ax.y!.min - 1e-6 || v > ax.y!.max + 1e-6) return fail(`at x = ${fmt(x)} the solution curve is outside the plot`);
+      // The curve is integrated numerically: a height within a thousandth of a gridline IS on it.
+      const unit = ax.y!.minor ?? ax.y!.step;
+      const snapped = Math.round(v / unit) * unit;
+      if (Math.abs(v - snapped) > 1e-3) return fail(`at x = ${fmt(x)} the solution curve is at about ${fmt(Number(v.toFixed(3)))}, which does not lie on a gridline of the figure, so it cannot be read off exactly`);
+      return num(snapped);
     },
   },
   // reaction_coordinate
@@ -2674,7 +2914,8 @@ const PRINTS_RESULT: Array<{ option: string; kind: FigureKind; checkers: RegExp 
   { option: 'showValues', kind: 'bar_chart', checkers: /^bar_/ },
   { option: 'annotateValues', kind: 'reaction_coordinate', checkers: /^rc_/ },
   { option: 'showEquation', kind: 'scatter_plot', checkers: /^trend_/ },
-  { option: 'showExpression', kind: 'slope_field', checkers: /^slope_at$/ },
+  // The equation settles every reading of a slope field (a slope, a sign, an isocline, the matching equation).
+  { option: 'showExpression', kind: 'slope_field', checkers: /^slope_/ },
 ];
 
 export interface Derivation {
@@ -2687,7 +2928,7 @@ export interface Derivation {
  *  cannot be read off the figure. */
 export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
   const def = CHECKERS[d.checker];
-  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker];
+  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker] ?? BATCH4_CHECKERS[d.checker];
   if (batch2) {
     if (!(batch2.kinds as readonly string[]).includes(spec.type)) return fail(`the checker "${d.checker}" is for ${batch2.kinds.join(' / ')}, not for ${spec.type}`);
     return viaBatch2(() => batch2.run(spec, d.args ?? {}));
@@ -2698,9 +2939,9 @@ export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
 }
 
 /** The checker list as the writer is shown it, grouped by figure kind. */
-export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind> = PRACTICE_FIGURE_KINDS): string {
+export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind | Batch4FigureKind> = PRACTICE_FIGURE_KINDS): string {
   return kinds.map((k) => {
-    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
+    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS), ...Object.entries(BATCH4_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
     return `${k}:\n${mine.map(([name, d]) => `  - ${name} ${d.args} → ${d.returns}`).join('\n')}`;
   }).join('\n');
 }

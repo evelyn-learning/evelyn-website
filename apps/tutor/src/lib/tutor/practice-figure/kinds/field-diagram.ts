@@ -9,6 +9,9 @@
  *                      showSign?: boolean (true) }>;   // false: an empty circle (the sign is the question)
  *     xRange?: [min, max]; yRange?: [min, max];   // default: round the charges
  *     linesPerUnit?: number (8);                  // 4–12
+ *                                                 //   (two unlike charges of unequal size: the larger one's escaping
+ *                                                 //   lines are aimed so two pass beyond the point of zero field —
+ *                                                 //   `beyondNull`; the count stays charge × linesPerUnit)
  *     arrows?: boolean (true);                    // arrowheads on the lines
  *     points?: Array<{ x: number; y: number; label: string }>;   // marked points ("P")
  *     equipotentials?: Array<[x, y]> }            // ≤ 4 dashed curves, each through that point
@@ -193,6 +196,34 @@ export interface FieldLine {
   to: number;
 }
 
+/**
+ * Two unlike charges of unequal size have one point of zero field, on the line through them beyond the
+ * SMALLER charge. When that point is inside the picture (with room beyond it): the index of the larger
+ * charge, the null point, a spot in the region beyond it (`aim` — off the axis, a third of the way on to
+ * the edge) and a test for "is in that region". null otherwise.
+ */
+export function beyondNull(m: Extract<FieldModel, { variant: 'point_charges' }>): { larger: number; at: Pt; aim: Pt; inRegion: (x: number, y: number) => boolean } | null {
+  const { charges, xRange, yRange } = m;
+  if (charges.length !== 2 || charges[0].q * charges[1].q >= 0 || Math.abs(Math.abs(charges[0].q) - Math.abs(charges[1].q)) < 1e-9) return null;
+  const larger = Math.abs(charges[0].q) > Math.abs(charges[1].q) ? 0 : 1;
+  const [big, small] = [charges[larger], charges[1 - larger]];
+  const d = Math.hypot(small.x - big.x, small.y - big.y);
+  if (d < 1e-9) return null;
+  const [ux, uy] = [(small.x - big.x) / d, (small.y - big.y) / d];
+  const s = d / (Math.sqrt(Math.abs(big.q / small.q)) - 1);
+  const at: Pt = [small.x + ux * s, small.y + uy * s];
+  // How far the axis runs on from the null point before it leaves the picture.
+  const tx = ux > 1e-9 ? (xRange[1] - at[0]) / ux : ux < -1e-9 ? (xRange[0] - at[0]) / ux : Infinity;
+  const ty = uy > 1e-9 ? (yRange[1] - at[1]) / uy : uy < -1e-9 ? (yRange[0] - at[1]) / uy : Infinity;
+  const room = Math.min(tx, ty);
+  const span = Math.max(xRange[1] - xRange[0], yRange[1] - yRange[0]);
+  if (!(room > span * 0.06) || at[0] <= xRange[0] || at[0] >= xRange[1] || at[1] <= yRange[0] || at[1] >= yRange[1]) return null;
+  const off = Math.min(s * 0.3, room * 0.6);
+  const aim: Pt = [at[0] + ux * room * 0.35 - uy * off, at[1] + uy * room * 0.35 + ux * off];
+  const inRegion = (x: number, y: number): boolean => (x - at[0]) * ux + (y - at[1]) * uy > 0 && Math.abs(-(x - at[0]) * uy + (y - at[1]) * ux) < Math.max(s, room) && x >= xRange[0] && x <= xRange[1] && y >= yRange[0] && y <= yRange[1];
+  return { larger, at, aim, inRegion };
+}
+
 /** The field lines of a point-charge model, in true coordinates. `r0` is the radius of a charge's symbol. */
 export function traceFieldLines(m: Extract<FieldModel, { variant: 'point_charges' }>, r0: number): FieldLine[] {
   const { charges, xRange, yRange } = m;
@@ -210,7 +241,7 @@ export function traceFieldLines(m: Extract<FieldModel, { variant: 'point_charges
   // A line that leaves the picture is followed on for a while (to 1.5 pictures beyond each edge):
   // `back` is the charge it comes back to end on, with the whole path — a long loop round a smaller charge.
   const [mx, my] = [(xRange[1] - xRange[0]) * 1.5, (yRange[1] - yRange[0]) * 1.5];
-  const trace = (i: number, angle: number, sgn: 1 | -1): { pts: Pt[]; end: number; back?: { pts: Pt[]; end: number } } => {
+  const trace = (i: number, angle: number, sgn: 1 | -1): { pts: Pt[]; end: number; back?: { pts: Pt[]; end: number }; all?: Pt[] } => {
     let x = charges[i].x + r0 * Math.cos(angle);
     let y = charges[i].y + r0 * Math.sin(angle);
     const pts: Pt[] = [[x, y]];
@@ -232,7 +263,7 @@ export function traceFieldLines(m: Extract<FieldModel, { variant: 'point_charges
       const hit = charges.findIndex((c, j) => j !== i && Math.hypot(x - c.x, y - c.y) < r0);
       if (hit >= 0) return cut ? { pts: cut, end: -1, back: { pts, end: hit } } : { pts, end: hit };
     }
-    return cut ? { pts: cut, end: -1 } : { pts, end: -2 };
+    return cut ? { pts: cut, end: -1, all: pts } : { pts, end: -2 };
   };
   // The smaller charges first (of equal ones the positive first): every line of a charge is started
   // evenly round IT, so a small charge beside a large one has lines on all its sides; a line that
@@ -240,6 +271,37 @@ export function traceFieldLines(m: Extract<FieldModel, { variant: 'point_charges
   // the picture and loops back to a LARGER charge is drawn in both its visible stretches (it is a
   // line of both charges, so both keep their counts); between equal charges each end is drawn to
   // the edge from its own charge, as it always was.
+  /** For the larger of two unlike charges: the angle (from the direction of the smaller charge, > 0) at
+   *  which a line must leave it to pass through the region beyond the null point — found by following
+   *  the field back from a spot there; null when there is no such region in the picture, when fewer than
+   *  three lines escape, or when no escaping line reaches it. */
+  const beyondNullAim = (i: number): number | null => {
+    const region = beyondNull(m);
+    if (!region || region.larger !== i) return null;
+    if (Math.round((Math.abs(charges[i].q) - Math.abs(charges[1 - i].q)) * m.linesPerUnit) < 3) return null;
+    const sgn: 1 | -1 = charges[i].q > 0 ? -1 : 1;
+    let [x, y] = region.aim;
+    for (let step = 0; step < 16000; step++) {
+      const [ax, ay] = fieldAt(charges, x, y);
+      const al = Math.hypot(ax, ay);
+      if (al < 1e-9) return null;
+      const [bx, by] = fieldAt(charges, x + (sgn * h * ax) / al / 2, y + (sgn * h * ay) / al / 2);
+      const bl = Math.hypot(bx, by);
+      if (bl < 1e-9) return null;
+      x += (sgn * h * bx) / bl;
+      y += (sgn * h * by) / bl;
+      if (Math.hypot(x - charges[1 - i].x, y - charges[1 - i].y) < r0) return null;
+      if (Math.hypot(x - charges[i].x, y - charges[i].y) < r0) {
+        const toSmall = Math.atan2(charges[1 - i].y - charges[i].y, charges[1 - i].x - charges[i].x);
+        let a = Math.abs(((Math.atan2(y - charges[i].y, x - charges[i].x) - toSmall + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
+        // The line as it is then traced forward must really escape (a hair nearer the axis it ends on the smaller charge).
+        for (let k = 0; k < 12 && trace(i, toSmall + a, charges[i].q > 0 ? 1 : -1).end >= 0; k++) a += 0.004;
+        return a < Math.PI - 0.2 ? a : null;
+      }
+      if (x < xRange[0] - mx || x > xRange[1] + mx || y < yRange[0] - my || y > yRange[1] + my) return null;
+    }
+    return null;
+  };
   const order = charges.map((_, i) => i).sort((a, b) => Math.abs(charges[a].q) - Math.abs(charges[b].q) || charges[b].q - charges[a].q || a - b);
   const done = new Set<number>();
   const mine: FieldLine[][] = charges.map(() => []);
@@ -248,6 +310,27 @@ export function traceFieldLines(m: Extract<FieldModel, { variant: 'point_charges
     const c = charges[i];
     const n = Math.abs(c.q) * m.linesPerUnit;
     const base = nearest(i);
+    // Two UNLIKE charges of unequal size, the larger one, when the point of zero field (on the far side
+    // of the smaller charge) is in the picture: started evenly round the larger charge, every line that
+    // escapes leaves the picture on that charge's own side, and the region beyond the null point is
+    // empty. So its escaping lines — still (Q − q) × linesPerUnit of them, the count ∝ charge — are
+    // started evenly over the angles from which a line escapes at all, the first and the last aimed to
+    // pass through the region beyond the null point (`beyondNull`). Fewer than three escaping lines
+    // cannot do both; the renderer then says the region is empty.
+    const aimed = charges.length === 2 && !done.has(i) && done.has(1 - i) ? beyondNullAim(i) : null;
+    if (aimed) {
+      const count = Math.round((size(i) - size(1 - i)) * m.linesPerUnit);
+      for (let j = 0; j < count; j++) {
+        const t = trace(i, base + aimed + ((2 * Math.PI - 2 * aimed) * j) / (count - 1), c.q > 0 ? 1 : -1);
+        if (t.end >= 0) continue;
+        // The two aimed lines are kept whole: in a low picture they leave it over the smaller charge and
+        // come back in beyond the null point — both visible stretches are drawn.
+        const pts = (j === 0 || j === count - 1) && t.all ? t.all : t.pts;
+        mine[i].push(c.q > 0 ? { pts, from: i, to: t.end } : { pts: [...pts].reverse(), from: t.end, to: i });
+      }
+      done.add(i);
+      continue;
+    }
     for (let j = 0; j < n; j++) {
       let t = trace(i, base + (2 * Math.PI * (j + 0.5)) / n, c.q > 0 ? 1 : -1);
       if (t.end >= 0 && done.has(t.end)) continue;
@@ -540,6 +623,13 @@ export function renderFieldDiagram(r: Reader): Drawn {
     // Counting lines works when each charge's lines leave it well apart and run clear. With THREE
     // charges they bunch in the gaps between the charges however they are started; and more than
     // a dozen lines on one symbol leave it under 5 units apart.
+    // Unequal unlike charges: the region beyond the point of zero field should not read as "no field there".
+    const far = beyondNull(m);
+    if (far && !lines.some((ln) => ln.pts.some((q) => far.inRegion(q[0], q[1])))) {
+      const [bigC, smallC] = [m.charges[far.larger], m.charges[1 - far.larger]];
+      const side = Math.abs(smallC.x - bigC.x) >= Math.abs(smallC.y - bigC.y) ? (smallC.x > bigC.x ? 'to the right of' : 'to the left of') : smallC.y > bigC.y ? 'above' : 'below';
+      notes.push({ code: 'not_to_scale', message: `no field line is drawn in the region beyond the point of zero field (${side} charges[${1 - far.larger}], past x = ${numStr(far.at[0], 1)}, y = ${numStr(far.at[1], 1)}): only ${Math.round((Math.abs(bigC.q) - Math.abs(smallC.q)) * m.linesPerUnit)} of the larger charge's lines escape, too few to reach it — use a larger linesPerUnit (at least three escaping lines), or keep that region out of xRange / yRange` });
+    }
     if (m.charges.length >= 3) notes.push({ code: 'crowded', message: 'three charges: the field lines bunch between them — use this figure for direction and sign, NOT for counting lines (for line counting use one or two charges)' });
     m.charges.forEach((c, i) => {
       const n = Math.abs(c.q) * m.linesPerUnit;

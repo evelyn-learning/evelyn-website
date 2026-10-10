@@ -9,6 +9,7 @@
  * figure ANSWERS the question without STATING the answer.
  */
 import type { PracticeFigureSpec } from '../../src/lib/tutor/practice-figure/render';
+import { BATCH4_FIXTURES } from './practice-figure-fixtures-batch4';
 
 export interface FigureFixture {
   id: string;
@@ -1739,3 +1740,7 @@ export const BATCH3_FIXTURES: FigureFixture[] = [
 ];
 
 FIGURE_FIXTURES.push(...BATCH3_FIXTURES);
+
+/** Batch 4 (2026-10-14): practice-figure-fixtures-batch4.ts and its part files. */
+export { BATCH4_FIXTURES };
+FIGURE_FIXTURES.push(...BATCH4_FIXTURES);

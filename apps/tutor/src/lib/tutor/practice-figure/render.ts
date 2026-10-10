@@ -93,6 +93,12 @@
  *   { categories: string[]; values: number[];       // same length, 1–24
  *     yLabel?: string; xLabel?: string; yMin?: number; yMax?: number; yStep?: number;
  *     showValues?: boolean (false); colors?: string[] }
+ *   Grouped bars (2026-10-14): in place of `values`,
+ *     series: Array<{ label: string; values: Array<number | null> }>   // 2–3 series, one value per category
+ *   draws the series side by side in every category with a legend under the chart. A series is told
+ *   apart WITHOUT colour: the first is solid, the second hatched inside an outline, the third an
+ *   outline only. A `null` value is a bar left out on purpose — a dashed "?" box stands in its slot.
+ *   At most 16 bars in all (categories × series); `colors` does not apply.
  *
  * line_plot — dot plot: one dot per data value over a number line TO SCALE
  *   { values: number[]; xLabel?: string; step?: number (tick spacing; inferred) }
@@ -150,6 +156,8 @@
  * molecular_structure, gel_electrophoresis (and its amplification_plot variant), bio_schematic
  * (cell, membrane, division, compartments), schematic_map — and the bar_magnet variant of
  * field_diagram. Params at the top of each module.
+ * BATCH 4 (./kinds/batch4.ts, 2026-10-14): conic_graph, venn_diagram, probability_tree, mechanics_setup,
+ * wave_diagram, energy_levels, heating_curve, electrochemical_cell, sequence_strip.
  *
  * Every marked point, endpoint and vertex dot is drawn LAST, unclipped, on a
  * thin white ring — above the curves, the grid and the axes.
@@ -180,6 +188,7 @@ import { renderBoxPlot, renderDistributionCurve, renderHistogram } from './kinds
 import { renderPolarComplex } from './kinds/polar-complex';
 import { renderPunnett } from './kinds/punnett';
 import { renderPedigree } from './kinds/pedigree';
+import { blank as blankBox } from './kinds/draw';
 import { HALO, PracticeFigureSpecError, Reader, type Drawn, type FigureFacts, type Params, type PracticeFigureSpec } from './spec';
 import {
   FIGURE_FONT,
@@ -215,6 +224,7 @@ import {
 } from './plot-frame';
 import { BATCH2_FIGURE_KINDS, renderBatch2, type Batch2FigureKind } from './kinds/batch2';
 import { BATCH3_FIGURE_KINDS, renderBatch3, type Batch3FigureKind } from './kinds/batch3';
+import { BATCH4_FIGURE_KINDS, renderBatch4, type Batch4FigureKind } from './kinds/batch4';
 
 export const PRACTICE_FIGURE_KINDS = [
   'function_graph',
@@ -271,6 +281,10 @@ export { BATCH2_FIGURE_KINDS, type Batch2FigureKind };
 /** Batch 3 (2026-10-12): molecular_structure, gel_electrophoresis, bio_schematic, schematic_map —
  *  drawn by ./kinds/batch3.ts and the modules it names. A list of its own, for the same reason. */
 export { BATCH3_FIGURE_KINDS, type Batch3FigureKind };
+/** Batch 4 (2026-10-14): conic_graph, venn_diagram, probability_tree, mechanics_setup, wave_diagram,
+ *  energy_levels, heating_curve, electrochemical_cell, sequence_strip — drawn by ./kinds/batch4.ts and the
+ *  modules it names. A list of its own, for the same reason. */
+export { BATCH4_FIGURE_KINDS, type Batch4FigureKind };
 export { sampleCurve };
 
 /** Short stable id prefix from the spec (FNV-1a) — see the module header. */
@@ -679,7 +693,12 @@ function renderMotionGraph(r: Reader, uid: string): Drawn {
     const mode = s.vertexDots ?? (showPoints ? 'all' : 'auto');
     const last = s.pts.length - 1;
     s.pts.forEach((pt, j) => {
-      facts.marks.push({ what: `series[${i}].points[${j}]`, cx: f.X(pt[0]), cy: f.Y(pt[1]) });
+      // A point ON an axis is where a motion graph legitimately starts or rests: the first point of a
+      // series on the left edge (the record begins there), or a value of zero when the time axis is the
+      // foot of the plot. Neither is "a feature on the border" — unless it is also on the top or right edge.
+      const onAxis = (j === 0 && pt[0] === tRange[0]) || (yRange[0] === 0 && pt[1] === 0 && pt[0] >= tRange[0]);
+      const onFarEdge = pt[0] === tRange[1] || pt[1] === yRange[1];
+      if (!onAxis || onFarEdge) facts.marks.push({ what: `series[${i}].points[${j}]`, cx: f.X(pt[0]), cy: f.Y(pt[1]) });
       const isEnd = j === 0 || j === last;
       const draw = mode === 'all' ? inPlot(pt) : mode === 'ends' ? isEnd && inPlot(pt) : mode === 'auto' ? isEnd && inside(pt) : false;
       if (draw) dots.push(`<circle cx="${n2(f.X(pt[0]))}" cy="${n2(f.Y(pt[1]))}" r="3.2" fill="${s.color}" stroke="#ffffff" stroke-width="1.2"/>`);
@@ -697,8 +716,155 @@ function renderMotionGraph(r: Reader, uid: string): Drawn {
 const ROT = 40; // degrees, for category labels that do not fit their column
 const MAX_CAT_CHARS = 28;
 
+/** Fill styles of grouped bars, in series order — each a different texture, so no reading rests on colour. */
+const GROUP_STYLES = ['solid', 'hatched', 'outline'] as const;
+const MAX_GROUPED_BARS = 16;
+
+/** One grouped bar (or a legend swatch): solid; white with an outline and rising hatch lines; white with a heavy outline. */
+function groupedBar(x: number, y: number, w: number, h: number, k: number): string {
+  const color = SERIES_COLORS[k];
+  const style = GROUP_STYLES[k];
+  if (style === 'solid') return `<rect x="${n2(x)}" y="${n2(y)}" width="${n2(w)}" height="${n2(h)}" fill="${color}"/>`;
+  const sw = style === 'outline' ? 2 : 1.3;
+  // The outline is drawn inside the bar's box, so the bar's top edge is its value.
+  const box = `<rect x="${n2(x + sw / 2)}" y="${n2(y + sw / 2)}" width="${n2(Math.max(w - sw, 0.2))}" height="${n2(Math.max(h - sw, 0.2))}" fill="#ffffff" stroke="${color}" stroke-width="${sw}"/>`;
+  if (style === 'outline' || h < 3) return box;
+  // Rising hatch lines x + y = c, each cut to the bar's box by hand (no clip path: nothing needs an id).
+  const gap = 5;
+  const segs: string[] = [];
+  for (let c = Math.ceil((x + y) / gap) * gap; c < x + w + y + h; c += gap) {
+    const xa = Math.max(x, c - (y + h));
+    const xb = Math.min(x + w, c - y);
+    if (xb - xa > 0.6) segs.push(`M${n2(xa)},${n2(c - xa)}L${n2(xb)},${n2(c - xb)}`);
+  }
+  return box + (segs.length ? `<path d="${segs.join('')}" fill="none" stroke="${color}" stroke-width="1.1"/>` : '');
+}
+
+/** bar_chart with `series`: the series side by side in each category. A function of its own, so a chart given
+ *  by `values` is drawn exactly as before. */
+function renderGroupedBarChart(r: Reader): Drawn {
+  const p = r.p;
+  if (p.values !== undefined && p.values !== null) r.fail('give either values (one bar per category) or series (grouped bars), not both');
+  const cats = r.list(p.categories, 'categories', 1, 8).map((c, i) => r.str(c, `categories[${i}]`, 60));
+  const n = cats.length;
+  const series = r.list(p.series, 'series', 2, GROUP_STYLES.length).map((raw, k) => {
+    const o = r.obj(raw, `series[${k}]`);
+    const values = r.list(o.values, `series[${k}].values`, n, n).map((v, i) => (v === null ? null : r.num(v, `series[${k}].values[${i}]`)));
+    return { label: r.str(o.label, `series[${k}].label`, 40), values };
+  });
+  const K = series.length;
+  if (new Set(series.map((s) => s.label)).size !== K) r.fail('series: every series needs its own label (the legend would show one twice)');
+  if (n * K > MAX_GROUPED_BARS) r.fail(`series: ${n} categories × ${K} series is ${n * K} bars — at most ${MAX_GROUPED_BARS} are legible at phone width`);
+  const all = series.flatMap((s) => s.values).filter((v): v is number => v !== null);
+  if (all.length === 0) r.fail('series: every value is left out — there is nothing to draw');
+  const auto = niceBounds(Math.min(0, ...all), Math.max(0, ...all), 8);
+  const yMin = r.optNum(p.yMin, 'yMin') ?? auto.min;
+  const yMax = r.optNum(p.yMax, 'yMax') ?? auto.max;
+  if (!(yMax > yMin)) r.fail('yMax must be greater than yMin');
+  if (all.some((v) => v < yMin || v > yMax)) r.fail('a value lies outside yMin..yMax');
+  const yStep = r.optStep(p.yStep, 'yStep') ?? (p.yMin === undefined && p.yMax === undefined ? auto.step : undefined);
+  const showValues = r.bool(p.showValues, 'showValues', false);
+  const base = {
+    xRange: [0, n] as [number, number],
+    yRange: [yMin, yMax] as [number, number],
+    yStep,
+    yLabel: r.optStr(p.yLabel, 'yLabel'),
+    title: r.optStr(p.title, 'title', 160),
+    aspect: 0.72,
+    xNumbers: false,
+  };
+  const xLabel = r.optStr(p.xLabel, 'xLabel');
+  let f = buildFrame(base);
+  let col = f.plot.w / n;
+  const flat = cats.map((c) => wrapText(c, col - 4, TICK_FS));
+  const fits = flat.every((lines) => lines.length <= 3 && lines.every((l) => estWidth(l, TICK_FS) <= col - 2));
+  const shown = cats.map((c) => (c.length > MAX_CAT_CHARS ? `${c.slice(0, MAX_CAT_CHARS - 1)}…` : c));
+  const rad = (ROT * Math.PI) / 180;
+  let bottomExtra: number;
+  let minLeft = 0;
+  if (fits) {
+    bottomExtra = Math.max(...flat.map((l) => l.length)) * (TICK_FS + 2) + 6;
+  } else {
+    bottomExtra = Math.max(...shown.map((c) => estWidth(c, TICK_FS))) * Math.sin(rad) + TICK_FS + 8;
+    shown.forEach((c, i) => {
+      minLeft = Math.max(minLeft, estWidth(c, TICK_FS) * Math.cos(rad) + 6 - (i + 0.5) * col);
+    });
+    minLeft += f.plot.x > minLeft ? 0 : 2;
+  }
+  f = buildFrame({ ...base, bottomExtra, minLeft: Math.ceil(minLeft) });
+  col = f.plot.w / n;
+  const notes: NonNullable<FigureFacts['notes']> = [];
+  const parts: string[] = [f.svg];
+  const slot = (col * 0.84) / K;
+  const barW = slot - Math.min(3, slot * 0.14);
+  const zeroY = f.Y(Math.max(yMin, Math.min(yMax, 0)));
+  const valueTexts: string[] = [];
+  const blanks: string[] = [];
+  let valueTooWide = false;
+  for (let i = 0; i < n; i++) {
+    const gx = f.plot.x + i * col + col * 0.08;
+    series.forEach((s, k) => {
+      const cx = gx + (k + 0.5) * slot;
+      const v = s.values[i];
+      if (v === null) {
+        blanks.push(blankBox(cx, zeroY - 12, Math.min(19, Math.max(15, slot - 1)), 17, 12));
+        return;
+      }
+      const yv = f.Y(v);
+      const top = Math.min(yv, zeroY);
+      const h = Math.max(Math.abs(yv - zeroY), 0.8);
+      // A value of zero has no bar: its slot is empty down to the baseline (a bar LEFT OUT is a "?" box).
+      if (Math.abs(yv - zeroY) >= 0.4) parts.push(groupedBar(cx - barW / 2, top, barW, h, k));
+      if (showValues) {
+        const t = tickText(v, 10 ** -decimalsOf(v));
+        if (estWidth(t, TICK_FS) > slot + 1) valueTooWide = true;
+        const ty = v >= 0 ? top - 4 : top + h + TICK_FS + 1;
+        valueTexts.push(`<text x="${n2(cx)}" y="${n2(ty)}" font-size="${TICK_FS}" font-weight="600" text-anchor="middle" fill="${INK}" ${HALO}>${esc(t)}</text>`);
+      }
+    });
+    const cx = f.plot.x + (i + 0.5) * col;
+    const ly = f.plot.y + f.plot.h + TICK_FS + 3;
+    if (fits) {
+      flat[i].forEach((line, k) => {
+        parts.push(`<text x="${n2(cx)}" y="${n2(ly + k * (TICK_FS + 2))}" font-size="${TICK_FS}" text-anchor="middle" fill="${INK}">${esc(line)}</text>`);
+      });
+    } else {
+      parts.push(`<text x="${n2(cx + 3)}" y="${n2(ly - 2)}" font-size="${TICK_FS}" text-anchor="end" fill="${INK}" transform="rotate(-${ROT} ${n2(cx + 3)} ${n2(ly - 2)})">${esc(shown[i])}</text>`);
+    }
+  }
+  parts.push(`<line x1="${n2(f.plot.x)}" y1="${n2(zeroY)}" x2="${n2(f.plot.x + f.plot.w)}" y2="${n2(zeroY)}" stroke="${INK}" stroke-width="1.4"/>`);
+  // Blanks and printed values go over the baseline and the bars.
+  parts.push(...blanks, ...valueTexts);
+  if (barW < 9) notes.push({ code: 'too_many_elements', message: `${n} categories × ${K} series leaves each bar ${Math.round((barW * 340) / FIGURE_WIDTH)} px wide at 340 px — use fewer categories or series` });
+  if (valueTooWide) notes.push({ code: 'crowded', message: 'showValues: a printed value is wider than its bar, so neighbouring values run together — leave the values to the axis, or use fewer bars' });
+  if (blanks.length > 0 && slot < 16) notes.push({ code: 'crowded', message: 'a "?" box is wider than the slot of the bar it stands for — use fewer categories or series' });
+  let H = f.bottom;
+  if (xLabel) {
+    parts.push(`<text x="${n2(f.plot.x + f.plot.w / 2)}" y="${n2(H + LABEL_FS - 2)}" font-size="${LABEL_FS}" font-weight="600" text-anchor="middle" fill="${INK}">${esc(xLabel)}</text>`);
+    H += LABEL_FS + 8;
+  }
+  // The legend: a swatch in each series' own texture.
+  const rowH = TICK_FS + 9;
+  let lx = 12;
+  let row = 0;
+  series.forEach((s, k) => {
+    const w = 22 + 5 + estWidth(s.label, TICK_FS) + 16;
+    if (lx > 12 && lx + w > FIGURE_WIDTH - 6) {
+      lx = 12;
+      row++;
+    }
+    const cy = H + 4 + row * rowH + rowH / 2;
+    parts.push(groupedBar(lx, cy - 6, 22, 12, k));
+    parts.push(`<text x="${n2(lx + 27)}" y="${n2(cy + TICK_FS * 0.36)}" font-size="${TICK_FS}" fill="${INK}">${esc(s.label)}</text>`);
+    lx += w;
+  });
+  H += 4 + (row + 1) * rowH + 4;
+  return { body: parts.join(''), H, facts: { plot: f.plot, curveCount: 0, marks: [], curves: [], notes } };
+}
+
 function renderBarChart(r: Reader): Drawn {
   const p = r.p;
+  if (p.series !== undefined && p.series !== null) return renderGroupedBarChart(r);
   const cats = r.list(p.categories, 'categories', 1, 24).map((c, i) => r.str(c, `categories[${i}]`, 60));
   let fig;
   try {
@@ -1446,8 +1612,8 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
     case 'punnett_square': drawn = renderPunnett(r, uid); break;
     case 'pedigree': drawn = renderPedigree(r); break;
     default: {
-      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid);
-      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS].join(', ')}`);
+      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid) ?? renderBatch4(kind, r, uid);
+      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS, ...BATCH4_FIGURE_KINDS].join(', ')}`);
       drawn = later;
     }
   }

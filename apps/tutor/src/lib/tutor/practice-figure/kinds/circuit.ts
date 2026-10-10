@@ -6,7 +6,16 @@
  *              name?: string;                     // "ε", "V₀"
  *              show?: 'value' | 'name' | 'both' | 'blank' | 'none';   // what is printed beside it
  *              positive?: 'top' | 'bottom' ('top');
- *              current?: string };                // an arrow on the wire leaving the + terminal, with this label ("I", "2 A", "?")
+ *              current?: string;                  // an arrow on the wire leaving the + terminal, with this label ("I", "2 A", "?")
+ *              internalResistance?: number;       // Ω — drawn as a resistor in series with the cells, both inside a
+ *                                                 //   dashed boundary (the real battery)
+ *              internalName?: string ('r');
+ *              internalShow?: 'value' | 'name' | 'both' | 'blank' | 'none' };   // default 'both': "r = 0.5 Ω"
+ *   battery2?: { emf: number; name?: string; show?: …;        // a second battery in series with the first, drawn under it
+ *                sense?: 'aiding' | 'opposing' ('aiding');    // opposing: its + terminal faces the first one's − … reversed
+ *                internalResistance?; internalName? ('r₂'); internalShow? };
+ *              // Every cell group carries its own + and −. An opposing second battery must have the smaller EMF
+ *              // (the first battery sets the direction of the current).
  *   circuit: Node;
  *   nodeDots?: boolean (true);                    // dots where wires join
  *   title?: string }
@@ -35,7 +44,7 @@
  */
 import { FIGURE_WIDTH, TICK_FS, estWidth, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
-import { INK, text, titleBlock } from './draw';
+import { INK, MUTED, text, titleBlock } from './draw';
 import { facts, head, lab, numStr, stroke, type Notes } from './draw2';
 
 export const CIRCUIT_TYPES = ['resistor', 'bulb', 'capacitor', 'switch', 'ammeter', 'voltmeter', 'wire'] as const;
@@ -64,10 +73,15 @@ export type CircuitNode = CircuitLeaf | CircuitGroup;
 export interface CircuitModel {
   root: CircuitNode;
   leaves: CircuitLeaf[];
-  battery: { emf: number; name?: string; shown: string; positiveTop: boolean; current?: string };
+  battery: { emf: number; name?: string; shown: string; positiveTop: boolean; current?: string; internal?: InternalR };
+  /** A second battery in series with the first (under it on the left wire). */
+  battery2?: { emf: number; name?: string; shown: string; opposing: boolean; internal?: InternalR };
   nodeDots: boolean;
   title?: string;
 }
+
+/** The internal resistance of a battery: its value, and what is printed beside it. */
+export interface InternalR { value: number; name: string; shown: string }
 
 function printed(show: (typeof SHOW)[number], name: string | undefined, value: string | undefined): string {
   switch (show) {
@@ -120,9 +134,30 @@ export function circuitModel(r: Reader): CircuitModel {
   const bName = r.optStr(b.name, 'battery.name', 8);
   if (b.positive !== undefined && b.positive !== 'top' && b.positive !== 'bottom') r.fail("battery.positive must be 'top' or 'bottom'");
   if (leaves.filter((l) => l.type !== 'wire').length === 0) r.fail('circuit: nothing but wire');
+  const internalOf = (o: Record<string, unknown>, at: string, dflt: string): InternalR | undefined => {
+    if (o.internalResistance === undefined || o.internalResistance === null) {
+      if (o.internalName !== undefined || o.internalShow !== undefined) r.fail(`${at}.internalResistance must be given when internalName or internalShow is`);
+      return undefined;
+    }
+    const value = r.positive(o.internalResistance, `${at}.internalResistance`);
+    const name = r.optStr(o.internalName, `${at}.internalName`, 8) ?? dflt;
+    return { value, name, shown: showOf(o.internalShow, `${at}.internal`, name, `${numStr(value, 3)} Ω`) };
+  };
+  let battery2: CircuitModel['battery2'];
+  if (p.battery2 !== undefined && p.battery2 !== null) {
+    const b2 = r.obj(p.battery2, 'battery2');
+    const emf2 = r.positive(b2.emf, 'battery2.emf');
+    const name2 = r.optStr(b2.name, 'battery2.name', 8);
+    if (b2.sense !== undefined && b2.sense !== 'aiding' && b2.sense !== 'opposing') r.fail("battery2.sense must be 'aiding' or 'opposing'");
+    const opposing = b2.sense === 'opposing';
+    if (opposing && !(emf2 < emf)) r.fail('battery2.emf: an opposing second battery must have the smaller EMF — the first battery sets the direction of the current (equal EMFs give no current at all)');
+    if (name2 && name2 === bName) r.fail(`battery2.name: "${name2}" is the first battery's name`);
+    battery2 = { emf: emf2, name: name2, shown: showOf(b2.show, 'battery2', name2, `${numStr(emf2, 3)} V`), opposing, internal: internalOf(b2, 'battery2', 'r₂') };
+  }
   return {
     root, leaves,
-    battery: { emf, name: bName, shown: showOf(b.show, 'battery', bName, `${numStr(emf, 3)} V`), positiveTop: b.positive !== 'bottom', current: r.optStr(b.current, 'battery.current', 8) },
+    battery: { emf, name: bName, shown: showOf(b.show, 'battery', bName, `${numStr(emf, 3)} V`), positiveTop: b.positive !== 'bottom', current: r.optStr(b.current, 'battery.current', 8), internal: internalOf(b, 'battery', battery2 ? 'r₁' : 'r') },
+    battery2,
     nodeDots: r.bool(p.nodeDots, 'nodeDots', true),
     title: r.optStr(p.title, 'title', 160),
   };
@@ -158,6 +193,12 @@ export interface CircuitSolution {
   current: Frac;
   /** Per leaf (same order as `model.leaves`). A voltage that the tree does not fix is NaN. */
   leaves: LeafState[];
+  /** Net EMF of the source (two batteries: the sum, or the difference when the second opposes). */
+  emf: Frac;
+  /** Total internal resistance of the source (0 when none is given). */
+  internal: Frac;
+  /** Voltage across the terminals of the source — what the external circuit gets (net EMF − I·r). */
+  terminal: Frac;
 }
 
 /**
@@ -213,11 +254,13 @@ export function solveCircuit(m: CircuitModel, switches: Record<string, boolean> 
     }
   };
   const total = R(m.root);
-  if (total !== null && total.n === 0) throw new Error('the battery is short-circuited (a path with no resistance joins its terminals)');
-  const emf = fracOf(m.battery.emf);
-  apply(m.root, emf);
+  const internal = [m.battery.internal, m.battery2?.internal].reduce((a, x) => (x ? fAdd(a, fracOf(x.value)) : a), ZERO);
+  if (total !== null && total.n === 0 && internal.n === 0) throw new Error('the battery is short-circuited (a path with no resistance joins its terminals)');
+  const emf = m.battery2 ? fAdd(fracOf(m.battery.emf), fracOf(m.battery2.opposing ? -m.battery2.emf : m.battery2.emf)) : fracOf(m.battery.emf);
   // Currents through 0 Ω elements (ammeters, switches, wires): what the rest of their series chain carries.
-  const current = total === null ? ZERO : fDiv(emf, total);
+  const current = total === null ? ZERO : fDiv(emf, fAdd(total, internal));
+  const terminal = fAdd(emf, fMul(frac(-1), fMul(current, internal)));
+  apply(m.root, terminal);
   const flow = (n: CircuitNode, I: Frac): void => {
     if (n.kind === 'leaf') {
       const s = state.get(n) as LeafState;
@@ -232,7 +275,7 @@ export function solveCircuit(m: CircuitModel, switches: Record<string, boolean> 
     n.children.forEach((c, i) => flow(c, rs[i] === null || sum.n === 0 && short < 0 ? ZERO : short >= 0 ? (i === short ? I : ZERO) : fMul(I, fDiv(g[i], sum))));
   };
   flow(m.root, current);
-  return { resistance: total, current, leaves: m.leaves.map((l) => state.get(l) as LeafState) };
+  return { resistance: total, current, leaves: m.leaves.map((l) => state.get(l) as LeafState), emf, internal, terminal };
 }
 
 // ---------------------------------------------------------------------------
@@ -289,11 +332,20 @@ export function renderCircuit(r: Reader): Drawn {
   const bottom: CircuitNode[] = [];
   const bx = 30;
   const xR = W - 14;
-  const labelW = m.battery.shown ? estWidth(m.battery.shown === '?' ? '???' : m.battery.shown, TICK_FS) + 8 : 0;
+  // A source with more than two plain cells (an internal resistance, a second battery) is a stack on the left wire.
+  const source = [m.battery, ...(m.battery2 ? [m.battery2] : [])];
+  const stacked = source.length > 1 || !!m.battery.internal;
+  const sourceLabels = source.flatMap((b) => [b.shown, b.internal?.shown ?? '']).filter(Boolean);
+  const labelW = stacked
+    ? Math.max(0, ...sourceLabels.map((l) => estWidth(l === '?' ? '???' : l, TICK_FS))) + 13
+    : m.battery.shown ? estWidth(m.battery.shown === '?' ? '???' : m.battery.shown, TICK_FS) + 8 : 0;
+  const CELLS_H = 50;
+  const INT_H = 34;
+  const stackH = source.reduce((a, b) => a + CELLS_H + (b.internal ? INT_H : 0), 0) + (source.length - 1) * 6;
   const widthOf = (list: CircuitNode[]) => list.reduce((a, n) => a + sizeOf(n).w, 0);
   const heightOf = (list: CircuitNode[]) => Math.max(ROW, ...list.map((n) => sizeOf(n).h));
   // The battery label sits inside the loop; it pushes the ladder right only when a branch row would run through it.
-  const x0For = () => bx + 24 + (heightOf(top) > ROW || bottom.length > 0 ? labelW + 4 : 0);
+  const x0For = () => bx + 24 + (stacked || heightOf(top) > ROW || bottom.length > 0 ? labelW + 4 : 0);
   while (top.length > 1 && widthOf(top) > xR - 10 - x0For()) bottom.unshift(top.pop() as CircuitNode);
   const xL = x0For();
   const avail = xR - 10 - xL;
@@ -301,7 +353,7 @@ export function renderCircuit(r: Reader): Drawn {
   const topH = heightOf(top);
   const botH = bottom.length ? heightOf(bottom) : 0;
   const yTop = t.top + (m.battery.current === '?' && m.battery.positiveTop ? 32 : 26);
-  const yBot = yTop + Math.max(84, bottom.length ? topH + botH - ROW + 8 : topH);
+  const yBot = yTop + Math.max(84, bottom.length ? topH + botH - ROW + 8 : topH, stacked ? stackH + 30 : 0);
   if (yBot + 16 > W * 1.55) r.fail('circuit: too many branches one under another to draw at this size');
 
   const wires: string[] = [];
@@ -366,15 +418,47 @@ export function renderCircuit(r: Reader): Drawn {
   rail(bottom, yBot, -1, flowTop > 0 ? -1 : 1);
   // The loop: battery side, the two corners on the right.
   const yc = (yTop + yBot) / 2;
-  wires.push(`M${n2(xL)},${n2(yTop)}H${n2(bx)}V${n2(yc - 9)}M${n2(bx)},${n2(yc + 9)}V${n2(yBot)}H${n2(xL)}`);
-  wires.push(`M${n2(xR - 10)},${n2(yTop)}H${n2(xR)}V${n2(yBot)}H${n2(xR - 10)}`);
-  // Battery: two cells; the long thin plate is the positive one.
   const plate = (y: number, long: boolean) => `<path d="M${n2(bx - (long ? 11 : 6))},${n2(y)}h${long ? 22 : 12}" ${stroke(INK, long ? 1.6 : 3.6)}/>`;
-  const ys = [yc - 9, yc - 3, yc + 3, yc + 9];
-  ys.forEach((y, i) => syms.push(plate(y, m.battery.positiveTop ? i % 2 === 0 : i % 2 === 1)));
-  labels.push(text(bx - 13, (m.battery.positiveTop ? ys[0] : ys[3]) + (m.battery.positiveTop ? -5 : 13), '+', { fs: 13, anchor: 'middle', weight: 700 }));
-  labels.push(text(bx - 13, (m.battery.positiveTop ? ys[3] : ys[0]) + (m.battery.positiveTop ? 13 : -5), '−', { fs: 13, anchor: 'middle', weight: 700 }));
-  if (m.battery.shown) labels.push(lab(bx + 15, yc + TICK_FS * 0.36, m.battery.shown, 'start'));
+  if (!stacked) {
+    wires.push(`M${n2(xL)},${n2(yTop)}H${n2(bx)}V${n2(yc - 9)}M${n2(bx)},${n2(yc + 9)}V${n2(yBot)}H${n2(xL)}`);
+    // Battery: two cells; the long thin plate is the positive one.
+    const ys = [yc - 9, yc - 3, yc + 3, yc + 9];
+    ys.forEach((y, i) => syms.push(plate(y, m.battery.positiveTop ? i % 2 === 0 : i % 2 === 1)));
+    labels.push(text(bx - 13, (m.battery.positiveTop ? ys[0] : ys[3]) + (m.battery.positiveTop ? -5 : 13), '+', { fs: 13, anchor: 'middle', weight: 700 }));
+    labels.push(text(bx - 13, (m.battery.positiveTop ? ys[3] : ys[0]) + (m.battery.positiveTop ? 13 : -5), '−', { fs: 13, anchor: 'middle', weight: 700 }));
+    if (m.battery.shown) labels.push(lab(bx + 15, yc + TICK_FS * 0.36, m.battery.shown, 'start'));
+  } else {
+    // The source as a stack on the left wire: per battery its two cells (each group with its own + and −) and,
+    // when it has one, its internal resistance under them — the two inside one dashed boundary (the real battery).
+    const gaps: Array<[number, number]> = [];
+    let y0 = yc - stackH / 2;
+    source.forEach((b, k) => {
+      const posTop = k === 0 ? m.battery.positiveTop : m.battery.positiveTop !== (m.battery2 as NonNullable<CircuitModel['battery2']>).opposing;
+      const cy = y0 + CELLS_H / 2;
+      const ys = [cy - 9, cy - 3, cy + 3, cy + 9];
+      ys.forEach((y, i) => syms.push(plate(y, posTop ? i % 2 === 0 : i % 2 === 1)));
+      gaps.push([cy - 9, cy + 9]);
+      labels.push(text(bx - 13, posTop ? ys[0] - 5 : ys[3] + 13, '+', { fs: 13, anchor: 'middle', weight: 700 }));
+      labels.push(text(bx - 13, posTop ? ys[3] + 13 : ys[0] - 5, '−', { fs: 13, anchor: 'middle', weight: 700 }));
+      if (b.shown) labels.push(lab(bx + 20, cy + TICK_FS * 0.36, b.shown, 'start'));
+      let h = CELLS_H;
+      if (b.internal) {
+        const ry = y0 + CELLS_H + 13;
+        const dx = [0, -6, 6, -6, 6, -6, 6, 0];
+        const dy = [-15, -12.5, -7.5, -2.5, 2.5, 7.5, 12.5, 15];
+        syms.push(`<path d="${dx.map((x, i) => `${i ? 'L' : 'M'}${n2(bx + x)},${n2(ry + dy[i])}`).join('')}" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>`);
+        gaps.push([ry - 15, ry + 15]);
+        if (b.internal.shown) labels.push(lab(bx + 20, ry + TICK_FS * 0.36, b.internal.shown, 'start'));
+        h += INT_H;
+        syms.push(`<path d="M${n2(bx - 24)},${n2(y0 + 1)}h39v${n2(h - 2)}h-39z" fill="none" stroke="${MUTED}" stroke-width="1.1" stroke-dasharray="5 3"/>`);
+      }
+      y0 += h + 6;
+    });
+    let d = `M${n2(xL)},${n2(yTop)}H${n2(bx)}`;
+    for (const [a, z] of gaps) d += `V${n2(a)}M${n2(bx)},${n2(z)}`;
+    wires.push(`${d}V${n2(yBot)}H${n2(xL)}`);
+  }
+  wires.push(`M${n2(xR - 10)},${n2(yTop)}H${n2(xR)}V${n2(yBot)}H${n2(xR - 10)}`);
   if (m.battery.current) {
     const y = m.battery.positiveTop ? yTop : yBot;
     syms.push(head(bx + 16, y, 1, 0, 8));

@@ -8,7 +8,8 @@
  *   arrangement?: 'panels' | 'shared';   // ('panels'; 'shared' when there are hbonds) side by side, each
  *                                        //   on its own — or all in ONE coordinate frame (`origin` places each)
  *   between?: 'resonance' | 'none';      // ('none') a double-headed arrow between neighbouring panels
- *   hbonds?: Array<{ from: { mol: index; atom: id }; to: { mol: index; atom: id } }>;   // dotted lines ('shared')
+ *   hbonds?: Array<{ from: { mol: index; atom: id }; to: { mol: index; atom: id };      // dotted lines ('shared')
+ *                    label?: string }>;   // ≤ 4 characters beside that dotted line ("1", "X"; "?" = a blank box)
  *   showLonePairs?: boolean (true); showFormalCharges?: boolean (true);   // switch every set / mark off at once
  *   title?: string }
  * Molecule = {
@@ -78,7 +79,7 @@ export interface MoleculeModel {
   molecules: Molecule[];
   arrangement: 'panels' | 'shared';
   between: 'resonance' | 'none';
-  hbonds: Array<{ from: [number, number]; to: [number, number] }>;
+  hbonds: Array<{ from: [number, number]; to: [number, number]; label?: string }>;
   title?: string;
 }
 
@@ -270,7 +271,7 @@ export function moleculeModel(r: Reader): MoleculeModel {
       if (ai < 0) r.fail(`${name}.atom: "${String(e.atom)}" is not an atom of molecules[${mi}]`);
       return [mi, ai];
     };
-    return { from: end(o.from, `hbonds[${i}].from`), to: end(o.to, `hbonds[${i}].to`) };
+    return { from: end(o.from, `hbonds[${i}].from`), to: end(o.to, `hbonds[${i}].to`), label: r.optStr(o.label, `hbonds[${i}].label`, 4) };
   });
   return { molecules, arrangement, between: pick(p.between, 'between', ['resonance', 'none'] as const, 'none'), hbonds, title: r.optStr(p.title, 'title', 160) };
 }
@@ -289,18 +290,39 @@ export function atomText(a: MolAtom, flip = false): string {
   return flip ? `${hs}${a.el}` : `${a.el}${hs}`;
 }
 
-/** Angles (degrees, y up) at which `k` things are set in the widest gaps left by `taken`. */
-function inGaps(taken: number[], k: number): number[] {
+const angSep = (a: number, b: number): number => Math.abs(((a - b + 540) % 360) - 180);
+/**
+ * Angles (degrees, y up) at which `k` things are set in the widest gaps left by `taken`.
+ * Equally roomy gaps: the wider one first, then gaps of the same size far from each other (two lone pairs on a square-planar
+ * centre go in OPPOSITE corners, not in two neighbouring ones). `apart` (lone pairs on an atom with
+ * two or more bonds): several in one gap are pushed towards its ends — at least 40° from the bond
+ * and from each other by more than that — instead of sharing it evenly, where three or four of them
+ * fan out into one arc of dots that cannot be told into pairs.
+ */
+function inGaps(taken: number[], k: number, apart = false): number[] {
   if (k <= 0) return [];
   if (taken.length === 0) return Array.from({ length: k }, (_, i) => (90 + (360 * i) / k) % 360);
   const t = [...taken].map((a) => ((a % 360) + 360) % 360).sort((a, b) => a - b);
   const gaps = t.map((a, i) => ({ start: a, size: i === t.length - 1 ? t[0] + 360 - a : t[i + 1] - a, n: 0 }));
+  const mid = (g: { start: number; size: number }): number => (g.start + g.size / 2) % 360;
   for (let i = 0; i < k; i++) {
-    let best = gaps[0];
-    for (const g of gaps) if (g.size / (g.n + 1) > best.size / (best.n + 1) + 1e-9) best = g;
+    const share = (g: { size: number; n: number }): number => g.size / (g.n + 1);
+    const top = Math.max(...gaps.map(share));
+    const tied = gaps.filter((g) => share(g) > top - 1e-9);
+    const used = gaps.filter((g) => g.n > 0);
+    // Of equally roomy gaps: the one furthest from those already used (the first, when none is).
+    const far = (g: { start: number; size: number }): number => (used.length ? Math.min(...used.map((u) => angSep(mid(g), mid(u)))) : 0);
+    // … and, before that, the WIDER gap: on a T-shaped centre both pairs go on the open side.
+    let best = tied[0];
+    for (const g of tied) if (g.size > best.size + 1e-9 || (Math.abs(g.size - best.size) < 1e-9 && far(g) > far(best) + 1e-9)) best = g;
     best.n++;
   }
-  return gaps.flatMap((g) => Array.from({ length: g.n }, (_, i) => (g.start + (g.size * (i + 1)) / (g.n + 1)) % 360));
+  return gaps.flatMap((g) => {
+    const even = g.size / (g.n + 1);
+    const edge = apart && g.n >= 2 && even < 75 ? Math.min(even, Math.max(g.size / (2 * g.n), 40)) : even;
+    const step = g.n > 1 ? (g.size - 2 * edge) / (g.n - 1) : 0;
+    return Array.from({ length: g.n }, (_, i) => (g.start + edge + step * i) % 360);
+  });
 }
 /** The freest direction for one more mark: the preferred diagonals first, when they are at least 38° clear;
  *  else the clearest direction there is — of equally clear ones, the one that points furthest from `awayFrom`. */
@@ -316,13 +338,38 @@ function freeDirection(taken: number[], prefs: number[] = [45, 135, 315, 225], a
   return best;
 }
 
+/** The least length of bond line that still reads as a bond between two labels (canvas units). */
+const MIN_BOND = 11;
+/** Are an atom's written hydrogens put BEFORE its symbol ("H₃C")? — when its bonds leave to the right. */
+function flipped(mol: Molecule, ai: number): boolean {
+  const a = mol.atoms[ai];
+  const nb = bondsAt(mol, ai).map((b) => mol.atoms[b.a === ai ? b.b : b.a]);
+  return a.h > 0 && nb.length > 0 && nb.reduce((s, q) => s + (q.x - a.x), 0) / nb.length > 0.3;
+}
+/** How far an atom's label reaches from its centre along (dx, dy) (canvas, y down), with the clearance `gap`. */
+function labelReach(a: MolAtom, flip: boolean, dx: number, dy: number, gap = 1.5): number {
+  const s = atomText(a, flip);
+  if (!s) return 0;
+  const l = Math.hypot(dx, dy) || 1;
+  const base = inkWidth(s === '?' ? '??' : a.el, ATOM_FS) / 2 + 2.5;
+  const extra = s.length > 2 || /H/.test(s.slice(1)) ? inkWidth(s, ATOM_FS) - 2 * (base - 2.5) : 0;
+  const rx = base + (extra > 0 && (flip ? dx < 0 : dx > 0) ? extra : 0);
+  return 1 / Math.hypot(dx / l / rx, dy / l / 8.5) + gap;
+}
+/** The length of line a bond shows between its two labels when a bond length is `L` canvas units. */
+export function visibleBond(mol: Molecule, b: MolBond, L: number): number {
+  const [A, B] = [mol.atoms[b.a], mol.atoms[b.b]];
+  const dx = (B.x - A.x) * L;
+  const dy = -(B.y - A.y) * L;
+  return Math.hypot(dx, dy) - labelReach(A, flipped(mol, b.a), dx, dy) - labelReach(B, flipped(mol, b.b), -dx, -dy);
+}
+
 interface Placed { mol: number; atom: number; cx: number; cy: number; rx: number; ry: number; text: string; flip: boolean; taken: number[] }
 
 export function renderMolecule(r: Reader): Drawn {
   const m = moleculeModel(r);
   const W = FIGURE_WIDTH;
   const t = titleBlock(m.title, W);
-  const notes: Notes = [];
   const PAD = 22;
   const shared = m.arrangement === 'shared';
   // Extents of each molecule (or of the whole frame), in bond lengths.
@@ -347,9 +394,33 @@ export function renderMolecule(r: Reader): Drawn {
   };
   let perRow = groups.length;
   let L = scaleFor(perRow);
+  const notes: Notes = [];
   if (L < 30 && groups.length > 1) {
     perRow = Math.ceil(groups.length / 2);
     L = scaleFor(perRow);
+  }
+  // A written group ("CH₂", "OH") takes room out of its bonds: side by side, three condensed formulas
+  // leave some bonds no longer than a hyphen. Fewer to a row, until every bond shows at least
+  // MIN_BOND of line (or there is one molecule to a row — then the figure says which bond is short).
+  const shortest = (len: number): { visible: number; what: string } => {
+    let worst = { visible: Infinity, what: '' };
+    m.molecules.forEach((mol, mi) => mol.bonds.forEach((b, bi) => {
+      // Only a bond that ends on a written group: between two bare symbols a bond is never eaten.
+      if (![b.a, b.b].some((ai) => mol.atoms[ai].h > 0 && mol.atoms[ai].show.label === 'value')) return;
+      const v = visibleBond(mol, b, len);
+      if (v < worst.visible) worst = { visible: v, what: `molecules[${mi}].bonds[${bi}] (${mol.atoms[b.a].id}–${mol.atoms[b.b].id})` };
+    }));
+    return worst;
+  };
+  if (!shared && L >= 26) {
+    while (perRow > 1 && shortest(L).visible < MIN_BOND) {
+      perRow--;
+      L = scaleFor(perRow);
+    }
+  }
+  if (L >= 26) {
+    const w = shortest(Math.min(L, 300 / Math.max(1e-9, Math.max(...exts.map((e) => e.y1 - e.y0)))));
+    if (w.visible < MIN_BOND) notes.push({ code: 'crowded', message: `${w.what} shows only ${Math.max(0, w.visible).toFixed(0)} units of line between its two labels — it reads as a hyphen; set those atoms further apart (a longer bond), or write fewer hydrogens into the labels` });
   }
   if (L < 26) r.fail(`molecules: ${Math.max(...exts.map((e) => e.x1 - e.x0)).toFixed(1)} bond lengths across — too wide to draw at 340 px (fewer atoms in a row, or fewer molecules)`);
   const maxH = Math.max(...exts.map((e) => e.y1 - e.y0));
@@ -497,9 +568,17 @@ export function renderMolecule(r: Reader): Drawn {
         return [e[0] + Math.cos(deg(ang)) * d, e[1] - Math.sin(deg(ang)) * d];
       };
       if (a.lonePairs !== undefined && a.show.lonePairs === 'value') {
-        const dirs = inGaps(taken, a.lonePairs);
+        const dirs = inGaps(taken, a.lonePairs, q.taken.length >= 2);
+        // Each pair far enough out that it stands clear of its neighbours (centres ≥ 15 apart — the
+        // two dots of a pair are 5.8 apart) and of the bonds beside it (≥ 8.5 from the bond's line):
+        // the more bonds and pairs an atom carries, the further out its pairs sit.
+        const pairGap = dirs.length > 1 ? Math.min(...dirs.flatMap((u, i) => dirs.slice(i + 1).map((v) => angSep(u, v)))) : 180;
         for (const ang of dirs) {
-          const [px, py] = out(ang, q.text ? 4.4 : 6);
+          const d0 = (q.text ? 4.4 : 6) + 1.3 * Math.max(0, q.taken.length - 2);
+          const [bx, by] = out(ang, d0);
+          const bondGap = taken.length ? Math.min(...taken.map((v) => angSep(ang, v))) : 180;
+          const need = Math.max(pairGap < 180 ? 7.5 / Math.sin(deg(pairGap / 2)) : 0, bondGap < 90 ? 8.5 / Math.sin(deg(bondGap)) : 0);
+          const [px, py] = out(ang, d0 + Math.max(0, need - Math.hypot(bx - q.cx, by - q.cy)));
           const tx = -Math.sin(deg(ang));
           const ty = -Math.cos(deg(ang));
           over.push(`<circle cx="${n2(px + tx * 2.9)}" cy="${n2(py + ty * 2.9)}" r="1.7" fill="${INK}"/><circle cx="${n2(px - tx * 2.9)}" cy="${n2(py - ty * 2.9)}" r="1.7" fill="${INK}"/>`);
@@ -558,6 +637,19 @@ export function renderMolecule(r: Reader): Drawn {
     const p1 = edge(B, A.cx, A.cy, 3);
     parts.push(`<path d="M${n2(p0[0])},${n2(p0[1])}L${n2(p1[0])},${n2(p1[1])}" ${stroke(MUTED, 1.8, '1.5 3.5')} stroke-linecap="round"/>`);
     segs.push({ owners: [`${hb.from[0]}:${hb.from[1]}`, `${hb.to[0]}:${hb.to[1]}`], a: p0, b: p1 });
+    if (hb.label) {
+      // Beside the middle of the dotted line, on whichever side is clear of the atoms' marks.
+      const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) || 1;
+      const [nx, ny] = [-(p1[1] - p0[1]) / len, (p1[0] - p0[0]) / len];
+      const spot = (side: number): Pt => [(p0[0] + p1[0]) / 2 + nx * side * 11, (p0[1] + p1[1]) / 2 + ny * side * 11];
+      const boxAt = (c: Pt): Box => { const hw = Math.max(7, inkWidth(hb.label === '?' ? '??' : (hb.label as string), 12) / 2 + 2); return { x0: c[0] - hw, y0: c[1] - 7.5, x1: c[0] + hw, y1: c[1] + 7.5 }; };
+      const hits = (c: Pt): number => { const q = boxAt(c); return ink.filter((o) => o.box.x0 < q.x1 && q.x0 < o.box.x1 && o.box.y0 < q.y1 && q.y0 < o.box.y1).length; };
+      // Above the line first (ny < 0 is up).
+      const first = ny <= 0 ? 1 : -1;
+      const c = hits(spot(first)) <= hits(spot(-first)) ? spot(first) : spot(-first);
+      over.push(lab(c[0], c[1] + 4.3, hb.label, 'middle', { fs: 12, weight: 700, halo: true }));
+      ink.push({ owner: `hbond ${m.hbonds.indexOf(hb)}`, what: `the label "${hb.label}" of a dotted line`, box: boxAt(c) });
+    }
   }
   // Crowding: a mark of one atom on a mark of another, or on a bond that is not its own.
   const clashes = new Set<string>();

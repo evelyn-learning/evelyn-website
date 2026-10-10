@@ -744,7 +744,15 @@ test('checkFigureLegibility: reports, never redraws', () => {
   // A marked point, an endpoint mark and a series vertex on the border.
   assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [-3, 3], curves: [{ expr: 'x' }], points: [{ x: 3, y: 1 }] }), ['feature_on_border']);
   assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [0, 3], curves: [{ expr: 'x', domain: [0, 2] }] }), ['feature_on_border']);
-  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 0], [4, 8]] }], tRange: [0, 6], yRange: [0, 10] }), ['feature_on_border']);
+  // Round 4 (d): a start point on the axis is legitimate — the left edge at the first point, the time axis at zero.
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 0], [4, 8]] }], tRange: [0, 6], yRange: [0, 10] }), []);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 4], [2, 0], [4, 8]] }], tRange: [0, 6], yRange: [0, 10] }), []);
+  // … the top and right edges are not axes, and a vertex outside the plot is not drawn at all.
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 0], [4, 10]] }], tRange: [0, 6], yRange: [0, 10] }), ['feature_on_border']);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 0], [6, 8]] }], tRange: [0, 6], yRange: [0, 10] }), ['feature_on_border']);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 10], [4, 2]] }], tRange: [0, 6], yRange: [0, 10] }), ['feature_on_border']);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[0, 0], [4, 8], [8, 12]] }], tRange: [0, 6], yRange: [0, 10] }), ['feature_on_border']);
+  assert.deepEqual(codes('motion_graph', { series: [{ points: [[1, 2], [4, 8]] }], tRange: [0, 6], yRange: [2, 10] }), ['feature_on_border'], 'a foot of the plot that is not the zero line is a border');
   assert.deepEqual(codes('motion_graph', { series: [{ points: [[1, 1], [4, 8]] }], tRange: [0, 6], yRange: [0, 10] }), []);
   // Two labels on top of each other.
   assert.deepEqual(codes('function_graph', { xRange: [-3, 3], yRange: [-3, 3], points: [{ x: 1, y: 1, label: 'first' }, { x: 1.05, y: 1.05, label: 'second' }] }), ['labels_overlap']);

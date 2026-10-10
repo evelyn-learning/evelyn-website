@@ -32,18 +32,26 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 const names = Object.keys(pkg.scripts).filter((n) => n.startsWith('test:') && !EXCLUDE.has(n));
 
 const failed = [];
+const skipped = [];
 for (const name of names) {
   process.stdout.write(`${name} ... `);
   try {
-    execSync(`npm run --silent ${name}`, { stdio: 'pipe', timeout: 300_000 });
-    console.log('PASS');
+    const out = String(execSync(`npm run --silent ${name}`, { stdio: 'pipe', timeout: 300_000 }));
+    // A suite that needs files kept outside the repo says so itself (a line starting "SKIP:",
+    // exit 0 — see scripts/run-lesson-fix-test.mjs); it is reported as skipped, not as a pass.
+    const skip = /^SKIP: .*$/m.exec(out);
+    if (skip) {
+      skipped.push({ name, why: skip[0] });
+      console.log('SKIP');
+    } else console.log('PASS');
   } catch (err) {
     console.log('FAIL');
     failed.push({ name, output: String(err.stdout ?? '') + String(err.stderr ?? '') });
   }
 }
 
-console.log(`\n${names.length - failed.length}/${names.length} passed`);
+console.log(`\n${names.length - failed.length - skipped.length}/${names.length - skipped.length} passed${skipped.length ? `, ${skipped.length} skipped` : ''}`);
+for (const s of skipped) console.log(`  skipped ${s.name} — ${s.why.replace(/^SKIP: /, '')}`);
 for (const f of failed) {
   console.log(`\n=== ${f.name} ===\n${f.output.slice(-2000)}`);
 }

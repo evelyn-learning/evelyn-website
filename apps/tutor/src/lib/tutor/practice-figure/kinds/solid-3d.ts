@@ -20,6 +20,9 @@
  * solid 'cone'             { radius; height }            // labels may include slant
  * solid 'sphere' | 'hemisphere'  { radius }
  * solid 'pyramid'          { base; height }              // square base; labels may include slant
+ * solid 'frustum'          { radius; topRadius; height } // a cone cut parallel to its base: `radius` is the bottom
+ *                                                        //   circle, `topRadius` the top one (either may be the
+ *                                                        //   larger); labels may include slant
  * solid 'composite'        { bottom: 'cylinder' | 'prism'; top: 'cone' | 'hemisphere' | 'pyramid';
  *                            radius | base;              // cylinder: radius. prism: a square base of side `base`
  *                            height;                     // of the bottom solid
@@ -46,7 +49,7 @@ import type { Drawn, Reader } from '../spec';
 import { INK, MUTED, hatched, text, titleBlock } from './draw';
 import { ellipseD, facts, halfEllipseD, lab, numStr, polyPath, stroke, type Notes, type Pt } from './draw2';
 
-export const SOLIDS = ['prism', 'triangular_prism', 'cylinder', 'cone', 'sphere', 'hemisphere', 'pyramid', 'composite', 'revolution'] as const;
+export const SOLIDS = ['prism', 'triangular_prism', 'cylinder', 'cone', 'sphere', 'hemisphere', 'pyramid', 'composite', 'revolution', 'frustum'] as const;
 export type SolidName = (typeof SOLIDS)[number];
 
 export interface RevCurve { poly: number[]; sqrt: boolean; label?: string; f: (x: number) => number }
@@ -68,7 +71,7 @@ export interface SolidModel {
 
 const DIMS: Record<Exclude<SolidName, 'composite' | 'revolution'>, string[]> = {
   prism: ['length', 'width', 'height'], triangular_prism: ['base', 'height', 'length'], cylinder: ['radius', 'height'],
-  cone: ['radius', 'height'], sphere: ['radius'], hemisphere: ['radius'], pyramid: ['base', 'height'],
+  cone: ['radius', 'height'], sphere: ['radius'], hemisphere: ['radius'], pyramid: ['base', 'height'], frustum: ['radius', 'topRadius', 'height'],
 };
 
 export function solidModel(r: Reader): SolidModel {
@@ -115,11 +118,12 @@ export function solidModel(r: Reader): SolidModel {
   const dims: Record<string, number> = {};
   for (const k of names) dims[k] = r.positive(p[k], k);
   const lo = p.labels === undefined || p.labels === null ? {} : r.obj(p.labels, 'labels');
-  const slantOk = solid === 'cone' || solid === 'pyramid' || top === 'cone' || top === 'pyramid';
+  const slantOk = solid === 'cone' || solid === 'pyramid' || solid === 'frustum' || top === 'cone' || top === 'pyramid';
+  if (solid === 'frustum' && dims.radius === dims.topRadius) r.fail('topRadius: equal to radius — that is a cylinder, not a frustum');
   for (const k of Object.keys(lo)) if (!names.includes(k) && !(k === 'slant' && slantOk)) r.fail(`labels.${k}: this solid has no such dimension (${[...names, ...(slantOk ? ['slant'] : [])].join(', ')})`);
   if (slantOk) {
     const h = dims.topHeight ?? dims.height;
-    const half = dims.radius ?? dims.base / 2;
+    const half = solid === 'frustum' ? dims.radius - dims.topRadius : dims.radius ?? dims.base / 2;
     dims.slant = Math.hypot(h, half);
   }
   const labels: Record<string, string> = {};
@@ -267,17 +271,19 @@ export function renderSolid(r: Reader, uid: string): Drawn {
   const L = m.labels;
   // Extent in true units (width × height of the projected drawing), to choose one scale.
   const kind = m.solid === 'composite' ? (m.bottom as string) : m.solid;
-  const round = ['cylinder', 'cone', 'sphere', 'hemisphere'].includes(kind);
-  const footW = round ? 2 * d.radius : kind === 'prism' && m.solid === 'prism' ? d.length : d.base ?? d.length;
+  const round = ['cylinder', 'cone', 'sphere', 'hemisphere', 'frustum'].includes(kind);
+  /** The widest radius of a round solid (a frustum's top may be the larger circle). */
+  const rr = m.solid === 'frustum' ? Math.max(d.radius, d.topRadius) : d.radius;
+  const footW = round ? 2 * rr : kind === 'prism' && m.solid === 'prism' ? d.length : d.base ?? d.length;
   const depth = round ? 0 : m.solid === 'prism' ? d.width : m.solid === 'triangular_prism' ? d.length : d.base;
   const tall = m.solid === 'sphere' ? 2 * d.radius : m.solid === 'hemisphere' ? d.radius : m.solid === 'composite' ? d.height + (m.top === 'hemisphere' ? d.radius : d.topHeight) : d.height;
   const extW = footW + depth * DX;
-  const extH = tall + depth * DY + (round ? d.radius * SQUASH : 0);
+  const extH = tall + depth * DY + (round ? d.radius * SQUASH : 0) + (m.solid === 'frustum' ? d.topRadius * SQUASH : 0);
   const k = Math.min(210 / extW, 200 / extH);
   if (Math.min(extW, extH) * k < 46) notes.push({ code: 'crowded', message: 'one dimension is so much smaller than the others that the solid is drawn under 46 units across — its labels crowd' });
-  const top = t.top + 22;
+  const top = t.top + 22 + (m.solid === 'frustum' ? d.topRadius * SQUASH * k : 0);
   const x0 = (W - extW * k) / 2 + (round ? 0 : 0);
-  const yBase = top + extH * k - (round ? d.radius * SQUASH * k : 0);
+  const yBase = top + (extH - (m.solid === 'frustum' ? d.topRadius * SQUASH : 0)) * k - (round ? d.radius * SQUASH * k : 0);
   /** True (x right, y up, z back) → canvas. */
   const P = (x: number, y: number, z = 0): Pt => [x0 + (x + z * DX) * k, yBase - (y + z * DY) * k];
   const ink: Ink = { solid: [], hidden: [], marks: [], labels: [] };
@@ -342,9 +348,9 @@ export function renderSolid(r: Reader, uid: string): Drawn {
     return { fl, fr, br };
   };
   /** An upright circular footprint: centre x in true units, at height y; returns canvas centre and radii. */
-  const disc = (y: number): { c: Pt; rx: number; ry: number } => ({ c: P(d.radius, y), rx: d.radius * k, ry: d.radius * k * SQUASH });
-  const rim = (y: number, back: 'solid' | 'hidden') => {
-    const e = disc(y);
+  const disc = (y: number, rad: number = d.radius): { c: Pt; rx: number; ry: number } => ({ c: P(rr, y), rx: rad * k, ry: rad * k * SQUASH });
+  const rim = (y: number, back: 'solid' | 'hidden', rad: number = d.radius) => {
+    const e = disc(y, rad);
     ink.solid.push(halfEllipseD(e.c[0], e.c[1], e.rx, e.ry, false));
     (back === 'solid' ? ink.solid : ink.hidden).push(halfEllipseD(e.c[0], e.c[1], e.rx, e.ry, true));
     return e;
@@ -421,6 +427,41 @@ export function renderSolid(r: Reader, uid: string): Drawn {
       radiusMark(e, m.solid === 'sphere' ? -1 : -1);
       break;
     }
+    case 'frustum': {
+      const e = disc(0);
+      const tp = disc(d.height, d.topRadius);
+      // The slanted sides are the common tangents of the two ellipses: they touch both at the same angle
+      // `th` off the level — above it when the bottom circle is the larger, below it when the top one is.
+      const th = Math.asin(Math.max(-0.999, Math.min(0.999, -((d.radius - d.topRadius) * k * SQUASH) / (e.c[1] - tp.c[1]))));
+      const on = (c: { c: Pt; rx: number; ry: number }, a: number): Pt => [c.c[0] + c.rx * Math.cos(a), c.c[1] + c.ry * Math.sin(a)];
+      const arc = (c: { c: Pt; rx: number; ry: number }, a0: number, a1: number): Pt[] => Array.from({ length: 41 }, (_, i) => on(c, a0 + ((a1 - a0) * i) / 40));
+      // Bottom circle: the near part between the two tangent points is seen, the rest is behind the solid.
+      ink.solid.push(polyPath(arc(e, th, Math.PI - th)));
+      ink.hidden.push(polyPath(arc(e, Math.PI - th, 2 * Math.PI + th)));
+      ink.solid.push(polyPath(arc(tp, 0, 2 * Math.PI), true));
+      lineS(on(e, th), on(tp, th));
+      lineS(on(e, Math.PI - th), on(tp, Math.PI - th));
+      if (tp.c[1] + tp.ry > e.c[1] - e.ry - 6) notes.push({ code: 'crowded', message: 'height: the frustum is so flat that its two circles overlap in the drawing — the rims, the height and the labels tangle at 340 px; use a taller frustum or notToScale proportions' });
+      // The two radii run to the right; the height is the dashed axis, labelled on its left.
+      if (L.radius !== undefined) {
+        ink.marks.push(`<path d="M${n2(e.c[0])},${n2(e.c[1])}H${n2(e.c[0] + e.rx)}" ${stroke(INK, 1.3, '5 3')}/><circle cx="${n2(e.c[0])}" cy="${n2(e.c[1])}" r="2.4" fill="${INK}"/>`);
+        put([e.c[0] + e.rx / 2, e.c[1]], L.radius, 'middle', 0, e.ry + 17);
+      }
+      if (L.topRadius !== undefined) {
+        ink.marks.push(`<path d="M${n2(tp.c[0])},${n2(tp.c[1])}H${n2(tp.c[0] + tp.rx)}" ${stroke(INK, 1.3)}/><circle cx="${n2(tp.c[0])}" cy="${n2(tp.c[1])}" r="2.4" fill="${INK}"/>`);
+        put([tp.c[0] + tp.rx / 2, tp.c[1]], L.topRadius, 'middle', 0, -tp.ry - 6);
+      }
+      if (L.height !== undefined) {
+        lineH(tp.c, e.c);
+        square(e.c, tp.c, [e.c[0] + e.rx, e.c[1]]);
+        // The label sits on the axis clear of the far rim of the bottom circle and the near rim of the top one.
+        const lo = tp.c[1] + tp.ry;
+        const hi = e.c[1] - e.ry;
+        plate([e.c[0], hi - lo >= 22 ? (lo + hi) / 2 : e.ry >= 24 ? e.c[1] - e.ry / 2 : (e.c[1] + tp.c[1]) / 2], L.height);
+      }
+      if (L.slant !== undefined) put(mid(on(e, th), on(tp, th)), L.slant, 'start', 8, 4);
+      break;
+    }
     case 'pyramid': {
       const b = pyramid(d.base, 0, d.height, false, 'height');
       put(mid(b.fl, b.fr), L.base, 'middle', 0, 16);
@@ -449,7 +490,7 @@ export function renderSolid(r: Reader, uid: string): Drawn {
       }
     }
   }
-  let H = yBase + (round ? d.radius * SQUASH * k : 0) + (L.length !== undefined || L.base !== undefined || (round && L.radius !== undefined && (m.solid === 'cone' || m.solid === 'composite')) ? 24 : 12);
+  let H = yBase + (round ? d.radius * SQUASH * k : 0) + (L.length !== undefined || L.base !== undefined || (round && L.radius !== undefined && (m.solid === 'cone' || m.solid === 'composite' || m.solid === 'frustum')) ? 24 : 12);
   const parts = [t.svg, `<path d="${ink.hidden.join('')}" ${stroke(INK, 1.2, '5 3')}/>`, `<path d="${ink.solid.join('')}" ${stroke(INK, 1.9)} stroke-linejoin="round"/>`, ...ink.marks, ...ink.labels];
   if (m.notToScale) {
     parts.push(text(W - 8, H + 4, 'not to scale', { anchor: 'end', fill: MUTED, italic: true }));
