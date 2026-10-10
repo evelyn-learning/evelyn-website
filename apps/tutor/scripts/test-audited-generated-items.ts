@@ -139,10 +139,10 @@ function countingGen() {
   const file = path.join(__dirname, '..', 'src', 'data', 'audited-generated-items.json');
   const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { generatedAt: string; source: string; items: Record<string, string> };
 
-  await test('the JSON holds exactly 6673 generated ids, each marked AUDITED', () => {
+  await test('the JSON holds exactly 6774 generated ids, each marked AUDITED', () => {
     assert.equal(data.generatedAt, '2026-10-17');
-    assert.equal(data.source, 'audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read) + figure items 2026-10-09 (49: visual read) + depth job 2026-10-10 (1779: two blind solves, full read, grader test) + slope-field figure items 2026-10-10 (11: visual read) + top-up 2026-10-11 (192: two blind solves, full read, grader test) + expansion to five per objective 2026-10-13 (2319: two blind solves, full read, grader test) + figure items 2026-10-11/13 (371: key proven in code, independent read) + final top-up 2026-10-14 (102: two blind solves, full read, grader test) + figure items 2026-10-14/15 (253: key proven in code, independent read) + objective-fit top-up 2026-10-16 (275: two blind solves, full read, grader test) − 12 withdrawn after the truth read 2026-10-17 + harder figure items 2026-10-16 (61: key proven in code, independent read) + figure items on the round-5 kinds 2026-10-17 (88: key proven in code, independent read)');
-    assert.equal(Object.keys(data.items).length, 6673);
+    assert.equal(data.source, 'audited generated items 2026-10-06 (828) + practice extension 2026-10-09 (357: two blind solvers, quality check, full read) + figure items 2026-10-09 (49: visual read) + depth job 2026-10-10 (1779: two blind solves, full read, grader test) + slope-field figure items 2026-10-10 (11: visual read) + top-up 2026-10-11 (192: two blind solves, full read, grader test) + expansion to five per objective 2026-10-13 (2319: two blind solves, full read, grader test) + figure items 2026-10-11/13 (371: key proven in code, independent read) + final top-up 2026-10-14 (102: two blind solves, full read, grader test) + figure items 2026-10-14/15 (253: key proven in code, independent read) + objective-fit top-up 2026-10-16 (275: two blind solves, full read, grader test) − 12 withdrawn after the truth read 2026-10-17 + harder figure items 2026-10-16 (61: key proven in code, independent read) + figure items on the round-5 kinds 2026-10-17 (88: key proven in code, independent read) + harder figure items 2026-10-18 (101: key proven in code, independent read)');
+    assert.equal(Object.keys(data.items).length, 6774);
     for (const [id, mark] of Object.entries(data.items)) {
       assert.ok(id === id.trim() && isGeneratedPracticeItemId(id), `not a generated item id: ${JSON.stringify(id)}`);
       assert.equal(mark, 'AUDITED', id);
@@ -157,7 +157,7 @@ function countingGen() {
   });
 
   await test('isAuditedGeneratedItem / the set reflect the JSON', () => {
-    assert.equal(AUDITED_GENERATED_ITEM_IDS.size, 6673);
+    assert.equal(AUDITED_GENERATED_ITEM_IDS.size, 6774);
     assert.equal(isAuditedGeneratedItem(AUDITED_ID), true);
     assert.equal(isAuditedGeneratedItem(UNLISTED_ID), false);
     assert.equal(isAuditedGeneratedItem(WITHDRAWN_GEN_ID), false);
