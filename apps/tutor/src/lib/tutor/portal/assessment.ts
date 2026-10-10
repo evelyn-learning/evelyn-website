@@ -23,6 +23,7 @@ import { NO_GEN_SOURCES } from '@/lib/tutor/practice-assign/resolve';
 import { emitSessionResult } from './session-result';
 import { gradeFreeResponse, GradeUndeterminedError, type GradeDeps } from './grade-free-response';
 import { gradeNumericAnswer } from './numeric-answer-rule';
+import { mcqFoldCollides } from '../voice/answer-primitives';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import type { ResolvedAssessmentKey } from './adapters';
@@ -98,6 +99,42 @@ function norm(s: string): string {
   return (s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+/** Whitespace-collapsed, NFC, case KEPT — `norm` without the case fold. */
+function normKeepCase(s: string): string {
+  return (s ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Deterministic MCQ grade: the response is the correct option's id (letter),
+ * its text, or the stored key. Case is folded, as it always was — EXCEPT in an
+ * item whose options differ only by case ("TT" / "Tt" / "tt", "mg" / "Mg"):
+ * there a fold cannot tell a wrong option from the right one (2026-10-10: "Tt"
+ * was graded correct against "TT"), so option TEXT is compared exactly. Ids
+ * stay folded unless two ids of the item differ only by case. Same rule as
+ * `resolveMcqLetter` (voice/answer-primitives.ts) and the academy's mcq-core.
+ */
+export function mcqResponseCorrect(
+  key: Pick<ResolvedAssessmentKey, 'choices' | 'correctChoiceId' | 'expectedAnswer'>,
+  text: string,
+): boolean {
+  const choices = key.choices ?? [];
+  const exactText = mcqFoldCollides(choices.map((c) => normKeepCase(c.text)));
+  const exactId = mcqFoldCollides(choices.map((c) => c.id));
+  const same = (a: string, b: string, exact: boolean) => (exact ? normKeepCase(a) === normKeepCase(b) : norm(a) === norm(b));
+
+  if (key.correctChoiceId && same(text, key.correctChoiceId, exactId)) return true;
+  const correct = choices.find((c) => c.id === key.correctChoiceId);
+  if (correct && same(text, correct.text, exactText)) return true;
+  if (key.expectedAnswer) {
+    // The stored key is a letter/id on bank items and option text on others.
+    const keyIsId =
+      choices.some((c) => same(c.id, key.expectedAnswer!, exactId)) &&
+      !choices.some((c) => normKeepCase(c.text) === normKeepCase(key.expectedAnswer!));
+    if (same(text, key.expectedAnswer, keyIsId ? exactId : exactText)) return true;
+  }
+  return false;
+}
+
 /** Thousands separators out ("1,200" → "1200"); anything else untouched. */
 function stripThousands(s: string): string {
   return (s ?? '').replace(/(\d),(?=\d{3}(?:\D|$))/g, '$1');
@@ -166,14 +203,7 @@ async function isCorrectJudged(
     return j.correct;
   }
 
-  if (fmt === 'mcq') {
-    const n = norm(text);
-    if (key.correctChoiceId && n === norm(key.correctChoiceId)) return true;
-    if (key.expectedAnswer && n === norm(key.expectedAnswer)) return true;
-    const correct = key.choices?.find((c) => c.id === key.correctChoiceId);
-    if (correct && n === norm(correct.text)) return true;
-    return false;
-  }
+  if (fmt === 'mcq') return mcqResponseCorrect(key, text);
 
   if (fmt === 'frq' || fmt === 'free') {
     const j = await judge({ expectedAnswer: key.expectedAnswer ?? '', response: { text }, question: key.problemText });

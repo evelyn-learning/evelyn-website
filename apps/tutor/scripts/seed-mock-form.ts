@@ -10,7 +10,8 @@
  *
  * Mongo bootstrap + verifier pattern MIRROR scripts/seed-problem-bank.ts
  * (read it first) — a fresh-context Sonnet solve per mcq/numeric item as a
- * verify-at-ingest gate, same numeric tolerance + MCQ letter-prefix match.
+ * verify-at-ingest gate, same MCQ letter-prefix match; numeric solves are
+ * compared with the shared numeric rule live scoring uses (no tolerance).
  * FRQ items skip auto-solve (there's no single right answer to solve for)
  * and are instead checked for a rubric whose part points sum > 0 — both at
  * lint time (hard gate) and again at verify time for symmetry with the
@@ -55,6 +56,7 @@ import { resolvePassage } from '../src/lib/tutor/passages/store';
 import { getBlueprint, validateBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
 import { getModelClient, prepareParams, resolveModel } from '../src/lib/tutor/ai/model-registry';
 import { lookupModelRate } from '../src/lib/tutor/ai/model-rates';
+import { solveMatchesNumericKey } from './lib/mock-form-numeric-match';
 
 const SOURCE = { name: 'Evelyn (original)' };
 const LICENSE = 'internal-original';
@@ -287,9 +289,10 @@ async function lintForm(
 
 // ---------------------------------------------------------------------------
 // Verify-at-ingest (independent Sonnet fresh-context solve) — mirrors
-// scripts/seed-problem-bank.ts's verifyItem/parseNum/numericMatch. Not
-// imported directly: that script doesn't export these helpers, and its
-// SeedItem shape/CLI are entangled with the ProblemBank-course flow.
+// scripts/seed-problem-bank.ts's verifyItem (not imported: that script does
+// not export it, and its SeedItem shape/CLI are entangled with the
+// ProblemBank-course flow). The NUMERIC comparison does not mirror it: it is
+// the shared rule live scoring uses (see `numericMatch` below).
 // ---------------------------------------------------------------------------
 
 interface VerifyResult {
@@ -300,26 +303,11 @@ interface VerifyResult {
   usageOut?: number;
 }
 
-function parseNum(s: string): number {
-  const t = s.trim().replace(/[,$\s]/g, '');
-  if (/%$/.test(t)) {
-    const n = parseFloat(t);
-    return Number.isFinite(n) ? n / 100 : NaN;
-  }
-  const frac = t.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
-  if (frac) {
-    const d = parseFloat(frac[2]);
-    return d !== 0 ? parseFloat(frac[1]) / d : NaN;
-  }
-  return parseFloat(t);
-}
-function numericMatch(expected: string, got: string): boolean {
-  const a = parseNum(got);
-  const b = parseNum(expected);
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
-  const tol = Math.max(0.01, Math.abs(b) * 0.01);
-  return Math.abs(a - b) <= tol;
-}
+/** Does the independent solve agree with the item's numeric key? The shared
+ *  numeric rule, exactly as live scoring applies it — see
+ *  scripts/lib/mock-form-numeric-match.ts. (Until 2026-10-10 this was a local
+ *  1% tolerance, which passed a key of 42 against a solve of 42.3.) */
+const numericMatch = solveMatchesNumericKey;
 
 async function verifyItem(anthropic: Anthropic, model: string, item: SeedableItem): Promise<VerifyResult> {
   const isMcq = item.responseFormat === 'mcq';
