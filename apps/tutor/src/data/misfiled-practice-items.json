@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-10-17",
-  "source": "misfiled-item audit 2026-10-16 (344 neighbour + 1 off-skill lines; 344 resolved to ids from local exports, 1 lesson step unresolved: text rewritten since the audit) + review of five objectives 2026-10-17 (3 added)",
+  "source": "misfiled-item audit 2026-10-16 (344 neighbour + 1 off-skill lines; 344 resolved to ids from local exports, 1 lesson step unresolved: text rewritten since the audit) + review of five objectives 2026-10-17 (3 added) − 3 withdrawn after the truth read 2026-10-17",
   "items": {
     "gen-1e8cc063-2e78-45c2-a46f-ab9cc249178a::gen-1e8cc063-2e78-45c2-a46f-ab9cc249178a.lo-1-try": "gen-1e8cc063-2e78-45c2-a46f-ab9cc249178a.lo-2",
     "gen-21937bfb-ce63-4594-9d91-33f24d780a98::gen-21937bfb-ce63-4594-9d91-33f24d780a98.lo-1-try": "gen-21937bfb-ce63-4594-9d91-33f24d780a98.lo-2",
@@ -81,7 +81,6 @@
     "practice-gen.gen-38765252-9422-413e-8e50-280cc4188d91.lo-1.4rihst": "gen-38765252-9422-413e-8e50-280cc4188d91.lo-3",
     "practice-gen.gen-3a76002e-78e8-4f03-8a20-ae031a57e7cb.lo-1.1ooz06": "gen-3a76002e-78e8-4f03-8a20-ae031a57e7cb.lo-4",
     "practice-gen.gen-3a76002e-78e8-4f03-8a20-ae031a57e7cb.lo-1.z75sur": "gen-3a76002e-78e8-4f03-8a20-ae031a57e7cb.lo-4",
-    "practice-gen.gen-3aa75ee5-2a3e-472c-b260-f1ee8ba643de.lo-1.xkr5lm": "gen-3aa75ee5-2a3e-472c-b260-f1ee8ba643de.lo-3",
     "practice-gen.gen-3c586ec0-3b8e-4ce2-99f0-8d22c6497083.lo-1.bw7xfa": "gen-3c586ec0-3b8e-4ce2-99f0-8d22c6497083.lo-4",
     "practice-gen.gen-3c586ec0-3b8e-4ce2-99f0-8d22c6497083.lo-1.db208s": "gen-3c586ec0-3b8e-4ce2-99f0-8d22c6497083.lo-4",
     "practice-gen.gen-3c586ec0-3b8e-4ce2-99f0-8d22c6497083.lo-1.f109iv": "gen-3c586ec0-3b8e-4ce2-99f0-8d22c6497083.lo-4",
@@ -167,7 +166,6 @@
     "practice-gen.gen-739c0ae5-de9d-428b-8319-f488ff6c76e5.lo-1.r7xgoa": "gen-739c0ae5-de9d-428b-8319-f488ff6c76e5.lo-3",
     "practice-gen.gen-75185b4f-3891-4118-bde3-ea7a1dbfffcb.lo-1.1biuq8i": "gen-75185b4f-3891-4118-bde3-ea7a1dbfffcb.lo-4",
     "practice-gen.gen-75185b4f-3891-4118-bde3-ea7a1dbfffcb.lo-1.d4vngn": "gen-75185b4f-3891-4118-bde3-ea7a1dbfffcb.lo-2",
-    "practice-gen.gen-75185b4f-3891-4118-bde3-ea7a1dbfffcb.lo-1.gbcw8m": "gen-75185b4f-3891-4118-bde3-ea7a1dbfffcb.lo-3",
     "practice-gen.gen-7bc3506d-a5b1-4ebf-ab79-ff6c1d42ce55.lo-1.11h9oqb": "gen-7bc3506d-a5b1-4ebf-ab79-ff6c1d42ce55.lo-3",
     "practice-gen.gen-7bc3506d-a5b1-4ebf-ab79-ff6c1d42ce55.lo-1.1ntnyvl": "gen-7bc3506d-a5b1-4ebf-ab79-ff6c1d42ce55.lo-3",
     "practice-gen.gen-7bc3506d-a5b1-4ebf-ab79-ff6c1d42ce55.lo-1.1xt95x": "gen-7bc3506d-a5b1-4ebf-ab79-ff6c1d42ce55.lo-3",
@@ -180,7 +178,6 @@
     "practice-gen.gen-8465e03f-132c-4f11-aad3-35f967c06491.lo-1.fotxy4": "gen-8465e03f-132c-4f11-aad3-35f967c06491.lo-2",
     "practice-gen.gen-846750a0-0e6f-4a05-9a7b-317fba569a8b.lo-1.12hykbb": "gen-846750a0-0e6f-4a05-9a7b-317fba569a8b.lo-3",
     "practice-gen.gen-846750a0-0e6f-4a05-9a7b-317fba569a8b.lo-1.8a6777": "gen-846750a0-0e6f-4a05-9a7b-317fba569a8b.lo-3",
-    "practice-gen.gen-846750a0-0e6f-4a05-9a7b-317fba569a8b.lo-1.erno06": "gen-846750a0-0e6f-4a05-9a7b-317fba569a8b.lo-3",
     "practice-gen.gen-85ec2ae2-32e8-4279-9381-99017036f227.lo-1.f4js8w": "gen-85ec2ae2-32e8-4279-9381-99017036f227.lo-3",
     "practice-gen.gen-869a59a5-fc48-4b00-9f2d-1b084a00611e.lo-1.1u522m": "gen-869a59a5-fc48-4b00-9f2d-1b084a00611e.lo-2",
     "practice-gen.gen-869a59a5-fc48-4b00-9f2d-1b084a00611e.lo-1.1veaa07": "gen-869a59a5-fc48-4b00-9f2d-1b084a00611e.lo-2",

@@ -156,9 +156,9 @@ const srcA = () => sourcesOf([planA, planB], bankA);
   const file = path.join(__dirname, '..', 'src', 'data', 'misfiled-practice-items.json');
   const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { generatedAt: string; source: string; items: Record<string, string | null> };
 
-  await test('the JSON holds exactly 347 marks: sorted, each target another objective of the SAME skill, 3 marked null', () => {
+  await test('the JSON holds exactly 344 marks: sorted, each target another objective of the SAME skill, 3 marked null', () => {
     assert.equal(data.generatedAt, '2026-10-17');
-    assert.equal(Object.keys(data.items).length, 347);
+    assert.equal(Object.keys(data.items).length, 344);
     assert.deepEqual(Object.keys(data.items), [...Object.keys(data.items)].sort(), 'ids are sorted');
     let nulls = 0;
     for (const [id, target] of Object.entries(data.items)) {
@@ -171,13 +171,13 @@ const srcA = () => sourcesOf([planA, planB], bankA);
       assert.notEqual(target, filed, id);
     }
     assert.equal(nulls, 3);
-    assert.equal(MISFILED_ITEM_MARKS.size, 347);
+    assert.equal(MISFILED_ITEM_MARKS.size, 344);
   });
 
   await test('no marked id is on the withdrawn list; every marked generated row is on the audited list', () => {
     assert.deepEqual(Object.keys(data.items).filter((id) => WITHDRAWN_ITEM_IDS.has(id)), []);
     const generated = Object.keys(data.items).filter((id) => id.startsWith('practice-gen.'));
-    assert.equal(generated.length, 332);
+    assert.equal(generated.length, 329);
     assert.deepEqual(generated.filter((id) => !AUDITED_GENERATED_ITEM_IDS.has(id)), []);
   });
 
