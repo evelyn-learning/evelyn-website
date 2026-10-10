@@ -7,6 +7,8 @@
  *   nodeDots?: boolean;                 // a dot on every internal node (default: only on labelled nodes)
  *   traitStyle?: 'auto' | 'label' | 'key';   // trait names on the branches, or numbered ticks with a key under the tree
  *                                       //   ('auto': names when they all fit clear of the tree, else the key)
+ *   letterLabels?: 'numerals' | 'roman'; // print single-letter node labels as 1, 2, 3 … or I, II, III … (so they
+ *                                       //   cannot be taken for the option letters of a multiple-choice question)
  *   title?: string }
  *
  * Clade = string                        // a tip
@@ -25,6 +27,7 @@ import { FIGURE_WIDTH, TICK_FS, estWidth, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
 import { INK, MUTED, Placer, segmentBoxes, text, textBox, titleBlock, type Box, type Candidate } from './draw';
 import { facts, lab, labBox, stroke, type Notes } from './draw2';
+import { letterAs, readLetterLabels } from './batch3';
 
 export interface PhyloTrait { label: string; blank: boolean }
 export interface PhyloNode {
@@ -55,6 +58,7 @@ export interface PhyloModel {
 
 export function phyloModel(r: Reader): PhyloModel {
   const p = r.p;
+  const letters = readLetterLabels(r);
   const tips: PhyloNode[] = [];
   const internals: PhyloNode[] = [];
   const traitsOf = (v: unknown, at: string): PhyloTrait[] => (v === undefined || v === null ? [] : r.list(v, `${at}.traits`, 0, 3)).map((raw, i) => {
@@ -75,7 +79,7 @@ export function phyloModel(r: Reader): PhyloModel {
     if (o.name !== undefined) r.fail(`${at}: an internal node is labelled with "node", not "name"`);
     const kids = r.list(o.children, `${at}.children`, 2, 4).map((c, i) => read(c, `${at}.children[${i}]`, depth + 1));
     const node: PhyloNode = {
-      node: r.optStr(o.node, `${at}.node`, 6), blank: false, traits: traitsOf(o.traits, at), children: kids,
+      node: letterAs(r.optStr(o.node, `${at}.node`, 6), letters), blank: false, traits: traitsOf(o.traits, at), children: kids,
       tips: kids.flatMap((k) => k.tips), height: Math.max(...kids.map((k) => k.height)) + 1, row: kids.reduce((a, k) => a + k.row, 0) / kids.length,
     };
     if (node.node && internals.some((n) => n.node === node.node)) r.fail(`${at}.node: the label "${node.node}" is used twice`);

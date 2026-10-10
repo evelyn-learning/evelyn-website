@@ -39,8 +39,17 @@
  *     lineNames?: [string, string, string] | null }   // the two parallels and the transversal
  * shape 'similar_triangles' — a triangle and its image under `scale`:
  *   { sides: [a, b, c]; scale: number;
- *     vertices?: [[3 names], [3 names]]; sideLabels?: [[a, b, c], [a, b, c]];
+ *     vertices?: [[3 names], [3 names]] | null;   // null: no vertex letters at all (either entry may be null too)
+ *     sideLabels?: [[a, b, c], [a, b, c]];
  *     angleLabels?: [[A, B, C], [A, B, C]]; rotate?: number (0) }   // degrees, second triangle
+ *   NESTED (`nested: true`, the lamp-post-and-shadow figure): ONE triangle A B C with a segment D E
+ *   inside it, parallel to side b = CA, that cuts off the small triangle D B E at the right-hand
+ *   corner B — D on the base A B, E on the side B C; D B E is A B C scaled by `scale` (0.15–0.85):
+ *   { nested: true; sides: [a, b, c]; scale: number;
+ *     vertices?: [[A, B, C], [D, E]] | null;      // (null entries hide either set)
+ *     sideLabels?: [[a, b, c], [EB, DE, DB]];     // the big triangle's sides; the small one's (a, b, c order)
+ *     restLabels?: [AD, CE] }                     // the parts of the base and of side a outside the small triangle
+ *   An angle label is set INSIDE its polygon, on the bisector, whenever it fits there.
  */
 import { FIGURE_WIDTH, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
@@ -85,7 +94,9 @@ export interface GeoModel {
   poly?: PolyModel;
   circle?: CircleModel;
   parallel?: { angle: number; labels: Record<number, string>; values: Record<number, number>; lineNames: [string, string, string] | null };
-  similar?: { first: PolyModel; second: PolyModel; scale: number; rotate: number };
+  /** `nested`: the second triangle is cut off inside the first at its vertex B (its points are D, B, E);
+   *  `rest` labels the parts A–D and C–E outside it, `names` are the letters of D and E. */
+  similar?: { first: PolyModel; second: PolyModel; scale: number; rotate: number; nested?: { rest: [GeoLabel, GeoLabel]; names: string[] | null } };
 }
 
 const SHAPES = ['triangle', 'polygon', 'circle', 'parallel_lines', 'similar_triangles'] as const;
@@ -218,8 +229,22 @@ export function geometryModel(r: Reader): GeoModel {
   if (shape === 'similar_triangles') {
     const [a, b, c] = three(p.sides, 'sides');
     const k = r.positive(p.scale, 'scale');
-    const sub = (i: number, key: string): unknown => (p[key] === undefined || p[key] === null ? undefined : r.list(p[key], key, 2, 2)[i]);
+    const sub = (i: number, key: string): unknown => (p[key] === undefined || p[key] === null ? (key === 'vertices' && p[key] === null ? null : undefined) : r.list(p[key], key, 2, 2)[i]);
     const mk = (i: number, f: number, dflt: string[]): PolyModel => poly({ vertices: sub(i, 'vertices'), sideLabels: sub(i, 'sideLabels'), angleLabels: sub(i, 'angleLabels') }, `[${i}].`, trianglePoints(r, a * f, b * f, c * f, 'sides'), dflt, true);
+    if (r.bool(p.nested, 'nested', false)) {
+      if (!(k >= 0.15 && k <= 0.85)) r.fail('scale must be between 0.15 and 0.85 for nested triangles (the small triangle is cut off inside the large one)');
+      if (p.rotate !== undefined && p.rotate !== null) r.fail('rotate: not with nested triangles');
+      const first = mk(0, 1, ['A', 'B', 'C']);
+      const [A, B, C] = first.pts;
+      const D: Pt = [B[0] + (A[0] - B[0]) * k, B[1] + (A[1] - B[1]) * k];
+      const E: Pt = [B[0] + (C[0] - B[0]) * k, B[1] + (C[1] - B[1]) * k];
+      // The small triangle in the order of its big counterpart: D ↔ A, B ↔ B, E ↔ C.
+      const names = sub(1, 'vertices');
+      const two = names === null ? null : names === undefined ? ['D', 'E'] : r.list(names, 'vertices[1]', 2, 2).map((x, i) => r.str(x, `vertices[1][${i}]`, 3));
+      const second = poly({ vertices: two === null ? null : [two[0], first.names ? first.names[1] : 'B', two[1]], sideLabels: sub(1, 'sideLabels'), angleLabels: sub(1, 'angleLabels') }, '[1].', [D, B, E], ['D', 'B', 'E'], true);
+      const rest = p.restLabels === undefined || p.restLabels === null ? [null, null] : r.list(p.restLabels, 'restLabels', 2, 2).map((x, i) => one(x, `restLabels[${i}]`, len(i === 0 ? dist(A, D) : dist(C, E))));
+      return { ...base, similar: { first, second, scale: k, rotate: 0, nested: { rest: rest as [GeoLabel, GeoLabel], names: two } } };
+    }
     return { ...base, similar: { first: mk(0, 1, ['A', 'B', 'C']), second: mk(1, k, ['D', 'E', 'F']), scale: k, rotate: r.optNum(p.rotate, 'rotate') ?? 0 } };
   }
   if (shape === 'parallel_lines') {
@@ -323,7 +348,7 @@ function put(c: Ctx, px: number, py: number, s: string, dirX: number, dirY: numb
 }
 
 /** The interior angle at canvas vertex v between canvas points a (previous) and b (next): its arc (or square) and label. */
-function angleMark(c: Ctx, v: Pt, a: Pt, b: Pt, label: GeoLabel, square: boolean, rArc = 17): void {
+function angleMark(c: Ctx, v: Pt, a: Pt, b: Pt, label: GeoLabel, square: boolean, rArc = 17, inside?: (x: number, y: number) => boolean): void {
   const ua: Pt = [(a[0] - v[0]) / dist(a, v), (a[1] - v[1]) / dist(a, v)];
   const ub: Pt = [(b[0] - v[0]) / dist(b, v), (b[1] - v[1]) / dist(b, v)];
   const cos = ua[0] * ub[0] + ua[1] * ub[1];
@@ -346,7 +371,45 @@ function angleMark(c: Ctx, v: Pt, a: Pt, b: Pt, label: GeoLabel, square: boolean
   while (sweep < -Math.PI) sweep += 2 * Math.PI;
   c.parts.push(`<path d="${arcPath(v[0], v[1], rr, a0, a0 + sweep)}" ${stroke(INK, 1.3)}/>`);
   const out = rr + (theta < 0.6 ? 16 : 11) + (label.length > 4 ? 5 : 0);
+  if (inside) {
+    // Where it always went — kept when that is clear and inside the polygon. Otherwise (a narrow
+    // angle used to push the label out across a side): centred on the bisector, as near the arc as
+    // leaves every corner of its box inside.
+    const fs = 12;
+    const s = layoutText(label);
+    const first = c.placer.place(s, fs, around(v[0] + bis[0] * out, v[1] + bis[1] * out, fs, bis[0], bis[1], [0, 5, 10, 16]));
+    if (first.clean && inside((first.box.x0 + first.box.x1) / 2, (first.box.y0 + first.box.y1) / 2)) {
+      c.parts.push(lab(first.x, first.y, label, first.anchor, { fs, halo: true }));
+      return;
+    }
+    c.placer.unplace();
+    const hw = (s.length * fs * 0.58) / 2 + 1.5;
+    for (let d = rr + 9; d <= rr + 60; d += 3) {
+      const cx = v[0] + bis[0] * d;
+      const cy = v[1] + bis[1] * d;
+      const corners: Pt[] = [[cx - hw, cy - 7], [cx + hw, cy - 7], [cx - hw, cy + 6], [cx + hw, cy + 6]];
+      if (!corners.every((q) => inside(q[0], q[1]))) continue;
+      const at = c.placer.place(s, fs, [{ x: cx, y: cy + fs * 0.36, anchor: 'middle' }]);
+      if (!at.clean) { c.placer.unplace(); continue; }
+      c.parts.push(lab(at.x, at.y, label, at.anchor, { fs, halo: true }));
+      return;
+    }
+  }
   put(c, v[0] + bis[0] * out, v[1] + bis[1] * out, label, bis[0], bis[1], [0, 5, 10, 16]);
+}
+
+/** Is (x, y) inside the polygon P, at least `margin` from every side? */
+function insidePoly(P: Pt[], x: number, y: number, margin: number): boolean {
+  let inside = false;
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    const [xi, yi] = P[i];
+    const [xj, yj] = P[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    const L = Math.hypot(xj - xi, yj - yi) || 1;
+    const tt = Math.max(0, Math.min(1, ((x - xi) * (xj - xi) + (y - yi) * (yj - yi)) / (L * L)));
+    if (Math.hypot(x - (xi + (xj - xi) * tt), y - (yi + (yj - yi) * tt)) < margin) return false;
+  }
+  return inside;
 }
 
 function drawPoly(c: Ctx, m: PolyModel, P: Pt[]): void {
@@ -369,7 +432,7 @@ function drawPoly(c: Ctx, m: PolyModel, P: Pt[]): void {
   // Angle marks first (they are nearest the vertex), then side labels, then names.
   P.forEach((q, i) => {
     const right = m.rightAngleMarks && Math.abs(m.angles[i] - 90) < 1e-6;
-    angleMark(c, q, P[(i + n - 1) % n], P[(i + 1) % n], m.angleLabels[i] !== null && right && /^90(\.0)?°$/.test(m.angleLabels[i] as string) ? null : m.angleLabels[i], right);
+    angleMark(c, q, P[(i + n - 1) % n], P[(i + 1) % n], m.angleLabels[i] !== null && right && /^90(\.0)?°$/.test(m.angleLabels[i] as string) ? null : m.angleLabels[i], right, 17, (x, y) => insidePoly(P, x, y, 1.5));
   });
   P.forEach((q, i) => {
     const s = P[(i + 1) % n];
@@ -418,6 +481,66 @@ export function renderGeometry(r: Reader, uid: string): Drawn {
     if (f.k * Math.min(...m.poly.drawPts.map((q, i) => dist(q, m.poly!.drawPts[(i + 1) % m.poly!.drawPts.length]))) < 26) notes.push({ code: 'crowded', message: 'the shortest side is drawn under 26 units long — its label and marks crowd the vertices' });
     drawPoly(c, m.poly, m.poly.drawPts.map(f.T));
     bottom = top + f.h;
+  } else if (m.similar?.nested) {
+    // One outline; the inner segment D E cuts off the small triangle at B.
+    const big = m.similar.first;
+    const small = m.similar.second;
+    const f = fit(big.pts, { x0: 56, y0: top, x1: W - 56, y1: top + 200 });
+    const [A, B, C] = big.pts.map(f.T);
+    const [D, , E] = small.pts.map(f.T);
+    const cen: Pt = [(A[0] + B[0] + C[0]) / 3, (A[1] + B[1] + C[1]) / 3];
+    parts.push(`<path d="${polyPath([A, B, C], true)}" ${stroke(INK, 1.9)} stroke-linejoin="round"/>`, `<path d="${polyPath([D, E])}" ${stroke(INK, 1.9)}/>`);
+    for (const [p0, p1] of [[A, B], [B, C], [C, A], [D, E]] as Array<[Pt, Pt]>) c.placer.block(...segmentBoxes(p0[0], p0[1], p1[0], p1[1], 2));
+    const insideBig = (x: number, y: number): boolean => insidePoly([A, B, C], x, y, 1.5);
+    // Right-angle marks, where the big triangle has one — and the same angle at D or E.
+    big.angles.forEach((ang, i) => {
+      const right = big.rightAngleMarks && Math.abs(ang - 90) < 1e-6;
+      const P3 = [A, B, C];
+      const lbl = big.angleLabels[i] !== null && right && /^90(\.0)?°$/.test(big.angleLabels[i] as string) ? null : big.angleLabels[i];
+      angleMark(c, P3[i], P3[(i + 2) % 3], P3[(i + 1) % 3], lbl, right, 17, insideBig);
+      if (right && i === 0) angleMark(c, D, E, B, null, true);
+      if (right && i === 2) angleMark(c, E, B, D, null, true);
+    });
+    /** A label beside the segment p0–p1, on the side away from (or, `inner`, towards) the middle of the big triangle. */
+    const sideLab = (p0: Pt, p1: Pt, s: GeoLabel, inner = false): void => {
+      if (s === null) return;
+      const mx = (p0[0] + p1[0]) / 2;
+      const my = (p0[1] + p1[1]) / 2;
+      const L = dist(p0, p1);
+      let nx = -(p1[1] - p0[1]) / L;
+      let ny = (p1[0] - p0[0]) / L;
+      if (((mx - cen[0]) * nx + (my - cen[1]) * ny < 0) !== inner) { nx = -nx; ny = -ny; }
+      put(c, mx, my, s, nx, ny, [9, 13, 18, 24]);
+    };
+    // The small triangle's sides first (they have the least room), then the parts outside it, then the whole sides.
+    sideLab(D, E, small.sideLabels[2], dist(D, A) < 46);      // side b of the small triangle: the inner segment
+    sideLab(D, B, small.sideLabels[0]);                         // its c: along the base
+    sideLab(B, E, small.sideLabels[1]);                         // its a: along side a
+    sideLab(A, D, m.similar.nested.rest[0]);
+    sideLab(E, C, m.similar.nested.rest[1]);
+    sideLab(C, A, big.sideLabels[2]);
+    // The whole base and the whole side a are named beyond the labels of their parts.
+    const whole = (p0: Pt, p1: Pt, s: GeoLabel): void => {
+      if (s === null) return;
+      const L = dist(p0, p1);
+      let nx = -(p1[1] - p0[1]) / L;
+      let ny = (p1[0] - p0[0]) / L;
+      const mx = (p0[0] + p1[0]) / 2;
+      const my = (p0[1] + p1[1]) / 2;
+      if ((mx - cen[0]) * nx + (my - cen[1]) * ny < 0) { nx = -nx; ny = -ny; }
+      const off = 24;
+      const q0: Pt = [p0[0] + nx * off, p0[1] + ny * off];
+      const q1: Pt = [p1[0] + nx * off, p1[1] + ny * off];
+      parts.push(`<path d="${polyPath([q0, q1])}M${n2(q0[0] - nx * 4)},${n2(q0[1] - ny * 4)}L${n2(q0[0] + nx * 4)},${n2(q0[1] + ny * 4)}M${n2(q1[0] - nx * 4)},${n2(q1[1] - ny * 4)}L${n2(q1[0] + nx * 4)},${n2(q1[1] + ny * 4)}" ${stroke(MUTED, 1)}/>`);
+      c.placer.block(...segmentBoxes(q0[0], q0[1], q1[0], q1[1], 2));
+      put(c, (q0[0] + q1[0]) / 2, (q0[1] + q1[1]) / 2, s, nx, ny, [8, 12, 17]);
+    };
+    whole(A, B, big.sideLabels[0]);
+    whole(B, C, big.sideLabels[1]);
+    const name = (q: Pt, s: string): void => { const l = Math.hypot(q[0] - cen[0], q[1] - cen[1]) || 1; put(c, q[0], q[1], s, (q[0] - cen[0]) / l, (q[1] - cen[1]) / l, [8, 12, 17], { weight: 600, italic: true }); };
+    if (big.names) [A, B, C].forEach((q, i) => name(q, (big.names as string[])[i]));
+    if (m.similar.nested.names) { name([D[0], D[1] + 3], m.similar.nested.names[0]); name(E, m.similar.nested.names[1]); }
+    bottom = top + f.h + (big.sideLabels[0] !== null ? 26 : 0);
   } else if (m.similar) {
     const a = m.similar.first.pts;
     const b = rot(m.similar.second.pts, m.similar.rotate);

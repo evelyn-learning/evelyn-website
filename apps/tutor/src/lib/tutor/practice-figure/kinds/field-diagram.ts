@@ -31,6 +31,7 @@
  *   { field: 'into' | 'out' | 'up' | 'down' | 'left' | 'right';
  *     showField?: boolean (true);
  *     charge: MovingCharge & { velocity: 'up' | 'down' | 'left' | 'right' } }
+ * variant 'bar_magnet' — one bar magnet, or two end to end: see ./bar-magnet.ts.
  * MovingCharge = { sign: '+' | '−' | '-'; label?: string; showSign?: boolean (true);
  *                  showForce?: boolean (false) }  // the force arrow is hidden unless asked for
  * Common: title?: string.
@@ -42,6 +43,7 @@ import { FIGURE_WIDTH, SERIES_COLORS, estWidth, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
 import { INK, MUTED, text, titleBlock } from './draw';
 import { SHOWS, facts, head, lab, numStr, polyPath, stroke, type Notes, type Pt, type Show } from './draw2';
+import { renderBarMagnet } from './bar-magnet';
 
 export const DIRS4 = ['up', 'down', 'left', 'right'] as const;
 export type Dir4 = (typeof DIRS4)[number];
@@ -100,7 +102,7 @@ export function wireSideField(current: Dir4, side: 'above' | 'below' | 'left' | 
 
 export function fieldModel(r: Reader): FieldModel {
   const p = r.p;
-  if (!VARIANTS.includes(p.variant as (typeof VARIANTS)[number])) r.fail(`variant must be one of ${VARIANTS.join(', ')}`);
+  if (!VARIANTS.includes(p.variant as (typeof VARIANTS)[number])) r.fail(`variant must be one of ${VARIANTS.join(', ')}, bar_magnet`);
   const title = r.optStr(p.title, 'title', 160);
   const pick = <T extends string>(v: unknown, name: string, allowed: readonly T[]): T => {
     if (!allowed.includes(v as T)) r.fail(`${name} must be one of ${allowed.join(', ')}`);
@@ -205,46 +207,100 @@ export function traceFieldLines(m: Extract<FieldModel, { variant: 'point_charges
     });
     return best;
   };
-  const trace = (i: number, angle: number, sgn: 1 | -1): { pts: Pt[]; end: number } => {
+  // A line that leaves the picture is followed on for a while (to 1.5 pictures beyond each edge):
+  // `back` is the charge it comes back to end on, with the whole path — a long loop round a smaller charge.
+  const [mx, my] = [(xRange[1] - xRange[0]) * 1.5, (yRange[1] - yRange[0]) * 1.5];
+  const trace = (i: number, angle: number, sgn: 1 | -1): { pts: Pt[]; end: number; back?: { pts: Pt[]; end: number } } => {
     let x = charges[i].x + r0 * Math.cos(angle);
     let y = charges[i].y + r0 * Math.sin(angle);
     const pts: Pt[] = [[x, y]];
-    for (let step = 0; step < 6000; step++) {
+    let cut: Pt[] | null = null;
+    for (let step = 0; step < (cut ? 16000 : 6000); step++) {
       const [ax, ay] = fieldAt(charges, x, y);
       const al = Math.hypot(ax, ay);
-      if (al < 1e-9) return { pts, end: -2 };
-      const mx = x + (sgn * h * ax) / al / 2;
-      const my = y + (sgn * h * ay) / al / 2;
-      const [bx, by] = fieldAt(charges, mx, my);
+      if (al < 1e-9) break;
+      const hx = x + (sgn * h * ax) / al / 2;
+      const hy = y + (sgn * h * ay) / al / 2;
+      const [bx, by] = fieldAt(charges, hx, hy);
       const bl = Math.hypot(bx, by);
-      if (bl < 1e-9) return { pts, end: -2 };
+      if (bl < 1e-9) break;
       x += (sgn * h * bx) / bl;
       y += (sgn * h * by) / bl;
-      if (x < xRange[0] || x > xRange[1] || y < yRange[0] || y > yRange[1]) {
-        pts.push([Math.max(xRange[0], Math.min(xRange[1], x)), Math.max(yRange[0], Math.min(yRange[1], y))]);
-        return { pts, end: -1 };
-      }
+      if (!cut && (x < xRange[0] || x > xRange[1] || y < yRange[0] || y > yRange[1])) cut = [...pts, [Math.max(xRange[0], Math.min(xRange[1], x)), Math.max(yRange[0], Math.min(yRange[1], y))]];
+      if (cut && (x < xRange[0] - mx || x > xRange[1] + mx || y < yRange[0] - my || y > yRange[1] + my)) break;
       pts.push([x, y]);
       const hit = charges.findIndex((c, j) => j !== i && Math.hypot(x - c.x, y - c.y) < r0);
-      if (hit >= 0) return { pts, end: hit };
+      if (hit >= 0) return cut ? { pts: cut, end: -1, back: { pts, end: hit } } : { pts, end: hit };
     }
-    return { pts, end: -2 };
+    return cut ? { pts: cut, end: -1 } : { pts, end: -2 };
   };
-  charges.forEach((c, i) => {
+  // The smaller charges first (of equal ones the positive first): every line of a charge is started
+  // evenly round IT, so a small charge beside a large one has lines on all its sides; a line that
+  // ends on a charge already done is that charge's line and is not drawn twice. A line that leaves
+  // the picture and loops back to a LARGER charge is drawn in both its visible stretches (it is a
+  // line of both charges, so both keep their counts); between equal charges each end is drawn to
+  // the edge from its own charge, as it always was.
+  const order = charges.map((_, i) => i).sort((a, b) => Math.abs(charges[a].q) - Math.abs(charges[b].q) || charges[b].q - charges[a].q || a - b);
+  const done = new Set<number>();
+  const mine: FieldLine[][] = charges.map(() => []);
+  const size = (j: number): number => Math.abs(charges[j].q);
+  for (const i of order) {
+    const c = charges[i];
     const n = Math.abs(c.q) * m.linesPerUnit;
     const base = nearest(i);
     for (let j = 0; j < n; j++) {
-      const t = trace(i, base + (2 * Math.PI * (j + 0.5)) / n, c.q > 0 ? 1 : -1);
-      if (c.q > 0) lines.push({ pts: t.pts, from: i, to: t.end });
-      // Traced back from a negative charge: a line that reaches a positive charge was already drawn from there.
-      else if (t.end < 0) lines.push({ pts: t.pts.reverse(), from: t.end, to: i });
+      let t = trace(i, base + (2 * Math.PI * (j + 0.5)) / n, c.q > 0 ? 1 : -1);
+      if (t.end >= 0 && done.has(t.end)) continue;
+      // (Two charges only: with three the loops crowd the lines already there.)
+      if (t.back && charges.length === 2) {
+        if (size(t.back.end) > size(i)) t = t.back;
+        else if (size(t.back.end) < size(i) && done.has(t.back.end)) continue;
+      }
+      mine[i].push(c.q > 0 ? { pts: t.pts, from: i, to: t.end } : { pts: [...t.pts].reverse(), from: t.end, to: i });
     }
-  });
+    done.add(i);
+  }
+  for (const list of mine) lines.push(...list);
   return lines;
 }
 
-/** How many lines leave (or arrive at) each charge — what a student counts. */
+/** The stretches of a traced line that lie inside the picture (one, unless it left and came back). */
+export function visibleRuns(pts: Pt[], xRange: [number, number], yRange: [number, number]): Pt[][] {
+  const eps = 1e-9;
+  const inside = (q: Pt): boolean => q[0] >= xRange[0] - eps && q[0] <= xRange[1] + eps && q[1] >= yRange[0] - eps && q[1] <= yRange[1] + eps;
+  const clamp = (q: Pt): Pt => [Math.max(xRange[0], Math.min(xRange[1], q[0])), Math.max(yRange[0], Math.min(yRange[1], q[1]))];
+  if (pts.every(inside)) return [pts];
+  const runs: Pt[][] = [];
+  let run: Pt[] = [];
+  pts.forEach((q, i) => {
+    if (inside(q)) {
+      if (run.length === 0 && i > 0) run.push(clamp(pts[i - 1]));
+      run.push(q);
+    } else if (run.length) {
+      run.push(clamp(q));
+      runs.push(run);
+      run = [];
+    }
+  });
+  if (run.length) runs.push(run);
+  return runs.filter((x) => x.length >= 2);
+}
+
+/** Radius of a charge's symbol, and the scale (canvas units per unit of the model) a point-charge figure is drawn at. */
+export const CHARGE_RADIUS = 10;
+export function fieldScale(m: Extract<FieldModel, { variant: 'point_charges' }>): number {
+  return Math.min((FIGURE_WIDTH - 24) / (m.xRange[1] - m.xRange[0]), 260 / (m.yRange[1] - m.yRange[0]));
+}
+
+/** How many lines of the DRAWN figure leave (or arrive at) each charge — what a student counts. It is the
+ *  charge's size × linesPerUnit whenever the lines that join two charges stay inside the picture; a figure
+ *  where it is not carries a legibility note. */
 export function lineCounts(m: Extract<FieldModel, { variant: 'point_charges' }>): number[] {
+  const lines = traceFieldLines(m, CHARGE_RADIUS / fieldScale(m));
+  return m.charges.map((_, i) => lines.filter((ln) => ln.from === i || ln.to === i).length);
+}
+/** The same by the charges' sizes alone: |q| × linesPerUnit. */
+export function nominalLineCounts(m: Extract<FieldModel, { variant: 'point_charges' }>): number[] {
   return m.charges.map((c) => Math.abs(c.q) * m.linesPerUnit);
 }
 
@@ -278,7 +334,68 @@ function vecArrow(x: number, y: number, d: Dir4, L: number, color: string, label
     + text(ex + ux * 9 + (ux === 0 ? 9 : 0), ey + uy * 9 + 4 + (uy === 0 ? -9 : 0), label, { fs: 13, anchor: 'middle', weight: 700, italic: true, fill: color, halo: true });
 }
 
+/**
+ * Where the letter of a marked point goes: the first of the places round the mark (up and to the
+ * right first — where it always went) whose box no field line crosses, that is clear of every
+ * `obstacle` and inside `bounds`. `clear` is false when every place is crossed (the one crossed
+ * least is used). `radius`: of the mark itself, when it is larger than a dot (a compass).
+ */
+export function clearLabelSpot(px: number, py: number, label: string, lines: ReadonlyArray<ReadonlyArray<Pt>>, obstacles: ReadonlyArray<{ x0: number; y0: number; x1: number; y1: number }>, bounds: { x0: number; y0: number; x1: number; y1: number }, leftFirst = false, radius = 0): { x: number; y: number; anchor: 'start' | 'end'; clear: boolean } {
+  const w = Math.max(9, estWidth(label, 13) * 0.9);
+  const k = radius * 0.72;
+  const spots: Array<{ x: number; y: number; anchor: 'start' | 'end' }> = [];
+  const pair = (dx: number, dy: number) => {
+    const a = { x: px + dx, y: py + dy, anchor: 'start' as const };
+    const b = { x: px - dx, y: py + dy, anchor: 'end' as const };
+    spots.push(...(leftFirst ? [b, a] : [a, b]));
+  };
+  pair(7 + k, -6 - k);
+  pair(7 + k, 15 + k);
+  pair(8 + radius, 4.5);
+  for (const out of [6, 12, 18]) {
+    pair(7 + k, -6 - k - out);
+    pair(7 + k, 15 + k + out);
+    pair(8 + radius + out, 4.5);
+    spots.push({ x: px - w / 2, y: py - 8 - radius - out, anchor: 'start' }, { x: px - w / 2, y: py + 17 + radius + out, anchor: 'start' });
+  }
+  const boxOf = (c: { x: number; y: number; anchor: 'start' | 'end' }) => (c.anchor === 'start' ? { x0: c.x - 2, y0: c.y - 12, x1: c.x + w + 2, y1: c.y + 4 } : { x0: c.x - w - 2, y0: c.y - 12, x1: c.x + 2, y1: c.y + 4 });
+  /** How many lines cross the box of a place; Infinity when it is off the figure or on an obstacle. */
+  const crossed = (c: { x: number; y: number; anchor: 'start' | 'end' }): number => {
+    const b = boxOf(c);
+    if (b.x0 < bounds.x0 || b.x1 > bounds.x1 || b.y0 < bounds.y0 || b.y1 > bounds.y1) return Infinity;
+    if (obstacles.some((o) => b.x0 < o.x1 && o.x0 < b.x1 && b.y0 < o.y1 && o.y0 < b.y1)) return Infinity;
+    let count = 0;
+    for (const ln of lines) {
+      let hit = false;
+      for (let i = 0; i < ln.length && !hit; i++) {
+        const q = ln[i];
+        if (q[0] > b.x0 && q[0] < b.x1 && q[1] > b.y0 && q[1] < b.y1) hit = true;
+        // Between two points that are far apart (a thinned line), look along the segment as well.
+        else if (i > 0 && Math.hypot(q[0] - ln[i - 1][0], q[1] - ln[i - 1][1]) > 3) {
+          const n = Math.ceil(Math.hypot(q[0] - ln[i - 1][0], q[1] - ln[i - 1][1]) / 2);
+          for (let j = 1; j < n && !hit; j++) {
+            const x = ln[i - 1][0] + ((q[0] - ln[i - 1][0]) * j) / n;
+            const y = ln[i - 1][1] + ((q[1] - ln[i - 1][1]) * j) / n;
+            if (x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1) hit = true;
+          }
+        }
+      }
+      if (hit) count++;
+    }
+    return count;
+  };
+  let best = spots[0];
+  let least = Infinity;
+  for (const c of spots) {
+    const n = crossed(c);
+    if (n === 0) return { ...c, clear: true };
+    if (n < least) { least = n; best = c; }
+  }
+  return { ...best, clear: false };
+}
+
 export function renderFieldDiagram(r: Reader): Drawn {
+  if (r.p.variant === 'bar_magnet') return renderBarMagnet(r);
   const m = fieldModel(r);
   const W = FIGURE_WIDTH;
   const t = titleBlock(m.title, W);
@@ -289,30 +406,30 @@ export function renderFieldDiagram(r: Reader): Drawn {
 
   if (m.variant === 'point_charges') {
     const bw = W - 24;
-    const k = Math.min(bw / (m.xRange[1] - m.xRange[0]), 260 / (m.yRange[1] - m.yRange[0]));
+    const k = fieldScale(m);
     const w = (m.xRange[1] - m.xRange[0]) * k;
     const w0 = w;
     const hgt = (m.yRange[1] - m.yRange[0]) * k;
     const x0 = (W - w) / 2;
     const C = (q: Pt): Pt => [x0 + (q[0] - m.xRange[0]) * k, top + (m.yRange[1] - q[1]) * k];
     parts.push(`<rect x="${n2(x0)}" y="${n2(top)}" width="${n2(w)}" height="${n2(hgt)}" fill="none" stroke="#cbd5e1" stroke-width="1"/>`);
-    const R = 10;
+    const R = CHARGE_RADIUS;
     const lines = traceFieldLines(m, R / k);
     const total = lines.length;
     if (total > 36) notes.push({ code: 'too_many_elements', message: `${total} field lines — more than 36 cannot be counted at 340 px (fewer linesPerUnit, or smaller charges)` });
     const d: string[] = [];
     /** Every drawn field line, on the canvas — what a label must keep off. */
     const drawn: Pt[][] = [];
-    for (const ln of lines) {
-      const cp = ln.pts.map(C);
+    for (const ln of lines) for (const [ri, run] of visibleRuns(ln.pts, m.xRange, m.yRange).entries()) {
+      const cp = run.map(C);
       // Thin the polyline: keep a point when the line has turned or run on.
       const kept: Pt[] = [cp[0]];
       let last = 0;
       for (let i = 1; i < cp.length - 1; i++) {
         const a = kept[kept.length - 1];
-        const run = Math.hypot(cp[i][0] - a[0], cp[i][1] - a[1]);
+        const run2 = Math.hypot(cp[i][0] - a[0], cp[i][1] - a[1]);
         const turn = Math.abs(Math.atan2(cp[i + 1][1] - cp[i][1], cp[i + 1][0] - cp[i][0]) - Math.atan2(cp[last + 1][1] - cp[last][1], cp[last + 1][0] - cp[last][0]));
-        if (run > 36 || (run > 2.5 && Math.min(turn, 2 * Math.PI - turn) > 0.07)) {
+        if (run2 > 36 || (run2 > 2.5 && Math.min(turn, 2 * Math.PI - turn) > 0.07)) {
           kept.push(cp[i]);
           last = i;
         }
@@ -324,8 +441,9 @@ export function renderFieldDiagram(r: Reader): Drawn {
         let len = 0;
         const seg = kept.map((q, i) => (i === 0 ? 0 : (len += Math.hypot(q[0] - kept[i - 1][0], q[1] - kept[i - 1][1]))));
         if (len > 26) {
-          // Nearer the charge it leaves than the middle, where neighbouring lines are still apart.
-          const want = Math.min(len * 0.5, 46);
+          // Nearer the charge it leaves than the middle, where neighbouring lines are still apart
+          // (on the stretch of a loop that comes back into the picture: nearer the charge it arrives at).
+          const want = ri === 0 ? Math.min(len * 0.5, 46) : Math.max(len * 0.5, len - 46);
           const i = Math.max(1, seg.findIndex((s) => s >= want));
           const f = (want - seg[i - 1]) / (seg[i] - seg[i - 1] || 1);
           const ax = kept[i - 1][0] + (kept[i][0] - kept[i - 1][0]) * f;
@@ -425,12 +543,16 @@ export function renderFieldDiagram(r: Reader): Drawn {
     if (m.charges.length >= 3) notes.push({ code: 'crowded', message: 'three charges: the field lines bunch between them — use this figure for direction and sign, NOT for counting lines (for line counting use one or two charges)' });
     m.charges.forEach((c, i) => {
       const n = Math.abs(c.q) * m.linesPerUnit;
+      const met = lines.filter((ln) => ln.from === i || ln.to === i).length;
+      if (met !== n && m.charges.length === 2) notes.push({ code: 'not_to_scale', message: `charges[${i}] is drawn with ${met} field lines, not ${n} (lines of the larger charge leave the picture before they reach the smaller one) — widen xRange / yRange before asking for a count or a ratio of lines` });
       if (n > 12) notes.push({ code: 'crowded', message: `charges[${i}] carries ${n} field lines — more than 12 leave its symbol under 5 units apart and cannot be counted at 340 px (fewer linesPerUnit)` });
     });
+    const symbols = m.charges.map((c) => { const [cx, cy] = C([c.x, c.y]); return { x0: cx - R - 1, y0: cy - R - 1, x1: cx + R + 1, y1: cy + R + 1 }; });
     for (const q of m.points) {
       const [px, py] = C([q.x, q.y]);
-      const leftSide = px > W - 40;
-      parts.push(`<circle cx="${n2(px)}" cy="${n2(py)}" r="3.4" fill="${INK}" stroke="#ffffff" stroke-width="1.5"/>`, text(px + (leftSide ? -7 : 7), py - 6, q.label, { fs: 13, anchor: leftSide ? 'end' : 'start', weight: 700, italic: true, halo: true }));
+      const at = clearLabelSpot(px, py, q.label, drawn, symbols, { x0: x0 + 1, y0: top + 1, x1: x0 + w0 - 1, y1: top + hgt - 1 }, px > W - 40);
+      if (!at.clear) notes.push({ code: 'labels_overlap', message: `the label "${q.label}" of a point has no place clear of the field lines — move the point, or use fewer linesPerUnit` });
+      parts.push(`<circle cx="${n2(px)}" cy="${n2(py)}" r="3.4" fill="${INK}" stroke="#ffffff" stroke-width="1.5"/>`, text(at.x, at.y, q.label, { fs: 13, anchor: at.anchor, weight: 700, italic: true, halo: true }));
     }
     if (!m.arrows && m.charges.every((c) => !c.showSign)) notes.push({ code: 'ambiguous_blank', message: 'no arrowheads and no signs — nothing fixes which charges are positive' });
     H = top + hgt + 10;
@@ -538,7 +660,8 @@ export function renderFieldDiagram(r: Reader): Drawn {
     }
     parts.push(`<path d="M${n2(cx - Math.abs(ux) * L)},${n2(cy - Math.abs(uy) * L)}L${n2(cx + Math.abs(ux) * L)},${n2(cy + Math.abs(uy) * L)}" ${stroke(INK, 4)}/>`);
     if (m.showCurrent) {
-      parts.push(head(cx + ux * 14, cy + uy * 14, ux, uy, 16, INK), `<path d="M${n2(cx + ux * 2)},${n2(cy + uy * 2)}L${n2(cx - ux * 14)},${n2(cy - uy * 14)}" ${stroke('#ffffff', 1.4)}/>`);
+      // One solid arrowhead, wider than the wire (a white slit drawn behind it once read as a stray stroke).
+      parts.push(head(cx + ux * 14, cy + uy * 14, ux, uy, 19, INK));
       // Beyond the end of a horizontal wire; beside the arrowhead of a vertical one (beyond its end
       // the letter fell on — and half outside — the top edge of the figure).
       parts.push(horizontal ? text(cx + ux * (L + 12), cy + 4.5, 'I', { fs: 14, anchor: 'middle', weight: 700, italic: true }) : text(cx - 13, cy + uy * 6 + 5, 'I', { fs: 14, anchor: 'middle', weight: 700, italic: true, halo: true }));

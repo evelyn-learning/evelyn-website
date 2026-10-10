@@ -1,0 +1,9 @@
+{
+ "ray-blank-diverging-lens": "a — the focal length of a diverging lens is printed as a magnitude, \"|f| = 10 cm\", not \"f = 10 cm\"",
+ "field-dipole": "b — the letter of the marked point P sits in a gap between field lines (a line ran through it)",
+ "field-three-charges-equipotentials": "b — the lines of the smaller charge are started evenly round it, so it has lines on every side; the labels moved to the gaps that left",
+ "field-blank-unknown-charges": "b — the smaller charge has lines on every side (two of its four used to be missing on the far side)",
+ "polish-ray-convex-mirror-all-labels": "a — the focal length of a convex mirror is printed as a magnitude, \"|f| = 10 cm\"",
+ "polish-field-wire-side-view": "b — the current arrowhead on the wire is one solid shape (no white stroke inside it)",
+ "polish-field-wire-side-view-horizontal-no-field": "b — the current arrowhead on the wire is one solid shape (no white stroke inside it)"
+}

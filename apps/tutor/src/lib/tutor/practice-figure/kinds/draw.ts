@@ -82,6 +82,10 @@ export class Placer {
   block(...boxes: Box[]): void {
     this.taken.push(...boxes);
   }
+  /** Take back the last `place` (a caller that tried a position and wants another). */
+  unplace(): void {
+    this.taken.pop();
+  }
   private cost(b: Box): number {
     let c = 0;
     for (const t of this.taken) {

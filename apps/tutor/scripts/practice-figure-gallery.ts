@@ -17,7 +17,7 @@
  * `--only` re-renders the PNGs of the matching fixtures only (the HTML always
  * holds every fixture).
  * Default <dir>:
- *   /Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration/practice-figures-2026-10-09
+ *   /Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration/practice-figures-2026-10-12-batch3
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,7 +25,7 @@ import { buildPracticeFigure } from '../src/lib/tutor/practice-figure/render';
 import { validateFigureSvg } from '../src/lib/tutor/practice-figure/svg-safety';
 import { FIGURE_FIXTURES } from './lib/practice-figure-fixtures';
 
-const DEFAULT_OUT = '/Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration/practice-figures-2026-10-09';
+const DEFAULT_OUT = '/Users/luke/Dev/evelynlearning/docs/whitelabel/greenapple/integration/practice-figures-2026-10-12-batch3';
 /** PNG widths in device pixels: the 340 px phone column and the 720 px copy, both at 2×. */
 const PNG_WIDTH = 680;
 const PNG_WIDTH_WIDE = 1440;

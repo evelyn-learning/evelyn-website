@@ -358,7 +358,10 @@ test('field checkers: directions, signs and sizes from the lines, forces by the 
   rw(unk, 'field_line_count', { charge: 0 }, '12', '4');
   rw(unk, 'field_line_count', { charge: 1 }, '4', '12');
   rw(unk, 'field_charge_ratio', { a: 0, b: 1 }, '3', '1/3');
-  rw(fx('field-three-charges-equipotentials'), 'field_charge_ratio', { a: 0, b: 2 }, '2', '1');
+  // Three charges: the lines bunch and the drawn counts are not the charges' ratio (the figure's own
+  // legibility note says so) — the ratio is refused rather than read off lines that do not show it.
+  refused(() => run(fx('field-three-charges-equipotentials'), 'field_charge_ratio', { a: 0, b: 2 }), /cannot be read by counting lines/);
+  rw(S('field_diagram', { variant: 'point_charges', linesPerUnit: 4, charges: [{ x: -2, y: 0, q: 2 }, { x: 2, y: 0, q: 1 }] }), 'field_charge_ratio', { a: 0, b: 1 }, '2', '1');
   // Electric force between plates: along the field for +, against it for −. E = V/d.
   const plates = (direction: string, sign: string) => S('field_diagram', { variant: 'uniform', direction, charge: { sign }, separation: { value: 2, unit: 'cm' }, voltage: { value: 120 } });
   rw(plates('down', '−'), 'field_force_direction', {}, 'up', 'down');

@@ -26,12 +26,19 @@
  *     sample?: { absorbance: number; guide?: boolean (true) };  // a dashed level line at the sample's absorbance
  *                                          //   (never dropped to the concentration axis: that is the answer)
  *     xLabel?: string ('Concentration (mol/L)'); yLabel?: string ('Absorbance') }
- * Common: title?: string.
+ * Common: title?: string; letterLabels?: 'numerals' | 'roman' — single-letter peak labels (mass, pes)
+ * are printed as 1, 2, 3 … or I, II, III ….
+ *
+ * PES peaks closer than a 1.5 energy ratio (the 2s and 2p peaks of a third-period element): the
+ * axis is then drawn from just outside the peaks instead of from whole decades, and the peaks
+ * narrower, so the two stand apart — no broken axis, no inset. Peaks that would still start under
+ * 8 units apart (a ratio under about 1.12) are refused.
  */
 import { FIGURE_WIDTH, LABEL_FS, SERIES_COLORS, TICK_FS, buildFrame, n2, niceBounds, niceStep, tickText, ticksBetween } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
 import { INK, MUTED, text, titleBlock } from './draw';
 import { facts, lab, labBox, numStr, stroke, type Notes } from './draw2';
+import { letterAs, readLetterLabels } from './batch3';
 
 export interface MassPeak { mz: number; abundance: number; label?: string }
 export interface PesPeak { energy: number; electrons: number; label?: string }
@@ -48,11 +55,12 @@ export function spectrumModel(r: Reader): SpectrumModel {
   const p = r.p;
   if (!VARIANTS.includes(p.variant as (typeof VARIANTS)[number])) r.fail(`variant must be one of ${VARIANTS.join(', ')}`);
   const title = r.optStr(p.title, 'title', 160);
+  const letters = readLetterLabels(r);
   switch (p.variant as (typeof VARIANTS)[number]) {
     case 'mass': {
       const peaks = r.list(p.peaks, 'peaks', 1, 10).map((raw, i): MassPeak => {
         const o = r.obj(raw, `peaks[${i}]`);
-        return { mz: r.positive(o.mz, `peaks[${i}].mz`), abundance: r.positive(o.abundance, `peaks[${i}].abundance`), label: r.optStr(o.label, `peaks[${i}].label`, 10) };
+        return { mz: r.positive(o.mz, `peaks[${i}].mz`), abundance: r.positive(o.abundance, `peaks[${i}].abundance`), label: letterAs(r.optStr(o.label, `peaks[${i}].label`, 10), letters) };
       });
       peaks.forEach((q, i) => { if (peaks.findIndex((x) => x.mz === q.mz) !== i) r.fail(`peaks: two peaks at m/z ${q.mz}`); });
       const lo = Math.min(...peaks.map((q) => q.mz));
@@ -71,7 +79,7 @@ export function spectrumModel(r: Reader): SpectrumModel {
         const o = r.obj(raw, `peaks[${i}]`);
         const electrons = r.num(o.electrons, `peaks[${i}].electrons`);
         if (!Number.isInteger(electrons) || electrons < 1 || electrons > 10) r.fail(`peaks[${i}].electrons must be a whole number from 1 to 10`);
-        return { energy: r.positive(o.energy, `peaks[${i}].energy`), electrons, label: r.optStr(o.label, `peaks[${i}].label`, 6) };
+        return { energy: r.positive(o.energy, `peaks[${i}].energy`), electrons, label: letterAs(r.optStr(o.label, `peaks[${i}].label`, 6), letters) };
       });
       // Left to right as drawn: decreasing binding energy.
       peaks.sort((a, b) => b.energy - a.energy);
@@ -171,18 +179,26 @@ export function renderSpectrum(r: Reader): Drawn {
     const hasLabels = m.peaks.some((q) => q.label);
     const head = 1 + (m.showEnergies ? 1 : 0) + (hasLabels ? 1 : 0);
     const f = buildFrame({ xRange: [0, 1], yRange: [0, top * (1 + head * 0.14)], xNumbers: false, yNumbers: false, xLabel: m.xLabel, yLabel: m.yLabel, title: m.title, aspect: 0.62, bottomExtra: TICK_FS + 6, minLeft: m.yNumbers ? 40 : 26 });
-    const lo = Math.floor(Math.log10(Math.min(...m.peaks.map((q) => q.energy)) / 1.3));
-    const hi = Math.ceil(Math.log10(Math.max(...m.peaks.map((q) => q.energy)) * 1.3));
+    const eMin = Math.min(...m.peaks.map((q) => q.energy));
+    const eMax = Math.max(...m.peaks.map((q) => q.energy));
+    // Two peaks closer than a 1.5 ratio: the axis runs from just outside the peaks (not from whole
+    // decades), which spreads them as far apart as the figure allows.
+    const tight = m.peaks.some((q, i) => i > 0 && m.peaks[i - 1].energy / q.energy < 1.5);
+    const lo = tight ? Math.log10(eMin / 1.45) : Math.floor(Math.log10(eMin / 1.3));
+    const hi = tight ? Math.log10(eMax * 1.45) : Math.ceil(Math.log10(eMax * 1.3));
     // Reversed: the highest energy at the left edge.
     const X = (e: number) => f.plot.x + ((hi - Math.log10(e)) / (hi - lo)) * f.plot.w;
     const base = f.plot.y + f.plot.h;
     const parts = [f.svg];
     const minor: string[] = [];
     const major: string[] = [];
-    for (let d = lo; d <= hi; d++) {
-      major.push(`M${n2(X(10 ** d))},${n2(f.plot.y)}V${n2(base)}`);
-      parts.push(text(X(10 ** d), base + TICK_FS + 3, tickText(10 ** d, 10 ** Math.min(d, 0)), { anchor: 'middle', fill: MUTED }));
-      if (d < hi) for (let k = 2; k <= 9; k++) minor.push(`M${n2(X(k * 10 ** d))},${n2(f.plot.y)}V${n2(base)}`);
+    for (let d = Math.floor(lo); d <= Math.ceil(hi); d++) {
+      const on = (e: number): boolean => Math.log10(e) >= lo - 1e-9 && Math.log10(e) <= hi + 1e-9;
+      if (on(10 ** d)) {
+        major.push(`M${n2(X(10 ** d))},${n2(f.plot.y)}V${n2(base)}`);
+        parts.push(text(X(10 ** d), base + TICK_FS + 3, tickText(10 ** d, 10 ** Math.min(d, 0)), { anchor: 'middle', fill: MUTED }));
+      }
+      if (d < hi) for (let k = 2; k <= 9; k++) if (on(k * 10 ** d)) minor.push(`M${n2(X(k * 10 ** d))},${n2(f.plot.y)}V${n2(base)}`);
     }
     const rows: string[] = [];
     for (let e = 1; e <= top; e++) {
@@ -191,7 +207,10 @@ export function renderSpectrum(r: Reader): Drawn {
     }
     parts.push(`<path d="${minor.join('')}" ${stroke('#e9eef4', 0.7)}/><path d="${major.join('')}${rows.join('')}" ${stroke('#cbd5e1', 0.9)}/>`);
     // Peaks: narrow bells on the baseline.
-    const hw = 6;
+    // Peaks nearer than 15 units are drawn narrower, so their bells keep 3 units of paper between them.
+    const nearest = Math.min(Infinity, ...m.peaks.slice(1).map((q, i) => X(q.energy) - X(m.peaks[i].energy)));
+    if (nearest < 8) r.fail(`peaks: the binding energies ${m.peaks.map((q) => q.energy).filter((_, i) => (i > 0 && X(m.peaks[i].energy) - X(m.peaks[i - 1].energy) < 8) || (i < m.peaks.length - 1 && X(m.peaks[i + 1].energy) - X(m.peaks[i].energy) < 8)).slice(0, 2).join(' and ')} are drawn under 8 units apart — too close to draw as two peaks`);
+    const hw = tight ? Math.max(3.4, Math.min(6, (nearest - 3) / 2)) : 6;
     const labels: Array<{ x: number; y: number; s: string; weight?: number }> = [];
     for (const q of m.peaks) {
       const x = X(q.energy);

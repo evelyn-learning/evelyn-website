@@ -15,6 +15,7 @@
  *     triangle?: boolean (false) }>; // the reference triangle to the x-axis
  *   angleLabels?: 'degrees' | 'radians' | 'none';   // default: as each angle was given
  *   quadrantLabels?: boolean (false); axisTicks?: boolean (true — "1" / "−1" on the axes);
+ *   letterLabels?: 'numerals' | 'roman';   // single-letter point names are printed as 1, 2, 3 … or I, II, III …
  *   title?: string }
  *
  * Coordinates are printed EXACTLY for multiples of 30° and 45° ("(−√3/2, 1/2)")
@@ -28,6 +29,7 @@
  */
 import { FIGURE_WIDTH, LABEL_FS, SERIES_COLORS, TICK_FS, n2 } from '../plot-frame';
 import type { Drawn, FigureFacts, Reader } from '../spec';
+import { letterAs, readLetterLabels } from './batch3';
 import { INK, MUTED, Placer, arcPath, around, arrow, exactTrig, inkWidth, label, layoutText, numText, piText, segmentBoxes, text, textBox, titleBlock, type Candidate } from './draw';
 
 export type AngleLabel = 'degrees' | 'radians' | 'none' | 'blank';
@@ -62,6 +64,7 @@ export interface UnitCircleModel {
 
 export function unitCircleModel(r: Reader): UnitCircleModel {
   const p = r.p;
+  const letters = readLetterLabels(r);
   const dflt = p.angleLabels;
   if (dflt !== undefined && dflt !== null && dflt !== 'degrees' && dflt !== 'radians' && dflt !== 'none') r.fail("angleLabels must be 'degrees', 'radians' or 'none'");
   const angles = r.list(p.angles, 'angles', 1, 16).map((raw, i): UnitCircleAngle => {
@@ -87,7 +90,7 @@ export function unitCircleModel(r: Reader): UnitCircleModel {
     if (label === 'radians' && !pi && !Number.isInteger(degrees) && !labelText) r.fail(`${at}: a radian label needs the angle as pi: [num, den]`);
     const coords = (a.coords ?? 'hide') as CoordsMode;
     if (!['hide', 'show', 'blank', 'blank_x', 'blank_y'].includes(coords)) r.fail(`${at}.coords must be 'hide', 'show', 'blank', 'blank_x' or 'blank_y'`);
-    const name = r.optStr(a.name, `${at}.name`, 4);
+    const name = letterAs(r.optStr(a.name, `${at}.name`, 4), letters);
     const cosText = exactTrig('cos', degrees) ?? numText(Math.cos((degrees * Math.PI) / 180));
     const sinText = exactTrig('sin', degrees) ?? numText(Math.sin((degrees * Math.PI) / 180));
     const shownLabel = labelText ?? (label === 'none' ? '' : label === 'blank' ? '?' : label === 'degrees' ? `${numText(degrees)}°` : pi ? piText(pi[0], pi[1]) : piText(degrees, 180));

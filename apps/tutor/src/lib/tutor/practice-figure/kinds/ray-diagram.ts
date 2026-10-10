@@ -17,6 +17,9 @@
  *   show?: { objectDistance?, imageDistance?, focalLength?, objectHeight?, imageHeight?:
  *            'value' | 'blank' | 'none' };        // ('none') dimension lines under the figure, heights beside the arrows
  *   focalMarks?: boolean (true);         // F and 2F on both sides of a lens; F and C of a mirror
+ *   focalLabel?: 'magnitude' | 'signed'; // ('magnitude') how a DIVERGING element's focal length is printed when shown:
+ *                                        //   "|f| = 12 cm" (it cannot contradict a stem that calls f negative), or
+ *                                        //   "f = −12 cm". A converging element prints "f = 12 cm" either way.
  *   title?: string }
  * The horizontal and vertical scales differ (as in any ray diagram); the
  * construction is exact in each. Height labels and the names of the focal
@@ -34,8 +37,12 @@
  *   angleLabels?: { incident?, reflected?, refracted?: 'auto' | string | '?' | null };
  *                                        // ('auto' incident, nothing else) an arc from the normal with the label
  *   title?: string }
- * Total internal reflection: no refracted ray is drawn (and `refracted: true`
- * with nothing else to draw is refused).
+ * Total internal reflection (n1 sin θ1 > n2): there is no refracted ray. Say
+ * so in the spec — `refracted: false` — and the incident ray is drawn alone
+ * (nothing beyond the interface: what happens next is the question), or with
+ * the reflected ray when `reflected: true`. Left at its default (or set true)
+ * `refracted` is refused there, so a refracted ray is never silently dropped
+ * — unless `reflected: true` with `refracted` left out, as before.
  */
 import { FIGURE_WIDTH, SERIES_COLORS, TICK_FS, esc, estWidth, n2 } from '../plot-frame';
 import type { Drawn, Reader } from '../spec';
@@ -63,6 +70,8 @@ export interface OpticsModel {
   showImage: boolean;
   show: Record<'objectDistance' | 'imageDistance' | 'focalLength' | 'objectHeight' | 'imageHeight', Show>;
   focalMarks: boolean;
+  /** A diverging element's focal length as printed: its size ("|f|") or signed ("f = −…"). */
+  focalLabel: 'magnitude' | 'signed';
   title?: string;
 }
 export interface InterfaceModel {
@@ -105,7 +114,8 @@ export function rayModel(r: Reader): RayModel {
     const theta2 = s >= 1 ? null : (Math.asin(s) * 180) / Math.PI;
     const reflected = r.bool(p.reflected, 'reflected', false);
     const refracted = r.bool(p.refracted, 'refracted', true) && theta2 !== null;
-    if (theta2 === null && !reflected) r.fail(`incidentAngle: at ${theta1}° the light is totally internally reflected (n1 sin θ1 > n2) — there is no refracted ray; set reflected: true`);
+    if (theta2 === null && p.refracted === true) r.fail(`refracted: true at ${theta1}° — the light is totally internally reflected (n1 sin θ1 > n2) and there is no refracted ray; set refracted: false`);
+    if (theta2 === null && !reflected && p.refracted !== false) r.fail(`incidentAngle: at ${theta1}° the light is totally internally reflected (n1 sin θ1 > n2) — there is no refracted ray; set reflected: true, or refracted: false to draw the incident ray alone`);
     const lo = p.angleLabels === undefined || p.angleLabels === null ? {} : r.obj(p.angleLabels, 'angleLabels');
     const one = (k: string, auto: string, dflt: string | null): string | null => (lo[k] === undefined ? dflt : lo[k] === null ? null : lo[k] === 'auto' ? auto : r.str(lo[k], `angleLabels.${k}`, 14));
     const a1 = `${numStr(theta1, 1)}°`;
@@ -138,22 +148,26 @@ export function rayModel(r: Reader): RayModel {
     objectDistance: showOf('objectDistance', 'none'), imageDistance: showOf('imageDistance', 'none'), focalLength: showOf('focalLength', 'none'),
     objectHeight: showOf('objectHeight', 'none'), imageHeight: showOf('imageHeight', 'none'),
   };
+  if (p.focalLabel !== undefined && p.focalLabel !== null && p.focalLabel !== 'magnitude' && p.focalLabel !== 'signed') r.fail('focalLabel must be one of magnitude, signed');
+  const focalLabel = p.focalLabel === 'signed' ? 'signed' as const : 'magnitude' as const;
   const needsImage = showImage || rays.length > 0 || show.imageDistance !== 'none' || show.imageHeight !== 'none';
   if (needsImage && atF) r.fail('objectDistance equals the focal length: the image is at infinity and cannot be drawn');
   if (needsImage && (Math.abs(mag) > 5 || Math.abs(dI) > 6 * fMag)) r.fail(`the image would be ${numStr(Math.abs(mag), 1)} times the object's size, ${numStr(Math.abs(dI), 1)} from the ${element.endsWith('lens') ? 'lens' : 'mirror'} — too large or too far to draw (move the object further from F)`);
   return {
     element, mirror: element.endsWith('mirror'), f, dO, hO, dI, hI: mag * hO, magnification: mag, real: dI > 0, upright: mag > 0,
-    unit: r.optStr(p.unit, 'unit', 4) ?? 'cm', rays, showImage, show, focalMarks: r.bool(p.focalMarks, 'focalMarks', true), title,
+    unit: r.optStr(p.unit, 'unit', 4) ?? 'cm', rays, showImage, show, focalMarks: r.bool(p.focalMarks, 'focalMarks', true), focalLabel, title,
   };
 }
 
 /** "d" with a small lowered letter, then the rest — `d<sub>o</sub> = 30 cm` — on a white plate. */
 function subLabel(x: number, y: number, sym: string, sub: string, rest: string, anchor: 'start' | 'middle' | 'end' = 'middle'): string {
+  // "|f|": the bars upright, the letter italic.
+  const bars = /^\|(.+)\|$/.exec(sym);
   const w = estWidth(sym + rest, TICK_FS) * 0.86 + (sub ? 5 : 0) + 6;
   const x0 = anchor === 'middle' ? x - w / 2 : anchor === 'start' ? x - 3 : x - w + 3;
   return `<rect x="${n2(x0)}" y="${n2(y - TICK_FS + 1)}" width="${n2(w)}" height="${TICK_FS + 4}" fill="#ffffff"/>`
     + `<text x="${n2(x)}" y="${n2(y)}" font-size="${TICK_FS}" text-anchor="${anchor}" fill="${INK}">`
-    + `<tspan font-style="italic">${esc(sym)}</tspan>${sub ? `<tspan font-size="8" dy="3">${esc(sub)}</tspan><tspan dy="-3">${esc(rest)}</tspan>` : esc(rest)}</text>`;
+    + `${bars ? '|' : ''}<tspan font-style="italic">${esc(bars ? bars[1] : sym)}</tspan>${bars ? '|' : ''}${sub ? `<tspan font-size="8" dy="3">${esc(sub)}</tspan><tspan dy="-3">${esc(rest)}</tspan>` : esc(rest)}</text>`;
 }
 
 function renderInterface(m: InterfaceModel, W: number, t: { svg: string; top: number }): Drawn {
@@ -397,7 +411,7 @@ export function renderRayDiagram(r: Reader): Drawn {
     const [xa, xb] = [X(Math.min(a, b)), X(Math.max(a, b))];
     const tick = (x: number) => `M${n2(x)},${n2(y - 4)}v8`;
     parts.push(`<path d="M${n2(xa)},${n2(y)}H${n2(xb)}${tick(xa)}${tick(xb)}" ${stroke(MUTED, 1)}/>`);
-    const rest = ` = ${show === 'blank' ? '?' : `${numStr(Math.abs(value), 2)} ${m.unit}`}`;
+    const rest = ` = ${show === 'blank' ? '?' : `${numStr(sym === 'f' ? value : Math.abs(value), 2)} ${m.unit}`}`;
     const need = estWidth(sym + rest, TICK_FS) + 22;
     // A span too short to hold its label carries it at one end.
     if (xb - xa >= need) over.push(subLabel((xa + xb) / 2, y + 4, sym, sub, rest));
@@ -407,7 +421,8 @@ export function renderRayDiagram(r: Reader): Drawn {
   };
   dim(-m.dO, 0, m.show.objectDistance, 'o', m.dO);
   if (m.show.imageDistance !== 'none') dim(0, imageX, m.show.imageDistance, 'i', m.dI);
-  dim(0, m.mirror ? (m.f > 0 ? -fa : fa) : fa, m.show.focalLength, '', fa, 'f');
+  // A diverging element: the size of f as "|f|" unless the spec asks for the signed value.
+  dim(0, m.mirror ? (m.f > 0 ? -fa : fa) : fa, m.show.focalLength, '', m.f < 0 && m.focalLabel === 'signed' ? m.f : fa, m.f < 0 && m.focalLabel === 'magnitude' ? '|f|' : 'f');
   if (!m.showImage && m.rays.length === 0 && m.show.focalLength === 'none' && !m.focalMarks) notes.push({ code: 'ambiguous_blank', message: 'neither the focal points, the rays nor the image are shown — nothing fixes the image' });
   if (m.rays.length > 0 && Math.abs(X(-m.dO) - X(0)) < 34) notes.push({ code: 'crowded', message: 'the object is drawn under 34 units from the lens or mirror — the rays crowd together' });
   return { body: t.svg + under.join('') + parts.join('') + overMarks.join('') + over.join(''), H: y + (y > yAxis + half + 14 ? 0 : -4), facts: facts(notes) };

@@ -145,6 +145,12 @@
  * very thing a question asks for (a coordinate, a resultant, a force's size,
  * a sign, an area, a cell — drawn as a dashed "?" box where a blank is meant).
  *
+ * BATCH 2 (./kinds/batch2.ts): circuit_diagram, phylogenetic_tree, geometric_figure, ray_diagram,
+ * field_diagram, flow_diagram, solid_3d, spectrum. BATCH 3 (./kinds/batch3.ts, 2026-10-12):
+ * molecular_structure, gel_electrophoresis (and its amplification_plot variant), bio_schematic
+ * (cell, membrane, division, compartments), schematic_map — and the bar_magnet variant of
+ * field_diagram. Params at the top of each module.
+ *
  * Every marked point, endpoint and vertex dot is drawn LAST, unclipped, on a
  * thin white ring — above the curves, the grid and the axes.
  * `checkFigureLegibility(spec)` (legibility.ts) reports what a reader would
@@ -208,6 +214,7 @@ import {
   type LegendEntry,
 } from './plot-frame';
 import { BATCH2_FIGURE_KINDS, renderBatch2, type Batch2FigureKind } from './kinds/batch2';
+import { BATCH3_FIGURE_KINDS, renderBatch3, type Batch3FigureKind } from './kinds/batch3';
 
 export const PRACTICE_FIGURE_KINDS = [
   'function_graph',
@@ -261,6 +268,9 @@ export { PracticeFigureSpecError, type FigureFacts, type PracticeFigureSpec } fr
  *  names (params documented at the top of each). Kept out of `ALL_PRACTICE_FIGURE_KINDS` for the
  *  reason batch 1 is kept out of `PRACTICE_FIGURE_KINDS`; `renderPracticeFigure` draws them all. */
 export { BATCH2_FIGURE_KINDS, type Batch2FigureKind };
+/** Batch 3 (2026-10-12): molecular_structure, gel_electrophoresis, bio_schematic, schematic_map —
+ *  drawn by ./kinds/batch3.ts and the modules it names. A list of its own, for the same reason. */
+export { BATCH3_FIGURE_KINDS, type Batch3FigureKind };
 export { sampleCurve };
 
 /** Short stable id prefix from the spec (FNV-1a) — see the module header. */
@@ -1436,9 +1446,9 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
     case 'punnett_square': drawn = renderPunnett(r, uid); break;
     case 'pedigree': drawn = renderPedigree(r); break;
     default: {
-      const batch2 = renderBatch2(kind, r, uid);
-      if (!batch2) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS].join(', ')}`);
-      drawn = batch2;
+      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid);
+      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS].join(', ')}`);
+      drawn = later;
     }
   }
   const svg = svgDocument(drawn.W ?? FIGURE_WIDTH, drawn.H, drawn.body);

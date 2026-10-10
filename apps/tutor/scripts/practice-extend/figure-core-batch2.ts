@@ -248,6 +248,22 @@ function geometryText(m: GeoModel, printed: string[], out: string[]): string {
     polyText(m.poly, printed, out, m.shape === 'triangle' ? 'A triangle' : `A polygon with ${m.poly.pts.length} sides`);
     return m.shape === 'triangle' ? 'a triangle' : 'a polygon';
   }
+  if (m.similar?.nested) {
+    // One triangle with a segment inside it: the small triangle shares the right-hand corner.
+    const big = m.similar.first;
+    const small = m.similar.second;
+    const [A, B, C] = big.names ?? ['the left end of the base', 'the right end of the base', 'the top corner'];
+    const [D, E] = m.similar.nested.names ?? ['a point on the base', 'a point on the side'];
+    polyText(big, printed, out, 'A large triangle');
+    out.push(`  A segment inside it, parallel to the side ${C}–${A}, runs from ${D} (on the base) up to ${E} (on the side ${B}–${C}); it cuts off a small triangle at the corner ${B}.${Math.abs(big.angles[0] - 90) < 1e-6 && big.rightAngleMarks ? ' A right-angle mark sits where the segment meets the base.' : ''}`);
+    const part = (name: string, s: string | null): void => { if (s !== null) { printed.push(`segment label: ${shown(s)}`); out.push(`  ${name}: labelled ${shown(s)}.`); } };
+    part('the inner segment', small.sideLabels[2]);
+    part(`the part of the base inside the small triangle (from the segment to ${B})`, small.sideLabels[0]);
+    part(`the part of the side ${B}–${C} inside the small triangle`, small.sideLabels[1]);
+    part(`the part of the base outside the small triangle (from ${A} to the segment)`, m.similar.nested.rest[0]);
+    part(`the part of the side ${B}–${C} outside the small triangle`, m.similar.nested.rest[1]);
+    return 'a triangle with a segment inside it parallel to one side (two nested similar triangles)';
+  }
   if (m.similar) {
     polyText(m.similar.first, printed, out, 'The first triangle (on the left)');
     polyText(m.similar.second, printed, out, 'The second triangle (on the right)');
@@ -359,10 +375,12 @@ function rayText(spec: PracticeFigureSpec, printed: string[], out: string[]): st
   }
   if (m.showImage) out.push(`The image is drawn as ${m.real ? 'a solid' : 'a dashed'} arrow ${lens ? (m.real ? 'on the far side of the lens' : 'on the same side as the object') : m.real ? 'in front of the mirror' : 'behind the mirror'}, pointing ${m.upright ? 'up' : 'down'}; it is drawn ${Math.abs(Math.abs(m.magnification) - 1) < 1e-9 ? 'the same height as' : Math.abs(m.magnification) > 1 ? 'taller than' : 'shorter than'} the object.`);
   else out.push('No image arrow is drawn.');
-  const dims: Array<[keyof OpticsModel['show'], string, number]> = [['objectDistance', 'object distance d_o', m.dO], ['imageDistance', 'image distance d_i', Math.abs(m.dI)], ['focalLength', 'focal length f', Math.abs(m.f)], ['objectHeight', 'object height h', m.hO], ['imageHeight', "image height h'", Math.abs(m.hI)]];
+  // A diverging element's focal length is printed as a size, "|f|", unless the spec asks for the signed value.
+  const focal: [keyof OpticsModel['show'], string, number] = m.f < 0 && m.focalLabel === 'signed' ? ['focalLength', 'focal length f', m.f] : ['focalLength', m.f < 0 ? 'size of the focal length |f|' : 'focal length f', Math.abs(m.f)];
+  const dims: Array<[keyof OpticsModel['show'], string, number]> = [['objectDistance', 'object distance d_o', m.dO], ['imageDistance', 'image distance d_i', Math.abs(m.dI)], focal, ['objectHeight', 'object height h', m.hO], ['imageHeight', "image height h'", Math.abs(m.hI)]];
   for (const [k, name, v] of dims) {
     if (m.show[k] === 'none' || ((k === 'imageHeight') && !m.showImage)) continue;
-    const s = m.show[k] === 'blank' ? '(blank)' : `${fmt(Number(v.toFixed(2)))} ${m.unit}`;
+    const s = m.show[k] === 'blank' ? '(blank)' : `${fmt(Number(v.toFixed(2))).replace(/^-/, '−')} ${m.unit}`;
     printed.push(`${name}: "${s}"`);
     out.push(`Printed: ${name} = ${s}${m.show[k] === 'value' && (k === 'imageDistance' || k === 'imageHeight') ? ' (a size, without sign)' : ''}.`);
   }
@@ -867,7 +885,14 @@ export const BATCH2_CHECKERS: Record<string, Batch2CheckerDef> = {
   },
   field_charge_ratio: {
     kinds: ['field_diagram'], args: '{ a: index, b: index }', returns: 'the size of charge a ÷ the size of charge b (the ratio of their line counts)',
-    run: (s, a) => { const m = variantOf(s, 'point_charges'); return measured(Math.abs(m.charges[argIndex(a, 'a', m.charges.length, 'charge')].q) / Math.abs(m.charges[argIndex(a, 'b', m.charges.length, 'charge')].q)); },
+    run: (s, a) => {
+      const m = variantOf(s, 'point_charges');
+      const [i, j] = [argIndex(a, 'a', m.charges.length, 'charge'), argIndex(a, 'b', m.charges.length, 'charge')];
+      const drawn = lineCounts(m);
+      // The ratio is read by counting lines: refused when the drawn counts do not show it.
+      if (drawn[i] * Math.abs(m.charges[j].q) !== drawn[j] * Math.abs(m.charges[i].q)) return fail(`the figure draws ${drawn[i]} and ${drawn[j]} lines on those charges, which is not the ratio of their sizes — the ratio cannot be read by counting lines here (use one or two charges, well inside the picture)`);
+      return measured(Math.abs(m.charges[i].q) / Math.abs(m.charges[j].q));
+    },
   },
   field_force_direction: {
     kinds: ['field_diagram'], args: '{}', returns: 'the direction of the force on the charge shown: electric between plates ("up", "down", "left", "right"), magnetic in a magnetic field (also "into the page", "out of the page") — reversed for a negative charge',

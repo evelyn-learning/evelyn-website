@@ -36,6 +36,7 @@ import { pedigreeModel, type PedigreeIndividual, type PedigreeModel } from '../.
 import { slopeFieldSolution } from '../../src/lib/tutor/practice-figure/slope-field';
 import { validateItem, type GeneratedItem } from './core';
 import { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS, Batch2RuleError, describeBatch2, isBatch2Kind, type Batch2FigureKind } from './figure-core-batch2';
+import { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, describeBatch3, figureLetterClash, isBatch3Kind, type Batch3FigureKind } from './figure-core-batch3';
 
 /** `PRACTICE_FIGURE_KINDS` is the list the job offers its writer (figure-prompts.ts).
  *  The batch-1 kinds (unit circle, vectors, …) are transcribed and checked here
@@ -45,6 +46,10 @@ export { ALL_PRACTICE_FIGURE_KINDS, BATCH1_FIGURE_KINDS, PRACTICE_FIGURE_KINDS }
  *  checked by figure-core-batch2.ts and reached through the same four functions of this file —
  *  `axesOf`, `describeFigure`, `runChecker`, `checkerCatalogue`. */
 export { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS };
+/** Batch 3 (molecular structures, gels and amplification plots, bio schematics, schematic maps, and the
+ *  bar-magnet variant of field_diagram): figure-core-batch3.ts, reached the same way. `figureLetterClash`
+ *  is the author's guard against option letters that are also labels printed on the figure. */
+export { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, figureLetterClash };
 export type FigureKind = AnyPracticeFigureKind;
 
 /** A spec, a derivation or an item that breaks a rule of this track. The
@@ -218,7 +223,7 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
     case 'box_plot': case 'polar_complex': case 'punnett_square': case 'pedigree':
       return {};
     default:
-      if (isBatch2Kind(spec.type)) return {};
+      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type)) return {};
       return fail(`unknown figure kind "${spec.type}" — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
 }
@@ -774,7 +779,7 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       break;
     }
     default: {
-      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch2(spec, printed, out));
+      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out));
       if (!k) fail(`unknown figure kind "${spec.type}"`);
       kind = k;
     }
@@ -2682,7 +2687,7 @@ export interface Derivation {
  *  cannot be read off the figure. */
 export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
   const def = CHECKERS[d.checker];
-  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker];
+  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker];
   if (batch2) {
     if (!(batch2.kinds as readonly string[]).includes(spec.type)) return fail(`the checker "${d.checker}" is for ${batch2.kinds.join(' / ')}, not for ${spec.type}`);
     return viaBatch2(() => batch2.run(spec, d.args ?? {}));
@@ -2693,9 +2698,9 @@ export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
 }
 
 /** The checker list as the writer is shown it, grouped by figure kind. */
-export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind> = PRACTICE_FIGURE_KINDS): string {
+export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind> = PRACTICE_FIGURE_KINDS): string {
   return kinds.map((k) => {
-    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
+    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
     return `${k}:\n${mine.map(([name, d]) => `  - ${name} ${d.args} → ${d.returns}`).join('\n')}`;
   }).join('\n');
 }

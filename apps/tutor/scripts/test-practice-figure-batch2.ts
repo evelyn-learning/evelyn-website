@@ -39,7 +39,12 @@ import { fieldAt, fieldModel, lineCounts, magneticForceDirection, traceFieldLine
 import { flowModel } from '../src/lib/tutor/practice-figure/kinds/flow-diagram';
 import { revolutionVolume, solidModel } from '../src/lib/tutor/practice-figure/kinds/solid-3d';
 import { spectrumModel } from '../src/lib/tutor/practice-figure/kinds/spectrum';
-import { BATCH2_FIXTURES, FIGURE_FIXTURES, POLISH_FIXTURES } from './lib/practice-figure-fixtures';
+import { BATCH2_FIXTURES, BATCH3_FIXTURES, FIGURE_FIXTURES as ALL_FIXTURES, POLISH_FIXTURES } from './lib/practice-figure-fixtures';
+
+/** The fixtures this file is about: everything up to the polish round. Batch 3 (2026-10-12) has a test file of
+ *  its own (test-practice-figure-batch3.ts), with pins of its own for what it redrew. */
+const BATCH3_IDS = new Set(BATCH3_FIXTURES.map((f) => f.id));
+const FIGURE_FIXTURES = ALL_FIXTURES.filter((f) => !BATCH3_IDS.has(f.id));
 
 let passed = 0;
 let failed = 0;
@@ -74,6 +79,8 @@ const readJson = (name: string): Record<string, string> => JSON.parse(fs.readFil
 const sha = (spec: PracticeFigureSpec): string => createHash('sha256').update(renderPracticeFigure(spec).svg).digest('hex');
 /** The polish round of 2026-10-11 redrew these on purpose — id → why (see the 80c5afc1 test below). */
 const POLISHED = readJson('practice-figure-changes-since-80c5afc1.json');
+/** The third round (2026-10-12) redrew a few more, each for a listed fix a–f — id → why. */
+const ROUND3 = readJson('practice-figure-changes-since-9613fe5e.json');
 const POLISH_IDS = new Set(POLISH_FIXTURES.map((f) => f.id));
 
 test('the 72 fixtures of the first nine kinds and batch 1 render to the very same bytes as at ca8cc0c4 — but for the ones the polish round redrew', () => {
@@ -81,7 +88,7 @@ test('the 72 fixtures of the first nine kinds and batch 1 render to the very sam
   assert.equal(Object.keys(pins).length, 72);
   const earlier = FIGURE_FIXTURES.filter((f) => !(BATCH2_FIGURE_KINDS as readonly string[]).includes(f.spec.type) && !POLISH_IDS.has(f.id));
   assert.deepEqual(earlier.map((f) => f.id), Object.keys(pins), 'same fixtures, same order');
-  for (const f of earlier) if (!(f.id in POLISHED)) assert.equal(sha(f.spec), pins[f.id], f.id);
+  for (const f of earlier) if (!(f.id in POLISHED) && !(f.id in ROUND3)) assert.equal(sha(f.spec), pins[f.id], f.id);
 });
 
 test('all 108 fixtures as they were at 80c5afc1: byte-identical, except exactly the ones listed (with the reason) as redrawn by the polish round', () => {
@@ -94,8 +101,10 @@ test('all 108 fixtures as they were at 80c5afc1: byte-identical, except exactly 
     assert.ok(/^[a-k] — /.test(POLISHED[id]), `${id}: the reason names the weakness (a–k) it was changed for`);
   }
   const changed = before.filter((f) => sha(f.spec) !== pins[f.id]).map((f) => f.id);
-  assert.deepEqual(changed, Object.keys(POLISHED), 'the fixtures that changed are exactly the listed ones, in fixture order');
-  assert.equal(changed.length, 16);
+  // Since the third round: also the ones IT lists (test-practice-figure-batch3.ts pins those against 9613fe5e).
+  const listed = before.filter((f) => f.id in POLISHED || f.id in ROUND3).map((f) => f.id);
+  assert.deepEqual(changed, listed, 'the fixtures that changed are exactly the listed ones, in fixture order');
+  assert.equal(Object.keys(POLISHED).length, 16);
 });
 
 test('batch 2 is a list of its own: eight kinds, none of them in the earlier lists', () => {

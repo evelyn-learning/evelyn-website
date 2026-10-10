@@ -1018,7 +1018,7 @@ export const BATCH2_FIXTURES: FigureFixture[] = [
     id: 'field-three-charges-equipotentials',
     note: 'dense: three charges of different sizes (+2, −1, +1), labels, two dashed equipotentials — warns: with three charges the lines bunch, so it is for direction and sign, not for counting lines',
     question: 'Which charge has the greatest magnitude, and how can you tell from the field lines?',
-    alt: 'Field lines of three point charges: twelve lines leave the charge q1, six arrive at q2 and six leave q3; two dashed closed curves are equipotentials.',
+    alt: 'Field lines of three point charges: the most lines leave the charge q1, fewer arrive at q2 and leave q3; two dashed closed curves are equipotentials.',
     spec: {
       type: 'field_diagram',
       params: { variant: 'point_charges', linesPerUnit: 6, charges: [{ x: -3, y: -1, q: 2, label: 'q₁' }, { x: 2, y: -1.5, q: -1, label: 'q₂' }, { x: 1, y: 2.5, q: 1, label: 'q₃' }], xRange: [-7, 6], yRange: [-5.5, 5.5], equipotentials: [[-3, 0.4], [1, 3.6]] },
@@ -1348,3 +1348,394 @@ export const POLISH_FIXTURES: FigureFixture[] = [
 ];
 
 FIGURE_FIXTURES.push(...POLISH_FIXTURES);
+
+// ---------------------------------------------------------------------------
+// Batch 3 (2026-10-12): molecular_structure, gel_electrophoresis (with its
+// amplification_plot variant), bio_schematic, schematic_map, the bar-magnet
+// variant of field_diagram — three or more per kind or variant (a simple one,
+// a dense one, one with a "?" blank) — and one fixture per fix a–f of the
+// third round (ids `fix3-…`).
+// ---------------------------------------------------------------------------
+const O2 = { el: 'O', lonePairs: 2 };
+const O3 = { el: 'O', lonePairs: 3 };
+/** One resonance form of the carbonate ion: the C=O is on oxygen `dbl`. */
+const carbonate = (label: string, dbl: number) => ({
+  label,
+  layout: { type: 'trigonal_planar', center: 'C', around: ['O1', 'O2', 'O3'] },
+  atoms: [{ id: 'C', el: 'C', lonePairs: 0 }, ...[1, 2, 3].map((k) => ({ id: `O${k}`, ...(k === dbl ? O2 : O3) }))],
+  bonds: [1, 2, 3].map((k) => ({ a: 'C', b: `O${k}`, order: k === dbl ? 2 : 1 })),
+});
+const water = (origin: [number, number], flip: boolean) => ({
+  origin,
+  atoms: [
+    { id: 'O', el: 'O', x: 0, y: 0, lonePairs: 2, partial: '-' },
+    { id: 'H1', el: 'H', from: 'O', angle: flip ? 232 : 52, partial: '+' },
+    { id: 'H2', el: 'H', from: 'O', angle: flip ? 128 : 308, partial: flip ? undefined : '+' },
+  ],
+  bonds: [{ a: 'O', b: 'H1' }, { a: 'O', b: 'H2' }],
+});
+
+export const BATCH3_FIXTURES: FigureFixture[] = [
+  // --- molecular_structure ---------------------------------------------------
+  {
+    id: 'mol-lewis-water',
+    note: 'simple: a bent molecule from the named layout, two lone pairs on the central atom',
+    question: 'The Lewis structure of a molecule is shown. How many lone pairs of electrons are on the central atom?',
+    alt: 'A Lewis structure: a central oxygen atom bonded to two hydrogen atoms in a bent shape, with pairs of dots on the oxygen.',
+    spec: { type: 'molecular_structure', params: { molecules: [{ layout: { type: 'bent', center: 'O', around: ['H1', 'H2'] }, atoms: [{ id: 'O', el: 'O', lonePairs: 2 }, { id: 'H1', el: 'H' }, { id: 'H2', el: 'H' }], bonds: [{ a: 'O', b: 'H1' }, { a: 'O', b: 'H2' }] }] } },
+  },
+  {
+    id: 'mol-dense-resonance-carbonate',
+    note: 'dense: three resonance structures side by side with double-headed arrows, eight lone pairs and two formal charges on each',
+    question: 'Three resonance structures of the carbonate ion are shown. What is the average carbon–oxygen bond order?',
+    alt: 'Three Lewis structures joined by double-headed arrows. Each has a central carbon bonded to three oxygen atoms, one by a double bond, with lone pairs and minus signs on the singly bonded oxygens.',
+    spec: { type: 'molecular_structure', params: { between: 'resonance', molecules: [carbonate('I', 1), carbonate('II', 2), carbonate('III', 3)] } },
+  },
+  {
+    id: 'mol-blank-formal-charge-candidates',
+    note: 'two candidate Lewis structures of the cyanate ion; one formal charge is a "?" box and one bond order is asked for',
+    question: 'Two possible Lewis structures of the cyanate ion, OCN⁻, are shown. What formal charge belongs in the box on structure I?',
+    alt: 'Two Lewis structures labelled I and II, each a row of oxygen, carbon and nitrogen atoms with lone pairs. In one a formal charge is replaced by a boxed question mark.',
+    spec: {
+      type: 'molecular_structure',
+      params: {
+        molecules: [
+          { label: 'I', layout: { type: 'linear', center: 'C', around: ['O', 'N'] }, atoms: [{ id: 'O', el: 'O', lonePairs: 3, show: { charge: 'blank' } }, { id: 'C', el: 'C', lonePairs: 0 }, { id: 'N', el: 'N', lonePairs: 1 }], bonds: [{ a: 'O', b: 'C', order: 1 }, { a: 'C', b: 'N', order: 3 }] },
+          { label: 'II', layout: { type: 'linear', center: 'C', around: ['O', 'N'] }, atoms: [{ id: 'O', el: 'O', lonePairs: 2 }, { id: 'C', el: 'C', lonePairs: 0 }, { id: 'N', el: 'N', lonePairs: 2 }], bonds: [{ a: 'O', b: 'C', order: 2 }, { a: 'C', b: 'N', order: 2 }] },
+        ],
+      },
+    },
+  },
+  {
+    id: 'mol-tetrahedral-wedge-dash',
+    note: 'a tetrahedral centre with a wedge and a dashed bond; three lone pairs on each halogen (dense round the lower right)',
+    question: 'The structure of a molecule is shown; the wedge points toward the viewer and the dashed bond away. What is the molecular geometry round the carbon atom?',
+    alt: 'A carbon atom bonded to hydrogen, fluorine, chlorine and bromine: two bonds are plain lines, one is a solid wedge and one a dashed wedge. The halogens carry lone pairs.',
+    spec: { type: 'molecular_structure', params: { molecules: [{ center: 'C', layout: { type: 'tetrahedral', center: 'C', around: ['H', 'F', 'Cl', 'Br'] }, atoms: [{ id: 'C', el: 'C', lonePairs: 0 }, { id: 'H', el: 'H' }, { id: 'F', el: 'F', lonePairs: 3 }, { id: 'Cl', el: 'Cl', lonePairs: 3 }, { id: 'Br', el: 'Br', lonePairs: 3 }], bonds: [{ a: 'C', b: 'H' }, { a: 'C', b: 'F' }, { a: 'C', b: 'Cl' }, { a: 'C', b: 'Br' }] }] } },
+  },
+  {
+    id: 'mol-skeletal-functional-groups',
+    note: 'a skeletal structure (carbons are the unlabelled corners) with heteroatom labels and two functional groups outlined and lettered',
+    question: 'The skeletal structure of a molecule is shown with two groups outlined. Which functional group is outlined and marked Y?',
+    alt: 'A zig-zag skeletal structure of three carbons. One end carries a double-bonded O and an OH inside a dashed outline marked Y; the middle carbon carries an NH₂ inside a dashed outline marked X.',
+    spec: {
+      type: 'molecular_structure',
+      params: {
+        molecules: [{
+          skeletal: true,
+          layout: { type: 'chain', atoms: ['C3', 'C2', 'C1'] },
+          atoms: [
+            { id: 'C3', el: 'C' }, { id: 'C2', el: 'C' }, { id: 'C1', el: 'C' },
+            { id: 'N', el: 'N', h: 2, from: 'C2', angle: 90 },
+            { id: 'O1', el: 'O', from: 'C1', angle: 270 },
+            { id: 'O2', el: 'O', h: 1, from: 'C1', angle: 30 },
+          ],
+          bonds: [{ a: 'C3', b: 'C2' }, { a: 'C2', b: 'C1' }, { a: 'C2', b: 'N' }, { a: 'C1', b: 'O1', order: 2 }, { a: 'C1', b: 'O2' }],
+          highlight: [{ atoms: ['N'], label: 'X' }, { atoms: ['C1', 'O1', 'O2'], label: 'Y' }],
+        }],
+      },
+    },
+  },
+  {
+    id: 'mol-hbond-water-pair',
+    note: 'two molecules in one frame: partial charges, a bond dipole arrow and a dotted hydrogen bond between them',
+    question: 'Two water molecules are shown. Between which two atoms is the dotted line drawn, and what kind of attraction does it represent?',
+    alt: 'Two bent water molecules with δ+ on hydrogen atoms and δ− on the oxygen atoms. A dotted line joins a hydrogen of one molecule to the oxygen of the other, and a crossed arrow lies along one O–H bond.',
+    spec: { type: 'molecular_structure', params: { arrangement: 'shared', molecules: [{ ...water([0, 0], false), bonds: [{ a: 'O', b: 'H1', dipole: 'to_a' }, { a: 'O', b: 'H2' }] }, water([2.75, -0.95], true)], hbonds: [{ from: { mol: 0, atom: 'H2' }, to: { mol: 1, atom: 'O' } }] } },
+  },
+  // --- gel_electrophoresis ---------------------------------------------------
+  {
+    id: 'gel-simple-pcr-presence',
+    note: 'simple: a ladder and three PCR lanes — a band is there or it is not',
+    question: 'A PCR test for a 500 bp target gives the gel shown. Which lanes contain the target DNA?',
+    alt: 'A gel with a size ladder and three sample lanes numbered one to three. Some lanes hold a single band and one holds none.',
+    spec: { type: 'gel_electrophoresis', params: { ladder: { sizes: [1000, 750, 500, 250, 100] }, lanes: [{ label: '1', bands: [500] }, { label: '2', bands: [] }, { label: '3', bands: [500] }] } },
+  },
+  {
+    id: 'gel-dense-paternity-six-lanes',
+    note: 'dense: an eight-band ladder and six lanes of two to four bands, some thick',
+    question: 'The gel shows DNA profiles of a mother, her child and four possible fathers (F1–F4). Which man could be the father?',
+    alt: 'A gel with a size ladder and six lanes labelled Mother, Child, F1, F2, F3 and F4, each holding several bands at different heights.',
+    spec: {
+      type: 'gel_electrophoresis',
+      params: {
+        ladder: { sizes: [3000, 2000, 1500, 1000, 700, 500, 300, 200], unit: 'bp' },
+        lanes: [
+          { label: 'Mother', bands: [2000, 1000, 500] }, { label: 'Child', bands: [2000, { size: 700, thick: 2 }, 500, 300] },
+          { label: 'F1', bands: [1500, 1000, 200] }, { label: 'F2', bands: [3000, 700, 300] },
+          { label: 'F3', bands: [1500, 700, 500] }, { label: 'F4', bands: [2000, 300, 200] },
+        ],
+      },
+    },
+  },
+  {
+    id: 'gel-blank-ladder-label',
+    note: 'a digest of a plasmid: one ladder label and one lane label are "?" boxes; the band level with the hidden ladder band is the one asked about',
+    question: 'A plasmid is cut with one enzyme and run beside a ladder. The lower band of lane 2 is level with the ladder band marked "?". The ladder is evenly spaced on this gel between 2 kb and 0.5 kb in three steps. What size is that band?',
+    alt: 'A gel with a ladder whose sizes are printed in kilobases except one, which is a boxed question mark, and two sample lanes, one of them labelled with a boxed question mark.',
+    spec: { type: 'gel_electrophoresis', params: { ladder: { sizes: [4, 2, 1, 0.5], unit: 'kb', blank: [1] }, lanes: [{ label: 'uncut', bands: [{ size: 3, thick: 3 }] }, { label: '?', bands: [2, 1] }] } },
+  },
+  {
+    id: 'amp-two-samples',
+    note: 'simple: two qPCR curves crossing the threshold on whole cycles',
+    question: 'The amplification plot shows two samples. At which cycle does sample S1 cross the threshold?',
+    alt: 'An amplification plot of fluorescence against cycle number with two S-shaped curves and a dashed horizontal threshold line.',
+    spec: { type: 'gel_electrophoresis', params: { variant: 'amplification_plot', samples: [{ label: 'S1', ct: 18 }, { label: 'S2', ct: 23 }] } },
+  },
+  {
+    id: 'amp-dense-four-samples',
+    note: 'dense: four curves, one of them a no-template control that never rises',
+    question: 'Four reactions were run. How many times more target DNA did sample P start with than sample R?',
+    alt: 'An amplification plot with four curves, three S-shaped and one flat along the baseline, and a dashed threshold line.',
+    spec: { type: 'gel_electrophoresis', params: { variant: 'amplification_plot', cycles: 40, samples: [{ label: 'P', ct: 15 }, { label: 'Q', ct: 20 }, { label: 'R', ct: 25 }, { label: 'NTC', ct: null }] } },
+  },
+  {
+    id: 'amp-blank-sample-name',
+    note: 'the name of one sample is a "?" box in the legend (which patient sample is it?)',
+    question: 'A standard with a known amount of virus crosses the threshold at cycle 20. The curve marked "?" is from a patient. Does the patient sample hold more or less virus than the standard?',
+    alt: 'An amplification plot with two S-shaped curves and a dashed threshold line. One curve is named in the legend; the other is marked with a boxed question mark.',
+    spec: { type: 'gel_electrophoresis', params: { variant: 'amplification_plot', cycles: 35, samples: [{ label: 'Standard', ct: 20 }, { label: '?', ct: 26 }] } },
+  },
+  // --- bio_schematic ---------------------------------------------------------
+  {
+    id: 'bio-cell-animal-lettered',
+    note: 'simple: an animal cell with five lettered organelles',
+    question: 'The diagram is a schematic of an animal cell. Which letter marks the organelle where most ATP is made?',
+    alt: 'A schematic animal cell: a rounded outline holding a large circle with a dark spot, an oval with a zig-zag inside, a stack of curved lines, folded bands with dots, and small circles, each joined by a line to a letter.',
+    spec: { type: 'bio_schematic', params: { variant: 'cell', cellType: 'animal', organelles: [{ type: 'nucleus', label: 'P' }, { type: 'mitochondrion', label: 'Q' }, { type: 'golgi', label: 'R' }, { type: 'rough_er', label: 'S' }, { type: 'lysosome', label: 'T' }] } },
+  },
+  {
+    id: 'bio-cell-plant-dense',
+    note: 'dense: a plant cell with nine lettered parts, wall and membrane included',
+    question: 'The diagram is a schematic of a plant cell. Which two lettered structures would NOT be found in an animal cell?',
+    alt: 'A schematic plant cell: a double rectangular outline holding a nucleus, a large empty vacuole, ovals with stacked bars, an oval with a zig-zag, a stack of curved lines, folded bands and dots, each joined by a line to a number.',
+    spec: { type: 'bio_schematic', params: { variant: 'cell', cellType: 'plant', organelles: [{ type: 'cell_wall', label: '1' }, { type: 'cell_membrane', label: '2' }, { type: 'nucleus', label: '3' }, { type: 'central_vacuole', label: '4' }, { type: 'chloroplast', label: '5' }, { type: 'mitochondrion', label: '6' }, { type: 'golgi', label: '7' }, { type: 'rough_er', label: '8' }, { type: 'ribosomes', label: '9' }] } },
+  },
+  {
+    id: 'bio-cell-blank-label',
+    note: 'named labels with one "?" box (name the organelle)',
+    question: 'In the schematic cell, what is the organelle marked with the question mark?',
+    alt: 'A schematic animal cell with its nucleus and mitochondrion named; a third structure, a stack of curved lines, is marked with a boxed question mark.',
+    spec: { type: 'bio_schematic', params: { variant: 'cell', cellType: 'animal', organelles: [{ type: 'nucleus', label: 'nucleus' }, { type: 'mitochondrion', label: 'mitochondrion' }, { type: 'golgi', label: '?' }, { type: 'smooth_er' }] } },
+  },
+  {
+    id: 'bio-membrane-channel-gradient',
+    note: 'simple: a bilayer with one channel and a solute at 12 dots outside, 3 inside',
+    question: 'The diagram shows a cell membrane with a channel protein. The dots are molecules of a solute. In which direction is the net movement of the solute?',
+    alt: 'A membrane cross-section: two rows of phospholipids with a channel through them. Many dots lie on the side labelled outside the cell and few on the side labelled inside the cell.',
+    spec: { type: 'bio_schematic', params: { variant: 'membrane', proteins: [{ type: 'channel' }], solutes: [{ outside: 12, inside: 3, through: 0 }] } },
+  },
+  {
+    id: 'bio-membrane-dense-pump-carrier-labels',
+    note: 'dense: channel, carrier, pump with its ATP marker, a peripheral protein, a carbohydrate chain, cholesterol; two solutes with arrows; five lettered parts',
+    question: 'In the membrane shown, solute 2 (squares) crosses through the protein marked with ATP. Is its transport active or passive?',
+    alt: 'A membrane cross-section with three proteins through the bilayer, one of them marked ATP, a small protein on the inner surface and a branched chain on the outer surface. Dots and squares lie on both sides in different numbers, arrows run through two proteins, and five parts are lettered.',
+    spec: {
+      type: 'bio_schematic',
+      params: {
+        variant: 'membrane',
+        proteins: [{ type: 'channel' }, { type: 'carrier', carbohydrate: true }, { type: 'pump' }, { type: 'peripheral' }],
+        cholesterol: true,
+        solutes: [{ name: 'solute 1', outside: 10, inside: 2, through: 0, arrow: 'in' }, { name: 'solute 2', outside: 9, inside: 3, through: 2, arrow: 'out', shape: 'square' }],
+        labels: [{ target: 'head', label: 'P' }, { target: 'tails', label: 'Q' }, { target: 'carbohydrate', label: 'R' }, { target: 'peripheral', label: 'S' }, { target: 'cholesterol', label: 'T' }],
+      },
+    },
+  },
+  {
+    id: 'bio-membrane-blank-part-label',
+    note: 'named parts with one "?" box on the carbohydrate chain; no solutes',
+    question: 'The diagram shows the fluid mosaic model of a membrane. What kind of molecule is the part marked with the question mark?',
+    alt: 'A membrane cross-section with a phospholipid and a protein named; a branched chain on the outer surface is marked with a boxed question mark.',
+    spec: { type: 'bio_schematic', params: { variant: 'membrane', proteins: [{ type: 'carrier', carbohydrate: true }, { type: 'peripheral' }], labels: [{ target: 'head', label: 'phospholipid' }, { target: 'carrier', label: 'protein' }, { target: 'carbohydrate', label: '?' }] } },
+  },
+  {
+    id: 'bio-division-mitosis-strip',
+    note: 'simple: three cells of a 2n = 4 mitosis in a row, lettered',
+    question: 'Three stages of mitosis in a cell with 2n = 4 are shown, not in order. Which cell is in metaphase?',
+    alt: 'Three schematic cells lettered X, Y and Z holding stick chromosomes: in one they are scattered, in one lined up across the middle, in one pulled apart toward the two ends.',
+    spec: { type: 'bio_schematic', params: { variant: 'division', n: 2, cells: [{ stage: 'anaphase', label: 'X' }, { stage: 'prophase', label: 'Y' }, { stage: 'metaphase', label: 'Z' }] } },
+  },
+  {
+    id: 'bio-division-meiosis-dense',
+    note: 'dense: four cells of a 2n = 6 meiosis in a two-by-two grid — pairs side by side, pairs separating, single file, chromatids separating',
+    question: 'Four stages of meiosis in a cell with 2n = 6 are shown. In which cell are homologous chromosomes being separated?',
+    alt: 'Four schematic cells numbered one to four holding stick chromosomes, some filled and some outlined: paired side by side across the middle, pairs pulled apart, a single file across the middle, and single sticks pulled apart.',
+    spec: { type: 'bio_schematic', params: { variant: 'division', n: 3, cells: [{ stage: 'metaphase_I', label: '1' }, { stage: 'anaphase_I', label: '2' }, { stage: 'metaphase_II', label: '3' }, { stage: 'anaphase_II', label: '4' }] } },
+  },
+  {
+    id: 'bio-division-blank-stage-name',
+    note: 'named stages with one "?" box',
+    question: 'Two stages of mitosis are shown. Name the stage marked with the question mark.',
+    alt: 'Two schematic cells holding stick chromosomes. One is named; the other, in which the cell is pinched in the middle with a group of chromosomes at each end, is marked with a boxed question mark.',
+    spec: { type: 'bio_schematic', params: { variant: 'division', n: 2, cells: [{ stage: 'metaphase', label: 'metaphase' }, { stage: 'telophase', label: '?' }] } },
+  },
+  {
+    id: 'bio-compartments-mitochondrion',
+    note: 'simple: a mitochondrion as nested boxes, H⁺ shown by dot density, ATP synthase in the inner membrane',
+    question: 'The box diagram shows a mitochondrion during cellular respiration; each dot is one H⁺ ion. Which labelled space has the higher H⁺ concentration?',
+    alt: 'A box diagram of a mitochondrion: an outer box, a band between it and an inner box, and the inner box. The spaces are named, and dots are scattered in them in different numbers. A key says each dot is a hydrogen ion.',
+    spec: { type: 'bio_schematic', params: { variant: 'compartments', organelle: 'mitochondrion', spaces: [{ id: 'intermembrane_space', ions: 18 }, { id: 'matrix', ions: 4 }], synthase: true } },
+  },
+  {
+    id: 'bio-compartments-chloroplast-dense',
+    note: 'dense: a chloroplast with lettered spaces, pH printed instead of dots, the synthase and its flow arrow',
+    question: 'The box diagram shows a chloroplast in the light. Through the enzyme shown, H⁺ ions flow from space Y to space X. Which space is the thylakoid lumen?',
+    alt: 'A box diagram of a chloroplast: an outer box holding a lettered space and a flattened inner box with another lettered space. Each space has a pH printed in it, and an arrow runs through a knob-shaped enzyme in the inner box\'s wall.',
+    spec: { type: 'bio_schematic', params: { variant: 'compartments', organelle: 'chloroplast', spaces: [{ id: 'stroma', label: 'X', pH: 8 }, { id: 'thylakoid_lumen', label: 'Y', pH: 5 }], synthase: true, showFlow: true } },
+  },
+  {
+    id: 'bio-compartments-blank-space',
+    note: 'one space is named, the other is a "?" box',
+    question: 'The box diagram shows a mitochondrion; each dot is one H⁺ ion. Name the space marked with the question mark.',
+    alt: 'A box diagram of a mitochondrion with dots scattered thickly in the band between its two boxes and thinly in the inner box. The inner box is named; the band is marked with a boxed question mark.',
+    spec: { type: 'bio_schematic', params: { variant: 'compartments', organelle: 'mitochondrion', spaces: [{ id: 'intermembrane_space', label: '?', ions: 16 }, { id: 'matrix', ions: 3 }] } },
+  },
+  // --- schematic_map ---------------------------------------------------------
+  {
+    id: 'map-islands-simple',
+    note: 'simple: a mainland and two islands on a grid, three markers, a scale bar and a north arrow',
+    question: 'On the schematic map each grid square is 50 km across. How far is site Q from site P?',
+    alt: 'A schematic map on a grid: a mainland along the left edge and two islands to its right, with three marked sites, a scale bar and a north arrow.',
+    spec: {
+      type: 'schematic_map',
+      params: {
+        grid: { cols: 12, rows: 8 }, scale: { squares: 2, length: 100, unit: 'km' },
+        regions: [
+          { label: 'Mainland', points: [[0, 0], [3, 0], [4, 3], [3, 6], [3, 8], [0, 8]] },
+          { label: 'Isla Norte', points: [[7, 5], [10, 5], [10, 7], [8, 7]] },
+          { label: 'Isla Sur', points: [[6, 1], [8, 1], [9, 3], [7, 3]] },
+        ],
+        markers: [{ x: 2, y: 4, label: 'P' }, { x: 8, y: 4, label: 'Q' }, { x: 8, y: 2, label: 'R' }],
+      },
+    },
+  },
+  {
+    id: 'map-dense-choropleth-arrows',
+    note: 'dense: five regions hatched by value with a legend, four markers, two dispersal arrows',
+    question: 'The map shows the number of finch species on each island and two colonisation routes. Which island has the most species?',
+    alt: 'A schematic map of a mainland and four islands, each filled with a hatch pattern of a different density explained in a legend, with marked sites, two arrows between land masses, a scale bar and a north arrow.',
+    spec: {
+      type: 'schematic_map',
+      params: {
+        grid: { cols: 14, rows: 9 }, scale: { squares: 2, length: 200, unit: 'km' },
+        legend: { title: 'Finch species' },
+        regions: [
+          { label: 'Mainland', points: [[0, 0], [3, 0], [3, 9], [0, 9]], value: 12 },
+          { label: 'P', points: [[5, 6], [7, 6], [7, 8], [5, 8]], value: 6 },
+          { label: 'Q', points: [[5, 1], [7, 1], [8, 3], [6, 4], [5, 3]], value: 6 },
+          { label: 'R', points: [[9, 4], [11, 4], [11, 6], [9, 6]], value: 3 },
+          { label: 'S', points: [[12, 1], [14, 1], [14, 3], [12, 3]], value: 1 },
+        ],
+        markers: [{ x: 2, y: 5, label: 'W' }, { x: 6, y: 7, label: 'X' }, { x: 10, y: 5, label: 'Y' }, { x: 13, y: 2, label: 'Z' }],
+        arrows: [{ from: [3, 7], to: [5, 7] }, { from: [7, 7], to: [9, 5.5], dashed: true }],
+      },
+    },
+  },
+  {
+    id: 'map-blank-region-label',
+    note: 'one region label is a "?" box; an ocean current arrow with its name',
+    question: 'A warm current flows as shown. The island marked "?" lies due east of site K. Which site is on it?',
+    alt: 'A schematic map with a mainland and two islands, one of them marked with a boxed question mark, three marked sites, a labelled arrow, a scale bar and a north arrow.',
+    spec: {
+      type: 'schematic_map',
+      params: {
+        grid: { cols: 12, rows: 8 }, scale: { squares: 3, length: 300, unit: 'km' },
+        regions: [
+          { label: 'Mainland', points: [[0, 0], [2, 0], [3, 4], [2, 8], [0, 8]] },
+          { label: '?', points: [[7, 3], [10, 3], [10, 5], [7, 5]] },
+          { label: 'Tern I.', points: [[5, 6], [7, 6], [7, 7.5], [5, 7.5]] },
+        ],
+        markers: [{ x: 1, y: 4, label: 'K' }, { x: 9, y: 4, label: 'L' }, { x: 6, y: 7, label: 'M' }],
+        arrows: [{ from: [4, 1], to: [10, 1.5], label: 'current' }],
+      },
+    },
+  },
+  // --- field_diagram: bar magnet ---------------------------------------------
+  {
+    id: 'magnet-single-field-lines',
+    note: 'simple: one bar magnet, poles named, field lines with arrowheads, one marked point',
+    question: 'The diagram shows the magnetic field of a bar magnet. What is the direction of the field at point P?',
+    alt: 'A bar magnet with its two halves marked N and S and curved field lines with arrowheads looping from one end to the other. A point P is marked above the middle of the magnet.',
+    spec: { type: 'field_diagram', params: { variant: 'bar_magnet', magnets: [{ north: 'right' }], points: [{ x: 0, y: 1.75, label: 'P' }] } },
+  },
+  {
+    id: 'magnet-dense-two-magnets-compasses',
+    note: 'dense: two magnets end to end with like poles facing, and three compasses (one needle hidden)',
+    question: 'Two bar magnets are placed end to end as shown. Which way does the needle of compass 3 point?',
+    alt: 'Two bar magnets end to end, each half marked N or S, with field lines that bend away from each other in the gap. Three small compasses are numbered; two show a needle and one is empty.',
+    spec: { type: 'field_diagram', params: { variant: 'bar_magnet', magnets: [{ north: 'right' }, { north: 'left' }], compasses: [{ x: 0, y: 1.5, label: '1' }, { x: -4.05, y: 0, label: '2' }, { x: 0, y: -1.5, label: '3', needle: false }] } },
+  },
+  {
+    id: 'magnet-blank-poles',
+    note: 'the poles are "?" boxes: the arrowheads on the lines fix which end is north',
+    question: 'The field lines of a bar magnet are shown. Which end of the magnet is its north pole?',
+    alt: 'A bar magnet whose two halves are each marked with a boxed question mark, with curved field lines carrying arrowheads from its left end round to its right end.',
+    spec: { type: 'field_diagram', params: { variant: 'bar_magnet', magnets: [{ north: 'left', poles: 'blank' }] } },
+  },
+  // --- the fixes of the third round ------------------------------------------
+  {
+    id: 'fix3-ray-diverging-abs-f',
+    note: 'a: a diverging lens with its focal length shown — printed as a magnitude, "|f| = 12 cm", so it cannot contradict a stem that says f is negative',
+    question: 'A diverging lens has a focal length of −12 cm. An object stands 24 cm from it. Where is the image?',
+    alt: 'A ray diagram of a diverging lens with an object arrow on the left; brackets under the axis give the object distance and the size of the focal length.',
+    spec: { type: 'ray_diagram', params: { element: 'diverging_lens', focalLength: 12, objectDistance: 24, objectHeight: 6, rays: 'none', showImage: false, show: { objectDistance: 'value', focalLength: 'value' } } },
+  },
+  {
+    id: 'fix3-field-unequal-charges-labels',
+    note: 'b: +3q and −q with three marked points — the smaller charge has lines on every side, and no line runs into a point label',
+    question: 'In the field diagram shown, the charge on the left has three times the magnitude of the charge on the right. At which marked point is the net electric field zero?',
+    alt: 'Field lines round two point charges of unequal size, with three marked points on the line through them.',
+    spec: { type: 'field_diagram', params: { variant: 'point_charges', charges: [{ x: -3, y: 0, q: 3 }, { x: 0, y: 0, q: -1 }], xRange: [-6, 6], yRange: [-3.6, 3.6], linesPerUnit: 4, arrows: false, points: [{ x: -4.8, y: 0, label: 'P' }, { x: -1.5, y: 0, label: 'Q' }, { x: 4.098076211353317, y: 0, label: 'R' }] } },
+  },
+  {
+    id: 'fix3-phylo-numerals',
+    note: 'c: node labels given as letters are printed as numerals, so they cannot be taken for the option letters A–D',
+    question: 'Which numbered node is the most recent common ancestor of the frog and the mouse?',
+    alt: 'A branching tree of five animals with three numbered nodes.',
+    spec: { type: 'phylogenetic_tree', params: { letterLabels: 'numerals', tree: { node: 'A', children: ['Lamprey', { node: 'B', children: ['Trout', { node: 'C', children: ['Frog', { children: ['Lizard', 'Mouse'] }] }] }] } } },
+  },
+  {
+    id: 'fix3-geometry-theta-inside',
+    note: 'd: θ at the narrow top vertex of a 6–8–10 triangle is set inside the triangle, between its sides',
+    question: 'In the right triangle shown, what is θ to the nearest tenth of a degree?',
+    alt: 'A right triangle with its sides labelled and the angle at its top vertex marked θ.',
+    spec: { type: 'geometric_figure', params: { shape: 'triangle', points: [[0, 0], [6, 0], [0, 8]], vertices: null, sideLabels: ['10', '8', '6'], angleLabels: [null, null, 'θ'] } },
+  },
+  {
+    id: 'fix3-similar-no-vertices',
+    note: 'd: two similar triangles with `vertices: null` — no vertex letters at all',
+    question: 'The two triangles are similar. What is x?',
+    alt: 'Two similar triangles side by side with some side lengths labelled and one side labelled x; the corners are not named.',
+    spec: { type: 'geometric_figure', params: { shape: 'similar_triangles', sides: [6, 8, 10], scale: 1.5, vertices: null, sideLabels: [['6', '8', '10'], ['9', 'x', null]] } },
+  },
+  {
+    id: 'fix3-nested-similar-lamp-post',
+    note: 'd: nested similar triangles — a lamp post, a person and the tip of the shadow, with a "?" on the post',
+    question: 'A person 1.8 m tall stands 4 m from a lamp post and casts a shadow 2 m long, as shown. How tall is the lamp post?',
+    alt: 'A right triangle with a vertical segment inside it parallel to its upright side, cutting off a smaller triangle at the right-hand corner. Lengths are marked along the base and on the inner segment; the upright side is marked with a boxed question mark.',
+    spec: { type: 'geometric_figure', params: { shape: 'similar_triangles', nested: true, sides: [Math.hypot(5.4, 6), 5.4, 6], scale: 1 / 3, unit: 'm', vertices: null, sideLabels: [[null, '?', null], [null, '1.8 m', '2 m']], restLabels: ['4 m', null] } },
+  },
+  {
+    id: 'fix3-interface-tir',
+    note: 'e: past the critical angle with `refracted: false` and no reflected ray — the incident ray alone, nothing drawn beyond the interface',
+    question: 'A ray in glass (n = 1.50) meets the surface with air at 50° to the normal, as shown. What happens to the ray at the surface?',
+    alt: 'A ray in the upper medium, labelled glass, meets a horizontal boundary with air at an angle to the dashed normal. No ray is drawn beyond the boundary.',
+    spec: { type: 'ray_diagram', params: { element: 'interface', n1: 1.5, n2: 1, incidentAngle: 50, media: ['glass', 'air'], refracted: false } },
+  },
+  {
+    id: 'fix3-pes-third-period',
+    note: 'f: sulfur — the 2s and 2p peaks are closer than a 1.5 energy ratio; drawn on a tightened axis with narrower peaks so they stand apart',
+    question: 'The photoelectron spectrum of an element is shown. Which element is it?',
+    alt: 'A photoelectron spectrum with five peaks of different heights on a logarithmic binding-energy axis that increases to the left.',
+    spec: { type: 'spectrum', params: { variant: 'pes', peaks: [{ energy: 239, electrons: 2 }, { energy: 22.7, electrons: 2 }, { energy: 16.5, electrons: 6 }, { energy: 2.05, electrons: 2 }, { energy: 1.0, electrons: 4 }] } },
+  },
+  {
+    id: 'fix3-wire-arrowhead',
+    note: 'b: the current arrowhead on a wire in the page is one solid shape (no white stroke inside it)',
+    question: 'A long straight wire carries a current to the right. What is the direction of the magnetic field at a point in the page directly below the wire?',
+    alt: 'A horizontal wire with an arrowhead showing the current flowing to the right. Nothing else is drawn.',
+    spec: { type: 'field_diagram', params: { variant: 'wire', view: 'side', current: 'right', showField: false } },
+  },
+];
+
+FIGURE_FIXTURES.push(...BATCH3_FIXTURES);
