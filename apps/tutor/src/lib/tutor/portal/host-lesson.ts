@@ -31,6 +31,11 @@ export const STANDBY_IDLE_END_MS = 30 * 60 * 1000;
 /** A moment that could not be delivered within this long (session never
  *  started, tutor kept busy) is dropped: the video has moved on. */
 export const MOMENT_STALE_MS = 120 * 1000;
+/** A moment that arrives BEFORE the session has started is kept only this
+ *  long: a host's "ask the tutor about this" sends the moment and the start
+ *  together, while a moment for a student who has not opened the tutor must
+ *  not play a minute later when they open it about something else. */
+export const MOMENT_PRESTART_HOLD_MS = 5 * 1000;
 
 function obj(data: unknown): Record<string, unknown> | null {
   return data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
@@ -186,6 +191,16 @@ export function currentPositionSeconds(s: LessonHostState, nowMs: number): numbe
  *  talks about a moment rather than a moving target. */
 export function videoForPrompt(s: LessonHostState): VideoState | null {
   return s.video === 'playing' && s.wokeAtMs !== null ? 'paused' : s.video;
+}
+
+/** A moment's position, checked against where the host's own `video_state`
+ *  says the video is. A value that is far from it but matches it once divided
+ *  by 1000 was sent in milliseconds (seen live: `16750` for 16.75 s) — use
+ *  seconds, or the tutor is shown the wrong part of the lesson. */
+export function reconcileMomentPosition(positionSeconds: number | null, knownSeconds: number | null): number | null {
+  if (positionSeconds === null || knownSeconds === null) return positionSeconds;
+  const asSeconds = positionSeconds / 1000;
+  return Math.abs(positionSeconds - knownSeconds) > 60 && Math.abs(asSeconds - knownSeconds) <= 5 ? asSeconds : positionSeconds;
 }
 
 /** Standing by = the host hid the panel, or its video is playing and nothing woke the tutor. */

@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import {
   INITIAL_INACTIVE_CLOCK,
   INITIAL_LESSON_HOST_STATE,
+  MOMENT_PRESTART_HOLD_MS,
   MOMENT_STALE_MS,
   RESUME_CONFIRM_MS,
   STANDBY_IDLE_END_MS,
@@ -27,6 +28,7 @@ import {
   parseHostResume,
   parseMoment,
   parseVideoState,
+  reconcileMomentPosition,
   reduceLessonHost,
   renderMomentDirective,
   shiftAnchor,
@@ -360,14 +362,14 @@ test('VTR: resume_lesson fires only after the turn is spoken; a student turn or 
   assert.match(vtr, /\(cmd\.action as string\) === 'resumeLesson'/);
   assert.match(vtr, /'resume_lesson_fired'/);
   assert.match(vtr, /onResumeLessonRef\.current\?\.\(\)/);
-  assert.match(vtr, /resumeLessonPendingRef\.current = false;\s*recordStudentEngagement\(idleNudgeStateRef\.current\)/);
+  assert.match(vtr, /cancelResumeLesson\('student_turn'\);\s*recordStudentEngagement\(idleNudgeStateRef\.current\)/);
   const pump = vtr.slice(vtr.indexOf('runHostLessonPumpRef.current = () => {'), vtr.indexOf("'resume_lesson_fired'"));
   assert.match(pump, /realtime\.isSpeechPending\(\)/);
   assert.match(pump, /!perceptionMidUtteranceRef\.current/);
   assert.match(pump, /studentTextInputRef\.current\?\.value \?\? ''\)\.trim\(\) === ''/);
   assert.ok(!/!studentTypingRef\.current/.test(pump), 'focus alone must not block the pump (it stays after a send)');
   const submit = vtr.slice(vtr.indexOf('onSubmit={async (e: FormEvent) => {'), vtr.indexOf("namedItem('studentText')"));
-  assert.match(submit, /resumeLessonPendingRef\.current = false;/);
+  assert.match(submit, /cancelResumeLesson\('student_typed'\);/);
 });
 
 test('resume_lesson is registered as state, not ink: no board repair, withheld after a kill', () => {
@@ -470,7 +472,7 @@ test('review fixes: opener aborted by standby clears the joining overlay; resume
   assert.match(enter, /setIsWarmingUp\(false\);\s*setShowWarmupOverlay\(false\);/);
   assert.match(enter, /warmupStateRef\.current = null;/);
   assert.match(vtr, /videoHost && !standbyRef\.current && !!getLessonNowRef\.current\?\.\(\)/);
-  assert.equal(vtr.split(/speechKilledAtRef\.current = Date\.now\(\);\s*resumeLessonPendingRef\.current = false;/).length - 1, 2);
+  assert.equal(vtr.split(/speechKilledAtRef\.current = Date\.now\(\);\s*cancelResumeLesson\('turn_killed'\);/).length - 1, 2);
   assert.match(vtr, /lastVadActivityAtRef\.current > resumeLessonPendingAtRef\.current/);
   assert.match(embed, /prewarm && TUTOR_HOST_LESSON \?/); // flag off ⇒ durations exactly as before
 });
@@ -495,6 +497,24 @@ test('host header options: clock message posted on start, standby change, end an
   assert.match(uiOptions, /sessionTimer: true, endControl: true, toolsLow: false/);
   assert.match(uiOptions, /gameclass: \{[^}]*toolsLow: true/);
   assert.ok(!/gameclass: \{[^}]*(sessionTimer|endControl)/.test(uiOptions), 'timer and End stay on until the host opts out per token');
+});
+
+test('moment position sent in milliseconds is read as seconds when it matches the video', () => {
+  assert.equal(reconcileMomentPosition(16750, 16.73), 16.75);
+  assert.equal(reconcileMomentPosition(148000, 150), 148);
+  assert.equal(reconcileMomentPosition(16.72, 16.73), 16.72);   // already seconds
+  assert.equal(reconcileMomentPosition(900, 16), 900);           // a real jump, not ms
+  assert.equal(reconcileMomentPosition(16750, null), 16750);     // nothing to check against
+  assert.equal(reconcileMomentPosition(null, 16), null);
+  assert.equal(reconcileMomentPosition(50_000, 49), 50_000 / 1000);
+});
+
+test('a moment for a tutor that is not open is dropped after a short hold; resume cancellations say why', () => {
+  assert.equal(MOMENT_PRESTART_HOLD_MS, 5000);
+  assert.match(vtr, /if \(!hasStartedRef\.current && now - moment\.atMs > MOMENT_PRESTART_HOLD_MS\) \{[^}]*'why=not_started'/);
+  for (const why of ['student_turn', 'standby', 'moment', 'student_typed', 'turn_killed']) assert.ok(vtr.includes(`cancelResumeLesson('${why}')`), why);
+  assert.match(embed, /reconcileMomentPosition\(sentPos, currentPositionSeconds\(lessonHostRef\.current, Date\.now\(\)\)\)/);
+  assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} chars=\$\{st\.chars\}/);
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
