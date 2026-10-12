@@ -26,7 +26,9 @@
  * null / nothing injected — the turn then runs exactly as it did before.
  *
  *   TUTOR_TEXT_VERDICT_PRECHECK             unset/anything ⇒ ON · 'off' ⇒ off
- *   TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS  hard cap (default 6000)
+ *   TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS  hard cap; set ⇒ that cap for every turn. Unset ⇒ 6000 for a
+ *                                           short problem, rising with its length to 12000 (below)
+ *   TUTOR_TEXT_VERDICT_PRECHECK_LONG_PROBLEM 'off' ⇒ 6000 whatever the problem's length
  *   TUTOR_MODEL_VERDICT_PRECHECK            model id (registry role `verdict-precheck`)
  *   TUTOR_TEXT_VERDICT_PRECHECK_THINKING    'low' (adaptive thinking, low effort) | 'off' (no thinking,
  *                                           a scratch field first) | 'bare' (neither); default per model, below
@@ -40,7 +42,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams, resolveModel } from '../ai/model-registry';
 import { falseArithmeticIn } from './turn-shape-signal';
-import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_PRECHECK_DIFFERS_AT, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { readOpenQuestion } from './nonanswer-praise';
 import type {
   PrecheckConfidence,
@@ -64,6 +66,33 @@ export function textVerdictPrecheckEnabled(
 export function verdictPrecheckTimeoutMs(env: string | undefined = process.env.TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS): number {
   const n = Number(env);
   return Number.isFinite(n) && n >= 500 && n <= 15_000 ? Math.round(n) : VERDICT_PRECHECK_TIMEOUT_MS;
+}
+
+/** 2026-10-12: a multi-step word problem (≈270 characters) took the check
+ *  7–11 s in four runs; at 6 s it was cut and the turn ran with no check —
+ *  on exactly the problems where a wrong final answer is hardest to judge.
+ *  The cap rises with the length of the problem being worked: 6 s up to 150
+ *  characters, 40 ms for each character beyond, 12 s at most. */
+export const VERDICT_PRECHECK_LONG_PROBLEM_FROM_CHARS = 150;
+export const VERDICT_PRECHECK_LONG_PROBLEM_MS_PER_CHAR = 40;
+export const VERDICT_PRECHECK_TIMEOUT_MAX_MS = 12_000;
+
+/** The cap for THIS turn's check. An explicit
+ *  TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS is the cap for every turn. */
+export function verdictPrecheckTimeoutFor(
+  input: Pick<VerdictPrecheckInput, 'problems' | 'currentProblem' | 'activeProblemStatement'>,
+  env: { timeoutEnv?: string; longProblemFlag?: string } = {
+    timeoutEnv: process.env.TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS,
+    longProblemFlag: process.env.TUTOR_TEXT_VERDICT_PRECHECK_LONG_PROBLEM,
+  },
+): number {
+  const base = verdictPrecheckTimeoutMs(env.timeoutEnv);
+  if ((env.timeoutEnv ?? '').trim() && base !== VERDICT_PRECHECK_TIMEOUT_MS) return base;
+  if (env.longProblemFlag === 'off') return base;
+  const worked = (input.problems ?? [])[(input.currentProblem ?? 0) - 1]?.text ?? '';
+  const chars = Math.max(worked.trim().length, (input.activeProblemStatement ?? '').trim().length);
+  const extra = Math.max(0, chars - VERDICT_PRECHECK_LONG_PROBLEM_FROM_CHARS) * VERDICT_PRECHECK_LONG_PROBLEM_MS_PER_CHAR;
+  return Math.min(VERDICT_PRECHECK_TIMEOUT_MAX_MS, base + extra);
 }
 
 export interface VerdictPrecheckInput {
@@ -103,6 +132,8 @@ export interface VerdictPrecheckDeps {
   /** Measurement overrides (scripts/replay-verdict-turns.ts). */
   model?: string;
   thinking?: 'low' | 'off' | 'bare';
+  /** Unset ⇒ TUTOR_PRECHECK_DIFFERS_AT; false ⇒ `differsAt` is never kept. */
+  differsAt?: boolean;
   now?: () => number;
 }
 
@@ -120,7 +151,7 @@ export const VERDICT_PRECHECK_SYSTEM =
   '   "neither" — it answers none of these: it is the wrong kind of thing for the open question and is not an answer to any of the student\'s problems, or it is unrelated.\n' +
   '4. COMPARE with your own answer to THAT question. An equivalent form, notation, ordering or unit spelling is the same answer. verdict: "correct" only when it is the complete right answer to that question; "incorrect"; "partly_correct" when the question asks for several things, or for all the values that work, and the student gave only some of them, or part is right and part is wrong; "cannot_determine" when the question has no single right answer (an opinion, an open-ended draft, a choice of what to do next) or there is not enough information to solve it.\n' +
   '5. CONFIDENCE. "high" only when it is unambiguous which question the message answers AND you solved that question completely. "medium" when either is somewhat uncertain. "low" otherwise. When answers is "neither", confidence is about that classification alone.\n' +
-  'Fields, in this order: proposed_value — what the student proposed, as they wrote it. problem_final_answer — the final answer of the problem or part being worked, as YOU worked it out in step 2 (empty if it has no single answer). proposed_equals_final_answer — true when the two are the same answer. target — a short name for the question the message answers, in your own words. correct_value — the correct answer to THAT question, worked out by you; empty when answers is "neither" or the verdict is "cannot_determine".';
+  'Fields, in this order: proposed_value — what the student proposed, as they wrote it. problem_final_answer — the final answer of the problem or part being worked, as YOU worked it out in step 2 (empty if it has no single answer). proposed_equals_final_answer — true when the two are the same answer. target — a short name for the question the message answers, in your own words. correct_value — the correct answer to THAT question, worked out by you; empty when answers is "neither" or the verdict is "cannot_determine". differs_test and differs_at — only when answers is "overall_problem" and the verdict is "incorrect"; both empty in every other case. Put what the student proposed into each thing the problem states, one at a time, and find the first condition, quantity or relationship of the problem that their answer does NOT agree with. It is something the problem gives, not the quantity the problem asks for. differs_test — for that one thing, what their answer gives and what the problem states, in a few words. differs_at — its name alone, in a few words, the way the problem names it. ONE thing only: do not join several conditions together. It must be something their answer actually fails: never name a condition their answer satisfies. Give no value in differs_at — not the correct answer, not a result of any working. If what they proposed cannot be put into the problem\'s conditions directly, or you are not sure which one fails, leave both empty rather than guess.';
 
 /**
  * 2026-10-06b (portal-10beb4f5, voice): a spoken expression arrived as words
@@ -179,18 +210,22 @@ const BASE_PROPERTIES = {
   correct_value: { type: 'string' },
   verdict: { type: 'string', enum: ['correct', 'incorrect', 'partly_correct', 'cannot_determine'] },
   confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+  // Last, so that every field before them is written exactly as it was. The
+  // test is written before the name, so the name follows from a test.
+  differs_test: { type: 'string' },
+  differs_at: { type: 'string' },
 } as const;
 
 export const VERDICT_PRECHECK_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
-  required: ['proposed_value', 'problem_final_answer', 'proposed_equals_final_answer', 'answers', 'target', 'correct_value', 'verdict', 'confidence'],
+  required: ['proposed_value', 'problem_final_answer', 'proposed_equals_final_answer', 'answers', 'target', 'correct_value', 'verdict', 'confidence', 'differs_test', 'differs_at'],
   properties: BASE_PROPERTIES,
 };
 export const VERDICT_PRECHECK_SCHEMA_WITH_WORKING: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
-  required: ['working', 'proposed_value', 'problem_final_answer', 'proposed_equals_final_answer', 'answers', 'target', 'correct_value', 'verdict', 'confidence'],
+  required: ['working', 'proposed_value', 'problem_final_answer', 'proposed_equals_final_answer', 'answers', 'target', 'correct_value', 'verdict', 'confidence', 'differs_test', 'differs_at'],
   properties: { working: { type: 'string' }, ...BASE_PROPERTIES },
 };
 
@@ -320,6 +355,25 @@ const TARGETS: ReadonlySet<string> = new Set(['open_question', 'overall_problem'
 const VERDICTS: ReadonlySet<string> = new Set(['correct', 'incorrect', 'partly_correct', 'cannot_determine']);
 const CONFIDENCES: ReadonlySet<string> = new Set(['high', 'medium', 'low']);
 
+/**
+ * What a wrong answer does not agree with, or '' when it may not be used.
+ * It is rendered on the branch that withholds the correct value, so it must
+ * carry none: it is dropped when it contains the check's own correct value,
+ * or any number that is in neither the student's problem nor their message
+ * (such a number is a result of working).
+ */
+export function safeDiffersAt(raw: unknown, correctValue: string, input: VerdictPrecheckInput): string {
+  const at = String(raw ?? '').replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+  if (!at) return '';
+  const norm = (v: string) => v.toLowerCase().replace(/\s+/g, '');
+  const value = norm(correctValue);
+  if (value && norm(at).includes(value)) return '';
+  const given = [...(input.problems ?? []).map((p) => p.text), input.activeProblemStatement ?? '', input.studentMessage ?? ''].join(' ');
+  const numbersIn = (v: string) => v.match(/\d+(?:[.,]\d+)*/g) ?? [];
+  const known = new Set(numbersIn(given));
+  return numbersIn(at).every((n) => known.has(n)) ? at : '';
+}
+
 /** The model the pre-check will call (registry role `verdict-precheck`). */
 export function verdictPrecheckModel(): string {
   return resolveModel('verdict-precheck').model;
@@ -335,7 +389,7 @@ export async function runVerdictPrecheck(
 ): Promise<VerdictPrecheckResult | null> {
   const now = deps.now ?? Date.now;
   const startedAt = now();
-  const timeoutMs = deps.timeoutMs ?? verdictPrecheckTimeoutMs();
+  const timeoutMs = deps.timeoutMs ?? verdictPrecheckTimeoutFor(input);
   const abort = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -375,13 +429,23 @@ export async function runVerdictPrecheck(
       o.correct_value = String(o.problem_final_answer);
       if (o.confidence === 'low') o.confidence = 'medium';
     }
+    const correctValue = String(o.correct_value ?? '').trim().slice(0, 240);
+    // Rendered only for a wrong answer to the whole problem (verdict-precheck-shared.ts).
+    const wantsDiffersAt = (deps.differsAt ?? TUTOR_PRECHECK_DIFFERS_AT) && o.answers === 'overall_problem' && o.verdict === 'incorrect';
+    const differsAt = wantsDiffersAt
+      ? safeDiffersAt(o.differs_at, correctValue, input)
+      : '';
+    if (wantsDiffersAt && !differsAt && String(o.differs_at ?? '').trim()) {
+      console.log(`[verdict-precheck] differs_at not used (it carried a value): "${String(o.differs_at).replace(/\s+/g, ' ').slice(0, 120)}"`);
+    }
     return {
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),
       verdict: o.verdict as PrecheckVerdict,
       confidence: o.confidence as PrecheckConfidence,
-      correctValue: String(o.correct_value ?? '').trim().slice(0, 240),
+      correctValue,
+      ...(differsAt ? { differsAt, differsTest: String(o.differs_test ?? '').replace(/\s+/g, ' ').trim().slice(0, 240) } : {}),
       model: raced.model,
       ms: now() - startedAt,
       inputTokens: raced.inputTokens,

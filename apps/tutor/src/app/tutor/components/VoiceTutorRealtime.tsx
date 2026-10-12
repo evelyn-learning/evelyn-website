@@ -16699,7 +16699,7 @@ export function VoiceTutorRealtime({
                     if (TUTOR_PRECHECK_CREDIT && precheckCreditOverride(pc).verifiedWrong) {
                       hedgedDenialSignalRef.current.verifiedWrong = true;
                     }
-                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"`);
+                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}`);
                   }
                   // Voice: the check ran alongside the reply — release what
                   // was held, or cut the turn at a sentence it contradicts.

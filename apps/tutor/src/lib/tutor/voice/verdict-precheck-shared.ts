@@ -23,7 +23,7 @@
  * Pure; never throws. `npm run test:verdict-precheck`.
  */
 import { opensWithAffirmingVerdict } from '@/lib/tutor/voice/nonanswer-praise';
-import { TUTOR_OTHER_PART_NO_GIVEAWAY, TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_OTHER_PART_NO_GIVEAWAY, TUTOR_PRECHECK_DIFFERS_AT, TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Which question the student's message answers. */
 export type PrecheckTarget =
@@ -49,11 +49,17 @@ export interface PublicVerdictPrecheck {
   proposed: string;
   verdict: PrecheckVerdict;
   confidence: PrecheckConfidence;
+  /** What a wrong answer does not agree with — a condition, quantity or
+   *  relationship of the problem, by name. Carries no value (see
+   *  verdict-precheck.ts `safeDiffersAt`). Absent when the check named none. */
+  differsAt?: string;
 }
 
 /** The full result; `correctValue` stays on the server. */
 export interface VerdictPrecheckResult extends PublicVerdictPrecheck {
   correctValue: string;
+  /** The check's own test behind `differsAt` (it carries values): logs only. */
+  differsTest?: string;
   model: string;
   ms: number;
   inputTokens: number;
@@ -81,11 +87,17 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     proposed: line(o.proposed, 200),
     verdict: o.verdict as PrecheckVerdict,
     confidence: o.confidence as PrecheckConfidence,
+    ...differsAtField(o.differsAt),
   };
 }
 
+function differsAtField(v: unknown): { differsAt?: string } {
+  const at = typeof v === 'string' ? line(v, 160) : '';
+  return at ? { differsAt: at } : {};
+}
+
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -126,6 +138,10 @@ export function formatAnswerCheckBlock(
      *  the whole problem is worded like a wrong step (2026-10-06). Read only
      *  under `workThenMatch`. */
     wrongWholeAnswerNoReveal?: boolean;
+    /** Unset ⇒ TUTOR_PRECHECK_DIFFERS_AT; false ⇒ what the answer does not
+     *  agree with is not rendered. Read only on the wrong-whole-answer
+     *  branch. */
+    differsAt?: boolean;
   },
 ): string {
   if (!precheckInforms(p)) return '';
@@ -228,8 +244,15 @@ export const WRONG_WHOLE_ANSWER_REEMIT =
   + 'the first sentence states plainly, as a fact about their answer, that it is not what the problem gives; '
   + 'the second asks one question about the first thing in their reasoning to re-examine. ';
 
+/** 2026-10-12 (portal-2000fd6a @73.3 s): told only INCORRECT and asked for
+ *  "the first thing to re-examine", the reply sent the student to a condition
+ *  their answer satisfied. When the check names what the answer does not
+ *  agree with, the question goes there. */
+export const WRONG_WHOLE_ANSWER_POINT_THERE =
+  'The check names above what their answer does not agree with: your second sentence points them to THAT — by name, with no value — and to nothing else. Never send them to a part of the problem their answer already satisfies.\n';
+
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean }): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean }): string {
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -266,9 +289,12 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
   if (p.verdict === 'incorrect') {
     if (wrongWholeAnswerChecked(p, { enabled: opts?.wrongWholeAnswerNoReveal })) {
       // No correct value here, on the first attempt or on a retry.
+      const at = (opts?.differsAt ?? TUTOR_PRECHECK_DIFFERS_AT) && p.differsAt ? line(p.differsAt, 160) : '';
       return head + proposed + where
         + '- Checked for that question: INCORRECT.\n'
+        + (at ? `- What their answer does not agree with: ${q(at)}.\n` : '')
         + WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH
+        + (at ? WRONG_WHOLE_ANSWER_POINT_THERE : '')
         + tail;
     }
     const value = correctValue

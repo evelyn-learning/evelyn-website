@@ -2292,7 +2292,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       input.verdictPrecheckDeps?.onResult?.(result, ms);
       if (result) {
         const pub = toPublicPrecheck(result);
-        console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${precheckInforms(pub) ? '' : ' (not injected)'}`);
+        console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${pub.differsAt ? ` differs_at="${pub.differsAt}"` : ''}${precheckInforms(pub) ? '' : ' (not injected)'}`);
         if (precheckInforms(pub)) {
           answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}) });
           const seal = armRevealGuard(pub, result.correctValue, studentSaid);

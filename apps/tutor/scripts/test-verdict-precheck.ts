@@ -34,6 +34,7 @@ import {
   runVerdictPrecheck,
   textVerdictPrecheckEnabled,
   verdictPrecheckThinking,
+  verdictPrecheckTimeoutFor,
   verdictPrecheckTimeoutMs,
   VERDICT_PRECHECK_SCHEMA,
   VERDICT_PRECHECK_SCHEMA_WITH_WORKING,
@@ -521,6 +522,97 @@ async function main() {
     assert.match(clientSrc, /const isCorrect = (?:matchCredit \? matchCredit\.credit === 'incorrect' : )?verdictRead\.isCorrection && !precheckCredit\.suppressIncorrect;/);
     assert.match(clientSrc, /hedgedDenialSignalRef\.current\.verifiedWrong = true;\n\s*\}\n\s*onDebugEvent\?\.\('verdict_precheck'/);
     assert.match(clientSrc, /ambiguousAssentKill\(transcript, nonAnswerTextSoFar, bareAssentPriorTutorTurn\)/);
+  });
+
+  // ── 2026-10-12: a longer cap for a longer problem ──
+  // A multi-step word problem took the check 7–11 s; at 6 s it was cut and
+  // the turn ran without it.
+  await test('timeout for a turn: 6 s for a short problem, rising with its length to 12 s; the env override and the switch win', () => {
+    const of = (n: number) => ({ ...input, problems: [{ n: 1, text: 'x'.repeat(n) }], currentProblem: 1, activeProblemStatement: '' });
+    assert.equal(verdictPrecheckTimeoutFor(of(40), {}), 6000);
+    assert.equal(verdictPrecheckTimeoutFor(of(150), {}), 6000);
+    assert.equal(verdictPrecheckTimeoutFor(of(200), {}), 8000);
+    assert.equal(verdictPrecheckTimeoutFor(of(270), {}), 10800);
+    assert.equal(verdictPrecheckTimeoutFor(of(300), {}), 12000);
+    assert.equal(verdictPrecheckTimeoutFor(of(5000), {}), 12000);
+    assert.equal(verdictPrecheckTimeoutFor({ ...input, problems: undefined, activeProblemStatement: 'y'.repeat(300) }, {}), 12000, 'a board problem counts');
+    assert.equal(verdictPrecheckTimeoutFor({ ...input, problems: [{ n: 1, text: 'x'.repeat(40) }, { n: 2, text: 'x'.repeat(900) }], currentProblem: 1, activeProblemStatement: '' }, {}), 6000, 'the problem being worked, not the longest on the sheet');
+    assert.equal(verdictPrecheckTimeoutFor(of(900), { timeoutEnv: '4000' }), 4000, 'an explicit cap is the cap');
+    assert.equal(verdictPrecheckTimeoutFor(of(900), { longProblemFlag: 'off' }), 6000);
+  });
+  await test('timeout for a turn: the call is given the longer cap', async () => {
+    let got = 0;
+    const llm: VerdictPrecheckLlm = async (req) => { got = req.timeoutMs; return { text: reply({}), model: 'fake-model', inputTokens: 1, outputTokens: 1 }; };
+    await runVerdictPrecheck({ ...input, problems: [{ n: 1, text: 'x'.repeat(300) }], currentProblem: 1, activeProblemStatement: '' }, { llm });
+    assert.equal(got, 12000);
+    await runVerdictPrecheck({ ...input, problems: [{ n: 1, text: 'x'.repeat(300) }], currentProblem: 1 }, { llm, timeoutMs: 3500 });
+    assert.equal(got, 3500, 'a caller that sets its own cap (voice) keeps it');
+  });
+
+  // ── 2026-10-12: what a wrong whole answer does not agree with ──
+  // portal-2000fd6a @73.3 s: the block said only INCORRECT, the reply had to
+  // ask about "the first thing to re-examine", and it named a condition the
+  // student's answer satisfied.
+  const wrongWhole = { answers: 'overall_problem' as const, verdict: 'incorrect' as const, target: 'the final answer' };
+  await test('differs_at: last schema field, described in the prompt, generic', () => {
+    const s = VERDICT_PRECHECK_SCHEMA as { required: string[]; properties: Record<string, unknown> };
+    const keys = Object.keys(s.properties);
+    assert.equal(keys[keys.length - 1], 'differs_at', 'written after the verdict, so nothing before it changes');
+    assert.ok(s.required.includes('differs_at'));
+    assert.match(VERDICT_PRECHECK_SYSTEM, /differs_at — /);
+    assert.equal(keys[keys.length - 2], 'differs_test', 'the test is written before the name');
+    assert.match(VERDICT_PRECHECK_SYSTEM, /leave both empty rather than guess/);
+    assert.match(VERDICT_PRECHECK_SYSTEM, /never name (?:a|one) (?:condition )?(?:that )?their answer satisfies/i);
+    assert.match(VERDICT_PRECHECK_SYSTEM, /no value/i);
+  });
+  await test('differs_at: kept for a wrong answer, public, one line', async () => {
+    const r = await runVerdictPrecheck(input, { llm: llmOf(reply({ ...wrongWhole, differs_at: 'the second condition\n of <Problem two>' })) });
+    assert.equal(r!.differsAt, 'the second condition of Problem two');
+    const pub = toPublicPrecheck(r!);
+    assert.equal(pub.differsAt, 'the second condition of Problem two');
+    assert.equal(sanitizePublicPrecheck(JSON.parse(JSON.stringify(pub)))!.differsAt, pub.differsAt, 'survives the round trip to the browser and back');
+    assert.ok(!('differsTest' in pub), 'the test behind it carries values and stays on the server');
+    assert.ok(!('differsAt' in sanitizePublicPrecheck({ answers: 'overall_problem', verdict: 'incorrect', confidence: 'high' })!), 'absent stays absent');
+  });
+  await test('differs_at: dropped for a correct verdict, for a wrong step, when empty, and when the flag is off', async () => {
+    const ok = await runVerdictPrecheck(input, { llm: llmOf(reply({ differs_at: 'something' })) });
+    assert.equal(ok!.differsAt, undefined);
+    const step = await runVerdictPrecheck(input, { llm: llmOf(reply({ verdict: 'incorrect', differs_at: 'something' })) });
+    assert.equal(step!.differsAt, undefined, 'only for an answer to the whole problem');
+    const empty = await runVerdictPrecheck(input, { llm: llmOf(reply({ ...wrongWhole, differs_at: '  ' })) });
+    assert.equal(empty!.differsAt, undefined);
+    const off = await runVerdictPrecheck(input, { llm: llmOf(reply({ ...wrongWhole, differs_at: 'the second condition' })), differsAt: false });
+    assert.equal(off!.differsAt, undefined);
+  });
+  await test('differs_at: never carries a value — the correct value, or a number that is in neither the problem nor the message', async () => {
+    const numbered = { ...input, problems: [{ n: 1, text: 'Problem one text with 50 in it.' }], currentProblem: 1, activeProblemStatement: '', studentMessage: 'maybe 20?' };
+    const fromProblem = await runVerdictPrecheck(numbered, { llm: llmOf(reply({ ...wrongWhole, correct_value: '35', differs_at: 'the condition with 50' })) });
+    assert.equal(fromProblem!.differsAt, 'the condition with 50', "the problem's own numbers may be used to name a condition");
+    const foreign = await runVerdictPrecheck(numbered, { llm: llmOf(reply({ ...wrongWhole, correct_value: '35', differs_at: 'the condition, which gives 480' })) });
+    assert.equal(foreign!.differsAt, undefined, 'a computed number is a piece of working');
+    const leak = await runVerdictPrecheck(input, { llm: llmOf(reply({ ...wrongWhole, correct_value: 'yyy', differs_at: 'the condition that leads to YYY' })) });
+    assert.equal(leak!.differsAt, undefined);
+  });
+  await test('block: a wrong whole answer names what it does not agree with, and points there only', () => {
+    const p = pc({ ...wrongWhole, differsAt: 'the second condition' });
+    const b = formatAnswerCheckBlock(p, { correctValue: 'yyy', workThenMatch: true });
+    assert.match(b, /- What their answer does not agree with: "the second condition"\.\n/);
+    assert.match(b, /points them to THAT/);
+    assert.match(b, /already satisfies/);
+    assert.ok(!b.includes('yyy'), 'still no correct value');
+    assert.ok(b.indexOf('does not agree with') > b.indexOf('INCORRECT') && b.indexOf('does not agree with') < b.indexOf('What to do:'));
+  });
+  await test('block: without it, and on every other branch, the block is byte for byte what it was', () => {
+    const base = pc(wrongWhole);
+    const plain = formatAnswerCheckBlock(base, { correctValue: 'yyy', workThenMatch: true });
+    assert.ok(!/does not agree with|points them to THAT/.test(plain));
+    assert.equal(formatAnswerCheckBlock(pc({ ...wrongWhole, differsAt: 'x' }), { correctValue: 'yyy', workThenMatch: true, differsAt: false }), plain, 'flag off');
+    for (const o of [{ answers: 'open_question' as const, verdict: 'incorrect' as const }, { answers: 'other_part' as const, verdict: 'incorrect' as const }, { verdict: 'partly_correct' as const }, { verdict: 'correct' as const }]) {
+      for (const workThenMatch of [true, false]) {
+        assert.equal(formatAnswerCheckBlock(pc({ ...o, differsAt: 'x' }), { correctValue: 'yyy', workThenMatch }), formatAnswerCheckBlock(pc(o), { correctValue: 'yyy', workThenMatch }));
+      }
+    }
+    assert.equal(formatAnswerCheckBlock(pc({ ...wrongWhole, differsAt: 'x' }), { correctValue: 'yyy' }), formatAnswerCheckBlock(base, { correctValue: 'yyy' }), 'not under the plain block');
   });
 
   if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }

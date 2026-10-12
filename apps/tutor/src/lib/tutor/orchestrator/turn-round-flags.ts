@@ -495,6 +495,14 @@ export const TUTOR_HOMEWORK_VERBATIM =
 export const TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL =
   process.env.NEXT_PUBLIC_TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL !== 'off';
 
+/** 2026-10-12 (portal-2000fd6a @73.3 s): the answer check also names what a
+ *  wrong answer does not agree with, and a reply to a wrong answer to the
+ *  WHOLE problem points the student there — it had been told only "incorrect"
+ *  and named a condition the answer satisfied. 'off' ⇒ the name is neither
+ *  kept nor rendered. */
+export const TUTOR_PRECHECK_DIFFERS_AT =
+  process.env.NEXT_PUBLIC_TUTOR_PRECHECK_DIFFERS_AT !== 'off';
+
 /** A judge finding "the tutor rejected a correct answer" plants its
  *  retraction note (and withholds credit) only when the student's turn was an
  *  answer, the flagged claim is a denial, and no affirming opener was cut
