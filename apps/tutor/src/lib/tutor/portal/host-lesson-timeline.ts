@@ -16,7 +16,10 @@
  */
 import type { VideoState } from './host-lesson';
 
-export const LESSON_TIMELINE_LIMITS = { entries: 5000, entryChars: 500, totalChars: 150_000 } as const;
+/** `visualEntryChars`: what is on screen takes more words than a caption
+ *  segment (a narrated visual, a table of numbers), so visual entries get a
+ *  larger cap than the 500 of the spec's speech entries. */
+export const LESSON_TIMELINE_LIMITS = { entries: 5000, entryChars: 500, visualEntryChars: 1500, totalChars: 150_000 } as const;
 
 export interface TimelineEntry {
   start: number;
@@ -64,7 +67,8 @@ export function parseLessonTimeline(data: unknown): ParsedTimeline | null {
     if (start === null || typeof r.text !== 'string') continue;
     const trimmed = r.text.trim();
     if (!trimmed) continue;
-    let text = clamp(trimmed, L.entryChars);
+    const kind = r.kind === 'visual' ? 'visual' : 'speech';
+    let text = clamp(trimmed, kind === 'visual' ? L.visualEntryChars : L.entryChars);
     if (text.length < trimmed.length) cut = true;
     if (total + text.length > L.totalChars) { text = clamp(text, L.totalChars - total); cut = true; }
     total += text.length;
@@ -73,7 +77,7 @@ export function parseLessonTimeline(data: unknown): ParsedTimeline | null {
       start,
       ...(end !== null && end >= start ? { end } : {}),
       text,
-      kind: r.kind === 'visual' ? 'visual' : 'speech',
+      kind,
     });
   }
   // Stable: entries with the same start keep the host's order.
@@ -87,13 +91,20 @@ export const LESSON_NOW_LIMITS = {
   /** A little ahead: the student often asks just before the line that answers it. */
   afterSeconds: 20,
   speechChars: 4000,
-  visualChars: 4000,
+  visualChars: 5000,
   /** Short caption segments are joined; a new time stamp starts this often. */
   stampEverySeconds: 15,
 } as const;
 
+/** What a timeline holds, for telemetry (how much of it is on-screen content). */
+export function timelineStats(entries: TimelineEntry[]): { speech: number; visual: number; chars: number } {
+  let speech = 0; let visual = 0; let chars = 0;
+  for (const e of entries) { if (e.kind === 'visual') visual++; else speech++; chars += e.text.length; }
+  return { speech, visual, chars };
+}
+
 /** Upper bound of the rendered block; the brain route refuses anything longer. */
-export const LESSON_NOW_MAX_CHARS = 12_000;
+export const LESSON_NOW_MAX_CHARS = 14_000;
 
 function mmss(total: number): string {
   const t = Math.floor(total);

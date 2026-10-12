@@ -443,7 +443,7 @@ import {
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { withdrawnVerdict } from '@/lib/tutor/portal/withdrawn-items';
-import { MOMENT_STALE_MS, shiftAnchor } from '@/lib/tutor/portal/host-lesson';
+import { MOMENT_PRESTART_HOLD_MS, MOMENT_STALE_MS, shiftAnchor } from '@/lib/tutor/portal/host-lesson';
 import { DEFERRED_REMOVAL_MAX_MS, deferRemoval, takeRemovalsForBatch, takeRemovalsForIds, takeStaleRemovals, type DeferredRemovals } from '@/lib/tutor/whiteboard/deferred-removals';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
@@ -1973,6 +1973,13 @@ export function VoiceTutorRealtime({
   const pendingMomentRef = useRef<{ text: string; atMs: number } | null>(null);
   const resumeLessonPendingRef = useRef(false);
   const resumeLessonPendingAtRef = useRef(0);
+  // Withdraw a pending "resume the lesson", saying why (it used to vanish
+  // without a trace: 8 of 12 calls in the first live sessions).
+  const cancelResumeLesson = (why: string) => {
+    if (!resumeLessonPendingRef.current) return;
+    resumeLessonPendingRef.current = false;
+    onDebugEventRef.current?.('resume_lesson_dropped', `why=${why}`);
+  };
   const resumeLessonQuietSinceRef = useRef<number | null>(null);
   const hostLessonPumpRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const runHostLessonPumpRef = useRef<() => void>(() => {});
@@ -19796,7 +19803,7 @@ export function VoiceTutorRealtime({
     if (!/^\s*\[/.test(transcript)) {
       // The student said something after the tutor asked to resume the
       // video: answer them instead of playing over them.
-      resumeLessonPendingRef.current = false;
+      cancelResumeLesson('student_turn');
       recordStudentEngagement(idleNudgeStateRef.current);
       // GreenApple spec 2026-10-02 §1: real student input (text or voice —
       // both land here). A window-event bridge (like evelyn:session-started)
@@ -21327,7 +21334,7 @@ export function VoiceTutorRealtime({
   useEffect(() => {
     if (hostStandby) {
       standbySinceMsRef.current = Date.now();
-      resumeLessonPendingRef.current = false;
+      cancelResumeLesson('standby');
       // Stop the turn in flight (same seal as a host-ended goodbye) but let
       // the sentence being spoken finish; bounded, in case it never ends.
       queuedTranscriptsRef.current = [];
@@ -21409,12 +21416,16 @@ export function VoiceTutorRealtime({
         now - lastVadActivityAtRef.current < 4000;
       const moment = pendingMomentRef.current;
       if (moment) {
-        if (now - moment.atMs > MOMENT_STALE_MS) {
+        if (!hasStartedRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
+          // The tutor was not open for this moment and no start followed it.
+          pendingMomentRef.current = null;
+          onDebugEventRef.current?.('moment_dropped', 'why=not_started');
+        } else if (now - moment.atMs > MOMENT_STALE_MS) {
           pendingMomentRef.current = null;
           onDebugEventRef.current?.('moment_dropped', 'why=stale');
         } else if (hasStartedRef.current && !standbyRef.current && !endingRef.current && quiet) {
           pendingMomentRef.current = null;
-          resumeLessonPendingRef.current = false;
+          cancelResumeLesson('moment');
           onDebugEventRef.current?.('moment_delivered', `waitMs=${now - moment.atMs}`);
           void handleStudentTranscriptForBrainRef.current?.(moment.text, { silent: true, bypassPerceptionDedupe: true });
         }
@@ -21671,7 +21682,7 @@ export function VoiceTutorRealtime({
       speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
       cancelStormRef.current.recordCancel(Date.now());
       speechKilledAtRef.current = Date.now();
-      resumeLessonPendingRef.current = false; // a killed turn's resume request dies with it
+      cancelResumeLesson('turn_killed'); // a killed turn's resume request dies with it
       // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
       // drain so the cancel doesn't flush buffered renders — the verdict
       // decides drop (abort/re-fire) vs flush-all (resume/deliver).
@@ -22823,7 +22834,7 @@ export function VoiceTutorRealtime({
         speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
         cancelStormRef.current.recordCancel(Date.now());
         speechKilledAtRef.current = Date.now();
-        resumeLessonPendingRef.current = false; // a killed turn's resume request dies with it
+        cancelResumeLesson('turn_killed'); // a killed turn's resume request dies with it
         // Render↔speech sync: PAUSE the buffer before the drain (see
         // retro-cancel) — verdict decides drop vs flush-all.
         renderBufferPausedRef.current = true;
@@ -25566,7 +25577,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           if (standbyRef.current) onStudentWakeRef.current?.('typing');
           // The student typed after the tutor asked to resume the video:
           // cancel now — the turn's own dispatch can be a moment away.
-          resumeLessonPendingRef.current = false;
+          cancelResumeLesson('student_typed');
           const input = (e.target as HTMLFormElement).elements.namedItem('studentText') as HTMLInputElement;
           const rawText = input?.value?.trim();
           // Round-7++++ Fix Issue 5: strip LaTeX inline-math wrappers

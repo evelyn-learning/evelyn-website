@@ -11,6 +11,7 @@ import {
   LESSON_TIMELINE_LIMITS,
   parseLessonTimeline,
   renderLessonNow,
+  timelineStats,
   type TimelineEntry,
 } from '../src/lib/tutor/portal/host-lesson-timeline';
 
@@ -24,7 +25,7 @@ function test(name: string, fn: () => void) {
 const msg = (timeline: unknown) => ({ type: 'evelyn:lesson', timeline });
 
 test('limits are the spec values', () => {
-  assert.deepEqual(LESSON_TIMELINE_LIMITS, { entries: 5000, entryChars: 500, totalChars: 150_000 });
+  assert.deepEqual(LESSON_TIMELINE_LIMITS, { entries: 5000, entryChars: 500, visualEntryChars: 1500, totalChars: 150_000 });
 });
 
 test('parse: the host transcript format passes through; kind defaults to speech', () => {
@@ -69,6 +70,20 @@ test('parse: entry text over 500 characters is cut', () => {
   const p = parseLessonTimeline(msg([{ start: 0, text: 'x'.repeat(1_000_000) }]));
   assert.equal(p?.entries[0].text.length, 500);
   assert.equal(p?.cut, true);
+});
+
+test('parse: a visual entry may run to 1,500 characters; speech stays at 500', () => {
+  const p = parseLessonTimeline(msg([{ start: 0, kind: 'visual', text: 'v'.repeat(4000) }, { start: 1, text: 's'.repeat(4000) }]));
+  assert.equal(p?.entries[0].text.length, 1500);
+  assert.equal(p?.entries[1].text.length, 500);
+  assert.deepEqual(timelineStats(p!.entries), { speech: 1, visual: 1, chars: 2000 });
+});
+
+test('render: a full-length visual on screen now fits the per-turn block', () => {
+  const tl = [0, 60, 120, 180].map((start) => ({ start, kind: 'visual' as const, text: `at${start} ` + 'n'.repeat(1490) }));
+  const r = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 181, resumeTool: true }) ?? '';
+  assert.ok(r.includes('at180 ') && r.includes('at120 '), 'the newest visuals are whole');
+  assert.ok(r.length <= LESSON_NOW_MAX_CHARS);
 });
 
 test('parse: more than 5,000 entries keeps the first 5,000', () => {

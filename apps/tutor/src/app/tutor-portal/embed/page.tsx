@@ -39,9 +39,9 @@ import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shou
 import {
   CLOCK_POST_MS, INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
   activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
-  parseVideoState, reduceLessonHost, renderMomentDirective, videoForPrompt, type InactiveClock, type LessonHostEvent, type LessonHostState,
+  parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
-import { parseLessonTimeline, renderLessonNow, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
+import { parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
@@ -1478,7 +1478,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       }
       const moment = parseMoment(event.data);
       if (moment) {
-        addDebugEvent('moment_received', `kind=${moment.kind} pos=${moment.positionSeconds ?? ''}`);
+        // A position sent in milliseconds is corrected against the video's own report.
+        const sentPos = moment.positionSeconds;
+        moment.positionSeconds = reconcileMomentPosition(sentPos, currentPositionSeconds(lessonHostRef.current, Date.now()));
+        addDebugEvent('moment_received', `kind=${moment.kind} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}`);
         dispatchLessonHost({ type: 'moment', positionSeconds: moment.positionSeconds });
         sessionHandleRef.current?.deliverMoment?.(renderMomentDirective(moment));
         return;
@@ -1486,7 +1489,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       const lesson = parseLessonTimeline(event.data);
       if (lesson) {
         timelineRef.current = lesson.entries;
-        addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut}`);
+        const st = timelineStats(lesson.entries);
+        addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut} speech=${st.speech} visual=${st.visual} chars=${st.chars}`);
         return;
       }
       const hostPause = parseHostPause(event.data);
