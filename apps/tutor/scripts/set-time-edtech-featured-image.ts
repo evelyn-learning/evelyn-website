@@ -43,7 +43,7 @@ async function main() {
   console.log(`  featuredImage: ${result.get("featuredImage")}`);
   console.log("");
   console.log("Cache will refresh within 60s (per export const revalidate = 60).");
-  console.log("To force-refresh now: ssh root@84.247.185.169 'pm2 restart evelyn-website'");
+  console.log("To force-refresh now: ssh root@85.239.239.134 'pm2 restart evelyn-website'");
 
   await mongoose.disconnect();
 }

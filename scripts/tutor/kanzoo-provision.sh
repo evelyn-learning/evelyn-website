@@ -14,7 +14,8 @@ set -euo pipefail
 
 PARTNER_ID="${PARTNER_ID:-kanzoo}"
 PARTNER_NAME="${PARTNER_NAME:-Kanzoo Global (DUC Academy)}"
-SERVER="root@84.247.185.169"
+# Production moved to the US box on 2026-10-13 (was root@84.247.185.169, Germany).
+SERVER="root@85.239.239.134"
 REMOTE_DIR="/root/evelyn-tutor/apps/tutor"
 ENGINE="https://www.evelynlearning.com"
 EMBED="https://tutor.evelynlearning.com/embed"

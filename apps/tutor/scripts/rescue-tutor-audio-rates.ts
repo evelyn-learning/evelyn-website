@@ -24,7 +24,7 @@
  * the corrected rate.
  *
  * Usage on prod (MONGODB_URI must be set, e.g. via .env.local.production):
- *   ssh root@84.247.185.169
+ *   ssh root@85.239.239.134
  *   cd /path/to/evelynlearning
  *   npx tsx scripts/rescue-tutor-audio-rates.ts            # dry-run report
  *   npx tsx scripts/rescue-tutor-audio-rates.ts --apply    # rewrite meta files

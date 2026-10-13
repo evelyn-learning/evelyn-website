@@ -38,7 +38,8 @@ import { join } from 'node:path';
 import { createHmac } from 'node:crypto';
 import { chromium } from 'playwright';
 
-const PROD = 'root@84.247.185.169';
+// Production moved to the US box on 2026-10-13 (was root@84.247.185.169, Germany).
+const PROD = 'root@85.239.239.134';
 const PROD_APP = '/root/evelynlearning';
 const AUDIO_DIR = '/var/data/evelyn/audio';
 const REPLAY_ORIGIN = 'https://www.evelynlearning.com';

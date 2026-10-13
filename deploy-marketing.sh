@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Evelyn Learning - Deploy the MARKETING app to Production
-# Server: root@84.247.185.169
+# Server: root@85.239.239.134 (US box since 2026-10-13; was root@84.247.185.169, Germany)
 # Remote path: /root/evelyn-marketing
 #
 # One of the two halves of the M1a workspace split (the other is
@@ -66,7 +66,7 @@ NC='\033[0m' # No Color
 ###############################################################################
 
 # Configuration
-SERVER_IP="84.247.185.169"
+SERVER_IP="85.239.239.134"
 SERVER_USER="root"
 REMOTE_DIR="/root/evelyn-marketing"
 ZIP_FILE="evelyn-marketing.zip"
