@@ -10,7 +10,7 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RDKitMod = { get_mol(s: string): RDKitMol | null };
+export type RDKitMod = { get_mol(s: string): RDKitMol | null };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RDKitMol = { get_smiles(): string; is_valid(): boolean; delete(): void };
 
@@ -21,6 +21,11 @@ async function getRDKit(): Promise<RDKitMod> {
   rdkitPromise = (async () => {
     // Dynamic import keeps the WASM load out of cold-start / non-chemistry paths.
     // @rdkit/rdkit exports a factory that returns a Promise<module>.
+    // The package is listed in next.config.ts `serverExternalPackages`, and
+    // must stay there: its loader finds RDKit_minimal.wasm next to itself via
+    // __dirname, and a BUNDLED copy has __dirname rewritten to a placeholder
+    // ("/ROOT/node_modules/…"), so in a production build the wasm was never
+    // found and every molecule was reported unparseable (2026-10-13).
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const initRDKitModule: any = require('@rdkit/rdkit');
     const factory = initRDKitModule.default || initRDKitModule;
@@ -35,41 +40,66 @@ async function getRDKit(): Promise<RDKitMod> {
 }
 
 /**
- * Return the canonical SMILES for an input string. Returns null if the
- * input is not a parseable SMILES.
+ * Outcome of checking one SMILES string. `unavailable` means the checker
+ * itself could not run (RDKit failed to load or crashed) — it says NOTHING
+ * about the molecule, and callers must not report the structure as wrong on
+ * it: with the engine down, "invalid" was returned for every valid molecule.
  */
-export async function canonicalize(smiles: string): Promise<string | null> {
-  if (!smiles || typeof smiles !== 'string') return null;
+export type SmilesCheck =
+  | { status: 'valid'; canonical: string }
+  | { status: 'invalid' }
+  | { status: 'unavailable' };
+
+/**
+ * Parse + canonicalize a SMILES string. `loadRDKit` is injectable for tests.
+ */
+export async function checkSmiles(
+  smiles: string,
+  loadRDKit: () => Promise<RDKitMod> = getRDKit,
+): Promise<SmilesCheck> {
+  if (!smiles || typeof smiles !== 'string') return { status: 'invalid' };
   try {
-    const rd = await getRDKit();
+    const rd = await loadRDKit();
     const mol = rd.get_mol(smiles);
-    if (!mol) return null;
-    if (!mol.is_valid()) { mol.delete(); return null; }
+    if (!mol) return { status: 'invalid' };
+    if (!mol.is_valid()) { mol.delete(); return { status: 'invalid' }; }
     const canonical = mol.get_smiles();
     mol.delete();
-    return canonical || null;
+    return canonical ? { status: 'valid', canonical } : { status: 'invalid' };
   } catch (err) {
-    console.error('[SMILES] canonicalize threw:', err);
-    return null;
+    // RDKit answers an unparseable string with null / is_valid() === false;
+    // it does not throw. A throw is the engine failing, not the molecule.
+    console.error('[SMILES] check could not run:', err);
+    return { status: 'unavailable' };
   }
 }
 
 /**
  * Compare two SMILES for structural equivalence by canonicalizing both.
- * Returns { equivalent, canonicalA, canonicalB }.
+ * Returns { equivalent, canonicalA, canonicalB }; a null canonical form means
+ * that input does not parse. `unavailable` ⇒ nothing was compared.
  */
-export async function smilesEquivalent(a: string, b: string): Promise<{
+export async function smilesEquivalent(a: string, b: string, loadRDKit?: () => Promise<RDKitMod>): Promise<{
   equivalent: boolean;
   canonicalA: string | null;
   canonicalB: string | null;
+  unavailable?: true;
 }> {
-  const [canonicalA, canonicalB] = await Promise.all([canonicalize(a), canonicalize(b)]);
+  const [checkA, checkB] = await Promise.all([checkSmiles(a, loadRDKit), checkSmiles(b, loadRDKit)]);
+  if (checkA.status === 'unavailable' || checkB.status === 'unavailable') {
+    return { equivalent: false, canonicalA: null, canonicalB: null, unavailable: true };
+  }
+  const canonicalA = checkA.status === 'valid' ? checkA.canonical : null;
+  const canonicalB = checkB.status === 'valid' ? checkB.canonical : null;
   return {
     equivalent: canonicalA !== null && canonicalB !== null && canonicalA === canonicalB,
     canonicalA,
     canonicalB,
   };
 }
+
+/** The one `issues` line of a could-not-check result (see SmilesCheck). */
+export const SMILES_UNCHECKED_ISSUE = 'The structure checker is unavailable — this SMILES was NOT checked.';
 
 // Canonical SMILES for common molecules students encounter. The LLM may
 // claim "CCO is methanol" — we can cross-check quickly against this map
@@ -125,9 +155,12 @@ export function smilesForName(name: string): string | null {
  * Verify a "SMILES X = name Y" claim. Returns match + canonical forms.
  * If the name is known, compares claimed SMILES against the canonical name
  * SMILES. If the name is unknown, returns correct=true (can't refute).
+ * `checked: false` ⇒ the checker could not run; `correct` is then true only
+ * so that a caller reading `correct` alone does not act on it.
  */
-export async function validateSmilesName(smilesClaim: string, name: string): Promise<{
+export async function validateSmilesName(smilesClaim: string, name: string, loadRDKit?: () => Promise<RDKitMod>): Promise<{
   correct: boolean;
+  checked?: false;
   expected?: string;
   canonical?: string;
   issues?: string[];
@@ -135,13 +168,17 @@ export async function validateSmilesName(smilesClaim: string, name: string): Pro
   // Parseability check first: an unparseable SMILES is wrong regardless of whether
   // the name is in our lookup. Catches valence errors like CC[H](S(C)CC)C where
   // [H] is given three bonds, or CCO(S(C)CC)C where O carries three bonds.
-  const canonical = await canonicalize(smilesClaim);
-  if (canonical === null) {
+  const check = await checkSmiles(smilesClaim, loadRDKit);
+  if (check.status === 'unavailable') {
+    return { correct: true, checked: false, issues: [SMILES_UNCHECKED_ISSUE] };
+  }
+  if (check.status === 'invalid') {
     return {
       correct: false,
       issues: [`SMILES "${smilesClaim}" is not a valid molecular structure — it fails to parse (usually a valence violation).`],
     };
   }
+  const canonical = check.canonical;
   const expected = smilesForName(name);
   if (!expected) {
     return {
@@ -150,7 +187,10 @@ export async function validateSmilesName(smilesClaim: string, name: string): Pro
       issues: [`Structure parses cleanly but name "${name}" is not in the canonical lookup — name not verified.`],
     };
   }
-  const cmp = await smilesEquivalent(smilesClaim, expected);
+  const cmp = await smilesEquivalent(smilesClaim, expected, loadRDKit);
+  if (cmp.unavailable) {
+    return { correct: true, checked: false, issues: [SMILES_UNCHECKED_ISSUE] };
+  }
   if (cmp.equivalent) {
     return {
       correct: true,

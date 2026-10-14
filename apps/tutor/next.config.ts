@@ -18,6 +18,12 @@ const nextConfig: NextConfig = {
   // above it.
   turbopack: { root: path.join(__dirname, "..", "..") },
   transpilePackages: ['@evelyn/core'],
+  // @rdkit/rdkit loads RDKit_minimal.wasm from its own directory (__dirname).
+  // Bundled, that path is rewritten to "/ROOT/node_modules/@rdkit/rdkit/dist/"
+  // and the wasm is never found in a production build — /api/tutor/validate
+  // then called every molecule unparseable (2026-10-13). External ⇒ a plain
+  // Node require from node_modules, where the wasm sits beside the loader.
+  serverExternalPackages: ['@rdkit/rdkit'],
   // 50mb, NOT the 10mb default: /api/tutor/session-audio flushes exceeded 10MB
   // (2026-04-24 "Unterminated JSON at position 10436608" = exactly the cutoff).
   experimental: { middlewareClientMaxBodySize: '50mb' },

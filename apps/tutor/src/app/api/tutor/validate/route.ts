@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkBalance, suggestSmallIntegerBalance } from '@/lib/tutor/validation/chemistry';
 import { checkFormulaDimensions, checkAgainstUnit } from '@/lib/tutor/validation/dimensional';
-import { canonicalize, smilesEquivalent, validateSmilesName } from '@/lib/tutor/validation/smiles';
+import { checkSmiles, smilesEquivalent, validateSmilesName, SMILES_UNCHECKED_ISSUE } from '@/lib/tutor/validation/smiles';
 import { runJsSandbox, type TestCase } from '@/lib/tutor/validation/code-sandbox';
 import { extractNumericClaims, verifyNumericClaim } from '@/lib/tutor/validation/geometry-numeric';
 import { validatePhSet, validateHendersonHasselbalch, validateStrongSolution } from '@/lib/tutor/validation/acid-base';
@@ -32,6 +32,10 @@ import {
 
 interface ValidateResponse {
   correct: boolean;
+  // false ⇒ the validator could not run at all (e.g. its engine failed to
+  // load). `correct` is then true ONLY so a caller that reads `correct` alone
+  // takes no action; it is not a verdict. Absent ⇒ the claim was checked.
+  checked?: false;
   expected?: unknown;
   issues?: string[];
   source: string;
@@ -391,8 +395,16 @@ export async function POST(request: NextRequest) {
             source: 'chemistry-smiles',
           });
         }
+        // The checker could not run: say so, never "invalid" (see SmilesCheck).
+        const unchecked = (): NextResponse => NextResponse.json({
+          correct: true,
+          checked: false,
+          issues: [SMILES_UNCHECKED_ISSUE],
+          source: 'chemistry-smiles',
+        } satisfies ValidateResponse);
         if (claim.compareTo) {
           const r = await smilesEquivalent(claim.smiles, claim.compareTo);
+          if (r.unavailable) return unchecked();
           return NextResponse.json({
             correct: r.equivalent,
             expected: r.canonicalB,
@@ -405,6 +417,7 @@ export async function POST(request: NextRequest) {
         }
         if (claim.name) {
           const r = await validateSmilesName(claim.smiles, claim.name);
+          if (r.checked === false) return unchecked();
           return NextResponse.json({
             correct: r.correct,
             expected: r.expected,
@@ -414,7 +427,9 @@ export async function POST(request: NextRequest) {
           } satisfies ValidateResponse);
         }
         // Just canonicalize
-        const canon = await canonicalize(claim.smiles);
+        const check = await checkSmiles(claim.smiles);
+        if (check.status === 'unavailable') return unchecked();
+        const canon = check.status === 'valid' ? check.canonical : null;
         return NextResponse.json({
           correct: canon !== null,
           expected: canon,
