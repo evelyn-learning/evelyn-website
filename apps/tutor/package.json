@@ -394,6 +394,7 @@
     "test:practice-skill-scope": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-skill-scope.ts",
     "test:practice-figure-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-figure-items.ts",
     "test:practice-drawn-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-drawn-items.ts",
+    "test:practice-drawn-t4-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-drawn-t4-items.ts",
     "test:practice-source-items": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-practice-source-items.ts",
     "test:practice-drawn-frame": "npx tsx scripts/test-practice-drawn-frame.ts",
     "test:practice-figure-svg": "npx tsx scripts/test-practice-figure-svg.ts",
