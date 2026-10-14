@@ -35,4 +35,17 @@ export const PASSAGE_APWORLD_INDENTURE_TABLE: Passage = {
     '[DATA TABLE — description] A data table showing the number of Indian indentured laborers (a headcount of departures under indenture contracts, not net migration — some workers later returned to India under return-passage provisions) transported to six British colonies, for the period 1834 (the year after the abolition of slavery in the British Empire) to 1917 (the year Britain ended indenture recruitment). The figures: British Mauritius, 453,063; British Guiana, 238,909; Trinidad and Tobago, 147,596; British Jamaica, 36,412; Colony of Natal (South Africa), 152,184; Colony of Fiji, 60,965. These six destinations together received 1,089,129 Indian indentured laborers. Mauritius and British Guiana together account for roughly 64 percent of that combined total, reflecting how early and how large-scale recruitment to the sugar colonies of the Indian Ocean and the Caribbean was; Natal received about 34 percent as many workers as Mauritius, and Fiji, where indenture began only in 1879, about 13 percent as many. Smaller, separately tabulated indenture streams to Malaya, the Seychelles, East Africa, and several minor Caribbean colonies are not included in this total.',
   lineNumbered: false,
   wordCount: 174,
+  table: {
+    caption: 'Indian Indentured Laborers Transported to Six British Colonies, 1834-1917 (departures under indenture contracts)',
+    columns: ['Destination colony', 'Indian indentured laborers'],
+    rows: [
+      ['British Mauritius', '453,063'],
+      ['British Guiana', '238,909'],
+      ['Trinidad and Tobago', '147,596'],
+      ['British Jamaica', '36,412'],
+      ['Colony of Natal (South Africa)', '152,184'],
+      ['Colony of Fiji', '60,965'],
+      ['Total, six colonies', '1,089,129'],
+    ],
+  },
 };

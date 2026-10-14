@@ -94,6 +94,17 @@
  * key does not grade is withheld. In every other case it is dropped like an
  * unserved figure row, so every other caller gets exactly what it got before.
  *
+ * SOURCE DOCUMENTS (2026-10-14, contract v1.22.0 — source-items.ts): an
+ * item whose segment / bank row references passages (`passageId`,
+ * `passageIds` + `packetLabel`) is returned WITH them (`sources`) when the
+ * request lists `sources` in `accepts` AND the caller passed
+ * `options.allowSources` (the practice route does; nothing else does). An item
+ * on the sources-required list (put back from the withdrawn list after a
+ * re-check with its documents shown) is served only then, with every document
+ * resolved; for any other caller it is dropped where the pools are assembled,
+ * like a withdrawn item, and every other item is returned exactly as before.
+ * An item carrying documents is never a generation anchor.
+ *
  * MISFILED MARKS (2026-10-17 — misfiled-items.ts, kill switch
  * `TUTOR_PRACTICE_MISFILED_MARKS=off`): some older items are filed under one
  * objective of a course skill (nearly always its first) but test a
@@ -138,6 +149,8 @@ import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnS
 import { auditedAllStepsEnabled, auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
 import { acceptsFigures, carriesFigure, logFigureItemSkip, servableFigure } from './figure-items';
 import { acceptsDrawn, drawnAnswersForPartner, isDrawnRow, logDrawnItemSkip, servableDrawn } from './drawn-items';
+import { acceptsSources, applySourcesGate, carriesPassages, requiresSources, SOURCES_REQUIRED_ITEM_IDS, type PassageRefs } from './source-items';
+import type { Passage } from '../passages/types';
 import { MISFILED_ITEM_MARKS, idsMarkedFor, misfiledMarksEnabled, spreadObjectiveOf, withoutMisfiledFor, type MisfiledMarks } from './misfiled-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
@@ -162,6 +175,9 @@ export interface BankLite {
    *  with `responseFormat: 'drawn'` — is a drawn item: served only through
    *  the drawn gate, never as a figure or text item. */
   drawn?: unknown;
+  /** The stimulus passage the row is about (passages/store.ts) — sent as
+   *  `sources` to a caller that shows documents (source-items.ts). */
+  passageId?: string;
 }
 
 /** What a bank read is for. `figures: true` only when the request may be
@@ -212,6 +228,10 @@ export interface PlanLite {
     /** Creation-time key check (generated / review plans). Present and not
      *  `verified` ⇒ the segment is never served as a practice item. */
     keyCheck?: { status: string } | null;
+    /** The documents the try-yourself is about (source-items.ts). */
+    passageId?: string;
+    passageIds?: string[];
+    packetLabel?: 'source' | 'document';
   }>;
 }
 
@@ -601,6 +621,16 @@ export interface RetrievePracticeOptions {
   /** The audited lesson-step list to apply (audited-items.ts). Omitted ⇒ the
    *  committed list; tests inject their own. */
   auditedLessonSteps?: ReadonlySet<string>;
+  /** This caller is the practice retrieval surface and shows an item's source
+   *  documents — when the request ALSO lists `sources` in `accepts`. Left
+   *  unset by every other caller (assessment, assigned practice), which is
+   *  what keeps a sources-required item out of them. See the module header. */
+  allowSources?: boolean;
+  /** The sources-required list (source-items.ts). Omitted ⇒ the committed
+   *  list; tests inject their own. */
+  sourcesRequired?: ReadonlySet<string>;
+  /** Passage lookup (tests). Omitted ⇒ passages/store.ts. */
+  resolvePassage?: (id: string) => Passage | undefined;
 }
 
 /**
@@ -630,6 +660,21 @@ export async function retrievePractice(
   // (drawn-items.ts). Anything less: exactly as before drawn rows existed.
   const serveDrawn = serveFigures && acceptsDrawn(req) && drawnAnswersForPartner(who?.partnerId);
   const bankOpts: BankQueryOptions = serveDrawn ? { figures: serveFigures, drawn: true } : { figures: serveFigures };
+  // Source documents (module header): both conditions, or none.
+  const serveSources = options.allowSources === true && acceptsSources(req);
+  const sourcesRequired = options.sourcesRequired ?? SOURCES_REQUIRED_ITEM_IDS;
+  // Item id → the passages its segment / row references, for the gate below.
+  const refsById = new Map<string, PassageRefs>();
+  const notePlanRefs = (plans: readonly PlanLite[]): void => {
+    for (const p of plans) {
+      for (const sg of p.segments) {
+        if (sg.kind === 'try_yourself' && carriesPassages(sg)) refsById.set(p.id ? `${p.id}::${sg.id}` : sg.id, sg);
+      }
+    }
+  };
+  const noteBankRefs = (rows: readonly BankLite[]): void => {
+    for (const b of rows) if (carriesPassages(b)) refsById.set(b.id, b);
+  };
   const planItems: PracticeItem[] = [];
   const bankItems: PracticeItem[] = [];
   // Hoisted out of the loId branch below so the shortfall/generation section
@@ -660,6 +705,7 @@ export async function retrievePractice(
     // contributes no items, no anchors and no generation topic.
     const plans = (await sources.plansForLoId(loId)).filter((p) => planServable(p, loId, who));
     loScopePlans = plans;
+    notePlanRefs(plans);
     // Skill scope (see the module header): `loId` heads a generated course
     // plan ⇒ draw from every objective of that one plan.
     const skillPlan = skillScopeEnabled() ? plans.find((p) => isSkillScopePlan(p, loId)) : undefined;
@@ -755,10 +801,12 @@ export async function retrievePractice(
           return false;
         })
       : bank;
+    noteBankRefs(servableBank);
     bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(servableBank), who?.partnerId, 'practice-lo'), serveFigures, serveDrawn, 'practice-lo'));
   } else {
     const topicId = req.scope.topicId;
     const plans = (await sources.plansForTopic(topicId)).filter((p) => planServable(p, undefined, who));
+    notePlanRefs(plans);
     // Topic scope: include every non-off-topic try-yourself, tagging each with
     // its own LO where the segment id names one, else its plan's first LO
     // (best-effort) so callers still get a loId hint.
@@ -767,13 +815,18 @@ export async function retrievePractice(
       if (firstLo) planItems.push(...auditedSteps(p, planToItems(p, firstLo, true), 'practice-topic'));
     }
     const bank = await sources.bankForTopic(topicId, difficulty, bankOpts);
+    noteBankRefs(bank);
     bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic'), serveFigures, serveDrawn, 'practice-topic'));
   }
+
+  // THE SOURCES GATE (source-items.ts): attach documents for a caller that
+  // shows them; otherwise drop the items that cannot be answered without.
+  const gated = applySourcesGate([...bankItems, ...planItems], refsById, serveSources, 'practice', sourcesRequired, options.resolvePassage);
 
   // De-dup by id; bank (verified) items first, then plan try-yourselves.
   const seen = new Set<string>();
   const ordered: PracticeItem[] = [];
-  for (const it of [...bankItems, ...planItems]) {
+  for (const it of gated) {
     if (seen.has(it.id)) continue;
     seen.add(it.id);
     ordered.push(it);
@@ -860,7 +913,8 @@ export async function retrievePractice(
             // so a student-seen item is still a fine anchor). Never a figure
             // item: its text leans on a picture the generated item would
             // not have.
-            anchorItems: ordered.filter((it) => !carriesFigure(it)),
+            // Nor an item carrying source documents (same reason).
+            anchorItems: ordered.filter((it) => !carriesFigure(it) && !it.sources && !requiresSources(it.id, sourcesRequired)),
             // The LO's authored try-yourselves are drawing tasks (dropped by
             // planToItems above, so absent from `ordered`): ask for the
             // typed/choice form of the skill (2026-10-04).

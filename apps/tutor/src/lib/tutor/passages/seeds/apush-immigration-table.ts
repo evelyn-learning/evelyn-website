@@ -52,4 +52,16 @@ export const PASSAGE_APUSH_IMMIGRATION_TABLE: Passage = {
     "[DATA TABLE — description] A data table adapted from the U.S. Department of Homeland Security's 2019 Yearbook of Immigration Statistics (Table 1, \"Persons Obtaining Lawful Permanent Resident Status: Fiscal Years 1820 to 2019,\" and Table 2, the accompanying breakdown by region and country of last residence), showing total immigrants admitted to the United States by decade and, for two of those decades, the mix of European sending regions. Total immigrants admitted: 1861–1870 — 2,314,824; 1871–1880 — 2,812,191; 1881–1890 — 5,246,613 (the decade of greatest immigration in this span); 1891–1900 — 3,687,564. The table also breaks down European arrivals by country of last residence for the 1880s and 1890s (Table 2's \"1880 to 1889\" and \"1890 to 1899\" columns): immigrants from Southern and Eastern Europe (Italy, Austria-Hungary, and Russia combined) rose from about 755,500 in the 1880s to about 1,551,200 in the 1890s, climbing from roughly 16 percent to roughly 43 percent of that decade's European immigration; over the same span, immigrants from Northern and Western Europe (Germany, Ireland, the United Kingdom, and Norway-Sweden combined) fell from about 3,516,600 to about 1,647,600, dropping from roughly 76 percent to roughly 46 percent of European immigration. Total immigration peaked in the 1880s and fell back in the 1890s, but within the European totals the balance of sending regions shifted decisively away from Northern and Western Europe and toward Southern and Eastern Europe over the same twenty years.",
   lineNumbered: false,
   wordCount: 234,
+  table: {
+    caption: 'Immigrants Admitted to the United States, 1861-1900, and European Arrivals by Sending Region. Source: U.S. Department of Homeland Security, 2019 Yearbook of Immigration Statistics, Tables 1 and 2',
+    columns: ['Period', 'Total immigrants admitted', 'Southern and Eastern Europe (Italy, Austria-Hungary, Russia)', 'Northern and Western Europe (Germany, Ireland, United Kingdom, Norway-Sweden)'],
+    rows: [
+      ['1861–1870', '2,314,824', '', ''],
+      ['1871–1880', '2,812,191', '', ''],
+      ['1881–1890', '5,246,613', '', ''],
+      ['1891–1900', '3,687,564', '', ''],
+      ['1880 to 1889', '', 'about 755,500 (roughly 16% of European immigration)', 'about 3,516,600 (roughly 76% of European immigration)'],
+      ['1890 to 1899', '', 'about 1,551,200 (roughly 43% of European immigration)', 'about 1,647,600 (roughly 46% of European immigration)'],
+    ],
+  },
 };

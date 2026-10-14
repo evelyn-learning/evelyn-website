@@ -34,4 +34,13 @@ export const PASSAGE_APWORLD_DEPRESSION_TABLE: Passage = {
     '[DATA TABLE — description] A data table showing three published indicators of the Great Depression\'s spread beyond the United States, 1929-1934. Row one: the gold value of world trade fell by roughly 66 percent between 1929 and 1934, to about one-third of its 1929 level, reflecting collapsing prices for globally traded commodities (rubber, coffee, copper, wheat) on which many colonial and Latin American economies depended for export earnings, not merely a decline in industrial-country demand. Row two: the United States unemployment rate, expressed as a percentage of the civilian labor force, rose from about 3 percent in 1929 to 24.9 percent in 1933, the depression\'s trough year in the United States. Row three: the German unemployment rate, on the same civilian-labor-force basis, rose to about 30 percent by 1932 (roughly 5.3 to 6 million workers), a rate that exceeded the American figure and reflected Germany\'s particular exposure to the withdrawal of short-term American loans after 1929. Read together, the three rows show a single US-centered credit contraction transmitted worldwide through trade and finance, producing comparable mass unemployment in the world\'s two leading industrial economies within three to five years.',
   lineNumbered: false,
   wordCount: 189,
+  table: {
+    caption: 'Indicators of the Great Depression Beyond the United States, 1929-1934',
+    columns: ['Indicator', '1929', 'Later year', 'Value in later year'],
+    rows: [
+      ['Gold value of world trade', '', '1934', 'fell roughly 66% from 1929 (about one-third of its 1929 level)'],
+      ['U.S. unemployment rate (% of civilian labor force)', 'about 3%', '1933', '24.9%'],
+      ['German unemployment rate (% of civilian labor force)', '', '1932', 'about 30% (roughly 5.3 to 6 million workers)'],
+    ],
+  },
 };

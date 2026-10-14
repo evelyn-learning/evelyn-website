@@ -33,4 +33,14 @@ export const PASSAGE_APWORLD_TRADE_CONTAINER_TABLE: Passage = {
     '[DATA TABLE — description] A data table combining a physical-volume measure and a nominal-value measure of world trade at four points from 1980 to 2020. World container port throughput, in million twenty-foot-equivalent units (TEU) handled at ports worldwide (Drewry Shipping Consultants / UNCTAD data): 1980 — 36 million TEU; 2000 — 237 million TEU; 2010 — 545 million TEU; 2020 — 792 million TEU, roughly a twenty-two-fold increase over the forty years shown. World merchandise exports, in current (not inflation-adjusted) US dollars (World Trade Organization data): 1980 — about $2.0 trillion; 2000 — about $6.5 trillion; 2010 — about $15.4 trillion; 2020 — about $17.7 trillion, roughly a nine-fold increase in nominal-dollar terms over the same span. Both indicators rise at every interval shown, but container throughput — a measure of physical volume unaffected by prices — grows far faster than the nominal-dollar figures, especially after 2010, when falling commodity prices and currency effects hold down the dollar total even as the physical volume of goods shipped keeps climbing. Container throughput is therefore the more reliable indicator of how much physical trade actually grew; the export-value figures mix real volume growth together with decades of price and exchange-rate change, and should be read with that limitation in mind.',
   lineNumbered: false,
   wordCount: 208,
+  table: {
+    caption: 'World Container Port Throughput and World Merchandise Exports, 1980-2020. Sources: Drewry Shipping Consultants / UNCTAD; World Trade Organization',
+    columns: ['Year', 'World container port throughput (million TEU)', 'World merchandise exports, approximate (trillions of current US dollars)'],
+    rows: [
+      ['1980', '36', '2.0'],
+      ['2000', '237', '6.5'],
+      ['2010', '545', '15.4'],
+      ['2020', '792', '17.7'],
+    ],
+  },
 };

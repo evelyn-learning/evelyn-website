@@ -31,4 +31,14 @@ export const PASSAGE_APWORLD_LIFE_EXPECTANCY_TABLE: Passage = {
     '[DATA TABLE — description] A data table adapted from the United Nations Population Division\'s World Population Prospects, showing life expectancy at birth, in years, for the world and three major regions, at two points sixty-nine years apart — 1950 and 2019 (the last full year before the COVID-19 pandemic\'s temporary global decline in life expectancy). World: 46 years in 1950, rising to 73 years in 2019, a gain of about 27 years by the rounded figures shown. Africa: 37 years in 1950, rising to 62 years in 2019, a gain of about 25 years. Asia: 42 years in 1950, rising to 74 years in 2019, a gain of about 32 years — the largest gain of the three regions shown. Asia started 1950 above Africa but below both the world figure and Europe; by 2019 Asia\'s life expectancy exceeds both the world average and Africa\'s, though it still trails Europe\'s. Europe: 62 years in 1950, rising to 79 years in 2019, a gain of about 17 years — the smallest gain of the three, reflecting its already comparatively high starting point in 1950. Every region gained life expectancy over the period, but Asia — despite not starting the lowest of the three — gained the most years of any region shown, narrowing (without closing) the regional gap with Europe. Figures are period-life-expectancy estimates (a snapshot of the mortality conditions prevailing in the stated year, not the eventual lifespan of any real birth cohort) and are rounded to the nearest whole year.',
   lineNumbered: false,
   wordCount: 246,
+  table: {
+    caption: 'Life Expectancy at Birth (years), 1950 and 2019. Source: United Nations Population Division, World Population Prospects',
+    columns: ['Region', '1950', '2019'],
+    rows: [
+      ['World', '46', '73'],
+      ['Africa', '37', '62'],
+      ['Asia', '42', '74'],
+      ['Europe', '62', '79'],
+    ],
+  },
 };
