@@ -28,4 +28,16 @@ export const PASSAGE_APGOV_FEDERAL_GRANTS_TABLE: Passage = {
     '[DATA TABLE — description] A data table adapted from the Office of Management and Budget\'s Historical Tables (Table 12.1, "Total Outlays for Grants to State and Local Governments"), showing two figures for each of four selected fiscal years — 1990, 2000, 2010, and 2019: total federal grants-in-aid outlays, in billions of constant (inflation-adjusted, fiscal year 2017) dollars, and grants-in-aid outlays as a percentage of total federal outlays. The values are: 1990 — $256 billion, 10.8% of federal outlays; 2000 — $416 billion, 16.0%; 2010 — $680 billion, 17.6%; 2019 — $692 billion, 16.2%. Inflation-adjusted grant outlays rise at every interval shown, and grants claim a markedly larger share of the federal budget in 2019 than in 1990 — indicating that federal grants to state and local governments grew substantially in real dollar terms over the three decades, with their share of federal outlays peaking in 2010 before easing slightly by 2019. A final row breaks down the $692 billion in fiscal year 2019 grant outlays by type: categorical grants (funds restricted to narrowly defined purposes, often carrying matching or compliance requirements) account for approximately $581 billion, or 84% of the total, while block grants (funds provided for a broad policy area with greater state discretion over spending) account for approximately $111 billion, or 16% of the total. Categorical grants far outweigh block grants as a share of federal grant dollars.',
   lineNumbered: false,
   wordCount: 230,
+  table: {
+    caption: 'Federal Grants-in-Aid Outlays to State and Local Governments, Selected Fiscal Years. Source: Office of Management and Budget, Historical Tables, Table 12.1',
+    columns: ['Fiscal year', 'Grants-in-aid outlays (billions of constant FY2017 dollars)', 'Grants-in-aid outlays (% of total federal outlays)', 'Share of FY2019 grant outlays'],
+    rows: [
+      ['1990', '256', '10.8%', ''],
+      ['2000', '416', '16.0%', ''],
+      ['2010', '680', '17.6%', ''],
+      ['2019', '692', '16.2%', ''],
+      ['2019: categorical grants', 'approx. 581', '', '84%'],
+      ['2019: block grants', 'approx. 111', '', '16%'],
+    ],
+  },
 };

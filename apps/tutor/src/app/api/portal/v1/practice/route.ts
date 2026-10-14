@@ -26,6 +26,9 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // (contract v1.21.0; practice.ts module header).
   const result = await retrievePractice(parsed.data, mongoPracticeSources(), undefined, { partnerId: auth.partnerId }, {
     allowFigures: true,
+    // `allowSources`: likewise the one surface that sends an item's source
+    // documents — for a request that lists `sources` (source-items.ts).
+    allowSources: true,
     genDeadlineMs: PRACTICE_DRAW_DEADLINE_MS,
     onBackground: (work) => {
       try {

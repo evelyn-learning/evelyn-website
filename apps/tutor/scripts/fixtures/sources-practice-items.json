@@ -1,0 +1,121 @@
+{
+  "items": [
+    {
+      "id": "evelyn.ap.apush.u1-dbq-practice.v1::try-full-essay-dbq",
+      "source": "plan-try-yourself",
+      "problemText": "Using the five documents below and your knowledge of the period, write an essay that responds to the following prompt: \"Evaluate the extent to which European contact transformed the Americas in the period 1491–1607.\" In your response you should do the following: (1) respond to the prompt with a historically defensible thesis or claim that establishes a line of reasoning, (2) describe a broader historical context relevant to the prompt (contextualization), (3) support an argument in response to the prompt using at least four of the five documents, (4) use at least one additional piece of specific historical evidence beyond what is in the documents, (5) explain how or why the point of view, purpose, historical situation, and/or audience of at least three documents is relevant to your argument (sourcing), and (6) demonstrate a complex understanding of the historical development that is the focus of the prompt.",
+      "expectedAnswer": "A full-credit response opens with a thesis arguing that European contact transformed the Americas to a profound and largely destructive extent — dismantling existing indigenous polities and imposing coercive labor systems on their survivors — even as the specific form contact took varied by which European power was involved, or a comparably defensible complex claim with a clear line of reasoning. Contextualization situates the packet in the aftermath of Columbus's 1492 voyage, which opened sustained contact between two hemispheres previously separated for millennia and set off a competition among European powers — Spain first, England following decades later — to explore, exploit, and settle the Americas. The body groups at least four documents around the thesis rather than summarizing them in order: Columbus's letter describing Española as abundant and its people as \"guileless, and so liberal of all they have\" (Doc 1) shows how the earliest published European account framed both the land and the people as available for the taking; Cortés's description of Tenochtitlan's causeways and its great market of \"more than sixty thousand souls\" trading daily (Doc 3), together with the Codex Mendoza's careful record of the tribute — cotton mantles, feathers, cacao, maize — that roughly three dozen provinces owed the Aztec state (Doc 4), show a large, wealthy, highly organized indigenous civilization; and Las Casas's account of Native people divided among Spanish masters in fixed numbers and sent to forced labor in the mines and fields (Doc 2) shows the coercive encomienda system Spain imposed once that civilization had been conquered. Outside evidence brings in the demographic catastrophe caused by Old World diseases such as smallpox, to which Native populations had no prior immunity — losses that historians estimate reached as high as roughly 90% in some of the hardest-hit regions within the first century of contact — a transformation none of the five documents describe, since disease left no trace in a promotional letter, a conquistador's report, a tribute record, or a colonization memorandum. A strong response can add further outside knowledge that Hakluyt's own broader case for English colonization, beyond the excerpt in Document 5, also invoked spreading Protestant Christianity and countering Catholic Spain's power in the Americas — outside evidence, since the seeded excerpt itself anchors only the idle-men employment argument. Sourcing explains that Columbus's letter (Doc 1) was addressed to Luis de Santángel, the royal treasury official who had helped finance the voyage, and was printed and circulated across Europe almost immediately, which explains why it presents the land and people as ready to be acquired — a public case for further investment, not a private account; that Las Casas (Doc 2), a Dominican friar and former encomendero, wrote specifically to bring Spanish colonial abuses to the attention of the Crown, which explains why he names Spanish \"Avarice and Ambition\" as the true motive rather than faith or service to the king; and that the Codex Mendoza (Doc 4) was commissioned around 1541 by Antonio de Mendoza, Spain's first viceroy of New Spain, as a gift intended to explain Aztec government to Charles V, which explains its careful administrative cataloging of tribute — a colonial official's documentation of the wealth and organization he now controlled, filtered through Aztec pictorial conventions. Complexity is shown by contrasting Spanish and English approaches to contact: Spain's approach (Docs 1-4) moved from an initial framing of the land and people as available, through conquest of an organized indigenous state, to a coercive labor system extracting that state's wealth and labor, while Hakluyt's 1584 memorandum (Doc 5) shows England, arriving decades later, framing colonization not around conquering an existing empire but around solving England's own domestic problem of \"idle vagabondes\" who could be employed abroad — evidence that \"European contact\" was not one uniform process but several, driven by different motives and taking different institutional forms.",
+      "hints": [
+        "Group documents around YOUR claim first — don't summarize Document 1, then 2, then 3, then 4, then 5 in order.",
+        "For sourcing, ask: why did THIS author write THIS document for THIS audience, and how does that explain what it argues?",
+        "Your outside-evidence fact should come from your own knowledge of the period (e.g. the disease-driven demographic catastrophe), not be paraphrased from one of the five documents.",
+        "Document 5 (Hakluyt) only verbatim-supports the idle-men employment motive — if you want to argue England also colonized for religion or to counter Spain, that's your own outside evidence, not this document's content.",
+        "A strong complexity move is contrasting Spanish and English motives and methods for contact."
+      ],
+      "responseFormat": "frq",
+      "loId": "apush.u1-dbq-practice",
+      "cedCode": "AP-APUSH-1-DBQ",
+      "sources": [
+        {
+          "label": "Document 1",
+          "title": "Letter to Luis de Santángel",
+          "attribution": "Christopher Columbus, 1493",
+          "text": "Española is a wonder. Its mountains and plains, and meadows, and fields, are so beautiful and rich for planting and sowing, and rearing cattle of all kinds, and for building towns and villages. The harbours on the coast, and the number and size and wholesomeness of the rivers, most of them bearing gold, surpass anything that would be believed by one who had not seen them.\n\n… It is true that when they are reassured and have thrown off this fear, they are guileless, and so liberal of all they have that no one would believe it who had not seen it. They never refuse anything that they possess when it is asked of them; on the contrary, they offer it themselves, and they exhibit so much loving kindness that they would even give their hearts; and, whether it be something of value or of little worth that is offered to them, they are satisfied."
+        },
+        {
+          "label": "Document 2",
+          "title": "A Brief Account of the Destruction of the Indies",
+          "attribution": "Bartolomé de las Casas, 1542",
+          "text": "The Warlike Engagements being over, and the Inhabitants all swept away, they divided among themselves the Young Men, Women, and Children reserved promiscuously for that purpose, one obtained thirty, another forty, to this Man one hundred were disposed, to the other two hundred, and the more one was in favor with the domineering Tyrant (which they styled Governor) the more he became Master of, upon this pretence, and with this Proviso, that he should see them instructed in the Catholick Religion … And this was the great care they had of them, they sent the Males to the Mines to dig and bring away the Gold, which is an intollerable labor; but the Women they made use of to Manure and Till the ground, which is a toil most irksome even to Men of the strongest and most robust constitutions.\n\n… The Spaniards first set Sail to America, not for the Honour of God, or as Persons moved and merited thereunto by servent Zeal to the True Faith, nor to promote the Salvation of their Neighbours, nor to serve the King, as they falsely boast and pretend to do, but in truth, only stimulated and goaded on by insatiable Avarice and Ambition, that they might for ever Domineer, Command, and Tyrannize over the West-Indians, whose Kingdoms they hoped to divide and distribute among themselves."
+        },
+        {
+          "label": "Document 3",
+          "title": "Second Letter to Charles V (on Tenochtitlan)",
+          "attribution": "Hernán Cortés, 1520",
+          "text": "This great city of Temixtitan is built on the salt lake, and from the mainland to the city is a distance of two leagues, from any side from which you enter. It has four approaches by means of artificial causeways, two cavalry lances in width. The city is as large as Seville or Cordoba.\n\n… The city has many squares where markets are held and trading is carried on. There is one square, twice as large as that of Salamanca, all surrounded by arcades, where there are daily more than sixty thousand souls, buying and selling, and where are found all the kinds of merchandise produced in these countries, including food products, jewels of gold and silver, lead, brass, copper, zinc, stone, bones, shells, and feathers."
+        },
+        {
+          "label": "Document 4",
+          "title": "Codex Mendoza, tribute section (pictorial manuscript)",
+          "attribution": "Aztec tlacuiloque (scribe-painters), commissioned by Viceroy Antonio de Mendoza, 1541",
+          "text": "[VISUAL DOCUMENT — description] A pictorial manuscript commissioned around 1541 by Antonio de Mendoza, first Spanish viceroy of New Spain, and painted by Aztec tlacuiloque (scribe-painters) trained at the Franciscan Colegio de Santa Cruz de Tlatelolco, intended as a gift for Emperor Charles V explaining Aztec history and government to Spanish readers. The manuscript has three sections: a pictorial history of Mexica conquests and rulers from the founding of Tenochtitlan (1325) to the Spanish conquest (1521); a tribute list recording what roughly three dozen conquered provinces of the Aztec (Triple Alliance) empire owed their rulers; and an ethnographic account of daily Aztec life from infancy through old age. In the tribute section, each folio is headed by the place-glyphs of a province's head town and subject towns, followed by rows of the goods it owed at set intervals: bundles of woven cotton mantles (mantas) of specified patterns, quilted cotton warrior costumes and shields, strings of feathers, bins of cacao beans, loads of maize and other foodstuffs, and, from a few provinces, raw materials such as gold dust or precious stones. Quantities are given in the Mesoamerican vigesimal (base-20) tally system used throughout the manuscript: a dot for one, a flag for twenty, a stylized feather for four hundred, and a small bag for eight thousand, so that a folio combining flags and feathers records tribute running into the thousands of units. The finished manuscript never reached Charles V — the ship carrying it was taken by French privateers, and it passed through the hands of the French royal cosmographer André Thevet and the English geographer Richard Hakluyt before entering the library of the antiquarian John Selden, whose bequest brought it to the Bodleian Library at Oxford in 1659, where the original is held today as MS. Arch. Selden. A. 1."
+        },
+        {
+          "label": "Document 5",
+          "title": "A Discourse Concerning Western Planting",
+          "attribution": "Richard Hakluyt (the younger), 1584",
+          "text": "… bothe which realmes, beinge of themselves poore and barren and hardly able to susteine their inhabitaunts, by their discoveries have founde suche occasion of employmente, that these many yeres we have not herde scarcely of any pirate of those twoo nations; whereas wee and the Frenche are moste infamous for our outeragious, common, and daily piracies. Againe, when hearde wee almoste of one theefe amongest them? The reason is, that by these, their newe discoveries, they have so many honest wayes to set them on worke, as they rather wante men then meanes to ymploye them. But wee, for all the statutes that hitherto can be devised, and the sharpe execution of the same in poonishinge idle and lazye persons … for wante of sufficient occasion of honest employmente, cannot deliver our commonwealthe from multitudes of loyterers and idle vagabondes."
+        }
+      ]
+    },
+    {
+      "id": "evelyn.ap.apgov.u1-frq-quantitative.v1::try-quantitative-analysis-frq",
+      "source": "plan-try-yourself",
+      "problemText": "Use the table to answer the question. Answer parts (A), (B), (C), and (D).\n\n(A) Identify the fiscal year shown in the table in which federal grants-in-aid represented the HIGHEST percentage of total federal outlays.\n(B) Describe the trend in the DOLLAR AMOUNT of federal grants-in-aid shown in the table from 1990 to 2019.\n(C) Draw a conclusion about how the trend you described in part (B) affects the relationship between the federal government and the states.\n(D) Explain how the data in the table's final row relates to the concept of fiscal federalism.",
+      "expectedAnswer": "(A) 2010 is the fiscal year in which federal grants-in-aid represented the highest share of total federal outlays, at 17.6%. (B) The dollar amount of federal grants-in-aid rose at every interval shown in the table: from $256 billion in 1990 to $416 billion in 2000, to $680 billion in 2010, to $692 billion in 2019 — a rising trend across all three decades, though the increase slowed sharply in the final decade (only +$12 billion from 2010 to 2019, versus +$160 billion and +$264 billion in the two prior decades). (C) Because real grant dollars to states grew substantially over this period, the federal government's fiscal leverage over state and local policy also grew: with more federal money flowing to states, the federal government gained a larger financial tool for shaping state and local decisions, deepening the fiscal relationship between the two levels of government even as the SHARE of the federal budget devoted to grants eased slightly after peaking in 2010. (D) The table's final row shows that of the $692 billion in fiscal year 2019 grant outlays, about $581 billion (84%) came as categorical grants restricted to narrowly defined purposes with conditions attached, while only about $111 billion (16%) came as block grants that leave states broader discretion — illustrating fiscal federalism in action: most of the federal government's grant money reaches the states with federally defined strings attached, meaning Washington retains substantial influence not just over how much money states receive, but over how they are allowed to spend it.",
+      "hints": [
+        "Part (A) wants the SHARE column, not the dollar column — check which one actually peaks where.",
+        "The dollar column and the share column do NOT move the same way after 2010 — don't assume one trend applies to both.",
+        "Part (D) is about the table's LAST row (the categorical/block breakdown), not the four-year dollar or share trend."
+      ],
+      "responseFormat": "frq",
+      "loId": "apgov.u1-frq-quantitative",
+      "cedCode": "AP-APGOV-1-FRQ-QA",
+      "sources": [
+        {
+          "label": "Source",
+          "title": "Federal Grants to State and Local Governments (data table, 1990–2019)",
+          "attribution": "Office of Management and Budget, 2026",
+          "text": "[DATA TABLE — description] A data table adapted from the Office of Management and Budget's Historical Tables (Table 12.1, \"Total Outlays for Grants to State and Local Governments\"), showing two figures for each of four selected fiscal years — 1990, 2000, 2010, and 2019: total federal grants-in-aid outlays, in billions of constant (inflation-adjusted, fiscal year 2017) dollars, and grants-in-aid outlays as a percentage of total federal outlays. The values are: 1990 — $256 billion, 10.8% of federal outlays; 2000 — $416 billion, 16.0%; 2010 — $680 billion, 17.6%; 2019 — $692 billion, 16.2%. Inflation-adjusted grant outlays rise at every interval shown, and grants claim a markedly larger share of the federal budget in 2019 than in 1990 — indicating that federal grants to state and local governments grew substantially in real dollar terms over the three decades, with their share of federal outlays peaking in 2010 before easing slightly by 2019. A final row breaks down the $692 billion in fiscal year 2019 grant outlays by type: categorical grants (funds restricted to narrowly defined purposes, often carrying matching or compliance requirements) account for approximately $581 billion, or 84% of the total, while block grants (funds provided for a broad policy area with greater state discretion over spending) account for approximately $111 billion, or 16% of the total. Categorical grants far outweigh block grants as a share of federal grant dollars.",
+          "table": {
+            "caption": "Federal Grants-in-Aid Outlays to State and Local Governments, Selected Fiscal Years. Source: Office of Management and Budget, Historical Tables, Table 12.1",
+            "columns": [
+              "Fiscal year",
+              "Grants-in-aid outlays (billions of constant FY2017 dollars)",
+              "Grants-in-aid outlays (% of total federal outlays)",
+              "Share of FY2019 grant outlays"
+            ],
+            "rows": [
+              [
+                "1990",
+                "256",
+                "10.8%",
+                ""
+              ],
+              [
+                "2000",
+                "416",
+                "16.0%",
+                ""
+              ],
+              [
+                "2010",
+                "680",
+                "17.6%",
+                ""
+              ],
+              [
+                "2019",
+                "692",
+                "16.2%",
+                ""
+              ],
+              [
+                "2019: categorical grants",
+                "approx. 581",
+                "",
+                "84%"
+              ],
+              [
+                "2019: block grants",
+                "approx. 111",
+                "",
+                "16%"
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

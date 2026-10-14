@@ -35,4 +35,15 @@ export const PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE: Passage = {
     '[DATA TABLE — description] A data table adapted from the Department of Homeland Security\'s Yearbook of Immigration Statistics (Table 2, "Persons Obtaining Lawful Permanent Resident Status by Region and Selected Country of Last Residence: Fiscal Years 1820 to 2022"), showing the share of persons obtaining lawful permanent resident status ("green cards") by region of origin in two ten-year periods: fiscal years 1960-1969 and fiscal years 2000-2009. In the 1960s, of roughly 3.2 million total immigrants admitted, about 35 percent came from Europe, 11 percent from Asia, 39 percent from Latin America (Mexico, the Caribbean, and Central and South America), and the remaining 15 percent from Canada, Africa, Oceania, and other or unspecified origins. In the 2000s, of roughly 10.3 million total immigrants admitted, about 13 percent came from Europe, 34 percent from Asia, 41 percent from Latin America, and the remaining 12 percent from Canada, Africa, Oceania, and other or unspecified origins. Europe\'s share fell by more than half between the two periods while Asia\'s share roughly tripled and Latin America\'s share became the largest of any region -- indicating a shift in the primary sources of legal immigration from a large European majority toward a plurality from Latin America alongside a substantially larger Asian share.',
   lineNumbered: false,
   wordCount: 206,
+  table: {
+    caption: 'Persons Obtaining Lawful Permanent Resident Status by Region of Origin, Fiscal Years 1960-1969 and 2000-2009. Source: Department of Homeland Security, Yearbook of Immigration Statistics, Table 2',
+    columns: ['Region of origin', '1960-1969', '2000-2009'],
+    rows: [
+      ['Europe', '35%', '13%'],
+      ['Asia', '11%', '34%'],
+      ['Latin America (Mexico, the Caribbean, and Central and South America)', '39%', '41%'],
+      ['Canada, Africa, Oceania, and other or unspecified origins', '15%', '12%'],
+      ['Total immigrants admitted', 'about 3.2 million', 'about 10.3 million'],
+    ],
+  },
 };

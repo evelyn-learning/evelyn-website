@@ -31,6 +31,7 @@ import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
 import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
+import { withoutSourcesRequired } from '../portal/source-items';
 import { withoutWithdrawn, isWithdrawnSegment, keyCheckUntrusted, segmentKeyUntrusted, logWithdrawnSkip, logUnverifiedKeySkip } from '../portal/withdrawn-items';
 import { withoutUnauditedGenerated } from '../portal/audited-items';
 import { NO_FIGURE_FILTER, withoutFigureItems } from '../portal/figure-items';
@@ -145,6 +146,9 @@ export function eligibleBankCandidates(
     candidates = candidates.filter((c) => !excludeHashes.includes(simpleHash(c.problemText)));
   }
   candidates = withoutWithdrawn(candidates);
+  // A row that needs its source documents (portal/source-items.ts) is never
+  // put on the board as text alone.
+  candidates = withoutSourcesRequired(candidates, 'session-generate-problem');
   candidates = withoutUnauditedGenerated(candidates, partnerId, 'session-generate-problem');
   // A drawn-answer row (contract v1.22.0) always carries a figure, so the
   // figure rule drops it; the format check keeps a malformed one out too.

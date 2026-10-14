@@ -79,6 +79,11 @@ export function toPlanLite(plan: LessonPlan): PlanLite {
         // ONLY when present, so planToItems can refuse a segment whose key
         // was checked and not verified; absent/null (legacy) adds no field.
         ...(s.keyCheck && typeof s.keyCheck === 'object' ? { keyCheck: s.keyCheck } : {}),
+        // The documents the try-yourself is about (source-items.ts): sent as
+        // `sources` to a caller that shows them. Only when present.
+        ...(typeof s.passageId === 'string' && s.passageId ? { passageId: s.passageId } : {}),
+        ...(Array.isArray(s.passageIds) && s.passageIds.length > 0 ? { passageIds: s.passageIds.filter((x: unknown): x is string => typeof x === 'string') } : {}),
+        ...(s.packetLabel === 'document' || s.packetLabel === 'source' ? { packetLabel: s.packetLabel } : {}),
       };
     }),
   };
@@ -100,6 +105,8 @@ function toBankLite(b: IProblemBank): BankLite {
     ...(carriesFigure(b) ? { figure: (b as { figure?: unknown }).figure } : {}),
     // Likewise the drawn spec (drawn-items.ts) — practice.ts gates and builds it.
     ...((b as { drawn?: unknown }).drawn !== undefined ? { drawn: (b as { drawn?: unknown }).drawn } : {}),
+    // The stimulus passage (source-items.ts), only when present.
+    ...(typeof b.passageId === 'string' && b.passageId ? { passageId: b.passageId } : {}),
   };
 }
 

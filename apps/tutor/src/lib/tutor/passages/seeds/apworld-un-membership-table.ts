@@ -30,4 +30,17 @@ export const PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE: Passage = {
     '[DATA TABLE — description] A data table adapted from the United Nations\' own published roster, "Growth in United Nations Membership," showing the total number of UN member states at seven points between the Organization\'s founding and the year 2000: 1945 — 51 members (the original signatories); 1955 — 76; 1960 — 99; 1970 — 127; 1980 — 154; 1990 — 159; and 2000 — 189. Total membership rises at every interval shown, nearly quadrupling over the 55-year span. The largest single-year increase in this period came in 1960, when membership jumped from 82 to 99 — 17 new states admitted in one year. Of those 17, 16 were newly independent African states admitted as decolonization accelerated (Cameroun, the Central African Republic, Chad, the Republic of the Congo, the Democratic Republic of the Congo, Dahomey, Gabon, Ivory Coast, the Malagasy Republic, Mali, Niger, Nigeria, Senegal, Somalia, Togo, and Upper Volta); the seventeenth, Cyprus, was the only non-African admission that year. African states supplied most of the new members admitted through the 1960s, as European colonial territories achieved independence and joined the Organization in the years following its founding membership of 51 in 1945.',
   lineNumbered: false,
   wordCount: 192,
+  table: {
+    caption: 'Total United Nations Member States, 1945-2000. Source: United Nations, "Growth in United Nations Membership"',
+    columns: ['Year', 'UN member states'],
+    rows: [
+      ['1945', '51'],
+      ['1955', '76'],
+      ['1960', '99'],
+      ['1970', '127'],
+      ['1980', '154'],
+      ['1990', '159'],
+      ['2000', '189'],
+    ],
+  },
 };

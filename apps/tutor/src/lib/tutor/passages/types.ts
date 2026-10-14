@@ -21,4 +21,17 @@ export interface Passage {
   /** AP passages are line-numbered for citation. */
   lineNumbered: boolean;
   wordCount: number;
+  /** A data-table stimulus's data AS A TABLE, for surfaces that can draw one
+   *  (the Self Study practice card — portal/source-items.ts). `fullText`
+   *  stays the description every other reader (grader, tutor) uses; every
+   *  value in a cell is a value `fullText` states. */
+  table?: PassageTable;
+}
+
+export interface PassageTable {
+  caption?: string;
+  /** Column headings, left to right. */
+  columns: string[];
+  /** One array of display strings per row, one string per column. */
+  rows: string[][];
 }
