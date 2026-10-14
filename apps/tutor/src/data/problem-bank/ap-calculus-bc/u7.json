@@ -525,7 +525,7 @@
     "problemText": "For a logistic model with carrying capacity $M$, the population grows fastest when $P$ equals:",
     "choices": [
       "$M$",
-      "$\\frac{M}{2}$",
+      "$M/2$",
       "${}0$",
       "${}2M$"
     ],

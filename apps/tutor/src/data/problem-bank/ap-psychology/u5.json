@@ -72,9 +72,9 @@
     "problemText": "After receiving a poor performance review, Daniel sits quietly, takes deep breaths, and reminds himself that one review does not define his career — but takes no concrete steps to change his work habits. Daniel is using:",
     "choices": [
       "Emotion-focused coping, which regulates the emotional response rather than altering the stressor itself",
-      "Problem-focused coping, which directly addresses the source of the stress",
-      "Proactive coping, which prevents anticipated stressors from materializing",
-      "Secondary appraisal, which involves evaluating available external resources"
+      "Problem-focused coping, which directly addresses the source of the stress by making a concrete plan to change it",
+      "Proactive coping, which prevents anticipated stressors from materializing by preparing for future reviews",
+      "Secondary appraisal, which involves evaluating available external resources for handling the threat"
     ],
     "answer": "A",
     "hints": ["He changes how he feels about the problem, not the problem itself."]
@@ -104,10 +104,10 @@
     "responseFormat": "mcq",
     "problemText": "Subjective well-being (SWB) is best described as:",
     "choices": [
-      "The absence of diagnosable psychological disorders",
-      "Wealth and material resources sufficient for a comfortable life",
-      "An individual's self-evaluation of life satisfaction combined with a favorable balance of positive over negative affect",
-      "Social recognition and sense of belonging within one's community"
+      "The absence of diagnosable psychological disorders as determined by a structured clinical assessment",
+      "Wealth and material resources sufficient for a comfortable and financially secure life",
+      "A person's self-evaluation of life satisfaction plus a favorable balance of positive over negative affect",
+      "Social recognition and a strong sense of belonging within one's local community and among wider peer groups"
     ],
     "answer": "C",
     "hints": ["SWB has both a cognitive component (life satisfaction) and an affective component."]
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "The biopsychosocial model of psychological disorders is distinguished from the strictly medical model primarily in that it:",
     "choices": [
-      "Incorporates biological, psychological, and social factors as interacting causes of disorders, rather than attributing disorders solely to physical pathology",
-      "Denies that brain chemistry or genetics plays any meaningful role in explaining mental illness",
-      "Focuses exclusively on social and environmental determinants while deliberately minimizing genetic contributions",
-      "Holds that all psychological disorders can be cured through cognitive restructuring alone"
+      "Treats biological, psychological, and social factors as interacting causes, rather than attributing disorders solely to physical pathology",
+      "Denies that brain chemistry or genetics plays any meaningful role in explaining mental illness, treating disorders as learned responses",
+      "Focuses exclusively on social and environmental determinants of disorder while deliberately minimizing genetic and neurochemical contributions",
+      "Holds that all psychological disorders can be cured through cognitive restructuring alone, without medication or social support"
     ],
     "answer": "A",
     "hints": ["The name of the model lists the three interacting levels it considers."]
@@ -266,8 +266,8 @@
     "problemText": "Twin studies find that if one identical twin is diagnosed with schizophrenia, the co-twin has roughly a 50% chance of also developing the disorder — not 100%. Which framework best explains why genetic identity does not guarantee the same outcome?",
     "choices": [
       "The medical model: schizophrenia involves many genetic variants each with very low individual penetrance",
-      "Labeling theory: the unaffected twin was never exposed to the diagnostic labeling process",
-      "The humanistic model: the unaffected twin received more unconditional positive regard during development",
+      "Labeling theory: the unaffected twin was never exposed to the diagnostic labeling process that shapes symptom expression",
+      "The humanistic model: the unaffected twin received more unconditional positive regard from caregivers during early childhood development",
       "The diathesis-stress model: a genetic vulnerability requires additional environmental stressors or triggers to produce the disorder"
     ],
     "answer": "D",
@@ -396,9 +396,9 @@
     "problemText": "Which symptoms must be present for at least two consecutive weeks for a diagnosis of Major Depressive Disorder?",
     "choices": [
       "Depressed mood and/or markedly diminished interest or pleasure in nearly all activities",
-      "Racing thoughts and a noticeably decreased need for sleep",
-      "Recurrent obsessional thoughts and compulsive rituals",
-      "Grandiosity and excessive involvement in high-risk activities"
+      "Racing thoughts, pressured speech, and a noticeably decreased need for sleep",
+      "Recurrent obsessional thoughts and compulsive rituals that cause marked daily distress",
+      "Grandiosity and excessive involvement in pleasurable but high-risk activities"
     ],
     "answer": "A",
     "hints": ["The DSM-5 requires at least one of two specific anchor symptoms — either persistent sad mood or loss of pleasure."]
@@ -411,10 +411,10 @@
     "responseFormat": "mcq",
     "problemText": "The key distinction between Bipolar I and Bipolar II disorder is that:",
     "choices": [
-      "Bipolar I involves only depressive episodes, while Bipolar II involves only manic episodes",
-      "Bipolar I is significantly more prevalent in women, whereas Bipolar II is more prevalent in men",
-      "Bipolar I requires at least one full manic episode, whereas Bipolar II is characterized by hypomanic — not full manic — episodes plus depressive episodes",
-      "Bipolar II involves more severe and impairing manic symptoms than Bipolar I"
+      "Bipolar I involves only depressive episodes, while Bipolar II involves only manic episodes with no intervening periods of depression",
+      "Bipolar I is significantly more prevalent in women, whereas Bipolar II is more prevalent in men across most age groups",
+      "Bipolar I requires at least one full manic episode, whereas Bipolar II involves hypomanic and depressive episodes but no full mania",
+      "Bipolar II involves more severe and impairing manic symptoms than Bipolar I, often requiring psychiatric hospitalization"
     ],
     "answer": "C",
     "hints": ["The critical difference lies in the severity of the elevated-mood episode: mania vs. hypomania."]
@@ -459,10 +459,10 @@
     "responseFormat": "mcq",
     "problemText": "After failing multiple job interviews despite extensive preparation, Layla stops applying altogether and tells her friend, 'It doesn't matter what I do — I'll never get hired.' Which concept best explains Layla's behavior?",
     "choices": [
-      "Learned helplessness: repeated exposure to uncontrollable negative outcomes has produced the belief that one's actions cannot influence results",
-      "Cognitive dissonance: Layla's current beliefs are inconsistent with the effort she previously invested",
-      "Reaction formation: Layla is unconsciously converting deep frustration into apparent indifference",
-      "Operant extinction: the positive reinforcement that interviews once provided has been withdrawn"
+      "Learned helplessness: repeated uncontrollable failures have produced the belief that her actions cannot influence results",
+      "Cognitive dissonance: Layla's current beliefs are inconsistent with the extensive effort she previously invested",
+      "Reaction formation: Layla is unconsciously converting deep frustration and disappointment into apparent indifference",
+      "Operant extinction: the positive reinforcement that job interviews once provided her has now been withdrawn"
     ],
     "answer": "A",
     "hints": ["Seligman's classic dog experiments established this concept — uncontrollable aversive events produce passive resignation."]
@@ -475,10 +475,10 @@
     "responseFormat": "mcq",
     "problemText": "The monoamine hypothesis of depression proposes that depressive symptoms arise primarily from:",
     "choices": [
-      "Excess dopamine activity in the mesolimbic reward pathway",
-      "Hypersecretion of cortisol causing direct structural damage to hippocampal neurons",
-      "Overactivation of GABA receptors that reduces overall cortical arousal",
-      "Insufficient activity of monoamine neurotransmitters — particularly serotonin and norepinephrine — in key brain circuits"
+      "Excess dopamine activity in the mesolimbic reward pathway, blunting the brain's sensitivity to ordinary everyday rewards",
+      "Hypersecretion of cortisol causing direct structural damage to hippocampal neurons over time",
+      "Overactivation of GABA receptors that reduces overall cortical arousal and motivation",
+      "Insufficient monoamine neurotransmitter activity — particularly serotonin and norepinephrine — in key circuits"
     ],
     "answer": "D",
     "hints": ["The classes of antidepressants developed from this hypothesis all act on a specific family of neurotransmitters."]
@@ -556,10 +556,10 @@
     "responseFormat": "mcq",
     "problemText": "A school psychologist evaluates an eight-year-old who frequently interrupts classmates, cannot remain seated during lessons, begins multiple tasks without completing them, and forgets instructions within minutes of receiving them — in school, at home, and at soccer practice. The most appropriate diagnostic category is:",
     "choices": [
-      "Oppositional Defiant Disorder",
-      "Conduct Disorder",
-      "Attention-Deficit/Hyperactivity Disorder, a neurodevelopmental disorder",
-      "Generalized Anxiety Disorder"
+      "Oppositional Defiant Disorder of childhood",
+      "Childhood-onset Conduct Disorder",
+      "Attention-Deficit/Hyperactivity Disorder",
+      "Generalized Anxiety Disorder with restlessness"
     ],
     "answer": "C",
     "hints": ["The symptoms span multiple settings and involve inattention and hyperactivity — key criteria for a neurodevelopmental diagnosis."]
@@ -573,9 +573,9 @@
     "problemText": "A psychiatrist notes that a patient with a five-year history of schizophrenia shows virtually no hallucinations or delusions but continues to exhibit flat affect, poverty of speech, and an inability to initiate goal-directed activity. These ongoing presentations are best described as:",
     "choices": [
       "Negative symptoms, reflecting deficits in normal functioning that are associated with a poorer long-term prognosis and respond less well to conventional antipsychotics",
-      "Positive symptoms, reflecting excesses of normal mental activity that are being suppressed by ongoing medication",
-      "Residual symptoms, which represent a temporary transitional phase between acute psychotic episodes",
-      "Secondary symptoms, caused entirely by side effects of long-term antipsychotic treatment"
+      "Positive symptoms, reflecting excesses of normal mental activity that are being suppressed by ongoing medication, and they would likely return quickly if treatment were discontinued",
+      "Residual symptoms, which represent a temporary transitional phase between acute psychotic episodes and typically resolve fully once the next episode has passed",
+      "Secondary symptoms, caused entirely by side effects of long-term antipsychotic treatment rather than by the disorder, and expected to lift once the dose is lowered"
     ],
     "answer": "A",
     "hints": ["'Negative' in this context means subtracted from normal functioning — and this group of symptoms is notoriously harder to treat."]
@@ -653,10 +653,10 @@
     "responseFormat": "mcq",
     "problemText": "SSRIs (selective serotonin reuptake inhibitors) are a first-line pharmacological treatment for depression. Their primary mechanism of action is:",
     "choices": [
-      "Stimulating dopamine release in prefrontal circuits to restore motivation and reward sensitivity",
+      "Stimulating dopamine release in prefrontal circuits to restore motivation and reward sensitivity in depressed patients",
       "Blocking the reuptake of serotonin into the presynaptic neuron, thereby increasing serotonin availability in the synapse",
-      "Enhancing GABA activity broadly throughout the brain to produce a calming, anxiolytic effect",
-      "Preventing the breakdown of monoamine neurotransmitters by inhibiting monoamine oxidase enzymes"
+      "Enhancing GABA activity broadly throughout the brain to produce a calming, anxiolytic effect on mood",
+      "Preventing the breakdown of monoamine neurotransmitters by inhibiting monoamine oxidase enzymes in the neuron"
     ],
     "answer": "B",
     "hints": ["The 'SR' in SSRI stands for Serotonin Reuptake Inhibitor — the drug blocks one specific step in the recycling of serotonin."]
@@ -670,9 +670,9 @@
     "problemText": "A client presents with recurrent depression and significant unresolved trauma from childhood. Based on the research evidence, which therapeutic approach has the broadest empirical support for treating comorbid depression and trauma-related symptoms?",
     "choices": [
       "Long-term psychoanalysis, because it is specifically designed to resolve unconscious trauma-related conflicts",
-      "Humanistic therapy, because unconditional positive regard directly repairs the damaged self-concept that trauma creates",
-      "A token economy, because systematic behavioral reinforcement restructures the maladaptive response patterns acquired during trauma",
-      "Cognitive-behavioral therapy, including trauma-focused CBT variants, which has consistent empirical support for treating both depressive and trauma-related disorders"
+      "Humanistic therapy, because unconditional positive regard directly repairs the damaged self-concept that childhood trauma creates over time",
+      "A token economy, because systematic behavioral reinforcement restructures the maladaptive response patterns that were acquired during the original trauma",
+      "Cognitive-behavioral therapy, including trauma-focused CBT variants, with consistent empirical support for both depressive and trauma-related disorders"
     ],
     "answer": "D",
     "hints": ["Consider which approach has the strongest randomized-trial evidence base for this combination of presentations."]

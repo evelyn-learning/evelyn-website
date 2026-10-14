@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following events would most directly shift the aggregate demand curve to the RIGHT?",
     "choices": [
-      "A sharp increase in personal income tax rates",
+      "A sharp increase in personal income tax rates that reduces household disposable income",
       "A rise in foreign incomes that increases demand for domestically produced exports",
-      "A decrease in government purchases of goods and services",
-      "A rise in the overall price level from 100 to 115"
+      "A decrease in government purchases of goods and services such as highways",
+      "A rise in the overall price level from 100 to 115 across the whole economy"
     ],
     "answer": "B",
     "hints": ["Shifts of AD are caused by changes in C, I, G, or NX — not by changes in the price level itself."]
@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following best describes the interest-rate effect that contributes to the downward slope of the aggregate demand curve?",
     "choices": [
-      "A higher price level reduces households' real wealth, causing them to cut back on spending",
-      "A higher price level causes the domestic currency to appreciate, making exports less competitive",
-      "A higher price level leads the government to automatically raise tax rates to balance the budget",
-      "A higher price level increases the demand for money, which pushes interest rates up and reduces investment and consumption spending"
+      "A higher price level reduces households' real wealth, causing them to cut back on their consumption spending",
+      "A higher price level causes the domestic currency to appreciate, making exports less competitive in foreign export markets",
+      "A higher price level leads the government to automatically raise tax rates to balance the budget, reducing spending",
+      "A higher price level increases money demand, pushing interest rates up and reducing investment and consumption spending"
     ],
     "answer": "D",
     "hints": ["Distinguish the three effects: wealth effect (A), exchange-rate effect (B), and interest-rate effect (D). Only D involves the money market and borrowing costs."]
@@ -71,10 +71,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following would cause a SHIFT of the aggregate demand curve rather than a movement along it?",
     "choices": [
-      "An expansion of government transfer payments, such as an increase in Social Security benefits",
-      "A rise in the overall price level from 100 to 110",
-      "A fall in the overall price level from 110 to 100",
-      "A change in the price level triggered by a negative supply shock"
+      "An expansion of government transfer payments, such as higher Social Security benefits",
+      "A rise in the overall price level from 100 to 110, which reduces households' real wealth",
+      "A fall in the overall price level from 110 to 100, which raises the economy's net exports",
+      "A change in the price level triggered by a negative supply shock such as an oil embargo"
     ],
     "answer": "A",
     "hints": ["Movements along AD are caused only by price-level changes. Shifts result from changes in the non-price determinants of C, I, G, or NX."]
@@ -150,10 +150,10 @@
     "responseFormat": "mcq",
     "problemText": "The spending multiplier is always larger in absolute value than the tax multiplier. Which explanation best captures why?",
     "choices": [
-      "When the government spends, every dollar directly enters the circular flow; a tax cut first allows households to save a fraction equal to MPS before the remainder is spent, so the initial spending impact is smaller",
-      "The tax multiplier applies only to income taxes, while the spending multiplier applies to all forms of government outlays",
-      "The MPC is mathematically always greater than the MPS in any economy, which makes tax cuts weaker",
-      "Tax changes require a longer legislative process, reducing their real-world effectiveness"
+      "Every dollar of government spending directly enters the circular flow, while part of a tax cut is first saved (a fraction equal to MPS), so the initial spending impact is smaller",
+      "The tax multiplier applies only to income taxes, while the spending multiplier applies to all forms of government outlays, including transfers, so its base is broader and its effect larger",
+      "The MPC is mathematically always greater than the MPS in any economy, which makes tax cuts weaker because the tax multiplier is divided by MPC rather than by MPS",
+      "Tax changes require a longer legislative process, reducing their real-world effectiveness, so economists scale the tax multiplier down to reflect implementation lags"
     ],
     "answer": "A",
     "hints": ["Spending multiplier = 1/MPS; tax multiplier = MPC/MPS. They differ by exactly 1, reflecting the savings leakage on the first round of a tax change."]
@@ -215,10 +215,10 @@
     "responseFormat": "mcq",
     "problemText": "The short-run aggregate supply curve slopes upward primarily because:",
     "choices": [
-      "firms can always hire unlimited additional workers at the prevailing wage whenever output rises",
-      "input prices, especially nominal wages, are relatively fixed in the short run, so a higher product price level raises profit margins and encourages firms to produce more",
-      "the government automatically raises spending when firms expand output",
-      "consumers demand more goods when the price level rises, pulling firms to produce more"
+      "firms can always hire unlimited additional workers at the prevailing wage whenever output rises, so their per-unit costs fall steadily as production expands",
+      "input prices, especially nominal wages, are relatively fixed in the short run, so a higher price level raises profit margins and encourages more output",
+      "the government automatically raises spending when firms expand output, which guarantees buyers for the extra goods that firms produce and sell",
+      "consumers demand more goods when the price level rises, pulling firms to produce more as buyers rush to purchase before prices climb further"
     ],
     "answer": "B",
     "hints": ["The key short-run assumption: nominal wages and other input prices are sticky, so rising product prices temporarily widen profit margins."]
@@ -280,10 +280,10 @@
     "responseFormat": "mcq",
     "problemText": "The long-run aggregate supply (LRAS) curve is vertical because:",
     "choices": [
-      "the price level is fixed and cannot change in the long run",
-      "in the long run all prices — including wages — adjust fully, so real output equals potential output regardless of the price level",
-      "government policy prevents output from ever exceeding the full-employment level",
-      "the spending multiplier is zero in the long run, making aggregate demand irrelevant"
+      "the price level is fixed and cannot change in the long run, so output adjusts only through quantity changes",
+      "in the long run all prices — including wages — adjust fully, so real output equals potential at any price level",
+      "government policy prevents output from ever exceeding the full-employment level, regardless of aggregate demand",
+      "the spending multiplier is zero in the long run, making aggregate demand irrelevant to both output and prices"
     ],
     "answer": "B",
     "hints": ["LRAS is vertical at potential output: once all prices adjust, the price level has no effect on real productive capacity."]
@@ -538,9 +538,9 @@
     "responseFormat": "mcq",
     "problemText": "Suppose consumer spending falls (shifting AD left) while raw material costs also fall (shifting SRAS right). The combined effect on real output in the short run is:",
     "choices": [
-      "unambiguously higher, because the positive supply shock always raises output by more",
-      "unambiguously lower, because the demand shock always dominates the supply shock",
-      "ambiguous — real output may rise, fall, or remain unchanged depending on the relative sizes of the two shifts",
+      "unambiguously higher, because the positive supply shock always raises output by more than the demand shock lowers it",
+      "unambiguously lower, because the demand shock always dominates the supply shock in the short run",
+      "ambiguous — real output may rise, fall, or stay the same depending on the relative sizes of the shifts",
       "always zero because two equal and opposite shifts perfectly cancel each other out"
     ],
     "answer": "C",
@@ -554,10 +554,10 @@
     "responseFormat": "mcq",
     "problemText": "An economy is at long-run equilibrium. A negative supply shock shifts SRAS left, raising the price level and reducing real output. The government responds with expansionary fiscal policy specifically designed to restore the original level of real output. After fiscal policy takes full effect, what is true?",
     "choices": [
-      "Real output is restored to its original level, but the price level is higher than it was before the supply shock occurred",
-      "Both the original price level and the original real output level are simultaneously restored",
-      "Real output is restored, and the price level falls back to exactly its pre-shock level",
-      "Fiscal policy has no effect because demand-side tools cannot offset supply shocks"
+      "Real output is restored to its original level, but the price level is higher than before the supply shock",
+      "Both the original price level and the original real output level are simultaneously restored by the policy",
+      "Real output is restored, and the price level falls back to exactly its pre-shock level as costs normalize",
+      "Fiscal policy has no effect on output because demand-side tools cannot offset supply shocks"
     ],
     "answer": "A",
     "hints": ["The supply shock raised P above the original level. Expansionary fiscal (AD shifts right) pushes P even higher while restoring Y. The final price level exceeds the pre-shock equilibrium price."]
@@ -603,10 +603,10 @@
     "responseFormat": "mcq",
     "problemText": "The self-adjustment process in the AD-AS model takes considerable time primarily because:",
     "choices": [
-      "the government must vote to authorize wage changes before they can occur",
-      "the central bank must first lower interest rates before wages are allowed to adjust",
-      "firms always raise wages instantly whenever aggregate demand increases",
-      "nominal wages are often sticky — especially downward — due to long-term contracts, minimum wage laws, and social norms"
+      "the government must vote to authorize wage changes before they can occur in most major industries",
+      "the central bank must first lower interest rates before wages are allowed to adjust to the new price level",
+      "firms always raise wages instantly whenever aggregate demand increases, which delays the return to potential output",
+      "nominal wages are often sticky — especially downward — due to contracts, minimum wage laws, and social norms"
     ],
     "answer": "D",
     "hints": ["Wage stickiness — particularly downward wage rigidity — is the core reason self-adjustment is slow and distinguishes short-run from long-run outcomes."]
@@ -651,10 +651,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following best captures the Keynesian argument for using discretionary fiscal policy rather than waiting for long-run self-adjustment?",
     "choices": [
-      "Wages are completely flexible, so self-adjustment is instantaneous and needs no assistance",
-      "Fiscal policy can only be used during inflationary gaps, not recessionary ones",
-      "When wages are sticky and self-adjustment is painfully slow, the human cost of prolonged unemployment justifies active fiscal intervention to restore output faster",
-      "The self-adjustment mechanism works reliably in open economies but fails in closed economies"
+      "Wages are completely flexible, so self-adjustment is instantaneous and needs no assistance from fiscal or monetary policy",
+      "Fiscal policy can only be used during inflationary gaps, not recessionary ones, because tax cuts in a slump only add to the national debt",
+      "When wages are sticky and self-adjustment is slow, the human cost of prolonged unemployment justifies active fiscal policy to restore output faster",
+      "The self-adjustment mechanism works reliably in open economies but fails in closed economies, where foreign trade cannot absorb the slack left by falling demand"
     ],
     "answer": "C",
     "hints": ["Keynes: 'In the long run we are all dead.' If wages are sticky, waiting for self-adjustment imposes large social costs — fiscal policy can close the gap faster."]
@@ -753,10 +753,10 @@
     "responseFormat": "mcq",
     "problemText": "An automatic stabilizer is best defined as:",
     "choices": [
-      "a monetary policy tool the central bank uses to smooth business cycle fluctuations",
-      "a policy that requires the government to spend more during expansions and less during recessions",
-      "a feature of the existing tax-and-spending system that automatically increases the budget deficit during downturns and reduces it during booms, without requiring new legislation",
-      "a law that fixes government spending at a constant fraction of GDP every year"
+      "a monetary policy tool the central bank uses to smooth business cycle fluctuations by adjusting the federal funds rate",
+      "a policy that requires the government to spend more during expansions and less during recessions so that the budget stays balanced over the full cycle",
+      "a feature of the existing tax-and-spending system that automatically widens the deficit in downturns and narrows it in booms without new legislation",
+      "a law that fixes government spending at a constant fraction of GDP every year, whatever the phase of the business cycle"
     ],
     "answer": "C",
     "hints": ["Key phrase: 'without new legislation.' Automatic stabilizers are built into existing law and respond automatically to changing economic conditions."]
@@ -769,10 +769,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following is the best example of an automatic stabilizer?",
     "choices": [
-      "A one-time emergency infrastructure bill passed by Congress during a recession",
-      "The Federal Reserve cutting the discount rate in response to slowing economic growth",
-      "A legislated one-time tax rebate check sent to all households to stimulate spending",
-      "A progressive income tax system in which total tax collections automatically fall as household incomes decline during a recession"
+      "A one-time emergency infrastructure bill passed by Congress during a recession to create construction jobs",
+      "The Federal Reserve cutting the discount rate in response to slowing economic growth and rising unemployment",
+      "A legislated one-time tax rebate check sent to all households to stimulate spending during an economic downturn",
+      "A progressive income tax system in which total tax collections automatically fall as household incomes decline"
     ],
     "answer": "D",
     "hints": ["Automatic stabilizers require no new legislation. A progressive tax automatically reduces tax burdens during recessions and raises them during booms."]
@@ -785,10 +785,10 @@
     "responseFormat": "mcq",
     "problemText": "Automatic stabilizers differ from discretionary fiscal policy primarily because:",
     "choices": [
-      "automatic stabilizers respond to economic conditions without requiring new legislative action, while discretionary policy requires explicit government decisions each time it is used",
-      "automatic stabilizers are controlled by the Federal Reserve, while discretionary policy is enacted by Congress",
-      "automatic stabilizers only affect investment spending, while discretionary policy influences consumption",
-      "automatic stabilizers are always contractionary, while discretionary fiscal policy is always expansionary"
+      "automatic stabilizers respond to economic conditions without new legislation, while discretionary policy requires explicit government decisions",
+      "automatic stabilizers are controlled by the Federal Reserve through open-market operations, while discretionary policy is enacted by Congress",
+      "automatic stabilizers only affect investment spending by firms, while discretionary policy influences household consumption and government purchases",
+      "automatic stabilizers are always contractionary, while discretionary fiscal policy is always expansionary regardless of the economy's position"
     ],
     "answer": "A",
     "hints": ["The defining feature of automatic stabilizers: they are already written into law and activate automatically — no new vote or executive order required."]
@@ -801,10 +801,10 @@
     "responseFormat": "mcq",
     "problemText": "During a recession, automatic stabilizers help prevent real GDP from declining as sharply because:",
     "choices": [
-      "they automatically raise interest rates, attracting foreign capital inflows that support domestic investment",
-      "rising transfer payments such as unemployment insurance and falling tax burdens support household disposable income and consumption spending",
-      "they legally require Congress to increase the money supply to offset the contraction",
-      "they shift the LRAS curve rightward, offsetting the reduction in potential output caused by the recession"
+      "they automatically raise interest rates, attracting foreign capital inflows that support domestic investment spending by firms",
+      "rising transfer payments such as unemployment insurance and falling tax burdens support disposable income and consumption",
+      "they legally require Congress to increase the money supply to offset the contraction in aggregate demand",
+      "they shift the LRAS curve rightward, offsetting the reduction in potential output caused by the recession itself"
     ],
     "answer": "B",
     "hints": ["In a recession: unemployment insurance rises and progressive taxes collect less. Both support household income, cushioning the decline in consumption and AD."]
@@ -817,10 +817,10 @@
     "responseFormat": "mcq",
     "problemText": "During an economic expansion, automatic stabilizers tend to:",
     "choices": [
-      "amplify the expansion by reducing taxes on rising incomes and increasing transfer payments",
-      "have no stabilizing effect because they are designed to work only during recessions",
-      "act as a brake — rising incomes generate higher tax revenues and transfer payments fall, shrinking the budget deficit and moderating spending growth",
-      "cause the government to run a larger deficit in order to fund rising demand for public services"
+      "amplify the expansion by reducing taxes on rising incomes and increasing transfer payments, which further boosts consumer spending and output",
+      "have no stabilizing effect because they are designed to work only during recessions, when incomes and tax revenues are falling",
+      "act as a brake — rising incomes raise tax revenues and transfer payments fall, shrinking the deficit and moderating spending growth",
+      "cause the government to run a larger deficit in order to fund rising demand for public services as incomes and population grow"
     ],
     "answer": "C",
     "hints": ["During a boom: taxable incomes rise so tax collections increase; fewer people are unemployed so transfer payments fall. Both reduce the deficit and slow AD growth."]
@@ -833,10 +833,10 @@
     "responseFormat": "mcq",
     "problemText": "Compared to discretionary fiscal policy, a key limitation of automatic stabilizers is that:",
     "choices": [
-      "they are slower to take effect because they still require congressional approval before funds can be disbursed",
+      "they are slower to take effect because they still require congressional approval before any funds can be disbursed to households",
       "they consistently create larger budget deficits than any comparable discretionary spending program would",
       "they operate only through monetary policy transmission channels, not through fiscal channels",
-      "they cannot be finely calibrated to the size of an economic shock — their magnitude is fixed by existing law and may be too large or too small for a given situation"
+      "they cannot be finely calibrated to the size of a shock — their magnitude is set by existing law and may be too large or too small"
     ],
     "answer": "D",
     "hints": ["Automatic stabilizers are fast and certain, but their size is predetermined. Unlike discretionary policy, they cannot be scaled to match the severity of a particular shock."]

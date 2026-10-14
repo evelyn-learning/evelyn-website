@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "For the series $\\sum_{n=1}^{\\infty}\\dfrac{n}{2n+1}$, what does the $n$th-term test conclude?",
     "choices": [
-      "It converges, because the terms are bounded",
-      "It converges to $\\tfrac12$",
+      "It converges, because the terms are bounded above by $\\tfrac12$",
+      "It converges to $\\tfrac12$, the limit of its terms as $n\\to\\infty$",
       "It diverges, because $\\lim_{n\\to\\infty}\\tfrac{n}{2n+1}=\\tfrac12\\neq 0$",
-      "The test is inconclusive because the terms are positive"
+      "The test is inconclusive because the terms are positive and increasing"
     ],
     "answer": "C",
     "hints": [
@@ -128,10 +128,10 @@
     "responseFormat": "mcq",
     "problemText": "Determine the behavior of $\\sum_{n=1}^{\\infty}\\dfrac{1}{\\sqrt{n}}$.",
     "choices": [
-      "It converges by the integral test",
+      "It converges by the integral test, since $\\frac{1}{\\sqrt{x}}$ is decreasing",
       "It diverges, since it is a $p$-series with $p=\\tfrac12\\leq 1$",
-      "It converges as a geometric series",
-      "It converges to 2"
+      "It converges as a geometric series with ratio less than 1",
+      "It converges to 2, since its terms approach 0"
     ],
     "answer": "B",
     "hints": [
@@ -186,9 +186,9 @@
     "problemText": "The integral test can be applied to $\\sum_{n=1}^{\\infty}\\dfrac{1}{n^{2}}$ using $f(x)=\\dfrac{1}{x^{2}}$. Which requirement must $f$ satisfy on $[1,\\infty)$ for the test to be valid?",
     "choices": [
       "It must be continuous, positive, and decreasing",
-      "It must be increasing and negative",
-      "It must be an even function",
-      "It must be constant"
+      "It must be increasing and negative, with a finite limit",
+      "It must be an even function, symmetric about the $y$-axis",
+      "It must be constant on each interval $[n,n+1]$"
     ],
     "answer": "A",
     "hints": [
@@ -219,8 +219,8 @@
     "choices": [
       "The $b_{n}$ increase and $\\lim_{n\\to\\infty} b_{n}=0$",
       "The $b_{n}$ decrease and $\\lim_{n\\to\\infty} b_{n}=1$",
-      "The $b_{n}$ decrease in magnitude and $\\lim_{n\\to\\infty} b_{n}=0$",
-      "The series is geometric with $|r|<1$"
+      "The $b_{n}$ decrease and $\\lim_{n\\to\\infty} b_{n}=0$",
+      "The series is geometric with common ratio $|r|<1$"
     ],
     "answer": "C",
     "hints": [
@@ -256,9 +256,9 @@
     "problemText": "For a convergent alternating series with sum $S$, the alternating series error bound states that the error $|S-S_{N}|$ is at most:",
     "choices": [
       "the magnitude of the first omitted term, $b_{N+1}$",
-      "the first term $b_{1}$",
-      "the partial sum $S_{N}$",
-      "zero"
+      "the magnitude of the first term of the series, $b_{1}$",
+      "the magnitude of the partial sum, $|S_{N}|$",
+      "zero, once the series is known to converge"
     ],
     "answer": "A",
     "hints": [
@@ -371,9 +371,9 @@
     "problemText": "Apply the ratio test to $\\sum_{n=1}^{\\infty}\\dfrac{n^{2}}{3^{n}}$. What is the value of $L$ and the conclusion?",
     "choices": [
       "$L=\\tfrac13$, so the series converges absolutely",
-      "$L=3$, so the series diverges",
-      "$L=1$, so the test is inconclusive",
-      "$L=0$, so the series converges to 0"
+      "$L=3$, so the series diverges by the ratio test",
+      "$L=1$, so the ratio test is inconclusive here",
+      "$L=0$, so the series converges, and its sum is 0"
     ],
     "answer": "A",
     "hints": [
@@ -417,7 +417,7 @@
     "choices": [
       "$f^{(k)}(c)$",
       "$\\dfrac{f^{(k)}(c)}{k!}$",
-      "$\\dfrac{f(c)}{k!}$",
+      "$\\dfrac{f^{(k)}(x)}{k!}$",
       "$k!\\,f^{(k)}(c)$"
     ],
     "answer": "B",
@@ -453,10 +453,10 @@
     "responseFormat": "mcq",
     "problemText": "In the Lagrange error bound $|R_{n}(x)|\\leq \\dfrac{M\\,|x-c|^{\\,n+1}}{(n+1)!}$, the quantity $M$ represents:",
     "choices": [
-      "the value $f(c)$",
-      "the $n$th derivative at $c$",
-      "the interval length $|x-c|$",
-      "an upper bound for $|f^{(n+1)}|$ on the interval between $c$ and $x$"
+      "the value $f(c)$ of the function at the center",
+      "the value of the $n$th derivative $f^{(n)}$ at the center $c$",
+      "the interval length $|x-c|$ between the center $c$ and the point $x$",
+      "an upper bound for $|f^{(n+1)}|$ between $c$ and $x$"
     ],
     "answer": "D",
     "hints": [
@@ -530,9 +530,9 @@
     "responseFormat": "mcq",
     "problemText": "At its center $x=c$, a power series $\\sum a_{n}(x-c)^{n}$ always:",
     "choices": [
-      "diverges",
-      "is undefined",
-      "equals zero",
+      "diverges (its terms there do not approach zero)",
+      "is undefined (it can only be found as a limit there)",
+      "equals zero (each term has a factor of $(x-c)$)",
       "converges (its value there is the constant term)"
     ],
     "answer": "D",

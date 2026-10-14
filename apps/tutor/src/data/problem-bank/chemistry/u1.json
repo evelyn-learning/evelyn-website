@@ -25,10 +25,10 @@
     "responseFormat": "mcq",
     "problemText": "Gray iron filings are stirred into yellow powdered sulfur. The gray specks are still clearly visible among the yellow powder, and dragging a magnet through the pile pulls the iron back out. How should this sample be classified?",
     "choices": [
-      "Compound, because iron and sulfur are now combined into one material",
-      "Element, because iron and sulfur are both elements",
+      "Compound, because iron and sulfur are now combined into one material with a single fixed composition",
+      "Element, because iron and sulfur are both elements and no new substance was made",
       "Heterogeneous mixture — the two solids are unbonded and you can point to visibly different regions",
-      "Homogeneous mixture, because stirring spread the two powders evenly"
+      "Homogeneous mixture, because stirring spread the two powders evenly through the whole pile"
     ],
     "answer": "C",
     "hints": [
@@ -44,10 +44,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of these samples is a HOMOGENEOUS MIXTURE?",
     "choices": [
-      "Vinegar — acetic acid fully dissolved in water, uniform throughout, and the strength can be adjusted",
-      "Dry ice, solid CO₂",
-      "A length of copper wire",
-      "Olive oil floating in a layer on top of water"
+      "Vinegar — acetic acid fully dissolved in water, uniform throughout, with adjustable strength",
+      "Dry ice — solid carbon dioxide, uniform throughout and slowly turning straight to gas",
+      "A length of copper wire — shiny, uniform throughout, and able to be drawn thinner",
+      "Olive oil floating in a layer on top of water — two liquids, combined in any proportion you like"
     ],
     "answer": "A",
     "hints": [
@@ -82,10 +82,10 @@
     "responseFormat": "mcq",
     "problemText": "A colorless liquid is gently boiled. The vapor is collected and condenses into pure water, and a dry white solid is left behind in the flask. Which conclusion about the original liquid is best supported?",
     "choices": [
-      "It was a compound, because it came apart into two different substances",
-      "It was an element, because elements are the only substances that boil cleanly",
-      "It was a heterogeneous mixture, because two substances were recovered from it",
-      "It was a homogeneous mixture, because a purely physical change — boiling — separated it into two substances"
+      "It was a compound, because heating broke it down into two different substances, water and a solid",
+      "It was an element, because elements are the only substances that boil cleanly into a pure condensed vapor",
+      "It was a heterogeneous mixture, because two different substances were recovered from it by boiling",
+      "It was a homogeneous mixture, because a physical change — boiling — separated it into two substances"
     ],
     "answer": "D",
     "hints": [
@@ -114,10 +114,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of these is a CHEMICAL property of iron?",
     "choices": [
-      "Its silvery gray color",
-      "Its density of 7.87 g/cm³",
+      "Its silvery gray color when freshly polished",
+      "Its density of 7.87 g/cm³ at room temperature",
       "Its ability to rust when left in damp air",
-      "Its melting point of 1538 °C"
+      "Its melting point of 1538 °C at normal pressure"
     ],
     "answer": "C",
     "hints": [
@@ -170,10 +170,10 @@
     "responseFormat": "mcq",
     "problemText": "A student watches bubbles form in two containers: (1) a pot of water held at a steady 100 °C on a stove, and (2) a chunk of limestone, CaCO₃, dropped into cold hydrochloric acid, which releases CO₂ gas. Which statement classifies the two events correctly?",
     "choices": [
-      "Both are chemical changes, because gas is produced in both",
-      "Container 1 is a physical change and container 2 is a chemical change — the gas leaving the pot is still H₂O, while the CO₂ gas did not exist as CO₂ a moment earlier",
-      "Both are physical changes, because bubbling is only a change of state",
-      "Container 1 is a chemical change and container 2 is a physical change, because heating always drives a reaction"
+      "Both are chemical changes, because gas is produced in both, and forming bubbles of gas is a sign that a new substance appears",
+      "Container 1 is physical and container 2 is chemical — the gas leaving the pot is still H₂O, but the CO₂ is a newly formed substance",
+      "Both are physical changes, because bubbling is only a change of state, whether from heating or from contact with acid",
+      "Container 1 is a chemical change and container 2 is a physical change, because heating always drives a reaction and acid only dissolves"
     ],
     "answer": "B",
     "hints": [
@@ -189,10 +189,10 @@
     "responseFormat": "mcq",
     "problemText": "A 12.0 g piece of wood is burned in an open dish, and only 0.9 g of ash is left behind. A student concludes that mass was destroyed. Which explanation is correct?",
     "choices": [
-      "Mass really is destroyed during burning, which is why ash always weighs less than the fuel",
-      "Wood is a mixture, and conservation of mass applies only to pure substances",
-      "Conservation of mass applies only to physical changes, never to chemical reactions",
-      "Mass was conserved — carbon dioxide and water vapor formed and drifted away into the room, and nobody weighed them"
+      "Mass really is destroyed during burning, which is why ash always weighs less than the fuel it came from",
+      "Wood is a mixture, and conservation of mass applies only to pure substances, not to materials like wood",
+      "Conservation of mass applies only to physical changes, never to chemical reactions such as burning wood",
+      "Mass was conserved — carbon dioxide and water vapor formed and drifted into the room unweighed"
     ],
     "answer": "D",
     "hints": [

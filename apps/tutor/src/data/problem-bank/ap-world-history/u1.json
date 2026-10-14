@@ -319,10 +319,10 @@
     "responseFormat": "mcq",
     "problemText": "Under feudalism in medieval Europe, monarchs granted land (fiefs) to nobles in exchange for military service and loyalty, and those nobles could in turn grant land to lesser lords. Which statement best describes the kind of political power this system produced?",
     "choices": [
-      "a decentralized structure in which political and military authority radiated outward through personal, reciprocal bonds rather than a trained central administration",
-      "a highly centralized bureaucracy in which officials were selected by a standardized examination",
-      "a system in which the Catholic Church held no independent political or economic power",
-      "an economic arrangement in which peasants owned their manor's land outright, free of any obligation to a lord"
+      "a decentralized structure in which political and military authority flowed through personal, reciprocal bonds rather than a central administration",
+      "a highly centralized bureaucracy in which salaried officials, selected by a standardized examination, carried out the monarch's commands directly across the realm",
+      "a system in which the Catholic Church held no independent political or economic power, serving entirely under the authority of kings",
+      "an economic arrangement in which peasants owned their manor's land outright, free of any obligation to a lord or to the monarch above him"
     ],
     "answer": "A",
     "hints": [

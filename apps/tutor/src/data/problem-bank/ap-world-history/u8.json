@@ -128,10 +128,10 @@
     "passageId": "evelyn.passage.apworld-un-membership-table.v1",
     "problemText": "The same UN roster shows total membership growing from 51 original members in 1945 to 189 members by 2000, with Africa and Asia together supplying most of the new members admitted through the 1960s. This overall long-run pattern is best used as evidence for which historical process?",
     "choices": [
-      "A steady decline in the number of independent states recognized worldwide after 1945",
-      "The replacement of colonial empires with a smaller number of larger regional unions",
-      "A one-time surge of new members concentrated entirely in the years immediately after 1945",
-      "The long-term expansion of the international state system as colonial territories achieved sovereign independence"
+      "A steady decline in the number of independent states recognized worldwide after 1945 as larger empires absorbed them",
+      "The replacement of colonial empires with a smaller number of larger regional unions such as federations",
+      "A one-time surge of new members concentrated entirely in the years immediately after the Second World War ended",
+      "The long-term expansion of the international state system as colonial territories achieved independence"
     ],
     "answer": "D",
     "hints": [
@@ -205,10 +205,10 @@
     "responseFormat": "mcq",
     "problemText": "The Truman Doctrine (1947) committed US aid to states resisting communist pressure, and the Marshall Plan (1948) provided economic aid to rebuild Western Europe. Together, these two policies are best understood as expressions of which broader US Cold War strategy?",
     "choices": [
-      "rollback, aimed at using US troops to directly liberate every state already under Soviet control",
-      "containment, aimed at limiting the spread of Soviet influence through economic and political support rather than direct military invasion",
-      "isolationism, aimed at withdrawing the United States from all involvement in European affairs",
-      "détente, aimed at formally normalizing relations between the US and USSR through direct negotiation"
+      "rollback, aimed at using US troops to directly liberate every state already under Soviet control in Eastern Europe",
+      "containment, aimed at limiting the spread of Soviet influence through economic and political support rather than direct invasion",
+      "isolationism, aimed at withdrawing the United States from all involvement in European affairs after the Second World War",
+      "détente, aimed at formally normalizing relations between the US and USSR through direct negotiation and mutual arms-control agreements"
     ],
     "answer": "B",
     "hints": [

@@ -206,9 +206,9 @@
     "passageId": "evelyn.passage.apworld-sadler-testimony.v1",
     "problemText": "Matthew Crabtree testifies before the Sadler Committee (1832) that his hours in ordinary times ran \"From 6 in the morning to 8 at night. Fourteen hours\" and that when trade was brisk his hours ran \"From 5 in the morning to 9 in the evening. Sixteen hours\". This testimony shows that —",
     "choices": [
-      "this child laborer's hours were capped by law at a maximum of ten hours per day",
-      "this child laborer worked no more than eight hours a day under any circumstance",
-      "this child laborer received extra overtime wages whenever trade was brisk",
+      "this child laborer's hours were capped by law at a maximum of ten hours per day, even when trade was brisk",
+      "this child laborer worked no more than eight hours a day under any circumstance, brisk trade or not",
+      "this child laborer received extra overtime wages whenever trade was brisk, doubling his normal weekly pay",
       "this child laborer's workdays stretched to fourteen or sixteen hours depending on how brisk trade was"
     ],
     "answer": "D",

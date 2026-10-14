@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "A homeowner tests their basement and discovers elevated radon levels. Radon most likely entered the home through:",
     "choices": [
-      "Combustion of natural gas from stove and furnace appliances",
-      "Off-gassing from synthetic carpet fibers and adhesives",
-      "Tobacco smoke residue left by previous residents",
-      "Cracks in the foundation through which radon seeps up from the radioactive decay of uranium in underlying rock and soil"
+      "Combustion of natural gas in stove and furnace appliances that are poorly vented into the basement",
+      "Off-gassing from synthetic carpet fibers, foam padding, and adhesives used in finishing the basement floor",
+      "Tobacco smoke residue left by previous residents and absorbed into the basement walls and flooring",
+      "Cracks in the foundation, through which radon from uranium decay in the underlying rock and soil seeps up"
     ],
     "answer": "D",
     "hints": ["Radon is a naturally occurring radioactive gas that forms as uranium decays in rock and soil."]
@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "Ground-level ozone is classified as a secondary air pollutant because it:",
     "choices": [
-      "Is emitted directly by burning fossil fuels in automobile engines",
-      "Is transported downward from the stratosphere during cold-weather events",
-      "Forms when nitrogen oxides (NOx) and volatile organic compounds (VOCs) react in the presence of sunlight",
-      "Is produced only by industrial stack emissions concentrated in urban areas"
+      "Is emitted directly by burning fossil fuels in automobile engines and power-plant boilers",
+      "Is transported downward from the stratosphere during cold-weather temperature inversion events",
+      "Forms when nitrogen oxides (NOx) and volatile organic compounds (VOCs) react in sunlight",
+      "Is produced only by industrial stack emissions concentrated in dense urban areas"
     ],
     "answer": "C",
     "hints": ["A secondary pollutant forms through chemical reactions in the atmosphere rather than being directly emitted."]
@@ -71,10 +71,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following correctly pairs an indoor air pollutant with its primary source?",
     "choices": [
-      "Radon — off-gassing from synthetic fabrics and furniture foam",
-      "Carbon monoxide — incomplete combustion from a gas furnace or an idling vehicle in an attached garage",
-      "Formaldehyde — radioactive decay of uranium beneath the home's foundation",
-      "Asbestos — burning tobacco products indoors"
+      "Radon — off-gassing from synthetic fabrics, carpet padding, and upholstered furniture foam",
+      "Carbon monoxide — incomplete combustion in a gas furnace or a car idling in an attached garage",
+      "Formaldehyde — radioactive decay of uranium in the soil and rock beneath the home's foundation",
+      "Asbestos — smoke from burning tobacco products indoors in poorly ventilated rooms"
     ],
     "answer": "B",
     "hints": ["Carbon monoxide is an odorless, colorless gas produced whenever carbon-containing fuel burns incompletely."]
@@ -120,10 +120,10 @@
     "responseFormat": "mcq",
     "problemText": "Industrial (sulfurous) smog differs from photochemical smog primarily because industrial smog:",
     "choices": [
-      "Is dominated by NOx, VOCs, and ozone produced under strong sunlight in warm climates",
-      "Consists mainly of ozone, PAN, and secondary aerosols from vehicle exhaust",
-      "Is dominated by SO2, particulate matter, and fog produced in coal-burning industrial areas under cool, humid conditions",
-      "Forms primarily from carbon dioxide and methane released by landfills and livestock operations"
+      "Is dominated by NOx, VOCs, and ozone produced under strong sunlight in warm, dry climates with heavy traffic",
+      "Consists mainly of ozone, PAN, and secondary aerosols formed from vehicle exhaust on sunny afternoons",
+      "Is dominated by SO2, particulates, and fog produced in coal-burning industrial areas under cool, humid conditions",
+      "Forms primarily from carbon dioxide and methane released by landfills and livestock operations in rural areas"
     ],
     "answer": "C",
     "hints": ["London-type smog from the industrial era was characterized by coal smoke, sulfur compounds, and damp, cool fog."]
@@ -201,10 +201,10 @@
     "responseFormat": "mcq",
     "problemText": "A catalytic converter in a vehicle reduces air pollution primarily by converting:",
     "choices": [
-      "Carbon dioxide and water vapor into less harmful compounds before tailpipe release",
-      "Lead and heavy metals into inert metallic deposits that are retained on a filter",
-      "Particulate matter larger than 10 micrometers into smaller fine particles",
-      "Carbon monoxide, nitrogen oxides, and unburned hydrocarbons into carbon dioxide, nitrogen gas, and water vapor"
+      "Carbon dioxide and water vapor into less harmful compounds before they are released from the tailpipe",
+      "Lead and heavy metals in the exhaust into inert metallic deposits that are retained on a filter",
+      "Particulate matter larger than 10 micrometers into smaller fine particles that disperse more easily",
+      "Carbon monoxide, nitrogen oxides, and unburned hydrocarbons into CO2, nitrogen gas, and water vapor"
     ],
     "answer": "D",
     "hints": ["A three-way catalytic converter is designed to address three pollutant categories: CO, NOx, and unburned hydrocarbons."]
@@ -249,10 +249,10 @@
     "responseFormat": "mcq",
     "problemText": "The 1990 Clean Air Act Amendments established a cap-and-trade program to reduce SO2 emissions from power plants. Under this program:",
     "choices": [
-      "All power plants are required to install identical scrubber technology regardless of cost or technical feasibility",
-      "Plants that reduce emissions below their allocated cap can sell unused emission allowances to higher-emitting plants, creating a market-based incentive to cut pollution cost-effectively",
-      "The federal government sets a uniform per-ton tax on SO2 emissions applied identically in all regions regardless of local air quality",
-      "States must achieve all SO2 reductions exclusively through mandated transitions to renewable energy sources"
+      "All power plants are required to install identical scrubber technology regardless of cost, plant age, or technical feasibility",
+      "Plants that cut emissions below their cap can sell unused allowances to higher-emitting plants, creating a market incentive to reduce pollution",
+      "The federal government sets a uniform per-ton tax on SO2 emissions, applied identically in all regions regardless of local air quality or plant size",
+      "States must achieve all SO2 reductions exclusively through federally mandated transitions to renewable energy sources at every plant"
     ],
     "answer": "B",
     "hints": ["Cap-and-trade sets an overall emission ceiling while giving individual firms flexibility in how they meet their share of the reduction."]
@@ -340,10 +340,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following accurately describes a mechanism by which acid deposition damages forest ecosystems?",
     "choices": [
-      "Acid deposition raises soil pH to levels too alkaline for tree roots to absorb phosphorus and potassium",
+      "Acid deposition raises soil pH to levels too alkaline for tree roots to absorb phosphorus and potassium from the soil",
       "Acid deposition increases solar UV penetration to forest floors, directly burning root systems near the soil surface",
-      "Acid deposition leaches essential nutrients such as calcium and magnesium from the soil and can mobilize toxic aluminum ions that damage tree roots and reduce water uptake",
-      "Acid deposition reduces atmospheric CO2 concentrations above affected forests, slowing the rate of photosynthesis"
+      "Acid deposition leaches calcium and magnesium from the soil and can mobilize toxic aluminum ions that damage tree roots",
+      "Acid deposition reduces atmospheric CO2 concentrations above affected forests, slowing the rate of photosynthesis in leaves"
     ],
     "answer": "C",
     "hints": ["Think about what acids do to soil chemistry — both stripping nutrients away from soil particles and releasing metals that are otherwise locked in insoluble mineral form."]
@@ -356,10 +356,10 @@
     "responseFormat": "mcq",
     "problemText": "Marble and limestone statues and buildings are particularly susceptible to damage from acid rain. Which explanation BEST accounts for this vulnerability?",
     "choices": [
-      "Steel reinforcement embedded in marble corrodes first, fracturing the stone from within before any surface erosion begins",
-      "Tempered glass panels mounted in limestone facades concentrate acid onto adjacent stone surfaces",
-      "Calcium carbonate (CaCO3) in marble and limestone reacts with sulfuric and nitric acid to form soluble products — calcium sulfate and calcium nitrate — that dissolve and wash away in subsequent rainfall",
-      "Iron oxides dispersed throughout limestone react with nitric acid, dissolving the pigments that bind mineral particles together"
+      "Steel reinforcement embedded in marble corrodes first, fracturing the stone from within before any visible surface erosion of the carving begins",
+      "Tempered glass panels mounted in limestone facades concentrate and channel acid runoff onto adjacent stone surfaces, etching them unevenly",
+      "Calcium carbonate (CaCO3) in the stone reacts with sulfuric and nitric acid to form soluble calcium sulfate and calcium nitrate, which wash away",
+      "Iron oxides dispersed throughout limestone react with nitric acid, dissolving the pigments and natural cements that bind the mineral particles together"
     ],
     "answer": "C",
     "hints": ["The reaction converts an insoluble mineral (CaCO3) into soluble salts — the stone is literally being dissolved and carried away by rain."]

@@ -115,9 +115,9 @@
     "responseFormat": "mcq",
     "problemText": "How many solutions does the equation √(x - 1) = -6 have?",
     "choices": [
-      "One, x = 37",
-      "Two, x = 37 and x = -35",
-      "One, x = 35",
+      "One, x = 37, found by squaring both sides of the equation",
+      "Two, x = 37 and x = -35, one from each sign of the root",
+      "One, x = 35, after squaring and then subtracting 1",
       "None, because a principal square root is never negative"
     ],
     "answer": "D",

@@ -264,7 +264,7 @@
     "choices": [
       "$\\displaystyle\\int_a^b\\vec v(t)\\,dt$",
       "$\\displaystyle\\int_a^b\\sqrt{x'(t)^2+y'(t)^2}\\,dt$",
-      "$\\left|\\vec r(b)-\\vec r(a)\\right|$",
+      "$\\displaystyle\\left|\\int_a^b\\vec v(t)\\,dt\\right|$",
       "$\\vec r(b)-\\vec r(a)$"
     ],
     "answer": "B",

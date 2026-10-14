@@ -179,9 +179,9 @@
     "problemText": "A student draft reads: \"(7) The committee reviewed dozens of proposals this quarter, evaluating each against the district's published criteria. (8) Honestly, most of them were kind of a mess.\" Which choice best revises sentence (8) to match the formal register established in sentence (7)?",
     "choices": [
       "However, most of the proposals lacked the documentation and organization the criteria required.",
-      "To be fair, some of the proposals were not that bad.",
-      "Honestly, most of them were kind of a mess, to be real.",
-      "Yeah, a lot of those proposals just weren't good enough, honestly."
+      "To be fair, some of the proposals were not that bad, even if a lot of them definitely needed work.",
+      "Honestly, most of them were kind of a mess, to be real, and the committee pretty much knew it.",
+      "Yeah, a lot of those proposals just weren't good enough, honestly, and nobody was too impressed."
     ],
     "answer": "A",
     "hints": [
@@ -197,9 +197,9 @@
     "passageId": "evelyn.passage.lincoln-gettysburg.v1",
     "problemText": "A prompt asks students to analyze the rhetorical choices Lincoln makes in the Gettysburg Address to convey his message about the significance of the occasion. Within a five-minute planning window, which thesis is both defensible (an arguable claim, not a summary) and specific enough to outline three body paragraphs from?",
     "choices": [
-      "Lincoln delivered this address at the dedication of a military cemetery in Gettysburg, Pennsylvania, in November of 1863.",
-      "The Gettysburg Address is widely regarded as one of the most famous speeches in American history.",
-      "Lincoln mentions liberty, dedication, and government several times throughout the address.",
+      "Lincoln delivered this address at the dedication of a military cemetery in Gettysburg, Pennsylvania, in November of 1863, only months after the battle fought there.",
+      "The Gettysburg Address is widely regarded as one of the most famous speeches in American history, and its brief length makes its lasting influence all the more remarkable.",
+      "Lincoln mentions liberty, dedication, and government several times throughout the address, which runs fewer than three hundred words and took roughly two minutes to deliver.",
       "Through an escalating triad of denial and a closing tricolon, Lincoln shifts the occasion from mourning the dead to recommitting the living to the nation's founding ideal."
     ],
     "answer": "D",
@@ -216,10 +216,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's paragraph includes this flat but technically correct sentence: \"Social media has changed the way teenagers communicate.\" Which revision of this sentence best earns the AP Lang rubric's sophistication point by adding a genuine, specific qualification or stake — rather than a vague, bolted-on closing line?",
     "choices": [
-      "Social media has changed the way teenagers communicate in many complex, multifaceted, and profoundly significant ways.",
-      "Social media has changed communication most visibly in the shift from sustained conversation to rapid, fragmented exchange — a trade that speeds up contact but narrows room for genuine disagreement.",
-      "Social media has changed the way teenagers communicate, which shows the complexity and richness of modern life today.",
-      "Social media has changed the way teenagers communicate, and this is truly an important and highly significant development."
+      "Social media has changed the way teenagers communicate in many complex, multifaceted, and profoundly significant ways that researchers and parents are only beginning to understand.",
+      "Social media has changed communication most visibly in the shift from sustained conversation to rapid, fragmented exchange — a trade that speeds contact but narrows room for genuine disagreement.",
+      "Social media has changed the way teenagers communicate, which shows the complexity and richness of modern life today and the many ways technology continues to transform it.",
+      "Social media has changed the way teenagers communicate, and this is truly an important and highly significant development that will shape how this generation relates to one another and to the wider world."
     ],
     "answer": "B",
     "hints": [

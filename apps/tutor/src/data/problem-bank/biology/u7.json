@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A bird's wing is supported by an internal skeleton of bone and covered in feathers. An insect's wing is a thin extension of the exoskeleton with no bones inside it at all. Both are used for powered flight. What does this comparison show?",
     "choices": [
-      "The wings are analogous — similar function evolved separately in the two lineages, not inherited from a common winged ancestor.",
-      "The wings are homologous, because both structures are used for flight.",
-      "The wings are homologous, because any two animals that fly must share a recent common ancestor.",
-      "The insect wing is a vestigial version of the bird wing, since the bird design is more advanced."
+      "The wings are analogous — similar function evolved separately, not inherited from a common winged ancestor.",
+      "The wings are homologous, because both structures are used for flight and both grow out from the animal's body.",
+      "The wings are homologous, because any two animals that fly must share a recent common ancestor that also flew.",
+      "The insect wing is a vestigial version of the bird wing, since the bird design is more advanced and complex."
     ],
     "answer": "A",
     "hints": [
@@ -45,9 +45,9 @@
     "responseFormat": "mcq",
     "problemText": "A student compares the same gene across four species and records the percentage of the DNA sequence each species shares with humans: chimpanzee 98%, mouse 85%, chicken 65%, fruit fly 40%. Which conclusion is best supported by these values?",
     "choices": [
-      "Humans evolved directly from chimpanzees, since a 98% match is nearly complete.",
-      "The fruit fly is not related to humans at all, because 40% is a low match.",
-      "The mouse is turning into a chimpanzee, because 85% is on the way to 98%.",
+      "Humans evolved directly from chimpanzees, since a 98% match is nearly complete and the other three species match far less.",
+      "The fruit fly is not related to humans at all, because 40% is a low match that could arise purely by chance.",
+      "The mouse is turning into a chimpanzee, because 85% is on the way to 98% and the mouse sequence keeps changing.",
       "Humans share their most recent common ancestor with the chimpanzee and their oldest common ancestor with the fruit fly."
     ],
     "answer": "D",
@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "Modern whales have a pair of small hip bones buried in muscle. These bones are not attached to the backbone and support no limbs. Fossil whales from about 40 million years ago have the same hip bones, but attached to small, complete hind legs with feet. Which statement uses this evidence correctly?",
     "choices": [
-      "The hip bones show that whales are trying to regrow legs so they can return to land.",
-      "The hip bones are vestigial — reduced remnants of the functional hind limbs of the whales' four-legged ancestors.",
-      "The hip bones prove that whales and fish share a recent common ancestor.",
-      "The hip bones appeared recently because modern whales needed extra support for swimming."
+      "The hip bones show that whales are trying to regrow legs so they can return to living on land.",
+      "The hip bones are vestigial — reduced remnants of the hind limbs of the whales' four-legged ancestors.",
+      "The hip bones prove that whales and fish share a recent common ancestor that lived in the sea.",
+      "The hip bones appeared recently because modern whales needed extra support for their muscles while swimming."
     ],
     "answer": "B",
     "hints": [
@@ -83,10 +83,10 @@
     "responseFormat": "mcq",
     "problemText": "The Hawaiian Islands rose from undersea volcanoes and were never connected to any continent. They are home to more than 50 species of honeycreeper birds found nowhere else on Earth. Every one of those 50 species is more similar in DNA to a single finch-like species from the Asian mainland than to any other bird. Which explanation best fits this pattern?",
     "choices": [
-      "Each honeycreeper species arrived separately from a different mainland bird species.",
-      "The honeycreepers walked to the islands across a land bridge before the volcanoes erupted.",
-      "The island climate forces any bird that lands there to become a honeycreeper.",
-      "A small founding population of the mainland species reached the islands, and its descendants diversified into many species in the new habitats."
+      "Each honeycreeper species arrived separately from a different mainland bird species and then changed slowly on the islands.",
+      "The honeycreepers walked to the islands across a land bridge before the volcanoes erupted and cut them off.",
+      "The island climate forces any bird that lands there to become a honeycreeper within a few generations.",
+      "A small founding population of the mainland species reached the islands, and its descendants diversified into many species."
     ],
     "answer": "D",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "Two desert plants, one native to North America and one native to Africa, both have thick water-storing stems, spines instead of leaves, and a waxy outer coating. Their DNA sequences, however, are no more similar to each other than either one is to an ordinary leafy plant from its own continent. A student claims the two desert plants must be closely related. Which response is strongest?",
     "choices": [
-      "The claim is not supported: the shared traits are analogous, produced by convergent evolution under similar desert conditions, and the DNA data show no close relationship.",
-      "The claim is supported: three shared structures outweigh a single DNA comparison.",
-      "The claim is supported, because sharing a habitat is what defines a group of related species.",
-      "The claim cannot be judged, because structural evidence and DNA evidence can never be compared."
+      "The claim is not supported: the shared traits are analogous, produced by convergent evolution in similar deserts, and the DNA shows no close relationship.",
+      "The claim is supported: three shared structures outweigh a single DNA comparison, since structures reflect many genes working together.",
+      "The claim is supported, because sharing a habitat and the same set of desert adaptations is what defines a group of related species.",
+      "The claim cannot be judged, because structural evidence and DNA evidence measure different kinds of things and can never be compared directly with each other."
     ],
     "answer": "A",
     "hints": [
@@ -141,10 +141,10 @@
     "responseFormat": "mcq",
     "problemText": "A hospital treats a bacterial infection with an antibiotic. Almost all of the bacteria die, but the infection returns several weeks later and the same antibiotic no longer works on it. Which explanation is correct?",
     "choices": [
-      "The antibiotic caused the bacteria to mutate on purpose so they could survive it.",
-      "The bacteria developed resistance because they needed it in order to stay alive.",
-      "Each surviving bacterium became stronger after being exposed to a small dose of the drug.",
-      "A few bacteria already carried resistance mutations before treatment began; the antibiotic killed the rest, and the resistant few reproduced to rebuild the population."
+      "The antibiotic caused the bacteria to mutate on purpose so they could survive it, and the new mutation then spread to the next generation.",
+      "The bacteria developed resistance because they needed it in order to stay alive, so each cell changed its own genes during the treatment.",
+      "Each surviving bacterium became stronger after being exposed to a small dose of the drug, and then passed that acquired toughness on to the offspring it produced.",
+      "A few bacteria already carried resistance mutations before treatment; the antibiotic killed the rest, and the resistant few reproduced to rebuild the population."
     ],
     "answer": "D",
     "hints": [
@@ -160,10 +160,10 @@
     "responseFormat": "mcq",
     "problemText": "In a bird population, large males win nearly every fight over territory, but they die young and father few chicks. Medium-sized males avoid fights, live longer, and father many chicks that survive to breed. In evolutionary terms, which males have the higher fitness?",
     "choices": [
-      "The medium-sized males, because evolutionary fitness is measured by the number of offspring that survive and reproduce.",
-      "The large males, because fitness means physical strength and dominance.",
-      "Neither, because fitness describes whole species and never individuals.",
-      "The large males, because winning fights proves they are better adapted."
+      "The medium-sized males, because fitness is measured by the number of offspring that survive and reproduce.",
+      "The large males, because fitness means physical strength and dominance over the rival males in the population.",
+      "Neither, because fitness describes whole species rather than the individual animals that belong to them.",
+      "The large males, because winning fights proves they are better adapted to their environment than smaller rivals."
     ],
     "answer": "A",
     "hints": [
@@ -198,10 +198,10 @@
     "responseFormat": "mcq",
     "problemText": "A population of moss plants grows in soil that has recently become contaminated with copper. Within about twenty generations, most plants in that population tolerate copper well. Which statement best explains where the tolerance came from?",
     "choices": [
-      "The copper in the soil instructed the plants' cells to build a copper-tolerance gene.",
+      "The copper in the soil instructed the plants' cells to build a copper-tolerance gene, which then spread quickly through the whole population.",
       "Random mutation and reproduction had already produced variation in copper tolerance, and the contaminated soil selected the tolerant plants.",
-      "The plants became tolerant because greater tolerance is the goal every population moves toward.",
-      "The parent plants toughened up during their own lifetimes and passed that acquired toughness to their seeds."
+      "The plants became tolerant because greater tolerance is the goal that every population steadily moves toward over time.",
+      "The parent plants toughened up during their own lifetimes and passed that acquired toughness on to the seeds they produced."
     ],
     "answer": "B",
     "hints": [
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "Over 30 years, the average horn length in a hunted population of wild rams fell from 70 cm to 45 cm. During that time, hunters were legally allowed to shoot only rams whose horns were longer than 60 cm. A student says, 'The rams learned to grow shorter horns so the hunters would leave them alone.' Which correction is best?",
     "choices": [
-      "The student is right about the mechanism, but the change would take place in one generation rather than thirty years.",
-      "The student is right, because animals adjust their bodies in response to threats they can see.",
-      "Rams cannot choose or learn their horn length; long-horned rams were shot before they could breed, so alleles for shorter horns made up a larger share of each new generation.",
-      "Horn length is not heritable, so hunting could not have produced this change."
+      "The student is right about the mechanism, but the change would take place within a single generation rather than over thirty years of steady hunting pressure.",
+      "The student is right, because animals adjust their bodies in response to threats they can see and then pass those adjustments to their young.",
+      "Rams cannot choose or learn their horn length; long-horned rams were shot before they could breed, so shorter-horn alleles became more common each generation.",
+      "Horn length is not heritable, so hunting could not have produced this change; the decline must instead reflect poorer food over those years."
     ],
     "answer": "C",
     "hints": [
@@ -385,10 +385,10 @@
     "responseFormat": "mcq",
     "problemText": "Two closely related cricket species live side by side in the same field. One species sings and mates only at dusk; the other sings and mates only after midnight. As a result, the two almost never mate with each other. What kind of reproductive barrier is this?",
     "choices": [
-      "A postzygotic barrier, because it takes effect after the eggs are laid.",
-      "A postzygotic barrier known as hybrid sterility.",
-      "A prezygotic barrier called temporal isolation, because it stops mating from happening in the first place.",
-      "Not a reproductive barrier at all, since the crickets share the same field."
+      "A postzygotic barrier, because it takes effect after the eggs are laid and the embryos begin to develop.",
+      "A postzygotic barrier known as hybrid sterility, because the two species' offspring cannot breed.",
+      "A prezygotic barrier called temporal isolation, because it prevents mating in the first place.",
+      "Not a reproductive barrier at all, since the crickets share the same field and could meet at any time."
     ],
     "answer": "C",
     "hints": [
@@ -404,10 +404,10 @@
     "responseFormat": "mcq",
     "problemText": "A horse and a donkey can mate and produce a healthy, strong mule. Mules, however, are almost always sterile and cannot produce offspring of their own. Which barrier is at work here, and what does it accomplish?",
     "choices": [
-      "A prezygotic barrier, because it prevents horses and donkeys from mating.",
-      "No reproductive barrier at all, since a living mule is produced.",
-      "A prezygotic barrier called mechanical isolation.",
-      "A postzygotic barrier called hybrid sterility — the hybrid forms and lives, but cannot pass genes on, so the two gene pools stay separate."
+      "A prezygotic barrier, because it prevents horses and donkeys from mating and so keeps the two gene pools apart.",
+      "No reproductive barrier at all, since a living mule is produced and the horse and donkey gene pools are joined.",
+      "A prezygotic barrier called mechanical isolation, because the reproductive organs of the two species do not fit together properly.",
+      "A postzygotic barrier called hybrid sterility — the hybrid lives but cannot pass genes on, so the two gene pools stay separate."
     ],
     "answer": "D",
     "hints": [
@@ -424,9 +424,9 @@
     "problemText": "Fossils of one shellfish lineage show almost no change in shell shape for about 5 million years. Then, within roughly 50,000 years following a sudden drop in sea level, many new shell forms appear. After that burst, the lineage again shows little change for millions of years. Which pattern of evolution does this describe?",
     "choices": [
       "Punctuated equilibrium — long stretches of little change broken by short bursts of rapid change.",
-      "Gradualism — steady, even change accumulating at a constant rate.",
-      "Convergent evolution — unrelated lineages coming to resemble one another.",
-      "Coevolution — two species changing in response to each other."
+      "Gradualism — steady, even change accumulating at a constant rate over millions of years.",
+      "Convergent evolution — unrelated lineages coming to resemble one another in similar environments.",
+      "Coevolution — two species changing in response to each other over long stretches of time."
     ],
     "answer": "A",
     "hints": [
@@ -442,10 +442,10 @@
     "responseFormat": "mcq",
     "problemText": "In one lake, some fish of a single ancestral population feed at the surface and others feed on the bottom. Nothing physically separates them, but surface feeders court only surface feeders and bottom feeders court only bottom feeders, and genetic testing shows the two groups no longer exchange genes. A student says this cannot be speciation, because no mountain range or river divides them. Which response is best?",
     "choices": [
-      "The student is correct: speciation requires a physical barrier in every case.",
-      "The student is correct, because two groups sharing one lake are by definition one species.",
-      "The student is incorrect, but only because the surface and the bottom of a lake count as a geographic barrier.",
-      "The student is incorrect: this is sympatric speciation, in which mating preferences rather than geography stop gene flow between groups living in the same place."
+      "The student is correct: speciation requires a physical barrier in every case, such as a mountain range, a river, or open sea.",
+      "The student is correct, because two groups sharing one lake are by definition one species, whatever their courtship habits.",
+      "The student is incorrect, but only because the surface and the bottom of a lake count as a geographic barrier, just as a river or mountain range would.",
+      "The student is incorrect: this is sympatric speciation, in which mating preferences rather than geography stop gene flow between groups in one place."
     ],
     "answer": "D",
     "hints": [

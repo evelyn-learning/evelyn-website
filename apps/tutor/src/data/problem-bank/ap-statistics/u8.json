@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "Before carrying out a chi-square goodness-of-fit test, which condition must be checked?",
     "choices": [
-      "All observed counts must be at least 30",
+      "All observed counts must be at least 30, so that the chi-square approximation is accurate enough",
       "The data come from a random sample or random process, and all expected counts are at least 5",
-      "The population must be approximately Normal",
-      "Every category must have the same expected count"
+      "The population must be approximately Normal, or the sample size must be at least 30",
+      "Every category must have the same expected count under the null hypothesis"
     ],
     "answer": "B",
     "hints": ["Look at the EXPECTED counts, not the observed counts.", "Random sampling still matters, just as it does for other inference procedures."]
@@ -96,9 +96,9 @@
     "responseFormat": "mcq",
     "problemText": "A chi-square test for homogeneity is the appropriate procedure when:",
     "choices": [
-      "One random sample is classified by two categorical variables",
-      "A single sample's distribution is compared to a claimed distribution",
-      "Two quantitative variables' correlation is tested",
+      "One random sample is classified by two categorical variables to test for an association",
+      "A single sample's distribution is compared to a claimed distribution for one categorical variable",
+      "Two quantitative variables' correlation is tested using counts in a two-way table",
       "Independent random samples from several populations are compared on the same categorical variable"
     ],
     "answer": "D",
@@ -113,9 +113,9 @@
     "problemText": "A chi-square test for independence is the appropriate procedure when:",
     "choices": [
       "A single random sample is classified by two categorical variables, and we ask whether the variables are associated",
-      "Independent samples from several populations are compared on one variable",
-      "A sample's counts are compared to a hypothesized population distribution",
-      "Two independent samples' means are compared"
+      "Independent random samples from several populations are compared on the distribution of one categorical variable",
+      "A sample's counts are compared to a hypothesized population distribution across several categories",
+      "Two independent samples' means are compared using a pooled standard error"
     ],
     "answer": "A",
     "hints": ["Look for ONE random sample classified by TWO categorical variables.", "The question asks whether the two variables are associated, not whether several populations match."]
@@ -148,10 +148,10 @@
     "responseFormat": "mcq",
     "problemText": "Before carrying out a chi-square test for independence, which condition must be checked?",
     "choices": [
-      "All observed counts must be at least 5",
+      "All observed counts must be at least 5, along with random sampling and the 10% condition where needed",
       "All expected counts must be at least 5, along with random sampling and the 10% condition where needed",
-      "The two variables must already be known to be independent",
-      "Row totals must equal column totals"
+      "The two variables must already be known to be independent before the test is run",
+      "Row totals must equal column totals so that the expected counts can be computed"
     ],
     "answer": "B",
     "hints": ["It's the EXPECTED counts that must be large enough, not the observed counts."]
@@ -174,10 +174,10 @@
     "responseFormat": "mcq",
     "problemText": "A chi-square test for independence produces chi-square = 12.3, df = 4, and p = 0.015. At alpha = 0.05, the correct conclusion is:",
     "choices": [
-      "Fail to reject H0; there is no evidence of association",
-      "Reject H0; the variables are proven to be independent",
+      "Fail to reject H0; there is no convincing evidence of an association between the variables",
+      "Reject H0; the variables are proven to be independent of each other",
       "Reject H0; there is convincing evidence of an association between the two variables",
-      "The test is invalid because the p-value is too small"
+      "The test is invalid because the p-value is too small relative to the chi-square statistic"
     ],
     "answer": "C",
     "hints": ["Compare the p-value to alpha.", "A small p-value is evidence AGAINST the null hypothesis of no association."]
@@ -255,10 +255,10 @@
     "responseFormat": "mcq",
     "problemText": "Independent random samples of 150 men and 150 women are each classified as supporting or opposing a policy (a single binary categorical variable). Besides a chi-square test for homogeneity, which other procedure could validly test the same question?",
     "choices": [
-      "A chi-square goodness-of-fit test",
-      "A chi-square test for independence",
-      "A paired t-test",
-      "A two-proportion z-test, since there are exactly two groups and one binary variable"
+      "A chi-square goodness-of-fit test using the combined sample of 300 adults",
+      "A one-sample z-test for the overall proportion who support the policy",
+      "A paired t-test comparing the proportion of men and women who support the policy",
+      "A two-proportion z-test, since there are two groups and one binary variable"
     ],
     "answer": "D",
     "hints": ["With exactly two groups and a two-category response, the chi-square test for homogeneity (df = 1) and another familiar procedure give equivalent results.", "Think about comparing two sample proportions directly."]

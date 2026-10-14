@@ -264,10 +264,10 @@
     "responseFormat": "mcq",
     "problemText": "Arab, Persian, Gujarati, and Chinese merchants settled semi-permanently in foreign Indian Ocean ports, often intermarrying locally and maintaining shared religious or commercial ties across vast distances. This pattern of diasporic merchant settlement is best understood as addressing which underlying challenge of long-distance trade?",
     "choices": [
-      "the absence of any common written language among Indian Ocean merchants",
-      "the difficulty of establishing trust and enforcing business agreements between merchants from distant, unfamiliar societies",
-      "the lack of monsoon wind knowledge among foreign merchants arriving in new ports",
-      "a shortage of skilled shipbuilders in Indian Ocean port cities"
+      "the absence of any common written language among Indian Ocean merchants, which made recording contracts impossible",
+      "the difficulty of establishing trust and enforcing agreements between merchants from distant, unfamiliar societies",
+      "the lack of monsoon wind knowledge among foreign merchants arriving in new ports, who needed local pilots to sail home",
+      "a shortage of skilled shipbuilders in Indian Ocean port cities, forcing merchants to settle and build their own vessels"
     ],
     "answer": "B",
     "hints": [
@@ -378,10 +378,10 @@
     "responseFormat": "mcq",
     "problemText": "Much of the gold that reached Mali's trade routes was mined outside Mali's own core territory, in goldfields such as the Akan forest region and the Bambuk/Bure area, controlled by other peoples and polities. Given this, which statement best explains the actual source of Mali's imperial wealth?",
     "choices": [
-      "Mali directly owned and mined nearly all of West Africa's gold within its own core territory",
-      "Mali's wealth came mainly from tribute paid by the neighboring Songhai Empire",
-      "Mali's rulers earned their wealth primarily through direct diplomatic gifts from Mamluk Egypt",
-      "Mali grew wealthy chiefly by controlling and taxing the trade routes and market cities through which gold from various sources moved north"
+      "Mali directly owned and mined nearly all of West Africa's gold within its own core territory, including the Akan and Bambuk fields",
+      "Mali's wealth came mainly from tribute paid by the neighboring Songhai Empire in exchange for Mali's military protection",
+      "Mali's rulers earned their wealth primarily through direct diplomatic gifts from Mamluk Egypt, received during royal pilgrimages to Mecca",
+      "Mali grew wealthy chiefly by controlling and taxing the trade routes and market cities through which gold from various sources moved"
     ],
     "answer": "D",
     "hints": [
@@ -397,10 +397,10 @@
     "responseFormat": "mcq",
     "problemText": "Mansa Musa and other Mali rulers converted to Islam, partly because shared religion with North African trading partners eased business and diplomatic ties. Which statement most accurately describes the broader pattern of religious change across the Mali Empire that resulted from this trade-driven conversion?",
     "choices": [
-      "conversion to Islam was concentrated among rulers and urban merchant classes, while traditional African religions persisted widely, especially in rural areas",
-      "the entire population of the Mali Empire converted to Islam within a single generation of Mansa Musa's reign",
-      "Mansa Musa's conversion had no influence on religious practice anywhere else in the empire",
-      "traditional African religions were formally banned throughout Mali immediately after Mansa Musa's 1324 hajj"
+      "conversion to Islam was concentrated among rulers and urban merchants, while traditional African religions persisted widely, especially in rural areas",
+      "the entire population of the Mali Empire converted to Islam within a single generation of Mansa Musa's reign, abandoning traditional practices in cities and countryside",
+      "Mansa Musa's conversion had no influence on religious practice anywhere else in the empire, remaining a private matter for the royal court",
+      "traditional African religions were formally banned throughout Mali immediately after Mansa Musa's 1324 hajj, by royal decree"
     ],
     "answer": "A",
     "hints": [

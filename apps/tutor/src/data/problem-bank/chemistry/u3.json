@@ -78,9 +78,9 @@
     "problemText": "Germanium sits directly below silicon in Group 14 (Period 4) and lies right on the staircase that divides the table. Which statement best describes germanium?",
     "choices": [
       "It is a metalloid with 4 valence electrons, so it conducts electricity partway — better than a nonmetal, worse than a metal",
-      "It is a nonmetal with 14 valence electrons, because its group number is 14",
-      "It is a transition metal, because it sits in the middle stretch of the table",
-      "It is an alkaline earth metal, because it is a solid that conducts some electricity"
+      "It is a nonmetal with 14 valence electrons, because its group number is 14, so it does not conduct electricity at all",
+      "It is a transition metal, because it sits in the middle stretch of the table, so it conducts about as well as iron does",
+      "It is an alkaline earth metal, because it is a solid that conducts some electricity and forms ions with a 2+ charge"
     ],
     "answer": "A",
     "hints": [
@@ -96,10 +96,10 @@
     "responseFormat": "mcq",
     "problemText": "A student applies the \"subtract 10\" shortcut to iron, which sits in Group 8, gets 8 − 10 = −2 valence electrons, and concludes that the shortcut must be broken. What is the real problem here?",
     "choices": [
-      "The shortcut works in every column; the student simply subtracted in the wrong order and iron has 2 valence electrons",
-      "Iron is a transition metal (Groups 3-12), where electrons fill inner d orbitals, so no group-number shortcut gives its valence count — which is exactly why iron has more than one possible ion charge",
-      "Group 8 is a noble-gas column, so iron already has a full shell of 8 valence electrons",
-      "The shortcut covers Groups 1-12, so iron has 8 valence electrons and forms only Fe⁸⁺"
+      "The shortcut works in every column; the student simply subtracted in the wrong order, and 10 − 8 shows that iron has 2 valence electrons",
+      "Iron is a transition metal (Groups 3-12), where electrons fill inner d orbitals, so no group-number shortcut gives its valence count",
+      "Group 8 is a noble-gas column, so iron already has a full shell of 8 valence electrons and needs no shortcut at all",
+      "The shortcut covers Groups 1-12 with no subtraction, so iron has 8 valence electrons and forms only Fe⁸⁺ ions"
     ],
     "answer": "B",
     "hints": [
@@ -134,10 +134,10 @@
     "responseFormat": "mcq",
     "problemText": "Oxygen sits in Period 2, Group 16; sulfur sits in Period 3, Group 16. Which atom has the higher electronegativity, and why?",
     "choices": [
-      "Sulfur — it has more electrons available to attract the shared pair",
-      "Sulfur — it is farther down the column, and lower elements are always more reactive",
-      "Oxygen — its valence electrons sit in a shell closer to the nucleus with less shielding, so it pulls shared electrons harder",
-      "They are equal, because electronegativity is fixed for every member of a group"
+      "Sulfur — it has more electrons of its own available to attract the shared pair toward itself",
+      "Sulfur — it is farther down the column, and lower elements are always more reactive and grab electrons more strongly",
+      "Oxygen — its valence shell is closer to the nucleus and less shielded, so it pulls shared electrons harder",
+      "They are equal, because electronegativity is fixed for every member of a group by its valence count"
     ],
     "answer": "C",
     "hints": [
@@ -153,10 +153,10 @@
     "responseFormat": "mcq",
     "problemText": "Rubidium (Period 5, 37 protons) sits directly below potassium (Period 4, 19 protons) in Group 1. Compared with a potassium atom, a rubidium atom is:",
     "choices": [
-      "Smaller, because rubidium has 18 more protons pulling its electrons inward",
-      "The same size, because both elements have exactly 1 valence electron",
-      "Smaller, because rubidium's extra electrons pack together more tightly",
-      "Larger, because its valence electron occupies an additional shell, farther out and behind more shielding"
+      "Smaller, because rubidium has 18 more protons pulling its electrons inward toward the nucleus",
+      "The same size, because both elements have exactly 1 valence electron in their outermost s orbital",
+      "Smaller, because rubidium's extra electrons pack together more tightly in its crowded inner shells",
+      "Larger, because its valence electron occupies an additional shell, farther out and more shielded"
     ],
     "answer": "D",
     "hints": [
@@ -204,10 +204,10 @@
     "responseFormat": "mcq",
     "problemText": "A student claims: \"Sulfur (Period 3, 16 protons) must be bigger than oxygen (Period 2, 8 protons) because sulfur has 8 more electrons — and by the same reasoning sulfur must also be bigger than magnesium (Period 3, 12 protons).\" Evaluate both comparisons.",
     "choices": [
-      "Both conclusions are correct, and electron count is the right explanation for each of them",
-      "Sulfur is indeed larger than oxygen, but because it has an extra occupied shell rather than because of raw electron count — and sulfur is actually SMALLER than magnesium, since both share Period 3 and sulfur's 4 extra protons pull that shared shell in tighter",
-      "Both conclusions are wrong: sulfur is smaller than oxygen and smaller than magnesium",
-      "Sulfur is larger than magnesium but smaller than oxygen, because atomic radius increases from left to right across a period"
+      "Both conclusions are correct, and electron count is the right explanation for each of them, since more electrons fill more space",
+      "Sulfur is larger than oxygen due to an extra shell, not electron count; but it is SMALLER than magnesium, as its 4 extra protons pull the shared outer shell tighter",
+      "Both conclusions are wrong: sulfur is smaller than oxygen and smaller than magnesium, because its 16 protons pull harder than either",
+      "Sulfur is larger than magnesium but smaller than oxygen, because atomic radius steadily increases from left to right across a period and decreases going down a group"
     ],
     "answer": "B",
     "hints": [
@@ -243,9 +243,9 @@
     "problemText": "Potassium sits in Group 1 and bromine sits in Group 17. Which pair of monatomic ions do these two elements form?",
     "choices": [
       "K⁻ and Br⁺, because the metal collects electrons and the nonmetal releases them",
-      "K⁺ and Br⁷⁺, because bromine sheds all 7 of its valence electrons",
-      "K⁺ and Br⁻ — potassium loses its single valence electron and bromine gains one to complete its octet",
-      "K²⁺ and Br²⁻, because monatomic ions always carry a charge of 2"
+      "K⁺ and Br⁷⁺, because bromine sheds all 7 of its valence electrons to reach a full shell",
+      "K⁺ and Br⁻ — potassium loses its one valence electron and bromine gains one",
+      "K²⁺ and Br²⁻, because monatomic ions always carry a charge of 2 in either direction"
     ],
     "answer": "C",
     "hints": [
@@ -293,10 +293,10 @@
     "responseFormat": "mcq",
     "problemText": "O²⁻ (8 protons), Na⁺ (11 protons), and Al³⁺ (13 protons) each contain exactly 10 electrons. Which of the three is the LARGEST, and why?",
     "choices": [
-      "Al³⁺ — the biggest charge means it takes up the most space",
-      "O²⁻ — only 8 protons are holding those 10 electrons, so the grip is weakest and the electron cloud spreads widest",
-      "Na⁺ — sodium is a metal, and metal particles are always the largest",
-      "All three are identical in size, because all three contain 10 electrons"
+      "Al³⁺ — the biggest charge means it takes up the most space and pushes its electrons outward",
+      "O²⁻ — only 8 protons hold those 10 electrons, so the grip is weakest and the cloud spreads widest",
+      "Na⁺ — sodium is a metal, and metal particles are always the largest of any ions with the same electron count",
+      "All three are identical in size, because all three contain 10 electrons in the same filled shells"
     ],
     "answer": "B",
     "hints": [
@@ -312,10 +312,10 @@
     "responseFormat": "mcq",
     "problemText": "Both iron(II) chloride and iron(III) chloride are real compounds. A student objects: \"Iron would have to be in Group 2 and Group 3 at the same time for that to work, which is impossible, so one of those compounds must be fake.\" What is the correct analysis?",
     "choices": [
-      "Iron is a transition metal, and transition metals have more than one stable charge — Fe²⁺ and Fe³⁺ are both real, the Roman numeral names which one is present, and the group-to-charge shortcut simply does not apply to Groups 3-12",
-      "Only iron(III) chloride is real; the II in the other name is a typo for the number of chloride ions",
-      "Iron sits in Group 8, so its only possible ion is Fe⁸⁺ and both names are wrong",
-      "The Roman numeral counts the iron atoms in the formula, not the charge, so neither name says anything about iron's ion"
+      "Iron is a transition metal with more than one stable ion, Fe²⁺ and Fe³⁺; the Roman numeral names which is present, and group-based charges don't apply",
+      "Only iron(III) chloride is real; the II in the other name is a typo for the number of chloride ions it contains",
+      "Iron sits in Group 8, so its only possible ion is Fe⁸⁺, and both names are wrong because neither shows that charge",
+      "The Roman numeral counts the iron atoms in the formula, not the charge, so neither name says anything about iron's ion or which of the two compounds is real"
     ],
     "answer": "A",
     "hints": [

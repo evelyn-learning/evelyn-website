@@ -334,9 +334,9 @@
     "problemText": "A region has outer boundary $y=R(x)$ and inner boundary $y=r(x)$ and is revolved about the $x$-axis. By the washer method, the volume is:",
     "choices": [
       "$\\pi\\int_a^b \\left(R(x)-r(x)\\right)^2\\,dx$",
-      "$\\pi\\int_a^b \\left(\\left[R(x)\\right]^2-\\left[r(x)\\right]^2\\right)\\,dx$",
+      "$\\pi\\int_a^b \\left([R(x)]^2-[r(x)]^2\\right)\\,dx$",
       "$\\pi\\int_a^b \\left(R(x)-r(x)\\right)\\,dx$",
-      "$\\pi\\int_a^b \\left[R(x)\\right]^2\\,dx - r(x)$"
+      "$\\pi\\int_a^b \\left[R(x)\\right]^2\\,dx - \\left[r(x)\\right]^2$"
     ],
     "answer": "B",
     "hints": [

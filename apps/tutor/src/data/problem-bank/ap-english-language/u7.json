@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "A draft claims: \"This school's later start time has completely eliminated student tardiness and improved every student's grades.\" Which revision both scopes the claim to what the evidence supports AND makes a genuine concession about the claim's own limits?",
     "choices": [
-      "The later start time has helped some students in some ways, though results vary depending on many different individual factors.",
-      "While the later start time helps most students, critics argue it fails to address the real causes of student stress.",
+      "The later start time has helped some students in some ways, though results vary depending on many different individual factors such as sleep habits, commute length, and home life.",
+      "While the later start time helps most students, critics argue it fails to address the real causes of student stress, such as heavy homework loads and pressure over college admissions and testing.",
       "The later start time has reduced tardiness for most students and modestly improved grades for many, though a few students with early morning commitments now arrive more rushed and stressed.",
-      "The later start time is clearly the single most important reform this school has made in the past decade."
+      "The later start time is clearly the single most important reform this school has made in the past decade, as the drop in tardiness and the rise in grades both show."
     ],
     "answer": "C",
     "hints": [
@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "A draft reasons: \"The coach benched the star player, so the coach clearly doesn't value winning.\" Which revision adds genuine complexity to this reasoning instead of just restating the obvious first link?",
     "choices": [
-      "Benching the star player suggests the coach is willing to trade a short-term shot at winning for a longer-term message about accountability that could shape the team's culture beyond this single game.",
-      "The coach benched the star player, which shows that the coach made a decision about who plays in this particular game.",
-      "In today's complicated athletic landscape, coaching decisions reflect numerous multifaceted pressures and considerations.",
-      "The coach probably benched the player for some reason, though it's really impossible to know what any coach is thinking."
+      "Benching the star player suggests the coach will trade a short-term shot at winning for a longer-term message about accountability that could shape the team's culture beyond this game.",
+      "The coach benched the star player, which shows that the coach made a decision about who plays in this particular game and who sits on the bench while the rest of the team competes.",
+      "In today's complicated athletic landscape, coaching decisions reflect numerous multifaceted pressures and considerations that shape a coach's choices about the lineup and playing time.",
+      "The coach probably benched the player for some reason, though it's really impossible to know what any coach is thinking when making lineup decisions in the heat of the moment."
     ],
     "answer": "A",
     "hints": [
@@ -83,10 +83,10 @@
     "responseFormat": "mcq",
     "problemText": "A draft reasons: \"The company apologized for the data breach, so the company clearly cares about its customers.\" Which revision traces the implication a further step, rather than stopping at the first plausible link?",
     "choices": [
-      "The company's apology proves beyond doubt that it deeply and sincerely cares about every one of its customers.",
-      "The apology, arriving only after the breach became public, implies the company's concern is bound up with reputational damage control as much as customer welfare — a tension the statement alone doesn't resolve.",
-      "Issuing apologies has become a common and expected part of corporate crisis communication in the modern business world.",
-      "The apology might mean the company cares, or it might not; it's honestly impossible to say either way."
+      "The company's apology proves beyond doubt that it deeply and sincerely cares about every one of its customers, since a company that did not care would have had no reason to apologize at all.",
+      "The apology, arriving only after the breach became public, implies the company's concern is bound up with reputational damage control as much as customer welfare — a tension the statement doesn't resolve.",
+      "Issuing apologies has become a common and expected part of corporate crisis communication in the modern business world, especially after data breaches that affect large numbers of customers and draw public attention.",
+      "The apology might mean the company cares, or it might not; it's honestly impossible to say either way without knowing what its executives were privately thinking when they issued it."
     ],
     "answer": "B",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's essay argues: \"Our town should replace the aging bridge with a new pedestrian walkway.\" Which closing sentence best situates this specific proposal in a genuine broader context, rather than a generic gesture that could close any essay?",
     "choices": [
-      "In the end, this issue shows that infrastructure is important and affects everyone in the community.",
-      "This proposal, like all human endeavors throughout history, reflects our species' eternal struggle between progress and tradition.",
-      "This bridge decision is the latest round in a debate the town has had since the 1960s highway expansion — how much of its shared infrastructure should serve cars versus people on foot.",
-      "There are many perspectives on bridges, and reasonable people can disagree about infrastructure spending."
+      "In the end, this issue shows that infrastructure is important and affects everyone in the community, from daily commuters to the children who walk to school each morning.",
+      "This proposal, like all human endeavors throughout history, reflects our species' eternal struggle between progress and tradition, a tension found in every town and every generation.",
+      "This bridge decision is the latest round in a debate the town has had since the 1960s highway expansion — how much shared infrastructure should serve cars versus people on foot.",
+      "There are many perspectives on bridges, and reasonable people can disagree about infrastructure spending, especially when a town must choose between competing projects."
     ],
     "answer": "C",
     "hints": [
@@ -121,10 +121,10 @@
     "responseFormat": "mcq",
     "problemText": "An essay claims: \"The novel's ending, in which the protagonist chooses silence over confession, reflects a specific failure of nerve.\" Which sentence best situates this specific literary claim within a genuine broader context?",
     "choices": [
-      "This shows that literature often deals with difficult themes that speak to readers everywhere.",
-      "Silence, confession, guilt, and redemption are universal themes found in nearly every work of literature ever written.",
-      "Some readers might interpret the ending as a failure of nerve, while others might see it quite differently, and both readings have merit.",
-      "The protagonist's silence echoes a pattern the novel traces across three generations of this family, in which each generation's most consequential choices happen in withheld words rather than in dramatic action."
+      "This shows that literature often deals with difficult themes that speak to readers everywhere, regardless of when or where a particular novel happens to have been written.",
+      "Silence, confession, guilt, and redemption are universal themes found in nearly every work of literature ever written, which is why this novel's ending resonates with so many readers.",
+      "Some readers might interpret the ending as a failure of nerve, while others might see it quite differently, and both readings have merit given how open-ended the final chapter leaves the protagonist's motives.",
+      "The protagonist's silence echoes a pattern the novel traces across three generations of this family, in which each generation's most consequential choices happen in withheld words rather than dramatic action."
     ],
     "answer": "D",
     "hints": [
@@ -140,10 +140,10 @@
     "responseFormat": "mcq",
     "problemText": "A writer is drafting an essay criticizing a wasteful bureaucratic process and is choosing how to open it. Which choice represents an effective, controlled rhetorical risk rather than an unclear or overwrought one?",
     "choices": [
-      "Open with an escalating cascade of exclamation points and rhetorical questions to make unmistakably clear how upset the writer is!!!",
-      "Open with a plain, literal sentence stating that the process is inefficient and ought to be reformed.",
-      "Sustain a deadpan, official-memo voice throughout the opening paragraphs — praising the committee's 'thorough sixteen-step form' with a straight face — before letting the absurdity of the process speak for itself.",
-      "Open in a sarcastic tone for one sentence, then shift to sincere outrage, then settle into a formal academic register for the rest of the paragraph."
+      "Open with an escalating cascade of exclamation points and rhetorical questions to make unmistakably clear how upset the writer is about the process before any evidence is presented!!!",
+      "Open with a plain, literal sentence stating that the process is inefficient and ought to be reformed, followed by a list of the specific steps the writer would cut.",
+      "Sustain a deadpan, official-memo voice through the opening paragraphs — praising the committee's 'thorough sixteen-step form' with a straight face — before letting the process's absurdity speak for itself.",
+      "Open in a sarcastic tone for one sentence, then shift to sincere outrage, then settle into a formal academic register for the rest of the paragraph, so readers see every side of the writer's growing frustration."
     ],
     "answer": "C",
     "hints": [
@@ -159,10 +159,10 @@
     "responseFormat": "mcq",
     "problemText": "A paragraph analyzes an essay that compares a broken healthcare system to a leaking ship — patched hulls, abandoned lifeboats, a captain refusing to chart a new course — sustained across several paragraphs without ever breaking into literal statement. Which claim about this stylistic choice best identifies it as an effective, controlled rhetorical risk?",
     "choices": [
-      "The metaphor is a controlled risk because the writer sustains the ship imagery consistently across every paragraph, so the comparison accumulates meaning instead of reading as one clever aside.",
-      "The metaphor is risky simply because comparing healthcare to a ship is a surprising, creative idea that most writers would never think to use.",
-      "The metaphor works because it relies on sophisticated, elevated vocabulary that makes the prose sound more intelligent throughout.",
-      "The metaphor is effective because it presents both sides of the healthcare debate fairly before reaching a balanced conclusion."
+      "The metaphor is a controlled risk because the writer sustains the ship imagery consistently across every paragraph, so the comparison accumulates meaning instead of reading as a clever aside.",
+      "The metaphor is risky simply because comparing healthcare to a ship is a surprising, creative idea that most writers would never think to use, which makes the essay instantly memorable.",
+      "The metaphor works because it relies on sophisticated, elevated vocabulary that makes the prose sound more intelligent throughout and signals the writer's expertise to skeptical readers in the field.",
+      "The metaphor is effective because it presents both sides of the healthcare debate fairly before reaching a balanced conclusion that readers on either side of the issue can accept."
     ],
     "answer": "A",
     "hints": [

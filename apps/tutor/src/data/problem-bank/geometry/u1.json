@@ -22,9 +22,9 @@
     "problemText": "A student claims that ray ST and ray TS are the same ray written two different ways. Which statement is correct?",
     "choices": [
       "They are different rays: ray ST starts at S and passes through T, while ray TS starts at T and passes through S.",
-      "They are the same ray, because segment ST and segment TS are the same segment.",
-      "They are the same ray, because a ray extends forever in both directions.",
-      "They are different rays because ray ST is longer than ray TS."
+      "They are the same ray, because segment ST and segment TS are the same segment with the same two endpoints.",
+      "They are the same ray, because a ray extends forever in both directions, so the order of its letters does not matter.",
+      "They are different rays because ray ST is longer than ray TS, since its length is measured starting from point S."
     ],
     "answer": "A",
     "hints": [
@@ -73,10 +73,10 @@
     "responseFormat": "mcq",
     "problemText": "Which statement is ALWAYS true?",
     "choices": [
-      "Two lines that never intersect must be parallel.",
-      "Any three points determine exactly one plane.",
+      "Two lines that never intersect must be parallel, since they do not share a single point.",
+      "Any three points determine exactly one plane, wherever in space those points happen to lie.",
       "If two points of a line lie in a plane, then the entire line lies in that plane.",
-      "Two distinct planes that intersect meet in exactly one point."
+      "Two distinct planes that intersect meet in exactly one point, the point where they cross."
     ],
     "answer": "C",
     "hints": [

@@ -207,9 +207,9 @@
     "problemText": "The First Opium War (1839-1842) ended with the Treaty of Nanjing, which imposed 'unequal treaty' terms on Qing China, including extraterritoriality — the principle that foreign nationals accused of crimes in China would be tried under their own country's laws rather than Chinese law. Which statement best describes what extraterritoriality meant for Qing sovereignty?",
     "choices": [
       "it left Qing China formally sovereign but stripped it of legal jurisdiction over foreign nationals within its own territory",
-      "it formally transferred all Qing territory to British colonial administration",
-      "it required foreign nationals in China to be tried only under Qing law in every case",
-      "it abolished the Qing dynasty and replaced it with a British-appointed government"
+      "it formally transferred all Qing territory to British colonial administration, ending China's existence as an independent state",
+      "it required foreign nationals in China to be tried only under Qing law in every case, strengthening Chinese courts",
+      "it abolished the Qing dynasty and replaced it with a British-appointed government ruling from Nanjing"
     ],
     "answer": "A",
     "hints": [
@@ -225,10 +225,10 @@
     "responseFormat": "mcq",
     "problemText": "Unlike much of Africa and South Asia, China was never formally partitioned into European colonies; instead, foreign powers carved out \"spheres of influence\" — regions of exclusive economic and political privilege — while the Qing dynasty remained nominally sovereign. Which statement best captures why historians classify this arrangement as \"informal imperialism\" rather than formal colonization?",
     "choices": [
-      "foreign powers had no meaningful economic or political influence in China at all during this period",
-      "the Qing dynasty formally ceded all of its territory to a single foreign power under one comprehensive treaty",
-      "spheres of influence gave the Qing dynasty exclusive control over foreign merchants operating within its borders",
-      "foreign powers exercised substantial economic and political control without formally replacing Qing sovereignty with direct colonial administration"
+      "foreign powers had no meaningful economic or political influence in China at all during this period of Qing rule",
+      "the Qing dynasty formally ceded all of its territory to a single foreign power under one comprehensive treaty settlement",
+      "spheres of influence gave the Qing dynasty exclusive control over foreign merchants operating within its borders and treaty ports",
+      "foreign powers exercised substantial economic and political control without replacing Qing sovereignty with direct colonial rule"
     ],
     "answer": "D",
     "hints": [
@@ -263,10 +263,10 @@
     "responseFormat": "mcq",
     "problemText": "Historians estimate that Mauritius and British Guiana together received roughly 64 percent of all Indian indentured laborers transported between 1834 and 1917, far more than smaller destinations like Fiji. Beyond Fiji's later 1879 start date, which additional factor most plausibly explains this concentration in Mauritius and British Guiana specifically?",
     "choices": [
-      "both colonies banned the recruitment of any laborers other than those from India",
-      "both had large, well-established sugar plantation economies with an especially urgent labor need immediately after the 1833 abolition of slavery",
-      "both colonies were located in the Pacific Ocean, closer to Indian ports than any Caribbean colony",
-      "both colonies had no sugar industry and instead recruited indentured labor for mining"
+      "both colonies banned the recruitment of any laborers other than those from India under their colonial labor laws",
+      "both had large, established sugar plantation economies with an urgent labor need immediately after the 1833 abolition of slavery",
+      "both colonies were located in the Pacific Ocean, closer to Indian ports than any Caribbean colony, which cut voyage costs",
+      "both colonies had no sugar industry and instead recruited indentured labor for gold and bauxite mining operations in their interiors"
     ],
     "answer": "B",
     "hints": [
@@ -358,10 +358,10 @@
     "responseFormat": "mcq",
     "problemText": "The Meiji government issued the Charter Oath in 1868, shortly after the fall of the Tokugawa shogunate. Which of the following best describes the Charter Oath's basic purpose?",
     "choices": [
-      "to formally abolish the imperial throne and replace it with an elected Meiji parliament",
-      "to establish, in 1868, Japan's first detailed and fully drafted written national constitution",
+      "to formally abolish the imperial throne and replace it with an elected Meiji parliament holding full sovereign authority over the nation",
+      "to establish, in 1868, Japan's first detailed and fully drafted written national constitution, modeled on Prussia's",
       "to set out broad guiding principles for Japan's new government, favoring consultative rule and openness to outside knowledge",
-      "to declare war on Qing China immediately following the Tokugawa shogunate's collapse in 1868"
+      "to declare war on Qing China immediately following the Tokugawa shogunate's collapse in 1868, seeking control of Korea"
     ],
     "answer": "C",
     "hints": [

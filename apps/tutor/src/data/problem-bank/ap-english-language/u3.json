@@ -83,10 +83,10 @@
     "responseFormat": "mcq",
     "problemText": "A synthesis prompt provides: Source A: \"Standardized tests give every applicant an identical, objective measure to be judged by.\" Source B: \"Test-prep coaching that costs thousands of dollars means the 'objective' score mostly measures a family's bank account.\" Which thesis takes the most defensible position ACROSS both sources, rather than simply repeating one side?",
     "choices": [
-      "Source A argues standardized tests are objective, while Source B argues they are not",
+      "Source A argues standardized tests are objective, while Source B argues they are not because of costly test-prep coaching",
       "A test billed as an objective measure stops being one once unequal access to coaching lets wealth, not ability, decide the score",
-      "Standardized tests are the fairest tool available for judging every college applicant on equal footing",
-      "Whether standardized tests are fair or unfair depends entirely on one's perspective on the issue"
+      "Standardized tests are the fairest tool available for judging every college applicant on equal footing, whatever coaching they had",
+      "Whether standardized tests are fair or unfair depends entirely on one's perspective on the issue and on which source one trusts"
     ],
     "answer": "B",
     "hints": [
@@ -103,9 +103,9 @@
     "problemText": "A student's draft thesis reads: \"Some people think homework helps students learn, and other sources think it just adds stress, so it really just depends on the student.\" Which revision converts this into a defensible, arguable position rather than a description of disagreement?",
     "choices": [
       "Homework helps learning only when its length is matched to a subject's actual practice needs; past that point, it adds stress without adding retention",
-      "It is hard to say for certain whether homework helps or hurts, since reasonable people disagree about its value",
-      "Sources disagree on whether homework helps or hurts, and both sides make valid points worth considering",
-      "Homework has both benefits and drawbacks, as shown by the differing sources provided"
+      "It is hard to say for certain whether homework helps or hurts, since reasonable people disagree about its value and the sources point in different directions",
+      "Sources disagree on whether homework helps or hurts, and both sides make valid points worth considering before any school sets its homework policy",
+      "Homework has both benefits and drawbacks, as shown by the differing sources provided, so each student must decide what works best for them"
     ],
     "answer": "A",
     "hints": [
@@ -121,10 +121,10 @@
     "responseFormat": "mcq",
     "problemText": "A student drafts: \"Source A says urban gardens increase neighborhood property values. Source B also discusses gardens, noting that garden upkeep often falls on volunteer labor that eventually burns out. Both sources talk about community gardens.\" Which revision replaces this book-report paragraph with one that integrates both sources as evidence for a single claim?",
     "choices": [
-      "Source A discusses property values from gardens, and then Source B discusses volunteer burnout, so both angles are worth knowing",
-      "Urban gardens are a clear net benefit to neighborhoods because they increase nearby property values",
-      "Community gardens are a complicated issue that involves both benefits and costs for a neighborhood",
-      "Community gardens raise property values only as long as someone keeps tending them, so a value gain that Source A celebrates is fragile precisely because Source B shows the volunteer labor sustaining it tends to burn out"
+      "Source A discusses property values from gardens, and then Source B discusses volunteer burnout, so both angles are worth knowing for anyone thinking about starting a community garden",
+      "Urban gardens are a clear net benefit to neighborhoods because they increase nearby property values, and this advantage outweighs any concerns raised elsewhere about the volunteers who maintain them over the years",
+      "Community gardens are a complicated issue that involves both benefits and costs for a neighborhood, including higher property values and the strain placed on volunteer labor",
+      "Community gardens raise property values only as long as someone keeps tending them, so the value gain Source A celebrates is fragile because Source B shows the volunteer labor sustaining it tends to burn out"
     ],
     "answer": "D",
     "hints": [
@@ -140,10 +140,10 @@
     "responseFormat": "mcq",
     "problemText": "A draft paragraph reads: \"Source A reports that reducing lunch periods to twenty minutes doesn't affect how much food students eat. Source B reports that students who eat lunch in under twenty minutes make significantly more trips to the nurse's office with stomachaches. The schools have short lunch periods.\" Which revision most effectively integrates both sources as evidence for one claim, rather than narrating each source in turn?",
     "choices": [
-      "Both Source A and Source B examine twenty-minute lunch periods, one from a food-quantity angle and the other from a health angle",
-      "Rushed lunch periods clearly damage student health, as the spike in nurse visits shows",
-      "A twenty-minute lunch period may not shrink how much food students eat, but Source B's spike in stomachache visits suggests it changes how safely they eat it — the real cost isn't quantity, it's the body's ability to handle a rushed meal",
-      "Source A's finding about food quantity and Source B's finding about stomachaches are both relevant considerations for schools to weigh"
+      "Both Source A and Source B examine twenty-minute lunch periods, one from a food-quantity angle and the other from a health angle, and together they show that lunch length is a topic researchers have studied quite closely",
+      "Rushed lunch periods clearly damage student health, as the spike in nurse visits shows, so Source A's finding about unchanged food quantity can be set aside as irrelevant to the question",
+      "A twenty-minute lunch may not shrink how much students eat, but Source B's spike in stomachache visits suggests it changes how safely they eat — the real cost isn't quantity but the body's ability to handle a rushed meal",
+      "Source A's finding about food quantity and Source B's finding about stomachaches are both relevant considerations for schools to weigh when they decide how long their lunch periods should run each day"
     ],
     "answer": "C",
     "hints": [
@@ -292,9 +292,9 @@
     "responseFormat": "mcq",
     "problemText": "A synthesis prompt provides: Source A, a labor economist, writes that a 15-dollar minimum wage \"raises earnings for the lowest-paid workers with only modest job losses in high-cost regions.\" Source B, also a labor economist, writes that the same policy \"produces steep job losses concentrated among the least-experienced workers in lower-cost regions.\" Which thesis takes the most defensible position across both sources?",
     "choices": [
-      "Source A supports a 15-dollar minimum wage while Source B opposes it, so the two labor economists simply and irreconcilably disagree with one another",
-      "A 15-dollar minimum wage is unambiguously good economic policy nationwide, since Source A already confirms that it raises earnings for workers",
-      "Because two credentialed economists disagree, no defensible thesis about the minimum wage can realistically be written from these two sources alone",
+      "Source A supports a 15-dollar minimum wage while Source B opposes it, so the two labor economists simply and irreconcilably disagree with one another about whether the policy works at all",
+      "A 15-dollar minimum wage is unambiguously good economic policy nationwide, since Source A already confirms that it raises earnings for workers, and Source B's job-loss figures concern only a few regions",
+      "Because two credentialed economists disagree, no defensible thesis about the minimum wage can realistically be written from these two sources alone, so the essay should simply present both views side by side",
       "A 15-dollar minimum wage's effect depends heavily on regional cost of living, so a single national wage floor risks helping low-cost-region workers' earnings while pricing out their least-experienced peers"
     ],
     "answer": "D",
@@ -332,8 +332,8 @@
     "choices": [
       "Both Source A and Source B examine the same bike-share program, one from a ridership angle and the other from an infrastructure angle worth noting",
       "The bike-share program clearly and unambiguously reduces car trips citywide, as the 40% figure from Source A already shows on its own",
-      "The bike-share program's strong 40% car-trip replacement rate is likely capped by Source B's finding that bike lanes thin out beyond downtown, leaving suburban riders without a safe route to use it",
-      "Source A's ridership finding and Source B's infrastructure finding are both relevant considerations that are worth mentioning somewhere in the essay"
+      "The bike-share program's 40% car-trip replacement rate is likely capped by Source B's finding that bike lanes thin out beyond downtown, leaving suburban riders without a safe route to use it",
+      "Source A's ridership finding and Source B's infrastructure finding are both relevant considerations that are worth mentioning somewhere in the essay as the city plans its transit future"
     ],
     "answer": "C",
     "hints": [

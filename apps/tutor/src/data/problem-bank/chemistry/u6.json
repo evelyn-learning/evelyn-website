@@ -95,10 +95,10 @@
     "responseFormat": "mcq",
     "problemText": "A student is asked how many moles are in a 48.0 g sample of oxygen GAS, O₂. The student divides 48.0 by 16.0 and reports 3.00 mol. Atomic mass O = 16.0. Which statement correctly evaluates this work?",
     "choices": [
-      "No error — oxygen's mass on the periodic table is 16.0, so 3.00 mol is correct",
-      "The student should have multiplied by the molar mass instead of dividing, giving 768 mol",
+      "No error — oxygen's mass on the periodic table is 16.0 g/mol, so dividing 48.0 g by 16.0 gives the correct 3.00 mol",
+      "The student should have multiplied the mass by the molar mass instead of dividing, giving 768 mol of O₂ in the sample",
       "The student used oxygen's ATOMIC mass (16.0) instead of the molar mass of O₂ (32.0 g/mol); the sample is 1.50 mol",
-      "The student should have divided by 22.4 L/mol instead, giving 2.14 mol"
+      "The student should have divided by the molar volume of a gas, 22.4 L/mol, instead of a mass, giving 2.14 mol of O₂"
     ],
     "answer": "C",
     "hints": [

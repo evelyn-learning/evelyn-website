@@ -199,10 +199,10 @@
     "responseFormat": "mcq",
     "problemText": "Researchers record x = the number of weeks a young tree has been fertilized and y = its height in centimeters, collecting data for weeks 1 through 8 only. They fit the trend line y = 3.2x + 5. A student plugs in x = 40, gets 133 cm, and concludes that fertilizing for 40 weeks makes a tree reach 133 cm. Which criticism of that conclusion is most accurate?",
     "choices": [
-      "The arithmetic is wrong; the trend line actually predicts 128 cm at week 40.",
-      "The prediction is fine, but the slope should be read as a percent increase rather than centimeters per week.",
-      "Week 40 lies far outside the weeks 1 through 8 the line was built from, so the prediction is unreliable extrapolation, and a trend line by itself cannot establish that fertilizing caused the height.",
-      "The trend line is invalid because a trend line for growth data must pass through the origin."
+      "The arithmetic is wrong; the trend line actually predicts 128 cm at week 40, so the student's 133 cm overstates the height by 5 cm.",
+      "The prediction is fine, but the slope should be read as a percent increase in height each week rather than as a fixed number of centimeters per week of fertilizing.",
+      "Week 40 lies far outside weeks 1 through 8, so the prediction is unreliable extrapolation, and a trend line alone cannot show that fertilizing caused the height.",
+      "The trend line is invalid because a trend line for growth data must pass through the origin, since a tree given zero weeks of fertilizer has zero height."
     ],
     "answer": "C",
     "hints": [

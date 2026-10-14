@@ -275,10 +275,10 @@
     "responseFormat": "mcq",
     "problemText": "An mRNA normally reads 5'-AUGCAUCGAGUA-3' and is translated starting at its first base. A mutation deletes the fourth base of this mRNA, the C. Translation still begins at the first base of the shortened molecule. What are the codons of the mutated mRNA?",
     "choices": [
-      "AUG, CAU, CGA, GUA — the codons are unchanged.",
+      "AUG, CAU, CGA, GUA — the codons are unchanged, because the ribosome skips over the gap.",
       "AUG, AUC, GAG, with UA left over — every codon after the first is different.",
-      "AUG, CAU, GAG, GUA — only the third codon changes.",
-      "AUG, CAU, CGA — the mRNA is simply one codon shorter."
+      "AUG, CAU, GAG, GUA — only the third codon changes, since only one base was lost.",
+      "AUG, CAU, CGA — the mRNA is simply one codon shorter, with the last codon dropped."
     ],
     "answer": "B",
     "hints": [
@@ -352,9 +352,9 @@
     "responseFormat": "mcq",
     "problemText": "A forensic scientist recovers a very small amount of DNA from a crime scene and runs the polymerase chain reaction (PCR) on it. What does PCR do?",
     "choices": [
-      "It separates DNA fragments by size so that their lengths can be measured.",
-      "It reads the order of the amino acids in a protein.",
-      "It cuts DNA into pieces at specific recognition sequences.",
+      "It separates DNA fragments by size so that their lengths can be measured and compared with a suspect's.",
+      "It reads the order of the amino acids in a protein found at the scene so the source can be identified.",
+      "It cuts DNA into pieces at specific recognition sequences so the fragments can be matched to a suspect.",
       "It makes a very large number of copies of a chosen segment of DNA from a small starting sample."
     ],
     "answer": "D",
@@ -447,10 +447,10 @@
     "responseFormat": "mcq",
     "problemText": "A 500 base-pair region of a gene is amplified by PCR and then cut with a restriction enzyme. The normal allele contains one recognition site for that enzyme inside the amplified region, located 200 base pairs from one end, so cutting the normal allele yields two fragments. A mutation in the other allele destroys that recognition site, so that allele is not cut at all. A person carries one normal allele and one mutant allele. Both alleles are amplified and cut together, and the products are run in a single lane of a gel. What is seen?",
     "choices": [
-      "One band, at 500 base pairs.",
+      "One band, at 500 base pairs, close to the well.",
       "Two bands, at 300 and 200 base pairs.",
       "Two bands, at 500 and 200 base pairs.",
-      "Three bands, at 500, 300 and 200 base pairs, with the 200 base-pair band farthest from the well."
+      "Three bands, at 500, 300 and 200 base pairs."
     ],
     "answer": "D",
     "hints": [

@@ -39,7 +39,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Excavations at Catalhoyuk, a settlement in what is now Turkey occupied around 7000 BCE, reveal several thousand residents living in mud-brick houses packed wall to wall and farming the surrounding plain — but no palace, no separate temple district, and no written records of any kind. Which conclusion does this evidence best support?",
-    "choices": ["Catalhoyuk was a seasonal camp rather than a year-round settlement", "Writing existed there but was recorded only on materials that decayed", "Large permanent settlements could form before kings, state religion, and writing appeared", "The residents were foragers who had not yet begun to farm"],
+    "choices": ["Catalhoyuk was a seasonal camp rather than a year-round settlement, used by herders during part of each year", "Writing existed there but was recorded only on materials that decayed, such as wood, reed, or cloth", "Large permanent settlements could form before kings, state religion, and writing appeared", "The residents were foragers who had not yet begun to farm, gathering wild plants on the surrounding plain"],
     "answer": "C",
     "hints": ["Compare what the site clearly has (size, permanence, farming) with what it clearly lacks, and ask which of those normally comes first."]
   },
@@ -61,7 +61,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A village occupied continuously from about 7000 to 5000 BCE shows a clear change over time. Its earliest graves hold nearly identical simple goods. Graves from its final centuries range from completely empty to ones containing imported stone beads, copper ornaments, and fine pottery. Storage rooms inside the later houses also vary enormously in size, some many times larger than others. Which interpretation is best supported?",
-    "choices": ["A foreign group conquered the village and buried its own elite there", "Falling population left more goods available to bury with each remaining person", "A new religion arose that permitted only priests to be buried with any goods", "Control over stored surplus let some households accumulate wealth, and those differences hardened into lasting ranks"],
+    "choices": ["A foreign group conquered the village and buried its own elite there alongside the goods it had brought with it", "Falling population left more goods available to bury with each remaining person during the village's final centuries", "A new religion arose that permitted only priests to be buried with any goods, leaving the other graves empty", "Control over stored surplus let some households accumulate wealth, and those differences hardened into lasting ranks"],
     "answer": "D",
     "hints": ["Two separate lines of evidence change together — burial goods and storage-room size. Look for an explanation that ties them to each other.", "Ask what a family with a much larger granary could do over generations that a family with a small one could not."]
   },
@@ -94,7 +94,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "By about 3100 BCE the Mesopotamian city of Uruk held tens of thousands of residents, most of whom were strangers to one another rather than kin or lifelong neighbors. Historians argue that this density itself generated institutions a village never needed, such as courts, markets, and written rules. Why?",
-    "choices": ["Cities contain more farmland per resident, so more property has to be divided among families", "Dense populations reduce the need for records, because news travels quickly by word of mouth", "Strangers cannot settle exchanges and disputes through personal familiarity, so impersonal rules, officials, and written records become necessary", "Large populations automatically produce more religious festivals than small ones do"],
+    "choices": ["Cities contain more farmland per resident, so more property has to be divided among families and courts are needed to record each division", "Dense populations reduce the need for records, because news travels quickly by word of mouth, so the new institutions grew out of religious ritual instead", "Strangers cannot settle exchanges and disputes through personal familiarity, so impersonal rules, officials, and written records become necessary", "Large populations automatically produce more religious festivals than small ones do, and those festivals require officials to organize them"],
     "answer": "C",
     "hints": ["In a village of forty people, who enforces a promise? Now ask the same question in a city of forty thousand."]
   },
@@ -105,7 +105,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A clay tablet from a Sumerian temple, dated to roughly 2900 BCE, has been paraphrased by scholars as: \"Barley issued for one month to forty-two weavers of the temple household; recorded by the scribe Ur-Shara.\" Which pair of civilization features does this single record most directly demonstrate?",
-    "choices": ["Monumental architecture and a distinctive artistic style", "Job specialization and organized record-keeping supported by stored surplus", "Elected government and equal treatment of citizens", "Long-distance sea trade paid for with standardized coins"],
+    "choices": ["Monumental architecture and a distinctive artistic style of temple decoration", "Job specialization and organized record-keeping supported by stored surplus", "Elected government and equal treatment of citizens within the temple", "Long-distance sea trade paid for with standardized coins of silver"],
     "answer": "B",
     "hints": ["List the jobs the tablet proves existed — including the job of the person who wrote it — and ask where the barley they were paid came from."]
   },
@@ -116,7 +116,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Nearly every surviving written record from early Mesopotamia was produced by scribes working for a temple or a palace. What limitation does this place on the history that can be written from those records?",
-    "choices": ["Clay tablets decay quickly, so almost nothing survives from before 2000 BCE", "Records written by paid officials cannot be treated as primary sources", "The records prove that nothing of importance happened outside temples and palaces", "The records reflect the concerns of elite institutions, leaving farmers, laborers, and women thinly documented"],
+    "choices": ["Clay tablets decay quickly, so almost nothing survives from before 2000 BCE", "Records written by paid officials cannot be treated as primary sources", "The records prove that nothing of real importance happened outside the temples and palaces of early Mesopotamia", "The records reflect the concerns of elite institutions, leaving farmers, laborers, and women thinly documented"],
     "answer": "D",
     "hints": ["Ask who could write, who employed them, and whose business they were paid to record — then ask whose lives that leaves out."]
   },
@@ -127,7 +127,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Two sites are excavated. Settlement X, occupied around 7000 BCE, housed several thousand people in dwellings of nearly uniform size, with no monuments, no records, and burials that look much alike. Settlement Y, occupied around 3000 BCE, housed roughly twenty thousand people and contains a massive temple platform, workshops full of identical mass-produced bowls, tablets recording grain deliveries, and burials ranging from lavish to bare. Which statement best captures what the comparison shows?",
-    "choices": ["Settlement X cannot have been permanent, since permanence requires monumental building", "Settlement Y was the less advanced of the two, since sharp inequality is a sign of social breakdown", "Settlement Y shows the full cluster of features historians associate with early civilization, while X shows that large permanent settlements could exist before those features developed", "The two settlements must have been in contact with each other, since both were unusually large"],
+    "choices": ["Settlement X cannot have been permanent, since permanence requires monumental building, so it was probably a seasonal camp that was reused over several centuries", "Settlement Y was the less advanced of the two, since sharp inequality is a sign of social breakdown rather than of growing complexity", "Settlement Y shows the full cluster of features of early civilization, while X shows that large permanent settlements could exist before those features", "The two settlements must have been in contact with each other, since both were unusually large for their periods and their regions"],
     "answer": "C",
     "hints": ["Run the standard checklist against each site in turn and mark which features are present at each.", "The interesting result is not that Y has more boxes ticked — it is what X being large and permanent with almost none of them ticked tells you about the order in which the features arrived."]
   },
@@ -149,7 +149,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "At the heart of Sumerian cities such as Ur and Uruk stood a ziggurat. What was a ziggurat, and what does its central position indicate about those cities?",
-    "choices": ["A fortified granary, showing that grain was the most valuable property in the city", "A royal tomb, showing that Sumerian kings expected an elaborate afterlife", "A stepped temple platform for the city's patron god, showing that religion stood at the center of civic life", "A public courthouse where the laws of Babylon were read aloud to citizens"],
+    "choices": ["A fortified granary, showing that grain was the most valuable property in the city and needed the strongest walls", "A royal tomb, showing that Sumerian kings expected an elaborate afterlife and were buried at the heart of the city", "A stepped temple platform for the city's patron god, showing that religion stood at the center of civic life", "A public courthouse where the laws of Babylon were read aloud to citizens, showing that law governed civic life"],
     "answer": "C",
     "hints": ["Each Sumerian city-state had its own patron deity — ask what building that deity would occupy."]
   },
@@ -171,7 +171,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Mesopotamia sat on a broad, flat plain with no mountains, deserts, or seas closing it off, and its two rivers flooded unpredictably. Egypt sat in a narrow green valley walled by deserts on both sides, with rapids blocking the river to the south and the sea to the north, and its river flooded on a dependable schedule. Which political difference do historians most often connect to this contrast?",
-    "choices": ["Mesopotamia developed writing several centuries later than Egypt did", "Mesopotamia remained a patchwork of rival city-states repeatedly conquered from outside, while Egypt held together as one kingdom for most of three thousand years", "Egypt required no irrigation at all, while Mesopotamia depended on it completely", "Mesopotamia abandoned kingship in favor of assemblies of ordinary citizens"],
+    "choices": ["Mesopotamia developed writing several centuries later than Egypt did, because its unstable rivers left its scribes little to record", "Mesopotamia stayed a patchwork of rival city-states often conquered from outside, while Egypt held together as one kingdom for most of 3,000 years", "Egypt required no irrigation at all, while Mesopotamia depended on it completely, so only Mesopotamian rulers had to organize mass labor", "Mesopotamia abandoned kingship in favor of assemblies of ordinary citizens, while Egypt kept a single pharaoh ruling the whole of the Nile valley"],
     "answer": "B",
     "hints": ["Ask two questions of each region: how easily can an army walk in, and how easily can one central government send orders and collect taxes across the whole territory?"]
   },
@@ -182,7 +182,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A provision of the law code that King Hammurabi of Babylon had carved on a public stone pillar around 1754 BCE has been paraphrased as: \"If a man knocks out the tooth of a man of his own rank, his own tooth shall be knocked out; if he knocks out the tooth of a commoner, he shall pay one-third of a measure of silver.\" What does this provision most directly reveal about Babylonian law?",
-    "choices": ["Every resident of Babylon received identical treatment before the law", "Disputes were left to families to settle privately, without any role for the state", "Penalties were fixed in advance and publicly known, yet varied according to the social rank of those involved", "Punishments were decided case by case according to the king's mood on the day"],
+    "choices": ["Every resident of Babylon received identical treatment before the law, whatever their wealth or social standing", "Disputes were left to families to settle privately, without any role for the state, its judges, or its written laws", "Penalties were fixed in advance and publicly known, yet varied according to the social rank of those involved", "Punishments were decided case by case according to the king's mood on the day that each dispute was brought before him"],
     "answer": "C",
     "hints": ["The provision states two different penalties for the same injury. Ask what changes between the two halves of the sentence — the act, or the person injured?"]
   },
@@ -193,7 +193,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Archaeologists working beside the Giza pyramids uncovered a workers' settlement containing bakeries, breweries, skeletons showing set and healed broken bones, and tombs where laborers were buried close to the monument they built. A student concludes from this that the Great Pyramid, finished around 2560 BCE, was built by enslaved foreign captives driven on by force. Which response best corrects that conclusion?",
-    "choices": ["The evidence proves the pyramids were raised by unpaid volunteers who received no food or shelter at all", "The evidence shows the pyramids were built many centuries later than historians have claimed", "The evidence supports the student, since only enslaved workers would ever be buried beside a royal monument", "The evidence points instead to a fed, housed, and medically treated Egyptian workforce, including farmers called up while floodwaters covered their fields; large-scale use of foreign captives belongs mainly to Egyptian periods more than a thousand years later"],
+    "choices": ["The evidence proves the pyramids were raised by unpaid volunteers who received no food or shelter at all, working out of devotion to the pharaoh and the gods he was believed to join in the afterlife", "The evidence shows the pyramids were built many centuries later than historians have claimed, as the bakeries and breweries reflect a later and richer Egyptian economy", "The evidence supports the student, since only enslaved workers would ever be buried beside a royal monument, as a mark of their owner's power over them", "The evidence points to a fed, housed, and medically treated Egyptian workforce, including farmers called up in flood season; mass use of foreign captives came mainly over a millennium later"],
     "answer": "D",
     "hints": ["Go item by item through what was actually found and ask what each detail implies about how the workers were treated.", "Then check the dates: the period when Egypt held large numbers of foreign captives came long after this pyramid was completed."]
   },
@@ -237,7 +237,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Historians can name Shang kings, date their wars, and describe what worried them, but cannot name a single ruler of the Indus cities, even though both were large Bronze Age river-valley societies. What best explains this difference?",
-    "choices": ["The people of the Indus cities never developed any form of writing", "The Indus was a far smaller and simpler society than Shang China", "Shang inscriptions can be read because their characters are ancestral to modern Chinese, while the Indus script remains undeciphered, so Indus history must be built from material remains", "Mesopotamian scribes visited Shang China and wrote down its dynasty for later generations"],
+    "choices": ["The people of the Indus cities never developed any form of writing, so no inscriptions naming their rulers or describing their wars were ever produced at all", "The Indus was a far smaller and simpler society than Shang China, organized in villages too small to need kings or written records of them", "Shang inscriptions are readable since their script is ancestral to modern Chinese, while the Indus script is undeciphered, leaving only material remains", "Mesopotamian scribes visited Shang China and wrote down its dynasty for later generations, but they never traveled as far as the Indus cities"],
     "answer": "C",
     "hints": ["The gap is in what historians can read, not in what the two societies achieved — check each option against that distinction."]
   },
@@ -259,7 +259,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Three findings are placed side by side. Excavation shows the Indus cities being abandoned gradually from about 1900 BCE, with no destruction layers and no mass battle casualties. Geological work shows river systems in the region shifting and drying and the monsoon weakening across those same centuries. Linguistic and archaeological evidence places the main Indo-Aryan movements into northern India after about 1500 BCE. Which conclusion do the three findings together best support?",
-    "choices": ["Indo-Aryan armies stormed the Indus cities and drove the survivors out", "Every Indus city was abandoned suddenly, within a single generation", "Because the decline had environmental causes, the Indo-Aryan movements into northern India never took place", "The decline was largely environmental and began well before the Indo-Aryan movements, which came later as a gradual migration rather than a conquest"],
+    "choices": ["Indo-Aryan armies stormed the Indus cities and drove the survivors out, and the drying rivers only made the conquered land harder to farm", "Every Indus city was abandoned suddenly, within a single generation, after the monsoon failed in one catastrophic season around 1900 BCE", "Because the decline had environmental causes, the Indo-Aryan movements into northern India never took place and are a later invention of colonial-era scholars", "The decline was largely environmental and began well before the Indo-Aryan movements, which came later as a gradual migration rather than a conquest"],
     "answer": "D",
     "hints": ["Put the three findings in chronological order before judging any of them as a cause.", "Note what the excavations did NOT find — the physical traces a conquest would leave behind."]
   }

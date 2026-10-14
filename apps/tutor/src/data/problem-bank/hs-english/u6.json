@@ -45,9 +45,9 @@
     "responseFormat": "mcq",
     "problemText": "Read this detail from the second page of a story: \"The footbridge still had its weight limit posted in faded paint, and Ozzie's brother mentioned that nobody had inspected the cables since their grandfather worked the ferry.\" What is this detail most likely doing?",
     "choices": [
-      "Providing a flashback that explains the grandfather's career",
-      "Resolving the story's central conflict before it begins",
-      "Describing the setting with no bearing on tension",
+      "Providing a flashback that explains the grandfather's career working the ferry before the bridge was built",
+      "Resolving the story's central conflict before it begins by explaining why the bridge is unsafe",
+      "Describing the setting with no bearing on tension, simply to show how old the town has become",
       "Foreshadowing - planting a detail that will make a later failure feel inevitable"
     ],
     "answer": "D",
@@ -159,10 +159,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"When Odile stepped into the workroom, the two apprentices stopped arguing and each found something to measure. Nobody looked up again until she had passed the last bench.\" Which kind of evidence characterizes Odile here, and what does it suggest?",
     "choices": [
-      "Effect on others - she carries enough authority that people rearrange themselves around her",
-      "Speech - her word choice reveals impatience with the apprentices",
-      "Looks - her appearance is described in a way that intimidates the room",
-      "Thoughts - the narration reports her private opinion of the apprentices"
+      "Effect on others - she has enough authority that people rearrange themselves around her",
+      "Speech - her word choice reveals impatience with the apprentices and their arguing",
+      "Looks - her appearance is described in a way that intimidates the whole workroom",
+      "Thoughts - the narration reports her private opinion of the apprentices and of their work"
     ],
     "answer": "A",
     "hints": [
@@ -197,10 +197,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"Marguerite snapped at the delivery driver on the one morning the shipment came two hours late. For eleven years before that she had signed for every crate in the same steady handwriting and poured coffee for whoever carried it in.\" Which trait claim does the excerpt best support?",
     "choices": [
-      "Marguerite is a hostile person, and the outburst proves it",
-      "Marguerite is careless about her responsibilities at the shop",
-      "The excerpt offers no character evidence, only a schedule",
-      "Marguerite is habitually gracious, and the snap is a passing emotion rather than a trait"
+      "Marguerite is a hostile person, and her outburst at the delivery driver proves it",
+      "Marguerite is careless about her responsibilities at the shop, as the late shipment shows",
+      "The excerpt offers no character evidence, only a schedule of the shop's deliveries",
+      "Marguerite is habitually gracious, and the snap is a passing emotion, not a trait"
     ],
     "answer": "D",
     "hints": [
@@ -216,10 +216,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"'I have made my peace with all of it, truly,' Osric told the reporter. Osric was a forgiving man, the kind who let old grudges go. That same week he crossed the street twice to avoid passing the storefront, and he rewrote the same short letter four times without ever sending it.\" Which analysis is strongest?",
     "choices": [
-      "The narrator's direct statement is complicated by his later actions, so the excerpt shows a man performing a peace he has not reached",
-      "Osric is forgiving, since both he and the narrator say so and two sources agree",
-      "The excerpt is entirely indirect characterization, because Osric speaks for himself",
-      "Crossing the street is a travel detail and carries no evidence about his character"
+      "The narrator's direct statement is undercut by his later actions, so the excerpt shows a man performing a peace he has not reached",
+      "Osric is forgiving, since both he and the narrator say so, and two sources agreeing on it settles the question of his true character",
+      "The excerpt is entirely indirect characterization, because Osric speaks for himself and the narrator only reports what he does",
+      "Crossing the street is a travel detail and carries no evidence about his character, unlike what he tells the reporter directly"
     ],
     "answer": "A",
     "hints": [
@@ -292,10 +292,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"Vashti dropped the folder on the table and leaned back in the chair. 'I read every page,' she said. 'I am not signing it.' Across from her, Mr. Adeyemi straightened the folder without answering.\" What point of view is this, and why?",
     "choices": [
-      "First person, because the word I appears twice",
-      "Second person, because a character is being addressed directly",
-      "Third-person omniscient, because two characters appear in the scene",
-      "Third person, because the narration itself uses she and a name - the I belongs to a speaker inside quotation marks"
+      "First person, because the word I appears twice, which shows the story is told by someone inside it",
+      "Second person, because a character is being addressed directly when Vashti tells Mr. Adeyemi she will not sign",
+      "Third-person omniscient, because two characters appear in the scene and the narration reports what both of them do",
+      "Third person, because the narration itself uses she and a name - the I is spoken inside quotation marks"
     ],
     "answer": "D",
     "hints": [
@@ -330,10 +330,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"Naturally I was the calmest person in that room for the entire meeting, and anyone there would confirm it. I remember every word that was said, though I did step out twice to take calls, and I still cannot say who raised the budget question or why the table went quiet the moment I sat back down.\" What is the clearest evidence that this narrator is unreliable?",
     "choices": [
-      "The narrator uses first-person pronouns, which always signal unreliability",
+      "The narrator uses first-person pronouns, which always signal unreliability because the narrator can report only one view",
       "The narration undercuts its own claims, asserting total recall alongside admitted absences and unexplained silences",
-      "The excerpt describes an ordinary meeting rather than a dramatic event",
-      "The narration is written in past tense rather than present tense"
+      "The excerpt describes an ordinary meeting rather than a dramatic event, which makes the narrator's attention seem misplaced",
+      "The narration is written in past tense rather than present tense, so events are filtered through a later memory"
     ],
     "answer": "B",
     "hints": [
@@ -387,10 +387,10 @@
     "responseFormat": "mcq",
     "problemText": "A story develops the theme that people guard most fiercely the things they are least able to explain. Read the excerpt: \"The blue tin sat on a shelf all through the move, on the counter all through the renovation, and on the windowsill the night Hester finally left. She never once opened it in front of anyone.\" Which feature of the excerpt most directly DEVELOPS that theme?",
     "choices": [
-      "The renovation, which suggests the family had money to spend",
-      "The color of the tin, which is a common and unremarkable color",
+      "The renovation, which suggests the family had money to spend on the house during the move",
+      "The color of the tin, which is a common and unremarkable color that draws no attention to it",
       "The repetition of the tin across three separate moments, always kept and never explained",
-      "The detail that Hester leaves at night rather than in the morning"
+      "The detail that Hester leaves at night rather than in the morning, when others might see her"
     ],
     "answer": "C",
     "hints": [
@@ -406,10 +406,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"Ilse apologized to her sister eleven years after the wedding, in a parking lot, in about four sentences. Her sister said it was fine and meant it, and they talked easily for an hour, and neither of them ever raised it again.\" A student says the theme is: always apologize, no matter how late. What is the strongest correction?",
     "choices": [
-      "That statement issues a command the story never issues; a supported theme observes that a late apology can restore ease between people without recovering what the silence already cost",
-      "The student is right, because the sisters do talk easily once the apology is made",
-      "The theme is apologies, which the student should have stated in one word",
-      "The excerpt has no theme, because it covers only one short conversation"
+      "It issues a command the story never issues; a supported theme observes that a late apology can restore ease without recovering what the silence cost",
+      "The student is right, because the sisters do talk easily once the apology is made, which shows that apologizing late is worth it in every case",
+      "The theme is apologies, which the student should have stated in one word, since a theme names the topic a story is about rather than a full sentence",
+      "The excerpt has no theme, because it covers only one short conversation, and a theme needs several scenes of conflict to develop across a story"
     ],
     "answer": "A",
     "hints": [
@@ -425,9 +425,9 @@
     "responseFormat": "mcq",
     "problemText": "Read the story: \"For nine years Tobias refused to learn his mother's first language, and he told himself it was only because she had never insisted. When his daughter was born he began studying it at night, badly, and told no one. At the naming ceremony he mispronounced half of the blessing, and his mother finished it beside him.\" Which theme is best traced through the character change and the ending?",
     "choices": [
-      "Learning a second language comes more easily to children than to adults",
-      "Family traditions and language",
-      "Always learn the language your parents grew up speaking",
+      "Learning a second language comes more easily to children than to adults, which is why Tobias stumbles over the blessing",
+      "Family traditions, heritage languages, and the naming ceremonies that pass them down",
+      "Always learn the language your parents grew up speaking, before it is too late to share it with them",
       "What we refuse from a parent we may reclaim for a child, and the reclaiming is allowed to be imperfect"
     ],
     "answer": "D",
@@ -444,10 +444,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the story: \"Marisela won the district essay prize with a piece about the grandmother she had not visited in four years. She spent the prize money on bus fare, arrived on a Tuesday, and read the essay aloud at the kitchen table. Her grandmother listened all the way through, then asked her to read again the parts that were not true.\" Which theme is BEST supported by the whole passage, including the final line?",
     "choices": [
-      "Hard work is always rewarded in the end",
+      "Hard work is always rewarded in the end, as Marisela's prize for her essay about her grandmother shows",
       "Writing about a person can be a way of avoiding that person, and the person is usually the one who notices",
-      "Winning a contest can bring a divided family back together",
-      "Grandparents are the keepers of a family's history"
+      "Winning a contest can bring a divided family back together, since the prize money is what pays for Marisela's bus fare",
+      "Grandparents are the keepers of a family's history and its oldest traditions"
     ],
     "answer": "B",
     "hints": [

@@ -151,10 +151,10 @@
     "responseFormat": "mcq",
     "problemText": "A hot copper cylinder is dropped into cool water inside an insulated calorimeter, and the two settle at the same final temperature. Which statement is TRUE?",
     "choices": [
-      "The heat released by the copper equals the heat gained by the water in magnitude, so q for the copper is negative and q for the water is positive",
-      "q is positive for both objects, because energy moved in both of them",
-      "The copper must undergo the same temperature change as the water, since they exchange the same energy",
-      "The water gains more energy than the copper releases, because water has the larger specific heat"
+      "The heat released by the copper equals the heat gained by the water, so q is negative for the copper and positive for the water",
+      "q is positive for both objects, because energy moved in both of them as they reached the same final temperature",
+      "The copper must undergo the same temperature change as the water, since the two exchange the same quantity of energy as heat",
+      "The water gains more energy than the copper releases, because water has the larger specific heat of the two substances in the cup"
     ],
     "answer": "A",
     "hints": [
@@ -202,10 +202,10 @@
     "responseFormat": "mcq",
     "problemText": "Sample X is 100.0 g of water (c = 4.18 J/(g·°C)) and sample Y is 100.0 g of copper (c = 0.39 J/(g·°C)). Each sample absorbs exactly 2090 J of heat. Which statement is TRUE?",
     "choices": [
-      "The copper warms by about 53.6 °C while the water warms by 5.0 °C, because the smaller specific heat produces the larger temperature swing",
-      "The water warms by about 53.6 °C while the copper warms by 5.0 °C, because water holds more heat",
-      "Both warm by 5.0 °C, since they have equal masses and absorbed equal energy",
-      "The copper warms about 10.7 times more than the water because it absorbed 10.7 times more energy"
+      "The copper warms by about 53.6 °C while the water warms by 5.0 °C, because the smaller specific heat gives the larger temperature rise",
+      "The water warms by about 53.6 °C while the copper warms by 5.0 °C, because water's larger specific heat lets it take up more of the energy",
+      "Both warm by 5.0 °C, since they have equal masses and absorbed equal energy, and specific heat only sets how fast heat is later lost",
+      "The copper warms about 10.7 times more than the water because, as a metal conductor, it absorbed about 10.7 times more of the energy"
     ],
     "answer": "A",
     "hints": [
@@ -239,10 +239,10 @@
     "responseFormat": "mcq",
     "problemText": "A campfire built from one thick log only smolders, but the same wood split into thin kindling catches quickly. Which rate factor explains this, and how?",
     "choices": [
-      "Surface area — splitting the wood exposes far more of it to oxygen, so successful collisions happen more often",
-      "Concentration — the kindling packs more wood into each unit of volume than the log does",
-      "Catalyst — splitting the wood lowers the activation energy of combustion",
-      "Temperature — the act of splitting the wood heats it up"
+      "Surface area — splitting exposes far more wood to oxygen, so successful collisions happen more often",
+      "Concentration — the kindling packs more wood into each unit of volume than the single thick log does",
+      "Catalyst — splitting the wood lowers the activation energy of combustion for the thin pieces",
+      "Temperature — the act of splitting the wood heats it up, so the pieces start out warmer"
     ],
     "answer": "A",
     "hints": [
@@ -290,10 +290,10 @@
     "responseFormat": "mcq",
     "problemText": "A reaction has ΔH = −390 kJ, yet a sealed sample of the reactants shows no visible change after a week at room temperature. Which explanation is correct?",
     "choices": [
-      "This is impossible — a negative ΔH guarantees that a reaction runs quickly",
-      "The reaction must really be endothermic, because slow reactions absorb energy",
-      "The reaction has a high activation energy, so very few collisions carry enough energy to get over the hill; ΔH describes the net energy change, not the speed",
-      "The reaction has an unusually low activation energy, and a low activation energy is what makes reactions slow"
+      "This is impossible — a negative ΔH guarantees that a reaction runs quickly once the reactants are mixed",
+      "The reaction must really be endothermic, because slow reactions absorb energy and the ΔH sign was recorded wrong",
+      "The reaction has a high activation energy, so few collisions have enough energy to react; ΔH is the net energy change, not the speed",
+      "The reaction has an unusually low activation energy, and a low activation energy is what makes reactions slow to get started at room temperature"
     ],
     "answer": "C",
     "hints": [
@@ -309,10 +309,10 @@
     "responseFormat": "mcq",
     "problemText": "Two identical flasks each hold the same solution of reactant X. Flask 1 is warmed from 20 °C to 40 °C. Flask 2 is held at 20 °C but has a pinch of catalyst stirred in. Both flasks react faster than an untouched flask at 20 °C. Which statement correctly describes the two mechanisms?",
     "choices": [
-      "Both changes work by lowering the activation energy of the reaction",
-      "Both changes work by increasing the concentration of the reactants",
-      "Warming lowers the activation energy, while the catalyst raises the average energy of the collisions",
-      "Warming raises the fraction of collisions that already reach the activation energy, while the catalyst lowers the activation energy so more ordinary collisions succeed"
+      "Both changes work by lowering the activation energy of the reaction, so more of the collisions succeed",
+      "Both changes work by increasing the concentration of the reactants, so the particles collide more often",
+      "Warming lowers the activation energy, while the catalyst raises the average energy of the collisions so more of those collisions succeed",
+      "Warming raises the fraction of collisions that reach the activation energy, while the catalyst lowers the activation energy itself"
     ],
     "answer": "D",
     "hints": [
@@ -346,10 +346,10 @@
     "responseFormat": "mcq",
     "problemText": "The reaction 2 SO₂(g) + O₂(g) ⇌ 2 SO₃(g) sits at equilibrium in a sealed vessel. Extra O₂ gas is pumped in at constant temperature and volume. Which way does the equilibrium shift?",
     "choices": [
-      "Left, because adding any gas raises the pressure on the reactant side",
-      "No shift, because O₂ appears only as a reactant and not as a product",
-      "Right, because the system shifts in the direction that consumes some of the added O₂, making more SO₃",
-      "Right at first, then back to the left once the added O₂ has been used up"
+      "Left, because adding any gas raises the pressure on the reactant side of the equation",
+      "No shift, because O₂ appears only as a reactant and the temperature has not changed",
+      "Right, because the system shifts to consume some of the added O₂, making more SO₃",
+      "Right at first, then back to the left once the added O₂ has been used up by the reaction"
     ],
     "answer": "C",
     "hints": [
@@ -416,10 +416,10 @@
     "responseFormat": "mcq",
     "problemText": "An engineer runs the exothermic reaction 2 NO(g) + O₂(g) ⇌ 2 NO₂(g), ΔH = −114 kJ, and wants the largest possible amount of NO₂ present at equilibrium. Which plan achieves that?",
     "choices": [
-      "Raise the pressure and lower the temperature; adding a catalyst would reach equilibrium sooner but would not raise the yield",
-      "Lower the pressure and raise the temperature, since both changes speed the reaction up",
-      "Raise both the pressure and the temperature, since higher values of each always favor the products",
-      "Add a catalyst, since that is the only change that increases the equilibrium amount of NO₂"
+      "Raise the pressure and lower the temperature; a catalyst would only reach equilibrium sooner, not raise the yield",
+      "Lower the pressure and raise the temperature, since both changes speed the reaction up and push it forward",
+      "Raise both the pressure and the temperature, since higher values of each always favor the products of a gas reaction",
+      "Add a catalyst, since that is the only change that increases the equilibrium amount of NO₂ formed"
     ],
     "answer": "A",
     "hints": [

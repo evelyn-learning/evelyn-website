@@ -23,9 +23,9 @@
     "responseFormat": "mcq",
     "problemText": "Which factor MOST strongly determines the type of biome found in a region?",
     "choices": [
-      "Soil mineral and nutrient content",
-      "Distance from the nearest ocean",
-      "Historical human land-use patterns",
+      "Mineral and nutrient content of the local soil",
+      "Distance from the nearest ocean or large lake",
+      "Historical human land-use and settlement patterns",
       "Long-term temperature and precipitation patterns"
     ],
     "answer": "D",
@@ -71,10 +71,10 @@
     "responseFormat": "mcq",
     "problemText": "Chaparral (Mediterranean shrubland) plants such as manzanita and chamise are adapted to periodic fire PRIMARILY because fire:",
     "choices": [
-      "Increases soil salinity, which these plants tolerate better than their competitors",
-      "Clears dead woody material and releases locked-up nutrients, and these species resprout from deep roots or germinate from fire-stimulated seeds",
-      "Lowers average summer temperatures, creating favorable germination conditions",
-      "Drives away competing herbivores, reducing grazing pressure on surviving shrubs"
+      "Increases soil salinity, which these drought-adapted shrubs tolerate far better than their competitors",
+      "Clears dead wood and releases nutrients, and these species resprout from roots or germinate from fire-stimulated seeds",
+      "Lowers average summer temperatures in the burned area, creating more favorable conditions for seed germination",
+      "Drives away competing herbivores, reducing grazing and browsing pressure on the surviving shrubs for several years"
     ],
     "answer": "B",
     "hints": ["Consider how fire affects nutrient cycling and the recovery mechanisms of fire-adapted shrubs."]
@@ -87,10 +87,10 @@
     "responseFormat": "mcq",
     "problemText": "As you climb a tall tropical mountain, you pass through vegetation zones that closely resemble the sequence from tropical forest near the equator to tundra near the poles. This pattern is BEST explained by:",
     "choices": [
-      "Island biogeography — isolated mountaintop habitats attract species from distant biomes",
-      "The competitive exclusion principle causing low-altitude species to displace high-altitude ones",
-      "Altitudinal zonation, in which decreasing temperature with increasing elevation produces biome-like vegetation zones analogous to latitudinal biome shifts",
-      "Ecological succession proceeding faster at higher elevations due to lower competition"
+      "Island biogeography — isolated mountaintop habitats attract and retain colonizing species dispersed from distant biomes",
+      "The competitive exclusion principle, in which low-altitude species progressively displace high-altitude ones up the slope",
+      "Altitudinal zonation — temperature drops with elevation, producing vegetation zones that parallel latitudinal biome shifts",
+      "Ecological succession proceeding faster at higher elevations because lower competition lets pioneer communities mature sooner"
     ],
     "answer": "C",
     "hints": ["Temperature drops roughly 6°C for every 1,000 m gained in elevation, mimicking the cooling at higher latitudes."]
@@ -152,10 +152,10 @@
     "responseFormat": "mcq",
     "problemText": "Denitrification is ecologically important PRIMARILY because it:",
     "choices": [
-      "Adds plant-available ammonium to nitrogen-depleted soils",
-      "Returns reactive nitrogen to the atmosphere as N₂ gas, preventing indefinite accumulation of nitrates in soils and waterways",
-      "Transforms atmospheric N₂ into ammonium that plant roots can directly absorb",
-      "Breaks down urea and other animal waste products into usable ammonium"
+      "Adds plant-available ammonium to nitrogen-depleted soils, boosting fertility where crops have exhausted the supply",
+      "Returns reactive nitrogen to the atmosphere as N₂ gas, keeping nitrates from building up indefinitely in soils and waterways",
+      "Transforms atmospheric N₂ into ammonium that plant roots can directly absorb, replenishing soil fertility after each growing season's harvest",
+      "Breaks down urea and other animal waste products into usable ammonium for soil microbes and plants"
     ],
     "answer": "B",
     "hints": ["Denitrification is the step that closes the nitrogen cycle — it removes reactive nitrogen from the ecosystem."]
@@ -168,10 +168,10 @@
     "responseFormat": "mcq",
     "problemText": "The widespread use of synthetic nitrogen fertilizers in agriculture MOST directly disrupts the nitrogen cycle by:",
     "choices": [
-      "Reducing populations of nitrogen-fixing bacteria in farm soils",
-      "Converting atmospheric N₂ directly into oxygen, altering air composition",
+      "Reducing populations of free-living and symbiotic nitrogen-fixing bacteria in heavily fertilized farm soils",
+      "Converting atmospheric N₂ directly into oxygen, altering the composition of air above heavily fertilized fields",
       "Introducing large quantities of reactive nitrogen that leach into waterways and promote eutrophication",
-      "Lowering soil temperature, which slows decomposition and nutrient cycling"
+      "Lowering soil temperature, which slows decomposition and the recycling of nutrients from organic matter"
     ],
     "answer": "C",
     "hints": ["Think about what happens when excess fertilizer washes off fields into streams and lakes."]
@@ -249,9 +249,9 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following represents the LARGEST long-term reservoir of carbon on Earth?",
     "choices": [
-      "Living terrestrial vegetation (plant biomass)",
-      "Fossil fuels (coal, oil, and natural gas) in Earth's crust",
-      "Soil organic matter and peat deposits",
+      "Living terrestrial vegetation (plant biomass) in forests and grasslands worldwide",
+      "Fossil fuels (coal, oil, and natural gas) buried in deposits within Earth's crust",
+      "Soil organic matter and peat deposits in wetlands and permafrost regions",
       "The ocean, including dissolved inorganic carbon and marine carbonate sediments"
     ],
     "answer": "D",
@@ -265,10 +265,10 @@
     "responseFormat": "mcq",
     "problemText": "Widespread deforestation MOST directly affects the carbon cycle by:",
     "choices": [
-      "Increasing the rate of nitrogen fixation in newly cleared soils",
-      "Decreasing ocean salinity as organic carbon washes into the sea",
-      "Removing a major terrestrial carbon sink and releasing stored carbon as CO₂ through burning and decomposition",
-      "Accelerating the water cycle by increasing surface runoff"
+      "Increasing the rate of nitrogen fixation by soil bacteria in newly cleared, sunlit soils",
+      "Decreasing ocean salinity as eroded organic carbon washes from cleared land into the sea",
+      "Removing a major carbon sink and releasing stored carbon as CO₂ through burning and decay",
+      "Accelerating the water cycle by increasing surface runoff and evaporation from bare ground"
     ],
     "answer": "C",
     "hints": ["Forests act as carbon sinks — removing them converts that sink into a carbon source."]
@@ -340,10 +340,10 @@
     "responseFormat": "mcq",
     "problemText": "Approximately 90% of energy is lost at each trophic level, leaving only about 10% to transfer to the next level. This loss occurs PRIMARILY because:",
     "choices": [
-      "Predators selectively consume the least nutritious prey, wasting most available energy",
-      "Decomposers intercept the majority of energy before higher trophic levels can access it",
-      "Most energy consumed by an organism is used in cellular respiration or lost as heat, leaving only a small fraction stored as new biomass",
-      "Solar energy reaching each successive trophic level is physically reduced by 90% due to canopy shading"
+      "Predators selectively consume the least nutritious prey, wasting most of the energy available in the ecosystem",
+      "Decomposers intercept the majority of energy before higher trophic levels can access it in living tissue",
+      "Most energy consumed is used in cellular respiration or lost as heat, leaving only a small fraction stored as new biomass",
+      "Solar energy reaching each successive trophic level is physically reduced by 90% due to canopy shading of the organisms below"
     ],
     "answer": "C",
     "hints": ["Think about what organisms do with most of the energy they ingest — they respire it to power life functions, generating heat."]
@@ -431,10 +431,10 @@
     "responseFormat": "mcq",
     "problemText": "Sea otters prey on sea urchins; sea urchins consume kelp. When sea otters were hunted nearly to extinction, urchin populations exploded and kelp forests were destroyed. Sea otters are called a keystone species because:",
     "choices": [
-      "Their removal causes a disproportionately large change in ecosystem structure relative to their own biomass or abundance",
-      "They are the most abundant organism in the kelp forest and directly support the most food chains",
-      "They are apex predators with no natural predators of their own in this system",
-      "They fix atmospheric nitrogen that fertilizes kelp and supports the entire food web"
+      "Their removal causes a disproportionately large change in ecosystem structure relative to their abundance",
+      "They are the most abundant organism in the kelp forest and directly support the most food chains in the system",
+      "They are apex predators with no natural predators of their own, placing them at the top of this system",
+      "They fix atmospheric nitrogen that fertilizes kelp and supports the entire food web along the coast"
     ],
     "answer": "A",
     "hints": ["'Keystone' describes outsized impact — a relatively low-biomass species whose loss triggers major ecosystem change."]
@@ -457,10 +457,10 @@
     "responseFormat": "mcq",
     "problemText": "When wolves were reintroduced to Yellowstone National Park, elk populations declined and shifted their grazing patterns. Riverbank vegetation recovered, stabilizing stream banks and altering river flow. This sequence BEST illustrates:",
     "choices": [
-      "Primary succession initiated by the arrival of an apex predator in a previously bare habitat",
-      "A trophic cascade in which a change at one trophic level ripples through the food web and alters the physical environment",
-      "Competitive exclusion between wolves and elk competing for the same food resources",
-      "Mutualism between wolves and riparian vegetation providing each other with benefits"
+      "Primary succession initiated by the arrival of an apex predator in a previously bare habitat lacking soil and vegetation",
+      "A trophic cascade, where a change at one trophic level ripples through the food web to alter the physical environment",
+      "Competitive exclusion between wolves and elk competing for the same limited food resources along the riverbanks",
+      "Mutualism between wolves and riparian vegetation, with each species providing the other with direct benefits"
     ],
     "answer": "B",
     "hints": ["Wolves changed elk behavior, which changed plant growth, which changed rivers — each effect cascaded downward from the top predator."]

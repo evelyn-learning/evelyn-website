@@ -24,9 +24,9 @@
     "problemText": "Which of the following best illustrates the economic concept of scarcity?",
     "choices": [
       "A student must choose between studying economics or biology because her study time is limited",
-      "A toy store runs out of a popular item the week before a holiday",
-      "A government prints additional money to finance a budget shortfall",
-      "A factory reduces output temporarily because a machine breaks down"
+      "A toy store runs out of a popular item the week before a holiday because demand exceeded its order",
+      "A government prints additional money to finance a budget shortfall without raising taxes on households",
+      "A factory reduces output temporarily because a machine breaks down and must wait for repair parts"
     ],
     "answer": "A",
     "hints": ["Scarcity forces a choice. Look for the option in which a limited resource requires an allocation decision."]
@@ -71,10 +71,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following statements about scarcity is most accurate?",
     "choices": [
-      "Scarcity is the fundamental economic problem facing all societies, regardless of their level of income or development",
-      "Scarcity can be eliminated if a country grows its economy fast enough over time",
-      "Scarcity affects only developing nations that lack sufficient productive capacity",
-      "Technological advances have made scarcity largely irrelevant in modern high-income economies"
+      "Scarcity is the fundamental economic problem facing all societies, regardless of their income or development level",
+      "Scarcity can be eliminated if a country grows its economy fast enough over time to satisfy its citizens' wants",
+      "Scarcity affects only developing nations that lack sufficient productive capacity to meet their basic needs",
+      "Technological advances have made scarcity largely irrelevant in modern high-income economies with abundant output and wealth"
     ],
     "answer": "A",
     "hints": ["Economic growth expands productive capacity, but it cannot eliminate the gap between unlimited wants and finite resources."]
@@ -153,9 +153,9 @@
     "problemText": "The price mechanism in a market economy performs which primary function in allocating resources?",
     "choices": [
       "It signals to producers where resources are most highly valued and provides incentives to reallocate them accordingly",
-      "It ensures an equal distribution of goods and services across all households in society",
-      "It allows the government to set fair prices that reflect the true social cost of each good",
-      "It eliminates scarcity by automatically adjusting the total quantity of resources available"
+      "It ensures an equal distribution of goods and services across all households in society, regardless of their income",
+      "It allows the government to set fair prices that reflect the true social cost of each good produced and sold",
+      "It eliminates scarcity by automatically adjusting the total quantity of resources available to meet demand"
     ],
     "answer": "A",
     "hints": ["Rising prices signal high value and attract resources toward those uses without any central coordinator."]
@@ -184,10 +184,10 @@
     "responseFormat": "mcq",
     "problemText": "Most real-world economies are best described as mixed economies. Which statement most accurately characterizes a mixed economy?",
     "choices": [
-      "The government owns all productive resources and directs every production and consumption decision",
-      "Markets determine all prices and quantities with absolutely no government involvement of any kind",
-      "Some goods are allocated by markets and others involve government activity, with private property coexisting alongside a public sector",
-      "Resource allocation is determined entirely by tradition and habit, with market prices playing no role"
+      "The government owns all productive resources and directs every production and consumption decision through a central plan",
+      "Markets determine all prices and quantities with absolutely no government involvement of any kind, even in national defense",
+      "Some goods are allocated by markets and others by government activity, with private property coexisting alongside a public sector",
+      "Resource allocation is determined entirely by tradition and habit, with market prices playing no role in deciding what gets produced"
     ],
     "answer": "C",
     "hints": ["Mixed economies blend market mechanisms with government intervention — neither extreme fully describes most countries."]
@@ -233,10 +233,10 @@
     "responseFormat": "mcq",
     "problemText": "A country's production possibilities curve is concave (bowed outward from the origin) rather than a straight line. The most likely explanation is:",
     "choices": [
-      "The country is experiencing economic growth driven by recent technological advances",
-      "Resources are perfectly substitutable between the two industries with no loss in efficiency",
-      "Resources are not equally well-suited to both goods, so producing more of one good requires giving up ever-larger quantities of the other",
-      "The country is operating inside its PPC due to widespread unemployment"
+      "The country is experiencing economic growth driven by recent technological advances that raise its output of both goods",
+      "Resources are perfectly substitutable between the two industries with no loss in efficiency, so output can shift freely between them",
+      "Resources are not equally well-suited to both goods, so producing more of one requires giving up ever-larger amounts of the other",
+      "The country is operating inside its PPC due to widespread unemployment, leaving labor and capital idle in both industries"
     ],
     "answer": "C",
     "hints": ["The concave shape reflects increasing opportunity cost — as you shift resources to one industry, you use progressively less suitable inputs."]
@@ -249,10 +249,10 @@
     "responseFormat": "mcq",
     "problemText": "An economy produces only computers and bread. Moving from (0 computers, 100 loaves) to (10 computers, 90 loaves) costs 10 loaves. Moving further from (10 computers, 90 loaves) to (20 computers, 70 loaves) costs 20 loaves. What does this pattern indicate about the shape of the PPC?",
     "choices": [
-      "The PPC is a straight line because the same number of computers (10) is gained in each move",
+      "The PPC is a straight line because the same number of computers (10) is gained in each move, so the trade-off is constant",
       "The PPC is concave (bowed outward from the origin), reflecting increasing opportunity cost as more computers are produced",
-      "The PPC is shifting outward between the two moves, indicating economic growth has occurred",
-      "The PPC is convex (bowed inward toward the origin), reflecting decreasing opportunity cost"
+      "The PPC is shifting outward between the two moves, indicating economic growth has occurred as more computers are produced",
+      "The PPC is convex (bowed inward toward the origin), reflecting decreasing opportunity cost as more computers are produced"
     ],
     "answer": "B",
     "hints": ["Each additional 10 computers costs more bread than the last batch did — that rising sacrifice is what creates the bowed-out shape."]
@@ -302,10 +302,10 @@
     "responseFormat": "mcq",
     "problemText": "Country Alpha can produce 80 units of grain or 40 units of cloth per year using all of its resources. Country Beta can produce 60 units of grain or 60 units of cloth per year. Which country has a comparative advantage in cloth, and why?",
     "choices": [
-      "Alpha, because it produces more grain per year and therefore has overall productive superiority",
-      "Alpha, because its maximum cloth output is closer in quantity to its grain output",
-      "Beta, because its opportunity cost of producing one unit of cloth (1 unit of grain) is lower than Alpha's opportunity cost of cloth (2 units of grain)",
-      "Beta, because it has an absolute advantage in producing every good in this scenario"
+      "Alpha, because it produces 20 more units of grain per year and therefore has overall productive superiority",
+      "Alpha, because its maximum cloth output of 40 units is closer in quantity to its grain output",
+      "Beta, because its opportunity cost of one unit of cloth (1 unit of grain) is lower than Alpha's (2 units of grain)",
+      "Beta, because it has an absolute advantage in producing every good in this scenario, including both grain and cloth"
     ],
     "answer": "C",
     "hints": ["Compute Alpha's OC of cloth: 80 divided by 40 = 2 grain. Compute Beta's OC of cloth: 60 divided by 60 = 1 grain. The lower OC determines comparative advantage."]
@@ -387,8 +387,8 @@
     "responseFormat": "mcq",
     "problemText": "Maria currently earns 50,000 dollars per year as a teacher. She quits to open her own bakery. The foregone teacher's salary of 50,000 dollars per year is best described as:",
     "choices": [
-      "An implicit cost, because it represents the value of Maria's next best alternative that she gives up by running the bakery",
-      "An explicit cost, because it was once a direct cash payment deposited into her account",
+      "An implicit cost, because it is the value of Maria's next best alternative, given up to run the bakery",
+      "An explicit cost, because it was once a direct cash payment deposited into her bank account each month",
       "A sunk cost, because the salary was already earned before she resigned",
       "An accounting cost that would appear as a line item on the bakery's income statement"
     ],
@@ -403,10 +403,10 @@
     "responseFormat": "mcq",
     "problemText": "A small business owner has total revenue of 200,000 dollars and explicit costs of 150,000 dollars for the year. She also could have earned 60,000 dollars working for another firm instead. What is her economic profit for the year?",
     "choices": [
-      "negative 10,000 dollars (total revenue minus both explicit and implicit costs)",
-      "50,000 dollars (total revenue minus explicit costs only)",
-      "110,000 dollars (total revenue minus implicit costs only)",
-      "260,000 dollars (total revenue plus the foregone salary)"
+      "negative 10,000 dollars (revenue minus explicit and implicit costs)",
+      "50,000 dollars (total revenue minus the explicit business costs only)",
+      "110,000 dollars (total revenue minus the implicit cost of her time only)",
+      "260,000 dollars (total revenue plus the foregone salary she gave up)"
     ],
     "answer": "A",
     "hints": ["Economic profit = revenue minus all costs, including the implicit opportunity cost of foregone wages."]
@@ -435,10 +435,10 @@
     "responseFormat": "mcq",
     "problemText": "From an economic perspective, an action is rational to undertake if:",
     "choices": [
-      "The accounting profit generated by the action is positive",
-      "The government or a regulatory body has approved the expenditure",
-      "The marginal benefit of the action exceeds its marginal cost, including all relevant opportunity costs",
-      "The action generates total revenue that exceeds its explicit monetary costs alone"
+      "The accounting profit generated by the action is positive after explicit costs are paid",
+      "The government or a regulatory body has formally reviewed and approved the expenditure",
+      "The marginal benefit of the action exceeds its marginal cost, including all opportunity costs",
+      "The action generates total revenue that exceeds its explicit monetary costs, ignoring implicit costs"
     ],
     "answer": "C",
     "hints": ["Rational economic decisions compare the additional benefit gained to the additional cost incurred — including the value of foregone alternatives."]
@@ -468,10 +468,10 @@
     "responseFormat": "mcq",
     "problemText": "The law of diminishing marginal utility states that:",
     "choices": [
-      "As a consumer buys more of a good, the market price of that good eventually rises",
-      "As more units of a good are consumed in a given period, the additional satisfaction from each successive unit eventually declines",
-      "Consumers will always prefer lower-priced goods over more expensive alternatives",
-      "Total utility falls immediately as soon as a consumer purchases any unit of a good"
+      "As a consumer buys more of a good in a given period, the market price of that good eventually rises for that consumer",
+      "As more units of a good are consumed in a period, the extra satisfaction from each additional unit eventually declines",
+      "Consumers will always prefer lower-priced goods over more expensive alternatives offering the same satisfaction",
+      "Total utility falls immediately as soon as a consumer purchases any additional unit of a good in a given period"
     ],
     "answer": "B",
     "hints": ["Marginal utility is the extra satisfaction from one more unit. The law says this extra amount eventually decreases as consumption rises."]
@@ -501,7 +501,7 @@
     "problemText": "Dani is deciding between purchasing a fourth slice of pizza or a second soda. The marginal utility of the fourth pizza slice is 12 utils and pizza costs 3 dollars per slice. The marginal utility of the second soda is 10 utils and soda costs 2 dollars per can. To maximize utility, which should Dani purchase next?",
     "choices": [
       "Pizza, because its marginal utility in utils (12) is greater than that of soda (10)",
-      "Soda, because its marginal utility per dollar (5 utils per dollar) exceeds that of pizza (4 utils per dollar)",
+      "Soda, because its marginal utility per dollar (5 utils) exceeds that of pizza (4 utils)",
       "Neither good; Dani has already reached her utility maximum at the current bundle",
       "Pizza, because spending more on a higher-priced item always yields greater satisfaction"
     ],
@@ -516,10 +516,10 @@
     "responseFormat": "mcq",
     "problemText": "A consumer spends her entire income on two goods. Good X is priced at 4 dollars per unit and currently has a marginal utility of 12 utils. Good Y is priced at 6 dollars per unit and has a marginal utility of 24 utils. To move toward a utility-maximizing allocation, she should:",
     "choices": [
-      "Keep the current bundle unchanged, because she is already at a utility maximum",
+      "Keep the current bundle unchanged, because she is already at a utility maximum given her fixed income and prices",
       "Purchase equal quantities of X and Y regardless of their relative prices or marginal utilities",
-      "Buy more of Good X and less of Good Y, because Good X carries a lower price",
-      "Buy more of Good Y and less of Good X, because Good Y's marginal utility per dollar (4 utils per dollar) exceeds Good X's (3 utils per dollar)"
+      "Buy more of Good X and less of Good Y, because Good X carries a lower price per unit than Good Y",
+      "Buy more of Good Y and less of Good X, because Y's marginal utility per dollar (4 utils) exceeds X's (3 utils)"
     ],
     "answer": "D",
     "hints": ["Compute MU divided by price for each good: X = 12 divided by 4 = 3; Y = 24 divided by 6 = 4. Shift spending toward the good with the higher ratio."]

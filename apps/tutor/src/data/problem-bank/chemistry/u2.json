@@ -27,9 +27,9 @@
     "problemText": "In a cathode-ray tube the beam bends toward a positively charged plate, and the same negatively charged particle is produced no matter which metal the cathode is made from. What conclusion did Thomson draw from this evidence?",
     "choices": [
       "Every atom, of every element, contains the same negatively charged particle, so atoms cannot be indivisible",
-      "The positive charge of an atom is concentrated in a tiny central core",
-      "Each metal produces its own distinct kind of negative particle",
-      "Negative particles exist only in heated metals, not inside ordinary atoms"
+      "The positive charge of an atom is concentrated in a tiny central core, which is why the beam is deflected",
+      "Each metal produces its own distinct kind of negative particle, so the cathode metal sets the beam's charge",
+      "Negative particles exist only in heated metals, not inside ordinary atoms, and are created by the high voltage"
     ],
     "answer": "A",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "A researcher repeats the alpha-particle scattering experiment using a thin platinum foil and finds that about 1 in 12,000 alpha particles is deflected sharply backward. If Thomson's plum-pudding model had been correct, what should she have observed instead?",
     "choices": [
-      "About half of the alpha particles would have bounced backward",
-      "Every alpha particle would have been absorbed and stopped by the foil",
-      "The alpha particles would have been pulled in and captured by the electrons",
-      "Essentially every alpha particle would have passed through with at most a tiny deflection, because thinly spread positive charge cannot reverse a fast, heavy particle"
+      "About half of the alpha particles would have bounced backward off the evenly spread positive charge",
+      "Every alpha particle would have been absorbed and stopped by the foil's dense positive pudding",
+      "The alpha particles would have been pulled in and captured by the electrons embedded in the pudding",
+      "Essentially every alpha particle would have passed through with at most a tiny deflection"
     ],
     "answer": "D",
     "hints": [
@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "A sealed tube of neon gas glows when a current passes through it. Sending that light through a prism produces a handful of sharp, separate colored lines instead of a continuous rainbow. Which conclusion does this observation support?",
     "choices": [
-      "A neon atom contains exactly one electron for each line seen in the spectrum",
-      "The electrons in a neon atom can hold only certain energies, so only certain energy drops — and therefore only certain colors — are possible",
-      "The nucleus of a neon atom emits the light as it breaks apart",
-      "Neon must actually be a mixture of several different elements, each contributing one line"
+      "A neon atom contains exactly one electron for each line seen in the spectrum, and each electron emits one color",
+      "Electrons in a neon atom can hold only certain energies, so only certain energy drops — and colors — are possible",
+      "The nucleus of a neon atom emits the light as it breaks apart under the current passing through the tube",
+      "Neon must actually be a mixture of several different elements, each element contributing one line of its own color"
     ],
     "answer": "B",
     "hints": [
@@ -97,9 +97,9 @@
     "problemText": "Suppose the gold-foil experiment had produced a completely different result: alpha particles emerged spread evenly across every angle, with none passing straight through undeflected. What would that outcome have implied about the structure of the atom?",
     "choices": [
       "The atom is mostly empty space with a tiny dense nucleus — the same conclusion Rutherford actually reached",
-      "The atom contains no positive charge at all",
-      "Positive charge and mass are spread through the atom's entire volume, so there is no empty space for a particle to cross — a pudding-like atom rather than a nuclear one",
-      "Electrons must be far more massive than alpha particles"
+      "The atom contains no positive charge at all, so the alpha particles scatter only off its electrons",
+      "Positive charge and mass are spread through the atom's entire volume, leaving no empty space for a particle to cross",
+      "Electrons must be far more massive than alpha particles, so each collision with an electron knocks the alpha particle well off its straight path"
     ],
     "answer": "C",
     "hints": [
@@ -420,10 +420,10 @@
     "responseFormat": "mcq",
     "problemText": "An atom has the ground-state electron configuration [Ar] 4s² 3d¹⁰ 4p³, where [Ar] stands for a filled argon core of 18 electrons. Which statement about this atom is correct?",
     "choices": [
-      "It has 15 valence electrons, because the 4s, 3d, and 4p electrons all lie outside the core",
-      "It has 3 valence electrons, because only p electrons count as valence",
-      "It has 5 valence electrons — the 4s² and 4p³ electrons in the highest occupied shell — so it tends to gain 3 electrons and form a 3− ion",
-      "It has 2 valence electrons, because only the s subshell counts as valence"
+      "It has 15 valence electrons, because the 4s, 3d, and 4p electrons all lie outside the [Ar] core and take part in bonding",
+      "It has 3 valence electrons, because only p electrons count as valence, so it tends to lose 3 and form a 3+ ion",
+      "It has 5 valence electrons — the 4s² and 4p³ electrons in the highest occupied shell — so it tends to form a 3− ion",
+      "It has 2 valence electrons, because only the s subshell counts as valence, so it tends to form a 2+ ion"
     ],
     "answer": "C",
     "hints": [

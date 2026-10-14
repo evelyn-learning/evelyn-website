@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "The Mean Value Theorem guarantees at least one interior point $c$ at which the tangent line is:",
     "choices": [
-      "Horizontal",
+      "Horizontal, so that $f'(c)=0$ at that point",
       "Parallel to the secant line joining the endpoints",
-      "Perpendicular to the secant line",
-      "Tangent to the $x$-axis"
+      "Perpendicular to the secant line joining the endpoints",
+      "Tangent to the $x$-axis between the endpoints"
     ],
     "answer": "B",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "By the Extreme Value Theorem, a function that is continuous on a closed interval $[a,b]$ must:",
     "choices": [
-      "Be differentiable on $(a,b)$",
-      "Have exactly one critical point",
-      "Attain both an absolute maximum and an absolute minimum on $[a,b]$",
-      "Be increasing on $[a,b]$"
+      "Be differentiable on $(a,b)$, since continuity implies differentiability",
+      "Have exactly one critical point inside the interval $(a,b)$",
+      "Attain an absolute maximum and an absolute minimum on $[a,b]$",
+      "Be increasing on $[a,b]$ from $f(a)$ up to $f(b)$"
     ],
     "answer": "C",
     "hints": [
@@ -67,7 +67,7 @@
       "$[3,6]$",
       "$[2,7]$",
       "$[-1,1]$",
-      "$[0,5]$, because $f$ is not differentiable at $x=2$"
+      "$[0,5]$"
     ],
     "answer": "D",
     "hints": [
@@ -166,10 +166,10 @@
     "responseFormat": "mcq",
     "problemText": "For $f(x)=x^3$, the point $x=0$ is a critical point but NOT a local extremum because:",
     "choices": [
-      "$f'(0)$ does not exist",
+      "$f'(0)$ does not exist because of a corner at $x=0$",
       "$f'(x)=3x^2$ does not change sign at $x=0$",
-      "$f$ is discontinuous at $x=0$",
-      "$f'(0)>0$"
+      "$f$ is discontinuous at $x=0$, so no extremum can form",
+      "$f'(0)>0$, so $f$ is rising through $x=0$"
     ],
     "answer": "B",
     "hints": [
@@ -268,10 +268,10 @@
     "responseFormat": "mcq",
     "problemText": "For $f(x)=x^4$ there is NO inflection point at $x=0$ even though $f''(0)=0$. The reason is that:",
     "choices": [
-      "$f''(0)$ is undefined",
+      "$f''(0)$ is undefined, so concavity cannot be tested there",
       "$f''(x)=12x^2$ never changes sign, so concavity does not change",
-      "$f$ has a local maximum at $x=0$",
-      "$f'(0)\\ne 0$"
+      "$f$ has a local maximum at $x=0$, which rules out a change in concavity",
+      "$f'(0)\\ne 0$, so the tangent at $x=0$ is not horizontal"
     ],
     "answer": "B",
     "hints": [
@@ -352,9 +352,9 @@
     "problemText": "An inflection point of $f$ corresponds to a point on the graph of $f'$ where $f'$ has:",
     "choices": [
       "A local maximum or minimum (a turning point)",
-      "An $x$-intercept",
-      "A positive value",
-      "A vertical asymptote"
+      "An $x$-intercept (a point where $f'$ crosses zero)",
+      "A positive value (so $f$ is increasing there)",
+      "A vertical asymptote (where $f'$ is undefined)"
     ],
     "answer": "A",
     "hints": [
@@ -370,10 +370,10 @@
     "responseFormat": "mcq",
     "problemText": "The graph of $f'$ is a straight line with positive slope passing through the origin. What is true of $f$?",
     "choices": [
-      "$f$ has a local maximum at $x=0$",
+      "$f$ has a local maximum at $x=0$ and is concave down everywhere",
       "$f$ has a local minimum at $x=0$ and is concave up everywhere",
       "$f$ is concave down everywhere",
-      "$f$ is increasing everywhere"
+      "$f$ is increasing everywhere because $f'$ has a positive slope"
     ],
     "answer": "B",
     "hints": [
@@ -416,9 +416,9 @@
     "problemText": "In an optimization problem where two variables are linked by a constraint, the essential first step before differentiating is to:",
     "choices": [
       "Use the constraint to rewrite the objective as a function of one variable",
-      "Differentiate both variables separately",
-      "Set both variables equal to zero",
-      "Integrate the objective function"
+      "Differentiate the objective with respect to each of the two variables separately",
+      "Set both variables equal to zero to find the critical points",
+      "Integrate the objective function to find its accumulated total"
     ],
     "answer": "A",
     "hints": [
@@ -434,10 +434,10 @@
     "responseFormat": "mcq",
     "problemText": "After finding a critical point of a one-variable objective $A(x)$, how do you confirm it gives a MAXIMUM?",
     "choices": [
-      "Check that the constraint equals zero",
+      "Check that the constraint equation equals zero at the critical point",
       "Check that $A''<0$ there (or that $A'$ changes from $+$ to $-$)",
-      "Confirm the variable is negative",
-      "No verification is necessary"
+      "Confirm that the critical value of the variable is negative",
+      "No verification is necessary once $A'=0$ has been solved"
     ],
     "answer": "B",
     "hints": [
@@ -453,10 +453,10 @@
     "responseFormat": "mcq",
     "problemText": "To minimize the distance from a fixed point to a curve, it is easiest to instead minimize:",
     "choices": [
-      "The reciprocal of the distance",
-      "The distance plus one",
+      "The reciprocal of the distance, which is easier to differentiate",
+      "The distance plus one, which removes the square root",
       "The squared distance, which has the same minimizer",
-      "The area under the curve"
+      "The area under the curve between the two points"
     ],
     "answer": "C",
     "hints": [
@@ -530,10 +530,10 @@
     "responseFormat": "mcq",
     "problemText": "A VERTICAL tangent to an implicit curve occurs where $\\dfrac{dy}{dx}$ is:",
     "choices": [
-      "Equal to zero",
+      "Equal to zero, because the numerator is zero and the denominator is nonzero",
       "Undefined, because the denominator is zero and the numerator is nonzero",
-      "Equal to one",
-      "Negative"
+      "Equal to one, because the numerator and the denominator are equal",
+      "Negative, because the curve is falling steeply at that point"
     ],
     "answer": "B",
     "hints": [
@@ -549,10 +549,10 @@
     "responseFormat": "mcq",
     "problemText": "If both the numerator and denominator of $\\dfrac{dy}{dx}$ are zero at a point on an implicit curve, then at that point:",
     "choices": [
-      "The curve definitely has a horizontal tangent",
-      "The curve definitely has a vertical tangent",
+      "The curve definitely has a horizontal tangent, because the numerator of the slope is zero",
+      "The curve definitely has a vertical tangent, because the denominator of the slope is zero",
       "The slope is indeterminate; it is not automatically a horizontal or vertical tangent",
-      "The curve must be discontinuous"
+      "The curve must be discontinuous, because the slope formula breaks down there"
     ],
     "answer": "C",
     "hints": [

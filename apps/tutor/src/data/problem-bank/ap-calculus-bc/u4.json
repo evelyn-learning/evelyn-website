@@ -7,8 +7,8 @@
     "responseFormat": "mcq",
     "problemText": "The volume of water in a tank is $V(t)$ liters, where $t$ is in minutes. What is the best interpretation of $V'(5) = -3$?",
     "choices": [
-      "At $t=5$ minutes, the tank holds 3 liters",
-      "Over the first 5 minutes, the tank loses 3 liters",
+      "At $t=5$ minutes, the tank holds 3 liters less water than it did at the start",
+      "Over the first 5 minutes, the tank loses 3 liters, an average of 0.6 liters per minute",
       "At $t=5$ minutes, the volume is decreasing at a rate of 3 liters per minute",
       "The tank is empty at $t=5$ minutes"
     ],
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "The cost, in dollars, to produce $x$ widgets is $C(x)$, and $C'(200) = 4.5$. Which statement is the best interpretation?",
     "choices": [
-      "Producing one more widget beyond 200 costs approximately 4.50 dollars (the marginal cost)",
-      "It costs 4.50 dollars to produce 200 widgets",
-      "The total cost of 200 widgets is 4.50 dollars",
-      "Each of the 200 widgets costs 4.50 dollars"
+      "Producing one more widget beyond 200 costs approximately 4.50 dollars",
+      "It costs 4.50 dollars in total to produce the first 200 widgets",
+      "The total cost of producing all 200 widgets together is 4.50 dollars",
+      "Each of the 200 widgets costs 4.50 dollars, the average cost per unit"
     ],
     "answer": "A",
     "hints": [
@@ -211,10 +211,10 @@
     "responseFormat": "mcq",
     "problemText": "In a related-rates problem, after identifying the quantities involved, the key step is to:",
     "choices": [
-      "Set the derivative equal to zero and solve",
-      "Integrate both sides with respect to time",
+      "Set the derivative equal to zero and solve for the critical value of the variable",
+      "Integrate both sides of the given rate equation with respect to time to recover the quantities",
       "Write an equation relating the variables, then differentiate implicitly with respect to time",
-      "Find the maximum of the quantity"
+      "Find the maximum of the quantity by locating where its rate of change equals zero"
     ],
     "answer": "C",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "L'Hopital's rule may be applied directly to a limit that has which indeterminate form?",
     "choices": [
-      "$\\frac{1}{0}$",
-      "$\\frac{5}{2}$",
+      "$\\frac{1}{0}$ or $\\frac{1}{\\infty}$",
+      "$\\frac{0}{\\infty}$ or $\\frac{\\infty}{0}$",
       "$\\frac{0}{0}$ or $\\frac{\\infty}{\\infty}$",
-      "Any limit whatsoever"
+      "Any limit, whatever its form"
     ],
     "answer": "C",
     "hints": [

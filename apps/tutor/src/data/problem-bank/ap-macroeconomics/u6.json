@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "A country runs a current account deficit. Which statement best describes this situation?",
     "choices": [
-      "The country exports more goods and services than it imports",
-      "The country is a net lender to the rest of the world",
-      "The country's total imports of goods, services, and net income transfers exceed its total exports and receipts",
-      "The country's financial account balance is equal to zero"
+      "The country exports more goods and services than it imports, earning net income from abroad",
+      "The country is a net lender to the rest of the world, accumulating foreign assets each year",
+      "The country's imports of goods, services, and net income transfers exceed its exports and receipts",
+      "The country's financial account balance is equal to zero because no capital flows across its borders"
     ],
     "answer": "C",
     "hints": ["A deficit means total outflows on the current account exceed total inflows."]
@@ -101,9 +101,9 @@
     "problemText": "One British pound exchanges for 1.40 U.S. dollars. The rate then changes so that one pound exchanges for only 1.30 U.S. dollars. Which statement correctly describes what has happened?",
     "choices": [
       "The pound has appreciated against the dollar",
-      "The pound has depreciated against the dollar, because each pound now buys fewer dollars",
+      "The pound has depreciated against the dollar",
       "The dollar has depreciated against the pound",
-      "Neither currency has changed in value"
+      "Neither currency has changed in value against the other"
     ],
     "answer": "B",
     "hints": ["Depreciation means each unit of a currency buys fewer units of the other currency."]
@@ -132,7 +132,7 @@
     "responseFormat": "mcq",
     "problemText": "The U.S. dollar appreciates relative to the Japanese yen. Which of the following is the most direct effect on U.S. trade?",
     "choices": [
-      "Imported Japanese goods become cheaper for U.S. buyers, as each dollar now buys more yen",
+      "Imported Japanese goods become cheaper for U.S. buyers",
       "U.S. exports to Japan become cheaper for Japanese buyers",
       "Imported goods become more expensive for U.S. buyers",
       "U.S. net exports improve, raising aggregate demand"
@@ -237,7 +237,7 @@
     "choices": [
       "The supply of euros decreases and the dollar price of the euro rises",
       "The demand for euros increases and the euro appreciates",
-      "The supply of euros increases and the dollar price of the euro falls (the euro depreciates)",
+      "The supply of euros increases and the dollar price of the euro falls",
       "Both supply and demand for euros fall, leaving the price unchanged"
     ],
     "answer": "C",
@@ -267,10 +267,10 @@
     "responseFormat": "mcq",
     "problemText": "U.S. income grows faster than income in Japan, while Japanese interest rates rise significantly above U.S. rates. In the market for Japanese yen, which outcome for the dollar price of the yen is most likely?",
     "choices": [
-      "The dollar price of the yen rises because both higher U.S. demand for Japanese goods and higher Japanese interest rates increase the demand for yen",
-      "The dollar price of the yen falls because higher Japanese interest rates discourage investment in Japan",
-      "The dollar price of the yen falls because faster U.S. income growth increases the supply of yen",
-      "The two effects exactly cancel, leaving the exchange rate unchanged"
+      "The dollar price of the yen rises because higher U.S. demand for Japanese goods and higher Japanese rates both raise demand for yen",
+      "The dollar price of the yen falls because higher Japanese interest rates discourage investment in Japan and reduce demand for yen",
+      "The dollar price of the yen falls because faster U.S. income growth increases the supply of yen offered in the foreign exchange market",
+      "The two effects work in opposite directions and exactly cancel, leaving the dollar price of the yen unchanged"
     ],
     "answer": "A",
     "hints": ["Trace each factor: rising U.S. incomes raise demand for Japanese goods (Americans need yen); higher Japanese rates attract U.S. capital (Americans need yen to buy Japanese bonds). Both effects increase demand for yen."]
@@ -315,10 +315,10 @@
     "responseFormat": "mcq",
     "problemText": "Country C's economy grows faster than its trading partners, raising household incomes rapidly. All else equal, how does this affect the value of Country C's currency?",
     "choices": [
-      "Country C's currency appreciates because higher growth signals economic strength to investors",
+      "Country C's currency appreciates because higher growth signals economic strength to investors abroad",
       "Country C's currency is unaffected because imports and exports change in equal proportions",
-      "Country C's currency appreciates because foreigners want to invest in the growing economy",
-      "Country C's currency depreciates as rising incomes increase imports and the supply of its currency on foreign exchange markets"
+      "Country C's currency appreciates because foreigners want to invest in the rapidly growing economy",
+      "Country C's currency depreciates as rising incomes increase imports and the supply of its currency"
     ],
     "answer": "D",
     "hints": ["Higher incomes mean residents buy more foreign goods; to pay for them, they supply more of their own currency on the FX market."]
@@ -331,10 +331,10 @@
     "responseFormat": "mcq",
     "problemText": "Mexico's inflation rate rises above the U.S. inflation rate, while simultaneously the Bank of Mexico raises its policy interest rate to combat that inflation. Which statement best describes the likely net effect on the peso-dollar exchange rate?",
     "choices": [
-      "The peso unambiguously appreciates because higher interest rates dominate all other factors",
-      "The net effect on the peso is ambiguous because higher inflation tends to depreciate the currency while higher interest rates tend to appreciate it",
-      "The peso unambiguously depreciates because higher inflation always dominates interest rate changes",
-      "Both effects reinforce each other, causing the peso to appreciate strongly"
+      "The peso unambiguously appreciates because higher interest rates dominate all other factors affecting capital flows",
+      "The net effect is ambiguous: higher inflation tends to depreciate the peso while higher interest rates tend to appreciate it",
+      "The peso unambiguously depreciates because higher inflation always dominates interest rate changes in the foreign exchange market",
+      "Both effects reinforce each other, causing the peso to appreciate strongly against the dollar over time"
     ],
     "answer": "B",
     "hints": ["Each determinant pushes in an opposite direction here — the net outcome depends on relative magnitudes."]
@@ -363,10 +363,10 @@
     "responseFormat": "mcq",
     "problemText": "Country E has real interest rates well above global averages, inflation lower than its trading partners, and rapidly growing foreign demand for its technology exports. Which best describes the expected medium-term effect on Country E's currency?",
     "choices": [
-      "Country E's currency depreciates because capital inflows are eventually offset by a current account deficit",
-      "Country E's currency depreciates because high interest rates raise domestic borrowing costs and slow growth",
-      "Country E's currency is unchanged because the three forces exactly offset each other",
-      "Country E's currency is likely to appreciate because high real interest rates, low relative inflation, and strong export demand all increase demand for it"
+      "Country E's currency depreciates because capital inflows are eventually offset by a current account deficit that steadily raises its supply abroad",
+      "Country E's currency depreciates because high interest rates raise domestic borrowing costs and slow growth, deterring foreign investors",
+      "Country E's currency is unchanged because the three forces exactly offset each other over the medium term",
+      "Country E's currency is likely to appreciate because high real rates, low relative inflation, and strong export demand all raise demand for it"
     ],
     "answer": "D",
     "hints": ["Evaluate each determinant: high real rates attract capital inflows; low relative inflation keeps exports competitive; strong export demand means foreigners need Country E's currency. All three push toward appreciation."]
@@ -395,10 +395,10 @@
     "responseFormat": "mcq",
     "problemText": "Country F's currency appreciates substantially against its trading partners. Which best describes the short-run effect on Country F's aggregate demand?",
     "choices": [
-      "Aggregate demand decreases because net exports fall as exports become more expensive to foreigners and imports become cheaper for domestic buyers",
-      "Aggregate demand increases because consumers benefit from cheaper imported goods",
+      "Aggregate demand decreases because net exports fall as exports become costlier abroad and imports cheaper at home",
+      "Aggregate demand increases because consumers benefit from cheaper imported goods and spend more on consumption",
       "Aggregate demand is unaffected because exchange rate changes only alter the price level, not real output",
-      "Aggregate demand increases because foreign direct investment rises with currency appreciation"
+      "Aggregate demand increases because foreign direct investment rises with currency appreciation and boosts spending"
     ],
     "answer": "A",
     "hints": ["Appreciation causes exports to fall and imports to rise, reducing net exports and therefore the NX component of aggregate demand."]
@@ -459,8 +459,8 @@
     "responseFormat": "mcq",
     "problemText": "Country G's policymakers allow their currency to depreciate to boost net exports. However, Country G's economy is already operating very close to full employment. Which of the following best describes the most likely outcome?",
     "choices": [
-      "Real GDP rises strongly with little inflation because the economy can quickly expand productive capacity",
-      "The stimulus to aggregate demand primarily causes inflation rather than lasting output growth, since the economy is near full capacity",
+      "Real GDP rises strongly with little inflation because the economy can quickly expand productive capacity to meet new demand",
+      "The demand stimulus mainly causes inflation rather than lasting output growth, since the economy is near capacity",
       "The depreciation causes deflation because lower import demand from abroad pushes foreign prices down",
       "Real GDP falls because higher import costs reduce aggregate supply by more than aggregate demand rises"
     ],
@@ -475,10 +475,10 @@
     "responseFormat": "mcq",
     "problemText": "A country runs a current account deficit of 200 billion dollars. Ignoring statistical discrepancies, what must be true of the country's capital and financial account balance?",
     "choices": [
-      "It is also in deficit by 200 billion dollars",
-      "It is zero because only the current account affects total borrowing",
-      "It shows a deficit of 100 billion dollars",
-      "It shows a surplus of 200 billion dollars, meaning the country is a net borrower from the rest of the world"
+      "It is also in deficit by 200 billion dollars, since both accounts move in the same direction together",
+      "It is zero because only the current account affects total borrowing from the rest of the world",
+      "It shows a deficit of 100 billion dollars, as half the gap is covered by official central bank reserve sales",
+      "It shows a surplus of 200 billion dollars, so the country is a net borrower from the rest of the world"
     ],
     "answer": "D",
     "hints": ["BOP identity: current account + capital and financial account = 0, so the financial account must offset the current account deficit."]
@@ -507,10 +507,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following statements about a country that consistently imports more goods and services than it exports is most accurate?",
     "choices": [
-      "The country necessarily runs a current account surplus",
-      "The country's balance of payments automatically goes negative",
+      "The country necessarily runs a current account surplus because its import payments are recorded as credits",
+      "The country's balance of payments automatically goes negative, forcing its currency to be devalued",
       "The country tends to run a current account deficit and typically must attract net capital inflows to finance it",
-      "The country's financial account balance is always zero regardless of trade flows"
+      "The country's financial account balance is always zero regardless of trade flows, since it records only asset swaps"
     ],
     "answer": "C",
     "hints": ["A persistent import surplus contributes to a current account deficit; the BOP identity requires a matching financial account surplus."]
@@ -556,7 +556,7 @@
     "problemText": "Country H adopts expansionary fiscal policy financed by large-scale government borrowing. Which of the following correctly traces the full sequence of effects on interest rates, capital flows, the exchange rate, and net exports?",
     "choices": [
       "Interest rates fall; capital flows out; the currency depreciates; net exports rise",
-      "Interest rates rise; capital flows in; the currency appreciates; net exports fall (exchange-rate channel of crowding out)",
+      "Interest rates rise; capital flows in; the currency appreciates; net exports fall",
       "Interest rates rise; capital flows out; the currency depreciates; net exports rise",
       "Interest rates fall; capital flows in; the currency appreciates; net exports fall"
     ],

@@ -299,10 +299,10 @@
     "responseFormat": "mcq",
     "problemText": "Writers associated with the Beat movement, such as Jack Kerouac and Allen Ginsberg, are significant to postwar cultural history chiefly because they —",
     "choices": [
-      "helped design the federal interstate highway system in the 1950s",
+      "helped design the federal interstate highway system in the 1950s, inspired by their cross-country road trips",
       "rejected mainstream 1950s conformity and consumerism, anticipating the 1960s counterculture",
-      "led the legal campaign that produced Brown v. Board of Education",
-      "organized the suburban homeownership boom financed by FHA loans"
+      "led the legal campaign that produced Brown v. Board of Education, ending legal school segregation in 1954",
+      "organized the suburban homeownership boom financed by FHA loans, promoting family life in the new suburbs"
     ],
     "answer": "B",
     "hints": [

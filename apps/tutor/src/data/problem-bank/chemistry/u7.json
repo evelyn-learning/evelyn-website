@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A copper sheet is chilled in a freezer and its measured length shrinks slightly. In kinetic-molecular terms, what is happening to its atoms?",
     "choices": [
-      "Each copper atom shrinks to a smaller size",
-      "The atoms vibrate less energetically and settle closer together, while each atom stays exactly the same size",
-      "Some copper atoms leave the sheet as it cools, so less material remains",
-      "The atoms stop vibrating completely and lock into a denser element"
+      "Each copper atom shrinks to a smaller size as the cold removes energy from inside it",
+      "The atoms vibrate less energetically and settle closer together, while each atom stays the same size",
+      "Some copper atoms leave the sheet as it cools, so less material remains to fill the sheet's original length",
+      "The atoms stop vibrating completely and lock together into a denser element as the cold sets in"
     ],
     "answer": "B",
     "hints": [
@@ -45,9 +45,9 @@
     "responseFormat": "mcq",
     "problemText": "Which statement is a postulate of the kinetic-molecular theory of an ideal gas?",
     "choices": [
-      "Gas particles lose kinetic energy every time they collide with one another",
-      "Every particle in a gas sample moves at exactly the same speed",
-      "Gas particles attract one another strongly in the space between collisions",
+      "Gas particles lose kinetic energy every time they collide with one another, which is why gases cool",
+      "Every particle in a gas sample moves at exactly the same speed at a given temperature",
+      "Gas particles attract one another strongly in the space between collisions, pulling the gas together",
       "The volume of the gas particles themselves is negligible compared with the space between them"
     ],
     "answer": "D",
@@ -390,7 +390,7 @@
     "choices": [
       "8.0 L",
       "2.0 L",
-      "4.0 L — halving the pressure doubles the volume, and halving the absolute temperature halves it right back",
+      "4.0 L",
       "16.0 L"
     ],
     "answer": "C",

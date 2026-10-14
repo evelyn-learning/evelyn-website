@@ -94,10 +94,10 @@
     "responseFormat": "mcq",
     "problemText": "Read these original lines: \"Grief moved into the spare room that winter. / It rearranged the furniture, kept its own hours, / and by April it had stopped asking / whether it could stay.\" Which statement best describes the figurative language and what it accomplishes?",
     "choices": [
-      "A single simile in the first line, dropped afterward in favor of literal description",
-      "Personification in line two only, with no comparison operating anywhere else",
-      "An extended metaphor: grief is treated as a live-in occupant across all four lines, so the passage shows it hardening into a permanent household presence rather than a passing feeling",
-      "Hyperbole, since no reader would believe that grief could rent a room"
+      "A single simile in the first line, dropped afterward in favor of literal description of the speaker's rooms and daily routine",
+      "Personification in line two only, with no comparison operating anywhere else, so grief stays an abstract feeling in the other three lines",
+      "An extended metaphor: grief is a live-in occupant across all four lines, hardening into a permanent presence rather than a passing feeling",
+      "Hyperbole, since no reader would believe that grief could rent a room, so the lines simply exaggerate the speaker's sadness for dramatic effect"
     ],
     "answer": "C",
     "hints": [
@@ -126,9 +126,9 @@
     "problemText": "Read this original excerpt: \"The waiting room hummed with fluorescent light, the vinyl chair stuck to the backs of my knees, and somewhere down the hall a cart rattled and stopped.\" Which mood does the imagery build?",
     "choices": [
       "Tense, uncomfortable waiting",
-      "Warm domestic comfort",
-      "Wild outdoor freedom",
-      "Playful, comic energy"
+      "Warm, cozy domestic comfort",
+      "Wild, open outdoor freedom",
+      "Playful, lighthearted comic energy"
     ],
     "answer": "A",
     "hints": [
@@ -177,9 +177,9 @@
     "responseFormat": "mcq",
     "problemText": "Read this original excerpt: \"Priya laced her boots, checked the forecast, and slid the red envelope into her coat pocket. On the trail she stopped four times to take it out, read it, and put it back. At the summit she left it under a stone.\" A student writes: \"The forecast symbolizes uncertainty about the future.\" What is the strongest objection?",
     "choices": [
-      "A passage can hold only one symbol, and the envelope already fills that slot",
-      "Weather details are never symbolic in literature",
-      "A symbol only counts when the narrator states its meaning outright",
+      "A passage can hold only one symbol, and the envelope already fills that slot, so the forecast cannot also be one",
+      "Weather details are never symbolic in literature, since they exist only to set the scene for the action that follows",
+      "A symbol only counts when the narrator states its meaning outright, and this narrator does not explain the forecast",
       "The forecast is mentioned once in passing, while the passage repeats and lingers on the envelope"
     ],
     "answer": "D",
@@ -196,10 +196,10 @@
     "responseFormat": "mcq",
     "problemText": "In an original story, a dove settles on the neighbor's roof three times, and each time the narrator's father reaches for the shutter latch and closes it. By the end the family eats with every window shut in August heat. A reader claims the dove stands for peace. Which response is most defensible?",
     "choices": [
-      "Correct — a dove always carries its conventional meaning of peace",
-      "The conventional meaning is only a starting hypothesis, and this text twists it: each arrival triggers a shutting-out, so the dove reads closer to an unwelcome intrusion",
-      "Incorrect — a living creature cannot be a symbol, because symbols must be objects",
-      "Incorrect — the dove appears too often to be a symbol, since symbols appear only once"
+      "Correct — a dove always carries its conventional meaning of peace, and the father's closing of the shutters each time does not change that",
+      "The conventional meaning is only a starting hypothesis; here each arrival brings a shutting-out, so the dove reads closer to an unwelcome intrusion",
+      "Incorrect — a living creature cannot be a symbol, because symbols must be objects that characters handle or keep, such as the latch on the window shutter",
+      "Incorrect — the dove appears too often to be a symbol, since symbols appear only once and repetition turns them into part of the ordinary setting"
     ],
     "answer": "B",
     "hints": [
@@ -367,10 +367,10 @@
     "responseFormat": "mcq",
     "problemText": "A student says a free verse poem has no structure worth analyzing, because the poet just pressed enter wherever it felt right. What is the strongest correction?",
     "choices": [
-      "Free verse always follows a hidden meter that a careful reader must uncover",
-      "Free verse gives up inherited meter and rhyme, but the poet still chooses every line ending and stanza length, and those choices carry the pacing and emphasis",
-      "The student is right — only fixed forms have structure that can be analyzed",
-      "Free verse should be rewritten as prose before any structural analysis begins"
+      "Free verse always follows a hidden meter that a careful reader must uncover by scanning the stresses in each line before analyzing anything else",
+      "Free verse drops inherited meter and rhyme, but the poet still chooses every line ending and stanza length, and those choices carry pacing and emphasis",
+      "The student is right — only fixed forms such as sonnets and villanelles have structure that can be analyzed, since their rules are set in advance",
+      "Free verse should be rewritten as prose before any structural analysis begins, because its line breaks only hide the sentences the poem is really built on"
     ],
     "answer": "B",
     "hints": [
@@ -386,10 +386,10 @@
     "responseFormat": "mcq",
     "problemText": "A poem's first stanza runs eleven lines of a crowded team bus after a win. A blank line follows. The final stanza is one line: \"The bus goes back half empty in June.\" What is the stanza break doing?",
     "choices": [
-      "Marking the point where a different speaker takes over the poem",
-      "Separating the sections so the poem is easier to print on a page",
+      "Marking the point where a different speaker takes over the poem and answers the voice of the first stanza",
+      "Separating the sections so the poem is easier to print on a page, since a twelve-line block would crowd the layout",
       "Creating a silence the reader has to cross, so the drop from a full bus to a half-empty one lands as loss",
-      "Signalling that the rhyme scheme has ended"
+      "Signalling that the rhyme scheme has ended and the poem is shifting into an unrhymed closing line"
     ],
     "answer": "C",
     "hints": [
@@ -405,10 +405,10 @@
     "responseFormat": "mcq",
     "problemText": "Read these original lines: \"My sister said she was not afraid / of the water, only of how far / the shore had gotten / while we talked.\" Which statement best explains what the line breaks accomplish?",
     "choices": [
-      "They mark the ends of four separate sentences, so the poem moves in deliberate steps",
-      "They are arbitrary, since the poem carries no rhyme scheme",
-      "The enjambments strand \"afraid\" and \"far\" at the line edges and hold the real fear back until the final line, so the structure enacts the drift it describes",
-      "They build a slant rhyme between \"afraid\" and \"far\" to bind the opening lines"
+      "They mark the ends of four separate sentences, so the poem moves in deliberate, evenly weighted steps toward a calm statement of the sister's fear",
+      "They are arbitrary, since the poem carries no rhyme scheme or regular meter that would give the breaks a reason to fall where they do",
+      "The enjambments strand \"afraid\" and \"far\" at line edges and hold the real fear back until the last line, so the form enacts the drift it describes",
+      "They build a slant rhyme between \"afraid\" and \"far\" to bind the opening lines into a couplet that the shorter closing lines then break apart"
     ],
     "answer": "C",
     "hints": [

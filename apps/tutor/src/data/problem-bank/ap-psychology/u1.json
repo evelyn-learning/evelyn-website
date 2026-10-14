@@ -184,10 +184,10 @@
     "responseFormat": "mcq",
     "problemText": "During an action potential, which sequence of ionic events correctly describes what occurs after the resting membrane potential is disrupted?",
     "choices": [
-      "Potassium ions rush in, then sodium ions rush out, causing depolarization followed by repolarization",
+      "Potassium ions rush in, then sodium ions rush out, causing depolarization followed by repolarization of the membrane",
       "Calcium ions trigger vesicle release, then sodium rushes in, then the neuron hyperpolarizes",
-      "Sodium ions rush out first, causing the inside of the neuron to become more negative before potassium enters",
-      "Sodium ions rush in, making the inside more positive (depolarization); then potassium rushes out, restoring the negative charge (repolarization)"
+      "Sodium ions rush out first, causing the inside of the neuron to become more negative before potassium ions flow back in to depolarize it",
+      "Sodium ions rush in, making the inside more positive (depolarization); then potassium rushes out, restoring negativity (repolarization)"
     ],
     "answer": "D",
     "hints": ["Sodium gates open first; the cell becomes more positive inside. Which ion then flows out to restore the charge?"]
@@ -315,9 +315,9 @@
     "problemText": "The body's master internal biological clock, which entrains the sleep-wake cycle to environmental light-dark cycles, is located in the:",
     "choices": [
       "Suprachiasmatic nucleus (SCN) of the hypothalamus",
-      "Hippocampus of the limbic system",
-      "Cerebellum of the hindbrain",
-      "Prefrontal cortex of the frontal lobe"
+      "Hippocampus within the medial temporal lobe",
+      "Cerebellum at the back of the hindbrain",
+      "Ventromedial prefrontal cortex of the frontal lobe"
     ],
     "answer": "A",
     "hints": ["This small structure sits just above the optic chiasm and directly detects light information."]
@@ -347,8 +347,8 @@
     "problemText": "A research participant is woken up each time sleep monitors show she is entering REM sleep. On the following night, under normal sleep conditions, she spends unusually long periods in REM sleep. This pattern is best described as:",
     "choices": [
       "Circadian rhythm phase delay caused by lab disruption",
-      "Slow-wave sleep rebound compensating for lost deep sleep",
-      "REM rebound, in which the brain compensates for previously lost REM sleep",
+      "Slow-wave sleep rebound compensating for the lost deep sleep",
+      "REM rebound, in which the brain compensates for lost REM sleep",
       "Sleep inertia caused by abrupt awakening from deep sleep"
     ],
     "answer": "C",

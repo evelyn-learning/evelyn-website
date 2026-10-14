@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following statements best describes the relationship between island area and species richness predicted by island biogeography theory?",
     "choices": [
-      "Larger islands support more species because they provide greater habitat diversity and can sustain larger, less extinction-prone populations",
-      "Larger islands support fewer species because they have less edge habitat per unit area",
-      "Island area has no effect on species richness; only distance from the mainland matters",
-      "Larger islands support more species because they block immigration of competing species from the mainland"
+      "Larger islands support more species because they offer more habitat types and larger, less extinction-prone populations",
+      "Larger islands support fewer species because they have less edge habitat per unit area for species to colonize",
+      "Island area has no effect on species richness; only the island's distance from the mainland source pool matters",
+      "Larger islands support more species because they block immigration of competing species from the mainland source pool"
     ],
     "answer": "A",
     "hints": ["Think about habitat variety and minimum viable population size — both increase with island area."]
@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "Compared with a large island at the same distance from a mainland source pool, a small island is predicted to reach an equilibrium species richness that is:",
     "choices": [
-      "Higher, because small islands have lower extinction rates due to reduced competition",
-      "Equal, because immigration rates are identical for both islands at the same distance",
-      "Higher, because small islands present more edge per unit area for colonizing species to exploit",
-      "Lower, because small islands have higher extinction rates as populations are smaller and more vulnerable to local extinction"
+      "Higher, because small islands have lower extinction rates due to reduced competition among resident species",
+      "Equal, because immigration rates are identical for both islands when they sit at the same distance",
+      "Higher, because small islands present more edge per unit area for colonizing species to exploit and settle",
+      "Lower, because small islands have higher extinction rates, as their smaller populations are more vulnerable"
     ],
     "answer": "D",
     "hints": ["In the model, extinction rate is governed by island size; immigration rate is governed by distance from the mainland."]
@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "A volcanic eruption completely sterilizes an oceanic island, destroying all species and soil. According to the MacArthur-Wilson equilibrium model, which outcome is most likely over the following decades?",
     "choices": [
-      "Species richness remains near zero permanently because volcanic substrate cannot support life",
-      "Immigration from nearby source populations gradually increases species richness back toward the original equilibrium number",
-      "Species richness instantly recovers because seeds buried in lava survive the eruption",
-      "The extinction rate accelerates as new colonizers compete, preventing any recovery"
+      "Species richness remains near zero permanently because bare volcanic substrate cannot support colonizing life",
+      "Immigration from nearby source populations gradually rebuilds species richness toward the original equilibrium",
+      "Species richness instantly recovers to its original level because seeds buried in the lava survive the eruption",
+      "The extinction rate accelerates as new colonizers compete with one another, preventing any recovery of richness"
     ],
     "answer": "B",
     "hints": ["The same immigration and extinction dynamics that established the original community will operate again — the equilibrium is dynamic, not fixed."]
@@ -129,10 +129,10 @@
     "responseFormat": "mcq",
     "problemText": "A river contains both a stenothermal fish (narrow temperature tolerance: 12°C–18°C) and a eurythermal fish (broad temperature tolerance: 5°C–30°C). When seasonal temperatures swing between 8°C in winter and 26°C in summer, which outcome does tolerance range theory predict?",
     "choices": [
-      "The eurythermal species maintains stable populations year-round while the stenothermal species declines or is absent during extreme-temperature seasons",
-      "The stenothermal species has a competitive advantage because specialization reduces its metabolic costs",
-      "Both species respond identically because tolerance ranges apply only to salinity, not temperature",
-      "The stenothermal species out-competes the eurythermal species by monopolizing the optimal mid-range temperature niche"
+      "The eurythermal species stays stable year-round while the stenothermal species declines or disappears during extreme-temperature seasons",
+      "The stenothermal species has a competitive advantage because specialization reduces its metabolic costs within its preferred range",
+      "Both species respond identically because tolerance ranges apply only to salinity and dissolved oxygen, not to water temperature",
+      "The stenothermal species out-competes the eurythermal species by monopolizing the optimal mid-range temperature niche within the river's main channel"
     ],
     "answer": "A",
     "hints": ["Steno- = narrow; eury- = wide. Check which species' tolerance range covers both 8°C and 26°C."]
@@ -161,10 +161,10 @@
     "responseFormat": "mcq",
     "problemText": "A freshwater fish has a pH tolerance range of 6.0 to 8.5 and grows optimally at pH 7.2. Upstream mining operations lower the river pH to 6.3. Which outcome does the tolerance curve model predict for this fish population?",
     "choices": [
-      "Immediate population death, because 6.3 is outside the tolerance range",
-      "No detectable change, because 6.3 remains within the broad survivable range",
-      "Accelerated growth, because slightly acidic conditions reduce the prevalence of fungal pathogens",
-      "Reduced growth and reproductive rates, because 6.3 places the population in the zone of stress — survivable but suboptimal"
+      "Immediate population death, because 6.3 is outside the tolerance range for this species",
+      "No detectable change, because 6.3 remains comfortably within the broad survivable range",
+      "Accelerated growth, because slightly acidic conditions reduce the prevalence of fungal and bacterial pathogens",
+      "Reduced growth and reproductive rates, because 6.3 lies in the zone of stress — survivable but suboptimal"
     ],
     "answer": "D",
     "hints": ["Confirm that 6.3 is inside or outside the tolerance range, then distinguish 'survives at full capacity' from 'survives under physiological stress.'"]
@@ -193,10 +193,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following most accurately describes primary ecological succession?",
     "choices": [
-      "The recovery of a plant community in an abandoned farm field that retains its original topsoil",
-      "The sequential colonization and community development on a substrate that has never supported life, or from which all life and soil have been completely removed",
-      "The seasonal turnover of dominant species in a stable, mature forest ecosystem",
-      "The abrupt replacement of one climax community by another following a catastrophic fire"
+      "The recovery of a plant community in an abandoned farm field that retains its original topsoil and seed bank",
+      "The sequential colonization of a substrate that has never supported life, or from which all life and soil were removed",
+      "The seasonal turnover of dominant species in a stable, mature forest ecosystem that has already reached its climax state",
+      "The abrupt replacement of one climax community by another following a catastrophic fire that burns the canopy"
     ],
     "answer": "B",
     "hints": ["Primary means starting from scratch — no soil, no seed bank, no organic matter to build on."]
@@ -225,10 +225,10 @@
     "responseFormat": "mcq",
     "problemText": "An ecologist compares two disturbed sites ten years after their disturbance: an abandoned farm field and a fresh lava field produced by a volcanic eruption. The old farm field has far greater plant cover and species richness. Which explanation best accounts for this difference?",
     "choices": [
-      "The old field receives more rainfall because cultivated soils permanently retain more moisture",
-      "The lava field is closer to the coast and inhibited by salt spray from the ocean",
-      "The old field is undergoing secondary succession, which begins with intact soil and a dormant seed bank and therefore proceeds much faster than primary succession on bare rock",
-      "The old field benefits from a more stable microclimate created by decades of agricultural land modification"
+      "The old field receives more rainfall because cultivated soils permanently retain more moisture and raise local humidity",
+      "The lava field is closer to the coast, and salt spray from the ocean inhibits seed germination on its bare surface",
+      "The old field is undergoing secondary succession, which starts with intact soil and a seed bank and so proceeds faster",
+      "The old field benefits from a more stable microclimate created by decades of agricultural land modification and irrigation"
     ],
     "answer": "C",
     "hints": ["Compare what each site started with: one had soil and dormant seeds; the other had bare, lifeless rock."]
@@ -276,7 +276,7 @@
       "Island biogeography theory, because the savanna is an isolated habitat patch that benefits from increased immigration of fire-adapted species from surrounding areas",
       "Liebig's Law of the Minimum, because light is the single limiting nutrient for prairie plants and burning temporarily removes the canopy",
       "The climax community concept, because the current dense forest represents the final stable state that should be maintained and protected",
-      "The intermediate disturbance hypothesis and secondary succession dynamics, because periodic fire prevents competitive exclusion by shade-tolerant trees and repeatedly resets the understory toward a higher-diversity savanna state"
+      "The intermediate disturbance hypothesis and secondary succession, because periodic fire stops shade-tolerant trees from excluding prairie species"
     ],
     "answer": "D",
     "hints": ["Ask: why did fire exclusion reduce diversity? Then identify which hypothesis predicts that moderate, periodic disturbance maintains higher species coexistence."]

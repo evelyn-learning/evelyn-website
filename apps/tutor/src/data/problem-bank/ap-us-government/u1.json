@@ -148,10 +148,10 @@
     "passageId": "evelyn.passage.apgov-federal-grants-table.v1",
     "problemText": "The same federal budget table reports that of the 692 billion dollars in federal grants-in-aid outlays in fiscal year 2019, about 581 billion dollars (84%) came as categorical grants — funds restricted to narrowly defined purposes and often carrying matching or compliance requirements — while about 111 billion dollars (16%) came as block grants, which give states broader discretion over how funds are spent. This breakdown best supports which conclusion about federal grants-in-aid in 2019?",
     "choices": [
-      "States had complete legal discretion over how every federal grant dollar they received was spent",
+      "States had complete legal discretion over how every federal grant dollar they received was spent, with no federal conditions attached",
       "Most federal grant dollars carried federally defined conditions, leaving states comparatively little spending discretion",
-      "The federal government provided no grant funding to state or local governments in 2019",
-      "Block grants made up a larger total dollar value than categorical grants in fiscal year 2019"
+      "The federal government provided no grant funding to state or local governments in 2019, leaving them to raise their own revenue",
+      "Block grants made up a larger total dollar value than categorical grants in fiscal year 2019, giving states broad discretion overall"
     ],
     "answer": "B",
     "hints": [

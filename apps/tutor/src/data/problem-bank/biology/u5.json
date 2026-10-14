@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "In one beetle population the allele for a dark shell (D) is dominant to the allele for a pale shell (d), yet only about 9% of the beetles in that population have dark shells. Which statement best explains this observation?",
     "choices": [
-      "The dark allele must really be the recessive one, since dark beetles are rare.",
-      "A dominant allele switches to being recessive whenever it becomes rare in a population.",
-      "A trait produced by a dominant allele must appear in at least half of any population.",
-      "Dominance describes which allele is expressed in a heterozygote; it says nothing about how common the allele is in a population."
+      "The dark allele must really be the recessive one, since dark beetles are rare and dominant traits are the common ones.",
+      "A dominant allele switches to being recessive whenever it becomes rare in a population, so the pale allele now dominates.",
+      "A trait produced by a dominant allele must appear in at least half of any population, so 9% dark reflects sampling error.",
+      "Dominance describes which allele is expressed in a heterozygote; it says nothing about how common the allele is."
     ],
     "answer": "D",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "Two genes in a certain plant sit close together on the same chromosome. A plant that is heterozygous for both (AaBb, having inherited A and B together on one chromosome and a and b together on the other) is crossed with an aabb plant. Instead of the expected 1:1:1:1 ratio, the offspring are mostly AaBb or aabb, with only a small number of Aabb or aaBb. Which statement best explains this result?",
     "choices": [
-      "The two genes are linked, so they do not assort independently; the few rare offspring classes arise from crossing over between the genes.",
-      "The law of segregation fails for these genes, so some gametes carry both alleles of a gene.",
-      "Allele A is incompletely dominant to a, which creates extra phenotype classes.",
-      "Independent assortment predicts a 3:1 ratio, and these offspring show 3:1."
+      "The genes are linked, so they do not assort independently; the few rare offspring classes come from crossing over between them.",
+      "The law of segregation fails for these genes, so some gametes carry both alleles of a gene and other gametes carry neither of them.",
+      "Allele A is incompletely dominant to a, which creates extra phenotype classes and shifts the expected 1:1:1:1 ratio.",
+      "Independent assortment predicts a 3:1 ratio for this cross, and these offspring show roughly that 3:1 ratio as expected."
     ],
     "answer": "A",
     "hints": [
@@ -371,10 +371,10 @@
     "responseFormat": "mcq",
     "problemText": "Human ABO blood type is controlled by three alleles of one gene: I^A and I^B are codominant with each other, and both are dominant to i. A person has the genotype I^A I^B. What blood type does that person have, and why?",
     "choices": [
-      "Type A, because the A allele is written first",
+      "Type A, because the A allele is written first and so is the one that is expressed",
       "Type AB, because both the A marker and the B marker appear on the red blood cells",
-      "Type O, because the two different alleles cancel each other out",
-      "A blend that is halfway between type A and type B"
+      "Type O, because the two different alleles cancel each other out on the red blood cells",
+      "A blend that is halfway between type A and type B, because neither allele is fully dominant"
     ],
     "answer": "B",
     "hints": [
@@ -447,10 +447,10 @@
     "responseFormat": "mcq",
     "problemText": "In rabbits, coat colour is controlled by four alleles of a single gene with the dominance series C (full colour) > c^ch (chinchilla) > c^h (Himalayan) > c (albino); each allele is dominant to every allele listed after it, and albino rabbits must be c c. A full-colour rabbit of genotype C c^h is crossed with a chinchilla rabbit of genotype c^ch c. What fraction of the offspring is expected to be albino?",
     "choices": [
-      "1/4",
-      "None of the offspring can be albino",
-      "1/2",
-      "1/16"
+      "1/4 of the offspring",
+      "None of the offspring",
+      "1/2 of the offspring",
+      "1/16 of the offspring"
     ],
     "answer": "B",
     "hints": [
@@ -505,10 +505,10 @@
     "responseFormat": "mcq",
     "problemText": "Red-green colour blindness is caused by a recessive allele on the X chromosome, and the Y chromosome carries no copy of that gene. Colour blindness is much more common in males than in females. Which statement best explains why?",
     "choices": [
-      "Sons inherit the colour-blindness allele from their fathers, because a father passes his X chromosome to every son.",
-      "The allele behaves as a dominant allele in males and a recessive allele in females.",
-      "Males and females should be affected at equal rates, so the difference is only a matter of chance.",
-      "A male has just one X chromosome, so a single recessive allele is expressed, while a female needs the recessive allele on both of her X chromosomes."
+      "Sons inherit the colour-blindness allele from their fathers, because a father passes his X chromosome, not his Y, to every one of his sons.",
+      "The allele behaves as a dominant allele in males and as a recessive allele in females, because male hormones switch on its expression.",
+      "Males and females should be affected at equal rates, so the observed difference is only a matter of chance in which families were sampled.",
+      "A male has one X chromosome, so a single recessive allele is expressed, while a female needs the recessive allele on both of her X chromosomes."
     ],
     "answer": "D",
     "hints": [

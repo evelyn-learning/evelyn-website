@@ -28,9 +28,9 @@
     "passageId": "evelyn.passage.swift-modest-proposal.v1",
     "problemText": "Swift opens with one long sentence: \"It is a melancholy object to those, who walk through this great town, or travel in the country, when they see the streets, the roads, and cabbin-doors crowded with beggars of the female sex, followed by three, four, or six children, all in rags, and importuning every passenger for an alms.\" This lengthy pile-up of qualifying clauses before Swift ever states his actual proposal primarily —",
     "choices": [
-      "signals that the sentence is grammatically incomplete and needs a second sentence to finish expressing its meaning",
-      "proves that Swift has personally counted every beggar and child present on the town's streets during his own walks",
-      "relaxes the reader with a leisurely, lighthearted tone appropriate to a comic essay about children playing outdoors",
+      "signals that the sentence is grammatically incomplete and needs a second sentence to finish expressing its meaning, which Swift then supplies in the next line",
+      "proves that Swift has personally counted every beggar and child present on the town's streets during his own walks, lending the essay statistical authority",
+      "relaxes the reader with a leisurely, lighthearted tone appropriate to a comic essay about children playing outdoors in the town's streets and country roads",
       "establishes Swift's earnest, patient persona and postpones his proposal, so the later shift to a brisk, businesslike solution lands more jarringly by contrast"
     ],
     "answer": "D",
@@ -48,10 +48,10 @@
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
     "problemText": "After several longer, flowing sentences, Douglass writes one short exclamation: \"I am not included within the pale of this glorious anniversary!\" Coming right after those longer sentences, this short exclamation primarily —",
     "choices": [
-      "lets the sentence's brevity land like a blunt personal confession, snapping the audience's attention onto Douglass's own exclusion after the preceding rolling description of shared blessings",
-      "shows that Douglass has run out of things to say on the subject and intends to move immediately to a wholly different topic",
-      "weakens the force of the argument by suddenly interrupting the speech's more carefully developed and grammatically fuller sentences",
-      "functions as a polite aside directed only at a few individual audience members rather than at the crowd as a whole"
+      "lets the sentence's brevity land like a blunt personal confession, snapping the audience's attention onto Douglass's own exclusion after the rolling description of shared blessings",
+      "shows that Douglass has run out of things to say on the subject and intends to move immediately to a wholly different topic, signaling the end of this section of his speech",
+      "weakens the force of the argument by suddenly interrupting the speech's more carefully developed and grammatically fuller sentences, breaking the rhythm the audience had come to expect",
+      "functions as a polite aside directed only at a few individual audience members rather than at the crowd as a whole, as if Douglass were briefly addressing his friends"
     ],
     "answer": "A",
     "hints": [
@@ -128,10 +128,10 @@
     "passageId": "evelyn.passage.lincoln-gettysburg.v1",
     "problemText": "Lincoln closes with \"government of the people, by the people, for the people.\" This threefold parallel structure —",
     "choices": [
-      "poses a rhetorical question to the audience, inviting them to silently debate which of the three phrases is most accurate",
-      "forms a tricolon of matched prepositional phrases that defines democratic government from three angles at once — origin, agency, and purpose — reinforcing popular sovereignty through rhythmic repetition",
-      "draws a simile comparing the young nation's government to an older, more established government from ancient history",
-      "relies on understatement, deliberately downplaying the importance of ordinary citizens in operating the federal government"
+      "poses a rhetorical question to the audience, inviting them to silently debate which of the three phrases most accurately describes their own government",
+      "forms a tricolon of matched prepositional phrases that defines democratic government from three angles — origin, agency, and purpose — reinforcing popular sovereignty",
+      "draws a simile comparing the young nation's government to an older, more established government from ancient history, such as the Roman Republic",
+      "relies on understatement, deliberately downplaying the importance of ordinary citizens in operating the federal government so the Union's leaders can take center stage"
     ],
     "answer": "B",
     "hints": [
@@ -188,9 +188,9 @@
     "passageId": "evelyn.passage.henry-give-me-liberty.v1",
     "problemText": "Henry says, \"We have petitioned; we have remonstrated; we have supplicated; we have prostrated ourselves before the throne.\" A full style analysis of this line would note that Henry combines anaphora (the repeated \"we have\"), a pattern of escalating diction, and short parallel clauses. Together, these choices integrate to —",
     "choices": [
-      "combine anaphora with diction that grows steadily calmer and more formal, matching an increasingly diplomatic argument for continued negotiation",
-      "function mainly for comic effect, since a listing structure like this was conventionally associated with satire in eighteenth-century oratory",
-      "combine anaphoric repetition with words that escalate in desperation (petitioned, then remonstrated, then supplicated, then prostrated), so syntax and diction jointly enact the very submission Henry says has failed",
+      "combine anaphora with diction that grows steadily calmer and more formal, matching an increasingly diplomatic argument for continued negotiation with the Crown rather than any open break with Britain",
+      "function mainly for comic effect, since a listing structure like this was conventionally associated with satire in eighteenth-century oratory, so the audience would have heard it as a mocking parody of loyalist pleas",
+      "combine anaphoric repetition with words that escalate in desperation (petitioned, then remonstrated, then supplicated, then prostrated), so syntax and diction jointly enact the submission Henry says has failed",
       "rely almost entirely on figurative language such as metaphor and simile, since anaphora and diction here play only a minor, decorative role"
     ],
     "answer": "C",

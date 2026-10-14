@@ -83,8 +83,8 @@
     "responseFormat": "mcq",
     "problemText": "Which sequence correctly traces what happens to one chromosome from the beginning of interphase through the end of mitosis?",
     "choices": [
-      "The chromosome is copied into two sister chromatids, the doubled chromosome condenses and attaches to spindle fibers, and then the two chromatids are pulled apart into two different cells.",
-      "The chromosome condenses, is copied into two sister chromatids during prophase, and then the two chromatids are pulled apart into two different cells.",
+      "The chromosome is copied into two sister chromatids, the doubled chromosome condenses and attaches to spindle fibers, and the chromatids are pulled apart into two different cells.",
+      "The chromosome condenses, is copied into two sister chromatids during prophase, attaches to spindle fibers, and then the two chromatids are pulled apart into two different cells.",
       "The chromosome pairs with its homolog, the pair is copied, and then the two homologs are separated into two different cells.",
       "The chromosome condenses and is pulled to one pole, and then it is copied inside each daughter cell after division is finished."
     ],
@@ -179,10 +179,10 @@
     "responseFormat": "mcq",
     "problemText": "Cancer is usually described as a multistep disease. Suppose a single cell acquires one mutation that leaves a growth-signal receptor permanently switched on. Why does this one change usually fail to produce a tumor on its own?",
     "choices": [
-      "A single mutation is always repaired before the cell divides, so it can never be inherited by daughter cells.",
-      "One mutation cannot change a protein enough to have any effect on cell division.",
-      "Intact checkpoint and repair proteins can still detect the abnormal cell and stop or destroy it, so several separate control genes usually have to fail before growth becomes uncontrolled.",
-      "Mutations lead to cancer only when they occur in gametes and are inherited by offspring."
+      "A single mutation is always repaired before the cell divides, so it can never be inherited by daughter cells or build up over many cell generations.",
+      "One mutation cannot change a protein enough to have any effect on cell division, because each receptor protein is built from many separate genes.",
+      "Intact checkpoint and repair proteins can still stop or destroy the abnormal cell, so several control genes usually must fail before growth becomes uncontrolled.",
+      "Mutations lead to cancer only when they occur in gametes and are inherited by offspring, so a mutation arising in a body cell stays harmless to the person who carries it."
     ],
     "answer": "C",
     "hints": [
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "A tumor sample carries two changes. First, one copy of a gene coding for a cyclin protein is overexpressed, producing far too much cyclin. Second, both copies of a gene coding for a DNA-damage checkpoint protein have been deleted, so none of that protein is made. Which description of these two changes is most accurate?",
     "choices": [
-      "Both are tumor suppressor mutations, because in the end both remove control over the cycle.",
-      "The overexpressed cyclin behaves like an oncogene by pushing the cycle forward, while the deleted checkpoint gene is a tumor suppressor whose brake has been removed.",
-      "The overexpressed cyclin is a tumor suppressor mutation, and the deleted checkpoint gene is an oncogene.",
-      "Neither change affects the cell unless it is also exposed to a chemical carcinogen from outside."
+      "Both are tumor suppressor mutations, because in the end both remove control over the cycle and each requires two hits to take effect.",
+      "The overexpressed cyclin acts like an oncogene pushing the cycle forward, while the deleted checkpoint gene is a tumor suppressor whose brake is gone.",
+      "The overexpressed cyclin is a tumor suppressor mutation, and the deleted checkpoint gene is an oncogene, since losing a gene speeds up the cell cycle.",
+      "Neither change affects the cell unless it is also exposed to a chemical carcinogen from outside that damages its DNA further."
     ],
     "answer": "B",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "Two siblings have the same two biological parents, yet they are genetically different from each other. Setting aside new mutations, which explanation best accounts for this difference?",
     "choices": [
-      "Each parent produces gametes that differ from one another because of crossing over and independent assortment, and which two gametes happen to join at fertilization is random.",
+      "Each parent makes gametes that differ because of crossing over and independent assortment, and which two gametes join at fertilization is random.",
       "Mitosis in each parent's body produced genetically different cells, and some of those different cells became the gametes.",
-      "The chromosome number changes slightly from one gamete to the next, so each sibling starts with a different total.",
-      "Sister chromatids separate differently during each sibling's very first cell division after fertilization."
+      "The chromosome number changes slightly from one gamete to the next, so each sibling starts life with a different total number.",
+      "Sister chromatids separate differently during each sibling's very first cell division after fertilization, giving each embryo a new mix of alleles."
     ],
     "answer": "A",
     "hints": [
@@ -449,8 +449,8 @@
     "choices": [
       "The asexual population will fare better, because mitosis produces new individuals more quickly than meiosis does.",
       "The asexual population will fare better, because its offspring inherit the results of crossing over from the parent.",
-      "The two populations are equally likely to survive, because the number of chromosomes in each offspring is the same either way.",
-      "The asexual population is more vulnerable, because mitosis produces offspring that are genetically identical to the parent, so a trait that makes one individual susceptible is shared by nearly all of them."
+      "The two populations are equally likely to survive, because the number of chromosomes in each offspring is the same whether it is produced by mitosis or by meiosis and fertilization.",
+      "The asexual population is more vulnerable, because its offspring are genetically identical to the parent, so a trait that makes one susceptible is shared by nearly all."
     ],
     "answer": "D",
     "hints": [

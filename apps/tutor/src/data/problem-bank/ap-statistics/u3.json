@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "A researcher assigns every member of a population a number and uses a random number generator to choose 50 people, where every possible group of 50 is equally likely to be chosen. This describes:",
     "choices": [
-      "A cluster sample",
+      "A cluster sample of 50 people",
       "A simple random sample (SRS)",
       "A convenience sample",
-      "A stratified sample"
+      "A stratified random sample"
     ],
     "answer": "B",
     "hints": ["Every group of the given size has an equal chance of selection.", "This is the most basic form of random sampling."]
@@ -87,10 +87,10 @@
     "responseFormat": "mcq",
     "problemText": "What is the key structural difference between stratified sampling and cluster sampling?",
     "choices": [
-      "Strata are formed so members are similar within each group, and a sample is taken from every stratum; clusters are formed so each one mirrors the whole population, and only some clusters are sampled, but entirely",
-      "Stratified sampling never involves any randomization at all",
-      "Cluster sampling always produces a larger overall sample than stratified sampling",
-      "The two terms describe exactly the same procedure"
+      "Strata are internally similar and every stratum is sampled; clusters each mirror the population, and only some clusters are sampled, but entirely",
+      "Stratified sampling never involves any randomization at all, whereas cluster sampling picks its groups at random from the population",
+      "Cluster sampling always produces a larger overall sample than stratified sampling, because every single member of each randomly chosen cluster is included",
+      "The two terms describe exactly the same procedure: the population is split into groups and a random sample is taken from each group"
     ],
     "answer": "A",
     "hints": ["Think about which groups are internally similar versus internally diverse, and whether every group or only some groups get sampled."]
@@ -114,7 +114,7 @@
     "responseFormat": "mcq",
     "problemText": "A radio station asks listeners to call in and vote for their favorite candidate. This type of sample suffers most from:",
     "choices": [
-      "Response bias",
+      "Response bias in the answers",
       "Undercoverage",
       "Voluntary response bias",
       "Nonresponse bias"
@@ -162,10 +162,10 @@
     "responseFormat": "mcq",
     "problemText": "A survey asks: 'Do you support the popular new policy that helps struggling families?' The phrasing of this question is likely to produce:",
     "choices": [
-      "Undercoverage",
+      "Undercoverage of struggling families",
       "Response bias due to leading question wording",
-      "Voluntary response bias",
-      "A smaller sample size"
+      "Voluntary response bias from self-selection",
+      "A smaller sample size than intended"
     ],
     "answer": "B",
     "hints": ["Words like 'popular' and 'helps struggling families' push respondents toward one answer."]
@@ -194,10 +194,10 @@
     "responseFormat": "mcq",
     "problemText": "A website's voluntary response poll collects 50,000 responses, while a properly designed random sample surveys only 500 people. Which statement is true?",
     "choices": [
-      "The voluntary response poll is more trustworthy simply because it has a much larger sample size",
-      "Bias is a systematic error that is not reduced by increasing sample size, so the much smaller random sample can still be more trustworthy",
-      "Sample size alone determines whether a study is biased, so the larger poll must be correct",
-      "Neither method can ever be trusted, regardless of size"
+      "The voluntary response poll is more trustworthy simply because its much larger sample size averages out any bias from self-selection",
+      "Bias is a systematic error that is not reduced by increasing sample size, so the smaller random sample can still be more trustworthy",
+      "Sample size alone determines whether a study is biased, so the larger poll must be correct and the random sample is too small to trust",
+      "Neither method can be trusted, because both surveys contain some sampling error regardless of their size"
     ],
     "answer": "B",
     "hints": ["A biased method keeps missing the true value in the same direction no matter how many people respond."]
@@ -211,10 +211,10 @@
     "responseFormat": "mcq",
     "problemText": "In an experiment testing a new fertilizer on tomato plants, the individual plants that receive a treatment and are measured for growth are called the:",
     "choices": [
-      "Factors",
+      "Explanatory factors",
       "Experimental units",
-      "Treatments",
-      "Blocks"
+      "Treatment groups",
+      "Experimental blocks"
     ],
     "answer": "B",
     "hints": ["This is the general term for the individuals (plants, people, plots) that treatments are applied to."]
@@ -275,10 +275,10 @@
     "responseFormat": "mcq",
     "problemText": "In a double-blind experiment:",
     "choices": [
-      "Only the subjects know which treatment they are receiving",
-      "Only the people evaluating the results know which treatment was given",
+      "Only the subjects know which treatment they are receiving, while the evaluators are kept unaware",
+      "Only the people evaluating the results know which treatment each subject was given",
       "Neither the subjects nor the people evaluating the results know who received which treatment",
-      "The experiment does not need a control group"
+      "The experiment does not need a control group because both sides are blinded"
     ],
     "answer": "C",
     "hints": ["'Double' means two groups of people are kept in the dark: the subjects and the evaluators."]
@@ -291,10 +291,10 @@
     "responseFormat": "mcq",
     "problemText": "An experiment on exercise and heart rate first separates subjects into a group of males and a group of females, and then randomly assigns males to treatments and separately randomly assigns females to treatments. This design is:",
     "choices": [
-      "A completely randomized design",
+      "A completely randomized design with two groups",
       "A randomized block design, blocking on sex",
-      "A matched pairs design",
-      "An observational study"
+      "A matched pairs design, pairing males with females",
+      "An observational study, since sex is not assigned"
     ],
     "answer": "B",
     "hints": ["Subjects are first grouped by a variable expected to affect the response, and randomization happens separately within each group."]
@@ -357,9 +357,9 @@
     "problemText": "A researcher takes a random sample from a population and simply observes, without assigning, whether each person exercises regularly and whether they report good sleep quality. What can be concluded from this study?",
     "choices": [
       "Any relationship found can be generalized to the population, but a cause-and-effect conclusion cannot be drawn",
-      "A cause-and-effect conclusion can be drawn for the population",
-      "Neither generalization nor a causal conclusion is appropriate",
-      "The study proves that exercise causes better sleep"
+      "A cause-and-effect conclusion can be drawn for the whole population, because the sample was randomly selected from it",
+      "Neither generalization nor a causal conclusion is appropriate, because no treatments were assigned",
+      "The study proves that exercise causes better sleep for people in the population sampled"
     ],
     "answer": "A",
     "hints": ["Random sampling supports generalizing to the population it was drawn from.", "Without random assignment of a treatment, causation cannot be established."]
@@ -388,10 +388,10 @@
     "responseFormat": "mcq",
     "problemText": "A convenience sample of volunteers tries a new study technique, with no comparison group and no randomization used anywhere in the study. Which statement is most appropriate?",
     "choices": [
-      "Both causal conclusions and generalization to a broader population are fully justified",
-      "Results should not be generalized to a broader population, and a cause-and-effect conclusion cannot be established from this design",
-      "Only generalization to a broader population is justified",
-      "Only a cause-and-effect conclusion is justified"
+      "Both causal conclusions and generalization to a broader population are fully justified by the volunteers' improved results",
+      "Results should not be generalized to a broader population, and cause and effect cannot be established from this design",
+      "Only generalization to a broader population is justified, since the volunteers chose to participate",
+      "Only a cause-and-effect conclusion is justified, since each volunteer tried the new technique directly"
     ],
     "answer": "B",
     "hints": ["With neither random sampling nor random assignment present, neither leg of the scope of inference is supported."]

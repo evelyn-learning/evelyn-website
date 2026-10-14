@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "Which set of conditions must be checked before constructing a one-sample z-interval for a population proportion p?",
     "choices": [
-      "Random, Independent groups, Equal variances",
-      "Random, Normal population, Large Counts using p0",
+      "Random, Independent groups, Equal variances, and a Normal population",
+      "Random, Normal population, Large Counts using p0 (n times p0 >= 10)",
       "Random, 10%, Large Counts (n times p-hat >= 10 and n times (1 - p-hat) >= 10)",
-      "Random, 10%, n times p0 >= 10 and n times (1 - p0) >= 10"
+      "Random, 10%, Large Counts using p0 (n times p0 >= 10 and n times (1 - p0) >= 10)"
     ],
     "answer": "C",
     "hints": ["A confidence interval has no hypothesized value, so the Large Counts check must use p-hat, not p0."]
@@ -23,8 +23,8 @@
     "responseFormat": "mcq",
     "problemText": "When constructing a confidence interval for a population proportion p, the standard error of p-hat is estimated using:",
     "choices": [
-      "sqrt(p0(1-p0)/n)",
-      "sigma / sqrt(n)",
+      "sqrt(p0(1-p0)/n), p0 from H0",
+      "s / sqrt(n), s = sample SD",
       "p-hat(1-p-hat)/n",
       "sqrt(p-hat(1-p-hat)/n)"
     ],
@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "A 95% confidence interval for the proportion of adults who support a policy is (0.42, 0.50). Which is a correct interpretation?",
     "choices": [
-      "There is a 95% probability that the true proportion is between 0.42 and 0.50",
-      "We are 95% confident that the interval from 0.42 to 0.50 captures the true population proportion of adults who support the policy",
-      "95% of adults support the policy at a rate between 0.42 and 0.50",
-      "95% of all possible samples will have a sample proportion of exactly 0.46"
+      "There is a 95% probability that the true proportion of all adults who support the policy is somewhere between 0.42 and 0.50",
+      "We are 95% confident that the interval from 0.42 to 0.50 captures the true proportion of adults who support the policy",
+      "95% of the adults surveyed support the policy at a rate somewhere between 0.42 and 0.50",
+      "95% of all possible samples of this size will have a sample proportion of exactly 0.46, the midpoint"
     ],
     "answer": "B",
     "hints": ["Confidence describes the long-run capture rate of the METHOD, not a probability statement about the fixed true parameter."]
@@ -134,10 +134,10 @@
     "responseFormat": "mcq",
     "problemText": "For a test of H0: p = 0.90 vs Ha: p not equal to 0.90 at alpha = 0.05, the test statistic is z = -2.83 and the two-sided p-value is approximately 0.0047. What is the correct conclusion?",
     "choices": [
-      "Since p-value > alpha, fail to reject H0",
+      "Since p-value > alpha, fail to reject H0; there is not convincing evidence the true proportion differs from 0.90",
       "Since p-value < alpha, reject H0; there is convincing evidence the true proportion differs from 0.90",
-      "Since p-value < alpha, fail to reject H0",
-      "The test is invalid because p-hat is negative"
+      "Since p-value < alpha, fail to reject H0; the evidence is not strong enough to say the proportion differs from 0.90",
+      "The test is invalid because p-hat is negative, as shown by the negative test statistic z = -2.83"
     ],
     "answer": "B",
     "hints": ["Compare the p-value directly to alpha; a small p-value is evidence against H0."]
@@ -193,8 +193,8 @@
     "responseFormat": "mcq",
     "problemText": "A Type II error occurs when:",
     "choices": [
-      "We reject a true null hypothesis",
-      "We correctly reject a false null hypothesis",
+      "We reject a null hypothesis that is actually true",
+      "We correctly reject a null hypothesis that is actually false",
       "We fail to reject a null hypothesis that is actually false",
       "The p-value equals alpha exactly"
     ],
@@ -263,9 +263,9 @@
     "problemText": "A 90% confidence interval for p1 - p2 (proportion of Group 1 minus Group 2) is (0.03, 0.15). Which is the best interpretation?",
     "choices": [
       "We are 90% confident that the true difference p1 - p2 is between 0.03 and 0.15",
-      "There is a 90% chance p1 equals p2",
-      "90% of the sample difference is 0.09",
-      "We are 90% confident that p1 is 90% larger than p2"
+      "There is a 90% chance that p1 equals p2 for the two groups being compared",
+      "90% of the sample difference is 0.09, the midpoint of the interval (0.03, 0.15)",
+      "We are 90% confident that p1 is 90% larger than p2 for the Group 1 and Group 2 populations"
     ],
     "answer": "A",
     "hints": ["Interpret the interval as capturing the true difference in population proportions, not a probability about a fixed value."]
@@ -341,10 +341,10 @@
     "responseFormat": "mcq",
     "problemText": "In a two-sample z-test for proportions, the pooled proportion is used in the standard error because:",
     "choices": [
-      "It always gives a smaller standard error than using separate proportions",
+      "It always gives a smaller standard error than using separate proportions, which increases the test's power",
       "The null hypothesis assumes p1 = p2, so a single common proportion estimates that shared value",
-      "Pooling is required only when n1 = n2",
-      "The confidence interval also requires pooling for consistency"
+      "Pooling is required only when n1 = n2, since the two samples must then be weighted equally",
+      "The confidence interval also requires pooling for consistency, so the test must match it"
     ],
     "answer": "B",
     "hints": ["Under H0: p1 = p2, both samples are treated as coming from a population with one common proportion."]
