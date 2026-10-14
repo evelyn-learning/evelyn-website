@@ -16,17 +16,28 @@ import type { Passage } from '../types';
  * calls it "an international team of several thousands"); the contemporary
  * estimated cost was roughly 32 million rupees. This entry contains no
  * quoted text and carries no verbatim-fidelity risk.
+ *
+ * 2026-10-14 (U3 DBQ re-read): the byline no longer names the architect as
+ * author (he did not write this description) — like a visual DBQ source
+ * line it names the patron and completion year, and the text is marked
+ * "[VISUAL DOCUMENT — description]"; the closing interpretive
+ * sentence and the "statement of power" clause were cut (they handed
+ * students the analysis); the gate inscription
+ * is the close of Surah al-Fajr (89), "enter My Paradise" — Surah Ya-Sin
+ * and the "only signature" claim were removed (Amanat Khan also signed
+ * inside the mausoleum). The tomb stands at the garden's riverside end,
+ * not its center (the center holds a raised marble water tank).
  */
 export const PASSAGE_APWORLD_TAJ_MAHAL: Passage = {
   id: 'evelyn.passage.apworld-taj-mahal.v1',
-  title: 'The Taj Mahal (1632-1653) — Mughal Imperial Legitimacy in Stone',
-  author: 'Ustad Ahmad Lahori (chief architect, under Shah Jahan)',
+  title: 'The Taj Mahal, Agra (1632-1653)',
+  author: 'Mughal emperor Shah Jahan (patron of the monument)',
   year: 1653,
   sourceUrl: 'https://whc.unesco.org/en/list/252/',
   license: 'public-domain',
   genre: 'political-cartoon',
   fullText:
-    '[VISUAL DOCUMENT — description] The Taj Mahal, a white-marble mausoleum complex on the Yamuna river at Agra, built 1632-1653 by the Mughal emperor Shah Jahan for his wife Mumtaz Mahal, who died in 1631 giving birth to their fourteenth child. A raised octagonal tomb chamber sits at the center of a symmetrical charbagh, a four-quadrant "paradise garden" divided by long reflecting channels — a layout drawn from Quranic descriptions of paradise, so that the building and its grounds together stage the tomb as a gateway to Paradise. Four minarets frame the mausoleum at the corners of its marble plinth; a red-sandstone mosque and an identical "guest house" flank it in perfect bilateral symmetry, and a monumental red-sandstone gate is inscribed with the calligrapher Amanat Khan\'s rendering of the Quranic Surah Ya-Sin and other verses on Judgment Day, in black marble inlaid into white — the only place in the complex where the calligrapher signed his own name. The scale of the undertaking was itself a statement of power: a workforce estimated at more than 20,000 masons, marble-workers, mosaicists, and calligraphers labored for over two decades, at a contemporary cost estimated near 32 million rupees, drawing white marble from Makrana and semi-precious inlay stones from as far as Persia, Tibet, and Sri Lanka. For a Mughal court whose legitimacy rested on Timurid descent, Persianate court culture, and Sunni Islamic patronage, the Taj Mahal converted dynastic grief into a permanent, empire-wide advertisement of the emperor\'s wealth, piety, and command over resources and skilled labor across the empire.',
+    '[VISUAL DOCUMENT — description] The Taj Mahal, a white-marble mausoleum complex on the Yamuna river at Agra, built 1632-1653 by the Mughal emperor Shah Jahan for his wife Mumtaz Mahal, who died in 1631 giving birth to their fourteenth child. The domed tomb stands at the far, riverside end of a symmetrical charbagh, a four-quadrant "paradise garden" divided by long reflecting channels — a layout drawn from Quranic descriptions of paradise, so that the building and its grounds together stage the tomb as a gateway to Paradise. Four minarets frame the mausoleum at the corners of its marble plinth; a red-sandstone mosque and an identical "guest house" flank it in perfect bilateral symmetry, and a monumental red-sandstone gate bears Quranic verses in the calligrapher Amanat Khan\'s black marble inlaid into white, among them the close of Surah al-Fajr, which invites the righteous soul to "enter My Paradise." The undertaking was vast: a workforce estimated at more than 20,000 masons, marble-workers, mosaicists, and calligraphers labored for over two decades, at a contemporary cost estimated near 32 million rupees, drawing white marble from Makrana and semi-precious inlay stones from as far as Persia, Tibet, and Sri Lanka.',
   lineNumbered: false,
-  wordCount: 255,
+  wordCount: 195,
 };

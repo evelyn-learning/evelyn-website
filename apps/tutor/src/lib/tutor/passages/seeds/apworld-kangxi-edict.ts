@@ -24,12 +24,19 @@ import type { Passage } from '../types';
  * Theological Seminary copy's own parallel page and the 1907 revised
  * edition (identifier thesacrededict00chinuoft), both unambiguous. No
  * wording was altered.
+ *
+ * ATTRIBUTION (2026-10-14): the card credits Wang Yupu, c. 1730 — the
+ * words are his colloquial exposition of the Yongzheng Emperor's 1724
+ * Amplified Instructions, written in the Yongzheng reign (1723-35; exact
+ * year unverified, hence "c."), not Kangxi's 1670 maxim (a single line).
+ * Kangxi and 1670 stay in the title as the maxim being expounded.
  */
 export const PASSAGE_APWORLD_KANGXI_EDICT: Passage = {
   id: 'evelyn.passage.apworld-kangxi-edict.v1',
-  title: 'The Sacred Edict — Maxim I, "Duteousness and Subordination"',
-  author: 'Kangxi Emperor (Wang Yupu colloquial rendering, trans. F. W. Baller)',
-  year: 1670,
+  title: 'The Sacred Edict — Maxim I (Kangxi Emperor, 1670), "Duteousness and Subordination"',
+  author: "Wang Yupu (colloquial exposition of the Kangxi Emperor's maxim, trans. F. W. Baller)",
+  year: 1730,
+  yearApproximate: true,
   sourceUrl: 'https://archive.org/details/sacrededict01kang',
   license: 'public-domain',
   genre: 'document',

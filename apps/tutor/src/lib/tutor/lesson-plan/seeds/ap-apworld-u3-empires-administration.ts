@@ -212,7 +212,7 @@ export const SEED_AP_APWORLD_U3_EMPIRES_ADMINISTRATION: LessonPlan = {
       {
         type: 'passage',
         book: 'evelyn.passage.apworld-peter-decrees.v1',
-        chapter: '1701',
+        chapter: 'c. 1725',
         note: "Jean Rousset de Missy's contemporary narrative of Peter the Great's beard/dress decrees — SAQ stimulus for Peter's service-state elite-control method.",
       },
     ],

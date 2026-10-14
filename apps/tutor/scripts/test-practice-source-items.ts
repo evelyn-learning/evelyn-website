@@ -161,6 +161,17 @@ async function main(): Promise<void> {
     assert.deepEqual(practiceSourcesFor({ passageId: 'd1', passageIds: ['d1', 'd2'] }, fakeResolve)?.map((x) => x.label), ['Source A', 'Source B'], 'de-duplicated');
   });
 
+  await test('an approximate year shows as "c. YYYY" (apworld U3 DBQ Document 3: Rousset de Missy, c. 1725 — not 1701)', () => {
+    const peter = resolvePassage('evelyn.passage.apworld-peter-decrees.v1');
+    assert.ok(peter);
+    assert.equal(peter?.year, 1725);
+    assert.equal(peter?.yearApproximate, true);
+    const s = practiceSourcesFor({ passageIds: ['evelyn.passage.apworld-peter-decrees.v1'] }, (id) => resolvePassage(id));
+    assert.equal(s?.[0].attribution, 'Jean Rousset de Missy (Robinson translation), c. 1725');
+    // An exact year is unchanged.
+    assert.equal(practiceSourcesFor({ passageId: 'd1' }, fakeResolve)?.[0].attribution, 'Author d1, 1850');
+  });
+
   await test('withPassageTitles: an internal passage id in the prompt becomes the title; a parenthetical id after a named work is dropped', () => {
     assert.equal(withPassageTitles('Using the passage d1, write…', fakeResolve), 'Using the passage d1, write…', 'not an id');
     const real = (id: string) => resolvePassage(id);

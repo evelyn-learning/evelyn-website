@@ -1,7 +1,7 @@
 import type { Passage } from '../types';
 
 /**
- * Jean Rousset de Missy, Life of Peter the Great (c. 1730), on Peter I's
+ * Jean Rousset de Missy, Life of Peter the Great (c. 1725), on Peter I's
  * westernization decrees on beards and dress (c. 1698-1705), as printed
  * in James Harvey Robinson, ed., Readings in European History, Vol. II
  * (Ginn and Co., 1904-1906), pp. 303-312 — the Internet History
@@ -21,12 +21,19 @@ import type { Passage } from '../types';
  * digital sourcebook text), only whitespace normalization. No wording was
  * altered. The editorial bracket "[i.e., the nobles]" glossing "boyars" is
  * the sourcebook's own insertion, reproduced as printed.
+ *
+ * DATE: c. 1725, approximate. Rousset de Missy (1686-1762) published his
+ * Mémoires du règne de Pierre le Grand (under the pseudonym "Iwan
+ * Nestesuranoi") in 1725-26, around Peter's death in 1725; 1701 (once used
+ * here) is the period of the decrees he narrates, not when he wrote. Exact
+ * edition behind Robinson's translation is not verified, hence "c.".
  */
 export const PASSAGE_APWORLD_PETER_DECREES: Passage = {
   id: 'evelyn.passage.apworld-peter-decrees.v1',
   title: "Life of Peter the Great — The Reform of Beards and Dress",
   author: 'Jean Rousset de Missy (Robinson translation)',
-  year: 1701,
+  year: 1725,
+  yearApproximate: true,
   sourceUrl: 'https://sourcebooks.fordham.edu/mod/petergreat.asp',
   license: 'public-domain',
   genre: 'document',

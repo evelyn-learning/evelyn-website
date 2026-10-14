@@ -180,14 +180,15 @@ async function captureLogs<T>(fn: () => Promise<T>): Promise<{ result: T; lines:
   // -------------------------------------------------------------------------
   // The committed list
   // -------------------------------------------------------------------------
-  // 672 withdrawn by the audit; 63 put back 2026-10-14 (T5) after a re-read
-  // with their documents shown — now on sources-required-items.json.
-  await test('the JSON holds exactly 609 ids, each with a verdict', () => {
+  // 672 withdrawn by the audit; 64 put back 2026-10-14 (T5) after a re-read
+  // with their documents shown — now on sources-required-items.json; the 64th
+  // (apworld U3 DBQ) after its document dates were fixed the same day.
+  await test('the JSON holds exactly 608 ids, each with a verdict', () => {
     const file = path.join(__dirname, '..', 'src', 'data', 'withdrawn-practice-items.json');
     const data = JSON.parse(fs.readFileSync(file, 'utf8')) as { generatedAt: string; source: string; items: Record<string, string> };
     assert.equal(data.generatedAt, '2026-10-17');
     assert.equal(data.source, 'answer-key audit 2026-10-04 + final pass 2026-10-06 + truth read 2026-10-17');
-    assert.equal(Object.keys(data.items).length, 609);
+    assert.equal(Object.keys(data.items).length, 608);
     assert.ok(WITHDRAWN_REV_TRY in data.items);
     for (const [id, verdict] of Object.entries(data.items)) {
       assert.ok(id.length > 0 && id === id.trim(), `bad id ${JSON.stringify(id)}`);
@@ -196,7 +197,7 @@ async function captureLogs<T>(fn: () => Promise<T>): Promise<{ result: T; lines:
   });
 
   await test('isWithdrawnItem / the set reflect the JSON', () => {
-    assert.equal(WITHDRAWN_ITEM_IDS.size, 609);
+    assert.equal(WITHDRAWN_ITEM_IDS.size, 608);
     for (const id of [WITHDRAWN_BANK_ID, WITHDRAWN_GEN_TRY, WITHDRAWN_SEED_TRY, WITHDRAWN_REV_TRY]) {
       assert.equal(isWithdrawnItem(id), true, id);
     }

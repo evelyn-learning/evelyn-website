@@ -96,7 +96,8 @@ function clip(s: string, max: number): string {
 }
 
 function attributionOf(p: Passage): string | undefined {
-  const parts = [p.author?.trim(), Number.isFinite(p.year) && p.year > 0 ? String(p.year) : ''].filter(Boolean);
+  const year = Number.isFinite(p.year) && p.year > 0 ? `${p.yearApproximate ? 'c. ' : ''}${p.year}` : '';
+  const parts = [p.author?.trim(), year].filter(Boolean);
   return parts.length ? clip(parts.join(', '), MAX_ATTRIBUTION) : undefined;
 }
 

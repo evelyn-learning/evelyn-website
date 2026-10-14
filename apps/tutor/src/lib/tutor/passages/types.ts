@@ -11,6 +11,9 @@ export interface Passage {
   /** Publication/delivery year. Must be public domain — pre-1929, or exempt
    *  from copyright regardless of year (US government works, 17 USC §105). */
   year: number;
+  /** `year` is approximate (shown "c. 1725" on the practice card) — for a
+   *  work whose exact year of writing/publication is uncertain. */
+  yearApproximate?: boolean;
   /** Canonical public-domain source (Wikisource/Gutenberg/archives). */
   sourceUrl: string;
   license: 'public-domain' | 'internal-original';
