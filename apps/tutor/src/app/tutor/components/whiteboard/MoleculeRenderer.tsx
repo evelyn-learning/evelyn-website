@@ -29,6 +29,10 @@ interface MoleculeRendererProps {
    *  'auto' — classifyCompound picks based on the SMILES/formula shape. */
   mode?: 'auto' | CompoundKind;
   onMoleculeChanged?: (newSmiles: string) => void;
+  /** "Check my molecule": the student asks the tutor to look at the structure
+   *  as it stands now. The button shows only on an editable molecule that
+   *  has this handler. */
+  onCheckRequested?: (currentSmiles: string) => void;
 }
 
 export default function MoleculeRenderer({
@@ -39,6 +43,7 @@ export default function MoleculeRenderer({
   className = '',
   mode = 'auto',
   onMoleculeChanged,
+  onCheckRequested,
 }: MoleculeRendererProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
@@ -49,6 +54,8 @@ export default function MoleculeRenderer({
   const classified = useMemo(() => classifyCompound(smiles, mode), [smiles, mode]);
   const ketcherSmiles = classified.ketcherSmiles;
   const pendingSmilesRef = useRef<string>(ketcherSmiles);
+  // "Check my molecule": true from the press until the button re-arms.
+  const [checkPending, setCheckPending] = useState(false);
 
   // Listen for messages from the Ketcher iframe
   useEffect(() => {
@@ -71,7 +78,10 @@ export default function MoleculeRenderer({
         setError(event.data.error);
       }
 
-      if (type === 'molecule-changed' && onMoleculeChanged) {
+      // Only THIS editor's edits: the listener is on window, so with two
+      // molecules on the board each renderer hears both iframes, and the
+      // other one's edit would be reported against this molecule.
+      if (type === 'molecule-changed' && onMoleculeChanged && event.source === iframeRef.current?.contentWindow) {
         onMoleculeChanged(event.data.smiles);
       }
     };
@@ -93,6 +103,24 @@ export default function MoleculeRenderer({
       }, '*');
     }
   }, [ketcherSmiles, ready]);
+
+  // "Check my molecule": read the structure out of the editor at the moment
+  // of the press (its change events lag by a polling interval) and hand it
+  // up. The button re-arms after a few seconds so a double press is one ask.
+  const requestCheck = useCallback(() => {
+    const frame = iframeRef.current?.contentWindow;
+    if (!ready || !frame || !onCheckRequested || checkPending) return;
+    setCheckPending(true);
+    setTimeout(() => setCheckPending(false), 4000);
+    const handleSmiles = (event: MessageEvent) => {
+      if (event.source !== frame || event.data?.type !== 'ketcher-smiles') return;
+      window.removeEventListener('message', handleSmiles);
+      if (event.data.smiles) onCheckRequested(event.data.smiles);
+    };
+    window.addEventListener('message', handleSmiles);
+    setTimeout(() => window.removeEventListener('message', handleSmiles), 5000);
+    frame.postMessage({ type: 'get-smiles' }, '*');
+  }, [ready, onCheckRequested, checkPending]);
 
   // Export SVG (for PDF export)
   const exportSvg = useCallback((): Promise<string | null> => {
@@ -176,7 +204,19 @@ export default function MoleculeRenderer({
             )}
           </div>
           {interactive && (
-            <span className="text-xs text-blue-500">Edit the structure above</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-blue-500">Edit the structure above</span>
+              {onCheckRequested && (
+                <button
+                  type="button"
+                  onClick={requestCheck}
+                  disabled={!ready || checkPending}
+                  className="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-2.5 py-1 rounded"
+                >
+                  {checkPending ? 'Asking the tutor…' : 'Check my molecule'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

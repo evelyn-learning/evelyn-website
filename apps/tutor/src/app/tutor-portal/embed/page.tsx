@@ -126,6 +126,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // on this list. Likewise the shaded-region net (shaded_region_net_planted /
   // _note_consumed), shipped the same day without a row here.
   'scribble_reject_', 'shaded_region_',
+  // 2026-10-13: student molecule edits are silent notes now
+  // (molecule_edit_note_planted / _note_consumed); molecule_edit_answered and
+  // molecule_check_requested record the two cases the tutor does answer —
+  // the trail for "why did / didn't the tutor react to my molecule".
+  'molecule_',
   // Final review 2026-09-07: session_struggles_attached — the <session_struggles>
   // ledger block is now WRAP-GATED, so this row is the record of WHY it rode a
   // given turn (utterance / recap segment / recap wrap / ≥75% of the budget).

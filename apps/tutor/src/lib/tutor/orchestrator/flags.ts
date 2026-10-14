@@ -773,3 +773,11 @@ export const TUTOR_TELEMETRY_SURVIVAL =
  *  Default ON; NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC=off is the switch. */
 export const TUTOR_DEFER_SESSION_DOC =
   process.env.NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC !== 'off';
+/** 2026-10-13: every student edit to a whiteboard molecule was sent to the
+ *  tutor as a message to discuss, so it talked at length about each stroke.
+ *  An edit is now a silent note on the next brain turn; the tutor answers one
+ *  only when its latest turn handed over an editable molecule, or the student
+ *  presses "Check my molecule" (lib/tutor/whiteboard/molecule-edit.ts).
+ *  Default ON; NEXT_PUBLIC_TUTOR_SILENT_MOLECULE_EDITS=off answers every edit again. */
+export const TUTOR_SILENT_MOLECULE_EDITS =
+  process.env.NEXT_PUBLIC_TUTOR_SILENT_MOLECULE_EDITS !== 'off';

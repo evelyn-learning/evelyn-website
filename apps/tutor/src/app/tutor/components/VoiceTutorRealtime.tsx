@@ -303,6 +303,7 @@ import {
   TUTOR_RENDER_FALLBACK_CARD,
   TUTOR_CLIENT_RULE8_REPAIR,
   TUTOR_STUDENT_MARKS,
+  TUTOR_SILENT_MOLECULE_EDITS,
   TUTOR_BOARD_ANCHOR_ASSIST,
   TUTOR_RESUME_FROM_CLAUSE,
   TUTOR_PEDAGOGY_OPENER,
@@ -384,6 +385,14 @@ import {
   resolveBargeInEnergyThreshold,
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
+import {
+  readMoleculeCheck,
+  isMoleculeEdit,
+  decideMoleculeEditDelivery,
+  buildMoleculeEditNote,
+  buildMoleculeEditMessage,
+  type MoleculeEdit,
+} from '@/lib/tutor/whiteboard/molecule-edit';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
 import { shouldPlantShadedRegionNote, SHADED_REGION_NOTE } from '@/lib/tutor/voice/shaded-region-net';
 import { detectBoardContradiction } from '@/lib/tutor/voice/board-contradiction';
@@ -4443,6 +4452,14 @@ export function VoiceTutorRealtime({
   // waits out an open tutor question): the wrong figure is on the board now.
   // Separate from pendingBoardAnchorNoteRef so it never sets anchorSuspect.
   const pendingRedrawNoteRef = useRef<string | null>(null);
+  // 2026-10-13: a student edit to a whiteboard molecule is a silent note for
+  // the next brain turn (molecule-edit.ts) — same prepend convention, own
+  // ref. Holds only the LATEST edit: the note says what the board shows now.
+  const pendingMoleculeNoteRef = useRef<string | null>(null);
+  // brainCallSeqRef value of the turn that last put an EDITABLE molecule on
+  // the board (show_molecule interactive: true). An edit is answered only
+  // while that is still the latest brain call, and once (cleared on answer).
+  const moleculeEditRequestRef = useRef<number | null>(null);
   // 2026-08-07 triage: judge kill-class survivor → next-turn correction note
   // (buildJudgeCorrectionNote). The judge stays advisory (no kill, no audio
   // chop) but its verdict now reaches the brain on the following turn so a
@@ -6749,6 +6766,8 @@ export function VoiceTutorRealtime({
       const cmdAny = cmd as any;
       const smiles: string = cmdAny.smiles || '';
       const title: string = cmdAny.title || '';
+      // An editable molecule is the tutor asking for an edit (molecule-edit.ts).
+      if (cmdAny.interactive === true) moleculeEditRequestRef.current = brainCallSeqRef.current;
       if (!smiles || !title) continue;
       fetch('/api/tutor/validate', {
         method: 'POST',
@@ -10729,83 +10748,126 @@ export function VoiceTutorRealtime({
   }, [lessonPlanId, logPacing]);
 
   useEffect(() => {
-    // Debounce to avoid false triggers from SMILES normalization on load
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    let changeCount = 0;
+    // Molecules that have reported a change before — see isMoleculeEdit: with
+    // no structural comparison, a molecule's first change is the editor
+    // re-spelling the SMILES on load, not the student.
+    const changedBefore = new Set<string>();
+
+    type MoleculeDetail = { smiles: string; originalSmiles: string; title?: string };
+
+    // Ask the structure checker about the molecule as it stands, against the
+    // one the tutor drew. Any failure ⇒ 'unchecked': no verdict reaches the
+    // tutor (a checker that cannot run says nothing about the molecule).
+    const checkMolecule = async (detail: MoleculeDetail) => {
+      try {
+        const resp = await fetch('/api/tutor/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            domain: 'chemistry-smiles',
+            claim: { smiles: detail.smiles, compareTo: detail.originalSmiles },
+          }),
+        });
+        return readMoleculeCheck(resp.ok ? await resp.json() : null);
+      } catch (err) {
+        console.error('[VoiceTutorRealtime] student SMILES validation threw:', err);
+        return readMoleculeCheck(null);
+      }
+    };
+
+    const addTranscriptEntry = (text: string) => {
+      const entry: TranscriptEntry = {
+        id: `student-action-${Date.now()}`,
+        timestamp: new Date(),
+        role: 'student',
+        text,
+      };
+      transcriptRef.current = [...transcriptRef.current, entry];
+      onTranscriptUpdate(transcriptRef.current);
+    };
 
     const handleMoleculeChanged = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
+      const detail = (event as CustomEvent).detail as MoleculeDetail | undefined;
       if (!detail?.smiles) return;
-
-      // Skip the first change (SMILES normalization on load)
-      changeCount++;
-      if (changeCount <= 1) {
-        console.log('[VoiceTutorRealtime] Skipping initial SMILES normalization');
-        return;
-      }
 
       // Debounce — wait 3s after last change before notifying AI
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
+        debounceTimer = null;
+        const key = `${detail.originalSmiles}|${detail.title ?? ''}`;
+        const firstChange = !changedBefore.has(key);
+        changedBefore.add(key);
+
+        const checked = await checkMolecule(detail);
+        if (!isMoleculeEdit(checked.change, firstChange)) {
+          // Same structure as the tutor drew (load re-spelling, or the
+          // student undid their edit): nothing on the board to report.
+          pendingMoleculeNoteRef.current = null;
+          return;
+        }
         console.log('[VoiceTutorRealtime] Student modified molecule:', detail.smiles);
-
-        // Validate SMILES parseability BEFORE forwarding to the tutor. If the
-        // student drew something chemically impossible (e.g. an H carrying
-        // three bonds, or an O with three bonds), RDKit fails to canonicalize
-        // — in that case we tell the tutor explicitly that the structure is
-        // invalid instead of letting it narrate nonsense.
-        let validationNote = '';
-        try {
-          const resp = await fetch('/api/tutor/validate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ domain: 'chemistry-smiles', claim: { smiles: detail.smiles } }),
-          });
-          if (resp.ok) {
-            const result = await resp.json();
-            if (result && result.correct === false) {
-              const issue = (result.issues && result.issues[0]) || 'SMILES failed to parse.';
-              validationNote = ` The new SMILES is NOT a valid molecular structure — ${issue} ` +
-                `Do NOT describe it as if it were a real compound. Point out the structural problem ` +
-                `(likely a valence violation — e.g. hydrogen with more than one bond, or oxygen with ` +
-                `more than two) and ask the student to revise the drawing.`;
-              onDebugEvent?.('smiles_invalid',
-                `Student drew invalid SMILES: ${detail.smiles} — ${issue}`);
-            }
-          }
-        } catch (err) {
-          console.error('[VoiceTutorRealtime] student SMILES validation threw:', err);
+        const edit: MoleculeEdit = { ...detail, check: checked.check, issue: checked.issue };
+        if (edit.check === 'invalid') {
+          onDebugEvent?.('smiles_invalid', `Student drew invalid SMILES: ${detail.smiles} — ${edit.issue ?? ''}`);
         }
 
-        // Send as a text message so the AI responds (unlike injectContext which is silent)
-        if (sendTextMessageRef.current) {
-          sendTextMessageRef.current(
-            `[The student just modified the molecule on the whiteboard. ` +
-            `Original: ${detail.title || 'unknown'} (${detail.originalSmiles}). ` +
-            `New SMILES: ${detail.smiles}.${validationNote} ` +
-            `Identify what changed and discuss it with the student.]`
+        const delivery = decideMoleculeEditDelivery({
+          silentEdits: TUTOR_SILENT_MOLECULE_EDITS,
+          requestedAtCall: moleculeEditRequestRef.current,
+          currentCall: brainCallSeqRef.current,
+        });
+        if (delivery === 'respond') {
+          // Send as a text message so the AI responds. One request, one
+          // answer: the message carries the board state, so no note is owed.
+          moleculeEditRequestRef.current = null;
+          pendingMoleculeNoteRef.current = null;
+          sendTextMessageRef.current?.(
+            buildMoleculeEditMessage(edit, TUTOR_SILENT_MOLECULE_EDITS ? 'requested' : 'unprompted'),
           );
+          onDebugEvent?.('molecule_edit_answered', detail.smiles);
+        } else if (claudeBrainMode) {
+          // Silent: rides the next brain turn, triggers nothing.
+          pendingMoleculeNoteRef.current = buildMoleculeEditNote(edit);
+          onDebugEvent?.('molecule_edit_note_planted', detail.smiles);
+        } else {
+          // No brain relay: the Realtime conversation is the tutor's context.
+          injectContextRef.current?.(buildMoleculeEditNote(edit));
         }
 
-        // Add to transcript
-        const entry: TranscriptEntry = {
-          id: `student-action-${Date.now()}`,
-          timestamp: new Date(),
-          role: 'student',
-          text: `[Modified molecule: ${detail.smiles}]`,
-        };
-        transcriptRef.current = [...transcriptRef.current, entry];
-        onTranscriptUpdate(transcriptRef.current);
+        addTranscriptEntry(`[Modified molecule: ${detail.smiles}]`);
         onTrackInteraction?.('click', 'molecule-edit', { newSmiles: detail.smiles, originalSmiles: detail.originalSmiles });
       }, 3000);
     };
 
+    // "Check my molecule" (MoleculeRenderer): the student asks the tutor to
+    // look at the structure as it stands. Always answered.
+    const handleMoleculeCheckRequested = async (event: Event) => {
+      const detail = (event as CustomEvent).detail as MoleculeDetail | undefined;
+      if (!detail?.smiles) return;
+      // The press reports the molecule as it is now; a debounced edit still
+      // waiting would only repeat it.
+      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+      changedBefore.add(`${detail.originalSmiles}|${detail.title ?? ''}`);
+      const checked = await checkMolecule(detail);
+      moleculeEditRequestRef.current = null;
+      pendingMoleculeNoteRef.current = null;
+      sendTextMessageRef.current?.(
+        buildMoleculeEditMessage({ ...detail, check: checked.check, issue: checked.issue }, 'check-button'),
+      );
+      onDebugEvent?.('molecule_check_requested', `${detail.smiles} (${checked.check})`);
+      addTranscriptEntry(`[Asked the tutor to check the molecule: ${detail.smiles}]`);
+      onTrackInteraction?.('click', 'molecule-check', { smiles: detail.smiles, originalSmiles: detail.originalSmiles });
+    };
+
     window.addEventListener('molecule-changed', handleMoleculeChanged);
+    window.addEventListener('molecule-check-requested', handleMoleculeCheckRequested);
     return () => {
       window.removeEventListener('molecule-changed', handleMoleculeChanged);
+      window.removeEventListener('molecule-check-requested', handleMoleculeCheckRequested);
       if (debounceTimer) clearTimeout(debounceTimer);
     };
-  }, [onTranscriptUpdate, onTrackInteraction, onDebugEvent]);
+  }, [onTranscriptUpdate, onTrackInteraction, onDebugEvent, claudeBrainMode]);
 
   // Read VAD tuning from env vars (NEXT_PUBLIC_ so they're available client-side)
   const vadThreshold = parseFloat(process.env.NEXT_PUBLIC_TUTOR_VAD_THRESHOLD || '0.8');
@@ -11656,6 +11718,12 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingRedrawNoteRef.current}\n\n${runTranscript}`;
         pendingRedrawNoteRef.current = null;
         onDebugEvent?.('shaded_region_note_consumed', 'delivered with this turn');
+      }
+      // Molecule-edit note — same convention, own concern (what the board shows now).
+      if (pendingMoleculeNoteRef.current) {
+        runTranscript = `${pendingMoleculeNoteRef.current}\n\n${runTranscript}`;
+        pendingMoleculeNoteRef.current = null;
+        onDebugEvent?.('molecule_edit_note_consumed', 'delivered with this turn');
       }
       // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
       if (pendingRuntimeNoteRef.current) {

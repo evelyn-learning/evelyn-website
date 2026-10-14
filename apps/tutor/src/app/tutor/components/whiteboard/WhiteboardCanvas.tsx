@@ -322,6 +322,9 @@ const MAX_INK_STROKES = 40;
  *  through every intermediate. */
 export const WhiteboardCallbackContext = React.createContext<{
   onTryYourselfAnswer?: WhiteboardCanvasProps['onTryYourselfAnswer'];
+  /** True on a session replay: there is no tutor to ask, so controls that
+   *  address the tutor ("Check my molecule") are not offered. */
+  replay?: boolean;
 }>({});
 
 /** A showSolution step field the brain labels as "latex" but may fill with a
@@ -1984,7 +1987,7 @@ export function WhiteboardCanvas({
   ) : null;
 
   return (
-    <WhiteboardCallbackContext.Provider value={{ onTryYourselfAnswer }}>
+    <WhiteboardCallbackContext.Provider value={{ onTryYourselfAnswer, replay: chrome === 'replay' }}>
       <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
         {headerContent}
         {bodyContent}
@@ -2662,6 +2665,24 @@ function TryYourselfWithBrainHookup(props: {
   );
 }
 
+/** Wraps MoleculeRenderer with "Check my molecule": the press goes up as a
+ *  window event, the same hand-off the renderer's edit event uses
+ *  ('molecule-changed', below), and VoiceTutorRealtime answers it. Not
+ *  offered on a replay (context) — nobody is listening there. */
+function MoleculeWithTutorHookup(props: React.ComponentProps<typeof MoleculeRenderer>) {
+  const ctx = React.useContext(WhiteboardCallbackContext);
+  return (
+    <MoleculeRenderer
+      {...props}
+      onCheckRequested={ctx.replay ? undefined : (currentSmiles) => {
+        window.dispatchEvent(new CustomEvent('molecule-check-requested', {
+          detail: { smiles: currentSmiles, originalSmiles: props.smiles, title: props.title },
+        }));
+      }}
+    />
+  );
+}
+
 interface CommandRendererProps {
   command: WhiteboardCommand;
 }
@@ -3140,7 +3161,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       return <FractionBarRenderer title={command.title} items={command.items} layout={command.layout} showComparison={command.showComparison} />;
 
     case 'showMolecule':
-      return <MoleculeRenderer
+      return <MoleculeWithTutorHookup
         smiles={command.smiles}
         title={command.title}
         description={command.description}

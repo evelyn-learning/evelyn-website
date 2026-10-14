@@ -275,6 +275,7 @@
     "test:pedagogy-board-truth": "npx tsx scripts/test-board-truth-clause.ts",
     "test:pedagogy-board-anchored": "npx tsx scripts/test-board-anchored-question-clause.ts",
     "test:question-anchor": "npx tsx scripts/test-question-anchor.ts",
+    "test:molecule-edit": "npx tsx src/lib/tutor/whiteboard/molecule-edit.test.ts",
     "test:pedagogy-c1": "npx tsx scripts/test-plan-seed-framing.ts",
     "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts",
     "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts",
