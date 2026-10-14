@@ -143,25 +143,28 @@ NC='\033[0m' # No Color
 ###############################################################################
 
 # Configuration
+# The TUTOR_DEPLOY_* overrides exist for ONE caller, deploy-tutor-demo.sh
+# (a separate demo engine: own dir, pm2 process and port). Unset ⇒ the
+# shared engine exactly as before.
 SERVER_IP="85.239.239.134"
 SERVER_USER="root"
-REMOTE_DIR="/root/evelyn-tutor"
-ZIP_FILE="evelyn-tutor.zip"
+REMOTE_DIR="${TUTOR_DEPLOY_REMOTE_DIR:-/root/evelyn-tutor}"
+ZIP_FILE="${TUTOR_DEPLOY_ZIP_FILE:-evelyn-tutor.zip}"
 
 # Which workspace this script deploys. Every path below that used to be
 # relative to the repo root (.next/, public/, src/, the config files) is
 # now under $APP_DIR — the app moved, the layout inside it did not.
 APP_DIR="apps/tutor"
 APP_WORKSPACE="@evelyn/tutor"
-PM2_NAME="evelyn-tutor"
-PM2_PORT="3007"
+PM2_NAME="${TUTOR_DEPLOY_PM2_NAME:-evelyn-tutor}"
+PM2_PORT="${TUTOR_DEPLOY_PM2_PORT:-3007}"
 
 # Suffix for this script's /tmp scratch files on the server. deploy-tutor.sh
 # and deploy-marketing.sh now run against the SAME host, and the prune logic
 # below builds its keep-set in /tmp: with shared filenames, two overlapping
 # deploys would diff one app's on-disk static tree against the OTHER app's
 # manifest and delete every chunk of the running build.
-TMP_TAG="tutor"
+TMP_TAG="${TUTOR_DEPLOY_TMP_TAG:-tutor}"
 
 # Log function with timestamps
 log_message() {
