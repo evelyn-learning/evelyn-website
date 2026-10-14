@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
 import { buildBilingualClause, buildSystemPromptParts } from '../src/lib/tutor/ai/system-prompt-builder';
 import { parseTutorLanguages, ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
+import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 
 let passed = 0;
@@ -122,6 +123,14 @@ test('rewriteForTTS leaves Japanese text intact', () => {
     const jp = (s: string) => s.match(/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/gu)?.join('') ?? '';
     assert.equal(jp(r), jp(t), `${t} → ${r}`);
   }
+});
+
+console.log('whiteboard');
+test('Japanese in an equation field routes to the text renderer', () => {
+  assert.equal(isProseNotLatex('会議の準備をしましょう'), true);
+  assert.equal(isProseNotLatex('時間 = 3'), false, 'a math signal still wins');
+  assert.equal(isProseNotLatex('x^2 + 1'), false);
+  assert.equal(isProseNotLatex('2x'), false);
 });
 
 console.log('wiring (source scan)');

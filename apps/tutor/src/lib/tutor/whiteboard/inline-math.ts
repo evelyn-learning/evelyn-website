@@ -148,6 +148,9 @@ export function isProseNotLatex(latex: string): boolean {
   if (/[\\^_{}$]/.test(t)) return false;
   if (/[=<>≤≥≠±×÷]/.test(t)) return false;
   if (/\S\s*[+\-*/]\s*\S/.test(t) && /\d/.test(t) && !/[a-zA-Z]{4,}/.test(t)) return false;
+  // Japanese has no word spaces, so the word count below never sees it as
+  // prose; any kana/kanji with no math signal is prose (bilingual sessions).
+  if (/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(t)) return true;
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length < 3) return false;
   return /[A-Za-z]{4,}/.test(t);
