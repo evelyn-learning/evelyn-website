@@ -202,16 +202,16 @@
     "cedCode": "CHEM-8.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student weighs out 4.0 g of NaOH, pours it into a graduated cylinder that already holds exactly 100 mL of water, stirs until it all dissolves, and labels the cylinder \"1.0 M NaOH\". Molar masses: Na = 23.0, O = 16.0, H = 1.0 g/mol. Evaluate the label.",
+    "problemText": "A student weighs out 34.2 g of sucrose (C₁₂H₂₂O₁₁), pours it into a graduated cylinder that already holds exactly 100 mL of water, stirs until it all dissolves, and labels the cylinder \"1.0 M sucrose\". Molar mass of sucrose = 342 g/mol. Evaluate the label.",
     "choices": [
-      "The label is correct: 4.0 g of NaOH is 0.10 mol, and 0.10 mol in 100 mL is exactly 1.0 M",
-      "The label is 1000 times too small — the volume was measured in milliliters, so the true value is 1000 M",
-      "The label is slightly too high — the dissolved NaOH takes up space, pushing the total solution volume past 100 mL, so the real concentration is a little below 1.0 M",
-      "The label is too low — the dissolved NaOH adds mass to the cylinder, which raises the concentration above 1.0 M"
+      "The label is correct: 34.2 g of sucrose is 0.100 mol, and 0.100 mol dissolved in 100 mL of water gives exactly 1.0 M",
+      "The label is 1000 times too small, because the volume was measured in milliliters, so the true value is 1000 M",
+      "The label is too high: the dissolved sugar adds volume, so there is more than 100 mL of solution and under 1.0 M",
+      "The label is too low: the dissolved sugar adds mass to the cylinder, and that extra mass raises the concentration above 1.0 M"
     ],
     "answer": "C",
     "hints": [
-      "The mole count is fine: 4.0 g ÷ 40.0 g/mol = 0.10 mol. Scrutinize the denominator instead.",
+      "The mole count is fine: 34.2 g ÷ 342 g/mol = 0.100 mol. Scrutinize the denominator instead.",
       "Molarity uses the total volume of SOLUTION, not the volume of water started with — which is why solutions are brought up to a mark in a volumetric flask."
     ]
   },
