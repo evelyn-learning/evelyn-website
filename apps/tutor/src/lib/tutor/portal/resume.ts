@@ -32,6 +32,8 @@ export interface PriorSessionRead {
   } | null;
   transcript?: Array<{ role?: string; text?: string; timestamp?: string }>;
   whiteboardCommands?: Array<{ action: string; data?: Record<string, unknown>; timestamp?: string; sourceMessageIndex?: number }>;
+  /** 2026-10-19: the homework ledger at the last record (session-usage GET). */
+  homeworkSolved?: unknown;
 }
 
 /** True when the checkpoint is within the conversation-resume window (§1.4). */
@@ -79,7 +81,16 @@ export function buildResumeState(data: PriorSessionRead | null | undefined): Tut
     transcript,
     whiteboardCommands,
     whiteboardCommandStamps,
+    ...(resumeSolved(data?.homeworkSolved) ? { homeworkSolved: resumeSolved(data?.homeworkSolved)! } : {}),
   };
+}
+
+/** A non-empty, all-valid solved list (positions 1..25), else undefined. The
+ *  problem count is not known here; the client clamps it again on use. */
+function resumeSolved(raw: unknown): number[] | undefined {
+  if (!Array.isArray(raw) || !raw.length || raw.length > 25) return undefined;
+  if (!raw.every((n) => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 25)) return undefined;
+  return [...new Set(raw as number[])].sort((a, b) => a - b);
 }
 
 /** `resolveResumeOutcome`'s result: the buildResumeState snapshot (or null)

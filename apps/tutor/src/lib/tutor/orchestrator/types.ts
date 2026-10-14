@@ -142,4 +142,7 @@ export interface TutorResumeState {
    *  see WhiteboardBatchMeta.seedStamps). Absent on legacy reads (the
    *  persistence layer then falls back to the resume moment, unchanged). */
   whiteboardCommandStamps?: Array<{ timestamp: string; sourceMessageIndex?: number }>;
+  /** 2026-10-19 homework ledger: list positions recorded as solved before the
+   *  page went away (lesson-plan/homework-ledger.ts). Absent when none. */
+  homeworkSolved?: number[];
 }

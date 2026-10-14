@@ -113,7 +113,7 @@ import {
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
-import { recordSolved, solvedPositionFromCheck } from '@/lib/tutor/lesson-plan/homework-ledger';
+import { recordSolved, sanitizeSolvedPositions, solvedPositionFromCheck } from '@/lib/tutor/lesson-plan/homework-ledger';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -2680,6 +2680,9 @@ export function VoiceTutorRealtime({
   // `verdict-precheck` frame, never from the tutor's words; sent with
   // `homework` every turn. The server renders it only for listed partners.
   const homeworkSolvedRef = useRef<number[]>([]);
+  // A resumed page starts the ledger from the session's stored record.
+  const resumeStateRef = useRef(resumeState);
+  resumeStateRef.current = resumeState;
   // 2026-10-09 (e2e scenario C): a typed message sent while the homework plan
   // is still being fetched is held, briefly, until the problems arrive
   // (session/text-kickoff.ts) — dispatched at once it ran with no plan and no
@@ -2743,7 +2746,8 @@ export function VoiceTutorRealtime({
     if (planId !== homeworkPlanIdRef.current) {
       homeworkPlanIdRef.current = planId;
       homeworkCurrentRef.current = 1;
-      homeworkSolvedRef.current = [];
+      // 2026-10-19: a resumed session keeps what its checks found solved.
+      homeworkSolvedRef.current = sanitizeSolvedPositions(resumeStateRef.current?.homeworkSolved, homeworkProblems.length) ?? [];
     }
     const total = homeworkProblems.length;
     const clamped = Math.min(Math.max(homeworkCurrentRef.current, 1), total);

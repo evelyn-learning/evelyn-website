@@ -125,3 +125,23 @@ export function formatProblemLedgerBlock(
     + `In this reply, do not ask about, re-offer, or call unfinished any ${LEDGER_SOLVED} problem — not by its number, and not by asking for a step, a part or a check of it — unless the student has just asked to go back to it. If your last question was about a ${LEDGER_SOLVED} problem, drop that question.\n`
     + '</problem_ledger>\n\n';
 }
+
+/**
+ * The ledger as it stood when the page went away: the `solved=[…]` list of
+ * the LAST `homework_problem_solved` debug event the session persisted (the
+ * browser emits one each time it records a problem). Read by the session
+ * read (session-usage GET) so a resumed page starts from it. No model call.
+ * [] when there is none or it cannot be read.
+ */
+export function homeworkSolvedFromDebugEvents(events: ReadonlyArray<{ type?: unknown; message?: unknown }> | null | undefined): number[] {
+  if (!Array.isArray(events)) return [];
+  for (let i = events.length - 1; i >= 0; i--) {
+    const e = events[i];
+    if (e?.type !== 'homework_problem_solved') continue;
+    const m = /solved=\[([\d,\s]*)\]/.exec(String(e.message ?? ''));
+    if (!m) continue;
+    const list = m[1].split(',').map((x) => Number(x.trim())).filter((n) => Number.isInteger(n) && n >= 1 && n <= 25);
+    return [...new Set(list)].sort((a, b) => a - b);
+  }
+  return [];
+}

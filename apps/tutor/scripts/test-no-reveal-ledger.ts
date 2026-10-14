@@ -116,6 +116,37 @@ async function main() {
     assert.doesNotMatch(HOMEWORK_LEDGER_RULES, /\d|e\.g\.|for example|"/i);
   });
 
+  console.log('ledger on resume');
+  await test('the stored solved list is the LAST homework_problem_solved event; junk ⇒ []', async () => {
+    const { homeworkSolvedFromDebugEvents } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
+    const ev = (type: string, message: string) => ({ type, message, timestamp: new Date() });
+    assert.deepEqual(homeworkSolvedFromDebugEvents([
+      ev('verdict_precheck', 'answers=overall_problem solved_problem=1'),
+      ev('homework_problem_solved', 'pos=1 solved=[1] total=2'),
+      ev('homework_problem_solved', 'pos=2 solved=[1,2] total=2'),
+      ev('homework_current_problem', 'n=2 pos=2 total=2'),
+    ]), [1, 2]);
+    assert.deepEqual(homeworkSolvedFromDebugEvents([]), []);
+    assert.deepEqual(homeworkSolvedFromDebugEvents(undefined), []);
+    assert.deepEqual(homeworkSolvedFromDebugEvents([ev('homework_problem_solved', 'solved=[x]')]), []);
+    assert.deepEqual(homeworkSolvedFromDebugEvents([ev('homework_problem_solved', 'pos=1 solved=[1] total=2'), ev('homework_problem_solved', 'garbled')]), [1]);
+  });
+  await test('buildResumeState carries the stored list (sanitised); absent ⇒ no field', async () => {
+    const { buildResumeState } = await import('../src/lib/tutor/portal/resume');
+    const base = { lessonProgress: { lessonPlanId: 'gen-x', currentSegmentId: 'homework', completedSegmentIds: [], updatedAt: new Date().toISOString() }, transcript: [], whiteboardCommands: [] };
+    assert.deepEqual(buildResumeState({ ...base, homeworkSolved: [2, 1, 2] })?.homeworkSolved, [1, 2]);
+    assert.equal('homeworkSolved' in (buildResumeState({ ...base, homeworkSolved: ['1', -3] }) ?? {}), false);
+    assert.equal('homeworkSolved' in (buildResumeState(base) ?? {}), false);
+  });
+  await test('wiring: the session read returns it, the embed persists the event, the client seeds the ledger from it', () => {
+    const read = fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/session-usage/route.ts'), 'utf8');
+    assert.match(read, /homeworkSolved: homeworkSolvedFromDebugEvents\(session\.debugEvents\)/);
+    const embed = fs.readFileSync(path.join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
+    assert.match(embed, /'homework_problem_solved'/);
+    const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.match(vtr, /homeworkSolvedRef\.current = sanitizeSolvedPositions\(resumeStateRef\.current\?\.homeworkSolved, homeworkProblems\.length\) \?\? \[\]/);
+  });
+
   console.log('homework block');
   const brain = await import('../src/lib/tutor/voice/claude-brain');
   const hw = { problems: [{ n: 1, text: 'First.' }, { n: 2, text: 'Second.' }], current: 2, solved: [1, 2] };
