@@ -39,6 +39,7 @@ import { BATCH2_CHECKERS, BATCH2_FIGURE_KINDS, Batch2RuleError, describeBatch2, 
 import { BATCH3_CHECKERS, BATCH3_FIGURE_KINDS, describeBatch3, figureLetterClash, isBatch3Kind, type Batch3FigureKind } from './figure-core-batch3';
 import { BATCH4_CHECKERS, BATCH4_FIGURE_KINDS, describeBatch4, isBatch4Kind, type Batch4FigureKind } from './figure-core-batch4';
 import { BATCH5_CHECKERS, BATCH5_FIGURE_KINDS, describeBatch5, isBatch5Kind, type Batch5FigureKind } from './figure-core-batch5';
+import { BATCH6_CHECKERS, BATCH6_FIGURE_KINDS, describeBatch6, isBatch6Kind, type Batch6FigureKind } from './figure-core-batch6';
 
 /** `PRACTICE_FIGURE_KINDS` is the list the job offers its writer (figure-prompts.ts).
  *  The batch-1 kinds (unit circle, vectors, …) are transcribed and checked here
@@ -58,6 +59,8 @@ export { BATCH4_CHECKERS, BATCH4_FIGURE_KINDS };
 /** Batch 5 (replication forks, operon maps, cell-cycle wheels, transformers, induction loops, Doppler
  *  wavefronts, photoelectric set-ups, data tables): figure-core-batch5.ts and its parts, reached the same way. */
 export { BATCH5_CHECKERS, BATCH5_FIGURE_KINDS };
+/** Batch 6 (coordinate polygons, stemplots — GreenApple T2): figure-core-batch6.ts and its parts. */
+export { BATCH6_CHECKERS, BATCH6_FIGURE_KINDS };
 export type FigureKind = AnyPracticeFigureKind;
 
 /** A spec, a derivation or an item that breaks a rule of this track. The
@@ -231,7 +234,7 @@ export function axesOf(spec: PracticeFigureSpec): FigureAxes {
     case 'box_plot': case 'polar_complex': case 'punnett_square': case 'pedigree':
       return {};
     default:
-      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type) || isBatch4Kind(spec.type) || isBatch5Kind(spec.type)) return {};
+      if (isBatch2Kind(spec.type) || isBatch3Kind(spec.type) || isBatch4Kind(spec.type) || isBatch5Kind(spec.type) || isBatch6Kind(spec.type)) return {};
       return fail(`unknown figure kind "${spec.type}" — one of ${ALL_PRACTICE_FIGURE_KINDS.join(', ')}`);
   }
 }
@@ -800,7 +803,7 @@ export function describeFigure(spec: PracticeFigureSpec): { printed: string[]; r
       break;
     }
     default: {
-      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out) || describeBatch4(spec, printed, out) || describeBatch5(spec, printed, out));
+      const k = describeBatch1(spec, printed, out) || viaBatch2(() => describeBatch3(spec, printed, out) || describeBatch2(spec, printed, out) || describeBatch4(spec, printed, out) || describeBatch5(spec, printed, out) || describeBatch6(spec, printed, out));
       if (!k) fail(`unknown figure kind "${spec.type}"`);
       kind = k;
     }
@@ -3101,7 +3104,7 @@ export interface Derivation {
  *  cannot be read off the figure. */
 export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
   const def = CHECKERS[d.checker];
-  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker] ?? BATCH4_CHECKERS[d.checker] ?? BATCH5_CHECKERS[d.checker];
+  const batch2 = def ? undefined : BATCH2_CHECKERS[d.checker] ?? BATCH3_CHECKERS[d.checker] ?? BATCH4_CHECKERS[d.checker] ?? BATCH5_CHECKERS[d.checker] ?? BATCH6_CHECKERS[d.checker];
   if (batch2) {
     if (!(batch2.kinds as readonly string[]).includes(spec.type)) return fail(`the checker "${d.checker}" is for ${batch2.kinds.join(' / ')}, not for ${spec.type}`);
     return viaBatch2(() => batch2.run(spec, d.args ?? {}));
@@ -3112,9 +3115,9 @@ export function runChecker(spec: PracticeFigureSpec, d: Derivation): Derived {
 }
 
 /** The checker list as the writer is shown it, grouped by figure kind. */
-export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind | Batch4FigureKind | Batch5FigureKind> = PRACTICE_FIGURE_KINDS): string {
+export function checkerCatalogue(kinds: ReadonlyArray<FigureKind | Batch2FigureKind | Batch3FigureKind | Batch4FigureKind | Batch5FigureKind | Batch6FigureKind> = PRACTICE_FIGURE_KINDS): string {
   return kinds.map((k) => {
-    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS), ...Object.entries(BATCH4_CHECKERS), ...Object.entries(BATCH5_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
+    const mine = [...Object.entries(CHECKERS), ...Object.entries(BATCH2_CHECKERS), ...Object.entries(BATCH3_CHECKERS), ...Object.entries(BATCH4_CHECKERS), ...Object.entries(BATCH5_CHECKERS), ...Object.entries(BATCH6_CHECKERS)].filter(([, d]) => (d.kinds as readonly string[]).includes(k));
     return `${k}:\n${mine.map(([name, d]) => `  - ${name} ${d.args} → ${d.returns}`).join('\n')}`;
   }).join('\n');
 }
@@ -3255,7 +3258,7 @@ function parseJsonObject(text: unknown, name: string): P {
 /** A stem that tells the student to produce a figure. */
 const DRAW_RE = /(?:^|[.?!:;,]\s+|\b(?:then|and|to|also|please|must|should|now)\s+)(?:draw|sketch|shade|plot|construct|graph|mark|label)\b(?!\s+(?:shows?|showing|of|is|was|below|above|at\b))/i;
 /** A stem that points the student at the figure. */
-const POINTS_AT_FIGURE_RE = /\b(?:figure|graph|diagram|chart|plot|curve|profile|field|shown|table|line|bar|dot|arrow|axis|segment)s?\b/i;
+const POINTS_AT_FIGURE_RE = /\b(?:figure|graph|diagram|chart|plot|stemplot|curve|profile|field|shown|table|line|bar|dot|arrow|axis|segment)s?\b/i;
 
 /** An option that argues for itself. */
 const OPTION_REASON_RE = /\b(?:because|since|so\s+that|therefore|thus|hence|due\s+to|as\s+a\s+result|which\s+means|owing\s+to)\b/i;

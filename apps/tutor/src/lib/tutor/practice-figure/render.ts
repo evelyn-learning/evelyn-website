@@ -233,6 +233,7 @@ import { BATCH2_FIGURE_KINDS, renderBatch2, type Batch2FigureKind } from './kind
 import { BATCH3_FIGURE_KINDS, renderBatch3, type Batch3FigureKind } from './kinds/batch3';
 import { BATCH4_FIGURE_KINDS, renderBatch4, type Batch4FigureKind } from './kinds/batch4';
 import { BATCH5_FIGURE_KINDS, renderBatch5, type Batch5FigureKind } from './kinds/batch5';
+import { BATCH6_FIGURE_KINDS, renderBatch6, type Batch6FigureKind } from './kinds/batch6';
 
 export const PRACTICE_FIGURE_KINDS = [
   'function_graph',
@@ -296,6 +297,8 @@ export { BATCH4_FIGURE_KINDS, type Batch4FigureKind };
 /** Batch 5 (2026-10-16): replication_fork, operon_map, cell_cycle_wheel, transformer, induction_loop,
  *  doppler_wavefronts, photoelectric_setup, data_table — drawn by ./kinds/batch5.ts and the modules it names. */
 export { BATCH5_FIGURE_KINDS, type Batch5FigureKind };
+/** Batch 6 (2026-10-15, GreenApple T2): coordinate_polygon, stemplot — drawn by ./kinds/batch6.ts and the modules it names. */
+export { BATCH6_FIGURE_KINDS, type Batch6FigureKind };
 export { sampleCurve };
 
 /** Short stable id prefix from the spec (FNV-1a) — see the module header. */
@@ -1685,8 +1688,8 @@ function drawPracticeFigure(spec: PracticeFigureSpec): { svg: string; facts: Fig
         drawn = renderCoordinateGrid(r);
         break;
       }
-      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid) ?? renderBatch4(kind, r, uid) ?? renderBatch5(kind, r, uid);
-      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS, ...BATCH4_FIGURE_KINDS, ...BATCH5_FIGURE_KINDS].join(', ')}`);
+      const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid) ?? renderBatch4(kind, r, uid) ?? renderBatch5(kind, r, uid) ?? renderBatch6(kind, r, uid);
+      if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS, ...BATCH4_FIGURE_KINDS, ...BATCH5_FIGURE_KINDS, ...BATCH6_FIGURE_KINDS].join(', ')}`);
       drawn = later;
     }
   }
