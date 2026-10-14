@@ -56,6 +56,11 @@ export default function MoleculeRenderer({
   const pendingSmilesRef = useRef<string>(ketcherSmiles);
   // "Check my molecule": true from the press until the button re-arms.
   const [checkPending, setCheckPending] = useState(false);
+  // The editor is editable even when the tutor showed the molecule for
+  // display only, so a student can change it without being asked. Once the
+  // structure here differs from the one the tutor put up, the student gets
+  // "Check my molecule" on that molecule too.
+  const [edited, setEdited] = useState(false);
 
   // Listen for messages from the Ketcher iframe
   useEffect(() => {
@@ -81,8 +86,9 @@ export default function MoleculeRenderer({
       // Only THIS editor's edits: the listener is on window, so with two
       // molecules on the board each renderer hears both iframes, and the
       // other one's edit would be reported against this molecule.
-      if (type === 'molecule-changed' && onMoleculeChanged && event.source === iframeRef.current?.contentWindow) {
-        onMoleculeChanged(event.data.smiles);
+      if (type === 'molecule-changed' && event.source === iframeRef.current?.contentWindow) {
+        if (event.data.smiles && event.data.smiles !== pendingSmilesRef.current) setEdited(true);
+        onMoleculeChanged?.(event.data.smiles);
       }
     };
 
@@ -203,9 +209,9 @@ export default function MoleculeRenderer({
               </span>
             )}
           </div>
-          {interactive && (
+          {(interactive || (edited && onCheckRequested)) && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-blue-500">Edit the structure above</span>
+              {interactive && <span className="text-xs text-blue-500">Edit the structure above</span>}
               {onCheckRequested && (
                 <button
                   type="button"
