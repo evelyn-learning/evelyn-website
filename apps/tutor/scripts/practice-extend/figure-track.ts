@@ -29,6 +29,7 @@ import {
   type KindChoice,
 } from './figure-core';
 import { FIGURE_GENERATE_SYSTEM, buildKindPrompt } from './figure-prompts';
+import { planIdOfObjective, planMapOf } from './plan-index';
 import { callJson, loadProviders, readLedger } from './models';
 import type { Args, AuditRecord, Dump, FigureObjective, FigureTools, Plan } from './practice-extend';
 import type { QualityView } from './prompts';
@@ -62,7 +63,8 @@ interface FigureAuditRecord extends AuditRecord {
   figure: { kind: string; derived: boolean; derivation: FigureExamination['derivation']; transcript?: string };
 }
 
-const planIdOf = (objectiveLoId: string): string => objectiveLoId.replace(/\.lo-\d+$/, '');
+/** `gen-….lo-N` → its plan; an older-subject seed LO (`geom.reflections`) → its seed plan (plan-index.ts). */
+const planIdOf = planIdOfObjective;
 const oneLine = (t: string): string => t.replace(/\s+/g, ' ').trim();
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -93,7 +95,7 @@ export async function runFigureStage(a: Args, t: FigureTools): Promise<void> {
 async function stageKinds(a: Args, t: FigureTools): Promise<void> {
   const figures = t.readJson<FigureObjective[]>(t.need(a.figures, '--figures'));
   const dump = t.readJson<Dump>(t.need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   fs.mkdirSync(a.out, { recursive: true });
   const file = path.join(a.out, 'kind-selection.jsonl');
   const done = new Set(t.readJsonl<KindRow>(file).map((r) => r.skillLoId));
@@ -206,7 +208,7 @@ function generatedObjectives(out: string, t: FigureTools): GeneratedObjective[] 
 
 async function stageGenerate(a: Args, t: FigureTools): Promise<void> {
   const dump = t.readJson<Dump>(t.need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const targets = t.readJsonl<FigureTarget>(path.join(a.out, 'targets.jsonl'));
   const outFile = path.join(a.out, 'generated.jsonl');
   const done = new Set(generatedObjectives(a.out, t).filter((g) => g.status !== 'failed' && !(g.status === 'salvaged' && a.retryIncomplete)).map((g) => g.objectiveLoId));
@@ -322,7 +324,7 @@ const keyQuestion = (it: FigureItem, question = it.problemText): KeyedQuestion =
 
 async function stageAudit(a: Args, t: FigureTools): Promise<void> {
   const dump = t.readJson<Dump>(t.need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const file = path.join(a.out, 'audit.jsonl');
   const prior = new Map(t.readJsonl<FigureAuditRecord>(file).map((r) => [r.id, r]));
   const work: Array<{ g: GeneratedObjective; it: StoredFigureItem; exam: FigureExamination; precheck?: { reason: string; detail: string }; view?: QualityView }> = [];
@@ -432,7 +434,7 @@ const PNG_WIDTH = 680;
 
 async function stageExport(a: Args, t: FigureTools): Promise<void> {
   const dump = t.readJson<Dump>(t.need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   // This run directory and every further pass (--also), put together.
   const dirs = [a.out, ...(a.also ?? [])];
   const audit = new Map(dirs.flatMap((d) => t.auditRecords(path.join(d, 'audit.jsonl'))).map((r) => [r.id, r as FigureAuditRecord]));

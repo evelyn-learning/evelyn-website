@@ -121,6 +121,7 @@ import {
   type SolverOutcome,
   type Target,
 } from './core';
+import { planIdOfObjective, planMapOf } from './plan-index';
 import { Ledger, callJson, loadProviders, readLedger, type Providers } from './models';
 import {
   GENERATE_SYSTEM,
@@ -438,7 +439,7 @@ async function stageFigures(a: Args): Promise<void> {
   const coverage = readJson<{ skills: CoverageSkill[] }>(need(a.coverage, '--coverage'));
   const map = new Map(readJson<SkillMapRow[]>(need(a.skillsMap, '--skills-map')).map((r) => [r.skill, r.subject]));
   const dump = readJson<Dump>(need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   fs.mkdirSync(a.out, { recursive: true });
   const file = path.join(a.out, 'figure-classification.jsonl');
   interface Row { skillLoId: string; objectives: Array<{ loId: string; figureDependent: boolean; reason: string; classified: boolean }>; model: string; at: string }
@@ -605,7 +606,7 @@ function openLedger(a: Args): Ledger {
 
 async function stageGenerate(a: Args): Promise<void> {
   const dump = readJson<Dump>(need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const targets = readJsonl<Target & { subject: string }>(path.join(a.out, 'targets.jsonl'));
   const outFile = path.join(a.out, 'generated.jsonl');
   const done = new Set(generatedSkills(a.out).filter((g) => g.status === 'ok' || (g.status === 'salvaged' && !a.retryIncomplete)).map((g) => g.skillLoId));
@@ -979,7 +980,7 @@ async function auditMany(
 
 async function stageAudit(a: Args): Promise<void> {
   const dump = readJson<Dump>(need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const work: Parameters<typeof auditMany>[3] = [];
   const earlierPass = new Map((a.previous ? generatedSkills(a.previous) : []).map((g) => [g.skillLoId, g.items]));
   for (const g of generatedSkills(a.out)) {
@@ -1044,7 +1045,7 @@ async function dropSameTasks(a: Args, file: string, plans: Map<string, Plan>): P
   const providers = loadProviders();
   const ledger = openLedger(a);
   const { budgetStop } = await pool(todo, a.concurrency, async ([loId, list]) => {
-    const lo = plans.get(loId.replace(/\.lo-\d+$/, ''))?.los.find((l) => l.id === loId);
+    const lo = plans.get(planIdOfObjective(loId))?.los.find((l) => l.id === loId);
     const prompt = buildSameTaskPrompt(lo?.description ?? loId, list.map((r) => (r.choices.length ? `${r.question} [options: ${r.choices.join(' | ')}]` : r.question)));
     const reply = await callJson(providers, ledger, {
       provider: 'deepseek', model: providers.models.deepseek, system: prompt.system, user: prompt.user, schema: prompt.schema,
@@ -1126,7 +1127,7 @@ function verifierOf(r: AuditRecord): string {
 
 function stageExport(a: Args): void {
   const dump = readJson<Dump>(need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const audit = new Map(allAuditRecords(a, 'audit.jsonl').map((r) => [r.id, r]));
   const skills = allGeneratedSkills(a);
   const rows: Array<Record<string, unknown>> = [];
@@ -1356,7 +1357,7 @@ function writeSummary(a: Args, auditFile: string): void {
 
 function stageReview(a: Args): void {
   const dump = readJson<Dump>(need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const audit = new Map(allAuditRecords(a, 'audit.jsonl').map((r) => [r.id, r]));
   const skills = allGeneratedSkills(a).sort((x, y) => x.subject.localeCompare(y.subject) || x.title.localeCompare(y.title));
   const all = skills.flatMap((s) => s.items);

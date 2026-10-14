@@ -42,6 +42,7 @@ import {
 } from './ingest-core';
 import { callJson, loadDeepseekOnly, type Ledger, type Providers } from './models';
 import type { Args, Dump, FigureTools } from './practice-extend';
+import { planIdOfObjective, planMapOf } from './plan-index';
 
 // ── files ───────────────────────────────────────────────────────────────────
 
@@ -434,7 +435,7 @@ function stageFinalize(a: Args, t: FigureTools): void {
   const dir = a.out;
   const readDir = path.join(dir, 'read');
   const dump = t.readJson<Dump>(t.need(a.dump, '--dump'));
-  const plans = new Map(dump.plans.map((p) => [p._id, p]));
+  const plans = planMapOf(dump.plans);
   const bankIds = new Set(dump.bank.map((b) => b.id));
   const stored = latestRecords(path.join(dir, 'checked', 'items.jsonl'), t);
 
@@ -489,7 +490,7 @@ function stageFinalize(a: Args, t: FigureTools): void {
     }
     assertLetterPointsAtCorrect(r);
     basisCount[d.basis] = (basisCount[d.basis] ?? 0) + 1;
-    const plan = plans.get(r.objectiveLoId.replace(/\.lo-\d+$/, ''));
+    const plan = plans.get(planIdOfObjective(r.objectiveLoId));
     const lo = plan?.los.find((l) => l.id === r.objectiveLoId);
     const model = r.solver?.model ?? 'deepseek';
     rows.push({
