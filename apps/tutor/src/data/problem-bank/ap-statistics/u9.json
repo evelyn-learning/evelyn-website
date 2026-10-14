@@ -7,7 +7,7 @@
     "responseFormat": "mcq",
     "problemText": "In the population regression model mu_y = alpha + beta·x, what does beta represent?",
     "choices": [
-      "The predicted response y-hat for one particular individual",
+      "The predicted response y-hat for one particular individual with a given value of x",
       "The population slope: the mean change in y for each one-unit increase in x",
       "The sample slope b computed from one particular data set",
       "The correlation coefficient r between x and y"
@@ -28,7 +28,7 @@
     "choices": [
       "Equal standard deviation of residuals across all values of x",
       "Independent condition (10% condition)",
-      "Nearly Normal distribution of residuals",
+      "Nearly Normal distribution of the residuals around the line",
       "Random sample or random assignment"
     ],
     "answer": "A",
@@ -94,9 +94,9 @@
     "responseFormat": "mcq",
     "problemText": "A 95% confidence interval for the slope beta, from a regression of exam score on hours of sleep, is (1.72, 5.98). Which is the correct interpretation?",
     "choices": [
-      "95% of all students in the population have a slope in this range",
+      "95% of all students in the population have an individual slope for sleep that falls in this range",
       "There is a 95% probability that the sample slope b itself lies in this interval",
-      "We are 95% confident that the interval (1.72, 5.98) captures the true population slope beta relating sleep to exam score",
+      "We are 95% confident that the interval (1.72, 5.98) captures the true population slope beta",
       "95% of the exam scores in the sample fall between 1.72 and 5.98"
     ],
     "answer": "C",
@@ -152,9 +152,9 @@
     "responseFormat": "mcq",
     "problemText": "The regression of monthly repair cost on machine age (n = 18, df = 16) gives t = 3.00 and a two-sided P-value of 0.0086 for testing H0: beta = 0 vs Ha: beta ≠ 0. At alpha = 0.05, what should the engineer conclude?",
     "choices": [
-      "Fail to reject H0; there is insufficient evidence of a linear relationship between age and repair cost",
-      "Reject H0; age causes higher repair costs in every machine",
-      "The value 0.0086 IS the population correlation between age and repair cost",
+      "Fail to reject H0; since 0.0086 is so close to zero, there is insufficient evidence of a linear relationship between age and repair cost",
+      "Reject H0; since 0.0086 < 0.05, age causes higher repair costs in every machine in the population",
+      "The value 0.0086 IS the population correlation between age and repair cost, so the relationship is very weak",
       "Reject H0; since 0.0086 < 0.05 there is convincing evidence of a linear relationship between age and repair cost in the population"
     ],
     "answer": "D",
@@ -200,10 +200,10 @@
     "responseFormat": "mcq",
     "problemText": "A test of H0: beta = 0 yields strong evidence to reject H0 in favor of Ha: beta ≠ 0 for the regression of repair cost on machine age. Which conclusion is justified?",
     "choices": [
-      "Older machine age directly causes higher repair costs, since the test rejected H0",
-      "The population slope beta must equal exactly 18.6, the sample estimate",
-      "There is convincing evidence of a linear association between age and repair cost in the population represented by the sample, but causation cannot be concluded from this observational study",
-      "The large sample size guarantees a causal relationship"
+      "Older machine age directly causes higher repair costs, since the test rejected H0 and gave strong evidence of a linear relationship in the population of all machines",
+      "The population slope beta must equal exactly 18.6, the sample estimate, since the test rejected H0 with strong evidence",
+      "There is convincing evidence of a linear association between age and repair cost in the population, but causation cannot be concluded from this observational study",
+      "The large sample size guarantees a causal relationship between machine age and repair cost in the population"
     ],
     "answer": "C",
     "hints": [

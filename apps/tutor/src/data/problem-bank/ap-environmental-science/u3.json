@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "An oyster releases millions of larvae into the water column. Nearly all larvae die within days from predation and starvation. The few that attach to hard substrate can live for a decade or more. Which survivorship curve best describes this population, and why?",
     "choices": [
-      "Type I, because adults survive for many years",
-      "Type II, because mortality rate is constant across all life stages",
-      "Type III, because mortality is extremely high in the earliest life stages while survivors live long",
-      "Type I, because the high total reproductive output compensates for early losses"
+      "Type I, because the adults that attach to substrate survive for many years",
+      "Type II, because the mortality rate stays constant across all life stages of the oyster",
+      "Type III, because mortality is extremely high early in life while the few survivors live long",
+      "Type I, because the high total reproductive output compensates for the heavy early losses of larvae"
     ],
     "answer": "C",
     "hints": ["Type III is typical of organisms that produce vast numbers of offspring with little parental care.", "The curve drops steeply early, then flattens."]
@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "Which combination of traits is MOST characteristic of a K-selected species?",
     "choices": [
-      "Early sexual maturity, large litter size, minimal parental care, and short lifespan",
-      "Long gestation period, one or two offspring per reproductive event, extensive parental care, and late reproductive maturity",
-      "Ability to rapidly colonize disturbed or newly available habitats",
-      "High intrinsic growth rate (r) and boom-bust population dynamics"
+      "Early sexual maturity, large litter size, minimal parental care, short lifespan, and rapid population turnover",
+      "Long gestation, one or two offspring per reproductive event, extensive parental care, and late maturity",
+      "Ability to rapidly colonize disturbed or newly available habitats with many small, easily dispersed offspring",
+      "High intrinsic growth rate (r), boom-bust population dynamics, and high juvenile mortality"
     ],
     "answer": "B",
     "hints": ["K-selected species devote energy to raising fewer, high-quality offspring.", "Think elephants, whales, humans."]
@@ -87,10 +87,10 @@
     "responseFormat": "mcq",
     "problemText": "A wildlife biologist confirms that grizzly bears in a national park follow a Type I survivorship curve. When designing a population recovery plan for this threatened population, which management recommendation follows MOST directly from this pattern?",
     "choices": [
-      "Prioritize protecting cubs and juveniles, because Type I curves show the greatest losses occur in early life",
-      "Focus on increasing annual litter size, because high early mortality is limiting population growth",
-      "Type I survivorship is only observed in captivity and cannot guide management of wild populations",
-      "Direct resources toward reducing adult mortality — from poaching, vehicle strikes, and human-conflict kills — because adult survival is the primary driver of population growth in Type I species"
+      "Prioritize protecting cubs and juveniles from predators and disease, because Type I curves show the greatest losses occur in early life",
+      "Focus on increasing annual litter size through supplemental feeding, because high early mortality is what limits population growth",
+      "Type I survivorship is only observed in captivity and cannot guide management of wild populations, so habitat protection should be the plan",
+      "Direct resources toward reducing adult mortality, because adult survival is the primary driver of population growth in Type I species"
     ],
     "answer": "D",
     "hints": ["In a Type I species, adults survive well; removing causes of adult mortality has the greatest leverage.", "Grizzlies produce few cubs — losing an adult female is a large setback."]
@@ -120,9 +120,9 @@
     "problemText": "Which factor most directly sets the carrying capacity (K) for a population within a specific habitat?",
     "choices": [
       "The availability of the most limiting resource — such as food, nesting sites, or water",
-      "The species' intrinsic rate of natural increase (r)",
-      "The size of the founding population introduced into the habitat",
-      "The geographic latitude of the habitat"
+      "The species' intrinsic rate of natural increase (r) under ideal, unlimited conditions",
+      "The size of the founding population when the species was first introduced into the habitat",
+      "The geographic latitude of the habitat and its distance from the equator"
     ],
     "answer": "A",
     "hints": ["Whichever essential resource runs out first caps population size.", "Remove the limiting resource and K would rise."]
@@ -145,10 +145,10 @@
     "responseFormat": "mcq",
     "problemText": "A wolf pack of 30 individuals enters a wilderness reserve with a carrying capacity of 150 wolves. Compared with a scenario where the pack has grown to 135 individuals, the per-capita growth rate when N = 30 is:",
     "choices": [
-      "Lower, because fewer individuals means fewer total births",
+      "Lower, because fewer individuals means fewer total births and fewer breeding pairs",
       "Equal, because the intrinsic rate r does not change with population size",
-      "Higher, because density-dependent limiting factors are much weaker when the population is far below K",
-      "Zero, because logistic growth has not yet begun at low density"
+      "Higher, because density-dependent limiting factors are much weaker far below K",
+      "Zero, because logistic growth has not yet begun at such low population density"
     ],
     "answer": "C",
     "hints": ["Per-capita rate in logistic model = r(1 - N/K). At N=30: r(1-30/150)=0.8r; at N=135: r(1-135/150)=0.1r.", "The farther below K, the less crowding suppresses per-capita growth."]
@@ -187,10 +187,10 @@
     "responseFormat": "mcq",
     "problemText": "An age-structure diagram for a country shows bars that are widest at the youngest age classes and become progressively narrower toward the oldest age classes. This pyramid shape indicates that the population is:",
     "choices": [
-      "Declining, because more individuals are concentrated in older age classes",
-      "Stable, because births approximately equal deaths across all age groups",
-      "Shrinking rapidly due to emigration of working-age adults",
-      "Growing, because a large proportion of individuals are young and will soon enter reproductive age"
+      "Declining, because more individuals are concentrated in the older, post-reproductive age classes",
+      "Stable, because births approximately equal deaths across all age groups in the population",
+      "Shrinking rapidly due to large-scale emigration of working-age adults to other countries",
+      "Growing, because a large share of individuals are young and will soon reach reproductive age"
     ],
     "answer": "D",
     "hints": ["A wide base means many children who will become reproductive adults — future growth is built in.", "This shape is characteristic of many sub-Saharan African nations today."]
@@ -203,10 +203,10 @@
     "responseFormat": "mcq",
     "problemText": "The replacement-level total fertility rate (TFR) is approximately 2.1 rather than exactly 2.0. The extra 0.1 children primarily accounts for:",
     "choices": [
-      "Statistical rounding error in national birth-registration records",
-      "The tendency for families to emigrate after having two children",
-      "The fact that slightly more boys than girls are born and some girls die before reaching reproductive age, so more than two births are needed on average to guarantee one woman survives to reproduce in the next generation",
-      "Government policies that require at least one extra birth per family for census purposes"
+      "Statistical rounding error in national birth-registration records that tend to undercount births in rural areas",
+      "The tendency for families to emigrate after having two children, removing them from the national birth count",
+      "The fact that slightly more boys than girls are born and that some girls die before reaching reproductive age",
+      "Government policies that require at least one extra birth per family for census and labor-planning purposes"
     ],
     "answer": "C",
     "hints": ["At birth, the sex ratio is about 105 boys per 100 girls; some females also die in childhood.", "Replacement needs 2 parents replaced — but the slight female deficit at birth means > 2 births are required."]
@@ -229,10 +229,10 @@
     "responseFormat": "mcq",
     "problemText": "A country's TFR drops to exactly 2.1 in 2025, yet a demographer projects that the country's total population will continue to rise until approximately 2055. The MOST likely explanation is:",
     "choices": [
-      "A large generation of young adults — born during an earlier period of high fertility — is moving through peak reproductive years, so total births still exceed total deaths even at replacement-level TFR",
-      "Replacement-level TFR always produces positive population growth for at least 50 years regardless of age structure",
-      "The country must be receiving an extremely high volume of immigration",
-      "The crude death rate is rising independently due to a new epidemic, temporarily masking population decline"
+      "A large generation born during an earlier high-fertility period is now in its peak reproductive years, so births still exceed deaths",
+      "Replacement-level TFR always produces positive population growth for at least 50 years regardless of the population's overall age structure",
+      "The country must be receiving an extremely high volume of immigration that alone offsets its natural population decline",
+      "The crude death rate is rising independently due to a new epidemic, temporarily masking an underlying population decline"
     ],
     "answer": "A",
     "hints": ["This phenomenon is called population momentum.", "Even at replacement fertility, a youthful age structure means many more births than deaths for decades."]
@@ -255,10 +255,10 @@
     "responseFormat": "mcq",
     "problemText": "Country P has a broad-based population pyramid (widest at youngest ages, narrowing toward top). Country Q has a nearly rectangular pyramid (roughly equal bar widths across all age classes). Both countries currently have 60 million people. Which statement BEST predicts their contrasting resource demands over the next 30 years?",
     "choices": [
-      "Country Q will face greater demand for schools because a rectangular pyramid implies proportionally more school-age children",
-      "Country P's large young cohort will drive surging demand for schools and jobs, then eventually pressure pension systems; Country Q already faces strain on elder-care and healthcare systems for an aging population",
-      "Both countries will require identical resources because their total populations are the same",
-      "Country P's population will decline rapidly due to high infant and child mortality"
+      "Country Q will face greater demand for schools and jobs because a rectangular pyramid implies proportionally more school-age children than Country P",
+      "Country P's young cohort will drive demand for schools and jobs, then later strain pensions; Country Q already faces elder-care and health strain",
+      "Both countries will require identical resources over the next 30 years because their total populations are currently the same size",
+      "Country P's population will decline rapidly due to high infant and child mortality, so its demand for schools and jobs will shrink"
     ],
     "answer": "B",
     "hints": ["Follow Country P's large base cohort as it ages: first schools, then jobs, then retirement.", "Country Q's rectangular shape means many people are already old — healthcare costs are its near-term pressure."]
@@ -287,10 +287,10 @@
     "responseFormat": "mcq",
     "problemText": "The rapid decline in death rates that marks the transition from Stage 1 to Stage 2 is MOST directly caused by:",
     "choices": [
-      "Government enforcement of strict family-planning policies that reduce birth-related mortality",
-      "Large-scale emigration that removes the most vulnerable members of the population",
-      "Improvements in public health — including clean water, sanitation, and vaccines — that dramatically reduce infectious-disease mortality",
-      "Industrialization generating sufficient wealth for all citizens to afford adequate nutrition independently"
+      "Government enforcement of strict family-planning policies that reduce birth-related mortality among mothers and infants",
+      "Large-scale emigration that removes the most vulnerable, disease-prone members of the population to other countries",
+      "Improvements in public health — such as clean water, sanitation, and vaccines — that sharply reduce infectious-disease deaths",
+      "Industrialization generating sufficient wealth for all citizens to afford adequate nutrition independently of public programs"
     ],
     "answer": "C",
     "hints": ["Death rates fall first, while birth rates remain high — that gap is what causes Stage 2 population explosion.", "Cholera, smallpox, and infant diarrhea declined sharply once clean water and vaccines arrived."]
@@ -351,10 +351,10 @@
     "responseFormat": "mcq",
     "problemText": "The demographic transition model was developed largely from Western European historical data spanning the 18th through 20th centuries. Critics argue its universal applicability is limited. Which limitation is MOST valid when applying the model to today's developing nations?",
     "choices": [
-      "The model incorrectly claims birth rates must always fall before death rates begin to decline",
-      "The model was designed only for island nations with closed, non-migratory populations",
-      "Stage 3 has been empirically removed from the revised demographic transition model since 1950",
-      "Access to modern contraceptives, international health aid, and global trade can compress or bypass stages that Western nations passed through over centuries, making the model less predictive for contemporary developing countries"
+      "The model incorrectly claims birth rates must always fall before death rates begin to decline in a developing population",
+      "The model was designed only for island nations with closed, non-migratory populations and cannot account for migration",
+      "Stage 3 has been empirically removed from the revised demographic transition model since 1950 by most demographers",
+      "Access to modern contraception, global health aid, and trade can compress or skip stages that took Western nations centuries"
     ],
     "answer": "D",
     "hints": ["Some countries moved from high fertility to near-replacement in a single generation — far faster than Europe's experience.", "Thailand's TFR fell from 6 to below 2 in roughly 30 years, compressing what took Europe 150 years."]

@@ -211,9 +211,9 @@
     "responseFormat": "mcq",
     "problemText": "In △DEF and △XYZ, DE/XY = EF/YZ = 3/1 and ∠D ≅ ∠X. In △DEF the angle ∠D is formed by sides DE and DF, and in △XYZ the angle ∠X is formed by sides XY and XZ. Can the triangles be proven similar from this information?",
     "choices": [
-      "Yes, by SAS similarity",
-      "Yes, by SSS similarity",
-      "Yes, by AA",
+      "Yes, by SAS similarity, since two side pairs are proportional and one angle pair is congruent",
+      "Yes, by SSS similarity, since the third pair of sides must share the same 3/1 ratio",
+      "Yes, by AA, since the congruent angles force a second pair of angles to match",
       "No — the congruent angle is not the included angle for the two proportional side pairs"
     ],
     "answer": "D",
@@ -257,10 +257,10 @@
     "responseFormat": "mcq",
     "problemText": "In △ABC, ∠B = 90°, AB = 9, and BC = 12. In △PQR, ∠Q = 90°, PQ = 12, and QR = 16. A student says: \"Both triangles have a right angle, so they are similar by AA.\" Which statement best evaluates the student's work?",
     "choices": [
-      "The conclusion is correct and AA is the right reason, because both triangles contain a 90° angle.",
+      "The conclusion is correct and AA is the right reason, because both triangles contain a 90° angle, a pair of congruent angles.",
       "The conclusion is correct, but the reason is wrong: 9/12 = 12/16 = 3/4 and the right angles are the included angles, so SAS similarity applies.",
-      "The conclusion is wrong — the triangles are not similar, because one grew by 3 and the other by 4.",
-      "The conclusion is wrong — a right angle can never serve as the included angle for SAS similarity."
+      "The conclusion is wrong — the triangles are not similar, because one triangle's legs grew by 3 and the other's by 4, not by one common amount.",
+      "The conclusion is wrong — a right angle can never serve as the included angle for SAS similarity, so no similarity criterion at all applies here."
     ],
     "answer": "B",
     "hints": [

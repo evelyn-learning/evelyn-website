@@ -149,7 +149,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Which of these is a FRAGMENT?",
-    "choices": ["The visiting coach protested for a full minute.", "The referee waved off the goal, and the crowd groaned.", "Which the visiting coach protested for a full minute after the whistle.", "The crowd groaned."],
+    "choices": ["The visiting coach protested to the referee for a full minute after the whistle.", "The referee waved off the goal, and the crowd groaned.", "Which the visiting coach protested for a full minute after the whistle.", "The crowd groaned when the referee waved off the goal."],
     "answer": "C",
     "hints": ["Read each option alone and ask whether you would send it by itself.", "A subject-verb pair is not enough if a relative pronoun such as which sits in front of it."]
   },

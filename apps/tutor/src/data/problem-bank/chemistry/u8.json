@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "Iodine, I₂, is a nonpolar molecule. It is offered two solvents: water, which is polar, and hexane, which is nonpolar. Which solvent dissolves the iodine, and why?",
     "choices": [
-      "Water — water is the universal solvent and dissolves essentially every substance",
-      "Water — I₂ molecules are small enough to slip into the spaces between water molecules",
-      "Hexane — nonpolar I₂ and nonpolar hexane attract each other about as strongly as hexane molecules attract each other, so like dissolves like",
-      "Neither — nonpolar substances cannot dissolve in any liquid solvent"
+      "Water — water is the universal solvent and dissolves essentially every substance, polar or nonpolar, given time",
+      "Water — I₂ molecules are small enough to slip into the gaps between water molecules, where hydrogen bonds then hold them firmly in place",
+      "Hexane — nonpolar I₂ and nonpolar hexane attract each other about as strongly as hexane attracts itself, so like dissolves like",
+      "Neither — nonpolar substances cannot dissolve in any liquid solvent, because they have no charges for a solvent to attract"
     ],
     "answer": "C",
     "hints": [

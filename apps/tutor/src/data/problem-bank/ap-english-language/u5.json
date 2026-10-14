@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's body paragraph opens with the sentence \"This paragraph is about how our school picked its new mascot.\" Which revision best turns this into an effective topic sentence?",
     "choices": [
-      "This paragraph is about how our school picked its new mascot, a decision made several years ago.",
-      "Mascots have been a meaningful part of school spirit at many schools for decades.",
+      "This paragraph is about how our school picked its new mascot, a decision made several years ago by a committee of teachers and students.",
+      "Mascots have been a meaningful part of school spirit at many schools for decades, and our school's recent choice of a new mascot is no exception.",
       "The mascot-selection process reveals whose voices the administration actually listens to when a decision affects the whole student body.",
-      "In the paragraph that follows, more details about the mascot-selection process will be given."
+      "In the paragraph that follows, more details about the mascot-selection process will be given, including who voted and when."
     ],
     "answer": "C",
     "hints": [
@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's paragraph opens with the topic sentence \"The new attendance policy is unfair to students who have long commutes,\" but the paragraph then also argues, linked by \"In addition,\" that the cafeteria menu needs more vegetarian options. Which revision best fixes this paragraph's structure?",
     "choices": [
-      "Split the paragraph into two paragraphs, each opening with its own topic sentence — one on the attendance policy, one on the cafeteria menu.",
-      "Replace \"In addition\" with \"Furthermore\" so the two ideas connect more smoothly.",
-      "Delete the topic sentence about the attendance policy so the paragraph can focus only on the cafeteria menu.",
-      "Add one more sentence at the end that introduces a third, related complaint about school policy."
+      "Split the paragraph into two, each opening with its own topic sentence — one on the attendance policy, one on the cafeteria menu.",
+      "Replace \"In addition\" with \"Furthermore\" so the two ideas connect more smoothly and the paragraph reads as one argument.",
+      "Delete the topic sentence about the attendance policy so the paragraph can focus only on the cafeteria menu and its options.",
+      "Add one more sentence at the end that introduces a third, related complaint about school policy to tie the two ideas together."
     ],
     "answer": "A",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "Draft: \"Standardized tests often fail to capture creativity or critical thinking. Therefore, they can still provide a useful, consistent measure for comparing schools across a large district.\" Which revision best fixes the logical relationship signaled by \"Therefore\"?",
     "choices": [
-      "Keep \"Therefore,\" since the second sentence is a direct result of the first.",
-      "Replace \"Therefore\" with \"For instance,\" since the second sentence gives a specific example of the first.",
-      "Replace \"Therefore\" with \"Similarly,\" since both sentences make the same point about testing.",
-      "Replace \"Therefore\" with an \"even though\" construction that signals a concession — the second sentence holds despite the problem named in the first, not because of it."
+      "Keep \"Therefore,\" since the second sentence states a direct consequence that follows logically from the first.",
+      "Replace \"Therefore\" with \"For instance,\" since the second sentence offers a specific example of the testing problem named in the first sentence.",
+      "Replace \"Therefore\" with \"Similarly,\" since both sentences make the same kind of point about the limits of standardized testing.",
+      "Replace \"Therefore\" with an \"even though\" construction, since the second sentence holds despite the problem in the first, not because of it."
     ],
     "answer": "D",
     "hints": [

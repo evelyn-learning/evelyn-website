@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "A student wants to construct a one-sample t-interval for a mean using a random sample of n = 12 measurements. A dotplot of the data shows a strong right skew with no outliers. Which condition, if any, is violated?",
     "choices": [
-      "The Random condition, because n = 12 is too small to be a random sample",
+      "The Random condition, because a sample of only n = 12 measurements is too small to be considered a truly random sample",
       "The Normal/Large Sample condition: n is under 30, the population is not stated to be Normal, and the graph shows strong skew",
-      "The 10% condition, since the sample may not be independent",
-      "No condition is violated; the t-interval is safe to use"
+      "The 10% condition, since with only 12 measurements the observations may not be independent",
+      "No condition is violated; the t-interval is safe to use because the dotplot shows no outliers and t procedures are robust to skew"
     ],
     "answer": "B",
     "hints": ["For small samples, the data need to look roughly symmetric with no strong skew or outliers.", "Random and 10% are about how the sample was collected, not the shape of the data."]
@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "A 95% confidence interval for the mean commute time of employees at a company is (24.3, 29.7) minutes. Which is the correct interpretation of this interval?",
     "choices": [
-      "There is a 95% probability that the true mean commute time is between 24.3 and 29.7 minutes",
-      "95% of employees have commute times between 24.3 and 29.7 minutes",
-      "We are 95% confident that the interval (24.3, 29.7) captures the true mean commute time for all employees at the company",
-      "The sample mean will fall in this interval 95% of the time in repeated sampling"
+      "There is a 95% probability that the true mean commute time for all employees is between 24.3 and 29.7 minutes",
+      "95% of employees at the company have commute times between 24.3 and 29.7 minutes",
+      "We are 95% confident that the interval (24.3, 29.7) captures the true mean commute time for all employees",
+      "The sample mean will fall in this interval 95% of the time in repeated sampling from the company"
     ],
     "answer": "C",
     "hints": ["A confidence interval is a statement about the CAPTURE of a fixed population parameter, not a probability about that parameter.", "Avoid interpretations that describe individual employees or the sample mean."]
@@ -55,9 +55,9 @@
     "responseFormat": "mcq",
     "problemText": "All else held constant, which single change would make a one-sample t-confidence interval for a mean NARROWER?",
     "choices": [
-      "Decreasing the sample size",
-      "Increasing the confidence level from 90% to 99%",
-      "Increasing s, the sample standard deviation",
+      "Decreasing the sample size while keeping s and the confidence level fixed",
+      "Increasing the confidence level from 90% to 99% with the same sample",
+      "Increasing s, the sample standard deviation, with n held the same",
       "Increasing the sample size while keeping s and the confidence level fixed"
     ],
     "answer": "D",
@@ -110,7 +110,7 @@
     "choices": [
       "z = (x-bar minus mu0) divided by sigma",
       "t = (x-bar minus mu0) divided by (s divided by sqrt(n))",
-      "t = (x-bar minus mu0) divided by s",
+      "t = (x-bar minus mu0) divided by (s divided by sqrt(n - 1))",
       "t = mu0 divided by (s divided by sqrt(n))"
     ],
     "answer": "B",
@@ -188,9 +188,9 @@
     "problemText": "To construct a two-sample t-confidence interval for mu1 minus mu2, which condition must be checked?",
     "choices": [
       "Random, 10% (independence), and Normal/Large Sample -- each checked separately for both groups",
-      "Only that the combined sample size exceeds 30",
-      "Only that the two sample standard deviations are equal",
-      "Only that the two sample means are numerically different"
+      "Only that the combined sample size exceeds 30, so the Central Limit Theorem applies to the difference",
+      "Only that the two sample standard deviations are equal, so the two variances can be pooled together",
+      "Only that the two sample means are numerically different, so the interval cannot contain zero"
     ],
     "answer": "A",
     "hints": ["Each of the two samples needs its own check of the three standard conditions.", "The two-sample t-procedure does NOT require equal standard deviations."]
@@ -288,10 +288,10 @@
     "responseFormat": "mcq",
     "problemText": "A researcher randomly assigns 30 plants to Fertilizer A and a different set of 30 plants to Fertilizer B, then compares the mean heights of the two groups after 6 weeks. Which procedure is appropriate to test for a difference in mean height?",
     "choices": [
-      "A one-sample t-test on paired differences, since both groups were fertilized",
-      "A two-sample t-test for mu1 minus mu2, since the two groups consist of different, independent plants",
-      "A matched-pairs t-test, since heights are being compared",
-      "A one-proportion z-test"
+      "A one-sample t-test on paired differences, since both groups were fertilized and measured after 6 weeks",
+      "A two-sample t-test for mu1 minus mu2, since the groups are different, independent plants",
+      "A matched-pairs t-test, since heights of the two groups are compared after the same 6 weeks",
+      "A one-proportion z-test on the proportion of plants that grew taller"
     ],
     "answer": "B",
     "hints": ["There is no natural pairing between a specific Fertilizer A plant and a specific Fertilizer B plant.", "Two disjoint groups of subjects call for a two-sample procedure."]

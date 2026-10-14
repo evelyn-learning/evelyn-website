@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "The sampling distribution of a statistic describes:",
     "choices": [
-      "The distribution of values in one single sample",
-      "The distribution of the population itself",
-      "The distribution of the statistic's values over all possible samples of a given size from the population",
-      "The margin of error for a single confidence interval"
+      "The distribution of the individual values in one single sample drawn from the population",
+      "The distribution of the population itself, from which all of the samples are drawn",
+      "The distribution of the statistic's values over all possible samples of a given size",
+      "The margin of error for a single confidence interval built from one sample"
     ],
     "answer": "C",
     "hints": ["Imagine taking many, many samples of the same size and computing the statistic each time."]
@@ -71,10 +71,10 @@
     "responseFormat": "mcq",
     "problemText": "As the sample size n increases (with the sampling method unchanged), what happens to the sampling distribution of a statistic?",
     "choices": [
-      "Its variability increases",
+      "Its variability (spread) increases, but its bias is unaffected",
       "Its variability (spread) decreases, but its bias is unaffected",
-      "Its center moves further from the parameter",
-      "It becomes biased"
+      "Its center moves further from the parameter as more data are collected",
+      "It becomes biased, because larger samples overrepresent common values"
     ],
     "answer": "B",
     "hints": ["Larger samples give less sample-to-sample variability, but a flawed sampling method stays flawed."]
@@ -141,9 +141,9 @@
     "problemText": "A population of daily commute times is strongly right-skewed. Random samples of size n = 4 are selected repeatedly. Which statement is true about the sampling distribution of x-bar in this case?",
     "choices": [
       "It will still reflect the right skew of the population, since n = 4 is too small for the CLT to apply",
-      "It will be exactly Normal because x-bar is always Normal",
-      "It will be uniform",
-      "It cannot be determined without knowing the standard deviation"
+      "It will be exactly Normal because x-bar is always Normally distributed, whatever the shape of the population",
+      "It will be uniform, since each sample mean is equally likely to occur",
+      "It cannot be determined without knowing the standard deviation of the population"
     ],
     "answer": "A",
     "hints": ["With such a small n and a strongly skewed population, the CLT has not 'kicked in' yet."]
@@ -156,10 +156,10 @@
     "responseFormat": "mcq",
     "problemText": "If the population itself is known to be exactly Normally distributed, the sampling distribution of x-bar is Normal:",
     "choices": [
-      "Only when n is at least 30",
+      "Only when n is at least 30, by the Central Limit Theorem",
       "For any sample size n, including small n",
-      "Never",
-      "Only when n is even"
+      "Never, because x-bar is only approximately Normal",
+      "Only when n is less than 10% of the population size"
     ],
     "answer": "B",
     "hints": ["When the population is already Normal, x-bar is Normal no matter how small the sample is."]
@@ -209,9 +209,9 @@
     "responseFormat": "mcq",
     "problemText": "For inference about a sample proportion, the '10% condition' (n <= 0.10N) is used to justify:",
     "choices": [
-      "That the sampling distribution of p-hat is approximately Normal in shape",
-      "That p-hat is unbiased",
-      "That the sample size is large enough",
+      "That the sampling distribution of p-hat is approximately Normal in shape when sampling without replacement",
+      "That p-hat is an unbiased estimator of the population proportion p",
+      "That the sample size is large enough for the Normal approximation to hold",
       "That individual observations are approximately independent when sampling without replacement"
     ],
     "answer": "D",

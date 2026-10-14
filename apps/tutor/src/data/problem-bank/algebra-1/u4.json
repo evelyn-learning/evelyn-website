@@ -416,10 +416,10 @@
     "responseFormat": "mcq",
     "problemText": "Are the lines 3x + y = 8 and y = 3x - 1 parallel, perpendicular, or neither?",
     "choices": [
-      "Parallel",
-      "Perpendicular",
+      "Parallel, as both slopes have size 3",
+      "Perpendicular, as the slopes are opposites",
       "Neither parallel nor perpendicular",
-      "They are the same line"
+      "They are the same line, rearranged"
     ],
     "answer": "C",
     "hints": [

@@ -17,7 +17,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Under the emperor Justinian in the 500s CE, teams of jurists gathered, edited, and organized roughly a thousand years of Roman statutes, rulings, and legal commentary into one usable body of law. Which statement best describes this collection and its later importance?",
-    "choices": ["It compiled and rationalized law that already existed, and after being rediscovered and taught in western Europe from the 1000s onward it became the foundation of the civil-law tradition", "It was an entirely new legal system that replaced Roman law with Greek customs", "It was a religious code that governed only the clergy of the eastern church", "It was a treaty that settled the boundary between the eastern and western halves of the empire"],
+    "choices": ["It compiled and rationalized existing law, and once rediscovered and taught in western Europe from the 1000s it became the foundation of the civil-law tradition", "It was an entirely new legal system that replaced Roman law with Greek customs, and it was abandoned in the west soon after Justinian's death", "It was a religious code that governed only the clergy of the eastern church and had no force over lay subjects or the imperial courts", "It was a treaty that settled the boundary between the eastern and western halves of the empire, fixing the line that later divided Latin and Greek Christendom for centuries"],
     "answer": "A",
     "hints": ["Ask whether Justinian's jurists were inventing rules from scratch or organizing a legal inheritance they already had."]
   },
@@ -28,7 +28,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "In 1054 a representative of the pope in Rome and the patriarch of Constantinople excommunicated one another, an event historians call the Great Schism. What did this event formalize?",
-    "choices": ["The Ottoman capture of Constantinople and the end of Christian rule in the city", "The merger of the eastern and western churches under a single patriarch", "The papacy's recognition of the Byzantine emperor as head of all Christians", "The division of Christianity into a Latin-speaking Roman Catholic west and a Greek-speaking Eastern Orthodox east"],
+    "choices": ["The Ottoman capture of Constantinople and the end of Christian rule over the city and its churches", "The merger of the eastern and western churches under a single patriarch seated in Constantinople", "The papacy's recognition of the Byzantine emperor as the rightful head of all Christians in east and west", "The division of Christianity into a Latin Roman Catholic west and a Greek Eastern Orthodox east"],
     "answer": "D",
     "hints": ["'Schism' means a split, so ask which two churches walked away from each other, and in which languages each of them worshipped."]
   },
@@ -39,7 +39,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Justinian's generals reconquered Italy, North Africa, and part of southern Spain during the 500s CE, yet by the end of that century the eastern empire was weaker than before the campaigns began. Which combination best explains that outcome?",
-    "choices": ["The reconquered provinces refused to speak Greek, so Mediterranean trade collapsed", "The campaigns were enormously expensive and the retaken lands were thinly garrisoned, and an epidemic that began in 541 CE cut population, tax revenue, and army recruitment", "The pope excommunicated Justinian, and Italian bishops withheld all imperial taxes", "Ottoman armies seized Anatolia while Justinian's forces were fighting in the west"],
+    "choices": ["The reconquered provinces refused to speak Greek, so Mediterranean trade collapsed and the imperial treasury lost its main source of income", "The campaigns were enormously expensive and the retaken lands thinly garrisoned, and an epidemic from 541 CE cut population, revenue, and recruitment", "The pope excommunicated Justinian, and Italian bishops withheld all imperial taxes until a new emperor took the throne in Constantinople", "Ottoman armies seized Anatolia while Justinian's forces were fighting in the west, cutting the empire off from its richest farmland and its best recruits"],
     "answer": "B",
     "hints": ["Weigh what the conquests cost against what arrived in 541 CE — territory still has to be paid for, garrisoned, and populated."]
   },
@@ -50,7 +50,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "In the 800s CE two missionaries sent from Constantinople began preaching to Slavic peoples in their own spoken language and devised a written script for it; their followers went on to develop an alphabet still used today for Russian, Bulgarian, and Serbian. Which conclusion about Byzantine influence does this best support?",
-    "choices": ["Byzantium spread its culture chiefly by conquering and annexing Slavic territory", "Slavic peoples took the Latin alphabet and Roman Catholic worship from Byzantium", "Byzantine missions carried writing, worship, and art northward and reshaped Slavic culture without Byzantine armies occupying those lands", "The alphabet was invented in western Europe and later exported eastward to the Slavic world"],
+    "choices": ["Byzantium spread its culture chiefly by conquering and annexing Slavic territory and settling Greek-speaking colonists among the conquered peoples", "Slavic peoples took the Latin alphabet and Roman Catholic worship from Byzantium, adapting both to their own spoken language", "Byzantine missions carried writing, worship, and art northward and reshaped Slavic culture without Byzantine armies occupying those lands", "The alphabet was invented in western Europe and later exported eastward to the Slavic world by merchants trading along the rivers"],
     "answer": "C",
     "hints": ["Ask what the missionaries physically brought with them — an occupying army, or a script and a liturgy people could adopt for themselves."]
   },
@@ -61,7 +61,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "In 1204 a crusading army stormed and sacked Constantinople and westerners ruled the city until Greek rulers retook it in 1261; in 1453 Ottoman forces broke the same walls with heavy cannon and ended the empire. Which comparison of the two events is strongest?",
-    "choices": ["The 1204 attack was decisive because no Greek emperor ever ruled in the city again after that year", "The 1204 sack stripped the city of its wealth and left the restored empire too poor and small to defend itself, so the 1453 conquest finished a state that fellow Christians had already crippled", "The two events were unrelated, because the empire fully recovered its wealth and armies between 1261 and 1453", "The 1453 conquest mattered less, because every Greek manuscript that reached western Europe had already left the city in 1204"],
+    "choices": ["The 1204 attack was decisive because no Greek emperor ever ruled in the city again after that year, which left 1453 a mere change of foreign masters", "The 1204 sack stripped the city's wealth and left the restored empire too poor and small to defend itself, so 1453 finished a state fellow Christians had already crippled", "The two events were unrelated, because the empire fully recovered its wealth and armies between 1261 and 1453 and fell only to the new Ottoman cannon", "The 1453 conquest mattered less, because every Greek manuscript that reached western Europe had already left the city in 1204 among the plunder the crusaders carried back to the west"],
     "answer": "B",
     "hints": ["Put both dates on a line and ask what condition the city was in when the second army arrived at its walls.", "One attack came from Christian crusaders and one from the Ottomans, but the damage accumulated across the two and a half centuries between them."]
   },
@@ -83,7 +83,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Which statement most accurately describes the legal position of a serf on a medieval European manor?",
-    "choices": ["A serf was owned outright by the lord and could be sold as an individual to any buyer", "A serf was a free wage laborer who could leave the manor whenever better pay appeared elsewhere", "A serf owned the manor's fields and hired the lord to provide protection", "A serf was bound to the land, owing labor days and dues and needing permission to leave or marry off the manor, but could not be bought or sold apart from that land"],
+    "choices": ["A serf was owned outright by the lord and could be sold as an individual to any buyer, like an enslaved person in a market", "A serf was a free wage laborer who could leave the manor whenever better pay appeared elsewhere, owing the lord only a yearly rent", "A serf owned the manor's fields and hired the lord to provide armed protection, paying him a fixed share of each harvest as his wage for that service", "A serf was bound to the land, owing labor and dues and needing permission to leave or marry off the manor, but could not be sold apart from that land"],
     "answer": "D",
     "hints": ["Apply a single test to each option: can this person be sold on their own, separately from the land they work?"]
   },
@@ -94,7 +94,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Historians treat feudalism and manorialism as two different systems operating side by side in medieval Europe. Which pairing states the difference correctly?",
-    "choices": ["Feudalism organized military and political obligations among lords and vassals; manorialism organized the farming economy of the estate and the peasants who worked it", "Feudalism organized farming while manorialism organized knightly service and loyalty oaths", "Feudalism applied only inside towns while manorialism applied only inside monasteries", "The two words name exactly the same system, one in French and one in Latin"],
+    "choices": ["Feudalism organized military and political obligations among lords and vassals; manorialism organized the estate's farming economy and its peasants", "Feudalism organized farming while manorialism organized knightly service and loyalty oaths between lords and the vassals who held land from them", "Feudalism applied only inside towns while manorialism applied only inside monasteries, so the two systems governed different kinds of community", "The two words name exactly the same system, one in French and one in Latin, and historians use them interchangeably"],
     "answer": "A",
     "hints": ["Sort the two words by the question each one answers: who owes armed service to whom, or who grows the food and on whose land?"]
   },
@@ -105,7 +105,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "In the 800s and 900s CE very little coined money circulated in western Europe, yet lords needed mounted, armored fighters who could respond to a raid within hours. How did the shortage of coin shape the arrangements they built?",
-    "choices": ["Lords hired standing professional armies paid in silver drawn from royal treasuries", "Lords required ordinary peasants to serve as heavy cavalry in place of trained knights", "Lords paid for military service by granting land, whose harvests and dues could support a warhorse, armor, and years of training", "Lords gave up armed defense entirely and relied on the Church to excommunicate raiders"],
+    "choices": ["Lords hired standing professional armies paid in silver drawn from royal treasuries, which raised it by taxing trade in the towns", "Lords required ordinary peasants to serve as heavy cavalry in place of trained knights, providing their horses from the manor's stables", "Lords paid for military service by granting land, whose harvests and dues could support a warhorse, armor, and years of training", "Lords gave up armed defense entirely and relied on the Church to excommunicate raiders and to shelter villagers behind monastery walls"],
     "answer": "C",
     "hints": ["If you cannot pay a soldier in cash, ask what else you own that generates income year after year without your spending anything."]
   },
@@ -116,7 +116,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A monastic record from northern France, written about 1150, describes a ceremony (paraphrased): 'The knight came before the lord unarmed, placed his joined hands within the lord's hands, and promised to become his man; then, touching the holy relics, he swore faith, and only after that did the lord name the lands he was to hold.' What does the order of these steps best reveal about feudal relationships?",
-    "choices": ["The land was a free gift, carrying no expectation of service in return", "The Church assigned vassals to lords and controlled the distribution of all fiefs", "Kings personally supervised each ceremony so that loyalty flowed to the crown", "Land was the payment given in return for a sworn promise of loyalty and service, and that oath — backed by religion rather than by any state — came first"],
+    "choices": ["The land was a free gift, carrying no expectation of service in return, and the oath simply thanked the lord for his generosity", "The Church assigned vassals to lords and controlled the distribution of all fiefs, which is why the oath had to be sworn on holy relics before a priest", "Kings personally supervised each ceremony so that loyalty flowed to the crown rather than to the lord who granted the land", "Land was the payment for a sworn promise of loyalty and service, and that oath — backed by religion rather than by any state — came first"],
     "answer": "D",
     "hints": ["Watch the sequence closely: what is promised before anything is handed over, and who is being called on to enforce the promise afterward?"]
   },
@@ -127,7 +127,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "In Japan from the late 1100s, warrior lords granted rights over land to samurai retainers in exchange for armed service while the emperor kept his title but little real power. In Europe, lords granted fiefs to vassals while kings often governed little beyond their own family estates. Which analysis of this resemblance is strongest?",
-    "choices": ["Two societies with almost no contact met the same problem — weak central authority and constant local insecurity — and independently arrived at a comparable exchange of land for armed service, so the similarity is convergence rather than borrowing", "The resemblance shows that European crusaders reached Japan in the 1100s and introduced the feudal contract there", "The resemblance is only superficial, since Japanese warriors were paid entirely in coin by a strong central treasury", "The resemblance proves that feudalism is a universal stage every society must pass through on the way to a modern state"],
+    "choices": ["Two societies with almost no contact faced weak central authority and constant local insecurity and independently arrived at exchanging land for armed service — convergence, not borrowing", "The resemblance shows that European crusaders reached Japan in the 1100s and introduced the feudal contract there, which samurai lords then adapted to fit their own local customs and laws", "The resemblance is only superficial, since Japanese warriors were paid entirely in coin by a strong central treasury rather than through grants of land from lords", "The resemblance proves that feudalism is a universal stage every society must pass through on the way to a modern state, whatever its contacts with others"],
     "answer": "A",
     "hints": ["Before assuming one side copied the other, check whether any route of sustained contact existed between France and Japan in that century.", "Similar problems can produce similar institutions independently; the test for borrowing is evidence of actual contact, not resemblance alone."]
   },
@@ -149,7 +149,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Besides excommunicating individuals, medieval popes could place a territory under interdict. What did an interdict do?",
-    "choices": ["It removed a bishop from office and transferred his estates to the crown", "It excused a ruler's subjects from paying the tithe until he submitted", "It suspended the sacraments across an entire territory, pressuring a ruler by pressuring everyone he governed", "It authorized neighboring kings to divide the offending ruler's lands among themselves"],
+    "choices": ["It removed a bishop from office and transferred his estates and their revenues to the crown", "It excused a ruler's subjects from paying the tithe to the Church until he submitted to the pope", "It suspended the sacraments across a whole territory, pressuring a ruler by pressuring everyone he governed", "It authorized neighboring kings to divide the offending ruler's lands among themselves and seize his castles by force"],
     "answer": "C",
     "hints": ["Compare the reach of the two penalties: one falls on a single named person, the other on a whole population at once."]
   },
@@ -171,7 +171,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Across western Europe in the 1000s and 1100s, kings staffed their governments with churchmen: chancellors, record keepers, and royal judges were usually clergy. What best explains this pattern?",
-    "choices": ["The Church held a near-monopoly on Latin literacy, so almost everyone able to read, write, and keep records was a churchman", "Canon law forbade laypeople from holding any office under a king", "The Concordat of Worms obliged every ruler to fill his household offices with clergy", "Monasteries paid kings large sums to place their monks in government positions"],
+    "choices": ["The Church held a near-monopoly on Latin literacy, so nearly everyone able to keep written records was a churchman", "Canon law forbade laypeople from holding any office under a king that involved oaths or written judgments", "The Concordat of Worms obliged every ruler to fill his household offices with clergy approved in advance by the pope", "Monasteries paid kings large sums to place their monks in government positions and gain influence at court"],
     "answer": "A",
     "hints": ["Ask what one skill a medieval government simply could not run without — then ask where a person went to acquire it."]
   },
@@ -182,7 +182,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "In 1202 a crusading army gathered at Venice unable to pay for the fleet it had ordered. Two years later that same army had stormed Constantinople, a Christian capital, installed its own ruler there, and never continued to the Holy Land. Which explanation best accounts for this outcome?",
-    "choices": ["The pope had ordered the army to punish the Orthodox church for the split of 1054", "Debt owed to Venice and entanglement in a Byzantine succession dispute redirected the campaign toward targets that could pay it, overriding its stated religious goal", "Ottoman forces already held Constantinople, so the crusaders attacked them where they stood", "The Byzantine emperor invited the crusaders to seize the city in order to end a famine"],
+    "choices": ["The pope had ordered the army to punish the Orthodox church for the split of 1054 and to bring Constantinople and its patriarch back under Rome's direct authority", "Debt owed to Venice and entanglement in a Byzantine succession dispute redirected the campaign toward targets that could pay, overriding its religious goal", "Ottoman forces already held Constantinople, so the crusaders attacked them where they stood instead of marching on to Jerusalem", "The Byzantine emperor invited the crusaders to seize the city in order to end a famine caused by years of drought and failed harvests"],
     "answer": "B",
     "hints": ["Follow the money before the theology: ask who was owed what, and what an unpaid army can take when coin is not available."]
   },
@@ -193,7 +193,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Measured against their stated goal the Crusades failed, and the last mainland crusader stronghold fell in 1291. Historians nevertheless treat the crusading era as a turning point for Europe. Which analysis best supports that judgment?",
-    "choices": ["The campaigns reunited the Catholic and Orthodox churches and closed the split of 1054", "The campaigns left Byzantium stronger, with a secured eastern frontier that held into the 1500s", "Two centuries of moving, feeding, and financing armies built durable sea routes and merchant wealth in cities such as Venice and Genoa, along which Greek and Arabic learning reached European universities, while taxing for war strengthened kings and drained the nobility", "The campaigns ended fighting among European knights and produced a lasting peace inside Christendom"],
+    "choices": ["The campaigns reunited the Catholic and Orthodox churches and closed the split of 1054, giving popes authority over Christian worship from Rome to Jerusalem and a single united front against the Islamic powers of the eastern Mediterranean", "The campaigns left Byzantium stronger, with a secured eastern frontier that held into the 1500s, which shielded western Europe from Turkish invasion and let its kingdoms turn their energies inward", "Moving, feeding, and financing armies for two centuries built sea routes and merchant wealth in Venice and Genoa that carried Greek and Arabic learning to European universities, while war taxes strengthened kings and drained the nobility", "The campaigns ended fighting among European knights and produced a lasting peace inside Christendom, as the nobility's warlike energies were channeled outward against foreign enemies for good"],
     "answer": "C",
     "hints": ["Separate the military scoreboard from the economic and intellectual ledger; the durable results were mostly unintended.", "Ask what kept moving along those sea lanes after the fighting stopped, and who was paying for the wars back home."]
   },
@@ -215,7 +215,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "In a European town of the 1300s, an association of cloth makers required a seven-year apprenticeship before anyone could work the trade independently, inspected every bolt of cloth for quality, and fined members who sold below the agreed price. Which institution is being described, and what was its chief purpose?",
-    "choices": ["A manor court, enforcing the labor dues peasants owed their lord", "A guild, protecting its members' livelihoods by controlling training, quality, and competition within a single trade", "A university faculty, licensing scholars to teach in the town", "A crusading order, financing expeditions to the eastern Mediterranean through trade"],
+    "choices": ["A manor court, enforcing the labor dues and fees that peasants owed their lord for working the land he held", "A guild, protecting its members' livelihoods by controlling training, quality, and competition within a single trade", "A university faculty, licensing scholars to teach in the town and setting the fees that students paid for lectures", "A crusading order, financing expeditions to the eastern Mediterranean through trade in cloth and other goods it controlled"],
     "answer": "B",
     "hints": ["Ask who benefits when an organization decides who may practice a trade at all, and at what price they may sell."]
   },
@@ -226,7 +226,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Between roughly 1100 and 1300, many towns bought charters of self-government from the lords whose land they sat on, and in a number of places custom held that a serf who lived in a town for a year and a day was no longer bound to the manor. Why would a lord agree to sell such a charter?",
-    "choices": ["Canon law obliged a lord to release any peasant who asked for freedom", "Kings had already abolished serfdom, so lords had no legal choice in the matter", "A chartered, growing town produced tolls, fees, and taxes in cash, which a lord valued more than the labor of the few peasants who left", "Lords expected towns to fail quickly and the runaway peasants to come back on worse terms"],
+    "choices": ["Canon law obliged a lord to release any peasant who asked for freedom, so a charter merely recorded what the Church required", "Kings had already abolished serfdom, so lords had no legal choice in the matter and sold charters to recover some of their lost income", "A chartered, growing town produced tolls, fees, and taxes in cash, which a lord valued more than the labor of the few peasants who left", "Lords expected towns to fail quickly and the runaway peasants to come back on worse terms, bound even more tightly to the manor"],
     "answer": "C",
     "hints": ["Follow the lord's incentive: what could a market town hand him every year that a field of grain could not?"]
   },
@@ -237,7 +237,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Universities at Bologna, Paris, and Oxford grew out of cathedral schools during the 1100s and 1200s, organized as self-governing corporations of masters and students. Which development most directly fed their growth in exactly that period?",
-    "choices": ["The printing press made books cheap enough to teach large classes", "Kings founded them by decree to train royal officials in the local spoken languages", "The Black Death emptied so many offices that only new graduates could fill them", "The recovery of Aristotle and other Greek and Arabic works in Latin translation supplied scholars with a large body of new material in logic, medicine, and natural philosophy"],
+    "choices": ["The printing press made books cheap enough to teach large classes, so every student could own copies of the set texts", "Kings founded them by decree to train royal officials in the local spoken languages rather than in the Latin of the church", "The Black Death emptied so many offices that only new graduates could fill them, drawing young men into the schools", "The recovery of Aristotle and other Greek and Arabic works in Latin translation gave scholars a large body of new material"],
     "answer": "D",
     "hints": ["Check the date attached to each option and ask which of these things actually existed before 1300."]
   },
@@ -259,7 +259,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A student concludes that the Black Death immediately abolished serfdom throughout Europe. Which correction is most accurate?",
-    "choices": ["The conclusion is right: England's Statute of Labourers of 1351 freed serfs by law", "The conclusion is wrong because the plague had no measurable effect on wages or rents anywhere in Europe", "The conclusion is wrong because serfdom in western Europe had already disappeared during the 1200s, before the plague arrived", "The conclusion overstates both the speed and the reach: in western Europe serfdom eroded across roughly a century as scarce laborers bargained, against resistance such as England's wage-freezing statute of 1351 and the revolt that helped provoke in 1381, while in parts of eastern Europe landlords tightened their hold on peasants during the same period"],
+    "choices": ["The conclusion is right: England's Statute of Labourers of 1351 freed serfs by law, and other kingdoms soon copied it to keep peasants from fleeing", "The conclusion is wrong because the plague had no measurable effect on wages or rents anywhere in Europe, since population recovered to its earlier level within a few years", "The conclusion is wrong because serfdom in western Europe had already disappeared during the 1200s, before the plague arrived, as towns bought charters freeing their peasants from the lord's manor", "The conclusion overstates speed and reach: western serfdom eroded over about a century as scarce laborers bargained against resistance, while eastern landlords in places tightened their hold"],
     "answer": "D",
     "hints": ["Test two claims separately: how quickly the change happened, and whether it ran in the same direction everywhere.", "Laws passed after 1348 were mostly attempts to stop the change, which tells you the change was gradual and fiercely contested."]
   }

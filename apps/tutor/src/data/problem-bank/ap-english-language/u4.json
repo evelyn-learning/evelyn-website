@@ -8,10 +8,10 @@
     "passageId": "evelyn.passage.lincoln-gettysburg.v1",
     "problemText": "In the line \"conceived in Liberty, and dedicated to the proposition that all men are created equal,\" Lincoln develops his opening claim about the nation primarily through which method — and to what end?",
     "choices": [
-      "cause-effect — showing that the Civil War itself was directly caused by the precise wording of this one clause",
-      "definition — pinning down the nation's founding identity as a commitment to an idea (equality), rather than merely a date or place, so the rest of the speech can build on that redefinition",
-      "narration — recounting, as a continuous story, each individual founding father's personal decision to include this clause",
-      "comparison-contrast — measuring the new nation directly against a specific rival nation founded on different principles"
+      "cause-effect — showing that the Civil War itself was directly caused by the precise wording of this one clause, so the war becomes the clause's inevitable result",
+      "definition — pinning down the nation's founding identity as a commitment to an idea (equality), rather than a date or place, so the speech can build on that redefinition",
+      "narration — recounting, as a continuous story, each individual founding father's personal decision to include this clause in the nation's founding documents and debates of 1776",
+      "comparison-contrast — measuring the new nation directly against a specific rival nation founded on different principles, in order to prove America's moral superiority"
     ],
     "answer": "B",
     "hints": [
@@ -28,9 +28,9 @@
     "passageId": "evelyn.passage.swift-modest-proposal.v1",
     "problemText": "Swift opens his proposal not with his solution but with this scene: \"the streets, the roads, and cabbin-doors crowded with beggars of the female sex, followed by three, four, or six children, all in rags.\" This method of development is best described as —",
     "choices": [
-      "narration — telling, in strict chronological order, the personal life story of one specific named beggar family",
-      "definition — formally defining the legal term \"beggar\" as it was used in Irish law of the period",
-      "cause-effect — tracing, step by step, the specific historical causes of the famine that produced this poverty",
+      "narration — telling, in strict chronological order, the personal life story of one specific named beggar family from their arrival in Dublin to the present day",
+      "definition — formally defining the legal term \"beggar\" as it was used in Irish law of the period, so readers know exactly who the proposal will cover",
+      "cause-effect — tracing, step by step, the specific historical causes of the famine that produced this poverty, beginning with the failed harvests of earlier years",
       "description — using concrete visual detail of a crowded, ragged street scene to make the abstract problem of poverty vividly felt before any solution is proposed"
     ],
     "answer": "D",
@@ -48,10 +48,10 @@
     "passageId": "evelyn.passage.henry-give-me-liberty.v1",
     "problemText": "Henry opens his speech, \"it is natural to man to indulge in the illusions of hope. We are apt to shut our eyes against a painful truth.\" As an introduction, this opening move primarily —",
     "choices": [
-      "frames the entire speech as a corrective to comforting illusions, signaling that Henry's aim is to force the delegates to face an unwelcome truth rather than cling to hope",
-      "apologizes in advance for the emotional tone Henry is about to adopt for the remainder of his remarks",
-      "summarizes, point by point, the specific terms of the peace proposal the delegates are about to vote on",
-      "concedes that Henry himself has, until this moment, shared in the delegates' hopeful view of reconciliation"
+      "frames the speech as a corrective to comforting illusions, signaling that Henry's aim is to force the delegates to face an unwelcome truth rather than cling to hope",
+      "apologizes in advance for the emotional tone Henry is about to adopt for the remainder of his remarks, asking the delegates to excuse his passion as natural and sincere",
+      "summarizes, point by point, the specific terms of the peace proposal the delegates are about to vote on, so that his later objections are easier to follow",
+      "concedes that Henry himself has, until this moment, shared in the delegates' hopeful view of reconciliation and is only now reluctantly abandoning it"
     ],
     "answer": "A",
     "hints": [
@@ -68,10 +68,10 @@
     "passageId": "evelyn.passage.lincoln-gettysburg.v1",
     "problemText": "Lincoln closes, \"that government of the people, by the people, for the people, shall not perish from the earth.\" As a conclusion, this closing line primarily —",
     "choices": [
-      "resolves a specific factual question about the exact number of soldiers who died at Gettysburg",
-      "redirects listeners away from the war entirely toward a discussion of postwar reconstruction policy",
-      "universalizes the sacrifice at this one battlefield into a stake in the survival of self-government everywhere, rather than merely closing out a funeral tribute",
-      "restates, without elaboration, the same idea already fully explained in the speech's opening sentence"
+      "resolves a specific factual question about the exact number of soldiers who died at Gettysburg, giving the audience a precise toll to remember the battle by",
+      "redirects listeners away from the war entirely toward a discussion of postwar reconstruction policy and the terms on which the South would rejoin the Union",
+      "universalizes the sacrifice at this one battlefield into a stake in the survival of self-government everywhere, rather than merely closing a funeral tribute",
+      "restates, without elaboration, the same idea already fully explained in the speech's opening sentence, simply repeating it so the audience will remember it"
     ],
     "answer": "C",
     "hints": [
@@ -128,10 +128,10 @@
     "passageId": "evelyn.passage.swift-modest-proposal.v1",
     "problemText": "Swift calls a year-old child \"a most delicious nourishing and wholesome food.\" Applied to this subject, this diction most clearly produces which effect?",
     "choices": [
-      "a sincere culinary review, meant literally as helpful advice for parents seeking better nutrition",
-      "an earnest, appreciative tone that signals Swift's genuine approval of the practice he is describing",
-      "an ironic clash between calm, appetizing word choice and a monstrous subject, forcing the reader to supply the horror the flat tone withholds",
-      "a neutral scientific description meant only to establish the nutritional content of the meat in question"
+      "a sincere culinary review, meant literally as helpful advice for parents seeking better and cheaper nutrition for their households",
+      "an earnest, appreciative tone that signals Swift's genuine approval of the practice he is describing as a sensible remedy for Ireland's poor",
+      "an ironic clash between calm, appetizing word choice and a monstrous subject, forcing the reader to supply the horror the tone withholds",
+      "a neutral scientific description meant only to establish the nutritional content of the meat in question for a learned audience"
     ],
     "answer": "C",
     "hints": [
@@ -168,10 +168,10 @@
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
     "problemText": "Douglass first says, \"Would to God, both for your sakes and ours, that an affirmative answer could be truthfully returned to these questions!\" and later declares, \"This Fourth of July is yours, not mine.\" How do these two moments connect in Douglass's line of reasoning?",
     "choices": [
-      "The first flatly contradicts the second, so the two statements cancel each other out and reveal a real inconsistency in the argument",
-      "The first and second are unrelated observations about two entirely separate topics, connected only by their shared location in the speech",
-      "The first restates a fact already proven earlier, and the second merely repeats that same fact in different words",
-      "The first briefly concedes what Douglass wishes were true, so that the second statement can turn against that wish and expose it as false, sharpening the accusation that follows"
+      "The first flatly contradicts the second, so the two statements cancel each other out and reveal a real inconsistency that weakens Douglass's argument from that point on",
+      "The first and second are unrelated observations about two entirely separate topics, connected only by their shared location in the speech and its holiday setting",
+      "The first restates a fact already proven earlier in the speech, and the second merely repeats that same fact in different words for emphasis",
+      "The first concedes what Douglass wishes were true, so that the second can turn against that wish and expose it as false, sharpening the accusation that follows"
     ],
     "answer": "D",
     "hints": [
@@ -188,10 +188,10 @@
     "passageId": "evelyn.passage.lincoln-gettysburg.v1",
     "problemText": "Lincoln moves through three claims: the dead \"have consecrated\" the ground; therefore \"it is for us the living... to be dedicated... to the unfinished work\"; so that the nation \"shall have a new birth of freedom.\" How do these three stages connect in Lincoln's line of reasoning?",
     "choices": [
-      "Each stage restates the one before it in different words, so the passage is a single claim repeated three times rather than an actual chain",
-      "The soldiers' sacrifice already accomplished something words cannot (stage one); that fact obligates the living to finish their unfinished work (stage two); completing that work is what will produce a \"new birth of freedom\" (stage three) — each stage depends on the one before it",
-      "The three moments describe three unrelated audiences — the dead, the living delegates, and a future generation not yet born — with no logical connection between them",
-      "The passage abandons its claim about consecration and instead pivots to an entirely new argument about upcoming elections"
+      "Each stage restates the one before it in different words, so the passage is a single claim about honoring the dead repeated three times for emphasis rather than an actual chain of reasoning",
+      "The soldiers' sacrifice accomplished what words cannot (stage one); that fact obligates the living to finish the unfinished work (stage two); completing it will produce a \"new birth of freedom\" (stage three) — each stage depends on the one before",
+      "The three moments describe three unrelated audiences — the dead, the living delegates, and a future generation not yet born — with no logical connection between them beyond their shared place in the speech's closing passage, which Lincoln delivered to a mixed crowd",
+      "The passage abandons its claim about consecration and instead pivots to an entirely new argument about the upcoming elections, using the dead only as an opening appeal to the crowd's emotions before turning to politics"
     ],
     "answer": "B",
     "hints": [
@@ -228,10 +228,10 @@
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
     "problemText": "In the line \"The blessings in which you, this day, rejoice, are not enjoyed in common,\" Douglass develops his claim primarily through which method — and to what end?",
     "choices": [
-      "definition — formally defining what qualifies as a national holiday under the era's own prevailing law and custom",
-      "narration — recounting, in strict chronological order, each specific event of the day's festivities as they unfolded",
+      "definition — formally defining what qualifies as a national holiday under the era's own prevailing law and custom, so the audience agrees on terms first",
+      "narration — recounting, in strict chronological order, each specific event of the day's festivities as they unfolded, from the morning parade to the evening speeches",
       "comparison-contrast — measuring the audience's shared \"blessings\" against the speaker's exclusion from them, splitting the day's meaning by who is included",
-      "exemplification — offering an isolated real-world case study drawn from just one enslaved family's own personal history"
+      "exemplification — offering an isolated real-world case study drawn from just one enslaved family's own personal history to stand in for the experience of a nation"
     ],
     "answer": "C",
     "hints": [

@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "Chlorofluorocarbons (CFCs) were widely used as refrigerants and aerosol propellants. How do CFCs damage the stratospheric ozone layer?",
     "choices": [
-      "CFCs absorb UV-A radiation and convert it to heat, directly warming the ozone layer",
-      "CFCs react directly and irreversibly with each O3 molecule in a one-to-one reaction",
-      "CFCs release free chlorine atoms when exposed to UV radiation; each chlorine atom acts as a catalyst that can destroy thousands of ozone molecules",
-      "CFCs elevate stratospheric nitrogen oxide concentrations, which then break down O3"
+      "CFCs absorb UV-A radiation and convert it to heat, directly warming the ozone layer until the O3 molecules break apart",
+      "CFCs react directly and irreversibly with each O3 molecule in a one-to-one reaction, using up one CFC for every ozone destroyed",
+      "CFCs release chlorine atoms under UV radiation; each chlorine atom acts as a catalyst that can destroy thousands of ozone molecules",
+      "CFCs elevate stratospheric nitrogen oxide concentrations, which then break down O3 molecules in a slow chain of reactions"
     ],
     "answer": "C",
     "hints": ["Focus on the catalytic nature of the destruction — one Cl atom can react many times before being deactivated."]
@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "Satellite measurements show that the Antarctic ozone hole reaches its greatest extent each September and October rather than persisting as a year-round phenomenon. Which explanation best accounts for this seasonal pattern?",
     "choices": [
-      "The polar vortex isolates stratospheric air over Antarctica during winter; polar stratospheric clouds (PSCs) form in the extreme cold and provide surfaces for reactions that activate chlorine, which then rapidly catalyzes ozone destruction when spring sunlight returns",
-      "Antarctic sunlight peaks in October, maximizing direct UV photolysis of O3 molecules",
-      "Subglacial volcanic eruptions release SO2 during winter that accumulates and reacts with ozone when spring temperatures rise",
-      "CFCs are carried to Antarctica by winter storm systems and reach peak stratospheric concentration in September"
+      "The winter polar vortex isolates Antarctic air; polar stratospheric clouds form in the extreme cold and activate chlorine, which rapidly destroys ozone once spring sunlight returns",
+      "Antarctic sunlight peaks in October, maximizing direct UV photolysis of O3 molecules before the long polar summer daylight allows the ozone layer to rebuild itself",
+      "Subglacial volcanic eruptions release SO2 during winter that accumulates beneath the stratospheric vortex and reacts with ozone when spring temperatures begin to rise",
+      "CFCs are carried to Antarctica by winter storm systems and reach peak stratospheric concentration in September, then disperse northward toward the mid-latitudes over the course of the summer"
     ],
     "answer": "A",
     "hints": [
@@ -74,10 +74,10 @@
     "responseFormat": "mcq",
     "problemText": "The Montreal Protocol (1987) is widely regarded as one of the most successful international environmental agreements. What was its primary mechanism for protecting stratospheric ozone?",
     "choices": [
-      "It required developing nations to phase out all industrial activity associated with CFC use within 20 years",
-      "It established a global carbon tax on fossil-fuel combustion to reduce industrial demand for CFC refrigerants",
-      "It mandated installation of UV-filtering glass on all new commercial buildings worldwide",
-      "It set legally binding targets for signatory nations to phase out the production and consumption of ozone-depleting substances, including CFCs and HCFCs"
+      "It required developing nations to phase out all industrial activity associated with CFC use within 20 years, while exempting wealthy nations",
+      "It established a global carbon tax on fossil-fuel combustion to reduce industrial demand for CFC refrigerants and aerosol propellants",
+      "It mandated installation of UV-filtering glass on all new commercial buildings worldwide to protect occupants from the thinning ozone",
+      "It set legally binding targets for nations to phase out production and consumption of ozone-depleting substances such as CFCs and HCFCs"
     ],
     "answer": "D",
     "hints": ["The protocol targeted the specific substances causing depletion, not broader energy policy."]
@@ -90,10 +90,10 @@
     "responseFormat": "mcq",
     "problemText": "Even if all production of ozone-depleting substances were halted today, scientists predict that stratospheric ozone concentrations would not return to pre-1980 levels for several more decades. Which factor most directly explains this long recovery time?",
     "choices": [
-      "The ozone hole has become a self-sustaining atmospheric feature that no longer depends on CFC concentration",
-      "CFCs already emitted have atmospheric lifetimes of decades to over a century, so chlorine atoms will continue to reach the stratosphere for years; additionally, each free Cl atom acts as a catalyst and destroys many ozone molecules before being permanently deactivated",
-      "UV radiation continually photo-dissociates newly formed O3 faster than the ozone layer can rebuild",
-      "Oxygen released from tropical forest photosynthesis reacts with residual stratospheric ozone"
+      "The ozone hole has become a self-sustaining atmospheric feature that no longer depends on CFC concentration, so it persists even as chlorine levels fall",
+      "Emitted CFCs persist for decades to over a century, so chlorine keeps reaching the stratosphere, where each Cl atom catalytically destroys many ozone molecules",
+      "UV radiation continually photo-dissociates newly formed O3 faster than the ozone layer can rebuild, so each year's partial recovery is cancelled out the next summer",
+      "Oxygen released from tropical forest photosynthesis rises into the stratosphere and reacts with residual ozone, steadily consuming it faster than it can reform"
     ],
     "answer": "B",
     "hints": [
@@ -125,10 +125,10 @@
     "responseFormat": "mcq",
     "problemText": "Methane (CH4) has a 100-year Global Warming Potential (GWP) of approximately 28. Which statement correctly interprets this value?",
     "choices": [
-      "One kilogram of methane traps approximately 28 times as much heat as one kilogram of CO2 over a 100-year period",
-      "Methane is 28 times more abundant in the atmosphere than CO2 on a mass basis",
-      "Methane persists in the atmosphere 28 times longer than CO2 does",
-      "Methane produces only 28 percent as much warming per molecule as CO2 does"
+      "One kilogram of methane traps about 28 times as much heat as one kilogram of CO2 over 100 years",
+      "Methane is 28 times more abundant in the atmosphere than CO2 when both are measured on a mass basis",
+      "Methane persists in the atmosphere 28 times longer than CO2 does before being broken down",
+      "Methane produces only 28 percent as much warming per molecule as CO2 does over a century"
     ],
     "answer": "A",
     "hints": ["GWP is always expressed relative to CO2 = 1 and measures heat-trapping ability per unit mass over a defined time horizon."]
@@ -202,10 +202,10 @@
     "responseFormat": "mcq",
     "problemText": "Ocean acidification is caused primarily by which of the following processes?",
     "choices": [
-      "Acid rain falling directly into the ocean at high latitudes",
-      "Agricultural fertilizer runoff introducing nitrates into coastal waters",
-      "Increased UV-B radiation breaking down carbonate minerals at the ocean surface",
-      "Oceans absorbing excess atmospheric CO2, which reacts with seawater to produce carbonic acid (H2CO3)"
+      "Acid rain falling directly into the ocean at high latitudes where storms are frequent",
+      "Agricultural fertilizer runoff introducing nitrates and phosphates into coastal waters",
+      "Increased UV-B radiation breaking down carbonate minerals at the ocean surface and releasing acid",
+      "Oceans absorbing excess atmospheric CO2, which reacts with seawater to form carbonic acid (H2CO3)"
     ],
     "answer": "D",
     "hints": ["The ocean absorbs roughly 25 to 30 percent of all CO2 emitted by human activities."]
@@ -218,10 +218,10 @@
     "responseFormat": "mcq",
     "problemText": "Coral bleaching events have increased in frequency as ocean temperatures rise. Which biological mechanism directly causes coral bleaching?",
     "choices": [
-      "Elevated UV-B radiation directly bleaches the pigment molecules in coral tissue",
-      "Thermal stress causes corals to expel their symbiotic photosynthetic algae (zooxanthellae), removing the corals' primary food source and revealing the white calcium carbonate skeleton",
-      "Warmer water reduces dissolved oxygen below the minimum threshold required for coral respiration",
-      "Increased dissolved CO2 is directly toxic to coral polyps at elevated concentrations"
+      "Elevated UV-B radiation directly bleaches the pigment molecules in coral tissue, turning the polyps white within hours of exposure",
+      "Thermal stress causes corals to expel their symbiotic algae (zooxanthellae), losing their main food source and revealing the white calcium carbonate skeleton",
+      "Warmer water reduces dissolved oxygen below the minimum threshold required for coral respiration, so the polyps suffocate and lose their color",
+      "Increased dissolved CO2 is directly toxic to coral polyps at elevated concentrations, killing the living tissue and exposing the pale calcium skeleton beneath"
     ],
     "answer": "B",
     "hints": ["The color in healthy corals comes from the zooxanthellae living inside the coral tissue, not from the coral itself."]
@@ -250,10 +250,10 @@
     "responseFormat": "mcq",
     "problemText": "When atmospheric CO2 dissolves in seawater it reacts with water to form carbonic acid, releasing hydrogen ions (H+) and lowering pH. This process also reduces the concentration of carbonate ions (CO3 2-). Which group of marine organisms is most directly threatened by reduced carbonate ion availability?",
     "choices": [
-      "Calcifying organisms — such as oysters, sea urchins, and reef-building corals — that rely on dissolved carbonate ions to precipitate calcium carbonate (CaCO3) for shells and skeletons",
-      "Pelagic fish, because carbonate ions directly regulate osmotic pressure across gill membranes",
-      "Photosynthetic phytoplankton, which require carbonate ions as electron donors in the light-independent reactions of photosynthesis",
-      "Marine mammals, because reduced carbonate concentration impairs the transmission of echolocation signals through water"
+      "Calcifying organisms — such as oysters, sea urchins, and reef-building corals — that use carbonate ions to build calcium carbonate (CaCO3) shells and skeletons",
+      "Pelagic fish, because carbonate ions directly regulate osmotic pressure across gill membranes, and their loss disrupts the fish's salt balance",
+      "Photosynthetic phytoplankton, which require carbonate ions as electron donors in the light-independent reactions of photosynthesis to fix carbon",
+      "Marine mammals, because reduced carbonate concentration impairs the transmission of echolocation signals through water, disrupting their hunting and navigation"
     ],
     "answer": "A",
     "hints": ["Think about which organisms build hard structures from calcium carbonate and what chemical building blocks they need."]
@@ -276,10 +276,10 @@
     "responseFormat": "mcq",
     "problemText": "Oceanographers are concerned that continued warming and increased freshwater input from melting Greenland ice could weaken the Atlantic Meridional Overturning Circulation (AMOC). If AMOC were to slow significantly, which combination of regional effects would most likely result?",
     "choices": [
-      "Global ocean temperatures would equilibrate toward a uniform value, reducing existing regional climate differences",
-      "Antarctic ice sheets would melt faster as deep-water warming in the South Atlantic intensified",
-      "Northern Europe would experience significant cooling while tropical Atlantic surface waters warmed, and sea levels along the U.S. East Coast could rise due to reduced northward water transport",
-      "Tropical coral reefs would benefit from cooler upwelling waters replacing warm surface water across equatorial regions"
+      "Global ocean temperatures would equilibrate toward a uniform value, reducing existing regional climate differences between the poles and the tropics",
+      "Antarctic ice sheets would melt faster as deep-water warming in the South Atlantic intensified, raising sea levels most sharply around southern Africa",
+      "Northern Europe would cool while tropical Atlantic surface waters warmed, and sea levels along the U.S. East Coast could rise as northward water transport weakened",
+      "Tropical coral reefs would benefit from cooler upwelling waters replacing warm surface water across equatorial regions, sharply lowering bleaching risk across the Atlantic"
     ],
     "answer": "C",
     "hints": [
@@ -311,10 +311,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following scenarios best illustrates an invasive species causing biodiversity loss?",
     "choices": [
-      "Burmese pythons released in southern Florida have established a breeding population that has dramatically reduced native mammal and bird populations through predation",
-      "A local deer population increases after hunters remove most of its wolf predators from the region",
-      "A migratory songbird returns each spring to the same woodland where it nested the previous year",
-      "A drought-tolerant native shrub expands its range northward during an unusually dry decade"
+      "Burmese pythons released in southern Florida have established a breeding population that sharply reduced native mammals and birds",
+      "A local deer population increases after hunters remove most of its wolf predators, and the deer then overbrowse the native understory shrubs",
+      "A migratory songbird returns each spring to the same woodland where it nested the previous year, competing with resident birds",
+      "A drought-tolerant native shrub expands its range northward during an unusually dry decade, displacing some local grasses"
     ],
     "answer": "A",
     "hints": ["An invasive species is non-native, establishes a self-sustaining population, and causes ecological harm in its introduced range."]
@@ -327,10 +327,10 @@
     "responseFormat": "mcq",
     "problemText": "Habitat fragmentation typically leads to long-term reductions in biodiversity in the affected landscape. Which mechanism best explains this outcome?",
     "choices": [
-      "Fragmented habitats always have a greater edge-to-interior ratio, which uniformly increases species richness throughout every fragment",
-      "Fragmentation primarily raises competition with invasive species in coastal wetland habitats",
-      "Forest fragmentation increases local precipitation, altering the hydrology of remaining patches in unpredictable ways",
-      "Small, isolated habitat patches support smaller populations with reduced genetic diversity, limited immigration from neighboring patches, and higher vulnerability to local extinction after disturbances"
+      "Fragmented habitats always have a greater edge-to-interior ratio, which uniformly increases species richness throughout every remaining fragment",
+      "Fragmentation primarily raises competition with invasive species in coastal wetland habitats near developed shorelines",
+      "Forest fragmentation increases local precipitation, altering the hydrology of remaining patches in unpredictable and damaging ways",
+      "Small, isolated patches hold smaller populations with less genetic diversity and little immigration, making local extinction more likely"
     ],
     "answer": "D",
     "hints": ["Think about how isolation affects population size and the ability of a species to recolonize a patch after a local extinction event."]
@@ -359,10 +359,10 @@
     "responseFormat": "mcq",
     "problemText": "CITES (the Convention on International Trade in Endangered Species of Wild Fauna and Flora) reduces biodiversity loss primarily through which mechanism?",
     "choices": [
-      "Providing direct financial grants for habitat restoration projects in biodiversity hotspot countries",
-      "Regulating and monitoring international trade in wild animals and plants, and restricting or banning trade in species threatened by overexploitation",
-      "Setting binding national caps on greenhouse gas emissions to slow climate-driven habitat loss",
-      "Establishing marine protected areas beyond national jurisdiction in international waters"
+      "Providing direct financial grants for habitat restoration projects in biodiversity hotspot countries with high endemism",
+      "Regulating international trade in wild animals and plants, restricting or banning trade in species threatened by overexploitation",
+      "Setting binding national caps on greenhouse gas emissions to slow climate-driven habitat loss in vulnerable ecosystems",
+      "Establishing marine protected areas beyond national jurisdiction in international waters to shelter overexploited marine fish species"
     ],
     "answer": "B",
     "hints": ["The 'T' in CITES stands for Trade — the convention directly targets the commercial international wildlife trade as a driver of species decline."]
@@ -375,10 +375,10 @@
     "responseFormat": "mcq",
     "problemText": "By the 1990s the Florida panther population had declined to roughly 30 individuals and showed severe inbreeding depression — including low sperm viability, kinked tails, and heart defects. Biologists introduced 8 Texas pumas (a closely related subspecies) into the Florida population. Within a decade, population size roughly doubled and the frequency of genetic defects fell sharply. This conservation intervention is best classified as:",
     "choices": [
-      "Ex situ conservation — removing threatened individuals to a captive breeding facility to protect them from habitat threats",
-      "Rewilding — reintroducing an apex predator to restore trophic cascades in a degraded ecosystem",
-      "Habitat corridor creation — physically connecting fragmented patches to allow natural dispersal of individuals",
-      "Assisted gene flow (genetic rescue) — deliberately introducing individuals from a related population to restore lost genetic diversity and reverse inbreeding depression in an isolated group"
+      "Ex situ conservation — removing threatened individuals to a captive breeding facility to protect them from ongoing habitat threats in the wild",
+      "Rewilding — reintroducing an apex predator to restore trophic cascades and natural prey regulation in a degraded ecosystem",
+      "Habitat corridor creation — physically connecting fragmented patches of habitat to allow the natural dispersal of individuals between isolated groups",
+      "Assisted gene flow (genetic rescue) — introducing individuals from a related population to restore genetic diversity and reverse inbreeding depression"
     ],
     "answer": "D",
     "hints": [

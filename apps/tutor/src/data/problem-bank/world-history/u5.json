@@ -17,7 +17,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Students often confuse the medieval Empire of Ghana (roughly 700 to 1200) with the modern nation that carries the same name. Which statement about the empire is accurate?",
-    "choices": ["It occupied the same Atlantic coastal territory as the modern country of Ghana", "It was founded by the modern country of Ghana after that country gained independence in 1957", "It stood in the Sahel, in the region of present-day Mali and Mauritania; the modern nation adopted the old name in 1957 as an honor", "It was a North African state that controlled the Mediterranean end of the caravan routes"],
+    "choices": ["It occupied the same Atlantic coastal territory as the modern country of Ghana, trading gold directly with ships from Europe", "It was founded by the modern country of Ghana after that country gained independence in 1957, as a federation of its northern provinces", "It stood in the Sahel, in the region of present-day Mali and Mauritania; the modern nation adopted the old name in 1957 as an honor", "It was a North African state that controlled the Mediterranean end of the caravan routes from its capital on the coast of Morocco"],
     "answer": "C",
     "hints": ["The empire sat where the goldfields met the desert crossings — the modern nation lies hundreds of miles away on the Atlantic coast."]
   },
@@ -28,7 +28,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "West African societies trained specialists who memorized genealogies, praise songs, and long epics such as the story of Sundiata, passing them down across generations and being held to accuracy by their communities. Who were these specialists?",
-    "choices": ["Askias — provincial governors who compiled the empire's written tax records", "Griots — trained professional oral historians whose accounts historians cross-check against written sources such as the traveler Ibn Battuta", "Ulama — North African judges who composed West African history from Cairo", "Missionaries — European visitors who first wrote down the region's traditions in the 1800s"],
+    "choices": ["Askias — provincial governors who compiled the empire's written tax records and recited them aloud at court festivals", "Griots — trained professional oral historians whose accounts historians cross-check against written sources such as Ibn Battuta", "Ulama — North African judges who composed West African history from Cairo, using reports brought back by pilgrims", "Missionaries — European visitors who first wrote down the region's traditions in the 1800s and taught them in mission schools"],
     "answer": "B",
     "hints": ["The record was carried in trained memory, not on paper — and 'oral' does not mean 'unchecked.'"]
   },
@@ -50,7 +50,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Under Mali and then Songhai, Timbuktu supported mosque-schools such as Sankore, salaried teachers of law and astronomy, and large family-owned manuscript libraries; handwritten books were among the most profitable goods sold in its markets. Which relationship does this best illustrate?",
-    "choices": ["Islamic law obligated every trading city to found and fund a university", "European missionaries carried literacy into the West African interior during the 1400s", "Scholarship could take root only in cities that owned and worked their own goldfields", "Revenue from taxing long-distance trade paid for full-time scholars, schools, and a commercial market in books"],
+    "choices": ["Islamic law obligated every trading city to found and fund a university, staffed by scholars sent from Cairo", "European missionaries carried literacy into the West African interior during the 1400s, founding the first libraries", "Scholarship could take root only in cities that owned and worked their own goldfields, as Timbuktu did along the Niger", "Revenue from taxing long-distance trade paid for full-time scholars, schools, and a commercial market in books"],
     "answer": "D",
     "hints": ["Someone has to feed people who read for a living — trace where the money came from before it reached the library."]
   },
@@ -61,7 +61,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "In 1591 a Moroccan force of a few thousand men crossed the Sahara and broke a far larger Songhai army at Tondibi. At that moment Songhai still had appointed provincial governors, standardized weights, functioning trade cities, and patronage of scholarship. Which conclusion does this evidence best support?",
-    "choices": ["Songhai had already disintegrated internally, so the battle merely confirmed a collapse that was complete", "A wealthy, well-administered state can still be destroyed when an opponent arrives with a decisive weapons advantage — here, firearms and cannon", "European colonial armies had begun partitioning the West African interior by the 1590s", "The Sahara had dried out by 1591, ending caravan trade and starving the empire of revenue"],
+    "choices": ["Songhai had already disintegrated internally, so the battle merely confirmed a collapse that was complete well before the Moroccans arrived", "A wealthy, well-administered state can still be destroyed when an opponent has a decisive weapons advantage — here, firearms and cannon", "European colonial armies had begun partitioning the West African interior by the 1590s, leaving Songhai too weakened to resist Morocco", "The Sahara had dried out by 1591, ending caravan trade and starving the empire of the revenue it needed to pay its army and governors"],
     "answer": "B",
     "hints": ["Compare what each side actually brought to the field: numbers on one side, gunpowder weapons on the other.", "Test the other options against dates and evidence — European partition of the interior comes roughly three centuries later, and Songhai's administration was still operating when the invasion arrived."]
   },
@@ -83,7 +83,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Kiswahili is a Bantu language, African in its grammar and structure, that absorbed a large layer of Arabic loanwords over centuries of trade contact. What does this pattern best indicate about Swahili coast society?",
-    "choices": ["African communities took on Arabic vocabulary and Islam through long trade contact while remaining African societies", "Arab settlers replaced the coastal population and founded the port cities themselves", "Kiswahili is a dialect of Arabic that was simply written in a local script", "Arab armies conquered the coast and imposed their language on the population by decree"],
+    "choices": ["African communities took on Arabic vocabulary and Islam through long trade contact while remaining African societies", "Arab settlers replaced the coastal population and founded the port cities themselves", "Kiswahili is a dialect of Arabic that was simply written in a local script", "Arab armies conquered the coast and imposed their language on the population by decree, replacing local speech within a generation"],
     "answer": "A",
     "hints": ["Look at what the language is underneath the borrowed words — grammar changes far more slowly than vocabulary does."]
   },
@@ -94,7 +94,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Kilwa, Mombasa, Malindi, Zanzibar, and Sofala each had its own ruling family, minted or controlled its own commerce, and competed with the others for a share of the ocean trade. What political form does this describe?",
-    "choices": ["A single unified Swahili empire governed from Kilwa", "Provinces of an Arabian caliphate administered from across the sea", "Trading colonies founded and governed from Portugal", "A chain of independent city-states, each consisting of a port and the territory around it"],
+    "choices": ["A single unified Swahili empire governed from Kilwa through appointed provincial governors", "Provinces of an Arabian caliphate administered from across the sea", "Trading colonies founded and governed from Portugal through a viceroy based at Goa", "A chain of independent city-states, each consisting of a port and the territory around it"],
     "answer": "D",
     "hints": ["Ask whether any one of these towns ever gave orders to the rest."]
   },
@@ -105,7 +105,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Archaeologists have excavated Chinese porcelain and Indian glass beads at Great Zimbabwe, a stone-walled inland capital several hundred miles from the coast that flourished from about 1100 to 1450 and controlled nearby goldfields. What does this evidence best show?",
-    "choices": ["Chinese merchants traveled inland in person to trade directly at Great Zimbabwe", "Goods moved through a multi-stage relay — interior gold went out through the port of Sofala and the city-state of Kilwa, and Asian goods came back along the same chain", "Great Zimbabwe was built by Chinese sailors who settled in southern Africa", "The objects were dropped by Portuguese traders traveling inland after 1500"],
+    "choices": ["Chinese merchants traveled inland in person to trade directly at Great Zimbabwe, carrying porcelain and beads up from the coast", "Goods moved through a relay — interior gold went out through Sofala and Kilwa, and Asian goods came back along the same chain", "Great Zimbabwe was built by Chinese sailors who settled in southern Africa and brought their own porcelain and beads with them", "The objects were dropped by Portuguese traders traveling inland after 1500, long after the city had already been abandoned"],
     "answer": "B",
     "hints": ["Long-distance goods usually pass through many hands; ask whether any single traveler had to make the whole journey."]
   },
@@ -127,7 +127,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Chinese treasure fleets under the admiral Zheng He reached the Swahili coast between 1405 and 1433, after which the Ming court ended the voyages and dismantled the fleets. Portuguese ships arrived in 1498, and by 1505 were bombarding Kilwa and Mombasa and requiring other ships to buy passes. Which comparison of the two arrivals is most accurate?",
-    "choices": ["China withdrew because of a decision by its own government, while the Portuguese tried to control an existing network by force", "Portuguese warships defeated the Chinese fleets and drove them out of the Indian Ocean", "Both powers were repelled by a military alliance of the Swahili city-states", "Both arrived as ordinary peaceful traders, and neither changed how commerce in the ocean worked"],
+    "choices": ["China withdrew because of a decision by its own government, while the Portuguese tried to control an existing network by force", "Portuguese warships defeated the Chinese fleets and drove them out of the Indian Ocean, then took over the routes they had used", "Both powers were repelled by a military alliance of the Swahili city-states, which closed their harbors to foreign warships", "Both arrived as ordinary peaceful traders, and neither changed how commerce in the ocean worked or who controlled its ports"],
     "answer": "A",
     "hints": ["Compare the cause behind each event: one is a policy choice made in a distant court, the other is a deliberate military strategy.", "Check the dates before connecting them — the last treasure fleet came home in 1433, sixty-five years before any Portuguese ship reached this ocean."]
   },
@@ -138,7 +138,7 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "problemText": "The Mexica founded Tenochtitlan in 1345 on an island in a shallow lake, and by 1500 the city held roughly 200,000 people. What agricultural method did they build out into the lake bed to feed a city that size?",
-    "choices": ["Terraced stone hillsides fed by canals carrying meltwater from the mountains", "Fenced pastures supporting large herds of cattle and sheep", "Deeply plowed valley fields worked with iron plows", "Chinampas — raised, highly fertile garden plots built up from the lake bed and harvested several times a year"],
+    "choices": ["Terraced stone hillsides fed by canals carrying meltwater down from the mountains around the Valley of Mexico", "Fenced pastures supporting large herds of cattle and sheep that grazed on drained marshland beside the lake", "Deeply plowed valley fields worked with iron plows drawn by teams of draft animals", "Chinampas — raised, fertile garden plots built up from the lake bed and harvested several times a year"],
     "answer": "D",
     "hints": ["Three of these depend on animals or metals that did not exist in Mesoamerica before 1492 — and the Mexica engineered their site rather than finding a good one."]
   },
@@ -160,7 +160,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Maya scribes wrote numbers in a positional system built on a base of twenty that included a symbol for zero, and used it to track the solar year, a 260-day ritual calendar, and the cycles of Venus. What does this best demonstrate?",
-    "choices": ["The Maya learned place-value notation and the concept of zero from Indian mathematicians", "The Maya developed place-value notation with zero on their own and applied it to precise astronomical timekeeping", "Maya numerals could express quantities but were never used to record dates", "The Maya counted in the same base of ten used around the Mediterranean"],
+    "choices": ["The Maya learned place-value notation and the concept of zero from Indian mathematicians through long-distance trade", "The Maya developed place-value notation with zero on their own and applied it to precise astronomical timekeeping", "Maya numerals could express quantities but were never used to record dates, which priests kept in memory instead", "The Maya counted in the same base of ten used around the Mediterranean, adding a zero sign later for their calendars"],
     "answer": "B",
     "hints": ["Zero was invented more than once in human history; compare the counting base of each system before assuming one was copied."]
   },
@@ -171,7 +171,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "After 1428 the Mexica and their allies conquered widely but generally left defeated city-states with their own rulers, gods, and soldiers, demanding only regular payments of cloth, cacao, food, labor, and captives. What was a predictable consequence of governing this way?",
-    "choices": ["Conquered peoples were steadily absorbed into Mexica identity and lost their own leadership", "The empire was forced to station large permanent garrisons in every town it defeated", "Subject peoples stayed organized and armed, so resentment could turn into rebellion or into alliance with an outside challenger", "Tribute demands were so light that subject states barely noticed they were ruled at all"],
+    "choices": ["Conquered peoples were steadily absorbed into Mexica identity and lost their own leadership within a generation or two", "The empire was forced to station large permanent garrisons in every town it defeated so that the tribute owed could be collected", "Subject peoples stayed organized and armed, so resentment could turn into rebellion or into alliance with an outside challenger", "Tribute demands were so light that subject states barely noticed they were ruled at all and remained willing, loyal allies"],
     "answer": "C",
     "hints": ["Cheap rule buys its savings with a trade-off — ask what this system never took away from the peoples it defeated."]
   },
@@ -182,7 +182,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Between roughly 800 and 900, the great Maya cities of the southern lowlands stopped raising dated monuments and lost their populations, while northern centers such as Chichen Itza rose to prominence afterward; today about six to seven million Maya people live in Guatemala, southern Mexico, Belize, and Honduras. Which statement best describes what happened?",
-    "choices": ["A specific set of southern cities was abandoned amid drought, warfare, and strain on thin tropical soils, while Maya society continued elsewhere", "The Maya people disappeared entirely and left no descendants", "The Aztec Empire conquered the Maya and scattered the survivors", "A single volcanic eruption destroyed every Maya settlement at once"],
+    "choices": ["A specific set of southern cities was abandoned amid drought, warfare, and strained soils, while Maya society continued elsewhere", "The Maya people disappeared entirely and left no descendants after their cities were emptied by disease and famine around 900", "The Aztec Empire conquered the Maya and scattered the survivors across central Mexico as tribute-paying laborers", "A single volcanic eruption destroyed every Maya settlement at once, burying the southern cities under deep layers of volcanic ash and lava"],
     "answer": "A",
     "hints": ["Ask precisely which places and which century the evidence covers — 'the civilization vanished' is a far larger claim than the record supports."]
   },
@@ -193,7 +193,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A student argues that Mesoamerican pyramids, writing, and the symbol for zero must have been taught to the Maya by visitors from Egypt or Asia. Which piece of evidence most directly undermines that argument?",
-    "choices": ["Some Mesoamerican pyramids cover a larger area at the base than Egyptian pyramids do", "Maya glyphs share no signs or structure with Egyptian hieroglyphs, and Maya arithmetic runs on a base of twenty while Old World systems used ten or sixty", "The Maya and the Egyptians lived in very different climates", "Maya cities were built many centuries later than the Egyptian pyramids"],
+    "choices": ["Some Mesoamerican pyramids cover a larger area at the base than Egyptian pyramids do, showing that the builders had surpassed their teachers", "Maya glyphs share no signs or structure with Egyptian hieroglyphs, and Maya arithmetic uses base twenty, unlike Old World base ten or sixty", "The Maya and the Egyptians lived in very different climates, so their farming methods and building materials had to differ", "Maya cities were built many centuries later than the Egyptian pyramids, leaving ample time for knowledge to cross the ocean"],
     "answer": "B",
     "hints": ["Similar problems can produce similar-looking solutions independently; look for details that a borrowed system would have had to carry along with it.", "If one system had been copied from the other, the signs and the counting base would match — compare those two things directly."]
   },
@@ -237,7 +237,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "An Andean community under Inca rule holds maize fields in a warm valley, potato fields up near the frost line, and llama herds higher still — all at the same time. What problem does this arrangement solve?",
-    "choices": ["It exempted the community from owing labor service to the state", "It concentrated all farming into one climate so that every harvest came in at the same time", "It let the community raise cattle and sheep alongside its crops", "It spread production across several climates at once, so a single frost or drought could not wipe out the whole food supply"],
+    "choices": ["It exempted the community from owing labor service to the state, since farming in several zones was counted as tribute in itself", "It concentrated all farming into one climate so that every harvest came in at the same time and could be stored together in one place", "It let the community raise cattle and sheep alongside its crops, using the high pastures for herds of European livestock", "It spread production across several climates at once, so a single frost or drought could not wipe out the whole food supply"],
     "answer": "D",
     "hints": ["Andean geography stacks climates on top of one another — ask what holding several of them at once protects a village against."]
   },
@@ -259,7 +259,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "The Inca governed roughly ten million people from Cusco using appointed officials, mandatory resettlement, and a labor tax. The Haudenosaunee Confederacy bound five nations under the Great Law of Peace: a shared council settled common matters by consensus while each nation ran its own internal affairs, and clan mothers chose and could remove the chiefs. Which comparison of the two is most accurate?",
-    "choices": ["Neither counts as real government, because neither one recorded its laws in writing", "Both placed final authority in the hands of a single hereditary ruler", "Both were durable political orders uniting many communities, but the Inca concentrated authority at the center while the Haudenosaunee distributed it among member nations", "The Haudenosaunee modeled their council on Inca administration after contact between the two"],
+    "choices": ["Neither counts as real government, because neither one recorded its laws in writing, so both relied entirely on custom and personal loyalty", "Both placed final authority in the hands of a single hereditary ruler, the Sapa Inca in Cusco and the head chief who presided over the Haudenosaunee council", "Both were durable political orders uniting many communities, but the Inca centralized authority while the Haudenosaunee distributed it among member nations", "The Haudenosaunee modeled their council on Inca administration after contact between the two, adopting its appointed officials and labor tax"],
     "answer": "C",
     "hints": ["Both are answers to the same question — how do many communities act as one? — so ask where each of them puts the final say.", "One commands from a center, the other negotiates among equals; neither the absence of writing nor the absence of a monarch means the absence of government."]
   }

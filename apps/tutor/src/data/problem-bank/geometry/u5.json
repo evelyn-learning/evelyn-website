@@ -133,10 +133,10 @@
     "responseFormat": "mcq",
     "problemText": "In triangles ABC and DEF: AB ≅ DE, BC ≅ EF, and ∠A ≅ ∠D. Which criterion proves the triangles congruent?",
     "choices": [
-      "SAS, because two sides and an angle are given",
-      "SSS, because the third pair of sides must match automatically",
-      "AAS, because the given angle is not between the given sides",
-      "None of these — ∠A is not included between AB and BC, so the pattern is SSA, which can close into two different triangles"
+      "SAS, because two sides and an angle are given, which is enough to fix the triangle",
+      "SSS, because the third pair of sides must match automatically once two pairs match",
+      "AAS, because the given angle is not between the given sides, so it counts as a non-included angle",
+      "No criterion applies — ∠A is not between AB and BC, so this is SSA, which can give two triangles"
     ],
     "answer": "D",
     "hints": [
@@ -152,10 +152,10 @@
     "responseFormat": "mcq",
     "problemText": "In triangles ABC and DEF you already know that ∠A ≅ ∠D and ∠B ≅ ∠E. Which single additional fact would prove △ABC ≅ △DEF?",
     "choices": [
-      "∠C ≅ ∠F",
+      "∠C ≅ ∠F, the third pair of angles in the two triangles",
       "AB ≅ DE, the side joining the two given angle vertices",
-      "Both triangles are isosceles",
-      "Both triangles contain a 90° angle"
+      "Both triangles are isosceles, with equal base angles at A and B",
+      "Both triangles contain a 90° angle at the third vertex, C and F"
     ],
     "answer": "B",
     "hints": [
@@ -198,7 +198,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "In a proof, one line states that ray BD bisects ∠ABC, and the next line states ∠ABD ≅ ∠DBC. Which reason belongs on that next line?",
-    "choices": ["Definition of angle bisector", "Definition of midpoint", "CPCTC", "Reflexive Property"],
+    "choices": ["Definition of angle bisector", "Definition of midpoint", "CPCTC (corresponding parts)", "Reflexive Property of Congruence"],
     "answer": "A",
     "hints": [
       "Ask what the word 'bisects' guarantees on its own, before any triangles are compared.",

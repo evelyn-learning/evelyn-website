@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "Integrated Pest Management (IPM) differs from conventional pesticide-only programs primarily because IPM:",
     "choices": [
-      "Schedules pesticide applications at fixed calendar intervals to prevent outbreaks before they can occur",
-      "Relies exclusively on genetically modified crop varieties engineered to resist all major pest species",
-      "Combines biological, cultural, mechanical, and chemical controls, applying pesticides only when pest populations exceed an economic threshold",
-      "Aims to eradicate pest populations entirely rather than managing them at economically acceptable levels"
+      "Schedules pesticide applications at fixed calendar intervals to prevent outbreaks before pest populations can begin to build",
+      "Relies exclusively on genetically modified crop varieties engineered to resist all major pest species, eliminating any spraying",
+      "Combines biological, cultural, mechanical, and chemical controls, using pesticides only when pests exceed an economic threshold",
+      "Aims to eradicate pest populations entirely rather than managing them at economically acceptable levels on the farm"
     ],
     "answer": "C",
     "hints": ["IPM uses monitoring and an economic threshold — chemical control is the last resort, not the first."]
@@ -104,9 +104,9 @@
     "problemText": "The \"tragedy of the commons\" describes a situation in which:",
     "choices": [
       "A government monopolizes a shared resource so completely that private users are excluded from it",
-      "Individual resource users, each acting rationally in their own self-interest, collectively overexploit a shared resource until it is degraded or depleted",
+      "Individual users, each acting rationally in their own self-interest, collectively overexploit a shared resource until it is degraded",
       "Common-pool resources remain sustainable because each user voluntarily restrains their own harvest",
-      "A multinational corporation purchases exclusive rights to a public resource and restricts access to increase scarcity"
+      "A multinational corporation purchases exclusive rights to a public resource and restricts access to increase its scarcity and price"
     ],
     "answer": "B",
     "hints": ["Garrett Hardin described individual herdsmen adding cattle to a shared pasture — each gains, but all eventually lose."]
@@ -119,10 +119,10 @@
     "responseFormat": "mcq",
     "problemText": "In commercial fishing, the term \"bycatch\" refers to:",
     "choices": [
-      "Fish harvested legally in international waters beyond a nation's exclusive economic zone",
-      "The portion of a catch sold below market value because individual fish are undersized",
-      "Overcapacity in a fishing fleet that allows vessels to haul more than their assigned quota",
-      "Non-target organisms — including undersized fish, sea turtles, and marine mammals — inadvertently caught and typically discarded"
+      "Fish harvested legally in international waters just beyond the outer limits of a nation's exclusive economic zone",
+      "The portion of a catch sold below market value because individual fish are undersized or damaged",
+      "Overcapacity in a fishing fleet that allows vessels to haul in more fish than their assigned quota",
+      "Non-target organisms — such as sea turtles and marine mammals — caught unintentionally and typically discarded"
     ],
     "answer": "D",
     "hints": ["Bycatch is unintentional — species or sizes the fisher did not set out to catch."]
@@ -161,10 +161,10 @@
     "responseFormat": "mcq",
     "problemText": "An Exclusive Economic Zone (EEZ) extending 200 nautical miles from a nation's coastline primarily serves to:",
     "choices": [
-      "Designate a no-take marine protected area where all extraction activities are permanently banned",
-      "Allow all foreign vessels to fish freely within the zone in exchange for a licensing fee",
-      "Distribute marine resources equally among all neighboring coastal states through binding treaty",
-      "Grant the coastal nation sovereign rights to manage and exploit marine resources within the zone, including the authority to set catch limits"
+      "Designate a no-take marine protected area in which all fishing, mining, and other extraction activities are permanently banned",
+      "Allow all foreign vessels to fish freely within the zone in exchange for paying the coastal nation a licensing fee",
+      "Distribute marine resources equally among all neighboring coastal states through a binding regional sharing treaty",
+      "Grant the coastal nation sovereign rights to manage and exploit marine resources in the zone, including setting catch limits"
     ],
     "answer": "D",
     "hints": ["EEZs were established under UNCLOS — think about who controls access to resources in that zone."]
@@ -177,8 +177,8 @@
     "responseFormat": "mcq",
     "problemText": "A nation provides fuel and gear subsidies to its commercial fishing fleet, allowing vessels to operate profitably even when fish stocks are severely depleted. Which analysis best explains why these subsidies accelerate overfishing?",
     "choices": [
-      "By reducing operating costs below the economic break-even point, subsidies allow fleets to sustain fishing effort well beyond MSY even as falling stock densities would otherwise make fishing economically unviable",
-      "Subsidies internalize the negative externality of overfishing by requiring fleet operators to pay the true social cost of each catch",
+      "By lowering operating costs, subsidies keep fishing profitable well beyond MSY, even after falling stock densities would otherwise make it unviable",
+      "Subsidies internalize the negative externality of overfishing by requiring fleet operators to pay the true social cost of each catch they land",
       "They shift the market demand curve for fish downward, reducing consumer prices and therefore reducing the incentive to fish",
       "They function as Pigouvian taxes that correct the open-access market failure by discouraging excess entry into the fishery"
     ],
@@ -209,10 +209,10 @@
     "responseFormat": "mcq",
     "problemText": "Compared to underground (subsurface) mining, surface mining typically:",
     "choices": [
-      "Has lower worker fatality rates per ton of mineral extracted but causes substantially greater habitat loss and land-surface disturbance",
-      "Produces less land disturbance per ton of mineral because operations are confined to a single access shaft",
-      "Requires significantly more labor hours per unit of output due to the complexity of deep excavation",
-      "Is legally restricted to ore deposits no deeper than 30 meters beneath the surface"
+      "Has lower worker fatality rates per ton extracted but causes far greater habitat loss and land-surface disturbance",
+      "Produces less land disturbance per ton of mineral because operations are confined to a single access shaft and haul road",
+      "Requires significantly more labor hours per unit of output due to the complexity of deep excavation and tunnel support",
+      "Is legally restricted to ore deposits no deeper than 30 meters beneath the surface under federal mining law"
     ],
     "answer": "A",
     "hints": ["Surface mining opens entire landscapes to excavation; consider the tradeoff between worker safety below ground and surface habitat above."]
@@ -241,8 +241,8 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following best explains why selective cutting generally has fewer ecological impacts than clearcutting on the same forested area?",
     "choices": [
-      "Selective cutting maintains canopy cover, limiting soil erosion, preserving interior forest microclimate, and retaining habitat for species that cannot tolerate open-canopy conditions",
-      "Selective cutting generates higher timber revenue per hectare, giving landowners financial incentive to invest in habitat conservation programs",
+      "Selective cutting keeps canopy cover, limiting erosion, preserving interior forest microclimate, and retaining habitat for species that cannot tolerate open canopy",
+      "Selective cutting generates higher timber revenue per hectare, giving landowners a financial incentive to invest in habitat conservation and restoration programs",
       "Selective cutting eliminates the risk of wildfire because standing trees prevent the accumulation of dry slash debris on the forest floor",
       "Selective cutting produces a uniform-age stand structure that is more resistant to pest and disease outbreaks than uneven-age forests"
     ],
@@ -273,10 +273,10 @@
     "responseFormat": "mcq",
     "problemText": "The U.S. Surface Mining Control and Reclamation Act (SMCRA) requires that operators who mine coal at the surface must reclaim the disturbed land after extraction. Which of the following most accurately describes SMCRA reclamation requirements?",
     "choices": [
-      "Paying a flat fee per acre disturbed into a federal fund that purchases conservation easements on unrelated land elsewhere",
-      "Converting all former mine sites into industrial parks or residential developments within five years of mine closure",
-      "Flooding abandoned pit mines with treated wastewater to create permanent artificial reservoir systems",
-      "Restoring the land to its approximate original contour, revegetating with appropriate species, and implementing controls to prevent acid mine drainage and erosion"
+      "Paying a flat fee per acre disturbed into a federal fund that purchases conservation easements on unrelated land elsewhere in the state",
+      "Converting all former mine sites into industrial parks or residential developments within five years of mine closure to restore tax revenue",
+      "Flooding abandoned pit mines with treated wastewater to create permanent artificial reservoir systems for local water supply",
+      "Restoring the land to its approximate original contour, revegetating with suitable species, and controlling acid mine drainage and erosion"
     ],
     "answer": "D",
     "hints": ["Reclamation under SMCRA has both a landform restoration component and a biological restoration component."]
@@ -289,10 +289,10 @@
     "responseFormat": "mcq",
     "problemText": "Urban sprawl is best characterized as:",
     "choices": [
-      "High-density, walkable redevelopment of vacant lots and brownfields within existing city limits",
+      "High-density, walkable redevelopment of vacant lots and brownfields within existing city limits and older neighborhoods",
       "Construction of affordable housing in infill sites near existing transit corridors",
-      "Municipal service consolidation across adjacent jurisdictions to reduce per-capita infrastructure costs",
-      "Low-density, outward expansion of developed land into surrounding rural and natural areas, typically dependent on private automobile infrastructure"
+      "Municipal service consolidation across adjacent jurisdictions to reduce per-capita infrastructure and administrative costs",
+      "Low-density, outward expansion of developed land into surrounding rural and natural areas, typically dependent on automobiles"
     ],
     "answer": "D",
     "hints": ["Sprawl implies spreading outward — focus on the direction, density, and transportation dependency of the growth pattern."]
@@ -321,10 +321,10 @@
     "responseFormat": "mcq",
     "problemText": "The urban heat island effect is primarily caused by:",
     "choices": [
-      "Higher ground-level ozone concentrations in city air that absorb additional solar ultraviolet radiation near the surface",
-      "Dark impervious surfaces absorbing and re-emitting solar energy as heat, combined with waste heat from vehicles and buildings and reduced evapotranspiration relative to vegetated land",
+      "Higher ground-level ozone concentrations in city air that absorb additional solar ultraviolet radiation and re-radiate it as heat near the surface",
+      "Dark impervious surfaces absorbing and re-emitting solar energy as heat, plus waste heat from vehicles and buildings and reduced evapotranspiration",
       "Taller buildings that block prevailing winds and trap industrial carbon dioxide emissions at street level",
-      "Elevated particulate matter concentrations that scatter incoming solar radiation back onto city surfaces"
+      "Elevated particulate matter concentrations that scatter incoming solar radiation back down onto city streets and building surfaces"
     ],
     "answer": "B",
     "hints": ["Compare a black asphalt parking lot to a forest on a hot sunny day — both absorb sunlight, but they differ greatly in how they release that energy."]
@@ -369,10 +369,10 @@
     "responseFormat": "mcq",
     "problemText": "A coastal city's hydrological model predicts that a proposed residential development on a forested floodplain will increase peak flood flows in the adjacent river by 35% during major storm events. Which planning requirement would most effectively address this impact while still permitting some development to proceed?",
     "choices": [
-      "Requiring all new buildings to elevate their first floors at least 0.5 meters above the current 100-year flood elevation",
-      "Mandating hydrologic neutrality — the development must retain or infiltrate sufficient stormwater on-site so that post-development peak flows do not exceed pre-development levels",
-      "Replacing the on-site retention requirement with a financial fee paid into a regional flood-barrier infrastructure fund",
-      "Restricting impervious surface coverage to no more than 80 percent of the total site area"
+      "Requiring all new buildings to elevate their first floors at least 0.5 meters above the current 100-year flood elevation for the site",
+      "Mandating hydrologic neutrality — retaining or infiltrating enough stormwater on-site that post-development peak flows do not exceed pre-development levels",
+      "Replacing the on-site retention requirement with a per-unit financial fee paid into a regional flood-barrier infrastructure fund managed by the regional water authority",
+      "Restricting impervious surface coverage on the floodplain parcel to no more than 80 percent of the total site area"
     ],
     "answer": "B",
     "hints": ["The problem is a 35% increase in peak flows; the most direct fix targets peak flows explicitly, not just building elevation or surface area."]

@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "A developmental psychologist sits quietly in a park and records how often toddlers share toys with their peers, making no attempt to influence the children. This study BEST illustrates which research method?",
     "choices": [
-      "Experiment, because the researcher systematically controls the environment",
-      "Survey, because the researcher collects structured data from participants",
+      "Experiment, because the researcher systematically controls the environment in which the toddlers play together",
+      "Survey, because the researcher collects structured data from participants about their sharing habits",
       "Naturalistic observation, because the researcher records behavior in its natural setting without intervening",
-      "Case study, because the researcher focuses on a small group of individuals"
+      "Case study, because the researcher focuses in depth on a small group of individuals over time"
     ],
     "answer": "C",
     "hints": ["Think about whether the researcher is manipulating anything or simply watching."]
@@ -49,10 +49,10 @@
     "responseFormat": "mcq",
     "problemText": "Dr. Okafor randomly selects 200 high school students from a national database and then randomly assigns half to a mindfulness training program and half to a control group. How do random selection and random assignment differ in their PRIMARY purpose?",
     "choices": [
-      "Random selection allows the researcher to generalize findings to the broader population; random assignment helps ensure the two groups are equivalent at the start, reducing the influence of confounding variables",
-      "Random selection reduces confounds within the study; random assignment ensures the sample is representative of the population",
-      "Both random selection and random assignment serve the same purpose of eliminating experimenter bias",
-      "Random assignment ensures the sample represents the population; random selection controls for placebo effects"
+      "Random selection lets findings generalize to the population; random assignment helps ensure the groups start out equivalent, reducing confounding",
+      "Random selection reduces confounds within the study; random assignment ensures the sample is representative of the broader population being studied",
+      "Both random selection and random assignment serve the same purpose of eliminating experimenter bias, so using both is largely redundant",
+      "Random assignment ensures the sample represents the broader population; random selection controls for placebo effects within the two groups"
     ],
     "answer": "A",
     "hints": ["Ask yourself: which technique affects who is in the study versus which group participants end up in."]
@@ -75,9 +75,9 @@
     "responseFormat": "mcq",
     "problemText": "A researcher reports that students who participated in an after-school tutoring program scored an average of 85 on a final exam, compared to an average of 72 for students who did not participate. A critic argues that students who enrolled in the program were already more academically motivated before the program began, and that this motivation — not the tutoring itself — may explain the higher scores. The critic is identifying:",
     "choices": [
-      "A sampling error caused by failing to use random selection",
-      "An operational definition that measures motivation too broadly",
-      "A violation of informed consent in the recruitment process",
+      "A sampling error caused by failing to use random selection from the population of students",
+      "An operational definition that measures motivation too broadly to be compared across groups",
+      "A violation of informed consent in the recruitment process for the tutoring program's students",
       "A confounding variable that threatens the internal validity of the study's causal claim"
     ],
     "answer": "D",

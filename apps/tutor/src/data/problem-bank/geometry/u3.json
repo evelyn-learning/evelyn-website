@@ -167,10 +167,10 @@
     "responseFormat": "mcq",
     "problemText": "Lines m and n are cut by transversal t, with m the upper line and n the lower line. The angle above m and to the left of t measures 74°, and the angle above n and to the right of t measures 106°. Are m and n parallel, and why?",
     "choices": [
-      "Yes — by the Converse of the Corresponding Angles Postulate applied directly to the two given angles",
-      "No — the two given angles are not congruent, so no converse applies",
-      "Yes — vertical angles move the 74° measure to the interior on the right of t, and 74 + 106 = 180, so the Converse of the Same-Side Interior Angles Theorem applies",
-      "Yes — by the Converse of the Alternate Exterior Angles Theorem applied directly to the two given angles"
+      "Yes — by the Converse of the Corresponding Angles Postulate applied directly to the two given angles, which sit in matching positions",
+      "No — the two given angles are not congruent, so no converse applies and the lines must eventually meet on one side of t",
+      "Yes — vertical angles put 74° on the interior right of t, and 74 + 106 = 180, so the Converse of the Same-Side Interior Angles Theorem applies",
+      "Yes — by the Converse of the Alternate Exterior Angles Theorem applied directly to the two given angles, which lie on opposite sides of t"
     ],
     "answer": "C",
     "hints": [

@@ -27,9 +27,9 @@
     "problemText": "Claim: \"The Brookvale yearbook staff should move its senior photo deadline from October to December, because October falls in the busiest stretch of the fall sports season.\" Which evidence best supports THIS claim?",
     "choices": [
       "A club survey found that three of every four seniors who missed the October deadline named a game or a practice that same week as the reason.",
-      "Yearbook sales at Brookvale have risen for three straight years.",
-      "Most nearby schools distribute their yearbooks in May.",
-      "The yearbook staff meets twice a week in room 214."
+      "Yearbook sales at Brookvale have risen for three straight years, according to the yearbook staff's own sales records from each spring term.",
+      "Most nearby schools distribute their yearbooks in May, well after the senior photo deadlines at every one of them have passed.",
+      "The yearbook staff meets twice a week in room 214 to plan page layouts and to set the deadlines for the fall semester."
     ],
     "answer": "A",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "A proposal reads: \"The student store should stock refillable water bottles. A school survey counted more than four hundred uses of the hallway fountains on an average day.\" What reasoning is missing between the evidence and the claim?",
     "choices": [
-      "A sentence stating that this survey result proves the store needs refillable bottles",
-      "An explanation that heavy fountain use signals steady demand for a refillable bottle the store does not currently sell",
-      "A note that many schools in the area have hallway fountains",
-      "A sentence explaining that tap water is cheaper than bottled water"
+      "A sentence stating that this survey result by itself proves that the store needs to stock refillable bottles",
+      "An explanation that heavy fountain use signals steady demand for refillable bottles the store does not sell",
+      "A note that many schools in the area have hallway fountains that students use throughout the day",
+      "A sentence explaining that tap water is cheaper than bottled water for students over a full school year"
     ],
     "answer": "B",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "Tomas writes: \"Fern Ridge High should add a second late bus. A student council count found that 130 students stay past 4:30 at least twice a week. This count proves the school needs another late bus. Students deserve a ride home.\" Which statement best diagnoses the paragraph?",
     "choices": [
-      "The paragraph offers evidence but no reasoning: the third sentence only restates the claim, and the fourth swaps in an emotional appeal instead of a link.",
-      "The paragraph is complete, since sentence one is the claim, sentence two the evidence, and sentence three the reasoning.",
-      "The paragraph fails because its claim is a checkable fact rather than an arguable position.",
-      "The paragraph fails because the count of students has nothing to do with buses."
+      "The paragraph has evidence but no reasoning: sentence three only restates the claim, and sentence four swaps in an emotional appeal.",
+      "The paragraph is complete, since sentence one is the claim, sentence two the evidence, and sentence three the reasoning that links them.",
+      "The paragraph fails because its claim is a checkable fact rather than an arguable position that a reader could dispute.",
+      "The paragraph fails because the count of students who stay late has nothing to do with whether the school needs buses."
     ],
     "answer": "A",
     "hints": [
@@ -141,9 +141,9 @@
     "responseFormat": "mcq",
     "problemText": "A proposal opens: \"Our town should keep the Maple Street pool open through September.\" Which revision most clearly adds PATHOS?",
     "choices": [
-      "Attendance records show 1,400 visits in the first two weeks of September last year.",
-      "As the pool's head lifeguard for four summers, I have unlocked that gate every morning.",
-      "Water temperatures at the pool stay above seventy degrees for most of September.",
+      "Attendance records show 1,400 visits in the first two weeks of September last year, more than in any week of June.",
+      "As the pool's head lifeguard for four summers, I have unlocked that gate every morning and know its schedule better than anyone.",
+      "Water temperatures at the pool stay above seventy degrees for most of September, according to the parks department's daily log.",
       "Closing day is the last afternoon many kids on our block will see each other before the school year swallows them whole."
     ],
     "answer": "D",
@@ -179,10 +179,10 @@
     "responseFormat": "mcq",
     "problemText": "Which analysis best describes this excerpt from a student blog? \"My cousin switched to the Halden paper planner and her grades jumped within six weeks. The research on planners is clear.\"",
     "choices": [
-      "Logos, because the writer reports a measurable result and then cites research",
-      "Pathos alone, because the excerpt makes no appeal to authority at all",
-      "Pathos followed by unsupported ethos: one vivid story stands where evidence belongs, and then unnamed research borrows authority",
-      "Ethos alone, because the writer's personal knowledge of her cousin is the entire appeal"
+      "Logos, because the writer reports a measurable result within a set time frame and then cites research to back it up",
+      "Pathos alone, because the excerpt makes no appeal to authority at all and relies entirely on the cousin's story",
+      "Pathos then unsupported ethos: one vivid story stands where evidence belongs, then unnamed research borrows authority",
+      "Ethos alone, because the writer's personal knowledge of her cousin is the entire appeal and gives the claim its credibility"
     ],
     "answer": "C",
     "hints": [
@@ -198,9 +198,9 @@
     "responseFormat": "mcq",
     "problemText": "A tutoring company's flyer contains these four lines. Which one uses ETHOS MANIPULATIVELY rather than legitimately?",
     "choices": [
-      "Our founder taught chemistry for twelve years at a public high school.",
-      "Every tutor finishes forty hours of training before a first session.",
-      "Our program was named best in the county by a local parents' association.",
+      "Our founder taught chemistry for twelve years at a public high school before starting the company in 2015.",
+      "Every tutor finishes forty hours of training before a first session, including supervised practice with real students.",
+      "Our program was named best in the county by a local parents' association after a survey of its member families.",
       "A well-known television actor smiles from our home page and says ours is the only program she would ever recommend."
     ],
     "answer": "D",
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "A speaker at a town meeting says: \"I have kept the ledger for the Ashfield food pantry for six years. Last month we turned away eleven families in a single week. Imagine standing behind that counter and telling a mother with two children in the car that the shelves are empty.\" Which analysis is correct?",
     "choices": [
-      "All three sentences are pathos, because the whole subject is an emotional one.",
+      "All three sentences are pathos, because the whole subject is an emotional one and each detail is meant to stir sympathy.",
       "Ethos, then logos, then pathos: the speaker establishes standing, supplies a countable figure, then asks the audience to feel the refusal.",
-      "Logos throughout, because the paragraph contains two numbers and numbers signal reasoning.",
-      "Ethos, then pathos, then logos, because the closing sentence carries the argument's real reasoning."
+      "Logos throughout, because the paragraph contains two numbers and numbers signal reasoning, even in the closing sentence.",
+      "Ethos, then pathos, then logos: the speaker establishes standing, makes the shortage vivid, then the closing sentence carries the real reasoning."
     ],
     "answer": "B",
     "hints": [
@@ -276,9 +276,9 @@
     "problemText": "A student writes: \"The first two people I asked in the lunch line said the new bell schedule is confusing, so the whole school is confused by it.\" Which fallacy is this?",
     "choices": [
       "Hasty generalization",
-      "Bandwagon",
-      "False cause",
-      "Straw man"
+      "Bandwagon appeal",
+      "False cause (post hoc)",
+      "Straw man argument"
     ],
     "answer": "A",
     "hints": [
@@ -294,10 +294,10 @@
     "responseFormat": "mcq",
     "problemText": "A parent tells the library committee: \"If students can reserve study rooms online, they will stop asking librarians for help, and within a few years nobody at this school will know how to use the catalog at all.\" Which fallacy is this, and why?",
     "choices": [
-      "False cause, because the speaker treats one event as the cause of another that merely followed it",
-      "Slippery slope, because the speaker chains a small change to a distant disaster without showing what makes each step follow",
-      "Bandwagon, because the speaker assumes most students would prefer online reservations",
-      "Hasty generalization, because the speaker draws a sweeping rule from too few cases"
+      "False cause, because the speaker treats online reservations as the cause of a decline that merely followed them in time",
+      "Slippery slope, because the speaker chains a small change to a distant disaster without showing why each step follows",
+      "Bandwagon, because the speaker assumes most students would prefer online reservations and treats that preference as proof",
+      "Hasty generalization, because the speaker draws a sweeping rule about the whole school from too few observed cases"
     ],
     "answer": "B",
     "hints": [
@@ -313,10 +313,10 @@
     "responseFormat": "mcq",
     "problemText": "Is there a fallacy here? \"Ms. Alvarado, who has run the school greenhouse for eleven years, reports that the new drip system cut water use by about a third, and the district facilities office measured the same drop at two other campuses.\"",
     "choices": [
-      "Yes, appeal to authority, because the argument rests on what one person reports",
-      "Yes, bandwagon, because two sources agreeing is treated as proof",
-      "No fallacy, because relevant expertise plus independent measurement is offered as evidence rather than as the final word",
-      "Yes, hasty generalization, because three campuses can never support any conclusion"
+      "Yes, appeal to authority, because the argument rests on what one person reports about her own greenhouse's water use",
+      "Yes, bandwagon, because two sources agreeing with each other is treated as proof that the drip system works",
+      "No fallacy, because relevant expertise plus independent measurement is offered as evidence, not as the final word",
+      "Yes, hasty generalization, because three campuses can never support any conclusion about a district-wide system"
     ],
     "answer": "C",
     "hints": [
@@ -333,9 +333,9 @@
     "problemText": "Marcus argues that the student store should stop selling energy drinks, citing the school nurse's log of three fainting episodes before first period. Priyanka answers: \"Marcus has been angling for a student council seat all year, so this is just a campaign stunt.\" Which analysis is best?",
     "choices": [
       "Ad hominem: Priyanka addresses Marcus's motive and never touches the nurse's log, which stands or falls on its own",
-      "Straw man: Priyanka exaggerates the proposal into a ban on every drink the store sells",
-      "No fallacy, because a speaker's motive always settles whether the claim is true",
-      "False cause: Priyanka assumes the council campaign caused the fainting episodes"
+      "Straw man: Priyanka exaggerates the proposal into a ban on every drink the store sells, then attacks that version",
+      "No fallacy, because a speaker's motive always settles whether the claim is true, so Priyanka's point is relevant",
+      "False cause: Priyanka assumes the council campaign is what caused the fainting episodes recorded in the nurse's log"
     ],
     "answer": "A",
     "hints": [
@@ -352,10 +352,10 @@
     "responseFormat": "mcq",
     "problemText": "A student is arguing that Fern Ridge High should open the gym to clubs on Saturday mornings. Which statement of the opposing view is the FAIREST, the steel-man version a thoughtful opponent would recognize?",
     "choices": [
-      "Opponents simply do not want students to have anywhere to go on the weekend.",
-      "Opponents think student clubs are a waste of school property.",
-      "Opponents have not bothered to notice how empty the building sits every Saturday.",
-      "Opponents note that Saturday access requires a custodian on overtime, a cost the activities budget does not currently cover."
+      "Opponents simply do not want students to have anywhere to go on the weekend, whatever the clubs might plan to do there.",
+      "Opponents think student clubs are a waste of school property and should not get the gym on any day of the week.",
+      "Opponents have not bothered to notice how empty the building sits every Saturday while clubs scramble for space.",
+      "Opponents note that Saturday access requires a custodian on overtime, a cost the activities budget does not cover."
     ],
     "answer": "D",
     "hints": [
@@ -371,10 +371,10 @@
     "responseFormat": "mcq",
     "problemText": "An essay argues for a longer passing period and has already stated the counterargument: \"Admittedly, adding four minutes between classes takes those minutes out of instruction.\" Which choice is the strongest REBUTTAL?",
     "choices": [
-      "That is a fair point, and four minutes matters in a class like chemistry.",
-      "Yet a hall count at the two campuses that lengthened passing time showed late arrivals falling by half, so classes give up four minutes and get back more.",
-      "The passing period should be longer, and the schedule committee ought to say so plainly.",
-      "Anyone who worries about four minutes has clearly never carried a cello across this building."
+      "That is a fair point, and four minutes matters a great deal in a lab class like chemistry, where every minute of setup counts.",
+      "Yet a hall count at two campuses that lengthened passing time showed late arrivals falling by half, so classes give up four minutes and get back more.",
+      "The passing period should be longer, and the schedule committee ought to say so plainly at its next public meeting with the principal and the rest of the staff.",
+      "Anyone who worries about four minutes has clearly never carried a cello across this building in the rush between the bells."
     ],
     "answer": "B",
     "hints": [
@@ -390,10 +390,10 @@
     "responseFormat": "mcq",
     "problemText": "Read this pair of sentences: \"Critics reasonably argue that a school garden needs weekly care all summer, when the campus is nearly empty. However, the horticulture club's logbook shows its members already staff the greenhouse every week in July and August.\" Which rebuttal move does the writer use?",
     "choices": [
-      "Conceding the objection and outweighing it",
-      "Straw-manning the objection into a weaker form",
-      "Counter-evidence, showing that the factual claim underneath the objection does not hold",
-      "Exposing a hidden assumption behind the objection"
+      "Conceding the objection and outweighing it with a more important benefit",
+      "Straw-manning the objection into a weaker form that is easier to knock down",
+      "Counter-evidence, showing that the factual claim under the objection does not hold",
+      "Exposing a hidden assumption behind the objection that the critics never actually state"
     ],
     "answer": "C",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "Claim: the town should keep the Larkin Street lot public and fund a skate park. Counterargument already stated: \"It is true that selling the lot would bring the town a one-time payment of well over a million dollars.\" Which rebuttal works by EXPOSING A HIDDEN ASSUMPTION?",
     "choices": [
-      "Yet the assessor's latest estimate puts the lot's value far below the figure supporters of a sale keep repeating.",
+      "Yet the assessor's latest estimate puts the lot's value far below the million-dollar figure that supporters of a sale keep repeating at every council meeting.",
       "Yet that objection assumes a lot is worth only what it sells for, while this one has given two hundred teenagers somewhere to go every weekend for six years.",
-      "It is true, and the town does need the money for other projects.",
-      "Still, selling public land is simply wrong, and it always has been."
+      "It is true, and the town does need the money for other projects, such as repairing roads and replacing the roof on the public library downtown.",
+      "Still, selling public land is simply wrong, and it always has been, no matter how large a payment the town is offered for a lot like this one."
     ],
     "answer": "B",
     "hints": [
@@ -428,10 +428,10 @@
     "responseFormat": "mcq",
     "problemText": "A draft reads: \"Some people say the theater program costs the school too much. But the theater program is genuinely valuable, and the school should keep funding it.\" What is wrong with the paragraph?",
     "choices": [
-      "The writer concedes the objection and never turns back toward the claim.",
-      "The counterargument attacks the people who raised the objection instead of their reason.",
+      "The writer concedes the objection and never turns back toward the claim, leaving the cost concern standing at the end.",
+      "The counterargument attacks the people who raised the objection instead of their reason, which turns the paragraph into an ad hominem attack.",
       "The rebuttal adds nothing new, restating the claim in place of counter-evidence, an exposed assumption, or an outweighing reason.",
-      "The counterargument is stated too strongly for any rebuttal to answer it."
+      "The counterargument is stated too strongly for any rebuttal to answer it, so the writer's position has no way to recover."
     ],
     "answer": "C",
     "hints": [
@@ -447,10 +447,10 @@
     "responseFormat": "mcq",
     "problemText": "Read this paragraph from an essay arguing that the spring art show should move to the gym: \"Admittedly, moving the show would leave the hallway display cases empty for a month, and those cases are the only place freshman work is ever seen. The gym has far better lighting, and visitors would have an easier time finding it.\" Which diagnosis is best?",
     "choices": [
-      "The writer concedes a real objection and never answers it, since the following sentences praise the gym without addressing the freshman work left unseen.",
-      "The writer uses counter-evidence to show that the display cases would not actually sit empty.",
-      "The writer exposes a hidden assumption behind the objection about the display cases.",
-      "The writer straw-mans the objection by exaggerating what opponents claim about the hallway."
+      "The writer concedes a real objection and never answers it; the following sentences praise the gym without addressing the freshman work left unseen.",
+      "The writer uses counter-evidence to show that the display cases would not actually sit empty during the month the spring art show is held in the gym.",
+      "The writer exposes a hidden assumption behind the objection about the display cases and the freshman work that is shown in them.",
+      "The writer straw-mans the objection by exaggerating what opponents claim about the hallway and the freshman work displayed there."
     ],
     "answer": "A",
     "hints": [

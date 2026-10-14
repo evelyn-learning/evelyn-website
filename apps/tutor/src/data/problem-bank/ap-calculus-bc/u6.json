@@ -741,9 +741,9 @@
     "responseFormat": "mcq",
     "problemText": "$\\int \\frac{1}{(x-1)(x+1)}\\,dx$ equals:",
     "choices": [
-      "$\\ln|(x-1)(x+1)|+C$",
-      "$\\frac{1}{2}\\ln|(x-1)(x+1)|+C$",
-      "$\\frac{1}{2}\\ln\\left|\\frac{x-1}{x+1}\\right|+C$",
+      "$\\ln\\left|(x-1)(x+1)\\right|+C$",
+      "$\\tfrac{1}{2}\\ln\\left|(x-1)(x+1)\\right|+C$",
+      "$\\frac12\\ln\\left|\\frac{x-1}{x+1}\\right|+C$",
       "$\\arctan x+C$"
     ],
     "answer": "C",
@@ -760,7 +760,7 @@
     "responseFormat": "mcq",
     "problemText": "Partial fraction decomposition can be applied directly to a rational function $\\frac{P(x)}{Q(x)}$ when:",
     "choices": [
-      "$\\deg P \\ge \\deg Q$",
+      "$\\deg P \\ge \\deg Q$ (an improper rational function)",
       "It can always be applied directly",
       "$Q(x)$ is an irreducible quadratic",
       "$\\deg P < \\deg Q$ (a proper rational function)"
@@ -920,8 +920,8 @@
     "responseFormat": "mcq",
     "problemText": "Which technique is most efficient for $\\int \\frac{2x}{x^2+1}\\,dx$?",
     "choices": [
-      "Integration by parts",
-      "Partial fractions",
+      "Integration by parts with $u=2x$",
+      "Partial fractions on $x^2+1$",
       "u-substitution with $u=x^2+1$",
       "Completing the square"
     ],

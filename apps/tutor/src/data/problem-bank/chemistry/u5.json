@@ -44,10 +44,10 @@
     "responseFormat": "mcq",
     "problemText": "A student heats 8.4 g of baking soda in an OPEN dish: 2 NaHCO₃(s) → Na₂CO₃(s) + H₂O(g) + CO₂(g). After heating, the solid left in the dish weighs 5.3 g. What best explains the drop from 8.4 g to 5.3 g?",
     "choices": [
-      "Gaseous products (water vapor and CO₂) escaped from the open dish, carrying away 3.1 g — mass is still conserved",
-      "Heat destroyed 3.1 g of matter, so mass was not conserved in this reaction",
-      "The balance must be miscalibrated, because the mass has to read 8.4 g after any reaction",
-      "The solid absorbed heat energy, and energy has no mass, so the reading fell"
+      "Gaseous products (water vapor and CO₂) escaped, carrying away 3.1 g — mass is still conserved",
+      "Heat destroyed 3.1 g of the baking soda's matter, so mass was not conserved in this reaction",
+      "The balance must be miscalibrated, because the mass has to read 8.4 g after any reaction in a dish",
+      "The solid absorbed heat energy, and energy has no mass, so the reading on the balance fell by 3.1 g"
     ],
     "answer": "A",
     "hints": [
@@ -132,10 +132,10 @@
     "responseFormat": "mcq",
     "problemText": "Hard water is softened by the reaction K₂CO₃(aq) + CaCl₂(aq) → CaCO₃(s) + 2 KCl(aq). How should it be classified?",
     "choices": [
-      "Single replacement — calcium takes the place of potassium",
+      "Single replacement — calcium takes the place of potassium in the carbonate compound",
       "Double replacement — two compounds trade partners and CaCO₃ leaves as a solid",
-      "Synthesis — a solid is built from two solutions",
-      "Decomposition — the potassium carbonate falls apart"
+      "Synthesis — a solid is built from two solutions that combine into one product",
+      "Decomposition — the potassium carbonate falls apart into simpler pieces in water"
     ],
     "answer": "B",
     "hints": [
@@ -309,10 +309,10 @@
     "responseFormat": "mcq",
     "problemText": "Activity series excerpt: K > Na > Ca > Mg > Al > Zn > Fe > H > Cu > Ag. A student predicts the reaction of magnesium metal with hydrochloric acid and writes Mg + HCl → MgCl + H. Which statement identifies ALL the errors and gives the correct equation?",
     "choices": [
-      "The only error is the balancing; the correct equation is Mg + 2 HCl → MgCl + 2 H",
-      "The formulas are fine, but the reaction does not run, because Mg ranks below H on the series",
-      "Two formula errors: magnesium forms Mg²⁺ so the product is MgCl₂, and the hydrogen leaves as the diatomic gas H₂ — the correct equation is Mg + 2 HCl → MgCl₂ + H₂",
-      "The products MgCl₂ and H₂ are right, but the reaction still does not run, because no metal reacts with a dilute acid"
+      "The only error is the balancing; the correct equation is Mg + 2 HCl → MgCl + 2 H, which balances both elements",
+      "The formulas are fine, but the reaction does not run, because Mg ranks below H on the series and cannot replace it",
+      "Two formula errors: Mg²⁺ makes the product MgCl₂, and hydrogen leaves as H₂ gas — the correct equation is Mg + 2 HCl → MgCl₂ + H₂",
+      "The products MgCl₂ and H₂ are right, but the reaction still does not run, because no metal reacts with a dilute acid such as hydrochloric acid"
     ],
     "answer": "C",
     "hints": [

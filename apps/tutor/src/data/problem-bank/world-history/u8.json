@@ -17,7 +17,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "During the 1700s, shared village fields across much of Britain were fenced off into privately owned farms, a process called enclosure. Why do historians treat enclosure as one of the preconditions for industrialization?",
-    "choices": ["It gave the government ownership of British farmland", "It multiplied the number of guild-trained craft workshops in villages", "It pushed rural laborers off the land, creating a pool of people who needed wage work just as mills needed hands", "It ended Britain's need to trade with its overseas colonies"],
+    "choices": ["It gave the government ownership of British farmland, so the state could direct food supplies toward the growing towns", "It multiplied the number of guild-trained craft workshops in villages, giving the early mills a ready supply of skilled artisans", "It pushed rural laborers off the land, creating a pool of people who needed wage work just as mills needed hands", "It ended Britain's need to trade with its overseas colonies, freeing capital that had been tied up in shipping for new factories"],
     "answer": "C",
     "hints": ["Follow the displaced people, not the fences — where does someone with no field to work go for money?"]
   },
@@ -28,7 +28,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "The earliest textile mills had to be built beside fast-flowing rivers because the machinery was turned by water wheels. The improved steam engine of the later 1700s changed that constraint. What was the main consequence?",
-    "choices": ["Cloth production moved back into workers' cottages", "Mills no longer needed large numbers of workers", "Parliament outlawed the use of water power in manufacturing", "Factories could be built wherever coal could be delivered, including in growing towns"],
+    "choices": ["Cloth production moved back into workers' cottages, since small steam engines could be installed in homes", "Mills no longer needed large numbers of workers, because steam engines now tended the spinning machines", "Parliament outlawed the use of water power in manufacturing to force mills to buy coal", "Factories could be built wherever coal could be delivered, including in growing towns"],
     "answer": "D",
     "hints": ["Ask what the river was supplying, and what the engine now supplied instead — then ask where a factory is free to stand."]
   },
@@ -50,7 +50,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A physician surveying a northern English mill town wrote in 1845 (paraphrased): 'In this district the courts are unpaved and undrained, one privy serves some twenty houses, and families sleep in cellars below the level of the street.' Which feature of early industrial Britain does this account best document?",
-    "choices": ["The success of factory inspection in improving working conditions", "The persistence of task-based work rhythms in the countryside", "City populations growing far faster than housing, drainage, and clean water could be built for them", "The decline of coal use in northern manufacturing towns"],
+    "choices": ["The success of factory inspection in improving working conditions inside the town's textile mills", "The persistence of task-based work rhythms among families who had moved in from the countryside", "City populations growing far faster than housing, drainage, and clean water could be built", "The decline of coal use in northern manufacturing towns as other fuels replaced it in homes"],
     "answer": "C",
     "hints": ["The details are all about where people live and what happens to their waste and water — not about the factory floor."]
   },
@@ -61,7 +61,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Historians often warn that the phrase 'Industrial Revolution' is misleading. Which statement best captures why?",
-    "choices": ["It suggests a political uprising, when in fact the British monarchy was overthrown in the same period", "It suggests a single event with an inventor and a date, when it was a rolling transformation lasting more than a century, spreading unevenly to Belgium, Germany, the United States, and Japan", "It suggests change was slow, when in fact all British manufacturing converted to steam power within a single decade", "It suggests the change was global, when in fact industrial production never spread beyond Britain"],
+    "choices": ["It suggests a political uprising, when in fact the British monarchy was overthrown in the same period by the new class of mill owners", "It suggests a single event with an inventor and a date, when it was a rolling transformation lasting more than a century and spreading unevenly abroad", "It suggests change was slow, when in fact all British manufacturing converted to steam power within a single decade of James Watt's improved steam engine", "It suggests the change was global, when in fact industrial production never spread beyond Britain because rival states banned the machinery"],
     "answer": "B",
     "hints": ["Test the word 'revolution' against the timeline: how many decades separate the first spinning machines from the railway boom?", "Then test it against the map: did every industrializing region start at the same moment?"]
   },
@@ -94,7 +94,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Trade unions in industrial Britain treated the strike as their ultimate source of leverage. Why did stopping work collectively give organized workers bargaining power that an individual worker did not have?",
-    "choices": ["Striking workers legally became part owners of the factory", "The law required employers to raise wages whenever any worker complained", "Individual workers owned the machines and could remove them from the mill", "One worker could be replaced easily, but all of them stopping at once idled expensive machinery that cost the owner money every hour"],
+    "choices": ["Striking workers legally became part owners of the factory and could vote on wages at its shareholder meetings", "The law required employers to raise wages whenever any worker complained, so a strike simply formalized the complaint", "Individual workers owned the machines and could remove them from the mill, halting production until owners paid more", "One worker could be replaced easily, but all stopping at once idled expensive machinery that cost the owner money"],
     "answer": "D",
     "hints": ["Compare what the owner loses when one hand quits with what the owner loses when the whole floor stops."]
   },
@@ -105,7 +105,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A British sanitary reformer argued in 1842 that filth and disease in the industrial cities were not merely a moral scandal but a financial drain, since sick and dying workers cost employers and local ratepayers money. Why was framing sanitation this way effective?",
-    "choices": ["It demonstrated that cholera was carried through foul air rather than water", "It aimed the argument at the self-interest of property owners and taxpayers who had resisted purely moral appeals", "It showed that epidemic disease struck only the poorest districts", "It proved that public spending on sewers would be unnecessary"],
+    "choices": ["It demonstrated that cholera was carried through foul air rather than water, so cleaning streets would end epidemics", "It aimed the argument at the self-interest of property owners and taxpayers who had resisted purely moral appeals", "It showed that epidemic disease struck only the poorest districts, so the costs fell on charities rather than employers", "It proved that public spending on sewers would be unnecessary, since private landlords would pay to drain their own courts"],
     "answer": "B",
     "hints": ["Ask who had to be persuaded to approve the spending, and what kind of argument moves that particular audience."]
   },
@@ -127,7 +127,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A student claims that Britain's factory and mines acts were socialist measures, because anyone who wanted to help factory workers in the 1800s was a socialist. Which correction is most accurate?",
-    "choices": ["The acts were drafted by Marx and Engels and enacted by a workers' party", "The acts transferred ownership of the mills and mines to the workers who ran them", "The claim is correct, since reformers and socialists formed one movement with one program", "The acts were written largely by reformers who accepted private ownership of industry and wanted to make it survivable, while socialists argued that relief granted from above leaves ownership untouched"],
+    "choices": ["The acts were drafted by Marx and Engels and enacted by a workers' party that had won a majority in Parliament after the 1832 Reform Act", "The acts transferred ownership of the mills and mines to the workers who ran them, as a first step toward placing the nation's industry under common control", "The claim is correct, since reformers and socialists formed one movement with one program for bringing the factories into public ownership", "The acts were largely the work of reformers who accepted private ownership of industry, while socialists argued relief from above left ownership untouched"],
     "answer": "D",
     "hints": ["Sort the responses by what each one proposes to do with ownership of the factories — keep it or replace it.", "A measure can be pro-worker and still be designed to stabilize the system it regulates."]
   },
@@ -160,7 +160,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "After Western warships forced Japanese ports open, reformers overthrew the shogun in 1868, restored the emperor as a national symbol, and drove rapid industrialization and military modernization. What reasoning drove this program?",
-    "choices": ["Japan intended to restore the feudal authority of the regional lords", "Japan had agreed by treaty to build factories under Western supervision", "Japan planned to close its ports again and withdraw from all foreign contact", "Japan's leaders concluded that a country must modernize quickly or risk being colonized as others had been"],
+    "choices": ["Japan intended to restore the feudal authority of the regional lords who had governed under the shogun", "Japan had agreed by treaty to build factories under Western supervision as a condition for reopening trade", "Japan planned to close its ports again and withdraw from all foreign contact once its new army was ready", "Japan's leaders concluded that a country must modernize quickly or risk being colonized as others had been"],
     "answer": "D",
     "hints": ["Look at what Japan's leaders could see happening to China and to much of Asia at the same moment, and ask what lesson they drew."]
   },
@@ -171,7 +171,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "In 1867 the Austrian Empire reorganized itself as Austria-Hungary, raising Hungarians to co-equal standing with Austrians under a shared monarch. Why did this arrangement fail to settle the empire's national tensions?",
-    "choices": ["Hungarians rejected the arrangement and immediately declared full independence", "The empire's Czechs, Croats, Serbs, Poles, and Romanians received no comparable standing and pressed their own claims", "The Compromise abolished the monarchy, leaving no government in place", "Austria lost its industry in the settlement and could no longer pay its army"],
+    "choices": ["Hungarians rejected the arrangement and immediately declared full independence from the Habsburg monarchy", "The empire's Czechs, Croats, Serbs, Poles, and Romanians received no comparable standing and pressed their own claims", "The Compromise abolished the monarchy, leaving no government in place to manage the empire's many peoples", "Austria lost its industry in the settlement and could no longer pay for the army that held the multinational empire together"],
     "answer": "B",
     "hints": ["Count the peoples living inside the empire, then count how many the deal actually promoted."]
   },
@@ -182,7 +182,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Napoleon's armies overran the German-speaking lands, abolished the centuries-old Holy Roman Empire in 1806, and consolidated hundreds of tiny states into a few dozen larger ones. How did a French conquest contribute to later German unification?",
-    "choices": ["Napoleon founded a united German state that survived his own defeat", "French rule convinced German-speakers to adopt French national identity", "It both simplified a fragmented map and provoked a shared German national feeling among people resisting foreign rule", "It eliminated Prussia, clearing the way for a smaller Germany to form"],
+    "choices": ["Napoleon founded a united German state that survived his own defeat and became the core of the later German empire", "French rule convinced German-speakers to adopt French national identity, which later united them as citizens of one state", "It both simplified a fragmented map and provoked a shared German national feeling among people resisting foreign rule", "It eliminated Prussia as a rival power, clearing the way for a smaller Germany to form under the leadership of Austria"],
     "answer": "C",
     "hints": ["Track two separate effects of the occupation: what it did to the map, and what it did to how the occupied people thought of themselves."]
   },
@@ -193,7 +193,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "In a region where several peoples live intermixed in the same towns and valleys, why does an ethnic understanding of nationhood tend to produce contested borders, while a civic understanding need not?",
-    "choices": ["Ethnic nationalism appeals only to industrial societies, and intermixed regions had no industry", "Civic nationalism rejects the idea of independent states altogether, so no borders are ever drawn", "Ethnic nationalism requires that every nation be ruled by a foreign monarch, which neighbors resist", "Ethnic nationalism defines belonging by descent and language, so intermixed neighbors can never join the nation and must be ruled or removed, while civic nationalism defines belonging by shared citizenship and law, which newcomers can adopt"],
+    "choices": ["Ethnic nationalism appeals only to industrial societies, and intermixed regions had no industry, so their borders were drawn by distant imperial powers rather than by the local peoples who actually lived in them", "Civic nationalism rejects the idea of independent states altogether, so no borders are ever drawn and intermixed peoples simply share one territory", "Ethnic nationalism requires that every nation be ruled by a foreign monarch, which neighbors resist, while civic nationalism lets each town pick its own ruler by vote", "Ethnic nationalism defines belonging by descent and language, so intermixed neighbors are excluded and must be ruled or removed; civic belonging rests on citizenship and law, which newcomers can adopt"],
     "answer": "D",
     "hints": ["Ask, for each version, what a person would have to do to become a member of the nation — and whether that is something a person can do at all.", "Then apply the rule 'one people, one state' to a valley where three peoples live on the same street."]
   },
@@ -237,7 +237,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A British colonial administrator wrote in 1893 (paraphrased): 'We bring courts, roads, and schools to peoples who, in our judgment, are not yet fit to govern themselves, and it is our duty to rule them until that day comes.' Which justification for empire is he offering?",
-    "choices": ["A nationalist argument that holding colonies proved a country's great-power status", "An economic argument that colonies were needed as markets for surplus industrial goods", "A strategic argument that colonies were needed as coaling stations to protect shipping routes", "The civilizing mission — the assertion that Europeans had a duty to govern peoples they claimed were incapable of self-rule"],
+    "choices": ["A nationalist argument that holding colonies proved a country's great-power status among its European rivals", "An economic argument that colonies were needed as markets for the surplus industrial goods produced in British factories", "A strategic argument that colonies were needed as coaling stations to protect shipping routes", "The civilizing mission — the claim that Europeans had a duty to govern peoples they deemed incapable of self-rule"],
     "answer": "D",
     "hints": ["Nothing in the passage mentions money, rivals, or shipping — identify which of the era's justifications the words on the page actually make."]
   },
@@ -248,7 +248,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Britain built an extensive railway network across India during the later 1800s. Which statement best describes the purpose the network was designed and routed to serve?",
-    "choices": ["To give Indian manufacturers cheap access to inland customers", "To move raw cotton, grain, and other materials from the interior out to the ports for export", "To help Indian handloom weavers ship finished cloth to overseas buyers", "To carry British settlers to farming colonies established in the interior"],
+    "choices": ["To give Indian manufacturers cheap access to inland customers across the subcontinent's interior", "To move raw cotton, grain, and other materials from the interior out to the ports for export", "To help Indian handloom weavers ship their finished cloth to overseas buyers in Britain and Europe", "To carry British settlers to farming colonies established in the cooler highlands of the interior"],
     "answer": "B",
     "hints": ["Follow the direction of the track: if most lines run from inland districts to a seaport, what is moving, and which way?"]
   },
@@ -259,7 +259,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Ethiopia under Menelik II destroyed an invading Italian army at Adwa in 1896 and kept its independence, and Zulu forces wiped out a British column at Isandlwana in 1879 before being overwhelmed. Which conclusion do these outcomes best support?",
-    "choices": ["African conquest succeeded through a gap in firepower and industrial resupply and through European exploitation of rivalries between African states, not through African passivity — organized African states could and sometimes did win", "African resistance to European conquest was rare, and Adwa was the only battle Africans ever fought", "Ethiopia stayed independent because the European powers had agreed at Berlin to respect its sovereignty", "European armies held no technological advantage anywhere in Africa"],
+    "choices": ["Conquest succeeded through firepower, industrial resupply, and exploiting African rivalries, not African passivity — organized African states could and sometimes did win", "African resistance to European conquest was rare, and Adwa was the only battle Africans ever fought, so its outcome shows how exceptional Ethiopia was among the African states of its time", "Ethiopia stayed independent because the European powers had agreed at Berlin to respect its sovereignty, so its victory at Adwa was largely symbolic rather than decisive", "European armies held no technological advantage anywhere in Africa, so their victories depended on larger numbers and on the toll disease took on African armies"],
     "answer": "A",
     "hints": ["Start from the fact that these were pitched battles between organized states, and ask what that rules out about the usual story.", "Then ask why victories like these were the exception rather than the rule — what could a European force replace after a defeat that an African force could not?"]
   }

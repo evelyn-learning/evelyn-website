@@ -83,10 +83,10 @@
     "responseFormat": "mcq",
     "problemText": "A dolphin and a shark both have streamlined bodies, dorsal fins, and paddle-like limbs used for swimming. However, the dolphin has hair, produces milk, and breathes air with lungs, while the shark has gills, a skeleton made of cartilage, and scales. A student argues that the two should be placed in the same class because they look so similar. Which statement best evaluates the student's argument?",
     "choices": [
-      "The student is correct, because classification groups organisms by outward body shape and habitat.",
-      "The student is incorrect, because dolphins and sharks are placed in different kingdoms and so cannot share any level of classification.",
-      "The student is incorrect, because the shared streamlined shape arose separately in each lineage as an adaptation for swimming, while inherited traits such as hair, milk, and lungs place the dolphin with mammals and gills and a cartilage skeleton place the shark with fishes.",
-      "The student is incorrect, because dolphins descended from sharks and descendants are always placed in a new class."
+      "The student is correct, because classification groups organisms by outward body shape and habitat, so animals built alike for the same waters belong together.",
+      "The student is incorrect, because dolphins and sharks are placed in different kingdoms and so cannot share any level of classification, however closely their streamlined bodies, fins, and paddle-like limbs happen to match.",
+      "The student is incorrect: the streamlined shape evolved separately in each lineage, while inherited traits such as hair, milk, and lungs make the dolphin a mammal and gills and cartilage make the shark a fish.",
+      "The student is incorrect, because dolphins descended from sharks, and descendants are always placed in a new class once they gain traits such as hair, milk, and lungs."
     ],
     "answer": "C",
     "hints": [
@@ -103,8 +103,8 @@
     "problemText": "A burrowing rodent has long been named Nannospalax ehrenbergi. New DNA sequence comparisons show that it shares a more recent common ancestor with members of the genus Spalax than with the other species currently in the genus Nannospalax. Taxonomists therefore move the species into the genus Spalax. Which statement best describes the outcome of this change?",
     "choices": [
       "The species is renamed Spalax Ehrenbergi, because an epithet that is transferred to a new genus is capitalized to mark the change.",
-      "The species is renamed Spalax ehrenbergi; the genus name changes while the epithet stays lowercase, and the new name reflects a revised hypothesis about the species' ancestry.",
-      "The species keeps the name Nannospalax ehrenbergi, because once a binomial name is assigned it can never be changed by later evidence.",
+      "The species is renamed Spalax ehrenbergi; the genus changes, the epithet stays lowercase, and the name reflects a revised hypothesis of ancestry.",
+      "The species keeps the name Nannospalax ehrenbergi, because once a binomial name is assigned it can never be changed by later evidence about ancestry.",
       "The species is renamed ehrenbergi Spalax, because the more specific of the two words is written first once a species is reassigned."
     ],
     "answer": "B",
@@ -179,10 +179,10 @@
     "responseFormat": "mcq",
     "problemText": "A tree of five plant groups is drawn with the moss lineage branching off first, then the fern lineage, then the pine lineage, and finally a split between the grass lineage and the oak lineage, with the oak drawn at the far right end of the row of tips. A student says this shows that the oak is the most advanced species and that the moss is the least evolved. Which statement best evaluates that claim?",
     "choices": [
-      "The student is correct, because groups drawn farther to the right appear later in the history of life and are therefore more advanced.",
-      "The student is mistaken. Branch position shows the order in which lineages split, not progress; all five lineages have been evolving for the same amount of time since their shared ancestor, and the tips could be rotated at any branch point without changing the relationships shown.",
-      "The student is mistaken, because mosses actually arose after oaks did, so the tree should be redrawn in the opposite order.",
-      "The student is correct, because the oak has more traits than the moss and a greater number of traits means a species is more advanced."
+      "The student is correct, because groups drawn farther to the right appear later in the history of life, so the oak arose last and is therefore the most advanced of the five.",
+      "The student is mistaken: branch order shows when lineages split, not progress; all five have evolved equally long since their shared ancestor, and tips can be rotated at any node.",
+      "The student is mistaken, because mosses actually arose after oaks did, so the tree should be redrawn in the opposite order with the moss placed at the far right end of the row.",
+      "The student is correct, because the oak has more traits than the moss, and a greater number of traits shows that a species has evolved further and is more advanced."
     ],
     "answer": "B",
     "hints": [
@@ -198,10 +198,10 @@
     "responseFormat": "mcq",
     "problemText": "On a tree of three living primates, the gorilla lineage branches off first, and the remaining lineage later splits into the chimpanzee and the human. A student concludes from this tree that humans evolved from chimpanzees. Which statement is the best correction?",
     "choices": [
-      "The student's reading is correct, because the chimpanzee is drawn to the left of the human and so came first.",
-      "The student is wrong only about which species is the ancestor; the tree shows humans evolved from gorillas.",
-      "The student is wrong about the direction; the tree shows that chimpanzees evolved from humans.",
-      "The tree shows that humans and chimpanzees both descended from a shared ancestor species that no longer exists; neither living species is the ancestor of the other."
+      "The student's reading is correct, because the chimpanzee is drawn to the left of the human and so came first in the line of descent.",
+      "The student is wrong only about which species is the ancestor; the tree shows that humans evolved from gorillas, which branched off from the others first.",
+      "The student is wrong about the direction; the tree shows that chimpanzees evolved from humans after the gorilla lineage had branched off.",
+      "Humans and chimpanzees both descended from a shared ancestor species that no longer exists; neither living species is the ancestor of the other."
     ],
     "answer": "D",
     "hints": [
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "A tree of five species is drawn with the tips in the order M, N, O, P, Q from left to right. The lineage leading to species M branches off first from all the others. The remaining lineage then splits into two groups: one group later splits into N and O, and the other group later splits into P and Q. Researchers then count amino acid differences in one shared protein, comparing each species with M: N differs at 22 positions, O at 21, P at 14, and Q at 15. A student argues that because P and Q differ from M the least, they must be M's closest relatives, so the tree must be wrong. Which statement best evaluates the student's argument?",
     "choices": [
-      "The argument fails. On this tree, N, O, P, and Q all connect back to M through the same single branch point, so all four are equally related to M; unequal numbers of amino acid differences reflect different rates of change along different lineages, not different degrees of relatedness.",
-      "The argument succeeds. Fewer amino acid differences always means a more recent common ancestor, so P and Q should be redrawn as the first branches next to M.",
-      "The argument fails, but only because N is drawn immediately next to M, which by itself proves N is M's closest relative.",
-      "The argument cannot be evaluated without first determining which of the five species is the most advanced."
+      "The argument fails. N, O, P, and Q all join M at the same branch point, so all four are equally related to M; unequal differences reflect unequal rates of change, not relatedness.",
+      "The argument succeeds. Fewer amino acid differences always means a more recent common ancestor, so P and Q should be redrawn as the first branches next to M, with N and O farther away.",
+      "The argument fails, but only because N is drawn immediately next to M, which by itself proves that N, not P or Q, is the closest relative of M on this tree.",
+      "The argument cannot be evaluated without first determining which of the five species is the most advanced, since more advanced species change their proteins faster."
     ],
     "answer": "A",
     "hints": [
@@ -256,10 +256,10 @@
     "responseFormat": "mcq",
     "problemText": "A mushroom is multicellular and does not move from place to place. Its cells have a nucleus and a cell wall made of chitin, it has no chloroplasts, and it obtains food by releasing digestive chemicals onto dead leaves in the soil and absorbing the nutrients that are released. In which kingdom does it belong, and why?",
     "choices": [
-      "Plantae, because it is multicellular, stays in one place, and grows out of the soil",
-      "Plantae, because its cells are surrounded by cell walls",
-      "Protista, because it is a eukaryote that does not fit neatly into the animal kingdom",
-      "Fungi, because it is a multicellular eukaryote that has no chloroplasts and obtains food by absorbing nutrients digested outside its body"
+      "Plantae, because it is multicellular, stays in one place, grows out of the soil, and has cells surrounded by a rigid wall",
+      "Plantae, because its cells are surrounded by cell walls and it takes up nutrients from the soil through its underground parts",
+      "Protista, because it is a eukaryote that does not fit neatly into the animal kingdom, and protists include many organisms that absorb food",
+      "Fungi, because it is a multicellular eukaryote without chloroplasts that obtains food by absorbing nutrients digested outside its body"
     ],
     "answer": "D",
     "hints": [
@@ -294,10 +294,10 @@
     "responseFormat": "mcq",
     "problemText": "A virus consists of genetic material enclosed in a protein coat. It has no cytoplasm, no ribosomes, and no metabolism of its own, and it can make copies of itself only by entering a host cell and using that cell's machinery. Which statement best describes how biologists classify viruses?",
     "choices": [
-      "Viruses make up a seventh kingdom, placed between the bacteria and the protists.",
-      "Viruses belong to the bacteria, because both are far smaller than a plant or animal cell.",
-      "Viruses are not placed in any kingdom or domain, because they are not cells and cannot carry out metabolism or reproduce without a host cell.",
-      "Viruses belong to the domain Archaea, because like archaea they have no nucleus."
+      "Viruses make up a seventh kingdom, placed between the bacteria and the protists because of their very simple structure.",
+      "Viruses belong to the bacteria, because both are far smaller than a plant or animal cell and both can cause infectious diseases.",
+      "Viruses are not placed in any kingdom or domain, because they are not cells and cannot metabolize or reproduce without a host cell.",
+      "Viruses belong to the domain Archaea, because like archaea they have no nucleus and can survive in extreme environments."
     ],
     "answer": "C",
     "hints": [
@@ -313,10 +313,10 @@
     "responseFormat": "mcq",
     "problemText": "Antibiotics work by disrupting structures and processes found in bacterial cells, such as building the peptidoglycan cell wall or running the bacterial ribosome. A patient with influenza, a viral infection, is told that antibiotics will not help. Which statement best explains why?",
     "choices": [
-      "Antibiotics do kill viruses, but far more slowly than they kill bacteria, so they are prescribed only for long-lasting infections.",
-      "A virus is not a cell: it has no cell wall and no ribosomes of its own, so the structures antibiotics attack are simply not present, and the virus is copied by the host cell's own machinery.",
-      "Antibiotics fail because viruses are eukaryotes, and the nucleus shields their genetic material from the drug.",
-      "Antibiotics fail because influenza viruses belong to the domain Archaea, and antibiotics affect only members of the domain Bacteria."
+      "Antibiotics do kill viruses, but far more slowly than they kill bacteria, so doctors prescribe them only for infections that last longer than a few weeks.",
+      "A virus is not a cell: it has no cell wall or ribosomes of its own, so the structures antibiotics attack are absent, and the host cell's machinery copies it.",
+      "Antibiotics fail because viruses are eukaryotes, and the nucleus surrounding their genetic material shields it from the drug's attack.",
+      "Antibiotics fail because influenza viruses belong to the domain Archaea, and antibiotics affect only the cell walls and ribosomes of members of the domain Bacteria."
     ],
     "answer": "B",
     "hints": [
@@ -332,10 +332,10 @@
     "responseFormat": "mcq",
     "problemText": "Four organisms are described. Organism 1 is single-celled with no nucleus, lives in a boiling acidic hot spring, and has ribosomal RNA more similar to that of yeast than to that of common gut bacteria. Organism 2 is multicellular, has cells with a nucleus and cellulose cell walls, and makes its own food using chloroplasts. Organism 3 is single-celled, has a nucleus, swims using a whip-like flagellum, and engulfs smaller cells for food. Organism 4 is single-celled, has no nucleus, and has a cell wall containing peptidoglycan. Which statement is best supported by these descriptions?",
     "choices": [
-      "Organisms 1 and 4 belong to the same domain, because neither one has a nucleus.",
-      "Organisms 2 and 3 belong to the same kingdom, because both have cells with a nucleus.",
-      "Organism 1 belongs to the domain Eukarya, because its ribosomal RNA resembles that of yeast.",
-      "Organisms 2 and 3 are both in the domain Eukarya but in different kingdoms, while organisms 1 and 4 fall into two different domains of organisms without a nucleus, Archaea and Bacteria."
+      "Organisms 1 and 4 belong to the same domain, because neither one has a nucleus and both are single-celled, while organisms 2 and 3 belong to the domain Eukarya.",
+      "Organisms 2 and 3 belong to the same kingdom, because both have cells with a nucleus, while organisms 1 and 4 share the domain Bacteria.",
+      "Organism 1 belongs to the domain Eukarya, because its ribosomal RNA resembles that of yeast more closely than that of common gut bacteria.",
+      "Organisms 2 and 3 are both Eukarya but in different kingdoms, while organisms 1 and 4 belong to two different domains, Archaea and Bacteria."
     ],
     "answer": "D",
     "hints": [

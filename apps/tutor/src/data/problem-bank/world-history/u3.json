@@ -50,7 +50,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Two Muslim scholars in the year 700 CE agree completely about the Quran, the five pillars, and the direction of prayer, yet they belong to communities that had already broken with one another. What was the original point of disagreement between those communities?",
-    "choices": ["Whether the pilgrimage should be made to Mecca or to Medina", "Whether the Quran could be recited in Persian as well as in Arabic", "Who held rightful authority to lead the community after Muhammad's death - a leader chosen by its leading figures, or a member of his family line through Ali", "Whether fasting during Ramadan was required of all believers"],
+    "choices": ["Whether the pilgrimage should be made to Mecca or to Medina, the city where Muhammad founded the first Muslim community and where he died and was later buried", "Whether the Quran could be recited in Persian as well as in Arabic, as large numbers of non-Arab converts entered the faith after the conquests", "Who held rightful authority to lead the community after Muhammad's death - a leader chosen by its leading figures, or a member of his family line through Ali", "Whether fasting during Ramadan was required of all believers, including soldiers on campaign and merchants traveling with caravans"],
     "answer": "C",
     "hints": ["The question already tells you the two scholars share the same beliefs and practices, so the split must be about something other than doctrine. Ask what else a community must settle."]
   },
@@ -61,7 +61,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Iberia came under Muslim rule in the early 700s CE through conquest. By contrast, Islam became widespread in the West African kingdoms of Mali and Songhai and in the port cities of Southeast Asia centuries later, in places no caliph's army ever reached, beginning with rulers and merchant communities. Which conclusion do these two patterns together best support?",
-    "choices": ["Muslim rule and Muslim belief spread by different mechanisms on different timetables, with conquest explaining territory and commerce and teaching explaining much of the later religious map", "Islam spread only where armies conquered, so later reports of merchant-led conversion must be inaccurate", "Conquest and conversion always occurred together within a single generation", "Umayyad armies conquered West Africa and Southeast Asia at the same time that they took Iberia"],
+    "choices": ["Muslim rule and Muslim belief spread by different mechanisms and timetables: conquest explains territory, while commerce and teaching explain much of the later religious map", "Islam spread only where armies conquered, so later reports of merchant-led conversion in West Africa and Southeast Asia must be inaccurate or greatly exaggerated", "Conquest and conversion always occurred together within a single generation, so the peoples of Mali, Songhai, and the Southeast Asian ports converted as soon as Muslim rule arrived", "Umayyad armies conquered West Africa and Southeast Asia at the same time that they took Iberia, and conversion there followed the same pattern as in Iberia"],
     "answer": "A",
     "hints": ["Compare the two cases on two axes at once: the dates involved, and who or what actually did the spreading.", "Ask whether one single explanation can cover a process that moved political control and a slower process that moved belief."]
   },
@@ -105,7 +105,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "A church official in the Spanish city of Toledo wrote around 1180 CE (paraphrased): 'Here a Jewish scholar reads the Arabic aloud in the common speech of the town, and a churchman writes it down in Latin; by this means the books of medicine and of the philosophers pass into our tongue.' What process does this description best illustrate?",
-    "choices": ["Arabic scholarship being rendered into Latin in a frontier city, which is how much of it reached European universities", "Latin works being translated into Arabic for the use of the Abbasid court", "European scholars independently rediscovering Greek science without any outside contact", "Mongol armies delivering the libraries of Baghdad to scholars in Spain"],
+    "choices": ["Arabic scholarship being rendered into Latin in a frontier city, which is how much of it reached European universities", "Latin works being translated into Arabic so that scholars at the Abbasid court could study Christian learning", "European scholars independently rediscovering Greek science in their own monastery libraries without any outside contact", "Mongol armies delivering the libraries of Baghdad to scholars in Spain after the city was sacked by their forces"],
     "answer": "A",
     "hints": ["Track the direction the languages move in the passage: which one is the source the scholars start from, and which is the destination?"]
   },
@@ -116,7 +116,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Paper-making techniques reached the Islamic world from Chinese contacts during the 700s CE and gradually replaced parchment, which was far more expensive. What effect did this most directly have on scholarship in Abbasid Baghdad?",
-    "choices": ["It let Baghdad's scholars print their books with movable type", "It made books far cheaper to produce and copy, so libraries and the translation movement could work at a much larger scale", "It removed any need to translate Greek and Indian works into Arabic", "It caused the Abbasid caliphs to abandon Baghdad and move to Cairo"],
+    "choices": ["It let Baghdad's scholars print their books with movable type, so a single text could be issued in many thousands of copies", "It made books far cheaper to produce and copy, so libraries and the translation movement could work at a much larger scale", "It removed any need to translate Greek and Indian works into Arabic, since the originals could now be copied cheaply", "It caused the Abbasid caliphs to abandon Baghdad and move to Cairo, where the first paper mills had already been built"],
     "answer": "B",
     "hints": ["Ask what changes for scholars when the material a book is written on drops sharply in price."]
   },
@@ -127,7 +127,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A student writes: 'Arabic numerals were invented in Baghdad, and scholars in the Islamic world mainly stored Greek books safely until Europe was ready to use them.' Which statement corrects both errors in that sentence?",
-    "choices": ["The digits came from Greece, and the translations were made at the request of European universities", "The digits came from India, but scholars in the Islamic world did in fact limit themselves to copying Greek texts without altering them", "Both claims are accurate as written, since Baghdad produced no original mathematics or medicine", "The digits with place value came from India and traveled west through Arabic scholarship, and scholars in the Islamic world tested, corrected, and extended the works they translated rather than merely storing them"],
+    "choices": ["The digits came from Greece, and the translations were made at the request of European universities that paid Baghdad's scholars to copy them", "The digits came from India, but scholars in the Islamic world did in fact limit themselves to copying Greek texts without altering them", "Both claims are accurate as written, since Baghdad produced no original mathematics or medicine and relied on the Greek and Indian texts it held for its learning", "The place-value digits came from India and traveled west through Arabic scholarship, and Islamic scholars tested, corrected, and extended what they translated"],
     "answer": "D",
     "hints": ["The sentence makes two separate claims. Check each one on its own before choosing.", "One claim is about ORIGIN, or where the digits came from; the other is about whether translation was the end of the work or only the beginning of it."]
   },
@@ -149,7 +149,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "In the 1020s CE the Song government began issuing printed notes that people accepted as payment, after merchants in Sichuan had already circulated paper deposit receipts. What problem was this innovation responding to?",
-    "choices": ["A severe shortage of paper in southern China", "Trade had grown so large in volume that carrying enough copper coin to settle deals had become impractical", "Confucian officials had banned the use of all metal currency", "Mongol rulers demanded that tribute be paid in printed form"],
+    "choices": ["A severe shortage of paper in southern China, which forced the state to control how receipts were printed", "Trade had grown so large that carrying enough copper coin to settle deals had become impractical", "Confucian officials had banned the use of all metal currency, calling it a source of greed among merchants", "Mongol rulers demanded that tribute be paid in printed form, so the Song needed a currency they could send north"],
     "answer": "B",
     "hints": ["Picture paying for a boatload of tea in strings of copper coin, then ask what the merchant physically has to haul to the dock."]
   },
@@ -182,7 +182,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "The Song paid silver and silk to their northern neighbors to keep the peace, lost northern China in 1127 CE, and were finally conquered in 1279 CE. Yet historians often describe Song China as the world's most advanced economy around 1200 CE. Which statement best reconciles these facts?",
-    "choices": ["The tribute payments and territorial losses were invented by later writers", "Military and territorial setbacks measure something different from economic strength, and the Southern Song's harvests, trade, and tax revenues kept growing after the north was lost", "Song wealth was created only after 1279 CE, once Mongol rule was established", "The Song economy was in fact poor, and its reputation rests entirely on its government offices"],
+    "choices": ["The tribute payments and territorial losses were invented by later writers who wanted to make the Song look weak beside the Mongol Yuan that replaced it", "Military and territorial setbacks measure something different from economic strength, and Southern Song harvests, trade, and tax revenues kept growing after the north was lost", "Song wealth was created only after 1279 CE, once Mongol rule was established, so descriptions of prosperity around 1200 CE actually describe the later Yuan period", "The Song economy was in fact poor, and its reputation rests entirely on its government offices and examination system, which later historians mistook for real economic strength"],
     "answer": "B",
     "hints": ["Two different yardsticks are in play here: one measures armies and borders, the other measures harvests, trade, and revenue."]
   },
@@ -193,7 +193,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "The Song greatly expanded the civil service examination system, so government offices were won by tested mastery of the Confucian classics rather than inherited, and cheap printed books put those texts within reach of more households. During the same centuries, foot binding spread among elite families and Neo-Confucian teaching reinforced women's subordinate legal and social position. Which summary best captures who gained and who lost in Song society?",
-    "choices": ["Opportunity widened for men outside the old aristocracy whose families could fund years of study, while women's mobility and standing narrowed", "Opportunity widened equally for women and for men, since the tests were open to every household", "Opportunity narrowed for nearly everyone, because offices returned to being inherited by birth", "Opportunity widened only for the hereditary nobility, since commoners were barred from sitting the tests"],
+    "choices": ["Opportunity widened for men outside the old aristocracy whose families could fund years of study, while women's mobility and standing narrowed", "Opportunity widened equally for women and for men, since the tests were open to every household and printed books reached daughters as well as sons", "Opportunity narrowed for nearly everyone, because offices returned to being inherited by birth and examinations became a formality for aristocratic sons", "Opportunity widened only for the hereditary nobility, since commoners were barred from sitting the tests and could not afford the newly printed classics"],
     "answer": "A",
     "hints": ["Handle the two groups separately first, then combine your two findings into one sentence.", "Distinguish the ideal of office by merit from the real cost of a decade of classical study, and then ask whether that door was open to women at all."]
   },

@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "The instantaneous rate of change of $f$ at $x=c$ is best described as:",
     "choices": [
-      "The average rate of change over the whole domain",
+      "The average rate of change of $f$ taken over the whole domain of the function",
       "The limit of the average rates of change over intervals shrinking toward $c$",
-      "Always equal to zero at a single point",
-      "The value $f(c)$ divided by $c$"
+      "Always equal to zero, since a single point has no width",
+      "The value $f(c)$ divided by $c$, the ratio of output to input"
     ],
     "answer": "B",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "Why can the instantaneous rate of change at a single point NOT be found by directly substituting one point into the average-rate-of-change formula?",
     "choices": [
-      "The numerator becomes infinite",
-      "The denominator becomes negative",
+      "The numerator becomes infinite, so the quotient grows without bound and has no value",
+      "The denominator becomes negative, so the computed rate of change comes out with the wrong sign",
       "Both the numerator and the denominator become 0, giving the indeterminate form $\\frac{0}{0}$",
-      "It actually works perfectly with a single point"
+      "It actually works perfectly with a single point, giving the derivative directly"
     ],
     "answer": "C",
     "hints": [
@@ -110,9 +110,9 @@
     "problemText": "The notation $\\lim_{x\\to c} f(x)=L$ means:",
     "choices": [
       "As $x$ gets arbitrarily close to $c$ (but not equal to $c$), $f(x)$ gets arbitrarily close to $L$",
-      "$f(c)=L$ exactly",
-      "$f$ is increasing near $c$",
-      "$L$ is the largest value of $f$ near $c$"
+      "$f(c)=L$ exactly, so substituting $x=c$ into $f$ gives the value $L$",
+      "$f$ is increasing near $c$ and its values level off at the height $L$",
+      "$L$ is the largest value that $f(x)$ reaches as $x$ gets arbitrarily close to $c$ from either side"
     ],
     "answer": "A",
     "hints": [
@@ -128,10 +128,10 @@
     "responseFormat": "mcq",
     "problemText": "The two-sided limit $\\lim_{x\\to c} f(x)$ exists if and only if:",
     "choices": [
-      "$f(c)$ is defined",
+      "$f(c)$ is defined and equals the values of $f$ at nearby points",
       "The left-hand and right-hand limits both exist and are equal",
-      "$f$ is continuous at $c$",
-      "The left-hand limit exists"
+      "$f$ is continuous at the point $x = c$",
+      "The left-hand limit exists and is equal to the function value $f(c)$"
     ],
     "answer": "B",
     "hints": [
@@ -214,7 +214,7 @@
       "Equal $c$ exactly",
       "Get closer to $c$ from both sides",
       "Grow without bound",
-      "Move away from $c$"
+      "Move away from $c$ on both sides"
     ],
     "answer": "B",
     "hints": [
@@ -351,10 +351,10 @@
     "responseFormat": "mcq",
     "problemText": "Given $\\lim_{x\\to a} f(x)=3$ and $\\lim_{x\\to a} g(x)=0$, what can be said about $\\lim_{x\\to a}\\frac{f(x)}{g(x)}$?",
     "choices": [
-      "It equals 0",
-      "It equals 3",
+      "It equals 0, found by dividing the limit of $g(x)$ by the limit of $f(x)$",
+      "It equals 3, because the limit of the numerator controls the whole quotient",
       "It is not determined by the quotient law, because the denominator's limit is 0",
-      "It equals 1"
+      "It equals 1, since the two limits cancel when they are divided"
     ],
     "answer": "C",
     "hints": [
@@ -410,9 +410,9 @@
     "problemText": "Direct substitution into $\\lim_{x\\to 3}\\frac{x^2-9}{x-3}$ gives $\\frac{0}{0}$. The best next technique is to:",
     "choices": [
       "Factor the numerator and cancel the common factor",
-      "Rationalize the denominator",
-      "Conclude the limit is 0",
-      "Conclude the limit does not exist"
+      "Rationalize the denominator by multiplying by a conjugate",
+      "Conclude the limit is 0, since the numerator is 0",
+      "Conclude the limit does not exist, since 0/0 is undefined"
     ],
     "answer": "A",
     "hints": [
@@ -525,9 +525,9 @@
     "problemText": "Direct substitution into $\\lim_{x\\to 2}\\frac{x^2-4}{x-2}$ produces the form $\\frac{0}{0}$. This tells you that:",
     "choices": [
       "The form is indeterminate; you must simplify before concluding",
-      "The limit is 0",
-      "The limit does not exist",
-      "The limit is 1"
+      "The limit is 0, because the numerator equals 0 at $x=2$",
+      "The limit does not exist, because the denominator is 0 at $x=2$",
+      "The limit is 1, because the numerator and denominator are equal"
     ],
     "answer": "A",
     "hints": [
@@ -543,10 +543,10 @@
     "responseFormat": "mcq",
     "problemText": "Substituting into $\\lim_{x\\to 2}\\frac{x+1}{x-2}$ gives the form $\\frac{3}{0}$, and the one-sided limits have opposite signs. The two-sided limit:",
     "choices": [
-      "Equals 0",
-      "Does not exist (the function has a vertical asymptote at $x=2$)",
-      "Equals 3",
-      "Equals $+\\infty$, so it exists"
+      "Equals 0, because the denominator is 0 at $x=2$",
+      "Does not exist (there is a vertical asymptote at $x=2$)",
+      "Equals 3, the value of the numerator at $x=2$",
+      "Equals $+\\infty$, so it exists as an infinite limit at $x=2$"
     ],
     "answer": "B",
     "hints": [
@@ -608,9 +608,9 @@
     "problemText": "The Squeeze Theorem lets you conclude $\\lim_{x\\to c} f(x)=L$ when, near $x=c$:",
     "choices": [
       "$g(x)\\le f(x)\\le h(x)$ and $\\lim_{x\\to c} g(x)=\\lim_{x\\to c} h(x)=L$",
-      "$f$ is increasing near $c$",
-      "$f$ is continuous at $c$",
-      "$g(x)=h(x)$ for all $x$"
+      "$f$ is increasing near $c$ and bounded above by $L$",
+      "$g(x)\\le f(x)\\le h(x)$ and $\\lim_{x\\to c} g(x)\\le L\\le\\lim_{x\\to c} h(x)$",
+      "$g(x)=h(x)$ for all $x$ and $\\lim_{x\\to c} g(x)=L$"
     ],
     "answer": "A",
     "hints": [
@@ -703,10 +703,10 @@
     "responseFormat": "mcq",
     "problemText": "A single limit can be investigated using which representations?",
     "choices": [
-      "Only graphs",
-      "Only algebra",
+      "Only graphs of the function near the point",
+      "Only algebraic expressions and their simplification",
       "Graphs, tables, and algebraic expressions",
-      "Only tables"
+      "Only tables of values close to the point"
     ],
     "answer": "C",
     "hints": [
@@ -722,9 +722,9 @@
     "responseFormat": "mcq",
     "problemText": "An algebraic evaluation gives $\\lim_{x\\to 2} f(x)=4$. A correct table of values near $x=2$ should show the $f$-values:",
     "choices": [
-      "Equal to 2",
-      "Approaching 2",
-      "Growing without bound",
+      "Equal to 2, the value that $x$ approaches",
+      "Approaching 2 from both sides of $x=2$",
+      "Growing without bound near $x=2$",
       "Approaching 4 from both sides"
     ],
     "answer": "D",
@@ -742,9 +742,9 @@
     "problemText": "A graph shows a hole (open circle) at $(3,5)$. The algebraic form of $f$ most likely came from:",
     "choices": [
       "A $\\frac{0}{0}$ indeterminate form where a common factor cancels",
-      "A $\\frac{5}{0}$ form",
-      "A continuous polynomial",
-      "A jump piecewise definition"
+      "A $\\frac{5}{0}$ form, where only the denominator vanishes at $x=3$",
+      "A continuous polynomial evaluated directly at $x=3$",
+      "A jump piecewise definition that splits at $x=3$"
     ],
     "answer": "A",
     "hints": [
@@ -760,10 +760,10 @@
     "responseFormat": "mcq",
     "problemText": "A table shows $f(x)\\to 2$ as $x\\to 1^-$ and $f(x)\\to 6$ as $x\\to 1^+$. The graph at $x=1$ therefore shows:",
     "choices": [
-      "A removable hole",
+      "A removable hole, where the limit equals 2",
       "A jump, so the two-sided limit does not exist",
-      "A vertical asymptote",
-      "Continuity"
+      "A vertical asymptote, so the limit is infinite",
+      "Continuity, since both one-sided limits exist"
     ],
     "answer": "B",
     "hints": [
@@ -843,9 +843,9 @@
     "responseFormat": "mcq",
     "problemText": "A removable discontinuity at $x=c$ occurs when:",
     "choices": [
-      "The one-sided limits are both infinite",
-      "The one-sided limits differ but are finite",
-      "$f$ is continuous at $c$",
+      "The one-sided limits are both infinite, so the graph has a vertical asymptote at $c$",
+      "The one-sided limits differ but are finite, so the graph jumps at $x=c$",
+      "$f$ is continuous at $c$ but not differentiable there",
       "$\\lim_{x\\to c} f(x)$ exists but does not equal $f(c)$ (or $f(c)$ is undefined)"
     ],
     "answer": "D",
@@ -907,9 +907,9 @@
     "responseFormat": "mcq",
     "problemText": "Which three conditions must all hold for $f$ to be continuous at $x=c$?",
     "choices": [
-      "$f$ is increasing, defined, and positive at $c$",
-      "$f(c)=0$, the limit exists, and $f$ is a polynomial",
-      "The left-hand limit exists and $f(c)$ is defined",
+      "$f$ is defined at $c$, increasing near $c$, and $f(c)$ is positive",
+      "$f(c)=0$, $\\lim_{x\\to c} f(x)$ exists, and $f$ is a polynomial",
+      "$\\lim_{x\\to c^-} f(x)$ exists, $f(c)$ is defined, and the two are equal",
       "$f(c)$ is defined, $\\lim_{x\\to c} f(x)$ exists, and the two are equal"
     ],
     "answer": "D",
@@ -927,9 +927,9 @@
     "problemText": "For $f$ to be continuous on the closed interval $[a,b]$, the endpoints require that:",
     "choices": [
       "The appropriate one-sided limits equal the endpoint values",
-      "$f$ is differentiable at $a$ and $b$",
-      "$f$ is increasing on $[a,b]$",
-      "$f(a)=f(b)$"
+      "$f$ is differentiable at both endpoints $a$ and $b$",
+      "$f$ is increasing on $[a,b]$, so its endpoint values are its extremes",
+      "$f(a)=f(b)$, so the graph begins and ends at the same height"
     ],
     "answer": "A",
     "hints": [
@@ -1041,10 +1041,10 @@
     "responseFormat": "mcq",
     "problemText": "Why can a jump discontinuity NOT be removed by redefining the function at one point?",
     "choices": [
-      "The function is undefined everywhere",
+      "The function is undefined everywhere near the jump, so there is nothing to redefine",
       "The two-sided limit does not exist, so no single value can make $f$ continuous",
-      "The limit is infinite",
-      "It actually can be removed"
+      "The limit is infinite, so no finite value can fill the gap at that point",
+      "It actually can be removed by setting $f$ equal to the average of the two sides"
     ],
     "answer": "B",
     "hints": [
@@ -1099,9 +1099,9 @@
     "responseFormat": "mcq",
     "problemText": "The statement $\\lim_{x\\to c} f(x)=\\infty$ means:",
     "choices": [
-      "$f(c)=\\infty$",
-      "The limit equals some large finite number",
-      "$f$ is continuous at $c$",
+      "$f(c)=\\infty$, so $f$ is defined there with an infinite value",
+      "The limit equals some large finite number that $f$ approaches",
+      "$f$ is continuous at $c$ with a very large value there",
       "$f(x)$ increases without bound as $x$ approaches $c$"
     ],
     "answer": "D",
@@ -1137,10 +1137,10 @@
     "responseFormat": "mcq",
     "problemText": "A rational function has a vertical asymptote at $x=c$ when, at $x=c$:",
     "choices": [
-      "The numerator is 0",
+      "The numerator is 0 and the denominator is nonzero",
       "The denominator is 0 and the numerator is nonzero",
-      "Both numerator and denominator are 0",
-      "The function is defined and continuous"
+      "Both the numerator and the denominator are 0 there",
+      "The function is defined and continuous, with a steep slope"
     ],
     "answer": "B",
     "hints": [
@@ -1317,9 +1317,9 @@
     "problemText": "If $f$ is continuous on $[a,b]$ and $N$ is any value between $f(a)$ and $f(b)$, the IVT guarantees that:",
     "choices": [
       "There exists at least one $c$ in $(a,b)$ with $f(c)=N$",
-      "There is exactly one $c$ with $f(c)=N$",
-      "$f(c)=N$ for every $c$",
-      "$f$ has a maximum equal to $N$"
+      "There exists exactly one value $c$ in $(a,b)$ with $f(c)=N$",
+      "$f(c)=N$ for every $c$ in the interval $[a,b]$",
+      "$f$ has a maximum value on $[a,b]$ equal to $N$"
     ],
     "answer": "A",
     "hints": [
@@ -1335,7 +1335,7 @@
     "responseFormat": "mcq",
     "problemText": "Suppose $f$ is continuous with $f(1)=-3$ and $f(4)=5$. The IVT guarantees that $f$ has:",
     "choices": [
-      "Exactly one zero in $(1,4)$",
+      "Exactly one zero (root) in $(1,4)$",
       "At least one zero (root) in $(1,4)$",
       "No zeros in $(1,4)$",
       "A zero at $x=0$"
@@ -1355,8 +1355,8 @@
     "problemText": "For which function does the IVT FAIL to guarantee that all values between the endpoint outputs are attained on $[-1,1]$?",
     "choices": [
       "$f(x)=x^3$",
-      "$f(x)=\\sin x$",
-      "$f(x)=\\frac{1}{x}$, which is discontinuous at $x=0$",
+      "$f(x)=\\sin(\\pi x)$",
+      "$f(x)=\\frac{1}{x}$",
       "$f(x)=x^2+1$"
     ],
     "answer": "C",

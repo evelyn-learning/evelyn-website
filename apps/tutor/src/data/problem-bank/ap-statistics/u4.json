@@ -42,7 +42,7 @@
       "P(A) + P(B)",
       "P(A) times P(B)",
       "P(A) + P(B) - P(A and B)",
-      "P(A) - P(B)"
+      "P(A) + P(B) - 2 P(A and B)"
     ],
     "answer": "C",
     "hints": ["Adding P(A) and P(B) double-counts the outcomes that are in both events.", "Subtract the overlap, P(A and B), exactly once."]
@@ -124,10 +124,10 @@
     "responseFormat": "mcq",
     "problemText": "Events A and B satisfy P(A) = 0.4, P(B) = 0.7, and P(A and B) = 0.28. Are A and B independent?",
     "choices": [
-      "No, because P(A and B) is not zero",
-      "No, because P(A) and P(B) are not equal",
+      "No, because P(A and B) is not zero, so the events overlap",
+      "No, because P(A) and P(B) are not equal to each other",
       "Yes, because P(A) times P(B) = 0.28, which matches P(A and B)",
-      "Yes, because A and B are mutually exclusive"
+      "Yes, because A and B are mutually exclusive events here"
     ],
     "answer": "C",
     "hints": ["Independence means P(A and B) = P(A) times P(B).", "Compute 0.4 times 0.7 and compare it to the given joint probability."]
@@ -171,9 +171,9 @@
     "responseFormat": "mcq",
     "problemText": "A discrete random variable X has a probability distribution. Which condition must this distribution satisfy?",
     "choices": [
-      "Each probability must equal exactly 0.5",
-      "The probabilities must be listed in increasing order",
-      "X must take only two possible values",
+      "Each probability must equal exactly 0.5, so all outcomes are equally likely",
+      "The probabilities must be listed in increasing order of the values of X",
+      "X must take only two possible values, one for success and one for failure",
       "Each probability is between 0 and 1, and the probabilities sum to 1"
     ],
     "answer": "D",

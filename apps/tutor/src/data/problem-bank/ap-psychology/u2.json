@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "According to the levels-of-processing framework (Craik and Lockhart), which study strategy will produce the strongest long-term retention of new vocabulary words?",
     "choices": [
-      "Copying each word five times in neat handwriting",
-      "Counting the number of vowels in each word",
-      "Reading each word aloud twice from the list",
-      "Writing an original sentence that uses each word in a personally meaningful context"
+      "Copying each word five times in neat handwriting until its spelling is memorized",
+      "Counting the number of vowels in each word and noting which words share them",
+      "Reading each word aloud twice from the list in a clear and steady voice",
+      "Writing an original sentence using each word in a personally meaningful context"
     ],
     "answer": "D",
     "hints": ["Deeper, more meaningful (semantic) processing creates stronger memory traces than shallow, surface-level processing."]
@@ -137,9 +137,9 @@
     "problemText": "A student who studied chemistry in a coffee shop notices she recalls the material more easily when taking a practice quiz in a similar cafe environment than in a silent exam hall. This best illustrates:",
     "choices": [
       "Context-dependent (encoding specificity) memory",
-      "The serial position effect",
-      "State-dependent memory",
-      "The primacy effect"
+      "The serial position effect in recalling word lists",
+      "State-dependent (internal-state) memory",
+      "The primacy effect of early-studied material"
     ],
     "answer": "A",
     "hints": ["The external physical environment during encoding matched the environment during retrieval."]
@@ -427,10 +427,10 @@
     "responseFormat": "mcq",
     "problemText": "Howard Gardner challenged traditional intelligence testing by arguing that:",
     "choices": [
-      "All intelligent behavior can ultimately be reduced to a single general factor (g)",
-      "Only verbal and mathematical abilities qualify as genuine intelligence",
-      "Intelligence is almost entirely fixed by genetic inheritance and cannot be developed",
-      "Human intelligence consists of several distinct and independent abilities, such as musical, bodily-kinesthetic, and interpersonal intelligence"
+      "All intelligent behavior can ultimately be reduced to a single general factor (g) underlying cognitive test performance",
+      "Only verbal and mathematical abilities qualify as genuine intelligence, since those abilities best predict academic success",
+      "Intelligence is almost entirely fixed by genetic inheritance and cannot be developed through education or practice",
+      "Intelligence comprises multiple independent abilities, such as musical, bodily-kinesthetic, and interpersonal intelligence"
     ],
     "answer": "D",
     "hints": ["Gardner was influenced by the observation that brain injury can selectively eliminate one ability while leaving others fully intact."]
@@ -459,10 +459,10 @@
     "responseFormat": "mcq",
     "problemText": "In classic stereotype threat research, students from a group targeted by a negative intellectual stereotype scored lower on a challenging test when the stereotype was made salient immediately before testing. This finding most directly implies that:",
     "choices": [
-      "Standardized intelligence tests are inherently free of situational influences",
-      "Members of stereotyped groups always underperform regardless of testing conditions",
-      "Awareness of a negative group stereotype can impair performance by creating anxiety and diverting cognitive resources",
-      "Stereotype threat affects verbal reasoning only and not quantitative problem-solving"
+      "Standardized intelligence tests are inherently free of situational influences such as the testing environment or instructions",
+      "Members of stereotyped groups always underperform regardless of testing conditions or how the test is framed",
+      "Awareness of a negative group stereotype can impair performance by raising anxiety and diverting cognitive resources",
+      "Stereotype threat affects verbal reasoning only and not quantitative or spatial problem-solving tasks"
     ],
     "answer": "C",
     "hints": ["Steele and Aronson found the gap appeared when the stereotype was made relevant — control groups without the prime showed no performance difference."]
@@ -475,10 +475,10 @@
     "responseFormat": "mcq",
     "problemText": "Average IQ scores have risen substantially in many countries over the past century — a trend known as the Flynn Effect. Which explanation do psychologists most widely accept for this generational increase?",
     "choices": [
-      "Improvements in nutrition, education, exposure to cognitively stimulating environments, and growing familiarity with abstract test-taking",
-      "Accumulated genetic mutations in intelligence-related alleles across generations",
+      "Improvements in nutrition, education, cognitively stimulating environments, and familiarity with abstract test-taking",
+      "Accumulated genetic mutations in intelligence-related alleles that spread across successive generations",
       "IQ tests were intentionally redesigned to be progressively easier in order to reduce score variance",
-      "The official definition of intelligence was formally broadened to include emotional and social intelligence"
+      "The official definition of intelligence was formally broadened to include emotional and social intelligence in modern tests"
     ],
     "answer": "A",
     "hints": ["The gains occurred far too rapidly across generations to be explained by genetic change — environmental improvements are the leading explanation."]

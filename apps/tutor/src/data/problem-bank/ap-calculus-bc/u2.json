@@ -27,9 +27,9 @@
     "problemText": "Before any limit is taken, the difference quotient $\\dfrac{f(x+h) - f(x)}{h}$ represents which quantity?",
     "choices": [
       "The instantaneous rate of change of $f$ at $x$",
-      "The slope of the tangent line to $f$ at $x$",
+      "The slope of the tangent line to the graph of $f$ at the point $(x, f(x))$",
       "The exact value of the derivative $f'(x)$",
-      "The average rate of change of $f$ over the interval, i.e. the slope of a secant line"
+      "The average rate of change of $f$ from $x$ to $x+h$ (a secant slope)"
     ],
     "answer": "D",
     "hints": [
@@ -119,10 +119,10 @@
     "responseFormat": "mcq",
     "problemText": "A table gives $f$ at $x = 1, 3, 5, 7$. To best estimate the instantaneous rate $f'(5)$ from the table, which pair of points should you use?",
     "choices": [
-      "$x = 5$ and $x = 7$ only",
-      "$x = 3$ and $x = 7$ (a centered pair on both sides of $x = 5$)",
-      "$x = 1$ and $x = 3$ only",
-      "Just the single value $f(5)$"
+      "$x = 5$ and $x = 7$, the next point to the right",
+      "$x = 3$ and $x = 7$, centered on $x = 5$",
+      "$x = 1$ and $x = 3$, the points to the left of $x = 5$",
+      "Just the single value $f(5)$, read straight from the table"
     ],
     "answer": "B",
     "hints": [
@@ -157,9 +157,9 @@
     "responseFormat": "mcq",
     "problemText": "Why is a symmetric (centered) difference quotient usually a more accurate estimate of $f'(a)$ than a one-sided quotient?",
     "choices": [
-      "It uses smaller numbers, so rounding is reduced",
-      "It always gives the exact derivative",
-      "One-sided quotients are undefined for smooth functions",
+      "It uses smaller step sizes, so rounding error in the table values is reduced",
+      "It always gives the exact derivative, no matter how large the step size is",
+      "One-sided quotients are undefined for smooth functions at interior points like $a$",
       "It averages the behavior on both sides of $a$, canceling much of the leading error"
     ],
     "answer": "D",
@@ -233,10 +233,10 @@
     "responseFormat": "mcq",
     "problemText": "The function $g(x) = |x|$ is continuous at $x = 0$ but not differentiable there. Which reason best explains this?",
     "choices": [
-      "The function is discontinuous at $x = 0$",
-      "The function is undefined at $x = 0$",
-      "The function has a vertical tangent at $x = 0$",
-      "The slope from the left is $-1$ while the slope from the right is $+1$, so no single tangent slope exists"
+      "The function is discontinuous at $x = 0$, so a derivative cannot be formed there",
+      "The function is undefined at $x = 0$, so the difference quotient has no value to start from",
+      "The function has a vertical tangent at $x = 0$, so its slope there grows without bound",
+      "The slope is $-1$ from the left and $+1$ from the right, so no single tangent slope exists"
     ],
     "answer": "D",
     "hints": [

@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "Congress enacts a large tax cut (expansionary fiscal policy) while the central bank simultaneously sells bonds on the open market (contractionary monetary policy). Which macroeconomic variable has a DETERMINATE direction of change?",
     "choices": [
-      "Real output",
-      "The price level",
+      "The level of real output",
+      "The aggregate price level",
       "The nominal interest rate",
-      "Unemployment"
+      "The unemployment rate"
     ],
     "answer": "C",
     "hints": ["Expansionary fiscal policy raises government borrowing, putting upward pressure on interest rates. Contractionary monetary policy shrinks the money supply, also pushing interest rates up."]
@@ -88,9 +88,9 @@
     "problemText": "The government pursues expansionary fiscal policy at the same time the central bank pursues expansionary monetary policy. In the short run, what happens to real output and the nominal interest rate?",
     "choices": [
       "Real output rises, and the effect on the nominal interest rate is indeterminate",
-      "Real output falls, and the nominal interest rate rises",
-      "Real output rises, and the nominal interest rate must rise",
-      "Real output falls, and the nominal interest rate must fall"
+      "Real output falls, and the nominal interest rate rises as government borrowing increases",
+      "Real output rises, and the nominal interest rate must rise because of crowding out",
+      "Real output falls, and the nominal interest rate must fall as the money supply grows"
     ],
     "answer": "A",
     "hints": ["Both policies increase aggregate demand, so short-run real output rises.", "Expansionary fiscal policy pushes the interest rate up while expansionary monetary policy pushes it down, so the net effect on the nominal interest rate is indeterminate."]
@@ -152,10 +152,10 @@
     "responseFormat": "mcq",
     "problemText": "A sudden large increase in oil prices reduces aggregate supply throughout the economy. On a Phillips curve diagram, this negative supply shock most likely causes the short-run Phillips curve to:",
     "choices": [
-      "Remain stationary; the economy simply moves along the existing curve",
-      "Shift downward, producing lower inflation at every unemployment rate",
+      "Remain stationary; the economy simply moves along the existing curve to a new point",
+      "Shift downward, producing lower inflation at every unemployment rate as spending falls",
       "Shift rightward (upward), producing higher unemployment AND higher inflation — stagflation",
-      "Shift leftward, producing lower unemployment at every inflation rate"
+      "Shift leftward, producing lower unemployment at every inflation rate as output adjusts"
     ],
     "answer": "C",
     "hints": ["A negative supply shock raises costs and lowers output simultaneously, worsening both inflation and unemployment — an outward shift of the SRPC."]
@@ -184,10 +184,10 @@
     "responseFormat": "mcq",
     "problemText": "An economy is experiencing unemployment above its natural rate and actual inflation below workers' expected inflation. According to the expectations-augmented Phillips curve model, what happens in the long run if no new policy is implemented?",
     "choices": [
-      "The economy remains stuck at high unemployment indefinitely",
-      "The SRPC shifts rightward, worsening stagflation",
-      "The central bank must intervene to restore the natural rate",
-      "Workers revise expected inflation downward; the SRPC shifts downward and the economy gradually returns to the natural rate with lower inflation"
+      "The economy remains stuck at high unemployment indefinitely, because nominal wages are sticky downward and expectations stay anchored at the old rate",
+      "The SRPC shifts rightward, worsening stagflation as workers raise their expected inflation to make up for lost real wages",
+      "The central bank must intervene to restore the natural rate, since the economy lacks a mechanism to lower expected inflation by itself",
+      "Workers revise expected inflation downward, so the SRPC shifts downward and the economy returns to the natural rate with lower inflation"
     ],
     "answer": "D",
     "hints": ["When actual inflation persistently falls short of expectations, workers reduce wage demands, lowering expected inflation and shifting the SRPC down until unemployment returns to its natural rate."]
@@ -218,9 +218,9 @@
     "problemText": "In the long run, an increase in the money supply leads to which outcome?",
     "choices": [
       "An increase in the price level but no change in real variables such as real GDP or real wages",
-      "Higher real GDP due to the sustained increase in spending",
-      "Permanently lower real interest rates",
-      "An increase in both the price level and long-run real output"
+      "Higher real GDP due to the sustained increase in spending by households and firms",
+      "Permanently lower real interest rates, which raise investment and the capital stock",
+      "An increase in both the price level and long-run real output as total spending rises over time"
     ],
     "answer": "A",
     "hints": ["Money is neutral in the long run: it changes nominal values but not real quantities like output, employment, or real wages."]
@@ -286,10 +286,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following correctly distinguishes the federal budget deficit from the national debt?",
     "choices": [
-      "The deficit is a stock variable; the national debt is a flow variable",
+      "The deficit is a stock variable (accumulated over time); the national debt is a flow variable (measured per year)",
       "The deficit is a flow variable (measured per year); the national debt is a stock variable (accumulated over time)",
-      "Both the deficit and the debt are flow variables",
-      "Both the deficit and the debt are stock variables"
+      "Both the deficit and the debt are flow variables, since each is measured over a single fiscal year",
+      "Both the deficit and the debt are stock variables, since each is measured at a single point in time"
     ],
     "answer": "B",
     "hints": ["A surplus or deficit is the difference between revenues and outlays in one fiscal year; debt is the running total of all past deficits minus surpluses."]
@@ -441,9 +441,9 @@
     "responseFormat": "mcq",
     "problemText": "In an open economy, increased government borrowing raises domestic real interest rates, attracting foreign capital inflows and appreciating the domestic currency. This currency appreciation is likely to:",
     "choices": [
-      "Increase net exports by making domestic goods cheaper for foreign buyers",
-      "Have no effect on net exports",
-      "Increase the trade surplus",
+      "Increase net exports by making domestic goods cheaper for foreign buyers, offsetting the effect of higher interest rates",
+      "Have no effect on net exports, because the exchange rate changes only the prices of financial assets, not of goods",
+      "Increase the trade surplus, as the stronger currency draws additional foreign demand toward domestic exports",
       "Reduce net exports, so foreign crowding out of exports partially replaces domestic crowding out of private investment"
     ],
     "answer": "D",
@@ -532,10 +532,10 @@
     "responseFormat": "mcq",
     "problemText": "The convergence hypothesis in growth economics predicts that, all else equal, poorer countries tend to grow faster than richer ones. The primary reason given by standard theory is:",
     "choices": [
-      "Poorer countries tend to have larger natural resource endowments",
+      "Poorer countries tend to have larger natural resource endowments, which can be exported to finance faster growth",
       "Diminishing returns to capital mean that each new unit of capital is more productive in capital-scarce economies",
-      "Poorer countries typically have lower inflation rates, which stimulates investment",
-      "Richer countries devote more resources to education, leaving less room for further growth"
+      "Poorer countries typically have lower inflation rates, which stimulates investment and speeds capital accumulation",
+      "Richer countries devote more resources to education, leaving less room for further growth in their skilled workforces"
     ],
     "answer": "B",
     "hints": ["Because capital-poor countries are on the steep part of the production function, a given investment generates a bigger output gain there than in a capital-rich country."]
@@ -548,9 +548,9 @@
     "responseFormat": "mcq",
     "problemText": "In a growth accounting framework, the portion of real GDP growth that cannot be explained by increases in measured physical capital or labor inputs is attributed to:",
     "choices": [
-      "Growth in government spending",
-      "Population growth",
-      "Financial sector development",
+      "Growth in government spending, which raises the measured value of output each year",
+      "Population growth, which expands potential output beyond the measured labor force",
+      "Financial sector development, measured by growth in the volume of bank lending",
       "Total factor productivity, often identified with technological progress"
     ],
     "answer": "D",
@@ -565,10 +565,10 @@
     "responseFormat": "mcq",
     "problemText": "Government policies designed to promote long-run economic growth primarily aim to:",
     "choices": [
-      "Shift aggregate demand rightward in the short run to reduce unemployment",
+      "Shift aggregate demand rightward in the short run to reduce unemployment and raise current output",
       "Shift the long-run aggregate supply (LRAS) rightward by expanding the economy's productive capacity",
-      "Reduce the natural rate of unemployment to zero",
-      "Lower the price level through contractionary demand management"
+      "Reduce the natural rate of unemployment to zero by eliminating frictional and structural joblessness",
+      "Lower the price level through contractionary demand management that restrains total spending"
     ],
     "answer": "B",
     "hints": ["Supply-side growth policies raise potential output — they work through the LRAS, not just short-run aggregate demand."]
@@ -597,9 +597,9 @@
     "responseFormat": "mcq",
     "problemText": "Government subsidies for higher education and job training programs are classified as growth-oriented policies because they:",
     "choices": [
-      "Increase aggregate demand in the short run by transferring income to students",
-      "Expand the money supply, allowing firms to borrow at lower rates",
-      "Generate budget surpluses that reduce the national debt",
+      "Increase aggregate demand in the short run by transferring income to students and training participants",
+      "Expand the money supply, allowing firms to borrow at lower rates and invest in new equipment",
+      "Generate budget surpluses that reduce the national debt and free up savings for private investment",
       "Increase the stock of human capital, shifting the production possibilities frontier outward over time"
     ],
     "answer": "D",
@@ -629,10 +629,10 @@
     "responseFormat": "mcq",
     "problemText": "Economists generally argue that free trade agreements promote long-run economic growth primarily because they:",
     "choices": [
-      "Allow countries to specialize according to comparative advantage, raising economy-wide efficiency and productivity",
-      "Eliminate government budget deficits by boosting export tax revenues",
-      "Guarantee that all trading partners grow at the same rate",
-      "Prevent foreign firms from competing with less-efficient domestic industries"
+      "Allow countries to specialize according to comparative advantage, raising efficiency and productivity",
+      "Eliminate government budget deficits by boosting the tax revenue collected on rising exports to partner countries",
+      "Guarantee that all trading partners grow at the same rate by equalizing their access to each other's markets",
+      "Prevent foreign firms from competing with less-efficient domestic industries, protecting jobs in those sectors"
     ],
     "answer": "A",
     "hints": ["Comparative advantage means each country produces what it makes most efficiently; trade allows more total output from the same resources."]
@@ -645,9 +645,9 @@
     "responseFormat": "mcq",
     "problemText": "Cross-country growth research consistently finds that strong protection of property rights is associated with higher long-run economic growth. The most likely economic explanation is that:",
     "choices": [
-      "Property rights enforcement directly lowers the natural rate of unemployment",
-      "Property rights eliminate production externalities automatically",
-      "Strong property rights reduce government budget deficits by increasing tax compliance",
+      "Property rights enforcement directly lowers the natural rate of unemployment by reducing labor market frictions",
+      "Property rights eliminate production externalities automatically, so markets reach efficient output without regulation",
+      "Strong property rights reduce government budget deficits by increasing tax compliance among firms and households",
       "Secure property rights encourage investment and innovation because entrepreneurs can capture the returns from their efforts"
     ],
     "answer": "D",

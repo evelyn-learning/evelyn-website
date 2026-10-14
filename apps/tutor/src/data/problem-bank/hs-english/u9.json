@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "A student is writing a three-page argument paper about the school's morning announcements. Which of these is the strongest thesis?",
     "choices": [
-      "The morning announcements are read over the intercom at 7:50 every day.",
-      "In this paper I will discuss the morning announcements and how they could be improved.",
-      "The morning announcements should be posted as a one-minute video shown in first period instead of read over the intercom, because half the building cannot hear the intercom over the hallway noise.",
-      "Communication has shaped schools and communities everywhere for generations."
+      "The morning announcements are read over the intercom at 7:50 every day by two student volunteers from the broadcast club, and they usually last about four minutes.",
+      "In this paper I will discuss the morning announcements, how they are delivered each day, and the several ways the school could improve them for students and teachers.",
+      "The morning announcements should be a one-minute video shown in first period instead of an intercom reading, because half the building cannot hear the intercom over hallway noise.",
+      "Communication has shaped schools and communities everywhere for generations, and the morning announcements are one more example of how a school keeps its students and teachers informed."
     ],
     "answer": "C",
     "hints": [
@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A student submits this thesis: \"Our school should require study hall, the track needs resurfacing, and the vending machines should stay on after lunch.\" What is the main problem with it?",
     "choices": [
-      "It is a fact rather than a claim, so no reasonable person could disagree with it.",
+      "It is a fact rather than a claim, so no reasonable person could disagree with it or need to be persuaded by the paper.",
       "It bundles three unrelated points together, so it has no single controlling claim for the paper to prove.",
-      "It is too short to serve as a thesis for a paper of any length.",
-      "It announces what the essay will do instead of stating a position."
+      "It is too short to serve as a thesis for a paper of any length, and a thesis should fill at least two full sentences.",
+      "It announces what the essay will do instead of stating a position the writer will defend."
     ],
     "answer": "B",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "A student wrote this weak thesis for a four-page paper: \"The peer tutoring program was a good thing for our school.\" Which revision is strongest?",
     "choices": [
-      "Forty-one students signed up for peer tutoring last fall.",
-      "This paper will describe the peer tutoring program and explain why the experience mattered.",
-      "Helping other people has always been an important part of human life everywhere.",
-      "The peer tutoring program should be expanded to math classes, because students who met with a tutor twice a week began turning in homework they had skipped all semester."
+      "Forty-one students signed up for peer tutoring last fall, and most of them met with a tutor at least once a week in the library after school.",
+      "This paper will describe the peer tutoring program, explain how it was organized, and show why the experience mattered to so many of the students involved.",
+      "Helping other people has always been an important part of human life everywhere, and a peer tutoring program is one way a school can teach that lesson to its students.",
+      "The peer tutoring program should be expanded to math classes, because students who met a tutor twice a week began turning in homework they had skipped all semester."
     ],
     "answer": "D",
     "hints": [
@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of these is the strongest thesis for a four-page paper about the school's late-work policy?",
     "choices": [
-      "The late-work policy should allow a two-day grace period on long projects, because the current same-day cutoff punishes students for bus delays rather than for weak work.",
-      "The late-work policy at our school should be changed.",
-      "Late work is a problem that teachers and students have argued about for decades in schools everywhere.",
-      "Under the current policy, work turned in one day late loses half of its credit."
+      "The late-work policy should allow a two-day grace period on long projects, because the same-day cutoff punishes students for bus delays rather than weak work.",
+      "The late-work policy at our school should be changed, because many students and teachers agree that it is unfair in several important ways.",
+      "Late work is a problem that teachers and students have argued about for decades in schools everywhere, and each school handles it in its own way with mixed results.",
+      "Under the current policy, work turned in one day late loses half of its credit, and work turned in two days late receives no credit at all."
     ],
     "answer": "A",
     "hints": [
@@ -83,10 +83,10 @@
     "responseFormat": "mcq",
     "problemText": "A student has two days and three pages to write about early-morning club meetings. Which thesis has a scope she can actually prove in that space?",
     "choices": [
-      "School start times across the country should be pushed back, because teenage sleep cycles do not match the schedules that set the modern school day.",
-      "Morning club meetings begin at 7:00 in the morning on Tuesdays and Thursdays.",
-      "Our school should move club meetings from 7:00 in the morning to the activity period after fourth block, because the early meetings depend on a carpool that only about a dozen families can manage.",
-      "In these pages I will weigh the advantages and disadvantages of morning club meetings."
+      "School start times across the country should be pushed back by an hour, because teenage sleep cycles do not match the early-morning schedules that still set the modern school day for most students.",
+      "Morning club meetings begin at 7:00 in the morning on Tuesdays and Thursdays and usually run until the first bell.",
+      "Our school should move club meetings from 7:00 in the morning to the activity period after fourth block, because the early meetings depend on a carpool only about a dozen families can manage.",
+      "In these pages I will weigh the advantages and disadvantages of morning club meetings for students and the advisers who run them."
     ],
     "answer": "C",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "Two of these thesis statements take the same arguable side about the school's hall pass. Which one is the stronger thesis?",
     "choices": [
-      "The school should replace the paper hall pass with a digital sign-out, because a digital sign-out is a better system than a paper one.",
-      "The school should replace the paper hall pass with a digital sign-out, because the front office currently rebuilds attendance from unreadable handwriting after every fire drill.",
-      "The paper hall pass has been used at this school for more than twenty years.",
-      "In this essay I will argue in favor of a digital sign-out system."
+      "The school should replace the paper hall pass with a digital sign-out, because a digital sign-out is simply a better and more modern system than a paper one could ever be.",
+      "The school should replace the paper hall pass with a digital sign-out, because the front office now rebuilds attendance from unreadable handwriting after every fire drill.",
+      "The paper hall pass has been used at this school for more than twenty years and is kept on a hook beside each classroom door.",
+      "In this essay I will argue in favor of a digital sign-out system and explain why it should replace the paper hall pass."
     ],
     "answer": "B",
     "hints": [
@@ -159,10 +159,10 @@
     "responseFormat": "mcq",
     "problemText": "A paragraph opens with this topic sentence: \"Moving the vending machines out of the gym lobby cut the litter problem in half.\" Which sentence best DEVELOPS that point?",
     "choices": [
-      "There is much less litter in the lobby now than there used to be.",
+      "There is much less litter in the lobby now than there used to be, and most students and staff say they have noticed the difference.",
       "The custodial log recorded nine bags of lobby trash in November and four in February, and the bleacher seams no longer collect wrappers.",
-      "The vending machines were installed in the lobby six years ago.",
-      "Many students believe the cafeteria should also start selling cold drinks."
+      "The vending machines were installed in the lobby six years ago, when the athletic boosters paid for them out of concession profits.",
+      "Many students believe the cafeteria should also start selling cold drinks, since the vending machines are now harder to reach."
     ],
     "answer": "B",
     "hints": [
@@ -274,10 +274,10 @@
     "responseFormat": "mcq",
     "problemText": "In which pair of sentences does the transition name the WRONG relationship?",
     "choices": [
-      "The debate team recorded its practice rounds all fall. In addition, the coach began timing every rebuttal.",
-      "The chorus room lost its air conditioning in September. As a result, morning rehearsals moved to the auditorium.",
-      "Some electives fill on the first day of registration. For example, the forensics course closed within an hour last spring.",
-      "The garden club ordered seed trays in February so that seedlings would be ready for the May sale. Moreover, the trays were delivered to the wrong campus and sat unopened until June."
+      "The debate team recorded its practice rounds all fall. In addition, the coach began timing every rebuttal and posting the results on the team board.",
+      "The chorus room lost its air conditioning in September. As a result, morning rehearsals moved to the auditorium until repairs were finished in October.",
+      "Some electives fill on the first day of registration. For example, the forensics course closed within an hour of opening last spring, before most seniors had logged in.",
+      "The garden club ordered seed trays in February for the May sale. Moreover, the trays were delivered to the wrong campus and sat unopened until June."
     ],
     "answer": "D",
     "hints": [
@@ -293,10 +293,10 @@
     "responseFormat": "mcq",
     "problemText": "A draft reads: \"The freshman mentors started meeting their groups on Friday mornings. It has changed things.\" Which revision of the second sentence improves cohesion WITHOUT adding a transition word?",
     "choices": [
-      "Moreover, it has changed things quite a bit.",
-      "Therefore, this has been a real change this year.",
+      "Moreover, it has changed things quite a bit for the new students in their groups.",
+      "Therefore, this has been a real change this year for the freshmen and their mentors.",
       "Those Friday meetings have given new students a place to ask the questions they will not ask in class.",
-      "This has changed a lot, and it is something they seem to like."
+      "This has changed a lot, and it is something that both the freshmen and their mentors seem to like so far this year."
     ],
     "answer": "C",
     "hints": [
@@ -326,9 +326,9 @@
     "responseFormat": "mcq",
     "problemText": "An essay will argue that the school should build a covered walkway between the main building and the portable classrooms. Which opening sentence best draws the reader in?",
     "choices": [
-      "Since the beginning of time, people have looked for shelter from bad weather.",
-      "The dictionary defines a walkway as a passage for people to walk along.",
-      "In this essay I will argue that a covered walkway should be built between the buildings.",
+      "Since the beginning of time, people have looked for shelter from bad weather, and schools are certainly no exception to that rule.",
+      "The dictionary defines a walkway as a passage for people to walk along, which is exactly what our portables are missing.",
+      "In this essay I will argue that a covered walkway should be built between the main building and the portable classrooms.",
       "When it rains, thirty-one students cross ninety feet of open blacktop four times a day and start algebra with soaked notebooks."
     ],
     "answer": "D",
@@ -345,10 +345,10 @@
     "responseFormat": "mcq",
     "problemText": "Here is the full opening paragraph of an essay about the school's athletic participation fee: \"Sports are very important and have been part of schools for a long time. Teams can be found at almost every high school. This paper is going to talk about the athletic fee.\" What is the paragraph's biggest problem?",
     "choices": [
-      "It never makes a claim; it names a topic instead of stating something a reader could disagree with, and nothing before that is concrete enough to hook anyone.",
-      "It places the thesis in the last sentence, when a thesis belongs in the first sentence of an introduction.",
-      "It gives so much specific evidence up front that the body paragraphs will have nothing left to prove.",
-      "It is written in the third person, and an essay about a fee students pay should be written in the first person."
+      "It never makes a claim; it names a topic instead of an arguable position, and nothing before that is concrete enough to hook anyone.",
+      "It places the thesis in the last sentence, when a thesis belongs in the first sentence of an introduction so readers know the claim at once.",
+      "It gives so much specific evidence up front that the body paragraphs will have nothing left to prove or explain to the reader.",
+      "It is written in the third person, and an essay about a fee that students themselves pay should be written in the first person."
     ],
     "answer": "A",
     "hints": [
@@ -364,10 +364,10 @@
     "responseFormat": "mcq",
     "problemText": "An essay has argued that students should be allowed to eat lunch at the courtyard tables. Its hook described the noise level in the cafeteria, and its body paragraphs covered supervision, weather, and seating. Which sentence is the strongest way to begin the conclusion?",
     "choices": [
-      "In conclusion, as stated above, students should be allowed to eat lunch at the courtyard tables.",
-      "Since the dawn of time, people have gathered together to share their meals.",
-      "Another good reason is that the courtyard tables were donated four years ago and are almost never used.",
-      "The noise that drives students to eat in the stairwells is not a discipline problem; it is a seating problem, and the courtyard already has the seats."
+      "In conclusion, as stated above, students should be allowed to eat lunch at the courtyard tables instead of in the noisy cafeteria.",
+      "Since the dawn of time, people have gathered together to share their meals, and a school lunch period is simply the latest version of that.",
+      "Another good reason is that the courtyard tables were donated by the parents' association four years ago and are almost never used at lunch.",
+      "The noise that drives students into the stairwells is not a discipline problem; it is a seating problem, and the courtyard has the seats."
     ],
     "answer": "D",
     "hints": [
@@ -383,10 +383,10 @@
     "responseFormat": "mcq",
     "problemText": "An opening has a hook and a thesis but nothing between them: \"The wood shop's dust collector shuts off every twenty minutes, and students finish their cuts in a gray haze. ___ The school should replace the collector before the spring build season, because a shop that cannot clear its own air cannot run the projects the course is built around.\" Which sentence best bridges the hook to the thesis?",
     "choices": [
-      "Wood shop is one of the most popular electives in the building.",
-      "Dust is a problem in workplaces all over the world.",
+      "Wood shop is one of the most popular electives in the building, and its waiting list has grown each semester for several years.",
+      "Dust is a problem in workplaces all over the world, from lumber mills and quarries to bakeries and textile factories.",
       "The collector was sized for a single lathe almost thirty years ago and has not been upgraded since the shop added six saws.",
-      "In this essay I will explain why the dust collector matters so much."
+      "In this essay I will explain why the dust collector matters so much and what the school should do about it this year."
     ],
     "answer": "C",
     "hints": [
@@ -421,10 +421,10 @@
     "responseFormat": "mcq",
     "problemText": "An essay has argued that the daily announcements should be cut from six minutes to two. Its hook described a first-period class losing the end of a lab demonstration to the intercom, and its body paragraphs covered lost instruction time, repetition, and posting notices online instead. Which sentence is the strongest final line?",
     "choices": [
-      "In short, the announcements run too long, they interrupt first period, and they could be posted online instead.",
-      "Announcements have always been part of school life and probably always will be.",
-      "The class that lost the end of its lab demonstration will never get those minutes back, and there are one hundred and eighty of those mornings in a year.",
-      "Another argument for shortening them is that the broadcast club has offered to produce a written bulletin."
+      "In short, the announcements run too long, they interrupt first period, and they could be posted online where students could read them later in the day.",
+      "Announcements have always been part of school life and probably always will be, no matter how the school decides to schedule them.",
+      "The class that lost the end of its lab demonstration will never get those minutes back, and a year holds one hundred and eighty such mornings.",
+      "Another argument for shortening them is that the broadcast club has already offered to produce a written bulletin each morning at no cost."
     ],
     "answer": "C",
     "hints": [

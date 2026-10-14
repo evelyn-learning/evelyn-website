@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "A cell uses a molecule of ATP to power the movement of a motor protein. What happens to the ATP molecule as that energy is released?",
     "choices": [
-      "It gains a fourth phosphate group and becomes ADP.",
+      "It gains a fourth phosphate group and becomes ADP, storing the released energy in that new bond.",
       "The bond holding its third phosphate group is broken, leaving ADP and a free phosphate.",
-      "It is broken all the way down into carbon dioxide and water.",
-      "Its adenine base is removed and sent back to the nucleus for storage."
+      "It is broken all the way down into carbon dioxide and water, as glucose is during respiration.",
+      "Its adenine base is removed and sent back to the nucleus for storage until it is needed again."
     ],
     "answer": "B",
     "hints": [
@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A student claims that organisms keep their long-term energy reserves in the form of ATP. Why is this claim incorrect?",
     "choices": [
-      "ATP is a short-term energy currency that is spent within seconds of being made; long-term reserves are held in molecules such as fats and starch.",
-      "ATP contains no usable chemical energy at all, so it could never serve as a store.",
-      "ATP can only be built inside chloroplasts, so animals have none of it to store.",
-      "ATP is a protein, and proteins are never involved in energy storage."
+      "ATP is a short-term energy currency spent within seconds of being made; long-term reserves are held in molecules such as fats and starch.",
+      "ATP contains no usable chemical energy at all, so it could never serve as a store; cells use it only to carry phosphate groups between proteins.",
+      "ATP can only be built inside chloroplasts, so animals have none of it to store and must take in their energy from food as glucose instead.",
+      "ATP is a protein, and proteins are never involved in energy storage, so organisms rely on nucleic acids such as DNA for long-term reserves."
     ],
     "answer": "A",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "A muscle cell holds only a very small amount of ATP at any given moment, yet the muscle can keep contracting for many minutes. Which statement best explains this?",
     "choices": [
-      "Each ATP molecule can be used thousands of times without ever being changed.",
-      "The muscle cell converts ADP directly into new glucose to keep contracting.",
-      "The muscle cell absorbs finished ATP from the bloodstream whenever it runs low.",
-      "ADP and free phosphate are continually rebuilt into ATP by cellular respiration, so the same small pool turns over again and again."
+      "Each ATP molecule can be used thousands of times without ever being changed, so a small supply lasts for many minutes.",
+      "The muscle cell converts ADP directly into new glucose to keep contracting, then burns that glucose for energy.",
+      "The muscle cell absorbs finished ATP from the bloodstream whenever it runs low, drawing on large reserves stored in the liver.",
+      "ADP and free phosphate are continually rebuilt into ATP by cellular respiration, so the same small pool turns over repeatedly."
     ],
     "answer": "D",
     "hints": [
@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "A membrane pump moves calcium ions from a region where they are scarce into a region where they are already concentrated. Which statement best explains how ATP makes this possible?",
     "choices": [
-      "ATP lowers the calcium concentration on the far side so the ions can drift downhill on their own.",
-      "Hydrolysis of ATP releases energy that changes the pump's shape, and the cell couples that energy-releasing reaction to the energy-requiring transport.",
-      "ATP forms an open channel that the calcium ions travel through without any energy cost.",
-      "ATP supplies the carbon that the pump converts into new calcium ions."
+      "ATP lowers the calcium concentration on the far side so the ions can drift downhill by diffusion, with the pump acting only as an open gate.",
+      "Hydrolysis of ATP releases energy that changes the pump's shape, coupling that energy-releasing reaction to the energy-requiring transport.",
+      "ATP forms an open channel that the calcium ions travel through without any energy cost, much like an aquaporin lets water through.",
+      "ATP supplies the carbon that the pump converts into new calcium ions, raising the calcium level on the concentrated side."
     ],
     "answer": "B",
     "hints": [
@@ -179,10 +179,10 @@
     "responseFormat": "mcq",
     "problemText": "A student says that because the Calvin cycle is sometimes called the 'dark reaction,' it must run only at night. Which correction is best supported by how the cycle actually works?",
     "choices": [
-      "The claim is correct: light destroys the enzymes of the Calvin cycle, so it can only operate after dark.",
-      "The Calvin cycle captures sunlight and makes its own ATP, so the time of day makes no difference to it.",
-      "The Calvin cycle does not use light directly, but it runs on ATP and NADPH supplied by the light reactions, so it operates mainly while light is available.",
-      "The Calvin cycle produces the ATP and NADPH that the light reactions then consume after dark."
+      "The claim is correct: light destroys the enzymes of the Calvin cycle, so the cycle can only operate after dark, once the light reactions have stopped.",
+      "The Calvin cycle captures sunlight and makes its own ATP, so the time of day makes no difference to how fast it runs.",
+      "The Calvin cycle does not use light directly, but it runs on ATP and NADPH from the light reactions, so it operates mainly while light is available.",
+      "The Calvin cycle produces the ATP and NADPH that the light reactions then consume after dark to keep the chloroplast running."
     ],
     "answer": "C",
     "hints": [
@@ -217,9 +217,9 @@
     "responseFormat": "mcq",
     "problemText": "Two chloroplast preparations are placed in bright light with plenty of CO2 and water. In sample 1 the pigment chlorophyll has been chemically destroyed. In sample 2 the chlorophyll is intact, but rubisco — the enzyme that attaches CO2 to a five-carbon molecule in the stroma — has been blocked. Which prediction about sugar production is best supported?",
     "choices": [
-      "Sample 1 still makes sugar because the Calvin cycle needs no light, while sample 2 makes none.",
-      "Both samples make normal amounts of sugar, because each blocked step has a backup pathway.",
-      "Sample 1 makes sugar but no oxygen, while sample 2 makes oxygen but no ATP.",
+      "Sample 1 still makes sugar because the Calvin cycle needs no light, while sample 2 makes none because rubisco is needed to absorb the light.",
+      "Both samples make normal amounts of sugar, because each blocked step has a backup pathway that takes over within the chloroplast.",
+      "Sample 1 makes sugar but no oxygen, while sample 2 makes oxygen but no ATP, so only sample 1 builds up any sugar at all.",
       "Neither sample makes sugar: sample 1 cannot absorb light to produce ATP and NADPH, and sample 2 has ATP and NADPH but cannot fix carbon."
     ],
     "answer": "D",
@@ -256,10 +256,10 @@
     "responseFormat": "mcq",
     "problemText": "One glucose molecule is broken down completely by aerobic respiration in a typical human cell. Which statement about the ATP yield is correct?",
     "choices": [
-      "Glycolysis alone gives a small net yield of about 2 ATP, and the mitochondrial stages that follow supply the large majority, for roughly 30 to 32 ATP in all.",
-      "Glycolysis supplies about 32 ATP and the mitochondrial stages add only about 2 more.",
-      "All of the ATP, about 32 molecules, is produced during the citric acid cycle itself.",
-      "Aerobic respiration yields about 2 ATP per glucose, the same as fermentation does."
+      "Glycolysis gives a small net yield of about 2 ATP, and the mitochondrial stages supply the large majority, for roughly 30 to 32 ATP in all.",
+      "Glycolysis supplies about 32 ATP and the mitochondrial stages add only about 2 more, since glycolysis splits glucose directly into ATP.",
+      "All of the ATP, about 32 molecules, is produced during the citric acid cycle itself, with the electron transport chain only recycling NAD+.",
+      "Aerobic respiration yields about 2 ATP per glucose, the same as fermentation does, because oxygen only removes waste carbon dioxide."
     ],
     "answer": "A",
     "hints": [
@@ -275,10 +275,10 @@
     "responseFormat": "mcq",
     "problemText": "When oxygen is unavailable, many cells switch from aerobic respiration to fermentation. What is the main role of fermentation for such a cell?",
     "choices": [
-      "It produces more ATP per glucose molecule than aerobic respiration does.",
-      "It runs the electron transport chain without oxygen, yielding large amounts of ATP.",
+      "It produces more ATP per glucose molecule than aerobic respiration does, because no energy is lost to oxygen.",
+      "It runs the electron transport chain without oxygen, yielding large amounts of ATP from the cell's stored glucose.",
       "It regenerates the NAD+ that glycolysis requires, allowing glycolysis and its small ATP yield to continue.",
-      "It converts lactic acid back into glucose so the cell never runs out of fuel."
+      "It converts lactic acid back into glucose so the cell never runs out of fuel while oxygen is unavailable."
     ],
     "answer": "C",
     "hints": [
@@ -294,10 +294,10 @@
     "responseFormat": "mcq",
     "problemText": "A leafy houseplant is kept in complete darkness for twelve hours. Which statement about its cells during that period is correct?",
     "choices": [
-      "The plant carries out neither photosynthesis nor cellular respiration; it is completely dormant until light returns.",
+      "The plant carries out neither photosynthesis nor cellular respiration; it is completely dormant until light returns, using no stored sugar at all.",
       "The plant carries out cellular respiration, breaking down stored sugars in its mitochondria and consuming O2, even though photosynthesis has stopped.",
-      "The plant keeps photosynthesizing on stored light energy, so it releases O2 all night long.",
-      "Plant cells have no mitochondria and rely on their chloroplasts to make ATP at all hours."
+      "The plant keeps photosynthesizing on stored light energy held in its chloroplasts, so it releases O2 and builds sugars all night long.",
+      "Plant cells have no mitochondria and rely on their chloroplasts to make ATP at all hours, drawing on sugar stored during the day."
     ],
     "answer": "B",
     "hints": [
@@ -314,9 +314,9 @@
     "problemText": "Cyanide blocks the final protein of the mitochondrial electron transport chain, so electrons can no longer be handed off to oxygen. Which immediate consequence inside the mitochondria best explains why this is rapidly fatal?",
     "choices": [
       "Electrons back up along the chain, the proton gradient across the inner membrane collapses, and mitochondrial ATP production nearly stops.",
-      "Glucose can no longer cross the cell membrane, so the cell is left with no fuel to burn.",
-      "The cell begins producing far too much ATP and overheats.",
-      "Carbon dioxide can no longer be exhaled, so sugars build up in the lungs."
+      "Glucose can no longer cross the cell membrane, so the cell is left with no fuel to burn and glycolysis in the cytoplasm grinds to a halt.",
+      "The cell begins producing far too much ATP and overheats, because the chain runs unchecked once oxygen is no longer accepting its electrons.",
+      "Carbon dioxide can no longer be exhaled, so sugars build up in the lungs and blood until the body's cells can no longer take any more in."
     ],
     "answer": "A",
     "hints": [

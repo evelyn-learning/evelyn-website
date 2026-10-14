@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "Which single case disproves the conjecture \"If two lines do not intersect, then the two lines are parallel\"?",
     "choices": [
-      "Two lines that cross at a 90° angle",
-      "Two lines drawn in the same plane, always 4 cm apart, that never meet",
-      "Two skew lines in space: one running along the front edge of the top face of a box, the other running along the right edge of the bottom face",
-      "Two lines that meet at exactly one point"
+      "Two lines that cross at a 90° angle, like two edges meeting at one corner of a box",
+      "Two lines drawn in the same plane, always 4 cm apart, that never meet however far they are extended",
+      "Two skew lines: the front edge of a box's top face and the right edge of the box's bottom face",
+      "Two lines that meet at exactly one point, like two straight roads crossing at a single intersection"
     ],
     "answer": "C",
     "hints": [

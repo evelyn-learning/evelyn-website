@@ -46,9 +46,9 @@
     "problemText": "Solid magnesium oxide melts at 2852 °C and shatters when struck with a hammer, while solid copper melts at 1085 °C and simply flattens when struck. Which statement best explains the behavior of magnesium oxide?",
     "choices": [
       "Every ion is gripped by several oppositely charged neighbors in a rigid lattice, and a struck layer slides until like charges line up and repel",
-      "Its molecules are heavier than copper atoms, so more heat is needed to get them moving",
-      "It contains no charged particles at all, so only friction between grains holds it together",
-      "Its covalent bonds are stronger than metallic bonds, and covalent solids are always brittle"
+      "Its molecules are heavier than copper atoms, so more heat is needed to get them moving, and their weight makes the solid crack rather than bend",
+      "It contains no charged particles at all, so only friction between grains holds it together, and the grains split apart when struck",
+      "Its covalent bonds are stronger than metallic bonds, and covalent solids are always brittle because shared electrons cannot shift"
     ],
     "answer": "A",
     "hints": [
@@ -96,10 +96,10 @@
     "responseFormat": "mcq",
     "problemText": "Lithium chloride (LiCl) melts at 605 °C, while magnesium oxide (MgO) melts at 2852 °C. Both are ionic solids with a 1:1 ion ratio and ions of similar size. What best explains the enormous gap in melting point?",
     "choices": [
-      "MgO is a covalent network solid, and covalent bonds always beat ionic attractions",
-      "MgO has the larger formula mass, and melting point always tracks formula mass",
+      "MgO is a covalent network solid, and covalent bonds always beat ionic attractions, so far more heat is needed to melt it",
+      "MgO has the larger formula mass, and melting point always tracks formula mass because heavier units move more slowly",
       "MgO is built from 2⁺ and 2⁻ ions instead of 1⁺ and 1⁻, so the electrostatic attraction throughout the lattice is far stronger",
-      "LiCl dissolves in water while MgO barely does, and soluble solids always melt at lower temperatures"
+      "LiCl dissolves in water while MgO barely does, and soluble solids always melt at lower temperatures than insoluble ones"
     ],
     "answer": "C",
     "hints": [
@@ -369,10 +369,10 @@
     "responseFormat": "mcq",
     "problemText": "In phosphorus trichloride, PCl₃, the central phosphorus has three P–Cl single bonds and one lone pair. What is the MOLECULAR SHAPE of PCl₃?",
     "choices": [
-      "Trigonal pyramidal — 4 domains arrange tetrahedrally, but one corner is held by the lone pair instead of an atom",
-      "Tetrahedral — the phosphorus has 4 electron domains",
-      "Trigonal planar — three chlorine atoms sit around the phosphorus",
-      "Bent — the lone pair pushes two of the chlorines together"
+      "Trigonal pyramidal — 4 domains arrange tetrahedrally, but a lone pair holds one corner instead of an atom",
+      "Tetrahedral — the phosphorus has 4 electron domains, so the molecule takes the same tetrahedral shape as its domains",
+      "Trigonal planar — three chlorine atoms sit around the phosphorus, spread evenly 120° apart in one plane",
+      "Bent — the lone pair pushes two of the chlorines together and leaves the third sticking out"
     ],
     "answer": "A",
     "hints": [
@@ -420,10 +420,10 @@
     "responseFormat": "mcq",
     "problemText": "Rank the H–X–H bond angles in CH₄ (carbon: 4 bonds, 0 lone pairs), NH₃ (nitrogen: 3 bonds, 1 lone pair), and H₂O (oxygen: 2 bonds, 2 lone pairs) from largest to smallest, and give the reason.",
     "choices": [
-      "H₂O > NH₃ > CH₄ — fewer outer atoms leaves each remaining bond more room to spread out",
-      "CH₄ > NH₃ > H₂O — all three centers have 4 domains, and each lone pair fans out wider than a bonding pair and squeezes the bonds closer together",
-      "All three are exactly 109.5°, because all three central atoms have four electron domains",
-      "NH₃ > CH₄ > H₂O — a pyramid opens its angles wider than a tetrahedron does"
+      "H₂O > NH₃ > CH₄ — fewer outer atoms leaves each remaining bond more room to spread out, so the angles widen",
+      "CH₄ > NH₃ > H₂O — all three have 4 domains, and each lone pair spreads wider than a bonding pair, squeezing the bonds together",
+      "All three are exactly 109.5°, because all three central atoms have four electron domains and lone pairs repel just like bonds do",
+      "NH₃ > CH₄ > H₂O — a pyramid opens its angles wider than a tetrahedron does, and two lone pairs close them most"
     ],
     "answer": "B",
     "hints": [
@@ -496,10 +496,10 @@
     "responseFormat": "mcq",
     "problemText": "Boron trifluoride, BF₃, is trigonal planar with no lone pairs on the boron. Nitrogen trifluoride, NF₃, is trigonal pyramidal with one lone pair on the nitrogen. Both molecules contain strongly polar bonds to fluorine. Which molecule is POLAR overall, and why?",
     "choices": [
-      "Both are polar, because both contain strongly polar bonds",
-      "BF₃ only — boron is far less electronegative than nitrogen, so its bonds pull harder",
-      "Neither — three identical outer atoms always cancel, whatever the shape",
-      "NF₃ only — its lone pair breaks the symmetry so the bond dipoles cannot cancel, while BF₃'s three identical dipoles cancel in a flat symmetric triangle"
+      "Both are polar, because both contain strongly polar bonds, and polar bonds make a polar molecule whatever the shape",
+      "BF₃ only — boron is far less electronegative than nitrogen, so its bonds to fluorine pull harder and cannot cancel",
+      "Neither — three identical outer atoms always cancel, whatever the shape, so the lone pair on nitrogen has no effect on polarity",
+      "NF₃ only — its lone pair breaks the symmetry so its bond dipoles cannot cancel, while BF₃'s flat, symmetric dipoles cancel"
     ],
     "answer": "D",
     "hints": [

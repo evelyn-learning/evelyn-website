@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A gray squirrel lives in an oak woodland. It eats acorns and tree buds, is active during daylight, nests in tree cavities, and is hunted by hawks. Which statement correctly separates the squirrel's habitat from its niche?",
     "choices": [
-      "The habitat is the oak woodland; the niche is its whole role there — eating acorns and buds, being active by day, nesting in cavities, and serving as prey for hawks.",
-      "The habitat is eating acorns and nesting in cavities; the niche is the oak woodland where it lives.",
-      "The habitat and the niche are both simply the oak woodland, since a species lives in only one place.",
-      "The habitat is the oak woodland; the niche is the largest number of squirrels that woodland can support."
+      "The habitat is the oak woodland; the niche is its role there — eating acorns and buds, being active by day, nesting in cavities, and being prey for hawks.",
+      "The habitat is eating acorns and nesting in cavities; the niche is the oak woodland where it lives, along with the hawks that hunt it.",
+      "The habitat and the niche are both simply the oak woodland, since a species lives in only one place and plays its role in that place.",
+      "The habitat is the oak woodland; the niche is the largest number of squirrels that the woodland's limited supply of acorns and nesting cavities can support."
     ],
     "answer": "A",
     "hints": [
@@ -198,10 +198,10 @@
     "responseFormat": "mcq",
     "problemText": "A meadow food web contains these chains: grass → grasshopper → shrew → owl; grass → rabbit → owl; and wildflowers → grasshopper → shrew → owl. A disease removes every rabbit from the meadow. Which short-term outcome is most likely?",
     "choices": [
-      "The owls will die out almost immediately, because rabbits were their only source of food.",
-      "The owl population will probably drop somewhat but can persist, because owls also eat shrews, which feed on grasshoppers.",
-      "The grasshopper population will fall sharply, because grasshoppers fed on rabbits.",
-      "The grass population will fall sharply, because the rabbits had been producing the grass."
+      "The owls will die out almost immediately, because rabbits were their only source of food in this meadow.",
+      "The owl population will probably drop somewhat but persist, because owls also eat shrews, which eat grasshoppers.",
+      "The grasshopper population will fall sharply, because grasshoppers fed on rabbits as well as on grass and wildflowers.",
+      "The grass population will fall sharply, because the rabbits had been spreading the grass seeds across the meadow."
     ],
     "answer": "B",
     "hints": [
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "A student draws an energy pyramid for a forest with three bars: producers on the bottom, primary consumers above them, and secondary consumers on top. The student writes: \"Energy is lost as heat at every step, which is why the pyramid narrows. Once the energy and matter reach the top predator, the ecosystem is finished with them.\" Which correction to this explanation matters most?",
     "choices": [
-      "No correction is needed; both sentences are fully accurate as written.",
-      "Energy is not lost as heat between levels; the pyramid narrows only because top predators have larger bodies.",
-      "The pyramid should be drawn upside down, because top predators always hold more energy than producers do.",
-      "Decomposers are missing: they break down wastes and dead bodies from every level and return nutrients to the soil for producers to reuse, even though the energy itself still leaves the system as heat."
+      "No correction is needed; both sentences are fully accurate as written, since energy and matter both stop at the top predator.",
+      "Energy is not lost as heat between levels; the pyramid narrows only because top predators have larger bodies and so there are fewer of them.",
+      "The pyramid should be drawn upside down, because top predators always hold more energy than producers do, having eaten everything on the levels below them.",
+      "Decomposers are missing: they break down wastes and dead bodies from every level and return nutrients to producers, though the energy still leaves as heat."
     ],
     "answer": "D",
     "hints": [
@@ -237,10 +237,10 @@
     "responseFormat": "mcq",
     "problemText": "Nitrogen gas (N2) makes up about 78 percent of the atmosphere, yet plants cannot use nitrogen in that form. How does most atmospheric nitrogen become usable by plants?",
     "choices": [
-      "Nitrogen-fixing bacteria in soil and in the root nodules of legumes convert N2 into ammonia (NH3), which other bacteria convert into nitrate (NO3-) that roots absorb.",
-      "Plants absorb N2 straight through the pores of their leaves, in the same way they absorb CO2.",
-      "Plants build their own nitrogen out of water and sunlight during photosynthesis.",
-      "Lightning converts nitrate (NO3-) already in the soil back into N2 gas, which the roots then take up."
+      "Nitrogen-fixing bacteria in soil and legume root nodules convert N2 into ammonia (NH3), which other bacteria turn into nitrate (NO3-) that roots absorb.",
+      "Plants absorb N2 straight through the pores of their leaves, in the same way they absorb CO2, and then build it directly into their proteins.",
+      "Plants build their own nitrogen out of water and sunlight during photosynthesis, storing it in their leaves as nitrate.",
+      "Lightning converts nitrate (NO3-) already in the soil back into N2 gas, which the roots then take up and convert into amino acids inside their leaves."
     ],
     "answer": "A",
     "hints": [
@@ -275,10 +275,10 @@
     "responseFormat": "mcq",
     "problemText": "Carbon atoms from atmospheric CO2 enter the living portion of an ecosystem at one main step. Which statement describes that step correctly?",
     "choices": [
-      "Animals take carbon in by inhaling CO2 from the air, and that carbon becomes part of their body tissue.",
-      "Producers take in CO2 and use photosynthesis to build sugars, and consumers then obtain that carbon by eating producers or by eating other consumers.",
-      "Decomposers pull CO2 out of the air and pass it upward to the plants.",
-      "Carbon enters when animals exhale CO2, which their own cells then rebuild into tissue."
+      "Animals take carbon in by inhaling CO2 from the air, and that carbon becomes part of their body tissue as their lungs build it into sugars.",
+      "Producers take in CO2 and use photosynthesis to build sugars, and consumers then obtain that carbon by eating producers or other consumers.",
+      "Decomposers pull CO2 out of the air and pass it upward to the plants through the soil around their roots.",
+      "Carbon enters when animals exhale CO2, which their own cells then rebuild into tissue the next time they breathe in."
     ],
     "answer": "B",
     "hints": [
@@ -294,10 +294,10 @@
     "responseFormat": "mcq",
     "problemText": "In a forest, H2O moves from the soil into tree roots, up through the trunk, and out through tiny pores in the leaves as water vapor. What is this process called, and where does that water go next?",
     "choices": [
-      "Condensation; the vapor sinks back down into the soil around the roots.",
-      "Precipitation; the vapor falls immediately as rain onto the same tree.",
-      "Runoff; the vapor flows downhill along the surface and into rivers.",
-      "Transpiration; the vapor joins the atmosphere, where it can condense into clouds and later return as precipitation."
+      "Condensation; the vapor sinks back down into the soil around the roots, where the tree absorbs it once again.",
+      "Precipitation; the vapor falls immediately as rain onto the same tree, keeping its leaves and bark moist.",
+      "Runoff; the vapor flows downhill along the surface and into rivers, which carry it out to the ocean.",
+      "Transpiration; the vapor joins the atmosphere, where it can condense into clouds and return as precipitation."
     ],
     "answer": "D",
     "hints": [
@@ -313,10 +313,10 @@
     "responseFormat": "mcq",
     "problemText": "For hundreds of millions of years, carbon from dead organisms was buried, compressed, and stored as coal, oil, and natural gas, where it stayed out of the atmosphere. Which statement best explains why burning these fuels raises the amount of CO2 in the air?",
     "choices": [
-      "Combustion releases carbon that had been locked in a long-term reservoir, and it releases that carbon far faster than photosynthesis and burial can remove it again.",
-      "Combustion creates brand-new carbon atoms that did not exist anywhere before the fuel was burned.",
-      "Combustion destroys the carbon inside the fuel, and the ocean releases CO2 to replace what was destroyed.",
-      "Burning fuel has no real effect on the carbon cycle, because the carbon in fossil fuels was never part of any living thing."
+      "Combustion releases carbon that had been locked in a long-term reservoir, and releases it far faster than photosynthesis and burial can remove it.",
+      "Combustion creates brand-new carbon atoms that did not exist anywhere before the fuel was burned, adding them directly to the air.",
+      "Combustion destroys the carbon inside the fuel, and the ocean releases CO2 to replace what was destroyed, raising the level in the air.",
+      "Burning fuel has no real effect on the carbon cycle, because the carbon in fossil fuels was never part of any living thing or the atmosphere."
     ],
     "answer": "A",
     "hints": [
@@ -332,10 +332,10 @@
     "responseFormat": "mcq",
     "problemText": "A farmer spreads nitrate (NO3-) fertilizer on a field beside a lake, and heavy rain washes much of it into the water. Over the following weeks, algae grow explosively across the lake surface, then die off in enormous numbers, and soon many fish suffocate. Which sequence best explains the fish deaths?",
     "choices": [
-      "The nitrate directly poisons the gills of the fish, and the algae bloom is an unrelated coincidence.",
-      "The extra nitrate is converted into N2 gas inside the fish, so the fish can no longer take in oxygen.",
-      "The extra nitrate lets algae multiply rapidly; when the algae die, decomposing bacteria multiply and consume the dissolved oxygen in the water, leaving too little oxygen for the fish.",
-      "The thick algae bloom blocks sunlight, so the fish cannot see well enough to find food and starve within a few weeks."
+      "The nitrate directly poisons the gills of the fish, and the algae bloom is an unrelated coincidence caused by warm weather that season.",
+      "The extra nitrate is converted into N2 gas inside the fish, so the fish can no longer take in oxygen and suffocate as gas bubbles fill their bloodstream.",
+      "The extra nitrate lets algae multiply rapidly; when the algae die, decomposing bacteria consume the dissolved oxygen, leaving too little for the fish.",
+      "The thick algae bloom blocks sunlight, so the fish cannot see well enough to find food and gradually starve within a few weeks of the bloom."
     ],
     "answer": "C",
     "hints": [
@@ -352,10 +352,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following is a density-dependent limiting factor on a population?",
     "choices": [
-      "A severe drought that dries up the streams across an entire region",
-      "A wildfire that sweeps through a forest",
-      "An unusually early hard frost that kills exposed plants",
-      "A contagious disease that spreads faster when individuals are crowded closely together"
+      "A severe drought that dries up the streams across an entire region for months",
+      "A wildfire that sweeps through a forest and burns everything in its path",
+      "An unusually early hard frost that kills exposed plants across the whole valley",
+      "A contagious disease that spreads faster when individuals are crowded together"
     ],
     "answer": "D",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "A forest fire burns the trees off a hillside, but the soil, buried seeds, and underground root systems survive. Within a year grasses and wildflowers sprout, and shrubs and young trees follow over the next several years. A student labels this primary succession. Why is that label wrong?",
     "choices": [
-      "Primary succession starts on bare rock or a newly exposed surface with no soil at all; because soil, seeds, and roots survived here, this is secondary succession.",
-      "The label is wrong because succession happens only after a volcanic eruption, never after a fire.",
-      "The label is wrong because no succession is happening at all — the same plants have simply grown back.",
-      "The label is wrong because primary succession must end in grassland, and this hillside is returning to forest."
+      "Primary succession starts on bare rock or a new surface with no soil; because soil, seeds, and roots survived here, this is secondary succession.",
+      "The label is wrong because succession happens only after a volcanic eruption lays down fresh rock, never after a fire that leaves soil behind.",
+      "The label is wrong because no succession is happening at all — the same plants have simply grown back from the roots that survived the fire.",
+      "The label is wrong because primary succession must end in grassland, and this hillside is returning to forest as shrubs and trees move in."
     ],
     "answer": "A",
     "hints": [
@@ -428,10 +428,10 @@
     "responseFormat": "mcq",
     "problemText": "Two warbler species hunt insects in the same spruce trees in the same forest. Careful observation shows that one species feeds almost entirely among the topmost branches, while the other feeds on the lower trunk and the inner limbs. Which statement best explains how both species manage to coexist?",
     "choices": [
-      "The two species occupy identical niches, and identical niches are what allows them to share the trees peacefully.",
-      "One warbler species preys on the other, and that predation keeps both populations balanced.",
-      "They coexist because they share one habitat, and sharing a habitat always removes competition between species.",
-      "By feeding in different parts of the tree they divide up the insect resource, so their niches differ enough that neither species drives the other out."
+      "The two species occupy identical niches, and identical niches are what allows them to share the same trees and insects peacefully.",
+      "One warbler species preys on the other, and that predation keeps both populations balanced at a level the trees can support.",
+      "They coexist because they share one habitat, and sharing a habitat always removes competition between species that live side by side in it.",
+      "By feeding in different parts of the tree they divide the insect resource, so their niches differ enough that neither drives the other out."
     ],
     "answer": "D",
     "hints": [
@@ -447,10 +447,10 @@
     "responseFormat": "mcq",
     "problemText": "A bacterial culture is started in a sealed flask holding a fixed amount of nutrient broth. For the first several hours the number of cells doubles every 20 minutes. A student predicts that after two days the sealed flask will hold more bacterial cells than there are stars in the galaxy. What is the strongest objection to that prediction?",
     "choices": [
-      "Bacteria never reproduce by doubling, so the early growth pattern must have been measured incorrectly.",
-      "Exponential growth cannot continue indefinitely: as the fixed nutrient supply runs out and wastes accumulate, density-dependent factors slow reproduction, and the population levels off or crashes.",
-      "The prediction is sound, because exponential growth by definition continues at the same rate forever.",
-      "The population will keep doubling but at a slower and slower pace, because the flask itself becomes heavier as cells accumulate."
+      "Bacteria never reproduce by doubling, so the early growth pattern must have been measured incorrectly by the student during those first hours.",
+      "Exponential growth cannot last: as the nutrients run out and wastes build up, density-dependent factors slow reproduction and the population levels off or crashes.",
+      "The prediction is sound, because exponential growth by definition continues at the same rate forever, as long as the flask stays sealed.",
+      "The population will keep doubling but at a slower and slower pace, because the sealed flask itself becomes heavier as cells accumulate, which slows each cell's division."
     ],
     "answer": "B",
     "hints": [

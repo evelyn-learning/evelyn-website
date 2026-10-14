@@ -8,9 +8,9 @@
     "problemText": "A two-way table displays two categorical variables. The marginal distribution of one variable is found by:",
     "choices": [
       "Using the row or column totals divided by the grand total, ignoring the other variable",
-      "Dividing each cell count by its row total",
+      "Dividing each cell count by its own row total",
       "Dividing each cell count by its column total",
-      "Comparing conditional distributions across rows"
+      "Comparing conditional distributions across rows to see how the variables are associated"
     ],
     "answer": "A",
     "hints": ["A marginal distribution only uses the totals in the margins of the table.", "It ignores the second variable entirely."]
@@ -49,10 +49,10 @@
     "responseFormat": "mcq",
     "problemText": "In the survey above, 50% of freshmen prefer math compared to only 30% of seniors. Based on this difference in conditional distributions, what can be concluded?",
     "choices": [
-      "There is no association between grade level and subject preference",
+      "There is no association between grade level and subject preference, since each grade still has some students preferring math",
       "There is an association between grade level and subject preference, since the conditional distributions differ",
-      "Grade level causes a preference for math",
-      "The marginal distribution of subject preference cannot be computed"
+      "Grade level causes a preference for math, since freshmen are more likely than seniors to prefer it",
+      "The marginal distribution of subject preference cannot be computed from the two-way table"
     ],
     "answer": "B",
     "hints": ["Association is present when conditional distributions differ across groups.", "Be careful: association is not the same as causation."]
@@ -268,10 +268,10 @@
     "responseFormat": "mcq",
     "problemText": "A least-squares regression line predicting exam score (y) from hours studied (x) is: predicted score = 50 + 5(hours studied). The correct interpretation of the slope, 5, is:",
     "choices": [
-      "For each additional hour studied, the predicted exam score increases by 5 points, on average",
-      "Every student who studies scores exactly 5 points",
-      "When hours studied is 0, the predicted score is 5",
-      "The correlation between hours studied and score is 5"
+      "For each additional hour studied, the predicted exam score increases by 5 points",
+      "Every student who studies scores exactly 5 points higher than one who does not",
+      "When hours studied is 0, the predicted score for that student is 5 points",
+      "The correlation between hours studied and exam score is 5, a strong positive link"
     ],
     "answer": "A",
     "hints": ["The slope gives the average change in predicted y for a one-unit increase in x."]
@@ -284,10 +284,10 @@
     "responseFormat": "mcq",
     "problemText": "A regression of exam score on hours studied gives r-squared = 0.64. The correct interpretation is:",
     "choices": [
-      "The correlation between the variables is 0.64",
-      "64% of students passed the exam",
+      "The correlation between hours studied and exam score is 0.64, a moderately strong association",
+      "64% of students' exam scores are correctly predicted by the regression line",
       "64% of the variability in exam scores is explained by the linear relationship with hours studied",
-      "The slope of the regression line is 0.64"
+      "The slope of the regression line is 0.64 points of exam score per hour studied"
     ],
     "answer": "C",
     "hints": ["r-squared is the proportion (as a percent) of variation in y accounted for by the linear model with x."]
@@ -390,7 +390,7 @@
     "problemText": "A residual plot shows a clear U-shaped curved pattern rather than random scatter. This indicates:",
     "choices": [
       "A linear model is not appropriate; the underlying relationship may be curved",
-      "The linear model is a good fit",
+      "The linear model is a good fit, since the residuals are balanced around zero",
       "The standard deviation of the residuals must be zero",
       "The correlation coefficient r must equal 1"
     ],

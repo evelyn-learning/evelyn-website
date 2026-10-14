@@ -290,10 +290,10 @@
     "responseFormat": "mcq",
     "problemText": "Lines m and n are parallel and 7 cm apart. A figure is reflected across m and then across n. The composition is equivalent to which single rigid motion?",
     "choices": [
-      "A translation of 7 cm perpendicular to the lines",
-      "A rotation of 14° about a point on m",
-      "A reflection across the line halfway between m and n",
-      "A translation of 14 cm perpendicular to the lines, in the direction from m toward n"
+      "A translation of 7 cm perpendicular to the lines, equal to their distance apart",
+      "A rotation of 14° about a point on line m, where the first reflection takes place",
+      "A reflection across the line halfway between m and n, parallel to both lines",
+      "A translation of 14 cm perpendicular to the lines, from m toward n"
     ],
     "answer": "D",
     "hints": [

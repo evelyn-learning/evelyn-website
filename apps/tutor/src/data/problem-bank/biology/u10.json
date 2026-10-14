@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "On a hot day a runner's core body temperature climbs from 37°C to 38.5°C. Her sweat glands increase sweat output, the sweat evaporates from her skin, and her core temperature falls back toward 37°C. How should this response be classified, and why?",
     "choices": [
-      "Positive feedback, because the response is triggered by the rise in temperature.",
-      "Negative feedback, because the response is harmful to the runner.",
-      "Positive feedback, because temperature eventually returned to the normal value.",
-      "Negative feedback, because the response opposes the original change and moves the body back toward its set point."
+      "Positive feedback, because the response is triggered by the rise in temperature and then increases sweat output.",
+      "Negative feedback, because the response is harmful to the runner, causing her to lose water and salts.",
+      "Positive feedback, because temperature eventually returned to the normal value after the sweating.",
+      "Negative feedback, because the response opposes the original change and returns the body toward its set point."
     ],
     "answer": "D",
     "hints": [
@@ -45,10 +45,10 @@
     "responseFormat": "mcq",
     "problemText": "During childbirth, stretching of the cervix triggers release of the hormone oxytocin. Oxytocin causes stronger uterine contractions, which stretch the cervix further, which triggers still more oxytocin. The cycle continues until the baby is delivered. Which statement correctly classifies and explains this loop?",
     "choices": [
-      "Positive feedback, because each pass through the loop amplifies the original stimulus, and the loop only stops when birth removes the stimulus.",
-      "Negative feedback, because the body is working to return the uterus to its resting state.",
-      "Negative feedback, because a hormone is involved and hormones always restore a set point.",
-      "Positive feedback, because the loop steadily reduces the stretching of the cervix over time."
+      "Positive feedback, because each pass through the loop amplifies the original stimulus until birth removes it.",
+      "Negative feedback, because the body is working to return the uterus to its resting state after each contraction.",
+      "Negative feedback, because a hormone is involved and hormones always act to restore a set point in the body.",
+      "Positive feedback, because the loop steadily reduces the stretching of the cervix with each contraction."
     ],
     "answer": "A",
     "hints": [
@@ -65,9 +65,9 @@
     "problemText": "After a large meal, a person's blood glucose rises from about 90 mg/dL to about 140 mg/dL. The pancreas responds by releasing insulin into the blood. Which description of what happens next is correct?",
     "choices": [
       "Insulin signals the liver to break glycogen down into glucose, so blood glucose climbs even higher.",
-      "Insulin travels along nerves to the liver, which then stores glucose as glycogen and blood glucose falls.",
-      "Body cells take up more glucose from the blood and the liver stores glucose as glycogen, so blood glucose falls back toward 90 mg/dL.",
-      "Insulin does nothing until blood glucose drops below 70 mg/dL, at which point it raises blood glucose."
+      "Insulin travels along nerves to the liver, which then stores glucose as glycogen, so blood glucose falls back to normal.",
+      "Body cells take up more glucose and the liver stores glucose as glycogen, so blood glucose falls back toward 90 mg/dL.",
+      "Insulin does nothing until blood glucose drops below 70 mg/dL, at which point it acts to raise blood glucose again."
     ],
     "answer": "C",
     "hints": [
@@ -102,10 +102,10 @@
     "responseFormat": "mcq",
     "problemText": "Normally, when blood calcium falls below its set point the parathyroid glands release parathyroid hormone (PTH); PTH causes bone to release calcium into the blood and causes the kidneys to return more calcium to the blood, and as blood calcium climbs back to normal, PTH release slows. Patient 1 shows exactly this pattern. Patient 2 has a parathyroid tumor that releases PTH continuously, at the same high rate, no matter how high blood calcium climbs. What is the key difference between the two?",
     "choices": [
-      "Patient 1's loop is positive feedback and patient 2's loop is negative feedback.",
-      "Both patients show a normal negative feedback loop, because PTH is being released in both cases.",
-      "Neither patient shows feedback, because hormones cannot take part in feedback loops.",
-      "Patient 1 has an intact negative feedback loop because the rising output shuts off the signal that produced it, while patient 2's loop is broken because the output no longer inhibits PTH release."
+      "Patient 1's loop is positive feedback and patient 2's loop is negative feedback, because patient 2's PTH level never changes.",
+      "Both patients show a normal negative feedback loop, because PTH is being released in both cases and blood calcium is rising back toward normal in both patients.",
+      "Neither patient shows feedback, because hormones cannot take part in feedback loops, which are controlled by nerve signals instead.",
+      "Patient 1 has intact negative feedback, since rising output shuts off the signal; patient 2's loop is broken, since the output no longer inhibits PTH release."
     ],
     "answer": "D",
     "hints": [
@@ -122,10 +122,10 @@
     "responseFormat": "mcq",
     "problemText": "Which statement about arteries and veins is correct?",
     "choices": [
-      "All arteries carry oxygenated blood and all veins carry deoxygenated blood.",
-      "Arteries carry blood toward the heart and veins carry blood away from the heart.",
-      "Arteries carry blood away from the heart; most carry oxygenated blood, but the pulmonary arteries carry deoxygenated blood from the heart to the lungs.",
-      "Veins have thicker, more muscular walls than arteries because veins carry blood at higher pressure."
+      "All arteries carry oxygenated blood and all veins carry deoxygenated blood, which is what defines the two types of vessel.",
+      "Arteries carry blood toward the heart and veins carry blood away from the heart, returning it to the organs and tissues of the body.",
+      "Arteries carry blood away from the heart; most carry oxygenated blood, but the pulmonary arteries carry deoxygenated blood to the lungs.",
+      "Veins have thicker, more muscular walls than arteries because veins carry blood at higher pressure as it is pushed back toward the heart."
     ],
     "answer": "C",
     "hints": [
@@ -160,10 +160,10 @@
     "responseFormat": "mcq",
     "problemText": "Air in an alveolus has a higher O2 concentration than the blood in the capillary wrapped around it. How does O2 get from the alveolus into that blood?",
     "choices": [
-      "The alveolus actively pumps O2 into the capillary, using energy from ATP.",
-      "Muscles in the wall of the lung squeeze the O2 across the membrane and into the blood.",
-      "A hormone released by the alveolus picks up O2 and carries it into the blood.",
-      "O2 diffuses down its concentration gradient, moving from the higher concentration in the alveolus to the lower concentration in the blood."
+      "The alveolus actively pumps O2 into the capillary, using energy from ATP to move it across the thin wall of the sac.",
+      "Muscles in the wall of the lung contract and squeeze the O2 across the membrane and into the blood each time the person breathes out.",
+      "A hormone released by the alveolus picks up O2 and carries it across the capillary wall into the blood.",
+      "O2 diffuses down its concentration gradient, from the higher concentration in the alveolus to the lower concentration in the blood."
     ],
     "answer": "D",
     "hints": [
@@ -179,10 +179,10 @@
     "responseFormat": "mcq",
     "problemText": "An adult human lung contains roughly 300 million alveoli. Each alveolus is a tiny sac whose wall is a single cell thick, and each is wrapped in capillaries whose walls are also a single cell thick. Which explanation best accounts for why this arrangement makes gas exchange efficient?",
     "choices": [
-      "The huge number of sacs lets the lungs store a large reserve of O2 for use during sleep.",
-      "The huge number of sacs creates an enormous total surface area, and the walls that are only one cell thick keep the diffusion distance extremely short.",
-      "The sacs let the lungs contract on their own, so no other muscles are needed to move air.",
-      "The capillaries warm the incoming air so that O2 will dissolve into the blood more easily."
+      "The huge number of sacs lets the lungs store a large reserve of O2 that the blood can draw on during sleep or whenever the person holds their breath.",
+      "The huge number of sacs creates an enormous total surface area, and the one-cell-thick walls keep the diffusion distance extremely short.",
+      "The sacs let the lungs contract on their own, so no other muscles, such as the diaphragm, are needed to move air in and out.",
+      "The capillaries warm the incoming air so that O2 will dissolve into the blood more easily as it passes through the thin walls."
     ],
     "answer": "B",
     "hints": [
@@ -198,10 +198,10 @@
     "responseFormat": "mcq",
     "problemText": "A student holds her breath. After about 40 seconds she feels a powerful, involuntary urge to breathe. Which change in her blood is the main trigger for that urge?",
     "choices": [
-      "CO2 builds up in her blood, which lowers blood pH, and chemical sensors detecting that change signal the brain stem to restart breathing.",
-      "O2 in her blood falls all the way to zero, and the empty hemoglobin signals the brain stem directly.",
-      "Her lungs collapse, and stretch sensors in the lung wall signal the brain stem.",
-      "Her blood glucose falls, and the pancreas signals the brain stem to restart breathing."
+      "CO2 builds up in her blood and lowers blood pH, and chemical sensors detecting that change signal the brain stem to restart breathing.",
+      "O2 in her blood falls all the way to zero, and the empty hemoglobin signals the brain stem directly to restart breathing.",
+      "Her lungs collapse as the air inside them is used up, and stretch sensors in the lung wall signal the brain stem to restart breathing.",
+      "Her blood glucose falls because her cells keep using it, and the pancreas signals the brain stem to restart breathing."
     ],
     "answer": "A",
     "hints": [
@@ -217,10 +217,10 @@
     "responseFormat": "mcq",
     "problemText": "In a healthy heart the left ventricle holds oxygen-rich blood that has just returned from the lungs, and the right ventricle holds oxygen-poor blood that has just returned from the body. A newborn is found to have a hole in the muscular wall separating the two ventricles. Because pressure in the left ventricle is much higher, some blood is pushed from the left ventricle into the right ventricle each beat. What is the most direct consequence for the blood that the right ventricle then pumps out?",
     "choices": [
-      "It carries less O2 than normal, because oxygen-poor blood has been added to it.",
-      "It bypasses the lungs completely and travels straight out to the body.",
-      "It carries more O2 than normal, because oxygen-rich blood has mixed into it, and the right ventricle sends this extra volume of already-oxygenated blood to the lungs.",
-      "Its O2 content is unchanged, because the two ventricles contract at different times."
+      "It carries less O2 than normal, because oxygen-poor blood returning from the body has been added to it just before it reaches the lungs.",
+      "It bypasses the lungs completely and travels straight out to the body, because the hole lets it escape into the left side.",
+      "It carries more O2 than normal, because oxygen-rich blood has mixed into it, and this extra already-oxygenated blood goes to the lungs.",
+      "Its O2 content is unchanged, because the two ventricles contract at different times, so the blood on each side never mixes."
     ],
     "answer": "C",
     "hints": [
@@ -256,10 +256,10 @@
     "responseFormat": "mcq",
     "problemText": "Bile is produced by the liver, stored in the gallbladder, and released into the small intestine when fatty food arrives. What does bile actually do to fats?",
     "choices": [
-      "It is an enzyme that chemically breaks the bonds in fat molecules, releasing fatty acids and glycerol.",
-      "It physically breaks large fat droplets into many small droplets, greatly increasing the surface area that fat-digesting enzymes can work on.",
-      "It absorbs fat directly into the bloodstream, so no enzymes are needed.",
-      "It neutralizes fats so that they pass out of the body unchanged in the feces."
+      "It is an enzyme that chemically breaks the bonds in fat molecules, releasing fatty acids and glycerol that the intestine can absorb.",
+      "It physically breaks large fat droplets into many small droplets, greatly increasing the surface area for fat-digesting enzymes.",
+      "It absorbs fat directly into the bloodstream through the wall of the small intestine, so no enzymes are needed.",
+      "It neutralizes fats so that they pass out of the body unchanged in the feces instead of being absorbed by the intestine."
     ],
     "answer": "B",
     "hints": [
@@ -294,9 +294,9 @@
     "responseFormat": "mcq",
     "problemText": "The contents of the human stomach are held at a pH of about 2. Which statement best explains the role of this strongly acidic environment?",
     "choices": [
-      "It activates pepsin, the protein-digesting enzyme that works best at low pH, and it kills many of the microbes that arrive with food.",
-      "It activates amylase, the starch-digesting enzyme, which works best at low pH.",
-      "It neutralizes bile so that fats can be absorbed straight through the stomach wall.",
+      "It activates pepsin, a protein-digesting enzyme that works best at low pH, and it kills many microbes that arrive with food.",
+      "It activates amylase, the starch-digesting enzyme, which works best at low pH and so finishes digesting starch in the stomach.",
+      "It neutralizes bile so that fats can be absorbed straight through the stomach wall before they reach the small intestine.",
       "It allows most nutrient absorption to happen in the stomach rather than farther down the digestive tract."
     ],
     "answer": "A",
@@ -313,10 +313,10 @@
     "responseFormat": "mcq",
     "problemText": "The body cannot store excess amino acids, so their nitrogen must be disposed of. Which statement correctly describes where urea is made and what the kidney does with it?",
     "choices": [
-      "The kidney makes urea from excess amino acids and then stores it in the bladder.",
-      "The liver makes urea, and the kidney converts it back into amino acids so the body can reuse them.",
-      "The large intestine makes urea from undigested food, and the kidney then excretes it.",
-      "The liver makes urea from the nitrogen stripped out of excess amino acids, and the kidney filters urea out of the blood so it leaves in the urine."
+      "The kidney makes urea from excess amino acids filtered out of the blood and then stores it in the bladder until it is released.",
+      "The liver makes urea, and the kidney converts it back into amino acids so the body can reuse them to build new proteins.",
+      "The large intestine makes urea from undigested food, and the kidney then filters that urea out of the blood and excretes it in the urine.",
+      "The liver makes urea from the nitrogen of excess amino acids, and the kidney filters urea out of the blood so it leaves in the urine."
     ],
     "answer": "D",
     "hints": [
@@ -332,10 +332,10 @@
     "responseFormat": "mcq",
     "problemText": "In a nephron, blood is first filtered under pressure: water, glucose, salts and urea all pass out of the blood into the tubule, while blood cells and large proteins are too big to pass and stay in the blood. Farther along the tubule, nearly all of the glucose and much of the water are returned to the blood, while urea is left behind to be excreted. Why does the kidney filter glucose out and then take it back, instead of simply never removing it?",
     "choices": [
-      "Because glucose is a waste product and must be removed before it can damage the tubule wall.",
-      "Because filtration separates molecules by size rather than by usefulness, so any useful molecule small enough to pass through is lost at that step and has to be reclaimed afterward by selective reabsorption.",
-      "Because glucose must be chemically converted into urea before it is allowed back into the blood.",
-      "Because glucose is the kidney's only fuel, and the tubule consumes all of it as it passes."
+      "Because glucose is a waste product at that point and must be removed from the blood before it can build up and damage the delicate inner lining of the tubule.",
+      "Because filtration sorts molecules by size, not usefulness, so useful small molecules are lost at that step and must be reclaimed by selective reabsorption.",
+      "Because glucose has to be chemically processed by the tubule cells, which convert part of it into urea, before it is allowed back into the blood.",
+      "Because glucose is the kidney's only fuel, and the tubule cells consume all of the filtered glucose as it passes, burning it to power filtration."
     ],
     "answer": "B",
     "hints": [
@@ -371,10 +371,10 @@
     "responseFormat": "mcq",
     "problemText": "An impulse reaches the end of one neuron's axon. A narrow fluid-filled gap, the synapse, separates it from the next neuron. How does the signal get across that gap?",
     "choices": [
-      "The electrical impulse jumps directly across the gap as a spark.",
-      "The two neurons are physically fused, so the electric current simply flows through the point of contact.",
-      "The arriving impulse triggers the release of neurotransmitter molecules, which diffuse across the gap and bind to receptors on the next neuron.",
-      "The impulse leaves the axon, enters the bloodstream, and is carried to the next neuron."
+      "The electrical impulse jumps directly across the narrow gap as a spark, much like a current crossing between two wires.",
+      "The two neurons are physically fused at the synapse, so the electric current simply flows straight through the point of contact unchanged.",
+      "The impulse triggers the release of neurotransmitter molecules, which diffuse across the gap and bind to receptors on the next neuron.",
+      "The impulse leaves the axon, enters the bloodstream, and is carried by the blood to receptors on the next neuron."
     ],
     "answer": "C",
     "hints": [
@@ -390,10 +390,10 @@
     "responseFormat": "mcq",
     "problemText": "A person touches a hot pan and jerks her hand away, and only afterward does she become aware of the pain. Which pathway best explains this sequence?",
     "choices": [
-      "The signal travels to the brain, the brain decides to move, and the brain then sends the order down to the arm muscles.",
-      "Sensory neurons carry the signal to the spinal cord, which passes it straight to motor neurons that move the arm; the signal continues up to the brain afterward, which is why the pain is felt after the movement.",
-      "Hormones released by the skin travel through the blood to the arm muscles and make them contract.",
-      "The arm muscles detect the heat themselves and contract without any nerve involvement."
+      "The signal travels to the brain, the brain decides to move, and the brain then sends the order down to the arm muscles; the pain registers only after that order has been sent out.",
+      "Sensory neurons carry the signal to the spinal cord, which relays it straight to motor neurons; the signal reaches the brain afterward, so the pain is felt after the movement.",
+      "Hormones released by the skin travel through the blood to the arm muscles and make them contract before any signal reaches the brain.",
+      "The arm muscles detect the heat themselves and contract without any nerve involvement, and the brain learns of the pain only later."
     ],
     "answer": "B",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "Thyroid-stimulating hormone (TSH) is released by the pituitary gland at the base of the brain and acts on the thyroid gland in the neck. How does TSH reach the thyroid, and why do the many organs it passes on the way not respond to it?",
     "choices": [
-      "TSH travels along nerves running from the pituitary directly to the thyroid, so no other organ is ever exposed to it.",
-      "TSH travels in the blood, and it reaches only the thyroid because a private blood vessel connects the pituitary to the thyroid alone.",
-      "TSH diffuses through the body tissues, and the thyroid takes it up simply because it is the nearest gland.",
-      "TSH is carried in the bloodstream and therefore passes essentially every organ, but only thyroid cells carry receptors that TSH can bind, so only the thyroid responds."
+      "TSH travels along nerves running from the pituitary directly to the thyroid, so no other organ along the way is ever exposed to it.",
+      "TSH travels in the blood, and it reaches only the thyroid because a private blood vessel connects the pituitary to the thyroid and to no other organ in the body.",
+      "TSH diffuses through the body tissues, and the thyroid takes it up first simply because it is the nearest gland to the pituitary.",
+      "TSH is carried in the bloodstream past essentially every organ, but only thyroid cells carry receptors that TSH can bind, so only the thyroid responds."
     ],
     "answer": "D",
     "hints": [
@@ -428,10 +428,10 @@
     "responseFormat": "mcq",
     "problemText": "Compared with a signal sent through the nervous system, an endocrine (hormonal) signal is generally:",
     "choices": [
-      "faster to take effect and shorter-lasting, because hormones travel along nerves.",
-      "faster to take effect and longer-lasting, because blood moves faster than a nerve impulse.",
-      "slower to take effect and longer-lasting, because hormones must be carried by the bloodstream to reach their target cells.",
-      "identical in both speed and duration, because the two systems use the same messenger molecules."
+      "faster to take effect and shorter-lasting, because hormones travel along nerves rather than through the blood.",
+      "faster to take effect and longer-lasting, because blood moves faster than a nerve impulse travels along an axon.",
+      "slower to take effect and longer-lasting, because hormones are carried by the bloodstream to their target cells.",
+      "identical in both speed and duration, because the two systems use the same messenger molecules to reach target cells."
     ],
     "answer": "C",
     "hints": [
@@ -447,10 +447,10 @@
     "responseFormat": "mcq",
     "problemText": "In the normal thyroid pathway, the hypothalamus signals the pituitary to release TSH, TSH makes the thyroid release the hormone thyroxine, and rising thyroxine in the blood then inhibits both the hypothalamus and the pituitary. A patient has had her entire thyroid gland removed surgically and is taking no replacement thyroxine. What would you expect her blood TSH level to be, and why?",
     "choices": [
-      "Higher than normal, because with almost no thyroxine in her blood the inhibition on the hypothalamus and pituitary is lifted, so they keep signaling.",
-      "Lower than normal, because with no thyroid gland there is no longer any reason for the pituitary to produce TSH.",
-      "Normal, because TSH output is set by the hypothalamus alone and does not depend on thyroxine levels.",
-      "Zero, because TSH is produced by the thyroid gland itself, and that gland is gone."
+      "Higher than normal, because with almost no thyroxine the inhibition on the hypothalamus and pituitary is lifted, so they keep signaling.",
+      "Lower than normal, because with no thyroid gland left to stimulate, there is no longer any reason for the pituitary to keep producing TSH.",
+      "Normal, because TSH output is set by the hypothalamus alone and does not depend on how much thyroxine is in the blood.",
+      "Zero, because TSH is produced by the thyroid gland itself, and that gland was removed in the surgery."
     ],
     "answer": "A",
     "hints": [
@@ -467,10 +467,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following belongs to the body's first line of defense — the nonspecific barriers that block pathogens before they ever enter body tissues?",
     "choices": [
-      "Antibodies produced by B cells",
-      "Unbroken skin, together with mucus in the airways and acid in the stomach",
+      "Antibodies that B cells release into the blood",
+      "Unbroken skin, mucus in the airways, and stomach acid",
       "Memory cells left behind after an earlier infection",
-      "Helper T cells that recognize one specific antigen"
+      "Helper T cells that each recognize one specific antigen"
     ],
     "answer": "B",
     "hints": [
@@ -486,10 +486,10 @@
     "responseFormat": "mcq",
     "problemText": "A bacterium enters a person's bloodstream. Which statement correctly describes the relationship between antigens and antibodies?",
     "choices": [
-      "The bacterium produces antibodies, and the immune system responds by making antigens that stick to them.",
-      "Antigen and antibody are two names for the same molecule.",
-      "Antibodies are the molecules on the bacterium's surface, and antigens are the proteins the body makes to attack them.",
-      "Antigens are molecules on the bacterium's surface that the immune system recognizes as foreign, and antibodies are proteins the body makes that bind to those specific antigens."
+      "The bacterium produces antibodies, and the immune system responds by making antigens that stick to them and destroy them.",
+      "Antigen and antibody are two names for the same molecule, used for it before and after it binds the bacterium.",
+      "Antibodies are the molecules on the bacterium's surface, and antigens are the proteins the body makes to attack those molecules.",
+      "Antigens are molecules on the bacterium that the body recognizes as foreign; antibodies are proteins the body makes to bind them."
     ],
     "answer": "D",
     "hints": [
@@ -505,10 +505,10 @@
     "responseFormat": "mcq",
     "problemText": "How does a vaccine protect a person against a disease?",
     "choices": [
-      "It exposes the immune system to a harmless form or a harmless piece of the pathogen, so the body makes antibodies and memory cells without the person becoming ill.",
-      "It gives the person a mild case of the disease so the body can practice fighting it.",
-      "It supplies antibiotics that kill the pathogen before it has a chance to multiply.",
-      "It permanently seals the skin so the pathogen can never get into the body."
+      "It exposes the immune system to a harmless form or piece of the pathogen, so the body makes antibodies and memory cells without illness.",
+      "It gives the person a mild case of the disease so the body can practice fighting it before it meets the full-strength pathogen later on.",
+      "It supplies antibiotics that kill the pathogen before it has a chance to multiply, and these stay in the blood for years.",
+      "It permanently seals the skin and mucous membranes so the pathogen can never get into the body in the first place."
     ],
     "answer": "A",
     "hints": [
@@ -524,10 +524,10 @@
     "responseFormat": "mcq",
     "problemText": "A person meets a particular virus for the first time. The level of antibody against that virus in her blood stays near zero for about 5 days, then rises slowly to a modest peak around day 14, and falls off over the following weeks. A year later she meets the same virus again. This time antibody levels begin rising within about one day and reach a peak roughly ten times higher than the first peak. What best accounts for the faster and larger second response?",
     "choices": [
-      "The virus mutated into a weaker form that her body could destroy more easily.",
-      "The antibodies made during the first exposure were still circulating at their peak level and simply attacked at once.",
-      "Memory B cells produced during the first exposure survived in her body, and on re-exposure they recognize the same antigen and divide rapidly into antibody-producing cells.",
-      "Her skin and mucus barriers thickened after the first infection and kept most of the virus out."
+      "The virus mutated into a weaker form during the year, one that her body could recognize and destroy more easily.",
+      "The antibodies made during the first exposure were still circulating at their peak level a year later, so they simply attacked the returning virus at once.",
+      "Memory B cells from the first exposure survived, and on re-exposure they recognize the same antigen and divide rapidly into antibody-producing cells.",
+      "Her skin and mucus barriers thickened after the first infection and kept most of the virus from ever reaching her blood."
     ],
     "answer": "C",
     "hints": [
@@ -543,10 +543,10 @@
     "responseFormat": "mcq",
     "problemText": "A student has influenza, which is caused by a virus, and asks a doctor for antibiotics. Why will antibiotics not cure the flu?",
     "choices": [
-      "Antibiotics work only if they are taken within the first hour after infection.",
-      "Antibiotics do kill viruses, but the influenza virus is too small for them to reach.",
-      "Antibiotics are hormones, and hormones cannot get inside cells.",
-      "Antibiotics attack structures and processes that only bacteria have, such as the bacterial cell wall, and viruses have none of those structures."
+      "Antibiotics work only if they are taken within the first hour after infection, before the virus has had time to spread through the body.",
+      "Antibiotics do kill viruses, but the influenza virus is too small for them to reach inside the cells of the airways.",
+      "Antibiotics are hormones, and hormones cannot get inside the infected cells where the influenza virus is hiding.",
+      "Antibiotics attack structures and processes found only in bacteria, such as the bacterial cell wall, and viruses lack those structures."
     ],
     "answer": "D",
     "hints": [
@@ -562,10 +562,10 @@
     "responseFormat": "mcq",
     "problemText": "HIV infects and destroys helper T cells, which normally activate both B cells and killer T cells. In an untreated patient the helper T cell count falls year after year, and eventually she develops severe infections caused by microbes that almost never make healthy people sick. Which explanation best accounts for this pattern?",
     "choices": [
-      "Losing helper T cells removes the activation step that the rest of the specific immune response depends on, so B cells and killer T cells are no longer switched on effectively, and microbes that a healthy immune system would clear are able to establish infections.",
-      "HIV directly infects and destroys every type of white blood cell at the same rate, so all defenses fail at once.",
-      "The patient's skin barrier fails first, letting in microbes the immune system has never encountered before.",
-      "The new infections are caused by the HIV virus itself changing into other kinds of microbes."
+      "Without helper T cells, B cells and killer T cells are no longer activated effectively, so microbes a healthy immune system would clear can establish infections.",
+      "HIV directly infects and destroys every type of white blood cell at the same rate, so all of the body's defenses fail together at once.",
+      "The patient's skin barrier fails first, letting in unusual microbes that the immune system has never encountered before and so it has no way to recognize or fight.",
+      "The new infections are caused by the HIV virus itself changing into other kinds of microbes as it copies itself inside the body."
     ],
     "answer": "A",
     "hints": [

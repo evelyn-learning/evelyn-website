@@ -17,7 +17,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Working from decades of unusually precise position measurements recorded by Tycho Brahe, Johannes Kepler concluded in 1609 that planetary orbits are ellipses rather than perfect circles. Why did this conclusion matter beyond astronomy?",
-    "choices": ["It showed that the Earth, not the Sun, sits at the center of the planetary system", "It overturned an ancient assumption about perfectly circular heavenly motion using careful measurement rather than authority", "It proved that a single force of gravitation holds the planets in their paths", "It established that the Moon's surface is rough and covered with craters"],
+    "choices": ["It showed that the Earth, not the Sun, sits at the center of the planetary system, confirming the older model of Ptolemy", "It overturned an ancient assumption about perfectly circular heavenly motion using careful measurement, not authority", "It proved that a single force of gravitation holds the planets in their elliptical paths, decades before Newton", "It established that the Moon's surface is rough and covered with craters, unlike the perfect spheres of ancient belief"],
     "answer": "B",
     "hints": ["Ask what the old belief in perfect circles had ever been tested against — and what Kepler tested it against."]
   },
@@ -50,7 +50,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Galileo was tried in Rome in 1633, forced to recant publicly, and kept under house arrest until his death in 1642. Yet support for the Sun-centered model kept growing across Europe in those same years. Which factor best explains why silencing him failed to stop the idea?",
-    "choices": ["The church formally reversed its position within a year of the trial", "Galileo escaped house arrest and continued publishing openly in Rome", "Printed books carried the arguments and the underlying measurements to scholars in many countries who could check them for themselves", "Newton had already published universal gravitation, which settled the question before the trial began"],
+    "choices": ["The church formally reversed its position within a year of the trial and lifted its ban on his Dialogue across Italy", "Galileo escaped house arrest and continued publishing openly in Rome, where his lectures drew scholars from across Europe", "Printed books carried the arguments and the underlying measurements to scholars in many countries who could check them for themselves", "Newton had already published universal gravitation, which settled the question for most astronomers well before the trial began in 1633"],
     "answer": "C",
     "hints": ["A court can compel a person. Ask what it cannot compel, once the reasoning is already in circulation on paper."]
   },
@@ -61,7 +61,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A student writes: 'Copernicus proved the Earth orbits the Sun in 1543 by looking through a telescope, and the church later executed Galileo for agreeing with him.' Which response corrects both errors?",
-    "choices": ["Copernicus did use a telescope, but he published nothing in his lifetime, and Galileo was executed in 1642", "Copernicus argued mainly from mathematical simplicity and had no telescope, since none was turned on the sky until about 1609; and Galileo was forced to recant and lived under house arrest until his death in 1642 rather than being executed", "Copernicus built his model on Kepler's elliptical orbits, and Galileo was acquitted in 1633 and honored by the church", "Copernicus proved his model with precise measurements he made himself, and Galileo was exiled from Europe and died in England"],
+    "choices": ["Copernicus did use a telescope, but he published nothing in his lifetime and his students released his findings later; and Galileo was executed in 1642 after a second trial for repeating his claims", "Copernicus argued mainly from mathematical simplicity and had no telescope, as none was used on the sky until about 1609; Galileo was not executed but forced to recant, living under house arrest until his death in 1642", "Copernicus built his model on Kepler's elliptical orbits rather than on telescope observations of his own; and Galileo was acquitted at his trial in Rome in 1633 and later honored by the church for his work on the heavens", "Copernicus proved his model with precise measurements he made himself over decades of nightly observation; and Galileo was exiled from Europe after his trial in 1633 and died in England"],
     "answer": "B",
     "hints": ["Handle the two errors separately: first check whether the technology existed in 1543, then check what the 1633 sentence actually was."]
   },
@@ -72,7 +72,7 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "problemText": "Defenders of absolute monarchy in the 1600s, such as Bishop Jacques-Benigne Bossuet, argued for the theory of divine right. According to that theory, where does a monarch's authority come from?",
-    "choices": ["Directly from God, making the ruler answerable to God rather than to any human body", "From a written agreement negotiated with an elected assembly", "From a vote taken among the kingdom's leading nobles", "From the consent of the merchants and landowners who pay the taxes"],
+    "choices": ["Directly from God, making the ruler answerable to God rather than to any human body", "From a written agreement negotiated with an elected assembly representing the kingdom", "From a vote taken among the kingdom's leading nobles when the previous ruler died", "From the consent of the merchants and landowners who pay the taxes that support the crown"],
     "answer": "A",
     "hints": ["The whole point of the theory was to place the ruler beyond appeal. Ask which choice leaves no human body able to judge the king."]
   },
@@ -83,7 +83,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "Louis XIV governed the French provinces through intendants, officials dispatched from the royal court rather than drawn from the great local noble families. What was the main political effect of this practice?",
-    "choices": ["It gave provincial nobles a formal veto over royal decrees", "It created an elected assembly in each province of France", "It placed day-to-day provincial authority in the hands of men who owed their positions entirely to the crown", "It ended the tax exemptions long enjoyed by the nobility and clergy"],
+    "choices": ["It gave provincial nobles a formal veto over royal decrees issued for their own regions", "It created an elected assembly in each province of France to advise the king's ministers", "It placed day-to-day provincial authority in the hands of men who owed their positions entirely to the crown", "It ended the tax exemptions long enjoyed by the nobility and clergy, putting both estates on the royal tax rolls"],
     "answer": "C",
     "hints": ["Ask who could remove an intendant from his post, and what that dependence means for whose orders he follows."]
   },
@@ -94,7 +94,7 @@
     "difficulty": 2,
     "responseFormat": "mcq",
     "problemText": "The English Bill of Rights of 1689 barred the monarch from suspending laws, from levying taxes without Parliament's consent, and from keeping a standing army in peacetime without consent, and it required Parliament to meet regularly. What kind of government did this settlement establish?",
-    "choices": ["A republic, since the office of monarch was abolished", "A constitutional monarchy, in which a real king still ruled but only inside legal limits", "A democracy, since most adult men could now vote for Parliament", "An absolute monarchy built on the French model"],
+    "choices": ["A republic, since the office of monarch was abolished and Parliament now governed on its own", "A constitutional monarchy, in which a real king still ruled but only inside legal limits", "A democracy, since most adult men could now vote for the members of Parliament", "An absolute monarchy built on the French model, with Parliament serving only to advise"],
     "answer": "B",
     "hints": ["Check two things separately: was there still a king in England after 1689, and how many people could vote for the body that limited him?"]
   },
@@ -105,7 +105,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "Jean-Baptiste Colbert, finance minister to Louis XIV, subsidized French manufacturing, taxed imported goods heavily, and worked to build up colonies and a merchant fleet so that France would export more than it imported. What was the underlying purpose of this program?",
-    "choices": ["To lower prices for French buyers by inviting foreign competition into the market", "To free the crown from any need for tax revenue by abolishing customs duties", "To hand economic policy over to the Estates-General for approval", "To maximize the revenue flowing into the royal treasury, which paid for the court, the officials, and the armies"],
+    "choices": ["To lower prices for French buyers by inviting foreign manufacturers to compete freely in the home market", "To free the crown from any need for tax revenue by abolishing customs duties at French ports", "To hand economic policy over to the Estates-General for its approval and oversight", "To maximize the revenue flowing into the royal treasury, which paid for the court, officials, and armies"],
     "answer": "D",
     "hints": ["Follow the money to its destination. Everything Louis built cost cash, and only one of these choices explains where the cash was meant to end up."]
   },
@@ -193,7 +193,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "A student writes that the Enlightenment thinkers formed a single unified movement demanding democracy and equal rights for everyone. Which response corrects this most accurately?",
-    "choices": ["They argued constantly among themselves and most were not democrats: Voltaire preferred a strong reforming monarch to rule by an uneducated public, Locke's framework suited a monarchy limited by consent rather than universal voting, and most of them assumed rights belonged to propertied European men", "They agreed on democracy but were prevented from saying so openly by censorship", "They rejected reason as a guide to politics and defended inherited custom instead", "They were united in demanding the immediate abolition of slavery throughout the colonies"],
+    "choices": ["They argued among themselves and most were not democrats: Voltaire favored a reforming monarch, Locke's ideas suited a monarchy limited by consent, and most assumed rights belonged to propertied European men", "They agreed on democracy but were prevented from saying so openly by censorship, so they disguised their shared program of universal suffrage and equal rights for everyone in satire, fiction and private letters", "They rejected reason as a guide to politics and defended inherited custom instead, arguing that tradition, church and monarchy preserved liberty far better than any written constitution ever could", "They were united in demanding the immediate abolition of slavery throughout the colonies, and they treated that cause as the first test of their shared commitment to equal rights"],
     "answer": "A",
     "hints": ["Test the claim in two parts: did these writers agree with one another, and who did their word 'everyone' actually cover?", "Recall that Mary Wollstonecraft had to argue in 1792 that women were included, and that enslaved revolutionaries had to take the language literally by force. Neither would have been necessary if the philosophes had already meant everyone."]
   },
@@ -204,7 +204,7 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "problemText": "In August 1789, France's National Assembly issued a document proclaiming that men are born free and equal in rights and that sovereignty rests with the nation. What was this document called?",
-    "choices": ["The Napoleonic Code", "The Declaration of the Rights of Man and of the Citizen", "The English Bill of Rights", "The Edict of Nantes"],
+    "choices": ["The Napoleonic Code", "The Declaration of the Rights of Man and of the Citizen", "The English Bill of Rights", "The Declaration of the Rights of Woman and of the Female Citizen"],
     "answer": "B",
     "hints": ["Two of these are not French at all or belong to a different century. Start by eliminating on date and country."]
   },
@@ -237,7 +237,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "France entered the American war in 1778 to weaken Britain, and Britain conceded American independence in 1783. Historians often call this a strategic success and a financial disaster for France. What best explains the second half of that judgment?",
-    "choices": ["Britain seized and occupied French territory in Europe as compensation for its loss", "The fighting destroyed French farmland and workshops on a large scale", "France was required by treaty to pay reparations to the new United States", "The loans and campaigns piled fresh debt onto a treasury already strained, under a tax system that largely exempted the nobility and clergy"],
+    "choices": ["Britain seized and occupied French territory in Europe as compensation for its loss, cutting deeply into royal tax income", "The fighting destroyed French farmland and workshops on a large scale, leaving the crown to pay for years of rebuilding afterward", "France was required by treaty to pay reparations to the new United States, in yearly installments that drained the royal treasury", "The loans and campaigns piled new debt onto a strained treasury whose tax system largely exempted the nobility and clergy"],
     "answer": "D",
     "hints": ["Ask where the war was actually fought, then ask who in France was legally obliged to pay for it."]
   },
@@ -248,7 +248,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "problemText": "In 1802 Napoleon moved to restore slavery in France's Caribbean colonies and sent an expedition to enforce that policy in Saint-Domingue. How did this decision shape what happened there?",
-    "choices": ["It convinced the formerly enslaved population that only full independence could secure their freedom, and they declared it on January 1, 1804", "It persuaded the colony to accept continued French rule in exchange for trade privileges", "It changed nothing, because Saint-Domingue had already been an independent state since 1791", "It led Britain to conquer the colony and annex it to its own empire"],
+    "choices": ["It convinced the formerly enslaved population that only independence could secure their freedom, and they declared it on January 1, 1804", "It persuaded the colony to accept continued French rule in exchange for trade privileges and a promise of local self-government", "It changed nothing, because Saint-Domingue had already been an independent state since 1791, when the great slave uprising began in the north", "It led Britain to conquer the colony and annex it to its own empire, as it had tried to do during the 1790s"],
     "answer": "A",
     "hints": ["Ask what remaining part of France means once France has announced it intends to re-enslave you."]
   },
@@ -259,7 +259,7 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "problemText": "Both the Haitian Revolution and the Spanish American independence movements ended European colonial rule. Yet Haiti destroyed the social order of its colony, while most new Spanish American republics of the 1820s left racial and class hierarchies substantially in place. Which difference best explains that contrast?",
-    "choices": ["Spain granted its colonies independence peacefully, while France fought a long war to keep Saint-Domingue", "Haiti's revolutionaries rejected Enlightenment arguments, while Spanish American leaders built their movements on them", "In Haiti the revolution was made by the enslaved themselves, while in Spanish America it was led by creole elites whose grievance was exclusion from high office rather than the hierarchy below them", "Slavery and racial hierarchy had already been abolished across Spanish America well before independence, so there was nothing left to change"],
+    "choices": ["Spain granted its colonies independence peacefully through negotiation, while France fought a long and costly war to keep Saint-Domingue and its sugar wealth", "Haiti's revolutionaries rejected Enlightenment arguments about rights, while Spanish American leaders built their movements on them and on the example of the United States", "In Haiti the enslaved made the revolution themselves, while Spanish American independence was led by creole elites resentful of exclusion from high office, not of the hierarchy below them", "Slavery and racial hierarchy had already been abolished across Spanish America well before independence, so the new republics inherited no colonial social order that still needed dismantling"],
     "answer": "C",
     "hints": ["Start with who led each movement and what each set of leaders personally stood to gain once the European power was gone.", "A revolution tends to remake exactly what its leaders were injured by. Ask whether the injury was a ceiling above one group or the whole structure."]
   }

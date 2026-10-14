@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "A bacterium and a human liver cell are each analyzed. Both are found to contain DNA, ribosomes, cytoplasm, and a plasma membrane. Which conclusion is best supported by this shared list?",
     "choices": [
-      "Bacteria must be eukaryotic, since they contain DNA just as the liver cell does.",
-      "All cells share a core set of features, so these four structures cannot be used to distinguish a prokaryote from a eukaryote.",
-      "The liver cell must be prokaryotic, since prokaryotes are defined by having ribosomes.",
-      "Ribosomes are membrane-bound organelles, so bacteria must contain membrane-bound organelles."
+      "Bacteria must be eukaryotic, since they contain DNA just as the liver cell does and DNA is normally enclosed in a nucleus.",
+      "All cells share a core set of features, so these four structures cannot distinguish a prokaryote from a eukaryote.",
+      "The liver cell must be prokaryotic, since prokaryotes are defined by having ribosomes floating free in the cytoplasm.",
+      "Ribosomes are membrane-bound organelles, so bacteria must contain membrane-bound organelles just as liver cells do."
     ],
     "answer": "B",
     "hints": [
@@ -160,10 +160,10 @@
     "responseFormat": "mcq",
     "problemText": "A protein is destined to be secreted from the cell. Which sequence correctly traces its route through the secretory pathway?",
     "choices": [
-      "Golgi apparatus → rough ER → transport vesicle → plasma membrane",
-      "Free ribosome in the cytosol → lysosome → smooth ER → plasma membrane",
+      "Free ribosome in the cytosol → Golgi apparatus → rough ER → transport vesicle → plasma membrane",
+      "Free ribosome in the cytosol → lysosome → smooth ER → transport vesicle → Golgi apparatus → secretory vesicle → plasma membrane",
       "Ribosome bound to the rough ER → rough ER → transport vesicle → Golgi apparatus → secretory vesicle → plasma membrane",
-      "Nucleus → mitochondrion → Golgi apparatus → plasma membrane"
+      "Nucleus → mitochondrion → transport vesicle → Golgi apparatus → secretory vesicle → plasma membrane"
     ],
     "answer": "C",
     "hints": [
@@ -180,9 +180,9 @@
     "problemText": "A drug shuts down the Golgi apparatus of a cell, but the nucleus, the ribosomes, and the rough ER continue to work normally. What is the most likely immediate effect on the cell?",
     "choices": [
       "Proteins are still made and still enter the ER, but they are no longer modified, sorted, or packaged for delivery to their destinations.",
-      "The cell can no longer make any protein at all, because the Golgi is where amino acids are linked together.",
-      "The cell can no longer make ATP, because the Golgi supplies the mitochondria with fuel.",
-      "Nothing measurable changes, because the rough ER carries out every Golgi function in addition to its own."
+      "The cell can no longer make any protein at all, because the Golgi is where amino acids are linked together into polypeptide chains.",
+      "The cell can no longer make ATP, because the Golgi supplies the mitochondria with the glucose they need as fuel.",
+      "Nothing measurable changes, because the rough ER carries out every Golgi function in addition to its own protein-folding work."
     ],
     "answer": "A",
     "hints": [
@@ -198,10 +198,10 @@
     "responseFormat": "mcq",
     "problemText": "In a certain inherited disorder, a single hydrolytic digestive enzyme is missing, and as a result undigested macromolecules pile up inside membrane-bound sacs in the patient's cells until the cells swell and malfunction. Which organelle is most directly affected?",
     "choices": [
-      "Smooth ER, which is the compartment that digests worn-out organelles.",
+      "Smooth ER, which is the membrane-bound compartment that digests worn-out organelles and stored macromolecules.",
       "Lysosome, a membrane-bound sac of hydrolytic enzymes that breaks down macromolecules and worn-out organelles.",
-      "Ribosome, which recycles used proteins back into free amino acids.",
-      "Golgi apparatus, which is the cell's main site of intracellular digestion."
+      "Ribosome, which recycles used proteins and other macromolecules back into free amino acids for reuse.",
+      "Golgi apparatus, which is the cell's main site of intracellular digestion of large macromolecules."
     ],
     "answer": "B",
     "hints": [
@@ -275,10 +275,10 @@
     "responseFormat": "mcq",
     "problemText": "Cholesterol molecules are wedged between the phospholipids of an animal cell membrane. What is their main role there?",
     "choices": [
-      "They pump Na+ out of the cell using energy from ATP.",
-      "They buffer membrane fluidity — restraining phospholipid movement when it is warm, and keeping the phospholipids from packing tightly when it is cold.",
-      "They form the water-filled channels through which glucose enters the cell.",
-      "They serve as the cell's identity markers that the immune system reads."
+      "They pump Na+ out of the cell using energy from ATP, which keeps the membrane's charge balanced against the K+ inside.",
+      "They buffer membrane fluidity — restraining phospholipid movement when warm, and keeping phospholipids from packing tightly when cold.",
+      "They form the water-filled channels through which glucose enters the cell, opening wider as the membrane warms up.",
+      "They serve as the cell's identity markers that the immune system reads, projecting from the outer surface to signal that the cell belongs to the body."
     ],
     "answer": "B",
     "hints": [
@@ -313,10 +313,10 @@
     "responseFormat": "mcq",
     "problemText": "A membrane protein spans the bilayer all the way from the outside surface to the inside surface and forms a water-lined passage through which K+ ions travel. Which description of this protein fits best?",
     "choices": [
-      "It is an integral transmembrane channel protein: the stretch that contacts the fatty acid tails is nonpolar, while the lining of its passage is polar so ions can pass.",
-      "It is a peripheral protein, resting loosely against the outer surface and never entering the bilayer.",
-      "It is a cholesterol molecule serving as a temperature buffer for the membrane.",
-      "It is a carbohydrate chain whose only function is cell-to-cell recognition."
+      "It is an integral transmembrane channel protein: the part contacting the fatty acid tails is nonpolar, while its passage lining is polar so ions can pass.",
+      "It is a peripheral protein, resting loosely against the outer surface and never entering the bilayer, held in place by weak bonds to the phospholipid heads.",
+      "It is a cholesterol molecule serving as a temperature buffer for the membrane, packed between the phospholipids across both layers.",
+      "It is a carbohydrate chain whose only function is cell-to-cell recognition, attached to proteins on the outer face of the membrane."
     ],
     "answer": "A",
     "hints": [
@@ -371,10 +371,10 @@
     "responseFormat": "mcq",
     "problemText": "An animal cell whose cytoplasm is 2% dissolved solute is placed into a solution that is 8% dissolved solute. Which way does water move overall, and what happens to the cell?",
     "choices": [
-      "Water moves into the cell and it swells, because water always travels toward the side with less solute.",
-      "There is no net movement of water, because water molecules cannot cross a cell membrane.",
-      "Water moves out of the cell and it shrivels, because water moves toward the side with the higher solute concentration, which is the 8% solution outside.",
-      "Water moves out of the cell and it swells, because losing solute raises the pressure inside."
+      "Water moves into the cell and it swells, because water always travels toward the side with less solute, which here is the cell's 2% cytoplasm.",
+      "There is no net movement of water, because water molecules cannot cross a cell membrane without a carrier protein to move them.",
+      "Water moves out of the cell and it shrivels, because water moves toward the side with higher solute concentration, the 8% solution outside.",
+      "Water moves out of the cell and it swells, because losing solute to the 8% solution raises the pressure inside the cell."
     ],
     "answer": "C",
     "hints": [
@@ -391,9 +391,9 @@
     "problemText": "A nerve cell holds its internal K+ concentration far above the K+ concentration of the fluid surrounding it, using a membrane protein that consumes ATP each time it moves K+ inward. This transport is best classified as:",
     "choices": [
       "Active transport, because the cell is moving K+ against its concentration gradient and paying with ATP.",
-      "Osmosis, because a concentration difference exists across the membrane.",
-      "Facilitated diffusion, because a membrane protein is doing the work.",
-      "Simple diffusion, because K+ is a small ion."
+      "Osmosis, because a concentration difference exists across the membrane and K+ follows the water inward.",
+      "Facilitated diffusion, because a membrane protein is doing the work of carrying K+ across the membrane.",
+      "Simple diffusion, because K+ is a small ion that slips directly through the lipid bilayer."
     ],
     "answer": "A",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "A plant cell whose cytoplasm is 5% dissolved solute is placed in a beaker of distilled water containing 0% solute. What is the most likely outcome?",
     "choices": [
-      "The cell bursts, because water rushes in and a plant cell has no wall to resist the pressure.",
-      "The cell shrivels and plasmolyzes, because water leaves the cytoplasm for the surrounding water.",
-      "Nothing happens, because a plant cell wall is impermeable to water.",
-      "Water enters the cell and it becomes turgid, with the rigid cell wall resisting further swelling and preventing the cell from bursting."
+      "The cell bursts, because water rushes in and a plant cell has no wall strong enough to resist the rising pressure inside it.",
+      "The cell shrivels and plasmolyzes, because water leaves the cytoplasm and moves out into the surrounding distilled water in the beaker.",
+      "Nothing happens, because a plant cell wall is impermeable to water and blocks it from reaching the cytoplasm.",
+      "Water enters the cell and it becomes turgid, with the rigid cell wall resisting further swelling so that the cell does not burst."
     ],
     "answer": "D",
     "hints": [
@@ -428,10 +428,10 @@
     "responseFormat": "mcq",
     "problemText": "Glucose enters a red blood cell through a specific carrier protein in the membrane. The glucose concentration is 5 mM in the blood plasma outside the cell and 1 mM in the cytoplasm inside, and the cell spends no ATP on this entry. Which term best describes this transport?",
     "choices": [
-      "Active transport, because a carrier protein is required to move the glucose.",
-      "Osmosis, because the glucose is dissolved in water and water is present on both sides.",
+      "Active transport, because a carrier protein is required to move the glucose across the membrane and into the cytoplasm.",
+      "Osmosis, because the glucose is dissolved in water and water is present on both sides of the membrane.",
       "Facilitated diffusion, because glucose moves down its gradient from 5 mM to 1 mM through a protein, so no ATP is needed.",
-      "Exocytosis, because a vesicle carries the glucose across the membrane."
+      "Exocytosis, because a vesicle carries the glucose across the membrane and releases it into the cytoplasm."
     ],
     "answer": "C",
     "hints": [
@@ -447,10 +447,10 @@
     "responseFormat": "mcq",
     "problemText": "An animal cell with an internal solute concentration of 0.9% is placed in a 0.9% salt solution, and at first it neither swells nor shrinks. A drug is then added that halts all ATP production inside the cell. Over the next hour the cell slowly swells and finally bursts. Which explanation is best supported?",
     "choices": [
-      "Osmosis requires ATP, so cutting off ATP drove water out of the cell until it collapsed and ruptured.",
-      "Osmosis itself needs no ATP, but the ATP-powered pumps that normally export Na+ stopped working, so solute accumulated inside and drew water in by osmosis.",
-      "The 0.9% outside solution was hypertonic to the cell from the very beginning, so water entered and burst the cell.",
-      "Water crosses the membrane by active transport, and that transport accelerated once ATP was no longer available to slow it."
+      "Osmosis requires ATP, so cutting off ATP drove water out of the cell until it collapsed and ruptured within the hour.",
+      "Osmosis itself needs no ATP, but the ATP-powered pumps that normally export Na+ stopped, so solute accumulated inside and drew water in by osmosis.",
+      "The 0.9% outside solution was hypertonic to the cell from the very beginning, so water entered and burst the cell once the drug was added.",
+      "Water crosses the membrane by active transport, and that transport accelerated once ATP was no longer available to slow it down and hold water out."
     ],
     "answer": "B",
     "hints": [

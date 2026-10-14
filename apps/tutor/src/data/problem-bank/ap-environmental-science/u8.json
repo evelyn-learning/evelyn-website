@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "Biochemical oxygen demand (BOD) measures the amount of:",
     "choices": [
-      "Dissolved oxygen currently present in a water sample",
-      "Oxygen required by microorganisms to decompose the organic matter in a water sample",
-      "Total chemical pollutants dissolved in a water body",
-      "Photosynthetic oxygen produced by aquatic plants per day"
+      "Dissolved oxygen currently present in a water sample at the time of collection",
+      "Oxygen microorganisms need to decompose the organic matter in a water sample",
+      "Total chemical pollutants dissolved in a water body, measured in milligrams per liter",
+      "Photosynthetic oxygen produced by aquatic plants per day in a water body"
     ],
     "answer": "B",
     "hints": ["High BOD signals a large load of decomposable organic matter; measuring it predicts how much dissolved oxygen decomposers will consume."]
@@ -40,9 +40,9 @@
     "problemText": "On a dissolved-oxygen sag curve for a river receiving a sewage discharge, the lowest dissolved oxygen reading typically occurs:",
     "choices": [
       "Upstream of the sewage outfall, in the undisturbed clean-water zone",
-      "At the exact point of the outfall, before any microbial decomposition has begun",
-      "Some distance below the outfall, where oxygen-consuming decomposition of organic waste is most intense and reaeration has not yet offset the oxygen debt",
-      "Far downstream where the river has fully recovered and dissolved oxygen has returned to near-saturation levels"
+      "At the exact point of the outfall, before any microbial decomposition of the organic waste has had time to begin",
+      "Some distance below the outfall, where decomposition of organic waste consumes oxygen fastest and reaeration has not yet offset the deficit",
+      "Far downstream, where decomposition is complete, the river has fully recovered, and dissolved oxygen has returned to near-saturation levels"
     ],
     "answer": "C",
     "hints": ["The 'sag' deepens as decomposers consume oxygen; the minimum is reached when BOD is still high but reaeration has not yet caught up."]
@@ -55,10 +55,10 @@
     "responseFormat": "mcq",
     "problemText": "A farmer applies excess nitrogen fertilizer to fields bordering a river. Heavy rains wash the fertilizer directly into the river. This is best classified as:",
     "choices": [
-      "Thermal pollution, because decomposing fertilizer releases heat energy into the water",
-      "Point source pollution, because the farm is a single identifiable property",
-      "Industrial effluent, because agriculture is classified under industrial use by the Clean Water Act",
-      "Nonpoint source pollution, because the runoff originates from a diffuse, widespread land area rather than a single discharge pipe"
+      "Thermal pollution, because decomposing fertilizer releases heat energy that warms the river water",
+      "Point source pollution, because the farm is a single identifiable property with a known owner",
+      "Industrial effluent, because large-scale commercial agriculture is classified under industrial use by the Clean Water Act",
+      "Nonpoint source pollution, because the runoff comes from a diffuse land area rather than a single discharge pipe"
     ],
     "answer": "D",
     "hints": ["Ask whether the pollution enters the water body through an identifiable, discrete conveyance — if not, it is nonpoint."]
@@ -106,10 +106,10 @@
     "responseFormat": "mcq",
     "problemText": "Which statement correctly distinguishes bioaccumulation from biomagnification?",
     "choices": [
-      "Both terms are synonymous and describe the same process of toxin buildup across food webs",
-      "Biomagnification occurs only in marine ecosystems; bioaccumulation occurs only in freshwater ecosystems",
-      "Bioaccumulation refers to increasing toxin concentration at higher trophic levels; biomagnification refers to toxin storage within a single organism",
-      "Bioaccumulation is the buildup of a substance within an individual organism over its lifetime; biomagnification is the increase in toxin concentration at successively higher trophic levels"
+      "Both terms are synonymous and describe the same process of toxin buildup, whether within one organism or across food webs",
+      "Biomagnification occurs only in marine ecosystems; bioaccumulation occurs only in freshwater ecosystems such as lakes and rivers",
+      "Bioaccumulation refers to increasing toxin concentration at successively higher trophic levels; biomagnification refers to toxin storage within a single organism over its lifetime",
+      "Bioaccumulation is the buildup of a substance within one organism over its lifetime; biomagnification is the increase in concentration at successively higher trophic levels"
     ],
     "answer": "D",
     "hints": ["Think of 'accumulate' as one animal storing more over time, and 'magnify' as the level-to-level amplification up the food web."]
@@ -148,10 +148,10 @@
     "responseFormat": "mcq",
     "problemText": "The LD50 of a new herbicide is determined to be 200 mg per kilogram of body weight in laboratory rats. Which statement correctly interprets this value?",
     "choices": [
-      "A dose of 200 mg/kg body weight is lethal to exactly 50% of the test population under standard test conditions",
-      "200 mg of the herbicide will kill any rat regardless of its body weight",
-      "50% of the herbicide applied to soil degrades chemically within 200 days",
-      "Any dose below 200 mg/kg body weight is guaranteed to be safe for all organisms"
+      "A dose of 200 mg/kg body weight kills 50% of the test population under standard test conditions",
+      "A total dose of 200 mg of the herbicide will kill any test rat regardless of its body weight",
+      "50% of the herbicide applied to soil degrades chemically within 200 days of its application",
+      "Any dose below 200 mg/kg body weight is guaranteed to be safe for all exposed organisms"
     ],
     "answer": "A",
     "hints": ["LD50 = the dose that is Lethal to 50% of a test population; it is always expressed per unit of body weight, not as a fixed mass."]
@@ -177,10 +177,10 @@
     "responseFormat": "mcq",
     "problemText": "DDT was banned in the United States in 1972, yet measurable residues of DDE (a DDT breakdown product) were still detected in bald eagle eggs and human adipose tissue decades later. Which combination of chemical properties best explains this long-term persistence?",
     "choices": [
-      "High water solubility, which allows DDT to circulate continuously through ocean currents and re-enter food chains via drinking water",
+      "High water solubility, which allows DDT to circulate continuously through ocean currents and re-enter food chains via drinking water and crop irrigation",
       "Chemical instability that causes DDT to constantly reform from its breakdown products stored in river sediments",
       "Rapid volatilization from soils that enables global atmospheric transport and annual redeposition in precipitation",
-      "Lipid solubility combined with resistance to chemical and biological degradation, which allows DDT and DDE to accumulate in fatty tissues and persist in sediments while recirculating through food webs"
+      "Lipid solubility plus resistance to chemical and biological degradation, allowing DDT and DDE to accumulate in fatty tissues and persist in sediments"
     ],
     "answer": "D",
     "hints": [
@@ -196,10 +196,10 @@
     "responseFormat": "mcq",
     "problemText": "Cultural eutrophication is best defined as:",
     "choices": [
-      "Human-caused over-enrichment of a water body with nutrients, leading to excessive algal growth and subsequent oxygen depletion",
-      "The natural aging of a lake over thousands of years as organic sediments fill the basin",
-      "Toxic contamination of a water body by heavy metals discharged from factories",
-      "Rising water temperatures caused by discharge of industrial cooling water"
+      "Human-caused nutrient over-enrichment of a water body, leading to excessive algal growth and oxygen depletion",
+      "The natural aging of a lake over thousands of years as organic sediments gradually fill the basin",
+      "Toxic contamination of a water body by heavy metals discharged from factories into nearby rivers",
+      "Rising water temperatures caused by discharge of heated industrial cooling water into nearby lakes and rivers"
     ],
     "answer": "A",
     "hints": ["The prefix 'cultural' signals human cause. Eutrophication follows the chain: excess nutrients → algal bloom → die-off → oxygen crash."]
@@ -212,10 +212,10 @@
     "responseFormat": "mcq",
     "problemText": "In temperate freshwater lakes, the nutrient most commonly identified as the primary limiting factor driving cultural eutrophication is:",
     "choices": [
-      "Carbon dioxide, because photosynthesis directly consumes CO2 and algae exhaust it first",
+      "Carbon dioxide, because photosynthesis directly consumes CO2 and algae exhaust the dissolved supply first during blooms",
       "Nitrogen, which is universally the scarcest element in freshwater lake water throughout the year",
-      "Sulfur, because acid rain delivers concentrated sulfate directly to lake surfaces",
-      "Phosphorus, because it is typically available in the lowest supply relative to algal demand and even small additions trigger large bloom responses"
+      "Sulfur, because acid rain delivers concentrated sulfate directly to lake surfaces where algae readily take it up",
+      "Phosphorus, because it is typically in lowest supply relative to algal demand, so small additions trigger large blooms"
     ],
     "answer": "D",
     "hints": ["In lakes, phosphorus is usually the limiting nutrient; adding phosphorus causes the biggest algal response. Nitrogen is more often limiting in marine coastal waters."]
@@ -260,10 +260,10 @@
     "responseFormat": "mcq",
     "problemText": "The large seasonal hypoxic zone (dead zone) in the northern Gulf of Mexico is primarily caused by:",
     "choices": [
-      "Chronic crude-oil spills from offshore drilling platforms releasing toxins fatal to marine life",
-      "Nitrogen and phosphorus from Midwestern agricultural fertilizers carried down the Mississippi River, fueling algal blooms whose decomposition depletes bottom-water oxygen",
-      "Warm Caribbean surface currents that push naturally oxygen-depleted tropical water onto the continental shelf",
-      "Industrial thermal discharges from petrochemical refineries concentrated along the Louisiana coastline"
+      "Chronic crude-oil spills from offshore drilling platforms releasing hydrocarbons that are toxic to marine life and smother the seafloor",
+      "Nitrogen and phosphorus from Midwestern fertilizers carried down the Mississippi River, fueling algal blooms whose decay depletes bottom-water oxygen",
+      "Warm Caribbean surface currents that push naturally oxygen-depleted tropical water onto the Louisiana–Texas continental shelf each summer",
+      "Industrial thermal discharges from petrochemical refineries along the Louisiana coastline, which heat bottom water until it can hold little oxygen"
     ],
     "answer": "B",
     "hints": ["Follow the nutrient pathway: farm fertilizers → river drainage → Gulf → algal bloom → decomposition → hypoxia."]
@@ -276,10 +276,10 @@
     "responseFormat": "mcq",
     "problemText": "Scientists determine that phosphorus from lawn fertilizers is the single limiting nutrient driving summer algal blooms in a local lake. A municipal government wants to address the root cause rather than treat symptoms. Which intervention would be MOST effective?",
     "choices": [
-      "Restrict or ban phosphorus in residential and commercial fertilizers and require vegetated riparian buffer strips to intercept phosphorus-laden runoff before it reaches the lake",
-      "Stock the lake with herbivorous fish such as grass carp to consume algae during peak bloom periods",
-      "Install floating aerators throughout the lake to maintain dissolved oxygen levels during algal die-off events",
-      "Drain the lake every five years and allow it to refill naturally with rainwater to dilute accumulated nutrients"
+      "Restrict or ban phosphorus in residential and commercial fertilizers and require vegetated riparian buffers to intercept phosphorus-laden runoff before it reaches the lake",
+      "Stock the lake with herbivorous fish such as grass carp to consume excess algae during peak bloom periods throughout each summer season",
+      "Install floating aerators throughout the lake to maintain dissolved oxygen levels during algal die-off events and prevent summer fish kills",
+      "Drain the lake every five years and allow it to refill naturally with rainwater, diluting accumulated nutrients and flushing out the algal population before blooms recur"
     ],
     "answer": "A",
     "hints": ["Root-cause solutions eliminate the nutrient input at the source; symptomatic treatments manage blooms after they have already formed."]
@@ -308,10 +308,10 @@
     "responseFormat": "mcq",
     "problemText": "Modern sanitary landfills minimize groundwater contamination primarily through:",
     "choices": [
-      "A composite liner system — compacted clay beneath high-density polyethylene — combined with a leachate collection and removal network below the waste cells",
-      "Chemically treating all incoming waste with disinfectants before burial",
-      "Compacting waste into dense bales that prevent any liquid from forming",
-      "Covering each day's waste with a thick clean-soil layer that naturally filters leachate before it reaches the water table"
+      "A composite liner of compacted clay beneath high-density polyethylene, combined with a leachate collection and removal system",
+      "Chemically treating all incoming waste with disinfectants before burial to neutralize contaminants in leachate",
+      "Compacting waste into dense bales that prevent any liquid from forming or seeping out of the waste cells",
+      "Covering each day's waste with a thick clean-soil layer that naturally filters leachate before it can reach the water table below"
     ],
     "answer": "A",
     "hints": ["The liner prevents leachate from escaping downward; the collection system drains and removes leachate that does form inside the landfill."]
@@ -324,10 +324,10 @@
     "responseFormat": "mcq",
     "problemText": "Which statement most accurately describes how landfill gas is produced, and one environmental benefit of capturing it?",
     "choices": [
-      "Landfill gas forms when rainwater dissolves calcium carbonate in buried concrete; capturing it helps neutralize acid rain precursors",
-      "Landfill gas (primarily methane) is produced by anaerobic bacteria decomposing organic waste; capturing and combusting it generates electricity while preventing the release of a greenhouse gas far more potent than CO2 over a 20-year timeframe",
-      "Landfill gas is mainly CO2 released when buried plastics photodegrade; capturing it reduces photochemical smog formation",
-      "Landfill gas results from inorganic reactions between buried metals; capturing it prevents heavy metals from migrating into leachate"
+      "Landfill gas forms when rainwater dissolves calcium carbonate in buried concrete and rubble; capturing it helps neutralize acid rain precursors before they reach the air",
+      "Landfill gas (mainly methane) comes from anaerobic bacteria decomposing organic waste; capturing and burning it generates electricity and keeps a potent greenhouse gas out of the air",
+      "Landfill gas is mainly CO2 released when buried plastics photodegrade under the cover soil; capturing it reduces photochemical smog formation over nearby cities",
+      "Landfill gas results from inorganic reactions between buried metals and acidic leachate; capturing it prevents heavy metals from migrating into groundwater and nearby surface streams"
     ],
     "answer": "B",
     "hints": ["Organic waste plus no oxygen plus bacteria equals methane. Burning methane for energy converts it to CO2, which is much less potent as a greenhouse gas."]
@@ -369,10 +369,10 @@
     "responseFormat": "mcq",
     "problemText": "An industrial facility generates three waste streams: used motor oil, spent lead-acid batteries, and clean cardboard packaging. Under RCRA and the solid-waste management hierarchy, which approach best manages the hazardous components of this waste stream?",
     "choices": [
-      "Co-incinerate all three streams together in a high-temperature combustion unit to maximize volume reduction and energy recovery",
-      "Dispose of all waste in a permitted RCRA Subtitle D sanitary landfill that meets federal composite-liner standards",
-      "Prioritize reclamation and recycling for the hazardous components — re-refine used oil into base lubricant and send spent batteries to a licensed lead smelter — before any residuals undergo properly licensed disposal",
-      "Export the used oil and spent batteries to a trading partner with lower-cost disposal regulations"
+      "Co-incinerate all three streams together in a high-temperature combustion unit to maximize volume reduction and energy recovery while scrubbing the stack emissions",
+      "Dispose of all waste in a permitted RCRA Subtitle D sanitary landfill that meets federal composite-liner standards, relying on the liner alone to contain any hazardous leachate that forms",
+      "Prioritize recycling the hazardous components — re-refine used oil into base lubricant and send spent batteries to a licensed lead smelter — before licensed disposal of residuals",
+      "Export the used oil and spent batteries to a trading partner with lower-cost disposal regulations, keeping the hazardous material out of domestic landfills"
     ],
     "answer": "C",
     "hints": [

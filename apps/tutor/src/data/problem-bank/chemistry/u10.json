@@ -204,10 +204,10 @@
     "responseFormat": "mcq",
     "problemText": "A student has an acid solution measured at pH 5 and predicts: \"If I add enough water to double the volume, the pH will double to 10.\" Which response correctly diagnoses the prediction?",
     "choices": [
-      "The prediction is fine — doubling the volume doubles the pH value",
-      "The pH will fall to 2.5 instead, because doubling the volume halves the pH number",
-      "Doubling the volume roughly halves [H⁺], which raises the pH by well under one unit; adding water can never push an acid past neutral to pH 10",
-      "The pH stays exactly 5, because adding water changes nothing about the solution at all"
+      "The prediction is fine — doubling the volume doubles the pH value, because pH is proportional to volume",
+      "The pH will fall to 2.5 instead, because doubling the volume halves the pH number and strengthens the acid",
+      "Doubling the volume roughly halves [H⁺], raising the pH by well under one unit; diluting an acid can never push it past pH 7",
+      "The pH stays exactly 5, because adding water changes nothing about the solution — the acid particles are still all there in the beaker"
     ],
     "answer": "C",
     "hints": [

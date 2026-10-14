@@ -26,10 +26,10 @@
     "responseFormat": "mcq",
     "problemText": "A student proposes this research question for a six-page paper: \"Did the county close the riverside campground in 2011?\" What is the problem, and which repair fixes it?",
     "choices": [
-      "It is far too broad, so it should be narrowed to a single year of campground attendance records.",
-      "It is answerable in one word, so the yes/no opener should be swapped for one that demands explanation: \"Why did the county close the riverside campground, and how did use of the nearby trails change afterward?\"",
-      "It is not researchable, so it should be replaced with \"Should the county have closed the riverside campground?\"",
-      "There is no problem, because the question already names a specific place and a specific year."
+      "It is far too broad for a six-page paper, so it should instead be narrowed to a single year of campground attendance records: \"How many people camped at the riverside campground in 2010?\"",
+      "It is answerable in one word, so it should be reworded to demand explanation: \"Why did the county close the riverside campground, and how did use of the nearby trails change afterward?\"",
+      "It is not researchable, because no public records would show the decision, so it should be replaced with \"Should the county have closed the riverside campground in 2011?\"",
+      "There is no problem, because the question already names a specific place and a specific year, which is exactly what a focused, researchable question for a six-page paper needs."
     ],
     "answer": "B",
     "hints": [
@@ -64,10 +64,10 @@
     "responseFormat": "mcq",
     "problemText": "A student has a five-page paper to write about a mill town's public swimming lake, which was drained in 1996. Which of these is the best-scoped, researchable question for that assignment?",
     "choices": [
-      "What reasons did the water board give for draining the swimming lake in 1996, and how did summer recreation in the town change over the next five years?",
-      "How has swimming shaped community life across the country?",
-      "In what month of 1996 was the swimming lake drained?",
-      "Was draining the swimming lake a mistake for the town?"
+      "What reasons did the water board give for draining the lake in 1996, and how did summer recreation in the town change over the next five years?",
+      "How has public swimming shaped community life in towns and cities across the country, from the very first municipal pools to today's water parks?",
+      "In what month of 1996 was the swimming lake drained, and which members of the water board voted in favor of draining it?",
+      "Was draining the swimming lake in 1996 a mistake for the town, and should the water board have chosen to keep it open instead?"
     ],
     "answer": "A",
     "hints": [
@@ -121,10 +121,10 @@
     "responseFormat": "mcq",
     "problemText": "For a paper on whether a county's well water has grown saltier over the past twenty years, which source is MOST credible?",
     "choices": [
-      "A homepage banner from a company that installs water-softening equipment.",
-      "A comment thread where six residents describe how their tap water tastes lately.",
-      "An undated printout with no author, titled \"Water Facts,\" found in a waiting room.",
-      "A county water district report from last year, written by two named hydrologists, with twenty years of sampling data attached."
+      "A homepage banner from a company that installs water-softening equipment, warning of rising salt levels in local wells.",
+      "A comment thread where six residents describe how their tap water has tasted saltier over the last several years.",
+      "An undated printout with no author, titled \"Water Facts,\" found in a waiting room and listing salt readings by town.",
+      "A county water district report from last year by two named hydrologists, with twenty years of sampling data attached."
     ],
     "answer": "D",
     "hints": [
@@ -159,10 +159,10 @@
     "responseFormat": "mcq",
     "problemText": "One student writing about current treatment guidance for concussions in youth sports cites a coaching handbook published nineteen years ago. A classmate writing about the wording of a state charter granted in 1912 cites a legal commentary published in 1960. Who has a currency problem?",
     "choices": [
-      "Both students, because any source older than about ten years is unusable.",
-      "Neither student, because the age of a source never affects its credibility.",
+      "Both students, because any source older than about ten years is unusable, whatever topic the paper happens to cover.",
+      "Neither student, because the age of a source never affects its credibility as long as its author is a recognized expert.",
       "Only the first student, because medical guidance is revised quickly while the wording of an old charter does not change.",
-      "Only the second student, because 1960 is much further in the past than nineteen years ago."
+      "Only the second student, because 1960 is much further in the past than nineteen years ago, making it the more outdated source."
     ],
     "answer": "C",
     "hints": [
@@ -197,10 +197,10 @@
     "responseFormat": "mcq",
     "problemText": "A student claims that a new bike-lane design cut crashes by half, and says she has three sources. All three repeat the same figure, and each of the three credits the same unpublished memo written by the design firm that sold the plan to the city. Which is the best assessment?",
     "choices": [
-      "Three sources landing on the same number is strong corroboration, so the claim is well supported.",
-      "The claim is solid because the design firm had the firsthand access needed to measure crashes.",
-      "The real problem is that all three sources are too recent for the trend to be trusted yet.",
-      "This is one claim repeated three times rather than three independent sources, and the original memo has a commercial stake in the result."
+      "Three sources landing on the same number is strong corroboration, so the claim is well supported and ready to be cited as established fact.",
+      "The claim is solid because the design firm had the firsthand access needed to measure crashes both before and after the change.",
+      "The real problem is that all three sources are too recent for the crash trend to be trusted until more years of data come in.",
+      "This is one claim repeated three times, not three independent sources, and the original memo has a commercial stake in the result."
     ],
     "answer": "D",
     "hints": [
@@ -311,10 +311,10 @@
     "responseFormat": "mcq",
     "problemText": "A student must PARAPHRASE this line from a county archive letter: \"The depot will remain open through the harvest, after which the line will be lifted and the ties sold.\" Which response is a correct paraphrase rather than a different move or an error?",
     "choices": [
-      "The depot closed eventually.",
-      "The station would stay in service until the harvest was finished; once it was, the track itself would be torn out and the wooden ties sold off.",
+      "The depot closed eventually, once the harvest was over and the railroad no longer had any use for the line.",
+      "The station would stay in service until the harvest ended; then the track would be torn up and the wooden ties sold off.",
       "\"The depot will remain open through the harvest, after which the line will be lifted and the ties sold.\"",
-      "The depot will stay open through the harvest, after which the line will be removed and the ties sold."
+      "The depot will stay open through the whole harvest, after which the line will be removed and the ties will all be sold off."
     ],
     "answer": "B",
     "hints": [
@@ -368,10 +368,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's paragraph contains this sentence standing alone, with the words copied exactly from a district report: \"Attendance rose in every grade after the late-start change.\" What is wrong, and what is the fix?",
     "choices": [
-      "Nothing is wrong, because the sentence is short enough to stand on its own.",
-      "The quotation marks should be removed so the sentence blends smoothly into the paragraph.",
-      "The sentence should be cut, because evidence belongs only in the conclusion.",
-      "It is a dropped quote with no speaker: frame it with a signal phrase, such as \"A district report found that attendance rose in every grade after the late-start change,\" and then explain what that proves for the claim."
+      "Nothing is wrong, because the sentence is short enough to stand on its own and is copied exactly from the district report.",
+      "The quotation marks should be removed so the sentence blends smoothly into the paragraph and reads like the student's own voice.",
+      "The sentence should be cut, because evidence belongs only in the conclusion, where it can sum up the support for the paragraph's whole argument.",
+      "It is a dropped quote with no speaker: frame it with a signal phrase, such as \"A district report found that...,\" then explain what it proves."
     ],
     "answer": "D",
     "hints": [
@@ -387,10 +387,10 @@
     "responseFormat": "mcq",
     "problemText": "A student is using this line from a county archive newsletter: \"The ferry carried more passengers in its final year than in any season since the bridge opened.\" Which version integrates it best?",
     "choices": [
-      "A county archive newsletter notes that the ferry \"carried more passengers in its final year than in any season since the bridge opened,\" which suggests the service was shut down for reasons other than falling demand.",
-      "\"The ferry carried more passengers in its final year than in any season since the bridge opened.\" This shows that the ferry mattered.",
-      "The ferry carried more passengers in its final year than in any season since the bridge opened.",
-      "Some people say the ferry carried more passengers in its final year than in any season since the bridge opened, and that is worth thinking about."
+      "A county archive newsletter notes that the ferry \"carried more passengers in its final year than in any season since the bridge opened,\" suggesting the service closed for reasons other than falling demand.",
+      "\"The ferry carried more passengers in its final year than in any season since the bridge opened.\" This shows that the ferry mattered a great deal to the many people of the county who rode it every day for years.",
+      "The ferry carried more passengers in its final year than in any season since the bridge opened, which is a fact recorded in the county's local archive.",
+      "Some people say the ferry carried more passengers in its final year than in any season since the bridge opened, and that is worth thinking about when looking back on the ferry."
     ],
     "answer": "A",
     "hints": [
@@ -444,10 +444,10 @@
     "responseFormat": "mcq",
     "problemText": "A student writes: \"Our district should keep the summer reading program. A county library report found that students who joined the program read more books over the summer than students who did not (County Library Report). Reading is important.\" Every borrowed idea is credited. What is the strongest remaining criticism?",
     "choices": [
-      "The evidence is never explained: the writer never says what the reading gap proves about keeping the program, and the closing sentence is filler rather than interpretation.",
-      "The report should not have been cited at all, because a library reporting on its own program can never be used as evidence.",
-      "The finding had to be quoted word for word instead of restated, because any number requires quotation marks.",
-      "Naming the report inside the paragraph is an error, because a source belongs only in the works cited list."
+      "The evidence is never explained: the writer never says what the reading gap proves about keeping the program, and the last sentence is filler, not interpretation.",
+      "The report should not have been cited at all, because a library reporting on its own program has a clear stake in the result and so can never be used as evidence.",
+      "The finding had to be quoted word for word instead of restated, because any number taken from a source requires quotation marks around it.",
+      "Naming the report inside the paragraph is an error, because a source belongs only in the works cited list at the end of the paper."
     ],
     "answer": "A",
     "hints": [

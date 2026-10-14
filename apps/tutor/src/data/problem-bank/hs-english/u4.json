@@ -163,10 +163,10 @@
     "responseFormat": "mcq",
     "problemText": "Read these two sentences. (1) The nurse recommended an aggressive treatment plan, and the infection cleared within a week. (2) Our group project stalled because one member was aggressive in every meeting. What do the two uses of \"aggressive\" best show?",
     "choices": [
-      "\"Aggressive\" carries a fixed negative charge, so sentence 1 uses the word incorrectly.",
-      "The denotation of \"aggressive\" changes between the sentences while its connotation stays the same.",
-      "\"Aggressive\" keeps roughly the same denotation in both sentences, but the surrounding context makes it approving in one and critical in the other.",
-      "Sentence 2 relies on the word's denotation while sentence 1 relies only on its connotation."
+      "\"Aggressive\" carries a fixed negative charge, so sentence 1 uses the word incorrectly when it describes a helpful treatment plan.",
+      "The denotation of \"aggressive\" changes between the sentences while its connotation stays the same in both of them.",
+      "\"Aggressive\" keeps roughly the same denotation in both sentences, but context makes it approving in one and critical in the other.",
+      "Sentence 2 relies on the word's denotation while sentence 1 relies only on its connotation to describe the treatment plan."
     ],
     "answer": "C",
     "hints": [
@@ -182,10 +182,10 @@
     "responseFormat": "mcq",
     "problemText": "Two reporters describe the same meeting. Reporter One writes: \"Forty residents filled the hearing room to question the parking plan.\" Reporter Two writes: \"A mob of forty agitators swarmed the hearing room to attack the parking plan.\" Which choice best explains how Reporter Two steers readers?",
     "choices": [
-      "Reporter Two reports different facts, since \"agitators\" and \"residents\" cannot describe the same people.",
-      "Reporter Two reports the same facts but selects charged near-synonyms, so \"mob,\" \"agitators,\" \"swarmed,\" and \"attack\" push readers to judge the group as unruly.",
-      "Reporter Two is more precise, because \"swarmed\" and \"attack\" describe the group's actions in greater detail.",
-      "Reporter Two is neutral, because every word chosen has a dictionary definition that fits what happened."
+      "Reporter Two reports different facts, since \"agitators\" and \"residents\" cannot describe the same people, so the accounts disagree about who came.",
+      "Reporter Two reports the same facts but picks charged near-synonyms, so \"mob,\" \"agitators,\" \"swarmed,\" and \"attack\" push readers to judge the group as unruly.",
+      "Reporter Two is more precise, because \"swarmed\" and \"attack\" describe the group's actions in greater detail than \"filled\" and \"question\" do in the first account.",
+      "Reporter Two is neutral, because every word chosen has a dictionary definition that fits what happened, so the account adds no slant of its own."
     ],
     "answer": "B",
     "hints": [
@@ -272,10 +272,10 @@
     "responseFormat": "mcq",
     "problemText": "Read this excerpt from a student column: \"The new hallway policy arrived in a memo of eleven bullet points, four of which explain how to walk. Administrators assure us the rules will be enforced with warmth.\" Which choice best names the tone and its evidence?",
     "choices": [
-      "Grateful — the writer thanks administrators for explaining the new rules so thoroughly.",
-      "Wry and skeptical — counting the bullet points, singling out the four that explain how to walk, and pairing enforcement with \"warmth\" all needle the policy.",
-      "Neutral and factual — the excerpt only reports how long the memo is and what administrators said.",
-      "Furious — the writer condemns the administrators for restricting student movement."
+      "Grateful — the writer thanks administrators for explaining the new rules so thoroughly and for promising to enforce them kindly.",
+      "Wry and skeptical — counting the bullet points, singling out the four on walking, and pairing enforcement with \"warmth\" all needle the policy.",
+      "Neutral and factual — the excerpt only reports how long the memo is and what administrators said, without adding any judgment or comment of its own.",
+      "Furious — the writer condemns the administrators for restricting student movement and demands that the hallway policy be withdrawn."
     ],
     "answer": "B",
     "hints": [
@@ -310,10 +310,10 @@
     "responseFormat": "mcq",
     "problemText": "Two writers describe the same renovated gym. Sentence 1: \"The renovated gym seats nine hundred, and the new floor was laid in maple.\" Sentence 2: \"The renovated gym seats nine hundred, which works out to about the price of a used car per seat.\" Both sentences are factually accurate. Which choice best explains the difference between them?",
     "choices": [
-      "Sentence 2 is inaccurate, because the cost of a building cannot be divided by its number of seats.",
-      "Sentence 1 has a tone and sentence 2 does not, since sentence 2 offers only a calculation.",
-      "The sentences differ in register rather than tone, because sentence 2 is less formal than sentence 1.",
-      "Both report the same capacity, but sentence 2's selected detail reframes the project as a cost per seat, creating a critical tone that sentence 1 does not."
+      "Sentence 2 is inaccurate, because the cost of a building cannot be meaningfully divided by its number of seats.",
+      "Sentence 1 has a tone and sentence 2 does not, since sentence 2 offers only a calculation and no descriptive detail.",
+      "The sentences differ in register rather than tone, because sentence 2 is less formal than sentence 1 and relies on a casual, conversational comparison.",
+      "Both report the same capacity, but sentence 2's chosen detail reframes the project as a cost per seat, creating a critical tone sentence 1 lacks."
     ],
     "answer": "D",
     "hints": [

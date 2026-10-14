@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "A bond issued by a corporation is best described as which of the following?",
     "choices": [
-      "A financial asset representing a loan from the bondholder to the corporation, promising fixed interest payments and repayment of principal at maturity",
-      "An ownership stake in the corporation entitling the holder to vote on corporate decisions",
-      "A physical asset produced by the corporation for sale to consumers",
-      "A government-guaranteed certificate that eliminates all default risk"
+      "A financial asset representing a loan from the bondholder to the corporation, promising fixed interest and repayment of principal",
+      "An ownership stake in the corporation entitling the holder to vote on corporate decisions and to share in residual profits",
+      "A physical asset produced by the corporation for sale to consumers, recorded as inventory on its balance sheet until it is eventually sold",
+      "A government-guaranteed certificate that eliminates all default risk for the holder in exchange for accepting a lower yield"
     ],
     "answer": "A",
     "hints": ["Bonds are debt instruments — the bondholder is a creditor, not an owner."]
@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "If market interest rates rise after an existing bond was issued at a fixed coupon rate, what happens to the market price of that existing bond?",
     "choices": [
-      "It rises, because higher interest rates make all bonds more valuable",
-      "It falls, because the fixed coupon becomes less attractive compared with newly issued bonds offering higher rates",
-      "It remains unchanged, because the bond's face value and coupon are contractually fixed",
-      "It doubles, because investors must be compensated for the rate increase"
+      "It rises, because higher interest rates make all bonds, including older issues, more valuable to investors",
+      "It falls, because the fixed coupon is less attractive than newly issued bonds offering higher rates",
+      "It remains unchanged, because the bond's face value and coupon are contractually fixed until maturity",
+      "It doubles, because investors must be compensated for the rate increase through a higher resale price"
     ],
     "answer": "B",
     "hints": ["Bond prices and interest rates move in opposite directions."]
@@ -72,9 +72,9 @@
     "problemText": "Compared with holders of corporate bonds, stockholders of the same corporation are best described as having which of the following?",
     "choices": [
       "A legally binding creditor claim that receives fixed interest payments before any other disbursement",
-      "A residual ownership claim that entitles them to profits only after all debt obligations are met, meaning they bear greater financial risk",
-      "Priority over bondholders in the event of corporate liquidation",
-      "A guaranteed dividend payment regardless of the firm's annual profitability"
+      "A residual ownership claim, paid only after all debt obligations are met, so they bear greater financial risk",
+      "Priority over bondholders in the event of corporate liquidation, since owners are repaid before outside lenders",
+      "A guaranteed dividend payment regardless of the firm's annual profitability, as set by the corporate charter"
     ],
     "answer": "B",
     "hints": ["Equity holders are owners; debt holders are creditors. Owners bear the residual risk."]
@@ -88,9 +88,9 @@
     "problemText": "A bond with a face value of 1,000 dollars pays an annual coupon of 50 dollars, giving it a coupon rate of 5 percent. Investors in the market now require a 6 percent annual return on bonds of this type. Relative to its face value, the bond's current market price will be:",
     "choices": [
       "Below its face value, because the 5 percent coupon rate is less than the 6 percent return investors now require",
-      "Equal to its face value, because the coupon payment is contractually fixed",
-      "Above its face value, because the coupon rate once exceeded prevailing market rates",
-      "Exactly zero, because no investor will purchase a bond that yields below the market rate"
+      "Equal to its face value, because the coupon payment and the repayment of principal are contractually fixed",
+      "Above its face value, because its coupon rate exceeded prevailing market rates at the time the bond was first issued",
+      "Exactly zero, because no investor will purchase a bond that yields below the return investors now require"
     ],
     "answer": "A",
     "hints": ["When the required return exceeds the coupon rate, the bond must sell at a discount so the total return equals the required rate."]
@@ -152,10 +152,10 @@
     "responseFormat": "mcq",
     "problemText": "A household took out a fixed-rate mortgage at a 4 percent nominal interest rate. Unexpectedly, inflation averages 7 percent per year over the life of the loan. Which of the following best describes the distributional outcome between borrower and lender?",
     "choices": [
-      "The lender benefits, because the nominal rate remains positive throughout the loan",
-      "Neither party is affected, since the nominal payment schedule is contractually fixed",
-      "The lender benefits, because higher inflation raises the real value of assets the lender holds",
-      "The borrower benefits, because the real cost of repayment has fallen — dollars repaid are worth less in purchasing power than the dollars originally borrowed"
+      "The lender benefits, because the nominal rate remains positive throughout the loan, so the lender still earns interest on every payment received",
+      "Neither party is affected, since the nominal payment schedule is contractually fixed and both sides agreed to those terms when the loan began",
+      "The lender benefits, because higher inflation raises the real value of assets the lender holds, including the outstanding mortgage balance",
+      "The borrower benefits, because the real cost of repayment has fallen — dollars repaid are worth less than the dollars originally borrowed"
     ],
     "answer": "D",
     "hints": ["Unexpected inflation transfers purchasing power from creditors to debtors."]
@@ -205,10 +205,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following assets is included in M2 but NOT in M1?",
     "choices": [
-      "Currency in circulation",
-      "Demand deposits at commercial banks",
+      "Currency in circulation outside banks and the Federal Reserve",
+      "Demand deposits held by households and firms at commercial banks",
       "Small-denomination savings accounts and certificates of deposit",
-      "Traveler's checks"
+      "Traveler's checks issued by banks and nonbank financial firms"
     ],
     "answer": "C",
     "hints": ["M1 = currency + demand deposits + other highly liquid accounts. M2 adds less-liquid near-monies such as savings accounts and small CDs."]
@@ -221,9 +221,9 @@
     "responseFormat": "mcq",
     "problemText": "Fiat money differs from commodity money primarily in that fiat money:",
     "choices": [
-      "Has intrinsic value because of the physical material from which it is made",
-      "Derives its value solely from government decree and the general trust of the public, not from any underlying commodity",
-      "Must be backed by a fixed quantity of a commodity such as gold held in reserve",
+      "Has intrinsic value because of the physical material from which it is made, such as its gold or silver content",
+      "Derives its value solely from government decree and public trust, not from any underlying commodity",
+      "Must be backed by a fixed quantity of a commodity such as gold held in reserve by the central bank",
       "Can only function as a medium of exchange within a single country's borders"
     ],
     "answer": "B",
@@ -237,10 +237,10 @@
     "responseFormat": "mcq",
     "problemText": "During a period of hyperinflation, which function of money is most severely undermined?",
     "choices": [
-      "Medium of exchange — merchants begin refusing all cash payments outright",
-      "Unit of account — the government stops publishing official price lists",
-      "Legal tender status — courts refuse to enforce contracts denominated in the currency",
-      "Store of value — the purchasing power of money holdings erodes so rapidly that people spend money immediately rather than save it"
+      "Medium of exchange — merchants begin refusing all cash payments outright and insist on barter instead",
+      "Unit of account — the government stops publishing official price lists, so prices can no longer be quoted in money",
+      "Legal tender status — courts refuse to enforce contracts denominated in the currency, so debts go unpaid",
+      "Store of value — money's purchasing power erodes so fast that people spend it immediately rather than save it"
     ],
     "answer": "D",
     "hints": ["If money loses purchasing power rapidly, it fails to preserve value over time — the core of the store-of-value function."]
@@ -254,9 +254,9 @@
     "problemText": "In a barter economy, trade requires a double coincidence of wants. The introduction of money most directly solves this problem by serving as a:",
     "choices": [
       "Medium of exchange that eliminates the need for both parties to want each other's goods simultaneously",
-      "Unit of account that sets standard prices for all goods and services",
-      "Store of value that allows individuals to accumulate wealth over time",
-      "Legal tender guarantee that forces all sellers to accept payment"
+      "Unit of account that sets standard prices for all goods and services so their values can be compared",
+      "Store of value that allows individuals to accumulate wealth over time and defer purchases until later",
+      "Legal tender guarantee that forces all sellers to accept payment in the official currency for any good"
     ],
     "answer": "A",
     "hints": ["Money lets a farmer sell grain to anyone and then separately buy shoes from a shoemaker — no coincidence of wants needed."]
@@ -269,10 +269,10 @@
     "responseFormat": "mcq",
     "problemText": "Assets classified as 'near monies' within M2 — such as savings accounts — differ from M1 assets primarily because near monies are:",
     "choices": [
-      "Issued by the Federal Reserve rather than by commercial banks",
+      "Issued by the Federal Reserve rather than by commercial banks, which makes them liabilities of the central bank",
       "Not directly spendable as a medium of exchange without first converting them to a more liquid form",
-      "Denominated in foreign currencies and subject to exchange-rate risk",
-      "Exempt from all federal reserve requirements and government oversight"
+      "Denominated in foreign currencies and subject to exchange-rate risk whenever they are converted to dollars",
+      "Exempt from all federal reserve requirements and government oversight, unlike checkable deposits"
     ],
     "answer": "B",
     "hints": ["You cannot write a check directly against a savings account — you must transfer the funds to a checking account first."]
@@ -318,10 +318,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following actions by a commercial bank most directly expands the money supply?",
     "choices": [
-      "Holding all excess reserves in its vault rather than making new loans",
-      "Converting customers' demand deposits into time deposits",
-      "Making a new loan to a business and crediting the loan proceeds to the business's checking account",
-      "Repaying reserves it had previously borrowed from the Federal Reserve"
+      "Holding all excess reserves in its vault rather than making new loans to households and firms",
+      "Converting customers' demand deposits into time deposits that pay a higher rate of interest",
+      "Making a new loan to a business and crediting the proceeds to the business's checking account",
+      "Repaying reserves it had previously borrowed from the Federal Reserve through the discount window"
     ],
     "answer": "C",
     "hints": ["When a bank makes a loan, it creates a new demand deposit — new purchasing power enters the economy."]
@@ -334,10 +334,10 @@
     "responseFormat": "mcq",
     "problemText": "A sudden loss of depositor confidence leads large numbers of people to simultaneously withdraw funds from their banks. This scenario threatens the stability of the banking system primarily because:",
     "choices": [
-      "It is merely a nuisance for banks that are already holding more than their required reserves",
-      "Only banks with fewer outstanding loans than required are at risk of failing",
-      "FDIC insurance fully protects deposits at any dollar amount, so systemic risk is eliminated",
-      "Fractional reserve banks hold reserves equal to only a fraction of total deposits and cannot immediately satisfy all simultaneous withdrawal demands"
+      "It is merely a nuisance for banks that are already holding more than their required reserves, since those excess reserves easily cover the withdrawals",
+      "Only banks with fewer outstanding loans than required are at risk of failing when depositors withdraw funds",
+      "FDIC insurance fully protects deposits at any dollar amount, so systemic risk from mass withdrawals is eliminated",
+      "Fractional reserve banks hold reserves equal to only a fraction of deposits and cannot immediately satisfy all simultaneous withdrawal demands"
     ],
     "answer": "D",
     "hints": ["Banks lend most of their deposits; a simultaneous run will exceed the reserves any fractional-reserve bank holds."]
@@ -419,10 +419,10 @@
     "responseFormat": "mcq",
     "problemText": "The Federal Reserve conducts open-market purchases of government bonds, increasing the money supply. In the money market, this action will most likely cause the nominal interest rate to:",
     "choices": [
-      "Rise, because bond prices fall when the Fed purchases them in large quantities",
-      "Fall, because the rightward shift of the money supply curve creates a surplus of money at the original interest rate, pushing the rate down",
-      "Rise, because the increased money supply immediately raises the price level",
-      "Remain unchanged, because the Fed cannot influence nominal interest rates through bond purchases"
+      "Rise, because bond prices fall when the Fed purchases them in large quantities, which pushes up bond yields",
+      "Fall, because the rightward shift of money supply creates a surplus of money at the original rate, pushing the rate down",
+      "Rise, because the increased money supply immediately raises the price level and with it the demand for money",
+      "Remain unchanged, because the Fed cannot influence nominal interest rates through bond purchases made directly in the open market"
     ],
     "answer": "B",
     "hints": ["An increase in money supply shifts the supply curve right; at the old rate there is now excess supply of money, so the nominal rate falls."]
@@ -445,10 +445,10 @@
     "responseFormat": "mcq",
     "problemText": "The Federal Reserve typically describes monetary policy in terms of a target for the nominal federal funds rate rather than a specific money supply target. Which of the following best explains this approach?",
     "choices": [
-      "The Fed lacks the legal authority to set targets for monetary aggregates such as M1 or M2",
-      "The nominal interest rate cannot be precisely measured, making the money supply a more reliable policy target",
-      "Commercial banks set the federal funds rate through interbank lending, so the Fed only reacts to bank behavior",
-      "Money demand shifts unpredictably; targeting a fixed money supply could produce large interest-rate swings, whereas targeting the rate provides greater economic stability"
+      "The Fed lacks the legal authority to set targets for monetary aggregates such as M1 or M2, so it must target an interest rate instead",
+      "The nominal interest rate cannot be precisely measured, making the money supply a more reliable target for guiding the Fed's day-to-day open-market operations and policy decisions",
+      "Commercial banks set the federal funds rate through interbank lending, so the Fed only reacts to bank behavior rather than leading it",
+      "Money demand shifts unpredictably, so a fixed money supply target could cause large interest-rate swings; a rate target gives greater economic stability"
     ],
     "answer": "D",
     "hints": ["If money demand shifts while supply is fixed, the interest rate fluctuates. Fixing the rate instead absorbs those demand shifts automatically."]
@@ -462,10 +462,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following is a primary tool the Federal Reserve uses to implement monetary policy in a traditional limited-reserves framework?",
     "choices": [
-      "Changing the federal personal income tax rate",
-      "Open-market operations — buying or selling government bonds to change the level of bank reserves",
-      "Setting the official consumer price index used to measure inflation",
-      "Adjusting the federal government's annual spending budget"
+      "Changing the federal personal income tax rate to alter household disposable income",
+      "Open-market operations — buying or selling government bonds to change bank reserves",
+      "Setting the official consumer price index used to measure inflation each month",
+      "Adjusting the federal government's annual spending budget through congressional appropriations"
     ],
     "answer": "B",
     "hints": ["Open-market operations are the Fed's main day-to-day tool for controlling reserves and the federal funds rate."]
@@ -542,10 +542,10 @@
     "responseFormat": "mcq",
     "problemText": "During the 2008 financial crisis, the Federal Reserve purchased large quantities of long-term Treasury bonds and mortgage-backed securities in a policy known as quantitative easing. The primary purpose of these asset purchases was to:",
     "choices": [
-      "Inject reserves into the banking system and exert downward pressure on long-term interest rates at a time when the short-term federal funds rate was already near its effective lower bound",
-      "Raise short-term interest rates to combat inflation by restricting the supply of bank reserves",
-      "Reduce the federal government's outstanding debt obligations by retiring Treasury bonds",
-      "Increase the required reserve ratio to strengthen commercial bank capital positions"
+      "Inject reserves into banks and push down long-term interest rates when the federal funds rate was already near its effective lower bound",
+      "Raise short-term interest rates to combat inflation by restricting the supply of bank reserves available for lending to households and firms",
+      "Reduce the federal government's outstanding debt obligations by retiring Treasury bonds before maturity and canceling the mortgage debt it held",
+      "Increase the required reserve ratio to strengthen commercial bank capital positions after heavy losses on mortgage-backed securities"
     ],
     "answer": "A",
     "hints": ["When the short-term policy rate hit near zero, the Fed turned to large-scale asset purchases to ease broader financial conditions."]
@@ -559,10 +559,10 @@
     "responseFormat": "mcq",
     "problemText": "In the loanable funds market, what is the relevant price of borrowing that equilibrates the supply of and demand for loanable funds?",
     "choices": [
-      "The nominal interest rate, since lenders care only about the stated contractual return",
-      "The real interest rate, since it reflects the true purchasing-power cost of borrowing after adjusting for inflation",
-      "The federal funds rate, set directly by the Federal Reserve",
-      "The discount rate, which the Federal Reserve charges commercial banks for overnight loans"
+      "The nominal interest rate, since lenders and borrowers care only about the stated contractual return",
+      "The real interest rate, since it reflects the true cost of borrowing after adjusting for inflation",
+      "The federal funds rate, set directly by the Federal Reserve at its policy meetings",
+      "The discount rate, which the Federal Reserve charges commercial banks for short-term overnight loans"
     ],
     "answer": "B",
     "hints": ["Lenders and borrowers care about real purchasing power, so the real interest rate clears the loanable funds market."]
@@ -607,10 +607,10 @@
     "responseFormat": "mcq",
     "problemText": "In the loanable funds framework, national saving is equal to the sum of:",
     "choices": [
-      "Consumption spending plus investment spending",
-      "Private household saving plus public saving (the government's budget balance, T minus G)",
-      "Gross domestic product plus net exports",
-      "Government expenditures plus tax revenues"
+      "Consumption spending plus investment spending by households and firms over the year",
+      "Private saving plus public saving (the government's budget balance, T minus G)",
+      "Gross domestic product plus net exports of goods and services to the rest of the world",
+      "Government expenditures plus tax revenues collected over the same fiscal year"
     ],
     "answer": "B",
     "hints": ["National saving = private saving + (T minus G). A budget surplus adds to national saving; a deficit subtracts from it."]

@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "Which term describes the tendency to overestimate dispositional factors and underestimate situational factors when explaining other people's behavior?",
     "choices": [
-      "Self-serving bias",
+      "Self-serving attributional bias",
       "Fundamental attribution error",
       "Actor-observer bias",
-      "Cognitive dissonance"
+      "Cognitive dissonance reduction"
     ],
     "answer": "B",
     "hints": ["Think about which bias involves explaining others' actions by their character rather than their circumstances."]
@@ -167,10 +167,10 @@
     "responseFormat": "mcq",
     "problemText": "During an economic recession, incidents of hate crimes against an ethnic minority group rise sharply, even though that minority had no role in causing the economic problems. This pattern is BEST explained by:",
     "choices": [
-      "The just-world hypothesis",
+      "The just-world hypothesis about deserved misfortune",
       "Scapegoating driven by displaced frustration",
-      "Normative social influence",
-      "Fundamental attribution error"
+      "Normative social influence from prejudiced peers",
+      "Fundamental attribution error about group traits"
     ],
     "answer": "B",
     "hints": ["When people cannot direct frustration at its true source, they may redirect it toward a convenient target."]
@@ -215,10 +215,10 @@
     "responseFormat": "mcq",
     "problemText": "In Solomon Asch's line-judgment experiments, which factor was MOST effective at helping a participant resist conforming to an incorrect majority?",
     "choices": [
-      "The participant's measured IQ score",
-      "The majority being larger than five people",
+      "The participant's measured IQ score and level of prior formal education",
+      "The majority being larger than five people rather than just three",
       "The presence of at least one other person who gave the correct answer",
-      "The lines being more ambiguous and harder to judge"
+      "The lines being more ambiguous and harder to judge with certainty"
     ],
     "answer": "C",
     "hints": ["A single dissenter dramatically reduced the pressure to conform in Asch's studies."]
@@ -279,10 +279,10 @@
     "responseFormat": "mcq",
     "problemText": "Group polarization differs from groupthink primarily in that group polarization:",
     "choices": [
-      "Occurs only in anonymous online environments rather than face-to-face groups",
+      "Occurs only in anonymous online environments rather than in face-to-face groups that meet and discuss in person",
       "Describes a shift toward more extreme positions following group discussion, not necessarily a failure of decision-making processes",
-      "Requires a strong authoritarian leader who actively suppresses dissent",
-      "Refers to situations where individual group members exert less effort than they would working alone"
+      "Requires a strong authoritarian leader who actively suppresses dissent and pushes the group toward a single view",
+      "Refers to situations where individual group members exert less effort than they would if they were working alone on the same task"
     ],
     "answer": "B",
     "hints": ["Group polarization is about attitude extremity after discussion; groupthink is about defective decision-making processes."]
@@ -313,8 +313,8 @@
     "choices": [
       "Self-actualization",
       "Unconditional positive regard",
-      "Peak experience",
-      "Reciprocal determinism"
+      "Peak experiences",
+      "Reciprocal (triadic) determinism"
     ],
     "answer": "B",
     "hints": ["Rogers contrasted this with conditional positive regard, which is withheld unless certain standards are met."]
@@ -343,10 +343,10 @@
     "responseFormat": "mcq",
     "problemText": "Bandura's concept of reciprocal determinism holds that behavior, personal factors, and the environment mutually influence one another. Which of the following BEST illustrates this principle?",
     "choices": [
-      "A person's fixed genetic traits determine both their behavior and the environments they are drawn to",
-      "An anxious student avoids group projects, which limits social opportunities, reinforcing their belief that they are socially incompetent",
-      "A person's locus of control is determined entirely by early childhood conditioning",
-      "Unconscious drives shape behavior in ways that cannot be modified by conscious effort"
+      "A person's fixed genetic traits determine both their behavior and the kinds of social environments they are drawn to over their lifetime",
+      "An anxious student avoids group projects, limiting social opportunities and reinforcing the belief that they are socially incompetent",
+      "A person's locus of control is determined entirely by early childhood conditioning and stays stable thereafter",
+      "Unconscious drives shape behavior in ways that cannot be modified by conscious effort or by the environment"
     ],
     "answer": "B",
     "hints": ["Look for a cycle in which the student's internal state, actions, and environment each feed back into each other."]
@@ -375,10 +375,10 @@
     "responseFormat": "mcq",
     "problemText": "Relief workers notice that newly arrived refugees who lack reliable food and shelter show little interest in educational programs offered at the camp. Maslow's hierarchy of needs would PREDICT this outcome because:",
     "choices": [
-      "Refugees prefer maintaining cultural identity over participating in formal educational structures",
-      "Higher-level growth needs such as cognitive development can only become motivating once physiological and safety needs are adequately met",
-      "Education falls under esteem needs, which are ranked higher than belongingness needs in the hierarchy",
-      "Self-transcendence supersedes cognitive needs under conditions of extreme crisis"
+      "Refugees prefer maintaining cultural identity over participating in formal educational structures run by outsiders",
+      "Higher-level growth needs such as cognitive development become motivating only once physiological and safety needs are adequately met",
+      "Education falls under esteem needs, which are ranked higher than belongingness needs in the hierarchy and are therefore deferred longer",
+      "Self-transcendence supersedes cognitive needs under conditions of extreme crisis, displacing interest in learning"
     ],
     "answer": "B",
     "hints": ["Maslow argued that lower-tier deficiency needs must be satisfied before higher-level growth needs can motivate behavior."]
@@ -407,10 +407,10 @@
     "responseFormat": "mcq",
     "problemText": "The Minnesota Multiphasic Personality Inventory (MMPI) is classified as an objective personality test primarily because:",
     "choices": [
-      "It was originally developed using an unbiased and nationally representative normative sample",
-      "Administrators record responses without interacting with the respondent in any way",
-      "Its scores are interpreted according to standardized, empirically derived norms rather than subjective clinician judgment",
-      "It uses abstract inkblot images that have no inherent meaning"
+      "It was originally developed and validated using an unbiased, nationally representative normative sample of U.S. adults",
+      "Administrators record responses without interacting with the respondent in any way during testing",
+      "Its scores are interpreted using standardized, empirically derived norms rather than subjective clinician judgment",
+      "It uses abstract inkblot images that have no inherent meaning to the person taking the test"
     ],
     "answer": "C",
     "hints": ["The key feature of an objective test is that scoring follows explicit, predetermined rules."]
@@ -440,9 +440,9 @@
     "problemText": "The Thematic Apperception Test (TAT) is designed to assess personality by asking respondents to:",
     "choices": [
       "Choose adjectives from a checklist that best describe their own personality",
-      "Complete a series of true-or-false statements about their moods and symptoms",
-      "Create stories about ambiguous pictures of people in social situations, presumably revealing underlying motivations",
-      "Reproduce inkblot patterns from memory after a brief viewing"
+      "Complete a series of true-or-false statements about their moods, habits, and physical symptoms",
+      "Create stories about ambiguous pictures of people, presumably revealing underlying motivations",
+      "Reproduce inkblot patterns from memory after a brief viewing of each card"
     ],
     "answer": "C",
     "hints": ["The TAT uses pictures of people, not inkblots — respondents narrate what is happening in each scene."]
@@ -455,8 +455,8 @@
     "responseFormat": "mcq",
     "problemText": "A major criticism of projective tests such as the Rorschach Inkblot Test is that:",
     "choices": [
-      "They cannot be administered to individuals currently experiencing psychological disorders",
-      "Many scoring systems have demonstrated low test-retest reliability and poor predictive validity across independent research studies",
+      "They cannot be administered to individuals who are currently experiencing psychological disorders or distress",
+      "Many scoring systems show low test-retest reliability and poor predictive validity in independent studies",
       "They are too structured to allow unconscious material to surface in responses",
       "Completing them requires no clinical training on the part of the examiner"
     ],
@@ -567,10 +567,10 @@
     "responseFormat": "mcq",
     "problemText": "A professional athlete deliberately listens to high-energy music before competing to raise arousal. According to the Yerkes-Dodson law, this strategy would be MOST likely to hurt performance if:",
     "choices": [
-      "The competition requires fine motor control and precision, because optimal arousal for complex tasks is lower than for simple tasks",
-      "The athlete has practiced fewer than one hundred repetitions of the required skill",
-      "The athlete is intrinsically rather than extrinsically motivated by the sport",
-      "The music raises arousal without simultaneously activating the sympathetic nervous system"
+      "The competition requires fine motor control and precision, since optimal arousal is lower for complex tasks",
+      "The athlete has practiced fewer than one hundred repetitions of the required skill before competing",
+      "The athlete is intrinsically rather than extrinsically motivated by the sport and its rewards",
+      "The music raises arousal without simultaneously activating the sympathetic nervous system's stress response"
     ],
     "answer": "A",
     "hints": ["For tasks requiring precision and fine coordination, peak performance occurs at lower arousal levels."]
@@ -663,10 +663,10 @@
     "responseFormat": "mcq",
     "problemText": "Richard Lazarus argued that emotion requires an initial cognitive appraisal of whether a stimulus is personally relevant or threatening. Which finding would MOST directly challenge Lazarus's position that appraisal must precede emotion?",
     "choices": [
-      "People from different cultures differ in which specific events trigger embarrassment",
-      "A patient with a spider phobia experiences intense fear upon glimpsing a spider before consciously identifying it as a spider",
-      "Physiological arousal intensity correlates with perceived emotional intensity across cultures",
-      "Basic facial expressions of emotion are recognized cross-culturally without language instruction"
+      "People from different cultures differ in which specific social events trigger embarrassment or shame",
+      "A patient with a spider phobia feels intense fear on glimpsing a spider before consciously recognizing it",
+      "Physiological arousal intensity correlates with perceived emotional intensity across many different cultures",
+      "Basic facial expressions of emotion are recognized cross-culturally, even without language instruction"
     ],
     "answer": "B",
     "hints": ["If emotion can occur before conscious recognition or appraisal of the stimulus, that undermines the claim that appraisal comes first."]

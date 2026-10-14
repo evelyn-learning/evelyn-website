@@ -48,7 +48,7 @@
     "passageId": "evelyn.passage.apworld-ict-table.v1",
     "problemText": "A data table combining two ITU-tracked indicators shows worldwide mobile-cellular subscriptions rising from about 11 million in 1990 to about 738 million in 2000, about 5.29 billion in 2010, and about 8.26 billion in 2020. The same table's Internet-use row, using 2005 as its earliest year because no reliable single global aggregate exists before then, shows Internet use rising from 15.6% of the world's population in 2005 to 28.4% in 2010, 39.9% in 2015, and 60.1% in 2020. Mobile subscriptions passed one per person worldwide years before Internet use reached even half the world's population. This gap is best read as evidence for which pattern?",
     "choices": [
-      "\"Leapfrogging\" — many countries adopted mobile networks directly, without first building fixed telephone-line infrastructure, letting mobile technology spread faster",
+      "\"Leapfrogging\" — many countries adopted mobile networks directly, without first building fixed telephone-line infrastructure",
       "Mobile phones and Internet access spread at the same pace everywhere, differing only in which year each indicator's tracking began",
       "Internet use could not have existed anywhere before 2005, since the earliest reliable global figure dates only to that year",
       "Wealthier countries adopted mobile phones only after their fixed telephone-line networks had already reached full saturation"
@@ -166,9 +166,9 @@
     "problemText": "The Universal Declaration of Human Rights (1948) proclaims rights belonging to \"all members of the human family.\" Which statement best describes the UDHR's legal status?",
     "choices": [
       "it is a UN General Assembly declaration, not legally binding by itself, though foundational to later binding human-rights treaties",
-      "it is a binding treaty enforced by an international court with the power to overturn national laws",
-      "it is a military alliance requiring signatory states to defend each other's borders",
-      "it is a trade agreement establishing tariff rates among UN member states"
+      "it is a binding treaty enforced by an international court with the power to overturn national laws that violate any of its provisions",
+      "it is a military alliance requiring signatory states to defend each other's borders against outside aggression or invasion",
+      "it is a trade agreement establishing tariff rates among UN member states and settling their commercial disputes"
     ],
     "answer": "A",
     "hints": [
@@ -203,10 +203,10 @@
     "responseFormat": "mcq",
     "problemText": "The 1918 influenza pandemic, spread and worsened by the movement of troops during the final stages of World War I, killed an estimated tens of millions of people worldwide within about two years. Which factor most directly explains why this pandemic caused such a high death toll?",
     "choices": [
-      "it was deliberately spread as a biological weapon by one of the warring powers",
-      "it affected only elderly populations already suffering from other chronic illnesses",
+      "it was deliberately spread as a biological weapon by one of the warring powers to weaken enemy armies at the front",
+      "it affected only elderly populations already suffering from other chronic illnesses, who had weak immune defenses",
       "it struck before effective antiviral treatments or a vaccine existed, and spread rapidly through wartime troop movements",
-      "it stayed confined to a single country and did not spread across any international border"
+      "it stayed confined to a single country and did not spread across any international border, overwhelming that nation's hospitals"
     ],
     "answer": "C",
     "hints": [
@@ -298,10 +298,10 @@
     "responseFormat": "mcq",
     "problemText": "An effective smallpox vaccine had existed for well over a century before the World Health Organization's campaign achieved the disease's global eradication, certified in 1980. Which statement best explains why eradication took so long after an effective vaccine already existed?",
     "choices": [
-      "the vaccine itself was not actually effective until the WHO's campaign began in the twentieth century",
-      "smallpox eradication was achieved instantly and simultaneously worldwide the moment the vaccine was first developed",
-      "the WHO's campaign focused mainly on wealthy countries, largely bypassing lower-income regions of the world",
-      "eradicating a disease worldwide required decades of sustained, coordinated global vaccination campaigning, not merely the existence of an effective vaccine"
+      "the vaccine itself was not actually effective until the WHO's campaign began in the twentieth century and improved its formula",
+      "smallpox eradication was achieved instantly and simultaneously worldwide the moment the vaccine was first developed and distributed",
+      "the WHO's campaign focused mainly on wealthy countries, largely bypassing lower-income regions where smallpox was still most widespread",
+      "eradicating a disease worldwide required decades of sustained, coordinated global vaccination campaigning, not merely an effective vaccine"
     ],
     "answer": "D",
     "hints": [

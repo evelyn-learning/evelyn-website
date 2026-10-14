@@ -247,10 +247,10 @@
     "responseFormat": "mcq",
     "problemText": "Triangle ABC has a right angle at C with legs AC = 3 and BC = 4. Triangle DEF has a right angle at F with legs DF = 9 and EF = 12. Which statement about sin A and sin D is true?",
     "choices": [
-      "sin D = 3 × sin A, because every side of △DEF is 3 times as long",
-      "sin A > sin D, because △ABC has the shorter sides",
+      "sin D = 3 × sin A, because every side of △DEF is 3 times as long as the matching side of △ABC",
+      "sin A > sin D, because △ABC has the shorter sides, so its side ratios come out larger",
       "sin A = sin D, because the triangles are similar and each ratio depends only on the angle, not on the size",
-      "There is not enough information to compare them"
+      "There is not enough information to compare them without first knowing the actual measures of angles A and D"
     ],
     "answer": "C",
     "hints": [

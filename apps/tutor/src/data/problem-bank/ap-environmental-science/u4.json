@@ -129,10 +129,10 @@
     "responseFormat": "mcq",
     "problemText": "In a Hadley circulation cell, air rises at the equator due to intense solar heating, travels poleward at high altitude, then descends at approximately 30° latitude. What type of climate is most commonly found in these subtropical subsidence zones where air sinks?",
     "choices": [
-      "Tropical rainforest with year-round heavy precipitation",
-      "Temperate grassland with moderate seasonal rainfall",
-      "Boreal (taiga) forest with cold winters and moderate summer rain",
-      "Desert or semi-arid zone, because descending air is compressed, warms, and holds moisture rather than releasing it as rain"
+      "Tropical rainforest, because the descending air carries moisture that falls as heavy rain year-round",
+      "Temperate grassland, because the sinking air brings moderate seasonal rainfall to the region",
+      "Boreal (taiga) forest, because the descending air cools as it sinks, giving cold winters and moderate summer rain",
+      "Desert or semi-arid zone, because sinking air warms by compression and holds its moisture instead of raining"
     ],
     "answer": "D",
     "hints": ["Sinking air warms by compression — this suppresses cloud formation and rainfall."]
@@ -161,10 +161,10 @@
     "responseFormat": "mcq",
     "problemText": "The Intertropical Convergence Zone (ITCZ) is a low-pressure belt near the equator associated with heavy, persistent rainfall. Which atmospheric process most directly drives the intense precipitation at the ITCZ?",
     "choices": [
-      "Cold, dense air sinks at the equator, forcing surface moisture underground to re-emerge as groundwater",
-      "The Coriolis effect spirals dry air from both hemispheres inward toward the equatorial center",
-      "Warm, moist air from both hemispheres converges, rises, cools with altitude, and condenses to form deep convective clouds and heavy rainfall",
-      "Descending dry air masses from subtropical highs push moisture poleward, triggering rain at the equator"
+      "Cold, dense air sinks at the equator, forcing surface moisture underground to re-emerge as groundwater that evaporates into rain",
+      "The Coriolis effect spirals dry air from both hemispheres inward toward the equatorial center, where it gathers moisture and releases rain",
+      "Warm, moist air from both hemispheres converges and rises, cooling and condensing into deep convective clouds and heavy rain",
+      "Descending dry air masses from the subtropical highs push surface moisture poleward, triggering heavy convective rain at the equator"
     ],
     "answer": "C",
     "hints": ["Rising air cools — and cool air holds less water vapor, so condensation and rain result."]
@@ -178,7 +178,7 @@
     "problemText": "Polar regions receive relatively little precipitation and are sometimes classified as cold deserts, even though they are covered in ice and snow. Which explanation best accounts for the low precipitation rate at the poles?",
     "choices": [
       "Polar regions receive 24 hours of intense summer sunlight, causing rapid evaporation that easily exceeds any precipitation input",
-      "Cold, descending air at the poles holds very little water vapor because cold air has low moisture capacity; precipitation is extremely sparse, and what does fall accumulates because temperatures never rise above freezing",
+      "Cold air sinking over the poles holds very little water vapor, so precipitation is sparse, and the snow that falls accumulates rather than melting",
       "Polar easterlies transport all available atmospheric moisture toward the temperate zones, leaving the polar atmosphere perpetually depleted",
       "High surface albedo reflects incoming solar radiation back to space before it can warm the ocean and supply evaporated water vapor to the atmosphere"
     ],
@@ -193,10 +193,10 @@
     "responseFormat": "mcq",
     "problemText": "A watershed (also called a drainage basin) is best defined as:",
     "choices": [
-      "The entire land area that drains precipitation and snowmelt to a common outlet such as a river, lake, or coastal point",
-      "The underground zone of saturated rock and sediment that stores and supplies groundwater",
+      "The entire land area that drains precipitation and snowmelt to a common outlet such as a river or lake",
+      "The underground zone of saturated rock and sediment that stores and supplies groundwater to wells and springs",
       "The coastal transition zone where a river's freshwater mixes with ocean saltwater",
-      "The riparian vegetation corridor that lines the banks of a stream or river"
+      "The riparian vegetation corridor that lines the banks of a stream or river and filters runoff"
     ],
     "answer": "A",
     "hints": ["Think of topography: rain falling on one side of a ridge drains one way; rain on the other side drains a different way."]
@@ -289,10 +289,10 @@
     "responseFormat": "mcq",
     "problemText": "Which statement best distinguishes climate from weather?",
     "choices": [
-      "Climate describes the long-term average atmospheric conditions of a region (typically averaged over 30 or more years), while weather refers to short-term, day-to-day atmospheric conditions at a specific place",
-      "Weather describes long-term atmospheric patterns of a region, while climate refers to daily temperature and precipitation at a specific location",
-      "Climate only includes temperature data, while weather also encompasses wind speed, humidity, and precipitation",
-      "Weather and climate measure identical atmospheric properties but at different altitudes in the atmosphere"
+      "Climate is a region's long-term average atmospheric conditions (typically 30+ years), while weather is short-term, day-to-day conditions at a place",
+      "Weather describes long-term atmospheric patterns of a region, while climate refers to daily temperature and precipitation readings at a specific location",
+      "Climate only includes temperature data, while weather also encompasses wind speed, humidity, cloud cover, and precipitation",
+      "Weather and climate measure identical atmospheric properties but at different altitudes, with climate measured in the upper atmosphere"
     ],
     "answer": "A",
     "hints": ["'Climate is what you expect; weather is what you get.'"]

@@ -7,10 +7,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"The Ferndale animal shelter replaced its kennel photos with short videos of each dog playing in the yard. Adoption applications tripled within two months, and staff say families now arrive already knowing which dog they want to meet.\" Which statement best states the central idea?",
     "choices": [
-      "Adoption applications at the shelter tripled within two months.",
-      "Animal shelters play an important role in their communities.",
+      "Adoption applications at the Ferndale shelter tripled within two months after the videos were posted.",
+      "Animal shelters play an important role in their communities by helping families find the right pet.",
       "Switching from kennel photos to yard videos changed how families chose a dog and drove adoptions up.",
-      "Dogs behave better outdoors than they do inside a kennel."
+      "Dogs behave better outdoors in a yard than they do inside a kennel, where they seem less playful."
     ],
     "answer": "C",
     "hints": [
@@ -44,10 +44,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"Most people assume a rain garden is mainly decorative. In fact, a county drainage study found that the shallow planted basins soaked up more than half the street runoff around them during heavy storms, water that would otherwise have gone straight into the storm drains.\" Which statement best states the central idea?",
     "choices": [
-      "A county study measured street runoff during heavy storms.",
-      "Rain gardens are a popular decorative choice for yards and parks.",
-      "Storm drains are often overwhelmed when a heavy storm hits a city.",
-      "Rain gardens absorb a large share of street runoff, which makes them drainage tools rather than decoration."
+      "A county study measured street runoff around the planted basins during several heavy storms.",
+      "Rain gardens are a popular decorative choice for yards and parks, valued mainly for their colorful plantings.",
+      "Storm drains are often overwhelmed when a heavy storm hits a city and runoff floods the streets.",
+      "Rain gardens absorb a large share of street runoff, making them drainage tools rather than decoration."
     ],
     "answer": "D",
     "hints": [
@@ -63,10 +63,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"When the Alder Point ferry added a bike deck, riders who used to drive to the terminal began pedaling instead. Parking lot use dropped by a quarter over the summer, while the ferry line reported no change at all in total passengers.\" Which statement best states the central idea?",
     "choices": [
-      "The Alder Point ferry carries a large number of passengers each summer.",
+      "The Alder Point ferry carries a large number of passengers each summer, with or without a bike deck.",
       "Adding a bike deck changed how existing riders reached the ferry rather than bringing in new riders.",
-      "Parking lot use at the ferry terminal dropped by a quarter.",
-      "Biking to a ferry terminal costs less than driving and parking there."
+      "Parking lot use at the ferry terminal dropped by a quarter over the summer after the bike deck opened.",
+      "Biking to a ferry terminal costs less than driving and parking there, so riders save money by pedaling."
     ],
     "answer": "B",
     "hints": [
@@ -309,9 +309,9 @@
     "problemText": "Read the excerpt: \"The campus clinic stocks two rescue inhalers. The first works within minutes but wears off in about four hours; the second takes half an hour to act and lasts through a full school day. Nurses keep both because a student's schedule decides which one is useful.\" Why would a writer choose this structure for a guide aimed at students and their families?",
     "choices": [
       "Because the reader has a choice to weigh, and matching categories set side by side make the difference easy to judge",
-      "Because the reader needs the steps of using an inhaler told in the order they happen",
-      "Because the guide must name a difficulty at the clinic and then propose a fix for it",
-      "Because comparison is the clearest structure for any nonfiction guide"
+      "Because the reader needs the steps of using an inhaler told in the order they happen, from the first puff to the last",
+      "Because the guide must name a difficulty at the clinic and then propose a fix for it that families can support",
+      "Because comparison is the clearest structure for any nonfiction guide written for students and their families"
     ],
     "answer": "A",
     "hints": [
@@ -421,10 +421,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"The Pennock Township road crew now salts the Vine Street hill ahead of every forecast freeze rather than after ice forms. The township's insurer lowered the crew's premium this year, and the crew has not been called out for a middle-of-the-night ice complaint since November.\" Which statement is an INFERENCE rather than a restatement of the excerpt?",
     "choices": [
-      "The crew salts the Vine Street hill before a freeze instead of after ice forms",
+      "The crew salts the Vine Street hill ahead of every forecast freeze instead of after ice forms",
       "The township's insurer lowered the crew's premium this year",
-      "Salting ahead of a freeze has made icy conditions on Vine Street less likely to need an emergency call-out",
-      "The crew has had no middle-of-the-night ice complaint since November"
+      "Salting ahead of a freeze has made emergency ice call-outs on Vine Street less likely",
+      "The crew has not been called out for a middle-of-the-night ice complaint since November"
     ],
     "answer": "C",
     "hints": [
@@ -440,10 +440,10 @@
     "responseFormat": "mcq",
     "problemText": "Read the excerpt: \"The Cordell Middle School library moved its graphic novels from a back corner to a rolling cart just inside the entrance. Circulation of those titles rose sharply, though total library checkouts for the term came out nearly identical to last year's. The librarian has ordered a second cart.\" Which inference does the excerpt BEST support?",
     "choices": [
-      "Placement near the entrance pulled readers toward titles they had been walking past, without changing how much students borrowed overall",
-      "Students at the school read more this term than they did during the same term last year",
-      "The school's students prefer graphic novels to every other kind of book in the library",
-      "The library moved the graphic novels because its budget for other books had been cut"
+      "Placement near the entrance drew readers to titles they had been walking past, without raising overall borrowing",
+      "Students at the school read more this term than they did during the same term last year, thanks to the new cart",
+      "The school's students prefer graphic novels to every other kind of book, which is why their circulation rose",
+      "The library moved the graphic novels because its budget for other books had been cut and the shelves were emptying"
     ],
     "answer": "A",
     "hints": [

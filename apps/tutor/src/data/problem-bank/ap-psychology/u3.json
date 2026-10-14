@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "A cross-sectional study compares adults born in the 1950s with adults born in the 1990s and finds the younger cohort performs significantly better on technology-related tasks. The most significant threat to concluding that age itself caused this difference is:",
     "choices": [
-      "Experimenter bias in scoring the technology tasks",
-      "Cohort effects, because the two groups grew up in different cultural and technological environments",
-      "Order effects from repeated testing",
-      "Regression to the mean over time"
+      "Experimenter bias in how the researchers scored the technology tasks for each group",
+      "Cohort effects, since the groups grew up in different technological environments",
+      "Order effects from repeated testing of the same participants across sessions",
+      "Regression to the mean, as extreme scorers drift toward the average over time"
     ],
     "answer": "B",
     "hints": ["Consider whether differences between age groups in a cross-sectional study might reflect era of birth rather than the aging process itself."]
@@ -87,10 +87,10 @@
     "responseFormat": "mcq",
     "problemText": "A developmental psychologist plans to track the same group of infants through adolescence. Compared to a cross-sectional design, her longitudinal plan has which combination of advantage and disadvantage?",
     "choices": [
-      "Advantage: cheaper and faster to conduct; disadvantage: confounds age with generation (cohort)",
-      "Advantage: eliminates cohort effects by following the same individuals; disadvantage: takes many years and risks participant dropout (attrition)",
-      "Advantage: tests many age groups simultaneously; disadvantage: lacks ecological validity",
-      "Advantage: controls for experimenter bias; disadvantage: produces only qualitative case-study data"
+      "Advantage: cheaper and faster to conduct with fewer staff; disadvantage: confounds age with generation (cohort membership)",
+      "Advantage: eliminates cohort effects by following the same individuals; disadvantage: takes many years and risks attrition",
+      "Advantage: tests many age groups simultaneously in one session; disadvantage: lacks ecological validity in its tasks",
+      "Advantage: controls for experimenter bias through blind scoring; disadvantage: produces only qualitative case-study data"
     ],
     "answer": "B",
     "hints": ["Longitudinal designs avoid the cohort-effects problem of cross-sectional studies, but they are costly in time and susceptible to attrition."]
@@ -152,10 +152,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following tasks most clearly requires the kind of abstract, hypothetical-deductive reasoning that Piaget associated with the formal operational stage?",
     "choices": [
-      "Sorting colored blocks into groups by shape",
-      "Understanding that a flattened ball of clay weighs the same as the original round ball",
-      "Systematically testing every possible combination of variables to identify which one causes a chemical reaction",
-      "Searching for a toy hidden beneath a blanket"
+      "Sorting colored blocks into groups by shape, then re-sorting the same blocks by color",
+      "Understanding that a flattened ball of clay still weighs the same as the original round ball of clay",
+      "Systematically testing each combination of variables to find which one causes a chemical reaction",
+      "Searching for a toy hidden beneath a blanket after watching an adult hide it there"
     ],
     "answer": "C",
     "hints": ["Formal operational thinking involves reasoning about possibilities and systematically isolating variables."]
@@ -201,10 +201,10 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following best captures the distinction psychologists draw between biological sex and gender?",
     "choices": [
-      "Biological sex refers to chromosomal makeup, while gender refers only to hormonal levels",
-      "Biological sex refers to chromosomes, gonads, and anatomy, while gender refers to a person's internal sense of being male, female, or another identity",
-      "Biological sex is determined at puberty, while gender is assigned at birth",
-      "Biological sex reflects emotional sensitivity, while gender reflects physical strength"
+      "Biological sex refers to chromosomal makeup, while gender refers only to the levels of sex hormones circulating in a person's body",
+      "Biological sex refers to chromosomes, gonads, and anatomy, while gender is one's internal sense of being male, female, or another identity",
+      "Biological sex is determined at puberty when secondary sex characteristics emerge, while gender is assigned at birth based on appearance",
+      "Biological sex reflects emotional sensitivity and temperament, while gender reflects physical strength and other bodily traits"
     ],
     "answer": "B",
     "hints": ["Sex is a biological classification; gender is a psychological and social identity."]
@@ -233,10 +233,10 @@
     "responseFormat": "mcq",
     "problemText": "Contemporary psychological research most consistently indicates that sexual orientation is best understood as:",
     "choices": [
-      "A purely voluntary choice that individuals make during adolescence",
-      "A dimension that exists along a continuum, influenced by a complex interplay of biological and environmental factors",
-      "Determined solely by hormone levels at the onset of puberty",
-      "A product of poor parenting or unresolved childhood trauma"
+      "A purely voluntary choice that individuals make during adolescence, largely based on their peer group",
+      "A dimension along a continuum, shaped by a complex interplay of biological and environmental factors",
+      "Determined solely by hormone levels at the onset of puberty, independent of any prenatal factors",
+      "A product of poor parenting or unresolved childhood trauma during the early preschool years"
     ],
     "answer": "B",
     "hints": ["Research points to multiple contributing factors — genetic, hormonal, and experiential — rather than a single cause."]
@@ -249,10 +249,10 @@
     "responseFormat": "mcq",
     "problemText": "Mariana was assigned female at birth but, from early childhood, consistently and persistently identified as male regardless of parental and cultural expectations. The term that best describes Mariana's experience is that Mariana:",
     "choices": [
-      "Is displaying only gender role nonconformity that is typical of young children",
-      "Has a gender identity that does not align with the sex assigned at birth, an experience sometimes described as being transgender",
-      "Is experiencing sexual orientation confusion typical of early adolescence",
-      "Exhibits hysteria, as described in early psychoanalytic theory"
+      "Is displaying only gender role nonconformity that is typical of young children and usually fades with age",
+      "Has a gender identity that differs from the sex assigned at birth, sometimes described as being transgender",
+      "Is experiencing a form of sexual orientation confusion that is typical of early adolescence and later resolves",
+      "Exhibits hysteria, as described in early psychoanalytic accounts of repressed emotional conflict"
     ],
     "answer": "B",
     "hints": ["Distinguish gender identity (one's internal sense of gender) from gender role nonconformity and from sexual orientation."]
@@ -265,10 +265,10 @@
     "responseFormat": "mcq",
     "problemText": "Twin studies examining the biological basis of sexual orientation have generally found which of the following?",
     "choices": [
-      "Identical twins show a 100% concordance rate for sexual orientation, proving complete genetic determination",
-      "Concordance rates for sexual orientation are higher for identical twins than for fraternal twins, suggesting a genetic contribution that is real but not absolute",
-      "Postnatal socialization is the sole determinant of sexual orientation, as twin concordance rates are near zero",
-      "Brain structure differences fully account for all variation in sexual orientation across individuals"
+      "Identical twins show a 100% concordance rate for sexual orientation, proving complete genetic determination of the trait",
+      "Concordance is higher for identical than for fraternal twins, suggesting a genetic contribution that is real but not absolute",
+      "Postnatal socialization is the sole determinant of sexual orientation, as twin concordance rates are near zero for both types",
+      "Brain structure differences fully account for all variation in sexual orientation across individuals and between twin pairs"
     ],
     "answer": "B",
     "hints": ["If genes were the only factor, identical twins would show 100% concordance; partial concordance implies both genetic and non-genetic influences."]
@@ -281,10 +281,10 @@
     "responseFormat": "mcq",
     "problemText": "A researcher claims gender differences in toy preferences are entirely caused by socialization, citing evidence that parents purchase more gender-typical toys for their children. A psychologist who favors a biopsychosocial model would most likely counter that:",
     "choices": [
-      "Socialization has absolutely no role; only chromosomes determine toy preferences",
-      "Gender differences in toy preference disappear entirely when children are raised without any gendered input",
-      "Biological predispositions may shape both children's initial preferences and parents' purchasing decisions, making it difficult to isolate socialization as the sole cause",
-      "The biopsychosocial model applies only to psychological disorders, not to typical developmental differences"
+      "Socialization has absolutely no role; only chromosomes determine toy preferences, so parental purchases merely follow children's requests",
+      "Gender differences in toy preference disappear entirely when children are raised without any gendered input from parents, peers, media, or the toys themselves",
+      "Biological predispositions may shape both children's initial preferences and parents' purchases, so socialization is hard to isolate as the sole cause",
+      "The biopsychosocial model applies only to psychological disorders, not to typical developmental differences such as toy preference"
     ],
     "answer": "C",
     "hints": ["The biopsychosocial model acknowledges bidirectional effects: biology can influence social behavior, and social factors can influence biology."]
@@ -314,10 +314,10 @@
     "responseFormat": "mcq",
     "problemText": "In Harlow's famous experiments with infant rhesus monkeys, the monkeys spent the vast majority of their time clinging to the soft, cloth-covered surrogate 'mother' rather than the wire surrogate that provided milk. This finding most directly supports the idea that:",
     "choices": [
-      "Attachment is formed primarily with whoever provides nourishment",
+      "Attachment is formed primarily with whoever provides nourishment, as drive-reduction theory predicts",
       "Contact comfort — physical warmth and softness — is a critical factor in the formation of attachment",
-      "Infant monkeys prefer visual stimulation over any form of tactile stimulation",
-      "Attachment behavior is entirely explained by operant conditioning"
+      "Infant monkeys prefer visual stimulation over any form of tactile stimulation when choosing a surrogate",
+      "Attachment behavior is entirely explained by operant conditioning, with milk acting as the reinforcer"
     ],
     "answer": "B",
     "hints": ["Harlow's work challenged the drive-reduction view that attachment is simply learned by association with food."]
@@ -445,7 +445,7 @@
     "choices": [
       "Extinction; spontaneous recovery",
       "Stimulus generalization; stimulus discrimination",
-      "Higher-order conditioning; extinction",
+      "Higher-order conditioning; extinction of the fear",
       "Spontaneous recovery; reconditioning"
     ],
     "answer": "B",
@@ -459,10 +459,10 @@
     "responseFormat": "mcq",
     "problemText": "After a severe case of food poisoning caused by eating shrimp, a person now feels nauseated every time she sees or smells shrimp, even though the shrimp itself is no longer contaminated. Which pairing CORRECTLY identifies the conditioned stimulus and conditioned response?",
     "choices": [
-      "CS = the original illness; CR = the sight of shrimp",
-      "CS = the sight or smell of shrimp; CR = nausea elicited by the sight or smell of shrimp",
-      "CS = nausea; CR = the sight of shrimp",
-      "CS = the original illness; CR = nausea during the illness"
+      "CS = the original bout of illness; CR = the later sight of shrimp",
+      "CS = the sight or smell of shrimp; CR = the resulting nausea",
+      "CS = the feeling of nausea; CR = the sight and smell of shrimp",
+      "CS = the original illness; CR = nausea felt during the illness itself"
     ],
     "answer": "B",
     "hints": ["The CS was neutral (shrimp) before it was paired with the US (illness). The CR is the same class of response as the UR, now triggered by the CS."]
@@ -508,10 +508,10 @@
     "responseFormat": "mcq",
     "problemText": "A student studies diligently every night specifically to eliminate the anxious feeling she gets when she feels unprepared for class. Because her studying removes an unpleasant internal state, her studying behavior is maintained by:",
     "choices": [
-      "Positive reinforcement — she receives praise and approval from her teacher",
-      "Negative reinforcement — studying removes the aversive feeling of anxiety, increasing the likelihood of studying",
+      "Positive reinforcement — she receives praise and approval from her teacher for being prepared",
+      "Negative reinforcement — studying removes the aversive anxiety, making studying more likely",
       "Positive punishment — the anxiety is an aversive event added after insufficient studying",
-      "Negative punishment — privileges are removed whenever she fails to study"
+      "Negative punishment — privileges are removed whenever she fails to study at night"
     ],
     "answer": "B",
     "hints": ["Negative reinforcement INCREASES behavior by removing something aversive — it is not a form of punishment."]
@@ -589,10 +589,10 @@
     "responseFormat": "mcq",
     "problemText": "Learning that occurs by watching the actions of others and observing the consequences those others experience — without direct personal experience of those consequences — is called:",
     "choices": [
-      "Classical conditioning",
-      "Latent learning",
+      "Classical (Pavlovian) conditioning",
+      "Latent (incidental) learning",
       "Observational (social) learning",
-      "Operant conditioning"
+      "Operant (instrumental) conditioning"
     ],
     "answer": "C",
     "hints": ["Albert Bandura is the theorist most closely associated with this form of learning."]
@@ -605,10 +605,10 @@
     "responseFormat": "mcq",
     "problemText": "In Bandura's Bobo doll experiments, children who watched an adult model physically and verbally attack an inflatable Bobo doll later:",
     "choices": [
-      "Showed decreased aggression toward the doll due to vicarious catharsis",
+      "Showed decreased aggression toward the doll due to vicarious catharsis of their own pent-up hostile impulses",
       "Showed no change in aggression because young children cannot learn through observation alone",
-      "Showed increased aggression toward the doll, demonstrating that aggressive behavior can be acquired through modeling",
-      "Showed increased aggression only when the model was visibly punished for the attacks"
+      "Showed increased aggression toward the doll, showing that aggression can be acquired through modeling",
+      "Showed increased aggression only when the model was visibly punished for the attacks on the doll"
     ],
     "answer": "C",
     "hints": ["The Bobo doll studies were landmark evidence that children learn novel behaviors simply by watching others perform them."]
@@ -622,9 +622,9 @@
     "problemText": "A new employee notices that colleagues who regularly stay late at the office receive public praise and a bonus from the manager. Without ever receiving praise herself, she begins staying late more often. Her behavior change best illustrates:",
     "choices": [
       "Negative reinforcement — staying late removes the anxiety of falling behind",
-      "Vicarious reinforcement — she observed others being rewarded, which increased her own similar behavior",
-      "Shaping through successive approximations",
-      "A variable-interval reinforcement schedule"
+      "Vicarious reinforcement — she saw others rewarded, which increased her own similar behavior",
+      "Shaping through successive approximations — each small step toward staying late was rewarded",
+      "A variable-interval schedule — her staying late is reinforced after unpredictable stretches of time"
     ],
     "answer": "B",
     "hints": ["Vicarious reinforcement occurs when observing another person receive a reward increases the observer's tendency to perform the same behavior."]
@@ -669,10 +669,10 @@
     "responseFormat": "mcq",
     "problemText": "A school publicly announces the suspension of a student caught cheating on an exam, hoping that other students who learn about this outcome will be less inclined to cheat themselves. The intended deterrent effect relies most directly on which principle of observational learning?",
     "choices": [
-      "Vicarious reinforcement — students observe a peer being rewarded for honesty",
-      "Latent learning — students passively absorb the school's values without direct instruction",
+      "Vicarious reinforcement — students observe a peer being rewarded for honesty and imitate that behavior",
+      "Latent learning — students passively absorb the school's values without direct instruction or explicit reinforcement from staff",
       "Stimulus discrimination — students learn to distinguish cheating from legitimate studying",
-      "Vicarious punishment — observing a peer receive a negative consequence reduces observers' own likelihood of performing the same behavior"
+      "Vicarious punishment — seeing a peer receive a negative consequence reduces observers' likelihood of the same behavior"
     ],
     "answer": "D",
     "hints": ["Vicarious punishment mirrors vicarious reinforcement but in the opposite direction — a modeled consequence that decreases the observer's behavior."]

@@ -23,10 +23,10 @@
     "responseFormat": "mcq",
     "problemText": "In a survey, responses are coded 1 = 'strongly disagree' through 5 = 'strongly agree.' A student computes the mean of these codes. Why can this be misleading?",
     "choices": [
-      "The codes are an ordinal categorical coding, so averaging assumes equal spacing between categories that may not exist",
-      "A mean can never be computed for survey data",
-      "The data must be Normal before a mean is allowed",
-      "Categorical variables can never be summarized at all"
+      "The codes are ordinal, so averaging assumes equal spacing between categories that may not exist",
+      "A mean can never be computed for survey data, since survey answers are opinions rather than measurements",
+      "The data must be Normal before a mean is allowed, and Likert responses are rarely Normally distributed",
+      "Categorical variables can never be summarized at all, so even counts of each response are not meaningful"
     ],
     "answer": "A",
     "hints": ["The numbers are labels for ordered categories, not true measurements."]
@@ -39,10 +39,10 @@
     "responseFormat": "mcq",
     "problemText": "A two-way table classifies 200 students by grade level and whether they play a sport. Of the 200 students, 120 play a sport, and 120/200 = 0.60. This 0.60 is best described as:",
     "choices": [
-      "A conditional distribution of grade given sport",
-      "A joint relative frequency for one cell",
+      "A conditional distribution of grade level, given that a student plays a sport",
+      "A joint relative frequency for one cell of the two-way table",
       "A marginal distribution: the overall proportion who play a sport",
-      "A conditional distribution of sport given grade"
+      "A conditional distribution of sport given grade, for one grade level"
     ],
     "answer": "C",
     "hints": ["It uses a column/row total over the grand total, ignoring grade level."]
@@ -98,10 +98,10 @@
     "responseFormat": "mcq",
     "problemText": "On a dotplot of quiz scores, most dots are stacked between 7 and 9, with a single dot far away at 2. The dot at 2 is best described as:",
     "choices": [
-      "The median",
+      "The median score",
       "A potential outlier",
-      "The mode",
-      "The range"
+      "The mode of the scores",
+      "The range of the data"
     ],
     "answer": "B",
     "hints": ["It is separated from the main cluster of the data."]
@@ -125,9 +125,9 @@
     "problemText": "A back-to-back stemplot is most useful for:",
     "choices": [
       "Comparing the distributions of one quantitative variable across two groups",
-      "Showing the relationship between two quantitative variables",
-      "Displaying a single categorical variable",
-      "Computing a correlation coefficient"
+      "Showing the relationship between two quantitative variables on the same individuals",
+      "Displaying the distribution of a single categorical variable across two groups",
+      "Computing a correlation coefficient between two quantitative variables"
     ],
     "answer": "A",
     "hints": ["It shares one stem with leaves on each side."]
@@ -205,10 +205,10 @@
     "responseFormat": "mcq",
     "problemText": "A histogram of adult shoe sizes shows two distinct peaks. The most likely explanation is:",
     "choices": [
-      "A calculation error",
+      "A calculation error in drawing the histogram",
       "Two overlapping groups in the data, such as men and women",
-      "The data are uniform",
-      "The presence of a single outlier"
+      "The data are uniform across the range of sizes",
+      "The presence of a single extreme outlier among the sizes"
     ],
     "answer": "B",
     "hints": ["Two peaks (bimodal) often signal two subgroups combined."]
@@ -317,10 +317,10 @@
     "responseFormat": "mcq",
     "problemText": "When comparing two distributions shown as boxplots on the AP exam, a full response should address:",
     "choices": [
-      "Only the medians",
+      "Only the medians, since the median is the most resistant measure",
       "Shape, center, spread, and unusual features, using explicit comparison language",
-      "Only whether either has outliers",
-      "The correlation between the two groups"
+      "Only whether either has outliers, along with the range of each boxplot",
+      "The correlation between the two groups, estimated from how much the two boxes overlap"
     ],
     "answer": "B",
     "hints": ["Remember to actually COMPARE, not just describe each separately."]
@@ -350,9 +350,9 @@
     "problemText": "Two boxplots show Group A with an IQR of 15 and Group B with an IQR of 8. Which conclusion about spread is best supported?",
     "choices": [
       "Group A is more variable in its middle 50% than Group B",
-      "Group B is more variable overall",
-      "Group A has a higher center",
-      "The two groups have identical spread"
+      "Group B is more variable overall, judging by its full range",
+      "Group A has a higher center because its IQR is larger",
+      "The two groups have identical spread across their full ranges"
     ],
     "answer": "A",
     "hints": ["IQR describes the spread of the middle 50%."]
@@ -375,10 +375,10 @@
     "responseFormat": "mcq",
     "problemText": "Two boxplots overlap substantially and have similar medians. The best description is:",
     "choices": [
-      "The groups differ dramatically",
+      "The groups differ dramatically in both center and spread",
       "The two distributions are broadly similar in center",
-      "Group 1 is clearly larger",
-      "There must be a calculation error"
+      "Group 1 is clearly larger than Group 2 in center",
+      "There must be a calculation error in one of the plots"
     ],
     "answer": "B",
     "hints": ["Overlap plus similar medians means similar centers."]

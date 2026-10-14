@@ -191,10 +191,10 @@
     "responseFormat": "mcq",
     "problemText": "Solve: 5x + 2 >= 27 AND 3x - 4 < 11",
     "choices": [
-      "x = 5",
-      "All real numbers",
+      "x = 5 — the one value where both boundaries meet",
+      "All real numbers — together the pieces cover the line",
       "No solution — the two pieces never overlap",
-      "x >= 5"
+      "x >= 5 — where the two inequalities' solutions overlap"
     ],
     "answer": "C",
     "hints": [

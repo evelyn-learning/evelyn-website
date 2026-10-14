@@ -26,9 +26,9 @@
     "responseFormat": "mcq",
     "problemText": "A person walks into a cold room. Within a minute the blood vessels near the skin narrow and the person begins to shiver. Measurements show the person's internal body temperature stays near 37°C the whole time. Which characteristic of life is best illustrated?",
     "choices": [
-      "Metabolism, because shivering burns stored energy",
-      "Growth and development, because the body is changing",
-      "Reproduction, because new muscle cells are made",
+      "Metabolism, because shivering burns stored energy to produce heat in the muscles",
+      "Growth and development, because the body is changing its blood vessels and muscles",
+      "Reproduction, because new muscle cells are made to replace those used up in shivering",
       "Homeostasis, because internal conditions are held steady despite the change outside"
     ],
     "answer": "D",
@@ -46,9 +46,9 @@
     "problemText": "A salt crystal sitting in a saturated solution steadily gets larger, and a fire spreads across a field, consumes oxygen, and gives off heat. Neither the crystal nor the fire is considered alive. Which reason best explains why?",
     "choices": [
       "Neither one is made of cells or uses its own hereditary information to maintain and reproduce itself",
-      "Neither one increases in size over time",
-      "Neither one uses energy from its surroundings",
-      "Neither one changes in response to conditions around it"
+      "Neither one increases in size over time, which is one of the main traits used to identify living things",
+      "Neither one takes in and uses energy from its surroundings to power its activities",
+      "Neither one changes in response to conditions around it, such as changes in temperature, moisture, or fuel"
     ],
     "answer": "A",
     "hints": [
@@ -179,10 +179,10 @@
     "responseFormat": "mcq",
     "problemText": "To test whether a new fish food speeds growth, a student places 20 goldfish in Tank A with the new food and 20 goldfish in Tank B with the old food. Tank A sits on a sunny windowsill and stays at 26°C; Tank B sits in a cool corner and stays at 20°C. After 6 weeks the Tank A fish average 30% more mass than the Tank B fish. Why can the student NOT conclude that the new food caused the faster growth?",
     "choices": [
-      "Twenty fish per tank is too small a number to allow any conclusion at all.",
+      "Twenty fish per tank is too small a number to allow any conclusion at all about the effect of the food.",
       "Water temperature differed between the tanks, so temperature rather than food could explain the difference.",
-      "The student measured mass instead of length, and growth must be measured as length.",
-      "The experiment has no independent variable, because both tanks received food."
+      "The student measured mass instead of length, and growth must be measured as an increase in body length.",
+      "The experiment has no independent variable, because both tanks received food throughout the six weeks."
     ],
     "answer": "B",
     "hints": [
@@ -313,10 +313,10 @@
     "responseFormat": "mcq",
     "problemText": "A student sets two beakers in the same sunlight for one hour. Beaker 1 holds 200 g of water and warms from 20°C to 24°C. Beaker 2 holds 200 g of cooking oil and warms from 20°C to 35°C. Both beakers absorbed the same amount of light energy. Which explanation of the difference, and of its importance to living things, is best?",
     "choices": [
-      "Water has a low specific heat, so it warms slowly and protects cells from temperature swings.",
-      "Water is less dense than oil, so it absorbed less of the light energy that reached it.",
-      "Water forms fewer hydrogen bonds than oil does, so its temperature changes less.",
-      "Water has a high specific heat because energy goes into disrupting hydrogen bonds, so cells and lakes resist rapid temperature change."
+      "Water has a low specific heat, so it warms slowly and protects cells and lakes from sudden swings in temperature during the hottest part of the day.",
+      "Water is less dense than oil, so it absorbed less of the light energy that reached it and stayed cooler for living things.",
+      "Water forms fewer hydrogen bonds than oil does, so less of the absorbed energy goes into raising its temperature.",
+      "Water has a high specific heat because energy goes into breaking hydrogen bonds, so cells and lakes resist rapid temperature change."
     ],
     "answer": "D",
     "hints": [
@@ -371,10 +371,10 @@
     "responseFormat": "mcq",
     "problemText": "A test tube holds 10 mL of hydrogen peroxide (H2O2) plus a small piece of liver, which supplies the enzyme catalase. Bubbles of O2 form rapidly and then stop. The same piece of liver is lifted out, rinsed, and dropped into a fresh tube of H2O2, where it bubbles rapidly again. What does the second result show?",
     "choices": [
-      "The liver manufactured a fresh supply of catalase between the two tubes.",
-      "The catalase used up in the first tube was replaced by catalase from the H2O2.",
-      "Catalase is not consumed by the reaction, so one enzyme molecule can catalyze many reactions in turn.",
-      "The first tube stopped bubbling because its catalase had all been used up."
+      "The liver manufactured a fresh supply of catalase between the two tubes while it was being rinsed.",
+      "The catalase used up in the first tube was replaced by catalase supplied by the fresh H2O2.",
+      "Catalase is not consumed by the reaction, so one enzyme molecule can catalyze many reactions.",
+      "The first tube stopped bubbling because its catalase had all been used up by the reaction."
     ],
     "answer": "C",
     "hints": [
@@ -390,10 +390,10 @@
     "responseFormat": "mcq",
     "problemText": "A human enzyme is tested at five temperatures with the same amount of substrate each time. The reaction rate, in units of product formed per minute, is: 10°C → 2 units; 25°C → 9 units; 37°C → 20 units; 45°C → 11 units; 60°C → 0 units. Which statement best explains the rate measured at 60°C?",
     "choices": [
-      "At 60°C the substrate was completely used up before the rate could be measured.",
+      "At 60°C the substrate had been completely used up before the rate could be measured by the experimenter.",
       "At 60°C the enzyme has denatured — its shape has changed, so the substrate no longer fits the active site.",
-      "At 60°C the molecules move too slowly to collide with the active site.",
-      "At 60°C the enzyme has reached its optimum and therefore no longer needs substrate."
+      "At 60°C the molecules move too slowly to collide with the active site and form product.",
+      "At 60°C the enzyme has reached its optimum and therefore no longer needs substrate to form product."
     ],
     "answer": "B",
     "hints": [
@@ -409,10 +409,10 @@
     "responseFormat": "mcq",
     "problemText": "With the amount of enzyme held constant, reaction rate is measured as substrate is added. Substrate 1 unit → rate 5; 2 units → rate 10; 4 units → rate 20; 8 units → rate 28; 16 units → rate 30; 32 units → rate 30. Why does the rate stop increasing once substrate goes above 16 units?",
     "choices": [
-      "The extra substrate denatures the enzyme molecules.",
-      "At high concentration the substrate starts acting as an inhibitor of its own reaction.",
-      "The enzyme is gradually consumed as more and more substrate is added.",
-      "Every enzyme active site is already occupied, so the enzyme is saturated and extra substrate cannot speed things up."
+      "The extra substrate denatures the enzyme molecules, so fewer of them remain able to catalyze the reaction.",
+      "At high concentration the substrate starts acting as an inhibitor, blocking its own reaction from going faster.",
+      "The enzyme is gradually consumed as more and more substrate is added, so less of it is left to do the work.",
+      "Every active site is already occupied, so the enzyme is saturated and extra substrate cannot speed things up."
     ],
     "answer": "D",
     "hints": [
@@ -428,10 +428,10 @@
     "responseFormat": "mcq",
     "problemText": "Pepsin is a protein-digesting enzyme released into the stomach; trypsin is a protein-digesting enzyme released into the small intestine. In a laboratory test, pepsin's rate peaks at pH 2 and falls to nearly zero at pH 8, while trypsin's rate peaks at pH 8 and is nearly zero at pH 2. Both reach the same peak rate. What does this result best show?",
     "choices": [
-      "Trypsin is the stronger enzyme, because it works at the higher pH.",
-      "Both enzymes would work best if the entire digestive tract were held at pH 5.",
-      "Each enzyme has an optimal pH matching the environment where it normally works; away from that pH the active site's shape is disrupted.",
-      "pH has no real effect on enzymes, since the two enzymes reach the same peak rate."
+      "Trypsin is the stronger enzyme, because it works at the higher pH, where proteins are easier to break apart.",
+      "Both enzymes would work best if the entire digestive tract were held at pH 5, halfway between their two peaks.",
+      "Each enzyme has an optimal pH matching where it normally works; away from that pH its active site's shape is disrupted.",
+      "pH has no real effect on enzymes, since the two enzymes reach exactly the same peak rate under these laboratory conditions."
     ],
     "answer": "C",
     "hints": [
