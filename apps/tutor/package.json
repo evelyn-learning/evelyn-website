@@ -126,6 +126,7 @@
     "replay:verdict-turns": "npx tsx scripts/replay-verdict-turns.ts",
     "test:turn-shape-signal": "npx tsx scripts/test-turn-shape-signal.ts",
     "test:verdict-precheck": "npx tsx scripts/test-verdict-precheck.ts",
+    "test:no-reveal-ledger": "npx tsx scripts/test-no-reveal-ledger.ts",
     "test:work-then-match": "npx tsx scripts/test-work-then-match.ts",
     "test:voice-judging": "npx tsx scripts/test-voice-judging.ts",
     "test:graphic-organizer-guard": "npx tsx scripts/test-graphic-organizer-guard.ts",

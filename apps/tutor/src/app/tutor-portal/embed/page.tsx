@@ -343,6 +343,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   and which homework problem the session moved to. Older than this
   //   round, never listed; they are the first thing a homework triage asks.
   'text_kickoff', 'homework_text_kickoff', 'homework_current_problem',
+  // 2026-10-19 homework ledger: each problem the answer check found solved
+  // (also the record a resumed page rebuilds the ledger from).
+  'homework_problem_solved',
   // ('opener_' above covers opener_stall_retry; 'judge' covers
   // judge_precheck_disagreement — a judge issue set aside because a
   // high-confidence answer pre-check and the tutor agreed.)

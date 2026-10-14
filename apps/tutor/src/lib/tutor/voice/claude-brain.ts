@@ -22,6 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
+import { formatLedgerProblemLines, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -310,7 +311,14 @@ export interface BrainTurnInput {
    *  Absent ⇒ block omitted AND `set_current_problem` withheld from the
    *  tools array ⇒ userContent + tools byte-identical to before this field
    *  existed. */
-  homework?: { problems: HomeworkProblem[]; current: number };
+  homework?: {
+    problems: HomeworkProblem[];
+    current: number;
+    /** 2026-10-19 (lesson-plan/homework-ledger.ts): list POSITIONS of the
+     *  problems the session has recorded as solved. Rendered only under
+     *  `noRevealLedger`. */
+    solved?: number[];
+  };
   /** Task WS3: durable mock-review context — present only when the student
    *  arrived from a completed full-length mock to review their misses.
    *  Absent ⇒ `<mock_review>` block omitted ⇒ userContent byte-identical. */
@@ -539,6 +547,12 @@ export interface BrainTurnInput {
    *  only for how each line is DRAWN (colour, legend label) — the facts
    *  themselves are computed here from `activeProblem.statement`. */
   problemGraph?: unknown;
+  /** 2026-10-19 teaching round (./no-reveal-ledger-gate.ts), set by the
+   *  stream route for a TEXT session of a listed partner: a wrong answer at
+   *  any step gets no result (block + reveal guard), a stated false claim is
+   *  corrected, and the homework ledger is rendered and fed by the check.
+   *  Absent/false ⇒ request, blocks and events exactly as before. */
+  noRevealLedger?: boolean;
   /** Test/measurement seam for the pre-check (model call, timeout, model). */
   verdictPrecheckDeps?: VerdictPrecheckDeps & { onResult?: (r: VerdictPrecheckResult | null, ms: number) => void };
   /** Optional async resolver for tool_result content. Default behavior
@@ -1723,12 +1737,16 @@ export const HOMEWORK_NO_EARLY_SIGNOFF_RULE =
 export const HOMEWORK_NO_TIME_TALK_RULE =
   `- Never tell the student how much time has been used or is left, and never mention minutes, time limits, quotas or usage. Timing is yours to manage silently.\n`;
 
-export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): string {
+export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts?: { ledger?: boolean }): string {
   if (!hw || !hw.problems.length) return '';
   const n = hw.problems.length;
-  const problemLines = hw.problems.map((p) => `${p.n}. ${p.text}`).join('\n');
+  // 2026-10-19: the ledger marks each problem [SOLVED]/[OPEN] (homework-ledger.ts).
+  const ledger = opts?.ledger === true ? formatLedgerProblemLines(hw.problems, hw.current, hw.solved ?? []) : null;
+  const problemLines = ledger ? ledger.lines : hw.problems.map((p) => `${p.n}. ${p.text}`).join('\n');
   const body =
-    `This is a HOMEWORK session. The student brought these problems (verbatim). Current: Problem ${hw.problems[hw.current - 1]?.n ?? hw.current} (${hw.current} of ${n}).\n` +
+    (ledger
+      ? `This is a HOMEWORK session. The student brought these problems (verbatim). ${ledger.currentLine}\n`
+      : `This is a HOMEWORK session. The student brought these problems (verbatim). Current: Problem ${hw.problems[hw.current - 1]?.n ?? hw.current} (${hw.current} of ${n}).\n`) +
     `${problemLines}\n` +
     `Rules:\n` +
     `- Work the problems in order unless the student asks to jump. One problem at a time. Before your first question about a problem, put it on the board and call set_current_problem with its number.\n` +
@@ -1738,6 +1756,7 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework']): str
     (TUTOR_NO_TIME_TALK ? HOMEWORK_NO_TIME_TALK_RULE : '') +
     (TUTOR_HOMEWORK_NO_EARLY_SIGNOFF ? HOMEWORK_NO_EARLY_SIGNOFF_RULE : '') +
     (TUTOR_HOMEWORK_OWN_MATERIAL ? HOMEWORK_OWN_MATERIAL_RULES : '') +
+    (ledger ? HOMEWORK_LEDGER_RULES : '') +
     `- The opener for a fresh session: greet in your own voice, put Problem ${hw.problems[0].n} on the board, call set_current_problem with ${hw.problems[0].n}, and ask the first question. Do not summarise prior sessions.`;
   return `<homework_session>\n${body}\n</homework_session>\n\n`;
 }
@@ -1933,7 +1952,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     console.log('[practice-mode] practice_session block attached');
   }
   // Task 5: durable homework-help mandate. '' when not a homework session.
-  const homeworkSessionBlock = formatHomeworkSessionBlock(input.homework);
+  const homeworkSessionBlock = formatHomeworkSessionBlock(input.homework, input.noRevealLedger === true ? { ledger: true } : undefined);
   if (homeworkSessionBlock) {
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
@@ -2143,7 +2162,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     console.log('[practice-mode] practice_session block attached');
   }
   // Task 5: durable homework-help mandate. '' when not a homework session.
-  const homeworkSessionBlock = formatHomeworkSessionBlock(input.homework);
+  const homeworkSessionBlock = formatHomeworkSessionBlock(input.homework, input.noRevealLedger === true ? { ledger: true } : undefined);
   if (homeworkSessionBlock) {
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
@@ -2199,6 +2218,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     : sortedShape;
   // "Work it, then match": true only when the route set it for the session's mode.
   const workThenMatch = input.textWorkThenMatch === true || voiceWorkThenMatch;
+  // 2026-10-19 teaching round (./no-reveal-ledger-gate.ts): text sessions of
+  // listed partners only — the route never sets it for voice.
+  const noRevealLedger = input.noRevealLedger === true && input.textVerdictPrecheck === true;
+  const checkBlockOpts = noRevealLedger ? { noRevealAnyStep: true, claimCorrection: true } : {};
   if (workThenMatch) yield { type: 'work-then-match' };
   // 2026-10-08c — wrong answer to the WHOLE problem: the result never leaves
   // this function (./whole-answer-reveal.ts). Armed once the pre-check's
@@ -2208,15 +2231,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // goes out through `guardedSentence` / the tool-call check.
   const reveal: { withheld: WithheldAnswer | null; muted: boolean; forwarded: string[] } = { withheld: null, muted: false, forwarded: [] };
   const armRevealGuard = (pub: PublicVerdictPrecheck | null | undefined, value: string | undefined, studentText: string): string => {
-    if (!workThenMatch || !wholeAnswerRevealGuardActive(pub, value)) return '';
+    if (!workThenMatch || !wholeAnswerRevealGuardActive(pub, value, noRevealLedger ? { anyTarget: true } : undefined)) return '';
     reveal.withheld = {
       value: String(value),
       studentText,
       givenText: [
         ...(input.homework?.problems ?? []).map((p) => p.text),
         input.activeProblem?.statement ?? '',
-        ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')),
+        ...input.conversationHistory.filter((m) => m.role === 'user' || noRevealLedger).map((m) => (typeof m.content === 'string' ? m.content : '')),
       ].join('\n'),
+      ...(noRevealLedger ? { newNumbers: true } : {}),
     };
     console.log('[whole-answer-reveal] guard armed for this request');
     return sealWithheldAnswer({ value: String(value), studentText });
@@ -2272,6 +2296,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // to be checked against (an open question, or the student's own problem).
   // A retry of the same turn re-renders the block from what the client was
   // sent. Any failure ⇒ '' ⇒ the turn runs as it did before.
+  // 2026-10-19: the ledger, restated next to the student's message (homework-ledger.ts).
+  const problemLedgerBlock = noRevealLedger && input.homework
+    ? formatProblemLedgerBlock(input.homework.problems, input.homework.solved ?? [])
+    : '';
   let answerCheckBlock = '';
   if (input.textVerdictPrecheck === true) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
@@ -2287,14 +2315,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         openQuestion: turnShape.open?.question ?? null,
         studentMessage: studentSaid,
         ...(problemFacts ? { problemFacts: formatInequalityFactsText(problemFacts) } : {}),
-      }, input.verdictPrecheckDeps);
+        ...(noRevealLedger && input.homework ? { solved: input.homework.solved ?? [] } : {}),
+      }, noRevealLedger ? { ...input.verdictPrecheckDeps, ledger: !!input.homework?.problems.length, claimVerdict: true } : input.verdictPrecheckDeps);
       const ms = Date.now() - startedAt;
       input.verdictPrecheckDeps?.onResult?.(result, ms);
       if (result) {
         const pub = toPublicPrecheck(result);
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${pub.differsAt ? ` differs_at="${pub.differsAt}"` : ''}${precheckInforms(pub) ? '' : ' (not injected)'}`);
         if (precheckInforms(pub)) {
-          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}) });
+          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts });
           const seal = armRevealGuard(pub, result.correctValue, studentSaid);
           yield { type: 'verdict-precheck', result: pub, ms, ...(seal ? { seal } : {}) };
         }
@@ -2302,7 +2331,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         console.log(`[verdict-precheck] ${ms} ms · no result (not injected)`);
       }
     } else if (!turnShape && input.verdictPrecheckCarry) {
-      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch ? { workThenMatch: true } : undefined);
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, { ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts });
       const carried = openWithheldAnswer(input.verdictPrecheckSeal);
       if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       if (answerCheckBlock) console.log('[verdict-precheck] carried from the first attempt of this turn');
@@ -2385,6 +2414,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     problemFactsBlock +
     textThinkingBlock +
     turnShapeBlock +
+    problemLedgerBlock +
     answerCheckBlock +
     verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;

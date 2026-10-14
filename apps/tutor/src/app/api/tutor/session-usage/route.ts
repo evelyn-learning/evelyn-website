@@ -15,7 +15,8 @@ import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
 import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
 import { isStaleSessionReuse } from "@/lib/tutor/portal/session-id-reuse";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
-import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";
+import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
+
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
@@ -67,6 +68,9 @@ export async function GET(req: NextRequest) {
       lessonProgress: session.lessonProgress ?? null,
       transcript: session.transcript ?? [],
       whiteboardCommands: session.whiteboardCommands ?? [],
+      // 2026-10-19 homework ledger: the solved problems at the last record,
+      // so a resumed page keeps them (lesson-plan/homework-ledger.ts).
+      homeworkSolved: homeworkSolvedFromDebugEvents(session.debugEvents),
     });
   } catch (error) {
     console.error("Session usage read error:", error);
