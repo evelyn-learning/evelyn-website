@@ -8,6 +8,7 @@ import { strict as assert } from 'node:assert';
 import {
   LESSON_NOW_LIMITS,
   LESSON_NOW_MAX_CHARS,
+  LESSON_NEAR_END_S,
   LESSON_TIMELINE_LIMITS,
   parseLessonTimeline,
   renderLessonNow,
@@ -169,6 +170,32 @@ test('render: budgets hold on the largest timeline; the newest visuals and neare
 test('render: generic wording — no partner or game names', () => {
   const r = renderLessonNow({ timeline: [], video: 'playing', positionSeconds: 1, resumeTool: true }) ?? '';
   assert.ok(!/gameclass|mario|sonic/i.test(r));
+});
+
+
+test('lesson window: video length shown; "nearly over" in the last minute only', () => {
+  const tl: TimelineEntry[] = [{ start: 0, kind: 'speech', text: 'Hello' }];
+  const mid = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 100, resumeTool: false, durationSeconds: 245 })!;
+  assert.match(mid, /The video is paused at 1:40 of 4:05\./);
+  assert.ok(!/nearly over/.test(mid));
+  const end = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 245 - LESSON_NEAR_END_S, resumeTool: false, durationSeconds: 245 })!;
+  assert.match(end, /The lesson is nearly over\./);
+  const none = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 240, resumeTool: false })!;
+  assert.ok(!/ of \d|nearly over/.test(none));
+});
+
+test('lesson window: recap carries the lesson from its start, evenly thinned, within the route bound', () => {
+  const tl: TimelineEntry[] = Array.from({ length: 400 }, (_, i) => ({ start: i * 2, kind: 'speech' as const, text: `line ${i} ${'w'.repeat(60)}` }));
+  for (let i = 0; i < 40; i++) tl.push({ start: i * 20, kind: 'visual', text: 'v'.repeat(1400) });
+  tl.sort((a, b) => a.start - b.start);
+  const normal = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 790, resumeTool: true })!;
+  assert.ok(!/line 0 /.test(normal), 'the normal window is the stretch around the position');
+  const recap = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 790, resumeTool: true, recap: true })!;
+  assert.match(recap, /What the lesson has said so far, from the start:/);
+  assert.match(recap, /line 0 /);
+  assert.ok(/line 39\d /.test(recap), 'the end is still represented');
+  assert.ok(recap.length <= LESSON_NOW_MAX_CHARS, `recap ${recap.length} within ${LESSON_NOW_MAX_CHARS}`);
+  assert.ok(!/line 399 /.test(renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 100, resumeTool: true, recap: true })!), 'nothing past the position');
 });
 
 console.log(`\n${passed}/${passed + failed} passed`);

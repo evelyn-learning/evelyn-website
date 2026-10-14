@@ -18,7 +18,7 @@ import { LESSON_CONTEXT_LIMITS } from '../embed/lesson-context';
 export const VIDEO_STATES = ['playing', 'paused', 'ended'] as const;
 export type VideoState = (typeof VIDEO_STATES)[number];
 
-export const MOMENT_KINDS = ['teaching_moment', 'question', 'quiz'] as const;
+export const MOMENT_KINDS = ['teaching_moment', 'question', 'quiz', 'exit_ticket'] as const;
 export type MomentKind = (typeof MOMENT_KINDS)[number];
 
 /** Shown in the dock while standing by (spec §1). */
@@ -36,6 +36,14 @@ export const MOMENT_STALE_MS = 120 * 1000;
  *  together, while a moment for a student who has not opened the tutor must
  *  not play a minute later when they open it about something else. */
 export const MOMENT_PRESTART_HOLD_MS = 5 * 1000;
+/** A session that starts with the video this close to its beginning opens
+ *  with a short hook for the lesson instead of the usual opener. */
+export const LESSON_START_WINDOW_S = 15;
+/** At most this many answer options are kept from a moment, each clamped. */
+export const MOMENT_OPTIONS_MAX = 8;
+export const MOMENT_OPTION_CHARS = 200;
+/** A moment's own transcript (what is said in that part of the video). */
+export const MOMENT_TRANSCRIPT_CHARS = 1500;
 
 function obj(data: unknown): Record<string, unknown> | null {
   return data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
@@ -55,11 +63,12 @@ function str(v: unknown, max: number): string | undefined {
 
 /** `{ type: 'evelyn:video_state', state, position_seconds? }`. An unknown
  *  state is ignored (null); a bad position is dropped, the state is kept. */
-export function parseVideoState(data: unknown): { state: VideoState; positionSeconds: number | null } | null {
+export function parseVideoState(data: unknown): { state: VideoState; positionSeconds: number | null; durationSeconds: number | null } | null {
   const d = obj(data);
   if (!d || d.type !== 'evelyn:video_state') return null;
   if (typeof d.state !== 'string' || !(VIDEO_STATES as readonly string[]).includes(d.state)) return null;
-  return { state: d.state as VideoState, positionSeconds: secs(d.position_seconds) };
+  const duration = secs(d.duration_seconds);
+  return { state: d.state as VideoState, positionSeconds: secs(d.position_seconds), durationSeconds: duration && duration > 0 ? duration : null };
 }
 
 /** `{ type: 'evelyn:pause', reason? }` — the host hid the panel. */
@@ -83,6 +92,24 @@ export interface LessonMoment {
   question?: string;
   studentAnswer?: string;
   correctAnswer?: string;
+  /** Every answer option the student was shown (quiz / question moments). */
+  options?: string[];
+  /** What is said in this part of the video, as the host sends it. */
+  transcript?: string;
+}
+
+/** Options as plain strings: a string, or an object's `text` / `label` /
+ *  `value`. Anything else is skipped; the list is capped and each clamped. */
+function parseOptions(v: unknown): string[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out: string[] = [];
+  for (const raw of v) {
+    if (out.length >= MOMENT_OPTIONS_MAX) break;
+    const o = obj(raw);
+    const text = str(o ? (o.text ?? o.label ?? o.value) : raw, MOMENT_OPTION_CHARS);
+    if (text) out.push(text);
+  }
+  return out.length ? out : undefined;
 }
 
 /** `{ type: 'evelyn:moment', … }`. Every field is optional and CLAMPED with
@@ -103,6 +130,8 @@ export function parseMoment(data: unknown): LessonMoment | null {
     question: str(d.question, L.question),
     studentAnswer: str(d.student_answer, L.studentAnswer),
     correctAnswer: str(d.correct_answer, L.correctAnswer),
+    options: parseOptions(d.options),
+    transcript: str(d.transcript, MOMENT_TRANSCRIPT_CHARS),
   };
   return Object.fromEntries(Object.entries(m).filter(([, v]) => v !== undefined)) as unknown as LessonMoment;
 }
@@ -114,6 +143,8 @@ export interface LessonHostState {
   positionSeconds: number | null;
   /** When `positionSeconds` was reported (a playing video has moved on since). */
   positionAtMs: number | null;
+  /** The video's length, once the host has reported it (optional). */
+  durationSeconds: number | null;
   /** Between `evelyn:pause` and `evelyn:resume`. */
   hostPaused: boolean;
   /** When the student (or a moment) woke the tutor over a playing video.
@@ -123,11 +154,11 @@ export interface LessonHostState {
 }
 
 export const INITIAL_LESSON_HOST_STATE: LessonHostState = {
-  video: null, positionSeconds: null, positionAtMs: null, hostPaused: false, wokeAtMs: null,
+  video: null, positionSeconds: null, positionAtMs: null, durationSeconds: null, hostPaused: false, wokeAtMs: null,
 };
 
 export type LessonHostEvent =
-  | { type: 'video_state'; state: VideoState; positionSeconds: number | null }
+  | { type: 'video_state'; state: VideoState; positionSeconds: number | null; durationSeconds?: number | null }
   | { type: 'host_pause' }
   | { type: 'host_resume' }
   /** The student started typing, tapped the mic, or pressed pause in the panel. */
@@ -146,6 +177,7 @@ export function reduceLessonHost(s: LessonHostState, e: LessonHostEvent, nowMs: 
         // the video was playing, so a later estimate starts from the right place.
         positionSeconds: e.positionSeconds ?? currentPositionSeconds(s, nowMs),
         positionAtMs: nowMs,
+        durationSeconds: e.durationSeconds ?? s.durationSeconds,
         // A wake outlives further `playing` reports (a host that reports its
         // position often, or is slow to pause, must not put the tutor back
         // to sleep in the middle of the student's question). It ends when the
@@ -224,14 +256,31 @@ function mmss(total: number): string {
  *  host moment. Generic by design: every fact comes from the host's fields. */
 export function renderMomentDirective(m: LessonMoment): string {
   const at = m.positionSeconds !== null ? ` at ${mmss(Math.floor(m.positionSeconds))}` : '';
-  const what = m.kind === 'teaching_moment' ? 'a teaching moment' : m.kind === 'quiz' ? 'a quiz question' : 'a question';
+  const what =
+    m.kind === 'teaching_moment' ? 'a teaching moment'
+      : m.kind === 'quiz' ? 'a quiz question'
+        : m.kind === 'exit_ticket' ? 'the exit ticket at the end of the lesson'
+          : 'a question';
   const parts = [`The lesson video just paused${at} for ${what}${m.title ? `: "${m.title}"` : ''}.`];
   if (m.summary) parts.push(`On screen: ${m.summary}`);
+  if (m.transcript) parts.push(`Said in this part of the video: ${m.transcript}`);
   if (m.question) parts.push(`Question: ${m.question}`);
+  if (m.options) parts.push(`Answer options shown to the student: ${m.options.map((o) => `"${o}"`).join(' | ')}.`);
   if (m.studentAnswer) parts.push(`The student answered: ${m.studentAnswer}`);
   if (m.correctAnswer) parts.push(`Correct answer (never state it outright; guide the student to it): ${m.correctAnswer}`);
-  if (m.question && m.studentAnswer) {
-    parts.push('Step in now: start from what the student answered — what they got right, then the one idea that fixes the rest.');
+  if (m.kind === 'exit_ticket') {
+    // The lesson is ending: recap first, then a single check. The exit
+    // ticket itself is the student's to answer.
+    parts.push(
+      'Step in now: in two or three sentences, sum up the key takeaways of this lesson from the lesson video lines, ' +
+      'then ask one short question that checks one of them.' +
+      (m.question ? ' Do not give away the answer to the exit-ticket question.' : ''),
+    );
+  } else if (m.question && m.studentAnswer) {
+    parts.push(
+      'Step in now: start from what the student answered — what they got right, then the one idea that fixes the rest.' +
+      (m.options ? ' Use the other options only to contrast with the one they chose; do not read them all out.' : ''),
+    );
   } else if (m.question) {
     parts.push('Step in now: ask the student what they think and why, then work from their answer.');
   } else {
@@ -241,6 +290,34 @@ export function renderMomentDirective(m: LessonMoment): string {
   // asked is dropped, not answered on the student's behalf.
   parts.push('If a question of yours was still open, leave it — do not answer it for the student.');
   return `[${parts.join(' ')}]`;
+}
+
+/** The banner that tells the student why the tutor opened: the moment's own
+ *  title (no generated text), under a label for its kind. Null without a title. */
+export function momentBanner(m: LessonMoment): { label: string; title: string } | null {
+  if (!m.title) return null;
+  const label =
+    m.kind === 'teaching_moment' ? 'Teaching moment'
+      : m.kind === 'quiz' ? 'Quiz'
+        : m.kind === 'exit_ticket' ? 'Exit ticket'
+          : 'Question';
+  return { label, title: m.title };
+}
+
+/** Opening-turn instruction for a session that starts at the very beginning
+ *  of the host's video: a short hook for the lesson, no teaching, then the
+ *  video. Null when the video is not near its start (a student who opens the
+ *  tutor mid-lesson gets the usual opener) or its position is unknown. */
+export function lessonStartHook(s: LessonHostState, nowMs: number, resumeTool: boolean): string | null {
+  if (s.video === null || s.video === 'ended') return null;
+  const pos = currentPositionSeconds(s, nowMs);
+  if (pos === null || pos > LESSON_START_WINDOW_S) return null;
+  return (
+    'LESSON START: the student is about to watch the lesson video, which is at its very beginning. ' +
+    'This replaces the usual opening: in two or three short sentences, introduce what the lesson is about and spark curiosity about what is coming, ' +
+    'and tell the student they can ask you anything while they watch. Do not explain or teach the content yet; explain only if the student asks.' +
+    (resumeTool ? ' Unless the student asks something, end with one short hand-back line and call `resume_lesson` in that same turn.' : '')
+  );
 }
 
 /** Time that must not count as session time: standby, and a prewarmed

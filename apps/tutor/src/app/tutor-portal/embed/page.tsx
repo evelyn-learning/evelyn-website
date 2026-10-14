@@ -39,7 +39,7 @@ import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shou
 import {
   CLOCK_POST_MS, INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
   activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
-  parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, type InactiveClock, type LessonHostEvent, type LessonHostState,
+  parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, momentBanner, lessonStartHook, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
 import { parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
@@ -79,7 +79,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // standby_idle_end, video_state / video_command / video_resume_unconfirmed,
   // moment_received / moment_delivered / moment_dropped, lesson_timeline,
   // host_pause / host_resume, student_wake, resume_lesson_called / _fired / _dropped.
-  'standby', 'video_', 'moment_', 'lesson_timeline', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson',
+  'standby', 'video_', 'moment_', 'lesson_timeline', 'lesson_start', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
@@ -1441,6 +1441,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // per-turn <lesson_video> window; the tutor can resume the video.
   const timelineRef = useRef<TimelineEntry[] | null>(null);
   const lastStandbyPostedRef = useRef(false);
+  /** Set by an exit-ticket moment; cleared when the tutor stands by again. */
+  const recapRef = useRef(false);
   const resumeConfirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dispatchLessonHost = useCallback((e: LessonHostEvent) => {
@@ -1453,6 +1455,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     syncInactiveRef.current();
     // Posted on a CHANGE only: a host may report its video state very often.
     const standingBy = isStandingBy(next);
+    if (standingBy) recapRef.current = false;
     if (standingBy === lastStandbyPostedRef.current) return;
     lastStandbyPostedRef.current = standingBy;
     window.parent.postMessage({ type: 'evelyn:standby', standing_by: standingBy }, '*');
@@ -1472,7 +1475,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       const video = parseVideoState(event.data);
       if (video) {
         const before = lessonHostRef.current.video;
-        dispatchLessonHost({ type: 'video_state', state: video.state, positionSeconds: video.positionSeconds });
+        dispatchLessonHost({ type: 'video_state', state: video.state, positionSeconds: video.positionSeconds, durationSeconds: video.durationSeconds });
         // Persist changes of state only — a host may report its position often.
         if (video.state !== before) addDebugEvent('video_state', `state=${video.state} pos=${video.positionSeconds ?? ''}`);
         if (video.state === 'playing' && resumeConfirmTimerRef.current) {
@@ -1486,9 +1489,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // A position sent in milliseconds is corrected against the video's own report.
         const sentPos = moment.positionSeconds;
         moment.positionSeconds = reconcileMomentPosition(sentPos, currentPositionSeconds(lessonHostRef.current, Date.now()));
-        addDebugEvent('moment_received', `kind=${moment.kind} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}`);
+        addDebugEvent('moment_received', `kind=${moment.kind} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}${moment.options ? ` options=${moment.options.length}` : ''}`);
         dispatchLessonHost({ type: 'moment', positionSeconds: moment.positionSeconds });
-        sessionHandleRef.current?.deliverMoment?.(renderMomentDirective(moment));
+        // An exit ticket: the lesson window carries the whole lesson until the
+        // tutor hands back to the video (standby), so the recap can draw on it.
+        if (moment.kind === 'exit_ticket') recapRef.current = true;
+        sessionHandleRef.current?.deliverMoment?.(renderMomentDirective(moment), momentBanner(moment));
         return;
       }
       const lesson = parseLessonTimeline(event.data);
@@ -1551,7 +1557,19 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     video: videoForPrompt(lessonHostRef.current),
     positionSeconds: currentPositionSeconds(lessonHostRef.current, Date.now()),
     resumeTool: uiOptions.videoControl,
+    durationSeconds: lessonHostRef.current.durationSeconds,
+    recap: recapRef.current,
   }), [uiOptions.videoControl]);
+
+  // Opening turn of a session that starts at the very beginning of the
+  // host's video: a short hook for the lesson instead of the usual opener.
+  const getOpeningNote = useCallback(() => {
+    if (!TUTOR_HOST_LESSON || !uiOptions.videoControl) return undefined;
+    const hook = lessonStartHook(lessonHostRef.current, Date.now(), uiOptions.videoControl);
+    if (!hook) return undefined;
+    addDebugEvent('lesson_start_hook', `pos=${currentPositionSeconds(lessonHostRef.current, Date.now()) ?? ''}`);
+    return hook;
+  }, [uiOptions.videoControl, addDebugEvent]);
 
   // Spec §5: 30 minutes of continuous standby ends the session as idle —
   // silently (no goodbye line: the student is watching, or the panel is hidden).
@@ -1948,6 +1966,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         standby={standby}
         videoHost={uiOptions.videoControl}
         getLessonNow={getLessonNow}
+        getOpeningNote={getOpeningNote}
         onStudentWake={handleStudentWake}
         onResumeLesson={handleResumeLesson}
         videoControl={TUTOR_HOST_LESSON && uiOptions.videoControl && lessonHost.video ? { state: lessonHost.video, onToggle: handleVideoToggle } : null}

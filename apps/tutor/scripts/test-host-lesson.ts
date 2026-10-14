@@ -34,6 +34,10 @@ import {
   shiftAnchor,
   videoForPrompt,
   type LessonHostState,
+  lessonStartHook,
+  momentBanner,
+  LESSON_START_WINDOW_S,
+  MOMENT_OPTIONS_MAX,
 } from '../src/lib/tutor/portal/host-lesson';
 
 let passed = 0;
@@ -58,10 +62,10 @@ test('constants are the spec values', () => {
 });
 
 test('parseVideoState: exact type, known state, tolerant position', () => {
-  assert.deepEqual(parseVideoState({ type: 'evelyn:video_state', state: 'playing', position_seconds: 12.5 }), { state: 'playing', positionSeconds: 12.5 });
-  assert.deepEqual(parseVideoState({ type: 'evelyn:video_state', state: 'ended' }), { state: 'ended', positionSeconds: null });
+  assert.deepEqual(parseVideoState({ type: 'evelyn:video_state', state: 'playing', position_seconds: 12.5 }), { state: 'playing', positionSeconds: 12.5, durationSeconds: null });
+  assert.deepEqual(parseVideoState({ type: 'evelyn:video_state', state: 'ended' }), { state: 'ended', positionSeconds: null, durationSeconds: null });
   for (const bad of [-1, NaN, Infinity, '12', null]) {
-    assert.deepEqual(parseVideoState({ type: 'evelyn:video_state', state: 'paused', position_seconds: bad }), { state: 'paused', positionSeconds: null }, String(bad));
+    assert.deepEqual(parseVideoState({ type: 'evelyn:video_state', state: 'paused', position_seconds: bad }), { state: 'paused', positionSeconds: null, durationSeconds: null }, String(bad));
   }
   for (const d of [null, 'x', [], {}, { type: 'evelyn:video_state' }, { type: 'evelyn:video_state', state: 'buffering' }, { type: 'evelyn:start', state: 'playing' }]) {
     assert.equal(parseVideoState(d), null, JSON.stringify(d));
@@ -350,7 +354,7 @@ test('VTR: per-turn lesson window and the video-host flag ride the brain request
 });
 
 test('VTR: a moment waits for a started, awake, idle tutor and goes stale', () => {
-  assert.match(types, /deliverMoment\?: \(directive: string\) => void/);
+  assert.match(types, /deliverMoment\?: \(directive: string, banner\?: \{ label: string; title: string \} \| null\) => void/);
   assert.match(vtr, /deliverMoment: \(directive/);
   assert.match(vtr, /MOMENT_STALE_MS/);
   assert.match(vtr, /hasStartedRef\.current && !standbyRef\.current && !endingRef\.current && quiet/);
@@ -515,6 +519,92 @@ test('a moment for a tutor that is not open is dropped after a short hold; resum
   for (const why of ['student_turn', 'standby', 'moment', 'student_typed', 'turn_killed']) assert.ok(vtr.includes(`cancelResumeLesson('${why}')`), why);
   assert.match(embed, /reconcileMomentPosition\(sentPos, currentPositionSeconds\(lessonHostRef\.current, Date\.now\(\)\)\)/);
   assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} chars=\$\{st\.chars\}/);
+});
+
+test('moment: answer options are kept (strings or objects), capped and clamped, and reach the directive', () => {
+  const m = parseMoment({ type: 'evelyn:moment', kind: 'quiz', question: 'Which is a royalty?', student_answer: 'Owning 25%',
+    options: ['Owning 25%', { text: '$1 per unit sold' }, { label: 'A loan' }, 7, null, '  '] })!;
+  assert.deepEqual(m.options, ['Owning 25%', '$1 per unit sold', 'A loan']);
+  const d = renderMomentDirective(m);
+  assert.match(d, /Answer options shown to the student: "Owning 25%" \| "\$1 per unit sold" \| "A loan"\./);
+  assert.match(d, /Use the other options only to contrast with the one they chose; do not read them all out\./);
+  const many = parseMoment({ type: 'evelyn:moment', options: Array.from({ length: 20 }, (_, i) => `opt ${i} ${'x'.repeat(400)}`) })!;
+  assert.equal(many.options!.length, MOMENT_OPTIONS_MAX);
+  assert.ok(many.options!.every((o) => o.length <= 200));
+  assert.equal(parseMoment({ type: 'evelyn:moment', options: 'not a list' })!.options, undefined);
+  assert.ok(!/Answer options/.test(renderMomentDirective(parseMoment({ type: 'evelyn:moment', title: 'x' })!)));
+});
+
+test('moment: the host transcript for the moment reaches the directive', () => {
+  const d = renderMomentDirective(parseMoment({ type: 'evelyn:moment', title: 'Two kinds of offers', transcript: 'Equity means owning a piece.' })!);
+  assert.match(d, /Said in this part of the video: Equity means owning a piece\./);
+});
+
+test('exit ticket: its own kind, recap then one check, never the answer', () => {
+  const m = parseMoment({ type: 'evelyn:moment', kind: 'exit_ticket', title: 'Exit ticket', question: 'Equity or royalty?' })!;
+  assert.equal(m.kind, 'exit_ticket');
+  const d = renderMomentDirective(m);
+  assert.match(d, /for the exit ticket at the end of the lesson/);
+  assert.match(d, /sum up the key takeaways of this lesson/);
+  assert.match(d, /ask one short question that checks one of them/);
+  assert.match(d, /Do not give away the answer to the exit-ticket question\./);
+  assert.ok(!/start from what the student answered/.test(d));
+});
+
+test('video duration: parsed when positive, kept across reports without one', () => {
+  assert.equal(parseVideoState({ type: 'evelyn:video_state', state: 'paused', position_seconds: 3, duration_seconds: 245 })!.durationSeconds, 245);
+  assert.equal(parseVideoState({ type: 'evelyn:video_state', state: 'paused', duration_seconds: 0 })!.durationSeconds, null);
+  assert.equal(parseVideoState({ type: 'evelyn:video_state', state: 'paused', duration_seconds: 'x' })!.durationSeconds, null);
+  let s = reduceLessonHost(S0, { type: 'video_state', state: 'paused', positionSeconds: 0, durationSeconds: 245 }, 0);
+  s = reduceLessonHost(s, { type: 'video_state', state: 'playing', positionSeconds: 10 }, 1000);
+  assert.equal(s.durationSeconds, 245);
+});
+
+test('moment banner: the host title under a label for its kind; none without a title', () => {
+  assert.deepEqual(momentBanner(parseMoment({ type: 'evelyn:moment', title: 'Two kinds of offers' })!), { label: 'Teaching moment', title: 'Two kinds of offers' });
+  assert.equal(momentBanner(parseMoment({ type: 'evelyn:moment', kind: 'quiz', title: 'Q' })!)!.label, 'Quiz');
+  assert.equal(momentBanner(parseMoment({ type: 'evelyn:moment', kind: 'exit_ticket', title: 'E' })!)!.label, 'Exit ticket');
+  assert.equal(momentBanner(parseMoment({ type: 'evelyn:moment', kind: 'question', title: 'Q' })!)!.label, 'Question');
+  assert.equal(momentBanner(parseMoment({ type: 'evelyn:moment', summary: 'no title' })!), null);
+});
+
+test('lesson-start hook: only with the video near its beginning; hands back only with the resume tool', () => {
+  const at = (pos: number | null, state: 'paused' | 'playing' | 'ended' = 'paused') =>
+    reduceLessonHost(S0, { type: 'video_state', state, positionSeconds: pos }, 0);
+  const hook = lessonStartHook(at(0), 0, true)!;
+  assert.match(hook, /^LESSON START:/);
+  assert.match(hook, /This replaces the usual opening/);
+  assert.match(hook, /Do not explain or teach the content yet; explain only if the student asks\./);
+  assert.match(hook, /call `resume_lesson` in that same turn/);
+  assert.ok(!/resume_lesson/.test(lessonStartHook(at(0), 0, false)!));
+  assert.ok(lessonStartHook(at(LESSON_START_WINDOW_S), 0, true));
+  assert.equal(lessonStartHook(at(LESSON_START_WINDOW_S + 1), 0, true), null);
+  assert.equal(lessonStartHook(at(null), 0, true), null);         // position unknown
+  assert.equal(lessonStartHook(S0, 0, true), null);               // no video reported
+  assert.equal(lessonStartHook(at(2, 'ended'), 0, true), null);
+  // A playing video moves on: 10 s in at report + 10 s since = past the window.
+  assert.equal(lessonStartHook(at(10, 'playing'), 10_000, true), null);
+  // Generic: no partner or lesson names in the instruction.
+  assert.ok(!/gameclass|scrub|shark/i.test(hook));
+});
+
+test('wiring: banner, opening note, recap and duration reach the session', () => {
+  assert.match(embed, /deliverMoment\?\.\(renderMomentDirective\(moment\), momentBanner\(moment\)\)/);
+  assert.match(embed, /if \(moment\.kind === 'exit_ticket'\) recapRef\.current = true;/);
+  assert.match(embed, /if \(standingBy\) recapRef\.current = false;/);
+  assert.match(embed, /durationSeconds: lessonHostRef\.current\.durationSeconds,\s*recap: recapRef\.current,/);
+  assert.match(embed, /durationSeconds: video\.durationSeconds/);
+  assert.match(embed, /lessonStartHook\(lessonHostRef\.current, Date\.now\(\), uiOptions\.videoControl\)/);
+  assert.match(embed, /getOpeningNote=\{getOpeningNote\}/);
+  assert.match(vtr, /onMomentBannerRef\.current\?\.\(moment\.banner\);/);
+  assert.match(vtr, /if \(openingNoteRef\.current === null\) openingNoteRef\.current = getOpeningNoteRef\.current\?\.\(\) \?\? '';/);
+  const ts = readFileSync(join(__dirname, '../src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  assert.match(ts, /onMomentBanner=\{handleMomentBanner\}/);
+  assert.match(ts, /questionPin=\{questionPinEl \?\? momentBannerEl\}/);
+  assert.match(ts, /if \(standby\) setMomentBannerState\(null\);/);
+  assert.match(ts, /if \(questionPinEl && momentBannerState\) setMomentBannerState\(null\);/);
+  const stage = readFileSync(join(__dirname, '../src/app/tutor/components/session/SessionStage.tsx'), 'utf8');
+  assert.match(stage, /if \(questionPinKey\.startsWith\('moment-'\)\) return;/);
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)

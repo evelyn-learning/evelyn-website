@@ -223,6 +223,7 @@ export interface TutorSessionProps {
   getLessonNow?: () => string | undefined;
   onStudentWake?: (via: 'typing' | 'mic') => void;
   onResumeLesson?: () => void;
+  getOpeningNote?: () => string | undefined;
   /** Embed UI option `videoControl`: play/pause for the HOST's video beside
    *  the text box. null until the host has reported its video state. */
   videoControl?: { state: VideoState; onToggle: () => void } | null;
@@ -299,7 +300,7 @@ export default function TutorSession(props: TutorSessionProps) {
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
     onPracticeStatsChange,
     humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
-    standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, videoControl,
+    standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, getOpeningNote, videoControl,
     sessionTimer = true, endControlVisible = true, toolsLow = false,
   } = props;
   // Embed-only (see the prop docs): the retail page can never get it.
@@ -1431,6 +1432,20 @@ export default function TutorSession(props: TutorSessionProps) {
   // button and nested buttons are invalid HTML. Dismiss = setQuestionPin(null)
   // only: pinFetchedTurnRef already blocks a same-turn re-fetch, so the pin
   // cannot re-appear until the next finalized turn.
+  // Host video (partner spec v1.2): the banner of the moment the tutor just
+  // stepped in on — the host's own title, so the student sees why the tutor
+  // opened. It sits in the question pin's place until the tutor's own
+  // question is pinned, the tutor hands back to the video, or ✕.
+  const [momentBannerState, setMomentBannerState] = useState<{ id: number; label: string; title: string } | null>(null);
+  const momentBannerSeqRef = useRef(0);
+  const handleMomentBanner = useCallback((b: { label: string; title: string } | null) => {
+    momentBannerSeqRef.current += 1;
+    setMomentBannerState(b ? { id: momentBannerSeqRef.current, ...b } : null);
+  }, []);
+  useEffect(() => {
+    if (standby) setMomentBannerState(null);
+  }, [standby]);
+
   const questionPinEl =
     TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId ? (
       <div
@@ -1458,6 +1473,28 @@ export default function TutorSession(props: TutorSessionProps) {
         </button>
       </div>
     ) : undefined;
+
+  // The tutor's own question replaces the moment banner for good.
+  useEffect(() => {
+    if (questionPinEl && momentBannerState) setMomentBannerState(null);
+  }, [questionPinEl, momentBannerState]);
+  const momentBannerEl = momentBannerState ? (
+    <div className="ss-cap w-full flex items-center gap-2 rounded-xl bg-violet-50/95 border border-violet-200 shadow-md px-3 py-1.5 text-left">
+      <span className="shrink-0 rounded-md bg-violet-500 text-white text-[10px] font-bold px-1.5 py-0.5 whitespace-nowrap">{momentBannerState.label}</span>
+      <span className="min-w-0 text-sm font-medium leading-snug text-violet-950 line-clamp-2">{momentBannerState.title}</span>
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={(e) => {
+          e.stopPropagation();
+          setMomentBannerState(null);
+        }}
+        className="shrink-0 grid place-items-center w-5 h-5 rounded-md text-violet-700/70 hover:bg-violet-100 hover:text-violet-900"
+      >
+        ✕
+      </button>
+    </div>
+  ) : undefined;
 
   // Round-28b: voice-hiccup captions pin — board-bottom sibling of the
   // Q-pin, shown only when a sentence could not be spoken by EITHER voice
@@ -1571,6 +1608,8 @@ export default function TutorSession(props: TutorSessionProps) {
         getLessonNow={getLessonNow}
         onStudentWake={onStudentWake}
         onResumeLesson={onResumeLesson}
+        getOpeningNote={getOpeningNote}
+        onMomentBanner={handleMomentBanner}
         composerSlot={videoBtn}
         onRelayReady={onRelayReady}
         targetKind={targetKind}
@@ -2037,8 +2076,8 @@ export default function TutorSession(props: TutorSessionProps) {
         )}
         adaptiveMenu={adaptiveMenuEl}
         endControl={endControlVisible ? endControlEl : null}
-        questionPin={questionPinEl}
-        questionPinKey={questionPinEl && questionPin ? questionPin.turnId : undefined}
+        questionPin={questionPinEl ?? momentBannerEl}
+        questionPinKey={questionPinEl && questionPin ? questionPin.turnId : momentBannerEl && momentBannerState ? `moment-${momentBannerState.id}` : undefined}
         hiccupPin={hiccupPinEl}
         actionPin={actionPinEl}
         voiceState={voiceState}

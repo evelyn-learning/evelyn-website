@@ -665,6 +665,8 @@ export default function SessionStage(props: SessionStageProps) {
   // Schedule the collapse.
   useEffect(() => {
     if (!QPIN_AUTO_COLLAPSE || !questionPin || !questionPinKey || qpinMode !== 'expanded' || qpinDragged) return;
+    // A host moment's banner stays expanded: its collapsed chip would read as the tutor's question.
+    if (questionPinKey.startsWith('moment-')) return;
     const deadline = qpinCollapseDeadline(qpinShownAt, qpinSpeechEndedAt);
     const t = window.setTimeout(() => setQpinMode('chip'), Math.max(0, deadline - Date.now()));
     return () => window.clearTimeout(t);

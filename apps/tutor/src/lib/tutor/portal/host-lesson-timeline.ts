@@ -94,7 +94,12 @@ export const LESSON_NOW_LIMITS = {
   visualChars: 5000,
   /** Short caption segments are joined; a new time stamp starts this often. */
   stampEverySeconds: 15,
+  /** Recap (exit ticket): speech from the start of the lesson up to now. */
+  recapSpeechChars: 7000,
 } as const;
+
+/** Seconds left at which the window tells the tutor the lesson is nearly over. */
+export const LESSON_NEAR_END_S = 60;
 
 /** What a timeline holds, for telemetry (how much of it is on-screen content). */
 export function timelineStats(entries: TimelineEntry[]): { speech: number; visual: number; chars: number } {
@@ -123,16 +128,27 @@ export function renderLessonNow(input: {
   video: VideoState | null;
   positionSeconds: number | null;
   resumeTool: boolean;
+  /** The video's length, when the host reported it. */
+  durationSeconds?: number | null;
+  /** Recap mode (after an exit-ticket moment): the lesson's speech from its
+   *  start, not just the stretch around the position. */
+  recap?: boolean;
 }): string | undefined {
   const { video, positionSeconds: pos } = input;
+  const duration = input.durationSeconds ?? null;
   if (video === null) return undefined;
   const timeline = input.timeline ?? [];
   const L = LESSON_NOW_LIMITS;
   const out: string[] = [];
   out.push(
     `The student is watching a lesson video beside this conversation. ` +
-    (video === 'ended' ? 'The video has finished.' : `The video is ${STATE_WORD[video]}${pos !== null ? ` at ${mmss(pos)}` : ''}.`),
+    (video === 'ended'
+      ? 'The video has finished.'
+      : `The video is ${STATE_WORD[video]}${pos !== null ? ` at ${mmss(pos)}` : ''}${duration !== null ? ` of ${mmss(duration)}` : ''}.`),
   );
+  if (video !== 'ended' && pos !== null && duration !== null && duration - pos <= LESSON_NEAR_END_S) {
+    out.push('The lesson is nearly over.');
+  }
 
   // Every visual that has appeared so far; when over budget the oldest go first.
   const visuals = timeline.filter((e) => e.kind === 'visual' && (pos === null || e.start <= pos + 1));
@@ -146,8 +162,29 @@ export function renderLessonNow(input: {
   }
   if (visualLines.length) out.push('On screen so far (latest last):', ...visualLines);
 
-  // Speech around the position.
-  if (pos !== null) {
+  if (input.recap) {
+    // The whole lesson so far, for a summary. Over budget: keep evenly
+    // spaced lines, so the beginning, middle and end all stay represented.
+    let speech = timeline.filter((e) => e.kind === 'speech' && (pos === null || e.start <= pos + 1));
+    const total = speech.reduce((n, e) => n + e.text.length + 10, 0);
+    if (total > L.recapSpeechChars) {
+      const keep = Math.max(1, Math.floor(speech.length * (L.recapSpeechChars / total)));
+      const stride = speech.length / keep;
+      speech = Array.from({ length: keep }, (_, k) => speech[Math.floor(k * stride)]);
+    }
+    const lines: string[] = [];
+    let stampAt = -Infinity;
+    for (const e of speech) {
+      if (e.start - stampAt >= L.stampEverySeconds || !lines.length) {
+        lines.push(`[${mmss(e.start)}] ${e.text}`);
+        stampAt = e.start;
+      } else {
+        lines[lines.length - 1] += ` ${e.text}`;
+      }
+    }
+    if (lines.length) out.push('What the lesson has said so far, from the start:', ...lines);
+  } else if (pos !== null) {
+    // Speech around the position.
     let speech = timeline.filter((e) => e.kind === 'speech' && e.start >= pos - L.beforeSeconds && e.start <= pos + L.afterSeconds);
     let chars = speech.reduce((n, e) => n + e.text.length + 1, 0);
     // Over budget: drop whichever end is farther from the position.

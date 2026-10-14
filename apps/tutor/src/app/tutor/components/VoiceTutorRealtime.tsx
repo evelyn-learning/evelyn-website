@@ -777,6 +777,11 @@ interface VoiceTutorRealtimeProps {
   onStudentWake?: (via: 'typing' | 'mic') => void;
   /** The tutor called `resume_lesson` and has finished speaking. */
   onResumeLesson?: () => void;
+  /** Host video: an extra instruction for the opening turn (a lesson-start
+   *  hook when the video is at its beginning); undefined = the usual opener. */
+  getOpeningNote?: () => string | undefined;
+  /** Host video: the banner of the moment just delivered (null clears it). */
+  onMomentBanner?: (banner: { label: string; title: string } | null) => void;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -1299,6 +1304,8 @@ export function VoiceTutorRealtime({
   getLessonNow,
   onStudentWake,
   onResumeLesson,
+  getOpeningNote,
+  onMomentBanner,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -1979,7 +1986,9 @@ export function VoiceTutorRealtime({
   const standbyRef = useRef(false);
   standbyRef.current = hostStandby;
   const standbySinceMsRef = useRef<number | null>(null);
-  const pendingMomentRef = useRef<{ text: string; atMs: number } | null>(null);
+  const pendingMomentRef = useRef<{ text: string; atMs: number; banner: { label: string; title: string } | null } | null>(null);
+  /** The opening note, read once at the first full opening attempt ('' = none). */
+  const openingNoteRef = useRef<string | null>(null);
   const resumeLessonPendingRef = useRef(false);
   const resumeLessonPendingAtRef = useRef(0);
   // Withdraw a pending "resume the lesson", saying why (it used to vanish
@@ -1998,6 +2007,10 @@ export function VoiceTutorRealtime({
   onStudentWakeRef.current = onStudentWake;
   const onResumeLessonRef = useRef(onResumeLesson);
   onResumeLessonRef.current = onResumeLesson;
+  const getOpeningNoteRef = useRef(getOpeningNote);
+  getOpeningNoteRef.current = getOpeningNote;
+  const onMomentBannerRef = useRef(onMomentBanner);
+  onMomentBannerRef.current = onMomentBanner;
 
   // R58 student-declared hold (live, portal-2f23ece4 "ignore everything I
   // say until I say candle"). PENDING is armed by the hold_for_student
@@ -12270,6 +12283,12 @@ export function VoiceTutorRealtime({
               : openingDirectiveRef.current;
             teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
+            // Host video at its beginning: a lesson-start hook rides every
+            // full opening attempt (read once, so a retry carries the same one).
+            if (TUTOR_HOST_LESSON) {
+              if (openingNoteRef.current === null) openingNoteRef.current = getOpeningNoteRef.current?.() ?? '';
+              if (openingNoteRef.current) openingDirective += ` ${openingNoteRef.current}`;
+            }
             // The client already spoke the greeting (bridge line): the brain
             // must not greet again on its first opening turn.
             if (bridgeSpokenRef.current && openingDirectiveBrainTurnsRef.current === 1) {
@@ -21495,6 +21514,7 @@ export function VoiceTutorRealtime({
           pendingMomentRef.current = null;
           cancelResumeLesson('moment');
           onDebugEventRef.current?.('moment_delivered', `waitMs=${now - moment.atMs}`);
+          onMomentBannerRef.current?.(moment.banner);
           void handleStudentTranscriptForBrainRef.current?.(moment.text, { silent: true, bypassPerceptionDedupe: true });
         }
       }
@@ -23788,10 +23808,10 @@ export function VoiceTutorRealtime({
           realtime.setVoiceMuted(muted);
           onDebugEvent?.('voice_mute', `tutor_voice muted=${muted}`);
         },
-        deliverMoment: (directive: string) => {
+        deliverMoment: (directive: string, banner?: { label: string; title: string } | null) => {
           if (!TUTOR_HOST_LESSON) return;
           // Latest wins: a newer moment replaces one still waiting.
-          pendingMomentRef.current = { text: directive, atMs: Date.now() };
+          pendingMomentRef.current = { text: directive, atMs: Date.now(), banner: banner ?? null };
           runHostLessonPumpRef.current();
         },
         resumeContinue: () => resumeContinueRef.current(),
