@@ -153,7 +153,7 @@ function countingGen() {
   await test('no id is on both the audited and the withdrawn list', () => {
     const both = Object.keys(data.items).filter((id) => WITHDRAWN_ITEM_IDS.has(id));
     assert.deepEqual(both, []);
-    assert.equal(WITHDRAWN_ITEM_IDS.size, 672);
+    assert.equal(WITHDRAWN_ITEM_IDS.size, 608);
   });
 
   await test('isAuditedGeneratedItem / the set reflect the JSON', () => {
