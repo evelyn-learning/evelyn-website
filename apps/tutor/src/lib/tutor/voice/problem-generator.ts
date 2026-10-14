@@ -146,6 +146,9 @@ export function eligibleBankCandidates(
   }
   candidates = withoutWithdrawn(candidates);
   candidates = withoutUnauditedGenerated(candidates, partnerId, 'session-generate-problem');
+  // A drawn-answer row (contract v1.22.0) always carries a figure, so the
+  // figure rule drops it; the format check keeps a malformed one out too.
+  candidates = candidates.filter((c) => c.responseFormat !== 'drawn' && (c as { drawn?: unknown }).drawn === undefined);
   return withoutFigureItems(candidates, 'session-generate-problem');
 }
 
@@ -231,7 +234,7 @@ async function queryBank(
       ? `${pick.solutionText} (answer: ${pick.answer})`
       : pick.answer,
     hints: pick.hints,
-    responseFormat: pick.responseFormat,
+    responseFormat: pick.responseFormat === 'drawn' ? undefined : pick.responseFormat,
     choices: pick.choices?.map((c, i) => ({
       id: String.fromCharCode(65 + i),
       text: c,

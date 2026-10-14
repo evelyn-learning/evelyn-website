@@ -81,7 +81,7 @@ export interface IProblemBank extends Document {
   /** Optional ordered hints, mirrors SegmentTryYourself.hints[]. */
   hints?: string[];
   /** Response format expected from student. */
-  responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
+  responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free' | 'drawn';
   /** When responseFormat is 'mcq', the choice list. */
   choices?: string[];
   /** OPTIONAL figure the student reads to answer the item (contract v1.21.0
@@ -94,10 +94,16 @@ export interface IProblemBank extends Document {
    *  practice, the in-session bank query or mock forms
    *  (portal/figure-items.ts). Absent on every pre-existing row. */
   figure?: {
-    svg: string;
+    /** Absent on a drawn row only (drawn at serve time from `spec`). */
+    svg?: string;
     alt: string;
     spec?: { type: string; params: Record<string, unknown> };
   };
+  /** Drawn-answer items only (contract v1.22.0; portal/drawn-items.ts):
+   *  `{ kind, snap?, tolerance, key }` — the `DrawnSpec` without its frame,
+   *  which is added when the figure is drawn at serve time. Present iff
+   *  `responseFormat === 'drawn'`; served only through the drawn gate. */
+  drawn?: Record<string, unknown>;
   /** Source attribution for license compliance + provenance. */
   source: {
     name: string;
@@ -152,7 +158,16 @@ const FigureSpecSchema = new Schema(
 
 const FigureSchema = new Schema(
   {
-    svg: { type: String, required: true, maxlength: 200_000 },
+    // Required, except on a drawn row: its figure is stored as { alt, spec }
+    // and drawn at serve time with its frame — and a figure with no svg is
+    // withheld by every build that predates drawn items (drawn-items.ts).
+    svg: {
+      type: String,
+      maxlength: 200_000,
+      required: function (this: { ownerDocument?: () => { get?: (k: string) => unknown } }) {
+        return this.ownerDocument?.()?.get?.('responseFormat') !== 'drawn';
+      },
+    },
     alt: { type: String, required: true, maxlength: 600 },
     spec: { type: FigureSpecSchema, required: false, default: undefined },
   },
@@ -180,10 +195,12 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     answer: { type: String, required: true },
     solutionText: { type: String },
     hints: [{ type: String }],
-    responseFormat: { type: String, enum: ['mcq', 'frq', 'numeric', 'free'] },
+    responseFormat: { type: String, enum: ['mcq', 'frq', 'numeric', 'free', 'drawn'] },
     choices: [{ type: String }],
     // Optional, additive, no migration — absent on every existing row.
     figure: { type: FigureSchema, required: false, default: undefined },
+    // Drawn-answer spec (contract v1.22.0) — Mixed, validated by drawn-items.ts.
+    drawn: { type: Schema.Types.Mixed, required: false, default: undefined },
     source: {
       name: { type: String, required: true },
       url: { type: String },

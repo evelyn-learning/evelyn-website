@@ -107,12 +107,27 @@ export interface FigureFacts {
   notes?: Array<{ code: 'too_many_elements' | 'ambiguous_blank' | 'not_to_scale' | 'labels_overlap' | 'crowded' | 'off_grid'; message: string }>;
 }
 
+/**
+ * The coordinate system a figure was drawn on, in canvas (viewBox) units —
+ * set only by kinds a student can DRAW an answer on (contract v1.22.0
+ * `DrawnSpec.frame`; portal/drawn-items.ts). Taken from the very values the
+ * renderer drew with, so an overlay built from it lines up with the picture.
+ *   grid:        data → canvas is X(v) = plot.x + (v − xRange[0]) / span · plot.w,
+ *                Y(v) = plot.y + plot.h − (v − yRange[0]) / span · plot.h;
+ *   number-line: drawn at height `y`, value `min` at `x0` and `max` at `x1`.
+ */
+export type FigureFrame =
+  | { kind: 'grid'; plot: { x: number; y: number; w: number; h: number }; xRange: [number, number]; yRange: [number, number] }
+  | { kind: 'number-line'; y: number; x0: number; x1: number; min: number; max: number };
+
 export interface Drawn {
   /** Everything inside the root, background excluded. */
   body: string;
   H: number;
   W?: number;
   facts?: FigureFacts;
+  /** See `FigureFrame`. Absent for every kind a student does not draw on. */
+  frame?: FigureFrame;
 }
 
 export const HALO = 'stroke="#ffffff" stroke-width="3" paint-order="stroke" stroke-linejoin="round"';

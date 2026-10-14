@@ -188,12 +188,13 @@ import { renderVectorDiagram } from './kinds/vector-diagram';
 import { renderFreeBody } from './kinds/free-body';
 import { renderShadedRegion } from './kinds/shaded-region';
 import { renderNumberLine, renderSignChart } from './kinds/number-line';
+import { renderCoordinateGrid } from './kinds/coordinate-grid';
 import { renderBoxPlot, renderDistributionCurve, renderHistogram } from './kinds/distribution';
 import { renderPolarComplex } from './kinds/polar-complex';
 import { renderPunnett } from './kinds/punnett';
 import { renderPedigree } from './kinds/pedigree';
 import { blank as blankBox } from './kinds/draw';
-import { HALO, PracticeFigureSpecError, Reader, type Drawn, type FigureFacts, type Params, type PracticeFigureSpec } from './spec';
+import { HALO, PracticeFigureSpecError, Reader, type Drawn, type FigureFacts, type FigureFrame, type Params, type PracticeFigureSpec } from './spec';
 import {
   FIGURE_FONT,
   FIGURE_WIDTH,
@@ -279,7 +280,7 @@ export type Batch1FigureKind = (typeof BATCH1_FIGURE_KINDS)[number];
 export const ALL_PRACTICE_FIGURE_KINDS = [...PRACTICE_FIGURE_KINDS, ...BATCH1_FIGURE_KINDS] as const;
 export type AnyPracticeFigureKind = PracticeFigureKind | Batch1FigureKind;
 
-export { PracticeFigureSpecError, type FigureFacts, type PracticeFigureSpec } from './spec';
+export { PracticeFigureSpecError, type FigureFacts, type FigureFrame, type PracticeFigureSpec } from './spec';
 /** Batch 2 (2026-10-09): circuit_diagram, phylogenetic_tree, geometric_figure, ray_diagram,
  *  field_diagram, flow_diagram, solid_3d, spectrum — drawn by ./kinds/batch2.ts and the modules it
  *  names (params documented at the top of each). Kept out of `ALL_PRACTICE_FIGURE_KINDS` for the
@@ -1626,6 +1627,30 @@ export function renderPracticeFigure(spec: PracticeFigureSpec): { svg: string } 
 /** `renderPracticeFigure` plus the layout facts the legibility report reads.
  *  The picture is the same string either way. */
 export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; facts: FigureFacts } {
+  const { svg, facts } = drawPracticeFigure(spec);
+  return { svg, facts };
+}
+
+/** The frame of a figure a student draws on: `FigureFrame` plus the SVG
+ *  root's `viewBox` `[width, height]`. */
+export type PracticeFigureFrame = FigureFrame & { viewBox: [number, number] };
+
+/**
+ * `renderPracticeFigure` plus the coordinate frame the figure was drawn on,
+ * for a kind a student can draw an answer on (contract v1.22.0 drawn items:
+ * `coordinate_grid`, `number_line`). The SVG is the same string either way;
+ * `frame` is absent for every other kind. Throws as `renderPracticeFigure`.
+ */
+export function renderPracticeFigureWithFrame(spec: PracticeFigureSpec): { svg: string; frame?: PracticeFigureFrame } {
+  const { svg, frame } = drawPracticeFigure(spec);
+  return frame ? { svg, frame } : { svg };
+}
+
+/** Kinds drawn only as the base of a drawn answer — kept out of the lists the
+ *  practice-extension writer is offered (see `BATCH1_FIGURE_KINDS`). */
+export const DRAWN_BASE_FIGURE_KINDS = ['coordinate_grid'] as const;
+
+function drawPracticeFigure(spec: PracticeFigureSpec): { svg: string; facts: FigureFacts; frame?: PracticeFigureFrame } {
   const kind = typeof spec?.type === 'string' ? spec.type : String(spec?.type);
   if (!spec || typeof spec.params !== 'object' || spec.params === null || Array.isArray(spec.params)) {
     throw new PracticeFigureSpecError(kind, 'params must be an object');
@@ -1656,6 +1681,10 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
     case 'punnett_square': drawn = renderPunnett(r, uid); break;
     case 'pedigree': drawn = renderPedigree(r); break;
     default: {
+      if (kind === 'coordinate_grid') {
+        drawn = renderCoordinateGrid(r);
+        break;
+      }
       const later = renderBatch2(kind, r, uid) ?? renderBatch3(kind, r, uid) ?? renderBatch4(kind, r, uid) ?? renderBatch5(kind, r, uid);
       if (!later) throw new PracticeFigureSpecError(kind, `unknown figure kind — one of ${[...ALL_PRACTICE_FIGURE_KINDS, ...BATCH2_FIGURE_KINDS, ...BATCH3_FIGURE_KINDS, ...BATCH4_FIGURE_KINDS, ...BATCH5_FIGURE_KINDS].join(', ')}`);
       drawn = later;
@@ -1664,7 +1693,9 @@ export function inspectPracticeFigure(spec: PracticeFigureSpec): { svg: string; 
   const svg = svgDocument(drawn.W ?? FIGURE_WIDTH, drawn.H, drawn.body);
   const safety = validateFigureSvg(svg);
   if (!safety.ok) throw new PracticeFigureSpecError(kind, `rendered SVG failed the safety check (${safety.issues.join(', ')})`);
-  return { svg, facts: drawn.facts ?? { curveCount: 0, marks: [], curves: [] } };
+  const facts = drawn.facts ?? { curveCount: 0, marks: [], curves: [] };
+  if (!drawn.frame) return { svg, facts };
+  return { svg, facts, frame: { ...drawn.frame, viewBox: [drawn.W ?? FIGURE_WIDTH, Math.ceil(drawn.H)] } };
 }
 
 /**

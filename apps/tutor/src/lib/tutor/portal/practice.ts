@@ -85,6 +85,15 @@
  * text items), whoever asked. Skill scope and the audited-only gate apply to
  * a figure row exactly as to any other bank row.
  *
+ * DRAWN ITEMS (2026-10-14, contract v1.22.0 — drawn-items.ts): a bank row
+ * with `responseFormat: 'drawn'` (or any `drawn` value) is answered by
+ * drawing on its figure. It is served only when the figure gate above is
+ * open AND the request lists `drawn` in `accepts` AND the partner is on
+ * `PRACTICE_DRAWN_ANSWER_PARTNERS` — then with its figure drawn now from the
+ * stored spec and the frame beside it; a row that does not render or whose
+ * key does not grade is withheld. In every other case it is dropped like an
+ * unserved figure row, so every other caller gets exactly what it got before.
+ *
  * MISFILED MARKS (2026-10-17 — misfiled-items.ts, kill switch
  * `TUTOR_PRACTICE_MISFILED_MARKS=off`): some older items are filed under one
  * objective of a course skill (nearly always its first) but test a
@@ -128,6 +137,7 @@ import { essayGenBlockEnabled, isEssayPracticeNode, isGeneratedPracticeItemId } 
 import { isWithdrawnItem, keyCheckUntrusted, logUnverifiedKeySkip, logWithdrawnSkip, withoutWithdrawn } from './withdrawn-items';
 import { auditedAllStepsEnabled, auditedOnlyForPartner, servableToPartner, withoutUnauditedGenerated, withoutUnauditedLessonSteps } from './audited-items';
 import { acceptsFigures, carriesFigure, logFigureItemSkip, servableFigure } from './figure-items';
+import { acceptsDrawn, drawnAnswersForPartner, isDrawnRow, logDrawnItemSkip, servableDrawn } from './drawn-items';
 import { MISFILED_ITEM_MARKS, idsMarkedFor, misfiledMarksEnabled, spreadObjectiveOf, withoutMisfiledFor, type MisfiledMarks } from './misfiled-items';
 
 type Difficulty = 1 | 2 | 3 | 4;
@@ -138,7 +148,7 @@ export interface BankLite {
   problemText: string;
   answer: string;
   hints?: string[];
-  responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
+  responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free' | 'drawn';
   /** Raw choice texts (as stored on ProblemBank). */
   choices?: string[];
   difficulty?: Difficulty;
@@ -148,6 +158,10 @@ export interface BankLite {
    *  shape ⇒ the row is a figure item and is default-denied; it is validated
    *  (`servableFigure`) before it reaches the wire. Absent ⇒ a text item. */
   figure?: unknown;
+  /** The stored drawn spec (drawn-items.ts), as found. A row with it — or
+   *  with `responseFormat: 'drawn'` — is a drawn item: served only through
+   *  the drawn gate, never as a figure or text item. */
+  drawn?: unknown;
 }
 
 /** What a bank read is for. `figures: true` only when the request may be
@@ -155,6 +169,9 @@ export interface BankLite {
  *  out of its query (the core drops any it returns regardless). */
 export interface BankQueryOptions {
   figures?: boolean;
+  /** `true` only when drawn items may be served (drawn-items.ts); otherwise
+   *  a source should leave drawn rows out of its query. */
+  drawn?: boolean;
 }
 
 /** Lesson-plan projection the assembler needs. */
@@ -427,9 +444,20 @@ function bankToItem(b: BankLite): PracticeItem {
  * Applied after the withdrawn / audited-only filters, like them before
  * de-dup, excludeIds and slicing.
  */
-function bankRowsToItems(rows: readonly BankLite[], serveFigures: boolean, where: string): PracticeItem[] {
+function bankRowsToItems(rows: readonly BankLite[], serveFigures: boolean, serveDrawn: boolean, where: string): PracticeItem[] {
   const items: PracticeItem[] = [];
   for (const b of rows) {
+    // THE DRAWN GATE (drawn-items.ts) comes first: a drawn row is never
+    // served as a figure or text item, only as a drawn one.
+    if (isDrawnRow(b)) {
+      if (!serveDrawn) {
+        logDrawnItemSkip(b.id, where);
+        continue;
+      }
+      const d = servableDrawn(b.id, b);
+      if (d) items.push({ ...bankToItem(b), responseFormat: 'drawn', figure: d.figure, drawn: d.drawn });
+      continue;
+    }
     if (!carriesFigure(b)) {
       items.push(bankToItem(b));
       continue;
@@ -598,7 +626,10 @@ export async function retrievePractice(
   const difficulty = req.difficulty;
   // Figure items: default-deny (module header). Both conditions, or none.
   const serveFigures = options.allowFigures === true && acceptsFigures(req);
-  const bankOpts: BankQueryOptions = { figures: serveFigures };
+  // Drawn items: a figure item AND `drawn` in `accepts` AND a listed partner
+  // (drawn-items.ts). Anything less: exactly as before drawn rows existed.
+  const serveDrawn = serveFigures && acceptsDrawn(req) && drawnAnswersForPartner(who?.partnerId);
+  const bankOpts: BankQueryOptions = serveDrawn ? { figures: serveFigures, drawn: true } : { figures: serveFigures };
   const planItems: PracticeItem[] = [];
   const bankItems: PracticeItem[] = [];
   // Hoisted out of the loId branch below so the shortfall/generation section
@@ -724,7 +755,7 @@ export async function retrievePractice(
           return false;
         })
       : bank;
-    bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(servableBank), who?.partnerId, 'practice-lo'), serveFigures, 'practice-lo'));
+    bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(servableBank), who?.partnerId, 'practice-lo'), serveFigures, serveDrawn, 'practice-lo'));
   } else {
     const topicId = req.scope.topicId;
     const plans = (await sources.plansForTopic(topicId)).filter((p) => planServable(p, undefined, who));
@@ -736,7 +767,7 @@ export async function retrievePractice(
       if (firstLo) planItems.push(...auditedSteps(p, planToItems(p, firstLo, true), 'practice-topic'));
     }
     const bank = await sources.bankForTopic(topicId, difficulty, bankOpts);
-    bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic'), serveFigures, 'practice-topic'));
+    bankItems.push(...bankRowsToItems(withoutUnauditedGenerated(withoutWithdrawn(bank), who?.partnerId, 'practice-topic'), serveFigures, serveDrawn, 'practice-topic'));
   }
 
   // De-dup by id; bank (verified) items first, then plan try-yourselves.

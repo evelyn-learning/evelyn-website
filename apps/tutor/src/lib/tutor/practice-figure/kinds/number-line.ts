@@ -170,7 +170,12 @@ export function renderNumberLine(r: Reader): Drawn {
     parts.push(circle(q.x, q.open));
     if (q.label) parts.push(label({ x: X(q.x), y: y - 13, anchor: 'middle' }, q.label, { fs: LABEL_FS, weight: 700, fill: BLUE }));
   }
-  return { body: parts.join(''), H: y + 10 + TICK_FS + 16, facts: { curveCount: 0, marks: [], curves: [], notes } };
+  return {
+    body: parts.join(''),
+    H: y + 10 + TICK_FS + 16,
+    facts: { curveCount: 0, marks: [], curves: [], notes },
+    frame: { kind: 'number-line', y, x0: xa, x1: xb, min: m.min, max: m.max },
+  };
 }
 
 // ---------------------------------------------------------------------------

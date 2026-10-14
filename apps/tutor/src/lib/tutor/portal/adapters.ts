@@ -12,6 +12,7 @@ import { SEED_PLANS, findStoredPlansByLoId, getLessonPlan } from '@/lib/tutor/le
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
 import { classifyPrivatePlan, isStudentOwnedPlan, type PracticeSources, type PracticeCaller, type PlanLite, type BankLite, type BankQueryOptions } from './practice';
 import { carriesFigure, NO_FIGURE_FILTER } from './figure-items';
+import { NO_DRAWN_FILTER } from './drawn-items';
 import type { GradeItem } from './grade-free-response';
 import { resolvePassage } from '@/lib/tutor/passages/store';
 import type { FrqRubric } from '@evelyn/portal-contract/v1';
@@ -97,6 +98,8 @@ function toBankLite(b: IProblemBank): BankLite {
     // Carried as found (any shape) — practice.ts decides whether the row is
     // served and validates the figure before it reaches the wire.
     ...(carriesFigure(b) ? { figure: (b as { figure?: unknown }).figure } : {}),
+    // Likewise the drawn spec (drawn-items.ts) — practice.ts gates and builds it.
+    ...((b as { drawn?: unknown }).drawn !== undefined ? { drawn: (b as { drawn?: unknown }).drawn } : {}),
   };
 }
 
@@ -110,7 +113,13 @@ async function safeBankQuery(filter: Record<string, unknown>, opts?: BankQueryOp
     // read is for a caller that accepts figures: they would only be dropped
     // again in practice.ts, and meanwhile take slots of the 50-row limit and
     // load SVGs nobody will see.
-    const rows = (await ProblemBank.find({ ...filter, bankScope: { $ne: 'mock' }, ...(opts?.figures === true ? {} : NO_FIGURE_FILTER) })
+    // Drawn rows (drawn-items.ts) likewise, unless drawn items may be served.
+    const rows = (await ProblemBank.find({
+      ...filter,
+      bankScope: { $ne: 'mock' },
+      ...(opts?.figures === true ? {} : NO_FIGURE_FILTER),
+      ...(opts?.drawn === true ? {} : NO_DRAWN_FILTER),
+    })
       .limit(50)
       .lean()) as unknown as IProblemBank[];
     return rows.map(toBankLite);
@@ -314,6 +323,9 @@ export async function resolveGradeItem(
   }
   const b = await resolveBankRow(itemId, deps);
   if (!b) return null;
+  // A drawn item is graded by the contract's `gradeDrawn` where it is
+  // answered — never by the model judge (no runtime tokens).
+  if (b.responseFormat === 'drawn') return null;
   return {
     itemId,
     expectedAnswer: b.answer,
@@ -374,6 +386,10 @@ export async function resolveAssessmentItem(
   // Bare id → ProblemBank (globally-unique ids; choices are string[]; the
   // reference `answer` is the key). No cross-plan scan (that mis-resolved keys).
   const b = await resolveBankRow(itemId, deps);
+  // A drawn item (contract v1.22.0) has no text key to judge: it is graded
+  // where it is answered, by the contract's `gradeDrawn`. Never resolved here.
+  const format = b?.responseFormat;
+  if (format === 'drawn') return null;
   if (b) {
     const choices = b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t }));
     // Bank MCQs store the correct choice LETTER in `answer`. Surface it as
@@ -386,7 +402,7 @@ export async function resolveAssessmentItem(
       if (choices.some((c) => c.id === id)) correctChoiceId = id;
     }
     return {
-      responseFormat: b.responseFormat,
+      responseFormat: format,
       expectedAnswer: b.answer,
       problemText: b.problemText,
       choices,

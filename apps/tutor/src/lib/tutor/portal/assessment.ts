@@ -73,6 +73,8 @@ export async function buildAssessment(
       caller,
     );
     for (const it of res.items) {
+      // Never served here (no `allowFigures`); a drawn item has no place in a quiz.
+      if (it.responseFormat === 'drawn') continue;
       if (seen.has(it.id)) continue;
       seen.add(it.id);
       items.push({
