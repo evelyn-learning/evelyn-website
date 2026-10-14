@@ -49,6 +49,8 @@ import { textThinkingEnabled } from '@/lib/tutor/voice/text-thinking';
 import { textTurnShapeEnabled } from '@/lib/tutor/voice/turn-shape-signal';
 import { textVerdictPrecheckEnabled } from '@/lib/tutor/voice/verdict-precheck';
 import { textWorkThenMatchEnabled } from '@/lib/tutor/voice/work-then-match';
+import { noRevealLedgerForPartner } from '@/lib/tutor/voice/no-reveal-ledger-gate';
+import { sanitizeSolvedPositions } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { sanitizePublicPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 import {
   VOICE_THINKING_DEADLINE_MS,
@@ -133,7 +135,7 @@ interface BrainStreamRequestBody {
    *  {n,text}, integer current) — anything malformed collapses to
    *  undefined (no `<homework_session>` block, no set_current_problem
    *  tool). See BrainTurnInput.homework. */
-  homework?: { problems: Array<{ n: number; text: string }>; current: number };
+  homework?: { problems: Array<{ n: number; text: string }>; current: number; solved?: unknown };
   /** Mock-review context (Task WS3). Present only for a mock-review session
    *  whose embed context fetch succeeded. Surfaces as the durable
    *  `<mock_review>` block. See BrainTurnInput.mockReview. */
@@ -701,7 +703,10 @@ export async function POST(req: NextRequest) {
           if (typeof text !== 'string' || !text.trim() || text.length > 4000) return undefined;
           cleaned.push({ n: n as number, text });
         }
-        return { problems: cleaned, current };
+        // 2026-10-19 (homework ledger): an unusable `solved` list is dropped
+        // on its own — the problems and pointer are unaffected.
+        const solved = sanitizeSolvedPositions((hw as { solved?: unknown }).solved, cleaned.length);
+        return { problems: cleaned, current, ...(solved ? { solved } : {}) };
       })();
       if (homework) {
         console.log(`[homework] homework_session block + set_current_problem tool attached current=${homework.current}/${homework.problems.length}`);
@@ -918,6 +923,9 @@ export async function POST(req: NextRequest) {
           textVerdictPrecheck: textVerdictPrecheckEnabled(body.inputMode),
           // "Work it, then match" (2026-10-06): text only, TUTOR_TEXT_WORK_THEN_MATCH.
           textWorkThenMatch: textWorkThenMatchEnabled(body.inputMode),
+          // 2026-10-19 teaching round (voice/no-reveal-ledger-gate.ts): text
+          // sessions of listed partners (unset env ⇒ GreenApple only).
+          noRevealLedger: body.inputMode === 'text' && noRevealLedgerForPartner(embedTokenPartnerClaim(req.headers.get('x-embed-token'))),
           ...(body.inputMode === 'text' && typeof body.studentMessage === 'string' && body.studentMessage.trim()
             ? { studentMessage: body.studentMessage.slice(0, 4000) }
             : {}),

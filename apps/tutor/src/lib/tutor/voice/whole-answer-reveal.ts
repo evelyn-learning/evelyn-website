@@ -44,16 +44,27 @@ export interface WithheldAnswer {
   /** The problem's wording and anything else the student supplied — numbers
    *  in it are given data, never a hit. */
   givenText: string;
+  /** 2026-10-19 (no-reveal-ledger-gate.ts, a wrong answer at any step): ALSO
+   *  a hit — any number standing where a result stands (after "=", "is",
+   *  "gives" …) that is in neither the student's words nor `givenText`. In a
+   *  reply to a wrong answer such a number is a result the reply worked out
+   *  (a corrected intermediate line, a corrected setup), whatever the check's
+   *  own value was. */
+  newNumbers?: boolean;
 }
 
-/** Is the guard on for this turn? HIGH confidence only, and only with a value. */
+/** Is the guard on for this turn? HIGH confidence only, and only with a value.
+ *  `anyTarget` (2026-10-19, no-reveal-ledger-gate.ts): every high-confidence
+ *  INCORRECT check except a non-answer — a wrong answer to a part or a step,
+ *  not only to the whole problem; the value is then that question's result. */
 export function wholeAnswerRevealGuardActive(
   p: PublicVerdictPrecheck | null | undefined,
   value: string | null | undefined,
-  opts?: { enabled?: boolean },
+  opts?: { enabled?: boolean; anyTarget?: boolean },
 ): boolean {
   if (!(opts?.enabled ?? TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL)) return false;
   if (!String(value ?? '').trim()) return false;
+  if (opts?.anyTarget === true) return precheckDecides(p) && p.verdict === 'incorrect' && p.answers !== 'neither';
   return precheckDecides(p) && wrongWholeAnswerChecked(p, { enabled: true });
 }
 
@@ -205,7 +216,11 @@ const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 function textHit(text: string, a: WithheldAnswer): string | null {
   for (const part of resultParts(a.value)) {
     const p = part.replace(/^[\s"'“”.,:;]+|[\s"'“”.,:;]+$/g, '');
-    if (!p || /\d/.test(p)) continue;
+    // An expression with digits AND letters (a formula result) is matched as
+    // an expression in new-number mode only (2026-10-19); before, any value
+    // with a digit in it was left to the numeric path, which skips the weak
+    // coefficients and known constants such an expression is made of.
+    if (!p || (/\d/.test(p) && !(a.newNumbers === true && /[a-z]/i.test(p)))) continue;
     // A choice letter: only where it is named as the choice.
     const letter = /^\(?([A-Ea-e])\)?$/.exec(p);
     if (letter) {
@@ -239,6 +254,20 @@ function textHit(text: string, a: WithheldAnswer): string | null {
   return null;
 }
 
+/** A number in a result position that the student and the problem never
+ *  wrote (`WithheldAnswer.newNumbers`). Speech forms are read as in
+ *  `numericHit`. */
+function newResultNumber(text: string, a: WithheldAnswer, board: boolean): string | null {
+  const known = [...numbersIn(a.studentText), ...numbersIn(a.givenText)];
+  const said = numbersIn(board ? text : spokenNumbersToDigits(text).replace(/(\d)\s+point\s+(\d(?:\s\d)*)(?!\d)/gi, (_m, i: string, f: string) => `${i}.${f.replace(/\s/g, '')}`));
+  for (const r of said) {
+    if (!r.resultPosition || r.coefficient) continue;
+    if (known.some((k) => sameNumber(k.value, r.value) || sameNumber(Math.abs(k.value), Math.abs(r.value)))) continue;
+    return String(r.value);
+  }
+  return null;
+}
+
 // ── the decision ───────────────────────────────────────────────────────────
 
 export interface RevealRead {
@@ -258,6 +287,10 @@ function read(text: string, a: WithheldAnswer | null | undefined, board: boolean
     if (n !== null) return { hit: true, how: 'number', matched: n };
     const t = textHit(text, a);
     if (t !== null) return { hit: true, how: 'text', matched: t };
+    if (a.newNumbers === true) {
+      const m = newResultNumber(text, a, board);
+      if (m !== null) return { hit: true, how: 'number', matched: m };
+    }
   } catch { /* never throws: an unreadable text is not a hit */ }
   return NO_HIT;
 }

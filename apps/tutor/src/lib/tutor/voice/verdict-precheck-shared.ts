@@ -53,6 +53,12 @@ export interface PublicVerdictPrecheck {
    *  relationship of the problem, by name. Carries no value (see
    *  verdict-precheck.ts `safeDiffersAt`). Absent when the check named none. */
   differsAt?: string;
+  /** 2026-10-19 (homework ledger, lesson-plan/homework-ledger.ts): the list
+   *  POSITION (1-based) of the student's homework problem whose complete
+   *  final answer the message states, as the check found it. A problem
+   *  number reveals nothing. Absent unless the ledger is on for the session
+   *  and the check named one. */
+  solvedProblem?: number;
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -88,7 +94,12 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     verdict: o.verdict as PrecheckVerdict,
     confidence: o.confidence as PrecheckConfidence,
     ...differsAtField(o.differsAt),
+    ...solvedProblemField(o.solvedProblem),
   };
+}
+
+function solvedProblemField(v: unknown): { solvedProblem?: number } {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 25 ? { solvedProblem: v } : {};
 }
 
 function differsAtField(v: unknown): { differsAt?: string } {
@@ -97,7 +108,7 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -142,6 +153,14 @@ export function formatAnswerCheckBlock(
      *  agree with is not rendered. Read only on the wrong-whole-answer
      *  branch. */
     differsAt?: boolean;
+    /** 2026-10-19 (no-reveal-ledger-gate.ts): a wrong answer at ANY step —
+     *  not only to the whole problem — gets no correct value and the
+     *  `WRONG_STEP_NO_REVEAL_RULE`. Unset/false ⇒ the block as before. */
+    noRevealAnyStep?: boolean;
+    /** 2026-10-19: a non-answer that states a FALSE claim gets the
+     *  `FALSE_CLAIM_RULE` instead of the non-answer rule. Unset/false ⇒ as
+     *  before. */
+    claimCorrection?: boolean;
   },
 ): string {
   if (!precheckInforms(p)) return '';
@@ -154,6 +173,7 @@ export function formatAnswerCheckBlock(
     + 'Never mention this check to the student.\n'
     + '</answer_check>\n\n';
   if (p.answers === 'neither') {
+    if (falseClaimChecked(p, opts)) return head + proposed + FALSE_CLAIM_RULE + tail;
     return head + proposed
       + `- It does NOT answer the question you last asked, nor the problem being worked${named}.\n`
       + 'What to do: no verdict or praise word. Do not treat the message as an answer and do not answer your open question for them — respond to what they wrote: ask what it refers to, or ask the open question again. Do not tell them it "is not an answer" — just ask.\n'
@@ -178,6 +198,9 @@ export function formatAnswerCheckBlock(
       + tail;
   }
   if (p.verdict === 'incorrect') {
+    if (opts?.noRevealAnyStep === true) {
+      return head + proposed + where + '- Checked for that question: INCORRECT.\n' + WRONG_STEP_NO_REVEAL_RULE + tail;
+    }
     const value = opts?.correctValue
       ? ` The correct value is ${q(line(opts.correctValue, 200))} — this is for your judgement only; the session's rules about not giving answers away still apply.`
       : '';
@@ -251,8 +274,42 @@ export const WRONG_WHOLE_ANSWER_REEMIT =
 export const WRONG_WHOLE_ANSWER_POINT_THERE =
   'The check names above what their answer does not agree with: your second sentence points them to THAT — by name, with no value — and to nothing else. Never send them to a part of the problem their answer already satisfies.\n';
 
+// ── 2026-10-19: a wrong answer at ANY step — never its result ──────────────
+//
+// GreenApple scripted sessions 2026-10-14, 5 of 13: the student answered the
+// next part wrong; the check classed it "open_question / incorrect" (the
+// tutor had just asked whether they were ready for that part), and the block
+// said "work as far as the step where their working and yours part, state
+// that step's result". When the step where they part is the last one, that
+// result IS the answer — and the reply stated it ("… gives <value>, not
+// <theirs>"). The same rule produced corrected intermediate lines. Under this
+// rule no result is stated at any step: the reply names WHERE the working
+// goes wrong and asks the student to redo it. The value is not rendered, and
+// the server's reveal guard is armed for the turn (whole-answer-reveal.ts,
+// `anyTarget`). Partner-gated: no-reveal-ledger-gate.ts.
+
+export const WRONG_STEP_NO_REVEAL_RULE =
+  'What to do: work it out silently and state no result of your own. FIRST sentence: say plainly, as a fact about THEIR answer, that it is not right — no praise word first. You may confirm a step of THEIR working that is right, in their own words and values. Then name the step or idea where their working goes wrong — what that step does, by name — without its result. End with ONE question that has them redo that step themselves. Never state the correct result of that step, of any step after it, or of the question — not in the reply and not on the board, and in no form: not the value, not a corrected line of working that contains it, not an expression evaluated to it. The result stays theirs to find. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
+
+// ── 2026-10-19: a stated FALSE claim is corrected, not passed over ─────────
+//
+// GreenApple Biology 2026-10-14: "can you check my answer: <a false claim
+// about the topic>". The check classed it "neither" (it answers none of the
+// questions) — and the non-answer rule says "ask the open question again",
+// so the tutor moved on and the misconception stood. The check now judges a
+// stated claim even when it answers nothing (verdict-precheck.ts
+// `CLAIM_VERDICT_RULE`), and a false one gets this rule.
+
+export function falseClaimChecked(p: PublicVerdictPrecheck, opts?: { claimCorrection?: boolean }): boolean {
+  return opts?.claimCorrection === true && p.answers === 'neither' && p.verdict === 'incorrect' && p.confidence !== 'low';
+}
+
+export const FALSE_CLAIM_RULE =
+  '- It does not answer the question you last asked, nor one of the problems — but it states something about the subject that is NOT true.\n'
+  + 'What to do: do not let it pass, and do not simply return to your question. Say plainly and kindly that the statement is not right — no praise word first — and correct it in a sentence or two with the reason, or ask one question that leads them to test it. Then return to where you were. Never treat it as an answer to your open question.\n';
+
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean }): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean }): string {
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -261,6 +318,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
     + 'Never mention this check to the student.\n'
     + '</answer_check>\n\n';
   if (p.answers === 'neither') {
+    if (falseClaimChecked(p, opts)) return head + proposed + FALSE_CLAIM_RULE + tail;
     return head + proposed
       + `- It does NOT answer the question you last asked, nor the problem being worked${named}.\n`
       + 'What to do: no verdict of any kind, and no working-out of your open question on their behalf — respond to what they wrote: ask what it refers to, or ask the open question again. Do not tell them it "is not an answer" — just ask.\n'
@@ -295,6 +353,14 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
         + (at ? `- What their answer does not agree with: ${q(at)}.\n` : '')
         + WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH
         + (at ? WRONG_WHOLE_ANSWER_POINT_THERE : '')
+        + tail;
+    }
+    if (opts?.noRevealAnyStep === true) {
+      // 2026-10-19: no correct value, on the first attempt or on a retry.
+      return head + proposed + where
+        + '- Checked for that question: INCORRECT.\n'
+        + (p.answers === 'other_part' ? '- It is an attempt at THAT problem or part, not at the question you asked just now.\n' : '')
+        + WRONG_STEP_NO_REVEAL_RULE
         + tail;
     }
     const value = correctValue

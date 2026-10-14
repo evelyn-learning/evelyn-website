@@ -113,6 +113,9 @@ export interface VerdictPrecheckInput {
   /** Unset ⇒ TUTOR_READINESS_NAMED_TASK (a readiness question that names
    *  the next part says so under <open_question>). */
   readinessTask?: boolean;
+  /** 2026-10-19 (homework ledger): list POSITIONS (1-based) of the problems
+   *  already solved. Rendered only when `deps.ledger` is on. */
+  solved?: readonly number[];
 }
 
 export interface VerdictPrecheckLlmRequest {
@@ -134,6 +137,12 @@ export interface VerdictPrecheckDeps {
   thinking?: 'low' | 'off' | 'bare';
   /** Unset ⇒ TUTOR_PRECHECK_DIFFERS_AT; false ⇒ `differsAt` is never kept. */
   differsAt?: boolean;
+  /** 2026-10-19 (no-reveal-ledger-gate.ts): ask for `solved_problem` and
+   *  list the problems already solved. Unset/false ⇒ the request as before. */
+  ledger?: boolean;
+  /** 2026-10-19: judge a stated claim that answers none of the questions
+   *  (`CLAIM_VERDICT_RULE`). Unset/false ⇒ the prompt as before. */
+  claimVerdict?: boolean;
   now?: () => number;
 }
 
@@ -173,10 +182,40 @@ export const AMBIGUOUS_READING_RULE =
 export const READINESS_TASK_RULE =
   '\n   A readiness or transition question that names the next part or task (it asks whether the student is ready for, or wants to move on to, a named part, and may name what that part asks for) makes THAT part the open question: a value or working the student offers in reply is their answer to that part — "open_question", judged against that part.';
 
+/**
+ * 2026-10-19 (GreenApple Biology, 2026-10-14): "can you check my answer:
+ * <a false claim about the topic>" was classed "neither" with no verdict on
+ * the claim, so the tutor was told to ask its open question again and the
+ * misconception stood. A stated claim is judged even when it answers none of
+ * the questions. Appended after step 4; generic wording.
+ */
+export const CLAIM_VERDICT_RULE =
+  ' A STATED CLAIM THAT ANSWERS NOTHING. When answers is "neither" but the message states a claim of fact, rule, definition or reasoning about the subject (including one the student asks you to check), still judge that claim from what is true of the subject: verdict "incorrect" when the claim is false, "correct" when it is true. Use "cannot_determine" only when the message states no claim at all (an assent, a question, a request, small talk). Confidence then covers both the classification and your judgement of the claim.';
+
+/**
+ * 2026-10-19 (homework ledger, lesson-plan/homework-ledger.ts): the check
+ * names the listed problem whose complete final answer the message states,
+ * so the session can record it as solved from the check rather than from the
+ * tutor's memory. Appended after the field list; generic wording.
+ */
+export const SOLVED_PROBLEM_FIELD_RULE =
+  ' solved_problem — the number, as listed in <student_problems>, of the student\'s problem whose COMPLETE final answer the message states correctly (every part and every value that problem asks for), judged by your own working in step two; zero when it states none, when it gives only a step, one part or some of the values, when the answer is wrong, or when no problems are listed. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier names that problem.';
+
 /** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
  *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; `readinessTaskRule` unset ⇒
  *  TUTOR_READINESS_NAMED_TASK; both false ⇒ the prompt of 2026-10-06. */
-export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean }): string {
+export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean; claimVerdict?: boolean; ledger?: boolean }): string {
+  let system = verdictPrecheckSystemBase(opts);
+  if (opts?.claimVerdict === true) {
+    const marker = '\n5. CONFIDENCE.';
+    const at = system.indexOf(marker);
+    system = at < 0 ? system + CLAIM_VERDICT_RULE : system.slice(0, at) + CLAIM_VERDICT_RULE + system.slice(at);
+  }
+  if (opts?.ledger === true) system += SOLVED_PROBLEM_FIELD_RULE;
+  return system;
+}
+
+function verdictPrecheckSystemBase(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean }): string {
   let system = VERDICT_PRECHECK_SYSTEM;
   if (opts?.readinessTaskRule ?? TUTOR_READINESS_NAMED_TASK) {
     const anchor = 'including when that question itself asks for the final answer).';
@@ -229,6 +268,16 @@ export const VERDICT_PRECHECK_SCHEMA_WITH_WORKING: Record<string, unknown> = {
   properties: { working: { type: 'string' }, ...BASE_PROPERTIES },
 };
 
+/** 2026-10-19: the same schema with `solved_problem` LAST, so every field
+ *  before it is written exactly as it was (homework ledger). */
+export function withSolvedProblemField(schema: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...schema,
+    required: [...(schema.required as string[]), 'solved_problem'],
+    properties: { ...(schema.properties as Record<string, unknown>), solved_problem: { type: 'integer' } },
+  };
+}
+
 const HISTORY_TURNS = 8;
 const TURN_MAX_CHARS = 900;
 const PROBLEM_MAX_CHARS = 1500;
@@ -236,6 +285,13 @@ const PROBLEM_MAX_CHARS = 1500;
 function clip(s: string, max: number): string {
   const t = (s ?? '').trim();
   return t.length > max ? `${t.slice(0, max)} …` : t;
+}
+
+/** 2026-10-19 (ledger): '' unless `solved` is given (the ledger is on). */
+function solvedNote(problems: ReadonlyArray<{ n: number; text: string }>, solved?: readonly number[]): string {
+  if (!solved) return '';
+  const labels = solved.map((pos) => problems[pos - 1]?.n).filter((n): n is number => typeof n === 'number');
+  return labels.length ? `\n(Already solved, from earlier checks: ${labels.map((n) => `Problem ${n}`).join(', ')}.)` : '';
 }
 
 /** The user content of the pre-check call. Exported for the tests. */
@@ -248,6 +304,7 @@ export function buildVerdictPrecheckUser(input: VerdictPrecheckInput): string {
       '<student_problems>\n'
       + problems.map((p) => `${p.n}. ${clip(p.text, PROBLEM_MAX_CHARS)}`).join('\n')
       + (cur ? `\n(The tutor's tracker marks Problem ${cur.n} as the one being worked. The tracker can lag behind the conversation.)` : '')
+      + solvedNote(problems, input.solved)
       + '\n</student_problems>',
     );
   }
@@ -316,7 +373,8 @@ function defaultLlm(deps: VerdictPrecheckDeps): VerdictPrecheckLlm {
     const model = deps.model ?? role.model;
     const thinking = deps.thinking ?? verdictPrecheckThinking(model);
     // 'bare' (measurement only): no thinking and no scratch field.
-    const schema = thinking === 'off' ? VERDICT_PRECHECK_SCHEMA_WITH_WORKING : VERDICT_PRECHECK_SCHEMA;
+    const baseSchema = thinking === 'off' ? VERDICT_PRECHECK_SCHEMA_WITH_WORKING : VERDICT_PRECHECK_SCHEMA;
+    const schema = deps.ledger === true ? withSolvedProblemField(baseSchema) : baseSchema;
     const params = prepareParams('verdict-precheck', {
       model,
       max_tokens: req.maxTokens,
@@ -395,9 +453,10 @@ export async function runVerdictPrecheck(
   try {
     if (!(input.studentMessage ?? '').trim()) return null;
     const llm = deps.llm ?? defaultLlm(deps);
+    const ledger = deps.ledger === true && (input.problems ?? []).length > 0;
     const call = llm({
-      system: verdictPrecheckSystem(),
-      user: buildVerdictPrecheckUser(input),
+      system: verdictPrecheckSystem({ ...(deps.claimVerdict === true ? { claimVerdict: true } : {}), ...(ledger ? { ledger: true } : {}) }),
+      user: buildVerdictPrecheckUser(ledger ? { ...input, solved: input.solved ?? [] } : { ...input, solved: undefined }),
       maxTokens: 1500,
       signal: abort.signal,
       timeoutMs,
@@ -438,7 +497,13 @@ export async function runVerdictPrecheck(
     if (wantsDiffersAt && !differsAt && String(o.differs_at ?? '').trim()) {
       console.log(`[verdict-precheck] differs_at not used (it carried a value): "${String(o.differs_at).replace(/\s+/g, ' ').slice(0, 120)}"`);
     }
+    // 2026-10-19 (ledger): the problem LABEL the check named → its list position.
+    const solvedLabel = Number(o.solved_problem);
+    const solvedIdx = ledger && Number.isInteger(solvedLabel) && solvedLabel > 0
+      ? (input.problems ?? []).findIndex((p) => p.n === solvedLabel)
+      : -1;
     return {
+      ...(solvedIdx >= 0 ? { solvedProblem: solvedIdx + 1 } : {}),
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),

@@ -113,6 +113,7 @@ import {
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
+import { recordSolved, solvedPositionFromCheck } from '@/lib/tutor/lesson-plan/homework-ledger';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -2674,6 +2675,11 @@ export function VoiceTutorRealtime({
   );
   const homeworkProblemsRef = useRef<HomeworkProblem[] | null>(null);
   const homeworkCurrentRef = useRef(1);
+  // 2026-10-19 homework ledger (lesson-plan/homework-ledger.ts): list
+  // POSITIONS the server's answer check found solved. Written only from the
+  // `verdict-precheck` frame, never from the tutor's words; sent with
+  // `homework` every turn. The server renders it only for listed partners.
+  const homeworkSolvedRef = useRef<number[]>([]);
   // 2026-10-09 (e2e scenario C): a typed message sent while the homework plan
   // is still being fetched is held, briefly, until the problems arrive
   // (session/text-kickoff.ts) — dispatched at once it ran with no plan and no
@@ -2725,6 +2731,7 @@ export function VoiceTutorRealtime({
       if (hadHomework) {
         homeworkPlanIdRef.current = null;
         homeworkCurrentRef.current = 1;
+        homeworkSolvedRef.current = [];
         onHomeworkProgressRef.current?.(null);
       }
       return;
@@ -2736,6 +2743,7 @@ export function VoiceTutorRealtime({
     if (planId !== homeworkPlanIdRef.current) {
       homeworkPlanIdRef.current = planId;
       homeworkCurrentRef.current = 1;
+      homeworkSolvedRef.current = [];
     }
     const total = homeworkProblems.length;
     const clamped = Math.min(Math.max(homeworkCurrentRef.current, 1), total);
@@ -12507,7 +12515,7 @@ export function VoiceTutorRealtime({
             // current one. Absent for every non-homework plan (byte-identical
             // body). Refs, not state — this callback is memoised.
             ...(homeworkProblemsRef.current
-              ? { homework: { problems: homeworkProblemsRef.current, current: homeworkCurrentRef.current } }
+              ? { homework: { problems: homeworkProblemsRef.current, current: homeworkCurrentRef.current, solved: homeworkSolvedRef.current } }
               : {}),
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
@@ -16786,7 +16794,14 @@ export function VoiceTutorRealtime({
                     if (TUTOR_PRECHECK_CREDIT && precheckCreditOverride(pc).verifiedWrong) {
                       hedgedDenialSignalRef.current.verifiedWrong = true;
                     }
-                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}`);
+                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}${pc.solvedProblem ? ` solved_problem=${pc.solvedProblem}` : ''}`);
+                    // 2026-10-19 homework ledger: the check's own finding, not the tutor's words.
+                    const hwTotal = homeworkProblemsRef.current?.length ?? 0;
+                    const solvedPos = hwTotal ? solvedPositionFromCheck(pc, hwTotal) : null;
+                    if (solvedPos !== null && !homeworkSolvedRef.current.includes(solvedPos)) {
+                      homeworkSolvedRef.current = recordSolved(homeworkSolvedRef.current, solvedPos, hwTotal);
+                      onDebugEvent?.('homework_problem_solved', `pos=${solvedPos} solved=[${homeworkSolvedRef.current.join(',')}] total=${hwTotal}`);
+                    }
                   }
                   // Voice: the check ran alongside the reply — release what
                   // was held, or cut the turn at a sentence it contradicts.
