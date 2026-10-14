@@ -29,7 +29,8 @@ import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/r
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES } from '@/lib/tutor/orchestrator/flags';
+import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
@@ -384,6 +385,10 @@ interface EmbedConfig {
   session_goal?: SessionGoal;
   engine?: 'standard' | 'premium';
   locale?: string;
+  /** Extra tutor languages for this tenant's sessions, e.g. ["en","ja"]
+   *  (normalised by parseTutorLanguages; unsupported codes dropped). Absent ⇒
+   *  English-only, unchanged. NEXT_PUBLIC_TUTOR_EXTRA_LANGUAGES=off ignores it. */
+  tutor_languages?: string[] | string;
   input_mode?: InputMode;
   voice?: string;
   curriculum_module?: string;
@@ -624,6 +629,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // is most visible; unknown/marketplace voice ids resolve undefined (no
   // speed sent — unchanged behavior for every other partner voice).
   const cartesiaVoiceSpeed = cartesiaSpeedForVoiceId(cartesiaVoiceId);
+  const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
@@ -1976,6 +1982,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         sessionMode={sessionMode}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
+        tutorLanguages={tutorLanguages}
         sessionMaxMinutes={maxDuration}
         sessionWrapMinutes={wrapAtMinutes}
         maxDurationExplicit={maxDurationExplicit}

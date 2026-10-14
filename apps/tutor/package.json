@@ -215,6 +215,7 @@
     "test:another-problem": "npx tsx scripts/test-another-problem.ts",
     "test:perception-classifier": "npx tsx scripts/test-perception-classifier.ts",
     "test:sentence-buffer": "npx tsx scripts/test-sentence-buffer.ts",
+    "test:bilingual-tutor": "npx tsx scripts/test-bilingual-tutor.ts",
     "test:sentence-spacing": "npx tsx scripts/test-sentence-spacing.ts",
     "test:stage-direction-strip": "npx tsx scripts/test-stage-direction-strip.ts",
     "test:ink-reconstruct": "npx tsx scripts/test-ink-reconstruct.ts",

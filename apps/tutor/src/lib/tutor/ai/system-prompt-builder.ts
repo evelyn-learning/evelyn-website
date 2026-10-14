@@ -200,6 +200,11 @@ export interface SystemPromptContext {
 
   /** Text-only session (partner claim). The student types and reads. */
   inputMode?: 'voice' | 'text';
+  /** Tutor languages of a bilingual session (tenant setting, e.g. ['en','ja']).
+   *  Absent ⇒ English-only and the prompt is byte-identical. Rendered in the
+   *  SESSION block, never the shared core, so the cross-session cache entry
+   *  is the same for every tenant. */
+  tutorLanguages?: string[];
   /** Host-supplied lesson context (in-flow embeds, partner spec v1.1). Rendered in the
    *  SESSION block; absent ⇒ nothing appended. */
   lessonContext?: LessonContext;
@@ -1994,6 +1999,11 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
     prompt += `Topics Covered Earlier: ${context.previousTopics.join(', ')}\n`;
   }
 
+  const bilingualClause = buildBilingualClause(context.tutorLanguages);
+  if (bilingualClause) {
+    prompt += bilingualClause;
+  }
+
   // R38: Removed obsolete Multilingual Support section — contradicts Rule 5 one-language-per-session policy; STT (Ink-2 English-only) + TTS (Cartesia language:'en') cannot deliver mid-session language switching
 
   // In-flow lesson context (partner spec v1.1): facts about the scene and the
@@ -2096,6 +2106,27 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
     : '';
 
   return { core, session: (prompt + textModeClause).slice(core.length) };
+}
+
+const LANGUAGE_NAMES: Record<string, string> = { en: 'English', ja: 'Japanese' };
+
+/** Session-block override of Rule 5 for a bilingual tenant. Null for an
+ *  English-only session (absent, ['en'], or no recognised second language). */
+export function buildBilingualClause(languages: string[] | undefined): string | null {
+  const others = (languages ?? []).filter((l) => l !== 'en' && LANGUAGE_NAMES[l]);
+  if (others.length === 0) return null;
+  const second = LANGUAGE_NAMES[others[0]!]!;
+  const japanese = others[0] === 'ja'
+    ? `\n- Japanese: natural, polite です/ます style, the way a kind Japanese teacher speaks to an adult — not word-for-word translation. Write Japanese in Japanese script, never romaji.`
+    : '';
+  return `\n\n## Session languages: English and ${second} (overrides Rule 5)
+This session is BILINGUAL. You speak, understand and write both English and ${second}. Rule 5's one-language rule and its "each session sticks to one language" reply do NOT apply here — never tell this student you can only use one language.
+- Follow the student. A turn in ${second} is real speech, not a misrecognition: understand it and answer it. A turn in any OTHER language is still handled as Rule 5 says.
+- When the subject is English itself, English is the target: model, practise and role-play in English, and use ${second} for explanations, instructions, grammar notes, checking understanding and reassurance. Use more ${second} with a beginner and less as the student grows more fluent; when the student is clearly comfortable, stay in English unless they ask. Always bring the student back to speaking English themselves.
+- For any other subject, teach in the language the student uses and prefers.
+- One language per SENTENCE. Each sentence is voiced in one language: a sentence containing any ${second} is read by a ${second} voice, so English inside it is pronounced the ${second} way. When you model an English word or phrase for the student to hear or repeat, say it as its own English sentence, then explain it in a separate ${second} sentence.
+- The board may carry both: the English phrase on the card, with a short ${second} gloss beside or below it when it helps.${japanese}
+`;
 }
 
 /**

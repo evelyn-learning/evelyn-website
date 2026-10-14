@@ -757,6 +757,12 @@ export type BrainStreamEvent =
  * on flush; false positives (premature flush) would cause speakText to
  * fire on a fragment, which is worse — so we err toward holding back.
  */
+const JAPANESE_SCRIPT_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
+/** Earliest boundary that is either a Japanese terminator (plus closing
+ *  brackets/quotes) or an English terminator directly before Japanese text. */
+const JAPANESE_BOUNDARY_RE =
+  /^([\s\S]+?(?:[。！？][」』）)"”]*|[.!?](?=\s*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}])))(\s*)/u;
+
 export class SentenceBuffer {
   private buf = '';
   private static readonly MIN_LEN = 25;
@@ -806,6 +812,14 @@ export class SentenceBuffer {
         m = this.buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
         if (!m || !SentenceBuffer.ABBREV_TAIL_RE.test(m[1])) break;
         minLen = m[1].length + 1;
+      }
+      // Bilingual sessions: Japanese ends sentences with 。！？ and no space,
+      // and TTS picks one language per sentence, so a Japanese sentence and
+      // an English one must not share a chunk. Only runs when the buffer
+      // holds Japanese script ⇒ English-only text splits exactly as before.
+      if (JAPANESE_SCRIPT_RE.test(this.buf)) {
+        const j = this.buf.match(JAPANESE_BOUNDARY_RE);
+        if (j && (!m || j[0].length < m[0].length) && !SentenceBuffer.ABBREV_TAIL_RE.test(j[1])) m = j;
       }
       if (!m) break;
       // Stage-direction leak defense (live 2026-07-30): "(waiting for

@@ -130,7 +130,10 @@ async function drive(
   }
   try { ws.close(); } catch { /* already closed */ }
   return {
-    transcript: finals.join(' ').replace(/\s+/g, ' ').trim(),
+    // Japanese/Chinese have no word spaces: a space the join put between two
+    // CJK characters is the harness's, not the engine's ("明 日の").
+    transcript: finals.join(' ').replace(/\s+/g, ' ').trim()
+      .replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー、。！？]) (?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー、。！？])/gu, '$1'),
     // Anchor latency at true speech end (realSpeechEndAt) when the buffer has
     // a synthetic silence tail; falls back to end-of-send for engines whose
     // buffer is all real speech. Settle-loop timing above is unaffected.

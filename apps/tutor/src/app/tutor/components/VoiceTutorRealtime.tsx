@@ -895,6 +895,10 @@ interface VoiceTutorRealtimeProps {
    *  consumed when ttsProvider === 'cartesia'; the student "slow" toggle
    *  always wins over this. */
   cartesiaVoiceSpeed?: number;
+  /** Tutor languages of a bilingual session (tenant setting, e.g. ['en','ja'],
+   *  normalised by parseTutorLanguages). Absent ⇒ English-only: the prompt
+   *  and every TTS request are byte-identical to before. */
+  tutorLanguages?: string[];
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -1268,6 +1272,7 @@ export function VoiceTutorRealtime({
   silentSecondsPerWord,
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
+  tutorLanguages,
   onLessonPlanProgress,
   onHomeworkProgress,
   onLessonPlanLoadSettled,
@@ -20980,6 +20985,7 @@ export function VoiceTutorRealtime({
           silentSecondsPerWord,
           cartesiaVoiceId,
           cartesiaVoiceSpeed,
+          ...(tutorLanguages ? { tutorLanguages } : {}),
           speakingRate,
           studentName,
         }
@@ -24139,6 +24145,8 @@ export function VoiceTutorRealtime({
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
           ...(TUTOR_ANSWER_REVEAL_GUARD ? { answerRevealGuard: true } : {}),
+          // Bilingual tenant: session-block override of Rule 5. Absent ⇒ unchanged.
+          ...(tutorLanguages ? { tutorLanguages } : {}),
           ...openerFields,
         });
         const systemPrompt = promptParts.core + promptParts.session;
