@@ -30,7 +30,14 @@ function resamplePcm16(pcm: Buffer, fromRate: number, toRate: number): Buffer {
 }
 
 interface ClipRun { transcript: string; finalLatencyMs: number }
-interface Opts { realtimePace: boolean; onEvent: (e: object) => void }
+interface Opts {
+  realtimePace: boolean;
+  onEvent: (e: object) => void;
+  /** Optional STT language hint (ink2 `language`, deepgram `language`, e.g.
+   *  'en' | 'ja' | 'multi'). Unset = the engine default, which is what
+   *  production sends today (no language param). */
+  language?: string;
+}
 
 /** Shared skeleton: connect, stream, then wait for finals to settle. */
 async function drive(
@@ -136,6 +143,7 @@ async function ink2(pcm: Buffer, opts: Opts): Promise<ClipRun> {
     model: 'ink-2', encoding: 'pcm_s16le', sample_rate: String(SR),
     cartesia_version: '2026-03-01', api_key: requireKey('CARTESIA_API_KEY'),
   });
+  if (opts.language) params.set('language', opts.language);
   const ws = new WebSocket(`wss://api.cartesia.ai/stt/turns/websocket?${params}`);
   // OBSERVED LIVE (--probe, 2026-07-06): events are {type:"connected"},
   // {type:"turn.start", turn_id}, then a stream of {type:"turn.update",
@@ -179,6 +187,7 @@ async function deepgram(pcm: Buffer, opts: Opts): Promise<ClipRun> {
     model: 'nova-3', encoding: 'linear16', sample_rate: String(SR),
     smart_format: 'true', interim_results: 'true',
   });
+  if (opts.language) params.set('language', opts.language);
   const ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${params}`, {
     headers: { Authorization: `Token ${requireKey('DEEPGRAM_API_KEY')}` },
   });
