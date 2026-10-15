@@ -276,6 +276,15 @@ function textHit(text: string, a: WithheldAnswer): string | null {
     // the same canonical form as one side of something written in the reply.
     const c = compact(p);
     if (c.length < 3) continue;
+    // 2026-10-15 (GAC v8, Physics): "7500 N" after the student wrote "7500"
+    // is their own value with its unit, not a reveal. In new-number mode a
+    // number-and-unit whose number is the student's own is skipped (only that
+    // shape: an expression built from their numbers can still be a result).
+    if (a.newNumbers === true && /^-?\d[\d.,]*\s*[a-zA-Zµ°%²³\/\s·^-]*$/.test(p) && !/[=+*×÷]/.test(p)) {
+      const nums = numbersIn(p);
+      const own = knownNumbers(a);
+      if (nums.length && nums.every((n) => own.some((k) => sameNumber(k.value, n.value)))) continue;
+    }
     if (compact(a.studentText).includes(c) || compact(a.givenText).includes(c)) continue;
     if (compact(text).includes(c)) return p;
     const canon = canonicalizeMathExpression(p);

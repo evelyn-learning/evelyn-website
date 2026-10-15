@@ -202,9 +202,12 @@ export function formatAnswerCheckBlock(
     solved?: readonly number[];
     /** 2026-10-15 (GAC v7): the listed problems' numbers, by position. */
     labels?: readonly number[];
+    /** 2026-10-15 (GAC v8): the position of the problem being worked. */
+    current?: number;
   },
 ): string {
   if (!precheckInforms(p)) return '';
+  p = asCurrentProblem(p, opts);
   if (opts?.workThenMatch === true) return formatAnswerCheckBlockWorkThenMatch(p, opts.correctValue, opts);
   const proposed = (p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '') + perProblemLines(p, opts);
   const named = p.target ? ` (${p.target})` : '';
@@ -328,6 +331,20 @@ export function perProblemLines(p: PublicVerdictPrecheck, opts?: { noRevealAnySt
     + '- Each problem is judged on its own in the lines above; what follows is about the message as a whole. Never call a problem marked RIGHT above wrong.\n';
 }
 
+/**
+ * 2026-10-15 (GAC v8, Algebra II): the tutor's question was a step of its own
+ * method ("which two numbers multiply to … and add to …?"); the student gave
+ * one value of the final answer of that same problem ("a is 3"). The check
+ * classed it "other_part", the block said "a different problem or part", and
+ * the reply took the value for a step of its method and called the student's
+ * other value wrong. Under the ledger, an answer about the problem being
+ * worked is rendered as an answer to that problem.
+ */
+function asCurrentProblem(p: PublicVerdictPrecheck, opts?: { noRevealAnyStep?: boolean; current?: number }): PublicVerdictPrecheck {
+  if (opts?.noRevealAnyStep !== true || p.answers !== 'other_part' || !opts.current || p.aboutProblem !== opts.current) return p;
+  return { ...p, answers: 'overall_problem' };
+}
+
 /** A wrong answer, under the ledger, to a problem the ledger holds as solved.
  *  2026-10-15 (GAC v7 audit): also when the message is about several problems
  *  (no `aboutProblem`) and every answer judged wrong in it is for a solved one. */
@@ -430,7 +447,8 @@ export const FALSE_CLAIM_RULE =
   + 'If what they stated is their answer to a problem (a value or result), not a statement about the subject: do not give the right answer or the working that reaches it — say it is not right, name the step to look at again, and ask them to redo it.\n';
 
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean; solved?: readonly number[]; labels?: readonly number[] }): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean; solved?: readonly number[]; labels?: readonly number[]; current?: number }): string {
+  p = asCurrentProblem(p, opts);
   const proposed = (p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '') + perProblemLines(p, opts);
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -521,7 +539,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
 /** 2026-10-15 (staging, Algebra II): a half-right answer; the reply wrote out
  *  the setup of the missing half before asking for it. */
 export const PARTLY_NO_REVEAL_RULE =
-  'What to do: work it out silently. Confirm the part of THEIR answer that is right, in their own words and values. Then say that something is still missing or wrong and name WHICH part, by what it is — without writing it out: no setup, no equation, no inequality or value for that part, not in the reply and not on the board. End with ONE question that has them write that part themselves.\n';
+  'What to do: work it out silently. Confirm the part of THEIR answer that is right, in their own words and values, as what THEY offered it as (it answers what the check names above): never recast it as something else, such as a step, a factor or an intermediate number, and never call any part of it wrong that the check found right. Then say that something is still missing or wrong and name WHICH part, by what it is — without writing it out: no setup, no equation, no inequality or value for that part, not in the reply and not on the board. End with ONE question that has them write that part themselves.\n';
 
 // ── before display: an opener that contradicts the check ───────────────────
 

@@ -44,7 +44,7 @@ import { getModelClient, prepareParams, resolveModel } from '../ai/model-registr
 import { falseArithmeticIn } from './turn-shape-signal';
 import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_PRECHECK_DIFFERS_AT, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { readOpenQuestion } from './nonanswer-praise';
-import { PROBLEM_LETTERS_RULE } from '../lesson-plan/homework-ledger';
+import { PROBLEM_LETTERS_RULE, problemLetterNames } from '../lesson-plan/homework-ledger';
 import type {
   PrecheckConfidence,
   PrecheckTarget,
@@ -237,7 +237,7 @@ export const SOLVED_PROBLEM_FIELD_RULE =
   ' stated_answers — one entry for EACH of the student\'s listed problems (or part of one) that this message states an answer for: problem (its number as listed), stated (what the message states for it), own_answer (the answer to that problem or part as YOU worked it out in step two — work it out for each one, do not assume), right (true only when stated is the same answer as own_answer). Empty when the message states no answer to a listed problem. When the message states answers for more than one problem or part, the verdict is "correct" only when every entry is right, and "partly_correct" when some are right and some are not.'
   + ' solved_problems — the numbers, as listed in <student_problems>, of EVERY one of the student\'s problems whose COMPLETE final answer (every part and every value that problem asks for) the student has now stated correctly, judged by your own working in step two. One message can complete several problems: list each one. An answer can also be split across messages: for each part of a problem, take the student\'s LATEST statement of it, in this message or in their own earlier messages in the recent conversation (never the tutor\'s words); when those latest statements together are the complete right answer, list the problem. Leave a problem out when only a step, one part or some of the values have been stated, or when the latest statement of any part is wrong. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier lists that problem. Empty when none, or when no problems are listed.'
   + ' about_problem — the number, as listed in <student_problems>, of the student\'s problem this message proposes an answer, step or part for; zero when it is about none of the listed problems (a new problem of their own, a general claim, small talk) or when it is about several.'
-  + ' reason_wrong — true when the message gives a reason, rule or method for its answer and that reason is false or does not actually establish the answer, even when the answer itself is right; false when it gives no reason or a sound one. A right answer with a wrong reason is "partly_correct", and that problem is not listed in solved_problems.';
+  + ' reason_wrong — true when the message gives a reason, rule or method for its answer and that reason is false or does not actually establish the answer, even when the answer itself is right; false when it gives no reason or a sound one. A reason that uses a value which is right under an accepted convention is sound, even when your own working used another convention. A right answer with a wrong reason is "partly_correct", and that problem is not listed in solved_problems.';
 
 /**
  * 2026-10-15 (GAC staging v5): with several problems listed, a correct answer
@@ -264,7 +264,7 @@ export const NAMED_PROBLEM_RULE =
  * before step 5; generic wording.
  */
 export const LEDGER_FORMS_RULE =
-  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer.';
+  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right: before you call a value wrong, check whether another accepted method or convention gives it, and if one does, it is right — and so is later working built on it. Use ONE convention consistently through your own working; never mix two in one calculation. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer.';
 
 /**
  * 2026-10-15 (GAC v7, Geometry): "31.4" for a circumference asked "in terms
@@ -462,6 +462,12 @@ export function buildVerdictPrecheckUser(input: VerdictPrecheckInput): string {
     + (namedTask ? `\n(This readiness question introduces the next part: "${clip(namedTask, 200).replace(/"/g, "'")}". A value or working the student offers now answers that part.)` : '')
     + '\n</open_question>');
   parts.push(`<student_message>\n${clip(input.studentMessage, 1200)}\n</student_message>`);
+  // 2026-10-15 (GAC v8): "a is <value>" — the problem a letter names, stated
+  // for the check (ledger requests only: `solved` is set only for them).
+  if (input.solved && problems.length > 1) {
+    const named = problemLetterNames(input.studentMessage, problems.map((p) => p.n));
+    if (named.length) parts.push(`<named_problems>\nThe student's message labels a value with a problem letter: ${named.join(', ')}. That value is their answer to THAT problem (third test).\n</named_problems>`);
+  }
   // A written calculation with the wrong result: a calculator's finding, so
   // the model does not have to notice it (it did not, once — see
   // turn-shape-signal.ts `falseArithmeticIn`).
@@ -599,6 +605,8 @@ export async function runVerdictPrecheck(
       return null;
     }
     const o = parseReply(raced.text);
+    // Measurement only (replay scripts): the check's whole reply.
+    if (process.env.TUTOR_PRECHECK_DUMP === '1') console.log(`[verdict-precheck] raw ${raced.text}`);
     if (!o || !TARGETS.has(String(o.answers)) || !VERDICTS.has(String(o.verdict)) || !CONFIDENCES.has(String(o.confidence))) {
       console.warn('[verdict-precheck] unusable reply — nothing injected');
       return null;
@@ -663,6 +671,16 @@ export async function runVerdictPrecheck(
       else for (const a of stated) { const pos = positionOf(a?.problem); if (pos > 0) reasonOpen.add(pos); }
       if (o.verdict === 'correct') o.verdict = 'partly_correct';
       console.log(`[verdict-precheck] reason judged wrong — not recorded solved (problem position ${[...reasonOpen].join(',') || 'none'})`);
+    }
+    // 2026-10-15 (GAC v8, Algebra II): the second half of a split answer came
+    // back CORRECT with every stated answer right and the final-answer test
+    // agreeing — at medium confidence, so the ledger (high only) never
+    // recorded the problem and the tutor kept asking for it. When the check's
+    // own three findings agree, that is a high-confidence correct.
+    if (ledger && o.verdict === 'correct' && o.confidence === 'medium' && o.proposed_equals_final_answer === true
+        && stated.length > 0 && stated.every((a) => a && a.right === true) && !reasonWrong) {
+      o.confidence = 'high';
+      console.log('[verdict-precheck] confidence medium → high: correct, every stated answer right, final-answer test agrees');
     }
     const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
     return {

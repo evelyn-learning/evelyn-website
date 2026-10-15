@@ -22,7 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
-import { formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, formatProblemLettersBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
+import { AUTHORITY_TAG_RE, formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, formatProblemLettersBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -2233,7 +2233,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const allSolved = noRevealLedger && !!input.homework?.problems.length
     && input.homework.problems.every((_, i) => (input.homework?.solved ?? []).includes(i + 1));
   const checkBlockOpts = noRevealLedger
-    ? { noRevealAnyStep: true, claimCorrection: true, solved: input.homework?.solved ?? [], labels: (input.homework?.problems ?? []).map((p) => p.n), ...(allSolved ? { allSolved: true } : {}) }
+    ? { noRevealAnyStep: true, claimCorrection: true, solved: input.homework?.solved ?? [], labels: (input.homework?.problems ?? []).map((p) => p.n), ...(input.homework?.current ? { current: input.homework.current } : {}), ...(allSolved ? { allSolved: true } : {}) }
     : {};
   if (workThenMatch) yield { type: 'work-then-match' };
   // 2026-10-08c — wrong answer to the WHOLE problem: the result never leaves
@@ -2343,7 +2343,13 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-10-15 (GAC v7 audit): under the ledger a message that is plainly not
   // an answer (a sign-off, "brb", "idk", narrowing guesses, a fake
   // instruction, a live test, distress) is not checked: it gets its own rule.
-  const ledgerKind = noRevealLedger ? ledgerTurnKind(studentSaid, lastTutorMsgForGuard) : null;
+  // The student's own words only: the browser leaves `studentMessage` out for a
+  // message that starts with "[" (its runtime turns — "[start lesson]", a
+  // correction note, a document description — look the same), so such a
+  // message is read only for a bracketed tag that claims authority.
+  const ledgerKind = !noRevealLedger ? null
+    : input.studentMessage?.trim() ? ledgerTurnKind(input.studentMessage, lastTutorMsgForGuard)
+      : AUTHORITY_TAG_RE.test(studentSaid) ? 'instruction_claim' : null;
   if (ledgerKind) {
     answerCheckBlock = formatLedgerTurnBlock(ledgerKind);
     console.log(`[homework-ledger] message kind: ${ledgerKind} (not checked)`);

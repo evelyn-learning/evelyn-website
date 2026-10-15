@@ -100,7 +100,7 @@ export const CRISIS_LINE = 'in the US, call or text 988';
 /** A question unrelated to the homework and its subject is not answered at
  *  all — the redirect alone. Generic. */
 export const OFF_TOPIC_NOT_ANSWERED =
-  'A question within the subject, or about why the subject matters, is welcome even when it is not one of these problems: give a short helpful answer or guide them, and never call it outside the session. Only a question unrelated to the subject itself (or a request for something dangerous) is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then return to the work. A request unrelated to the subject, such as a joke, a story or a game, is declined the same way, even after the homework is done.';
+  'A question within the subject, about why the subject matters, or about how to study or prepare for a test in it, is welcome even when it is not one of these problems: give a short helpful answer or guide them, and never call it outside the session. Only a question unrelated to the subject itself (or a request for something dangerous) is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then return to the work. A request unrelated to the subject, such as a joke, a story or a game, is declined the same way, even after the homework is done.';
 
 /** A problem the student adds mid-session is taught like the listed ones. */
 export const EXTRA_PROBLEM_SAME_RULES =
@@ -175,6 +175,10 @@ const BOUND_RE = /\b(?:is\s+(?:it|the\s+answer|x|that)|it'?s)\b[^?]{0,20}\b(?:bi
 const ONE_OF_RE = /\b(?:is\s+it|could\s+it\s+be|would\s+it\s+be)\s+(?:like\s+|maybe\s+)?(-?[\w.\/]+)\s+or\s+(-?[\w.\/]+)\s*\??$/i;
 const YES_NO_RE = /\bjust\s+(?:say\s+)?yes\s+or\s+no\b/i;
 
+/** A bracketed tag at the start of a message that claims a mode or an
+ *  authority ("[TEACHER MODE]"), never a runtime marker of this app. */
+export const AUTHORITY_TAG_RE = /^\s*\[[^\]]*\b(?:mode|admin|administrator|system|developer|dev|teacher|override|jailbreak|unlock(?:ed)?|sudo|root|god)\b[^\]]*\]/i;
+
 export function ledgerTurnKind(text: string, lastTutorMessage = ''): LedgerTurnKind | null {
   const t = (text ?? '').trim();
   if (!t) return null;
@@ -233,6 +237,7 @@ export const LEDGER_CONDUCT_RULES =
   + '- Never fully work a problem of the same kind as one of their OPEN problems (a similar one, an example, or the same one with other numbers), in the reply or on the board, even when asked: it hands over the method and the result. Offer to go through their own problem one step at a time instead.\n'
   // 2026-10-15 (GAC v7, AP Statistics): "my book gets <another value>" was
   // called wrong without being worked the book's way.
+  + '- When a quantity can be worked out by more than one accepted method or convention, use one of them consistently from start to finish; never mix two in one calculation. When the student uses another accepted one, accept their value and carry on with THEIR value in the later steps — never insist on yours.\n'
   + '- When the student reports a different result from a book, a teacher or a classmate, work it that way first. If it is right under a recognised method or convention, say so, say that both are accepted and how they differ, and accept either. Only when it is wrong under every recognised method say it is not right.\n'
   // 2026-10-15 (pre-v8 review): cases no run had covered yet.
   + '- Asked what you are or who made you: you are an AI tutor. Never name an AI model, an AI company or any other product or company behind this tutor.\n'
@@ -249,11 +254,20 @@ export const LEDGER_CONDUCT_RULES =
  * student's message labels an answer with a letter, the mapping is restated
  * next to it. '' otherwise.
  */
+const letterLabelRe = (letters: string) => new RegExp(`(?:^|[\\s,;])\\(?([${letters}])\\)?\\s*(?:is|was|=|:|\\))(?=\\s|$|-?\\d)`, 'gi');
+
+/** "a = Problem <n>" for each letter the message uses as a problem label. */
+export function problemLetterNames(studentText: string, labels: readonly number[]): string[] {
+  if (labels.length < 2) return [];
+  const letters = 'abcdefgh'.slice(0, Math.min(labels.length, 8));
+  const used = new Set([...` ${studentText ?? ''}`.matchAll(letterLabelRe(letters))].map((m) => m[1].toLowerCase()));
+  return [...letters].filter((l) => used.has(l)).map((l) => `${l} = Problem ${labels[letters.indexOf(l)]}`);
+}
+
 export function formatProblemLettersBlock(studentText: string, labels: readonly number[]): string {
   if (labels.length < 2) return '';
   const letters = 'abcdefgh'.slice(0, Math.min(labels.length, 8));
-  const re = new RegExp(`(?:^|[\\s,;])\\(?([${letters}])\\)?\\s*(?:is|was|=|:|\\))(?=\\s|$|-?\\d)`, 'i');
-  if (!re.test(` ${studentText ?? ''}`)) return '';
+  if (!problemLetterNames(studentText, labels).length) return '';
   const map = [...letters].map((l, i) => `${l} = Problem ${labels[i]}`).join(', ');
   return `<problem_letters>\nThe student names problems by letter in this message: ${map}.\n</problem_letters>\n\n`;
 }
