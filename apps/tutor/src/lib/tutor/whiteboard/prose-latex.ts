@@ -38,12 +38,22 @@ export function latexAsProse(latex: string): ProseRun[] | null {
   const tail = latex.slice(last);
   outside += tail;
   push(tail, false);
-  // Spacing commands between groups are fine; any other command, script,
-  // relation or digit outside the text groups means this is math.
-  const rest = outside.replace(/\\[,;:! ]|\\quad|\\qquad/g, ' ');
-  if (/\\|[\^_=<>]|\d/.test(rest)) return null;
+  // Between text groups only spacing, an arrow, or "=" used as a label
+  // ("\text{Kim's message} = \text{"Are you free…"}", GDI meeting session
+  // 2026-10-15) may appear: "=" reads as ":", arrows as "→". Any other
+  // command, a script, a relation, or a bare letter or digit outside the
+  // text groups means this is math.
+  const SEP = /\\[,;:! ]|\\qquad|\\quad|\\(rightarrow|to|Rightarrow|longrightarrow)\b/g;
+  const rest = outside.replace(SEP, ' ').replace(/=/g, ' ');
+  if (/\\|[\^_<>]|[A-Za-z0-9]/.test(rest)) return null;
+  const sepText = (t: string) => t
+    .replace(/\\qquad|\\quad/g, ' · ')
+    .replace(/\\[,;:! ]/g, ' ')
+    .replace(/\\(rightarrow|to|Rightarrow|longrightarrow)\b/g, ' → ')
+    .replace(/(\s*·\s*)?→(\s*·\s*)?/g, ' → ')
+    .replace(/\s*=\s*/g, ': ');
   const cleaned = runs
-    .map((r) => ({ ...r, text: r.text.replace(/\\[,;:! ]|\\quad|\\qquad/g, ' ').replace(/[{}]/g, '').replace(/\s+/g, ' ') }))
+    .map((r) => ({ ...r, text: (r.bold ? r.text : sepText(r.text)).replace(/[{}]/g, '').replace(/[ \t]+/g, ' ') }))
     .filter((r) => r.text.length > 0);
   if (cleaned.length === 0) return null;
   cleaned[0]!.text = cleaned[0]!.text.trimStart();

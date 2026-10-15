@@ -363,6 +363,17 @@ export const TUTOR_THINK_TIME_HOLD =
 // Default ON per the R49b standing rule.
 export const TUTOR_TURN_COALESCE =
   process.env.NEXT_PUBLIC_TUTOR_TURN_COALESCE !== 'off';
+// Pre-audio supersede (GDI meeting session 2026-10-15, 494–500s): a learner
+// paused twice inside one question; each fragment became its own turn, and
+// the reply to the fragment "enough?" played AFTER the full question had
+// arrived, then the full question got a second answer. When a new final
+// arrives while the brain is busy and the in-flight reply has not spoken a
+// single sentence yet (cover/ack lines don't count), abort that reply and
+// answer the in-flight text + the new text once. Acts on a real final
+// transcript only, never on speech onset or noise (the E1 regression).
+// Default ON per the R49b standing rule.
+export const TUTOR_SUPERSEDE_PRE_AUDIO =
+  process.env.NEXT_PUBLIC_TUTOR_SUPERSEDE_PRE_AUDIO !== 'off';
 export const TUTOR_ANSWER_REVEAL_GUARD =
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'true';

@@ -18,6 +18,8 @@ import { parseTutorLanguages, ttsLanguageFor } from '../src/lib/tutor/voice/tts-
 import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
+import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
+import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
@@ -186,6 +188,47 @@ test('board: appended items start below notes; placed notes claim their spot fir
   assert.ok(canvas.includes('onNotesBottomChange={handleNotesBottom}') && canvas.includes('marginTop: appendPad'));
   assert.ok(overlay.includes('for (const src of placementOrder)'));
   assert.ok(canvas.includes("s.targetFeature?.startsWith('cell-')"));
+});
+console.log('live-session fixes (GDI meeting + starter sessions 2026-10-15)');
+test('mostly-Japanese turns are speech in a bilingual session, still noise in an English-only one', () => {
+  const turn = 'はい、もう一回。Iwenttothesupermarketandboatmilk .今度はボートじゃなくてボートのつもりです。あの、次の話ちょっとだけでいいです';
+  assert.equal(classifyTranscript(turn, { allowNonLatin: sessionAllowsNonLatin(['en', 'ja']) }), 'clean');
+  assert.equal(classifyTranscript('少々だけ時間欲しいです。その後一緒にいたいです。お願いします。', { allowNonLatin: true }), 'clean');
+  assert.equal(classifyTranscript(turn), 'noise', 'English-only sessions keep the hallucination filter');
+  assert.equal(sessionAllowsNonLatin(['en']), false);
+  assert.equal(sessionAllowsNonLatin(undefined), false);
+});
+test('every noise-filter call in the runtime passes the session languages', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const calls = vtr.match(/classifyTranscript\([^)]*\)/g) ?? [];
+  assert.ok(calls.length >= 4);
+  for (const c of calls) assert.ok(c.includes('allowNonLatin'), c);
+  assert.ok(readFileSync('src/app/tutor/hooks/useOpenAIRealtime.ts', 'utf8').includes('allowNonLatin: sessionAllowsNonLatin('));
+});
+test('label equations of text read as text: "=" → ":", arrows kept', () => {
+  const r = (s: string) => latexAsProse(s)?.map((x) => x.text).join('') ?? null;
+  assert.equal(r(String.raw`\text{Kim's message} = \text{"Are you free Tuesday morning?"}`), `Kim's message: "Are you free Tuesday morning?"`);
+  assert.equal(r(String.raw`\text{go} \rightarrow \text{went}`), 'go → went');
+  assert.equal(r(String.raw`\text{speed} = 5`), null);
+});
+test('language-lesson clause: short turns, sound-alikes, two retries, honest about pronunciation, board the correction, role-play in character, answer a continuation once', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  for (const k of ['about 40 words', 'sound-alike', 'at most twice', 'only see their words as text', 'write the correct sentence on the board', 'speak AS the character', 'answer the whole thing once']) assert.ok(c.includes(k), k);
+});
+test('judge: language lessons get the learner-speech block; other subjects unchanged', () => {
+  const base = { boardSummary: '', spokenText: 'Great.' };
+  assert.ok(buildJudgeUserContent({ ...base, learnerSpeech: true }).startsWith('<learner_speech>'));
+  assert.ok(buildJudgeUserContent(base).startsWith('<whiteboard_state>'));
+  assert.ok(readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8').includes("subject === 'languages' ? { learnerSpeech: true }"));
+});
+test('pre-audio supersede: a final arriving before the in-flight reply spoke aborts it and answers both parts once', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const i = vtr.indexOf('TUTOR_SUPERSEDE_PRE_AUDIO &&');
+  assert.ok(i > 0);
+  const branch = vtr.slice(i, i + 1600);
+  for (const k of ['!inFlight.shown', '!opts?.silent', 'PRE_AUDIO_SUPERSEDE_MS', 'inFlightBrainAbortRef.current.abort()', 'queuedTranscriptsRef.current.push(combined)', 'isFuzzyDupTranscript']) assert.ok(branch.includes(k), k);
+  assert.ok(vtr.indexOf('TUTOR_SUPERSEDE_PRE_AUDIO &&') < vtr.indexOf("queued (brain busy):', JSON.stringify(transcript)"), 'runs before the plain queue push');
+  assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("NEXT_PUBLIC_TUTOR_SUPERSEDE_PRE_AUDIO !== 'off'"));
 });
 test('speech_rate claim: numbers/strings clamped to [0.6,1.5]; absent/1/garbage ⇒ undefined', () => {
   assert.equal(parseSpeechRate(0.85), 0.85);

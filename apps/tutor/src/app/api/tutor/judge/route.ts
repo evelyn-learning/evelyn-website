@@ -34,6 +34,8 @@ const { client: anthropic, model: JUDGE_MODEL_ID } = getModelClient('judge');
 const MAX_TOKENS = 600;
 
 interface JudgeRequestBody {
+  /** Language lesson — see judge-prompt.ts `learnerSpeech`. */
+  learnerSpeech?: boolean;
   /** Compact prose dump of what's currently on the board — same shape
    *  as buildWhiteboardSummary's output. Empty string means blank board. */
   boardSummary: string;

@@ -44,6 +44,13 @@ export interface JudgeUserContentInput {
    *  decision.ts `formatJudgeAnswerCheck`). Like computed_facts, the block
    *  words its own authority, so the cached system prompt is unchanged. */
   answerCheck?: string;
+  /** Language lesson (subject "languages"): the student's turn is speech
+   *  recognition of a learner, often mixed-language. GDI starter session
+   *  2026-10-15: "bought" spoken correctly came back as "boat" every time,
+   *  the judge flagged the tutor's praise as false, and the tutor took it
+   *  back. The block words its own authority, so the cached system prompt
+   *  is unchanged. */
+  learnerSpeech?: boolean;
 }
 
 export function buildJudgeUserContent(body: JudgeUserContentInput): string {
@@ -70,7 +77,11 @@ export function buildJudgeUserContent(body: JudgeUserContentInput): string {
   const answerCheckBlock = (typeof body.answerCheck === 'string' && body.answerCheck.trim().length > 0)
     ? `<answer_check>\n${body.answerCheck.trim().slice(0, 600).replace(/[<>]/g, ' ')}\nThis check of the student's answer was made independently, from the problem itself, before the tutor replied. Take its result as settled when you fill in studentAnswerVerdict. A tutor statement that agrees with it — saying an answer checked INCORRECT is not right, or confirming one checked CORRECT — is not an issue: do not flag it. A tutor statement that contradicts it is an issue. Every other statement in the turn is judged as usual.\n</answer_check>\n\n`
     : '';
+  const learnerSpeechBlock = body.learnerSpeech === true
+    ? `<learner_speech>\nThis is a language lesson. The student's words reach the tutor through speech recognition, which often turns a correctly spoken word into a similar-sounding one (bought → "boat", walked → "work"). When the student's answer differs from the target only by such a sound-alike word, the tutor treating it as correct is right: do not flag that praise. Judge grammar and word choice that cannot be explained by mishearing as usual.\n</learner_speech>\n\n`
+    : '';
   return (
+    learnerSpeechBlock +
     `<whiteboard_state>\n${body.boardSummary || '(whiteboard is empty)'}\n</whiteboard_state>\n\n` +
     computedFactsBlock +
     answerCheckBlock +

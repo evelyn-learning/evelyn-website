@@ -254,6 +254,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'false_assertion_downgraded_stale_anchor',
   //   a queue-time merge/drop decision for a near-duplicate student final:
   'student_turn_coalesced',
+  'pre_audio_supersede',
   //   the "give me a moment" think-time hold armed for a turn:
   'think_time_hold_set',
   // portal-704e3e01 (2026-09-04): page retitled from the problem that actually

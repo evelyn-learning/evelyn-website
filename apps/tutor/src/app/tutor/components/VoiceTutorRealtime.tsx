@@ -364,6 +364,7 @@ import {
   TUTOR_POSED_PROBLEM_BOARD_CHECK,
   TUTOR_THINK_TIME_HOLD,
   TUTOR_TURN_COALESCE,
+  TUTOR_SUPERSEDE_PRE_AUDIO,
   TUTOR_OPENING_BARGEIN_ESCAPE,
   TUTOR_VERDICT_REPLANT_ON_KILL,
   TUTOR_KILL_WITHHOLDS_ADVANCE,
@@ -506,7 +507,7 @@ async function dispatchTopicNotesOverlay(
 }
 
 // Words that Whisper commonly misrecognizes as inappropriate
-import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
+import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting, sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
 import { detectStudentIntent, isContinuationRequest } from '@/lib/tutor/voice/student-intent';
 import { detectTutorSameContext, decidePageStrip } from '@/lib/tutor/voice/tutor-context-detector';
@@ -3473,6 +3474,9 @@ export function VoiceTutorRealtime({
   // into, vs. stale enough that the new final should start its own entry.
   const queuedTranscriptCoalesceAtRef = useRef<number>(0);
   const TURN_COALESCE_MS = 5000;
+  // Pre-audio supersede window: a final that lands this long after the
+  // in-flight turn was dispatched is a new thought, not the rest of it.
+  const PRE_AUDIO_SUPERSEDE_MS = 8000;
   // R32 (H1 review round 1, Finding 1): a queueOnMidUtterance push has a
   // guaranteed drain ONLY when brainBusyRef was true at push time (the
   // while-loop drain / 90s busy-watchdog own it then). When brainBusyRef is
@@ -4749,7 +4753,7 @@ export function VoiceTutorRealtime({
           currentUserTextRef.current = '';
           return;
         }
-        const classification = classifyTranscript(raw, { allowGreetings: !studentHasSpokenRef.current });
+        const classification = classifyTranscript(raw, { allowGreetings: !studentHasSpokenRef.current, allowNonLatin: sessionAllowsNonLatin(tutorLanguages) });
         if (classification === 'noise') {
           console.log('[VoiceTutorRealtime] Dropped noise transcript:', raw);
           onDebugEvent?.('noise_filtered', `Filtered: "${raw}"`);
@@ -17494,7 +17498,7 @@ export function VoiceTutorRealtime({
               // 2026-10-06b: computedFacts — which side of which (coloured)
               // line holds, computed from the problem's own inequalities. The
               // judge flagged four correct statements without them.
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}), ...(judgeAnswerCheck ? { answerCheck: judgeAnswerCheck } : {}) }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}), ...(judgeAnswerCheck ? { answerCheck: judgeAnswerCheck } : {}), ...(subject === 'languages' ? { learnerSpeech: true } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -20122,6 +20126,37 @@ export function VoiceTutorRealtime({
       // in-flight turn on a new arrival regressed before (see the E1
       // lazy-cancel comments elsewhere in this file); this only affects
       // turns that haven't dispatched yet.
+      // Pre-audio supersede (see the flag's doc): the in-flight reply has not
+      // reached the speaker yet, so nothing the student heard is taken back.
+      // Abort it and queue in-flight text + this final as ONE turn; the
+      // aborted call's own finally releases the busy flag and drains it,
+      // the same hand-off the typed opening-turn supersede uses.
+      const inFlight = inFlightTurnRef.current;
+      if (
+        TUTOR_SUPERSEDE_PRE_AUDIO &&
+        !opts?.silent &&
+        inFlight &&
+        !inFlight.shown &&
+        !inFlight.transcript.trim().startsWith('[') &&
+        !isKickoffMessage(inFlight.transcript) &&
+        Date.now() - brainTurnStartedAtRef.current < PRE_AUDIO_SUPERSEDE_MS &&
+        inFlightBrainAbortRef.current
+      ) {
+        const prior = queuedTranscriptsRef.current.splice(0).filter((q) => !q.startsWith('['));
+        const parts = [inFlight.transcript, ...prior, transcript].map((x) => x.trim()).filter(Boolean);
+        const merged: string[] = [];
+        for (const part of parts) {
+          const norm = part.toLowerCase().replace(/\s+/g, ' ');
+          if (!merged.some((m) => isFuzzyDupTranscript(m.toLowerCase().replace(/\s+/g, ' '), norm))) merged.push(part);
+        }
+        const combined = merged.join(' ');
+        inFlight.shown = true; // one supersede per in-flight turn
+        queuedTranscriptsRef.current.push(combined);
+        queuedTranscriptCoalesceAtRef.current = Date.now();
+        onDebugEvent?.('pre_audio_supersede', combined.slice(0, 80));
+        try { inFlightBrainAbortRef.current.abort(); } catch { /* already gone */ }
+        return;
+      }
       if (
         TUTOR_TURN_COALESCE &&
         queuedTranscriptsRef.current.length > 0 &&
@@ -20307,7 +20342,7 @@ export function VoiceTutorRealtime({
       // enhancement; it must never be load-bearing for the reply.
       if (!opts?.silent && !/^\s*\[/.test(transcript)) {
         const detectSource = opts?.typed === true ? 'typed' : 'voice';
-        if (detectSource === 'typed' || classifyTranscript(transcript) === 'clean') {
+        if (detectSource === 'typed' || classifyTranscript(transcript, { allowNonLatin: sessionAllowsNonLatin(tutorLanguages) }) === 'clean') {
           try {
             runStudentTurnDetection(transcript, detectSource);
           } catch (err) {
@@ -20460,7 +20495,7 @@ export function VoiceTutorRealtime({
         // being wrong is a spurious newPage or jump match, so guard rather
         // than rely on the producers. Same defensive try/catch as the
         // direct site.
-        if (!/^\s*\[/.test(combined) && classifyTranscript(combined) === 'clean') {
+        if (!/^\s*\[/.test(combined) && classifyTranscript(combined, { allowNonLatin: sessionAllowsNonLatin(tutorLanguages) }) === 'clean') {
           try {
             runStudentTurnDetection(combined, 'queued');
           } catch (err) {
@@ -22168,7 +22203,7 @@ export function VoiceTutorRealtime({
       // gated on firstStudentTurnAcceptedRef (not studentHasSpokenRef)
       // so an earlier rejected/duplicate attempt can't close this window.
       const isPreTurnGreeting = !firstStudentTurnAcceptedRef.current && /^(hello|hi|hey)[.!?]?$/i.test(t.text.trim());
-      const noiseCheck = isPreTurnGreeting ? 'clean' : classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current });
+      const noiseCheck = isPreTurnGreeting ? 'clean' : classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current, allowNonLatin: sessionAllowsNonLatin(tutorLanguages) });
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));

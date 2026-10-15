@@ -12,7 +12,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDefinition } from './toolDefinitions';
-import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
+import { classifyTranscript, sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
 import { shouldSurfaceWsError, shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
@@ -1596,7 +1596,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             updateState(shouldListenRef.current ? 'listening' : 'connected');
             break;
           }
-          const classification = classifyTranscript(transcript);
+          const classification = classifyTranscript(transcript, { allowNonLatin: sessionAllowsNonLatin(tutorLanguagesRef.current) });
           if (classification === 'noise') {
             console.log('[Realtime] Dropping phantom turn (noise):', JSON.stringify(transcript));
             // Remove the phantom item from the server's conversation state
