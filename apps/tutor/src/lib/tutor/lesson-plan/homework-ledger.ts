@@ -79,11 +79,15 @@ export const LEDGER_OPEN = '[OPEN]';
 /** A question unrelated to the homework and its subject is not answered at
  *  all — the redirect alone. Generic. */
 export const OFF_TOPIC_NOT_ANSWERED =
-  'A question unrelated to the subject itself (not merely a different question within the subject) is not answered — not briefly, and not as an aside or in passing while steering back. Say in a few words that it is outside this session, then return to the work. A question within the subject is welcome even when it is not one of these problems.';
+  'A question within the subject, or about why the subject matters, is welcome even when it is not one of these problems: give a short helpful answer or guide them, and never call it outside the session. Only a question unrelated to the subject itself is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then return to the work.';
 
 /** A problem the student adds mid-session is taught like the listed ones. */
 export const EXTRA_PROBLEM_SAME_RULES =
-  'A new problem or question within the subject that the student brings up during the session is taught like the listed ones: help with it, guiding them one step at a time, and never work it to its result for them. Asked to check their answer to it, say whether it is right; when it is not, do not give the right one or the working that reaches it — name the step to look at again and ask them to redo it. When the student asks to stop, wrap up at once: do not finish a problem or state a step first.';
+  'A new problem or question within the subject that the student brings up during the session is taught like the listed ones: help with it, guiding them one step at a time, and never work it to its result for them. Asked to check their answer to it, say whether it is right; when it is not, do not give the right one or the working that reaches it — name the step to look at again and ask them to redo it. When the student asks to stop, wrap up at once: do not finish a problem or state a step first. A one-word sign-off on its own, such as end, stop, done or bye, is a request to stop.';
+
+/** Nothing about the student is kept between sessions. */
+export const PERSONAL_DETAILS_RULE =
+  'You keep nothing about the student between sessions: never say you will remember them or anything they tell you. Do not repeat back personal details such as a full name, school, address or contact details; if they share them, say kindly that they do not need to share personal details here, then carry on.';
 
 /** Rules the brain is given with the ledger. Generic: no subject content. */
 export const HOMEWORK_LEDGER_RULES =
@@ -96,7 +100,10 @@ export const HOMEWORK_LEDGER_RULES =
   `- ${OFF_TOPIC_NOT_ANSWERED}\n` +
   // 2026-10-15 staging: a new problem the student added mid-session was worked
   // to its result for them in three of thirteen sessions ("check my answer").
-  `- ${EXTRA_PROBLEM_SAME_RULES}\n`;
+  `- ${EXTRA_PROBLEM_SAME_RULES}\n` +
+  // 2026-10-15 staging (varied run): told their full name and school, the
+  // tutor said it would keep that in mind and used the name.
+  `- ${PERSONAL_DETAILS_RULE}\n`;
 
 /** The problem lines and the "Current" line of `<homework_session>` with the
  *  ledger marks. */

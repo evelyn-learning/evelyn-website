@@ -19,6 +19,7 @@ import {
   formatProblemLedgerBlock,
   HOMEWORK_LEDGER_RULES,
   OFF_TOPIC_NOT_ANSWERED,
+  PERSONAL_DETAILS_RULE,
   nextOpenPosition,
   recordSolved,
   sanitizeSolvedPositions,
@@ -439,7 +440,10 @@ async function main() {
     assert.ok(HOMEWORK_LEDGER_RULES.includes(OFF_TOPIC_NOT_ANSWERED));
     assert.ok(HOMEWORK_LEDGER_RULES.includes(EXTRA_PROBLEM_SAME_RULES));
     assert.ok(formatProblemLedgerBlock([{ n: 1, text: 'a' }, { n: 2, text: 'b' }], [1]).includes(OFF_TOPIC_NOT_ANSWERED));
-    for (const t of [OFF_TOPIC_NOT_ANSWERED, EXTRA_PROBLEM_SAME_RULES]) assert.doesNotMatch(t, /\d|e\.g\.|for example|"/i);
+    assert.ok(HOMEWORK_LEDGER_RULES.includes(PERSONAL_DETAILS_RULE));
+    assert.match(OFF_TOPIC_NOT_ANSWERED, /^A question within the subject/);
+    assert.match(EXTRA_PROBLEM_SAME_RULES, /one-word sign-off/);
+    for (const t of [OFF_TOPIC_NOT_ANSWERED, EXTRA_PROBLEM_SAME_RULES, PERSONAL_DETAILS_RULE]) assert.doesNotMatch(t, /\d|e\.g\.|for example|"/i);
   });
   // 2026-10-15 staging, second run (Algebra II, AP Chemistry): a repeat of a solved answer once all are solved.
   await test('all solved: a correct repeat of a listed answer gets the no-question rule; extra-problem work does not', () => {
