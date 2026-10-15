@@ -203,7 +203,7 @@ async function ledgerAt(r: Rec, idx: number): Promise<{ solved: number[]; trail:
   const { runVerdictPrecheck } = await import('../src/lib/tutor/voice/verdict-precheck');
   const { toPublicPrecheck } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
   const { classifyTurnShape } = await import('../src/lib/tutor/voice/turn-shape-signal');
-  const { recordSolved, solvedPositionFromCheck } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
+  const { recordSolved, solvedPositionsFromCheck } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
   let solved: number[] = [];
   const trail: string[] = [];
   for (let i = 0; i < idx; i++) {
@@ -221,9 +221,9 @@ async function ledgerAt(r: Rec, idx: number): Promise<{ solved: number[]; trail:
     }, { ledger: true, claimVerdict: true, timeoutMs: 15_000 });
     if (res) { usage.checkIn += res.inputTokens; usage.checkOut += res.outputTokens; }
     const pub = res ? toPublicPrecheck(res) : null;
-    const pos = solvedPositionFromCheck(pub, r.problems.length);
-    solved = recordSolved(solved, pos, r.problems.length);
-    trail.push(`"${m.text.slice(0, 50)}" → ${pub ? `${pub.answers}/${pub.verdict}/${pub.confidence}${pub.solvedProblem ? ` solved=${pub.solvedProblem}` : ''}` : 'no result'}`);
+    // Same rule as the browser (VoiceTutorRealtime.tsx): every position the check proves.
+    for (const pos of solvedPositionsFromCheck(pub, r.problems.length)) solved = recordSolved(solved, pos, r.problems.length);
+    trail.push(`"${m.text.slice(0, 50)}" → ${pub ? `${pub.answers}/${pub.verdict}/${pub.confidence}${pub.solvedProblems?.length ? ` solved=${pub.solvedProblems.join(',')}` : ''}` : 'no result'}`);
   }
   cache[key] = { solved, trail };
   fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 1));

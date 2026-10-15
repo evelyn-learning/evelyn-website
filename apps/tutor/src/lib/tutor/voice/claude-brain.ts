@@ -22,7 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
-import { formatLedgerProblemLines, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES, isSignOff, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
+import { formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -1753,6 +1753,9 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts
     `${problemLines}\n` +
     `Rules:\n` +
     `- Work the problems in order unless the student asks to jump. One problem at a time. Before your first question about a problem, put it on the board and call set_current_problem with its number.\n` +
+    // 2026-10-15 (GAC v7 audit): "one at a time" sat beside the ledger's
+    // multi-answer recording; the student sets the order, the tutor does not.
+    (ledger ? `- The student may answer several problems in one message, or out of order: take every answer they give as it comes, then ask about one open problem.\n` : '') +
     `- Ask, never tell: never state a final answer, a completed step the student has not attempted, or a full solution — even when asked outright. A stuck student gets a smaller step or a hint, not the answer.\n` +
     `- When the student reaches an answer, have them state it, confirm it is correct or ask them to check a specific step, then move on.\n` +
     `- When time is nearly up, close cleanly and name the problems left for next time.\n` +
@@ -2260,7 +2263,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         input.activeProblem?.statement ?? '',
         ...input.conversationHistory.filter((m) => m.role === 'user' || noRevealLedger).map((m) => (typeof m.content === 'string' ? m.content : '')),
       ].join('\n'),
-      ...(noRevealLedger ? { newNumbers: true } : {}),
+      ...(noRevealLedger ? {
+        newNumbers: true,
+        studentPriorText: input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')).join('\n'),
+        problemText: [...(input.homework?.problems ?? []).map((p) => p.text), input.activeProblem?.statement ?? ''].join('\n'),
+      } : {}),
     };
     console.log('[whole-answer-reveal] guard armed for this request');
     return sealWithheldAnswer({ value: String(value), studentText });
@@ -2329,9 +2336,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? formatProblemLedgerBlock(input.homework.problems, input.homework.solved ?? [])
     : '';
   let answerCheckBlock = '';
-  if (input.textVerdictPrecheck === true) {
+  // 2026-10-15 (GAC v7 audit): under the ledger a message that is plainly not
+  // an answer (a sign-off, "brb", "idk", narrowing guesses, a fake
+  // instruction, a live test, distress) is not checked: it gets its own rule.
+  const ledgerKind = noRevealLedger ? ledgerTurnKind(studentSaid) : null;
+  if (ledgerKind) {
+    answerCheckBlock = formatLedgerTurnBlock(ledgerKind);
+    console.log(`[homework-ledger] message kind: ${ledgerKind} (not checked)`);
+  }
+  if (input.textVerdictPrecheck === true && !ledgerKind) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
-    if (turnShape?.answerShaped && hasContext && !(noRevealLedger && isSignOff(studentSaid))) {
+    if (turnShape?.answerShaped && hasContext) {
       // Liveness: the client keeps its typing indicator up while this runs.
       yield { type: 'thinking' };
       const startedAt = Date.now();

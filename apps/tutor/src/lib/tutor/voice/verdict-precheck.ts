@@ -227,6 +227,8 @@ export const CLAIM_VERDICT_RULE =
  * problem the message is about, so a wrong second answer to a problem
  * already solved does not reopen it.
  */
+// 2026-10-15 (GAC v7 audit): `reason_wrong` — a right value with a false
+// reason was forced to "correct" by the final-answer test and recorded solved.
 // 2026-10-15 (GAC staging v6): "<right answer> and <wrong answer>" in one
 // message was judged correct as a whole and both problems recorded solved
 // (and, once, the wrong one praised). Each stated answer is judged on its
@@ -234,7 +236,8 @@ export const CLAIM_VERDICT_RULE =
 export const SOLVED_PROBLEM_FIELD_RULE =
   ' stated_answers — one entry for EACH of the student\'s listed problems (or part of one) that this message states an answer for: problem (its number as listed), stated (what the message states for it), own_answer (the answer to that problem or part as YOU worked it out in step two — work it out for each one, do not assume), right (true only when stated is the same answer as own_answer). Empty when the message states no answer to a listed problem. When the message states answers for more than one problem or part, the verdict is "correct" only when every entry is right, and "partly_correct" when some are right and some are not.'
   + ' solved_problems — the numbers, as listed in <student_problems>, of EVERY one of the student\'s problems whose COMPLETE final answer (every part and every value that problem asks for) the student has now stated correctly, judged by your own working in step two. One message can complete several problems: list each one. An answer can also be split across messages: for each part of a problem, take the student\'s LATEST statement of it, in this message or in their own earlier messages in the recent conversation (never the tutor\'s words); when those latest statements together are the complete right answer, list the problem. Leave a problem out when only a step, one part or some of the values have been stated, or when the latest statement of any part is wrong. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier lists that problem. Empty when none, or when no problems are listed.'
-  + ' about_problem — the number, as listed in <student_problems>, of the student\'s problem this message proposes an answer, step or part for; zero when it is about none of the listed problems (a new problem of their own, a general claim, small talk) or when it is about several.';
+  + ' about_problem — the number, as listed in <student_problems>, of the student\'s problem this message proposes an answer, step or part for; zero when it is about none of the listed problems (a new problem of their own, a general claim, small talk) or when it is about several.'
+  + ' reason_wrong — true when the message gives a reason, rule or method for its answer and that reason is false or does not actually establish the answer, even when the answer itself is right; false when it gives no reason or a sound one. A right answer with a wrong reason is "partly_correct", and that problem is not listed in solved_problems.';
 
 /**
  * 2026-10-15 (GAC staging v5): with several problems listed, a correct answer
@@ -244,6 +247,15 @@ export const SOLVED_PROBLEM_FIELD_RULE =
  */
 export const OTHER_LISTED_PROBLEM_RULE =
   '\n   Second test: does the proposed value equal the final answer of a DIFFERENT one of the student\'s listed problems (or of one of its parts)? If it does, answers is "other_part" and the verdict is "correct" — the student has answered that problem, not the question asked just now.';
+
+/**
+ * 2026-10-15 (GAC v7 audit): the same answer in another form was left to
+ * "an equivalent form … is the same answer", and a value the student reports
+ * from someone else was not always read as proposed. Ledger only; inserted
+ * before step 5; generic wording.
+ */
+export const LEDGER_FORMS_RULE =
+  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves.';
 
 /** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
  *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; `readinessTaskRule` unset ⇒
@@ -259,6 +271,8 @@ export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; r
     const anchor = 'matching the final answer is not a coincidence.';
     const i = system.indexOf(anchor);
     if (i >= 0) system = system.slice(0, i + anchor.length) + OTHER_LISTED_PROBLEM_RULE + system.slice(i + anchor.length);
+    const at5 = system.indexOf('\n5. CONFIDENCE.');
+    system = at5 < 0 ? system + LEDGER_FORMS_RULE : system.slice(0, at5) + LEDGER_FORMS_RULE + system.slice(at5);
     system += SOLVED_PROBLEM_FIELD_RULE;
   }
   return system;
@@ -323,7 +337,7 @@ export const VERDICT_PRECHECK_SCHEMA_WITH_WORKING: Record<string, unknown> = {
 export function withSolvedProblemField(schema: Record<string, unknown>): Record<string, unknown> {
   return {
     ...schema,
-    required: [...(schema.required as string[]), 'stated_answers', 'solved_problems', 'about_problem'],
+    required: [...(schema.required as string[]), 'stated_answers', 'solved_problems', 'about_problem', 'reason_wrong'],
     properties: {
       ...(schema.properties as Record<string, unknown>),
       stated_answers: {
@@ -337,6 +351,7 @@ export function withSolvedProblemField(schema: Record<string, unknown>): Record<
       },
       solved_problems: { type: 'array', items: { type: 'integer' } },
       about_problem: { type: 'integer' },
+      reason_wrong: { type: 'boolean' },
     },
   };
 }
@@ -547,7 +562,10 @@ export async function runVerdictPrecheck(
     // EQUALS the final answer of the problem being worked is a correct answer
     // to that problem, whatever it then wrote about the open question —
     // unless it classed it as a correct answer to the open question already.
-    if (o.proposed_equals_final_answer === true && String(o.problem_final_answer ?? '').trim()
+    // 2026-10-15 (GAC v7 audit): not over the check's own finding that the
+    // reason given is wrong (ledger).
+    const reasonWrong = ledger && o.reason_wrong === true;
+    if (o.proposed_equals_final_answer === true && String(o.problem_final_answer ?? '').trim() && !reasonWrong
         && !(o.verdict === 'correct' && (o.answers === 'open_question' || o.answers === 'overall_problem'))) {
       o.answers = 'overall_problem';
       o.verdict = 'correct';
@@ -564,7 +582,8 @@ export async function runVerdictPrecheck(
       console.log(`[verdict-precheck] differs_at not used (it carried a value): "${String(o.differs_at).replace(/\s+/g, ' ').slice(0, 120)}"`);
     }
     // 2026-10-19 (ledger): the problem LABELS the check named → list positions.
-    // `solved_problem` (one number) is still read, for a reply in the old shape.
+    // `solved_problem` (one number) is still read for a reply in the old shape
+    // (a test double or a replay of a stored reply; the schema no longer asks for it).
     const problems = input.problems ?? [];
     const positionOf = (v: unknown): number => {
       const n = Number(v);
@@ -582,11 +601,21 @@ export async function runVerdictPrecheck(
       o.verdict = rightHere ? 'partly_correct' : 'incorrect';
       console.log(`[verdict-precheck] verdict correct → ${o.verdict}: a stated answer was judged wrong (problem position ${[...wrongHere].join(',')})`);
     }
-    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos)))].sort((a, b) => a - b);
     const aboutProblem = positionOf(o.about_problem);
+    // A right answer given for a wrong reason is not yet solved: the problem
+    // it is about (or every one it states, when it is about several) stays open.
+    const reasonOpen = new Set<number>();
+    if (reasonWrong) {
+      if (aboutProblem) reasonOpen.add(aboutProblem);
+      else for (const a of stated) { const pos = positionOf(a?.problem); if (pos > 0) reasonOpen.add(pos); }
+      if (o.verdict === 'correct') o.verdict = 'partly_correct';
+      console.log(`[verdict-precheck] reason judged wrong — not recorded solved (problem position ${[...reasonOpen].join(',') || 'none'})`);
+    }
+    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
       ...(aboutProblem ? { aboutProblem } : {}),
+      ...(wrongHere.size ? { wrongProblems: [...wrongHere].sort((a, b) => a - b) } : {}),
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),

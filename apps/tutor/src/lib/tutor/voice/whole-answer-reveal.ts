@@ -51,6 +51,12 @@ export interface WithheldAnswer {
    *  (a corrected intermediate line, a corrected setup), whatever the check's
    *  own value was. */
   newNumbers?: boolean;
+  /** 2026-10-15: the student's own earlier messages — in new-number mode
+   *  their numbers, like `studentText`'s, are never a hit, except numbers
+   *  that are also in `problemText` (the first message usually IS the
+   *  problem list, so those count as the problem's own numbers). */
+  studentPriorText?: string;
+  problemText?: string;
 }
 
 /** Is the guard on for this turn? HIGH confidence only, and only with a value.
@@ -173,8 +179,20 @@ function resultParts(value: string): string[] {
     .filter(Boolean);
 }
 
+// 2026-10-15 (GAC v7 audit): a result that also occurs in the problem's own
+// text ("2" in "x^2 - 5x + 6 = 0", whose roots are 2 and 3) was never a hit,
+// so "x = 2 also works" went out. In new-number mode (the ledger) a number
+// the problem or the conversation already contains still counts where a
+// result stands; only the student's own numbers are never a hit.
+function knownNumbers(a: WithheldAnswer): Num[] {
+  if (a.newNumbers !== true) return [...numbersIn(a.studentText), ...numbersIn(a.givenText)];
+  const inProblem = numbersIn(a.problemText ?? '');
+  const prior = numbersIn(a.studentPriorText ?? '').filter((n) => !inProblem.some((k) => sameNumber(k.value, n.value)));
+  return [...numbersIn(a.studentText), ...prior];
+}
+
 function targetNumbers(a: WithheldAnswer): Num[] {
-  const known = [...numbersIn(a.studentText), ...numbersIn(a.givenText)];
+  const known = knownNumbers(a);
   const out: Num[] = [];
   for (const part of resultParts(a.value)) {
     for (const n of numbersIn(part)) {
@@ -192,13 +210,20 @@ const isWeak = (n: Num): boolean => n.decimals === 0 && Math.abs(n.value) < 10;
 
 function numericHit(text: string, a: WithheldAnswer, targets: Num[], board: boolean): string | null {
   if (!targets.length) return null;
-  const known = [...numbersIn(a.studentText), ...numbersIn(a.givenText)];
+  const known = knownNumbers(a);
+  const given = a.newNumbers === true ? numbersIn(a.givenText) : [];
   // Speech: "eighty-four point nine" → "84 point 9" → "84.9".
   const said = numbersIn(board ? text : spokenNumbersToDigits(text).replace(/(\d)\s+point\s+(\d(?:\s\d)*)(?!\d)/gi, (_m, i: string, f: string) => `${i}.${f.replace(/\s/g, '')}`));
   const lone = said.length === 1;
+  // 2026-10-15 (GAC v7 audit): a small number written as a word outside a
+  // result position ("which two numbers multiply to …") is ordinary prose,
+  // not a result — only one written in digits counts there.
+  const inDigits = numbersIn(text);
   for (const r of said) {
     // A number the student wrote, or one given in the problem, is never a hit.
     if (known.some((k) => sameNumber(k.value, r.value))) continue;
+    // A number of the problem or the conversation: only where a result stands.
+    if (!r.resultPosition && given.some((k) => sameNumber(k.value, r.value))) continue;
     for (const t of targets) {
       if (!agrees(r, t)) continue;
       if (r.coefficient && isWeak(t)) continue;
@@ -206,6 +231,7 @@ function numericHit(text: string, a: WithheldAnswer, targets: Num[], board: bool
       // single-digit result is a hit wherever it stands — "there are only 9
       // bonds" gave the answer away in prose, outside any result position.
       if (isWeak(t) && !(r.resultPosition || (board && lone) || a.newNumbers === true)) continue;
+      if (isWeak(t) && !r.resultPosition && !inDigits.some((d) => sameNumber(d.value, r.value))) continue;
       return String(r.value);
     }
   }
@@ -266,7 +292,7 @@ function textHit(text: string, a: WithheldAnswer): string | null {
  *  wrote (`WithheldAnswer.newNumbers`). Speech forms are read as in
  *  `numericHit`. */
 function newResultNumber(text: string, a: WithheldAnswer, board: boolean): string | null {
-  const known = [...numbersIn(a.studentText), ...numbersIn(a.givenText)];
+  const known = [...numbersIn(a.studentText), ...numbersIn(a.studentPriorText ?? ''), ...numbersIn(a.givenText)];
   const said = numbersIn(board ? text : spokenNumbersToDigits(text).replace(/(\d)\s+point\s+(\d(?:\s\d)*)(?!\d)/gi, (_m, i: string, f: string) => `${i}.${f.replace(/\s/g, '')}`));
   for (const r of said) {
     if (!r.resultPosition || r.coefficient) continue;

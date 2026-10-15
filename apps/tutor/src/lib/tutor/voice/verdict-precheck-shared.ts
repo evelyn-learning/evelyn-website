@@ -65,6 +65,10 @@ export interface PublicVerdictPrecheck {
   /** 2026-10-15: the list position of the homework problem the message is
    *  about, when the check named one. Ledger only. */
   aboutProblem?: number;
+  /** 2026-10-15 (GAC v7 audit): the list positions of the problems this
+   *  message stated an answer for that the check judged WRONG (its
+   *  `stated_answers`). A problem number reveals nothing. Ledger only. */
+  wrongProblems?: number[];
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -103,6 +107,7 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     ...solvedProblemField(o.solvedProblem),
     ...solvedProblemsField(o.solvedProblems),
     ...aboutProblemField(o.aboutProblem),
+    ...wrongProblemsField(o.wrongProblems),
   };
 }
 
@@ -114,6 +119,12 @@ function solvedProblemsField(v: unknown): { solvedProblems?: number[] } {
   if (!Array.isArray(v) || v.length > 25 || !v.every(isPosition)) return {};
   const list = [...new Set(v)].sort((a, b) => a - b);
   return list.length ? { solvedProblems: list } : {};
+}
+
+function wrongProblemsField(v: unknown): { wrongProblems?: number[] } {
+  if (!Array.isArray(v) || v.length > 25 || !v.every(isPosition)) return {};
+  const list = [...new Set(v)].sort((a, b) => a - b);
+  return list.length ? { wrongProblems: list } : {};
 }
 
 function aboutProblemField(v: unknown): { aboutProblem?: number } {
@@ -130,7 +141,7 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -245,7 +256,9 @@ export function formatAnswerCheckBlock(
   }
   return head + proposed + where
     + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
-    + 'What to do: say exactly what is right and what is missing or wrong. Do not open with unqualified praise, and do not open with a flat denial.\n'
+    + (opts?.noRevealAnyStep === true && partlyWrongOnSolvedProblem(p, opts)
+      ? PARTLY_SOLVED_DOUBT_RULE
+      : 'What to do: say exactly what is right and what is missing or wrong. Do not open with unqualified praise, and do not open with a flat denial.\n')
     + tail;
 }
 
@@ -294,10 +307,29 @@ export const OTHER_PART_NOTHING_OPEN_RULE =
 export const SOLVED_PROBLEM_WRONG_RULE =
   'What to do: the software\'s record shows the student already solved THAT problem correctly earlier in the session, so their earlier answer stands and the problem stays finished. Say kindly, in a sentence or two, that this new answer is not right and that the answer they gave before was — with one short reason in general terms — but do not write out the earlier answer or any value. Do not reopen the problem: ask no question about it and do not ask them to work any step of it again. Then carry on with the next unsolved problem, or, when every problem is solved, offer to stop or to look at something else.\n';
 
-/** A wrong answer, under the ledger, to a problem the ledger holds as solved. */
+/** A wrong answer, under the ledger, to a problem the ledger holds as solved.
+ *  2026-10-15 (GAC v7 audit): also when the message is about several problems
+ *  (no `aboutProblem`) and every answer judged wrong in it is for a solved one. */
 function wrongOnSolvedProblem(p: PublicVerdictPrecheck, opts?: { solved?: readonly number[] }): boolean {
-  return p.verdict === 'incorrect' && p.aboutProblem !== undefined && !!opts?.solved?.includes(p.aboutProblem);
+  if (p.verdict !== 'incorrect') return false;
+  if (p.aboutProblem !== undefined && !!opts?.solved?.includes(p.aboutProblem)) return true;
+  return !!p.wrongProblems?.length && p.wrongProblems.every((pos) => !!opts?.solved?.includes(pos));
 }
+
+/**
+ * 2026-10-15 (GAC v7 audit): "<a right answer to an open problem>, also was
+ * <a solved one> really <something else>?" is PARTLY correct as a whole, and
+ * the partly rule asks one question to redo the wrong part — which reopened
+ * the solved problem (the v6 bug through another branch). True when some
+ * answer judged wrong in the message is for a problem the ledger holds as
+ * solved.
+ */
+function partlyWrongOnSolvedProblem(p: PublicVerdictPrecheck, opts?: { solved?: readonly number[] }): boolean {
+  return p.verdict === 'partly_correct' && !!p.wrongProblems?.some((pos) => !!opts?.solved?.includes(pos));
+}
+
+export const PARTLY_SOLVED_DOUBT_RULE =
+  'Part of what it states is about a problem the software\'s record shows the student already solved correctly earlier: their earlier answer to THAT problem stands and it stays finished. Credit what is right, and say in a few words that their earlier answer to the solved one stands — without writing out that answer or any value. Ask no question about the solved problem and do not ask them to work any step of it again. If something is still missing or wrong on a problem that is NOT solved, ask about that one only.\n';
 
 export const ALL_SOLVED_CORRECT_RULE =
   'What to do: every one of the student\'s problems is already solved (the software\'s record), so this repeats an answer they already gave. Say in a few words that it is right and already done. Ask NO question about any problem, part or step of this homework — not one you asked earlier, and not a check of it. Offer to stop or to look at something else.\n';
@@ -456,7 +488,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
   if (opts?.noRevealAnyStep === true) {
     return head + proposed + where
       + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
-      + PARTLY_NO_REVEAL_RULE
+      + (partlyWrongOnSolvedProblem(p, opts) ? PARTLY_SOLVED_DOUBT_RULE : PARTLY_NO_REVEAL_RULE)
       + tail;
   }
   return head + proposed + where
