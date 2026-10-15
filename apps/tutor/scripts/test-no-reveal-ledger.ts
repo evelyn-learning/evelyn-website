@@ -747,6 +747,31 @@ async function main() {
     assert.equal(formatProblemLettersBlock('a is 5', [1]), '', 'one problem');
   });
 
+  console.log('pre-v8 review');
+  await test('pre-v8: the same words read against the tutor\'s last message', () => {
+    const report = 'Write the equation down and let me know when you have it.';
+    const hint = 'Want a hint for the next step?';
+    const wrap = 'All three are solved. Want to look at anything else, or call it there?';
+    assert.equal(ledgerTurnKind('done', report), 'step_done');
+    assert.equal(ledgerTurnKind('done', wrap), 'sign_off');
+    assert.equal(ledgerTurnKind('done'), 'sign_off');
+    assert.equal(ledgerTurnKind('ok im good', hint), 'decline');
+    assert.equal(ledgerTurnKind('no thanks', 'Would you like me to show an example?'), 'decline');
+    assert.equal(ledgerTurnKind('ok im good', wrap), 'sign_off');
+    assert.equal(ledgerTurnKind('nah', 'What do you get when you subtract 1?'), null);
+    assert.equal(ledgerTurnKind('i want to die lol this is so hard'), 'wellbeing');
+    for (const k of ['step_done', 'decline'] as const) assert.doesNotMatch(formatLedgerTurnBlock(k), /\d|e\.g\.|for example|"/i);
+  });
+  await test('pre-v8: the ledger\'s own words are never spoken', async () => {
+    const { isMetaNarration } = await import('../src/lib/tutor/voice/meta-narration');
+    for (const t of ['Those are already recorded as solved.', 'Problem 2 is marked as done.', 'The software shows it is finished.', 'Problem 1 [SOLVED].', 'My records show you got that one.'])
+      assert.equal(isMetaNarration(t), true, t);
+    for (const t of ['You already got that one.', 'The temperature was recorded as 25 degrees.', 'That one is done, nice work.', 'Mark the point on the graph.'])
+      assert.equal(isMetaNarration(t), false, t);
+    assert.match(HOMEWORK_LEDGER_RULES, /never mention a record, a mark, a check or the software/);
+    assert.match(HOMEWORK_LEDGER_RULES, /Never name an AI model, an AI company/);
+  });
+
   console.log('route + client wiring (source)');
   const route = fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain/stream/route.ts'), 'utf8');
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');

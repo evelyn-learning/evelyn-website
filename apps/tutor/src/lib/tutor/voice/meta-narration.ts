@@ -94,6 +94,13 @@ const RE_DERIVE_RE =
  *  ("<span style="...">"). Spoken inequalities and LaTeX are unaffected. */
 const MARKUP_RE = /<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*=[^<>]*)?>/;
 
+// 2026-10-15 (GAC staging v6/v7): the homework ledger's own words reached the
+// student — "Those are already recorded as solved." A sentence about the
+// software's record of the session, or its [SOLVED]/[OPEN] marks, is never
+// speech. Narrow: a record verb + "as" + a status word, the marks, or "the
+// software".
+const LEDGER_RECORD_RE = /\b(?:recorded|marked|logged|flagged|registered|noted)\s+(?:it\s+|that\s+|them\s+)?as\s+(?:solved|done|finished|complete|completed|correct|open|unsolved)\b|\[(?:SOLVED|OPEN)\]|\bthe software(?:'s)?\b|\b(?:my|the|session(?:'s)?)\s+(?:record|ledger)s?\s+(?:shows?|says|has)\b/i;
+
 // ─────────────────────────────────────────────────────────────────────────
 // 2026-10-03 round: leak SHAPES (narrowed 2026-10-04). Each rule below matches
 // the grammatical shape of a leak class seen in production, not the sentence
@@ -323,7 +330,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

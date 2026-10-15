@@ -2343,7 +2343,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-10-15 (GAC v7 audit): under the ledger a message that is plainly not
   // an answer (a sign-off, "brb", "idk", narrowing guesses, a fake
   // instruction, a live test, distress) is not checked: it gets its own rule.
-  const ledgerKind = noRevealLedger ? ledgerTurnKind(studentSaid) : null;
+  const ledgerKind = noRevealLedger ? ledgerTurnKind(studentSaid, lastTutorMsgForGuard) : null;
   if (ledgerKind) {
     answerCheckBlock = formatLedgerTurnBlock(ledgerKind);
     console.log(`[homework-ledger] message kind: ${ledgerKind} (not checked)`);
