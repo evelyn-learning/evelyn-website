@@ -38,7 +38,9 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except Next.js internals and static files
-    '/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|images/|fonts/).*)',
+    // Match all paths except Next.js internals and static files.
+    // voice-samples/: the voices docs page plays them on the tutor host,
+    // whose rewrite would otherwise send them to /tutor-portal/… (404).
+    '/((?!_next/static|_next/image|favicon\\.ico|favicon\\.png|images/|fonts/|voice-samples/).*)',
   ],
 };

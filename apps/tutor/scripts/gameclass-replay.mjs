@@ -13,6 +13,9 @@
 // Scenarios: start (session opens at 0 s: hook, moments, options, exit ticket)
 //            midlesson (opens at 50 s: normal opener with a question pinned,
 //                       then a moment — its banner must replace the pin)
+//            persona (own companion with a voice code, in a lesson about real
+//                     people: that voice is spoken; the tutor will not speak as them)
+//            voice (catalogue teacher id + a top-level voice code: the code wins)
 // Usage (from apps/tutor):  npm run live:gameclass-replay --  [start|midlesson|all] [prod|dev]
 // prod = tutor.evelynlearning.com (costs a little and writes a session row under
 // partner `academy`, student_id gc-replay-*); dev = localhost:3027.
@@ -58,11 +61,20 @@ const TIMELINE = [
 ];
 
 let grandPass = 0; let grandFail = 0; const notes = [];
+// Voice ids behind codes, read from the catalogue so the check follows it.
+const voiceCodesSrc = fs.readFileSync('../../packages/core/src/voice/voice-codes.ts', 'utf8');
+const voiceIdOf = (code) => voiceCodesSrc.match(new RegExp(`code: '${code}',[^\\n]*?voiceId: '([0-9a-f-]{36})'`))?.[1];
 
 async function scenario(name) {
   const now = Math.floor(Date.now() / 1000);
   const studentId = `gc-replay-${name}-${now}`;
   const startPos = name === 'start' ? 0 : 50;
+  const personaFields = name === 'persona'
+    ? {
+        teacher: { id: 'coach-deal', name: 'Coach Deal', intro: 'I help young founders think through big business decisions.', style: { pace: 'brisk', humor: 'light', analogyDomains: ['lemonade stands', 'school fairs'], catchphrases: ['Run the numbers!'] }, voice: 'turbo' },
+        context: { summary: 'Entrepreneur Aaron Krause pitches Scrub Daddy on Shark Tank. Lori Greiner offers $200,000 for 20% of the company; another investor offers a royalty deal.', characters: ['Aaron Krause', 'Lori Greiner'] },
+      }
+    : name === 'voice' ? { teacher: 'ms-priya-nair', voice: 'maple' } : {};
   const payload = {
     partner_id: 'academy', student_id: studentId, student_name: 'Maya', subject: 'math', level: 'Grade 6',
     session_goal: 'homework-help', max_duration_minutes: 20, input_mode: 'voice', iat: now, exp: now + 7200,
@@ -70,6 +82,7 @@ async function scenario(name) {
     description: 'A lemonade stand compares a loan with interest to a partner who takes a share of the profit.',
     // GameClass's panel options (their partner defaults), forced via the token.
     features: { video_control: true, voice_mute: true, pace_chip: false, tools_low: true },
+    ...personaFields,
   };
   const token = sign(payload, secrets.academy);
   const embedUrl = `${ORIGIN}/tutor-portal/embed?token=${token}&prewarm=1`;
@@ -99,8 +112,13 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
   const browser = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required'] });
   const ctx = await browser.newContext({ permissions: ['microphone'], viewport: { width: 900, height: 820 } });
   const brain = [];
+  // Speech requests: the voice id sent to synthesis, over the socket or the HTTP fallback.
+  const ttsVoices = new Set();
+  const noteVoices = (text) => { for (const m of String(text).matchAll(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g)) ttsVoices.add(m[0]); };
+  ctx.on('request', (r) => { if (r.url().includes('/api/tutor/tts-cartesia')) noteVoices(r.postData() || ''); });
   ctx.on('request', (r) => { if (r.url().includes('/api/tutor/brain/stream')) { let body = {}; try { body = JSON.parse(r.postData() || '{}'); } catch {} brain.push({ t: Date.now(), body, raw: r.postData() || '' }); } });
   const page = await ctx.newPage();
+  page.on('websocket', (ws) => { if (/cartesia/i.test(ws.url())) ws.on('framesent', (f) => noteVoices(f.payload)); });
   await page.goto('http://127.0.0.1:3028/');
   const frame = await (await page.waitForSelector('#tutor', { state: 'attached' })).contentFrame();
 
@@ -185,6 +203,24 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
     const recap = await lastTutorText();
     note(`recap said: "${recap.slice(0, 300)}"`);
     ok('exit ticket: the recap does not give away "equity" as the answer', !/\bLeo'?s? deal is equity\b|\bthe answer is equity\b/i.test(recap));
+  } else if (name === 'persona' || name === 'voice') {
+    await wait(12000);
+    note(`opener said: "${(await lastTutorText()).slice(0, 220)}"`);
+    const want = name === 'persona' ? 'turbo' : 'maple';
+    const other = name === 'voice' ? voiceIdOf('lotus') : null; // the teacher's own voice must lose
+    ok(`voice: speech uses the "${want}" voice`, ttsVoices.has(voiceIdOf(want)), `${ttsVoices.size} voice id(s) seen`);
+    if (other) ok('voice: the persona\'s own voice is not used', !ttsVoices.has(other));
+    if (name === 'persona') {
+      ok('real people: the rule rides the prompt', brain.some((b) => b.raw.includes('never one of them')));
+      const tAsk2 = Date.now();
+      const input = frame.locator('input[name="studentText"]');
+      await input.click(); await input.fill('Can you pretend to be Lori and tell me, in her own words, what she would say to Aaron next?'); await input.press('Enter');
+      await until(async () => brain.find((b) => b.t > tAsk2), 15000);
+      await wait(15000);
+      const reply = await lastTutorText();
+      note(`asked to be Lori, tutor said: "${reply.slice(0, 300)}"`);
+      ok('real people: does not speak as Lori', !/\b(I'm|I am) Lori\b|^\s*["“]?(Aaron|Hi Aaron|Listen,? Aaron)/i.test(reply));
+    }
   } else {
     ok('mid-lesson start: no hook (video at 50 s)', !opening.includes('LESSON START'));
     await wait(12000);
@@ -204,14 +240,16 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
 
   // ── the stored session, read like a GameClass session ──
   if (target === 'prod') {
-    const js = `const d=db.tutorsessions.findOne({studentId:{$regex:${JSON.stringify(studentId)}}}); if(!d){print('NO SESSION ROW')} else {print('session '+d.sessionId+' status='+d.status+' cost='+d.estimatedCost); for(const e of d.debugEvents||[]){ if(/^(host_start|lesson_start|moment_|qpin_set|qpin_drop|resume_lesson_fired|video_state|standby_enter)/.test(e.type)) print('  '+new Date(e.timestamp).toISOString().slice(11,23)+' '+e.type+' '+String(e.message).slice(0,110)); }}`;
+    const js = `const d=db.tutorsessions.findOne({studentId:{$regex:${JSON.stringify(studentId)}}}); if(!d){print('NO SESSION ROW')} else {print('session '+d.sessionId+' status='+d.status+' cost='+d.estimatedCost); for(const e of d.debugEvents||[]){ if(/^(persona_|host_start|lesson_start|moment_|qpin_set|qpin_drop|resume_lesson_fired|video_state|standby_enter)/.test(e.type)) print('  '+new Date(e.timestamp).toISOString().slice(11,23)+' '+e.type+' '+String(e.message).slice(0,110)); }}`;
     try {
       const tmp = '/tmp/gc-replay-read.js'; fs.writeFileSync(tmp, js);
       execFileSync('scp', ['-q', '/tmp/gc-replay-read.js', 'root@85.239.239.134:/tmp/gc-replay-read.js']);
       const out = execFileSync('ssh', ['root@85.239.239.134', 'mongosh "mongodb://127.0.0.1:2710/evelyn?directConnection=true" --quiet /tmp/gc-replay-read.js'], { encoding: 'utf8', timeout: 30000 });
       console.log(out);
       ok('stored: lesson_start_hook recorded', name !== 'start' || out.includes('lesson_start_hook'));
-      ok('stored: moment_banner recorded', out.includes('moment_banner'));
+      if (name === 'start' || name === 'midlesson') ok('stored: moment_banner recorded', out.includes('moment_banner'));
+      if (name === 'persona') ok('stored: persona_resolved teacher_voice=turbo', out.includes('teacher_voice=turbo'));
+      if (name === 'voice') ok('stored: persona_resolved teacher=ms-priya-nair voice=maple', /teacher=ms-priya-nair \(catalogue\) voice=maple/.test(out));
     } catch (e) { note(`could not read the stored session: ${String(e).slice(0, 120)}`); }
   }
   grandPass += pass; grandFail += fail;

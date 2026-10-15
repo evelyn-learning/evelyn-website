@@ -32,6 +32,8 @@ import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON } from '@/lib/tutor/orchestrator/flags';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
+import { isVoiceCode } from '@core/voice/voice-codes';
+import { resolveEmbedPersona } from '@/lib/tutor/portal/embed-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
@@ -79,6 +81,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // standby_idle_end, video_state / video_command / video_resume_unconfirmed,
   // moment_received / moment_delivered / moment_dropped, lesson_timeline,
   // host_pause / host_resume, student_wake, resume_lesson_called / _fired / _dropped.
+  // persona_resolved: catalogue persona id / voice code / fallbacks.
+  'persona_',
   'standby', 'video_', 'moment_', 'lesson_timeline', 'lesson_start', 'host_pause', 'host_resume', 'student_wake', 'resume_lesson',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
@@ -385,6 +389,7 @@ interface EmbedConfig {
   engine?: 'standard' | 'premium';
   locale?: string;
   input_mode?: InputMode;
+  /** A voice code (see the voices docs page) or, legacy, a realtime voice name. */
   voice?: string;
   curriculum_module?: string;
   max_duration_minutes?: number;
@@ -445,8 +450,10 @@ interface EmbedConfig {
    *  engine teaches AS that specific teacher (name/intro/style/voice +
    *  identity bounds). Wire shape shared verbatim with the academy — see
    *  src/lib/tutor/ai/teacher-persona.ts. Passed through to the runtime;
-   *  only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
-  teacher?: TeacherPersonaWire;
+   *  only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on.
+   *  Partners may also send a catalogue persona id (string) or a voice code
+   *  as the persona's `voice` — read through resolveEmbedPersona, never raw. */
+  teacher?: TeacherPersonaWire | string;
   /** Prerequisite-readiness summary from the course-start diagnostic (prose),
    *  e.g. "the student scored 62% … Shakier foundations: … Already solid: …".
    *  TRANSIENT session-scoped context, same carrier semantics as
@@ -566,6 +573,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const searchParams = useSearchParams();
   const prewarm = TUTOR_HOST_START && isPrewarmParam(searchParams.get('prewarm'));
   const tokenExp = useMemo(() => tokenExpSec(rawPayload), [rawPayload]);
+  // Persona by catalogue id, voice codes, and a token voice that wins over
+  // the persona's: the persona and the voice are the partner's separate picks.
+  const persona = useMemo(() => resolveEmbedPersona({ teacher: config.teacher, voice: config.voice }), [config.teacher, config.voice]);
+  const teacher = persona.teacher;
   // Open-scope (2026-09-10): subject + lessonPlanId become STATE so a
   // mid-session plan swap can move both. For every non-open-scope token
   // neither setter is ever called and the values equal the old consts.
@@ -590,22 +601,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // cartesia branch below read teacher.voice) — honor its voiceId ahead of
   // the token-level `voice` field and the 'coral' default.
   const openAIVoice: OpenAIVoice =
-    (config.teacher?.voice?.provider === 'openai' && config.teacher.voice.voiceId
-      ? (config.teacher.voice.voiceId as OpenAIVoice)
-      : (config.voice as OpenAIVoice)) || 'coral';
+    (teacher?.voice?.provider === 'openai' && teacher.voice.voiceId
+      ? (teacher.voice.voiceId as OpenAIVoice)
+      : isVoiceCode(config.voice) ? undefined : (config.voice as OpenAIVoice | undefined)) || 'coral';
   // Honor the teacher persona's declared voice. A cartesia teacher voice drives
   // Cartesia TTS with that EXACT voiceId (the marketplace teacher's cloned
   // voice); the embed otherwise never wired a TTS provider and fell back to the
   // OpenAI Realtime voice (`openAIVoice`). Absent/openai teacher voice keeps
   // that prior behavior exactly — backward-compatible for existing partners.
-  const teacherVoice = config.teacher?.voice;
-  const useCartesiaVoice = teacherVoice?.provider === 'cartesia' && !!teacherVoice.voiceId;
+  const teacherVoice = teacher?.voice;
+  const voiceOverrideId = persona.voiceOverrideId;
+  const useCartesiaVoice = !!voiceOverrideId || (teacherVoice?.provider === 'cartesia' && !!teacherVoice.voiceId);
   // 2026-09-15 (Kanzoo sandbox): a token with NO teacher voice at all now
   // defaults to Cartesia with the registry's default voice, so a partner that
   // omits `teacher` hears the same natural voice as every first-party surface
   // instead of the OpenAI Realtime fallback. An explicit openai persona voice
   // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
-  const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice;
+  const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice && !voiceOverrideId;
   if (useCartesiaDefault && typeof window !== 'undefined') {
     // Served-artifact marker for this behavior (Rule 4) + a breadcrumb when a
     // partner token arrives without a persona.
@@ -613,7 +625,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   }
   const ttsProvider = resolveTtsProvider(null, useCartesiaVoice || useCartesiaDefault ? 'cartesia' : undefined, sessionMode);
   const cartesiaVoiceId = useCartesiaVoice
-    ? teacherVoice.voiceId
+    ? (voiceOverrideId ?? teacherVoice?.voiceId)
     : useCartesiaDefault
       ? CARTESIA_DEFAULT_VOICE_ID
       : undefined;
@@ -818,6 +830,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     addDebugEvent('embed_config', `practice_locator=${config.practice_locator ? 'yes' : 'no'} goal_note=${config.goal_note ? 'yes' : 'no'} readiness_note=${config.readiness_note ? 'yes' : 'no'}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.practice_locator, config?.goal_note]);
+  useEffect(() => {
+    if (persona.notes.length) addDebugEvent('persona_resolved', persona.notes.join(' '));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persona]);
   useEffect(() => {
     if (!wantsResume) return;
     let cancelled = false;
@@ -2015,7 +2031,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         isTrial={config.is_trial === true}
         targetKind={config.target_kind}
         checkpointStale={checkpointStale}
-        teacherPersona={config.teacher}
+        teacherPersona={teacher}
         resumeState={resumeState}
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}

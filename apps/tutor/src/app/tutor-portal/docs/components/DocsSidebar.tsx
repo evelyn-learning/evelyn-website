@@ -7,6 +7,7 @@ const sections = [
   { href: '/docs', label: 'Overview' },
   { href: '/docs/quickstart', label: 'Getting Started' },
   { href: '/docs/embed', label: 'Embed Configuration' },
+  { href: '/docs/voices', label: 'Voices and Companions' },
   { href: '/docs/api', label: 'API Reference' },
   { href: '/docs/webhooks', label: 'Events' },
   { href: '/docs/modules', label: 'Your Curriculum' },

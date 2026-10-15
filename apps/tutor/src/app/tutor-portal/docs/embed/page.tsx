@@ -33,12 +33,12 @@ export default function EmbedPage() {
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Teacher persona and voice</h2>
       <p className="mb-4 text-sm text-slate-600">
-        The persona catalog supplied with your credentials (<code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">teachers.json</code>)
-        holds ready-made teachers, each with a name, a short intro, a teaching style and a natural
-        voice. Put the whole object in the token as <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">teacher</code>.
-        You may edit <code className="text-xs">name</code>, <code className="text-xs">intro</code> and <code className="text-xs">style</code> to
-        fit your brand; keep <code className="text-xs">voice</code> as-is. Pick one persona per course so a
-        student always hears the same teacher.
+        Send a ready-made teacher by its id (<code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">&quot;teacher&quot;: &quot;ms-priya-nair&quot;</code>),
+        or a persona object of your own as <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">teacher</code>, and choose the voice
+        with a voice code (<code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">&quot;voice&quot;: &quot;maple&quot;</code>). The persona catalog
+        (<code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">teachers.json</code>) holds the ready-made teachers as editable objects.
+        Listen to every voice, and see how to build a themed companion, on{' '}
+        <a href="/docs/voices" className="text-blue-700 underline">Voices and Companions</a>.
       </p>
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Branding Object</h2>
@@ -70,7 +70,7 @@ export default function EmbedPage() {
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Example: Full Token</h2>
       <CodeBlock language="json" title="JWT payload">{`{
-  "partner_id": "kanzoo",
+  "partner_id": "your_partner_id",
   "student_id": "stu_abc123",
   "student_name": "Ayaan",
   "subject": "math",
@@ -80,15 +80,10 @@ export default function EmbedPage() {
   "target_kind": "lessonNode",
   "session_goal": "homework-help",
   "max_duration_minutes": 30,
-  "session_id": "duc-sess-9012",
-  "teacher": {
-    "id": "ms-priya-nair",
-    "name": "Ms. Priya Nair",
-    "intro": "…",
-    "style": { "pace": "moderate", "humor": "light" },
-    "voice": { "provider": "cartesia", "voiceId": "28ca2041-5dda-42df-8123-f58ea9c3da00" }
-  },
-  "branding": { "primary_color": "#1E40AF", "product_name": "DUC Tutor" },
+  "session_id": "sess-9012",
+  "teacher": "ms-priya-nair",
+  "voice": "lotus",
+  "branding": { "primary_color": "#1E40AF", "product_name": "Acme Tutor" },
   "features": { "homework_upload": false },
   "metadata": { "class_id": "math-6b" },
   "iat": 1789450837,

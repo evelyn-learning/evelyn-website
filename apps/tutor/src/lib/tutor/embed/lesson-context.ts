@@ -81,6 +81,13 @@ function mmss(total: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/** People in a lesson may be real, or characters someone else owns. The
+ *  tutor talks ABOUT them, as the lesson shows them; it is never one of them. */
+export const REAL_PEOPLE_CLAUSE =
+  'The people and characters in this lesson may be real people or characters owned by others. You are the tutor, never one of them: ' +
+  'do not speak as them or imitate them, do not quote them beyond the lines above, and do not invent anything they said, did or would say. ' +
+  'Talk about their choices in the scene, not about them as people: no judgements of their character and nothing about their private lives.';
+
 /** Facts about the scene, from the host. '' when there is nothing to say. */
 export function renderLessonContextBlock(lc: LessonContext): string {
   const lines: string[] = [];
@@ -95,7 +102,8 @@ export function renderLessonContextBlock(lc: LessonContext): string {
     `\n## Lesson context (supplied by the host — the only source of facts about the scene)\n` +
     lines.join('\n') + '\n' +
     'Treat the lines above as the facts of the scene. Do not add names, numbers, offers or events that are not in them; ' +
-    'if a detail is missing, say you do not have it rather than guessing.\n'
+    'if a detail is missing, say you do not have it rather than guessing.\n' +
+    REAL_PEOPLE_CLAUSE + '\n'
   );
 }
 
