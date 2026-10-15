@@ -55,7 +55,7 @@ export default function AuthenticationPage() {
 
 const token = jwt.sign(
   {
-    partner_id: 'kanzoo',
+    partner_id: 'acme',
     student_id: 'stu_abc123',
     subject: 'math',
     level: 'Grade 6',
@@ -69,7 +69,7 @@ const token = jwt.sign(
       <CodeBlock language="php" title="PHP (firebase/php-jwt)">{`use Firebase\\JWT\\JWT;
 
 $token = JWT::encode([
-    'partner_id' => 'kanzoo',
+    'partner_id' => 'acme',
     'student_id' => 'stu_abc123',
     'subject'    => 'math',
     'level'      => 'Grade 6',
@@ -91,7 +91,7 @@ $token = JWT::encode([
         captured request cannot be replayed elsewhere.
       </p>
 
-      <CodeBlock language="text" title="Headers">{`x-evelyn-partner:    kanzoo
+      <CodeBlock language="text" title="Headers">{`x-evelyn-partner:    acme
 x-evelyn-timestamp:  1789450837123          # unix epoch MILLISECONDS, as a string
 x-evelyn-signature:  <hex HMAC-SHA256>`}</CodeBlock>
 
@@ -115,7 +115,7 @@ async function portalFetch(method, path, body) {
     method,
     headers: {
       'content-type': 'application/json',
-      'x-evelyn-partner': 'kanzoo',
+      'x-evelyn-partner': 'acme',
       'x-evelyn-timestamp': timestamp,
       'x-evelyn-signature': signature,
     },
@@ -137,7 +137,7 @@ def portal_request(method: str, path: str, body: dict | None = None):
                    f"{ts}.{method.upper()}.{path}.{raw}".encode(), hashlib.sha256).hexdigest()
     return requests.request(method, BASE + path, data=raw or None, headers={
         "content-type": "application/json",
-        "x-evelyn-partner": "kanzoo",
+        "x-evelyn-partner": "acme",
         "x-evelyn-timestamp": ts,
         "x-evelyn-signature": sig,
     }).json()`}</CodeBlock>

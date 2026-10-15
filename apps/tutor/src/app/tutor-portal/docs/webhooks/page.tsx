@@ -40,7 +40,7 @@ export default function EventsPage() {
       <CodeBlock language="json">{`{
   "type": "evelyn:session_ended",
   "data": {
-    "session_id": "duc-sess-9012",
+    "session_id": "sess-9012",
     "duration": 1847,
     "message_count": 24,
     "whiteboard_items": 8,
@@ -121,7 +121,7 @@ export default function EventsPage() {
         Events are signals, not the record. After <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">session_ended</code>{' '}
         your backend should call the signed API:
       </p>
-      <CodeBlock language="bash">{`GET /api/portal/v1/sessions/summary?ids=duc-sess-9012   # active minutes, turns, board items
+      <CodeBlock language="bash">{`GET /api/portal/v1/sessions/summary?ids=sess-9012   # active minutes, turns, board items
 GET /api/portal/v1/gaps?studentId=stu_abc123             # learning gaps
 GET /api/portal/v1/mastery?studentId=stu_abc123          # mastery per objective
 POST /api/portal/v1/assigned-practice                     # homework the tutor set`}</CodeBlock>
