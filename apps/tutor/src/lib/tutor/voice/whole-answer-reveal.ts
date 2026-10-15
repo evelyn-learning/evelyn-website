@@ -33,7 +33,7 @@
 import { TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 import { canonicalizeMathExpression } from '@/lib/tutor/voice/utterance-answer-match';
-import { precheckDecides, wrongWholeAnswerChecked, WRONG_WHOLE_ANSWER_REEMIT, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
+import { precheckDecides, precheckInforms, wrongWholeAnswerChecked, WRONG_WHOLE_ANSWER_REEMIT, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 
 /** What the server knows for a turn under the rule. */
 export interface WithheldAnswer {
@@ -64,7 +64,12 @@ export function wholeAnswerRevealGuardActive(
 ): boolean {
   if (!(opts?.enabled ?? TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL)) return false;
   if (!String(value ?? '').trim()) return false;
-  if (opts?.anyTarget === true) return precheckDecides(p) && p.verdict === 'incorrect' && p.answers !== 'neither';
+  // 2026-10-15 (staging, Algebra II): a PARTLY correct answer too — the reply
+  // stated the setup of the half that was missing.
+  if (opts?.anyTarget === true) {
+    return !!p && p.confidence === 'high' && p.answers !== 'neither'
+      && (p.verdict === 'partly_correct' ? precheckInforms(p) : precheckDecides(p) && p.verdict === 'incorrect');
+  }
   return precheckDecides(p) && wrongWholeAnswerChecked(p, { enabled: true });
 }
 
@@ -358,3 +363,60 @@ export function wholeAnswerFallbackTail(forwarded: ReadonlyArray<string>): strin
   if (!forwarded.some((s) => /\?\s*["'”)*_]*\s*$/.test(s.trim()))) tail.push(WHOLE_ANSWER_FALLBACK_QUESTION);
   return tail;
 }
+
+// ── 2026-10-15: a CHECKED-CORRECT answer denied mid-reply ──────────────────
+//
+// GreenApple staging, Geometry: the check found the student's "x = 17"
+// correct (high confidence); the reply opened with working of its own
+// ("5x + 5 = 180, so … x = 35") — no denying opener, so the browser's opener
+// kill (verdict-precheck-shared.ts `precheckOpenerContradiction`) never fired
+// — and then said "not 17". Under the no-reveal ledger (no-reveal-ledger-gate.ts)
+// every sentence of a reply to a HIGH-confidence correct check of the whole
+// problem or the open question is read here: one that denies the student's own
+// value is not forwarded; the same `answer-reveal` frame (how 'denial') makes
+// the browser retry once with `checkedCorrectDenialFeedback`. Generic wording.
+
+/** The values a denial would name: the proposal itself, the side after its
+ *  last "=", and every number in it. */
+function proposedForms(proposed: string): string[] {
+  const p = String(proposed ?? '').replace(/\s+/g, ' ').trim();
+  if (!p) return [];
+  const forms = new Set<string>([p]);
+  const rhs = p.split(/=/).pop()?.trim();
+  if (rhs) forms.add(rhs);
+  for (const n of p.match(/-?\d+(?:[.,]\d+)*(?:\/\d+)?/g) ?? []) forms.add(n);
+  return [...forms].filter((f) => f.length > 0 && f.length <= 80);
+}
+
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Does this sentence deny the student's own (checked-correct) value? */
+export function deniesCheckedAnswer(sentence: string, proposed: string): boolean {
+  const s = String(sentence ?? '').replace(/\s+/g, ' ');
+  if (!s.trim()) return false;
+  for (const f of proposedForms(proposed)) {
+    const v = /^-?\d/.test(f) ? `${esc(f)}(?![\\w°]|[.,/]\\d)` : `${esc(f)}(?![\\w])`;
+    const lead = /^-?\d/.test(f) ? '(?<![\\w.,/])' : '(?<![\\w])';
+    const res = [
+      // "… not 17", "isn't 17", "not x = 17", "not quite 17"
+      new RegExp(`\\b(?:not|isn['’]t|aren['’]t|wasn['’]t)\\s+(?:quite\\s+|exactly\\s+|really\\s+)?(?:[a-z]\\s*=\\s*)?${lead}${v}`, 'i'),
+      // "17 is not …", "17 isn't right", "17 doesn't work / match / fit"
+      new RegExp(`${lead}${v}\\s*(?:is\\s+not|isn['’]t|was\\s+not|wasn['’]t|does\\s+not|doesn['’]t|won['’]t|can['’]t)\\b`, 'i'),
+      // "17 is wrong / incorrect"
+      new RegExp(`${lead}${v}\\s*(?:is|was)\\s+(?:wrong|incorrect)\\b`, 'i'),
+    ];
+    if (res.some((re) => re.test(s))) return true;
+  }
+  return false;
+}
+
+/** Retry feedback via the standard rejection channel. */
+export function checkedCorrectDenialFeedback(studentText: string): string {
+  return `The student wrote "${(studentText ?? '').trim().slice(0, 120)}". `
+    + 'An independent check of their answer, worked from the problem exactly as written, found it CORRECT; your reply said it was not, and that part was not shown to them. '
+    + 'Re-emit your response: read the problem\'s wording again (every condition it states), tell them plainly that their answer is right, show the working briefly if it helps, then carry on. '
+    + 'Do not mention this note or narrate the correction — just reply naturally.';
+}
+
+/** The fixed tail when a denial is withheld: a plain confirmation. */
+export const CHECKED_CORRECT_FALLBACK_STATEMENT = 'Your answer is right.';

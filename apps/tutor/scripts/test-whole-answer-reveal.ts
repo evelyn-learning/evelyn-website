@@ -174,7 +174,7 @@ test('server: every sentence and tool call goes through the guard; the frame car
   // No sentence is yielded past the guard inside the streaming generator.
   const gen = brain.slice(brain.indexOf('export async function* streamBrainTurn'));
   const raw = (gen.match(/yield \{ type: 'sentence'/g) ?? []).length;
-  assert.equal(raw, 2, 'only the guard itself yields sentences (the passed sentence and the fixed tail)');
+  assert.equal(raw, 3, 'only the guard itself yields sentences (the passed sentence, the fixed tail, and the fixed confirmation after a withheld denial)');
   assert.match(gen, /yield\* guardedSentence\(/);
   assert.match(gen, /boardRevealsWithheldAnswer\(/);
   assert.match(gen, /type: 'answer-reveal', where: /);
@@ -188,7 +188,7 @@ test('client: the frame discards the attempt and retries once; the seal rides th
   const vtr = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
   assert.match(vtr, /type === 'answer-reveal'/);
   assert.match(vtr, /wholeAnswerRevealKillUsed/);
-  assert.match(vtr, /WHOLE_ANSWER_REVEAL_ACTION, reason: wholeAnswerRevealFeedback\(/);
+  assert.match(vtr, /WHOLE_ANSWER_REVEAL_ACTION, reason: revealHow === 'denial' \? checkedCorrectDenialFeedback\(transcript\) : wholeAnswerRevealFeedback\(/);
   assert.match(vtr, /whole_answer_reveal_hit/);
   assert.match(vtr, /whole_answer_reveal_retry/);
   assert.match(vtr, /whole_answer_reveal_fallback/);

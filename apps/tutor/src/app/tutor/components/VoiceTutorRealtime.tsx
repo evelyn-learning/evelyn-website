@@ -176,7 +176,7 @@ import { gateInequalityGraph, extractProblemInequalities } from '@/lib/tutor/whi
 import { boardInequalityFacts, formatInequalityFactsText, spokenRegionContradiction, spokenRegionFeedback, SPOKEN_REGION_ACTION } from '@/lib/tutor/whiteboard/inequality-facts';
 import { shouldPaintOnArrivalInTextMode } from '@/lib/tutor/whiteboard/render-sync';
 import { planFusedOpener, precheckCountsAsAnswer } from '@/lib/tutor/voice/work-then-match';
-import { WHOLE_ANSWER_REVEAL_ACTION, wholeAnswerRevealFeedback } from '@/lib/tutor/voice/whole-answer-reveal';
+import { checkedCorrectDenialFeedback, WHOLE_ANSWER_REVEAL_ACTION, wholeAnswerRevealFeedback } from '@/lib/tutor/voice/whole-answer-reveal';
 import { shouldSkipProseDispute } from '@/lib/tutor/voice/answer-dispute-tiebreak';
 import { coverPresentation, noiseTipMayRideTurn, NOISE_TIP_NOTE, TEXT_COVER_VISIBLE_LINE, THINKING_HINT_EVENT } from '@/lib/tutor/voice/cover-layer';
 import {
@@ -16770,11 +16770,16 @@ export function VoiceTutorRealtime({
                   // its bubble is replaced, its board renders are swept —
                   // kill-keep.ts ANSWER_REVEALING_KILL_ACTIONS). With that
                   // retry spent, what the server let through stands.
+                  // 2026-10-15: how 'denial' — under the no-reveal ledger, a
+                  // sentence denied an answer the check found CORRECT
+                  // (whole-answer-reveal.ts `deniesCheckedAnswer`); same path,
+                  // its own feedback.
                   const revealWhere = String((ev as { where?: unknown }).where ?? 'sentence');
-                  onDebugEvent?.('whole_answer_reveal_hit', `${revealWhere} withheld by the server (${String((ev as { how?: unknown }).how ?? '-')}) · attempt ${attempt}`);
+                  const revealHow = String((ev as { how?: unknown }).how ?? '-');
+                  onDebugEvent?.('whole_answer_reveal_hit', `${revealWhere} withheld by the server (${revealHow}) · attempt ${attempt}`);
                   if (!attemptKilled && !wholeAnswerRevealKillUsed && attempt < attemptCap) {
                     wholeAnswerRevealKillUsed = true;
-                    rejectionsThisAttempt.push({ action: WHOLE_ANSWER_REVEAL_ACTION, reason: wholeAnswerRevealFeedback(transcript) });
+                    rejectionsThisAttempt.push({ action: WHOLE_ANSWER_REVEAL_ACTION, reason: revealHow === 'denial' ? checkedCorrectDenialFeedback(transcript) : wholeAnswerRevealFeedback(transcript) });
                     judgeRetriesUsed++;
                     await performKill();
                     console.warn('[brain-orchestrator] reply stated the result of the whole problem — withheld, retrying once');

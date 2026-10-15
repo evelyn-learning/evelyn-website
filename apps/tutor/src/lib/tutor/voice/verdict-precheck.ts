@@ -95,6 +95,26 @@ export function verdictPrecheckTimeoutFor(
   return Math.min(VERDICT_PRECHECK_TIMEOUT_MAX_MS, base + extra);
 }
 
+/** 2026-10-15 (GreenApple staging, no-reveal-ledger-gate.ts): 7 of 78 checks
+ *  were cut at 6 s; two of those were a hedged right answer and the first
+ *  solved problem, so the ledger never recorded it and the tutor went back to
+ *  it. Under the ledger the cap is at least 10 s (the long-problem rise above
+ *  still applies, to 12 s). An explicit TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS
+ *  still wins. */
+export const LEDGER_VERDICT_PRECHECK_TIMEOUT_MS = 10_000;
+
+export function ledgerVerdictPrecheckTimeoutFor(
+  input: Pick<VerdictPrecheckInput, 'problems' | 'currentProblem' | 'activeProblemStatement'>,
+  env: { timeoutEnv?: string; longProblemFlag?: string } = {
+    timeoutEnv: process.env.TUTOR_TEXT_VERDICT_PRECHECK_TIMEOUT_MS,
+    longProblemFlag: process.env.TUTOR_TEXT_VERDICT_PRECHECK_LONG_PROBLEM,
+  },
+): number {
+  const base = verdictPrecheckTimeoutFor(input, env);
+  if ((env.timeoutEnv ?? '').trim() && verdictPrecheckTimeoutMs(env.timeoutEnv) !== VERDICT_PRECHECK_TIMEOUT_MS) return base;
+  return Math.max(LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, base);
+}
+
 export interface VerdictPrecheckInput {
   /** The student's own problems (homework session), verbatim. */
   problems?: ReadonlyArray<{ n: number; text: string }>;

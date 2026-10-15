@@ -36,11 +36,12 @@ import {
   TUTOR_NO_TIME_TALK,
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from './turn-shape-signal';
-import { runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
+import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
+  precheckDecides,
   precheckInforms,
   toPublicPrecheck,
   type PublicVerdictPrecheck,
@@ -50,6 +51,8 @@ import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THI
 import { formatWorkThenMatchBlock } from './work-then-match';
 import {
   boardRevealsWithheldAnswer,
+  CHECKED_CORRECT_FALLBACK_STATEMENT,
+  deniesCheckedAnswer,
   revealsWithheldAnswer,
   wholeAnswerFallbackTail,
   wholeAnswerRevealGuardActive,
@@ -714,7 +717,7 @@ export type BrainStreamEvent =
    *  reply will be; a fixed tail that reveals nothing follows this frame. The
    *  frame carries no value. The browser discards the attempt and retries
    *  once; with that retry spent it keeps what was forwarded. */
-  | { type: 'answer-reveal'; where: 'sentence' | 'board'; how: 'number' | 'text' }
+  | { type: 'answer-reveal'; where: 'sentence' | 'board'; how: 'number' | 'text' | 'denial' }
   /** Voice: a pre-check of this message has been started alongside the brain
    *  call. Sent before any sentence. The browser holds back a sentence that
    *  carries a verdict until the finding (or the frame below) arrives. */
@@ -2229,7 +2232,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // browser echoes; voice: when the parallel check lands — sentences already
   // forwarded by then are not covered). Every sentence and tool call below
   // goes out through `guardedSentence` / the tool-call check.
-  const reveal: { withheld: WithheldAnswer | null; muted: boolean; forwarded: string[] } = { withheld: null, muted: false, forwarded: [] };
+  const reveal: { withheld: WithheldAnswer | null; muted: boolean; forwarded: string[]; confirmed: string | null } = { withheld: null, muted: false, forwarded: [], confirmed: null };
+  // 2026-10-15 (./whole-answer-reveal.ts `deniesCheckedAnswer`): under the
+  // ledger, a HIGH-confidence CORRECT check of the whole problem or the open
+  // question — a sentence that denies the student's own value is withheld.
+  const armDenialGuard = (pub: PublicVerdictPrecheck | null | undefined): void => {
+    if (!noRevealLedger || !workThenMatch || !precheckDecides(pub)) return;
+    if (pub.verdict !== 'correct' || (pub.answers !== 'overall_problem' && pub.answers !== 'open_question')) return;
+    if (!pub.proposed.trim()) return;
+    reveal.confirmed = pub.proposed;
+    console.log('[checked-correct-denial] guard armed for this request');
+  };
   const armRevealGuard = (pub: PublicVerdictPrecheck | null | undefined, value: string | undefined, studentText: string): string => {
     if (!workThenMatch || !wholeAnswerRevealGuardActive(pub, value, noRevealLedger ? { anyTarget: true } : undefined)) return '';
     reveal.withheld = {
@@ -2257,6 +2270,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   }
   function* guardedSentence(text: string): Generator<BrainStreamEvent> {
     if (reveal.muted) return;
+    if (reveal.confirmed && deniesCheckedAnswer(text, reveal.confirmed)) {
+      reveal.muted = true;
+      console.warn(`[checked-correct-denial] sentence withheld: "${text.slice(0, 80)}" — fixed confirmation follows`);
+      yield { type: 'answer-reveal', where: 'sentence', how: 'denial' };
+      reveal.forwarded.push(CHECKED_CORRECT_FALLBACK_STATEMENT);
+      yield { type: 'sentence', text: CHECKED_CORRECT_FALLBACK_STATEMENT };
+      return;
+    }
     const hit = revealsWithheldAnswer(text, reveal.withheld);
     if (hit.hit) { yield* revealStop('sentence', hit.how, hit.matched); return; }
     reveal.forwarded.push(text);
@@ -2316,7 +2337,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         studentMessage: studentSaid,
         ...(problemFacts ? { problemFacts: formatInequalityFactsText(problemFacts) } : {}),
         ...(noRevealLedger && input.homework ? { solved: input.homework.solved ?? [] } : {}),
-      }, noRevealLedger ? { ...input.verdictPrecheckDeps, ledger: !!input.homework?.problems.length, claimVerdict: true } : input.verdictPrecheckDeps);
+      }, noRevealLedger
+        ? {
+          // 2026-10-15: under the ledger a check cut by its cap leaves a solved
+          // problem unrecorded and a hedged right answer unjudged — a longer cap.
+          ...input.verdictPrecheckDeps,
+          timeoutMs: input.verdictPrecheckDeps?.timeoutMs ?? ledgerVerdictPrecheckTimeoutFor({ problems: input.homework?.problems, currentProblem: input.homework?.current, activeProblemStatement: input.activeProblem?.statement }),
+          ledger: !!input.homework?.problems.length,
+          claimVerdict: true,
+        }
+        : input.verdictPrecheckDeps);
       const ms = Date.now() - startedAt;
       input.verdictPrecheckDeps?.onResult?.(result, ms);
       if (result) {
@@ -2325,6 +2355,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         if (precheckInforms(pub)) {
           answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts });
           const seal = armRevealGuard(pub, result.correctValue, studentSaid);
+          armDenialGuard(pub);
           yield { type: 'verdict-precheck', result: pub, ms, ...(seal ? { seal } : {}) };
         }
       } else {
@@ -2334,6 +2365,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, { ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts });
       const carried = openWithheldAnswer(input.verdictPrecheckSeal);
       if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
+      armDenialGuard(input.verdictPrecheckCarry);
       if (answerCheckBlock) console.log('[verdict-precheck] carried from the first attempt of this turn');
     }
   }

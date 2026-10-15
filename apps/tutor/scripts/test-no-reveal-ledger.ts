@@ -14,8 +14,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { noRevealLedgerForPartner, NO_REVEAL_LEDGER_PARTNERS_ENV } from '../src/lib/tutor/voice/no-reveal-ledger-gate';
 import {
+  EXTRA_PROBLEM_SAME_RULES,
   formatLedgerProblemLines,
+  formatProblemLedgerBlock,
   HOMEWORK_LEDGER_RULES,
+  OFF_TOPIC_NOT_ANSWERED,
   nextOpenPosition,
   recordSolved,
   sanitizeSolvedPositions,
@@ -35,7 +38,9 @@ import {
   VERDICT_PRECHECK_SCHEMA,
   type VerdictPrecheckLlm,
 } from '../src/lib/tutor/voice/verdict-precheck';
-import { wholeAnswerRevealGuardActive } from '../src/lib/tutor/voice/whole-answer-reveal';
+import { checkedCorrectDenialFeedback, deniesCheckedAnswer, wholeAnswerRevealGuardActive } from '../src/lib/tutor/voice/whole-answer-reveal';
+import { LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, ledgerVerdictPrecheckTimeoutFor, verdictPrecheckTimeoutFor } from '../src/lib/tutor/voice/verdict-precheck';
+import { OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE } from '../src/lib/tutor/voice/verdict-precheck-shared';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -190,9 +195,10 @@ async function main() {
       formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true }),
     );
   });
-  await test('correct / partly-correct checks are unchanged by the option', () => {
-    for (const verdict of ['correct', 'partly_correct'] as const) {
-      const p = pc({ verdict });
+  // Partly correct: changed by the option since 2026-10-15 (PARTLY_NO_REVEAL_RULE, below).
+  await test('correct checks of the open question or the problem are unchanged by the option', () => {
+    for (const answers of ['open_question', 'overall_problem'] as const) {
+      const p = pc({ verdict: 'correct', answers });
       assert.equal(formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true, noRevealAnyStep: true }), formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true }));
     }
   });
@@ -364,6 +370,78 @@ async function main() {
   await test('gate on: a stated false claim gets the correction rule', async () => {
     const r = await run('Not quite.', { noRevealLedger: true, studentTranscript: 'can you check my answer: it gets used up', studentMessage: 'can you check my answer: it gets used up', verdictPrecheckDeps: { llm: check({ answers: 'neither', verdict: 'incorrect', confidence: 'medium', correct_value: '' }) } });
     assert.match(r.content, /NOT true/);
+  });
+
+  // 2026-10-15 staging (Geometry): a checked-correct answer denied mid-reply.
+  const DENY = 'Adding them gives 5x + 5 = 180, so x = 35. That is the value here, not 15. What do you get?';
+  await test('gate on: a sentence denying a checked-correct answer is withheld, a fixed confirmation follows', async () => {
+    const r = await run(DENY, { noRevealLedger: true, verdictPrecheckDeps: { llm: check({ verdict: 'correct', correct_value: '15', proposed_value: '15', problem_final_answer: '15', proposed_equals_final_answer: true, answers: 'overall_problem' }) } });
+    const hit = r.events.find((e) => e.type === 'answer-reveal');
+    assert.ok(hit, 'no answer-reveal frame');
+    assert.equal(hit!.how, 'denial');
+    assert.ok(!r.sentences.some((t) => /not 15/.test(t)), r.sentences.join(' | '));
+    assert.equal(r.sentences[r.sentences.length - 1], 'Your answer is right.');
+  });
+  await test('gate off: the same reply is forwarded as before', async () => {
+    const r = await run(DENY, { verdictPrecheckDeps: { llm: check({ verdict: 'correct', correct_value: '15', proposed_value: '15', problem_final_answer: '15', proposed_equals_final_answer: true, answers: 'overall_problem' }) } });
+    assert.ok(!r.events.some((e) => e.type === 'answer-reveal'));
+    assert.ok(r.sentences.some((t) => /not 15/.test(t)));
+  });
+  await test('gate on: a confirming reply to a checked-correct answer is untouched', async () => {
+    const r = await run('Adding them gives 5x + 5 = 80, so x = 15. That is the value you gave.', { noRevealLedger: true, verdictPrecheckDeps: { llm: check({ verdict: 'correct', correct_value: '15', proposed_value: '15', problem_final_answer: '15', proposed_equals_final_answer: true, answers: 'overall_problem' }) } });
+    assert.ok(!r.events.some((e) => e.type === 'answer-reveal'));
+  });
+  await test('deniesCheckedAnswer: denials of the value, not mentions of it', () => {
+    const yes: Array<[string, string]> = [
+      ["That's the value for this problem — not 17, so let's check.", 'x = 17'],
+      ['x = 17 does not work here.', 'x = 17'], ["That's not x = 17.", 'x = 17'], ['17 is wrong.', '17'],
+      ["C6H12O6 isn't the molecular formula.", 'C6H12O6'], ['Not 3x + 1 — check again.', '3x + 1'],
+    ];
+    const no: Array<[string, string]> = [
+      ['Your x = 17 is right.', 'x = 17'], ['It is not 170.', 'x = 17'], ['That is C6H12O6, the final answer.', 'C6H12O6'],
+      ['So the inverse is 3x + 1, not 3x - 1.', '3x + 1'], ['With x = 17, angle 1 is 44.', 'x = 17'], ['', '17'], ['not 17', ''],
+    ];
+    for (const [s, v] of yes) assert.equal(deniesCheckedAnswer(s, v), true, s);
+    for (const [s, v] of no) assert.equal(deniesCheckedAnswer(s, v), false, s);
+    assert.doesNotMatch(checkedCorrectDenialFeedback('x = 17'), /\d{2,}.*\d{2,}/);
+  });
+  // 2026-10-15 staging (AP Chemistry): "return to the question you asked" after every problem was solved.
+  await test('gate on: a correct answer to another part may not bring back a question about a solved problem', () => {
+    const p = pc({ answers: 'other_part', verdict: 'correct', proposed: 'zzz' });
+    assert.ok(formatAnswerCheckBlock(p, { workThenMatch: true, noRevealAnyStep: true }).includes(OTHER_PART_NOTHING_OPEN_RULE));
+    assert.ok(!formatAnswerCheckBlock(p, { workThenMatch: true }).includes(OTHER_PART_NOTHING_OPEN_RULE));
+    assert.doesNotMatch(OTHER_PART_NOTHING_OPEN_RULE, /\d|e\.g\.|for example/i);
+  });
+  // 2026-10-15 staging: 7 of 78 checks cut at 6 s.
+  await test('ledger: the check cap is at least 10 s; an explicit cap still wins', () => {
+    const short = { problems: [{ n: 1, text: 'Solve 2x = 4.' }], currentProblem: 1 };
+    assert.equal(verdictPrecheckTimeoutFor(short, {}), 6000);
+    assert.equal(ledgerVerdictPrecheckTimeoutFor(short, {}), LEDGER_VERDICT_PRECHECK_TIMEOUT_MS);
+    const long = { problems: [{ n: 1, text: 'x'.repeat(400) }], currentProblem: 1 };
+    assert.equal(ledgerVerdictPrecheckTimeoutFor(long, {}), 12_000);
+    assert.equal(ledgerVerdictPrecheckTimeoutFor(short, { timeoutEnv: '7000' }), 7000);
+  });
+  // 2026-10-15 staging (Algebra II): a half-right answer.
+  await test('partly correct: the no-reveal rule and the guard under the ledger only', () => {
+    const p = pc({ verdict: 'partly_correct', answers: 'open_question' });
+    assert.ok(formatAnswerCheckBlock(p, { workThenMatch: true, noRevealAnyStep: true }).includes(PARTLY_NO_REVEAL_RULE));
+    assert.ok(!formatAnswerCheckBlock(p, { workThenMatch: true }).includes(PARTLY_NO_REVEAL_RULE));
+    assert.equal(wholeAnswerRevealGuardActive(p, '-10 < x < 2', { enabled: true, anyTarget: true }), true);
+    assert.equal(wholeAnswerRevealGuardActive(p, '-10 < x < 2', { enabled: true }), false);
+    assert.equal(wholeAnswerRevealGuardActive(pc({ verdict: 'partly_correct', confidence: 'medium' }), '-10 < x < 2', { enabled: true, anyTarget: true }), false);
+    assert.equal(wholeAnswerRevealGuardActive(pc({ verdict: 'partly_correct', answers: 'neither' }), '-10 < x < 2', { enabled: true, anyTarget: true }), false);
+    assert.doesNotMatch(PARTLY_NO_REVEAL_RULE, /\d|e\.g\.|for example/i);
+  });
+  // 2026-10-15 staging: an unrelated question answered in passing; a student's extra problem worked for them.
+  await test('ledger rules: off-topic questions are not answered; an extra problem is taught, not solved', () => {
+    assert.ok(HOMEWORK_LEDGER_RULES.includes(OFF_TOPIC_NOT_ANSWERED));
+    assert.ok(HOMEWORK_LEDGER_RULES.includes(EXTRA_PROBLEM_SAME_RULES));
+    assert.ok(formatProblemLedgerBlock([{ n: 1, text: 'a' }, { n: 2, text: 'b' }], [1]).includes(OFF_TOPIC_NOT_ANSWERED));
+    for (const t of [OFF_TOPIC_NOT_ANSWERED, EXTRA_PROBLEM_SAME_RULES]) assert.doesNotMatch(t, /\d|e\.g\.|for example|"/i);
+  });
+  await test('client: a denial hit retries with its own feedback', () => {
+    const vtr0 = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+    assert.match(vtr0, /revealHow === 'denial' \? checkedCorrectDenialFeedback\(transcript\) : wholeAnswerRevealFeedback\(transcript\)/);
   });
 
   console.log('route + client wiring (source)');

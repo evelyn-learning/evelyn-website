@@ -76,12 +76,27 @@ export function nextOpenPosition(total: number, solved: readonly number[], from 
 export const LEDGER_SOLVED = '[SOLVED]';
 export const LEDGER_OPEN = '[OPEN]';
 
+/** A question unrelated to the homework and its subject is not answered at
+ *  all — the redirect alone. Generic. */
+export const OFF_TOPIC_NOT_ANSWERED =
+  'A question unrelated to these problems and their subject is not answered — not briefly, and not as an aside or in passing while steering back. Say in a few words that it is outside this session, then return to the work.';
+
+/** A problem the student adds mid-session is taught like the listed ones. */
+export const EXTRA_PROBLEM_SAME_RULES =
+  'A new problem the student brings up during the session is taught like the listed ones: guide them through it one step at a time and never work it to its result for them. Asked to check their answer to it, say whether it is right; when it is not, do not give the right one or the working that reaches it — name the step to look at again and ask them to redo it.';
+
 /** Rules the brain is given with the ledger. Generic: no subject content. */
 export const HOMEWORK_LEDGER_RULES =
   `- The ${LEDGER_SOLVED} / ${LEDGER_OPEN} mark beside each problem is the session's record, kept by the software from independent checks of the student's answers. Trust it over your own memory of the conversation.\n` +
   `- A ${LEDGER_SOLVED} problem is finished. Do not go back to it, re-offer it, ask whether they are ready for it, or ask for anything more on it, unless the student asks to return to it. If the student gives an answer to a ${LEDGER_SOLVED} problem again, say in a few words that it is already done and carry on with the next ${LEDGER_OPEN} problem.\n` +
   `- When every problem is ${LEDGER_SOLVED}, the homework is done: say so, and offer to stop or to look at something else. Do not invent work left on these problems.\n` +
-  `- When you close, wrap up or summarise: name each ${LEDGER_SOLVED} problem as done and only ${LEDGER_OPEN} ones as left for next time. Anything the student brought up during the session that is not on this list is not one of these problems: never give it one of their numbers — mention it separately, as their extra question.\n`;
+  `- When you close, wrap up or summarise: name each ${LEDGER_SOLVED} problem as done and only ${LEDGER_OPEN} ones as left for next time. Anything the student brought up during the session that is not on this list is not one of these problems: never give it one of their numbers — mention it separately, as their extra question.\n` +
+  // 2026-10-15 staging: an unrelated trivia question was answered "by the way"
+  // in two of thirteen sessions while the reply steered back.
+  `- ${OFF_TOPIC_NOT_ANSWERED}\n` +
+  // 2026-10-15 staging: a new problem the student added mid-session was worked
+  // to its result for them in three of thirteen sessions ("check my answer").
+  `- ${EXTRA_PROBLEM_SAME_RULES}\n`;
 
 /** The problem lines and the "Current" line of `<homework_session>` with the
  *  ledger marks. */
@@ -123,6 +138,7 @@ export function formatProblemLedgerBlock(
   return '<problem_ledger>\n'
     + `Recorded by the software from checked answers: ${status}.${all ? ' Every one of the student\'s problems is solved.' : ''}\n`
     + `In this reply, do not ask about, re-offer, or call unfinished any ${LEDGER_SOLVED} problem — not by its number, and not by asking for a step, a part or a check of it — unless the student has just asked to go back to it. If your last question was about a ${LEDGER_SOLVED} problem, drop that question.\n`
+    + `${OFF_TOPIC_NOT_ANSWERED}\n`
     + '</problem_ledger>\n\n';
 }
 

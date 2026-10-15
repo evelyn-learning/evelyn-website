@@ -237,6 +237,14 @@ export const OTHER_PART_CORRECT_RULE =
 export const OTHER_PART_CORRECT_RULE_WORK_THEN_MATCH =
   `What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. ${OTHER_PART_GUARD} Otherwise (they meant THAT), say briefly that it is right for THAT and return to the question you asked.\n`;
 
+// 2026-10-15 (GreenApple staging, AP Chemistry): both problems were solved and
+// the tutor had said so; the student repeated problem 1's answer, the check
+// classed it "other_part / correct", and "return to the question you asked"
+// brought back a question about the solved problem ("what's 180 divided by
+// 30?"). Under the ledger there may be nothing to return to.
+export const OTHER_PART_NOTHING_OPEN_RULE =
+  'Return to a question only if it is still open: if your last message asked nothing, or what you asked was about a problem the software already records as solved, there is nothing to return to — say briefly that it is right and already done, then carry on with the next unsolved problem, or, when none is left, say the homework is done.\n';
+
 // ── 2026-10-08: a wrong answer to the WHOLE problem — never the result ─────
 //
 // portal-09624999 @18.0 s: the student opened a homework session with a wrong
@@ -341,6 +349,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
           ? (otherPartNoGiveaway(opts)
             ? OTHER_PART_CORRECT_RULE_WORK_THEN_MATCH
             : 'What to do: your match statement must agree with the check — it is the right value for THAT, and it is not an answer to the question you asked just now. State both as facts, briefly, then return to the question you asked.\n')
+            + (opts?.noRevealAnyStep === true ? OTHER_PART_NOTHING_OPEN_RULE : '')
           : 'What to do: your working must reach the checked value and your match statement must agree with the check — say that the result is the value they gave. Do not ask them to check it again.\n')
       + tail;
   }
@@ -373,11 +382,22 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
         : 'What to do: your working must reach the checked value and your match statement must agree with the check — work as far as the step where their working and yours part, state that step\'s result, and say that it is not what they wrote and which step the difference is in. The steps after that one stay with the student.\n')
       + tail;
   }
+  if (opts?.noRevealAnyStep === true) {
+    return head + proposed + where
+      + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
+      + PARTLY_NO_REVEAL_RULE
+      + tail;
+  }
   return head + proposed + where
     + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
     + 'What to do: your working must reach the checked value and your match statement must agree with the check — state as facts which part your working confirms, and that the question asks for more or that a part differs. Ask for what is missing; do not supply it.\n'
     + tail;
 }
+
+/** 2026-10-15 (staging, Algebra II): a half-right answer; the reply wrote out
+ *  the setup of the missing half before asking for it. */
+export const PARTLY_NO_REVEAL_RULE =
+  'What to do: work it out silently. Confirm the part of THEIR answer that is right, in their own words and values. Then say that something is still missing or wrong and name WHICH part, by what it is — without writing it out: no setup, no equation, no inequality or value for that part, not in the reply and not on the board. End with ONE question that has them write that part themselves.\n';
 
 // ── before display: an opener that contradicts the check ───────────────────
 
