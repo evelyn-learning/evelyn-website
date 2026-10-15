@@ -24,6 +24,7 @@ import {
   recordSolved,
   sanitizeSolvedPositions,
   solvedPositionFromCheck,
+  solvedPositionsFromCheck,
 } from '../src/lib/tutor/lesson-plan/homework-ledger';
 import {
   formatAnswerCheckBlock,
@@ -41,7 +42,9 @@ import {
 } from '../src/lib/tutor/voice/verdict-precheck';
 import { checkedCorrectDenialFeedback, deniesCheckedAnswer, revealsWithheldAnswer, wholeAnswerRevealGuardActive } from '../src/lib/tutor/voice/whole-answer-reveal';
 import { LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, ledgerVerdictPrecheckTimeoutFor, verdictPrecheckTimeoutFor } from '../src/lib/tutor/voice/verdict-precheck';
-import { ALL_SOLVED_CORRECT_RULE, OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { ALL_SOLVED_CORRECT_RULE, OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE, SOLVED_PROBLEM_WRONG_RULE } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { OTHER_LISTED_PROBLEM_RULE } from '../src/lib/tutor/voice/verdict-precheck';
+import { classifyTurnShape } from '../src/lib/tutor/voice/turn-shape-signal';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -469,6 +472,92 @@ async function main() {
     assert.match(vtr0, /revealHow === 'denial' \? checkedCorrectDenialFeedback\(transcript\) : wholeAnswerRevealFeedback\(transcript\)/);
   });
 
+  // 2026-10-15 (GAC staging, varied run v5): several answers in one message,
+  // one answer split across messages, a doubt about a solved problem, and a
+  // calculation opened with "oh".
+  console.log('multi-answer tracking (v5)');
+  await test('every listed position counts; partly_correct counts; neither / medium / wrong verdict do not', () => {
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'correct', solvedProblem: 1, solvedProblems: [1, 2] }), 3), [1, 2]);
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'partly_correct', solvedProblem: 1, solvedProblems: [1] }), 3), [1]);
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'correct', solvedProblem: 2 }), 3), [2], 'old shape still read');
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'correct', solvedProblems: [2, 4] }), 3), [2]);
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'incorrect', solvedProblems: [2] }), 3), []);
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'cannot_determine', solvedProblems: [2] }), 3), []);
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'correct', confidence: 'medium', solvedProblems: [2] }), 3), []);
+    assert.deepEqual(solvedPositionsFromCheck(pc({ verdict: 'correct', answers: 'neither', solvedProblems: [2] }), 3), []);
+    assert.deepEqual(solvedPositionsFromCheck(null, 3), []);
+  });
+  await test('pre-check: solved_problems labels map to positions; about_problem is read; ledger off ignores both', async () => {
+    const labelled = { problems: [{ n: 3, text: 'A.' }, { n: 7, text: 'B.' }, { n: 9, text: 'C.' }], currentProblem: 1, history: [], openQuestion: 'What is A?', studentMessage: 'a and b' };
+    const reply = (o: Record<string, unknown>) => async () => ({ text: JSON.stringify({ answers: 'overall_problem', verdict: 'correct', confidence: 'high', ...o }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const r = await runVerdictPrecheck(labelled, { llm: reply({ solved_problems: [9, 3, 5, 3], about_problem: 7 }), timeoutMs: 1000, ledger: true });
+    assert.deepEqual(r?.solvedProblems, [1, 3]);
+    assert.equal(r?.solvedProblem, 1);
+    assert.equal(r?.aboutProblem, 2);
+    const none = await runVerdictPrecheck(labelled, { llm: reply({ solved_problems: [], about_problem: 0 }), timeoutMs: 1000, ledger: true });
+    assert.equal(none?.solvedProblems, undefined);
+    assert.equal(none?.aboutProblem, undefined);
+    const off = await runVerdictPrecheck(labelled, { llm: reply({ solved_problems: [3], about_problem: 3 }), timeoutMs: 1000 });
+    assert.equal(off?.solvedProblems, undefined);
+    assert.equal(off?.aboutProblem, undefined);
+  });
+  await test('pre-check prompt: ledger asks for the list, split answers and the other listed problem; off is unchanged', () => {
+    const on = verdictPrecheckSystem({ ledger: true });
+    assert.match(on, /solved_problems — /);
+    assert.match(on, /LATEST statement/);
+    assert.match(on, /about_problem — /);
+    assert.ok(on.includes(OTHER_LISTED_PROBLEM_RULE));
+    assert.ok(on.indexOf(OTHER_LISTED_PROBLEM_RULE) < on.indexOf('Otherwise decide from what KIND'));
+    assert.ok(!verdictPrecheckSystem().includes('Second test'));
+    assert.ok(!verdictPrecheckSystem().includes('solved_problems'));
+    assert.doesNotMatch(OTHER_LISTED_PROBLEM_RULE.replace(/\\'/g, "'"), /\d|e\.g\.|for example/i);
+  });
+  await test('public pre-check carries solvedProblems and aboutProblem; junk is dropped', () => {
+    const r = { ...pc({ verdict: 'correct' }), correctValue: 'v', model: 'm', ms: 1, inputTokens: 1, outputTokens: 1, solvedProblem: 1, solvedProblems: [1, 2], aboutProblem: 2 } as VerdictPrecheckResult;
+    const pub = sanitizePublicPrecheck(JSON.parse(JSON.stringify(toPublicPrecheck(r))))!;
+    assert.deepEqual(pub.solvedProblems, [1, 2]);
+    assert.equal(pub.aboutProblem, 2);
+    assert.equal(sanitizePublicPrecheck({ ...pub, solvedProblems: [1, 'x'] })?.solvedProblems, undefined);
+    assert.equal(sanitizePublicPrecheck({ ...pub, solvedProblems: [0] })?.solvedProblems, undefined);
+    assert.equal(sanitizePublicPrecheck({ ...pub, aboutProblem: 30 })?.aboutProblem, undefined);
+  });
+  await test('a wrong answer to a SOLVED problem gets the stands rule (both formats); open problem or gate off do not', () => {
+    const wrong = pc({ verdict: 'incorrect', answers: 'other_part', aboutProblem: 2 });
+    for (const workThenMatch of [true, false]) {
+      const b = formatAnswerCheckBlock(wrong, { workThenMatch, noRevealAnyStep: true, solved: [1, 2] });
+      assert.ok(b.includes(SOLVED_PROBLEM_WRONG_RULE), `workThenMatch=${workThenMatch}`);
+      assert.ok(!formatAnswerCheckBlock(wrong, { workThenMatch, noRevealAnyStep: true, solved: [1] }).includes(SOLVED_PROBLEM_WRONG_RULE));
+      assert.ok(!formatAnswerCheckBlock(pc({ verdict: 'incorrect', answers: 'other_part' }), { workThenMatch, noRevealAnyStep: true, solved: [1, 2] }).includes(SOLVED_PROBLEM_WRONG_RULE));
+      assert.ok(!formatAnswerCheckBlock(wrong, { workThenMatch, solved: [1, 2] }).includes(SOLVED_PROBLEM_WRONG_RULE));
+    }
+    assert.doesNotMatch(SOLVED_PROBLEM_WRONG_RULE, /\d|e\.g\.|for example|"/i);
+    assert.match(HOMEWORK_LEDGER_RULES, /doubts a \[SOLVED\] problem/);
+  });
+  await test('turn shape: a message with a digit is not an acknowledgment under the option only', () => {
+    assert.equal(classifyTurnShape('oh 14 - 2 = 12', 'What is the pOH?')?.shape, 'acknowledgment', 'unchanged without the option');
+    const on = classifyTurnShape('oh 14 - 2 = 12', 'What is the pOH?', { digitsNotAssent: true });
+    assert.equal(on?.answerShaped, true);
+    assert.equal(classifyTurnShape('oh ok', 'Does that make sense?', { digitsNotAssent: true })?.shape, classifyTurnShape('oh ok', 'Does that make sense?')?.shape);
+    assert.equal(classifyTurnShape('yes', 'Ready?', { digitsNotAssent: true })?.shape, 'bare_assent');
+  });
+  await test('brain: two problems solved by this message are [SOLVED] in this reply\'s ledger and both in the frame', async () => {
+    const hw = { problems: [{ n: 1, text: 'Find the mean.' }, { n: 2, text: 'Find the range.' }, { n: 3, text: 'Find the median.' }], current: 1, solved: [] as number[] };
+    const r = await run('Both right.', { noRevealLedger: true, homework: hw, studentTranscript: 'mean is 5 and range is 6', studentMessage: 'mean is 5 and range is 6', verdictPrecheckDeps: { llm: check({ verdict: 'correct', answers: 'overall_problem', correct_value: '5', proposed_value: 'mean is 5 and range is 6', solved_problems: [1, 2], about_problem: 0 }) } });
+    assert.match(r.content, /<problem_ledger>[\s\S]*Problem 1 \[SOLVED\], Problem 2 \[SOLVED\], Problem 3 \[OPEN\]/);
+    const pre = r.events.find((e) => e.type === 'verdict-precheck') as { result: PublicVerdictPrecheck };
+    assert.deepEqual(pre.result.solvedProblems, [1, 2]);
+  });
+  await test('brain: gate off, the same check renders no ledger', async () => {
+    const hw = { problems: [{ n: 1, text: 'Find the mean.' }, { n: 2, text: 'Find the range.' }], current: 1, solved: [] as number[] };
+    const r = await run('Both right.', { homework: hw, studentTranscript: 'mean is 5 and range is 6', studentMessage: 'mean is 5 and range is 6', verdictPrecheckDeps: { llm: check({ verdict: 'correct', answers: 'overall_problem', solved_problems: [1, 2] }) } });
+    assert.doesNotMatch(r.content, /<problem_ledger>/);
+  });
+  await test('brain: a wrong doubt about a solved problem gets the stands rule, with no value', async () => {
+    const r = await run('That one stands.', { noRevealLedger: true, homework: { ...base.homework, solved: [1, 2] }, verdictPrecheckDeps: { llm: check({ answers: 'other_part', verdict: 'incorrect', correct_value: '30', about_problem: 2, solved_problems: [] }) } });
+    assert.ok(r.content.includes(SOLVED_PROBLEM_WRONG_RULE));
+    assert.doesNotMatch(r.content, /"30"/);
+  });
+
   console.log('route + client wiring (source)');
   const route = fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain/stream/route.ts'), 'utf8');
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
@@ -477,7 +566,7 @@ async function main() {
     assert.match(route, /sanitizeSolvedPositions\(/);
   });
   await test('client: the ledger is recorded from the check frame and sent with homework', () => {
-    assert.match(vtr, /solvedPositionFromCheck\(pc, /);
+    assert.match(vtr, /solvedPositionsFromCheck\(pc, hwTotal\)/);
     assert.match(vtr, /homeworkSolvedRef\.current = recordSolved\(/);
     assert.match(vtr, /homework: \{ problems: homeworkProblemsRef\.current, current: homeworkCurrentRef\.current, solved: homeworkSolvedRef\.current \}/);
   });

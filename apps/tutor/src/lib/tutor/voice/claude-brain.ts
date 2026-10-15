@@ -22,7 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
-import { formatLedgerProblemLines, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES } from '../lesson-plan/homework-ledger';
+import { formatLedgerProblemLines, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -2213,7 +2213,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const turnShapeOn = input.textTurnShape === true || input.voiceTurnShape === true;
   const voicePrecheck = input.voiceVerdictPrecheck === true && input.textVerdictPrecheck !== true;
   const sortedShape = turnShapeOn || input.textVerdictPrecheck === true || voicePrecheck || voiceWorkThenMatch
-    ? classifyTurnShape(studentSaid, lastTutorMsgForGuard)
+    // 2026-10-15 (GAC staging v5): "oh <a sum>" was read as an acknowledgment
+    // and never checked — under the ledger a message with a digit is not one.
+    ? classifyTurnShape(studentSaid, lastTutorMsgForGuard, input.noRevealLedger === true && input.textVerdictPrecheck === true ? { digitsNotAssent: true } : undefined)
     : null;
   // Voice only: a spoken conditional statement is an answer, not a question.
   const turnShape = input.voiceTurnShape === true || voicePrecheck || voiceWorkThenMatch
@@ -2227,7 +2229,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-10-15 (staging): every listed problem already solved, per the ledger.
   const allSolved = noRevealLedger && !!input.homework?.problems.length
     && input.homework.problems.every((_, i) => (input.homework?.solved ?? []).includes(i + 1));
-  const checkBlockOpts = noRevealLedger ? { noRevealAnyStep: true, claimCorrection: true, ...(allSolved ? { allSolved: true } : {}) } : {};
+  const checkBlockOpts = noRevealLedger
+    ? { noRevealAnyStep: true, claimCorrection: true, solved: input.homework?.solved ?? [], ...(allSolved ? { allSolved: true } : {}) }
+    : {};
   if (workThenMatch) yield { type: 'work-then-match' };
   // 2026-10-08c — wrong answer to the WHOLE problem: the result never leaves
   // this function (./whole-answer-reveal.ts). Armed once the pre-check's
@@ -2321,7 +2325,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // A retry of the same turn re-renders the block from what the client was
   // sent. Any failure ⇒ '' ⇒ the turn runs as it did before.
   // 2026-10-19: the ledger, restated next to the student's message (homework-ledger.ts).
-  const problemLedgerBlock = noRevealLedger && input.homework
+  let problemLedgerBlock = noRevealLedger && input.homework
     ? formatProblemLedgerBlock(input.homework.problems, input.homework.solved ?? [])
     : '';
   let answerCheckBlock = '';
@@ -2357,6 +2361,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${pub.differsAt ? ` differs_at="${pub.differsAt}"` : ''}${precheckInforms(pub) ? '' : ' (not injected)'}`);
         if (precheckInforms(pub)) {
           answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts });
+          // 2026-10-15 (GAC staging v5): the problems THIS message completed
+          // are in the ledger for this reply too — the browser records them
+          // only from the frame below, i.e. for the next turn. Without this
+          // the reply asked again for an answer the message had just given.
+          if (noRevealLedger && input.homework?.problems.length) {
+            const before = input.homework.solved ?? [];
+            const now = solvedPositionsFromCheck(pub, input.homework.problems.length).filter((pos) => !before.includes(pos));
+            if (now.length) {
+              problemLedgerBlock = formatProblemLedgerBlock(input.homework.problems, [...before, ...now].sort((a, b) => a - b));
+              console.log(`[homework-ledger] solved this turn: ${now.join(',')}`);
+            }
+          }
           const seal = armRevealGuard(pub, result.correctValue, studentSaid);
           armDenialGuard(pub);
           yield { type: 'verdict-precheck', result: pub, ms, ...(seal ? { seal } : {}) };

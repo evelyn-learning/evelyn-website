@@ -59,6 +59,12 @@ export interface PublicVerdictPrecheck {
    *  number reveals nothing. Absent unless the ledger is on for the session
    *  and the check named one. */
   solvedProblem?: number;
+  /** 2026-10-15: EVERY position the check found solved (one message can
+   *  complete several; `solvedProblem` is the first of them). */
+  solvedProblems?: number[];
+  /** 2026-10-15: the list position of the homework problem the message is
+   *  about, when the check named one. Ledger only. */
+  aboutProblem?: number;
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -95,7 +101,23 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     confidence: o.confidence as PrecheckConfidence,
     ...differsAtField(o.differsAt),
     ...solvedProblemField(o.solvedProblem),
+    ...solvedProblemsField(o.solvedProblems),
+    ...aboutProblemField(o.aboutProblem),
   };
+}
+
+function isPosition(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 25;
+}
+
+function solvedProblemsField(v: unknown): { solvedProblems?: number[] } {
+  if (!Array.isArray(v) || v.length > 25 || !v.every(isPosition)) return {};
+  const list = [...new Set(v)].sort((a, b) => a - b);
+  return list.length ? { solvedProblems: list } : {};
+}
+
+function aboutProblemField(v: unknown): { aboutProblem?: number } {
+  return isPosition(v) ? { aboutProblem: v } : {};
 }
 
 function solvedProblemField(v: unknown): { solvedProblem?: number } {
@@ -108,7 +130,7 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -164,6 +186,9 @@ export function formatAnswerCheckBlock(
     /** 2026-10-15: under the ledger, every listed problem is solved — a
      *  correct repeat of one of their answers gets `ALL_SOLVED_CORRECT_RULE`. */
     allSolved?: boolean;
+    /** 2026-10-15: the ledger's solved positions before this message — a
+     *  wrong answer to one of them gets `SOLVED_PROBLEM_WRONG_RULE`. */
+    solved?: readonly number[];
   },
 ): string {
   if (!precheckInforms(p)) return '';
@@ -202,6 +227,7 @@ export function formatAnswerCheckBlock(
   }
   if (p.verdict === 'incorrect') {
     if (opts?.noRevealAnyStep === true) {
+      if (wrongOnSolvedProblem(p, opts)) return head + proposed + '- Checked: it is NOT right.\n' + SOLVED_PROBLEM_WRONG_RULE + tail;
       return head + proposed + where + '- Checked for that question: INCORRECT.\n' + WRONG_STEP_NO_REVEAL_RULE + tail;
     }
     const value = opts?.correctValue
@@ -252,6 +278,22 @@ export const OTHER_PART_NOTHING_OPEN_RULE =
 // problem was solved and recorded; the student repeated an earlier answer, and
 // the reply said it was done — then asked again for a step of a solved
 // problem ("what do you get when you solve …?").
+/**
+ * 2026-10-15 (GAC staging v5, AP Biology): both problems were recorded solved;
+ * the student then doubted one with a wrong alternative, and the tutor taught
+ * that problem again from its first step and kept asking about it until the
+ * session ended. A wrong answer to a problem the ledger holds as solved does
+ * not reopen it. The earlier answer is not restated (it is also the check's
+ * withheld value). Generic.
+ */
+export const SOLVED_PROBLEM_WRONG_RULE =
+  'What to do: the software\'s record shows the student already solved THAT problem correctly earlier in the session, so their earlier answer stands and the problem stays finished. Say kindly, in a sentence or two, that this new answer is not right and that the answer they gave before was — with one short reason in general terms — but do not write out the earlier answer or any value. Do not reopen the problem: ask no question about it and do not ask them to work any step of it again. Then carry on with the next unsolved problem, or, when every problem is solved, offer to stop or to look at something else.\n';
+
+/** A wrong answer, under the ledger, to a problem the ledger holds as solved. */
+function wrongOnSolvedProblem(p: PublicVerdictPrecheck, opts?: { solved?: readonly number[] }): boolean {
+  return p.verdict === 'incorrect' && p.aboutProblem !== undefined && !!opts?.solved?.includes(p.aboutProblem);
+}
+
 export const ALL_SOLVED_CORRECT_RULE =
   'What to do: every one of the student\'s problems is already solved (the software\'s record), so this repeats an answer they already gave. Say in a few words that it is right and already done. Ask NO question about any problem, part or step of this homework — not one you asked earlier, and not a check of it. Offer to stop or to look at something else.\n';
 
@@ -330,7 +372,7 @@ export const FALSE_CLAIM_RULE =
   + 'If what they stated is their answer to a problem (a value or result), not a statement about the subject: do not give the right answer or the working that reaches it — say it is not right, name the step to look at again, and ask them to redo it.\n';
 
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean }): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean; solved?: readonly number[] }): string {
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -383,6 +425,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
         + tail;
     }
     if (opts?.noRevealAnyStep === true) {
+      if (wrongOnSolvedProblem(p, opts)) return head + proposed + '- Checked: it is NOT right.\n' + SOLVED_PROBLEM_WRONG_RULE + tail;
       // 2026-10-19: no correct value, on the first attempt or on a retry.
       return head + proposed + where
         + '- Checked for that question: INCORRECT.\n'

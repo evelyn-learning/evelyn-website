@@ -34,6 +34,7 @@ export interface LedgerCheck {
   verdict: string;
   confidence: string;
   solvedProblem?: number;
+  solvedProblems?: number[];
 }
 
 /** The problem position a check proves solved, or null. */
@@ -42,6 +43,20 @@ export function solvedPositionFromCheck(p: LedgerCheck | null | undefined, total
   const n = p.solvedProblem;
   if (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || n > total) return null;
   return n;
+}
+
+/**
+ * 2026-10-15 (GAC staging v5): EVERY position a check proves solved. One
+ * message can complete several problems ("<one answer> and <another>"), and
+ * a message that is partly right can still complete one of them, so a
+ * high-confidence PARTLY_CORRECT check counts too (the check lists only
+ * problems whose complete answer is right). [] when none.
+ */
+export function solvedPositionsFromCheck(p: LedgerCheck | null | undefined, total: number): number[] {
+  if (!p || p.confidence !== 'high' || p.answers === 'neither') return [];
+  if (p.verdict !== 'correct' && p.verdict !== 'partly_correct') return [];
+  const list = p.solvedProblems ?? (p.solvedProblem !== undefined ? [p.solvedProblem] : []);
+  return [...new Set(list.filter((n) => Number.isInteger(n) && n >= 1 && n <= total))].sort((a, b) => a - b);
 }
 
 /** `solved` with `pos` added (sorted, unique, in range). */
@@ -93,6 +108,9 @@ export const PERSONAL_DETAILS_RULE =
 export const HOMEWORK_LEDGER_RULES =
   `- The ${LEDGER_SOLVED} / ${LEDGER_OPEN} mark beside each problem is the session's record, kept by the software from independent checks of the student's answers. Trust it over your own memory of the conversation.\n` +
   `- A ${LEDGER_SOLVED} problem is finished. Do not go back to it, re-offer it, ask whether they are ready for it, or ask for anything more on it, unless the student asks to return to it. If the student gives an answer to a ${LEDGER_SOLVED} problem again, say in a few words that it is already done and carry on with the next ${LEDGER_OPEN} problem.\n` +
+  // 2026-10-15 staging (varied run): doubting a solved answer with a wrong
+  // alternative reopened the problem from its first step.
+  `- If the student doubts a ${LEDGER_SOLVED} problem or offers a different answer to it, their earlier answer stands: say so briefly, with a short reason, and do not reopen it or ask them to work it again — unless they ask to go through it again.\n` +
   `- When every problem is ${LEDGER_SOLVED}, the homework is done: say so, and offer to stop or to look at something else. Do not invent work left on these problems.\n` +
   `- When you close, wrap up or summarise: name each ${LEDGER_SOLVED} problem as done and only ${LEDGER_OPEN} ones as left for next time. Anything the student brought up during the session that is not on this list is not one of these problems: never give it one of their numbers — mention it separately, as their extra question.\n` +
   // 2026-10-15 staging: an unrelated trivia question was answered "by the way"

@@ -113,7 +113,15 @@ function checkRequestValue(text: string): string | null {
 
 /** The shape of what the student typed, and the tutor question it meets.
  *  Null for an empty or synthetic ("[…]") turn. Never throws. */
-export function classifyTurnShape(studentText: string, priorTutorTurn: string): TurnShape | null {
+export function classifyTurnShape(
+  studentText: string,
+  priorTutorTurn: string,
+  /** 2026-10-15 (GAC staging v5, ledger sessions only): "oh <a sum>" was read
+   *  as an acknowledgment (digits are stripped before that test) and never
+   *  checked. true ⇒ a message with a digit is never an assent or an
+   *  acknowledgment. Unset ⇒ as before. */
+  opts?: { digitsNotAssent?: boolean },
+): TurnShape | null {
   const t = (studentText ?? '').trim();
   if (!t || t.startsWith('[')) return null;
   const open = readOpenQuestion(priorTutorTurn ?? '');
@@ -124,8 +132,9 @@ export function classifyTurnShape(studentText: string, priorTutorTurn: string): 
     answerShaped: shape === 'hedged_proposal' || shape === 'bare_token' || shape === 'answer'
       || (shape === 'check_request' && !!proposed),
   });
-  if (isBareAssent(t)) return done(/^(?:\W|um+|uh+|oh|well|so|hmm+)*n/i.test(t) ? 'bare_dissent' : 'bare_assent');
-  if (isPureAcknowledgment(t)) return done('acknowledgment');
+  const assentPossible = !(opts?.digitsNotAssent === true && /\d/.test(t));
+  if (assentPossible && isBareAssent(t)) return done(/^(?:\W|um+|uh+|oh|well|so|hmm+)*n/i.test(t) ? 'bare_dissent' : 'bare_assent');
+  if (assentPossible && isPureAcknowledgment(t)) return done('acknowledgment');
   // "… is it <one thing> or <the other>?" names alternatives and commits to
   // neither: a question — never judged, never matched (2026-10-06b).
   if (isUncommittedAlternativesQuestion(t)) return done('question');

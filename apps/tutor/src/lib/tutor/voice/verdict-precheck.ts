@@ -214,12 +214,30 @@ export const CLAIM_VERDICT_RULE =
 
 /**
  * 2026-10-19 (homework ledger, lesson-plan/homework-ledger.ts): the check
- * names the listed problem whose complete final answer the message states,
- * so the session can record it as solved from the check rather than from the
- * tutor's memory. Appended after the field list; generic wording.
+ * names the listed problems whose complete final answer the student has now
+ * stated, so the session can record them as solved from the check rather
+ * than from the tutor's memory. Appended after the field list; generic wording.
+ *
+ * 2026-10-15 (GAC staging, varied run v5): the field named ONE problem per
+ * message, judged from that message alone. Two answers in one message
+ * recorded only the first problem; a two-part answer given across two
+ * messages was never recorded. It is now a list, and a part the student
+ * stated in an earlier message counts. `about_problem` names the listed
+ * problem the message is about, so a wrong second answer to a problem
+ * already solved does not reopen it.
  */
 export const SOLVED_PROBLEM_FIELD_RULE =
-  ' solved_problem — the number, as listed in <student_problems>, of the student\'s problem whose COMPLETE final answer the message states correctly (every part and every value that problem asks for), judged by your own working in step two; zero when it states none, when it gives only a step, one part or some of the values, when the answer is wrong, or when no problems are listed. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier names that problem.';
+  ' solved_problems — the numbers, as listed in <student_problems>, of EVERY one of the student\'s problems whose COMPLETE final answer (every part and every value that problem asks for) the student has now stated correctly, judged by your own working in step two. One message can complete several problems: list each one. An answer can also be split across messages: for each part of a problem, take the student\'s LATEST statement of it, in this message or in their own earlier messages in the recent conversation (never the tutor\'s words); when those latest statements together are the complete right answer, list the problem. Leave a problem out when only a step, one part or some of the values have been stated, or when the latest statement of any part is wrong. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier lists that problem. Empty when none, or when no problems are listed.'
+  + ' about_problem — the number, as listed in <student_problems>, of the student\'s problem this message proposes an answer, step or part for; zero when it is about none of the listed problems (a new problem of their own, a general claim, small talk) or when it is about several.';
+
+/**
+ * 2026-10-15 (GAC staging v5): with several problems listed, a correct answer
+ * to a DIFFERENT listed problem from the one the tutor was asking about was
+ * judged a wrong answer to the open question. Ledger only; inserted after the
+ * first test of step 3; generic wording.
+ */
+export const OTHER_LISTED_PROBLEM_RULE =
+  '\n   Second test: does the proposed value equal the final answer of a DIFFERENT one of the student\'s listed problems (or of one of its parts)? If it does, answers is "other_part" and the verdict is "correct" — the student has answered that problem, not the question asked just now.';
 
 /** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
  *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; `readinessTaskRule` unset ⇒
@@ -231,7 +249,12 @@ export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; r
     const at = system.indexOf(marker);
     system = at < 0 ? system + CLAIM_VERDICT_RULE : system.slice(0, at) + CLAIM_VERDICT_RULE + system.slice(at);
   }
-  if (opts?.ledger === true) system += SOLVED_PROBLEM_FIELD_RULE;
+  if (opts?.ledger === true) {
+    const anchor = 'matching the final answer is not a coincidence.';
+    const i = system.indexOf(anchor);
+    if (i >= 0) system = system.slice(0, i + anchor.length) + OTHER_LISTED_PROBLEM_RULE + system.slice(i + anchor.length);
+    system += SOLVED_PROBLEM_FIELD_RULE;
+  }
   return system;
 }
 
@@ -288,13 +311,18 @@ export const VERDICT_PRECHECK_SCHEMA_WITH_WORKING: Record<string, unknown> = {
   properties: { working: { type: 'string' }, ...BASE_PROPERTIES },
 };
 
-/** 2026-10-19: the same schema with `solved_problem` LAST, so every field
- *  before it is written exactly as it was (homework ledger). */
+/** 2026-10-19: the same schema with the ledger fields LAST, so every field
+ *  before them is written exactly as it was (homework ledger). 2026-10-15:
+ *  `solved_problems` (a list) replaced `solved_problem`; `about_problem` added. */
 export function withSolvedProblemField(schema: Record<string, unknown>): Record<string, unknown> {
   return {
     ...schema,
-    required: [...(schema.required as string[]), 'solved_problem'],
-    properties: { ...(schema.properties as Record<string, unknown>), solved_problem: { type: 'integer' } },
+    required: [...(schema.required as string[]), 'solved_problems', 'about_problem'],
+    properties: {
+      ...(schema.properties as Record<string, unknown>),
+      solved_problems: { type: 'array', items: { type: 'integer' } },
+      about_problem: { type: 'integer' },
+    },
   };
 }
 
@@ -517,13 +545,19 @@ export async function runVerdictPrecheck(
     if (wantsDiffersAt && !differsAt && String(o.differs_at ?? '').trim()) {
       console.log(`[verdict-precheck] differs_at not used (it carried a value): "${String(o.differs_at).replace(/\s+/g, ' ').slice(0, 120)}"`);
     }
-    // 2026-10-19 (ledger): the problem LABEL the check named → its list position.
-    const solvedLabel = Number(o.solved_problem);
-    const solvedIdx = ledger && Number.isInteger(solvedLabel) && solvedLabel > 0
-      ? (input.problems ?? []).findIndex((p) => p.n === solvedLabel)
-      : -1;
+    // 2026-10-19 (ledger): the problem LABELS the check named → list positions.
+    // `solved_problem` (one number) is still read, for a reply in the old shape.
+    const problems = input.problems ?? [];
+    const positionOf = (v: unknown): number => {
+      const n = Number(v);
+      return ledger && Number.isInteger(n) && n > 0 ? problems.findIndex((p) => p.n === n) + 1 : 0;
+    };
+    const labels: unknown[] = Array.isArray(o.solved_problems) ? o.solved_problems.slice(0, 25) : [o.solved_problem];
+    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0))].sort((a, b) => a - b);
+    const aboutProblem = positionOf(o.about_problem);
     return {
-      ...(solvedIdx >= 0 ? { solvedProblem: solvedIdx + 1 } : {}),
+      ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
+      ...(aboutProblem ? { aboutProblem } : {}),
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),

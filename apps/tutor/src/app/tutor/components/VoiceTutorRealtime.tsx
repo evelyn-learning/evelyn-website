@@ -113,7 +113,7 @@ import {
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
-import { recordSolved, sanitizeSolvedPositions, solvedPositionFromCheck } from '@/lib/tutor/lesson-plan/homework-ledger';
+import { recordSolved, sanitizeSolvedPositions, solvedPositionsFromCheck } from '@/lib/tutor/lesson-plan/homework-ledger';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -16803,11 +16803,12 @@ export function VoiceTutorRealtime({
                     if (TUTOR_PRECHECK_CREDIT && precheckCreditOverride(pc).verifiedWrong) {
                       hedgedDenialSignalRef.current.verifiedWrong = true;
                     }
-                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}${pc.solvedProblem ? ` solved_problem=${pc.solvedProblem}` : ''}`);
+                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}${pc.solvedProblems?.length ? ` solved_problems=${pc.solvedProblems.join(',')}` : pc.solvedProblem ? ` solved_problem=${pc.solvedProblem}` : ''}${pc.aboutProblem ? ` about_problem=${pc.aboutProblem}` : ''}`);
                     // 2026-10-19 homework ledger: the check's own finding, not the tutor's words.
                     const hwTotal = homeworkProblemsRef.current?.length ?? 0;
-                    const solvedPos = hwTotal ? solvedPositionFromCheck(pc, hwTotal) : null;
-                    if (solvedPos !== null && !homeworkSolvedRef.current.includes(solvedPos)) {
+                    // 2026-10-15: one message can complete several problems.
+                    for (const solvedPos of hwTotal ? solvedPositionsFromCheck(pc, hwTotal) : []) {
+                      if (homeworkSolvedRef.current.includes(solvedPos)) continue;
                       homeworkSolvedRef.current = recordSolved(homeworkSolvedRef.current, solvedPos, hwTotal);
                       onDebugEvent?.('homework_problem_solved', `pos=${solvedPos} solved=[${homeworkSolvedRef.current.join(',')}] total=${hwTotal}`);
                     }
