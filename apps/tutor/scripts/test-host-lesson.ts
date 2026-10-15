@@ -607,6 +607,18 @@ test('wiring: banner, opening note, recap and duration reach the session', () =>
   assert.match(stage, /if \(questionPinKey\.startsWith\('moment-'\)\) return;/);
 });
 
+test('wiring: a moment supersedes the question pinned before it (live 10-15)', () => {
+  const ts = readFileSync(join(__dirname, '../src/app/tutor/components/session/TutorSession.tsx'), 'utf8');
+  const handler = ts.slice(ts.indexOf('const handleMomentBanner = useCallback'), ts.indexOf('const handleMomentBanner = useCallback') + 600);
+  assert.match(handler, /if \(b\) \{\s*setQuestionPin\(null\);/);
+  assert.match(handler, /onDebugEvent\?\.\('moment_banner'/);
+  // A pin fetched for a pre-moment turn must not land on top of the banner.
+  assert.match(ts, /const momentSeqAtFetch = momentBannerSeqRef\.current;/);
+  assert.equal((ts.match(/if \(momentBannerSeqRef\.current !== momentSeqAtFetch\)/g) ?? []).length, 2, 'both the gist and the fallback path');
+  // The ref is declared before the pin-fetch effect reads it.
+  assert.ok(ts.indexOf('const momentBannerSeqRef = useRef(0);') < ts.indexOf('const momentSeqAtFetch'));
+});
+
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)
 
 console.log(`\n${passed}/${passed + failed} passed`);

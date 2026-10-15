@@ -42,7 +42,7 @@ import {
   parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, momentBanner, lessonStartHook, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
 import { parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
-import { PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
+import { HOST_START_VIDEO_WAIT_MS, PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, shouldAwaitVideoState, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -1358,15 +1358,29 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const hostStartAcceptedRef = useRef(false);
   const [startBlocked, setStartBlocked] = useState<null | 'autoplay' | 'token_expired'>(null);
   const runHostStart = useCallback(() => {
-    const deadline = Date.now() + 60_000;
+    const startedAt = Date.now();
+    const deadline = startedAt + 60_000;
+    let awaitedVideo = false;
     const tryStart = () => {
+      // A host video's first report may land just after the start: wait for
+      // it briefly so the opening turn knows where the video is.
+      const videoWait = {
+        hostVideo: TUTOR_HOST_LESSON && uiOptions.videoControl,
+        videoKnown: lessonHostRef.current.video !== null,
+        waitedMs: Date.now() - startedAt,
+      };
+      if (shouldAwaitVideoState(videoWait)) { awaitedVideo = true; setTimeout(tryStart, 25); return; }
+      if (awaitedVideo) {
+        addDebugEvent('host_start_video_wait', videoWait.videoKnown ? `ms=${videoWait.waitedMs} video=known` : `ms=${HOST_START_VIDEO_WAIT_MS} video=unknown`);
+        awaitedVideo = false;
+      }
       const h = sessionHandleRef.current;
       if (h?.startSession) { h.startSession(); return; }
       if (Date.now() < deadline) setTimeout(tryStart, 100);
       else addDebugEvent('host_start_ignored', 'why=no_session_handle');
     };
     tryStart();
-  }, [addDebugEvent]);
+  }, [addDebugEvent, uiOptions.videoControl]);
   const blockStart = useCallback((reason: 'autoplay' | 'token_expired') => {
     setStartBlocked(reason);
     addDebugEvent('start_blocked', `reason=${reason}`);
