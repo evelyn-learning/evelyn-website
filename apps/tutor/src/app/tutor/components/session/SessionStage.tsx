@@ -104,6 +104,10 @@ export interface SessionStageProps {
   actionPin?: ReactNode;
   // presence
   voiceState: VoiceState;
+  /** Thinking cue (GDI sessions 2026-10-15): when set, a large "Thinking…"
+   *  pill with a pulsing ring sits above the dock over the board — the small
+   *  caption alone was missed by learners who weren't watching it. */
+  thinkingCueText?: string | null;
   /** R35 T-A (demo-polish): show the full-stage "joining" overlay — board +
    *  caption strip + voice dock all dimmed/blocked — while true. Mirrored
    *  from VoiceTutorRealtime's onWarmupOverlayChange via TutorSession; true
@@ -255,7 +259,7 @@ export default function SessionStage(props: SessionStageProps) {
   const {
     sessionMode = 'voice',
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
-    voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
+    voiceState, thinkingCueText = null, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
@@ -1107,6 +1111,11 @@ export default function SessionStage(props: SessionStageProps) {
         .ss-breathe{animation:ss-breathe 3.4s ease-in-out infinite}
         @keyframes ss-cap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         .ss-cap{animation:ss-cap .4s ease both}
+        @keyframes ss-think{0%{transform:scale(.8);opacity:.7}100%{transform:scale(2.2);opacity:0}}
+        .ss-think{animation:ss-think 1.2s ease-out infinite}
+        @keyframes ss-think-dot{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+        .ss-think-dot{animation:ss-think-dot 1.2s ease-in-out infinite}
+        @media (prefers-reduced-motion: reduce){.ss-think{animation:none;opacity:.35;transform:scale(1.6)}.ss-think-dot{animation:none}}
       `}</style>
 
       {/* Full-bleed grid background — behind every row. */}
@@ -1809,9 +1818,23 @@ export default function SessionStage(props: SessionStageProps) {
               offset and stack vertically instead of overlapping (Task 16
               fix, live-check-3 addendum: both rendered at the same absolute
               bottom offset). ===== */}
-      {(hiccupPin || actionPin) && (
+      {(hiccupPin || actionPin || thinkingCueText) && (
         <div className={`absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
           <div className="max-w-[min(88vw,560px)] pointer-events-auto flex flex-col items-center gap-2">
+            {thinkingCueText && (
+              <div
+                role="status"
+                aria-live="polite"
+                data-testid="thinking-cue"
+                className="ss-cap pointer-events-none flex items-center gap-3 rounded-full bg-amber-50/95 border-2 border-amber-300 px-5 py-2.5 shadow-lg shadow-amber-500/20"
+              >
+                <span className="relative grid place-items-center w-6 h-6" aria-hidden="true">
+                  <span className="ss-think absolute inset-0 rounded-full bg-amber-400/60" />
+                  <span className="ss-think-dot relative w-3.5 h-3.5 rounded-full bg-amber-500" />
+                </span>
+                <span className="text-lg font-semibold text-amber-900">{thinkingCueText}</span>
+              </div>
+            )}
             {hiccupPin}
             {actionPin}
           </div>

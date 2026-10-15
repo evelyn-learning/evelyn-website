@@ -372,6 +372,12 @@ export const TUTOR_TURN_COALESCE =
 // answer the in-flight text + the new text once. Acts on a real final
 // transcript only, never on speech onset or noise (the E1 regression).
 // Default ON per the R49b standing rule.
+// Thinking cue kill switch (GDI sessions 2026-10-15): the chime + pulse +
+// large on-stage "Thinking…" state. Per-session opt-in is the embed claim
+// `thinking_cue`; this flag only turns it off everywhere. Default ON per
+// the R49b standing rule.
+export const TUTOR_THINKING_CUE =
+  process.env.NEXT_PUBLIC_TUTOR_THINKING_CUE !== 'off';
 export const TUTOR_SUPERSEDE_PRE_AUDIO =
   process.env.NEXT_PUBLIC_TUTOR_SUPERSEDE_PRE_AUDIO !== 'off';
 export const TUTOR_ANSWER_REVEAL_GUARD =

@@ -20,6 +20,8 @@ import {
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
+import { initialThinkingCue, cueTurnAccepted, cueTick, cueStop, type ThinkingCueState } from '@/lib/tutor/voice/thinking-cue';
+import { playTurnChime, playThinkingPulse, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 // Aliased: this file already has a `SessionMode` (opening-behavior's
 // lessonNode/freestyle/diagnostic `targetKind`, unrelated concept) — the
 // text-only tutor mode is `TutorSessionMode` here to avoid the collision.
@@ -365,6 +367,7 @@ import {
   TUTOR_THINK_TIME_HOLD,
   TUTOR_TURN_COALESCE,
   TUTOR_SUPERSEDE_PRE_AUDIO,
+  TUTOR_THINKING_CUE,
   TUTOR_OPENING_BARGEIN_ESCAPE,
   TUTOR_VERDICT_REPLANT_ON_KILL,
   TUTOR_KILL_WITHHOLDS_ADVANCE,
@@ -904,6 +907,10 @@ interface VoiceTutorRealtimeProps {
   /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
    *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
   speechRate?: number;
+  /** Thinking cue (embed claim `thinking_cue`): chime when a student turn is
+   *  accepted, soft pulse while the reply is still coming, head cover line
+   *  skipped (the chime replaces it). See lib/tutor/voice/thinking-cue.ts. */
+  thinkingCue?: boolean;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -1279,6 +1286,7 @@ export function VoiceTutorRealtime({
   cartesiaVoiceSpeed,
   tutorLanguages,
   speechRate,
+  thinkingCue = false,
   onLessonPlanProgress,
   onHomeworkProgress,
   onLessonPlanLoadSettled,
@@ -19622,6 +19630,39 @@ export function VoiceTutorRealtime({
   // changed. Every ref/const referenced below is either a component-scope
   // ref (stable identity) or a module-level pure import — see the
   // useCallback deps for the two non-ref component values it touches.
+  // Thinking cue (GDI sessions 2026-10-15) — see lib/tutor/voice/thinking-cue.ts.
+  // The coarse voice state the stage shows is mirrored into a ref by the
+  // effect beside onVoiceStateChange; a 200 ms poller advances the cue while
+  // a wait is open and stops itself when it closes.
+  const thinkingCueOn = TUTOR_THINKING_CUE && thinkingCue;
+  const thinkingCueStateRef = useRef<ThinkingCueState>(initialThinkingCue());
+  const thinkingCueTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const coarseVoiceStateRef = useRef<string>('idle');
+  const runThinkingCueTick = useCallback(() => {
+    const { state, play } = cueTick(thinkingCueStateRef.current, coarseVoiceStateRef.current, Date.now());
+    thinkingCueStateRef.current = state;
+    if (play === 'pulse') playThinkingPulse();
+    if (state.phase === 'idle' && thinkingCueTimerRef.current) {
+      clearInterval(thinkingCueTimerRef.current);
+      thinkingCueTimerRef.current = null;
+    }
+  }, []);
+  /** A real student turn was accepted for the brain (never a synthetic,
+   *  silent or opening dispatch — callers check). */
+  const cueStudentTurnAccepted = useCallback(() => {
+    if (!thinkingCueOn) return;
+    const { state, play } = cueTurnAccepted(thinkingCueStateRef.current, Date.now());
+    thinkingCueStateRef.current = state;
+    if (play === 'chime') playTurnChime();
+    onDebugEvent?.('thinking_cue_chime', '');
+    if (!thinkingCueTimerRef.current) thinkingCueTimerRef.current = setInterval(runThinkingCueTick, 200);
+  }, [thinkingCueOn, runThinkingCueTick, onDebugEvent]);
+  useEffect(() => () => {
+    thinkingCueStateRef.current = cueStop();
+    if (thinkingCueTimerRef.current) clearInterval(thinkingCueTimerRef.current);
+    thinkingCueTimerRef.current = null;
+  }, []);
+
   const armCoverForDispatch = useCallback((transcript: string) => {
     // R58 student-declared hold: no ack, no cover, no escalation while the
     // student has asked us to stay quiet. Dispatch itself is swallowed in
@@ -19709,6 +19750,14 @@ export function VoiceTutorRealtime({
           // Same gate the fast opener respects (perception-cancel window).
           if (Date.now() < speakTextBlockedUntilRef.current) {
             onDebugEvent?.('ack_suppressed', 'speak-gate');
+            return;
+          }
+          // Thinking cue: the chime already told the student their turn was
+          // taken, so the head filler ("One moment.", "Mm, thinking.") is
+          // skipped — ChatGPT's test feedback called those lines mechanical.
+          // Escalation tiers below still speak on a long wait.
+          if (thinkingCueOn) {
+            onDebugEvent?.('thinking_cue_ack_skipped', TUTOR_COVER_V2 && verdict.kind === 'cover' ? verdict.category : 'ack');
             return;
           }
           let text: string; let index: number;
@@ -20368,6 +20417,7 @@ export function VoiceTutorRealtime({
       // to armCoverForDispatch above — same call, now shared with the
       // queue-drain site below.
       armCoverForDispatch(transcript);
+      if (!opts?.silent && !/^\s*\[/.test(transcript) && !openingTurnPendingRef.current) cueStudentTurnAccepted();
       await callBrainOnce(transcript, opts);
       // R58: promote a pending hold to ACTIVE only now — the turn that
       // acknowledged the request has fully dispatched, so its speech is
@@ -20504,6 +20554,7 @@ export function VoiceTutorRealtime({
           }
         }
         armCoverForDispatch(combined);
+        if (!/^\s*\[/.test(combined)) cueStudentTurnAccepted();
         inFlightTurnRef.current = { transcript: combined, shown: false };
         await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
       }
@@ -24569,6 +24620,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       'start_tap',
       `action=${tapAction} state=${realtime.state} connected=${realtime.isConnected} started=${hasStarted}`,
     );
+    // Thinking cue: create/resume its AudioContext inside this user gesture.
+    if (thinkingCueOn) primeThinkingCueAudio();
     // RESUME first-tap — the brain has the rehydrated history + restored
     // board, so it re-orients, RE-RENDERS any interrupted visual, and
     // continues — voiced + drawn through the normal turn path (reliable; no
@@ -25465,6 +25518,23 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       onListeningHintRef.current?.(null);
     }
   }, [realtime.state, isWarmingUp, isBrainResponding, resolveAwaitingDispatch]);
+
+  // Thinking cue: same derivation as the stage state below, mirrored into a
+  // ref and fed to the cue right away so a pulse stops the instant the state
+  // leaves processing/thinking (tutor audio, barge-in, cancel).
+  useEffect(() => {
+    if (!thinkingCueOn) return;
+    const s = realtime.state;
+    coarseVoiceStateRef.current =
+      s === 'error' ? 'error'
+      : s === 'speaking' ? 'speaking'
+      : (isWarmingUp || isBrainResponding || s === 'processing') ? 'thinking'
+      : (hasStarted && isMicMuted) ? 'muted'
+      : perceptionAwaitingDispatch ? 'processing'
+      : perceptionHearing ? 'hearing'
+      : hasStarted ? 'listening' : 'idle';
+    runThinkingCueTick();
+  }, [thinkingCueOn, realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, runThinkingCueTick]);
 
   useEffect(() => {
     if (!onVoiceStateChange) return;

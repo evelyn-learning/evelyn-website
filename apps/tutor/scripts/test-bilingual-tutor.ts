@@ -20,6 +20,7 @@ import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
+import { parseThinkingCue, initialThinkingCue, cueTurnAccepted, cueTick, thinkingCueVisible, thinkingCueLabel, CHIME_TO_PULSE_MS, PULSE_EVERY_MS, ACCEPT_GRACE_MS } from '../src/lib/tutor/voice/thinking-cue';
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
@@ -229,6 +230,55 @@ test('pre-audio supersede: a final arriving before the in-flight reply spoke abo
   for (const k of ['!inFlight.shown', '!opts?.silent', 'PRE_AUDIO_SUPERSEDE_MS', 'inFlightBrainAbortRef.current.abort()', 'queuedTranscriptsRef.current.push(combined)', 'isFuzzyDupTranscript']) assert.ok(branch.includes(k), k);
   assert.ok(vtr.indexOf('TUTOR_SUPERSEDE_PRE_AUDIO &&') < vtr.indexOf("queued (brain busy):', JSON.stringify(transcript)"), 'runs before the plain queue push');
   assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("NEXT_PUBLIC_TUTOR_SUPERSEDE_PRE_AUDIO !== 'off'"));
+});
+console.log('thinking cue (GDI sessions 2026-10-15)');
+test('thinking_cue claim: true/"true"/1/"on" ⇒ on; absent or anything else ⇒ off', () => {
+  for (const v of [true, 'true', 1, '1', 'on', ' TRUE ']) assert.equal(parseThinkingCue(v), true, String(v));
+  for (const v of [undefined, false, 'false', 0, 'off', '', null, {}]) assert.equal(parseThinkingCue(v), false, String(v));
+});
+test('cue timing: chime on accept, silent until 2 s, then a pulse every 1.2 s while thinking', () => {
+  let { state, play } = cueTurnAccepted(initialThinkingCue(), 1000);
+  assert.equal(play, 'chime');
+  ({ state, play } = cueTick(state, 'thinking', 1000 + CHIME_TO_PULSE_MS - 1));
+  assert.equal(play, null);
+  ({ state, play } = cueTick(state, 'thinking', 1000 + CHIME_TO_PULSE_MS));
+  assert.equal(play, 'pulse');
+  ({ state, play } = cueTick(state, 'processing', 1000 + CHIME_TO_PULSE_MS + PULSE_EVERY_MS - 1));
+  assert.equal(play, null);
+  ({ state, play } = cueTick(state, 'thinking', 1000 + CHIME_TO_PULSE_MS + PULSE_EVERY_MS));
+  assert.equal(play, 'pulse');
+});
+test('cue stops the moment tutor audio starts or the student speaks (after the accept grace)', () => {
+  for (const leave of ['speaking', 'hearing', 'listening', 'idle', 'error']) {
+    let { state } = cueTurnAccepted(initialThinkingCue(), 0);
+    let play;
+    ({ state, play } = cueTick(state, leave, ACCEPT_GRACE_MS - 1));
+    assert.equal(state.phase, 'waiting', `${leave}: grace beat keeps waiting`);
+    ({ state, play } = cueTick(state, leave, ACCEPT_GRACE_MS));
+    assert.equal(state.phase, 'idle', leave);
+    ({ state, play } = cueTick(state, 'thinking', 10_000));
+    assert.equal(play, null, `${leave}: no pulse after stopping`);
+  }
+});
+test('thinking pill: only when enabled, started and processing/thinking; Japanese label after a Japanese turn', () => {
+  assert.equal(thinkingCueVisible(true, true, 'thinking'), true);
+  assert.equal(thinkingCueVisible(true, true, 'processing'), true);
+  assert.equal(thinkingCueVisible(true, true, 'speaking'), false);
+  assert.equal(thinkingCueVisible(false, true, 'thinking'), false, 'off without the claim');
+  assert.equal(thinkingCueVisible(true, false, 'thinking'), false);
+  assert.equal(thinkingCueLabel('ja'), '考えています…');
+  assert.equal(thinkingCueLabel(undefined), 'Thinking…');
+});
+test('thinking cue wiring: claim → TutorSession → runtime + stage; head cover skipped; events persisted', () => {
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const ts = readFileSync('src/app/tutor/components/session/TutorSession.tsx', 'utf8');
+  assert.ok(embed.includes('TUTOR_THINKING_CUE && parseThinkingCue(config.thinking_cue)') && embed.includes('thinkingCue={thinkingCue}'));
+  assert.ok(ts.includes('thinkingCue={thinkingCue}') && ts.includes('thinkingCueText={thinkingCueText}'));
+  assert.ok(vtr.includes("onDebugEvent?.('thinking_cue_ack_skipped'"));
+  assert.ok(vtr.includes('cueStudentTurnAccepted();\n      await callBrainOnce(transcript, opts);') || vtr.includes('cueStudentTurnAccepted();'));
+  for (const ev of ['thinking_cue_chime', 'thinking_cue_ack_skipped']) assert.ok(embed.includes(`'${ev}',`), ev);
+  assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("NEXT_PUBLIC_TUTOR_THINKING_CUE !== 'off'"));
 });
 test('speech_rate claim: numbers/strings clamped to [0.6,1.5]; absent/1/garbage ⇒ undefined', () => {
   assert.equal(parseSpeechRate(0.85), 0.85);
