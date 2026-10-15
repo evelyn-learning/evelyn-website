@@ -202,7 +202,10 @@ function numericHit(text: string, a: WithheldAnswer, targets: Num[], board: bool
     for (const t of targets) {
       if (!agrees(r, t)) continue;
       if (r.coefficient && isWeak(t)) continue;
-      if (isWeak(t) && !(r.resultPosition || (board && lone))) continue;
+      // 2026-10-15 (staging, AP Biology): under the ledger (new-number mode) a
+      // single-digit result is a hit wherever it stands — "there are only 9
+      // bonds" gave the answer away in prose, outside any result position.
+      if (isWeak(t) && !(r.resultPosition || (board && lone) || a.newNumbers === true)) continue;
       return String(r.value);
     }
   }

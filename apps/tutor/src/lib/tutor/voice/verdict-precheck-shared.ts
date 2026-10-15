@@ -161,6 +161,9 @@ export function formatAnswerCheckBlock(
      *  `FALSE_CLAIM_RULE` instead of the non-answer rule. Unset/false ⇒ as
      *  before. */
     claimCorrection?: boolean;
+    /** 2026-10-15: under the ledger, every listed problem is solved — a
+     *  correct repeat of one of their answers gets `ALL_SOLVED_CORRECT_RULE`. */
+    allSolved?: boolean;
   },
 ): string {
   if (!precheckInforms(p)) return '';
@@ -245,6 +248,13 @@ export const OTHER_PART_CORRECT_RULE_WORK_THEN_MATCH =
 export const OTHER_PART_NOTHING_OPEN_RULE =
   'Return to a question only if it is still open: if your last message asked nothing, or what you asked was about a problem the software already records as solved, there is nothing to return to — say briefly that it is right and already done, then carry on with the next unsolved problem, or, when none is left, say the homework is done.\n';
 
+// 2026-10-15 (staging, Algebra II and AP Chemistry, second run): every
+// problem was solved and recorded; the student repeated an earlier answer, and
+// the reply said it was done — then asked again for a step of a solved
+// problem ("what do you get when you solve …?").
+export const ALL_SOLVED_CORRECT_RULE =
+  'What to do: every one of the student\'s problems is already solved (the software\'s record), so this repeats an answer they already gave. Say in a few words that it is right and already done. Ask NO question about any problem, part or step of this homework — not one you asked earlier, and not a check of it. Offer to stop or to look at something else.\n';
+
 // ── 2026-10-08: a wrong answer to the WHOLE problem — never the result ─────
 //
 // portal-09624999 @18.0 s: the student opened a homework session with a wrong
@@ -317,7 +327,7 @@ export const FALSE_CLAIM_RULE =
   + 'What to do: do not let it pass, and do not simply return to your question. Say plainly and kindly that the statement is not right — no praise word first — and correct it in a sentence or two with the reason, or ask one question that leads them to test it. Then return to where you were. Never treat it as an answer to your open question.\n';
 
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean }): string {
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean }): string {
   const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
@@ -341,6 +351,11 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
     // The student gave this value themselves, so stating it reveals nothing:
     // it is what the reply's own working has to arrive at.
     const checked = correctValue ? ` The check's own result: ${q(line(correctValue, 200))}.` : '';
+    // Only for a repeat of a listed problem's answer — not for work on an
+    // extra problem the student brought after the list was done.
+    if (opts?.noRevealAnyStep === true && opts.allSolved === true && (p.solvedProblem !== undefined || p.answers === 'other_part')) {
+      return head + proposed + where + `- Checked for that question: CORRECT.${checked}\n` + ALL_SOLVED_CORRECT_RULE + tail;
+    }
     return head + proposed + where
       + `- Checked for that question: CORRECT.${checked}\n`
       + (p.answers === 'overall_problem'

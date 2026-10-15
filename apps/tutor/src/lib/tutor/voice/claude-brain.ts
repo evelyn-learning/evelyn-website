@@ -2224,7 +2224,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-10-19 teaching round (./no-reveal-ledger-gate.ts): text sessions of
   // listed partners only — the route never sets it for voice.
   const noRevealLedger = input.noRevealLedger === true && input.textVerdictPrecheck === true;
-  const checkBlockOpts = noRevealLedger ? { noRevealAnyStep: true, claimCorrection: true } : {};
+  // 2026-10-15 (staging): every listed problem already solved, per the ledger.
+  const allSolved = noRevealLedger && !!input.homework?.problems.length
+    && input.homework.problems.every((_, i) => (input.homework?.solved ?? []).includes(i + 1));
+  const checkBlockOpts = noRevealLedger ? { noRevealAnyStep: true, claimCorrection: true, ...(allSolved ? { allSolved: true } : {}) } : {};
   if (workThenMatch) yield { type: 'work-then-match' };
   // 2026-10-08c — wrong answer to the WHOLE problem: the result never leaves
   // this function (./whole-answer-reveal.ts). Armed once the pre-check's

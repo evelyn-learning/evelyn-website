@@ -79,11 +79,11 @@ export const LEDGER_OPEN = '[OPEN]';
 /** A question unrelated to the homework and its subject is not answered at
  *  all — the redirect alone. Generic. */
 export const OFF_TOPIC_NOT_ANSWERED =
-  'A question unrelated to these problems and their subject is not answered — not briefly, and not as an aside or in passing while steering back. Say in a few words that it is outside this session, then return to the work.';
+  'A question unrelated to the subject itself (not merely a different question within the subject) is not answered — not briefly, and not as an aside or in passing while steering back. Say in a few words that it is outside this session, then return to the work. A question within the subject is welcome even when it is not one of these problems.';
 
 /** A problem the student adds mid-session is taught like the listed ones. */
 export const EXTRA_PROBLEM_SAME_RULES =
-  'A new problem the student brings up during the session is taught like the listed ones: guide them through it one step at a time and never work it to its result for them. Asked to check their answer to it, say whether it is right; when it is not, do not give the right one or the working that reaches it — name the step to look at again and ask them to redo it.';
+  'A new problem or question within the subject that the student brings up during the session is taught like the listed ones: help with it, guiding them one step at a time, and never work it to its result for them. Asked to check their answer to it, say whether it is right; when it is not, do not give the right one or the working that reaches it — name the step to look at again and ask them to redo it. When the student asks to stop, wrap up at once: do not finish a problem or state a step first.';
 
 /** Rules the brain is given with the ledger. Generic: no subject content. */
 export const HOMEWORK_LEDGER_RULES =

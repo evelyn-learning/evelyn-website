@@ -38,9 +38,9 @@ import {
   VERDICT_PRECHECK_SCHEMA,
   type VerdictPrecheckLlm,
 } from '../src/lib/tutor/voice/verdict-precheck';
-import { checkedCorrectDenialFeedback, deniesCheckedAnswer, wholeAnswerRevealGuardActive } from '../src/lib/tutor/voice/whole-answer-reveal';
+import { checkedCorrectDenialFeedback, deniesCheckedAnswer, revealsWithheldAnswer, wholeAnswerRevealGuardActive } from '../src/lib/tutor/voice/whole-answer-reveal';
 import { LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, ledgerVerdictPrecheckTimeoutFor, verdictPrecheckTimeoutFor } from '../src/lib/tutor/voice/verdict-precheck';
-import { OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { ALL_SOLVED_CORRECT_RULE, OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE } from '../src/lib/tutor/voice/verdict-precheck-shared';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -438,6 +438,25 @@ async function main() {
     assert.ok(HOMEWORK_LEDGER_RULES.includes(EXTRA_PROBLEM_SAME_RULES));
     assert.ok(formatProblemLedgerBlock([{ n: 1, text: 'a' }, { n: 2, text: 'b' }], [1]).includes(OFF_TOPIC_NOT_ANSWERED));
     for (const t of [OFF_TOPIC_NOT_ANSWERED, EXTRA_PROBLEM_SAME_RULES]) assert.doesNotMatch(t, /\d|e\.g\.|for example|"/i);
+  });
+  // 2026-10-15 staging, second run (Algebra II, AP Chemistry): a repeat of a solved answer once all are solved.
+  await test('all solved: a correct repeat of a listed answer gets the no-question rule; extra-problem work does not', () => {
+    const rep = pc({ verdict: 'correct', answers: 'overall_problem', solvedProblem: 1 });
+    assert.ok(formatAnswerCheckBlock(rep, { workThenMatch: true, noRevealAnyStep: true, allSolved: true }).includes(ALL_SOLVED_CORRECT_RULE));
+    assert.ok(formatAnswerCheckBlock(pc({ verdict: 'correct', answers: 'other_part' }), { workThenMatch: true, noRevealAnyStep: true, allSolved: true }).includes(ALL_SOLVED_CORRECT_RULE));
+    assert.ok(!formatAnswerCheckBlock(pc({ verdict: 'correct', answers: 'open_question' }), { workThenMatch: true, noRevealAnyStep: true, allSolved: true }).includes(ALL_SOLVED_CORRECT_RULE));
+    assert.ok(!formatAnswerCheckBlock(rep, { workThenMatch: true, noRevealAnyStep: true }).includes(ALL_SOLVED_CORRECT_RULE));
+    assert.ok(!formatAnswerCheckBlock(rep, { workThenMatch: true, allSolved: true }).includes(ALL_SOLVED_CORRECT_RULE));
+    assert.doesNotMatch(ALL_SOLVED_CORRECT_RULE, /\d|e\.g\.|for example|"/i);
+  });
+  await test('gate on, every problem solved: the brain request carries the rule', async () => {
+    const r = await run('Yes, already done.', { noRevealLedger: true, homework: { ...base.homework, solved: [1, 2] }, verdictPrecheckDeps: { llm: check({ verdict: 'correct', correct_value: '30', proposed_value: '30', solved_problem: 2, answers: 'overall_problem' }) } });
+    assert.ok(r.content.includes(ALL_SOLVED_CORRECT_RULE));
+  });
+  await test('weak single-digit result: a hit anywhere under the ledger, only in a result position otherwise', () => {
+    const w = { value: '9', studentText: 'ten of them, one each', givenText: 'How many are needed for a chain of 10 units?' };
+    assert.equal(revealsWithheldAnswer('There are only 9 links between them, not 10.', { ...w, newNumbers: true }).hit, true);
+    assert.equal(revealsWithheldAnswer('There are only 9 links between them, not 10.', w).hit, false);
   });
   await test('client: a denial hit retries with its own feedback', () => {
     const vtr0 = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
