@@ -408,7 +408,9 @@ export function deniesCheckedAnswer(sentence: string, proposed: string): boolean
       // "17 is wrong / incorrect"
       new RegExp(`${lead}${v}\\s*(?:is|was)\\s+(?:wrong|incorrect)\\b`, 'i'),
     ];
-    if (res.some((re) => re.test(s))) return true;
+    // 2026-10-15 (staging, AP Statistics): the student's own answer may itself
+    // be a negative ("42 is not an outlier") — repeating it is agreement.
+    if (res.some((re) => re.test(s) && !re.test(String(proposed ?? '')))) return true;
   }
   return false;
 }

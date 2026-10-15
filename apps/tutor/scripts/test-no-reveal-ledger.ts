@@ -400,6 +400,8 @@ async function main() {
     const no: Array<[string, string]> = [
       ['Your x = 17 is right.', 'x = 17'], ['It is not 170.', 'x = 17'], ['That is C6H12O6, the final answer.', 'C6H12O6'],
       ['So the inverse is 3x + 1, not 3x - 1.', '3x + 1'], ['With x = 17, angle 1 is 44.', 'x = 17'], ['', '17'], ['not 17', ''],
+      // the student's own answer is a negative: repeating it agrees
+      ['Since 42 is less than 45.5, that matches what you said — 42 is not an outlier.', '23 + 22.5 = 45.5, so 42 is not an outlier'],
     ];
     for (const [s, v] of yes) assert.equal(deniesCheckedAnswer(s, v), true, s);
     for (const [s, v] of no) assert.equal(deniesCheckedAnswer(s, v), false, s);

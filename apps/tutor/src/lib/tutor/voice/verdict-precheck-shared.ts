@@ -307,7 +307,7 @@ export const WRONG_WHOLE_ANSWER_POINT_THERE =
 // `anyTarget`). Partner-gated: no-reveal-ledger-gate.ts.
 
 export const WRONG_STEP_NO_REVEAL_RULE =
-  'What to do: work it out silently and state no result of your own. FIRST sentence: say plainly, as a fact about THEIR answer, that it is not right — no praise word first. You may confirm a step of THEIR working that is right, in their own words and values. Then name the step or idea where their working goes wrong — what that step does, by name — without its result. End with ONE question that has them redo that step themselves. Never state the correct result of that step, of any step after it, or of the question — not in the reply and not on the board, and in no form: not the value, not a corrected line of working that contains it, not an expression evaluated to it. The result stays theirs to find. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
+  'What to do: work it out silently and state no result of your own. FIRST sentence: say plainly, as a fact about THEIR answer, that it is not right — no praise word first. You may confirm a step of THEIR working that is right, in their own words and values. Then name the step or idea where their working goes wrong — what that step does, by name — without its result. End with ONE question that has them redo that step themselves. Never state the correct result of that step, of any step after it, or of the question — not in the reply and not on the board, and in no form: not the value, not a corrected line of working that contains it, not an expression evaluated to it. The result stays theirs to find. When the answer is a word rather than a number (a term, a name, a structure, a category or a choice), naming the right one IS the result: do not name it, not even as a contrast with what they wrote. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
 
 // ── 2026-10-19: a stated FALSE claim is corrected, not passed over ─────────
 //
@@ -324,7 +324,10 @@ export function falseClaimChecked(p: PublicVerdictPrecheck, opts?: { claimCorrec
 
 export const FALSE_CLAIM_RULE =
   '- It does not answer the question you last asked, nor one of the problems — but it states something about the subject that is NOT true.\n'
-  + 'What to do: do not let it pass, and do not simply return to your question. Say plainly and kindly that the statement is not right — no praise word first — and correct it in a sentence or two with the reason, or ask one question that leads them to test it. Then return to where you were. Never treat it as an answer to your open question.\n';
+  + 'What to do: do not let it pass, and do not simply return to your question. Say plainly and kindly that the statement is not right — no praise word first — and correct it in a sentence or two with the reason, or ask one question that leads them to test it. Then return to where you were. Never treat it as an answer to your open question.\n'
+  // 2026-10-15 (staging, Geometry): "check my answer" to an extra problem of
+  // their own came here, and the reply worked that problem to its result.
+  + 'If what they stated is their answer to a problem (a value or result), not a statement about the subject: do not give the right answer or the working that reaches it — say it is not right, name the step to look at again, and ask them to redo it.\n';
 
 /** The same findings, worded for a reply that opens with the working. */
 function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean }): string {
