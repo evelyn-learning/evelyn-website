@@ -36,7 +36,7 @@
  * untouched.
  */
 import { DrawnSpecSchema, gradeDrawn, type DrawnSpec } from '@evelyn/portal-contract/v1';
-import { renderPracticeFigureWithFrame } from '../practice-figure/render';
+import { renderDrawnBaseFigure } from '../practice-figure/render-drawn-base';
 import { MAX_FIGURE_SVG_CHARS } from '../practice-figure/svg-safety';
 import { MAX_FIGURE_ALT_CHARS } from './figure-items';
 
@@ -111,9 +111,9 @@ function buildDrawn(row: { figure?: unknown; drawn?: unknown }): ServableDrawn |
   if (spec.type !== base.figure) return `${String(d.kind)} must be drawn on ${base.figure}, not ${spec.type}`;
   const params = spec.params as Record<string, unknown>;
   if (spec.type === 'number_line' && !(isEmptyList(params.intervals) && isEmptyList(params.points))) return 'the number line already shows an interval or point';
-  let rendered: ReturnType<typeof renderPracticeFigureWithFrame>;
+  let rendered: ReturnType<typeof renderDrawnBaseFigure>;
   try {
-    rendered = renderPracticeFigureWithFrame({ type: spec.type, params });
+    rendered = renderDrawnBaseFigure({ type: spec.type, params });
   } catch (err) {
     return `figure does not render (${(err as Error).message})`;
   }

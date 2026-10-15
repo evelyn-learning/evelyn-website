@@ -17,6 +17,8 @@
 import { strict as assert } from 'node:assert';
 import { DrawnGridFrameSchema, DrawnNumberLineFrameSchema } from '@evelyn/portal-contract/v1';
 import { inspectPracticeFigure, renderPracticeFigure, renderPracticeFigureWithFrame } from '@/lib/tutor/practice-figure/render';
+import { renderDrawnBaseFigure } from '@/lib/tutor/practice-figure/render-drawn-base';
+import { readFileSync } from 'node:fs';
 
 let passed = 0;
 let failed = 0;
@@ -102,6 +104,38 @@ test('a kind without a frame returns the svg and no frame', () => {
   const r = renderPracticeFigureWithFrame({ type: 'function_graph', params: { xRange: [-4, 4], yRange: [-4, 4], curves: [{ expr: 'x' }] } });
   assert.ok(r.svg.startsWith('<svg'));
   assert.equal(r.frame, undefined);
+});
+
+console.log('\nThe serving path (render-drawn-base.ts, no react-dom/server):\n');
+
+const BASE_SPECS = [
+  { type: 'coordinate_grid', params: { xRange: [-5, 5], yRange: [-5, 5] } },
+  { type: 'coordinate_grid', params: { xRange: [0, 10], yRange: [-2, 8], title: 'Plot the points' } },
+  { type: 'number_line', params: { min: -10, max: 10 } },
+  { type: 'number_line', params: { min: 0, max: 12, step: 2 } },
+];
+test('renderDrawnBaseFigure gives the same svg and frame as renderPracticeFigureWithFrame', () => {
+  for (const spec of BASE_SPECS) assert.deepEqual(renderDrawnBaseFigure(spec), renderPracticeFigureWithFrame(spec));
+});
+
+// The T4 drawn rows (release data, gitignored): every stored figure spec, when present.
+const T4 = process.env.DRAWN_T4_ROWS ?? `${__dirname}/../../../docs/whitelabel/greenapple/integration/practice-drawn-2026-10-t4/final/import-rows-t4.json`;
+let t4: Array<{ id?: string; figure?: { spec?: { type: string; params: Record<string, unknown> } } }> | null = null;
+try { t4 = JSON.parse(readFileSync(T4, 'utf8')); } catch { t4 = null; }
+test(`renderDrawnBaseFigure matches render.ts on every T4 drawn row${t4 ? ` (${t4.length})` : ' (file absent — skipped)'}`, () => {
+  if (!t4) return;
+  let n = 0;
+  for (const row of t4) {
+    const spec = row.figure?.spec;
+    if (!spec) continue;
+    assert.deepEqual(renderDrawnBaseFigure(spec), renderPracticeFigureWithFrame(spec), String(row.id));
+    n++;
+  }
+  assert.ok(n > 0, 'no drawn figure specs found');
+});
+
+test('renderDrawnBaseFigure refuses any other kind', () => {
+  assert.throws(() => renderDrawnBaseFigure({ type: 'function_graph', params: { xRange: [-4, 4], yRange: [-4, 4], curves: [{ expr: 'x' }] } }), /not a drawn-answer base/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
