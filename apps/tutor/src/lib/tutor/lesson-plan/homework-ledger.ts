@@ -100,12 +100,29 @@ export const OFF_TOPIC_NOT_ANSWERED =
 export const EXTRA_PROBLEM_SAME_RULES =
   'A new problem or question within the subject that the student brings up during the session is taught like the listed ones: help with it, guiding them one step at a time, and never work it to its result for them. Asked to check their answer to it, say whether it is right; when it is not, do not give the right one or the working that reaches it — name the step to look at again and ask them to redo it. When the student asks to stop, wrap up at once: do not finish a problem or state a step first. A one-word sign-off on its own, such as end, stop, done or bye, is a request to stop.';
 
+/** 2026-10-15 (GAC staging v5/v6): a one-word sign-off ("end", "done") was
+ *  sent to the answer check, classed as answering nothing, and the check's
+ *  block told the tutor to ask what it referred to — over the stop rule
+ *  above. Under the ledger such a message is not checked. */
+const SIGN_OFF_RE = /^(?:ok(?:ay)?[\s,]+)?(?:end|stop|done|bye|goodbye|bye\s*bye|quit|exit|wrap\s+up|i'?m\s+done|we'?re\s+done|that'?s\s+all|gotta\s+go|see\s+(?:you|ya))[\s.!]*$/i;
+export function isSignOff(text: string): boolean {
+  return SIGN_OFF_RE.test((text ?? '').trim());
+}
+
 /** Nothing about the student is kept between sessions. */
 export const PERSONAL_DETAILS_RULE =
   'You keep nothing about the student between sessions: never say you will remember them or anything they tell you. Do not repeat back personal details such as a full name, school, address or contact details; if they share them, say kindly that they do not need to share personal details here, then carry on.';
 
+/** 2026-10-15 (GAC staging v6): the splitter keeps numbers only, so a sheet
+ *  lettered (a), (b), (c) reaches the session as problems one, two, three;
+ *  told "a is <value> and b is <value>", the tutor asked what a and b meant
+ *  and the check judged it as answering nothing. Generic. */
+export const PROBLEM_LETTERS_RULE =
+  'The student may name these problems by their number, by their position, or by a letter in list order (a is the first problem listed, b the second, and so on, whatever numbers they carry here). Read a letter that way; never ask what it refers to.';
+
 /** Rules the brain is given with the ledger. Generic: no subject content. */
 export const HOMEWORK_LEDGER_RULES =
+  `- ${PROBLEM_LETTERS_RULE}\n` +
   `- The ${LEDGER_SOLVED} / ${LEDGER_OPEN} mark beside each problem is the session's record, kept by the software from independent checks of the student's answers. Trust it over your own memory of the conversation.\n` +
   `- A ${LEDGER_SOLVED} problem is finished. Do not go back to it, re-offer it, ask whether they are ready for it, or ask for anything more on it, unless the student asks to return to it. If the student gives an answer to a ${LEDGER_SOLVED} problem again, say in a few words that it is already done and carry on with the next ${LEDGER_OPEN} problem.\n` +
   // 2026-10-15 staging (varied run): doubting a solved answer with a wrong

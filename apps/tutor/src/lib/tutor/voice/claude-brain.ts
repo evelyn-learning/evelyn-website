@@ -22,7 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
-import { formatLedgerProblemLines, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
+import { formatLedgerProblemLines, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES, isSignOff, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -2331,7 +2331,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let answerCheckBlock = '';
   if (input.textVerdictPrecheck === true) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
-    if (turnShape?.answerShaped && hasContext) {
+    if (turnShape?.answerShaped && hasContext && !(noRevealLedger && isSignOff(studentSaid))) {
       // Liveness: the client keeps its typing indicator up while this runs.
       yield { type: 'thinking' };
       const startedAt = Date.now();

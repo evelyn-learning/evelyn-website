@@ -44,6 +44,7 @@ import { getModelClient, prepareParams, resolveModel } from '../ai/model-registr
 import { falseArithmeticIn } from './turn-shape-signal';
 import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_PRECHECK_DIFFERS_AT, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { readOpenQuestion } from './nonanswer-praise';
+import { PROBLEM_LETTERS_RULE } from '../lesson-plan/homework-ledger';
 import type {
   PrecheckConfidence,
   PrecheckTarget,
@@ -335,11 +336,14 @@ function clip(s: string, max: number): string {
   return t.length > max ? `${t.slice(0, max)} …` : t;
 }
 
-/** 2026-10-19 (ledger): '' unless `solved` is given (the ledger is on). */
+/** 2026-10-19 (ledger): '' unless `solved` is given (the ledger is on).
+ *  2026-10-15: with the ledger on, also how the student may name a problem
+ *  (homework-ledger.ts `PROBLEM_LETTERS_RULE`). */
 function solvedNote(problems: ReadonlyArray<{ n: number; text: string }>, solved?: readonly number[]): string {
   if (!solved) return '';
   const labels = solved.map((pos) => problems[pos - 1]?.n).filter((n): n is number => typeof n === 'number');
-  return labels.length ? `\n(Already solved, from earlier checks: ${labels.map((n) => `Problem ${n}`).join(', ')}.)` : '';
+  return `\n(${PROBLEM_LETTERS_RULE})`
+    + (labels.length ? `\n(Already solved, from earlier checks: ${labels.map((n) => `Problem ${n}`).join(', ')}.)` : '');
 }
 
 /** The user content of the pre-check call. Exported for the tests. */

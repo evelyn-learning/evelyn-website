@@ -20,6 +20,8 @@ import {
   HOMEWORK_LEDGER_RULES,
   OFF_TOPIC_NOT_ANSWERED,
   PERSONAL_DETAILS_RULE,
+  PROBLEM_LETTERS_RULE,
+  isSignOff,
   nextOpenPosition,
   recordSolved,
   sanitizeSolvedPositions,
@@ -533,6 +535,13 @@ async function main() {
     assert.doesNotMatch(SOLVED_PROBLEM_WRONG_RULE, /\d|e\.g\.|for example|"/i);
     assert.match(HOMEWORK_LEDGER_RULES, /doubts a \[SOLVED\] problem/);
   });
+  await test('letters name problems in list order: in the ledger rules and the ledger-on check only', () => {
+    assert.ok(HOMEWORK_LEDGER_RULES.includes(PROBLEM_LETTERS_RULE));
+    const inp = { problems: [{ n: 1, text: 'A.' }, { n: 2, text: 'B.' }], currentProblem: 1, history: [], openQuestion: null, studentMessage: 'a is one' };
+    assert.ok(buildVerdictPrecheckUser({ ...inp, solved: [] }).includes(PROBLEM_LETTERS_RULE));
+    assert.ok(!buildVerdictPrecheckUser(inp).includes(PROBLEM_LETTERS_RULE));
+    assert.doesNotMatch(PROBLEM_LETTERS_RULE, /\d|e\.g\.|for example|"/i);
+  });
   await test('turn shape: a message with a digit is not an acknowledgment under the option only', () => {
     assert.equal(classifyTurnShape('oh 14 - 2 = 12', 'What is the pOH?')?.shape, 'acknowledgment', 'unchanged without the option');
     const on = classifyTurnShape('oh 14 - 2 = 12', 'What is the pOH?', { digitsNotAssent: true });
@@ -551,6 +560,14 @@ async function main() {
     const hw = { problems: [{ n: 1, text: 'Find the mean.' }, { n: 2, text: 'Find the range.' }], current: 1, solved: [] as number[] };
     const r = await run('Both right.', { homework: hw, studentTranscript: 'mean is 5 and range is 6', studentMessage: 'mean is 5 and range is 6', verdictPrecheckDeps: { llm: check({ verdict: 'correct', answers: 'overall_problem', solved_problems: [1, 2] }) } });
     assert.doesNotMatch(r.content, /<problem_ledger>/);
+  });
+  await test('sign-off: a bare one-word stop is not checked under the ledger; checked as before with the gate off', async () => {
+    for (const t of ['done', 'end', 'Bye!', 'ok bye', 'wrap up', "i'm done", 'stop.']) assert.equal(isSignOff(t), true, t);
+    for (const t of ['done with a, b is 10', 'x = 5', 'stop sign', 'the end behaviour is up']) assert.equal(isSignOff(t), false, t);
+    let calls = 0;
+    const counting = (o: Record<string, unknown>) => { const f = check(o); return async () => { calls++; return f(); }; };
+    await run('Good work today.', { noRevealLedger: true, studentTranscript: 'done', studentMessage: 'done', verdictPrecheckDeps: { llm: counting({ answers: 'neither', verdict: 'cannot_determine' }) } });
+    assert.equal(calls, 0);
   });
   await test('brain: a wrong doubt about a solved problem gets the stands rule, with no value', async () => {
     const r = await run('That one stands.', { noRevealLedger: true, homework: { ...base.homework, solved: [1, 2] }, verdictPrecheckDeps: { llm: check({ answers: 'other_part', verdict: 'incorrect', correct_value: '30', about_problem: 2, solved_problems: [] }) } });
