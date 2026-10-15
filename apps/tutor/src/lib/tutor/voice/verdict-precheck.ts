@@ -249,13 +249,58 @@ export const OTHER_LISTED_PROBLEM_RULE =
   '\n   Second test: does the proposed value equal the final answer of a DIFFERENT one of the student\'s listed problems (or of one of its parts)? If it does, answers is "other_part" and the verdict is "correct" — the student has answered that problem, not the question asked just now.';
 
 /**
+ * 2026-10-15 (GAC v7, Algebra II): "a is 3" — one of the two roots of the
+ * first problem — was judged against the tutor's smaller step question and
+ * called wrong. A value the student labels with a problem is an answer to
+ * that problem. Ledger only; after the second test; generic wording.
+ */
+export const NAMED_PROBLEM_RULE =
+  '\n   Third test: when the message names one of the listed problems for a value (by its letter, number or position), that value is the student\'s answer to THAT problem, never to the open question: judge it against that problem\'s final answer — "partly_correct" when it is some of the values that problem asks for and all of them are right.';
+
+/**
  * 2026-10-15 (GAC v7 audit): the same answer in another form was left to
  * "an equivalent form … is the same answer", and a value the student reports
  * from someone else was not always read as proposed. Ledger only; inserted
  * before step 5; generic wording.
  */
 export const LEDGER_FORMS_RULE =
-  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves.';
+  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer.';
+
+/**
+ * 2026-10-15 (GAC v7, Geometry): "31.4" for a circumference asked "in terms
+ * of pi" came back INCORRECT with high confidence, and the reply said it was
+ * not what the problem gives. A decimal that rounds the check's own exact
+ * answer is never a wrong value. The plain numeric value of a short answer
+ * (π, square roots, fractions, powers; a leading "x =" and a trailing unit
+ * dropped), or null when it is not one.
+ */
+export function plainNumericValue(text: string): number | null {
+  let t = String(text ?? '').toLowerCase().replace(/\s+/g, '').replace(/−/g, '-')
+    .replace(/\\pi|π/g, 'P').replace(/\\sqrt\{([^{}]*)\}/g, 'S($1)').replace(/√\(/g, 'S(').replace(/√(\d+(?:\.\d+)?)/g, 'S($1)')
+    .replace(/sqrt\(/g, 'S(').replace(/\bpi\b|pi/g, 'P').replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)');
+  t = t.replace(/^[a-z][a-z0-9_]*(?:\([a-z]\))?=/, '').replace(/[a-oq-z°²³]+$/i, '').replace(/[{}]/g, '');
+  if (!t || !/^[0-9.+\-*/^()PS]+$/.test(t) || !/\d|P/.test(t)) return null;
+  const expr = t.replace(/(\d|\)|P)(?=[P(S])/g, '$1*').replace(/\^/g, '**').replace(/P/g, '(Math.PI)').replace(/S\(/g, 'Math.sqrt(');
+  try {
+    // Only digits, operators, brackets and the two Math names reach here.
+    const v = Function(`"use strict"; return (${expr});`)() as unknown;
+    return typeof v === 'number' && Number.isFinite(v) ? v : null;
+  } catch { return null; }
+}
+
+/** Is `stated` a decimal rounding of the exact answer `own`? Only for an
+ *  exact form (π, a root or a fraction) and a decimal with at least one
+ *  place or three significant digits. */
+export function roundsExactAnswer(stated: string, own: string): boolean {
+  if (!/π|pi|√|sqrt|\/|frac/i.test(String(own ?? ''))) return false;
+  const m = /(-?\d+)(?:\.(\d+))?/.exec(String(stated ?? ''));
+  if (!m || /π|pi|√|sqrt|\//i.test(String(stated))) return false;
+  const places = m[2]?.length ?? 0;
+  if (places === 0 && m[1].replace('-', '').length < 3) return false;
+  const a = plainNumericValue(stated), b = plainNumericValue(own);
+  if (a === null || b === null) return false;
+  return Math.abs(a - b) <= 0.5 * Math.pow(10, -places) + 1e-9;
+}
 
 /** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
  *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; `readinessTaskRule` unset ⇒
@@ -270,7 +315,7 @@ export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; r
   if (opts?.ledger === true) {
     const anchor = 'matching the final answer is not a coincidence.';
     const i = system.indexOf(anchor);
-    if (i >= 0) system = system.slice(0, i + anchor.length) + OTHER_LISTED_PROBLEM_RULE + system.slice(i + anchor.length);
+    if (i >= 0) system = system.slice(0, i + anchor.length) + OTHER_LISTED_PROBLEM_RULE + NAMED_PROBLEM_RULE + system.slice(i + anchor.length);
     const at5 = system.indexOf('\n5. CONFIDENCE.');
     system = at5 < 0 ? system + LEDGER_FORMS_RULE : system.slice(0, at5) + LEDGER_FORMS_RULE + system.slice(at5);
     system += SOLVED_PROBLEM_FIELD_RULE;
@@ -595,7 +640,15 @@ export async function runVerdictPrecheck(
     // wrong is never recorded solved, and a message with any wrong answer is
     // not "correct" as a whole.
     const stated = ledger && Array.isArray(o.stated_answers) ? o.stated_answers.slice(0, 25) as Array<Record<string, unknown>> : [];
-    const wrongHere = new Set(stated.filter((a) => a && a.right === false).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
+    // A rounded decimal of the exact answer is not wrong: right value, not yet in the exact form.
+    const rounded = (a: Record<string, unknown>) => roundsExactAnswer(String(a.stated ?? ''), String(a.own_answer ?? ''));
+    const roundedHere = new Set(stated.filter((a) => a && a.right === false && rounded(a)).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
+    const wrongHere = new Set(stated.filter((a) => a && a.right === false && !rounded(a)).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
+    if (ledger && o.verdict === 'incorrect' && (roundedHere.size || roundsExactAnswer(String(o.proposed_value ?? ''), String(o.correct_value || o.problem_final_answer || '')))
+        && !wrongHere.size) {
+      o.verdict = 'partly_correct';
+      console.log('[verdict-precheck] verdict incorrect → partly_correct: a rounded decimal of the exact answer');
+    }
     const rightHere = stated.some((a) => a && a.right === true);
     if (wrongHere.size && o.verdict === 'correct') {
       o.verdict = rightHere ? 'partly_correct' : 'incorrect';
@@ -611,7 +664,7 @@ export async function runVerdictPrecheck(
       if (o.verdict === 'correct') o.verdict = 'partly_correct';
       console.log(`[verdict-precheck] reason judged wrong — not recorded solved (problem position ${[...reasonOpen].join(',') || 'none'})`);
     }
-    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
+    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
       ...(aboutProblem ? { aboutProblem } : {}),

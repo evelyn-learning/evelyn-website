@@ -16803,7 +16803,7 @@ export function VoiceTutorRealtime({
                     if (TUTOR_PRECHECK_CREDIT && precheckCreditOverride(pc).verifiedWrong) {
                       hedgedDenialSignalRef.current.verifiedWrong = true;
                     }
-                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}${pc.solvedProblems?.length ? ` solved_problems=${pc.solvedProblems.join(',')}` : pc.solvedProblem ? ` solved_problem=${pc.solvedProblem}` : ''}${pc.aboutProblem ? ` about_problem=${pc.aboutProblem}` : ''}`);
+                    onDebugEvent?.('verdict_precheck', `answers=${pc.answers} verdict=${pc.verdict} confidence=${pc.confidence} ms=${Number((ev as { ms?: number }).ms ?? 0)} proposed="${pc.proposed.slice(0, 40)}"${pc.differsAt ? ` differs_at="${pc.differsAt.slice(0, 80)}"` : ''}${pc.solvedProblems?.length ? ` solved_problems=${pc.solvedProblems.join(',')}` : pc.solvedProblem ? ` solved_problem=${pc.solvedProblem}` : ''}${pc.aboutProblem ? ` about_problem=${pc.aboutProblem}` : ''}${pc.wrongProblems?.length ? ` wrong_problems=${pc.wrongProblems.join(',')}` : ''}`);
                     // 2026-10-19 homework ledger: the check's own finding, not the tutor's words.
                     const hwTotal = homeworkProblemsRef.current?.length ?? 0;
                     // 2026-10-15: one message can complete several problems.

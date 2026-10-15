@@ -200,11 +200,13 @@ export function formatAnswerCheckBlock(
     /** 2026-10-15: the ledger's solved positions before this message — a
      *  wrong answer to one of them gets `SOLVED_PROBLEM_WRONG_RULE`. */
     solved?: readonly number[];
+    /** 2026-10-15 (GAC v7): the listed problems' numbers, by position. */
+    labels?: readonly number[];
   },
 ): string {
   if (!precheckInforms(p)) return '';
   if (opts?.workThenMatch === true) return formatAnswerCheckBlockWorkThenMatch(p, opts.correctValue, opts);
-  const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
+  const proposed = (p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '') + perProblemLines(p, opts);
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
     + 'Before this turn the student\'s message was checked independently, from their own problem and data. The student does not see this.\n';
@@ -306,6 +308,25 @@ export const OTHER_PART_NOTHING_OPEN_RULE =
  */
 export const SOLVED_PROBLEM_WRONG_RULE =
   'What to do: the software\'s record shows the student already solved THAT problem correctly earlier in the session, so their earlier answer stands and the problem stays finished. Say kindly, in a sentence or two, that this new answer is not right and that the answer they gave before was — with one short reason in general terms — but do not write out the earlier answer or any value. Do not reopen the problem: ask no question about it and do not ask them to work any step of it again. Then carry on with the next unsolved problem, or, when every problem is solved, offer to stop or to look at something else.\n';
+
+/**
+ * 2026-10-15 (GAC v7, Physics): "<right answer to b> and <wrong answer to c>"
+ * came back PARTLY correct for "the problem being worked" (b), and the reply
+ * told the student their answer to b was wrong. Under the ledger, a message
+ * that answers more than one problem gets one line per problem. Positions
+ * only; no values.
+ */
+export function perProblemLines(p: PublicVerdictPrecheck, opts?: { noRevealAnyStep?: boolean; solved?: readonly number[]; labels?: readonly number[] }): string {
+  if (opts?.noRevealAnyStep !== true) return '';
+  const before = opts.solved ?? [];
+  const right = (p.solvedProblems ?? []).filter((pos) => !before.includes(pos));
+  const wrong = (p.wrongProblems ?? []).filter((pos) => !right.includes(pos));
+  if (right.length + wrong.length < 2) return '';
+  const label = (pos: number) => opts.labels?.[pos - 1] ?? pos;
+  return right.map((pos) => `- Problem ${label(pos)}: its answer in this message is RIGHT, and it is now solved — credit it by its number.\n`).join('')
+    + wrong.map((pos) => `- Problem ${label(pos)}: its answer in this message is NOT right${before.includes(pos) ? ' (it was already solved earlier)' : ''}.\n`).join('')
+    + '- Each problem is judged on its own in the lines above; what follows is about the message as a whole. Never call a problem marked RIGHT above wrong.\n';
+}
 
 /** A wrong answer, under the ledger, to a problem the ledger holds as solved.
  *  2026-10-15 (GAC v7 audit): also when the message is about several problems
@@ -409,8 +430,8 @@ export const FALSE_CLAIM_RULE =
   + 'If what they stated is their answer to a problem (a value or result), not a statement about the subject: do not give the right answer or the working that reaches it — say it is not right, name the step to look at again, and ask them to redo it.\n';
 
 /** The same findings, worded for a reply that opens with the working. */
-function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean; solved?: readonly number[] }): string {
-  const proposed = p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '';
+function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean; solved?: readonly number[]; labels?: readonly number[] }): string {
+  const proposed = (p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '') + perProblemLines(p, opts);
   const named = p.target ? ` (${p.target})` : '';
   const head = '<answer_check>\n'
     + 'Before this turn the student\'s message was checked independently, from their own problem and data. The student does not see this.\n';

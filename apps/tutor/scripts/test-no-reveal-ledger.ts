@@ -23,6 +23,7 @@ import {
   PROBLEM_LETTERS_RULE,
   CRISIS_LINE,
   formatLedgerTurnBlock,
+  formatProblemLettersBlock,
   isSignOff,
   ledgerTurnKind,
   nextOpenPosition,
@@ -46,8 +47,8 @@ import {
   type VerdictPrecheckLlm,
 } from '../src/lib/tutor/voice/verdict-precheck';
 import { checkedCorrectDenialFeedback, deniesCheckedAnswer, revealsWithheldAnswer, wholeAnswerRevealGuardActive } from '../src/lib/tutor/voice/whole-answer-reveal';
-import { LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, ledgerVerdictPrecheckTimeoutFor, verdictPrecheckTimeoutFor } from '../src/lib/tutor/voice/verdict-precheck';
-import { ALL_SOLVED_CORRECT_RULE, OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE, PARTLY_SOLVED_DOUBT_RULE, SOLVED_PROBLEM_WRONG_RULE } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, ledgerVerdictPrecheckTimeoutFor, NAMED_PROBLEM_RULE, plainNumericValue, roundsExactAnswer, verdictPrecheckTimeoutFor } from '../src/lib/tutor/voice/verdict-precheck';
+import { ALL_SOLVED_CORRECT_RULE, OTHER_PART_NOTHING_OPEN_RULE, PARTLY_NO_REVEAL_RULE, PARTLY_SOLVED_DOUBT_RULE, SOLVED_PROBLEM_WRONG_RULE, perProblemLines } from '../src/lib/tutor/voice/verdict-precheck-shared';
 import { OTHER_LISTED_PROBLEM_RULE } from '../src/lib/tutor/voice/verdict-precheck';
 import { classifyTurnShape } from '../src/lib/tutor/voice/turn-shape-signal';
 
@@ -701,6 +702,49 @@ async function main() {
     assert.equal(revealsWithheldAnswer('So x = 2 also works.', { ...w, newNumbers: false }).hit, false);
     // A number the student said earlier (not one of the problem's) is theirs.
     assert.equal(revealsWithheldAnswer('You said x = 7 before.', { ...w, value: 'x = 7', studentPriorText: 'is it 7' }).hit, false);
+  });
+
+  console.log('v7 run fixes');
+  await test('v7 run: a value labelled with a problem is judged against that problem (ledger only)', () => {
+    assert.ok(verdictPrecheckSystem({ ledger: true }).includes(NAMED_PROBLEM_RULE.trim()));
+    assert.ok(!verdictPrecheckSystem({}).includes('Third test'));
+    assert.doesNotMatch(NAMED_PROBLEM_RULE, /\d|e\.g\.|for example/i);
+    assert.match(verdictPrecheckSystem({ ledger: true }), /never complete a vague answer/);
+  });
+  await test('v7 run: a rounded decimal of an exact answer is partly correct, never incorrect', async () => {
+    assert.ok(Math.abs((plainNumericValue('10π') ?? 0) - 31.4159) < 1e-3);
+    assert.equal(plainNumericValue('alert(1)'), null);
+    assert.equal(plainNumericValue('3t/2'), null);
+    for (const [a, b, want] of [['31.4', '10π', true], ['0.33', '1/3', true], ['0.707', '√2/2', true], ['14', '10π', false], ['31', '10π', false], ['31.4', '31', false]] as const)
+      assert.equal(roundsExactAnswer(a, b), want, `${a} vs ${b}`);
+    const labelled = { problems: [{ n: 1, text: 'A.' }, { n: 2, text: 'B.' }], currentProblem: 2, history: [], openQuestion: 'What is B?', studentMessage: 'c is 31.4' };
+    const reply = (o: Record<string, unknown>) => async () => ({ text: JSON.stringify({ answers: 'overall_problem', verdict: 'incorrect', confidence: 'high', proposed_value: '31.4', correct_value: '10π', ...o }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const r = await runVerdictPrecheck(labelled, { llm: reply({ stated_answers: [{ problem: 2, stated: '31.4', own_answer: '10π', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(r?.verdict, 'partly_correct');
+    assert.equal(r?.wrongProblems, undefined);
+    assert.equal(r?.solvedProblems, undefined);
+    const plain = await runVerdictPrecheck(labelled, { llm: reply({}), timeoutMs: 1000, ledger: true });
+    assert.equal(plain?.verdict, 'partly_correct', 'from the proposed and correct values alone');
+    const wrong = await runVerdictPrecheck(labelled, { llm: reply({ proposed_value: '14', stated_answers: [{ problem: 2, stated: '14', own_answer: '10π', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(wrong?.verdict, 'incorrect');
+    const off = await runVerdictPrecheck(labelled, { llm: reply({}), timeoutMs: 1000 });
+    assert.equal(off?.verdict, 'incorrect', 'ledger off: as before');
+  });
+  await test('v7 run: a message answering two problems gets one line per problem', () => {
+    const p = pc({ verdict: 'partly_correct', answers: 'overall_problem', solvedProblems: [1, 2], wrongProblems: [3] });
+    const lines = perProblemLines(p, { noRevealAnyStep: true, solved: [1], labels: [4, 5, 6] });
+    assert.match(lines, /Problem 5: its answer in this message is RIGHT/);
+    assert.match(lines, /Problem 6: its answer in this message is NOT right\./);
+    assert.doesNotMatch(lines, /Problem 4/);
+    assert.ok(formatAnswerCheckBlock(p, { workThenMatch: true, noRevealAnyStep: true, solved: [1], labels: [4, 5, 6] }).includes(lines));
+    assert.equal(perProblemLines(pc({ solvedProblems: [2] }), { noRevealAnyStep: true, solved: [1] }), '', 'one problem: no lines');
+    assert.equal(perProblemLines(p, { solved: [1] }), '', 'gate off');
+  });
+  await test('v7 run: a letter-labelled answer gets the letter mapping', () => {
+    assert.match(formatProblemLettersBlock('a is 5', [3, 7, 9]), /a = Problem 3, b = Problem 7, c = Problem 9/);
+    for (const t of ['b was 1944 and c versailles', 'c: 2Fe + O2 -> Fe2O3', '(b) 12', 'a = 5']) assert.ok(formatProblemLettersBlock(t, [1, 2, 3]), t);
+    for (const t of ['what is a slope', 'I got a 5 on it', 'is a really 8?', 'the last one is -4']) assert.equal(formatProblemLettersBlock(t, [1, 2, 3]), '', t);
+    assert.equal(formatProblemLettersBlock('a is 5', [1]), '', 'one problem');
   });
 
   console.log('route + client wiring (source)');

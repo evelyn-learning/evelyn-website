@@ -22,7 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
-import { formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
+import { formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, formatProblemLettersBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -2233,7 +2233,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const allSolved = noRevealLedger && !!input.homework?.problems.length
     && input.homework.problems.every((_, i) => (input.homework?.solved ?? []).includes(i + 1));
   const checkBlockOpts = noRevealLedger
-    ? { noRevealAnyStep: true, claimCorrection: true, solved: input.homework?.solved ?? [], ...(allSolved ? { allSolved: true } : {}) }
+    ? { noRevealAnyStep: true, claimCorrection: true, solved: input.homework?.solved ?? [], labels: (input.homework?.problems ?? []).map((p) => p.n), ...(allSolved ? { allSolved: true } : {}) }
     : {};
   if (workThenMatch) yield { type: 'work-then-match' };
   // 2026-10-08c — wrong answer to the WHOLE problem: the result never leaves
@@ -2334,6 +2334,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-10-19: the ledger, restated next to the student's message (homework-ledger.ts).
   let problemLedgerBlock = noRevealLedger && input.homework
     ? formatProblemLedgerBlock(input.homework.problems, input.homework.solved ?? [])
+    : '';
+  // 2026-10-15 (GAC v7): "a is <value>" — which problem a letter means, next to the message.
+  const problemLettersBlock = noRevealLedger && input.homework
+    ? formatProblemLettersBlock(studentSaid, input.homework.problems.map((p) => p.n))
     : '';
   let answerCheckBlock = '';
   // 2026-10-15 (GAC v7 audit): under the ledger a message that is plainly not
@@ -2481,6 +2485,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     textThinkingBlock +
     turnShapeBlock +
     problemLedgerBlock +
+    problemLettersBlock +
     answerCheckBlock +
     verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
