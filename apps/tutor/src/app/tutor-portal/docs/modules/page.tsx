@@ -68,7 +68,7 @@ export default function ModulesPage() {
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Then lock the session to it</h2>
       <CodeBlock language="json" title="Token claims">{`{
-  "partner_id": "kanzoo",
+  "partner_id": "acme",
   "student_id": "stu_abc123",
   "subject": "math",
   "level": "Grade 6",

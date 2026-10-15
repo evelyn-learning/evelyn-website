@@ -72,3 +72,16 @@ export function prewarmIdleAction(expSec: number | undefined, nowMs: number): 'r
 export function isAutoplayBlocked(probeState: AudioContextState | 'unavailable'): boolean {
   return probeState !== 'running' && probeState !== 'unavailable';
 }
+
+/** A host with its own video sends `evelyn:start` and its first
+ *  `evelyn:video_state` back to back, sometimes in that order (live 10-15:
+ *  the video report landed ~20 ms after the start, when the opening turn had
+ *  already been built without it, so the lesson-start hook never fired). The
+ *  start waits at most this long for the first video report (in practice a
+ *  few tens of ms, before the greeting is spoken). */
+export const HOST_START_VIDEO_WAIT_MS = 500;
+
+/** Whether the start should keep waiting for the host's first video report. */
+export function shouldAwaitVideoState(s: { hostVideo: boolean; videoKnown: boolean; waitedMs: number }): boolean {
+  return s.hostVideo && !s.videoKnown && s.waitedMs < HOST_START_VIDEO_WAIT_MS;
+}

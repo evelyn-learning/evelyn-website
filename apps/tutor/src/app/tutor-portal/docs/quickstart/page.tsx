@@ -15,7 +15,7 @@ export default function QuickstartPage() {
         When your sandbox is provisioned you receive two values:
       </p>
       <ul className="mb-4 space-y-2 text-sm text-slate-600">
-        <li><strong>Partner id</strong> — a short slug such as <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">kanzoo</code></li>
+        <li><strong>Partner id</strong> — a short slug such as <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">acme</code></li>
         <li><strong>Partner secret</strong> — one secret used for both the session token (HS256) and API request signing (HMAC-SHA256)</li>
       </ul>
 
@@ -28,12 +28,13 @@ export default function QuickstartPage() {
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">2. Mint a session token</h2>
       <p className="mb-4 text-sm text-slate-600">
         When a student opens a lesson, your backend signs a JWT whose payload is the session
-        configuration. Always include a <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">teacher</code>{' '}
-        persona: it selects the tutor&apos;s name, style and natural voice.
+        configuration. Include a <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">teacher</code>{' '}
+        (a ready-made teacher id, or your own persona) and, if you like, a{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">voice</code> code: see{' '}
+        <a href="/docs/voices" className="text-blue-700 underline">Voices and Companions</a>.
       </p>
 
       <CodeBlock language="javascript" title="Node.js (no dependencies)">{`const crypto = require('crypto');
-const teachers = require('./teachers.json');   // persona catalog, supplied with your credentials
 
 const b64url = (b) => Buffer.from(b).toString('base64')
   .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
@@ -47,7 +48,7 @@ function signEmbedToken(payload, secret) {
 
 const now = Math.floor(Date.now() / 1000);
 const token = signEmbedToken({
-  partner_id: 'kanzoo',
+  partner_id: 'acme',
   student_id: 'stu_abc123',
   student_name: 'Ayaan',
   subject: 'math',
@@ -55,7 +56,8 @@ const token = signEmbedToken({
   topic: 'Ratios and unit rates',
   session_goal: 'homework-help',
   max_duration_minutes: 30,
-  teacher: teachers.find((t) => t.id === 'ms-priya-nair'),
+  teacher: 'ms-priya-nair',   // a ready-made teacher (or your own persona object)
+  voice: 'lotus',             // optional: any voice code
   iat: now,
   exp: now + 2 * 3600,
 }, process.env.EVELYN_PARTNER_SECRET);`}</CodeBlock>
@@ -71,10 +73,9 @@ def sign_embed_token(payload: dict, secret: str) -> str:
     s = hmac.new(secret.encode(), f"{h}.{p}".encode(), hashlib.sha256).digest()
     return f"{h}.{p}.{b64url(s)}"
 
-teachers = json.load(open("teachers.json"))
 now = int(time.time())
 token = sign_embed_token({
-    "partner_id": "kanzoo",
+    "partner_id": "acme",
     "student_id": "stu_abc123",
     "student_name": "Ayaan",
     "subject": "math",
@@ -82,7 +83,8 @@ token = sign_embed_token({
     "topic": "Ratios and unit rates",
     "session_goal": "homework-help",
     "max_duration_minutes": 30,
-    "teacher": next(t for t in teachers if t["id"] == "ms-priya-nair"),
+    "teacher": "ms-priya-nair",
+    "voice": "lotus",
     "iat": now,
     "exp": now + 2 * 3600,
 }, os.environ["EVELYN_PARTNER_SECRET"])`}</CodeBlock>

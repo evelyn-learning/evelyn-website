@@ -1145,6 +1145,9 @@ export default function TutorSession(props: TutorSessionProps) {
   const [questionPin, setQuestionPin] = useState<{ turnId: string; gist: string } | null>(null);
   const [pinShownForTurn, setPinShownForTurn] = useState<string | null>(null);
   const pinFetchedTurnRef = useRef<string | null>(null);
+  // Host video: counts delivered moment banners. A pin fetch started before
+  // a moment arrived belongs to a question the moment has superseded.
+  const momentBannerSeqRef = useRef(0);
   // R47 Task 3c: a Q-pin is scoped to the segment it was asked in — R38's
   // persist-until-replaced semantics has no staleness bound across a
   // segment ADVANCE, so a question pinned against an earlier problem could
@@ -1336,6 +1339,7 @@ export default function TutorSession(props: TutorSessionProps) {
     // student's current segment — resurrecting it would reopen the
     // ask-then-advance bug class (see currentSegmentIdLiveRef doc above).
     const segIdAtFetch = currentSegmentIdLiveRef.current;
+    const momentSeqAtFetch = momentBannerSeqRef.current;
     void fetch('/api/tutor/question-gist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1368,6 +1372,10 @@ export default function TutorSession(props: TutorSessionProps) {
           onDebugEvent?.('qpin_drop', `segment moved during fetch (${segIdAtFetch} -> ${currentSegmentIdLiveRef.current})`);
           return;
         }
+        if (momentBannerSeqRef.current !== momentSeqAtFetch) {
+          onDebugEvent?.('qpin_drop', 'a host moment arrived during fetch');
+          return;
+        }
         if (gist) {
           setQuestionPin({ turnId: entry.id, gist });
           onDebugEvent?.('qpin_set', `"${gist.slice(0, 60)}"`);
@@ -1378,6 +1386,10 @@ export default function TutorSession(props: TutorSessionProps) {
       .catch(() => {
         if (currentSegmentIdLiveRef.current !== segIdAtFetch) {
           onDebugEvent?.('qpin_drop', 'segment moved during fetch (error path)');
+          return;
+        }
+        if (momentBannerSeqRef.current !== momentSeqAtFetch) {
+          onDebugEvent?.('qpin_drop', 'a host moment arrived during fetch (error path)');
           return;
         }
         const fallback = lastQuestionSentence(entry.text);
@@ -1440,12 +1452,20 @@ export default function TutorSession(props: TutorSessionProps) {
   // stepped in on — the host's own title, so the student sees why the tutor
   // opened. It sits in the question pin's place until the tutor's own
   // question is pinned, the tutor hands back to the video, or ✕.
+  // A moment supersedes the question pinned before it (live 10-15: the
+  // opener's question was still pinned when the first moment came, and as
+  // the pin outranks the banner, no banner was ever seen).
   const [momentBannerState, setMomentBannerState] = useState<{ id: number; label: string; title: string } | null>(null);
-  const momentBannerSeqRef = useRef(0);
   const handleMomentBanner = useCallback((b: { label: string; title: string } | null) => {
     momentBannerSeqRef.current += 1;
     setMomentBannerState(b ? { id: momentBannerSeqRef.current, ...b } : null);
-  }, []);
+    if (b) {
+      setQuestionPin(null);
+      onDebugEvent?.('moment_banner', `${b.label}: "${b.title.slice(0, 60)}"`);
+    } else {
+      onDebugEvent?.('moment_banner', 'none (moment has no title)');
+    }
+  }, [onDebugEvent]);
   useEffect(() => {
     if (standby) setMomentBannerState(null);
   }, [standby]);

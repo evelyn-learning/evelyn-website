@@ -9,6 +9,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  HOST_START_VIDEO_WAIT_MS,
   PREWARM_IDLE_MS,
   decideHostStart,
   isAutoplayBlocked,
@@ -16,6 +17,7 @@ import {
   isTokenExpired,
   parseHostStart,
   prewarmIdleAction,
+  shouldAwaitVideoState,
   tokenExpSec,
 } from '../src/lib/tutor/portal/host-start';
 
@@ -126,6 +128,24 @@ test('VTR: prewarm holds the microphone until the session starts', () => {
 test('VTR: relay readiness reaches the page (onRelayReady)', () => {
   assert.match(vtr, /onRelayReady\?: \(\) => void/);
   assert.ok(vtr.includes("onRelayReadyRef.current?.()"), "onRelayReady fired");
+});
+
+test('start waits briefly for a host video\'s first report (live 10-15 race)', () => {
+  assert.equal(shouldAwaitVideoState({ hostVideo: true, videoKnown: false, waitedMs: 0 }), true);
+  assert.equal(shouldAwaitVideoState({ hostVideo: true, videoKnown: false, waitedMs: HOST_START_VIDEO_WAIT_MS - 1 }), true);
+  assert.equal(shouldAwaitVideoState({ hostVideo: true, videoKnown: false, waitedMs: HOST_START_VIDEO_WAIT_MS }), false, 'gives up');
+  assert.equal(shouldAwaitVideoState({ hostVideo: true, videoKnown: true, waitedMs: 0 }), false, 'video already known');
+  assert.equal(shouldAwaitVideoState({ hostVideo: false, videoKnown: false, waitedMs: 0 }), false, 'no host video: start at once');
+  assert.ok(HOST_START_VIDEO_WAIT_MS <= 500, 'never delays a start by more than half a second');
+});
+
+test('embed: host start holds for the video report before startSession', () => {
+  const run = embed.slice(embed.indexOf('const runHostStart = useCallback'), embed.indexOf('const blockStart = useCallback'));
+  assert.ok(run.length > 0, 'runHostStart found');
+  assert.match(run, /hostVideo: TUTOR_HOST_LESSON && uiOptions\.videoControl/);
+  assert.match(run, /videoKnown: lessonHostRef\.current\.video !== null/);
+  assert.ok(run.indexOf('shouldAwaitVideoState(videoWait)') < run.indexOf('h.startSession()'), 'wait precedes the start');
+  assert.match(run, /addDebugEvent\('host_start_video_wait'/);
 });
 
 console.log(`\n${passed}/${passed + failed} passed`);
