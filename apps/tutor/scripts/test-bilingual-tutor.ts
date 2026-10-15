@@ -20,6 +20,10 @@ import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
+import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
+import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
+import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
+import { isMetaNarration, stripLeakedLabels } from '../src/lib/tutor/voice/meta-narration';
 import { parseThinkingCue, initialThinkingCue, cueTurnAccepted, cueTick, thinkingCueVisible, thinkingCueLabel, CHIME_TO_PULSE_MS, PULSE_EVERY_MS, ACCEPT_GRACE_MS } from '../src/lib/tutor/voice/thinking-cue';
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
@@ -279,6 +283,56 @@ test('thinking cue wiring: claim → TutorSession → runtime + stage; head cove
   assert.ok(vtr.includes('cueStudentTurnAccepted();\n      await callBrainOnce(transcript, opts);') || vtr.includes('cueStudentTurnAccepted();'));
   for (const ev of ['thinking_cue_chime', 'thinking_cue_ack_skipped']) assert.ok(embed.includes(`'${ev}',`), ev);
   assert.ok(readFileSync('src/lib/tutor/orchestrator/flags.ts', 'utf8').includes("NEXT_PUBLIC_TUTOR_THINKING_CUE !== 'off'"));
+});
+console.log('live-session fixes (GDI starter session 3, 2026-10-15)');
+test('after the close: goodbyes/thanks are pleasantries; content and questions are not', () => {
+  for (const t of ['はい、ありがとうございます。また次回。はい、失礼します。', 'はい、またお願いします。ありがとうございました。', 'はい、お疲れ様でした', 'はい。', 'Thank you, see you next time!']) assert.equal(isPleasantryOnly(t), true, t);
+  for (const t of ['はい、ありがとうございます。ちょっと自信つきました。', "No, I haven't。カヤックはまだです。", 'また質問してもいいですか？', 'Have you?']) assert.equal(isPleasantryOnly(t), false, t);
+});
+test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript))"));
+  assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,200}lessonClosedRef\.current = true/.test(vtr));
+  assert.ok(vtr.includes('if (lessonClosedRef.current) return;'));
+});
+test('bare Japanese short answers survive the noise filter in a bilingual session', () => {
+  assert.equal(classifyTranscript('はい', { allowNonLatin: true }), 'clean');
+  assert.equal(classifyTranscript('うん', { allowNonLatin: true }), 'clean');
+  assert.equal(classifyTranscript('uh', { allowNonLatin: true }), 'noise');
+});
+test('persona directives are meta; leaked stage labels are stripped', () => {
+  assert.equal(isMetaNarration("Ryota's rule applies here: no second full farewell beyond acknowledgment."), true);
+  assert.equal(isMetaNarration("Ryota's style: gentle pace, one catchphrase max, no re-greeting."), true);
+  assert.equal(isMetaNarration('お疲れ様でした。'), false);
+  assert.equal(stripLeakedLabels('*opener* はい、ちょうど今、三つの質問が出ていますね。'), 'はい、ちょうど今、三つの質問が出ていますね。');
+  assert.equal(stripLeakedLabels('*I went* is right.'), '*I went* is right.');
+});
+test('brain: an empty max_tokens turn is re-issued once even with thinking off', () => {
+  const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
+  assert.ok(src.includes('emptyCapRetried = true') && src.includes("finalMessage.stop_reason === 'max_tokens'"));
+});
+test('clause: Japanese-script English, no re-teaching correct answers, name the real error, answer questions now, close once', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  for (const k of ['ラストウィーク', 'Never re-teach', 'name the actual error', 'Never postpone a question', 'without asking it in the same turn', 'close_session_notes', 'never say goodbye again']) assert.ok(c.includes(k), k);
+});
+console.log('turn-taking fixes (Crimsora portal sessions 2026-10-15)');
+test('"can you hear me?" is answered; plain liveness keeps its lines', () => {
+  assert.match(pickLivenessReply(0, 'hi can you hear me'), /^Yes, I (?:can )?hear you\.$/);
+  assert.match(pickLivenessReply(1, 'Hello? Can you hear me?'), /hear you/);
+  assert.doesNotMatch(pickLivenessReply(0, 'are you there?'), /hear you/);
+});
+test('a late-fallback barge-in over finished audio stops that audio', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const i = vtr.indexOf("'late_fallback_barge_stopped_speech'");
+  assert.ok(i > 0);
+  const near = vtr.slice(i - 300, i + 200);
+  assert.ok(near.includes("heur.verdict === 'barge_in' && prodState === 'speaking' && !brainBusyRef.current"));
+  assert.ok(near.includes('clearSpeechQueueRef.current?.()'));
+  assert.ok(readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8').includes("'late_fallback_barge_stopped_speech'"));
+});
+test('voice cadence: short opening, ~60-word turns, hearing check re-asks the last question, own question honoured', () => {
+  const v = renderVoiceCadenceBlock();
+  for (const k of ['FIRST turn of a session', 'about 60 words', 'ask your LAST question again', 'Never restart the lesson', 'their own question']) assert.ok(v.includes(k), k);
 });
 test('speech_rate claim: numbers/strings clamped to [0.6,1.5]; absent/1/garbage ⇒ undefined', () => {
   assert.equal(parseSpeechRate(0.85), 0.85);

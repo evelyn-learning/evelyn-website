@@ -2279,6 +2279,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // Text-mode thinking (streaming path only): `thinkingOn` can only fall to
   // false within a turn (deadline / token-cap re-issue below), never rise.
   let thinkingOn = input.textThinking === true || input.voiceThinking === true;
+  // GDI starter 2026-10-15 (demo log 23:01Z): a voice turn with thinking OFF
+  // still came back stop=max_tokens with no text and no tool (out=2000, 25 s)
+  // — the student heard nothing but cover lines. Re-issued once, like the
+  // thinking-starved case below.
+  let emptyCapRetried = false;
   const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript, workThenMatch ? { workThenMatch: true } : undefined);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   // Verdict pre-check: one small call, awaited HERE — before the brain call,
@@ -2617,6 +2622,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       // thinking at the normal cap. Its tokens were billed, so they count.
       console.warn(`[text-thinking] max_tokens reached with nothing shown — re-issuing iteration ${iter} without thinking`);
       thinkingOn = false;
+      iter--;
+      continue;
+    }
+    if (
+      !emptyCapRetried &&
+      finalMessage.stop_reason === 'max_tokens' &&
+      accumulatedText.length - textCharsBeforeIter === 0 &&
+      newToolUseBlocks.length === 0
+    ) {
+      emptyCapRetried = true;
+      console.warn(`[brain.stream] max_tokens reached with nothing shown (thinking off) — re-issuing iteration ${iter} once`);
       iter--;
       continue;
     }

@@ -202,7 +202,8 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { isMetaNarration, createCorrectionWorkingTracker } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
+import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -3059,6 +3060,10 @@ export function VoiceTutorRealtime({
   // re-wraps after a "wait, one more thing"). The ASSIGN call is one-shot
   // per session — a second call still refreshes nextTimeIntent.
   const closeNotesFiredRef = useRef(false);
+  // Set when the brain closes the lesson (closeSessionNotes). After it, pure
+  // pleasantries get no new turn and the idle nudge stands down — GDI starter
+  // 2026-10-15 ran eight farewells and an idle nudge restarted an exercise.
+  const lessonClosedRef = useRef(false);
   // What the practice-assign route actually created, for the end-of-session
   // summary card. Null until an assign succeeds (either the in-session tool
   // call or the commit-route fallback).
@@ -8012,6 +8017,8 @@ export function VoiceTutorRealtime({
       // above already excludes the action unconditionally, so flag-off
       // behaviour is byte-identical to pre-round).
       if (cmd.action === 'closeSessionNotes') {
+        if (!lessonClosedRef.current) onDebugEvent?.('lesson_closed', 'closeSessionNotes');
+        lessonClosedRef.current = true;
         if (!TUTOR_CLOSE_NOTES) continue;
         const c = cmd as { assignLoIds: string[]; reason?: string; nextTimeIntent?: string };
         // Latest-wins: a second wrap-up call refreshes the intent even
@@ -13653,6 +13660,9 @@ export function VoiceTutorRealtime({
                       }
                     }
                   }
+                  // Leaked stage label in front of a real sentence ("*opener* …",
+                  // GDI starter 2026-10-15): strip it before anything reads the text.
+                  if (typeof ev.text === 'string') (ev as { text?: string }).text = stripLeakedLabels(ev.text);
                   const updatedSentence = (ev.text as string) || '';
                   if (!updatedSentence.trim()) continue;
                   // Correction-note working tracker (meta-narration.ts). Asked
@@ -19711,7 +19721,7 @@ export function VoiceTutorRealtime({
         // BECAUSE of our latency — answer instantly, brain turn continues
         // normally. Same speak-gate the fast opener respects.
         if (Date.now() >= speakTextBlockedUntilRef.current) {
-          const text = localizeCanned(pickLivenessReply(ackTurnIndex), 'liveness',
+          const text = localizeCanned(pickLivenessReply(ackTurnIndex, ackTranscript), 'liveness',
             cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), ackTurnIndex);
           const sid = pushTtsScriptForPerception(text);
           speakTextRef.current?.(text, sid);
@@ -19905,6 +19915,12 @@ export function VoiceTutorRealtime({
       image?: { dataUrl: string; name?: string };
     },
   ) => {
+    // Lesson closed (see lesson-close.ts): a goodbye/thanks after the close
+    // is not a new turn — no second farewell, no restarted exercise.
+    if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript)) {
+      onDebugEvent?.('post_close_pleasantry_silenced', transcript.slice(0, 60));
+      return;
+    }
     // Host-end goodbye under way (endSessionNowRef farewell branch): no new
     // turn may reach the brain until unmount.
     if (farewellSealedRef.current) return;
@@ -21488,6 +21504,8 @@ export function VoiceTutorRealtime({
         ? nudgePlan.decision
         : decideIdleNudge({ busy, hidden, wrapPhase, hold: nudgeHold, state: idleNudgeStateRef.current });
       if (decision === 'stand-down') return;
+      // The lesson has been closed: nothing to nudge toward.
+      if (lessonClosedRef.current) return;
       if (decision === 'recheck') {
         if (nudgePlan?.reason) {
           const pp = idleNudgePostponeRef.current;
@@ -22642,6 +22660,16 @@ export function VoiceTutorRealtime({
             console.warn(`[PERCEPTION] late-fallback duplicate dropped: ${JSON.stringify(t.text).slice(0, 80)}`);
             onDebugEvent?.('perception_dispatch_duplicate_dropped', t.text.slice(0, 80));
             return;
+          }
+          // A real barge-in over audio whose text is already complete (the
+          // brain is done; only the queue is playing): stop that audio first.
+          // Without this the student's reply waited behind the rest of the
+          // tutor's monologue — portal-e90ab190 (2026-10-15): "Can we go
+          // through?" at 21.6s, the opening kept talking until 30.4s while
+          // two replies stacked up behind it ("Oh my god, please, hello.").
+          if (heur.verdict === 'barge_in' && prodState === 'speaking' && !brainBusyRef.current) {
+            onDebugEvent?.('late_fallback_barge_stopped_speech', t.text.slice(0, 60));
+            void clearSpeechQueueRef.current?.();
           }
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;

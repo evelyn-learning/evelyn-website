@@ -396,7 +396,16 @@ export function pickCoverPhrase(
   return { text, index };
 }
 
-export function pickLivenessReply(turnIndex: number): string {
+/** "Can you hear me?" is a question about the line, not about latency:
+ *  answer it (portal-f2d0b9b5, 2026-10-15: "hi can you hear me" got "Still
+ *  here. Working on it."). */
+export const HEARING_REPLIES = ['Yes, I can hear you.', 'Yes, I hear you.'] as const;
+const HEARING_CHECK_RE = /\b(?:can|do) you hear me\b|\bare you hearing me\b|\bcan you understand me\b|聞こえ(?:ます|てます|てる)/i;
+
+export function pickLivenessReply(turnIndex: number, transcript?: string): string {
+  if (transcript && HEARING_CHECK_RE.test(transcript)) {
+    return HEARING_REPLIES[((turnIndex % HEARING_REPLIES.length) + HEARING_REPLIES.length) % HEARING_REPLIES.length];
+  }
   return LIVENESS_REPLIES[((turnIndex % LIVENESS_REPLIES.length) + LIVENESS_REPLIES.length) % LIVENESS_REPLIES.length];
 }
 

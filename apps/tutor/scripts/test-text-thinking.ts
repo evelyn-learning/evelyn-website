@@ -360,8 +360,17 @@ async function main() {
     assert.equal(done.fullText, 'Right. Thirty it is.');
     assert.ok(!JSON.stringify(starved.events).includes('SECRET'));
   });
-  await test('a voice turn at max_tokens is NOT re-issued (unchanged behaviour)', async () => {
-    const r = await run(baseInput, [{ ...textScript('', 'max_tokens'), final: { content: [], stop_reason: 'max_tokens' } }]);
+  // GDI starter 2026-10-15: a voice turn (thinking off) came back at the cap
+  // with nothing — re-issued ONCE now; a second empty one is not retried.
+  await test('a voice turn at max_tokens with nothing shown is re-issued once, never twice', async () => {
+    const empty = () => ({ ...textScript('', 'max_tokens'), final: { content: [], stop_reason: 'max_tokens' } });
+    const r = await run(baseInput, [empty(), textScript('Right. Thirty it is.')]);
+    assert.equal(r.requests.length, 2);
+    const twice = await run(baseInput, [empty(), empty()]);
+    assert.equal(twice.requests.length, 2);
+  });
+  await test('a voice turn at max_tokens that DID show text is not re-issued', async () => {
+    const r = await run(baseInput, [{ ...textScript('Right.', 'max_tokens'), final: { content: [], stop_reason: 'max_tokens' } }]);
     assert.equal(r.requests.length, 1);
   });
 

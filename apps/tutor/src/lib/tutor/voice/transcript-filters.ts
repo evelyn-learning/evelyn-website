@@ -431,6 +431,10 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
     && !/^[-+]?\d+$/.test(normalized)
     && !MATH_VAR_LETTERS.has(normalized)
     && !SHORT_ANSWER_WORDS.has(normalized)
+    // Bilingual session: 「はい」「うん」「ええ」 are two characters and a whole
+    // answer — the bare 「はい」 to a closing line was dropped here and the idle
+    // nudge restarted the exercise (GDI starter 2026-10-15, 1159.8s).
+    && !(opts?.allowNonLatin && /[\u3040-\u30ff\u4e00-\u9fff]/.test(normalized))
   ) return true;
   // Phonetic garbage — mostly single letters separated by spaces
   if (isPhoneticGarbage(normalized)) return true;

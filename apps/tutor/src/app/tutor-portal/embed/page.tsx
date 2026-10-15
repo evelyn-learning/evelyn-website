@@ -260,6 +260,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   a queue-time merge/drop decision for a near-duplicate student final:
   'student_turn_coalesced',
   'pre_audio_supersede',
+  'lesson_closed',
+  'late_fallback_barge_stopped_speech',
+  'post_close_pleasantry_silenced',
   'thinking_cue_chime',
   'thinking_cue_ack_skipped',
   //   the "give me a moment" think-time hold armed for a turn:
