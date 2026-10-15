@@ -244,6 +244,7 @@ export function InkNotesOverlay({
   labeledScribbles,
   links,
   onOverflowChange,
+  onNotesBottomChange,
   onNoteMoved,
   onNoteTap,
 }: {
@@ -275,6 +276,13 @@ export function InkNotesOverlay({
    *  margin notes (see ink-placement's exhausted-scan extension) are
    *  scrollable instead of clipped. */
   onOverflowChange?: (px: number) => void;
+  /** Reports the lowest note's bottom edge in px from the content
+   *  wrapper's TOP (0 when there are no notes). The host starts each newly
+   *  appended item below it: margin notes are frozen where they were
+   *  placed (drift is worse than overlap), so without this a card added
+   *  after a note in the empty area below the content is drawn under it
+   *  (GDI advanced session 2026-10-15). */
+  onNotesBottomChange?: (px: number) => void;
   /** R2 E3: fires when the student finishes dragging a note — the owner
    *  stamps `userPos` onto the source command (and persistence follows
    *  the existing whiteboardCommands pipeline for free). Addressed by
@@ -540,7 +548,16 @@ export function InkNotesOverlay({
       // scribble notes, appended after scribble labels (command order),
       // so they get identical backdrop/animation/occupied treatment.
       const allSources = [...sources, ...arrowLabelSources];
-      for (const src of allSources) {
+      // Notes that already hold a spot claim it first; new notes are placed
+      // after them and so avoid them. `sources` lists every handwrite before
+      // every scribble label, so in plain order a NEW handwrite was placed
+      // before the frozen labels entered `occupied` and landed on top of
+      // them (GDI advanced session 2026-10-15). Stable sort keeps command
+      // order within each group.
+      const placementOrder = [...allSources].sort(
+        (a, b) => Number(placedCacheRef.current.has(b.key)) - Number(placedCacheRef.current.has(a.key)),
+      );
+      for (const src of placementOrder) {
         const m = measureNote(src.text);
         const t = src.explicitTarget
           ? { rect: src.explicitTarget, itemEl: null as Element | null, el: null as Element | null }
@@ -731,6 +748,10 @@ export function InkNotesOverlay({
         const maxBottom = next.reduce((b, e) => Math.max(b, e.placement.rect.y + e.placement.rect.h), 0);
         onOverflowChange(Math.max(0, Math.ceil(maxBottom - (page.y + page.h))));
       }
+      if (onNotesBottomChange) {
+        const maxBottom = next.reduce((b, e) => Math.max(b, e.placement.rect.y + e.placement.rect.h), page.y);
+        onNotesBottomChange(Math.max(0, Math.ceil(maxBottom - page.y)));
+      }
     };
 
     raf1 = requestAnimationFrame(() => {
@@ -742,7 +763,7 @@ export function InkNotesOverlay({
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
     };
-  }, [sources, links, hostRef, contentRef, hostW, fontsReady, onOverflowChange]);
+  }, [sources, links, hostRef, contentRef, hostW, fontsReady, onOverflowChange, onNotesBottomChange]);
 
   // Host width tracking (student-ink pattern): proportional rescale.
   useEffect(() => {

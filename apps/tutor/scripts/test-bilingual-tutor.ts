@@ -17,6 +17,7 @@ import { buildBilingualClause, buildSystemPromptParts } from '../src/lib/tutor/a
 import { parseTutorLanguages, ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
 import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
+import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
@@ -170,6 +171,21 @@ test('session clause: spoken items carry their cue, unambiguous instructions, sh
   assert.ok(c.includes('Do not re-explain a rule'));
   assert.ok(c.includes('rules of thumb'));
   assert.ok(c.includes('never as equations'));
+});
+test('a sentence sent as an equation renders as prose; real math stays KaTeX', () => {
+  assert.deepEqual(latexAsProse(String.raw`\text{I tried scuba diving last summer.}`), [{ text: 'I tried scuba diving last summer.', bold: false }]);
+  assert.deepEqual(latexAsProse(String.raw`\text{Last month, I } \textbf{visited} \text{ Osaka.}`),
+    [{ text: 'Last month, I ', bold: false }, { text: 'visited', bold: true }, { text: ' Osaka.', bold: false }]);
+  for (const m of [String.raw`5\,\text{m/s}`, String.raw`x = \text{cost}`, String.raw`\frac{1}{2}\text{ of it}`, String.raw`\text{area} = \pi r^2`, 'x^2 + 1', String.raw`\text{if } x > 0`]) {
+    assert.equal(latexAsProse(m), null, m);
+  }
+});
+test('board: appended items start below notes; placed notes claim their spot first; cell ticks sit inside the cell', () => {
+  const canvas = readFileSync('src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx', 'utf8');
+  const overlay = readFileSync('src/app/tutor/components/whiteboard/InkNotesOverlay.tsx', 'utf8');
+  assert.ok(canvas.includes('onNotesBottomChange={handleNotesBottom}') && canvas.includes('marginTop: appendPad'));
+  assert.ok(overlay.includes('for (const src of placementOrder)'));
+  assert.ok(canvas.includes("s.targetFeature?.startsWith('cell-')"));
 });
 test('speech_rate claim: numbers/strings clamped to [0.6,1.5]; absent/1/garbage ⇒ undefined', () => {
   assert.equal(parseSpeechRate(0.85), 0.85);

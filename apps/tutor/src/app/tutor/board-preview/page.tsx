@@ -34,7 +34,7 @@ function parseHash(): WhiteboardCommand[] {
     const entries = JSON.parse(utf8) as Array<{ action: string; data?: Record<string, unknown> }>;
     return entries
       .filter((e) => e && typeof e.action === 'string')
-      .map((e) => ({ action: e.action, ...(e.data ?? {}) }) as unknown as WhiteboardCommand);
+      .map((e) => ({ action: e.action, ...(e.data ?? {}), ...((e as { timestamp?: string }).timestamp ? { timestamp: (e as { timestamp?: string }).timestamp } : {}) }) as unknown as WhiteboardCommand);
   } catch (err) {
     console.error('[board-preview] bad hash payload:', err);
     return [];
@@ -44,10 +44,29 @@ function parseHash(): WhiteboardCommand[] {
 export default function BoardPreviewPage() {
   const [commands, setCommands] = useState<WhiteboardCommand[]>([]);
   useEffect(() => {
-    const apply = () => setCommands(parseHash());
+    // ?step=<ms>: replay the board BATCH BY BATCH (entries sharing a
+    // `timestamp` arrive together, as in the live session) instead of all
+    // at once — layout bugs that only show when a card is APPENDED after
+    // notes were placed need the incremental order to reproduce.
+    const stepMs = Number(new URLSearchParams(window.location.search).get('step')) || 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const apply = () => {
+      timers.splice(0).forEach(clearTimeout);
+      const all = parseHash();
+      if (!stepMs) { setCommands(all); return; }
+      const cuts: number[] = [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      all.forEach((c, i) => { if (i > 0 && (c as any).timestamp !== (all[i - 1] as any).timestamp) cuts.push(i); });
+      cuts.push(all.length);
+      setCommands([]);
+      cuts.forEach((end, k) => timers.push(setTimeout(() => {
+        setCommands(all.slice(0, end));
+        if (k === cuts.length - 1) document.body.dataset.boardReplayDone = '1';
+      }, stepMs * (k + 1))));
+    };
     apply();
     window.addEventListener('hashchange', apply);
-    return () => window.removeEventListener('hashchange', apply);
+    return () => { timers.forEach(clearTimeout); window.removeEventListener('hashchange', apply); };
   }, []);
 
   if (process.env.NODE_ENV !== 'development') {

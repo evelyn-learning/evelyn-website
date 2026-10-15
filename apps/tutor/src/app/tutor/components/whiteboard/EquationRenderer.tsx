@@ -14,6 +14,7 @@ import { InlineMathText } from './InlineMathText';
 import { splitLatexToLines } from '@/lib/tutor/whiteboard/equation-split';
 import { preprocessKatexBody } from '@/lib/tutor/whiteboard/inline-math';
 import { attachHScrollFade, type HScrollFadeHandle } from '@/lib/tutor/whiteboard/hscroll-fade';
+import { latexAsProse } from '@/lib/tutor/whiteboard/prose-latex';
 
 interface EquationRendererProps {
   latex: string;
@@ -262,6 +263,25 @@ export function EquationRenderer({
       fade = null;
     };
   }, [latex, highlight, displayMode]);
+
+  // A sentence sent as an equation (\text{…} only) reads as a sentence:
+  // body font, left-aligned, wraps — not serif math (prose-latex.ts). No
+  // containerRef in this branch, so the KaTeX effect above is a no-op.
+  const prose = highlight && highlight.length > 0 ? null : latexAsProse(latex);
+  if (prose) {
+    return (
+      <div className={`equation-container ${className}`} data-feature="equation" style={{ minWidth: 0, width: '100%' }}>
+        {label && (
+          <div className="text-sm font-medium text-gray-600 mb-2" data-feature="equation-label" style={{ maxWidth: '100%', overflowWrap: 'anywhere' }}>
+            <InlineMathText text={label} />
+          </div>
+        )}
+        <p className="equation-content text-xl leading-relaxed text-gray-900" data-prose="1" style={{ overflowWrap: 'anywhere' }}>
+          {prose.map((r, i) => (r.bold ? <strong key={i}>{r.text}</strong> : <span key={i}>{r.text}</span>))}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

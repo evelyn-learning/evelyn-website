@@ -1169,6 +1169,38 @@ export function WhiteboardCanvas({
     setNoteOverflowPx((prev) => (prev === px ? prev : px));
   }, []);
 
+  // Notes never sit under a later card (GDI advanced session 2026-10-15:
+  // margin notes placed in the empty area below the content are frozen
+  // there, and the next card was drawn right under them). An item APPENDED
+  // to a page that already rendered gets a one-time top pad that starts it
+  // below the lowest note. Decided once per stamped item id and kept, so
+  // nothing already on the board ever moves; a page's first render pads
+  // nothing.
+  const notesBottomRef = useRef(0);
+  const lastItemBottomRef = useRef(0);
+  const itemPadRef = useRef<Map<string, number>>(new Map());
+  const padPageRef = useRef<{ page: number; rendered: boolean }>({ page: -1, rendered: false });
+  const handleNotesBottom = useCallback((px: number) => { notesBottomRef.current = px; }, []);
+  const appendPadFor = (id: string | undefined, isLast: boolean): number => {
+    if (!id) return 0;
+    const known = itemPadRef.current.get(id);
+    if (known !== undefined) return known;
+    const pad = isLast && padPageRef.current.page === currentIndex && padPageRef.current.rendered && inkNotesEnabled()
+      ? Math.max(0, Math.ceil(notesBottomRef.current - lastItemBottomRef.current + 8))
+      : 0;
+    itemPadRef.current.set(id, pad);
+    return pad;
+  };
+  useLayoutEffect(() => {
+    if (padPageRef.current.page !== currentIndex) notesBottomRef.current = 0;
+    padPageRef.current = { page: currentIndex, rendered: renderableCommands.length > 0 };
+    const wrapper = pageWrapperRef.current;
+    const last = itemRefsRef.current[renderableCommands.length - 1];
+    lastItemBottomRef.current = wrapper && last
+      ? last.getBoundingClientRect().bottom - wrapper.getBoundingClientRect().top
+      : 0;
+  });
+
   // Fix 1 (ink drift on resize/rotation): track the outer host's live
   // CSS width so ink strokes captured at a different width can be
   // rescaled at render time — see the InkStroke doc comment.
@@ -1743,8 +1775,9 @@ export function WhiteboardCanvas({
               // positions (2026-07-10 perf audit).
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const key = ((cmd as any).id as string | undefined) ?? i;
+              const appendPad = appendPadFor(typeof key === 'string' ? key : undefined, i === renderableCommands.length - 1);
               return (
-                <div key={key} className={itemEnterClass(cmd)}>
+                <div key={key} className={itemEnterClass(cmd)} style={appendPad > 0 ? { marginTop: appendPad } : undefined}>
                   {i > 0 && (
                     // Round 28 design pass: the separator is now a bare
                     // hairline — the old all-caps type label ("EQUATION")
@@ -1836,6 +1869,7 @@ export function WhiteboardCanvas({
             labeledScribbles={scribbles}
             links={links}
             onOverflowChange={handleNoteOverflow}
+            onNotesBottomChange={handleNotesBottom}
             // Round-5 (2026-07-27): tutor annotations are NO LONGER draggable —
             // product call, the affordance wasn't wanted. Withholding
             // `onNoteMoved` is the whole switch: InkNotesOverlay derives
@@ -2569,6 +2603,14 @@ function ScribbleOverlays({ scribbles, seenMarkSeeds }: { scribbles: ScribbleCmd
           let ty = r.y - half * 0.2;
           if (tx + half > vbW - 2) tx = r.x + r.w - half * 0.8;
           if (ty - half * 0.6 < 2) ty = r.y + half * 0.8;
+          // Table cells: the outside corner IS the grid line, so the tick sat
+          // on the border between two cells and read as belonging to neither
+          // (GDI advanced session 2026-10-15). Cell text is left-aligned, so
+          // the cell's own right end, vertically centred, is clear of it.
+          if (s.targetFeature?.startsWith('cell-') && r.w > tickSize * 2) {
+            tx = r.x + r.w - half * 1.3;
+            ty = r.y + r.h / 2;
+          }
           if (handMarks) {
             // Hand-drawn ✓: same spine geometry as the stroked path below,
             // rendered as two filled variable-width outlines (white halo
