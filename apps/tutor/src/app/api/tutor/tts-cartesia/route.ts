@@ -25,6 +25,7 @@
  * straight through to the existing 502 handling below.
  */
 
+import { parseSpeechRate } from '@/lib/tutor/voice/speech-rate';
 import { NextRequest } from 'next/server';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { SUPPORTED_TUTOR_LANGUAGES } from '@/lib/tutor/voice/tts-language';
@@ -45,8 +46,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, voiceId, speed, studentName, language } = body as {
-      text?: string; voiceId?: string; speed?: string | number; studentName?: string; language?: string;
+    const { text, voiceId, speed, rate, studentName, language } = body as {
+      text?: string; voiceId?: string; speed?: string | number; rate?: number; studentName?: string; language?: string;
     };
     // Bilingual sessions name the sentence's language; only a supported tutor
     // language passes, anything else (or nothing) stays 'en' as before.
@@ -92,6 +93,8 @@ export async function POST(request: NextRequest) {
       model_id: CARTESIA_TTS_MODEL,
       transcript: rewriteForTTS(text, { studentName }),
       voice,
+      // Tenant speaking rate (sonic-3 control). Re-validated here; absent ⇒ no field.
+      ...(parseSpeechRate(rate) !== undefined ? { generation_config: { speed: parseSpeechRate(rate) } } : {}),
       language: ttsLanguage,
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },
     };

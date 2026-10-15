@@ -17,6 +17,9 @@ import { buildBilingualClause, buildSystemPromptParts } from '../src/lib/tutor/a
 import { parseTutorLanguages, ttsLanguageFor } from '../src/lib/tutor/voice/tts-language';
 import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
+import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
+import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
+import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 
 let passed = 0;
 let failed = 0;
@@ -148,6 +151,52 @@ test('embed claim reaches both the prompt and the TTS hook', () => {
   assert.ok(embed.includes('tutorLanguages={tutorLanguages}'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.equal((vtr.match(/\.\.\.\(tutorLanguages \? \{ tutorLanguages \} : \{\}\)/g) ?? []).length, 2);
+});
+
+console.log('live-session fixes (GDI starter session 2026-10-14)');
+test('session clause forbids romaji openers and pronunciation judgments, asks for production', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  assert.ok(c.includes('never romaji') && c.includes('short opener'));
+  assert.ok(c.includes('cannot hear pronunciation'));
+  assert.ok(c.includes('only after they have tried'));
+  assert.equal(buildBilingualClause(['en']), null, 'English-only tenants unchanged');
+});
+test('speech_rate claim: numbers/strings clamped to [0.6,1.5]; absent/1/garbage ⇒ undefined', () => {
+  assert.equal(parseSpeechRate(0.85), 0.85);
+  assert.equal(parseSpeechRate('0.8'), 0.8);
+  assert.equal(parseSpeechRate(0.2), 0.6);
+  assert.equal(parseSpeechRate(9), 1.5);
+  assert.equal(parseSpeechRate(1), undefined);
+  assert.equal(parseSpeechRate(undefined), undefined);
+  assert.equal(parseSpeechRate('fast'), undefined);
+  assert.equal(parseSpeechRate(''), undefined);
+});
+test('canned lines: Japanese only when bilingual AND the tutor last spoke Japanese', () => {
+  const tr = [{ role: 'tutor', text: 'もう一度言ってみましょう。' }, { role: 'student', text: 'I went to school.' }];
+  assert.equal(lastTutorText(tr), 'もう一度言ってみましょう。');
+  assert.equal(cannedLanguage(['en', 'ja'], lastTutorText(tr)), 'ja');
+  assert.equal(cannedLanguage(['en', 'ja'], 'Nice. Now try it politely.'), undefined);
+  assert.equal(cannedLanguage(undefined, 'もう一度'), undefined, 'English-only session never localizes');
+  assert.equal(localizeCanned('Let me see.', 'cover', undefined, 3), 'Let me see.');
+  assert.ok(JA_CANNED.cover.includes(localizeCanned('Let me see.', 'cover', 'ja', 3)));
+});
+test('Japanese covers are fillers, not acknowledgments (no doubling with the brain opener)', () => {
+  for (const line of JA_CANNED.cover) assert.ok(!/いいですね|そうですね|なるほど|大丈夫/.test(line), line);
+  assert.ok(COVER_POOLS.generic.length > 0);
+});
+test('speech rate reaches every Cartesia request path as generation_config.speed', () => {
+  const hook = readFileSync('src/app/tutor/hooks/useOpenAIRealtime.ts', 'utf8');
+  assert.equal((hook.match(/rate: speechRateRef\.current/g) ?? []).length, 3);
+  const ws = readFileSync('src/app/tutor/hooks/useCartesiaSonicWS.ts', 'utf8');
+  assert.ok(ws.includes('generation_config: { speed: opts.rate }'));
+  const route = readFileSync('src/app/api/tutor/tts-cartesia/route.ts', 'utf8');
+  assert.ok(route.includes('generation_config: { speed: parseSpeechRate(rate) }'));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  assert.ok(embed.includes('parseSpeechRate(config.speech_rate)') && embed.includes('speechRate={speechRate}'));
+});
+test('every canned spoken line in the runtime goes through localizeCanned', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.equal((vtr.match(/localizeCanned\(/g) ?? []).length, 4);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

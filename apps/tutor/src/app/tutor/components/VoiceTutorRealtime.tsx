@@ -226,6 +226,7 @@ import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mi
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
+import { cannedLanguage, localizeCanned, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createNoiseFloorState, recordFloorSample, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
 import { CancelStormGovernor, STOP_IMPERATIVE_RE } from '@/lib/tutor/voice/cancel-storm';
@@ -899,6 +900,9 @@ interface VoiceTutorRealtimeProps {
    *  normalised by parseTutorLanguages). Absent ⇒ English-only: the prompt
    *  and every TTS request are byte-identical to before. */
   tutorLanguages?: string[];
+  /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
+   *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
+  speechRate?: number;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -1273,6 +1277,7 @@ export function VoiceTutorRealtime({
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   tutorLanguages,
+  speechRate,
   onLessonPlanProgress,
   onHomeworkProgress,
   onLessonPlanLoadSettled,
@@ -19661,7 +19666,8 @@ export function VoiceTutorRealtime({
         // BECAUSE of our latency — answer instantly, brain turn continues
         // normally. Same speak-gate the fast opener respects.
         if (Date.now() >= speakTextBlockedUntilRef.current) {
-          const text = pickLivenessReply(ackTurnIndex);
+          const text = localizeCanned(pickLivenessReply(ackTurnIndex), 'liveness',
+            cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), ackTurnIndex);
           const sid = pushTtsScriptForPerception(text);
           speakTextRef.current?.(text, sid);
           ttsDispatchedCountRef.current++;
@@ -19711,6 +19717,8 @@ export function VoiceTutorRealtime({
             ({ text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current));
             lastAckIndexRef.current = index;
           }
+          // Bilingual session, tutor currently speaking Japanese ⇒ Japanese filler.
+          text = localizeCanned(text, 'cover', cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), ackTurnIndex);
           // Fast-opener call shape: perception self-voice push + speak.
           const ackScriptId = pushTtsScriptForPerception(text);
           speakTextRef.current?.(text, ackScriptId);
@@ -19783,10 +19791,12 @@ export function VoiceTutorRealtime({
               return;
             }
             if (Date.now() < speakTextBlockedUntilRef.current) return; // retry next tick? no — tier already consumed; acceptable
-            const sid = pushTtsScriptForPerception(act.text);
-            speakTextRef.current?.(act.text, sid);
+            const escText = localizeCanned(act.text, act.tier === 0 ? 'escalation-1' : 'escalation-2',
+              cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), esTurnIndex);
+            const sid = pushTtsScriptForPerception(escText);
+            speakTextRef.current?.(escText, sid);
             ttsDispatchedCountRef.current++;
-            onDebugEvent?.('cover_escalation', `tier=${act.tier} "${act.text}"`);
+            onDebugEvent?.('cover_escalation', `tier=${act.tier} "${escText}"`);
             return;
           }
           // give-up: stop waiting on a sick turn (would otherwise ride ~93s of
@@ -20986,6 +20996,7 @@ export function VoiceTutorRealtime({
           cartesiaVoiceId,
           cartesiaVoiceSpeed,
           ...(tutorLanguages ? { tutorLanguages } : {}),
+          ...(speechRate !== undefined ? { speechRate } : {}),
           speakingRate,
           studentName,
         }
@@ -22179,8 +22190,9 @@ export function VoiceTutorRealtime({
         const spokeMs = lastSpeechDurationMsRef.current;
         const { nag } = recordNoiseDrop(noiseNagStateRef.current, Date.now(), spokeMs);
         if (nag && Date.now() >= speakTextBlockedUntilRef.current && prodState !== 'speaking') {
-          const sid = pushTtsScriptForPerception(NOISE_NAG_LINE);
-          speakTextRef.current?.(NOISE_NAG_LINE, sid);
+          const nagLine = localizeCanned(NOISE_NAG_LINE, 'noise', cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), 0);
+          const sid = pushTtsScriptForPerception(nagLine);
+          speakTextRef.current?.(nagLine, sid);
           onDebugEvent?.('noise_nag_spoken', `${spokeMs}ms utterance`);
         }
         // Stage 3 quick-fix (2026-06-16): if a cancel checkpoint is

@@ -34,6 +34,7 @@ import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
+import { parseSpeechRate } from '@/lib/tutor/voice/speech-rate';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
@@ -389,6 +390,9 @@ interface EmbedConfig {
    *  (normalised by parseTutorLanguages; unsupported codes dropped). Absent ⇒
    *  English-only, unchanged. NEXT_PUBLIC_TUTOR_EXTRA_LANGUAGES=off ignores it. */
   tutor_languages?: string[] | string;
+  /** Tutor speaking rate, Cartesia generation_config.speed (0.6–1.5; 1 = normal).
+   *  Absent ⇒ unchanged. See lib/tutor/voice/speech-rate.ts. */
+  speech_rate?: number | string;
   input_mode?: InputMode;
   voice?: string;
   curriculum_module?: string;
@@ -630,6 +634,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // speed sent — unchanged behavior for every other partner voice).
   const cartesiaVoiceSpeed = cartesiaSpeedForVoiceId(cartesiaVoiceId);
   const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
+  const speechRate = parseSpeechRate(config.speech_rate);
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
@@ -1983,6 +1988,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
+        speechRate={speechRate}
         sessionMaxMinutes={maxDuration}
         sessionWrapMinutes={wrapAtMinutes}
         maxDurationExplicit={maxDurationExplicit}

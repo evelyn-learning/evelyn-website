@@ -68,6 +68,8 @@ export interface SonicSynthesizeOpts extends SonicContextHandlers {
    *  raw numeric offset ∈ [-1,1] (per-voice cadence normalization, R38 Task
    *  6). Omitted ⇢ no speed field on the wire (byte-identical to before). */
   speed?: string | number;
+  /** Tutor speaking rate → `generation_config.speed` (sonic-3). Omitted ⇢ no field. */
+  rate?: number;
   /** Cartesia `language` for this sentence. Omitted ⇢ 'en' (byte-identical
    *  to before); only a bilingual session passes anything else. */
   language?: string;
@@ -240,6 +242,7 @@ export function useCartesiaSonicWS(options: UseCartesiaSonicWSOptions): UseCarte
         // NEXT_PUBLIC_TUTOR_TTS_WS=on.
         ...(opts.speed !== undefined ? { __experimental_controls: { speed: opts.speed } } : {}),
       },
+      ...(opts.rate !== undefined ? { generation_config: { speed: opts.rate } } : {}),
       language: opts.language ?? 'en',
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },
       context_id: opts.contextId,

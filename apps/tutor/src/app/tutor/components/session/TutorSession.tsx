@@ -132,6 +132,8 @@ export interface TutorSessionProps {
   cartesiaVoiceSpeed?: VTRProps['cartesiaVoiceSpeed'];
   /** Bilingual tutor languages (tenant setting). Forwarded to the runtime. */
   tutorLanguages?: VTRProps['tutorLanguages'];
+  /** Tutor speaking rate (tenant claim). Forwarded to the runtime. */
+  speechRate?: VTRProps['speechRate'];
   sessionMaxMinutes: number;
   /** Demo time-box (trial): wrap-phase threshold in minutes. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. */
@@ -292,7 +294,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, speechRate, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -1652,6 +1654,7 @@ export default function TutorSession(props: TutorSessionProps) {
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
+        speechRate={speechRate}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onHomeworkProgress={setHomeworkProgress}
         onLessonPlanLoadSettled={setSettledPlanId}

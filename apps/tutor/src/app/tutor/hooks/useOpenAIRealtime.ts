@@ -357,6 +357,8 @@ export interface RealtimeConfig {
      *  Present ⇒ each sentence is synthesized in the language of its script
      *  (src/lib/tutor/voice/tts-language.ts). */
     tutorLanguages?: string[];
+    /** Tutor speaking rate → Cartesia generation_config.speed. Absent ⇒ unchanged. */
+    speechRate?: number;
     /** Task W4: per-session "Speak slower" toggle, independent of the
      *  explain-pace (paceBias) knob. 'slow' asks the HTTP-TTS provider to
      *  synthesize noticeably slower speech; 'normal' (default, or omitted)
@@ -1067,6 +1069,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // point, so this is always the per-voice speed (no student-slow case
         // to merge here) — same merged value as the HTTP path in spirit.
         speed: cartesiaVoiceSpeedRef.current,
+        rate: speechRateRef.current,
         language: ttsLanguageFor(trimmed, tutorLanguagesRef.current),
         onChunk: (chunk) => {
           if (job.sink) job.sink(chunk);
@@ -1153,6 +1156,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     cartesiaVoiceIdRef.current = relayMode?.cartesiaVoiceId;
   }, [relayMode?.cartesiaVoiceId]);
   // Bilingual session languages — session-static, same ref pattern.
+  const speechRateRef = useRef<number | undefined>(relayMode?.speechRate);
+  useEffect(() => {
+    speechRateRef.current = relayMode?.speechRate;
+  }, [relayMode?.speechRate]);
   const tutorLanguagesRef = useRef<string[] | undefined>(relayMode?.tutorLanguages);
   useEffect(() => {
     tutorLanguagesRef.current = relayMode?.tutorLanguages;
@@ -3219,7 +3226,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   : (useCartesia ? voiceSpeed : undefined);
       const language = useCartesia ? ttsLanguageFor(trimmed, tutorLanguagesRef.current) : undefined;
       const body = useCartesia
-        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(language ? { language } : {}) }
+        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}), ...(language ? { language } : {}) }
         : { text: trimmed, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) };
       // Bounded retry (2026-07-15 incident): a single mid-session transient
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
@@ -3323,6 +3330,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           voiceId: cartesiaVoiceIdRef.current,
           studentName: studentNameRef.current,
           ...(speed !== undefined ? { speed } : {}),
+          ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}),
           ...(ttsLanguageFor(trimmed, tutorLanguagesRef.current) ? { language: ttsLanguageFor(trimmed, tutorLanguagesRef.current) } : {}),
         }),
       });
