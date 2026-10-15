@@ -161,6 +161,16 @@ test('session clause forbids romaji openers and pronunciation judgments, asks fo
   assert.ok(c.includes('only after they have tried'));
   assert.equal(buildBilingualClause(['en']), null, 'English-only tenants unchanged');
 });
+console.log('live-session fixes (GDI advanced session 2026-10-15)');
+test('session clause: spoken items carry their cue, unambiguous instructions, short specific feedback, no math talk', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  assert.ok(c.includes('including any cue in brackets'));
+  assert.ok(c.includes('Judge the answer against what you SAID'));
+  assert.ok(c.includes('another reasonable reading of your instruction'));
+  assert.ok(c.includes('Do not re-explain a rule'));
+  assert.ok(c.includes('rules of thumb'));
+  assert.ok(c.includes('never as equations'));
+});
 test('speech_rate claim: numbers/strings clamped to [0.6,1.5]; absent/1/garbage ⇒ undefined', () => {
   assert.equal(parseSpeechRate(0.85), 0.85);
   assert.equal(parseSpeechRate('0.8'), 0.8);
