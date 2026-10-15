@@ -246,7 +246,7 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
       execFileSync('scp', ['-q', '/tmp/gc-replay-read.js', 'root@85.239.239.134:/tmp/gc-replay-read.js']);
       const out = execFileSync('ssh', ['root@85.239.239.134', 'mongosh "mongodb://127.0.0.1:2710/evelyn?directConnection=true" --quiet /tmp/gc-replay-read.js'], { encoding: 'utf8', timeout: 30000 });
       console.log(out);
-      ok('stored: lesson_start_hook recorded', name !== 'start' || out.includes('lesson_start_hook'));
+      if (name === 'start') ok('stored: lesson_start_hook recorded', out.includes('lesson_start_hook'));
       if (name === 'start' || name === 'midlesson') ok('stored: moment_banner recorded', out.includes('moment_banner'));
       if (name === 'persona') ok('stored: persona_resolved teacher_voice=turbo', out.includes('teacher_voice=turbo'));
       if (name === 'voice') ok('stored: persona_resolved teacher=ms-priya-nair voice=maple', /teacher=ms-priya-nair \(catalogue\) voice=maple/.test(out));
@@ -255,6 +255,6 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
   grandPass += pass; grandFail += fail;
 }
 
-for (const s of which === 'all' ? ['start', 'midlesson'] : [which]) await scenario(s);
+for (const s of which === 'all' ? ['start', 'midlesson', 'persona', 'voice'] : [which]) await scenario(s);
 console.log(`\n${grandPass}/${grandPass + grandFail} passed${notes.length ? `\n--- notes\n${notes.join('\n')}` : ''}`);
 process.exit(grandFail ? 1 : 0);
