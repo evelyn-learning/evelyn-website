@@ -94,7 +94,7 @@ export const LEDGER_OPEN = '[OPEN]';
 /** A question unrelated to the homework and its subject is not answered at
  *  all — the redirect alone. Generic. */
 export const OFF_TOPIC_NOT_ANSWERED =
-  'A question within the subject, or about why the subject matters, is welcome even when it is not one of these problems: give a short helpful answer or guide them, and never call it outside the session. Only a question unrelated to the subject itself is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then return to the work.';
+  'A question within the subject, or about why the subject matters, is welcome even when it is not one of these problems: give a short helpful answer or guide them, and never call it outside the session. Only a question unrelated to the subject itself is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then return to the work. A request unrelated to the subject, such as a joke, a story or a game, is declined the same way, even after the homework is done.';
 
 /** A problem the student adds mid-session is taught like the listed ones. */
 export const EXTRA_PROBLEM_SAME_RULES =

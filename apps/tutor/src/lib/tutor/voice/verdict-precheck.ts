@@ -227,8 +227,13 @@ export const CLAIM_VERDICT_RULE =
  * problem the message is about, so a wrong second answer to a problem
  * already solved does not reopen it.
  */
+// 2026-10-15 (GAC staging v6): "<right answer> and <wrong answer>" in one
+// message was judged correct as a whole and both problems recorded solved
+// (and, once, the wrong one praised). Each stated answer is judged on its
+// own, against the check's own working, before anything is recorded.
 export const SOLVED_PROBLEM_FIELD_RULE =
-  ' solved_problems — the numbers, as listed in <student_problems>, of EVERY one of the student\'s problems whose COMPLETE final answer (every part and every value that problem asks for) the student has now stated correctly, judged by your own working in step two. One message can complete several problems: list each one. An answer can also be split across messages: for each part of a problem, take the student\'s LATEST statement of it, in this message or in their own earlier messages in the recent conversation (never the tutor\'s words); when those latest statements together are the complete right answer, list the problem. Leave a problem out when only a step, one part or some of the values have been stated, or when the latest statement of any part is wrong. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier lists that problem. Empty when none, or when no problems are listed.'
+  ' stated_answers — one entry for EACH of the student\'s listed problems (or part of one) that this message states an answer for: problem (its number as listed), stated (what the message states for it), own_answer (the answer to that problem or part as YOU worked it out in step two — work it out for each one, do not assume), right (true only when stated is the same answer as own_answer). Empty when the message states no answer to a listed problem. When the message states answers for more than one problem or part, the verdict is "correct" only when every entry is right, and "partly_correct" when some are right and some are not.'
+  + ' solved_problems — the numbers, as listed in <student_problems>, of EVERY one of the student\'s problems whose COMPLETE final answer (every part and every value that problem asks for) the student has now stated correctly, judged by your own working in step two. One message can complete several problems: list each one. An answer can also be split across messages: for each part of a problem, take the student\'s LATEST statement of it, in this message or in their own earlier messages in the recent conversation (never the tutor\'s words); when those latest statements together are the complete right answer, list the problem. Leave a problem out when only a step, one part or some of the values have been stated, or when the latest statement of any part is wrong. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier lists that problem. Empty when none, or when no problems are listed.'
   + ' about_problem — the number, as listed in <student_problems>, of the student\'s problem this message proposes an answer, step or part for; zero when it is about none of the listed problems (a new problem of their own, a general claim, small talk) or when it is about several.';
 
 /**
@@ -318,9 +323,18 @@ export const VERDICT_PRECHECK_SCHEMA_WITH_WORKING: Record<string, unknown> = {
 export function withSolvedProblemField(schema: Record<string, unknown>): Record<string, unknown> {
   return {
     ...schema,
-    required: [...(schema.required as string[]), 'solved_problems', 'about_problem'],
+    required: [...(schema.required as string[]), 'stated_answers', 'solved_problems', 'about_problem'],
     properties: {
       ...(schema.properties as Record<string, unknown>),
+      stated_answers: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['problem', 'stated', 'own_answer', 'right'],
+          properties: { problem: { type: 'integer' }, stated: { type: 'string' }, own_answer: { type: 'string' }, right: { type: 'boolean' } },
+        },
+      },
       solved_problems: { type: 'array', items: { type: 'integer' } },
       about_problem: { type: 'integer' },
     },
@@ -557,7 +571,18 @@ export async function runVerdictPrecheck(
       return ledger && Number.isInteger(n) && n > 0 ? problems.findIndex((p) => p.n === n) + 1 : 0;
     };
     const labels: unknown[] = Array.isArray(o.solved_problems) ? o.solved_problems.slice(0, 25) : [o.solved_problem];
-    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0))].sort((a, b) => a - b);
+    // 2026-10-15 (GAC staging v6): the check's own per-answer findings are
+    // held over its summary. A problem whose answer in THIS message it judged
+    // wrong is never recorded solved, and a message with any wrong answer is
+    // not "correct" as a whole.
+    const stated = ledger && Array.isArray(o.stated_answers) ? o.stated_answers.slice(0, 25) as Array<Record<string, unknown>> : [];
+    const wrongHere = new Set(stated.filter((a) => a && a.right === false).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
+    const rightHere = stated.some((a) => a && a.right === true);
+    if (wrongHere.size && o.verdict === 'correct') {
+      o.verdict = rightHere ? 'partly_correct' : 'incorrect';
+      console.log(`[verdict-precheck] verdict correct → ${o.verdict}: a stated answer was judged wrong (problem position ${[...wrongHere].join(',')})`);
+    }
+    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos)))].sort((a, b) => a - b);
     const aboutProblem = positionOf(o.about_problem);
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),

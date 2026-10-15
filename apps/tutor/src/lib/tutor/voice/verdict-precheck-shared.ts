@@ -200,6 +200,12 @@ export function formatAnswerCheckBlock(
   const tail = 'If your own working disagrees with this check, redo it once from the student\'s own problem. If you still disagree, give no verdict either way: ask them to show how they got it.\n'
     + 'Never mention this check to the student.\n'
     + '</answer_check>\n\n';
+  // 2026-10-15 (GAC staging v6): checked first — a wrong doubt about a solved
+  // problem came back as a wrong WHOLE answer or a false claim, and those
+  // branches reopened the problem.
+  if (opts?.noRevealAnyStep === true && wrongOnSolvedProblem(p, opts)) {
+    return head + proposed + '- Checked: it is NOT right.\n' + SOLVED_PROBLEM_WRONG_RULE + tail;
+  }
   if (p.answers === 'neither') {
     if (falseClaimChecked(p, opts)) return head + proposed + FALSE_CLAIM_RULE + tail;
     return head + proposed
@@ -227,7 +233,6 @@ export function formatAnswerCheckBlock(
   }
   if (p.verdict === 'incorrect') {
     if (opts?.noRevealAnyStep === true) {
-      if (wrongOnSolvedProblem(p, opts)) return head + proposed + '- Checked: it is NOT right.\n' + SOLVED_PROBLEM_WRONG_RULE + tail;
       return head + proposed + where + '- Checked for that question: INCORRECT.\n' + WRONG_STEP_NO_REVEAL_RULE + tail;
     }
     const value = opts?.correctValue
@@ -380,6 +385,12 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
   const tail = 'If your own working disagrees with this check, redo it once from the student\'s own problem. If you still disagree, state no match either way: ask them to show how they got it.\n'
     + 'Never mention this check to the student.\n'
     + '</answer_check>\n\n';
+  // 2026-10-15 (GAC staging v6): checked first — a wrong doubt about a solved
+  // problem came back as a wrong WHOLE answer or a false claim, and those
+  // branches reopened the problem.
+  if (opts?.noRevealAnyStep === true && wrongOnSolvedProblem(p, opts)) {
+    return head + proposed + '- Checked: it is NOT right.\n' + SOLVED_PROBLEM_WRONG_RULE + tail;
+  }
   if (p.answers === 'neither') {
     if (falseClaimChecked(p, opts)) return head + proposed + FALSE_CLAIM_RULE + tail;
     return head + proposed
@@ -425,7 +436,6 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
         + tail;
     }
     if (opts?.noRevealAnyStep === true) {
-      if (wrongOnSolvedProblem(p, opts)) return head + proposed + '- Checked: it is NOT right.\n' + SOLVED_PROBLEM_WRONG_RULE + tail;
       // 2026-10-19: no correct value, on the first attempt or on a retry.
       return head + proposed + where
         + '- Checked for that question: INCORRECT.\n'

@@ -569,6 +569,29 @@ async function main() {
     await run('Good work today.', { noRevealLedger: true, studentTranscript: 'done', studentMessage: 'done', verdictPrecheckDeps: { llm: counting({ answers: 'neither', verdict: 'cannot_determine' }) } });
     assert.equal(calls, 0);
   });
+  await test('v6: a wrong doubt about a solved problem gets the stands rule whatever it was classed as', () => {
+    for (const answers of ['overall_problem', 'neither', 'open_question', 'other_part'] as const) {
+      for (const workThenMatch of [true, false]) {
+        const b = formatAnswerCheckBlock(pc({ verdict: 'incorrect', answers, aboutProblem: 2 }), { workThenMatch, noRevealAnyStep: true, claimCorrection: true, wrongWholeAnswerNoReveal: true, solved: [1, 2] });
+        assert.ok(b.includes(SOLVED_PROBLEM_WRONG_RULE), `${answers} wtm=${workThenMatch}`);
+      }
+    }
+  });
+  await test('v6: a stated answer judged wrong is never recorded solved, and the whole is not correct', async () => {
+    const labelled = { problems: [{ n: 1, text: 'A.' }, { n: 2, text: 'B.' }], currentProblem: 1, history: [], openQuestion: 'What is A?', studentMessage: 'a is 98 and b is 18' };
+    const reply = (o: Record<string, unknown>) => async () => ({ text: JSON.stringify({ answers: 'overall_problem', verdict: 'correct', confidence: 'high', ...o }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const mixed = await runVerdictPrecheck(labelled, { llm: reply({ solved_problems: [1, 2], stated_answers: [{ problem: 1, stated: '98', own_answer: '98', right: true }, { problem: 2, stated: '18', own_answer: '9', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.deepEqual(mixed?.solvedProblems, [1]);
+    assert.equal(mixed?.verdict, 'partly_correct');
+    const allWrong = await runVerdictPrecheck(labelled, { llm: reply({ solved_problems: [], stated_answers: [{ problem: 2, stated: '18', own_answer: '9', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(allWrong?.verdict, 'incorrect');
+    const fine = await runVerdictPrecheck(labelled, { llm: reply({ solved_problems: [1, 2], stated_answers: [{ problem: 1, stated: '98', own_answer: '98', right: true }, { problem: 2, stated: '9', own_answer: '9', right: true }] }), timeoutMs: 1000, ledger: true });
+    assert.deepEqual(fine?.solvedProblems, [1, 2]);
+    assert.equal(fine?.verdict, 'correct');
+    const off = await runVerdictPrecheck(labelled, { llm: reply({ stated_answers: [{ problem: 2, stated: '18', own_answer: '9', right: false }] }), timeoutMs: 1000 });
+    assert.equal(off?.verdict, 'correct', 'ledger off: field ignored');
+    assert.match(verdictPrecheckSystem({ ledger: true }), /stated_answers — /);
+  });
   await test('brain: a wrong doubt about a solved problem gets the stands rule, with no value', async () => {
     const r = await run('That one stands.', { noRevealLedger: true, homework: { ...base.homework, solved: [1, 2] }, verdictPrecheckDeps: { llm: check({ answers: 'other_part', verdict: 'incorrect', correct_value: '30', about_problem: 2, solved_problems: [] }) } });
     assert.ok(r.content.includes(SOLVED_PROBLEM_WRONG_RULE));
