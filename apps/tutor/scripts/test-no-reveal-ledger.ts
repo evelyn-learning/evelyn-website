@@ -939,6 +939,14 @@ async function main() {
     // a second check that says incorrect is still a dispute
     const d = await runVerdictPrecheck(labelled, { llm: mk({ ...second, verdict: 'incorrect' }), timeoutMs: 1000, ledger: true });
     assert.equal(d?.verdict, 'cannot_determine'); assert.equal(d?.disputed, true);
+    // a worded answer: the first finding stands on a partly_correct second check; still a dispute on incorrect
+    const bio = { ...labelled, studentMessage: 'maybe it binds in the active site itself and blocks the substrate from getting in?' };
+    const w1 = { ...first, proposed_value: 'binds in the active site and blocks the substrate', problem_final_answer: 'Its shape resembles the substrate, so it binds to the active site and blocks the substrate.', stated_answers: [{ problem: 2, stated: 'binds in the active site and blocks the substrate', own_answer: 'binds to the active site, blocking the substrate', right: true }] };
+    const mkw = (b: object): VerdictPrecheckLlm => { let n = 0; return async () => ({ text: JSON.stringify(n++ === 0 ? w1 : b), model: 'f', inputTokens: 1, outputTokens: 1 }); };
+    const wr = await runVerdictPrecheck(bio, { llm: mkw({ ...w1, verdict: 'partly_correct', proposed_equals_final_answer: false, solved_problems: [] }), timeoutMs: 1000, ledger: true });
+    assert.equal(wr?.verdict, 'correct'); assert.deepEqual(wr?.solvedProblems, [2]);
+    const wd = await runVerdictPrecheck(bio, { llm: mkw({ ...w1, verdict: 'incorrect', proposed_equals_final_answer: false, solved_problems: [] }), timeoutMs: 1000, ledger: true });
+    assert.equal(wd?.disputed, true);
   });
 
   await test('v17: a calculation in the reply that comes to the check\'s deciding number is guarded', async () => {

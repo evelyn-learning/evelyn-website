@@ -681,10 +681,22 @@ export async function runVerdictPrecheck(
           // also asks for both angles — first check correct, second
           // partly_correct. That is a finding about completeness, not a
           // dispute: the part is right, the problem stays open.
-          if (o2 && o2.verdict === 'partly_correct' && !agrees) {
+          // 2026-10-16 (GAC v18, Biology): a WORDED answer (no number in it)
+          // that the first check found complete and the second only partly
+          // complete keeps the first finding — a detail the problem did not
+          // ask for is not missing (LEDGER_FORMS_RULE "A WORDED ANSWER").
+          const proposedNums = (String(o.proposed_value ?? '').match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+          const finalNums = (String(o.problem_final_answer ?? '').match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+          const numericPart = proposedNums.length > 0 && finalNums.length > proposedNums.length
+            && proposedNums.every((v) => finalNums.some((w) => Math.abs(v - w) < 1e-9));
+          const worded = proposedNums.length === 0;
+          if (o2 && o2.verdict === 'partly_correct' && !agrees && numericPart) {
             o.verdict = 'partly_correct';
             partlyByConfirm = true;
-            console.log('[verdict-precheck] confirming check says partly_correct — verdict partly_correct, nothing recorded solved');
+            console.log('[verdict-precheck] confirming check says partly_correct (a value that is part of the answer) — verdict partly_correct, nothing recorded solved');
+          } else if (o2 && o2.verdict === 'partly_correct' && !agrees && worded) {
+            confirmAgreed = true;
+            console.log('[verdict-precheck] confirming check says partly_correct on a worded answer — the first finding stands');
           } else if (o2 && VERDICTS.has(String(o2.verdict)) && !agrees) {
             disputed = true;
             console.log(`[verdict-precheck] confirming check DISAGREES (${String(o2.verdict)}) — no verdict either way`);
