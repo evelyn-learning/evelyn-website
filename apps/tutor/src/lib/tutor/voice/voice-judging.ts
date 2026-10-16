@@ -239,6 +239,12 @@ const TRAILING_PRAISE_RE =
 export function sentenceVerdictStance(sentence: string, studentText?: string): VerdictStance | null {
   const s = (sentence ?? '').replace(/[*_~`]/g, '').trim();
   if (!s) return null;
+  // A sentence that opens by quoting the student's own words back is not a
+  // verdict, even when those words start with "No" (embed-1792182263126: the
+  // learner said "No, I haven't. Have you?" in an English lesson; the reply
+  // "No, Ihaven'thaveyou — No, I haven't. …" was cut as denying a correct
+  // answer, and the retry took 12.6 s).
+  if (opensByQuotingStudent(s, studentText)) return null;
   // The opening word or phrase — read even when the sentence ends in a
   // question ("Not quite — what does the left side come to?").
   if (opensWithDenial(s)) return 'deny';
@@ -254,6 +260,15 @@ export function sentenceVerdictStance(sentence: string, studentText?: string): V
   const affirm = !deny && (INLINE_AFFIRM_RE.test(s) || COMMA_AFFIRM_RE.test(s) || PRAISE_THEN_AGREES_RE.test(s) || PRAISE_FOR_EYE_RE.test(s) || TRAILING_PRAISE_RE.test(s) || SPOKEN_MATCHES_RE.test(s));
   if (deny && /\b(?:actually|after\s+all)\b/i.test(s)) return null; // a reversal inside one sentence: other guards own it
   return deny ? 'deny' : affirm ? 'affirm' : null;
+}
+
+function opensByQuotingStudent(sentence: string, studentText?: string): boolean {
+  // Letters only: STT spaces apostrophes apart ("Ihaven ' thaveyou").
+  const letters = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const st = letters(studentText ?? '');
+  if (st.length < 5) return false;
+  const lead = st.slice(0, 12);
+  return letters(sentence).startsWith(lead);
 }
 
 /** Does a verdict sentence of this stance contradict a deciding check? */

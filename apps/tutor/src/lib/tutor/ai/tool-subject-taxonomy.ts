@@ -87,8 +87,8 @@ const TOOL_SUBJECTS: Record<string, CatalogSubject[]> = {
 /**
  * UI subject (page.tsx `selectedSubject`) → the CatalogSubject set this
  * session may use. `null` ⇒ FAIL OPEN (caller sends the full array).
- * 'science' is the science-union (v1 decision); 'test-prep' /
- * 'languages' / 'arts' / unknown ⇒ fail open.
+ * 'science' is the science-union (v1 decision); 'languages' ⇒ ela;
+ * 'test-prep' / 'arts' / unknown ⇒ fail open.
  */
 export function resolveToolSubjects(
   uiSubject: string | undefined | null,
@@ -115,6 +115,13 @@ export function resolveToolSubjects(
     case 'ela':
     case 'english':
     case 'english-language-arts':
+    // 2026-10-16 (GDI demo): a language lesson — English for Japanese
+    // learners, or any foreign language — uses the reading/writing tools
+    // (passage, table, organizer) and never the lab-science, maths or code
+    // ones. Failing open sent all 86 tools (~37K tokens) on every call.
+    case 'languages':
+    case 'language':
+    case 'esl':
       return ['ela'];
     case 'social':
     case 'ss':

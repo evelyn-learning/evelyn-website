@@ -267,6 +267,11 @@ async function main() {
     assert.equal(sentenceVerdictStance('So that is not quite right.'), 'deny');
     assert.equal(sentenceVerdictStance('That does not match what you said.', 'three'), 'deny');
   });
+  await test('a reply that opens by quoting the student back is not a verdict (embed-1792182263126)', () => {
+    assert.equal(sentenceVerdictStance("No, Ihaven'thaveyou — No, I haven't.", "No , Ihaven ' thaveyou ."), null);
+    assert.equal(sentenceVerdictStance("No, that's not quite right — it's 12.", "No , Ihaven ' thaveyou ."), 'deny');
+    assert.equal(sentenceVerdictStance("No, that's not right.", '12'), 'deny');
+  });
   await test('affirmations and match statements read as AFFIRM — including the 5:12 praise', () => {
     assert.equal(sentenceVerdictStance(OWNER.intercept.reply[0], OWNER.intercept.student), 'affirm');
     assert.equal(sentenceVerdictStance('That is exactly the point you gave.', 'x'), 'affirm');

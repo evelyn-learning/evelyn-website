@@ -161,6 +161,8 @@ const BARGE_IN_TRIGGERS = [
 ];
 
 const QUESTION_TRIGGERS = ['why', 'how', 'what', 'when', 'where', 'who'];
+// STT often drops the「？」: spoken Japanese question endings count too.
+const JA_QUESTION_END_RE = /(?:です|ます|ません|でしょう|ました)か|何|どう|いつ|どこ|だれ|誰/;
 
 const CONTINUATION_LEAD_TOKENS = new Set<string>([
   'and', 'also', 'plus', 'or', 'because', 'but', 'wait', 'oh',
@@ -237,6 +239,7 @@ function ngrams(tokens: string[], n: number): string[] {
 // word per two characters — roughly a Japanese word. Text without CJK
 // script counts exactly as before.
 const CJK_CHAR_RE = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff66-\uff9f]/g;
+const CJK_ANY_RE = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
 
 export function lengthWordCount(tokens: string[]): number {
   let n = 0;
@@ -317,6 +320,13 @@ const CONSONANT_CLASS: Record<string, string> = {
  *  separated by a vowel and both survive; a doubled letter like "Badd"
  *  collapses to one). */
 function phoneticCode(word: string): string {
+  // A token with no Latin letters (Japanese, digits-only aside) has no
+  // consonant skeleton. It used to code to '' — and '' matched every other
+  // such token, so ANY Japanese utterance scored a perfect 1.00 echo of ANY
+  // Japanese tutor line and was dropped (embed-1792182263126: every learner
+  // interruption while Ryota spoke). Such a token now codes to itself, so it
+  // only "sounds like" an identical token.
+  if (CJK_ANY_RE.test(word)) return `=${word}`;
   const w = word.toLowerCase().replace(/[^a-z]/g, '');
   if (!w) return '';
   let skeleton = '';
@@ -335,6 +345,24 @@ function phoneticCode(word: string): string {
   }
   if (!skeleton) skeleton = w[0].toUpperCase(); // all-vowel word fallback
   return `${skeleton}#${vowelCount}`;
+}
+
+/** Share of `transcript`'s adjacent CJK character pairs found in `line`
+ *  (0 when the transcript has fewer than 4 CJK characters). */
+export function cjkPairOverlap(transcript: string, line: string): number {
+  const pairs = (t: string): string[] => {
+    const chars = t.match(CJK_CHAR_RE) ?? [];
+    const out: string[] = [];
+    for (let i = 0; i + 1 < chars.length; i++) out.push(chars[i] + chars[i + 1]);
+    return out;
+  };
+  const tp = pairs(transcript);
+  if (tp.length < 3) return 0;
+  const lp = new Set(pairs(line));
+  if (lp.size === 0) return 0;
+  let hit = 0;
+  for (const p of tp) if (lp.has(p)) hit += 1;
+  return hit / tp.length;
 }
 
 function phoneticTokens(tokens: string[]): string[] {
@@ -585,7 +613,13 @@ function scoreSelfVoiceDetailed(
         ? 1
         : 0;
 
-    const textScore = Math.max(j, ngramHit, containment * 0.9);
+    // Japanese has no word spaces, so the token measures above only catch
+    // an echo that reproduces a whole tutor sentence exactly. Character-pair
+    // overlap catches the partial echo: the share of the transcript's CJK
+    // pairs that occur in this line, needing ≥4 CJK characters and the same
+    // onset anchor as containment.
+    const cjkEcho = anchorOk ? cjkPairOverlap(transcript, s.text) : 0;
+    const textScore = Math.max(j, ngramHit, containment * 0.9, cjkEcho);
     const phonScore = Math.max(jPhon, ngramHitPhon, containmentPhon * 0.9);
     if (textScore > bestText) {
       bestText = textScore;
@@ -1164,7 +1198,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       return { verdict: 'barge_in', reason: 'speaking + barge trigger', selfVoiceScore };
     }
     const hasQuestionShape =
-      text.includes('?') || text.includes('？') ||
+      text.includes('?') || text.includes('？') || JA_QUESTION_END_RE.test(text) ||
       tokens.some((tok) => QUESTION_TRIGGERS.includes(tok));
     if (hasQuestionShape && lengthWords >= 3) {
       return { verdict: 'barge_in', reason: 'speaking + question shape ≥3w', selfVoiceScore };

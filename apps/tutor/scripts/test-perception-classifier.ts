@@ -1514,5 +1514,18 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   check('en: two-word ack while speaking unchanged (filler)', en.verdict === 'filler', `${en.verdict} (${en.reason})`);
 }
 
+// ── Japanese is not an echo of other Japanese (embed-1792182263126) ──
+{
+  const now = 1_000_000;
+  const scripts = [{ text: 'ここでは二つのパターンを見てみます。一つ目は、昨日したことを言う形です。', enqueuedAt: now - 8000, spokenStartedAt: now - 7000, spokenEndedAt: now + 3000 }] as unknown as RecentTtsScript[];
+  const base = { productionState: 'speaking' as ProductionStateForClassifier, recentTtsScripts: scripts, now, speechStartedAt: now - 1500, onsetDuringTutorSpeech: true };
+  const a = classifyHeuristic({ ...base, transcript: 'あの、次に進んでいいですか' });
+  check('ja: learner question during tutor speech is not self-voice', a.verdict === 'barge_in', `${a.verdict} (${a.reason})`);
+  const b = classifyHeuristic({ ...base, transcript: 'すみません、ちょっと待ってください' });
+  check('ja: すみません interruption barges in', b.verdict === 'barge_in', `${b.verdict} (${b.reason})`);
+  const echo = classifyHeuristic({ ...base, transcript: '一つ目は昨日したことを言う形です' });
+  check('ja: partial echo of the tutor line still drops', echo.verdict === 'drop_self_voice', `${echo.verdict} (${echo.reason})`);
+  check('ja: unrelated Japanese scores low', scoreSelfVoice('あの、次に進んでいいですか', scripts, now - 1500, now) < SELF_VOICE_THRESHOLD);
+}
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
