@@ -23,7 +23,7 @@ import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
-import { isMetaNarration, stripLeakedLabels } from '../src/lib/tutor/voice/meta-narration';
+import { isMetaNarration, stripLeakedLabels, stripEchoedTags } from '../src/lib/tutor/voice/meta-narration';
 import { parseThinkingCue, initialThinkingCue, cueTurnAccepted, cueTick, thinkingCueVisible, thinkingCueLabel, CHIME_TO_PULSE_MS, PULSE_EVERY_MS, ACCEPT_GRACE_MS } from '../src/lib/tutor/voice/thinking-cue';
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
@@ -306,6 +306,18 @@ test('persona directives are meta; leaked stage labels are stripped', () => {
   assert.equal(isMetaNarration('お疲れ様でした。'), false);
   assert.equal(stripLeakedLabels('*opener* はい、ちょうど今、三つの質問が出ていますね。'), 'はい、ちょうど今、三つの質問が出ていますね。');
   assert.equal(stripLeakedLabels('*I went* is right.'), '*I went* is right.');
+});
+test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers dropped, echoed tags stripped', () => {
+  for (const s of ["Let's see this together.", "Okay, let's see.", "This matches what's on the board — \"Yes, I have.\" for Pattern 2.", "That's an attempt at this turn's open question — where you went.", "That matches Pattern 2's expected answer for the question."]) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ["Let's see what happens if we add two.", "Okay, let's see the next one together, shall we?", "That's a complete, correct answer to my question.", "3<n and n>10 holds."]) assert.equal(isMetaNarration(s), false, s);
+  assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
+  assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
+  const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
+  assert.ok(src.includes('const text = stripEchoedTags(raw);'));
+});
+test('clause: exercise state kept, grounded corrections, no narrated judging, one goodbye', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  for (const k of ['A question they answered correctly is finished', 'continue from the step they were on', 'check the error is really there', 'name both', 'do not praise them', 'Never narrate your own judging', 'Say goodbye only in the turn that closes the lesson']) assert.ok(c.includes(k), k);
 });
 test('brain: an empty max_tokens turn is re-issued once even with thinking off', () => {
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
