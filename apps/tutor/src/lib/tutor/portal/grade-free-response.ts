@@ -17,6 +17,7 @@
  * scored 0 with empty feedback (11 correct maths answers in the live test).
  */
 
+import { recordGradeUsage } from './grade-usage';
 import type {
   FrqRubric,
   GradeFreeResponseRequest,
@@ -320,6 +321,7 @@ export async function callGraderJson(
     console.warn(`[grader] structured output rejected by ${model} — using prompt-only JSON for ${STRUCTURED_OUTPUT_RETRY_MS / 60_000} min`);
     msg = await create(false);
   }
+  recordGradeUsage(model, (msg as { usage?: unknown }).usage);
   const text = msg.content
     .map((b) => (b.type === 'text' ? b.text ?? '' : ''))
     .join('')
