@@ -682,11 +682,18 @@ export async function runVerdictPrecheck(
       o.confidence = 'high';
       console.log('[verdict-precheck] confidence medium → high: correct, every stated answer right, final-answer test agrees');
     }
+    // The value given is the exact answer rounded: whatever the verdict
+    // word, the reply must not call it a wrong value.
+    const roundedDecimal = ledger && o.verdict !== 'correct' && !wrongHere.size
+      && (roundedHere.size > 0 || stated.some((a) => a && rounded(a))
+        || roundsExactAnswer(String(o.proposed_value ?? ''), String(o.correct_value || o.problem_final_answer || '')));
+    if (roundedDecimal) console.log('[verdict-precheck] rounded decimal of the exact answer — reply must not call it wrong');
     const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
       ...(aboutProblem ? { aboutProblem } : {}),
       ...(wrongHere.size ? { wrongProblems: [...wrongHere].sort((a, b) => a - b) } : {}),
+      ...(roundedDecimal ? { roundedDecimal: true as const } : {}),
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),

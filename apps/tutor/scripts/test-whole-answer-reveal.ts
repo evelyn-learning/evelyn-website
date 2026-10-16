@@ -16,6 +16,10 @@ import {
   wholeAnswerRevealGuardActive,
   WHOLE_ANSWER_FALLBACK_QUESTION,
   WHOLE_ANSWER_FALLBACK_STATEMENT,
+  PARTLY_FALLBACK_STATEMENT,
+  ROUNDED_FALLBACK_STATEMENT,
+  PARTLY_FALLBACK_QUESTION,
+  ROUNDED_FALLBACK_QUESTION,
   WHOLE_ANSWER_REVEAL_ACTION,
   type WithheldAnswer,
 } from '../src/lib/tutor/voice/whole-answer-reveal';
@@ -152,6 +156,11 @@ test('fallback tail: fixed, generic, and read as a non-match', () => {
   assert.deepEqual(wholeAnswerFallbackTail(['Your answer is not what the problem gives.', 'Which way does it point?']), []);
   assert.deepEqual(wholeAnswerFallbackTail(['Weight acts straight down.']), [WHOLE_ANSWER_FALLBACK_STATEMENT, WHOLE_ANSWER_FALLBACK_QUESTION]);
   for (const s of [WHOLE_ANSWER_FALLBACK_STATEMENT, WHOLE_ANSWER_FALLBACK_QUESTION]) assert.doesNotMatch(s, /\d|\$/);
+  // 2026-10-16 (GAC v12): a partly-correct or rounded-decimal check never gets "not what the problem gives".
+  assert.deepEqual(wholeAnswerFallbackTail([], { partly: true, rounded: true }), [ROUNDED_FALLBACK_STATEMENT, ROUNDED_FALLBACK_QUESTION]);
+  assert.deepEqual(wholeAnswerFallbackTail([], { partly: true }), [PARTLY_FALLBACK_STATEMENT, PARTLY_FALLBACK_QUESTION]);
+  assert.deepEqual(wholeAnswerFallbackTail([], { partly: false, rounded: false }), [WHOLE_ANSWER_FALLBACK_STATEMENT, WHOLE_ANSWER_FALLBACK_QUESTION]);
+  for (const s of [PARTLY_FALLBACK_STATEMENT, ROUNDED_FALLBACK_STATEMENT, PARTLY_FALLBACK_QUESTION, ROUNDED_FALLBACK_QUESTION]) { assert.doesNotMatch(s, /\d|\$/); assert.doesNotMatch(s, /not what the problem gives/); }
   assert.equal(readMatchStatement(`${WHOLE_ANSWER_FALLBACK_STATEMENT} ${WHOLE_ANSWER_FALLBACK_QUESTION}`, '98 N'), 'differs');
   assert.equal(resolveMatchCredit({ precheck: pc({}), match: 'none' }).credit, 'incorrect', 'counted either way');
 });
@@ -304,6 +313,24 @@ async function generatorTests() {
     }
   });
 }
+
+// 2026-10-16 (GAC v12, AP Calculus AB): an expression result said by value.
+test('ledger: an expression result is withheld however it is written or said; the student\'s own and the problem\'s are not', () => {
+  const problem = '(c) Evaluate the integral from 0 to 2 of x e^(x^2) dx.';
+  const a = { value: '(e^4 - 1)/2 ≈ 26.80', studentText: 'c: e^4 - 1', givenText: problem, newNumbers: true, problemText: problem, studentPriorText: '' };
+  for (const s of [
+    'With u = x squared, du = 2x dx, so the integral becomes one half times e^u — giving one half times e^4 minus 1 as the antiderivative evaluated.',
+    'So the answer is (e^4 - 1)/2.', 'That gives e^4/2 - 1/2.', 'That is one half of e to the fourth minus one.', 'The result is $\\frac{e^{4}-1}{2}$.',
+  ]) assert.equal(revealsWithheldAnswer(s, a).hit, true, s);
+  for (const s of ['You wrote e^4 - 1, which is not what the problem gives.', 'Where did the factor from du go when you substituted?', 'What is the integral from 0 to 2 of x e^(x^2) dx after substituting?'])
+    assert.equal(revealsWithheldAnswer(s, a).hit, false, s);
+  const alg = { value: 'x + 2 (x ≠ 2)', studentText: 'c is x-2', givenText: '(c) Simplify (x^2 - 4)/(x - 2).', newNumbers: true, problemText: '(c) Simplify (x^2 - 4)/(x - 2).', studentPriorText: '' };
+  assert.equal(revealsWithheldAnswer('It simplifies to x + 2.', alg).hit, true);
+  assert.equal(revealsWithheldAnswer('So what does (x^2 - 4)/(x - 2) simplify to?', alg).hit, false);
+  assert.equal(revealsWithheldAnswer('You wrote x - 2; check the sign.', alg).hit, false);
+  // Outside the ledger (no newNumbers) the expression path does not run.
+  assert.equal(revealsWithheldAnswer('That gives e^4/2 - 1/2.', { ...a, newNumbers: false } as never).hit, false);
+});
 
 generatorTests().then(() => {
   console.log(`\n${passed} passed, ${failed} failed`);

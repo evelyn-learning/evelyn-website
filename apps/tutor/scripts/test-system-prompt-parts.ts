@@ -38,6 +38,18 @@ for (const [name, ctx] of Object.entries(PROMPT_MATRIX)) {
 }
 checks.push(['core is identical across the whole matrix', cores.size === 1]);
 
+// 2026-10-16 (GAC v12): a typed session follows the student's language; a
+// bilingual tenant (tutorLanguages) keeps its own language section instead,
+// and a voice session keeps Rule 5.
+{
+  const LANG = 'replaces Rule 5 for this typed session';
+  const text = builder.buildSystemPrompt(PROMPT_MATRIX.text_mode);
+  checks.push(['text: the follow-the-student language rule is present', text.includes(LANG)]);
+  checks.push(['text + bilingual tenant: the rule is left out', !builder.buildSystemPrompt({ ...PROMPT_MATRIX.text_mode, tutorLanguages: ['en', 'ja'] }).includes(LANG)]);
+  checks.push(['text + English-only tenant list: the rule stays', builder.buildSystemPrompt({ ...PROMPT_MATRIX.text_mode, tutorLanguages: ['en'] }).includes(LANG)]);
+  checks.push(['voice: no language override', !builder.buildSystemPrompt(PROMPT_MATRIX.math_g8).includes(LANG)]);
+}
+
 // Tripwire: the shared cache entry assumes the browser never sees the
 // server-only prompt flags. Exposing one (next.config `env`, or a
 // NEXT_PUBLIC_ rename) makes `core` vary by subject and silently splits the

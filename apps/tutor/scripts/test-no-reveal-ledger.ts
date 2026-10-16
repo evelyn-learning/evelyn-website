@@ -182,6 +182,16 @@ async function main() {
     assert.match(none, /1\. \[OPEN\] First\.\n2\. \[OPEN\] Second\./);
   });
 
+  console.log('answer check — a rounded decimal of the exact answer (GAC v12)');
+  await test('roundedDecimal: the right value is said, the exact form asked for, never "not what the problem gives"', () => {
+    const p = pc({ verdict: 'partly_correct', answers: 'open_question', roundedDecimal: true } as never);
+    const b = formatAnswerCheckBlock(p, { correctValue: 'Q-VALUE', workThenMatch: true, noRevealAnyStep: true });
+    assert.match(b, /RIGHT VALUE as a rounded decimal/);
+    assert.doesNotMatch(b, /Q-VALUE|PARTLY correct/);
+    assert.equal(sanitizePublicPrecheck({ ...p, roundedDecimal: true })?.roundedDecimal, true);
+    assert.equal(sanitizePublicPrecheck({ ...p, roundedDecimal: 'yes' })?.roundedDecimal, undefined);
+  });
+
   console.log('answer check — wrong answer at any step');
   const wrongStep = pc({});
   const oldBlock = formatAnswerCheckBlock(wrongStep, { correctValue: 'Q-VALUE', workThenMatch: true });
@@ -558,9 +568,19 @@ async function main() {
   await test('brain: two problems solved by this message are [SOLVED] in this reply\'s ledger and both in the frame', async () => {
     const hw = { problems: [{ n: 1, text: 'Find the mean.' }, { n: 2, text: 'Find the range.' }, { n: 3, text: 'Find the median.' }], current: 1, solved: [] as number[] };
     const r = await run('Both right.', { noRevealLedger: true, homework: hw, studentTranscript: 'mean is 5 and range is 6', studentMessage: 'mean is 5 and range is 6', verdictPrecheckDeps: { llm: check({ verdict: 'correct', answers: 'overall_problem', correct_value: '5', proposed_value: 'mean is 5 and range is 6', solved_problems: [1, 2], about_problem: 0 }) } });
-    assert.match(r.content, /<problem_ledger>[\s\S]*Problem 1 \[SOLVED\], Problem 2 \[SOLVED\], Problem 3 \[OPEN\]/);
+    assert.match(r.content, /<problem_ledger>[\s\S]*Problem 1 \[SOLVED\] \(just now\), Problem 2 \[SOLVED\] \(just now\), Problem 3 \[OPEN\][\s\S]*NOT solved before it/);
     const pre = r.events.find((e) => e.type === 'verdict-precheck') as { result: PublicVerdictPrecheck };
     assert.deepEqual(pre.result.solvedProblems, [1, 2]);
+  });
+  await test('brain: a retry of the turn reads the ledger as it stood before the message (GAC v12)', async () => {
+    // The browser has already recorded problem 3 from this message's frame.
+    const hw = { problems: [{ n: 1, text: 'A.' }, { n: 2, text: 'B.' }, { n: 3, text: 'C.' }], current: 2, solved: [1, 3] as number[] };
+    const carry = { answers: 'other_part', target: 'C', proposed: 'c is 7', verdict: 'correct', confidence: 'high', solvedProblem: 3, solvedProblems: [3] } as PublicVerdictPrecheck;
+    const r = await run('Right.', { noRevealLedger: true, homework: hw, studentTranscript: '[correction note — not from the student] An automated review flagged a statement.', studentMessage: undefined, verdictPrecheckCarry: carry } as never);
+    assert.match(r.content, /<problem_ledger>[\s\S]*Problem 1 \[SOLVED\], Problem 2 \[OPEN\], Problem 3 \[SOLVED\] \(just now\)/);
+    const all = { ...hw, solved: [1, 2, 3] };
+    const r2 = await run('Right.', { noRevealLedger: true, homework: all, studentTranscript: '[correction note — not from the student] An automated review flagged a statement.', studentMessage: undefined, verdictPrecheckCarry: carry } as never);
+    assert.ok(!r2.content.includes(ALL_SOLVED_CORRECT_RULE.slice(0, 60)), 'a retry is not a repeat of a solved problem');
   });
   await test('brain: gate off, the same check renders no ledger', async () => {
     const hw = { problems: [{ n: 1, text: 'Find the mean.' }, { n: 2, text: 'Find the range.' }], current: 1, solved: [] as number[] };

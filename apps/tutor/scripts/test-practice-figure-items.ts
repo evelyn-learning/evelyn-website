@@ -181,9 +181,9 @@ const TEXT_IDS = [T1.id, T2.id, 'phys-kinematics::try-1'];
 async function main(): Promise<void> {
   console.log('\nContract pin:\n');
 
-  await test('the repo pins @evelyn/portal-contract v1.21.0 and the installed schema has `accepts` and `figure`', () => {
+  await test('the repo pins @evelyn/portal-contract v1.22.0 (v1.21.0 added figures) and the installed schema has `accepts` and `figure`', () => {
     const rootPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../package.json'), 'utf8'));
-    assert.equal(rootPkg.dependencies['@evelyn/portal-contract'], 'github:evelyn-learning/portal-contract#v1.21.0');
+    assert.equal(rootPkg.dependencies['@evelyn/portal-contract'], 'github:evelyn-learning/portal-contract#v1.22.0');
     assert.deepEqual(RetrievePracticeRequestSchema.parse(req(FIG)).accepts, ['figure']);
     assert.equal(RetrievePracticeRequestSchema.safeParse({ ...req(), accepts: ['video'] }).success, false);
     PracticeFigureSchema.parse(FIGURE);

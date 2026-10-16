@@ -69,6 +69,10 @@ export interface PublicVerdictPrecheck {
    *  message stated an answer for that the check judged WRONG (its
    *  `stated_answers`). A problem number reveals nothing. Ledger only. */
   wrongProblems?: number[];
+  /** 2026-10-16 (GAC v12, Precalc): the stated value is a decimal rounding of
+   *  the exact answer — the right value, not yet in the form asked for. The
+   *  flag reveals nothing (the student wrote the decimal). Ledger only. */
+  roundedDecimal?: true;
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -108,6 +112,7 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     ...solvedProblemsField(o.solvedProblems),
     ...aboutProblemField(o.aboutProblem),
     ...wrongProblemsField(o.wrongProblems),
+    ...(o.roundedDecimal === true ? { roundedDecimal: true as const } : {}),
   };
 }
 
@@ -141,7 +146,7 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -424,7 +429,7 @@ export const WRONG_WHOLE_ANSWER_POINT_THERE =
 // `anyTarget`). Partner-gated: no-reveal-ledger-gate.ts.
 
 export const WRONG_STEP_NO_REVEAL_RULE =
-  'What to do: work it out silently and state no result of your own. FIRST sentence: say plainly, as a fact about THEIR answer, that it is not right — no praise word first. You may confirm a step of THEIR working that is right, in their own words and values. Then name the step or idea where their working goes wrong — what that step does, by name — without its result. End with ONE question that has them redo that step themselves. Never state the correct result of that step, of any step after it, or of the question — not in the reply and not on the board, and in no form: not the value, not a corrected line of working that contains it, not an expression evaluated to it. The result stays theirs to find. When the answer is a word rather than a number (a term, a name, a structure, a category or a choice), naming the right one IS the result: do not name it, not even as a contrast with what they wrote. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
+  'What to do: work it out silently and state no result of your own. FIRST sentence: say plainly, as a fact about THEIR answer, that it is not right — no praise word first. You may confirm a step of THEIR working that is right, in their own words and values. Then name the step or idea where their working goes wrong — what that step does, by name — without its result. End with ONE question that has them redo that step themselves. Never state the correct result of that step, of any step after it, or of the question — not in the reply and not on the board, and in no form: not the value, not a corrected line of working that contains it, not an expression evaluated to it. The result stays theirs to find. When the answer is a word rather than a number (a term, a name, a structure, a category or a choice), naming the right one IS the result: do not name it, not even as a contrast with what they wrote. The same holds for a decision or conclusion (reject or not, converges or not, spontaneous or not, true or false): do not state which way it goes, and never assert one — ask what their own result says about it. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
 
 // ── 2026-10-19: a stated FALSE claim is corrected, not passed over ─────────
 //
@@ -524,6 +529,12 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
         : 'What to do: your working must reach the checked value and your match statement must agree with the check — work as far as the step where their working and yours part, state that step\'s result, and say that it is not what they wrote and which step the difference is in. The steps after that one stay with the student.\n')
       + tail;
   }
+  if (opts?.noRevealAnyStep === true && p.roundedDecimal === true && !partlyWrongOnSolvedProblem(p, opts)) {
+    return head + proposed + where
+      + '- Checked for that question: the RIGHT VALUE as a rounded decimal; the problem asks for an exact form.\n'
+      + ROUNDED_DECIMAL_RULE
+      + tail;
+  }
   if (opts?.noRevealAnyStep === true) {
     return head + proposed + where
       + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
@@ -535,6 +546,12 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
     + 'What to do: your working must reach the checked value and your match statement must agree with the check — state as facts which part your working confirms, and that the question asks for more or that a part differs. Ask for what is missing; do not supply it.\n'
     + tail;
 }
+
+/** 2026-10-16 (GAC v12, Precalc): "0.2588" for an exact cos 75° was answered
+ *  "0.2588 is the value of sin 15°, not cos 75°" — the two are equal, so the
+ *  student was told a right value was wrong. */
+export const ROUNDED_DECIMAL_RULE =
+  'What to do: work it out silently. Say plainly that their decimal is the right value — never that it is wrong, belongs to something else, or "is not what the problem gives". Then say the problem asks for the exact value, and ask ONE question that has them find it (for instance which identity, angles or form to use). Do not write the exact form, or any expression that evaluates to it, in the reply or on the board.\n';
 
 /** 2026-10-15 (staging, Algebra II): a half-right answer; the reply wrote out
  *  the setup of the missing half before asking for it. */

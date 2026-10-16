@@ -33,6 +33,7 @@
 import { TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 import { canonicalizeMathExpression } from '@/lib/tutor/voice/utterance-answer-match';
+import { expressionRevealHit, isExpressionValue } from '@/lib/tutor/voice/expression-reveal';
 import { precheckDecides, precheckInforms, wrongWholeAnswerChecked, WRONG_WHOLE_ANSWER_REEMIT, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 
 /** What the server knows for a turn under the rule. */
@@ -311,6 +312,30 @@ function newResultNumber(text: string, a: WithheldAnswer, board: boolean): strin
   return null;
 }
 
+// ── an expression said by value (./expression-reveal.ts) ───────────────────
+
+/** Every side of the check's value that is an expression: alternatives split
+ *  on ";" and "or", a trailing " (aside)" dropped, each side of "=" / "≈". */
+function expressionParts(value: string): string[] {
+  return String(value ?? '').split(/\s*(?:;|\bor\b)\s*/i)
+    .map((alt) => alt.replace(/\s+\([^()]*\)\s*$/, ''))
+    .flatMap((alt) => alt.split(/[=≈]/))
+    .map((side) => side.trim())
+    .filter((side) => side && isExpressionValue(side));
+}
+
+/** 2026-10-16 (GAC v12): the result as an expression, by its value — "one
+ *  half times e^4 minus 1" for (e^4 - 1)/2. What the student or the problem
+ *  wrote is never a hit. New-number mode (the ledger) only. */
+function expressionHit(text: string, a: WithheldAnswer): string | null {
+  const own = [a.studentText, a.studentPriorText ?? '', a.problemText ?? '', a.givenText].join('\n');
+  for (const part of expressionParts(a.value)) {
+    const hit = expressionRevealHit(text, part, own);
+    if (hit !== null) return hit;
+  }
+  return null;
+}
+
 // ── the decision ───────────────────────────────────────────────────────────
 
 export interface RevealRead {
@@ -331,6 +356,8 @@ function read(text: string, a: WithheldAnswer | null | undefined, board: boolean
     const t = textHit(text, a);
     if (t !== null) return { hit: true, how: 'text', matched: t };
     if (a.newNumbers === true) {
+      const e = expressionHit(text, a);
+      if (e !== null) return { hit: true, how: 'text', matched: e };
       const m = newResultNumber(text, a, board);
       if (m !== null) return { hit: true, how: 'number', matched: m };
     }
@@ -386,6 +413,10 @@ export function wholeAnswerRevealFeedback(studentText: string): string {
 
 /** The fixed tail: it reveals nothing and is the same for every subject. */
 export const WHOLE_ANSWER_FALLBACK_STATEMENT = 'That answer is not what the problem gives.';
+export const PARTLY_FALLBACK_STATEMENT = 'Part of that is right, but it is not the whole answer yet.';
+export const ROUNDED_FALLBACK_STATEMENT = 'That decimal is the right value, but the problem asks for the exact form.';
+export const PARTLY_FALLBACK_QUESTION = 'What do you think is still missing?';
+export const ROUNDED_FALLBACK_QUESTION = 'How could you write that value exactly?';
 export const WHOLE_ANSWER_FALLBACK_QUESTION = 'Which part of your reasoning would you check again first?';
 
 const STATES_NON_MATCH_RE = /\b(?:is\s+not|isn['’]?t|does\s+not|doesn['’]?t|not)\s+(?:what|match|give)\b/i;
@@ -395,10 +426,14 @@ const STATES_NON_MATCH_RE = /\b(?:is\s+not|isn['’]?t|does\s+not|doesn['’]?t|
  * statement unless a forwarded sentence already made one, and the question
  * unless a forwarded sentence already asked one.
  */
-export function wholeAnswerFallbackTail(forwarded: ReadonlyArray<string>): string[] {
+export function wholeAnswerFallbackTail(forwarded: ReadonlyArray<string>, verdict?: { partly?: boolean; rounded?: boolean }): string[] {
   const tail: string[] = [];
-  if (!forwarded.some((s) => !/\?\s*$/.test(s.trim()) && STATES_NON_MATCH_RE.test(s))) tail.push(WHOLE_ANSWER_FALLBACK_STATEMENT);
-  if (!forwarded.some((s) => /\?\s*["'”)*_]*\s*$/.test(s.trim()))) tail.push(WHOLE_ANSWER_FALLBACK_QUESTION);
+  // 2026-10-16 (GAC v12): after a PARTLY-correct check (a rounded decimal of
+  // an exact answer, one of two roots) "not what the problem gives" told the
+  // student a right value was wrong.
+  const statement = verdict?.rounded ? ROUNDED_FALLBACK_STATEMENT : verdict?.partly ? PARTLY_FALLBACK_STATEMENT : WHOLE_ANSWER_FALLBACK_STATEMENT;
+  if (!forwarded.some((s) => !/\?\s*$/.test(s.trim()) && (STATES_NON_MATCH_RE.test(s) || (statement !== WHOLE_ANSWER_FALLBACK_STATEMENT && s === statement)))) tail.push(statement);
+  if (!forwarded.some((s) => /\?\s*["'”)*_]*\s*$/.test(s.trim()))) tail.push(verdict?.rounded ? ROUNDED_FALLBACK_QUESTION : verdict?.partly ? PARTLY_FALLBACK_QUESTION : WHOLE_ANSWER_FALLBACK_QUESTION);
   return tail;
 }
 

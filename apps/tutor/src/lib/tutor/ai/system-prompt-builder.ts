@@ -200,6 +200,11 @@ export interface SystemPromptContext {
 
   /** Text-only session (partner claim). The student types and reads. */
   inputMode?: 'voice' | 'text';
+  /** Tutor languages of a bilingual session (tenant setting, e.g. ['en','ja']).
+   *  Absent ⇒ English-only and the prompt is byte-identical. Rendered in the
+   *  SESSION block, never the shared core, so the cross-session cache entry
+   *  is the same for every tenant. */
+  tutorLanguages?: string[];
   /** Host-supplied lesson context (in-flow embeds, partner spec v1.1). Rendered in the
    *  SESSION block; absent ⇒ nothing appended. */
   lessonContext?: LessonContext;
@@ -2092,7 +2097,15 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
   const textModeClause = context.inputMode === 'text'
     ? '\n<text_mode>\nThis student is TYPING and READING, not speaking. Write, do not narrate: no "say", "hear", "listen" phrasing. ' +
       'Keep every turn short (one idea, then a question). Keep math in the same $…$ delimiters so the board and the chat render identically. ' +
-      'Never ask the student to speak or to use a microphone.\n</text_mode>\n'
+      'Never ask the student to speak or to use a microphone.\n' +
+      // 2026-10-16 (GAC v12, Praveen): Rule 5 exists because speech
+      // recognition mishears; typed text is what the student meant. A student
+      // writing in Chinese was told the session was English only.
+      // A bilingual tenant (tutorLanguages, the gdi-bilingual branch) has its
+      // own language section, which wins: this rule is left out there.
+      ((context.tutorLanguages ?? []).some((l) => l !== 'en') ? '' :
+      'Language (this replaces Rule 5 for this typed session): reply in the language of the student\'s latest full message. When they write a whole message in another language, answer in it from then on; when they switch back, switch back. A single foreign word, a name, or a problem pasted in another language does not change it. Keep math, symbols, units and problem labels exactly as written. In a language other than English, give each key subject term once with its English term in brackets, so the vocabulary of their class and tests stays familiar. Everything else — the rules about answers, checking and conduct — is the same in every language.\n') +
+      '</text_mode>\n'
     : '';
 
   return { core, session: (prompt + textModeClause).slice(core.length) };

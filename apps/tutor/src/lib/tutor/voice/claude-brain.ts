@@ -2242,7 +2242,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // browser echoes; voice: when the parallel check lands — sentences already
   // forwarded by then are not covered). Every sentence and tool call below
   // goes out through `guardedSentence` / the tool-call check.
-  const reveal: { withheld: WithheldAnswer | null; muted: boolean; forwarded: string[]; confirmed: string | null } = { withheld: null, muted: false, forwarded: [], confirmed: null };
+  const reveal: { withheld: WithheldAnswer | null; muted: boolean; forwarded: string[]; confirmed: string | null; verdict?: { partly?: boolean; rounded?: boolean } } = { withheld: null, muted: false, forwarded: [], confirmed: null };
   // 2026-10-15 (./whole-answer-reveal.ts `deniesCheckedAnswer`): under the
   // ledger, a HIGH-confidence CORRECT check of the whole problem or the open
   // question — a sentence that denies the student's own value is withheld.
@@ -2255,6 +2255,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   };
   const armRevealGuard = (pub: PublicVerdictPrecheck | null | undefined, value: string | undefined, studentText: string): string => {
     if (!workThenMatch || !wholeAnswerRevealGuardActive(pub, value, noRevealLedger ? { anyTarget: true } : undefined)) return '';
+    if (noRevealLedger) reveal.verdict = { partly: pub?.verdict === 'partly_correct', rounded: pub?.roundedDecimal === true };
     reveal.withheld = {
       value: String(value),
       studentText,
@@ -2277,7 +2278,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     reveal.muted = true;
     console.warn(`[whole-answer-reveal] ${where} withheld (${how}; matched "${String(matched ?? '').slice(0, 40)}") — fixed tail follows`);
     yield { type: 'answer-reveal', where: where, how: how ?? 'text' };
-    for (const text of wholeAnswerFallbackTail(reveal.forwarded)) {
+    for (const text of wholeAnswerFallbackTail(reveal.forwarded, reveal.verdict)) {
       reveal.forwarded.push(text);
       yield { type: 'sentence', text };
     }
@@ -2394,7 +2395,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             const before = input.homework.solved ?? [];
             const now = solvedPositionsFromCheck(pub, input.homework.problems.length).filter((pos) => !before.includes(pos));
             if (now.length) {
-              problemLedgerBlock = formatProblemLedgerBlock(input.homework.problems, [...before, ...now].sort((a, b) => a - b));
+              problemLedgerBlock = formatProblemLedgerBlock(input.homework.problems, before, now);
               console.log(`[homework-ledger] solved this turn: ${now.join(',')}`);
             }
           }
@@ -2406,7 +2407,22 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         console.log(`[verdict-precheck] ${ms} ms · no result (not injected)`);
       }
     } else if (!turnShape && input.verdictPrecheckCarry) {
-      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, { ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts });
+      // 2026-10-16 (GAC v12): on a retry the browser has already recorded what
+      // THIS message solved; read against that list the check looked like a
+      // repeat of a solved problem ("already locked in from before"). The
+      // retry is judged against the list as it stood before the message.
+      let carryOpts: Parameters<typeof formatAnswerCheckBlock>[1] = checkBlockOpts;
+      if (noRevealLedger && input.homework?.problems.length) {
+        const total = input.homework.problems.length;
+        const just = solvedPositionsFromCheck(input.verdictPrecheckCarry, total);
+        if (just.length) {
+          const before = (input.homework.solved ?? []).filter((pos) => !just.includes(pos));
+          const { allSolved: _wasAll, ...rest } = checkBlockOpts as typeof checkBlockOpts & { allSolved?: boolean };
+          carryOpts = { ...rest, solved: before, ...(before.length === total ? { allSolved: true } : {}) };
+          problemLedgerBlock = formatProblemLedgerBlock(input.homework.problems, before, just);
+        }
+      }
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, { ...(workThenMatch ? { workThenMatch: true } : {}), ...carryOpts });
       const carried = openWithheldAnswer(input.verdictPrecheckSeal);
       if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       armDenialGuard(input.verdictPrecheckCarry);
