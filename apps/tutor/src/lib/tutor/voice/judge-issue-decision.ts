@@ -393,6 +393,12 @@ export function decideJudgeIssue(input: {
   issue: { claim: string; studentAnswerVerdict?: unknown; issueKind?: unknown; why?: unknown };
   severity: 'kill' | 'advisory';
   falsePraiseRound?: boolean;
+  /** A language lesson (subject 'languages'). There, praise for a wrong
+   *  sentence is always worth a note: GDI starter 2026-10-16
+   *  (embed-1792125283926) — "Yes, that's right" to "My friend to with my
+   *  friend" was flagged false_praise and then dropped as not-noteworthy,
+   *  because the plant rule only knew kill severity or a maths expression. */
+  languageLesson?: boolean;
   /** Unset ⇒ TUTOR_JUDGE_UNSURE_NO_NOTE; false ⇒ the table as it stood on
    *  2026-10-05 (an unsure judge still planted the neutral / false-praise note). */
   unsureNoNote?: boolean;
@@ -482,7 +488,7 @@ export function decideJudgeIssue(input: {
     if (kind === 'false_praise') {
       // "The praise was false" and "the student was correct" cannot both hold.
       if (verdict === 'correct') return none('judge-self-contradiction');
-      const plantPraise = severity === 'kill' || hasMathExpression(claim);
+      const plantPraise = severity === 'kill' || hasMathExpression(claim) || input.languageLesson === true;
       if (plantPraise) return { plantNote: true, noteMode: 'false_praise', withholdCredit: false, reason: 'false-praise', fields };
       return none('not-noteworthy');
     }

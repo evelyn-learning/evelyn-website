@@ -71,6 +71,7 @@ const scrubTutorText = (raw: string): string => {
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggles-block';
+import { stripEchoedTags } from './meta-narration';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -2245,8 +2246,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       yield { type: 'sentence', text };
     }
   }
-  function* guardedSentence(text: string): Generator<BrainStreamEvent> {
+  function* guardedSentence(raw: string): Generator<BrainStreamEvent> {
     if (reveal.muted) return;
+    const text = stripEchoedTags(raw);
+    if (!text) return;
     const hit = revealsWithheldAnswer(text, reveal.withheld);
     if (hit.hit) { yield* revealStop('sentence', hit.how, hit.matched); return; }
     reveal.forwarded.push(text);

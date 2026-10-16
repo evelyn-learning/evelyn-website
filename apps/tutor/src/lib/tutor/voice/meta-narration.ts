@@ -89,6 +89,29 @@ const TURN_CLASSIFYING_RE =
 const PERSONA_DIRECTIVE_RE =
   /^\s*[A-Z][\w-]*'s (?:rule|rules|style|persona|voice|catchphrase|guidelines?)\b|\bcatchphrase max\b|\bno re-greeting\b|\bbeyond acknowledg(?:e)?ment\b|\bsecond full farewell\b/i;
 
+// GDI starter session 2026-10-16 (embed-1792125283926): the verdict layer's
+// reasoning spoken in English to a beginner — "This matches what's on the
+// board — …", "That's an attempt at this turn's open question — …", "That
+// matches Pattern 2's expected answer …" — and bare English fillers as a
+// whole sentence ("Let's see this together.", "Okay, let's see."). The
+// filler is caught only when it IS the whole sentence; "Let's see what
+// happens if…" is teaching and survives.
+const VERDICT_NARRATION_RE =
+  /\bthis turn['’]?s\b|^\s*(?:this|that) matches (?:what['’]?s on the board|the (?:expected|target)\b)|\bexpected answer\b|^\s*that['’]?s an attempt at\b/i;
+const BARE_FILLER_RE = /^\s*(?:ok(?:ay)?,?\s+)?let['’]?s see(?: this together)?[.!]?\s*$/i;
+
+/** A tag block the model echoed from its input ("<students_said> Hi, today
+ *  </students_said> …", same session): the block and any stray tag go, the
+ *  rest of the sentence stays. Only snake_case / lowercase tag names, so
+ *  inequalities and maths survive. */
+export function stripEchoedTags(sentence: string): string {
+  return (sentence ?? '')
+    .replace(/<([a-z][a-z_]*_[a-z_]*|[a-z]+_said)>[\s\S]*?<\/\1>/g, ' ')
+    .replace(/<\/?[a-z][a-z_]*_[a-z_]*>/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 /** Bare stage labels the model sometimes writes in front of a real sentence
  *  ("*opener* はい、…" — same session). Stripped, the sentence itself kept. */
 export function stripLeakedLabels(sentence: string): string {
@@ -338,7 +361,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || VERDICT_NARRATION_RE.test(s) || BARE_FILLER_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

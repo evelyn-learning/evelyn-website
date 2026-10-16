@@ -17713,7 +17713,7 @@ export function VoiceTutorRealtime({
                   // claim-text rule below, unchanged.
                   const advisoryDecisions = advisoryIssues.map((i) => ({
                     claim: i.claim,
-                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory', turn: judgeTurnContext }),
+                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'advisory', turn: judgeTurnContext, languageLesson: subject === 'languages' }),
                   }));
                   for (const d of advisoryDecisions) {
                     if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {
@@ -17800,7 +17800,7 @@ export function VoiceTutorRealtime({
                   // fields this is the claim-text rule, unchanged.
                   const killDecisions = killIssues.map((i) => ({
                     claim: i.claim,
-                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill', turn: judgeTurnContext }),
+                    decision: decideJudgeIssue({ enabled: TUTOR_JUDGE_STRUCTURED_VERDICT, issue: i, severity: 'kill', turn: judgeTurnContext, languageLesson: subject === 'languages' }),
                   }));
                   for (const d of killDecisions) {
                     if (d.decision.reason !== 'flag-off' && d.decision.reason !== 'unstructured') {

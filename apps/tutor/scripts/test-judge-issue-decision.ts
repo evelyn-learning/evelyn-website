@@ -552,8 +552,8 @@ test('the debug line names the new reasons', () => {
 });
 test('wiring: the orchestrator hands both judge branches the turn context, read after the opener backstop', () => {
   const vtr = readFileSync(join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  assert.ok(vtr.includes("severity: 'advisory', turn: judgeTurnContext })"));
-  assert.ok(vtr.includes("severity: 'kill', turn: judgeTurnContext })"));
+  assert.ok(vtr.includes("severity: 'advisory', turn: judgeTurnContext, languageLesson: subject === 'languages' })"));
+  assert.ok(vtr.includes("severity: 'kill', turn: judgeTurnContext, languageLesson: subject === 'languages' })"));
   assert.ok(vtr.includes('cutOpener: openerBackstopCutPhrase'));
   assert.equal(vtr.split('openerBackstopCutPhrase ??= openerRead.opener').length - 1, 2, 'recorded for a dropped opener and for a cut one');
 });
@@ -710,4 +710,14 @@ test('wiring: the orchestrator hands the reply to the context, records the disag
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
+// GDI starter 2026-10-16: false praise of a wrong sentence in a language lesson plants a note.
+{
+  const issue = { claim: "Yes, that's right.", issueKind: 'false_praise', studentAnswerVerdict: 'incorrect', why: 'student sentence was wrong' } as never;
+  const lang = decideJudgeIssue({ enabled: true, issue, severity: 'advisory', languageLesson: true, falsePraiseRound: true });
+  const other = decideJudgeIssue({ enabled: true, issue, severity: 'advisory', languageLesson: false, falsePraiseRound: true });
+  if (!lang.plantNote || lang.reason !== 'false-praise') { console.error('✗ language-lesson false praise plants a note', lang); process.exit(1); }
+  if (other.plantNote) { console.error('✗ non-language advisory false praise without maths stays silent', other); process.exit(1); }
+  console.log('  ✓ language-lesson false praise plants a note; other subjects unchanged');
+}
+
 process.exit(failed > 0 ? 1 : 0);
