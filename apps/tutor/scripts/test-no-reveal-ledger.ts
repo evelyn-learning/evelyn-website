@@ -866,6 +866,7 @@ async function main() {
   console.log('route + client wiring (source)');
   const route = fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain/stream/route.ts'), 'utf8');
   const vtr = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  const brainSrc = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
   await test('route: the gate is text-only and keyed on the embed token partner claim; solved is sanitised', () => {
     assert.match(route, /noRevealLedger: body\.inputMode === 'text' && noRevealLedgerForPartner\(embedTokenPartnerClaim\(req\.headers\.get\('x-embed-token'\)\)\)/);
     assert.match(route, /sanitizeSolvedPositions\(/);
@@ -874,6 +875,20 @@ async function main() {
     assert.match(vtr, /solvedPositionsFromCheck\(pc, hwTotal\)/);
     assert.match(vtr, /homeworkSolvedRef\.current = recordSolved\(/);
     assert.match(vtr, /homework: \{ problems: homeworkProblemsRef\.current, current: homeworkCurrentRef\.current, solved: homeworkSolvedRef\.current \}/);
+  });
+
+  console.log('typed sessions follow the student\'s language (GAC v14)');
+  await test('the language of a typed message is read; English, maths and labels are not flagged', async () => {
+    const { nonEnglishLanguageOf, formatStudentLanguageBlock } = await import('../src/lib/tutor/voice/text-language');
+    for (const [t, want] of [['这个会考吗？我好紧张', 'Chinese'], ['わかりません、もう一度説明してください', 'Japanese'], ['이해가 안 돼요', 'Korean'], ['hola, no entiendo nada de esto, me puedes ayudar?', 'Spanish'], ['je ne comprends pas, tu peux m\'aider?', 'French']] as const)
+      assert.equal(nonEnglishLanguageOf(t), want, t);
+    assert.match(String(nonEnglishLanguageOf('(a) 9000 دولار')), /^Arabic/);
+    for (const t of ["5'-AUG CCU-3'", 'a is 5 and b is 10', 'c: we accept H0 so p = 0.5', 'is it 24 root 3?', 'x = 5 por favor', 'i want to die lol this is so hard'])
+      assert.equal(nonEnglishLanguageOf(t), null, t);
+    assert.equal(formatStudentLanguageBlock('the answer is 4'), '');
+    assert.match(formatStudentLanguageBlock('谢谢，再见'), /<student_language>[\s\S]*Chinese[\s\S]*Session languages/);
+    assert.match(brainSrc, /input\.textLanguageNote === true \? formatStudentLanguageBlock\(studentSaid\)/);
+    assert.match(route, /textLanguageNote: body\.inputMode === 'text'/);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

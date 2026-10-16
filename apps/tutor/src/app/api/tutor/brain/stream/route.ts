@@ -920,6 +920,7 @@ export async function POST(req: NextRequest) {
           // false / undefined for voice and for an old client that sends no
           // mode, so those requests are the pre-existing ones.
           textTurnShape: textTurnShapeEnabled(body.inputMode),
+          textLanguageNote: body.inputMode === 'text',
           textVerdictPrecheck: textVerdictPrecheckEnabled(body.inputMode),
           // "Work it, then match" (2026-10-06): text only, TUTOR_TEXT_WORK_THEN_MATCH.
           textWorkThenMatch: textWorkThenMatchEnabled(body.inputMode),

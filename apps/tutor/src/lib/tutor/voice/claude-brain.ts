@@ -49,6 +49,7 @@ import {
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
 import { formatWorkThenMatchBlock } from './work-then-match';
+import { formatStudentLanguageBlock } from './text-language';
 import {
   boardRevealsWithheldAnswer,
   CHECKED_CORRECT_FALLBACK_STATEMENT,
@@ -495,6 +496,9 @@ export interface BrainTurnInput {
    *  session when TUTOR_TEXT_TURN_SHAPE is not 'off'. Streaming path only.
    *  Absent/false ⇒ no block ⇒ user content exactly as before. */
   textTurnShape?: boolean;
+  /** 2026-10-16: typed session — a message plainly written in another
+   *  language gets a `<student_language>` reminder (./text-language.ts). */
+  textLanguageNote?: boolean;
   /** Text-mode verdict pre-check (2026-10-06, ./verdict-precheck.ts): an
    *  answer-shaped message is checked by a small separate call BEFORE the
    *  brain call, and the finding rides as a per-turn `<answer_check>` block.
@@ -2508,6 +2512,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     turnShapeBlock +
     problemLedgerBlock +
     problemLettersBlock +
+    (input.textLanguageNote === true ? formatStudentLanguageBlock(studentSaid) : '') +
     answerCheckBlock +
     verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
