@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { segment } from '@/lib/tutor/whiteboard/inline-math';
+import { segment, prepareBubbleText } from '@/lib/tutor/whiteboard/inline-math';
 import { InlineMathText } from './whiteboard/InlineMathText';
 
 /** Render markdown-style *emphasis* and **strong** as actual styled spans
@@ -57,6 +57,7 @@ export function renderInlineEmphasis(text: string): React.ReactNode {
  *  through renderInlineEmphasis so emphasis markers never leak into a
  *  KaTeX span. Does NOT run normalizeSentenceGaps — see module doc. */
 export function renderBubbleEmphasis(text: string): React.ReactNode {
+  if (text) text = prepareBubbleText(text);
   if (!text || !text.includes('$')) return renderInlineEmphasis(text);
   const parts = segment(text);
   if (!parts.some((p) => p.kind === 'math')) return renderInlineEmphasis(text);

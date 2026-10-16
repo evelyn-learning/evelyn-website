@@ -11,7 +11,7 @@
  * Run: npm run test:inline-math
  */
 import katex from 'katex';
-import { segment, addBubbleMathBreaks, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex, normalizeLiteralLineBreaks, deepNormalizeLiteralLineBreaks } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, addBubbleMathBreaks, prepareBubbleText, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex, normalizeLiteralLineBreaks, deepNormalizeLiteralLineBreaks } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -842,6 +842,16 @@ console.log('\n=== Bubble maths gets break points between factors (GAC live 2026
   check('live span still renders in KaTeX', !katex.renderToString(out, { throwOnError: false }).includes('katex-error'), out);
   check('no factor run, no change', addBubbleMathBreaks('2(21.76)') === '2(21.76)');
   check('\\left( after \\right) untouched', addBubbleMathBreaks(String.raw`\left(a\right)\left(b\right)`) === String.raw`\left(a\right)\left(b\right)`);
+}
+
+console.log('\n=== Bubbles wrap un-delimited maths (GAC live 2026-10-16) ===');
+{
+  const live = String.raw`f_k d = 0.15 × 2.0 × 9.8 × 0.866 × 3.0 ≈ 7.64 J — matches what you got. With $mgh = 29.4\ J$, what next?`;
+  const m = mathBodies(prepareBubbleText(live));
+  check('live repro: leading f_k equation is maths', m[0]?.startsWith('f_k d = 0.15'), JSON.stringify(m));
+  check('already-delimited maths kept', m.includes(String.raw`mgh = 29.4\ J`), JSON.stringify(m));
+  check('currency prose untouched', mathBodies(prepareBubbleText('Maya has $50 and a $15 movie ticket.')).length === 0);
+  check('plain prose byte-identical', prepareBubbleText('Nice work, keep going!') === 'Nice work, keep going!');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

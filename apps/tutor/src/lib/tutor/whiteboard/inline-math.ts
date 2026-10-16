@@ -762,6 +762,14 @@ export function preprocessKatexBody(latex: string): string {
  *  maths after a relation or binary operator; a run of parenthesized
  *  factors has neither, so it is one unbreakable box. An `\allowbreak`
  *  between adjacent groups lets it wrap like the rest of the line. */
+/** Chat bubbles run the same un-delimited maths passes as board cards before
+ *  splitting out `$…$` (GAC live 2026-10-16, portal-76431d8b: a reply opened
+ *  "f_k d = 0.15 × 2.0 × …" with no dollars and the bubble printed `f_k`).
+ *  Measured on 3,559 recent tutor turns: this changed only that one. */
+export function prepareBubbleText(text: string): string {
+  return autoWrapLatex(autoWrapUnicodeMath(text));
+}
+
 export function addBubbleMathBreaks(latex: string): string {
   return latex.replace(/\)(?=\s*\()/g, ')\\allowbreak ');
 }
