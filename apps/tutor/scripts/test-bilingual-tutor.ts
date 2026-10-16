@@ -21,6 +21,8 @@ import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
+import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
+import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
 import { isMetaNarration, stripLeakedLabels, stripEchoedTags } from '../src/lib/tutor/voice/meta-narration';
@@ -315,6 +317,9 @@ test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers d
   // embed-1792174263669: reworded fillers, English and Japanese.
   for (const s of ["Let's see what you've got.", "Okay, let’s hear what you've got.", "Okay, let's see where this is.", "Okay, let's see what's going on.", "Let's see this.", "はい、少し見てみましょう。", "いいですね、見てみましょう。", "はい、見てみましょう。"]) assert.equal(isMetaNarration(s), true, s);
   for (const s of ["ちょっと見てみてください。", "表を見てみましょう、一つ目はパターン1です。", "Let's see what you did last weekend.", "Let's look at the table together: Pattern 1 is for a specific time."]) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792185403054: tool names, plan read aloud, more fillers.
+  for (const s of ['show_passage を使って、完成した文を見せます。', 'show_equationを見てください。', 'Let me give the correct form directly, kindly, then close this out and move on.', "Let's see here.", "Let's check that.", 'That matches what you said, well done on part two.']) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ['Show me your answer.', 'Let me give you a hint: the verb is went.', "Let's check the next sentence together."]) assert.equal(isMetaNarration(s), false, s);
   assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
   assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
@@ -387,6 +392,25 @@ test('speech rate reaches every Cartesia request path as generation_config.speed
 test('every canned spoken line in the runtime goes through localizeCanned', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.equal((vtr.match(/localizeCanned\(/g) ?? []).length, 4);
+});
+
+test('run-together English from the STT is split into words (embed-1792185403054)', () => {
+  assert.equal(splitRunTogetherEnglish('Haveyouevergotokaraoke ?'), 'Have you ever go to karaoke ?');
+  assert.equal(splitRunTogetherEnglish('Iwenttoplaygolfyesterday .'), 'I went to play golf yesterday .');
+  assert.equal(splitRunTogetherEnglish('Haveyoueverbeentocanada ?'), 'Have you ever been to canada ?');
+  assert.equal(splitRunTogetherEnglish("No , Ihaven ' thaveyou ."), "No , I haven't have you .");
+  // unknown pieces are kept, never "corrected" into a real word
+  assert.equal(splitRunTogetherEnglish('Yes , Ihaveited sushi lastweek .'), 'Yes , I have ited sushi last week .');
+  // names and ordinary text are left alone
+  for (const t of ['I have been to Hokkaido last year.', 'photosynthesis', 'はい、ありがとうございます。', 'Yesterday I go Golf']) assert.equal(splitRunTogetherEnglish(t), t, t);
+});
+
+test('two repeat-asks in a row trigger the move-on note (embed-1792185403054)', () => {
+  for (const t of ['もう一度言ってみましょう。', 'もう一度、ゆっくり言ってみましょうか。', 'Try saying it once more: Have you ever gone to karaoke?', 'Say it once more for me?']) assert.equal(isRetryAsk(t), true, t);
+  for (const t of ['では、次に進みましょう。', 'Have you ever been to Canada?', 'もう一度読みますね。']) assert.equal(isRetryAsk(t), false, t);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('retryAskStreakRef.current >= RETRY_CAP_TURNS'));
+  assert.ok(vtr.includes('splitRunTogetherEnglish(transcript)'));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

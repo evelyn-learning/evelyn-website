@@ -109,7 +109,15 @@ const VERDICT_NARRATION_RE =
 // got.", "Let's see where this is.", "Let's see what's going on.", and the
 // Japanese 「はい、少し見てみましょう。」. Still whole-sentence only.
 const BARE_FILLER_RE =
-  /^\s*(?:(?:ok(?:ay)?|alright|all right|right|ah|hmm|so)[,.]?\s+)?let['’]?s (?:see|hear|look)(?: at)?(?: (?:this(?: together)?|that|it|what you['’]?ve got|what we['’]?ve got|where this is|where we are|what['’]?s going on|what you said))?[.!]?\s*$/i;
+  /^\s*(?:(?:ok(?:ay)?|alright|all right|right|ah|hmm|so)[,.]?\s+)?let['’]?s (?:see|hear|look|check)(?: at)?(?: (?:this(?: together)?|that|it|here|what you['’]?ve got|what we['’]?ve got|where this is|where we are|what['’]?s going on|what you said))?[.!]?\s*$/i;
+// embed-1792185403054: tool names spoken to the learner ("show_passage を使って
+// 完成した文を見せます", "show_equationを見てください") and the tutor's plan read
+// aloud ("Let me give the correct form directly, kindly, then close this out
+// and move on.", "That matches what you said, well done on part two.").
+const TOOL_NAME_SPOKEN_RE =
+  /(?:^|[^a-z_])(?:show|mark|advance|close|tutor|add|record|flag|expand|propose|hold|set|clear|request|render)_[a-z][a-z_]*/i;
+const PLAN_ALOUD_RE =
+  /\bclose (?:this|it) out\b|^\s*let me (?:give|just|now|quickly|first)\b[^.!?]*\b(?:then|and then)\b|\bthat matches what you said\b/i;
 const BARE_FILLER_JA_RE =
   /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 
@@ -381,7 +389,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || BARE_FILLER_RE.test(s) || BARE_FILLER_JA_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || BARE_FILLER_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

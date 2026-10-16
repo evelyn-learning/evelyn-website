@@ -206,6 +206,8 @@ import {
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
 import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
+import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
+import { isRetryAsk, RETRY_CAP_TURNS, RETRY_CAP_NOTE } from '@/lib/tutor/voice/retry-cap';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -4503,6 +4505,10 @@ export function VoiceTutorRealtime({
   // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
   // cadence and anchoring independently).
   const pendingBoardAnchorNoteRef = useRef<string | null>(null);
+  // Retry cap (retry-cap.ts): consecutive tutor turns asking for a repeat,
+  // and the move-on note planted once that streak reaches the cap.
+  const retryAskStreakRef = useRef(0);
+  const pendingRetryCapNoteRef = useRef<string | null>(null);
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -11767,6 +11773,11 @@ export function VoiceTutorRealtime({
       // the whole attempt loop (not per-sentence, not per-retry).
       const anchorSuspectThisTurn = pendingBoardAnchorNoteRef.current != null;
       // R2 E2: board-anchor corrective — same convention, own concern.
+      if (pendingRetryCapNoteRef.current) {
+        runTranscript = `${pendingRetryCapNoteRef.current}\n\n${runTranscript}`;
+        pendingRetryCapNoteRef.current = null;
+        onDebugEvent?.('retry_cap_note_consumed', 'delivered with this turn');
+      }
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
@@ -18535,6 +18546,18 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
         }
       }
+      if (sessionAllowsNonLatin(tutorLanguages) && totalSentenceCount > 0) {
+        if (isRetryAsk(fullText)) {
+          retryAskStreakRef.current += 1;
+          if (retryAskStreakRef.current >= RETRY_CAP_TURNS) {
+            pendingRetryCapNoteRef.current = RETRY_CAP_NOTE;
+            retryAskStreakRef.current = 0;
+            onDebugEvent?.('retry_cap_note_planted', `${RETRY_CAP_TURNS} repeat-asks in a row`);
+          }
+        } else {
+          retryAskStreakRef.current = 0;
+        }
+      }
       if (TUTOR_BOARD_ANCHOR_NET) {
         const finalQuestion = lastQuestionSentence(fullText);
         const paintedContent = totalToolNamesSeen.some((n) => isBoardContentTool(n));
@@ -19956,6 +19979,16 @@ export function VoiceTutorRealtime({
       image?: { dataUrl: string; name?: string };
     },
   ) => {
+    // Bilingual session: the STT runs the learner's English together
+    // ("Haveyouevergotokaraoke") — split it before the brain, the answer
+    // check or the judge reads it (run-together-english.ts).
+    if (!opts?.silent && sessionAllowsNonLatin(tutorLanguages)) {
+      const split = splitRunTogetherEnglish(transcript);
+      if (split !== transcript) {
+        onDebugEvent?.('run_together_split', split.slice(0, 80));
+        transcript = split;
+      }
+    }
     // Lesson closed (see lesson-close.ts): a goodbye/thanks after the close
     // is not a new turn — no second farewell, no restarted exercise.
     if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript)) {
