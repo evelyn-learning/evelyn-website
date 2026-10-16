@@ -164,6 +164,10 @@ export interface VerdictPrecheckDeps {
   /** 2026-10-19: judge a stated claim that answers none of the questions
    *  (`CLAIM_VERDICT_RULE`). Unset/false ⇒ the prompt as before. */
   claimVerdict?: boolean;
+  /** 2026-10-16 (GAC v12): under the ledger a CORRECT finding is confirmed by
+   *  a second, independent check started at the same time. Unset ⇒ on
+   *  (ledger only); false ⇒ one check, as before. */
+  confirmCorrect?: boolean;
   now?: () => number;
 }
 
@@ -586,21 +590,30 @@ export async function runVerdictPrecheck(
     if (!(input.studentMessage ?? '').trim()) return null;
     const llm = deps.llm ?? defaultLlm(deps);
     const ledger = deps.ledger === true && (input.problems ?? []).length > 0;
-    const call = llm({
+    const request = {
       system: verdictPrecheckSystem({ ...(deps.claimVerdict === true ? { claimVerdict: true } : {}), ...(ledger ? { ledger: true } : {}) }),
       user: buildVerdictPrecheckUser(ledger ? { ...input, solved: input.solved ?? [] } : { ...input, solved: undefined }),
       maxTokens: 1500,
-      signal: abort.signal,
       timeoutMs,
-    });
+    };
+    const call = llm({ ...request, signal: abort.signal });
     // The abandoned call rejects when aborted; nothing awaits it then.
     call.catch(() => undefined);
+    // 2026-10-16 (GAC v12, Praveen: "confirm correct only"): the same check
+    // once more, independently and at the same time. It is read only when the
+    // first finds the answer CORRECT (a correct finding records the problem
+    // solved); otherwise it is aborted. Two findings that disagree → no
+    // verdict either way (`disputed`).
+    const confirmAbort = new AbortController();
+    const confirm = ledger && deps.confirmCorrect !== false ? llm({ ...request, signal: confirmAbort.signal }) : null;
+    confirm?.catch(() => undefined);
     const raced = await Promise.race([
       call,
       new Promise<'timeout'>((resolve) => { timer = setTimeout(() => resolve('timeout'), timeoutMs); }),
     ]);
     if (raced === 'timeout') {
       abort.abort();
+      confirmAbort.abort();
       console.warn(`[verdict-precheck] timed out after ${timeoutMs} ms — nothing injected`);
       return null;
     }
@@ -624,6 +637,33 @@ export async function runVerdictPrecheck(
       o.verdict = 'correct';
       o.correct_value = String(o.problem_final_answer);
       if (o.confidence === 'low') o.confidence = 'medium';
+    }
+    let disputed = false;
+    if (confirm) {
+      if (o.verdict !== 'correct') confirmAbort.abort();
+      else {
+        const left = Math.max(0, timeoutMs - (now() - startedAt));
+        let t2: ReturnType<typeof setTimeout> | undefined;
+        const second = await Promise.race([
+          confirm.catch(() => null),
+          new Promise<null>((resolve) => { t2 = setTimeout(() => resolve(null), left); }),
+        ]);
+        if (t2) clearTimeout(t2);
+        if (!second) {
+          confirmAbort.abort();
+          console.log('[verdict-precheck] confirming check: no reply in time — the first finding stands');
+        } else {
+          const o2 = parseReply(second.text);
+          const agrees = !!o2 && (o2.verdict === 'correct'
+            || (o2.proposed_equals_final_answer === true && String(o2.problem_final_answer ?? '').trim() !== '' && o2.reason_wrong !== true));
+          if (o2 && VERDICTS.has(String(o2.verdict)) && !agrees) {
+            disputed = true;
+            console.log(`[verdict-precheck] confirming check DISAGREES (${String(o2.verdict)}) — no verdict either way`);
+          } else {
+            console.log(`[verdict-precheck] confirming check ${agrees ? 'agrees' : 'unusable — the first finding stands'}`);
+          }
+        }
+      }
     }
     const correctValue = String(o.correct_value ?? '').trim().slice(0, 240);
     // Rendered only for a wrong answer to the whole problem (verdict-precheck-shared.ts).
@@ -688,7 +728,7 @@ export async function runVerdictPrecheck(
       && (roundedHere.size > 0 || stated.some((a) => a && rounded(a))
         || roundsExactAnswer(String(o.proposed_value ?? ''), String(o.correct_value || o.problem_final_answer || '')));
     if (roundedDecimal) console.log('[verdict-precheck] rounded decimal of the exact answer — reply must not call it wrong');
-    const solvedProblems = [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
+    const solvedProblems = disputed ? [] : [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
       ...(aboutProblem ? { aboutProblem } : {}),
@@ -697,8 +737,9 @@ export async function runVerdictPrecheck(
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),
-      verdict: o.verdict as PrecheckVerdict,
-      confidence: o.confidence as PrecheckConfidence,
+      verdict: (disputed ? 'cannot_determine' : o.verdict) as PrecheckVerdict,
+      confidence: (disputed ? 'medium' : o.confidence) as PrecheckConfidence,
+      ...(disputed ? { disputed: true as const } : {}),
       correctValue,
       ...(differsAt ? { differsAt, differsTest: String(o.differs_test ?? '').replace(/\s+/g, ' ').trim().slice(0, 240) } : {}),
       model: raced.model,

@@ -73,6 +73,9 @@ export interface PublicVerdictPrecheck {
    *  the exact answer — the right value, not yet in the form asked for. The
    *  flag reveals nothing (the student wrote the decimal). Ledger only. */
   roundedDecimal?: true;
+  /** 2026-10-16 (GAC v12): two independent checks disagreed about a CORRECT
+   *  finding — no verdict either way; the student shows how they got it. */
+  disputed?: true;
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -113,6 +116,7 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     ...aboutProblemField(o.aboutProblem),
     ...wrongProblemsField(o.wrongProblems),
     ...(o.roundedDecimal === true ? { roundedDecimal: true as const } : {}),
+    ...(o.disputed === true ? { disputed: true as const } : {}),
   };
 }
 
@@ -146,14 +150,14 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}), ...(r.disputed === true ? { disputed: true as const } : {}) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
  *  "cannot determine" say nothing — the turn then runs as it did before. */
 export function precheckInforms(p: PublicVerdictPrecheck | null | undefined): p is PublicVerdictPrecheck {
   if (!p || p.confidence === 'low') return false;
-  if (p.answers === 'neither') return true;
+  if (p.answers === 'neither' || p.disputed === true) return true;
   return p.verdict !== 'cannot_determine';
 }
 
@@ -212,6 +216,14 @@ export function formatAnswerCheckBlock(
   },
 ): string {
   if (!precheckInforms(p)) return '';
+  if (p.disputed === true) {
+    return '<answer_check>\n'
+      + 'Before this turn the student\'s message was checked twice, independently, from their own problem and data. The student does not see this.\n'
+      + (p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '')
+      + DISPUTED_CHECK_RULE
+      + 'Never mention this check to the student.\n'
+      + '</answer_check>\n\n';
+  }
   p = asCurrentProblem(p, opts);
   if (opts?.workThenMatch === true) return formatAnswerCheckBlockWorkThenMatch(p, opts.correctValue, opts);
   const proposed = (p.proposed ? `- The student's message proposes: ${q(p.proposed)}.\n` : '') + perProblemLines(p, opts);
@@ -315,7 +327,7 @@ export const OTHER_PART_NOTHING_OPEN_RULE =
  * withheld value). Generic.
  */
 export const SOLVED_PROBLEM_WRONG_RULE =
-  'What to do: the software\'s record shows the student already solved THAT problem correctly earlier in the session, so their earlier answer stands and the problem stays finished. Say kindly, in a sentence or two, that this new answer is not right and that the answer they gave before was — with one short reason in general terms — but do not write out the earlier answer or any value. Do not reopen the problem: ask no question about it and do not ask them to work any step of it again. Then carry on with the next unsolved problem, or, when every problem is solved, offer to stop or to look at something else.\n';
+  'What to do: the software\'s record shows the student already solved THAT problem correctly earlier in the session, so their earlier answer stands and the problem stays finished. Say kindly, in a sentence or two, that this new answer is not right and that the answer they gave before was — with one short reason in general terms — but do not write out the earlier answer or any value. When their message is a question or a wrong claim about a DETAIL of that solved answer — its unit, its sign, its form or its wording — answer the detail plainly in one sentence with its reason (the unit follows from the quantity, the sign from the direction): the problem is solved, so this gives nothing away, and leaving a wrong belief uncorrected is a teaching failure. Never wave it off as already settled. Do not reopen the problem: ask no question about it and do not ask them to work any step of it again. Then carry on with the next unsolved problem, or, when every problem is solved, offer to stop or to look at something else.\n';
 
 /**
  * 2026-10-15 (GAC v7, Physics): "<right answer to b> and <wrong answer to c>"
@@ -546,6 +558,13 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
     + 'What to do: your working must reach the checked value and your match statement must agree with the check — state as facts which part your working confirms, and that the question asks for more or that a part differs. Ask for what is missing; do not supply it.\n'
     + tail;
 }
+
+/** 2026-10-16 (GAC v12, AP Macro): a check found a wrong answer CORRECT
+ *  (high confidence); a second, independent check of a correct finding now
+ *  has to agree before anything is credited or recorded. */
+export const DISPUTED_CHECK_RULE =
+  '- The two checks DISAGREE about whether it is right.\n'
+  + 'What to do: give no verdict either way — do not say it is right, wrong, close or almost, and do not praise it. Ask the student to show how they got it (the steps, or the reasoning in a sentence or two), so you can follow their thinking. State no value, result or step of your own.\n';
 
 /** 2026-10-16 (GAC v12, Precalc): "0.2588" for an exact cos 75° was answered
  *  "0.2588 is the value of sin 15°, not cos 75°" — the two are equal, so the

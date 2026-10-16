@@ -308,6 +308,33 @@ async function main() {
     const unknown = await runVerdictPrecheck(labelled, { llm: async () => ({ text: JSON.stringify({ answers: 'open_question', verdict: 'correct', confidence: 'high', solved_problem: 5 }), model: 'f', inputTokens: 1, outputTokens: 1 }), timeoutMs: 1000, ledger: true });
     assert.equal(unknown?.solvedProblem, undefined);
   });
+  await test('ledger: a CORRECT finding is confirmed by a second check; disagreement = no verdict, nothing recorded (GAC v12)', async () => {
+    const labelled = { ...input, problems: [{ n: 1, text: 'First.' }, { n: 2, text: 'Second.' }], solved: [] as number[] };
+    const reply = (o: Record<string, unknown>, ms = 0) => new Promise<{ text: string; model: string; inputTokens: number; outputTokens: number }>((res) => setTimeout(() => res({ text: JSON.stringify({ answers: 'overall_problem', confidence: 'high', solved_problems: [1], ...o }), model: 'f', inputTokens: 1, outputTokens: 1 }), ms));
+    const seq = (...rs: Array<() => Promise<{ text: string; model: string; inputTokens: number; outputTokens: number }>>): VerdictPrecheckLlm => { let i = 0; return async () => rs[Math.min(i++, rs.length - 1)](); };
+    // both agree → recorded
+    const ok = await runVerdictPrecheck(labelled, { llm: seq(() => reply({ verdict: 'correct' }), () => reply({ verdict: 'correct' })), timeoutMs: 1000, ledger: true });
+    assert.equal(ok?.verdict, 'correct'); assert.deepEqual(ok?.solvedProblems, [1]); assert.equal(ok?.disputed, undefined);
+    // the second disagrees → disputed, no verdict, nothing solved
+    const no = await runVerdictPrecheck(labelled, { llm: seq(() => reply({ verdict: 'correct' }), () => reply({ verdict: 'incorrect' })), timeoutMs: 1000, ledger: true });
+    assert.equal(no?.disputed, true); assert.equal(no?.verdict, 'cannot_determine'); assert.equal(no?.solvedProblems, undefined);
+    const pub = toPublicPrecheck(no!);
+    assert.equal(sanitizePublicPrecheck(pub)?.disputed, true);
+    const block = formatAnswerCheckBlock(pub, { workThenMatch: true, noRevealAnyStep: true });
+    assert.match(block, /DISAGREE/); assert.match(block, /show how they got it/);
+    assert.deepEqual(solvedPositionsFromCheck(pub, 2), []);
+    // the second is too slow → the first stands
+    const slow = await runVerdictPrecheck(labelled, { llm: seq(() => reply({ verdict: 'correct' }), () => reply({ verdict: 'incorrect' }, 400)), timeoutMs: 150, ledger: true });
+    assert.equal(slow?.verdict, 'correct'); assert.equal(slow?.disputed, undefined);
+    // a wrong finding never waits for the second
+    const t0 = Date.now();
+    const wrong = await runVerdictPrecheck(labelled, { llm: seq(() => reply({ verdict: 'incorrect', solved_problems: [] }), () => reply({ verdict: 'correct' }, 600)), timeoutMs: 1000, ledger: true });
+    assert.equal(wrong?.verdict, 'incorrect'); assert.ok(Date.now() - t0 < 400);
+    // off the ledger: one call only
+    let calls = 0;
+    await runVerdictPrecheck(labelled, { llm: async () => { calls++; return reply({ verdict: 'correct' }); }, timeoutMs: 1000 });
+    assert.equal(calls, 1);
+  });
   await test('claim judging on: the system prompt asks for a verdict on a stated claim', async () => {
     const seen: string[] = [];
     await runVerdictPrecheck(input, { llm: async (req) => { seen.push(req.system); return { text: '{}', model: 'f', inputTokens: 1, outputTokens: 1 }; }, timeoutMs: 1000, claimVerdict: true });
