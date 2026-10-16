@@ -929,6 +929,39 @@ async function main() {
     assert.equal(revealsWithheldAnswer('The fence uses Q3, not the median. Which value should replace 15.5?', a).hit, false);
   });
 
+  await test('v17: a second check that says partly_correct gives partly_correct, nothing recorded — not a dispute', async () => {
+    const labelled = { ...input, problems: [{ n: 1, text: 'A.' }, { n: 2, text: 'Find x and both angles.' }], solved: [1] as number[], studentMessage: "I don't know, maybe x = 17?" };
+    const first = { proposed_value: 'x = 17', problem_final_answer: 'x = 17, angles 44 and 46', proposed_equals_final_answer: true, answers: 'overall_problem', verdict: 'correct', confidence: 'high', correct_value: 'x = 17', stated_answers: [{ problem: 2, stated: 'x = 17', own_answer: 'x = 17, angles 44 and 46', right: true }], solved_problems: [2], about_problem: 2, reason_wrong: false, wrong_step: '' };
+    const second = { ...first, proposed_equals_final_answer: false, verdict: 'partly_correct', solved_problems: [] };
+    const mk = (b: object): VerdictPrecheckLlm => { let n = 0; return async () => ({ text: JSON.stringify(n++ === 0 ? first : b), model: 'f', inputTokens: 1, outputTokens: 1 }); };
+    const r = await runVerdictPrecheck(labelled, { llm: mk(second), timeoutMs: 1000, ledger: true });
+    assert.equal(r?.verdict, 'partly_correct'); assert.equal(r?.disputed, undefined); assert.equal(r?.solvedProblems, undefined);
+    // a second check that says incorrect is still a dispute
+    const d = await runVerdictPrecheck(labelled, { llm: mk({ ...second, verdict: 'incorrect' }), timeoutMs: 1000, ledger: true });
+    assert.equal(d?.verdict, 'cannot_determine'); assert.equal(d?.disputed, true);
+  });
+
+  await test('v17: a calculation in the reply that comes to the check\'s deciding number is guarded', async () => {
+    const prob = 'The data set is 4, 8, 15, 16, 23, 42. Is 42 an outlier by the 1.5 x IQR rule?';
+    const a = { value: 'No, 42 is not an outlier (upper fence = 45.5)', studentText: 'yes, 42 is an outlier because 15.5 + 1.5 x 15 = 38', givenText: prob, newNumbers: true, problemText: prob, studentPriorText: 'Q1 = 8, Q3 = 23, so IQR = 15.' };
+    assert.equal(revealsWithheldAnswer("What's $23 + 1.5 \\times 15$, and how does 42 compare to that?", a).hit, true);
+    // their own calculation, and a question with no calculation, are not
+    assert.equal(revealsWithheldAnswer('You wrote 15.5 + 1.5 x 15 — which of those is the median?', a).hit, false);
+    assert.equal(revealsWithheldAnswer('The fence uses Q3, not the median. Which value should replace 15.5?', a).hit, false);
+    // a small whole number is never matched by a calculation ("2 + 4" for 6)
+    const small = { value: 'x = 6', studentText: 'x = 3', givenText: '2x = 12', newNumbers: true, problemText: '2x = 12', studentPriorText: '' };
+    assert.equal(revealsWithheldAnswer('What is 2 + 4 doing in that line?', small).hit, false);
+  });
+
+  await test('v17: a worded answer is judged on what the problem asks; a hedged sign-off is a request', async () => {
+    const { LEDGER_FORMS_RULE } = await import('../src/lib/tutor/voice/verdict-precheck');
+    assert.match(LEDGER_FORMS_RULE, /A WORDED ANSWER[\s\S]*what the problem as written asks for[\s\S]*not a detail a later question of the tutor's asked for/);
+    assert.equal(classifyTurnShape("I think I'm done for today, can we wrap up?", 'What do you get?')?.shape, 'request');
+    assert.equal(classifyTurnShape('maybe we can stop here', 'What do you get?')?.shape, 'request');
+    assert.equal(classifyTurnShape("I don't know, maybe x = 17?", 'What do you get?')?.shape, 'hedged_proposal');
+    assert.equal(classifyTurnShape('I think it is 45 degrees', 'What do you get?')?.shape, 'hedged_proposal');
+  });
+
   console.log('typed sessions follow the student\'s language (GAC v14)');
   await test('the language of a typed message is read; English, maths and labels are not flagged', async () => {
     const { nonEnglishLanguageOf, formatStudentLanguageBlock } = await import('../src/lib/tutor/voice/text-language');

@@ -335,7 +335,17 @@ function expressionParts(value: string): string[] {
     .map((alt) => alt.replace(/\s+\([^()]*\)\s*$/, ''))
     .flatMap((alt) => alt.split(/[=≈<>≤≥]/))
     .map((side) => side.trim())
-    .filter((side) => side && isExpressionValue(side));
+    .filter((side) => side && (isExpressionValue(side) || isDecidingNumber(side)));
+}
+
+/** 2026-10-16 (GAC v17, AP Statistics): the check's value was "not an outlier
+ *  (upper fence = 45.5)" — no expression in it — and the reply wrote "What's
+ *  23 + 1.5 × 15" after a wrong fence. A bare number of the check's value that
+ *  is not a small whole number is also matched by value, so a calculation the
+ *  reply writes out that comes to it is a hit (a run with no operator never is). */
+function isDecidingNumber(side: string): boolean {
+  const m = /^-?\d+(?:\.(\d+))?$/.exec(side.trim());
+  return !!m && (!!m[1] || Math.abs(Number(side)) >= 10);
 }
 
 /** 2026-10-16 (GAC v12): the result as an expression, by its value — "one

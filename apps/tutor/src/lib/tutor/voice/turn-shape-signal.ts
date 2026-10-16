@@ -25,6 +25,7 @@
  * Pure — no SDK import, no I/O. `npm run test:turn-shape-signal`.
  */
 import { isAnswerAttempt, isBareShortAnswer } from '@/lib/tutor/orchestrator/answer-attempt';
+import { isStudentSignoff } from './cover-layer';
 import { isHedgedProposal, isSelfReport, isStudentQuestion, isUncommittedAlternativesQuestion } from '@/lib/tutor/orchestrator/student-turn-shape';
 import {
   classifyNonAnswer,
@@ -138,6 +139,11 @@ export function classifyTurnShape(
   // "… is it <one thing> or <the other>?" names alternatives and commits to
   // neither: a question — never judged, never matched (2026-10-06b).
   if (isUncommittedAlternativesQuestion(t)) return done('question');
+  // 2026-10-16 (GAC v17, Geometry): "I think I'm done for today, can we wrap
+  // up?" opened on "I think" and was read as a hedged proposal; the reply
+  // said "let's finish this one first" and worked the next step. A sign-off
+  // behind a hedge word is a request, never an answer.
+  if (isStudentSignoff(t.replace(LEAD_IN_RE, '').replace(HEDGE_WORD_RE, ''))) return done('request');
   if (isHedgedProposal(t) || isHedgedProse(t)) return done('hedged_proposal', hedgedProposedValue(t));
   const checked = checkRequestValue(t);
   if (checked !== null) return checked ? done('check_request', checked) : done('request');

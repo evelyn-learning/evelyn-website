@@ -267,9 +267,13 @@ export const NAMED_PROBLEM_RULE =
  * "an equivalent form … is the same answer", and a value the student reports
  * from someone else was not always read as proposed. Ledger only; inserted
  * before step 5; generic wording.
+ * 2026-10-16 (GAC v17, Biology): "it binds in the active site itself and
+ * blocks the substrate" — the problem's whole question — was partly_correct
+ * because the check's own answer added "its shape resembles the substrate"
+ * (asked by the tutor along the way), and (b) stayed open at the wrap-up.
  */
 export const LEDGER_FORMS_RULE =
-  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right: before you call a value wrong, check whether another accepted method or convention gives it, and if one does, it is right — and so is later working built on it. Use ONE convention consistently through your own working; never mix two in one calculation. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer.';
+  ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right: before you call a value wrong, check whether another accepted method or convention gives it, and if one does, it is right — and so is later working built on it. Use ONE convention consistently through your own working; never mix two in one calculation. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer. A WORDED ANSWER (a why, what or describe question): the complete answer is what the problem as written asks for — not every detail a full textbook answer would add, and not a detail a later question of the tutor\'s asked for. A message that states that point correctly answers the problem completely ("correct", the problem is solved), even when it leaves out a cause or a detail the problem itself did not ask for.';
 
 /**
  * 2026-10-15 (GAC v7, Geometry): "31.4" for a circumference asked "in terms
@@ -654,6 +658,7 @@ export async function runVerdictPrecheck(
     }
     let disputed = false;
     let confirmAgreed = false;
+    let partlyByConfirm = false;
     if (confirm) {
       if (o.verdict !== 'correct') confirmAbort.abort();
       else {
@@ -672,7 +677,15 @@ export async function runVerdictPrecheck(
           const agrees = !!o2 && (o2.verdict === 'correct'
             || (o2.proposed_equals_final_answer === true && String(o2.problem_final_answer ?? '').trim() !== '' && o2.reason_wrong !== true));
           if (agrees) confirmAgreed = true;
-          if (o2 && VERDICTS.has(String(o2.verdict)) && !agrees) {
+          // 2026-10-16 (GAC v17, Geometry): "maybe x = 17" for a problem that
+          // also asks for both angles — first check correct, second
+          // partly_correct. That is a finding about completeness, not a
+          // dispute: the part is right, the problem stays open.
+          if (o2 && o2.verdict === 'partly_correct' && !agrees) {
+            o.verdict = 'partly_correct';
+            partlyByConfirm = true;
+            console.log('[verdict-precheck] confirming check says partly_correct — verdict partly_correct, nothing recorded solved');
+          } else if (o2 && VERDICTS.has(String(o2.verdict)) && !agrees) {
             disputed = true;
             console.log(`[verdict-precheck] confirming check DISAGREES (${String(o2.verdict)}) — no verdict either way`);
           } else {
@@ -766,7 +779,7 @@ export async function runVerdictPrecheck(
       && (roundedHere.size > 0 || stated.some((a) => a && rounded(a))
         || roundsExactAnswer(String(o.proposed_value ?? ''), String(o.correct_value || o.problem_final_answer || '')));
     if (roundedDecimal) console.log('[verdict-precheck] rounded decimal of the exact answer — reply must not call it wrong');
-    const solvedProblems = disputed ? [] : [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
+    const solvedProblems = disputed || partlyByConfirm ? [] : [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
       ...(aboutProblem ? { aboutProblem } : {}),
