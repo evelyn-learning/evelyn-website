@@ -14,6 +14,7 @@
  * only authority on the video; the frame never guesses the player's state.
  */
 import { LESSON_CONTEXT_LIMITS } from '../embed/lesson-context';
+import { lessonEndSeconds, type TimelineEntry } from './host-lesson-timeline';
 
 export const VIDEO_STATES = ['playing', 'paused', 'ended'] as const;
 export type VideoState = (typeof VIDEO_STATES)[number];
@@ -250,6 +251,30 @@ function mmss(total: number): string {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/** A teaching moment this close to the end of the lesson, with nothing after
+ *  it, is the exit ticket even when the host did not tag it (creators do not
+ *  always): the tutor recaps the lesson instead of teaching one more visual. */
+export const EXIT_TICKET_END_WINDOW_S = 5;
+
+/** Why an untagged moment counts as the exit ticket; null when it does not.
+ *  Both conditions must hold: it appears within the last
+ *  EXIT_TICKET_END_WINDOW_S of the lesson (reported duration, else the end of
+ *  the timeline), and no visual, slide, quiz or question comes after it. */
+export function inferExitTicket(
+  m: LessonMoment,
+  input: { timeline: TimelineEntry[] | null; durationSeconds: number | null },
+): 'duration' | 'timeline_end' | 'tagged_in_timeline' | null {
+  if (m.kind !== 'teaching_moment' || m.positionSeconds === null) return null;
+  const pos = m.positionSeconds;
+  const later = (input.timeline ?? []).filter((e) => e.kind !== 'speech' && e.start > pos + 1);
+  if (later.length) return null;
+  const tagged = (input.timeline ?? []).some((e) => e.exitTicket && Math.abs(e.start - pos) <= 2);
+  if (tagged) return 'tagged_in_timeline';
+  const end = lessonEndSeconds(input.timeline, input.durationSeconds);
+  if (end === null || pos < end - EXIT_TICKET_END_WINDOW_S) return null;
+  return input.durationSeconds !== null ? 'duration' : 'timeline_end';
 }
 
 /** The synthetic (bracketed, silent) turn that makes the tutor step in on a
