@@ -33,6 +33,8 @@ import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
+import { thinkingCueVisible, thinkingCueLabel } from '@/lib/tutor/voice/thinking-cue';
+import { cannedLanguage, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
 import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
@@ -130,6 +132,13 @@ export interface TutorSessionProps {
   /** Per-voice Cartesia speed offset (R38 Task 6). Forwarded straight to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. */
   cartesiaVoiceSpeed?: VTRProps['cartesiaVoiceSpeed'];
+  /** Bilingual tutor languages (tenant setting). Forwarded to the runtime. */
+  tutorLanguages?: VTRProps['tutorLanguages'];
+  /** Tutor speaking rate (tenant claim). Forwarded to the runtime. */
+  speechRate?: VTRProps['speechRate'];
+  /** Thinking cue (embed claim `thinking_cue`): forwarded to the runtime for
+   *  the sound, and drives the large on-stage "Thinking…" state here. */
+  thinkingCue?: boolean;
   sessionMaxMinutes: number;
   /** Demo time-box (trial): wrap-phase threshold in minutes. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. */
@@ -290,7 +299,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, speechRate, thinkingCue = false, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -972,6 +981,11 @@ export default function TutorSession(props: TutorSessionProps) {
     isProcessing ? 'thinking' : lastEntry?.role === 'tutor' ? 'speaking' : 'listening';
   const voiceState: VoiceState =
     liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
+  // Thinking cue (GDI sessions 2026-10-15): large on-stage state while the
+  // tutor prepares a reply, in the language the tutor is speaking.
+  const thinkingCueText = thinkingCueVisible(thinkingCue, started, voiceState)
+    ? thinkingCueLabel(cannedLanguage(tutorLanguages, lastTutorText(transcript)))
+    : null;
 
   // Agenda round 5: auto-open the Agenda drawer ONCE when its rows first arrive,
   // but only during pre-start (session not yet started and no agenda pick made).
@@ -1669,6 +1683,9 @@ export default function TutorSession(props: TutorSessionProps) {
         silentSecondsPerWord={sessionMode === 'text' ? textModeSecondsPerWord(process.env.NEXT_PUBLIC_TUTOR_TEXT_MODE_SPW) : undefined}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
+        tutorLanguages={tutorLanguages}
+        speechRate={speechRate}
+        thinkingCue={thinkingCue}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onHomeworkProgress={setHomeworkProgress}
         onLessonPlanLoadSettled={setSettledPlanId}
@@ -2101,6 +2118,7 @@ export default function TutorSession(props: TutorSessionProps) {
         hiccupPin={hiccupPinEl}
         actionPin={actionPinEl}
         voiceState={voiceState}
+        thinkingCueText={thinkingCueText}
         warmupOverlay={warmupOverlay}
         micLevelRef={micLevelRef}
         listeningHint={listeningHint}

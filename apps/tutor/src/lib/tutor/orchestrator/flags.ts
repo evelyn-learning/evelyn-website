@@ -58,6 +58,12 @@ export const TUTOR_RENDER_SYNC =
 // openai voice still gets it. 'off' restores the pre-2026-09-15 fallback.
 export const TUTOR_EMBED_CARTESIA_DEFAULT =
   process.env.NEXT_PUBLIC_TUTOR_EMBED_CARTESIA_DEFAULT !== 'off';
+// Extra tutor languages (2026-10-14, bilingual en+ja): a partner token's
+// `tutor_languages` claim makes that tenant's sessions bilingual (prompt
+// override of Rule 5 + per-sentence TTS language). Tokens without the claim
+// are unaffected either way. 'off' ignores the claim everywhere.
+export const TUTOR_EXTRA_LANGUAGES =
+  process.env.NEXT_PUBLIC_TUTOR_EXTRA_LANGUAGES !== 'off';
 // Student whiteboard marks (Phase 1, 2026-07-05): tap-to-point. Default
 // OFF — new student-facing input surface. See student-marks design spec.
 export const TUTOR_STUDENT_MARKS =
@@ -357,6 +363,23 @@ export const TUTOR_THINK_TIME_HOLD =
 // Default ON per the R49b standing rule.
 export const TUTOR_TURN_COALESCE =
   process.env.NEXT_PUBLIC_TUTOR_TURN_COALESCE !== 'off';
+// Pre-audio supersede (GDI meeting session 2026-10-15, 494–500s): a learner
+// paused twice inside one question; each fragment became its own turn, and
+// the reply to the fragment "enough?" played AFTER the full question had
+// arrived, then the full question got a second answer. When a new final
+// arrives while the brain is busy and the in-flight reply has not spoken a
+// single sentence yet (cover/ack lines don't count), abort that reply and
+// answer the in-flight text + the new text once. Acts on a real final
+// transcript only, never on speech onset or noise (the E1 regression).
+// Default ON per the R49b standing rule.
+// Thinking cue kill switch (GDI sessions 2026-10-15): the chime + pulse +
+// large on-stage "Thinking…" state. Per-session opt-in is the embed claim
+// `thinking_cue`; this flag only turns it off everywhere. Default ON per
+// the R49b standing rule.
+export const TUTOR_THINKING_CUE =
+  process.env.NEXT_PUBLIC_TUTOR_THINKING_CUE !== 'off';
+export const TUTOR_SUPERSEDE_PRE_AUDIO =
+  process.env.NEXT_PUBLIC_TUTOR_SUPERSEDE_PRE_AUDIO !== 'off';
 export const TUTOR_ANSWER_REVEAL_GUARD =
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'true';

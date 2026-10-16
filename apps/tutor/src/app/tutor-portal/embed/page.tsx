@@ -29,12 +29,15 @@ import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/r
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
+import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { isVoiceCode } from '@core/voice/voice-codes';
 import { resolveEmbedPersona } from '@/lib/tutor/portal/embed-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
+import { parseSpeechRate } from '@/lib/tutor/voice/speech-rate';
+import { parseThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
@@ -256,6 +259,12 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'false_assertion_downgraded_stale_anchor',
   //   a queue-time merge/drop decision for a near-duplicate student final:
   'student_turn_coalesced',
+  'pre_audio_supersede',
+  'lesson_closed',
+  'late_fallback_barge_stopped_speech',
+  'post_close_pleasantry_silenced',
+  'thinking_cue_chime',
+  'thinking_cue_ack_skipped',
   //   the "give me a moment" think-time hold armed for a turn:
   'think_time_hold_set',
   // portal-704e3e01 (2026-09-04): page retitled from the problem that actually
@@ -391,6 +400,16 @@ interface EmbedConfig {
   session_goal?: SessionGoal;
   engine?: 'standard' | 'premium';
   locale?: string;
+  /** Extra tutor languages for this tenant's sessions, e.g. ["en","ja"]
+   *  (normalised by parseTutorLanguages; unsupported codes dropped). Absent ⇒
+   *  English-only, unchanged. NEXT_PUBLIC_TUTOR_EXTRA_LANGUAGES=off ignores it. */
+  tutor_languages?: string[] | string;
+  /** Tutor speaking rate, Cartesia generation_config.speed (0.6–1.5; 1 = normal).
+   *  Absent ⇒ unchanged. See lib/tutor/voice/speech-rate.ts. */
+  speech_rate?: number | string;
+  /** Thinking cue (chime + soft pulse + large "Thinking…" on the stage) while
+   *  the tutor prepares a reply. Absent ⇒ off. See lib/tutor/voice/thinking-cue.ts. */
+  thinking_cue?: boolean | string | number;
   input_mode?: InputMode;
   /** A voice code (see the voices docs page) or, legacy, a realtime voice name. */
   voice?: string;
@@ -639,6 +658,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // is most visible; unknown/marketplace voice ids resolve undefined (no
   // speed sent — unchanged behavior for every other partner voice).
   const cartesiaVoiceSpeed = cartesiaSpeedForVoiceId(cartesiaVoiceId);
+  const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
+  const speechRate = parseSpeechRate(config.speech_rate);
+  const thinkingCue = TUTOR_THINKING_CUE && parseThinkingCue(config.thinking_cue);
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
@@ -2009,6 +2031,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         sessionMode={sessionMode}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
+        tutorLanguages={tutorLanguages}
+        speechRate={speechRate}
+        thinkingCue={thinkingCue}
         sessionMaxMinutes={maxDuration}
         sessionWrapMinutes={wrapAtMinutes}
         maxDurationExplicit={maxDurationExplicit}

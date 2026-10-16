@@ -20,6 +20,8 @@ import {
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
+import { initialThinkingCue, cueTurnAccepted, cueTick, cueStop, type ThinkingCueState } from '@/lib/tutor/voice/thinking-cue';
+import { playTurnChime, playThinkingPulse, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 // Aliased: this file already has a `SessionMode` (opening-behavior's
 // lessonNode/freestyle/diagnostic `targetKind`, unrelated concept) — the
 // text-only tutor mode is `TutorSessionMode` here to avoid the collision.
@@ -201,7 +203,8 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { isMetaNarration, createCorrectionWorkingTracker } from '@/lib/tutor/voice/meta-narration';
+import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
+import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -227,6 +230,7 @@ import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mi
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
+import { cannedLanguage, localizeCanned, lastTutorText } from '@/lib/tutor/voice/bilingual-canned';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createNoiseFloorState, recordFloorSample, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
 import { CancelStormGovernor, STOP_IMPERATIVE_RE } from '@/lib/tutor/voice/cancel-storm';
@@ -364,6 +368,8 @@ import {
   TUTOR_POSED_PROBLEM_BOARD_CHECK,
   TUTOR_THINK_TIME_HOLD,
   TUTOR_TURN_COALESCE,
+  TUTOR_SUPERSEDE_PRE_AUDIO,
+  TUTOR_THINKING_CUE,
   TUTOR_OPENING_BARGEIN_ESCAPE,
   TUTOR_VERDICT_REPLANT_ON_KILL,
   TUTOR_KILL_WITHHOLDS_ADVANCE,
@@ -506,7 +512,7 @@ async function dispatchTopicNotesOverlay(
 }
 
 // Words that Whisper commonly misrecognizes as inappropriate
-import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting } from '@/lib/tutor/voice/transcript-filters';
+import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting, sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
 import { detectStudentIntent, isContinuationRequest } from '@/lib/tutor/voice/student-intent';
 import { detectTutorSameContext, decidePageStrip } from '@/lib/tutor/voice/tutor-context-detector';
@@ -896,6 +902,17 @@ interface VoiceTutorRealtimeProps {
    *  consumed when ttsProvider === 'cartesia'; the student "slow" toggle
    *  always wins over this. */
   cartesiaVoiceSpeed?: number;
+  /** Tutor languages of a bilingual session (tenant setting, e.g. ['en','ja'],
+   *  normalised by parseTutorLanguages). Absent ⇒ English-only: the prompt
+   *  and every TTS request are byte-identical to before. */
+  tutorLanguages?: string[];
+  /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
+   *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
+  speechRate?: number;
+  /** Thinking cue (embed claim `thinking_cue`): chime when a student turn is
+   *  accepted, soft pulse while the reply is still coming, head cover line
+   *  skipped (the chime replaces it). See lib/tutor/voice/thinking-cue.ts. */
+  thinkingCue?: boolean;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -1269,6 +1286,9 @@ export function VoiceTutorRealtime({
   silentSecondsPerWord,
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
+  tutorLanguages,
+  speechRate,
+  thinkingCue = false,
   onLessonPlanProgress,
   onHomeworkProgress,
   onLessonPlanLoadSettled,
@@ -3052,6 +3072,10 @@ export function VoiceTutorRealtime({
   // re-wraps after a "wait, one more thing"). The ASSIGN call is one-shot
   // per session — a second call still refreshes nextTimeIntent.
   const closeNotesFiredRef = useRef(false);
+  // Set when the brain closes the lesson (closeSessionNotes). After it, pure
+  // pleasantries get no new turn and the idle nudge stands down — GDI starter
+  // 2026-10-15 ran eight farewells and an idle nudge restarted an exercise.
+  const lessonClosedRef = useRef(false);
   // What the practice-assign route actually created, for the end-of-session
   // summary card. Null until an assign succeeds (either the in-session tool
   // call or the commit-route fallback).
@@ -3475,6 +3499,9 @@ export function VoiceTutorRealtime({
   // into, vs. stale enough that the new final should start its own entry.
   const queuedTranscriptCoalesceAtRef = useRef<number>(0);
   const TURN_COALESCE_MS = 5000;
+  // Pre-audio supersede window: a final that lands this long after the
+  // in-flight turn was dispatched is a new thought, not the rest of it.
+  const PRE_AUDIO_SUPERSEDE_MS = 8000;
   // R32 (H1 review round 1, Finding 1): a queueOnMidUtterance push has a
   // guaranteed drain ONLY when brainBusyRef was true at push time (the
   // while-loop drain / 90s busy-watchdog own it then). When brainBusyRef is
@@ -4751,7 +4778,7 @@ export function VoiceTutorRealtime({
           currentUserTextRef.current = '';
           return;
         }
-        const classification = classifyTranscript(raw, { allowGreetings: !studentHasSpokenRef.current });
+        const classification = classifyTranscript(raw, { allowGreetings: !studentHasSpokenRef.current, allowNonLatin: sessionAllowsNonLatin(tutorLanguages) });
         if (classification === 'noise') {
           console.log('[VoiceTutorRealtime] Dropped noise transcript:', raw);
           onDebugEvent?.('noise_filtered', `Filtered: "${raw}"`);
@@ -8002,6 +8029,8 @@ export function VoiceTutorRealtime({
       // above already excludes the action unconditionally, so flag-off
       // behaviour is byte-identical to pre-round).
       if (cmd.action === 'closeSessionNotes') {
+        if (!lessonClosedRef.current) onDebugEvent?.('lesson_closed', 'closeSessionNotes');
+        lessonClosedRef.current = true;
         if (!TUTOR_CLOSE_NOTES) continue;
         const c = cmd as { assignLoIds: string[]; reason?: string; nextTimeIntent?: string };
         // Latest-wins: a second wrap-up call refreshes the intent even
@@ -13643,6 +13672,9 @@ export function VoiceTutorRealtime({
                       }
                     }
                   }
+                  // Leaked stage label in front of a real sentence ("*opener* …",
+                  // GDI starter 2026-10-15): strip it before anything reads the text.
+                  if (typeof ev.text === 'string') (ev as { text?: string }).text = stripLeakedLabels(ev.text);
                   const updatedSentence = (ev.text as string) || '';
                   if (!updatedSentence.trim()) continue;
                   // Correction-note working tracker (meta-narration.ts). Asked
@@ -17509,7 +17541,7 @@ export function VoiceTutorRealtime({
               // 2026-10-06b: computedFacts — which side of which (coloured)
               // line holds, computed from the problem's own inequalities. The
               // judge flagged four correct statements without them.
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}), ...(judgeAnswerCheck ? { answerCheck: judgeAnswerCheck } : {}) }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}), ...(judgeComputedFacts ? { computedFacts: judgeComputedFacts } : {}), ...(judgeAnswerCheck ? { answerCheck: judgeAnswerCheck } : {}), ...(subject === 'languages' ? { learnerSpeech: true } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
@@ -19633,6 +19665,39 @@ export function VoiceTutorRealtime({
   // changed. Every ref/const referenced below is either a component-scope
   // ref (stable identity) or a module-level pure import — see the
   // useCallback deps for the two non-ref component values it touches.
+  // Thinking cue (GDI sessions 2026-10-15) — see lib/tutor/voice/thinking-cue.ts.
+  // The coarse voice state the stage shows is mirrored into a ref by the
+  // effect beside onVoiceStateChange; a 200 ms poller advances the cue while
+  // a wait is open and stops itself when it closes.
+  const thinkingCueOn = TUTOR_THINKING_CUE && thinkingCue;
+  const thinkingCueStateRef = useRef<ThinkingCueState>(initialThinkingCue());
+  const thinkingCueTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const coarseVoiceStateRef = useRef<string>('idle');
+  const runThinkingCueTick = useCallback(() => {
+    const { state, play } = cueTick(thinkingCueStateRef.current, coarseVoiceStateRef.current, Date.now());
+    thinkingCueStateRef.current = state;
+    if (play === 'pulse') playThinkingPulse();
+    if (state.phase === 'idle' && thinkingCueTimerRef.current) {
+      clearInterval(thinkingCueTimerRef.current);
+      thinkingCueTimerRef.current = null;
+    }
+  }, []);
+  /** A real student turn was accepted for the brain (never a synthetic,
+   *  silent or opening dispatch — callers check). */
+  const cueStudentTurnAccepted = useCallback(() => {
+    if (!thinkingCueOn) return;
+    const { state, play } = cueTurnAccepted(thinkingCueStateRef.current, Date.now());
+    thinkingCueStateRef.current = state;
+    if (play === 'chime') playTurnChime();
+    onDebugEvent?.('thinking_cue_chime', '');
+    if (!thinkingCueTimerRef.current) thinkingCueTimerRef.current = setInterval(runThinkingCueTick, 200);
+  }, [thinkingCueOn, runThinkingCueTick, onDebugEvent]);
+  useEffect(() => () => {
+    thinkingCueStateRef.current = cueStop();
+    if (thinkingCueTimerRef.current) clearInterval(thinkingCueTimerRef.current);
+    thinkingCueTimerRef.current = null;
+  }, []);
+
   const armCoverForDispatch = useCallback((transcript: string) => {
     // R58 student-declared hold: no ack, no cover, no escalation while the
     // student has asked us to stay quiet. Dispatch itself is swallowed in
@@ -19681,7 +19746,8 @@ export function VoiceTutorRealtime({
         // BECAUSE of our latency — answer instantly, brain turn continues
         // normally. Same speak-gate the fast opener respects.
         if (Date.now() >= speakTextBlockedUntilRef.current) {
-          const text = pickLivenessReply(ackTurnIndex);
+          const text = localizeCanned(pickLivenessReply(ackTurnIndex, ackTranscript), 'liveness',
+            cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), ackTurnIndex);
           const sid = pushTtsScriptForPerception(text);
           speakTextRef.current?.(text, sid);
           ttsDispatchedCountRef.current++;
@@ -19721,6 +19787,14 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('ack_suppressed', 'speak-gate');
             return;
           }
+          // Thinking cue: the chime already told the student their turn was
+          // taken, so the head filler ("One moment.", "Mm, thinking.") is
+          // skipped — ChatGPT's test feedback called those lines mechanical.
+          // Escalation tiers below still speak on a long wait.
+          if (thinkingCueOn) {
+            onDebugEvent?.('thinking_cue_ack_skipped', TUTOR_COVER_V2 && verdict.kind === 'cover' ? verdict.category : 'ack');
+            return;
+          }
           let text: string; let index: number;
           if (TUTOR_COVER_V2 && verdict.kind === 'cover') {
             const catKey = verdict.category;
@@ -19731,6 +19805,8 @@ export function VoiceTutorRealtime({
             ({ text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current));
             lastAckIndexRef.current = index;
           }
+          // Bilingual session, tutor currently speaking Japanese ⇒ Japanese filler.
+          text = localizeCanned(text, 'cover', cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), ackTurnIndex);
           // Fast-opener call shape: perception self-voice push + speak.
           const ackScriptId = pushTtsScriptForPerception(text);
           speakTextRef.current?.(text, ackScriptId);
@@ -19803,10 +19879,12 @@ export function VoiceTutorRealtime({
               return;
             }
             if (Date.now() < speakTextBlockedUntilRef.current) return; // retry next tick? no — tier already consumed; acceptable
-            const sid = pushTtsScriptForPerception(act.text);
-            speakTextRef.current?.(act.text, sid);
+            const escText = localizeCanned(act.text, act.tier === 0 ? 'escalation-1' : 'escalation-2',
+              cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), esTurnIndex);
+            const sid = pushTtsScriptForPerception(escText);
+            speakTextRef.current?.(escText, sid);
             ttsDispatchedCountRef.current++;
-            onDebugEvent?.('cover_escalation', `tier=${act.tier} "${act.text}"`);
+            onDebugEvent?.('cover_escalation', `tier=${act.tier} "${escText}"`);
             return;
           }
           // give-up: stop waiting on a sick turn (would otherwise ride ~93s of
@@ -19862,6 +19940,12 @@ export function VoiceTutorRealtime({
       image?: { dataUrl: string; name?: string };
     },
   ) => {
+    // Lesson closed (see lesson-close.ts): a goodbye/thanks after the close
+    // is not a new turn — no second farewell, no restarted exercise.
+    if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript)) {
+      onDebugEvent?.('post_close_pleasantry_silenced', transcript.slice(0, 60));
+      return;
+    }
     // Host-end goodbye under way (endSessionNowRef farewell branch): no new
     // turn may reach the brain until unmount.
     if (farewellSealedRef.current) return;
@@ -20132,6 +20216,37 @@ export function VoiceTutorRealtime({
       // in-flight turn on a new arrival regressed before (see the E1
       // lazy-cancel comments elsewhere in this file); this only affects
       // turns that haven't dispatched yet.
+      // Pre-audio supersede (see the flag's doc): the in-flight reply has not
+      // reached the speaker yet, so nothing the student heard is taken back.
+      // Abort it and queue in-flight text + this final as ONE turn; the
+      // aborted call's own finally releases the busy flag and drains it,
+      // the same hand-off the typed opening-turn supersede uses.
+      const inFlight = inFlightTurnRef.current;
+      if (
+        TUTOR_SUPERSEDE_PRE_AUDIO &&
+        !opts?.silent &&
+        inFlight &&
+        !inFlight.shown &&
+        !inFlight.transcript.trim().startsWith('[') &&
+        !isKickoffMessage(inFlight.transcript) &&
+        Date.now() - brainTurnStartedAtRef.current < PRE_AUDIO_SUPERSEDE_MS &&
+        inFlightBrainAbortRef.current
+      ) {
+        const prior = queuedTranscriptsRef.current.splice(0).filter((q) => !q.startsWith('['));
+        const parts = [inFlight.transcript, ...prior, transcript].map((x) => x.trim()).filter(Boolean);
+        const merged: string[] = [];
+        for (const part of parts) {
+          const norm = part.toLowerCase().replace(/\s+/g, ' ');
+          if (!merged.some((m) => isFuzzyDupTranscript(m.toLowerCase().replace(/\s+/g, ' '), norm))) merged.push(part);
+        }
+        const combined = merged.join(' ');
+        inFlight.shown = true; // one supersede per in-flight turn
+        queuedTranscriptsRef.current.push(combined);
+        queuedTranscriptCoalesceAtRef.current = Date.now();
+        onDebugEvent?.('pre_audio_supersede', combined.slice(0, 80));
+        try { inFlightBrainAbortRef.current.abort(); } catch { /* already gone */ }
+        return;
+      }
       if (
         TUTOR_TURN_COALESCE &&
         queuedTranscriptsRef.current.length > 0 &&
@@ -20317,7 +20432,7 @@ export function VoiceTutorRealtime({
       // enhancement; it must never be load-bearing for the reply.
       if (!opts?.silent && !/^\s*\[/.test(transcript)) {
         const detectSource = opts?.typed === true ? 'typed' : 'voice';
-        if (detectSource === 'typed' || classifyTranscript(transcript) === 'clean') {
+        if (detectSource === 'typed' || classifyTranscript(transcript, { allowNonLatin: sessionAllowsNonLatin(tutorLanguages) }) === 'clean') {
           try {
             runStudentTurnDetection(transcript, detectSource);
           } catch (err) {
@@ -20343,6 +20458,7 @@ export function VoiceTutorRealtime({
       // to armCoverForDispatch above — same call, now shared with the
       // queue-drain site below.
       armCoverForDispatch(transcript);
+      if (!opts?.silent && !/^\s*\[/.test(transcript) && !openingTurnPendingRef.current) cueStudentTurnAccepted();
       await callBrainOnce(transcript, opts);
       // R58: promote a pending hold to ACTIVE only now — the turn that
       // acknowledged the request has fully dispatched, so its speech is
@@ -20470,7 +20586,7 @@ export function VoiceTutorRealtime({
         // being wrong is a spurious newPage or jump match, so guard rather
         // than rely on the producers. Same defensive try/catch as the
         // direct site.
-        if (!/^\s*\[/.test(combined) && classifyTranscript(combined) === 'clean') {
+        if (!/^\s*\[/.test(combined) && classifyTranscript(combined, { allowNonLatin: sessionAllowsNonLatin(tutorLanguages) }) === 'clean') {
           try {
             runStudentTurnDetection(combined, 'queued');
           } catch (err) {
@@ -20479,6 +20595,7 @@ export function VoiceTutorRealtime({
           }
         }
         armCoverForDispatch(combined);
+        if (!/^\s*\[/.test(combined)) cueStudentTurnAccepted();
         inFlightTurnRef.current = { transcript: combined, shown: false };
         await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
       }
@@ -21005,6 +21122,8 @@ export function VoiceTutorRealtime({
           silentSecondsPerWord,
           cartesiaVoiceId,
           cartesiaVoiceSpeed,
+          ...(tutorLanguages ? { tutorLanguages } : {}),
+          ...(speechRate !== undefined ? { speechRate } : {}),
           speakingRate,
           studentName,
         }
@@ -21410,6 +21529,8 @@ export function VoiceTutorRealtime({
         ? nudgePlan.decision
         : decideIdleNudge({ busy, hidden, wrapPhase, hold: nudgeHold, state: idleNudgeStateRef.current });
       if (decision === 'stand-down') return;
+      // The lesson has been closed: nothing to nudge toward.
+      if (lessonClosedRef.current) return;
       if (decision === 'recheck') {
         if (nudgePlan?.reason) {
           const pp = idleNudgePostponeRef.current;
@@ -22176,7 +22297,7 @@ export function VoiceTutorRealtime({
       // gated on firstStudentTurnAcceptedRef (not studentHasSpokenRef)
       // so an earlier rejected/duplicate attempt can't close this window.
       const isPreTurnGreeting = !firstStudentTurnAcceptedRef.current && /^(hello|hi|hey)[.!?]?$/i.test(t.text.trim());
-      const noiseCheck = isPreTurnGreeting ? 'clean' : classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current });
+      const noiseCheck = isPreTurnGreeting ? 'clean' : classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current, allowNonLatin: sessionAllowsNonLatin(tutorLanguages) });
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
@@ -22198,8 +22319,9 @@ export function VoiceTutorRealtime({
         const spokeMs = lastSpeechDurationMsRef.current;
         const { nag } = recordNoiseDrop(noiseNagStateRef.current, Date.now(), spokeMs);
         if (nag && Date.now() >= speakTextBlockedUntilRef.current && prodState !== 'speaking') {
-          const sid = pushTtsScriptForPerception(NOISE_NAG_LINE);
-          speakTextRef.current?.(NOISE_NAG_LINE, sid);
+          const nagLine = localizeCanned(NOISE_NAG_LINE, 'noise', cannedLanguage(tutorLanguages, lastTutorText(transcriptRef.current)), 0);
+          const sid = pushTtsScriptForPerception(nagLine);
+          speakTextRef.current?.(nagLine, sid);
           onDebugEvent?.('noise_nag_spoken', `${spokeMs}ms utterance`);
         }
         // Stage 3 quick-fix (2026-06-16): if a cancel checkpoint is
@@ -22563,6 +22685,16 @@ export function VoiceTutorRealtime({
             console.warn(`[PERCEPTION] late-fallback duplicate dropped: ${JSON.stringify(t.text).slice(0, 80)}`);
             onDebugEvent?.('perception_dispatch_duplicate_dropped', t.text.slice(0, 80));
             return;
+          }
+          // A real barge-in over audio whose text is already complete (the
+          // brain is done; only the queue is playing): stop that audio first.
+          // Without this the student's reply waited behind the rest of the
+          // tutor's monologue — portal-e90ab190 (2026-10-15): "Can we go
+          // through?" at 21.6s, the opening kept talking until 30.4s while
+          // two replies stacked up behind it ("Oh my god, please, hello.").
+          if (heur.verdict === 'barge_in' && prodState === 'speaking' && !brainBusyRef.current) {
+            onDebugEvent?.('late_fallback_barge_stopped_speech', t.text.slice(0, 60));
+            void clearSpeechQueueRef.current?.();
           }
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
@@ -24164,6 +24296,8 @@ export function VoiceTutorRealtime({
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
           ...(TUTOR_ANSWER_REVEAL_GUARD ? { answerRevealGuard: true } : {}),
+          // Bilingual tenant: session-block override of Rule 5. Absent ⇒ unchanged.
+          ...(tutorLanguages ? { tutorLanguages } : {}),
           ...openerFields,
         });
         const systemPrompt = promptParts.core + promptParts.session;
@@ -24539,6 +24673,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       'start_tap',
       `action=${tapAction} state=${realtime.state} connected=${realtime.isConnected} started=${hasStarted}`,
     );
+    // Thinking cue: create/resume its AudioContext inside this user gesture.
+    if (thinkingCueOn) primeThinkingCueAudio();
     // RESUME first-tap — the brain has the rehydrated history + restored
     // board, so it re-orients, RE-RENDERS any interrupted visual, and
     // continues — voiced + drawn through the normal turn path (reliable; no
@@ -25435,6 +25571,23 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       onListeningHintRef.current?.(null);
     }
   }, [realtime.state, isWarmingUp, isBrainResponding, resolveAwaitingDispatch]);
+
+  // Thinking cue: same derivation as the stage state below, mirrored into a
+  // ref and fed to the cue right away so a pulse stops the instant the state
+  // leaves processing/thinking (tutor audio, barge-in, cancel).
+  useEffect(() => {
+    if (!thinkingCueOn) return;
+    const s = realtime.state;
+    coarseVoiceStateRef.current =
+      s === 'error' ? 'error'
+      : s === 'speaking' ? 'speaking'
+      : (isWarmingUp || isBrainResponding || s === 'processing') ? 'thinking'
+      : (hasStarted && isMicMuted) ? 'muted'
+      : perceptionAwaitingDispatch ? 'processing'
+      : perceptionHearing ? 'hearing'
+      : hasStarted ? 'listening' : 'idle';
+    runThinkingCueTick();
+  }, [thinkingCueOn, realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, runThinkingCueTick]);
 
   useEffect(() => {
     if (!onVoiceStateChange) return;

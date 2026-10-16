@@ -12,7 +12,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDefinition } from './toolDefinitions';
-import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
+import { classifyTranscript, sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
 import { shouldSurfaceWsError, shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
@@ -34,6 +34,7 @@ import { openPcmChunkStream, type PcmChunkStream } from '@/lib/tutor/voice/pcm-s
 import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS, TUTOR_TTS_WS, SONIC_WS_FIRST_CHUNK_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
 import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
 import { preciseSentenceFraction } from '@/lib/tutor/voice/resume-from-cut';
+import { ttsLanguageFor } from '@/lib/tutor/voice/tts-language';
 import { useCartesiaSonicWS } from './useCartesiaSonicWS';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
@@ -351,6 +352,13 @@ export interface RealtimeConfig {
      *  Merged with speakingRate below — the student "slow" toggle always
      *  wins over this per-voice cadence normalization. */
     cartesiaVoiceSpeed?: number;
+    /** Tutor languages of a bilingual session (e.g. ['en','ja']), from the
+     *  tenant's setting. Absent ⇒ English-only, every TTS request unchanged.
+     *  Present ⇒ each sentence is synthesized in the language of its script
+     *  (src/lib/tutor/voice/tts-language.ts). */
+    tutorLanguages?: string[];
+    /** Tutor speaking rate → Cartesia generation_config.speed. Absent ⇒ unchanged. */
+    speechRate?: number;
     /** Task W4: per-session "Speak slower" toggle, independent of the
      *  explain-pace (paceBias) knob. 'slow' asks the HTTP-TTS provider to
      *  synthesize noticeably slower speech; 'normal' (default, or omitted)
@@ -1061,6 +1069,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // point, so this is always the per-voice speed (no student-slow case
         // to merge here) — same merged value as the HTTP path in spirit.
         speed: cartesiaVoiceSpeedRef.current,
+        rate: speechRateRef.current,
+        language: ttsLanguageFor(trimmed, tutorLanguagesRef.current),
         onChunk: (chunk) => {
           if (job.sink) job.sink(chunk);
           else job.chunks.push(chunk);
@@ -1145,6 +1155,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     cartesiaVoiceIdRef.current = relayMode?.cartesiaVoiceId;
   }, [relayMode?.cartesiaVoiceId]);
+  // Bilingual session languages — session-static, same ref pattern.
+  const speechRateRef = useRef<number | undefined>(relayMode?.speechRate);
+  useEffect(() => {
+    speechRateRef.current = relayMode?.speechRate;
+  }, [relayMode?.speechRate]);
+  const tutorLanguagesRef = useRef<string[] | undefined>(relayMode?.tutorLanguages);
+  useEffect(() => {
+    tutorLanguagesRef.current = relayMode?.tutorLanguages;
+  }, [relayMode?.tutorLanguages]);
   // R38 Task 6: per-voice Cartesia speed offset, mirrors cartesiaVoiceIdRef
   // exactly (session-static, same ref+effect pattern). Merged with
   // speakingRateRef in fetchTTSPromise/fetchCartesiaStreamedHead/
@@ -1577,7 +1596,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             updateState(shouldListenRef.current ? 'listening' : 'connected');
             break;
           }
-          const classification = classifyTranscript(transcript);
+          const classification = classifyTranscript(transcript, { allowNonLatin: sessionAllowsNonLatin(tutorLanguagesRef.current) });
           if (classification === 'noise') {
             console.log('[Realtime] Dropping phantom turn (noise):', JSON.stringify(transcript));
             // Remove the phantom item from the server's conversation state
@@ -3205,8 +3224,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       const voiceSpeed = cartesiaVoiceSpeedRef.current; // number | undefined, set beside cartesiaVoiceIdRef
       const speed = speakingRateRef.current === 'slow' ? (useCartesia ? 'slow' : 0.85)
                   : (useCartesia ? voiceSpeed : undefined);
+      const language = useCartesia ? ttsLanguageFor(trimmed, tutorLanguagesRef.current) : undefined;
       const body = useCartesia
-        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) }
+        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}), ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}), ...(language ? { language } : {}) }
         : { text: trimmed, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) };
       // Bounded retry (2026-07-15 incident): a single mid-session transient
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
@@ -3310,6 +3330,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           voiceId: cartesiaVoiceIdRef.current,
           studentName: studentNameRef.current,
           ...(speed !== undefined ? { speed } : {}),
+          ...(speechRateRef.current !== undefined ? { rate: speechRateRef.current } : {}),
+          ...(ttsLanguageFor(trimmed, tutorLanguagesRef.current) ? { language: ttsLanguageFor(trimmed, tutorLanguagesRef.current) } : {}),
         }),
       });
       if (!res.ok || !res.body) return null;

@@ -346,6 +346,17 @@ const GREETING_WORDS = new Set(['hello', 'hi', 'hey']);
 export interface NoiseFilterOpts {
   /** Session-start window: greeting-only utterances are NOT noise. */
   allowGreetings?: boolean;
+  /** Bilingual session (a non-Latin second language such as Japanese):
+   *  mostly-non-Latin text is the student speaking that language, not a
+   *  Whisper hallucination. Without this every mostly-Japanese turn was
+   *  dropped as noise and the tutor sat silent until the idle nudge (GDI
+   *  starter session 2026-10-15: five turns lost, including "move on"). */
+  allowNonLatin?: boolean;
+}
+
+/** True when the session's languages include a non-Latin-script one. */
+export function sessionAllowsNonLatin(languages: string[] | undefined): boolean {
+  return (languages ?? []).some((l) => ['ja', 'zh', 'ko', 'ar', 'hi', 'ru', 'el', 'he', 'th'].includes(l));
 }
 
 /**
@@ -420,6 +431,10 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
     && !/^[-+]?\d+$/.test(normalized)
     && !MATH_VAR_LETTERS.has(normalized)
     && !SHORT_ANSWER_WORDS.has(normalized)
+    // Bilingual session: 「はい」「うん」「ええ」 are two characters and a whole
+    // answer — the bare 「はい」 to a closing line was dropped here and the idle
+    // nudge restarted the exercise (GDI starter 2026-10-15, 1159.8s).
+    && !(opts?.allowNonLatin && /[\u3040-\u30ff\u4e00-\u9fff]/.test(normalized))
   ) return true;
   // Phonetic garbage — mostly single letters separated by spaces
   if (isPhoneticGarbage(normalized)) return true;
@@ -433,7 +448,7 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
   // This happens when Whisper processes background noise and outputs random foreign text.
   // Only filter if the session language is expected to be English/Latin.
   const nonLatinChars = normalized.replace(/[\u0000-\u024F\u1E00-\u1EFF\s\d.,!?;:'"()\-+*/=]/g, '');
-  if (nonLatinChars.length > normalized.length * 0.5 && normalized.length > 3) return true;
+  if (!opts?.allowNonLatin && nonLatinChars.length > normalized.length * 0.5 && normalized.length > 3) return true;
   return false;
 }
 

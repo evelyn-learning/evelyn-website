@@ -778,6 +778,12 @@ export type BrainStreamEvent =
  * on flush; false positives (premature flush) would cause speakText to
  * fire on a fragment, which is worse — so we err toward holding back.
  */
+const JAPANESE_SCRIPT_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
+/** Earliest boundary that is either a Japanese terminator (plus closing
+ *  brackets/quotes) or an English terminator directly before Japanese text. */
+const JAPANESE_BOUNDARY_RE =
+  /^([\s\S]+?(?:[。！？][」』）)"”]*|[.!?](?=\s*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}])))(\s*)/u;
+
 export class SentenceBuffer {
   private buf = '';
   private static readonly MIN_LEN = 25;
@@ -827,6 +833,14 @@ export class SentenceBuffer {
         m = this.buf.match(new RegExp(`^([\\s\\S]{${minLen},}?[.!?])(\\s+)`));
         if (!m || !SentenceBuffer.ABBREV_TAIL_RE.test(m[1])) break;
         minLen = m[1].length + 1;
+      }
+      // Bilingual sessions: Japanese ends sentences with 。！？ and no space,
+      // and TTS picks one language per sentence, so a Japanese sentence and
+      // an English one must not share a chunk. Only runs when the buffer
+      // holds Japanese script ⇒ English-only text splits exactly as before.
+      if (JAPANESE_SCRIPT_RE.test(this.buf)) {
+        const j = this.buf.match(JAPANESE_BOUNDARY_RE);
+        if (j && (!m || j[0].length < m[0].length) && !SentenceBuffer.ABBREV_TAIL_RE.test(j[1])) m = j;
       }
       if (!m) break;
       // Stage-direction leak defense (live 2026-07-30): "(waiting for
@@ -2329,6 +2343,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // Text-mode thinking (streaming path only): `thinkingOn` can only fall to
   // false within a turn (deadline / token-cap re-issue below), never rise.
   let thinkingOn = input.textThinking === true || input.voiceThinking === true;
+  // GDI starter 2026-10-15 (demo log 23:01Z): a voice turn with thinking OFF
+  // still came back stop=max_tokens with no text and no tool (out=2000, 25 s)
+  // — the student heard nothing but cover lines. Re-issued once, like the
+  // thinking-starved case below.
+  let emptyCapRetried = false;
   const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript, workThenMatch ? { workThenMatch: true } : undefined);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   // Verdict pre-check: one small call, awaited HERE — before the brain call,
@@ -2731,6 +2750,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       // thinking at the normal cap. Its tokens were billed, so they count.
       console.warn(`[text-thinking] max_tokens reached with nothing shown — re-issuing iteration ${iter} without thinking`);
       thinkingOn = false;
+      iter--;
+      continue;
+    }
+    if (
+      !emptyCapRetried &&
+      finalMessage.stop_reason === 'max_tokens' &&
+      accumulatedText.length - textCharsBeforeIter === 0 &&
+      newToolUseBlocks.length === 0
+    ) {
+      emptyCapRetried = true;
+      console.warn(`[brain.stream] max_tokens reached with nothing shown (thinking off) — re-issuing iteration ${iter} once`);
       iter--;
       continue;
     }

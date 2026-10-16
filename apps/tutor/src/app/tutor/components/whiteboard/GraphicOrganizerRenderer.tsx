@@ -37,6 +37,7 @@ export default function GraphicOrganizerRenderer({ spec: rawSpec }: { spec: unkn
   const decision = normalizeGraphicOrganizerSpec(rawSpec);
   if (!decision.ok) return null;
   const spec = decision.spec;
+  if (spec.kind === 'sequence') return <SequenceOrganizer spec={spec} />;
   return (
     <div className="graphic-organizer-renderer">
       {spec.title && (
@@ -47,7 +48,6 @@ export default function GraphicOrganizerRenderer({ spec: rawSpec }: { spec: unkn
         {spec.kind === 'story_map' && renderStoryMap(spec)}
         {spec.kind === 'kwl' && renderKWL(spec)}
         {spec.kind === 't_chart' && renderTChart(spec)}
-        {spec.kind === 'sequence' && renderSequence(spec)}
         {spec.kind === 'cause_effect' && renderCauseEffect(spec)}
       </svg>
     </div>
@@ -147,34 +147,36 @@ function renderTChart(spec: Extract<GraphicOrganizerSpec, { kind: 't_chart' }>) 
   );
 }
 
-function renderSequence(spec: Extract<GraphicOrganizerSpec, { kind: 'sequence' }>) {
+/** Sequence as wrapping HTML boxes, not a fixed SVG row: six steps in a
+ *  520-unit row left ~60px per box, so step text was cut off mid-word and the
+ *  fixed 320-unit canvas left a blank band above the row (GDI meeting session
+ *  2026-10-15). Boxes now wrap onto new rows and grow to fit their text. */
+const SEQ_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#7c3aed', '#ef4444', '#06b6d4'];
+function SequenceOrganizer({ spec }: { spec: Extract<GraphicOrganizerSpec, { kind: 'sequence' }> }) {
   const steps = list(spec.steps);
-  const N = Math.max(1, steps.length);
-  const boxW = (SVG_W - 30 - (N - 1) * 24) / N;
-  const cy = SVG_H / 2;
-  const palette = ['#3b82f6', '#10b981', '#f59e0b', '#7c3aed', '#ef4444', '#06b6d4'];
   return (
-    <g>
-      {steps.map((s, i) => {
-        const x = 15 + i * (boxW + 24);
-        const color = palette[i % palette.length];
-        return (
-          <g key={i}>
-            <rect x={x} y={cy - 50} width={boxW} height={100} fill="#fff" stroke={color} strokeWidth={3} rx={8} />
-            <text x={x + 12} y={cy - 32} fontSize={11} fontWeight={700} fill={color}>step {i + 1}</text>
-            <foreignObject x={x + 8} y={cy - 22} width={boxW - 16} height={70}>
-              <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.3 }}>{s}</div>
-            </foreignObject>
-            {i < N - 1 && (
-              <g>
-                <line x1={x + boxW + 4} y1={cy} x2={x + boxW + 18} y2={cy} stroke="#0f172a" strokeWidth={2.5} />
-                <polygon points={`${x + boxW + 18},${cy - 5} ${x + boxW + 23},${cy} ${x + boxW + 18},${cy + 5}`} fill="#0f172a" />
-              </g>
-            )}
-          </g>
-        );
-      })}
-    </g>
+    <div className="graphic-organizer-renderer">
+      {spec.title && (
+        <div className="text-center text-sm font-semibold text-gray-700 mb-2">{spec.title}</div>
+      )}
+      <ol className="flex flex-wrap items-stretch gap-y-3 rounded bg-[#fafbfc] p-3" style={{ listStyle: 'none', margin: 0 }}>
+        {steps.map((s, i) => {
+          const color = SEQ_PALETTE[i % SEQ_PALETTE.length];
+          return (
+            <li key={i} className="flex items-center" data-feature={`step-${i + 1}`}>
+              <div
+                className="rounded-lg bg-white px-3 py-2"
+                style={{ border: `3px solid ${color}`, width: 150, minHeight: 72, overflowWrap: 'anywhere' }}
+              >
+                <div className="text-[11px] font-bold" style={{ color }}>step {i + 1}</div>
+                <div className="text-[13px] leading-snug text-slate-900">{s}</div>
+              </div>
+              {i < steps.length - 1 && <span aria-hidden="true" className="px-1.5 text-lg font-bold text-slate-900">→</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 

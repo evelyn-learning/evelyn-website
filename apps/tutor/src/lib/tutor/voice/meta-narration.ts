@@ -80,6 +80,21 @@ const SELF_AUDIT_RE =
 // layer's reasoning leaking into speech.
 const TURN_CLASSIFYING_RE =
   /^\s*that'?s (?:a |an )?(?:request|question|greeting|statement|session-?end|non-?answer|meta)\b[^.!?]{0,40}\bnot (?:an? )?(?:attempt|answer)\b|^\s*that'?s session-?end\b|\bno (?:math|grading|verdict) needed\b/i;
+// GDI starter session 2026-10-15 (embed-1792105245704): the model voiced
+// its persona instructions as the turn's first sentence — "Ryota's rule
+// applies here: no second full farewell beyond acknowledgment.", "Ryota's
+// style: gentle pace, one catchphrase max, no re-greeting." A name's
+// rule/style/persona label, or the instruction vocabulary itself, is never
+// said TO a student.
+const PERSONA_DIRECTIVE_RE =
+  /^\s*[A-Z][\w-]*'s (?:rule|rules|style|persona|voice|catchphrase|guidelines?)\b|\bcatchphrase max\b|\bno re-greeting\b|\bbeyond acknowledg(?:e)?ment\b|\bsecond full farewell\b/i;
+
+/** Bare stage labels the model sometimes writes in front of a real sentence
+ *  ("*opener* はい、…" — same session). Stripped, the sentence itself kept. */
+export function stripLeakedLabels(sentence: string): string {
+  return (sentence ?? '').replace(/^\s*\*(?:opener|opening|ack|acknowledg(?:e)?ment|verdict|recap|closing|bridge)\*\s*/i, '');
+}
+
 const THIRD_PERSON_PLAN_RE =
   /^\s*let me (?:support|help|guide|redirect|steer|reassure|encourage) them\b/i;
 
@@ -330,7 +345,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
