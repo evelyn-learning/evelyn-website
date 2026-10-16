@@ -34,7 +34,7 @@ import katex from 'katex';
 // WhiteboardCanvas, TranscriptView, ReplayPlayer (+ EquationRenderer's own
 // import). Any NEW top-level surface that renders InlineMathText outside
 // those trees must import 'katex/dist/katex.min.css' itself.
-import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities, preprocessKatexBody, normalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities, preprocessKatexBody, normalizeLiteralLineBreaks, addBubbleMathBreaks } from '@/lib/tutor/whiteboard/inline-math';
 
 interface InlineMathTextProps {
   text: string;
@@ -52,14 +52,20 @@ interface InlineMathTextProps {
    *  sessions stored before the ingestion fix must replay correctly; pass
    *  `false` wherever the text is not tutor-authored board prose. */
   literalLineBreaks?: boolean;
+  /** Chat bubbles: let a long maths span wrap onto the next line instead of
+   *  spilling past the bubble (GAC live 2026-10-16). The span renders inline
+   *  rather than as an atomic inline-block, and adjacent parenthesized
+   *  factors get a break opportunity. Board cards keep the atomic box. */
+  wrap?: boolean;
 }
 
-function Math({ latex }: { latex: string }) {
+function Math({ latex, wrap = false }: { latex: string; wrap?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (!ref.current) return;
     try {
-      const processed = preprocessKatexBody(latex);
+      const body = preprocessKatexBody(latex);
+      const processed = wrap ? addBubbleMathBreaks(body) : body;
       katex.render(processed, ref.current, {
         throwOnError: false,
         displayMode: false,
@@ -70,8 +76,8 @@ function Math({ latex }: { latex: string }) {
       // Fall back to raw text if KaTeX throws
       if (ref.current) ref.current.textContent = latex;
     }
-  }, [latex]);
-  return <span ref={ref} className="inline-block align-baseline" />;
+  }, [latex, wrap]);
+  return <span ref={ref} className={wrap ? 'inline' : 'inline-block align-baseline'} />;
 }
 
 /** One `$…$` span and nothing else — what the transcript bubbles pass
@@ -79,7 +85,7 @@ function Math({ latex }: { latex: string }) {
  *  each one over wrapped in dollars; the prose around it never comes here). */
 const LONE_DOLLAR_SPAN_RE = /^\$[^$]*\$$/;
 
-export function InlineMathText({ text, className = '', forceMath = false, nowrap = false, literalLineBreaks = true }: InlineMathTextProps) {
+export function InlineMathText({ text, className = '', forceMath = false, nowrap = false, literalLineBreaks = true, wrap = false }: InlineMathTextProps) {
   // A literal backslash-n that is a line SEPARATOR in prose becomes a real
   // line break before anything else looks at the string (the auto-wrap pass
   // would otherwise read "\n" as a LaTeX command). New tool calls are
@@ -94,7 +100,7 @@ export function InlineMathText({ text, className = '', forceMath = false, nowrap
     <span className={`${nowrap ? 'whitespace-nowrap' : 'whitespace-pre-wrap'} ${className}`}>
       {parts.map((p, i) =>
         p.kind === 'math'
-          ? <Math key={i} latex={p.body} />
+          ? <Math key={i} latex={p.body} wrap={wrap} />
           : <span key={i}>{p.body}</span>
       )}
     </span>

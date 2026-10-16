@@ -62,7 +62,7 @@ export function renderBubbleEmphasis(text: string): React.ReactNode {
   if (!parts.some((p) => p.kind === 'math')) return renderInlineEmphasis(text);
   return parts.map((p, i) =>
     p.kind === 'math'
-      ? <InlineMathText key={`m-${i}`} text={`$${p.body}$`} />
+      ? <InlineMathText key={`m-${i}`} text={`$${p.body}$`} wrap />
       : <React.Fragment key={`t-${i}`}>{renderInlineEmphasis(p.body)}</React.Fragment>,
   );
 }

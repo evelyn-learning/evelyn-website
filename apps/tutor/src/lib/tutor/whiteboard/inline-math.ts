@@ -117,7 +117,28 @@ function looksLikeMath(inner: string): boolean {
   //      phenotype ratio): two or more colon-separated integers. Without
   //      this the wrapped ratio showed literal "$9:3:3:1$" on cards.
   if (/^\d+(?::\d+)+$/.test(inner)) return true;
+  //  11. Parenthesized numeric product (GAC live 2026-10-16, portal-76431d8b
+  //      — "divide $2(21.76)$ by $2.0$" showed literal "$2(21.76)$"): a
+  //      whitespace-free span of digits, decimals, operators and at least one
+  //      balanced paren pair. No letters and no spaces, so a currency pairing
+  //      artifact ("5 (plus tax) or ") or "$2(each)" stays literal.
+  if (
+    inner.length <= 40 &&
+    /^[-+*/×·÷\d.()]+$/.test(inner) &&
+    /\d/.test(inner) &&
+    /\(/.test(inner) &&
+    parensBalanced(inner)
+  ) return true;
   return false;
+}
+
+function parensBalanced(s: string): boolean {
+  let depth = 0;
+  for (const ch of s) {
+    if (ch === '(') depth++;
+    else if (ch === ')' && --depth < 0) return false;
+  }
+  return depth === 0;
 }
 
 /** Display-side sentence-gap normalization (Round-23). The brain sometimes
@@ -733,6 +754,16 @@ export function preprocessKatexBody(latex: string): string {
   return latex
     .replace(/\\\\(?=[a-zA-Z{])/g, '\\')
     .replace(/\\n(?![a-zA-Z])/g, '\n');
+}
+
+/** Break opportunities for a maths span in a chat bubble (GAC live
+ *  2026-10-16, portal-76431d8b: "$f_k \times d = (0.15)(2.0)(9.8)(\cos30°)(3.0)$"
+ *  spilled past the bubble on a narrow screen). KaTeX already breaks inline
+ *  maths after a relation or binary operator; a run of parenthesized
+ *  factors has neither, so it is one unbreakable box. An `\allowbreak`
+ *  between adjacent groups lets it wrap like the rest of the line. */
+export function addBubbleMathBreaks(latex: string): string {
+  return latex.replace(/\)(?=\s*\()/g, ')\\allowbreak ');
 }
 
 /**

@@ -10,7 +10,8 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex, normalizeLiteralLineBreaks, deepNormalizeLiteralLineBreaks } from '../src/lib/tutor/whiteboard/inline-math';
+import katex from 'katex';
+import { segment, addBubbleMathBreaks, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex, normalizeLiteralLineBreaks, deepNormalizeLiteralLineBreaks } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -812,6 +813,35 @@ console.log('\n=== A leading enumerator stays outside the maths span ===');
   eq('deep: CS show_table byte-identical', deepNormalizeLiteralLineBreaks(table), table);
   const quiz = { question: 'Which escape is a line feed?', options: [String.raw`\n`, String.raw`\t`], answer: String.raw`\n` };
   eq('deep: CS show_quiz byte-identical', deepNormalizeLiteralLineBreaks(quiz), quiz);
+}
+
+console.log('\n=== Digit-led parenthesized product is math (GAC live 2026-10-16) ===');
+{
+  // portal-76431d8b: "divide $2(21.76)$ by $2.0$" showed literal "$2(21.76)$"
+  // because a digit-led span with no LaTeX signal fell through every clause.
+  const t = 'Now divide $2(21.76)$ by $2.0$.';
+  const m = mathBodies(t);
+  check('live repro: both spans are math', m.length === 2 && m[0] === '2(21.76)' && m[1] === '2.0', joined(t));
+  const m2 = mathBodies('So $(0.15)(2.0)(9.8)$ first.');
+  check('chained parenthesized product is math', m2.length === 1 && m2[0] === '(0.15)(2.0)(9.8)', JSON.stringify(m2));
+  const m3 = mathBodies('Take $-3(4.5)$ next.');
+  check('negative coefficient product is math', m3.length === 1, JSON.stringify(m3));
+  const c1 = 'It costs $5 (plus tax) or $7 flat.';
+  check('currency with a parenthetical stays literal', mathBodies(c1).length === 0, joined(c1));
+  const c2 = 'Pens are $2(each) and pads $5.';
+  check('currency glued to a word in parens stays literal', mathBodies(c2).length === 0, joined(c2));
+  const c3 = 'Unbalanced $2(3.5$ stays literal.';
+  check('unbalanced paren stays literal', mathBodies(c3).length === 0, joined(c3));
+}
+
+console.log('\n=== Bubble maths gets break points between factors (GAC live 2026-10-16) ===');
+{
+  const live = String.raw`f_k \times d = (0.15)(2.0)(9.8)(\cos30°)(3.0)`;
+  const out = addBubbleMathBreaks(live);
+  check('break between each adjacent factor', (out.match(/\\allowbreak/g) ?? []).length === 4, out);
+  check('live span still renders in KaTeX', !katex.renderToString(out, { throwOnError: false }).includes('katex-error'), out);
+  check('no factor run, no change', addBubbleMathBreaks('2(21.76)') === '2(21.76)');
+  check('\\left( after \\right) untouched', addBubbleMathBreaks(String.raw`\left(a\right)\left(b\right)`) === String.raw`\left(a\right)\left(b\right)`);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
