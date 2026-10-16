@@ -64,6 +64,12 @@ const SELF_REFERENCE_RE =
 // 8+8+5+5", "So my 'Not quite' was correct". Colon after
 // "compute" is load-bearing: "Let me compute the area
 // together" is legitimate teaching and must survive.
+// 2026-10-16 (GAC v12/v16): working shown and corrected mid-sentence —
+// "…not $10y+5$... wait, let me say it plainly:", "(2u−2)(u+1)/... let's
+// check:". A plain admission of a mistake to the student is not this.
+const MID_REPLY_SELF_CORRECTION_RE =
+  /(?:\.{2,}|…)\s*(?:wait|hmm+|let'?s check|let me (?:check|redo|re-?do|fix|say)|no,|actually)\b|\bwait,\s*let me\b|\blet me say (?:it|that) (?:plainly|again|properly)\b|\bscratch that\b/i;
+
 const SELF_AUDIT_RE =
   /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i;
 
@@ -345,7 +351,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;

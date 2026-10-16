@@ -167,7 +167,9 @@ export function expressionRevealHit(sentence: string, value: string, own: string
   if (v === undefined) return null;
   const want = valuesOf(target, v);
   if (!want.every(Number.isFinite)) return null;
-  const ownRuns = mathRuns(spokenMathToSymbols(own)).flatMap((r) => [r.join('')]);
+  // Every contiguous piece of what the student (or the problem) wrote: a
+  // label in front ("c: e^4 - 1") must not hide their own expression.
+  const ownRuns = mathRuns(spokenMathToSymbols(own)).flatMap((r) => r.flatMap((_, a) => r.slice(a).map((__, k) => r.slice(a, a + k + 1).join(''))));
   const ownVals = ownRuns.map((r) => valuesOf(r, v));
   const words = mathRuns(spokenMathToSymbols(sentence));
   for (const run of words) {

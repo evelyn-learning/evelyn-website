@@ -241,7 +241,8 @@ export const SOLVED_PROBLEM_FIELD_RULE =
   ' stated_answers — one entry for EACH of the student\'s listed problems (or part of one) that this message states an answer for: problem (its number as listed), stated (what the message states for it), own_answer (the answer to that problem or part as YOU worked it out in step two — work it out for each one, do not assume), right (true only when stated is the same answer as own_answer). Empty when the message states no answer to a listed problem. When the message states answers for more than one problem or part, the verdict is "correct" only when every entry is right, and "partly_correct" when some are right and some are not.'
   + ' solved_problems — the numbers, as listed in <student_problems>, of EVERY one of the student\'s problems whose COMPLETE final answer (every part and every value that problem asks for) the student has now stated correctly, judged by your own working in step two. One message can complete several problems: list each one. An answer can also be split across messages: for each part of a problem, take the student\'s LATEST statement of it, in this message or in their own earlier messages in the recent conversation (never the tutor\'s words); when those latest statements together are the complete right answer, list the problem. Leave a problem out when only a step, one part or some of the values have been stated, or when the latest statement of any part is wrong. Judge this whichever question the message answers: a message that restates the complete final answer of a problem settled earlier lists that problem. Empty when none, or when no problems are listed.'
   + ' about_problem — the number, as listed in <student_problems>, of the student\'s problem this message proposes an answer, step or part for; zero when it is about none of the listed problems (a new problem of their own, a general claim, small talk) or when it is about several.'
-  + ' reason_wrong — true when the message gives a reason, rule or method for its answer and that reason is false or does not actually establish the answer, even when the answer itself is right; false when it gives no reason or a sound one. A reason that uses a value which is right under an accepted convention is sound, even when your own working used another convention. A right answer with a wrong reason is "partly_correct", and that problem is not listed in solved_problems.';
+  + ' reason_wrong — true when the message gives a reason, rule or method for its answer and that reason is false or does not actually establish the answer, even when the answer itself is right; false when it gives no reason or a sound one. A reason that uses a value which is right under an accepted convention is sound, even when your own working used another convention. A right answer with a wrong reason is "partly_correct", and that problem is not listed in solved_problems.'
+  + ' wrong_step — when the answer is wrong and the message shows working: the FIRST operation in THEIR working that is wrong, named by what it does with the numbers or terms THEY wrote (which subtraction, which sign, which substitution), in a few words. Recompute every operation they wrote, in order, and name the first one that does not hold — not a later one, and never an operation they did correctly. Give no result: not the correct value of that operation, not the answer. Empty when they showed no working, when their working holds and the error is elsewhere, or when you are not sure.';
 
 /**
  * 2026-10-15 (GAC staging v5): with several problems listed, a correct answer
@@ -386,7 +387,7 @@ export const VERDICT_PRECHECK_SCHEMA_WITH_WORKING: Record<string, unknown> = {
 export function withSolvedProblemField(schema: Record<string, unknown>): Record<string, unknown> {
   return {
     ...schema,
-    required: [...(schema.required as string[]), 'stated_answers', 'solved_problems', 'about_problem', 'reason_wrong'],
+    required: [...(schema.required as string[]), 'stated_answers', 'solved_problems', 'about_problem', 'reason_wrong', 'wrong_step'],
     properties: {
       ...(schema.properties as Record<string, unknown>),
       stated_answers: {
@@ -401,6 +402,7 @@ export function withSolvedProblemField(schema: Record<string, unknown>): Record<
       solved_problems: { type: 'array', items: { type: 'integer' } },
       about_problem: { type: 'integer' },
       reason_wrong: { type: 'boolean' },
+      wrong_step: { type: 'string' },
     },
   };
 }
@@ -631,14 +633,27 @@ export async function runVerdictPrecheck(
     // 2026-10-15 (GAC v7 audit): not over the check's own finding that the
     // reason given is wrong (ledger).
     const reasonWrong = ledger && o.reason_wrong === true;
+    let upgradedToFinal = false;
     if (o.proposed_equals_final_answer === true && String(o.problem_final_answer ?? '').trim() && !reasonWrong
         && !(o.verdict === 'correct' && (o.answers === 'open_question' || o.answers === 'overall_problem'))) {
       o.answers = 'overall_problem';
       o.verdict = 'correct';
       o.correct_value = String(o.problem_final_answer);
       if (o.confidence === 'low') o.confidence = 'medium';
+      upgradedToFinal = true;
+    }
+    // 2026-10-16 (GAC v16, Geometry): "check my answer x = 4" for a problem
+    // the student brought up mid-session (not on the list) came back
+    // answers=neither / incorrect — so no reveal guard and no no-reveal rule,
+    // and the reply said "so x = 20 — not 4". Under the ledger a wrong VALUE
+    // with a checked correct value is an answer to the problem being worked.
+    if (ledger && o.answers === 'neither' && o.verdict === 'incorrect' && String(o.correct_value ?? '').trim()
+        && /\d|=/.test(String(o.proposed_value ?? '')) && !(Array.isArray(o.stated_answers) && o.stated_answers.length)) {
+      o.answers = 'open_question';
+      console.log('[verdict-precheck] neither → open_question: a wrong value for a problem off the list (the one being worked)');
     }
     let disputed = false;
+    let confirmAgreed = false;
     if (confirm) {
       if (o.verdict !== 'correct') confirmAbort.abort();
       else {
@@ -656,6 +671,7 @@ export async function runVerdictPrecheck(
           const o2 = parseReply(second.text);
           const agrees = !!o2 && (o2.verdict === 'correct'
             || (o2.proposed_equals_final_answer === true && String(o2.problem_final_answer ?? '').trim() !== '' && o2.reason_wrong !== true));
+          if (agrees) confirmAgreed = true;
           if (o2 && VERDICTS.has(String(o2.verdict)) && !agrees) {
             disputed = true;
             console.log(`[verdict-precheck] confirming check DISAGREES (${String(o2.verdict)}) — no verdict either way`);
@@ -682,7 +698,20 @@ export async function runVerdictPrecheck(
       const n = Number(v);
       return ledger && Number.isInteger(n) && n > 0 ? problems.findIndex((p) => p.n === n) + 1 : 0;
     };
-    const labels: unknown[] = Array.isArray(o.solved_problems) ? o.solved_problems.slice(0, 25) : [o.solved_problem];
+    let labels: unknown[] = Array.isArray(o.solved_problems) ? o.solved_problems.slice(0, 25) : [o.solved_problem];
+    // 2026-10-16 (GAC v16, AP Calc BC): "maybe 1/4" came back neither /
+    // incorrect yet equal to the problem's final answer; the upgrade above made
+    // it correct at medium with no problem named — the reply credited it, the
+    // ledger kept it OPEN, and the wrap-up said "problem 2 is still open".
+    // Upgraded this way and confirmed by the second check: the problem the
+    // message is about is solved, at high confidence.
+    const confirmedUpgrade = ledger && upgradedToFinal && !disputed && confirmAgreed && !reasonWrong
+      && !labels.some((l) => positionOf(l) > 0) && positionOf(o.about_problem) > 0;
+    if (confirmedUpgrade) {
+      labels = [o.about_problem];
+      o.confidence = 'high';
+      console.log('[verdict-precheck] equals-final upgrade confirmed by the second check — recorded the problem it is about');
+    }
     // 2026-10-15 (GAC staging v6): the check's own per-answer findings are
     // held over its summary. A problem whose answer in THIS message it judged
     // wrong is never recorded solved, and a message with any wrong answer is
@@ -690,8 +719,17 @@ export async function runVerdictPrecheck(
     const stated = ledger && Array.isArray(o.stated_answers) ? o.stated_answers.slice(0, 25) as Array<Record<string, unknown>> : [];
     // A rounded decimal of the exact answer is not wrong: right value, not yet in the exact form.
     const rounded = (a: Record<string, unknown>) => roundsExactAnswer(String(a.stated ?? ''), String(a.own_answer ?? ''));
+    // 2026-10-16 (GAC v16, AP Statistics): "15.5" for a problem whose answer
+    // is "median 15.5, IQR 15" came back right:false (not the WHOLE answer)
+    // and the reply said "not 15.5". A value that IS one of the check's own
+    // answer values is part of the answer, never wrong.
+    const partOfOwn = (a: Record<string, unknown>) => {
+      const st = (String(a.stated ?? '').match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+      const own = (String(a.own_answer ?? '').match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+      return st.length > 0 && own.length > st.length && st.every((v) => own.some((w) => Math.abs(v - w) < 1e-9));
+    };
     const roundedHere = new Set(stated.filter((a) => a && a.right === false && rounded(a)).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
-    const wrongHere = new Set(stated.filter((a) => a && a.right === false && !rounded(a)).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
+    const wrongHere = new Set(stated.filter((a) => a && a.right === false && !rounded(a) && !partOfOwn(a)).map((a) => positionOf(a.problem)).filter((pos) => pos > 0));
     if (ledger && o.verdict === 'incorrect' && (roundedHere.size || roundsExactAnswer(String(o.proposed_value ?? ''), String(o.correct_value || o.problem_final_answer || '')))
         && !wrongHere.size) {
       o.verdict = 'partly_correct';
@@ -734,6 +772,10 @@ export async function runVerdictPrecheck(
       ...(aboutProblem ? { aboutProblem } : {}),
       ...(wrongHere.size ? { wrongProblems: [...wrongHere].sort((a, b) => a - b) } : {}),
       ...(roundedDecimal ? { roundedDecimal: true as const } : {}),
+      // 2026-10-16 (GAC v16, Algebra I): "7y = -4" — the reply pointed at the
+      // distribution, which was right. The check names the first wrong
+      // operation of THEIR working, with no value in it (safeDiffersAt).
+      ...(() => { const ws = ledger && o.verdict !== 'correct' && !disputed ? safeDiffersAt(o.wrong_step, correctValue, input) : ''; return ws ? { wrongStep: ws } : {}; })(),
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),

@@ -76,6 +76,9 @@ export interface PublicVerdictPrecheck {
   /** 2026-10-16 (GAC v12): two independent checks disagreed about a CORRECT
    *  finding — no verdict either way; the student shows how they got it. */
   disputed?: true;
+  /** 2026-10-16 (GAC v16): the first wrong operation of the student's own
+   *  working, in their numbers, with no result. Ledger only. */
+  wrongStep?: string;
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -117,6 +120,7 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     ...wrongProblemsField(o.wrongProblems),
     ...(o.roundedDecimal === true ? { roundedDecimal: true as const } : {}),
     ...(o.disputed === true ? { disputed: true as const } : {}),
+    ...wrongStepField(o.wrongStep),
   };
 }
 
@@ -136,6 +140,11 @@ function wrongProblemsField(v: unknown): { wrongProblems?: number[] } {
   return list.length ? { wrongProblems: list } : {};
 }
 
+function wrongStepField(v: unknown): { wrongStep?: string } {
+  const at = typeof v === 'string' ? line(v, 160) : '';
+  return at ? { wrongStep: at } : {};
+}
+
 function aboutProblemField(v: unknown): { aboutProblem?: number } {
   return isPosition(v) ? { aboutProblem: v } : {};
 }
@@ -150,7 +159,7 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}), ...(r.disputed === true ? { disputed: true as const } : {}) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}), ...(r.disputed === true ? { disputed: true as const } : {}), ...wrongStepField(r.wrongStep) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -440,6 +449,14 @@ export const WRONG_WHOLE_ANSWER_POINT_THERE =
 // the server's reveal guard is armed for the turn (whole-answer-reveal.ts,
 // `anyTarget`). Partner-gated: no-reveal-ledger-gate.ts.
 
+/** 2026-10-16 (GAC v16): where THEIR working first goes wrong, as the check
+ *  found it — the reply points there and nowhere else. */
+function wrongStepLines(p: PublicVerdictPrecheck): string {
+  if (!p.wrongStep) return '';
+  return `- Where their working first goes wrong: ${q(line(p.wrongStep, 160))}.\n`
+    + 'Point to exactly that step — not to an earlier step they did correctly — and ask them to redo it. Do not state its result.\n';
+}
+
 export const WRONG_STEP_NO_REVEAL_RULE =
   'What to do: work it out silently and state no result of your own. FIRST sentence: say plainly, as a fact about THEIR answer, that it is not right — no praise word first. You may confirm a step of THEIR working that is right, in their own words and values. Then name the step or idea where their working goes wrong — what that step does, by name — without its result. End with ONE question that has them redo that step themselves. Never state the correct result of that step, of any step after it, or of the question — not in the reply and not on the board, and in no form: not the value, not a corrected line of working that contains it, not an expression evaluated to it. The result stays theirs to find. When the answer is a word rather than a number (a term, a name, a structure, a category or a choice), naming the right one IS the result: do not name it, not even as a contrast with what they wrote. The same holds for a decision or conclusion (reject or not, converges or not, spontaneous or not, true or false): do not state which way it goes, and never assert one — ask what their own result says about it. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
 
@@ -519,6 +536,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
       return head + proposed + where
         + '- Checked for that question: INCORRECT.\n'
         + (at ? `- What their answer does not agree with: ${q(at)}.\n` : '')
+        + wrongStepLines(p)
         + WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH
         + (at ? WRONG_WHOLE_ANSWER_POINT_THERE : '')
         + tail;
@@ -528,6 +546,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
       return head + proposed + where
         + '- Checked for that question: INCORRECT.\n'
         + (p.answers === 'other_part' ? '- It is an attempt at THAT problem or part, not at the question you asked just now.\n' : '')
+        + wrongStepLines(p)
         + WRONG_STEP_NO_REVEAL_RULE
         + tail;
     }

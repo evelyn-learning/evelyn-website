@@ -317,9 +317,14 @@ function newResultNumber(text: string, a: WithheldAnswer, board: boolean): strin
 /** Every side of the check's value that is an expression: alternatives split
  *  on ";" and "or", a trailing " (aside)" dropped, each side of "=" / "≈". */
 function expressionParts(value: string): string[] {
-  return String(value ?? '').split(/\s*(?:;|\bor\b)\s*/i)
+  // 2026-10-16 (GAC v16, AP Statistics): the check's working in a bracketed
+  // aside ("not an outlier (upper fence = 23 + 22.5 = 45.5)") is read too —
+  // "that'd be 23 + 1.5×15" gave the deciding value away.
+  const v = String(value ?? '');
+  const asides = [...v.matchAll(/\(([^()]*)\)/g)].map((m) => m[1]).filter((a) => /[=≈<>≤≥]/.test(a));
+  return [v, ...asides].join(';').split(/\s*(?:;|\bor\b|,)\s*/i)
     .map((alt) => alt.replace(/\s+\([^()]*\)\s*$/, ''))
-    .flatMap((alt) => alt.split(/[=≈]/))
+    .flatMap((alt) => alt.split(/[=≈<>≤≥]/))
     .map((side) => side.trim())
     .filter((side) => side && isExpressionValue(side));
 }

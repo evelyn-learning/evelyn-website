@@ -877,6 +877,58 @@ async function main() {
     assert.match(vtr, /homework: \{ problems: homeworkProblemsRef\.current, current: homeworkCurrentRef\.current, solved: homeworkSolvedRef\.current \}/);
   });
 
+  await test('v16: the check names the first wrong step of their working, with no value; the reply is pointed there', async () => {
+    const labelled = { ...input, problems: [{ n: 1, text: 'Solve 5(2y + 1) = 3y - 9.' }], solved: [] as number[], studentMessage: '10y + 5 = 3y - 9, then 7y = -4, so y = -4/7' };
+    const mk = (ws: string): VerdictPrecheckLlm => async () => ({ text: JSON.stringify({ answers: 'overall_problem', verdict: 'incorrect', confidence: 'high', correct_value: 'y = -2', stated_answers: [{ problem: 1, stated: 'y = -4/7', own_answer: 'y = -2', right: false }], solved_problems: [], about_problem: 1, reason_wrong: false, wrong_step: ws }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const r = await runVerdictPrecheck(labelled, { llm: mk('subtracting 5 from -9'), timeoutMs: 1000, ledger: true });
+    assert.equal(r?.wrongStep, 'subtracting 5 from -9');
+    const pub = sanitizePublicPrecheck(toPublicPrecheck(r!))!;
+    assert.equal(pub.wrongStep, 'subtracting 5 from -9');
+    const b = formatAnswerCheckBlock(pub, { workThenMatch: true, noRevealAnyStep: true });
+    assert.match(b, /Where their working first goes wrong: "subtracting 5 from -9"/);
+    // a step carrying a value the student never wrote is dropped
+    const leak = await runVerdictPrecheck(labelled, { llm: mk('-9 - 5 is -14'), timeoutMs: 1000, ledger: true });
+    assert.equal(leak?.wrongStep, undefined);
+    // gate off: never asked, never kept
+    const off = await runVerdictPrecheck(labelled, { llm: mk('subtracting 5 from -9'), timeoutMs: 1000 });
+    assert.equal(off?.wrongStep, undefined);
+  });
+
+  await test('v16: a wrong value for a problem off the list is a wrong answer to the one being worked (guarded, no value)', async () => {
+    const labelled = { ...input, problems: [{ n: 1, text: 'Angles.' }], solved: [1] as number[], studentMessage: 'can you check my answer x = 4' };
+    const llm: VerdictPrecheckLlm = async () => ({ text: JSON.stringify({ proposed_value: 'x = 4', answers: 'neither', verdict: 'incorrect', confidence: 'high', correct_value: 'x = 20', stated_answers: [], solved_problems: [], about_problem: 0, reason_wrong: false, wrong_step: '' }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const r = await runVerdictPrecheck(labelled, { llm, timeoutMs: 1000, ledger: true });
+    assert.equal(r?.answers, 'open_question');
+    const b = formatAnswerCheckBlock(toPublicPrecheck(r!), { workThenMatch: true, noRevealAnyStep: true });
+    assert.match(b, /INCORRECT/); assert.doesNotMatch(b, /x = 20/);
+    // a non-answer stays neither
+    const chat: VerdictPrecheckLlm = async () => ({ text: JSON.stringify({ proposed_value: '', answers: 'neither', verdict: 'cannot_determine', confidence: 'high', correct_value: '', stated_answers: [], solved_problems: [], about_problem: 0, reason_wrong: false, wrong_step: '' }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    assert.equal((await runVerdictPrecheck(labelled, { llm: chat, timeoutMs: 1000, ledger: true }))?.answers, 'neither');
+  });
+
+  await test('v16: an answer equal to the final answer, confirmed by the second check, records the problem it is about', async () => {
+    const labelled = { ...input, problems: [{ n: 1, text: 'A.' }, { n: 2, text: 'B.' }], solved: [1] as number[], studentMessage: 'maybe 1/4?' };
+    const raw = { proposed_value: '1/4', problem_final_answer: '1/4', proposed_equals_final_answer: true, answers: 'neither', verdict: 'incorrect', confidence: 'medium', correct_value: 'sqrt(x+4)+2', stated_answers: [], solved_problems: [], about_problem: 2, reason_wrong: false, wrong_step: '' };
+    const llm: VerdictPrecheckLlm = async () => ({ text: JSON.stringify(raw), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const r = await runVerdictPrecheck(labelled, { llm, timeoutMs: 1000, ledger: true });
+    assert.equal(r?.verdict, 'correct'); assert.equal(r?.confidence, 'high'); assert.deepEqual(r?.solvedProblems, [2]);
+    // without the confirming check (switched off) it stays as before: not recorded
+    const one = await runVerdictPrecheck(labelled, { llm, timeoutMs: 1000, ledger: true, confirmCorrect: false });
+    assert.equal(one?.solvedProblems, undefined);
+  });
+
+  await test('v16: a value that is one part of a two-value answer is never judged wrong; the check\'s bracketed working is guarded', async () => {
+    const labelled = { ...input, problems: [{ n: 1, text: 'Median and IQR.' }, { n: 2, text: 'Outlier?' }], solved: [1, 2] as number[], studentMessage: '15.5' };
+    const llm: VerdictPrecheckLlm = async () => ({ text: JSON.stringify({ proposed_value: '15.5', answers: 'other_part', verdict: 'correct', confidence: 'medium', correct_value: '15.5', stated_answers: [{ problem: 1, stated: '15.5', own_answer: 'median 15.5, IQR 15', right: false }], solved_problems: [1, 2], about_problem: 1, reason_wrong: false, wrong_step: '' }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const r = await runVerdictPrecheck(labelled, { llm, timeoutMs: 1000, ledger: true });
+    assert.equal(r?.verdict, 'correct'); assert.equal(r?.wrongProblems, undefined);
+    const { revealsWithheldAnswer } = await import('../src/lib/tutor/voice/whole-answer-reveal');
+    const prob = 'The data set is 4, 8, 15, 16, 23, 42. Is 42 an outlier by the 1.5 x IQR rule?';
+    const a = { value: 'No, 42 is not an outlier (upper fence = Q3+1.5*IQR = 23+22.5 = 45.5, and 42 < 45.5)', studentText: 'yes, because 15.5 + 1.5 x 15 = 38', givenText: prob, newNumbers: true, problemText: prob, studentPriorText: 'Q1 = 8, Q3 = 23, so IQR = 15.' };
+    assert.equal(revealsWithheldAnswer("So that'd be 23 + 1.5×15.", a).hit, true);
+    assert.equal(revealsWithheldAnswer('The fence uses Q3, not the median. Which value should replace 15.5?', a).hit, false);
+  });
+
   console.log('typed sessions follow the student\'s language (GAC v14)');
   await test('the language of a typed message is read; English, maths and labels are not flagged', async () => {
     const { nonEnglishLanguageOf, formatStudentLanguageBlock } = await import('../src/lib/tutor/voice/text-language');

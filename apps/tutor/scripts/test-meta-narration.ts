@@ -19,6 +19,12 @@ function check(name: string, cond: boolean, detail?: string) {
 
 // ─── the pre-existing phrase behaviour, pinned before it moved ───
 check('"The student already solved this one."', isMetaNarration('The student already solved this one.'));
+// 2026-10-16 (GAC v12/v16): working corrected mid-sentence is never shown; a plain admission or a pedagogical "Wait —" is.
+check('mid-sentence "... wait, let me say it plainly"', isMetaNarration('Distributing gives $10y+5$, not $10y+5$... wait, let me say it plainly: $7y=-14$.'));
+check('mid-sentence "/... let\'s check:"', isMetaNarration('Factoring to (2u−2)(u+1)/... let\'s check: (2u+1)(u−1)=0.'));
+check('"scratch that"', isMetaNarration('Hmm, no — scratch that.'));
+check('a plain admission is kept', !isMetaNarration('Wait, I made a mistake there.'));
+check('a pedagogical "Wait —" question is kept', !isMetaNarration('Wait — what do you get when you subtract 5?'));
 check('"Let me check — the active problem is …"', isMetaNarration('Let me check — the active problem is the dataset.'));
 check('"Let me mark this segment complete."', isMetaNarration('Let me mark this segment complete.'));
 check('"Since the student answered, …"', isMetaNarration('Since the student answered, we advance.'));
