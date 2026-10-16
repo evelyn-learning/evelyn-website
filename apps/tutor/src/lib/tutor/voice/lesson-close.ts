@@ -32,5 +32,26 @@ export function isPleasantryOnly(text: string): boolean {
     .split(/[、。,.!！\n]+/)
     .map((c) => c.replace(/\s+/g, ' ').trim())
     .filter(Boolean);
-  return clauses.length > 0 && clauses.every((c) => PLEASANTRY_CLAUSE.test(c));
+  if (clauses.length === 0) return false;
+  if (clauses.every((c) => PLEASANTRY_CLAUSE.test(c))) return true;
+  // embed-1792174263669: 「うん、こちらこそです。ありがとうございました。今日は色々
+  // 練習できました。まだ難しいけど、また次回もお願いします。」 got a second full
+  // farewell. A remark that ENDS on a goodbye is a goodbye; one that ends on
+  // new content (「…ちょっと自信つきました。」) still gets its turn.
+  return FAREWELL_CLAUSE.test(clauses[clauses.length - 1]) && !QUESTION_MARKER.test(text);
 }
+
+const FAREWELL_CLAUSE = new RegExp(
+  '^(?:' + [
+    'ありがとう(?:ございます|ございました)?', 'どうも(?:ありがとうございました)?',
+    'お疲れ(?:様|さま)でした', '失礼します', '失礼しました',
+    '(?:また)?(?:次回|今度|明日)?(?:も)?(?:よろしく)?お願いします(?:ね)?',
+    'さようなら', 'じゃあね', 'またね',
+    'thanks?(?: you)?(?: so much| very much)?', 'bye', 'goodbye', 'good bye',
+    'see you(?: next time| later| soon)?', 'take care',
+  ].join('|') + ')$',
+  'i',
+);
+// A question anywhere keeps the turn, even after a goodbye. STT often drops
+// the「？」, so the spoken question endings count too.
+const QUESTION_MARKER = /[?？]|(?:です|ます|でした|ません)か|教えて|もう一(?:つ|回|度)|質問|one more|question/i;

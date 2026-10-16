@@ -155,6 +155,9 @@ function inFillerLexicon(tok: string): boolean {
 const BARGE_IN_TRIGGERS = [
   'stop', 'wait', 'no,', 'no.', 'actually', 'hold on', 'but ', 'i mean',
   'sorry', 'pause',
+  // Japanese (GDI bilingual sessions, 2026-10-16): 「すみません、…」 and
+  // 「ちょっと待って」 are how a Japanese learner breaks in.
+  'すみません', '待って', 'ストップ',
 ];
 
 const QUESTION_TRIGGERS = ['why', 'how', 'what', 'when', 'where', 'who'];
@@ -227,6 +230,23 @@ function ngrams(tokens: string[], n: number): string[] {
  *  matcher) — that's correct for token-overlap scoring but would over-count
  *  words for the speaking-state ≤4-word gate below ("Badu, what's now
  *  Badu?" is 4 words to a human, 5 tokens after punctuation-splitting). */
+// Japanese/Chinese script has no spaces, so a whole spoken sentence is ONE
+// whitespace token and every "≥3 words" bar below read it as a brief filler
+// (embed-1792174263669: 「すみません、これは何分ですか？」 talked over by the
+// opener). For the state-dependent length bars only, a CJK run counts as one
+// word per two characters — roughly a Japanese word. Text without CJK
+// script counts exactly as before.
+const CJK_CHAR_RE = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff66-\uff9f]/g;
+
+export function lengthWordCount(tokens: string[]): number {
+  let n = 0;
+  for (const tok of tokens) {
+    const cjk = tok.match(CJK_CHAR_RE)?.length ?? 0;
+    n += cjk === 0 ? 1 : Math.max(1, Math.ceil(cjk / 2));
+  }
+  return n;
+}
+
 function rawWordCount(text: string): number {
   const t = text.trim();
   if (!t) return 0;
@@ -922,6 +942,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   const norm = normalize(text);
   const tokens = tokenize(text);
   const wordCount = tokens.length;
+  const lengthWords = lengthWordCount(tokens);
 
   // Task 6: wraps every echo-grounds drop return below. If the expected-
   // answer carve-out applies to THIS input (verified answer, utterance
@@ -1143,12 +1164,12 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       return { verdict: 'barge_in', reason: 'speaking + barge trigger', selfVoiceScore };
     }
     const hasQuestionShape =
-      text.includes('?') ||
+      text.includes('?') || text.includes('？') ||
       tokens.some((tok) => QUESTION_TRIGGERS.includes(tok));
-    if (hasQuestionShape && wordCount >= 3) {
+    if (hasQuestionShape && lengthWords >= 3) {
       return { verdict: 'barge_in', reason: 'speaking + question shape ≥3w', selfVoiceScore };
     }
-    if (wordCount < 3) {
+    if (lengthWords < 3) {
       if (isBriefAnswerShape(tokens)) {
         return { verdict: 'escalate', reason: 'speaking + brief numeric answer', selfVoiceScore };
       }
@@ -1166,7 +1187,7 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     if (startsWithContinuation && wordCount <= 8) {
       return { verdict: 'continuation', reason: 'thinking + continuation lead, short', selfVoiceScore };
     }
-    if (wordCount < 3) {
+    if (lengthWords < 3) {
       if (isBriefAnswerShape(tokens)) {
         return { verdict: 'escalate', reason: 'thinking + brief numeric answer', selfVoiceScore };
       }

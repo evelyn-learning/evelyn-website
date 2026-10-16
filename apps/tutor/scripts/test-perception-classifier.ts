@@ -1500,5 +1500,19 @@ console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence 
   );
 }
 
+// ── Japanese length bars (embed-1792174263669, 2026-10-16) ──────────
+{
+  const q = classify('すみません、これは何分ですか？', 'speaking');
+  check('ja: question while speaking barges in', q.verdict === 'barge_in', `${q.verdict} (${q.reason})`);
+  const long = classify('先生ちょっと質問があるんですけど今のところもう一回お願いします', 'speaking');
+  check('ja: long sentence while speaking is not filler', long.verdict !== 'filler', `${long.verdict} (${long.reason})`);
+  const hai = classify('はい', 'speaking');
+  check('ja: bare はい while speaking stays filler', hai.verdict === 'filler', `${hai.verdict} (${hai.reason})`);
+  const think = classify('えーと、ゴルフをしましたけど', 'processing');
+  check('ja: mid-length sentence while thinking is not filler', think.verdict !== 'filler', `${think.verdict} (${think.reason})`);
+  const en = classify('ok sure', 'speaking');
+  check('en: two-word ack while speaking unchanged (filler)', en.verdict === 'filler', `${en.verdict} (${en.reason})`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

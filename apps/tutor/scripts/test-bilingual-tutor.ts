@@ -287,6 +287,8 @@ test('thinking cue wiring: claim → TutorSession → runtime + stage; head cove
 console.log('live-session fixes (GDI starter session 3, 2026-10-15)');
 test('after the close: goodbyes/thanks are pleasantries; content and questions are not', () => {
   for (const t of ['はい、ありがとうございます。また次回。はい、失礼します。', 'はい、またお願いします。ありがとうございました。', 'はい、お疲れ様でした', 'はい。', 'Thank you, see you next time!']) assert.equal(isPleasantryOnly(t), true, t);
+  for (const t of ['うん、こちらこそです。ありがとうございました。今日は色々練習できました。まだ難しいけど、また次回もお願いします。', 'Today was hard but fun. Thank you, see you next time.']) assert.equal(isPleasantryOnly(t), true, t);
+  for (const t of ['今日は色々練習できました。もう一つ質問してもいいですか。ありがとうございました。', '難しかったです。発音を教えてください。お願いします。']) assert.equal(isPleasantryOnly(t), false, t);
   for (const t of ['はい、ありがとうございます。ちょっと自信つきました。', "No, I haven't。カヤックはまだです。", 'また質問してもいいですか？', 'Have you?']) assert.equal(isPleasantryOnly(t), false, t);
 });
 test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
@@ -310,6 +312,9 @@ test('persona directives are meta; leaked stage labels are stripped', () => {
 test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers dropped, echoed tags stripped', () => {
   for (const s of ["Let's see this together.", "Okay, let's see.", "This matches what's on the board — \"Yes, I have.\" for Pattern 2.", "That's an attempt at this turn's open question — where you went.", "That matches Pattern 2's expected answer for the question."]) assert.equal(isMetaNarration(s), true, s);
   for (const s of ["Let's see what happens if we add two.", "Okay, let's see the next one together, shall we?", "That's a complete, correct answer to my question.", "3<n and n>10 holds."]) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792174263669: reworded fillers, English and Japanese.
+  for (const s of ["Let's see what you've got.", "Okay, let’s hear what you've got.", "Okay, let's see where this is.", "Okay, let's see what's going on.", "Let's see this.", "はい、少し見てみましょう。", "いいですね、見てみましょう。", "はい、見てみましょう。"]) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ["ちょっと見てみてください。", "表を見てみましょう、一つ目はパターン1です。", "Let's see what you did last weekend.", "Let's look at the table together: Pattern 1 is for a specific time."]) assert.equal(isMetaNarration(s), false, s);
   assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
   assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');

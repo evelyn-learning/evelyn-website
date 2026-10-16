@@ -2737,6 +2737,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // Stream finished. Pull final metadata + assistant content for the
     // next agent-loop iteration.
     const finalMessage = await opened.finalMessage();
+    // embed-1792174263669: a turn hit the 2000-token cap and spoke 3 short
+    // sentences after 24 s — what the model wrote is not in any log. Record
+    // the raw shape of a capped iteration (diagnostic only).
+    if (finalMessage.stop_reason === 'max_tokens') {
+      const raw = accumulatedText.slice(textCharsBeforeIter);
+      const blocks = finalMessage.content.map((b) => b.type).join(',');
+      console.warn(
+        `[brain.stream] max_tokens raw: iter=${iter} blocks=[${blocks}] chars=${raw.length} ` +
+        `head=${JSON.stringify(raw.slice(0, 300))} tail=${JSON.stringify(raw.slice(-300))}`,
+      );
+    }
     totalUsage.inputTokens += finalMessage.usage.input_tokens;
     totalUsage.outputTokens += finalMessage.usage.output_tokens;
     totalUsage.cacheReadTokens += finalMessage.usage.cache_read_input_tokens ?? 0;

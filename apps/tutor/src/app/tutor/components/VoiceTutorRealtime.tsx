@@ -15,6 +15,7 @@ import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type 
 import { useCartesiaInkWS } from '../hooks/useCartesiaInkWS';
 import {
   classifyHeuristic,
+  lengthWordCount,
   type RecentTtsScript,
   type ProductionStateForClassifier,
   type PerceptionVerdict,
@@ -3628,6 +3629,9 @@ export function VoiceTutorRealtime({
   // Runtime pedagogy note for the next brain turn (same prepend convention as
   // the cadence / board-anchor / judge notes; own ref, own concern).
   const pendingRuntimeNoteRef = useRef<string | null>(null);
+  /** Segment the pending overlong note was planted for — a note about a
+   *  segment the lesson has already left is stale and dropped. */
+  const pendingRuntimeNoteSegRef = useRef<string | null>(null);
   // Live check 7: the note must not land while the student is answering an
   // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
   // advanced mid-problem and rendered the next card under the wrong problem).
@@ -11780,6 +11784,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('molecule_edit_note_consumed', 'delivered with this turn');
       }
       // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
+      // embed-1792174263669: the "6 turns in hook" note, held while the student
+      // answered, was delivered after the lesson had already advanced — the
+      // brain then produced nothing speakable for 49 s. A note about a segment
+      // we have left is stale; drop it.
+      if (pendingRuntimeNoteRef.current && pendingRuntimeNoteSegRef.current
+          && pendingRuntimeNoteSegRef.current !== currentSegmentIdRef.current) {
+        onDebugEvent?.('segment_overlong_note_stale', `planted for ${pendingRuntimeNoteSegRef.current}, now ${currentSegmentIdRef.current ?? 'none'} — dropped`);
+        pendingRuntimeNoteRef.current = null;
+        pendingRuntimeNoteSegRef.current = null;
+        runtimeNoteHeldTurnsRef.current = 0;
+      }
       if (pendingRuntimeNoteRef.current) {
         // Live check 7: deliver only on a turn where the student is NOT mid-answer —
         // no tutor question was open, or the utterance is a bare ack / move-on.
@@ -18511,6 +18526,7 @@ export function VoiceTutorRealtime({
           const nextHint = nextSeg
             ? `The next segment is "${nextSeg.id}" (${nextSeg.kind}); call advance_lesson({to: "next"}) and show_segment_card({segmentId: "${nextSeg.id}"}) in the same turn.`
             : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
+          pendingRuntimeNoteSegRef.current = segIdNow;
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
             `First finish the problem in play — give the student the verdict on what they just said and close that problem out. Then move the lesson forward: ${nextHint} ` +
@@ -21722,10 +21738,14 @@ export function VoiceTutorRealtime({
    *  text together, which fails toward suppression — the safe direction. */
   const openerBargeEscape = useCallback((text: string): boolean => {
     if (!TUTOR_OPENING_BARGEIN_ESCAPE) return false;
-    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    // Japanese script is kept (it used to normalize to '' — a Japanese
+    // interruption could never escape the opener, embed-1792174263669) and
+    // measured with the classifier's CJK-aware length.
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]+/g, ' ').trim();
     const normalizedText = normalize(text);
     const words = normalizedText.split(/\s+/).filter(Boolean);
-    if (words.length < 3) return false;
+    if (lengthWordCount(words) < 3) return false;
     const openerText = normalize(openingTurnTextRef.current ?? '');
     return !openerText.includes(normalizedText);
   }, []);
