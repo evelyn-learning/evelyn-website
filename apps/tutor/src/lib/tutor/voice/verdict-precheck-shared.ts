@@ -393,7 +393,7 @@ function partlyWrongOnSolvedProblem(p: PublicVerdictPrecheck, opts?: { solved?: 
 }
 
 export const PARTLY_SOLVED_DOUBT_RULE =
-  'Part of what it states is about a problem the software\'s record shows the student already solved correctly earlier: their earlier answer to THAT problem stands and it stays finished. Credit what is right, and say in a few words that their earlier answer to the solved one stands — without writing out that answer or any value. Ask no question about the solved problem and do not ask them to work any step of it again. If something is still missing or wrong on a problem that is NOT solved, ask about that one only.\n';
+  'Part of what it states is about a problem the software\'s record shows the student already solved correctly earlier: their earlier answer to THAT problem stands and it stays finished. Credit what is right, and say in a few words that their earlier answer to the solved one stands — without writing out that answer or any value. Ask no question about the solved problem and do not ask them to work any step of it again. If something is still missing or wrong on a problem that is NOT solved, ask about that one only. When every listed problem is solved, ask about none of them: offer to stop or to look at something else.\n';
 
 export const ALL_SOLVED_CORRECT_RULE =
   'What to do: every one of the student\'s problems is already solved (the software\'s record), so this repeats an answer they already gave. Say in a few words that it is right and already done. Ask NO question about any problem, part or step of this homework — not one you asked earlier, and not a check of it. Offer to stop or to look at something else.\n';

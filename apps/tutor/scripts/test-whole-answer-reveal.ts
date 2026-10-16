@@ -332,6 +332,14 @@ test('ledger: an expression result is withheld however it is written or said; th
   assert.equal(revealsWithheldAnswer('That gives e^4/2 - 1/2.', { ...a, newNumbers: false } as never).hit, false);
 });
 
+// 2026-10-16 (GAC v16, AP Chemistry): the student's "180/30 = 3" is an operation, not the value 6.
+test('ledger: a division the student worked wrongly does not make its true quotient "theirs"', () => {
+  const prob = 'The empirical formula is CH2O. The molar mass is 180 g/mol. What is the molecular formula?';
+  const a = { value: 'C6H12O6', studentText: 'CH2O is 30 g/mol and 180/30 = 3, so C3H6O3.', givenText: prob, newNumbers: true, problemText: prob, studentPriorText: '' };
+  for (const s of ['180 divided by 30 actually gives 6, not 3.', 'So the multiplier is six.']) assert.equal(revealsWithheldAnswer(s, a).hit, true, s);
+  assert.equal(revealsWithheldAnswer('Can you redo that division, 180 divided by 30?', a).hit, false);
+});
+
 generatorTests().then(() => {
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

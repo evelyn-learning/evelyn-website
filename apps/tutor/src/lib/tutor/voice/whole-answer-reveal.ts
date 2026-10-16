@@ -134,6 +134,15 @@ function numbersIn(text: string): Num[] {
     const a = parseFloat(m[1]);
     const aDec = m[1].split('.')[1]?.length ?? 0;
     if (!Number.isFinite(a)) continue;
+    // 2026-10-16 (GAC v16, AP Chemistry): "180/30 = 3" is a division the
+    // student worked (wrongly), not the value 6 — read as 6 it made "gives 6"
+    // look like the student's own number. A fraction followed by "=" is an
+    // operation: its two numbers, not its quotient.
+    if (m[2] && /^\s*=/.test(after)) {
+      out.push({ value: sign * a, decimals: aDec, resultPosition, coefficient: false });
+      out.push({ value: parseFloat(m[2]), decimals: m[2].split('.')[1]?.length ?? 0, resultPosition: false, coefficient: false });
+      continue;
+    }
     if (m[2]) {
       const b = parseFloat(m[2]);
       if (b !== 0) out.push({ value: sign * a / b, decimals: 6, resultPosition, coefficient });
