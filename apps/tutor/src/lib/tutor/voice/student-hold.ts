@@ -66,8 +66,12 @@ const IGNORE_UNTIL_RE =
  *  "hold on" / "one sec" are ordinary thinking stalls (STALL_RE territory
  *  in cover-layer.ts) and must NOT enter hold. These shapes all declare
  *  the student is leaving the conversation or talking to someone else. */
+// "don't listen / respond / reply" is an IMPERATIVE to the tutor. With a
+// subject in front of it ("If I don't listen to you, then what will
+// happen?", embed-1792275630905) it is the student talking ABOUT listening —
+// that one armed a strict hold and swallowed seven utterances.
 const STEP_AWAY_RE =
-  /\b(?:i(?:'m| am| have| need|'ve got) (?:go(?:ing|nna)? |to )?(?:step away|talk to (?:someone|my|a friend)|take a (?:quick )?break)\b|(?:don'?t|do not) (?:listen|respond|reply)(?: to me)?\b|i'?m not talking to you\b|stop listening\b)/i;
+  /\b(?:i(?:'m| am| have| need|'ve got) (?:go(?:ing|nna)? |to )?(?:step away|talk to (?:someone|my|a friend)|take a (?:quick )?break)\b|(?<!\b(?:i|you|we|they|he|she|it|who|that|which|people|students|kids) )(?<!\bif i )(?:don'?t|do not) (?:listen|respond|reply)(?: to (?:me|us|anything|this))?\b|i'?m not talking to you\b|stop listening\b)/i;
 
 const READY_INTENT_RE =
   /\b(?:i'?m ready\b|ready to (?:keep going|continue|go|start)\b|let'?s (?:continue|keep going|get back|go on|resume|start|carry on|pick (?:it )?(?:back )?up)\b|i'?m (?:back|done)\b|back now\b|okay,? i'?m (?:here|ready|back|done)\b|we can (?:continue|keep going|resume)\b|(?:can|could|will|would) you (?:please )?(?:carry on|continue|go on|keep going|start|resume|go ahead)\b|(?:why don'?t you|are you (?:gonna|going to)|aren'?t you (?:gonna|going to)) (?:start|continue|carry on|go on|keep going)\b|get on with (?:it|the lesson)\b|i'?m listening\b)/i;

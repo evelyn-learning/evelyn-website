@@ -91,5 +91,13 @@ check('SOFT_HOLD_CHECKIN_MS is one minute', SOFT_HOLD_CHECKIN_MS === 60_000);
   check('wiring: soft hold expires at its check-in', vtr.includes("onDebugEvent?.('student_hold_expired'"));
 }
 
+// embed-1792275630905: talking ABOUT listening is not a step-away.
+for (const u of ['If I don\'t listen to you, then what will happen?', "Don't uh teach, then um will I get less marks?", 'People who don\'t listen fail.', 'You don\'t respond to me sometimes.']) {
+  check(`"${u}" is NOT a hold request`, detectHoldRequest(u).hold === false, JSON.stringify(detectHoldRequest(u)));
+}
+for (const u of ["Don't listen to me for a minute.", 'Please don\'t respond, I\'m on the phone.', 'Okay, do not reply until I say banana.', "I'm not talking to you right now."]) {
+  check(`"${u}" IS a hold request`, detectHoldRequest(u).hold === true, JSON.stringify(detectHoldRequest(u)));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

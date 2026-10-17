@@ -17,6 +17,8 @@ import {
   scorePartialSelfVoice,
   BARGEIN_PAUSE_MAX_MS,
   BARGEIN_PAUSE_MIN_PARTIAL_CHARS,
+  BARGEIN_PAUSE_SELF_VOICE_MIN_CHARS,
+  partialIsBackchannelOnly,
 } from '../src/lib/tutor/voice/bargein-pause';
 import { SELF_VOICE_THRESHOLD } from '../src/lib/tutor/voice/perception-classifier';
 import { TUTOR_BARGEIN_PAUSE_FIRST } from '../src/lib/tutor/orchestrator/flags';
@@ -41,6 +43,20 @@ test('a real interruption kills on its first content partial, ~300–600 ms afte
 test("the tutor's own echo resumes: partial matches the TTS script", () => {
   assert.equal(decideBargeInPause({ ...base, partial: '今日は経験について', selfVoiceScore: 1 }), 'resume');
   assert.equal(decideBargeInPause({ ...base, partial: 'Let us practice talking', selfVoiceScore: SELF_VOICE_THRESHOLD }), 'resume');
+  // embed-1792275630905: "Did you" scored 0.90 against "What did you do
+  // yesterday?" while the student was saying "Did you stop in between?" —
+  // too short to call echo; wait for the next partial.
+  assert.equal(BARGEIN_PAUSE_SELF_VOICE_MIN_CHARS, 8);
+  assert.equal(decideBargeInPause({ ...base, partial: 'Did you', selfVoiceScore: 0.9 }), 'wait');
+  assert.equal(decideBargeInPause({ ...base, partial: 'Did you stop in', selfVoiceScore: 0.2 }), 'kill');
+});
+
+test('a backchannel-only partial is not an interruption yet (embed-1792275630905: "Okay" killed, then dropped as noise)', () => {
+  for (const p of ['Okay', 'Okay, okay.', 'yeah', 'Mm-hmm', 'はい', 'うん、うん', 'Oh, okay']) assert.equal(partialIsBackchannelOnly(p), true, p);
+  for (const p of ['Okay, can you wait', 'yes but', 'はい、ちょっと待って', 'stop']) assert.equal(partialIsBackchannelOnly(p), false, p);
+  assert.equal(decideBargeInPause({ ...base, partial: 'Okay', selfVoiceScore: 0 }), 'wait');
+  assert.equal(decideBargeInPause({ ...base, partial: 'Okay, okay.', selfVoiceScore: 0, speechStopped: true }), 'resume');
+  assert.equal(decideBargeInPause({ ...base, partial: 'Okay, can you wait', selfVoiceScore: 0 }), 'kill');
 });
 
 test('a blip resumes: speech stopped before any words; nothing in time resumes too', () => {

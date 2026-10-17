@@ -36,6 +36,27 @@ export const BARGEIN_PAUSE_MAX_MS = 1500;
 /** Letters / kana / kanji a partial needs before it counts as content. Four,
  *  because the CJK echo measure needs four characters to say anything. */
 export const BARGEIN_PAUSE_MIN_PARTIAL_CHARS = 4;
+/** A self-voice match on a very short partial is not yet evidence of echo:
+ *  "Did you" scored 0.90 against "What did you do yesterday?" and resumed the
+ *  tutor over a student who was saying "Did you stop in between?"
+ *  (embed-1792275630905). Below this many characters a match means WAIT for
+ *  the next partial, not resume. */
+export const BARGEIN_PAUSE_SELF_VOICE_MIN_CHARS = 8;
+/** A partial that is only backchannel / filler ("Okay", "yeah", はい, うん) is
+ *  not an interruption yet — it killed a turn on "Okay" that was then dropped
+ *  as noise and had to be resumed from the cut (embed-1792275630905). It
+ *  waits for more; a stop or the max wait resumes. */
+const BACKCHANNEL_RE =
+  /^(?:(?:okay|ok|yeah|yes|yep|yup|no|nope|mm+|hmm+|uh+|um+|er+|ah+|oh+|right|sure|alright|wow|はい|うん|ええ|そう|そうそう|なるほど|えっと|えー|あー|うーん|オーケー|はいはい)[\s,.!?。、…-]*)+$/i;
+
+export function partialIsBackchannelOnly(partial: string | null | undefined): boolean {
+  const t = (partial ?? '').trim();
+  return t.length > 0 && BACKCHANNEL_RE.test(t);
+}
+
+function partialChars(partial: string | null | undefined): number {
+  return (partial ?? '').replace(/[^A-Za-z0-9ぁ-んァ-ヺ一-龯々]/g, '').length;
+}
 
 export interface BargeInPauseState {
   onsetAt: number;
@@ -60,15 +81,18 @@ export interface BargeInPauseInput {
 }
 
 export function partialIsSubstantive(partial: string | null | undefined): boolean {
-  const t = (partial ?? '').replace(/[^A-Za-z0-9ぁ-んァ-ヺ一-龯々]/g, '');
-  return t.length >= BARGEIN_PAUSE_MIN_PARTIAL_CHARS;
+  if (partialIsBackchannelOnly(partial)) return false;
+  return partialChars(partial) >= BARGEIN_PAUSE_MIN_PARTIAL_CHARS;
 }
 
 export function decideBargeInPause(i: BargeInPauseInput): BargeInPauseDecision {
   if (i.state !== 'speaking') return 'resume';
   if (i.energyGatePassed) return 'kill';
   if (partialIsSubstantive(i.partial)) {
-    if (i.selfVoiceScore != null && i.selfVoiceScore >= SELF_VOICE_THRESHOLD) return 'resume';
+    if (i.selfVoiceScore != null && i.selfVoiceScore >= SELF_VOICE_THRESHOLD) {
+      // Echo — but a two-word match proves little; let the partial grow.
+      return partialChars(i.partial) >= BARGEIN_PAUSE_SELF_VOICE_MIN_CHARS ? 'resume' : 'wait';
+    }
     return 'kill';
   }
   if (i.speechStopped) return 'resume';
