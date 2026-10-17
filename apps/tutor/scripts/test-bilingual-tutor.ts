@@ -22,6 +22,7 @@ import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voic
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
+import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
@@ -326,6 +327,11 @@ test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers d
   // embed-1792199116313: tool-use plan read aloud.
   for (const s of ['Let me verify the card is there before scribbling.', 'Let me check the card first.']) assert.equal(isMetaNarration(s), true, s);
   for (const s of ['Let me check your sentence: I ate sushi yesterday.', 'Let me make sure you know this word: went.']) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792201826241: English spelled out in katakana.
+  assert.equal(hasKatakanaEnglish('なので「アイ・エイト・スシ・イエスタデイ」ですね。'), true);
+  assert.equal(hasKatakanaEnglish('「ハブ・ユー・エバー…」から始めます。'), true);
+  assert.equal(hasKatakanaEnglish('コカ・コーラを飲みました。I ate sushi yesterday.'), false);
+  assert.equal(hasKatakanaEnglish('カヤックをしたことがありますか。'), false);
   assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
   assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
   // embed-1792199116313: a retro 'speaking' cut whose sound never transcribed

@@ -63,7 +63,7 @@ const TUTOR_PEDAGOGY_OPENER_EMBED = isPedagogyOpenerFlagValue(process.env.NEXT_P
 // perception/reliability breadcrumb dropped. The reliability families are
 // one short line per utterance, so real-student volume stays modest.
 const EMBED_DEBUG_EVENT_PREFIXES = [
-  'turn_latency', 'run_together', 'retry_cap', 'ack_', 'tts_ws_', 'render_dropped', 'rule8',
+  'turn_latency', 'run_together', 'retry_cap', 'katakana_english', 'ack_', 'tts_ws_', 'render_dropped', 'rule8',
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',

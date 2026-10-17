@@ -2748,6 +2748,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         `head=${JSON.stringify(raw.slice(0, 300))} tail=${JSON.stringify(raw.slice(-300))}`,
       );
     }
+    // GDI 2026-10-17: thinking blocks came back on voice turns sent with
+    // `thinking: disabled` (16–28 s silences, 1.7–2.3K output tokens). The
+    // docs say claude-sonnet-5 honours `disabled` — record which model served
+    // the turn and its usage so the cause can be pinned down.
+    if (!thinkingOn && finalMessage.content.some((b) => b.type === 'thinking' || b.type === 'redacted_thinking')) {
+      console.warn(
+        `[brain.stream] thinking block with thinking off: iter=${iter} served=${opened.target.model} ` +
+        `native=${opened.target.native} stop=${finalMessage.stop_reason} usage=${JSON.stringify(finalMessage.usage)}`,
+      );
+    }
     totalUsage.inputTokens += finalMessage.usage.input_tokens;
     totalUsage.outputTokens += finalMessage.usage.output_tokens;
     totalUsage.cacheReadTokens += finalMessage.usage.cache_read_input_tokens ?? 0;

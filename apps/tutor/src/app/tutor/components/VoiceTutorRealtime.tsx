@@ -208,6 +208,7 @@ import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } fr
 import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, RETRY_CAP_NOTE } from '@/lib/tutor/voice/retry-cap';
+import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -4512,6 +4513,9 @@ export function VoiceTutorRealtime({
   // and the move-on note planted once that streak reaches the cap.
   const retryAskStreakRef = useRef(0);
   const pendingRetryCapNoteRef = useRef<string | null>(null);
+  // Katakana-English corrective (katakana-english.ts): planted after a turn
+  // that spelled English out in katakana, delivered with the next turn.
+  const pendingKatakanaNoteRef = useRef<string | null>(null);
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -11781,6 +11785,11 @@ export function VoiceTutorRealtime({
         pendingRetryCapNoteRef.current = null;
         onDebugEvent?.('retry_cap_note_consumed', 'delivered with this turn');
       }
+      if (pendingKatakanaNoteRef.current) {
+        runTranscript = `${pendingKatakanaNoteRef.current}\n\n${runTranscript}`;
+        pendingKatakanaNoteRef.current = null;
+        onDebugEvent?.('katakana_english_note_consumed', 'delivered with this turn');
+      }
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
@@ -18559,6 +18568,10 @@ export function VoiceTutorRealtime({
           }
         } else {
           retryAskStreakRef.current = 0;
+        }
+        if (hasKatakanaEnglish(fullText)) {
+          pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE;
+          onDebugEvent?.('katakana_english_note_planted', fullText.slice(0, 80));
         }
       }
       if (TUTOR_BOARD_ANCHOR_NET) {
