@@ -620,6 +620,13 @@ export const BARGEIN_GATE_MAX_MS = 5000;
 // deliberately left in place; set this true to bring it back.
 export const INK_NOTE_DRAG = false;
 export const BARGEIN_ENERGY_FLOOR = 0.03;
+// 2026-10-17 (GDI, embed-1792271667337 — a human barge-in test): pause the
+// playback clock at the onset, then kill or resume on the first evidence
+// (bargein-pause.ts). The energy gate above sat at its 0.15 ceiling on the
+// test laptop and never passed; every kill came from the final transcript,
+// 1.5–2 s after the student began. 'off' restores decide-then-kill.
+export const TUTOR_BARGEIN_PAUSE_FIRST =
+  process.env.NEXT_PUBLIC_TUTOR_BARGEIN_PAUSE_FIRST !== 'off';
 export const BARGEIN_ECHO_MARGIN = 2.5;
 /** How far back from the onset the echo-floor baseline is sampled. Must stay
  *  under usePerceptionWS/useCartesiaInkWS's 1500ms energy window. */

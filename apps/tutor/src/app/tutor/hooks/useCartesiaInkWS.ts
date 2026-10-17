@@ -130,6 +130,9 @@ export interface UseCartesiaInkWSOptions {
   turnEndTimeoutMs?: number;
   onSpeechStart?: (e: PerceptionSpeechEvent) => void;
   onSpeechStop?: (e: PerceptionSpeechEvent) => void;
+  /** The cumulative partial transcript on every `turn.update` (pause-first
+   *  barge-in, bargein-pause.ts): the earliest content evidence Ink gives. */
+  onPartialTranscript?: (p: { text: string; tMs: number }) => void;
   onMicLevel?: (level: number) => void;
   onTranscript?: (t: PerceptionTranscript) => void;
   onTranscriptionFailed?: (errorType: string | undefined) => void;
@@ -213,6 +216,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     turnEndTimeoutMs = ENV_TURN_END_TIMEOUT_MS,
     onSpeechStart,
     onSpeechStop,
+    onPartialTranscript,
     onMicLevel,
     onTranscript,
     onTranscriptionFailed,
@@ -225,6 +229,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
 
   const onSpeechStartRef = useRef(onSpeechStart);
   const onSpeechStopRef = useRef(onSpeechStop);
+  const onPartialTranscriptRef = useRef(onPartialTranscript);
   const onMicLevelRef = useRef(onMicLevel);
   const onTranscriptRef = useRef(onTranscript);
   const onTranscriptionFailedRef = useRef(onTranscriptionFailed);
@@ -233,6 +238,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const onDiagnosticRef = useRef(onDiagnostic);
   onSpeechStartRef.current = onSpeechStart;
   onSpeechStopRef.current = onSpeechStop;
+  onPartialTranscriptRef.current = onPartialTranscript;
   onMicLevelRef.current = onMicLevel;
   onTranscriptRef.current = onTranscript;
   onTranscriptionFailedRef.current = onTranscriptionFailed;
@@ -489,6 +495,10 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       }
       case 'turn.update': {
         if (data.turn_id) turnBuffersRef.current.get(data.turn_id)?.events.push(data);
+        if (typeof data.transcript === 'string' && data.transcript.trim()) {
+          const tMs = inkT0Ref.current ? Date.now() - inkT0Ref.current : 0;
+          try { onPartialTranscriptRef.current?.({ text: data.transcript, tMs }); } catch {}
+        }
         break;
       }
       case 'turn.eager_end': {

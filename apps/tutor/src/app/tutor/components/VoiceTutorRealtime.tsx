@@ -214,6 +214,7 @@ import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_R
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, PRAISE_VARIETY_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, PRAISE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { decideBargeInPause, scorePartialSelfVoice, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -346,6 +347,7 @@ import {
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
   TUTOR_LESSON_CLOSE_AUTO_END,
+  TUTOR_BARGEIN_PAUSE_FIRST,
   TUTOR_HOST_LESSON,
   TUTOR_EVOLVE_SWAP,
   TUTOR_CONTENT_VARIETY,
@@ -4539,6 +4541,11 @@ export function VoiceTutorRealtime({
   // callback is defined with the idle nudge; the close sites run earlier).
   const lessonCloseAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const armLessonCloseAutoEndRef = useRef<() => void>(() => {});
+  // Pause-first barge-in (bargein-pause.ts): the utterance the playback is
+  // paused for, and the evaluator (defined with the kill body) by ref so the
+  // Ink hook's callbacks below can reach it.
+  const bargeInPauseRef = useRef<BargeInPauseState | null>(null);
+  const evaluateBargeInPauseRef = useRef<(energyGatePassed?: boolean) => void>(() => {});
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -23174,6 +23181,14 @@ export function VoiceTutorRealtime({
   // cancel (and creates no checkpoint — callers must handle that).
   const runPerceptionKill = useCallback((cancelStage: 'processing' | 'speaking') => {
         if (perceptionInterruptCheckpointRef.current) return;
+        // Pause-first barge-in: whichever path kills, the pause ends here —
+        // clearSpeechQueue resumes the clock itself; the refusals below must
+        // resume it too, or the tutor would stay frozen mid-sentence.
+        const pausedForBargeIn = bargeInPauseRef.current;
+        if (pausedForBargeIn) {
+          if (pausedForBargeIn.timer) clearTimeout(pausedForBargeIn.timer);
+          bargeInPauseRef.current = null;
+        }
         // Round-6d: a verdict just CONFIRMED the previous kill was self-echo
         // — don't let the resumed audio's echo re-kill (portal-37c0e0bf's
         // kill→replay loop). Checked at fire time so a gate armed before
@@ -23181,6 +23196,7 @@ export function VoiceTutorRealtime({
         if (Date.now() < selfEchoCancelImmunityUntilRef.current) {
           console.warn(`[PERCEPTION] cancel suppressed — self-echo immunity window (stage=${cancelStage})`);
           onDebugEvent?.('perception_cancel_suppressed_self_echo', `prod=${productionStateRef.current} stage=${cancelStage}`);
+          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
           return;
         }
         const ctx = lastBrainCallContextRef.current;
@@ -23190,6 +23206,7 @@ export function VoiceTutorRealtime({
         // have an anchor. brain abort below is a no-op if not in flight.
         if (!ctx) {
           console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (stage=${cancelStage})`);
+          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
           return;
         }
         // Cancel-storm breaker: see retro-cancel site. Without this, a
@@ -23198,6 +23215,7 @@ export function VoiceTutorRealtime({
         if (!cancelStormRef.current.allowCancel(Date.now(), { stopImperative: STOP_IMPERATIVE_RE.test(lastPerceptionTextRef.current) })) {
           console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, stage=${cancelStage})`);
           onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${productionStateRef.current} stage=${cancelStage}`);
+          if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }
           return;
         }
         const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
@@ -23303,6 +23321,65 @@ export function VoiceTutorRealtime({
         realtime.markInterrupted();
   }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending, claimSupersededStreakForCheckpoint, armNoVerdictRecovery]);
   runPerceptionKillRef.current = runPerceptionKill;
+  // Pause-first barge-in (bargein-pause.ts, 2026-10-17). beginBargeInPause
+  // runs at a 'speaking' onset: suspend playback now, decide on the first
+  // evidence — energy gate pass, Ink partial (content vs the tutor's own TTS
+  // script), speech stopped before any words, or the max wait.
+  const endBargeInPause = useCallback((outcome: 'kill' | 'resume', reason: string) => {
+    const p = bargeInPauseRef.current;
+    if (!p) return;
+    if (p.timer) clearTimeout(p.timer);
+    const sinceOnset = Date.now() - p.onsetAt;
+    if (outcome === 'kill') {
+      onDebugEvent?.('perception_bargein_pause_kill', `${reason} · latencyMs=${sinceOnset}`);
+      // runPerceptionKill clears bargeInPauseRef and resumes the clock through
+      // clearSpeechQueue (or through its own refusal branches).
+      runPerceptionKill('speaking');
+      if (bargeInPauseRef.current === p) bargeInPauseRef.current = null;
+      try { realtime.resumeSpeech(); } catch {}
+      return;
+    }
+    bargeInPauseRef.current = null;
+    onDebugEvent?.('perception_bargein_pause_resume', `${reason} · pausedMs=${sinceOnset}`);
+    try { realtime.resumeSpeech(); } catch {}
+  }, [onDebugEvent, realtime, runPerceptionKill]);
+  const evaluateBargeInPause = useCallback((energyGatePassed = false) => {
+    const p = bargeInPauseRef.current;
+    if (!p) return;
+    const now = Date.now();
+    const selfVoiceScore = p.partial ? scorePartialSelfVoice(p.partial, ttsScriptBufferRef.current, p.onsetAt, now) : null;
+    const decision = decideBargeInPause({
+      state: productionStateRef.current,
+      elapsedMs: now - p.onsetAt,
+      speechStopped: p.speechStopped,
+      partial: p.partial,
+      selfVoiceScore,
+      energyGatePassed,
+    });
+    if (decision === 'wait') return;
+    const reason = decision === 'kill'
+      ? (energyGatePassed ? 'energy gate' : `partial="${(p.partial ?? '').slice(0, 40)}" sv=${selfVoiceScore?.toFixed(2) ?? '-'}`)
+      : (selfVoiceScore != null && p.partial ? `self_voice sv=${selfVoiceScore.toFixed(2)} partial="${p.partial.slice(0, 40)}"` : p.speechStopped ? 'stopped before any words' : productionStateRef.current !== 'speaking' ? `prod=${productionStateRef.current}` : 'no evidence in time');
+    endBargeInPause(decision, reason);
+  }, [endBargeInPause]);
+  evaluateBargeInPauseRef.current = evaluateBargeInPause;
+  const beginBargeInPause = useCallback(() => {
+    if (!TUTOR_BARGEIN_PAUSE_FIRST) return;
+    if (bargeInPauseRef.current) return; // this utterance already paused us
+    let paused = false;
+    try { paused = realtime.pauseSpeech(); } catch {}
+    if (!paused) return;
+    const p: BargeInPauseState = { onsetAt: Date.now(), speechStopped: false, partial: null, timer: null };
+    bargeInPauseRef.current = p;
+    onDebugEvent?.('perception_bargein_paused', 'playback suspended at the onset — deciding on the first evidence');
+    p.timer = setTimeout(() => evaluateBargeInPauseRef.current(false), BARGEIN_PAUSE_MAX_MS);
+  }, [onDebugEvent, realtime]);
+  const perceptionOnPartialTranscript = useCallback((partial: { text: string }) => {
+    const p = bargeInPauseRef.current;
+    if (!p) return;
+    p.partial = partial.text;
+    evaluateBargeInPauseRef.current(false);
+  }, []);
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
@@ -23403,6 +23480,9 @@ export function VoiceTutorRealtime({
         clearTimeout(bargeInDeferredKillRef.current);
         bargeInDeferredKillRef.current = null;
       }
+      // Pause-first barge-in: the tutor stops NOW; the gates and the partial
+      // transcript below decide whether that stop becomes a kill or a resume.
+      if (canStage3) beginBargeInPause();
       // Opening-turn guard (rewritten 2026-07-22). History: blanket
       // suppression until the FULL opener delivered (2026-07-04, self-echo
       // phantoms aborting the kickoff) made real first-turn barge-ins
@@ -23687,13 +23767,19 @@ export function VoiceTutorRealtime({
         }, BARGEIN_GATE_POLL_MS);
         return;
       }
-  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending]);
+  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending, beginBargeInPause]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // turn_latency: provisional endpoint (Ink-2 fires this on turn.eager_end).
       // First-wins keeps the ORIGINAL endpoint across turn.resume re-fires.
       turnLatencyRef.current ??= createTurnLatencyLedger();
       turnLatencyRef.current.mark('eagerEnd', Date.now());
+      // Pause-first barge-in: the utterance ended — a blip resumes now; words
+      // already heard decide as they would have.
+      if (bargeInPauseRef.current) {
+        bargeInPauseRef.current.speechStopped = true;
+        evaluateBargeInPauseRef.current(false);
+      }
       // Task V1: the utterance ended — if a sustained-energy barge-in gate is
       // still pending, the onset never sustained (echo blip / brief noise), so
       // cancel it. The gate's own energy check would reach the same verdict; this
@@ -23787,6 +23873,7 @@ export function VoiceTutorRealtime({
     enabled: perceptionEnabled && TUTOR_STT_ENGINE_INK2,
     onSpeechStart: perceptionOnSpeechStart,
     onSpeechStop: perceptionOnSpeechStop,
+    onPartialTranscript: perceptionOnPartialTranscript,
     onMicLevel,
     onTranscript: perceptionOnTranscript,
     onTranscriptionFailed: perceptionOnTranscriptionFailed,
