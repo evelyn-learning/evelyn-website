@@ -1822,6 +1822,9 @@ export function VoiceTutorRealtime({
   // perceptionOnTranscript's stage2-lazy resolver — declared earlier —
   // reaches it through this ref instead of a direct closure reference.
   const runPerceptionKillRef = useRef<((cancelStage: 'processing' | 'speaking') => void) | null>(null);
+  // armNoVerdictRecovery (declared later, next to runPerceptionKill) — the
+  // retro-cancel effect reaches it through this ref.
+  const armNoVerdictRecoveryRef = useRef<(() => void) | null>(null);
   // Review-round-1 (finding 2): shared clear for stage2LazyPendingRef, used
   // at every site that can otherwise leak an armed-but-never-consumed lazy
   // pending — see stage2LazyPendingRef's declaration comment for the full
@@ -21974,6 +21977,7 @@ export function VoiceTutorRealtime({
       // drain so the cancel doesn't flush buffered renders — the verdict
       // decides drop (abort/re-fire) vs flush-all (resume/deliver).
       renderBufferPausedRef.current = true;
+      armNoVerdictRecoveryRef.current?.();
       try { inFlightBrainAbortRef.current?.abort(); } catch {}
       try { void clearSpeechQueueRef.current?.(); } catch {}
       productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
@@ -22943,6 +22947,82 @@ export function VoiceTutorRealtime({
   // re-enter a stale closure — same forward-ref-via-ref pattern as
   // applyPerceptionVerdictRef.current assignment elsewhere in this file.
   perceptionOnTranscriptRef.current = perceptionOnTranscript;
+  // No-verdict recovery for an open cancel checkpoint (Round-28 / R32 H3):
+  // if the interrupting sound never resolves to a transcript, no verdict
+  // ever consumes the checkpoint — resume the unplayed TTS ('speaking') or
+  // re-fire the aborted turn ('processing') after the window instead of
+  // stalling until the student re-prompts. Shared by runPerceptionKill and
+  // the retro-cancel effect (embed-1792199116313: a retro 'speaking' cut on
+  // a 5.5s noise burst that never transcribed left the tutor silent 75s —
+  // the retro path armed no recovery at all).
+  const armNoVerdictRecovery = useCallback(() => {
+    const armedCheckpoint = perceptionInterruptCheckpointRef.current;
+    if (!armedCheckpoint) return;
+    if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);
+    const checkTimeoutRestore = () => {
+      stage2TimeoutRestoreTimerRef.current = null;
+      const cp = perceptionInterruptCheckpointRef.current;
+      const verdict = decideStage2TimeoutRestore({
+        checkpointActive: cp !== null && cp === armedCheckpoint,
+        cancelledDuringState: armedCheckpoint!.cancelledDuringState,
+        brainWasInFlight: armedCheckpoint!.brainWasInFlight,
+        brainTurnAborted: brainTurnAbortedRef.current,
+        midUtterance: perceptionMidUtteranceRef.current,
+        // R42: recent-activity window for the 'speaking' branch — see
+        // lastVadActivityAtRef doc comment. 0 (never stamped) yields a
+        // huge ms value, which is always outside the window, so an
+        // untouched ref behaves exactly like "no signal".
+        msSinceLastVadActivity: lastVadActivityAtRef.current ? Date.now() - lastVadActivityAtRef.current : undefined,
+        newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
+        ageMs: Date.now() - armedCheckpoint!.cancelledAt,
+        hasUnplayedSnapshot: (armedCheckpoint!.unplayedSentencesSnapshot?.length ?? 0) > 0,
+      });
+      if (verdict === 'defer') {
+        stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, 2_000);
+        return;
+      }
+      if (verdict === 'resume-tts') {
+        // R32 (H3): re-queue the unplayed tail through the same
+        // resume-from-cut path the 'speaking' verdict branch uses
+        // (applyPerceptionVerdict, noise/filler/drop_self_voice ×
+        // 'speaking'), including the clauseTailFromFraction
+        // snapshot[0] handling so we don't re-speak already-heard
+        // content.
+        const n = armedCheckpoint!.unplayedSentencesSnapshot.length;
+        // R32 review round 1, Finding 2: shares applyClauseTailSnapshot
+        // with the 'speaking' verdict branch above (including its
+        // [RESUME-CUT] console.warn + 'resume_from_clause' debug
+        // event on truncation) instead of a second inline copy.
+        const resumeQueue = applyClauseTailSnapshot(armedCheckpoint!.unplayedSentencesSnapshot, armedCheckpoint!.cutFraction);
+        console.warn(
+          `[PERCEPTION] STAGE-3 timeout-resume (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-queuing ${n} unplayed sentence(s)`,
+        );
+        onDebugEvent?.('stage3_timeout_resume', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms · ${n} sentences`);
+        perceptionInterruptCheckpointRef.current = null;
+        resumeSpeakTextRef.current?.(resumeQueue);
+        flushAllRenderBuffer();
+        return;
+      }
+      if (verdict !== 'restore') return;
+      console.warn(
+        `[PERCEPTION] STAGE-2 timeout-RESTORE (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-firing original transcript=${JSON.stringify(armedCheckpoint!.originalTranscript).slice(0, 80)}`,
+      );
+      onDebugEvent?.('perception_stage2_timeout_restore', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms`);
+      perceptionInterruptCheckpointRef.current = null;
+      // Same re-fire discipline as the verdict-driven STAGE-2
+      // RESTORE: re-arm the speakText gate, drop buffered renders
+      // (refire redraws from scratch), bypass the perception dedupe
+      // armed at cancel time.
+      speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+      dropRenderBuffer();
+      void handleStudentTranscriptForBrain(armedCheckpoint!.originalTranscript, {
+        ...(armedCheckpoint!.originalOpts || {}),
+        bypassPerceptionDedupe: true,
+      });
+    };
+    stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS);
+  }, [onDebugEvent, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot]);
+  armNoVerdictRecoveryRef.current = armNoVerdictRecovery;
   // ── The stage-2/3 kill body ──────────────────────────────────────────
   // Extracted (E1) from perceptionOnSpeechStart's closure into its own
   // top-level useCallback so BOTH perceptionOnSpeechStart (the eager
@@ -23060,72 +23140,7 @@ export function VoiceTutorRealtime({
         // effect (armed-then-immediately-cleared, harmless in that path),
         // different mechanism — don't assume applyPerceptionVerdict runs
         // here.
-        {
-          const armedCheckpoint = perceptionInterruptCheckpointRef.current;
-          if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);
-          const checkTimeoutRestore = () => {
-            stage2TimeoutRestoreTimerRef.current = null;
-            const cp = perceptionInterruptCheckpointRef.current;
-            const verdict = decideStage2TimeoutRestore({
-              checkpointActive: cp !== null && cp === armedCheckpoint,
-              cancelledDuringState: armedCheckpoint!.cancelledDuringState,
-              brainWasInFlight: armedCheckpoint!.brainWasInFlight,
-              brainTurnAborted: brainTurnAbortedRef.current,
-              midUtterance: perceptionMidUtteranceRef.current,
-              // R42: recent-activity window for the 'speaking' branch — see
-              // lastVadActivityAtRef doc comment. 0 (never stamped) yields a
-              // huge ms value, which is always outside the window, so an
-              // untouched ref behaves exactly like "no signal".
-              msSinceLastVadActivity: lastVadActivityAtRef.current ? Date.now() - lastVadActivityAtRef.current : undefined,
-              newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
-              ageMs: Date.now() - armedCheckpoint!.cancelledAt,
-              hasUnplayedSnapshot: (armedCheckpoint!.unplayedSentencesSnapshot?.length ?? 0) > 0,
-            });
-            if (verdict === 'defer') {
-              stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, 2_000);
-              return;
-            }
-            if (verdict === 'resume-tts') {
-              // R32 (H3): re-queue the unplayed tail through the same
-              // resume-from-cut path the 'speaking' verdict branch uses
-              // (applyPerceptionVerdict, noise/filler/drop_self_voice ×
-              // 'speaking'), including the clauseTailFromFraction
-              // snapshot[0] handling so we don't re-speak already-heard
-              // content.
-              const n = armedCheckpoint!.unplayedSentencesSnapshot.length;
-              // R32 review round 1, Finding 2: shares applyClauseTailSnapshot
-              // with the 'speaking' verdict branch above (including its
-              // [RESUME-CUT] console.warn + 'resume_from_clause' debug
-              // event on truncation) instead of a second inline copy.
-              const resumeQueue = applyClauseTailSnapshot(armedCheckpoint!.unplayedSentencesSnapshot, armedCheckpoint!.cutFraction);
-              console.warn(
-                `[PERCEPTION] STAGE-3 timeout-resume (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-queuing ${n} unplayed sentence(s)`,
-              );
-              onDebugEvent?.('stage3_timeout_resume', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms · ${n} sentences`);
-              perceptionInterruptCheckpointRef.current = null;
-              resumeSpeakTextRef.current?.(resumeQueue);
-              flushAllRenderBuffer();
-              return;
-            }
-            if (verdict !== 'restore') return;
-            console.warn(
-              `[PERCEPTION] STAGE-2 timeout-RESTORE (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-firing original transcript=${JSON.stringify(armedCheckpoint!.originalTranscript).slice(0, 80)}`,
-            );
-            onDebugEvent?.('perception_stage2_timeout_restore', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms`);
-            perceptionInterruptCheckpointRef.current = null;
-            // Same re-fire discipline as the verdict-driven STAGE-2
-            // RESTORE: re-arm the speakText gate, drop buffered renders
-            // (refire redraws from scratch), bypass the perception dedupe
-            // armed at cancel time.
-            speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
-            dropRenderBuffer();
-            void handleStudentTranscriptForBrain(armedCheckpoint!.originalTranscript, {
-              ...(armedCheckpoint!.originalOpts || {}),
-              bypassPerceptionDedupe: true,
-            });
-          };
-          stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS);
-        }
+        armNoVerdictRecovery();
         // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
         // sentence drained from the in-flight orchestrator's SSE buffer
         // between this point and AbortError propagation drops silently.
@@ -23151,7 +23166,7 @@ export function VoiceTutorRealtime({
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
         // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
         realtime.markInterrupted();
-  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending, claimSupersededStreakForCheckpoint]);
+  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending, claimSupersededStreakForCheckpoint, armNoVerdictRecovery]);
   runPerceptionKillRef.current = runPerceptionKill;
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;

@@ -323,8 +323,18 @@ test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers d
   // embed-1792196208833: "let me think" opener filler.
   for (const s of ['Okay. let me think about that for a second.', 'Let me think.', 'Hmm, let me just think about this for a moment.']) assert.equal(isMetaNarration(s), true, s);
   for (const s of ['Let me think about that for a second, then we can try the next one.', 'Let me think of an example: I went to Kyoto.']) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792199116313: tool-use plan read aloud.
+  for (const s of ['Let me verify the card is there before scribbling.', 'Let me check the card first.']) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ['Let me check your sentence: I ate sushi yesterday.', 'Let me make sure you know this word: went.']) assert.equal(isMetaNarration(s), false, s);
   assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
   assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
+  // embed-1792199116313: a retro 'speaking' cut whose sound never transcribed
+  // left the tutor silent 75s — the retro path must arm the no-verdict recovery.
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  const retroAt = vtr.indexOf('const executeRetroCancel = () => {');
+  const retro = vtr.slice(retroAt, vtr.indexOf('realtime.markInterrupted();', retroAt));
+  assert.ok(retro.includes('armNoVerdictRecoveryRef.current?.();'), 'retro-cancel arms no-verdict recovery');
+  assert.ok(vtr.includes('armNoVerdictRecoveryRef.current = armNoVerdictRecovery;'));
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
   assert.ok(src.includes('const text = stripEchoedTags(raw);'));
 });

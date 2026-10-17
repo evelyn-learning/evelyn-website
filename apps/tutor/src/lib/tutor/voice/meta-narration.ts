@@ -104,14 +104,18 @@ const PERSONA_DIRECTIVE_RE =
 // happens if…" is teaching and survives.
 const VERDICT_NARRATION_RE =
   /\bthis turn['’]?s\b|^\s*(?:this|that) matches (?:what['’]?s on the board|the (?:expected|target)\b)|\bexpected answer\b|^\s*that['’]?s an attempt at\b/i;
-// embed-1792174263669 (2026-10-16): the filler came back reworded on almost
-// every turn — "Let's see what you've got.", "Okay, let's hear what you've
-// got.", "Let's see where this is.", "Let's see what's going on.", and the
-// Japanese 「はい、少し見てみましょう。」. Still whole-sentence only.
+// embed-1792199116313: "Let me verify the card is there before scribbling." —
+// a tool-use plan read aloud.
+const TOOL_PLAN_SPOKEN_RE =
+  /^\s*let me (?:just )?(?:verify|check|confirm|make sure)\b[^.!?]*\b(?:card|scribbl\w*|render\w*|tool|snapshot)\b|\bbefore (?:scribbling|rendering|drawing on the board)\b/i;
 // embed-1792196208833: "Okay. let me think about that for a second." opened a
 // Japanese explanation. Whole-sentence only, like the fillers below.
 const THINK_FILLER_RE =
   /^\s*(?:(?:ok(?:ay)?|alright|all right|hmm|so)[,.]?\s+)?let me (?:just )?think(?: about (?:that|this|it))?(?: for a (?:second|sec|moment|bit))?[.!]?\s*$/i;
+// embed-1792174263669 (2026-10-16): the filler came back reworded on almost
+// every turn — "Let's see what you've got.", "Okay, let's hear what you've
+// got.", "Let's see where this is.", "Let's see what's going on.", and the
+// Japanese 「はい、少し見てみましょう。」. Still whole-sentence only.
 const BARE_FILLER_RE =
   /^\s*(?:(?:ok(?:ay)?|alright|all right|right|ah|hmm|so)[,.]?\s+)?let['’]?s (?:see|hear|look|check)(?: at)?(?: (?:this(?: together)?|that|it|here|what you['’]?ve got|what we['’]?ve got|where this is|where we are|what['’]?s going on|what you said))?[.!]?\s*$/i;
 // embed-1792185403054: tool names spoken to the learner ("show_passage を使って
@@ -393,7 +397,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
