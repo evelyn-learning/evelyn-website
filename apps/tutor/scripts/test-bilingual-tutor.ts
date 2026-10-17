@@ -320,6 +320,9 @@ test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers d
   // embed-1792185403054: tool names, plan read aloud, more fillers.
   for (const s of ['show_passage を使って、完成した文を見せます。', 'show_equationを見てください。', 'Let me give the correct form directly, kindly, then close this out and move on.', "Let's see here.", "Let's check that.", 'That matches what you said, well done on part two.']) assert.equal(isMetaNarration(s), true, s);
   for (const s of ['Show me your answer.', 'Let me give you a hint: the verb is went.', "Let's check the next sentence together."]) assert.equal(isMetaNarration(s), false, s);
+  // embed-1792196208833: "let me think" opener filler.
+  for (const s of ['Okay. let me think about that for a second.', 'Let me think.', 'Hmm, let me just think about this for a moment.']) assert.equal(isMetaNarration(s), true, s);
+  for (const s of ['Let me think about that for a second, then we can try the next one.', 'Let me think of an example: I went to Kyoto.']) assert.equal(isMetaNarration(s), false, s);
   assert.equal(stripEchoedTags("<students_said>\nHi, today\n</students_said>\n\nLet's see this together."), "Let's see this together.");
   assert.equal(stripEchoedTags('x<y and y>z'), 'x<y and y>z');
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
