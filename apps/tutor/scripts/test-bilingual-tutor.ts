@@ -20,11 +20,12 @@ import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
-import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
+import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa } from '../src/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
 import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
-import { saysCannotSeeScreen } from '../src/lib/tutor/voice/voice-only';
-import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
+import { saysCannotSeeScreen, VOICE_ONLY_NOTE_FIRST } from '../src/lib/tutor/voice/voice-only';
+import { asksForEnglish, hasNoLatinLetters, NO_ENGLISH_REPLY_NOTE } from '../src/lib/tutor/voice/english-reply';
+import { isRetryAsk, retryCapNote, RETRY_CAP_NOTE } from '../src/lib/tutor/voice/retry-cap';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
 import { isMetaNarration, stripLeakedLabels, stripEchoedTags } from '../src/lib/tutor/voice/meta-narration';
@@ -436,6 +437,77 @@ test('two repeat-asks in a row trigger the move-on note (embed-1792185403054)', 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('retryAskStreakRef.current >= RETRY_CAP_TURNS'));
   assert.ok(vtr.includes('splitRunTogetherEnglish(transcript)'));
+});
+
+
+// ── embed-1792254012923 (2026-10-17) ─────────────────────────────────────────
+test('retry cap: every repeat-ask form from embed-1792254012923 is counted', () => {
+  const missed = [
+    'いいですね、意味はよく伝わります。 一つだけ、発音の区切りを直しましょう。 coworkerはひとつの単語で、コーワーカーと読みます。 もう一度、I went with my coworker、と言ってみてください。',
+    'はい、カラオケ好きで、よく行くんですよね。  Have you ever sung karaoke? の答えは、Yes, I have. です。  もう一度、声に出して言ってみてください。 Yes, I have.',
+    'カラオケ、好きでよく行くんですね。もう一度聞きますね。Have you ever sung karaoke? 声に出して言ってみてください。',
+    'ですので、正しい文は I sang karaoke last week です。 もう一度、声に出して言ってみてください。',
+    'いいですね、音がsangに近づいてきましたよ。 Sing の過去形はsangです。 もう一度、I sang karaoke last week、と言ってみてください。',
+    'いいですね、だいぶ近づきました。 sang の音は「サング」です。 もう一度、I sang karaoke last week、と言ってみてください。',
+    'Have you ever sung karaoke? もう一度、ゆっくり言ってみましょう。「サング」です。',
+    'もう一回、繰り返してください。', 'もう一度お願いします。', 'Repeat after me: I went to Kyoto.', 'Once more, please: I have been to Osaka.',
+  ];
+  for (const t of missed) assert.equal(isRetryAsk(t), true, t);
+  // The tutor doing something again is not a repeat-ask; a sentence boundary ends the search.
+  for (const t of ['もう一度読みますね。', 'もう一度説明しますね。', 'もう一度、ゆっくり説明します。では言ってみましょう、ではなくて質問に答えてください。', 'では、次に進みましょう。']) assert.equal(isRetryAsk(t), false, t);
+  assert.ok(retryCapNote(2).includes('twice'));
+  assert.ok(retryCapNote(5).includes('5 times'));
+  assert.equal(RETRY_CAP_NOTE, retryCapNote(2));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('pendingRetryCapNoteRef.current = retryCapNote(retryAskStreakRef.current);'));
+  assert.ok(!vtr.includes('retryAskStreakRef.current = 0;\n            onDebugEvent'), 'the streak must not be zeroed on plant');
+});
+
+test('katakana note: a katakana READING of an English word fires it; a loanword used as Japanese does not', () => {
+  for (const t of [
+    'coworkerはひとつの単語で、コーワーカーと読みます。',
+    'カラオケは英語でもkaraoke、同じスペルで大丈夫ですよ。 発音だけ少し違って、カラオケよりキャリオゥキーみたいに言います。',
+    'いいですね、だいぶ近づきました。 sang の音は「サング」です。',
+    'Have you ever sung karaoke? もう一度、ゆっくり言ってみましょう。「サング・カラオケ」です。',
+    'もう一度、ゆっくり言ってみましょう。「サング」です。',
+    'なので「アイ・エイト・スシ・イエスタデイ」ですね。',
+  ]) assert.equal(hasKatakanaEnglish(t), true, t);
+  for (const t of [
+    'カラオケをしたことがありますか。', 'ゴルフは好きですか。', 'コカ・コーラを飲みました。I ate sushi yesterday.',
+    'ハワイに行ったことがあるんですね。', '「カラオケ」は日本語でもよく使います。', 'ビデオを見ました、いいですね。',
+  ]) assert.equal(hasKatakanaEnglish(t), false, t);
+});
+
+test('voice-only: the first turn acknowledges aloud, later turns stay silent', () => {
+  assert.ok(VOICE_ONLY_NOTE_FIRST.includes('one short sentence'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('voiceOnlyNote = VOICE_ONLY_NOTE_FIRST;'));
+  assert.ok(vtr.includes('voiceOnlyNote = VOICE_ONLY_NOTE;'));
+});
+
+test('mutual farewell closes the lesson: tutor farewell + Japanese session-end signals', () => {
+  for (const t of ['今日はゴルフにカラオケ、ハワイのお話まで、たくさん練習できましたね。 また次回、続きを一緒にやりましょう。 さようなら、Mikeさん。', 'さようなら、Mikeさん。 また次回、お待ちしていますね。', 'Great work today. See you next time!', 'Bye for now, take care.']) assert.equal(isTutorFarewell(t), true, t);
+  for (const t of ['さようならは英語で goodbye です。言ってみましょう。', 'See you is a common goodbye. Can you say it?', '短く区切りますね。 もう一つ練習しましょう。 ハワイに、いつ行きましたか。', 'いいですね。 Yes, I have. バッチリです。', '']) assert.equal(isTutorFarewell(t), false, t);
+  for (const t of ['今日はここまでにします。ありがとうございました。また次回もお願いします。さようなら。', 'はい、失礼します。両田先生、また次回もよろしくお願いします。さようなら。', '今日はここまでで大丈夫です', 'もう終わりにします']) assert.equal(isSessionEndSignalJa(t), true, t);
+  for (const t of ['はい、Iwentwithmycoworkerこれでいいですか', 'ゆっくりでいいですか?', 'えーっと、一人で見ました。']) assert.equal(isSessionEndSignalJa(t), false, t);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t)'));
+  assert.ok(vtr.includes("lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)"));
+  assert.ok(vtr.includes("onDebugEvent?.('lesson_closed', 'mutual farewell"));
+});
+
+test('english-reply: an English ask answered with no Latin letters gets the note (embed-1792254012923 seq 32)', () => {
+  for (const t of ['では、二つの形をまとめますね。「海外に行ったことがありますか」を英語で言ってみましょう。', 'In English, please: have you ever been abroad?', 'もう一度、I sang karaoke last week、と言ってみてください。', 'Say it once more for me.']) assert.equal(asksForEnglish(t), true, t);
+  for (const t of ['いいですね。 Yes, I have. I went to Hawaii six years ago. バッチリです。', 'いつ行きましたか。', 'What did you do yesterday?']) assert.equal(asksForEnglish(t), false, t);
+  assert.equal(hasNoLatinLetters('えっと、海外に行ったことがありますか?英語にするんでしたよね。でも、はい、ハワイに行きましたと答えたくなります。'), true);
+  assert.equal(hasNoLatinLetters('はい、アイサンカロケラストウィーク。これでどうでしょう'), true);
+  assert.equal(hasNoLatinLetters('はい。はい。Yes , I have I went to Hawaii 6 years ago .これで大丈夫でしょうか。'), false);
+  assert.ok(NO_ENGLISH_REPLY_NOTE.includes('katakana'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('askedForEnglishRef.current = asksForEnglish(fullText);'));
+  assert.ok(vtr.includes("onDebugEvent?.('no_english_reply_note'"));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  assert.ok(embed.includes("'no_english_reply'"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -205,11 +205,12 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
+import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
-import { isRetryAsk, RETRY_CAP_TURNS, RETRY_CAP_NOTE } from '@/lib/tutor/voice/retry-cap';
+import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/katakana-english';
-import { saysCannotSeeScreen, VOICE_ONLY_NOTE } from '@/lib/tutor/voice/voice-only';
+import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
+import { asksForEnglish, hasNoLatinLetters, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -4520,6 +4521,9 @@ export function VoiceTutorRealtime({
   // Voice-only mode (voice-only.ts): set once the student says they cannot
   // see the screen; never cleared for the rest of the session.
   const voiceOnlyRef = useRef(false);
+  // English-reply check (english-reply.ts): did the last tutor turn ask the
+  // student to produce English? Read when the next student turn arrives.
+  const askedForEnglishRef = useRef(false);
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -11552,7 +11556,7 @@ export function VoiceTutorRealtime({
         }
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
-        const isSessionEndSignal = sessionEndSignalRegex.test(lower);
+        const isSessionEndSignal = sessionEndSignalRegex.test(lower) || isSessionEndSignalJa(t);
         ledgerStudentTextRef.current = t;
         ledgerPriorTutorTextRef.current = String([...priorWithoutCurrent].reverse().find((m) => m.role === 'assistant')?.content ?? '');
         lastStudentVerificationRef.current = {
@@ -11797,11 +11801,22 @@ export function VoiceTutorRealtime({
       // Voice-only (voice-only.ts): sticky from the turn the student says they
       // cannot see the screen; re-stated with every later turn.
       if (sessionAllowsNonLatin(tutorLanguages)) {
+        let voiceOnlyNote: string | null = null;
         if (!voiceOnlyRef.current && saysCannotSeeScreen(transcript)) {
           voiceOnlyRef.current = true;
+          voiceOnlyNote = VOICE_ONLY_NOTE_FIRST; // acknowledged once, this turn
           onDebugEvent?.('voice_only_set', transcript.slice(0, 80));
+        } else if (voiceOnlyRef.current) {
+          voiceOnlyNote = VOICE_ONLY_NOTE;
         }
-        if (voiceOnlyRef.current) runTranscript = `${VOICE_ONLY_NOTE}\n\n${runTranscript}`;
+        if (voiceOnlyNote) runTranscript = `${voiceOnlyNote}\n\n${runTranscript}`;
+        // english-reply.ts: the last tutor turn asked for English and this
+        // transcript has no Latin letters — Japanese reply, or katakana-
+        // rendered English. The brain must not credit a sentence not there.
+        if (askedForEnglishRef.current && hasNoLatinLetters(transcript) && transcript.trim().length >= 4 && !isPleasantryOnly(transcript)) {
+          runTranscript = `${NO_ENGLISH_REPLY_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('no_english_reply_note', transcript.slice(0, 80));
+        }
       }
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
@@ -18573,11 +18588,12 @@ export function VoiceTutorRealtime({
       }
       if (sessionAllowsNonLatin(tutorLanguages) && totalSentenceCount > 0) {
         if (isRetryAsk(fullText)) {
+          // The streak is NOT zeroed on plant (embed-1792254012923): every
+          // further ask re-plants the note with the running count.
           retryAskStreakRef.current += 1;
           if (retryAskStreakRef.current >= RETRY_CAP_TURNS) {
-            pendingRetryCapNoteRef.current = RETRY_CAP_NOTE;
-            retryAskStreakRef.current = 0;
-            onDebugEvent?.('retry_cap_note_planted', `${RETRY_CAP_TURNS} repeat-asks in a row`);
+            pendingRetryCapNoteRef.current = retryCapNote(retryAskStreakRef.current);
+            onDebugEvent?.('retry_cap_note_planted', `${retryAskStreakRef.current} repeat-asks in a row`);
           }
         } else {
           retryAskStreakRef.current = 0;
@@ -18586,6 +18602,16 @@ export function VoiceTutorRealtime({
           pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE;
           onDebugEvent?.('katakana_english_note_planted', fullText.slice(0, 80));
         }
+        askedForEnglishRef.current = asksForEnglish(fullText);
+      }
+      // Mutual farewell (lesson-close.ts): the student signalled the end and
+      // this turn said goodbye without calling close_session_notes — the
+      // lesson is closed all the same, so no idle nudge and no second
+      // farewell (embed-1792254012923: a nudge after the goodbye restarted
+      // the exercise). The commit route's fallback still assigns practice.
+      if (!lessonClosedRef.current && totalSentenceCount > 0 && lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)) {
+        lessonClosedRef.current = true;
+        onDebugEvent?.('lesson_closed', 'mutual farewell — student signalled the end, tutor said goodbye');
       }
       if (TUTOR_BOARD_ANCHOR_NET) {
         const finalQuestion = lastQuestionSentence(fullText);

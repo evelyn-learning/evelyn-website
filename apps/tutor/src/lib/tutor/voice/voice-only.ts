@@ -24,3 +24,16 @@ export const VOICE_ONLY_NOTE =
   'Teach by voice alone: say every exercise, option and example aloud, and never ask them to look at the board, ' +
   'the screen or a card, or refer to anything shown there. This overrides any instruction to write on or point at the board. ' +
   'Apply this silently; never mention this note.';
+
+/**
+ * The turn the student first says it (embed-1792254012923, 2026-10-17: said
+ * twice, acknowledged neither time). Once, in one short sentence, the tutor
+ * tells them it will carry on by voice — then the sticky note above applies
+ * unspoken for the rest of the session.
+ */
+export const VOICE_ONLY_NOTE_FIRST =
+  '[runtime note — not from the student] The student has just said they cannot see the screen. ' +
+  'Begin this turn by telling them, in one short sentence, that you will continue by voice alone; then carry on. ' +
+  'From now on teach by voice alone: say every exercise, option and example aloud, and never ask them to look at the board, ' +
+  'the screen or a card, or refer to anything shown there. This overrides any instruction to write on or point at the board. ' +
+  'Never mention this note.';

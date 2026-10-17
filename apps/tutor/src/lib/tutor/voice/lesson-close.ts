@@ -55,3 +55,49 @@ const FAREWELL_CLAUSE = new RegExp(
 // A question anywhere keeps the turn, even after a goodbye. STT often drops
 // the「？」, so the spoken question endings count too.
 const QUESTION_MARKER = /[?？]|(?:です|ます|でした|ません)か|教えて|もう一(?:つ|回|度)|質問|one more|question/i;
+
+/**
+ * A mutual farewell closes the lesson even when the close tool did not fire.
+ *
+ * embed-1792254012923 (2026-10-17): the student said 「今日はここまでにします
+ * …さようなら」, the tutor said 「さようなら、Mikeさん」 — and did not call
+ * close_session_notes. Nothing marked the lesson closed, so 75 s later the
+ * idle nudge told the student to "take your time thinking", the student asked
+ * what that was about, and the tutor restarted the exercise. Three more
+ * goodbyes followed before the close tool fired.
+ *
+ * `isTutorFarewell` reads the TUTOR's reply: its last sentence is a goodbye and
+ * the turn asks nothing. The caller pairs it with the student's own session-end
+ * signal, so a greetings lesson that practises さようなら mid-turn does not
+ * close itself.
+ */
+const FAREWELL_RE =
+  /さようなら|さよなら|またね|また(?:次回|今度|明日|来週)|お疲れ(?:様|さま)|失礼します|良い(?:一日|週末)を|\b(?:goodbye|good bye|bye|see you(?: next time| soon| later| tomorrow)?|take care|have a (?:good|nice|great|lovely) (?:day|one|evening|weekend|night))\b/i;
+
+export function isTutorFarewell(tutorText: string): boolean {
+  if (typeof tutorText !== 'string') return false;
+  const t = tutorText.trim();
+  if (!t || /[?？]\s*$/.test(t)) return false;
+  const sentences = t.split(/(?<=[。！!.])\s*|\n+/).map((s) => s.trim()).filter(Boolean);
+  const last = sentences[sentences.length - 1] ?? '';
+  if (FAREWELL_RE.test(last)) return true;
+  // 「さようなら。Keep practising!」 — the goodbye one sentence back, followed by
+  // a short closing line that asks for nothing. 「さようならは英語で goodbye です。
+  // 言ってみましょう。」 asks the student to say it: a lesson, not a farewell.
+  const prev = sentences[sentences.length - 2] ?? '';
+  return !!prev && FAREWELL_RE.test(prev) && last.length <= 30 && !FAREWELL_TAIL_ASK_RE.test(last);
+}
+const FAREWELL_TAIL_ASK_RE = /言って|言い|読んで|答え|聞|質問|\b(?:say|repeat|try|answer|question)\b/i;
+
+/**
+ * The STUDENT's session-end signal in Japanese: 今日はここまで / 終わりにします /
+ * さようなら / 失礼します / また次回. The English list lives in
+ * VoiceTutorRealtime's sessionEndSignalRegex (word-bounded); Japanese has no
+ * word boundaries, so it is matched here and OR-ed in.
+ */
+export const SESSION_END_SIGNAL_JA_RE =
+  /今日はここまで|ここまでにし|ここまでで(?:大丈夫|いい|結構)|終わりにし|終わります|もう終わり|やめます|さようなら|さよなら|失礼します|お疲れ(?:様|さま)|また次回|また今度/;
+
+export function isSessionEndSignalJa(studentText: string): boolean {
+  return SESSION_END_SIGNAL_JA_RE.test(studentText ?? '');
+}

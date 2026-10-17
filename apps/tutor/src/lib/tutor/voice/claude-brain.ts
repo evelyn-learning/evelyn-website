@@ -47,7 +47,7 @@ import {
   type PublicVerdictPrecheck,
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
-import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
+import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS, type TextThinkingEffort } from './text-thinking';
 import { formatWorkThenMatchBlock } from './work-then-match';
 import { formatStudentLanguageBlock } from './text-language';
 import {
@@ -2355,7 +2355,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // thinking block on a `thinking: disabled` turn and reasoned to the 2000
   // token cap (~40 s of silence) before the empty-cap re-issue above. Cut such
   // a turn as soon as the thinking block opens and re-issue it once.
+  //
+  // embed-1792254012923 (2026-10-17): the identical re-issue brought the
+  // identical thinking block back both times it ran (9 s and 28 s to the first
+  // sentence — the second went to the cap again). The model will reason on
+  // this input whatever the flag says, so the re-issue lets it, briefly:
+  // adaptive thinking at low effort, under the text-thinking deadline, with
+  // the headroom cap so the reply never has to fit beside the reasoning.
   let unaskedThinkingRetried = false;
+  let thinkingEffortOverride: TextThinkingEffort | undefined;
   const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript, workThenMatch ? { workThenMatch: true } : undefined);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   // Verdict pre-check: one small call, awaited HERE — before the brain call,
@@ -2581,7 +2589,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       // Voice / thinking off: `max_tokens` + `thinking: disabled`, as before.
       // Text thinking: adaptive thinking + effort, with the cap raised so
       // reasoning never has to fit inside the reply's budget.
-      ...brainThinkingParams(thinkingOn, input.maxTokens ?? DEFAULT_MAX_TOKENS),
+      ...brainThinkingParams(thinkingOn, input.maxTokens ?? DEFAULT_MAX_TOKENS, thinkingEffortOverride),
       // 1-hour TTL on every block: survives student pauses > 5 min, and the
       // core block must outlive the gap between sessions (shared entry).
       system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
@@ -2733,9 +2741,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
 
     if (unaskedThinkingHit) {
       // Nothing from the cut attempt was emitted, so re-running is duplication-free.
-      console.warn(`[brain.stream] thinking block with thinking off — cut at block start, re-issuing iteration ${iter} once (served=${opened.target.model})`);
+      // Re-issued WITH adaptive thinking at low effort (see unaskedThinkingRetried).
+      console.warn(`[brain.stream] thinking block with thinking off — cut at block start, re-issuing iteration ${iter} once with adaptive thinking at low effort (served=${opened.target.model})`);
       opened.abort();
       unaskedThinkingRetried = true;
+      thinkingOn = true;
+      thinkingEffortOverride = 'low';
       iter--;
       continue;
     }
