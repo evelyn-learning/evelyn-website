@@ -610,8 +610,13 @@ const DENIAL_OPENER_RE = new RegExp(
   ')',
   'i',
 );
+/** Japanese denial openers (GDI bilingual sessions): 「惜しい」 / 「残念」 /
+ *  「ちょっと違います」 / 「そうではなく」 / 「正しくは」 / 「近いですが」. */
+const DENIAL_OPENER_JA_RE =
+  /^[\s「"'“(]*(?:(?:うーん|んー|あ|あれ|おっと)[、,\s]*)?(?:惜しい|残念|ちょっと(?:違|惜しい|だけ違)|違います|違いますね|そうではなく|そうじゃなく|正しくは|ではなく|ではありません|じゃなく|もう少しです|近いです(?:が|けど)|いい線です(?:が|けど)|少し違)/;
 export function opensWithDenial(attemptText: string): boolean {
-  return DENIAL_OPENER_RE.test(attemptText ?? '');
+  const t = attemptText ?? '';
+  return DENIAL_OPENER_RE.test(t) || DENIAL_OPENER_JA_RE.test(t);
 }
 
 export type PrecheckContradiction =

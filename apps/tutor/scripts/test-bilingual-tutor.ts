@@ -26,6 +26,16 @@ import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE_FIRST } from '../src/lib/tutor/voice/voice-only';
 import { asksForEnglish, hasNoLatinLetters, NO_ENGLISH_REPLY_NOTE } from '../src/lib/tutor/voice/english-reply';
 import { isRetryAsk, retryCapNote, RETRY_CAP_NOTE } from '../src/lib/tutor/voice/retry-cap';
+import { readPacingVerdict } from '../src/lib/tutor/voice/pacing-verdict';
+import { shouldClearQpinOnAnswer } from '../src/lib/tutor/qpin-behavior';
+import { sentenceVerdictStance } from '../src/lib/tutor/voice/voice-judging';
+import { opensWithDenial } from '../src/lib/tutor/voice/verdict-precheck-shared';
+import { opensWithAffirmingVerdict } from '../src/lib/tutor/voice/nonanswer-praise';
+import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '../src/lib/tutor/voice/learner-address';
+import { overusesSuperlative, hasSuperlativePraise, PRAISE_VARIETY_NOTE } from '../src/lib/tutor/voice/praise-variety';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS } from '../src/lib/tutor/voice/lesson-close';
+import { TUTOR_LESSON_CLOSE_AUTO_END } from '../src/lib/tutor/orchestrator/flags';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
 import { isMetaNarration, stripLeakedLabels, stripEchoedTags } from '../src/lib/tutor/voice/meta-narration';
@@ -508,6 +518,111 @@ test('english-reply: an English ask answered with no Latin letters gets the note
   assert.ok(vtr.includes("onDebugEvent?.('no_english_reply_note'"));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   assert.ok(embed.includes("'no_english_reply'"));
+});
+
+// ── embed-1792261973710 (2026-10-17) ─────────────────────────────────────────
+
+test('Ink turn-end timeout defaults to 3000 ms (was 5600; decided 2026-10-17)', () => {
+  const hook = readFileSync('src/app/tutor/hooks/useCartesiaInkWS.ts', 'utf8');
+  assert.ok(hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 3000)'));
+  assert.ok(!hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 5600)'));
+});
+
+test('Japanese affirmations read as affirmations: the question pin clears (seq 3, 01:12)', () => {
+  const praise = 'なるほど。 "I played golf with my friend." ちゃんと答えられていますね。 前置詞の"with"を使って、一緒にいた人を言えましたね。';
+  const read = readPacingVerdict(praise, { studentText: 'えっとはい。えー、with my friend' });
+  assert.equal(read.isAffirm, true);
+  assert.equal(read.isCorrection, false);
+  const transcript = [
+    { id: 'q', role: 'tutor', text: 'では、もう一つ聞きますね。 英語で。 "Who did you play golf with?"' },
+    { id: 's', role: 'student', text: 'えっとはい。えー、with my friend' },
+    { id: 'a', role: 'tutor', text: praise },
+  ];
+  assert.deepEqual(shouldClearQpinOnAnswer(transcript, 'q'), { clear: true, reason: 'answered' });
+  // The Nagoya turn: praise first, the rejection two sentences later.
+  const nagoya = 'I went to Nagoya last week. とてもいい文ですね。 "went" を正しく使えていますね。 でも、今回の問題は「岐阜」でした。 もう一度、"Gifu" を使って言ってみてください。';
+  assert.equal(readPacingVerdict(nagoya).isAffirm, true);
+  for (const t of ['"I went to Gifu last week." 完璧です。', '正解です。', 'はい、その通りです。', 'ばっちり使えましたね。', '合っていますよ。']) assert.equal(readPacingVerdict(t).isAffirm, true, t);
+  // An acknowledgement of the move, an interjection, a correction: not affirmations.
+  const ack = readPacingVerdict('いい質問ですね。 "went" は "go" の過去形です。');
+  assert.equal(ack.isAffirm, false); assert.equal(ack.ackOpener, true);
+  assert.equal(readPacingVerdict('なるほど。 では、次に進みましょう。').isAffirm, false);
+  const miss = readPacingVerdict('惜しい！ "go" ではなく "went" です。');
+  assert.equal(miss.isAffirm, false); assert.equal(miss.isCorrection, true);
+});
+
+test('Japanese verdict openers for the before-display check (deny / affirm)', () => {
+  for (const t of ['惜しい！ もう一度。', 'ちょっと違いますね。', 'うーん、そうではなくて、', '正しくは "went" です。', '近いですが、少し違います。']) assert.equal(opensWithDenial(t), true, t);
+  for (const t of ['"I went to Gifu last week." 完璧です。', '正解です！', 'ちゃんと言えましたね。', 'はい、合っています。']) assert.equal(opensWithAffirmingVerdict(t), true, t);
+  for (const t of ['では、次の文です。', 'いい質問ですね。', '"I go to Tokyo two years ago" ですね。', 'でも、今回の問題は「岐阜」でした。']) {
+    assert.equal(opensWithDenial(t), false, t);
+    assert.equal(opensWithAffirmingVerdict(t), false, t);
+  }
+});
+
+test("a quote the splitter cut open is not a denial; a closed quote's tail is the verdict (seq 17, 10:57 false kill)", () => {
+  const said = "No, I haven't. But I want to go.";
+  assert.equal(sentenceVerdictStance('"No, I haven\'t.', said), null);
+  assert.equal(sentenceVerdictStance('"No, I haven\'t. But I want to go." 完璧な返事です。', said), 'affirm');
+  assert.equal(sentenceVerdictStance('「No, I haven\'t. But I want to go.」 正解です。', said), 'affirm');
+  assert.equal(sentenceVerdictStance('"I go to Tokyo two years ago" ですね。', 'I go to Tokyo 2 years ago'), null);
+  assert.equal(sentenceVerdictStance("No, Ihaven'thaveyou — No, I haven't.", "No , Ihaven ' thaveyou ."), null);
+  assert.equal(sentenceVerdictStance('Not quite — try the past tense.', 'I go to Tokyo'), 'deny');
+});
+
+test('learner-address: 学生 / "the student" said to the student gets the note; compounds do not', () => {
+  for (const t of ['学生が言った内容を確認しますね。', 'ゴルフでもカラオケでも何でもいいので、学生自身の質問を一つ作ってみてください。', '今度は学生の番です。', 'Now the student will try one.']) assert.equal(refersToLearnerInThirdPerson(t), true, t);
+  for (const t of ['留学生の友達はいますか。', '大学生のとき、京都に行きました。', '学生時代は何をしていましたか。', '学生証を見せてください。', 'あなたの番です。', 'Students often mix these up.']) assert.equal(refersToLearnerInThirdPerson(t), false, t);
+  assert.ok(LEARNER_ADDRESS_NOTE.includes('あなた'));
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(clause.includes('Speak TO the student, never about them'));
+});
+
+test('praise-variety: 完璧 in 3 of the last 4 turns (latest included) plants the note', () => {
+  const perfect = '"Have you ever been to Canada?" 完璧です。 三つとも全部正解できましたね。';
+  const plain = '"When did you go?" これは「いつ行きましたか」という意味です。';
+  assert.equal(overusesSuperlative([perfect, plain, perfect, perfect]), true);
+  assert.equal(overusesSuperlative([plain, perfect, perfect, perfect]), true);
+  assert.equal(overusesSuperlative([perfect, perfect, plain, plain]), false);
+  assert.equal(overusesSuperlative([perfect, perfect, perfect, plain]), false, 'latest turn has none');
+  assert.equal(overusesSuperlative([perfect, perfect]), false, 'too few turns');
+  assert.equal(hasSuperlativePraise('Perfect! That is exactly it.'), true);
+  assert.equal(hasSuperlativePraise('いいですね。 "went" が使えました。'), false);
+  assert.ok(PRAISE_VARIETY_NOTE.includes('完璧'));
+});
+
+test('correct-retry: a checked-correct answer asked for again plants the note (seq 14, Nagoya → Gifu)', () => {
+  const pc = { answers: 'open_question', target: 'the sentence about last week', proposed: 'I went to Nagoya last week.', verdict: 'correct', confidence: 'high' } as const;
+  const reply = 'I went to Nagoya last week. とてもいい文ですね。 でも、今回の問題は「岐阜」でした。 もう一度、"Gifu" を使って言ってみてください。';
+  assert.equal(reAskedCheckedCorrect(pc, reply), true);
+  assert.equal(reAskedCheckedCorrect({ ...pc, answers: 'overall_problem' }, reply), true);
+  assert.equal(reAskedCheckedCorrect({ ...pc, answers: 'other_part' }, reply), false);
+  assert.equal(reAskedCheckedCorrect({ ...pc, answers: 'neither', verdict: 'cannot_determine' }, reply), false);
+  assert.equal(reAskedCheckedCorrect({ ...pc, verdict: 'incorrect' }, reply), false, 'a wrong answer may be re-asked');
+  assert.equal(reAskedCheckedCorrect(pc, 'I went to Nagoya last week. 完璧です。 では、三番目の文です。'), false, 'no retry ask');
+  assert.equal(reAskedCheckedCorrect(null, reply), false);
+  assert.ok(CORRECT_RETRY_NOTE.includes('do not ask for it again'));
+});
+
+test('lesson close → quiet auto-end: 45 s, deferred while busy, re-armed by a post-close turn', () => {
+  assert.equal(LESSON_CLOSE_AUTO_END_MS, 45_000);
+  assert.equal(decideLessonCloseAutoEnd({ busy: true, elapsedMs: 120_000 }), 'recheck');
+  assert.equal(decideLessonCloseAutoEnd({ busy: false, elapsedMs: 44_000 }), 'recheck');
+  assert.equal(decideLessonCloseAutoEnd({ busy: false, elapsedMs: 45_000 }), 'end');
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.equal(vtr.split('armLessonCloseAutoEndRef.current();').length - 1, 3, 'armed at both close sites and on a post-close student turn');
+  assert.ok(vtr.includes("onDebugEvent?.('lesson_closed_auto_end'"));
+  assert.ok(vtr.includes("if (!TUTOR_LESSON_CLOSE_AUTO_END || sessionMode === 'text') return;"));
+  assert.ok(vtr.includes('void endSessionNowRef.current();\n    };\n    lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_MS);'));
+  assert.equal(TUTOR_LESSON_CLOSE_AUTO_END, true, 'default ON');
+});
+
+test('the three new notes are planted after the turn, consumed with the next, and persisted', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  for (const ev of ['learner_address_note_planted', 'praise_variety_note_planted', 'correct_retry_note_planted', 'learner_address_note_consumed', 'praise_variety_note_consumed', 'correct_retry_note_consumed']) assert.ok(vtr.includes(`'${ev}'`), ev);
+  assert.ok(vtr.includes('reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)'));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'learner_address'", "'praise_variety'", "'correct_retry'", "'lesson_closed'"]) assert.ok(embed.includes(p), p);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

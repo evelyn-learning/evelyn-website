@@ -105,6 +105,12 @@ export const TUTOR_NOISE_NAG =
 // src/lib/tutor/voice/idle-nudge.ts (test:idle-nudge).
 export const TUTOR_IDLE_NUDGE =
   process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE !== 'off';
+// 2026-10-17 (GDI embed-1792261973710): after the lesson closes, a quiet
+// LESSON_CLOSE_AUTO_END_MS ends the voice session the way the End button does
+// (lesson-close.ts). Without it the mic, the recogniser and the recording ran
+// 8.5 minutes past the goodbye, until the tab was closed. 'off' disables.
+export const TUTOR_LESSON_CLOSE_AUTO_END =
+  process.env.NEXT_PUBLIC_TUTOR_LESSON_CLOSE_AUTO_END !== 'off';
 // R58 false-final-assertion kill (live, portal-71d11dac: "Right. Dividing
 // both sides by 3 gives $x = 11$" spoken — twice — against a card whose
 // verified answer is 13/3; the LLM judge killed both and Pillar 2b

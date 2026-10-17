@@ -205,12 +205,15 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa } from '@/lib/tutor/voice/lesson-close';
+import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
 import { asksForEnglish, hasNoLatinLetters, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
+import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
+import { overusesSuperlative, PRAISE_VARIETY_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS } from '@/lib/tutor/voice/praise-variety';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -342,6 +345,7 @@ import {
   TUTOR_STUDENT_PROBLEM_GROUNDING,
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
+  TUTOR_LESSON_CLOSE_AUTO_END,
   TUTOR_HOST_LESSON,
   TUTOR_EVOLVE_SWAP,
   TUTOR_CONTENT_VARIETY,
@@ -4524,6 +4528,16 @@ export function VoiceTutorRealtime({
   // English-reply check (english-reply.ts): did the last tutor turn ask the
   // student to produce English? Read when the next student turn arrives.
   const askedForEnglishRef = useRef(false);
+  // learner-address.ts / praise-variety.ts / correct-retry.ts (embed-1792261973710):
+  // per-turn notes planted after a delivered turn, consumed with the next.
+  const pendingLearnerAddressNoteRef = useRef<string | null>(null);
+  const pendingPraiseVarietyNoteRef = useRef<string | null>(null);
+  const pendingCorrectRetryNoteRef = useRef<string | null>(null);
+  const recentTutorTurnsRef = useRef<string[]>([]);
+  // lesson-close.ts auto-end: the quiet-after-close timer and its arm (the
+  // callback is defined with the idle nudge; the close sites run earlier).
+  const lessonCloseAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const armLessonCloseAutoEndRef = useRef<() => void>(() => {});
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -8056,6 +8070,7 @@ export function VoiceTutorRealtime({
       if (cmd.action === 'closeSessionNotes') {
         if (!lessonClosedRef.current) onDebugEvent?.('lesson_closed', 'closeSessionNotes');
         lessonClosedRef.current = true;
+        armLessonCloseAutoEndRef.current();
         if (!TUTOR_CLOSE_NOTES) continue;
         const c = cmd as { assignLoIds: string[]; reason?: string; nextTimeIntent?: string };
         // Latest-wins: a second wrap-up call refreshes the intent even
@@ -11042,6 +11057,10 @@ export function VoiceTutorRealtime({
         clearTimeout(idleNudgeTimerRef.current);
         idleNudgeTimerRef.current = null;
       }
+      if (lessonCloseAutoEndTimerRef.current) {
+        clearTimeout(lessonCloseAutoEndTimerRef.current);
+        lessonCloseAutoEndTimerRef.current = null;
+      }
       // R58: the student-hold check-in timer gets the same treatment.
       if (studentHoldCheckInTimerRef.current) {
         clearTimeout(studentHoldCheckInTimerRef.current);
@@ -11797,6 +11816,17 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingKatakanaNoteRef.current}\n\n${runTranscript}`;
         pendingKatakanaNoteRef.current = null;
         onDebugEvent?.('katakana_english_note_consumed', 'delivered with this turn');
+      }
+      for (const [ref, consumed] of [
+        [pendingLearnerAddressNoteRef, 'learner_address_note_consumed'],
+        [pendingPraiseVarietyNoteRef, 'praise_variety_note_consumed'],
+        [pendingCorrectRetryNoteRef, 'correct_retry_note_consumed'],
+      ] as const) {
+        if (ref.current) {
+          runTranscript = `${ref.current}\n\n${runTranscript}`;
+          ref.current = null;
+          onDebugEvent?.(consumed, 'delivered with this turn');
+        }
       }
       // Voice-only (voice-only.ts): sticky from the turn the student says they
       // cannot see the screen; re-stated with every later turn.
@@ -18603,6 +18633,22 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('katakana_english_note_planted', fullText.slice(0, 80));
         }
         askedForEnglishRef.current = asksForEnglish(fullText);
+        // learner-address.ts: 「学生の番です」 said to the student.
+        if (refersToLearnerInThirdPerson(fullText)) {
+          pendingLearnerAddressNoteRef.current = LEARNER_ADDRESS_NOTE;
+          onDebugEvent?.('learner_address_note_planted', fullText.slice(0, 80));
+        }
+        // praise-variety.ts: 完璧 in most of the recent turns.
+        recentTutorTurnsRef.current = [...recentTutorTurnsRef.current.slice(-(PRAISE_WINDOW_TURNS - 1)), fullText];
+        if (overusesSuperlative(recentTutorTurnsRef.current)) {
+          pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
+          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ superlatives in the last ${PRAISE_WINDOW_TURNS} turns`);
+        }
+        // correct-retry.ts: the check said correct; this turn asked for it again.
+        if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
+          pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
+          onDebugEvent?.('correct_retry_note_planted', `checked correct: "${verdictPrecheckRef.current?.proposed.slice(0, 60) ?? ''}"`);
+        }
       }
       // Mutual farewell (lesson-close.ts): the student signalled the end and
       // this turn said goodbye without calling close_session_notes — the
@@ -18612,6 +18658,7 @@ export function VoiceTutorRealtime({
       if (!lessonClosedRef.current && totalSentenceCount > 0 && lastStudentVerificationRef.current?.isSessionEndSignal && isTutorFarewell(fullText)) {
         lessonClosedRef.current = true;
         onDebugEvent?.('lesson_closed', 'mutual farewell — student signalled the end, tutor said goodbye');
+        armLessonCloseAutoEndRef.current();
       }
       if (TUTOR_BOARD_ANCHOR_NET) {
         const finalQuestion = lastQuestionSentence(fullText);
@@ -20105,6 +20152,8 @@ export function VoiceTutorRealtime({
       // video: answer them instead of playing over them.
       cancelResumeLesson('student_turn');
       recordStudentEngagement(idleNudgeStateRef.current);
+      // A real turn after the close restarts the quiet-after-close clock.
+      if (lessonClosedRef.current) armLessonCloseAutoEndRef.current();
       // GreenApple spec 2026-10-02 §1: real student input (text or voice —
       // both land here). A window-event bridge (like evelyn:session-started)
       // so the embed page — the only place that posts to the host — relays
@@ -21577,6 +21626,34 @@ export function VoiceTutorRealtime({
   // 7.7min of mutual silence that nothing owned). The nudge's own spoken
   // reply re-arms the timer at the longer repeat gap via the same delivery
   // effect; caps and busy/hidden backoff live in idle-nudge.ts.
+  // lesson-close.ts: after the close, a quiet LESSON_CLOSE_AUTO_END_MS ends the
+  // session the way the End button does (embed-1792261973710: the mic and the
+  // recogniser ran 8.5 min past the goodbye). Voice sessions only — a text
+  // student may still be typing. A dispatched post-close turn re-arms it; the
+  // tutor still talking, or a turn in flight, defers it.
+  const armLessonCloseAutoEnd = useCallback(() => {
+    if (!TUTOR_LESSON_CLOSE_AUTO_END || sessionMode === 'text') return;
+    if (lessonCloseAutoEndTimerRef.current) clearTimeout(lessonCloseAutoEndTimerRef.current);
+    const closedAt = Date.now();
+    const check = () => {
+      lessonCloseAutoEndTimerRef.current = null;
+      if (endingRef.current) return;
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        perceptionMidUtteranceRef.current ||
+        awaitingDispatchTimerRef.current != null;
+      if (decideLessonCloseAutoEnd({ busy, elapsedMs: Date.now() - closedAt }) === 'recheck') {
+        lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_RECHECK_MS);
+        return;
+      }
+      onDebugEvent?.('lesson_closed_auto_end', `quiet ${Math.round((Date.now() - closedAt) / 1000)} s after the close — ending the session`);
+      void endSessionNowRef.current();
+    };
+    lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_MS);
+  }, [sessionMode, onDebugEvent]);
+  armLessonCloseAutoEndRef.current = armLessonCloseAutoEnd;
+
   const armIdleNudge = useCallback(() => {
     if (!TUTOR_IDLE_NUDGE) return;
     if (idleNudgeTimerRef.current) clearTimeout(idleNudgeTimerRef.current);

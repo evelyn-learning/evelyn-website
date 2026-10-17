@@ -269,6 +269,10 @@ async function main() {
   });
   await test('a reply that opens by quoting the student back is not a verdict (embed-1792182263126)', () => {
     assert.equal(sentenceVerdictStance("No, Ihaven'thaveyou — No, I haven't.", "No , Ihaven ' thaveyou ."), null);
+    // embed-1792261973710: the splitter cut the quote open — a fragment of the
+    // student's words carries no verdict; the closed quote's tail does.
+    assert.equal(sentenceVerdictStance('"No, I haven\'t.', "No, I haven't. But I want to go."), null);
+    assert.equal(sentenceVerdictStance('"No, I haven\'t. But I want to go." 完璧な返事です。', "No, I haven't. But I want to go."), 'affirm');
     assert.equal(sentenceVerdictStance("No, that's not quite right — it's 12.", "No , Ihaven ' thaveyou ."), 'deny');
     assert.equal(sentenceVerdictStance("No, that's not right.", '12'), 'deny');
   });

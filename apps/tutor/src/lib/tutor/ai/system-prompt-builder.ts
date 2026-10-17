@@ -2125,7 +2125,7 @@ export function buildBilingualClause(languages: string[] | undefined): string | 
   if (others.length === 0) return null;
   const second = LANGUAGE_NAMES[others[0]!]!;
   const japanese = others[0] === 'ja'
-    ? `\n- Japanese: natural, polite です/ます style, the way a kind Japanese teacher speaks to an adult — not word-for-word translation. Write Japanese in Japanese script, never romaji — this includes your short opener and one-word affirmations (いいですね。/ なるほど。/ 大丈夫ですよ。). Romaji is Latin script, so it is read aloud by the English voice and sounds wrong.`
+    ? `\n- Japanese: natural, polite です/ます style, the way a kind Japanese teacher speaks to an adult — not word-for-word translation. Write Japanese in Japanese script, never romaji — this includes your short opener and one-word affirmations (いいですね。/ なるほど。/ 大丈夫ですよ。). Romaji is Latin script, so it is read aloud by the English voice and sounds wrong.\n- Speak TO the student, never about them: あなた or their name (「あなたの番です」, never 「学生の番です」). The word 学生 — or "the student" — does not belong in what you say unless the lesson is about students.`
     : '';
   return `\n\n## Session languages: English and ${second} (overrides Rule 5)
 This session is BILINGUAL. You speak, understand and write both English and ${second}. Rule 5's one-language rule and its "each session sticks to one language" reply do NOT apply here — never tell this student you can only use one language.

@@ -101,3 +101,29 @@ export const SESSION_END_SIGNAL_JA_RE =
 export function isSessionEndSignalJa(studentText: string): boolean {
   return SESSION_END_SIGNAL_JA_RE.test(studentText ?? '');
 }
+
+/**
+ * After the close, end the session when the room goes quiet.
+ *
+ * embed-1792261973710 (2026-10-17): the lesson closed at 12:18 (the close tool
+ * fired, the goodbye was said, a second student goodbye was silenced), and the
+ * tab stayed open until 20:57. Nothing spoke, but the mic kept streaming to the
+ * speech recogniser (which dropped and re-opened its socket after five silent
+ * minutes), the recording kept uploading, and the saves kept running: eight
+ * and a half minutes of paid recognition for a lesson that was over. Praveen
+ * read the cost ticking up and the tutor as "stuck".
+ *
+ * Once the lesson is closed, a quiet LESSON_CLOSE_AUTO_END_MS ends the session
+ * the way the End button does (no second goodbye — it was said). A student
+ * who speaks after the close restarts the clock; while the tutor is still
+ * talking, or a turn is in flight, the check waits.
+ */
+export const LESSON_CLOSE_AUTO_END_MS = 45_000;
+export const LESSON_CLOSE_AUTO_END_RECHECK_MS = 5_000;
+
+export type LessonCloseAutoEndDecision = 'end' | 'recheck';
+
+export function decideLessonCloseAutoEnd(args: { busy: boolean; elapsedMs: number }): LessonCloseAutoEndDecision {
+  if (args.busy) return 'recheck';
+  return args.elapsedMs >= LESSON_CLOSE_AUTO_END_MS ? 'end' : 'recheck';
+}
