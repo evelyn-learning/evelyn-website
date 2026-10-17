@@ -8,7 +8,8 @@
  *
  * Usage: npx tsx scripts/test-student-hold.ts  (npm run test:student-hold)
  */
-import { detectHoldRequest, checkResume } from '../src/lib/tutor/voice/student-hold';
+import { readFileSync } from 'node:fs';
+import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS } from '../src/lib/tutor/voice/student-hold';
 
 let passed = 0;
 let failed = 0;
@@ -60,6 +61,35 @@ check('overheard "I have to talk to a friend and stuff" does NOT resume',
 // Multi-word cue: majority-token match.
 check('multi-word cue "purple dragon" matched by "dragon purple thing"',
   checkResume('uh the dragon purple thing', 'purple dragon').resume === true);
+
+// ─── 2026-10-17 (GDI embed-1792274192055): "wait a second" hold, then "carry on" ───
+for (const u of [
+  'No, but like, can you carry on?',
+  'What are we teaching here?',
+  'Are you gonna start?',
+  "Why don't you start?",
+  'Okay, can you carry on, please? Like, I want to get on with the lesson.',
+  'Please continue.',
+  "Let's start.",
+  'Go ahead.',
+]) {
+  check(`strict hold (no cue): "${u}" resumes`, checkResume(u).resume === true, JSON.stringify(checkResume(u)));
+  check(`cue hold (candle): "${u}" resumes`, checkResume(u, 'candle').resume === true, JSON.stringify(checkResume(u, 'candle')));
+}
+// Overheard chatter still does not resume an explicit (cue) hold…
+check('cue hold: "Look at this" does NOT resume', checkResume('Look at this', 'candle').resume === false);
+check('cue hold: "can you see this?" (to a friend) does NOT resume', checkResume('can you see this?', 'candle').resume === false);
+// …but a SOFT hold ("wait a second", no cue, no step-away) resumes on any speech.
+check('soft hold: "Look at this" resumes', checkResume('Look at this', undefined, { soft: true }).reason === 'soft-any-speech');
+check('soft hold: a one-word "Hello." does not count', checkResume('Hello.', undefined, { soft: true }).resume === false);
+check('"Okay, can you just wait for a second?" is NOT a step-away hold request', detectHoldRequest('Okay, can you just wait for a second?').hold === false);
+check('SOFT_HOLD_CHECKIN_MS is one minute', SOFT_HOLD_CHECKIN_MS === 60_000);
+{
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  check('wiring: a cue-less tool hold on a non-step-away utterance is soft', vtr.includes('const soft = !cue && !detectHoldRequest(transcript).hold;'));
+  check('wiring: resume check carries soft', vtr.includes('{ soft: studentHoldRef.current.soft }'));
+  check('wiring: soft hold expires at its check-in', vtr.includes("onDebugEvent?.('student_hold_expired'"));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

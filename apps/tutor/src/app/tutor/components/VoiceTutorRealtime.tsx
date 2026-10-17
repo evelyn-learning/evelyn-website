@@ -227,7 +227,7 @@ import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradictio
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
-import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
+import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
 import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
@@ -2057,8 +2057,11 @@ export function VoiceTutorRealtime({
   // dispatch, no transcript append (the aside is private), no covers, no
   // idle nudges. One gentle check-in after 5 quiet minutes, then silence
   // again until the student resumes. Session-scoped — VTR remounts.
-  const pendingStudentHoldRef = useRef<{ resumeCue?: string } | null>(null);
-  const studentHoldRef = useRef<{ resumeCue?: string; sinceMs: number; checkInDone: boolean } | null>(null);
+  // `soft` (2026-10-17, embed-1792274192055): a cue-less hold the student did
+  // not declare as stepping away ("wait a second") — any next utterance
+  // resumes it, and it checks in and ends after SOFT_HOLD_CHECKIN_MS.
+  const pendingStudentHoldRef = useRef<{ resumeCue?: string; soft?: boolean } | null>(null);
+  const studentHoldRef = useRef<{ resumeCue?: string; soft?: boolean; sinceMs: number; checkInDone: boolean } | null>(null);
   const studentHoldCheckInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const renderBufferRef = useRef<Array<{
@@ -15688,8 +15691,9 @@ export function VoiceTutorRealtime({
                       const cueRaw = typeof (args as Record<string, unknown>)?.resumeCue === 'string'
                         ? String((args as Record<string, unknown>).resumeCue) : '';
                       const cue = cueRaw.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-                      pendingStudentHoldRef.current = { resumeCue: cue || undefined };
-                      onDebugEvent?.('student_hold_armed', cue ? `cue="${cue.slice(0, 30)}"` : 'no cue');
+                      const soft = !cue && !detectHoldRequest(transcript).hold;
+                      pendingStudentHoldRef.current = { resumeCue: cue || undefined, soft };
+                      onDebugEvent?.('student_hold_armed', cue ? `cue="${cue.slice(0, 30)}"` : soft ? 'no cue — soft (any speech resumes)' : 'no cue');
                     }
                     onDebugEvent?.('server_only_tool', name);
                     continue;
@@ -20193,7 +20197,7 @@ export function VoiceTutorRealtime({
     // Synthetic bracketed dispatches pass through untouched (idle nudges
     // are separately suppressed via decideIdleNudge's hold arg).
     if (TUTOR_STUDENT_HOLD && studentHoldRef.current && !opts?.silent && !/^\s*\[/.test(transcript)) {
-      const resume = checkResume(transcript, studentHoldRef.current.resumeCue);
+      const resume = checkResume(transcript, studentHoldRef.current.resumeCue, { soft: studentHoldRef.current.soft });
       if (!resume.resume) {
         onDebugEvent?.('student_hold_swallowed', transcript.slice(0, 60));
         return;
@@ -20632,7 +20636,7 @@ export function VoiceTutorRealtime({
       if (TUTOR_STUDENT_HOLD && pendingStudentHoldRef.current) {
         studentHoldRef.current = { ...pendingStudentHoldRef.current, sinceMs: Date.now(), checkInDone: false };
         pendingStudentHoldRef.current = null;
-        onDebugEvent?.('student_hold_active', studentHoldRef.current.resumeCue ? `cue="${studentHoldRef.current.resumeCue}"` : 'no cue');
+        onDebugEvent?.('student_hold_active', studentHoldRef.current.resumeCue ? `cue="${studentHoldRef.current.resumeCue}"` : studentHoldRef.current.soft ? 'soft' : 'no cue');
         if (studentHoldCheckInTimerRef.current) clearTimeout(studentHoldCheckInTimerRef.current);
         studentHoldCheckInTimerRef.current = setTimeout(() => {
           const hold = studentHoldRef.current;
@@ -20644,7 +20648,12 @@ export function VoiceTutorRealtime({
             speakTextRef.current?.(line, sid);
             onDebugEvent?.('student_hold_check_in', `${Math.round((Date.now() - hold.sinceMs) / 1000)}s held`);
           }
-        }, 5 * 60_000);
+          // A soft hold ends with its check-in: back to normal listening.
+          if (hold.soft && studentHoldRef.current === hold) {
+            studentHoldRef.current = null;
+            onDebugEvent?.('student_hold_expired', 'soft hold — listening normally again');
+          }
+        }, studentHoldRef.current.soft ? SOFT_HOLD_CHECKIN_MS : 5 * 60_000);
       }
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a

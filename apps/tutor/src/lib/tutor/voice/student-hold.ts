@@ -31,8 +31,30 @@ export interface HoldRequest {
 
 export interface ResumeCheck {
   resume: boolean;
-  reason?: 'cue' | 'ready-intent' | 'direct-address';
+  reason?: 'cue' | 'ready-intent' | 'direct-address' | 'soft-any-speech';
 }
+
+/**
+ * 2026-10-17 (GDI, embed-1792274192055): a human barged in with "Okay, can
+ * you just wait for a second?"; the brain called hold_for_student with no
+ * cue, and the student's next five utterances — "No, but like, can you carry
+ * on?", "What are we teaching here?", "Are you gonna start?", "Why don't you
+ * start?", "Okay, can you carry on, please? I want to get on with the lesson."
+ * — were all swallowed: none matched the resume shapes written for the
+ * "until I say candle" case. Two changes:
+ *   - a hold with NO codeword that the utterance itself did not declare as a
+ *     step-away ("ignore me", "I need to talk to someone") is a SOFT hold —
+ *     "wait a second" — and the next thing the student says resumes it;
+ *   - the strict shapes gain the plain ways of asking the tutor to go on.
+ */
+export interface ResumeOptions {
+  /** A cue-less hold the student never declared as stepping away: any
+   *  substantive utterance resumes. */
+  soft?: boolean;
+}
+
+/** A soft hold checks in — and ends — after this long, not five minutes. */
+export const SOFT_HOLD_CHECKIN_MS = 60_000;
 
 /** "ignore (everything I say) until I say X" — captures the cue. The cue
  *  capture stops at punctuation/conjunction so trailing chatter doesn't
@@ -48,12 +70,18 @@ const STEP_AWAY_RE =
   /\b(?:i(?:'m| am| have| need|'ve got) (?:go(?:ing|nna)? |to )?(?:step away|talk to (?:someone|my|a friend)|take a (?:quick )?break)\b|(?:don'?t|do not) (?:listen|respond|reply)(?: to me)?\b|i'?m not talking to you\b|stop listening\b)/i;
 
 const READY_INTENT_RE =
-  /\b(?:i'?m ready\b|ready to (?:keep going|continue|go|start)\b|let'?s (?:continue|keep going|get back|go on|resume|pick (?:it )?(?:back )?up)\b|i'?m (?:back|done)\b|back now\b|okay,? i'?m (?:here|ready|back|done)\b|we can (?:continue|keep going|resume)\b)/i;
+  /\b(?:i'?m ready\b|ready to (?:keep going|continue|go|start)\b|let'?s (?:continue|keep going|get back|go on|resume|start|carry on|pick (?:it )?(?:back )?up)\b|i'?m (?:back|done)\b|back now\b|okay,? i'?m (?:here|ready|back|done)\b|we can (?:continue|keep going|resume)\b|(?:can|could|will|would) you (?:please )?(?:carry on|continue|go on|keep going|start|resume|go ahead)\b|(?:why don'?t you|are you (?:gonna|going to)|aren'?t you (?:gonna|going to)) (?:start|continue|carry on|go on|keep going)\b|get on with (?:it|the lesson)\b|i'?m listening\b)/i;
 
 /** The student addressing the TUTOR directly mid-hold — always resumes
  *  (a student asking "are you there?" must never be met with silence). */
 const DIRECT_ADDRESS_RE =
-  /\b(?:are you (?:there|still there|listening)\b|can you hear me\b|hello\?|hey,? (?:tutor|are you)\b)/i;
+  /\b(?:are you (?:there|still there|listening)\b|can you hear me\b|hello\?|hey,? (?:tutor|are you)\b|what are we (?:doing|teaching|learning|working on|practi[cs]ing)\b|what(?:'s| is) (?:the|today'?s) (?:lesson|topic|plan)\b)/i;
+
+/** A bare "carry on" / "please continue" / "go ahead" at the start of the
+ *  utterance or a clause — not inside one ("I am not continue… I have to
+ *  talk to a friend", the live R58 fixture, must stay swallowed). */
+const BARE_GO_ON_RE =
+  /(?:^|[.!?]\s*|\b(?:okay|ok|yes|yeah|alright|so),?\s+)(?:please\s+)?(?:carry on|go on|go ahead|continue|keep going|resume)(?:,?\s*please)?\b/i;
 
 function normalizeForCue(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -71,9 +99,14 @@ export function detectHoldRequest(utterance: string): HoldRequest {
   return { hold: false };
 }
 
-export function checkResume(utterance: string, resumeCue?: string): ResumeCheck {
+export function checkResume(utterance: string, resumeCue?: string, opts?: ResumeOptions): ResumeCheck {
   const t = (utterance ?? '').trim();
   if (!t) return { resume: false };
+  // Soft hold ("wait a second"): the student is still talking to the tutor,
+  // so anything with a couple of words in it resumes.
+  if (opts?.soft && normalizeForCue(t).split(' ').filter(Boolean).length >= 2) {
+    return { resume: true, reason: 'soft-any-speech' };
+  }
   if (resumeCue) {
     const norm = ` ${normalizeForCue(t)} `;
     const cueTokens = resumeCue.split(' ').filter(Boolean);
@@ -86,7 +119,7 @@ export function checkResume(utterance: string, resumeCue?: string): ResumeCheck 
       if (hit * 2 > cueTokens.length) return { resume: true, reason: 'cue' };
     }
   }
-  if (READY_INTENT_RE.test(t)) return { resume: true, reason: 'ready-intent' };
+  if (READY_INTENT_RE.test(t) || BARE_GO_ON_RE.test(t)) return { resume: true, reason: 'ready-intent' };
   if (DIRECT_ADDRESS_RE.test(t)) return { resume: true, reason: 'direct-address' };
   return { resume: false };
 }
