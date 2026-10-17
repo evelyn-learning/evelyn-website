@@ -2351,6 +2351,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // — the student heard nothing but cover lines. Re-issued once, like the
   // thinking-starved case below.
   let emptyCapRetried = false;
+  // GDI starter embed-1792251169634 (2026-10-17): claude-sonnet-5 sent a
+  // thinking block on a `thinking: disabled` turn and reasoned to the 2000
+  // token cap (~40 s of silence) before the empty-cap re-issue above. Cut such
+  // a turn as soon as the thinking block opens and re-issue it once.
+  let unaskedThinkingRetried = false;
   const textThinkingBlock = formatTextThinkingBlock(thinkingOn, input.studentTranscript, workThenMatch ? { workThenMatch: true } : undefined);
   if (thinkingOn) console.log(`[text-thinking] on${textThinkingBlock ? ' + private_reasoning block' : ''}`);
   // Verdict pre-check: one small call, awaited HERE — before the brain call,
@@ -2569,6 +2574,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     let shownThisIter = false;
     let thinkingAnnounced = false;
     let deadlineHit = false;
+    let unaskedThinkingHit = false;
 
     const opened = await openBrainStream((target) => paramsForTarget(target, {
       model: input.model ?? BRAIN_MODEL_ID,
@@ -2637,6 +2643,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             name: event.content_block.name,
             rawJson: '',
           };
+        } else if (
+          (event.content_block.type === 'thinking' || event.content_block.type === 'redacted_thinking') &&
+          !thinkingOn && !shownThisIter && !unaskedThinkingRetried
+        ) {
+          unaskedThinkingHit = true;
+          break;
         } else if (
           (event.content_block.type === 'thinking' || event.content_block.type === 'redacted_thinking') &&
           !thinkingAnnounced
@@ -2719,6 +2731,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       }
     }
 
+    if (unaskedThinkingHit) {
+      // Nothing from the cut attempt was emitted, so re-running is duplication-free.
+      console.warn(`[brain.stream] thinking block with thinking off — cut at block start, re-issuing iteration ${iter} once (served=${opened.target.model})`);
+      opened.abort();
+      unaskedThinkingRetried = true;
+      iter--;
+      continue;
+    }
     if (deadlineHit) {
       // Reasoning ran past the deadline with nothing shown. Cut it and
       // re-issue THIS iteration without thinking — the same request a voice

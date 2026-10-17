@@ -23,6 +23,7 @@ import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { isPleasantryOnly } from '../src/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
 import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
+import { saysCannotSeeScreen } from '../src/lib/tutor/voice/voice-only';
 import { isRetryAsk } from '../src/lib/tutor/voice/retry-cap';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
@@ -427,6 +428,11 @@ test('run-together English from the STT is split into words (embed-1792185403054
 test('two repeat-asks in a row trigger the move-on note (embed-1792185403054)', () => {
   for (const t of ['もう一度言ってみましょう。', 'もう一度、ゆっくり言ってみましょうか。', 'Try saying it once more: Have you ever gone to karaoke?', 'Say it once more for me?']) assert.equal(isRetryAsk(t), true, t);
   for (const t of ['では、次に進みましょう。', 'Have you ever been to Canada?', 'もう一度読みますね。']) assert.equal(isRetryAsk(t), false, t);
+  // embed-1792251169634: 'だけ' and '一緒に' between もう一度 and the verb.
+  for (const t of ['もう一度だけ、ゆっくり一緒に言ってみましょうか、No, I haven\'t.', 'もう一度だけ、ゆっくり言ってみましょうか。']) assert.equal(isRetryAsk(t), true, t);
+  // embed-1792251169634: 'can't see the screen' sets voice-only mode.
+  for (const t of ['ゆっくりでお願いします。画面が見えないです', 'すみません、画面は見えないです。声だけでお願いします', 'ボードが見えません', "Sorry, I can't see the screen."]) assert.equal(saysCannotSeeScreen(t), true, t);
+  for (const t of ['はい、なんとなくわかります。', '富士山が見えないです', 'I can see the board now.']) assert.equal(saysCannotSeeScreen(t), false, t);
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes('retryAskStreakRef.current >= RETRY_CAP_TURNS'));
   assert.ok(vtr.includes('splitRunTogetherEnglish(transcript)'));

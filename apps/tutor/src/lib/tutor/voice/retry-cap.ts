@@ -9,7 +9,7 @@
  */
 
 const RETRY_ASK_RE =
-  /もう一度(?:、)?\s*(?:ゆっくり)?(?:言って|言いましょう|言ってみ|お願い|どうぞ|挑戦)|もう一回(?:言って|言いましょう|言ってみ|お願い)|\b(?:try\s+)?say(?:ing)?\s+(?:it|that)\s+(?:once\s+more|again)\b|\btry\s+(?:it|that)\s+again\b|\bone\s+more\s+time\b|\btry\s+again\b/i;
+  /(?:もう一度|もう一回)(?:だけ)?(?:、)?\s*(?:ゆっくり)?(?:、)?\s*(?:一緒に)?(?:、)?\s*(?:ゆっくり)?(?:言って|言いましょう|言ってみ|お願い|どうぞ|挑戦)|\b(?:try\s+)?say(?:ing)?\s+(?:it|that)\s+(?:once\s+more|again)\b|\btry\s+(?:it|that)\s+again\b|\bone\s+more\s+time\b|\btry\s+again\b/i;
 
 /** Does this tutor turn ask the student to say something again? */
 export function isRetryAsk(tutorText: string): boolean {

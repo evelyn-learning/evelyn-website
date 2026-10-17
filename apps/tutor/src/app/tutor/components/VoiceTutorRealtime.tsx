@@ -209,6 +209,7 @@ import { isPleasantryOnly } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, RETRY_CAP_NOTE } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/katakana-english';
+import { saysCannotSeeScreen, VOICE_ONLY_NOTE } from '@/lib/tutor/voice/voice-only';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -4516,6 +4517,9 @@ export function VoiceTutorRealtime({
   // Katakana-English corrective (katakana-english.ts): planted after a turn
   // that spelled English out in katakana, delivered with the next turn.
   const pendingKatakanaNoteRef = useRef<string | null>(null);
+  // Voice-only mode (voice-only.ts): set once the student says they cannot
+  // see the screen; never cleared for the rest of the session.
+  const voiceOnlyRef = useRef(false);
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
   // waits out an open tutor question): the wrong figure is on the board now.
@@ -11789,6 +11793,15 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingKatakanaNoteRef.current}\n\n${runTranscript}`;
         pendingKatakanaNoteRef.current = null;
         onDebugEvent?.('katakana_english_note_consumed', 'delivered with this turn');
+      }
+      // Voice-only (voice-only.ts): sticky from the turn the student says they
+      // cannot see the screen; re-stated with every later turn.
+      if (sessionAllowsNonLatin(tutorLanguages)) {
+        if (!voiceOnlyRef.current && saysCannotSeeScreen(transcript)) {
+          voiceOnlyRef.current = true;
+          onDebugEvent?.('voice_only_set', transcript.slice(0, 80));
+        }
+        if (voiceOnlyRef.current) runTranscript = `${VOICE_ONLY_NOTE}\n\n${runTranscript}`;
       }
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
