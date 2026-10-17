@@ -227,7 +227,9 @@ import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradictio
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
-import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS } from '@/lib/tutor/voice/student-hold';
+import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS, WAIT_REQUEST_NOTE } from '@/lib/tutor/voice/student-hold';
+import { asksReadiness, READINESS_ASK_NOTE } from '@/lib/tutor/voice/readiness-ask';
+import { claimsPronunciation, PRONUNCIATION_CLAIM_NOTE } from '@/lib/tutor/voice/pronunciation-claim';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
 import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
@@ -4540,6 +4542,11 @@ export function VoiceTutorRealtime({
   const pendingCorrectRetryNoteRef = useRef<string | null>(null);
   const recentTutorTurnsRef = useRef<string[]>([]);
   const praiseVarietyPlantsRef = useRef(0);
+  const pendingReadinessNoteRef = useRef<string | null>(null);
+  const pendingPronunciationNoteRef = useRef<string | null>(null);
+  // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
+  // (a soft, cue-less hold), consumed where the other notes are.
+  const pendingWaitNoteRef = useRef<string | null>(null);
   // lesson-close.ts auto-end: the quiet-after-close timer and its arm (the
   // callback is defined with the idle nudge; the close sites run earlier).
   const lessonCloseAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -11832,6 +11839,9 @@ export function VoiceTutorRealtime({
         [pendingLearnerAddressNoteRef, 'learner_address_note_consumed'],
         [pendingPraiseVarietyNoteRef, 'praise_variety_note_consumed'],
         [pendingCorrectRetryNoteRef, 'correct_retry_note_consumed'],
+        [pendingReadinessNoteRef, 'readiness_ask_note_consumed'],
+        [pendingPronunciationNoteRef, 'pronunciation_claim_note_consumed'],
+        [pendingWaitNoteRef, 'wait_request_note_consumed'],
       ] as const) {
         if (ref.current) {
           runTranscript = `${ref.current}\n\n${runTranscript}`;
@@ -11854,7 +11864,7 @@ export function VoiceTutorRealtime({
         // english-reply.ts: the last tutor turn asked for English and this
         // transcript has no Latin letters — Japanese reply, or katakana-
         // rendered English. The brain must not credit a sentence not there.
-        if (askedForEnglishRef.current && hasNoLatinLetters(transcript) && transcript.trim().length >= 4 && !isPleasantryOnly(transcript) && !isStudentRepeatRequest(transcript)) {
+        if (askedForEnglishRef.current && hasNoLatinLetters(transcript) && transcript.trim().length >= 2 && !isStudentRepeatRequest(transcript)) {
           runTranscript = `${NO_ENGLISH_REPLY_NOTE}\n\n${runTranscript}`;
           onDebugEvent?.('no_english_reply_note', transcript.slice(0, 80));
         }
@@ -18661,6 +18671,16 @@ export function VoiceTutorRealtime({
           // Sticky: the habit came back after the first note (embed-1792266148587).
           pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
         }
+        // readiness-ask.ts: 「準備はいいですか」 → next turn starts the item instead.
+        if (asksReadiness(fullText)) {
+          pendingReadinessNoteRef.current = READINESS_ASK_NOTE;
+          onDebugEvent?.('readiness_ask_note_planted', fullText.slice(-60));
+        }
+        // pronunciation-claim.ts: "the sound of last was off" from a transcript.
+        if (claimsPronunciation(fullText, transcript)) {
+          pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
+          onDebugEvent?.('pronunciation_claim_note_planted', fullText.slice(0, 80));
+        }
         // correct-retry.ts: the check said correct; this turn asked for it again.
         if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
           pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
@@ -20620,8 +20640,10 @@ export function VoiceTutorRealtime({
           && !studentHoldRef.current && !pendingStudentHoldRef.current) {
         const holdReq = detectHoldRequest(transcript);
         if (holdReq.hold) {
-          pendingStudentHoldRef.current = { resumeCue: holdReq.resumeCue };
-          onDebugEvent?.('student_hold_armed', `heuristic${holdReq.resumeCue ? ` cue="${holdReq.resumeCue.slice(0, 30)}"` : ''}`);
+          pendingStudentHoldRef.current = { resumeCue: holdReq.resumeCue, soft: holdReq.soft };
+          // A wait request: this turn's reply is one short sentence, then silence.
+          if (holdReq.soft) pendingWaitNoteRef.current = WAIT_REQUEST_NOTE;
+          onDebugEvent?.('student_hold_armed', `heuristic${holdReq.soft ? ' — soft wait request' : ''}${holdReq.resumeCue ? ` cue="${holdReq.resumeCue.slice(0, 30)}"` : ''}`);
         }
       }
       // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted

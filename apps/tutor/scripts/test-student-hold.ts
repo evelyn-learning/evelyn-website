@@ -82,7 +82,9 @@ check('cue hold: "can you see this?" (to a friend) does NOT resume', checkResume
 // …but a SOFT hold ("wait a second", no cue, no step-away) resumes on any speech.
 check('soft hold: "Look at this" resumes', checkResume('Look at this', undefined, { soft: true }).reason === 'soft-any-speech');
 check('soft hold: a one-word "Hello." does not count', checkResume('Hello.', undefined, { soft: true }).resume === false);
-check('"Okay, can you just wait for a second?" is NOT a step-away hold request', detectHoldRequest('Okay, can you just wait for a second?').hold === false);
+check('"Okay, can you just wait for a second?" is a SOFT wait request, not a step-away', (() => { const r = detectHoldRequest('Okay, can you just wait for a second?'); return r.hold === true && r.soft === true; })());
+check('「ちょっと待ってください」 is a SOFT wait request', detectHoldRequest('はい、どう、ちょっと待ってください。').soft === true);
+check('"ignore everything until I say candle" is NOT soft', detectHoldRequest('ignore everything I say until I say candle').soft !== true);
 check('SOFT_HOLD_CHECKIN_MS is one minute', SOFT_HOLD_CHECKIN_MS === 60_000);
 {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');

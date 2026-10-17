@@ -35,6 +35,12 @@ export function isStudentRepeatRequest(studentText: string): boolean {
   return REPEAT_REQUEST_RE.test(studentText ?? '');
 }
 
+/** 2026-10-17 (embed-1792276942766): after 「先週岐阜に行きました」を英語で,
+ *  the student said only 「はい。」 and the tutor replied 「I went to Gifu last
+ *  week、合っていますよ」 — crediting a sentence nobody said. A bare はい after
+ *  an English ask is exactly the case the note exists for, so the caller no
+ *  longer skips pleasantry-only replies; only repeat requests are skipped. */
+
 /** Is there no Latin-letter English anywhere in the student's transcript? */
 export function hasNoLatinLetters(studentText: string): boolean {
   return !/[A-Za-z]/.test(studentText ?? '');

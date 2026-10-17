@@ -27,7 +27,23 @@ export interface HoldRequest {
   hold: boolean;
   /** The student's chosen resume codeword, when they named one. */
   resumeCue?: string;
+  /** "Wait a moment" (ちょっと待ってください): the student is still with the
+   *  tutor and wants a breath — one short acknowledgement, no question, and
+   *  the next thing they say resumes (embed-1792276942766: the tutor said
+   *  「もちろん、ゆっくりで大丈夫ですよ」 and then kept explaining). */
+  soft?: boolean;
 }
+
+/** 「ちょっと待ってください」 / "wait a second" / "can you wait" — a pause
+ *  request addressed to the tutor, not a step-away. "hold on" / "one sec" /
+ *  "give me a sec" stay thinking stalls (cover-layer STALL_RE, and the suite
+ *  pins them): these need the explicit wait verb, or a ください. */
+const WAIT_REQUEST_RE =
+  /(?:ちょっと|少し|すこし|一瞬|いっしゅん)?(?:待って|まって)(?:ください|下さい|もらえ|いただけ)|タイム(?:ください)?|\b(?:please )?wait (?:a |one |for a )?(?:sec(?:ond)?|moment|minute|bit)\b|\bcan you (?:just )?wait\b|\bplease wait\b/i;
+
+export const WAIT_REQUEST_NOTE =
+  '[runtime note — not from the student] The student asked you to wait a moment. Reply with ONE short sentence that says you will wait — ' +
+  'no explanation, no new question, no next item — and stop. They will tell you when to go on. Apply this silently; never mention this note.';
 
 export interface ResumeCheck {
   resume: boolean;
@@ -100,6 +116,7 @@ export function detectHoldRequest(utterance: string): HoldRequest {
     return { hold: true, resumeCue: cue || undefined };
   }
   if (STEP_AWAY_RE.test(t)) return { hold: true };
+  if (WAIT_REQUEST_RE.test(t)) return { hold: true, soft: true };
   return { hold: false };
 }
 

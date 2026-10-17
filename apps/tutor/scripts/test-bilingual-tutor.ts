@@ -36,6 +36,9 @@ import { overusesSuperlative, hasSuperlativePraise, PRAISE_VARIETY_NOTE, PRAISE_
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS } from '../src/lib/tutor/voice/lesson-close';
 import { TUTOR_LESSON_CLOSE_AUTO_END } from '../src/lib/tutor/orchestrator/flags';
+import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
+import { claimsPronunciation } from '../src/lib/tutor/voice/pronunciation-claim';
+import { detectHoldRequest, WAIT_REQUEST_NOTE } from '../src/lib/tutor/voice/student-hold';
 import { pickLivenessReply } from '../src/lib/tutor/voice/cover-layer';
 import { renderVoiceCadenceBlock } from '../src/lib/tutor/pedagogy/voice-cadence';
 import { isMetaNarration, stripLeakedLabels, stripEchoedTags } from '../src/lib/tutor/voice/meta-narration';
@@ -630,12 +633,30 @@ test('embed-1792266148587: repeat requests get no English-reply note; transition
   for (const t of ['えっと、海外に行ったことがありますか?', 'はい、ハワイに行きました。じゃなくて、英語で']) assert.equal(isStudentRepeatRequest(t), false, t);
   assert.ok(NO_ENGLISH_REPLY_NOTE.includes('do not say the item or the exercise is finished'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes('!isPleasantryOnly(transcript) && !isStudentRepeatRequest(transcript)'));
+  assert.ok(vtr.includes('transcript.trim().length >= 2 && !isStudentRepeatRequest(transcript)'), 'a bare はい after an English ask gets the note (embed-1792276942766 15:04)');
   assert.ok(vtr.includes('Say any transition sentence in the language you are using with this student'));
   assert.equal(PRAISE_STICKY_AFTER_PLANTS, 2);
   assert.ok(vtr.includes('praiseVarietyPlantsRef.current >= PRAISE_STICKY_AFTER_PLANTS'));
   const clause = buildBilingualClause(['en', 'ja']) ?? '';
   assert.ok(clause.includes('「ここまでのポイント」'));
+});
+
+test('embed-1792276942766: readiness checks, pronunciation claims and wait requests get their notes', () => {
+  for (const t of ['では次に、今日の二つ目の形を練習しましょうね。 準備はいいですか。', 'Shall we start?', 'Are you ready?']) assert.equal(asksReadiness(t), true, t);
+  for (const t of ['では聞きますね。 Have you ever been to Okinawa?', '準備ができたら教えてくださいと言われました。']) assert.equal(asksReadiness(t), false, t);
+  const student = 'I went the rest week';
+  for (const t of ['「last week」と言いたかったんだと思いますが、「last」の音が少し変わってしまいましたね。', '「ear」ではなく「ever」の音でしたが、ちゃんと形になっていました。', 'It sounded like "rest" — try "last".']) assert.equal(claimsPronunciation(t, student), true, t);
+  assert.equal(claimsPronunciation('カラオケは英語でも "karaoke" と言いますよ、発音は少し違いますが、そのまま通じます。', 'すみません、カラオケはカタカナで書きますよね。英語ではどう言いますか?'), false, 'the student asked');
+  assert.equal(claimsPronunciation('I went last week、今度はしっかり言えましたね。', student), false);
+  assert.deepEqual(detectHoldRequest('はい、どう、ちょっと待ってください。'), { hold: true, soft: true });
+  assert.deepEqual(detectHoldRequest('Okay, can you just wait for a second?'), { hold: true, soft: true });
+  assert.equal(detectHoldRequest('待ってました、この問題。').hold, false);
+  assert.ok(WAIT_REQUEST_NOTE.includes('ONE short sentence'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  for (const ev of ['readiness_ask_note_planted', 'pronunciation_claim_note_planted', 'wait_request_note_consumed']) assert.ok(vtr.includes(`'${ev}'`), ev);
+  assert.ok(vtr.includes('if (holdReq.soft) pendingWaitNoteRef.current = WAIT_REQUEST_NOTE;'));
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'readiness_ask'", "'pronunciation_claim'", "'wait_request'"]) assert.ok(embed.includes(p), p);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
