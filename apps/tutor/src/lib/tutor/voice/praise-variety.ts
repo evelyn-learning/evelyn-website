@@ -18,6 +18,10 @@ const SUPERLATIVE_RE =
   /完璧|パーフェクト|大正解|素晴らしい|すばらしい|お見事|\b(?:perfect|excellent|amazing|wonderful|brilliant|flawless|outstanding)\b/i;
 
 export const PRAISE_WINDOW_TURNS = 4;
+/** embed-1792266148587: the note held for a turn or two, then 完璧 came back —
+ *  four plantings, 13 superlatives in 29 turns. From the second planting on,
+ *  the note rides with every remaining turn of the session. */
+export const PRAISE_STICKY_AFTER_PLANTS = 2;
 export const PRAISE_MIN_HITS = 3;
 
 /** Does this tutor turn carry a superlative? */

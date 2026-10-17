@@ -28,6 +28,13 @@ export function asksForEnglish(tutorText: string): boolean {
   return ASKS_ENGLISH_RE.test(tutorText ?? '');
 }
 
+/** The student asked to hear it again (「もう一度お願いします」, "say it again"):
+ *  a request, not an answer — no note (embed-1792266148587: two false notes). */
+const REPEAT_REQUEST_RE = /もう一度|もう一回|もう1度|もう1回|もういちど|もっかい|再度|\b(?:again|repeat|one more time|once more)\b/i;
+export function isStudentRepeatRequest(studentText: string): boolean {
+  return REPEAT_REQUEST_RE.test(studentText ?? '');
+}
+
 /** Is there no Latin-letter English anywhere in the student's transcript? */
 export function hasNoLatinLetters(studentText: string): boolean {
   return !/[A-Za-z]/.test(studentText ?? '');
@@ -37,4 +44,4 @@ export const NO_ENGLISH_REPLY_NOTE =
   '[runtime note — not from the student] You asked for English, and the transcript of the student\'s reply contains no English words in Latin letters. ' +
   'Either they answered in Japanese (respond to what they said, then say the English sentence once yourself and ask them to say it), ' +
   'or the recognizer wrote their English in katakana (treat it as their attempt at the sentence). ' +
-  'Do not praise or confirm an English sentence they did not say. Apply this silently; never mention this note.';
+  'Do not praise or confirm an English sentence they did not say, and do not say the item or the exercise is finished. Apply this silently; never mention this note.';

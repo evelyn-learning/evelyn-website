@@ -210,9 +210,9 @@ import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english'
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
-import { asksForEnglish, hasNoLatinLetters, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
+import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
-import { overusesSuperlative, PRAISE_VARIETY_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS } from '@/lib/tutor/voice/praise-variety';
+import { overusesSuperlative, PRAISE_VARIETY_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, PRAISE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
@@ -4534,6 +4534,7 @@ export function VoiceTutorRealtime({
   const pendingPraiseVarietyNoteRef = useRef<string | null>(null);
   const pendingCorrectRetryNoteRef = useRef<string | null>(null);
   const recentTutorTurnsRef = useRef<string[]>([]);
+  const praiseVarietyPlantsRef = useRef(0);
   // lesson-close.ts auto-end: the quiet-after-close timer and its arm (the
   // callback is defined with the idle nudge; the close sites run earlier).
   const lessonCloseAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -11843,7 +11844,7 @@ export function VoiceTutorRealtime({
         // english-reply.ts: the last tutor turn asked for English and this
         // transcript has no Latin letters — Japanese reply, or katakana-
         // rendered English. The brain must not credit a sentence not there.
-        if (askedForEnglishRef.current && hasNoLatinLetters(transcript) && transcript.trim().length >= 4 && !isPleasantryOnly(transcript)) {
+        if (askedForEnglishRef.current && hasNoLatinLetters(transcript) && transcript.trim().length >= 4 && !isPleasantryOnly(transcript) && !isStudentRepeatRequest(transcript)) {
           runTranscript = `${NO_ENGLISH_REPLY_NOTE}\n\n${runTranscript}`;
           onDebugEvent?.('no_english_reply_note', transcript.slice(0, 80));
         }
@@ -18612,6 +18613,7 @@ export function VoiceTutorRealtime({
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
             `First finish the problem in play — give the student the verdict on what they just said and close that problem out. Then move the lesson forward: ${nextHint} ` +
             `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. ` +
+            `Say any transition sentence in the language you are using with this student, in your own words. ` +
             `Apply this silently; never mention this note.`;
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
         }
@@ -18642,7 +18644,11 @@ export function VoiceTutorRealtime({
         recentTutorTurnsRef.current = [...recentTutorTurnsRef.current.slice(-(PRAISE_WINDOW_TURNS - 1)), fullText];
         if (overusesSuperlative(recentTutorTurnsRef.current)) {
           pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
-          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ superlatives in the last ${PRAISE_WINDOW_TURNS} turns`);
+          praiseVarietyPlantsRef.current += 1;
+          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ superlatives in the last ${PRAISE_WINDOW_TURNS} turns${praiseVarietyPlantsRef.current === PRAISE_STICKY_AFTER_PLANTS ? ' — sticky from now on' : ''}`);
+        } else if (praiseVarietyPlantsRef.current >= PRAISE_STICKY_AFTER_PLANTS) {
+          // Sticky: the habit came back after the first note (embed-1792266148587).
+          pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
         }
         // correct-retry.ts: the check said correct; this turn asked for it again.
         if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {

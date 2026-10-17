@@ -24,7 +24,7 @@ import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa } from '../src/
 import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
 import { hasKatakanaEnglish } from '../src/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE_FIRST } from '../src/lib/tutor/voice/voice-only';
-import { asksForEnglish, hasNoLatinLetters, NO_ENGLISH_REPLY_NOTE } from '../src/lib/tutor/voice/english-reply';
+import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '../src/lib/tutor/voice/english-reply';
 import { isRetryAsk, retryCapNote, RETRY_CAP_NOTE } from '../src/lib/tutor/voice/retry-cap';
 import { readPacingVerdict } from '../src/lib/tutor/voice/pacing-verdict';
 import { shouldClearQpinOnAnswer } from '../src/lib/tutor/qpin-behavior';
@@ -32,7 +32,7 @@ import { sentenceVerdictStance } from '../src/lib/tutor/voice/voice-judging';
 import { opensWithDenial } from '../src/lib/tutor/voice/verdict-precheck-shared';
 import { opensWithAffirmingVerdict } from '../src/lib/tutor/voice/nonanswer-praise';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '../src/lib/tutor/voice/learner-address';
-import { overusesSuperlative, hasSuperlativePraise, PRAISE_VARIETY_NOTE } from '../src/lib/tutor/voice/praise-variety';
+import { overusesSuperlative, hasSuperlativePraise, PRAISE_VARIETY_NOTE, PRAISE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS } from '../src/lib/tutor/voice/lesson-close';
 import { TUTOR_LESSON_CLOSE_AUTO_END } from '../src/lib/tutor/orchestrator/flags';
@@ -623,6 +623,19 @@ test('the three new notes are planted after the turn, consumed with the next, an
   assert.ok(vtr.includes('reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)'));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   for (const p of ["'learner_address'", "'praise_variety'", "'correct_retry'", "'lesson_closed'"]) assert.ok(embed.includes(p), p);
+});
+
+test('embed-1792266148587: repeat requests get no English-reply note; transitions stay in the session language; praise note goes sticky', () => {
+  for (const t of ['すいません。もう一度お願いします', 'はい、もう一度言います', 'Can you say that again?', 'One more time please']) assert.equal(isStudentRepeatRequest(t), true, t);
+  for (const t of ['えっと、海外に行ったことがありますか?', 'はい、ハワイに行きました。じゃなくて、英語で']) assert.equal(isStudentRepeatRequest(t), false, t);
+  assert.ok(NO_ENGLISH_REPLY_NOTE.includes('do not say the item or the exercise is finished'));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('!isPleasantryOnly(transcript) && !isStudentRepeatRequest(transcript)'));
+  assert.ok(vtr.includes('Say any transition sentence in the language you are using with this student'));
+  assert.equal(PRAISE_STICKY_AFTER_PLANTS, 2);
+  assert.ok(vtr.includes('praiseVarietyPlantsRef.current >= PRAISE_STICKY_AFTER_PLANTS'));
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(clause.includes('「ここまでのポイント」'));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
