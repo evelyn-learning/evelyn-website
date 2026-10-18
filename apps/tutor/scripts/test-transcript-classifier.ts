@@ -42,6 +42,10 @@ const cases: TC[] = [
   // ── NOISE: stutter from audio glitches
   { input: "Oh, f-f-f-f-f-f-f-f-f-f-f-f-ck", expected: "noise", note: "stutter (not real speech)" },
   { input: "wacht wacht wacht wacht wacht", expected: "noise", note: "repeated-word stutter" },
+  { input: "bye bye", expected: "noise", note: "repeated noise word" },
+  { input: "hello hello hello", expected: "noise", note: "repeated greeting (no greeting window)" },
+  { input: "Yesterday, yesterday.", expected: "clean", note: "repeated CONTENT word is an answer (embed-1792354826479)" },
+  { input: "golf golf", expected: "clean", note: "repeated content word" },
 
   // ── NOISE: hyphenated babbling (2026-04-23 session 2)
   { input: "goo-gah-goo-gah-gah-gah-gah-gah-bing-gang-go", expected: "noise", note: "hyphen babbling from session 2" },

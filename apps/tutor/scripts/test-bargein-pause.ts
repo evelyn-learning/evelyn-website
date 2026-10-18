@@ -21,6 +21,7 @@ import {
   partialIsBackchannelOnly,
 } from '../src/lib/tutor/voice/bargein-pause';
 import { SELF_VOICE_THRESHOLD } from '../src/lib/tutor/voice/perception-classifier';
+import { shouldPauseForOnset, BARGEIN_PAUSE_MAX_NO_EVIDENCE_PER_TURN } from '../src/lib/tutor/voice/bargein-pause';
 import { TUTOR_BARGEIN_PAUSE_FIRST } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0;
@@ -108,6 +109,17 @@ test('wiring: pause at a speaking onset, partials and stops decide, every kill o
   assert.ok(ink.includes("onPartialTranscriptRef.current?.({ text: data.transcript, tMs })"));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   assert.ok(embed.includes("'perception_'"), 'pause events persist under the perception_ prefix');
+});
+
+test('echo-shaped turn (embed-1792354826479): after one no-evidence resume, later onsets in the same tutor turn do not pause; a new turn starts fresh', () => {
+  assert.equal(BARGEIN_PAUSE_MAX_MS, 1000, 'max wait shortened: real interruptions were confirmed in 346–653 ms');
+  assert.equal(BARGEIN_PAUSE_MAX_NO_EVIDENCE_PER_TURN, 1);
+  assert.equal(shouldPauseForOnset({ noEvidenceResumesThisTurn: 0 }), true);
+  assert.equal(shouldPauseForOnset({ noEvidenceResumesThisTurn: 1 }), false);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("'perception_bargein_pause_skipped'"));
+  assert.ok(vtr.includes("if (reason === 'no evidence in time') bargeInNoEvidenceResumesRef.current += 1;"));
+  assert.ok(vtr.includes('bargeInNoEvidenceResumesRef.current = 0;'), 'reset at each brain turn start');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

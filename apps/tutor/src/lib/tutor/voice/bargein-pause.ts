@@ -32,7 +32,23 @@ import { scoreSelfVoice, SELF_VOICE_THRESHOLD, type RecentTtsScript } from './pe
 
 /** No evidence either way after this long → resume (Ink's first partial
  *  normally lands within ~600 ms of a real onset). */
-export const BARGEIN_PAUSE_MAX_MS = 1500;
+export const BARGEIN_PAUSE_MAX_MS = 1000;
+/**
+ * 2026-10-18 (embed-1792354826479): the tutor's own voice reached the mic and
+ * Ink opened a new "utterance" every ~3 s of a 7-s turn — no partial, no
+ * energy — so the pause fired FIVE times in one turn and each time resumed
+ * on "no evidence in time". Five 1.5-s holes: the turn sounded cut to
+ * pieces. After this many no-evidence resumes within one tutor turn the
+ * room is echo-shaped for that turn: later onsets in the same turn do not
+ * pause (the final-transcript kill path still stops the tutor for a real
+ * interruption, as before pause-first). The max wait is also shortened:
+ * every real interruption in the human tests was confirmed in 346–653 ms.
+ */
+export const BARGEIN_PAUSE_MAX_NO_EVIDENCE_PER_TURN = 1;
+
+export function shouldPauseForOnset(i: { noEvidenceResumesThisTurn: number }): boolean {
+  return i.noEvidenceResumesThisTurn < BARGEIN_PAUSE_MAX_NO_EVIDENCE_PER_TURN;
+}
 /** Letters / kana / kanji a partial needs before it counts as content. Four,
  *  because the CJK echo measure needs four characters to say anything. */
 export const BARGEIN_PAUSE_MIN_PARTIAL_CHARS = 4;

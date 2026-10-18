@@ -219,7 +219,7 @@ import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } f
 import { findUnreadableWords, latinWords, unreadableWordNote } from '@/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote } from '@/lib/tutor/voice/late-tail';
-import { decideBargeInPause, scorePartialSelfVoice, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
+import { decideBargeInPause, scorePartialSelfVoice, shouldPauseForOnset, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -4581,6 +4581,8 @@ export function VoiceTutorRealtime({
   // paused for, and the evaluator (defined with the kill body) by ref so the
   // Ink hook's callbacks below can reach it.
   const bargeInPauseRef = useRef<BargeInPauseState | null>(null);
+  /** 2026-10-18: pauses that resumed on "no evidence" during the current tutor turn (echo-shaped onsets). Reset per brain turn. */
+  const bargeInNoEvidenceResumesRef = useRef(0);
   const evaluateBargeInPauseRef = useRef<(energyGatePassed?: boolean) => void>(() => {});
   // GreenApple round 6 (shaded-region net): board-REDRAW note — delivered on
   // the very next brain turn, UN-held (unlike pendingRuntimeNoteRef, which
@@ -20375,6 +20377,7 @@ export function VoiceTutorRealtime({
       }
     }
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120), `· humor=${humorCeilingRef.current ?? 'default'}`);
+    bargeInNoEvidenceResumesRef.current = 0;
     // "Mute me" / "stop listening" voice command — mute the mic instead of
     // sending it to the brain (which would otherwise try to "answer" it). Only
     // for real student speech, never synthetic kickoffs (those are silent).
@@ -23557,6 +23560,7 @@ export function VoiceTutorRealtime({
       return;
     }
     bargeInPauseRef.current = null;
+    if (reason === 'no evidence in time') bargeInNoEvidenceResumesRef.current += 1;
     onDebugEvent?.('perception_bargein_pause_resume', `${reason} · pausedMs=${sinceOnset}`);
     try { realtime.resumeSpeech(); } catch {}
   }, [onDebugEvent, realtime, runPerceptionKill]);
@@ -23583,6 +23587,12 @@ export function VoiceTutorRealtime({
   const beginBargeInPause = useCallback(() => {
     if (!TUTOR_BARGEIN_PAUSE_FIRST) return;
     if (bargeInPauseRef.current) return; // this utterance already paused us
+    if (!shouldPauseForOnset({ noEvidenceResumesThisTurn: bargeInNoEvidenceResumesRef.current })) {
+      // Echo-shaped room for this turn (bargein-pause.ts): no pause; the
+      // final-transcript kill path still answers a real interruption.
+      onDebugEvent?.('perception_bargein_pause_skipped', `echo-shaped: ${bargeInNoEvidenceResumesRef.current} no-evidence pause(s) this turn`);
+      return;
+    }
     let paused = false;
     try { paused = realtime.pauseSpeech(); } catch {}
     if (!paused) return;
