@@ -103,6 +103,12 @@ const DIRECT_ADDRESS_RE =
 const BARE_GO_ON_RE =
   /(?:^|[.!?]\s*|\b(?:okay|ok|yes|yeah|alright|so),?\s+)(?:please\s+)?(?:carry on|go on|go ahead|continue|keep going|resume)(?:,?\s*please)?\b/i;
 
+/** Japanese ready-intent and direct address (bilingual sessions): 「続けて
+ *  ください」「再開しましょう」「大丈夫です、どうぞ」「聞いてますか」. */
+const READY_INTENT_JA_RE =
+  /続け(?:て|ましょう|よう|たい|る)|再開|始め(?:て|ましょう)|(?:もう)?大丈夫です|いいですよ|どうぞ|戻りました|準備(?:が)?(?:でき|整い)|お願いします|やりましょう|行きましょう|いきましょう|オーケー/;
+const DIRECT_ADDRESS_JA_RE = /聞いて(?:い)?ますか|聞こえ(?:て)?(?:い)?ますか|先生[、,？?]|もしもし|いますか[？?]?$/;
+
 function normalizeForCue(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -125,7 +131,11 @@ export function checkResume(utterance: string, resumeCue?: string, opts?: Resume
   if (!t) return { resume: false };
   // Soft hold ("wait a second"): the student is still talking to the tutor,
   // so anything with a couple of words in it resumes.
-  if (opts?.soft && normalizeForCue(t).split(' ').filter(Boolean).length >= 2) {
+  // embed-1792280893534: 「はい、続けてください」 was swallowed — the word count
+  // read Latin letters only, so Japanese scored zero. Kana / kanji count too.
+  const latinWords = normalizeForCue(t).split(' ').filter(Boolean).length;
+  const cjkChars = (t.match(/[ぁ-んァ-ヺ一-龯々]/g) ?? []).length;
+  if (opts?.soft && (latinWords >= 2 || cjkChars >= 3)) {
     return { resume: true, reason: 'soft-any-speech' };
   }
   if (resumeCue) {
@@ -140,7 +150,7 @@ export function checkResume(utterance: string, resumeCue?: string, opts?: Resume
       if (hit * 2 > cueTokens.length) return { resume: true, reason: 'cue' };
     }
   }
-  if (READY_INTENT_RE.test(t) || BARE_GO_ON_RE.test(t)) return { resume: true, reason: 'ready-intent' };
-  if (DIRECT_ADDRESS_RE.test(t)) return { resume: true, reason: 'direct-address' };
+  if (READY_INTENT_RE.test(t) || BARE_GO_ON_RE.test(t) || READY_INTENT_JA_RE.test(t)) return { resume: true, reason: 'ready-intent' };
+  if (DIRECT_ADDRESS_RE.test(t) || DIRECT_ADDRESS_JA_RE.test(t)) return { resume: true, reason: 'direct-address' };
   return { resume: false };
 }

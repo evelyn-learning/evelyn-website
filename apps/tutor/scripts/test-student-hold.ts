@@ -101,5 +101,13 @@ for (const u of ["Don't listen to me for a minute.", 'Please don\'t respond, I\'
   check(`"${u}" IS a hold request`, detectHoldRequest(u).hold === true, JSON.stringify(detectHoldRequest(u)));
 }
 
+// embed-1792280893534: Japanese resumes.
+check('soft hold: 「はい、続けてください」 resumes', checkResume('はい、続けてください', undefined, { soft: true }).resume === true, JSON.stringify(checkResume('はい、続けてください', undefined, { soft: true })));
+check('strict hold (no cue): 「はい、続けてください」 resumes (ready-intent)', checkResume('はい、続けてください').reason === 'ready-intent');
+check('strict hold (cue): 「大丈夫です、どうぞ」 resumes', checkResume('大丈夫です、どうぞ', 'candle').resume === true);
+check('strict hold (cue): 「先生、聞いてますか？」 resumes (direct address)', checkResume('先生、聞いてますか？', 'candle').reason === 'direct-address');
+check('soft hold: a bare 「はい」 does not resume', checkResume('はい', undefined, { soft: true }).resume === false);
+check('strict hold (cue): 「ちょっとこれ見て」 (to a friend) does NOT resume', checkResume('ちょっとこれ見て', 'candle').resume === false);
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
