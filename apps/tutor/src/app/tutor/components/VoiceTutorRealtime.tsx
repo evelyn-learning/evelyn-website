@@ -213,9 +213,11 @@ import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/l
 import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, PRAISE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote } from '@/lib/tutor/voice/unreadable-word';
+import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
+import { isLateTail, lateTailNote } from '@/lib/tutor/voice/late-tail';
 import { decideBargeInPause, scorePartialSelfVoice, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
@@ -4552,6 +4554,12 @@ export function VoiceTutorRealtime({
   const cadencePlantsRef = useRef(0);
   /** 2026-10-18: the lesson plan's Latin words, computed once, for the unreadable-word check. */
   const planWordsRef = useRef<string[] | null>(null);
+  /** 2026-10-18: the route confirmed it cached this session's opener — Start skips the bridge line. */
+  const openerPrefetchReadyRef = useRef(false);
+  /** 2026-10-18: a late tail of the student's previous answer, held instead of dispatched (late-tail.ts). */
+  const pendingLateTailRef = useRef<string | null>(null);
+  /** 2026-10-18: language-drift note (English instructions / romaji) for the next turn. */
+  const pendingLanguageDriftNoteRef = useRef<string | null>(null);
   const pendingReadinessNoteRef = useRef<string | null>(null);
   const pendingPronunciationNoteRef = useRef<string | null>(null);
   // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
@@ -11858,6 +11866,8 @@ export function VoiceTutorRealtime({
         [pendingReadinessNoteRef, 'readiness_ask_note_consumed'],
         [pendingPronunciationNoteRef, 'pronunciation_claim_note_consumed'],
         [pendingWaitNoteRef, 'wait_request_note_consumed'],
+        [pendingLanguageDriftNoteRef, 'language_drift_note_consumed'],
+        [pendingLateTailRef, 'late_tail_note_consumed'],
       ] as const) {
         if (ref.current) {
           runTranscript = `${ref.current}\n\n${runTranscript}`;
@@ -12320,6 +12330,12 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('session_struggles_attached', `reason=${wrapReason} los=[${ledgerFlagsForTurn.map((f) => `${f.loId}:${f.detections}`).join(',')}]`);
       }
 
+      // 2026-10-18 (embed-1792346446334): the runtime notes are English and
+      // they pulled the tutor's own instructions into English. In a bilingual
+      // session a language note heads every note-carrying turn.
+      if (sessionAllowsNonLatin(tutorLanguages) && runTranscript !== transcript && /^\s*\[/.test(runTranscript)) {
+        runTranscript = `${LANGUAGE_KEEP_NOTE}\n\n${runTranscript}`;
+      }
       for (let attempt = 0; attempt <= attemptCap; attempt++) {
         // This attempt continues a turn that stopped early (turn-shape.ts): it
         // is NEW content, not a correction of a killed/rejected attempt.
@@ -12862,6 +12878,7 @@ export function VoiceTutorRealtime({
             .then(async (r) => {
               const text = await r.text().catch(() => '');
               onDebugEvent?.(r.ok ? 'opener_prefetch_done' : 'opener_prefetch_failed', `status=${r.status} after=${Date.now() - sentAt}ms ${text.slice(0, 120)}`);
+              if (r.ok && /"prefetched":true/.test(text)) openerPrefetchReadyRef.current = true;
             })
             .catch((err) => onDebugEvent?.('opener_prefetch_failed', `after=${Date.now() - sentAt}ms ${String(err).slice(0, 120)}`));
           return;
@@ -18744,6 +18761,25 @@ export function VoiceTutorRealtime({
           pendingCorrectRetryNoteRef.current = OWN_SENTENCE_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `own sentence re-asked: "${transcript.slice(0, 60)}"`);
         }
+        {
+          const prevTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 2] ?? '';
+          const reasked = reAskedAnsweredQuestion(prevTutor, transcript, fullText);
+          if (reasked && !pendingCorrectRetryNoteRef.current) {
+            pendingCorrectRetryNoteRef.current = REASKED_QUESTION_NOTE;
+            onDebugEvent?.('correct_retry_note_planted', `answered question re-asked: "${reasked.slice(0, 60)}"`);
+          }
+        }
+        {
+          const romaji = romajiSentences(fullText);
+          const english = romaji.length ? [] : englishInstructionSentences(fullText);
+          if (romaji.length) {
+            pendingLanguageDriftNoteRef.current = ROMAJI_NOTE;
+            onDebugEvent?.('romaji_note_planted', romaji[0].slice(0, 80));
+          } else if (english.length && /[\u3040-\u30FF\u4E00-\u9FFF]/.test(transcript)) {
+            pendingLanguageDriftNoteRef.current = ENGLISH_INSTRUCTION_NOTE;
+            onDebugEvent?.('english_instruction_note_planted', english.map((x) => x.slice(0, 50)).join(' | ').slice(0, 160));
+          }
+        }
       }
       // Mutual farewell (lesson-close.ts): the student signalled the end and
       // this turn said goodbye without calling close_session_notes — the
@@ -22835,6 +22871,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('perception_bargein_classifier_kill', `verdict=${v} · "${text.slice(0, 60)}"`);
         runPerceptionKillRef.current?.('speaking');
       };
+      // 2026-10-18 (embed-1792346446334): a short continuation that lands a
+      // couple of seconds into the tutor's reply is the tail of the student's
+      // own previous answer, not a turn. Held as context for the next brain
+      // call; the reply keeps playing (late-tail.ts).
+      const holdLateTail = (v: string, text: string, prod: string): boolean => {
+        const turnMs = Date.now() - (brainTurnStartedAtRef.current ?? 0);
+        if (!isLateTail({ verdict: v, prodState: prod, tutorTurnMs: turnMs, text })) return false;
+        pendingLateTailRef.current = lateTailNote(text);
+        onDebugEvent?.('late_tail_held', `"${text.slice(0, 80)}" · turnMs=${turnMs}`);
+        return true;
+      };
 
       // ── Stage 1: heuristic classifier + Haiku escalation (logged, not enforced)
       // Per design Q2 + Q6, every perception transcript runs through the
@@ -22955,6 +23002,7 @@ export function VoiceTutorRealtime({
           (prodState === 'speaking' || prodState === 'processing') &&
           (heur.verdict === 'barge_in' || heur.verdict === 'new_turn' || heur.verdict === 'continuation')
         ) {
+          if (holdLateTail(heur.verdict, t.text, prodState)) return;
           console.warn(`[PERCEPTION] STAGE-3 late-fallback (no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_stage3_late_fallback', `${heur.verdict} at prod=${prodState}`);
           // Stage 3 fix #12 (2026-05-29) + fix #13 (2026-06-15): arm
@@ -23133,6 +23181,7 @@ export function VoiceTutorRealtime({
                 // substantive interruptions during prod 'speaking'/'processing'
                 // without a checkpoint also fire as FRESH new turn so
                 // the student's content reaches the brain.
+                if (holdLateTail(verdict, t.text, prodState)) return;
                 console.warn(`[PERCEPTION] STAGE-3 late-fallback (haiku, no checkpoint, prod=${prodState}): firing as FRESH new turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
                 onDebugEvent?.('perception_stage3_late_fallback', `haiku:${verdict} at prod=${prodState}`);
                 // Stage 3 fix #12 + fix #13: same suppress arming as
@@ -25168,7 +25217,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         realtime.unlockAudio(); audioUnlockedRef.current = true;
         // Bridge line: fixed first words before the brain's first sentence
         // (no model). Once per mount; never on resume or in text mode.
-        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+        // 2026-10-18: the bridge line covered the opener's brain latency. With
+        // the opener already cached by the prefetch it only delays the real
+        // first sentence (~2 s live) and says a placeholder name — skip it.
+        if (openerPrefetchReadyRef.current && TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current) {
+          onDebugEvent?.('bridge_skipped', 'opener prefetched — the cached opener is the first thing heard');
+        }
+        if (TUTOR_BRIDGE_LINE && claudeBrainMode && !bridgeSpokenRef.current && !openerPrefetchReadyRef.current) {
           const line = bridgeLineFor({
             studentName, title: lessonContext?.title, inFlow: isInFlow,
             // Text mode returned above (typed start, no dead air to cover).

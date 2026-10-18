@@ -62,6 +62,11 @@ export function findUnreadableWords(studentText: string, context: Iterable<strin
     if (w.length < 3 || seen.has(w)) continue;
     seen.add(w);
     if (dict.has(w) || ctx.has(w)) continue;
+    // 2026-10-18 (embed-1792346446334): "toNagoya" — a run-together the
+    // splitter could not break because the proper noun is not in its list.
+    // A token that CONTAINS a context word (≥4 letters) or a longer
+    // dictionary word (≥5) is readable, not lost.
+    if (containsKnownWord(w, ctx, dict)) continue;
     const tolerance = w.length <= 4 ? 1 : 2;
     let soundAlike = false;
     for (const c of ctx) {
@@ -70,6 +75,16 @@ export function findUnreadableWords(studentText: string, context: Iterable<strin
     if (!soundAlike) out.push(raw);
   }
   return out;
+}
+
+function containsKnownWord(w: string, ctx: Set<string>, dict: Set<string>): boolean {
+  for (const c of ctx) if (c.length >= 4 && w.includes(c)) return true;
+  for (let start = 0; start < w.length - 4; start++) {
+    for (let end = w.length; end - start >= 5; end--) {
+      if (dict.has(w.slice(start, end))) return true;
+    }
+  }
+  return false;
 }
 
 export function unreadableWordNote(words: string[]): string {

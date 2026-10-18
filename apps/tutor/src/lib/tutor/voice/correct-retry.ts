@@ -52,7 +52,7 @@ const SAY_IT_ASK_RE =
 export function reAskedOwnSentence(studentText: string, tutorText: string): boolean {
   if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
   const said = latinSentence(studentText ?? '');
-  if (said.split(' ').filter(Boolean).length < 4) return false;
+  if (said.split(' ').filter(Boolean).length < 3) return false;
   return latinSentence(tutorText ?? '').includes(said);
 }
 
@@ -60,4 +60,53 @@ export const OWN_SENTENCE_RETRY_NOTE =
   '[runtime note — not from the student] Your last turn asked the student to say a sentence they had JUST said, in those words. ' +
   'A sentence they already produced is done: confirm it in one short clause and move to the next item. ' +
   'Never ask for a repeat of something that was right. Apply this silently; never mention this note.';
+
+/** English questions of a tutor turn, normalised: lower-cased Latin words,
+ *  with a trailing "too" dropped so "Have you ever eaten sushi, too?" and
+ *  "Have you ever eaten sushi?" are the same question. */
+export function englishQuestions(tutorText: string): string[] {
+  const out: string[] = [];
+  for (const raw of (tutorText ?? '').split(/(?<=[。！？.!?])\s+|\n+/)) {
+    const s = raw.trim();
+    if (!/[?？]\s*$/.test(s)) continue;
+    const words = (s.match(/[A-Za-z][A-Za-z']*/g) ?? []).map((w) => w.toLowerCase());
+    if (words.length < 3) continue;
+    if (words[words.length - 1] === 'too') words.pop();
+    out.push(words.join(' '));
+  }
+  return out;
+}
+
+/** Did the student's turn carry an answer (any English, a yes/no, or a
+ *  Japanese sentence)? */
+function carriesAnswer(studentText: string): boolean {
+  const t = studentText ?? '';
+  if ((t.match(/[A-Za-z][A-Za-z']*/g) ?? []).length >= 2) return true;
+  if (/\b(?:yes|no|yeah|nope)\b/i.test(t)) return true;
+  if (/^[\s、。]*(?:はい|いいえ|うん|ええ|ないです|あります)/.test(t)) return true;
+  // a Japanese sentence, not a filler (えっと / えーと / あの / うーん)
+  const cjk = (t.match(/[\u3040-\u30FF\u4E00-\u9FFF]/g) ?? []).join('');
+  return cjk.length >= 3 && !/^(?:え+っ?と+|あの+|うー*ん|ん+|はい|えー+)$/.test(cjk);
+}
+
+/**
+ * 2026-10-18 (GDI embed-1792346446334): "Have you ever eaten sushi?" was asked
+ * three times after a correct "Yes, I have." — a three-word answer under the
+ * own-sentence floor, and the return-question loop (student asks it back, the
+ * tutor answers and asks the student again). The same English question in two
+ * consecutive tutor turns, with an answer from the student in between, is a
+ * re-ask of a finished question.
+ */
+export function reAskedAnsweredQuestion(prevTutorText: string, studentText: string, tutorText: string): string | null {
+  if (!carriesAnswer(studentText)) return null;
+  const before = new Set(englishQuestions(prevTutorText));
+  if (before.size === 0) return null;
+  for (const q of englishQuestions(tutorText)) if (before.has(q)) return q;
+  return null;
+}
+
+export const REASKED_QUESTION_NOTE =
+  '[runtime note — not from the student] Your last turn asked the same English question you had asked the turn before, ' +
+  'and the student had already answered it. A question that was answered is finished — also when the student asks it back ' +
+  'to you: answer it yourself in one sentence and move to the next item. Do not ask it again. Apply this silently; never mention this note.';
 

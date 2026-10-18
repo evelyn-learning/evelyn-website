@@ -50,6 +50,9 @@ import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } f
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { findUnreadableWords, latinWords, unreadableWordNote } from '../src/lib/tutor/voice/unreadable-word';
+import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
+import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
+import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
 
 let passed = 0;
 let failed = 0;
@@ -739,6 +742,59 @@ test('language clause: one mid-lesson recap at most, at a segment end', () => {
 test('embed persists the new debug families (opener_prefetch, unreadable_word; ink_ covers the stale final)', () => {
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   for (const p of ["'opener_prefetch'", "'unreadable_word'", "'ink_'"]) assert.ok(embed.includes(p), p);
+});
+
+// ── 2026-10-18 round 2 (GDI embed-1792346446334): language drift, re-asked
+// questions, run-together proper nouns, late tails ─────────────────────────
+
+test('english instruction sentences: Now let\'s… / ask me back / That\'s exactly… are caught; target phrases and questions are not', () => {
+  assert.deepEqual(englishInstructionSentences('"No, I haven\'t." That\'s exactly right for Canada, and nice detail adding Hawaii. Now let\'s move to today\'s main practice. 一番目、「昨日ゴルフをしました」を英語で言ってみてください。'),
+    ["That's exactly right for Canada, and nice detail adding Hawaii.", "Now let's move to today's main practice."]);
+  assert.deepEqual(englishInstructionSentences('No, I haven\'t. カヤックはまだなんですね。 Have you — ask me back, with "ever" in there.'), ['Have you — ask me back, with "ever" in there.']);
+  assert.deepEqual(englishInstructionSentences('では一つ聞いてみますね。 Have you ever eaten sushi? 答えてみてください。'), [], 'a question for the student is a target');
+  assert.deepEqual(englishInstructionSentences('「I went to karaoke last weekend.」と言ってみてください。'), [], 'quoted model sentence');
+  assert.deepEqual(englishInstructionSentences('Yes, I have. I ate sushi last weekend.'), [], 'the tutor answering in English is modelling');
+  assert.match(ENGLISH_INSTRUCTION_NOTE, /English is only for the target phrases/);
+});
+
+test('romaji: "Last week ni Kyoto ni itta koto arimasu ka?" is caught; English with "no"/"to" is not', () => {
+  assert.deepEqual(romajiSentences('That sushi question\'s answered twice now — let\'s move forward. Last week ni Kyoto ni itta koto arimasu ka? Have you ever been to Kyoto?'),
+    ['Last week ni Kyoto ni itta koto arimasu ka?']);
+  assert.deepEqual(romajiSentences('I went to Nagoya Castle last week. No, I haven\'t.'), []);
+  assert.deepEqual(romajiSentences('京都に行ったことがありますか。'), []);
+  assert.deepEqual(romajiSentences('Ii desu ne. Sugoi desu.'), ['Ii desu ne.', 'Sugoi desu.']);
+  assert.match(ROMAJI_NOTE, /romaji/); assert.match(LANGUAGE_KEEP_NOTE, /never change the language you speak/);
+});
+
+test('re-asked answered question: the sushi loop, with and without ", too"; a new question is fine', () => {
+  const prev = 'では一つ聞いてみますね。 Have you ever eaten sushi? 答えてみてください。';
+  assert.equal(reAskedAnsweredQuestion(prev, 'もちろんあります。Yes , Ihave 。', '"Yes, I have." が答えられていますね。 では、Have you ever eaten sushi?'), 'have you ever eaten sushi');
+  assert.equal(reAskedAnsweredQuestion('Yes, I have. I ate sushi last weekend. Have you ever eaten sushi?', 'Yes , Ihave . Have you ever ten sushi 2?', '"I ate sushi last weekend" — solid. Have you ever eaten sushi, too?'), 'have you ever eaten sushi');
+  assert.equal(reAskedAnsweredQuestion(prev, 'Yes, I have.', 'いいですね。 Have you ever been to Okinawa?'), null, 'different question');
+  assert.equal(reAskedAnsweredQuestion(prev, 'えっと', 'Have you ever eaten sushi?'), null, 'no answer between');
+  assert.deepEqual(englishQuestions('Have you ever eaten sushi, too? 答えてみてください。 Who did you play golf with?'), ['have you ever eaten sushi', 'who did you play golf with']);
+  assert.match(REASKED_QUESTION_NOTE, /also when the student asks it back/);
+});
+
+test('own-sentence re-ask now counts a three-word answer', () => {
+  assert.equal(reAskedOwnSentence('Yes , I have .', 'いいですね。もう一度言ってみてください。 Yes, I have.'), true);
+});
+
+test('unreadable word: a run-together with a plan name ("toNagoya") is readable; "thef" still is not', () => {
+  const plan = latinWords('I went to Gifu last week. Have you ever been to Nagoya Castle?');
+  assert.deepEqual(findUnreadableWords('でも先週は名古屋城に行ったんです。I went toNagoya Castle last week .', plan), []);
+  assert.deepEqual(findUnreadableWords('I went thef last week .', plan), ['thef']);
+  assert.deepEqual(findUnreadableWords('I went to karaoke no strid end', latinWords('I went to karaoke last weekend.')), ['strid'], 'a lost word stays flagged');
+});
+
+test('late tail: a short continuation seconds into the tutor\'s turn is held; a question or a real new turn is not', () => {
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1900, text: 'ハネムーンで行きました。' }), true);
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1900, text: 'Have you ever been to Hawaii?' }), false, 'a question is a turn');
+  assert.equal(isLateTail({ verdict: 'new_turn', prodState: 'speaking', tutorTurnMs: 1900, text: 'ハネムーンで行きました。' }), false);
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: LATE_TAIL_MAX_TUTOR_TURN_MS + 1, text: 'ハネムーンで行きました。' }), false, 'too late to be a tail');
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'listening', tutorTurnMs: 0, text: 'ハネムーンで行きました。' }), false);
+  assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1000, text: 'I played golf yesterday and then I went to Nagoya Castle with my friend and we ate sushi there' }), false, 'too long');
+  assert.match(lateTailNote('ハネムーンで行きました。'), /do not repeat your previous instruction/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
