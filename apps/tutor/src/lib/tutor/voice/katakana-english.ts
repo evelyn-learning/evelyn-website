@@ -71,3 +71,25 @@ export const KATAKANA_ECHO_NOTE =
   'that is their ENGLISH, written by speech recognition in Japanese script. Read it as the English words it sounds like. ' +
   'In your reply write that English in Latin letters only; never repeat or quote the katakana spelling. ' +
   'Apply this silently; never mention this note.';
+
+/**
+ * 2026-10-18 (embed-1792356364051): the note was planted three times and the
+ * tutor still said 「一緒に言ってみましょう — 「アイ・プレイド・ゴルフ・イエスタデイ」」
+ * after every model sentence — the Japanese voice then reads the katakana.
+ * The English sentence had already been said in Latin letters the sentence
+ * before, so the katakana "reading" sentence carries nothing the student
+ * needs: in a bilingual session a sentence that contains a dotted katakana
+ * run (three or more katakana words joined by ・) is dropped from speech and
+ * transcript (orchestrator sentence path, event `katakana_reading_dropped`).
+ * And the note is sticky after KATAKANA_STICKY_AFTER_PLANTS plants.
+ */
+export function hasDottedKatakanaReading(sentence: string): boolean {
+  return DOTTED_SENTENCE_RE.test(sentence ?? '');
+}
+
+export const KATAKANA_STICKY_AFTER_PLANTS = 2;
+
+export const KATAKANA_ENGLISH_NOTE_STANDING =
+  '[runtime note — not from the student] Standing rule for this session: write every English word and sentence only in Latin letters (A–Z). ' +
+  'Never spell English out in katakana, not even as a reading aid after the English sentence — the voice reads katakana as Japanese sounds. ' +
+  'Apply this silently; never mention this note.';

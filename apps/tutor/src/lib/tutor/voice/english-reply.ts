@@ -51,3 +51,24 @@ export const NO_ENGLISH_REPLY_NOTE =
   'Either they answered in Japanese (respond to what they said, then say the English sentence once yourself and ask them to say it), ' +
   'or the recognizer wrote their English in katakana (treat it as their attempt at the sentence). ' +
   'Do not praise or confirm an English sentence they did not say, and do not say the item or the exercise is finished. Apply this silently; never mention this note.';
+
+/**
+ * 2026-10-18 (embed-1792356364051): the recogniser wrote "I went there on
+ * Honey Moon" three times running; the tutor corrected the missing "my" three
+ * times. When the transcript of a retry is IDENTICAL to the transcript the
+ * tutor just corrected, the difference the tutor is hearing is the
+ * recogniser's, not the student's: credit the sentence and move on.
+ */
+export function normaliseTranscriptForIdentity(text: string): string {
+  return (text ?? '').toLowerCase().replace(/[\s.,!?、。！？「」"'’]+/g, '');
+}
+
+export function isIdenticalTranscript(a: string, b: string): boolean {
+  const x = normaliseTranscriptForIdentity(a);
+  return x.length >= 6 && x === normaliseTranscriptForIdentity(b);
+}
+
+export const IDENTICAL_RETRY_NOTE =
+  '[runtime note — not from the student] The transcript of this reply is IDENTICAL, character for character, to the transcript of their previous reply — the one your last turn corrected. ' +
+  'Speech recognition writes the same thing for whatever they are saying, so the word you are correcting is most likely lost in recognition, not in their speech. ' +
+  'Do not correct it again: accept the sentence as said, say the full sentence once yourself if you wish, and move to the next item. Apply this silently; never mention this note.';

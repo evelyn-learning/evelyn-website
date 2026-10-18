@@ -208,11 +208,11 @@ import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } fr
 import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
-import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, hasKatakanaEnglishFromStt, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
+import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
-import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
+import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
-import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise } from '@/lib/tutor/voice/praise-variety';
+import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly } from '@/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
@@ -4537,6 +4537,10 @@ export function VoiceTutorRealtime({
   // Katakana-English corrective (katakana-english.ts): planted after a turn
   // that spelled English out in katakana, delivered with the next turn.
   const pendingKatakanaNoteRef = useRef<string | null>(null);
+  /** 2026-10-18: katakana-note plants this session; sticky after KATAKANA_STICKY_AFTER_PLANTS. */
+  const katakanaPlantsRef = useRef(0);
+  /** 2026-10-18: the previous real student transcript (identical-retry note, english-reply.ts). */
+  const prevStudentTranscriptRef = useRef<string | null>(null);
   // Voice-only mode (voice-only.ts): set once the student says they cannot
   // see the screen; never cleared for the rest of the session.
   const voiceOnlyRef = useRef(false);
@@ -11909,6 +11913,20 @@ export function VoiceTutorRealtime({
           runTranscript = `${ALREADY_ANSWERED_NOTE}\n\n${runTranscript}`;
           onDebugEvent?.('already_answered_complaint', transcript.slice(0, 80));
         }
+        // english-reply.ts: the same transcript twice running after a
+        // correction — the recogniser's difference, not the student's.
+        if (!/^\s*\[/.test(transcript)) {
+          const prevTutor = recentTutorTurnsRef.current[recentTutorTurnsRef.current.length - 1] ?? '';
+          if (
+            prevStudentTranscriptRef.current &&
+            isIdenticalTranscript(transcript, prevStudentTranscriptRef.current) &&
+            (isRetryAsk(prevTutor) || asksForEnglish(prevTutor))
+          ) {
+            runTranscript = `${IDENTICAL_RETRY_NOTE}\n\n${runTranscript}`;
+            onDebugEvent?.('identical_retry_note', transcript.slice(0, 80));
+          }
+          prevStudentTranscriptRef.current = transcript;
+        }
         // katakana-english.ts: the recogniser wrote the student's English in
         // katakana — told before the turn, so the spelling is not echoed.
         if (hasKatakanaEnglishFromStt(transcript)) {
@@ -14952,6 +14970,24 @@ export function VoiceTutorRealtime({
                   // classifying one yourself?", "your check was
                   // right"); only the meta COLLOCATIONS are dropped.
                   // (`correctionWorking` was decided above, before the guards.)
+                  // Bilingual sentence drops (2026-10-18, embed-1792356364051):
+                  // a katakana "reading" of English the Japanese voice would
+                  // mangle, and a bare stock praise opener once the praise note
+                  // is sticky. Neither carries content the student needs.
+                  if (sessionAllowsNonLatin(tutorLanguages)) {
+                    if (hasDottedKatakanaReading(updatedSentence)) {
+                      console.warn('[brain-orchestrator] dropped katakana reading sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('katakana_reading_dropped', updatedSentence.slice(0, 80));
+                      continue;
+                    }
+                    if (
+                      isStockPraiseOpenerOnly(updatedSentence) &&
+                      praiseNoteIsSticky({ plants: praiseVarietyPlantsRef.current, superlativeTurns: superlativeTurnsRef.current, languageLesson: true })
+                    ) {
+                      onDebugEvent?.('stock_opener_dropped', updatedSentence.slice(0, 40));
+                      continue;
+                    }
+                  }
                   const metaNarrationRe = isMetaNarration(updatedSentence, {
                     structural: TUTOR_META_NARRATION_STRUCTURAL,
                   });
@@ -18778,8 +18814,11 @@ export function VoiceTutorRealtime({
           retryAskStreakRef.current = 0;
         }
         if (hasKatakanaEnglish(fullText)) {
+          katakanaPlantsRef.current += 1;
           pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE;
-          onDebugEvent?.('katakana_english_note_planted', fullText.slice(0, 80));
+          onDebugEvent?.('katakana_english_note_planted', `${fullText.slice(0, 80)}${katakanaPlantsRef.current >= KATAKANA_STICKY_AFTER_PLANTS ? ' (sticky)' : ''}`);
+        } else if (katakanaPlantsRef.current >= KATAKANA_STICKY_AFTER_PLANTS) {
+          pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE_STANDING;
         }
         askedForEnglishRef.current = asksForEnglish(fullText);
         // learner-address.ts: 「学生の番です」 said to the student.
@@ -20841,7 +20880,11 @@ export function VoiceTutorRealtime({
           if (!hold || hold.checkInDone) return;
           hold.checkInDone = true;
           if (Date.now() >= speakTextBlockedUntilRef.current) {
-            const line = 'Still here — whenever you’re ready, just say so and we’ll pick right back up.';
+            // 2026-10-18 (embed-1792356364051): the check-in was the one English
+            // line of a Japanese-guided lesson. Session language first.
+            const line = (tutorLanguages ?? []).includes('ja')
+              ? 'まだここにいますよ。準備ができたら、声をかけてくださいね。'
+              : 'Still here — whenever you’re ready, just say so and we’ll pick right back up.';
             const sid = pushTtsScriptForPerception(line);
             speakTextRef.current?.(line, sid);
             onDebugEvent?.('student_hold_check_in', `${Math.round((Date.now() - hold.sinceMs) / 1000)}s held`);

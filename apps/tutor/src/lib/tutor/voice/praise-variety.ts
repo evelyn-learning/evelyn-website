@@ -55,8 +55,11 @@ export const PRAISE_VARIETY_NOTE =
  * pattern when it persists anyway. A stock opener is a praise word or phrase
  * in the turn's first few characters, in either language.
  */
-const STOCK_OPENER_RE =
-  /^[\s"「『(（]*(?:nice|good|great|perfect|excellent|awesome|wonderful|well done|good job|exactly|correct|right|そうです|その通り|いいですね|いいね|すごい|素晴らしい|すばらしい|完璧|大正解|正解|ナイス|よくできました|ばっちり|お見事|上手)(?:です|ですね|ですよ|だね)?[\s!！.。,、—:：-]/i;
+const STOCK_OPENER_WORDS =
+  'nice|good|great|perfect|excellent|awesome|wonderful|well done|good job|exactly|correct|right|そうです|その通り|いいですね|いいね|すごい|素晴らしい|すばらしい|完璧|大正解|正解|ナイス|よくできました|ばっちり|お見事|上手';
+const STOCK_OPENER_RE = new RegExp(`^[\\s"「『(（]*(?:${STOCK_OPENER_WORDS})(?:です|ですね|ですよ|だね)?[\\s!！.。,、—:：-]`, 'i');
+/** The WHOLE sentence is one stock opener (after stripping quotes and punctuation). */
+const STOCK_OPENER_ONLY_RE = new RegExp(`^(?:${STOCK_OPENER_WORDS})(?:です|ですね|ですよ|だね)?$`, 'i');
 
 export function opensWithStockPraise(tutorText: string): boolean {
   return STOCK_OPENER_RE.test(`${tutorText ?? ''} `);
@@ -92,4 +95,19 @@ export function praiseStickyAfterPlants(languageLesson: boolean): number {
 
 export function praiseNoteIsSticky(args: { plants: number; superlativeTurns: number; languageLesson: boolean }): boolean {
   return args.plants >= praiseStickyAfterPlants(args.languageLesson) || args.superlativeTurns >= PRAISE_SESSION_SUPERLATIVE_STICKY;
+}
+
+/**
+ * 2026-10-18 (embed-1792356364051): the opener note was sticky from 01:51
+ * and 「いいですね」 still opened eight turns. A sentence that is NOTHING but a
+ * stock praise opener (「いいですね!」, "Nice.") is dropped from speech once the
+ * note is sticky — the sentence after it carries the real feedback
+ * (orchestrator sentence path, event `stock_opener_dropped`).
+ */
+export function isStockPraiseOpenerOnly(sentence: string): boolean {
+  const t = (sentence ?? '').trim();
+  if (!t || t.length > 14) return false;
+  const stripped = t.replace(/^[\s"「『(（]+|[\s!！.。,、—:：-]+$/g, '');
+  if (!stripped) return false;
+  return STOCK_OPENER_ONLY_RE.test(stripped) && !/[?？]/.test(t);
 }

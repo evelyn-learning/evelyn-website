@@ -59,6 +59,10 @@ import { languageTurnMaxTokens, outputBudgetNote, settleHeldTail, endsSentence, 
 import { decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE } from '../src/lib/tutor/voice/lesson-close';
 import { praiseNoteIsSticky, PRAISE_SESSION_SUPERLATIVE_STICKY } from '../src/lib/tutor/voice/praise-variety';
 import { hasKatakanaEnglishFromStt, KATAKANA_ECHO_NOTE } from '../src/lib/tutor/voice/katakana-english';
+import { hasDottedKatakanaReading, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/katakana-english';
+import { isStockPraiseOpenerOnly } from '../src/lib/tutor/voice/praise-variety';
+import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/voice/english-reply';
+import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
 
 let passed = 0;
 let failed = 0;
@@ -930,6 +934,50 @@ test('katakana from STT: a long katakana run in the STUDENT\'s transcript is Eng
   assert.equal(hasKatakanaEnglishFromStt('カラオケをしたことがあります'), false);
   assert.equal(hasKatakanaEnglishFromStt('ハネムーンで行きました'), false);
   assert.match(KATAKANA_ECHO_NOTE, /Latin letters only/);
+});
+
+
+// ── 2026-10-18 round after embed-1792356364051 (Kenji v5, first full run) ──
+
+test('katakana reading sentence (「アイ・プレイド・ゴルフ・イエスタデイ」) is dropped from speech; a loanword sentence is not; note sticky after 2 plants', () => {
+  assert.equal(hasDottedKatakanaReading('一緒に言ってみましょう — 「アイ・プレイド・ゴルフ・イエスタデイ」。'), true);
+  assert.equal(hasDottedKatakanaReading('英語では「I played golf yesterday.」と言いますよ。'), false);
+  assert.equal(hasDottedKatakanaReading('カラオケに行きましたか?'), false);
+  assert.equal(hasDottedKatakanaReading('コカ・コーラを飲みました。'), false, 'a one-dot loanword');
+  assert.equal(KATAKANA_STICKY_AFTER_PLANTS, 2);
+  assert.match(KATAKANA_ENGLISH_NOTE_STANDING, /Standing rule/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('katakana_reading_dropped'"));
+  assert.ok(vtr.includes('pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE_STANDING;'));
+});
+
+test('a bare stock praise opener is recognised; feedback sentences and questions are not', () => {
+  for (const s of ['いいですね!', 'いいですね、', 'Nice.', 'Great!', '正解です。', 'いいですね']) assert.equal(isStockPraiseOpenerOnly(s), true, s);
+  for (const s of ['いいですね、同僚と!', 'Nice work on the past tense.', 'いいですか?', 'ゴルフをしましたね。', 'Nagoya が言えましたね。']) assert.equal(isStockPraiseOpenerOnly(s), false, s);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('stock_opener_dropped'"));
+});
+
+test('identical transcript after a correction (embed-1792356364051: "on Honey Moon" ×3) gets the identical-retry note', () => {
+  assert.equal(isIdenticalTranscript('Yes , Ihave . I went there on Honey Moon .', 'Yes, I have. I went there on Honey Moon.'), true);
+  assert.equal(isIdenticalTranscript('Yes, I have. I went there on my honeymoon.', 'Yes, I have. I went there on Honey Moon.'), false);
+  assert.equal(isIdenticalTranscript('はい', 'はい'), false, 'too short to mean anything');
+  assert.match(IDENTICAL_RETRY_NOTE, /Do not correct it again/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('identical_retry_note'"));
+});
+
+test('Japanese verdict narration (「これは質問ですね — 答えではなく…」) is meta; ordinary Japanese is not', () => {
+  assert.equal(isMetaNarration2('これは質問ですね — 答えではなく、もう一度同じ形を繰り返していますよ。'), true);
+  assert.equal(isMetaNarration2('もう一度同じ形を繰り返していますよ。'), true);
+  for (const s of ['これは過去分詞ですね。', 'それは質問の形です。使ってみましょう。', '質問ですね、いいですよ。', 'もう一度言ってみましょう。']) assert.equal(isMetaNarration2(s), false, s);
+});
+
+test('hold check-in line follows the session language; correction note never quotes garbled transcript', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("(tutorLanguages ?? []).includes('ja')\n              ? 'まだここにいますよ。準備ができたら、声をかけてくださいね。'"));
+  const jn = readFileSync('src/lib/tutor/voice/judge-correction-note.ts', 'utf8');
+  assert.ok(jn.includes('never quote that text back to them'));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
