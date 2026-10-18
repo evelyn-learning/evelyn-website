@@ -13,13 +13,13 @@
  */
 
 const CJK_RE = /[぀-ヿ㐀-䶿一-鿿]/;
-const SENTENCE_SPLIT_RE = /(?<=[。！？.!?]["”」』)]?)\s+|\n+/;
+const SENTENCE_SPLIT_RE = /(?<=[。！？])|(?<=[.!?]["”」』)]?)\s+|\n+/;
 
 // Instruction / feedback shapes. A target phrase is a model sentence or a
 // question for the student to answer or repeat; these are the tutor talking
 // ABOUT the lesson in English, which an A1 learner cannot follow.
 const INSTRUCTION_RE =
-  /^\W*(?:now\b|let'?s\b|that'?s\b|this (?:is|was|whole)\b|here'?s\b|nice\b|good\b|great\b|well done\b|exactly\b|perfect\b|all (?:three|two|the)\b|ask me\b|try (?:it|that|again|a|the)\b|tell me\b|your turn\b|remember\b|notice\b|so\b|okay,? (?:now|let'?s|so)\b|first\b|next\b|then\b|again,?\b|one more\b)/i;
+  /^\W*(?:now\b|let'?s\b|that'?s\b|this (?:is|was|whole)\b|here'?s\b|nice\b|good\b|great\b|well done\b|exactly\b|perfect\b|all (?:three|two|the)\b|ask me\b|try (?:it|that|again|a|the|saying)\b|say it\b|repeat after me\b|thanks for today\b|see you next\b|tell me\b|your turn\b|remember\b|notice\b|so\b|okay,? (?:now|let'?s|so)\b|first\b|next\b|then\b|again,?\b|one more\b)/i;
 
 // Imperatives that sit mid-sentence ("Have you — ask me back, with "ever" in there.").
 const INSTRUCTION_ANYWHERE_RE =

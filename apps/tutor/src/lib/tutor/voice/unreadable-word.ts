@@ -99,10 +99,12 @@ export function findUnreadableWords(studentText: string, context: Iterable<strin
  *  "Nagoya" mid-sentence → [] (a name); "Thef" at a sentence start → ["Thef"]
  *  (checked lower-cased as usual); "thef" → ["thef"]. */
 function splitProperNoun(raw: string, sentenceInitial: boolean, dict: Set<string>): string[] {
-  const camel = /^([a-z]+)([A-Z][a-z']+)$/.exec(raw);
+  const camel = /^([A-Za-z]*[a-z])([A-Z][a-z']+)$/.exec(raw);
   if (camel) {
     const [, head] = camel;
-    return dict.has(head) || head.length <= 3 ? [head] : [raw];
+    // "toNagoya" → ["to"]; "IwenttoTerimachi" → ["Iwentto"] (checked as a
+    // run-together of known words); the capitalised rest is a name.
+    return [head];
   }
   if (/^[A-Z][a-z']+$/.test(raw) && !sentenceInitial) return [];
   return [raw];
@@ -126,5 +128,54 @@ export function unreadableWordNote(words: string[]): string {
     `Do not credit, correct, or guess that word — do not turn it into a place or a thing they may not have said. ` +
     `Say the sentence as you heard it, with that word left out, and ask the student to say just that word once more. ` +
     `Apply this silently; never mention this note.`
+  );
+}
+
+/**
+ * 2026-10-18 (embed-1792361732296): the student said "I went to Torimachi
+ * last month" (a made-up town), the recogniser wrote "Terimachi", and the
+ * tutor taught 「寺町」 — it replaced an unknown name with a known place. A
+ * capitalised token (or the capitalised rest of a run-together) that is in
+ * neither the dictionary nor anything said or planned this session is an
+ * UNKNOWN NAME: not asked for again (it is probably exactly what they said),
+ * but the model is told to keep it as spelled and never swap it for a
+ * similar-sounding place. One note per name per session (`skip`).
+ */
+export function findUnknownNames(studentText: string, context: Iterable<string>, opts?: { skip?: Iterable<string> }): string[] {
+  const dict = englishDictionary();
+  const ctx = new Set<string>();
+  for (const w of context) ctx.add(w.toLowerCase());
+  const skip = new Set<string>();
+  for (const w of opts?.skip ?? []) skip.add(w.toLowerCase());
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const text = studentText ?? '';
+  const re = new RegExp(LATIN_TOKEN_RE.source, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const raw = m[0];
+    const sentenceInitial = /(?:^|[.!?。！？「」『』"“”]\s*)$/.test(text.slice(0, m.index));
+    const camel = /^(?:[A-Za-z]*[a-z])([A-Z][a-z']+)$/.exec(raw);
+    const name = camel ? camel[1] : (/^[A-Z][a-z']+$/.test(raw) && !sentenceInitial ? raw : null);
+    if (!name) continue;
+    const w = name.toLowerCase();
+    if (w.length < 4 || seen.has(w)) continue;
+    seen.add(w);
+    if (skip.has(w) || dict.has(w) || ctx.has(w)) continue;
+    let near = false;
+    for (const c of ctx) { if (c.length >= 4 && editDistance(w, c, 1) <= 1) { near = true; break; } }
+    if (near) continue;
+    out.push(name);
+  }
+  return out;
+}
+
+export function unknownNameNote(names: string[]): string {
+  const quoted = names.slice(0, 3).map((n) => `"${n}"`).join(', ');
+  return (
+    `[runtime note — not from the student] The student's last turn contains the name ${quoted}, which is in neither the lesson nor anything said so far. ` +
+    `It is a place or a person the student knows and you do not. Use it EXACTLY as spelled, in Latin letters, every time you refer to it: ` +
+    `never replace it with a similar-sounding place you know, never write it in kanji or katakana, never explain what it is. ` +
+    `If you need to be sure of it, ask once — 「${names[0]} ですか？」 — and accept their answer. Apply this silently; never mention this note.`
   );
 }

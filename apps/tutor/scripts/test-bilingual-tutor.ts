@@ -49,7 +49,7 @@ import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
 import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
 import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
-import { findUnreadableWords, latinWords, unreadableWordNote } from '../src/lib/tutor/voice/unreadable-word';
+import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '../src/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
@@ -872,10 +872,10 @@ test('output budget: on max_tokens the cut-off fragment is dropped, a complete l
 });
 
 test('post-close gate: chatter and pleasantries are silenced; an explicit continue / question shape gets a turn', () => {
-  for (const s of ['ありがとうございました', 'はい、さようなら', "I'm sorry, I couldn't pull the report.", 'Thank you so much, Ryota.', 'Okay I will do that.', 'えーと、今日は楽しかったです。', 'また次回もお願いします']) {
+  for (const s of ['ありがとうございました', 'はい、さようなら', "I'm sorry, I couldn't pull the report.", 'Sorry, I could not find the report.', 'What do you prefer?', 'Thank you so much.', 'Okay I will do that.', 'えーと、今日は楽しかったです。', 'また次回もお願いします']) {
     assert.equal(decidePostCloseUtterance(s), 'silence', s);
   }
-  for (const s of ['すみません、もう一つ質問があります', 'ちょっと待ってください', '続けてもいいですか', 'kayaking は英語で何と言いますか', 'Can I ask one more question?', 'wait', 'What do you prefer?', '宿題はありますか']) {
+  for (const s of ['すみません、もう一つ質問があります', 'ちょっと待ってください', '続けてもいいですか', 'kayaking は英語で何と言いますか', 'Can I ask one more question?', 'wait', 'Do you have homework for me?', 'What does kayaking mean?', '宿題はありますか']) {
     assert.equal(decidePostCloseUtterance(s), 'answer', s);
   }
   assert.equal(postCloseSilenceKind('ありがとうございました'), 'pleasantry');
@@ -978,6 +978,28 @@ test('hold check-in line follows the session language; correction note never quo
   assert.ok(vtr.includes("(tutorLanguages ?? []).includes('ja')\n              ? 'まだここにいますよ。準備ができたら、声をかけてくださいね。'"));
   const jn = readFileSync('src/lib/tutor/voice/judge-correction-note.ts', 'utf8');
   assert.ok(jn.includes('never quote that text back to them'));
+});
+
+
+test('unknown name (embed-1792361732296: "Terimachi" → 寺町): a capitalised name nobody has used gets the keep-as-spelled note; known places and names do not', () => {
+  const ctx = latinWords('I went to Nagoya Castle last week. Have you ever been to Hawaii? Mike');
+  assert.deepEqual(findUnknownNames('IwenttoTerimachi lastmonth .', ctx), ['Terimachi']);
+  assert.deepEqual(findUnknownNames('I went to Torimachi last month.', ctx), ['Torimachi']);
+  assert.deepEqual(findUnknownNames('I went to Nagoya with Mike.', ctx), [], 'both in context');
+  assert.deepEqual(findUnknownNames('I went to Nagoy castle.', ctx), [], 'one edit from a context name');
+  assert.deepEqual(findUnknownNames('Yesterday I played golf.', ctx), [], 'sentence-initial capital is a word');
+  assert.deepEqual(findUnknownNames('I went to Torimachi.', ctx, { skip: ['torimachi'] }), [], 'one note per name');
+  assert.match(unknownNameNote(['Terimachi']), /EXACTLY as spelled/);
+  assert.match(unknownNameNote(['Terimachi']), /「Terimachi ですか？」/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('unknown_name_note_planted'"));
+});
+
+test('English tails from embed-1792361732296: "Try saying it now." is an instruction; "That answers …" is verdict narration', () => {
+  assert.deepEqual(englishInstructionSentences('もう一度言ってみましょう。 I tried some local fish, and it was delicious. Try saying it now.'), ['Try saying it now.']);
+  assert.deepEqual(englishInstructionSentences('さようなら。Thanks for today — see you next time!'), ['Thanks for today — see you next time!']);
+  assert.equal(isMetaNarration2('That answers "have you been there" — yes, they\'ve been.'), true);
+  assert.equal(isMetaNarration2('That answers the question nicely: yes, you have.'), true);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

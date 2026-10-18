@@ -108,7 +108,7 @@ const PERSONA_DIRECTIVE_RE =
 const VERDICT_NARRATION_JA_RE =
   /^\s*(?:これ|それ)は(?:質問|答え|繰り返し|同じ形)ですね\s*[—–、,]|同じ形を繰り返してい?ますよ?/;
 const VERDICT_NARRATION_RE =
-  /\bthis turn['’]?s\b|^\s*(?:this|that) matches (?:what['’]?s on the board|the (?:expected|target)\b)|\bexpected answer\b|^\s*that['’]?s an attempt at\b/i;
+  /\bthis turn['’]?s\b|^\s*(?:this|that) matches (?:what['’]?s on the board|the (?:expected|target)\b)|\bexpected answer\b|^\s*that['’]?s an attempt at\b|^\s*that answers\b/i;
 // embed-1792199116313: "Let me verify the card is there before scribbling." —
 // a tool-use plan read aloud.
 const TOOL_PLAN_SPOKEN_RE =

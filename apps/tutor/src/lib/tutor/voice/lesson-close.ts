@@ -153,9 +153,20 @@ const POST_CLOSE_CONTINUE_RE = new RegExp(
 
 export type PostCloseDecision = 'silence' | 'answer';
 
+// 2026-10-18 (embed-1792361732296): after the goodbye, ChatGPT's own "What do
+// you prefer?" carried a question mark and got a full answer about the sea
+// and hiking. An ENGLISH utterance after the close is answered only when it
+// is about the lesson — homework, the next lesson, a word, a question for the
+// tutor, a wait/continue request. Japanese keeps the broader shapes: a
+// Japanese question from this learner is theirs.
+const POST_CLOSE_LESSON_EN_RE =
+  /\b(?:homework|assignment|lesson|class|next (?:time|week|session)|practi[sc]e|review|question|word|phrase|sentence|mean|means|say|pronounce|spell|grammar|english|japanese|wait|hold on|one more|not yet|continue|carry on|go on|stop|end|finish|teacher|tutor|ryota)\b/i;
+
 export function decidePostCloseUtterance(studentText: string): PostCloseDecision {
   const t = (studentText ?? '').trim();
   if (!t) return 'silence';
+  const hasCjk = /[\u3040-\u30FF\u4E00-\u9FFF]/.test(t);
+  if (!hasCjk) return POST_CLOSE_LESSON_EN_RE.test(t) ? 'answer' : 'silence';
   if (POST_CLOSE_CONTINUE_RE.test(t)) return 'answer';
   return 'silence';
 }

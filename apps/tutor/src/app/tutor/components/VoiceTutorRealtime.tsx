@@ -216,7 +216,7 @@ import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PR
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
-import { findUnreadableWords, latinWords, unreadableWordNote } from '@/lib/tutor/voice/unreadable-word';
+import { findUnreadableWords, latinWords, unreadableWordNote, findUnknownNames, unknownNameNote } from '@/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote } from '@/lib/tutor/voice/late-tail';
 import { decideBargeInPause, scorePartialSelfVoice, shouldPauseForOnset, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
@@ -4562,6 +4562,8 @@ export function VoiceTutorRealtime({
   const planWordsRef = useRef<string[] | null>(null);
   /** 2026-10-18: words the unreadable-word note has already asked for — one note per word per session. */
   const unreadableNotedRef = useRef<Set<string>>(new Set());
+  /** 2026-10-18: unknown names already noted this session (unreadable-word.ts findUnknownNames). */
+  const unknownNamesNotedRef = useRef<Set<string>>(new Set());
   /** 2026-10-18: English questions the student has answered this session (correct-retry.ts window). */
   const answeredQuestionsRef = useRef<Set<string>>(new Set());
   /** 2026-10-18: tutor turns with a superlative this session — four make the praise note sticky. */
@@ -11955,6 +11957,17 @@ export function VoiceTutorRealtime({
             for (const w of unreadable) unreadableNotedRef.current.add(w.toLowerCase());
             runTranscript = `${unreadableWordNote(unreadable)}\n\n${runTranscript}`;
             onDebugEvent?.('unreadable_word_note_planted', unreadable.slice(0, 3).join(', '));
+          }
+          // A capitalised name nobody has used: keep it as spelled, never
+          // swap it for a known place (embed-1792361732296: Terimachi → 寺町).
+          const unknownNames = findUnknownNames(transcript, [
+            ...(planWordsRef.current ?? []),
+            ...transcriptRef.current.flatMap((e) => (e.role === 'system' ? [] : latinWords(e.text))),
+          ], { skip: unknownNamesNotedRef.current });
+          if (unknownNames.length > 0) {
+            for (const n of unknownNames) unknownNamesNotedRef.current.add(n.toLowerCase());
+            runTranscript = `${unknownNameNote(unknownNames)}\n\n${runTranscript}`;
+            onDebugEvent?.('unknown_name_note_planted', unknownNames.slice(0, 3).join(', '));
           }
         }
       }
