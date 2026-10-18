@@ -30,3 +30,34 @@ export const CORRECT_RETRY_NOTE =
   'yet your last turn asked them to say it again or to use a different word. The task is what you SAID, not the example on the card. ' +
   'In this turn: whatever they say now, tell them plainly that their earlier sentence was right too, do not ask for it again, ' +
   'and move to the next item. Apply this silently; never mention this note.';
+
+/** Lower-cased Latin words of a text, as a single space-joined string. */
+function latinSentence(text: string): string {
+  return (text.match(/[A-Za-z][A-Za-z']*/g) ?? []).map((w) => w.toLowerCase()).join(' ');
+}
+
+/**
+ * 2026-10-18 (GDI embed-1792338502233, turn 6): the student said "I went to
+ * the office yesterday" correctly and the tutor replied 「Nice. 言ってみましょう。
+ * I went to the office yesterday. — 完璧です」 — asked for a sentence it was
+ * about to praise. No verdict precheck was involved, so reAskedCheckedCorrect
+ * could not see it. This catches the shape directly: a repeat-ask whose text
+ * contains the student's own last English sentence (four words or more).
+ */
+// A plain "say it" ask — 言ってみましょう / 言ってみてください / repeat after me —
+// without the もう一度 that isRetryAsk needs: the live turn had none.
+const SAY_IT_ASK_RE =
+  /言(?:って|い)(?:み(?:ましょう|てください|て)|ましょう)|繰り返し|リピート|\brepeat after me\b|\bsay (?:it|this|that)\b|\btry saying\b/;
+
+export function reAskedOwnSentence(studentText: string, tutorText: string): boolean {
+  if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
+  const said = latinSentence(studentText ?? '');
+  if (said.split(' ').filter(Boolean).length < 4) return false;
+  return latinSentence(tutorText ?? '').includes(said);
+}
+
+export const OWN_SENTENCE_RETRY_NOTE =
+  '[runtime note — not from the student] Your last turn asked the student to say a sentence they had JUST said, in those words. ' +
+  'A sentence they already produced is done: confirm it in one short clause and move to the next item. ' +
+  'Never ask for a repeat of something that was right. Apply this silently; never mention this note.';
+

@@ -47,3 +47,32 @@ export const PRAISE_VARIETY_NOTE =
   'Calibrate: in one short clause name exactly what was right, vary the wording, and keep words like 完璧 / perfect ' +
   'for a sentence the student produced on their own without a model or a hint to copy. A repeated or prompted sentence ' +
   'gets a plain confirmation, not a superlative. Apply this silently; never mention this note.';
+
+/**
+ * 2026-10-18 (GDI embed-1792338502233): no superlative streak, yet GPT's
+ * report called the praise "scripted" — "Nice." opened four turns, いいですね
+ * most of the rest. The language clause bans stock openers; this catches the
+ * pattern when it persists anyway. A stock opener is a praise word or phrase
+ * in the turn's first few characters, in either language.
+ */
+const STOCK_OPENER_RE =
+  /^[\s"「『(（]*(?:nice|good|great|perfect|excellent|awesome|wonderful|well done|good job|exactly|correct|right|そうです|その通り|いいですね|いいね|すごい|素晴らしい|すばらしい|完璧|大正解|正解|ナイス|よくできました|ばっちり|お見事|上手)(?:です|ですね|ですよ|だね)?[\s!！.。,、—:：-]/i;
+
+export function opensWithStockPraise(tutorText: string): boolean {
+  return STOCK_OPENER_RE.test(`${tutorText ?? ''} `);
+}
+
+export function overusesStockPraiseOpener(recentTutorTurns: readonly string[]): boolean {
+  const recent = recentTutorTurns.slice(-PRAISE_WINDOW_TURNS);
+  if (recent.length < PRAISE_MIN_HITS) return false;
+  const latest = recent[recent.length - 1] ?? '';
+  if (!opensWithStockPraise(latest)) return false;
+  return recent.filter((t) => opensWithStockPraise(t)).length >= PRAISE_MIN_HITS;
+}
+
+export const PRAISE_OPENER_NOTE =
+  '[runtime note — not from the student] Most of your recent turns have opened with the same kind of stock praise ' +
+  '(いいですね / Nice / 正解です). It sounds scripted. From now on do not open with a praise word: when the answer is right, ' +
+  'start by naming in a few words what was right, or go straight to the next item; keep the warm word for a sentence ' +
+  'the student built on their own. Apply this silently; never mention this note.';
+

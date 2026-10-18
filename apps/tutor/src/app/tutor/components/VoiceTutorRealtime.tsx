@@ -212,8 +212,10 @@ import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/kat
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
 import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
-import { overusesSuperlative, PRAISE_VARIETY_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, PRAISE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, PRAISE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/praise-variety';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
+import { findUnreadableWords, latinWords, unreadableWordNote } from '@/lib/tutor/voice/unreadable-word';
 import { decideBargeInPause, scorePartialSelfVoice, BARGEIN_PAUSE_MAX_MS, type BargeInPauseState } from '@/lib/tutor/voice/bargein-pause';
 import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
@@ -4544,6 +4546,12 @@ export function VoiceTutorRealtime({
   const pendingCorrectRetryNoteRef = useRef<string | null>(null);
   const recentTutorTurnsRef = useRef<string[]>([]);
   const praiseVarietyPlantsRef = useRef(0);
+  /** 2026-10-18: which praise note was planted last — the sticky re-plant repeats it. */
+  const praiseLastNoteRef = useRef<string | null>(null);
+  /** 2026-10-18: cadence-note plants this session; sticky after CADENCE_STICKY_AFTER_PLANTS (turn-cap.ts). */
+  const cadencePlantsRef = useRef(0);
+  /** 2026-10-18: the lesson plan's Latin words, computed once, for the unreadable-word check. */
+  const planWordsRef = useRef<string[] | null>(null);
   const pendingReadinessNoteRef = useRef<string | null>(null);
   const pendingPronunciationNoteRef = useRef<string | null>(null);
   // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
@@ -11876,6 +11884,19 @@ export function VoiceTutorRealtime({
           runTranscript = `${NO_ENGLISH_REPLY_NOTE}\n\n${runTranscript}`;
           onDebugEvent?.('no_english_reply_note', transcript.slice(0, 80));
         }
+        // 2026-10-18: a word the recogniser lost ("thef" → credited as Gifu).
+        // Name it so the tutor asks for that word instead of guessing.
+        if (!/^\s*\[/.test(transcript) && /[A-Za-z]{3,}/.test(transcript)) {
+          if (!planWordsRef.current && lessonPlanRef.current) planWordsRef.current = latinWords(JSON.stringify(lessonPlanRef.current));
+          const unreadable = findUnreadableWords(transcript, [
+            ...(planWordsRef.current ?? []),
+            ...recentTutorTurnsRef.current.flatMap((t) => latinWords(t)),
+          ]);
+          if (unreadable.length > 0) {
+            runTranscript = `${unreadableWordNote(unreadable)}\n\n${runTranscript}`;
+            onDebugEvent?.('unreadable_word_note_planted', unreadable.slice(0, 3).join(', '));
+          }
+        }
       }
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
@@ -11911,7 +11932,11 @@ export function VoiceTutorRealtime({
         // Held at most 3 turns, then delivered regardless (the note itself now says
         // "finish the problem in play first").
         const ackOrMoveOn = /^(?:ok(?:ay)?|yes|yeah|yep|sure|ready|next|go|continue|done|move on|let'?s (?:go|move on|continue)|got it|alright)[!.\s]*$/i.test(transcript.trim());
-        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || runtimeNoteHeldTurnsRef.current >= 3;
+        // 2026-10-18: held at most ONE turn. In a language lesson every turn ends
+        // with an ask, so a 3-turn hold always ran to its cap (three times in
+        // embed-1792338502233) — and the note itself already tells the tutor
+        // to close the open item first.
+        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || runtimeNoteHeldTurnsRef.current >= 1;
         if (deliver) {
           runTranscript = `${pendingRuntimeNoteRef.current}\n\n${runTranscript}`;
           pendingRuntimeNoteRef.current = null;
@@ -11919,7 +11944,7 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
         } else {
           runtimeNoteHeldTurnsRef.current += 1;
-          onDebugEvent?.('segment_overlong_note_held', `student is answering an open question (${runtimeNoteHeldTurnsRef.current}/3)`);
+          onDebugEvent?.('segment_overlong_note_held', `student is answering an open question (${runtimeNoteHeldTurnsRef.current}/1)`);
         }
       }
       // Judge correction note (2026-08-07) — same convention, own concern.
@@ -18603,31 +18628,27 @@ export function VoiceTutorRealtime({
       // is grounds for a next-turn note, but the pendingCadenceNoteRef slot
       // holds a single note, so the sentence trigger takes priority when
       // both fire (else-if) rather than planting/overwriting twice.
-      if (TUTOR_TURN_CAP && totalSentenceCount > TURN_CAP_HARD_SENTENCES && totalToolNamesSeen.length === 0) {
-        pendingCadenceNoteRef.current =
-          `[cadence note — not from the student] Your previous turn ran ${totalSentenceCount} spoken sentences ` +
-          `with no whiteboard action — too long to follow by ear. From this turn on: at most ` +
-          `${TURN_CAP_SOFT_SENTENCES} sentences in a row before you either anchor what you're saying on the ` +
-          `board or hand the turn back to the student. Apply this silently — never mention or reason ` +
-          `aloud about this note; your reply speaks only to the student.`;
-        console.warn(`[brain-orchestrator] turn cap: ${totalSentenceCount} sentences, 0 tools — cadence note planted`);
-        onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · 0 tool calls — cadence note planted for next turn`);
-      } else if (TUTOR_TURN_CAP && totalWordCount > TURN_CAP_WORDS && totalToolNamesSeen.length === 0) {
-        pendingCadenceNoteRef.current =
-          `[cadence note — not from the student] Your previous turn ran ${totalWordCount} words with no ` +
-          `whiteboard action — too wordy to follow by ear. Condense: one idea per sentence, cut restatement ` +
-          `(don't explain, then analogize, then recap the same point) — anchor what you're saying on the ` +
-          `board or hand the turn back to the student instead.`;
-        console.warn(`[brain-orchestrator] word cap: ${totalWordCount} words, 0 tools — cadence note planted`);
-        onDebugEvent?.('turn_cap_flagged', `${totalWordCount} words · 0 tool calls — cadence note planted for next turn`);
+      // 2026-10-18 (GDI embed-1792338502233): policy moved to turn-cap.ts —
+      // lower caps for language lessons, no tool exemption once the student
+      // cannot see the board, sticky after two plants.
+      if (TUTOR_TURN_CAP) {
+        const capPolicy = turnCapPolicy({
+          languageLesson: sessionAllowsNonLatin(tutorLanguages),
+          voiceOnly: voiceOnlyRef.current,
+          defaults: { hardSentences: TURN_CAP_HARD_SENTENCES, words: TURN_CAP_WORDS, softSentences: TURN_CAP_SOFT_SENTENCES },
+        });
+        const capTurn = { sentences: totalSentenceCount, words: totalWordCount, toolCalls: totalToolNamesSeen.length };
+        const capHit = turnCapHit(capTurn, capPolicy);
+        if (capHit) {
+          cadencePlantsRef.current += 1;
+          const sticky = cadencePlantsRef.current >= CADENCE_STICKY_AFTER_PLANTS;
+          pendingCadenceNoteRef.current = cadenceNote(capHit, capTurn, capPolicy, { voiceOnly: voiceOnlyRef.current, sticky });
+          console.warn(`[brain-orchestrator] turn cap (${capHit}): ${totalSentenceCount} sentences / ${totalWordCount} words, ${totalToolNamesSeen.length} tools — cadence note planted`);
+          onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · ${totalWordCount} words · ${totalToolNamesSeen.length} tool calls — cadence note planted for next turn${sticky ? ' (sticky)' : ''}`);
+        } else if (cadencePlantsRef.current >= CADENCE_STICKY_AFTER_PLANTS && !pendingCadenceNoteRef.current) {
+          pendingCadenceNoteRef.current = cadenceNote(null, capTurn, capPolicy, { voiceOnly: voiceOnlyRef.current, sticky: true });
+        }
       }
-      // R2 E2: substantive final question + zero content board writes →
-      // plant a board-anchor note for the next turn. Independent of the
-      // cadence triggers (own ref) — both can fire on the same turn.
-      // Live check 6: does this turn leave a question open for the student?
-      // (Read by the correction-note deadline; cleared by the next real
-      // student turn.) A pure nudge/cover turn ends in a question too — the
-      // hold is still right: the student is expected to speak next.
       openTutorQuestionRef.current = /\?\s*$/.test(fullText.trim()) || !!lastQuestionSentence(fullText) ? Date.now() : null;
       // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
       // substantive turns, improvised three worked examples in speech, then
@@ -18653,7 +18674,7 @@ export function VoiceTutorRealtime({
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
         }
-        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
+        if (!homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept' || (sessionAllowsNonLatin(tutorLanguages) && kindNow !== 'recap'))) {
           cur.noted = true;
           const plan = lessonPlanRef.current;
           const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
@@ -18665,7 +18686,7 @@ export function VoiceTutorRealtime({
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
             `First finish the problem in play — give the student the verdict on what they just said and close that problem out. Then move the lesson forward: ${nextHint} ` +
-            `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. ` +
+            (voiceOnlyRef.current ? `The student cannot see the board: say the new segment's first item aloud in full. ` : `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. `) +
             `Say any transition sentence in the language you are using with this student, in your own words. ` +
             `Apply this silently; never mention this note.`;
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
@@ -18695,15 +18716,17 @@ export function VoiceTutorRealtime({
         }
         // praise-variety.ts: 完璧 in most of the recent turns.
         recentTutorTurnsRef.current = [...recentTutorTurnsRef.current.slice(-(PRAISE_WINDOW_TURNS - 1)), fullText];
-        if (overusesSuperlative(recentTutorTurnsRef.current)) {
-          pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
+        const praiseNote = overusesSuperlative(recentTutorTurnsRef.current)
+          ? PRAISE_VARIETY_NOTE
+          : overusesStockPraiseOpener(recentTutorTurnsRef.current) ? PRAISE_OPENER_NOTE : null;
+        if (praiseNote) {
+          pendingPraiseVarietyNoteRef.current = praiseNote;
+          praiseLastNoteRef.current = praiseNote;
           praiseVarietyPlantsRef.current += 1;
-          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ superlatives in the last ${PRAISE_WINDOW_TURNS} turns${praiseVarietyPlantsRef.current === PRAISE_STICKY_AFTER_PLANTS ? ' — sticky from now on' : ''}`);
+          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ ${praiseNote === PRAISE_VARIETY_NOTE ? 'superlatives' : 'stock praise openers'} in the last ${PRAISE_WINDOW_TURNS} turns${praiseVarietyPlantsRef.current === PRAISE_STICKY_AFTER_PLANTS ? ' — sticky from now on' : ''}`);
         } else if (praiseVarietyPlantsRef.current >= PRAISE_STICKY_AFTER_PLANTS) {
-          // Sticky: the habit came back after the first note (embed-1792266148587).
-          pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
+          pendingPraiseVarietyNoteRef.current = praiseLastNoteRef.current ?? PRAISE_VARIETY_NOTE;
         }
-        // readiness-ask.ts: 「準備はいいですか」 → next turn starts the item instead.
         if (asksReadiness(fullText)) {
           pendingReadinessNoteRef.current = READINESS_ASK_NOTE;
           onDebugEvent?.('readiness_ask_note_planted', fullText.slice(-60));
@@ -18717,6 +18740,9 @@ export function VoiceTutorRealtime({
         if (reAskedCheckedCorrect(verdictPrecheckRef.current, fullText)) {
           pendingCorrectRetryNoteRef.current = CORRECT_RETRY_NOTE;
           onDebugEvent?.('correct_retry_note_planted', `checked correct: "${verdictPrecheckRef.current?.proposed.slice(0, 60) ?? ''}"`);
+        } else if (reAskedOwnSentence(transcript, fullText)) {
+          pendingCorrectRetryNoteRef.current = OWN_SENTENCE_RETRY_NOTE;
+          onDebugEvent?.('correct_retry_note_planted', `own sentence re-asked: "${transcript.slice(0, 60)}"`);
         }
       }
       // Mutual farewell (lesson-close.ts): the student signalled the end and

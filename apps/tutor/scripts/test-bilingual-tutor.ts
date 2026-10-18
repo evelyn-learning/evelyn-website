@@ -46,6 +46,10 @@ import { parseThinkingCue, initialThinkingCue, cueTurnAccepted, cueTick, thinkin
 import { parseSpeechRate } from '../src/lib/tutor/voice/speech-rate';
 import { cannedLanguage, localizeCanned, lastTutorText, JA_CANNED } from '../src/lib/tutor/voice/bilingual-canned';
 import { COVER_POOLS } from '../src/lib/tutor/voice/cover-layer';
+import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/turn-cap';
+import { opensWithStockPraise, overusesStockPraiseOpener, PRAISE_OPENER_NOTE } from '../src/lib/tutor/voice/praise-variety';
+import { reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { findUnreadableWords, latinWords, unreadableWordNote } from '../src/lib/tutor/voice/unreadable-word';
 
 let passed = 0;
 let failed = 0;
@@ -657,6 +661,84 @@ test('embed-1792276942766: readiness checks, pronunciation claims and wait reque
   assert.ok(vtr.includes('if (holdReq.soft) pendingWaitNoteRef.current = WAIT_REQUEST_NOTE;'));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   for (const p of ["'readiness_ask'", "'pronunciation_claim'", "'wait_request'"]) assert.ok(embed.includes(p), p);
+});
+
+// ── 2026-10-18 round (GDI embed-1792338502233): turn length, praise openers,
+// own-sentence re-ask, unreadable words, recap cap ───────────────────────────
+
+test('turn cap: language lessons cap at 5 sentences / 70 words; voice-only drops the tool exemption', () => {
+  const defaults = { hardSentences: 8, words: 110, softSentences: 4 };
+  const maths = turnCapPolicy({ languageLesson: false, voiceOnly: false, defaults });
+  assert.deepEqual(maths, { hardSentences: 8, words: 110, softSentences: 4, toolTurnsExempt: true });
+  const lang = turnCapPolicy({ languageLesson: true, voiceOnly: false, defaults });
+  assert.equal(lang.hardSentences, 5); assert.equal(lang.softSentences, 3); assert.equal(lang.toolTurnsExempt, true);
+  const langVoice = turnCapPolicy({ languageLesson: true, voiceOnly: true, defaults });
+  assert.equal(langVoice.toolTurnsExempt, false);
+  // the live turns: 9 sentences, no tools → hit under both; 10 sentences + show_problem in voice-only → hit only there
+  assert.equal(turnCapHit({ sentences: 9, words: 90, toolCalls: 0 }, maths), 'sentences');
+  assert.equal(turnCapHit({ sentences: 10, words: 95, toolCalls: 1 }, lang), null);
+  assert.equal(turnCapHit({ sentences: 10, words: 95, toolCalls: 1 }, langVoice), 'sentences');
+  assert.equal(turnCapHit({ sentences: 3, words: 40, toolCalls: 0 }, lang), null);
+  assert.equal(turnCapHit({ sentences: 4, words: 80, toolCalls: 0 }, lang), 'words');
+  assert.equal(CADENCE_STICKY_AFTER_PLANTS, 2);
+});
+
+test('cadence note: names the overrun, the soft cap, voice-only hand-back; the sticky re-plant is a standing rule', () => {
+  const lang = turnCapPolicy({ languageLesson: true, voiceOnly: true, defaults: { hardSentences: 8, words: 110, softSentences: 4 } });
+  const n = cadenceNote('sentences', { sentences: 9, words: 90 }, lang, { voiceOnly: true, sticky: false });
+  assert.match(n, /^\[cadence note — not from the student\]/);
+  assert.match(n, /ran 9 spoken sentences/); assert.match(n, /at most 3 sentences/); assert.match(n, /cannot see the board/);
+  assert.doesNotMatch(n, /anchor what you are saying on the board/);
+  const standing = cadenceNote(null, { sentences: 2, words: 20 }, lang, { voiceOnly: false, sticky: true });
+  assert.match(standing, /Standing rule/); assert.doesNotMatch(standing, /ran 2/);
+  assert.match(cadenceNote('words', { sentences: 4, words: 80 }, lang, { voiceOnly: false, sticky: true }), /applies to every turn from now on/);
+});
+
+test('praise opener: Nice / いいですね / 正解です openers count, mid-sentence praise does not', () => {
+  assert.equal(opensWithStockPraise('Nice. 言ってみましょう。'), true);
+  assert.equal(opensWithStockPraise('いいですね、ちゃんと言えましたね。'), true);
+  assert.equal(opensWithStockPraise('正解です。「play」が「played」に変わるところ、きちんとできていますね。'), true);
+  assert.equal(opensWithStockPraise('I went to Gifu last week. — 完璧ですね。'), false);
+  assert.equal(opensWithStockPraise('先週は名古屋城に行ったんですね。'), false);
+  assert.equal(opensWithStockPraise('はい、お待ちしますね。'), false);
+  const nice = 'Nice. 言ってみましょう。'; const plain = 'I see. 「I went alone」—それが答えですね。';
+  assert.equal(overusesStockPraiseOpener([nice, plain, nice, nice]), true);
+  assert.equal(overusesStockPraiseOpener([nice, nice, nice, plain]), false, 'latest turn must be one');
+  assert.equal(overusesStockPraiseOpener([plain, plain, nice, nice]), false);
+  assert.match(PRAISE_OPENER_NOTE, /do not open with a praise word/);
+});
+
+test('own-sentence re-ask: a repeat-ask quoting the sentence the student just said', () => {
+  const student = 'I went to the office yesterday .';
+  assert.equal(reAskedOwnSentence(student, 'Nice. 言ってみましょう。 I went to the office yesterday. — 完璧です。'), true);
+  assert.equal(reAskedOwnSentence(student, 'I went to the office yesterday. — 完璧です。 では次です。'), false, 'no repeat-ask');
+  assert.equal(reAskedOwnSentence(student, '言ってみましょう。 I went to the office last week.'), false, 'different sentence');
+  assert.equal(reAskedOwnSentence('Yes', '言ってみましょう。Yes, I have.'), false, 'too short to count');
+  assert.match(OWN_SENTENCE_RETRY_NOTE, /JUST said/);
+});
+
+test('unreadable word: "thef" is named; sound-alikes, plan names and dictionary words are not', () => {
+  const plan = latinWords('I went to Gifu last week. Have you ever been to Nagoya Castle? karaoke');
+  const tutor = latinWords('「先週岐阜に行きました。」 を英語で言ってみてください。');
+  assert.deepEqual(findUnreadableWords('I went thef last week .', [...plan, ...tutor]), ['thef']);
+  assert.deepEqual(findUnreadableWords('I went to Nagoya , castle reast week .', plan), [], 'reast ~ last, names from the plan');
+  assert.deepEqual(findUnreadableWords('Have you ever been to canada ?', latinWords('Have you ever been to Canada?')), []);
+  assert.deepEqual(findUnreadableWords('I played golf yesterday .', []), []);
+  assert.deepEqual(findUnreadableWords('I want to go to tokioto .', latinWords('Kyoto')), ['tokioto']);
+  assert.deepEqual(findUnreadableWords('のI haven \'t', []), [], 'clipped ending is a word');
+  assert.deepEqual(findUnreadableWords('はい、ハワイに行きました。', []), [], 'no Latin');
+  const note = unreadableWordNote(['thef']);
+  assert.match(note, /"thef"/); assert.match(note, /ask the student to say just that word once more/); assert.match(note, /do not turn it into a place/);
+});
+
+test('language clause: one mid-lesson recap at most, at a segment end', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  assert.match(c, /a mid-lesson recap happens at most once per lesson, when a segment ends, in two sentences at most/);
+});
+
+test('embed persists the new debug families (opener_prefetch, unreadable_word; ink_ covers the stale final)', () => {
+  const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'opener_prefetch'", "'unreadable_word'", "'ink_'"]) assert.ok(embed.includes(p), p);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
