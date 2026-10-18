@@ -23,6 +23,24 @@ export function claimsPronunciation(tutorText: string, studentText: string): boo
   return PRONUNCIATION_CLAIM_RE.test(tutorText ?? '');
 }
 
+/**
+ * The SENTENCE form, for the orchestrator's per-sentence drop (embed-
+ * 1792363895174, 2026-10-18: the katakana reading 「カリオキ」 was dropped but
+ * the claim line 「発音は少し違って…」 before it was spoken). Tighter than the
+ * turn-level detector above — it must name a sound/pronunciation AND say it
+ * changed, differed or was heard as something — so a hearing check
+ * (「聞こえますか」), a pronunciation exercise (「発音の練習ですね」) and ordinary
+ * feedback are never dropped. The student's own pronunciation question still
+ * lifts it.
+ */
+const PRONUNCIATION_CLAIM_SENTENCE_RE =
+  /(?:音|発音)(?:が|は|を|に|で|も)?[^。！？!?]{0,24}?(?:変わ|違っ|違い|違う|ずれ|弱|強|聞こえ|出てい)|の音(?:でした|だった|ですね|になって|に近)|(?:と|に)聞こえ(?:ました|ます|て|た)|\bsound(?:ed|s)?\s+(?:like|a bit|a little|more like)\b|\byou said it like\b|\bpronounced it\b/i;
+
+export function isPronunciationClaimSentence(sentence: string, studentText: string): boolean {
+  if (STUDENT_ASKS_PRONUNCIATION_RE.test(studentText ?? '')) return false;
+  return PRONUNCIATION_CLAIM_SENTENCE_RE.test(sentence ?? '');
+}
+
 export const PRONUNCIATION_CLAIM_NOTE =
   '[runtime note — not from the student] Your last turn described how a word sounded or was pronounced. You receive text only — the transcript is the recogniser\'s guess, ' +
   'not what the student said. Never describe sounds, pronunciation or "the word you said"; when the transcript shows a wrong-looking word that sounds like the target, ' +

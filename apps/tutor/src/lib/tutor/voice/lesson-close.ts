@@ -183,3 +183,46 @@ export const POST_CLOSE_NOTE =
   'Do not call close_session_notes, mark_segment_complete or advance_lesson again, and do not start or resume an exercise. ' +
   'Answer what the student just asked in one or two sentences, in the language you have been using with them, and stop. ' +
   'Apply this silently; never mention this note.';
+
+/**
+ * The tutor announces the END OF THE DAY mid-lesson.
+ *
+ * embed-1792363895174 (2026-10-18, 03:26): 「今日の練習はここまでにしましょう」
+ * at a segment transition, then four more minutes of teaching. The learner
+ * (and the reviewer) heard the lesson end. A segment transition is 「次は…」;
+ * 「今日はここまで」 belongs only to the turn that closes the lesson. While the
+ * lesson is open, the student has not asked to stop, and the plan still has
+ * more than one real segment to go, such a sentence is dropped from speech
+ * and a one-line note follows the turn. Closing an EXERCISE (「この練習はここ
+ * まで」) and a mid-lesson recap (「ここまでのポイント」) are not matched.
+ */
+export const PREMATURE_CLOSE_LINE_RE =
+  /今日(?:の(?:練習|レッスン|授業|勉強))?は(?:ここまで|これで(?:終わり|おしまい|終了))/;
+
+export function isPrematureCloseLine(
+  sentence: string,
+  ctx: { lessonClosed: boolean; studentEndSignal: boolean; closingStretch: boolean },
+): boolean {
+  if (ctx.lessonClosed || ctx.studentEndSignal || ctx.closingStretch) return false;
+  return PREMATURE_CLOSE_LINE_RE.test(sentence ?? '');
+}
+
+/** Is the lesson in its closing stretch — the recap, the last segment, or the
+ *  one before it (extensions do not count)? Unknown plan or segment ⇒ true,
+ *  so the guard never drops a legitimate close it cannot place. */
+export function inClosingStretch(
+  plan: { segments: ReadonlyArray<{ id: string; kind: string }> } | null | undefined,
+  segmentId: string | null | undefined,
+): boolean {
+  if (!plan || !segmentId) return true;
+  const idx = plan.segments.findIndex((s) => s.id === segmentId);
+  if (idx < 0) return true;
+  if (plan.segments[idx]!.kind === 'recap' || plan.segments[idx]!.kind === 'extension') return true;
+  const left = plan.segments.slice(idx + 1).filter((s) => s.kind !== 'extension').length;
+  return left <= 1;
+}
+
+export const PREMATURE_CLOSE_NOTE =
+  '[runtime note — not from the student] The lesson is not over, and a sentence in your last turn that announced the end of today\'s lesson was removed before the student heard it. ' +
+  'A segment transition is 「次は…」 (one sentence, then the next item); 「今日はここまで」 and a closing summary belong only in the turn that calls close_session_notes. ' +
+  'Apply this silently; never mention this note.';

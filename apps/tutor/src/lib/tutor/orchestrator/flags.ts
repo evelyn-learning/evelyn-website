@@ -6,6 +6,7 @@
  * inlining works in any module — these are build-time substitutions.
  */
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+import { LANGUAGE_TURN_MAX_TOKENS_DEFAULT } from '@/lib/tutor/voice/output-budget';
 
 // ─── Topic-notes orchestrator guardrails ───
 // Brain may emit expand_topic_notes_theory / add_topic_notes_method /
@@ -833,10 +834,13 @@ export const OPENER_PREFETCH_DELAY_MS = 1500;
 /** 2026-10-18 (output-budget.ts, Praveen's ruling after GDI
  *  embed-1792350642171): hard cap on the brain's output tokens for a plain
  *  language VOICE turn (bilingual session; not the opener, not a tool-carrying
- *  turn). Default 320; a number overrides; 'off' disables. */
+ *  turn). Default 220 (was 320 until 2026-10-18: embed-1792363895174 passed
+ *  9-sentence turns at out=216; a tool call the cap cuts is now finished by a
+ *  continuation call, see output-budget.ts); a number overrides; 'off'
+ *  disables. */
 export const TUTOR_LANGUAGE_TURN_MAX_TOKENS: number | null = (() => {
   const raw = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_TURN_MAX_TOKENS;
   if (raw === 'off') return null;
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? n : 320;
+  return Number.isFinite(n) && n > 0 ? n : LANGUAGE_TURN_MAX_TOKENS_DEFAULT;
 })();

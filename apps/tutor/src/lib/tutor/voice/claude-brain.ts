@@ -27,7 +27,7 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, ABBREV_TAIL_RE } from './sentence-spacing';
+import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, stripMarkdownEmphasis, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
 import {
   TUTOR_HOMEWORK_OWN_MATERIAL,
@@ -64,21 +64,30 @@ import { openWithheldAnswer, sealWithheldAnswer } from './whole-answer-seal';
 import { isAnswerBearingRenderTool } from '@/lib/tutor/whiteboard/kill-keep';
 import { adjustTurnShapeForSpeech, formatVoiceWorkThenMatchBlock, voiceVerdictPrecheckTimeoutMs } from './voice-judging';
 
+/** Does the streamed tool input parse as JSON? Partial JSON (a tool call
+ *  the output cap cut in half) does not. */
+function parsesAsJson(raw: string): boolean {
+  try { JSON.parse(raw); return true; } catch { return false; }
+}
+
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
  *  the stored transcript. The meta pass is flag-gated — off ⇒ identical to
  *  the pre-R49b single strip. */
 const scrubTutorText = (raw: string): string => {
   // HTML tag leak (2026-09-18) runs first and unconditionally — see sentence-spacing.ts.
-  const t = stripHtmlBreakTags(raw);
+  // Then a leaked stage label ("*opener* …", meta-narration.ts) — BEFORE the
+  // markdown-emphasis strip below, which would otherwise turn it into a bare
+  // word — and then markdown emphasis asterisks (GDI 2026-10-18).
+  const t = stripMarkdownEmphasis(stripLeakedLabels(stripHtmlBreakTags(raw)));
   return TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
 };
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggles-block';
-import { stripEchoedTags } from './meta-narration';
+import { stripEchoedTags, stripLeakedLabels } from './meta-narration';
 import { ToolMarkupFilter, stripToolMarkup } from './tool-markup';
-import { settleHeldTail } from './output-budget';
+import { settleHeldTail, settleCutToolUse, toolContinuationMessages, type CutToolUse } from './output-budget';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -753,6 +762,9 @@ export type BrainStreamEvent =
   /** 2026-10-18 (output-budget.ts): the reply hit max_tokens mid-sentence;
    *  the cut-off fragment was dropped. Telemetry only. */
   | { type: 'max-tokens-tail-dropped'; text: string }
+  /** 2026-10-18 (output-budget.ts): the cap cut a tool call in half; the
+   *  brain re-issued once at the normal cap to finish it. Telemetry only. */
+  | { type: 'tool-call-continued'; name: string }
   /** Terminal event. Includes cumulative metadata for telemetry. */
   | {
       type: 'done';
@@ -2368,6 +2380,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // — the student heard nothing but cover lines. Re-issued once, like the
   // thinking-starved case below.
   let emptyCapRetried = false;
+  // GDI embed-1792363895174 (2026-10-18, output-budget.ts): the language-turn
+  // cap cut a tool call in half (text spoken, close_session_notes JSON cut).
+  // One continuation at the normal cap finishes the tool call(s); any text it
+  // produces is muted — the student already heard this turn's sentences.
+  let toolCutContinued = false;
+  let speechMuted = false;
+  let mutedChars = 0;
+  let capOverride: number | undefined;
   // GDI starter embed-1792251169634 (2026-10-17): claude-sonnet-5 sent a
   // thinking block on a `thinking: disabled` turn and reasoned to the 2000
   // token cap (~40 s of silence) before the empty-cap re-issue above. Cut such
@@ -2595,6 +2615,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // Per-block tool-use accumulator. Anthropic streams the input JSON
     // as `input_json_delta` events; we parse it once on content_block_stop.
     let currentToolUse: { id: string; name: string; rawJson: string } | null = null;
+    // A tool_use block whose input JSON did not parse (cut by the cap, or
+    // never closed): settled after the stop reason is known.
+    let cutToolUse: CutToolUse | null = null;
 
     // A thinking iteration is silent until the model has finished reasoning.
     // `shownThisIter` flips on the first text or tool-call block; until then
@@ -2612,7 +2635,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       // Voice / thinking off: `max_tokens` + `thinking: disabled`, as before.
       // Text thinking: adaptive thinking + effort, with the cap raised so
       // reasoning never has to fit inside the reply's budget.
-      ...brainThinkingParams(thinkingOn, input.maxTokens ?? DEFAULT_MAX_TOKENS, thinkingEffortOverride),
+      ...brainThinkingParams(thinkingOn, capOverride ?? input.maxTokens ?? DEFAULT_MAX_TOKENS, thinkingEffortOverride),
       // 1-hour TTL on every block: survives student pauses > 5 min, and the
       // core block must outlive the gap between sessions (shared entry).
       system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
@@ -2699,9 +2722,13 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       } else if (event.type === 'content_block_delta') {
         if (event.delta.type === 'text_delta') {
           shownThisIter = true;
-          accumulatedText += event.delta.text;
-          for (const sentence of sentenceBuffer.push(event.delta.text)) {
-            yield* guardedSentence(sentence);
+          if (speechMuted) {
+            mutedChars += event.delta.text.length;
+          } else {
+            accumulatedText += event.delta.text;
+            for (const sentence of sentenceBuffer.push(event.delta.text)) {
+              yield* guardedSentence(sentence);
+            }
           }
         } else if (event.delta.type === 'input_json_delta' && currentToolUse) {
           currentToolUse.rawJson += event.delta.partial_json;
@@ -2715,15 +2742,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           if (!currentToolUse && settleHeldTail(remaining, 'max_tokens') === 'drop') heldTail = remaining;
           else yield* guardedSentence(remaining);
         }
+        if (currentToolUse && currentToolUse.rawJson && !parsesAsJson(currentToolUse.rawJson)) {
+          // Cut by the cap (settled below once the stop reason is known) or
+          // malformed: never dispatched with empty args.
+          console.warn(`[brain.stream] tool input JSON did not parse for ${currentToolUse.name}: ${JSON.stringify(currentToolUse.rawJson.slice(0, 160))}`);
+          cutToolUse = { id: currentToolUse.id, name: currentToolUse.name };
+          currentToolUse = null;
+        }
         if (currentToolUse) {
           let args: Record<string, unknown> = {};
-          if (currentToolUse.rawJson) {
-            try {
-              args = JSON.parse(currentToolUse.rawJson) as Record<string, unknown>;
-            } catch (err) {
-              console.error('[brain.stream] failed to parse tool input JSON:', err, currentToolUse.rawJson);
-            }
-          }
+          if (currentToolUse.rawJson) args = JSON.parse(currentToolUse.rawJson) as Record<string, unknown>;
           const tc: BrainToolCall = { id: currentToolUse.id, name: currentToolUse.name, args };
           const validation = validateToolCall(tc.name, args);
           if (!validation.ok) {
@@ -2769,6 +2797,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       }
     }
 
+    if (currentToolUse && !cutToolUse) {
+      // The stream ended with the tool_use block still open: cut by the cap.
+      cutToolUse = { id: currentToolUse.id, name: currentToolUse.name };
+      currentToolUse = null;
+    }
     if (unaskedThinkingHit) {
       // Nothing from the cut attempt was emitted, so re-running is duplication-free.
       // Re-issued WITH adaptive thinking at low effort (see unaskedThinkingRetried).
@@ -2834,6 +2867,39 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     totalUsage.outputTokens += finalMessage.usage.output_tokens;
     totalUsage.cacheReadTokens += finalMessage.usage.cache_read_input_tokens ?? 0;
     totalUsage.cacheCreationTokens += finalMessage.usage.cache_creation_input_tokens ?? 0;
+    if (speechMuted && mutedChars) {
+      console.warn(`[brain.stream] continuation iteration ${iter} produced ${mutedChars} chars of text — muted (the turn's speech was already delivered)`);
+      mutedChars = 0;
+    }
+    const cutDecision = settleCutToolUse({ cut: cutToolUse, stopReason: finalMessage.stop_reason, alreadyContinued: toolCutContinued });
+    if (cutDecision === 'continue' && cutToolUse) {
+      // output-budget.ts: finish the cut tool call with ONE more call at the
+      // normal cap. The spoken text becomes the assistant turn; the model is
+      // told to emit tool calls only. Speech stays muted for the rest of the
+      // turn and the cap stays lifted for its remaining tool iterations.
+      toolCutContinued = true;
+      speechMuted = true;
+      capOverride = DEFAULT_MAX_TOKENS;
+      const spoken = accumulatedText.slice(textCharsBeforeIter).trim();
+      console.warn(
+        `[brain.stream] max_tokens cut the ${cutToolUse.name} call after ${spoken.length} chars of speech — ` +
+        `re-issuing once at ${DEFAULT_MAX_TOKENS} to finish the tool call(s); new speech muted`,
+      );
+      yield { type: 'tool-call-continued', name: cutToolUse.name };
+      const doneTools = newToolUseBlocks.filter((b) => !b.rejectionReason).map((b) => b.name);
+      messages = [...messages, ...toolContinuationMessages(spoken, cutToolUse.name, doneTools)];
+      lastFinalMessage = finalMessage;
+      lastStopReason = finalMessage.stop_reason ?? 'unknown';
+      continue;
+    }
+    if (cutDecision === 'reject' && cutToolUse) {
+      // Malformed input on a normal stop, or a second cut after the one
+      // continuation: dropped, registered so the conversation contract holds.
+      const reason = 'tool input JSON was malformed or cut off by the output limit';
+      console.warn(`[brain.stream] tool-call ${cutToolUse.name} dropped: ${reason} (stop=${finalMessage.stop_reason})`);
+      newToolUseBlocks.push({ id: cutToolUse.id, name: cutToolUse.name, input: {}, rejectionReason: reason });
+      yield { type: 'tool-rejected', id: cutToolUse.id, name: cutToolUse.name, args: {}, reason };
+    }
     if (thinkingStarved({
       thinkingOn,
       stopReason: finalMessage.stop_reason,

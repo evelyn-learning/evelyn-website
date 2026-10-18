@@ -111,3 +111,28 @@ export function isStockPraiseOpenerOnly(sentence: string): boolean {
   if (!stripped) return false;
   return STOCK_OPENER_ONLY_RE.test(stripped) && !/[?？]/.test(t);
 }
+
+/**
+ * A prompted REPEAT praised as the student's own sentence (GDI embed-
+ * 1792363895174, 2026-10-18, turn 1: the tutor modelled "Have you ever been
+ * to Kyoto?", asked for it back, and met the repeat with 「完璧な英語の文です」).
+ * The student's words are the sentence the previous tutor turn gave them (three
+ * or more English words, contained in that turn), and this turn carries a
+ * superlative. A repeat is confirmed, not celebrated; praise is for sentences
+ * the student built.
+ */
+export function praisedPromptedRepeat(studentText: string, prevTutorText: string, tutorText: string): boolean {
+  if (!hasSuperlativePraise(tutorText)) return false;
+  const said = latinRun(studentText);
+  if (said.split(' ').filter(Boolean).length < 3) return false;
+  return latinRun(prevTutorText).includes(said);
+}
+
+function latinRun(text: string): string {
+  return ((text ?? '').match(/[A-Za-z][A-Za-z']*/g) ?? []).map((w) => w.toLowerCase()).join(' ');
+}
+
+export const PROMPTED_REPEAT_NOTE =
+  '[runtime note — not from the student] The student\'s last words were a repeat of the sentence you had just given them. ' +
+  'A repeat is confirmed in one short word (そうです / はい、そうですね) and the lesson moves on; it is never praised as the student\'s own achievement (no 完璧, no "perfect"). ' +
+  'Save praise for sentences they build themselves. Apply this silently; never mention this note.';

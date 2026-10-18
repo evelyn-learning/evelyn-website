@@ -205,14 +205,14 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS, isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
 import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
-import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly } from '@/lib/tutor/voice/praise-variety';
+import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
 import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
@@ -234,7 +234,7 @@ import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-chec
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
 import { detectHoldRequest, checkResume, SOFT_HOLD_CHECKIN_MS, WAIT_REQUEST_NOTE } from '@/lib/tutor/voice/student-hold';
 import { asksReadiness, READINESS_ASK_NOTE } from '@/lib/tutor/voice/readiness-ask';
-import { claimsPronunciation, PRONUNCIATION_CLAIM_NOTE } from '@/lib/tutor/voice/pronunciation-claim';
+import { claimsPronunciation, isPronunciationClaimSentence, PRONUNCIATION_CLAIM_NOTE } from '@/lib/tutor/voice/pronunciation-claim';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
 import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
@@ -4576,6 +4576,10 @@ export function VoiceTutorRealtime({
   const pendingLanguageDriftNoteRef = useRef<string | null>(null);
   const pendingReadinessNoteRef = useRef<string | null>(null);
   const pendingPronunciationNoteRef = useRef<string | null>(null);
+  // lesson-close.ts: a 「今日はここまで」 said mid-lesson was dropped; one note follows.
+  const pendingPrematureCloseNoteRef = useRef<string | null>(null);
+  // praise-variety.ts: a prompted repeat was praised as the student's own sentence.
+  const pendingPromptedRepeatNoteRef = useRef<string | null>(null);
   // student-hold.ts WAIT_REQUEST_NOTE: set for THIS turn by the heuristic hold
   // (a soft, cue-less hold), consumed where the other notes are.
   const pendingWaitNoteRef = useRef<string | null>(null);
@@ -11881,6 +11885,8 @@ export function VoiceTutorRealtime({
         [pendingCorrectRetryNoteRef, 'correct_retry_note_consumed'],
         [pendingReadinessNoteRef, 'readiness_ask_note_consumed'],
         [pendingPronunciationNoteRef, 'pronunciation_claim_note_consumed'],
+        [pendingPrematureCloseNoteRef, 'premature_close_note_consumed'],
+        [pendingPromptedRepeatNoteRef, 'prompted_repeat_note_consumed'],
         [pendingWaitNoteRef, 'wait_request_note_consumed'],
         [pendingLanguageDriftNoteRef, 'language_drift_note_consumed'],
         [pendingLateTailRef, 'late_tail_note_consumed'],
@@ -14993,6 +14999,28 @@ export function VoiceTutorRealtime({
                       onDebugEvent?.('katakana_reading_dropped', updatedSentence.slice(0, 80));
                       continue;
                     }
+                    // lesson-close.ts (embed-1792363895174 03:26): 「今日はここまで」
+                    // mid-lesson. Kept once the plan is in its closing stretch, when
+                    // the session clock says wrap, after the student's end signal, or
+                    // once the lesson is closed.
+                    if (isPrematureCloseLine(updatedSentence, {
+                      lessonClosed: lessonClosedRef.current,
+                      studentEndSignal: !!lastStudentVerificationRef.current?.isSessionEndSignal,
+                      closingStretch: wrapByTime || inClosingStretch(lessonPlanRef.current, currentSegmentIdRef.current),
+                    })) {
+                      console.warn('[brain-orchestrator] dropped premature close line:', JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('premature_close_line_dropped', updatedSentence.slice(0, 80));
+                      pendingPrematureCloseNoteRef.current = PREMATURE_CLOSE_NOTE;
+                      continue;
+                    }
+                    // pronunciation-claim.ts (embed-1792363895174): 「発音は少し違って…」
+                    // from a transcript. The sentence is dropped and the note follows.
+                    if (isPronunciationClaimSentence(updatedSentence, transcript)) {
+                      console.warn('[brain-orchestrator] dropped pronunciation claim sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
+                      onDebugEvent?.('pronunciation_claim_dropped', updatedSentence.slice(0, 80));
+                      pendingPronunciationNoteRef.current = PRONUNCIATION_CLAIM_NOTE;
+                      continue;
+                    }
                     if (
                       isStockPraiseOpenerOnly(updatedSentence) &&
                       praiseNoteIsSticky({ plants: praiseVarietyPlantsRef.current, superlativeTurns: superlativeTurnsRef.current, languageLesson: true })
@@ -17153,6 +17181,9 @@ export function VoiceTutorRealtime({
                   onDebugEvent?.('tool_markup_stripped', String(ev.text ?? '').slice(0, 80));
                 } else if (ev.type === 'max-tokens-tail-dropped') {
                   onDebugEvent?.('max_tokens_tail_dropped', String(ev.text ?? '').slice(0, 80));
+                } else if (ev.type === 'tool-call-continued') {
+                  // output-budget.ts: the cap cut a tool call; the brain finished it in one more call.
+                  onDebugEvent?.('tool_call_continued', String((ev as { name?: string }).name ?? ''));
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry
@@ -18893,6 +18924,12 @@ export function VoiceTutorRealtime({
           if (reaskedEarlier && !pendingCorrectRetryNoteRef.current) {
             pendingCorrectRetryNoteRef.current = REASKED_EARLIER_QUESTION_NOTE;
             onDebugEvent?.('correct_retry_note_planted', `earlier answered question re-asked: "${reaskedEarlier.slice(0, 60)}"`);
+          }
+          // praise-variety.ts (embed-1792363895174 turn 1): a repeat of the
+          // modelled sentence met with 「完璧な英語の文です」.
+          if (sessionAllowsNonLatin(tutorLanguages) && praisedPromptedRepeat(transcript, prevTutor, fullText)) {
+            pendingPromptedRepeatNoteRef.current = PROMPTED_REPEAT_NOTE;
+            onDebugEvent?.('prompted_repeat_note_planted', transcript.slice(0, 60));
           }
         }
         {

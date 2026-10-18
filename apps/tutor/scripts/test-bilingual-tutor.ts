@@ -35,7 +35,7 @@ import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '../src/lib/t
 import { overusesSuperlative, hasSuperlativePraise, PRAISE_VARIETY_NOTE, PRAISE_STICKY_AFTER_PLANTS } from '../src/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE } from '../src/lib/tutor/voice/correct-retry';
 import { decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS } from '../src/lib/tutor/voice/lesson-close';
-import { TUTOR_LESSON_CLOSE_AUTO_END } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_LANGUAGE_TURN_MAX_TOKENS } from '../src/lib/tutor/orchestrator/flags';
 import { asksReadiness } from '../src/lib/tutor/voice/readiness-ask';
 import { claimsPronunciation } from '../src/lib/tutor/voice/pronunciation-claim';
 import { detectHoldRequest, WAIT_REQUEST_NOTE } from '../src/lib/tutor/voice/student-hold';
@@ -63,6 +63,11 @@ import { hasDottedKatakanaReading, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STIC
 import { isStockPraiseOpenerOnly } from '../src/lib/tutor/voice/praise-variety';
 import { isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '../src/lib/tutor/voice/english-reply';
 import { isMetaNarration as isMetaNarration2 } from '../src/lib/tutor/voice/meta-narration';
+import { settleCutToolUse, toolContinuationMessages, toolContinuationNote } from '../src/lib/tutor/voice/output-budget';
+import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '../src/lib/tutor/voice/lesson-close';
+import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
+import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
+import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
 
 let passed = 0;
 let failed = 0;
@@ -841,15 +846,21 @@ test('tool markup: inequalities, LaTeX and other tags are untouched', () => {
 
 test('output budget: a plain language voice turn is capped; the opener, a directive, a close, a recap turn and text sessions are not', () => {
   const base = { languageLesson: true, voice: true, needsHeadroom: false, cap: LANGUAGE_TURN_MAX_TOKENS_DEFAULT };
-  assert.equal(languageTurnMaxTokens(base), 320);
+  // 2026-10-18 (embed-1792363895174): 9-sentence turns passed at out=216 — short
+  // Japanese sentences are cheap, so 320 bounded words, not sentences. 220 now
+  // that a cut tool call is finished by a continuation call (settleCutToolUse).
+  assert.equal(LANGUAGE_TURN_MAX_TOKENS_DEFAULT, 220);
+  assert.equal(TUTOR_LANGUAGE_TURN_MAX_TOKENS, 220, 'flags.ts default follows (env unset in this run)');
+  assert.equal(languageTurnMaxTokens(base), 220);
   assert.equal(languageTurnMaxTokens({ ...base, cap: 260 }), 260);
   assert.equal(languageTurnMaxTokens({ ...base, needsHeadroom: true }), undefined, 'tool-carrying turn keeps the normal cap');
   assert.equal(languageTurnMaxTokens({ ...base, voice: false }), undefined, 'text session');
   assert.equal(languageTurnMaxTokens({ ...base, languageLesson: false }), undefined, 'maths lesson');
   assert.equal(languageTurnMaxTokens({ ...base, cap: null }), undefined, 'flag off');
-  assert.match(outputBudgetNote(320), /320 tokens/);
-  assert.match(outputBudgetNote(320), /at most three sentences/);
-  assert.match(outputBudgetNote(320), /never mention this note/);
+  assert.match(outputBudgetNote(220), /220 tokens/);
+  assert.match(outputBudgetNote(220), /roughly four short sentences/);
+  assert.match(outputBudgetNote(220), /at most three sentences/);
+  assert.match(outputBudgetNote(220), /never mention this note/);
 });
 
 test('output budget: on max_tokens the cut-off fragment is dropped, a complete last sentence is kept, and end_turn keeps everything', () => {
@@ -1000,6 +1011,125 @@ test('English tails from embed-1792361732296: "Try saying it now." is an instruc
   assert.deepEqual(englishInstructionSentences('さようなら。Thanks for today — see you next time!'), ['Thanks for today — see you next time!']);
   assert.equal(isMetaNarration2('That answers "have you been there" — yes, they\'ve been.'), true);
   assert.equal(isMetaNarration2('That answers the question nicely: yes, you have.'), true);
+});
+
+test('cut tool call (embed-1792363895174 07:31: stop=max_tokens with blocks=[text,tool_use]): ONE continuation call finishes the tool; a malformed call on a normal stop is rejected', () => {
+  const cut = { id: 'toolu_1', name: 'close_session_notes' };
+  assert.equal(settleCutToolUse({ cut, stopReason: 'max_tokens', alreadyContinued: false }), 'continue');
+  assert.equal(settleCutToolUse({ cut, stopReason: 'max_tokens', alreadyContinued: true }), 'reject', 'one continuation per turn');
+  assert.equal(settleCutToolUse({ cut, stopReason: 'tool_use', alreadyContinued: false }), 'reject', 'malformed JSON on a normal stop');
+  assert.equal(settleCutToolUse({ cut, stopReason: 'end_turn', alreadyContinued: false }), 'reject');
+  assert.equal(settleCutToolUse({ cut: null, stopReason: 'max_tokens', alreadyContinued: false }), 'none', 'a text-only cap is the tail-drop case, not this one');
+  // The continuation: the spoken text as the assistant turn, then one instruction.
+  const msgs = toolContinuationMessages('今日はここまでにしましょう、お疲れ様でした。', 'close_session_notes');
+  assert.equal(msgs.length, 2);
+  assert.equal(msgs[0]!.role, 'assistant');
+  assert.equal(msgs[0]!.content, '今日はここまでにしましょう、お疲れ様でした。');
+  assert.equal(msgs[1]!.role, 'user');
+  assert.equal(msgs[1]!.content, toolContinuationNote('close_session_notes'));
+  assert.match(toolContinuationNote('close_session_notes'), /close_session_notes/);
+  assert.match(toolContinuationNote('advance_lesson'), /not from the student/);
+  assert.match(toolContinuationNote('advance_lesson'), /tool calls? only|no (?:further|new) speech/i);
+  // Tool calls that already ran in the cut iteration are named, so the continuation does not repeat them.
+  const withDone = toolContinuationNote('advance_lesson', ['mark_segment_complete']);
+  assert.match(withDone, /mark_segment_complete/);
+  assert.match(withDone, /already (?:executed|ran|been executed)|do not (?:call|repeat)/i);
+  assert.equal(toolContinuationMessages('text', 'advance_lesson', ['mark_segment_complete'])[1]!.content, withDone);
+  assert.equal(toolContinuationMessages('', 'advance_lesson').length, 1, 'no spoken text ⇒ no empty assistant turn');
+  assert.equal(toolContinuationMessages('   ', 'advance_lesson')[0]!.role, 'user');
+  // Wired: the brain stream re-issues once at the normal cap and mutes any new speech; the client records the event.
+  const brain = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
+  assert.ok(brain.includes('settleCutToolUse('));
+  assert.ok(brain.includes('toolContinuationMessages('));
+  assert.ok(brain.includes("yield { type: 'tool-call-continued'"));
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('tool_call_continued'"));
+});
+
+test('premature close line (embed-1792363895174 03:26: 「今日の練習はここまでにしましょう」 at a segment transition, 4 more minutes of teaching): dropped mid-lesson, kept in the closing stretch, after the student\'s end signal, or once the lesson is closed', () => {
+  const open = { lessonClosed: false, studentEndSignal: false, closingStretch: false };
+  assert.equal(isPrematureCloseLine('今日の練習はここまでにしましょう。', open), true);
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう、お疲れ様でした。', open), true);
+  assert.equal(isPrematureCloseLine('今日のレッスンはここまでです。', open), true);
+  assert.equal(isPrematureCloseLine('今日はこれで終わりにしましょう。', open), true);
+  assert.equal(isPrematureCloseLine('ここまでのポイントを確認しましょう。', open), false, 'a mid-lesson recap is allowed');
+  assert.equal(isPrematureCloseLine('次は、過去の経験について話しましょう。', open), false, 'a transition is 次は…');
+  assert.equal(isPrematureCloseLine('この練習はここまでにして、次に進みましょう。', open), false, 'closing an EXERCISE is not closing the day');
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', { ...open, closingStretch: true }), false, 'the last segment / recap may close');
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', { ...open, studentEndSignal: true }), false, 'the student asked to stop');
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', { ...open, lessonClosed: true }), false);
+  // Where in the plan: recap, the last segment, or one segment before it (extensions do not count).
+  const plan = { segments: [
+    { id: 'hook', kind: 'hook' }, { id: 'p1', kind: 'practice' }, { id: 'p2', kind: 'practice' }, { id: 'p3', kind: 'practice' },
+    { id: 'recap', kind: 'recap' }, { id: 'ext', kind: 'extension' },
+  ] };
+  assert.equal(inClosingStretch(plan, 'hook'), false);
+  assert.equal(inClosingStretch(plan, 'p1'), false);
+  assert.equal(inClosingStretch(plan, 'p2'), false, 'two real segments left');
+  assert.equal(inClosingStretch(plan, 'p3'), true, 'only the recap left');
+  assert.equal(inClosingStretch(plan, 'recap'), true);
+  assert.equal(inClosingStretch(plan, 'ext'), true);
+  assert.equal(inClosingStretch(plan, 'nope'), true, 'unknown segment ⇒ never drop');
+  assert.equal(inClosingStretch(null, 'p1'), true, 'no plan (freestyle) ⇒ never drop');
+  assert.match(PREMATURE_CLOSE_NOTE, /not from the student/);
+  assert.match(PREMATURE_CLOSE_NOTE, /次は/);
+  assert.match(PREMATURE_CLOSE_NOTE, /close_session_notes/);
+  // Wired in the bilingual sentence path, and the clause names the transition shape.
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('premature_close_line_dropped'"));
+  assert.ok(vtr.includes("'premature_close_note_consumed'"));
+  const clause = buildBilingualClause(['en', 'ja']) ?? '';
+  assert.ok(/「次は/.test(clause) && /今日はここまで/.test(clause), 'clause: a segment transition is 「次は…」, never 「今日はここまで」');
+});
+
+test('markdown emphasis (embed-1792363895174: *「Have you ever…」* in the opener and the transcript drawer): asterisks stripped, text kept; multiplication and a leaked *opener* label untouched by this rule', () => {
+  assert.equal(stripMarkdownEmphasis('今日は *「Have you ever been to Kyoto?」* を練習しましょう。'), '今日は 「Have you ever been to Kyoto?」 を練習しましょう。');
+  assert.equal(stripMarkdownEmphasis('The target is **ever** here.'), 'The target is ever here.');
+  assert.equal(stripMarkdownEmphasis('*I went to Nagoya.*'), 'I went to Nagoya.');
+  assert.equal(stripMarkdownEmphasis('「*been*」と言います。'), '「been」と言います。');
+  assert.equal(stripMarkdownEmphasis('2*3*4 = 24'), '2*3*4 = 24', 'multiplication');
+  assert.equal(stripMarkdownEmphasis('3 * 4 * 5'), '3 * 4 * 5', 'spaced multiplication');
+  assert.equal(stripMarkdownEmphasis('plain sentence.'), 'plain sentence.');
+  // Through the sentence buffer (what TTS and the transcript receive): no asterisk survives,
+  // and a leaked stage label still comes off first.
+  const b = new SentenceBuffer();
+  const out = [...b.push('*opener* いいですね。次は *「Have you ever eaten sushi?」* です。 Say it: *I have eaten sushi.* ')];
+  const tail = b.flush();
+  const all = [...out, ...(tail ? [tail] : [])];
+  assert.ok(all.length >= 3, `got ${JSON.stringify(all)}`);
+  assert.ok(all.every((x) => !x.includes('*')), `asterisk survived: ${JSON.stringify(all)}`);
+  assert.equal(all[0], 'いいですね。');
+  assert.ok(all.some((x) => x.includes('「Have you ever eaten sushi?」')));
+  assert.ok(all.some((x) => x.includes('I have eaten sushi.')));
+});
+
+test('pronunciation claim SENTENCE (embed-1792363895174: 「発音は少し違って…「カリオキ」のように」 stayed after the katakana sentence was dropped): the claim sentence is dropped; a hearing check, a pronunciation exercise and an answer to the student\'s own question are kept', () => {
+  assert.equal(isPronunciationClaimSentence('発音は少し違っていましたね。', 'I went to karaoke.'), true);
+  assert.equal(isPronunciationClaimSentence('「last」の音が少し変わってしまいましたね。', 'the rest week'), true);
+  assert.equal(isPronunciationClaimSentence('「ear」ではなく「ever」の音でしたが、意味は伝わりました。', 'ear eaten'), true);
+  assert.equal(isPronunciationClaimSentence('It sounded like "bent" there.', 'I went'), true);
+  assert.equal(isPronunciationClaimSentence('聞こえますか？', 'はい'), false, 'a hearing check is not a claim');
+  assert.equal(isPronunciationClaimSentence('発音の練習ですね。', 'はい'), false, 'an exercise, not a claim');
+  assert.equal(isPronunciationClaimSentence('発音を練習しましょう。', 'はい'), false);
+  assert.equal(isPronunciationClaimSentence('発音は少し違っていましたね。', '発音はどうでしたか？'), false, 'the student asked');
+  assert.equal(isPronunciationClaimSentence('いいですね。次は "Have you ever been to Kyoto?" です。', 'Yes, I have.'), false);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('pronunciation_claim_dropped'"));
+});
+
+test('prompted repeat praised as the student\'s own (embed-1792363895174 turn 1: 「完璧な英語の文です」 after a repeat of the modelled sentence): note planted; praise for a sentence the student built is left alone', () => {
+  const prev = '今日は "Have you ever been to Kyoto?" を練習します。言ってみてください。 Have you ever been to Kyoto?';
+  assert.equal(praisedPromptedRepeat('Have you ever been to Kyoto?', prev, '完璧な英語の文です！とてもいいですね。'), true);
+  assert.equal(praisedPromptedRepeat('have you ever been to kyoto', prev, 'Perfect sentence! 次は…'), true);
+  assert.equal(praisedPromptedRepeat('Have you ever been to Kyoto?', prev, 'そうです。では、あなたの経験を話してみましょう。'), false, 'a plain confirmation is right');
+  assert.equal(praisedPromptedRepeat('Yes, I have. I went to Kyoto last year.', prev, '完璧です！'), false, 'the student built their own sentence');
+  assert.equal(praisedPromptedRepeat('Have you ever been to Kyoto?', '次は自分の経験を話してみましょう。', '完璧な英語の文です！'), false, 'not modelled in the previous turn');
+  assert.equal(praisedPromptedRepeat('Yes.', prev, '完璧です！'), false, 'too short to be a repeat of a sentence');
+  assert.match(PROMPTED_REPEAT_NOTE, /not from the student/);
+  assert.match(PROMPTED_REPEAT_NOTE, /repeat/i);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes("onDebugEvent?.('prompted_repeat_note_planted'"));
+  assert.ok(vtr.includes("'prompted_repeat_note_consumed'"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
