@@ -817,3 +817,16 @@ export const TUTOR_DEFER_SESSION_DOC =
  *  Default ON; NEXT_PUBLIC_TUTOR_SILENT_MOLECULE_EDITS=off answers every edit again. */
 export const TUTOR_SILENT_MOLECULE_EDITS =
   process.env.NEXT_PUBLIC_TUTOR_SILENT_MOLECULE_EDITS !== 'off';
+/** 2026-10-18 (GDI embed-1792338502233): the learner waited 4.6 s after Start
+ *  for the tutor's first sentence — the opener brain call ran cold. The opener
+ *  depends only on plan, persona and student, so the embed now builds and sends
+ *  it pre-start (callBrainOnce `prefetchOnly`); the route caches the stream
+ *  under the session id and the Start call replays it in ~100 ms
+ *  (lib/tutor/voice/opener-prefetch.ts). One brain call per page load even if
+ *  Start is never tapped. Default ON; NEXT_PUBLIC_TUTOR_OPENER_PREFETCH=off
+ *  restores the cold opener. */
+export const TUTOR_OPENER_PREFETCH =
+  process.env.NEXT_PUBLIC_TUTOR_OPENER_PREFETCH !== 'off';
+/** How long after the prompt is built the pre-start opener is sent: lets the
+ *  plan and persona refs settle and skips a tab that bounces straight off. */
+export const OPENER_PREFETCH_DELAY_MS = 1500;

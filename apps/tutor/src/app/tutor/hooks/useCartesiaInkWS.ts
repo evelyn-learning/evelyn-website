@@ -70,6 +70,7 @@ import type { PerceptionState, PerceptionTranscript, PerceptionSpeechEvent } fro
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted } from '@/lib/tutor/voice/shared-mic';
 import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
+import { isStaleInkFinal, countSpeechTokens } from '@/lib/tutor/voice/stale-ink-final';
 
 /** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
 const MIC_CONSUMER = 'ink2-stt';
@@ -463,6 +464,17 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     const now = Date.now();
     const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
     const latencyMs = speechStartedAtRef.current ? now - speechStartedAtRef.current : 0;
+    // 2026-10-18 (embed-1792338502233): a turn that opened during the tutor's
+    // speech and sat muted never closes; its final arrives tens of seconds
+    // later, when the student next speaks, carrying a two-token fragment of
+    // what the mic caught back then. Dispatched, it cost two brain calls and
+    // a spoken fragment. See lib/tutor/voice/stale-ink-final.ts.
+    if (isStaleInkFinal(text, latencyMs)) {
+      console.warn(`${logPrefix} stale final dropped (${latencyMs}ms open, ${countSpeechTokens(text)} token(s)): ${JSON.stringify(text)}`);
+      onDiagnosticRef.current?.('ink_stale_final_dropped',
+        `turn ${turnId} open ${latencyMs}ms with ${countSpeechTokens(text)} token(s) — dropped: ${JSON.stringify(text.slice(0, 80))}`);
+      return;
+    }
     console.warn(`${logPrefix} transcript (${latencyMs}ms): ${JSON.stringify(text)}`);
     try { onTranscriptRef.current?.({ text, tMs, latencyMs, itemId: turnId }); } catch {}
   }, [logPrefix]);

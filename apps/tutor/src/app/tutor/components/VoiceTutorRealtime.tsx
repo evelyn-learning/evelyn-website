@@ -395,6 +395,8 @@ import {
   TUTOR_FALSE_PRAISE_OPENER,
   TUTOR_CLOSE_NOTES,
   TUTOR_RECAP_OFFER,
+  TUTOR_OPENER_PREFETCH,
+  OPENER_PREFETCH_DELAY_MS,
 } from '@/lib/tutor/orchestrator/flags';
 
 /** How long after speaking the bridge line its audio may start and still be
@@ -11111,8 +11113,14 @@ export function VoiceTutorRealtime({
       // vanish from history on the next turn (the interrupted partial was
       // never a committed tutor turn).
       injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
+      /** Opener prefetch (2026-10-18): build the opener's request body through
+       *  this same code and POST it with `prefetch: true` for the route to
+       *  cache, then return before anything is streamed, spoken or shown.
+       *  Pre-start only — see the prefetch effect near the JSX return. */
+      prefetchOnly?: boolean;
     },
   ) => {
+    const prefetchSavedPageTurn = pageTurnRef.current;
     // Brain-turn start timestamp. Declared OUTSIDE the try so the catch
     // block can reference it for streaming-entry cleanup (Fix 9).
     // Re-assigned inside the try once we know the turn actually starts.
@@ -12568,6 +12576,12 @@ export function VoiceTutorRealtime({
             ...splitPromptForWire(claudeSystemPromptRef.current, claudeSystemPromptCoreRef.current),
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
+            // Opener prefetch (2026-10-18): the session id keys the route's
+            // opener cache. Sent on the opener's first attempt only — a retry
+            // runs live; `prefetch: true` marks the pre-start recording call.
+            ...(TUTOR_OPENER_PREFETCH && transcript === '[start lesson]' && attempt === 0
+              ? { prefetchKey: sessionIdRef.current, ...(opts?.prefetchOnly ? { prefetch: true as const } : {}) }
+              : {}),
             // Text-mode thinking (2026-10-06): tell the server this is a text
             // session so it can let the model reason before it replies
             // (server flag TUTOR_TEXT_THINKING; lib/tutor/voice/text-thinking.ts).
@@ -12809,6 +12823,24 @@ export function VoiceTutorRealtime({
           signal: brainAbort.signal,
           body: JSON.stringify(input),
         };
+        if (opts?.prefetchOnly) {
+          // Opener prefetch (2026-10-18): the body above is exactly what the
+          // Start tap would send. Hand it to the route to run and cache; the
+          // tap's call replays it. Undo the one per-turn counter this dry run
+          // advanced, then leave — the `finally` below releases the turn.
+          pageTurnRef.current = prefetchSavedPageTurn;
+          catalogRef.current.setCurrentTurn(prefetchSavedPageTurn);
+          const bodyBytes = typeof brainFetchInit.body === 'string' ? brainFetchInit.body.length : 0;
+          onDebugEvent?.('opener_prefetch_sent', `key=${sessionIdRef.current} bytes=${bodyBytes}`);
+          const sentAt = Date.now();
+          void fetch('/api/tutor/brain/stream', { ...brainFetchInit, signal: undefined })
+            .then(async (r) => {
+              const text = await r.text().catch(() => '');
+              onDebugEvent?.(r.ok ? 'opener_prefetch_done' : 'opener_prefetch_failed', `status=${r.status} after=${Date.now() - sentAt}ms ${text.slice(0, 120)}`);
+            })
+            .catch((err) => onDebugEvent?.('opener_prefetch_failed', `after=${Date.now() - sentAt}ms ${String(err).slice(0, 120)}`));
+          return;
+        }
         let res = await fetch('/api/tutor/brain/stream', brainFetchInit);
         pacingTelemetryRef.current = [];
         // Whiteboard markup Phase 1: drain the unrealized-marks +
@@ -24902,6 +24934,46 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // never completes still surfaces as warmupFailed instead of hanging.
   const pendingGestureStartRef = useRef(false);
 
+  // Opener directive at Start — shared by the orb tap and the pre-start
+  // opener prefetch (2026-10-18), so the prefetched body carries the same
+  // agenda-preview clause the tap would send. `emit` controls the
+  // agenda_rail_active debug event (the prefetch runs it silently; the tap
+  // still reports once).
+  const prepareOpenerDirectiveForStart = useCallback((emit: boolean): void => {
+    const planForAgenda = lessonPlanRef.current;
+    const isFreshStart = completedSegmentIdsRef.current.size === 0 && !resumeState;
+    const agendaItemCount = (TUTOR_AGENDA_RAIL && planForAgenda && isFreshStart && targetKind !== 'diagnostic')
+      ? buildAgendaItems(planForAgenda).length
+      : 0;
+    pendingAgendaItemCountRef.current = agendaItemCount;
+    if (agendaItemCount > 0) {
+      if (emit) onDebugEvent?.('agenda_rail_active', `${agendaItemCount} item${agendaItemCount === 1 ? '' : 's'}`, { itemCount: agendaItemCount });
+      // Rebuild the opening directive WITH the agenda-preview clause —
+      // the mount-time seed ran before this tap, so the seeded
+      // directive lacks it (see openerClauseCtxRef doc).
+      // Homework-help: the seeded homework opener has no agenda
+      // preview to add — never overwrite it with the ordinary opener.
+      if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help' && !isInFlow) {
+        const rebuilt = buildOpenerClause({
+          ...openerClauseCtxRef.current,
+          agendaItemCount,
+        });
+        if (rebuilt) {
+          // Task 20: re-prepend the SAME continuity clause the seed
+          // chose (stashed in continuityClauseRef) — the rebuild would
+          // otherwise silently drop it. Mutually exclusive with the
+          // stale-reorient branch: resume-stale is excluded from the
+          // continuity journeys, so the ref is null on that path.
+          openingDirectiveRef.current = openerStaleReorientRef.current
+            ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${rebuilt}`
+            : continuityClauseRef.current
+              ? `${continuityClauseRef.current} ${rebuilt}`
+              : rebuilt;
+        }
+      }
+    }
+  }, [resumeState, targetKind, sessionGoal, isInFlow, onDebugEvent]);
+
   const handleMicClick = useCallback(() => {
     // Task 5: text mode has no mic-start path at all. The pre-start center
     // orb (SessionStage) isn't sessionMode-aware and calls straight into
@@ -25118,38 +25190,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // non-fresh/diagnostic/flag-off starts) covers both this tap-time
           // rebuild AND the mount-time seed's buildOpenerClause call above,
           // whichever runs second — see pendingAgendaItemCountRef's doc.
-          const planForAgenda = lessonPlanRef.current;
-          const isFreshStart = completedSegmentIdsRef.current.size === 0 && !resumeState;
-          const agendaItemCount = (TUTOR_AGENDA_RAIL && planForAgenda && isFreshStart && targetKind !== 'diagnostic')
-            ? buildAgendaItems(planForAgenda).length
-            : 0;
-          pendingAgendaItemCountRef.current = agendaItemCount;
-          if (agendaItemCount > 0) {
-            onDebugEvent?.('agenda_rail_active', `${agendaItemCount} item${agendaItemCount === 1 ? '' : 's'}`, { itemCount: agendaItemCount });
-            // Rebuild the opening directive WITH the agenda-preview clause —
-            // the mount-time seed ran before this tap, so the seeded
-            // directive lacks it (see openerClauseCtxRef doc).
-            // Homework-help: the seeded homework opener has no agenda
-            // preview to add — never overwrite it with the ordinary opener.
-            if (openingDirectiveRef.current && openerClauseCtxRef.current && sessionGoal !== 'homework-help' && !isInFlow) {
-              const rebuilt = buildOpenerClause({
-                ...openerClauseCtxRef.current,
-                agendaItemCount,
-              });
-              if (rebuilt) {
-                // Task 20: re-prepend the SAME continuity clause the seed
-                // chose (stashed in continuityClauseRef) — the rebuild would
-                // otherwise silently drop it. Mutually exclusive with the
-                // stale-reorient branch: resume-stale is excluded from the
-                // continuity journeys, so the ref is null on that path.
-                openingDirectiveRef.current = openerStaleReorientRef.current
-                  ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${rebuilt}`
-                  : continuityClauseRef.current
-                    ? `${continuityClauseRef.current} ${rebuilt}`
-                    : rebuilt;
-              }
-            }
-          }
+          prepareOpenerDirectiveForStart(true);
           warmupKickoffRef.current = '[start lesson]';
           handleStudentTranscriptForBrain('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
         } else {
@@ -25935,6 +25976,37 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   }, [realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, manualMic, manualBufferCount, onVoiceStateChange]);
 
   const isIsland = dockVariant === 'island';
+
+  // Opener prefetch (2026-10-18, GDI embed-1792338502233): after Start the
+  // learner waited 4.6 s for the tutor's first sentence — the opener brain call
+  // ran cold (prompt-cache write + a hidden-thinking first attempt), after 6.5
+  // minutes on the pre-start screen. The opener depends only on plan, persona
+  // and student, so it is built pre-start through the real body builder
+  // (callBrainOnce prefetchOnly) and sent with `prefetch: true`; the route
+  // caches the stream under the session id and the tap's '[start lesson]'
+  // call replays it (lib/tutor/voice/opener-prefetch.ts). Same conditions as
+  // the tap's lesson branch: claude-brain, a lesson plan, not a checkpoint
+  // resume, voice session. Once per mount; a tap before it fires wins.
+  const openerPrefetchFiredRef = useRef(false);
+  useEffect(() => {
+    if (!TUTOR_OPENER_PREFETCH || !claudeBrainMode || !isInitialized || sessionMode === 'text') return;
+    if (resumeState || hasStartedRef.current || openerPrefetchFiredRef.current) return;
+    let tries = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      if (openerPrefetchFiredRef.current || hasStartedRef.current) return;
+      if (!lessonPlanRef.current) {
+        if (++tries < 8) { timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS); return; }
+        onDebugEvent?.('opener_prefetch_skipped', `no lesson plan after ${tries} checks`);
+        return;
+      }
+      openerPrefetchFiredRef.current = true;
+      prepareOpenerDirectiveForStart(false);
+      void callBrainOnce('[start lesson]', { silent: true, prefetchOnly: true });
+    };
+    timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [claudeBrainMode, isInitialized, sessionMode, resumeState, callBrainOnce, prepareOpenerDirectiveForStart, onDebugEvent]);
 
   return (
     <div className={`voice-tutor-realtime flex items-center flex-wrap ${isIsland ? 'py-1 px-1 gap-2 sm:gap-2.5' : 'py-2 px-2 gap-2 sm:gap-3'}`}>
