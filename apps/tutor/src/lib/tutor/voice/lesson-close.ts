@@ -127,3 +127,48 @@ export function decideLessonCloseAutoEnd(args: { busy: boolean; elapsedMs: numbe
   if (args.busy) return 'recheck';
   return args.elapsedMs >= LESSON_CLOSE_AUTO_END_MS ? 'end' : 'recheck';
 }
+
+/**
+ * Post-close gate (2026-10-18, embed-1792350642171, Kenji v4).
+ *
+ * After the mutual farewell, ChatGPT's own English chatter ("I'm sorry, I
+ * couldn't pull the report…", "What do you prefer?") reached the mic. Only
+ * pleasantries were silenced, so the tutor answered 「お気になさらずに」 and
+ * then produced two turns of tool-call markup. Once the lesson is closed,
+ * EVERY student utterance is silenced except an explicit continue / question
+ * shape: 続けて / もう一つ / 質問 / 待って / a Japanese question ending in か or
+ * ？ / "wait", "one more", "question", "continue", or an English question
+ * with a question mark or an auxiliary-first shape. Those still get a turn
+ * (with POST_CLOSE_NOTE, so the turn is a short answer, not bookkeeping).
+ */
+const POST_CLOSE_CONTINUE_RE = new RegExp(
+  [
+    '続け', '再開', 'もう(?:一|1|ひと)(?:つ|問|回|度|個)', '質問', '待っ', '聞きたい', '教えて', 'お願いがあ', 'いいですか', 'できますか',
+    '[?？]', '(?:です|ます|でした|ません|ました|ない|る|た)か[。！!]?\\s*$',
+    '\\b(?:wait|one more|question|continue|carry on|go on|hold on|not yet)\\b',
+    '^\\s*(?:(?:um+|uh+|ok(?:ay)?|so|well|sorry|excuse me|えーと|あの)[,.、]?\\s+)?(?:can|could|would|will|do|does|did|is|are|was|were|should|may|how|what|why|where|when|which|who)\\s+(?:i|you|we|it|that|this|he|she|they|is|are|do|does|did|about)\\b',
+  ].join('|'),
+  'i',
+);
+
+export type PostCloseDecision = 'silence' | 'answer';
+
+export function decidePostCloseUtterance(studentText: string): PostCloseDecision {
+  const t = (studentText ?? '').trim();
+  if (!t) return 'silence';
+  if (POST_CLOSE_CONTINUE_RE.test(t)) return 'answer';
+  return 'silence';
+}
+
+/** Why an utterance was silenced after the close — for the debug event. */
+export function postCloseSilenceKind(studentText: string): 'pleasantry' | 'chatter' {
+  return isPleasantryOnly(studentText) ? 'pleasantry' : 'chatter';
+}
+
+/** Heads every brain turn after the close (the same session: after the close
+ *  the model re-ran its bookkeeping and wrote the tool calls out as text). */
+export const POST_CLOSE_NOTE =
+  '[runtime note — not from the student] The lesson is already closed and its closing notes are recorded. ' +
+  'Do not call close_session_notes, mark_segment_complete or advance_lesson again, and do not start or resume an exercise. ' +
+  'Answer what the student just asked in one or two sentences, in the language you have been using with them, and stop. ' +
+  'Apply this silently; never mention this note.';

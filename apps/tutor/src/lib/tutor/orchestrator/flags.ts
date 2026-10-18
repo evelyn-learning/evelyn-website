@@ -830,3 +830,13 @@ export const TUTOR_OPENER_PREFETCH =
 /** How long after the prompt is built the pre-start opener is sent: lets the
  *  plan and persona refs settle and skips a tab that bounces straight off. */
 export const OPENER_PREFETCH_DELAY_MS = 1500;
+/** 2026-10-18 (output-budget.ts, Praveen's ruling after GDI
+ *  embed-1792350642171): hard cap on the brain's output tokens for a plain
+ *  language VOICE turn (bilingual session; not the opener, not a tool-carrying
+ *  turn). Default 320; a number overrides; 'off' disables. */
+export const TUTOR_LANGUAGE_TURN_MAX_TOKENS: number | null = (() => {
+  const raw = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_TURN_MAX_TOKENS;
+  if (raw === 'off') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 320;
+})();

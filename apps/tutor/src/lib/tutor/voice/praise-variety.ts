@@ -76,3 +76,20 @@ export const PRAISE_OPENER_NOTE =
   'start by naming in a few words what was right, or go straight to the next item; keep the warm word for a sentence ' +
   'the student built on their own. Apply this silently; never mention this note.';
 
+
+/**
+ * 2026-10-18 (embed-1792350642171): one plant was not enough — 完璧 ×6 with
+ * the note planted once and not sticky. In a language lesson the note is
+ * sticky from the FIRST plant; and in any lesson, four or more tutor turns
+ * with a superlative make it sticky whether or not the four-turn window ever
+ * trips (spread-out 完璧 is still 完璧).
+ */
+export const PRAISE_SESSION_SUPERLATIVE_STICKY = 4;
+
+export function praiseStickyAfterPlants(languageLesson: boolean): number {
+  return languageLesson ? 1 : PRAISE_STICKY_AFTER_PLANTS;
+}
+
+export function praiseNoteIsSticky(args: { plants: number; superlativeTurns: number; languageLesson: boolean }): boolean {
+  return args.plants >= praiseStickyAfterPlants(args.languageLesson) || args.superlativeTurns >= PRAISE_SESSION_SUPERLATIVE_STICKY;
+}

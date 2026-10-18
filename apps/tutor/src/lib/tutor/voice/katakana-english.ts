@@ -50,3 +50,24 @@ export const KATAKANA_ENGLISH_NOTE =
   '[runtime note — not from the student] Your last turn wrote English in katakana. ' +
   'From now on write every English word and sentence only in Latin letters (A–Z), never spelled out in katakana, ' +
   'so the student hears real English. Apply this silently; never mention this note.';
+
+/**
+ * 2026-10-18 (embed-1792350642171, turn 11): the recogniser wrote the
+ * student's English in katakana and the tutor echoed that spelling back; the
+ * note above then fired a turn late. When the STUDENT's transcript carries a
+ * long katakana run (seven or more characters, or a dotted sequence), the
+ * next brain turn is told before it speaks: read it as English, write it in
+ * Latin letters. A short loanword (カラオケ, ゴルフ) is ordinary Japanese and
+ * does not match.
+ */
+const STT_KATAKANA_RUN_RE = /[ァ-ヺー]{7,}|[ァ-ヺー]+(?:・[ァ-ヺー]+){2,}/u;
+
+export function hasKatakanaEnglishFromStt(studentText: string): boolean {
+  return STT_KATAKANA_RUN_RE.test(studentText ?? '');
+}
+
+export const KATAKANA_ECHO_NOTE =
+  '[runtime note — not from the student] The transcript writes part of what the student said in a long run of katakana: ' +
+  'that is their ENGLISH, written by speech recognition in Japanese script. Read it as the English words it sounds like. ' +
+  'In your reply write that English in Latin letters only; never repeat or quote the katakana spelling. ' +
+  'Apply this silently; never mention this note.';

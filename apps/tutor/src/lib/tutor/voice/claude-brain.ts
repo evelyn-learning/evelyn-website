@@ -77,6 +77,8 @@ import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggles-block';
 import { stripEchoedTags } from './meta-narration';
+import { ToolMarkupFilter, stripToolMarkup } from './tool-markup';
+import { settleHeldTail } from './output-budget';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -745,6 +747,12 @@ export type BrainStreamEvent =
    *  drifted from it during long verification threads (live 2026-07-17:
    *  affirmed 1/4 for a limit whose pipeline-verified answer was 1/32). */
   | { type: 'generated-problem'; statement: string; expectedAnswer?: string }
+  /** 2026-10-18 (tool-markup.ts): the model wrote a tool call out as text;
+   *  the span was removed from speech and transcript. Telemetry only. */
+  | { type: 'tool-markup-stripped'; text: string }
+  /** 2026-10-18 (output-budget.ts): the reply hit max_tokens mid-sentence;
+   *  the cut-off fragment was dropped. Telemetry only. */
+  | { type: 'max-tokens-tail-dropped'; text: string }
   /** Terminal event. Includes cumulative metadata for telemetry. */
   | {
       type: 'done';
@@ -2302,9 +2310,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       yield { type: 'sentence', text };
     }
   }
+  const toolMarkup = new ToolMarkupFilter();
   function* guardedSentence(raw: string): Generator<BrainStreamEvent> {
     if (reveal.muted) return;
-    const text = stripEchoedTags(raw);
+    // 2026-10-18 (tool-markup.ts): a tool call written as text — from its
+    // opening tag to its closing tag, across sentences — never reaches speech
+    // or the transcript.
+    const markup = toolMarkup.filter(raw);
+    if (markup.stripped) {
+      console.warn(`[brain.stream] tool markup stripped from text: ${JSON.stringify(raw.slice(0, 120))}`);
+      yield { type: 'tool-markup-stripped', text: raw.slice(0, 120) };
+    }
+    const text = stripEchoedTags(markup.text);
     if (!text) return;
     if (reveal.confirmed && deniesCheckedAnswer(text, reveal.confirmed)) {
       reveal.muted = true;
@@ -2568,6 +2585,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
 
   for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
     const sentenceBuffer = new SentenceBuffer();
+    toolMarkup.reset();
+    // 2026-10-18 (output-budget.ts): the fragment the buffer flushes at the
+    // end of a text block is held until the stop reason is known (or the
+    // next block starts, so audio→board order is kept): on max_tokens it is
+    // the cut-off half of a sentence and is dropped, never spoken.
+    let heldTail: string | null = null;
     const newToolUseBlocks: Array<{ id: string; name: string; input: unknown; rejectionReason?: string }> = [];
     // Per-block tool-use accumulator. Anthropic streams the input JSON
     // as `input_json_delta` events; we parse it once on content_block_stop.
@@ -2644,6 +2667,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       if (step.done) break;
       const event = step.value;
       if (event.type === 'content_block_start') {
+        if (heldTail) {
+          yield* guardedSentence(heldTail);
+          heldTail = null;
+        }
         if (event.content_block.type === 'tool_use') {
           shownThisIter = true;
           currentToolUse = {
@@ -2684,7 +2711,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         // same response — keeps the audio→visual ordering correct (the
         // student hears "Here's the triangle" then sees the triangle pop in).
         const remaining = sentenceBuffer.flush();
-        if (remaining) yield* guardedSentence(remaining);
+        if (remaining) {
+          if (!currentToolUse && settleHeldTail(remaining, 'max_tokens') === 'drop') heldTail = remaining;
+          else yield* guardedSentence(remaining);
+        }
         if (currentToolUse) {
           let args: Record<string, unknown> = {};
           if (currentToolUse.rawJson) {
@@ -2768,6 +2798,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // Stream finished. Pull final metadata + assistant content for the
     // next agent-loop iteration.
     const finalMessage = await opened.finalMessage();
+    if (heldTail) {
+      if (settleHeldTail(heldTail, finalMessage.stop_reason) === 'drop') {
+        console.warn(`[brain.stream] max_tokens tail dropped: ${JSON.stringify(heldTail.slice(0, 120))}`);
+        const cut = accumulatedText.lastIndexOf(heldTail.trim());
+        if (cut >= 0) accumulatedText = accumulatedText.slice(0, cut);
+        yield { type: 'max-tokens-tail-dropped', text: heldTail.slice(0, 120) };
+      } else {
+        yield* guardedSentence(heldTail);
+      }
+      heldTail = null;
+    }
     // embed-1792174263669: a turn hit the 2000-token cap and spoke 3 short
     // sentences after 24 s — what the model wrote is not in any log. Record
     // the raw shape of a capped iteration (diagnostic only).
@@ -2973,7 +3014,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // (spacing repair + stage-direction strip, same as the voiced path).
     // (A reply stopped by the whole-answer reveal guard: only what was
     // forwarded — the model's own text holds the withheld result.)
-    fullText: scrubTutorText(normalizeSentenceSpacing((reveal.muted ? reveal.forwarded.join(' ') : accumulatedText).trim())),
+    fullText: scrubTutorText(normalizeSentenceSpacing(stripToolMarkup(reveal.muted ? reveal.forwarded.join(' ') : accumulatedText).text.trim())),
     toolCalls: accumulatedToolCalls,
   };
 }

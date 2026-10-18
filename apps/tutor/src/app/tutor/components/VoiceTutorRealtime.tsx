@@ -205,15 +205,16 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration, createCorrectionWorkingTracker, stripLeakedLabels } from '@/lib/tutor/voice/meta-narration';
-import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS } from '@/lib/tutor/voice/lesson-close';
+import { isTutorFarewell, isSessionEndSignalJa, decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE, decideLessonCloseAutoEnd, LESSON_CLOSE_AUTO_END_MS, LESSON_CLOSE_AUTO_END_RECHECK_MS } from '@/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english';
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
-import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE } from '@/lib/tutor/voice/katakana-english';
+import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, hasKatakanaEnglishFromStt, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
 import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
-import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, PRAISE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/praise-variety';
-import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise } from '@/lib/tutor/voice/praise-variety';
+import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
+import { languageTurnMaxTokens, outputBudgetNote } from '@/lib/tutor/voice/output-budget';
 import { turnCapPolicy, turnCapHit, cadenceNote, CADENCE_STICKY_AFTER_PLANTS } from '@/lib/tutor/voice/turn-cap';
 import { findUnreadableWords, latinWords, unreadableWordNote } from '@/lib/tutor/voice/unreadable-word';
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '@/lib/tutor/voice/tutor-language-drift';
@@ -367,6 +368,7 @@ import {
   VALIDATE_BEFORE_SPEAK_CAP_MS,
   VERDICT_HOLD_CAP_MS,
   TUTOR_TURN_CAP,
+  TUTOR_LANGUAGE_TURN_MAX_TOKENS,
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
@@ -4554,6 +4556,12 @@ export function VoiceTutorRealtime({
   const cadencePlantsRef = useRef(0);
   /** 2026-10-18: the lesson plan's Latin words, computed once, for the unreadable-word check. */
   const planWordsRef = useRef<string[] | null>(null);
+  /** 2026-10-18: words the unreadable-word note has already asked for — one note per word per session. */
+  const unreadableNotedRef = useRef<Set<string>>(new Set());
+  /** 2026-10-18: English questions the student has answered this session (correct-retry.ts window). */
+  const answeredQuestionsRef = useRef<Set<string>>(new Set());
+  /** 2026-10-18: tutor turns with a superlative this session — four make the praise note sticky. */
+  const superlativeTurnsRef = useRef(0);
   /** 2026-10-18: the route confirmed it cached this session's opener — Start skips the bridge line. */
   const openerPrefetchReadyRef = useRef(false);
   /** 2026-10-18: a late tail of the student's previous answer, held instead of dispatched (late-tail.ts). */
@@ -11887,6 +11895,24 @@ export function VoiceTutorRealtime({
           voiceOnlyNote = VOICE_ONLY_NOTE;
         }
         if (voiceOnlyNote) runTranscript = `${voiceOnlyNote}\n\n${runTranscript}`;
+        // 2026-10-18 (embed-1792350642171): after the close the model re-ran
+        // its bookkeeping and wrote the tool calls out as text. A turn that
+        // still gets through the post-close gate is a short answer, nothing more.
+        if (lessonClosedRef.current && !/^\s*\[/.test(transcript)) {
+          runTranscript = `${POST_CLOSE_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('post_close_note', transcript.slice(0, 60));
+        }
+        // correct-retry.ts: 「それはもう答えましたよ」 — a complaint, not an answer.
+        if (saysAlreadyAnswered(transcript)) {
+          runTranscript = `${ALREADY_ANSWERED_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('already_answered_complaint', transcript.slice(0, 80));
+        }
+        // katakana-english.ts: the recogniser wrote the student's English in
+        // katakana — told before the turn, so the spelling is not echoed.
+        if (hasKatakanaEnglishFromStt(transcript)) {
+          runTranscript = `${KATAKANA_ECHO_NOTE}\n\n${runTranscript}`;
+          onDebugEvent?.('katakana_echo_note', transcript.slice(0, 80));
+        }
         // english-reply.ts: the last tutor turn asked for English and this
         // transcript has no Latin letters — Japanese reply, or katakana-
         // rendered English. The brain must not credit a sentence not there.
@@ -11898,11 +11924,15 @@ export function VoiceTutorRealtime({
         // Name it so the tutor asks for that word instead of guessing.
         if (!/^\s*\[/.test(transcript) && /[A-Za-z]{3,}/.test(transcript)) {
           if (!planWordsRef.current && lessonPlanRef.current) planWordsRef.current = latinWords(JSON.stringify(lessonPlanRef.current));
+          // Context = every word said this session (student and tutor) plus
+          // the plan; one note per word per session (2026-10-18).
           const unreadable = findUnreadableWords(transcript, [
             ...(planWordsRef.current ?? []),
+            ...transcriptRef.current.flatMap((e) => (e.role === 'system' ? [] : latinWords(e.text))),
             ...recentTutorTurnsRef.current.flatMap((t) => latinWords(t)),
-          ]);
+          ], { skip: unreadableNotedRef.current });
           if (unreadable.length > 0) {
+            for (const w of unreadable) unreadableNotedRef.current.add(w.toLowerCase());
             runTranscript = `${unreadableWordNote(unreadable)}\n\n${runTranscript}`;
             onDebugEvent?.('unreadable_word_note_planted', unreadable.slice(0, 3).join(', '));
           }
@@ -12333,6 +12363,25 @@ export function VoiceTutorRealtime({
       // 2026-10-18 (embed-1792346446334): the runtime notes are English and
       // they pulled the tutor's own instructions into English. In a bilingual
       // session a language note heads every note-carrying turn.
+      // Output budget (output-budget.ts, 2026-10-18 ruling): a plain language
+      // voice turn is capped at the brain, and told so. Turns that must carry
+      // tools keep the normal cap: the opener and any bracketed directive, a
+      // turn carrying the segment-advance note, the closing turn after the
+      // student's end signal, a recap go/wrap turn.
+      const turnMaxTokens = languageTurnMaxTokens({
+        languageLesson: sessionAllowsNonLatin(tutorLanguages),
+        voice: sessionMode !== 'text',
+        needsHeadroom:
+          /^\s*\[/.test(transcript) ||
+          /call advance_lesson\(/.test(runTranscript) ||
+          !!lastStudentVerificationRef.current?.isSessionEndSignal ||
+          !!recapGoForTurn || !!recapWrapForTurn,
+        cap: TUTOR_LANGUAGE_TURN_MAX_TOKENS,
+      });
+      if (turnMaxTokens !== undefined) {
+        runTranscript = `${outputBudgetNote(turnMaxTokens)}\n\n${runTranscript}`;
+        onDebugEvent?.('output_budget_capped', `max_tokens=${turnMaxTokens}`);
+      }
       if (sessionAllowsNonLatin(tutorLanguages) && runTranscript !== transcript && /^\s*\[/.test(runTranscript)) {
         runTranscript = `${LANGUAGE_KEEP_NOTE}\n\n${runTranscript}`;
       }
@@ -12617,6 +12666,7 @@ export function VoiceTutorRealtime({
             ...splitPromptForWire(claudeSystemPromptRef.current, claudeSystemPromptCoreRef.current),
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
+            ...(turnMaxTokens !== undefined ? { maxTokens: turnMaxTokens } : {}),
             // Opener prefetch (2026-10-18): the session id keys the route's
             // opener cache. Sent on the opener's first attempt only — a retry
             // runs live; `prefetch: true` marks the pre-start recording call.
@@ -17048,6 +17098,10 @@ export function VoiceTutorRealtime({
                   // Voice: the check failed, timed out or was unsure.
                   onDebugEvent?.('verdict_precheck_none', `ms=${Number((ev as { ms?: number }).ms ?? 0)}`);
                   settleVoiceGate(null);
+                } else if (ev.type === 'tool-markup-stripped') {
+                  onDebugEvent?.('tool_markup_stripped', String(ev.text ?? '').slice(0, 80));
+                } else if (ev.type === 'max-tokens-tail-dropped') {
+                  onDebugEvent?.('max_tokens_tail_dropped', String(ev.text ?? '').slice(0, 80));
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry
@@ -18736,13 +18790,23 @@ export function VoiceTutorRealtime({
         const praiseNote = overusesSuperlative(recentTutorTurnsRef.current)
           ? PRAISE_VARIETY_NOTE
           : overusesStockPraiseOpener(recentTutorTurnsRef.current) ? PRAISE_OPENER_NOTE : null;
+        if (hasSuperlativePraise(fullText)) superlativeTurnsRef.current += 1;
+        const praiseStickyArgs = { plants: praiseVarietyPlantsRef.current, superlativeTurns: superlativeTurnsRef.current, languageLesson: true };
+        const praiseWasSticky = praiseNoteIsSticky(praiseStickyArgs);
         if (praiseNote) {
           pendingPraiseVarietyNoteRef.current = praiseNote;
           praiseLastNoteRef.current = praiseNote;
           praiseVarietyPlantsRef.current += 1;
-          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ ${praiseNote === PRAISE_VARIETY_NOTE ? 'superlatives' : 'stock praise openers'} in the last ${PRAISE_WINDOW_TURNS} turns${praiseVarietyPlantsRef.current === PRAISE_STICKY_AFTER_PLANTS ? ' — sticky from now on' : ''}`);
-        } else if (praiseVarietyPlantsRef.current >= PRAISE_STICKY_AFTER_PLANTS) {
+          const stickyNow = praiseNoteIsSticky({ ...praiseStickyArgs, plants: praiseVarietyPlantsRef.current });
+          onDebugEvent?.('praise_variety_note_planted', `${PRAISE_MIN_HITS}+ ${praiseNote === PRAISE_VARIETY_NOTE ? 'superlatives' : 'stock praise openers'} in the last ${PRAISE_WINDOW_TURNS} turns${stickyNow && !praiseWasSticky ? ' — sticky from now on' : stickyNow ? ' (sticky)' : ''}`);
+        } else if (praiseWasSticky) {
           pendingPraiseVarietyNoteRef.current = praiseLastNoteRef.current ?? PRAISE_VARIETY_NOTE;
+        } else if (praiseNoteIsSticky(praiseStickyArgs)) {
+          // Four superlative turns this session with no window trip: sticky from here.
+          pendingPraiseVarietyNoteRef.current = PRAISE_VARIETY_NOTE;
+          praiseLastNoteRef.current = PRAISE_VARIETY_NOTE;
+          praiseVarietyPlantsRef.current += 1;
+          onDebugEvent?.('praise_variety_note_planted', `${superlativeTurnsRef.current} superlative turns this session — sticky from now on`);
         }
         if (asksReadiness(fullText)) {
           pendingReadinessNoteRef.current = READINESS_ASK_NOTE;
@@ -18767,6 +18831,14 @@ export function VoiceTutorRealtime({
           if (reasked && !pendingCorrectRetryNoteRef.current) {
             pendingCorrectRetryNoteRef.current = REASKED_QUESTION_NOTE;
             onDebugEvent?.('correct_retry_note_planted', `answered question re-asked: "${reasked.slice(0, 60)}"`);
+          }
+          // 2026-10-18: the whole session's answered questions, not just the
+          // previous turn's (embed-1792350642171: re-asked eight turns later).
+          recordAnsweredQuestions(answeredQuestionsRef.current, prevTutor, transcript);
+          const reaskedEarlier = reAskedEarlierQuestion(answeredQuestionsRef.current, prevTutor, fullText);
+          if (reaskedEarlier && !pendingCorrectRetryNoteRef.current) {
+            pendingCorrectRetryNoteRef.current = REASKED_EARLIER_QUESTION_NOTE;
+            onDebugEvent?.('correct_retry_note_planted', `earlier answered question re-asked: "${reaskedEarlier.slice(0, 60)}"`);
           }
         }
         {
@@ -20229,8 +20301,10 @@ export function VoiceTutorRealtime({
     }
     // Lesson closed (see lesson-close.ts): a goodbye/thanks after the close
     // is not a new turn — no second farewell, no restarted exercise.
-    if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript)) {
-      onDebugEvent?.('post_close_pleasantry_silenced', transcript.slice(0, 60));
+    // 2026-10-18: after the close EVERYTHING is silenced except an explicit
+    // continue / question shape (decidePostCloseUtterance).
+    if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence') {
+      onDebugEvent?.('post_close_silenced', `${postCloseSilenceKind(transcript)}: ${transcript.slice(0, 60)}`);
       return;
     }
     // Host-end goodbye under way (endSessionNowRef farewell branch): no new

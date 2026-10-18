@@ -53,7 +53,29 @@ export function reAskedOwnSentence(studentText: string, tutorText: string): bool
   if (!isRetryAsk(tutorText) && !SAY_IT_ASK_RE.test(tutorText ?? '')) return false;
   const said = latinSentence(studentText ?? '');
   if (said.split(' ').filter(Boolean).length < 3) return false;
-  return latinSentence(tutorText ?? '').includes(said);
+  if (!latinSentence(tutorText ?? '').includes(said)) return false;
+  // 2026-10-18 (embed-1792350642171, turn 33): 「"I went to Nagoya Castle last
+  // week." いいですね。次は "Have you ever eaten sushi?" 言ってみてください。」
+  // quoted the student's correct sentence and asked for the NEXT item — not
+  // a re-ask. The ask is a re-ask only when its target is the student's own
+  // sentence: the ask sentence (or, when it carries no English of its own,
+  // the sentence before it) holds the student's sentence and no other English
+  // run of three or more words.
+  const sentences = (tutorText ?? '').split(/(?<=[。！？.!?])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
+  const askIdx = sentences.findIndex((x) => isRetryAsk(x) || SAY_IT_ASK_RE.test(x));
+  if (askIdx < 0) return true;
+  const own = sentences[askIdx]!;
+  // An ask with no English of its own takes its target from the sentences
+  // around it (「言ってみましょう。I went to the office yesterday.」).
+  const target = latinWordCount(own) >= 3 ? own : `${sentences[askIdx - 1] ?? ''} ${own} ${sentences[askIdx + 1] ?? ''}`;
+  const targetLatin = latinSentence(target);
+  if (!targetLatin.includes(said)) return false;
+  const remainder = targetLatin.replace(said, ' ').trim();
+  return latinWordCount(remainder) < 3;
+}
+
+function latinWordCount(text: string): number {
+  return (text.match(/[A-Za-z][A-Za-z']*/g) ?? []).length;
 }
 
 export const OWN_SENTENCE_RETRY_NOTE =
@@ -86,7 +108,7 @@ function carriesAnswer(studentText: string): boolean {
   if (/^[\s、。]*(?:はい|いいえ|うん|ええ|ないです|あります)/.test(t)) return true;
   // a Japanese sentence, not a filler (えっと / えーと / あの / うーん)
   const cjk = (t.match(/[\u3040-\u30FF\u4E00-\u9FFF]/g) ?? []).join('');
-  return cjk.length >= 3 && !/^(?:え+っ?と+|あの+|うー*ん|ん+|はい|えー+)$/.test(cjk);
+  return cjk.length >= 3 && !/^(?:え+ー*っ?と+ー*|あの+ー*|うー*ん+|ん+|はい|えー+)$/.test(cjk);
 }
 
 /**
@@ -110,3 +132,47 @@ export const REASKED_QUESTION_NOTE =
   'and the student had already answered it. A question that was answered is finished — also when the student asks it back ' +
   'to you: answer it yourself in one sentence and move to the next item. Do not ask it again. Apply this silently; never mention this note.';
 
+
+/**
+ * 2026-10-18 (embed-1792350642171): "What did you do last weekend?" came
+ * back eight turns after it was answered (39 → 47); the consecutive-turn rule
+ * above could not see it. The orchestrator keeps the English questions the
+ * student has ANSWERED this session; a later turn that asks one of them again
+ * — when it was not the previous turn's question (that case is the rule
+ * above, and a legitimate retry after a wrong answer) — plants a note.
+ */
+export function recordAnsweredQuestions(answered: Set<string>, prevTutorText: string, studentText: string): void {
+  if (!carriesAnswer(studentText)) return;
+  for (const q of englishQuestions(prevTutorText)) answered.add(q);
+}
+
+export function reAskedEarlierQuestion(answered: ReadonlySet<string>, prevTutorText: string, tutorText: string): string | null {
+  if (answered.size === 0) return null;
+  const prev = new Set(englishQuestions(prevTutorText));
+  for (const q of englishQuestions(tutorText)) {
+    if (answered.has(q) && !prev.has(q)) return q;
+  }
+  return null;
+}
+
+export const REASKED_EARLIER_QUESTION_NOTE =
+  '[runtime note — not from the student] Your last turn asked an English question the student already answered earlier in this lesson. ' +
+  'A question that was answered is finished for the whole lesson: whatever they say now, do not grade it as a new answer to that question, ' +
+  'do not ask it again, and move to a different item or a new detail. Apply this silently; never mention this note.';
+
+/**
+ * The student says they already answered (same session: 「それはもう答えました
+ * よ」 was ignored and the question graded as a new answer). Read it as the
+ * complaint it is.
+ */
+const ALREADY_ANSWERED_RE =
+  /さっき(?:も)?(?:言い|答え|話し)ました|(?:それ|これ)?(?:は)?もう(?:答え|言い|話し)ました|もう答えた|二回目|2回目|同じ質問|また同じ|\b(?:i (?:already|just) (?:said|answered|told you)(?: that)?|you (?:already |just )?asked (?:me )?that|same question(?: again)?|again\?)/i;
+
+export function saysAlreadyAnswered(studentText: string): boolean {
+  return ALREADY_ANSWERED_RE.test(studentText ?? '');
+}
+
+export const ALREADY_ANSWERED_NOTE =
+  '[runtime note — not from the student] The student is telling you they already answered this question. They are right: ' +
+  'acknowledge it in a few words, do not grade these words as a new answer, do not ask that question again, and move to the next item. ' +
+  'Apply this silently; never mention this note.';

@@ -49,32 +49,63 @@ function editDistance(a: string, b: string, max: number): number {
 }
 
 /** Words in the student's text that cannot be read as English or as anything
- *  in the lesson's context. `context` = words the tutor has said recently plus
- *  the lesson plan's words. */
-export function findUnreadableWords(studentText: string, context: Iterable<string>): string[] {
+ *  in the lesson's context. `context` = every Latin word the student and the
+ *  tutor have used this session plus the lesson plan's words (2026-10-18,
+ *  embed-1792350642171: a four-turn window missed "Nagoya" said twelve turns
+ *  earlier). `skip` = words already asked for once this session — one note
+ *  per word.
+ *
+ *  Proper nouns: the recogniser writes a name with a capital letter, and it
+ *  runs a short word into it ("toNagoya", "inNagoya"). A capitalised token
+ *  that is not sentence-initial is a name and is never flagged; a run-together
+ *  of a short known word and a capitalised rest is split and the rest is a
+ *  name. */
+export function findUnreadableWords(studentText: string, context: Iterable<string>, opts?: { skip?: Iterable<string> }): string[] {
   const dict = englishDictionary();
   const ctx = new Set<string>();
   for (const w of context) ctx.add(w.toLowerCase());
+  const skip = new Set<string>();
+  for (const w of opts?.skip ?? []) skip.add(w.toLowerCase());
   const out: string[] = [];
   const seen = new Set<string>();
-  for (const raw of studentText.match(LATIN_TOKEN_RE) ?? []) {
-    const w = raw.toLowerCase().replace(/^'+|'+$/g, '');
-    if (w.length < 3 || seen.has(w)) continue;
-    seen.add(w);
-    if (dict.has(w) || ctx.has(w)) continue;
-    // 2026-10-18 (embed-1792346446334): "toNagoya" — a run-together the
-    // splitter could not break because the proper noun is not in its list.
-    // A token that CONTAINS a context word (≥4 letters) or a longer
-    // dictionary word (≥5) is readable, not lost.
-    if (containsKnownWord(w, ctx, dict)) continue;
-    const tolerance = w.length <= 4 ? 1 : 2;
-    let soundAlike = false;
-    for (const c of ctx) {
-      if (editDistance(w, c, tolerance) <= tolerance) { soundAlike = true; break; }
+  const text = studentText ?? '';
+  const re = new RegExp(LATIN_TOKEN_RE.source, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const raw = m[0];
+    const sentenceInitial = /(?:^|[.!?。！？「」『』"“”]\s*)$/.test(text.slice(0, m.index));
+    for (const piece of splitProperNoun(raw, sentenceInitial, dict)) {
+      const w = piece.toLowerCase().replace(/^'+|'+$/g, '');
+      if (w.length < 3 || seen.has(w)) continue;
+      seen.add(w);
+      if (skip.has(w) || dict.has(w) || ctx.has(w)) continue;
+      // 2026-10-18 (embed-1792346446334): "toNagoya" — a run-together the
+      // splitter could not break because the proper noun is not in its list.
+      // A token that CONTAINS a context word (≥4 letters) or a longer
+      // dictionary word (≥5) is readable, not lost.
+      if (containsKnownWord(w, ctx, dict)) continue;
+      const tolerance = w.length <= 4 ? 1 : 2;
+      let soundAlike = false;
+      for (const c of ctx) {
+        if (editDistance(w, c, tolerance) <= tolerance) { soundAlike = true; break; }
+      }
+      if (!soundAlike) out.push(piece);
     }
-    if (!soundAlike) out.push(raw);
   }
   return out;
+}
+
+/** "toNagoya" → ["to"] (Nagoya is a name: dropped from the check);
+ *  "Nagoya" mid-sentence → [] (a name); "Thef" at a sentence start → ["Thef"]
+ *  (checked lower-cased as usual); "thef" → ["thef"]. */
+function splitProperNoun(raw: string, sentenceInitial: boolean, dict: Set<string>): string[] {
+  const camel = /^([a-z]+)([A-Z][a-z']+)$/.exec(raw);
+  if (camel) {
+    const [, head] = camel;
+    return dict.has(head) || head.length <= 3 ? [head] : [raw];
+  }
+  if (/^[A-Z][a-z']+$/.test(raw) && !sentenceInitial) return [];
+  return [raw];
 }
 
 function containsKnownWord(w: string, ctx: Set<string>, dict: Set<string>): boolean {

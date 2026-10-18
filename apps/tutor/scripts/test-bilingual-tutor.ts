@@ -53,6 +53,12 @@ import { findUnreadableWords, latinWords, unreadableWordNote } from '../src/lib/
 import { englishInstructionSentences, romajiSentences, ENGLISH_INSTRUCTION_NOTE, ROMAJI_NOTE, LANGUAGE_KEEP_NOTE } from '../src/lib/tutor/voice/tutor-language-drift';
 import { isLateTail, lateTailNote, LATE_TAIL_MAX_TUTOR_TURN_MS } from '../src/lib/tutor/voice/late-tail';
 import { reAskedAnsweredQuestion, englishQuestions, REASKED_QUESTION_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '../src/lib/tutor/voice/correct-retry';
+import { ToolMarkupFilter, stripToolMarkup, hasToolMarkup } from '../src/lib/tutor/voice/tool-markup';
+import { languageTurnMaxTokens, outputBudgetNote, settleHeldTail, endsSentence, LANGUAGE_TURN_MAX_TOKENS_DEFAULT } from '../src/lib/tutor/voice/output-budget';
+import { decidePostCloseUtterance, postCloseSilenceKind, POST_CLOSE_NOTE } from '../src/lib/tutor/voice/lesson-close';
+import { praiseNoteIsSticky, PRAISE_SESSION_SUPERLATIVE_STICKY } from '../src/lib/tutor/voice/praise-variety';
+import { hasKatakanaEnglishFromStt, KATAKANA_ECHO_NOTE } from '../src/lib/tutor/voice/katakana-english';
 
 let passed = 0;
 let failed = 0;
@@ -318,7 +324,7 @@ test('after the close: goodbyes/thanks are pleasantries; content and questions a
 });
 test('lesson-closed state: set by closeSessionNotes, silences pleasantries, stands the idle nudge down', () => {
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && isPleasantryOnly(transcript))"));
+  assert.ok(vtr.includes("if (!opts?.silent && lessonClosedRef.current && decidePostCloseUtterance(transcript) === 'silence')"));
   assert.ok(/cmd\.action === 'closeSessionNotes'\) \{[\s\S]{0,200}lessonClosedRef\.current = true/.test(vtr));
   assert.ok(vtr.includes('if (lessonClosedRef.current) return;'));
 });
@@ -364,7 +370,7 @@ test('meta-narration (embed-1792125283926): verdict reasoning and bare fillers d
   assert.ok(retro.includes('armNoVerdictRecoveryRef.current?.();'), 'retro-cancel arms no-verdict recovery');
   assert.ok(vtr.includes('armNoVerdictRecoveryRef.current = armNoVerdictRecovery;'));
   const src = readFileSync('src/lib/tutor/voice/claude-brain.ts', 'utf8');
-  assert.ok(src.includes('const text = stripEchoedTags(raw);'));
+  assert.ok(src.includes('const text = stripEchoedTags(markup.text);'), 'echoed tags stripped after the tool-markup filter');
 });
 test('clause: exercise state kept, grounded corrections, no narrated judging, one goodbye', () => {
   const c = buildBilingualClause(['en', 'ja'])!;
@@ -643,7 +649,7 @@ test('embed-1792266148587: repeat requests get no English-reply note; transition
   assert.ok(vtr.includes('transcript.trim().length >= 2 && !isStudentRepeatRequest(transcript)'), 'a bare はい after an English ask gets the note (embed-1792276942766 15:04)');
   assert.ok(vtr.includes('Say any transition sentence in the language you are using with this student'));
   assert.equal(PRAISE_STICKY_AFTER_PLANTS, 2);
-  assert.ok(vtr.includes('praiseVarietyPlantsRef.current >= PRAISE_STICKY_AFTER_PLANTS'));
+  assert.ok(vtr.includes('praiseNoteIsSticky(praiseStickyArgs)'));
   const clause = buildBilingualClause(['en', 'ja']) ?? '';
   assert.ok(clause.includes('「ここまでのポイント」'));
 });
@@ -795,6 +801,135 @@ test('late tail: a short continuation seconds into the tutor\'s turn is held; a 
   assert.equal(isLateTail({ verdict: 'continuation', prodState: 'listening', tutorTurnMs: 0, text: 'ハネムーンで行きました。' }), false);
   assert.equal(isLateTail({ verdict: 'continuation', prodState: 'speaking', tutorTurnMs: 1000, text: 'I played golf yesterday and then I went to Nagoya Castle with my friend and we ate sushi there' }), false, 'too long');
   assert.match(lateTailNote('ハネムーンで行きました。'), /do not repeat your previous instruction/);
+});
+
+
+// ── 2026-10-18 round after embed-1792350642171 (Kenji v4) ─────────────────
+
+test('tool markup: a tool call written as text is removed across sentences; prose before and after survives', () => {
+  const f = new ToolMarkupFilter();
+  let r = f.filter('はい、わかりました。<function_calls><function_invoke name="close_session_notes">');
+  assert.equal(r.text, 'はい、わかりました。'); assert.equal(r.stripped, true); assert.equal(f.open, true);
+  r = f.filter('<parameter name="reason">student said goodbye</parameter>');
+  assert.equal(r.text, ''); assert.equal(r.stripped, true); assert.equal(f.open, true);
+  r = f.filter('</function_invoke></function_calls>またね。');
+  assert.equal(r.text, 'またね。'); assert.equal(r.stripped, true); assert.equal(f.open, false);
+  r = f.filter('今日はここまでです。');
+  assert.equal(r.text, '今日はここまでです。'); assert.equal(r.stripped, false);
+});
+
+test('tool markup: prefixed and bare invoke/parameter forms; a stray closing tag alone', () => {
+  const pfx = 'antml:';
+  assert.equal(stripToolMarkup(`OK. <function_calls><invoke name="mark_segment_complete"><parameter name="segmentId">hook</${pfx}parameter></${pfx}invoke></${pfx}function_calls> Next.`).text, 'OK. Next.');
+  assert.equal(stripToolMarkup(`<${pfx}function_calls><${pfx}invoke name="x"><${pfx}parameter name="y">1</${pfx}parameter></${pfx}invoke></${pfx}function_calls>`).text, '');
+  const r = stripToolMarkup('Sure. </parameter></invoke>');
+  assert.equal(r.text, 'Sure.'); assert.equal(r.stripped, true);
+  assert.equal(hasToolMarkup('<parameter name="x">1</parameter>'), true);
+});
+
+test('tool markup: inequalities, LaTeX and other tags are untouched', () => {
+  for (const s of ['3<n and n>10', 'a<b and c>d', '$x < 5$ and $y > 2$', '<result>42</result>', 'Type <b>bold</b> here', 'いいですね。']) {
+    const r = stripToolMarkup(s);
+    assert.equal(r.text, s, s); assert.equal(r.stripped, false, s);
+  }
+  assert.equal(hasToolMarkup('3<n and n>10'), false);
+});
+
+test('output budget: a plain language voice turn is capped; the opener, a directive, a close, a recap turn and text sessions are not', () => {
+  const base = { languageLesson: true, voice: true, needsHeadroom: false, cap: LANGUAGE_TURN_MAX_TOKENS_DEFAULT };
+  assert.equal(languageTurnMaxTokens(base), 320);
+  assert.equal(languageTurnMaxTokens({ ...base, cap: 260 }), 260);
+  assert.equal(languageTurnMaxTokens({ ...base, needsHeadroom: true }), undefined, 'tool-carrying turn keeps the normal cap');
+  assert.equal(languageTurnMaxTokens({ ...base, voice: false }), undefined, 'text session');
+  assert.equal(languageTurnMaxTokens({ ...base, languageLesson: false }), undefined, 'maths lesson');
+  assert.equal(languageTurnMaxTokens({ ...base, cap: null }), undefined, 'flag off');
+  assert.match(outputBudgetNote(320), /320 tokens/);
+  assert.match(outputBudgetNote(320), /at most three sentences/);
+  assert.match(outputBudgetNote(320), /never mention this note/);
+});
+
+test('output budget: on max_tokens the cut-off fragment is dropped, a complete last sentence is kept, and end_turn keeps everything', () => {
+  assert.equal(settleHeldTail('そして次は、先週の', 'max_tokens'), 'drop');
+  assert.equal(settleHeldTail('そして次は先週の話です。', 'max_tokens'), 'speak');
+  assert.equal(settleHeldTail('「Have you ever been to Kyoto?」', 'max_tokens'), 'speak');
+  assert.equal(settleHeldTail('そして次は、先週の', 'end_turn'), 'speak', 'a sentence without a full stop is still a sentence on a normal stop');
+  assert.equal(settleHeldTail('', 'end_turn'), 'drop');
+  assert.equal(endsSentence('Nice work!'), true);
+  assert.equal(endsSentence('いいですね。」'), true);
+  assert.equal(endsSentence('and then we'), false);
+  // The streamed shape: three sentences, the model cut mid-fourth.
+  const b = new SentenceBuffer();
+  const spoken = [...b.push('いいですね。先週は名古屋城に行ったんですね。では次の質問です。Have you ever')];
+  const fragment = b.flush();
+  assert.equal(spoken.length, 3);
+  assert.ok(fragment && !endsSentence(fragment));
+  assert.equal(settleHeldTail(fragment!, 'max_tokens'), 'drop');
+  assert.equal(settleHeldTail(fragment!, 'tool_use'), 'speak');
+});
+
+test('post-close gate: chatter and pleasantries are silenced; an explicit continue / question shape gets a turn', () => {
+  for (const s of ['ありがとうございました', 'はい、さようなら', "I'm sorry, I couldn't pull the report.", 'Thank you so much, Ryota.', 'Okay I will do that.', 'えーと、今日は楽しかったです。', 'また次回もお願いします']) {
+    assert.equal(decidePostCloseUtterance(s), 'silence', s);
+  }
+  for (const s of ['すみません、もう一つ質問があります', 'ちょっと待ってください', '続けてもいいですか', 'kayaking は英語で何と言いますか', 'Can I ask one more question?', 'wait', 'What do you prefer?', '宿題はありますか']) {
+    assert.equal(decidePostCloseUtterance(s), 'answer', s);
+  }
+  assert.equal(postCloseSilenceKind('ありがとうございました'), 'pleasantry');
+  assert.equal(postCloseSilenceKind('Okay I will do that.'), 'chatter');
+  assert.match(POST_CLOSE_NOTE, /close_session_notes/);
+  assert.match(POST_CLOSE_NOTE, /one or two sentences/);
+});
+
+test('unreadable word: a run-together with a NAME ("toNagoya", "inNagoya") and a mid-sentence capitalised name are never flagged; one note per word', () => {
+  const ctx = latinWords('I went to Gifu last week.');
+  assert.deepEqual(findUnreadableWords('先週 I went toNagoya Castle last week .', ctx), []);
+  assert.deepEqual(findUnreadableWords('I stayed inNagoya .', ctx), []);
+  assert.deepEqual(findUnreadableWords('I went to Nagoya with Mike .', ctx), [], 'names mid-sentence');
+  assert.deepEqual(findUnreadableWords('I went thef last week .', ctx), ['thef'], 'a lost lower-case word is still flagged');
+  assert.deepEqual(findUnreadableWords('Thef is my friend .', ctx), ['Thef'], 'a sentence-initial capital is checked as a word');
+  assert.deepEqual(findUnreadableWords('I went thef last week .', ctx, { skip: ['thef'] }), [], 'already asked for once');
+  assert.deepEqual(findUnreadableWords('I went thef and strid .', ctx, { skip: ['thef'] }), ['strid']);
+});
+
+test('own-sentence re-ask: quoting the student\'s correct sentence and then asking for the NEXT item is not a re-ask', () => {
+  const said = 'I went to Nagoya Castle last week.';
+  assert.equal(reAskedOwnSentence(said, '"I went to Nagoya Castle last week." いいですね。次は "Have you ever eaten sushi?" 言ってみてください。'), false);
+  assert.equal(reAskedOwnSentence(said, 'いいですね。もう一度 "I went to Nagoya Castle last week." と言ってみてください。'), true, 'the same sentence asked for again');
+  assert.equal(reAskedOwnSentence('I went to the office yesterday', 'Nice. 言ってみましょう。I went to the office yesterday. — 完璧です'), true, 'the original live shape still flags');
+});
+
+test('answered-question window: a question answered earlier in the lesson and asked again plants the note; the consecutive case is left to the older rule', () => {
+  const answered = new Set<string>();
+  recordAnsweredQuestions(answered, 'では、What did you do last weekend?', 'I played golf.');
+  assert.ok(answered.has('what did you do last weekend'));
+  recordAnsweredQuestions(answered, 'Have you ever eaten sushi?', 'えーと…');
+  assert.equal(answered.has('have you ever eaten sushi'), false, 'a filler is not an answer');
+  assert.equal(reAskedEarlierQuestion(answered, 'Have you ever been to Kyoto?', 'いいですね。What did you do last weekend?'), 'what did you do last weekend');
+  assert.equal(reAskedEarlierQuestion(answered, 'What did you do last weekend?', 'もう一度。What did you do last weekend?'), null, 'consecutive re-ask belongs to reAskedAnsweredQuestion');
+  assert.equal(reAskedEarlierQuestion(new Set(), 'x', 'What did you do last weekend?'), null);
+  assert.match(REASKED_EARLIER_QUESTION_NOTE, /already answered earlier/);
+});
+
+test('already-answered complaint: 「それはもう答えましたよ」 / "I already said that" are read as a complaint, not an answer', () => {
+  for (const s of ['それはもう答えましたよ', 'さっきも言いましたよ', 'さっき答えました', 'I already said that.', 'You asked me that already', '二回目ですね']) assert.equal(saysAlreadyAnswered(s), true, s);
+  for (const s of ['はい、ゴルフをしました', 'もう一度お願いします', 'I went to Kyoto', 'もう終わりにします']) assert.equal(saysAlreadyAnswered(s), false, s);
+  assert.match(ALREADY_ANSWERED_NOTE, /do not grade these words as a new answer/);
+});
+
+test('praise note: sticky after ONE plant in a language lesson, or after four superlative turns in any lesson', () => {
+  assert.equal(praiseNoteIsSticky({ plants: 1, superlativeTurns: 0, languageLesson: true }), true);
+  assert.equal(praiseNoteIsSticky({ plants: 1, superlativeTurns: 0, languageLesson: false }), false);
+  assert.equal(praiseNoteIsSticky({ plants: 2, superlativeTurns: 0, languageLesson: false }), true);
+  assert.equal(praiseNoteIsSticky({ plants: 0, superlativeTurns: PRAISE_SESSION_SUPERLATIVE_STICKY, languageLesson: false }), true);
+  assert.equal(praiseNoteIsSticky({ plants: 0, superlativeTurns: 3, languageLesson: true }), false);
+});
+
+test('katakana from STT: a long katakana run in the STUDENT\'s transcript is English to be written in Latin letters; a loanword is not', () => {
+  assert.equal(hasKatakanaEnglishFromStt('アイサンカロケラストウィーク'), true);
+  assert.equal(hasKatakanaEnglishFromStt('アイ・ウェント・トゥ・キョウト'), true);
+  assert.equal(hasKatakanaEnglishFromStt('カラオケをしたことがあります'), false);
+  assert.equal(hasKatakanaEnglishFromStt('ハネムーンで行きました'), false);
+  assert.match(KATAKANA_ECHO_NOTE, /Latin letters only/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
