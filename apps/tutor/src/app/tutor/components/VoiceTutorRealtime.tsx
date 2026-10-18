@@ -19834,7 +19834,12 @@ export function VoiceTutorRealtime({
       // 2026-10-08: not for an opening turn the student's typed message took
       // the place of — the pending flag stays armed, so THAT turn is the
       // opener turn (as when the student starts first).
-      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current && !supersededByStudent) {
+      // 2026-10-18: the opener PREFETCH dry run (prefetchOnly) ends here with
+      // zero renders by design — it never streamed. It must neither consume
+      // the pending flag (the real opener turn is still to come) nor paint
+      // the fallback line pre-start (seen live: "Curious about … ?" on the
+      // board before Start).
+      if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current && !supersededByStudent && !opts?.prefetchOnly) {
         openingTurnPendingRef.current = false;
         if (shouldEmitOpenerFallback({
           openingPhase: true,
