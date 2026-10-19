@@ -26,7 +26,7 @@ export const GDI_DECK: DeckConfig = {
     { id: "hero", kicker: "01", title: "English your learners actually speak", Component: Hero },
     { id: "learners", kicker: "02", title: "Built for Japanese professionals", Component: Learners },
     { id: "how-a-lesson-works", kicker: "03", title: "How a lesson works", Component: HowALessonWorks },
-    { id: "live-demo", kicker: "04", title: "Live demo — three lessons", Component: LiveDemo },
+    { id: "live-demo", kicker: "04", title: "Live demo — three lessons", Component: LiveDemo, interactive: true },
     { id: "your-content", kicker: "05", title: "Your material becomes the lessons", Component: YourContent },
     { id: "your-brand", kicker: "06", title: "It's GDI's tutor", Component: YourBrand },
     { id: "reporting", kicker: "07", title: "What GDI and your clients see", Component: Reporting },

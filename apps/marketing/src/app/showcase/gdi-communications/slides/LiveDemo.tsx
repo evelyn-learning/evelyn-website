@@ -55,8 +55,8 @@ export default function LiveDemo() {
 
   return (
     <SlideShell kicker="Live demo" title="Three lessons from your material. Pick one." subtitle="Each button starts a real session on the demo engine with a fresh learner. Allow the microphone when the browser asks, then tap Start and speak at a normal pace.">
-      {/* z-30: above the deck's left/right click zones (z-20), so the controls take the click. */}
-      <div className="relative z-30 w-full">
+      {/* The deck drops its click zones on this slide (deck.ts: interactive). */}
+      <div className="relative w-full">
         <label className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <span className="text-sm font-medium text-slate-300">Learner&apos;s name <span className="text-slate-500">(the tutor uses it)</span></span>
           <input

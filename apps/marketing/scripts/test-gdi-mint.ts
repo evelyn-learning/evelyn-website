@@ -6,6 +6,8 @@
  */
 import { strict as assert } from "node:assert";
 import { createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { buildGdiEmbedPayload, signEmbedToken, gdiEmbedUrl, GDI_LESSONS, GDI_DEMO_EMBED_BASE } from "../src/app/showcase/gdi-communications/_lib/mint";
 
 let passed = 0, failed = 0;
@@ -67,6 +69,15 @@ test("HS256 token: header.payload.signature, verifiable with the secret; URL poi
   assert.equal(sig, expected);
   assert.equal(gdiEmbedUrl(token), `${GDI_DEMO_EMBED_BASE}?token=${token}`);
   assert.equal(GDI_DEMO_EMBED_BASE, "https://tutor-demo.evelynlearning.com/tutor-portal/embed");
+});
+
+test("the live-demo slide is interactive: the deck drops its left/right click zones there (they sat above the buttons and showed a focus bar)", () => {
+  const deck = readFileSync(join(__dirname, "../src/app/showcase/gdi-communications/deck.ts"), "utf8");
+  assert.match(deck, /id: "live-demo"[^\n]*interactive: true/);
+  const Deck = readFileSync(join(__dirname, "../src/components/showcase-deck/Deck.tsx"), "utf8");
+  assert.ok(Deck.includes("interactive"), "Deck.tsx honours DeckSlide.interactive");
+  const cfg = readFileSync(join(__dirname, "../src/components/showcase-deck/config.ts"), "utf8");
+  assert.ok(cfg.includes("interactive?: boolean"));
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

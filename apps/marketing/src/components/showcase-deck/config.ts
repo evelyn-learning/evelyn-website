@@ -12,6 +12,11 @@ export type DeckSlide = {
   kicker: string;
   title: string;
   Component: ComponentType;
+  /** The slide has controls the viewer clicks (inputs, buttons, an embed).
+   *  The deck then drops its invisible left/right click zones on this slide
+   *  — they sit above the slide content and would take the click (and show
+   *  a focus bar). Arrow keys and the bottom chrome still page. */
+  interactive?: boolean;
 };
 
 export type DeckConfig = {
