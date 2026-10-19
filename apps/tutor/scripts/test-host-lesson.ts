@@ -38,7 +38,9 @@ import {
   momentBanner,
   LESSON_START_WINDOW_S,
   MOMENT_OPTIONS_MAX,
+  inferExitTicket,
 } from '../src/lib/tutor/portal/host-lesson';
+import type { TimelineEntry } from '../src/lib/tutor/portal/host-lesson-timeline';
 
 let passed = 0;
 let failed = 0;
@@ -518,7 +520,7 @@ test('a moment for a tutor that is not open is dropped after a short hold; resum
   assert.match(vtr, /if \(!hasStartedRef\.current && now - moment\.atMs > MOMENT_PRESTART_HOLD_MS\) \{[^}]*'why=not_started'/);
   for (const why of ['student_turn', 'standby', 'moment', 'student_typed', 'turn_killed']) assert.ok(vtr.includes(`cancelResumeLesson('${why}')`), why);
   assert.match(embed, /reconcileMomentPosition\(sentPos, currentPositionSeconds\(lessonHostRef\.current, Date\.now\(\)\)\)/);
-  assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} chars=\$\{st\.chars\}/);
+  assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} slide=\$\{st\.slide\} quiz=\$\{st\.quiz\} question=\$\{st\.question\} chars=\$\{st\.chars\}/);
 });
 
 test('moment: answer options are kept (strings or objects), capped and clamped, and reach the directive', () => {
@@ -617,6 +619,38 @@ test('wiring: a moment supersedes the question pinned before it (live 10-15)', (
   assert.equal((ts.match(/if \(momentBannerSeqRef\.current !== momentSeqAtFetch\)/g) ?? []).length, 2, 'both the gist and the fallback path');
   // The ref is declared before the pin-fetch effect reads it.
   assert.ok(ts.indexOf('const momentBannerSeqRef = useRef(0);') < ts.indexOf('const momentSeqAtFetch'));
+});
+
+test('exit ticket: an untagged last visual near the end is inferred (duration or timeline end)', () => {
+  const tm = (pos: number) => parseMoment({ type: 'evelyn:moment', kind: 'teaching_moment', title: '07 Exit', position_seconds: pos })!;
+  const tl: TimelineEntry[] = [
+    { start: 36, kind: 'visual', text: 'Rights' },
+    { start: 150, kind: 'quiz', text: 'Quiz' },
+    { start: 210, end: 216, kind: 'speech', text: 'last line' },
+    { start: 219.7, kind: 'visual', text: 'Exit' },
+  ];
+  assert.equal(inferExitTicket(tm(219.7), { timeline: tl, durationSeconds: 222 }), 'duration');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: tl, durationSeconds: null }), 'timeline_end');
+  assert.equal(inferExitTicket(tm(210), { timeline: tl, durationSeconds: 222 }), null, 'more than 5 s from the end');
+  assert.equal(inferExitTicket(tm(36), { timeline: tl, durationSeconds: 40 }), null, 'a quiz still comes after it');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: [...tl, { start: 221, kind: 'question', text: 'Q' }], durationSeconds: 222 }), null, 'a question after it');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: [...tl, { start: 221, kind: 'speech', text: 'bye' }], durationSeconds: 222 }), 'duration', 'speech after it does not count');
+  assert.equal(inferExitTicket(tm(100), { timeline: [{ start: 100, kind: 'visual', text: 'X', exitTicket: true }, { start: 200, kind: 'speech', text: 's' }], durationSeconds: 300 }), 'tagged_in_timeline');
+  const quiz = parseMoment({ type: 'evelyn:moment', kind: 'quiz', position_seconds: 219.7 })!;
+  assert.equal(inferExitTicket(quiz, { timeline: tl, durationSeconds: 222 }), null, 'only teaching moments');
+  assert.equal(inferExitTicket(tm(219.7), { timeline: null, durationSeconds: null }), null, 'nothing to measure the end against');
+  const noPos = parseMoment({ type: 'evelyn:moment', kind: 'teaching_moment' })!;
+  assert.equal(inferExitTicket(noPos, { timeline: tl, durationSeconds: 222 }), null);
+});
+
+test('embed: an inferred exit ticket is logged and becomes the recap', () => {
+  const embed = readFileSync(join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  const i = embed.indexOf('inferExitTicket(moment,');
+  assert.ok(i > 0);
+  assert.ok(i < embed.indexOf("if (moment.kind === 'exit_ticket') recapRef.current = true;"), 'inferred before the recap switch');
+  assert.ok(i > embed.indexOf('reconcileMomentPosition(sentPos'), 'after the position is corrected');
+  assert.match(embed, /\(inferred: \$\{inferred\}\)/);
+  assert.match(embed, /kinds=\$\{Object\.entries\(lesson\.rawKinds\)/);
 });
 
 // WIRING-TESTS (Tasks 3–6 append their source scans above this line)

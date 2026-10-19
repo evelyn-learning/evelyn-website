@@ -16,7 +16,7 @@
 //            persona (own companion with a voice code, in a lesson about real
 //                     people: that voice is spoken; the tutor will not speak as them)
 //            voice (catalogue teacher id + a top-level voice code: the code wins)
-// Usage (from apps/tutor):  npm run live:gameclass-replay --  [start|midlesson|all] [prod|dev]
+// Usage (from apps/tutor):  npm run live:gameclass-replay --  [start|midlesson|persona|voice|untagged|all] [prod|dev]
 // prod = tutor.evelynlearning.com (costs a little and writes a session row under
 // partner `academy`, student_id gc-replay-*); dev = localhost:3027.
 // After the run it reads the session's stored debug events from prod Mongo
@@ -60,6 +60,18 @@ const TIMELINE = [
   { start: 205, end: 235, text: 'Maya chooses the loan, because she expects a sunny summer and wants to keep the whole stand.' },
 ];
 
+// GameClass's 10-16 timeline shape: quizzes (several questions), questions and
+// slides as their own entries, and no exit-ticket tag on the last visual.
+const TIMELINE_V2 = [
+  ...TIMELINE.filter((e) => !e.text.startsWith('Visual 4')),
+  { start: 44, kind: 'slide', title: 'Profit', summary: 'Profit = sales minus costs. $100 - $40 = $60.' },
+  { start: 120, kind: 'quiz', title: 'Check-in', questions: [
+    { question: 'Which deal lets Maya keep all of her profit after she pays it back?', options: ['the loan', "Leo's deal", 'both', 'neither'], correct_answer: 'the loan' },
+    { question: 'Which deal costs Maya nothing in a bad month?', options: ['the loan', "Leo's deal"], correct_answer: "Leo's deal" },
+  ] },
+  { start: 236, kind: 'visual', text: 'Visual 6 "Exit": Name one difference between debt and equity.' },
+].sort((a, b) => a.start - b.start);
+
 let grandPass = 0; let grandFail = 0; const notes = [];
 // Voice ids behind codes, read from the catalogue so the check follows it.
 const voiceCodesSrc = fs.readFileSync('../../packages/core/src/voice/voice-codes.ts', 'utf8');
@@ -68,7 +80,10 @@ const voiceIdOf = (code) => voiceCodesSrc.match(new RegExp(`code: '${code}',[^\\
 async function scenario(name) {
   const now = Math.floor(Date.now() / 1000);
   const studentId = `gc-replay-${name}-${now}`;
-  const startPos = name === 'start' ? 0 : 50;
+  const startPos = name === 'start' ? 0 : name === 'untagged' ? 125 : 50;
+  const timeline = name === 'untagged' ? TIMELINE_V2 : TIMELINE;
+  // The untagged scenario is a host that never reports the video's length.
+  const durationField = name === 'untagged' ? '' : `, duration_seconds: ${DURATION}`;
   const personaFields = name === 'persona'
     ? {
         teacher: { id: 'coach-deal', name: 'Coach Deal', intro: 'I help young founders think through big business decisions.', style: { pace: 'brisk', humor: 'light', analogyDomains: ['lemonade stands', 'school fairs'], catchphrases: ['Run the numbers!'] }, voice: 'turbo' },
@@ -96,11 +111,11 @@ const O = ${JSON.stringify(ORIGIN)};
 window.post = (m) => document.getElementById('tutor').contentWindow.postMessage(m, O);
 window.pos = () => window.__playing ? window.__pos + (Date.now() - window.__playAt) / 1000 : window.__pos;
 window.setVideo = (state, p) => { window.__pos = p; window.__playing = state === 'playing'; window.__playAt = Date.now();
-  window.post({ type: 'evelyn:video_state', state, position_seconds: Math.round(p * 100) / 100, duration_seconds: ${DURATION} }); };
+  window.post({ type: 'evelyn:video_state', state, position_seconds: Math.round(p * 100) / 100${durationField} }); };
 window.addEventListener('message', (e) => {
   if (!e.data || typeof e.data.type !== 'string') return;
   window.__msgs.push({ t: Date.now(), ...e.data });
-  if (e.data.type === 'evelyn:ready') window.post({ type: 'evelyn:lesson', timeline: ${JSON.stringify(TIMELINE)} });
+  if (e.data.type === 'evelyn:ready') window.post({ type: 'evelyn:lesson', timeline: ${JSON.stringify(timeline)} });
   // GameClass answers a video command within ~50 ms.
   if (e.data.type === 'evelyn:video_command') setTimeout(() => window.setVideo(e.data.command === 'pause' ? 'paused' : 'playing', window.pos()), 50);
 });
@@ -221,6 +236,24 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
       note(`asked to be Lori, tutor said: "${reply.slice(0, 300)}"`);
       ok('real people: does not speak as Lori', !/\b(I'm|I am) Lori\b|^\s*["“]?(Aaron|Hi Aaron|Listen,? Aaron)/i.test(reply));
     }
+  } else if (name === 'untagged') {
+    const openNow = String(firstBrain?.body?.lessonNow ?? '');
+    ok('timeline v2: slides are on screen, labelled', /\[0:44\] Slide: Profit/.test(openNow));
+    ok('timeline v2: the quiz is its own section with both questions', openNow.includes('Quizzes and questions so far') && /Q1: Which deal lets Maya/.test(openNow) && /Q2: Which deal costs Maya nothing/.test(openNow));
+    ok('timeline v2: priority rule rides the turn', openNow.includes('what the video says matters least'));
+    ok('timeline v2: on screen before quizzes before speech', openNow.indexOf('On screen so far') < openNow.indexOf('Quizzes and questions') && openNow.indexOf('Quizzes and questions') < openNow.indexOf('What is said around'));
+    await wait(10000);
+    note(`opener said: "${(await lastTutorText()).slice(0, 220)}"`);
+    await setVideo('playing', 125);
+    await wait(3000);
+    const tE = Date.now();
+    await moment({ kind: 'teaching_moment', position_seconds: 236, title: '07 Exit', summary: 'Name one difference between debt and equity.' });
+    ok('untagged exit: banner reads "Exit ticket"', !!(await until(() => bannerShown('Exit ticket', '07 Exit'), 8000)));
+    const dE = await until(async () => brainWith('sum up the key takeaways', tE), 15000);
+    ok('untagged exit: recap directive reached the tutor', !!dE);
+    ok('untagged exit: the tutor sees the whole lesson', String(dE?.body?.lessonNow ?? '').includes('lemonade stand'));
+    await wait(20000);
+    note(`recap said: "${(await lastTutorText()).slice(0, 300)}"`);
   } else {
     ok('mid-lesson start: no hook (video at 50 s)', !opening.includes('LESSON START'));
     await wait(12000);
@@ -240,7 +273,7 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
 
   // ── the stored session, read like a GameClass session ──
   if (target === 'prod') {
-    const js = `const d=db.tutorsessions.findOne({studentId:{$regex:${JSON.stringify(studentId)}}}); if(!d){print('NO SESSION ROW')} else {print('session '+d.sessionId+' status='+d.status+' cost='+d.estimatedCost); for(const e of d.debugEvents||[]){ if(/^(persona_|host_start|lesson_start|moment_|qpin_set|qpin_drop|resume_lesson_fired|video_state|standby_enter)/.test(e.type)) print('  '+new Date(e.timestamp).toISOString().slice(11,23)+' '+e.type+' '+String(e.message).slice(0,110)); }}`;
+    const js = `const d=db.tutorsessions.findOne({studentId:{$regex:${JSON.stringify(studentId)}}}); if(!d){print('NO SESSION ROW')} else {print('session '+d.sessionId+' status='+d.status+' cost='+d.estimatedCost); for(const e of d.debugEvents||[]){ if(/^(persona_|host_start|lesson_start|lesson_timeline|moment_|qpin_set|qpin_drop|resume_lesson_fired|video_state|standby_enter)/.test(e.type)) print('  '+new Date(e.timestamp).toISOString().slice(11,23)+' '+e.type+' '+String(e.message).slice(0,110)); }}`;
     try {
       const tmp = '/tmp/gc-replay-read.js'; fs.writeFileSync(tmp, js);
       execFileSync('scp', ['-q', '/tmp/gc-replay-read.js', 'root@85.239.239.134:/tmp/gc-replay-read.js']);
@@ -248,6 +281,8 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
       console.log(out);
       if (name === 'start') ok('stored: lesson_start_hook recorded', out.includes('lesson_start_hook'));
       if (name === 'start' || name === 'midlesson') ok('stored: moment_banner recorded', out.includes('moment_banner'));
+      if (name === 'untagged') ok('stored: exit ticket inferred from the timeline end', out.includes('kind=exit_ticket (inferred: timeline_end)'));
+      if (name === 'untagged') ok('stored: lesson_timeline counts the quiz and slide', /slide=1 quiz=1/.test(out));
       if (name === 'persona') ok('stored: persona_resolved teacher_voice=turbo', out.includes('teacher_voice=turbo'));
       if (name === 'voice') ok('stored: persona_resolved teacher=ms-priya-nair voice=maple', /teacher=ms-priya-nair \(catalogue\) voice=maple/.test(out));
     } catch (e) { note(`could not read the stored session: ${String(e).slice(0, 120)}`); }
@@ -255,6 +290,6 @@ document.getElementById('ask').onclick = () => { document.getElementById('tutor'
   grandPass += pass; grandFail += fail;
 }
 
-for (const s of which === 'all' ? ['start', 'midlesson', 'persona', 'voice'] : [which]) await scenario(s);
+for (const s of which === 'all' ? ['start', 'midlesson', 'persona', 'voice', 'untagged'] : [which]) await scenario(s);
 console.log(`\n${grandPass}/${grandPass + grandFail} passed${notes.length ? `\n--- notes\n${notes.join('\n')}` : ''}`);
 process.exit(grandFail ? 1 : 0);

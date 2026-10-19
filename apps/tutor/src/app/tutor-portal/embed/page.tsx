@@ -43,7 +43,7 @@ import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { parseHostEnd, goodbyeFor, isAllowedHostOrigin, shouldPostActivity, shouldAcceptHostEnd, type HostEndReason } from '@/lib/tutor/portal/host-end';
 import {
   CLOCK_POST_MS, INITIAL_INACTIVE_CLOCK, INITIAL_LESSON_HOST_STATE, RESUME_CONFIRM_MS, STANDBY_IDLE_END_MS,
-  activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment,
+  activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment, inferExitTicket,
   parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, momentBanner, lessonStartHook, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
 import { parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
@@ -1548,7 +1548,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // A position sent in milliseconds is corrected against the video's own report.
         const sentPos = moment.positionSeconds;
         moment.positionSeconds = reconcileMomentPosition(sentPos, currentPositionSeconds(lessonHostRef.current, Date.now()));
-        addDebugEvent('moment_received', `kind=${moment.kind} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}${moment.options ? ` options=${moment.options.length}` : ''}`);
+        // An untagged visual at the very end of the lesson is its exit ticket.
+        const inferred = inferExitTicket(moment, { timeline: timelineRef.current, durationSeconds: lessonHostRef.current.durationSeconds });
+        if (inferred) moment.kind = 'exit_ticket';
+        addDebugEvent('moment_received', `kind=${moment.kind}${inferred ? ` (inferred: ${inferred})` : ''} pos=${moment.positionSeconds ?? ''}${moment.positionSeconds !== sentPos ? ` (sent ${sentPos}, read as ms)` : ''}${moment.options ? ` options=${moment.options.length}` : ''}`);
         dispatchLessonHost({ type: 'moment', positionSeconds: moment.positionSeconds });
         // An exit ticket: the lesson window carries the whole lesson until the
         // tutor hands back to the video (standby), so the recap can draw on it.
@@ -1560,7 +1563,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       if (lesson) {
         timelineRef.current = lesson.entries;
         const st = timelineStats(lesson.entries);
-        addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut} speech=${st.speech} visual=${st.visual} chars=${st.chars}`);
+        addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut} speech=${st.speech} visual=${st.visual} slide=${st.slide} quiz=${st.quiz} question=${st.question} chars=${st.chars} kinds=${Object.entries(lesson.rawKinds).map(([k, n]) => `${k}:${n}`).join(',')}`);
         return;
       }
       const hostPause = parseHostPause(event.data);

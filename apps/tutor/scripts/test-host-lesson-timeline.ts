@@ -10,6 +10,7 @@ import {
   LESSON_NOW_MAX_CHARS,
   LESSON_NEAR_END_S,
   LESSON_TIMELINE_LIMITS,
+  lessonEndSeconds,
   parseLessonTimeline,
   renderLessonNow,
   timelineStats,
@@ -62,7 +63,8 @@ test('parse: malformed entries are skipped, never thrown on (Review Focus 4)', (
   assert.deepEqual(p.entries, [
     { start: 2, text: 'end before start', kind: 'speech' },
     { start: 3, text: 'bad end', kind: 'speech' },
-    { start: 4, text: 'odd kind', kind: 'speech' },
+    // An unknown kind is a new host item type: on-screen content, never narration.
+    { start: 4, text: 'odd kind', kind: 'visual' },
   ]);
   assert.equal(p.received, 14);
 });
@@ -77,7 +79,7 @@ test('parse: a visual entry may run to 1,500 characters; speech stays at 500', (
   const p = parseLessonTimeline(msg([{ start: 0, kind: 'visual', text: 'v'.repeat(4000) }, { start: 1, text: 's'.repeat(4000) }]));
   assert.equal(p?.entries[0].text.length, 1500);
   assert.equal(p?.entries[1].text.length, 500);
-  assert.deepEqual(timelineStats(p!.entries), { speech: 1, visual: 1, chars: 2000 });
+  assert.deepEqual(timelineStats(p!.entries), { speech: 1, visual: 1, slide: 0, quiz: 0, question: 0, chars: 2000 });
 });
 
 test('render: a full-length visual on screen now fits the per-turn block', () => {
@@ -196,6 +198,62 @@ test('lesson window: recap carries the lesson from its start, evenly thinned, wi
   assert.ok(/line 39\d /.test(recap), 'the end is still represented');
   assert.ok(recap.length <= LESSON_NOW_MAX_CHARS, `recap ${recap.length} within ${LESSON_NOW_MAX_CHARS}`);
   assert.ok(!/line 399 /.test(renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 100, resumeTool: true, recap: true })!), 'nothing past the position');
+});
+
+test('parse: quizzes, questions and slides are kept as their own kinds, never as speech', () => {
+  const p = parseLessonTimeline(msg([
+    { start: 10, end: 12, text: 'Today: two offers' },
+    { start: 30, kind: 'slide', title: 'Equity vs debt', summary: 'Equity = ownership; debt = repay with interest' },
+    { start: 60, kind: 'quiz', title: 'Check-in', questions: [
+      { question: 'Who owns part of the company?', options: ['lender', { text: 'investor' }], correct_answer: 'investor' },
+      { question: 'Which must be repaid?', options: ['equity', 'debt'], answer: 'debt' },
+    ] },
+    { start: 90, kind: 'question', question: 'Is a bond equity?', options: ['yes', 'no'], correct_answer: 'no' },
+    { start: 120, kind: 'teaching_moment', text: 'Coupon = 5% of $1,000' },
+    { start: 130, kind: 'Transcript', text: 'And that is the coupon.' },
+  ]))!;
+  assert.deepEqual(p.entries.map((e) => e.kind), ['speech', 'slide', 'quiz', 'question', 'visual', 'speech']);
+  assert.match(p.entries[1].text, /^Equity vs debt Equity = ownership/);
+  assert.match(p.entries[2].text, /Q1: Who owns part of the company\? Options: lender \| investor\. \(Answer, for you only: investor\.\)/);
+  assert.match(p.entries[2].text, /Q2: Which must be repaid\?/);
+  assert.match(p.entries[3].text, /^Is a bond equity\? Options: yes \| no\. \(Answer, for you only: no\.\)$/);
+  assert.deepEqual(p.rawKinds, { '-': 1, slide: 1, quiz: 1, question: 1, teaching_moment: 1, Transcript: 1 });
+  const st = timelineStats(p.entries);
+  assert.deepEqual([st.speech, st.visual, st.slide, st.quiz, st.question], [2, 1, 1, 1, 1]);
+});
+
+test('parse: an exit ticket tagged in the timeline is marked', () => {
+  const p = parseLessonTimeline(msg([{ start: 200, kind: 'exit_ticket', text: 'Exit: one difference' }]))!;
+  assert.equal(p.entries[0].kind, 'visual');
+  assert.equal(p.entries[0].exitTicket, true);
+});
+
+test('render: on screen, then quizzes/questions, then speech — with the priority rule', () => {
+  const tl = parseLessonTimeline(msg([
+    { start: 5, end: 8, text: 'The pitcher winds up' },
+    { start: 20, kind: 'visual', text: 'F = m × a' },
+    { start: 25, kind: 'slide', text: 'Newton 2' },
+    { start: 40, kind: 'quiz', question: 'Double the force?', options: ['double a', 'half a'], correct_answer: 'double a' },
+    { start: 300, kind: 'quiz', question: 'LATER QUIZ' },
+  ]))!.entries;
+  const r = renderLessonNow({ timeline: tl, video: 'paused', positionSeconds: 50, resumeTool: false })!;
+  const iScreen = r.indexOf('On screen so far');
+  const iQuiz = r.indexOf('Quizzes and questions so far');
+  const iSpeech = r.indexOf('What is said around');
+  assert.ok(iScreen >= 0 && iScreen < iQuiz && iQuiz < iSpeech, 'order');
+  assert.match(r, /\[0:25\] Slide: Newton 2/);
+  assert.match(r, /\[0:40\] Quiz: Double the force\?/);
+  assert.ok(!r.includes('LATER QUIZ'), 'nothing ahead of the position');
+  assert.match(r, /title and description, then what is on screen, then its quizzes and questions; what the video says matters least/);
+  const plain = renderLessonNow({ timeline: [{ start: 1, kind: 'speech', text: 'hi' }], video: 'paused', positionSeconds: 2, resumeTool: false })!;
+  assert.ok(!/matters least/.test(plain), 'no rule when there is nothing but speech');
+});
+
+test('lesson end: the duration, else the end of the timeline', () => {
+  const tl: TimelineEntry[] = [{ start: 0, end: 4, kind: 'speech', text: 'a' }, { start: 219.7, kind: 'visual', text: 'b' }, { start: 210, end: 216, kind: 'speech', text: 'c' }];
+  assert.equal(lessonEndSeconds(tl, 240), 240);
+  assert.equal(lessonEndSeconds(tl, null), 219.7);
+  assert.equal(lessonEndSeconds(null, null), null);
 });
 
 console.log(`\n${passed}/${passed + failed} passed`);
