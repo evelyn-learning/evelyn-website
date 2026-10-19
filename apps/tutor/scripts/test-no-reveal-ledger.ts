@@ -533,6 +533,23 @@ async function main() {
     assert.doesNotMatch(OFF_TOPIC_NOT_ANSWERED, /give a short helpful answer or guide them/);
     assert.match(WRONG_WHOLE_ANSWER_REEMIT, /Never say that the step where their working goes wrong is fine/);
   });
+  // 2026-10-19 (GAC Calc BC portal-413c1189, Biology portal-3f855241).
+  await test('10-19 pm: the verdict guard under the ledger shows only their step; a checked false claim is not corrected outright', async () => {
+    const { formatWorkThenMatchBlock, LEDGER_WORKING_RULE, LEDGER_FINAL_ANSWER_RULE } = await import('../src/lib/tutor/voice/work-then-match');
+    const { FALSE_CLAIM_RULE, PARTLY_NO_REVEAL_RULE, CORRECT_GO_NO_FURTHER_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+    const led = formatWorkThenMatchBlock('can you check my answer x = 4', null, { noRevealAnyStep: true });
+    const plain = formatWorkThenMatchBlock('can you check my answer x = 4', null);
+    assert.ok(led.includes(LEDGER_WORKING_RULE) && led.includes(LEDGER_FINAL_ANSWER_RULE));
+    assert.doesNotMatch(led, /show the remaining step or steps briefly/);
+    assert.doesNotMatch(led, /say what they wrote, what the working gives/);
+    assert.doesNotMatch(led, /that step\'s result is what you state/);
+    assert.match(plain, /show the remaining step or steps briefly/);
+    assert.match(FALSE_CLAIM_RULE, /asked you to check it as their answer[^.]*not right, but do not state the true version/);
+    assert.match(PARTLY_NO_REVEAL_RULE, /saying the right one IS writing it out/);
+    assert.match(CORRECT_GO_NO_FURTHER_RULE, /only the value, with none of the working[^.]*ask them to show the step/);
+    const brain = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/voice/claude-brain.ts'), 'utf8');
+    assert.match(brain, /formatWorkThenMatchBlock\(input\.studentTranscript, turnShape, noRevealLedger \? \{ noRevealAnyStep: true \} : undefined\)/);
+  });
   // 2026-10-15 staging, second run (Algebra II, AP Chemistry): a repeat of a solved answer once all are solved.
   await test('all solved: a correct repeat of a listed answer gets the no-question rule; extra-problem work does not', () => {
     const rep = pc({ verdict: 'correct', answers: 'overall_problem', solvedProblem: 1 });

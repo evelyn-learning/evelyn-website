@@ -484,7 +484,11 @@ export const FALSE_CLAIM_RULE =
   + 'What to do: do not let it pass, and do not simply return to your question. Say plainly and kindly that the statement is not right — no praise word first — and correct it in a sentence or two with the reason, or ask one question that leads them to test it. Then return to where you were. Never treat it as an answer to your open question.\n'
   // 2026-10-15 (staging, Geometry): "check my answer" to an extra problem of
   // their own came here, and the reply worked that problem to its result.
-  + 'If what they stated is their answer to a problem (a value or result), not a statement about the subject: do not give the right answer or the working that reaches it — say it is not right, name the step to look at again, and ask them to redo it.\n';
+  + 'If what they stated is their answer to a problem (a value or result), not a statement about the subject: do not give the right answer or the working that reaches it — say it is not right, name the step to look at again, and ask them to redo it.\n'
+  // 2026-10-19 (GAC Biology portal-3f855241): "can you check my answer:
+  // enzymes get used up in the reaction" got the true statement and its reason
+  // in full — the answer they were asking about (TEST-CASES §2 7b).
+  + 'If they asked you to check it as their answer: say plainly that it is not right, but do not state the true version or the fact that settles it — that is the answer. Ask one question that leads them to test their claim themselves.\n';
 
 /** The same findings, worded for a reply that opens with the working. */
 function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctValue?: string, opts?: { otherPartNoGiveaway?: boolean; wrongWholeAnswerNoReveal?: boolean; differsAt?: boolean; noRevealAnyStep?: boolean; claimCorrection?: boolean; allSolved?: boolean; solved?: readonly number[]; labels?: readonly number[]; current?: number }): string {
@@ -601,7 +605,7 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
  *  built the molecular formula. Under the ledger, a right answer is confirmed
  *  and the next step stays the student's. */
 export const CORRECT_GO_NO_FURTHER_RULE =
-  'What to do: say plainly that it is right — a short reason is fine, in their own values. Go no further than what they wrote: do not work the next step, a value computed from theirs, or a final form built from it, in the reply or on the board, and never say they gave something they did not write. If the problem asks for more than what they wrote, ask them for that next step in one question. If what they wrote is the whole answer, say it is the final answer. Never send them back to a smaller step as though the value were wrong.\n';
+  'What to do: say plainly that it is right — a short reason is fine, in their own values. Go no further than what they wrote: do not work the next step, a value computed from theirs, or a final form built from it, in the reply or on the board, and never say they gave something they did not write. If the problem asks for more than what they wrote, ask them for that next step in one question. If what they wrote is the whole answer, say it is the final answer; if it is only the value, with none of the working that reaches it, ask them to show the step that gets there — do not show it yourself. Never send them back to a smaller step as though the value were wrong.\n';
 
 /** 2026-10-19 (GAC AP Chemistry portal-00153d15): see above — a whole answer
  *  the check is not sure about. */
@@ -624,7 +628,7 @@ export const ROUNDED_DECIMAL_RULE =
 /** 2026-10-15 (staging, Algebra II): a half-right answer; the reply wrote out
  *  the setup of the missing half before asking for it. */
 export const PARTLY_NO_REVEAL_RULE =
-  'What to do: work it out silently. Confirm the part of THEIR answer that is right, in their own words and values, as what THEY offered it as (it answers what the check names above): never recast it as something else, such as a step, a factor or an intermediate number, and never call any part of it wrong that the check found right. Then say that something is still missing or wrong and name WHICH part, by what it is — without writing it out: no setup, no equation, no inequality or value for that part, not in the reply and not on the board. End with ONE question that has them write that part themselves.\n';
+  'What to do: work it out silently. Confirm the part of THEIR answer that is right, in their own words and values, as what THEY offered it as (it answers what the check names above): never recast it as something else, such as a step, a factor or an intermediate number, and never call any part of it wrong that the check found right. Then say that something is still missing or wrong and name WHICH part, by what it is — without writing it out: no setup, no equation, no inequality or value for that part, not in the reply and not on the board. When the wrong part is a word or an idea (a process, a direction, a term), saying the right one IS writing it out — not even as a contrast with theirs. End with ONE question that has them write that part themselves.\n';
 
 // ── before display: an opener that contradicts the check ───────────────────
 

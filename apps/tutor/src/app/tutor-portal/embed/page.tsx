@@ -960,7 +960,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // 2026-07-13: a 47-minute Crimsora session recorded $2.43 of brain cost
   // (cost rides the small progress checkpoints) but ZERO transcript.
   // Mirrors the /tutor page's periodic-flush fix from 2026-04-29.
-  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned') => {
+  // 'backgrounded' (2026-10-19, GAC live test): the tab was hidden. The data
+  // goes by beacon, as on unload, but the session is still live — a student
+  // switching tabs, or staff opening the admin view beside it, is not an end.
+  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned' | 'backgrounded') => {
     const now = new Date();
     // Active time only (spec v1.2 §5): standing by and a prewarmed frame's
     // wait are not session time.
@@ -1001,12 +1004,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // Task 4: sendBeacon can't set headers, so the raw embed token rides in
       // the JSON body instead — the session-usage route accepts either.
       ...(embedToken ? { embedToken } : {}),
-      ...(status !== 'active' ? { endedAt: now.toISOString(), status } : {}),
+      ...(status === 'active' || status === 'backgrounded' ? { status: 'active' as const } : { endedAt: now.toISOString(), status }),
       // A1: token/cost telemetry + covered topics (were always 0/empty for
       // embed sessions — this is what makes Sonnet-5 cost tracking visible).
       ...brainUsageTotals(),
       ...(() => {
-        if (status === 'active') return {};
+        if (status === 'active' || status === 'backgrounded') return {};
         const summary = sessionHandleRef.current?.getSessionSummary?.();
         return {
           ...(summary?.topicsCovered?.length ? { topicsCovered: summary.topicsCovered } : {}),
@@ -1072,7 +1075,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       return;
     }
 
-    if (status === 'abandoned') {
+    if (status === 'abandoned' || status === 'backgrounded') {
       // sendBeacon returns false (and sends NOTHING) when the payload
       // exceeds the UA's in-flight quota (~64KB) — exactly how the
       // 47-minute transcript vanished on 2026-07-13. Fall back to the slim
@@ -1787,7 +1790,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     if (sessionEnded) return;
     const handleUnload = () => saveSession('abandoned');
     const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') saveSession('abandoned');
+      if (document.visibilityState === 'hidden') saveSession('backgrounded');
     };
     window.addEventListener('beforeunload', handleUnload);
     if (TUTOR_TELEMETRY_SURVIVAL) {

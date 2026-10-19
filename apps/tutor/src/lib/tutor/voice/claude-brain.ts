@@ -2334,7 +2334,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const verdictGuardBlock = workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
     ? (voiceWorkThenMatch
       ? formatVoiceWorkThenMatchBlock(input.studentTranscript, turnShape)
-      : formatWorkThenMatchBlock(input.studentTranscript, turnShape))
+      : formatWorkThenMatchBlock(input.studentTranscript, turnShape, noRevealLedger ? { noRevealAnyStep: true } : undefined))
     : ordinaryGuardBlock;
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : workThenMatch ? '[verdict-guard] work-then-match rule attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.

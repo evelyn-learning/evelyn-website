@@ -229,7 +229,9 @@ export async function POST(req: NextRequest) {
     // A single-sitting session stores what it stored before: the page's
     // figure only grows, and it equals the sum of its entries.
     const totalsMax = clientTotalsMax(body);
-    if (body.status !== undefined) updateFields.status = body.status;
+    // 2026-10-19 (GAC live test): a periodic save says 'active'; it only ever
+    // revives an ABANDONED row (below), never a completed one.
+    if (body.status !== undefined && body.status !== 'active') updateFields.status = body.status;
     if (Array.isArray(body.topicsCovered)) updateFields.topicsCovered = body.topicsCovered;
     if (Array.isArray(body.conceptsCovered)) updateFields.conceptsCovered = body.conceptsCovered;
     if (Array.isArray(body.weakTopics)) updateFields.weakTopics = body.weakTopics;
@@ -440,6 +442,18 @@ export async function POST(req: NextRequest) {
       // Answer from the document as written, not from the pre-write read:
       // the figures then include whatever another mount saved in between.
       attemptPlan = planAttemptSave({ existing: session, attemptStartMs: attemptStart.getTime(), attemptDurationSec: attemptDuration });
+    }
+
+    // 2026-10-19 (GAC live test, portal-413c1189): the row read "abandoned"
+    // while the student was in the session — a hidden tab used to save
+    // 'abandoned' and the periodic saves never said otherwise. A live save on
+    // an abandoned row brings it back.
+    if (body.status === 'active') {
+      try {
+        await TutorSession.updateOne({ sessionId, status: 'abandoned' }, { $set: { status: 'active' }, $unset: { endedAt: 1 } });
+      } catch (err) {
+        console.error("[session-usage] status revive failed:", err);
+      }
     }
 
     // Reconcile the token totals with the usage entries as they stand AFTER

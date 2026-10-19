@@ -321,7 +321,7 @@ export function EquationRenderer({
         // fitToWidth() above). Suppress it defensively — it's a pure
         // display:none-equivalent no-op whenever content doesn't overflow
         // vertically, which is always the case here.
-        className="equation-content overflow-x-auto overflow-y-hidden py-2 fit-to-width"
+        className="equation-content overflow-x-auto overflow-y-hidden py-1 fit-to-width"
         style={{ maxWidth: '100%' }}
       />
     </div>

@@ -112,6 +112,17 @@ assert(decideStallRecovery({ ...stall, stalled: false, networkFailure: true, not
 {
   const vtr = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
   assert(vtr.includes('if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn) {'), 'GAC APES portal-4b144435: a typed homework turn never boards the tutor\'s own question as a card');
+  {
+    // 2026-10-19 (GAC Calc BC portal-413c1189): "abandoned" on a live session.
+    const embed = src('src/app/tutor-portal/embed/page.tsx');
+    const route = src('src/app/api/tutor/session-usage/route.ts');
+    const admin = src('src/app/admin/tutor-sessions/page.tsx');
+    assert(embed.includes("if (document.visibilityState === 'hidden') saveSession('backgrounded');") && !embed.includes("if (document.visibilityState === 'hidden') saveSession('abandoned');"), 'a hidden tab flushes but does not end the session');
+    assert(embed.includes("status === 'active' || status === 'backgrounded' ? { status: 'active' as const }"), 'live saves say active');
+    assert(route.includes("if (body.status !== undefined && body.status !== 'active') updateFields.status = body.status;"), 'an active save never overwrites a completed row');
+    assert(route.includes("TutorSession.updateOne({ sessionId, status: 'abandoned' }, { $set: { status: 'active' }, $unset: { endedAt: 1 } })"), 'an active save revives only an abandoned row');
+    assert(admin.includes("{ status: 'active', updatedAt: { $lt: new Date(Date.now() - STALE_EMPTY_ACTIVE_MS) } }"), 'an active row silent for 30 min is swept to abandoned');
+  }
   assert(vtr.includes('networkFailure: isNetworkFailure,'), 'wiring: a dropped connection reaches the stall recovery');
   assert(vtr.includes("onDebugEvent?.('brain_error_typed_line'"), 'wiring: a failed typed turn shows its line in the transcript, never only speaks it');
 }

@@ -2749,8 +2749,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       // consecutive equations sat ~170px apart, reading as unrelated
       // islands (2026-07-24 user round). Modest symmetric padding keeps
       // equations breathing without the letterbox.
+      // 2026-10-19 (GAC live test, Calc BC): still ~75px of white between two
+      // one-line equations (this py-3 + the content's py-2 + KaTeX's margin +
+      // the separator) — each step read as its own island. Tightened.
       return (
-        <div className="flex items-center justify-center py-3">
+        <div className="flex items-center justify-center py-1">
           <EquationRenderer
             latex={command.latex}
             label={command.label}

@@ -100,7 +100,19 @@ export const AMBIGUOUS_READING_TEXT_RULE =
 export const WRONG_WHOLE_ANSWER_TEXT_RULE =
   'The exception: when what they wrote is their answer to the WHOLE problem — its final result, not a step on the way — and it does not match, do not state the correct final result, and no formula or expression evaluated to it, in the reply or on the board. Rules 2 and 3 do not apply, and this reply shows NO working at all: no step, no formula, no intermediate value. The reply is two sentences, in this order. FIRST sentence: state plainly, as a fact about THEIR answer, that it is not what the problem gives — only that, with nothing of how the problem is worked; it is a full sentence, not a verdict word, so rule 1 does not exclude it, and it is never skipped or folded into the question. SECOND sentence: one question about the first step in their reasoning that does not hold — never a step they did correctly. The result stays theirs to find.\n';
 
-export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | null): string {
+/** 2026-10-19 (GAC Calc BC portal-413c1189): under the no-reveal ledger the
+ *  answer check says "go no further than what they wrote", but this block
+ *  still said "show the remaining step or steps … say it is the final
+ *  answer" — and the reply worked the student's extra problem in full after
+ *  a bare "x = 4", and the conjugate method after "maybe 1/4". Under the
+ *  ledger the working shown is only ever THEIR step. */
+export const LEDGER_WORKING_RULE =
+  'The working you show never goes past what they wrote: no step after theirs, no value computed from theirs, and no step they did not write, in the reply or on the board.\n';
+export const LEDGER_FINAL_ANSWER_RULE =
+  'When they gave the correct FINAL answer while a smaller step was open: say plainly that it is the right final answer. If their message shows how they got it, confirm it; if it is only the value, ask them to show the step that gets there — do not show the remaining steps yourself. Do not send them back to the smaller step as though the value were wrong.\n';
+
+export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | null, opts?: { noRevealAnyStep?: boolean }): string {
+  const ledger = opts?.noRevealAnyStep === true;
   const t = (transcript ?? '').trim();
   if (!t || t.startsWith('[')) return '';
   if (isNonAnswerShape(ts)) {
@@ -123,12 +135,17 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'For a genuine attempt:\n'
     + '1. Do not begin with a verdict or praise word or phrase — no acceptance, denial, credit or praise of any kind before the working ("Right", "Exactly", "Yes", "Correct", "Good", "Nice", "Not quite", "Close", "Almost", "No", "Hmm" and their like).\n'
     + '2. Begin with the working itself: in one or two short sentences work the relevant step from the student\'s own problem and data, and state its result plainly.\n'
-    + '3. Only then say whether that result matches what the student wrote, as a statement of fact tied to the result. When it matches: say that it is the value they gave. When it does not: say what they wrote, what the working gives, and which step the difference is in. An equivalent form, notation or phrasing is the same value. Uncertainty in how they said it is not wrongness.\n'
+    + (ledger
+      ? '3. Only then say whether it matches what the student wrote, as a statement of fact. When it matches: say that it is the value they gave. When it does not: say that it is not right and which step of theirs does not hold — never what the working gives. An equivalent form, notation or phrasing is the same value. Uncertainty in how they said it is not wrongness.\n'
+      : '3. Only then say whether that result matches what the student wrote, as a statement of fact tied to the result. When it matches: say that it is the value they gave. When it does not: say what they wrote, what the working gives, and which step the difference is in. An equivalent form, notation or phrasing is the same value. Uncertainty in how they said it is not wrongness.\n')
     + '4. Warmth is welcome AFTER the match is stated, never before it. Then one next step or question, as usual.\n'
-    + 'When what they wrote does not match, your working goes as far as the step where theirs and yours part, and that step\'s result is what you state; the steps after it stay with the student.\n'
+    + (ledger ? LEDGER_WORKING_RULE : '')
+    + (ledger
+      ? 'When what they wrote does not match, work it silently: name the step where theirs goes wrong, without its result, and ask them to redo it; that step and the ones after it stay with the student.\n'
+      : 'When what they wrote does not match, your working goes as far as the step where theirs and yours part, and that step\'s result is what you state; the steps after it stay with the student.\n')
     + (TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL ? WRONG_WHOLE_ANSWER_TEXT_RULE : '')
     + 'When their value is right as far as it goes but the question asks for more (one of several values that work, one bound of two, one part of several): say what it does satisfy and that the question asks for more, and ask for the rest. Do not supply the rest.\n'
-    + 'When they gave the correct FINAL answer while a smaller step was open: show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n'
+    + (ledger ? LEDGER_FINAL_ANSWER_RULE : 'When they gave the correct FINAL answer while a smaller step was open: show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n')
     + 'When the message does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them their message "is not an answer".\n'
     + 'Work from the student\'s own problem and data, not from a value stated earlier in the conversation: an earlier line — yours included — can be wrong, and if your working now shows that one of yours was, say so plainly and use the corrected value.\n'
     + (TUTOR_AMBIGUOUS_EXPRESSION_RULE ? AMBIGUOUS_READING_TEXT_RULE : '')

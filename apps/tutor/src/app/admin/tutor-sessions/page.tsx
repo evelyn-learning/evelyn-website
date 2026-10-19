@@ -38,6 +38,14 @@ async function getSessions(filters: SessionFilterParams, page: number) {
     },
     { $set: { status: 'abandoned' } },
   );
+  // 2026-10-19: a hidden tab no longer marks its session abandoned (it is
+  // still live), so a tab killed while hidden — mobile — leaves an "active"
+  // row. A live session saves every 30 s (at least once a minute when
+  // hidden); one silent this long has ended.
+  await TutorSession.updateMany(
+    { status: 'active', updatedAt: { $lt: new Date(Date.now() - STALE_EMPTY_ACTIVE_MS) } },
+    { $set: { status: 'abandoned' } },
+  );
   // Lesson-name search: resolve matching plan ids up front (title lookup is
   // async; skipped when the query is a date, which searches startedAt instead).
   const q = filters.q?.trim();
