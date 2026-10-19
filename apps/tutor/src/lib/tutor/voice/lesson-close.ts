@@ -204,7 +204,11 @@ export function isPrematureCloseLine(
   ctx: { lessonClosed: boolean; studentEndSignal: boolean; closingStretch: boolean },
 ): boolean {
   if (ctx.lessonClosed || ctx.studentEndSignal || ctx.closingStretch) return false;
-  return PREMATURE_CLOSE_LINE_RE.test(sentence ?? '');
+  const s = (sentence ?? '').trim();
+  // A QUESTION is the recap's own ending (「続けますか、それとも今日はここまでに
+  // しましょうか?」 — embed-1792367246990 dropped one): never a close.
+  if (/[?？]\s*$/.test(s) || /(?:ましょうか|ますか|ですか|でしょうか)[」』]?\s*$/.test(s)) return false;
+  return PREMATURE_CLOSE_LINE_RE.test(s);
 }
 
 /** Is the lesson in its closing stretch — the recap, the last segment, or the

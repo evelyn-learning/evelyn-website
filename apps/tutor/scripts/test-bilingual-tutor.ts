@@ -68,6 +68,7 @@ import { isPrematureCloseLine, inClosingStretch, PREMATURE_CLOSE_NOTE } from '..
 import { stripMarkdownEmphasis } from '../src/lib/tutor/voice/sentence-spacing';
 import { isPronunciationClaimSentence } from '../src/lib/tutor/voice/pronunciation-claim';
 import { praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '../src/lib/tutor/voice/praise-variety';
+import { expectsEnglishReply } from '../src/lib/tutor/voice/english-reply';
 
 let passed = 0;
 let failed = 0;
@@ -539,7 +540,7 @@ test('english-reply: an English ask answered with no Latin letters gets the note
   assert.equal(hasNoLatinLetters('はい。はい。Yes , I have I went to Hawaii 6 years ago .これで大丈夫でしょうか。'), false);
   assert.ok(NO_ENGLISH_REPLY_NOTE.includes('katakana'));
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
-  assert.ok(vtr.includes('askedForEnglishRef.current = asksForEnglish(fullText);'));
+  assert.ok(vtr.includes('askedForEnglishRef.current = expectsEnglishReply(fullText);'), '2026-10-19: an English question also arms the note');
   assert.ok(vtr.includes("onDebugEvent?.('no_english_reply_note'"));
   const embed = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
   assert.ok(embed.includes("'no_english_reply'"));
@@ -1130,6 +1131,32 @@ test('prompted repeat praised as the student\'s own (embed-1792363895174 turn 1:
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.ok(vtr.includes("onDebugEvent?.('prompted_repeat_note_planted'"));
   assert.ok(vtr.includes("'prompted_repeat_note_consumed'"));
+});
+
+test('embed-1792367246990 regressions: the live asterisk shapes (!*…*( and 。 *…*() are stripped; the recap\'s "continue or stop?" question is NOT a premature close', () => {
+  assert.equal(stripMarkdownEmphasis('いいですね!*I played golf yesterday.*(昨日ゴルフをしました)— 完璧な文です。'), 'いいですね!I played golf yesterday.(昨日ゴルフをしました)— 完璧な文です。');
+  assert.equal(stripMarkdownEmphasis('まず一つ聞きますね。 *What did you do yesterday?*(昨日何をしましたか?)'), 'まず一つ聞きますね。 What did you do yesterday?(昨日何をしましたか?)');
+  assert.equal(stripMarkdownEmphasis('いいですね、*Yes, I have.*で答えられました。'), 'いいですね、Yes, I have.で答えられました。');
+  assert.equal(stripMarkdownEmphasis('*I played golf yesterday.*(昨日)と *I went to Nagoya Castle last week.*(先週)— 両方とも正しい文ですよ'), 'I played golf yesterday.(昨日)と I went to Nagoya Castle last week.(先週)— 両方とも正しい文ですよ');
+  assert.equal(stripMarkdownEmphasis('2*3*4 = 24'), '2*3*4 = 24');
+  const open = { lessonClosed: false, studentEndSignal: false, closingStretch: false };
+  assert.equal(isPrematureCloseLine('続けて大丈夫ですか、それとも今日はここまでにしましょうか?', open), false, 'the recap ends by asking whether to continue or stop');
+  assert.equal(isPrematureCloseLine('今日はここまでにしますか？', open), false);
+  assert.equal(isPrematureCloseLine('今日はここまでにしましょう。', open), true, 'the statement is still dropped');
+});
+
+test('false credit after an ENGLISH QUESTION (embed-1792367246990: 「はい、ハワイに行きました」 → "Yes, I have. I went to Hawaii… 完璧"; curry): any English question from the tutor expects an English reply, so the no-English note fires on a Japanese-only answer', () => {
+  assert.equal(expectsEnglishReply('I ate dinner with my family at seven. 過去形は ate ですね。 Have you ever been abroad? (海外に行ったことがありますか?)'), true);
+  assert.equal(expectsEnglishReply('次に行きましょう。*Have you ever cooked curry?*(カレーを作ったことがありますか?)'), true);
+  assert.equal(expectsEnglishReply('家族とご飯を食べたことを英語で言ってみましょう。'), true, 'the explicit ask still counts');
+  assert.equal(expectsEnglishReply('はい、お待ちしています。'), false);
+  assert.equal(expectsEnglishReply('続けて大丈夫ですか、それとも今日はここまでにしましょうか?'), false, 'a Japanese question is not an English ask');
+  assert.match(NO_ENGLISH_REPLY_NOTE, /asked (?:for English|a question in English)/);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('askedForEnglishRef.current = expectsEnglishReply(fullText)'));
+  // The new events of this round are persisted for embed sessions (page.tsx prefix list).
+  const page = readFileSync('src/app/tutor-portal/embed/page.tsx', 'utf8');
+  for (const p of ["'premature_close'", "'tool_call_continued'", "'prompted_repeat'"]) assert.ok(page.includes(p), `prefix ${p} missing`);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

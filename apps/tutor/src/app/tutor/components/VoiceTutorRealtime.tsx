@@ -210,7 +210,7 @@ import { splitRunTogetherEnglish } from '@/lib/tutor/voice/run-together-english'
 import { isRetryAsk, RETRY_CAP_TURNS, retryCapNote } from '@/lib/tutor/voice/retry-cap';
 import { hasKatakanaEnglish, KATAKANA_ENGLISH_NOTE, KATAKANA_ENGLISH_NOTE_STANDING, KATAKANA_STICKY_AFTER_PLANTS, hasKatakanaEnglishFromStt, hasDottedKatakanaReading, KATAKANA_ECHO_NOTE } from '@/lib/tutor/voice/katakana-english';
 import { saysCannotSeeScreen, VOICE_ONLY_NOTE, VOICE_ONLY_NOTE_FIRST } from '@/lib/tutor/voice/voice-only';
-import { asksForEnglish, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
+import { asksForEnglish, expectsEnglishReply, hasNoLatinLetters, isStudentRepeatRequest, NO_ENGLISH_REPLY_NOTE, isIdenticalTranscript, IDENTICAL_RETRY_NOTE } from '@/lib/tutor/voice/english-reply';
 import { refersToLearnerInThirdPerson, LEARNER_ADDRESS_NOTE } from '@/lib/tutor/voice/learner-address';
 import { overusesSuperlative, overusesStockPraiseOpener, PRAISE_VARIETY_NOTE, PRAISE_OPENER_NOTE, PRAISE_MIN_HITS, PRAISE_WINDOW_TURNS, praiseNoteIsSticky, hasSuperlativePraise, isStockPraiseOpenerOnly, praisedPromptedRepeat, PROMPTED_REPEAT_NOTE } from '@/lib/tutor/voice/praise-variety';
 import { reAskedCheckedCorrect, CORRECT_RETRY_NOTE, reAskedOwnSentence, OWN_SENTENCE_RETRY_NOTE, reAskedAnsweredQuestion, REASKED_QUESTION_NOTE, recordAnsweredQuestions, reAskedEarlierQuestion, REASKED_EARLIER_QUESTION_NOTE, saysAlreadyAnswered, ALREADY_ANSWERED_NOTE } from '@/lib/tutor/voice/correct-retry';
@@ -18864,7 +18864,8 @@ export function VoiceTutorRealtime({
         } else if (katakanaPlantsRef.current >= KATAKANA_STICKY_AFTER_PLANTS) {
           pendingKatakanaNoteRef.current = KATAKANA_ENGLISH_NOTE_STANDING;
         }
-        askedForEnglishRef.current = asksForEnglish(fullText);
+        // english-reply.ts: an explicit ask, or an English question (embed-1792367246990).
+        askedForEnglishRef.current = expectsEnglishReply(fullText);
         // learner-address.ts: 「学生の番です」 said to the student.
         if (refersToLearnerInThirdPerson(fullText)) {
           pendingLearnerAddressNoteRef.current = LEARNER_ADDRESS_NOTE;

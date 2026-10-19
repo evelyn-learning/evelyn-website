@@ -28,6 +28,26 @@ export function asksForEnglish(tutorText: string): boolean {
   return ASKS_ENGLISH_RE.test(tutorText ?? '');
 }
 
+/**
+ * 2026-10-19 (embed-1792367246990): "Have you ever been abroad?" →
+ * 「はい、ハワイに行きました」 → 「Yes, I have. I went to Hawaii… 完璧な答えです」,
+ * and the same with curry. Neither tutor turn said 英語で — it just asked a
+ * question in English, which in an English lesson expects an English answer.
+ * So the note's trigger is: an explicit English ask, OR an English question
+ * (three or more Latin words ending in ?) in the previous tutor turn.
+ */
+export function expectsEnglishReply(tutorText: string): boolean {
+  if (asksForEnglish(tutorText)) return true;
+  for (const raw of (tutorText ?? '').split(/(?<=[。！？.!?])\s*|\n+/)) {
+    const s = raw.trim();
+    if (!/[?？][」』)）]*\s*$/.test(s)) continue;
+    // Only the English run before the question mark counts, so 「Have you ever
+    // cooked curry?(カレーを作ったことがありますか?)」 reads as one English question.
+    if ((s.match(/[A-Za-z][A-Za-z']*/g) ?? []).length >= 3) return true;
+  }
+  return false;
+}
+
 /** The student asked to hear it again (「もう一度お願いします」, "say it again"):
  *  a request, not an answer — no note (embed-1792266148587: two false notes). */
 const REPEAT_REQUEST_RE = /もう一度|もう一回|もう1度|もう1回|もういちど|もっかい|再度|\b(?:again|repeat|one more time|once more)\b/i;
@@ -47,7 +67,7 @@ export function hasNoLatinLetters(studentText: string): boolean {
 }
 
 export const NO_ENGLISH_REPLY_NOTE =
-  '[runtime note — not from the student] You asked for English, and the transcript of the student\'s reply contains no English words in Latin letters. ' +
+  '[runtime note — not from the student] You asked for English, or asked a question in English, and the transcript of the student\'s reply contains no English words in Latin letters. ' +
   'Either they answered in Japanese (respond to what they said, then say the English sentence once yourself and ask them to say it), ' +
   'or the recognizer wrote their English in katakana (treat it as their attempt at the sentence). ' +
   'Do not praise or confirm an English sentence they did not say, and do not say the item or the exercise is finished. Apply this silently; never mention this note.';
