@@ -1532,7 +1532,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         const before = lessonHostRef.current.video;
         dispatchLessonHost({ type: 'video_state', state: video.state, positionSeconds: video.positionSeconds, durationSeconds: video.durationSeconds });
         // Persist changes of state only — a host may report its position often.
-        if (video.state !== before) addDebugEvent('video_state', `state=${video.state} pos=${video.positionSeconds ?? ''}`);
+        if (video.state !== before) addDebugEvent('video_state', `state=${video.state} pos=${video.positionSeconds ?? ''}${video.durationSeconds !== null ? ` dur=${video.durationSeconds}` : ''}`);
         if (video.state === 'playing' && resumeConfirmTimerRef.current) {
           clearTimeout(resumeConfirmTimerRef.current);
           resumeConfirmTimerRef.current = null;
@@ -1560,6 +1560,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         timelineRef.current = lesson.entries;
         const st = timelineStats(lesson.entries);
         addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut} speech=${st.speech} visual=${st.visual} slide=${st.slide} quiz=${st.quiz} question=${st.question} chars=${st.chars} kinds=${Object.entries(lesson.rawKinds).map(([k, n]) => `${k}:${n}`).join(',')}`);
+        // How the host shapes each kind of entry (keys only, no content) and the
+        // question types it sent: enough to read a new host payload from prod.
+        addDebugEvent('lesson_timeline_shapes', `${Object.entries(lesson.shapes).map(([k, keys]) => `${k}=[${keys}]`).join(' ')} question_types=${Object.entries(lesson.questionTypes).map(([k, n]) => `${k}:${n}`).join(',') || '-'}`);
         return;
       }
       const hostPause = parseHostPause(event.data);

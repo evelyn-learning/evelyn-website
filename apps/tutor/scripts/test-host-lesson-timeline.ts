@@ -256,5 +256,69 @@ test('lesson end: the duration, else the end of the timeline', () => {
   assert.equal(lessonEndSeconds(null, null), null);
 });
 
+test('parse: question types — a free response has no key, true/false implies its options; the type may sit on the entry, the item or the kind', () => {
+  const p = parseLessonTimeline(msg([
+    { start: 10, kind: 'question', type: 'mcq', question: 'Which law?', options: ['First', 'Second'], correct_answer: 'Second' },
+    { start: 20, kind: 'question', type: 'truefalse', question: 'Force needs mass.', correct_answer: 'True' },
+    { start: 30, kind: 'question', question_type: 'shortanswer', question: 'Name the unit of force.', correct_answer: 'newton' },
+    { start: 40, kind: 'question', type: 'freeresponse', question: 'Describe a time you felt inertia.', correct_answer: 'Describe a time you felt inertia.' },
+    { start: 50, kind: 'quiz_question', questions: [
+      { type: 'free_response', question: 'Explain in your words.', correct_answer: 'n/a' },
+      { type: 'true_false', question: 'Mass is weight.', correct_answer: 'False' },
+    ] },
+    { start: 60, kind: 'mcq', question: 'Kind is the type', options: ['a', 'b'], correct_answer: 'a' },
+    { start: 70, kind: 'freeresponse', question: 'Kind is free response', correct_answer: 'SECRET' },
+    { start: 80, kind: 'question', type: 'riddle', question: 'Unknown type keeps the answer', correct_answer: 'kept' },
+  ]))!;
+  const t = p.entries.map((e) => e.text);
+  assert.match(t[0], /^Which law\? Options: First \| Second\. \(Answer, for you only: Second\.\)$/);
+  assert.match(t[1], /^Force needs mass\. Options: True \| False\. \(Answer, for you only: True\.\)$/);
+  assert.match(t[2], /^Name the unit of force\. \(Answer, for you only: newton\.\)$/);
+  assert.equal(t[3], 'Describe a time you felt inertia. (Open-ended: no set answer.)');
+  assert.equal(p.entries[4].kind, 'quiz');
+  assert.match(t[4], /Q1: Explain in your words\. \(Open-ended: no set answer\.\) Q2: Mass is weight\. Options: True \| False\. \(Answer, for you only: False\.\)/);
+  assert.equal(p.entries[5].kind, 'question');
+  assert.match(t[5], /Answer, for you only: a\./);
+  assert.equal(p.entries[6].kind, 'question');
+  assert.ok(!t[6].includes('SECRET'), 'a free response never carries the host\'s placeholder answer');
+  assert.match(t[7], /Answer, for you only: kept\./);
+  assert.deepEqual(p.questionTypes, { mcq: 2, truefalse: 2, shortanswer: 1, freeresponse: 3 });
+});
+
+test('parse: a slide\'s own fields are rendered as key: value; structural, media and layout keys are not', () => {
+  const p = parseLessonTimeline(msg([
+    { start: 5, kind: 'slide', slide_type: 'two_column', title: 'Newton 1', heading: 'Inertia', left_text: 'A body at rest stays at rest.', rightText: 'A body in motion stays in motion.',
+      bullets: ['stays', 'moves'], image_url: 'https://cdn.example/x.png', caption: 'https://cdn.example/y.png', id: 'abc123', order: 3, x: 10, width: 400, style: { color: 'red' },
+      notes: { speaker: 'say it slowly', font: 'Arial' }, visible: true, empty: '   ' },
+    { start: 9, kind: 'visual', text: 'Court diagram', alt: 'The ball leaves the hand' },
+    { start: 12, text: 'Narration keeps only its text', mood: 'calm' },
+  ]))!;
+  const slide = p.entries[0].text;
+  assert.match(slide, /^Newton 1; /, 'title first');
+  assert.match(slide, /slide type: two_column/);
+  assert.match(slide, /heading: Inertia/);
+  assert.match(slide, /left text: A body at rest stays at rest\./);
+  assert.match(slide, /right text: A body in motion stays in motion\./);
+  assert.match(slide, /bullets: stays, moves/);
+  assert.match(slide, /notes speaker: say it slowly/);
+  assert.ok(!/https|abc123|order|width|color|font|visible|empty|x: 10/.test(slide), slide);
+  assert.ok(slide.indexOf('slide type') < slide.indexOf('heading'), 'host field order is kept');
+  assert.equal(p.entries[1].text, 'Court diagram; alt: The ball leaves the hand');
+  assert.equal(p.entries[2].text, 'Narration keeps only its text');
+});
+
+test('parse: unknown kinds, notes and text are on-screen; the shape of each kind is kept for telemetry (keys, never content)', () => {
+  const p = parseLessonTimeline(msg([
+    { start: 1, kind: 'notes', text: 'teacher note' },
+    { start: 2, kind: 'text', text: 'on-screen text' },
+    { start: 3, kind: 'visual', text: 'v', end: 5 },
+    { start: 4, kind: 'visual', text: 'w', end: 6, extra: 'e' },
+    { start: 5, text: 'speech' },
+  ]))!;
+  assert.deepEqual(p.entries.map((e) => e.kind), ['visual', 'visual', 'visual', 'visual', 'speech']);
+  assert.deepEqual(p.shapes, { notes: 'start,kind,text', text: 'start,kind,text', visual: 'start,kind,text,end', '-': 'start,text' });
+  assert.ok(!JSON.stringify(p.shapes).includes('teacher note'));
+});
+
 console.log(`\n${passed}/${passed + failed} passed`);
 if (failed > 0) process.exit(1);

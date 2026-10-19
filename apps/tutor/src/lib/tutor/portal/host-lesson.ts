@@ -14,7 +14,7 @@
  * only authority on the video; the frame never guesses the player's state.
  */
 import { LESSON_CONTEXT_LIMITS } from '../embed/lesson-context';
-import { lessonEndSeconds, type TimelineEntry } from './host-lesson-timeline';
+import { lessonEndSeconds, normalizeQuestionType, type QuestionType, type TimelineEntry } from './host-lesson-timeline';
 
 export const VIDEO_STATES = ['playing', 'paused', 'ended'] as const;
 export type VideoState = (typeof VIDEO_STATES)[number];
@@ -88,6 +88,8 @@ export function parseHostResume(data: unknown): true | null {
 export interface LessonMoment {
   kind: MomentKind;
   positionSeconds: number | null;
+  /** How the question is answered (question / quiz moments); see QuestionType. */
+  questionType?: QuestionType;
   title?: string;
   summary?: string;
   question?: string;
@@ -120,17 +122,24 @@ export function parseMoment(data: unknown): LessonMoment | null {
   const d = obj(data);
   if (!d || d.type !== 'evelyn:moment') return null;
   const L = LESSON_CONTEXT_LIMITS;
+  // `type` is the message type here, so the question type goes by its other names.
+  // A host may also name the moment after the question's type (kind: "mcq").
+  const kindAsType = normalizeQuestionType(d.kind);
+  const questionType = normalizeQuestionType(d.question_type) ?? normalizeQuestionType(d.questionType) ?? normalizeQuestionType(d.format) ?? normalizeQuestionType(d.answer_type) ?? kindAsType;
   const kind = typeof d.kind === 'string' && (MOMENT_KINDS as readonly string[]).includes(d.kind)
     ? (d.kind as MomentKind)
-    : 'teaching_moment';
+    : kindAsType ? 'question' : 'teaching_moment';
   const m: LessonMoment = {
     kind,
     positionSeconds: secs(d.position_seconds),
+    questionType,
     title: str(d.title, L.title),
     summary: str(d.summary, L.summary),
     question: str(d.question, L.question),
     studentAnswer: str(d.student_answer, L.studentAnswer),
-    correctAnswer: str(d.correct_answer, L.correctAnswer),
+    // A free response has no key: the platform marks every submission
+    // correct, and its field is a placeholder the tutor must not grade by.
+    correctAnswer: questionType === 'freeresponse' ? undefined : str(d.correct_answer, L.correctAnswer),
     options: parseOptions(d.options),
     transcript: str(d.transcript, MOMENT_TRANSCRIPT_CHARS),
   };
@@ -281,17 +290,26 @@ export function inferExitTicket(
  *  host moment. Generic by design: every fact comes from the host's fields. */
 export function renderMomentDirective(m: LessonMoment): string {
   const at = m.positionSeconds !== null ? ` at ${mmss(Math.floor(m.positionSeconds))}` : '';
+  const open = m.questionType === 'freeresponse';
+  const typeWord =
+    open ? 'an open-ended'
+      : m.questionType === 'truefalse' ? 'a true-or-false'
+        : m.questionType === 'shortanswer' ? 'a short-answer'
+          : m.questionType === 'mcq' ? 'a multiple-choice'
+            : m.kind === 'teaching_moment' || m.kind === 'exit_ticket' ? '' : 'a';
   const what =
     m.kind === 'teaching_moment' ? 'a teaching moment'
-      : m.kind === 'quiz' ? 'a quiz question'
+      : m.kind === 'quiz' ? `${typeWord} quiz question`
         : m.kind === 'exit_ticket' ? 'the exit ticket at the end of the lesson'
-          : 'a question';
+          : `${typeWord} question`;
   const parts = [`The lesson video just paused${at} for ${what}${m.title ? `: "${m.title}"` : ''}.`];
   if (m.summary) parts.push(`On screen: ${m.summary}`);
   if (m.transcript) parts.push(`Said in this part of the video: ${m.transcript}`);
   if (m.question) parts.push(`Question: ${m.question}`);
   if (m.options) parts.push(`Answer options shown to the student: ${m.options.map((o) => `"${o}"`).join(' | ')}.`);
+  else if (m.questionType === 'truefalse') parts.push('The student chooses True or False.');
   if (m.studentAnswer) parts.push(`The student answered: ${m.studentAnswer}`);
+  if (open) parts.push('This question has no set answer; the platform accepts whatever the student writes. Never mark it right or wrong.');
   if (m.correctAnswer) parts.push(`Correct answer (never state it outright; guide the student to it): ${m.correctAnswer}`);
   if (m.kind === 'exit_ticket') {
     // The lesson is ending: recap first, then a single check. The exit
@@ -300,6 +318,10 @@ export function renderMomentDirective(m: LessonMoment): string {
       'Step in now: in two or three sentences, sum up the key takeaways of this lesson from the lesson video lines, ' +
       'then ask one short question that checks one of them.' +
       (m.question ? ' Do not give away the answer to the exit-ticket question.' : ''),
+    );
+  } else if (open && m.studentAnswer) {
+    parts.push(
+      'Step in now: respond to what the student wrote — name what is sound in it, then the one thing that would make it stronger, and ask them to add that.',
     );
   } else if (m.question && m.studentAnswer) {
     parts.push(

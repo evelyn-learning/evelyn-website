@@ -241,6 +241,34 @@ test('moment directive: question with and without the student answer', () => {
   assert.match(bare, /^\[The lesson video just paused for a teaching moment\. Step in now: /);
 });
 
+test('parseMoment: the question type is read; a typed kind becomes a question; a free response drops the host\'s placeholder answer', () => {
+  const fr = parseMoment({ type: 'evelyn:moment', kind: 'question', question_type: 'freeresponse', question: 'Why did it keep rolling?', student_answer: 'Nothing stopped it', correct_answer: 'Nothing stopped it' });
+  assert.deepEqual(fr, { kind: 'question', positionSeconds: null, questionType: 'freeresponse', question: 'Why did it keep rolling?', studentAnswer: 'Nothing stopped it' });
+  const tf = parseMoment({ type: 'evelyn:moment', kind: 'truefalse', question: 'Mass is weight.', student_answer: 'True', correct_answer: 'False' });
+  assert.equal(tf?.kind, 'question');
+  assert.equal(tf?.questionType, 'truefalse');
+  assert.equal(tf?.correctAnswer, 'False');
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'quiz', questionType: 'MCQ' })?.questionType, 'mcq');
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'quiz', format: 'Short Answer' })?.questionType, 'shortanswer');
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'question', question_type: 'riddle' })?.questionType, undefined);
+  assert.equal(parseMoment({ type: 'evelyn:moment', kind: 'free_response', question: 'q' })?.kind, 'question');
+});
+
+test('moment directive: a free response is discussed, never marked; true/false names its two options', () => {
+  const fr = renderMomentDirective({ kind: 'question', positionSeconds: 30, questionType: 'freeresponse', question: 'Why did it keep rolling?', studentAnswer: 'Nothing stopped it' });
+  assert.match(fr, /open-ended/i);
+  assert.match(fr, /The student answered: Nothing stopped it/);
+  assert.ok(!/Correct answer/.test(fr));
+  assert.match(fr, /what the student wrote/);
+  const frBlank = renderMomentDirective({ kind: 'question', positionSeconds: 30, questionType: 'freeresponse', question: 'Why?' });
+  assert.match(frBlank, /open-ended/i);
+  assert.match(frBlank, /what they think/);
+  const tf = renderMomentDirective({ kind: 'question', positionSeconds: 30, questionType: 'truefalse', question: 'Mass is weight.', studentAnswer: 'True', correctAnswer: 'False' });
+  assert.match(tf, /true-or-false question/);
+  assert.match(tf, /Correct answer \(never state it outright; guide the student to it\): False/);
+  assert.ok(!/gameclass/i.test(fr + tf));
+});
+
 test('inactive clock: accumulates closed stretches plus the open one', () => {
   let c = INITIAL_INACTIVE_CLOCK;
   assert.equal(inactiveMsAt(c, T), 0);
@@ -456,6 +484,13 @@ test('embed: duration excludes standby and prewarm waiting, in the save and in s
   const latches = embed.split('sessionEngagedAtRef.current = Date.now();').length - 1;
   const synced = embed.split(/sessionEngagedAtRef\.current = Date\.now\(\);\s*syncInactiveRef\.current\(\);/).length - 1;
   assert.ok(latches >= 3 && synced === latches, `every engagement latch closes the prewarm wait (${synced}/${latches})`);
+});
+
+test('embed: telemetry records the reported duration and each timeline kind\'s shape, so a host\'s real payload can be read from prod', () => {
+  assert.match(embed, /addDebugEvent\('video_state', `state=\$\{video\.state\} pos=\$\{video\.positionSeconds \?\? ''\}\$\{video\.durationSeconds !== null \? ` dur=\$\{video\.durationSeconds\}` : ''\}`\)/);
+  assert.match(embed, /addDebugEvent\('lesson_timeline_shapes'/);
+  assert.match(embed, /lesson\.shapes/);
+  assert.match(embed, /lesson\.questionTypes/);
 });
 
 test('embed: moments become a synthetic turn; the timeline feeds the per-turn window', () => {
