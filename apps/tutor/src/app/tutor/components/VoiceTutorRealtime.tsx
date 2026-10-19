@@ -21649,8 +21649,10 @@ export function VoiceTutorRealtime({
         now - lastVadActivityAtRef.current < 4000;
       const moment = pendingMomentRef.current;
       if (moment) {
-        if (!hasStartedRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
-          // The tutor was not open for this moment and no start followed it.
+        if (!hasStartedRef.current && standbyRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
+          // The tutor was not open for this moment and the video has played
+          // on without a start. (Paused on the moment, it waits for the tap —
+          // the host pauses first, the student taps start seconds later.)
           pendingMomentRef.current = null;
           onDebugEventRef.current?.('moment_dropped', 'why=not_started');
         } else if (now - moment.atMs > MOMENT_STALE_MS) {

@@ -322,6 +322,31 @@ test('parse: unknown kinds, notes and text are on-screen; the shape of each kind
   assert.ok(!JSON.stringify(p.shapes).includes('teacher note'));
 });
 
+test('parse: a question entry with no question field is the question — text, type, options and answer at the top level (the shape a host sends: embed-1792453041712)', () => {
+  const p = parseLessonTimeline(msg([
+    { start: 20, text: 'Which law explains the ball staying in motion?', kind: 'quiz_question', type: 'mcq', options: ['First', 'Second', 'Third'], correct_answer: 'First' },
+    { start: 20, text: 'A heavier player needs more force for the same acceleration.', kind: 'quiz_question', type: 'truefalse', options: [], correct_answer: 'True' },
+    { start: 20, text: 'Name the unit of force.', kind: 'quiz_question', type: 'shortanswer', options: [], correct_answer: 'newton' },
+    { start: 45, text: 'Describe one action-reaction pair you saw.', kind: 'question', type: 'freeresponse', options: [], correct_answer: 'Any reasonable answer' },
+    { start: 50, text: 'Slide text only', kind: 'slide' },
+  ]))!;
+  assert.equal(p.entries.length, 5);
+  assert.equal(p.entries[0].kind, 'quiz');
+  assert.equal(p.entries[0].text, 'Which law explains the ball staying in motion? Options: First | Second | Third. (Answer, for you only: First.)');
+  assert.equal(p.entries[1].text, 'A heavier player needs more force for the same acceleration. Options: True | False. (Answer, for you only: True.)');
+  assert.equal(p.entries[2].text, 'Name the unit of force. (Answer, for you only: newton.)');
+  assert.equal(p.entries[3].kind, 'question');
+  assert.equal(p.entries[3].text, 'Describe one action-reaction pair you saw. (Open-ended: no set answer.)');
+  assert.ok(!p.entries[3].text.includes('reasonable'), 'a free response carries no placeholder answer');
+  assert.equal(p.entries[4].text, 'Slide text only');
+  assert.deepEqual(p.questionTypes, { mcq: 1, truefalse: 1, shortanswer: 1, freeresponse: 1 });
+  assert.equal(p.shapes.quiz_question, 'start,text,kind,type,options,correct_answer');
+  // A question entry with only text stays a question and reads as its text.
+  const q = parseLessonTimeline(msg([{ start: 1, kind: 'question', text: 'Why?' }]))!;
+  assert.equal(q.entries[0].text, 'Why?');
+  assert.deepEqual(q.questionTypes, {});
+});
+
 test('cache key: one per token, stable, none without a token; the token itself never appears in it', () => {
   const a = lessonCacheKey('eyJhbGciOi.payload.sig-aaaa');
   const b = lessonCacheKey('eyJhbGciOi.payload.sig-bbbb');

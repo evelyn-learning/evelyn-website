@@ -559,9 +559,10 @@ test('moment position sent in milliseconds is read as seconds when it matches th
   assert.equal(reconcileMomentPosition(50_000, 49), 50_000 / 1000);
 });
 
-test('a moment for a tutor that is not open is dropped after a short hold; resume cancellations say why', () => {
+test('a moment for a tutor that is not open waits while the video is paused on it; it is dropped once the video plays on; resume cancellations say why', () => {
   assert.equal(MOMENT_PRESTART_HOLD_MS, 5000);
-  assert.match(vtr, /if \(!hasStartedRef\.current && now - moment\.atMs > MOMENT_PRESTART_HOLD_MS\) \{[^}]*'why=not_started'/);
+  // embed-1792453041712: the host paused at the moment, the start tap came 8 s later — a bare 5 s hold dropped it.
+  assert.match(vtr, /if \(!hasStartedRef\.current && standbyRef\.current && now - moment\.atMs > MOMENT_PRESTART_HOLD_MS\) \{[^}]*'why=not_started'/);
   for (const why of ['student_turn', 'standby', 'moment', 'student_typed', 'turn_killed']) assert.ok(vtr.includes(`cancelResumeLesson('${why}')`), why);
   assert.match(embed, /reconcileMomentPosition\(sentPos, currentPositionSeconds\(lessonHostRef\.current, Date\.now\(\)\)\)/);
   assert.match(embed, /speech=\$\{st\.speech\} visual=\$\{st\.visual\} slide=\$\{st\.slide\} quiz=\$\{st\.quiz\} question=\$\{st\.question\} chars=\$\{st\.chars\}/);

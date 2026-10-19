@@ -32,10 +32,11 @@ export const STANDBY_IDLE_END_MS = 30 * 60 * 1000;
 /** A moment that could not be delivered within this long (session never
  *  started, tutor kept busy) is dropped: the video has moved on. */
 export const MOMENT_STALE_MS = 120 * 1000;
-/** A moment that arrives BEFORE the session has started is kept only this
- *  long: a host's "ask the tutor about this" sends the moment and the start
- *  together, while a moment for a student who has not opened the tutor must
- *  not play a minute later when they open it about something else. */
+/** A moment that arrives BEFORE the session has started is kept while the
+ *  video stays paused on it (a host pauses at the moment; the student reads
+ *  it, then taps start — seconds later), up to MOMENT_STALE_MS. Once the
+ *  video plays on without a start, it is dropped after this long: a student
+ *  who opens the tutor a minute later is asking about something else. */
 export const MOMENT_PRESTART_HOLD_MS = 5 * 1000;
 /** A session that starts with the video this close to its beginning opens
  *  with a short hook for the lesson instead of the usual opener. */

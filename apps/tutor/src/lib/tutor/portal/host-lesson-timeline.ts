@@ -191,12 +191,22 @@ function entryText(r: Record<string, unknown>, kind: TimelineKind, questionType?
   const summary = field(r, 'summary', 'description', 'content');
   if (summary && summary !== text) parts.push(summary);
   if (text && title && !text.includes(title)) parts.unshift(`"${title}":`);
-  const qs = Array.isArray(r.questions) ? r.questions : (r.question !== undefined ? [r] : []);
+  // A question entry with no `question(s)` field IS the question: its `text`
+  // is the prompt and `type`, `options`, `correct_answer` sit beside it.
+  const self = isAssessment(kind) && !Array.isArray(r.questions) && r.question === undefined;
+  const qs = Array.isArray(r.questions) ? r.questions : (r.question !== undefined || self ? [r] : []);
   // An entry-level type applies to every question of a quiz that has none of its own.
   const entryType = questionType ?? (Array.isArray(r.questions) ? questionTypeOf(r) : undefined);
   qs.forEach((q, i) => {
     const line = q && typeof q === 'object' ? questionLine(q as Record<string, unknown>, entryType, onType) : typeof q === 'string' && q.trim() ? q.trim() : undefined;
-    if (line && line !== text) parts.push(qs.length > 1 ? `Q${i + 1}: ${line}` : line);
+    if (!line || line === text) return;
+    if (self) {
+      // The prompt is already in parts (as text or title): the full line takes its place.
+      const at = parts.indexOf(text ?? title ?? '');
+      if (at >= 0) parts[at] = line; else parts.push(line);
+      return;
+    }
+    parts.push(qs.length > 1 ? `Q${i + 1}: ${line}` : line);
   });
   if (isOnScreen(kind)) {
     const extras = extraFields(r);
