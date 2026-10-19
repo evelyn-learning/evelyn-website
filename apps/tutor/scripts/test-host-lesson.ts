@@ -446,7 +446,7 @@ const embed = read('src/app/tutor-portal/embed/page.tsx');
 test('embed: v1.2 host messages are parent-only, origin-checked and flag-gated', () => {
   const i = embed.indexOf('parseVideoState(event.data)');
   assert.ok(i > 0, 'parseVideoState wired');
-  const block = embed.slice(Math.max(0, i - 900), i + 200);
+  const block = embed.slice(Math.max(0, i - 2200), i + 200);
   assert.match(block, /if \(!TUTOR_HOST_LESSON\) return;/);
   assert.match(block, /event\.source !== window\.parent/);
   assert.match(block, /isAllowedHostOrigin\(event\.origin, expectedOrigin\)/);
@@ -491,6 +491,15 @@ test('embed: telemetry records the reported duration and each timeline kind\'s s
   assert.match(embed, /addDebugEvent\('lesson_timeline_shapes'/);
   assert.match(embed, /lesson\.shapes/);
   assert.match(embed, /lesson\.questionTypes/);
+});
+
+test('embed: the lesson timeline survives the warm frame\'s 30-minute self-reload (host sends it once, on the first ready)', () => {
+  // Live 10-19: GameClass posted evelyn:lesson once; after our idle reload the frame had no timeline.
+  assert.match(embed, /sessionStorage\.setItem\(cacheKey, JSON\.stringify\(event\.data\)\)/);
+  assert.match(embed, /sessionStorage\.getItem\(cacheKey\)/);
+  assert.match(embed, /'lesson_timeline_restored' : 'lesson_timeline'/);
+  assert.match(embed, /lessonCacheKey\(embedToken\)/);
+  assert.match(embed, /LESSON_CACHE_MAX_CHARS/);
 });
 
 test('embed: moments become a synthetic turn; the timeline feeds the per-turn window', () => {

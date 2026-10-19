@@ -276,6 +276,23 @@ export function parseLessonTimeline(data: unknown): ParsedTimeline | null {
   return { entries, received: d.timeline.length, cut, rawKinds, shapes, questionTypes };
 }
 
+/** The host posts the lesson ONCE, on the frame's first `evelyn:ready`
+ *  (seen live 10-19). A warm frame reloads itself after 30 idle minutes, so
+ *  the raw lesson message is kept in sessionStorage under a key derived from
+ *  the token — per lesson, never the token itself — and restored on mount.
+ *  sessionStorage is shared by every frame of this origin in the tab, so the
+ *  key must tell one lesson's frame from another's. */
+export const LESSON_CACHE_MAX_CHARS = 1_500_000;
+
+export function lessonCacheKey(token: string | null | undefined): string | null {
+  if (!token) return null;
+  // djb2 over the token: a stable, short fingerprint (not a secret: the
+  // token is a signed JWT; a fingerprint of it reveals nothing).
+  let h = 5381;
+  for (let i = 0; i < token.length; i++) h = ((h * 33) ^ token.charCodeAt(i)) >>> 0;
+  return `evelyn:lesson:${h.toString(36)}${token.length.toString(36)}`;
+}
+
 export const LESSON_NOW_LIMITS = {
   /** Speech this far before the position is context for "what did they just say". */
   beforeSeconds: 120,

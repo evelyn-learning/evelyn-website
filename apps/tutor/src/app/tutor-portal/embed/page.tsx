@@ -46,7 +46,7 @@ import {
   activeSeconds, clockMessage, currentPositionSeconds, isStandingBy, markInactive, panelToggleCommand, parseHostPause, parseHostResume, parseMoment, inferExitTicket,
   parseVideoState, reconcileMomentPosition, reduceLessonHost, renderMomentDirective, videoForPrompt, momentBanner, lessonStartHook, type InactiveClock, type LessonHostEvent, type LessonHostState,
 } from '@/lib/tutor/portal/host-lesson';
-import { parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
+import { LESSON_CACHE_MAX_CHARS, lessonCacheKey, parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { HOST_START_VIDEO_WAIT_MS, PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, shouldAwaitVideoState, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
@@ -1524,6 +1524,24 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   useEffect(() => {
     if (!TUTOR_HOST_LESSON) return;
     const expectedOrigin = getEmbeddingHost();
+    const cacheKey = lessonCacheKey(embedToken);
+    const applyLesson = (lesson: NonNullable<ReturnType<typeof parseLessonTimeline>>, source: 'host' | 'cache') => {
+      timelineRef.current = lesson.entries;
+      const st = timelineStats(lesson.entries);
+      addDebugEvent(source === 'cache' ? 'lesson_timeline_restored' : 'lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut} speech=${st.speech} visual=${st.visual} slide=${st.slide} quiz=${st.quiz} question=${st.question} chars=${st.chars} kinds=${Object.entries(lesson.rawKinds).map(([k, n]) => `${k}:${n}`).join(',')}`);
+      // How the host shapes each kind of entry (keys only, no content) and the
+      // question types it sent: enough to read a new host payload from prod.
+      addDebugEvent('lesson_timeline_shapes', `${Object.entries(lesson.shapes).map(([k, keys]) => `${k}=[${keys}]`).join(' ')} question_types=${Object.entries(lesson.questionTypes).map(([k, n]) => `${k}:${n}`).join(',') || '-'}`);
+    };
+    // The host posts the lesson once, on the first ready; a frame that
+    // reloaded itself (30 idle minutes) takes it back from sessionStorage.
+    if (cacheKey && timelineRef.current === null) {
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        const cached = raw ? parseLessonTimeline(JSON.parse(raw)) : null;
+        if (cached) applyLesson(cached, 'cache');
+      } catch { /* no storage, or a stale/odd value: the host's next lesson message wins */ }
+    }
     const onMessage = (event: MessageEvent) => {
       if (event.source !== window.parent || window.parent === window) return;
       if (!isAllowedHostOrigin(event.origin, expectedOrigin)) return;
@@ -1557,12 +1575,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       }
       const lesson = parseLessonTimeline(event.data);
       if (lesson) {
-        timelineRef.current = lesson.entries;
-        const st = timelineStats(lesson.entries);
-        addDebugEvent('lesson_timeline', `received=${lesson.received} kept=${lesson.entries.length} cut=${lesson.cut} speech=${st.speech} visual=${st.visual} slide=${st.slide} quiz=${st.quiz} question=${st.question} chars=${st.chars} kinds=${Object.entries(lesson.rawKinds).map(([k, n]) => `${k}:${n}`).join(',')}`);
-        // How the host shapes each kind of entry (keys only, no content) and the
-        // question types it sent: enough to read a new host payload from prod.
-        addDebugEvent('lesson_timeline_shapes', `${Object.entries(lesson.shapes).map(([k, keys]) => `${k}=[${keys}]`).join(' ')} question_types=${Object.entries(lesson.questionTypes).map(([k, n]) => `${k}:${n}`).join(',') || '-'}`);
+        applyLesson(lesson, 'host');
+        if (cacheKey) {
+          try {
+            const raw = JSON.stringify(event.data);
+            if (raw.length <= LESSON_CACHE_MAX_CHARS) sessionStorage.setItem(cacheKey, JSON.stringify(event.data));
+          } catch { /* quota or no storage: the lesson still applies for this load */ }
+        }
         return;
       }
       const hostPause = parseHostPause(event.data);
@@ -1578,7 +1597,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [addDebugEvent, dispatchLessonHost]);
+  }, [addDebugEvent, dispatchLessonHost, embedToken]);
 
   const standby = TUTOR_HOST_LESSON && isStandingBy(lessonHost);
 

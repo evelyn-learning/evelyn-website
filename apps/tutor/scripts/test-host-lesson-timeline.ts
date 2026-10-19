@@ -11,6 +11,8 @@ import {
   LESSON_NEAR_END_S,
   LESSON_TIMELINE_LIMITS,
   lessonEndSeconds,
+  lessonCacheKey,
+  LESSON_CACHE_MAX_CHARS,
   parseLessonTimeline,
   renderLessonNow,
   timelineStats,
@@ -318,6 +320,18 @@ test('parse: unknown kinds, notes and text are on-screen; the shape of each kind
   assert.deepEqual(p.entries.map((e) => e.kind), ['visual', 'visual', 'visual', 'visual', 'speech']);
   assert.deepEqual(p.shapes, { notes: 'start,kind,text', text: 'start,kind,text', visual: 'start,kind,text,end', '-': 'start,text' });
   assert.ok(!JSON.stringify(p.shapes).includes('teacher note'));
+});
+
+test('cache key: one per token, stable, none without a token; the token itself never appears in it', () => {
+  const a = lessonCacheKey('eyJhbGciOi.payload.sig-aaaa');
+  const b = lessonCacheKey('eyJhbGciOi.payload.sig-bbbb');
+  assert.ok(a && b && a !== b);
+  assert.equal(lessonCacheKey('eyJhbGciOi.payload.sig-aaaa'), a);
+  assert.equal(lessonCacheKey(null), null);
+  assert.equal(lessonCacheKey(''), null);
+  assert.ok(!a!.includes('payload'));
+  assert.match(a!, /^evelyn:lesson:/);
+  assert.ok(LESSON_CACHE_MAX_CHARS >= LESSON_TIMELINE_LIMITS.totalChars);
 });
 
 console.log(`\n${passed}/${passed + failed} passed`);
