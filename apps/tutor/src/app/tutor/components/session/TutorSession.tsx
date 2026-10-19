@@ -1260,7 +1260,7 @@ export default function TutorSession(props: TutorSessionProps) {
   const qpinAnswerRefusalRef = useRef<string>('');
   useEffect(() => {
     if (!TUTOR_QUESTION_PIN || !TUTOR_QPIN_CLEAR_ON_ANSWER || !questionPin) return;
-    const decision = shouldClearQpinOnAnswer(transcript, questionPin.turnId);
+    const decision = shouldClearQpinOnAnswer(transcript, questionPin.turnId, { movedOnClears: sessionMode === 'text' });
     if (!decision.clear) {
       const key = `${questionPin.turnId}:${decision.reason}`;
       if (qpinAnswerRefusalRef.current !== key) {
@@ -1274,10 +1274,10 @@ export default function TutorSession(props: TutorSessionProps) {
     }
     onDebugEvent?.(
       'qpin_cleared_answered',
-      `answered and affirmed — "${questionPin.gist.slice(0, 60)}"`,
+      `${decision.reason === 'moved-on' ? 'answered, and the reply asked nothing more' : 'answered and affirmed'} — "${questionPin.gist.slice(0, 60)}"`,
     );
     setQuestionPin(null);
-  }, [transcript, questionPin, onDebugEvent]);
+  }, [transcript, questionPin, onDebugEvent, sessionMode]);
 
   // R47 Task 3c (review fix): live mirror of the segment id, kept in sync
   // every time it changes — separate from prevQpinSegmentIdRef above

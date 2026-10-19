@@ -429,7 +429,10 @@ export const WRONG_WHOLE_ANSWER_REEMIT =
   // 2026-10-18 (GAC Chemistry, portal-484b007a): "the first thing in their
   // reasoning" sent the student back to their first step, which was right
   // (30 g/mol), when the slip was the division after it.
-  + 'the second asks one question about the step in their working that does not hold — recompute each step they wrote, in order, and ask about the first one that is wrong; never question a step they did correctly. If they gave only a result, with none of the working behind it, there is no step of theirs to point to: ask how they got it instead — never send them to a step, quantity or value they did not write. ';
+  + 'the second asks one question about the step in their working that does not hold — recompute each step they wrote, in order, and ask about the first one that is wrong; never question a step they did correctly. '
+  // 2026-10-19 (GAC AP Chemistry portal-00153d15): told the slip was the
+  // division, the retry said "that division itself isn't quite the issue".
+  + 'You may quote that step in their own words and numbers to point at it — that shows nothing of yours. Never say that the step where their working goes wrong is fine or is not the issue. If they gave only a result, with none of the working behind it, there is no step of theirs to point to: ask how they got it instead — never send them to a step, quantity or value they did not write. ';
 
 /** 2026-10-12 (portal-2000fd6a @73.3 s): told only INCORRECT and asked for
  *  "the first thing to re-examine", the reply sent the student to a condition
@@ -520,6 +523,16 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
     if (opts?.noRevealAnyStep === true && opts.allSolved === true && (p.solvedProblem !== undefined || p.answers === 'other_part')) {
       return head + proposed + where + `- Checked for that question: CORRECT.${checked}\n` + ALL_SOLVED_CORRECT_RULE + tail;
     }
+    // 2026-10-19 (GAC AP Chemistry portal-00153d15): "check my answer x = 4"
+    // on a formula question was checked CORRECT at medium confidence; the
+    // reply wrote the whole solution on the board and called 4 "exactly
+    // right". A whole answer the check is not sure of is not credited.
+    if (opts?.noRevealAnyStep === true && p.answers === 'overall_problem' && p.confidence === 'medium') {
+      return head + proposed + where + '- Checked for that question: PROBABLY correct, but the check is not sure what their answer means.\n' + UNSURE_CORRECT_RULE + tail;
+    }
+    if (opts?.noRevealAnyStep === true && (p.answers === 'overall_problem' || p.answers === 'open_question')) {
+      return head + proposed + where + `- Checked for that question: CORRECT.${checked}\n` + CORRECT_GO_NO_FURTHER_RULE + tail;
+    }
     return head + proposed + where
       + `- Checked for that question: CORRECT.${checked}\n`
       + (p.answers === 'overall_problem'
@@ -580,6 +593,20 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
     + 'What to do: your working must reach the checked value and your match statement must agree with the check — state as facts which part your working confirms, and that the question asks for more or that a part differs. Ask for what is missing; do not supply it.\n'
     + tail;
 }
+
+/** 2026-10-19 (GAC APES portal-4b144435, AP Chemistry portal-00153d15): told
+ *  to reach the checked value, the reply went past it — the student gave the
+ *  formula and the reply worked out the number ("1000 − 600 = 400. That
+ *  matches what you gave"); the student gave the multiplier and the reply
+ *  built the molecular formula. Under the ledger, a right answer is confirmed
+ *  and the next step stays the student's. */
+export const CORRECT_GO_NO_FURTHER_RULE =
+  'What to do: say plainly that it is right — a short reason is fine, in their own values. Go no further than what they wrote: do not work the next step, a value computed from theirs, or a final form built from it, in the reply or on the board, and never say they gave something they did not write. If the problem asks for more than what they wrote, ask them for that next step in one question. If what they wrote is the whole answer, say it is the final answer. Never send them back to a smaller step as though the value were wrong.\n';
+
+/** 2026-10-19 (GAC AP Chemistry portal-00153d15): see above — a whole answer
+ *  the check is not sure about. */
+export const UNSURE_CORRECT_RULE =
+  'What to do: give no verdict either way — do not say it is right, wrong or close. Ask them, in one short question, what their answer stands for or how they got it. Show no working, value, step or result of your own, in the reply or on the board.\n';
 
 /** 2026-10-16 (GAC v12, AP Macro): a check found a wrong answer CORRECT
  *  (high confidence); a second, independent check of a correct finding now

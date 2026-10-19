@@ -107,6 +107,11 @@ export function decideStallRecovery(input: {
   enabled?: boolean;
   /** This call ended by the stall guard's own abort. */
   stalled: boolean;
+  /** 2026-10-19 (GAC Precalc portal-59db7283): the connection dropped mid-turn
+   *  ("network error") with nothing shown. Handled like a stall: the default
+   *  was a spoken cover line, which a typed session never shows, so the
+   *  student waited 80 s and typed "hello?". */
+  networkFailure?: boolean;
   /** Nothing of this turn reached the student (no sentence dispatched). */
   nothingShown: boolean;
   /** The turn's trigger text. A bracketed runtime dispatch is never retried
@@ -116,7 +121,7 @@ export function decideStallRecovery(input: {
   lastRetry: { transcript: string; at: number } | null | undefined;
   now: number;
 }): StallRecovery {
-  if ((input?.enabled ?? TUTOR_BRAIN_STALL_RETRY) !== true || !input.stalled || !input.nothingShown) return 'default';
+  if ((input?.enabled ?? TUTOR_BRAIN_STALL_RETRY) !== true || !(input.stalled || input.networkFailure === true) || !input.nothingShown) return 'default';
   const t = (input.transcript ?? '').trim();
   if (!t || t.startsWith('[')) return 'default';
   const prev = input.lastRetry;

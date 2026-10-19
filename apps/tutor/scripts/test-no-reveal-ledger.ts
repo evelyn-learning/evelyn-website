@@ -223,10 +223,17 @@ async function main() {
     );
   });
   // Partly correct: changed by the option since 2026-10-15 (PARTLY_NO_REVEAL_RULE, below).
-  await test('correct checks of the open question or the problem are unchanged by the option', () => {
+  // 2026-10-19 (GAC APES portal-4b144435, AP Chemistry portal-00153d15): with the
+  // option a right answer is confirmed and the reply goes no further; without it, as before.
+  await test('correct checks of the open question or the problem: with the option the reply goes no further', () => {
     for (const answers of ['open_question', 'overall_problem'] as const) {
-      const p = pc({ verdict: 'correct', answers });
-      assert.equal(formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true, noRevealAnyStep: true }), formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true }));
+      const p = pc({ verdict: 'correct', answers, confidence: 'high' });
+      const withOpt = formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true, noRevealAnyStep: true });
+      assert.notEqual(withOpt, formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true }));
+      assert.match(withOpt, /CORRECT/);
+      assert.match(withOpt, /Go no further than what they wrote/);
+      assert.doesNotMatch(withOpt, /show the remaining step/);
+      assert.match(formatAnswerCheckBlock(p, { correctValue: 'Q', workThenMatch: true }), answers === 'overall_problem' ? /show the remaining step/ : /say that the result is the value they gave/);
     }
   });
 
@@ -512,6 +519,19 @@ async function main() {
       assert.match(r, /only a result, with none of the working behind it, there is no step of theirs to point to: ask how they got it/);
     assert.match(LEDGER_CONDUCT_RULES, /A hint is never part of the answer itself/);
     assert.match(WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH, /naming no source other than the problem/);
+  });
+  // 2026-10-19 (GAC AP Chemistry portal-00153d15, APES portal-4b144435).
+  await test('10-19: a right answer goes no further; an unsure whole answer is not credited; content questions are guided', () => {
+    const open = formatAnswerCheckBlock(pc({ verdict: 'correct', answers: 'open_question', confidence: 'high', proposed: 'NPP = GPP - respiration' }), { workThenMatch: true, noRevealAnyStep: true });
+    const whole = formatAnswerCheckBlock(pc({ verdict: 'correct', answers: 'overall_problem', confidence: 'high', proposed: '6' }), { workThenMatch: true, noRevealAnyStep: true });
+    const unsure = formatAnswerCheckBlock(pc({ verdict: 'correct', answers: 'overall_problem', confidence: 'medium', proposed: 'x = 4' }), { workThenMatch: true, noRevealAnyStep: true });
+    assert.match(open, /Go no further than what they wrote/);
+    assert.match(whole, /Go no further than what they wrote/);
+    assert.match(unsure, /give no verdict either way/);
+    assert.doesNotMatch(unsure, /Checked for that question: CORRECT/);
+    assert.match(OFF_TOPIC_NOT_ANSWERED, /content[^.]*is homework: guide them/);
+    assert.doesNotMatch(OFF_TOPIC_NOT_ANSWERED, /give a short helpful answer or guide them/);
+    assert.match(WRONG_WHOLE_ANSWER_REEMIT, /Never say that the step where their working goes wrong is fine/);
   });
   // 2026-10-15 staging, second run (Algebra II, AP Chemistry): a repeat of a solved answer once all are solved.
   await test('all solved: a correct repeat of a listed answer gets the no-question rule; extra-problem work does not', () => {

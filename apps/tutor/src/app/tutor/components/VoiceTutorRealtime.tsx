@@ -13541,7 +13541,13 @@ export function VoiceTutorRealtime({
                 onDebugEvent?.('auto_card_on_advance', `${adv.segId} (${truth.kind}) — advanced without rendering the authored card`);
               }
             }
-            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0) {
+            // 2026-10-19 (GAC APES portal-4b144435): in a TYPED homework session
+            // a scaffolding question ("what do you get when you take 10% of
+            // that 40?") and an explanation were boarded as "Question" cards.
+            // The chat already shows them, and the student's own problems are
+            // the board's problems.
+            const typedHomeworkTurn = currentTurnTypedRef.current && (homeworkProblemsRef.current?.length ?? 0) > 0;
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn) {
               const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
               const hit = detectSpokenProblem(attemptSentences, boardTexts);
               if (hit) {
@@ -19422,6 +19428,7 @@ export function VoiceTutorRealtime({
           // once; if that stalls too, say so where the student is looking.
           const stallRecovery = decideStallRecovery({
             stalled: stallState.stalled,
+            networkFailure: isNetworkFailure,
             nothingShown: audibleSentenceCount === 0,
             transcript,
             lastRetry: stallRetryRef.current,
@@ -19445,6 +19452,15 @@ export function VoiceTutorRealtime({
           } else if (stallRecovery === 'apology') {
             onDebugEvent?.('brain_stall_apology', 'second stall — apology line spoken');
             speakTextRef.current?.(BRAIN_STALL_APOLOGY);
+          } else if (currentTurnTypedRef.current) {
+            // 2026-10-19 (GAC Precalc portal-59db7283): a spoken line shows
+            // nothing in a typed session — say it where the student is looking.
+            onDebugEvent?.('brain_error_typed_line', 'turn failed — apology line shown in the transcript');
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              { id: `tutor-fallback-${Date.now()}`, role: 'tutor' as const, text: BRAIN_STALL_APOLOGY, timestamp: new Date() },
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
           } else {
             speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
           }

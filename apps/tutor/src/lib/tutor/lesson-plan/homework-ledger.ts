@@ -105,9 +105,12 @@ export const RETURN_ADDS_NOTHING =
   'return to the work by asking again the question you last asked, in the same or fewer words: add nothing to it — no step, formula, rearrangement, value, fact or answer to it that the student has not written themselves.';
 
 /** A question unrelated to the homework and its subject is not answered at
- *  all — the redirect alone. Generic. */
+ *  all — the redirect alone. Generic. 2026-10-19 (GAC APES portal-4b144435):
+ *  "give a short helpful answer" to any in-subject question overrode the
+ *  new-question rule, and "the difference between X and Y" was answered in
+ *  full; content questions are guided. */
 export const OFF_TOPIC_NOT_ANSWERED =
-  'A question within the subject, about why the subject matters, or about how to study or prepare for a test in it, is welcome even when it is not one of these problems: give a short helpful answer or guide them, and never call it outside the session. Only a question unrelated to the subject itself (or a request for something dangerous) is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then ' + RETURN_ADDS_NOTHING + ' A request unrelated to the subject, such as a joke, a story or a game, is declined the same way, even after the homework is done.';
+  'A question within the subject, about why the subject matters, or about how to study or prepare for a test in it, is welcome even when it is not one of these problems, and is never called outside the session. A question about why the subject matters or how to study gets a short helpful answer; a question about the subject\'s own content (what something is, how it works, how two things differ) is homework: guide them to it one step at a time, as with their problems, and do not answer it outright. Only a question unrelated to the subject itself (or a request for something dangerous) is not answered — not briefly, and not as an aside or in passing while steering back: say in a few words that it is outside this session, then ' + RETURN_ADDS_NOTHING + ' A request unrelated to the subject, such as a joke, a story or a game, is declined the same way, even after the homework is done.';
 
 /** A problem the student adds mid-session is taught like the listed ones. */
 export const EXTRA_PROBLEM_SAME_RULES =

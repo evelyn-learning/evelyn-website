@@ -105,7 +105,16 @@ assert(decideStallRecovery({ ...stall, lastRetry: { transcript: stall.transcript
 assert(decideStallRecovery({ ...stall, lastRetry: { transcript: 'a different turn', at: now - 30_000 } }) === 'retry', 'a retry of ANOTHER turn does not use up this one');
 assert(decideStallRecovery({ ...stall, lastRetry: { transcript: stall.transcript, at: now - BRAIN_STALL_RETRY_WINDOW_MS - 1 } }) === 'retry', 'the same words long afterwards are a new turn');
 assert(decideStallRecovery({ ...stall, nothingShown: false }) === 'default', 'something was already shown → no retry (the student has content)');
-assert(decideStallRecovery({ ...stall, stalled: false }) === 'default', 'not a stall (network error, …) → the existing handling');
+assert(decideStallRecovery({ ...stall, stalled: false }) === 'default', 'not a stall and no dropped connection → the existing handling');
+assert(decideStallRecovery({ ...stall, stalled: false, networkFailure: true }) === 'retry', 'GAC Precalc portal-59db7283: a dropped connection with nothing shown → retry the turn once');
+assert(decideStallRecovery({ ...stall, stalled: false, networkFailure: true, lastRetry: { transcript: stall.transcript, at: now - 5_000 } }) === 'apology', 'the retry dropped too → apology line');
+assert(decideStallRecovery({ ...stall, stalled: false, networkFailure: true, nothingShown: false }) === 'default', 'a dropped connection after content was shown → no retry');
+{
+  const vtr = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
+  assert(vtr.includes('if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn) {'), 'GAC APES portal-4b144435: a typed homework turn never boards the tutor\'s own question as a card');
+  assert(vtr.includes('networkFailure: isNetworkFailure,'), 'wiring: a dropped connection reaches the stall recovery');
+  assert(vtr.includes("onDebugEvent?.('brain_error_typed_line'"), 'wiring: a failed typed turn shows its line in the transcript, never only speaks it');
+}
 assert(decideStallRecovery({ ...stall, transcript: '[start lesson]' }) === 'default', 'a runtime dispatch is never retried here (the opener has its own retry)');
 assert(decideStallRecovery({ ...stall, enabled: false }) === 'default', 'flag off → the existing single cover line');
 assert(BRAIN_STALL_APOLOGY === 'Sorry — I lost my train of thought. Could you send that again?', 'the apology line');

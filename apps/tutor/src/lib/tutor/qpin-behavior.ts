@@ -189,7 +189,8 @@ export type QpinAnswerReason =
   | 'not-answer-shaped'
   | 'awaiting-tutor-turn'
   | 'no-affirm'
-  | 'correction';
+  | 'correction'
+  | 'moved-on';
 
 export interface QpinAnswerDecision {
   clear: boolean;
@@ -204,7 +205,8 @@ const ANSWER_SHAPED_CATEGORIES = new Set(['numeric-echo', 'think-aloud', 'generi
 
 export function shouldClearQpinOnAnswer<
   T extends { id?: string; role: string; text?: string; historyOnly?: boolean },
->(transcript: readonly T[], pinTurnId: string | null | undefined): QpinAnswerDecision {
+>(transcript: readonly T[], pinTurnId: string | null | undefined, opts?: { movedOnClears?: boolean }): QpinAnswerDecision {
+  const movedOnClears = opts?.movedOnClears === true;
   if (!pinTurnId) return { clear: false, reason: 'pin-not-found' };
   const idx = transcript.findIndex((t) => t.id === pinTurnId);
   if (idx < 0) return { clear: false, reason: 'pin-not-found' };
@@ -220,15 +222,17 @@ export function shouldClearQpinOnAnswer<
   let sIdx = -1;
   let sawStudent = false;
   let firstCategory = '';
+  let movedOn = false;
   for (let i = idx + 1; i < transcript.length; i++) {
     if (transcript[i].role !== 'student') continue;
     sawStudent = true;
     const cover = classifyCover(transcript[i].text || '');
+    if (movedOnClears && cover.kind === 'cover' && cover.category !== 'question' && tutorMovedOnAfter(transcript, i)) movedOn = true;
     if (cover.kind === 'cover' && ANSWER_SHAPED_CATEGORIES.has(cover.category)) { sIdx = i; break; }
     if (!firstCategory) firstCategory = cover.kind === 'cover' ? cover.category : cover.kind;
   }
   if (!sawStudent) return { clear: false, reason: 'no-student-turn' };
-  if (sIdx < 0) return { clear: false, reason: 'not-answer-shaped', coverCategory: firstCategory };
+  if (sIdx < 0) return movedOn ? { clear: true, reason: 'moved-on' } : { clear: false, reason: 'not-answer-shaped', coverCategory: firstCategory };
 
   // 3. the tutor's following SUBSTANTIVE turn must read as an affirmation.
   //    historyOnly turns are skipped — R38's guarantee, same as the turn bound.
@@ -241,6 +245,28 @@ export function shouldClearQpinOnAnswer<
 
   const read = readPacingVerdict(transcript[tIdx].text || '');
   if (read.isCorrection) return { clear: false, reason: 'correction' };
-  if (!read.isAffirm) return { clear: false, reason: 'no-affirm' };
+  if (!read.isAffirm) return movedOnClears && tutorMovedOnAfter(transcript, sIdx) ? { clear: true, reason: 'moved-on' } : { clear: false, reason: 'no-affirm' };
   return { clear: true, reason: 'answered' };
+}
+
+/**
+ * 2026-10-19 (GAC AP Chemistry portal-00153d15, APES portal-4b144435): the
+ * student answered, and the tutor's reply asked nothing at all — it settled
+ * the question ("That value checks out…", "Both problems are done…") — yet
+ * the pin stayed up for 140 s. The affirm test missed it because the verdict
+ * opener cut removes the "Right," the test reads. A reply to a student turn
+ * that asks NO question and is not a correction has left the pinned question
+ * behind: an open question is always re-asked (the rules end a hint, a
+ * correction and a steer-back with a question). TYPED sessions only
+ * (`movedOnClears`): a spoken lesson carries on across turns without a
+ * question ("Let me show you both on the map.") while its question stays open.
+ */
+function tutorMovedOnAfter<T extends { role: string; text?: string; historyOnly?: boolean }>(transcript: readonly T[], studentIdx: number): boolean {
+  for (let i = studentIdx + 1; i < transcript.length; i++) {
+    const t = transcript[i];
+    if (t.role !== 'tutor' || t.historyOnly) continue;
+    const text = t.text || '';
+    return text.trim().length > 0 && !text.includes('?') && !readPacingVerdict(text).isCorrection;
+  }
+  return false;
 }

@@ -388,6 +388,19 @@ check(
   ).reason,
   'not-answer-shaped',
 );
+// 2026-10-19 (GAC AP Chemistry portal-00153d15, APES portal-4b144435): typed
+// homework, the reply settled the question and asked nothing — the pin stayed.
+{
+  const chem = [T2('q', 'If we assume a 100 gram sample, how many grams of carbon and hydrogen would you have?'), A('a', 'can you check my answer x = 4'),
+    T2('v', 'That value checks out. That gives CH4, and 4 is exactly right for x.')];
+  check('typed: answer + reply that asks nothing → pin cleared (moved-on)', shouldClearQpinOnAnswer(chem, 'q', { movedOnClears: true }).reason, 'moved-on');
+  check('voice (default): the same window keeps its old behaviour', shouldClearQpinOnAnswer(chem, 'q').clear, false);
+  const apes = [T2('q', 'What do you get when you take 10% of 40?'), A('a', "I don't know, maybe 4 kcal/m^2/yr, because it's 10% twice?"),
+    T2('v', '10% of 40 is 4 kcal/m²/yr. Both problems are done — nice work!')];
+  check('typed: a hedged answer + a reply that asks nothing → pin cleared', shouldClearQpinOnAnswer(apes, 'q', { movedOnClears: true }).clear, true);
+  check('typed: a reply that asks again keeps the pin', shouldClearQpinOnAnswer([T2('q', 'What is 10% of 40?'), A('a', '5'), T2('v', 'That is not it. What is one tenth of 40?')], 'q', { movedOnClears: true }).clear, false);
+  check('typed: a student question answered with no question keeps the pin', shouldClearQpinOnAnswer([T2('q', 'What is 10% of 40?'), A('a', 'what does percent mean?'), T2('v', 'Percent means per hundred.')], 'q', { movedOnClears: true }).clear, false);
+}
 check('unknown pin id → never clears', shouldClearQpinOnAnswer(W1, 'nope').clear, false);
 check('null pin id → never clears', shouldClearQpinOnAnswer(W1, null).clear, false);
 check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').clear, false);
