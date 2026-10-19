@@ -241,7 +241,7 @@ export const LEDGER_CONDUCT_RULES =
   // the board showed a fully worked twin of an open problem.
   // 2026-10-18 (GAC AP Biology, portal-c20a3190): "can you help me with why
   // hydrolysis is used in digestion" got the whole explanation, then a question.
-  + '- A new question or problem the student brings that is not on their list is homework too: help them reason it out — start from what they already know with one question or a small hint, and do not give the full answer or explanation first. When you mention their progress, count it separately from the listed problems ("your two problems are done; this one is still open"), never as one of them.\n'
+  + '- A new question or problem the student brings that is not on their list is homework too: help them reason it out — start from what they already know with one question or a small hint, and do not give the full answer or explanation first. When you mention their progress, count it separately from the listed problems — the listed ones done, this one still open — never as one of them.\n'
   + '- Never fully work a problem of the same kind as one of their OPEN problems (a similar one, an example, or the same one with other numbers), in the reply or on the board, even when asked: it hands over the method and the result. Offer to go through their own problem one step at a time instead.\n'
   // 2026-10-15 (GAC v7, AP Statistics): "my book gets <another value>" was
   // called wrong without being worked the book's way.

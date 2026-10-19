@@ -262,7 +262,9 @@ async function main() {
     assert.equal(wholeAnswerRevealGuardActive(pc({}), 'v', { anyTarget: true }), true);
     assert.equal(wholeAnswerRevealGuardActive(pc({ answers: 'other_part' }), 'v', { anyTarget: true }), true);
     assert.equal(wholeAnswerRevealGuardActive(pc({ answers: 'neither' }), 'v', { anyTarget: true }), false);
-    assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium' }), 'v', { anyTarget: true }), false);
+    // 2026-10-18: a MEDIUM "incorrect" check arms the value-only guard; a low one does not.
+    assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium' }), 'v', { anyTarget: true }), true);
+    assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'low' }), 'v', { anyTarget: true }), false);
     assert.equal(wholeAnswerRevealGuardActive(pc({ verdict: 'correct' }), 'v', { anyTarget: true }), false);
     assert.equal(wholeAnswerRevealGuardActive(pc({}), '', { anyTarget: true }), false);
   });
@@ -514,7 +516,7 @@ async function main() {
   });
   await test('client: a denial hit retries with its own feedback', () => {
     const vtr0 = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-    assert.match(vtr0, /revealHow === 'denial' \? checkedCorrectDenialFeedback\(transcript\) : wholeAnswerRevealFeedback\(transcript\)/);
+    assert.match(vtr0, /revealHow === 'denial' \? checkedCorrectDenialFeedback\(transcript\) : wholeAnswerRevealFeedback\(transcript, verdictPrecheckRef\.current\)/);
   });
 
   // 2026-10-15 (GAC staging, varied run v5): several answers in one message,
