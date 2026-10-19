@@ -19,6 +19,8 @@ import {
   formatProblemLedgerBlock,
   HOMEWORK_LEDGER_RULES,
   OFF_TOPIC_NOT_ANSWERED,
+  RETURN_ADDS_NOTHING,
+  LEDGER_CONDUCT_RULES,
   PERSONAL_DETAILS_RULE,
   PROBLEM_LETTERS_RULE,
   CRISIS_LINE,
@@ -35,6 +37,9 @@ import {
 } from '../src/lib/tutor/lesson-plan/homework-ledger';
 import {
   formatAnswerCheckBlock,
+  WRONG_STEP_NO_REVEAL_RULE,
+  WRONG_WHOLE_ANSWER_REEMIT,
+  WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH,
   sanitizePublicPrecheck,
   toPublicPrecheck,
   type PublicVerdictPrecheck,
@@ -494,6 +499,19 @@ async function main() {
     assert.match(OFF_TOPIC_NOT_ANSWERED, /^A question within the subject/);
     assert.match(EXTRA_PROBLEM_SAME_RULES, /short sign-off on its own/);
     for (const t of [OFF_TOPIC_NOT_ANSWERED, EXTRA_PROBLEM_SAME_RULES, PERSONAL_DETAILS_RULE]) assert.doesNotMatch(t, /\d|e\.g\.|for example|"/i);
+  });
+  // 2026-10-18 eve (GAC Chemistry portal-922bf1a4, Physics portal-f27f929b, APES portal-cb4f0f46).
+  await test('10-18 eve: steering back adds nothing; a bare answer gets "how did you get it"; a new concept question gets no half-answer', () => {
+    assert.ok(OFF_TOPIC_NOT_ANSWERED.includes(RETURN_ADDS_NOTHING));
+    assert.ok(formatLedgerTurnBlock('instruction_claim').includes(RETURN_ADDS_NOTHING));
+    assert.match(RETURN_ADDS_NOTHING, /asking again the question you last asked/);
+    assert.match(RETURN_ADDS_NOTHING, /no step, formula, rearrangement, value, fact or answer/);
+    assert.doesNotMatch(RETURN_ADDS_NOTHING, /\d|e\.g\.|for example|"/i);
+    assert.match(EXTRA_PROBLEM_SAME_RULES, /only the result, with none of the working behind it[^.]*: ask how they got it/);
+    for (const r of [WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH, WRONG_WHOLE_ANSWER_REEMIT, WRONG_STEP_NO_REVEAL_RULE])
+      assert.match(r, /only a result, with none of the working behind it, there is no step of theirs to point to: ask how they got it/);
+    assert.match(LEDGER_CONDUCT_RULES, /A hint is never part of the answer itself/);
+    assert.match(WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH, /naming no source other than the problem/);
   });
   // 2026-10-15 staging, second run (Algebra II, AP Chemistry): a repeat of a solved answer once all are solved.
   await test('all solved: a correct repeat of a listed answer gets the no-question rule; extra-problem work does not', () => {
