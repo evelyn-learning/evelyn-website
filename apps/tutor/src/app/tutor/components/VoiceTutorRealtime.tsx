@@ -54,7 +54,7 @@ const KEEPALIVE_MAX_BYTES = 60_000;
 const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import type { LessonContext } from '@/lib/tutor/embed/lesson-context';
-import { bridgeLineFor, BRIDGE_SPOKEN_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
+import { bridgeLineFor, bridgeSpokeName, BRIDGE_SPOKEN_DIRECTIVE, BRIDGE_SPOKEN_NO_NAME_DIRECTIVE } from '@/lib/tutor/voice/bridge-line';
 import { usableStudentName } from '@/lib/tutor/student-name';
 import { buildSystemPromptParts, buildOpenerClause, buildHomeworkOpenerClause, buildInFlowOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { splitPromptForWire, nextToolScope, type ToolScope } from '@/lib/tutor/ai/prompt-cache';
@@ -1417,6 +1417,8 @@ export function VoiceTutorRealtime({
   const firstSessionTipPendingRef = useRef(false);
   // Bridge line (fixed first words at the start tap): once per mount.
   const bridgeSpokenRef = useRef(false);
+  /** Whether the bridge line said the student's name (picks the opening directive variant). */
+  const bridgeSpokeNameRef = useRef(false);
   // Set when the bridge line is handed to TTS; its FIRST sentence-start is the
   // bridge's own audio and must not count as the brain turn's first sentence
   // (render-sync counter, turn_latency.firstAudio). Cleared on that event or
@@ -12587,7 +12589,7 @@ export function VoiceTutorRealtime({
             // The client already spoke the greeting (bridge line): the brain
             // must not greet again on its first opening turn.
             if (bridgeSpokenRef.current && openingDirectiveBrainTurnsRef.current === 1) {
-              openingDirective += BRIDGE_SPOKEN_DIRECTIVE;
+              openingDirective += bridgeSpokeNameRef.current ? BRIDGE_SPOKEN_DIRECTIVE : BRIDGE_SPOKEN_NO_NAME_DIRECTIVE;
             }
             // R58 first-session tip: rides the first opening turn only,
             // like the teacher intro above. Keyed per-browser via
@@ -25406,9 +25408,12 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             studentName, title: lessonContext?.title, inFlow: isInFlow,
             // Text mode returned above (typed start, no dead air to cover).
             inputMode: 'voice', resume: Boolean(resumeState),
+            // Japanese sessions get a Japanese, nameless line (bridge-line.ts).
+            tutorLanguages,
           });
           if (line) {
             bridgeSpokenRef.current = true;
+            bridgeSpokeNameRef.current = bridgeSpokeName(line);
             bridgeAudioPendingAtRef.current = Date.now();
             bridgeTapAtRef.current = Date.now();
             try { realtime.speakText(line, pushTtsScriptForPerception(line)); } catch { bridgeAudioPendingAtRef.current = null; /* skip; brain follows */ }

@@ -1159,5 +1159,11 @@ test('false credit after an ENGLISH QUESTION (embed-1792367246990: 「はい、�
   for (const p of ["'premature_close'", "'tool_call_continued'", "'prompted_repeat'"]) assert.ok(page.includes(p), `prefix ${p} missing`);
 });
 
+test('embed-1792378728971: the bridge line is wired with the session languages, and the no-name directive is used when the bridge said no name', () => {
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.match(vtr, /bridgeLineFor\(\{[^}]*tutorLanguages/s, 'bridgeLineFor must receive tutorLanguages');
+  assert.ok(vtr.includes('BRIDGE_SPOKEN_NO_NAME_DIRECTIVE'), 'the opening directive must use the no-name variant after a nameless bridge');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
