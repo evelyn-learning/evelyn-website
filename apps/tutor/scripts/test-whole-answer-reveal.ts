@@ -25,6 +25,7 @@ import {
 } from '../src/lib/tutor/voice/whole-answer-reveal';
 import { openWithheldAnswer, sealWithheldAnswer } from '../src/lib/tutor/voice/whole-answer-seal';
 import { readMatchStatement, resolveMatchCredit } from '../src/lib/tutor/voice/work-then-match';
+import { deniesCheckedAnswer } from '../src/lib/tutor/voice/whole-answer-reveal';
 import { isAnswerRevealingKill } from '../src/lib/tutor/whiteboard/kill-keep';
 import type { PublicVerdictPrecheck } from '../src/lib/tutor/voice/verdict-precheck-shared';
 
@@ -338,6 +339,39 @@ test('ledger: a division the student worked wrongly does not make its true quoti
   const a = { value: 'C6H12O6', studentText: 'CH2O is 30 g/mol and 180/30 = 3, so C3H6O3.', givenText: prob, newNumbers: true, problemText: prob, studentPriorText: '' };
   for (const s of ['180 divided by 30 actually gives 6, not 3.', 'So the multiplier is six.']) assert.equal(revealsWithheldAnswer(s, a).hit, true, s);
   assert.equal(revealsWithheldAnswer('Can you redo that division, 180 divided by 30?', a).hit, false);
+});
+
+// 2026-10-18 GAC fix round (live tests portal-171ad417 / 484b007a / c20a3190).
+test('10-18: "different from <their value>" denies a right answer — spoken or typed', () => {
+  assert.equal(deniesCheckedAnswer("That's different from $y = -2$ — so let's go from $7y + 5 = -9$.", 'y = -2'), true);
+  assert.equal(deniesCheckedAnswer('That is not the same as -2.', 'y = -2'), true);
+  assert.equal(deniesCheckedAnswer('That gives $y = -2$, the value you gave.', 'y = -2'), false);
+  assert.equal(readMatchStatement("That's different from $y = -2$.", 'Yeah, I don\'t know. Maybe Y equals negative 2.'), 'differs');
+  assert.equal(readMatchStatement("That's different from $y = -2$.", 'maybe y = -2?'), 'differs');
+  assert.equal(readMatchStatement("That's different from $y = -24$.", 'maybe y = -2?'), 'none', 'a longer number is not theirs');
+  assert.equal(readMatchStatement('That is different from the first part.', 'maybe y = -2?'), 'none');
+});
+test('10-18: the reveal retry is sent to the step the check located, never to the first step', () => {
+  const f = wholeAnswerRevealFeedback('CH2O is 30 g/mol and 180/30 = 3', pc({ answers: 'open_question', wrongStep: 'the division of 180 by 30' }));
+  assert.match(f, /the division of 180 by 30/);
+  assert.match(f, /exactly that step and no other/);
+  assert.match(f, /never question a step they did correctly/);
+  assert.doesNotMatch(f, /first thing in their reasoning/);
+  const g = wholeAnswerRevealFeedback('x', pc({ differsAt: 'the total of the two angles' }));
+  assert.match(g, /the total of the two angles/);
+  assert.doesNotMatch(wholeAnswerRevealFeedback('x'), /independent check found/);
+});
+test('10-18: under the ledger a MEDIUM "incorrect" check arms the value guard; medium correct / partly / non-answer do not', () => {
+  const on = { anyTarget: true, enabled: true };
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium', answers: 'other_part' }), 'hydrolysis', on), true);
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium', verdict: 'correct' }), 'hydrolysis', on), false);
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium', verdict: 'partly_correct' }), 'hydrolysis', on), false);
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium', answers: 'neither' }), 'hydrolysis', on), false);
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium', disputed: true }), 'hydrolysis', on), false);
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'low' }), 'hydrolysis', on), false);
+  assert.equal(wholeAnswerRevealGuardActive(pc({ confidence: 'medium' }), 'hydrolysis', { enabled: true }), false, 'outside the ledger: unchanged');
+  const a = { value: 'hydrolysis', studentText: 'can you check my answer: dehydration synthesis breaks polymers apart', givenText: 'Dehydration synthesis and hydrolysis reactions.', newNumbers: false };
+  assert.equal(revealsWithheldAnswer('Breaking polymers apart is hydrolysis, the reverse process.', { ...a, givenText: '' }).hit, true);
 });
 
 generatorTests().then(() => {

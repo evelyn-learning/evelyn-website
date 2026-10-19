@@ -74,6 +74,13 @@ export function wholeAnswerRevealGuardActive(
   // 2026-10-15 (staging, Algebra II): a PARTLY correct answer too — the reply
   // stated the setup of the half that was missing.
   if (opts?.anyTarget === true) {
+    // 2026-10-18 (GAC AP Biology, portal-c20a3190): a MEDIUM-confidence
+    // "incorrect" check of a wrong term ("dehydration synthesis breaks
+    // polymers apart") armed nothing, and the reply named the right term.
+    // At medium only the checked value itself is withheld (claude-brain.ts
+    // arms no new-number reading below high), and the student's own words
+    // are never a hit, so a wrong check cannot silence their answer.
+    if (p && p.confidence === 'medium' && p.verdict === 'incorrect' && p.answers !== 'neither' && p.disputed !== true) return true;
     return !!p && p.confidence === 'high' && p.answers !== 'neither'
       && (p.verdict === 'partly_correct' ? precheckInforms(p) : precheckDecides(p) && p.verdict === 'incorrect');
   }
@@ -428,10 +435,20 @@ export const WHOLE_ANSWER_BOARD_WITHHELD_REASON =
   'not shown — it writes the result of the problem, which the student has yet to find';
 
 /** Retry feedback via the standard rejection channel. Carries no value. */
-export function wholeAnswerRevealFeedback(studentText: string): string {
+export function wholeAnswerRevealFeedback(studentText: string, precheck?: PublicVerdictPrecheck | null): string {
+  // 2026-10-18 (GAC Chemistry, portal-484b007a): the retry carried no answer
+  // check and pointed at a step that was right. Where the check located the
+  // slip, the retry is sent there (neither field carries a value).
+  const step = String(precheck?.wrongStep ?? '').replace(/\s+/g, ' ').trim().slice(0, 160);
+  const at = String(precheck?.differsAt ?? '').replace(/\s+/g, ' ').trim().slice(0, 160);
+  const where = step
+    ? `An independent check found where their working first goes wrong: "${step.replace(/"/g, "'")}". Your question is about exactly that step and no other. `
+    : at
+      ? `An independent check found what their answer does not agree with: "${at.replace(/"/g, "'")}". Your question points there and nowhere else. `
+      : '';
   return `The student wrote "${(studentText ?? '').trim().slice(0, 120)}". `
     + 'Your reply stated or wrote the result of the problem, which is theirs to find; that part was not shown to them. '
-    + 'Re-emit your response. ' + WRONG_WHOLE_ANSWER_REEMIT
+    + 'Re-emit your response. ' + WRONG_WHOLE_ANSWER_REEMIT + where
     + 'Do not mention this note or narrate the correction — just reply naturally.';
 }
 
@@ -501,6 +518,8 @@ export function deniesCheckedAnswer(sentence: string, proposed: string): boolean
       new RegExp(`${lead}${v}\\s*(?:is\\s+not|isn['’]t|was\\s+not|wasn['’]t|does\\s+not|doesn['’]t|won['’]t|can['’]t)\\b`, 'i'),
       // "17 is wrong / incorrect"
       new RegExp(`${lead}${v}\\s*(?:is|was)\\s+(?:wrong|incorrect)\\b`, 'i'),
+      // 2026-10-18 (GAC voice test): "That's different from y = -2"
+      new RegExp(`\\b(?:different\\s+(?:from|than|to)|differs?\\s+from|not\\s+the\\s+same\\s+as)\\s+[$(]?\\s*(?:[a-z]\\s*=\\s*)?${lead}${v}`, 'i'),
     ];
     // 2026-10-15 (staging, AP Statistics): the student's own answer may itself
     // be a negative ("42 is not an outlier") — repeating it is agreement.

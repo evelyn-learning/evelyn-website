@@ -2284,7 +2284,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         ...input.conversationHistory.filter((m) => m.role === 'user' || noRevealLedger).map((m) => (typeof m.content === 'string' ? m.content : '')),
       ].join('\n'),
       ...(noRevealLedger ? {
-        newNumbers: true,
+        // Medium confidence: the checked value only (whole-answer-reveal.ts).
+        newNumbers: pub?.confidence === 'high',
         studentPriorText: input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')).join('\n'),
         problemText: [...(input.homework?.problems ?? []).map((p) => p.text), input.activeProblem?.statement ?? ''].join('\n'),
       } : {}),

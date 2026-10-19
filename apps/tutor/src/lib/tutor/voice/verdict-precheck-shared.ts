@@ -418,7 +418,7 @@ export function wrongWholeAnswerChecked(p: PublicVerdictPrecheck | null | undefi
 }
 
 export const WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH =
-  'What to do: your reply is two sentences, in this order, and it contains NO working at all — no step, no formula, no intermediate value and no result, in the reply or on the board. FIRST sentence: your match statement must agree with the check — state plainly, as a fact about THEIR answer, that it is not what the problem gives. Only that: do not describe, narrate or begin to show how the problem is worked. It comes before anything else, it is never left out, and it is not folded into the question. SECOND sentence: one question that points them to the first thing in their reasoning to re-examine. Do NOT state the correct result — not in the reply and not on the board, and in no form: not the value, not a formula or expression evaluated to it, not a line of working that ends in it. Work the problem silently. The result stays theirs to find. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
+  'What to do: your reply is two sentences, in this order, and it contains NO working at all — no step, no formula, no intermediate value and no result, in the reply or on the board. FIRST sentence: your match statement must agree with the check — state plainly, as a fact about THEIR answer, that it is not what the problem gives. Only that: do not describe, narrate or begin to show how the problem is worked. It comes before anything else, it is never left out, and it is not folded into the question. SECOND sentence: one question that points them to the first step in their reasoning that does not hold — never a step they did correctly. Do NOT state the correct result — not in the reply and not on the board, and in no form: not the value, not a formula or expression evaluated to it, not a line of working that ends in it. Work the problem silently. The result stays theirs to find. This changes nothing in what the session\'s rules say about a student who asks outright to be given the answer.\n';
 
 /** What a reply under that rule consists of — shared by every retry feedback
  *  for it (the opener kill in work-then-match.ts, the reveal guard in
@@ -426,7 +426,10 @@ export const WRONG_WHOLE_ANSWER_RULE_WORK_THEN_MATCH =
 export const WRONG_WHOLE_ANSWER_REEMIT =
   'Your reply is two sentences and contains no working at all — no step, no formula, no intermediate value and no result, in the reply or on the board: '
   + 'the first sentence states plainly, as a fact about their answer, that it is not what the problem gives; '
-  + 'the second asks one question about the first thing in their reasoning to re-examine. ';
+  // 2026-10-18 (GAC Chemistry, portal-484b007a): "the first thing in their
+  // reasoning" sent the student back to their first step, which was right
+  // (30 g/mol), when the slip was the division after it.
+  + 'the second asks one question about the step in their working that does not hold — recompute each step they wrote, in order, and ask about the first one that is wrong; never question a step they did correctly. ';
 
 /** 2026-10-12 (portal-2000fd6a @73.3 s): told only INCORRECT and asked for
  *  "the first thing to re-examine", the reply sent the student to a condition

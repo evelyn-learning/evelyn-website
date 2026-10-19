@@ -372,7 +372,7 @@ async function main() {
     assert.match(b, /not what the problem gives/i);
     assert.match(b, /Do NOT state the correct result/);
     assert.match(b, /formula or expression evaluated to it/i);
-    assert.match(b, /first thing in their reasoning to re-examine/i);
+    assert.match(b, /first step in their reasoning that does not hold/i);
     assert.match(b, /one question/i);
     assert.doesNotMatch(b, /working must reach the checked value/i);
     assert.doesNotMatch(b, /state that step's result/i);
@@ -404,7 +404,7 @@ async function main() {
     assert.ok(b.includes(WRONG_WHOLE_ANSWER_TEXT_RULE));
     assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /WHOLE problem/);
     assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /do not state the correct final result/i);
-    assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /first thing in their reasoning to re-examine/i);
+    assert.match(WRONG_WHOLE_ANSWER_TEXT_RULE, /first step in their reasoning that does not hold/i);
     assert.doesNotMatch(WRONG_WHOLE_ANSWER_TEXT_RULE, /\d\s*\S*(?:\/|%)|\$[^$]+\$/, 'no subject content or example values');
     // It sits directly after the rule it is the exception to.
     assert.ok(b.indexOf(WRONG_WHOLE_ANSWER_TEXT_RULE) > b.indexOf('the steps after it stay with the student'));
@@ -463,7 +463,7 @@ async function main() {
     const block = formatAnswerCheckBlock(pc({ answers: 'overall_problem', verdict: 'incorrect' }), { workThenMatch: true });
     const f0 = openerBackstopFeedback('Not quite — x.', 'zzz', { wrongWholeAnswer: true });
     for (const t of [WRONG_WHOLE_ANSWER_TEXT_RULE, block]) {
-      const first = t.search(/FIRST sentence/), stmt = t.search(/not what the problem gives/), second = t.search(/SECOND sentence/), ask = t.search(/first thing in their reasoning to re-examine/);
+      const first = t.search(/FIRST sentence/), stmt = t.search(/not what the problem gives/), second = t.search(/SECOND sentence/), ask = t.search(/first step in their reasoning that does not hold/);
       assert.ok(first >= 0 && first < stmt && stmt < second && second < ask, t);
       assert.match(t, /never (?:left out|skip)/i);
     }

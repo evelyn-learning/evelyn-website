@@ -390,6 +390,15 @@ async function main() {
     const p = run('lost', [{ at: 'pending' }, ...say(r), { at: 'end' }, { at: 'deadline' }], OWNER.point.student);
     assert.deepEqual(p.spoken, r);
   });
+  // 2026-10-18 (GAC voice test, portal-171ad417): the check reported CORRECT
+  // before the reply's second sentence, which denied y = -2 by "different from".
+  await test('10-18: a right answer denied by "different from <their value>" after the check is in: cut', () => {
+    const r = ['Distributing the 5 on the left gives $10y + 5 = 3y - 9$, and moving the $3y$ over gives $7y + 5 = -9$.',
+      "That's different from $y = -2$ — so let's go from $7y + 5 = -9$: what do you do to both sides next to isolate $y$?"];
+    const p = run('different-from', [{ at: 'pending' }, { at: 'precheck', result: pc({ verdict: 'correct' }) }, ...say(r), { at: 'end' }], "Yeah, I don't know. Maybe Y equals negative 2.");
+    assert.equal(p.cut?.kind, 'denied_correct');
+    assert.deepEqual(p.spoken, [r[0]]);
+  });
   await test('a message that answers nothing, affirmed: cut; a denial of it: left alone', () => {
     const a = run('neither-affirm', [{ at: 'pending' }, ...say(['Okay, let me take a look.', 'Right.', 'So the next step is yours.']), { at: 'precheck', result: pc({ answers: 'neither' }) }, { at: 'end' }], 'forty one');
     assert.equal(a.cut?.kind, 'praised_non_answer');

@@ -41,6 +41,7 @@ import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_ECHO_ANSWER_NO_CREDIT, TUTOR_OPE
 import { openQuestionText } from '@/lib/tutor/voice/nonanswer-praise';
 import { ACK_OPENER_RE } from '@/lib/tutor/voice/affirm-opener';
 import { assentSettlesNothing, type TurnShape } from '@/lib/tutor/voice/turn-shape-signal';
+import { spokenMathToSymbols } from '@/lib/tutor/voice/expression-reveal';
 import { precheckDecides, precheckInforms, wrongWholeAnswerChecked, WRONG_WHOLE_ANSWER_REEMIT, type PublicVerdictPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 
 /** On for a turn iff the session is text mode and the flag is not 'off'. */
@@ -97,7 +98,7 @@ export const AMBIGUOUS_READING_TEXT_RULE =
  *  and the reply shows none. The wording is not the guard:
  *  ./whole-answer-reveal.ts is. */
 export const WRONG_WHOLE_ANSWER_TEXT_RULE =
-  'The exception: when what they wrote is their answer to the WHOLE problem — its final result, not a step on the way — and it does not match, do not state the correct final result, and no formula or expression evaluated to it, in the reply or on the board. Rules 2 and 3 do not apply, and this reply shows NO working at all: no step, no formula, no intermediate value. The reply is two sentences, in this order. FIRST sentence: state plainly, as a fact about THEIR answer, that it is not what the problem gives — only that, with nothing of how the problem is worked; it is a full sentence, not a verdict word, so rule 1 does not exclude it, and it is never skipped or folded into the question. SECOND sentence: one question about the first thing in their reasoning to re-examine. The result stays theirs to find.\n';
+  'The exception: when what they wrote is their answer to the WHOLE problem — its final result, not a step on the way — and it does not match, do not state the correct final result, and no formula or expression evaluated to it, in the reply or on the board. Rules 2 and 3 do not apply, and this reply shows NO working at all: no step, no formula, no intermediate value. The reply is two sentences, in this order. FIRST sentence: state plainly, as a fact about THEIR answer, that it is not what the problem gives — only that, with nothing of how the problem is worked; it is a full sentence, not a verdict word, so rule 1 does not exclude it, and it is never skipped or folded into the question. SECOND sentence: one question about the first step in their reasoning that does not hold — never a step they did correctly. The result stays theirs to find.\n';
 
 export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | null): string {
   const t = (transcript ?? '').trim();
@@ -466,16 +467,30 @@ const MATCHES_RE = new RegExp(
  *  difference only when the rejected value is one the student wrote. */
 const NOT_VALUE_RE = /(?:,|\s[—–-])?\s*\bnot\s+((?:\$[^$]{1,40}\$|[^\s,.;:!?—–]+)(?:\s+(?:\$[^$]{1,40}\$|[^\s,.;:!?—–]+)){0,3})/gi;
 
+/** 2026-10-18 (GAC voice test, portal-171ad417): "That's different from
+ *  $y = -2$" denied a right answer and was read as nothing — a value set
+ *  against the student's by "different from", not only by "not". */
+const DIFFERENT_VALUE_RE = /\b(?:different\s+(?:from|than|to)|differs?\s+from|not\s+the\s+same\s+as)\s+((?:\$[^$]{1,40}\$|[^\s,.;:!?—–]+)(?:\s+(?:\$[^$]{1,40}\$|[^\s,.;:!?—–]+)){0,3})/gi;
+
+/** The student's words with spoken maths written as symbols ("y equals
+ *  negative 2" → "y = - 2"), so a value the tutor writes can be found in them. */
+function studentValueText(text: string): string {
+  return spokenMathToSymbols(text).replace(/\b(?:is\s+equal\s+to|equals?)\b/gi, '=');
+}
+
 function normValue(text: string): string {
   return (text || '').toLowerCase().replace(/\\[a-z]+|[*_~`${}\s\\]/g, '').replace(/−/g, '-').replace(/×/g, 'x');
 }
 
 function rejectsStudentValue(sentence: string, studentText: string): boolean {
-  const student = normValue(studentText);
+  const student = normValue(studentValueText(studentText));
   if (!student) return false;
-  NOT_VALUE_RE.lastIndex = 0;
-  for (let m = NOT_VALUE_RE.exec(sentence); m; m = NOT_VALUE_RE.exec(sentence)) {
-    const words = m[1].split(/\s+/);
+  for (const re of [NOT_VALUE_RE, DIFFERENT_VALUE_RE]) {
+  re.lastIndex = 0;
+  for (let m = re.exec(sentence); m; m = re.exec(sentence)) {
+    // A $…$ span is one value: its leading pieces ("$y =") are not values.
+    const span = /^\$[^$]*\$/.exec(m[1]);
+    const words = span ? [span[0]] : m[1].split(/\s+/);
     // The longest leading run of the rejected phrase that the student wrote.
     for (let n = words.length; n >= 1; n--) {
       const v = normValue(words.slice(0, n).join(' ')).replace(/^[("']+|[)"'.]+$/g, '');
@@ -489,6 +504,7 @@ function rejectsStudentValue(sentence: string, studentText: string): boolean {
       if (/\d/.test(after) && /\d$/.test(v)) continue;
       return true;
     }
+  }
   }
   return false;
 }

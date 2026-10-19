@@ -198,7 +198,9 @@ export function ledgerTurnKind(text: string, lastTutorMessage = ''): LedgerTurnK
 }
 
 const LEDGER_TURN_RULES: Record<LedgerTurnKind, string> = {
-  sign_off: 'The student is ending the session. Wrap up now, in a sentence or two: say which of their problems are done and, if any are not, that those are left for next time. Ask no question, start nothing new and state no step or answer.',
+  // 2026-10-18 (GAC Geometry / Algebra II): a problem the student added during
+  // the session was left out of the wrap-up, or counted as one of "both".
+  sign_off: 'The student is ending the session. Wrap up now, in a sentence or two: name which of their problems are done and, if any are not, that those are left for next time — including any problem they brought up during the session that is not on their list, by what it is. Ask no question, start nothing new and state no step or answer.',
   pause: 'The student is stepping away for a moment. Say in a few words that you will be here when they are back. Do not wrap up or summarise, ask no question and start nothing new.',
   no_idea: 'The student does not know how to go on. No verdict, and no praise. Give ONE small hint toward the next step of the problem they are on, never its result, then ask one short question that has them take that step.',
   narrowing: 'The student is narrowing down the answer: several candidate answers at once, whether it is above or below a value, or a yes/no on a value. Confirming, ruling out, ranking or hinting at which candidate is closer gives the answer away, so do none of these — not hotter-or-colder hints, and not saying the answer is among them. Do not give the next step or its result either. Say kindly that they should pick one and show how they got it, and ask for the first step of their working.',
@@ -237,6 +239,9 @@ export const LEDGER_CONDUCT_RULES =
   + '- A question within the subject that asks how to make or do something dangerous (a weapon, an explosive, a harmful substance, a dangerous experiment at home) is not answered: say briefly that you can\'t help with that and why it is unsafe, then return to the work.\n'
   // 2026-10-15 (GAC v7, AP Calculus AB): asked for "a similar one fully",
   // the board showed a fully worked twin of an open problem.
+  // 2026-10-18 (GAC AP Biology, portal-c20a3190): "can you help me with why
+  // hydrolysis is used in digestion" got the whole explanation, then a question.
+  + '- A new question or problem the student brings that is not on their list is homework too: help them reason it out — start from what they already know with one question or a small hint, and do not give the full answer or explanation first. When you mention their progress, count it separately from the listed problems ("your two problems are done; this one is still open"), never as one of them.\n'
   + '- Never fully work a problem of the same kind as one of their OPEN problems (a similar one, an example, or the same one with other numbers), in the reply or on the board, even when asked: it hands over the method and the result. Offer to go through their own problem one step at a time instead.\n'
   // 2026-10-15 (GAC v7, AP Statistics): "my book gets <another value>" was
   // called wrong without being worked the book's way.
