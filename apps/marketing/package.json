@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed:teacher": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-teacher.ts",
+    "test:gdi-mint": "npx tsx scripts/test-gdi-mint.ts",
     "test:outreach-model": "npx tsx src/models/Lead.test.ts",
     "test:outreach-job": "npx tsx src/models/ResearchJob.test.ts",
     "test:outreach-import": "npx tsx src/lib/outreach/import-leads.test.ts",

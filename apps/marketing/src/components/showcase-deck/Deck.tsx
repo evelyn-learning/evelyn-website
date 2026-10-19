@@ -143,19 +143,24 @@ export default function Deck({ config, onSlideView }: { config: DeckConfig; onSl
         );
       })}
 
-      {/* Click zones — left third = previous, right third = next */}
-      <button
-        aria-label="Previous slide"
-        onClick={goPrev}
-        disabled={index === 0}
-        className="deck-chrome group absolute inset-y-0 left-0 z-20 w-1/3 cursor-w-resize disabled:cursor-default"
-      />
-      <button
-        aria-label="Next slide"
-        onClick={goNext}
-        disabled={index === total - 1}
-        className="deck-chrome group absolute inset-y-0 right-0 z-20 w-1/3 cursor-e-resize disabled:cursor-default"
-      />
+      {/* Click zones — left third = previous, right third = next. Not on an
+          interactive slide (see DeckSlide.interactive). */}
+      {!SLIDES[index]?.interactive && (
+        <>
+          <button
+            aria-label="Previous slide"
+            onClick={goPrev}
+            disabled={index === 0}
+            className="deck-chrome group absolute inset-y-0 left-0 z-20 w-1/3 cursor-w-resize disabled:cursor-default"
+          />
+          <button
+            aria-label="Next slide"
+            onClick={goNext}
+            disabled={index === total - 1}
+            className="deck-chrome group absolute inset-y-0 right-0 z-20 w-1/3 cursor-e-resize disabled:cursor-default"
+          />
+        </>
+      )}
 
       {/* Presenter-view hint — first slide only, unobtrusive corner link.
           Opens in a new tab so a presenter sharing just this tab in Meet can
