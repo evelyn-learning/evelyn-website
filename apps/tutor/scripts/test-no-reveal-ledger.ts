@@ -852,6 +852,23 @@ async function main() {
     assert.equal(formatProblemLettersBlock('a is 5', [1]), '', 'one problem');
   });
 
+  console.log('10-19 bio');
+  await test('10-19 bio: a bare yes to an open question answers nothing', () => {
+    const open = 'But what shape does it need, to be able to fit into that same active site?';
+    for (const t of ['yes', 'Yes.', 'no', 'ok', 'yeah i think', 'maybe']) assert.equal(ledgerTurnKind(t, open), 'bare_reply', t);
+    for (const q of ['Does that make sense?', 'Is that right?', 'Ready for the next one?', 'So, do you see why?', 'Is it bigger or smaller?']) assert.equal(ledgerTurnKind('yes', q), null, q);
+    assert.equal(ledgerTurnKind('yes'), null, 'no tutor message');
+    assert.equal(ledgerTurnKind('yes it binds there', open), null, 'more than a bare reply');
+    const r = formatLedgerTurnBlock('bare_reply');
+    assert.match(r, /answers nothing/);
+    assert.match(r, /do not offer an answer for them to agree with/);
+    assert.doesNotMatch(r, /\d|e\.g\.|for example|"/i);
+  });
+  await test('10-19 bio: the wrap-up names a question put off for later', () => {
+    assert.match(formatLedgerTurnBlock('sign_off'), /put off to come back to later/);
+    assert.match(HOMEWORK_LEDGER_RULES, /put off to come back to later, and never got back to, is still open/);
+  });
+
   console.log('pre-v8 review');
   await test('pre-v8: the same words read against the tutor\'s last message', () => {
     const report = 'Write the equation down and let me know when you have it.';
@@ -863,7 +880,7 @@ async function main() {
     assert.equal(ledgerTurnKind('ok im good', hint), 'decline');
     assert.equal(ledgerTurnKind('no thanks', 'Would you like me to show an example?'), 'decline');
     assert.equal(ledgerTurnKind('ok im good', wrap), 'sign_off');
-    assert.equal(ledgerTurnKind('nah', 'What do you get when you subtract 1?'), null);
+    assert.equal(ledgerTurnKind('nah', 'What do you get when you subtract 1?'), 'bare_reply');
     assert.equal(ledgerTurnKind('i want to die lol this is so hard'), 'wellbeing');
     for (const k of ['step_done', 'decline'] as const) assert.doesNotMatch(formatLedgerTurnBlock(k), /\d|e\.g\.|for example|"/i);
   });
