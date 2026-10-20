@@ -1141,6 +1141,13 @@ async function main() {
   // accepted for "classify by its angles"; the tutor's own "120 = y + 45";
   // "That's the last problem done — great finish on the whole set!" with
   // problem 6 open; the photo read put an angle on the wrong side again.
+  console.log('10-20 c: an offer the student accepted is kept (portal-4cc98574: "Ready to move to problem 4?" — "Yes" — went to problem 2)');
+  await test('the ledger rule: offer the lowest open problem, and keep an offer the student accepted', async () => {
+    const { HOMEWORK_LEDGER_RULES } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
+    assert.match(HOMEWORK_LEDGER_RULES, /accepted a problem you offered, or asked for one, go to THAT problem/);
+    assert.match(HOMEWORK_LEDGER_RULES, /never take back an offer they said yes to/);
+  });
+
   console.log('10-20 b: the kind of answer asked for, a set called finished early, rules for the figure');
   await test('a reply that calls the set finished while a problem is open: the sentence is dropped, the open problem named', async () => {
     const { claimsSetFinished } = await import('../src/lib/tutor/lesson-plan/homework-ledger');

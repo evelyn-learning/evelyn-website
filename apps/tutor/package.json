@@ -122,6 +122,7 @@
     "test:gap-manifest": "npx tsx scripts/test-gap-manifest.ts",
     "test:brain-retry": "npx tsx scripts/test-brain-retry.ts",
     "test:brain-stall": "npx tsx scripts/test-brain-stall.ts",
+    "test:homework-figure": "npx tsx scripts/test-homework-figure.ts",
     "test:text-thinking": "npx tsx scripts/test-text-thinking.ts",
     "replay:verdict-turns": "npx tsx scripts/replay-verdict-turns.ts",
     "test:turn-shape-signal": "npx tsx scripts/test-turn-shape-signal.ts",

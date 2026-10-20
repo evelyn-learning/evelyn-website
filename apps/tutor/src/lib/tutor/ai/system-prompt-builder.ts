@@ -1179,6 +1179,13 @@ positions and labels them exactly, which also avoids piling on redundant
 labels. Put any one annotation label on at most a SINGLE element — don't repeat
 the same label across several.
 
+  A point the problem puts ON a segment or side ("D on AB", "E on AC",
+  "M is the midpoint of BC", "AD = 4 and DB = 6") is NEVER a free { x, y }
+  point: construct it ON that segment — section_point { of, ratio } (AD:DB =
+  4:6 → ratio [4, 6]), midpoint, or intersect — so it sits exactly on the
+  line. A hand-placed point lands beside the side, and the figure shows a
+  segment floating inside the triangle instead of a line parallel to its base.
+
   Points and ratios:
     midpoint                  { of: segId | { from, to } }
     point_on_circle           { on, angle }                       # degrees CCW

@@ -271,6 +271,7 @@ import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
 import { normalizeEquationLabel, decideLabelDuplicate, type SeenEquationLabel } from '@/lib/tutor/whiteboard/equation-label-dedup';
 import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
+import { homeworkFigureFor } from '@/lib/tutor/whiteboard/homework-figure';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
 import {
@@ -2710,9 +2711,31 @@ export function VoiceTutorRealtime({
     const idx = problems.findIndex((p) => p.n === nRaw);
     const pos = idx >= 0 ? idx + 1 : Math.min(Math.max(Math.round(nRaw), 1), total);
     if (source === 'inferred' && pos === homeworkCurrentRef.current) return;
+    const moved = pos !== homeworkCurrentRef.current;
     homeworkCurrentRef.current = pos;
     onHomeworkProgressRef.current?.({ current: pos, total, text: problems[pos - 1]?.text });
     onDebugEvent?.('homework_current_problem', `n=${nRaw} pos=${pos} total=${total}${source === 'inferred' ? ' inferred=reply' : ''}`);
+    // 2026-10-20 (portal-4cc98574): back on a problem whose figure is on an
+    // earlier page, "Looking at the figure…" had no figure in view. Bring
+    // that problem's figure back the way a re-shown figure comes back
+    // (dedup → scrollTo): never for a same-page figure that is still near.
+    if (moved) {
+      const label = problems[pos - 1]?.n ?? pos;
+      const fig = homeworkFigureFor(catalogRef.current.getItems(), label);
+      if (fig) {
+        const itemsAfterOnPage = fig.pageId
+          ? catalogRef.current.getItems().filter((it) => it.pageId === fig.pageId && it.order > fig.order).length
+          : 0;
+        if (shouldScrollToDedupedItem({
+          itemPageTitle: fig.pageTitle,
+          currentPageTitle: catalogRef.current.getCurrentPageTitle(),
+          itemsAfterOnPage,
+        })) {
+          onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: fig.itemId } as unknown as WhiteboardCommand]);
+          onDebugEvent?.('homework_figure_scroll', `problem ${label} → ${fig.itemId} on "${fig.pageTitle ?? '?'}"`);
+        }
+      }
+    }
   };
   // 2026-10-19 homework ledger (lesson-plan/homework-ledger.ts): list
   // POSITIONS the server's answer check found solved. Written only from the
@@ -19370,9 +19393,13 @@ export function VoiceTutorRealtime({
       // so no opener retry, no stall retry and no "could you repeat that?".
       supersededByStudent = openerSupersededByStudentRef.current && isKickoffMessage(transcript);
       if (supersededByStudent) openerSupersededByStudentRef.current = false;
+      // 2026-10-20: the cover layer's 45 s give-up abort is OUR abort too — a
+      // stall with nothing shown, handled below like the stall guard's own.
+      const gaveUp = escalationGaveUpRef.current;
+      const stalledOrGaveUp = stallState.stalled || gaveUp;
       const isAbort =
         supersededByStudent || (
-        !stallState.stalled && (
+        !stalledOrGaveUp && (
           (err instanceof DOMException && err.name === 'AbortError') ||
           (err instanceof Error && /abort/i.test(err.message))));
       if (isAbort) {
@@ -19391,10 +19418,10 @@ export function VoiceTutorRealtime({
           turnLatencyRef.current = null;
           turnLatencyAwaitingAudioRef.current = false;
         }
-        // R32 Task 4: the give-up path already spoke its own honest reset
-        // line and called abort() itself — if that abort somehow lands
-        // here (non-AbortError-shaped) instead of the isAbort branch above,
-        // don't double-speak a second "repeat that?" on top of it.
+        // R32 Task 4 → 2026-10-20: the give-up path only aborts now; its
+        // abort reaches the stall-recovery branch at the end of this chain
+        // (`stalledOrGaveUp`), which retries the turn once and otherwise
+        // puts the apology where the student is looking.
         // Live 2026-09-05 (portal-620a92a4): the OPENER's fetch failed
         // client-side ("Failed to fetch" — a network blip at t+1.5s), nothing
         // was spoken, a fallback card rendered, and the student sat for five
@@ -19407,7 +19434,7 @@ export function VoiceTutorRealtime({
             void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
           }, OPENER_RETRY_DELAY_MS);
         } else if (shouldRetryStalledOpener({
-          stalled: stallState.stalled,
+          stalled: stalledOrGaveUp,
           nothingShown: audibleSentenceCount === 0,
           transcript,
           retryUsed: openerRetryUsedRef.current,
@@ -19422,8 +19449,6 @@ export function VoiceTutorRealtime({
           setTimeout(() => {
             void handleStudentTranscriptForBrainRef.current?.(openerKickoff, { silent: true, bypassMidUtteranceGuard: true });
           }, OPENER_RETRY_DELAY_MS);
-        } else if (escalationGaveUpRef.current) {
-          onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
         } else if (audibleSentenceCount > 0) {
           // R47 Task 3d (live incident portal-1349716e, 2:49 PM): the
           // stream already dispatched ≥1 sentence to TTS this turn (e.g.
@@ -19443,7 +19468,7 @@ export function VoiceTutorRealtime({
           // nothing there — and two student turns in a row. Retry the same turn
           // once; if that stalls too, say so where the student is looking.
           const stallRecovery = decideStallRecovery({
-            stalled: stallState.stalled,
+            stalled: stalledOrGaveUp,
             networkFailure: isNetworkFailure,
             nothingShown: audibleSentenceCount === 0,
             transcript,
@@ -19920,15 +19945,22 @@ export function VoiceTutorRealtime({
             return;
           }
           // give-up: stop waiting on a sick turn (would otherwise ride ~93s of
-          // server retries — silence audit). Abort, speak an honest reset line.
+          // server retries — silence audit). Abort; the catch treats this
+          // abort as a stall (brain-stall.ts decideStallRecovery): the same
+          // turn is retried once with nothing shown, and only a second stall
+          // says so where the student is looking.
+          // 2026-10-20 (GAC Geometry upload portal-4cc98574, 23:04:31Z): the
+          // server's ladder (answer check 7 s + thinking deadline 14 s + 30 s
+          // no-event stall) outran this 45 s give-up; the abort was filed as
+          // a perception cancel (silent) and the reset line was SPOKEN into a
+          // typed session, so the student saw nothing for 83 s and typed
+          // "hello?". The stall guard never fired: keepalive frames kept
+          // arriving.
           if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
           escalationTimerRef.current = null;
           escalationGaveUpRef.current = true;
           inFlightBrainAbortRef.current?.abort();
-          const text = "Sorry about that, I lost my thread. Say that once more for me?";
-          const sid = pushTtsScriptForPerception(text);
-          speakTextRef.current?.(text, sid);
-          onDebugEvent?.('cover_giveup', `after=${Date.now() - dispatchedAt}ms`);
+          onDebugEvent?.('cover_giveup', `after=${Date.now() - dispatchedAt}ms → stall recovery`);
         }, 1000);
       }
     }

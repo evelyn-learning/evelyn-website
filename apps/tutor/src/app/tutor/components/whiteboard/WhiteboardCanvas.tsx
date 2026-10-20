@@ -1744,7 +1744,7 @@ export function WhiteboardCanvas({
         >
         {renderableCommands.length === 1 ? (
           <div
-            className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6`}
+            className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6 select-text`}
             style={reviseStyle(renderableCommands[0])}
             ref={(el) => { itemRefsRef.current[0] = el; maybeDrawOn(renderableCommands[0], el); }}
             data-wb-item-index={1}
@@ -1792,7 +1792,7 @@ export function WhiteboardCanvas({
                     </div>
                   )}
                   <div
-                    className="relative scroll-mt-6"
+                    className="relative scroll-mt-6 select-text"
                     style={reviseStyle(cmd)}
                     ref={(el) => { itemRefsRef.current[i] = el; maybeDrawOn(cmd, el); }}
                     data-wb-item-index={i + 1}

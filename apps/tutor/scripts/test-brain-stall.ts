@@ -69,5 +69,26 @@ test('an already-aborted call is never re-aborted (perception barge-in owns that
     false, 'a student barge-in abort must not be reported as a stall');
 });
 
+// ── 2026-10-20 (GAC Geometry upload portal-4cc98574, 23:04:31Z) ──────────
+// The cover layer's 45 s give-up aborted a turn the stall guard never caught
+// (keepalive frames kept arriving). That abort was filed as a perception
+// cancel — silent — and the give-up's reset line was SPOKEN into a typed
+// session: nothing shown for 83 s. The give-up now only aborts, and the catch
+// treats it as a stall: retry once, then the apology where the student looks.
+{
+  const fs = require('node:fs') as typeof import('node:fs');
+  const path = require('node:path') as typeof import('node:path');
+  const src = fs.readFileSync(path.join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
+  test('the 45 s give-up no longer speaks a reset line of its own', () => {
+    assert.equal(src.includes("I lost my thread. Say that once more"), false);
+  });
+  test('the give-up abort is a stall to the catch: opener retry and stall recovery both see it', () => {
+    assert.match(src, /const stalledOrGaveUp = stallState\.stalled \|\| gaveUp;/);
+    assert.match(src, /shouldRetryStalledOpener\(\{\s*stalled: stalledOrGaveUp,/);
+    assert.match(src, /decideStallRecovery\(\{\s*stalled: stalledOrGaveUp,/);
+    assert.equal(src.includes('cover_giveup_abort_swallowed'), false, 'the swallow branch that pre-empted stall recovery is gone');
+  });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

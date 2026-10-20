@@ -751,7 +751,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
             ? (() => {
                 if (!split) {
                   return (
-                    <p className="whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap select-text cursor-text">
                       {renderBubbleText(entry.text)}
                     </p>
                   );
@@ -771,7 +771,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                 );
               })()
             : (
-              <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.streaming ? 'typing-caret' : ''}`}>
+              <p className={`whitespace-pre-wrap select-text cursor-text ${entry.role === 'tutor' && entry.streaming ? 'typing-caret' : ''}`}>
                 {renderBubbleText(entry.text)}
               </p>
             )
