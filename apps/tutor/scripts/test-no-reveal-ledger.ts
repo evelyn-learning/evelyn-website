@@ -869,6 +869,13 @@ async function main() {
     assert.match(HOMEWORK_LEDGER_RULES, /put off to come back to later, and never got back to, is still open/);
   });
 
+  await test('10-19 bio b: a last sentence that asks to stop is a sign-off', () => {
+    for (const t of ['I get it now, thanks for the help. Let\'s finish up.', 'That makes sense now, thank you! Let\'s stop here.', 'That clears it up, thanks. Let\'s wrap up for today.', 'ok can we stop now?', 'Thanks so much. I\'m done for today.']) assert.equal(ledgerTurnKind(t, 'What does that molecule make?'), 'sign_off', t);
+    for (const t of ['So x = 5. Let\'s stop here.', 'Let\'s finish problem two first', 'I\'m finishing the second step now, it gives the slope', 'let\'s end with the units: grams']) assert.notEqual(ledgerTurnKind(t, 'What do you get?'), 'sign_off', t);
+    assert.match(formatLedgerTurnBlock('no_idea'), /never a description that only that word fits/);
+    assert.match(LEDGER_CONDUCT_RULES, /Nor does a hint supply a value, constant or fact the problem needs/);
+  });
+
   console.log('pre-v8 review');
   await test('pre-v8: the same words read against the tutor\'s last message', () => {
     const report = 'Write the equation down and let me know when you have it.';
