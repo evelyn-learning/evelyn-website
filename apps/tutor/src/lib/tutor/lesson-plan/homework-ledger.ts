@@ -126,6 +126,34 @@ export function inferProblemMoveFromReply(replyText: string, labels: readonly nu
   return found;
 }
 
+/**
+ * 2026-10-20 (GAC Geometry upload portal-242abe76): "That's the last problem
+ * done — great finish on the whole set!" with problem 6 still [OPEN]. A
+ * sentence that calls the whole set, sheet or homework finished — not one
+ * that finishes a single problem.
+ */
+export function claimsSetFinished(sentence: string): boolean {
+  const t = String(sentence ?? '').replace(/\s+/g, ' ');
+  if (!t) return false;
+  return /\b(?:whole|entire)\s+(?:set|sheet|worksheet|homework|assignment|list)\b/i.test(t)
+    || /\b(?:all|every(?:\s+one)?)\s+(?:of\s+)?(?:the\s+|your\s+|these\s+|those\s+)?(?:\d+\s+)?problems?\b[^.!?]*\b(?:done|finished|solved|complete(?:d)?|wrapped)/i.test(t)
+    || /\b(?:finished|completed|solved|done with)\s+(?:all|every)\b[^.!?]*\bproblems?\b/i.test(t)
+    || /\b(?:finished|completed|done with)\s+(?:the\s+|your\s+)?(?:homework|worksheet|sheet|set|assignment|all of (?:them|it))\b/i.test(t)
+    || /\bthe\s+(?:homework|worksheet|sheet|set|assignment)\s+is\s+(?:all\s+)?(?:done|finished|complete)\b/i.test(t)
+    || /\bthat'?s\s+everything\b/i.test(t)
+    || /\blast\s+problem\b[^.!?]*\b(?:done|finished|solved|wrapped)/i.test(t)
+    || /\bnothing\s+left\b/i.test(t)
+    || /\ball\s+done\b(?!\s+with)/i.test(t);
+}
+
+/** "Problem 6 is still open." / "Problems 2 and 6 are still open." — by label. */
+export function openProblemsLine(problems: ReadonlyArray<{ n: number }>, openPositions: readonly number[]): string {
+  const labels = openPositions.map((pos) => problems[pos - 1]?.n ?? pos);
+  if (!labels.length) return '';
+  if (labels.length === 1) return `Problem ${labels[0]} is still open.`;
+  return `Problems ${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]} are still open.`;
+}
+
 export const LEDGER_SOLVED = '[SOLVED]';
 export const LEDGER_OPEN = '[OPEN]';
 

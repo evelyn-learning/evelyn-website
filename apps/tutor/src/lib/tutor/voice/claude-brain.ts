@@ -22,7 +22,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import { effectiveSegment, NO_VERIFIED_ANSWER_LINE } from '../portal/withdrawn-items';
 import type { Segment } from '../lesson-plan/types';
 import type { HomeworkProblem } from '../lesson-plan/enumerate-problems';
-import { AUTHORITY_TAG_RE, formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, formatProblemLettersBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
+import { AUTHORITY_TAG_RE, claimsSetFinished, openProblemsLine, formatLedgerProblemLines, formatLedgerTurnBlock, formatProblemLedgerBlock, formatProblemLettersBlock, HOMEWORK_LEDGER_RULES, ledgerTurnKind, solvedPositionsFromCheck } from '../lesson-plan/homework-ledger';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
@@ -1784,6 +1784,11 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts
     // it, the tutor drew lines with no angles marked. Parts are named as the
     // sheet names them (the split keeps a number's parts together).
     `- ${HOMEWORK_DIAGRAM_RULE}\n` +
+    // 2026-10-20 (GAC Geometry upload portal-242abe76): the tutor wrote the
+    // exterior-angle equation with the ADJACENT interior angle in it, then
+    // took the student's correction without a word.
+    `- A rule or theorem about a figure applies to particular parts of it. Before you write an equation from one, place each symbol in it on the figure as the description gives it (which angle at which vertex, which side), and check that the rule names exactly those parts; do not write the equation until it does.\n` +
+    `- If the student points out a mistake of yours and they are right, say so plainly in a few words and go on from their correction; never pass over it or restate the mistaken line.\n` +
     // 2026-10-15 (GAC v7 audit): "one at a time" sat beside the ledger's
     // multi-answer recording; the student sets the order, the tutor does not.
     (ledger ? `- The student may answer several problems in one message, or out of order: take every answer they give as it comes, then ask about one open problem.\n` : '') +
@@ -2277,7 +2282,22 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // 2026-10-15 (./whole-answer-reveal.ts `deniesCheckedAnswer`): under the
   // ledger, a HIGH-confidence CORRECT check of the whole problem or the open
   // question — a sentence that denies the student's own value is withheld.
+  // 2026-10-20 (GAC Geometry upload portal-242abe76): "That's the last
+  // problem done — great finish on the whole set!" with problem 6 [OPEN].
+  // Under the ledger a sentence that calls the set finished while a problem
+  // is open is dropped; a fixed line names what is open (once per reply).
+  // The open set = the record the browser sent, minus what this turn's check
+  // found solved.
+  const hwForSet = noRevealLedger && input.homework?.problems?.length ? input.homework : null;
+  const setGuard: { open: number[]; said: boolean } = { open: [], said: false };
+  const refreshOpenSet = (pub?: PublicVerdictPrecheck | null): void => {
+    if (!hwForSet) return;
+    const done = new Set<number>([...(hwForSet.solved ?? []), ...(pub?.solvedProblems ?? []), ...(pub?.solvedProblem !== undefined ? [pub.solvedProblem] : [])]);
+    setGuard.open = hwForSet.problems.map((_, i) => i + 1).filter((pos) => !done.has(pos));
+  };
+  refreshOpenSet();
   const armDenialGuard = (pub: PublicVerdictPrecheck | null | undefined): void => {
+    refreshOpenSet(pub);
     if (!noRevealLedger || !workThenMatch || !precheckDecides(pub)) return;
     if (pub.verdict !== 'correct' || (pub.answers !== 'overall_problem' && pub.answers !== 'open_question')) return;
     if (!pub.proposed.trim()) return;
@@ -2325,6 +2345,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       yield { type: 'answer-reveal', where: 'sentence', how: 'denial' };
       reveal.forwarded.push(CHECKED_CORRECT_FALLBACK_STATEMENT);
       yield { type: 'sentence', text: CHECKED_CORRECT_FALLBACK_STATEMENT };
+      return;
+    }
+    if (hwForSet && setGuard.open.length && claimsSetFinished(text)) {
+      console.warn(`[set-finished] sentence dropped — ${setGuard.open.length} problem(s) still open: "${text.slice(0, 80)}"`);
+      if (!setGuard.said) {
+        setGuard.said = true;
+        const line = openProblemsLine(hwForSet.problems, setGuard.open);
+        if (line) { reveal.forwarded.push(line); yield { type: 'sentence', text: line }; }
+      }
       return;
     }
     const hit = revealsWithheldAnswer(text, reveal.withheld);

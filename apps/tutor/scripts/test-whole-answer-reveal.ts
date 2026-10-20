@@ -184,7 +184,8 @@ test('server: every sentence and tool call goes through the guard; the frame car
   // No sentence is yielded past the guard inside the streaming generator.
   const gen = brain.slice(brain.indexOf('export async function* streamBrainTurn'));
   const raw = (gen.match(/yield \{ type: 'sentence'/g) ?? []).length;
-  assert.equal(raw, 3, 'only the guard itself yields sentences (the passed sentence, the fixed tail, and the fixed confirmation after a withheld denial)');
+  // 2026-10-20: + the fixed "still open" line after a dropped set-finished claim (homework-ledger.ts claimsSetFinished).
+  assert.equal(raw, 4, 'only the guard itself yields sentences (the passed sentence, the fixed tail, the fixed confirmation after a withheld denial, and the open-problems line after a dropped set-finished claim)');
   assert.match(gen, /yield\* guardedSentence\(/);
   assert.match(gen, /boardRevealsWithheldAnswer\(/);
   assert.match(gen, /type: 'answer-reveal', where: /);

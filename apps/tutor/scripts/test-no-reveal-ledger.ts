@@ -1137,6 +1137,55 @@ async function main() {
     assert.ok(formatAnswerCheckBlock(pc({ verdict: 'partly_correct', answers: 'overall_problem' }), { workThenMatch: true, noRevealAnyStep: true }).includes(PARTLY_NO_REVEAL_RULE));
   });
 
+  // 2026-10-20 (GAC Geometry upload portal-242abe76, local stack): "scalene"
+  // accepted for "classify by its angles"; the tutor's own "120 = y + 45";
+  // "That's the last problem done — great finish on the whole set!" with
+  // problem 6 open; the photo read put an angle on the wrong side again.
+  console.log('10-20 b: the kind of answer asked for, a set called finished early, rules for the figure');
+  await test('a reply that calls the set finished while a problem is open: the sentence is dropped, the open problem named', async () => {
+    const { claimsSetFinished } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
+    for (const t of ["That's the last problem done — great finish on the whole set!", 'All 7 problems are done — great work today.', 'We finished the homework!', "That's everything on the sheet.", 'You have finished every problem.', 'The whole worksheet is complete.'])
+      assert.equal(claimsSetFinished(t), true, t);
+    for (const t of ["Problem 4's done — on to problem 5.", "That's problem 3 done.", "Nice work — that's problem 5 wrapped up.", 'The last problem is 7.', 'Each interior angle is 120°.', 'Problem 6 is still open.'])
+      assert.equal(claimsSetFinished(t), false, t);
+    const seven = Array.from({ length: 7 }, (_, i) => ({ n: i + 1, text: `P${i + 1}.` }));
+    const r = await run("Each interior angle is 120°. That's the last problem done — great finish on the whole set!", {
+      noRevealLedger: true,
+      homework: { problems: seven, current: 7, solved: [1, 2, 3, 4, 5] },
+      studentTranscript: '720/6=120 deg', studentMessage: '720/6=120 deg',
+      verdictPrecheckDeps: { llm: check({ verdict: 'correct', answers: 'overall_problem', correct_value: '120', proposed_value: '720/6=120', solved_problems: [7], about_problem: 7 }) },
+    });
+    const all = r.sentences.join(' | ');
+    assert.ok(!/whole set/.test(all), all);
+    assert.match(all, /Each interior angle is 120°\./);
+    assert.match(all, /Problem 6 is still open/);
+    assert.ok(!r.events.some((e) => e.type === 'answer-reveal'), 'no kill: a fixed line replaces the sentence');
+    // nothing open: the claim stands
+    const ok = await run("That's the last problem done — great finish on the whole set!", {
+      noRevealLedger: true,
+      homework: { problems: seven, current: 7, solved: [1, 2, 3, 4, 5, 6] },
+      studentTranscript: '720/6=120 deg', studentMessage: '720/6=120 deg',
+      verdictPrecheckDeps: { llm: check({ verdict: 'correct', answers: 'overall_problem', correct_value: '120', proposed_value: '720/6=120', solved_problems: [7], about_problem: 7 }) },
+    });
+    assert.match(ok.sentences.join(' | '), /whole set/);
+    // gate off: untouched
+    const off = await run("Great finish on the whole set!", { homework: { problems: seven, current: 7, solved: [1] }, verdictPrecheckDeps: { llm: check({}) } });
+    assert.match(off.sentences.join(' | '), /whole set/);
+  });
+  await test('the check judges the KIND of answer asked for; the brain places a rule on the figure and owns a mistake', async () => {
+    const sys = verdictPrecheckSystem({ ledger: true });
+    assert.match(sys, /THE KIND OF ANSWER ASKED FOR/);
+    assert.doesNotMatch(verdictPrecheckSystem({}), /THE KIND OF ANSWER ASKED FOR/);
+    const { formatHomeworkSessionBlock } = await import('../src/lib/tutor/voice/claude-brain');
+    const block = formatHomeworkSessionBlock({ problems: [{ n: 1, text: 'A.' }], current: 1, solved: [] }, { ledger: true });
+    assert.match(block, /place each symbol/i);
+    assert.match(block, /points out a mistake of yours/i);
+    const { DIAGRAM_RULE } = await import('../src/lib/tutor/lesson-plan/material-extract');
+    assert.match(DIAGRAM_RULE, /one angle at a time/);
+    const { resolveModel } = await import('../src/lib/tutor/ai/model-registry');
+    assert.equal(resolveModel('plangen-vision').model, 'claude-sonnet-5');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

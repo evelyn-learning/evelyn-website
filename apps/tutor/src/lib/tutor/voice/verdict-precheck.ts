@@ -272,6 +272,12 @@ export const NAMED_PROBLEM_RULE =
  * because the check's own answer added "its shape resembles the substrate"
  * (asked by the tutor along the way), and (b) stayed open at the wrap-up.
  */
+/** 2026-10-20 (GAC Geometry upload portal-242abe76): "angles are 70, 60, 50 -
+ *  scalene triangle" was checked CORRECT for "classify the triangle by its
+ *  angles" (the answer is acute; scalene classifies by sides). */
+export const ANSWER_KIND_RULE =
+  ' THE KIND OF ANSWER ASKED FOR. When the question asks for something by a stated criterion or in a stated form — a classification by one property, a name, a value to a given precision or in a given unit, a form such as a fraction or an exact value — an answer that is true of the object but answers a different criterion or a different kind of question is not an answer to that question: "incorrect" when that is all it gives, "partly_correct" when the message also gives a right part of what was asked. Judge against the question as the problem words it, not against whether the statement is true.';
+
 export const LEDGER_FORMS_RULE =
   ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right: before you call a value wrong, check whether another accepted method or convention gives it, and if one does, it is right — and so is later working built on it. Use ONE convention consistently through your own working; never mix two in one calculation. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer. A WORDED ANSWER (a why, what or describe question): the complete answer is what the problem as written asks for — not every detail a full textbook answer would add, and not a detail a later question of the tutor\'s asked for. A message that states that point correctly answers the problem completely ("correct", the problem is solved), even when it leaves out a cause or a detail the problem itself did not ask for.';
 
@@ -326,7 +332,7 @@ export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; r
     const i = system.indexOf(anchor);
     if (i >= 0) system = system.slice(0, i + anchor.length) + OTHER_LISTED_PROBLEM_RULE + NAMED_PROBLEM_RULE + system.slice(i + anchor.length);
     const at5 = system.indexOf('\n5. CONFIDENCE.');
-    system = at5 < 0 ? system + LEDGER_FORMS_RULE : system.slice(0, at5) + LEDGER_FORMS_RULE + system.slice(at5);
+    system = at5 < 0 ? system + LEDGER_FORMS_RULE + ANSWER_KIND_RULE : system.slice(0, at5) + LEDGER_FORMS_RULE + ANSWER_KIND_RULE + system.slice(at5);
     system += SOLVED_PROBLEM_FIELD_RULE;
   }
   return system;

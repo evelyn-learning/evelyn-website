@@ -72,7 +72,9 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   'social-threads': 'claude-haiku-4-5-20251001',
   'video-curator': 'claude-sonnet-4-6',
   'plangen-fast': 'claude-haiku-4-5-20251001',
-  'plangen-vision': 'claude-sonnet-4-6',
+  // 2026-10-20 (GAC Geometry upload, twice): Sonnet 4.6 put a labelled angle on
+  // the wrong side of the transversal in two reads of the same worksheet.
+  'plangen-vision': 'claude-sonnet-5',
   taxonomy: 'claude-sonnet-5',
   'content-gen': 'claude-sonnet-5',
   'content-verify': 'claude-sonnet-5',
