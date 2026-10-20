@@ -45,11 +45,13 @@ export function isKickoffMessage(t: string | null | undefined): boolean {
  *  - 'queue_after_opening' the opening turn has already shown a sentence:
  *                          leave it running and the busy flag set, so the
  *                          message queues and runs right after it.
- *  - 'force_clear'         any other turn in flight, a stale busy flag, or
- *                          voice: the busy flag is force-cleared, as before.
+ *  - 'supersede_turn' / 'queue_after_turn'  the same for a typed student
+ *                          turn in flight (2026-10-19).
+ *  - 'force_clear'         a runtime dispatch in flight, a stale busy flag,
+ *                          or voice: the busy flag is force-cleared, as before.
  * Pure.
  */
-export type TypedDuringTurn = 'dispatch' | 'supersede_opening' | 'queue_after_opening' | 'force_clear';
+export type TypedDuringTurn = 'dispatch' | 'supersede_opening' | 'queue_after_opening' | 'supersede_turn' | 'queue_after_turn' | 'force_clear';
 
 export function decideTypedDuringTurn(i: {
   sessionMode: string;
@@ -60,8 +62,16 @@ export function decideTypedDuringTurn(i: {
   inFlightShown: boolean;
 }): TypedDuringTurn {
   if (!i.brainBusy) return 'dispatch';
-  if (i.sessionMode !== 'text' || !isKickoffMessage(i.inFlightTranscript)) return 'force_clear';
-  return i.inFlightShown ? 'queue_after_opening' : 'supersede_opening';
+  if (i.sessionMode !== 'text') return 'force_clear';
+  if (isKickoffMessage(i.inFlightTranscript)) return i.inFlightShown ? 'queue_after_opening' : 'supersede_opening';
+  // 2026-10-19 (GAC AP Statistics, portal-7b0e93dc): "60 - 48" then "= 12"
+  // a second later ran as two overlapping turns — two tutor messages, the
+  // second repeating the first. A student turn in flight that has shown
+  // nothing is aborted silently and the new message answers both (the first
+  // stays in the history); one already showing finishes, then the new one runs.
+  const t = (i.inFlightTranscript ?? '').trim();
+  if (!t || t.startsWith('[')) return 'force_clear';
+  return i.inFlightShown ? 'queue_after_turn' : 'supersede_turn';
 }
 
 // ── 2026-10-09: a typed first message while the homework plan is loading ───

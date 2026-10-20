@@ -39,7 +39,10 @@ assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: '[start session]'
 assert(decideTypedDuringTurn({ ...typedAt, inFlightShown: true }) === 'queue_after_opening', 'the opening turn has already shown a sentence → the typed message runs right after it');
 assert(decideTypedDuringTurn({ ...typedAt, brainBusy: false }) === 'dispatch', 'nothing in flight → dispatched as before');
 assert(decideTypedDuringTurn({ ...typedAt, brainBusy: false, inFlightShown: true }) === 'dispatch', 'nothing in flight → dispatched as before (whatever the last turn showed)');
-assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4' }) === 'force_clear', 'an ordinary student turn in flight → unchanged (busy flag force-cleared)');
+// 2026-10-19 (GAC AP Statistics, portal-7b0e93dc): two quick typed messages → two overlapping turns.
+assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4' }) === 'supersede_turn', 'a student turn in flight that has shown nothing → aborted; the new message answers both');
+assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4', inFlightShown: true }) === 'queue_after_turn', 'a student turn already showing → the new message runs after it');
+assert(/typedDuringTurn === 'supersede_turn'\) \{[\s\S]{0,400}inFlightBrainAbortRef\.current\?\.abort\(\)/.test(vtr.slice(vtr.indexOf('const typedDuringTurn = decideTypedDuringTurn({'))) && !/typedDuringTurn === 'supersede_turn'\) \{[\s\S]{0,400}openerSupersededByStudentRef/.test(vtr), 'wiring: superseding a student turn aborts it without the opener flag');
 assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: '[Skip-button-clicked: advance]' }) === 'force_clear', 'another runtime dispatch in flight → unchanged');
 assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: null }) === 'force_clear', 'busy with no turn on record (a stale flag) → unchanged');
 assert(decideTypedDuringTurn({ ...typedAt, sessionMode: 'voice' }) === 'force_clear', 'voice → unchanged');

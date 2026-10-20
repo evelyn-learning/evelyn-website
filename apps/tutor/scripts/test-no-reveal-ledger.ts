@@ -874,6 +874,8 @@ async function main() {
     for (const t of ['So x = 5. Let\'s stop here.', 'Let\'s finish problem two first', 'I\'m finishing the second step now, it gives the slope', 'let\'s end with the units: grams']) assert.notEqual(ledgerTurnKind(t, 'What do you get?'), 'sign_off', t);
     assert.match(formatLedgerTurnBlock('no_idea'), /never a description that only that word fits/);
     assert.match(LEDGER_CONDUCT_RULES, /Nor does a hint supply a value, constant or fact the problem needs/);
+    assert.match(LEDGER_CONDUCT_RULES, /do not carry it out on their problem's numbers/);
+    assert.match(HOMEWORK_LEDGER_RULES, /A bare doubt .* is about that answer: say plainly that it is right/);
   });
 
   console.log('pre-v8 review');

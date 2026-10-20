@@ -25909,6 +25909,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               try { inFlightBrainAbortRef.current?.abort(); } catch { /* already gone */ }
             } else if (typedDuringTurn === 'queue_after_opening') {
               onDebugEvent?.('typed_queued_after_opening', 'opening turn already showing — typed message runs after it');
+            } else if (typedDuringTurn === 'supersede_turn') {
+              // Busy flag stays set, as above: the silent abort's handler
+              // drains this message, which answers both (text-kickoff.ts).
+              onDebugEvent?.('typed_turn_superseded', 'typed again before anything was shown — the turn in flight is aborted');
+              try { inFlightBrainAbortRef.current?.abort(); } catch { /* already gone */ }
+            } else if (typedDuringTurn === 'queue_after_turn') {
+              onDebugEvent?.('typed_queued_after_turn', 'turn in flight already showing — typed message runs after it');
             } else if (typedDuringTurn === 'force_clear') {
               console.warn('[VoiceTutor] typed input while brainBusy=true — force-clearing stale busy flag');
               setBrainBusy(false);
