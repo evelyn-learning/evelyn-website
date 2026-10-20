@@ -1283,6 +1283,11 @@ the same label across several.
                               # gets its own angle_marker with label = exactly that text,
                               # and the from/to points choose which of the angles at the
                               # vertex it is (the side of each line it sits on).
+                              # from and to are two points OTHER than the vertex, one on each
+                              # arm, on the side the angle opens toward — never the vertex
+                              # itself (such a marker is dropped). At an intersection of two
+                              # lines, pick a point of each line on that side: a line's end
+                              # point, or the other intersection along it.
 
 Line references (used by reflect_point.across, perpendicular_from.to,
 parallel_through.of) accept any of:

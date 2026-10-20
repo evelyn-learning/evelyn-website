@@ -115,7 +115,7 @@ import {
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
-import { recordSolved, sanitizeSolvedPositions, solvedPositionsFromCheck } from '@/lib/tutor/lesson-plan/homework-ledger';
+import { recordSolved, sanitizeSolvedPositions, solvedPositionsFromCheck, inferProblemMoveFromReply } from '@/lib/tutor/lesson-plan/homework-ledger';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -2695,6 +2695,25 @@ export function VoiceTutorRealtime({
   );
   const homeworkProblemsRef = useRef<HomeworkProblem[] | null>(null);
   const homeworkCurrentRef = useRef(1);
+  // 2026-10-20 (GAC Geometry upload portal-0886d151): the one place the
+  // current problem moves — from the set_current_problem tool, or inferred
+  // from a reply that announced a move in words without calling it (the
+  // check then judged problem 1's answers against problem 5). `n` is the
+  // problem's LABEL as shown in the homework list (the worksheet's own
+  // numbering can be 3, 7, 11…); `current` on the wire is the 1-based list
+  // POSITION. An unknown label falls back to treating n as a position.
+  const applyHomeworkCurrentRef = useRef<(nRaw: number, source: 'tool' | 'inferred') => void>(() => {});
+  applyHomeworkCurrentRef.current = (nRaw, source) => {
+    const problems = homeworkProblemsRef.current;
+    if (!problems || problems.length === 0 || !Number.isFinite(nRaw)) return;
+    const total = problems.length;
+    const idx = problems.findIndex((p) => p.n === nRaw);
+    const pos = idx >= 0 ? idx + 1 : Math.min(Math.max(Math.round(nRaw), 1), total);
+    if (source === 'inferred' && pos === homeworkCurrentRef.current) return;
+    homeworkCurrentRef.current = pos;
+    onHomeworkProgressRef.current?.({ current: pos, total, text: problems[pos - 1]?.text });
+    onDebugEvent?.('homework_current_problem', `n=${nRaw} pos=${pos} total=${total}${source === 'inferred' ? ' inferred=reply' : ''}`);
+  };
   // 2026-10-19 homework ledger (lesson-plan/homework-ledger.ts): list
   // POSITIONS the server's answer check found solved. Written only from the
   // `verdict-precheck` frame, never from the tutor's words; sent with
@@ -7340,20 +7359,7 @@ export function VoiceTutorRealtime({
         continue;
       }
       if (cmd.action === 'setCurrentProblem') {
-        const problems = homeworkProblemsRef.current;
-        const nRaw = Number((cmd as { n?: unknown }).n);
-        if (problems && problems.length > 0 && Number.isFinite(nRaw)) {
-          // `n` is the problem's LABEL as shown in the homework list (the
-          // worksheet's own numbering can be 3, 7, 11…); `current` on the
-          // wire is the 1-based list POSITION. Map label → position; an
-          // unknown label falls back to treating n as a position, clamped.
-          const total = problems.length;
-          const idx = problems.findIndex((p) => p.n === nRaw);
-          const pos = idx >= 0 ? idx + 1 : Math.min(Math.max(Math.round(nRaw), 1), total);
-          homeworkCurrentRef.current = pos;
-          onHomeworkProgressRef.current?.({ current: pos, total, text: problems[pos - 1]?.text });
-          onDebugEvent?.('homework_current_problem', `n=${nRaw} pos=${pos} total=${total}`);
-        }
+        applyHomeworkCurrentRef.current(Number((cmd as { n?: unknown }).n), 'tool');
         continue;
       }
       if (cmd.action === 'advanceLesson') {
@@ -18340,6 +18346,16 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms · in=${lastUsage?.inputTokens ?? 0} out=${lastUsage?.outputTokens ?? 0} cr=${lastUsage?.cacheReadTokens ?? 0} cc=${lastUsage?.cacheCreationTokens ?? 0}`);
+
+      // 2026-10-20 (GAC Geometry upload portal-0886d151): a homework move the
+      // reply announced in words ("Now let's go back to problem 1") with no
+      // set_current_problem call left the record on the problem it had left;
+      // the answer check then judged problem 1's answers against problem 5.
+      // The reply's own announcement moves the record.
+      if (homeworkProblemsRef.current?.length && !totalToolNamesSeen.includes('set_current_problem')) {
+        const moved = inferProblemMoveFromReply(fullText, homeworkProblemsRef.current.map((p) => p.n));
+        if (moved !== null) applyHomeworkCurrentRef.current(moved, 'inferred');
+      }
 
       // R44 (rail-bargein round, Task 2) — turn-completion seam: runs
       // exactly once per completed turn (success OR give-up; NOT on

@@ -792,6 +792,18 @@ export async function runVerdictPrecheck(
         || roundsExactAnswer(String(o.proposed_value ?? ''), String(o.correct_value || o.problem_final_answer || '')));
     if (roundedDecimal) console.log('[verdict-precheck] rounded decimal of the exact answer — reply must not call it wrong');
     const solvedProblems = disputed || partlyByConfirm ? [] : [...new Set(labels.map(positionOf).filter((pos) => pos > 0 && !wrongHere.has(pos) && !roundedHere.has(pos) && !reasonOpen.has(pos)))].sort((a, b) => a - b);
+    const wrongStep = ledger && o.verdict !== 'correct' && !disputed ? safeDiffersAt(o.wrong_step, correctValue, input) : '';
+    // 2026-10-20 (GAC Geometry upload portal-0886d151, problem "find x and
+    // m∠1"): "6x+60=180 so x=20" came back partly_correct — x right, m∠1 not
+    // given yet — and the block's "something is missing or wrong" let the
+    // reply say x "doesn't follow". When every value the student stated is
+    // part of the check's own answer and nothing of theirs was found wrong,
+    // the only thing wrong is what is missing: the reply confirms the part
+    // and asks for the rest.
+    const missingOnly = ledger && o.verdict === 'partly_correct' && !disputed && !reasonWrong && !wrongStep && !wrongHere.size && !roundedDecimal
+      && o.confidence !== 'low' && stated.length > 0
+      && stated.every((a) => a && (a.right === true || partOfOwn(a)));
+    if (missingOnly) console.log('[verdict-precheck] partly_correct with nothing wrong — a right part, the rest not yet given');
     return {
       ...(solvedProblems.length ? { solvedProblem: solvedProblems[0], solvedProblems } : {}),
       ...(aboutProblem ? { aboutProblem } : {}),
@@ -800,7 +812,8 @@ export async function runVerdictPrecheck(
       // 2026-10-16 (GAC v16, Algebra I): "7y = -4" — the reply pointed at the
       // distribution, which was right. The check names the first wrong
       // operation of THEIR working, with no value in it (safeDiffersAt).
-      ...(() => { const ws = ledger && o.verdict !== 'correct' && !disputed ? safeDiffersAt(o.wrong_step, correctValue, input) : ''; return ws ? { wrongStep: ws } : {}; })(),
+      ...(wrongStep ? { wrongStep } : {}),
+      ...(missingOnly ? { missingOnly: true as const } : {}),
       answers: o.answers as PrecheckTarget,
       target: String(o.target ?? '').trim().slice(0, 200),
       proposed: String(o.proposed_value ?? '').trim().slice(0, 240),

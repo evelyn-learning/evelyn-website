@@ -1067,6 +1067,76 @@ async function main() {
     assert.match(route, /textLanguageNote: body\.inputMode === 'text'/);
   });
 
+  // 2026-10-20 (GAC Geometry upload portal-0886d151): after a jump to #4 the
+  // tutor went on to #5, not back to the interrupted #1; it later returned to
+  // #1 in words without set_current_problem, so the check judged #1's answers
+  // against #5; "6x+60=180 so x=20" (x right, m∠1 not given yet) came back
+  // partly_correct and the reply said x "doesn't follow".
+  console.log('10-20 Geometry upload: order after a jump, moves in words, a right part with the rest missing');
+  await test('after a jump, the next open problem is the LOWEST open one (the interrupted problem first)', () => {
+    const probs = Array.from({ length: 7 }, (_, i) => ({ n: i + 1, text: `P${i + 1}.` }));
+    assert.match(formatLedgerProblemLines(probs, 4, [4]).currentLine, /Problem 4 is \[SOLVED\]; the next \[OPEN\] problem is Problem 1 \(1 of 7\)/);
+    assert.match(formatLedgerProblemLines(probs, 2, [2, 4]).currentLine, /next \[OPEN\] problem is Problem 1 /);
+    assert.match(formatLedgerProblemLines(probs, 1, [1, 2, 4]).currentLine, /next \[OPEN\] problem is Problem 3 /);
+    assert.match(HOMEWORK_LEDGER_RULES, /lowest-numbered \[OPEN\] problem/);
+  });
+  await test('a move the tutor announces in words is read from the reply', async () => {
+    const { inferProblemMoveFromReply } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
+    const labels = [1, 2, 3, 4, 5, 6, 7];
+    assert.equal(inferProblemMoveFromReply("$y + 120 = 180$, so $y = 60$ — that's exactly what you got. Problem 4 is done. Let's move to problem 5. Since these form a linear pair, what equation relates $m\\angle 1$ and $m\\angle 2$?", labels), 5);
+    assert.equal(inferProblemMoveFromReply("Angles 70, 60, 50 — all less than 90, so the triangle is acute. Nice, that's problem 2 done. Now let's go back to problem 1 — lines $l$ and $m$, with $(3x+15)°$ and $(5x-25)°$ corresponding. What equation do those give you?", labels), 1);
+    assert.equal(inferProblemMoveFromReply("Sure, let's switch to problem 2. Here's triangle $ABC$: angle $C$ is $70°$.", labels), 2);
+    assert.equal(inferProblemMoveFromReply("Sure, let's jump to problem 4. Here's triangle $PQR$ with side $QR$ extended to $S$.", labels), 4);
+    assert.equal(inferProblemMoveFromReply('Problem 1 is done. Let\'s move to problem 5 — what\'s x from $8x-10=180$?', labels), 5);
+    assert.equal(inferProblemMoveFromReply('M∠1 = 90° — nice work on problem 5. Let\'s move to problem 6: the vertex angle of an isosceles triangle is 40°.', labels), 6);
+    assert.equal(inferProblemMoveFromReply('Okay, picking back up. We\'re on problem 6 — the vertex angle is 40°.', labels), 6);
+    assert.equal(inferProblemMoveFromReply('Now on to #3: a ladder leans against a wall.', labels), 3);
+    // not a move
+    assert.equal(inferProblemMoveFromReply("That's problem 3 done.", labels), null);
+    assert.equal(inferProblemMoveFromReply('You already finished problem 2 — it stands.', labels), null);
+    assert.equal(inferProblemMoveFromReply('In problem 2 you used the angle sum; the same idea works here. What do the three angles add to?', labels), null);
+    assert.equal(inferProblemMoveFromReply('Problem 1 asks for x first. What relationship do the two angles have?', labels), null);
+    assert.equal(inferProblemMoveFromReply('We have 7 problems today; which would you like to start with?', labels), null);
+    assert.equal(inferProblemMoveFromReply('Which would you like to do next, problem 3 or problem 5?', labels), null, 'an offer');
+    assert.equal(inferProblemMoveFromReply('Nice work. Ready for problem 2?', labels), null, 'a question, not a move');
+    assert.equal(inferProblemMoveFromReply('Problem 2 is done. How about problem 3 next?', labels), null, 'an offer');
+    assert.equal(inferProblemMoveFromReply("Let's move to problem 9.", labels), null, 'not a listed label');
+    assert.equal(inferProblemMoveFromReply('', labels), null);
+  });
+  await test('a right part with the rest not yet given: the check says so, the reply confirms it and asks for the rest', async () => {
+    const { PARTLY_MISSING_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+    const labelled = { problems: [{ n: 5, text: '∠1 and ∠2 form a linear pair. m∠1 = (4x + 10)° and m∠2 = (2x + 50)°. Find x and m∠1.' }], currentProblem: 1, history: [], openQuestion: 'What do 4x+10 and 2x+50 combine to give you?', studentMessage: 'so it\'ll be 6x+60=180 so x=20' };
+    const reply = (o: Record<string, unknown>) => async () => ({ text: JSON.stringify({ answers: 'overall_problem', verdict: 'partly_correct', confidence: 'high', proposed_value: '6x+60=180 so x=20', problem_final_answer: 'x = 20, m∠1 = 90°', correct_value: 'x = 20, m∠1 = 90°', about_problem: 5, solved_problems: [], reason_wrong: false, wrong_step: '', ...o }), model: 'f', inputTokens: 1, outputTokens: 1 });
+    const missing = await runVerdictPrecheck(labelled, { llm: reply({ stated_answers: [{ problem: 5, stated: 'x = 20', own_answer: 'x = 20, m∠1 = 90°', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(missing?.verdict, 'partly_correct');
+    assert.equal(missing?.missingOnly, true);
+    assert.equal(missing?.wrongProblems, undefined);
+    // the same with the entry marked right
+    const right = await runVerdictPrecheck(labelled, { llm: reply({ stated_answers: [{ problem: 5, stated: 'x = 20', own_answer: 'x = 20, m∠1 = 90°', right: true }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(right?.missingOnly, true);
+    // a wrong value in it: not missing-only
+    const wrong = await runVerdictPrecheck(labelled, { llm: reply({ stated_answers: [{ problem: 5, stated: 'x = 25', own_answer: 'x = 20, m∠1 = 90°', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(wrong?.missingOnly, undefined);
+    // a wrong step named: not missing-only
+    const step = await runVerdictPrecheck(labelled, { llm: reply({ wrong_step: 'the subtraction of 60', stated_answers: [{ problem: 5, stated: 'x = 20', own_answer: 'x = 20, m∠1 = 90°', right: false }] }), timeoutMs: 1000, ledger: true });
+    assert.equal(step?.missingOnly, undefined);
+    // ledger off: never
+    const off = await runVerdictPrecheck(labelled, { llm: reply({ stated_answers: [{ problem: 5, stated: 'x = 20', own_answer: 'x = 20, m∠1 = 90°', right: true }] }), timeoutMs: 1000 });
+    assert.equal(off?.missingOnly, undefined);
+    // over the wire and into the block
+    const pub = toPublicPrecheck(missing!);
+    assert.equal(pub.missingOnly, true);
+    assert.equal(sanitizePublicPrecheck(JSON.parse(JSON.stringify(pub)))?.missingOnly, true);
+    const b = formatAnswerCheckBlock(pub, { workThenMatch: true, noRevealAnyStep: true });
+    assert.ok(b.includes(PARTLY_MISSING_RULE), 'missing rule');
+    assert.ok(!b.includes(PARTLY_NO_REVEAL_RULE), 'not the generic partly rule');
+    assert.match(b, /RIGHT AS FAR AS IT GOES/);
+    assert.doesNotMatch(b, /something is missing or wrong/);
+    assert.doesNotMatch(PARTLY_MISSING_RULE, /\d|e\.g\.|for example/i);
+    // the plain partly block is unchanged when the flag is absent
+    assert.ok(formatAnswerCheckBlock(pc({ verdict: 'partly_correct', answers: 'overall_problem' }), { workThenMatch: true, noRevealAnyStep: true }).includes(PARTLY_NO_REVEAL_RULE));
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

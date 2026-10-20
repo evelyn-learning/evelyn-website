@@ -1776,6 +1776,9 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts
     `${problemLines}\n` +
     `Rules:\n` +
     `- Work the problems in order unless the student asks to jump. One problem at a time. Before your first question about a problem, put it on the board and call set_current_problem with its number.\n` +
+    // 2026-10-20 (GAC Geometry upload portal-0886d151): "Let's move to
+    // problem 5 — what's x from 8x-10=180?" carried problem 1's equation.
+    `- When you move to a problem, your first question about it comes from that problem's own givens and whatever was already done on it: never carry an equation, a value or a question over from the problem you just left. A problem you come back to is picked up where it was left, not started over.\n` +
     // 2026-10-19 (GAC Geometry upload, portal-9d615e3a): the board showed the
     // problem's words only, though the problem was a diagram; asked to draw
     // it, the tutor drew lines with no angles marked. Parts are named as the

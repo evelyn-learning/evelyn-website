@@ -191,6 +191,35 @@ function main() {
     assert.equal(out.points.find((p) => p.id === 'C')!.hidden, true, 'a point only placing a labelled line is hidden');
   });
 
+  // 2026-10-20 (GAC Geometry upload portal-0886d151): the brain marked the
+  // angles of a parallel-lines figure with `to` equal to the vertex
+  // ({vertex:'P1', from:'A', to:'P1'}); the marker had one arm and drew as a
+  // wrong angle. A marker whose arm is its own vertex is dropped, not drawn.
+  test('an angle_marker whose from or to IS the vertex is dropped; a proper one at an intersection stays', () => {
+    const out = solveGeometry({
+      given: [
+        { id: 'A', kind: 'point', x: 0, y: 4 }, { id: 'B', kind: 'point', x: 10, y: 4 },
+        { id: 'C', kind: 'point', x: 0, y: 0 }, { id: 'D', kind: 'point', x: 10, y: 0 },
+      ],
+      steps: [
+        { id: 'l', kind: 'line', through: ['A', 'B'], label: 'l' },
+        { id: 'm', kind: 'line', through: ['C', 'D'], label: 'm' },
+        { id: 't', kind: 'line', through: [{ x: 2, y: 6 }, { x: 7, y: -2 }], label: 't' },
+        { id: 'P1', kind: 'intersect', of: ['l', 't'] },
+        { id: 'P2', kind: 'intersect', of: ['m', 't'] },
+        { id: 'bad1', kind: 'angle_marker', vertex: 'P1', from: 'A', to: 'P1', label: '(3x+15)°' },
+        { id: 'bad2', kind: 'angle_marker', vertex: 'P2', from: 'P2', to: 'D', label: '(5x-25)°' },
+        { id: 'good', kind: 'angle_marker', vertex: 'P1', from: 'A', to: 'P2', label: '(3x+15)°' },
+      ],
+    } as ConstructedGeometrySpec);
+    assert.equal(out.angles.length, 1, 'only the proper marker survives');
+    const good = out.angles[0];
+    assert.equal(good.label, '(3x+15)°');
+    assert.equal(good.vertex, 'P1');
+    assert.notEqual(good.from, good.vertex);
+    assert.notEqual(good.to, good.vertex);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

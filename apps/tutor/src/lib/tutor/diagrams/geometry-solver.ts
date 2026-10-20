@@ -2961,6 +2961,14 @@ function solveAngleMarker(step: StepAngleMarker, state: State): void {
   const vId = normalizePointRef(state, step.vertex, step.id, 'vertex');
   const fId = normalizePointRef(state, step.from, step.id, 'from');
   const tId = normalizePointRef(state, step.to, step.id, 'to');
+  // 2026-10-20 (GAC Geometry upload portal-0886d151): the brain wrote
+  // {vertex:'P1', from:'A', to:'P1'} for an angle at an intersection — one
+  // arm was the vertex itself, and the marker drew as a wrong angle on the
+  // student's board. A marker with no second arm marks nothing: dropped.
+  if (fId === vId || tId === vId || fId === tId) {
+    console.warn(`[geometry-solver] angle_marker "${step.id}" dropped: from/to must be two points other than the vertex (vertex=${vId}, from=${fId}, to=${tId})`);
+    return;
+  }
   const style: 'arc' | 'square' = step.style === 'right' || step.style === 'square' ? 'square' : 'arc';
   setObject(state, {
     kind: 'angle', id: step.id,

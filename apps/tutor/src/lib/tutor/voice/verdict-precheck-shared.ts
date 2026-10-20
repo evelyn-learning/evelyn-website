@@ -79,6 +79,10 @@ export interface PublicVerdictPrecheck {
   /** 2026-10-16 (GAC v16): the first wrong operation of the student's own
    *  working, in their numbers, with no result. Ledger only. */
   wrongStep?: string;
+  /** 2026-10-20 (GAC Geometry upload): partly_correct with NOTHING of the
+   *  student's found wrong — every value they gave is part of the answer and
+   *  the rest is not given yet. Reveals nothing. Ledger only. */
+  missingOnly?: true;
 }
 
 /** The full result; `correctValue` stays on the server. */
@@ -121,6 +125,7 @@ export function sanitizePublicPrecheck(v: unknown): PublicVerdictPrecheck | null
     ...(o.roundedDecimal === true ? { roundedDecimal: true as const } : {}),
     ...(o.disputed === true ? { disputed: true as const } : {}),
     ...wrongStepField(o.wrongStep),
+    ...(o.missingOnly === true && o.verdict === 'partly_correct' ? { missingOnly: true as const } : {}),
   };
 }
 
@@ -159,7 +164,7 @@ function differsAtField(v: unknown): { differsAt?: string } {
 }
 
 export function toPublicPrecheck(r: VerdictPrecheckResult): PublicVerdictPrecheck {
-  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}), ...(r.disputed === true ? { disputed: true as const } : {}), ...wrongStepField(r.wrongStep) };
+  return { answers: r.answers, target: line(r.target, 160), proposed: line(r.proposed, 200), verdict: r.verdict, confidence: r.confidence, ...differsAtField(r.differsAt), ...solvedProblemField(r.solvedProblem), ...solvedProblemsField(r.solvedProblems), ...aboutProblemField(r.aboutProblem), ...wrongProblemsField(r.wrongProblems), ...(r.roundedDecimal === true ? { roundedDecimal: true as const } : {}), ...(r.disputed === true ? { disputed: true as const } : {}), ...wrongStepField(r.wrongStep), ...(r.missingOnly === true ? { missingOnly: true as const } : {}) };
 }
 
 /** Does this check say anything the brain should be told? Low confidence and
@@ -586,6 +591,12 @@ function formatAnswerCheckBlockWorkThenMatch(p: PublicVerdictPrecheck, correctVa
       + ROUNDED_DECIMAL_RULE
       + tail;
   }
+  if (opts?.noRevealAnyStep === true && p.missingOnly === true && !partlyWrongOnSolvedProblem(p, opts)) {
+    return head + proposed + where
+      + '- Checked for that question: RIGHT AS FAR AS IT GOES — every value or part they gave is right; the question asks for more, which they have not given yet. Nothing of theirs was found wrong.\n'
+      + PARTLY_MISSING_RULE
+      + tail;
+  }
   if (opts?.noRevealAnyStep === true) {
     return head + proposed + where
       + '- Checked for that question: PARTLY correct — part of what the question asks for is right, and something is missing or wrong.\n'
@@ -627,6 +638,11 @@ export const ROUNDED_DECIMAL_RULE =
 
 /** 2026-10-15 (staging, Algebra II): a half-right answer; the reply wrote out
  *  the setup of the missing half before asking for it. */
+/** 2026-10-20 (GAC Geometry upload portal-0886d151): the right part is
+ *  confirmed as right; only what is missing is asked for. */
+export const PARTLY_MISSING_RULE =
+  'What to do: confirm what they gave as right, plainly and first, in their own words and values — never say it is wrong, does not follow, or needs another look, and never send them back to a step of it. Then say that the question also asks for something more and name WHICH part, by what it is — without writing it out: no setup, no equation, no value for that part, not in the reply and not on the board. End with ONE question that has them write that part themselves.\n';
+
 export const PARTLY_NO_REVEAL_RULE =
   'What to do: work it out silently. Confirm the part of THEIR answer that is right, in their own words and values, as what THEY offered it as (it answers what the check names above): never recast it as something else, such as a step, a factor or an intermediate number, and never call any part of it wrong that the check found right. Then say that something is still missing or wrong and name WHICH part, by what it is — without writing it out: no setup, no equation, no inequality or value for that part, not in the reply and not on the board. When the wrong part is a word or an idea (a process, a direction, a term), saying the right one IS writing it out — not even as a contrast with theirs. End with ONE question that has them write that part themselves.\n';
 

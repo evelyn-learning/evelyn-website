@@ -91,6 +91,41 @@ export function nextOpenPosition(total: number, solved: readonly number[], from 
   return null;
 }
 
+/**
+ * 2026-10-20 (GAC Geometry upload portal-0886d151): the tutor moved between
+ * problems in words ("Now let's go back to problem 1") without calling
+ * set_current_problem, so the record — and the answer check — stayed on the
+ * problem it had left. The LAST problem the reply announces a move to, by its
+ * label, or null when it announces none. A mention that only reports on a
+ * problem ("problem 2 is done", "in problem 2 you used…", "problem 1 asks
+ * for x") is not a move. Labels are the worksheet's own numbers.
+ */
+export function inferProblemMoveFromReply(replyText: string, labels: readonly number[]): number | null {
+  const text = String(replyText ?? '').replace(/\s+/g, ' ');
+  if (!text || !labels.length) return null;
+  const known = new Set(labels);
+  const re = /\b(?:problem|question|number|no\.)\s*#?\s*(\d{1,3})\b|#\s?(\d{1,3})\b/gi;
+  let found: number | null = null;
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const n = Number(m[1] ?? m[2]);
+    if (!known.has(n)) continue;
+    const before = text.slice(Math.max(0, m.index - 48), m.index);
+    const after = text.slice(m.index + m[0].length, m.index + m[0].length + 24);
+    // A report on the problem, not a move to it.
+    if (/^\s*(?:is|was|'s|are|were|you|asks?|asked|says?|gives?|wants?|needs?|done|finished|solved|stands|again)\b/i.test(after)) continue;
+    if (/\b(?:in|on|for|from|with|of|about|like|as in|than|unlike|finished|finishing|done with|done|solved|solving|completed|already)\s*$/i.test(before) && !/\b(?:we'?re|we are|you'?re|you are|back) (?:on|at)\s*$/i.test(before)) continue;
+    // An offer or a question about which to do ("problem 3 or problem 5?",
+    // "ready for problem 2?") is not a move.
+    const sentenceEnd = text.slice(m.index + m[0].length).search(/[.!?](?:\s|$)/);
+    const sentence = text.slice(text.lastIndexOf('.', m.index) + 1, sentenceEnd >= 0 ? m.index + m[0].length + sentenceEnd + 1 : undefined);
+    if (/\?\s*$/.test(sentence) && /\b(?:which|or|would you like|want to|do you want|prefer|ready for|ready to|shall we|should we|how about|what about)\b/i.test(sentence)) continue;
+    const cue = /\b(?:back to|on to|onto|over to|move(?:d|s)?(?: on)? to|moving(?: on)? to|jump(?:ed|s|ing)? to|switch(?:ed|es|ing)? to|go(?:ing)? to|turn(?:ing)? to|head(?:ing)? to|let'?s (?:do|try|look at|tackle|start(?: with| on)?|take|pick up|open|see|go back to|turn to|move(?: on)? to|jump to|switch to|head to|go to|get to|start)|start(?:ing)? (?:with|on)|pick(?:ing)? up|picking back up|now(?:,| for| to| on to| onto)?|next(?: up)?(?: is|:)?|here'?s|time for|we'?re on|we are on|you'?re on|back on|ready for|do)\s*$/i;
+    if (!cue.test(before)) continue;
+    found = n;
+  }
+  return found;
+}
+
 export const LEDGER_SOLVED = '[SOLVED]';
 export const LEDGER_OPEN = '[OPEN]';
 
@@ -338,6 +373,10 @@ export const HOMEWORK_LEDGER_RULES =
   // alternative reopened the problem from its first step.
   `- If the student doubts a ${LEDGER_SOLVED} problem or offers a different answer to it, their earlier answer stands: say so briefly, with a short reason, and do not reopen it or ask them to work it again — unless they ask to go through it again. A bare doubt (asking whether you are sure, or saying someone told them it is wrong, with no answer of their own) right after you confirmed an answer is about that answer: say plainly that it is right, then carry on.\n` +
   `- When every problem is ${LEDGER_SOLVED}, the homework is done: say so, and offer to stop or to look at something else. Do not invent work left on these problems.\n` +
+  // 2026-10-20 (GAC Geometry upload portal-0886d151): after a jump to #4 the
+  // tutor went on to #5 and came back to #1 only later, in words; its first
+  // question on the new problem carried the old problem's equation.
+  `- When a problem is finished and the student has not asked for a particular one next, go to the lowest-numbered ${LEDGER_OPEN} problem — a problem they skipped to come back to later comes before the ones after it — and pick it up where it was left, not from the start. Whenever you move to a problem, say which one, call set_current_problem with its number, and ask your first question from THAT problem's own givens and whatever was already done on it: never carry an equation, a value or a question over from the problem you just left.\n` +
   `- When you close, wrap up or summarise: name each ${LEDGER_SOLVED} problem as done and only ${LEDGER_OPEN} ones as left for next time. Anything the student brought up during the session that is not on this list is not one of these problems: never give it one of their numbers — mention it separately, as their extra question. A question you put off to come back to later, and never got back to, is still open: name it too.\n` +
   // 2026-10-15 staging: an unrelated trivia question was answered "by the way"
   // in two of thirteen sessions while the reply steered back.
@@ -365,7 +404,12 @@ export function formatLedgerProblemLines(
   const done = new Set(solved);
   const lines = problems.map((p, i) => `${p.n}. ${done.has(i + 1) ? LEDGER_SOLVED : LEDGER_OPEN} ${p.text}`).join('\n');
   const label = (pos: number) => problems[pos - 1]?.n ?? pos;
-  const open = nextOpenPosition(total, solved, current);
+  // 2026-10-20 (GAC Geometry upload portal-0886d151): "can we do #4 first?"
+  // — after #4 the next open problem was #5 (the first open one AFTER the
+  // current), so the interrupted #1 waited until the tutor's own memory took
+  // it back, out of step with the record. The next open problem is the
+  // lowest-numbered one: a problem left part-way comes first.
+  const open = nextOpenPosition(total, solved, 1);
   let currentLine: string;
   if (open === null) {
     currentLine = `All ${total} problem${total === 1 ? ' is' : 's are'} ${LEDGER_SOLVED}.`;
