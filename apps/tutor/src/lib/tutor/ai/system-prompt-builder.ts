@@ -1159,6 +1159,12 @@ Given (raw objects):
   segment   { id, from, to, label? }
   line      { id, through: [a, b], label? }
   polygon   { id, vertices: [...], label? }
+  # A line WITH a label is drawn across the whole figure, its label beside
+  # it; a line without one is invisible scaffolding. A point that only places
+  # a labelled line (no label of its own, used nowhere else) is hidden, so
+  # give a point a label only when the original figure names it.
+  # For a figure that is not on a coordinate plane, set display
+  # { grid: false, axes: false }.
 
 Steps. All take { id, label? } plus the kind-specific fields below.
 Givens may also appear as steps (segment/line/polygon/circle) when
@@ -1272,6 +1278,11 @@ the same label across several.
                               # Use this whenever you want to call out an angle measurement
                               # (e.g. "30°" at a point on a circle) or perpendicularity
                               # (right-angle square at a foot of altitude / tangent / perpendicular).
+                              # Markers are never automatic: an intersection marks nothing.
+                              # Every angle the problem gives (a measure or an expression)
+                              # gets its own angle_marker with label = exactly that text,
+                              # and the from/to points choose which of the angles at the
+                              # vertex it is (the side of each line it sits on).
 
 Line references (used by reflect_point.across, perpendicular_from.to,
 parallel_through.of) accept any of:

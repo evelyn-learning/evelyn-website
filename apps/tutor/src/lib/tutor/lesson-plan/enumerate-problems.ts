@@ -70,9 +70,14 @@ const OPEN_RESPONSE_RULE = TUTOR_HOMEWORK_OWN_MATERIAL
   ? ' Given information that several parts share (a data set, a passage, a sentence, a scenario) is repeated verbatim at the start of EACH part that needs it, so every entry can be worked on its own. A writing or free-response task (an essay, a thesis, a short written answer, a plan) is ONE entry: the prompt verbatim, followed by what the student says they need help with, in their own words. A message that states one task or question is one entry — never return an empty list for it.'
   : '';
 
-const ENUMERATE_SYSTEM_PROMPT = `You extract the discrete problems a student has to solve from the text of their homework. Output ONLY JSON:
+// 2026-10-19 (GAC Geometry upload, portal-9d615e3a): a sheet numbered 1–7
+// with lettered parts was split into 11 entries and renumbered 1–11, so the
+// student's "#4" was the session's 2(b) and "go back to #2" opened 1(b). A
+// printed number now keeps its lettered parts in ONE entry, under its own
+// number; only a list lettered with no printed numbers splits by letter.
+export const ENUMERATE_SYSTEM_PROMPT = `You extract the discrete problems a student has to solve from the text of their homework. Output ONLY JSON:
 {"problems":[{"n":<number as printed, or the 1-based position if unnumbered>,"text":"<the problem's full wording, verbatim, including any given values; keep math as plain text>"}]}
-Rules: keep the original order; one entry per problem or sub-part that expects its own answer; do not solve, hint, rephrase or omit; skip headings, instructions like "show your work", and answer keys; at most 25 entries.${OPEN_RESPONSE_RULE}`;
+Rules: keep the original order; one entry per problem that expects its own answer; do not solve, hint, rephrase or omit; skip headings, instructions like "show your work", and answer keys; at most 25 entries. When a problem has a printed number and lettered or numbered parts under it, it is ONE entry with that number: its shared wording and any diagram description first, then every part with its letter, in order — never one entry per part, and never renumber. Only when the problems carry letters and no printed numbers at all is each lettered problem its own entry, numbered by position. Keep any bracketed description of a diagram, figure, graph or table with the problem it belongs to, verbatim.${OPEN_RESPONSE_RULE}`;
 
 /** Last parseable JSON block wins — the parseLast convention used by
  *  TopicValidator, OpenContainerDeriver and material-classify.ts. */

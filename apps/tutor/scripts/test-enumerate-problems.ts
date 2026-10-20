@@ -4,7 +4,7 @@
  * Usage: npx tsx scripts/test-enumerate-problems.ts
  *        (npm run test:enumerate-problems)
  */
-import { parseEnumeration, enumerateProblems, HOMEWORK_MAX_PROBLEMS, HOMEWORK_MAX_PROBLEM_CHARS } from '../src/lib/tutor/lesson-plan/enumerate-problems';
+import { ENUMERATE_SYSTEM_PROMPT, parseEnumeration, enumerateProblems, HOMEWORK_MAX_PROBLEMS, HOMEWORK_MAX_PROBLEM_CHARS } from '../src/lib/tutor/lesson-plan/enumerate-problems';
 import { homeworkProblemsOf, buildHomeworkPlanFields } from '../src/lib/tutor/lesson-plan/homework';
 let passed = 0, failed = 0; const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
 (async () => {
@@ -12,6 +12,10 @@ let passed = 0, failed = 0; const assert = (c: boolean, n: string) => { c ? pass
     === JSON.stringify([{ n: 1, text: 'Solve b + 5 = 12' }, { n: 2, text: '2b + x = 10' }]), 'parse: numbered list kept in order');
   assert(parseEnumeration({ problems: [{ text: 'a' }, { text: 'b' }] })?.map((p) => p.n).join(',') === '1,2', 'parse: missing n → 1-based order');
   assert(parseEnumeration({ problems: [] }) === null, 'parse: empty → null');
+  // 2026-10-19 (GAC Geometry upload, portal-9d615e3a): sheet numbers are kept; parts stay with their number.
+  assert(/printed number and lettered or numbered parts under it, it is ONE entry with that number/.test(ENUMERATE_SYSTEM_PROMPT) && /never one entry per part, and never renumber/.test(ENUMERATE_SYSTEM_PROMPT), 'prompt: a numbered problem keeps its parts, under its own number');
+  assert(/letters and no printed numbers at all is each lettered problem its own entry/.test(ENUMERATE_SYSTEM_PROMPT), 'prompt: a lettered-only list still splits by letter');
+  assert(!/one entry per problem or sub-part/.test(ENUMERATE_SYSTEM_PROMPT), 'prompt: no per-sub-part split rule left');
   assert(parseEnumeration('nope') === null, 'parse: garbage → null');
   assert(parseEnumeration({ problems: Array.from({ length: 40 }, (_, i) => ({ text: `q${i}` })) })?.length === HOMEWORK_MAX_PROBLEMS, 'parse: capped at 25');
   assert(parseEnumeration({ problems: [{ n: 1, text: 'x'.repeat(5000) }] })?.[0].text.length === HOMEWORK_MAX_PROBLEM_CHARS, 'parse: a single problem text is capped at 4000 chars');

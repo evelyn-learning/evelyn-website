@@ -354,7 +354,14 @@ async function extractDocx(
 /* Images — ONE vision call for the whole batch                        */
 /* ------------------------------------------------------------------ */
 
-const TRANSCRIBE_MATERIAL_PROMPT_SINGLE = `You are transcribing a photo of a student's teaching material (a textbook page, handout, or handwritten notes) so it can be used to build a lesson.
+// 2026-10-19 (GAC Geometry upload, portal-9d615e3a): the read of a worksheet
+// photo described a diagram as "two parallel lines cut by a transversal, with
+// angles (3x + 15)° and (5x − 25)°" — not where either angle sits. The tutor
+// could not see the image, drew it from that line, and taught the wrong angle
+// pair. Each figure is now described with its positions.
+export const DIAGRAM_RULE = '\n\nFor every diagram, figure, graph or table, write a description in square brackets right after the problem it belongs to, so that someone who cannot see it could redraw it exactly: every label, value and mark on it, and WHERE each one sits — at which point or intersection, on which side of which line, above or below, inside or outside a shape, at which vertex — plus any right-angle marks, arrow marks showing parallel lines, equal-length ticks, and scale. Describe only what is drawn or written; never add a relationship the figure does not mark.';
+
+export const TRANSCRIBE_MATERIAL_PROMPT_SINGLE = `You are transcribing a photo of a student's teaching material (a textbook page, handout, or handwritten notes) so it can be used to build a lesson.
 
 Faithfully transcribe ALL visible text as plain text, preserving:
 - Section or topic headings
@@ -362,13 +369,13 @@ Faithfully transcribe ALL visible text as plain text, preserving:
 - Formulas (plain-text math is fine — e.g. x^2, sqrt(x), a/b)
 - Problem statements, exactly as written
 
-Do NOT solve any problems, do NOT answer any questions, do NOT add commentary or summary. If the image has no legible text, reply with exactly: [no legible text].`;
+Do NOT solve any problems, do NOT answer any questions, do NOT add commentary or summary. If the image has no legible text, reply with exactly: [no legible text].${DIAGRAM_RULE}`;
 
-function buildBatchTranscribePrompt(n: number): string {
+export function buildBatchTranscribePrompt(n: number): string {
   if (n === 1) return TRANSCRIBE_MATERIAL_PROMPT_SINGLE;
   return `You are transcribing ${n} photos of a student's teaching material (textbook pages, handouts, or handwritten notes), numbered 1 through ${n} in the order shown, so they can be used to build a lesson.
 
-For EACH image, faithfully transcribe ALL visible text as plain text, preserving section/topic headings, definitions, formulas (plain-text math is fine — e.g. x^2, sqrt(x), a/b), and problem statements exactly as written. Do NOT solve any problems, do NOT answer any questions, do NOT add commentary.
+For EACH image, faithfully transcribe ALL visible text as plain text, preserving section/topic headings, definitions, formulas (plain-text math is fine — e.g. x^2, sqrt(x), a/b), and problem statements exactly as written. Do NOT solve any problems, do NOT answer any questions, do NOT add commentary.${DIAGRAM_RULE}
 
 Output EXACTLY ${n} sections, in order, each starting on its own line with the exact marker "===MATERIAL i===" (where i is the 1-based image number) followed by that image's transcription. If an image has no legible text, write "[no legible text]" for that section.`;
 }

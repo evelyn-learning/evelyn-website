@@ -533,6 +533,9 @@ export interface GeometryPoint {
    *  actual numeric coordinates. */
   showCoords?: boolean;
   color?: string;
+  /** 2026-10-19: a construction helper (a point only placing a drawn line, or
+   *  a drawn line's end): kept for geometry, never drawn or labelled. */
+  hidden?: boolean;
 }
 
 export interface GeometrySegment {

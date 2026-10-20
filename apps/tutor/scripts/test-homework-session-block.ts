@@ -48,6 +48,9 @@ const checks: Array<[RegExp | string, string]> = [
   ['Current: Problem 2 (2 of 2).', 'must state the current-problem progress line'],
   ['put Problem 1 on the board, call set_current_problem with 1,', 'opener must name the FIRST problem by its number'],
   ['x+2=5', 'must include the first problem VERBATIM'],
+  // 2026-10-19 (GAC Geometry upload, portal-9d615e3a): a problem's diagram is drawn when it is first boarded.
+  ['draw it on the board the first time you put that problem up, without being asked', 'a described diagram is drawn with its problem'],
+  ['name them as the sheet does', 'lettered parts are named as the sheet names them'],
   ['2y=8', 'must include the second problem VERBATIM'],
   [/never state/i, 'must carry the ask-never-tell "never state" rule'],
   ['set_current_problem', 'must name set_current_problem as the announce mechanism'],

@@ -658,10 +658,10 @@ function angleDisplayLabel(
   to: GeometryPoint,
 ): string {
   const rawLabel = (angle.label ?? '').trim();
-  const looksLikeBareSymbol =
-    rawLabel === '' ||
-    rawLabel === '∠' ||
-    (rawLabel.length <= 2 && !/\d/.test(rawLabel) && !/°/.test(rawLabel));
+  // 2026-10-19: a short label such as a variable name was replaced by the
+  // computed measure — on a find-the-angle problem that shows the answer.
+  // Only an empty label or a bare angle sign gets the measure.
+  const looksLikeBareSymbol = rawLabel === '' || rawLabel === '∠';
   return looksLikeBareSymbol
     ? formatDegrees(computeAngleDegrees(vertex, from, to))
     : rawLabel;
@@ -761,7 +761,7 @@ function renderPointDots(
   points: GeometryPoint[],
   toSvg: (x: number, y: number) => [number, number],
 ) {
-  return points.map((pt) => {
+  return points.filter((pt) => !pt.hidden).map((pt) => {
     const [px, py] = toSvg(pt.x, pt.y);
     const color = pt.color || '#2563eb';
     const ptName = pt.label ? `point-${featSlug(pt.label)}` : `point-${featSlug(pt.id)}`;
@@ -1045,6 +1045,11 @@ function dedupCoLocatedLabels(labels: LabelBox[]): LabelBox[] {
   const pointLabels = labels.filter((l) => l.key.startsWith('pt:'));
   return labels.filter((l) => {
     if (l.key.startsWith('pt:')) return true;
+    // 2026-10-19 (GAC Geometry, portal-9d615e3a): an angle label is anchored
+    // AT its vertex, so at a lettered vertex every one was dropped here — the
+    // triangle showed arcs with no measures. Collision resolution already
+    // moves an angle label off its vertex along the bisector.
+    if (l.key.startsWith('ang:')) return true;
     // For non-point labels, drop if any point label sits at the same anchor.
     for (const pl of pointLabels) {
       const dx = l.anchorX - pl.anchorX;
@@ -1075,6 +1080,7 @@ function computeLabels(
   // boolean — the coord text is computed from pt.x/pt.y so it can never
   // disagree with where the dot is drawn.
   for (const pt of points) {
+    if (pt.hidden) continue;
     const baseText = pt.label?.trim();
     const coordText = pt.showCoords ? formatCoordTuple(pt.x, pt.y) : '';
     const text = [baseText, coordText].filter(Boolean).join(' ');

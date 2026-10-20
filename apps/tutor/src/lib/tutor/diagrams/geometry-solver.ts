@@ -3080,10 +3080,37 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     id.startsWith('__') ||
     /_{1,2}(from|to|end|touch|touchA|touchB|foot|center|apex|mid|vertex|arc\d+|v\d+|e\d+|m\d+|T\d+|F\d+|V\d+|d\d+(_a|_b)?|\d+_a|\d+_b|a|b|c|d|ab|bc|ca|A|B|C)$/.test(id);
 
+  // 2026-10-19 (GAC Geometry, portal-9d615e3a): lines l, m and t were sent
+  // as labelled `line`s, which drew nothing — the student saw six lettered
+  // helper dots on a grid. A labelled line is now drawn (see below), and a
+  // point that only places it (no label of its own, in no segment, polygon,
+  // circle or arc, and no angle's vertex) is a hidden helper.
+  const lineLabel = (o: { id: string; label?: string }) => (labelOverrides[o.id] ?? o.label ?? '').trim();
+  const drawnLines = [...state.byId.values()].filter((o): o is Extract<typeof o, { kind: 'line' }> => o.kind === 'line' && !!lineLabel(o));
+  const usedElsewhere = new Set<string>();
+  for (const o of state.byId.values()) {
+    if (o.kind === 'segment') { usedElsewhere.add(o.from); usedElsewhere.add(o.to); }
+    else if (o.kind === 'polygon') o.vertices.forEach((v) => usedElsewhere.add(v));
+    else if (o.kind === 'circle' || o.kind === 'arc') usedElsewhere.add(o.center);
+    else if (o.kind === 'angle') usedElsewhere.add(o.vertex);
+    else if (o.kind === 'line' && !lineLabel(o)) { usedElsewhere.add(o.pointA); usedElsewhere.add(o.pointB); }
+  }
+  const helperPoints = new Set<string>();
+  for (const l of drawnLines) {
+    for (const pid of [l.pointA, l.pointB]) {
+      const p = state.byId.get(pid);
+      if (p?.kind === 'point' && !usedElsewhere.has(pid) && !(labelOverrides[pid] ?? p.label)) helperPoints.add(pid);
+    }
+  }
+
   for (const id of state.order) {
     const obj = state.byId.get(id);
     if (!obj) continue;
     if (obj.kind === 'point') {
+      if (helperPoints.has(obj.id)) {
+        points.push({ id: obj.id, x: obj.x, y: obj.y, hidden: true });
+        continue;
+      }
       const label = labelOverrides[obj.id] ?? obj.label ?? defaultPointLabel(obj.id);
       // Suppress an auto-scaffolding dot that coincides with a labeled point.
       if (!label && isAutoScaffold(obj.id)) {
@@ -3174,8 +3201,26 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         color: colorOverrides[obj.id] ?? obj.color,
       });
     }
-    // Lines are not directly rendered — they're construction scaffolding.
-    // If a brain wants a line drawn it should also emit a long segment.
+    // An unlabelled line is construction scaffolding and is not drawn; a
+    // labelled one is drawn below.
+  }
+
+  // A labelled line is drawn as a segment spanning every point of the figure
+  // along it, a little past each end, between two hidden end points.
+  const figurePoints = points.slice();
+  for (const l of drawnLines) {
+    const a = state.byId.get(l.pointA), b = state.byId.get(l.pointB);
+    if (a?.kind !== 'point' || b?.kind !== 'point') continue;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (!(len > 1e-9)) continue;
+    const dx = (b.x - a.x) / len, dy = (b.y - a.y) / len;
+    let smin = 0, smax = len;
+    for (const p of figurePoints) { const s = (p.x - a.x) * dx + (p.y - a.y) * dy; smin = Math.min(smin, s); smax = Math.max(smax, s); }
+    const pad = Math.max((smax - smin) * 0.12, len * 0.1);
+    const e0 = { id: `__${l.id}__end0`, x: a.x + (smin - pad) * dx, y: a.y + (smin - pad) * dy, hidden: true };
+    const e1 = { id: `__${l.id}__end1`, x: a.x + (smax + pad) * dx, y: a.y + (smax + pad) * dy, hidden: true };
+    points.push(e0, e1);
+    segments.push({ from: e0.id, to: e1.id, label: lineLabel(l), color: colorOverrides[l.id], style: dashedSet.has(l.id) ? 'dashed' : undefined });
   }
 
   // Zero-drawable guard. A spec that resolves to nothing visible (e.g. given

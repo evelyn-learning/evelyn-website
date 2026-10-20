@@ -158,6 +158,39 @@ function main() {
     assert.ok((STEP_KINDS as readonly string[]).includes('point'));
   });
 
+  // 2026-10-19 (GAC Geometry, portal-9d615e3a): labelled lines drew nothing
+  // and their helper points showed as lettered dots.
+  test('a labelled line is drawn; the points only placing it are hidden', () => {
+    const out = solveGeometry({
+      given: [
+        { id: 'A', kind: 'point', x: -3, y: 3 }, { id: 'B', kind: 'point', x: 3, y: 3 },
+        { id: 'C', kind: 'point', x: -3, y: -1 }, { id: 'D', kind: 'point', x: 3, y: -1 },
+        { id: 'E', kind: 'point', x: -1, y: 5 }, { id: 'F', kind: 'point', x: 1, y: -3 },
+      ],
+      steps: [
+        { id: 'l', kind: 'line', through: ['A', 'B'], label: 'l' },
+        { id: 'm', kind: 'line', through: ['C', 'D'], label: 'm' },
+        { id: 't', kind: 'line', through: ['E', 'F'], label: 't' },
+        { id: 'P1', kind: 'intersect', of: ['l', 't'] },
+        { id: 'a1', kind: 'angle_marker', vertex: 'P1', from: 'A', to: 'F', label: '(3x + 15)°' },
+      ],
+    } as ConstructedGeometrySpec);
+    assert.deepEqual(out.segments.map((s) => s.label).sort(), ['l', 'm', 't']);
+    for (const id of ['A', 'B', 'C', 'D', 'E', 'F']) assert.equal(out.points.find((p) => p.id === id)?.hidden, true, id);
+    assert.ok(out.points.find((p) => p.id === 'P1') && !out.points.find((p) => p.id === 'P1')!.hidden, 'the intersection is shown');
+    assert.equal(out.angles?.[0]?.label, '(3x + 15)°');
+  });
+  test('an unlabelled line stays scaffolding; a point the figure names stays shown', () => {
+    const out = solveGeometry({
+      given: [{ id: 'A', kind: 'point', x: 0, y: 0, label: 'A' }, { id: 'B', kind: 'point', x: 2, y: 0 }, { id: 'C', kind: 'point', x: 0, y: 2 }],
+      steps: [{ id: 'k', kind: 'line', through: ['A', 'B'] }, { id: 'n', kind: 'line', through: ['A', 'C'], label: 'n' }, { id: 's', kind: 'segment', from: 'A', to: 'B' }],
+    } as ConstructedGeometrySpec);
+    assert.deepEqual(out.segments.map((s) => s.label ?? '').sort(), ['', 'n']);
+    assert.ok(!out.points.find((p) => p.id === 'A')!.hidden, 'a named point stays');
+    assert.ok(!out.points.find((p) => p.id === 'B')!.hidden, 'a point used by a segment stays');
+    assert.equal(out.points.find((p) => p.id === 'C')!.hidden, true, 'a point only placing a labelled line is hidden');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

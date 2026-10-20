@@ -1759,6 +1759,10 @@ export const HOMEWORK_NO_EARLY_SIGNOFF_RULE =
 export const HOMEWORK_NO_TIME_TALK_RULE =
   `- Never tell the student how much time has been used or is left, and never mention minutes, time limits, quotas or usage. Timing is yours to manage silently.\n`;
 
+/** A problem that comes with a diagram is drawn with it. Generic. */
+export const HOMEWORK_DIAGRAM_RULE =
+  'When a problem comes with a diagram, figure or graph (described in brackets in its text), draw it on the board the first time you put that problem up, without being asked: every label, value and mark from the description, each placed where the description puts it (which intersection, which side of a line, which vertex), and nothing it does not give — no extra point letters, no relationship it does not mark. When a problem has lettered parts, name them as the sheet does (the problem number, then the part).';
+
 export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts?: { ledger?: boolean }): string {
   if (!hw || !hw.problems.length) return '';
   const n = hw.problems.length;
@@ -1772,6 +1776,11 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts
     `${problemLines}\n` +
     `Rules:\n` +
     `- Work the problems in order unless the student asks to jump. One problem at a time. Before your first question about a problem, put it on the board and call set_current_problem with its number.\n` +
+    // 2026-10-19 (GAC Geometry upload, portal-9d615e3a): the board showed the
+    // problem's words only, though the problem was a diagram; asked to draw
+    // it, the tutor drew lines with no angles marked. Parts are named as the
+    // sheet names them (the split keeps a number's parts together).
+    `- ${HOMEWORK_DIAGRAM_RULE}\n` +
     // 2026-10-15 (GAC v7 audit): "one at a time" sat beside the ledger's
     // multi-answer recording; the student sets the order, the tutor does not.
     (ledger ? `- The student may answer several problems in one message, or out of order: take every answer they give as it comes, then ask about one open problem.\n` : '') +
