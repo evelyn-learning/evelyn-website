@@ -66,6 +66,17 @@ async function main() {
     assert.doesNotThrow(() => parseLessonPlan(plan));
   });
 
+  console.log('mint kick');
+  await section('buildNeedsKick: missing, or not done and stale; never a done or fresh one', async () => {
+    const { buildNeedsKick, BUILD_STALE_MS } = await import('../src/lib/tutor/homework-build/runner');
+    const now = 1_000_000_000;
+    assert.equal(buildNeedsKick(null, now), true);
+    assert.equal(buildNeedsKick({ done: false, updatedAt: new Date(now - BUILD_STALE_MS - 1) }, now), true);
+    assert.equal(buildNeedsKick({ done: false, updatedAt: new Date(now - 1000) }, now), false);
+    assert.equal(buildNeedsKick({ done: true, updatedAt: new Date(0) }, now), false);
+    assert.equal(buildNeedsKick({ done: false }, now), true, 'no timestamp: treated as stale');
+  });
+
   console.log('route source');
   const route = fs.readFileSync(path.join(__dirname, '../src/app/api/portal/v1/homework-problem-plan/route.ts'), 'utf8');
   await section('polls with waitMs clamp 8000, partner-scoped, no key leak', () => {
@@ -73,6 +84,7 @@ async function main() {
     assert.match(route, /8000/);
     assert.match(route, /portalPartnerId !== auth\.partnerId/);
     assert.match(route, /kickHomeworkBuild/);
+    assert.match(route, /buildNeedsKick\(build\)/, 'kicks a missing or stale build');
     assert.ok(!/finals|key:/.test(route));
   });
 

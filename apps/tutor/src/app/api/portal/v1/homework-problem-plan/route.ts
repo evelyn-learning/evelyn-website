@@ -14,7 +14,7 @@ import { getLessonPlan, upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
 import { buildHomeworkProblemPlan } from '@/lib/tutor/lesson-plan/homework-problem';
 import { getHomeworkBuild } from '@/lib/tutor/homework-build/store';
-import { kickHomeworkBuild } from '@/lib/tutor/homework-build/runner';
+import { buildNeedsKick, kickHomeworkBuild } from '@/lib/tutor/homework-build/runner';
 import type { ProblemBuild, ProblemBuildStatus } from '@/lib/tutor/homework-build/types';
 
 const POLL_MS = 500;
@@ -44,7 +44,8 @@ export const POST = withPortalAuth(async (req, auth) => {
   let entry: ProblemBuild | undefined;
   for (;;) {
     const build = await getHomeworkBuild(parentId);
-    if (!build && !kicked) { kickHomeworkBuild(parentId, auth.partnerId, { first: n }); kicked = true; }
+    // No build yet, or one whose run died (not done, stale): start it, this problem first.
+    if (!kicked && buildNeedsKick(build)) { kickHomeworkBuild(parentId, auth.partnerId, { first: n }); kicked = true; }
     entry = build?.problems.find((p) => p.n === n);
     if ((entry && entry.status !== 'preparing') || Date.now() + POLL_MS > deadline) break;
     await sleep(POLL_MS);

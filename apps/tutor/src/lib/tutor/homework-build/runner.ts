@@ -13,6 +13,14 @@ import type { ProblemBuild } from './types';
 
 export const BUILD_STALE_MS = 3 * 60_000;
 
+/** A build to (re)start: none yet, or not done and untouched for longer than BUILD_STALE_MS (a run that died). Pure. */
+export function buildNeedsKick(build: { done?: boolean; updatedAt?: Date | string | number } | null | undefined, now: number = Date.now()): boolean {
+  if (!build) return true;
+  if (build.done) return false;
+  const at = build.updatedAt != null ? new Date(build.updatedAt).getTime() : NaN;
+  return !Number.isFinite(at) || now - at > BUILD_STALE_MS;
+}
+
 export interface RunnerDeps { figure: FigureBuildDeps; key: KeySolveDeps; now?: () => number }
 
 export async function runHomeworkBuild(
