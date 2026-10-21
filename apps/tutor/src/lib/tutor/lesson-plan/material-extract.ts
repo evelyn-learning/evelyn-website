@@ -95,8 +95,26 @@ const CONDENSE_MAX_TOKENS = 4096;
 // → more transcription text needed) — see transcribeImagesBatch.
 // Opus 5.5 thinks before it answers and its thinking counts against
 // max_tokens, so the budget is roomier than the transcript alone needs.
-const VISION_TOKENS_PER_IMAGE = 4000;
-const VISION_MAX_TOKENS_CAP = 16000;
+// 2026-10-20 (GAC worksheet3, twice): at 4000 the read ended at the cap
+// (thinking + a partial page) and past the portal's 25 s summary budget.
+const VISION_TOKENS_PER_IMAGE = 8000;
+const VISION_MAX_TOKENS_CAP = 24000;
+
+/**
+ * Thinking for the photo read. Opus 5.5 cannot switch thinking off and its
+ * default effort is medium — on a one-page worksheet that spent the whole
+ * token budget deliberating and ran past the portal's 25 s summary budget
+ * (GAC worksheet3, 2026-10-20). `low` keeps the thinking short; Anthropic's
+ * own guidance is that Opus 5.5 reads charts and diagrams accurately at low
+ * effort. Older models (no adaptive thinking) get no thinking fields.
+ */
+export function visionReadParams(
+  modelId: string,
+): { thinking: { type: 'adaptive' }; output_config: { effort: 'low' } } | Record<string, never> {
+  return /opus-5|sonnet-5|fable-5/.test(modelId)
+    ? { thinking: { type: 'adaptive' }, output_config: { effort: 'low' } }
+    : {};
+}
 
 // Clients resolve lazily per call via getModelClient(...) rather than a
 // module-load-time `new Anthropic(...)`: in Next.js, env vars are guaranteed
@@ -489,10 +507,12 @@ async function transcribeImagesBatchUncached(
   const visionMaxTokens = Math.min(VISION_MAX_TOKENS_CAP, n * VISION_TOKENS_PER_IMAGE);
 
   let raw = '';
+  const startedAt = Date.now();
   try {
     const response = await getModelClient('plangen-vision').client.messages.create({
       model: VISION_MODEL_ID,
       max_tokens: visionMaxTokens,
+      ...visionReadParams(VISION_MODEL_ID),
       system: buildBatchTranscribePrompt(n),
       messages: [
         {
@@ -501,6 +521,12 @@ async function transcribeImagesBatchUncached(
         },
       ],
     });
+    // The portal's summary budget is 25 s: this line is how a slow read shows
+    // up in the engine log next to the portal's timeout.
+    console.log(
+      `[material-extract] vision read model=${VISION_MODEL_ID} images=${n} ms=${Date.now() - startedAt} ` +
+        `in=${response.usage?.input_tokens ?? '?'} out=${response.usage?.output_tokens ?? '?'} stop=${response.stop_reason}`,
+    );
 
     if (response.stop_reason === 'max_tokens') {
       // Don't silently hand back a transcript that was cut off mid-page —

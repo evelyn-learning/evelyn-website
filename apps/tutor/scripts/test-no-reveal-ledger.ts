@@ -1212,6 +1212,16 @@ async function main() {
     assert.match(DIAGRAM_RULE, /one angle at a time/);
     const { resolveModel } = await import('../src/lib/tutor/ai/model-registry');
     assert.equal(resolveModel('plangen-vision').model, 'claude-opus-5-5');
+    // 10-20 e: the Opus read thinks at LOW effort with room for the page —
+    // at the default (medium) and 4000 tokens, worksheet3 ended at the cap
+    // and past the portal's 25 s summary budget, twice.
+    const { visionReadParams } = await import('../src/lib/tutor/lesson-plan/material-extract');
+    assert.deepEqual(visionReadParams('claude-opus-5-5'), { thinking: { type: 'adaptive' }, output_config: { effort: 'low' } });
+    assert.deepEqual(visionReadParams('claude-sonnet-5'), { thinking: { type: 'adaptive' }, output_config: { effort: 'low' } });
+    assert.deepEqual(visionReadParams('claude-sonnet-4-6'), {});
+    const extractSrc = fs.readFileSync(path.join(__dirname, '../src/lib/tutor/lesson-plan/material-extract.ts'), 'utf8');
+    assert.match(extractSrc, /const VISION_TOKENS_PER_IMAGE = 8000;/);
+    assert.match(extractSrc, /\.\.\.visionReadParams\(VISION_MODEL_ID\)/);
     const { lookupModelRate } = await import('../src/lib/tutor/ai/model-rates');
     assert.ok(lookupModelRate('claude-opus-5-5'), 'the read model is priced, so upload cost is recorded');
   });
