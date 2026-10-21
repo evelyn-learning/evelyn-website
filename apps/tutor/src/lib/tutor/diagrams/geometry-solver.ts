@@ -2060,6 +2060,7 @@ function solveRotatePoint(step: StepRotatePoint, state: State): void {
 }
 
 function solveTranslatePoint(step: StepTranslatePoint, state: State): void {
+  if (!step.by || typeof step.by.dx !== 'number' || typeof step.by.dy !== 'number') throw new Error('by must be {dx, dy}');
   const P = pt(state, step.point);
   setObject(state, {
     kind: 'point', id: step.id,
@@ -3053,7 +3054,15 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   }
 
   for (const step of spec.steps ?? []) {
-    solveStep(step, state);
+    // 2026-10-21 (GAC homework build): a failing step names itself. The
+    // offline figure builder feeds this message back to the proposer, and
+    // "Cannot read properties of undefined (reading 'dx')" fixed nothing.
+    try {
+      solveStep(step, state);
+    } catch (e) {
+      const kind = (step as { kind?: unknown })?.kind, id = (step as { id?: unknown })?.id;
+      throw new Error(`${typeof kind === 'string' ? kind : 'step'}${typeof id === 'string' ? ` "${id}"` : ''}: ${(e as Error)?.message ?? String(e)}`);
+    }
   }
 
   // Translate resolved objects into the GeometryRenderer-friendly shape.

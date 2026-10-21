@@ -58,6 +58,19 @@ const LABEL_WORD_RE = /^-?[A-Za-z0-9\u00b0\u03c0'\u2032./]+$/;
  * clause, within 4 words after an occurrence of NAME. Anything else (sums,
  * products, computed values) fails.
  */
+/**
+ * 2026-10-21 (hw-10 problem 5): the proposer captioned a polygon "Rectangle
+ * with semicircle cut out" and the whole figure was rejected for it. A label
+ * of three or more words with no digit is a caption, not a value: it can
+ * never leak an answer, so it is dropped from the figure instead of failing
+ * it. Two words ("DE = 9" is three tokens but carries a digit) stay labels.
+ */
+export function isCaptionLabel(label: string): boolean {
+  const l = String(label ?? '').trim();
+  if (/[\d=+\-−×÷*/^<>≤≥≠∠∥⊥°√π%]/.test(l)) return false;   // a relation or a value is a label
+  return l.split(/\s+/).filter((w) => /^[A-Za-z]{2,}$/.test(w)).length >= 3;
+}
+
 export function labelIsFromText(label: string, problemText: string): boolean {
   const l = normalise(label).replace(/([=:])/g, ' $1 ').replace(/\s+/g, ' ').trim();
   if (!l) return true;
@@ -165,6 +178,12 @@ export function checkClaims(
       : c.kind === 'collinear' ? c.points
       : [c.point, ...c.ends];
     const gone = missing(ids);
+    // 2026-10-21 (hw-10 problem 4): the claims reader named the cone's "apex",
+    // "center" and "edge" — words of the sheet, not point ids — and the
+    // figure failed for points it could never have. A claim on a prose word
+    // cannot be checked against any drawing, so it is skipped; a missing
+    // letter id (B, P1) is still a point the figure forgot.
+    if (gone.some((id) => /^[a-z]{3,}$/.test(id))) continue;
     if (gone.length) { out.push(`${c.kind} claim names ${gone.join(', ')} but the solver has no such point`); continue; }
 
     if (c.kind === 'on_segment' || c.kind === 'between') {
@@ -225,6 +244,7 @@ function validateGeometry(
   }
 
   for (const label of [...collectLabels(fig.given), ...collectLabels(fig.steps)]) {
+    if (isCaptionLabel(label)) continue;   // dropped by normalizeFigureDisplay, never a value
     if (!labelIsFromText(label, ctx.problemText)) reasons.push(`label "${label}" does not come from the problem text`);
   }
   reasons.push(...textFieldReasons([{ value: fig.title }], ctx.problemText));
@@ -267,7 +287,12 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
     const src = f.expr || f.latex || f.fn || '';
     // parseFunctionString does not insert the '*' in "3sin(2x)" (its function-name
     // lookbehind rejects a leading digit), so make the multiplication explicit first.
-    const explicit = src.replace(/([\dx)])\s*(?=\\?(?:sin|cos|tan|sqrt|abs|log)\b)/g, '$1*').replace(/\\(?=(?:sin|cos|tan|sqrt|abs|log)\b)/g, '');
+    // 2026-10-21 (hw-10 problem 8): the sheet writes π, and so did the proposer
+    // ("-2cos(πx/2)+3"); the parser knows only "pi", so every point read as off
+    // the curve. π becomes pi with its products made explicit ("2π" → "2*pi",
+    // "πx" → "pi*x") before the function-name pass.
+    const explicit = src.replace(/π/g, 'pi').replace(/([\d)])\s*(?=pi\b)/g, '$1*').replace(/\bpi(?=[A-Za-z(])/g, 'pi*')
+      .replace(/([\dx)])\s*(?=\\?(?:sin|cos|tan|sqrt|abs|log)\b)/g, '$1*').replace(/\\(?=(?:sin|cos|tan|sqrt|abs|log)\b)/g, '');
     return { fn: src ? parseFunctionString(explicit) : null, domain: f.domain };
   });
   for (const p of data.points ?? []) {

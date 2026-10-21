@@ -185,6 +185,43 @@ async function main() {
       assert.equal(yi.ok, true);            // the curve's own y-intercept / midline crossing
     });
 
+    // 2026-10-21 (GAC acceptance round 3, hw-10 build notes) — four figure failures with structural causes.
+    await section('a function written with the sheet\'s π is read as pi', () => {
+      const P8c = 'The graph of y = a cos(bx) + d is shown. [Graph: A grid with x from 0 to 8 and y from 0 to 6. The curve starts at (0, 1), rises to a maximum at (2, 5), falls to a minimum at (4, 1).] (a) Find a, b, and d.';
+      const g = (fn: string): Fig => ({ action: 'showGraph', type: 'function', data: { xLabel: 'x', yLabel: 'y', xRange: [0, 8], yRange: [0, 6], functions: [{ fn }], points: [{ x: 0, y: 1 }, { x: 2, y: 5 }, { x: 4, y: 1 }] } as never });
+      assert.deepEqual(validateFigure(g('-2cos(πx/2)+3'), { problemText: P8c, claims: [] }), { ok: true });
+      assert.deepEqual(validateFigure(g('3 - 2cos((π/2)x)'), { problemText: P8c, claims: [] }), { ok: true });
+      assert.equal(validateFigure(g('2cos(πx/2)+3'), { problemText: P8c, claims: [] }).ok, false, 'the wrong curve still fails');
+    });
+    await section('a caption-like label (words only, not on the sheet) is dropped, never a failure; a value label still fails', async () => {
+      const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
+      const cap = { ...goodFig(), steps: [...goodFig().steps, { id: 'tri', kind: 'polygon', vertices: ['A', 'B', 'C'], label: 'Triangle with a parallel cut' }] } as Fig;
+      assert.deepEqual(validateFigure(cap, { problemText: P5, claims }), { ok: true });
+      const out = normalizeFigureDisplay(cap, P5) as { steps: Array<{ id: string; label?: string }> };
+      assert.equal(out.steps.find((s) => s.id === 'tri')?.label, undefined, 'the caption is gone from the stored figure');
+      assert.equal(validateFigure(goodFig('DB = 9'), { problemText: P5, claims }).ok, false, 'a computed value is still a failure');
+      const two = { ...goodFig(), steps: [...goodFig().steps, { id: 'tri', kind: 'polygon', vertices: ['A', 'B', 'C'], label: 'Answer here' }] } as Fig;
+      assert.equal(validateFigure(two, { problemText: P5, claims }).ok, false, 'two words are a label, not a caption');
+      assert.equal(validateFigure(goodFig('DB = the rest'), { problemText: P5, claims }).ok, false, 'a relation is a label, not a caption');
+    });
+    await section('a claim naming a prose word (apex, center) instead of a point id is skipped; a missing letter id still fails', () => {
+      const pts = { A: { x: 0, y: 0 }, B: { x: 4, y: 0 }, C: { x: 0, y: 3 } };
+      assert.deepEqual(checkClaims(pts, {}, [{ kind: 'perpendicular', a: ['apex', 'center'], b: ['center', 'edge'] }]), []);
+      assert.deepEqual(checkClaims(pts, {}, [{ kind: 'on_segment', point: 'centre', segment: ['A', 'B'] }]), []);
+      assert.match(checkClaims(pts, {}, [{ kind: 'on_segment', point: 'D', segment: ['A', 'B'] }])[0], /no such point/);
+      assert.match(checkClaims(pts, {}, [{ kind: 'between', point: 'P1', ends: ['A', 'B'] }])[0], /no such point/);
+    });
+    await section('a solver crash names the step, so the retry can fix it', () => {
+      const bad = { ...goodFig(), steps: [...goodFig().steps, { id: 'T', kind: 'translate_point', point: 'A', dx: 1, dy: 1 }] } as Fig;
+      const r = reasonsOf(validateFigure(bad, { problemText: P5, claims }));
+      assert.equal(r.length, 1, r.join(' | '));
+      assert.match(r[0], /translate_point "T"/);
+      assert.match(r[0], /by/);
+      assert.doesNotMatch(r[0], /undefined/);
+      const unknown = { ...goodFig(), steps: [...goodFig().steps, { id: 'M', kind: 'midpoint', of: ['A', 'Z'] }] } as Fig;
+      assert.match(reasonsOf(validateFigure(unknown, { problemText: P5, claims }))[0], /midpoint "M"/);
+    });
+
     // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
     console.log('3 build figure');
     const { buildFigure, FIGURE_PROPOSE_SYSTEM, parseProposal, normalizeClaims } = await import('../src/lib/tutor/homework-build/figure-build');
