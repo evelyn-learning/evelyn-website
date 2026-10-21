@@ -59,6 +59,7 @@ import { deleteLearnerModelData } from '@/lib/tutor/learner-model/store';
 import { identityFilter, identityResolutionEnabled, forgetEphemeralProfile } from '@/lib/tutor/student-profile/store';
 import { forgetEphemeralTopicNotes } from '@/lib/tutor/topic-notes/apply-overlay';
 import { HOMEWORK_PLAN_KIND } from '@/lib/tutor/lesson-plan/homework';
+import { HOMEWORK_PROBLEM_KIND } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import { deleteHomeworkBuilds } from '@/lib/tutor/homework-build/store';
 import { audioBaseDir, removeSessionAudioDirs, type AudioFs, type AudioRemovalSummary } from './audio-dir';
 
@@ -200,7 +201,8 @@ export type HomeworkPlanDecision =
  * own and may go with them. Pure. The per-student kinds are exactly the two
  * the code creates from a single student's own material:
  *   • `metadata.kind === 'homework-help'` — the student's typed/uploaded
- *     problems, verbatim (lesson-plan/homework.ts);
+ *     problems, verbatim (lesson-plan/homework.ts); and its one-problem
+ *     children, `'homework-problem'` (homework-problem-meta.ts);
  *   • `metadata.sourceKind === 'materials'` — a plan generated from an
  *     uploaded document, but ONLY when it carries this student's
  *     `ownerStudentId` stamp: the same path also builds shared courses.
@@ -213,7 +215,8 @@ export function classifyHomeworkPlan(
   if (typeof plan._id !== 'string' || !plan._id.startsWith(GENERATED_PLAN_PREFIX)) return 'notPerStudent';
   const owner = typeof md.ownerStudentId === 'string' && md.ownerStudentId ? md.ownerStudentId : null;
   const ownedByThisStudent = owner !== null && ctx.ownedIds.includes(owner);
-  const isHomework = md.kind === HOMEWORK_PLAN_KIND;
+  // One-problem child plans (homework-problem route) carry the problem text, figure and priorNote.
+  const isHomework = md.kind === HOMEWORK_PLAN_KIND || md.kind === HOMEWORK_PROBLEM_KIND;
   const isMaterials = md.sourceKind === 'materials';
   if (!isHomework && !isMaterials) return 'notPerStudent';
   if (!isHomework && owner === null) return 'unattributedMaterials';

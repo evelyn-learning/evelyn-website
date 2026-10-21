@@ -209,6 +209,8 @@ async function test(name: string, fn: () => Promise<void>) {
     // The real production shape: no student id anywhere on the plan.
     plan('gen-homework-a', { kind: 'homework-help', generatedFromText: true, portalPartnerId: 'partnerA', problems: [{ n: 1, text: 'typed by the student' }] }),
     plan('gen-homework-stamped', { kind: 'homework-help', portalPartnerId: 'partnerA', ownerStudentId: A, problems: [{ n: 1, text: 'no session ever ran' }] }),
+    // One-problem child of the stamped parent: carries the problem text, so it goes with the student.
+    plan('gen-homework-stamped-p1', { kind: 'homework-problem', parentPlanId: 'gen-homework-stamped', n: 1, text: 'P1', figure: null, verified: true, ownerStudentId: A, portalPartnerId: 'partnerA' }),
     plan('gen-homework-shared', { kind: 'homework-help', portalPartnerId: 'partnerA', problems: [{ n: 1, text: 'also run by stu006' }] }),
     plan('gen-homework-b', { kind: 'homework-help', portalPartnerId: 'partnerB', problems: [{ n: 1, text: 'partner B student' }] }),
     plan('gen-homework-bx', { kind: 'homework-help', portalPartnerId: 'partnerB', problems: [{ n: 1, text: 'partner B, named by A' }] }),
@@ -247,13 +249,14 @@ async function test(name: string, fn: () => Promise<void>) {
       assert.deepStrictEqual(first.json.deleted, {
         evidenceEvents: 1, learnerStateProjections: 1, learnerStateSnapshots: 1, eloRatings: 1,
         studentProfiles: 1, tutorSessions: 2, studentTopicNotes: 1, practiceAssignments: 1, mockAttempts: 1,
-        practiceGenCounters: 1, reviewPlans: 1, homeworkPlans: 2, homeworkPracticeItems: 1, homeworkBuilds: 1, audioDirs: 2,
+        practiceGenCounters: 1, reviewPlans: 1, homeworkPlans: 3, homeworkPracticeItems: 1, homeworkBuilds: 1, audioDirs: 2,
       });
       assert.deepStrictEqual(first.json.audio, { removed: 2, missing: 0, skipped: 0, failed: 0 });
     });
     await test('homework plans: the student\'s own are deleted — session-linked (no student id on the plan) and owner-stamped', async () => {
       assert.strictEqual(await LessonPlanModel.findById('gen-homework-a').lean(), null);
       assert.strictEqual(await LessonPlanModel.findById('gen-homework-stamped').lean(), null);
+      assert.strictEqual(await LessonPlanModel.findById('gen-homework-stamped-p1').lean(), null, 'one-problem child plan');
     });
     await test('homework builds: the deleted plan\'s build is gone; the kept plans\' builds stay', async () => {
       assert.strictEqual(await HomeworkBuildModel.findById('gen-homework-a').lean(), null);
