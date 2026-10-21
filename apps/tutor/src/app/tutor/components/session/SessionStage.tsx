@@ -298,7 +298,8 @@ export default function SessionStage(props: SessionStageProps) {
         );
       })()
     : null;
-  const railEl: ReactNode = homeworkRail ?? agendaRail;
+  // A one-problem session has no agenda to walk either: no "Concept 0/2" chip.
+  const railEl: ReactNode = problemPanel ? null : (homeworkRail ?? agendaRail);
 
   // Round-5: transient full-title reveal (see the header markup below).
   const [titleRevealed, setTitleRevealed] = useState(false);
@@ -1453,10 +1454,11 @@ export default function SessionStage(props: SessionStageProps) {
                 )}
               </div>
               )
-            ) : (
+            ) : problemPanel ? null : (
             /* Quick ways in — Upload (de-emphasized, the cluster camera does
                 the same), plus generic starters. Shown in every session so the
-                student always has something to act on. */
+                student always has something to act on — except a one-problem
+                homework session, which is already inside an upload. */
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2 pointer-events-auto">
               {/* Ghost styling pre-start (2026-07-26): these are secondary
                   ways in and were competing with the start action for the
