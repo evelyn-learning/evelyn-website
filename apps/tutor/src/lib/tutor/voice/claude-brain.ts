@@ -413,7 +413,7 @@ export interface BrainTurnInput {
     /** 'card' (2026-07-23, live round 5): a try-yourself card the brain
      *  authored — its declared expectedAnswer is what the typed-submit
      *  auto-scorer grades against, so spoken grading must match it. */
-    source?: 'student' | 'generated' | 'card';
+    source?: 'student' | 'generated' | 'card' | 'homework';
     /** Pipeline-verified expected answer for the active problem (2026-07-17).
      *  Carried on EVERY turn while the problem is active so the brain
      *  verifies attempts against it instead of re-deriving from scratch and
@@ -1561,6 +1561,11 @@ export const ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX =
 export const ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX =
   ' The check against this problem applies ONLY when the student\'s reply is an answer to THIS problem. The student has several problems and parts in front of them: if their reply answers a different part or problem (they name it, or it plainly fits another one), judge it against the part it actually answers — work that part out yourself — and never mark it wrong for not matching this one.';
 
+/** A homework-problem turn with no verified key: never judged (spec §9.2). */
+export function homeworkProblemNeverJudged(input: Pick<BrainTurnInput, 'homeworkProblem'>): boolean {
+  return !!input.homeworkProblem && !(input.homeworkProblem.verified && input.homeworkProblem.key?.parts?.length);
+}
+
 export function formatActiveProblemBlock(
   active: BrainTurnInput['activeProblem'],
   opts?: { homework?: boolean; /** Unset ⇒ TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS. */ partScope?: boolean },
@@ -1612,6 +1617,23 @@ export function formatActiveProblemBlock(
   // (2) A card with NO declared expectedAnswer still commanded "grade against
   //     the declared expected answer" — the brain invented a verdict ("Right,
   //     a circle!") for a bare "a" submission. Softened branch below.
+  // GAC per-problem homework (2026-10-21): the student's OWN sheet problem,
+  // shown in the problem panel, with an expected answer verified by the
+  // homework build. Only homework-problem turns set this source.
+  if (active.source === 'homework') {
+    return (
+      `<active_problem>\n` +
+      `The student is working this problem from their own homework sheet; it is shown in the problem panel beside the chat. ` +
+      `A spoken or typed answer from the student refers to THIS problem — UNLESS you have since asked a DIFFERENT question aloud; in that case <active_question> names the question actually on the table and you respond to THAT. ` +
+      `Do NOT pose a different problem or change the numbers.\n\n` +
+      `Statement: ${active.statement}\n` +
+      (active.expectedAnswer
+        ? `\nVERIFIED expected answer (checked independently when the homework was prepared): ${active.expectedAnswer}\n` +
+          `Check the student's attempts against THIS. Trust it: if your own working disagrees, re-check your working before saying anything. Never state it to the student.${hwReveal}\n`
+        : '') +
+      `</active_problem>\n\n`
+    );
+  }
   if (active.source === 'card') {
     return (
       `<active_problem>\n` +
@@ -2047,7 +2069,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   // A homework-problem turn takes the homework reveal suffix (never state the
   // final answer) but not the several-problems part scope.
-  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, homeworkSessionBlock !== '' ? { homework: true } : homeworkProblemBlock !== '' ? { homework: true, partScope: false } : { homework: false });
+  // An unverified homework problem carries no <active_problem> at all: the
+  // <homework_problem> block already has its text and the never-judge rule.
+  const activeProblemBlock = formatActiveProblemBlock(homeworkProblemNeverJudged(input) ? undefined : input.activeProblem, homeworkSessionBlock !== '' ? { homework: true } : homeworkProblemBlock !== '' ? { homework: true, partScope: false } : { homework: false });
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
@@ -2073,7 +2097,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: the last spoken question outranks a stale card question —
   // rendered directly after <active_problem> so the override reads in place.
-  const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
+  // Its "grade it against THIS … say so" is a judging rule: never on an unverified homework problem.
+  const activeQuestionBlock = homeworkProblemNeverJudged(input) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
@@ -2262,7 +2287,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
   // A homework-problem turn takes the homework reveal suffix (never state the
   // final answer) but not the several-problems part scope.
-  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, homeworkSessionBlock !== '' ? { homework: true } : homeworkProblemBlock !== '' ? { homework: true, partScope: false } : { homework: false });
+  // An unverified homework problem carries no <active_problem> at all: the
+  // <homework_problem> block already has its text and the never-judge rule.
+  const activeProblemBlock = formatActiveProblemBlock(homeworkProblemNeverJudged(input) ? undefined : input.activeProblem, homeworkSessionBlock !== '' ? { homework: true } : homeworkProblemBlock !== '' ? { homework: true, partScope: false } : { homework: false });
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
@@ -2284,7 +2311,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // notes in front of them, and is a runtime message on a retry.
   const studentSaid = (input.studentMessage ?? input.studentTranscript ?? '').trim();
   // Voice (./voice-judging.ts): the same levers under their own switches.
-  const voiceWorkThenMatch = input.voiceWorkThenMatch === true && input.textWorkThenMatch !== true;
+  // GAC per-problem homework: an unverified problem is never judged — no
+  // work-then-match frame or rule, no verdict guard.
+  const hpNeverJudged = homeworkProblemNeverJudged(input);
+  const voiceWorkThenMatch = input.voiceWorkThenMatch === true && input.textWorkThenMatch !== true && !hpNeverJudged;
   const turnShapeOn = input.textTurnShape === true || input.voiceTurnShape === true;
   const voicePrecheck = input.voiceVerdictPrecheck === true && input.textVerdictPrecheck !== true;
   const sortedShape = turnShapeOn || input.textVerdictPrecheck === true || voicePrecheck || voiceWorkThenMatch
@@ -2297,7 +2327,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? adjustTurnShapeForSpeech(sortedShape, studentSaid)
     : sortedShape;
   // "Work it, then match": true only when the route set it for the session's mode.
-  const workThenMatch = input.textWorkThenMatch === true || voiceWorkThenMatch;
+  const workThenMatch = (input.textWorkThenMatch === true && !hpNeverJudged) || voiceWorkThenMatch;
   // 2026-10-19 teaching round (./no-reveal-ledger-gate.ts): text sessions of
   // listed partners only — the route never sets it for voice.
   const noRevealLedger = input.noRevealLedger === true && input.textVerdictPrecheck === true;
@@ -2408,14 +2438,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   );
   // Under the mode the rule block takes the guard's place; plain consent to
   // an offer keeps its continuation guard (nothing is being judged there).
-  const verdictGuardBlock = workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
+  const verdictGuardBlock = hpNeverJudged
+    ? (ordinaryGuardBlock.includes('<continuation_guard>') ? ordinaryGuardBlock : '')
+    : workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
     ? (voiceWorkThenMatch
       ? formatVoiceWorkThenMatchBlock(input.studentTranscript, turnShape)
       : formatWorkThenMatchBlock(input.studentTranscript, turnShape, noRevealLedger ? { noRevealAnyStep: true } : undefined))
     : ordinaryGuardBlock;
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : workThenMatch ? '[verdict-guard] work-then-match rule attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
-  const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
+  // Its "grade it against THIS … say so" is a judging rule: never on an unverified homework problem.
+  const activeQuestionBlock = homeworkProblemNeverJudged(input) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
@@ -2462,8 +2495,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // GAC per-problem homework: an unverified problem is never judged (no
   // pre-check, no <answer_check>); a verified one is checked against its key
   // first, with no model call (./keyed-verdict.ts).
-  const hpKey = input.homeworkProblem?.verified ? input.homeworkProblem.key : undefined;
-  const hpUnverified = !!input.homeworkProblem && !hpKey;
+  const hpKey = hpNeverJudged ? undefined : input.homeworkProblem?.key;
+  const hpUnverified = hpNeverJudged;
   const keyed = hpKey && input.textVerdictPrecheck === true && !ledgerKind ? keyedVerdict(studentSaid, hpKey) : null;
   const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
   if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified) {

@@ -226,7 +226,7 @@ async function main() {
     assert.equal(r.homeworkProblem.verified, true);
     assert.equal(r.homeworkProblem.hasFigure, true);
     assert.deepEqual(r.homeworkProblem.key, AB);
-    assert.deepEqual(r.activeProblem, { statement: 'Find x.', source: 'card', expectedAnswer: 'a) a = 8; b) b = 24' });
+    assert.deepEqual(r.activeProblem, { statement: 'Find x.', source: 'homework', expectedAnswer: 'a) a = 8; b) b = 24' });
   });
   await section('resolveHomeworkProblemTurn: unverified → no key, no expected answer; other plans → null', async () => {
     const t = await import('../src/lib/tutor/voice/homework-problem-turn');
@@ -236,7 +236,7 @@ async function main() {
     assert.ok(r);
     assert.equal(r.homeworkProblem.verified, false);
     assert.equal(r.homeworkProblem.key, undefined);
-    assert.equal(r.activeProblem.expectedAnswer, undefined);
+    assert.equal(r.activeProblem, undefined, 'an unverified problem carries no <active_problem>');
     assert.equal(builds, 0, 'the build is never read for an unverified plan');
     const none = await t.resolveHomeworkProblemTurn('p3', { getPlan: async () => ({ metadata: { kind: 'homework-help' } }) as never, getBuild: async () => null, noCache: true });
     assert.equal(none, null);
@@ -379,6 +379,34 @@ async function main() {
       assert.ok(!r.events.some((e) => e.type === 'verdict-precheck' || e.type === 'homework-keyed-verdict'));
       assert.ok(!r.content.includes('<answer_check>'));
       assert.ok(r.content.includes('never say an answer is right or wrong'));
+    });
+    await section('C1 unverified: nothing in the turn tells the tutor to judge', async () => {
+      // Even when a caller passes an activeProblem and work-then-match is on.
+      for (const msg of ['x = 25', 'I think it is 25', 'yes']) {
+        const r = await run(msg, { homeworkProblem: { text: 'Find x.', verified: false, hasFigure: false }, activeProblem: { statement: 'Find x.', source: 'card' } });
+        for (const bad of ['WORK IT', 'right final answer', 'judging', 'Derive the correct answer', '<verdict_guard>', '<answer_check>', '<active_problem>', '<active_question>', 'grade it']) {
+          assert.ok(!r.content.includes(bad), `${JSON.stringify(msg)}: prompt contains ${bad} :: ${r.content.slice(Math.max(0, r.content.indexOf(bad) - 300), r.content.indexOf(bad) + 100)}`);
+        }
+        assert.ok(!r.events.some((e) => e.type === 'work-then-match'), 'no work-then-match frame');
+        assert.ok(r.content.includes('<homework_problem>'));
+      }
+    });
+    await section('C1 verified: homework card wording, never "YOU authored"/"auto-scorer"', async () => {
+      const r = await run('so it is twenty', { homeworkProblem: verifiedHp, activeProblem: { statement: 'Find x when 3x = 60.', source: 'homework', expectedAnswer: 'x = 20' } });
+      assert.ok(r.content.includes('from their own homework sheet'), 'homework card text');
+      assert.ok(r.content.includes('VERIFIED expected answer'), 'verified expected answer');
+      assert.ok(r.content.includes('Never state it to the student.'));
+      assert.ok(!r.content.includes('YOU authored'));
+      assert.ok(!r.content.includes('auto-scorer'));
+    });
+    await section('C1 formatActiveProblemBlock: default sources unchanged by the homework variant', () => {
+      const card = brain.formatActiveProblemBlock({ statement: 'S', source: 'card', expectedAnswer: 'A' }, { homework: false });
+      assert.ok(card.includes('a card YOU authored') && card.includes('auto-scorer'));
+      assert.ok(!card.includes('own homework sheet'));
+      const hw = brain.formatActiveProblemBlock({ statement: 'S', source: 'homework', expectedAnswer: 'A' }, { homework: true, partScope: false });
+      assert.ok(hw.includes(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()));
+      assert.equal(brain.homeworkProblemNeverJudged({ homeworkProblem: { text: 'P', verified: true, hasFigure: false } }), true, 'verified without a key is never judged');
+      assert.equal(brain.homeworkProblemNeverJudged({}), false);
     });
     await section('no homeworkProblem: the model check runs as before, no new frames or block', async () => {
       const r = await run('x = 7', {});

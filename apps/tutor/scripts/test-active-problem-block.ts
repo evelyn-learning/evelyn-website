@@ -7,6 +7,7 @@
  *
  * Run: npx tsx scripts/test-active-problem-block.ts
  */
+import { createHash } from 'node:crypto';
 import { formatActiveProblemBlock, formatActiveQuestionBlock } from '../src/lib/tutor/voice/claude-brain';
 
 let passed = 0;
@@ -117,6 +118,23 @@ check('empty statement → empty string', formatActiveProblemBlock({ statement: 
   // Over-long or absent questions never render a block (lastQuestionSentence caps at 220).
   const longQ = 'x'.repeat(230) + '?';
   check('aq: over-long question → empty', formatActiveQuestionBlock(longQ) === '');
+}
+
+// GAC per-problem homework (2026-10-21): the `source: 'homework'` variant is
+// used only by homework-problem turns; every other source renders exactly as
+// before (hash pinned against bfdc0cc9).
+{
+  const cases = [
+    [{ statement: 'S', source: 'card', expectedAnswer: 'A' }, { homework: false }],
+    [{ statement: 'S', source: 'card' }, { homework: true, partScope: false }],
+    [{ statement: 'S', source: 'generated', expectedAnswer: 'A' }, { homework: true }],
+    [{ statement: 'S', source: 'student', expectedAnswer: 'A' }, undefined],
+  ] as const;
+  const h = createHash('sha256').update(cases.map(([a, o]) => formatActiveProblemBlock(a as never, o as never)).join('|')).digest('hex').slice(0, 16);
+  check('default sources byte-identical to before the homework variant', h === 'e769a71a50f46bbc');
+  const hw = formatActiveProblemBlock({ statement: 'S', source: 'homework', expectedAnswer: 'A' }, { homework: true, partScope: false });
+  check('homework: own sheet problem, verified, never stated', hw.includes('own homework sheet') && hw.includes('VERIFIED expected answer') && hw.includes('Never state it'));
+  check('homework: not the authored-card wording', !hw.includes('YOU authored') && !hw.includes('auto-scorer'));
 }
 
 console.log(`\nactive-problem-block: ${passed} passed, ${failed} failed`);

@@ -20,7 +20,8 @@ export const HOMEWORK_PROBLEM_THINKING_DEADLINE_MS = 8000;
 export interface HomeworkProblemTurn {
   meta: HomeworkProblemMeta;
   homeworkProblem: HomeworkProblemTurnInput;
-  activeProblem: { statement: string; source: 'card'; expectedAnswer?: string };
+  /** Only for a verified problem: an unverified one carries no <active_problem>. */
+  activeProblem?: { statement: string; source: 'homework'; expectedAnswer: string };
 }
 
 export interface HomeworkProblemTurnDeps {
@@ -75,7 +76,7 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
       ...(meta.priorNote ? { priorNote: meta.priorNote } : {}),
       ...(key ? { key } : {}),
     },
-    activeProblem: { statement: meta.text, source: 'card', expectedAnswer: key ? keyFinalsLine(key) : undefined },
+    ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key) } } : {}),
   };
   if (!deps.noCache && (verified || !meta.verified)) remember(planId, turn);
   return turn;
