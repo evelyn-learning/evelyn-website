@@ -12,7 +12,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
 import { getGeometryStepKindsDescriptionTail } from '../diagrams/geometry-solver';
 import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geometry-step-docs';
-import { validateFigure } from './figure-validate';
+import { labelIsFromText, validateFigure } from './figure-validate';
 import type { FigureClaim, FigureCommand } from './types';
 
 export interface TokenUsage { in: number; out: number }
@@ -47,6 +47,8 @@ Rules:
 4. Keep proportions faithful to the stated lengths and ratios where the text gives them, and keep the drawing uncluttered.
 5. If feedback from a previous attempt is given, you also get that attempt's figure: fix every item in the feedback and keep what was not criticized.
 6. A geometry figure has no coordinate grid and no axes (display grid false, axes false) unless the problem itself is on a coordinate plane: it names coordinates, axes, the coordinate plane or ordered pairs.
+7. A line the sheet names with a lowercase letter (p, q, r, l, m, t) is a line object {id, kind:"line", pointA, pointB, label:"p"} — drawn long, labelled by its letter — never a segment, and never a point carrying the letter as its label. The two points that place such a line are helpers: give them no label. Label only points the problem names; a point you invent to place something (P1, Q1) carries no label and is drawn without one.
+8. Draw the whole figure the description gives: every line to its full extent, every angle arc at the crossing it sits at, every mark; a figure with a line drawn short or a marked angle missing is incomplete.
 
 Step reference (the steps array of showGeometryConstructed):
 ${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
@@ -122,11 +124,24 @@ const COORDINATE_TEXT_RE = /\bcoordinates?\b|\bcoordinate plane\b|\bax[ie]s\b|\b
  * I5: a geometry figure is drawn without the coordinate grid and axes unless
  * the problem text is about a coordinate plane. Graphs are untouched. Pure.
  */
+/** Given points and the step kinds whose result is one point (the solver labels each by its id when no label is given). */
+const POINT_KINDS = new Set(['point', 'midpoint', 'intersect', 'section_point', 'point_on_circle', 'point_on_conic', 'triangle_center', 'reflect_point', 'rotate_point', 'translate_point', 'dilate_point']);
+
 export function normalizeFigureDisplay(figure: FigureCommand | null, problemText: string): FigureCommand | null {
   if (!figure || figure.action !== 'showGeometryConstructed') return figure;
-  if (COORDINATE_TEXT_RE.test(problemText ?? '')) return figure;
-  const display = figure.display && typeof figure.display === 'object' ? figure.display : {};
-  return { ...figure, display: { ...display, grid: false, axes: false } };
+  // GAC acceptance 2026-10-21: the renderer labels an unlabelled point by its
+  // id, so helper points the proposer invented (P1, Q1, R2) came out lettered
+  // on the board. A point with no label whose id is not a word of the problem
+  // text gets an empty label: the sheet never names it, so the board does not.
+  const own = (o: unknown): o is { kind?: unknown; id?: unknown; label?: unknown } => !!o && typeof o === 'object';
+  const unname = (arr: unknown) => Array.isArray(arr)
+    ? arr.map((o) => (own(o) && typeof o.kind === 'string' && POINT_KINDS.has(o.kind) && typeof o.id === 'string' && o.label === undefined && !labelIsFromText(o.id, problemText ?? '')) ? { ...o, label: '' } : o)
+    : arr;
+  const geo = figure as Extract<FigureCommand, { action: 'showGeometryConstructed' }>;
+  const named = { ...geo, given: unname(geo.given) as typeof geo.given, steps: unname(geo.steps) as typeof geo.steps };
+  if (COORDINATE_TEXT_RE.test(problemText ?? '')) return named;
+  const display = geo.display && typeof geo.display === 'object' ? geo.display : {};
+  return { ...named, display: { ...display, grid: false, axes: false } };
 }
 
 export function parseFigure(raw: unknown): FigureCommand | null {

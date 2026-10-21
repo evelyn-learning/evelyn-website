@@ -275,8 +275,26 @@ async function main() {
       const kept = normalizeFigureDisplay({ ...g, display: { showLabels: true, grid: true } } as Fig, P5) as { display?: Record<string, unknown> };
       assert.deepEqual(kept.display, { showLabels: true, grid: false, axes: false }, 'other display keys kept');
       for (const t of [`${P5} The triangle is drawn on the coordinate plane.`, 'Plot A(2, 3) and B(-1, 4).', 'Reflect the triangle over the x-axis.', 'Name the ordered pair of the vertex.']) {
-        assert.deepEqual(normalizeFigureDisplay(g, t), g, t);
+        assert.deepEqual((normalizeFigureDisplay(g, t) as { display?: unknown }).display, g.display, t);
       }
+      // 2026-10-21 (GAC acceptance): invented helper points (P1, Q1, R2) came out lettered
+      // on the board — an unlabelled point the text never names gets an empty label.
+      const helpers = {
+        ...g,
+        given: [
+          { id: 'P1', kind: 'point', x: 0, y: 0 }, { id: 'A', kind: 'point', x: 1, y: 0 },
+          { id: 'B', kind: 'point', x: 2, y: 0, label: 'B' }, { id: 'ln', kind: 'line', pointA: 'P1', pointB: 'A', label: 'p' },
+        ],
+        steps: [{ id: 'M1', kind: 'midpoint', of: ['P1', 'A'] }, { id: 'E', kind: 'midpoint', of: ['A', 'B'] }],
+      } as unknown as Fig;
+      const un = normalizeFigureDisplay(helpers, P5) as { given: Array<{ id: string; label?: string }>; steps: Array<{ id: string; label?: string }> };
+      assert.equal(un.given[0].label, '', 'P1 unnamed');
+      assert.equal(un.given[1].label, undefined, 'A is named in the text');
+      assert.equal(un.given[2].label, 'B', 'an explicit label is left for the validator');
+      assert.equal(un.given[3].label, 'p', 'lines untouched');
+      assert.equal(un.steps[0].label, '', 'constructed helper unnamed');
+      assert.equal(un.steps[1].label, undefined);
+      assert.match(FIGURE_PROPOSE_SYSTEM, /never a segment, and never a point carrying the letter as its label/);
       const gr = graph();
       assert.equal(normalizeFigureDisplay(gr, 'no coordinates mentioned here at all'), gr, 'graphs untouched');
       assert.match(FIGURE_PROPOSE_SYSTEM, /no coordinate grid and no axes/);
