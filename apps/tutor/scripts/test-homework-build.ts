@@ -155,6 +155,49 @@ async function main() {
       const yi = validateFigure(graph({ points: [{ x: 0, y: 1 }, { x: PI / 2, y: 1 }] }), { problemText: P8, claims: [] });
       assert.equal(yi.ok, true);            // the curve's own y-intercept / midline crossing
     });
+
+    // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
+    console.log('3 build figure');
+    const { buildFigure, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
+    type Deps = Parameters<typeof buildFigure>[1];
+    const mkDeps = (propose: Deps['propose'], extra: FigureClaimList = claims): Deps & { calls: Array<{ feedback?: string[] }> } => {
+      const calls: Array<{ feedback?: string[] }> = [];
+      return { calls, async propose(i) { calls.push({ feedback: i.feedback }); return propose(i); }, async extractClaims() { return extra; } };
+    };
+    type FigureClaimList = typeof claims;
+    await section('bad first proposal is retried with feedback and the good one wins', async () => {
+      const good = goodFig();
+      const d = mkDeps(async (i) => ({ figure: i.feedback?.length ? good : ws3p5Bad, claims: [] }));
+      const r = await buildFigure({ n: 5, text: P5 }, d);
+      assert.deepEqual(r.figure, good); assert.equal(r.attempts, 2);
+      assert.ok(d.calls[1].feedback!.some((f) => f.includes('on_segment')), String(d.calls[1].feedback));
+      assert.equal(r.claims.length, 3);
+    });
+    await section('always-bad proposals give null with the reasons after maxAttempts', async () => {
+      const d = mkDeps(async () => ({ figure: ws3p5Bad, claims }));   // duplicate claims dedupe
+      const r = await buildFigure({ n: 5, text: P5 }, d);
+      assert.equal(r.figure, null); assert.equal(r.attempts, 2); assert.match(r.note ?? '', /on_segment/);
+      assert.equal(r.claims.length, 3);
+    });
+    await section('text-only problem returns after one attempt', async () => {
+      const d = mkDeps(async () => ({ figure: null, claims: [], note: 'no figure' }), []);
+      const r = await buildFigure({ n: 1, text: 'Solve 2x = 4.' }, d);
+      assert.equal(r.figure, null); assert.equal(r.attempts, 1); assert.equal(d.calls.length, 1);
+    });
+    await section('a throwing dep never makes buildFigure throw', async () => {
+      const d: Deps = { async propose() { throw new Error('boom'); }, async extractClaims() { throw new Error('boom2'); } };
+      const r = await buildFigure({ n: 5, text: P5 }, d);
+      assert.equal(r.figure, null); assert.equal(r.attempts, 2); assert.match(r.note ?? '', /propose_failed/);
+    });
+    await section('propose_failed note from a dep counts as an attempt and is surfaced', async () => {
+      const d = mkDeps(async () => ({ figure: null, claims: [], note: 'propose_failed:APIError' }), []);
+      const r = await buildFigure({ n: 5, text: P5 }, d);
+      assert.equal(r.figure, null); assert.equal(r.attempts, 2); assert.match(r.note ?? '', /propose_failed:APIError/);
+    });
+    await section('system prompt carries the structural rules', () => {
+      assert.match(FIGURE_PROPOSE_SYSTEM, /never.*free coordinates/i);
+      assert.match(FIGURE_PROPOSE_SYSTEM, /xAxisStep/);
+    });
   }
 
   console.log('1 types+store');
