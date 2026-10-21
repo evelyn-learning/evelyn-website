@@ -407,9 +407,14 @@ Output EXACTLY ${n} sections, in order, each starting on its own line with the e
 // Sonnet 5 read takes ~20 s, so the second read ran the plan call past the
 // academy's 50 s budget (summary elapsed + plan ≤ 50 s) and the student saw
 // "we could not generate a lesson from that material" twice. The reading of a
-// given set of images is the same both times: keep it for a few minutes, keyed
+// given set of images is the same both times: keep it for a while, keyed
 // by the bytes, and the plan call pays only for the plan.
-const TRANSCRIPTION_TTL_MS = 15 * 60_000;
+// 2026-10-21 (GAC worksheet3_photo, acceptance): a 27 s Opus read ended past
+// the academy's summary budget, the student got "try again in a moment", and
+// the retry came after the 15-minute TTL — so it paid for the whole read a
+// second time and timed out the same way. A human retry can take a while:
+// keep the read for an hour (40 entries × a few KB — nothing).
+const TRANSCRIPTION_TTL_MS = 60 * 60_000;
 const TRANSCRIPTION_CACHE_MAX = 40;
 const transcriptionCache = new Map<string, { texts: string[]; at: number }>();
 /** Reads in flight, so a second request for the same images while the first
@@ -452,6 +457,9 @@ export function rememberTranscription(key: string, texts: string[], now: number 
     if (oldest === undefined) break;
     transcriptionCache.delete(oldest);
   }
+  // Next to the "reused" line on a hit: a retry that reads again instead of
+  // reusing is either a different key or a lost/expired entry — this says which.
+  console.log(`[material-extract] vision transcription cached key=${key.slice(0, 14)} entries=${transcriptionCache.size}`);
 }
 
 /** Test seam. */
@@ -465,7 +473,7 @@ async function transcribeImagesBatch(
   const key = transcriptionCacheKey(items);
   const cached = recallTranscription(key);
   if (cached) {
-    console.log(`[material-extract] vision transcription reused count=${items.length}`);
+    console.log(`[material-extract] vision transcription reused count=${items.length} key=${key.slice(0, 14)}`);
     return { ok: true, texts: cached };
   }
   const joined = transcriptionInFlight.get(key);

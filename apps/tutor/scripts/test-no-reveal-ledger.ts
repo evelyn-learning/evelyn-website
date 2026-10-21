@@ -1163,8 +1163,8 @@ async function main() {
     assert.notEqual(transcriptionCacheKey([a, b], 'm'), transcriptionCacheKey([b, a], 'm'));
     assert.equal(recallTranscription(k1, 1_000), null);
     rememberTranscription(k1, ['1. Lines l ∥ m …'], 1_000);
-    assert.deepEqual(recallTranscription(k1, 1_000 + 14 * 60_000), ['1. Lines l ∥ m …']);
-    assert.equal(recallTranscription(k1, 1_000 + 16 * 60_000), null, 'expired after 15 min');
+    assert.deepEqual(recallTranscription(k1, 1_000 + 59 * 60_000), ['1. Lines l ∥ m …']);
+    assert.equal(recallTranscription(k1, 1_000 + 61 * 60_000), null, 'expired after 60 min');
     assert.equal(recallTranscription(k1, 1_000), null, 'and dropped');
     clearTranscriptionCache();
   });
