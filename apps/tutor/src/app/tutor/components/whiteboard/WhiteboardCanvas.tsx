@@ -7,7 +7,7 @@
  * from the AI tutor including equations, graphs, and diagrams.
  */
 
-import React, { memo, useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { memo, useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 // KaTeX styles for every card that renders InlineMathText (which itself
 // carries no CSS import so renderer files stay node-importable — see the
 // note in InlineMathText.tsx).
@@ -281,6 +281,14 @@ interface WhiteboardCanvasProps {
    *  notes render but don't offer drag (InkNotesOverlay gates its own
    *  pointer-events-auto on this being set). */
   onInkNoteMoved?: (ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => void;
+  /** A host-supplied item drawn FIRST on page 1, outside the command stream
+   *  (GAC acceptance 2026-10-21: a one-problem homework session's pre-built
+   *  figure). It looks and scrolls like any board item but is never a
+   *  command: not persisted, not cleared, not superseded by a tutor redraw,
+   *  not counted in item indices (scribbles / scrollTo keep their targets),
+   *  and the board is not "empty" while it is there. Later pages are the
+   *  tutor's as before. */
+  leadItem?: ReactNode;
 }
 
 // ── Phase 2: pen mode (freehand ink) ────────────────────────────────
@@ -356,6 +364,7 @@ export function WhiteboardCanvas({
   inkEpoch,
   tutorTurnActive,
   onInkNoteMoved,
+  leadItem,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -1097,6 +1106,10 @@ export function WhiteboardCanvas({
     () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'link' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
     [safeCurrentPage.commands],
   );
+  // The host's lead item (see the prop) is page 1's first thing; with it
+  // present a page holding one command takes the list layout, so the
+  // hairline between the two is the same one every item pair gets.
+  const showLead = leadItem != null && currentIndex === 0;
   // Kill-recovery phase A: dim style for an item currently flagged revising.
   const reviseStyle = (cmd: WhiteboardCommand): React.CSSProperties | undefined =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1579,7 +1592,7 @@ export function WhiteboardCanvas({
     return () => { delete w.__tutorTestTap; delete wStroke.__tutorTestStroke; delete wGesture.__tutorTestGesture; };
   }, [onStudentMark, fireStudentTap, finishStroke, emitGesture]);
 
-  if (pages.length === 0) {
+  if (pages.length === 0 && !leadItem) {
     return (
       <div className={`whiteboard-canvas flex flex-col h-full ${className}`}>
         <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
@@ -1742,7 +1755,19 @@ export function WhiteboardCanvas({
           onPointerDown={onStudentMark ? handleMarkPointerDown : undefined}
           onPointerUp={onStudentMark ? handleMarkPointerUp : undefined}
         >
-        {renderableCommands.length === 1 ? (
+        {showLead && (
+          <div data-wb-lead-item="1" className="relative scroll-mt-6 select-text">
+            <BoardItemErrorBoundary action="leadItem" resetKey={leadItem}>
+              {leadItem}
+            </BoardItemErrorBoundary>
+            {renderableCommands.length > 0 && (
+              <div className="py-1" data-wb-sep="1">
+                <div className="border-t border-gray-100" />
+              </div>
+            )}
+          </div>
+        )}
+        {renderableCommands.length === 1 && !showLead ? (
           <div
             className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6 select-text`}
             style={reviseStyle(renderableCommands[0])}

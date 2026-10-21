@@ -42,8 +42,6 @@ import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import type { SessionGoal } from '@/lib/tutor/types';
 import type { HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import { ProblemPanel } from './ProblemPanel';
-import { ProblemFigure } from './ProblemFigure';
-import { BoardItemErrorBoundary } from '../whiteboard/BoardItemErrorBoundary';
 
 /** Layout effect on the client (measure before paint), plain effect on the
  *  server (where useLayoutEffect warns and cannot run). */
@@ -605,11 +603,9 @@ export default function SessionStage(props: SessionStageProps) {
   // (no `pagerPlacement` added to the public interface) — this is purely
   // an internal SessionStage render branch.
   const pagerInCard = sessionMode === 'text' && !isMdUp;
-  // GAC acceptance 2026-10-21: a one-problem session's pre-built figure is
-  // pinned above the board's pages (problem-figure-strip below), so the card
-  // stacks its rows whenever the strip is there, not only with the in-card pager.
-  const figureStrip = problemPanel?.figure ?? null;
-  const stackCard = pagerInCard || figureStrip != null;
+  // A one-problem session's pre-built figure is NOT a strip here any more
+  // (GAC acceptance 2026-10-21, round 5): TutorSession hands it to the
+  // WhiteboardCanvas as its `leadItem`, drawn on page 1 like any board item.
   useEffect(() => {
     if (!toolsOpen) return;
     // R57: the whole dismiss cycle is off while always-open. Registering no
@@ -1197,24 +1193,8 @@ export default function SessionStage(props: SessionStageProps) {
               padding; the wrench floats over the card's top-right corner. */}
           <div
             ref={boardCardRef}
-            className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${stackCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}
+            className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}
           >
-            {/* GAC acceptance 2026-10-21: the problem's figure lives ON the
-                board at every width. Below xl the ProblemPanel is a sheet
-                behind "Problem n ▾", and the student worked the problem
-                without its figure in sight. Pinned above the board's pages
-                (never scrolled away, never a board item the tutor can
-                supersede); the panel keeps the text. The svg scales to the
-                strip's height and keeps its aspect. */}
-            {figureStrip && (
-              <div data-testid="problem-figure-strip" className="shrink-0 border-b border-slate-100 bg-white px-3 py-2 overflow-hidden">
-                <div className="mx-auto flex h-[220px] sm:h-[260px] justify-center [&_svg]:h-full [&_svg]:w-auto [&_svg]:max-w-full">
-                  <BoardItemErrorBoundary action={figureStrip.action} resetKey={figureStrip}>
-                    <ProblemFigure figure={figureStrip} />
-                  </BoardItemErrorBoundary>
-                </div>
-              </div>
-            )}
             {/* Text mode, <md: the pager moves IN the card (compact row, no
                 floating pill, no extra vertical row) — owner mobile-split
                 ruling, re-review 2026-09-19. Mirrors the floating version's
@@ -1247,7 +1227,7 @@ export default function SessionStage(props: SessionStageProps) {
                 </button>
               </div>
             )}
-            {stackCard ? (
+            {pagerInCard ? (
               // Same "absolute inset-0 inside a relative flex-1 min-h-0"
               // trick TranscriptView's panel uses — a flex-1 parent's
               // percentage height doesn't always resolve, and

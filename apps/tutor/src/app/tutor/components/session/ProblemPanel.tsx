@@ -9,11 +9,12 @@
  *  - Desktop (xl+): a fixed left column holding the text.
  *  - Below xl: a collapsible sheet above the board, collapsed by default, its
  *    header "Problem n ▾" (▴ when open; the open sheet overlays the board).
- *  - The figure itself is NOT here (GAC acceptance 2026-10-21): it is pinned
- *    above the board in SessionStage (problem-figure-strip) at every width,
- *    where the student works. With a figure drawn, the read's bracketed
- *    figure description is left out of the text (problemTextForDisplay) —
- *    it can state what the student is asked to read off the figure.
+ *  - The figure itself is NOT here (GAC acceptance 2026-10-21): it is drawn
+ *    on the whiteboard as page 1's first item (TutorSession → WhiteboardCanvas
+ *    `leadItem` → ProblemFigure), where the student works. With a figure
+ *    drawn, the read's bracketed figure description is left out of the text
+ *    (problemTextForDisplay) — it can state what the student is asked to
+ *    read off the figure.
  *
  * `verified` only decides the one-line note; the answer key never reaches
  * the client.

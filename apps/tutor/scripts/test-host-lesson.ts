@@ -496,7 +496,7 @@ test('host header options: clock message posted on start, standby change, end an
   for (const p of ['sessionTimer={uiOptions.sessionTimer}', 'endControlVisible={uiOptions.endControl}', 'toolsLow={uiOptions.toolsLow}']) assert.ok(embed.includes(p), p);
   assert.match(session, /headerClock=\{!sessionTimer \? undefined : \(/);
   assert.match(session, /hideTimer=\{!sessionTimer\}/);
-  assert.match(session, /endControl=\{endControlVisible \? endControlEl : null\}/);
+  assert.match(session, /endControl=\{endControlVisible && !homeworkProblem \? endControlEl : null\}/);
   assert.match(read('src/app/tutor/components/session/SessionStage.tsx'), /style=\{toolsLow \? \{ bottom: /);
   assert.match(uiOptions, /sessionTimer: true, endControl: true, toolsLow: false/);
   assert.match(uiOptions, /gameclass: \{[^}]*toolsLow: true/);

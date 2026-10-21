@@ -30,7 +30,7 @@ async function main() {
     has(panel, /export function ProblemPanel\(/);
     has(panel, /export interface ProblemPanelProps\s*\{[^}]*n: number;[^}]*text: string;[^}]*figure: FigureCommand \| null;[^}]*verified: boolean;[^}]*collapsed\?: boolean;[^}]*onToggle\?: \(\) => void/);
   });
-  await section('the panel holds the text only; the figure is pinned above the board (stage strip)', () => {
+  await section('the panel holds the text only; the figure is drawn on the board (lead item)', () => {
     hasNot(panel, /CommandRenderer/);
     hasNot(panel, /aspect-\[4\/3\]/);
     has(panel, /InlineMathText/);
@@ -51,15 +51,27 @@ async function main() {
     has(stage, /problemPanel\?:/);
     has(stage, /<ProblemPanel\b/);
   });
-  await section('the figure is pinned above the board inside the board card, through the item error boundary', () => {
-    has(stage, /data-testid="problem-figure-strip"/);
-    has(stage, /const figureStrip = problemPanel\?\.figure \?\? null;/);
-    has(stage, /const stackCard = pagerInCard \|\| figureStrip != null;/);
-    has(stage, /<BoardItemErrorBoundary action=\{figureStrip\.action\} resetKey=\{figureStrip\}>\s*<ProblemFigure figure=\{figureStrip\} \/>/);
+  await section('the figure is the board\'s lead item on page 1 — not a strip above the pages, not a command the tutor can supersede', () => {
+    // GAC acceptance 2026-10-21 (round 5): the owner wants the figure DRAWN
+    // on the whiteboard, larger, with the drawer carrying the text only.
+    hasNot(stage, /problem-figure-strip/);
+    hasNot(stage, /figureStrip/);
+    hasNot(stage, /ProblemFigure/);
+    has(stage, /\$\{pagerInCard \? 'flex flex-col' : ''\}/);
+    const wb = readSrc('app/tutor/components/whiteboard/WhiteboardCanvas.tsx');
+    has(wb, /leadItem\?: ReactNode;/);
+    has(wb, /if \(pages\.length === 0 && !leadItem\)/);
+    has(wb, /const showLead = leadItem != null && currentIndex === 0;/);
+    has(wb, /data-wb-lead-item="1"/);
+    has(wb, /<BoardItemErrorBoundary action="leadItem" resetKey=\{leadItem\}>\s*\{leadItem\}/);
+    has(wb, /renderableCommands\.length === 1 && !showLead \?/);
+    const ts = readSrc('app/tutor/components/session/TutorSession.tsx');
+    has(ts, /leadItem=\{homeworkProblem\?\.figure \? <ProblemFigure figure=\{homeworkProblem\.figure\} \/> : undefined\}/);
+    has(ts, /boardEmpty=\{whiteboardCommands\.length === 0 && !homeworkProblem\?\.figure\}/);
     const pf = readSrc('app/tutor/components/session/ProblemFigure.tsx');
     has(pf, /fit="content"/);
+    has(pf, /h-\[280px\] sm:h-\[400px\]/);
     has(pf, /<CommandRenderer command=\{figure as unknown as WhiteboardCommand\} \/>/);
-    hasNot(stage, /\$\{pagerInCard \? 'flex flex-col' : ''\}/);
   });
   await section('the stage keeps one tree position: never returned under a conditional wrapper', () => {
     // A plan arrives after the first render; nesting the stage only when

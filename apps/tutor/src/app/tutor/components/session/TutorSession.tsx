@@ -24,6 +24,7 @@ import Script from 'next/script';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { STANDBY_LINE, shiftAnchor, type VideoState } from '@/lib/tutor/portal/host-lesson';
 import { EndControl } from './EndControl';
+import { ProblemFigure } from './ProblemFigure';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
@@ -893,6 +894,12 @@ export default function TutorSession(props: TutorSessionProps) {
   // --- Composed slot elements ---
   const topicLabel = topicDisplayName || 'AI Tutor';
 
+  // One-problem homework (2026-10-20): the `homework-problem` plan's problem,
+  // reported by VoiceTutorRealtime's onHomeworkProblem; null for every other
+  // plan. Drives the stage's ProblemPanel and the board's lead item (its
+  // figure), so it is declared before boardEl.
+  const [homeworkProblem, setHomeworkProblem] = useState<HomeworkProblemMeta | null>(null);
+
   const boardEl = (
     <div className="relative h-full">
       <WhiteboardCanvas
@@ -912,6 +919,11 @@ export default function TutorSession(props: TutorSessionProps) {
         onPenIdle={handlePenIdle}
         inkEpoch={inkEpoch}
         onInkNoteMoved={handleInkNoteMoved}
+        // GAC acceptance 2026-10-21 (round 5): the one-problem session's
+        // pre-built figure is drawn on the board as page 1's first item —
+        // not a strip above the pages (owner: "the figure must be drawn on
+        // the WB"), not a command the tutor could supersede or clear.
+        leadItem={homeworkProblem?.figure ? <ProblemFigure figure={homeworkProblem.figure} /> : undefined}
         className="h-full"
       />
       {awaitingResume && (
@@ -1324,10 +1336,6 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime's onHomeworkProgress. Stays null for non-homework
   // plans (the callback never fires for them).
   const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number; text?: string } | null>(null);
-  // One-problem homework (2026-10-20): the `homework-problem` plan's problem,
-  // reported by VoiceTutorRealtime's onHomeworkProblem; null for every other
-  // plan. Drives the stage's ProblemPanel.
-  const [homeworkProblem, setHomeworkProblem] = useState<HomeworkProblemMeta | null>(null);
   // Which lesson-plan id's fetch has settled (loaded or failed). While the
   // selected plan is still loading, a homework session shows "Getting your
   // first problem ready…"; once it settles with no homework plan (fetch
@@ -2136,7 +2144,7 @@ export default function TutorSession(props: TutorSessionProps) {
         started={started}
         liveCaption={liveCaption}
         getSpokenCaption={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined}
-        boardEmpty={whiteboardCommands.length === 0}
+        boardEmpty={whiteboardCommands.length === 0 && !homeworkProblem?.figure}
         board={boardEl}
         boardPages={boardNav ?? undefined}
         voiceInput={voiceInputEl}
