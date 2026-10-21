@@ -11,6 +11,7 @@
 
 import type { AnswerKey } from '../homework-build/types';
 import { EXTRA_PROBLEM_SAME_RULES, LEDGER_CONDUCT_RULES, OFF_TOPIC_NOT_ANSWERED, PERSONAL_DETAILS_RULE } from '../lesson-plan/homework-ledger';
+import { boardRevealsWithheldAnswer, type RevealRead, type WithheldAnswer } from './whole-answer-reveal';
 
 /** Server-populated only (never from the request body). */
 export interface HomeworkProblemTurnInput {
@@ -25,7 +26,7 @@ export interface HomeworkProblemTurnInput {
 export const HOMEWORK_PROBLEM_FIGURE_SHOWN =
   'The problem\'s figure is already on the student\'s screen beside the chat. Never redraw the problem\'s figure; sketch only new work.';
 export const HOMEWORK_PROBLEM_NO_FIGURE =
-  'No figure could be drawn for this problem: refer to the sheet for it. Never draw the problem\'s figure yourself; sketch only new work.';
+  'No figure could be built for this problem: refer to the sheet for it. If you sketch the sheet\'s figure, draw only what the sheet shows — its labels and its given values — never a value the problem asks the student to find.';
 export const HOMEWORK_PROBLEM_VERIFIED =
   'Check the student\'s final answer against the expected answer in <active_problem> and say plainly whether it matches.';
 export const HOMEWORK_PROBLEM_UNVERIFIED =
@@ -48,6 +49,35 @@ export const HOMEWORK_PROBLEM_CONDUCT_RULES =
   `- ${EXTRA_PROBLEM_SAME_RULES}\n` +
   `- ${PERSONAL_DETAILS_RULE}\n` +
   `- ${LEDGER_CONDUCT_RULES}\n`;
+
+/**
+ * GAC acceptance 2026-10-21 (hw-10 problem 4): with no pre-built figure the
+ * tutor sketched the cone itself and labelled it "h=12" — the answer to part
+ * (a) — in its opening turn, before the student had said a word. The rule
+ * above is wording; this is the guard. One withheld value per key part: a
+ * board item that writes it is not forwarded (the model gets
+ * HOMEWORK_BOARD_KEY_WITHHELD_REASON as its tool result and redraws). A
+ * number the sheet gives (r = 5) or the student has already written is never
+ * a hit, so a confirmed part can be drawn.
+ */
+export const HOMEWORK_BOARD_KEY_WITHHELD_REASON =
+  'not shown — it writes a value the problem asks the student to find; draw only what the sheet gives';
+
+export function homeworkKeyWithheld(hp: HomeworkProblemTurnInput | undefined, studentText: string): WithheldAnswer[] {
+  if (!hp?.verified || !hp.key?.parts?.length) return [];
+  return hp.key.parts
+    .map((part) => String(part.final ?? '').trim())
+    .filter(Boolean)
+    .map((value) => ({ value, studentText: String(studentText ?? ''), givenText: String(hp.text ?? '') }));
+}
+
+export function boardRevealsHomeworkKey(args: unknown, withheld: ReadonlyArray<WithheldAnswer>): RevealRead | null {
+  for (const a of withheld) {
+    const r = boardRevealsWithheldAnswer(args, a);
+    if (r.hit) return r;
+  }
+  return null;
+}
 
 const oneLine = (s: string, max: number) => String(s ?? '').replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 

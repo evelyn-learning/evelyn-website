@@ -246,6 +246,30 @@ async function main() {
     }
     has(read('lib/tutor/voice/homework-problem-block.ts'), /import \{[^}]*LEDGER_CONDUCT_RULES[^}]*\} from '\.\.\/lesson-plan\/homework-ledger'/);
   });
+  await section('no figure: the rule allows the sheet\'s figure with given values, never a value to find', () => {
+    assert.ok(blk.HOMEWORK_PROBLEM_NO_FIGURE.includes('never a value the problem asks the student to find'));
+  });
+  await section('board guard: a key value on a board item is a hit; a given number or the student\'s own value is not', () => {
+    const hp = { text: 'A right circular cone has radius 5 cm and slant height 13 cm. (a) Find the height h. (b) Find the volume. Use π ≈ 3.14.', verified: true, hasFigure: false,
+      key: { solvers: ['a', 'b'], parts: [
+        { label: '(a)', final: '12 cm', canonical: { kind: 'number' as const, value: 12, units: 'cm' } },
+        { label: '(b)', final: '314 cm³', canonical: { kind: 'number' as const, value: 314, units: 'cm³' } },
+      ] } };
+    const w = blk.homeworkKeyWithheld(hp, '');
+    assert.equal(w.length, 2);
+    assert.ok(blk.boardRevealsHomeworkKey({ shape: 'cone', title: 'Cone: radius 5 cm, slant height 13 cm', labels: ['h=12', 'r=5'] }, w), 'h=12 is the answer to (a)');
+    assert.equal(blk.boardRevealsHomeworkKey({ shape: 'cone', title: 'Cone: radius 5 cm, slant height 13 cm', labels: ['h', 'r=5', 'l=13'] }, w), null, 'given values only');
+    assert.equal(blk.boardRevealsHomeworkKey({ labels: ['h=12'] }, blk.homeworkKeyWithheld(hp, 'I think h is 12')), null, 'the student wrote it');
+    assert.ok(blk.boardRevealsHomeworkKey({ equation: 'V = 314' }, blk.homeworkKeyWithheld(hp, 'I think h is 12')), '(b) is still withheld');
+    assert.deepEqual(blk.homeworkKeyWithheld({ ...hp, verified: false }, ''), [], 'an unverified problem has no key to guard');
+    assert.deepEqual(blk.homeworkKeyWithheld(undefined, ''), []);
+  });
+  await section('claude-brain wires the board guard into the tool-call path', () => {
+    const src = read('lib/tutor/voice/claude-brain.ts');
+    has(src, /const hpWithheld = hpKey/);
+    has(src, /boardRevealsHomeworkKey\(args, hpWithheld\)/);
+    has(src, /rejectionReason: HOMEWORK_BOARD_KEY_WITHHELD_REASON/);
+  });
   await section('claude-brain re-exports the block API', () => {
     const src = read('lib/tutor/voice/claude-brain.ts');
     for (const re of [/formatHomeworkProblemBlock/, /HOMEWORK_PROBLEM_RULES/, /homeworkProblem\?: HomeworkProblemTurnInput/]) has(src, re);

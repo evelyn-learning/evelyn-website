@@ -48,7 +48,7 @@ import {
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
-import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput } from './homework-problem-block';
+import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld } from './homework-problem-block';
 import { allKeyPartsConfirmed, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS } from './keyed-verdict';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
@@ -2497,6 +2497,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // first, with no model call (./keyed-verdict.ts).
   const hpKey = hpNeverJudged ? undefined : input.homeworkProblem?.key;
   const hpUnverified = hpNeverJudged;
+  // GAC acceptance 2026-10-21 (homework-problem-block.ts homeworkKeyWithheld):
+  // the board never writes a key value the student has not written.
+  const hpWithheld = hpKey
+    ? homeworkKeyWithheld(input.homeworkProblem, [studentSaid, ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : ''))].join('\n'))
+    : [];
   const keyed = hpKey && input.textVerdictPrecheck === true && !ledgerKind ? keyedVerdict(studentSaid, hpKey) : null;
   const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
   if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified) {
@@ -2834,6 +2839,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               const hit = boardRevealsWithheldAnswer(args, reveal.withheld);
               yield* revealStop('board', hit.how, hit.matched);
             }
+            currentToolUse = null;
+          } else if (hpWithheld.length && isAnswerBearingRenderTool(tc.name) && boardRevealsHomeworkKey(args, hpWithheld)) {
+            // GAC acceptance 2026-10-21: a one-problem session's board item
+            // that writes a key value (the cone drawn with "h=12" before the
+            // student had answered). Only this call is dropped — the reply
+            // itself is not stopped — and the model reads the reason as its
+            // tool result, so it redraws with the sheet's values.
+            const hit = boardRevealsHomeworkKey(args, hpWithheld);
+            console.warn(`[homework-problem] board item withheld (${tc.name}; ${hit?.how}; matched "${String(hit?.matched ?? '').slice(0, 40)}")`);
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: HOMEWORK_BOARD_KEY_WITHHELD_REASON });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: HOMEWORK_BOARD_KEY_WITHHELD_REASON };
             currentToolUse = null;
           } else {
             newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
