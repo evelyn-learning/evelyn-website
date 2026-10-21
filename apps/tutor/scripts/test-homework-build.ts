@@ -244,12 +244,18 @@ async function main() {
     });
     await section('figureToSvg: a geometry figure gives one svg document; a graph or a bad spec gives null', async () => {
       const { figureToSvg } = await import('../src/lib/tutor/homework-build/figure-svg');
-      const svg = await figureToSvg(goodFig());
+      const svg = await figureToSvg({ ...goodFig(), display: { grid: false, axes: false } } as Fig);   // as stored: normalizeFigureDisplay turns the plane off
       assert.ok(svg && svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && svg.endsWith('</svg>'), String(svg).slice(0, 120));
-      assert.ok(/viewBox="0 0 500 400"/.test(svg!), 'the board renderer\'s viewBox');
+      const vb = /viewBox="([^"]+)"/.exec(svg!)![1].split(' ').map(Number);
+      assert.ok(vb[2] < 500 || vb[3] < 400, `cropped to the content, not the canvas: ${vb.join(' ')}`);
+      assert.ok(vb[2] > 100 && vb[3] > 100, `a real box: ${vb.join(' ')}`);
       assert.ok(!/<svg[^>]* (class|style)=/.test(svg!), 'no sizing classes on the root');
       assert.ok(svg!.includes('DE = 9') && svg!.includes('>A<'), 'labels are drawn');
-      assert.equal(await figureToSvg(graph({})), null);
+      const gs = await figureToSvg({ action: 'showGraph', type: 'function', data: { xLabel: 'x', yLabel: 'y', xRange: [0, 6.4], yRange: [-4, 2], xAxisStep: 'pi/4', yAxisStep: 1, functions: [{ expression: '2.25*sin(x - pi/4) - 1.25' }], points: [{ x: 0, y: 1, label: 'P' }] } as never });
+      assert.ok(gs && gs.startsWith('<svg xmlns=') && gs.includes('<path d="M') && gs.includes('π/4') && gs.includes('>P<'), String(gs).slice(0, 200));
+      const { graphToSvg } = await import('../src/lib/tutor/homework-build/graph-svg');
+      assert.equal(graphToSvg({ xRange: [1, 0], yRange: [0, 1] } as never), null, 'an empty range gives nothing');
+      assert.ok(graphToSvg({ xLabel: '', yLabel: '', xRange: [-5, 5], yRange: [-5, 5], functions: [{ fn: '1/x' }] } as never)!.includes('<path'), 'a pole breaks the path, never the svg');
       assert.equal(await figureToSvg({ action: 'showGeometryConstructed', given: [], steps: [{ id: 'M', kind: 'midpoint', of: ['A', 'Z'] }] } as Fig), null);
       assert.equal(await figureToSvg(null), null);
     });

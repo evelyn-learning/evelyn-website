@@ -42,8 +42,7 @@ import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import type { SessionGoal } from '@/lib/tutor/types';
 import type { HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import { ProblemPanel } from './ProblemPanel';
-import type { WhiteboardCommand } from '@core/knowledge/types';
-import { CommandRenderer } from '../whiteboard/WhiteboardCanvas';
+import { ProblemFigure } from './ProblemFigure';
 import { BoardItemErrorBoundary } from '../whiteboard/BoardItemErrorBoundary';
 
 /** Layout effect on the client (measure before paint), plain effect on the
@@ -1209,9 +1208,9 @@ export default function SessionStage(props: SessionStageProps) {
                 strip's height and keeps its aspect. */}
             {figureStrip && (
               <div data-testid="problem-figure-strip" className="shrink-0 border-b border-slate-100 bg-white px-3 py-2 overflow-hidden">
-                <div className="mx-auto flex h-[200px] sm:h-[240px] justify-center [&_svg]:h-full [&_svg]:w-auto [&_svg]:max-w-full">
+                <div className="mx-auto flex h-[220px] sm:h-[260px] justify-center [&_svg]:h-full [&_svg]:w-auto [&_svg]:max-w-full">
                   <BoardItemErrorBoundary action={figureStrip.action} resetKey={figureStrip}>
-                    <CommandRenderer command={figureStrip as unknown as WhiteboardCommand} />
+                    <ProblemFigure figure={figureStrip} />
                   </BoardItemErrorBoundary>
                 </div>
               </div>

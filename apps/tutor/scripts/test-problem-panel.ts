@@ -55,7 +55,10 @@ async function main() {
     has(stage, /data-testid="problem-figure-strip"/);
     has(stage, /const figureStrip = problemPanel\?\.figure \?\? null;/);
     has(stage, /const stackCard = pagerInCard \|\| figureStrip != null;/);
-    has(stage, /<BoardItemErrorBoundary action=\{figureStrip\.action\} resetKey=\{figureStrip\}>\s*<CommandRenderer command=\{figureStrip as unknown as WhiteboardCommand\} \/>/);
+    has(stage, /<BoardItemErrorBoundary action=\{figureStrip\.action\} resetKey=\{figureStrip\}>\s*<ProblemFigure figure=\{figureStrip\} \/>/);
+    const pf = readSrc('app/tutor/components/session/ProblemFigure.tsx');
+    has(pf, /fit="content"/);
+    has(pf, /<CommandRenderer command=\{figure as unknown as WhiteboardCommand\} \/>/);
     hasNot(stage, /\$\{pagerInCard \? 'flex flex-col' : ''\}/);
   });
   await section('the stage keeps one tree position: never returned under a conditional wrapper', () => {

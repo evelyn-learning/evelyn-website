@@ -283,6 +283,17 @@ function validateGeometry(
 
 // ---------------------------------------------------------------- graph
 
+/** A graph function's source as parseFunctionString reads it: π → pi with its
+ *  products explicit ("2π" → "2*pi", "πx" → "pi*x"), and "3sin(2x)" → "3*sin(2x)"
+ *  (the parser's function-name lookbehind rejects a leading digit). */
+export function explicitFunctionSource(src: string): string {
+  return src.replace(/π/g, 'pi').replace(/([\d)])\s*(?=pi\b)/g, '$1*').replace(/\bpi(?=[A-Za-z(])/g, 'pi*')
+    .replace(/([\dx)])\s*(?=\\?(?:sin|cos|tan|sqrt|abs|log)\b)/g, '$1*').replace(/\\(?=(?:sin|cos|tan|sqrt|abs|log)\b)/g, '');
+}
+
+/** The source of a graph function, whichever field the proposer used. */
+export const functionSourceOf = (f: { expr?: string; latex?: string; fn?: string; expression?: string }): string => f.expr || f.latex || f.fn || f.expression || '';
+
 /** What the board's graph renderer draws (GraphData). Anything else the proposer invents — hw-11 problem 6 sent a box plot as `segments` — is not drawn, so the figure would be empty axes. */
 const GRAPH_DATA_FIELDS = new Set(['title', 'xLabel', 'yLabel', 'xRange', 'yRange', 'xAxisStep', 'yAxisStep', 'functions', 'functionsOfY', 'points', 'annotations', 'shadedRegion', 'inequalities']);
 
@@ -305,9 +316,7 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
     // ("-2cos(πx/2)+3"); the parser knows only "pi", so every point read as off
     // the curve. π becomes pi with its products made explicit ("2π" → "2*pi",
     // "πx" → "pi*x") before the function-name pass.
-    const explicit = src.replace(/π/g, 'pi').replace(/([\d)])\s*(?=pi\b)/g, '$1*').replace(/\bpi(?=[A-Za-z(])/g, 'pi*')
-      .replace(/([\dx)])\s*(?=\\?(?:sin|cos|tan|sqrt|abs|log)\b)/g, '$1*').replace(/\\(?=(?:sin|cos|tan|sqrt|abs|log)\b)/g, '');
-    return { fn: src ? parseFunctionString(explicit) : null, domain: f.domain };
+    return { fn: src ? parseFunctionString(explicitFunctionSource(src)) : null, domain: f.domain };
   });
   for (const p of data.points ?? []) {
     const onCurve = evals.some((e) => {

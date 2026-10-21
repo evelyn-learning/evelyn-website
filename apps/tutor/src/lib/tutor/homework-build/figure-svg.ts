@@ -3,8 +3,9 @@
  * thumbnails (GAC acceptance 2026-10-21: the "Figure ready" box should show
  * a miniature of the figure). Rendered once at build time with the board's
  * own GeometryRenderer through react-dom/server, so the thumbnail IS the
- * figure the student will see on the board. Graphs (Desmos, client-only)
- * have none. Never throws: a figure that cannot be rendered has no thumbnail.
+ * figure the student will see on the board, cropped to its content. A graph
+ * (Desmos on the board) is drawn by graph-svg.ts from the same data. Never
+ * throws: a figure that cannot be rendered has no thumbnail.
  *
  * The title is left out: it is an InlineMathText (a client component with
  * KaTeX), and a thumbnail does not need it. The board's sizing classes and inline max
@@ -15,6 +16,7 @@ import { version as reactVersion } from 'react';
 import { renderGeometryTree } from '@/app/tutor/components/whiteboard/GeometryRenderer';
 import { solveGeometry, type ConstructedGeometrySpec } from '../diagrams/geometry-solver';
 import type { FigureCommand } from './types';
+import { graphToSvg } from './graph-svg';
 
 /** Mirrors the academy's cap on the stored copy. */
 export const FIGURE_SVG_MAX_CHARS = 65_536;
@@ -58,13 +60,19 @@ async function renderToStaticMarkup(el: JSX.Element): Promise<string> {
 }
 
 export async function figureToSvg(figure: FigureCommand | null | undefined): Promise<string | null> {
-  if (!figure || figure.action !== 'showGeometryConstructed') return null;
+  if (!figure) return null;
+  if (figure.action === 'showGraph') {
+    const svg = graphToSvg(figure.data);
+    return svg && svg.length <= FIGURE_SVG_MAX_CHARS ? svg : null;
+  }
+  if (figure.action !== 'showGeometryConstructed') return null;
   try {
     const solved = solveGeometry({ given: figure.given, steps: figure.steps, display: figure.display } as ConstructedGeometrySpec);
     const html = await renderToStaticMarkup(renderGeometryTree({
       points: solved.points, segments: solved.segments, polygons: solved.polygons, circles: solved.circles,
       arcs: solved.arcs, angles: solved.angles, conics: solved.conics,
       showGrid: solved.showGrid, showAxes: solved.showAxes, viewRange: solved.viewRange,
+      fit: 'content',
     }));
     const m = html.match(/<svg[\s\S]*<\/svg>/);
     if (!m) return null;

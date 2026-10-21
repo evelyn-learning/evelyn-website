@@ -52,6 +52,11 @@ interface GeometryRendererProps {
   showAxes?: boolean;
   viewRange?: { x: [number, number]; y: [number, number] };
   className?: string;
+  /** 'content' (GAC 2026-10-21): the svg's viewBox is the drawn content's box, not
+   *  the whole 500×400 canvas — a wide, short figure (two parallel lines and a
+   *  triangle) fills a small frame instead of sitting tiny in its padding. Off
+   *  when axes or a grid are drawn: there the plane itself is the figure. */
+  fit?: 'canvas' | 'content';
 }
 
 // ─── Coordinate helpers ──────────────────────────────────────────────────────
@@ -1513,11 +1518,11 @@ const NONE: never[] = [];
 /** The board component: one memo over the whole tree (same deps as before). */
 export function GeometryRenderer({
   title, points, segments = NONE, polygons = NONE, circles = NONE, arcs = NONE, angles = NONE, conics = NONE,
-  showGrid = false, showAxes = false, viewRange, className = '',
+  showGrid = false, showAxes = false, viewRange, className = '', fit = 'canvas',
 }: GeometryRendererProps) {
   return useMemo(
-    () => renderGeometryTree({ title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className }),
-    [title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className],
+    () => renderGeometryTree({ title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className, fit }),
+    [title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className, fit],
   );
 }
 
@@ -1539,6 +1544,7 @@ export function renderGeometryTree({
   showAxes = false,
   viewRange,
   className = '',
+  fit = 'canvas',
 }: GeometryRendererProps): JSX.Element {
   // Build point lookup map
   const ptMap = buildPointMap(points);
@@ -1627,15 +1633,38 @@ export function renderGeometryTree({
     return labelBoxes.some((lb) => Math.abs(lb.x + lb.w / 2 - ox) < 30 && Math.abs(lb.y - oy) < 20);
   })();
 
+  // fit="content": the box around everything drawn, in svg units, padded and
+  // clamped to the canvas. Null when there is nothing to crop to.
+  const contentBox = (() => {
+    if (fit !== 'content' || showAxes || showGrid) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const add = (x: number, y: number, pad = 0) => {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+      x0 = Math.min(x0, x - pad); y0 = Math.min(y0, y - pad); x1 = Math.max(x1, x + pad); y1 = Math.max(y1, y + pad);
+    };
+    const scale = Math.abs(toSvg(1, 0)[0] - toSvg(0, 0)[0]);
+    for (const p of points) { const [sx, sy] = toSvg(p.x, p.y); add(sx, sy, p.hidden ? 0 : 8); }
+    for (const c of circles) { const ctr = ptMap.get(c.center); if (ctr) { const [sx, sy] = toSvg(ctr.x, ctr.y); add(sx, sy, c.radius * scale + 2); } }
+    for (const a of arcs) { const ctr = ptMap.get(a.center); if (ctr) { const [sx, sy] = toSvg(ctr.x, ctr.y); add(sx, sy, a.radius * scale + 2); } }
+    for (const cn of conics) { const ctr = ptMap.get(cn.center); if (ctr) { const [sx, sy] = toSvg(ctr.x, ctr.y); add(sx, sy, 2 * Math.max(cn.a, cn.b ?? cn.a) * scale); } }
+    for (const an of angles) { const v = ptMap.get(an.vertex); if (v) { const [sx, sy] = toSvg(v.x, v.y); add(sx, sy, 32); } }
+    for (const lb of labelBoxes) { add(lb.x, lb.y - lb.h); add(lb.x + lb.w, lb.y + lb.h); }
+    if (!Number.isFinite(x0) || !Number.isFinite(y0)) return null;
+    const PAD = 14;
+    const bx = Math.max(0, x0 - PAD), by = Math.max(0, y0 - PAD);
+    const bw = Math.min(SVG_WIDTH, x1 + PAD) - bx, bh = Math.min(SVG_HEIGHT, y1 + PAD) - by;
+    return bw > 24 && bh > 24 ? { x: bx, y: by, w: bw, h: bh } : null;
+  })();
+
   return (
     <div className={`geometry-renderer ${className}`}>
       {title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-1"><InlineMathText text={title} /></div>
       )}
       <svg
-        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
+        viewBox={contentBox ? `${contentBox.x} ${contentBox.y} ${contentBox.w} ${contentBox.h}` : `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
         className="w-full h-auto"
-        style={{ maxWidth: SVG_WIDTH, maxHeight: SVG_HEIGHT }}
+        style={{ maxWidth: contentBox ? contentBox.w : SVG_WIDTH, maxHeight: contentBox ? contentBox.h : SVG_HEIGHT }}
       >
         {/* Background */}
         <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill="#fafbfc" rx={4} />
