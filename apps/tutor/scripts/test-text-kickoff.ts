@@ -6,7 +6,7 @@ import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuri
 
 let passed = 0, failed = 0;
 const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log(`${c ? '✓' : '✗'} ${n}`); };
-const base = { sessionMode: 'text', sessionGoal: 'concept-review', tutorOpens: false, homeworkReady: false, hasPlanId: true, planLoaded: true };
+const base = { sessionMode: 'text', sessionGoal: 'concept-review', tutorOpens: false, homeworkReady: false, hasPlanId: true, planLoaded: true, homeworkProblem: false };
 
 assert(!textKickoffReady({ ...base, sessionMode: 'voice', tutorOpens: true }), 'voice never kicks off');
 assert(textKickoffReady({ ...base, sessionGoal: 'homework-help', homeworkReady: true }), 'round 2: homework problems kick off without the claim');

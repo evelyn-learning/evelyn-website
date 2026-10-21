@@ -48,6 +48,7 @@ import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } fro
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
+import type { HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
@@ -1323,6 +1324,10 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime's onHomeworkProgress. Stays null for non-homework
   // plans (the callback never fires for them).
   const [homeworkProgress, setHomeworkProgress] = useState<{ current: number; total: number; text?: string } | null>(null);
+  // One-problem homework (2026-10-20): the `homework-problem` plan's problem,
+  // reported by VoiceTutorRealtime's onHomeworkProblem; null for every other
+  // plan. Drives the stage's ProblemPanel.
+  const [homeworkProblem, setHomeworkProblem] = useState<HomeworkProblemMeta | null>(null);
   // Which lesson-plan id's fetch has settled (loaded or failed). While the
   // selected plan is still loading, a homework session shows "Getting your
   // first problem ready…"; once it settles with no homework plan (fetch
@@ -1688,6 +1693,7 @@ export default function TutorSession(props: TutorSessionProps) {
         thinkingCue={thinkingCue}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onHomeworkProgress={setHomeworkProgress}
+        onHomeworkProblem={setHomeworkProblem}
         onLessonPlanLoadSettled={setSettledPlanId}
         segmentLabels={segmentLabels}
         onTutorBusy={handleTutorBusy}
@@ -2084,6 +2090,7 @@ export default function TutorSession(props: TutorSessionProps) {
         sessionMode={sessionMode}
         sessionGoal={sessionGoal}
         homeworkProgress={homeworkProgress}
+        problemPanel={homeworkProblem}
         homeworkPlanPending={!!selectedLessonPlanId && settledPlanId !== selectedLessonPlanId}
         // Host-supplied `title` (in-flow embeds) wins over the plan's title; otherwise unchanged.
         lessonTitle={lessonContext?.title ?? (lessonProgress.plan ? lessonProgress.plan.title : topicLabel)}

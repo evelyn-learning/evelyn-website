@@ -7,39 +7,13 @@
  * homework-build collection).
  */
 
-import type { FigureCommand } from '../homework-build/types';
 import { buildRecapSegment } from './generate-from-text';
 import { parseLessonPlan } from './parser';
 import { LESSON_PLAN_SCHEMA_VERSION } from './types';
 import type { LessonPlan } from './types';
+import { HOMEWORK_PROBLEM_KIND, type HomeworkProblemMeta } from './homework-problem-meta';
 
-export const HOMEWORK_PROBLEM_KIND = 'homework-problem' as const;
-
-export interface HomeworkProblemMeta {
-  kind: typeof HOMEWORK_PROBLEM_KIND;
-  parentPlanId: string;
-  n: number;
-  text: string;
-  figure: FigureCommand | null;
-  verified: boolean;
-  priorNote?: string;
-}
-
-/** Read the problem metadata back off a plan, or null when it isn't a one-problem plan. */
-export function homeworkProblemOf(plan: { metadata?: Record<string, unknown> } | null | undefined): HomeworkProblemMeta | null {
-  const m = plan?.metadata;
-  if (!m || m.kind !== HOMEWORK_PROBLEM_KIND) return null;
-  if (typeof m.parentPlanId !== 'string' || typeof m.n !== 'number' || typeof m.text !== 'string') return null;
-  return {
-    kind: HOMEWORK_PROBLEM_KIND,
-    parentPlanId: m.parentPlanId,
-    n: m.n,
-    text: m.text,
-    figure: (m.figure ?? null) as FigureCommand | null,
-    verified: m.verified === true,
-    ...(typeof m.priorNote === 'string' ? { priorNote: m.priorNote } : {}),
-  };
-}
+export { HOMEWORK_PROBLEM_KIND, homeworkProblemOf, type HomeworkProblemMeta } from './homework-problem-meta';
 
 /** Pure: build (and parse) the one-problem plan under `planId`. Does not persist. */
 export function buildHomeworkProblemPlan(

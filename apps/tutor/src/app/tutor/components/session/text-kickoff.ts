@@ -1,7 +1,8 @@
 /** Round 4 (E5): when the text-mode tutor speaks first. Round 2: a homework
  *  session once its problems are loaded. Round 4: ANY goal when the host sets
  *  the `tutor_opens` claim — once the plan is loaded, or at once when there is
- *  no plan. Voice never (the mic tap starts it). Pure. */
+ *  no plan. 2026-10-20: a one-problem homework plan, once loaded. Voice
+ *  never (the mic tap starts it). Pure. */
 export function textKickoffReady(i: {
   sessionMode: string;
   sessionGoal: string;
@@ -9,9 +10,13 @@ export function textKickoffReady(i: {
   homeworkReady: boolean;
   hasPlanId: boolean;
   planLoaded: boolean;
+  /** 2026-10-20: the plan is a one-problem `homework-problem` plan — the
+   *  tutor opens on that problem once the plan is loaded. */
+  homeworkProblem: boolean;
 }): boolean {
   if (i.sessionMode !== 'text') return false;
   if (i.sessionGoal === 'homework-help' && i.homeworkReady) return true;
+  if (i.homeworkProblem && i.planLoaded) return true;
   if (!i.tutorOpens) return false;
   return i.hasPlanId ? i.planLoaded : true;
 }

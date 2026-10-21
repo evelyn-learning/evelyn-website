@@ -115,6 +115,8 @@ import {
 } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
+import { homeworkProblemOf, type HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
+import { formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
 import { recordSolved, sanitizeSolvedPositions, solvedPositionsFromCheck, inferProblemMoveFromReply } from '@/lib/tutor/lesson-plan/homework-ledger';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
@@ -927,6 +929,10 @@ interface VoiceTutorRealtimeProps {
    *  `current` is the 1-based list POSITION, not the worksheet label;
    *  `text` is that problem's verbatim wording (the rail shows a prefix). */
   onHomeworkProgress?: (p: { current: number; total: number; text?: string } | null) => void;
+  /** One-problem homework (2026-10-20): the `homework-problem` plan's problem
+   *  (text, figure, verified) when such a plan arrives; null when it is
+   *  swapped for another plan. Never fires for sessions without one. */
+  onHomeworkProblem?: (meta: HomeworkProblemMeta | null) => void;
   /** Fires once the lesson-plan fetch for `lessonPlanId` has SETTLED —
    *  loaded, not found, unusable, or failed — so the parent can stop
    *  showing "plan on its way" copy (homework pre-start) when no plan will
@@ -1292,6 +1298,7 @@ export function VoiceTutorRealtime({
   thinkingCue = false,
   onLessonPlanProgress,
   onHomeworkProgress,
+  onHomeworkProblem,
   onLessonPlanLoadSettled,
   segmentLabels,
   onTutorBusy,
@@ -2696,6 +2703,25 @@ export function VoiceTutorRealtime({
   );
   const homeworkProblemsRef = useRef<HomeworkProblem[] | null>(null);
   const homeworkCurrentRef = useRef(1);
+  // One-problem homework (2026-10-20): a `homework-problem` plan's problem,
+  // null for every other plan. Shown in the stage's ProblemPanel; the ref
+  // gates the client's own follow-up turns/notes in this mode (the
+  // correction-note volunteer turn, the board-anchor net, the
+  // segment-overlong note), read by helpers declared far above their use.
+  const homeworkProblem = useMemo<HomeworkProblemMeta | null>(() => homeworkProblemOf(activePlan), [activePlan]);
+  const homeworkProblemRef = useRef<HomeworkProblemMeta | null>(null);
+  homeworkProblemRef.current = homeworkProblem;
+  // `homework_problem_done` is recorded once per session (the server sends
+  // its frame on every turn once every key part is confirmed).
+  const homeworkProblemDoneRecordedRef = useRef(false);
+  const onHomeworkProblemRef = useRef(onHomeworkProblem);
+  onHomeworkProblemRef.current = onHomeworkProblem;
+  const homeworkProblemReportedRef = useRef(false);
+  useEffect(() => {
+    if (!homeworkProblem && !homeworkProblemReportedRef.current) return;
+    homeworkProblemReportedRef.current = !!homeworkProblem;
+    onHomeworkProblemRef.current?.(homeworkProblem);
+  }, [homeworkProblem]);
   // 2026-10-20 (GAC Geometry upload portal-0886d151): the one place the
   // current problem moves — from the set_current_problem tool, or inferred
   // from a reply that announced a move in words without calling it (the
@@ -4592,6 +4618,12 @@ export function VoiceTutorRealtime({
       // student was asked to find). A timer left over from an earlier note
       // must not volunteer it either.
       if (relationStepNoteRef.current?.note === pendingJudgeCorrectionNoteRef.current) return;
+      // 2026-10-20: a one-problem homework session issues no correction
+      // follow-up turn — the note waits for the student's next real turn.
+      if (homeworkProblemRef.current) {
+        onDebugEvent?.('judge_correction_note_timeout_skipped_homework_problem', 'note held for the student\'s next turn');
+        return;
+      }
       // Read through refs, never through the callbacks/consts declared later
       // in this component — this helper sits ~11k lines ABOVE them, so naming
       // one in a dep array would evaluate it at render time and throw
@@ -11737,6 +11769,9 @@ export function VoiceTutorRealtime({
       // 2026-10-08c: one retry per turn for a reply that stated the result
       // of the whole problem (the server's `answer-reveal` frame).
       let wholeAnswerRevealKillUsed = false;
+      // 2026-10-20: one-problem homework — a keyed verdict is recorded once
+      // per part per turn (a retried attempt re-sends the same frame).
+      const keyedVerdictPartsThisTurn = new Set<string>();
       // 2026-10-06b: the spoken-region kill (text) also fires once per turn.
       let spokenRegionKillUsed = false;
       let openerBackstopShape: TurnShape | null | undefined;
@@ -16891,6 +16926,20 @@ export function VoiceTutorRealtime({
                   // Voice: the check failed, timed out or was unsure.
                   onDebugEvent?.('verdict_precheck_none', `ms=${Number((ev as { ms?: number }).ms ?? 0)}`);
                   settleVoiceGate(null);
+                } else if ((ev as { type?: string }).type === 'homework-keyed-verdict') {
+                  // One-problem homework (2026-10-20): the server's keyed
+                  // verdict for one part — read back by the outcome route.
+                  const kv = ev as { part?: unknown; verdict?: unknown };
+                  if ((kv.verdict === 'correct' || kv.verdict === 'incorrect') && !keyedVerdictPartsThisTurn.has(String(kv.part ?? ''))) {
+                    keyedVerdictPartsThisTurn.add(String(kv.part ?? ''));
+                    onDebugEvent?.('homework_keyed_verdict', formatKeyedVerdictDebug(String(kv.part ?? ''), kv.verdict));
+                  }
+                } else if ((ev as { type?: string }).type === 'homework-problem-done') {
+                  // Every key part confirmed. Sent on every turn from then on; recorded once.
+                  if (!homeworkProblemDoneRecordedRef.current) {
+                    homeworkProblemDoneRecordedRef.current = true;
+                    onDebugEvent?.('homework_problem_done', 'all key parts confirmed');
+                  }
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   // `||` not `??`: a give-up done frame (stop=error) can carry
@@ -18543,7 +18592,8 @@ export function VoiceTutorRealtime({
         // the recap and close the session after problem 4 of 10. In a homework
         // session the <homework_session> block owns pacing (problem by problem);
         // the segment-advance note never applies.
-        const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0;
+        // 2026-10-20: a one-problem homework plan paces by its one problem too.
+        const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;
         if (homeworkSession && !cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS) {
           cur.noted = true;
           onDebugEvent?.('segment_overlong_note_skipped_homework', `${segIdNow} after ${cur.turns} turns — homework session paces by problem`);
@@ -18564,7 +18614,9 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
         }
       }
-      if (TUTOR_BOARD_ANCHOR_NET) {
+      // 2026-10-20: not in a one-problem homework session — the problem and
+      // its figure are already on screen in the ProblemPanel.
+      if (TUTOR_BOARD_ANCHOR_NET && !homeworkProblemRef.current) {
         const finalQuestion = lastQuestionSentence(fullText);
         const paintedContent = totalToolNamesSeen.some((n) => isBoardContentTool(n));
         if (finalQuestion && !paintedContent && isSubstantiveAsk(finalQuestion)) {
@@ -24546,6 +24598,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     homeworkReady,
     hasPlanId: !!lessonPlanId,
     planLoaded: !!activePlan,
+    homeworkProblem: !!homeworkProblem,
   });
   const homeworkKickoffPendingRef = useRef(false);
   useEffect(() => {

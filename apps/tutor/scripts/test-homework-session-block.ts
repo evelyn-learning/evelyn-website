@@ -116,7 +116,7 @@ if (noAns.includes(ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX)) fail('no expectedAnsw
 // skipped whenever the session carries homework problems.
 {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8') as string;
-  const at = src.indexOf('const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0;');
+  const at = src.indexOf('const homeworkSession = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;');
   const window = at >= 0 ? src.slice(at, at + 1400) : '';
   if (at < 0) fail('overlong note: homeworkSession guard missing from VoiceTutorRealtime');
   if (!window.includes("segment_overlong_note_skipped_homework")) fail('overlong note: homework skip must be observable (debug event)');

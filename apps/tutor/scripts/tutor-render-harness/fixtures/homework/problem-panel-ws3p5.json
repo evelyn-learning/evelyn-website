@@ -1,0 +1,114 @@
+[
+  {
+    "label": "problem-panel-ws3p5",
+    "tool": "show_geometry_constructed",
+    "expect": "render",
+    "args": {
+      "given": [
+        {
+          "id": "A",
+          "kind": "point",
+          "x": 0,
+          "y": 5,
+          "label": "A"
+        },
+        {
+          "id": "B",
+          "kind": "point",
+          "x": -3,
+          "y": 0,
+          "label": "B"
+        },
+        {
+          "id": "C",
+          "kind": "point",
+          "x": 3,
+          "y": 0,
+          "label": "C"
+        }
+      ],
+      "steps": [
+        {
+          "id": "D",
+          "kind": "section_point",
+          "of": {
+            "from": "A",
+            "to": "B"
+          },
+          "ratio": [
+            6,
+            9
+          ],
+          "label": "D"
+        },
+        {
+          "id": "E",
+          "kind": "section_point",
+          "of": {
+            "from": "A",
+            "to": "C"
+          },
+          "ratio": [
+            12,
+            18
+          ],
+          "label": "E"
+        },
+        {
+          "id": "AB",
+          "kind": "segment",
+          "from": "A",
+          "to": "B"
+        },
+        {
+          "id": "AC",
+          "kind": "segment",
+          "from": "A",
+          "to": "C"
+        },
+        {
+          "id": "BC",
+          "kind": "segment",
+          "from": "B",
+          "to": "C",
+          "label": "BC = 15"
+        },
+        {
+          "id": "DE",
+          "kind": "segment",
+          "from": "D",
+          "to": "E",
+          "label": "DE = 9"
+        },
+        {
+          "id": "AD",
+          "kind": "segment",
+          "from": "A",
+          "to": "D",
+          "label": "AD = 6"
+        },
+        {
+          "id": "DB",
+          "kind": "segment",
+          "from": "D",
+          "to": "B",
+          "label": "DB = x"
+        },
+        {
+          "id": "AE",
+          "kind": "segment",
+          "from": "A",
+          "to": "E",
+          "label": "AE = 12"
+        },
+        {
+          "id": "EC",
+          "kind": "segment",
+          "from": "E",
+          "to": "C",
+          "label": "EC = y"
+        }
+      ]
+    }
+  }
+]

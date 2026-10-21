@@ -22,6 +22,7 @@ import TutorSession from '@/app/tutor/components/session/TutorSession';
 import { type TutorMilestone, type TutorResumeState, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import { homeworkProblemOf } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { endedDurationSeconds, readActiveSecondsField } from '@/lib/tutor/recordings/active-seconds';
@@ -359,6 +360,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // 2026-10-19 homework ledger: each problem the answer check found solved
   // (also the record a resumed page rebuilds the ledger from).
   'homework_problem_solved',
+  // 2026-10-20 one-problem homework: each keyed verdict and the once-only
+  // "every key part confirmed" — the homework-problem outcome route reads both.
+  'homework_keyed_verdict', 'homework_problem_done',
   // ('opener_' above covers opener_stall_retry; 'judge' covers
   // judge_precheck_disagreement — a judge issue set aside because a
   // high-confidence answer pre-check and the tutor agreed.)
@@ -1286,6 +1290,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       activeSeconds((Date.now() - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, Date.now()),
       priorActiveSecRef.current,
     );
+    const homeworkProblem = homeworkProblemOf(planRef.current);
     // Post message to parent window for partner integration
     window.parent.postMessage({
       type: 'evelyn:session_ended',
@@ -1311,6 +1316,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // Final lesson position (contract v1.2.0). Omitted for free-conversation
         // sessions with no plan (lessonProgressRef stays null).
         ...(lessonProgressRef.current ? { lesson_progress: lessonProgressRef.current } : {}),
+        // One-problem homework (2026-10-20, additive, informational): which
+        // problem of which sheet this session was. The academy keeps its own
+        // Session row; absent for every other plan.
+        ...(homeworkProblem ? { homework_problem: { parent_plan_id: homeworkProblem.parentPlanId, n: homeworkProblem.n } } : {}),
         // Opener-recency loop (part B): which opener the tutor used this
         // session — the academy stores it and round-trips it as the next
         // session's last_opener. Only present when the pedagogy flag is on

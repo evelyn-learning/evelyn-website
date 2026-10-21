@@ -40,6 +40,8 @@ import {
 } from './stage-geometry';
 import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import type { SessionGoal } from '@/lib/tutor/types';
+import type { HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
+import { ProblemPanel } from './ProblemPanel';
 
 /** Layout effect on the client (measure before paint), plain effect on the
  *  server (where useLayoutEffect warns and cannot run). */
@@ -231,6 +233,11 @@ export interface SessionStageProps {
    *  will ever fire, so the pre-start copy falls back to "Type your
    *  question below to start". */
   homeworkPlanPending?: boolean;
+  /** One-problem homework (`homework-problem` plan, 2026-10-20): the problem
+   *  shown in the fixed ProblemPanel beside the board. Set ⇒ the stage sits
+   *  in a flex row with the panel and the homework rail chip is not shown.
+   *  Absent/null ⇒ the stage renders exactly as before. */
+  problemPanel?: Pick<HomeworkProblemMeta, 'n' | 'text' | 'figure' | 'verified'> | null;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -265,7 +272,7 @@ export default function SessionStage(props: SessionStageProps) {
     agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
     boardPenActive, onToggleBoardPen, onOrbStart, onDebugEvent,
-    sessionGoal, homeworkProgress, homeworkPlanPending,
+    sessionGoal, homeworkProgress, homeworkPlanPending, problemPanel,
   } = props;
 
   // Homework mode (GreenApple round 2): a single "Problem n of N · <text>"
@@ -274,7 +281,8 @@ export default function SessionStage(props: SessionStageProps) {
   // clearance, tool cluster / switcher / qpin anchors, transcript panel
   // top) so the homework chip reserves exactly the same ~40px row. Other
   // goals: railEl === agendaRail, byte-identical behaviour.
-  const homeworkRail: ReactNode = sessionGoal === 'homework-help' && homeworkProgress
+  // A one-problem session (problemPanel) shows its problem in the panel, not the chip.
+  const homeworkRail: ReactNode = !problemPanel && sessionGoal === 'homework-help' && homeworkProgress
     ? (() => {
         const raw = (homeworkProgress.text ?? '').replace(/\s+/g, ' ').trim();
         const snippet = raw.length > 40 ? `${raw.slice(0, 40).trimEnd()}…` : raw;
@@ -1094,10 +1102,12 @@ export default function SessionStage(props: SessionStageProps) {
             </button>
   );
 
-  return (
+  const stage = (
     <div
       ref={stageRef}
-      className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col"
+      className={problemPanel
+        ? 'relative flex-1 min-w-0 min-h-0 overflow-hidden bg-white select-none session-stage flex flex-col'
+        : 'fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col'}
       style={sessionMode === 'text' ? ({ ['--ss-tools-top' as string]: `${textToolsTopPx}px`, ['--ss-panel-top' as string]: `${textPanelTopPx}px` } as CSSProperties) : undefined}
     >
       <style>{`
@@ -2035,6 +2045,16 @@ export default function SessionStage(props: SessionStageProps) {
           <div className="absolute inset-0">{transcript}</div>
         </div>
       </div>
+    </div>
+  );
+
+  // One-problem homework: the panel beside (desktop) / above (phone) the
+  // stage. Every other session returns the stage itself, unchanged.
+  if (!problemPanel) return stage;
+  return (
+    <div className="fixed inset-0 flex flex-col md:flex-row bg-white" data-testid="problem-session">
+      <ProblemPanel n={problemPanel.n} text={problemPanel.text} figure={problemPanel.figure} verified={problemPanel.verified} />
+      {stage}
     </div>
   );
 }
