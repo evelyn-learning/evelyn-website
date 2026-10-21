@@ -6,25 +6,22 @@
  * whole session, so the tutor never redraws them and the student never has
  * to scroll the board to find what they are solving.
  *
- *  - Desktop (md+): a fixed left column, the text above the figure (4:3).
- *  - Phone: a collapsible sheet above the board, collapsed by default, its
+ *  - Desktop (xl+): a fixed left column holding the text.
+ *  - Below xl: a collapsible sheet above the board, collapsed by default, its
  *    header "Problem n ▾" (▴ when open; the open sheet overlays the board).
- *  - With a figure drawn, the read's bracketed figure description is left
- *    out of the text (problemTextForDisplay) — it can state what the
- *    student is asked to read off the figure.
+ *  - The figure itself is NOT here (GAC acceptance 2026-10-21): it is pinned
+ *    above the board in SessionStage (problem-figure-strip) at every width,
+ *    where the student works. With a figure drawn, the read's bracketed
+ *    figure description is left out of the text (problemTextForDisplay) —
+ *    it can state what the student is asked to read off the figure.
  *
- * The figure is the stored `FigureCommand`, drawn by the whiteboard's own
- * renderer inside the board item error boundary — a bad spec costs the
- * figure, never the page. `verified` only decides the one-line note; the
- * answer key never reaches the client.
+ * `verified` only decides the one-line note; the answer key never reaches
+ * the client.
  */
 'use client';
 
 import { useState } from 'react';
-import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FigureCommand } from '@/lib/tutor/homework-build/types';
-import { CommandRenderer } from '../whiteboard/WhiteboardCanvas';
-import { BoardItemErrorBoundary } from '../whiteboard/BoardItemErrorBoundary';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { problemTextForDisplay } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 
@@ -68,15 +65,6 @@ export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
         <div className="text-[15px] leading-relaxed text-slate-900">
           <InlineMathText text={problemTextForDisplay(text, !!figure)} wrap />
         </div>
-        {figure && (
-          <div className="mt-4 w-full aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 bg-white flex items-center justify-center">
-            <div className="w-full h-full">
-              <BoardItemErrorBoundary action={figure.action} resetKey={figure}>
-                <CommandRenderer command={figure as unknown as WhiteboardCommand} />
-              </BoardItemErrorBoundary>
-            </div>
-          </div>
-        )}
         {!verified && (
           <p className="mt-3 text-xs text-slate-500">No answer check for this one yet — your tutor will work it through with you.</p>
         )}

@@ -2119,7 +2119,11 @@ export default function TutorSession(props: TutorSessionProps) {
           />
         )}
         adaptiveMenu={adaptiveMenuEl}
-        endControl={endControlVisible ? endControlEl : null}
+        {/* GAC acceptance 2026-10-21: a one-problem homework session has the
+            host's two controls — "I've finished this problem" (finish) and
+            "Back to list" (pause) — so End/Pause was a third button for the
+            same two actions. */}
+        endControl={endControlVisible && !homeworkProblem ? endControlEl : null}
         questionPin={questionPinEl ?? momentBannerEl}
         questionPinKey={questionPinEl && questionPin ? questionPin.turnId : momentBannerEl && momentBannerState ? `moment-${momentBannerState.id}` : undefined}
         hiccupPin={hiccupPinEl}

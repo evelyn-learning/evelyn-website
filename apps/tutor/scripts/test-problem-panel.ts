@@ -30,15 +30,14 @@ async function main() {
     has(panel, /export function ProblemPanel\(/);
     has(panel, /export interface ProblemPanelProps\s*\{[^}]*n: number;[^}]*text: string;[^}]*figure: FigureCommand \| null;[^}]*verified: boolean;[^}]*collapsed\?: boolean;[^}]*onToggle\?: \(\) => void/);
   });
-  await section('imports CommandRenderer, InlineMathText and the board error boundary', () => {
-    has(panel, /import \{[^}]*\bCommandRenderer\b[^}]*\} from '\.\.\/whiteboard\/WhiteboardCanvas'/);
-    has(panel, /import \{ InlineMathText \} from '\.\.\/whiteboard\/InlineMathText'/);
-    has(panel, /<BoardItemErrorBoundary[\s\S]*<CommandRenderer[\s\S]*<\/BoardItemErrorBoundary>/);
+  await section('the panel holds the text only; the figure is pinned above the board (stage strip)', () => {
+    hasNot(panel, /CommandRenderer/);
+    hasNot(panel, /aspect-\[4\/3\]/);
+    has(panel, /InlineMathText/);
   });
-  await section('layout: desktop column width, select-text, 4:3 figure box, phone header', () => {
+  await section('layout: desktop column width, select-text, phone header', () => {
     has(panel, /w-\[min\(38vw,440px\)\]/);
     has(panel, /select-text/);
-    has(panel, /aspect-\[4\/3\]/);
     has(panel, /Problem \{n\} \{collapsed \? '▾' : '▴'\}/);
   });
   await section('unverified line is the ruled sentence, and there is no checking state', () => {
@@ -51,6 +50,13 @@ async function main() {
   await section('has a problemPanel prop and renders ProblemPanel', () => {
     has(stage, /problemPanel\?:/);
     has(stage, /<ProblemPanel\b/);
+  });
+  await section('the figure is pinned above the board inside the board card, through the item error boundary', () => {
+    has(stage, /data-testid="problem-figure-strip"/);
+    has(stage, /const figureStrip = problemPanel\?\.figure \?\? null;/);
+    has(stage, /const stackCard = pagerInCard \|\| figureStrip != null;/);
+    has(stage, /<BoardItemErrorBoundary action=\{figureStrip\.action\} resetKey=\{figureStrip\}>\s*<CommandRenderer command=\{figureStrip as unknown as WhiteboardCommand\} \/>/);
+    hasNot(stage, /\$\{pagerInCard \? 'flex flex-col' : ''\}/);
   });
   await section('the stage keeps one tree position: never returned under a conditional wrapper', () => {
     // A plan arrives after the first render; nesting the stage only when
@@ -90,6 +96,9 @@ async function main() {
   await section('TutorSession holds the problem and passes it to the stage', () => {
     has(ts, /onHomeworkProblem=\{setHomeworkProblem\}/);
     has(ts, /problemPanel=\{homeworkProblem\b/);
+  });
+  await section('TutorSession hides End/Pause in a one-problem session (the host has finish and back)', () => {
+    has(ts, /endControl=\{endControlVisible && !homeworkProblem \? endControlEl : null\}/);
   });
 
   console.log('4 text kickoff');
