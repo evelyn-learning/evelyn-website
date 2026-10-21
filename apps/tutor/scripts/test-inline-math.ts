@@ -854,5 +854,11 @@ console.log('\n=== Bubbles wrap un-delimited maths (GAC live 2026-10-16) ===');
   check('plain prose byte-identical', prepareBubbleText('Nice work, keep going!') === 'Nice work, keep going!');
 }
 
+{
+  // GAC acceptance 2026-10-21: "left side (height) $= 8$ cm" on the problem card.
+  check('leading relation "$= 8$" is math', joined('left side (height) $= 8$ cm, bottom (width) $= 14$ cm.') === 'left side (height) ⟨= 8⟩ cm, bottom (width) ⟨= 14⟩ cm.', joined('left side (height) $= 8$ cm, bottom (width) $= 14$ cm.'));
+  check('leading relation with a prose word stays literal', mathBodies('cost $= the fee$ plus tax').length === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

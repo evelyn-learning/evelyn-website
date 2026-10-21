@@ -36,6 +36,15 @@ function looksLikeMath(inner: string): boolean {
     /\S\s*[=<>≤≥≠]\s*\S/.test(inner) &&
     !/[a-z]{3,}/.test(inner)
   ) return true;
+  //   3b. Relation with its left side in the prose (GAC acceptance
+  //      2026-10-21 — the problem card showed literal "height $= 8$ cm"): a
+  //      span that STARTS with a relation symbol and a short operand. The
+  //      prose-word guard keeps "$= the fee$" literal.
+  if (
+    inner.length <= 24 &&
+    /^[=<>≤≥≠≈]\s*\S/.test(inner) &&
+    !/[a-z]{3,}/.test(inner)
+  ) return true;
   //   4. Coordinate tuple (2026-07-17 — live AP Calc card showed literal
   //      "$(1,-1)$"): a parenthesized, comma-separated list of short
   //      operands (numbers, decimals, negatives, single identifiers).
