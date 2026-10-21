@@ -1615,7 +1615,7 @@ export function WhiteboardCanvas({
     );
   }
 
-  const currentPage = pages[Math.min(currentIndex, pages.length - 1)];
+  const currentPage = safeCurrentPage;
 
   const headerContent = chrome === 'minimal' ? null : (
     <div className="border-b bg-gray-50 rounded-t-lg flex-shrink-0">

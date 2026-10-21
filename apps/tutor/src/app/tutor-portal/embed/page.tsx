@@ -566,13 +566,39 @@ function mapEngine(_engine?: string): InternalEngine {
   return 'claude-brain';
 }
 
+/** How long a token-less embed inside a host frame waits for the host to
+ *  reload it (evelyn:embed_needs_token) before showing the token error. */
+const EMBED_NEEDS_TOKEN_WAIT_MS = 4000;
+
 function EmbedSession() {
   const searchParams = useSearchParams();
   const tokenParam = searchParams.get('token');
   const config = useMemo(() => parseToken(tokenParam), [tokenParam]);
 
+  // GAC acceptance 2026-10-21 (round 5): after a top-level reload of the
+  // host's page the frame came up as /tutor-portal/embed? — no token — and
+  // the student saw the error below. Inside a host frame, ask the host for a
+  // fresh frame (it reloads us on its current embed URL) and show a neutral
+  // line for a bounded wait; a standalone page with no token still gets the
+  // error at once.
+  const [askingHost, setAskingHost] = useState(false);
+  useEffect(() => {
+    if (config || typeof window === 'undefined' || window.parent === window) return;
+    setAskingHost(true);
+    try { window.parent.postMessage({ type: 'evelyn:embed_needs_token' }, '*'); } catch { /* no host */ }
+    const t = setTimeout(() => setAskingHost(false), EMBED_NEEDS_TOKEN_WAIT_MS);
+    return () => clearTimeout(t);
+  }, [config]);
+
   // If no valid config, show error
   if (!config) {
+    if (askingHost) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 p-8">
+          <p className="text-sm text-gray-500" role="status">Reconnecting to your session…</p>
+        </div>
+      );
+    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-8">
         <div className="max-w-md text-center">

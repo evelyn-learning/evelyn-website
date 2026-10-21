@@ -27,6 +27,7 @@ export const webhookEvents: WebhookEvent[] = [
  * src/lib/tutor/portal/host-end.ts.
  */
 export const inboundEvents: WebhookEvent[] = [
+  { event: 'evelyn:embed_needs_token', trigger: 'The embed loaded inside a host frame without a session token (for example a browser reload that restored the frame without its URL query). The host should reload the frame on its current embed URL; the embed shows a neutral reconnecting line for 4 s, then the token error.', category: 'Session lifecycle', keyFields: [] },
   { event: 'evelyn:host_end', trigger: 'The host wants the session to end (its own finish button, a usage ceiling, an inactivity timeout). The tutor says a one-line goodbye, saves, then posts evelyn:session_ended with ended_reason = reason. Ignored after the first, and once the session is already ending.', category: 'Host → embed', keyFields: ['reason ("finished" | "minutes_exhausted" | "no_input" | "idle" | "paused", top-level; "paused" says a short "saved" line instead of the goodbye)'] },
 ];
 

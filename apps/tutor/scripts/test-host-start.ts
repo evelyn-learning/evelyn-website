@@ -147,6 +147,21 @@ test('embed: host start holds for the video report before startSession', () => {
   assert.ok(run.indexOf('shouldAwaitVideoState(videoWait)') < run.indexOf('h.startSession()'), 'wait precedes the start');
   assert.match(run, /addDebugEvent\('host_start_video_wait'/);
 });
+// GAC acceptance 2026-10-21 (round 5): after a top-level reload of the academy's
+// problem page the frame came up as /tutor-portal/embed? — no token — and the
+// student saw "Invalid Session Token". Inside a host frame the embed now asks
+// the host for a fresh frame (evelyn:embed_needs_token) and shows a neutral
+// reconnecting line for a bounded wait before the error.
+test('a token-less embed inside a host frame asks the host and waits before the error screen', () => {
+  const page = readFileSync(join(__dirname, '../src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  assert.match(page, /const EMBED_NEEDS_TOKEN_WAIT_MS = 4000;/);
+  assert.match(page, /window\.parent\.postMessage\(\{ type: 'evelyn:embed_needs_token' \}, '\*'\)/);
+  assert.match(page, /if \(config \|\| typeof window === 'undefined' \|\| window\.parent === window\) return;/);
+  assert.match(page, /Reconnecting to your session…/);
+  const events = readFileSync(join(__dirname, '../src/app/tutor-portal/data/webhook-events.ts'), 'utf8');
+  assert.match(events, /event: 'evelyn:embed_needs_token'/);
+});
+
 
 console.log(`\n${passed}/${passed + failed} passed`);
 if (failed > 0) process.exit(1);
