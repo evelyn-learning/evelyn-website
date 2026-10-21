@@ -74,7 +74,9 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   'plangen-fast': 'claude-haiku-4-5-20251001',
   // 2026-10-20 (GAC Geometry upload, twice): Sonnet 4.6 put a labelled angle on
   // the wrong side of the transversal in two reads of the same worksheet.
-  'plangen-vision': 'claude-sonnet-5',
+  // 2026-10-20 (GAC uploads, 3 sheets): Sonnet 5 still misplaced angle arcs
+  // against slanted lines (5 figures misread); Praveen chose the Opus read.
+  'plangen-vision': 'claude-opus-5-5',
   taxonomy: 'claude-sonnet-5',
   'content-gen': 'claude-sonnet-5',
   'content-verify': 'claude-sonnet-5',

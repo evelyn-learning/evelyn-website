@@ -22,6 +22,7 @@ export const MODEL_RATES: Record<string, ModelRate> = {
   'claude-haiku-4-5': { input: 1, output: 5, cacheRead: 0.1, cacheWrite5m: 1.25, cacheWrite1h: 2 },
   'claude-haiku-4-5-20251001': { input: 1, output: 5, cacheRead: 0.1, cacheWrite5m: 1.25, cacheWrite1h: 2 },
   'claude-opus-5': { input: 5, output: 25, cacheRead: 0.5, cacheWrite5m: 6.25, cacheWrite1h: 10 },
+  'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2, cacheWrite5m: 5, cacheWrite1h: 8 },
   // Non-Anthropic (priced so a provider swap keeps dashboards honest).
   // DeepSeek V4 Flash — what the `deepseek-chat` alias serves since Aug 2026.
   // PEAK rates (peak = 01:00–04:00 + 06:00–10:00 UTC, which overlaps US-evening

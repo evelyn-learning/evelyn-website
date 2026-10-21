@@ -1211,7 +1211,9 @@ async function main() {
     const { DIAGRAM_RULE } = await import('../src/lib/tutor/lesson-plan/material-extract');
     assert.match(DIAGRAM_RULE, /one angle at a time/);
     const { resolveModel } = await import('../src/lib/tutor/ai/model-registry');
-    assert.equal(resolveModel('plangen-vision').model, 'claude-sonnet-5');
+    assert.equal(resolveModel('plangen-vision').model, 'claude-opus-5-5');
+    const { lookupModelRate } = await import('../src/lib/tutor/ai/model-rates');
+    assert.ok(lookupModelRate('claude-opus-5-5'), 'the read model is priced, so upload cost is recorded');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

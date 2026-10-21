@@ -93,8 +93,10 @@ const HAIKU_MODEL_ID = resolveModel('plangen-fast').model;
 const CONDENSE_MAX_TOKENS = 4096;
 // Vision output scales with how many images are in the batch (more images
 // → more transcription text needed) — see transcribeImagesBatch.
-const VISION_TOKENS_PER_IMAGE = 2500;
-const VISION_MAX_TOKENS_CAP = 8192;
+// Opus 5.5 thinks before it answers and its thinking counts against
+// max_tokens, so the budget is roomier than the transcript alone needs.
+const VISION_TOKENS_PER_IMAGE = 4000;
+const VISION_MAX_TOKENS_CAP = 16000;
 
 // Clients resolve lazily per call via getModelClient(...) rather than a
 // module-load-time `new Anthropic(...)`: in Next.js, env vars are guaranteed
