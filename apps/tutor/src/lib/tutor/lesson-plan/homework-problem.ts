@@ -13,7 +13,7 @@ import { LESSON_PLAN_SCHEMA_VERSION } from './types';
 import type { LessonPlan } from './types';
 import { HOMEWORK_PROBLEM_KIND, type HomeworkProblemMeta } from './homework-problem-meta';
 
-export { HOMEWORK_PROBLEM_KIND, homeworkProblemOf, type HomeworkProblemMeta } from './homework-problem-meta';
+export { HOMEWORK_PROBLEM_KIND, homeworkProblemOf, problemTextForDisplay, type HomeworkProblemMeta } from './homework-problem-meta';
 
 /** Pure: build (and parse) the one-problem plan under `planId`. Does not persist. */
 export function buildHomeworkProblemPlan(

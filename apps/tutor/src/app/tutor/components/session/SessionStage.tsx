@@ -772,7 +772,7 @@ export default function SessionStage(props: SessionStageProps) {
     if (card) ro.observe(card);
     measure();
     return () => ro.disconnect();
-  }, [sessionMode, textToolRail, boardColumnTopPadClass, chipRowShown]);
+  }, [sessionMode, textToolRail, boardColumnTopPadClass, chipRowShown, problemPanel != null]);
   const textBoardTopPx = boardTopPx ?? textPanelTopFallbackPx({ chipRow: chipRowShown });
   const textToolsTopPx = textToolRail ? toolRailTopPx(textBoardTopPx) : legacyTextGeom.toolsTopPx;
   const textPanelTopPx = textToolRail ? textBoardTopPx : legacyTextGeom.panelTopPx;
@@ -1106,7 +1106,7 @@ export default function SessionStage(props: SessionStageProps) {
     <div
       ref={stageRef}
       className={problemPanel
-        ? 'relative flex-1 min-w-0 min-h-0 overflow-hidden bg-white select-none session-stage flex flex-col'
+        ? 'fixed inset-x-0 bottom-0 top-10 md:top-0 md:left-[min(38vw,440px)] overflow-hidden bg-white select-none session-stage flex flex-col'
         : 'fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col'}
       style={sessionMode === 'text' ? ({ ['--ss-tools-top' as string]: `${textToolsTopPx}px`, ['--ss-panel-top' as string]: `${textPanelTopPx}px` } as CSSProperties) : undefined}
     >
@@ -2048,14 +2048,18 @@ export default function SessionStage(props: SessionStageProps) {
     </div>
   );
 
-  // One-problem homework: the panel beside (desktop) / above (phone) the
-  // stage. Every other session returns the stage itself, unchanged.
-  if (!problemPanel) return stage;
+  // One-problem homework: the panel is fixed beside (desktop) / above (phone)
+  // the stage, and the stage root's class makes room for it. The stage keeps
+  // the same tree position for every session (a fragment adds no DOM), so a
+  // plan arriving after the first render never remounts the stage — and with
+  // it VoiceTutorRealtime in the voiceInput slot.
   return (
-    <div className="fixed inset-0 flex flex-col md:flex-row bg-white" data-testid="problem-session">
-      <ProblemPanel n={problemPanel.n} text={problemPanel.text} figure={problemPanel.figure} verified={problemPanel.verified} />
+    <>
+      {problemPanel ? (
+        <ProblemPanel n={problemPanel.n} text={problemPanel.text} figure={problemPanel.figure} verified={problemPanel.verified} />
+      ) : null}
       {stage}
-    </div>
+    </>
   );
 }
 

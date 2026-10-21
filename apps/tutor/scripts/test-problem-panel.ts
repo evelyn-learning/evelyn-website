@@ -39,7 +39,7 @@ async function main() {
     has(panel, /w-\[min\(38vw,440px\)\]/);
     has(panel, /select-text/);
     has(panel, /aspect-\[4\/3\]/);
-    has(panel, /Problem \{n\} ▾/);
+    has(panel, /Problem \{n\} \{collapsed \? '▾' : '▴'\}/);
   });
   await section('unverified line is the ruled sentence, and there is no checking state', () => {
     has(panel, /No answer check for this one yet — your tutor will work it through with you\./);
@@ -52,6 +52,15 @@ async function main() {
     has(stage, /problemPanel\?:/);
     has(stage, /<ProblemPanel\b/);
   });
+  await section('the stage keeps one tree position: never returned under a conditional wrapper', () => {
+    // A plan arrives after the first render; nesting the stage only when
+    // problemPanel is set would remount it (and VoiceTutorRealtime with it).
+    assert.equal((stage.match(/\{stage\}/g) ?? []).length, 1, '{stage} must appear exactly once');
+    hasNot(stage, /return stage;/);
+    has(stage, /return \(\s*<>\s*\{problemPanel \? \(\s*<ProblemPanel[^]*?\) : null\}\s*\{stage\}\s*<\/>\s*\);/);
+    has(stage, /\[sessionMode, textToolRail, boardColumnTopPadClass, chipRowShown, problemPanel != null\]/);
+  });
+  await section('the panel uses the display text', () => has(panel, /problemTextForDisplay\(text, !!figure\)/));
   await section('the homework rail is not rendered when problemPanel is set', () => {
     has(stage, /const homeworkRail: ReactNode = !problemPanel && sessionGoal === 'homework-help' && homeworkProgress/);
   });
@@ -66,7 +75,7 @@ async function main() {
   });
   await section('VTR records the keyed verdict and the done event (once)', () => {
     has(vtr, /type === 'homework-keyed-verdict'/);
-    has(vtr, /onDebugEvent\?\.\('homework_keyed_verdict', formatKeyedVerdictDebug\(/);
+    has(vtr, /onDebugEvent\?\.\((?:KEYED_VERDICT_DEBUG_TYPE|'homework_keyed_verdict'), formatKeyedVerdictDebug\(/);
     has(vtr, /type === 'homework-problem-done'/);
     has(vtr, /if \(!homeworkProblemDoneRecordedRef\.current\) \{\s*homeworkProblemDoneRecordedRef\.current = true;\s*onDebugEvent\?\.\('homework_problem_done', 'all key parts confirmed'\)/);
   });
@@ -103,9 +112,35 @@ async function main() {
   const embed = readSrc('app/tutor-portal/embed/page.tsx');
   await section('session_ended carries homework_problem; both events are persisted', () => {
     has(embed, /homework_problem: \{ parent_plan_id: [^,]+, n: [^}]+\}/);
-    has(embed, /'homework_keyed_verdict'/);
+    has(embed, /KEYED_VERDICT_DEBUG_TYPE|'homework_keyed_verdict'/);
     has(embed, /'homework_problem_done'/);
   });
+
+  console.log('5b problemTextForDisplay');
+  {
+    const { problemTextForDisplay } = await import('../src/lib/tutor/lesson-plan/homework-problem-meta');
+    const P5 = "In △ABC, DE ∥ BC. Find the values of x and y. [Figure: Triangle with A at the top, B at the bottom left, and C at the bottom right. D is on AB and E is on AC. Segment DE is drawn, and both DE and BC carry a single arrow mark (parallel). Labels: AD = 6, DB = x, AE = 12, EC = y, DE = 9, BC = 15.]";
+    const P8 = "The graph of y = a sin(bx) + d is shown. [Graph: The x-axis is marked π/2, π, 3π/2, 2π; the y-axis is marked 4, 2, −2. A horizontal line is drawn at y = 1. The sinusoid starts at x = 0 near y = 1 rising. It peaks at y = 4 near x = π/4, reaches its minimum at y = −2 near x = 3π/4, peaks again at 4 near 5π/4, reaches its minimum at −2 near 7π/4, and rises back to 1 at 2π.]\\n(a) Find the amplitude, period, midline.\\n(b) Find a, b, and d.";
+    await section('P5 with a figure → the question only', () => {
+      assert.equal(problemTextForDisplay(P5, true), 'In △ABC, DE ∥ BC. Find the values of x and y.');
+    });
+    await section('P8 with a figure keeps (a)/(b), loses the [Graph: …] block', () => {
+      const t = problemTextForDisplay(P8, true);
+      assert.ok(t.includes('(a) Find the amplitude, period, midline.'), t);
+      assert.ok(t.includes('(b) Find a, b, and d.'), t);
+      assert.ok(!/Graph:|peaks|y = 4/.test(t), t);
+      assert.ok(t.startsWith('The graph of y = a sin(bx) + d is shown.'), t);
+    });
+    await section('nested brackets are balanced; other brackets stay', () => {
+      const t = 'Solve on [0, 2π]. [Diagram: a curve on [0, 2π] with a mark at [π, 1].]\nThen sketch.';
+      assert.equal(problemTextForDisplay(t, true), 'Solve on [0, 2π].\nThen sketch.');
+      assert.equal(problemTextForDisplay('A [figure: x] B [Figure : y] C', true), 'A B C');
+    });
+    await section('without a figure the text is unchanged', () => {
+      assert.equal(problemTextForDisplay(P5, false), P5);
+      assert.equal(problemTextForDisplay(P8, false), P8);
+    });
+  }
 
   console.log('6 render-harness fixture');
   await section('fixtures/homework/problem-panel-ws3p5.json parses and names show_geometry_constructed', () => {

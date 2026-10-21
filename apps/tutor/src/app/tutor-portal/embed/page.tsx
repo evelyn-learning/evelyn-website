@@ -23,6 +23,7 @@ import { type TutorMilestone, type TutorResumeState, type RealtimeHandle } from 
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { homeworkProblemOf } from '@/lib/tutor/lesson-plan/homework-problem-meta';
+import { KEYED_VERDICT_DEBUG_TYPE } from '@/lib/tutor/voice/keyed-verdict';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { endedDurationSeconds, readActiveSecondsField } from '@/lib/tutor/recordings/active-seconds';
@@ -362,7 +363,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'homework_problem_solved',
   // 2026-10-20 one-problem homework: each keyed verdict and the once-only
   // "every key part confirmed" — the homework-problem outcome route reads both.
-  'homework_keyed_verdict', 'homework_problem_done',
+  KEYED_VERDICT_DEBUG_TYPE, 'homework_problem_done',
   // ('opener_' above covers opener_stall_retry; 'judge' covers
   // judge_precheck_disagreement — a judge issue set aside because a
   // high-confidence answer pre-check and the tutor agreed.)

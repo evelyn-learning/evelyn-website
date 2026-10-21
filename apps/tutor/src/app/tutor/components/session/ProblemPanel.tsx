@@ -8,7 +8,10 @@
  *
  *  - Desktop (md+): a fixed left column, the text above the figure (4:3).
  *  - Phone: a collapsible sheet above the board, collapsed by default, its
- *    header "Problem n ▾".
+ *    header "Problem n ▾" (▴ when open; the open sheet overlays the board).
+ *  - With a figure drawn, the read's bracketed figure description is left
+ *    out of the text (problemTextForDisplay) — it can state what the
+ *    student is asked to read off the figure.
  *
  * The figure is the stored `FigureCommand`, drawn by the whiteboard's own
  * renderer inside the board item error boundary — a bad spec costs the
@@ -23,6 +26,7 @@ import type { FigureCommand } from '@/lib/tutor/homework-build/types';
 import { CommandRenderer } from '../whiteboard/WhiteboardCanvas';
 import { BoardItemErrorBoundary } from '../whiteboard/BoardItemErrorBoundary';
 import { InlineMathText } from '../whiteboard/InlineMathText';
+import { problemTextForDisplay } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 
 export interface ProblemPanelProps {
   n: number;
@@ -48,21 +52,21 @@ export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
     <aside
       data-testid="problem-panel"
       aria-label={`Problem ${n}`}
-      className="relative z-20 shrink-0 flex flex-col bg-white border-b border-slate-200 select-text md:w-[min(38vw,440px)] md:h-full md:border-b-0 md:border-r"
+      className="fixed inset-x-0 top-0 z-[60] flex flex-col bg-white border-b border-slate-200 shadow-sm select-text md:inset-x-auto md:left-0 md:bottom-0 md:z-20 md:w-[min(38vw,440px)] md:border-b-0 md:border-r md:shadow-none"
     >
       {/* Phone header: the sheet's toggle. Hidden on desktop. */}
       <button
         type="button"
         onClick={toggle}
         aria-expanded={!collapsed}
-        className="md:hidden flex items-center justify-between w-full px-4 py-2 text-sm font-semibold text-slate-800"
+        className="md:hidden flex items-center justify-between w-full h-10 px-4 text-sm font-semibold text-slate-800"
       >
-        <span>Problem {n} ▾</span>
+        <span>Problem {n} {collapsed ? '▾' : '▴'}</span>
       </button>
       <div className={`${collapsed ? 'hidden' : 'block'} md:block max-h-[45vh] md:max-h-none md:flex-1 overflow-y-auto px-4 pb-4 md:pt-4`}>
         <div className="hidden md:block mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Problem {n}</div>
         <div className="text-[15px] leading-relaxed text-slate-900">
-          <InlineMathText text={text} wrap />
+          <InlineMathText text={problemTextForDisplay(text, !!figure)} wrap />
         </div>
         {figure && (
           <div className="mt-4 w-full aspect-[4/3] overflow-hidden rounded-lg border border-slate-200 bg-white flex items-center justify-center">

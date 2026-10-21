@@ -116,7 +116,7 @@ import {
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
 import { homeworkProblemOf, type HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
-import { formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
+import { formatKeyedVerdictDebug, KEYED_VERDICT_DEBUG_TYPE } from '@/lib/tutor/voice/keyed-verdict';
 import { recordSolved, sanitizeSolvedPositions, solvedPositionsFromCheck, inferProblemMoveFromReply } from '@/lib/tutor/lesson-plan/homework-ledger';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
@@ -16932,7 +16932,7 @@ export function VoiceTutorRealtime({
                   const kv = ev as { part?: unknown; verdict?: unknown };
                   if ((kv.verdict === 'correct' || kv.verdict === 'incorrect') && !keyedVerdictPartsThisTurn.has(String(kv.part ?? ''))) {
                     keyedVerdictPartsThisTurn.add(String(kv.part ?? ''));
-                    onDebugEvent?.('homework_keyed_verdict', formatKeyedVerdictDebug(String(kv.part ?? ''), kv.verdict));
+                    onDebugEvent?.(KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug(String(kv.part ?? ''), kv.verdict));
                   }
                 } else if ((ev as { type?: string }).type === 'homework-problem-done') {
                   // Every key part confirmed. Sent on every turn from then on; recorded once.
