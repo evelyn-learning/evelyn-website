@@ -11,6 +11,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
 import { getGeometryStepKindsDescriptionTail } from '../diagrams/geometry-solver';
+import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geometry-step-docs';
 import { validateFigure } from './figure-validate';
 import type { FigureClaim, FigureCommand } from './types';
 
@@ -18,7 +19,7 @@ export interface FigureProposal { figure: FigureCommand | null; claims: FigureCl
 
 export interface FigureBuildDeps {
   /** Opus 5.5, adaptive thinking at low effort, JSON-schema output. */
-  propose(input: { text: string; feedback?: string[] }): Promise<FigureProposal>;
+  propose(input: { text: string; feedback?: string[]; previous?: FigureCommand | null }): Promise<FigureProposal>;
   /** Sonnet 5 in a fresh context: the relations the TEXT states, from the text alone. */
   extractClaims(text: string): Promise<FigureClaim[]>;
 }
@@ -43,7 +44,12 @@ Rules:
 2. Labels are copied verbatim from the problem text, exactly as written there. Never compute a label, never write a value the text does not state, and leave an unknown quantity as the symbol the text uses. Do not add a legend.
 3. A graph copies the sheet's axis marks: when an axis is marked in multiples of pi set xAxisStep ("pi/2", "pi", "2pi"), otherwise a numeric step. Plot only curves and points the description states, and attach no function label or equation text to a curve.
 4. Keep proportions faithful to the stated lengths and ratios where the text gives them, and keep the drawing uncluttered.
-5. If feedback from a previous attempt is given, fix every item in it and keep what was not criticized.${getGeometryStepKindsDescriptionTail()}`;
+5. If feedback from a previous attempt is given, you also get that attempt's figure: fix every item in the feedback and keep what was not criticized.
+
+Step reference (the steps array of showGeometryConstructed):
+${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
+
+${GEOMETRY_STEP_DOCS_EXTRA}`;
 
 export const FIGURE_CLAIMS_SYSTEM = `You read one homework problem, including its bracketed figure or graph description, and list the geometric relations it states. Use only what the text says; do not infer relations from how a figure would look. Reply with JSON only: {"claims":[...]}. Claim kinds: on_segment (point, segment:[p,q]), on_circle (point, circle), parallel (a:[p,q], b:[r,s]), perpendicular (a, b), collinear (points:[...]), between (point, ends:[p,q]). Point names are the single letters or ids the text uses. If the text states no such relation, return {"claims":[]}.`;
 
@@ -90,7 +96,7 @@ const pair = (v: unknown): [string, string] | null =>
   Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === 'string') ? [v[0], v[1]] : null;
 
 /** Keeps only well-formed claims; a malformed one is dropped, not guessed at. */
-function normalizeClaims(raw: unknown): FigureClaim[] {
+export function normalizeClaims(raw: unknown): FigureClaim[] {
   if (!Array.isArray(raw)) return [];
   const out: FigureClaim[] = [];
   for (const c of raw as Array<Record<string, unknown>>) {
@@ -107,7 +113,7 @@ function normalizeClaims(raw: unknown): FigureClaim[] {
   return out;
 }
 
-function parseFigure(raw: unknown): FigureCommand | null {
+export function parseFigure(raw: unknown): FigureCommand | null {
   if (typeof raw !== 'string' || !raw.trim()) return null;
   let v: unknown;
   try { v = JSON.parse(raw); } catch { throw new ParseError('figure_json is not JSON'); }
@@ -141,17 +147,27 @@ async function callJson(role: 'plangen-vision' | 'content-verify', maxTokens: nu
 const errorKind = (e: unknown): string =>
   e instanceof TruncatedError ? 'truncated' : e instanceof ParseError ? 'parse' : (e as { constructor?: { name?: string } })?.constructor?.name || 'Error';
 
+/** The model's JSON reply -> a proposal. A malformed figure becomes a failed proposal. */
+export function parseProposal(o: Record<string, unknown>): FigureProposal {
+  const claims = normalizeClaims(o.claims);
+  try {
+    const figure = parseFigure(o.figure_json);
+    return { figure, claims, ...(typeof o.note === 'string' && o.note ? { note: o.note } : {}) };
+  } catch (e) {
+    return { figure: null, claims, note: `propose_failed:${errorKind(e)}` };
+  }
+}
+
 /** Production deps. Any SDK / parse failure resolves as a failed proposal. */
 export function defaultFigureBuildDeps(): FigureBuildDeps {
   return {
-    async propose({ text, feedback }) {
+    async propose({ text, feedback, previous }) {
       const user = feedback?.length
-        ? `${text}\n\nYour previous figure failed validation. Fix every item:\n${feedback.map((f) => `- ${f}`).join('\n')}`
+        ? `${text}\n\nYour previous figure failed validation:\n${previous ? `${JSON.stringify(previous)}\n\n` : ''}Fix every item, keeping what was not criticized:\n${feedback.map((f) => `- ${f}`).join('\n')}`
         : text;
       try {
         const o = await callJson('plangen-vision', PROPOSE_MAX_TOKENS, FIGURE_PROPOSE_SYSTEM, user, FIGURE_PROPOSAL_SCHEMA);
-        const figure = parseFigure(o.figure_json);
-        return { figure, claims: normalizeClaims(o.claims), ...(typeof o.note === 'string' && o.note ? { note: o.note } : {}) };
+        return parseProposal(o);
       } catch (e) {
         return { figure: null, claims: [], note: `propose_failed:${errorKind(e)}` };
       }
@@ -178,33 +194,35 @@ export async function buildFigure(
 ): Promise<FigureBuildResult> {
   const maxAttempts = Math.max(1, opts.maxAttempts ?? 2);
   const claims = new Map<string, FigureClaim>();
-  const safePropose = async (feedback?: string[]): Promise<FigureProposal> => {
-    try { return await deps.propose({ text: problem.text, feedback }); }
+  const safePropose = async (feedback?: string[], previous?: FigureCommand | null): Promise<FigureProposal> => {
+    try { return await deps.propose({ text: problem.text, feedback, previous }); }
     catch (e) { return { figure: null, claims: [], note: `propose_failed:${errorKind(e)}` }; }
   };
 
   const [first, extracted] = await Promise.all([
     safePropose(),
-    deps.extractClaims(problem.text).catch((): FigureClaim[] => []),
+    (async () => deps.extractClaims(problem.text))().catch((): FigureClaim[] => []),
   ]);
   unionClaims(claims, extracted);
 
   let proposal = first;
   let feedback: string[] | undefined;
   let reasons: string[] = [];
+  let lastFigure: FigureCommand | null = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    if (attempt > 1) proposal = await safePropose(feedback);
+    if (attempt > 1) proposal = await safePropose(feedback, lastFigure);
     unionClaims(claims, proposal.claims ?? []);
     const all = [...claims.values()];
     if (!proposal.figure) {
       if (!proposal.note?.startsWith('propose_failed')) return { figure: null, note: proposal.note, attempts: attempt, claims: all };
-      reasons = [proposal.note];   // a failed call is an attempt; retry with the same feedback
+      if (!reasons.length) reasons = [proposal.note];   // a failed call is an attempt; keep any validator reasons already found
       continue;
     }
     const v = validateFigure(proposal.figure, { problemText: problem.text, claims: all });
     if (v.ok) return { figure: proposal.figure, attempts: attempt, claims: all };
     reasons = v.reasons;
     feedback = v.reasons;
+    lastFigure = proposal.figure;
   }
   return { figure: null, note: reasons.join('; '), attempts: maxAttempts, claims: [...claims.values()] };
 }

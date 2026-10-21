@@ -158,11 +158,11 @@ async function main() {
 
     // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
     console.log('3 build figure');
-    const { buildFigure, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
+    const { buildFigure, FIGURE_PROPOSE_SYSTEM, parseProposal, normalizeClaims } = await import('../src/lib/tutor/homework-build/figure-build');
     type Deps = Parameters<typeof buildFigure>[1];
-    const mkDeps = (propose: Deps['propose'], extra: FigureClaimList = claims): Deps & { calls: Array<{ feedback?: string[] }> } => {
-      const calls: Array<{ feedback?: string[] }> = [];
-      return { calls, async propose(i) { calls.push({ feedback: i.feedback }); return propose(i); }, async extractClaims() { return extra; } };
+    const mkDeps = (propose: Deps['propose'], extra: FigureClaimList = claims): Deps & { calls: Array<{ feedback?: string[]; previous?: unknown }> } => {
+      const calls: Array<{ feedback?: string[]; previous?: unknown }> = [];
+      return { calls, async propose(i) { calls.push({ feedback: i.feedback, previous: i.previous }); return propose(i); }, async extractClaims() { return extra; } };
     };
     type FigureClaimList = typeof claims;
     await section('bad first proposal is retried with feedback and the good one wins', async () => {
@@ -171,6 +171,7 @@ async function main() {
       const r = await buildFigure({ n: 5, text: P5 }, d);
       assert.deepEqual(r.figure, good); assert.equal(r.attempts, 2);
       assert.ok(d.calls[1].feedback!.some((f) => f.includes('on_segment')), String(d.calls[1].feedback));
+      assert.deepEqual(d.calls[1].previous, ws3p5Bad);
       assert.equal(r.claims.length, 3);
     });
     await section('always-bad proposals give null with the reasons after maxAttempts', async () => {
@@ -194,7 +195,41 @@ async function main() {
       const r = await buildFigure({ n: 5, text: P5 }, d);
       assert.equal(r.figure, null); assert.equal(r.attempts, 2); assert.match(r.note ?? '', /propose_failed:APIError/);
     });
+    await section('propose fails on attempt 1, succeeds on attempt 2', async () => {
+      const good = goodFig();
+      const d = mkDeps(async (i) => i.feedback || d.calls.length > 1 ? { figure: good, claims: [] } : { figure: null, claims: [], note: 'propose_failed:APIError' });
+      const r = await buildFigure({ n: 5, text: P5 }, d);
+      assert.deepEqual(r.figure, good); assert.equal(r.attempts, 2);
+    });
+    await section('validator reasons survive a failed second propose', async () => {
+      const d = mkDeps(async () => (d.calls.length > 1 ? { figure: null, claims: [], note: 'propose_failed:APIError' } : { figure: ws3p5Bad, claims: [] }));
+      const r = await buildFigure({ n: 5, text: P5 }, d);
+      assert.equal(r.figure, null); assert.match(r.note ?? '', /on_segment/);
+    });
+    await section('a synchronously throwing extractClaims cannot escape', async () => {
+      const d: Deps = { async propose() { return { figure: null, claims: [], note: 'no figure' }; }, extractClaims() { throw new Error('sync'); } };
+      const r = await buildFigure({ n: 1, text: 'x' }, d);
+      assert.equal(r.attempts, 1);
+    });
+    await section('parseProposal / normalizeClaims: malformed figure_json -> null; bad claims dropped', () => {
+      const bad = parseProposal({ figure_json: '{nope', claims: [{ kind: 'on_segment', point: 'D', segment: ['A', 'B'] }] });
+      assert.equal(bad.figure, null); assert.equal(bad.note, 'propose_failed:parse'); assert.equal(bad.claims.length, 1);
+      assert.equal(parseProposal({ figure_json: '', claims: [] }).figure, null);
+      assert.equal(parseProposal({ figure_json: '{"action":"nope"}', claims: [] }).figure, null);
+      const ok = parseProposal({ figure_json: JSON.stringify(goodFig()), claims: [] });
+      assert.deepEqual(ok.figure, JSON.parse(JSON.stringify(goodFig())));
+      const cl = normalizeClaims([
+        { kind: 'on_segment', point: 'D', segment: ['A', 'B'] },
+        { kind: 'on_segment', point: 'E', segment: ['A'] },
+        { kind: 'parallel', a: ['D', 'E'], b: ['B', 'C'] },
+        { kind: 'collinear', points: ['A', 'B'] },
+        { kind: 'bogus' }, null,
+      ]);
+      assert.equal(cl.length, 2);
+    });
     await section('system prompt carries the structural rules', () => {
+      assert.match(FIGURE_PROPOSE_SYSTEM, /section_point: \{ kind: "section_point", of: [^\n]*ratio: \[m, n\]/);
+      assert.match(FIGURE_PROPOSE_SYSTEM, /parallel_through: \{ kind: "parallel_through", through: pointId/);
       assert.match(FIGURE_PROPOSE_SYSTEM, /never.*free coordinates/i);
       assert.match(FIGURE_PROPOSE_SYSTEM, /xAxisStep/);
     });
