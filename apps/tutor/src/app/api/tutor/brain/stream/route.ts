@@ -52,6 +52,7 @@ import { textWorkThenMatchEnabled } from '@/lib/tutor/voice/work-then-match';
 import { noRevealLedgerForPartner } from '@/lib/tutor/voice/no-reveal-ledger-gate';
 import { sanitizeSolvedPositions } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { sanitizePublicPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
+import { HOMEWORK_PROBLEM_THINKING_DEADLINE_MS, resolveHomeworkProblemTurn } from '@/lib/tutor/voice/homework-problem-turn';
 import {
   VOICE_THINKING_DEADLINE_MS,
   isVoiceJudgingRequest,
@@ -687,7 +688,21 @@ export async function POST(req: NextRequest) {
       // demoStop below — so a malformed client can never inject an
       // arbitrary blob into the per-turn user content or half-render a
       // broken problem list.
+      // GAC per-problem homework (2026-10-20): a session on a one-problem plan
+      // (lesson-plan/homework-problem.ts, kind 'homework-problem') is resolved
+      // HERE, from the plan and the homework build — the request body is not
+      // trusted for it. Its `body.homework` is ignored (no <homework_session>,
+      // no set_current_problem); the key is read only for a verified plan.
+      // Any other plan, or no plan ⇒ null ⇒ the turn as before.
+      const homeworkProblemTurn = body.lessonPlanContext?.plan?.id
+        ? await resolveHomeworkProblemTurn(body.lessonPlanContext.plan.id)
+        : null;
+      const homeworkProblem = homeworkProblemTurn?.homeworkProblem;
+      if (homeworkProblemTurn) {
+        console.log(`[homework-problem] n=${homeworkProblemTurn.meta.n} verified=${homeworkProblem?.verified} figure=${homeworkProblem?.hasFigure} key_parts=${homeworkProblem?.key?.parts.length ?? 0}`);
+      }
       const homework: BrainTurnInput['homework'] = (() => {
+        if (homeworkProblem) return undefined;
         const hw = body.homework;
         if (!hw || typeof hw !== 'object') return undefined;
         const { problems, current } = hw;
@@ -708,7 +723,7 @@ export async function POST(req: NextRequest) {
         const solved = sanitizeSolvedPositions((hw as { solved?: unknown }).solved, cleaned.length);
         return { problems: cleaned, current, ...(solved ? { solved } : {}) };
       })();
-      if (homework) {
+      if (homework && !homeworkProblem) {
         console.log(`[homework] homework_session block + set_current_problem tool attached current=${homework.current}/${homework.problems.length}`);
         // Offered only for homework-help turns, AFTER the Lever A filter —
         // a non-homework session's tools array (and cached prefix) stays
@@ -898,7 +913,12 @@ export async function POST(req: NextRequest) {
           // Task 13: sanitized above. Surfaces as `<session_struggles>` in
           // the per-turn user content (suppressed when recapOffer is set).
           ledgerFlags: ledgerFlags?.length ? ledgerFlags : undefined,
-          activeProblem: body.activeProblem,
+          // A homework-problem turn runs on its own problem (and its verified
+          // expected answer, when there is one), not on what the browser sent.
+          activeProblem: homeworkProblemTurn ? homeworkProblemTurn.activeProblem : body.activeProblem,
+          // Server-resolved above. Before the voice levers so a voice-thinking
+          // turn keeps its own (shorter) deadline.
+          ...(homeworkProblem ? { homeworkProblem, textThinkingDeadlineMs: HOMEWORK_PROBLEM_THINKING_DEADLINE_MS } : {}),
           // A plain object of bounded size, else dropped (the facts are then
           // stated without line colours).
           ...(body.problemGraph && typeof body.problemGraph === 'object' && !Array.isArray(body.problemGraph)
@@ -997,7 +1017,7 @@ export async function POST(req: NextRequest) {
           // far is this frame is still safely retryable.
           // (The verdict pre-check frame is the same kind of frame: it is sent
           // before any sentence and commits nothing to the student.)
-          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal') {
+          if (ev.type === 'thinking' || ev.type === 'verdict-precheck' || ev.type === 'work-then-match' || ev.type === 'verdict-precheck-pending' || ev.type === 'verdict-precheck-none' || ev.type === 'answer-reveal' || ev.type === 'homework-keyed-verdict' || ev.type === 'homework-problem-done') {
             sendTelemetry(ev);
             if (clientGone) break;
             continue;

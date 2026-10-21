@@ -125,6 +125,7 @@
     "test:homework-figure": "npx tsx scripts/test-homework-figure.ts",
     "test:homework-build": "tsx scripts/test-homework-build.ts",
     "test:homework-problem-plan": "tsx scripts/test-homework-problem-plan.ts",
+    "test:homework-problem-brain": "tsx scripts/test-homework-problem-brain.ts",
     "test:graph-axis": "npx tsx scripts/test-graph-axis.ts",
     "test:text-thinking": "npx tsx scripts/test-text-thinking.ts",
     "replay:verdict-turns": "npx tsx scripts/replay-verdict-turns.ts",

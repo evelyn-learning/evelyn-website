@@ -64,6 +64,13 @@ export const TEXT_THINKING_HEADROOM_TOKENS = 6000;
  *  (~120K tokens) on that rare turn. */
 export const TEXT_THINKING_DEADLINE_MS = 14_000;
 
+/** The thinking deadline of one call: the caller's per-call
+ *  `textThinkingDeadlineMs` (voice thinking: 3 s; a homework-problem turn:
+ *  8 s), else TEXT_THINKING_DEADLINE_MS. */
+export function textThinkingDeadline(textThinkingDeadlineMs?: number): number {
+  return textThinkingDeadlineMs ?? TEXT_THINKING_DEADLINE_MS;
+}
+
 export function textThinkingEffort(env: string | undefined = process.env.TUTOR_TEXT_THINKING_EFFORT): TextThinkingEffort {
   return env === 'low' || env === 'medium' || env === 'high' ? env : TEXT_THINKING_DEFAULT_EFFORT;
 }

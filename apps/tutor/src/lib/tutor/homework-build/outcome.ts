@@ -1,0 +1,100 @@
+/**
+ * Outcome of one homework-problem session (GAC per-problem homework,
+ * 2026-10-20), read by GET /api/portal/v1/homework-problem-outcome.
+ *
+ *   done          the browser recorded `homework_problem_done` (every key
+ *                 part confirmed correct — voice/keyed-verdict.ts)
+ *   needs_review  an unverified problem whose student's last turn says they
+ *                 finished, or ≥ 2 wrong keyed verdicts on one part with no
+ *                 later correct one
+ *   in_progress   anything else
+ *
+ * `priorNote`: two short lines for the next session on this problem, from the
+ * `recap` model role; '' with no student turn or on any model failure.
+ */
+
+import { claimsSetFinished } from '../lesson-plan/homework-ledger';
+import { KEYED_VERDICT_DEBUG_TYPE, parseKeyedVerdictDebug } from '../voice/keyed-verdict';
+
+export { KEYED_VERDICT_DEBUG_TYPE };
+
+export type HomeworkProblemOutcome = 'done' | 'in_progress' | 'needs_review';
+
+export const HOMEWORK_PROBLEM_DONE_EVENT = 'homework_problem_done';
+
+export const PRIOR_NOTE_INSTRUCTION = 'Two short lines: what the student did on this problem and where they stopped. No answers.';
+export const PRIOR_NOTE_MAX_WORDS = 40;
+
+type DebugEventLike = { type?: unknown; message?: unknown };
+type TranscriptLike = { role?: unknown; text?: unknown };
+
+const isStudent = (t: TranscriptLike) => t?.role === 'student' && typeof t.text === 'string' && t.text.trim() !== '';
+
+export function classifyHomeworkProblemOutcome(input: {
+  debugEvents: ReadonlyArray<DebugEventLike> | null | undefined;
+  transcript: ReadonlyArray<TranscriptLike> | null | undefined;
+  /** The plan's `verified` flag; null when the plan could not be read. */
+  verified: boolean | null;
+}): HomeworkProblemOutcome {
+  const events = Array.isArray(input.debugEvents) ? input.debugEvents : [];
+  if (events.some((e) => e?.type === HOMEWORK_PROBLEM_DONE_EVENT)) return 'done';
+  if (input.verified === false) {
+    const lastStudent = [...(input.transcript ?? [])].reverse().find(isStudent);
+    if (lastStudent && claimsSetFinished(String(lastStudent.text))) return 'needs_review';
+  }
+  // Per part: wrong verdicts since the last correct one.
+  const wrongSinceCorrect = new Map<string, number>();
+  for (const e of events) {
+    if (e?.type !== KEYED_VERDICT_DEBUG_TYPE) continue;
+    const v = parseKeyedVerdictDebug(e.message);
+    if (!v) continue;
+    wrongSinceCorrect.set(v.part, v.verdict === 'correct' ? 0 : (wrongSinceCorrect.get(v.part) ?? 0) + 1);
+  }
+  if ([...wrongSinceCorrect.values()].some((n) => n >= 2)) return 'needs_review';
+  return 'in_progress';
+}
+
+export interface PriorNoteDeps {
+  /** The model call: `instruction` is the system prompt, `transcript` the user message. */
+  summarize?: (req: { instruction: string; transcript: string }) => Promise<string>;
+}
+
+const TRANSCRIPT_MAX_CHARS = 8000;
+
+function transcriptText(transcript: ReadonlyArray<TranscriptLike>): string {
+  const lines = transcript
+    .filter((t) => (t?.role === 'student' || t?.role === 'tutor') && typeof t.text === 'string' && t.text.trim())
+    .map((t) => `${t.role === 'student' ? 'STUDENT' : 'TUTOR'}: ${String(t.text).replace(/\s+/g, ' ').trim()}`);
+  let out = lines.join('\n');
+  if (out.length > TRANSCRIPT_MAX_CHARS) out = out.slice(out.length - TRANSCRIPT_MAX_CHARS);
+  return out;
+}
+
+async function recapSummarize(req: { instruction: string; transcript: string }): Promise<string> {
+  const { getModelClient, prepareParams } = await import('../ai/model-registry');
+  const { client, model } = getModelClient('recap');
+  const res = await client.messages.create(prepareParams('recap', {
+    model,
+    max_tokens: 150,
+    system: req.instruction,
+    messages: [{ role: 'user' as const, content: req.transcript }],
+  }));
+  return res.content
+    .filter((b) => b.type === 'text')
+    .map((b) => (b as { type: 'text'; text: string }).text)
+    .join('')
+    .trim();
+}
+
+export async function homeworkProblemPriorNote(transcript: ReadonlyArray<TranscriptLike> | null | undefined, deps: PriorNoteDeps = {}): Promise<string> {
+  const list = Array.isArray(transcript) ? transcript : [];
+  if (!list.some(isStudent)) return '';
+  try {
+    const raw = await (deps.summarize ?? recapSummarize)({ instruction: PRIOR_NOTE_INSTRUCTION, transcript: transcriptText(list) });
+    const words = String(raw ?? '').replace(/[<>]/g, ' ').trim().split(/\s+/).filter(Boolean);
+    return words.slice(0, PRIOR_NOTE_MAX_WORDS).join(' ');
+  } catch (err) {
+    console.warn('[homework-problem-outcome] prior note failed:', (err as Error)?.message ?? err);
+    return '';
+  }
+}

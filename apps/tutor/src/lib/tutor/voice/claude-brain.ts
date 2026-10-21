@@ -47,7 +47,11 @@ import {
   type PublicVerdictPrecheck,
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
-import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, TEXT_THINKING_DEADLINE_MS } from './text-thinking';
+import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
+import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput } from './homework-problem-block';
+import { allKeyPartsConfirmed, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS } from './keyed-verdict';
+export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
+export type { HomeworkProblemTurnInput } from './homework-problem-block';
 import { formatWorkThenMatchBlock } from './work-then-match';
 import { formatStudentLanguageBlock } from './text-language';
 import {
@@ -324,6 +328,14 @@ export interface BrainTurnInput {
      *  `noRevealLedger`. */
     solved?: number[];
   };
+  /** GAC per-problem homework (2026-10-20, ./homework-problem-block.ts): the
+   *  session runs on ONE problem of the student's sheet. Server-populated
+   *  only — the stream route resolves the session's plan and reads the key
+   *  from the homework build (only when verified); `homework` is then
+   *  absent. Renders `<homework_problem>`; with a key, the text pre-check is
+   *  decided by `keyedVerdict` first; unverified ⇒ no pre-check at all.
+   *  Absent ⇒ request, blocks and events exactly as before. */
+  homeworkProblem?: HomeworkProblemTurnInput;
   /** Task WS3: durable mock-review context — present only when the student
    *  arrived from a completed full-length mock to review their misses.
    *  Absent ⇒ `<mock_review>` block omitted ⇒ userContent byte-identical. */
@@ -730,6 +742,16 @@ export type BrainStreamEvent =
   /** Voice: the parallel pre-check ended with nothing to act on (failed,
    *  timed out, unsure). The browser releases what it held. */
   | { type: 'verdict-precheck-none'; ms: number }
+  /** Homework-problem turn (./keyed-verdict.ts): a part of the problem the
+   *  student's message was judged on against the verified key, with no model
+   *  call. Telemetry only; the browser records it as the debug event
+   *  `homework_keyed_verdict` (`formatKeyedVerdictDebug`). */
+  | { type: 'homework-keyed-verdict'; part: string; verdict: 'correct' | 'incorrect' }
+  /** Homework-problem turn: every part of the key is confirmed correct by
+   *  the student's messages so far (this one included). Recomputed on every
+   *  turn, so it repeats once reached; the browser records the debug event
+   *  `homework_problem_done` once. */
+  | { type: 'homework-problem-done' }
   /** Text mode "work it, then match" is on for this call. Sent before any
    *  sentence; the client then applies its opener backstop and reads credit
    *  from the checks and the match statement instead of the opener. */
@@ -2003,6 +2025,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (homeworkSessionBlock) {
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
+  // GAC per-problem homework: '' unless the route resolved a homework-problem plan.
+  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem);
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -2065,6 +2089,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     demoStopBlock +
     practiceSessionBlock +
     homeworkSessionBlock +
+    homeworkProblemBlock +
     mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
@@ -2213,6 +2238,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (homeworkSessionBlock) {
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
+  // GAC per-problem homework: '' unless the route resolved a homework-problem plan.
+  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem);
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -2428,22 +2455,41 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     answerCheckBlock = formatLedgerTurnBlock(ledgerKind);
     console.log(`[homework-ledger] message kind: ${ledgerKind} (not checked)`);
   }
-  if (input.textVerdictPrecheck === true && !ledgerKind) {
+  // GAC per-problem homework: an unverified problem is never judged (no
+  // pre-check, no <answer_check>); a verified one is checked against its key
+  // first, with no model call (./keyed-verdict.ts).
+  const hpKey = input.homeworkProblem?.verified ? input.homeworkProblem.key : undefined;
+  const hpUnverified = !!input.homeworkProblem && !hpKey;
+  const keyed = hpKey && input.textVerdictPrecheck === true && !ledgerKind ? keyedVerdict(studentSaid, hpKey) : null;
+  const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
+  if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
-    if (turnShape?.answerShaped && hasContext) {
-      // Liveness: the client keeps its typing indicator up while this runs.
-      yield { type: 'thinking' };
+    if ((turnShape?.answerShaped || keyedResult) && hasContext) {
       const startedAt = Date.now();
-      const result = await runVerdictPrecheck({
+      const keyedFacts = hpKey ? keyedProblemFacts(hpKey) : '';
+      if (!keyedResult) {
+        // Liveness: the client keeps its typing indicator up while this runs.
+        yield { type: 'thinking' };
+      } else {
+        console.log(`[keyed-verdict] part=${keyed?.part ?? ''} verdict=${keyedResult.verdict} ms=0`);
+        for (const v of keyedVerdicts(studentSaid, hpKey!)) {
+          if (v.verdict !== 'undecided') yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: v.verdict };
+        }
+      }
+      const result = keyedResult ?? await runVerdictPrecheck({
         problems: input.homework?.problems,
         currentProblem: input.homework?.current,
         activeProblemStatement: input.activeProblem?.statement,
         history: input.conversationHistory.map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : '' })),
-        openQuestion: turnShape.open?.question ?? null,
+        openQuestion: turnShape?.open?.question ?? null,
         studentMessage: studentSaid,
-        ...(problemFacts ? { problemFacts: formatInequalityFactsText(problemFacts) } : {}),
+        ...(problemFacts || keyedFacts
+          ? { problemFacts: [problemFacts ? formatInequalityFactsText(problemFacts) : '', keyedFacts].filter(Boolean).join('\n') }
+          : {}),
         ...(noRevealLedger && input.homework ? { solved: input.homework.solved ?? [] } : {}),
-      }, noRevealLedger
+      }, hpKey
+        ? { ...(noRevealLedger ? { claimVerdict: true } : {}), ...input.verdictPrecheckDeps, timeoutMs: input.verdictPrecheckDeps?.timeoutMs ?? KEYED_VERDICT_MODEL_TIMEOUT_MS }
+        : noRevealLedger
         ? {
           // 2026-10-15: under the ledger a check cut by its cap leaves a solved
           // problem unrecorded and a hedged right answer unjudged — a longer cap.
@@ -2453,7 +2499,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           claimVerdict: true,
         }
         : input.verdictPrecheckDeps);
-      const ms = Date.now() - startedAt;
+      const ms = keyedResult ? 0 : Date.now() - startedAt;
       input.verdictPrecheckDeps?.onResult?.(result, ms);
       if (result) {
         const pub = toPublicPrecheck(result);
@@ -2511,7 +2557,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   let parallelPrecheck: Promise<void> | null = null;
   let parallelSettled: { result: VerdictPrecheckResult | null; ms: number } | null = null;
   let parallelEmitted = false;
-  if (voicePrecheck) {
+  if (voicePrecheck && !hpUnverified) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
     if (turnShape?.answerShaped && hasContext && !assentSettlesNothing(turnShape)) {
       const startedAt = Date.now();
@@ -2533,6 +2579,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       if (answerCheckBlock) console.log('[verdict-precheck] voice: carried from the first attempt of this turn');
     }
+  }
+  // GAC per-problem homework: every key part confirmed by the student's
+  // messages so far (stateless: recomputed from the history every turn).
+  if (hpKey && allKeyPartsConfirmed(input.conversationHistory, studentSaid, hpKey)) {
+    console.log('[homework-problem] every part confirmed — homework-problem-done');
+    yield { type: 'homework-problem-done' };
   }
   /** The parallel check's frame, once, when it is in. Null otherwise. */
   const takeParallelPrecheckFrame = (): BrainStreamEvent | null => {
@@ -2563,6 +2615,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     demoStopBlock +
     practiceSessionBlock +
     homeworkSessionBlock +
+    homeworkProblemBlock +
     mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
@@ -2611,7 +2664,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // `shownThisIter` flips on the first text or tool-call block; until then
     // the deadline below is armed.
     const iterStartedAt = Date.now();
-    const thinkingDeadlineMs = input.textThinkingDeadlineMs ?? TEXT_THINKING_DEADLINE_MS;
+    const thinkingDeadlineMs = textThinkingDeadline(input.textThinkingDeadlineMs);
     const textCharsBeforeIter = accumulatedText.length;
     let shownThisIter = false;
     let thinkingAnnounced = false;
