@@ -5,8 +5,8 @@
  *   done          the browser recorded `homework_problem_done` (every key
  *                 part confirmed correct — voice/keyed-verdict.ts)
  *   needs_review  an unverified problem whose student's last turn says they
- *                 finished, or ≥ 2 wrong keyed verdicts on one part with no
- *                 later correct one
+ *                 finished it (`claimsProblemFinished`), or ≥ 2 wrong keyed
+ *                 verdicts on one part with no later correct one
  *   in_progress   anything else
  *
  * `priorNote`: two short lines for the next session on this problem, from the
@@ -28,6 +28,24 @@ export const PRIOR_NOTE_MAX_WORDS = 40;
 type DebugEventLike = { type?: unknown; message?: unknown };
 type TranscriptLike = { role?: unknown; text?: unknown };
 
+/**
+ * The student says they are finished with THIS problem ("done", "finished",
+ * "that's it", "I'm done with this one", "got it, thanks") — or with the whole
+ * set, which includes it. A question or a negation ("not done yet") is not.
+ */
+export function claimsProblemFinished(sentence: string): boolean {
+  const t = String(sentence ?? '').replace(/\s+/g, ' ').trim();
+  if (!t || /\?\s*$/.test(t)) return false;
+  if (/\b(?:not|n't|never)\s+(?:quite\s+|yet\s+|really\s+)?(?:done|finished|complete)\b/i.test(t)) return false;
+  return /\b(?:i'?m|i am|we'?re|we are|i'?ve|i have)\s+(?:all\s+|now\s+)?(?:done|finished|completed?)\b/i.test(t)
+    || /^(?:ok(?:ay)?[,!.]?\s*)?(?:all\s+)?(?:done|finished)\s*[.!]*$/i.test(t)
+    || /\bthat'?s\s+it\b/i.test(t)
+    || /\b(?:done|finished)\s+with\s+(?:this|that|it)(?:\s+one)?\b/i.test(t)
+    || /\bfinished\s+(?:this|that|it)(?:\s+one)?\b/i.test(t)
+    || /\bgot\s+it,?\s+thanks?\b/i.test(t)
+    || claimsSetFinished(t);
+}
+
 const isStudent = (t: TranscriptLike) => t?.role === 'student' && typeof t.text === 'string' && t.text.trim() !== '';
 
 export function classifyHomeworkProblemOutcome(input: {
@@ -40,7 +58,7 @@ export function classifyHomeworkProblemOutcome(input: {
   if (events.some((e) => e?.type === HOMEWORK_PROBLEM_DONE_EVENT)) return 'done';
   if (input.verified === false) {
     const lastStudent = [...(input.transcript ?? [])].reverse().find(isStudent);
-    if (lastStudent && claimsSetFinished(String(lastStudent.text))) return 'needs_review';
+    if (lastStudent && claimsProblemFinished(String(lastStudent.text))) return 'needs_review';
   }
   // Per part: wrong verdicts since the last correct one.
   const wrongSinceCorrect = new Map<string, number>();

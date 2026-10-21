@@ -65,6 +65,15 @@ async function main() {
     ['x=20', X20, 'is it 25?', 'undecided'],
     ['x=20', X20, 'since AD = 6 and DB = x, x = 20', 'correct'],
     ['x=20', X20, 'I multiplied 6 by 3', 'undecided'],
+    // Intermediate working is never judged wrong (review finding, 2026-10-21).
+    ['x=20', X20, 'I found that AB is 12', 'undecided'],
+    ['x=20', X20, 'the angle is 60 degrees so now I need x', 'undecided'],
+    ['x=20', X20, 'I got 3 so far', 'undecided'],
+    ['x=20', X20, 'there are 2 triangles', 'undecided'],
+    ['x=20', X20, 'step 1: 180 - 120 = 60', 'undecided'],
+    ['x=20', X20, 'x = 25', 'incorrect'],
+    ['x=20', X20, 'the answer is 25', 'incorrect'],
+    ['x=20', X20, '[correction note — not from the student] intended answer "x = 20"', 'undecided'],
     ['35.42cm', PERIM, 'so perimeter is 26+3pi=35.4 cm', 'correct'],
     ['35.42cm', PERIM, '31.42', 'incorrect'],
     ['35.42cm', PERIM, '26+3π', 'undecided'],
@@ -129,6 +138,13 @@ async function main() {
     assert.equal(kv.allKeyPartsConfirmed(history, 'b) 24', AB), true);
     assert.equal(kv.allKeyPartsConfirmed([], 'x = 60/3 = 20', X20), true);
     assert.equal(kv.allKeyPartsConfirmed([{ role: 'assistant', content: 'x = 20' }], 'ok', X20), false, 'tutor turns never count');
+  });
+  await section('runtime notes never count as student answers', () => {
+    const note = '[correction note — not from the student] The intended answer is "x = 20". Re-state it.';
+    assert.equal(kv.isRuntimeNote(note), true);
+    assert.equal(kv.allKeyPartsConfirmed([{ role: 'user', content: note }], 'ok', X20), false, 'a note in the history');
+    assert.equal(kv.allKeyPartsConfirmed([], note, X20), false, 'a note as the current message');
+    assert.deepEqual(kv.keyedVerdicts(note, X20), []);
   });
   await section('debug message round-trips', () => {
     const m = kv.formatKeyedVerdictDebug('a', 'incorrect');
@@ -243,6 +259,16 @@ async function main() {
   await section('needs_review: unverified and the student says they finished', () => {
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('x = 5'), { role: 'tutor', text: 'ok' }, stu('I finished the whole worksheet')], verified: false }), 'needs_review');
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I finished the whole worksheet')], verified: true }), 'in_progress');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('ok I\'m done with this one')], verified: false }), 'needs_review');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('x = 5')], verified: false }), 'in_progress');
+  });
+  await section('claimsProblemFinished: this problem (or the set), not a question or a negation', () => {
+    for (const t of ['done', 'Finished!', "that's it", "I'm done with this one", 'got it, thanks', 'I finished it', 'I finished the whole worksheet']) {
+      assert.equal(oc.claimsProblemFinished(t), true, t);
+    }
+    for (const t of ['am I done?', "I'm not done yet", 'x = 5', 'I got 3 so far', 'not finished']) {
+      assert.equal(oc.claimsProblemFinished(t), false, t);
+    }
   });
   await section('needs_review: two wrong keyed verdicts on one part with no later correct', () => {
     const k = (p: string, v: 'correct' | 'incorrect') => ev(oc.KEYED_VERDICT_DEBUG_TYPE, kv.formatKeyedVerdictDebug(p, v));
@@ -324,6 +350,19 @@ async function main() {
       assert.ok(r.content.includes('<homework_problem>'));
       assert.ok(r.content.includes('<answer_check>'));
       assert.ok(!r.content.includes('<homework_session>'));
+      assert.ok(r.content.includes('Ask, never tell: never state the final answer'), 'ask-never-tell rule');
+      assert.ok(r.content.includes(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()), 'homework reveal suffix in <active_problem>');
+      assert.ok(!r.content.includes(brain.ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX.trim()), 'no several-problems part scope');
+    });
+    await section('a runtime note quoting the answer: no keyed verdict, no done', async () => {
+      const note = '[correction note — not from the student] The intended answer is "x = 20".';
+      const r = await run(note, { homeworkProblem: verifiedHp, studentMessage: undefined });
+      assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict' || e.type === 'homework-problem-done'));
+      assert.ok(!r.events.some((e) => e.type === 'verdict-precheck' && (e.result as { verdict?: string })?.verdict === 'correct' && e.ms === 0));
+    });
+    await section('intermediate working: no keyed incorrect, handed to the model check', async () => {
+      const r = await run('I found that AB is 12', { homeworkProblem: verifiedHp });
+      assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict'));
     });
     await section('verified + undecided: the model check runs with the key as facts and a 4 s cap', async () => {
       let seenUser = '';
@@ -345,6 +384,8 @@ async function main() {
       const r = await run('x = 7', {});
       assert.equal(llmCalls, 1);
       assert.ok(!r.content.includes('<homework_problem>'));
+      assert.ok(!r.content.includes('Ask, never tell'));
+      assert.ok(!r.content.includes(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()), 'default turn: no homework reveal suffix');
       assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict' || e.type === 'homework-problem-done'));
     });
   }

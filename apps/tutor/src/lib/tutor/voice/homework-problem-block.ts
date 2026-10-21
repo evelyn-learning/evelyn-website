@@ -33,7 +33,8 @@ export const HOMEWORK_PROBLEM_UNVERIFIED =
 /** The rules every homework-problem turn carries. */
 export const HOMEWORK_PROBLEM_RULES = [
   '- Labels and values are the ones on the student\'s sheet, as written in the problem above.',
-  '- When the student says they do not know or remember a name or fact, tell them after one miss and move on.',
+  '- Ask, never tell: never state the final answer, even when asked outright; when the student gives up, give the next smallest hint.',
+  '- When the student says they do not know or remember a fact to recall (a name, a definition, a formula), tell them after one miss and move on. This never applies to the problem\'s answer or to any numeric result.',
   '- The prior-work note, when there is one, is what happened last time on this problem.',
   '- When every part is confirmed correct, say the problem is done and offer "Back to your list".',
 ].join('\n');

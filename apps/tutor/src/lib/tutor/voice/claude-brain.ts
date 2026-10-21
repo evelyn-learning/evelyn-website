@@ -2045,7 +2045,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // anchors to the authored example (see formatActiveProblemBlock).
   const truthBlock = (truthBody && input.activeProblem?.source !== 'student')
     ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
-  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, { homework: homeworkSessionBlock !== '' });
+  // A homework-problem turn takes the homework reveal suffix (never state the
+  // final answer) but not the several-problems part scope.
+  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, homeworkSessionBlock !== '' ? { homework: true } : homeworkProblemBlock !== '' ? { homework: true, partScope: false } : { homework: false });
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
@@ -2258,7 +2260,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // anchors to the authored example (see formatActiveProblemBlock).
   const truthBlock = (truthBody && input.activeProblem?.source !== 'student')
     ? `<segment_truth>\n${truthBody}\n</segment_truth>\n\n` : '';
-  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, { homework: homeworkSessionBlock !== '' });
+  // A homework-problem turn takes the homework reveal suffix (never state the
+  // final answer) but not the several-problems part scope.
+  const activeProblemBlock = formatActiveProblemBlock(input.activeProblem, homeworkSessionBlock !== '' ? { homework: true } : homeworkProblemBlock !== '' ? { homework: true, partScope: false } : { homework: false });
   const unrealizedMarksBlock = formatUnrealizedMarksBlock(input.unrealizedMarks);
   const deduplicatedShowsBlock = formatDeduplicatedShowsBlock(input.deduplicatedShows);
   const { block: studentStateBlock, hint: pacingHint } = formatStudentStateBlock(input.pacingState);
@@ -2464,7 +2468,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
   if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
-    if ((turnShape?.answerShaped || keyedResult) && hasContext) {
+    if (turnShape?.answerShaped && hasContext) {
       const startedAt = Date.now();
       const keyedFacts = hpKey ? keyedProblemFacts(hpKey) : '';
       if (!keyedResult) {

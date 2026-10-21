@@ -9,7 +9,12 @@
  * value of an equation chain is the one offered (`x = 60/3 = 20` offers 20).
  * Fractions, exact forms (`3π`, `2√3`), words and text parts are `undecided`
  * (the caller then asks the model check). A message with no explicit final
- * value is never `incorrect`.
+ * value is never `incorrect`: a value is wrong only when it is offered AS the
+ * final answer — assigned to the key's own variable (`x = 25`, `x is 25`),
+ * after a part label, after "the answer is", as "it is …", or as the whole
+ * message. Intermediate working ("AB is 12", "I got 3 so far", "step 1: …
+ * = 60") is `undecided`. A runtime note (a message that starts with `[`,
+ * e.g. a correction note quoting the intended answer) is never judged.
  */
 
 import type { AnswerKey, AnswerPart } from '../homework-build/types';
@@ -24,7 +29,8 @@ export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 4000;
 /** Debug event the browser records for each keyed verdict frame. */
 export const KEYED_VERDICT_DEBUG_TYPE = 'homework_keyed_verdict';
 
-interface Candidate { value: number; text: string; at: number }
+/** `explicit`: offered as the final answer (see the header) — only such a value can be judged wrong. */
+interface Candidate { value: number; text: string; at: number; explicit: boolean }
 
 const NUM_RE = /-?\d+(?:\.\d+)?/g;
 /** Words / marks after which a number is an offered value. */
@@ -52,10 +58,19 @@ function continuesExpression(text: string, end: number): boolean {
   return false;
 }
 
-/** The short variable name directly in front of an `=` / `≈` lead, if any. */
+/** The short name directly in front of an `=` / `≈` / "is" / "'s" lead, if any. */
 function lhsBefore(before: string): string | null {
-  const m = /(?:^|[\s,;(])([A-Za-z]{1,3}\d?)\s*[=≈]\s*$/.exec(before);
+  const m = /(?:^|[\s,;(])([A-Za-z]{1,3}\d?)(?:\s*[=≈]|\s+is|'s)\s*$/i.exec(before);
   return m ? m[1].toLowerCase() : null;
+}
+
+/** "the answer is 25", "answer: 25", "final answer = 25". */
+const ANSWER_LEAD_RE = /\banswers?\s*(?:is|was|=|:|would be|should be)?\s*$/i;
+
+/** A runtime note, not the student's words: the browser's runtime turns
+ *  (a correction note, a board-anchor note, "[start lesson]") start with `[`. */
+export function isRuntimeNote(text: unknown): boolean {
+  return String(text ?? '').trim().startsWith('[');
 }
 
 /** Offered values in `text`. `segmentStartIsLead`: a number right at the start counts (after a part label). */
@@ -71,12 +86,13 @@ function candidates(text: string, opts: { segmentStartIsLead?: boolean; keyVar?:
     const before = text.slice(0, at);
     const atStart = /^\s*[:=]?\s*$/.test(before);
     if (!(LEAD_RE.test(before) || (opts.segmentStartIsLead && atStart))) continue;
-    if (opts.keyVar) {
-      const lhs = lhsBefore(before);
-      if (lhs && lhs !== opts.keyVar) continue; // "AD = 6" is a given, not x
-    }
+    const lhs = lhsBefore(before);
+    if (opts.keyVar && lhs && lhs !== opts.keyVar && lhs !== 'it') continue; // "AD = 6" is a given, not x
+    const explicit = (opts.segmentStartIsLead === true && atStart)
+      || ANSWER_LEAD_RE.test(before)
+      || (lhs !== null && (lhs === opts.keyVar || lhs === 'it'));
     const unit = UNIT_RE.exec(text.slice(end).replace(/^\s+/, ''));
-    out.push({ value: Number(m[0]), text: (m[0] + (unit ? ` ${unit[0]}` : '')).trim(), at });
+    out.push({ value: Number(m[0]), text: (m[0] + (unit ? ` ${unit[0]}` : '')).trim(), at, explicit });
   }
   return out;
 }
@@ -86,7 +102,7 @@ function bareNumber(text: string): Candidate | null {
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*([A-Za-z°º%²³^23]*)\s*[.!]?\s*$/.exec(text);
   if (!m) return null;
   if (m[2] && !UNIT_RE.test(m[2])) return null;
-  return { value: Number(m[1]), text: (m[1] + (m[2] ? ` ${m[2]}` : '')).trim(), at: 0 };
+  return { value: Number(m[1]), text: (m[1] + (m[2] ? ` ${m[2]}` : '')).trim(), at: 0, explicit: true };
 }
 
 const normLabel = (s: string) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -131,13 +147,16 @@ function judgePart(part: AnswerPart, cands: Candidate[]): KeyedVerdict {
   if (numbersAgree(last.value, want)) return { verdict: 'correct', part: label, matched: last.text };
   // An earlier value matches and a later one does not: ambiguous.
   if (cands.some((c) => numbersAgree(c.value, want))) return { verdict: 'undecided', part: label };
-  return { verdict: 'incorrect', part: label, matched: last.text };
+  // Wrong only when offered as the final answer; working is for the model check.
+  const offered = [...cands].reverse().find((c) => c.explicit);
+  if (!offered) return { verdict: 'undecided', part: label };
+  return { verdict: 'incorrect', part: label, matched: offered.text };
 }
 
 /** One verdict per part the message offers a value for (or the single part). */
 export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerdict[] {
   const text = normalize(studentMessage).trim();
-  if (!text || !key?.parts?.length) return [];
+  if (!text || !key?.parts?.length || isRuntimeNote(text)) return [];
   const isQuestion = /\?/.test(text);
   const marks = labelMarks(text, key);
   const byLabel = new Map<string, Candidate[]>();
