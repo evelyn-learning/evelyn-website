@@ -1107,7 +1107,7 @@ export default function SessionStage(props: SessionStageProps) {
     <div
       ref={stageRef}
       className={problemPanel
-        ? 'fixed inset-x-0 bottom-0 top-10 md:top-0 md:left-[min(38vw,440px)] overflow-hidden bg-white select-none session-stage flex flex-col'
+        ? 'fixed inset-x-0 bottom-0 top-10 xl:top-0 xl:left-[min(38vw,440px)] overflow-hidden bg-white select-none session-stage flex flex-col'
         : 'fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col'}
       style={sessionMode === 'text' ? ({ ['--ss-tools-top' as string]: `${textToolsTopPx}px`, ['--ss-panel-top' as string]: `${textPanelTopPx}px` } as CSSProperties) : undefined}
     >

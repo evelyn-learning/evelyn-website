@@ -52,19 +52,19 @@ export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
     <aside
       data-testid="problem-panel"
       aria-label={`Problem ${n}`}
-      className="fixed inset-x-0 top-0 z-[60] flex flex-col bg-white border-b border-slate-200 shadow-sm select-text md:inset-x-auto md:left-0 md:bottom-0 md:z-20 md:w-[min(38vw,440px)] md:border-b-0 md:border-r md:shadow-none"
+      className="fixed inset-x-0 top-0 z-[60] flex flex-col bg-white border-b border-slate-200 shadow-sm select-text xl:inset-x-auto xl:left-0 xl:bottom-0 xl:z-20 xl:w-[min(38vw,440px)] xl:border-b-0 xl:border-r xl:shadow-none"
     >
       {/* Phone header: the sheet's toggle. Hidden on desktop. */}
       <button
         type="button"
         onClick={toggle}
         aria-expanded={!collapsed}
-        className="md:hidden flex items-center justify-between w-full h-10 px-4 text-sm font-semibold text-slate-800"
+        className="xl:hidden flex items-center justify-between w-full h-10 px-4 text-sm font-semibold text-slate-800"
       >
         <span>Problem {n} {collapsed ? '▾' : '▴'}</span>
       </button>
-      <div className={`${collapsed ? 'hidden' : 'block'} md:block max-h-[45vh] md:max-h-none md:flex-1 overflow-y-auto px-4 pb-4 md:pt-4`}>
-        <div className="hidden md:block mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Problem {n}</div>
+      <div className={`${collapsed ? 'hidden' : 'block'} xl:block max-h-[45vh] xl:max-h-none xl:flex-1 overflow-y-auto px-4 pb-4 xl:pt-4`}>
+        <div className="hidden xl:block mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Problem {n}</div>
         <div className="text-[15px] leading-relaxed text-slate-900">
           <InlineMathText text={problemTextForDisplay(text, !!figure)} wrap />
         </div>
