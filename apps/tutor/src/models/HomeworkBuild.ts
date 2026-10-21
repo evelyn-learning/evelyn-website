@@ -15,6 +15,7 @@ const ProblemBuildSchema = new Schema(
     status: { type: String, enum: ['preparing', 'ready', 'unverified'], default: 'preparing' },
     figure: { type: Schema.Types.Mixed, default: null },
     figureNote: { type: String },
+    figureSvg: { type: String },
     key: { type: Schema.Types.Mixed, default: null },
     verify: { type: Schema.Types.Mixed, default: () => ({ agreed: false }) },
     ms: { type: Number },

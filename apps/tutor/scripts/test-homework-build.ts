@@ -222,6 +222,18 @@ async function main() {
       assert.match(reasonsOf(validateFigure(unknown, { problemText: P5, claims }))[0], /midpoint "M"/);
     });
 
+    await section('figureToSvg: a geometry figure gives one svg document; a graph or a bad spec gives null', async () => {
+      const { figureToSvg } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const svg = await figureToSvg(goodFig());
+      assert.ok(svg && svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"') && svg.endsWith('</svg>'), String(svg).slice(0, 120));
+      assert.ok(/viewBox="0 0 500 400"/.test(svg!), 'the board renderer\'s viewBox');
+      assert.ok(!/<svg[^>]* (class|style)=/.test(svg!), 'no sizing classes on the root');
+      assert.ok(svg!.includes('DE = 9') && svg!.includes('>A<'), 'labels are drawn');
+      assert.equal(await figureToSvg(graph({})), null);
+      assert.equal(await figureToSvg({ action: 'showGeometryConstructed', given: [], steps: [{ id: 'M', kind: 'midpoint', of: ['A', 'Z'] }] } as Fig), null);
+      assert.equal(await figureToSvg(null), null);
+    });
+
     // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
     console.log('3 build figure');
     const { buildFigure, FIGURE_PROPOSE_SYSTEM, parseProposal, normalizeClaims } = await import('../src/lib/tutor/homework-build/figure-build');
@@ -623,6 +635,15 @@ async function main() {
       assert.equal(b.done, true); assert.equal(b.problems[0].status, 'ready');
     });
 
+    await section('buildStatusResponse carries figureSvg only when the build has one', async () => {
+      const { buildStatusResponse } = await import('../src/lib/tutor/homework-build/status');
+      await ensureHomeworkBuild('gen-svg', 'greenapple', [{ n: 1, text: 'Svg 1' }, { n: 2, text: 'Svg 2' }]);
+      await patchProblemBuild('gen-svg', 1, { status: 'ready', figure: { action: 'showGeometryConstructed', given: [{ id: 'A', kind: 'point', x: 0, y: 0, label: 'A' }], steps: [] }, figureSvg: '<svg xmlns="http://www.w3.org/2000/svg"></svg>', key: null, verify: { agreed: false } });
+      const r = buildStatusResponse((await getHomeworkBuild('gen-svg'))!, 'greenapple')!;
+      assert.equal(r.problems[0].figureSvg, '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+      assert.equal(r.problems[0].hasFigure, true);
+      assert.equal('figureSvg' in r.problems[1], false);
+    });
     await section('buildStatusResponse: partner-scoped, finals only when agreed, no key/canonical leak', async () => {
       const { buildStatusResponse } = await import('../src/lib/tutor/homework-build/status');
       const b = (await getHomeworkBuild('gen-r1'))!;

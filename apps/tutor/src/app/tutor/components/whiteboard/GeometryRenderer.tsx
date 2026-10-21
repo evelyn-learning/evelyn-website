@@ -1,4 +1,9 @@
-'use client';
+// No 'use client' here (GAC 2026-10-21): every importer is a client module
+// (WhiteboardCanvas), so the browser graph is unchanged, and the homework
+// build renders this same component to a static svg on the server for the
+// list thumbnails (lib/tutor/homework-build/figure-svg.ts). The directive
+// would have made it a client reference there. Only useMemo is used; the
+// title's InlineMathText (client-only KaTeX) is simply not passed by that caller.
 
 import { InlineMathText } from './InlineMathText';
 /**
@@ -1503,26 +1508,44 @@ export function buildGeometryManifest(props: GeometryRendererProps): FeatureMani
   return entries;
 }
 
+const NONE: never[] = [];
+
+/** The board component: one memo over the whole tree (same deps as before). */
 export function GeometryRenderer({
+  title, points, segments = NONE, polygons = NONE, circles = NONE, arcs = NONE, angles = NONE, conics = NONE,
+  showGrid = false, showAxes = false, viewRange, className = '',
+}: GeometryRendererProps) {
+  return useMemo(
+    () => renderGeometryTree({ title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className }),
+    [title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className],
+  );
+}
+
+/**
+ * The tree itself, hook-free (GAC 2026-10-21): the homework build renders it
+ * to a static svg on the server through Next's bundled react-dom, which is a
+ * different React instance from the one this module's hooks would bind to.
+ */
+export function renderGeometryTree({
   title,
   points,
-  segments = [],
-  polygons = [],
-  circles = [],
-  arcs = [],
-  angles = [],
-  conics = [],
+  segments = NONE,
+  polygons = NONE,
+  circles = NONE,
+  arcs = NONE,
+  angles = NONE,
+  conics = NONE,
   showGrid = false,
   showAxes = false,
   viewRange,
   className = '',
-}: GeometryRendererProps) {
+}: GeometryRendererProps): JSX.Element {
   // Build point lookup map
-  const ptMap = useMemo(() => buildPointMap(points), [points]);
+  const ptMap = buildPointMap(points);
 
   // Auto-compute view range from points (with padding) if not provided.
   // Then expand to match SVG aspect so circles render as circles.
-  const range = useMemo(() => {
+  const range = (() => {
     let baseRange: { x: [number, number]; y: [number, number] };
     if (viewRange) {
       baseRange = viewRange;
@@ -1572,15 +1595,15 @@ export function GeometryRenderer({
       };
     }
     return matchRangeAspect(baseRange);
-  }, [viewRange, points, circles, conics, ptMap]);
+  })();
 
   // Coordinate transform function
-  const toSvg = useMemo(() => makeTransform(range), [range]);
+  const toSvg = makeTransform(range);
 
   // Pre-compute label positions with collision resolution across points,
   // segments, and angles. Labels are drawn in a single pass on top of the
   // diagram so they sit above arcs and strokes.
-  const labelBoxes = useMemo(() => {
+  const labelBoxes = (() => {
     // Compute axis pixel positions once (only when axes are drawn AND the
     // origin lies inside the visible math range — same conditions
     // renderAxes uses).
@@ -1591,7 +1614,7 @@ export function GeometryRenderer({
     const xAxisY = showXAxis ? toSvg(0, 0)[1] : undefined;
     const yAxisX = showYAxis ? toSvg(0, 0)[0] : undefined;
     return computeLabels(points, segments, angles, ptMap, toSvg, { xAxisY, yAxisX });
-  }, [points, segments, angles, ptMap, toSvg, range, showAxes]);
+  })();
 
   // Suppress the faint auto-"O" origin marker when brain labels crowd the
   // origin — otherwise it collides with annotation labels placed near (0,0)

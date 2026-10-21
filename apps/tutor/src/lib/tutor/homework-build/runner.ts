@@ -7,12 +7,19 @@
 import { getLessonPlan } from '../lesson-plan/store';
 import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { buildFigure, defaultFigureBuildDeps, type FigureBuildDeps } from './figure-build';
+import { figureToSvg } from './figure-svg';
 import { hasFigureDescription } from '../lesson-plan/homework-problem-meta';
 import { solveKey, defaultKeySolveDeps, type KeySolveDeps } from './key-solve';
 import { ensureHomeworkBuild, findCachedProblem, patchProblemBuild } from './store';
 import type { ProblemBuild } from './types';
 
 export const BUILD_STALE_MS = 3 * 60_000;
+
+/** The list thumbnail of a built figure (figure-svg.ts), or nothing. */
+const svgOf = async (figure: Parameters<typeof figureToSvg>[0]): Promise<{ figureSvg?: string }> => {
+  const svg = await figureToSvg(figure);
+  return svg ? { figureSvg: svg } : {};
+};
 
 /** A build to (re)start: none yet, or not done and untouched for longer than BUILD_STALE_MS (a run that died). Pure. */
 export function buildNeedsKick(build: { done?: boolean; updatedAt?: Date | string | number } | null | undefined, now: number = Date.now()): boolean {
@@ -57,6 +64,7 @@ export async function runHomeworkBuild(
       if (cached && cached.status === 'ready' && (cached.figure || !hasFigureDescription(p.text))) {
         patch = {
           status: 'ready', figure: cached.figure, figureNote: cached.figureNote,
+          ...(cached.figureSvg ? { figureSvg: cached.figureSvg } : {}),
           key: cached.key, verify: cached.verify, ms: 0,
         };
       } else if (cached && cached.status === 'ready') {
@@ -67,6 +75,7 @@ export async function runHomeworkBuild(
         const fig = await buildFigure(p, deps.figure);
         patch = {
           status: 'ready', figure: fig.figure, figureNote: fig.note,
+          ...(await svgOf(fig.figure)),
           key: cached.key, verify: cached.verify, ms: now() - t0,
           ...(fig.tokens ? { tokens: { in: fig.tokens.in, out: fig.tokens.out } } : {}),
         };
@@ -77,6 +86,7 @@ export async function runHomeworkBuild(
           status: keyRes.key ? 'ready' : 'unverified',
           figure: fig.figure,
           figureNote: fig.note,
+          ...(await svgOf(fig.figure)),
           key: keyRes.key,
           verify: {
             agreed: keyRes.agreed,

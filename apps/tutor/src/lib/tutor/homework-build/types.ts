@@ -35,6 +35,8 @@ export interface ProblemBuild {
   status: ProblemBuildStatus;
   figure: FigureCommand | null;
   figureNote?: string;
+  /** Static SVG of a geometry figure for list thumbnails (figure-svg.ts); absent for graphs and failures. */
+  figureSvg?: string;
   key: AnswerKey | null;
   verify: { agreed: boolean; candidates?: string[]; note?: string };
   ms?: number;
