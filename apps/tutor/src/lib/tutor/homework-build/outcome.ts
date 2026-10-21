@@ -14,7 +14,8 @@
  */
 
 import { claimsSetFinished } from '../lesson-plan/homework-ledger';
-import { KEYED_VERDICT_DEBUG_TYPE, parseKeyedVerdictDebug } from '../voice/keyed-verdict';
+import { KEYED_VERDICT_DEBUG_TYPE, parseKeyedVerdictDebug, allKeyPartsConfirmed } from '../voice/keyed-verdict';
+import type { AnswerKey } from './types';
 
 export { KEYED_VERDICT_DEBUG_TYPE };
 
@@ -58,7 +59,7 @@ export function dedupedKeyedVerdicts(
     const at = timeOf(e.timestamp);
     if (timed && at !== null) {
       const turn = (studentTimes as number[]).filter((t) => t <= at).length;
-      const k = `${v.part}|${v.verdict}|${turn}`;
+      const k = `${v.part}|${v.value ?? ''}|${v.verdict}|${turn}`;
       if (seen.has(k)) continue;
       seen.add(k);
     } else if (prev && prev.part === v.part && prev.verdict === v.verdict) {
@@ -95,9 +96,20 @@ export function classifyHomeworkProblemOutcome(input: {
   transcript: ReadonlyArray<TranscriptLike> | null | undefined;
   /** The plan's `verified` flag; null when the plan could not be read. */
   verified: boolean | null;
+  /** 2026-10-21 (hw-11): the host's finish button was pressed (GET …?finished=1).
+   *  Done when every key part is confirmed by the transcript, else needs_review —
+   *  never left "in progress" after the student said they finished. */
+  finished?: boolean;
+  /** The verified key, for the finished check; null/undefined when there is none. */
+  key?: AnswerKey | null;
 }): HomeworkProblemOutcome {
   const events = Array.isArray(input.debugEvents) ? input.debugEvents : [];
   if (events.some((e) => e?.type === HOMEWORK_PROBLEM_DONE_EVENT)) return 'done';
+  if (input.finished) {
+    const history = (input.transcript ?? []).filter(isStudent).map((t) => ({ role: 'user' as const, content: String(t.text) }));
+    if (input.key?.parts?.length && allKeyPartsConfirmed(history, '', input.key)) return 'done';
+    return 'needs_review';
+  }
   if (input.verified === false) {
     const lastStudent = [...(input.transcript ?? [])].reverse().find(isStudent);
     if (lastStudent && claimsProblemFinished(String(lastStudent.text))) return 'needs_review';

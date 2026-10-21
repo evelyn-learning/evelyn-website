@@ -16,6 +16,7 @@ import { TutorSession, type ITutorSession } from '@/models/TutorSession';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { homeworkProblemOf } from '@/lib/tutor/lesson-plan/homework-problem';
 import { classifyHomeworkProblemOutcome, homeworkProblemPriorNote } from '@/lib/tutor/homework-build/outcome';
+import { getHomeworkBuild } from '@/lib/tutor/homework-build/store';
 
 export const GET = withPortalAuth(async (req, auth) => {
   const params = new URL(req.url).searchParams;
@@ -31,10 +32,17 @@ export const GET = withPortalAuth(async (req, auth) => {
   const plan = planId ? await getLessonPlan(planId) : null;
   const scoped = plan && plan.metadata?.portalPartnerId === auth.partnerId ? plan : null;
   const meta = homeworkProblemOf(scoped);
+  // The host's finish button (academy live-result path): done only when the
+  // transcript confirms every key part, else needs_review (outcome.ts).
+  const finished = params.get('finished') === '1';
+  const build = finished && meta?.verified ? await getHomeworkBuild(meta.parentPlanId).catch(() => null) : null;
+  const key = build?.problems.find((p) => p.n === meta?.n)?.key ?? null;
   const outcome = classifyHomeworkProblemOutcome({
     debugEvents: session.debugEvents,
     transcript: session.transcript,
     verified: meta ? meta.verified : null,
+    finished,
+    key,
   });
   const priorNote = await homeworkProblemPriorNote(session.transcript);
   return NextResponse.json({ outcome, priorNote });

@@ -26,7 +26,13 @@ import type { AnswerKey, AnswerPart } from '../homework-build/types';
 import { numbersAgree } from '../portal/key-compare';
 import type { VerdictPrecheckResult } from './verdict-precheck-shared';
 
-export type KeyedVerdict = { verdict: 'correct' | 'incorrect' | 'undecided'; part?: string; matched?: string };
+export type KeyedVerdict = {
+  verdict: 'correct' | 'incorrect' | 'undecided';
+  part?: string;
+  matched?: string;
+  /** A multi-value part (AnswerPart.values): the one named value this verdict is about. */
+  value?: string;
+};
 
 /** The model check's cap when the keyed verdict is undecided. */
 export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 4000;
@@ -35,7 +41,7 @@ export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 4000;
 export const KEYED_VERDICT_DEBUG_TYPE = 'homework_keyed_verdict';
 
 /** `explicit`: offered as the final answer (see the header) — only such a value can be judged wrong. */
-interface Candidate { value: number; text: string; at: number; explicit: boolean; /** A fraction / mixed number: confirms, never marks wrong. */ frac?: boolean }
+interface Candidate { value: number; text: string; at: number; explicit: boolean; /** A fraction / mixed number: confirms, never marks wrong. */ frac?: boolean; /** The short name in front of the lead ("x = 7" → "x"), when there is one. */ lhs?: string | null }
 
 const NUM_RE = /-?\d+(?:\.\d+)?/g;
 /** Words / marks after which a number is an offered value. */
@@ -169,7 +175,7 @@ function candidates(text: string, opts: { segmentStartIsLead?: boolean; keyVar?:
       || ANSWER_LEAD_RE.test(before)
       || (lhs !== null && (lhs === opts.keyVar || lhs === 'it'));
     const unit = UNIT_RE.exec(text.slice(end).replace(/^\s+/, ''));
-    out.push({ value: Number(m[0]), text: (m[0] + (unit ? ` ${unit[0]}` : '')).trim(), at, explicit });
+    out.push({ value: Number(m[0]), text: (m[0] + (unit ? ` ${unit[0]}` : '')).trim(), at, explicit, lhs });
   }
   return out;
 }
@@ -242,6 +248,36 @@ function judgeValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict {
   return { verdict: 'incorrect', part: label, matched: offered.text };
 }
 
+const normValueName = (s: string) => String(s ?? '').toLowerCase().replace(/\s+/g, '');
+
+/**
+ * 2026-10-21 (hw-11 problem 2): a part with several named values ("x = 7,
+ * PA = 17") — one verdict per value the message offers. A candidate with a
+ * name ("x = 7", "PA is 20") judges that value; a bare value judges the one
+ * value it equals (a value equal to none, with no name, is undecided). The
+ * part is confirmed once every value has been confirmed (confirmedKeyParts).
+ */
+function judgeNamedValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict[] {
+  const values = part.values ?? [];
+  if (!values.length) return [];
+  const label = normLabel(part.label);
+  const byName = new Map<string, KeyedVerdict>();
+  for (const c of cands) {
+    if (c.frac) continue;
+    const named = c.lhs ? values.find((v) => v.name === normValueName(c.lhs!)) : undefined;
+    if (named) {
+      byName.set(named.name, numbersAgree(c.value, named.value)
+        ? { verdict: 'correct', part: label, value: named.name, matched: c.text }
+        : { verdict: 'incorrect', part: label, value: named.name, matched: c.text });
+      continue;
+    }
+    if (c.lhs && c.lhs !== 'it') continue;   // "AD = 6": a given, not one of the values
+    const hits = values.filter((v) => numbersAgree(c.value, v.value));
+    if (hits.length === 1) byName.set(hits[0].name, { verdict: 'correct', part: label, value: hits[0].name, matched: c.text });
+  }
+  return [...byName.values()];
+}
+
 /** One verdict per part the message offers a value for (or the single part). */
 export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerdict[] {
   // A runtime note in front of the student's words is dropped (R19b); a
@@ -267,22 +303,27 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
   const out: KeyedVerdict[] = [];
   if (key.parts.length === 1) {
     const part = key.parts[0];
+    const keyVar = part.values?.length ? undefined : keyVarOf(part);   // several names: none is "the" variable
     const cands = [
-      ...[...candidates(head, { keyVar: keyVarOf(part) }), ...fractionCandidates(head, { keyVar: keyVarOf(part) })].sort(byAt),
+      ...[...candidates(head, { keyVar }), ...fractionCandidates(head, { keyVar })].sort(byAt),
       ...(byLabel.get(normLabel(part.label)) ?? []),
     ];
     const bare = !marks.length && !cands.length ? bareNumber(text) : null;
     const whole = marks.length ? (segText.get(normLabel(part.label)) || undefined) : text;
-    const v = judgePart(part, bare ? [bare] : cands, whole);
-    out.push(v);
+    const named = part.values?.length ? judgeNamedValues(part, bare ? [bare] : cands) : [];
+    if (named.length) out.push(...named);
+    else out.push(judgePart(part, bare ? [bare] : cands, whole));
   } else {
     for (const part of key.parts) {
       const cands = byLabel.get(normLabel(part.label));
       const seg = segText.get(normLabel(part.label)) || undefined;
-      if (cands?.length) out.push(judgePart(part, cands, seg));
+      const named = part.values?.length && cands?.length ? judgeNamedValues(part, cands) : [];
+      if (named.length) out.push(...named);
+      else if (cands?.length) out.push(judgePart(part, cands, seg));
       else if (seg !== undefined && textMatchesPart(part, seg)) out.push(judgePart(part, [], seg));
     }
-    // An unlabeled value counts only when it matches exactly one numeric part.
+    // An unlabeled value counts only when it matches exactly one numeric part
+    // (or, named or unique, one value of a multi-value part).
     if (!marks.length) {
       const cands = candidates(head, {});
       const bare = !cands.length ? bareNumber(text) : null;
@@ -290,7 +331,10 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
       const last = vals[vals.length - 1];
       if (last) {
         const hits = key.parts.filter((p) => p.canonical.kind === 'number' && numbersAgree(last.value, p.canonical.value));
-        if (hits.length === 1) out.push({ verdict: 'correct', part: normLabel(hits[0].label), matched: last.text });
+        const multi = key.parts.filter((p) => p.values?.length);
+        const namedHits = multi.flatMap((p) => judgeNamedValues(p, [last]).map((v) => ({ ...v, verdict: v.verdict })));
+        if (hits.length === 1 && namedHits.length === 0) out.push({ verdict: 'correct', part: normLabel(hits[0].label), matched: last.text });
+        else if (hits.length === 0 && namedHits.length === 1) out.push(namedHits[0]);
       }
     }
   }
@@ -310,7 +354,7 @@ export function keyedVerdict(studentMessage: string, key: AnswerKey): KeyedVerdi
   if (!vs.every((v) => v.verdict === first)) return { verdict: 'undecided' };
   return {
     verdict: first,
-    part: vs.map((v) => v.part ?? '').join(','),
+    part: [...new Set(vs.map((v) => v.part ?? ''))].join(','),
     matched: vs.map((v) => v.matched ?? '').filter(Boolean).join('; '),
   };
 }
@@ -358,10 +402,20 @@ export function confirmedKeyParts(
   key: AnswerKey,
 ): Set<string> {
   const done = new Set<string>();
+  const values = new Map<string, Set<string>>();   // part → confirmed value names
   const msgs = [...history.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), currentMessage];
   // keyedVerdicts drops a runtime note in front of a student's words (R19b).
   for (const msg of msgs) {
-    for (const v of keyedVerdicts(msg, key)) if (v.verdict === 'correct') done.add(v.part ?? '');
+    for (const v of keyedVerdicts(msg, key)) {
+      if (v.verdict !== 'correct') continue;
+      if (v.value) { const set = values.get(v.part ?? '') ?? new Set<string>(); set.add(v.value); values.set(v.part ?? '', set); }
+      else done.add(v.part ?? '');
+    }
+  }
+  // A multi-value part is confirmed once every value has been, across messages.
+  for (const p of key.parts) {
+    const label = normLabel(p.label);
+    if (p.values?.length && !done.has(label) && p.values.every((v) => values.get(label)?.has(v.name))) done.add(label);
   }
   return done;
 }
@@ -377,11 +431,11 @@ export function allKeyPartsConfirmed(
 }
 
 /** Debug message for a keyed verdict: `keyed part=<label> verdict=<v>`. */
-export function formatKeyedVerdictDebug(part: string, verdict: 'correct' | 'incorrect'): string {
-  return `keyed part=${normLabel(part)} verdict=${verdict}`;
+export function formatKeyedVerdictDebug(part: string, verdict: 'correct' | 'incorrect', value?: string): string {
+  return `keyed part=${normLabel(part)} verdict=${verdict}${value ? ` value=${normValueName(value)}` : ''}`;
 }
 
-export function parseKeyedVerdictDebug(message: unknown): { part: string; verdict: 'correct' | 'incorrect' } | null {
-  const m = /^keyed part=([a-z0-9]*) verdict=(correct|incorrect)\b/.exec(String(message ?? ''));
-  return m ? { part: m[1], verdict: m[2] as 'correct' | 'incorrect' } : null;
+export function parseKeyedVerdictDebug(message: unknown): { part: string; verdict: 'correct' | 'incorrect'; value?: string } | null {
+  const m = /^keyed part=([a-z0-9]*) verdict=(correct|incorrect)\b(?: value=(\S+))?/.exec(String(message ?? ''));
+  return m ? { part: m[1], verdict: m[2] as 'correct' | 'incorrect', ...(m[3] ? { value: m[3] } : {}) } : null;
 }

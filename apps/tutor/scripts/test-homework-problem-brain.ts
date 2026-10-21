@@ -143,6 +143,37 @@ async function main() {
       if (part) assert.equal(got.part, part);
     });
   }
+  // 2026-10-21 (hw-11 problem 2): "(b) x = 7, PA = 17" was never confirmed — the
+  // student gave x = 7 and then 17 in two messages, and a text part needed the
+  // whole final verbatim. Named values confirm one by one, across messages.
+  await section('multi-value part "x = 7, PA = 17": each named value judged on its own, the part confirmed once all are', async () => {
+    const { normalizeKeyParts } = await import('../src/lib/tutor/homework-build/key-solve');
+    const parts = normalizeKeyParts({ parts: [
+      { label: 'a', final: '132°', canonical: { kind: 'number', number: 132 } },
+      { label: 'b', final: 'x = 7, PA = 17', canonical: { kind: 'text', text: 'x = 7, PA = 17' } },
+    ] })!;
+    assert.deepEqual(parts[1].values, [{ name: 'x', value: 7 }, { name: 'pa', value: 17 }]);
+    assert.equal(parts[0].values, undefined);
+    const key: AnswerKey = { parts, solvers: ['s1', 's2'] };
+    const pick = (vs: ReturnType<typeof kv.keyedVerdicts>) => vs.map((v) => [v.verdict, v.part, v.value]);
+    assert.deepEqual(pick(kv.keyedVerdicts('equal so 3x-4=x+10 so x=7', key)), [['correct', 'b', 'x']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('17', key)), [['correct', 'b', 'pa']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('PA = 20', key)), [['incorrect', 'b', 'pa']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('360 - (90+90+48)=132', key)), [['correct', 'a', undefined]]);
+    assert.equal(kv.keyedVerdict('x = 7 and PA = 17', key).verdict, 'correct');
+    assert.equal(kv.keyedVerdict('x = 7 and PA = 17', key).part, 'b');
+    const h = (...msgs: string[]) => msgs.map((content) => ({ role: 'user' as const, content }));
+    assert.equal(kv.allKeyPartsConfirmed(h('360 - (90+90+48)=132', 'equal so 3x-4=x+10 so x=7'), '17', key), true);
+    assert.equal(kv.allKeyPartsConfirmed(h('360 - (90+90+48)=132'), 'x = 7', key), false, 'PA still open');
+    assert.equal(kv.allKeyPartsConfirmed(h('equal so 3x-4=x+10 so x=7'), '17', key), false, '(a) still open');
+    const angles = normalizeKeyParts({ parts: [{ label: 'b', final: 'm∠1 = 116°, m∠2 = 64°', canonical: { kind: 'text', text: '' } }] })!;
+    assert.deepEqual(angles[0].values, [{ name: 'm∠1', value: 116 }, { name: 'm∠2', value: 64 }]);
+    const akey: AnswerKey = { parts: angles, solvers: [] };
+    assert.deepEqual(pick(kv.keyedVerdicts('angle 1 is 116', akey)), [['correct', 'b', 'm∠1']]);
+    assert.equal(kv.allKeyPartsConfirmed(h('angle 1 is 116'), 'and angle 2 = 64', akey), true);
+    assert.deepEqual(kv.parseKeyedVerdictDebug(kv.formatKeyedVerdictDebug('b', 'correct', 'PA')), { part: 'b', verdict: 'correct', value: 'pa' });
+    assert.deepEqual(kv.parseKeyedVerdictDebug(kv.formatKeyedVerdictDebug('b', 'correct')), { part: 'b', verdict: 'correct' });
+  });
   await section('correct carries the matched value', () => {
     const got = keyedVerdict('so perimeter is 26+3pi=35.4 cm', PERIM);
     assert.ok(got.matched && got.matched.includes('35.4'), JSON.stringify(got));
@@ -294,6 +325,12 @@ async function main() {
     has(route + turn, /getHomeworkBuild\(/);
     has(route, /resolveHomeworkProblemTurn\(/);
   });
+  await section('outcome route reads finished=1 and the key', () => {
+    const o = read('app/api/portal/v1/homework-problem-outcome/route.ts');
+    has(o, /params\.get\('finished'\) === '1'/);
+    has(o, /getHomeworkBuild\(meta\.parentPlanId\)/);
+    has(o, /finished,\s*key,/);
+  });
   await section('set_current_problem attached only under a homeworkProblem condition', () => {
     const lines = route.split('\n');
     const i = lines.findIndex((l) => /tools: \[\.\.\.toolFilter\.tools, SET_CURRENT_PROBLEM_TOOL\]/.test(l));
@@ -364,6 +401,18 @@ async function main() {
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I finished the whole worksheet')], verified: true }), 'in_progress');
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('ok I\'m done with this one')], verified: false }), 'needs_review');
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('x = 5')], verified: false }), 'in_progress');
+  });
+  await section('finished (the host\'s button): done when the transcript confirms every key part, else needs_review', async () => {
+    const { normalizeKeyParts } = await import('../src/lib/tutor/homework-build/key-solve');
+    const key: AnswerKey = { parts: normalizeKeyParts({ parts: [
+      { label: 'a', final: '132°', canonical: { kind: 'number', number: 132 } },
+      { label: 'b', final: 'x = 7, PA = 17', canonical: { kind: 'text', text: '' } },
+    ] })!, solvers: ['s1', 's2'] };
+    const tx = [stu('360'), { role: 'tutor', text: 'ok' }, stu('360 - (90+90+48)=132'), stu('equal so 3x-4=x+10 so x=7'), stu('17')];
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: tx, verified: true, finished: true, key }), 'done');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: tx.slice(0, 3), verified: true, finished: true, key }), 'needs_review');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: tx, verified: false, finished: true, key: null }), 'needs_review');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: tx.slice(0, 3), verified: true, key }), 'in_progress', 'not finished: as before');
   });
   await section('claimsProblemFinished: this problem (or the set), not a question or a negation', () => {
     for (const t of ['done', 'Finished!', "that's it", "I'm done with this one", 'got it, thanks', 'I finished it', 'I finished the whole worksheet']) {

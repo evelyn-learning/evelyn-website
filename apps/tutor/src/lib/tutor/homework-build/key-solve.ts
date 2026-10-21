@@ -75,6 +75,22 @@ function trailingUnit(final: string): string {
 }
 
 /** Model JSON -> parts, or null for ill_posed / malformed / empty. Trailing units move into canonical.units. */
+/** A value's name as the keyed verdict compares it: lower case, no spaces ("PA" → "pa", "m∠1" → "m∠1"). */
+export const normValueName = (s: string) => String(s ?? '').toLowerCase().replace(/\s+/g, '');
+
+/** The named numbers of a final such as "x = 7, PA = 17" or "m∠1 = 116°, m∠2 = 64°"; empty unless there are at least two. */
+export function namedValues(final: string): Array<{ name: string; value: number }> {
+  const out: Array<{ name: string; value: number }> = [];
+  const re = /(?:^|[,;]\s*|\band\s+|\s)([A-Za-z∠][A-Za-z0-9∠′'_]{0,7})\s*[=≈]\s*(-?\d+(?:\.\d+)?)(?![\d.]*\s*[+\-*/×÷^])/g;
+  for (const m of final.matchAll(re)) {
+    const name = normValueName(m[1]);
+    const value = Number(m[2]);
+    if (!Number.isFinite(value) || out.some((v) => v.name === name)) continue;
+    out.push({ name, value });
+  }
+  return out.length >= 2 ? out : [];
+}
+
 export function normalizeKeyParts(o: unknown): AnswerPart[] | null {
   const r = o as { parts?: unknown; ill_posed?: unknown } | null;
   if (!r || typeof r !== 'object') return null;
@@ -90,7 +106,8 @@ export function normalizeKeyParts(o: unknown): AnswerPart[] | null {
       const units = (typeof c.units === 'string' && c.units.trim()) || trailingUnit(final);
       out.push({ label, final, canonical: { kind: 'number', value: c.number, ...(units ? { units } : {}) } });
     } else {
-      out.push({ label, final, canonical: { kind: 'text', value: (typeof c.text === 'string' && c.text.trim()) || final } });
+      const values = namedValues(final);
+      out.push({ label, final, canonical: { kind: 'text', value: (typeof c.text === 'string' && c.text.trim()) || final }, ...(values.length ? { values } : {}) });
     }
   }
   return out;

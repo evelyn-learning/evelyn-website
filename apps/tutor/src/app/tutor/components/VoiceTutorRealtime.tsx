@@ -16933,10 +16933,11 @@ export function VoiceTutorRealtime({
                 } else if ((ev as { type?: string }).type === 'homework-keyed-verdict') {
                   // One-problem homework (2026-10-20): the server's keyed
                   // verdict for one part — read back by the outcome route.
-                  const kv = ev as { part?: unknown; verdict?: unknown };
-                  if ((kv.verdict === 'correct' || kv.verdict === 'incorrect') && !keyedVerdictPartsThisTurn.has(String(kv.part ?? ''))) {
-                    keyedVerdictPartsThisTurn.add(String(kv.part ?? ''));
-                    onDebugEvent?.(KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug(String(kv.part ?? ''), kv.verdict));
+                  const kv = ev as { part?: unknown; verdict?: unknown; value?: unknown };
+                  const kvKey = `${String(kv.part ?? '')}#${typeof kv.value === 'string' ? kv.value : ''}`;
+                  if ((kv.verdict === 'correct' || kv.verdict === 'incorrect') && !keyedVerdictPartsThisTurn.has(kvKey)) {
+                    keyedVerdictPartsThisTurn.add(kvKey);
+                    onDebugEvent?.(KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug(String(kv.part ?? ''), kv.verdict, typeof kv.value === 'string' ? kv.value : undefined));
                   }
                 } else if ((ev as { type?: string }).type === 'homework-problem-done') {
                   // Every key part confirmed. Sent on every turn from then on; recorded once.

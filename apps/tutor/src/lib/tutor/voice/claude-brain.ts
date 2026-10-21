@@ -746,7 +746,7 @@ export type BrainStreamEvent =
    *  student's message was judged on against the verified key, with no model
    *  call. Telemetry only; the browser records it as the debug event
    *  `homework_keyed_verdict` (`formatKeyedVerdictDebug`). */
-  | { type: 'homework-keyed-verdict'; part: string; verdict: 'correct' | 'incorrect' }
+  | { type: 'homework-keyed-verdict'; part: string; verdict: 'correct' | 'incorrect'; value?: string }
   /** Homework-problem turn: every part of the key is confirmed correct by
    *  the student's messages so far (this one included). Recomputed on every
    *  turn, so it repeats once reached; the browser records the debug event
@@ -2520,7 +2520,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       } else {
         console.log(`[keyed-verdict] part=${keyed?.part ?? ''} verdict=${keyedResult.verdict} ms=0`);
         for (const v of keyedVerdicts(studentSaid, hpKey!)) {
-          if (v.verdict !== 'undecided') yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: v.verdict };
+          if (v.verdict !== 'undecided') yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: v.verdict, ...(v.value ? { value: v.value } : {}) };
         }
       }
       const result = keyedResult ?? await runVerdictPrecheck({

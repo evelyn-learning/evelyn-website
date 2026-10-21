@@ -22,6 +22,10 @@ export interface AnswerPart {
   label: string;
   final: string;
   canonical: { kind: 'number'; value: number; units?: string } | { kind: 'text'; value: string };
+  /** 2026-10-21 (hw-11 problem 2, "x = 7, PA = 17"): a part whose final holds
+   *  several named numbers is confirmed value by value, across messages
+   *  (keyed-verdict.ts). Names are normalised (lower case, no spaces). */
+  values?: Array<{ name: string; value: number }>;
 }
 
 export interface AnswerKey { parts: AnswerPart[]; solvers: string[] }
