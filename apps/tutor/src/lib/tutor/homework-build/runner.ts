@@ -8,6 +8,7 @@ import { getLessonPlan } from '../lesson-plan/store';
 import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { buildFigure, defaultFigureBuildDeps, type FigureBuildDeps } from './figure-build';
 import { figureToSvg } from './figure-svg';
+import { validateFigure } from './figure-validate';
 import { hasFigureDescription } from '../lesson-plan/homework-problem-meta';
 import { solveKey, defaultKeySolveDeps, type KeySolveDeps } from './key-solve';
 import { ensureHomeworkBuild, findCachedProblem, patchProblemBuild } from './store';
@@ -61,7 +62,19 @@ export async function runHomeworkBuild(
       // infrastructure (Mongo, process). Leave the problem `preparing` so the stale
       // re-kick retries it; never persist a transient fault as a final verdict.
       const cached = await findCachedProblem(p.hash);
-      if (cached && cached.status === 'ready' && (cached.figure || !hasFigureDescription(p.text))) {
+      // A cached figure is copied only if it still passes today's validator
+      // (GAC acceptance 2026-10-21, round 5: hw-11's box plot was cached as a
+      // showGraph of undrawable `segments` before the graph-field check
+      // existed, and a re-upload within 24 h copied it). Claims are not
+      // re-extracted — this is the static half: labels from the text, known
+      // graph fields, a solvable construction.
+      let cachedFigureOk = false;
+      if (cached?.status === 'ready' && cached.figure) {
+        const v = validateFigure(cached.figure, { problemText: p.text, claims: [] });
+        cachedFigureOk = v.ok;
+        if (!v.ok) console.warn(`[homework-build] n=${p.n} cached figure rejected by the current validator, retrying: ${v.reasons.join('; ').slice(0, 300)}`);
+      }
+      if (cached && cached.status === 'ready' && (cachedFigureOk || (!cached.figure && !hasFigureDescription(p.text)))) {
         patch = {
           status: 'ready', figure: cached.figure, figureNote: cached.figureNote,
           ...(cached.figureSvg ? { figureSvg: cached.figureSvg } : {}),

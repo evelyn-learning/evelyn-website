@@ -632,6 +632,31 @@ async function main() {
       assert.equal((await getHomeworkBuild('gen-f3'))!.problems[0].ms, 0);
     });
 
+    await section('a cached ready figure that fails today\'s validator is retried, the key reused', async () => {
+      // GAC acceptance 2026-10-21 (round 5 audit): hw-11's box plot was cached
+      // as a showGraph made of `segments` (undrawable) before the graph-field
+      // check existed; a re-upload within 24 h copied it. A cached figure is
+      // re-validated against the current rules before it is copied.
+      const text = 'Box 1 [Figure: box plot from 0 to 50]';
+      const stale = { action: 'showGraph', type: 'function', data: { xRange: [0, 50], yRange: [0, 4], segments: [{ from: [9, 2], to: [18, 2] }] } };
+      await ensureHomeworkBuild('gen-s0', 'greenapple', [{ n: 1, text }]);
+      await patchProblemBuild('gen-s0', 1, {
+        status: 'ready', figure: stale as never,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+      });
+      await mkPlan('gen-s1', [text]);
+      const { deps, order } = mkDeps();
+      let solves = 0;
+      deps.key.solveA = async () => { solves++; return { parts: [{ label: '', final: '7', canonical: { kind: 'number', value: 7 } }], usage: { in: 1, out: 1 } }; };
+      await runHomeworkBuild('gen-s1', 'greenapple', { deps, concurrency: 1 });
+      assert.deepEqual(order, [text], 'the figure was proposed again');
+      assert.equal(solves, 0, 'the verified key was not re-solved');
+      const b = (await getHomeworkBuild('gen-s1'))!;
+      assert.equal(b.problems[0].status, 'ready');
+      assert.equal(b.problems[0].figure, null, 'the stale graph was not copied');
+      assert.equal(b.problems[0].key!.parts[0].final, '5');
+    });
+
     await section('an unverified cached entry is ignored and rebuilt', async () => {
       await ensureHomeworkBuild('gen-u0', 'greenapple', [{ n: 1, text: 'Unver 1' }]);
       await patchProblemBuild('gen-u0', 1, { status: 'unverified', verify: { agreed: false } });
