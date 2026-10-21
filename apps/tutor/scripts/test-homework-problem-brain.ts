@@ -177,6 +177,18 @@ async function main() {
     assert.ok(b.includes(blk.HOMEWORK_PROBLEM_RULES));
     assert.ok(b.includes('Back to your list'));
   });
+  await section('C2 conduct + safeguarding rules: the ledger constants verbatim, both modes', async () => {
+    const led = await import('../src/lib/tutor/lesson-plan/homework-ledger');
+    for (const verified of [true, false]) {
+      const b = blk.formatHomeworkProblemBlock({ text: 'P', verified, hasFigure: true, ...(verified ? { key: X20 } : {}) });
+      for (const [name, c] of [['PERSONAL_DETAILS_RULE', led.PERSONAL_DETAILS_RULE], ['OFF_TOPIC_NOT_ANSWERED', led.OFF_TOPIC_NOT_ANSWERED], ['EXTRA_PROBLEM_SAME_RULES', led.EXTRA_PROBLEM_SAME_RULES], ['LEDGER_CONDUCT_RULES', led.LEDGER_CONDUCT_RULES]] as const) {
+        assert.ok(b.includes(c), `${name} missing (verified=${verified})`);
+        assert.ok(led.HOMEWORK_LEDGER_RULES.includes(c), `${name} no longer in the ledger rules`);
+      }
+      assert.ok(b.indexOf(led.LEDGER_CONDUCT_RULES) < b.indexOf('</homework_problem>'), 'inside the block');
+    }
+    has(read('lib/tutor/voice/homework-problem-block.ts'), /import \{[^}]*LEDGER_CONDUCT_RULES[^}]*\} from '\.\.\/lesson-plan\/homework-ledger'/);
+  });
   await section('claude-brain re-exports the block API', () => {
     const src = read('lib/tutor/voice/claude-brain.ts');
     for (const re of [/formatHomeworkProblemBlock/, /HOMEWORK_PROBLEM_RULES/, /homeworkProblem\?: HomeworkProblemTurnInput/]) has(src, re);
@@ -413,6 +425,7 @@ async function main() {
       assert.equal(llmCalls, 1);
       assert.ok(!r.content.includes('<homework_problem>'));
       assert.ok(!r.content.includes('Ask, never tell'));
+      assert.ok(!r.content.includes('You keep nothing about the student between sessions'), 'default turn: no conduct rules added');
       assert.ok(!r.content.includes(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()), 'default turn: no homework reveal suffix');
       assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict' || e.type === 'homework-problem-done'));
     });

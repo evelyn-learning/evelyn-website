@@ -10,6 +10,7 @@
  */
 
 import type { AnswerKey } from '../homework-build/types';
+import { EXTRA_PROBLEM_SAME_RULES, LEDGER_CONDUCT_RULES, OFF_TOPIC_NOT_ANSWERED, PERSONAL_DETAILS_RULE } from '../lesson-plan/homework-ledger';
 
 /** Server-populated only (never from the request body). */
 export interface HomeworkProblemTurnInput {
@@ -39,6 +40,15 @@ export const HOMEWORK_PROBLEM_RULES = [
   '- When every part is confirmed correct, say the problem is done and offer "Back to your list".',
 ].join('\n');
 
+/** The homework path's conduct and safeguarding rules (crisis line, personal
+ *  details, live tests and graded work, off-topic, extra problems, methods…),
+ *  the same constants `<homework_session>` renders, so the two cannot drift. */
+export const HOMEWORK_PROBLEM_CONDUCT_RULES =
+  `- ${OFF_TOPIC_NOT_ANSWERED}\n` +
+  `- ${EXTRA_PROBLEM_SAME_RULES}\n` +
+  `- ${PERSONAL_DETAILS_RULE}\n` +
+  `- ${LEDGER_CONDUCT_RULES}\n`;
+
 const oneLine = (s: string, max: number) => String(s ?? '').replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 
 export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined): string {
@@ -51,5 +61,6 @@ export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefi
     + `- ${hp.hasFigure ? HOMEWORK_PROBLEM_FIGURE_SHOWN : HOMEWORK_PROBLEM_NO_FIGURE}\n`
     + `- ${hp.verified ? HOMEWORK_PROBLEM_VERIFIED : HOMEWORK_PROBLEM_UNVERIFIED}\n`
     + `${HOMEWORK_PROBLEM_RULES}\n`
+    + HOMEWORK_PROBLEM_CONDUCT_RULES
     + '</homework_problem>\n\n';
 }
