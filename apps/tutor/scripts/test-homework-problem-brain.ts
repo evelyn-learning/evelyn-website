@@ -88,6 +88,54 @@ async function main() {
     ['c≈6.9', numKey([['', 'c ≈ 6.93', 6.93]]), 'c ≈ 6.9', 'correct'],
     ['20°', numKey([['', '20°', 20]]), 'the angle is 20°', 'correct'],
   ];
+  // I3 (2026-10-21): exact text and fractions CONFIRM; nothing new is ever marked wrong.
+  const FRAC = numKey([['', '3/4', 0.75]]);
+  const XFRAC = numKey([['', 'x = 3/4', 0.75]]);
+  const LINE: AnswerKey = { parts: [{ label: '', final: 'y = 2x + 3', canonical: { kind: 'text', value: 'y = 2x + 3' } }], solvers: [] };
+  const ROOT = numKey([['', '2√3', 3.4641]]);
+  const ROOTS: AnswerKey = { parts: [{ label: '', final: 'x = 2 or x = -3', canonical: { kind: 'text', value: 'x = 2 or x = -3' } }], solvers: [] };
+  const ROOTSN = numKey([['', 'x = 2 or x = −3', 2]]);
+  const MIX = numKey([['', '1 1/2 cups', 1.5]]);
+  const TWO: AnswerKey = { parts: [{ label: 'a', final: 'a = 8', canonical: { kind: 'number', value: 8 } }, { label: 'b', final: 'y = 2x + 3', canonical: { kind: 'text', value: 'y = 2x + 3' } }], solvers: [] };
+  table.push(
+    ['3/4', FRAC, 'x = 3/4', 'correct'],
+    ['3/4', FRAC, '3/4', 'correct'],
+    ['3/4', FRAC, '0.75', 'correct'],
+    ['3/4', FRAC, 'x = 6/8', 'correct'],
+    ['3/4', FRAC, 'x = 2/3', 'undecided'],
+    ['3/4', FRAC, 'x = 3/4 + 1', 'undecided'],
+    ['x=3/4', XFRAC, 'x = 3 / 4', 'correct'],
+    ['x=3/4', XFRAC, 'y = 3/4', 'undecided'],
+    ['x=20', X20, 'x = 60/3', 'correct'],
+    ['x=20', X20, 'x = 60/3, no wait x = 25', 'undecided'], // an earlier value matched: ambiguous, as for whole numbers
+    ['1 1/2', MIX, 'it is 1 1/2', 'correct'],
+    ['1 1/2', MIX, '1 1/2 cups', 'correct'],
+    ['y=2x+3', LINE, 'y = 2x + 3', 'correct'],
+    ['y=2x+3', LINE, 'Y=2X+3.', 'correct'],
+    ['y=2x+3', LINE, 'y = 2×x + 3', 'undecided'],
+    ['y=2x+3', LINE, 'y = 3x + 2', 'undecided'],
+    ['2√3', ROOT, '2√3', 'correct'],
+    ['2√3', ROOT, '3.46', 'correct'],
+    ['2√3', ROOT, '3√2', 'undecided'],
+    ['x=2 or -3', ROOTS, 'x = 2 or x = -3', 'correct'],
+    ['x=2 or -3', ROOTS, 'x = 2 or x = −3', 'correct'],
+    ['x=2 or -3', ROOTS, 'x = 2', 'undecided'],
+    ['x=2 or -3 (num)', ROOTSN, 'x = 2 or x = -3', 'correct'],
+    ['text', TEXT, 'Similar by AA.', 'correct'],
+    ['a=8,b=line', TWO, 'b) y = 2x + 3', 'correct', 'b'],
+    ['a=8,b=line', TWO, 'a) 8 b) y = 2x+3', 'correct'],
+    ['a=8,b=line', TWO, 'b) y = 2x + 4', 'undecided'],
+    // R19a: a question is judged neither way.
+    ['x=20', X20, 'is it 20?', 'undecided'],
+    ['x=20', X20, 'x = 20?', 'undecided'],
+    ['x=20', X20, 'is x = 20', 'undecided'],
+    ['x=20', X20, 'would it be 20', 'undecided'],
+    ['x=20', X20, 'does x = 25', 'undecided'],
+    // R19b: a note in front of the student's words is dropped, the rest judged.
+    ['x=20', X20, '[correction note — not from the student] The intended answer is "x = 20".\n\nx = 25', 'incorrect'],
+    ['x=20', X20, '[correction note — not from the student] The intended answer is "x = 25".\n\nx = 20', 'correct'],
+    ['x=20', X20, '[cadence note — not from the student] Shorter.\nx = 20', 'correct'],
+  );
   for (const [kname, key, msg, want, part] of table) {
     await section(`[${kname}] ${JSON.stringify(msg)} → ${want}${part ? ` part ${part}` : ''}`, () => {
       const got = keyedVerdict(msg, key);
@@ -145,6 +193,15 @@ async function main() {
     assert.equal(kv.allKeyPartsConfirmed([{ role: 'user', content: note }], 'ok', X20), false, 'a note in the history');
     assert.equal(kv.allKeyPartsConfirmed([], note, X20), false, 'a note as the current message');
     assert.deepEqual(kv.keyedVerdicts(note, X20), []);
+  });
+  await section('R19b stripRuntimeNote: prefix stripped; a note alone → empty; plain text unchanged', () => {
+    assert.equal(kv.stripRuntimeNote('[correction note — not from the student] Re-check.\n\nx = 20'), 'x = 20');
+    assert.equal(kv.stripRuntimeNote('[a note] one\n\n[b note] two\n\n  x = 5 '), 'x = 5');
+    assert.equal(kv.stripRuntimeNote('[correction note — not from the student] The intended answer is "x = 20".'), '');
+    assert.equal(kv.stripRuntimeNote('x = 20 [sic]'), 'x = 20 [sic]');
+    const note = '[correction note — not from the student] The intended answer is "x = 20".';
+    assert.equal(kv.allKeyPartsConfirmed([{ role: 'user', content: `${note}\n\nx = 20` }], 'ok', X20), true, 'student words after a note count');
+    assert.equal(kv.allKeyPartsConfirmed([{ role: 'user', content: note }], 'ok', X20), false, 'a note alone never counts');
   });
   await section('debug message round-trips', () => {
     const m = kv.formatKeyedVerdictDebug('a', 'incorrect');
@@ -283,10 +340,21 @@ async function main() {
     }
   });
   await section('needs_review: two wrong keyed verdicts on one part with no later correct', () => {
-    const k = (p: string, v: 'correct' | 'incorrect') => ev(oc.KEYED_VERDICT_DEBUG_TYPE, kv.formatKeyedVerdictDebug(p, v));
-    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect'), k('a', 'incorrect')], transcript: [], verified: true }), 'needs_review');
-    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect'), k('a', 'incorrect'), k('a', 'correct')], transcript: [], verified: true }), 'in_progress');
-    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect'), k('b', 'incorrect')], transcript: [], verified: true }), 'in_progress');
+    const k = (p: string, v: 'correct' | 'incorrect', t?: number) => ({ ...ev(oc.KEYED_VERDICT_DEBUG_TYPE, kv.formatKeyedVerdictDebug(p, v)), ...(t !== undefined ? { timestamp: new Date(t) } : {}) });
+    const st = (text: string, t: number) => ({ role: 'student', text, timestamp: new Date(t) });
+    const two = [st('a) 7', 1000), st('a) 9', 3000)];
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect', 1500), k('a', 'incorrect', 3500)], transcript: two, verified: true }), 'needs_review');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect', 1500), k('a', 'incorrect', 3500), k('a', 'correct', 3600)], transcript: two, verified: true }), 'in_progress');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect', 1500), k('b', 'incorrect', 3500)], transcript: two, verified: true }), 'in_progress');
+    // Untimed: consecutive identical events count once; a different event between breaks the run.
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect'), k('b', 'correct'), k('a', 'incorrect')], transcript: [], verified: true }), 'needs_review');
+  });
+  await section('R19c: a stall re-dispatch of ONE message never makes needs_review by itself', () => {
+    const k = (p: string, v: 'correct' | 'incorrect', t?: number) => ({ ...ev(oc.KEYED_VERDICT_DEBUG_TYPE, kv.formatKeyedVerdictDebug(p, v)), ...(t !== undefined ? { timestamp: new Date(t) } : {}) });
+    const one = [{ role: 'student', text: 'a) 7', timestamp: new Date(1000) }, { role: 'tutor', text: 'Not quite', timestamp: new Date(2000) }];
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect', 1500), k('a', 'incorrect', 1900)], transcript: one, verified: true }), 'in_progress', 'timed, same student turn');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [k('a', 'incorrect'), k('a', 'incorrect')], transcript: [], verified: true }), 'in_progress', 'untimed, consecutive');
+    assert.deepEqual(oc.dedupedKeyedVerdicts([k('a', 'incorrect', 1500), k('a', 'incorrect', 1600), k('a', 'correct', 1700)], one), [{ part: 'a', verdict: 'incorrect' }, { part: 'a', verdict: 'correct' }]);
   });
   await section('priorNote: exact prompt, ≤ 40 words, empty without a student turn or on failure', async () => {
     let prompt = '';

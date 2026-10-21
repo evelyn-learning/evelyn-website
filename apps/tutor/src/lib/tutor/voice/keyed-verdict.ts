@@ -8,13 +8,18 @@
  * (`a) 8`, `(b) 24`, `part b: 25`), or as the whole message. The LAST such
  * value of an equation chain is the one offered (`x = 60/3 = 20` offers 20).
  * Fractions, exact forms (`3π`, `2√3`), words and text parts are `undecided`
- * (the caller then asks the model check). A message with no explicit final
+ * (the caller then asks the model check) — except that two shapes CONFIRM
+ * (never mark wrong): the student's text exactly the key's final after
+ * normalisation (`y = 2x + 3`, `2√3`, `x = 2 or x = -3`, a text part), and a
+ * simple fraction / mixed number within 1 % of a number part (`x = 3/4`).
+ * A question (`…?`, "is it …") is never judged. A message with no explicit final
  * value is never `incorrect`: a value is wrong only when it is offered AS the
  * final answer — assigned to the key's own variable (`x = 25`, `x is 25`),
  * after a part label, after "the answer is", as "it is …", or as the whole
  * message. Intermediate working ("AB is 12", "I got 3 so far", "step 1: …
  * = 60") is `undecided`. A runtime note (a message that starts with `[`,
- * e.g. a correction note quoting the intended answer) is never judged.
+ * e.g. a correction note quoting the intended answer) is never judged; one
+ * PREPENDED to the student's words is stripped and the rest judged.
  */
 
 import type { AnswerKey, AnswerPart } from '../homework-build/types';
@@ -30,7 +35,7 @@ export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 4000;
 export const KEYED_VERDICT_DEBUG_TYPE = 'homework_keyed_verdict';
 
 /** `explicit`: offered as the final answer (see the header) — only such a value can be judged wrong. */
-interface Candidate { value: number; text: string; at: number; explicit: boolean }
+interface Candidate { value: number; text: string; at: number; explicit: boolean; /** A fraction / mixed number: confirms, never marks wrong. */ frac?: boolean }
 
 const NUM_RE = /-?\d+(?:\.\d+)?/g;
 /** Words / marks after which a number is an offered value. */
@@ -72,6 +77,78 @@ const ANSWER_LEAD_RE = /\banswers?\s*(?:is|was|=|:|would be|should be)?\s*$/i;
 export function isRuntimeNote(text: unknown): boolean {
   return String(text ?? '').trim().startsWith('[');
 }
+
+/** A runtime note PREPENDED to the student's words (`[… note — not from the
+ *  student] …\n\n<student text>`) is removed; what is left is the student's
+ *  own text. A message that is only a note → ''. Pure. */
+export function stripRuntimeNote(text: unknown): string {
+  let t = String(text ?? '').trim();
+  while (t.startsWith('[')) {
+    const para = /\n\s*\n/.exec(t);
+    const line = t.indexOf('\n');
+    if (para) t = t.slice(para.index + para[0].length).trim();
+    else if (line >= 0) t = t.slice(line + 1).trim();
+    else return '';
+  }
+  return t;
+}
+
+/** A question ("…?" at the end, or "is it …", "does …", "would …") offers nothing to judge. */
+const QUESTION_FORM_RE = /^(?:so\s+|and\s+|um\s+|uh\s+)?(?:is|isn't|does|doesn't|do|did|would|could|can|should|will|was|were|are|am|has|have|shall|might|may)\b/i;
+function isQuestionForm(text: string): boolean {
+  return /\?\s*$/.test(text) || QUESTION_FORM_RE.test(text);
+}
+
+/** Exact-match normalisation (I3): lowercase, no whitespace, trailing period
+ *  dropped, the times signs (× · and the asterisk), the division signs (÷ and the slash) and the unicode minus signs unified. */
+function normExact(s: string): string {
+  return normalize(s)
+    .toLowerCase()
+    .replace(/[×·*]/g, '*')
+    .replace(/[÷/]/g, '/')
+    .replace(/\s+/g, '')
+    .replace(/[.!]+$/, '');
+}
+
+/** The student's text equals the part's final (or text value) exactly, after normalisation. */
+function textMatchesPart(part: AnswerPart, studentText: string): boolean {
+  const got = normExact(studentText);
+  if (!got) return false;
+  const wants = [part.final, ...(part.canonical.kind === 'text' ? [part.canonical.value] : [])].map(normExact).filter(Boolean);
+  const v = keyVarOf(part);
+  // "x = 3/4" offered for a final written "3/4" (or the reverse): the key's own variable only.
+  const strip = (x: string) => (v && x.startsWith(`${v}=`) ? x.slice(v.length + 1) : x);
+  return wants.some((w) => w === got || (v !== null && strip(w) === strip(got) && strip(got) !== ''));
+}
+
+const FRACTION_RE = /(-?)(\d+)(?:\s+(\d+))?\s*\/\s*(\d+)/g;
+
+/** Offered simple fractions / mixed numbers (`3/4`, `x = 1 1/2`). Used to confirm, never to mark wrong. */
+function fractionCandidates(text: string, opts: { segmentStartIsLead?: boolean; keyVar?: string | null }): Candidate[] {
+  const out: Candidate[] = [];
+  const whole = /^\s*-?\d+(?:\s+\d+)?\s*\/\s*\d+\s*[.!]?\s*$/.test(text);
+  for (const m of text.matchAll(FRACTION_RE)) {
+    const at = m.index ?? 0;
+    const prev = text[at - 1] ?? '';
+    if (/[\w.]/.test(prev) || /[+\-*/^×÷·√]/.test(prev)) continue;
+    const end = at + m[0].length;
+    if (/^\s*[.\d]/.test(text.slice(end)) || continuesExpression(text, end)) continue;
+    const before = text.slice(0, at);
+    const atStart = /^\s*[:=]?\s*$/.test(before);
+    if (!(whole || LEAD_RE.test(before) || (opts.segmentStartIsLead && atStart))) continue;
+    const lhs = lhsBefore(before);
+    if (opts.keyVar && lhs && lhs !== opts.keyVar && lhs !== 'it') continue;
+    const [, sign, a, b, c] = m;
+    const den = Number(b !== undefined ? c : c);
+    if (!den) continue;
+    const mag = b !== undefined ? Number(a) + Number(b) / den : Number(a) / den;
+    out.push({ value: sign ? -mag : mag, text: m[0].trim(), at, explicit: false, frac: true });
+  }
+  return out;
+}
+
+/** A fraction agrees with a number key within 1 %. */
+const fractionAgrees = (got: number, want: number) => (want === 0 ? got === 0 : Math.abs(got - want) <= Math.abs(want) * 0.01);
 
 /** Offered values in `text`. `segmentStartIsLead`: a number right at the start counts (after a part label). */
 function candidates(text: string, opts: { segmentStartIsLead?: boolean; keyVar?: string | null }): Candidate[] {
@@ -139,48 +216,71 @@ function keyVarOf(part: AnswerPart): string | null {
 }
 
 /** Judge the offered values for one part: the last offered value decides. */
-function judgePart(part: AnswerPart, cands: Candidate[]): KeyedVerdict {
+function judgePart(part: AnswerPart, cands: Candidate[], studentText?: string): KeyedVerdict {
+  const v = judgeValues(part, cands);
+  // I3: undecided, but the student's text is exactly the key's final (any part kind) → correct.
+  if (v.verdict === 'undecided' && studentText !== undefined && textMatchesPart(part, studentText)) {
+    return { verdict: 'correct', part: normLabel(part.label), matched: studentText.trim().replace(/[.!]+$/, '') };
+  }
+  return v;
+}
+
+function judgeValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict {
   const label = normLabel(part.label);
   if (part.canonical.kind !== 'number' || cands.length === 0) return { verdict: 'undecided', ...(label ? { part: label } : {}) };
   const want = part.canonical.value;
+  const agrees = (c: Candidate) => (c.frac ? fractionAgrees(c.value, want) : numbersAgree(c.value, want));
   const last = cands[cands.length - 1];
-  if (numbersAgree(last.value, want)) return { verdict: 'correct', part: label, matched: last.text };
+  if (agrees(last)) return { verdict: 'correct', part: label, matched: last.text };
+  // A fraction that does not match is never judged wrong.
+  if (last.frac) return { verdict: 'undecided', part: label };
   // An earlier value matches and a later one does not: ambiguous.
-  if (cands.some((c) => numbersAgree(c.value, want))) return { verdict: 'undecided', part: label };
+  if (cands.some(agrees)) return { verdict: 'undecided', part: label };
   // Wrong only when offered as the final answer; working is for the model check.
-  const offered = [...cands].reverse().find((c) => c.explicit);
+  const offered = [...cands].reverse().find((c) => c.explicit && !c.frac);
   if (!offered) return { verdict: 'undecided', part: label };
   return { verdict: 'incorrect', part: label, matched: offered.text };
 }
 
 /** One verdict per part the message offers a value for (or the single part). */
 export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerdict[] {
-  const text = normalize(studentMessage).trim();
+  // A runtime note in front of the student's words is dropped (R19b); a
+  // message that is only a note is never judged.
+  const text = normalize(stripRuntimeNote(studentMessage)).trim();
   if (!text || !key?.parts?.length || isRuntimeNote(text)) return [];
+  // R19a: a question is judged neither right nor wrong.
+  if (isQuestionForm(text)) return [];
   const isQuestion = /\?/.test(text);
   const marks = labelMarks(text, key);
   const byLabel = new Map<string, Candidate[]>();
+  const segText = new Map<string, string>();
   const head = marks.length ? text.slice(0, marks[0].at) : text;
+  const byAt = (a: Candidate, b: Candidate) => a.at - b.at;
   marks.forEach((mk, i) => {
     const seg = text.slice(mk.end, i + 1 < marks.length ? marks[i + 1].at : text.length);
     const list = byLabel.get(mk.label) ?? [];
-    list.push(...candidates(seg, { segmentStartIsLead: true }));
+    list.push(...[...candidates(seg, { segmentStartIsLead: true }), ...fractionCandidates(seg, { segmentStartIsLead: true })].sort(byAt));
     byLabel.set(mk.label, list);
+    // The labelled segment's own text, for an exact match (one segment per label only).
+    segText.set(mk.label, segText.has(mk.label) ? '' : seg.replace(/[,;]\s*$/, ''));
   });
   const out: KeyedVerdict[] = [];
   if (key.parts.length === 1) {
     const part = key.parts[0];
     const cands = [
-      ...candidates(head, { keyVar: keyVarOf(part) }),
+      ...[...candidates(head, { keyVar: keyVarOf(part) }), ...fractionCandidates(head, { keyVar: keyVarOf(part) })].sort(byAt),
       ...(byLabel.get(normLabel(part.label)) ?? []),
     ];
     const bare = !marks.length && !cands.length ? bareNumber(text) : null;
-    const v = judgePart(part, bare ? [bare] : cands);
+    const whole = marks.length ? (segText.get(normLabel(part.label)) || undefined) : text;
+    const v = judgePart(part, bare ? [bare] : cands, whole);
     out.push(v);
   } else {
     for (const part of key.parts) {
       const cands = byLabel.get(normLabel(part.label));
-      if (cands?.length) out.push(judgePart(part, cands));
+      const seg = segText.get(normLabel(part.label)) || undefined;
+      if (cands?.length) out.push(judgePart(part, cands, seg));
+      else if (seg !== undefined && textMatchesPart(part, seg)) out.push(judgePart(part, [], seg));
     }
     // An unlabeled value counts only when it matches exactly one numeric part.
     if (!marks.length) {
@@ -259,6 +359,7 @@ export function confirmedKeyParts(
 ): Set<string> {
   const done = new Set<string>();
   const msgs = [...history.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), currentMessage];
+  // keyedVerdicts drops a runtime note in front of a student's words (R19b).
   for (const msg of msgs) {
     for (const v of keyedVerdicts(msg, key)) if (v.verdict === 'correct') done.add(v.part ?? '');
   }

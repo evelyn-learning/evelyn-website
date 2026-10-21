@@ -25,8 +25,50 @@ export const HOMEWORK_PROBLEM_DONE_EVENT = 'homework_problem_done';
 export const PRIOR_NOTE_INSTRUCTION = 'Two short lines: what the student did on this problem and where they stopped. No answers.';
 export const PRIOR_NOTE_MAX_WORDS = 40;
 
-type DebugEventLike = { type?: unknown; message?: unknown };
-type TranscriptLike = { role?: unknown; text?: unknown };
+type DebugEventLike = { type?: unknown; message?: unknown; timestamp?: unknown };
+type TranscriptLike = { role?: unknown; text?: unknown; timestamp?: unknown };
+
+const timeOf = (v: unknown): number | null => {
+  if (v == null) return null;
+  const t = v instanceof Date ? v.getTime() : new Date(v as string | number).getTime();
+  return Number.isFinite(t) ? t : null;
+};
+
+/**
+ * The keyed verdict events, one per (part, verdict) per student turn (R19c):
+ * a stall re-dispatch of the same message records its verdict again, and two
+ * records of ONE answer must never read as two wrong answers. The student
+ * turn an event belongs to = the number of student transcript entries at or
+ * before its timestamp; without a usable timestamp, consecutive identical
+ * (part, verdict) events count once.
+ */
+export function dedupedKeyedVerdicts(
+  events: ReadonlyArray<DebugEventLike>,
+  transcript: ReadonlyArray<TranscriptLike> | null | undefined,
+): Array<{ part: string; verdict: 'correct' | 'incorrect' }> {
+  const studentTimes = (transcript ?? []).filter(isStudent).map((t) => timeOf(t.timestamp));
+  const timed = studentTimes.length > 0 && studentTimes.every((t) => t !== null);
+  const seen = new Set<string>();
+  const out: Array<{ part: string; verdict: 'correct' | 'incorrect' }> = [];
+  let prev: { part: string; verdict: string } | null = null;
+  for (const e of events) {
+    if (e?.type !== KEYED_VERDICT_DEBUG_TYPE) continue;
+    const v = parseKeyedVerdictDebug(e.message);
+    if (!v) continue;
+    const at = timeOf(e.timestamp);
+    if (timed && at !== null) {
+      const turn = (studentTimes as number[]).filter((t) => t <= at).length;
+      const k = `${v.part}|${v.verdict}|${turn}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+    } else if (prev && prev.part === v.part && prev.verdict === v.verdict) {
+      continue;
+    }
+    prev = v;
+    out.push(v);
+  }
+  return out;
+}
 
 /**
  * The student says they are finished with THIS problem ("done", "finished",
@@ -62,10 +104,7 @@ export function classifyHomeworkProblemOutcome(input: {
   }
   // Per part: wrong verdicts since the last correct one.
   const wrongSinceCorrect = new Map<string, number>();
-  for (const e of events) {
-    if (e?.type !== KEYED_VERDICT_DEBUG_TYPE) continue;
-    const v = parseKeyedVerdictDebug(e.message);
-    if (!v) continue;
+  for (const v of dedupedKeyedVerdicts(events, input.transcript)) {
     wrongSinceCorrect.set(v.part, v.verdict === 'correct' ? 0 : (wrongSinceCorrect.get(v.part) ?? 0) + 1);
   }
   if ([...wrongSinceCorrect.values()].some((n) => n >= 2)) return 'needs_review';
