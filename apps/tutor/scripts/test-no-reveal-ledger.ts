@@ -1210,6 +1210,7 @@ async function main() {
     assert.match(block, /points out a mistake of yours/i);
     const { DIAGRAM_RULE } = await import('../src/lib/tutor/lesson-plan/material-extract');
     assert.match(DIAGRAM_RULE, /one angle at a time/);
+    assert.match(DIAGRAM_RULE, /always opens with the word Figure:/);   // 2026-10-21: a read wrote "[Angles, one at a time: …]" instead
     const { resolveModel } = await import('../src/lib/tutor/ai/model-registry');
     assert.equal(resolveModel('plangen-vision').model, 'claude-opus-5-5');
     // 10-20 e: the Opus read thinks at LOW effort with room for the page —

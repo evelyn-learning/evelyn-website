@@ -36,10 +36,38 @@ export function homeworkProblemOf(plan: { metadata?: Record<string, unknown> } |
 }
 
 const FIGURE_DESCRIPTION_OPEN_RE = /^\[\s*(?:figure|graph|diagram)\s*:/i;
+/** 2026-10-21 (hw-11 problem 1): the read wrote "[Angles, one at a time: 55°: its arc …]"
+ *  instead of "[Figure: …]". A bracketed block that opens with a capitalised word or
+ *  short phrase and a colon, and runs long, is a description too; "[Note: see back]",
+ *  "[2 marks]" and an interval "[0, 2π]" are not. */
+const DESCRIPTION_OPEN_RE = /^\[\s*[A-Z][^\]:]{0,40}:\s/;
+const DESCRIPTION_MIN_CHARS = 60;
+
+/** [start, endExclusive] of the bracket-balanced block opening at `i`, or null when unbalanced. */
+function blockAt(text: string, i: number): number | null {
+  let depth = 0;
+  for (let j = i; j < text.length; j++) {
+    if (text[j] === '[') depth++;
+    else if (text[j] === ']') { depth--; if (depth === 0) return j + 1; }
+  }
+  return null;
+}
+
+/** The bracketed block at `i` is a figure description: an explicit Figure/Graph/Diagram opener, or a long "Word:" block. */
+function isDescriptionAt(text: string, i: number): boolean {
+  if (text[i] !== '[') return false;
+  const head = text.slice(i, i + 48);
+  if (FIGURE_DESCRIPTION_OPEN_RE.test(head)) return true;
+  if (!DESCRIPTION_OPEN_RE.test(head)) return false;
+  const end = blockAt(text, i);
+  return end !== null && end - i >= DESCRIPTION_MIN_CHARS;
+}
 
 /** The photo read wrote a bracketed figure/graph/diagram description into this problem's text. Pure. */
 export function hasFigureDescription(text: string): boolean {
-  return /\[\s*(?:figure|graph|diagram)\s*:/i.test(text);
+  const t = String(text ?? '');
+  for (let i = t.indexOf('['); i >= 0; i = t.indexOf('[', i + 1)) if (isDescriptionAt(t, i)) return true;
+  return false;
 }
 
 /**
@@ -56,15 +84,10 @@ export function problemTextForDisplay(text: string, hasFigure: boolean): string 
   let out = '';
   let i = 0;
   while (i < text.length) {
-    if (text[i] === '[' && FIGURE_DESCRIPTION_OPEN_RE.test(text.slice(i, i + 40))) {
-      let depth = 0;
-      let j = i;
-      for (; j < text.length; j++) {
-        if (text[j] === '[') depth++;
-        else if (text[j] === ']') { depth--; if (depth === 0) break; }
-      }
-      if (j >= text.length) { out += text.slice(i); break; } // unbalanced: keep the rest as written
-      i = j + 1;
+    if (isDescriptionAt(text, i)) {
+      const end = blockAt(text, i);
+      if (end === null) { out += text.slice(i); break; } // unbalanced: keep the rest as written
+      i = end;
       continue;
     }
     out += text[i];

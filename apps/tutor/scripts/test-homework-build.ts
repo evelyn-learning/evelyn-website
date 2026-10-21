@@ -222,6 +222,26 @@ async function main() {
       assert.match(reasonsOf(validateFigure(unknown, { problemText: P5, claims }))[0], /midpoint "M"/);
     });
 
+    // 2026-10-21 round 4 (hw-11 build notes).
+    await section('a hyphenated caption is still a caption; "circle A" is the circle centred at A; two circles on A are ambiguous', async () => {
+      const { isCaptionLabel } = await import('../src/lib/tutor/homework-build/figure-validate');
+      assert.equal(isCaptionLabel('Square ABCD with two quarter-circle arcs'), true);
+      assert.equal(isCaptionLabel('x - 5'), false);
+      const P = 'ABCD is a square with side 10 cm. Arcs BD are quarter circles centered at A and C. [Figure: square ABCD, arcs from B to D centred at A and at C.]';
+      const sq: Fig = { action: 'showGeometryConstructed', given: [pt('A', 0, 0), pt('B', 10, 0), pt('C', 10, 10), pt('D', 0, 10)],
+        steps: [{ id: 'cA', kind: 'circle', center: 'A', radius: 10 }, { id: 'cC', kind: 'circle', center: 'C', radius: 10 }] };
+      const cl = [{ kind: 'on_circle' as const, point: 'B', circle: 'A' }, { kind: 'on_circle' as const, point: 'D', circle: 'C' }];
+      assert.deepEqual(validateFigure(sq, { problemText: P, claims: cl }), { ok: true });
+      const far: Fig = { ...sq, given: [pt('A', 0, 0), pt('B', 10, 0), pt('C', 10, 10), pt('D', 0, 12)] };
+      assert.ok(reasonsOf(validateFigure(far, { problemText: P, claims: cl })).some((r) => /on_circle D/.test(r)), 'the alias is checked, not skipped');
+      const two: Fig = { ...sq, steps: [...sq.steps, { id: 'cA2', kind: 'circle', center: 'A', radius: 5 }] };
+      assert.ok(reasonsOf(validateFigure(two, { problemText: P, claims: cl })).some((r) => /no such circle/.test(r)));
+    });
+    await section('a graph with a field the board cannot draw (segments) fails, saying what a graph holds', () => {
+      const g = graph({ segments: [{ from: [9, 2], to: [18, 2] }] } as never);
+      const r = reasonsOf(validateFigure(g, { problemText: P8, claims: [] }));
+      assert.ok(r.some((x) => /"segments" cannot be drawn/.test(x)), r.join(' | '));
+    });
     await section('figureToSvg: a geometry figure gives one svg document; a graph or a bad spec gives null', async () => {
       const { figureToSvg } = await import('../src/lib/tutor/homework-build/figure-svg');
       const svg = await figureToSvg(goodFig());

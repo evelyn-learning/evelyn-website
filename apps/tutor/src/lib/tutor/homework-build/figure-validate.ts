@@ -67,7 +67,7 @@ const LABEL_WORD_RE = /^-?[A-Za-z0-9\u00b0\u03c0'\u2032./]+$/;
  */
 export function isCaptionLabel(label: string): boolean {
   const l = String(label ?? '').trim();
-  if (/[\d=+\-−×÷*/^<>≤≥≠∠∥⊥°√π%]/.test(l)) return false;   // a relation or a value is a label
+  if (/[\d=+−×÷*/^<>≤≥≠∠∥⊥°√π%]/.test(l)) return false;   // a relation or a value is a label (a hyphen inside "quarter-circle" is not)
   return l.split(/\s+/).filter((w) => /^[A-Za-z]{2,}$/.test(w)).length >= 3;
 }
 
@@ -253,6 +253,7 @@ function validateGeometry(
   for (const p of solved.points) points[p.id] = { x: p.x, y: p.y };
   // Circles are keyed by their step/given id: match each spec circle to a solved one by centre (and radius when given).
   const circles: Record<string, { cx: number; cy: number; r: number }> = {};
+  const centerAlias = new Map<string, string | null>();
   const used = new Set<number>();
   for (const g of [...fig.given, ...fig.steps] as Array<{ id?: string; center?: string; radius?: number; kind?: string }>) {
     if (!g.id || typeof g.center !== 'string' || !/circle/.test(g.kind ?? '')) continue;
@@ -261,7 +262,15 @@ function validateGeometry(
     if (idx < 0 || !ctr) continue;
     used.add(idx);
     circles[g.id] = { cx: ctr.x, cy: ctr.y, r: solved.circles[idx].radius };
+    // 2026-10-21 (hw-11 problem 5, "quarter circles centered at A and C"): the
+    // claims reader names a circle by its centre ("circle A"). When no shape
+    // carries that id, the centre's name reaches its circle — one circle per
+    // centre; a second circle on the same centre makes the name ambiguous.
+    if (!circles[g.center]) {
+      if (centerAlias.has(g.center)) centerAlias.set(g.center, null); else centerAlias.set(g.center, g.id);
+    }
   }
+  for (const [center, id] of centerAlias) if (id && !circles[center]) circles[center] = circles[id];
   reasons.push(...checkClaims(points, circles, ctx.claims));
 
   // Every single-capital point the figure description names must be drawn.
@@ -274,8 +283,13 @@ function validateGeometry(
 
 // ---------------------------------------------------------------- graph
 
+/** What the board's graph renderer draws (GraphData). Anything else the proposer invents — hw-11 problem 6 sent a box plot as `segments` — is not drawn, so the figure would be empty axes. */
+const GRAPH_DATA_FIELDS = new Set(['title', 'xLabel', 'yLabel', 'xRange', 'yRange', 'xAxisStep', 'yAxisStep', 'functions', 'functionsOfY', 'points', 'annotations', 'shadedRegion', 'inequalities']);
+
 function validateGraph(data: GraphData, ctx: FigureContext): string[] {
   const reasons: string[] = [];
+  const unknown = Object.keys(data ?? {}).filter((k) => !GRAPH_DATA_FIELDS.has(k));
+  if (unknown.length) reasons.push(`graph field${unknown.length > 1 ? 's' : ''} ${unknown.map((k) => `"${k}"`).join(', ')} cannot be drawn: a graph holds functions, functionsOfY, points, annotations, shadedRegion and inequalities only; a figure the graph vocabulary cannot express returns figure_json ""`);
   const fns = data.functions ?? [];
   for (const f of fns) {
     if (f.label) reasons.push(`legend label "${f.label}" is not allowed on a homework graph (the problem panel shows the text)`);

@@ -97,6 +97,11 @@ async function main() {
     has(ts, /onHomeworkProblem=\{setHomeworkProblem\}/);
     has(ts, /problemPanel=\{homeworkProblem\b/);
   });
+  await section('VTR boards no synthetic "Question" card in a one-problem session', () => {
+    const vtr = readSrc('app/tutor/components/VoiceTutorRealtime.tsx');
+    has(vtr, /const oneProblemSession = homeworkProblemRef\.current != null;/);
+    has(vtr, /&& !typedHomeworkTurn && !oneProblemSession\) \{/);
+  });
   await section('TutorSession hides End/Pause in a one-problem session (the host has finish and back)', () => {
     has(ts, /endControl=\{endControlVisible && !homeworkProblem \? endControlEl : null\}/);
   });
@@ -144,6 +149,16 @@ async function main() {
       const t = 'Solve on [0, 2π]. [Diagram: a curve on [0, 2π] with a mark at [π, 1].]\nThen sketch.';
       assert.equal(problemTextForDisplay(t, true), 'Solve on [0, 2π].\nThen sketch.');
       assert.equal(problemTextForDisplay('A [figure: x] B [Figure : y] C', true), 'A B C');
+    });
+    await section('a long bracketed "Word:" block is a description too; short brackets and intervals are not', async () => {
+      const { hasFigureDescription } = await import('../src/lib/tutor/lesson-plan/homework-problem-meta');
+      const P1 = 'Lines p ∥ q. Point A lies on line p. [Angles, one at a time: 55°: its arc is at A, below line p, on the left side of segment AB (outside the triangle). (2x + 15)°: its arc is at A, inside the triangle. Rest of figure: two horizontal lines.] (a) Find x. (b) Find m∠1 and m∠2.';
+      assert.equal(problemTextForDisplay(P1, true), 'Lines p ∥ q. Point A lies on line p. (a) Find x. (b) Find m∠1 and m∠2.');
+      assert.equal(hasFigureDescription(P1), true);
+      const short = 'Solve for x. [Note: see back] Use the interval [0, 2π].';
+      assert.equal(problemTextForDisplay(short, true), short);
+      assert.equal(hasFigureDescription(short), false);
+      assert.equal(hasFigureDescription('Find x. [Graph: y = x]'), true, 'an explicit opener needs no length');
     });
     await section('without a figure the text is unchanged', () => {
       assert.equal(problemTextForDisplay(P5, false), P5);
