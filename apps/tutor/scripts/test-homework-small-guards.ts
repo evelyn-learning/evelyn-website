@@ -111,7 +111,7 @@ assert(decideStallRecovery({ ...stall, stalled: false, networkFailure: true, las
 assert(decideStallRecovery({ ...stall, stalled: false, networkFailure: true, nothingShown: false }) === 'default', 'a dropped connection after content was shown → no retry');
 {
   const vtr = src('src/app/tutor/components/VoiceTutorRealtime.tsx');
-  assert(vtr.includes('if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn) {'), 'GAC APES portal-4b144435: a typed homework turn never boards the tutor\'s own question as a card');
+  assert(vtr.includes('if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn && !oneProblemSession) {'), 'GAC APES portal-4b144435: a typed homework turn never boards the tutor\'s own question as a card (nor a one-problem session, 2026-10-21)');
   {
     // 2026-10-19 (GAC Calc BC portal-413c1189): "abandoned" on a live session.
     const embed = src('src/app/tutor-portal/embed/page.tsx');
