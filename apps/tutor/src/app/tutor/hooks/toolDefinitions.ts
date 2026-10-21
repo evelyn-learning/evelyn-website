@@ -106,6 +106,8 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         yLabel: { type: 'string' },
         xRange: { type: 'array', items: { type: 'number' }, description: 'Visible x-axis range [min, max].' },
         yRange: { type: 'array', items: { type: 'number' }, description: 'Visible y-axis range [min, max].' },
+        xAxisStep: { type: 'string', description: 'Tick spacing on the x-axis when the problem\'s axis is marked in multiples of π — "pi/2", "pi", "pi/4", "2pi" (ticks are then labelled π/2, π, 3π/2 …) — or a fixed number as a string. Omit for an ordinary numeric axis. A graph copied from a problem keeps the problem\'s axis marks.' },
+        yAxisStep: { type: 'string', description: 'Tick spacing on the y-axis, same forms as xAxisStep. Omit for automatic.' },
         functions: {
           type: 'array',
           description: 'y=f(x) functions or implicit equations.',
@@ -2342,6 +2344,8 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         yLabel: funcArgs.yLabel || 'y',
         xRange,
         yRange,
+        ...(funcArgs.xAxisStep != null ? { xAxisStep: funcArgs.xAxisStep as number | string } : {}),
+        ...(funcArgs.yAxisStep != null ? { yAxisStep: funcArgs.yAxisStep as number | string } : {}),
         functions: graphFunctions,
         functionsOfY: graphFunctionsOfY,
         points: Array.isArray(funcArgs.points) ? funcArgs.points : [],

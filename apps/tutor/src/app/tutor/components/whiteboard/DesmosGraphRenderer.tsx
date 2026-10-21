@@ -13,6 +13,7 @@ import type { GraphData, GraphFunction, GraphFunctionOfY } from '@core/knowledge
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
+import { parseAxisStep } from '@/lib/tutor/whiteboard/graph-axis';
 import { resolveInequalityEntry, normalizeLineStyle } from '@/lib/tutor/whiteboard/graph-inequalities';
 import { GRAPH_COLORS } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_GRAPH_CURVE_FEATURES } from '@/lib/tutor/orchestrator/turn-round-flags';
@@ -277,6 +278,12 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
         }
         const left = cx - xSpan / 2;
         const top = cy + ySpan / 2;
+        // 2026-10-20 (portal-f7a639d4, problem 8): a graph copied from a sheet
+        // whose x-axis is marked π/2, π, 3π/2, 2π keeps those marks. Desmos
+        // labels a π-multiple step in terms of π on its own; 0 = automatic.
+        const xAxisStep = parseAxisStep(data.xAxisStep) ?? 0;
+        const yAxisStep = parseAxisStep(data.yAxisStep) ?? 0;
+        calculator.updateSettings({ xAxisStep, yAxisStep });
         calculator.setMathBounds({
           left,
           right: cx + xSpan / 2,

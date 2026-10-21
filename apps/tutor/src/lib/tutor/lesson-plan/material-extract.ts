@@ -360,7 +360,7 @@ async function extractDocx(
 // angles (3x + 15)° and (5x − 25)°" — not where either angle sits. The tutor
 // could not see the image, drew it from that line, and taught the wrong angle
 // pair. Each figure is now described with its positions.
-export const DIAGRAM_RULE = '\n\nFor every diagram, figure, graph or table, write a description in square brackets right after the problem it belongs to, so that someone who cannot see it could redraw it exactly: every label, value and mark on it, and WHERE each one sits — at which point or intersection, on which side of which line, above or below, inside or outside a shape, at which vertex — plus any right-angle marks, arrow marks showing parallel lines, equal-length ticks, and scale. For a figure with labelled angles, begin its bracketed description by taking the angles one angle at a time: an angle sits where its ARC is drawn, not where its label text is printed, so for each label find its arc (the label sits beside it), name the point or crossing the arc is at, and say which side of EACH line through that point the arc opens to — above or below the one line, left or right of the other — then describe the rest of the figure. When two labelled angles sit at different crossings of the same lines, read each arc on its own; do not assume they sit on the same side. Describe only what is drawn or written; never add a relationship the figure does not mark.';
+export const DIAGRAM_RULE = '\n\nFor every diagram, figure, graph or table, write a description in square brackets right after the problem it belongs to, so that someone who cannot see it could redraw it exactly: every label, value and mark on it, and WHERE each one sits — at which point or intersection, on which side of which line, above or below, inside or outside a shape, at which vertex — plus any right-angle marks, arrow marks showing parallel lines, equal-length ticks, and scale. For a figure with labelled angles, begin its bracketed description by taking the angles one angle at a time: an angle sits where its ARC is drawn, not where its label text is printed, so for each label find its arc (the label sits beside it), name the point or crossing the arc is at, and say which side of EACH line through that point the arc opens to — above or below the one line, left or right of the other — then describe the rest of the figure. For a slanted line, "left" and "right" are easy to get backwards: also name the side by a landmark on the figure, such as "on the same side of t as its letter t" or "on the side of t toward the arrowheads of l and m", and check that the landmark and the left/right word agree. Where a side of a triangle is extended past a vertex, say whether the arc at that vertex lies between the two sides of the triangle (an interior angle) or between one side and the extension (an exterior angle). When two labelled angles sit at different crossings of the same lines, read each arc on its own; do not assume they sit on the same side. For every length or dimension label, say exactly what it spans — from which point, edge or dashed line to which — and whether any attached part (a semicircle on the end, a triangle on top) lies inside that span or beyond it. Describe only what is drawn or written; never add a relationship the figure does not mark.';
 
 export const TRANSCRIBE_MATERIAL_PROMPT_SINGLE = `You are transcribing a photo of a student's teaching material (a textbook page, handout, or handwritten notes) so it can be used to build a lesson.
 
@@ -392,6 +392,11 @@ Output EXACTLY ${n} sections, in order, each starting on its own line with the e
 const TRANSCRIPTION_TTL_MS = 15 * 60_000;
 const TRANSCRIPTION_CACHE_MAX = 40;
 const transcriptionCache = new Map<string, { texts: string[]; at: number }>();
+/** Reads in flight, so a second request for the same images while the first
+ *  is still reading joins it instead of starting another read (the academy's
+ *  summary request may time out and the plan request arrive before the read
+ *  ends; the engine keeps reading and the plan call picks up the result). */
+const transcriptionInFlight = new Map<string, Promise<{ ok: true; texts: string[] } | { ok: false; error: ErrResult }>>();
 
 /** One key per set of images in order: the bytes, their types and the model. */
 export function transcriptionCacheKey(
@@ -443,9 +448,19 @@ async function transcribeImagesBatch(
     console.log(`[material-extract] vision transcription reused count=${items.length}`);
     return { ok: true, texts: cached };
   }
-  const result = await transcribeImagesBatchUncached(items);
-  if (result.ok) rememberTranscription(key, result.texts);
-  return result;
+  const joined = transcriptionInFlight.get(key);
+  if (joined) {
+    console.log(`[material-extract] vision transcription joined in-flight count=${items.length}`);
+    return joined;
+  }
+  const run = transcribeImagesBatchUncached(items)
+    .then((result) => {
+      if (result.ok) rememberTranscription(key, result.texts);
+      return result;
+    })
+    .finally(() => { transcriptionInFlight.delete(key); });
+  transcriptionInFlight.set(key, run);
+  return run;
 }
 
 async function transcribeImagesBatchUncached(

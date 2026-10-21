@@ -1789,6 +1789,11 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts
     // took the student's correction without a word.
     `- A rule or theorem about a figure applies to particular parts of it. Before you write an equation from one, place each symbol in it on the figure as the description gives it (which angle at which vertex, which side), and check that the rule names exactly those parts; do not write the equation until it does.\n` +
     `- If the student points out a mistake of yours and they are right, say so plainly in a few words and go on from their correction; never pass over it or restate the mistaken line.\n` +
+    // 2026-10-20 (GAC "Geometry & Graphs" upload portal-f7a639d4): the zeros of
+    // a graphed parabola were "checked" by solving (x−2)²−4 = 0 — the formula
+    // the tutor had used to plot its copy of the graph, which the problem
+    // never gave; the equation was part (c), still to come.
+    `- When a problem gives a graph or a figure, its values are READ from it (a vertex, a zero, a peak, a period, a length). The formula or coordinates you used to draw your copy of it are yours, not the problem's: never cite them as given, never check the student's reading against them, and never bring in an equation the problem has not given or the student has not yet found.\n` +
     // 2026-10-15 (GAC v7 audit): "one at a time" sat beside the ledger's
     // multi-answer recording; the student sets the order, the tutor does not.
     (ledger ? `- The student may answer several problems in one message, or out of order: take every answer they give as it comes, then ask about one open problem.\n` : '') +

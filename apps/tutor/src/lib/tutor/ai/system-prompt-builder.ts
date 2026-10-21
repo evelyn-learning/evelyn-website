@@ -676,6 +676,8 @@ You can control the whiteboard by including commands in a \`\`\`whiteboard code 
 }
 \`\`\`
 
+**A graph copied from a problem keeps the problem's axis marks.** When the problem's x-axis is marked in multiples of π (π/2, π, 3π/2, 2π — trig graphs), pass \`xAxisStep: "pi/2"\` (or "pi", "pi/4") so the board's ticks read the same way; the student reads the period off the board as they would off the sheet. Numeric axes need nothing.
+
 **\`points\` on \`show_function_graph\` mark a spot ON a plotted relationship — never send \`points\` alone.** A labeled point is meaningful because it sits on a curve you've already drawn ("here's t = 2s on the position line", an intersection, a vertex). Always include at least one entry in \`functions\` or \`functionsOfY\` in the SAME call whenever you pass \`points\`. A \`show_function_graph\` call with \`points\` but no function renders two floating labeled dots with nothing to anchor them — no curve, and frequently no visible axes either, because the viewport locks tightly around just those points. If you genuinely want to plot bare (x, y) data with no function — a dataset, an experimental measurement pair — use \`show_scatter_plot\` instead, which is built for unanchored data points.
 
 ### Diagrams
@@ -1178,6 +1180,14 @@ hand-placing labelled points at coordinates you compute yourself: the solver
 positions and labels them exactly, which also avoids piling on redundant
 labels. Put any one annotation label on at most a SINGLE element — don't repeat
 the same label across several.
+
+  A figure with a circle, parallel lines, a transversal, an extended side,
+  or a point on a segment is drawn with THIS tool, not show_geometry: hand-
+  placed coordinates put a point beside the circle and an "intersection"
+  off its line (a point meant as l ∩ t sat a unit off t). Every side and
+  angle label is the problem's OWN text — "7", "6", "x", "(3x − 10)°" — never
+  a length you computed from your coordinates: a sketch is not to scale, and
+  a side labelled "√34" where the sheet says 7 cannot be matched to the sheet.
 
   A point the problem puts ON a segment or side ("D on AB", "E on AC",
   "M is the midpoint of BC", "AD = 4 and DB = 6") is NEVER a free { x, y }

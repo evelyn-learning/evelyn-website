@@ -157,7 +157,31 @@ function fixPointCoordLabels(cmd: GeometryCommand): void {
  * distance by more than 1%, replace it with the correct value. Labels
  * that aren't length-like (e.g. "side a", "AB", or empty) are left as-is.
  */
+/**
+ * Does the figure present its coordinates to the student — axes, a grid, or
+ * a point labelled with its (x, y)? Only then are the coordinates the truth
+ * a length label must agree with. A textbook sketch ("diagrams are not drawn
+ * to scale") is the other way round: its labels are the problem's givens and
+ * its coordinates are a guess at a shape.
+ *
+ * 2026-10-20 (GAC "Geometry & Graphs" upload portal-f7a639d4): the brain
+ * sketched a triangle with sides given as 7, 9, c and the validator relabelled
+ * the 7 "√34" (its coordinate length); on the DE ∥ BC triangle it turned the
+ * sheet's 6, 12, 9, 15 into 2.92, 2.92, 3, 6. The student could no longer
+ * match the board to the sheet.
+ */
+export function coordinatesAreShown(cmd: GeometryCommand): boolean {
+  if (cmd.showAxes === true || cmd.showGrid === true || cmd.grid === true) return true;
+  const coordRe = /\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)/;
+  for (const p of cmd.points || []) {
+    if ((p as { showCoords?: unknown }).showCoords === true) return true;
+    if (p.label && coordRe.test(p.label)) return true;
+  }
+  return false;
+}
+
 function fixSegmentLengthLabels(cmd: GeometryCommand, pointMap: Map<string, GeoPoint>): void {
+  if (!coordinatesAreShown(cmd)) return;
   const segments = cmd.segments || [];
   for (const seg of segments) {
     if (!seg.label) continue;
@@ -205,10 +229,11 @@ export function validateGeometryCommand(cmd: GeometryCommand): GeometryCommand {
   // 1. Fix triangles with incorrect geometry
   fixTriangleGeometry(result, pointMap);
 
-  // 1b. Recompute segment-length labels from coordinates. Catches bugs
-  // like Sonnet labeling BC = √5 when the actual distance is √13. We
-  // trust the points (which the model usually gets right) over the
-  // labels (which it sometimes computes wrong).
+  // 1b. Recompute segment-length labels from coordinates — ONLY on a figure
+  // that shows its coordinates (axes/grid/"(x, y)" labels): there the points
+  // are the truth and a label like BC = √5 for a √13 distance is a slip. On a
+  // not-to-scale sketch the labels are the problem's givens and stay as given
+  // (coordinatesAreShown).
   fixSegmentLengthLabels(result, pointMap);
 
   // 1c. Same idea for point-label coordinate text: if a point at (3,7) is

@@ -40,6 +40,9 @@ declare namespace Desmos {
     settingsMenu?: boolean;
     zoomButtons?: boolean;
     lockViewport?: boolean;
+    /** Axis tick spacing in math units; 0 = automatic. A π-multiple is labelled in π. */
+    xAxisStep?: number;
+    yAxisStep?: number;
     border?: boolean;
     keypad?: boolean;
     expressionsTopbar?: boolean;

@@ -430,6 +430,11 @@ export interface GraphData {
   yLabel: string;
   xRange: [number, number];
   yRange: [number, number];
+  /** Tick spacing when the problem's axis is marked in multiples of π
+   *  ("pi/2", "pi", "2pi") or at a fixed step (a number). Omitted = automatic.
+   *  Parsed by apps/tutor graph-axis.ts. */
+  xAxisStep?: number | string;
+  yAxisStep?: number | string;
   functions?: GraphFunction[];
   functionsOfY?: GraphFunctionOfY[];
   points?: GraphPoint[];

@@ -22,6 +22,7 @@ import { parseFunctionString, parseFunctionOfYString, normalizeShadedRegion } fr
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { isOpenGraphPoint } from '@/lib/tutor/whiteboard/graph-features';
+import { parseAxisStep, isPiStep, labelPiTick } from '@/lib/tutor/whiteboard/graph-axis';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -115,6 +116,17 @@ export function GraphRenderer({
     y: [yRange[0], yRange[1]] as [number, number],
   }), [xRange, yRange]);
 
+  // 2026-10-20 (portal-f7a639d4, problem 8): a graph copied from a sheet whose
+  // axis is marked in multiples of π keeps those marks (graph-axis.ts).
+  const axisConfig = (stepRaw: unknown) => {
+    const step = parseAxisStep(stepRaw);
+    if (!step) return { labels: (n: number) => n.toString() };
+    if (isPiStep(step)) return { lines: step, labels: (n: number) => labelPiTick(n, step) };
+    return { lines: step, labels: (n: number) => n.toString() };
+  };
+  const xAxisConfig = axisConfig(data.xAxisStep);
+  const yAxisConfig = axisConfig(data.yAxisStep);
+
   return (
     <div className={`graph-container ${className}`}>
       {title && (
@@ -141,8 +153,8 @@ export function GraphRenderer({
             height={300}
           >
             <Coordinates.Cartesian
-              xAxis={{ labels: (n) => n.toString() }}
-              yAxis={{ labels: (n) => n.toString() }}
+              xAxis={xAxisConfig}
+              yAxis={yAxisConfig}
             />
 
             {/* Shaded region between curves */}
