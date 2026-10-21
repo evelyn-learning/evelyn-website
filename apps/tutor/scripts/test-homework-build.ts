@@ -33,7 +33,7 @@ async function main() {
   // ---- 2 validate (pure; runs before any Mongo work) ----
   console.log('2 validate');
   {
-    const { validateFigure, labelIsFromText, allowedLabelTokens, checkClaims } =
+    const { validateFigure, labelIsFromText, checkClaims } =
       await import('../src/lib/tutor/homework-build/figure-validate');
     type Fig = Parameters<typeof validateFigure>[0];
     const P5 = "In △ABC, DE ∥ BC. Find the values of x and y. [Figure: Triangle with A at the top, B at the bottom left, and C at the bottom right. D is on AB and E is on AC. Segment DE is drawn, and both DE and BC carry a single arrow mark (parallel). Labels: AD = 6, DB = x, AE = 12, EC = y, DE = 9, BC = 15.]";
@@ -90,8 +90,26 @@ async function main() {
       assert.ok(!labelIsFromText('DB = 9', P5)); assert.ok(!labelIsFromText('Z', P5)); assert.ok(!labelIsFromText('AD = 7', P5));
       assert.ok(labelIsFromText('AD is 6'.replace(' is', ' ='), 'AD is 6 cm'));
       assert.ok(labelIsFromText('−2', P8)); assert.ok(labelIsFromText('π/4', P8)); assert.ok(!labelIsFromText('3π/4 + 1', P8));
-      assert.ok(allowedLabelTokens(P5).has('AD = 6')); assert.ok(!allowedLabelTokens(P5).has('DB = 9'));
+      assert.ok(!labelIsFromText('DB = 12', P5), 'neighbouring label must not supply the value');
+      assert.ok(!labelIsFromText('-5', P5)); assert.ok(!labelIsFromText('3π/4 + 4', P8)); assert.ok(!labelIsFromText('AD + DB', P5));
+      assert.ok(labelIsFromText('AD=6', P5)); assert.ok(!labelIsFromText('AD - 6', P5));
     });
+    await section('first-sentence article "A" is not a point', () => {
+      const text = 'Find the radius. [Figure: A circle with centre O and radius 5.]';
+      const fig: Fig = { action: 'showGeometryConstructed', given: [pt('O', 0, 0)], steps: [] };
+      assert.deepEqual(validateFigure(fig, { problemText: text, claims: [] }), { ok: true });
+    });
+    await section('malformed figures return a verdict instead of throwing', () => {
+      const ctx = { problemText: P5, claims: [] };
+      for (const f of [
+        { action: 'showGeometryConstructed', given: undefined, steps: [] },
+        { action: 'showGeometryConstructed', given: [], steps: 'nope' },
+        { action: 'showGraph', type: 'function', data: { xLabel: 'x', yLabel: 'y', xRange: [0, 1], functions: [{ expr: 'x' }], points: [{ x: 0, y: 0 }] } },
+        { action: 'showGraph', type: 'function' },
+      ]) {
+        const v = validateFigure(f as unknown as Fig, ctx);
+        assert.equal(v.ok, false);
+      }    });
     await section('checkClaims: perpendicular, collinear, between, on_circle, missing id', () => {
       const pts = { A: { x: 0, y: 0 }, B: { x: 4, y: 0 }, C: { x: 0, y: 3 }, M: { x: 2, y: 0 }, O: { x: 0, y: 0 }, R: { x: 5, y: 0 } };
       const circ = { c: { cx: 0, cy: 0, r: 5 } };
@@ -132,6 +150,10 @@ async function main() {
       assert.ok(reasonsOf(off).some((r) => r.includes('not on any plotted function')), reasonsOf(off).join(' | '));
       const lab = validateFigure(graph({ points: [{ x: PI / 4, y: 4, label: 'max = 4' }] }), { problemText: P8, claims: [] });
       assert.ok(reasonsOf(lab).some((r) => r.includes('label')), reasonsOf(lab).join(' | '));
+      const inv = validateFigure(graph({ points: [{ x: 0, y: 3.7 }] }), { problemText: P8, claims: [] });
+      assert.equal(inv.ok, false);          // an axis position alone is not an intercept
+      const yi = validateFigure(graph({ points: [{ x: 0, y: 1 }, { x: PI / 2, y: 1 }] }), { problemText: P8, claims: [] });
+      assert.equal(yi.ok, true);            // the curve's own y-intercept / midline crossing
     });
   }
 

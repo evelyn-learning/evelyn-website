@@ -22,49 +22,66 @@ function normalise(s: string): string {
   return s.replace(/[−‒–]/g, '-').replace(/\s+/g, ' ').trim().replace(/\.$/, '');
 }
 
-/** Words of the text: identifiers, numbers (with ° / π / fractions), and the = : operators. */
+/** Clause boundaries: a value must be in the same clause as its NAME. */
+const BOUNDARY = new Set([',', ';', ')', ']']);
+/** Words allowed between NAME and VALUE in a label (plus the = : operators). */
+const LABEL_LINKS = new Set(['is', 'measures', 'of']);
+
+/**
+ * Words of the text, the = : operators, and clause boundaries (, ; ) ] and a
+ * sentence-ending period). A leading minus is kept when part of a number.
+ */
 function tokenize(s: string): string[] {
-  const raw = normalise(s).match(/[A-Za-z0-9°π'′.\-/]+|[=:]/g) ?? [];
-  return raw.map((t) => t.replace(/^[.\-/]+(?=[A-Za-z0-9])/, '').replace(/[.\-/]+$/, '')).filter(Boolean);
-}
-
-const isOp = (t: string) => t === '=' || t === ':';
-
-/** Whole-word tokens of the normalised text, plus `NAME op VALUE` pairs found in it. */
-export function allowedLabelTokens(problemText: string): Set<string> {
-  const toks = tokenize(problemText);
-  const out = new Set<string>(toks.filter((t) => !isOp(t)));
-  for (let i = 1; i + 1 < toks.length; i++) {
-    if (isOp(toks[i]) && !isOp(toks[i - 1]) && !isOp(toks[i + 1])) out.add(`${toks[i - 1]} = ${toks[i + 1]}`);
+  const raw = normalise(s).match(/[A-Za-z0-9\u00b0\u03c0'\u2032.\-/]+|[=:,;()\[\]]/g) ?? [];
+  const out: string[] = [];
+  for (const r of raw) {
+    if (r === '(') continue;
+    if (BOUNDARY.has(r) || isOp(r)) { out.push(r); continue; }
+    const t = r.replace(/^[.\/]+(?=[A-Za-z0-9])/, '').replace(/^-(?![0-9\u03c0.])/, '').replace(/[.\-/]+$/, '');
+    if (t) out.push(t);
+    if (r.length > 1 && r.endsWith('.')) out.push(';');
   }
   return out;
 }
 
-const IDENT_RE = /^[A-Za-z][A-Za-z'′]{0,2}$/;
-const VALUE_RE = /^-?\d+(?:\.\d+)?(?:\/\d+)?(?:°|π)?[A-Za-z%°]*$|^[π]$|^-?\d*π(?:\/\d+)?$|^[A-Za-z]$/;
+const isOp = (t: string) => t === '=' || t === ':';
 
-/** Does this label come from the problem text? See the rules in the task brief (a)-(c). */
+const IDENT_RE = /^[A-Za-z][A-Za-z'\u2032]{0,2}$/;
+const VALUE_RE = /^-?\d+(?:\.\d+)?(?:\/\d+)?(?:\u00b0|\u03c0)?[A-Za-z%\u00b0]*$|^-?\d*\u03c0(?:\/\d+)?$|^[A-Za-z]$/;
+/** One whole word of a label: identifier / number / unit / pi fraction, optional leading minus. */
+const LABEL_WORD_RE = /^-?[A-Za-z0-9\u00b0\u03c0'\u2032./]+$/;
+
+/**
+ * Does this label come from the problem text? Passes when it is
+ * (a) a bare point name, (b) a bare value or single variable, or
+ * (c) `NAME op VALUE` (op = : is measures of, or none) with VALUE in the same
+ * clause, within 4 words after an occurrence of NAME. Anything else (sums,
+ * products, computed values) fails.
+ */
 export function labelIsFromText(label: string, problemText: string): boolean {
-  const l = normalise(label);
+  const l = normalise(label).replace(/([=:])/g, ' $1 ').replace(/\s+/g, ' ').trim();
   if (!l) return true;
+  const pieces = l.split(' ');
+  if (!pieces.every((w) => isOp(w) || LABEL_WORD_RE.test(w))) return false;
   const toks = tokenize(problemText);
-  const words = new Set(toks.filter((t) => !isOp(t)));
-  const wl = tokenize(l);
-  if (wl.length === 1 && !isOp(wl[0])) {
-    const w = wl[0];
-    if (IDENT_RE.test(w) && words.has(w)) return true;
-    if (VALUE_RE.test(w) && words.has(w)) return true;
-    return false;
+  const words = new Set(toks.filter((t) => !isOp(t) && !BOUNDARY.has(t) && t !== ';'));
+  if (pieces.length === 1) {
+    const w = pieces[0];
+    return (IDENT_RE.test(w) || VALUE_RE.test(w)) && words.has(w);
   }
-  // NAME op VALUE, or NAME VALUE
-  const parts = wl.filter((t) => !isOp(t));
-  if (parts.length === 2 && wl.length <= 3) {
-    const [name, value] = parts;
-    for (let i = 0; i < toks.length; i++) {
-      if (toks[i] !== name) continue;
-      const after = toks.slice(i + 1).filter((t) => !isOp(t)).slice(0, 4);
-      if (after.includes(value)) return true;
+  const parts = pieces.filter((w) => !isOp(w) && !LABEL_LINKS.has(w));
+  const ops = pieces.filter((w) => isOp(w) || LABEL_LINKS.has(w));
+  if (parts.length !== 2 || ops.length > 1 || pieces.length > 3) return false;
+  const [name, value] = parts;
+  if (pieces[0] !== name || pieces[pieces.length - 1] !== value) return false;
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i] !== name) continue;
+    const after: string[] = [];
+    for (let j = i + 1; j < toks.length && after.length < 4; j++) {
+      if (BOUNDARY.has(toks[j]) || toks[j] === ';') break;
+      if (!isOp(toks[j])) after.push(toks[j]);
     }
+    if (after.includes(value)) return true;
   }
   return false;
 }
@@ -151,6 +168,7 @@ function validateGeometry(
   fig: Extract<FigureCommand, { action: 'showGeometryConstructed' }>,
   ctx: FigureContext,
 ): string[] {
+  if (!Array.isArray(fig.given) || !Array.isArray(fig.steps)) return ['malformed figure: given and steps must both be arrays'];
   const reasons: string[] = [];
   let solved;
   try {
@@ -167,21 +185,22 @@ function validateGeometry(
 
   const points: Record<string, Pt> = {};
   for (const p of solved.points) points[p.id] = { x: p.x, y: p.y };
+  // Circles are keyed by their step/given id: match each spec circle to a solved one by centre (and radius when given).
   const circles: Record<string, { cx: number; cy: number; r: number }> = {};
-  for (const c of solved.circles) {
-    const ctr = points[c.center];
-    if (ctr) circles[c.center] = { cx: ctr.x, cy: ctr.y, r: c.radius };
-  }
-  for (const g of [...fig.given, ...fig.steps] as Array<{ id?: string; center?: string; kind?: string }>) {
-    if (g.id && g.center && circles[g.center] && (g.kind === 'circle' || g.kind?.startsWith('circle') || g.kind === 'incircle' || g.kind === 'circumcircle')) {
-      circles[g.id] = circles[g.center];
-    }
+  const used = new Set<number>();
+  for (const g of [...fig.given, ...fig.steps] as Array<{ id?: string; center?: string; radius?: number; kind?: string }>) {
+    if (!g.id || typeof g.center !== 'string' || !/circle/.test(g.kind ?? '')) continue;
+    const idx = solved.circles.findIndex((c, i) => !used.has(i) && c.center === g.center && (g.radius === undefined || Math.abs(c.radius - g.radius) < 1e-9));
+    const ctr = points[g.center];
+    if (idx < 0 || !ctr) continue;
+    used.add(idx);
+    circles[g.id] = { cx: ctr.x, cy: ctr.y, r: solved.circles[idx].radius };
   }
   reasons.push(...checkClaims(points, circles, ctx.claims));
 
   // Every single-capital point the figure description names must be drawn.
   const desc = /\[Figure:([^\]]*)\]/.exec(ctx.problemText)?.[1] ?? '';
-  const stripped = desc.replace(/(^|[.:]\s+)(A|I)\s+(?=[a-z])/g, '$1');
+  const stripped = desc.replace(/(^\s*|[.:]\s+)(A|I)\s+(?=[a-z])/g, '$1');
   const named = new Set(stripped.match(/(?<![A-Za-z0-9'])[A-Z](?![A-Za-z0-9'])/g) ?? []);
   for (const n of named) if (!points[n]) reasons.push(`point ${n} is in the figure description but not drawn`);
   return reasons;
@@ -206,14 +225,13 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
     return { fn: src ? parseFunctionString(explicit) : null, domain: f.domain };
   });
   for (const p of data.points ?? []) {
-    const atAxis = Math.abs(p.x) <= tol || Math.abs(p.y) <= tol;
     const onCurve = evals.some((e) => {
       if (!e.fn) return false;
       if (e.domain && (p.x < e.domain[0] - 1e-9 || p.x > e.domain[1] + 1e-9)) return false;
       const y = e.fn(p.x);
       return Number.isFinite(y) && Math.abs(y - p.y) <= tol;
     });
-    if (!onCurve && !atAxis) reasons.push(`point (${fmt(p.x)}, ${fmt(p.y)}) is not on any plotted function or axis intercept`);
+    if (!onCurve) reasons.push(`point (${fmt(p.x)}, ${fmt(p.y)}) is not on any plotted function (roots and y-intercepts count only when the curve passes through them)`);
     if (p.label && !labelIsFromText(p.label, ctx.problemText)) reasons.push(`label "${p.label}" does not come from the problem text`);
   }
   const vp = validateFunctionValuePoints(data);
@@ -227,10 +245,19 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
 
 // ---------------------------------------------------------------- entry
 
-export function validateFigure(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {
+function validateFigureUnsafe(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {
   if (!figure) return { ok: true };
   const reasons = figure.action === 'showGraph'
     ? validateGraph(figure.data, ctx)
     : validateGeometry(figure, ctx);
   return reasons.length ? { ok: false, reasons } : { ok: true };
+}
+
+/** Total: malformed model output yields a failing verdict, never a throw. */
+export function validateFigure(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {
+  try {
+    return validateFigureUnsafe(figure, ctx);
+  } catch (e) {
+    return { ok: false, reasons: [`malformed figure: ${(e as Error).message}`] };
+  }
 }
