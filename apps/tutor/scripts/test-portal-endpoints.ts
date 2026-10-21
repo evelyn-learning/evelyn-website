@@ -38,6 +38,8 @@ import { parseSummaryIds, summarizeTutorSession, activeSeconds, isCostVisiblePar
 import { SessionSummarySchema } from '@evelyn/portal-contract/v1';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
 import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
+import { POST as homeworkBuildPOST } from '@/app/api/portal/v1/homework-build/route';
+import { POST as homeworkProblemPlanPOST } from '@/app/api/portal/v1/homework-problem-plan/route';
 
 // Creation-time answer-key verification (plan-key-verify.ts) makes extra LIVE
 // model calls per generated plan. It has its own hermetic suite
@@ -99,6 +101,23 @@ const ctxBody = (studentId: string) => ({
   await test('context POST without signature → 401', async () => {
     const { status } = await call(contextPOST, unsigned('POST', '/api/portal/v1/context'));
     assert.strictEqual(status, 401);
+  });
+  // GAC acceptance 2026-10-21: both routes answered 400 "planId required" to
+  // a well-formed signed body — withPortalAuth had already consumed the
+  // request stream for the HMAC check, so the handler's own req.json() found
+  // nothing. The handler reads auth.body; a signed body for an unknown plan
+  // reaches the plan lookup (404), never the body check (400).
+  await test('homework-build POST reads the signed body (unknown plan → 404, not 400)', async () => {
+    const { status } = await call(homeworkBuildPOST, signed('POST', '/api/portal/v1/homework-build', { planId: 'gen-no-such-plan' }));
+    assert.strictEqual(status, 404);
+  });
+  await test('homework-problem-plan POST reads the signed body (unknown plan → 404, not 400)', async () => {
+    const { status } = await call(homeworkProblemPlanPOST, signed('POST', '/api/portal/v1/homework-problem-plan', { planId: 'gen-no-such-plan', n: 1 }));
+    assert.strictEqual(status, 404);
+  });
+  await test('homework-build POST with no planId → 400', async () => {
+    const { status } = await call(homeworkBuildPOST, signed('POST', '/api/portal/v1/homework-build', { first: 1 }));
+    assert.strictEqual(status, 400);
   });
   await test('gaps GET without signature → 401', async () => {
     const { status } = await call(gapsGET, unsigned('GET', '/api/portal/v1/gaps?studentId=x'));

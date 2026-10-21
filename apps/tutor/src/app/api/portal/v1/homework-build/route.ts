@@ -11,9 +11,10 @@ import { getHomeworkBuild } from '@/lib/tutor/homework-build/store';
 import { buildStatusResponse } from '@/lib/tutor/homework-build/status';
 import { kickHomeworkBuild, BUILD_STALE_MS } from '@/lib/tutor/homework-build/runner';
 
-export const POST = withPortalAuth(async (req, auth) => {
-  let body: { planId?: unknown; first?: unknown } = {};
-  try { body = await req.json(); } catch { /* handled below */ }
+export const POST = withPortalAuth(async (_req, auth) => {
+  // withPortalAuth consumed the request stream for the HMAC check; the parsed
+  // body is auth.body (reading _req.json() here finds an empty stream → 400).
+  const body = (auth.body && typeof auth.body === 'object' ? auth.body : {}) as { planId?: unknown; first?: unknown };
   if (typeof body.planId !== 'string' || !body.planId) {
     return NextResponse.json({ error: 'bad_request', reason: 'planId required' }, { status: 400 });
   }

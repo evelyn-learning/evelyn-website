@@ -23,9 +23,10 @@ const PRIOR_NOTE_MAX = 400;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export const POST = withPortalAuth(async (req, auth) => {
-  let body: { planId?: unknown; n?: unknown; priorNote?: unknown; waitMs?: unknown } = {};
-  try { body = await req.json(); } catch { /* handled below */ }
+export const POST = withPortalAuth(async (_req, auth) => {
+  // withPortalAuth consumed the request stream for the HMAC check; the parsed
+  // body is auth.body (reading _req.json() here finds an empty stream → 400).
+  const body = (auth.body && typeof auth.body === 'object' ? auth.body : {}) as { planId?: unknown; n?: unknown; priorNote?: unknown; waitMs?: unknown };
   if (typeof body.planId !== 'string' || !body.planId || typeof body.n !== 'number') {
     return NextResponse.json({ error: 'bad_request', reason: 'planId and n required' }, { status: 400 });
   }
