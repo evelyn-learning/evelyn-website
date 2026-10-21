@@ -31,6 +31,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { createHash } from 'node:crypto';
 import { getModelClient, resolveModel } from '../ai/model-registry';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import { extractDocxText, normalizeExtractedText } from '@core/utils/document-extract';
@@ -380,7 +381,74 @@ For EACH image, faithfully transcribe ALL visible text as plain text, preserving
 Output EXACTLY ${n} sections, in order, each starting on its own line with the exact marker "===MATERIAL i===" (where i is the 1-based image number) followed by that image's transcription. If an image has no legible text, write "[no legible text]" for that section.`;
 }
 
+// 2026-10-20 (GAC "Geometry & Graphs" upload, worksheet3): the academy asks
+// the engine for a material summary and then for a plan from the SAME upload,
+// and each call transcribed the image again — on an eight-figure sheet a
+// Sonnet 5 read takes ~20 s, so the second read ran the plan call past the
+// academy's 50 s budget (summary elapsed + plan ≤ 50 s) and the student saw
+// "we could not generate a lesson from that material" twice. The reading of a
+// given set of images is the same both times: keep it for a few minutes, keyed
+// by the bytes, and the plan call pays only for the plan.
+const TRANSCRIPTION_TTL_MS = 15 * 60_000;
+const TRANSCRIPTION_CACHE_MAX = 40;
+const transcriptionCache = new Map<string, { texts: string[]; at: number }>();
+
+/** One key per set of images in order: the bytes, their types and the model. */
+export function transcriptionCacheKey(
+  items: ReadonlyArray<{ material: { mimeType?: string }; buffer: Buffer }>,
+  modelId: string = VISION_MODEL_ID,
+): string {
+  const h = createHash('sha256');
+  h.update(modelId);
+  for (const it of items) {
+    h.update('|');
+    h.update(it.material.mimeType ?? '');
+    h.update(':');
+    h.update(it.buffer);
+  }
+  return `${items.length}:${h.digest('hex')}`;
+}
+
+export function recallTranscription(key: string, now: number = Date.now()): string[] | null {
+  const hit = transcriptionCache.get(key);
+  if (!hit) return null;
+  if (now - hit.at > TRANSCRIPTION_TTL_MS) {
+    transcriptionCache.delete(key);
+    return null;
+  }
+  return hit.texts;
+}
+
+export function rememberTranscription(key: string, texts: string[], now: number = Date.now()): void {
+  transcriptionCache.delete(key);
+  transcriptionCache.set(key, { texts, at: now });
+  while (transcriptionCache.size > TRANSCRIPTION_CACHE_MAX) {
+    const oldest = transcriptionCache.keys().next().value;
+    if (oldest === undefined) break;
+    transcriptionCache.delete(oldest);
+  }
+}
+
+/** Test seam. */
+export function clearTranscriptionCache(): void {
+  transcriptionCache.clear();
+}
+
 async function transcribeImagesBatch(
+  items: { position: number; material: PlanMaterial; buffer: Buffer }[],
+): Promise<{ ok: true; texts: string[] } | { ok: false; error: ErrResult }> {
+  const key = transcriptionCacheKey(items);
+  const cached = recallTranscription(key);
+  if (cached) {
+    console.log(`[material-extract] vision transcription reused count=${items.length}`);
+    return { ok: true, texts: cached };
+  }
+  const result = await transcribeImagesBatchUncached(items);
+  if (result.ok) rememberTranscription(key, result.texts);
+  return result;
+}
+
+async function transcribeImagesBatchUncached(
   items: { position: number; material: PlanMaterial; buffer: Buffer }[],
 ): Promise<{ ok: true; texts: string[] } | { ok: false; error: ErrResult }> {
   const n = items.length;

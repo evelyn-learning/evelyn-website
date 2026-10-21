@@ -1148,6 +1148,27 @@ async function main() {
     assert.match(HOMEWORK_LEDGER_RULES, /never take back an offer they said yes to/);
   });
 
+  console.log('10-20 d: one read per upload — the plan call reuses the summary call\'s transcription (worksheet3: two 20 s reads ran past the 50 s budget)');
+  await test('the transcription cache: same bytes → same key and a hit; different bytes, order, type or model → miss; a stale entry is gone', async () => {
+    const { transcriptionCacheKey, recallTranscription, rememberTranscription, clearTranscriptionCache } =
+      await import('../src/lib/tutor/lesson-plan/material-extract');
+    clearTranscriptionCache();
+    const a = { material: { mimeType: 'image/png' }, buffer: Buffer.from('sheet-a') };
+    const b = { material: { mimeType: 'image/png' }, buffer: Buffer.from('sheet-b') };
+    const k1 = transcriptionCacheKey([a], 'm');
+    assert.equal(transcriptionCacheKey([{ material: { mimeType: 'image/png' }, buffer: Buffer.from('sheet-a') }], 'm'), k1);
+    assert.notEqual(transcriptionCacheKey([b], 'm'), k1);
+    assert.notEqual(transcriptionCacheKey([{ ...a, material: { mimeType: 'image/jpeg' } }], 'm'), k1);
+    assert.notEqual(transcriptionCacheKey([a], 'other-model'), k1);
+    assert.notEqual(transcriptionCacheKey([a, b], 'm'), transcriptionCacheKey([b, a], 'm'));
+    assert.equal(recallTranscription(k1, 1_000), null);
+    rememberTranscription(k1, ['1. Lines l ∥ m …'], 1_000);
+    assert.deepEqual(recallTranscription(k1, 1_000 + 14 * 60_000), ['1. Lines l ∥ m …']);
+    assert.equal(recallTranscription(k1, 1_000 + 16 * 60_000), null, 'expired after 15 min');
+    assert.equal(recallTranscription(k1, 1_000), null, 'and dropped');
+    clearTranscriptionCache();
+  });
+
   console.log('10-20 b: the kind of answer asked for, a set called finished early, rules for the figure');
   await test('a reply that calls the set finished while a problem is open: the sentence is dropped, the open problem named', async () => {
     const { claimsSetFinished } = await import('../src/lib/tutor/lesson-plan/homework-ledger');
