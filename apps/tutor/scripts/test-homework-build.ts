@@ -546,11 +546,14 @@ async function main() {
       assert.equal(await getHomeworkBuild('gen-nope'), null);
     });
 
-    await section('constants and plan-generate kick wiring', () => {
+    await section('constants; plan-generate never kicks a build (R18)', () => {
       assert.equal(BUILD_STALE_MS, 180_000);
       const src = fs.readFileSync('src/app/api/portal/v1/plan-generate/route.ts', 'utf8');
-      assert.match(src, /kickHomeworkBuild\(/);
-      assert.ok(src.indexOf('kickHomeworkBuild(plan.id') > src.indexOf('await upsertLessonPlan(plan)'));
+      // R18: plan-generate never starts a build; the academy's POST
+      // /homework-build and the mint route's kick-if-missing are the triggers.
+      assert.doesNotMatch(src, /kickHomeworkBuild/);
+      assert.match(fs.readFileSync('src/app/api/portal/v1/homework-build/route.ts', 'utf8'), /kickHomeworkBuild\(/);
+      assert.match(fs.readFileSync('src/app/api/portal/v1/homework-problem-plan/route.ts', 'utf8'), /kickHomeworkBuild\(/);
     });
   }
 

@@ -82,7 +82,6 @@ import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
-import { kickHomeworkBuild } from '@/lib/tutor/homework-build/runner';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
 import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generation-cache';
 import { parseLessonPlan } from '@/lib/tutor/lesson-plan/parser';
@@ -517,8 +516,6 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'persistence_failed' }, { status: 502 });
   }
   finishKeyVerifyInBackground(kv);
-  // Homework plans: prepare per-problem figures + verified keys ahead of the session (detached).
-  if (homeworkProblems) kickHomeworkBuild(plan.id, auth.partnerId);
 
   // Schema-validate before responding so contract drift fails loudly
   // instead of silently shipping a malformed body to the portal.
