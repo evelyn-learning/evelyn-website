@@ -62,6 +62,14 @@ export function labelIsFromText(label: string, problemText: string): boolean {
   const l = normalise(label).replace(/([=:])/g, ' $1 ').replace(/\s+/g, ' ').trim();
   if (!l) return true;
   const pieces = l.split(' ');
+  // GAC acceptance 2026-10-21 (worksheet3_photo): the sheet labels its angles
+  // "(5x + 10)°" and "(8x − 56)°", written exactly so in the problem text, and
+  // the token rule below (name/value, NAME = VALUE) has no shape for an
+  // expression — six of eight figures were dropped for it. A label of two or
+  // more pieces that appears verbatim in the text (case and spacing aside) is
+  // from the text by definition. A single token keeps the word rule: "8" must
+  // be a word of the text, not a digit inside one.
+  if (pieces.length >= 2 && phraseInText(l, problemText)) return true;
   if (!pieces.every((w) => isOp(w) || LABEL_WORD_RE.test(w))) return false;
   const toks = tokenize(problemText);
   const words = new Set(toks.filter((t) => !isOp(t) && !BOUNDARY.has(t) && t !== ';'));
@@ -94,7 +102,12 @@ export function labelIsFromText(label: string, problemText: string): boolean {
  */
 export function textFieldIsFromText(field: string, problemText: string): boolean {
   if (labelIsFromText(field, problemText)) return true;
-  const f = normalise(field).toLowerCase();
+  return phraseInText(normalise(field), problemText);
+}
+
+/** `phrase` occurs in the text as a whole phrase: not inside a longer word or number, case and spacing aside. */
+function phraseInText(phrase: string, problemText: string): boolean {
+  const f = phrase.toLowerCase();
   if (!f) return true;
   const esc = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
   return new RegExp(`(?<![A-Za-z0-9])${esc}(?![A-Za-z0-9])`).test(normalise(problemText).toLowerCase());
@@ -115,12 +128,16 @@ function textFieldReasons(fields: Array<{ value: unknown; axis?: boolean }>, pro
 
 type Pt = { x: number; y: number };
 
-/** Failing-claim messages; [] when every claim holds. tol is relative to the figure's extent. */
+/** Failing-claim messages; [] when every claim holds. tol is relative to the
+ *  figure's extent. 1e-3 (2026-10-21, GAC acceptance): the proposer writes
+ *  given coordinates to two or three decimals, so a chord endpoint sat 0.003
+ *  off its circle and a point 0.004 off its line at 1e-6 — a thousandth of
+ *  the figure is invisible on the board and still catches a wrong figure. */
 export function checkClaims(
   points: Record<string, Pt>,
   circles: Record<string, { cx: number; cy: number; r: number }>,
   claims: FigureClaim[],
-  tol = 1e-6,
+  tol = 1e-3,
 ): string[] {
   const xs = Object.values(points).map((p) => p.x);
   const ys = Object.values(points).map((p) => p.y);
@@ -156,7 +173,10 @@ export function checkClaims(
       if (off > dtol) out.push(`${c.kind === 'between' ? 'between' : 'on_segment'} ${c.point} [${a},${b}] fails: ${c.point} is ${fmt(off)} off the line`);
       else if (t < -tol || t > 1 + tol) out.push(`${c.kind === 'between' ? 'between' : 'on_segment'} ${c.point} [${a},${b}] fails: ${c.point} is outside the segment`);
     } else if (c.kind === 'on_circle') {
-      const circ = circles[c.circle];
+      // The claims pass names a circle the way the sheet does ("the circle",
+      // "circle O"); with one circle in the figure that is the one it means.
+      const ids = Object.keys(circles);
+      const circ = circles[c.circle] ?? (ids.length === 1 ? circles[ids[0]] : undefined);
       if (!circ) { out.push(`on_circle ${c.point} names circle ${c.circle} but the solver has no such circle`); continue; }
       const d = Math.abs(Math.hypot(points[c.point].x - circ.cx, points[c.point].y - circ.cy) - circ.r);
       if (d > dtol) out.push(`on_circle ${c.point} ${c.circle} fails: ${c.point} is ${fmt(d)} off the circle`);

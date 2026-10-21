@@ -37,6 +37,11 @@ export function homeworkProblemOf(plan: { metadata?: Record<string, unknown> } |
 
 const FIGURE_DESCRIPTION_OPEN_RE = /^\[\s*(?:figure|graph|diagram)\s*:/i;
 
+/** The photo read wrote a bracketed figure/graph/diagram description into this problem's text. Pure. */
+export function hasFigureDescription(text: string): boolean {
+  return /\[\s*(?:figure|graph|diagram)\s*:/i.test(text);
+}
+
 /**
  * The problem text as the ProblemPanel shows it. With a figure drawn, every
  * bracketed `[Figure: …]` / `[Graph: …]` / `[Diagram: …]` description the

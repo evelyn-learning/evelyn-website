@@ -7,6 +7,7 @@
 import { getLessonPlan } from '../lesson-plan/store';
 import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { buildFigure, defaultFigureBuildDeps, type FigureBuildDeps } from './figure-build';
+import { hasFigureDescription } from '../lesson-plan/homework-problem-meta';
 import { solveKey, defaultKeySolveDeps, type KeySolveDeps } from './key-solve';
 import { ensureHomeworkBuild, findCachedProblem, patchProblemBuild } from './store';
 import type { ProblemBuild } from './types';
@@ -53,10 +54,21 @@ export async function runHomeworkBuild(
       // infrastructure (Mongo, process). Leave the problem `preparing` so the stale
       // re-kick retries it; never persist a transient fault as a final verdict.
       const cached = await findCachedProblem(p.hash);
-      if (cached && cached.status === 'ready') {
+      if (cached && cached.status === 'ready' && (cached.figure || !hasFigureDescription(p.text))) {
         patch = {
           status: 'ready', figure: cached.figure, figureNote: cached.figureNote,
           key: cached.key, verify: cached.verify, ms: 0,
+        };
+      } else if (cached && cached.status === 'ready') {
+        // The key is verified and reused; the figure failed last time on a
+        // problem that has one (GAC acceptance 2026-10-21: six of eight,
+        // most on a validator rule since fixed). The proposer is not
+        // deterministic and the validator improves — try the figure again.
+        const fig = await buildFigure(p, deps.figure);
+        patch = {
+          status: 'ready', figure: fig.figure, figureNote: fig.note,
+          key: cached.key, verify: cached.verify, ms: now() - t0,
+          ...(fig.tokens ? { tokens: { in: fig.tokens.in, out: fig.tokens.out } } : {}),
         };
       } else {
         const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), solveKey(p, deps.key)]);

@@ -93,6 +93,13 @@ async function main() {
       assert.ok(!labelIsFromText('DB = 12', P5), 'neighbouring label must not supply the value');
       assert.ok(!labelIsFromText('-5', P5)); assert.ok(!labelIsFromText('3π/4 + 4', P8)); assert.ok(!labelIsFromText('AD + DB', P5));
       assert.ok(labelIsFromText('AD=6', P5)); assert.ok(!labelIsFromText('AD - 6', P5));
+      // 2026-10-21 (GAC acceptance): an expression label written verbatim on the sheet.
+      const T1 = 'Lines p ∥ q are cut by transversal r. [Figure: Angles, one at a time: - (5x + 10)°: its arc is at the crossing of r and p. - (8x − 56)°: its arc is at the crossing of r and q.] Find x.';
+      assert.ok(labelIsFromText('(5x + 10)°', T1)); assert.ok(labelIsFromText('(8x − 56)°', T1)); assert.ok(labelIsFromText('(8x - 56)°', T1));
+      assert.ok(labelIsFromText('4x + 6', 'The angles measure (4x + 6)° and (2x + 10)°.'));
+      assert.ok(!labelIsFromText('5x + 11', T1)); assert.ok(!labelIsFromText('(5x + 1)°', T1));
+      assert.ok(!labelIsFromText('Rectangle with semicircle cut out', P5));
+      assert.ok(!labelIsFromText('6', 'AD = 16'), 'a digit inside a number is not the word');
     });
     await section('first-sentence article "A" is not a point', () => {
       const text = 'Find the radius. [Figure: A circle with centre O and radius 5.]';
@@ -120,6 +127,13 @@ async function main() {
       assert.equal(checkClaims(pts, circ, [{ kind: 'on_circle', point: 'M', circle: 'c' }]).length, 1);
       assert.equal(checkClaims(pts, circ, [{ kind: 'parallel', a: ['A', 'B'], b: ['A', 'C'] }]).length, 1);
       assert.match(checkClaims(pts, circ, [{ kind: 'on_segment', point: 'Q', segment: ['A', 'B'] }])[0], /no such point/);
+      // 2026-10-21 (GAC acceptance): the sheet's "the circle" with one circle drawn is that circle; two circles stay ambiguous.
+      assert.deepEqual(checkClaims(pts, circ, [{ kind: 'on_circle', point: 'R', circle: 'circle' }]), []);
+      assert.match(checkClaims(pts, { ...circ, d: { cx: 1, cy: 1, r: 1 } }, [{ kind: 'on_circle', point: 'R', circle: 'circle' }])[0], /no such circle/);
+      // Coordinates written to three decimals: 0.002 off a 5-wide figure passes by default, not at 1e-6.
+      const near = { ...pts, N: { x: 2, y: 0.002 } };
+      assert.deepEqual(checkClaims(near, circ, [{ kind: 'collinear', points: ['A', 'N', 'B'] }]), []);
+      assert.equal(checkClaims(near, circ, [{ kind: 'collinear', points: ['A', 'N', 'B'] }], 1e-6).length, 1);
     });
 
     const PI = Math.PI;
@@ -494,6 +508,35 @@ async function main() {
       const b = (await getHomeworkBuild('gen-r2'))!;
       assert.equal(b.problems[0].status, 'ready'); assert.equal(b.problems[0].ms, 0);
       assert.equal(b.problems[0].key!.parts[0].final, '5');
+    });
+
+    await section('a cached ready entry with no figure on a problem that has one reuses the key and retries the figure', async () => {
+      // GAC acceptance 2026-10-21: six of eight figures failed validation and were
+      // cached as ready-without-figure; a re-upload must not copy that verdict.
+      const text = 'Fig 1 [Figure: a box ABCD]';
+      await ensureHomeworkBuild('gen-f0', 'greenapple', [{ n: 1, text }]);
+      await patchProblemBuild('gen-f0', 1, {
+        status: 'ready', figure: null, figureNote: 'label "Q" does not come from the problem text',
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+      });
+      await mkPlan('gen-f1', [text, 'Plain 2']);
+      const { deps, order } = mkDeps();
+      let solves = 0;
+      deps.key.solveA = async () => { solves++; return { parts: [{ label: '', final: '7', canonical: { kind: 'number', value: 7 } }], usage: { in: 1, out: 1 } }; };
+      await runHomeworkBuild('gen-f1', 'greenapple', { deps, concurrency: 1 });
+      assert.deepEqual(order, [text, 'Plain 2'], 'the figure was proposed again; the key was not re-solved');
+      assert.equal(solves, 1, 'only Plain 2 solved');
+      const b = (await getHomeworkBuild('gen-f1'))!;
+      assert.equal(b.problems[0].status, 'ready');
+      assert.equal(b.problems[0].key!.parts[0].final, '5', 'verified key reused');
+      // A cached ready entry without a figure on a problem with no description is still copied.
+      await ensureHomeworkBuild('gen-f2', 'greenapple', [{ n: 1, text: 'Nofig 1' }]);
+      await patchProblemBuild('gen-f2', 1, { status: 'ready', figure: null, key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9 });
+      await mkPlan('gen-f3', ['Nofig 1']);
+      const r = mkDeps();
+      await runHomeworkBuild('gen-f3', 'greenapple', { deps: r.deps });
+      assert.deepEqual(r.order, []);
+      assert.equal((await getHomeworkBuild('gen-f3'))!.problems[0].ms, 0);
     });
 
     await section('an unverified cached entry is ignored and rebuilt', async () => {
