@@ -145,6 +145,21 @@ async function main() {
       const v = validateFigure(graph({ xAxisStep: undefined }), { problemText: P8, claims: [] });
       assert.equal(v.ok, false); assert.ok(reasonsOf(v).some((r) => r.includes('axis')), reasonsOf(v).join(' | '));
     });
+    await section('I4 figure text fields: title / axis labels / annotations must come from the sheet', () => {
+      const answerTitle = validateFigure({ ...goodFig(), title: 'x = 20' } as Fig, { problemText: P5, claims });
+      assert.equal(answerTitle.ok, false);
+      assert.ok(reasonsOf(answerTitle).some((r) => r === 'label "x = 20" does not come from the problem text'), reasonsOf(answerTitle).join(' | '));
+      assert.deepEqual(validateFigure({ ...goodFig(), title: 'In △ABC, DE ∥ BC' } as Fig, { problemText: P5, claims }), { ok: true }, 'title copied from the sheet');
+      assert.deepEqual(validateFigure({ ...goodFig(), title: 'DE = 9' } as Fig, { problemText: P5, claims }), { ok: true }, 'a given as title');
+      const gt = validateFigure(graph({ title: 'amplitude = 3' }), { problemText: P8, claims: [] });
+      assert.ok(reasonsOf(gt).some((r) => r.includes('"amplitude = 3"')), reasonsOf(gt).join(' | '));
+      assert.deepEqual(validateFigure(graph({ title: 'The graph of y = a sin(bx) + d' }), { problemText: P8, claims: [] }), { ok: true });
+      const ax = validateFigure(graph({ xLabel: 'period = π', yLabel: 'y' }), { problemText: P8, claims: [] });
+      assert.ok(reasonsOf(ax).some((r) => r.includes('"period = π"')), reasonsOf(ax).join(' | '));
+      assert.deepEqual(validateFigure(graph({ xLabel: 't', yLabel: 'y' }), { problemText: P8, claims: [] }), { ok: true }, 'one-letter axis names always pass');
+      const an = validateFigure(graph({ annotations: [{ type: 'point-label', at: 0, label: 'd = 1' }] }), { problemText: P8, claims: [] });
+      assert.ok(reasonsOf(an).some((r) => r.includes('"d = 1"')), reasonsOf(an).join(' | '));
+    });
     await section('graph point off the curve fails; invented point label fails', () => {
       const off = validateFigure(graph({ points: [{ x: PI / 4, y: 3.2 }] }), { problemText: P8, claims: [] });
       assert.ok(reasonsOf(off).some((r) => r.includes('not on any plotted function')), reasonsOf(off).join(' | '));
@@ -169,7 +184,7 @@ async function main() {
       const good = goodFig();
       const d = mkDeps(async (i) => ({ figure: i.feedback?.length ? good : ws3p5Bad, claims: [] }));
       const r = await buildFigure({ n: 5, text: P5 }, d);
-      assert.deepEqual(r.figure, good); assert.equal(r.attempts, 2);
+      assert.deepEqual(r.figure, { ...good, display: { grid: false, axes: false } }); assert.equal(r.attempts, 2);
       assert.ok(d.calls[1].feedback!.some((f) => f.includes('on_segment')), String(d.calls[1].feedback));
       assert.deepEqual(d.calls[1].previous, ws3p5Bad);
       assert.equal(r.claims.length, 3);
@@ -210,7 +225,7 @@ async function main() {
       const good = goodFig();
       const d = mkDeps(async (i) => i.feedback || d.calls.length > 1 ? { figure: good, claims: [] } : { figure: null, claims: [], note: 'propose_failed:APIError' });
       const r = await buildFigure({ n: 5, text: P5 }, d);
-      assert.deepEqual(r.figure, good); assert.equal(r.attempts, 2);
+      assert.deepEqual(r.figure, { ...good, display: { grid: false, axes: false } }); assert.equal(r.attempts, 2);
     });
     await section('validator reasons survive a failed second propose', async () => {
       const d = mkDeps(async () => (d.calls.length > 1 ? { figure: null, claims: [], note: 'propose_failed:APIError' } : { figure: ws3p5Bad, claims: [] }));
@@ -237,6 +252,20 @@ async function main() {
         { kind: 'bogus' }, null,
       ]);
       assert.equal(cl.length, 2);
+    });
+    await section('I5 geometry display: grid/axes off unless the text is on a coordinate plane', async () => {
+      const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
+      const g = goodFig();
+      const off = normalizeFigureDisplay(g, P5) as { display?: Record<string, unknown> };
+      assert.deepEqual(off.display, { grid: false, axes: false });
+      const kept = normalizeFigureDisplay({ ...g, display: { showLabels: true, grid: true } } as Fig, P5) as { display?: Record<string, unknown> };
+      assert.deepEqual(kept.display, { showLabels: true, grid: false, axes: false }, 'other display keys kept');
+      for (const t of [`${P5} The triangle is drawn on the coordinate plane.`, 'Plot A(2, 3) and B(-1, 4).', 'Reflect the triangle over the x-axis.', 'Name the ordered pair of the vertex.']) {
+        assert.deepEqual(normalizeFigureDisplay(g, t), g, t);
+      }
+      const gr = graph();
+      assert.equal(normalizeFigureDisplay(gr, 'no coordinates mentioned here at all'), gr, 'graphs untouched');
+      assert.match(FIGURE_PROPOSE_SYSTEM, /no coordinate grid and no axes/);
     });
     await section('system prompt carries the structural rules', () => {
       assert.match(FIGURE_PROPOSE_SYSTEM, /section_point: \{ kind: "section_point", of: [^\n]*ratio: \[m, n\]/);

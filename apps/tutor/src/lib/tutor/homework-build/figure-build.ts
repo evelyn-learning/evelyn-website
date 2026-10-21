@@ -46,6 +46,7 @@ Rules:
 3. A graph copies the sheet's axis marks: when an axis is marked in multiples of pi set xAxisStep ("pi/2", "pi", "2pi"), otherwise a numeric step. Plot only curves and points the description states, and attach no function label or equation text to a curve.
 4. Keep proportions faithful to the stated lengths and ratios where the text gives them, and keep the drawing uncluttered.
 5. If feedback from a previous attempt is given, you also get that attempt's figure: fix every item in the feedback and keep what was not criticized.
+6. A geometry figure has no coordinate grid and no axes (display grid false, axes false) unless the problem itself is on a coordinate plane: it names coordinates, axes, the coordinate plane or ordered pairs.
 
 Step reference (the steps array of showGeometryConstructed):
 ${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
@@ -112,6 +113,20 @@ export function normalizeClaims(raw: unknown): FigureClaim[] {
     }
   }
   return out;
+}
+
+/** The problem is set on a coordinate plane: it names coordinates, axes, a grid, a quadrant or an ordered pair. */
+const COORDINATE_TEXT_RE = /\bcoordinates?\b|\bcoordinate plane\b|\bax[ie]s\b|\b[xy]-?\s?axis\b|\bordered pairs?\b|\bgrid\b|\bquadrants?\b|\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)/i;
+
+/**
+ * I5: a geometry figure is drawn without the coordinate grid and axes unless
+ * the problem text is about a coordinate plane. Graphs are untouched. Pure.
+ */
+export function normalizeFigureDisplay(figure: FigureCommand | null, problemText: string): FigureCommand | null {
+  if (!figure || figure.action !== 'showGeometryConstructed') return figure;
+  if (COORDINATE_TEXT_RE.test(problemText ?? '')) return figure;
+  const display = figure.display && typeof figure.display === 'object' ? figure.display : {};
+  return { ...figure, display: { ...display, grid: false, axes: false } };
 }
 
 export function parseFigure(raw: unknown): FigureCommand | null {
@@ -230,7 +245,7 @@ export async function buildFigure(
       continue;
     }
     const v = validateFigure(proposal.figure, { problemText: problem.text, claims: all });
-    if (v.ok) return withTokens({ figure: proposal.figure, attempts: attempt, claims: all });
+    if (v.ok) return withTokens({ figure: normalizeFigureDisplay(proposal.figure, problem.text), attempts: attempt, claims: all });
     reasons = v.reasons;
     feedback = v.reasons;
     lastFigure = proposal.figure;

@@ -108,7 +108,11 @@
           "to": "C",
           "label": "EC = y"
         }
-      ]
+      ],
+      "display": {
+        "grid": false,
+        "axes": false
+      }
     }
   }
 ]
