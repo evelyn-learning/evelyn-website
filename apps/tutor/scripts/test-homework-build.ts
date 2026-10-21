@@ -235,6 +235,84 @@ async function main() {
     });
   }
 
+  // ---- 4 key (pure: stub solvers, no Mongo, no model) ----
+  console.log('4 key');
+  {
+    const { solveKey, partsAgree, KEY_SOLVE_SYSTEM, normalizeKeyParts } = await import('../src/lib/tutor/homework-build/key-solve');
+    type AP = Parameters<typeof partsAgree>[0];
+    const num = (final: string, value: number, label = '', units?: string): AP[number] =>
+      ({ label, final, canonical: { kind: 'number', value, ...(units ? { units } : {}) } });
+    const txt = (final: string, label = ''): AP[number] => ({ label, final, canonical: { kind: 'text', value: final } });
+    const mk = (a: AP | null, b: AP | null, t: AP | null) => {
+      const calls = { a: 0, b: 0, t: 0 };
+      return { calls, names: ['A', 'B', 'T'] as [string, string, string],
+        solveA: async () => { calls.a++; return a; }, solveB: async () => { calls.b++; return b; }, solveTieBreak: async () => { calls.t++; return t; } };
+    };
+    await section('A = B: agreed, two solvers, tie-break not called', async () => {
+      const d = mk([num('x = 20', 20)], [num('x = 20', 20)], null);
+      const r = await solveKey({ n: 1, text: 'q' }, d);
+      assert.equal(r.agreed, true); assert.deepEqual(r.key!.solvers, ['A', 'B']); assert.equal(d.calls.t, 0);
+    });
+    await section('tie-break agrees with A within 1 %', async () => {
+      const d = mk([num('35.42', 35.42)], [num('31.42', 31.42)], [num('35.4', 35.4)]);
+      const r = await solveKey({ n: 1, text: 'q' }, d);
+      assert.equal(r.agreed, true); assert.deepEqual(r.key!.solvers, ['A', 'T']); assert.equal(r.key!.parts[0].final, '35.42');
+    });
+    await section('one solver null -> tie-break decides; null contributes (no answer)', async () => {
+      const d = mk(null, [num('7', 7)], [num('7', 7)]);
+      const r = await solveKey({ n: 1, text: 'q' }, d);
+      assert.equal(r.agreed, true); assert.deepEqual(r.key!.solvers, ['B', 'T']);
+      const d2 = mk(null, [num('7', 7)], [num('9', 9)]);
+      const r2 = await solveKey({ n: 1, text: 'q' }, d2);
+      assert.equal(r2.key, null); assert.deepEqual(r2.candidates, ['A: (no answer)', 'B: 7', 'T: 9']);
+    });
+    await section('all three differ -> null key, 3 candidates', async () => {
+      const r = await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('2', 2)], [num('3', 3)]));
+      assert.equal(r.key, null); assert.equal(r.agreed, false); assert.equal(r.candidates.length, 3);
+    });
+    await section('two parts: (a) agrees, (b) differs, tie-break matches neither -> no partial key', async () => {
+      const r = await solveKey({ n: 1, text: 'q' }, mk(
+        [num('5', 5, 'a'), num('7', 7, 'b')], [num('5', 5, 'a'), num('8', 8, 'b')], [num('6', 6, 'a'), num('9', 9, 'b')]));
+      assert.equal(r.key, null); assert.equal(r.candidates[0], 'A: a) 5; b) 7');
+    });
+    await section('tie-break matching both disagreeing solvers is refused as ambiguous', async () => {
+      const r = await solveKey({ n: 1, text: 'q' }, mk([num('100', 100)], [num('102', 102)], [num('101', 101)]));
+      assert.equal(r.key, null); assert.match(r.note ?? '', /ambiguous/);
+    });
+    await section('throwing deps never reject', async () => {
+      const boom = async () => { throw new Error('x'); };
+      const r = await solveKey({ n: 1, text: 'q' }, { names: ['A', 'B', 'T'], solveA: boom, solveB: boom, solveTieBreak: boom });
+      assert.equal(r.key, null);
+    });
+    await section('partsAgree table', () => {
+      assert.equal(partsAgree([num('20°', 20)], [num('20', 20)]), true);
+      assert.equal(partsAgree([num('35.42 cm', 35.42, '', 'cm')], [num('35.4', 35.4)]), true);
+      assert.equal(partsAgree([txt('1/2')], [num('0.5', 0.5)]), false);
+      assert.equal(partsAgree([num('1', 1, 'a'), num('2', 2, 'b')], [num('2', 2, 'b'), num('1', 1, 'a')]), true);
+      assert.equal(partsAgree([num('1', 1, 'a'), num('2', 2, 'b')], [num('1', 1, 'a')]), false);
+      assert.equal(partsAgree([num('1', 1, 'a')], [num('1', 1, 'b')]), false);
+      assert.equal(partsAgree([num('5 cm', 5, '', 'cm')], [num('5 m', 5, '', 'm')]), false);
+      assert.equal(partsAgree([num('20', 20)], [num('21', 21)]), false);
+      assert.equal(partsAgree([txt('Parallel.')], [txt('  parallel')]), true);
+      assert.equal(partsAgree([txt('parallel')], [txt('perpendicular')]), false);
+      assert.equal(partsAgree([], []), false);
+      assert.equal(partsAgree([num('1', 1, 'a'), num('2', 2, 'a')], [num('1', 1, 'a'), num('2', 2, 'a')]), false);
+      assert.equal(partsAgree([num('20', 20)], [num('x', Number.NaN)]), false);
+      assert.equal(partsAgree([num('0', 0)], [num('0.005', 0.005)]), false);   // zero vs near-zero is not agreement
+    });
+    await section('normalizeKeyParts strips trailing units from number finals; ill-posed -> null', () => {
+      const p = normalizeKeyParts({ parts: [{ label: ' (a) ', final: '35.42 cm', canonical: { kind: 'number', number: 35.42, text: '', units: '' } }] })!;
+      assert.equal(p[0].label, 'a'); assert.deepEqual(p[0].canonical, { kind: 'number', value: 35.42, units: 'cm' });
+      assert.equal(normalizeKeyParts({ parts: [], ill_posed: 'no figure' }), null);
+      assert.equal(normalizeKeyParts({ parts: [{ label: '', final: '', canonical: { kind: 'text', number: 0, text: '', units: '' } }] }), null);
+      assert.equal(normalizeKeyParts({ nope: 1 }), null);
+    });
+    await section('system prompt: per-part and ill_posed', () => {
+      assert.match(KEY_SOLVE_SYSTEM, /one entry per lettered part/);
+      assert.match(KEY_SOLVE_SYSTEM, /ill_posed/);
+    });
+  }
+
   console.log('1 types+store');
   try {
     await mongoose.connect(TEST_URI, { serverSelectionTimeoutMS: 2000, bufferCommands: false });
