@@ -408,6 +408,30 @@ async function main() {
     for (const r of rs) { assert.equal(r._id, 'gen-race'); assert.equal(r.problems.length, 2); }
   });
 
+  await section('I6 erase: deleteHomeworkBuilds removes the erased plans\' builds only; erase wires it', async () => {
+    const { deleteHomeworkBuilds } = await import('../src/lib/tutor/homework-build/store');
+    await ensureHomeworkBuild('gen-erase-1', 'greenapple', [{ n: 1, text: 'E1' }]);
+    await ensureHomeworkBuild('gen-erase-keep', 'greenapple', [{ n: 1, text: 'E2' }]);
+    assert.equal(await deleteHomeworkBuilds([]), 0);
+    assert.equal(await deleteHomeworkBuilds(['gen-erase-1', 'gen-not-there']), 1);
+    assert.equal(await getHomeworkBuild('gen-erase-1'), null);
+    assert.ok(await getHomeworkBuild('gen-erase-keep'), 'another plan\'s build survives');
+    const fs = await import('node:fs');
+    const erase = fs.readFileSync('src/lib/tutor/student-erase/erase.ts', 'utf8');
+    assert.match(erase, /hasPlans \? deleteHomeworkBuilds\(deletablePlanIds\)/);
+    assert.match(erase, /homeworkBuilds,/);
+  });
+
+  await section('I6 retention: TTL index on updatedAt, 90 days', async () => {
+    const { HomeworkBuildModel, HOMEWORK_BUILD_TTL_SECONDS } = await import('../src/models/HomeworkBuild');
+    assert.equal(HOMEWORK_BUILD_TTL_SECONDS, 90 * 24 * 3600);
+    await HomeworkBuildModel.syncIndexes();
+    const idx = (await HomeworkBuildModel.collection.indexes()) as Array<{ key: Record<string, number>; expireAfterSeconds?: number }>;
+    const ttl = idx.find((i) => JSON.stringify(i.key) === JSON.stringify({ updatedAt: 1 }));
+    assert.ok(ttl, JSON.stringify(idx));
+    assert.equal(ttl.expireAfterSeconds, 90 * 24 * 3600);
+  });
+
   // ---- 5 runner (Mongo-backed: inserts plans) ----
   console.log('5 runner');
   {

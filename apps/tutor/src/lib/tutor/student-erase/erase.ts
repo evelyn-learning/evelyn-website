@@ -59,6 +59,7 @@ import { deleteLearnerModelData } from '@/lib/tutor/learner-model/store';
 import { identityFilter, identityResolutionEnabled, forgetEphemeralProfile } from '@/lib/tutor/student-profile/store';
 import { forgetEphemeralTopicNotes } from '@/lib/tutor/topic-notes/apply-overlay';
 import { HOMEWORK_PLAN_KIND } from '@/lib/tutor/lesson-plan/homework';
+import { deleteHomeworkBuilds } from '@/lib/tutor/homework-build/store';
 import { audioBaseDir, removeSessionAudioDirs, type AudioFs, type AudioRemovalSummary } from './audio-dir';
 
 export interface EraseIdentity {
@@ -380,7 +381,7 @@ export async function eraseStudentData(identity: EraseIdentity, opts: EraseOptio
   const none = { deletedCount: 0 };
   const hasOwned = ownedIds.length > 0;
   const hasPlans = deletablePlanIds.length > 0;
-  const [learnerModel, studentProfiles, tutorSessions, studentTopicNotes, practiceAssignments, mockAttempts, practiceGenCounters, reviewPlans, homeworkPlans, homeworkPracticeItems] =
+  const [learnerModel, studentProfiles, tutorSessions, studentTopicNotes, practiceAssignments, mockAttempts, practiceGenCounters, reviewPlans, homeworkPlans, homeworkPracticeItems, homeworkBuilds] =
     await Promise.all([
       deleteLearnerModelData(ownedIds, { partnerId }),
       hasOwned ? StudentProfileModel.deleteMany(filters.profiles) : none,
@@ -402,6 +403,9 @@ export async function eraseStudentData(identity: EraseIdentity, opts: EraseOptio
             loId: { $regex: `^(?:${deletablePlanIds.map(escapeRegExp).join('|')})\\.` },
           })
         : none,
+      // The per-problem homework build of a deleted plan (keyed by its id):
+      // the problem text and answer keys.
+      hasPlans ? deleteHomeworkBuilds(deletablePlanIds) : 0,
     ]);
 
   // In-process fallbacks (used only while Mongo was unreachable).
@@ -422,6 +426,7 @@ export async function eraseStudentData(identity: EraseIdentity, opts: EraseOptio
       reviewPlans: count(reviewPlans),
       homeworkPlans: count(homeworkPlans),
       homeworkPracticeItems: count(homeworkPracticeItems),
+      homeworkBuilds,
       audioDirs: audio.removed,
     },
     audio: { removed: audio.removed, missing: audio.missing, skipped: audio.skipped, failed: audio.failed },

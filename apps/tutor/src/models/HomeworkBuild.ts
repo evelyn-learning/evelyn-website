@@ -39,6 +39,12 @@ const HomeworkBuildSchema = new Schema<HomeworkBuildDoc>(
 // Cache lookup: newest problem with this hash.
 HomeworkBuildSchema.index({ 'problems.hash': 1, updatedAt: -1 });
 
+/** Retention: a build untouched for 90 days is removed by Mongo's TTL
+ *  monitor (problem text + keys of a student's homework are not kept
+ *  indefinitely). A plan still in use simply rebuilds on its next mint. */
+export const HOMEWORK_BUILD_TTL_SECONDS = 90 * 24 * 60 * 60;
+HomeworkBuildSchema.index({ updatedAt: 1 }, { expireAfterSeconds: HOMEWORK_BUILD_TTL_SECONDS, name: 'homework_build_ttl' });
+
 export const HomeworkBuildModel =
   (mongoose.models.HomeworkBuild as mongoose.Model<HomeworkBuildDoc>) ||
   mongoose.model<HomeworkBuildDoc>('HomeworkBuild', HomeworkBuildSchema);

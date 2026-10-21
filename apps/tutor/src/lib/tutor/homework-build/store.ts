@@ -8,6 +8,17 @@ import { problemHash, type HomeworkBuildDoc, type ProblemBuild } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Student erase (I6): the builds of erased homework plans (a build's `_id` is
+ * its plan id; it holds the problem text and keys). Returns the deleted count.
+ */
+export async function deleteHomeworkBuilds(planIds: readonly string[]): Promise<number> {
+  if (!planIds.length) return 0;
+  await connectDB();
+  const res = await HomeworkBuildModel.deleteMany({ _id: { $in: [...planIds] } });
+  return res.deletedCount ?? 0;
+}
+
 export async function getHomeworkBuild(planId: string): Promise<HomeworkBuildDoc | null> {
   await connectDB();
   return (await HomeworkBuildModel.findById(planId).lean()) as HomeworkBuildDoc | null;

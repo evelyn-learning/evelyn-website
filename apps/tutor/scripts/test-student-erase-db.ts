@@ -223,6 +223,10 @@ async function test(name: string, fn: () => Promise<void>) {
     bankRow('practice-gen.lo.shared.h1', 'lo.shared'),
     bankRow('curated-item', 'gen-homework-a.homework-lo-1'), // not a runtime-generated row
   ]);
+  // Per-problem homework builds (keyed by plan id): A's goes with its plan; the shared plan's stays.
+  const { HomeworkBuildModel } = await import('../src/models/HomeworkBuild');
+  const build = (planId: string, partnerId: string) => ({ _id: planId, partnerId, problems: [{ n: 1, text: 'p', hash: 'h', status: 'ready', figure: null, key: null, verify: { agreed: true }, updatedAt: now }], startedAt: now, updatedAt: now, done: true });
+  await raw(HomeworkBuildModel, [build('gen-homework-a', 'partnerA'), build('gen-homework-shared', 'partnerA'), build('gen-homework-b', 'partnerB')]);
   const audioSessions = ['sessA1', 'sessA2', 'sessB1', 'sessR', 'sessA3'];
   for (const id of audioSessions) {
     await fs.mkdir(path.join(audioRoot, id));
@@ -243,13 +247,18 @@ async function test(name: string, fn: () => Promise<void>) {
       assert.deepStrictEqual(first.json.deleted, {
         evidenceEvents: 1, learnerStateProjections: 1, learnerStateSnapshots: 1, eloRatings: 1,
         studentProfiles: 1, tutorSessions: 2, studentTopicNotes: 1, practiceAssignments: 1, mockAttempts: 1,
-        practiceGenCounters: 1, reviewPlans: 1, homeworkPlans: 2, homeworkPracticeItems: 1, audioDirs: 2,
+        practiceGenCounters: 1, reviewPlans: 1, homeworkPlans: 2, homeworkPracticeItems: 1, homeworkBuilds: 1, audioDirs: 2,
       });
       assert.deepStrictEqual(first.json.audio, { removed: 2, missing: 0, skipped: 0, failed: 0 });
     });
     await test('homework plans: the student\'s own are deleted — session-linked (no student id on the plan) and owner-stamped', async () => {
       assert.strictEqual(await LessonPlanModel.findById('gen-homework-a').lean(), null);
       assert.strictEqual(await LessonPlanModel.findById('gen-homework-stamped').lean(), null);
+    });
+    await test('homework builds: the deleted plan\'s build is gone; the kept plans\' builds stay', async () => {
+      assert.strictEqual(await HomeworkBuildModel.findById('gen-homework-a').lean(), null);
+      assert.ok(await HomeworkBuildModel.findById('gen-homework-shared').lean());
+      assert.ok(await HomeworkBuildModel.findById('gen-homework-b').lean());
     });
     await test('homework plans: one another student\'s session also ran on is kept', async () => {
       assert.ok(await LessonPlanModel.findById('gen-homework-shared').lean());
