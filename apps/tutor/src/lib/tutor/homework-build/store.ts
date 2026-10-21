@@ -31,11 +31,19 @@ export async function ensureHomeworkBuild(
     updatedAt: now,
     done: false,
   };
-  return (await HomeworkBuildModel.findOneAndUpdate(
-    { _id: planId },
-    { $setOnInsert: fresh },
-    { upsert: true, new: true, lean: true },
-  )) as unknown as HomeworkBuildDoc;
+  try {
+    return (await HomeworkBuildModel.findOneAndUpdate(
+      { _id: planId },
+      { $setOnInsert: fresh },
+      { upsert: true, new: true, lean: true },
+    )) as unknown as HomeworkBuildDoc;
+  } catch (err) {
+    // Two concurrent first calls can both try to insert: the loser re-reads.
+    if ((err as { code?: number }).code !== 11000) throw err;
+    const existing = (await HomeworkBuildModel.findById(planId).lean()) as HomeworkBuildDoc | null;
+    if (!existing) throw err;
+    return existing;
+  }
 }
 
 export async function patchProblemBuild(

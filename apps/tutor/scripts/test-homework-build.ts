@@ -358,6 +358,107 @@ async function main() {
     assert.equal((await findCachedProblem(problemHash('P1')))!.status, 'unverified');   // newer than gen-p1's
   });
 
+  await section('concurrent first ensure calls resolve to the same doc', async () => {
+    const probs = [{ n: 1, text: 'C1' }, { n: 2, text: 'C2' }];
+    const rs = await Promise.all(Array.from({ length: 6 }, () => ensureHomeworkBuild('gen-race', 'greenapple', probs)));
+    for (const r of rs) { assert.equal(r._id, 'gen-race'); assert.equal(r.problems.length, 2); }
+  });
+
+  // ---- 5 runner (Mongo-backed: inserts plans) ----
+  console.log('5 runner');
+  {
+    const fs = await import('node:fs');
+    const { runHomeworkBuild, BUILD_STALE_MS } = await import('../src/lib/tutor/homework-build/runner');
+    const { upsertLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
+    const { LESSON_PLAN_SCHEMA_VERSION } = await import('../src/lib/tutor/lesson-plan/types');
+    type RD = NonNullable<NonNullable<Parameters<typeof runHomeworkBuild>[2]>['deps']>;
+    const mkPlan = async (id: string, texts: string[]) => {
+      await upsertLessonPlan({
+        id, title: 'Homework help', curriculum: 'freestyle', grade: '8', subject: 'math', topic: 'hw', locale: 'en',
+        los: [{ id: `${id}.hw`, description: 'Work the problems.', shortTitle: 'hw', estimatedMinutes: 20 }],
+        estimatedMinutes: 20,
+        segments: [{ id: 'homework', kind: 'concept', goal: 'Work them.', keyIdeas: ['x'] }],
+        prerequisites: [], followUps: [], schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
+        metadata: { kind: 'homework-help', problems: texts.map((text, i) => ({ n: i + 1, text })) },
+      });
+    };
+    const mkDeps = (opts: { throwOn?: string } = {}) => {
+      const order: string[] = [];
+      const deps: RD = {
+        figure: {
+          async propose({ text }) { order.push(text); if (opts.throwOn === text) throw new Error('boom'); return { figure: null, claims: [] }; },
+          async extractClaims() { return []; },
+        },
+        key: {
+          names: ['A', 'B', 'T'],
+          async solveA() { return [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }]; },
+          async solveB() { return [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }]; },
+          async solveTieBreak() { return null; },
+        },
+      };
+      return { deps, order };
+    };
+
+    await section('first problem first, then ascending; all ready; done', async () => {
+      await mkPlan('gen-r1', ['Alpha 1', 'Beta 2', 'Gamma 3']);
+      const { deps, order } = mkDeps();
+      await runHomeworkBuild('gen-r1', 'greenapple', { first: 3, deps, concurrency: 1 });
+      assert.deepEqual(order, ['Gamma 3', 'Alpha 1', 'Beta 2']);
+      const b = (await getHomeworkBuild('gen-r1'))!;
+      assert.equal(b.done, true);
+      assert.deepEqual(b.problems.map((p) => p.status), ['ready', 'ready', 'ready']);
+      assert.equal(b.problems[0].verify.agreed, true);
+      assert.equal(typeof b.problems[0].ms, 'number');
+    });
+
+    await section('a second run makes zero dep calls', async () => {
+      const { deps, order } = mkDeps();
+      await runHomeworkBuild('gen-r1', 'greenapple', { deps, concurrency: 1 });
+      assert.equal(order.length, 0);
+    });
+
+    await section('identical problem text copies the cache', async () => {
+      await mkPlan('gen-r2', ['Alpha 1', 'Fresh 2']);
+      const { deps, order } = mkDeps();
+      await runHomeworkBuild('gen-r2', 'greenapple', { deps, concurrency: 1 });
+      assert.deepEqual(order, ['Fresh 2']);
+      const b = (await getHomeworkBuild('gen-r2'))!;
+      assert.equal(b.problems[0].status, 'ready'); assert.equal(b.problems[0].ms, 0);
+      assert.equal(b.problems[0].key!.parts[0].final, '5');
+    });
+
+    await section('a throwing problem is unverified with build_error; others continue', async () => {
+      await mkPlan('gen-r3', ['Thrower 1', 'Ok 2', 'Ok 3']);
+      const { deps } = mkDeps();
+      // solveKey/buildFigure never throw by contract; a defect inside one (here: names
+      // throwing on its first read) must still be contained per problem by the runner.
+      let reads = 0;
+      const names = deps.key.names;
+      Object.defineProperty(deps.key, 'names', { get() { if (reads++ === 0) throw new Error('boom'); return names; } });
+      await runHomeworkBuild('gen-r3', 'greenapple', { first: 1, deps, concurrency: 1 });
+      const b = (await getHomeworkBuild('gen-r3'))!;
+      assert.equal(b.done, true);
+      assert.equal(b.problems[1].status, 'ready'); assert.equal(b.problems[2].status, 'ready');
+      assert.equal(b.problems[0].status, 'unverified');
+      assert.equal(b.problems[0].key, null);
+      assert.match(b.problems[0].verify.note ?? '', /^build_error:boom/);
+    });
+
+    await section('a non-homework or missing plan is a no-op', async () => {
+      const { deps, order } = mkDeps();
+      await runHomeworkBuild('gen-nope', 'greenapple', { deps });
+      assert.equal(order.length, 0);
+      assert.equal(await getHomeworkBuild('gen-nope'), null);
+    });
+
+    await section('constants and plan-generate kick wiring', () => {
+      assert.equal(BUILD_STALE_MS, 180_000);
+      const src = fs.readFileSync('src/app/api/portal/v1/plan-generate/route.ts', 'utf8');
+      assert.match(src, /kickHomeworkBuild\(/);
+      assert.ok(src.indexOf('kickHomeworkBuild(plan.id') > src.indexOf('await upsertLessonPlan(plan)'));
+    });
+  }
+
   assertTestDb();
   await mongoose.connection.dropDatabase();
   await mongoose.disconnect();

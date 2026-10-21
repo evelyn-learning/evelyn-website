@@ -1,0 +1,97 @@
+/**
+ * Homework build runner: for each problem of a homework plan, prepare a
+ * figure and a verified answer key ahead of the session (cache -> else
+ * buildFigure + solveKey in parallel), persisting each problem as it lands.
+ */
+
+import { getLessonPlan } from '../lesson-plan/store';
+import { homeworkProblemsOf } from '../lesson-plan/homework';
+import { buildFigure, defaultFigureBuildDeps, type FigureBuildDeps } from './figure-build';
+import { solveKey, defaultKeySolveDeps, type KeySolveDeps } from './key-solve';
+import { ensureHomeworkBuild, findCachedProblem, patchProblemBuild } from './store';
+import type { ProblemBuild } from './types';
+
+export const BUILD_STALE_MS = 3 * 60_000;
+
+export interface RunnerDeps { figure: FigureBuildDeps; key: KeySolveDeps; now?: () => number }
+
+export async function runHomeworkBuild(
+  planId: string,
+  partnerId: string,
+  opts: { first?: number; deps?: RunnerDeps; concurrency?: number } = {},
+): Promise<void> {
+  const plan = await getLessonPlan(planId);
+  const problems = plan ? homeworkProblemsOf(plan) : null;
+  if (!problems) return;
+
+  const doc = await ensureHomeworkBuild(planId, partnerId, problems);
+  const pending = doc.problems.filter((p) => p.status === 'preparing');
+  pending.sort((a, b) => {
+    const fa = a.n === opts.first ? 0 : 1;
+    const fb = b.n === opts.first ? 0 : 1;
+    return fa - fb || a.n - b.n;
+  });
+  if (pending.length === 0) return;
+
+  const deps: RunnerDeps = opts.deps ?? { figure: defaultFigureBuildDeps(), key: defaultKeySolveDeps() };
+  const now = deps.now ?? Date.now;
+  const queue = [...pending];
+
+  const buildOne = async (p: ProblemBuild): Promise<void> => {
+    const t0 = now();
+    let patch: Parameters<typeof patchProblemBuild>[2];
+    try {
+      const cached = await findCachedProblem(p.hash);
+      if (cached) {
+        patch = {
+          status: cached.status, figure: cached.figure, figureNote: cached.figureNote,
+          key: cached.key, verify: cached.verify, ms: 0,
+        };
+      } else {
+        const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), solveKey(p, deps.key)]);
+        patch = {
+          status: keyRes.key ? 'ready' : 'unverified',
+          figure: fig.figure,
+          figureNote: fig.note,
+          key: keyRes.key,
+          verify: {
+            agreed: keyRes.agreed,
+            ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
+            ...(keyRes.note ? { note: keyRes.note } : {}),
+          },
+          ms: now() - t0,
+        };
+      }
+    } catch (err) {
+      patch = {
+        status: 'unverified', figure: null, key: null,
+        verify: { agreed: false, note: `build_error:${(err as Error).message}` },
+        ms: now() - t0,
+      };
+    }
+    try { await patchProblemBuild(planId, p.n, patch); }
+    catch (err) { console.error(`[homework-build] plan=${planId} n=${p.n} persist failed: ${(err as Error).message}`); return; }
+    const tk = patch.tokens;
+    console.log(
+      `[homework-build] plan=${planId} n=${p.n} status=${patch.status} figure=${patch.figure ? 'yes' : 'no'} ms=${patch.ms} in=${tk?.in ?? '-'} out=${tk?.out ?? '-'}`,
+    );
+  };
+
+  const worker = async (): Promise<void> => {
+    for (let p = queue.shift(); p; p = queue.shift()) await buildOne(p);
+  };
+  const n = Math.max(1, opts.concurrency ?? 2);
+  await Promise.all(Array.from({ length: Math.min(n, queue.length) }, worker));
+}
+
+const running = new Set<string>();
+
+/** Detached: never delays or fails the caller. A second kick while running is a no-op. */
+export function kickHomeworkBuild(planId: string, partnerId: string, opts: { first?: number } = {}): boolean {
+  if (running.has(planId)) return false;
+  running.add(planId);
+  void runHomeworkBuild(planId, partnerId, opts)
+    .catch((err) => console.error(`[homework-build] plan=${planId} run failed: ${(err as Error).message}`))
+    .finally(() => running.delete(planId));
+  return true;
+}
