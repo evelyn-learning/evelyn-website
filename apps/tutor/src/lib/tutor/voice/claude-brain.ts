@@ -48,7 +48,7 @@ import {
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
-import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld } from './homework-problem-block';
+import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld } from './homework-problem-block';
 import { allKeyPartsConfirmed, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS } from './keyed-verdict';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
@@ -2499,6 +2499,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const hpUnverified = hpNeverJudged;
   // GAC acceptance 2026-10-21 (homework-problem-block.ts homeworkKeyWithheld):
   // the board never writes a key value the student has not written.
+  // GAC acceptance 2026-10-21 (hw-11 problem 2): with its figure already on the
+  // board, the opener drew the figure again — with computed angles on it. A
+  // board call in the opening turn of a one-problem session with a figure is
+  // never new work; it is not forwarded, and the model reads why.
+  const hpOpenerWithFigure = !!input.homeworkProblem?.hasFigure && /^\[start (?:lesson|session)\]$/.test(studentSaid);
   const hpWithheld = hpKey
     ? homeworkKeyWithheld(input.homeworkProblem, [studentSaid, ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : ''))].join('\n'))
     : [];
@@ -2839,6 +2844,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               const hit = boardRevealsWithheldAnswer(args, reveal.withheld);
               yield* revealStop('board', hit.how, hit.matched);
             }
+            currentToolUse = null;
+          } else if (hpOpenerWithFigure && tc.name.startsWith('show_')) {
+            console.warn(`[homework-problem] opener board call withheld (${tc.name}): the figure is already on the board`);
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: HOMEWORK_OPENER_BOARD_WITHHELD_REASON });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: HOMEWORK_OPENER_BOARD_WITHHELD_REASON };
             currentToolUse = null;
           } else if (hpWithheld.length && isAnswerBearingRenderTool(tc.name) && boardRevealsHomeworkKey(args, hpWithheld)) {
             // GAC acceptance 2026-10-21: a one-problem session's board item

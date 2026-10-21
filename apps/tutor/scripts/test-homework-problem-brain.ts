@@ -264,6 +264,16 @@ async function main() {
     assert.deepEqual(blk.homeworkKeyWithheld({ ...hp, verified: false }, ''), [], 'an unverified problem has no key to guard');
     assert.deepEqual(blk.homeworkKeyWithheld(undefined, ''), []);
   });
+  await section('verified rule: the expected answer is the authority for relations the tutor asserts', () => {
+    assert.ok(blk.HOMEWORK_PROBLEM_VERIFIED.includes('consistent with the expected values'));
+  });
+  await section('claude-brain withholds every board call of the opening turn when the figure is on the board', () => {
+    const src = read('lib/tutor/voice/claude-brain.ts');
+    has(src, /const hpOpenerWithFigure = !!input\.homeworkProblem\?\.hasFigure && \/\^\\\[start \(\?:lesson\|session\)\\\]\$\/\.test\(studentSaid\);/);
+    has(src, /hpOpenerWithFigure && tc\.name\.startsWith\('show_'\)/);
+    has(src, /rejectionReason: HOMEWORK_OPENER_BOARD_WITHHELD_REASON/);
+    assert.ok(blk.HOMEWORK_OPENER_BOARD_WITHHELD_REASON.includes('already on the board'));
+  });
   await section('claude-brain wires the board guard into the tool-call path', () => {
     const src = read('lib/tutor/voice/claude-brain.ts');
     has(src, /const hpWithheld = hpKey/);

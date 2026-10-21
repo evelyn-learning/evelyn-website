@@ -13611,7 +13611,11 @@ export function VoiceTutorRealtime({
             // The chat already shows them, and the student's own problems are
             // the board's problems.
             const typedHomeworkTurn = currentTurnTypedRef.current && (homeworkProblemsRef.current?.length ?? 0) > 0;
-            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn) {
+            // GAC acceptance 2026-10-21 (hw-11): in a one-problem session the
+            // question is already pinned (Q-pin) and in the transcript; a
+            // "Question" card made it three copies of the same sentence.
+            const oneProblemSession = homeworkProblemRef.current != null;
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0 && !typedHomeworkTurn && !oneProblemSession) {
               const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
               const hit = detectSpokenProblem(attemptSentences, boardTexts);
               if (hit) {

@@ -28,7 +28,7 @@ export const HOMEWORK_PROBLEM_FIGURE_SHOWN =
 export const HOMEWORK_PROBLEM_NO_FIGURE =
   'No figure could be built for this problem: refer to the sheet for it. If you sketch the sheet\'s figure, draw only what the sheet shows — its labels and its given values — never a value the problem asks the student to find.';
 export const HOMEWORK_PROBLEM_VERIFIED =
-  'Check the student\'s final answer against the expected answer in <active_problem> and say plainly whether it matches.';
+  'Check the student\'s final answer against the expected answer in <active_problem> and say plainly whether it matches. The expected answer is correct: before you assert a relation or an intermediate value, make sure it is consistent with the expected values, and when the student\'s claim is consistent with them and yours is not, the student is right — say so and continue from their claim.';
 export const HOMEWORK_PROBLEM_UNVERIFIED =
   'This problem has no checked answer, so never say an answer is right or wrong — work it through step by step with the student and ask them to check their result with their teacher. This overrides every other line of this message that asks you to grade an answer or say whether it matches.';
 
@@ -60,6 +60,9 @@ export const HOMEWORK_PROBLEM_CONDUCT_RULES =
  * number the sheet gives (r = 5) or the student has already written is never
  * a hit, so a confirmed part can be drawn.
  */
+export const HOMEWORK_OPENER_BOARD_WITHHELD_REASON =
+  'not shown — the problem\'s figure is already on the board; open with your question, not a drawing';
+
 export const HOMEWORK_BOARD_KEY_WITHHELD_REASON =
   'not shown — it writes a value the problem asks the student to find; draw only what the sheet gives';
 
