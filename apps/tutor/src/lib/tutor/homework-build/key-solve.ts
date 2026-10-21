@@ -15,9 +15,10 @@ import { getModelClient, prepareParams } from '../ai/model-registry';
 import { compareDeterministic, parseSimpleNumber } from '../portal/key-compare';
 import type { AnswerKey, AnswerPart } from './types';
 
-export type SolveFn = (text: string) => Promise<AnswerPart[] | null>;
+export interface SolveOutcome { parts: AnswerPart[] | null; usage?: { in: number; out: number } }
+export type SolveFn = (text: string) => Promise<SolveOutcome>;
 export interface KeySolveDeps { solveA: SolveFn; solveB: SolveFn; solveTieBreak: SolveFn; names: [string, string, string] }
-export interface KeySolveResult { key: AnswerKey | null; agreed: boolean; candidates: string[]; note?: string }
+export interface KeySolveResult { key: AnswerKey | null; agreed: boolean; candidates: string[]; note?: string; tokens?: { in: number; out: number } }
 
 const CALL_OPTS = { timeout: 60_000, maxRetries: 0 } as const;
 const SOLVE_MAX_TOKENS = 8000;
@@ -95,7 +96,7 @@ export function normalizeKeyParts(o: unknown): AnswerPart[] | null {
   return out;
 }
 
-async function callSolve(role: 'plangen-vision' | 'content-verify', effort: 'medium' | 'high', text: string): Promise<AnswerPart[] | null> {
+async function callSolve(role: 'plangen-vision' | 'content-verify', effort: 'medium' | 'high', text: string): Promise<SolveOutcome> {
   try {
     const { client, model } = getModelClient(role);
     const params = prepareParams(role, {
@@ -107,11 +108,12 @@ async function callSolve(role: 'plangen-vision' | 'content-verify', effort: 'med
       output_config: { effort, format: { type: 'json_schema', schema: KEY_SOLVE_SCHEMA } },
     });
     const msg = await client.messages.create(params as unknown as Anthropic.MessageCreateParamsNonStreaming, { ...CALL_OPTS });
-    if (msg.stop_reason === 'max_tokens' || msg.stop_reason === 'refusal') return null;
+    const usage = { in: msg.usage?.input_tokens ?? 0, out: msg.usage?.output_tokens ?? 0 };
+    if (msg.stop_reason === 'max_tokens' || msg.stop_reason === 'refusal') return { parts: null, usage };
     const raw = msg.content.filter((b) => b.type === 'text').map((b) => (b as Anthropic.TextBlock).text).join('');
-    return normalizeKeyParts(JSON.parse(raw.trim()));
+    return { parts: normalizeKeyParts(JSON.parse(raw.trim())), usage };
   } catch {
-    return null;
+    return { parts: null };
   }
 }
 
@@ -193,20 +195,26 @@ const describe = (name: string, ps: AnswerPart[] | null): string =>
   ps ? `${name}: ${ps.map((p) => (p.label ? `${p.label}) ` : '') + p.final).join('; ')}` : `${name}: (no answer)`;
 
 export async function solveKey(problem: { n: number; text: string }, deps: KeySolveDeps): Promise<KeySolveResult> {
+  let tokens: { in: number; out: number } | undefined;
   const safe = async (fn: SolveFn): Promise<AnswerPart[] | null> => {
-    try { return (await fn(problem.text)) ?? null; } catch { return null; }
+    try {
+      const r = await fn(problem.text);
+      if (r?.usage) tokens = { in: (tokens?.in ?? 0) + r.usage.in, out: (tokens?.out ?? 0) + r.usage.out };
+      return r?.parts ?? null;
+    } catch { return null; }
   };
+  const out = async (r: KeySolveResult): Promise<KeySolveResult> => (tokens ? { ...r, tokens } : r);
   const [n0, n1, n2] = deps.names;
   const [a, b] = await Promise.all([safe(deps.solveA), safe(deps.solveB)]);
-  if (a && b && partsAgree(a, b)) return { key: { parts: a, solvers: [n0, n1] }, agreed: true, candidates: [] };
+  if (a && b && partsAgree(a, b)) return out({ key: { parts: a, solvers: [n0, n1] }, agreed: true, candidates: [] });
 
-  if (!a && !b) return { key: null, agreed: false, candidates: [describe(n0, a), describe(n1, b)], note: 'both solvers failed' };
+  if (!a && !b) return out({ key: null, agreed: false, candidates: [describe(n0, a), describe(n1, b)], note: 'both solvers failed' });
   const t = await safe(deps.solveTieBreak);
   const candidates = [describe(n0, a), describe(n1, b), describe(n2, t)];
   const withA = !!(t && a && partsAgree(a, t));
   const withB = !!(t && b && partsAgree(b, t));
-  if (withA && withB) return { key: null, agreed: false, candidates, note: 'ambiguous: tie-break matches both disagreeing solvers' };
-  if (withA) return { key: { parts: a!, solvers: [n0, n2] }, agreed: true, candidates: [] };
-  if (withB) return { key: { parts: b!, solvers: [n1, n2] }, agreed: true, candidates: [] };
-  return { key: null, agreed: false, candidates };
+  if (withA && withB) return out({ key: null, agreed: false, candidates, note: 'ambiguous: tie-break matches both disagreeing solvers' });
+  if (withA) return out({ key: { parts: a!, solvers: [n0, n2] }, agreed: true, candidates: [] });
+  if (withB) return out({ key: { parts: b!, solvers: [n1, n2] }, agreed: true, candidates: [] });
+  return out({ key: null, agreed: false, candidates });
 }

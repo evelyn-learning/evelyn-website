@@ -41,14 +41,18 @@ export async function runHomeworkBuild(
     const t0 = now();
     let patch: Parameters<typeof patchProblemBuild>[2];
     try {
+      // buildFigure and solveKey are total, so a throw anywhere around a problem is
+      // infrastructure (Mongo, process). Leave the problem `preparing` so the stale
+      // re-kick retries it; never persist a transient fault as a final verdict.
       const cached = await findCachedProblem(p.hash);
-      if (cached) {
+      if (cached && cached.status === 'ready') {
         patch = {
-          status: cached.status, figure: cached.figure, figureNote: cached.figureNote,
+          status: 'ready', figure: cached.figure, figureNote: cached.figureNote,
           key: cached.key, verify: cached.verify, ms: 0,
         };
       } else {
         const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), solveKey(p, deps.key)]);
+        const fi = fig.tokens, ki = keyRes.tokens;
         patch = {
           status: keyRes.key ? 'ready' : 'unverified',
           figure: fig.figure,
@@ -60,20 +64,17 @@ export async function runHomeworkBuild(
             ...(keyRes.note ? { note: keyRes.note } : {}),
           },
           ms: now() - t0,
+          ...(fi || ki ? { tokens: { in: (fi?.in ?? 0) + (ki?.in ?? 0), out: (fi?.out ?? 0) + (ki?.out ?? 0) } } : {}),
         };
       }
+      await patchProblemBuild(planId, p.n, patch);
     } catch (err) {
-      patch = {
-        status: 'unverified', figure: null, key: null,
-        verify: { agreed: false, note: `build_error:${(err as Error).message}` },
-        ms: now() - t0,
-      };
+      console.error(`[homework-build] plan=${planId} n=${p.n} infra_error=${(err as Error).message}`);
+      return;
     }
-    try { await patchProblemBuild(planId, p.n, patch); }
-    catch (err) { console.error(`[homework-build] plan=${planId} n=${p.n} persist failed: ${(err as Error).message}`); return; }
     const tk = patch.tokens;
     console.log(
-      `[homework-build] plan=${planId} n=${p.n} status=${patch.status} figure=${patch.figure ? 'yes' : 'no'} ms=${patch.ms} in=${tk?.in ?? '-'} out=${tk?.out ?? '-'}`,
+      `[homework-build] plan=${planId} n=${p.n} status=${patch.status} figure=${patch.figure ? 'yes' : 'no'} ms=${patch.ms} in=${tk ? tk.in : '-'} out=${tk ? tk.out : '-'}`,
     );
   };
 

@@ -162,7 +162,7 @@ async function main() {
     type Deps = Parameters<typeof buildFigure>[1];
     const mkDeps = (propose: Deps['propose'], extra: FigureClaimList = claims): Deps & { calls: Array<{ feedback?: string[]; previous?: unknown }> } => {
       const calls: Array<{ feedback?: string[]; previous?: unknown }> = [];
-      return { calls, async propose(i) { calls.push({ feedback: i.feedback, previous: i.previous }); return propose(i); }, async extractClaims() { return extra; } };
+      return { calls, async propose(i) { calls.push({ feedback: i.feedback, previous: i.previous }); return propose(i); }, async extractClaims() { return { claims: extra }; } };
     };
     type FigureClaimList = typeof claims;
     await section('bad first proposal is retried with feedback and the good one wins', async () => {
@@ -173,6 +173,17 @@ async function main() {
       assert.ok(d.calls[1].feedback!.some((f) => f.includes('on_segment')), String(d.calls[1].feedback));
       assert.deepEqual(d.calls[1].previous, ws3p5Bad);
       assert.equal(r.claims.length, 3);
+    });
+    await section('tokens sum propose + extractClaims usage across attempts; absent when none reported', async () => {
+      const good = goodFig();
+      const d: Deps = {
+        async propose(i) { return { figure: i.feedback?.length ? good : ws3p5Bad, claims: [], usage: { in: 10, out: 5 } }; },
+        async extractClaims() { return { claims, usage: { in: 3, out: 2 } }; },
+      };
+      const r = await buildFigure({ n: 1, text: P5 }, d);
+      assert.equal(r.attempts, 2);
+      assert.deepEqual(r.tokens, { in: 23, out: 12 });
+      assert.equal((await buildFigure({ n: 1, text: P5 }, mkDeps(async () => ({ figure: null, claims: [] }), []))).tokens, undefined);
     });
     await section('always-bad proposals give null with the reasons after maxAttempts', async () => {
       const d = mkDeps(async () => ({ figure: ws3p5Bad, claims }));   // duplicate claims dedupe
@@ -246,12 +257,16 @@ async function main() {
     const mk = (a: AP | null, b: AP | null, t: AP | null) => {
       const calls = { a: 0, b: 0, t: 0 };
       return { calls, names: ['A', 'B', 'T'] as [string, string, string],
-        solveA: async () => { calls.a++; return a; }, solveB: async () => { calls.b++; return b; }, solveTieBreak: async () => { calls.t++; return t; } };
+        solveA: async () => { calls.a++; return { parts: a, usage: { in: 100, out: 10 } }; }, solveB: async () => { calls.b++; return { parts: b, usage: { in: 100, out: 10 } }; }, solveTieBreak: async () => { calls.t++; return { parts: t, usage: { in: 50, out: 5 } }; } };
     };
     await section('A = B: agreed, two solvers, tie-break not called', async () => {
       const d = mk([num('x = 20', 20)], [num('x = 20', 20)], null);
       const r = await solveKey({ n: 1, text: 'q' }, d);
       assert.equal(r.agreed, true); assert.deepEqual(r.key!.solvers, ['A', 'B']); assert.equal(d.calls.t, 0);
+    });
+    await section('tokens sum over the solves made', async () => {
+      assert.deepEqual((await solveKey({ n: 1, text: 'q' }, mk([num('x = 20', 20)], [num('x = 20', 20)], null))).tokens, { in: 200, out: 20 });
+      assert.deepEqual((await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('2', 2)], [num('1', 1)]))).tokens, { in: 250, out: 25 });
     });
     await section('tie-break agrees with A within 1 %', async () => {
       const d = mk([num('35.42', 35.42)], [num('31.42', 31.42)], [num('35.4', 35.4)]);
@@ -387,13 +402,13 @@ async function main() {
       const deps: RD = {
         figure: {
           async propose({ text }) { order.push(text); if (opts.throwOn === text) throw new Error('boom'); return { figure: null, claims: [] }; },
-          async extractClaims() { return []; },
+          async extractClaims() { return { claims: [], usage: { in: 4, out: 1 } }; },
         },
         key: {
           names: ['A', 'B', 'T'],
-          async solveA() { return [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }]; },
-          async solveB() { return [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }]; },
-          async solveTieBreak() { return null; },
+          async solveA() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], usage: { in: 20, out: 2 } }; },
+          async solveB() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], usage: { in: 20, out: 2 } }; },
+          async solveTieBreak() { return { parts: null }; },
         },
       };
       return { deps, order };
@@ -409,6 +424,7 @@ async function main() {
       assert.deepEqual(b.problems.map((p) => p.status), ['ready', 'ready', 'ready']);
       assert.equal(b.problems[0].verify.agreed, true);
       assert.equal(typeof b.problems[0].ms, 'number');
+      assert.deepEqual(b.problems[0].tokens, { in: 44, out: 5 });
     });
 
     await section('a second run makes zero dep calls', async () => {
@@ -427,21 +443,47 @@ async function main() {
       assert.equal(b.problems[0].key!.parts[0].final, '5');
     });
 
-    await section('a throwing problem is unverified with build_error; others continue', async () => {
+    await section('an unverified cached entry is ignored and rebuilt', async () => {
+      await ensureHomeworkBuild('gen-u0', 'greenapple', [{ n: 1, text: 'Unver 1' }]);
+      await patchProblemBuild('gen-u0', 1, { status: 'unverified', verify: { agreed: false } });
+      await mkPlan('gen-u1', ['Unver 1']);
+      const { deps, order } = mkDeps();
+      await runHomeworkBuild('gen-u1', 'greenapple', { deps });
+      assert.deepEqual(order, ['Unver 1']);
+      assert.equal((await getHomeworkBuild('gen-u1'))!.problems[0].status, 'ready');
+    });
+
+    await section('an infrastructure throw leaves the problem preparing; a later run builds it', async () => {
       await mkPlan('gen-r3', ['Thrower 1', 'Ok 2', 'Ok 3']);
       const { deps } = mkDeps();
-      // solveKey/buildFigure never throw by contract; a defect inside one (here: names
-      // throwing on its first read) must still be contained per problem by the runner.
+      // solveKey/buildFigure are total; a throw around a problem is infrastructure
+      // (here: names throwing on its first read) and must not become a verdict.
       let reads = 0;
       const names = deps.key.names;
       Object.defineProperty(deps.key, 'names', { get() { if (reads++ === 0) throw new Error('boom'); return names; } });
       await runHomeworkBuild('gen-r3', 'greenapple', { first: 1, deps, concurrency: 1 });
-      const b = (await getHomeworkBuild('gen-r3'))!;
-      assert.equal(b.done, true);
-      assert.equal(b.problems[1].status, 'ready'); assert.equal(b.problems[2].status, 'ready');
-      assert.equal(b.problems[0].status, 'unverified');
-      assert.equal(b.problems[0].key, null);
-      assert.match(b.problems[0].verify.note ?? '', /^build_error:boom/);
+      let b = (await getHomeworkBuild('gen-r3'))!;
+      assert.deepEqual(b.problems.map((p) => p.status), ['preparing', 'ready', 'ready']);
+      assert.equal(b.done, false);
+      const again = mkDeps();
+      await runHomeworkBuild('gen-r3', 'greenapple', { deps: again.deps, concurrency: 1 });
+      assert.deepEqual(again.order, ['Thrower 1']);
+      b = (await getHomeworkBuild('gen-r3'))!;
+      assert.equal(b.done, true); assert.equal(b.problems[0].status, 'ready');
+    });
+
+    await section('buildStatusResponse: partner-scoped, finals only when agreed, no key/canonical leak', async () => {
+      const { buildStatusResponse } = await import('../src/lib/tutor/homework-build/status');
+      const b = (await getHomeworkBuild('gen-r1'))!;
+      assert.equal(buildStatusResponse(b, 'other'), null);
+      const r = buildStatusResponse(b, 'greenapple')!;
+      assert.deepEqual(r.problems[0].finals, ['5']);
+      const json = JSON.stringify(r);
+      assert.doesNotMatch(json, /canonical|"key"|solvers/);
+      const unagreed = { ...b, problems: [{ ...b.problems[0], verify: { agreed: false, candidates: ['1', '2'] }, key: null }] };
+      const u = buildStatusResponse(unagreed, 'greenapple')!;
+      assert.equal('finals' in u.problems[0], false);
+      assert.deepEqual(u.problems[0].verify.candidates, ['1', '2']);
     });
 
     await section('a non-homework or missing plan is a no-op', async () => {

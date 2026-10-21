@@ -15,16 +15,17 @@ import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geomet
 import { validateFigure } from './figure-validate';
 import type { FigureClaim, FigureCommand } from './types';
 
-export interface FigureProposal { figure: FigureCommand | null; claims: FigureClaim[]; note?: string }
+export interface TokenUsage { in: number; out: number }
+export interface FigureProposal { figure: FigureCommand | null; claims: FigureClaim[]; note?: string; usage?: TokenUsage }
 
 export interface FigureBuildDeps {
   /** Opus 5.5, adaptive thinking at low effort, JSON-schema output. */
   propose(input: { text: string; feedback?: string[]; previous?: FigureCommand | null }): Promise<FigureProposal>;
   /** Sonnet 5 in a fresh context: the relations the TEXT states, from the text alone. */
-  extractClaims(text: string): Promise<FigureClaim[]>;
+  extractClaims(text: string): Promise<{ claims: FigureClaim[]; usage?: TokenUsage }>;
 }
 
-export interface FigureBuildResult { figure: FigureCommand | null; note?: string; attempts: number; claims: FigureClaim[] }
+export interface FigureBuildResult { figure: FigureCommand | null; note?: string; attempts: number; claims: FigureClaim[]; tokens?: TokenUsage }
 
 const CALL_OPTS = { timeout: 60_000, maxRetries: 0 } as const;
 const PROPOSE_MAX_TOKENS = 6000;
@@ -122,7 +123,7 @@ export function parseFigure(raw: unknown): FigureCommand | null {
   return f as FigureCommand;
 }
 
-async function callJson(role: 'plangen-vision' | 'content-verify', maxTokens: number, system: string, user: string, schema: object): Promise<Record<string, unknown>> {
+async function callJson(role: 'plangen-vision' | 'content-verify', maxTokens: number, system: string, user: string, schema: object): Promise<{ o: Record<string, unknown>; usage: TokenUsage }> {
   const { client, model } = getModelClient(role);
   const params = prepareParams(role, {
     model,
@@ -138,7 +139,7 @@ async function callJson(role: 'plangen-vision' | 'content-verify', maxTokens: nu
   try {
     const v = JSON.parse(text.trim());
     if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('not an object');
-    return v as Record<string, unknown>;
+    return { o: v as Record<string, unknown>, usage: { in: msg.usage?.input_tokens ?? 0, out: msg.usage?.output_tokens ?? 0 } };
   } catch {
     throw new ParseError('model reply was not a JSON object');
   }
@@ -166,18 +167,18 @@ export function defaultFigureBuildDeps(): FigureBuildDeps {
         ? `${text}\n\nYour previous figure failed validation:\n${previous ? `${JSON.stringify(previous)}\n\n` : ''}Fix every item, keeping what was not criticized:\n${feedback.map((f) => `- ${f}`).join('\n')}`
         : text;
       try {
-        const o = await callJson('plangen-vision', PROPOSE_MAX_TOKENS, FIGURE_PROPOSE_SYSTEM, user, FIGURE_PROPOSAL_SCHEMA);
-        return parseProposal(o);
+        const { o, usage } = await callJson('plangen-vision', PROPOSE_MAX_TOKENS, FIGURE_PROPOSE_SYSTEM, user, FIGURE_PROPOSAL_SCHEMA);
+        return { ...parseProposal(o), usage };
       } catch (e) {
         return { figure: null, claims: [], note: `propose_failed:${errorKind(e)}` };
       }
     },
     async extractClaims(text) {
       try {
-        const o = await callJson('content-verify', CLAIMS_MAX_TOKENS, FIGURE_CLAIMS_SYSTEM, text, FIGURE_CLAIMS_SCHEMA);
-        return normalizeClaims(o.claims);
+        const { o, usage } = await callJson('content-verify', CLAIMS_MAX_TOKENS, FIGURE_CLAIMS_SYSTEM, text, FIGURE_CLAIMS_SCHEMA);
+        return { claims: normalizeClaims(o.claims), usage };
       } catch {
-        return [];
+        return { claims: [] };
       }
     },
   };
@@ -194,16 +195,26 @@ export async function buildFigure(
 ): Promise<FigureBuildResult> {
   const maxAttempts = Math.max(1, opts.maxAttempts ?? 2);
   const claims = new Map<string, FigureClaim>();
+  let tokens: TokenUsage | undefined;
+  const addUsage = (u?: TokenUsage): void => {
+    if (u) tokens = { in: (tokens?.in ?? 0) + u.in, out: (tokens?.out ?? 0) + u.out };
+  };
+  const withTokens = <T extends object>(r: T): T & { tokens?: TokenUsage } => (tokens ? { ...r, tokens } : r);
   const safePropose = async (feedback?: string[], previous?: FigureCommand | null): Promise<FigureProposal> => {
-    try { return await deps.propose({ text: problem.text, feedback, previous }); }
+    try {
+      const r = await deps.propose({ text: problem.text, feedback, previous });
+      addUsage(r?.usage);
+      return r;
+    }
     catch (e) { return { figure: null, claims: [], note: `propose_failed:${errorKind(e)}` }; }
   };
 
   const [first, extracted] = await Promise.all([
     safePropose(),
-    (async () => deps.extractClaims(problem.text))().catch((): FigureClaim[] => []),
+    (async () => deps.extractClaims(problem.text))().catch((): { claims: FigureClaim[]; usage?: TokenUsage } => ({ claims: [] })),
   ]);
-  unionClaims(claims, extracted);
+  addUsage(extracted?.usage);
+  unionClaims(claims, extracted?.claims ?? []);
 
   let proposal = first;
   let feedback: string[] | undefined;
@@ -214,15 +225,15 @@ export async function buildFigure(
     unionClaims(claims, proposal.claims ?? []);
     const all = [...claims.values()];
     if (!proposal.figure) {
-      if (!proposal.note?.startsWith('propose_failed')) return { figure: null, note: proposal.note, attempts: attempt, claims: all };
+      if (!proposal.note?.startsWith('propose_failed')) return withTokens({ figure: null, note: proposal.note, attempts: attempt, claims: all });
       if (!reasons.length) reasons = [proposal.note];   // a failed call is an attempt; keep any validator reasons already found
       continue;
     }
     const v = validateFigure(proposal.figure, { problemText: problem.text, claims: all });
-    if (v.ok) return { figure: proposal.figure, attempts: attempt, claims: all };
+    if (v.ok) return withTokens({ figure: proposal.figure, attempts: attempt, claims: all });
     reasons = v.reasons;
     feedback = v.reasons;
     lastFigure = proposal.figure;
   }
-  return { figure: null, note: reasons.join('; '), attempts: maxAttempts, claims: [...claims.values()] };
+  return withTokens({ figure: null, note: reasons.join('; '), attempts: maxAttempts, claims: [...claims.values()] });
 }
