@@ -86,6 +86,31 @@ export function labelIsFromText(label: string, problemText: string): boolean {
   return false;
 }
 
+/**
+ * A free-text figure field (a title, an axis label, an annotation): passes
+ * when it is a label `labelIsFromText` accepts, or a whole phrase of the
+ * problem text (case and spacing aside). A value the text does not state —
+ * an answer — fails either way.
+ */
+export function textFieldIsFromText(field: string, problemText: string): boolean {
+  if (labelIsFromText(field, problemText)) return true;
+  const f = normalise(field).toLowerCase();
+  if (!f) return true;
+  const esc = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+');
+  return new RegExp(`(?<![A-Za-z0-9])${esc}(?![A-Za-z0-9])`).test(normalise(problemText).toLowerCase());
+}
+
+/** I4: every free-text field of a figure comes from the sheet; one-letter axis names always pass. */
+function textFieldReasons(fields: Array<{ value: unknown; axis?: boolean }>, problemText: string): string[] {
+  const out: string[] = [];
+  for (const { value, axis } of fields) {
+    if (typeof value !== 'string' || !value.trim()) continue;
+    if (axis && /^\s*[A-Za-z]\s*$/.test(value)) continue;
+    if (!textFieldIsFromText(value, problemText)) out.push(`label "${value}" does not come from the problem text`);
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------- claims
 
 type Pt = { x: number; y: number };
@@ -182,6 +207,7 @@ function validateGeometry(
   for (const label of [...collectLabels(fig.given), ...collectLabels(fig.steps)]) {
     if (!labelIsFromText(label, ctx.problemText)) reasons.push(`label "${label}" does not come from the problem text`);
   }
+  reasons.push(...textFieldReasons([{ value: fig.title }], ctx.problemText));
 
   const points: Record<string, Pt> = {};
   for (const p of solved.points) points[p.id] = { x: p.x, y: p.y };
@@ -234,6 +260,12 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
     if (!onCurve) reasons.push(`point (${fmt(p.x)}, ${fmt(p.y)}) is not on any plotted function (roots and y-intercepts count only when the curve passes through them)`);
     if (p.label && !labelIsFromText(p.label, ctx.problemText)) reasons.push(`label "${p.label}" does not come from the problem text`);
   }
+  reasons.push(...textFieldReasons([
+    { value: data.title },
+    { value: data.xLabel, axis: true },
+    { value: data.yLabel, axis: true },
+    ...(data.annotations ?? []).map((a) => ({ value: a?.label })),
+  ], ctx.problemText));
   const vp = validateFunctionValuePoints(data);
   if (!vp.ok) reasons.push(vp.reason);
 
