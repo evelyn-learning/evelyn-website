@@ -1305,7 +1305,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         // the portal can distinguish a timed-out demo from a normal finish.
         // Host-end (2026-10-02): the host's `evelyn:host_end` reason rides
         // the same additive field ('finished' | 'minutes_exhausted' |
-        // 'no_input' | 'idle'); absent on a plain End/Pause as before.
+        // 'no_input' | 'idle' | 'paused' — a per-problem homework pause, with
+        // a short saved line instead of the goodbye); absent on a plain End/Pause as before.
         ...(endedReason ? { ended_reason: endedReason } : {}),
         // Round-4 item 5 (additive): the Adaptive-menu Finish/Discard choice.
         // The portal branches on it (finish → finalize, discard → abort);

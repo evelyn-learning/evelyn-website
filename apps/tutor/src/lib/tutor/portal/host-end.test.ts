@@ -21,8 +21,15 @@ function test(name: string, fn: () => void): void {
   catch (e) { failed++; console.log(`  FAIL - ${name}`); console.error(e); }
 }
 
-test('HOST_END_REASONS is exactly the four spec reasons', () => {
-  assert.deepEqual([...HOST_END_REASONS], ['finished', 'minutes_exhausted', 'no_input', 'idle']);
+test('HOST_END_REASONS is exactly the four spec reasons plus paused', () => {
+  assert.deepEqual([...HOST_END_REASONS], ['finished', 'minutes_exhausted', 'no_input', 'idle', 'paused']);
+});
+
+test('paused: accepted, neutral saved line (not the goodbye); finished unchanged', () => {
+  assert.deepEqual(parseHostEnd({ type: 'evelyn:host_end', reason: 'paused' }), { reason: 'paused' });
+  assert.equal(goodbyeFor('paused'), 'Saved — pick this up from your list whenever you like.');
+  assert.equal(goodbyeFor('finished'), 'Nice work today — that\'s the session.');
+  assert.equal(parseHostEnd({ type: 'evelyn:host_end', reason: 'PAUSED' }), null);
 });
 
 test('parseHostEnd accepts each of the four reasons', () => {

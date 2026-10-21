@@ -12,7 +12,10 @@
  * `ended_reason` = the host's reason.
  */
 
-export const HOST_END_REASONS = ['finished', 'minutes_exhausted', 'no_input', 'idle'] as const;
+/** `paused` (2026-10-21, per-problem homework): the student leaves a problem
+ *  to come back to it — ended like `finished`, with a neutral line instead of
+ *  the goodbye. */
+export const HOST_END_REASONS = ['finished', 'minutes_exhausted', 'no_input', 'idle', 'paused'] as const;
 export type HostEndReason = (typeof HOST_END_REASONS)[number];
 
 /** Accepts only `{ type: 'evelyn:host_end', reason: <one of HOST_END_REASONS> }`. */
@@ -35,6 +38,8 @@ export function goodbyeFor(reason: HostEndReason): string {
     case 'no_input':
     case 'idle':
       return 'I\'ll stop here since it\'s gone quiet — come back any time.';
+    case 'paused':
+      return 'Saved — pick this up from your list whenever you like.';
   }
 }
 
