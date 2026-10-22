@@ -12,7 +12,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
 import { getGeometryStepKindsDescriptionTail } from '../diagrams/geometry-solver';
 import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geometry-step-docs';
-import { isCaptionLabel, labelIsFromText, validateFigure } from './figure-validate';
+import { isCaptionLabel, labelIsFromText, validateFigure, namedPointsIn, POINT_KINDS } from './figure-validate';
 import type { FigureClaim, FigureCommand } from './types';
 
 export interface TokenUsage { in: number; out: number }
@@ -49,6 +49,7 @@ Rules:
 6. A geometry figure has no coordinate grid and no axes (display grid false, axes false) unless the problem itself is on a coordinate plane: it names coordinates, axes, the coordinate plane or ordered pairs.
 7. A line the sheet names with a lowercase letter (p, q, r, l, m, t) is a line object {id, kind:"line", through:[P1, P2], label:"p"} — drawn long, labelled by its letter — never a segment, and never a point carrying the letter as its label. The two points that place such a line are helpers: give them no label. Label only points the problem names; a point you invent to place something (P1, Q1) carries no label and is drawn without one.
 8. Draw the whole figure the description gives: every line to its full extent, every angle arc at the crossing it sits at, every mark; a figure with a line drawn short or a marked angle missing is incomplete.
+9. An angle label (a degree sign, or a number or letter the text names as an angle) is the label of an angle_marker at the vertex it is printed at, opening between the two sides the description places it between — never a free-floating labelled point. A label the description places inside a shape beside a vertex, without naming its arc, is the angle of that shape at that vertex.
 
 Step reference (the steps array of showGeometryConstructed):
 ${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
@@ -125,7 +126,6 @@ const COORDINATE_TEXT_RE = /\bcoordinates?\b|\bcoordinate plane\b|\bax[ie]s\b|\b
  * the problem text is about a coordinate plane. Graphs are untouched. Pure.
  */
 /** Given points and the step kinds whose result is one point (the solver labels each by its id when no label is given). */
-const POINT_KINDS = new Set(['point', 'midpoint', 'intersect', 'section_point', 'point_on_circle', 'point_on_conic', 'triangle_center', 'reflect_point', 'rotate_point', 'translate_point', 'dilate_point']);
 
 export function normalizeFigureDisplay(figure: FigureCommand | null, problemText: string): FigureCommand | null {
   if (!figure || figure.action !== 'showGeometryConstructed') return figure;
@@ -139,14 +139,22 @@ export function normalizeFigureDisplay(figure: FigureCommand | null, problemText
       if (!own(o)) return o;
       // A caption the proposer added (isCaptionLabel) is not on the sheet: drop it.
       if (typeof o.label === 'string' && isCaptionLabel(o.label)) { const { label: _drop, ...rest } = o; void _drop; return rest; }
-      return (typeof o.kind === 'string' && POINT_KINDS.has(o.kind) && typeof o.id === 'string' && o.label === undefined && !labelIsFromText(o.id, problemText ?? '')) ? { ...o, label: '' } : o;
+      if (typeof o.kind !== 'string' || !POINT_KINDS.has(o.kind) || typeof o.id !== 'string' || o.label !== undefined) return o;
+      // A one-letter id is a point name only when the text names that point
+      // (an article "A" is not); a longer id (P1, foot_1) is a helper.
+      const isNamed = /^[A-Z]$/.test(o.id) ? pointNames.has(o.id) : labelIsFromText(o.id, problemText ?? '');
+      return isNamed ? o : { ...o, label: '' };
     })
     : arr;
+  const pointNames = namedPointsIn(problemText ?? '');
   const geo = figure as Extract<FigureCommand, { action: 'showGeometryConstructed' }>;
   const named = { ...geo, given: unname(geo.given) as typeof geo.given, steps: unname(geo.steps) as typeof geo.steps };
-  if (COORDINATE_TEXT_RE.test(problemText ?? '')) return named;
+  // keepLabels (2026-10-22, hw-13 p4): the sheet's "13" on a slant edge of an
+  // oblique pyramid is the sheet's label, however long the drawn segment is;
+  // the solver's mislabel guard is for the live tutor, not a stored figure.
   const display = geo.display && typeof geo.display === 'object' ? geo.display : {};
-  return { ...named, display: { ...display, grid: false, axes: false } };
+  if (COORDINATE_TEXT_RE.test(problemText ?? '')) return { ...named, display: { ...display, keepLabels: true } };
+  return { ...named, display: { ...display, grid: false, axes: false, keepLabels: true } };
 }
 
 export function parseFigure(raw: unknown): FigureCommand | null {

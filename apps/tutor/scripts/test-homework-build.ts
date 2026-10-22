@@ -204,6 +204,41 @@ async function main() {
       assert.equal(validateFigure(two, { problemText: P5, claims }).ok, false, 'two words are a label, not a caption');
       assert.equal(validateFigure(goodFig('DB = the rest'), { problemText: P5, claims }).ok, false, 'a relation is a label, not a caption');
     });
+    await section('hw-13 p4: a stored figure keeps the sheet\'s length labels even when the drawing is not to scale', async () => {
+      // GAC acceptance 2026-10-22: the pyramid's slant height "13" vanished —
+      // the solver drops a numeric segment label that disagrees with the drawn
+      // length by >5 % (a live-board guard against tutor mislabels). A sheet
+      // figure in oblique projection is never to scale; its labels are the
+      // sheet's and stay. normalizeFigureDisplay marks the figure keepLabels.
+      const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
+      const { solveGeometry } = await import('../src/lib/tutor/diagrams/geometry-solver');
+      const text = 'A square pyramid has base edge 10 cm and slant height 13 cm. [Figure: a square pyramid; the slant segment from the apex to the midpoint M of an edge is labelled 13.] (a) Find the height h.';
+      const fig = { action: 'showGeometryConstructed', given: [{ id: 'P', kind: 'point', x: 7, y: 12 }, { id: 'M', kind: 'point', x: 12, y: 2, label: 'M' }], steps: [{ id: 'sPM', kind: 'segment', from: 'P', to: 'M', label: '13' }] } as unknown as Fig;
+      const stored = normalizeFigureDisplay(fig, text) as { display?: Record<string, unknown>; given: Array<{ id: string; label?: string }> };
+      assert.equal(stored.display?.keepLabels, true);
+      const solved = solveGeometry({ given: stored.given, steps: (stored as unknown as Fig & { steps: unknown[] }).steps, display: stored.display } as never);
+      assert.equal(solved.segments[0].label, '13', 'the label survives the length check');
+      const live = solveGeometry({ given: fig.given, steps: (fig as unknown as { steps: unknown[] }).steps } as never);
+      assert.equal(live.segments[0].label, undefined, 'the live board (no keepLabels) still drops it');
+      // The given point P has no label key and the text names no point P
+      // ("A square pyramid" is an article, not a point): it is drawn unlettered.
+      assert.equal(stored.given.find((g) => g.id === 'P')?.label, '', 'an unnamed given point is blanked');
+      assert.equal(stored.given.find((g) => g.id === 'M')?.label, 'M');
+      const art = normalizeFigureDisplay({ ...fig, given: [{ id: 'A', kind: 'point', x: 0, y: 0 }] } as never, text) as { given: Array<{ id: string; label?: string }> };
+      assert.equal(art.given[0].label, '', 'the article "A" at the start of a sentence is not the point A');
+    });
+    await section('hw-13 p1: an angle label on a bare point is rejected — it belongs on an angle marker', () => {
+      // GAC acceptance 2026-10-22: "(3x − 5)°" was drawn as a free-floating
+      // labelled point near C instead of the angle at C, so the figure showed
+      // an angle nobody could read. A label with a degree sign is an angle.
+      const text = 'Lines p ∥ q. [Figure: The label (3x − 5)° is printed inside the triangle near C. The angle labelled 55° has its arc at A.] (a) Find x.';
+      const bad = { ...goodFig(), steps: [...goodFig().steps, { id: 't', kind: 'point', x: 1, y: 0.5, label: '(3x − 5)°' }] } as Fig;
+      const v = validateFigure(bad, { problemText: text, claims: [] });
+      assert.equal(v.ok, false);
+      assert.match(reasonsOf(v).join('; '), /angle label "\(3x − 5\)°" is on a bare point; attach it to an angle_marker at its vertex/);
+      const good = { ...goodFig(), steps: [...goodFig().steps, { id: 'm', kind: 'angle_marker', vertex: 'C', from: 'A', to: 'B', style: 'arc', label: '(3x − 5)°' }] } as Fig;
+      assert.ok(!reasonsOf(validateFigure(good, { problemText: text, claims: [] })).some((r) => /bare point/.test(r)));
+    });
     await section('a claim naming a prose word (apex, center) instead of a point id is skipped; a missing letter id still fails', () => {
       const pts = { A: { x: 0, y: 0 }, B: { x: 4, y: 0 }, C: { x: 0, y: 3 } };
       assert.deepEqual(checkClaims(pts, {}, [{ kind: 'perpendicular', a: ['apex', 'center'], b: ['center', 'edge'] }]), []);
@@ -273,7 +308,7 @@ async function main() {
       const good = goodFig();
       const d = mkDeps(async (i) => ({ figure: i.feedback?.length ? good : ws3p5Bad, claims: [] }));
       const r = await buildFigure({ n: 5, text: P5 }, d);
-      assert.deepEqual(r.figure, { ...good, display: { grid: false, axes: false } }); assert.equal(r.attempts, 2);
+      assert.deepEqual(r.figure, { ...good, display: { grid: false, axes: false, keepLabels: true } }); assert.equal(r.attempts, 2);
       assert.ok(d.calls[1].feedback!.some((f) => f.includes('on_segment')), String(d.calls[1].feedback));
       assert.deepEqual(d.calls[1].previous, ws3p5Bad);
       assert.equal(r.claims.length, 3);
@@ -314,7 +349,7 @@ async function main() {
       const good = goodFig();
       const d = mkDeps(async (i) => i.feedback || d.calls.length > 1 ? { figure: good, claims: [] } : { figure: null, claims: [], note: 'propose_failed:APIError' });
       const r = await buildFigure({ n: 5, text: P5 }, d);
-      assert.deepEqual(r.figure, { ...good, display: { grid: false, axes: false } }); assert.equal(r.attempts, 2);
+      assert.deepEqual(r.figure, { ...good, display: { grid: false, axes: false, keepLabels: true } }); assert.equal(r.attempts, 2);
     });
     await section('validator reasons survive a failed second propose', async () => {
       const d = mkDeps(async () => (d.calls.length > 1 ? { figure: null, claims: [], note: 'propose_failed:APIError' } : { figure: ws3p5Bad, claims: [] }));
@@ -346,11 +381,11 @@ async function main() {
       const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
       const g = goodFig();
       const off = normalizeFigureDisplay(g, P5) as { display?: Record<string, unknown> };
-      assert.deepEqual(off.display, { grid: false, axes: false });
+      assert.deepEqual(off.display, { grid: false, axes: false, keepLabels: true });
       const kept = normalizeFigureDisplay({ ...g, display: { showLabels: true, grid: true } } as Fig, P5) as { display?: Record<string, unknown> };
-      assert.deepEqual(kept.display, { showLabels: true, grid: false, axes: false }, 'other display keys kept');
+      assert.deepEqual(kept.display, { showLabels: true, grid: false, axes: false, keepLabels: true }, 'other display keys kept');
       for (const t of [`${P5} The triangle is drawn on the coordinate plane.`, 'Plot A(2, 3) and B(-1, 4).', 'Reflect the triangle over the x-axis.', 'Name the ordered pair of the vertex.']) {
-        assert.deepEqual((normalizeFigureDisplay(g, t) as { display?: unknown }).display, g.display, t);
+        assert.deepEqual((normalizeFigureDisplay(g, t) as { display?: unknown }).display, { ...(g.display ?? {}), keepLabels: true }, t);
       }
       // 2026-10-21 (GAC acceptance): invented helper points (P1, Q1, R2) came out lettered
       // on the board — an unlabelled point the text never names gets an empty label.

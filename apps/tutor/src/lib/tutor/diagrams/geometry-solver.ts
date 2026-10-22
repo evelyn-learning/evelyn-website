@@ -50,6 +50,11 @@ export interface DisplayOpts {
   colors?: Record<string, string>;
   /** Mark a segment dashed (for radii/perpendiculars commonly drawn that way). */
   dashed?: string[];
+  /** Keep every segment label as written, even a number that disagrees with
+   *  the drawn length (GAC acceptance 2026-10-22: a homework sheet's figure in
+   *  oblique projection is never to scale, and its labels are the sheet's).
+   *  Off by default: the live board's guard against tutor mislabels stays. */
+  keepLabels?: boolean;
 }
 
 // Givens: explicit, raw objects.
@@ -3159,7 +3164,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
           const dy = toPt.y - fromPt.y;
           const actualLen = Math.sqrt(dx * dx + dy * dy);
           const labelNum = parseNumericLabel(requestedLabel);
-          if (labelNum !== null && actualLen > 1e-6) {
+          if (labelNum !== null && actualLen > 1e-6 && !display.keepLabels) {
             const rel = Math.abs(labelNum - actualLen) / actualLen;
             if (rel > 0.05) {
               console.warn(`[geometry-solver] dropping mislabeled segment ${obj.id}: label "${requestedLabel}" (${labelNum}) but computed length ${actualLen.toFixed(3)}`);

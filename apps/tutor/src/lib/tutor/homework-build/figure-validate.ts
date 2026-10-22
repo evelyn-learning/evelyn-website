@@ -126,6 +126,17 @@ function phraseInText(phrase: string, problemText: string): boolean {
   return new RegExp(`(?<![A-Za-z0-9])${esc}(?![A-Za-z0-9])`).test(normalise(problemText).toLowerCase());
 }
 
+/** Step kinds that place a point (shared with normalizeFigureDisplay). */
+export const POINT_KINDS = new Set(['point', 'midpoint', 'intersect', 'section_point', 'point_on_circle', 'point_on_conic', 'triangle_center', 'reflect_point', 'rotate_point', 'translate_point', 'dilate_point']);
+
+/** The single-capital point names a text uses, as whole tokens, with a
+ *  sentence-initial article ("A square pyramid", "I ...") not counted — the
+ *  hw-13 pyramid's helper point A came out lettered because of that article. */
+export function namedPointsIn(text: string): Set<string> {
+  const stripped = text.replace(/(^\s*|[.:\]]\s+)(A|I)\s+(?=[a-z])/g, '$1');
+  return new Set(stripped.match(/(?<![A-Za-z0-9'])[A-Z](?![A-Za-z0-9'])/g) ?? []);
+}
+
 /** I4: every free-text field of a figure comes from the sheet; one-letter axis names always pass. */
 function textFieldReasons(fields: Array<{ value: unknown; axis?: boolean }>, problemText: string): string[] {
   const out: string[] = [];
@@ -247,6 +258,14 @@ function validateGeometry(
     if (isCaptionLabel(label)) continue;   // dropped by normalizeFigureDisplay, never a value
     if (!labelIsFromText(label, ctx.problemText)) reasons.push(`label "${label}" does not come from the problem text`);
   }
+  // GAC acceptance 2026-10-22 (hw-13 p1): "(3x − 5)°" was placed as a bare
+  // labelled point near C, so the board showed an angle value with no angle.
+  // A label with a degree sign is an angle label and belongs on an angle_marker.
+  for (const o of [...fig.given, ...fig.steps] as Array<{ kind?: unknown; label?: unknown }>) {
+    if (o && typeof o.kind === 'string' && POINT_KINDS.has(o.kind) && typeof o.label === 'string' && /°/.test(o.label)) {
+      reasons.push(`angle label "${o.label}" is on a bare point; attach it to an angle_marker at its vertex`);
+    }
+  }
   reasons.push(...textFieldReasons([{ value: fig.title }], ctx.problemText));
 
   const points: Record<string, Pt> = {};
@@ -275,8 +294,7 @@ function validateGeometry(
 
   // Every single-capital point the figure description names must be drawn.
   const desc = /\[Figure:([^\]]*)\]/.exec(ctx.problemText)?.[1] ?? '';
-  const stripped = desc.replace(/(^\s*|[.:]\s+)(A|I)\s+(?=[a-z])/g, '$1');
-  const named = new Set(stripped.match(/(?<![A-Za-z0-9'])[A-Z](?![A-Za-z0-9'])/g) ?? []);
+  const named = namedPointsIn(desc);
   for (const n of named) if (!points[n]) reasons.push(`point ${n} is in the figure description but not drawn`);
   return reasons;
 }
