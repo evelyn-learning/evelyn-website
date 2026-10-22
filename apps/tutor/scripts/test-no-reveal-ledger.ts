@@ -1161,11 +1161,12 @@ async function main() {
     assert.notEqual(transcriptionCacheKey([{ ...a, material: { mimeType: 'image/jpeg' } }], 'm'), k1);
     assert.notEqual(transcriptionCacheKey([a], 'other-model'), k1);
     assert.notEqual(transcriptionCacheKey([a, b], 'm'), transcriptionCacheKey([b, a], 'm'));
-    assert.equal(recallTranscription(k1, 1_000), null);
-    rememberTranscription(k1, ['1. Lines l ∥ m …'], 1_000);
-    assert.deepEqual(recallTranscription(k1, 1_000 + 59 * 60_000), ['1. Lines l ∥ m …']);
-    assert.equal(recallTranscription(k1, 1_000 + 61 * 60_000), null, 'expired after 60 min');
-    assert.equal(recallTranscription(k1, 1_000), null, 'and dropped');
+    const none = { get: async () => null, set: async () => {} }; // memory only: never the real store
+    assert.equal(await recallTranscription(k1, 1_000, none), null);
+    await rememberTranscription(k1, ['1. Lines l ∥ m …'], 1_000, none);
+    assert.deepEqual(await recallTranscription(k1, 1_000 + 59 * 60_000, none), ['1. Lines l ∥ m …']);
+    assert.equal(await recallTranscription(k1, 1_000 + 61 * 60_000, none), null, 'expired after 60 min');
+    assert.equal(await recallTranscription(k1, 1_000, none), null, 'and dropped');
     clearTranscriptionCache();
   });
 

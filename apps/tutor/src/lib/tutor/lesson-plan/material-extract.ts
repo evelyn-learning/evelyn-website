@@ -35,6 +35,8 @@ import { createHash } from 'node:crypto';
 import { getModelClient, resolveModel } from '../ai/model-registry';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import { extractDocxText, normalizeExtractedText } from '@core/utils/document-extract';
+import connectDB from '@core/db';
+import { TranscriptionCacheModel } from '../../../models/TranscriptionCache';
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -423,13 +425,77 @@ const transcriptionCache = new Map<string, { texts: string[]; at: number }>();
  *  ends; the engine keeps reading and the plan call picks up the result). */
 const transcriptionInFlight = new Map<string, Promise<{ ok: true; texts: string[] } | { ok: false; error: ErrResult }>>();
 
-/** One key per set of images in order: the bytes, their types and the model. */
+// 2026-10-22 (GAC worksheet6, G6): the memory map dies with the engine. A
+// re-upload of the same sheet after a restart read the page again, the read
+// came back in different words for all eight problems, every problem's text
+// hash changed and the whole sheet rebuilt (figures + keys) instead of copying
+// from the build cache. The read is now also kept in Mongo for a week, and the
+// key carries the read prompt's version, so a prompt fix invalidates old
+// reads on purpose while an unchanged prompt reproduces the same text.
+
+/** Where reads outlive the process. Failures are a miss, never an error. */
+export interface TranscriptionStore {
+  get(key: string): Promise<string[] | null>;
+  set(key: string, texts: string[]): Promise<void>;
+}
+
+/** A store call that hangs (tunnel down, server selection) must not hold the
+ *  read past the academy's budget: past this it is a miss. */
+const TRANSCRIPTION_STORE_TIMEOUT_MS = 3_000;
+
+const mongoTranscriptionStore: TranscriptionStore = {
+  async get(key) {
+    await connectDB();
+    const doc = await TranscriptionCacheModel.findById(key).lean();
+    return doc && Array.isArray(doc.texts) ? doc.texts : null;
+  },
+  async set(key, texts) {
+    await connectDB();
+    await TranscriptionCacheModel.updateOne(
+      { _id: key },
+      { $set: { texts, createdAt: new Date() } },
+      { upsert: true },
+    );
+  },
+};
+
+async function guardedStore<T>(op: 'get' | 'set', fn: () => Promise<T>, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('timeout')), TRANSCRIPTION_STORE_TIMEOUT_MS);
+      }),
+    ]);
+  } catch (err) {
+    console.warn(`[material-extract] transcription store ${op} failed errorType=${errorKind(err)}`);
+    return fallback;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function sha8(s: string): string {
+  return createHash('sha256').update(s).digest('hex').slice(0, 8);
+}
+
+/** The read prompt's version for a batch of n images. */
+export function transcriptionPromptVersion(n: number): string {
+  return sha8(DIAGRAM_RULE + buildBatchTranscribePrompt(n));
+}
+
+/** One key per set of images in order: the bytes, their types, the model and
+ *  the read prompt's version. */
 export function transcriptionCacheKey(
   items: ReadonlyArray<{ material: { mimeType?: string }; buffer: Buffer }>,
   modelId: string = VISION_MODEL_ID,
+  promptVersion: string = transcriptionPromptVersion(items.length),
 ): string {
   const h = createHash('sha256');
   h.update(modelId);
+  h.update('|p:');
+  h.update(promptVersion);
   for (const it of items) {
     h.update('|');
     h.update(it.material.mimeType ?? '');
@@ -439,7 +505,7 @@ export function transcriptionCacheKey(
   return `${items.length}:${h.digest('hex')}`;
 }
 
-export function recallTranscription(key: string, now: number = Date.now()): string[] | null {
+function recallFromMemory(key: string, now: number): string[] | null {
   const hit = transcriptionCache.get(key);
   if (!hit) return null;
   if (now - hit.at > TRANSCRIPTION_TTL_MS) {
@@ -449,7 +515,7 @@ export function recallTranscription(key: string, now: number = Date.now()): stri
   return hit.texts;
 }
 
-export function rememberTranscription(key: string, texts: string[], now: number = Date.now()): void {
+function rememberInMemory(key: string, texts: string[], now: number): void {
   transcriptionCache.delete(key);
   transcriptionCache.set(key, { texts, at: now });
   while (transcriptionCache.size > TRANSCRIPTION_CACHE_MAX) {
@@ -457,43 +523,82 @@ export function rememberTranscription(key: string, texts: string[], now: number 
     if (oldest === undefined) break;
     transcriptionCache.delete(oldest);
   }
+}
+
+/** Read-through: memory (1 h) → the store (7 days) → null. A store hit warms
+ *  memory again. */
+export async function recallTranscription(
+  key: string,
+  now: number = Date.now(),
+  store: TranscriptionStore = mongoTranscriptionStore,
+): Promise<string[] | null> {
+  const mem = recallFromMemory(key, now);
+  if (mem) return mem;
+  const stored = await guardedStore('get', () => store.get(key), null);
+  if (!stored) return null;
+  rememberInMemory(key, stored, now);
+  console.log(`[material-extract] vision transcription restored from store key=${key.slice(0, 14)}`);
+  return stored;
+}
+
+/** Write-through: memory and the store. A store failure is logged and ignored. */
+export async function rememberTranscription(
+  key: string,
+  texts: string[],
+  now: number = Date.now(),
+  store: TranscriptionStore = mongoTranscriptionStore,
+): Promise<void> {
+  rememberInMemory(key, texts, now);
   // Next to the "reused" line on a hit: a retry that reads again instead of
   // reusing is either a different key or a lost/expired entry — this says which.
   console.log(`[material-extract] vision transcription cached key=${key.slice(0, 14)} entries=${transcriptionCache.size}`);
+  await guardedStore('set', () => store.set(key, texts), undefined);
 }
 
-/** Test seam. */
+/** Test seam: clears the memory map only (the store is untouched — this is
+ *  what an engine restart looks like). */
 export function clearTranscriptionCache(): void {
   transcriptionCache.clear();
 }
 
-async function transcribeImagesBatch(
-  items: { position: number; material: PlanMaterial; buffer: Buffer }[],
-): Promise<{ ok: true; texts: string[] } | { ok: false; error: ErrResult }> {
-  const key = transcriptionCacheKey(items);
-  const cached = recallTranscription(key);
-  if (cached) {
-    console.log(`[material-extract] vision transcription reused count=${items.length} key=${key.slice(0, 14)}`);
-    return { ok: true, texts: cached };
-  }
+type TranscribeItems = { position: number; material: PlanMaterial; buffer: Buffer }[];
+type TranscribeResult = { ok: true; texts: string[] } | { ok: false; error: ErrResult };
+
+/** Test seams: the store, the uncached read and the prompt version. */
+export interface TranscribeDeps {
+  store?: TranscriptionStore;
+  read?: (items: TranscribeItems) => Promise<TranscribeResult>;
+  promptVersion?: string;
+}
+
+export async function transcribeImagesBatch(
+  items: TranscribeItems,
+  deps: TranscribeDeps = {},
+): Promise<TranscribeResult> {
+  const store = deps.store ?? mongoTranscriptionStore;
+  const read = deps.read ?? transcribeImagesBatchUncached;
+  const key = transcriptionCacheKey(items, VISION_MODEL_ID, deps.promptVersion ?? transcriptionPromptVersion(items.length));
   const joined = transcriptionInFlight.get(key);
   if (joined) {
     console.log(`[material-extract] vision transcription joined in-flight count=${items.length}`);
     return joined;
   }
-  const run = transcribeImagesBatchUncached(items)
-    .then((result) => {
-      if (result.ok) rememberTranscription(key, result.texts);
-      return result;
-    })
-    .finally(() => { transcriptionInFlight.delete(key); });
+  const run = (async (): Promise<TranscribeResult> => {
+    const cached = await recallTranscription(key, Date.now(), store);
+    if (cached) {
+      console.log(`[material-extract] vision transcription reused count=${items.length} key=${key.slice(0, 14)}`);
+      return { ok: true, texts: cached };
+    }
+    const result = await read(items);
+    // The store write does not hold the reply; it is bounded and never throws.
+    if (result.ok) void rememberTranscription(key, result.texts, Date.now(), store);
+    return result;
+  })().finally(() => { transcriptionInFlight.delete(key); });
   transcriptionInFlight.set(key, run);
   return run;
 }
 
-async function transcribeImagesBatchUncached(
-  items: { position: number; material: PlanMaterial; buffer: Buffer }[],
-): Promise<{ ok: true; texts: string[] } | { ok: false; error: ErrResult }> {
+async function transcribeImagesBatchUncached(items: TranscribeItems): Promise<TranscribeResult> {
   const n = items.length;
 
   const imageBlocks = items.map((item) => ({

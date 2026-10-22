@@ -24,7 +24,15 @@ config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs';
-import { extractMaterials, condenseForPipeline, DIAGRAM_RULE } from '../src/lib/tutor/lesson-plan/material-extract';
+import {
+  extractMaterials,
+  condenseForPipeline,
+  DIAGRAM_RULE,
+  transcribeImagesBatch,
+  transcriptionCacheKey,
+  clearTranscriptionCache,
+  type TranscriptionStore,
+} from '../src/lib/tutor/lesson-plan/material-extract';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 
 const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');
@@ -241,6 +249,106 @@ async function testCondenseForPipeline() {
 }
 
 /* ------------------------------------------------------------------ */
+/* Stored transcription cache (G6a, round 8 Task 7)                     */
+/* ------------------------------------------------------------------ */
+
+// 2026-10-22 (GAC worksheet6): a re-upload of the same sheet after an engine
+// restart re-read the page in new words, every problem's hash changed and the
+// whole sheet rebuilt. The read is now kept in a store behind the memory map.
+function memoryStore() {
+  const rows = new Map<string, string[]>();
+  const sets: string[] = [];
+  const store: TranscriptionStore = {
+    get: async (key) => rows.get(key) ?? null,
+    set: async (key, texts) => { sets.push(key); rows.set(key, texts); },
+  };
+  return { store, rows, sets };
+}
+
+function stubRead(texts: string[]) {
+  let calls = 0;
+  const read = async () => { calls++; return { ok: true as const, texts }; };
+  return { read, calls: () => calls };
+}
+
+const SHEET = [{ position: 0, material: { kind: 'image', data: '', mimeType: 'image/png' } as PlanMaterial, buffer: Buffer.from('worksheet6-bytes') }];
+
+async function testStoredTranscriptionSurvivesRestart() {
+  clearTranscriptionCache();
+  const { store, sets } = memoryStore();
+  const first = stubRead(['1. Find x. [Figure: …]']);
+  const r1 = await transcribeImagesBatch(SHEET, { store, read: first.read });
+  assert.equal(first.calls(), 1, 'first read calls the model once');
+  assert.ok(r1.ok);
+  const key = transcriptionCacheKey(SHEET);
+  assert.deepEqual(sets, [key], 'the read is written to the store under its key');
+
+  clearTranscriptionCache(); // an engine restart: memory gone, store kept
+  const second = stubRead(['different wording']);
+  const r2 = await transcribeImagesBatch(SHEET, { store, read: second.read });
+  assert.equal(second.calls(), 0, 'no model call after the restart');
+  assert.ok(r2.ok && r2.ok === true);
+  if (r2.ok) assert.deepEqual(r2.texts, ['1. Find x. [Figure: …]'], 'the same text, from the store');
+
+  // memory is warm again: a third call reads neither the model nor writes the store
+  const third = stubRead(['x']);
+  await transcribeImagesBatch(SHEET, { store, read: third.read });
+  assert.equal(third.calls(), 0);
+  assert.equal(sets.length, 1, 'a store hit does not write again');
+  clearTranscriptionCache();
+}
+
+async function testPromptVersionChangesTheKey() {
+  clearTranscriptionCache();
+  const { store } = memoryStore();
+  const k = transcriptionCacheKey(SHEET);
+  assert.equal(transcriptionCacheKey(SHEET), k, 'the default prompt version is stable');
+  assert.notEqual(transcriptionCacheKey(SHEET, undefined, 'older-prompt'), k);
+  assert.notEqual(transcriptionCacheKey(SHEET, 'other-model'), k);
+  const a = stubRead(['old read']);
+  await transcribeImagesBatch(SHEET, { store, read: a.read, promptVersion: 'v-old' });
+  clearTranscriptionCache();
+  const b = stubRead(['new read']);
+  const r = await transcribeImagesBatch(SHEET, { store, read: b.read, promptVersion: 'v-new' });
+  assert.equal(b.calls(), 1, 'a changed read prompt misses on purpose');
+  if (r.ok) assert.deepEqual(r.texts, ['new read']);
+  clearTranscriptionCache();
+}
+
+async function testStoreFailureIsAMiss() {
+  clearTranscriptionCache();
+  const broken: TranscriptionStore = {
+    get: async () => { throw new Error('connection down'); },
+    set: async () => { throw new Error('write error'); },
+  };
+  const s = stubRead(['read anyway']);
+  const r = await transcribeImagesBatch(SHEET, { store: broken, read: s.read });
+  assert.equal(s.calls(), 1);
+  assert.ok(r.ok);
+  if (r.ok) assert.deepEqual(r.texts, ['read anyway']);
+  // memory still caches it
+  const again = stubRead(['y']);
+  const r2 = await transcribeImagesBatch(SHEET, { store: broken, read: again.read });
+  assert.equal(again.calls(), 0);
+  if (r2.ok) assert.deepEqual(r2.texts, ['read anyway']);
+  clearTranscriptionCache();
+}
+
+async function testInFlightJoinStillOneRead() {
+  clearTranscriptionCache();
+  const { store } = memoryStore();
+  let calls = 0;
+  const read = async () => { calls++; await new Promise((res) => setTimeout(res, 20)); return { ok: true as const, texts: ['joined'] }; };
+  const [r1, r2] = await Promise.all([
+    transcribeImagesBatch(SHEET, { store, read }),
+    transcribeImagesBatch(SHEET, { store, read }),
+  ]);
+  assert.equal(calls, 1, 'a second request while the first reads joins it');
+  assert.ok(r1.ok && r2.ok);
+  clearTranscriptionCache();
+}
+
+/* ------------------------------------------------------------------ */
 /* main                                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -261,6 +369,10 @@ async function main() {
   await test('materials: empty array -> ok with no materials', testEmptyMaterialsIsOk);
   await test('DIAGRAM_RULE: a figure is described by positions, not by a letter it resembles (G1)', testDiagramRuleStatesPositionsNotGlyphs);
   await test('condenseForPipeline: under target passes through (no LLM call)', testCondensePassthroughUnderTarget);
+  await test('transcription store: a re-read after a restart comes from the store, no model call (G6)', testStoredTranscriptionSurvivesRestart);
+  await test('transcription store: a changed read prompt or model is a new key, read again (G6)', testPromptVersionChangesTheKey);
+  await test('transcription store: a failing store is a miss, the read still succeeds (G6)', testStoreFailureIsAMiss);
+  await test('transcription store: the in-flight join still makes one read (G6)', testInFlightJoinStillOneRead);
 
   // Live LLM calls (budget: 2 total for this whole run).
   await test('image material: vision transcription finds expected text', testImageTranscription);
