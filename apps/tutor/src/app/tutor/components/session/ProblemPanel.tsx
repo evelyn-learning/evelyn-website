@@ -12,9 +12,11 @@
  *  - The figure itself is NOT here (GAC acceptance 2026-10-21): it is drawn
  *    on the whiteboard as page 1's first item (TutorSession → WhiteboardCanvas
  *    `leadItem` → ProblemFigure), where the student works. With a figure
- *    drawn, the read's bracketed figure description is left out of the text
- *    (problemTextForDisplay) — it can state what the student is asked to
- *    read off the figure.
+ *  - The read's bracketed `[Figure: …]` / `[Graph: …]` description is never
+ *    shown, drawn figure or not (owner ruling 2026-10-22, hw-14: the drawer
+ *    carries the problem text only; the student has the sheet). See
+ *    problemTextForDisplay — the description can state what the student is
+ *    asked to read off the figure. The tutor's prompt still has it.
  *
  * `verified` only decides the one-line note; the answer key never reaches
  * the client.
@@ -64,7 +66,7 @@ export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
       <div className={`${collapsed ? 'hidden' : 'block'} xl:block max-h-[45vh] xl:max-h-none xl:flex-1 overflow-y-auto px-4 pb-4 xl:pt-4`}>
         <div className="hidden xl:block mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Problem {n}</div>
         <div className="text-[15px] leading-relaxed text-slate-900">
-          <InlineMathText text={problemTextForDisplay(text, !!figure)} wrap />
+          <InlineMathText text={problemTextForDisplay(text)} wrap />
         </div>
         {!verified && (
           <p className="mt-3 text-xs text-slate-500">No answer check for this one yet — your tutor will work it through with you.</p>

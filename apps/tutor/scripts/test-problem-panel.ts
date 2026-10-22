@@ -95,7 +95,8 @@ async function main() {
     has(stage, /return \(\s*<>\s*\{problemPanel \? \(\s*<ProblemPanel[^]*?\) : null\}\s*\{stage\}\s*<\/>\s*\);/);
     has(stage, /\[sessionMode, textToolRail, boardColumnTopPadClass, chipRowShown, problemPanel != null\]/);
   });
-  await section('the panel uses the display text', () => has(panel, /problemTextForDisplay\(text, !!figure\)/));
+  await section('the panel uses the display text', () => has(panel, /problemTextForDisplay\(text\)/));
+  await section('the panel never keys the strip on the figure (F2)', () => hasNot(panel, /problemTextForDisplay\([^)]*figure/));
   await section('the homework rail is not rendered when problemPanel is set', () => {
     has(stage, /const homeworkRail: ReactNode = !problemPanel && sessionGoal === 'homework-help' && homeworkProgress/);
   });
@@ -165,10 +166,10 @@ async function main() {
     const P5 = "In △ABC, DE ∥ BC. Find the values of x and y. [Figure: Triangle with A at the top, B at the bottom left, and C at the bottom right. D is on AB and E is on AC. Segment DE is drawn, and both DE and BC carry a single arrow mark (parallel). Labels: AD = 6, DB = x, AE = 12, EC = y, DE = 9, BC = 15.]";
     const P8 = "The graph of y = a sin(bx) + d is shown. [Graph: The x-axis is marked π/2, π, 3π/2, 2π; the y-axis is marked 4, 2, −2. A horizontal line is drawn at y = 1. The sinusoid starts at x = 0 near y = 1 rising. It peaks at y = 4 near x = π/4, reaches its minimum at y = −2 near x = 3π/4, peaks again at 4 near 5π/4, reaches its minimum at −2 near 7π/4, and rises back to 1 at 2π.]\\n(a) Find the amplitude, period, midline.\\n(b) Find a, b, and d.";
     await section('P5 with a figure → the question only', () => {
-      assert.equal(problemTextForDisplay(P5, true), 'In △ABC, DE ∥ BC. Find the values of x and y.');
+      assert.equal(problemTextForDisplay(P5), 'In △ABC, DE ∥ BC. Find the values of x and y.');
     });
     await section('P8 with a figure keeps (a)/(b), loses the [Graph: …] block', () => {
-      const t = problemTextForDisplay(P8, true);
+      const t = problemTextForDisplay(P8);
       assert.ok(t.includes('(a) Find the amplitude, period, midline.'), t);
       assert.ok(t.includes('(b) Find a, b, and d.'), t);
       assert.ok(!/Graph:|peaks|y = 4/.test(t), t);
@@ -176,22 +177,26 @@ async function main() {
     });
     await section('nested brackets are balanced; other brackets stay', () => {
       const t = 'Solve on [0, 2π]. [Diagram: a curve on [0, 2π] with a mark at [π, 1].]\nThen sketch.';
-      assert.equal(problemTextForDisplay(t, true), 'Solve on [0, 2π].\nThen sketch.');
-      assert.equal(problemTextForDisplay('A [figure: x] B [Figure : y] C', true), 'A B C');
+      assert.equal(problemTextForDisplay(t), 'Solve on [0, 2π].\nThen sketch.');
+      assert.equal(problemTextForDisplay('A [figure: x] B [Figure : y] C'), 'A B C');
     });
     await section('a long bracketed "Word:" block is a description too; short brackets and intervals are not', async () => {
       const { hasFigureDescription } = await import('../src/lib/tutor/lesson-plan/homework-problem-meta');
       const P1 = 'Lines p ∥ q. Point A lies on line p. [Angles, one at a time: 55°: its arc is at A, below line p, on the left side of segment AB (outside the triangle). (2x + 15)°: its arc is at A, inside the triangle. Rest of figure: two horizontal lines.] (a) Find x. (b) Find m∠1 and m∠2.';
-      assert.equal(problemTextForDisplay(P1, true), 'Lines p ∥ q. Point A lies on line p. (a) Find x. (b) Find m∠1 and m∠2.');
+      assert.equal(problemTextForDisplay(P1), 'Lines p ∥ q. Point A lies on line p. (a) Find x. (b) Find m∠1 and m∠2.');
       assert.equal(hasFigureDescription(P1), true);
       const short = 'Solve for x. [Note: see back] Use the interval [0, 2π].';
-      assert.equal(problemTextForDisplay(short, true), short);
+      assert.equal(problemTextForDisplay(short), short);
       assert.equal(hasFigureDescription(short), false);
       assert.equal(hasFigureDescription('Find x. [Graph: y = x]'), true, 'an explicit opener needs no length');
     });
-    await section('without a figure the text is unchanged', () => {
-      assert.equal(problemTextForDisplay(P5, false), P5);
-      assert.equal(problemTextForDisplay(P8, false), P8);
+    await section('F2: no figure drawn, the [Figure:]/[Graph:] description is still stripped', () => {
+      const f = problemTextForDisplay('Find the radius. [Figure: A circle with centre O and radius 5.]');
+      assert.ok(!f.includes('[Figure:'), f);
+      assert.equal(f, 'Find the radius.');
+      const g = problemTextForDisplay('Find the slope. [Graph: A line through (0, 1) and (2, 5).]');
+      assert.ok(!g.includes('[Graph:'), g);
+      assert.equal(g, 'Find the slope.');
     });
   }
 

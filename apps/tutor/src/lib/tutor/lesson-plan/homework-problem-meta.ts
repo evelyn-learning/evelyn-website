@@ -71,16 +71,16 @@ export function hasFigureDescription(text: string): boolean {
 }
 
 /**
- * The problem text as the ProblemPanel shows it. With a figure drawn, every
- * bracketed `[Figure: …]` / `[Graph: …]` / `[Diagram: …]` description the
- * photo read wrote is removed — it can state exactly what the student is
- * asked to read off the figure (peaks, a midline). The scan is
- * bracket-balanced: descriptions hold intervals like `[0, 2π]`. Without a
- * figure the text is returned unchanged (the description is then the only
- * rendering of it). Pure.
+ * The problem text as the ProblemPanel shows it: every bracketed
+ * `[Figure: …]` / `[Graph: …]` / `[Diagram: …]` description the photo read
+ * wrote is removed, whether or not a figure was drawn (owner ruling
+ * 2026-10-22, hw-14: the drawer carries the problem text only; the student
+ * has the sheet). A description can state exactly what the student is asked
+ * to read off the figure (peaks, a midline). The scan is bracket-balanced:
+ * descriptions hold intervals like `[0, 2π]`. The tutor's prompt path keeps
+ * the full text. Pure.
  */
-export function problemTextForDisplay(text: string, hasFigure: boolean): string {
-  if (!hasFigure) return text;
+export function problemTextForDisplay(text: string): string {
   let out = '';
   let i = 0;
   while (i < text.length) {

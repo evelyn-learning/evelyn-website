@@ -271,6 +271,11 @@ async function main() {
     assert.ok(!b.includes('expected answer'), 'no expected-answer line when unverified');
     assert.ok(b.includes('already on the student\'s screen'));
   });
+  await section('F2: the tutor block carries the full text, figure description included', () => {
+    const text = 'Find the radius. [Figure: A circle with centre O and radius 5.]';
+    const b = blk.formatHomeworkProblemBlock({ text, verified: false, hasFigure: false });
+    assert.ok(b.includes('[Figure: A circle with centre O and radius 5.]'), b);
+  });
   await section('verified: checks against the expected answer', () => {
     const b = blk.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true, key: X20 });
     assert.ok(b.includes('expected answer'), b);
