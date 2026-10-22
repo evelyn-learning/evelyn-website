@@ -88,7 +88,15 @@ export function labelIsFromText(label: string, problemText: string): boolean {
   const words = new Set(toks.filter((t) => !isOp(t) && !BOUNDARY.has(t) && t !== ';'));
   if (pieces.length === 1) {
     const w = pieces[0];
-    return (IDENT_RE.test(w) || VALUE_RE.test(w)) && words.has(w);
+    if ((IDENT_RE.test(w) || VALUE_RE.test(w)) && words.has(w)) return true;
+    // GAC acceptance 2026-10-22 (hw-14 p7): the sheet writes x°, a degree-signed
+    // variable that IDENT_RE (letters only) rejects as a token. Test it without
+    // the sign, against the text as written (x° or x).
+    if (/[\u00b0\u00ba]$/.test(w)) {
+      const bare = w.slice(0, -1);
+      return (IDENT_RE.test(bare) || VALUE_RE.test(bare)) && (words.has(w) || words.has(bare));
+    }
+    return false;
   }
   const parts = pieces.filter((w) => !isOp(w) && !LABEL_LINKS.has(w));
   const ops = pieces.filter((w) => isOp(w) || LABEL_LINKS.has(w));

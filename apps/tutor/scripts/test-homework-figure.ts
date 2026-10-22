@@ -11,7 +11,7 @@
 
 import { strict as assert } from 'node:assert';
 import { homeworkFigureFor, titleNamesProblem } from '../src/lib/tutor/whiteboard/homework-figure';
-import { namedPointsIn, validateFigure, checkClaims } from '../src/lib/tutor/homework-build/figure-validate';
+import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../src/lib/tutor/homework-build/figure-validate';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 
 let passed = 0;
@@ -206,6 +206,13 @@ test('a circumcircle step registers its circle; with two circles an unknown name
   const v = validateFigure(two, { problemText: CC_TEXT, claims: [{ kind: 'on_circle', point: 'A', circle: 'the circle' }] });
   assert.equal(v.ok, false);
   assert.match(v.ok ? '' : v.reasons.join('; '), /names circle the circle but the solver has no such circle/);
+});
+
+test('labelIsFromText: a single token with a trailing degree sign (F5)', () => {
+  const T = 'x° at the lower-left vertex, inside the pentagon.';
+  assert.equal(labelIsFromText('x°', T), true);
+  assert.equal(labelIsFromText('y°', T), false);
+  assert.equal(labelIsFromText('42°', '42° at B'), true);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
