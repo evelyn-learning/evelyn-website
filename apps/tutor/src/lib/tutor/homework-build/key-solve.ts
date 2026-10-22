@@ -187,7 +187,7 @@ function partAgree(a: AnswerPart, b: AnswerPart): boolean {
   return av === bv || relClose(av, bv);
 }
 
-/** Same part count and labels (order-insensitive), every part equal; any doubt is "no". */
+/** Same part count, every part equal — by label when the labels match, else by position; any doubt is "no". */
 export function partsAgree(a: AnswerPart[], b: AnswerPart[]): boolean {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || a.length !== b.length) return false;
   const index = (ps: AnswerPart[]): Map<string, AnswerPart> | null => {
@@ -201,11 +201,16 @@ export function partsAgree(a: AnswerPart[], b: AnswerPart[]): boolean {
   };
   const ma = index(a), mb = index(b);
   if (!ma || !mb) return false;
-  for (const [k, pa] of ma) {
-    const pb = mb.get(k);
-    if (!pb || !partAgree(pa, pb)) return false;
+  // 2026-10-22 (hw-15 p4, "find the area and perimeter"): three solvers agreed on
+  // the numbers and labelled them "area/perimeter", "" and "a/b" — the key was
+  // refused on the labels alone. Labels that match pair by label; otherwise the
+  // parts pair by position (same count, every part equal in order).
+  const sameLabels = [...ma.keys()].every((k) => mb.has(k));
+  if (sameLabels) {
+    for (const [k, pa] of ma) if (!partAgree(pa, mb.get(k)!)) return false;
+    return true;
   }
-  return true;
+  return a.every((pa, i) => partAgree(pa, b[i]));
 }
 
 const describe = (name: string, ps: AnswerPart[] | null): string =>

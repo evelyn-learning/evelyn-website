@@ -173,6 +173,38 @@ async function main() {
       const v = validateFigure(fig, { problemText: P4, claims: [{ kind: 'collinear', points: ['A', 'E', 'B'] }] });
       assert.ok(!v.ok && v.reasons.some((r) => /collinear \[A,E,B\] fails/.test(r)), JSON.stringify(v));
     });
+    await section('hw-15 p4 (quarter circles in a rectangle): sector is documented for the proposer; hidden circles + unfilled sectors + region validate and solve', async () => {
+      const { FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
+      const { solveGeometry } = await import('../src/lib/tutor/diagrams/geometry-solver');
+      assert.ok(FIGURE_PROPOSE_SYSTEM.includes('sector: { kind: "sector", on: circleId, from: pointId, to: pointId'), 'sector shape documented');
+      assert.ok(FIGURE_PROPOSE_SYSTEM.includes('hidden: true'), 'hidden circle documented');
+      const P4 = 'Two quarter circles are drawn inside a 16 cm by 8 cm rectangle. Find the area and perimeter of the shaded region. [Figure: A rectangle 16 cm wide (labelled on the top edge) and 8 cm tall (labelled on the left side). Two quarter circles of radius 8, one centered at each bottom corner; their arcs meet at the midpoint of the bottom edge. Shaded region: the area below the top edge and above both arcs. It is hatched.]';
+      const fig = {
+        action: 'showGeometryConstructed',
+        // The sheet letters no corner: helper points, no labels.
+        given: [{ id: 'D', kind: 'point', x: 0, y: 0 }, { id: 'C', kind: 'point', x: 16, y: 0 }, { id: 'B', kind: 'point', x: 16, y: 8 }, { id: 'A', kind: 'point', x: 0, y: 8 }, { id: 'rect', kind: 'polygon', vertices: ['D', 'C', 'B', 'A'], fill: 'none' }],
+        steps: [
+          { id: 'M', kind: 'midpoint', of: { from: 'D', to: 'C' } },
+          { id: 'c1', kind: 'circle', center: 'D', radius: 8, hidden: true },
+          { id: 'c2', kind: 'circle', center: 'C', radius: 8, hidden: true },
+          { id: 's1', kind: 'sector', on: 'c1', from: 'M', to: 'A', fill: 'none' },
+          { id: 's2', kind: 'sector', on: 'c2', from: 'B', to: 'M', fill: 'none' },
+          seg('top', 'A', 'B', '16 cm'), seg('left', 'D', 'A', '8 cm'),
+          { id: 'sh', kind: 'region', outer: 'rect', inner: ['s1', 's2'] },
+        ],
+        display: { grid: false, axes: false },
+      } as unknown as Fig;
+      assert.deepEqual(validateFigure(fig, { problemText: P4, claims: [] }), { ok: true });
+      const solved = solveGeometry(fig as never);
+      assert.equal(solved.circles.length, 0, 'hidden circles are not drawn');
+      assert.deepEqual(solved.polygons.filter((p) => p.vertices.length > 4).map((p) => p.fill), ['none', 'none'], 'the sectors are outlines only');
+      assert.equal(solved.regions.length, 1);
+      assert.equal(solved.regions[0].holes.length, 2);
+      // A sector on a circle that is drawn keeps today's shape (no fill field → renderer default).
+      const plain = solveGeometry({ action: 'showGeometryConstructed', given: [pt('O', 0, 0)], steps: [{ id: 'c', kind: 'circle', center: 'O', radius: 4 }, { id: 'P', kind: 'point_on_circle', on: 'c', angle: 0 }, { id: 'Q', kind: 'point_on_circle', on: 'c', angle: 90 }, { id: 's', kind: 'sector', on: 'c', from: 'P', to: 'Q' }] } as never);
+      assert.equal(plain.circles.length, 1);
+      assert.equal(plain.polygons[0].fill, undefined);
+    });
     await section('claims prompts (hw-14b p4): an angle or polygon name is not a collinear statement', async () => {
       const { FIGURE_CLAIMS_SYSTEM, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
       for (const s of [FIGURE_CLAIMS_SYSTEM, FIGURE_PROPOSE_SYSTEM]) {
@@ -661,7 +693,16 @@ async function main() {
       assert.equal(partsAgree([txt('1/2')], [num('0.5', 0.5)]), false);
       assert.equal(partsAgree([num('1', 1, 'a'), num('2', 2, 'b')], [num('2', 2, 'b'), num('1', 1, 'a')]), true);
       assert.equal(partsAgree([num('1', 1, 'a'), num('2', 2, 'b')], [num('1', 1, 'a')]), false);
-      assert.equal(partsAgree([num('1', 1, 'a')], [num('1', 1, 'b')]), false);
+      // 2026-10-22 (hw-15 p4, "find the area and perimeter"): three solvers agreed on
+      // 27.47 cm² / 41.13 cm and labelled the parts "area/perimeter", "" and "a/b" —
+      // the key was refused on the labels alone. Same count, every part equal in
+      // order → agreement, whatever the labels; duplicate labels still refuse.
+      assert.equal(partsAgree([num('1', 1, 'a')], [num('1', 1, 'b')]), true);
+      assert.equal(partsAgree([num('27.47 cm²', 27.47, 'area', 'cm²'), num('41.13 cm', 41.13, 'perimeter', 'cm')],
+        [num('27.47 cm²', 27.47, 'a', 'cm²'), num('41.13 cm', 41.13, 'b', 'cm')]), true);
+      assert.equal(partsAgree([num('27.47', 27.47, 'area'), num('41.13', 41.13, 'perimeter')], [num('41.13', 41.13, 'a'), num('27.47', 27.47, 'b')]), false, 'different labels compare by position');
+      assert.equal(partsAgree([num('27.47', 27.47), num('41.13', 41.13)], [num('27.47', 27.47, 'a'), num('41.13', 41.13, 'b')]), false, 'duplicate (empty) labels still refuse');
+      assert.equal(partsAgree([num('27.47', 27.47, 'area'), num('41.13', 41.13, 'perimeter')], [num('27.47', 27.47, 'a'), num('40', 40, 'b')]), false);
       assert.equal(partsAgree([num('5 cm', 5, '', 'cm')], [num('5 m', 5, '', 'm')]), false);
       assert.equal(partsAgree([num('20', 20)], [num('21', 21)]), false);
       assert.equal(partsAgree([txt('Parallel.')], [txt('  parallel')]), true);

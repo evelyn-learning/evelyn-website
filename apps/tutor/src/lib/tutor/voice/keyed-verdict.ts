@@ -48,13 +48,16 @@ export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 4000;
 export const KEYED_VERDICT_DEBUG_TYPE = 'homework_keyed_verdict';
 
 /** `explicit`: offered as the final answer (see the header) — only such a value can be judged wrong. */
-interface Candidate { value: number; text: string; at: number; explicit: boolean; /** A fraction / mixed number: confirms, never marks wrong. */ frac?: boolean; /** The short name in front of the lead ("x = 7" → "x"), when there is one. */ lhs?: string | null }
+interface Candidate { value: number; text: string; at: number; explicit: boolean; /** A fraction / mixed number / exact radical: confirms, never marks wrong. */ frac?: boolean; /** The short name in front of the lead ("x = 7" → "x"), when there is one. */ lhs?: string | null }
 
 const NUM_RE = /-?\d+(?:\.\d+)?/g;
 /** Words / marks after which a number is an offered value. */
 const LEAD_RE = /(?:=|≈|:|\bis|'s|\bare|\bequals?(?:\s+to)?|\bgot|\bget|\bbe|\banswer)\s*$/i;
 const UNIT_RE = /^(?:°|º|%|degrees?|deg|cm|mm|km|m|in|inches|ft|feet|yd|mi|miles|units?|sq|kg|g|s|sec|seconds?|min|minutes?|h|hrs?|hours?|mph)(?:\^?[23²³])?(?![A-Za-z])/i;
-const OPERATOR_WORD_RE = /^\s+(?:times|plus|minus|over|divided|multiplied|squared|cubed|root|pi|sqrt|π|√)\b/i;
+// 2026-10-22 (hw-15 p6): a number before a function word ("8 sin 60") is working, not an offer.
+const OPERATOR_WORD_RE = /^\s+(?:times|plus|minus|over|divided|multiplied|squared|cubed|root|pi|sqrt|π|√|sin|cos|tan|csc|cot|arcsin|arccos|arctan|log|ln)\b/i;   // not sec: "5 sec" is seconds (UNIT_RE)
+/** An exact radical: "4 root 3", "4√3", "4 sqrt 3", "4\\sqrt{3}", "√3". Groups: coefficient?, radicand. */
+const RADICAL_RE = /(-?\d+(?:\.\d+)?)?\s*(?:√|\\?sqrt|root)\s*(?:of\s+)?[{(]?\s*(\d+(?:\.\d+)?)\s*[)}]?/gi;
 
 function normalize(s: string): string {
   return String(s ?? '')
@@ -78,7 +81,8 @@ function continuesExpression(text: string, end: number): boolean {
 
 /** The short name directly in front of an `=` / `≈` / "is" / "'s" lead, if any. */
 function lhsBefore(before: string): string | null {
-  const m = /(?:^|[\s,;(])([A-Za-z]{1,3}\d?)(?:\s*[=≈]|\s+is|'s)\s*$/i.exec(before);
+  // 2026-10-22 (hw-15 p2): an angle name may carry its prefix ("m∠ACB =", "∠ACB =", "angle ACB is").
+  const m = /(?:^|[\s,;(])(?:m\s*∠\s*|∠\s*|angle\s+)?([A-Za-z]{1,3}\d?)(?:\s*[=≈]|\s+is|'s)\s*$/i.exec(before);
   return m ? m[1].toLowerCase() : null;
 }
 
@@ -188,12 +192,41 @@ function candidates(text: string, opts: { segmentStartIsLead?: boolean; keyVar?:
       || (lhs !== null && (lhs === opts.keyVar || lhs === 'it'));
     out.push({ value: Number(m[0]), text: (m[0] + (unit ? ` ${unit[0]}` : '')).trim(), at, explicit, lhs });
   }
-  return out;
+  // 2026-10-22 (hw-15 p6): an exact radical offered after a lead ("h = 4 root 3",
+  // "= 4√3") is a value too — its coefficient was skipped above as the start of
+  // an expression. Like a fraction it confirms and never denies (`frac`).
+  for (const m of text.matchAll(RADICAL_RE)) {
+    const at = m.index ?? 0;
+    const prev = text[at - 1] ?? '';
+    if (/[\w.]/.test(prev) || /[+\-*/^×÷·√]/.test(prev)) continue;
+    const end = at + m[0].length;
+    if (continuesExpression(text, end)) continue;
+    const before = text.slice(0, at);
+    const atStart = /^\s*[:=]?\s*$/.test(before);
+    if (!(LEAD_RE.test(before) || (opts.segmentStartIsLead && atStart))) continue;
+    const lhs = lhsBefore(before);
+    if (opts.keyVar && lhs && lhs !== opts.keyVar && lhs !== 'it') continue;
+    const value = radicalValue(m);
+    if (value === null) continue;
+    out.push({ value, text: m[0].trim(), at, explicit: false, frac: true, lhs });
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
+
+/** The numeric value of a RADICAL_RE match: coefficient × √radicand. */
+function radicalValue(m: RegExpMatchArray): number | null {
+  const coef = m[1] !== undefined ? Number(m[1]) : 1;
+  const rad = Number(m[2]);
+  if (!Number.isFinite(coef) || !Number.isFinite(rad) || rad < 0) return null;
+  return coef * Math.sqrt(rad);
 }
 
 /** The whole message is one number (optionally with units / a trailing mark).
  *  Unnamed (2026-10-22, hw-14 p5): it confirms, never denies (the header). */
 function bareNumber(text: string): Candidate | null {
+  // A message that is one exact radical ("4 root 3") offers that value (hw-15 p6).
+  const r = new RegExp(`^\\s*${RADICAL_RE.source}\\s*[.!]?\\s*$`, 'i').exec(text);
+  if (r) { const value = radicalValue(r); return value === null ? null : { value, text: r[0].trim(), at: 0, explicit: false, frac: true }; }
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*([A-Za-z°º%²³^23]*)\s*[.!]?\s*$/.exec(text);
   if (!m) return null;
   if (m[2] && !UNIT_RE.test(m[2])) return null;
@@ -261,6 +294,9 @@ function judgeValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict {
 }
 
 const normValueName = (s: string) => String(s ?? '').toLowerCase().replace(/\s+/g, '');
+/** 2026-10-22 (hw-15 p2): a value named "m∠ACB" in the key is the student's "ACB" / "∠ACB" / "angle ACB". */
+const bareValueName = (s: string) => normValueName(s).replace(/^(?:m∠|∠|angle|m(?=∠))/, '');
+const sameValueName = (a: string, b: string) => bareValueName(a) === bareValueName(b);
 
 /**
  * 2026-10-21 (hw-11 problem 2): a part with several named values ("x = 7,
@@ -276,7 +312,7 @@ function judgeNamedValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict[] 
   const byName = new Map<string, KeyedVerdict>();
   for (const c of cands) {
     if (c.frac) continue;
-    const named = c.lhs ? values.find((v) => v.name === normValueName(c.lhs!)) : undefined;
+    const named = c.lhs ? values.find((v) => sameValueName(v.name, c.lhs!)) : undefined;
     if (named) {
       byName.set(named.name, numbersAgree(c.value, named.value)
         ? { verdict: 'correct', part: label, value: named.name, matched: c.text }

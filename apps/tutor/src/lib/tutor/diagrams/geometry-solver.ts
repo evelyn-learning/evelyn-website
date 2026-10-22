@@ -66,7 +66,7 @@ type PtRef = string | { x: number; y: number };
 
 export type Given =
   | { id: string; kind: 'point'; x: number; y: number; label?: string }
-  | { id: string; kind: 'circle'; center: string; radius: number; label?: string }
+  | { id: string; kind: 'circle'; center: string; radius: number; label?: string; hidden?: boolean }
   | { id: string; kind: 'segment'; from: PtRef; to: PtRef; label?: string }
   | { id: string; kind: 'line'; through: [PtRef, PtRef]; label?: string }
   | { id: string; kind: 'polygon'; vertices: PtRef[]; label?: string; fill?: string };
@@ -479,6 +479,8 @@ export interface StepDeclareCircle extends StepCommon {
   kind: 'circle';
   center: string;
   radius: number;
+  /** Built on, never drawn (2026-10-22, hw-15 p4: a quarter circle is a sector on a hidden circle). */
+  hidden?: boolean;
 }
 
 /** Circle defined by a center and a point that lies on it. Useful when
@@ -644,6 +646,8 @@ export interface StepSector extends StepCommon {
   direction?: 'ccw' | 'cw';
   /** How many segments to sample the arc with. Default 24. */
   arcSegments?: number;
+  /** Polygon fill ("none" for an outline only — hw-15 p4's white quarter circles); absent → the renderer's default. */
+  fill?: string;
 }
 
 // ─── Tier 2 — specific shape constructors ─────────────────────────────────────
@@ -906,7 +910,8 @@ export interface StepRegion extends StepCommon {
 // ─── Internal resolution state ────────────────────────────────────────────────
 
 interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string; hidden?: boolean }
-interface ResolvedCircle { kind: 'circle'; id: string; center: string; radius: number; label?: string }
+/** `hidden` (2026-10-22, hw-15 p4): a circle built on but never drawn (a quarter circle is a sector on it). */
+interface ResolvedCircle { kind: 'circle'; id: string; center: string; radius: number; label?: string; hidden?: boolean }
 interface ResolvedSegment { kind: 'segment'; id: string; from: string; to: string; label?: string }
 interface ResolvedLine { kind: 'line'; id: string; pointA: string; pointB: string; label?: string }
 interface ResolvedPolygon { kind: 'polygon'; id: string; vertices: string[]; label?: string; fill?: string }
@@ -1192,7 +1197,7 @@ function solveStep(step: Step, state: State): void {
       return;
     case 'circle':
       if (!state.byId.has(step.center)) throw new Error(`circle "${step.id}": center "${step.center}" not declared`);
-      setObject(state, { kind: 'circle', id: step.id, center: step.center, radius: step.radius, label: step.label });
+      setObject(state, { kind: 'circle', id: step.id, center: step.center, radius: step.radius, label: step.label, ...(step.hidden ? { hidden: true } : {}) });
       return;
     case 'circle_through_point': return solveCircleThroughPoint(step, state);
     case 'circle_through_three': return solveCircleThroughThree(step, state);
@@ -2345,7 +2350,7 @@ function solveSector(step: StepSector, state: State): void {
     });
     verts.push(id);
   }
-  setObject(state, { kind: 'polygon', id: step.id, vertices: verts, label: step.label });
+  setObject(state, { kind: 'polygon', id: step.id, vertices: verts, label: step.label, ...(step.fill !== undefined ? { fill: step.fill } : {}) });
 }
 
 /** How many points a region samples a circle boundary into. Closed by the
@@ -3125,7 +3130,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         if (!state.byId.has(g.center)) {
           throw new Error(`circle "${g.id}": center "${g.center}" not declared`);
         }
-        setObject(state, { kind: 'circle', id: g.id, center: g.center, radius: g.radius, label: g.label });
+        setObject(state, { kind: 'circle', id: g.id, center: g.center, radius: g.radius, label: g.label, ...(g.hidden ? { hidden: true } : {}) });
         break;
       case 'segment':
         setObject(state, {
@@ -3280,6 +3285,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         style: dashedSet.has(obj.id) ? 'dashed' : undefined,
       });
     } else if (obj.kind === 'circle') {
+      if (obj.hidden) continue;   // built on, never drawn (hw-15 p4)
       circles.push({
         id: obj.id,
         center: obj.center,

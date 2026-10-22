@@ -193,6 +193,43 @@ async function main() {
     assert.deepEqual(kv.parseKeyedVerdictDebug(kv.formatKeyedVerdictDebug('b', 'correct', 'PA')), { part: 'b', verdict: 'correct', value: 'pa' });
     assert.deepEqual(kv.parseKeyedVerdictDebug(kv.formatKeyedVerdictDebug('b', 'correct')), { part: 'b', verdict: 'correct' });
   });
+  // 2026-10-22 (hw-15 p2): the key's value names carry the sheet's "m∠" prefix
+  // (m∠acb); the student writes "ACB=90" / "angle ACB is 90". Named by the
+  // bare letters, the value was skipped as "a given" and the part never
+  // confirmed, so the finish said needs review and the resumed session could
+  // not close it either.
+  await section('hw-15 p2: an angle value matches with or without its m∠ / angle prefix', async () => {
+    const { normalizeKeyParts } = await import('../src/lib/tutor/homework-build/key-solve');
+    const parts = normalizeKeyParts({ parts: [{ label: '', final: 'm∠ACB = 90°, m∠CAB = 58°, m∠PAC = 32°', canonical: { kind: 'text', text: '' } }] })!;
+    const key: AnswerKey = { parts, solvers: [] };
+    const pick = (vs: ReturnType<typeof kv.keyedVerdicts>) => vs.map((v) => [v.verdict, v.part, v.value]).sort();
+    assert.deepEqual(pick(kv.keyedVerdicts('it subtends 90 at C. SO ACB=90, CAB=90-32=58 and CAP=90-58=32', key)),
+      [['correct', '', 'm∠acb'], ['correct', '', 'm∠cab'], ['correct', '', 'm∠pac']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('ACB = 90°', key)), [['correct', '', 'm∠acb']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('angle ACB is 90', key)), [['correct', '', 'm∠acb']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('m∠ACB = 90', key)), [['correct', '', 'm∠acb']]);
+    assert.deepEqual(pick(kv.keyedVerdicts('∠ACB = 80', key)), [['incorrect', '', 'm∠acb']]);
+    assert.equal(kv.allKeyPartsConfirmed([], 'it subtends 90 at C. SO ACB=90, CAB=90-32=58 and CAP=90-58=32', key), true);
+  });
+  // 2026-10-22 (hw-15 p6): "h=8 sin 60 = 4 root 3" was judged on the 8 (a
+  // number before a trig word is working, not an offer) and "4 root 3" was
+  // never read; the right answer was denied, then confirmed by the model.
+  await section('hw-15 p6: a number before sin/cos/tan is working; an exact radical confirms a number part', () => {
+    const H: AnswerKey = { parts: [
+      { label: 'a', final: 'h = 4√3', canonical: { kind: 'number', value: 6.928 } },
+      { label: 'b', final: '18', canonical: { kind: 'number', value: 18 } },
+      { label: 'c', final: '56√3 ≈ 96.99', canonical: { kind: 'number', value: 96.99 } },
+    ], solvers: [] };
+    for (const m of ['h=8 sin 60 = 4 root 3', '4 root 3', 'h = 4√3', '4√3', 'h = 4 sqrt 3', 'h = 4\\sqrt{3}', 'a) 4√3', 'h is 4 root 3']) {
+      const got = keyedVerdict(m, H);
+      assert.equal(got.verdict, 'correct', `${m}: ${JSON.stringify(got)}`);
+      assert.equal(got.part, 'a', m);
+    }
+    assert.equal(keyedVerdict('h = 8 sin 60', H).verdict, 'undecided', 'unfinished working is not an offer');
+    assert.equal(keyedVerdict('h = 2 root 3', H).verdict, 'undecided', 'an exact form confirms, never denies (as a fraction)');
+    assert.equal(keyedVerdict('so base = 4 root 3 times 2 + 10 so 10 + 8 root 3', H).verdict, 'undecided');
+    assert.equal(keyedVerdict('56 root 3', H).part, 'c');
+  });
   await section('correct carries the matched value', () => {
     const got = keyedVerdict('so perimeter is 26+3pi=35.4 cm', PERIM);
     assert.ok(got.matched && got.matched.includes('35.4'), JSON.stringify(got));
