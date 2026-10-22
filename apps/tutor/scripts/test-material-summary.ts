@@ -35,7 +35,7 @@ const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log
   const raw = await extractMaterials([{ kind: 'text', data: Buffer.from(big).toString('base64') } as never], { skipCondense: true });
   assert(raw.ok && raw.combinedText === big, 'M1: skipCondense returns the raw combined text (no Haiku call)');
   const extractSrc = readFileSync(join(__dirname, '..', 'src/lib/tutor/lesson-plan/material-extract.ts'), 'utf8');
-  assert(extractSrc.includes('opts: { skipCondense?: boolean } = {}') && extractSrc.includes('!opts.skipCondense && combinedRaw.length > DEFAULT_PIPELINE_TARGET_CHARS'), 'M1: condense stays the default for every other caller');
+  assert(/opts: \{\n    skipCondense\?: boolean;\n[\s\S]*?\n  \} = \{\},\n\): Promise<ExtractResult>/.test(extractSrc) && extractSrc.includes('!opts.skipCondense && combinedRaw.length > DEFAULT_PIPELINE_TARGET_CHARS'), 'M1: condense stays the default for every other caller');
   console.log(`${passed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);
 })();
