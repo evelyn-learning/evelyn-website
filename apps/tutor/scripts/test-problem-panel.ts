@@ -82,7 +82,7 @@ async function main() {
   });
   await section('one-problem session: no Wrap up / Finish lesson / Discard session in the adjust menu', () => {
     const ts = readSrc('app/tutor/components/session/TutorSession.tsx');
-    has(ts, /\{!homeworkProblem && \(\s*<button[^]*?Wrap up<\/button>/);
+    has(ts, /\{!homeworkProblem && \(\s*<>\s*<div[^]*?Wrap up<\/button>/);
     has(ts, /\{embedded && !isTrial && !homeworkProblem && \(/);
     const vtr = readSrc('app/tutor/components/VoiceTutorRealtime.tsx');
     has(vtr, /buildHomeworkOpenerClause\(\{ \.\.\.openerCtx, oneProblem: homeworkProblemRef\.current != null, hasPriorNote: !!homeworkProblemRef\.current\?\.priorNote \}\)/);
