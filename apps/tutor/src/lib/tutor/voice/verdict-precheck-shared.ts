@@ -242,7 +242,7 @@ export function formatAnswerCheckBlock(
   const block = formatAnswerCheckBlockBase(p, opts);
   if (!block || !p || p.disputed === true || p.answers === 'neither' || p.verdict !== 'correct') return block;
   if (!block.endsWith(ANSWER_CHECK_END)) return block;
-  const rules = (opts?.statedReasonCheck === true ? STATED_REASON_CHECK_RULE : '')
+  const rules = (opts?.statedReasonCheck === true && !block.includes(UNSURE_CORRECT_RULE) ? STATED_REASON_CHECK_RULE : '')
     + (opts?.nextMoveAfterConfirm === true && nextMoveFits(block) ? NEXT_MOVE_AFTER_CONFIRM_RULE : '');
   if (!rules) return block;
   return block.slice(0, -ANSWER_CHECK_END.length) + rules + ANSWER_CHECK_END;
@@ -264,7 +264,9 @@ export const NEXT_MOVE_AFTER_CONFIRM_RULE =
 
 // Round 8 review (G4): a "PROBABLY correct" block gives no verdict, and a
 // repeat of an already-solved answer asks no question — neither is a
-// confirmation to move on from, so neither gets the next-move rule.
+// confirmation to move on from, so neither gets the next-move rule. The
+// unsure block skips the stated-reason rule too: "confirm the values"
+// contradicts "give no verdict either way" (round 8 review, F6).
 function nextMoveFits(block: string): boolean {
   return !block.includes(UNSURE_CORRECT_RULE) && !block.includes(ALL_SOLVED_CORRECT_RULE);
 }

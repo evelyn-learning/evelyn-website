@@ -643,11 +643,14 @@ async function main() {
       const uPlain = formatAnswerCheckBlock(unsure, uOpts);
       assert.ok(uPlain.includes(UNSURE_CORRECT_RULE), 'fixture reaches the unsure branch');
       assert.equal(formatAnswerCheckBlock(unsure, { ...uOpts, nextMoveAfterConfirm: true }), uPlain, 'unsure: unchanged');
+      assert.equal(formatAnswerCheckBlock(unsure, { ...uOpts, statedReasonCheck: true, nextMoveAfterConfirm: true }), uPlain, 'unsure: unchanged with both options (F6 rule too)');
       const repeat = { answers: 'other_part' as const, target: 'x', proposed: '20', verdict: 'correct' as const, confidence: 'high' as const };
       const aOpts = { workThenMatch: true, noRevealAnyStep: true, allSolved: true };
       const aPlain = formatAnswerCheckBlock(repeat, aOpts);
       assert.ok(aPlain.includes(ALL_SOLVED_CORRECT_RULE), 'fixture reaches the all-solved branch');
       assert.equal(formatAnswerCheckBlock(repeat, { ...aOpts, nextMoveAfterConfirm: true }), aPlain, 'all-solved repeat: unchanged');
+      const { STATED_REASON_CHECK_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+      assert.equal(formatAnswerCheckBlock(repeat, { ...aOpts, statedReasonCheck: true, nextMoveAfterConfirm: true }).replace(STATED_REASON_CHECK_RULE, ''), aPlain, 'all-solved repeat keeps only the stated-reason rule');
       const sure = formatAnswerCheckBlock({ ...unsure, confidence: 'high' as const }, { ...uOpts, nextMoveAfterConfirm: true });
       assert.ok(sure.includes(NEXT_MOVE_SENTENCE), 'a sure no-reveal correct still gets it');
     });
