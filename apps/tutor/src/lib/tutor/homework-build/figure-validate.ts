@@ -133,7 +133,13 @@ export const POINT_KINDS = new Set(['point', 'midpoint', 'intersect', 'section_p
  *  sentence-initial article ("A square pyramid", "I ...") not counted — the
  *  hw-13 pyramid's helper point A came out lettered because of that article. */
 export function namedPointsIn(text: string): Set<string> {
-  const stripped = text.replace(/(^\s*|[.:\]]\s+)(A|I)\s+(?=[a-z])/g, '$1');
+  // GAC acceptance 2026-10-22 (hw-14 p1): "V" shape — a quoted letter, a
+  // letter-shape ("V-shaped", "an L shape") or "letter T" names a glyph, not a point.
+  const noGlyphs = text
+    .replace(/["'\u201C\u2018][A-Z]["'\u201D\u2019]/g, ' ')
+    .replace(/(?<![A-Za-z0-9'])[A-Z](?:-| )shape(?:d)?(?![A-Za-z])/g, ' ')
+    .replace(/\bletter\s+[A-Z](?![A-Za-z0-9'])/gi, ' ');
+  const stripped = noGlyphs.replace(/(^\s*|[.:\]]\s+)(A|I)\s+(?=[a-z])/g, '$1');
   return new Set(stripped.match(/(?<![A-Za-z0-9'])[A-Z](?![A-Za-z0-9'])/g) ?? []);
 }
 

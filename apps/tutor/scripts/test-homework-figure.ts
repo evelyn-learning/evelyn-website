@@ -11,6 +11,7 @@
 
 import { strict as assert } from 'node:assert';
 import { homeworkFigureFor, titleNamesProblem } from '../src/lib/tutor/whiteboard/homework-figure';
+import { namedPointsIn } from '../src/lib/tutor/homework-build/figure-validate';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 
 let passed = 0;
@@ -73,6 +74,15 @@ test('the latest figure for a problem wins (a redrawn figure over the first one)
 
 test('a same-page figure that is still near is left alone (no yank)', () => {
   assert.equal(shouldScrollToDedupedItem({ itemPageTitle: 'Problem 2 of 8', currentPageTitle: 'Problem 2 of 8', itemsAfterOnPage: 1 }), false);
+});
+
+test('namedPointsIn ignores a quoted letter and a letter-shape (F4a)', () => {
+  const names = (s: string) => [...namedPointsIn(s)].sort().join(',');
+  assert.equal(names('Segments AE and BE form a "V" shape that points right, with its vertex at E. Point A is on p.'), 'A,E');
+  assert.equal(names('an "L" shape'), '');
+  assert.equal(names('a V-shaped notch'), '');
+  assert.equal(names('the letter T'), '');
+  assert.equal(names('Point V lies on q'), 'V');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
