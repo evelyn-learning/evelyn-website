@@ -13,6 +13,7 @@ import { getModelClient, prepareParams } from '../ai/model-registry';
 import { getGeometryStepKindsDescriptionTail } from '../diagrams/geometry-solver';
 import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geometry-step-docs';
 import { isCaptionLabel, labelIsFromText, validateFigure, namedPointsIn, POINT_KINDS } from './figure-validate';
+import { functionSourceOf } from '../whiteboard/graph-function-source';
 import type { FigureClaim, FigureCommand } from './types';
 
 export interface TokenUsage { in: number; out: number }
@@ -128,6 +129,7 @@ const COORDINATE_TEXT_RE = /\bcoordinates?\b|\bcoordinate plane\b|\bax[ie]s\b|\b
 /** Given points and the step kinds whose result is one point (the solver labels each by its id when no label is given). */
 
 export function normalizeFigureDisplay(figure: FigureCommand | null, problemText: string): FigureCommand | null {
+  if (figure?.action === 'showGraph') return normalizeGraphFunctions(figure);
   if (!figure || figure.action !== 'showGeometryConstructed') return figure;
   // GAC acceptance 2026-10-21: the renderer labels an unlabelled point by its
   // id, so helper points the proposer invented (P1, Q1, R2) came out lettered
@@ -155,6 +157,32 @@ export function normalizeFigureDisplay(figure: FigureCommand | null, problemText
   const display = geo.display && typeof geo.display === 'object' ? geo.display : {};
   if (COORDINATE_TEXT_RE.test(problemText ?? '')) return { ...named, display: { ...display, keepLabels: true } };
   return { ...named, display: { ...display, grid: false, axes: false, keepLabels: true } };
+}
+
+/**
+ * 2026-10-22 (hw-14 p8, F8): the proposer wrote a graph function as
+ * `{ expression }`. The validator and thumbnail read it, the board's
+ * renderers read `expr | latex | fn` and drew y = x. A stored graph function
+ * carries `expr`: `expression` moves there when no `expr` is set, and is
+ * dropped. x = f(y) curves (`functionsOfY`) the same. Pure.
+ */
+function normalizeGraphFunctions(figure: Extract<FigureCommand, { action: 'showGraph' }>): FigureCommand {
+  const data = figure.data as unknown as Record<string, unknown> | undefined;
+  if (!data || typeof data !== 'object') return figure;
+  const hasExpression = (arr: unknown) => Array.isArray(arr) && arr.some((f) => !!f && typeof f === 'object' && 'expression' in f);
+  if (!hasExpression(data.functions) && !hasExpression(data.functionsOfY)) return figure;   // nothing to move: the same object
+  const move = (arr: unknown) => Array.isArray(arr)
+    ? arr.map((f) => {
+      if (!f || typeof f !== 'object' || !('expression' in f)) return f;
+      const { expression, ...rest } = f as Record<string, unknown>;
+      // expr | latex | fn already win over expression (functionSourceOf): keep that choice.
+      return functionSourceOf(rest) || typeof expression !== 'string' || !expression ? rest : { ...rest, expr: expression };
+    })
+    : arr;
+  const out: Record<string, unknown> = { ...data };
+  if ('functions' in data) out.functions = move(data.functions);
+  if ('functionsOfY' in data) out.functionsOfY = move(data.functionsOfY);
+  return { ...figure, data: out as unknown as typeof figure.data };
 }
 
 export function parseFigure(raw: unknown): FigureCommand | null {

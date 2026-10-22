@@ -23,6 +23,7 @@ import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { isOpenGraphPoint } from '@/lib/tutor/whiteboard/graph-features';
 import { parseAxisStep, isPiStep, labelPiTick } from '@/lib/tutor/whiteboard/graph-axis';
+import { functionSourceOf } from '@/lib/tutor/whiteboard/graph-function-source';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -72,7 +73,7 @@ export function GraphRenderer({
   const parsedFunctions = useMemo(() => {
     return functions.map((fn, index) => ({
       ...fn,
-      evaluator: parseFunctionString(fn.expr || fn.latex || fn.fn || 'x'),
+      evaluator: parseFunctionString(functionSourceOf(fn) || 'x'),
       color: fn.color || COLORS[index % COLORS.length],
     }));
   }, [functions]);
@@ -81,7 +82,7 @@ export function GraphRenderer({
   const parsedFunctionsOfY = useMemo(() => {
     return functionsOfY.map((fn, index) => ({
       ...fn,
-      evaluator: parseFunctionOfYString(fn.expr || fn.latex || fn.fn || 'y'),
+      evaluator: parseFunctionOfYString(functionSourceOf(fn) || 'y'),
       color: fn.color || COLORS[(functions.length + index) % COLORS.length],
     }));
   }, [functionsOfY, functions.length]);

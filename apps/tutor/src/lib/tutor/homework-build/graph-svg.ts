@@ -55,10 +55,21 @@ export function graphToSvg(data: GraphData | null | undefined): string | null {
       out.push(`<line x1="${fmt(px)}" y1="${M.t}" x2="${fmt(px)}" y2="${H - M.b}" stroke="#e5e7eb" stroke-width="1"></line>`);
       if (Math.abs(x) > 1e-9 || !(x0 <= 0 && x1 >= 0)) out.push(`<text x="${fmt(px)}" y="${fmt(axisY + 14)}" text-anchor="middle" font-size="11" fill="#6b7280">${esc(tickLabel(x, xStep, xPi))}</text>`);
     }
-    for (let y = Math.ceil(y0 / yStep - 1e-9) * yStep; y <= y1 + 1e-9; y += yStep) {
+    const yTicks: number[] = [];
+    for (let y = Math.ceil(y0 / yStep - 1e-9) * yStep; y <= y1 + 1e-9; y += yStep) yTicks.push(y);
+    // 2026-10-22 (hw-14 p8, F8): with xRange [0, 360] the y-axis sits on the
+    // plot's left edge (M.l), and labels right-aligned at axisX − 6 fell
+    // outside the clip rect and vanished. When the widest label (≈ 7 px per
+    // character) does not fit left of the axis, the labels go right of it,
+    // left-aligned. Chosen over widening M.l: the clip rect starts at M.l, so a
+    // wider margin would still clip them, and every other graph keeps its
+    // layout unchanged.
+    const yLabelWidth = Math.max(0, ...yTicks.filter((y) => Math.abs(y) > 1e-9).map((y) => 7 * tickLabel(y, yStep, yPi).length));
+    const yLabelsRight = axisX - 6 - yLabelWidth < M.l;
+    for (const y of yTicks) {
       const py = sy(y);
       out.push(`<line x1="${M.l}" y1="${fmt(py)}" x2="${W - M.r}" y2="${fmt(py)}" stroke="#e5e7eb" stroke-width="1"></line>`);
-      if (Math.abs(y) > 1e-9) out.push(`<text x="${fmt(axisX - 6)}" y="${fmt(py + 4)}" text-anchor="end" font-size="11" fill="#6b7280">${esc(tickLabel(y, yStep, yPi))}</text>`);
+      if (Math.abs(y) > 1e-9) out.push(`<text x="${fmt(yLabelsRight ? axisX + 6 : axisX - 6)}" y="${fmt(py + 4)}" text-anchor="${yLabelsRight ? 'start' : 'end'}" font-size="11" fill="#6b7280">${esc(tickLabel(y, yStep, yPi))}</text>`);
     }
     // Axes
     out.push(`<line x1="${M.l}" y1="${fmt(axisY)}" x2="${W - M.r}" y2="${fmt(axisY)}" stroke="#374151" stroke-width="1.5"></line>`);
@@ -68,7 +79,7 @@ export function graphToSvg(data: GraphData | null | undefined): string | null {
     // Curves
     const colors = ['#2563eb', '#dc2626', '#059669', '#7c3aed'];
     (data.functions ?? []).forEach((f, i) => {
-      const src = functionSourceOf(f as { expr?: string; latex?: string; fn?: string; expression?: string });
+      const src = functionSourceOf(f);
       if (!src) return;
       const fn = parseFunctionString(explicitFunctionSource(src));
       const [d0, d1] = f.domain ?? [x0, x1];

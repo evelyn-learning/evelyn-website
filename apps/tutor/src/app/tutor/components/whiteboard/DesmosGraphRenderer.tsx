@@ -14,6 +14,7 @@ import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 import { parseAxisStep } from '@/lib/tutor/whiteboard/graph-axis';
+import type { GraphFunctionSourceFields } from '@/lib/tutor/whiteboard/graph-function-source';
 import { resolveInequalityEntry, normalizeLineStyle } from '@/lib/tutor/whiteboard/graph-inequalities';
 import { GRAPH_COLORS } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_GRAPH_CURVE_FEATURES } from '@/lib/tutor/orchestrator/turn-round-flags';
@@ -151,6 +152,14 @@ export function getLatex(fn: GraphFunction | GraphFunctionOfY, variable: string 
   if (fn.expr) return looksLikeJs(fn.expr) ? jsExprToLatex(fn.expr, variable) : normalizeBareLatex(fn.expr);
   if (fn.latex) return looksLikeJs(fn.latex) ? jsExprToLatex(fn.latex, variable) : normalizeBareLatex(fn.latex);
   if (fn.fn) return jsExprToLatex(fn.fn, variable);
+  // 2026-10-22 (hw-14 p8, F8): a stored homework graph carried `expression`;
+  // read last, after the fields above — the order is canonical in
+  // whiteboard/graph-function-source. Routed like `expr`, not like `fn`: the
+  // proposer writes plain math ("2.5*cos(3*x*pi/180)+0.5"), and jsExprToLatex
+  // would run "x*pi" together into "xpi". GraphFunction lives in @core and
+  // has no `expression`, so it is widened here.
+  const expression = (fn as GraphFunctionSourceFields).expression;
+  if (expression) return looksLikeJs(expression) ? jsExprToLatex(expression, variable) : normalizeBareLatex(expression);
   return variable;
 }
 

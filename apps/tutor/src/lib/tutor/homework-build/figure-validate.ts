@@ -8,6 +8,7 @@ import { solveGeometry, type ConstructedGeometrySpec } from '../diagrams/geometr
 import { validateFunctionValuePoints } from '../whiteboard/graph-consistency-validator';
 import { parseFunctionString } from '../whiteboard/math-expr';
 import { parseAxisStep, isPiStep } from '../whiteboard/graph-axis';
+import { functionSourceOf } from '../whiteboard/graph-function-source';
 import type { GraphData } from '@core/knowledge/types';
 import type { FigureClaim, FigureCommand } from './types';
 
@@ -392,8 +393,9 @@ export function explicitFunctionSource(src: string): string {
     .replace(/([\dx)])\s*(?=\\?(?:sin|cos|tan|sqrt|abs|log)\b)/g, '$1*').replace(/\\(?=(?:sin|cos|tan|sqrt|abs|log)\b)/g, '');
 }
 
-/** The source of a graph function, whichever field the proposer used. */
-export const functionSourceOf = (f: { expr?: string; latex?: string; fn?: string; expression?: string }): string => f.expr || f.latex || f.fn || f.expression || '';
+/** The source of a graph function, whichever field the proposer used. The
+ *  order is canonical in whiteboard/graph-function-source (the board reads it too). */
+export { functionSourceOf };
 
 /** What the board's graph renderer draws (GraphData). Anything else the proposer invents — hw-11 problem 6 sent a box plot as `segments` — is not drawn, so the figure would be empty axes. */
 const GRAPH_DATA_FIELDS = new Set(['title', 'xLabel', 'yLabel', 'xRange', 'yRange', 'xAxisStep', 'yAxisStep', 'functions', 'functionsOfY', 'points', 'annotations', 'shadedRegion', 'inequalities']);

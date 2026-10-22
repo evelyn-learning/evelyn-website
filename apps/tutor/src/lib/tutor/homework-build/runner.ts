@@ -6,7 +6,7 @@
 
 import { getLessonPlan } from '../lesson-plan/store';
 import { homeworkProblemsOf } from '../lesson-plan/homework';
-import { buildFigure, defaultFigureBuildDeps, type FigureBuildDeps } from './figure-build';
+import { buildFigure, defaultFigureBuildDeps, normalizeFigureDisplay, type FigureBuildDeps } from './figure-build';
 import { figureToSvg } from './figure-svg';
 import { validateFigure } from './figure-validate';
 import { hasFigureDescription } from '../lesson-plan/homework-problem-meta';
@@ -75,8 +75,10 @@ export async function runHomeworkBuild(
         if (!v.ok) console.warn(`[homework-build] n=${p.n} cached figure rejected by the current validator, retrying: ${v.reasons.join('; ').slice(0, 300)}`);
       }
       if (cached && cached.status === 'ready' && (cachedFigureOk || (!cached.figure && !hasFigureDescription(p.text)))) {
+        // 2026-10-22 (hw-14 p8, F8): a cached figure is stored the way a fresh
+        // one is (a graph's `expression` → `expr`, which the board reads).
         patch = {
-          status: 'ready', figure: cached.figure, figureNote: cached.figureNote,
+          status: 'ready', figure: normalizeFigureDisplay(cached.figure ?? null, p.text), figureNote: cached.figureNote,
           ...(cached.figureSvg ? { figureSvg: cached.figureSvg } : {}),
           key: cached.key, verify: cached.verify, ms: 0,
         };

@@ -11,6 +11,7 @@
  */
 import { jsExprToLatex, getLatex } from '../src/app/tutor/components/whiteboard/DesmosGraphRenderer';
 import { latexToJs } from '../src/lib/tutor/whiteboard/intersection-validator';
+import { functionSourceOf } from '../src/lib/tutor/whiteboard/graph-function-source';
 
 let passed = 0;
 let failed = 0;
@@ -34,6 +35,14 @@ check('Math.sqrt still converts', jsExprToLatex('Math.sqrt(x+1)').includes('\\sq
 check('getLatex(expr with Math.) converts', !/Math\./.test(getLatex({ expr: SESSION_EXPR, label: 'f' } as never)));
 check('getLatex(expr with **) converts', getLatex({ expr: 'x**2 + 1', label: 'f' } as never).includes('x^2'));
 check('getLatex(plain latex) untouched path', getLatex({ expr: 'e^{2x} - 1', label: 'f' } as never).includes('e^{2x}'));
+
+// 2026-10-22 (hw-14 p8, F8): a stored homework graph carried `expression`; the
+// renderers read only expr | latex | fn and drew y = x.
+check('getLatex({ expression }) → its latex, not the variable', getLatex({ expression: 'x^2' } as never) === 'x^{2}' || getLatex({ expression: 'x^2' } as never) === 'x^2', getLatex({ expression: 'x^2' } as never));
+check('getLatex({ expression }) keeps pi a symbol (hw-14 p8)', getLatex({ expression: '2.5*cos(3*x*pi/180)+0.5' } as never) === getLatex({ expr: '2.5*cos(3*x*pi/180)+0.5' } as never) && getLatex({ expression: '2.5*cos(3*x*pi/180)+0.5' } as never).includes('\\pi'), getLatex({ expression: '2.5*cos(3*x*pi/180)+0.5' } as never));
+check('getLatex: expr still wins over expression', getLatex({ expr: 'x+1', expression: 'x^2' } as never) === 'x+1', getLatex({ expr: 'x+1', expression: 'x^2' } as never));
+check('functionSourceOf reads expression last', functionSourceOf({ expression: '2.5*cos(3*x*pi/180)+0.5' }) === '2.5*cos(3*x*pi/180)+0.5');
+check('functionSourceOf order expr > latex > fn > expression', functionSourceOf({ fn: 'c', latex: 'b', expression: 'd' }) === 'b' && functionSourceOf({ fn: 'c', expression: 'd' }) === 'c' && functionSourceOf({}) === '');
 
 // latexToJs: JS expression is evaluable → numeric validators see the curve
 const js = latexToJs(SESSION_EXPR, 'x');

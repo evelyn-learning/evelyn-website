@@ -30,6 +30,9 @@ function assertTestDb(): void {
 }
 
 async function main() {
+  // 2026-10-22 (hw-14 p8): the stored figure as the HomeworkBuild dump has it — `expression`, not `expr`.
+  const HW14_P8 = "The graph of y = a cos(bx) + d is shown (x in degrees). [Graph: A cosine curve on a grid. The x-axis runs from 0 to 360, labelled at 60, 120, 180, 240, 300, and 360. The y-axis is labelled 3, 2, 1, −1, −2. The curve has maxima of 3 at x = 0, 120, 240, and 360. It has minima of −2 at x = 60, 180, and 300. A horizontal line is drawn at y = 0.]\n(a) Find the amplitude, period, and midline.\n(b) Find a, b, and d.";
+  const hw14p8Fig = () => ({ action: 'showGraph', type: 'function', data: { xLabel: 'x', yLabel: 'y', xRange: [0, 360], yRange: [-2.5, 3.5], xAxisStep: 60, yAxisStep: 1, functions: [{ expression: '2.5*cos(3*x*pi/180)+0.5' }] } });
   // ---- 2 validate (pure; runs before any Mongo work) ----
   console.log('2 validate');
   {
@@ -294,6 +297,24 @@ async function main() {
       assert.equal(await figureToSvg({ action: 'showGeometryConstructed', given: [], steps: [{ id: 'M', kind: 'midpoint', of: ['A', 'Z'] }] } as Fig), null);
       assert.equal(await figureToSvg(null), null);
     });
+    await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
+      // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
+      // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.
+      const { graphToSvg } = await import('../src/lib/tutor/homework-build/graph-svg');
+      const yLabels = (svg: string) => [...svg.matchAll(/<text x="([-\d.]+)" y="[-\d.]+" text-anchor="(start|end)" font-size="11"[^>]*>([^<]+)<\/text>/g)]
+        .map((m) => ({ x: Number(m[1]), anchor: m[2], text: m[3] }));
+      const left = (l: { x: number; anchor: string; text: string }) => (l.anchor === 'end' ? l.x - 7 * l.text.length : l.x);
+      const svg = graphToSvg(hw14p8Fig().data as never)!;
+      const ys = yLabels(svg);
+      for (const t of ['3', '-2']) {
+        const l = ys.find((y) => y.text === t);
+        assert.ok(l, `y label ${t} drawn: ${JSON.stringify(ys)}`);
+        assert.ok(l!.x >= 0 && left(l!) >= 44, `y label ${t} inside the plot: ${JSON.stringify(l)}`);
+      }
+      // A graph whose y-axis is mid-plot keeps its labels right-aligned left of the axis.
+      const mid = yLabels(graphToSvg({ xLabel: '', yLabel: '', xRange: [-5, 5], yRange: [-5, 5], functions: [{ fn: 'x' }] } as never)!);
+      assert.ok(mid.length > 0 && mid.every((l) => l.anchor === 'end' && l.x === 258), JSON.stringify(mid.slice(0, 2)));
+    });
 
     // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
     console.log('3 build figure');
@@ -376,6 +397,17 @@ async function main() {
         { kind: 'bogus' }, null,
       ]);
       assert.equal(cl.length, 2);
+    });
+    await section('normalizeFigureDisplay (hw-14 p8, F8): a graph function stored as `expression` is stored as `expr`', async () => {
+      const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
+      const out = normalizeFigureDisplay(hw14p8Fig() as Fig, HW14_P8) as { data: { functions: Array<Record<string, unknown>>; xRange: number[] } };
+      assert.equal(out.data.functions[0].expr, '2.5*cos(3*x*pi/180)+0.5');
+      assert.ok(!('expression' in out.data.functions[0]), JSON.stringify(out.data.functions[0]));
+      assert.deepEqual(out.data.xRange, [0, 360], 'the rest of the data kept');
+      // An `expr` already present wins; x = f(y) curves are normalised the same way.
+      const both = normalizeFigureDisplay({ action: 'showGraph', type: 'function', data: { xRange: [0, 1], yRange: [0, 1], functions: [{ expr: 'x', expression: 'x^2' }], functionsOfY: [{ expression: 'y^2' }] } } as never, '') as { data: { functions: Array<Record<string, unknown>>; functionsOfY: Array<Record<string, unknown>> } };
+      assert.equal(both.data.functions[0].expr, 'x');
+      assert.deepEqual(both.data.functionsOfY[0], { expr: 'y^2' });
     });
     await section('I5 geometry display: grid/axes off unless the text is on a coordinate plane', async () => {
       const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
@@ -692,6 +724,21 @@ async function main() {
       assert.equal(b.problems[0].key!.parts[0].final, '5');
     });
 
+    await section('a cached ready graph stored with `expression` is copied with `expr` (hw-14 p8, F8)', async () => {
+      // The board's renderers read expr | latex | fn; a cached figure is copied
+      // through the same normaliser as a fresh one.
+      await ensureHomeworkBuild('gen-e0', 'greenapple', [{ n: 1, text: HW14_P8 }]);
+      await patchProblemBuild('gen-e0', 1, {
+        status: 'ready', figure: hw14p8Fig() as never,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+      });
+      await mkPlan('gen-e1', [HW14_P8]);
+      const { deps, order } = mkDeps();
+      await runHomeworkBuild('gen-e1', 'greenapple', { deps, concurrency: 1 });
+      assert.deepEqual(order, [], 'copied, not rebuilt');
+      const f = (await getHomeworkBuild('gen-e1'))!.problems[0].figure as unknown as { data: { functions: Array<Record<string, unknown>> } };
+      assert.deepEqual(f.data.functions[0], { expr: '2.5*cos(3*x*pi/180)+0.5' });
+    });
     await section('an unverified cached entry is ignored and rebuilt', async () => {
       await ensureHomeworkBuild('gen-u0', 'greenapple', [{ n: 1, text: 'Unver 1' }]);
       await patchProblemBuild('gen-u0', 1, { status: 'unverified', verify: { agreed: false } });
