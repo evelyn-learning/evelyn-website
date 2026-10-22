@@ -10,7 +10,7 @@ import { buildFigure, defaultFigureBuildDeps, normalizeFigureDisplay, type Figur
 import { figureToSvg } from './figure-svg';
 import { validateFigure } from './figure-validate';
 import { hasFigureDescription } from '../lesson-plan/homework-problem-meta';
-import { solveKey, defaultKeySolveDeps, type KeySolveDeps } from './key-solve';
+import { solveKey, defaultKeySolveDeps, type KeySolveDeps, type KeySolveResult } from './key-solve';
 import { ensureHomeworkBuild, findCachedProblem, patchProblemBuild } from './store';
 import type { ProblemBuild } from './types';
 
@@ -28,6 +28,24 @@ export function buildNeedsKick(build: { done?: boolean; updatedAt?: Date | strin
   if (build.done) return false;
   const at = build.updatedAt != null ? new Date(build.updatedAt).getTime() : NaN;
   return !Number.isFinite(at) || now - at > BUILD_STALE_MS;
+}
+
+/** The stored verdict of a key solve. */
+const verifyOf = (keyRes: KeySolveResult): ProblemBuild['verify'] => ({
+  agreed: keyRes.agreed,
+  ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
+  ...(keyRes.note ? { note: keyRes.note } : {}),
+});
+
+/**
+ * round 11 final review (I2): the re-solve of a stepless verified key only
+ * adds a path. When it yields no key, the cached verified key and its verdict
+ * are kept — a refresh never demotes a problem to unverified.
+ */
+function refreshedKey(n: number, keyRes: KeySolveResult, cached: Pick<ProblemBuild, 'key' | 'verify'>): Pick<ProblemBuild, 'key' | 'verify'> {
+  if (keyRes.key) return { key: keyRes.key, verify: verifyOf(keyRes) };
+  console.warn(`[homework-build] n=${n} steps refresh failed: ${keyRes.note ?? keyRes.candidates.join('; ')}, keeping the verified key`);
+  return { key: cached.key, verify: cached.verify };
 }
 
 export interface RunnerDeps { figure: FigureBuildDeps; key: KeySolveDeps; now?: () => number }
@@ -83,14 +101,9 @@ export async function runHomeworkBuild(
       if (cached && cached.status === 'ready' && figureCopyable && keyStale) {
         const keyRes = await solveKey(p, deps.key);
         patch = {
-          status: keyRes.key ? 'ready' : 'unverified', figure: cachedFigure, figureNote: cached.figureNote,
+          status: 'ready', figure: cachedFigure, figureNote: cached.figureNote,
           ...(cached.figureSvg ? { figureSvg: cached.figureSvg } : {}),
-          key: keyRes.key,
-          verify: {
-            agreed: keyRes.agreed,
-            ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
-            ...(keyRes.note ? { note: keyRes.note } : {}),
-          },
+          ...refreshedKey(p.n, keyRes, cached),
           ms: now() - t0,
           ...(keyRes.tokens ? { tokens: { in: keyRes.tokens.in, out: keyRes.tokens.out } } : {}),
         };
@@ -111,18 +124,9 @@ export async function runHomeworkBuild(
         const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), keyStale ? solveKey(p, deps.key) : Promise.resolve(null)]);
         const fi = fig.tokens, ki = keyRes?.tokens;
         patch = {
-          status: keyRes && !keyRes.key ? 'unverified' : 'ready', figure: fig.figure, figureNote: fig.note,
+          status: 'ready', figure: fig.figure, figureNote: fig.note,
           ...(await svgOf(fig.figure)),
-          ...(keyRes
-            ? {
-                key: keyRes.key,
-                verify: {
-                  agreed: keyRes.agreed,
-                  ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
-                  ...(keyRes.note ? { note: keyRes.note } : {}),
-                },
-              }
-            : { key: cached.key, verify: cached.verify }),
+          ...(keyRes ? refreshedKey(p.n, keyRes, cached) : { key: cached.key, verify: cached.verify }),
           ms: now() - t0,
           ...(fi || ki ? { tokens: { in: (fi?.in ?? 0) + (ki?.in ?? 0), out: (fi?.out ?? 0) + (ki?.out ?? 0) } } : {}),
         };
@@ -135,11 +139,7 @@ export async function runHomeworkBuild(
           figureNote: fig.note,
           ...(await svgOf(fig.figure)),
           key: keyRes.key,
-          verify: {
-            agreed: keyRes.agreed,
-            ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
-            ...(keyRes.note ? { note: keyRes.note } : {}),
-          },
+          verify: verifyOf(keyRes),
           ms: now() - t0,
           ...(fi || ki ? { tokens: { in: (fi?.in ?? 0) + (ki?.in ?? 0), out: (fi?.out ?? 0) + (ki?.out ?? 0) } } : {}),
         };

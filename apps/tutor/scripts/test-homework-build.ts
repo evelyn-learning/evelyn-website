@@ -660,6 +660,23 @@ async function main() {
       assert.deepEqual(r3.key!.solvers, ['plangen-vision', 'plangen-vision-tiebreak']); assert.deepEqual(r3.key!.steps, sB);
       assert.equal((await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('1', 1)], null))).key!.steps, undefined, 'no steps → field absent');
     });
+    await section('final review (I1): the tie-break counts as the Opus role; a stepless Opus path yields to the other agreeing path; steps keyed by slot', async () => {
+      const N: [string, string, string] = ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'];
+      const sA = [{ relation: 'A route', value: 'x = 3' }];
+      const sB = [{ relation: 'B route', value: 'x = 4' }];
+      const sT = [{ relation: 'T route', value: 'x = 3' }];
+      const withA = await solveKey({ n: 1, text: 'q' }, { ...mk([num('3', 3)], [num('4', 4)], [num('3', 3)], { a: sA, b: sB, t: sT }), names: N });
+      assert.deepEqual(withA.key!.solvers, ['content-verify', 'plangen-vision-tiebreak']);
+      assert.deepEqual(withA.key!.steps, sT, 'withA: the tie-break (Opus) path, not content-verify\'s');
+      const withB = await solveKey({ n: 1, text: 'q' }, { ...mk([num('3', 3)], [num('4', 4)], [num('4', 4)], { a: sA, b: sB, t: [{ relation: 'T', value: 'x = 4' }] }), names: N });
+      assert.deepEqual(withB.key!.steps, sB, 'withB: plangen-vision over its tie-break');
+      const r6 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('3', 3)], [num('3', 3)], null, { a: sA }), names: N });
+      assert.deepEqual(r6.key!.steps, sA, 'R6: Opus returned no steps, the other agreeing path is stored');
+      // Same parts array returned by two solvers: slot keying keeps their paths apart.
+      const shared = [num('3', 3)];
+      const sameArr = await solveKey({ n: 1, text: 'q' }, { ...mk(shared, shared, null, { a: sA, b: [{ relation: 'B', value: 'x = 3' }] }), names: N });
+      assert.deepEqual(sameArr.key!.steps, [{ relation: 'B', value: 'x = 3' }], 'one parts array, two solvers: the Opus slot\'s path');
+    });
     await section('round 11: normalizeKeySteps drops empty relations, caps at 8, trims, omits empty values', () => {
       assert.deepEqual(normalizeKeySteps([{ relation: ' a ', value: ' 1 ' }, { relation: '', value: '2' }, { relation: 'b', value: '' }, null, 'x']), [{ relation: 'a', value: '1' }, { relation: 'b' }]);
       assert.equal(normalizeKeySteps(Array.from({ length: 10 }, (_, i) => ({ relation: `s${i}` }))).length, 8);
@@ -946,7 +963,7 @@ async function main() {
       await ensureHomeworkBuild('gen-e0', 'greenapple', [{ n: 1, text: HW14_P8 }]);
       await patchProblemBuild('gen-e0', 1, {
         status: 'ready', figure: hw14p8Fig() as never,
-        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'], steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9,
       });
       await mkPlan('gen-e1', [HW14_P8]);
       const { deps, order } = mkDeps();
@@ -1004,6 +1021,37 @@ async function main() {
       assert.deepEqual(c.order, ['Retry 2 [Figure: a box ABCD]']);
       assert.equal(solves2, 0, 'a key with steps is kept');
       assert.deepEqual((await getHomeworkBuild('gen-b3'))!.problems[0].key!.steps, [{ relation: 'x = 5' }]);
+    });
+
+    await section('final review (I2): a stepless re-solve that yields no key keeps the verified key (figure copied; figure retried)', async () => {
+      const key = { parts: [{ label: '', final: '20', canonical: { kind: 'number' as const, value: 20 } }], solvers: ['A', 'B'] };
+      const verify = { agreed: true };
+      const fig = { action: 'showGeometryConstructed', given: [{ id: 'A', kind: 'point', x: 0, y: 0, label: 'A' }, { id: 'B', kind: 'point', x: 4, y: 0, label: 'B' }], steps: [] };
+      const failing = async () => ({ parts: null, usage: { in: 3, out: 1 } });
+      // Branch 1: the cached figure is copied, the key re-solve fails.
+      await ensureHomeworkBuild('gen-d0', 'greenapple', [{ n: 1, text: 'Demote 1 [Figure: a segment AB]' }]);
+      await patchProblemBuild('gen-d0', 1, { status: 'ready', figure: fig as never, figureSvg: '<svg/>', key, verify, ms: 9 });
+      await mkPlan('gen-d1', ['Demote 1 [Figure: a segment AB]']);
+      const a = mkDeps();
+      a.deps.key.solveA = failing; a.deps.key.solveB = failing;
+      await runHomeworkBuild('gen-d1', 'greenapple', { deps: a.deps, concurrency: 1 });
+      assert.deepEqual(a.order, [], 'the figure was not rebuilt');
+      const p1 = (await getHomeworkBuild('gen-d1'))!.problems[0];
+      assert.equal(p1.status, 'ready', 'never demoted to unverified');
+      assert.deepEqual(p1.key, key); assert.deepEqual(p1.verify, verify);
+      assert.deepEqual((p1.figure as unknown as typeof fig).given, fig.given); assert.equal(p1.figureSvg, '<svg/>');
+      assert.deepEqual(p1.tokens, { in: 6, out: 2 }, 'tokens still summed');
+      // Branch 3: the figure is retried, the key re-solve fails.
+      await ensureHomeworkBuild('gen-d2', 'greenapple', [{ n: 1, text: 'Demote 2 [Figure: a box ABCD]' }]);
+      await patchProblemBuild('gen-d2', 1, { status: 'ready', figure: null, key, verify, ms: 9 });
+      await mkPlan('gen-d3', ['Demote 2 [Figure: a box ABCD]']);
+      const b = mkDeps();
+      b.deps.key.solveA = failing; b.deps.key.solveB = failing;
+      await runHomeworkBuild('gen-d3', 'greenapple', { deps: b.deps, concurrency: 1 });
+      assert.deepEqual(b.order, ['Demote 2 [Figure: a box ABCD]'], 'the figure dep was called');
+      const p2 = (await getHomeworkBuild('gen-d3'))!.problems[0];
+      assert.equal(p2.status, 'ready');
+      assert.deepEqual(p2.key, key); assert.deepEqual(p2.verify, verify);
     });
 
     await section('an unverified cached entry is ignored and rebuilt', async () => {

@@ -244,33 +244,40 @@ const describe = (name: string, ps: AnswerPart[] | null): string =>
 
 export async function solveKey(problem: { n: number; text: string }, deps: KeySolveDeps): Promise<KeySolveResult> {
   let tokens: { in: number; out: number } | undefined;
-  const steps = new Map<AnswerPart[], KeyStep[]>();
-  const safe = async (fn: SolveFn): Promise<AnswerPart[] | null> => {
+  type Slot = 'a' | 'b' | 't';
+  const steps = new Map<Slot, KeyStep[]>();
+  const safe = async (slot: Slot, fn: SolveFn): Promise<AnswerPart[] | null> => {
     try {
       const r = await fn(problem.text);
       if (r?.usage) tokens = { in: (tokens?.in ?? 0) + r.usage.in, out: (tokens?.out ?? 0) + r.usage.out };
-      if (r?.parts && r.steps?.length) steps.set(r.parts, r.steps);
+      if (r?.parts && r.steps?.length) steps.set(slot, r.steps);
       return r?.parts ?? null;
     } catch { return null; }
   };
-  /** The agreeing pair's path: the 'plangen-vision' solver's when it is one of them, else the first agreeing solver's. */
-  const keyOf = (pair: Array<[string, AnswerPart[]]>): AnswerKey => {
-    const opus = pair.find(([name]) => name === 'plangen-vision');
-    const st = steps.get((opus ?? pair[0])[1]);
-    return { parts: pair[0][1], solvers: pair.map(([name]) => name), ...(st?.length ? { steps: st } : {}) };
+  /**
+   * The agreeing pair's path. The Opus role ('plangen-vision*', the tie-break
+   * included) is preferred, its non-tie-break solve first; otherwise pair order.
+   * A preferred solver without steps yields to the other agreeing solver's
+   * path (final review R6: any agreeing path beats none).
+   */
+  const keyOf = (pair: Array<[Slot, string, AnswerPart[]]>): AnswerKey => {
+    const rank = ([slot, name]: [Slot, string, AnswerPart[]]): number => (name.startsWith('plangen-vision') ? (slot === 't' ? 1 : 0) : 2);
+    const ordered = pair.map((e, i) => ({ e, i })).sort((x, y) => rank(x.e) - rank(y.e) || x.i - y.i).map(({ e }) => e);
+    const st = ordered.map(([slot]) => steps.get(slot)).find((s) => s?.length);
+    return { parts: pair[0][2], solvers: pair.map(([, name]) => name), ...(st?.length ? { steps: st } : {}) };
   };
   const out = async (r: KeySolveResult): Promise<KeySolveResult> => (tokens ? { ...r, tokens } : r);
   const [n0, n1, n2] = deps.names;
-  const [a, b] = await Promise.all([safe(deps.solveA), safe(deps.solveB)]);
-  if (a && b && partsAgree(a, b)) return out({ key: keyOf([[n0, a], [n1, b]]), agreed: true, candidates: [] });
+  const [a, b] = await Promise.all([safe('a', deps.solveA), safe('b', deps.solveB)]);
+  if (a && b && partsAgree(a, b)) return out({ key: keyOf([['a', n0, a], ['b', n1, b]]), agreed: true, candidates: [] });
 
   if (!a && !b) return out({ key: null, agreed: false, candidates: [describe(n0, a), describe(n1, b)], note: 'both solvers failed' });
-  const t = await safe(deps.solveTieBreak);
+  const t = await safe('t', deps.solveTieBreak);
   const candidates = [describe(n0, a), describe(n1, b), describe(n2, t)];
   const withA = !!(t && a && partsAgree(a, t));
   const withB = !!(t && b && partsAgree(b, t));
   if (withA && withB) return out({ key: null, agreed: false, candidates, note: 'ambiguous: tie-break matches both disagreeing solvers' });
-  if (withA) return out({ key: keyOf([[n0, a!], [n2, t!]]), agreed: true, candidates: [] });
-  if (withB) return out({ key: keyOf([[n1, b!], [n2, t!]]), agreed: true, candidates: [] });
+  if (withA) return out({ key: keyOf([['a', n0, a!], ['t', n2, t!]]), agreed: true, candidates: [] });
+  if (withB) return out({ key: keyOf([['b', n1, b!], ['t', n2, t!]]), agreed: true, candidates: [] });
   return out({ key: null, agreed: false, candidates });
 }
