@@ -565,14 +565,37 @@ async function main() {
       for (const re of STATED_REASON) assert.match(block, re);
       assert.ok(!/complement|supplement|angle/i.test(block), 'no example topic in the rule');
     });
-    await section('F6 non-keyed correct (no homeworkProblem / model-check result): no stated-reason rule', async () => {
-      const okLlm = async () => ({ text: JSON.stringify({ proposed_value: '20', problem_final_answer: '20', proposed_equals_final_answer: true, answers: 'overall_problem', target: 'x', correct_value: '20', verdict: 'correct', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 });
+    // Final review (F6): the rule follows the one-problem session (hpKey), not
+    // the path that judged it — a right value the key leaves undecided ("so it
+    // is twenty") and the model check confirms gets the rule too; a session
+    // without hpKey keeps byte-identical frames.
+    await section('F6 model-checked correct: rule present WITH hpKey, absent WITHOUT', async () => {
+      let okCalls = 0;
+      const okLlm = async () => (okCalls++, { text: JSON.stringify({ proposed_value: '20', problem_final_answer: '20', proposed_equals_final_answer: true, answers: 'overall_problem', target: 'x', correct_value: '20', verdict: 'correct', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 });
       const plain = await run('x = 60/3 = 20', { verdictPrecheckDeps: { llm: okLlm } });
       assert.ok(plain.content.includes('<answer_check>'), 'model-check block injected');
       for (const re of STATED_REASON) assert.ok(!re.test(plain.content), `no-hp frame contains ${re}`);
       const modelChecked = await run('so it is twenty', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: okLlm } });
-      assert.ok(modelChecked.content.includes('<answer_check>'), 'model-check block injected');
-      for (const re of STATED_REASON) assert.ok(!re.test(modelChecked.content), `model-checked frame contains ${re}`);
+      assert.ok(okCalls > 0, 'the model check ran (the key left it undecided)');
+      const block = answerCheckOf(modelChecked.content);
+      assert.ok(block.length > 0, 'model-check block injected');
+      for (const re of STATED_REASON) assert.match(block, re);
+    });
+    await section('F6 carried correct verdict (transport retry): rule kept WITH hpKey, absent WITHOUT — text and voice', async () => {
+      const carry = { answers: 'overall_problem' as const, target: 'x', proposed: '20', verdict: 'correct' as const, confidence: 'high' as const };
+      const note = '[validator feedback — not from the student] …';
+      const text = { studentTranscript: note, studentMessage: undefined, noRevealLedger: false, verdictPrecheckCarry: carry, verdictPrecheckDeps: undefined };
+      const voice = { ...text, textVerdictPrecheck: false, textTurnShape: false, textWorkThenMatch: false, voiceVerdictPrecheck: true };
+      for (const [label, extra] of [['text', text], ['voice', voice]] as const) {
+        const withHp = answerCheckOf((await run(note, { ...extra, homeworkProblem: verifiedHp })).content);
+        assert.ok(withHp.length > 0, `${label}: carried <answer_check> present`);
+        for (const re of STATED_REASON) assert.match(withHp, re, label);
+        const noHp = (await run(note, extra)).content;
+        assert.ok(noHp.includes('<answer_check>'), `${label}: carried block without hp`);
+        for (const re of STATED_REASON) assert.ok(!re.test(noHp), `${label}: no-hp carried frame contains ${re}`);
+        const wrong = answerCheckOf((await run(note, { ...extra, homeworkProblem: verifiedHp, verdictPrecheckCarry: { ...carry, verdict: 'incorrect' } })).content);
+        for (const re of STATED_REASON) assert.ok(!re.test(wrong), `${label}: carried incorrect contains ${re}`);
+      }
     });
     await section('F6 formatAnswerCheckBlock: statedReasonCheck adds the rule only to a correct verdict; unset is byte-identical', async () => {
       const { formatAnswerCheckBlock, STATED_REASON_CHECK_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');

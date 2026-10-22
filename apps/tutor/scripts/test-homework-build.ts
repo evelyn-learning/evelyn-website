@@ -207,6 +207,17 @@ async function main() {
       assert.equal(validateFigure(two, { problemText: P5, claims }).ok, false, 'two words are a label, not a caption');
       assert.equal(validateFigure(goodFig('DB = the rest'), { problemText: P5, claims }).ok, false, 'a relation is a label, not a caption');
     });
+    await section('a dropped caption on a helper point: normalising twice equals normalising once (final review, F8-cache)', async () => {
+      // The runner normalises a cached figure that was normalised when built;
+      // the second pass must not hide a helper letter the first pass left shown.
+      const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
+      const g = goodFig();
+      const cap = { ...g, given: [...g.given, { id: 'P1', kind: 'point', x: 1, y: 1, label: 'the helper point here' }] } as Fig;
+      const once = normalizeFigureDisplay(cap, P5);
+      assert.deepEqual(normalizeFigureDisplay(once, P5), once);
+      const p1 = (once as unknown as { given: Array<{ id: string; label?: string }> }).given.find((o) => o.id === 'P1');
+      assert.equal(p1?.label, '', 'the helper the sheet never names is unlettered on pass 1');
+    });
     await section('hw-13 p4: a stored figure keeps the sheet\'s length labels even when the drawing is not to scale', async () => {
       // GAC acceptance 2026-10-22: the pyramid's slant height "13" vanished —
       // the solver drops a numeric segment label that disagrees with the drawn
@@ -376,6 +387,16 @@ async function main() {
       const d = mkDeps(async () => (d.calls.length > 1 ? { figure: null, claims: [], note: 'propose_failed:APIError' } : { figure: ws3p5Bad, claims: [] }));
       const r = await buildFigure({ n: 5, text: P5 }, d);
       assert.equal(r.figure, null); assert.match(r.note ?? '', /on_segment/);
+    });
+    await section('a graph proposed with `expression` and a labelled point is accepted on attempt 1 and stored with `expr` (final review, F8)', async () => {
+      const T = 'The line y = 2x + 1 passes through point P.';
+      const proposed = { action: 'showGraph', type: 'function', data: { xLabel: 'x', yLabel: 'y', xRange: [-5, 5], yRange: [-5, 5], functions: [{ expression: '2*x+1' }], points: [{ x: 0, y: 1, label: 'P' }] } } as unknown as Fig;
+      const d = mkDeps(async () => ({ figure: proposed, claims: [] }), []);
+      const r = await buildFigure({ n: 3, text: T }, d);
+      assert.equal(r.attempts, 1, r.note);
+      assert.equal(d.calls.length, 1);
+      const fns = (r.figure as unknown as { data: { functions: Array<Record<string, unknown>> } }).data.functions;
+      assert.deepEqual(fns, [{ expr: '2*x+1' }]);
     });
     await section('a synchronously throwing extractClaims cannot escape', async () => {
       const d: Deps = { async propose() { return { figure: null, claims: [], note: 'no figure' }; }, extractClaims() { throw new Error('sync'); } };

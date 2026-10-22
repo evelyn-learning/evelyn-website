@@ -137,10 +137,14 @@ export function normalizeFigureDisplay(figure: FigureCommand | null, problemText
   // text gets an empty label: the sheet never names it, so the board does not.
   const own = (o: unknown): o is { kind?: unknown; id?: unknown; label?: unknown } => !!o && typeof o === 'object';
   const unname = (arr: unknown) => Array.isArray(arr)
-    ? arr.map((o) => {
-      if (!own(o)) return o;
-      // A caption the proposer added (isCaptionLabel) is not on the sheet: drop it.
-      if (typeof o.label === 'string' && isCaptionLabel(o.label)) { const { label: _drop, ...rest } = o; void _drop; return rest; }
+    ? arr.map((orig) => {
+      if (!own(orig)) return orig;
+      let o = orig;
+      // A caption the proposer added (isCaptionLabel) is not on the sheet: drop
+      // it, then fall through to the unnamed-id rule (final review, F8-cache:
+      // returning here left a helper lettered by its id on pass 1 and unlettered
+      // on the runner's cached-copy pass 2).
+      if (typeof o.label === 'string' && isCaptionLabel(o.label)) { const { label: _drop, ...rest } = o; void _drop; o = rest; }
       if (typeof o.kind !== 'string' || !POINT_KINDS.has(o.kind) || typeof o.id !== 'string' || o.label !== undefined) return o;
       // A one-letter id is a point name only when the text names that point
       // (an article "A" is not); a longer id (P1, foot_1) is a helper.
@@ -300,8 +304,11 @@ export async function buildFigure(
       if (!reasons.length) reasons = [proposal.note];   // a failed call is an attempt; keep any validator reasons already found
       continue;
     }
-    const v = validateFigure(proposal.figure, { problemText: problem.text, claims: all });
-    if (v.ok) return withTokens({ figure: normalizeFigureDisplay(proposal.figure, problem.text), attempts: attempt, claims: all });
+    // Final review (F8): normalise first, so the figure validated is the
+    // figure stored (a graph's `expression` is already `expr`).
+    const figure = normalizeFigureDisplay(proposal.figure, problem.text)!;
+    const v = validateFigure(figure, { problemText: problem.text, claims: all });
+    if (v.ok) return withTokens({ figure, attempts: attempt, claims: all });
     reasons = v.reasons;
     // The rejected proposal itself, for the build notes: the note alone
     // ("not on any plotted function") said nothing about WHAT was drawn.

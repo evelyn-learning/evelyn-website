@@ -68,9 +68,12 @@ export async function runHomeworkBuild(
       // existed, and a re-upload within 24 h copied it). Claims are not
       // re-extracted — this is the static half: labels from the text, known
       // graph fields, a solvable construction.
+      // Final review (F8): normalised first, as buildFigure does, so the copy
+      // validated is the copy stored.
+      const cachedFigure = cached?.status === 'ready' ? normalizeFigureDisplay(cached.figure ?? null, p.text) : null;
       let cachedFigureOk = false;
-      if (cached?.status === 'ready' && cached.figure) {
-        const v = validateFigure(cached.figure, { problemText: p.text, claims: [] });
+      if (cached?.status === 'ready' && cachedFigure) {
+        const v = validateFigure(cachedFigure, { problemText: p.text, claims: [] });
         cachedFigureOk = v.ok;
         if (!v.ok) console.warn(`[homework-build] n=${p.n} cached figure rejected by the current validator, retrying: ${v.reasons.join('; ').slice(0, 300)}`);
       }
@@ -78,7 +81,7 @@ export async function runHomeworkBuild(
         // 2026-10-22 (hw-14 p8, F8): a cached figure is stored the way a fresh
         // one is (a graph's `expression` → `expr`, which the board reads).
         patch = {
-          status: 'ready', figure: normalizeFigureDisplay(cached.figure ?? null, p.text), figureNote: cached.figureNote,
+          status: 'ready', figure: cachedFigure, figureNote: cached.figureNote,
           ...(cached.figureSvg ? { figureSvg: cached.figureSvg } : {}),
           key: cached.key, verify: cached.verify, ms: 0,
         };

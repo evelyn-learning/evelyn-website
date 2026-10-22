@@ -215,5 +215,14 @@ test('labelIsFromText: a single token with a trailing degree sign (F5)', () => {
   assert.equal(labelIsFromText('42°', '42° at B'), true);
 });
 
+test('a graph function written as `expression` is plotted: a labelled point on it holds, one off it fails (final review, F8)', () => {
+  const T = 'The line y = 2x + 1 passes through point P.';
+  const fig = (y: number) => ({ action: 'showGraph', type: 'function', data: { xLabel: 'x', yLabel: 'y', xRange: [-5, 5], yRange: [-5, 5], functions: [{ expression: '2*x+1' }], points: [{ x: 0, y, label: 'P' }] } }) as unknown as Parameters<typeof validateFigure>[0];
+  assert.deepEqual(validateFigure(fig(1), { problemText: T, claims: [] }), { ok: true });
+  const off = validateFigure(fig(2), { problemText: T, claims: [] });
+  assert.equal(off.ok, false);
+  assert.match(off.ok ? '' : off.reasons.join('; '), /point \(0, 2\) is not on any plotted function/);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

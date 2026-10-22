@@ -412,7 +412,9 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
   const ySpan = Math.abs(data.yRange[1] - data.yRange[0]) || 1;
   const tol = 1e-3 * ySpan;
   const evals = fns.map((f) => {
-    const src = f.expr || f.latex || f.fn || '';
+    // Final review (F8): the same field order as the board renderers, so a
+    // function written as `expression` is plotted here too.
+    const src = functionSourceOf(f);
     // parseFunctionString does not insert the '*' in "3sin(2x)" (its function-name
     // lookbehind rejects a leading digit), so make the multiplication explicit first.
     // 2026-10-21 (hw-10 problem 8): the sheet writes π, and so did the proposer
