@@ -73,15 +73,20 @@ async function main() {
     has(pf, /h-\[280px\] sm:h-\[400px\]/);
     has(pf, /<CommandRenderer command=\{figure as unknown as WhiteboardCommand\} \/>/);
   });
-  await section('one-problem session: the question pin sits above the board card, never floating over the figure', () => {
+  await section('one-problem session: the question pin lives in the board flow under the figure, never floating over it', () => {
     // GAC acceptance 2026-10-22 (hw-13): the floating Q-pin covered the figure.
+    // Round 11 (owner ruling): not a row above the card either (the figure
+    // jumped down) — the pin goes to the WhiteboardCanvas through
+    // BoardLeadPinContext (markup + layout proof: scripts/test-stage-qpin-static.tsx).
     has(stage, /const qpinStatic = problemPanel != null;/);
-    has(stage, /\{questionPin && qpinMode === 'expanded' && qpinStatic && \(/);
-    has(stage, /data-testid="question-pin-static"/);
+    has(stage, /const pinInBoard = qpinStatic && qpinMode === 'expanded' \? questionPin : null;/);
+    has(stage, /<BoardLeadPinContext\.Provider value=\{pinInBoard\}>\{board\}<\/BoardLeadPinContext\.Provider>/);
+    hasNot(stage, /data-testid="question-pin-static"/);
     has(stage, /\{questionPin && qpinMode === 'expanded' && !qpinStatic && \(/);
-    // GAC acceptance 2026-10-22 (hw-14 p1, F1): the pin row and the card are
-    // column siblings — a flex ROW squeezed the card to its borders when the
-    // pin appeared (full proof + real layout: scripts/test-stage-qpin-static.tsx).
+    const wbPin = readSrc('app/tutor/components/whiteboard/WhiteboardCanvas.tsx');
+    has(wbPin, /<div data-wb-lead-pin="1" className="sticky top-0 z-20">\{leadPin\}<\/div>/);
+    // GAC acceptance 2026-10-22 (hw-14 p1, F1): the one-problem column is a
+    // column — kept after round 11 (harmless with the card as its only child).
     has(stage, /flex justify-center\$\{qpinStatic \? ' flex-col items-center' : ''\} /);
     has(stage, /\$\{qpinStatic \? 'flex-1 min-h-0' : 'h-full'\} \$\{pagerInCard \? 'flex flex-col' : ''\}/);
   });

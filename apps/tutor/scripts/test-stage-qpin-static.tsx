@@ -14,14 +14,26 @@
  * the pin, or in any session without `problemPanel` (floating pin), the
  * card kept its width. The `mb-2` on the pin row shows a column was meant.
  *
+ * Round 11 (owner ruling 2026-10-22): the static row above the card made
+ * the figure jump down when the first question arrived. The one-problem
+ * pin now lives IN the board flow, under the pre-built figure: SessionStage
+ * provides it through `BoardLeadPinContext` and WhiteboardCanvas renders a
+ * sticky `data-wb-lead-pin` slot (page 1: right after the lead item's
+ * separator; any other page: the page wrapper's first child). The
+ * `question-pin-static` row is gone.
+ *
  * Part 1 (always): SessionStage rendered to static markup — the one-problem
- * column is a column (`flex-col items-center`) with the pin row before the
- * card and the card `flex-1 min-h-0`; every other session keeps its exact
- * pre-fix class strings (pinned here byte for byte: GAC engine freeze).
+ * column is still a column (`flex-col items-center`) with the card
+ * `flex-1 min-h-0`, no static pin row, and the pin reaches the board child
+ * through the context (only with a problem panel); every other session
+ * keeps its exact pre-fix class strings (pinned here byte for byte: GAC
+ * engine freeze).
  * Part 2 (only when the dev/prod compiled CSS chunk and playwright's
  * chromium are on this machine — otherwise reported as skipped, never
- * faked): the same markup laid out for real — the card keeps its width and
- * sits below the pin.
+ * faked): the same markup laid out for real — the card does not move or
+ * resize when the pin arrives.
+ * Part 3 (always): WhiteboardCanvas markup — where the slot sits, and
+ * byte-identical markup when no pin is provided.
  *
  * Pure: no database, no network, no model call, no live session.
  * Run: npx tsx scripts/test-stage-qpin-static.tsx  (npm run test:stage-qpin-static)
@@ -29,10 +41,38 @@
 import { strict as assert } from 'node:assert';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import React from 'react';
+import React, { act, useContext, type Context, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Window } from 'happy-dom';
 import SessionStage from '@/app/tutor/components/session/SessionStage';
+
+// WhiteboardCanvas imports katex's stylesheet; node cannot load a .css file.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(require as any).extensions['.css'] = () => {};
+// renderToStaticMarkup warns once per useLayoutEffect in the canvas tree —
+// expected on the server, noise here.
+const consoleError = console.error;
+console.error = (...args: unknown[]) => {
+  if (String(args[0]).includes('useLayoutEffect does nothing on the server')) return;
+  consoleError(...args);
+};
+
+/** Loaded in main() (dynamic so a missing module fails the sections that
+ *  need it, not the whole script). */
+let LeadPinCtx: Context<ReactNode | null> | null = null;
+
+/** Stand-in for the WhiteboardCanvas: reads the board lead-pin context the
+ *  way the canvas does and renders the pin above its content. */
+function BoardStub() {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const pin = LeadPinCtx ? useContext(LeadPinCtx) : null;
+  return (
+    <div data-probe-board="1" style={{ width: '100%', height: BOARD_H }}>
+      {pin != null && <div data-probe-board-pin="1">{pin}</div>}
+      FIGURE
+    </div>
+  );
+}
 
 let passed = 0;
 let failed = 0;
@@ -57,7 +97,7 @@ function render(mode: Mode, opts: { pin: boolean; panel: boolean }): string {
       voiceState="idle"
       started
       boardEmpty={false}
-      board={<div data-probe-board="1" style={{ width: '100%', height: BOARD_H }}>FIGURE</div>}
+      board={<BoardStub />}
       voiceInput={null}
       transcript={null}
       onStudentInput={() => {}}
@@ -88,7 +128,7 @@ function structure(html: string) {
     card: card.className,
     cardClasses: classes(card),
     pinPresent: pin != null,
-    pinThenCard: pin != null && pin.parentElement === column && pin.nextElementSibling === card,
+    boardPin: win.document.querySelector('[data-probe-board-pin]')?.textContent ?? null,
   };
 }
 
@@ -109,17 +149,18 @@ async function part1() {
   console.log('1 structure (static markup)');
   for (const mode of ['text', 'voice'] as const) {
     const maxW = mode === 'text' ? 'max-w-4xl' : 'max-w-3xl';
-    await section(`${mode}, one-problem, pin shown: the column is a column, the pin row sits before the card, the card fills the rest`, () => {
+    await section(`${mode}, one-problem, pin shown: no static pin row; the pin reaches the board child through BoardLeadPinContext; the column layout is unchanged`, () => {
       const s = structure(render(mode, { pin: true, panel: true }));
-      assert.ok(s.pinPresent, 'static pin row rendered');
-      assert.ok(s.pinThenCard, `pin row and card are column siblings, pin first (column: ${s.column})`);
+      assert.equal(s.pinPresent, false, 'no question-pin-static row in a one-problem session (round 11)');
+      assert.equal(s.boardPin, 'Q: what is x?', 'the board child reads the pin from the context');
       for (const c of ['flex', 'flex-col', 'items-center']) assert.ok(s.columnClasses.includes(c), `column has ${c} (was: ${s.column})`);
       for (const c of ['w-full', maxW, 'flex-1', 'min-h-0', 'overflow-hidden']) assert.ok(s.cardClasses.includes(c), `card has ${c} (was: ${s.card})`);
-      assert.ok(!s.cardClasses.includes('h-full'), `card is flex-1, not h-full, under the pin row (was: ${s.card})`);
+      assert.ok(!s.cardClasses.includes('h-full'), `card stays flex-1, not h-full (was: ${s.card})`);
     });
-    await section(`${mode}, one-problem, no pin yet: the same column layout (nothing flips when the pin arrives)`, () => {
+    await section(`${mode}, one-problem, no pin yet: the same column layout, nothing in the context`, () => {
       const s = structure(render(mode, { pin: false, panel: true }));
       assert.equal(s.pinPresent, false);
+      assert.equal(s.boardPin, null);
       for (const c of ['flex', 'flex-col', 'items-center']) assert.ok(s.columnClasses.includes(c), `column has ${c} (was: ${s.column})`);
       for (const c of ['flex-1', 'min-h-0']) assert.ok(s.cardClasses.includes(c), `card has ${c} (was: ${s.card})`);
     });
@@ -127,6 +168,7 @@ async function part1() {
       await section(`${mode}, no problem panel, pin ${pin ? 'shown' : 'absent'}: column and card keep the exact pre-fix classes (engine freeze)`, () => {
         const s = structure(render(mode, { pin, panel: false }));
         assert.equal(s.pinPresent, false, 'no static pin row outside a one-problem session');
+        assert.equal(s.boardPin, null, 'no pin in the board context outside a one-problem session (the floating pin owns it)');
         assert.equal(s.column, NON_STATIC_COLUMN[mode]);
         assert.equal(s.card, NON_STATIC_CARD[mode]);
       });
@@ -152,7 +194,7 @@ function findCompiledCss(): string | null {
 }
 
 type Box = { x: number; y: number; w: number; h: number };
-type Layout = { pin: Box | null; card: Box; board: Box; pinNextIsCard: boolean | null };
+type Layout = { staticPin: boolean; card: Box; board: Box };
 
 async function part2() {
   console.log('2 layout (headless chromium + compiled Tailwind)');
@@ -174,25 +216,21 @@ async function part2() {
         const box = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
         const board = document.querySelector('[data-probe-board]');
         const card = board.parentElement;
-        const pin = document.querySelector('[data-testid="question-pin-static"]');
-        return { pin: box(pin), card: box(card), board: box(board), pinNextIsCard: pin ? pin.nextElementSibling === card : null };
+        return { staticPin: document.querySelector('[data-testid="question-pin-static"]') != null, card: box(card), board: box(board) };
       })()`) as Promise<Layout>;
     };
     for (const mode of ['text', 'voice'] as const) {
       const bare = await measure(render(mode, { pin: false, panel: true }));
-      await section(`${mode}, one-problem: the card keeps its width when the pin row appears, and sits below it`, async () => {
+      await section(`${mode}, one-problem: the card does not move or resize when the pin arrives (it is in the board flow)`, async () => {
         const l = await measure(render(mode, { pin: true, panel: true }));
-        assert.ok(l.pin && l.pinNextIsCard, 'pin row rendered before the card');
-        assert.ok(l.card.w >= bare.card.w - 1, `card width with the pin ${l.card.w}px ≈ without ${bare.card.w}px (F1: the row squeezed it)`);
-        assert.ok(l.board.w >= bare.board.w - 1, `board width with the pin ${l.board.w}px ≈ without ${bare.board.w}px (F1: the row squeezed it)`);
-        assert.ok(l.pin!.h < 120, `pin row is one row tall, not stretched (${l.pin!.h}px)`);
-        assert.ok(l.card.y >= l.pin!.y + l.pin!.h, `card top ${l.card.y} is below the pin row's bottom ${l.pin!.y + l.pin!.h}`);
-        assert.ok(l.card.h >= BOARD_H, `card ${l.card.h}px tall still holds the ${BOARD_H}px board item`);
+        assert.equal(l.staticPin, false, 'no static pin row');
+        assert.deepEqual(l.card, bare.card, 'card box with the pin = without it (round 11: the figure no longer jumps down)');
+        assert.ok(l.board.w >= bare.board.w - 1, `board width with the pin ${l.board.w}px ≈ without ${bare.board.w}px`);
       });
     }
     await section('text, no problem panel: the card is laid out exactly as before (engine freeze)', async () => {
       const l = await measure(render('text', { pin: true, panel: false }));
-      assert.equal(l.pin, null);
+      assert.equal(l.staticPin, false);
       // 1280 − 16 (md:pl-4) − 388 (md:pr-[388px]) = 876 = the column width; max-w-4xl (896) does not bind.
       assert.deepEqual({ x: l.card.x, w: l.card.w }, { x: 16, w: 876 });
     });
@@ -201,9 +239,116 @@ async function part2() {
   }
 }
 
+// Today's (pre-round-11) WhiteboardCanvas markup for PAGE_1 with a lead item,
+// captured before the slot existed: with no context value the canvas must
+// render it byte for byte.
+const WB_BASELINE_LEAD = '<div class="whiteboard-canvas flex flex-col h-full "><div class="relative flex-1 overflow-y-auto overflow-x-hidden pb-32" style="-webkit-overflow-scrolling:touch"><div style="position:relative" class="p-4"><div style="position:relative" class="wb-page-enter-forward"><div data-wb-lead-item="1" class="relative scroll-mt-6 select-text"><div data-probe-figure="1">FIG</div><div class="py-1" data-wb-sep="1"><div class="border-t border-gray-100"></div></div></div><div class="space-y-2"><div class="wb-item-enter"><div class="relative scroll-mt-6 select-text" data-wb-item-index="1" data-wb-item-id="a"><div class="p-4 rounded-lg bg-gray-50 border border-gray-200"><p class="text-lg overflow-x-auto"><span class="whitespace-pre-wrap "><span>one</span></span></p></div></div></div><div class="wb-item-enter"><div class="py-1" data-wb-sep="1"><div class="border-t border-gray-100"></div></div><div class="relative scroll-mt-6 select-text" data-wb-item-index="2" data-wb-item-id="b"><div class="p-4 rounded-lg bg-gray-50 border border-gray-200"><p class="text-lg overflow-x-auto"><span class="whitespace-pre-wrap "><span>two</span></span></p></div></div></div></div></div></div></div></div>';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PAGE_1: any[] = [
+  { action: 'annotate', text: 'one', id: 'a' },
+  { action: 'annotate', text: 'two', id: 'b' },
+];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TWO_PAGES: any[] = [
+  ...PAGE_1,
+  { action: 'newPage', title: 'P2' },
+  { action: 'annotate', text: 'three', id: 'c' },
+  { action: 'annotate', text: 'four', id: 'd' },
+];
+const FIG = <div data-probe-figure="1">FIG</div>;
+const PIN = <div data-probe-pin="1">Q: what is x?</div>;
+
+async function part3() {
+  console.log('3 board slot (WhiteboardCanvas markup)');
+  const { WhiteboardCanvas } = await import('@/app/tutor/components/whiteboard/WhiteboardCanvas');
+  const withPin = (pin: ReactNode, el: React.ReactElement) => {
+    assert.ok(LeadPinCtx, 'BoardLeadPinContext module loads');
+    return <LeadPinCtx.Provider value={pin}>{el}</LeadPinCtx.Provider>;
+  };
+
+  await section('no context value: no slot, markup byte-identical to before round 11', () => {
+    const html = renderToStaticMarkup(<WhiteboardCanvas commands={PAGE_1} chrome="minimal" leadItem={FIG} />);
+    assert.equal(html, WB_BASELINE_LEAD);
+    assert.ok(!html.includes('data-wb-lead-pin'));
+  });
+  await section('null context value: no slot either', () => {
+    const html = renderToStaticMarkup(withPin(null, <WhiteboardCanvas commands={PAGE_1} chrome="minimal" leadItem={FIG} />));
+    assert.equal(html, WB_BASELINE_LEAD);
+  });
+  await section('page 1 with a lead item: figure + separator, then the sticky slot, then the first board item', () => {
+    const html = renderToStaticMarkup(withPin(PIN, <WhiteboardCanvas commands={PAGE_1} chrome="minimal" leadItem={FIG} />));
+    const win = new Window();
+    win.document.body.innerHTML = html;
+    const lead = win.document.querySelector('[data-wb-lead-item]');
+    const slot = win.document.querySelector('[data-wb-lead-pin]');
+    assert.ok(lead && slot, 'lead item and slot rendered');
+    assert.equal(slot.className, 'sticky top-0 z-20');
+    assert.equal(slot.textContent, 'Q: what is x?');
+    // A page-wrapper child right after the lead block (whose last child is
+    // the separator), not inside it: sticky only sticks within its parent,
+    // so inside the lead block it would scroll away with the figure.
+    assert.equal(slot.previousElementSibling, lead, 'slot comes right after the lead block');
+    assert.equal(lead.lastElementChild?.getAttribute('data-wb-sep'), '1', 'the lead block ends with its separator');
+    assert.ok(slot.parentElement?.classList.contains('wb-page-enter-forward'), 'slot is a page wrapper child (sticks across the page)');
+    const iLead = html.indexOf('data-wb-lead-item');
+    const iPin = html.indexOf('data-wb-lead-pin');
+    const iItem = html.indexOf('data-wb-item-index');
+    assert.ok(iLead >= 0 && iLead < iPin && iPin < iItem, `order lead ${iLead} < pin ${iPin} < first item ${iItem}`);
+    assert.equal(win.document.querySelectorAll('[data-wb-lead-pin]').length, 1, 'exactly one slot');
+  });
+  await section('page 1 without a lead item: the slot is the page wrapper\'s first child', () => {
+    const html = renderToStaticMarkup(withPin(PIN, <WhiteboardCanvas commands={PAGE_1} chrome="minimal" />));
+    const win = new Window();
+    win.document.body.innerHTML = html;
+    const wrapper = win.document.querySelector('.wb-page-enter-forward');
+    assert.ok(wrapper, 'page wrapper rendered');
+    assert.equal(wrapper.firstElementChild?.getAttribute('data-wb-lead-pin'), '1');
+    assert.equal(win.document.querySelectorAll('[data-wb-lead-pin]').length, 1, 'exactly one slot');
+  });
+  // Last section on purpose: it installs happy-dom globals (react-dom's
+  // client renderer reads `window`/`document` at commit time) and leaves
+  // them — React's scheduler may still touch them after the last act().
+  await section('page 2 (client render in happy-dom, openOnLastPage): the slot is the page wrapper\'s first child, no lead item', async () => {
+    const win = new Window({ url: 'http://localhost/' });
+    win.document.write('<!doctype html><html><head></head><body></body></html>');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = globalThis as any;
+    g.window = win;
+    g.document = win.document;
+    for (const k of ['navigator', 'HTMLElement', 'HTMLIFrameElement', 'Element', 'Node', 'MutationObserver', 'ResizeObserver', 'getComputedStyle', 'requestAnimationFrame', 'cancelAnimationFrame']) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (g[k] === undefined) g[k] = (win as any)[k];
+    }
+    g.IS_REACT_ACT_ENVIRONMENT = true;
+    const { createRoot } = await import('react-dom/client');
+    const host = win.document.createElement('div');
+    win.document.body.appendChild(host);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const root = createRoot(host as any);
+    await act(async () => { root.render(withPin(PIN, <WhiteboardCanvas commands={TWO_PAGES} chrome="minimal" openOnLastPage leadItem={FIG} />)); });
+    try {
+      assert.equal(host.querySelector('[data-wb-lead-item]'), null, 'on page 2 (no lead item there)');
+      assert.ok(host.querySelector('[data-wb-item-id="c"]'), 'page 2 is shown');
+      const wrapper = host.querySelector('.wb-page-enter-forward, .wb-page-enter-backward');
+      assert.ok(wrapper, 'page wrapper rendered');
+      assert.equal(wrapper.firstElementChild?.getAttribute('data-wb-lead-pin'), '1', 'slot is the page wrapper\'s first child');
+      assert.equal(host.querySelectorAll('[data-wb-lead-pin]').length, 1, 'exactly one slot');
+    } finally {
+      await act(async () => { root.unmount(); });
+    }
+  });
+}
+
 async function main() {
+  try {
+    ({ BoardLeadPinContext: LeadPinCtx } = await import('@/app/tutor/components/whiteboard/board-lead-pin-context'));
+  } catch (e) {
+    console.log(`  (BoardLeadPinContext did not load: ${(e as Error).message.split('\n')[0]})`);
+  }
   await part1();
   await part2();
+  await part3();
   console.log(`\n${passed} passed, ${failed} failed${skipped ? `, ${skipped} layout check skipped (no chromium/CSS on this machine)` : ''}`);
   if (failed) process.exit(1);
 }

@@ -26,6 +26,7 @@ import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 import { InlineMathText } from '../whiteboard/InlineMathText';
+import { BoardLeadPinContext } from '../whiteboard/board-lead-pin-context';
 import {
   captionMeasureProxy,
   tokenizeCaptionMathAtomic,
@@ -604,8 +605,11 @@ export default function SessionStage(props: SessionStageProps) {
   // an internal SessionStage render branch.
   const pagerInCard = sessionMode === 'text' && !isMdUp;
   // GAC acceptance 2026-10-22 (hw-13): in a one-problem session the floating
-  // question pin sat over the figure. There the pin is a row above the board
-  // card instead — same node, same collapse-to-chip behaviour, no overlap.
+  // question pin sat over the figure. Round 11 (owner ruling): it is not a
+  // row above the board card either (the figure jumped down when the first
+  // question arrived) — it lives IN the board flow, under the pre-built
+  // figure: the WhiteboardCanvas reads it from BoardLeadPinContext (see
+  // `pinInBoard` below). Same node, same collapse-to-chip behaviour.
   const qpinStatic = problemPanel != null;
   // A one-problem session's pre-built figure is NOT a strip here any more
   // (GAC acceptance 2026-10-21, round 5): TutorSession hands it to the
@@ -1094,6 +1098,10 @@ export default function SessionStage(props: SessionStageProps) {
   const toolBtnSize = textToolRail ? 'w-8 h-8 md:w-7 md:h-7' : 'w-8 h-8';
   const toolSepClass = textToolRail ? 'w-px h-5 bg-slate-200 mx-0.5 md:w-5 md:h-px md:mx-0' : 'w-px h-5 bg-slate-200 mx-0.5';
   const showQBtn = QPIN_AUTO_COLLAPSE && questionPin && qpinMode === 'chip';
+  // One-problem session: the expanded pin goes to the board (null otherwise,
+  // so the canvas renders no slot and every other session is untouched).
+  const pinInBoard = qpinStatic && qpinMode === 'expanded' ? questionPin : null;
+  const boardWithPin = <BoardLeadPinContext.Provider value={pinInBoard}>{board}</BoardLeadPinContext.Provider>;
   const renderQBtn = (className: string) => (
             <button
               type="button"
@@ -1173,7 +1181,9 @@ export default function SessionStage(props: SessionStageProps) {
           // card filling the rest — see the card's `flex-1 min-h-0`), whether
           // or not the pin is showing yet, so nothing flips when it arrives.
           // Every session without a problem panel keeps the exact same class
-          // string (scripts/test-stage-qpin-static.tsx pins it).
+          // string (scripts/test-stage-qpin-static.tsx pins it). Round 11:
+          // the pin row is gone (the pin is in the board flow); the column
+          // classes stay — harmless with a single child.
           ref={boardColumnRef}
           className={`absolute inset-0 ${boardColumnTopPadClass} pb-2 px-2 sm:px-0 flex justify-center${qpinStatic ? ' flex-col items-center' : ''} ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
           style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
@@ -1206,14 +1216,10 @@ export default function SessionStage(props: SessionStageProps) {
               phones, starts collapsed to one wrench button at the top-right
               (`toolsRowDefaultOpen`), so a full-height gutter was dead
               padding; the wrench floats over the card's top-right corner. */}
-          {questionPin && qpinMode === 'expanded' && qpinStatic && (
-            <div data-testid="question-pin-static" className={`mx-auto mb-2 w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} shrink-0`}>
-              {questionPin}
-            </div>
-          )}
           <div
             ref={boardCardRef}
-            // F1 (above): under the static pin row the card takes the rest of
+            // F1 (above; the row is gone since round 11, the classes kept):
+            // under the static pin row the card took the rest of
             // the column (`flex-1 min-h-0`) instead of `h-full`, which would
             // overflow the column by the pin row's height and clip the board's
             // bottom under the floating dock. The WhiteboardCanvas root is
@@ -1258,9 +1264,9 @@ export default function SessionStage(props: SessionStageProps) {
               // percentage height doesn't always resolve, and
               // WhiteboardCanvas's own root is `h-full`.
               <div className="relative flex-1 min-h-0">
-                <div className="absolute inset-0">{board}</div>
+                <div className="absolute inset-0">{boardWithPin}</div>
               </div>
-            ) : board}
+            ) : boardWithPin}
           </div>
         </div>
 

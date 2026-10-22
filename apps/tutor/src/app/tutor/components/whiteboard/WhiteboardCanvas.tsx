@@ -21,6 +21,7 @@ import { SketchRenderer } from './SketchRenderer';
 import { SketchFallbackCard } from './SketchFallbackCard';
 import { RenderFallbackCard } from './RenderFallbackCard';
 import { BoardItemErrorBoundary } from './BoardItemErrorBoundary';
+import { BoardLeadPinContext } from './board-lead-pin-context';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import { gradeTryYourself, type TryYourselfRelationDetail } from './tryYourselfAnswer';
@@ -1110,6 +1111,15 @@ export function WhiteboardCanvas({
   // present a page holding one command takes the list layout, so the
   // hairline between the two is the same one every item pair gets.
   const showLead = leadItem != null && currentIndex === 0;
+  // GAC round 11: the one-problem question pin (SessionStage provides it;
+  // null everywhere else ⇒ no slot, markup unchanged). Page 1 with a lead
+  // item: right under the figure. Any other page: the page's first thing.
+  // Sticky against the board's scroll container (no overflow between the
+  // two), so it stays in view while the student scrolls the page.
+  const leadPin = React.useContext(BoardLeadPinContext);
+  const leadPinSlot = leadPin != null
+    ? <div data-wb-lead-pin="1" className="sticky top-0 z-20">{leadPin}</div>
+    : null;
   // Kill-recovery phase A: dim style for an item currently flagged revising.
   const reviseStyle = (cmd: WhiteboardCommand): React.CSSProperties | undefined =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1755,6 +1765,7 @@ export function WhiteboardCanvas({
           onPointerDown={onStudentMark ? handleMarkPointerDown : undefined}
           onPointerUp={onStudentMark ? handleMarkPointerUp : undefined}
         >
+        {!showLead && leadPinSlot}
         {showLead && (
           <div data-wb-lead-item="1" className="relative scroll-mt-6 select-text">
             <BoardItemErrorBoundary action="leadItem" resetKey={leadItem}>
@@ -1767,6 +1778,11 @@ export function WhiteboardCanvas({
             )}
           </div>
         )}
+        {/* The slot follows the lead block (after its separator) as a page
+            wrapper child, not inside the block: a sticky element only sticks
+            within its parent's box, and as the lead block's last child it
+            would scroll away with the figure. */}
+        {showLead && leadPinSlot}
         {renderableCommands.length === 1 && !showLead ? (
           <div
             className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6 select-text`}
