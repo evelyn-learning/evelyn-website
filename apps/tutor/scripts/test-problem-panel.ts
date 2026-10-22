@@ -73,6 +73,20 @@ async function main() {
     has(pf, /h-\[280px\] sm:h-\[400px\]/);
     has(pf, /<CommandRenderer command=\{figure as unknown as WhiteboardCommand\} \/>/);
   });
+  await section('one-problem session: the question pin sits above the board card, never floating over the figure', () => {
+    // GAC acceptance 2026-10-22 (hw-13): the floating Q-pin covered the figure.
+    has(stage, /const qpinStatic = problemPanel != null;/);
+    has(stage, /\{questionPin && qpinMode === 'expanded' && qpinStatic && \(/);
+    has(stage, /data-testid="question-pin-static"/);
+    has(stage, /\{questionPin && qpinMode === 'expanded' && !qpinStatic && \(/);
+  });
+  await section('one-problem session: no Wrap up / Finish lesson / Discard session in the adjust menu', () => {
+    const ts = readSrc('app/tutor/components/session/TutorSession.tsx');
+    has(ts, /\{!homeworkProblem && \(\s*<button[^]*?Wrap up<\/button>/);
+    has(ts, /\{embedded && !isTrial && !homeworkProblem && \(/);
+    const vtr = readSrc('app/tutor/components/VoiceTutorRealtime.tsx');
+    has(vtr, /buildHomeworkOpenerClause\(\{ \.\.\.openerCtx, oneProblem: homeworkProblemRef\.current != null, hasPriorNote: !!homeworkProblemRef\.current\?\.priorNote \}\)/);
+  });
   await section('the stage keeps one tree position: never returned under a conditional wrapper', () => {
     // A plan arrives after the first render; nesting the stage only when
     // problemPanel is set would remount it (and VoiceTutorRealtime with it).

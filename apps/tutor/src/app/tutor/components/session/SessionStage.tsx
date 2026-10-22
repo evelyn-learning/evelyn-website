@@ -603,6 +603,10 @@ export default function SessionStage(props: SessionStageProps) {
   // (no `pagerPlacement` added to the public interface) — this is purely
   // an internal SessionStage render branch.
   const pagerInCard = sessionMode === 'text' && !isMdUp;
+  // GAC acceptance 2026-10-22 (hw-13): in a one-problem session the floating
+  // question pin sat over the figure. There the pin is a row above the board
+  // card instead — same node, same collapse-to-chip behaviour, no overlap.
+  const qpinStatic = problemPanel != null;
   // A one-problem session's pre-built figure is NOT a strip here any more
   // (GAC acceptance 2026-10-21, round 5): TutorSession hands it to the
   // WhiteboardCanvas as its `leadItem`, drawn on page 1 like any board item.
@@ -1191,6 +1195,11 @@ export default function SessionStage(props: SessionStageProps) {
               phones, starts collapsed to one wrench button at the top-right
               (`toolsRowDefaultOpen`), so a full-height gutter was dead
               padding; the wrench floats over the card's top-right corner. */}
+          {questionPin && qpinMode === 'expanded' && qpinStatic && (
+            <div data-testid="question-pin-static" className={`mx-auto mb-2 w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} shrink-0`}>
+              {questionPin}
+            </div>
+          )}
           <div
             ref={boardCardRef}
             className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}
@@ -1767,7 +1776,7 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Question pin — gist of the tutor's current ask, top-center
               over the board (drops below the page switcher when shown). An
               overlay, so it never collides with board ink. ===== */}
-      {questionPin && qpinMode === 'expanded' && (
+      {questionPin && qpinMode === 'expanded' && !qpinStatic && (
         <div
           ref={qpinBoxRef}
           onPointerDown={onQpinPointerDown}

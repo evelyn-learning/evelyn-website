@@ -389,10 +389,22 @@ async function main() {
     assert.equal(r.homeworkProblem.verified, false);
   });
 
+  const readSrc = (rel: string) => fs.readFileSync(path.join(__dirname, '..', 'src', rel), 'utf8');
   console.log('d outcome');
   const oc = await import('../src/lib/tutor/homework-build/outcome');
   const ev = (type: string, message: string) => ({ type, message });
   const stu = (text: string) => ({ role: 'student', text });
+  await section('hw-13: every key part confirmed by the transcript is done, finished or not (a pause after solving it)', () => {
+    // GAC acceptance 2026-10-22: problem 2 was solved in full, "Back to list"
+    // left it "In progress" and the next open started over. The confirmed-key
+    // rule applied only with finished=1; it applies always now.
+    const key = { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] };
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I think x = 5')], verified: true, key }), 'done');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I think x = 4')], verified: true, key }), 'in_progress');
+    assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I think x = 4')], verified: true, key, finished: true }), 'needs_review');
+    const route = readSrc('app/api/portal/v1/homework-problem-outcome/route.ts');
+    assert.match(route, /const build = meta\?\.verified \? await getHomeworkBuild\(meta\.parentPlanId\)/, 'the key is loaded for every outcome call, not only a finish');
+  });
   await section('done when homework_problem_done is recorded', () => {
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [ev('homework_problem_done', 'done')], transcript: [], verified: true }), 'done');
   });

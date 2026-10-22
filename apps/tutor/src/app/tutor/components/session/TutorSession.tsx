@@ -1896,15 +1896,22 @@ export default function TutorSession(props: TutorSessionProps) {
           <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); }} className={`w-full text-left px-3 py-2 rounded-xl ${paceBias > 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
             <span className="inline-block w-3">{paceBias > 0 ? '✓' : ''}</span> Speed up{paceBias > 0 ? ` ×${paceBias}` : ''}
           </button>
-          <div className="my-1 border-t border-slate-100" />
-          <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+          {/* GAC acceptance 2026-10-22 (hw-13): a one-problem homework session
+              ends through the host's own "I've finished" / "Back to list" —
+              Wrap up / Finish lesson / Discard session here were redundant. */}
+          {!homeworkProblem && (
+            <>
+              <div className="my-1 border-t border-slate-100" />
+              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+            </>
+          )}
           {/* Round-4 item 5 (embed-only): the portal's bottom-strip
               Finish/Discard buttons moved here. Each stashes its intent in
               endIntentRef, then runs VTR's FULL endSession() teardown (TTS
               hard-stop + recording finalize + final profile commit) — same
               fallback shape as the End button above; handleEndSession
               forwards the intent to the embed's session_ended postMessage. */}
-          {embedded && !isTrial && (
+          {embedded && !isTrial && !homeworkProblem && (
             <>
               <div className="my-1 border-t border-slate-100" />
               <button

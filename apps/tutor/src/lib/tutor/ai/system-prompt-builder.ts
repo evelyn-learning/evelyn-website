@@ -1648,8 +1648,33 @@ export const STALE_CHECKPOINT_REORIENT_CLAUSE =
  * the directive exists on exactly the turns the ordinary opener would.
  * Generic by design per feedback_generic_prompts.
  */
-export function buildHomeworkOpenerClause(ctx: Pick<SystemPromptContext, 'openingPhase' | 'studentName'>): string | null {
+export function buildHomeworkOpenerClause(
+  ctx: Pick<SystemPromptContext, 'openingPhase' | 'studentName'> & {
+    /** One-problem homework session (GAC per-problem redesign): the problem and
+     *  its figure are already on the board when the tutor speaks. */
+    oneProblem?: boolean;
+    /** The problem carries a prior-work note from an earlier sitting. */
+    hasPriorNote?: boolean;
+  },
+): string | null {
   if (!ctx.openingPhase) return null;
+  if (ctx.oneProblem) {
+    // GAC acceptance 2026-10-22 (hw-13): the opener was "Last time we sliced
+    // through a pyramid… This time, picture two tightrope lines…" — a callback
+    // to another problem and an analogy hook before a question the student
+    // did not ask for. Owner: no intro line in homework sessions.
+    const greet = usableStudentName(ctx.studentName)
+      ? 'Greet the student by name in at most four words'
+      : 'Greet the student in at most four words (no student name is available — never speak a placeholder value as if it were their name)';
+    const pickUp = ctx.hasPriorNote
+      ? ' If the prior-work note says where the student got to, pick up from there in one sentence instead of starting over.'
+      : '';
+    return (
+      `${greet}, then ask your first question about the problem on the board — it and its figure are already there, so do not restate or redraw them. ` +
+      'No analogy, no "picture this" hook, no mention of any earlier session or what you did last time, no introduction of yourself or of how you work: ' +
+      `the greeting and the question are the whole first turn.${pickUp}`
+    );
+  }
   const greet = usableStudentName(ctx.studentName)
     ? 'Open by greeting the student by name in one short sentence'
     : 'Open by greeting the student warmly in one short sentence (no student name is available — never speak a placeholder value as if it were their name)';

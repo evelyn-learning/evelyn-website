@@ -105,11 +105,12 @@ export function classifyHomeworkProblemOutcome(input: {
 }): HomeworkProblemOutcome {
   const events = Array.isArray(input.debugEvents) ? input.debugEvents : [];
   if (events.some((e) => e?.type === HOMEWORK_PROBLEM_DONE_EVENT)) return 'done';
-  if (input.finished) {
-    const history = (input.transcript ?? []).filter(isStudent).map((t) => ({ role: 'user' as const, content: String(t.text) }));
-    if (input.key?.parts?.length && allKeyPartsConfirmed(history, '', input.key)) return 'done';
-    return 'needs_review';
-  }
+  // GAC acceptance 2026-10-22 (hw-13 problem 2): solved in full, then "Back to
+  // list" — the problem stayed "In progress" and the next open started over.
+  // Every key part confirmed by the transcript is done, finish button or not.
+  const history = (input.transcript ?? []).filter(isStudent).map((t) => ({ role: 'user' as const, content: String(t.text) }));
+  if (input.key?.parts?.length && allKeyPartsConfirmed(history, '', input.key)) return 'done';
+  if (input.finished) return 'needs_review';
   if (input.verified === false) {
     const lastStudent = [...(input.transcript ?? [])].reverse().find(isStudent);
     if (lastStudent && claimsProblemFinished(String(lastStudent.text))) return 'needs_review';

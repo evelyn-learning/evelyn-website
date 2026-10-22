@@ -24318,7 +24318,7 @@ export function VoiceTutorRealtime({
             const openerClause = isInFlow
               ? buildInFlowOpenerClause({ ...openerCtx, lessonContext, inputMode: sessionMode })
               : isHomeworkOpener
-                ? buildHomeworkOpenerClause(openerCtx)
+                ? buildHomeworkOpenerClause({ ...openerCtx, oneProblem: homeworkProblemRef.current != null, hasPriorNote: !!homeworkProblemRef.current?.priorNote })
                 : buildOpenerClause({
                   ...openerCtx,
                   agendaItemCount: pendingAgendaItemCountRef.current ?? 0,

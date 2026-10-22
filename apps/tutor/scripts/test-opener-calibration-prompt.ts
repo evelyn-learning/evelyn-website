@@ -265,6 +265,26 @@ function main() {
     assert(c.includes('no recap of prior sessions'), 'still bans recap');
   });
 
+  // ─── One-problem homework opener (GAC acceptance 2026-10-22, hw-13) ───
+  test('one-problem opener: a few-word greeting, straight to the first question — no hook, no callback, no self-intro', () => {
+    const c = buildHomeworkOpenerClause({ openingPhase: true, studentName: 'Sam', oneProblem: true })!;
+    assert(c.includes('at most four words'), 'greeting is a few words');
+    assert(c.includes('the problem on the board'), 'the problem is already on the board (Q-pin + figure)');
+    assert(c.includes('ask your first question'), 'asks the first question');
+    assert(/no analogy|no "picture this"/i.test(c), 'bans the analogy / picture-this hook');
+    assert(/earlier session|previous session|last time/i.test(c), 'bans the callback to another session');
+    assert(!c.includes('put the first problem on the board'), 'does not ask to paint the problem again');
+    assert(!c.includes('prior-work note'), 'no prior-work line without a note');
+    const resumed = buildHomeworkOpenerClause({ openingPhase: true, oneProblem: true, hasPriorNote: true })!;
+    assert(resumed.includes('prior-work note'), 'with a note: pick up where it says the student got to');
+    assert(/instead of starting over/.test(resumed));
+    assert.equal(buildHomeworkOpenerClause({ openingPhase: false, oneProblem: true }), null);
+  });
+  test('whole-sheet homework opener is unchanged by the one-problem flag being absent', () => {
+    const c = buildHomeworkOpenerClause({ openingPhase: true, studentName: 'Sam' })!;
+    assert(c.includes('put the first problem on the board'));
+  });
+
   // ─── In-flow opener (GameClass v1.1) ───
   test('in-flow opener: name + one pick-up sentence + question, no intro, no tip', () => {
     const c = buildInFlowOpenerClause({ openingPhase: true, studentName: 'Maya', lessonContext: { title: 'Own a Piece?', question: 'Which is equity?' } });

@@ -35,7 +35,8 @@ export const GET = withPortalAuth(async (req, auth) => {
   // The host's finish button (academy live-result path): done only when the
   // transcript confirms every key part, else needs_review (outcome.ts).
   const finished = params.get('finished') === '1';
-  const build = finished && meta?.verified ? await getHomeworkBuild(meta.parentPlanId).catch(() => null) : null;
+  // The key is loaded for every call (2026-10-22): a pause after solving the problem is done too.
+  const build = meta?.verified ? await getHomeworkBuild(meta.parentPlanId).catch(() => null) : null;
   const key = build?.problems.find((p) => p.n === meta?.n)?.key ?? null;
   const outcome = classifyHomeworkProblemOutcome({
     debugEvents: session.debugEvents,
