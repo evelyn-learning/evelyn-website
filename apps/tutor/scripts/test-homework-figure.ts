@@ -224,5 +224,15 @@ test('a graph function written as `expression` is plotted: a labelled point on i
   assert.match(off.ok ? '' : off.reasons.join('; '), /point \(0, 2\) is not on any plotted function/);
 });
 
+test('labelIsFromText: a point letter inside a compound name (△ABC, AB, OBA) is from the text (G2)', () => {
+  const P2TEXT = 'The circle is inscribed in △ABC and AC = 13. [Figure: Triangle ABC with inscribed circle touching AB at D, AC at F, and BC at E. Segment AD = 5, segment BE = 7, segment FC = x.]\n(a) Find x.\n(b) Find the perimeter of △ABC.';
+  for (const l of ['A', 'B', 'C', 'D', 'E', 'F', 'x', '5', '7']) assert.equal(labelIsFromText(l, P2TEXT), true, l);
+  assert.equal(labelIsFromText('G', P2TEXT), false);
+  // Unchanged by G2: the compound token AB is itself a word of the text, so today it passes.
+  assert.equal(labelIsFromText('AB', P2TEXT), true);
+  const P6TEXT = 'The shaded sector has radius 9 cm and a central angle of 80°. [Figure: Circle with center O. Sector OBA with radius 9 cm and central angle 80° is shaded.]';
+  for (const l of ['O', 'B', 'A']) assert.equal(labelIsFromText(l, P6TEXT), true, l);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

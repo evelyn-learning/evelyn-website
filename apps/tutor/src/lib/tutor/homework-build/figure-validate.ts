@@ -93,6 +93,18 @@ export function labelIsFromText(label: string, problemText: string): boolean {
     // GAC acceptance 2026-10-22 (hw-14 p7): the sheet writes x°, a degree-signed
     // variable that IDENT_RE (letters only) rejects as a token. Test it without
     // the sign, against the text as written (x° or x).
+    // GAC acceptance 2026-10-22 (hw-14 p2, round 8): the sheet names points only
+    // inside △ABC / AB / Sector OBA, never as standalone words. A point-id label
+    // is from the text when its letter sits in a compound name (2-4 capitals).
+    // namedPointsIn is deliberately NOT widened: a compound token may be an
+    // acronym, so permitting a label is safe, demanding a drawn point is not.
+    if (/^[A-Z]\d?['\u2032]?$/.test(w)) {
+      const letter = w[0];
+      if (toks.some((t) => {
+        const c = t.replace(/^[\u25b3\u25b2\u2220]+/, '').replace(/['\u2032]+$/, '');
+        return /^[A-Z]{2,4}\d?$/.test(c) && c.includes(letter);
+      })) return true;
+    }
     if (/[\u00b0\u00ba]$/.test(w)) {
       const bare = w.slice(0, -1);
       return (IDENT_RE.test(bare) || VALUE_RE.test(bare)) && (words.has(w) || words.has(bare));
