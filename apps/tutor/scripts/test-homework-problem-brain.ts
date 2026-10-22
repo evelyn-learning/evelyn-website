@@ -548,6 +548,40 @@ async function main() {
       assert.ok(r.content.includes(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()), 'homework reveal suffix in <active_problem>');
       assert.ok(!r.content.includes(brain.ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX.trim()), 'no several-problems part scope');
     });
+    // 2026-10-22 (hw-14 p4, F6): the key confirms VALUES only — the keyed-correct
+    // frame asks the tutor to check any stated reason/term and correct a wrong
+    // one while confirming the values. Only a keyed verdict gets the rule.
+    const STATED_REASON = [/confirmed the VALUES only/, /states a reason, a name or a relationship/, /confirm the values AND correct the term in the same sentence/, /Never let a confirmed value stand in for a wrong explanation/];
+    const answerCheckOf = (content: string) => content.slice(content.indexOf('<answer_check>'), content.indexOf('</answer_check>'));
+    await section('F6 keyed correct: the frame carries the stated-reason rule', async () => {
+      const r = await run('Consecutive terms are equal: 3x = 60 so x = 20', { homeworkProblem: verifiedHp });
+      const block = answerCheckOf(r.content);
+      assert.ok(block.length > 0, '<answer_check> present');
+      for (const re of STATED_REASON) assert.match(block, re);
+      assert.ok(!/complement|supplement|angle/i.test(block), 'no example topic in the rule');
+    });
+    await section('F6 non-keyed correct (no homeworkProblem / model-check result): no stated-reason rule', async () => {
+      const okLlm = async () => ({ text: JSON.stringify({ proposed_value: '20', problem_final_answer: '20', proposed_equals_final_answer: true, answers: 'overall_problem', target: 'x', correct_value: '20', verdict: 'correct', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 });
+      const plain = await run('x = 60/3 = 20', { verdictPrecheckDeps: { llm: okLlm } });
+      assert.ok(plain.content.includes('<answer_check>'), 'model-check block injected');
+      for (const re of STATED_REASON) assert.ok(!re.test(plain.content), `no-hp frame contains ${re}`);
+      const modelChecked = await run('so it is twenty', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: okLlm } });
+      assert.ok(modelChecked.content.includes('<answer_check>'), 'model-check block injected');
+      for (const re of STATED_REASON) assert.ok(!re.test(modelChecked.content), `model-checked frame contains ${re}`);
+    });
+    await section('F6 formatAnswerCheckBlock: statedReasonCheck adds the rule only to a correct verdict; unset is byte-identical', async () => {
+      const { formatAnswerCheckBlock, STATED_REASON_CHECK_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+      const pub = { answers: 'open_question' as const, target: 'x', proposed: '20', verdict: 'correct' as const, confidence: 'high' as const };
+      for (const wtm of [false, true]) {
+        const plain = formatAnswerCheckBlock(pub, { correctValue: '20', workThenMatch: wtm });
+        const withRule = formatAnswerCheckBlock(pub, { correctValue: '20', workThenMatch: wtm, statedReasonCheck: true });
+        assert.equal(withRule.replace(STATED_REASON_CHECK_RULE, ''), plain, 'only the rule is added');
+        assert.ok(withRule.includes(STATED_REASON_CHECK_RULE));
+        assert.equal(formatAnswerCheckBlock(pub, { correctValue: '20', workThenMatch: wtm, statedReasonCheck: false }), plain);
+        const wrong = { ...pub, verdict: 'incorrect' as const };
+        assert.equal(formatAnswerCheckBlock(wrong, { workThenMatch: wtm, statedReasonCheck: true }), formatAnswerCheckBlock(wrong, { workThenMatch: wtm }));
+      }
+    });
     await section('a runtime note quoting the answer: no keyed verdict, no done', async () => {
       const note = '[correction note — not from the student] The intended answer is "x = 20".';
       const r = await run(note, { homeworkProblem: verifiedHp, studentMessage: undefined });

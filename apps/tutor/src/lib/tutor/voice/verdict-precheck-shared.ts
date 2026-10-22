@@ -227,7 +227,31 @@ export function formatAnswerCheckBlock(
     labels?: readonly number[];
     /** 2026-10-15 (GAC v8): the position of the problem being worked. */
     current?: number;
+    /** 2026-10-22 (hw-14 p4, F6): the verdict came from the problem's answer
+     *  key (one-problem homework session), which confirms VALUES only — a
+     *  correct verdict gets `STATED_REASON_CHECK_RULE`. Unset/false ⇒ the
+     *  block as before. */
+    statedReasonCheck?: boolean;
   },
+): string {
+  const block = formatAnswerCheckBlockBase(p, opts);
+  if (opts?.statedReasonCheck !== true || !block || !p || p.disputed === true || p.answers === 'neither' || p.verdict !== 'correct') return block;
+  if (!block.endsWith(ANSWER_CHECK_END)) return block;
+  return block.slice(0, -ANSWER_CHECK_END.length) + STATED_REASON_CHECK_RULE + ANSWER_CHECK_END;
+}
+
+// 2026-10-22 (hw-14 p4, F6): the student's message gave right values with a
+// wrong stated reason; the key confirmed the values, the frame said nothing
+// about the reason, and the reply restated the working without naming the
+// wrong term. The key judges values, never the words around them.
+export const STATED_REASON_CHECK_RULE =
+  'The check confirmed the VALUES only, against the problem\'s answer key — not any reason, name or relationship around them. When the student\'s message also states a reason, a name or a relationship, check it against the problem\'s facts. If a stated term is wrong, confirm the values AND correct the term in the same sentence. Never let a confirmed value stand in for a wrong explanation.\n';
+
+const ANSWER_CHECK_END = 'Never mention this check to the student.\n</answer_check>\n\n';
+
+function formatAnswerCheckBlockBase(
+  p: PublicVerdictPrecheck | null | undefined,
+  opts?: Parameters<typeof formatAnswerCheckBlock>[1],
 ): string {
   if (!precheckInforms(p)) return '';
   if (p.disputed === true) {

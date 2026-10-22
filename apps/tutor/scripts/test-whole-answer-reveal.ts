@@ -352,6 +352,12 @@ test('10-18: "different from <their value>" denies a right answer — spoken or 
   assert.equal(readMatchStatement("That's different from $y = -24$.", 'maybe y = -2?'), 'none', 'a longer number is not theirs');
   assert.equal(readMatchStatement('That is different from the first part.', 'maybe y = -2?'), 'none');
 });
+// 2026-10-22 (hw-14 p4, F6): a sentence that confirms the value and corrects a
+// stated term is not a denial of the value — the guard must not withhold it.
+test('10-22: correcting a wrong term while confirming the value is not a denial', () => {
+  assert.equal(deniesCheckedAnswer('That value is right; the pair is supplementary, not complementary.', '110'), false);
+  assert.equal(deniesCheckedAnswer('110 is not right; they are supplementary.', '110'), true, 'a denial of the value still trips');
+});
 test('10-18: the reveal retry is sent to the step the check located, never to the first step', () => {
   const f = wholeAnswerRevealFeedback('CH2O is 30 g/mol and 180/30 = 3', pc({ answers: 'open_question', wrongStep: 'the division of 180 by 30' }));
   assert.match(f, /the division of 180 by 30/);
