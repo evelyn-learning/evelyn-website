@@ -16,6 +16,7 @@ import { InlineMathText } from './InlineMathText';
 
 import { useMemo } from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { autoViewRange } from '@/lib/tutor/whiteboard/geometry-view-range';
 import type {
   GeometryPoint,
   GeometrySegment,
@@ -30,7 +31,6 @@ import type {
 
 const SVG_WIDTH = 500;
 const SVG_HEIGHT = 400;
-const PADDING = 1.5; // math-unit padding around auto-computed viewRange
 const POINT_RADIUS = 5;
 const LABEL_OFFSET = 14;
 const ANGLE_MARKER_SIZE = 18; // pixels for the angle arc/square marker
@@ -1558,47 +1558,9 @@ export function renderGeometryTree({
     } else if (points.length === 0) {
       baseRange = { x: [-5, 5], y: [-5, 5] };
     } else {
-      let xMin = Infinity;
-      let xMax = -Infinity;
-      let yMin = Infinity;
-      let yMax = -Infinity;
-
-      for (const p of points) {
-        if (p.x < xMin) xMin = p.x;
-        if (p.x > xMax) xMax = p.x;
-        if (p.y < yMin) yMin = p.y;
-        if (p.y > yMax) yMax = p.y;
-      }
-
-      for (const c of circles) {
-        const center = ptMap.get(c.center);
-        if (!center) continue;
-        xMin = Math.min(xMin, center.x - c.radius);
-        xMax = Math.max(xMax, center.x + c.radius);
-        yMin = Math.min(yMin, center.y - c.radius);
-        yMax = Math.max(yMax, center.y + c.radius);
-      }
-
-      // Conic extents — bound by 2*max(a, b) around the center. Parabolas
-      // are unbounded; treat them as ellipse-like for viewport purposes
-      // so the brain's vertex shows centered with reasonable padding.
-      for (const cn of conics) {
-        const center = ptMap.get(cn.center);
-        if (!center) continue;
-        const span = 2 * Math.max(cn.a, cn.b ?? cn.a);
-        xMin = Math.min(xMin, center.x - span);
-        xMax = Math.max(xMax, center.x + span);
-        yMin = Math.min(yMin, center.y - span);
-        yMax = Math.max(yMax, center.y + span);
-      }
-
-      if (xMax - xMin < 1) { xMin -= 1; xMax += 1; }
-      if (yMax - yMin < 1) { yMin -= 1; yMax += 1; }
-
-      baseRange = {
-        x: [xMin - PADDING, xMax + PADDING],
-        y: [yMin - PADDING, yMax + PADDING],
-      };
+      const resolved = <T extends { center: string }>(items: T[]) =>
+        items.flatMap((it) => { const center = ptMap.get(it.center); return center ? [{ ...it, center }] : []; });
+      baseRange = autoViewRange({ points, circles: resolved(circles), conics: resolved(conics), fit });
     }
     return matchRangeAspect(baseRange);
   })();

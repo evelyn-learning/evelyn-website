@@ -308,6 +308,31 @@ async function main() {
       assert.equal(await figureToSvg({ action: 'showGeometryConstructed', given: [], steps: [{ id: 'M', kind: 'midpoint', of: ['A', 'Z'] }] } as Fig), null);
       assert.equal(await figureToSvg(null), null);
     });
+    await section('figureToSvg (hw-14b p3, G3): a 125-unit-wide figure keeps its edge label "60 m" and the 40° arc inside the thumbnail', async () => {
+      // The stored lighthouse figure (hw14b-dump n=3). With ± 1.5 units of padding (≈ 1 % of the width)
+      // the content crop met the canvas edge at x = 0 and whatever sat left of T/B was cut off.
+      const { figureToSvg } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const fig = {"action":"showGeometryConstructed","given":[{"id":"B","kind":"point","x":0,"y":0,"label":""},{"id":"T","kind":"point","x":0,"y":60,"label":""},{"id":"A","kind":"point","x":71.5,"y":0,"label":""},{"id":"C","kind":"point","x":112.8,"y":0,"label":""},{"id":"H","kind":"point","x":125,"y":60,"label":""}],"steps":[{"id":"sTB","kind":"segment","from":"B","to":"T","label":"60 m"},{"id":"sBC","kind":"segment","from":"B","to":"C"},{"id":"sTA","kind":"segment","from":"T","to":"A"},{"id":"sTC","kind":"segment","from":"T","to":"C"},{"id":"sTH","kind":"segment","from":"T","to":"H"},{"id":"m1","kind":"angle_marker","vertex":"T","from":"H","to":"A","style":"arc","label":"40°"},{"id":"m2","kind":"angle_marker","vertex":"T","from":"H","to":"C","style":"arc","label":"28°"},{"id":"m3","kind":"angle_marker","vertex":"B","from":"T","to":"A","style":"right"}],"display":{"grid":false,"axes":false,"keepLabels":true}} as Fig;
+      const svg = await figureToSvg(fig);
+      assert.ok(svg, 'the figure renders');
+      const [vx, vy, vw, vh] = /viewBox="([^"]+)"/.exec(svg!)![1].split(' ').map(Number);
+      const textAt = (label: string) => {
+        const m = new RegExp(`<text x="([^"]+)" y="([^"]+)"[^>]*>${label}</text>`).exec(svg!);
+        assert.ok(m, `a <text> for ${label}`);
+        return { x: Number(m![1]), y: Number(m![2]) };
+      };
+      const m60 = textAt('60 m');
+      assert.ok(m60.x >= vx, `"60 m" at x ${m60.x} is right of the viewBox x ${vx}`);
+      const a40 = textAt('40°');
+      assert.ok(a40.x >= vx && a40.x <= vx + vw && a40.y >= vy && a40.y <= vy + vh, `40° at (${a40.x}, ${a40.y}) inside ${[vx, vy, vw, vh].join(' ')}`);
+      // The crop has room on every side: it is not clamped to the canvas edge.
+      assert.ok(vx > 0 && vy > 0 && vx + vw < 500 && vy + vh < 400, `the content box is not clamped by the canvas: ${[vx, vy, vw, vh].join(' ')}`);
+      // Every point dot (cx − r) sits inside the viewBox with a margin.
+      for (const c of svg!.matchAll(/<circle cx="([^"]+)" cy="([^"]+)" r="([^"]+)"[^>]*data-feature="point-/g)) {
+        const [cx, cy, r] = [Number(c[1]), Number(c[2]), Number(c[3])];
+        assert.ok(cx - r >= vx + 4 && cy - r >= vy + 4 && cx + r <= vx + vw - 4 && cy + r <= vy + vh - 4, `point dot at (${cx}, ${cy}) inside ${[vx, vy, vw, vh].join(' ')}`);
+      }
+    });
     await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
       // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
       // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.
