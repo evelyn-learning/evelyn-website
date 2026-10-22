@@ -2989,7 +2989,9 @@ export interface SolverOutput {
   title?: string;
   points: GeometryPoint[];
   segments: GeometrySegment[];
-  circles: GeometryCircle[];
+  /** `id` (2026-10-22, hw-14 p2): the circle's step id, so the homework
+   *  validator can find an `incircle`/`circumcircle` by name; renderers ignore it. */
+  circles: Array<GeometryCircle & { id?: string }>;
   polygons: GeometryPolygon[];
   arcs: GeometryArc[];
   angles: GeometryAngle[];
@@ -3082,7 +3084,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const points: GeometryPoint[] = [];
   const segments: GeometrySegment[] = [];
   const arcs: GeometryArc[] = [];
-  const circles: GeometryCircle[] = [];
+  const circles: SolverOutput['circles'] = [];
   const conics: GeometryConic[] = [];
   const anglesOut: GeometryAngle[] = [];
   const polygons: GeometryPolygon[] = [];
@@ -3183,6 +3185,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
       });
     } else if (obj.kind === 'circle') {
       circles.push({
+        id: obj.id,
         center: obj.center,
         radius: obj.radius,
         label: labelOverrides[obj.id] ?? obj.label,

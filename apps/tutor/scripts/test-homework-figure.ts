@@ -164,5 +164,49 @@ test("a missing primed id (C', P1') fails like any id; it is not a word (F4c)", 
   }
 });
 
+// GAC acceptance 2026-10-22 (hw-14 p2): the proposer drew the incircle as an
+// `incircle` step (attempt 1) and then as a `circle` centred on a
+// `triangle_center` incenter (attempt 2); both were rejected because the claims
+// named "incircle" and the validator found "no such circle". Specs verbatim from
+// engine.log lines 74 and 79.
+const HW14_P2_TEXT = 'The circle is inscribed in △ABC and AC = 13. [Figure: Triangle ABC. A is at the top, B is at the bottom left, and C is at the bottom right. A circle is inscribed in the triangle, tangent to AB at D, to AC at F, and to BC at E. The label 5 is next to segment AD. The label 7 is under segment BE on the base. The label x is beside segment FC.]';
+const HW14_P2_GIVEN = [{"id":"A","kind":"point","x":6.667,"y":9.978,"label":"A"},{"id":"B","kind":"point","x":0,"y":0,"label":"B"},{"id":"C","kind":"point","x":15,"y":0,"label":"C"}];
+const HW14_P2_TAIL = [{"id":"D","kind":"section_point","of":{"from":"A","to":"B"},"ratio":[5,7],"label":"D"},{"id":"E","kind":"section_point","of":{"from":"B","to":"C"},"ratio":[7,8],"label":"E"},{"id":"F","kind":"section_point","of":{"from":"A","to":"C"},"ratio":[5,8],"label":"F"},{"id":"sAD","kind":"segment","from":"A","to":"D","label":"5"},{"id":"sBE","kind":"segment","from":"B","to":"E","label":"7"},{"id":"sFC","kind":"segment","from":"F","to":"C","label":"x"}];
+const HW14_P2_ATTEMPT1 = {"action":"showGeometryConstructed","given":HW14_P2_GIVEN,"steps":[{"id":"tri","kind":"polygon","vertices":["A","B","C"]},{"id":"inc","kind":"incircle","vertices":["A","B","C"]},...HW14_P2_TAIL],"display":{"grid":false,"axes":false}} as unknown as Parameters<typeof validateFigure>[0];
+const HW14_P2_ATTEMPT2 = {"action":"showGeometryConstructed","given":HW14_P2_GIVEN,"steps":[{"id":"tri","kind":"polygon","vertices":["A","B","C"]},{"id":"I","kind":"triangle_center","vertices":["A","B","C"],"type":"incenter"},{"id":"inc","kind":"circle","center":"I","radius":3.7417},...HW14_P2_TAIL],"display":{"grid":false,"axes":false}} as unknown as Parameters<typeof validateFigure>[0];
+const onIncircle = (circle: string): Claims => ['D', 'E', 'F'].map((point) => ({ kind: 'on_circle' as const, point, circle }));
+
+test('an incircle step registers its circle: D, E, F on "incircle" and on "inc" are checked and hold (F4b)', () => {
+  // AB = 12, AC = 13, BC = 15: tangent lengths 5, 7, 8 — the sheet's ratios put D, E, F on the incircle.
+  assert.deepEqual(validateFigure(HW14_P2_ATTEMPT1, { problemText: HW14_P2_TEXT, claims: onIncircle('incircle') }), { ok: true });
+  assert.deepEqual(validateFigure(HW14_P2_ATTEMPT1, { problemText: HW14_P2_TEXT, claims: onIncircle('inc') }), { ok: true });
+});
+
+test('a circle centred on the incenter, aliased by its centre, is still the only circle (F4b)', () => {
+  assert.deepEqual(validateFigure(HW14_P2_ATTEMPT2, { problemText: HW14_P2_TEXT, claims: onIncircle('incircle') }), { ok: true });
+});
+
+test('an incircle claim is still checked against the drawing: a point off it fails, not "no such circle" (F4b)', () => {
+  const v = validateFigure(HW14_P2_ATTEMPT1, { problemText: HW14_P2_TEXT, claims: [{ kind: 'on_circle', point: 'A', circle: 'incircle' }] });
+  assert.equal(v.ok, false);
+  assert.match(v.ok ? '' : v.reasons.join('; '), /on_circle A incircle fails: A is [\d.]+ off the circle/);
+});
+
+test('a circumcircle step registers its circle; with two circles an unknown name is not guessed (F4b)', () => {
+  const fig = { action: 'showGeometryConstructed', given: HW14_P2_GIVEN, steps: [
+    { id: 'cc', kind: 'circumcircle', vertices: ['A', 'B', 'C'] },
+  ], display: { grid: false, axes: false } } as unknown as Parameters<typeof validateFigure>[0];
+  const CC_TEXT = 'Points A, B and C lie on a circle. [Figure: Triangle ABC with its vertices A, B and C on its circumscribed circle.]';
+  assert.deepEqual(validateFigure(fig, { problemText: CC_TEXT, claims: [{ kind: 'on_circle', point: 'A', circle: 'circumcircle' }] }), { ok: true });
+  const two = JSON.parse(JSON.stringify(fig));
+  two.steps.push({ id: 'inc', kind: 'incircle', vertices: ['A', 'B', 'C'] });
+  assert.deepEqual(validateFigure(two, { problemText: CC_TEXT, claims: [{ kind: 'on_circle', point: 'A', circle: 'cc' }] }), { ok: true });
+  // A name that matches an id only after folding ("CC" → "cc") reaches that circle.
+  assert.deepEqual(validateFigure(two, { problemText: CC_TEXT, claims: [{ kind: 'on_circle', point: 'A', circle: 'CC' }] }), { ok: true });
+  const v = validateFigure(two, { problemText: CC_TEXT, claims: [{ kind: 'on_circle', point: 'A', circle: 'the circle' }] });
+  assert.equal(v.ok, false);
+  assert.match(v.ok ? '' : v.reasons.join('; '), /names circle the circle but the solver has no such circle/);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

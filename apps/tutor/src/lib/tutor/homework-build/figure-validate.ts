@@ -249,8 +249,13 @@ export function checkClaims(
     } else if (c.kind === 'on_circle') {
       // The claims pass names a circle the way the sheet does ("the circle",
       // "circle O"); with one circle in the figure that is the one it means.
-      const ids = Object.keys(circles);
-      const circ = circles[c.circle] ?? (ids.length === 1 ? circles[ids[0]] : undefined);
+      // 2026-10-22 (hw-14 p2): a circle is registered under its id and its
+      // centre's name, so "one circle" counts distinct circles, not names; a
+      // name that matches a key only after folding ("CC" for "cc") reaches it.
+      const distinct = [...new Set(Object.values(circles))];
+      const folded = [...new Set(Object.keys(circles).filter((k) => foldName(k) === foldName(c.circle)).map((k) => circles[k]))];
+      const circ = circles[c.circle] ?? (folded.length === 1 ? folded[0] : undefined)
+        ?? (distinct.length === 1 ? distinct[0] : undefined);
       if (!circ) { out.push(`on_circle ${c.point} names circle ${c.circle} but the solver has no such circle`); continue; }
       const d = Math.abs(Math.hypot(points[c.point].x - circ.cx, points[c.point].y - circ.cy) - circ.r);
       if (d > dtol) out.push(`on_circle ${c.point} ${c.circle} fails: ${c.point} is ${fmt(d)} off the circle`);
@@ -314,25 +319,39 @@ function validateGeometry(
 
   const points: Record<string, Pt> = {};
   for (const p of solved.points) points[p.id] = { x: p.x, y: p.y };
-  // Circles are keyed by their step/given id: match each spec circle to a solved one by centre (and radius when given).
+  // Circles are keyed by their step/given id: match each spec circle to a solved one by
+  // id, else by centre (and radius when given). GAC acceptance 2026-10-22 (hw-14 p2): an
+  // `incircle`/`circumcircle` step has no `center` field, so it matched nothing and the
+  // claims on the incircle failed with "no such circle"; the solver now carries the id.
   const circles: Record<string, { cx: number; cy: number; r: number }> = {};
   const centerAlias = new Map<string, string | null>();
   const used = new Set<number>();
+  const solvedCircle = (i: number) => {
+    const c = solved.circles[i], ctr = points[c.center];
+    return ctr ? { cx: ctr.x, cy: ctr.y, r: c.radius } : undefined;
+  };
   for (const g of [...fig.given, ...fig.steps] as Array<{ id?: string; center?: string; radius?: number; kind?: string }>) {
-    if (!g.id || typeof g.center !== 'string' || !/circle/.test(g.kind ?? '')) continue;
-    const idx = solved.circles.findIndex((c, i) => !used.has(i) && c.center === g.center && (g.radius === undefined || Math.abs(c.radius - g.radius) < 1e-9));
-    const ctr = points[g.center];
-    if (idx < 0 || !ctr) continue;
+    if (!g.id || !/circle/.test(g.kind ?? '')) continue;
+    let idx = solved.circles.findIndex((c, i) => !used.has(i) && c.id === g.id);
+    if (idx < 0 && typeof g.center === 'string') idx = solved.circles.findIndex((c, i) => !used.has(i) && c.center === g.center && (g.radius === undefined || Math.abs(c.radius - g.radius) < 1e-9));
+    const circ = idx < 0 ? undefined : solvedCircle(idx);
+    if (!circ) continue;
     used.add(idx);
-    circles[g.id] = { cx: ctr.x, cy: ctr.y, r: solved.circles[idx].radius };
+    circles[g.id] = circ;
+    const center = solved.circles[idx].center;
     // 2026-10-21 (hw-11 problem 5, "quarter circles centered at A and C"): the
     // claims reader names a circle by its centre ("circle A"). When no shape
     // carries that id, the centre's name reaches its circle — one circle per
     // centre; a second circle on the same centre makes the name ambiguous.
-    if (!circles[g.center]) {
-      if (centerAlias.has(g.center)) centerAlias.set(g.center, null); else centerAlias.set(g.center, g.id);
+    if (!circles[center]) {
+      if (centerAlias.has(center)) centerAlias.set(center, null); else centerAlias.set(center, g.id);
     }
   }
+  // A solved circle no spec entry claimed is still a circle of the figure, under its own id.
+  solved.circles.forEach((c, i) => {
+    const circ = used.has(i) || !c.id || circles[c.id] ? undefined : solvedCircle(i);
+    if (circ && c.id) circles[c.id] = circ;
+  });
   for (const [center, id] of centerAlias) if (id && !circles[center]) circles[center] = circles[id];
   // A claim may name a point by the sheet's word for it, the point's label (hw-14 p3).
   // Two points whose labels fold alike make the label ambiguous (null), like
