@@ -1163,8 +1163,19 @@ export default function SessionStage(props: SessionStageProps) {
           // (`showSwitcher && !pagerInCard`) — shared with the presence
           // overlay below so their tops (and therefore vertical centers)
           // agree.
+          // GAC acceptance 2026-10-22 (hw-14 p1, F1): in a one-problem session
+          // the static Q-pin row below is a SIBLING of the board card, and
+          // this column was a flex ROW — the pin (`w-full shrink-0`) took the
+          // whole width and the card (`overflow-hidden` ⇒ min-width 0)
+          // collapsed to its two borders, so the live-drawn figure "vanished
+          // when the Q-pin showed up" (chromium: card 2px wide, board 0px).
+          // With a problem panel the column is a column (pin row, then the
+          // card filling the rest — see the card's `flex-1 min-h-0`), whether
+          // or not the pin is showing yet, so nothing flips when it arrives.
+          // Every session without a problem panel keeps the exact same class
+          // string (scripts/test-stage-qpin-static.tsx pins it).
           ref={boardColumnRef}
-          className={`absolute inset-0 ${boardColumnTopPadClass} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
+          className={`absolute inset-0 ${boardColumnTopPadClass} pb-2 px-2 sm:px-0 flex justify-center${qpinStatic ? ' flex-col items-center' : ''} ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
           style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
@@ -1202,7 +1213,12 @@ export default function SessionStage(props: SessionStageProps) {
           )}
           <div
             ref={boardCardRef}
-            className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}
+            // F1 (above): under the static pin row the card takes the rest of
+            // the column (`flex-1 min-h-0`) instead of `h-full`, which would
+            // overflow the column by the pin row's height and clip the board's
+            // bottom under the floating dock. The WhiteboardCanvas root is
+            // `h-full`; a flex item in a definite-height column resolves it.
+            className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} ${qpinStatic ? 'flex-1 min-h-0' : 'h-full'} ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}
           >
             {/* Text mode, <md: the pager moves IN the card (compact row, no
                 floating pill, no extra vertical row) — owner mobile-split

@@ -79,6 +79,11 @@ async function main() {
     has(stage, /\{questionPin && qpinMode === 'expanded' && qpinStatic && \(/);
     has(stage, /data-testid="question-pin-static"/);
     has(stage, /\{questionPin && qpinMode === 'expanded' && !qpinStatic && \(/);
+    // GAC acceptance 2026-10-22 (hw-14 p1, F1): the pin row and the card are
+    // column siblings — a flex ROW squeezed the card to its borders when the
+    // pin appeared (full proof + real layout: scripts/test-stage-qpin-static.tsx).
+    has(stage, /flex justify-center\$\{qpinStatic \? ' flex-col items-center' : ''\} /);
+    has(stage, /\$\{qpinStatic \? 'flex-1 min-h-0' : 'h-full'\} \$\{pagerInCard \? 'flex flex-col' : ''\}/);
   });
   await section('one-problem session: no Wrap up / Finish lesson / Discard session in the adjust menu', () => {
     const ts = readSrc('app/tutor/components/session/TutorSession.tsx');
