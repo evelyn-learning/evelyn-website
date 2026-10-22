@@ -11,7 +11,7 @@
  *    header "Problem n ▾" (▴ when open; the open sheet overlays the board).
  *  - The figure itself is NOT here (GAC acceptance 2026-10-21): it is drawn
  *    on the whiteboard as page 1's first item (TutorSession → WhiteboardCanvas
- *    `leadItem` → ProblemFigure), where the student works. With a figure
+ *    `leadItem` → ProblemFigure), where the student works.
  *  - The read's bracketed `[Figure: …]` / `[Graph: …]` description is never
  *    shown, drawn figure or not (owner ruling 2026-10-22, hw-14: the drawer
  *    carries the problem text only; the student has the sheet). See
