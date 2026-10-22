@@ -2365,7 +2365,7 @@ function solveRegion(step: StepRegion, state: State): void {
     const obj = state.byId.get(ref);
     if (!obj) throw new Error(`region "${step.id}": ${role} names ${ref} but the figure has no such shape`);
     if (obj.kind === 'polygon') return obj.vertices;
-    if (obj.kind !== 'circle') throw new Error(`region "${step.id}": ${role} ${ref} is a ${obj.kind}, not a circle or polygon`);
+    if (obj.kind !== 'circle') throw new Error(`region "${step.id}": ${role} ${ref} is of kind ${obj.kind}, not a circle or polygon`);
     const c = pt(state, obj.center);
     const ids: string[] = [];
     for (let i = 0; i < REGION_CIRCLE_SAMPLES; i++) {

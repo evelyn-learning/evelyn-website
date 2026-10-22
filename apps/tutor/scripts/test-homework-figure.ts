@@ -338,5 +338,33 @@ test('position claims resolve names like every claim: a prose word is skipped, a
   assert.deepEqual(checkClaims({ A: { x: 0, y: 0 }, B: { x: 1, y: 0 } }, {}, [{ kind: 'left_of', point: 'A', of: 'B' }]), []);
 });
 
+// Review of 6be191d6 (controller ruling R4): an inner shape outside or straddling
+// the outer would paint a union / XOR silently. Every hole vertex must lie inside
+// the outer (within r + dtol of a circle's centre; inside a polygon's bounding
+// box ± dtol) — dtol is the claims tolerance, so the p5 inner square, which
+// TOUCHES the circle at P, Q, R, S, still passes (asserted above).
+test('a region whose inner shape lies outside its outer fails: "is not inside outer" (G5, R4)', () => {
+  const far = (outer: string, inner: string[]) => ({
+    ...HW14B_P5_STORED,
+    given: [...(HW14B_P5_STORED as unknown as { given: unknown[] }).given,
+      { id: 'F1', kind: 'point', x: 30, y: 30, label: '' }, { id: 'F2', kind: 'point', x: 34, y: 30, label: '' }, { id: 'F3', kind: 'point', x: 32, y: 34, label: '' },
+      { id: 'far', kind: 'polygon', vertices: ['F1', 'F2', 'F3'] },
+      { id: 'cfar', kind: 'circle', center: 'F1', radius: 1 }],
+    steps: [...HW14B_P5_STORED.steps, { id: 'shade', kind: 'region', outer, inner }],
+  }) as unknown as Parameters<typeof validateFigure>[0];
+  const v = validateFigure(far('c1', ['far']), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.ok(!v.ok && v.reasons.includes('region "shade" fails: inner far is not inside outer c1'), v.ok ? 'passed' : v.reasons.join(' | '));
+  // A circle hole outside a circle outer, and a polygon/circle hole outside a POLYGON outer, likewise.
+  const c = validateFigure(far('c1', ['inner', 'cfar']), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.ok(!c.ok && c.reasons.includes('region "shade" fails: inner cfar is not inside outer c1') && !c.reasons.some((r) => /inner inner/.test(r)), c.ok ? 'passed' : c.reasons.join(' | '));
+  const p = validateFigure(far('inner', ['far']), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.ok(!p.ok && p.reasons.includes('region "shade" fails: inner far is not inside outer inner'), p.ok ? 'passed' : p.reasons.join(' | '));
+  // A straddling hole fails too: the circle c1 is not inside the inner square.
+  const s = validateFigure(far('inner', ['c1']), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.ok(!s.ok && s.reasons.includes('region "shade" fails: inner c1 is not inside outer inner'), s.ok ? 'passed' : s.reasons.join(' | '));
+  // The touching case still passes: the inner square's vertices sit ON c1.
+  assert.deepEqual(validateFigure(p5Region({ id: 'shade', kind: 'region', outer: 'c1', inner: ['inner'] }), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS }), { ok: true });
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

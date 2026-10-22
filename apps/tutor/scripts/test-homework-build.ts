@@ -358,7 +358,11 @@ async function main() {
       assert.ok(inner, 'the inner square path has fill="none" and no fill-opacity');
       assert.ok(region!.index < inner!.index, 'the region is painted before the polygons');
       assert.ok(!/fill="#4f8cff" fill-opacity="0.15"/.test(svg!), 'no 15 %-filled polygon remains');
-      assert.ok(!/point-shade_r/.test(svg!), 'the 48 circle samples are hidden helpers, never dots');
+      // The samples are named after the CIRCLE (`c1_r0..47`, geometry-solver solveRegion), not the
+      // region, and featSlug writes the id's underscore as a hyphen: an un-hidden sample's dot is
+      // data-feature="point-c1-r9" (checked by un-hiding them: this assertion then fails).
+      assert.ok(!/point-c1-r\d+/.test(svg!), 'the 48 circle samples are hidden helpers, never dots');
+      assert.ok(!/data-feature="point-[^"]*-r\d+"/.test(svg!), 'no sample of any circle is a dot');
       assert.ok(/<ellipse cx="[^"]+" cy="[^"]+" rx="[^"]+" ry="[^"]+" fill="none"/.test(svg!), 'the circle outline is still drawn');
       // Engine freeze (controller ruling R1): a geometry with no regions and no polygon fill is byte-identical.
       const html = renderToStaticMarkup(renderGeometryTree(GEOMETRY_FREEZE_FIXTURE));
@@ -545,7 +549,9 @@ async function main() {
       assert.match(FIGURE_PROPOSE_SYSTEM, /xAxisStep/);
       assert.match(FIGURE_PROPOSE_SYSTEM, /translate_point: \{ kind: "translate_point", point: pointId, by: \{ dx, dy \} \| \{ from: pointId, to: pointId \}/, 'the proposer prompt names both by shapes (G7)');
       // G5: the region vocabulary and the shading rule live in the homework proposer prompt only.
-      assert.match(FIGURE_PROPOSE_SYSTEM, /region: \{ kind: "region", outer: circleId\|polygonId, inner\?: \[circleId\|polygonId, \.\.\.\], label\? \}/, 'the proposer prompt names region with outer/inner (G5)');
+      // No `label?` on region: the renderer draws no region label, so a word written there would vanish (review, Minor 3).
+      assert.match(FIGURE_PROPOSE_SYSTEM, /region: \{ kind: "region", outer: circleId\|polygonId, inner\?: \[circleId\|polygonId, \.\.\.\] \}/, 'the proposer prompt names region with outer/inner and no label (G5)');
+      assert.doesNotMatch(FIGURE_PROPOSE_SYSTEM, /kind: "region"[^\n]*label\?/, 'region offers no label');
       assert.match(FIGURE_PROPOSE_SYSTEM, /fill: "none"/, 'the proposer prompt names the polygon fill "none" field (G5)');
       assert.ok(FIGURE_PROPOSE_SYSTEM.includes('10. Shade exactly what the sheet shades: a region step whose outer is the shape whose inside is shaded and whose inner shapes are cut out; when the sheet shades a region, every polygon it leaves unshaded carries fill "none"; never shade a polygon to stand in for the sheet\'s shading.'), 'rule 10 verbatim (G5)');
       const { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } = await import('../src/lib/tutor/diagrams/geometry-step-docs');

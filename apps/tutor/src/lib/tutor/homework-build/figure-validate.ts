@@ -406,6 +406,43 @@ function validateGeometry(
     if (circ && c.id) circles[c.id] = circ;
   });
   for (const [center, id] of centerAlias) if (id && !circles[center]) circles[center] = circles[id];
+  // G5 review (controller ruling R4): a region's inner shape outside, or straddling,
+  // its outer would paint a union / XOR silently. Every hole vertex must lie inside
+  // the outer: within r + dtol of the centre when the outer is a circle, inside the
+  // polygon (even-odd ray cast, or within dtol of an edge) otherwise. dtol is the
+  // claims tolerance (1e-3 of the figure's extent), so an inner shape that TOUCHES
+  // the boundary (hw-14b p5: the inner square's vertices sit on the circle) still
+  // passes. Not the polygon's bounding box: the box of the p5 inner diamond is the
+  // whole outer square, so a circle straddling the diamond would have passed.
+  {
+    const xs = Object.values(points).map((p) => p.x), ys = Object.values(points).map((p) => p.y);
+    const dtol = 1e-3 * Math.max(1e-9, Math.max(...xs, 0) - Math.min(...xs, 0), Math.max(...ys, 0) - Math.min(...ys, 0));
+    const steps = fig.steps as Array<{ kind?: unknown; id?: unknown; outer?: unknown; inner?: unknown }>;
+    const inPolygon = (p: Pt, ring: Pt[]): boolean => {
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const a = ring[i], b = ring[j];
+        // Within dtol of the edge ab (between its ends): on the boundary counts as inside.
+        const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1e-12;
+        const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (len * len);
+        if (t >= -1e-9 && t <= 1 + 1e-9 && Math.abs((p.x - a.x) * dy - (p.y - a.y) * dx) / len <= dtol) return true;
+        if ((a.y > p.y) !== (b.y > p.y) && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+      }
+      return inside;
+    };
+    for (const r of solved.regions) {
+      const step = steps.find((s) => s?.kind === 'region' && s.id === r.id);
+      if (!step || typeof step.outer !== 'string') continue;
+      const innerIds = Array.isArray(step.inner) ? step.inner as string[] : [];
+      const circ = circles[step.outer];
+      const ring = r.outer.map((id) => points[id]).filter(Boolean);
+      const inside = (p: Pt) => (circ ? Math.hypot(p.x - circ.cx, p.y - circ.cy) <= circ.r + dtol : inPolygon(p, ring));
+      r.holes.forEach((hole, i) => {
+        const vs = hole.map((id) => points[id]).filter(Boolean);
+        if (vs.length && !vs.every(inside)) reasons.push(`region "${r.id}" fails: inner ${innerIds[i] ?? '?'} is not inside outer ${step.outer}`);
+      });
+    }
+  }
   // A claim may name a point by the sheet's word for it, the point's label (hw-14 p3).
   // Two points whose labels fold alike make the label ambiguous (null), like
   // centerAlias above: neither point is guessed.
