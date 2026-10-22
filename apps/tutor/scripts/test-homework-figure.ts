@@ -11,7 +11,7 @@
 
 import { strict as assert } from 'node:assert';
 import { homeworkFigureFor, titleNamesProblem } from '../src/lib/tutor/whiteboard/homework-figure';
-import { namedPointsIn } from '../src/lib/tutor/homework-build/figure-validate';
+import { namedPointsIn, validateFigure } from '../src/lib/tutor/homework-build/figure-validate';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 
 let passed = 0;
@@ -86,6 +86,40 @@ test('namedPointsIn ignores a quoted letter and a letter-shape (F4a)', () => {
   assert.equal(names('a \u201CV\u201D shape'), '');
   assert.equal(names("a 'V' shape"), '');
   assert.equal(names("triangle A'B'C' is the image"), '');
+});
+
+// GAC acceptance 2026-10-22 (hw-14 problem 3, the lighthouse): the claims
+// named the boats by the sheet's words ("Boat1", "Boat2") and the base as
+// "Base"; the figure drew them as P1/P2 labelled "Boat 1"/"Boat 2" and had no
+// base point by that name, so every attempt failed and no figure showed.
+const HW14_P3_TEXT = 'From the top of a 60 m lighthouse, the angles of depression to two boats are 40° and 28°. How far apart are the boats? [Figure: A vertical lighthouse stands on the left on a horizontal ground line. Its height is labelled 60 m along its left side. A dashed horizontal line extends to the right from the top of the lighthouse. Two sight lines run from the top of the lighthouse down to Boat 1 (the nearer boat) and Boat 2 (the farther boat), both on the ground/water line to the right. 40° is the angle between the dashed line and the line to Boat 1, below the dashed line. 28° is the angle between the dashed line and the line to Boat 2, below the dashed line.]';
+const HW14_P3_FIGURE = {"action":"showGeometryConstructed","given":[{"id":"B","kind":"point","x":0,"y":0},{"id":"T","kind":"point","x":0,"y":60},{"id":"P1","kind":"point","x":71.5,"y":0,"label":"Boat 1"},{"id":"P2","kind":"point","x":112.8,"y":0,"label":"Boat 2"},{"id":"H","kind":"point","x":130,"y":60},{"id":"G","kind":"point","x":130,"y":0}],"steps":[{"id":"s_lh","kind":"segment","from":"B","to":"T","label":"60 m"},{"id":"s_ground","kind":"segment","from":"B","to":"G"},{"id":"s_hor","kind":"segment","from":"T","to":"H","style":"dashed"},{"id":"s_1","kind":"segment","from":"T","to":"P1"},{"id":"s_2","kind":"segment","from":"T","to":"P2"},{"id":"a1","kind":"angle_marker","vertex":"T","from":"P1","to":"H","style":"arc","label":"40°"},{"id":"a2","kind":"angle_marker","vertex":"T","from":"P2","to":"H","style":"arc","label":"28°"},{"id":"ar","kind":"angle_marker","vertex":"B","from":"G","to":"T","style":"right"}],"display":{"grid":false,"axes":false}} as unknown as Parameters<typeof validateFigure>[0];
+type Claims = Parameters<typeof validateFigure>[1]['claims'];
+const hw14 = (claims: Claims) => validateFigure(HW14_P3_FIGURE, { problemText: HW14_P3_TEXT, claims });
+
+test('claims name points by the sheet\'s label; a word no point carries is skipped (F4c)', () => {
+  const v = hw14([
+    { kind: 'on_segment', point: 'Boat1', segment: ['Base', 'Boat2'] },
+    { kind: 'between', point: 'Boat1', ends: ['Base', 'Boat2'] },
+  ]);
+  assert.deepEqual(v, { ok: true });
+});
+
+test('a label-resolved claim is still checked against the drawing (F4c)', () => {
+  // Boat 2 is not between B and Boat 1: resolved by label, then it fails on geometry.
+  const v = hw14([{ kind: 'between', point: 'Boat 2', ends: ['B', 'Boat1'] }]);
+  assert.equal(v.ok, false);
+  assert.match(v.ok ? '' : v.reasons.join('; '), /between P2 \[B,P1\] fails/);
+  assert.deepEqual(hw14([{ kind: 'between', point: 'boat-1', ends: ['B', 'Boat 2'] }]), { ok: true });
+});
+
+test('a missing letter id still fails; a prose word is still skipped (F4c)', () => {
+  const q = hw14([{ kind: 'on_segment', point: 'Q', segment: ['B', 'G'] }]);
+  assert.equal(q.ok, false);
+  assert.match(q.ok ? '' : q.reasons.join('; '), /names Q but the solver has no such point/);
+  const p3 = hw14([{ kind: 'on_segment', point: 'P3', segment: ['B', 'G'] }]);
+  assert.equal(p3.ok, false);
+  assert.deepEqual(hw14([{ kind: 'on_segment', point: 'apex', segment: ['B', 'G'] }]), { ok: true });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
