@@ -169,3 +169,18 @@ export function usageResponse(
     session_max_minutes: toMinutes(snap.sessionMaxSec),
   };
 }
+
+/** The frame's view of GET /api/tutor/partner-pool: anything not a complete pooled answer is "not pooled". */
+export function poolSnapshotFromWire(json: unknown): PoolSnapshot {
+  if (!json || typeof json !== 'object') return { pooled: false };
+  const j = json as Record<string, unknown>;
+  if (j.pooled !== true) return { pooled: false };
+  const n = (k: string) => (typeof j[k] === 'number' && Number.isFinite(j[k] as number) ? (j[k] as number) : null);
+  const capSec = n('cap_sec');
+  const usedSec = n('used_sec');
+  const remainingSec = n('remaining_sec');
+  const sessionMaxSec = n('session_max_sec');
+  const idleEndSec = n('idle_end_sec');
+  if (capSec === null || usedSec === null || remainingSec === null || sessionMaxSec === null || idleEndSec === null) return { pooled: false };
+  return { pooled: true, capSec, usedSec, remainingSec, sessionMaxSec, idleEndSec, exhausted: j.exhausted === true };
+}

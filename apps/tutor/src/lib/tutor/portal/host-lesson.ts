@@ -410,13 +410,18 @@ export const CLOCK_POST_MS = 15 * 1000;
  *  minimized time excluded); `running` says whether it is advancing right now
  *  — the host ticks locally from the last message while it is, and shows the
  *  value as is while it is not. `max_seconds` only when the token set a limit. */
-export function clockMessage(input: { activeSeconds: number; running: boolean; maxSeconds?: number }): {
-  type: 'evelyn:clock'; active_seconds: number; running: boolean; max_seconds?: number;
+export function clockMessage(input: { activeSeconds: number; running: boolean; maxSeconds?: number; poolRemainingSeconds?: number }): {
+  type: 'evelyn:clock'; active_seconds: number; running: boolean; max_seconds?: number; pool_remaining_seconds?: number;
 } {
   return {
     type: 'evelyn:clock',
     active_seconds: Math.max(0, Math.floor(input.activeSeconds)),
     running: input.running,
     ...(typeof input.maxSeconds === 'number' && input.maxSeconds > 0 ? { max_seconds: Math.floor(input.maxSeconds) } : {}),
+    // Partner minute pool (2026-10-21): minutes left in the partner's shared
+    // pool, for a host that draws a gauge. Absent when no pool applies.
+    ...(typeof input.poolRemainingSeconds === 'number' && Number.isFinite(input.poolRemainingSeconds) && input.poolRemainingSeconds >= 0
+      ? { pool_remaining_seconds: Math.floor(input.poolRemainingSeconds) }
+      : {}),
   };
 }

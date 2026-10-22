@@ -140,7 +140,10 @@ test('start waits briefly for a host video\'s first report (live 10-15 race)', (
 });
 
 test('embed: host start holds for the video report before startSession', () => {
-  const run = embed.slice(embed.indexOf('const runHostStart = useCallback'), embed.indexOf('const blockStart = useCallback'));
+  // 2026-10-21: blockStart moved above runHostStart (the partner-pool gate
+  // calls it), so the slice ends at runHostStart's own dependency list.
+  const runStart = embed.indexOf('const runHostStart = useCallback');
+  const run = embed.slice(runStart, embed.indexOf('}, [addDebugEvent, uiOptions.videoControl', runStart));
   assert.ok(run.length > 0, 'runHostStart found');
   assert.match(run, /hostVideo: TUTOR_HOST_LESSON && uiOptions\.videoControl/);
   assert.match(run, /videoKnown: lessonHostRef\.current\.video !== null/);

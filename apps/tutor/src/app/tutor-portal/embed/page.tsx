@@ -48,10 +48,14 @@ import {
 } from '@/lib/tutor/portal/host-lesson';
 import { LESSON_CACHE_MAX_CHARS, lessonCacheKey, parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { HOST_START_VIDEO_WAIT_MS, PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, shouldAwaitVideoState, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
+import { POOL_BLOCKED_LINE, POOL_GOODBYE_LINE, clockPoolSeconds, effectiveCapSec, poolSnapshotFromWire, startDecision, type PoolSnapshot } from '@/lib/tutor/portal/partner-pool';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
 const TUTOR_PEDAGOGY_OPENER_EMBED = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
+// Partner minute pool (spec 2026-10-21): start gate, wall-clock sitting cap,
+// exhausted end, per-partner parked idle. Off ⇒ every path exactly as before.
+const TUTOR_PARTNER_POOL = process.env.NEXT_PUBLIC_TUTOR_PARTNER_POOL !== 'off';
 
 // Debug-event types persisted for embed sessions (prefix match). Measurement
 // events only — keep this list short; every entry lands in Mongo for every
@@ -95,6 +99,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // orb/mic tap now records its resolved action, so a swallowed pre-start
   // tap can never again leave a zero-telemetry dead session.
   'start_',
+  // 2026-10-21 partner minute pool: partner_pool_snapshot / _unavailable /
+  // _cap_end / _exhausted — why a pooled partner's session refused to start
+  // or ended early.
+  'partner_pool',
   // 2026-08-17 (portal-35b9a5d8): figure_evolve_replace / figure_redraw_replace
   // / figure_evolve_removed — the supersede trail for "the diagram is
   // overlapping, redraw it" fixes; without these the portal replay can't
@@ -741,11 +749,16 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // own span). 0 until either answers, i.e. a first sitting, or a failed
   // request ⇒ this mount's duration alone, exactly the old behaviour.
   const priorActiveSecRef = useRef(0);
+  // Partner minute pool: the same response carries `pool` (remaining /
+  // exhausted); the handler is assigned further down, once the session handle
+  // and end path exist (latest-closure ref, like syncInactiveRef).
+  const poolResponseRef = useRef<(j: unknown) => void>(() => {});
   const notePriorActive = useCallback((res: Response) => {
     if (!res.ok) return;
     res.json().then((j: { priorActiveSeconds?: unknown } | null) => {
       const prior = readActiveSecondsField(j?.priorActiveSeconds);
       if (prior != null) priorActiveSecRef.current = prior;
+      poolResponseRef.current(j);
     }).catch(() => {});
   }, []);
   // Phase-0 instrumentation (humanlike-latency plan): the embed surface never
@@ -789,6 +802,31 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // transcript latch is the backstop, not a replacement. `=== null` on each
   // setter means the first signal wins and the rest are no-ops.
   const sessionEngagedAtRef = useRef<number | null>(null);
+  // Partner minute pool (spec 2026-10-21 §4.3–4.5). The snapshot is read at
+  // mount (and every 60 s until the session engages), re-read at a host
+  // start, and kept current from every session-usage response. The cap is
+  // latched the moment the session engages: min(token max, the partner's
+  // per-session max, what is left in the pool) — WALL clock from
+  // sessionEngagedAtRef, standby included (the engine's own time_limit stop
+  // counts active time only). poolEndReasonRef carries the reason into
+  // evelyn:session_ended the same way hostEndReasonRef does.
+  const poolSnapshotRef = useRef<PoolSnapshot | null>(null);
+  const poolCapSecRef = useRef<number | null>(null);
+  const poolEndReasonRef = useRef<'time_limit' | 'minutes_exhausted' | null>(null);
+  const poolIdleEndSecRef = useRef<number | null>(null);
+  const latchPoolCap = () => {
+    if (!TUTOR_PARTNER_POOL || poolCapSecRef.current !== null) return;
+    const snap = poolSnapshotRef.current;
+    if (!snap || !snap.pooled) return;
+    poolCapSecRef.current = effectiveCapSec({
+      tokenMaxSec: maxDurationExplicit ? maxDuration * 60 : undefined,
+      sessionMaxSec: snap.sessionMaxSec,
+      remainingSec: snap.remainingSec,
+    });
+    poolIdleEndSecRef.current = snap.idleEndSec;
+  };
+  const latchPoolCapRef = useRef(latchPoolCap);
+  latchPoolCapRef.current = latchPoolCap;
   // Single definition of the gate (fix-round-1: the reviewer flagged the
   // duplicated three-line check at the two write sites below). A page load
   // is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206): hold every
@@ -823,6 +861,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     if (type === 'start_tap' && sessionEngagedAtRef.current === null) {
       sessionEngagedAtRef.current = Date.now();
       syncInactiveRef.current(); // a prewarmed frame's wait ends here
+      latchPoolCapRef.current(); // partner pool: the sitting's wall-clock cap starts now
     }
     if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
     debugEventsRef.current.push({
@@ -1272,7 +1311,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const handleEndSession = useCallback((reason?: 'time_limit', endIntent?: 'finish' | 'discard') => {
     if (sessionEndedPostedRef.current) return;
     sessionEndedPostedRef.current = true;
-    const endedReason = reason ?? hostEndReasonRef.current ?? undefined;
+    const endedReason = reason ?? poolEndReasonRef.current ?? hostEndReasonRef.current ?? undefined;
     // A deliberate discard (round-4 item 5) is an abandonment, not a
     // completion — keep the engine's own record consistent with the
     // portal's abort.
@@ -1400,7 +1439,60 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // frame shows one "Tap to hear your tutor" button and the start runs on
   // that tap instead.
   const hostStartAcceptedRef = useRef(false);
-  const [startBlocked, setStartBlocked] = useState<null | 'autoplay' | 'token_expired'>(null);
+  const [startBlocked, setStartBlocked] = useState<null | 'autoplay' | 'token_expired' | 'minutes_exhausted'>(null);
+  const blockStart = useCallback((reason: 'autoplay' | 'token_expired' | 'minutes_exhausted') => {
+    setStartBlocked(reason);
+    addDebugEvent('start_blocked', `reason=${reason}`);
+    window.parent.postMessage({ type: 'evelyn:start_blocked', reason }, '*');
+  }, [addDebugEvent]);
+  // Partner minute pool read (GET /api/tutor/partner-pool). Resolves null on
+  // any failure and keeps the last good snapshot: an unreadable pool never
+  // blocks a student (fail open), it just stops being enforced for this sitting.
+  const fetchPoolSnapshot = useCallback(async (timeoutMs?: number): Promise<PoolSnapshot | null> => {
+    if (!TUTOR_PARTNER_POOL || !embedToken) return null;
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = timeoutMs && ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+    try {
+      const res = await fetch('/api/tutor/partner-pool', { headers: { 'x-embed-token': embedToken }, cache: 'no-store', signal: ctrl?.signal });
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      const j = (await res.json()) as { error?: string } | null;
+      const snap = poolSnapshotFromWire(j);
+      poolSnapshotRef.current = snap;
+      if (snap.pooled) {
+        poolIdleEndSecRef.current = snap.idleEndSec;
+        addDebugEvent('partner_pool_snapshot', `remaining=${snap.remainingSec} cap=${snap.capSec} session_max=${snap.sessionMaxSec} exhausted=${snap.exhausted}`);
+      } else if (j?.error === 'unavailable') {
+        addDebugEvent('partner_pool_unavailable', 'read=unavailable');
+      }
+      return snap;
+    } catch (err) {
+      if (poolSnapshotRef.current === null) poolSnapshotRef.current = { pooled: false };
+      addDebugEvent('partner_pool_unavailable', `err=${(err as Error)?.message ?? 'unknown'}`);
+      return null;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }, [embedToken, addDebugEvent]);
+  // Mount read, repeated every 60 s until the session engages, so a pool that
+  // empties while the frame sits prewarmed shows the "used up" overlay before
+  // the student's tap (the tap itself never passes runHostStart).
+  useEffect(() => {
+    if (!TUTOR_PARTNER_POOL || !embedToken) return;
+    let cancelled = false;
+    let blocked = false;
+    const read = () => void fetchPoolSnapshot().then((snap) => {
+      if (cancelled || blocked || !snap || !snap.pooled || !snap.exhausted) return;
+      if (sessionEngagedAtRef.current !== null || hostStartAcceptedRef.current) return;
+      blocked = true;
+      blockStart('minutes_exhausted');
+    });
+    read();
+    const t = setInterval(() => {
+      if (sessionEngagedAtRef.current !== null || blocked) { clearInterval(t); return; }
+      read();
+    }, 60_000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [embedToken, fetchPoolSnapshot, blockStart]);
   const runHostStart = useCallback(() => {
     const startedAt = Date.now();
     const deadline = startedAt + 60_000;
@@ -1423,13 +1515,19 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       if (Date.now() < deadline) setTimeout(tryStart, 100);
       else addDebugEvent('host_start_ignored', 'why=no_session_handle');
     };
-    tryStart();
-  }, [addDebugEvent, uiOptions.videoControl]);
-  const blockStart = useCallback((reason: 'autoplay' | 'token_expired') => {
-    setStartBlocked(reason);
-    addDebugEvent('start_blocked', `reason=${reason}`);
-    window.parent.postMessage({ type: 'evelyn:start_blocked', reason }, '*');
-  }, [addDebugEvent]);
+    // Partner minute pool (spec 2026-10-21 §4.3): a fresh read (≤ 1.5 s, else
+    // the last snapshot) gates the start; no pool or an unreadable one starts
+    // the session exactly as before.
+    void (async () => {
+      if (TUTOR_PARTNER_POOL && embedToken) {
+        const fresh = await fetchPoolSnapshot(1_500);
+        const decision = startDecision(fresh ?? poolSnapshotRef.current ?? { pooled: false });
+        if (!decision.start) { blockStart(decision.reason); return; }
+        latchPoolCapRef.current();
+      }
+      tryStart();
+    })();
+  }, [addDebugEvent, uiOptions.videoControl, embedToken, fetchPoolSnapshot, blockStart]);
   useEffect(() => {
     if (!TUTOR_HOST_START) return;
     const expectedOrigin = getEmbeddingHost();
@@ -1665,17 +1763,68 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     const t = setInterval(() => {
       const engagedAt = sessionEngagedAtRef.current;
       if (engagedAt === null || sessionEndedPostedRef.current) return;
-      if (Date.now() - Math.max(standbyFrom, engagedAt) < STANDBY_IDLE_END_MS) return;
+      // Partner minute pool: a pooled partner's own parked-idle limit
+      // (idle_end_sec, e.g. 10 min) replaces the 30-minute default.
+      const idleEndMs = (poolIdleEndSecRef.current ?? STANDBY_IDLE_END_MS / 1000) * 1000;
+      if (Date.now() - Math.max(standbyFrom, engagedAt) < idleEndMs) return;
       const h = sessionHandleRef.current;
       if (h?.isEnding?.() === true) return;
       clearInterval(t);
-      addDebugEvent('standby_idle_end', `afterMs=${STANDBY_IDLE_END_MS}`);
+      addDebugEvent('standby_idle_end', `afterMs=${idleEndMs}`);
       hostEndReasonRef.current = 'idle';
       if (h?.endSession) h.endSession();
       else handleEndSessionRef.current();
     }, 60_000);
     return () => clearInterval(t);
   }, [standby, addDebugEvent]);
+
+  // Partner minute pool — the sitting's WALL-clock cap (spec 2026-10-21 §4.3).
+  // Counted from the moment the session engaged, standby included; ends the
+  // session through the same goodbye-and-save path as a host_end, with
+  // ended_reason 'time_limit'. The engine's own time_limit stop (active time)
+  // stays as a backstop; whichever fires first wins, the post-once guard
+  // keeps session_ended single.
+  useEffect(() => {
+    if (!TUTOR_PARTNER_POOL) return;
+    const t = setInterval(() => {
+      const cap = poolCapSecRef.current;
+      const engagedAt = sessionEngagedAtRef.current;
+      if (cap === null || engagedAt === null || poolEndReasonRef.current || sessionEndedPostedRef.current) return;
+      if (Date.now() - engagedAt < cap * 1000) return;
+      const h = sessionHandleRef.current;
+      if (h?.isEnding?.() === true) return;
+      clearInterval(t);
+      poolEndReasonRef.current = 'time_limit';
+      addDebugEvent('partner_pool_cap_end', `capSec=${cap} wallMs=${Date.now() - engagedAt}`);
+      if (h?.endSession) h.endSession({ farewell: goodbyeFor('finished') });
+      else handleEndSessionRef.current('time_limit');
+    }, 5_000);
+    return () => clearInterval(t);
+  }, [addDebugEvent]);
+  // Partner minute pool — every session-usage response says what is left
+  // (§4.4). Exhausted while open ⇒ one pool-specific goodbye, then the normal
+  // end; ended_reason 'minutes_exhausted'.
+  poolResponseRef.current = (j: unknown) => {
+    if (!TUTOR_PARTNER_POOL) return;
+    const pool = (j as { pool?: { remaining_sec?: unknown; exhausted?: unknown } } | null)?.pool;
+    if (!pool || typeof pool.remaining_sec !== 'number') return;
+    const prev = poolSnapshotRef.current;
+    if (prev && prev.pooled) {
+      poolSnapshotRef.current = {
+        ...prev,
+        remainingSec: pool.remaining_sec,
+        usedSec: Math.max(0, prev.capSec - pool.remaining_sec),
+        exhausted: pool.exhausted === true,
+      };
+    }
+    if (pool.exhausted !== true || poolEndReasonRef.current || sessionEndedPostedRef.current) return;
+    const h = sessionHandleRef.current;
+    if (h?.isEnding?.() === true) return;
+    poolEndReasonRef.current = 'minutes_exhausted';
+    addDebugEvent('partner_pool_exhausted', `remaining=${pool.remaining_sec}`);
+    if (h?.endSession) h.endSession({ farewell: POOL_GOODBYE_LINE });
+    else handleEndSessionRef.current();
+  };
 
   // evelyn:clock — the session clock for a host that draws it in its own
   // header (and hides ours with `features.session_timer: false`). Posted when
@@ -1687,7 +1836,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     window.parent.postMessage(clockMessage({
       activeSeconds: activeSeconds((now - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, now),
       running: !ended && !isStandingBy(lessonHostRef.current),
-      maxSeconds: maxDurationExplicit ? maxDuration * 60 : undefined,
+      // Partner minute pool: the effective cap for THIS sitting, so a host's
+      // countdown matches what will actually end it; plus the pool gauge.
+      maxSeconds: poolCapSecRef.current ?? (maxDurationExplicit ? maxDuration * 60 : undefined),
+      poolRemainingSeconds: clockPoolSeconds(poolSnapshotRef.current),
     }), '*');
   }, [maxDurationExplicit, maxDuration]);
   useEffect(() => {
@@ -1739,6 +1891,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       if (sessionEngagedAtRef.current === null) {
         sessionEngagedAtRef.current = Date.now();
         syncInactiveRef.current(); // a prewarmed frame's wait ends here
+        latchPoolCapRef.current();
       }
       const startedAtMs = (e as CustomEvent<{ startedAtMs?: number }>).detail?.startedAtMs;
       window.parent.postMessage(
@@ -1795,6 +1948,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     if (transcript.length > resumedTranscriptBaseline && sessionEngagedAtRef.current === null) {
       sessionEngagedAtRef.current = Date.now();
       syncInactiveRef.current(); // a prewarmed frame's wait ends here
+      latchPoolCapRef.current();
     }
   }, [transcript.length, resumedTranscriptBaseline]);
 
@@ -2163,6 +2317,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       {startBlocked === 'token_expired' && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-white/95 p-8 text-center text-sm text-slate-700">
           This session link has expired. Please reload the page to start the tutor.
+        </div>
+      )}
+      {/* Partner minute pool (spec 2026-10-21): the partner's shared minutes are gone. */}
+      {startBlocked === 'minutes_exhausted' && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-white/95 p-8 text-center text-sm text-slate-700">
+          {POOL_BLOCKED_LINE}
         </div>
       )}
 

@@ -469,11 +469,12 @@ test('embed: video commands carry who asked', () => {
   assert.match(embed, /'video_resume_unconfirmed'/);
 });
 
-test('embed: 30 minutes of standby ends the session as idle, silently', () => {
+test('embed: 30 minutes of standby ends the session as idle, silently (a pooled partner\'s own idle_end_sec replaces the 30)', () => {
   const i = embed.indexOf("addDebugEvent('standby_idle_end'");
   assert.ok(i > 0, 'idle timer');
-  const block = embed.slice(Math.max(0, i - 700), i + 300);
-  assert.match(block, /Date\.now\(\) - Math\.max\(standbyFrom, engagedAt\) < STANDBY_IDLE_END_MS/);
+  const block = embed.slice(Math.max(0, i - 900), i + 300);
+  assert.match(block, /const idleEndMs = \(poolIdleEndSecRef\.current \?\? STANDBY_IDLE_END_MS \/ 1000\) \* 1000;/);
+  assert.match(block, /Date\.now\(\) - Math\.max\(standbyFrom, engagedAt\) < idleEndMs/);
   assert.match(block, /hostEndReasonRef\.current = 'idle'/);
   assert.match(block, /h\.endSession\(\)/);
 });
@@ -532,6 +533,14 @@ test('evelyn:clock: whole active seconds, running flag, limit only when set', ()
   assert.deepEqual(clockMessage({ activeSeconds: 61.9, running: true, maxSeconds: 900 }), { type: 'evelyn:clock', active_seconds: 61, running: true, max_seconds: 900 });
   assert.deepEqual(clockMessage({ activeSeconds: -3, running: false }), { type: 'evelyn:clock', active_seconds: 0, running: false });
   assert.ok(!('max_seconds' in clockMessage({ activeSeconds: 1, running: true, maxSeconds: 0 })));
+});
+
+test('evelyn:clock: pool_remaining_seconds only for a pooled partner (finite, ≥ 0)', () => {
+  assert.equal(clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: 123 }).pool_remaining_seconds, 123);
+  assert.ok(!('pool_remaining_seconds' in clockMessage({ activeSeconds: 10, running: true })));
+  assert.ok(!('pool_remaining_seconds' in clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: -5 })));
+  assert.equal(clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: 0 }).pool_remaining_seconds, 0);
+  assert.equal(clockMessage({ activeSeconds: 10, running: true, poolRemainingSeconds: 59.9 }).pool_remaining_seconds, 59);
 });
 
 test('host header options: clock message posted on start, standby change, end and on a timer; timer / End / tools options wired', () => {
