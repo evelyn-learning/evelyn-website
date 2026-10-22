@@ -58,12 +58,12 @@ ${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
 
 ${GEOMETRY_STEP_DOCS_EXTRA} translate_point: { kind: "translate_point", point: pointId, by: { dx, dy } | { from: pointId, to: pointId }, label? } — the point moved by a vector, given as numbers or as two points (the vector from → to, so ABCD's fourth vertex C is B translated by { from: "A", to: "D" }). region: { kind: "region", outer: circleId|polygonId, inner?: [circleId|polygonId, ...], label? } — shades the inside of outer with the inner shapes cut out (the four circular segments between a circle c1 and its inscribed square sq: { kind: "region", outer: "c1", inner: ["sq"] }); outer and inner name circles (given or step) or polygons (given or step, a sector included). A polygon (given or step) also takes fill: "none" to draw its outline only, so a square the sheet leaves white is not painted.`;
 
-export const FIGURE_CLAIMS_SYSTEM = `You read one homework problem, including its bracketed figure or graph description, and list the geometric relations it states. Use only what the text says; do not infer relations from how a figure would look. Reply with JSON only: {"claims":[...]}. Claim kinds: on_segment (point, segment:[p,q]), on_circle (point, circle), parallel (a:[p,q], b:[r,s]), perpendicular (a, b), collinear (points:[...]), between (point, ends:[p,q]). Point names are the single letters or ids the text uses. If the text states no such relation, return {"claims":[]}.`;
+export const FIGURE_CLAIMS_SYSTEM = `You read one homework problem, including its bracketed figure or graph description, and list the geometric relations it states. Use only what the text says; do not infer relations from how a figure would look. Reply with JSON only: {"claims":[...]}. Claim kinds: on_segment (point, segment:[p,q]), on_circle (point, circle), parallel (a:[p,q], b:[r,s]), perpendicular (a, b), collinear (points:[...]), between (point, ends:[p,q]), and stated relative positions of named points (left of, right of, above, below): left_of (point, of), right_of (point, of), above (point, of), below (point, of) — the point sits to the left of, to the right of, above or below the point named in of. Point names are the single letters or ids the text uses. If the text states no such relation, return {"claims":[]}.`;
 
 const CLAIM_ITEM_SCHEMA = {
   type: 'object',
   properties: {
-    kind: { type: 'string', enum: ['on_segment', 'on_circle', 'parallel', 'perpendicular', 'collinear', 'between'] },
+    kind: { type: 'string', enum: ['on_segment', 'on_circle', 'parallel', 'perpendicular', 'collinear', 'between', 'left_of', 'right_of', 'above', 'below'] },
     point: { type: 'string' },
     segment: { type: 'array', items: { type: 'string' } },
     circle: { type: 'string' },
@@ -71,6 +71,7 @@ const CLAIM_ITEM_SCHEMA = {
     b: { type: 'array', items: { type: 'string' } },
     points: { type: 'array', items: { type: 'string' } },
     ends: { type: 'array', items: { type: 'string' } },
+    of: { type: 'string' },
   },
   required: ['kind'],
   additionalProperties: false,
@@ -115,6 +116,7 @@ export function normalizeClaims(raw: unknown): FigureClaim[] {
       case 'parallel': case 'perpendicular': { const a = pair(c.a), b = pair(c.b); if (a && b) out.push({ kind: c.kind, a, b }); break; }
       case 'collinear': if (Array.isArray(c.points) && c.points.length >= 3 && c.points.every((x) => typeof x === 'string')) out.push({ kind: 'collinear', points: c.points as string[] }); break;
       case 'between': { const p = str(c.point), e = pair(c.ends); if (p && e) out.push({ kind: 'between', point: p, ends: e }); break; }
+      case 'left_of': case 'right_of': case 'above': case 'below': { const p = str(c.point), o = str(c.of); if (p && o) out.push({ kind: c.kind, point: p, of: o }); break; }
     }
   }
   return out;

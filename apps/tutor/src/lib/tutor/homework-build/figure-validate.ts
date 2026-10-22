@@ -197,6 +197,7 @@ function resolveClaim(c: FigureClaim, r: (n: string) => string): FigureClaim {
     case 'parallel': case 'perpendicular': return { ...c, a: two(c.a), b: two(c.b) };
     case 'collinear': return { ...c, points: c.points.map(r) };
     case 'between': return { ...c, point: r(c.point), ends: two(c.ends) };
+    case 'left_of': case 'right_of': case 'above': case 'below': return { ...c, point: r(c.point), of: r(c.of) };
     default: return c;
   }
 }
@@ -247,7 +248,8 @@ export function checkClaims(
       : c.kind === 'on_circle' ? [c.point]
       : c.kind === 'parallel' || c.kind === 'perpendicular' ? [...c.a, ...c.b]
       : c.kind === 'collinear' ? c.points
-      : [c.point, ...c.ends];
+      : c.kind === 'between' ? [c.point, ...c.ends]
+      : [c.point, c.of];
     const gone = missing(ids);
     // 2026-10-21 (hw-10 problem 4): the claims reader named the cone's "apex",
     // "center" and "edge" — words of the sheet, not point ids — and the
@@ -292,6 +294,17 @@ export function checkClaims(
       for (const p of rest) {
         const { off } = lineDist(points[p], points[a], points[b]);
         if (off > dtol) out.push(`collinear [${c.points}] fails: ${p} is ${fmt(off)} off line ${a}${b}`);
+      }
+    } else {
+      // GAC acceptance 2026-10-22 (hw-14b p1, G1): the read said E is right of
+      // A and B; the drawing put E on the left (a mirrored figure). y is up
+      // (the solver's convention; the renderer flips it in makeTransform).
+      const horizontal = c.kind === 'left_of' || c.kind === 'right_of';
+      const d = horizontal ? points[c.point].x - points[c.of].x : points[c.point].y - points[c.of].y;
+      const holds = c.kind === 'right_of' || c.kind === 'above' ? d > dtol : d < -dtol;
+      if (!holds) {
+        const actual = Math.abs(d) <= dtol ? 'level with' : horizontal ? (d < 0 ? 'left of' : 'right of') : (d < 0 ? 'below' : 'above');
+        out.push(`${c.kind} ${c.point} ${c.of} fails: ${c.point} is ${actual} ${c.of}`);
       }
     }
   }

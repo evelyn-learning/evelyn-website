@@ -288,5 +288,55 @@ test('a region naming a shape the figure does not have fails honestly, by name (
   assert.ok(!seg.ok && seg.reasons.some((r) => /region "shade"/.test(r) && /not a circle or polygon/.test(r)), seg.ok ? 'passed' : seg.reasons.join(' | '));
 });
 
+// GAC acceptance 2026-10-22 (hw-14b problem 1, G1): the photo read described
+// the figure as a "<" shape with E on the left; the sheet has E to the RIGHT of
+// A and B (a ">"). The proposer drew the read faithfully and nothing checked
+// orientation. Stated relative positions are now claims checked on the drawing.
+const HW14B_P1_TEXT = "Lines p ∥ q. Point E lies between them. [Figure: Two horizontal parallel lines p (top) and q (bottom). Point A is on p, point B is on q, point E is between the lines. Segments AE and BE form a \"<\" shape. Angle at A (below line p, right of AE): (3x + 8)°. Angle AEB at E (left side, between EA and EB): (5x − 4)°. Angle at B (above line q, right of BE): 42°. Angle 1 at B (above line q, left side of BE, extending left along q): unlabeled.]";
+const HW14B_P1_STORED = {"action":"showGeometryConstructed","given":[{"id":"A","kind":"point","x":2,"y":4,"label":"A"},{"id":"B","kind":"point","x":2,"y":0,"label":"B"},{"id":"E","kind":"point","x":-1,"y":2,"label":"E"},{"id":"PL","kind":"point","x":-4,"y":4,"label":""},{"id":"PR","kind":"point","x":6,"y":4,"label":""},{"id":"QL","kind":"point","x":-4,"y":0,"label":""},{"id":"QR","kind":"point","x":6,"y":0,"label":""}],"steps":[{"id":"p","kind":"line","through":["PL","PR"],"label":"p"},{"id":"q","kind":"line","through":["QL","QR"],"label":"q"},{"id":"sAE","kind":"segment","from":"A","to":"E"},{"id":"sBE","kind":"segment","from":"B","to":"E"},{"id":"mA","kind":"angle_marker","vertex":"A","from":"E","to":"PR","style":"arc","label":"(3x + 8)°"},{"id":"mE","kind":"angle_marker","vertex":"E","from":"B","to":"A","style":"arc","label":"(5x − 4)°"},{"id":"mB","kind":"angle_marker","vertex":"B","from":"QR","to":"E","style":"arc","label":"42°"},{"id":"m1","kind":"angle_marker","vertex":"B","from":"E","to":"QL","style":"arc","label":"1"}],"display":{"grid":false,"axes":false,"keepLabels":true}};
+const mirrorX = (f: typeof HW14B_P1_STORED) => ({ ...f, given: f.given.map((g) => ({ ...g, x: -g.x })) });
+const P1_RIGHT: Claims = [{ kind: 'right_of', point: 'E', of: 'A' }, { kind: 'right_of', point: 'E', of: 'B' }];
+const p1 = (f: unknown, claims: Claims) => validateFigure(f as Parameters<typeof validateFigure>[0], { problemText: HW14B_P1_TEXT, claims });
+
+test('the stored mirrored p1 figure (E left of A and B) fails a stated right_of, naming the points (G1)', () => {
+  assert.deepEqual(p1(HW14B_P1_STORED, []), { ok: true }, 'the stored figure passes with no position claims');
+  const v = p1(HW14B_P1_STORED, P1_RIGHT);
+  assert.equal(v.ok, false);
+  const reasons = v.ok ? [] : v.reasons;
+  assert.ok(reasons.includes('right_of E A fails: E is left of A'), reasons.join(' | '));
+  assert.ok(reasons.includes('right_of E B fails: E is left of B'), reasons.join(' | '));
+});
+
+test('the same figure mirrored in x (E right of A and B) passes the stated right_of (G1)', () => {
+  const m = mirrorX(HW14B_P1_STORED);
+  assert.equal(m.given.find((g) => g.id === 'E')!.x, 1, 'E really moved to the right');
+  assert.equal(m.given.find((g) => g.id === 'A')!.x, -2);
+  assert.equal(m.given.find((g) => g.id === 'PR')!.x, -6, 'the helper points that place lines p and q follow');
+  assert.deepEqual(p1(m, P1_RIGHT), { ok: true });
+  assert.deepEqual(p1(HW14B_P1_STORED, [{ kind: 'left_of', point: 'E', of: 'A' }]), { ok: true });
+  const l = p1(m, [{ kind: 'left_of', point: 'E', of: 'A' }]);
+  assert.ok(!l.ok && l.reasons.includes('left_of E A fails: E is right of A'), l.ok ? 'passed' : l.reasons.join(' | '));
+});
+
+test('above / below on the lighthouse (T above B) hold; the reverse fails; level within tolerance is named (G1)', () => {
+  assert.deepEqual(hw14([{ kind: 'above', point: 'T', of: 'B' }, { kind: 'below', point: 'B', of: 'T' }]), { ok: true });
+  const v = hw14([{ kind: 'above', point: 'B', of: 'T' }, { kind: 'below', point: 'T', of: 'B' }]);
+  const reasons = v.ok ? [] : v.reasons;
+  assert.ok(reasons.includes('above B T fails: B is below T'), reasons.join(' | '));
+  assert.ok(reasons.includes('below T B fails: T is above B'), reasons.join(' | '));
+  // B (0,0) and P1 "Boat 1" (71.5,0) are level: neither above nor below; T and B share x.
+  const lv = hw14([{ kind: 'above', point: 'Boat 1', of: 'B' }, { kind: 'right_of', point: 'T', of: 'B' }]);
+  const lr = lv.ok ? [] : lv.reasons;
+  assert.ok(lr.includes('above P1 B fails: P1 is level with B'), lr.join(' | '));
+  assert.ok(lr.includes('right_of T B fails: T is level with B'), lr.join(' | '));
+});
+
+test('position claims resolve names like every claim: a prose word is skipped, a missing letter fails (G1)', () => {
+  assert.deepEqual(hw14([{ kind: 'left_of', point: 'lighthouse', of: 'Boat1' }]), { ok: true });
+  const q = hw14([{ kind: 'left_of', point: 'Q', of: 'B' }]);
+  assert.ok(!q.ok && q.reasons.some((r) => /left_of claim names Q but the solver has no such point/.test(r)), q.ok ? 'passed' : q.reasons.join(' | '));
+  assert.deepEqual(checkClaims({ A: { x: 0, y: 0 }, B: { x: 1, y: 0 } }, {}, [{ kind: 'left_of', point: 'A', of: 'B' }]), []);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

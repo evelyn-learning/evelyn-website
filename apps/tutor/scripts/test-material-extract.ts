@@ -24,7 +24,7 @@ config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs';
-import { extractMaterials, condenseForPipeline } from '../src/lib/tutor/lesson-plan/material-extract';
+import { extractMaterials, condenseForPipeline, DIAGRAM_RULE } from '../src/lib/tutor/lesson-plan/material-extract';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 
 const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');
@@ -179,6 +179,17 @@ async function testAllMaterialsEmptyTextYieldsExtractFailed() {
   assert.ok(result.message.length > 0, 'expected a friendly explanatory message');
 }
 
+async function testDiagramRuleStatesPositionsNotGlyphs() {
+  // GAC acceptance 2026-10-22 (hw-14b p1, G1): the read called the figure a
+  // "<" shape with E on the left; the sheet has E on the right (a ">").
+  assert.ok(
+    DIAGRAM_RULE.includes('Never describe a figure\'s shape by a letter or symbol it resembles — say where each named point sits relative to the others (left or right of, above or below) and which way each angle opens, name a landmark for every side word, and check the word against the landmark.'),
+    'DIAGRAM_RULE must tell the read to state positions, not glyphs',
+  );
+  // Additive only: the existing slanted-line sentence is unchanged.
+  assert.ok(DIAGRAM_RULE.includes('For a slanted line, "left" and "right" are easy to get backwards: also name the side by a landmark on the figure'));
+}
+
 async function testEmptyMaterialsIsOk() {
   const result = await extractMaterials([]);
   assert.equal(result.ok, true);
@@ -248,6 +259,7 @@ async function main() {
   await test('materials: >4 files -> too_large', testTooManyMaterials);
   await test('docx material: well-formed but no text runs -> extract_failed (I2, all-empty guard)', testAllMaterialsEmptyTextYieldsExtractFailed);
   await test('materials: empty array -> ok with no materials', testEmptyMaterialsIsOk);
+  await test('DIAGRAM_RULE: a figure is described by positions, not by a letter it resembles (G1)', testDiagramRuleStatesPositionsNotGlyphs);
   await test('condenseForPipeline: under target passes through (no LLM call)', testCondensePassthroughUnderTarget);
 
   // Live LLM calls (budget: 2 total for this whole run).

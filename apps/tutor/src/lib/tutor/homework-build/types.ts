@@ -16,7 +16,10 @@ export type FigureClaim =
   | { kind: 'parallel'; a: [string, string]; b: [string, string] }
   | { kind: 'perpendicular'; a: [string, string]; b: [string, string] }
   | { kind: 'collinear'; points: string[] }
-  | { kind: 'between'; point: string; ends: [string, string] };
+  | { kind: 'between'; point: string; ends: [string, string] }
+  /** GAC acceptance 2026-10-22 (hw-14b p1, G1): a stated relative position of
+   *  two named points ("E is to the right of A"); y up, the solver's convention. */
+  | { kind: 'left_of' | 'right_of' | 'above' | 'below'; point: string; of: string };
 
 export interface AnswerPart {
   label: string;

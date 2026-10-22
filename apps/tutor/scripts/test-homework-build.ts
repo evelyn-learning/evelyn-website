@@ -478,6 +478,23 @@ async function main() {
       ]);
       assert.equal(cl.length, 2);
     });
+    await section('normalizeClaims / FIGURE_CLAIMS_SYSTEM (hw-14b p1, G1): stated relative positions are claims', async () => {
+      const { FIGURE_CLAIMS_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
+      const cl = normalizeClaims([
+        { kind: 'right_of', point: 'E', of: 'A' },
+        { kind: 'right_of', point: 'E' },
+        { kind: 'left_of', point: 'A', of: 'E' },
+        { kind: 'above', point: 'T', of: 'B' },
+        { kind: 'below', point: 'B', of: '' },
+      ]);
+      assert.deepEqual(cl, [
+        { kind: 'right_of', point: 'E', of: 'A' },
+        { kind: 'left_of', point: 'A', of: 'E' },
+        { kind: 'above', point: 'T', of: 'B' },
+      ]);
+      assert.ok(FIGURE_CLAIMS_SYSTEM.includes('stated relative positions of named points (left of, right of, above, below)'), FIGURE_CLAIMS_SYSTEM);
+      for (const k of ['left_of', 'right_of', 'above', 'below']) assert.ok(FIGURE_CLAIMS_SYSTEM.includes(`${k} (point, of)`), k);
+    });
     await section('normalizeFigureDisplay (hw-14 p8, F8): a graph function stored as `expression` is stored as `expr`', async () => {
       const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
       const out = normalizeFigureDisplay(hw14p8Fig() as Fig, HW14_P8) as { data: { functions: Array<Record<string, unknown>>; xRange: number[] } };
