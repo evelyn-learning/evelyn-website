@@ -205,6 +205,32 @@ async function main() {
       assert.equal(plain.circles.length, 1);
       assert.equal(plain.polygons[0].fill, undefined);
     });
+    await section('hw-15 p8 (shaded segment): a region on a sector validates — the sector\'s apex and arc ends coincide with labelled points and stay as hidden points', async () => {
+      const { solveGeometry } = await import('../src/lib/tutor/diagrams/geometry-solver');
+      const P8 = 'Circle O has radius 6 and ∠AOB = 120°. Find the area of the shaded segment (between chord AB and the arc). [Figure: A circle with center O. A is on the upper right and B is on the upper left. Chord AB is horizontal near the top. - Radii OA and OB are drawn, and OA is labelled 6. - 120°: an arc at O, above O, between OB and OA. - The region between chord AB and the upper arc is hatched (shaded).]';
+      // The proposer's first attempt on 2026-10-22 (engine log): rejected as "inner tri is not inside outer sec".
+      const fig = {
+        action: 'showGeometryConstructed',
+        given: [pt('O', 0, 0), { id: 'c', kind: 'circle', center: 'O', radius: 6 }],
+        steps: [
+          { id: 'A', kind: 'point_on_circle', on: 'c', angle: 30, label: 'A' }, { id: 'B', kind: 'point_on_circle', on: 'c', angle: 150, label: 'B' },
+          { id: 'sec', kind: 'sector', on: 'c', from: 'A', to: 'B', direction: 'ccw', fill: 'none' },
+          { id: 'tri', kind: 'polygon', vertices: ['O', 'A', 'B'], fill: 'none' },
+          { id: 'reg', kind: 'region', outer: 'sec', inner: ['tri'] },
+          seg('oa', 'O', 'A', '6'), seg('ob', 'O', 'B'), seg('ab', 'A', 'B'),
+          { id: 'ang', kind: 'angle_marker', vertex: 'O', from: 'A', to: 'B', style: 'arc', label: '120°' },
+        ],
+        display: { grid: false, axes: false },
+      } as unknown as Fig;
+      assert.deepEqual(validateFigure(fig, { problemText: P8, claims: [] }), { ok: true });
+      const solved = solveGeometry(fig as never);
+      const byId = new Map(solved.points.map((p) => [p.id, p]));
+      for (const id of solved.regions[0].outer) assert.ok(byId.has(id), `ring vertex ${id} reaches the output`);
+      // The apex sits on O and the arc ends on A and B: present, but never drawn as dots.
+      assert.equal(byId.get('sec_apex')?.hidden, true); assert.equal(byId.get('sec_arc0')?.hidden, true);
+      assert.equal(byId.get('O')?.hidden, undefined, 'the labelled point itself is still drawn');
+      assert.equal(solved.points.filter((p) => !p.hidden).length, 3, 'exactly O, A, B are visible dots');
+    });
     await section('claims prompts (hw-14b p4): an angle or polygon name is not a collinear statement', async () => {
       const { FIGURE_CLAIMS_SYSTEM, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
       for (const s of [FIGURE_CLAIMS_SYSTEM, FIGURE_PROPOSE_SYSTEM]) {

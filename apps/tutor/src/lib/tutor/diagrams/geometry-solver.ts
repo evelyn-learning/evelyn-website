@@ -2336,8 +2336,10 @@ function solveSector(step: StepSector, state: State): void {
   const n = Math.max(8, step.arcSegments ?? 24);
   const verts: string[] = [];
   // The sector polygon: center + sampled arc points.
+  // 2026-10-22 (hw-15 p8): the apex and the arc samples are scaffolding, not
+  // points of the figure — hidden, so renderers draw no dots along the arc.
   const apexId = `${step.id}_apex`;
-  setObject(state, { kind: 'point', id: apexId, x: centerPt.x, y: centerPt.y });
+  setObject(state, { kind: 'point', id: apexId, x: centerPt.x, y: centerPt.y, hidden: true });
   verts.push(apexId);
   for (let i = 0; i <= n; i++) {
     const t = i / n;
@@ -2347,6 +2349,7 @@ function solveSector(step: StepSector, state: State): void {
       kind: 'point', id,
       x: round2(centerPt.x + radius * Math.cos(a)),
       y: round2(centerPt.y + radius * Math.sin(a)),
+      hidden: true,
     });
     verts.push(id);
   }
@@ -3238,9 +3241,13 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
       }
       const label = labelOverrides[obj.id] ?? obj.label ?? defaultPointLabel(obj.id);
       // Suppress an auto-scaffolding dot that coincides with a labeled point.
+      // 2026-10-22 (hw-15 p8): kept as a HIDDEN point rather than dropped — a
+      // sector's apex and arc ends sit on O, A and B, and a region built on
+      // that sector needs every ring vertex in the output (renderers draw no
+      // hidden point, so the board is unchanged).
       if (!label && isAutoScaffold(obj.id)) {
         const k = `${roundForKey(obj.x)}|${roundForKey(obj.y)}`;
-        if (labeledKeys.has(k)) continue;
+        if (labeledKeys.has(k)) { points.push({ id: obj.id, x: obj.x, y: obj.y, hidden: true }); continue; }
       }
       points.push({
         id: obj.id,

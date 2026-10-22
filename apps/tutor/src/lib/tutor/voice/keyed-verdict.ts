@@ -221,6 +221,33 @@ function radicalValue(m: RegExpMatchArray): number | null {
   return coef * Math.sqrt(rad);
 }
 
+/**
+ * 2026-10-22 (hw-15 p6, round 11): the solvers may store an exact final as a
+ * TEXT part ("4√3", "3/4", "12π"). Its numeric value, when the text is one
+ * exact form: a number, c√n / c sqrt n / c root n, a/b, or cπ (optionally
+ * over d). A leading "x =" is dropped. Null for prose ("parallel").
+ */
+export function exactFormValue(text: string): number | null {
+  let t = normalize(text).trim().replace(/^[A-Za-z]\w{0,2}\s*[=≈]\s*/, '').replace(/[.;!]+$/, '').trim();
+  t = t.replace(/\s*(?:square units|sq units|units)\s*$/i, '').trim();
+  if (!t) return null;
+  const num = /^-?\d+(?:\.\d+)?$/.exec(t);
+  if (num) return Number(t);
+  const rad = new RegExp(`^${RADICAL_RE.source}$`, 'i').exec(t);
+  if (rad) return radicalValue(rad);
+  const frac = /^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/.exec(t);
+  if (frac && Number(frac[2]) !== 0) return Number(frac[1]) / Number(frac[2]);
+  const pi = /^(-?\d+(?:\.\d+)?)?\s*(?:π|pi)(?:\s*\/\s*(\d+(?:\.\d+)?))?$/i.exec(t);
+  if (pi) { const c = pi[1] !== undefined ? Number(pi[1]) : 1; const d = pi[2] !== undefined ? Number(pi[2]) : 1; return d === 0 ? null : (c * Math.PI) / d; }
+  return null;
+}
+
+/** A part's numeric value: a number part's canonical value, or a text part's exact form (exactFormValue); null for prose. */
+function partValue(part: AnswerPart): number | null {
+  if (part.canonical.kind === 'number') return Number.isFinite(part.canonical.value) ? part.canonical.value : null;
+  return exactFormValue(part.canonical.value) ?? exactFormValue(part.final);
+}
+
 /** The whole message is one number (optionally with units / a trailing mark).
  *  Unnamed (2026-10-22, hw-14 p5): it confirms, never denies (the header). */
 function bareNumber(text: string): Candidate | null {
@@ -278,13 +305,16 @@ function judgePart(part: AnswerPart, cands: Candidate[], studentText?: string): 
 
 function judgeValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict {
   const label = normLabel(part.label);
-  if (part.canonical.kind !== 'number' || cands.length === 0) return { verdict: 'undecided', ...(label ? { part: label } : {}) };
-  const want = part.canonical.value;
+  const want = partValue(part);
+  if (want === null || cands.length === 0) return { verdict: 'undecided', ...(label ? { part: label } : {}) };
+  // An exact form stored as text (hw-15 p6) confirms by value and never denies: the
+  // student may be mid-simplification ("8 sin 60") rather than wrong.
+  const exactText = part.canonical.kind !== 'number';
   const agrees = (c: Candidate) => (c.frac ? fractionAgrees(c.value, want) : numbersAgree(c.value, want));
   const last = cands[cands.length - 1];
   if (agrees(last)) return { verdict: 'correct', part: label, matched: last.text };
-  // A fraction that does not match is never judged wrong.
-  if (last.frac) return { verdict: 'undecided', part: label };
+  // A fraction that does not match is never judged wrong; nor is a text-stored exact form.
+  if (last.frac || exactText) return { verdict: 'undecided', part: label };
   // An earlier value matches and a later one does not: ambiguous.
   if (cands.some(agrees)) return { verdict: 'undecided', part: label };
   // Wrong only when offered as the final answer; working is for the model check.
@@ -383,7 +413,7 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
         const keyVar = keyVarOf(varParts[0]);
         out.push(judgePart(varParts[0], [...candidates(head, { keyVar }), ...fractionCandidates(head, { keyVar })].sort(byAt), text));
       } else if (last) {
-        const hits = key.parts.filter((p) => p.canonical.kind === 'number' && numbersAgree(last.value, p.canonical.value));
+        const hits = key.parts.filter((p) => { const v = partValue(p); return v !== null && numbersAgree(last.value, v); });
         const multi = key.parts.filter((p) => p.values?.length);
         const namedHits = multi.flatMap((p) => judgeNamedValues(p, [last]).map((v) => ({ ...v, verdict: v.verdict })));
         if (hits.length === 1 && namedHits.length === 0) out.push({ verdict: 'correct', part: normLabel(hits[0].label), matched: last.text });

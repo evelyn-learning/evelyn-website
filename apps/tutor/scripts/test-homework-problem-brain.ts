@@ -230,6 +230,34 @@ async function main() {
     assert.equal(keyedVerdict('so base = 4 root 3 times 2 + 10 so 10 + 8 root 3', H).verdict, 'undecided');
     assert.equal(keyedVerdict('56 root 3', H).part, 'c');
   });
+  // 2026-10-22 (hw-15 p6, round 11 live check): the solvers stored the exact
+  // finals as TEXT parts ("4√3", "56√3"), so the keyed verdict could only
+  // match them verbatim; "h=4 root 3" and "…=56 root 3" never confirmed (a)
+  // and (c), and the finish read needs review although every part was right.
+  // A text part whose value is an exact form (c√n, a/b, cπ) judges by value.
+  await section('hw-15 p6: a text part holding an exact form (4√3, 56√3) is confirmed by its value', () => {
+    const K: AnswerKey = { parts: [
+      { label: 'a', final: 'h = 4√3', canonical: { kind: 'text', value: '4√3' } },
+      { label: 'b', final: '18', canonical: { kind: 'number', value: 18 } },
+      { label: 'c', final: '56√3 square units', canonical: { kind: 'text', value: '56√3' } },
+    ], solvers: [] };
+    const pick = (m: string) => kv.keyedVerdicts(m, K).map((v) => [v.verdict, v.part]);
+    assert.deepEqual(pick('h=8 sin 60 so h=4 root 3'), [['correct', 'a']]);
+    assert.deepEqual(pick('1.2 (10+18) 4 root 3=56 root 3'), [['correct', 'c']]);
+    assert.deepEqual(pick('56√3'), [['correct', 'c']]);
+    assert.deepEqual(pick('a) 4√3'), [['correct', 'a']]);
+    assert.deepEqual(pick('h = 6.93'), [['correct', 'a']], 'a decimal within 1 % confirms the exact form');
+    assert.deepEqual(pick('h = 2 root 3'), [['undecided', 'a']], 'an exact form never denies');
+    const h = (...msgs: string[]) => msgs.map((content) => ({ role: 'user' as const, content }));
+    assert.equal(kv.allKeyPartsConfirmed(h('h=8 sin 60 so h=4 root 3', 'got it so longer base = 10 + 4 + 4 = 18'), '1.2 (10+18) 4 root 3=56 root 3', K), true);
+    // Fractions and π multiples are exact forms too; a prose text part is still verbatim-only.
+    const F: AnswerKey = { parts: [{ label: '', final: 'x = 3/4', canonical: { kind: 'text', value: '3/4' } }], solvers: [] };
+    assert.deepEqual(kv.keyedVerdicts('x = 0.75', F).map((v) => v.verdict), ['correct']);
+    const P: AnswerKey = { parts: [{ label: '', final: '12π', canonical: { kind: 'text', value: '12π' } }], solvers: [] };
+    assert.deepEqual(kv.keyedVerdicts('area = 37.7', P).map((v) => v.verdict), ['correct']);
+    const T: AnswerKey = { parts: [{ label: '', final: 'parallel', canonical: { kind: 'text', value: 'parallel' } }], solvers: [] };
+    assert.deepEqual(kv.keyedVerdicts('it is 5', T).map((v) => v.verdict), ['undecided']);
+  });
   await section('correct carries the matched value', () => {
     const got = keyedVerdict('so perimeter is 26+3pi=35.4 cm', PERIM);
     assert.ok(got.matched && got.matched.includes('35.4'), JSON.stringify(got));
