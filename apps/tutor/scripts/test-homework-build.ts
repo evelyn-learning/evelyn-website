@@ -637,16 +637,38 @@ async function main() {
   // ---- 4 key (pure: stub solvers, no Mongo, no model) ----
   console.log('4 key');
   {
-    const { solveKey, partsAgree, KEY_SOLVE_SYSTEM, normalizeKeyParts } = await import('../src/lib/tutor/homework-build/key-solve');
+    const { solveKey, partsAgree, KEY_SOLVE_SYSTEM, KEY_SOLVE_SCHEMA, normalizeKeyParts, normalizeKeySteps } = await import('../src/lib/tutor/homework-build/key-solve');
     type AP = Parameters<typeof partsAgree>[0];
     const num = (final: string, value: number, label = '', units?: string): AP[number] =>
       ({ label, final, canonical: { kind: 'number', value, ...(units ? { units } : {}) } });
     const txt = (final: string, label = ''): AP[number] => ({ label, final, canonical: { kind: 'text', value: final } });
-    const mk = (a: AP | null, b: AP | null, t: AP | null) => {
+    type KS = Array<{ relation: string; value?: string }>;
+    const mk = (a: AP | null, b: AP | null, t: AP | null, steps: { a?: KS; b?: KS; t?: KS } = {}) => {
       const calls = { a: 0, b: 0, t: 0 };
       return { calls, names: ['A', 'B', 'T'] as [string, string, string],
-        solveA: async () => { calls.a++; return { parts: a, usage: { in: 100, out: 10 } }; }, solveB: async () => { calls.b++; return { parts: b, usage: { in: 100, out: 10 } }; }, solveTieBreak: async () => { calls.t++; return { parts: t, usage: { in: 50, out: 5 } }; } };
+        solveA: async () => { calls.a++; return { parts: a, ...(steps.a ? { steps: steps.a } : {}), usage: { in: 100, out: 10 } }; }, solveB: async () => { calls.b++; return { parts: b, ...(steps.b ? { steps: steps.b } : {}), usage: { in: 100, out: 10 } }; }, solveTieBreak: async () => { calls.t++; return { parts: t, ...(steps.t ? { steps: steps.t } : {}), usage: { in: 50, out: 5 } }; } };
     };
+    await section('round 11: steps ride the solve; the Opus solver\'s path is stored; agreement stays finals-only', async () => {
+      const sA = [{ relation: 'base angles equal', value: '∠B = ∠C' }];
+      const sB = [{ relation: 'exterior angle = sum of remote interior', value: '(5x + 5) = 40 + ∠B' }, { relation: 'solve', value: 'x = 21' }];
+      const d = mk([num('x = 21', 21, 'a')], [num('x = 21', 21, 'a')], null, { a: sA, b: sB });
+      const r = await solveKey({ n: 1, text: 'q' }, { ...d, names: ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'] });
+      assert.deepEqual(r.key!.steps, sB, 'the plangen-vision (Opus) path');
+      const r2 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('1', 1)], [num('1', 1)], null, { a: sA }), names: ['A', 'B', 'T'] });
+      assert.deepEqual(r2.key!.steps, sA, 'first agreeing solver when neither is plangen-vision');
+      const r3 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('1', 1)], [num('2', 2)], [num('2', 2)], { b: sB }), names: ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'] });
+      assert.deepEqual(r3.key!.solvers, ['plangen-vision', 'plangen-vision-tiebreak']); assert.deepEqual(r3.key!.steps, sB);
+      assert.equal((await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('1', 1)], null))).key!.steps, undefined, 'no steps → field absent');
+    });
+    await section('round 11: normalizeKeySteps drops empty relations, caps at 8, trims, omits empty values', () => {
+      assert.deepEqual(normalizeKeySteps([{ relation: ' a ', value: ' 1 ' }, { relation: '', value: '2' }, { relation: 'b', value: '' }, null, 'x']), [{ relation: 'a', value: '1' }, { relation: 'b' }]);
+      assert.equal(normalizeKeySteps(Array.from({ length: 10 }, (_, i) => ({ relation: `s${i}` }))).length, 8);
+      assert.deepEqual(normalizeKeySteps(undefined), []);
+    });
+    await section('round 11: KEY_SOLVE_SYSTEM asks for steps; the schema carries them', () => {
+      assert.ok(KEY_SOLVE_SYSTEM.includes('6. steps:'));
+      assert.ok((KEY_SOLVE_SCHEMA.properties as Record<string, unknown>).steps);
+    });
     await section('A = B: agreed, two solvers, tie-break not called', async () => {
       const d = mk([num('x = 20', 20)], [num('x = 20', 20)], null);
       const r = await solveKey({ n: 1, text: 'q' }, d);

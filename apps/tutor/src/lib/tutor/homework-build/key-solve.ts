@@ -13,9 +13,9 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
 import { compareDeterministic, parseSimpleNumber } from '../portal/key-compare';
-import type { AnswerKey, AnswerPart } from './types';
+import type { AnswerKey, AnswerPart, KeyStep } from './types';
 
-export interface SolveOutcome { parts: AnswerPart[] | null; usage?: { in: number; out: number } }
+export interface SolveOutcome { parts: AnswerPart[] | null; steps?: KeyStep[]; usage?: { in: number; out: number } }
 export type SolveFn = (text: string) => Promise<SolveOutcome>;
 export interface KeySolveDeps { solveA: SolveFn; solveB: SolveFn; solveTieBreak: SolveFn; names: [string, string, string] }
 export interface KeySolveResult { key: AnswerKey | null; agreed: boolean; candidates: string[]; note?: string; tokens?: { in: number; out: number } }
@@ -30,7 +30,8 @@ Rules:
 2. "final" is the answer exactly as a student would write it, including units when the problem has them (for example "35.4 cm", "x = 20", "y = 3x + 2").
 3. "canonical" is the same answer in machine form. When the answer is a single number, kind is "number", number holds its value, and units holds the unit with the number stripped out ("" when none). Otherwise kind is "text" and text holds the answer as written. Unused canonical fields are 0 or "".
 4. Round numeric answers to 4 significant figures unless the problem asks for a different precision or the answer is exact.
-5. If the problem cannot be solved from the text and the figure description (missing data, contradictory data, or a figure that is needed but not described), set ill_posed to a short reason and return an empty parts array. Never guess.`;
+5. If the problem cannot be solved from the text and the figure description (missing data, contradictory data, or a figure that is needed but not described), set ill_posed to a short reason and return an empty parts array. Never guess.
+6. steps: the solution path a tutor would walk the student along — one entry per step, in order. relation is the fact, theorem or equation the step uses (one sentence, at most 25 words); value is that step's intermediate result exactly as a student would write it ("AE = 4", "(5x + 5) = 40 + ∠B"), or "" when the step yields none. At most 8 steps. Every number in the finals must be reachable from these steps.`;
 
 export const KEY_SOLVE_SCHEMA = {
   type: 'object',
@@ -58,9 +59,18 @@ export const KEY_SOLVE_SCHEMA = {
         additionalProperties: false,
       },
     },
+    steps: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { relation: { type: 'string' }, value: { type: 'string' } },
+        required: ['relation', 'value'],
+        additionalProperties: false,
+      },
+    },
     ill_posed: { type: 'string' },
   },
-  required: ['parts'],
+  required: ['parts', 'steps'],
   additionalProperties: false,
 } as const;
 
@@ -89,6 +99,21 @@ export function namedValues(final: string): Array<{ name: string; value: number 
     out.push({ name, value });
   }
   return out.length >= 2 ? out : [];
+}
+
+/** Model JSON steps -> at most 8 `{ relation, value? }`; entries without a non-empty relation are dropped. */
+export function normalizeKeySteps(raw: unknown): KeyStep[] {
+  if (!Array.isArray(raw)) return [];
+  const out: KeyStep[] = [];
+  for (const e of raw) {
+    const relation = typeof (e as { relation?: unknown } | null)?.relation === 'string' ? (e as { relation: string }).relation.trim() : '';
+    if (!relation) continue;
+    const v = (e as { value?: unknown }).value;
+    const value = typeof v === 'string' ? v.trim() : '';
+    out.push(value ? { relation, value } : { relation });
+    if (out.length === 8) break;
+  }
+  return out;
 }
 
 export function normalizeKeyParts(o: unknown): AnswerPart[] | null {
@@ -128,7 +153,8 @@ async function callSolve(role: 'plangen-vision' | 'content-verify', effort: 'med
     const usage = { in: msg.usage?.input_tokens ?? 0, out: msg.usage?.output_tokens ?? 0 };
     if (msg.stop_reason === 'max_tokens' || msg.stop_reason === 'refusal') return { parts: null, usage };
     const raw = msg.content.filter((b) => b.type === 'text').map((b) => (b as Anthropic.TextBlock).text).join('');
-    return { parts: normalizeKeyParts(JSON.parse(raw.trim())), usage };
+    const json = JSON.parse(raw.trim());
+    return { parts: normalizeKeyParts(json), steps: normalizeKeySteps(json?.steps), usage };
   } catch {
     return { parts: null };
   }
@@ -218,17 +244,25 @@ const describe = (name: string, ps: AnswerPart[] | null): string =>
 
 export async function solveKey(problem: { n: number; text: string }, deps: KeySolveDeps): Promise<KeySolveResult> {
   let tokens: { in: number; out: number } | undefined;
+  const steps = new Map<AnswerPart[], KeyStep[]>();
   const safe = async (fn: SolveFn): Promise<AnswerPart[] | null> => {
     try {
       const r = await fn(problem.text);
       if (r?.usage) tokens = { in: (tokens?.in ?? 0) + r.usage.in, out: (tokens?.out ?? 0) + r.usage.out };
+      if (r?.parts && r.steps?.length) steps.set(r.parts, r.steps);
       return r?.parts ?? null;
     } catch { return null; }
+  };
+  /** The agreeing pair's path: the 'plangen-vision' solver's when it is one of them, else the first agreeing solver's. */
+  const keyOf = (pair: Array<[string, AnswerPart[]]>): AnswerKey => {
+    const opus = pair.find(([name]) => name === 'plangen-vision');
+    const st = steps.get((opus ?? pair[0])[1]);
+    return { parts: pair[0][1], solvers: pair.map(([name]) => name), ...(st?.length ? { steps: st } : {}) };
   };
   const out = async (r: KeySolveResult): Promise<KeySolveResult> => (tokens ? { ...r, tokens } : r);
   const [n0, n1, n2] = deps.names;
   const [a, b] = await Promise.all([safe(deps.solveA), safe(deps.solveB)]);
-  if (a && b && partsAgree(a, b)) return out({ key: { parts: a, solvers: [n0, n1] }, agreed: true, candidates: [] });
+  if (a && b && partsAgree(a, b)) return out({ key: keyOf([[n0, a], [n1, b]]), agreed: true, candidates: [] });
 
   if (!a && !b) return out({ key: null, agreed: false, candidates: [describe(n0, a), describe(n1, b)], note: 'both solvers failed' });
   const t = await safe(deps.solveTieBreak);
@@ -236,7 +270,7 @@ export async function solveKey(problem: { n: number; text: string }, deps: KeySo
   const withA = !!(t && a && partsAgree(a, t));
   const withB = !!(t && b && partsAgree(b, t));
   if (withA && withB) return out({ key: null, agreed: false, candidates, note: 'ambiguous: tie-break matches both disagreeing solvers' });
-  if (withA) return out({ key: { parts: a!, solvers: [n0, n2] }, agreed: true, candidates: [] });
-  if (withB) return out({ key: { parts: b!, solvers: [n1, n2] }, agreed: true, candidates: [] });
+  if (withA) return out({ key: keyOf([[n0, a!], [n2, t!]]), agreed: true, candidates: [] });
+  if (withB) return out({ key: keyOf([[n1, b!], [n2, t!]]), agreed: true, candidates: [] });
   return out({ key: null, agreed: false, candidates });
 }

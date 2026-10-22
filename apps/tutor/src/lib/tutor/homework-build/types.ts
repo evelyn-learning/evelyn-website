@@ -31,7 +31,10 @@ export interface AnswerPart {
   values?: Array<{ name: string; value: number }>;
 }
 
-export interface AnswerKey { parts: AnswerPart[]; solvers: string[] }
+/** One step of the verified solution path: the fact/theorem/equation used, and the intermediate result when there is one. */
+export interface KeyStep { relation: string; value?: string }
+
+export interface AnswerKey { parts: AnswerPart[]; solvers: string[]; steps?: KeyStep[] }
 
 export type ProblemBuildStatus = 'preparing' | 'ready' | 'unverified';
 
