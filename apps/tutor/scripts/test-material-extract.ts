@@ -21,6 +21,10 @@ import { config } from 'dotenv';
 import path from 'path';
 
 config({ path: path.resolve(process.cwd(), '.env.local') });
+// .env.local points MONGODB_URI at the laptop's :2710 tunnel — prod. No test
+// here may reach the real photo-read store: the URI is dropped before the
+// module (and @core/db, which reads it at load) is imported.
+delete process.env.MONGODB_URI;
 
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs';
@@ -210,7 +214,12 @@ async function testImageTranscription() {
   // LIVE LLM CALL #1 (vision, single image — the batch-of-one path).
   const material = loadFixtureAsMaterial('sample-text.png', 'image', 'image/png');
 
-  const result = await extractMaterials([material]);
+  // The photo-read store is an in-memory one: never the real (prod) Mongo.
+  process.env.MONGODB_URI = '';
+  clearTranscriptionCache();
+  const { store } = memoryStore();
+  const result = await extractMaterials([material], { transcriptionStore: store });
+  clearTranscriptionCache();
   assert.equal(result.ok, true, 'expected ok result');
   if (!result.ok) return;
   assert.equal(result.materials.length, 1);
@@ -321,8 +330,15 @@ async function testStoreFailureIsAMiss() {
     get: async () => { throw new Error('connection down'); },
     set: async () => { throw new Error('write error'); },
   };
+  const warned: string[] = [];
+  const origWarn = console.warn;
+  const origError = console.error;
+  console.warn = (...a: unknown[]) => { warned.push(a.map(String).join(' ')); };
+  console.error = (...a: unknown[]) => { warned.push(a.map(String).join(' ')); };
+  try {
   const s = stubRead(['read anyway']);
   const r = await transcribeImagesBatch(SHEET, { store: broken, read: s.read });
+  await new Promise((res) => setImmediate(res)); // the write-through is not awaited by the read
   assert.equal(s.calls(), 1);
   assert.ok(r.ok);
   if (r.ok) assert.deepEqual(r.texts, ['read anyway']);
@@ -331,7 +347,13 @@ async function testStoreFailureIsAMiss() {
   const r2 = await transcribeImagesBatch(SHEET, { store: broken, read: again.read });
   assert.equal(again.calls(), 0);
   if (r2.ok) assert.deepEqual(r2.texts, ['read anyway']);
-  clearTranscriptionCache();
+  assert.equal(warned.filter((l) => l.startsWith('[material-extract] transcription store get failed')).length, 1, warned.join('\n'));
+  assert.equal(warned.filter((l) => l.startsWith('[material-extract] transcription store set failed')).length, 1, warned.join('\n'));
+  } finally {
+    console.warn = origWarn;
+    console.error = origError;
+    clearTranscriptionCache();
+  }
 }
 
 async function testInFlightJoinStillOneRead() {

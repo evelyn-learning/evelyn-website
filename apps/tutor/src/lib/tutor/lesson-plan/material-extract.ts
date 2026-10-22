@@ -36,6 +36,7 @@ import { getModelClient, resolveModel } from '../ai/model-registry';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import { extractDocxText, normalizeExtractedText } from '@core/utils/document-extract';
 import connectDB from '@core/db';
+import mongoose from 'mongoose';
 import { TranscriptionCacheModel } from '../../../models/TranscriptionCache';
 
 /* ------------------------------------------------------------------ */
@@ -134,7 +135,11 @@ export async function extractMaterials(
   /** Final fix wave (M1): `skipCondense` returns the combined text raw (no
    *  Haiku condense pass) — for callers that only sample the text and have a
    *  tight latency cap (material-summary). Default false: unchanged. */
-  opts: { skipCondense?: boolean } = {},
+  opts: {
+    skipCondense?: boolean;
+    /** Test seam: the photo-read store (default: the Mongo one). */
+    transcriptionStore?: TranscriptionStore;
+  } = {},
 ): Promise<ExtractResult> {
   if (!materials || materials.length === 0) {
     return { ok: true, materials: [], combinedText: '' };
@@ -230,7 +235,7 @@ export async function extractMaterials(
   }
 
   if (imageItems.length > 0) {
-    const imageResult = await transcribeImagesBatch(imageItems);
+    const imageResult = await transcribeImagesBatch(imageItems, { store: opts.transcriptionStore });
     if (!imageResult.ok) return imageResult.error;
     imageItems.forEach((item, j) => {
       results[item.position] = { text: imageResult.texts[j], kind: 'image' };
@@ -443,14 +448,29 @@ export interface TranscriptionStore {
  *  read past the academy's budget: past this it is a miss. */
 const TRANSCRIPTION_STORE_TIMEOUT_MS = 3_000;
 
+/** Set once the store has had a working connection. After that, a dropped
+ *  connection (readyState ≠ 1) is a miss at once rather than a 3 s wait on
+ *  every memory miss; before it, the first use connects. */
+let transcriptionStoreConnected = false;
+
+async function transcriptionStoreReady(): Promise<void> {
+  if (mongoose.connection.readyState === 1) {
+    transcriptionStoreConnected = true;
+    return;
+  }
+  if (transcriptionStoreConnected) throw new Error('mongo not connected');
+  await connectDB();
+  transcriptionStoreConnected = true;
+}
+
 const mongoTranscriptionStore: TranscriptionStore = {
   async get(key) {
-    await connectDB();
+    await transcriptionStoreReady();
     const doc = await TranscriptionCacheModel.findById(key).lean();
     return doc && Array.isArray(doc.texts) ? doc.texts : null;
   },
   async set(key, texts) {
-    await connectDB();
+    await transcriptionStoreReady();
     await TranscriptionCacheModel.updateOne(
       { _id: key },
       { $set: { texts, createdAt: new Date() } },
@@ -480,9 +500,22 @@ function sha8(s: string): string {
   return createHash('sha256').update(s).digest('hex').slice(0, 8);
 }
 
-/** The read prompt's version for a batch of n images. */
+/** Bump by hand when anything about the read changes that the prompt texts
+ *  below do not show: `visionReadParams`, the max_tokens budget, the
+ *  `===MATERIAL i===` parser or the text normalisation. A bump retires every
+ *  stored read (they live 7 days). */
+export const READ_FORMAT_VERSION = '1';
+
+/** The user-turn line sent with the images. */
+function buildReadInstruction(n: number): string {
+  return n === 1 ? 'Transcribe this teaching material.' : `Transcribe these ${n} teaching materials, in order.`;
+}
+
+/** The read recipe's version for a batch of n images: the system prompt
+ *  (which carries DIAGRAM_RULE), the user-turn instruction and
+ *  READ_FORMAT_VERSION (params, parser). The model id is keyed separately. */
 export function transcriptionPromptVersion(n: number): string {
-  return sha8(DIAGRAM_RULE + buildBatchTranscribePrompt(n));
+  return sha8(`${READ_FORMAT_VERSION}|${DIAGRAM_RULE}|${buildBatchTranscribePrompt(n)}|${buildReadInstruction(n)}`);
 }
 
 /** One key per set of images in order: the bytes, their types, the model and
@@ -610,8 +643,7 @@ async function transcribeImagesBatchUncached(items: TranscribeItems): Promise<Tr
     },
   }));
 
-  const instructionText =
-    n === 1 ? 'Transcribe this teaching material.' : `Transcribe these ${n} teaching materials, in order.`;
+  const instructionText = buildReadInstruction(n);
 
   // A fixed token budget starves larger batches (more images → more
   // transcription output needed) and, worse, lets a truncated response
