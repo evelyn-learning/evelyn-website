@@ -257,5 +257,36 @@ test('a caption-like figure title is dropped, not fatal; a label-like title is s
   assert.equal((normalizeFigureDisplay(labelTitle, HW14B_P3_TEXT) as { title?: string }).title, 'AB = 5', 'a label-like title is not dropped');
 });
 
+// GAC acceptance 2026-10-22 (hw-14b problem 5, G5): the sheet shades the four
+// circular segments between the circle and the inner square; the stored figure
+// drew the inner square as a filled polygon, so the wrong region read as shaded.
+// A `region` step (outer minus inner shapes) passes the gate; one naming a shape
+// the figure does not have fails by name, not with a solver trace.
+const HW14B_P5_TEXT = 'A circle is inscribed in a square with side 12 cm, and a smaller square is inscribed in the circle. Find the area of the shaded region. [Figure: Outer square with side 12 cm. Circle inscribed in outer square. Smaller square inscribed in circle, rotated 45° with vertices at the points where the circle touches the outer square. The four circular segments between the circle and inner square are shaded.]';
+const HW14B_P5_STORED = JSON.parse('{"action":"showGeometryConstructed","given":[{"id":"A","kind":"point","x":0,"y":0,"label":""},{"id":"B","kind":"point","x":12,"y":0,"label":""},{"id":"C","kind":"point","x":12,"y":12,"label":""},{"id":"D","kind":"point","x":0,"y":12,"label":""},{"id":"O","kind":"point","x":6,"y":6,"label":""},{"id":"c1","kind":"circle","center":"O","radius":6}],"steps":[{"id":"sAB","kind":"segment","from":"A","to":"B","label":"12 cm"},{"id":"sBC","kind":"segment","from":"B","to":"C"},{"id":"sCD","kind":"segment","from":"C","to":"D"},{"id":"sDA","kind":"segment","from":"D","to":"A"},{"id":"P","kind":"midpoint","of":"sAB","label":""},{"id":"Q","kind":"midpoint","of":"sBC","label":""},{"id":"R","kind":"midpoint","of":"sCD","label":""},{"id":"S","kind":"midpoint","of":"sDA","label":""},{"id":"inner","kind":"polygon","vertices":["P","Q","R","S"]}],"display":{"grid":false,"axes":false,"keepLabels":true}}') as { steps: Array<Record<string, unknown>> };
+const p5Region = (region: Record<string, unknown>) => ({
+  ...HW14B_P5_STORED,
+  steps: [...HW14B_P5_STORED.steps.map((s) => (s.id === 'inner' ? { ...s, fill: 'none' } : s)), region],
+}) as unknown as Parameters<typeof validateFigure>[0];
+const P5_CLAIMS = ['P', 'Q', 'R', 'S'].map((point) => ({ kind: 'on_circle' as const, point, circle: 'c1' }));
+
+test('the p5 figure with a region step and an unfilled inner square passes the gate (G5)', () => {
+  assert.deepEqual(validateFigure(p5Region({ id: 'shade', kind: 'region', outer: 'c1', inner: ['inner'] }), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS }), { ok: true });
+  assert.deepEqual(validateFigure(HW14B_P5_STORED as unknown as Parameters<typeof validateFigure>[0], { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS }), { ok: true }, 'the stored figure without a region still passes');
+});
+
+test('a region naming a shape the figure does not have fails honestly, by name (G5)', () => {
+  const v = validateFigure(p5Region({ id: 'shade', kind: 'region', outer: 'c9', inner: ['inner'] }), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.equal(v.ok, false);
+  const reasons = v.ok ? [] : v.reasons;
+  assert.ok(reasons.includes('region "shade" names c9 but the figure has no such shape'), reasons.join(' | '));
+  assert.ok(!reasons.some((r) => /solver rejected/.test(r)), `named, not a solver trace: ${reasons.join(' | ')}`);
+  const inner = validateFigure(p5Region({ id: 'shade', kind: 'region', outer: 'c1', inner: ['inner', 'sq2'] }), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.ok(!inner.ok && inner.reasons.includes('region "shade" names sq2 but the figure has no such shape'), inner.ok ? 'passed' : inner.reasons.join(' | '));
+  // A shape that exists but is not an area (a segment) is still the solver's refusal, named by step.
+  const seg = validateFigure(p5Region({ id: 'shade', kind: 'region', outer: 'sAB' }), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS });
+  assert.ok(!seg.ok && seg.reasons.some((r) => /region "shade"/.test(r) && /not a circle or polygon/.test(r)), seg.ok ? 'passed' : seg.reasons.join(' | '));
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

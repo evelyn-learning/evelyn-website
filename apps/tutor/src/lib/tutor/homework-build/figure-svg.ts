@@ -70,7 +70,7 @@ export async function figureToSvg(figure: FigureCommand | null | undefined): Pro
     const solved = solveGeometry({ given: figure.given, steps: figure.steps, display: figure.display } as ConstructedGeometrySpec);
     const html = await renderToStaticMarkup(renderGeometryTree({
       points: solved.points, segments: solved.segments, polygons: solved.polygons, circles: solved.circles,
-      arcs: solved.arcs, angles: solved.angles, conics: solved.conics,
+      arcs: solved.arcs, angles: solved.angles, conics: solved.conics, regions: solved.regions,
       showGrid: solved.showGrid, showAxes: solved.showAxes, viewRange: solved.viewRange,
       fit: 'content',
     }));

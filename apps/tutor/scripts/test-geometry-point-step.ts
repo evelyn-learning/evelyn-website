@@ -12,7 +12,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { solveGeometry, STEP_KINDS, type ConstructedGeometrySpec, type SolverOutput } from '../src/lib/tutor/diagrams/geometry-solver';
+import { solveGeometry, STEP_KINDS, HOMEWORK_ONLY_STEP_KINDS, getGeometryStepKindsDescriptionTail, type ConstructedGeometrySpec, type SolverOutput } from '../src/lib/tutor/diagrams/geometry-solver';
 
 let passed = 0;
 let failed = 0;
@@ -172,6 +172,80 @@ function main() {
 
   test("STEP_KINDS advertises 'point'", () => {
     assert.ok((STEP_KINDS as readonly string[]).includes('point'));
+  });
+
+  // GAC acceptance 2026-10-22 (hw-14b problem 5, G5): the sheet shades the four
+  // circular segments between the circle and the inner square. The proposer
+  // drew the inner square as a polygon, which the renderer fills 15 %, so the
+  // wrong region read as shaded. A `region` step shades outer minus inner
+  // shapes; a polygon with fill "none" draws unfilled. The stored p5 figure:
+  const HW14B_P5 = JSON.parse('{"action":"showGeometryConstructed","given":[{"id":"A","kind":"point","x":0,"y":0,"label":""},{"id":"B","kind":"point","x":12,"y":0,"label":""},{"id":"C","kind":"point","x":12,"y":12,"label":""},{"id":"D","kind":"point","x":0,"y":12,"label":""},{"id":"O","kind":"point","x":6,"y":6,"label":""},{"id":"c1","kind":"circle","center":"O","radius":6}],"steps":[{"id":"sAB","kind":"segment","from":"A","to":"B","label":"12 cm"},{"id":"sBC","kind":"segment","from":"B","to":"C"},{"id":"sCD","kind":"segment","from":"C","to":"D"},{"id":"sDA","kind":"segment","from":"D","to":"A"},{"id":"P","kind":"midpoint","of":"sAB","label":""},{"id":"Q","kind":"midpoint","of":"sBC","label":""},{"id":"R","kind":"midpoint","of":"sCD","label":""},{"id":"S","kind":"midpoint","of":"sDA","label":""},{"id":"inner","kind":"polygon","vertices":["P","Q","R","S"]}],"display":{"grid":false,"axes":false,"keepLabels":true}}') as ConstructedGeometrySpec & { steps: Array<Record<string, unknown>> };
+  const p5WithRegion = (region: Record<string, unknown>) => ({
+    ...HW14B_P5,
+    steps: [...HW14B_P5.steps.map((s) => (s.id === 'inner' ? { ...s, fill: 'none' } : s)), region],
+  }) as unknown as ConstructedGeometrySpec;
+
+  test('a region step shades the circle minus the inner square; the inner square carries fill "none" (G5)', () => {
+    const out = solveGeometry(p5WithRegion({ id: 'shade', kind: 'region', outer: 'c1', inner: ['inner'] }));
+    assert.equal(out.regions.length, 1);
+    const r = out.regions[0];
+    assert.equal(r.id, 'shade');
+    // 48 samples, i = 0..47, and no repeated closing vertex: the renderer closes
+    // every ring of the evenodd path with Z, so a 49th point equal to the first
+    // (solveSector repeats it because its arc is OPEN and returns to the apex)
+    // would add a zero-length edge and a hidden point for nothing.
+    assert.equal(r.outer.length, 48);
+    assert.deepEqual(r.holes, [['P', 'Q', 'R', 'S']]);
+    assert.equal(r.label, undefined);
+    assert.equal(new Set(r.outer).size, 48, 'distinct sample ids');
+    for (const id of r.outer) {
+      const p = findPt(out, id);
+      assert.equal(p.hidden, true, `${id} is a hidden helper, never a dot`);
+      assert.ok(Math.abs(Math.hypot(p.x - 6, p.y - 6) - 6) < 0.02, `${id} lies on c1`);
+      assert.equal(p.label, undefined);
+    }
+    const inner = out.polygons.find((p) => p.label === undefined && p.vertices[0] === 'P');
+    assert.ok(inner, 'the inner square is still a polygon');
+    assert.equal(inner!.fill, 'none');
+    assert.equal(out.circles.length, 1, 'the circle outline is still drawn');
+    assert.equal(out.circles[0].id, 'c1');
+    // A given polygon takes fill too; a polygon without one is unchanged.
+    const given = solveGeometry({ given: [{ id: 'A', kind: 'point', x: 0, y: 0 }, { id: 'B', kind: 'point', x: 2, y: 0 }, { id: 'C', kind: 'point', x: 0, y: 2 },
+      { id: 't', kind: 'polygon', vertices: ['A', 'B', 'C'], fill: 'none' }, { id: 'u', kind: 'polygon', vertices: ['A', 'B', 'C'] }] } as unknown as ConstructedGeometrySpec);
+    assert.equal(given.polygons[0].fill, 'none');
+    assert.equal(given.polygons[1].fill, undefined);
+    assert.equal(given.regions.length, 0, 'no region step, no regions');
+  });
+
+  test('a region takes a polygon outer with a circle hole, a sector, and a colour; one naming a missing or non-area shape throws (G5)', () => {
+    const base = {
+      given: [{ id: 'A', kind: 'point', x: 0, y: 0, label: 'A' }, { id: 'B', kind: 'point', x: 12, y: 0, label: 'B' }, { id: 'C', kind: 'point', x: 12, y: 12 }, { id: 'D', kind: 'point', x: 0, y: 12 },
+        { id: 'O', kind: 'point', x: 6, y: 6, label: 'O' }, { id: 'c1', kind: 'circle', center: 'O', radius: 3 }, { id: 'sq', kind: 'polygon', vertices: ['A', 'B', 'C', 'D'] }],
+      steps: [{ id: 'sAB', kind: 'segment', from: 'A', to: 'B' }],
+    };
+    const out = solveGeometry({ ...base, steps: [...base.steps, { id: 'ring', kind: 'region', outer: 'sq', inner: ['c1'], label: 'shaded' }], display: { colors: { ring: '#e67e22' } } } as unknown as ConstructedGeometrySpec);
+    assert.deepEqual(out.regions[0].outer, ['A', 'B', 'C', 'D']);
+    assert.equal(out.regions[0].holes.length, 1);
+    assert.equal(out.regions[0].holes[0].length, 48);
+    assert.equal(out.regions[0].label, 'shaded');
+    assert.equal(out.regions[0].color, '#e67e22');
+    // A sector's polygon is an area too; `inner` may be absent.
+    const sec = solveGeometry({ ...base, steps: [
+      { id: 'P', kind: 'point_on_circle', on: 'c1', angle: 0 }, { id: 'Q', kind: 'point_on_circle', on: 'c1', angle: 90 },
+      { id: 'sec', kind: 'sector', on: 'c1', from: 'P', to: 'Q' }, { id: 'sh', kind: 'region', outer: 'sec' }] } as unknown as ConstructedGeometrySpec);
+    assert.equal(sec.regions[0].outer.length, 1 + 25, 'the sector polygon as drawn: apex + 25 arc samples');
+    assert.deepEqual(sec.regions[0].holes, []);
+    for (const bad of [{ outer: 'c9', inner: ['sq'] }, { outer: 'sq', inner: ['nope'] }, { outer: 'sAB' }, { outer: 'A' }]) {
+      assert.throws(() => solveGeometry({ ...base, steps: [...base.steps, { id: 'shade', kind: 'region', ...bad }] } as unknown as ConstructedGeometrySpec), /region "shade"/, JSON.stringify(bad));
+    }
+    assert.throws(() => solveGeometry({ ...base, steps: [...base.steps, { id: 'shade', kind: 'region', outer: 'c9' }] } as unknown as ConstructedGeometrySpec), /c9/);
+    assert.throws(() => solveGeometry({ ...base, steps: [...base.steps, { id: 'shade', kind: 'region', outer: 'sAB' }] } as unknown as ConstructedGeometrySpec), /not a circle or polygon/);
+  });
+
+  test("'region' is a homework-only kind: the live tool-description tail and STEP_KINDS do not change (engine freeze)", () => {
+    assert.ok((HOMEWORK_ONLY_STEP_KINDS as readonly string[]).includes('region'));
+    assert.ok(!(STEP_KINDS as readonly string[]).includes('region'));
+    assert.doesNotMatch(getGeometryStepKindsDescriptionTail(), /region/);
   });
 
   // 2026-10-19 (GAC Geometry, portal-9d615e3a): labelled lines drew nothing

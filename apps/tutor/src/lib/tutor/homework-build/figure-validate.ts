@@ -315,6 +315,20 @@ function validateGeometry(
 ): string[] {
   if (!Array.isArray(fig.given) || !Array.isArray(fig.steps)) return ['malformed figure: given and steps must both be arrays'];
   const reasons: string[] = [];
+  // G5 (2026-10-22, hw-14b p5): a `region` names the shapes it shades between by
+  // id. One naming an id the figure never declares is reported by name, before
+  // the solver's own refusal (which would read as a step trace: 'region "shade":
+  // outer names c9 …'), so the retry feedback says exactly which name is wrong.
+  const declared = new Set<string>();
+  for (const o of [...fig.given, ...fig.steps] as Array<{ id?: unknown }>) if (typeof o?.id === 'string') declared.add(o.id);
+  for (const o of fig.steps as Array<{ kind?: unknown; id?: unknown; outer?: unknown; inner?: unknown }>) {
+    if (o?.kind !== 'region') continue;
+    const named = [o.outer, ...(Array.isArray(o.inner) ? o.inner : [])];
+    for (const ref of named) {
+      if (typeof ref === 'string' && !declared.has(ref)) reasons.push(`region "${String(o.id)}" names ${ref} but the figure has no such shape`);
+    }
+  }
+  if (reasons.length) return reasons;
   let solved;
   try {
     solved = solveGeometry({

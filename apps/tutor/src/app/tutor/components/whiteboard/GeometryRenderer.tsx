@@ -17,6 +17,7 @@ import { InlineMathText } from './InlineMathText';
 import { useMemo } from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { autoViewRange } from '@/lib/tutor/whiteboard/geometry-view-range';
+import type { GeometryRegion } from '@/lib/tutor/diagrams/geometry-solver';
 import type {
   GeometryPoint,
   GeometrySegment,
@@ -48,6 +49,10 @@ interface GeometryRendererProps {
   arcs?: GeometryArc[];
   angles?: GeometryAngle[];
   conics?: GeometryConic[];
+  /** Shaded areas between shapes (GAC round 8, G5): the solver's `regions`,
+   *  one evenodd path each, drawn before the polygons. Absent or empty on
+   *  every figure without a `region` step: nothing is drawn, as before. */
+  regions?: GeometryRegion[];
   showGrid?: boolean;
   showAxes?: boolean;
   viewRange?: { x: [number, number]; y: [number, number] };
@@ -282,6 +287,41 @@ function renderAxes(
   return <g className="axes">{elements}</g>;
 }
 
+/**
+ * Shaded regions (GAC round 8, G5): the inside of the outer ring minus the
+ * holes, as ONE path with fill-rule evenodd — "M … Z" per ring — so the four
+ * circular segments between a circle and its inscribed square shade exactly,
+ * with the square left white. Drawn before polygons, circles and segments: a
+ * region is paint under the figure, never a cover over an outline. No stroke;
+ * the shapes it sits between draw their own.
+ */
+function renderRegions(
+  regions: GeometryRegion[],
+  ptMap: Map<string, GeometryPoint>,
+  toSvg: (x: number, y: number) => [number, number],
+) {
+  const ring = (ids: string[]): string | null => {
+    const pts = ids.map((id) => ptMap.get(id)).filter(Boolean) as GeometryPoint[];
+    if (pts.length < 3) return null;
+    return pts.map((p, idx) => { const [px, py] = toSvg(p.x, p.y); return `${idx === 0 ? 'M' : 'L'}${px},${py}`; }).join(' ') + ' Z';
+  };
+  return regions.map((r, i) => {
+    const outer = ring(r.outer);
+    if (!outer) return null;
+    const d = [outer, ...r.holes.map(ring).filter(Boolean)].join(' ');
+    return (
+      <path
+        key={`region-${r.id || i}`}
+        d={d}
+        fillRule="evenodd"
+        fill={r.color ?? '#4f8cff'}
+        fillOpacity={0.25}
+        stroke="none"
+      />
+    );
+  });
+}
+
 /** Render filled polygons */
 function renderPolygons(
   polygons: GeometryPolygon[],
@@ -321,7 +361,10 @@ function renderPolygons(
         <path
           d={d}
           fill={poly.fill || '#4f8cff'}
-          fillOpacity={0.15}
+          // fill "none" (G5: a polygon the sheet leaves white beside a shaded
+          // region) carries no opacity attribute at all; every other polygon
+          // keeps the 15 % default exactly as before.
+          fillOpacity={poly.fill === 'none' ? undefined : 0.15}
           stroke={poly.stroke || '#4f8cff'}
           strokeWidth={2}
         />
@@ -1517,12 +1560,12 @@ const NONE: never[] = [];
 
 /** The board component: one memo over the whole tree (same deps as before). */
 export function GeometryRenderer({
-  title, points, segments = NONE, polygons = NONE, circles = NONE, arcs = NONE, angles = NONE, conics = NONE,
+  title, points, segments = NONE, polygons = NONE, circles = NONE, arcs = NONE, angles = NONE, conics = NONE, regions = NONE,
   showGrid = false, showAxes = false, viewRange, className = '', fit = 'canvas',
 }: GeometryRendererProps) {
   return useMemo(
-    () => renderGeometryTree({ title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className, fit }),
-    [title, points, segments, polygons, circles, arcs, angles, conics, showGrid, showAxes, viewRange, className, fit],
+    () => renderGeometryTree({ title, points, segments, polygons, circles, arcs, angles, conics, regions, showGrid, showAxes, viewRange, className, fit }),
+    [title, points, segments, polygons, circles, arcs, angles, conics, regions, showGrid, showAxes, viewRange, className, fit],
   );
 }
 
@@ -1540,6 +1583,7 @@ export function renderGeometryTree({
   arcs = NONE,
   angles = NONE,
   conics = NONE,
+  regions = NONE,
   showGrid = false,
   showAxes = false,
   viewRange,
@@ -1650,6 +1694,9 @@ export function renderGeometryTree({
           )
           || originCrowded,
         )}
+
+        {/* Shaded regions (G5) — paint under every outline */}
+        {regions.length > 0 && renderRegions(regions, ptMap, toSvg)}
 
         {/* Polygons (filled areas behind lines and points) */}
         {polygons.length > 0 && renderPolygons(polygons, ptMap, toSvg, points.filter((p) => !!p.label))}

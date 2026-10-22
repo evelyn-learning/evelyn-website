@@ -3210,6 +3210,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
             arcs={solved.arcs}
             angles={solved.angles}
             conics={solved.conics}
+            regions={solved.regions}
             showGrid={solved.showGrid}
             showAxes={solved.showAxes}
             viewRange={solved.viewRange}

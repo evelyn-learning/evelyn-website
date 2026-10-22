@@ -333,6 +333,40 @@ async function main() {
         assert.ok(cx - r >= vx + 4 && cy - r >= vy + 4 && cx + r <= vx + vw - 4 && cy + r <= vy + vh - 4, `point dot at (${cx}, ${cy}) inside ${[vx, vy, vw, vh].join(' ')}`);
       }
     });
+    await section('figureToSvg (hw-14b p5, G5): a region shades the circle minus the inner square as one evenodd path; the inner square is unfilled; a figure with no regions renders byte-identically', async () => {
+      // The stored p5 figure (hw14b-dump n=5): the sheet shades the four circular
+      // segments between the circle and the inner square; the inner square was a
+      // filled polygon, so the thumbnail and the board shaded the wrong region.
+      const { figureToSvg } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const { renderToStaticMarkup } = await import('react-dom/server');
+      const { createHash } = await import('node:crypto');
+      const { renderGeometryTree } = await import('../src/app/tutor/components/whiteboard/GeometryRenderer');
+      const { GEOMETRY_FREEZE_EXPECTED, GEOMETRY_FREEZE_FIXTURE } = await import('./fixtures/geometry-freeze-fixture');
+      const stored = JSON.parse('{"action":"showGeometryConstructed","given":[{"id":"A","kind":"point","x":0,"y":0,"label":""},{"id":"B","kind":"point","x":12,"y":0,"label":""},{"id":"C","kind":"point","x":12,"y":12,"label":""},{"id":"D","kind":"point","x":0,"y":12,"label":""},{"id":"O","kind":"point","x":6,"y":6,"label":""},{"id":"c1","kind":"circle","center":"O","radius":6}],"steps":[{"id":"sAB","kind":"segment","from":"A","to":"B","label":"12 cm"},{"id":"sBC","kind":"segment","from":"B","to":"C"},{"id":"sCD","kind":"segment","from":"C","to":"D"},{"id":"sDA","kind":"segment","from":"D","to":"A"},{"id":"P","kind":"midpoint","of":"sAB","label":""},{"id":"Q","kind":"midpoint","of":"sBC","label":""},{"id":"R","kind":"midpoint","of":"sCD","label":""},{"id":"S","kind":"midpoint","of":"sDA","label":""},{"id":"inner","kind":"polygon","vertices":["P","Q","R","S"]}],"display":{"grid":false,"axes":false,"keepLabels":true}}') as Fig & { steps: Array<Record<string, unknown>> };
+      const fig = { ...stored, steps: [...stored.steps.map((s) => (s.id === 'inner' ? { ...s, fill: 'none' } : s)), { id: 'shade', kind: 'region', outer: 'c1', inner: ['inner'] }] } as Fig;
+      const svg = await figureToSvg(fig);
+      assert.ok(svg, 'the figure renders');
+      const region = /<path d="([^"]+)" fill-rule="evenodd" fill="#4f8cff" fill-opacity="0.25" stroke="none"><\/path>/.exec(svg!);
+      assert.ok(region, `one evenodd region path: ${svg!.slice(0, 400)}`);
+      const d = region![1];
+      assert.equal((d.match(/M/g) ?? []).length, 2, 'two rings: the circle and the square hole');
+      assert.equal((d.match(/Z/g) ?? []).length, 2, 'both rings closed');
+      // 48 circle samples (47 L after the M) + the 4-vertex hole (3 L after its M).
+      assert.equal((d.match(/L/g) ?? []).length, 47 + 3, d.slice(0, 200));
+      // The inner square is drawn with no fill and no fill-opacity; the region is drawn before it.
+      const inner = /<path d="M[^"]+ Z" fill="none" stroke="#4f8cff" stroke-width="2"><\/path>/.exec(svg!);
+      assert.ok(inner, 'the inner square path has fill="none" and no fill-opacity');
+      assert.ok(region!.index < inner!.index, 'the region is painted before the polygons');
+      assert.ok(!/fill="#4f8cff" fill-opacity="0.15"/.test(svg!), 'no 15 %-filled polygon remains');
+      assert.ok(!/point-shade_r/.test(svg!), 'the 48 circle samples are hidden helpers, never dots');
+      assert.ok(/<ellipse cx="[^"]+" cy="[^"]+" rx="[^"]+" ry="[^"]+" fill="none"/.test(svg!), 'the circle outline is still drawn');
+      // Engine freeze (controller ruling R1): a geometry with no regions and no polygon fill is byte-identical.
+      const html = renderToStaticMarkup(renderGeometryTree(GEOMETRY_FREEZE_FIXTURE));
+      assert.equal(html.length, GEOMETRY_FREEZE_EXPECTED.markupLength);
+      assert.equal(createHash('sha256').update(html).digest('hex'), GEOMETRY_FREEZE_EXPECTED.markupSha256, 'the no-region render is unchanged');
+      const filled = renderToStaticMarkup(renderGeometryTree({ ...GEOMETRY_FREEZE_FIXTURE, polygons: [{ vertices: ['A', 'B', 'C'] }] }));
+      assert.ok(filled.includes('fill="#4f8cff" fill-opacity="0.15"'), 'a polygon without fill still fills 15 % as before');
+    });
     await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
       // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
       // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.
@@ -487,12 +521,19 @@ async function main() {
       assert.equal(normalizeFigureDisplay(gr, 'no coordinates mentioned here at all'), gr, 'graphs untouched');
       assert.match(FIGURE_PROPOSE_SYSTEM, /no coordinate grid and no axes/);
     });
-    await section('system prompt carries the structural rules', () => {
+    await section('system prompt carries the structural rules', async () => {
       assert.match(FIGURE_PROPOSE_SYSTEM, /section_point: \{ kind: "section_point", of: [^\n]*ratio: \[m, n\]/);
       assert.match(FIGURE_PROPOSE_SYSTEM, /parallel_through: \{ kind: "parallel_through", through: pointId/);
       assert.match(FIGURE_PROPOSE_SYSTEM, /never.*free coordinates/i);
       assert.match(FIGURE_PROPOSE_SYSTEM, /xAxisStep/);
       assert.match(FIGURE_PROPOSE_SYSTEM, /translate_point: \{ kind: "translate_point", point: pointId, by: \{ dx, dy \} \| \{ from: pointId, to: pointId \}/, 'the proposer prompt names both by shapes (G7)');
+      // G5: the region vocabulary and the shading rule live in the homework proposer prompt only.
+      assert.match(FIGURE_PROPOSE_SYSTEM, /region: \{ kind: "region", outer: circleId\|polygonId, inner\?: \[circleId\|polygonId, \.\.\.\], label\? \}/, 'the proposer prompt names region with outer/inner (G5)');
+      assert.match(FIGURE_PROPOSE_SYSTEM, /fill: "none"/, 'the proposer prompt names the polygon fill "none" field (G5)');
+      assert.ok(FIGURE_PROPOSE_SYSTEM.includes('10. Shade exactly what the sheet shades: a region step whose outer is the shape whose inside is shaded and whose inner shapes are cut out; when the sheet shades a region, every polygon it leaves unshaded carries fill "none"; never shade a polygon to stand in for the sheet\'s shading.'), 'rule 10 verbatim (G5)');
+      const { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } = await import('../src/lib/tutor/diagrams/geometry-step-docs');
+      const { getGeometryStepKindsDescriptionTail } = await import('../src/lib/tutor/diagrams/geometry-solver');
+      assert.doesNotMatch(GEOMETRY_STEP_DOCS + GEOMETRY_STEP_DOCS_EXTRA + getGeometryStepKindsDescriptionTail(), /region|fill: "none"/, 'the live session vocabulary is unchanged (engine freeze)');
     });
   }
 

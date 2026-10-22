@@ -69,7 +69,7 @@ export type Given =
   | { id: string; kind: 'circle'; center: string; radius: number; label?: string }
   | { id: string; kind: 'segment'; from: PtRef; to: PtRef; label?: string }
   | { id: string; kind: 'line'; through: [PtRef, PtRef]; label?: string }
-  | { id: string; kind: 'polygon'; vertices: PtRef[]; label?: string };
+  | { id: string; kind: 'polygon'; vertices: PtRef[]; label?: string; fill?: string };
 
 // Steps: derived objects. Each step has an id (its primary output).
 // Multi-output steps (chord = 2 points + 1 segment) name child outputs by
@@ -149,7 +149,9 @@ export type Step =
   | StepChordOfContact
   | StepCommonTangent
   | StepTangentWithSlope
-  | StepAngleMarker;
+  | StepAngleMarker
+  // Homework-only (GAC round 8, G5): see HOMEWORK_ONLY_STEP_KINDS.
+  | StepRegion;
 
 /**
  * Authoritative list of step kinds the solver dispatches in `solveStep`.
@@ -224,21 +226,32 @@ export const STEP_KINDS = [
   'angle_marker',
 ] as const;
 
-// Compile-time assertion: STEP_KINDS must EXACTLY match Step['kind'].
-// If the Step union grows or shrinks without STEP_KINDS being updated,
-// the lines below will fail to compile. Mechanism: cross-assignability
-// in both directions verifies set equality.
+/**
+ * Step kinds the solver dispatches but the LIVE brain is not told about
+ * (GAC round 8, G5, 2026-10-22). `getGeometryStepKindsDescriptionTail`
+ * reads STEP_KINDS only, so the live tool description (frozen GAC engine)
+ * is byte-identical; the homework figure proposer prompt documents these
+ * itself (figure-build.ts, after GEOMETRY_STEP_DOCS_EXTRA). The two lists
+ * together must EXACTLY match Step['kind'] (assertion below).
+ */
+export const HOMEWORK_ONLY_STEP_KINDS = ['region'] as const;
+
+// Compile-time assertion: STEP_KINDS + HOMEWORK_ONLY_STEP_KINDS must EXACTLY
+// match Step['kind']. If the Step union grows or shrinks without the lists
+// being updated, the lines below will fail to compile. Mechanism:
+// cross-assignability in both directions verifies set equality.
 type _StepKindUnion = Step['kind'];
-type _StepKindsArr = typeof STEP_KINDS[number];
-// "Every kind in the Step union is in STEP_KINDS"
+type _StepKindsArr = typeof STEP_KINDS[number] | typeof HOMEWORK_ONLY_STEP_KINDS[number];
+// "Every kind in the Step union is in one of the lists"
 const _stepKindsCovers: Record<_StepKindUnion, true> = (() => {
   const acc = {} as Record<_StepKindUnion, true>;
   for (const k of STEP_KINDS) (acc as Record<string, true>)[k] = true;
+  for (const k of HOMEWORK_ONLY_STEP_KINDS) (acc as Record<string, true>)[k] = true;
   return acc;
 })();
 void _stepKindsCovers;
-// "Every entry in STEP_KINDS is a real Step kind" (catches typos / removed kinds)
-const _stepKindsAllValid: readonly _StepKindUnion[] = STEP_KINDS;
+// "Every entry in the lists is a real Step kind" (catches typos / removed kinds)
+const _stepKindsAllValid: readonly _StepKindUnion[] = [...STEP_KINDS, ...HOMEWORK_ONLY_STEP_KINDS];
 void _stepKindsAllValid;
 // Equality (defensive): if either direction breaks, TS errors above too.
 type _Assert<T extends true> = T;
@@ -457,6 +470,10 @@ export interface StepDeclareLine extends StepCommon {
 export interface StepDeclarePolygon extends StepCommon {
   kind: 'polygon';
   vertices: PtRef[];
+  /** GAC round 8 (G5): "none" draws the outline only — a polygon the sheet
+   *  leaves white next to a shaded `region`; a colour fills with it. Absent:
+   *  the renderer's 15 % default fill, as before. */
+  fill?: string;
 }
 export interface StepDeclareCircle extends StepCommon {
   kind: 'circle';
@@ -870,13 +887,30 @@ export interface StepAngleMarker extends StepCommon {
   color?: string;
 }
 
+/** Shaded area: the inside of `outer` with the insides of `inner` cut out
+ *  (GAC acceptance 2026-10-22, hw-14b problem 5, G5: "the four circular
+ *  segments between the circle and inner square are shaded" — the proposer
+ *  had drawn the inner square as a filled polygon, so the wrong region read
+ *  as shaded). `outer` and each `inner` name a circle (given or step) or a
+ *  polygon (given or step, a `sector`'s polygon included). A circle boundary
+ *  is sampled into 48 hidden helper points `${id}_r${i}`; a polygon's own
+ *  vertices are used. Rendered as one evenodd path before the polygons, so
+ *  the shading never covers an outline. Homework-only: see
+ *  HOMEWORK_ONLY_STEP_KINDS. */
+export interface StepRegion extends StepCommon {
+  kind: 'region';
+  outer: string;
+  inner?: string[];
+}
+
 // ─── Internal resolution state ────────────────────────────────────────────────
 
-interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string }
+interface ResolvedPoint { kind: 'point'; id: string; x: number; y: number; label?: string; hidden?: boolean }
 interface ResolvedCircle { kind: 'circle'; id: string; center: string; radius: number; label?: string }
 interface ResolvedSegment { kind: 'segment'; id: string; from: string; to: string; label?: string }
 interface ResolvedLine { kind: 'line'; id: string; pointA: string; pointB: string; label?: string }
-interface ResolvedPolygon { kind: 'polygon'; id: string; vertices: string[]; label?: string }
+interface ResolvedPolygon { kind: 'polygon'; id: string; vertices: string[]; label?: string; fill?: string }
+interface ResolvedRegion { kind: 'region'; id: string; outer: string[]; holes: string[][]; label?: string }
 interface ResolvedArc {
   kind: 'arc';
   id: string;
@@ -917,7 +951,8 @@ type Resolved =
   | ResolvedPolygon
   | ResolvedArc
   | ResolvedConic
-  | ResolvedAngle;
+  | ResolvedAngle
+  | ResolvedRegion;
 
 interface State {
   byId: Map<string, Resolved>;
@@ -1152,6 +1187,7 @@ function solveStep(step: Step, state: State): void {
         kind: 'polygon', id: step.id,
         vertices: step.vertices.map((v, i) => normalizePointRef(state, v, step.id, `v${i}`)),
         label: step.label,
+        fill: step.fill,
       });
       return;
     case 'circle':
@@ -1195,6 +1231,7 @@ function solveStep(step: Step, state: State): void {
     case 'common_tangent': return solveCommonTangent(step, state);
     case 'tangent_with_slope': return solveTangentWithSlope(step, state);
     case 'angle_marker': return solveAngleMarker(step, state);
+    case 'region': return solveRegion(step, state);
     default: {
       // Runtime emissions aren't typed: a kind outside the union used to
       // fall through silently, dropping the step AND everything built on
@@ -2311,6 +2348,41 @@ function solveSector(step: StepSector, state: State): void {
   setObject(state, { kind: 'polygon', id: step.id, vertices: verts, label: step.label });
 }
 
+/** How many points a region samples a circle boundary into. Closed by the
+ *  renderer's `Z`, so no vertex is repeated (solveSector repeats its last
+ *  sample because its arc is open and returns to the apex). */
+const REGION_CIRCLE_SAMPLES = 48;
+
+function solveRegion(step: StepRegion, state: State): void {
+  if (typeof step.outer !== 'string') throw new Error(`region "${step.id}": outer must be the id of a circle or polygon`);
+  const inner = step.inner ?? [];
+  if (!Array.isArray(inner) || inner.some((x) => typeof x !== 'string')) throw new Error(`region "${step.id}": inner must be a list of circle or polygon ids`);
+  // The ring of vertex ids around a shape: a polygon's own vertices; a circle
+  // sampled into hidden helper points on its boundary, counter-clockwise from
+  // angle 0. The ids are stable per shape, so the same circle named by two
+  // regions is sampled once.
+  const ring = (ref: string, role: string): string[] => {
+    const obj = state.byId.get(ref);
+    if (!obj) throw new Error(`region "${step.id}": ${role} names ${ref} but the figure has no such shape`);
+    if (obj.kind === 'polygon') return obj.vertices;
+    if (obj.kind !== 'circle') throw new Error(`region "${step.id}": ${role} ${ref} is a ${obj.kind}, not a circle or polygon`);
+    const c = pt(state, obj.center);
+    const ids: string[] = [];
+    for (let i = 0; i < REGION_CIRCLE_SAMPLES; i++) {
+      const a = (2 * Math.PI * i) / REGION_CIRCLE_SAMPLES;
+      const id = `${ref}_r${i}`;
+      if (!state.byId.has(id)) {
+        setObject(state, { kind: 'point', id, x: round2(c.x + obj.radius * Math.cos(a)), y: round2(c.y + obj.radius * Math.sin(a)), hidden: true });
+      }
+      ids.push(id);
+    }
+    return ids;
+  };
+  const outer = ring(step.outer, 'outer');
+  const holes = inner.map((ref) => ring(ref, 'inner'));
+  setObject(state, { kind: 'region', id: step.id, outer, holes, label: step.label });
+}
+
 // ─── Tier 2 solvers ───────────────────────────────────────────────────────────
 
 /** Materialize a triangle from three computed vertex coords plus optional
@@ -2992,6 +3064,17 @@ function solveAngleMarker(step: StepAngleMarker, state: State): void {
 
 // ─── Public entry point ───────────────────────────────────────────────────────
 
+/** A shaded area for the renderer: vertex ids of the outer ring and of each
+ *  hole, drawn as one evenodd path (GAC round 8, G5). Local to the solver and
+ *  the renderer; `@core` is untouched. */
+export interface GeometryRegion {
+  id: string;
+  outer: string[];
+  holes: string[][];
+  label?: string;
+  color?: string;
+}
+
 export interface SolverOutput {
   title?: string;
   points: GeometryPoint[];
@@ -3003,6 +3086,9 @@ export interface SolverOutput {
   arcs: GeometryArc[];
   angles: GeometryAngle[];
   conics: GeometryConic[];
+  /** GAC round 8 (G5): shaded areas between shapes; empty for every figure
+   *  without a `region` step, so renderers that pass it through draw as before. */
+  regions: GeometryRegion[];
   showGrid?: boolean;
   showAxes?: boolean;
   viewRange?: { x: [number, number]; y: [number, number] };
@@ -3062,6 +3148,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
           kind: 'polygon', id: g.id,
           vertices: g.vertices.map((v, i) => normalizePointRef(state, v, g.id, `v${i}`)),
           label: g.label,
+          fill: g.fill,
         });
         break;
     }
@@ -3095,6 +3182,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const conics: GeometryConic[] = [];
   const anglesOut: GeometryAngle[] = [];
   const polygons: GeometryPolygon[] = [];
+  const regions: GeometryRegion[] = [];
   // Build a co-location set for labeled points so we can suppress the
   // unlabeled scaffolding dots (chord_from, chord_to, hex_v0, …) when
   // they sit on top of a brain-named point. Without this, the scaffolding
@@ -3122,6 +3210,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   for (const o of state.byId.values()) {
     if (o.kind === 'segment') { usedElsewhere.add(o.from); usedElsewhere.add(o.to); }
     else if (o.kind === 'polygon') o.vertices.forEach((v) => usedElsewhere.add(v));
+    else if (o.kind === 'region') [o.outer, ...o.holes].forEach((ring) => ring.forEach((v) => usedElsewhere.add(v)));
     else if (o.kind === 'circle' || o.kind === 'arc') usedElsewhere.add(o.center);
     else if (o.kind === 'angle') usedElsewhere.add(o.vertex);
     else if (o.kind === 'line' && !lineLabel(o)) { usedElsewhere.add(o.pointA); usedElsewhere.add(o.pointB); }
@@ -3138,7 +3227,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     const obj = state.byId.get(id);
     if (!obj) continue;
     if (obj.kind === 'point') {
-      if (helperPoints.has(obj.id)) {
+      if (helperPoints.has(obj.id) || obj.hidden) {
         points.push({ id: obj.id, x: obj.x, y: obj.y, hidden: true });
         continue;
       }
@@ -3202,6 +3291,17 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
       polygons.push({
         vertices: obj.vertices,
         label: labelOverrides[obj.id] ?? obj.label,
+        // Absent on every polygon without a `fill` field (G5), so the renderer's
+        // default fill and the live boards are unchanged.
+        ...(obj.fill !== undefined ? { fill: obj.fill } : {}),
+      });
+    } else if (obj.kind === 'region') {
+      regions.push({
+        id: obj.id,
+        outer: obj.outer,
+        holes: obj.holes,
+        label: labelOverrides[obj.id] ?? obj.label,
+        color: colorOverrides[obj.id],
       });
     } else if (obj.kind === 'arc') {
       arcs.push({
@@ -3282,6 +3382,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     arcs,
     angles: anglesOut,
     conics,
+    regions,
     // Axes and grid default ON. Brain forgets to set them on follow-up
     // turns and the resulting axisless figures are hard to read against
     // a coordinate plane backdrop. Brain can still opt out explicitly.
