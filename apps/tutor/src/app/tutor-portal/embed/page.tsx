@@ -995,6 +995,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       studentName: studentName || undefined,
       studentId: config?.student_id || undefined,
       startedAt: sessionStartRef.current.toISOString(),
+      // Partner minute pool: the moment the tutor engaged in THIS sitting
+      // (start tap / evelyn:start). The server charges wall clock from here.
+      attemptEngagedAt: sessionEngagedAtRef.current ? new Date(sessionEngagedAtRef.current).toISOString() : undefined,
       duration,
       messageCount: transcript.length,
       whiteboardItemCount: whiteboardCommands.length,

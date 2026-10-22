@@ -143,6 +143,7 @@
     "test:host-start": "npx tsx scripts/test-host-start.ts",
     "test:partner-pool": "npx tsx scripts/test-partner-pool.ts",
     "test:partner-pool-store": "npx tsx scripts/test-partner-pool-store.ts",
+    "test:session-usage-pool": "npx tsx scripts/test-session-usage-pool.ts",
     "test:voice-codes": "npx tsx scripts/test-voice-codes.ts",
     "test:host-lesson": "npx tsx scripts/test-host-lesson.ts",
     "test:tree-renderer": "npx tsx scripts/test-tree-renderer.tsx",

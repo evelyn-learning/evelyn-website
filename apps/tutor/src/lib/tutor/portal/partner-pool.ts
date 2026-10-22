@@ -140,3 +140,14 @@ export function clockPoolSeconds(snap: PoolSnapshot | null | undefined): number 
 export function poolFlagOn(env: string | undefined): boolean {
   return env !== 'off';
 }
+
+/** Which partner a usage save charges: the verified token's partner wins; the body's is a fallback. */
+export function chargePartnerFor(input: {
+  tokenPartnerId?: string | null;
+  bodyPartnerId?: string | null;
+}): { partnerId: string | null; mismatch: boolean } {
+  const token = (input.tokenPartnerId ?? '').trim() || null;
+  const body = (input.bodyPartnerId ?? '').trim() || null;
+  if (token) return { partnerId: token, mismatch: body !== null && body !== token };
+  return { partnerId: body, mismatch: false };
+}
