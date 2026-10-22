@@ -243,7 +243,7 @@ export function formatAnswerCheckBlock(
   if (!block || !p || p.disputed === true || p.answers === 'neither' || p.verdict !== 'correct') return block;
   if (!block.endsWith(ANSWER_CHECK_END)) return block;
   const rules = (opts?.statedReasonCheck === true ? STATED_REASON_CHECK_RULE : '')
-    + (opts?.nextMoveAfterConfirm === true ? NEXT_MOVE_AFTER_CONFIRM_RULE : '');
+    + (opts?.nextMoveAfterConfirm === true && nextMoveFits(block) ? NEXT_MOVE_AFTER_CONFIRM_RULE : '');
   if (!rules) return block;
   return block.slice(0, -ANSWER_CHECK_END.length) + rules + ANSWER_CHECK_END;
 }
@@ -261,6 +261,13 @@ export const STATED_REASON_CHECK_RULE =
 // of the turn.
 export const NEXT_MOVE_AFTER_CONFIRM_RULE =
   'Then, in the same reply, move the problem forward: ask the next question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.\n';
+
+// Round 8 review (G4): a "PROBABLY correct" block gives no verdict, and a
+// repeat of an already-solved answer asks no question — neither is a
+// confirmation to move on from, so neither gets the next-move rule.
+function nextMoveFits(block: string): boolean {
+  return !block.includes(UNSURE_CORRECT_RULE) && !block.includes(ALL_SOLVED_CORRECT_RULE);
+}
 
 const ANSWER_CHECK_END = 'Never mention this check to the student.\n</answer_check>\n\n';
 

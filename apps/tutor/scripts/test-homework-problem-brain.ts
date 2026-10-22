@@ -636,6 +636,21 @@ async function main() {
         }
       }
     });
+    await section('G4 review: an unsure ("PROBABLY correct") block and an already-solved repeat are byte-identical with nextMoveAfterConfirm', async () => {
+      const { formatAnswerCheckBlock, UNSURE_CORRECT_RULE, ALL_SOLVED_CORRECT_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+      const unsure = { answers: 'overall_problem' as const, target: 'x', proposed: '4', verdict: 'correct' as const, confidence: 'medium' as const };
+      const uOpts = { workThenMatch: true, noRevealAnyStep: true };
+      const uPlain = formatAnswerCheckBlock(unsure, uOpts);
+      assert.ok(uPlain.includes(UNSURE_CORRECT_RULE), 'fixture reaches the unsure branch');
+      assert.equal(formatAnswerCheckBlock(unsure, { ...uOpts, nextMoveAfterConfirm: true }), uPlain, 'unsure: unchanged');
+      const repeat = { answers: 'other_part' as const, target: 'x', proposed: '20', verdict: 'correct' as const, confidence: 'high' as const };
+      const aOpts = { workThenMatch: true, noRevealAnyStep: true, allSolved: true };
+      const aPlain = formatAnswerCheckBlock(repeat, aOpts);
+      assert.ok(aPlain.includes(ALL_SOLVED_CORRECT_RULE), 'fixture reaches the all-solved branch');
+      assert.equal(formatAnswerCheckBlock(repeat, { ...aOpts, nextMoveAfterConfirm: true }), aPlain, 'all-solved repeat: unchanged');
+      const sure = formatAnswerCheckBlock({ ...unsure, confidence: 'high' as const }, { ...uOpts, nextMoveAfterConfirm: true });
+      assert.ok(sure.includes(NEXT_MOVE_SENTENCE), 'a sure no-reveal correct still gets it');
+    });
     await section('G4 brain: keyed undecided → model check correct ("12 cm" shape) WITH hpKey gets the next move; WITHOUT hpKey absent', async () => {
       const okLlm = async () => ({ text: JSON.stringify({ proposed_value: '20', problem_final_answer: '20', proposed_equals_final_answer: true, answers: 'open_question', target: 'x', correct_value: '20', verdict: 'correct', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 });
       const modelChecked = await run('so it is twenty', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: okLlm } });
