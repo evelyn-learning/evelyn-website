@@ -13,6 +13,7 @@ import { strict as assert } from 'node:assert';
 import { homeworkFigureFor, titleNamesProblem } from '../src/lib/tutor/whiteboard/homework-figure';
 import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../src/lib/tutor/homework-build/figure-validate';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
+import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
 
 let passed = 0;
 let failed = 0;
@@ -232,6 +233,28 @@ test('labelIsFromText: a point letter inside a compound name (△ABC, AB, OBA) i
   assert.equal(labelIsFromText('AB', P2TEXT), true);
   const P6TEXT = 'The shaded sector has radius 9 cm and a central angle of 80°. [Figure: Circle with center O. Sector OBA with radius 9 cm and central angle 80° is shaded.]';
   for (const l of ['O', 'B', 'A']) assert.equal(labelIsFromText(l, P6TEXT), true, l);
+});
+
+
+// GAC acceptance 2026-10-22 (hw-14b problem 3, attempt 1): the proposer titled
+// the figure "Lighthouse and two boats" and the whole attempt was rejected
+// ("label ... does not come from the problem text"). A caption-like title is
+// the proposer's own words: dropped from the stored figure, never a failure.
+// A title that is a label ("AB = 5") keeps the from-the-text check. (G7)
+const HW14B_P3_TEXT = 'From the top of a 60 m lighthouse, the angles of depression to two boats are 40° and 28°. How far apart are the boats?';
+const HW14B_P3_ATTEMPT1 = {"action":"showGeometryConstructed","title":"Lighthouse and two boats","given":[{"id":"B","kind":"point","x":0,"y":0},{"id":"T","kind":"point","x":0,"y":60},{"id":"A","kind":"point","x":71.5,"y":0},{"id":"C","kind":"point","x":112.8,"y":0},{"id":"H","kind":"point","x":125,"y":60}],"steps":[{"id":"sTB","kind":"segment","from":"B","to":"T","label":"60 m"},{"id":"sBC","kind":"segment","from":"B","to":"C"},{"id":"sTA","kind":"segment","from":"T","to":"A"},{"id":"sTC","kind":"segment","from":"T","to":"C"},{"id":"sTH","kind":"segment","from":"T","to":"H"},{"id":"m1","kind":"angle_marker","vertex":"T","from":"H","to":"A","style":"arc","label":"40°"},{"id":"m2","kind":"angle_marker","vertex":"T","from":"H","to":"C","style":"arc","label":"28°"},{"id":"m3","kind":"angle_marker","vertex":"B","from":"T","to":"A","style":"right"}],"display":{"grid":false,"axes":false}} as unknown as Parameters<typeof validateFigure>[0];
+
+test('a caption-like figure title is dropped, not fatal; a label-like title is still checked (G7)', () => {
+  assert.deepEqual(validateFigure(HW14B_P3_ATTEMPT1, { problemText: HW14B_P3_TEXT, claims: [] }), { ok: true });
+  const stored = normalizeFigureDisplay(HW14B_P3_ATTEMPT1, HW14B_P3_TEXT) as { title?: string } | null;
+  assert.ok(stored);
+  assert.equal(stored.title, undefined, 'the caption is gone from the stored figure');
+  assert.equal('title' in stored, false);
+  const labelTitle = { ...(HW14B_P3_ATTEMPT1 as object), title: 'AB = 5' } as unknown as Parameters<typeof validateFigure>[0];
+  const v = validateFigure(labelTitle, { problemText: HW14B_P3_TEXT, claims: [] });
+  assert.equal(v.ok, false, 'a label-like title absent from the text still fails');
+  assert.match(v.ok ? '' : v.reasons.join('; '), /AB = 5/);
+  assert.equal((normalizeFigureDisplay(labelTitle, HW14B_P3_TEXT) as { title?: string }).title, 'AB = 5', 'a label-like title is not dropped');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -336,7 +336,12 @@ function validateGeometry(
       reasons.push(`angle label "${o.label}" is on a bare point; attach it to an angle_marker at its vertex`);
     }
   }
-  reasons.push(...textFieldReasons([{ value: fig.title }], ctx.problemText));
+  // G7 (2026-10-22, hw-14b p3): a caption-like title ("Lighthouse and two
+  // boats") is the proposer's own words, never the sheet's: normalizeFigureDisplay
+  // drops it, so it is not checked. A title that is a label ("AB = 5") still is.
+  if (!(typeof fig.title === 'string' && isCaptionLabel(fig.title))) {
+    reasons.push(...textFieldReasons([{ value: fig.title }], ctx.problemText));
+  }
 
   const points: Record<string, Pt> = {};
   for (const p of solved.points) points[p.id] = { x: p.x, y: p.y };

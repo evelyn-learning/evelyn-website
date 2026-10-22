@@ -154,6 +154,22 @@ function main() {
     assert.throws(() => solveGeometry(spec), /zorble/);
   });
 
+  // GAC acceptance 2026-10-22 (hw-14b problem 4, attempt 1): the proposer
+  // translated B by the vector A→D as by: {from, to}; only {dx, dy} was read. (G7)
+  test('translate_point accepts by: {from, to} (the vector from → to) as well as {dx, dy}', () => {
+    const spec = {
+      given: [{ id: 'A', kind: 'point', x: 0, y: 0 }, { id: 'B', kind: 'point', x: 6, y: 0 }, { id: 'D', kind: 'point', x: 1.5, y: 3.5 }],
+      steps: [{ id: 'C', kind: 'translate_point', point: 'B', by: { from: 'A', to: 'D' } }],
+    } as unknown as ConstructedGeometrySpec;
+    const C = findPt(solveGeometry(spec), 'C');
+    assert.equal(C.x, 7.5); assert.equal(C.y, 3.5);
+    const dxdy = { ...spec, steps: [{ id: 'C', kind: 'translate_point', point: 'B', by: { dx: 1.5, dy: 3.5 } }] } as unknown as ConstructedGeometrySpec;
+    const C2 = findPt(solveGeometry(dxdy), 'C');
+    assert.equal(C2.x, 7.5); assert.equal(C2.y, 3.5);
+    const bad = { ...spec, steps: [{ id: 'C', kind: 'translate_point', point: 'B', by: { x: 1 } }] } as unknown as ConstructedGeometrySpec;
+    assert.throws(() => solveGeometry(bad), /by must be \{dx, dy\} or \{from, to\}/);
+  });
+
   test("STEP_KINDS advertises 'point'", () => {
     assert.ok((STEP_KINDS as readonly string[]).includes('point'));
   });

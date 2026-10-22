@@ -55,7 +55,7 @@ Rules:
 Step reference (the steps array of showGeometryConstructed):
 ${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
 
-${GEOMETRY_STEP_DOCS_EXTRA}`;
+${GEOMETRY_STEP_DOCS_EXTRA} translate_point: { kind: "translate_point", point: pointId, by: { dx, dy } | { from: pointId, to: pointId }, label? } — the point moved by a vector, given as numbers or as two points (the vector from → to, so ABCD's fourth vertex C is B translated by { from: "A", to: "D" }).`;
 
 export const FIGURE_CLAIMS_SYSTEM = `You read one homework problem, including its bracketed figure or graph description, and list the geometric relations it states. Use only what the text says; do not infer relations from how a figure would look. Reply with JSON only: {"claims":[...]}. Claim kinds: on_segment (point, segment:[p,q]), on_circle (point, circle), parallel (a:[p,q], b:[r,s]), perpendicular (a, b), collinear (points:[...]), between (point, ends:[p,q]). Point names are the single letters or ids the text uses. If the text states no such relation, return {"claims":[]}.`;
 
@@ -155,6 +155,9 @@ export function normalizeFigureDisplay(figure: FigureCommand | null, problemText
   const pointNames = namedPointsIn(problemText ?? '');
   const geo = figure as Extract<FigureCommand, { action: 'showGeometryConstructed' }>;
   const named = { ...geo, given: unname(geo.given) as typeof geo.given, steps: unname(geo.steps) as typeof geo.steps };
+  // G7 (2026-10-22, hw-14b p3): a caption-like title is the proposer's own
+  // words, never the sheet's: it is dropped from the stored figure.
+  if (typeof named.title === 'string' && isCaptionLabel(named.title)) delete (named as { title?: string }).title;
   // keepLabels (2026-10-22, hw-13 p4): the sheet's "13" on a slant edge of an
   // oblique pyramid is the sheet's label, however long the drawn segment is;
   // the solver's mislabel guard is for the live tutor, not a stored figure.

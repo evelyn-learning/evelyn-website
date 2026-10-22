@@ -467,6 +467,7 @@ async function main() {
       assert.match(FIGURE_PROPOSE_SYSTEM, /parallel_through: \{ kind: "parallel_through", through: pointId/);
       assert.match(FIGURE_PROPOSE_SYSTEM, /never.*free coordinates/i);
       assert.match(FIGURE_PROPOSE_SYSTEM, /xAxisStep/);
+      assert.match(FIGURE_PROPOSE_SYSTEM, /translate_point: \{ kind: "translate_point", point: pointId, by: \{ dx, dy \} \| \{ from: pointId, to: pointId \}/, 'the proposer prompt names both by shapes (G7)');
     });
   }
 

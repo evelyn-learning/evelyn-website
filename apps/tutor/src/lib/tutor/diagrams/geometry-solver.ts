@@ -566,7 +566,8 @@ export interface StepRotatePoint extends StepCommon {
 export interface StepTranslatePoint extends StepCommon {
   kind: 'translate_point';
   point: string;
-  by: { dx: number; dy: number };
+  /** A vector as numbers, or as two points (the vector from → to; G7, 2026-10-22). */
+  by: { dx: number; dy: number } | { from: string; to: string };
 }
 
 /** Dilate (scale) a point about a center by factor k. */
@@ -2065,12 +2066,18 @@ function solveRotatePoint(step: StepRotatePoint, state: State): void {
 }
 
 function solveTranslatePoint(step: StepTranslatePoint, state: State): void {
-  if (!step.by || typeof step.by.dx !== 'number' || typeof step.by.dy !== 'number') throw new Error('by must be {dx, dy}');
+  const by = step.by as { dx?: unknown; dy?: unknown; from?: unknown; to?: unknown } | undefined;
+  let dx: number, dy: number;
+  if (by && typeof by.dx === 'number' && typeof by.dy === 'number') { dx = by.dx; dy = by.dy; }
+  else if (by && typeof by.from === 'string' && typeof by.to === 'string') {
+    const F = pt(state, by.from), T = pt(state, by.to);
+    dx = T.x - F.x; dy = T.y - F.y;
+  } else throw new Error('by must be {dx, dy} or {from, to}');
   const P = pt(state, step.point);
   setObject(state, {
     kind: 'point', id: step.id,
-    x: round2(P.x + step.by.dx),
-    y: round2(P.y + step.by.dy),
+    x: round2(P.x + dx),
+    y: round2(P.y + dy),
     label: step.label,
   });
 }
