@@ -139,6 +139,48 @@ async function main() {
       assert.equal(checkClaims(near, circ, [{ kind: 'collinear', points: ['A', 'N', 'B'] }], 1e-6).length, 1);
     });
 
+    await section('checkClaims (hw-14b p4): a collinear claim over one polygon\'s vertices is skipped, not checked', () => {
+      const pts = { A: { x: 0, y: 0 }, B: { x: 6, y: 0 }, C: { x: 8, y: 3.5 }, D: { x: 2, y: 3.5 }, E: { x: 4, y: 1.75 } };
+      const polygons = [['A', 'B', 'C', 'D']];
+      const vertexTriples = [['D', 'A', 'B'], ['A', 'B', 'C'], ['B', 'C', 'D'], ['A', 'D', 'C']].map((points) => ({ kind: 'collinear' as const, points }));
+      assert.equal(checkClaims(pts, {}, vertexTriples).length, 4, 'without the polygon the claims fail as before');
+      assert.deepEqual(checkClaims(pts, {}, vertexTriples, undefined, undefined, polygons), []);
+      // A point that is not a vertex (E, on diagonal AC) is still checked.
+      assert.deepEqual(checkClaims(pts, {}, [{ kind: 'collinear', points: ['A', 'E', 'C'] }], undefined, undefined, polygons), []);
+      assert.match(checkClaims(pts, {}, [{ kind: 'collinear', points: ['A', 'E', 'B'] }], undefined, undefined, polygons)[0], /collinear \[A,E,B\] fails/);
+      // Vertices of two different polygons do not combine into one skip.
+      assert.equal(checkClaims(pts, {}, [{ kind: 'collinear', points: ['A', 'B', 'C'] }], undefined, undefined, [['A', 'B', 'E'], ['C', 'D', 'E']]).length, 1);
+    });
+    await section('validateFigure (hw-14b p4): parallelogram ABCD with its angle names read as collinear triples still gets its figure', () => {
+      const P4 = 'ABCD is a parallelogram. [Figure: Parallelogram ABCD with A at bottom left, B at bottom right, C at top right, D at top left. Diagonals AC and BD intersect at E. Segment AE = 2x + 1, segment EC = 3x − 4. Angle DAB = (2y + 20)°, angle ABC = (4y + 10)°.]';
+      const fig: Fig = {
+        action: 'showGeometryConstructed',
+        given: [pt('A', 0, 0), pt('B', 6, 0), pt('D', 2, 3.5)],
+        steps: [
+          { id: 'C', kind: 'translate_point', point: 'B', by: { from: 'A', to: 'D' }, label: 'C' },
+          { id: 'pg', kind: 'polygon', vertices: ['A', 'B', 'C', 'D'], fill: 'none' },
+          { id: 'E', kind: 'midpoint', of: { from: 'A', to: 'C' }, label: 'E' },
+          seg('sAE', 'A', 'E', '2x + 1'), seg('sEC', 'E', 'C', '3x − 4'), seg('sDB', 'D', 'B'),
+          { id: 'mA', kind: 'angle_marker', vertex: 'A', from: 'B', to: 'D', style: 'arc', label: '(2y + 20)°' },
+          { id: 'mB', kind: 'angle_marker', vertex: 'B', from: 'C', to: 'A', style: 'arc', label: '(4y + 10)°' },
+        ],
+        display: { grid: false, axes: false },
+      } as unknown as Fig;
+      // The four claims the live run emitted (engine log 2026-10-22, n=4 attempts 1 and 2): the parallelogram's angle names.
+      const live = [['D', 'A', 'B'], ['A', 'B', 'C'], ['B', 'C', 'D'], ['A', 'D', 'C']].map((points) => ({ kind: 'collinear' as const, points }));
+      assert.deepEqual(validateFigure(fig, { problemText: P4, claims: [...live, { kind: 'on_segment', point: 'E', segment: ['A', 'C'] }] }), { ok: true });
+      // A collinear claim the figure really breaks still rejects it.
+      const v = validateFigure(fig, { problemText: P4, claims: [{ kind: 'collinear', points: ['A', 'E', 'B'] }] });
+      assert.ok(!v.ok && v.reasons.some((r) => /collinear \[A,E,B\] fails/.test(r)), JSON.stringify(v));
+    });
+    await section('claims prompts (hw-14b p4): an angle or polygon name is not a collinear statement', async () => {
+      const { FIGURE_CLAIMS_SYSTEM, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
+      for (const s of [FIGURE_CLAIMS_SYSTEM, FIGURE_PROPOSE_SYSTEM]) {
+        assert.ok(s.includes('collinear only when the text says the points lie on one line'), s.slice(0, 200));
+        assert.ok(s.includes('an angle name (angle ABC, ∠ABC) or a polygon name (ABCD) is not a collinear statement'), s.slice(0, 200));
+      }
+    });
+
     const PI = Math.PI;
     const graph = (over: Record<string, unknown> = {}, fnLabel?: string): Fig => ({
       action: 'showGraph', type: 'function',

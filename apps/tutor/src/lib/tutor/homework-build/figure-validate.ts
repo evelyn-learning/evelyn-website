@@ -208,7 +208,9 @@ function resolveClaim(c: FigureClaim, r: (n: string) => string): FigureClaim {
   }
 }
 
-/** Failing-claim messages; [] when every claim holds. tol is relative to the
+/** Failing-claim messages; [] when every claim holds. polygons are the solved
+ *  polygons' vertex ids: a collinear claim over one polygon's vertices is
+ *  skipped (hw-14b p4). tol is relative to the
  *  figure's extent. 1e-3 (2026-10-21, GAC acceptance): the proposer writes
  *  given coordinates to two or three decimals, so a chord endpoint sat 0.003
  *  off its circle and a point 0.004 off its line at 1e-6 — a thousandth of
@@ -222,6 +224,7 @@ export function checkClaims(
   claims: FigureClaim[],
   tol = 1e-3,
   nameToId: ReadonlyMap<string, string | null> = new Map(),
+  polygons: ReadonlyArray<ReadonlyArray<string>> = [],
 ): string[] {
   const xs = Object.values(points).map((p) => p.x);
   const ys = Object.values(points).map((p) => p.y);
@@ -275,6 +278,13 @@ export function checkClaims(
     // missing name (AB, a segment or line) is skipped. Other kinds keep BARE_ID.
     if (POSITION_KINDS.has(c.kind) && gone.some((id) => !SINGLE_POINT_ID.test(id))) continue;
     if (gone.length) { out.push(`${c.kind} claim names ${gone.join(', ')} but the solver has no such point`); continue; }
+    // GAC acceptance 2026-10-22 (hw-14b p4): the claims read turned the
+    // parallelogram's angle names (DAB, ABC, BCD, ADC) into collinear triples.
+    // Points that are all vertices of one declared polygon are never collinear
+    // (the polygon would be degenerate), so such a claim is the reader's error,
+    // not the figure's: it is skipped. Both attempts had died on it, since the
+    // claims are unioned once and a redraw cannot change them.
+    if (c.kind === 'collinear' && polygons.some((poly) => c.points.every((p) => poly.includes(p)))) continue;
 
     if (c.kind === 'on_segment' || c.kind === 'between') {
       const [a, b] = c.kind === 'on_segment' ? c.segment : c.ends;
@@ -473,7 +483,7 @@ function validateGeometry(
     const prev = nameToId.get(k);
     if (prev === undefined) nameToId.set(k, o.id); else if (prev !== o.id) nameToId.set(k, null);
   }
-  reasons.push(...checkClaims(points, circles, ctx.claims, undefined, nameToId));
+  reasons.push(...checkClaims(points, circles, ctx.claims, undefined, nameToId, solved.polygons.map((p) => p.vertices)));
 
   // Every single-capital point the figure description names must be drawn.
   const desc = /\[Figure:([^\]]*)\]/.exec(ctx.problemText)?.[1] ?? '';
