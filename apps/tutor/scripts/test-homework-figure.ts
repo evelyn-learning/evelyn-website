@@ -83,6 +83,9 @@ test('namedPointsIn ignores a quoted letter and a letter-shape (F4a)', () => {
   assert.equal(names('a V-shaped notch'), '');
   assert.equal(names('the letter T'), '');
   assert.equal(names('Point V lies on q'), 'V');
+  assert.equal(names('a \u201CV\u201D shape'), '');
+  assert.equal(names("a 'V' shape"), '');
+  assert.equal(names("triangle A'B'C' is the image"), '');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
