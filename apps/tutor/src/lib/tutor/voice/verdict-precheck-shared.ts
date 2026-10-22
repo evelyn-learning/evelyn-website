@@ -232,12 +232,20 @@ export function formatAnswerCheckBlock(
      *  correct verdict gets `STATED_REASON_CHECK_RULE`. Unset/false ⇒ the
      *  block as before. */
     statedReasonCheck?: boolean;
+    /** 2026-10-22 (round 8, G4): one-problem homework session — a correct
+     *  verdict (keyed, model-checked or carried) gets
+     *  `NEXT_MOVE_AFTER_CONFIRM_RULE`, so the reply carries the next move.
+     *  Unset/false ⇒ the block as before. */
+    nextMoveAfterConfirm?: boolean;
   },
 ): string {
   const block = formatAnswerCheckBlockBase(p, opts);
-  if (opts?.statedReasonCheck !== true || !block || !p || p.disputed === true || p.answers === 'neither' || p.verdict !== 'correct') return block;
+  if (!block || !p || p.disputed === true || p.answers === 'neither' || p.verdict !== 'correct') return block;
   if (!block.endsWith(ANSWER_CHECK_END)) return block;
-  return block.slice(0, -ANSWER_CHECK_END.length) + STATED_REASON_CHECK_RULE + ANSWER_CHECK_END;
+  const rules = (opts?.statedReasonCheck === true ? STATED_REASON_CHECK_RULE : '')
+    + (opts?.nextMoveAfterConfirm === true ? NEXT_MOVE_AFTER_CONFIRM_RULE : '');
+  if (!rules) return block;
+  return block.slice(0, -ANSWER_CHECK_END.length) + rules + ANSWER_CHECK_END;
 }
 
 // 2026-10-22 (hw-14 p4, F6): the student's message gave right values with a
@@ -246,6 +254,13 @@ export function formatAnswerCheckBlock(
 // wrong term. The key judges values, never the words around them.
 export const STATED_REASON_CHECK_RULE =
   'The check confirmed the VALUES only, against the problem\'s answer key — not any reason, name or relationship around them. When the student\'s message also states a reason, a name or a relationship, check it against the problem\'s facts. If a stated term is wrong, confirm the values AND correct the term in the same sentence. Never let a confirmed value stand in for a wrong explanation.\n';
+
+// 2026-10-22 (round 8, G4): a confirmed value in a one-problem session got a
+// two-sentence reply with no question — "…That's the value you gave." — and
+// the student had to type again to move on. The confirmation is not the end
+// of the turn.
+export const NEXT_MOVE_AFTER_CONFIRM_RULE =
+  'Then, in the same reply, move the problem forward: ask the next question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.\n';
 
 const ANSWER_CHECK_END = 'Never mention this check to the student.\n</answer_check>\n\n';
 

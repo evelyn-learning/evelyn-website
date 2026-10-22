@@ -610,6 +610,59 @@ async function main() {
         assert.equal(formatAnswerCheckBlock(wrong, { workThenMatch: wtm, statedReasonCheck: true }), formatAnswerCheckBlock(wrong, { workThenMatch: wtm }));
       }
     });
+    // 2026-10-22 (round 8, G4): a confirmed value in a one-problem session —
+    // keyed, model-checked or carried — must end with the next move in the
+    // same reply, not the confirmation alone. Without hpKey: byte-identical.
+    const NEXT_MOVE_SENTENCE = 'Then, in the same reply, move the problem forward: ask the next question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.';
+    await section('G4 formatAnswerCheckBlock: nextMoveAfterConfirm adds the sentence to every correct branch; unset is byte-identical', async () => {
+      const { formatAnswerCheckBlock, NEXT_MOVE_AFTER_CONFIRM_RULE, STATED_REASON_CHECK_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
+      assert.equal(NEXT_MOVE_AFTER_CONFIRM_RULE, NEXT_MOVE_SENTENCE + '\n');
+      for (const answers of ['open_question', 'overall_problem', 'other_part'] as const) {
+        const pub = { answers, target: 'x', proposed: '12 cm', verdict: 'correct' as const, confidence: 'high' as const };
+        for (const wtm of [false, true]) {
+          const label = `${answers} wtm=${wtm}`;
+          const plain = formatAnswerCheckBlock(pub, { workThenMatch: wtm });
+          const withRule = formatAnswerCheckBlock(pub, { workThenMatch: wtm, nextMoveAfterConfirm: true });
+          assert.ok(withRule.includes(NEXT_MOVE_SENTENCE), `${label}: sentence present`);
+          assert.equal(withRule.replace(NEXT_MOVE_AFTER_CONFIRM_RULE, ''), plain, `${label}: only the sentence is added`);
+          assert.ok(withRule.endsWith(NEXT_MOVE_AFTER_CONFIRM_RULE + 'Never mention this check to the student.\n</answer_check>\n\n'), `${label}: before the closing line`);
+          assert.equal(formatAnswerCheckBlock(pub, { workThenMatch: wtm, nextMoveAfterConfirm: false }), plain, `${label}: false is byte-identical`);
+          const both = formatAnswerCheckBlock(pub, { workThenMatch: wtm, statedReasonCheck: true, nextMoveAfterConfirm: true });
+          assert.equal(both.replace(NEXT_MOVE_AFTER_CONFIRM_RULE, '').replace(STATED_REASON_CHECK_RULE, ''), plain, `${label}: both rules, nothing else`);
+          for (const verdict of ['incorrect', 'partly_correct'] as const) {
+            const other = { ...pub, verdict };
+            assert.equal(formatAnswerCheckBlock(other, { workThenMatch: wtm, nextMoveAfterConfirm: true }), formatAnswerCheckBlock(other, { workThenMatch: wtm }), `${label} ${verdict}: unchanged`);
+          }
+        }
+      }
+    });
+    await section('G4 brain: keyed undecided → model check correct ("12 cm" shape) WITH hpKey gets the next move; WITHOUT hpKey absent', async () => {
+      const okLlm = async () => ({ text: JSON.stringify({ proposed_value: '20', problem_final_answer: '20', proposed_equals_final_answer: true, answers: 'open_question', target: 'x', correct_value: '20', verdict: 'correct', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 });
+      const modelChecked = await run('so it is twenty', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: okLlm } });
+      const block = answerCheckOf(modelChecked.content);
+      assert.ok(block.length > 0, 'model-check block injected');
+      assert.ok(block.includes(NEXT_MOVE_SENTENCE), 'model-checked correct with hpKey: next move present');
+      const keyed = answerCheckOf((await run('x = 60/3 = 20', { homeworkProblem: verifiedHp })).content);
+      assert.ok(keyed.includes(NEXT_MOVE_SENTENCE), 'keyed correct with hpKey: next move present');
+      const plain = await run('x = 60/3 = 20', { verdictPrecheckDeps: { llm: okLlm } });
+      assert.ok(plain.content.includes('<answer_check>'), 'no-hp block injected');
+      assert.ok(!plain.content.includes(NEXT_MOVE_SENTENCE), 'no-hp: next move absent');
+    });
+    await section('G4 carried correct verdict: next move WITH hpKey, absent WITHOUT and on incorrect — text and voice', async () => {
+      const carry = { answers: 'overall_problem' as const, target: 'x', proposed: '20', verdict: 'correct' as const, confidence: 'high' as const };
+      const note = '[validator feedback — not from the student] …';
+      const text = { studentTranscript: note, studentMessage: undefined, noRevealLedger: false, verdictPrecheckCarry: carry, verdictPrecheckDeps: undefined };
+      const voice = { ...text, textVerdictPrecheck: false, textTurnShape: false, textWorkThenMatch: false, voiceVerdictPrecheck: true };
+      for (const [label, extra] of [['text', text], ['voice', voice]] as const) {
+        const withHp = answerCheckOf((await run(note, { ...extra, homeworkProblem: verifiedHp })).content);
+        assert.ok(withHp.includes(NEXT_MOVE_SENTENCE), `${label}: carried with hpKey has the next move`);
+        const noHp = (await run(note, extra)).content;
+        assert.ok(noHp.includes('<answer_check>'), `${label}: carried block without hp`);
+        assert.ok(!noHp.includes(NEXT_MOVE_SENTENCE), `${label}: no-hp carried frame has no next move`);
+        const wrong = answerCheckOf((await run(note, { ...extra, homeworkProblem: verifiedHp, verdictPrecheckCarry: { ...carry, verdict: 'incorrect' } })).content);
+        assert.ok(!wrong.includes(NEXT_MOVE_SENTENCE), `${label}: carried incorrect has no next move`);
+      }
+    });
     await section('a runtime note quoting the answer: no keyed verdict, no done', async () => {
       const note = '[correction note — not from the student] The intended answer is "x = 20".';
       const r = await run(note, { homeworkProblem: verifiedHp, studentMessage: undefined });

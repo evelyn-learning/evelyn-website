@@ -2556,7 +2556,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           // frame asks for any stated reason to be checked too. Final review: in
           // a one-problem session (hpKey) whichever path judged it, keyed or
           // model-checked ("so it is twenty" is left to the model).
-          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts, ...(hpKey && pub.verdict === 'correct' ? { statedReasonCheck: true } : {}) });
+          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts, ...(hpKey && pub.verdict === 'correct' ? { statedReasonCheck: true, nextMoveAfterConfirm: true } : {}) });
           // 2026-10-15 (GAC staging v5): the problems THIS message completed
           // are in the ledger for this reply too — the browser records them
           // only from the frame below, i.e. for the next turn. Without this
@@ -2593,7 +2593,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         }
       }
       // Final review (F6): a transport retry keeps the stated-reason rule.
-      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, { ...(workThenMatch ? { workThenMatch: true } : {}), ...carryOpts, ...(hpKey && input.verdictPrecheckCarry.verdict === 'correct' ? { statedReasonCheck: true } : {}) });
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, { ...(workThenMatch ? { workThenMatch: true } : {}), ...carryOpts, ...(hpKey && input.verdictPrecheckCarry.verdict === 'correct' ? { statedReasonCheck: true, nextMoveAfterConfirm: true } : {}) });
       const carried = openWithheldAnswer(input.verdictPrecheckSeal);
       if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       armDenialGuard(input.verdictPrecheckCarry);
@@ -2626,10 +2626,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         parallelSettled = { result, ms: Date.now() - startedAt };
       });
     } else if (!turnShape && input.verdictPrecheckCarry) {
-      // Final review (F6): the voice carry keeps the stated-reason rule under hpKey;
+      // Final review (F6) + round 8 (G4): the voice carry keeps the stated-reason and
+      // next-move rules under hpKey;
       // without hpKey the options are exactly what they were.
       const statedReason = !!hpKey && input.verdictPrecheckCarry.verdict === 'correct';
-      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch || statedReason ? { ...(workThenMatch ? { workThenMatch: true } : {}), ...(statedReason ? { statedReasonCheck: true } : {}) } : undefined);
+      answerCheckBlock = formatAnswerCheckBlock(input.verdictPrecheckCarry, workThenMatch || statedReason ? { ...(workThenMatch ? { workThenMatch: true } : {}), ...(statedReason ? { statedReasonCheck: true, nextMoveAfterConfirm: true } : {}) } : undefined);
       const carried = openWithheldAnswer(input.verdictPrecheckSeal);
       if (carried) armRevealGuard(input.verdictPrecheckCarry, carried.value, carried.studentText);
       if (answerCheckBlock) console.log('[verdict-precheck] voice: carried from the first attempt of this turn');
