@@ -21,7 +21,7 @@ export interface HomeworkProblemTurn {
   meta: HomeworkProblemMeta;
   homeworkProblem: HomeworkProblemTurnInput;
   /** Only for a verified problem: an unverified one carries no <active_problem>. */
-  activeProblem?: { statement: string; source: 'homework'; expectedAnswer: string };
+  activeProblem?: { statement: string; source: 'homework'; expectedAnswer: string; solutionPath?: string[] };
 }
 
 export interface HomeworkProblemTurnDeps {
@@ -67,6 +67,7 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
     }
   }
   const verified = !!key;
+  const solutionPath = key ? solutionPathLines(key) : [];
   const turn: HomeworkProblemTurn = {
     meta,
     homeworkProblem: {
@@ -76,7 +77,7 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
       ...(meta.priorNote ? { priorNote: meta.priorNote } : {}),
       ...(key ? { key } : {}),
     },
-    ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key), ...(solutionPathLines(key).length ? { solutionPath: solutionPathLines(key) } : {}) } } : {}),
+    ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key), ...(solutionPath.length ? { solutionPath } : {}) } } : {}),
   };
   if (!deps.noCache && (verified || !meta.verified)) remember(planId, turn);
   return turn;

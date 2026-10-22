@@ -798,7 +798,7 @@ async function main() {
       const kvm = await import('../src/lib/tutor/voice/keyed-verdict');
       const k0 = numKey([['a', 'a = 8', 8]]);
       const k1 = { ...k0, steps: [{ relation: 'r1', value: 'v1' }, { relation: 'r2' }] } as AnswerKey;
-      assert.ok(kvm.keyedProblemFacts(k1).includes('Verified intermediate steps: r1 → v1; r2'));
+      assert.ok(kvm.keyedProblemFacts(k1).endsWith('Verified intermediate steps: r1 → v1; r2 These are one verified route: judge a student\'s intermediate value against a step only when it is the same quantity; a value from another valid route is judged on its own logic.'), 'the path is one route (final review I5)');
       assert.equal(kvm.keyedProblemFacts(k0), `The problem's verified final answer: ${kvm.keyFinalsLine(k0)}`);
       assert.deepEqual(kvm.solutionPathLines(k0), []);
     });

@@ -423,7 +423,9 @@ export function keyFinalsLine(key: AnswerKey): string {
 export function keyedProblemFacts(key: AnswerKey): string {
   const path = solutionPathLines(key);
   return `The problem's verified final answer: ${keyFinalsLine(key)}` +
-    (path.length ? `\nVerified intermediate steps: ${path.join('; ')}` : '');
+    (path.length
+      ? `\nVerified intermediate steps: ${path.join('; ')} These are one verified route: judge a student's intermediate value against a step only when it is the same quantity; a value from another valid route is judged on its own logic.`
+      : '');
 }
 
 /** The key's verified solution path, one line per step (`relation → value`, or

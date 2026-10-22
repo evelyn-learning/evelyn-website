@@ -649,14 +649,14 @@ async function main() {
         solveA: async () => { calls.a++; return { parts: a, ...(steps.a ? { steps: steps.a } : {}), usage: { in: 100, out: 10 } }; }, solveB: async () => { calls.b++; return { parts: b, ...(steps.b ? { steps: steps.b } : {}), usage: { in: 100, out: 10 } }; }, solveTieBreak: async () => { calls.t++; return { parts: t, ...(steps.t ? { steps: steps.t } : {}), usage: { in: 50, out: 5 } }; } };
     };
     await section('round 11: steps ride the solve; the Opus solver\'s path is stored; agreement stays finals-only', async () => {
-      const sA = [{ relation: 'base angles equal', value: '∠B = ∠C' }];
+      const sA = [{ relation: 'base angles equal', value: '∠B = ∠C = 21' }];
       const sB = [{ relation: 'exterior angle = sum of remote interior', value: '(5x + 5) = 40 + ∠B' }, { relation: 'solve', value: 'x = 21' }];
       const d = mk([num('x = 21', 21, 'a')], [num('x = 21', 21, 'a')], null, { a: sA, b: sB });
       const r = await solveKey({ n: 1, text: 'q' }, { ...d, names: ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'] });
       assert.deepEqual(r.key!.steps, sB, 'the plangen-vision (Opus) path');
-      const r2 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('1', 1)], [num('1', 1)], null, { a: sA }), names: ['A', 'B', 'T'] });
+      const r2 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('21', 21)], [num('21', 21)], null, { a: sA }), names: ['A', 'B', 'T'] });
       assert.deepEqual(r2.key!.steps, sA, 'first agreeing solver when neither is plangen-vision');
-      const r3 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('1', 1)], [num('2', 2)], [num('2', 2)], { b: sB }), names: ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'] });
+      const r3 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('1', 1)], [num('21', 21)], [num('21', 21)], { b: sB }), names: ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'] });
       assert.deepEqual(r3.key!.solvers, ['plangen-vision', 'plangen-vision-tiebreak']); assert.deepEqual(r3.key!.steps, sB);
       assert.equal((await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('1', 1)], null))).key!.steps, undefined, 'no steps → field absent');
     });
@@ -681,6 +681,33 @@ async function main() {
       assert.deepEqual(normalizeKeySteps([{ relation: ' a ', value: ' 1 ' }, { relation: '', value: '2' }, { relation: 'b', value: '' }, null, 'x']), [{ relation: 'a', value: '1' }, { relation: 'b' }]);
       assert.equal(normalizeKeySteps(Array.from({ length: 10 }, (_, i) => ({ relation: `s${i}` }))).length, 8);
       assert.deepEqual(normalizeKeySteps(undefined), []);
+    });
+    await section('final review (I6): a path that does not reach every number final is dropped', async () => {
+      const N: [string, string, string] = ['content-verify', 'plangen-vision', 'plangen-vision-tiebreak'];
+      const two = (): AP => [num('x = 21', 21, 'a'), num('70°', 70, 'b', '°')];
+      const reach = [{ relation: 'exterior angle', value: '(5x + 5) = 40 + ∠B' }, { relation: 'solve', value: 'x = 21' }, { relation: 'substitute', value: '∠B = 70°' }];
+      const kept = await solveKey({ n: 1, text: 'q' }, { ...mk(two(), two(), null, { b: reach }), names: N });
+      assert.deepEqual(kept.key!.steps, reach, 'every final reached → kept');
+      const miss = reach.slice(0, 2);
+      const warns: string[] = []; const w = console.warn; console.warn = (m: string) => { warns.push(String(m)); };
+      let dropped;
+      try { dropped = await solveKey({ n: 4, text: 'q' }, { ...mk(two(), two(), null, { b: miss }), names: N }); } finally { console.warn = w; }
+      assert.equal('steps' in dropped.key!, false, '70 never on the path → steps absent');
+      assert.ok(warns.some((m) => m === '[homework-build] n=4 steps dropped: finals not reachable from the path'), JSON.stringify(warns));
+      const rad = [num('56√3 ≈ 96.99', 96.99)];
+      const rk = await solveKey({ n: 1, text: 'q' }, { ...mk(rad, rad, null, { b: [{ relation: 'area of the triangle', value: 'A = 56√3' }] }), names: N });
+      assert.deepEqual(rk.key!.steps, [{ relation: 'area of the triangle', value: 'A = 56√3' }], 'a radical value reaches its decimal final');
+      const rk2 = await solveKey({ n: 1, text: 'q' }, { ...mk([num('96.99', 96.99)], [num('96.99', 96.99)], null, { b: [{ relation: 'r', value: '56 sqrt 3' }] }), names: N });
+      assert.ok(rk2.key!.steps, '"c sqrt n" parses as c·√n');
+      const tx = await solveKey({ n: 1, text: 'q' }, { ...mk([txt('y = 3x + 2')], [txt('y = 3x + 2')], null, { b: [{ relation: 'slope', value: 'm = 3' }] }), names: N });
+      assert.ok(tx.key!.steps, 'a text-kind part imposes no requirement');
+      const sub = await solveKey({ n: 1, text: 'q' }, { ...mk([num('x = −4', -4)], [num('x = −4', -4)], null, { b: [{ relation: 'solve', value: 'so X = -4' }] }), names: N });
+      assert.ok(sub.key!.steps, 'final reached as a normalised substring (unicode minus, case)');
+    });
+    await section('final review (I7): normalizeKeySteps collapses whitespace and caps relation 200 / value 80', () => {
+      assert.deepEqual(normalizeKeySteps([{ relation: 'line one\n  line two', value: 'x =\n 3' }]), [{ relation: 'line one line two', value: 'x = 3' }]);
+      const [cap] = normalizeKeySteps([{ relation: 'r'.repeat(300), value: 'v'.repeat(120) }]);
+      assert.equal(cap.relation.length, 200); assert.equal(cap.value!.length, 80);
     });
     await section('round 11: KEY_SOLVE_SYSTEM asks for steps; the schema carries them', () => {
       assert.ok(KEY_SOLVE_SYSTEM.includes('6. steps:'));
@@ -866,8 +893,8 @@ async function main() {
         },
         key: {
           names: ['A', 'B', 'T'],
-          async solveA() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], steps: [{ relation: 'x = 5' }], usage: { in: 20, out: 2 } }; },
-          async solveB() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], steps: [{ relation: 'x = 5' }], usage: { in: 20, out: 2 } }; },
+          async solveA() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], steps: [{ relation: 'solve', value: 'x = 5' }], usage: { in: 20, out: 2 } }; },
+          async solveB() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], steps: [{ relation: 'solve', value: 'x = 5' }], usage: { in: 20, out: 2 } }; },
           async solveTieBreak() { return { parts: null }; },
         },
       };
@@ -982,7 +1009,7 @@ async function main() {
       });
       await mkPlan('gen-k1', [text]);
       const { deps, order } = mkDeps();
-      const keyed = async () => ({ parts: [{ label: '', final: '20', canonical: { kind: 'number', value: 20 } as const }], steps: [{ relation: 'r', value: 'v' }], usage: { in: 3, out: 1 } });
+      const keyed = async () => ({ parts: [{ label: '', final: '20', canonical: { kind: 'number', value: 20 } as const }], steps: [{ relation: 'r', value: 'x = 20' }], usage: { in: 3, out: 1 } });
       deps.key.solveA = keyed; deps.key.solveB = keyed;
       await runHomeworkBuild('gen-k1', 'greenapple', { deps, concurrency: 1 });
       assert.deepEqual(order, [], 'the figure was not rebuilt');
@@ -990,7 +1017,7 @@ async function main() {
       assert.equal(p.status, 'ready');
       assert.deepEqual((p.figure as unknown as typeof fig).given, fig.given, 'the cached figure is copied');
       assert.equal(p.figureSvg, '<svg/>');
-      assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'v' }]);
+      assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'x = 20' }]);
       assert.deepEqual(p.tokens, { in: 6, out: 2 });
     });
     await section('round 11: a failed-figure cache with a stepless key retries the figure AND re-solves the key; with steps the key is kept', async () => {
@@ -1001,14 +1028,14 @@ async function main() {
       await mkPlan('gen-b1', [text]);
       const a = mkDeps();
       let solves = 0;
-      const keyed = async () => { solves++; return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } as const }], steps: [{ relation: 'r', value: 'v' }], usage: { in: 3, out: 1 } }; };
+      const keyed = async () => { solves++; return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } as const }], steps: [{ relation: 'r', value: 'x = 5' }], usage: { in: 3, out: 1 } }; };
       a.deps.key.solveA = keyed; a.deps.key.solveB = keyed;
       await runHomeworkBuild('gen-b1', 'greenapple', { deps: a.deps, concurrency: 1 });
       assert.deepEqual(a.order, [text], 'the figure was proposed again');
       assert.equal(solves, 2, 'the stepless key was re-solved');
       const p = (await getHomeworkBuild('gen-b1'))!.problems[0];
       assert.equal(p.status, 'ready');
-      assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'v' }]);
+      assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'x = 5' }]);
       assert.deepEqual(p.tokens, { in: 6 + 4, out: 2 + 1 }, 'figure and key tokens summed');
       // With steps already stored, the key is kept and not re-solved.
       await ensureHomeworkBuild('gen-b2', 'greenapple', [{ n: 1, text: 'Retry 2 [Figure: a box ABCD]' }]);

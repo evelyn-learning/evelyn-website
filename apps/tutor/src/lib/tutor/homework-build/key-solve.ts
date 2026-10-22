@@ -12,7 +12,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
-import { compareDeterministic, parseSimpleNumber } from '../portal/key-compare';
+import { compareDeterministic, numbersAgree, parseSimpleNumber } from '../portal/key-compare';
 import type { AnswerKey, AnswerPart, KeyStep } from './types';
 
 export interface SolveOutcome { parts: AnswerPart[] | null; steps?: KeyStep[]; usage?: { in: number; out: number } }
@@ -101,15 +101,17 @@ export function namedValues(final: string): Array<{ name: string; value: number 
   return out.length >= 2 ? out : [];
 }
 
-/** Model JSON steps -> at most 8 `{ relation, value? }`; entries without a non-empty relation are dropped. */
+const oneLine = (s: string): string => s.replace(/\s+/g, ' ').trim();
+
+/** Model JSON steps -> at most 8 `{ relation, value? }` (one line each; relation ≤ 200, value ≤ 80 chars); entries without a non-empty relation are dropped. */
 export function normalizeKeySteps(raw: unknown): KeyStep[] {
   if (!Array.isArray(raw)) return [];
   const out: KeyStep[] = [];
   for (const e of raw) {
-    const relation = typeof (e as { relation?: unknown } | null)?.relation === 'string' ? (e as { relation: string }).relation.trim() : '';
+    const relation = typeof (e as { relation?: unknown } | null)?.relation === 'string' ? oneLine((e as { relation: string }).relation).slice(0, 200) : '';
     if (!relation) continue;
     const v = (e as { value?: unknown }).value;
-    const value = typeof v === 'string' ? v.trim() : '';
+    const value = typeof v === 'string' ? oneLine(v).slice(0, 80) : '';
     out.push(value ? { relation, value } : { relation });
     if (out.length === 8) break;
   }
@@ -242,6 +244,38 @@ export function partsAgree(a: AnswerPart[], b: AnswerPart[]): boolean {
 const describe = (name: string, ps: AnswerPart[] | null): string =>
   ps ? `${name}: ${ps.map((p) => (p.label ? `${p.label}) ` : '') + p.final).join('; ')}` : `${name}: (no answer)`;
 
+const normReach = (s: string): string => (s ?? '').toLowerCase().replace(/\s+/g, '').replace(/[−–]/g, '-');
+
+/** Numbers a step value states: plain decimals, and simple radicals `c√n` / `c sqrt n` / `c root n` as c·√n. */
+function stepNumbers(value: string): number[] {
+  const v = value.replace(/[−–]/g, '-');
+  const out: number[] = [];
+  for (const m of v.matchAll(/-?\d+(?:\.\d+)?/g)) out.push(Number(m[0]));
+  for (const m of v.matchAll(/(-?\d+(?:\.\d+)?)?\s*(?:√|\bsqrt\b|\broot\b)\s*\(?\s*(\d+(?:\.\d+)?)/gi)) {
+    const c = m[1] === undefined ? 1 : Number(m[1]);
+    out.push(c * Math.sqrt(Number(m[2])));
+  }
+  return out.filter(Number.isFinite);
+}
+
+/**
+ * Final review (I6): a path is stored only when every number-kind final is
+ * reachable from it — its value agrees (±1 %) with a number a step states, or
+ * its final appears in a step value. Text-kind parts impose no requirement.
+ */
+export function pathReachesFinals(parts: AnswerPart[], steps: KeyStep[]): boolean {
+  const values = steps.map((s) => s.value ?? '').filter(Boolean);
+  const nums = values.flatMap(stepNumbers);
+  const texts = values.map(normReach);
+  return parts.every((p) => {
+    if (p.canonical.kind !== 'number') return true;
+    const target = p.canonical.value;
+    if (nums.some((n) => numbersAgree(target, n))) return true;
+    const f = normReach(p.final);
+    return !!f && texts.some((t) => t.includes(f));
+  });
+}
+
 export async function solveKey(problem: { n: number; text: string }, deps: KeySolveDeps): Promise<KeySolveResult> {
   let tokens: { in: number; out: number } | undefined;
   type Slot = 'a' | 'b' | 't';
@@ -258,12 +292,15 @@ export async function solveKey(problem: { n: number; text: string }, deps: KeySo
    * The agreeing pair's path. The Opus role ('plangen-vision*', the tie-break
    * included) is preferred, its non-tie-break solve first; otherwise pair order.
    * A preferred solver without steps yields to the other agreeing solver's
-   * path (final review R6: any agreeing path beats none).
+   * path (final review R6: any agreeing path beats none), and so does one
+   * that does not reach every final (I6); none reaching them stores no steps.
    */
   const keyOf = (pair: Array<[Slot, string, AnswerPart[]]>): AnswerKey => {
     const rank = ([slot, name]: [Slot, string, AnswerPart[]]): number => (name.startsWith('plangen-vision') ? (slot === 't' ? 1 : 0) : 2);
     const ordered = pair.map((e, i) => ({ e, i })).sort((x, y) => rank(x.e) - rank(y.e) || x.i - y.i).map(({ e }) => e);
-    const st = ordered.map(([slot]) => steps.get(slot)).find((s) => s?.length);
+    const paths = ordered.map(([slot]) => steps.get(slot)).filter((s): s is KeyStep[] => !!s?.length);
+    const st = paths.find((s) => pathReachesFinals(pair[0][2], s));
+    if (paths.length && !st) console.warn(`[homework-build] n=${problem.n} steps dropped: finals not reachable from the path`);
     return { parts: pair[0][2], solvers: pair.map(([, name]) => name), ...(st?.length ? { steps: st } : {}) };
   };
   const out = async (r: KeySolveResult): Promise<KeySolveResult> => (tokens ? { ...r, tokens } : r);
