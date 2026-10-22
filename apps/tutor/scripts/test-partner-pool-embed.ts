@@ -78,6 +78,23 @@ test('clock: max_seconds is the effective cap; pool_remaining_seconds from the s
   assert.ok(embed.includes('poolRemainingSeconds: clockPoolSeconds(poolSnapshotRef.current)'), 'clockPoolSeconds');
 });
 
+test('admin tutor-sessions: a partner filter with a pool shows the pool line', () => {
+  const admin = readFileSync(join(__dirname, '../src/app/admin/tutor-sessions/page.tsx'), 'utf8');
+  assert.ok(admin.includes('readPoolSnapshot'), 'imports readPoolSnapshot');
+  assert.ok(admin.includes('data-testid="pool-line"'), 'renders the pool line');
+  assert.match(admin, /filters\.partner \? readPoolSnapshot\(filters\.partner\)/);
+});
+
+test('ops: scripts/ops/partner-pool.sh + .js exist, parse, and cover show/set/add/session-max/idle-end', () => {
+  const sh = readFileSync(join(__dirname, '../../../scripts/ops/partner-pool.sh'), 'utf8');
+  assert.ok(sh.includes('PROD'), 'header warns that :2710 is the prod tunnel');
+  assert.ok(sh.includes('partner-pool.js'), 'wraps the mongosh script');
+  const js = readFileSync(join(__dirname, '../../../scripts/ops/partner-pool.js'), 'utf8');
+  for (const cmd of ["'show'", "'set'", "'add'", "'session-max'", "'idle-end'"]) assert.ok(js.includes(cmd), `command ${cmd}`);
+  assert.ok(js.includes('partnerpools'), 'collection');
+  assert.ok(js.includes('pct80At') && js.includes('pct100At'), 'clears alert stamps');
+});
+
 // ADMIN-SCAN (Task 7 appends above this line)
 
 console.log(`\n${passed} passed, ${failed} failed`);
