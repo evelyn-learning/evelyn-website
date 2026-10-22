@@ -10,14 +10,23 @@
 
 export const pricing = {
   productName: 'Voice Tutor',
-  /** Partner list price, USD per VOICE tutoring minute (whiteboard included). */
-  perMinuteUsd: 0.15,
+  /** Partner list price, USD per VOICE tutoring minute (whiteboard included).
+   *  2026-10-22 (Praveen ruling): $0.15 → $0.20. The measured all-in cost is
+   *  ≈ $0.12–0.13 per minute and a cold session writes a ≈ $0.50 prompt
+   *  cache, so the old rate was at cost. */
+  perMinuteUsd: 0.2,
   /**
    * Text-only sessions (same tutor, same whiteboard, typed instead of spoken).
    * Cheaper because the speech layer (TTS + STT) is what the difference pays for
    * (Praveen ruling 2026-09-19).
    */
-  textPerMinuteUsd: 0.12,
+  textPerMinuteUsd: 0.16,
+  /**
+   * 2026-10-22 (Praveen ruling): every session is billed for at least this many
+   * minutes — it covers the cold-start cost (the prompt-cache write) that a
+   * one-minute session would otherwise leave unpaid.
+   */
+  minimumMinutesPerSession: 5,
   tagline: 'One product. One rate. No fixed fees.',
   description:
     'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
@@ -35,6 +44,7 @@ export const pricing = {
   billing: [
     'No setup fee, no monthly platform fee, no minimum commitment',
     'Minutes are metered per session and billed monthly in arrears',
+    'Every session is billed for at least 5 minutes',
     'Volume pricing available for 50,000+ minutes per month — contact us',
   ],
 };
@@ -53,7 +63,10 @@ export type SessionMode = 'voice' | 'text';
 export const rateFor = (mode: SessionMode = 'voice') =>
   mode === 'text' ? pricing.textPerMinuteUsd : pricing.perMinuteUsd;
 
-export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => minutes * rateFor(mode);
+/** Minutes billed for a session: its length, never less than the per-session minimum. */
+export const billableMinutes = (minutes: number) => Math.max(minutes, pricing.minimumMinutesPerSession);
+
+export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => billableMinutes(minutes) * rateFor(mode);
 
 export function estimateMonthlyCost(
   studentsPerMonth: number,
@@ -61,7 +74,7 @@ export function estimateMonthlyCost(
   avgSessionMinutes: number,
   mode: SessionMode = 'voice',
 ): { totalMinutes: number; cost: number; perStudent: number; rate: number } {
-  const totalMinutes = studentsPerMonth * sessionsPerStudent * avgSessionMinutes;
+  const totalMinutes = studentsPerMonth * sessionsPerStudent * billableMinutes(avgSessionMinutes);
   const rate = rateFor(mode);
   const cost = totalMinutes * rate;
   return { totalMinutes, cost, perStudent: studentsPerMonth > 0 ? cost / studentsPerMonth : 0, rate };
