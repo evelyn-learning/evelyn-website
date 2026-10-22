@@ -12,7 +12,7 @@ import type { AnswerKey, HomeworkBuildDoc } from '../homework-build/types';
 import { homeworkProblemOf, type HomeworkProblemMeta } from '../lesson-plan/homework-problem';
 import type { LessonPlan } from '../lesson-plan/types';
 import type { HomeworkProblemTurnInput } from './homework-problem-block';
-import { keyFinalsLine } from './keyed-verdict';
+import { keyFinalsLine, solutionPathLines } from './keyed-verdict';
 
 /** A homework-problem turn's text-thinking deadline (the default is 14 s). */
 export const HOMEWORK_PROBLEM_THINKING_DEADLINE_MS = 8000;
@@ -76,7 +76,7 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
       ...(meta.priorNote ? { priorNote: meta.priorNote } : {}),
       ...(key ? { key } : {}),
     },
-    ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key) } } : {}),
+    ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key), ...(solutionPathLines(key).length ? { solutionPath: solutionPathLines(key) } : {}) } } : {}),
   };
   if (!deps.noCache && (verified || !meta.verified)) remember(planId, turn);
   return turn;

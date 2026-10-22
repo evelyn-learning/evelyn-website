@@ -421,7 +421,15 @@ export function keyFinalsLine(key: AnswerKey): string {
 
 /** Facts for the model check when the keyed verdict is undecided. */
 export function keyedProblemFacts(key: AnswerKey): string {
-  return `The problem's verified final answer: ${keyFinalsLine(key)}`;
+  const path = solutionPathLines(key);
+  return `The problem's verified final answer: ${keyFinalsLine(key)}` +
+    (path.length ? `\nVerified intermediate steps: ${path.join('; ')}` : '');
+}
+
+/** The key's verified solution path, one line per step (`relation → value`, or
+ *  `relation` alone); [] when the key carries no steps. */
+export function solutionPathLines(key: AnswerKey): string[] {
+  return (key.steps ?? []).map((s) => (s.value ? `${s.relation} → ${s.value}` : s.relation));
 }
 
 /**

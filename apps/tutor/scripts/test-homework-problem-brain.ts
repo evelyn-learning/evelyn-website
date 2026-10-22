@@ -429,6 +429,17 @@ async function main() {
     assert.deepEqual(r.homeworkProblem.key, AB);
     assert.deepEqual(r.activeProblem, { statement: 'Find x.', source: 'homework', expectedAnswer: 'a) a = 8; b) b = 24' });
   });
+  await section('resolveHomeworkProblemTurn: a key with steps carries solutionPath; without steps the field is absent (round 11)', async () => {
+    const t = await import('../src/lib/tutor/voice/homework-problem-turn');
+    const plan = { metadata: { kind: 'homework-problem', parentPlanId: 'par', n: 3, text: 'Find x.', figure: null, verified: true } };
+    const stepKey = { ...AB, steps: [{ relation: 'base angles equal', value: '∠B = ∠C' }, { relation: 'solve' }] } as AnswerKey;
+    const r = await t.resolveHomeworkProblemTurn('p1s', { getPlan: async () => plan as never, getBuild: async () => ({ problems: [{ n: 3, key: stepKey }] }) as never, noCache: true });
+    assert.ok(r);
+    assert.deepEqual(r.activeProblem, { statement: 'Find x.', source: 'homework', expectedAnswer: 'a) a = 8; b) b = 24', solutionPath: ['base angles equal → ∠B = ∠C', 'solve'] });
+    const r2 = await t.resolveHomeworkProblemTurn('p1n', { getPlan: async () => plan as never, getBuild: async () => ({ problems: [{ n: 3, key: AB }] }) as never, noCache: true });
+    assert.ok(r2 && r2.activeProblem);
+    assert.ok(!('solutionPath' in r2.activeProblem), 'no steps: field absent');
+  });
   await section('resolveHomeworkProblemTurn: unverified → no key, no expected answer; other plans → null', async () => {
     const t = await import('../src/lib/tutor/voice/homework-problem-turn');
     let builds = 0;
@@ -771,6 +782,25 @@ async function main() {
       assert.ok(hw.includes(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()));
       assert.equal(brain.homeworkProblemNeverJudged({ homeworkProblem: { text: 'P', verified: true, hasFigure: false } }), true, 'verified without a key is never judged');
       assert.equal(brain.homeworkProblemNeverJudged({}), false);
+    });
+    await section('round 11: the verified solution path in the homework frame; keyedProblemFacts steps', async () => {
+      const PIN = "<active_problem>\nThe student is working this problem from their own homework sheet; it is shown in the problem panel beside the chat. A spoken or typed answer from the student refers to THIS problem — UNLESS you have since asked a DIFFERENT question aloud; in that case <active_question> names the question actually on the table and you respond to THAT. Do NOT pose a different problem or change the numbers.\n\nStatement: S\n\nVERIFIED expected answer (checked independently when the homework was prepared): A\nCheck the student's attempts against THIS. Trust it: if your own working disagrees, re-check your working before saying anything. Never state it to the student. In a homework session this does not apply: never state the final answer; when the student gives up, give the next smallest hint instead.\n</active_problem>\n\n";
+      const none = brain.formatActiveProblemBlock({ statement: 'S', source: 'homework', expectedAnswer: 'A' }, { homework: true, partScope: false });
+      assert.equal(none, PIN, 'without solutionPath: byte-identical to before');
+      assert.equal(brain.formatActiveProblemBlock({ statement: 'S', source: 'homework', expectedAnswer: 'A', solutionPath: [] }, { homework: true, partScope: false }), PIN, 'empty path: unchanged');
+      const withPath = brain.formatActiveProblemBlock({ statement: 'S', source: 'homework', expectedAnswer: 'A', solutionPath: ['r1 → v1', 'r2'] }, { homework: true, partScope: false });
+      const H = 'Verified solution path (the derivation the key was checked with):';
+      assert.ok(withPath.includes(`${H}\n- r1 → v1\n- r2\n`), 'heading then one bullet per step');
+      assert.ok(withPath.includes('Guide along this path. Never state a relation or an intermediate value that contradicts it;'));
+      assert.ok(withPath.includes('Do not read the path out or reveal a step\'s value before the student has reached it.'));
+      assert.ok(withPath.indexOf('VERIFIED expected answer') < withPath.indexOf(H) && withPath.indexOf(H) < withPath.indexOf(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()), 'path sits after the expected answer, before the reveal suffix');
+      assert.ok(!none.includes('Verified solution path') && !none.includes('Guide along this path'));
+      const kvm = await import('../src/lib/tutor/voice/keyed-verdict');
+      const k0 = numKey([['a', 'a = 8', 8]]);
+      const k1 = { ...k0, steps: [{ relation: 'r1', value: 'v1' }, { relation: 'r2' }] } as AnswerKey;
+      assert.ok(kvm.keyedProblemFacts(k1).includes('Verified intermediate steps: r1 → v1; r2'));
+      assert.equal(kvm.keyedProblemFacts(k0), `The problem's verified final answer: ${kvm.keyFinalsLine(k0)}`);
+      assert.deepEqual(kvm.solutionPathLines(k0), []);
     });
     await section('no homeworkProblem: the model check runs as before, no new frames or block', async () => {
       const r = await run('x = 7', {});

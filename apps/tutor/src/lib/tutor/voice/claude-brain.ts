@@ -419,6 +419,12 @@ export interface BrainTurnInput {
      *  verifies attempts against it instead of re-deriving from scratch and
      *  drifting mid-thread. */
     expectedAnswer?: string;
+    /** Verified solution path (2026-10-22, round 11, hw-15 p3/p6): the
+     *  derivation the answer key was checked with, one step per line. Shown
+     *  in the homework frame so the tutor never asserts a relation or value
+     *  that contradicts it — the tutor's own derivation errors, not the key,
+     *  were what misled students. Absent when the key carries no steps. */
+    solutionPath?: string[];
   };
   /** Pacing v2 student-state snapshot. Surfaces as `<student_state>`
    *  block when any signal is interesting (streak > 0 OR cue present
@@ -1629,6 +1635,10 @@ export function formatActiveProblemBlock(
       `Statement: ${active.statement}\n` +
       (active.expectedAnswer
         ? `\nVERIFIED expected answer (checked independently when the homework was prepared): ${active.expectedAnswer}\n` +
+          (active.solutionPath?.length
+            ? `Verified solution path (the derivation the key was checked with):\n${active.solutionPath.map((l) => `- ${l}`).join('\n')}\n` +
+              `Guide along this path. Never state a relation or an intermediate value that contradicts it; when your own working disagrees with a step, the step is right — re-check your working instead of asserting yours. A student who takes a different valid route is not wrong: judge that route by its own logic and its finals against the verified finals. Do not read the path out or reveal a step's value before the student has reached it.\n`
+            : '') +
           `Check the student's attempts against THIS. Trust it: if your own working disagrees, re-check your working before saying anything. Never state it to the student.${hwReveal}\n`
         : '') +
       `</active_problem>\n\n`
