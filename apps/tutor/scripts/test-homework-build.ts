@@ -893,7 +893,7 @@ async function main() {
       await ensureHomeworkBuild('gen-f0', 'greenapple', [{ n: 1, text }]);
       await patchProblemBuild('gen-f0', 1, {
         status: 'ready', figure: null, figureNote: 'label "Q" does not come from the problem text',
-        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'], steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9,
       });
       await mkPlan('gen-f1', [text, 'Plain 2']);
       const { deps, order } = mkDeps();
@@ -925,7 +925,7 @@ async function main() {
       await ensureHomeworkBuild('gen-s0', 'greenapple', [{ n: 1, text }]);
       await patchProblemBuild('gen-s0', 1, {
         status: 'ready', figure: stale as never,
-        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'], steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9,
       });
       await mkPlan('gen-s1', [text]);
       const { deps, order } = mkDeps();
@@ -976,6 +976,36 @@ async function main() {
       assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'v' }]);
       assert.deepEqual(p.tokens, { in: 6, out: 2 });
     });
+    await section('round 11: a failed-figure cache with a stepless key retries the figure AND re-solves the key; with steps the key is kept', async () => {
+      const text = 'Retry 1 [Figure: a box ABCD]';
+      const key = { parts: [{ label: '', final: '5', canonical: { kind: 'number' as const, value: 5 } }], solvers: ['A', 'B'] };
+      await ensureHomeworkBuild('gen-b0', 'greenapple', [{ n: 1, text }]);
+      await patchProblemBuild('gen-b0', 1, { status: 'ready', figure: null, key, verify: { agreed: true }, ms: 9 });
+      await mkPlan('gen-b1', [text]);
+      const a = mkDeps();
+      let solves = 0;
+      const keyed = async () => { solves++; return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } as const }], steps: [{ relation: 'r', value: 'v' }], usage: { in: 3, out: 1 } }; };
+      a.deps.key.solveA = keyed; a.deps.key.solveB = keyed;
+      await runHomeworkBuild('gen-b1', 'greenapple', { deps: a.deps, concurrency: 1 });
+      assert.deepEqual(a.order, [text], 'the figure was proposed again');
+      assert.equal(solves, 2, 'the stepless key was re-solved');
+      const p = (await getHomeworkBuild('gen-b1'))!.problems[0];
+      assert.equal(p.status, 'ready');
+      assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'v' }]);
+      assert.deepEqual(p.tokens, { in: 6 + 4, out: 2 + 1 }, 'figure and key tokens summed');
+      // With steps already stored, the key is kept and not re-solved.
+      await ensureHomeworkBuild('gen-b2', 'greenapple', [{ n: 1, text: 'Retry 2 [Figure: a box ABCD]' }]);
+      await patchProblemBuild('gen-b2', 1, { status: 'ready', figure: null, key: { ...key, steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9 });
+      await mkPlan('gen-b3', ['Retry 2 [Figure: a box ABCD]']);
+      const c = mkDeps();
+      let solves2 = 0;
+      c.deps.key.solveA = async () => { solves2++; return { parts: null }; };
+      await runHomeworkBuild('gen-b3', 'greenapple', { deps: c.deps, concurrency: 1 });
+      assert.deepEqual(c.order, ['Retry 2 [Figure: a box ABCD]']);
+      assert.equal(solves2, 0, 'a key with steps is kept');
+      assert.deepEqual((await getHomeworkBuild('gen-b3'))!.problems[0].key!.steps, [{ relation: 'x = 5' }]);
+    });
+
     await section('an unverified cached entry is ignored and rebuilt', async () => {
       await ensureHomeworkBuild('gen-u0', 'greenapple', [{ n: 1, text: 'Unver 1' }]);
       await patchProblemBuild('gen-u0', 1, { status: 'unverified', verify: { agreed: false } });

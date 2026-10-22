@@ -107,12 +107,24 @@ export async function runHomeworkBuild(
         // problem that has one (GAC acceptance 2026-10-21: six of eight,
         // most on a validator rule since fixed). The proposer is not
         // deterministic and the validator improves — try the figure again.
-        const fig = await buildFigure(p, deps.figure);
+        // round 11: a stepless key is re-solved alongside the figure retry.
+        const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), keyStale ? solveKey(p, deps.key) : Promise.resolve(null)]);
+        const fi = fig.tokens, ki = keyRes?.tokens;
         patch = {
-          status: 'ready', figure: fig.figure, figureNote: fig.note,
+          status: keyRes && !keyRes.key ? 'unverified' : 'ready', figure: fig.figure, figureNote: fig.note,
           ...(await svgOf(fig.figure)),
-          key: cached.key, verify: cached.verify, ms: now() - t0,
-          ...(fig.tokens ? { tokens: { in: fig.tokens.in, out: fig.tokens.out } } : {}),
+          ...(keyRes
+            ? {
+                key: keyRes.key,
+                verify: {
+                  agreed: keyRes.agreed,
+                  ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
+                  ...(keyRes.note ? { note: keyRes.note } : {}),
+                },
+              }
+            : { key: cached.key, verify: cached.verify }),
+          ms: now() - t0,
+          ...(fi || ki ? { tokens: { in: (fi?.in ?? 0) + (ki?.in ?? 0), out: (fi?.out ?? 0) + (ki?.out ?? 0) } } : {}),
         };
       } else {
         const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), solveKey(p, deps.key)]);
