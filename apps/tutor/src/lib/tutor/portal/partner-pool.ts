@@ -151,3 +151,21 @@ export function chargePartnerFor(input: {
   if (token) return { partnerId: token, mismatch: body !== null && body !== token };
   return { partnerId: body, mismatch: false };
 }
+
+const toMinutes = (sec: number) => Math.round(sec / 6) / 10;
+
+/** The partner-facing shape of GET /api/portal/v1/usage (minutes to one decimal). */
+export function usageResponse(
+  snap: PoolSnapshot,
+  partnerId: string,
+): { partner_id: string; pooled: boolean; cap_minutes?: number; used_minutes?: number; remaining_minutes?: number; session_max_minutes?: number } {
+  if (!snap.pooled) return { partner_id: partnerId, pooled: false };
+  return {
+    partner_id: partnerId,
+    pooled: true,
+    cap_minutes: toMinutes(snap.capSec),
+    used_minutes: toMinutes(snap.usedSec),
+    remaining_minutes: toMinutes(snap.remainingSec),
+    session_max_minutes: toMinutes(snap.sessionMaxSec),
+  };
+}
