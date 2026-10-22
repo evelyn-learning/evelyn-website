@@ -5,21 +5,28 @@
  *
  * Total and conservative: a value is taken only when the student offers it as
  * a final value — after `=`, `≈`, "is", "equals", "got", a part label
- * (`a) 8`, `(b) 24`, `part b: 25`), or as the whole message. The LAST such
- * value of an equation chain is the one offered (`x = 60/3 = 20` offers 20).
+ * (`a) 8`, `(b) 24`, `part b: 25`); a bare number (the whole message) only
+ * confirms (below). The LAST such value of an equation chain is the one
+ * offered (`x = 60/3 = 20` offers 20).
  * Fractions, exact forms (`3π`, `2√3`), words and text parts are `undecided`
  * (the caller then asks the model check) — except that two shapes CONFIRM
  * (never mark wrong): the student's text exactly the key's final after
  * normalisation (`y = 2x + 3`, `2√3`, `x = 2 or x = -3`, a text part), and a
  * simple fraction / mixed number within 1 % of a number part (`x = 3/4`).
- * A question (`…?`, "is it …") is never judged. A message with no explicit final
- * value is never `incorrect`: a value is wrong only when it is offered AS the
- * final answer — assigned to the key's own variable (`x = 25`, `x is 25`),
- * after a part label, after "the answer is", as "it is …", or as the whole
- * message. Intermediate working ("AB is 12", "I got 3 so far", "step 1: …
- * = 60") is `undecided`. A runtime note (a message that starts with `[`,
- * e.g. a correction note quoting the intended answer) is never judged; one
- * PREPENDED to the student's words is stripped and the rest judged.
+ * A question (`…?`, "is it …") is never judged. A message with no NAMED final
+ * value is never `incorrect`: a value is wrong only when it is named AS the
+ * final answer — assigned to the key's own variable (`x = 25`, `x is 25`;
+ * on a multi-part key, the variable of exactly one part), after a part label,
+ * after "the answer is", as "it is …" / "it's …", or followed by "as the
+ * answer". A bare number (the whole message one value, `12 cm`) and any other
+ * unnamed value CONFIRM when they equal the key but never deny: 2026-10-22
+ * (hw-14 p5) the tutor asked for the inner square's diagonal, the student
+ * typed `12 cm`, and it was denied against the key's `41.10 cm²` — a bare
+ * value answers the tutor's last question, which may be an intermediate one,
+ * so it goes to the model check. Intermediate working ("AB is 12", "I got 3
+ * so far", "step 1: … = 60") is `undecided`. A runtime note (a message that
+ * starts with `[`, e.g. a correction note quoting the intended answer) is
+ * never judged; one PREPENDED to the student's words is stripped and the rest judged.
  */
 
 import type { AnswerKey, AnswerPart } from '../homework-build/types';
@@ -77,6 +84,8 @@ function lhsBefore(before: string): string | null {
 
 /** "the answer is 25", "answer: 25", "final answer = 25". */
 const ANSWER_LEAD_RE = /\banswers?\s*(?:is|was|=|:|would be|should be)?\s*$/i;
+/** "I got 12 as the answer" / "12 cm as my final answer": after the value (and its unit). */
+const ANSWER_TAIL_RE = /^\s*as\s+(?:the|my)\s+(?:final\s+)?answer\b/i;
 
 /** A runtime note, not the student's words: the browser's runtime turns
  *  (a correction note, a board-anchor note, "[start lesson]") start with `[`. */
@@ -171,21 +180,24 @@ function candidates(text: string, opts: { segmentStartIsLead?: boolean; keyVar?:
     if (!(LEAD_RE.test(before) || (opts.segmentStartIsLead && atStart))) continue;
     const lhs = lhsBefore(before);
     if (opts.keyVar && lhs && lhs !== opts.keyVar && lhs !== 'it') continue; // "AD = 6" is a given, not x
+    const unit = UNIT_RE.exec(text.slice(end).replace(/^\s+/, ''));
+    // Named as the final answer (the header): a part label, an answer phrase, the key's variable or "it".
     const explicit = (opts.segmentStartIsLead === true && atStart)
       || ANSWER_LEAD_RE.test(before)
+      || ANSWER_TAIL_RE.test(text.slice(end).replace(/^\s+/, '').slice(unit ? unit[0].length : 0))
       || (lhs !== null && (lhs === opts.keyVar || lhs === 'it'));
-    const unit = UNIT_RE.exec(text.slice(end).replace(/^\s+/, ''));
     out.push({ value: Number(m[0]), text: (m[0] + (unit ? ` ${unit[0]}` : '')).trim(), at, explicit, lhs });
   }
   return out;
 }
 
-/** The whole message is one number (optionally with units / a trailing mark). */
+/** The whole message is one number (optionally with units / a trailing mark).
+ *  Unnamed (2026-10-22, hw-14 p5): it confirms, never denies (the header). */
 function bareNumber(text: string): Candidate | null {
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*([A-Za-z°º%²³^23]*)\s*[.!]?\s*$/.exec(text);
   if (!m) return null;
   if (m[2] && !UNIT_RE.test(m[2])) return null;
-  return { value: Number(m[1]), text: (m[1] + (m[2] ? ` ${m[2]}` : '')).trim(), at: 0, explicit: true };
+  return { value: Number(m[1]), text: (m[1] + (m[2] ? ` ${m[2]}` : '')).trim(), at: 0, explicit: false };
 }
 
 const normLabel = (s: string) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -329,7 +341,12 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
       const bare = !cands.length ? bareNumber(text) : null;
       const vals = bare ? [bare] : cands;
       const last = vals[vals.length - 1];
-      if (last) {
+      // Named by exactly one part's variable ("x = 20", part a "x = 27"): that part is judged.
+      const varParts = last?.lhs ? key.parts.filter((p) => !p.values?.length && keyVarOf(p) === last.lhs) : [];
+      if (varParts.length === 1) {
+        const keyVar = keyVarOf(varParts[0]);
+        out.push(judgePart(varParts[0], [...candidates(head, { keyVar }), ...fractionCandidates(head, { keyVar })].sort(byAt), text));
+      } else if (last) {
         const hits = key.parts.filter((p) => p.canonical.kind === 'number' && numbersAgree(last.value, p.canonical.value));
         const multi = key.parts.filter((p) => p.values?.length);
         const namedHits = multi.flatMap((p) => judgeNamedValues(p, [last]).map((v) => ({ ...v, verdict: v.verdict })));

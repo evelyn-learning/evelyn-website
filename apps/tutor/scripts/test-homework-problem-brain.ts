@@ -75,7 +75,8 @@ async function main() {
     ['x=20', X20, 'the answer is 25', 'incorrect'],
     ['x=20', X20, '[correction note — not from the student] intended answer "x = 20"', 'undecided'],
     ['35.42cm', PERIM, 'so perimeter is 26+3pi=35.4 cm', 'correct'],
-    ['35.42cm', PERIM, '31.42', 'incorrect'],
+    // 2026-10-22 (hw-14 p5): a bare number answers the tutor's question, not the key — undecided, the model check judges it.
+    ['35.42cm', PERIM, '31.42', 'undecided'],
     ['35.42cm', PERIM, '26+3π', 'undecided'],
     ['35.42cm', PERIM, 'it is 35.42cm', 'correct'],
     ['a=8,b=24', AB, 'a) 8', 'correct', 'a'],
@@ -135,6 +136,24 @@ async function main() {
     ['x=20', X20, '[correction note — not from the student] The intended answer is "x = 20".\n\nx = 25', 'incorrect'],
     ['x=20', X20, '[correction note — not from the student] The intended answer is "x = 25".\n\nx = 20', 'correct'],
     ['x=20', X20, '[cadence note — not from the student] Shorter.\nx = 20', 'correct'],
+  );
+  // 2026-10-22 (hw-14 p5, F7): the tutor asked for the inner square's diagonal and
+  // "12 cm" was denied against the key's 41.10 cm². A bare or unnamed value answers
+  // the tutor's last question: it confirms (equal to the key) but never denies.
+  const AREA: AnswerKey = { parts: [{ label: '', final: '41.10 cm²', canonical: { kind: 'number', value: 41.1, units: 'cm²' } }], solvers: [] };
+  const X27: AnswerKey = numKey([['a', 'x = 27', 27], ['b', 'y = 54', 54], ['c', '81°', 81]]);
+  table.push(
+    ['41.10cm²', AREA, '12 cm', 'undecided'],
+    ['41.10cm²', AREA, '12', 'undecided'],
+    ['41.10cm²', AREA, '41.1', 'correct'],
+    ['41.10cm²', AREA, '41.1 cm²', 'correct'],
+    ['41.10cm²', AREA, 'the answer is 12', 'incorrect'],
+    ['41.10cm²', AREA, "it's 12 cm²", 'incorrect'],
+    ['41.10cm²', AREA, 'area = 12', 'undecided'],
+    ['41.10cm²', AREA, 'I got 12 cm² as the answer', 'incorrect'],   // "area" is not the key's variable
+    ['a) x=27 of 3', X27, 'x = 20', 'incorrect'],
+    ['a) x=27 of 3', X27, '20', 'undecided'],
+    ['a) x=27 of 3', X27, 'a) 20', 'incorrect', 'a'],
   );
   for (const [kname, key, msg, want, part] of table) {
     await section(`[${kname}] ${JSON.stringify(msg)} → ${want}${part ? ` part ${part}` : ''}`, () => {
