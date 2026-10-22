@@ -793,7 +793,11 @@ async function main() {
       assert.ok(withPath.includes(`${H}\n- r1 → v1\n- r2\n`), 'heading then one bullet per step');
       assert.ok(withPath.includes('Guide along this path. Never state a relation or an intermediate value that contradicts it;'));
       assert.ok(withPath.includes('Do not read the path out or reveal a step\'s value before the student has reached it.'));
-      assert.ok(withPath.indexOf('VERIFIED expected answer') < withPath.indexOf(H) && withPath.indexOf(H) < withPath.indexOf(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()), 'path sits after the expected answer, before the reveal suffix');
+      // Final review (R8): the path follows the "Check … against THIS" sentence, so THIS still names the expected answer.
+      const iAns = withPath.indexOf('VERIFIED expected answer'), iCheck = withPath.indexOf('Check the student\'s attempts against THIS'), iHead = withPath.indexOf(H), iRule = withPath.indexOf('Guide along this path.');
+      assert.ok(iAns >= 0 && iAns < iCheck && iCheck < iHead && iHead < iRule, `order: expected answer ${iAns} < Check ${iCheck} < heading ${iHead} < rule ${iRule}`);
+      assert.ok(withPath.indexOf(brain.ACTIVE_PROBLEM_HOMEWORK_REVEAL_SUFFIX.trim()) < iHead, 'the reveal suffix stays with the Check sentence');
+      assert.ok(withPath.endsWith('before the student has reached it.\n</active_problem>\n\n'), 'the path block closes the frame');
       assert.ok(!none.includes('Verified solution path') && !none.includes('Guide along this path'));
       const kvm = await import('../src/lib/tutor/voice/keyed-verdict');
       const k0 = numKey([['a', 'a = 8', 8]]);

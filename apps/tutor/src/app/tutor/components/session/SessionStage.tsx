@@ -686,15 +686,17 @@ export default function SessionStage(props: SessionStageProps) {
     if (voiceState !== 'speaking') setQpinSpeechEndedAt(Date.now());
   }, [voiceState, questionPinKey, qpinSpeechEndedAt]);
 
-  // Schedule the collapse.
+  // Schedule the collapse. Round 11 final review (R7): never in a one-problem
+  // session — its pin sits in the board flow, so a height change the student
+  // did not cause would move the items under the student's ink.
   useEffect(() => {
-    if (!QPIN_AUTO_COLLAPSE || !questionPin || !questionPinKey || qpinMode !== 'expanded' || qpinDragged) return;
+    if (!QPIN_AUTO_COLLAPSE || qpinStatic || !questionPin || !questionPinKey || qpinMode !== 'expanded' || qpinDragged) return;
     // A host moment's banner stays expanded: its collapsed chip would read as the tutor's question.
     if (questionPinKey.startsWith('moment-')) return;
     const deadline = qpinCollapseDeadline(qpinShownAt, qpinSpeechEndedAt);
     const t = window.setTimeout(() => setQpinMode('chip'), Math.max(0, deadline - Date.now()));
     return () => window.clearTimeout(t);
-  }, [questionPin, questionPinKey, qpinMode, qpinDragged, qpinShownAt, qpinSpeechEndedAt]);
+  }, [qpinStatic, questionPin, questionPinKey, qpinMode, qpinDragged, qpinShownAt, qpinSpeechEndedAt]);
 
   // Dragging: pointer events (one path for mouse + touch). A <5px press is a
   // tap and falls through to the pin's own click (transcript). A real drag

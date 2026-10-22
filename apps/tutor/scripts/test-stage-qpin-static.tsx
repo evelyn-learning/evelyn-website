@@ -340,6 +340,61 @@ async function part3() {
   });
 }
 
+/** Final-review fixes on the two UI files: the scroll offset (I3, happy-dom
+ *  with stubbed layout numbers), the auto-collapse guard (I4) and the tap
+ *  guard (M4) — source-pattern pins (see each section for why). */
+async function part4() {
+  console.log('4 final review: scroll under the sticky pin; no auto-collapse; no mark from a pin tap');
+  const wb = await import('@/app/tutor/components/whiteboard/WhiteboardCanvas');
+  const scrollCase = (withSlot: boolean, itemAboveSlot = false) => {
+    const win = new Window({ url: 'http://localhost/' });
+    const doc = win.document;
+    const container = doc.createElement('div');
+    const slot = doc.createElement('div');
+    slot.setAttribute('data-wb-lead-pin', '1');
+    const item = doc.createElement('div');
+    item.setAttribute('style', 'scroll-margin-top: 24px');
+    if (itemAboveSlot) { container.appendChild(item); if (withSlot) container.appendChild(slot); }
+    else { if (withSlot) container.appendChild(slot); container.appendChild(item); }
+    doc.body.appendChild(container);
+    const def = (el: object, props: Record<string, unknown>) => { for (const [k, v] of Object.entries(props)) Object.defineProperty(el, k, { value: v, configurable: true }); };
+    def(slot, { offsetTop: 300, offsetHeight: 90, offsetParent: container });
+    def(item, { offsetTop: itemAboveSlot ? 40 : 1000, offsetHeight: 50, offsetParent: container });
+    def(container, { clientHeight: 600, scrollHeight: 5000 });
+    let top = -1;
+    (container as unknown as { scrollTo: (o: { top: number }) => void }).scrollTo = (o) => { top = o.top; };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = globalThis as any;
+    const prev = g.getComputedStyle;
+    g.getComputedStyle = win.getComputedStyle.bind(win);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    try { wb.scrollElementIntoContainer(container as any, item as any, 'start'); } finally { g.getComputedStyle = prev; }
+    return top;
+  };
+  await section('I3: an item below the sticky pin lands under it (target − slot height − 8); no slot or an item above it: unchanged', () => {
+    assert.equal(typeof wb.scrollElementIntoContainer, 'function', 'scrollElementIntoContainer is a named export');
+    assert.equal(scrollCase(false), 1000 - 24, 'no slot: offsetTop − scroll-margin-top, as before');
+    assert.equal(scrollCase(true), 1000 - 24 - 90 - 8, 'slot present, item below it: its height + 8 px subtracted');
+    assert.equal(scrollCase(true, true), 40 - 24, 'item above the slot (the figure): unchanged');
+  });
+  await section('I4 (source pin — QPIN_AUTO_COLLAPSE is false, so no timer can arm in a render today): the collapse schedule skips one-problem sessions', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/session/SessionStage.tsx'), 'utf8');
+    const i = src.indexOf('// Schedule the collapse.');
+    assert.ok(i > 0, 'the schedule effect is found');
+    const effect = src.slice(i, src.indexOf('}, [', i));
+    assert.match(effect, /if \(!QPIN_AUTO_COLLAPSE \|\| qpinStatic \|\| /, 'qpinStatic guards the timer');
+  });
+  await section('M4 (source pin — the tap path reads layout happy-dom does not have): a tap on the pin never fires a board mark', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'), 'utf8');
+    for (const fn of ['handleMarkPointerDown', 'handleMarkPointerUp']) {
+      const i = src.indexOf(`const ${fn} = useCallback(`);
+      assert.ok(i > 0, `${fn} is found`);
+      const body = src.slice(i, src.indexOf('}, [', i));
+      assert.match(body, /\(e\.target as Element\)\.closest\('\[data-wb-lead-pin\]'\)\) \{ tapStartRef\.current = null; return; \}/, `${fn} returns early on the pin`);
+    }
+  });
+}
+
 async function main() {
   try {
     ({ BoardLeadPinContext: LeadPinCtx } = await import('@/app/tutor/components/whiteboard/board-lead-pin-context'));
@@ -349,6 +404,7 @@ async function main() {
   await part1();
   await part2();
   await part3();
+  await part4();
   console.log(`\n${passed} passed, ${failed} failed${skipped ? `, ${skipped} layout check skipped (no chromium/CSS on this machine)` : ''}`);
   if (failed) process.exit(1);
 }

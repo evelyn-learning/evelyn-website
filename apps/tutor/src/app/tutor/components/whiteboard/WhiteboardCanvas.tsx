@@ -346,6 +346,59 @@ function SolutionStepField({ latex, className }: { latex: string; className?: st
   return <EquationRenderer latex={latex} className={className} />;
 }
 
+// Scroll a descendant of the whiteboard's own scroll container into view
+// WITHOUT using Element.scrollIntoView(). scrollIntoView() walks the full
+// scroll-container chain up to (and through) the top-level browsing
+// context — inside the portal-embedded tutor that chain doesn't stop at
+// the iframe boundary, so scrolling a freshly-rendered item also scrolls
+// the HOST page under it (2026-07-09 production bug: every new whiteboard
+// item jumped the partner page's scroll position). Compute the target
+// offset relative to `container` directly and set container.scrollTop /
+// scrollTo so the scroll is fully contained to this pane.
+// Round 28 (jerky-scroll fix): target math now accumulates offsetTop up
+// to the container (which is position:relative, terminating the
+// offsetParent chain) instead of getBoundingClientRect deltas. Rect math
+// was wrong in two ways: (a) it includes the wb-item-enter transform —
+// the double-rAF measured ~32ms into the 480ms entrance animation, so
+// the target came out ~13px low and the item slid under the running
+// scroll; (b) it bakes the CURRENT animated scrollTop into the delta, so
+// a second scroll issued mid-flight restarted from a moving baseline.
+// offsetTop/offsetHeight ignore transforms and never read scroll state.
+export function scrollElementIntoContainer(
+  container: HTMLElement,
+  el: HTMLElement,
+  block: 'start' | 'center' = 'start',
+): void {
+  let top = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== container) {
+    top += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  if (!node) {
+    // offsetParent chain missed the container (unexpected DOM shape) —
+    // fall back to the old rect math rather than not scrolling at all.
+    top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+  }
+  // Honor the item's CSS scroll-margin-top (scroll-mt-6): the native
+  // property only applies to scrollIntoView(), which this helper
+  // deliberately avoids (iframe host-page scroll bug, see above) — so
+  // without this the item's top landed flush at pixel 0 of the pane.
+  const scrollMt = parseFloat(getComputedStyle(el).scrollMarginTop || '0') || 0;
+  // Round 11 final review (I3): the one-problem question pin is a sticky slot
+  // at the top of this container; an item after it in the flow lands under
+  // the pin (its height + 8 px), not behind it. The figure above it is unchanged.
+  const pin = container.querySelector<HTMLElement>('[data-wb-lead-pin]');
+  const pinCover = pin && pin !== el && !pin.contains(el) && (pin.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
+    ? pin.offsetHeight + 8
+    : 0;
+  const rawTarget = block === 'center'
+    ? top - (container.clientHeight - el.offsetHeight) / 2 - pinCover / 2
+    : top - scrollMt - pinCover;
+  const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+  container.scrollTo({ top: Math.max(0, Math.min(rawTarget, maxScrollTop)), behavior: 'smooth' });
+}
+
 export function WhiteboardCanvas({
   commands,
   onClear,
@@ -653,52 +706,6 @@ export function WhiteboardCanvas({
   // Only re-run when commands array length changes (new command added)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commands.length, pages]);
-
-  // Scroll a descendant of the whiteboard's own scroll container into view
-  // WITHOUT using Element.scrollIntoView(). scrollIntoView() walks the full
-  // scroll-container chain up to (and through) the top-level browsing
-  // context — inside the portal-embedded tutor that chain doesn't stop at
-  // the iframe boundary, so scrolling a freshly-rendered item also scrolls
-  // the HOST page under it (2026-07-09 production bug: every new whiteboard
-  // item jumped the partner page's scroll position). Compute the target
-  // offset relative to `container` directly and set container.scrollTop /
-  // scrollTo so the scroll is fully contained to this pane.
-  // Round 28 (jerky-scroll fix): target math now accumulates offsetTop up
-  // to the container (which is position:relative, terminating the
-  // offsetParent chain) instead of getBoundingClientRect deltas. Rect math
-  // was wrong in two ways: (a) it includes the wb-item-enter transform —
-  // the double-rAF measured ~32ms into the 480ms entrance animation, so
-  // the target came out ~13px low and the item slid under the running
-  // scroll; (b) it bakes the CURRENT animated scrollTop into the delta, so
-  // a second scroll issued mid-flight restarted from a moving baseline.
-  // offsetTop/offsetHeight ignore transforms and never read scroll state.
-  const scrollElementIntoContainer = (
-    container: HTMLElement,
-    el: HTMLElement,
-    block: 'start' | 'center' = 'start',
-  ) => {
-    let top = 0;
-    let node: HTMLElement | null = el;
-    while (node && node !== container) {
-      top += node.offsetTop;
-      node = node.offsetParent as HTMLElement | null;
-    }
-    if (!node) {
-      // offsetParent chain missed the container (unexpected DOM shape) —
-      // fall back to the old rect math rather than not scrolling at all.
-      top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-    }
-    // Honor the item's CSS scroll-margin-top (scroll-mt-6): the native
-    // property only applies to scrollIntoView(), which this helper
-    // deliberately avoids (iframe host-page scroll bug, see above) — so
-    // without this the item's top landed flush at pixel 0 of the pane.
-    const scrollMt = parseFloat(getComputedStyle(el).scrollMarginTop || '0') || 0;
-    const rawTarget = block === 'center'
-      ? top - (container.clientHeight - el.offsetHeight) / 2
-      : top - scrollMt;
-    const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
-    container.scrollTo({ top: Math.max(0, Math.min(rawTarget, maxScrollTop)), behavior: 'smooth' });
-  };
 
   // Handle tutor_scroll_whiteboard — navigate to page/item when the tutor
   // wants to draw the student's attention to existing content. Process
@@ -1359,10 +1366,13 @@ export function WhiteboardCanvas({
     // overlay sits above this wrapper and stops propagation on its own
     // events, but guard here too in case a pointerdown lands outside it.
     if (penMode) { tapStartRef.current = null; return; }
+    // Round 11 final review (M4): the question pin's text is not the board.
+    if ((e.target as Element).closest('[data-wb-lead-pin]')) { tapStartRef.current = null; return; }
     tapStartRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
   }, [penMode]);
   const handleMarkPointerUp = useCallback((e: React.PointerEvent) => {
     if (penMode) { tapStartRef.current = null; return; }
+    if ((e.target as Element).closest('[data-wb-lead-pin]')) { tapStartRef.current = null; return; }
     const start = tapStartRef.current;
     tapStartRef.current = null;
     if (!start || !onStudentMark) return;
