@@ -11,7 +11,7 @@
 
 import { strict as assert } from 'node:assert';
 import { homeworkFigureFor, titleNamesProblem } from '../src/lib/tutor/whiteboard/homework-figure';
-import { namedPointsIn, validateFigure } from '../src/lib/tutor/homework-build/figure-validate';
+import { namedPointsIn, validateFigure, checkClaims } from '../src/lib/tutor/homework-build/figure-validate';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 
 let passed = 0;
@@ -120,6 +120,48 @@ test('a missing letter id still fails; a prose word is still skipped (F4c)', () 
   const p3 = hw14([{ kind: 'on_segment', point: 'P3', segment: ['B', 'G'] }]);
   assert.equal(p3.ok, false);
   assert.deepEqual(hw14([{ kind: 'on_segment', point: 'apex', segment: ['B', 'G'] }]), { ok: true });
+});
+
+test('checkClaims resolves through an explicit name map; an ambiguous (null) key stays unresolved (F4c)', () => {
+  const pts = { P1: { x: 1, y: 0 }, B: { x: 0, y: 0 }, G: { x: 2, y: 0 }, T: { x: 0, y: 2 } };
+  const map = new Map<string, string | null>([['boat1', 'P1'], ['boat', null]]);
+  assert.deepEqual(checkClaims(pts, {}, [{ kind: 'between', point: 'Boat 1', ends: ['B', 'G'] }], undefined, map), []);
+  assert.match(checkClaims(pts, {}, [{ kind: 'on_segment', point: 'Boat1', segment: ['B', 'T'] }], undefined, map)[0], /on_segment P1 \[B,T\] fails/);
+  // "Boat" is ambiguous: unresolved, a word, so the claim is skipped rather than checked against either point.
+  assert.deepEqual(checkClaims(pts, {}, [{ kind: 'on_segment', point: 'Boat', segment: ['B', 'T'] }], undefined, map), []);
+  // No map: a name is its own id, as before.
+  assert.match(checkClaims(pts, {}, [{ kind: 'between', point: 'Boat1', ends: ['B', 'G'] }, { kind: 'between', point: 'Q', ends: ['B', 'G'] }])[0], /between claim names Q but/);
+});
+
+test('two points whose labels fold alike: the label resolves to neither, the claim is skipped (F4c)', () => {
+  const fig = JSON.parse(JSON.stringify(HW14_P3_FIGURE));
+  fig.given[3].label = 'Boat 1';          // P2 now also labelled "Boat 1"
+  const v = validateFigure(fig, { problemText: HW14_P3_TEXT, claims: [{ kind: 'on_segment', point: 'Boat1', segment: ['T', 'H'] }] });
+  // First-wins would resolve to P1 and fail (P1 is not on TH); ambiguous → unresolved word → skipped.
+  assert.deepEqual(v, { ok: true });
+});
+
+// Review probe: a point A labelled "A" and A1 labelled "A'" — the fold kept no
+// prime, so the claim on A' was checked against A and a correct figure failed.
+const PRIME_TEXT = "Point A' is the image of point A, and A' lies on segment A'B.";
+const PRIME_FIGURE = { action: 'showGeometryConstructed', given: [
+  { id: 'A', kind: 'point', x: 0, y: 2, label: 'A' },
+  { id: 'A1', kind: 'point', x: 1, y: 0, label: "A'" },
+  { id: 'B', kind: 'point', x: 2, y: 0 },
+], steps: [{ id: 's', kind: 'segment', from: 'A1', to: 'B' }], display: { grid: false, axes: false } } as unknown as Parameters<typeof validateFigure>[0];
+const prime = (claims: Claims) => validateFigure(PRIME_FIGURE, { problemText: PRIME_TEXT, claims });
+
+test("a primed name keeps its prime: A' resolves to the point labelled A', not A (F4c)", () => {
+  assert.deepEqual(prime([{ kind: 'on_segment', point: "A'", segment: ['A1', 'B'] }]), { ok: true });
+  assert.deepEqual(prime([{ kind: 'on_segment', point: 'A′', segment: ['A1', 'B'] }]), { ok: true });
+});
+
+test("a missing primed id (C', P1') fails like any id; it is not a word (F4c)", () => {
+  for (const n of ["C'", 'C′', "P1'"]) {
+    const v = prime([{ kind: 'on_segment', point: n, segment: ['A1', 'B'] }]);
+    assert.equal(v.ok, false, n);
+    assert.match(v.ok ? '' : v.reasons.join('; '), /no such point/, n);
+  }
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

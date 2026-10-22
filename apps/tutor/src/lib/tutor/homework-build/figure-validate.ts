@@ -160,11 +160,13 @@ function textFieldReasons(fields: Array<{ value: unknown; axis?: boolean }>, pro
 
 type Pt = { x: number; y: number };
 
-/** The shape of a point id (B, P1, AB, P12); any other unresolved claim name is a word. */
-const BARE_ID = /^[A-Z]{1,2}\d*$/;
+/** The shape of a point id (B, P1, AB, P12, A', P1'); any other unresolved claim name is a word. */
+const BARE_ID = /^[A-Z]{1,2}\d*['\u2032]*$/;
 
-/** A point name folded for matching a label: lower case, letters and digits only ("Boat 1" → "boat1"). */
-const foldName = (s: string) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+/** A point name folded for matching a label: lower case, letters, digits and
+ *  primes only ("Boat 1" → "boat1", "A′" → "a'"). The prime stays so A' and A
+ *  never fold together (a transformation sheet names both). */
+const foldName = (s: string) => String(s ?? '').toLowerCase().replace(/\u2032/g, "'").replace(/[^a-z0-9']/g, '');
 
 function resolveClaim(c: FigureClaim, r: (n: string) => string): FigureClaim {
   const two = (p: [string, string]): [string, string] => [r(p[0]), r(p[1])];
@@ -183,14 +185,15 @@ function resolveClaim(c: FigureClaim, r: (n: string) => string): FigureClaim {
  *  given coordinates to two or three decimals, so a chord endpoint sat 0.003
  *  off its circle and a point 0.004 off its line at 1e-6 — a thousandth of
  *  the figure is invisible on the board and still catches a wrong figure.
- *  nameToId maps a point id or a folded point label (foldName) to its id; a
+ *  nameToId maps a point id or a folded point label (foldName) to its id, or
+ *  to null when two points' labels fold alike (ambiguous: left unresolved); a
  *  claim name resolves through it, and with no map a name is its own id. */
 export function checkClaims(
   points: Record<string, Pt>,
   circles: Record<string, { cx: number; cy: number; r: number }>,
   claims: FigureClaim[],
   tol = 1e-3,
-  nameToId: ReadonlyMap<string, string> = new Map(),
+  nameToId: ReadonlyMap<string, string | null> = new Map(),
 ): string[] {
   const xs = Object.values(points).map((p) => p.x);
   const ys = Object.values(points).map((p) => p.y);
@@ -211,7 +214,12 @@ export function checkClaims(
     return { dx, dy, len: Math.hypot(dx, dy) || 1e-12 };
   };
 
-  const resolve = (n: string) => (points[n] ? n : nameToId.get(n) ?? nameToId.get(foldName(n)) ?? n);
+  const resolve = (n: string) => {
+    if (points[n]) return n;
+    const exact = nameToId.get(n);
+    if (exact !== undefined) return exact ?? n;   // null: ambiguous, unresolved
+    return nameToId.get(foldName(n)) ?? n;
+  };
   for (const raw of claims) {
     const c = resolveClaim(raw, resolve);
     const ids = c.kind === 'on_segment' ? [c.point, ...c.segment]
@@ -327,12 +335,16 @@ function validateGeometry(
   }
   for (const [center, id] of centerAlias) if (id && !circles[center]) circles[center] = circles[id];
   // A claim may name a point by the sheet's word for it, the point's label (hw-14 p3).
-  const nameToId = new Map<string, string>();
+  // Two points whose labels fold alike make the label ambiguous (null), like
+  // centerAlias above: neither point is guessed.
+  const nameToId = new Map<string, string | null>();
   for (const id of Object.keys(points)) nameToId.set(id, id);
   for (const o of [...fig.given, ...fig.steps] as Array<{ id?: unknown; label?: unknown }>) {
     if (typeof o?.id !== 'string' || !points[o.id] || typeof o.label !== 'string') continue;
     const k = foldName(o.label);
-    if (k && !nameToId.has(k)) nameToId.set(k, o.id);
+    if (!k) continue;
+    const prev = nameToId.get(k);
+    if (prev === undefined) nameToId.set(k, o.id); else if (prev !== o.id) nameToId.set(k, null);
   }
   reasons.push(...checkClaims(points, circles, ctx.claims, undefined, nameToId));
 
