@@ -10,7 +10,7 @@ import { connectDB } from "@core/db";
 import { TutorSession, type ITutorSession } from "@/models/TutorSession";
 import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
 import { lookupGeo } from "@/lib/tutor/recordings/geo";
-import { checkEmbedAuthAsync } from "@/lib/tutor/portal/embed-token";
+import { checkEmbedAuthAsync, embedEnforceMode } from "@/lib/tutor/portal/embed-token";
 import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
 import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
 import { isStaleSessionReuse } from "@/lib/tutor/portal/session-id-reuse";
@@ -510,8 +510,11 @@ export async function POST(req: NextRequest) {
             tokenPartnerId = poolAuth.payload?.partner_id ?? null;
           }
           const bodyPartnerId = typeof body.sourcePartnerId === "string" ? body.sourcePartnerId : null;
-          const who = chargePartnerFor({ tokenPartnerId, bodyPartnerId });
+          // With token enforcement on, every real frame sends its token, so a
+          // body-only partner is an anonymous caller: attribute, never charge.
+          const who = chargePartnerFor({ tokenPartnerId, bodyPartnerId, trustBody: embedEnforceMode() !== "on" });
           if (who.mismatch) console.warn("[partner-pool] partner_mismatch", `token=${tokenPartnerId}`, `body=${bodyPartnerId}`, sessionId);
+          if (who.untrustedBody) console.warn("[partner-pool] partner_pool_untrusted_body", `body=${bodyPartnerId}`, sessionId);
           if (who.partnerId) {
             const status: "active" | "completed" | "abandoned" =
               body.status === "completed" || body.status === "abandoned" ? body.status : "active";

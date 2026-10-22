@@ -141,15 +141,24 @@ export function poolFlagOn(env: string | undefined): boolean {
   return env !== 'off';
 }
 
-/** Which partner a usage save charges: the verified token's partner wins; the body's is a fallback. */
+/**
+ * Which partner a usage save charges: the verified token's partner wins. The
+ * body's `sourcePartnerId` is a fallback ONLY when `trustBody` (the route
+ * passes `embedEnforceMode() !== 'on'`): session-usage is unauthenticated
+ * without a studentId, so with enforcement on, an anonymous POST naming a
+ * partner must charge nobody — otherwise ~300 junk requests empty a pool.
+ */
 export function chargePartnerFor(input: {
   tokenPartnerId?: string | null;
   bodyPartnerId?: string | null;
-}): { partnerId: string | null; mismatch: boolean } {
+  trustBody?: boolean;
+}): { partnerId: string | null; mismatch: boolean; untrustedBody: boolean } {
   const token = (input.tokenPartnerId ?? '').trim() || null;
   const body = (input.bodyPartnerId ?? '').trim() || null;
-  if (token) return { partnerId: token, mismatch: body !== null && body !== token };
-  return { partnerId: body, mismatch: false };
+  const trustBody = input.trustBody !== false;
+  if (token) return { partnerId: token, mismatch: body !== null && body !== token, untrustedBody: false };
+  if (body && !trustBody) return { partnerId: null, mismatch: false, untrustedBody: true };
+  return { partnerId: body, mismatch: false, untrustedBody: false };
 }
 
 const toMinutes = (sec: number) => Math.round(sec / 6) / 10;
