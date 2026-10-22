@@ -366,5 +366,51 @@ test('a region whose inner shape lies outside its outer fails: "is not inside ou
   assert.deepEqual(validateFigure(p5Region({ id: 'shade', kind: 'region', outer: 'c1', inner: ['inner'] }), { problemText: HW14B_P5_TEXT, claims: P5_CLAIMS }), { ok: true });
 });
 
+// Final review (finding 1): "E is right of segment AB" — a phrasing the read
+// sentence invites — named AB as a point and both attempts died on a claim the
+// proposer could never satisfy by redrawing. A position claim skips a missing
+// name that is not a single-letter id; a missing single letter still fails.
+test('a position claim naming a two-letter name (AB) is skipped; a missing single letter still fails (final review)', () => {
+  assert.deepEqual(p1(HW14B_P1_STORED, [{ kind: 'right_of', point: 'E', of: 'AB' }]), { ok: true });
+  assert.deepEqual(p1(HW14B_P1_STORED, [{ kind: 'above', point: 'AB', of: 'B' }]), { ok: true });
+  const q = p1(HW14B_P1_STORED, [{ kind: 'right_of', point: 'E', of: 'Q' }]);
+  assert.ok(!q.ok && q.reasons.some((r) => /right_of claim names Q but the solver has no such point/.test(r)), q.ok ? 'passed' : q.reasons.join(' | '));
+  // Other kinds keep today's rule: a two-letter id is still a point the figure forgot.
+  assert.deepEqual(checkClaims({ A: { x: 0, y: 0 }, B: { x: 1, y: 0 } }, {}, [{ kind: 'on_segment', point: 'PQ', segment: ['A', 'B'] }]), ['on_segment claim names PQ but the solver has no such point']);
+});
+
+// Final review (finding 2): m∠AEB names E, A and B on p1/p4.
+test('labelIsFromText: a letter inside m∠XYZ is from the text (final review)', () => {
+  assert.equal(labelIsFromText('E', 'Find m∠AEB.'), true);
+  assert.equal(labelIsFromText('A', 'Find m∠AEB.'), true);
+  assert.equal(labelIsFromText('E', 'Find m ∠AEB.'), true);
+  assert.equal(labelIsFromText('Z', 'Find m∠AEB.'), false);
+});
+
+// Final review (finding 3): the solver round2's every point (≤ 0.005 per axis,
+// ≤ 0.0071 off a circle), while dtol is 1e-3 of the extent — 0.002 on a
+// figure of extent 2, so an internally tangent circle hole failed at a sample.
+const circles = (hole: { x: number; y: number; r: number }, R: number) => ({
+  action: 'showGeometryConstructed',
+  given: [
+    { id: 'O', kind: 'point', x: 0, y: 0, label: '' },
+    { id: 'H', kind: 'point', x: hole.x, y: hole.y, label: '' },
+    { id: 'co', kind: 'circle', center: 'O', radius: R },
+    { id: 'ch', kind: 'circle', center: 'H', radius: hole.r },
+  ],
+  steps: [{ id: 'shade', kind: 'region', outer: 'co', inner: ['ch'] }],
+  display: { grid: false, axes: false },
+}) as unknown as Parameters<typeof validateFigure>[0];
+const TANGENT_TEXT = 'A small circle is inside a larger circle and touches it at one point. Find the area of the shaded region.';
+test('an internally tangent circle hole passes the containment guard on a small figure; one outside still fails (final review)', () => {
+  assert.deepEqual(validateFigure(circles({ x: 1, y: 0, r: 1 }, 2), { problemText: TANGENT_TEXT, claims: [] }), { ok: true }, 'extent 4');
+  assert.deepEqual(validateFigure(circles({ x: 0.5, y: 0, r: 0.5 }, 1), { problemText: TANGENT_TEXT, claims: [] }), { ok: true }, 'extent 2');
+  assert.deepEqual(validateFigure(circles({ x: 0, y: 0.5, r: 0.5 }, 1), { problemText: TANGENT_TEXT, claims: [] }), { ok: true }, 'extent 2, tangent at the top');
+  const out = validateFigure(circles({ x: 3, y: 0, r: 0.5 }, 1), { problemText: TANGENT_TEXT, claims: [] });
+  assert.ok(!out.ok && out.reasons.includes('region "shade" fails: inner ch is not inside outer co'), out.ok ? 'passed' : out.reasons.join(' | '));
+  const poke = validateFigure(circles({ x: 0.52, y: 0, r: 0.5 }, 1), { problemText: TANGENT_TEXT, claims: [] });
+  assert.ok(!poke.ok && poke.reasons.includes('region "shade" fails: inner ch is not inside outer co'), poke.ok ? 'passed' : 'a hole poking 0.02 out still fails');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

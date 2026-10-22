@@ -259,8 +259,11 @@ export const STATED_REASON_CHECK_RULE =
 // two-sentence reply with no question — "…That's the value you gave." — and
 // the student had to type again to move on. The confirmation is not the end
 // of the turn.
+// Final review (finding 4): "with one question" — stacked on
+// CORRECT_GO_NO_FURTHER_RULE ("ask them to show the step that gets there") the
+// old "ask the next question" could make a reply carry two asks.
 export const NEXT_MOVE_AFTER_CONFIRM_RULE =
-  'Then, in the same reply, move the problem forward: ask the next question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.\n';
+  'Then, in the same reply, move the problem forward with one question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.\n';
 
 // Round 8 review (G4): a "PROBABLY correct" block gives no verdict, and a
 // repeat of an already-solved answer asks no question — neither is a

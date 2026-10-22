@@ -568,7 +568,8 @@ export async function recallTranscription(
   const mem = recallFromMemory(key, now);
   if (mem) return mem;
   const stored = await guardedStore('get', () => store.get(key), null);
-  if (!stored) return null;
+  // A stored [] is no read (final review, finding 5): a miss, so the page is read again.
+  if (!stored || !stored.length) return null;
   rememberInMemory(key, stored, now);
   console.log(`[material-extract] vision transcription restored from store key=${key.slice(0, 14)}`);
   return stored;

@@ -101,7 +101,10 @@ export function labelIsFromText(label: string, problemText: string): boolean {
     if (/^[A-Z]\d?['\u2032]?$/.test(w)) {
       const letter = w[0];
       if (toks.some((t) => {
-        const c = t.replace(/^[\u25b3\u25b2\u2220]+/, '').replace(/['\u2032]+$/, '');
+        // △ABC, ∠AEB and m∠AEB (final review, finding 2). tokenize already splits
+        // at these signs (they are not token characters), so this is the guard
+        // for a token that keeps one, not the path the sheets take today.
+        const c = t.replace(/^(?:m?[\u25b3\u25b2\u2220])+/, '').replace(/['\u2032]+$/, '');
         return /^[A-Z]{2,4}\d?$/.test(c) && c.includes(letter);
       })) return true;
     }
@@ -183,6 +186,9 @@ type Pt = { x: number; y: number };
 
 /** The shape of a point id (B, P1, AB, P12, A', P1'); any other unresolved claim name is a word. */
 const BARE_ID = /^[A-Z]{1,2}\d*['\u2032]*$/;
+/** A single-letter point id (E, P1, A'): the only missing name a position claim fails on. */
+const SINGLE_POINT_ID = /^[A-Z]\d?['\u2032]?$/;
+const POSITION_KINDS = new Set<FigureClaim['kind']>(['left_of', 'right_of', 'above', 'below']);
 
 /** A point name folded for matching a label: lower case, letters, digits and
  *  primes only ("Boat 1" → "boat1", "A′" → "a'"). The prime stays so A' and A
@@ -262,6 +268,12 @@ export function checkClaims(
     // by its point's label first (above); what still matches nothing and is
     // not an id shape (Q, P3, AB) is a word, and its claim is skipped.
     if (gone.some((id) => !BARE_ID.test(id))) continue;
+    // Final review (finding 1): "E is right of segment AB" — a phrasing the read
+    // sentence invites — named AB as a point; the proposer cannot satisfy such a
+    // claim by redrawing, so both attempts died and the problem lost its figure.
+    // A position claim checks only single-letter points (E, P1, A'); any other
+    // missing name (AB, a segment or line) is skipped. Other kinds keep BARE_ID.
+    if (POSITION_KINDS.has(c.kind) && gone.some((id) => !SINGLE_POINT_ID.test(id))) continue;
     if (gone.length) { out.push(`${c.kind} claim names ${gone.join(', ')} but the solver has no such point`); continue; }
 
     if (c.kind === 'on_segment' || c.kind === 'between') {
@@ -416,7 +428,13 @@ function validateGeometry(
   // whole outer square, so a circle straddling the diamond would have passed.
   {
     const xs = Object.values(points).map((p) => p.x), ys = Object.values(points).map((p) => p.y);
-    const dtol = 1e-3 * Math.max(1e-9, Math.max(...xs, 0) - Math.min(...xs, 0), Math.max(...ys, 0) - Math.min(...ys, 0));
+    // Final review (finding 3): the solver round2's every point it places, a circle
+    // hole's 48 samples included — up to 0.005 per axis, 0.005·√2 ≈ 0.0071 off a
+    // circle — so on a figure of extent < 7 a hole that touches the outer failed at
+    // a sample. The floor 0.0075 covers that rounding for EVERY hole vertex (a
+    // polygon's vertices are solver points too, rounded the same way); 0.0075 units
+    // is invisible on the board and a hole that really pokes out still fails.
+    const dtol = Math.max(0.0075, 1e-3 * Math.max(1e-9, Math.max(...xs, 0) - Math.min(...xs, 0), Math.max(...ys, 0) - Math.min(...ys, 0)));
     const steps = fig.steps as Array<{ kind?: unknown; id?: unknown; outer?: unknown; inner?: unknown }>;
     const inPolygon = (p: Pt, ring: Pt[]): boolean => {
       let inside = false;

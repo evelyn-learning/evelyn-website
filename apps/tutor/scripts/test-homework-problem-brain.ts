@@ -613,7 +613,7 @@ async function main() {
     // 2026-10-22 (round 8, G4): a confirmed value in a one-problem session —
     // keyed, model-checked or carried — must end with the next move in the
     // same reply, not the confirmation alone. Without hpKey: byte-identical.
-    const NEXT_MOVE_SENTENCE = 'Then, in the same reply, move the problem forward: ask the next question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.';
+    const NEXT_MOVE_SENTENCE = 'Then, in the same reply, move the problem forward with one question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.';
     await section('G4 formatAnswerCheckBlock: nextMoveAfterConfirm adds the sentence to every correct branch; unset is byte-identical', async () => {
       const { formatAnswerCheckBlock, NEXT_MOVE_AFTER_CONFIRM_RULE, STATED_REASON_CHECK_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
       assert.equal(NEXT_MOVE_AFTER_CONFIRM_RULE, NEXT_MOVE_SENTENCE + '\n');

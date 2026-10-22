@@ -370,6 +370,17 @@ async function testInFlightJoinStillOneRead() {
   clearTranscriptionCache();
 }
 
+// Final review (finding 5): a stored [] is no read; it must not count as a hit.
+async function testStoredEmptyReadIsAMiss() {
+  clearTranscriptionCache();
+  const empty: TranscriptionStore = { get: async () => [], set: async () => {} };
+  const s = stubRead(['1. Find x.']);
+  const r = await transcribeImagesBatch(SHEET, { store: empty, read: s.read });
+  assert.equal(s.calls(), 1, 'a stored empty transcription is a miss: the read runs');
+  if (r.ok) assert.deepEqual(r.texts, ['1. Find x.']);
+  clearTranscriptionCache();
+}
+
 /* ------------------------------------------------------------------ */
 /* main                                                                 */
 /* ------------------------------------------------------------------ */
@@ -395,6 +406,7 @@ async function main() {
   await test('transcription store: a changed read prompt or model is a new key, read again (G6)', testPromptVersionChangesTheKey);
   await test('transcription store: a failing store is a miss, the read still succeeds (G6)', testStoreFailureIsAMiss);
   await test('transcription store: the in-flight join still makes one read (G6)', testInFlightJoinStillOneRead);
+  await test('transcription store: a stored empty read is a miss, the read runs (final review)', testStoredEmptyReadIsAMiss);
 
   // Live LLM calls (budget: 2 total for this whole run).
   await test('image material: vision transcription finds expected text', testImageTranscription);
