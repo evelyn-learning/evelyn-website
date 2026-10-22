@@ -77,7 +77,24 @@ export async function runHomeworkBuild(
         cachedFigureOk = v.ok;
         if (!v.ok) console.warn(`[homework-build] n=${p.n} cached figure rejected by the current validator, retrying: ${v.reasons.join('; ').slice(0, 300)}`);
       }
-      if (cached && cached.status === 'ready' && (cachedFigureOk || (!cached.figure && !hasFigureDescription(p.text)))) {
+      const figureCopyable = cachedFigureOk || (!cached?.figure && !hasFigureDescription(p.text));
+      // round 11: a key built before the solution path is re-solved; the figure is copied
+      const keyStale = cached?.status === 'ready' && !!cached.key && !cached.key.steps?.length;
+      if (cached && cached.status === 'ready' && figureCopyable && keyStale) {
+        const keyRes = await solveKey(p, deps.key);
+        patch = {
+          status: keyRes.key ? 'ready' : 'unverified', figure: cachedFigure, figureNote: cached.figureNote,
+          ...(cached.figureSvg ? { figureSvg: cached.figureSvg } : {}),
+          key: keyRes.key,
+          verify: {
+            agreed: keyRes.agreed,
+            ...(keyRes.agreed ? {} : { candidates: keyRes.candidates }),
+            ...(keyRes.note ? { note: keyRes.note } : {}),
+          },
+          ms: now() - t0,
+          ...(keyRes.tokens ? { tokens: { in: keyRes.tokens.in, out: keyRes.tokens.out } } : {}),
+        };
+      } else if (cached && cached.status === 'ready' && figureCopyable) {
         // 2026-10-22 (hw-14 p8, F8): a cached figure is stored the way a fresh
         // one is (a graph's `expression` → `expr`, which the board reads).
         patch = {

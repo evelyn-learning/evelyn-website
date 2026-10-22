@@ -849,8 +849,8 @@ async function main() {
         },
         key: {
           names: ['A', 'B', 'T'],
-          async solveA() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], usage: { in: 20, out: 2 } }; },
-          async solveB() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], usage: { in: 20, out: 2 } }; },
+          async solveA() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], steps: [{ relation: 'x = 5' }], usage: { in: 20, out: 2 } }; },
+          async solveB() { return { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], steps: [{ relation: 'x = 5' }], usage: { in: 20, out: 2 } }; },
           async solveTieBreak() { return { parts: null }; },
         },
       };
@@ -907,7 +907,7 @@ async function main() {
       assert.equal(b.problems[0].key!.parts[0].final, '5', 'verified key reused');
       // A cached ready entry without a figure on a problem with no description is still copied.
       await ensureHomeworkBuild('gen-f2', 'greenapple', [{ n: 1, text: 'Nofig 1' }]);
-      await patchProblemBuild('gen-f2', 1, { status: 'ready', figure: null, key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9 });
+      await patchProblemBuild('gen-f2', 1, { status: 'ready', figure: null, key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'], steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9 });
       await mkPlan('gen-f3', ['Nofig 1']);
       const r = mkDeps();
       await runHomeworkBuild('gen-f3', 'greenapple', { deps: r.deps });
@@ -954,6 +954,27 @@ async function main() {
       assert.deepEqual(order, [], 'copied, not rebuilt');
       const f = (await getHomeworkBuild('gen-e1'))!.problems[0].figure as unknown as { data: { functions: Array<Record<string, unknown>> } };
       assert.deepEqual(f.data.functions[0], { expr: '2.5*cos(3*x*pi/180)+0.5' });
+    });
+    await section('round 11: a cached key without a solution path is re-solved, the cached figure and svg are copied', async () => {
+      const text = 'Steps 1 [Figure: a segment AB]';
+      const fig = { action: 'showGeometryConstructed', given: [{ id: 'A', kind: 'point', x: 0, y: 0, label: 'A' }, { id: 'B', kind: 'point', x: 4, y: 0, label: 'B' }], steps: [] };
+      await ensureHomeworkBuild('gen-k0', 'greenapple', [{ n: 1, text }]);
+      await patchProblemBuild('gen-k0', 1, {
+        status: 'ready', figure: fig as never, figureSvg: '<svg/>',
+        key: { parts: [{ label: '', final: '20', canonical: { kind: 'number', value: 20 } }], solvers: ['A', 'B'] }, verify: { agreed: true }, ms: 9,
+      });
+      await mkPlan('gen-k1', [text]);
+      const { deps, order } = mkDeps();
+      const keyed = async () => ({ parts: [{ label: '', final: '20', canonical: { kind: 'number', value: 20 } as const }], steps: [{ relation: 'r', value: 'v' }], usage: { in: 3, out: 1 } });
+      deps.key.solveA = keyed; deps.key.solveB = keyed;
+      await runHomeworkBuild('gen-k1', 'greenapple', { deps, concurrency: 1 });
+      assert.deepEqual(order, [], 'the figure was not rebuilt');
+      const p = (await getHomeworkBuild('gen-k1'))!.problems[0];
+      assert.equal(p.status, 'ready');
+      assert.deepEqual((p.figure as unknown as typeof fig).given, fig.given, 'the cached figure is copied');
+      assert.equal(p.figureSvg, '<svg/>');
+      assert.deepEqual(p.key!.steps, [{ relation: 'r', value: 'v' }]);
+      assert.deepEqual(p.tokens, { in: 6, out: 2 });
     });
     await section('an unverified cached entry is ignored and rebuilt', async () => {
       await ensureHomeworkBuild('gen-u0', 'greenapple', [{ n: 1, text: 'Unver 1' }]);
