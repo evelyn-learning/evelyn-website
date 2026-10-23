@@ -200,6 +200,10 @@ async function testDiagramRuleStatesPositionsNotGlyphs() {
   );
   // Additive only: the existing slanted-line sentence is unchanged.
   assert.ok(DIAGRAM_RULE.includes('For a slanted line, "left" and "right" are easy to get backwards: also name the side by a landmark on the figure'));
+  // A5 (2026-10-23, hw-15 p4): quarter circles were read as "centered at the top corners"
+  // (they end there; their centres are the bottom corners, unmarked).
+  assert.ok(DIAGRAM_RULE.includes('name the two points or corners where the arc ENDS'), 'arcs are described by their endpoints');
+  assert.ok(DIAGRAM_RULE.includes('never a centre you infer from the curve'), 'no inferred centre');
 }
 
 async function testEmptyMaterialsIsOk() {
