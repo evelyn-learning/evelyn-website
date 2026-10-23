@@ -6,19 +6,31 @@
  * the text only). A geometry figure is solved here and drawn with
  * fit="content" inside a fixed-height box, so a wide, short figure fills the
  * box instead of sitting tiny in its canvas padding and a tall one never
- * swallows the page; a graph goes through the board's own CommandRenderer.
+ * swallows the page; any other figure goes through the board's own
+ * CommandRenderer — a data chart or a solid inside that same fixed box, a
+ * graph, table or number line at its natural height (figureBoxMode).
  * Any throw (a bad spec) is the item error boundary's — the caller wraps this.
  */
 'use client';
 
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FigureCommand } from '@/lib/tutor/homework-build/types';
+import { figureBoxMode } from '@/lib/tutor/homework-build/figure-box';
 import { solveGeometry, type ConstructedGeometrySpec } from '@/lib/tutor/diagrams/geometry-solver';
 import { CommandRenderer } from '../whiteboard/WhiteboardCanvas';
 import { GeometryRenderer } from '../whiteboard/GeometryRenderer';
 
 export function ProblemFigure({ figure }: { figure: FigureCommand }): JSX.Element {
   if (figure.action !== 'showGeometryConstructed') {
+    // A data chart or a solid sits in the same fixed box as a geometry figure;
+    // a graph, a table or a number line keeps its natural height (figure-box.ts).
+    if (figureBoxMode(figure) === 'fixed') {
+      return (
+        <div data-testid="problem-figure" className="mx-auto flex h-[280px] sm:h-[400px] justify-center py-1 [&_svg]:h-full [&_svg]:w-auto [&_svg]:max-w-full">
+          <CommandRenderer command={figure as unknown as WhiteboardCommand} />
+        </div>
+      );
+    }
     return <CommandRenderer command={figure as unknown as WhiteboardCommand} />;
   }
   const solved = solveGeometry({ given: figure.given, steps: figure.steps, display: figure.display } as ConstructedGeometrySpec);

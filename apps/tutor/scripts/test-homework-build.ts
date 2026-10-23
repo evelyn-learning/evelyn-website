@@ -609,6 +609,18 @@ async function main() {
       }
     });
 
+    await section('figureBoxMode: data figures in the fixed box, tables and number lines at natural height; agrees with FIGURE_KIND_DOCS', async () => {
+      const { figureBoxMode, FIGURE_BOX_MODES } = await import('../src/lib/tutor/homework-build/figure-box');
+      const { FIGURE_KIND_DOCS } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
+      const F = await import('./fixtures/homework-figure-fixtures');
+      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
+      for (const fig of [F.tableFig(), F.nlFig(), hw14p8Fig() as never]) assert.equal(figureBoxMode(fig), 'natural', JSON.stringify(fig).slice(0, 60));
+      assert.equal(figureBoxMode(goodFig()), 'fixed', 'a geometry figure is in the fixed box');
+      // The client-safe table cannot drift from the proposer's docs.
+      assert.deepEqual(Object.fromEntries(FIGURE_KIND_DOCS.map((d) => [d.id, d.box])),
+        Object.fromEntries(Object.entries(FIGURE_BOX_MODES).filter(([id]) => id !== 'showGraph' && id !== 'showGeometryConstructed')));
+    });
+
     await section('figure kinds section: generated from the vocabulary, rules 11–12 verbatim, geometry prompt unchanged', async () => {
       const { figureProposeSystem, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
       const { FIGURE_KIND_DOCS, figureKindsSection } = await import('../src/lib/tutor/homework-build/figure-vocabulary');

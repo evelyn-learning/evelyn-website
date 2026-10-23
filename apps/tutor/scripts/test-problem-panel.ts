@@ -72,6 +72,8 @@ async function main() {
     has(pf, /fit="content"/);
     has(pf, /h-\[280px\] sm:h-\[400px\]/);
     has(pf, /<CommandRenderer command=\{figure as unknown as WhiteboardCommand\} \/>/);
+    has(pf, /figureBoxMode\(figure\) === 'fixed'/);
+    has(pf, /h-\[280px\] sm:h-\[400px\][^"]*\[&_svg\]:h-full/);
   });
   await section('one-problem session: the question pin lives in the board flow under the figure, never floating over it', () => {
     // GAC acceptance 2026-10-22 (hw-13): the floating Q-pin covered the figure.
