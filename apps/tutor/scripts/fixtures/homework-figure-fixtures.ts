@@ -80,3 +80,25 @@ export const scatFig = () => ({
   action: 'showScatterPlot', xLabel: 'x', yLabel: 'y',
   points: [{ x: 1, y: 62 }, { x: 2, y: 70 }, { x: 3, y: 75 }, { x: 4, y: 83 }, { x: 5, y: 88 }],
 }) as unknown as Fig;
+
+// ---------------------------------------------------------------- 3D solid (Task 7)
+
+export const CONE = 'Find the volume of the cone. Leave your answer in terms of π. [Figure: A cone with a radius of 4 cm drawn from the centre of the base to its edge and a height of 9 cm drawn as a dashed line from the apex to the centre of the base.]';
+export const SLANT = '[Figure: A cone with radius 3 and slant height 5.]';
+
+/**
+ * hw-9/10 problem 4 (the cone). NOT the stored text: the read-only tunnel
+ * read was refused by the session's permission layer on 2026-10-22, so this
+ * is hand-written in the photo read's style (sheet sentence, then the
+ * bracketed description, then the parts). Answers (V = 100π cm³, slant
+ * height 13 cm) are not in it.
+ */
+export const HW910_P4 = 'A cone has a radius of 5 cm and a height of 12 cm. [Figure: a cone with its radius of 5 cm drawn from the centre of the base to its edge and its height of 12 cm drawn as a dashed line from the apex to the centre of the base.]\n(a) Find the volume of the cone. Leave your answer in terms of π.\n(b) Find the slant height of the cone.';
+
+export const coneFig = () => ({
+  action: 'showDiagram', type: 'solid_3d', params: { shape: 'cone', dims: { radius: 4, height: 9 } },
+}) as unknown as Fig;
+
+export const hw910p4Fig = () => ({
+  action: 'showDiagram', type: 'solid_3d', params: { shape: 'cone', dims: { radius: 5, height: 12 } },
+}) as unknown as Fig;

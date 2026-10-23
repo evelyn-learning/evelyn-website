@@ -10,6 +10,7 @@
  * the drift test in scripts/test-homework-build.ts keeps the four in step.
  */
 
+import { getDiagramKind } from '../diagrams/catalog/manifest';
 import type { FigureDiagramKind, FigureStatsType } from './types';
 
 export type FigureVocabulary = 'all' | 'geometry';
@@ -18,13 +19,16 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot'];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram'];
 
 /** The showStats chart types in the vocabulary. */
 export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
 
 /** The showDiagram catalog kinds in the vocabulary (each has a catalog solver). */
-export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = [];
+export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = ['solid_3d'];
+
+/** A showDiagram kind's shape, from the catalog's own paramSchema (generated, so it cannot drift from the solver). */
+const diagramShape = (kind: FigureDiagramKind) => `{"action":"showDiagram","type":"${kind}","params":{${getDiagramKind(kind)!.paramSchema}}}`;
 
 /** One kind as the proposer is told about it: its id (figureKindId), when to use it, its shape, and how its thumbnail box is sized. */
 export interface FigureKindDoc { id: string; when: string; shape: string; box: 'fixed' | 'natural' }
@@ -70,6 +74,11 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
     id: 'showNumberLine', box: 'natural',
     when: 'the sheet shows a number line (marked points, open or closed circles, shaded intervals or rays, an inequality graph)',
     shape: '{"action":"showNumberLine","title"?,"min","max","step"?,"points"?:[{"value","label"?,"style"?:"filled"|"open"}],"intervals"?:[{"from","to","fromInclusive"?,"toInclusive"?,"label"?}]}',
+  },
+  {
+    id: 'showDiagram:solid_3d', box: 'fixed',
+    when: 'the sheet shows one 3D solid (cube, rectangular prism, triangular prism, cylinder, cone, sphere or square pyramid) with every dimension the shape needs stated; never a composite or cut-out solid, never a dimension the student must find',
+    shape: diagramShape('solid_3d'),
   },
 ];
 

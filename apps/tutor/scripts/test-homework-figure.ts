@@ -15,7 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
-import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, type Fig } from './fixtures/homework-figure-fixtures';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -635,6 +635,62 @@ test('scatter: labels, series, title and notes come from the text; ranges are sc
 });
 test('scatter: the kill switch (geometry) rejects it', () => {
   assert.deepEqual(statsOk(scatFig(), SCAT, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showScatterPlot"'] });
+});
+
+// ---------------------------------------------------------------- 3D solid (Task 7)
+
+const paramsOf = (f: Fig) => (f as unknown as { params: Record<string, unknown> }).params;
+const solid = (params: Record<string, unknown>) => ({ action: 'showDiagram', type: 'solid_3d', params }) as unknown as Fig;
+
+test('solid_3d: the stated cone passes', () => {
+  assert.deepEqual(statsOk(coneFig(), CONE), { ok: true });
+});
+test('solid_3d: an answer in the title fails as a label', () => {
+  const f = coneFig(); paramsOf(f).title = 'V = 48π';
+  statsFails(f, CONE, /label "V = 48π"/);
+});
+test('solid_3d: a computed height on a cone stated by slant height fails on provenance', () => {
+  statsFails(solid({ shape: 'cone', dims: { radius: 3, height: 4 } }), SLANT, /number 4/);
+});
+test('solid_3d: a missing dim fails (the solver would draw its default)', () => {
+  statsFails(solid({ shape: 'cone', dims: { radius: 4 } }), CONE, /solid_3d cone needs dims radius, height/);
+  statsFails(solid({ shape: 'cone' }), CONE, /needs dims radius, height/);
+});
+test('solid_3d: an alias or unknown shape fails (the solver would map or fall back)', () => {
+  statsFails(solid({ shape: 'pyramid', dims: { base: 4, height: 9 } }), CONE, /solid_3d shape "pyramid" is not one of/);
+  statsFails(solid({ shape: 'ball', dims: { radius: 4 } }), CONE, /is not one of/);
+  statsFails(solid({ shape: 'torus', dims: { radius: 4 } }), CONE, /is not one of/);
+});
+test('solid_3d: an extra dim, a bad dim value, or an unread param fails', () => {
+  statsFails(solid({ shape: 'cone', dims: { radius: 4, height: 9, slant: 9 } }), CONE, /solid_3d dim "slant" is not drawn for a cone/);
+  statsFails(solid({ shape: 'cone', dims: { radius: 4, height: -9 } }), CONE, /height/);
+  statsFails(solid({ shape: 'cone', dims: { radius: 4, height: '9' } }), CONE, /height/);
+  statsFails(solid({ shape: 'cone', dimensions: { radius: 4, height: 9 } }), CONE, /solid_3d param "dimensions"/);
+});
+test('solid_3d: a sphere has no net', () => {
+  statsFails(solid({ shape: 'sphere', dims: { radius: 2 }, showNet: true }), 'sphere of radius 2', /no net/);
+  assert.deepEqual(statsOk(solid({ shape: 'sphere', dims: { radius: 2 } }), 'sphere of radius 2'), { ok: true });
+});
+test('solid_3d: every shape with its stated dims passes; a net on a prism passes', () => {
+  const T = 'side 2, length 3, width 4, height 5, base 6, triHeight 7, radius 8';
+  assert.deepEqual(statsOk(solid({ shape: 'cube', dims: { side: 2 }, showNet: true }), T), { ok: true });
+  assert.deepEqual(statsOk(solid({ shape: 'rectangular_prism', dims: { length: 3, width: 4, height: 5 } }), T), { ok: true });
+  assert.deepEqual(statsOk(solid({ shape: 'triangular_prism', dims: { base: 6, triHeight: 7, length: 3 } }), T), { ok: true });
+  assert.deepEqual(statsOk(solid({ shape: 'cylinder', dims: { radius: 8, height: 5 } }), T), { ok: true });
+  assert.deepEqual(statsOk(solid({ shape: 'square_pyramid', dims: { base: 6, height: 5 } }), T), { ok: true });
+});
+test('solid_3d: other diagram kinds are unsupported until their task', () => {
+  assert.deepEqual(statsOk({ action: 'showDiagram', type: 'supply_demand', params: {} } as unknown as Fig, CONE),
+    { ok: false, reasons: ['unsupported figure kind "showDiagram:supply_demand"'] });
+});
+test('solid_3d: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(coneFig(), CONE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showDiagram:solid_3d"'] });
+});
+test('solid_3d: hw-9/10 p4 cone (hand-written): good passes, the slant height fails, a missing height fails', () => {
+  assert.deepEqual(statsOk(hw910p4Fig(), HW910_P4), { ok: true });
+  const f = hw910p4Fig(); (paramsOf(f).dims as Record<string, number>).height = 13;
+  statsFails(f, HW910_P4, /number 13/);
+  statsFails(solid({ shape: 'cone', dims: { radius: 5 } }), HW910_P4, /needs dims radius, height/);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
