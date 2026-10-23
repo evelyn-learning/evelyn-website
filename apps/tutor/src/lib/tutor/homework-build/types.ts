@@ -4,11 +4,27 @@
  */
 
 import { createHash } from 'node:crypto';
-import type { GraphData } from '@core/knowledge/types';
+import type { GraphData, WhiteboardCommand } from '@core/knowledge/types';
+
+/** The showStats chart types a homework figure may be (figure-vocabulary.ts lists the live ones). */
+export type FigureStatsType = 'histogram' | 'boxplot' | 'dotplot' | 'bar' | 'pie';
+/** The showDiagram catalog kinds a homework figure may be. The catalog's
+ *  `transformation` kind is not one (controller ruling 2026-10-23): a
+ *  transformation is drawn on showCoordinatePlane only when the sheet states
+ *  both shapes' vertices. */
+export type FigureDiagramKind = 'solid_3d' | 'tape_diagram' | 'area_model' | 'inequality_graph' | 'coordinate_grid';
+type Cmd<A extends WhiteboardCommand['action']> = Extract<WhiteboardCommand, { action: A }>;
+export type StatsFigure = Cmd<'showStats'> & { type: FigureStatsType };
+export type DiagramFigure = Cmd<'showDiagram'> & { type: FigureDiagramKind };
 
 export type FigureCommand =
   | { action: 'showGeometryConstructed'; title?: string; given: unknown[]; steps: unknown[]; display?: Record<string, unknown> }
-  | { action: 'showGraph'; type: 'function'; data: GraphData };
+  | { action: 'showGraph'; type: 'function'; data: GraphData }
+  | StatsFigure
+  | Cmd<'showScatterPlot'>
+  | Cmd<'showTable'>
+  | Cmd<'showNumberLine'>
+  | DiagramFigure;
 
 export type FigureClaim =
   | { kind: 'on_segment'; point: string; segment: [string, string] }

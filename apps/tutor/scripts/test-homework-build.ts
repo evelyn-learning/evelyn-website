@@ -490,6 +490,63 @@ async function main() {
       assert.ok(mid.length > 0 && mid.every((l) => l.anchor === 'end' && l.x === 258), JSON.stringify(mid.slice(0, 2)));
     });
 
+    await section('vocabulary: env, kind ids, gate', async () => {
+      const { figureVocabularyFromEnv, figureKindId, isFigureKindAllowed } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
+      const warn = console.warn; const warned: string[] = [];
+      console.warn = (...a: unknown[]) => { warned.push(a.map(String).join(' ')); };
+      try {
+        assert.equal(figureVocabularyFromEnv({}), 'all');
+        assert.equal(figureVocabularyFromEnv({ HOMEWORK_FIGURE_KINDS: 'all' }), 'all');
+        assert.equal(figureVocabularyFromEnv({ HOMEWORK_FIGURE_KINDS: ' Geometry ' }), 'geometry');
+        assert.equal(figureVocabularyFromEnv({ HOMEWORK_FIGURE_KINDS: 'ALL' }), 'all');
+        assert.equal(warned.length, 0, warned.join('\n'));
+        assert.equal(figureVocabularyFromEnv({ HOMEWORK_FIGURE_KINDS: 'nonsense' }), 'all');   // default ON
+        assert.deepEqual(warned, ['[homework-build] HOMEWORK_FIGURE_KINDS="nonsense" not recognised, using all']);
+      } finally { console.warn = warn; }
+      assert.equal(figureKindId({ action: 'showStats', type: 'boxplot' }), 'showStats:boxplot');
+      assert.equal(figureKindId({ action: 'showDiagram', type: 'solid_3d' }), 'showDiagram:solid_3d');
+      assert.equal(figureKindId({ action: 'showTable' }), 'showTable');
+      assert.ok(isFigureKindAllowed('showGraph', 'geometry') && isFigureKindAllowed('showGeometryConstructed', 'geometry'));
+      assert.ok(isFigureKindAllowed('showGraph', 'all') && isFigureKindAllowed('showGeometryConstructed', 'all'));
+      assert.ok(!isFigureKindAllowed('showMolecule', 'all') && !isFigureKindAllowed('showMolecule', 'geometry'));
+      const v = validateFigure({ action: 'showMolecule' } as never, { problemText: 'x', claims: [] });
+      assert.deepEqual(v, { ok: false, reasons: ['unsupported figure kind "showMolecule"'] });
+      // The catalog transformation kind is not in the vocabulary (controller ruling).
+      assert.deepEqual(validateFigure({ action: 'showDiagram', type: 'transformation', params: {} } as never, { problemText: 'x', claims: [] }),
+        { ok: false, reasons: ['unsupported figure kind "showDiagram:transformation"'] });
+      // Under geometry, a graph and a geometry figure still reach their validators (the same verdicts as under all).
+      for (const [fig, text] of [[goodFig(), P5], [ws3p5Bad, P5]] as const) {
+        assert.deepEqual(validateFigure(fig, { problemText: text, claims, vocabulary: 'geometry' }), validateFigure(fig, { problemText: text, claims }));
+      }
+      // A figure with no action is named by what it is.
+      assert.deepEqual(validateFigure({} as never, { problemText: 'x', claims: [] }), { ok: false, reasons: ['unsupported figure kind "undefined"'] });
+    });
+    await section('vocabulary drift: docs, actions, stats types and diagram kinds agree; every diagram kind has a solver', async () => {
+      const { FIGURE_ACTIONS, FIGURE_STATS_TYPES, FIGURE_DIAGRAM_KINDS, FIGURE_KIND_DOCS, isFigureKindAllowed } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
+      const { isImplementedKind } = await import('../src/lib/tutor/diagrams/catalog/manifest');
+      assert.deepEqual(FIGURE_ACTIONS.slice(0, 2), ['showGeometryConstructed', 'showGraph']);
+      assert.equal(new Set(FIGURE_KIND_DOCS.map((d) => d.id)).size, FIGURE_KIND_DOCS.length, 'doc ids are unique');
+      const docsFor = (id: string) => FIGURE_KIND_DOCS.filter((d) => d.id === id || d.id.startsWith(`${id}:`));
+      for (const d of FIGURE_KIND_DOCS) {
+        const [action, type] = d.id.split(':');
+        assert.ok(FIGURE_ACTIONS.includes(action), `doc ${d.id}: action in FIGURE_ACTIONS`);
+        if (action === 'showStats') assert.ok((FIGURE_STATS_TYPES as readonly string[]).includes(type), `doc ${d.id}: type in FIGURE_STATS_TYPES`);
+        if (action === 'showDiagram') assert.ok((FIGURE_DIAGRAM_KINDS as readonly string[]).includes(type), `doc ${d.id}: kind in FIGURE_DIAGRAM_KINDS`);
+        assert.ok(isFigureKindAllowed(d.id, 'all') && !isFigureKindAllowed(d.id, 'geometry'), `doc ${d.id}: allowed under all only`);
+      }
+      for (const t of FIGURE_STATS_TYPES) assert.equal(docsFor(`showStats:${t}`).length, 1, `stats type ${t} has one doc`);
+      for (const k of FIGURE_DIAGRAM_KINDS) {
+        assert.equal(docsFor(`showDiagram:${k}`).length, 1, `diagram kind ${k} has one doc`);
+        assert.ok(isImplementedKind(k), `diagram kind ${k} has a solver`);
+      }
+      assert.ok(!(FIGURE_DIAGRAM_KINDS as readonly string[]).includes('transformation'), 'transformation is dropped');
+      for (const a of FIGURE_ACTIONS.slice(2)) {
+        const n = docsFor(a).length;
+        if (a === 'showStats' || a === 'showDiagram') assert.ok(n >= 1, `${a} has at least one doc`);
+        else assert.equal(n, 1, `${a} has exactly one doc`);
+      }
+    });
+
     // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
     console.log('3 build figure');
     const { buildFigure, FIGURE_PROPOSE_SYSTEM, parseProposal, normalizeClaims } = await import('../src/lib/tutor/homework-build/figure-build');
@@ -570,7 +627,8 @@ async function main() {
       const bad = parseProposal({ figure_json: '{nope', claims: [{ kind: 'on_segment', point: 'D', segment: ['A', 'B'] }] });
       assert.equal(bad.figure, null); assert.equal(bad.note, 'propose_failed:parse'); assert.equal(bad.claims.length, 1);
       assert.equal(parseProposal({ figure_json: '', claims: [] }).figure, null);
-      assert.equal(parseProposal({ figure_json: '{"action":"nope"}', claims: [] }).figure, null);
+      assert.deepEqual(parseProposal({ figure_json: '{"action":"nope"}', claims: [] }).figure, { action: 'nope' }, 'an unknown action is the validator\'s to name');
+      assert.equal(parseProposal({ figure_json: '{"x":1}', claims: [] }).figure, null);
       const ok = parseProposal({ figure_json: JSON.stringify(goodFig()), claims: [] });
       assert.deepEqual(ok.figure, JSON.parse(JSON.stringify(goodFig())));
       const cl = normalizeClaims([
@@ -581,6 +639,31 @@ async function main() {
         { kind: 'bogus' }, null,
       ]);
       assert.equal(cl.length, 2);
+    });
+    await section('parseFigure keeps an unknown action for the validator to name', async () => {
+      const { parseFigure } = await import('../src/lib/tutor/homework-build/figure-build');
+      assert.deepEqual(parseFigure('{"action":"showMolecule"}'), { action: 'showMolecule' });
+      assert.throws(() => parseFigure('{"x":1}'));
+      assert.throws(() => parseFigure('{"action":3}'));
+      assert.throws(() => parseFigure('[1]'));
+      assert.throws(() => parseFigure('{nope'));
+      assert.equal(parseFigure(''), null);
+    });
+    await section('a figure kind outside the vocabulary fails both attempts with the kind named', async () => {
+      const seen: unknown[] = [];
+      const d: Deps = {
+        async propose(i) { seen.push(i.vocabulary); return { figure: { action: 'showStats', type: 'distribution' } as never, claims: [] }; },
+        async extractClaims() { return { claims: [] }; },
+      };
+      const r = await buildFigure({ n: 1, text: 'A normal curve [Figure: a bell curve]' }, d);
+      assert.equal(r.figure, null);
+      assert.match(r.note ?? '', /unsupported figure kind "showStats:distribution"/);
+      assert.equal(r.attempts, 2);
+      assert.deepEqual(seen, ['all', 'all'], 'buildFigure passes its vocabulary (default all) to propose');
+      // vocabulary geometry reaches propose and the validator: a graph passes, the same stats figure still fails.
+      seen.length = 0;
+      const g = await buildFigure({ n: 1, text: 'x' }, d, { vocabulary: 'geometry' });
+      assert.equal(g.figure, null); assert.deepEqual(seen, ['geometry', 'geometry']);
     });
     await section('normalizeClaims / FIGURE_CLAIMS_SYSTEM (hw-14b p1, G1): stated relative positions are claims', async () => {
       const { FIGURE_CLAIMS_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
@@ -1008,6 +1091,33 @@ async function main() {
       assert.equal(b.problems[0].status, 'ready');
       assert.equal(b.problems[0].figure, null, 'the stale graph was not copied');
       assert.equal(b.problems[0].key!.parts[0].final, '5');
+    });
+
+    await section('HOMEWORK_FIGURE_KINDS=geometry: a cached figure outside the vocabulary is retried, not copied', async () => {
+      const text = 'Box [Figure: box plot]';
+      const statsFig = { action: 'showStats', type: 'boxplot', boxplot: { datasets: [] } };
+      await ensureHomeworkBuild('gen-v0', 'greenapple', [{ n: 1, text }]);
+      await patchProblemBuild('gen-v0', 1, {
+        status: 'ready', figure: statsFig as never,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'], steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9,
+      });
+      await mkPlan('gen-v1', [text]);
+      const { deps, order } = mkDeps();
+      const vocabs: unknown[] = [];
+      const inner = deps.figure.propose.bind(deps.figure);
+      deps.figure.propose = async (i) => { vocabs.push(i.vocabulary); return inner(i); };
+      const prev = process.env.HOMEWORK_FIGURE_KINDS;
+      process.env.HOMEWORK_FIGURE_KINDS = 'geometry';
+      try {
+        await runHomeworkBuild('gen-v1', 'greenapple', { deps, concurrency: 1 });
+      } finally {
+        if (prev === undefined) delete process.env.HOMEWORK_FIGURE_KINDS; else process.env.HOMEWORK_FIGURE_KINDS = prev;
+      }
+      assert.deepEqual(order, [text], 'the figure was proposed again');
+      assert.deepEqual(vocabs, ['geometry'], 'propose was told the vocabulary');
+      const b = (await getHomeworkBuild('gen-v1'))!;
+      assert.equal(b.problems[0].figure, null, 'the out-of-vocabulary figure was not copied');
+      assert.equal(b.problems[0].key!.parts[0].final, '5', 'the verified key was reused');
     });
 
     await section('a cached ready graph stored with `expression` is copied with `expr` (hw-14 p8, F8)', async () => {

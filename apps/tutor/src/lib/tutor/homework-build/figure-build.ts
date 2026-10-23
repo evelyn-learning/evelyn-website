@@ -15,13 +15,14 @@ import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geomet
 import { isCaptionLabel, labelIsFromText, validateFigure, namedPointsIn, POINT_KINDS } from './figure-validate';
 import { functionSourceOf } from '../whiteboard/graph-function-source';
 import type { FigureClaim, FigureCommand } from './types';
+import type { FigureVocabulary } from './figure-vocabulary';
 
 export interface TokenUsage { in: number; out: number }
 export interface FigureProposal { figure: FigureCommand | null; claims: FigureClaim[]; note?: string; usage?: TokenUsage }
 
 export interface FigureBuildDeps {
   /** Opus 5.5, adaptive thinking at low effort, JSON-schema output. */
-  propose(input: { text: string; feedback?: string[]; previous?: FigureCommand | null }): Promise<FigureProposal>;
+  propose(input: { text: string; feedback?: string[]; previous?: FigureCommand | null; vocabulary?: FigureVocabulary }): Promise<FigureProposal>;
   /** Sonnet 5 in a fresh context: the relations the TEXT states, from the text alone. */
   extractClaims(text: string): Promise<{ claims: FigureClaim[]; usage?: TokenUsage }>;
 }
@@ -195,12 +196,15 @@ function normalizeGraphFunctions(figure: Extract<FigureCommand, { action: 'showG
   return { ...figure, data: out as unknown as typeof figure.data };
 }
 
+/** Any JSON object with a string `action` is a figure: whether its kind is
+ *  supported is the validator's to say, by name ('unsupported figure kind'),
+ *  so the retry feedback tells the proposer which kind to stop using. */
 export function parseFigure(raw: unknown): FigureCommand | null {
   if (typeof raw !== 'string' || !raw.trim()) return null;
   let v: unknown;
   try { v = JSON.parse(raw); } catch { throw new ParseError('figure_json is not JSON'); }
   const f = v as { action?: unknown } | null;
-  if (!f || (f.action !== 'showGeometryConstructed' && f.action !== 'showGraph')) throw new ParseError('figure has no known action');
+  if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.action !== 'string') throw new ParseError('figure has no action');
   return f as FigureCommand;
 }
 
@@ -272,9 +276,10 @@ function unionClaims(into: Map<string, FigureClaim>, more: FigureClaim[]): void 
 export async function buildFigure(
   problem: { n: number; text: string },
   deps: FigureBuildDeps,
-  opts: { maxAttempts?: number } = {},
+  opts: { maxAttempts?: number; vocabulary?: FigureVocabulary } = {},
 ): Promise<FigureBuildResult> {
   const maxAttempts = Math.max(1, opts.maxAttempts ?? 2);
+  const vocabulary = opts.vocabulary ?? 'all';
   const claims = new Map<string, FigureClaim>();
   let tokens: TokenUsage | undefined;
   const addUsage = (u?: TokenUsage): void => {
@@ -283,7 +288,7 @@ export async function buildFigure(
   const withTokens = <T extends object>(r: T): T & { tokens?: TokenUsage } => (tokens ? { ...r, tokens } : r);
   const safePropose = async (feedback?: string[], previous?: FigureCommand | null): Promise<FigureProposal> => {
     try {
-      const r = await deps.propose({ text: problem.text, feedback, previous });
+      const r = await deps.propose({ text: problem.text, feedback, previous, vocabulary });
       addUsage(r?.usage);
       return r;
     }
@@ -313,7 +318,7 @@ export async function buildFigure(
     // Final review (F8): normalise first, so the figure validated is the
     // figure stored (a graph's `expression` is already `expr`).
     const figure = normalizeFigureDisplay(proposal.figure, problem.text)!;
-    const v = validateFigure(figure, { problemText: problem.text, claims: all });
+    const v = validateFigure(figure, { problemText: problem.text, claims: all, vocabulary });
     if (v.ok) return withTokens({ figure, attempts: attempt, claims: all });
     reasons = v.reasons;
     // The rejected proposal itself, for the build notes: the note alone

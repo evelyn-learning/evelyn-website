@@ -9,6 +9,7 @@ import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { buildFigure, defaultFigureBuildDeps, normalizeFigureDisplay, type FigureBuildDeps } from './figure-build';
 import { figureToSvg } from './figure-svg';
 import { validateFigure } from './figure-validate';
+import { figureVocabularyFromEnv } from './figure-vocabulary';
 import { hasFigureDescription } from '../lesson-plan/homework-problem-meta';
 import { solveKey, defaultKeySolveDeps, type KeySolveDeps, type KeySolveResult } from './key-solve';
 import { ensureHomeworkBuild, findCachedProblem, patchProblemBuild } from './store';
@@ -61,6 +62,9 @@ export async function runHomeworkBuild(
   const plan = await getLessonPlan(planId);
   const problems = plan ? homeworkProblemsOf(plan) : null;
   if (!problems) return;
+  // HOMEWORK_FIGURE_KINDS (default all): read once per run; a cached figure
+  // outside it is retried, and every proposal is told it.
+  const vocabulary = figureVocabularyFromEnv();
 
   const doc = await ensureHomeworkBuild(planId, partnerId, problems);
   const pending = doc.problems.filter((p) => p.status === 'preparing');
@@ -94,7 +98,7 @@ export async function runHomeworkBuild(
       const cachedFigure = cached?.status === 'ready' ? normalizeFigureDisplay(cached.figure ?? null, p.text) : null;
       let cachedFigureOk = false;
       if (cached?.status === 'ready' && cachedFigure) {
-        const v = validateFigure(cachedFigure, { problemText: p.text, claims: [] });
+        const v = validateFigure(cachedFigure, { problemText: p.text, claims: [], vocabulary });
         cachedFigureOk = v.ok;
         if (!v.ok) console.warn(`[homework-build] n=${p.n} cached figure rejected by the current validator, retrying: ${v.reasons.join('; ').slice(0, 300)}`);
       }
@@ -124,7 +128,7 @@ export async function runHomeworkBuild(
         // most on a validator rule since fixed). The proposer is not
         // deterministic and the validator improves — try the figure again.
         // round 11: a stepless key is re-solved alongside the figure retry.
-        const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), keyStale ? solveKey(p, deps.key) : Promise.resolve(null)]);
+        const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure, { vocabulary }), keyStale ? solveKey(p, deps.key) : Promise.resolve(null)]);
         const fi = fig.tokens, ki = keyRes?.tokens;
         patch = {
           status: 'ready', figure: fig.figure, figureNote: fig.note,
@@ -134,7 +138,7 @@ export async function runHomeworkBuild(
           ...(fi || ki ? { tokens: { in: (fi?.in ?? 0) + (ki?.in ?? 0), out: (fi?.out ?? 0) + (ki?.out ?? 0) } } : {}),
         };
       } else {
-        const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure), solveKey(p, deps.key)]);
+        const [fig, keyRes] = await Promise.all([buildFigure(p, deps.figure, { vocabulary }), solveKey(p, deps.key)]);
         const fi = fig.tokens, ki = keyRes.tokens;
         patch = {
           status: keyRes.key ? 'ready' : 'unverified',
