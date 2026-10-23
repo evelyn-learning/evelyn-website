@@ -389,7 +389,7 @@ async function main() {
     assert.match(sys, /Never return "incorrect" on the strength of one reading while another reasonable reading is right/);
     assert.ok(!/\d\s*[+\-*/=<>]|\b\d{2,}\b/.test(AMBIGUOUS_READING_RULE), 'no worked example');
     assert.ok(!/\b(?:equation|fraction|limit|inequality|algebra|calculus|physics|chemistry|slope|line)\b/i.test(AMBIGUOUS_READING_RULE));
-    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false }), VERDICT_PRECHECK_SYSTEM);
+    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false, describedAnswerRule: false }), VERDICT_PRECHECK_SYSTEM);
   });
   await test('the pre-check is SENT that prompt', async () => {
     const seen: string[] = [];

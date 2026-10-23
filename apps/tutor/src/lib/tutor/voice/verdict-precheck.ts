@@ -42,7 +42,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams, resolveModel } from '../ai/model-registry';
 import { falseArithmeticIn } from './turn-shape-signal';
-import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_PRECHECK_DIFFERS_AT, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_AMBIGUOUS_EXPRESSION_RULE, TUTOR_PRECHECK_DESCRIBED_ANSWER, TUTOR_PRECHECK_DIFFERS_AT, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { readOpenQuestion } from './nonanswer-praise';
 import { PROBLEM_LETTERS_RULE, problemLetterNames } from '../lesson-plan/homework-ledger';
 import type {
@@ -278,6 +278,15 @@ export const NAMED_PROBLEM_RULE =
 export const ANSWER_KIND_RULE =
   ' THE KIND OF ANSWER ASKED FOR. When the question asks for something by a stated criterion or in a stated form — a classification by one property, a name, a value to a given precision or in a given unit, a form such as a fraction or an exact value — an answer that is true of the object but answers a different criterion or a different kind of question is not an answer to that question: "incorrect" when that is all it gives, "partly_correct" when the message also gives a right part of what was asked. Judge against the question as the problem words it, not against whether the statement is true.';
 
+/**
+ * B7 (2026-10-23, GAC): a correct description of how a graph behaves was
+ * checked "incorrect" with high confidence because it was not worded like the
+ * check's own answer; the judge's false-denial finding was then set aside
+ * because the high-confidence check agreed with the tutor. Generic wording.
+ */
+export const DESCRIBED_ANSWER_RULE =
+  ' A DESCRIBED ANSWER. When the question asks the student to describe, explain or say what happens, a plain-language description that is true of the problem and states the point the question asks for is "correct", even when it does not use your term or your value. A description that is true but leaves out part of what was asked is "partly_correct". Only a description that is false of the problem is "incorrect". When you judge a description against an answer of your own that is worded differently, your confidence is at most "medium".';
+
 export const LEDGER_FORMS_RULE =
   ' SAME ANSWER, ANOTHER FORM. A number written in words, an answer written in another language, a percentage of the same fraction, another exact form of the same value, and a right value with its unit left off or abbreviated are all the same answer. A rounded decimal of an exact answer is the same answer when the problem does not ask for an exact form; when the problem asks for an exact form, it is "partly_correct" (the right value, not yet in the form asked for), never "incorrect". Where the subject has more than one accepted convention or method for a quantity, an answer that is right under a recognised one is right: before you call a value wrong, check whether another accepted method or convention gives it, and if one does, it is right — and so is later working built on it. Use ONE convention consistently through your own working; never mix two in one calculation. A value the student reports from someone else (a teacher, a friend, a book, an answer key) for one of their problems is proposed and judged exactly as if they had written it themselves. Judge only what the message actually says: never complete a vague answer or replace a related term with the right one. A misspelt word is the word it is closest to; when that is a different term from the answer (a related part, substance, process or person), it is not the answer. A WORDED ANSWER (a why, what or describe question): the complete answer is what the problem as written asks for — not every detail a full textbook answer would add, and not a detail a later question of the tutor\'s asked for. A message that states that point correctly answers the problem completely ("correct", the problem is solved), even when it leaves out a cause or a detail the problem itself did not ask for.';
 
@@ -320,7 +329,7 @@ export function roundsExactAnswer(stated: string, own: string): boolean {
 /** The system prompt the check is sent. `ambiguousReadingRule` unset ⇒
  *  TUTOR_AMBIGUOUS_EXPRESSION_RULE; `readinessTaskRule` unset ⇒
  *  TUTOR_READINESS_NAMED_TASK; both false ⇒ the prompt of 2026-10-06. */
-export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean; claimVerdict?: boolean; ledger?: boolean }): string {
+export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean; describedAnswerRule?: boolean; claimVerdict?: boolean; ledger?: boolean }): string {
   let system = verdictPrecheckSystemBase(opts);
   if (opts?.claimVerdict === true) {
     const marker = '\n5. CONFIDENCE.';
@@ -338,8 +347,12 @@ export function verdictPrecheckSystem(opts?: { ambiguousReadingRule?: boolean; r
   return system;
 }
 
-function verdictPrecheckSystemBase(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean }): string {
+function verdictPrecheckSystemBase(opts?: { ambiguousReadingRule?: boolean; readinessTaskRule?: boolean; describedAnswerRule?: boolean }): string {
   let system = VERDICT_PRECHECK_SYSTEM;
+  if (opts?.describedAnswerRule ?? TUTOR_PRECHECK_DESCRIBED_ANSWER) {
+    const at5 = system.indexOf('\n5. CONFIDENCE.');
+    system = at5 < 0 ? system + DESCRIBED_ANSWER_RULE : system.slice(0, at5) + DESCRIBED_ANSWER_RULE + system.slice(at5);
+  }
   if (opts?.readinessTaskRule ?? TUTOR_READINESS_NAMED_TASK) {
     const anchor = 'including when that question itself asks for the final answer).';
     const i = system.indexOf(anchor);

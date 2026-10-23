@@ -117,7 +117,7 @@ test('LIVE: the pre-check is told which part the readiness question opened', () 
 test('the pre-check prompt: one sentence after the open_question definition; both switches off ⇒ the 2026-10-06 prompt', () => {
   const sys = verdictPrecheckSystem({ ambiguousReadingRule: false });
   assert.ok(sys.includes('including when that question itself asks for the final answer).' + READINESS_TASK_RULE + '\n   "overall_problem"'));
-  assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false }), VERDICT_PRECHECK_SYSTEM);
+  assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false, describedAnswerRule: false }), VERDICT_PRECHECK_SYSTEM);
   assert.match(verdictPrecheckSystem(), /AMBIGUOUS WRITING OR SPEECH/);
   assert.ok(!/\d/.test(READINESS_TASK_RULE), 'generic: no example values');
 });

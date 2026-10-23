@@ -31,6 +31,7 @@ import {
 } from '../src/lib/tutor/voice/verdict-precheck-shared';
 import {
   buildVerdictPrecheckUser,
+  DESCRIBED_ANSWER_RULE,
   runVerdictPrecheck,
   textVerdictPrecheckEnabled,
   verdictPrecheckThinking,
@@ -125,6 +126,14 @@ async function main() {
     assert.ok(!/\b(?:equation|fraction|limit|inequality|algebra|calculus|physics|chemistry|essay|veto)\b/i.test(VERDICT_PRECHECK_SYSTEM));
   });
 
+  await test('B7: the described-answer rule sits before step 5, is generic, and switches off', () => {
+    const on = verdictPrecheckSystem({ describedAnswerRule: true });
+    assert.ok(on.includes(DESCRIBED_ANSWER_RULE));
+    assert.ok(on.indexOf(DESCRIBED_ANSWER_RULE) < on.indexOf('\n5. CONFIDENCE.'));
+    assert.ok(!verdictPrecheckSystem({ describedAnswerRule: false }).includes('A DESCRIBED ANSWER'));
+    assert.ok(!/\d|\b(?:graph|line|equation|fraction|inequality)\b/i.test(DESCRIBED_ANSWER_RULE), 'no digits or subject words');
+  });
+
   // ── the call ──
   await test('a well-formed reply becomes a result (correct value kept server-side)', async () => {
     const seen: Array<{ system: string; user: string }> = [];
@@ -136,7 +145,7 @@ async function main() {
     assert.equal(r!.model, 'fake-model');
     assert.equal(seen[0].system, verdictPrecheckSystem());
     // 2026-10-06c: the readiness-task sentence is a second switch on the same prompt.
-    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false }), VERDICT_PRECHECK_SYSTEM);
+    assert.equal(verdictPrecheckSystem({ ambiguousReadingRule: false, readinessTaskRule: false, describedAnswerRule: false }), VERDICT_PRECHECK_SYSTEM);
     assert.ok(!('correctValue' in toPublicPrecheck(r!)), 'the public form has no correct value');
   });
   await test('consistency: "equals the final answer" ⇒ a correct answer to the problem, whatever was said about the open question', async () => {

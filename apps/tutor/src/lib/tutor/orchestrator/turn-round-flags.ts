@@ -387,6 +387,12 @@ export const TUTOR_OPENER_STRIP_NOT_KILL =
 export const TUTOR_AMBIGUOUS_EXPRESSION_RULE =
   process.env.NEXT_PUBLIC_TUTOR_AMBIGUOUS_EXPRESSION_RULE !== 'off';
 
+/** B7 (2026-10-23): the pre-check judges a correct plain-language description
+ *  as correct, and caps its confidence when its own answer is worded
+ *  differently (DESCRIBED_ANSWER_RULE). */
+export const TUTOR_PRECHECK_DESCRIBED_ANSWER =
+  process.env.NEXT_PUBLIC_TUTOR_PRECHECK_DESCRIBED_ANSWER !== 'off';
+
 /** A page opened for an untitled problem card is titled "Problem N" (or
  *  "Problem N of M") instead of "Next". */
 export const TUTOR_PROBLEM_PAGE_TITLE =
