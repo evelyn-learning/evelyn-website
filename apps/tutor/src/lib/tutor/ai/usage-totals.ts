@@ -326,3 +326,11 @@ export function clientTotalsMax(body: { totalInputTokens?: unknown; totalOutputT
   if (ok(b.estimatedCost)) out.estimatedCost = b.estimatedCost;
   return out;
 }
+
+/** The stored totals a resumed embed page continues from (session-usage GET);
+ *  anything missing or malformed reads as 0. */
+export function readPriorUsageTotals(prior: unknown): Required<Pick<UsageTotals, 'totalInputTokens' | 'totalOutputTokens' | 'estimatedCost'>> {
+  const p = (prior ?? {}) as Record<string, unknown>;
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0);
+  return { totalInputTokens: num(p.totalInputTokens), totalOutputTokens: num(p.totalOutputTokens), estimatedCost: num(p.estimatedCost) };
+}
