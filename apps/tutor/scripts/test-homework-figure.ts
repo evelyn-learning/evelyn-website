@@ -15,7 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
-import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, type Fig } from './fixtures/homework-figure-fixtures';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -604,6 +604,37 @@ test('number line: an unstated fraction-tick denominator fails', () => {
 test('table and number line: the kill switch (geometry) rejects them', () => {
   assert.deepEqual(statsOk(tableFig(), TABLE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showTable"'] });
   assert.deepEqual(statsOk(nlFig(), NL, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showNumberLine"'] });
+});
+
+// ---------------------------------------------------------------- scatter plot (Task 6)
+
+const ptsOf = (f: Fig) => (f as unknown as { points: Array<Record<string, unknown>> }).points;
+
+test('scatter: the five stated points pass', () => {
+  assert.deepEqual(statsOk(scatFig(), SCAT), { ok: true });
+});
+test('scatter: an extra (predicted) point fails on provenance', () => {
+  const f = scatFig(); ptsOf(f).push({ x: 6, y: 93 });
+  statsFails(f, SCAT, /number (6|93) /);
+});
+test('scatter: a trend line is always rejected (computed R²), even with a stated equation', () => {
+  statsFails(Object.assign(scatFig(), { showTrendLine: true }), SCAT, /a trend line is drawn by least squares with a computed R²; it is never part of a homework figure/);
+  statsFails(Object.assign(scatFig(), { trendLineEquation: 'y = 6.4x + 56' }), SCAT, /computed R²/);
+});
+test('scatter: no points or a non-numeric point fails structurally', () => {
+  statsFails(Object.assign(scatFig(), { points: [] }), SCAT, /at least one point/);
+  const f = scatFig(); ptsOf(f)[0].y = 'sixty';
+  statsFails(f, SCAT, /scatter point 0: x and y must be finite numbers/);
+});
+test('scatter: labels, series, title and notes come from the text; ranges are scaffolding', () => {
+  statsFails(Object.assign(scatFig(), { title: 'Strong positive correlation' }), SCAT, /label "Strong positive correlation"/);
+  statsFails(Object.assign(scatFig(), { notes: 'r = 0.99' }), SCAT, /label "r = 0.99"/);
+  const f = scatFig(); ptsOf(f)[0].series = 'Outlier';
+  statsFails(f, SCAT, /label "Outlier"/);
+  assert.deepEqual(statsOk(Object.assign(scatFig(), { xRange: [0, 6], yRange: [50, 100], xLabel: 'hours studied', yLabel: 'score' }), SCAT), { ok: true });
+});
+test('scatter: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(scatFig(), SCAT, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showScatterPlot"'] });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

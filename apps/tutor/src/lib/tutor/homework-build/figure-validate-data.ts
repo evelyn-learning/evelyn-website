@@ -1,6 +1,6 @@
 /**
  * Validators for the data homework figures: showStats (box plot, histogram,
- * dot plot, bar, pie), showTable and showNumberLine. Structural: the chart must render as the
+ * dot plot, bar, pie), showTable, showNumberLine and showScatterPlot. Structural: the chart must render as the
  * sheet shows it. Provenance: every drawn number is one the problem text
  * states (numberIsFromText) and every free-text field comes from the text
  * (textFieldReasons). A number the renderer would compute (pie percentages,
@@ -215,5 +215,46 @@ export function validateNumberLineFigure(fig: Extract<FigureCommand, { action: '
     if (!isNum(d.denominator) || !Number.isInteger(d.denominator) || d.denominator < 1) reasons.push('number line fractionTicks.denominator must be a positive integer');
     else if (!numberIsFromText(d.denominator, text)) reasons.push(`number ${d.denominator} in fractionTicks.denominator does not come from the problem text`);
   }
+  return reasons;
+}
+
+const TREND_LINE_REASON = 'a trend line is drawn by least squares with a computed R²; it is never part of a homework figure';
+
+/**
+ * showScatterPlot: at least one point; every x and y finite and stated by the
+ * text; point labels, series, title, axis labels and notes from the text.
+ * xRange / yRange are scaffolding (two numbers, lo < hi, every point inside).
+ * A trend line is always rejected: the renderer fits it itself and always
+ * prints R² (a computed value), so even a stated equation would draw one.
+ */
+export function validateScatterFigure(fig: Extract<FigureCommand, { action: 'showScatterPlot' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = unusedFieldReasons(f, ['title', 'xLabel', 'yLabel', 'points', 'xRange', 'yRange', 'notes', 'showTrendLine', 'trendLineEquation']);
+  if (f.showTrendLine === true || f.trendLineEquation !== undefined) reasons.push(TREND_LINE_REASON);
+  reasons.push(...textFieldReasons([
+    { value: f.title },
+    { value: f.xLabel, axis: true },
+    { value: f.yLabel, axis: true },
+    { value: f.notes },
+  ], text));
+  const range = (key: 'xRange' | 'yRange'): [number, number] | null => {
+    const r = f[key];
+    if (r === undefined) return null;
+    if (!Array.isArray(r) || r.length !== 2 || !r.every(isNum) || !(r[0] < r[1])) { reasons.push(`scatter ${key} must be [lo, hi] with lo < hi`); return null; }
+    return r as [number, number];
+  };
+  const xr = range('xRange');
+  const yr = range('yRange');
+  const points = f.points;
+  if (!Array.isArray(points) || points.length === 0) return [...reasons, 'a scatter plot needs at least one point'];
+  points.forEach((raw, i) => {
+    const p = (raw ?? {}) as Record<string, unknown>;
+    if (!isNum(p.x) || !isNum(p.y)) { reasons.push(`scatter point ${i}: x and y must be finite numbers`); return; }
+    if (!numberIsFromText(p.x, text)) reasons.push(`number ${p.x} in points[${i}].x does not come from the problem text`);
+    if (!numberIsFromText(p.y, text)) reasons.push(`number ${p.y} in points[${i}].y does not come from the problem text`);
+    if ((xr && (p.x < xr[0] || p.x > xr[1])) || (yr && (p.y < yr[0] || p.y > yr[1]))) reasons.push(`scatter point (${p.x}, ${p.y}) is outside xRange/yRange`);
+    reasons.push(...textFieldReasons([{ value: p.label }, { value: p.series }], text));
+  });
   return reasons;
 }

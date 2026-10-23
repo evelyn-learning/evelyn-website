@@ -13,7 +13,7 @@ import type { GraphData } from '@core/knowledge/types';
 import type { FigureClaim, FigureCommand } from './types';
 import { isCaptionLabel, labelIsFromText, textFieldIsFromText, textFieldReasons } from './figure-text';
 import { figureKindId, isFigureKindAllowed, type FigureVocabulary } from './figure-vocabulary';
-import { validateNumberLineFigure, validateStatsFigure, validateTableFigure } from './figure-validate-data';
+import { validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure } from './figure-validate-data';
 
 /** Re-exported so existing imports from figure-validate keep working. */
 export { isCaptionLabel, labelIsFromText, textFieldIsFromText };
@@ -437,6 +437,7 @@ const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext
   'showStats:pie': statsValidator,
   showTable: (figure, ctx) => validateTableFigure(figure as Extract<FigureCommand, { action: 'showTable' }>, ctx),
   showNumberLine: (figure, ctx) => validateNumberLineFigure(figure as Extract<FigureCommand, { action: 'showNumberLine' }>, ctx),
+  showScatterPlot: (figure, ctx) => validateScatterFigure(figure as Extract<FigureCommand, { action: 'showScatterPlot' }>, ctx),
 };
 
 function validateFigureUnsafe(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {

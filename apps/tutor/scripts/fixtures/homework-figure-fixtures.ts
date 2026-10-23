@@ -71,3 +71,12 @@ export const nlFig = () => ({
   intervals: [{ from: -2, to: 5, fromInclusive: false }],
   points: [{ value: -2, style: 'open' }],
 }) as unknown as Fig;
+
+// ---------------------------------------------------------------- scatter plot (Task 6)
+
+export const SCAT = '[Figure: A scatter plot of hours studied (x) and score (y) with points (1, 62), (2, 70), (3, 75), (4, 83), (5, 88).]';
+
+export const scatFig = () => ({
+  action: 'showScatterPlot', xLabel: 'x', yLabel: 'y',
+  points: [{ x: 1, y: 62 }, { x: 2, y: 70 }, { x: 3, y: 75 }, { x: 4, y: 83 }, { x: 5, y: 88 }],
+}) as unknown as Fig;

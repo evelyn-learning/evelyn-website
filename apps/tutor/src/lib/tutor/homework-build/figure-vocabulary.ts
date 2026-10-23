@@ -18,7 +18,7 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine'];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot'];
 
 /** The showStats chart types in the vocabulary. */
 export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
@@ -55,6 +55,11 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
     id: 'showStats:pie', box: 'fixed',
     when: 'the sheet shows a pie chart (circle graph)',
     shape: '{"action":"showStats","type":"pie","title"?,"pie":{"slices":[{"label","value"}]}}',
+  },
+  {
+    id: 'showScatterPlot', box: 'fixed',
+    when: 'the sheet shows a scatter plot of stated (x, y) points (never a trend or best-fit line)',
+    shape: '{"action":"showScatterPlot","title"?,"xLabel"?,"yLabel"?,"points":[{"x","y","label"?}],"xRange"?,"yRange"?}',
   },
   {
     id: 'showTable', box: 'natural',
