@@ -69,6 +69,12 @@ export async function GET(req: NextRequest) {
       inputMode: session.inputMode,
       startedAt: session.startedAt,
       activeSeconds: sessionActiveSeconds(session) ?? 0,
+      // 2026-10-23 (GAC Sonnet resume): an embed page saves running totals
+      // only, raised with $max — a resumed page continues from these, or its
+      // sitting (smaller than the stored total) would never be recorded.
+      totalInputTokens: session.totalInputTokens ?? 0,
+      totalOutputTokens: session.totalOutputTokens ?? 0,
+      estimatedCost: session.estimatedCost ?? 0,
       lessonProgress: session.lessonProgress ?? null,
       transcript: session.transcript ?? [],
       whiteboardCommands: session.whiteboardCommands ?? [],

@@ -4,6 +4,7 @@ import { MODEL_RATES, lookupModelRate, rateForPrompt } from '../src/lib/tutor/ai
 import {
   computeUsageTotals, dedupeUsageEntries, usageEntryKey, usageTotalsBehind, clientTotalsMax, countedUsageEntries, usageSaveWindow,
   FALLBACK_PRICING, REALTIME_PRICING, REALTIME_2_PRICING, type UsageEntry,
+  readPriorUsageTotals,
 } from '../src/lib/tutor/ai/usage-totals';
 
 let passed = 0, failed = 0;
@@ -214,6 +215,18 @@ console.log('\nHaiku 5.5 two rate cards (2026-10-23 brain trial):');
   check('a short Haiku call keeps the short card', computeUsageTotals([turn(10_000, 40_000, 1_000)]).estimatedCost === 0.0019, computeUsageTotals([turn(10_000, 40_000, 1_000)]));
   check('rateForPrompt leaves a model with one card unchanged', rateForPrompt(MODEL_RATES['claude-sonnet-5'], 500_000) === MODEL_RATES['claude-sonnet-5']);
   check('rateForPrompt: exactly 100K is the short card', rateForPrompt(MODEL_RATES['claude-haiku-5-5'], 100_000) === MODEL_RATES['claude-haiku-5-5']);
+}
+
+console.log('\nresumed embed page continues from the stored totals (2026-10-23):');
+{
+  check('stored totals are read as numbers', same(readPriorUsageTotals({ totalInputTokens: 3_548_257, totalOutputTokens: 5150, estimatedCost: 1.6715, other: 1 }), { totalInputTokens: 3_548_257, totalOutputTokens: 5150, estimatedCost: 1.6715 }));
+  check('missing / junk read as 0', same(readPriorUsageTotals(null), { totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 }) && same(readPriorUsageTotals({ estimatedCost: 'x', totalInputTokens: -4 }), { totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 }));
+  const fs = require('node:fs') as typeof import('node:fs'); const path = require('node:path') as typeof import('node:path');
+  const embed = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  check('embed: the resume read seeds the prior totals', /priorUsageRef\.current = readPriorUsageTotals\(prior\)/.test(embed));
+  check('embed: saved totals = prior + this sitting', /prior\.totalInputTokens \+ acc\.inputTokens/.test(embed) && /prior\.estimatedCost \+ cost/.test(embed));
+  const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  check('route GET returns the stored totals', /estimatedCost: session\.estimatedCost \?\? 0/.test(route));
 }
 
 console.log('\nwhat the route takes from the client:');

@@ -18,6 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
 import { lookupModelRate, rateForPrompt } from '@/lib/tutor/ai/model-rates';
+import { readPriorUsageTotals } from '@/lib/tutor/ai/usage-totals';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
 import { type TutorMilestone, type TutorResumeState, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -914,6 +915,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
           // writes into the same session document).
           const priorActive = readActiveSecondsField(prior?.activeSeconds);
           if (!cancelled && priorActive != null) priorActiveSecRef.current = priorActive;
+          if (!cancelled) priorUsageRef.current = readPriorUsageTotals(prior);
           const { state: rs, hadStaleCheckpoint } = resolveResumeOutcome(prior);
           if (!cancelled) {
             if (rs) setResumeState(rs);
@@ -1168,6 +1170,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // inputTokens excludes cache reads/creations (Anthropic semantics), so
   // totalInputTokens below reports the full billed input volume.
   const FALLBACK_PRICING = { input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 }; // $/1M tok
+  // Earlier sittings' stored totals (resume): this page's saves are raised
+  // with $max, so they must carry the earlier sittings too.
+  const priorUsageRef = useRef({ totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 });
   const brainUsageRef = useRef({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0, model: undefined as string | undefined });
   const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string }) => {
     const acc = brainUsageRef.current;
@@ -1187,10 +1192,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const brainUsageTotals = useCallback(() => {
     const acc = brainUsageRef.current;
     const cost = acc.cost;
+    const prior = priorUsageRef.current;
     return {
-      totalInputTokens: acc.inputTokens + acc.cacheReadTokens + acc.cacheCreationTokens,
-      totalOutputTokens: acc.outputTokens,
-      estimatedCost: Math.round(cost * 10000) / 10000,
+      totalInputTokens: prior.totalInputTokens + acc.inputTokens + acc.cacheReadTokens + acc.cacheCreationTokens,
+      totalOutputTokens: prior.totalOutputTokens + acc.outputTokens,
+      estimatedCost: Math.round((prior.estimatedCost + cost) * 10000) / 10000,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
