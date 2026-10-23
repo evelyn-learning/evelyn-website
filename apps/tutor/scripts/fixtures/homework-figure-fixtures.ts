@@ -150,10 +150,14 @@ export const fracFig = () => ({
   items: [{ numerator: 3, denominator: 4 }, { numerator: 2, denominator: 3 }],
 }) as unknown as Fig;
 
-/** Three unknown parts labelled x (their lengths are proportions, not printed); the stated total on the brace. */
+/**
+ * Three equal unknown parts labelled x; the stated total on the brace. A part
+ * is drawn at its length, so even an unknown part's length is a stated number:
+ * 3 (the sheet's part count) for each, equal widths as the sheet draws them.
+ */
 export const tapeFig = () => ({
   action: 'showDiagram', type: 'tape_diagram',
-  params: { bars: [{ segments: [1, 2, 3].map(() => ({ length: 1, label: 'x', unknown: true })), totalLabel: '24' }] },
+  params: { bars: [{ segments: [1, 2, 3].map(() => ({ length: 3, label: 'x', unknown: true })), totalLabel: '24' }] },
 }) as unknown as Fig;
 
 /** The split sides only: the partial products are what the student finds, so showProducts is false. */

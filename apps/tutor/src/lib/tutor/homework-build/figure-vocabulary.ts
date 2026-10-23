@@ -97,7 +97,7 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   },
   {
     id: 'showDiagram:tape_diagram', box: 'fixed',
-    when: 'the sheet shows a tape diagram (bar model): each part with its stated length, a part the student must find as unknown:true with its label or "?"; a total only as the sheet prints it',
+    when: 'the sheet shows a tape diagram (bar model): each part with its stated length, a part the student must find as unknown:true with its label or "?"; every length, the unknown part\'s included, is a number the text states (a part is drawn at its length, so a computed length would show the answer); a total only as the sheet prints it',
     shape: diagramShape('tape_diagram'),
   },
   {

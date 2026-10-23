@@ -839,7 +839,7 @@ test('fraction bar: the kill switch (geometry) rejects it', () => {
   assert.deepEqual(statsOk(fracFig(), FRAC, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showFractionBar"'] });
 });
 
-test('tape diagram: the stated tape passes (unknown parts need no stated length)', () => {
+test("tape diagram: the stated tape passes (an unknown part's drawn length is a stated number)", () => {
   assert.deepEqual(statsOk(tapeFig(), TAPE), { ok: true });
   const t = 'Sam has 5 more stickers than Jo. [Figure: Two tapes: Jo has one part labelled j; Sam has a part labelled j and a part of 5.]';
   assert.deepEqual(statsOk({ action: 'showDiagram', type: 'tape_diagram', params: { bars: [
@@ -852,6 +852,14 @@ test('tape diagram: an answer label or a computed part length fails on provenanc
   statsFails(f, TAPE, /label "x = 8"/);
   const g = tapeFig(); barsOf(g)[0].segments[0] = { length: 8, label: 'x' };
   statsFails(g, TAPE, /number 8 in params\.bars\[0\]\.segments\[0\]\.length/);
+});
+test('tape diagram: an unknown part whose length the text does not state fails (its width would leak the answer)', () => {
+  const T = 'A ribbon is 20 cm long. Ana cuts off 8 cm. How much is left? [Figure: A tape of total 20 split into a part of 8 and a part labelled ?.]';
+  const tape = (unknownLength: number) => ({ action: 'showDiagram', type: 'tape_diagram', params: { bars: [{ totalLabel: '20', segments: [{ length: 8, label: '8' }, { length: unknownLength, label: '?', unknown: true }] }] } } as unknown as Fig);
+  // Drawn 12 wide, the "?" part shows the answer's proportion: rejected.
+  statsFails(tape(12), T, /number 12 in params\.bars\[0\]\.segments\[1\]\.length does not come from the problem text/);
+  // Drawn at a stated length, it carries no computed proportion: passes.
+  assert.deepEqual(statsOk(tape(8), T), { ok: true });
 });
 test('tape diagram: no bars, an empty or bad segment, or an unused param fails structurally (before the solver can default)', () => {
   statsFails({ action: 'showDiagram', type: 'tape_diagram', params: { bars: [] } } as unknown as Fig, TAPE, /tape_diagram needs at least one bar/);

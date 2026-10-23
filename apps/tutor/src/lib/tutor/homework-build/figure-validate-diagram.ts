@@ -107,8 +107,10 @@ export const AREA_MAX_SPLITS = 6;
 /**
  * tape_diagram: at least one bar, each with at least one segment of length
  * > 0. A part's length sets its drawn width, so it is a number the text
- * states, unless the part is the unknown (unknown: true), whose width is only
- * a proportion; its label, bar names, totalLabel and title from the text.
+ * states — the unknown part (unknown: true) included: the board draws it at
+ * its length too, so a computed length (total 20, known 8, "?" drawn 12 wide)
+ * would show the answer's proportion. Its label, bar names, totalLabel and
+ * title from the text.
  */
 function validateTape(params: Record<string, unknown>, ctx: FigureContext): string[] {
   const text = ctx.problemText;
@@ -136,7 +138,11 @@ function validateTape(params: Record<string, unknown>, ctx: FigureContext): stri
       if (sg.color !== undefined && typeof sg.color !== 'string') reasons.push(`${sw}: color must be a string`);
       reasons.push(...drawnLabelReasons(sg.label, `${sw}.label`, text));
       if (!isNum(sg.length) || sg.length <= 0) { reasons.push(`${sw}: length must be a number > 0`); return; }
-      if (sg.unknown !== true && !numberIsFromText(sg.length, text)) reasons.push(`number ${sg.length} in ${sw}.length does not come from the problem text (mark a part the student finds unknown: true)`);
+      if (!numberIsFromText(sg.length, text)) {
+        reasons.push(sg.unknown === true
+          ? `number ${sg.length} in ${sw}.length does not come from the problem text (an unknown part is drawn at its length, so a computed length shows the answer; give it a length the text states)`
+          : `number ${sg.length} in ${sw}.length does not come from the problem text (mark a part the student finds unknown: true)`);
+      }
     });
   });
   return reasons.length ? reasons : solves('tape_diagram', params);
