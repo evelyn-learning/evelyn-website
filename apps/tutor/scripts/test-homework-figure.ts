@@ -15,6 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
+import { FIGURE_KIND_DOCS } from '../src/lib/tutor/homework-build/figure-vocabulary';
 import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, VENN, VENN3, TREE, vennFig, venn3Fig, treeFig, FRAC, TAPE, AREA, fracFig, tapeFig, areaFig, CP, TR, INEQ, GRID, cpFig, ineqFig, gridFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
@@ -788,6 +789,15 @@ test('tree: a branch with no node, a bad children list, a bad type or a missing 
 });
 test('tree: the kill switch (geometry) rejects it', () => {
   assert.deepEqual(statsOk(treeFig(), TREE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showTree"'] });
+});
+
+test('Venn and tree docs show value and probability as strings, the only form the validator takes', () => {
+  const shape = (id: string) => FIGURE_KIND_DOCS.find((d) => d.id === id)!.shape;
+  assert.match(shape('showVennDiagram'), /"value"\?:"12"/);
+  assert.match(shape('showTree'), /"probability"\?:"2\/5"/);
+  assert.match(shape('showTree'), /"value"\?:"12"/);
+  const v = vennFig(); regionsOf(v).onlyA.value = 8;
+  statsFails(v, VENN, /must be a string/);
 });
 
 // ---------------------------------------------------------------- fraction bar, tape diagram, area model (Task 15)

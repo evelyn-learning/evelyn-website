@@ -83,12 +83,12 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   {
     id: 'showVennDiagram', box: 'fixed',
     when: 'the sheet shows a Venn diagram of 2 or 3 sets (regions: onlyA, onlyB, intersection, neither for 2 sets; onlyA, onlyB, onlyC, AB, AC, BC, ABC, neither for 3); a region the sheet leaves empty or asks for is left out',
-    shape: '{"action":"showVennDiagram","title"?,"sets":[{"label"}],"regions":{"<region>":{"value"?,"items"?:[…]}},"universalLabel"?}',
+    shape: '{"action":"showVennDiagram","title"?,"sets":[{"label"}],"regions":{"<region>":{"value"?:"12","items"?:[…]}},"universalLabel"?} (value is a string, as the sheet writes it)',
   },
   {
     id: 'showTree', box: 'fixed',
     when: 'the sheet shows a tree diagram (probability, factor or decision tree): outcomes in the node boxes, a stated probability on each branch; never a leaf probability the sheet does not print',
-    shape: '{"action":"showTree","title"?,"type"?:"probability"|"factor"|"decision"|"generic","root":{"label","children":[{"label","probability"?,"node":{"label","value"?,"children"?:[…]}}]}}',
+    shape: '{"action":"showTree","title"?,"type"?:"probability"|"factor"|"decision"|"generic","root":{"label","children":[{"label","probability"?:"2/5","node":{"label","value"?:"12","children"?:[…]}}]}} (probability and value are strings, as the sheet writes them)',
   },
   {
     id: 'showFractionBar', box: 'fixed',
