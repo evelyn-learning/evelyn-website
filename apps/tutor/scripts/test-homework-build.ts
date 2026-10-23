@@ -386,6 +386,19 @@ async function main() {
       const two: Fig = { ...sq, steps: [...sq.steps, { id: 'cA2', kind: 'circle', center: 'A', radius: 5 }] };
       assert.ok(reasonsOf(validateFigure(two, { problemText: P, claims: cl })).some((r) => /no such circle/.test(r)));
     });
+    await section('a claim on a hidden circle finds it (worksheet3 p6: semicircle drawn as an arc on a hidden circle)', () => {
+      const P = 'The figure is a rectangle with a semicircle on one end. Find its area and perimeter. Use π ≈ 3.14. [Figure: rectangle 10 cm by 6 cm; a semicircle on the right end, its diameter the dashed right side.]';
+      const f: Fig = { action: 'showGeometryConstructed',
+        given: [{ id: 'A', kind: 'point', x: 0, y: 0 }, { id: 'B', kind: 'point', x: 10, y: 0 }, { id: 'C', kind: 'point', x: 10, y: 6 }, { id: 'D', kind: 'point', x: 0, y: 6 },
+          { id: 'sAB', kind: 'segment', from: 'A', to: 'B', label: '10 cm' }, { id: 'sDA', kind: 'segment', from: 'D', to: 'A', label: '6 cm' }, { id: 'sCD', kind: 'segment', from: 'C', to: 'D' }],
+        steps: [{ id: 'sBC', kind: 'segment', from: 'B', to: 'C', dashed: true }, { id: 'M', kind: 'midpoint', of: { from: 'B', to: 'C' } },
+          { id: 'c1', kind: 'circle', center: 'M', radius: 3, hidden: true }, { id: 'arc1', kind: 'arc', on: 'c1', from: 'B', to: 'C', direction: 'ccw' }],
+        display: { grid: false, axes: false } } as unknown as Fig;
+      const cl = [{ kind: 'on_circle' as const, point: 'B', circle: 'c1' }, { kind: 'on_circle' as const, point: 'C', circle: 'c1' }];
+      assert.deepEqual(validateFigure(f, { problemText: P, claims: cl }), { ok: true });
+      const off = { ...f, steps: [...(f as { steps: unknown[] }).steps.slice(0, 2), { id: 'c1', kind: 'circle', center: 'M', radius: 4, hidden: true }] } as unknown as Fig;
+      assert.ok(reasonsOf(validateFigure(off, { problemText: P, claims: cl })).some((r) => /on_circle B c1 fails/.test(r)), 'a hidden circle is checked, not skipped');
+    });
     await section('a graph with a field the board cannot draw (segments) fails, saying what a graph holds', () => {
       const g = graph({ segments: [{ from: [9, 2], to: [18, 2] }] } as never);
       const r = reasonsOf(validateFigure(g, { problemText: P8, claims: [] }));

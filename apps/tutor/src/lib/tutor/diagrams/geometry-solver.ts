@@ -3090,6 +3090,10 @@ export interface SolverOutput {
   /** `id` (2026-10-22, hw-14 p2): the circle's step id, so the homework
    *  validator can find an `incircle`/`circumcircle` by name; renderers ignore it. */
   circles: Array<GeometryCircle & { id?: string }>;
+  /** Circles built on but never drawn (`hidden`), for the homework validator's
+   *  on_circle claims (GAC 2026-10-23, worksheet3 p6: a semicircle drawn as an
+   *  arc on a hidden circle failed "no such circle"); renderers ignore it. */
+  hiddenCircles?: Array<{ id: string; center: string; radius: number }>;
   polygons: GeometryPolygon[];
   arcs: GeometryArc[];
   angles: GeometryAngle[];
@@ -3187,6 +3191,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
   const segments: GeometrySegment[] = [];
   const arcs: GeometryArc[] = [];
   const circles: SolverOutput['circles'] = [];
+  const hiddenCircles: NonNullable<SolverOutput['hiddenCircles']> = [];
   const conics: GeometryConic[] = [];
   const anglesOut: GeometryAngle[] = [];
   const polygons: GeometryPolygon[] = [];
@@ -3292,7 +3297,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
         style: dashedSet.has(obj.id) ? 'dashed' : undefined,
       });
     } else if (obj.kind === 'circle') {
-      if (obj.hidden) continue;   // built on, never drawn (hw-15 p4)
+      if (obj.hidden) { hiddenCircles.push({ id: obj.id, center: obj.center, radius: obj.radius }); continue; }   // built on, never drawn (hw-15 p4)
       circles.push({
         id: obj.id,
         center: obj.center,
@@ -3391,6 +3396,7 @@ export function solveGeometry(spec: ConstructedGeometrySpec): SolverOutput {
     points,
     segments,
     circles,
+    ...(hiddenCircles.length ? { hiddenCircles } : {}),
     polygons,
     arcs,
     angles: anglesOut,

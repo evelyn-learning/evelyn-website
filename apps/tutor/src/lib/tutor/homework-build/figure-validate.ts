@@ -268,19 +268,21 @@ function validateGeometry(
   const circles: Record<string, { cx: number; cy: number; r: number }> = {};
   const centerAlias = new Map<string, string | null>();
   const used = new Set<number>();
+  // A hidden circle (built on, never drawn) is still one the claims may name.
+  const allCircles: Array<{ id?: string; center: string; radius: number }> = [...solved.circles, ...(solved.hiddenCircles ?? [])];
   const solvedCircle = (i: number) => {
-    const c = solved.circles[i], ctr = points[c.center];
+    const c = allCircles[i], ctr = points[c.center];
     return ctr ? { cx: ctr.x, cy: ctr.y, r: c.radius } : undefined;
   };
   for (const g of [...fig.given, ...fig.steps] as Array<{ id?: string; center?: string; radius?: number; kind?: string }>) {
     if (!g.id || !/circle/.test(g.kind ?? '')) continue;
-    let idx = solved.circles.findIndex((c, i) => !used.has(i) && c.id === g.id);
-    if (idx < 0 && typeof g.center === 'string') idx = solved.circles.findIndex((c, i) => !used.has(i) && c.center === g.center && (g.radius === undefined || Math.abs(c.radius - g.radius) < 1e-9));
+    let idx = allCircles.findIndex((c, i) => !used.has(i) && c.id === g.id);
+    if (idx < 0 && typeof g.center === 'string') idx = allCircles.findIndex((c, i) => !used.has(i) && c.center === g.center && (g.radius === undefined || Math.abs(c.radius - g.radius) < 1e-9));
     const circ = idx < 0 ? undefined : solvedCircle(idx);
     if (!circ) continue;
     used.add(idx);
     circles[g.id] = circ;
-    const center = solved.circles[idx].center;
+    const center = allCircles[idx].center;
     // 2026-10-21 (hw-11 problem 5, "quarter circles centered at A and C"): the
     // claims reader names a circle by its centre ("circle A"). When no shape
     // carries that id, the centre's name reaches its circle — one circle per
@@ -290,7 +292,7 @@ function validateGeometry(
     }
   }
   // A solved circle no spec entry claimed is still a circle of the figure, under its own id.
-  solved.circles.forEach((c, i) => {
+  allCircles.forEach((c, i) => {
     const circ = used.has(i) || !c.id || circles[c.id] ? undefined : solvedCircle(i);
     if (circ && c.id) circles[c.id] = circ;
   });
