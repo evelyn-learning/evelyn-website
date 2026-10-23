@@ -13,6 +13,7 @@ import {
   buildOpenerClause,
   buildHomeworkOpenerClause,
   buildSystemPrompt,
+  FIGURE_HOOK_RULE,
   STALE_CHECKPOINT_REORIENT_CLAUSE,
   type SystemPromptContext,
 } from '../src/lib/tutor/ai/system-prompt-builder';
@@ -320,6 +321,14 @@ function main() {
   });
   test('in-flow opener returns null outside the opening phase', () => {
     assert.equal(buildInFlowOpenerClause({ openingPhase: false, studentName: 'Maya' }), null);
+  });
+
+  // B6 (2026-10-23): a hook that narrates a figure must draw it.
+  test('B6: the opener and the whole-sheet homework opener carry the figure-hook rule; one-problem does not need it', () => {
+    assert.ok(buildOpenerClause({ ...baseCtx, openingPhase: true })!.includes(FIGURE_HOOK_RULE));
+    assert.ok(buildHomeworkOpenerClause({ openingPhase: true, studentName: 'Maya' })!.includes(FIGURE_HOOK_RULE));
+    assert.ok(!buildHomeworkOpenerClause({ openingPhase: true, studentName: 'Maya', oneProblem: true })!.includes(FIGURE_HOOK_RULE), 'one-problem already bans the picture-this hook');
+    assert.ok(!/\d/.test(FIGURE_HOOK_RULE), 'generic: no digits');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

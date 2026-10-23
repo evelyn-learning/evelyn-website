@@ -1533,6 +1533,12 @@ Every academic response includes a whiteboard tool call — never explain withou
  * Generic by design (no topic-specific examples) per
  * feedback_generic_prompts.
  */
+/** B6 (2026-10-23, session portal-8e7849a0: "Picture a graph…" → "i dont see
+ *  the graph"): a hook that asks the student to look at or picture a figure
+ *  must draw that figure in the same turn, or not describe it. Generic. */
+export const FIGURE_HOOK_RULE =
+  ' If you ask the student to picture or look at a figure (a graph, diagram, shape or scene), drawing that figure is your board call this turn; if you will not draw it, do not describe it.';
+
 export function buildOpenerClause(ctx: SystemPromptContext): string | null {
   if (!ctx.openingPhase) return null;
 
@@ -1548,7 +1554,8 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
   const boardFirstClause =
     ' HARD RULE for this opening turn: put something on the board — your FIRST tool call is a ' +
     'whiteboard render (a written hook, sketch, diagram, or the day\'s problem), issued before ' +
-    'or alongside your first substantive sentence. Do not end the turn with an empty board.';
+    'or alongside your first substantive sentence. Do not end the turn with an empty board.' +
+    FIGURE_HOOK_RULE;
 
   // Agenda rail (2026-08-10, retiring the opening "Agenda" card): the
   // persistent rail (Task 3) is already on the board above the whiteboard —
@@ -1680,7 +1687,8 @@ export function buildHomeworkOpenerClause(
     : 'Open by greeting the student warmly in one short sentence (no student name is available — never speak a placeholder value as if it were their name)';
   return (
     `${greet}, then put the first problem on the board and ask your first question about it — ` +
-    'no getting-to-know-you exchange, no calibration questions, no recap of prior sessions.'
+    'no getting-to-know-you exchange, no calibration questions, no recap of prior sessions.' +
+    FIGURE_HOOK_RULE
   );
 }
 
