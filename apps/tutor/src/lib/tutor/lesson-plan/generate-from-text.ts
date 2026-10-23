@@ -55,6 +55,36 @@ const STAGE2_MAX_TOKENS = 8192; // Per-LO expansion can be larger.
 
 const anthropic = getModelClient('plangen-fast').client;
 
+/**
+ * 2026-10-22 — env-gated effort knob for the two plan-generation stages
+ * (plangen model-compare eval). Haiku 5.5 / Sonnet 5 run adaptive thinking
+ * by default and the thinking tokens count toward `max_tokens`, so a newer
+ * model on this role needs `output_config.effort` and a roomier Stage-1 cap
+ * (1 500 → 4 000) or the LO list can truncate. UNSET ⇒ the request body is
+ * returned as the SAME object, byte-identical to before the knob existed
+ * (asserted by scripts/test-plangen-effort-knob.ts) — today's Haiku 4.5
+ * requests never change. Any value other than low|medium|high is ignored.
+ */
+const STAGE1_MAX_TOKENS_WITH_EFFORT = 4000;
+export type PlangenEffort = 'low' | 'medium' | 'high';
+
+export function plangenEffort(raw: string | undefined = process.env.TUTOR_PLANGEN_EFFORT): PlangenEffort | undefined {
+  return raw === 'low' || raw === 'medium' || raw === 'high' ? raw : undefined;
+}
+
+export function withPlangenEffort<T extends { max_tokens: number }>(
+  params: T,
+  stage: 1 | 2,
+  effort: PlangenEffort | undefined = plangenEffort(),
+): T {
+  if (!effort) return params;
+  return {
+    ...params,
+    ...(stage === 1 ? { max_tokens: Math.max(params.max_tokens, STAGE1_MAX_TOKENS_WITH_EFFORT) } : {}),
+    output_config: { effort },
+  } as T;
+}
+
 /* ------------------------------------------------------------------ */
 /* Plan-id + LO-id identity                                           */
 /* ------------------------------------------------------------------ */
@@ -235,7 +265,7 @@ export async function extractLearningObjectives(
 
   let raw = '';
   try {
-    const response = await anthropic.messages.create({
+    const response = await anthropic.messages.create(withPlangenEffort({
       model: HAIKU_MODEL_ID,
       max_tokens: STAGE1_MAX_TOKENS,
       system: STAGE1_SYSTEM,
@@ -250,7 +280,7 @@ export async function extractLearningObjectives(
           ],
         },
       ],
-    });
+    }, 1));
     for (const block of response.content) {
       if (block.type === 'text') raw += block.text;
     }
@@ -446,7 +476,7 @@ export async function expandSegmentsForLOs(
 
   let raw = '';
   try {
-    const response = await anthropic.messages.create({
+    const response = await anthropic.messages.create(withPlangenEffort({
       model: HAIKU_MODEL_ID,
       max_tokens: STAGE2_MAX_TOKENS,
       system: opts?.system ?? STAGE2_SYSTEM,
@@ -461,7 +491,7 @@ export async function expandSegmentsForLOs(
           ],
         },
       ],
-    });
+    }, 2));
     for (const block of response.content) {
       if (block.type === 'text') raw += block.text;
     }
