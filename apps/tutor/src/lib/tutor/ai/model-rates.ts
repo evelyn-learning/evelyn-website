@@ -13,14 +13,21 @@ export interface ModelRate {
   cacheRead?: number;
   cacheWrite5m?: number;
   cacheWrite1h?: number;
+  /** A second rate card for a request whose prompt (input + cache reads +
+   *  cache writes) is over `above` tokens. */
+  longContext?: { above: number } & Omit<ModelRate, 'longContext'>;
 }
 
 export const MODEL_RATES: Record<string, ModelRate> = {
   // Current Anthropic models
   'claude-sonnet-5': { input: 2, output: 10, cacheRead: 0.2, cacheWrite5m: 2.5, cacheWrite1h: 4 },
   'claude-sonnet-4-6': { input: 3, output: 15, cacheRead: 0.3, cacheWrite5m: 3.75, cacheWrite1h: 6 },
-  // 2026-10-22: Haiku 5.5 list price (prompts ≤ 100K) — priced for the plangen model-compare eval.
-  'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite5m: 0.125, cacheWrite1h: 0.2 },
+  // 2026-10-22: Haiku 5.5 list price. Two cards by prompt length: a tutor brain
+  // turn (~110K prompt) always pays the long one (2026-10-23 brain trial).
+  'claude-haiku-5-5': {
+    input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite5m: 0.125, cacheWrite1h: 0.2,
+    longContext: { above: 100_000, input: 0.5, output: 2.5, cacheRead: 0.05, cacheWrite5m: 0.625, cacheWrite1h: 1 },
+  },
   'claude-haiku-4-5': { input: 1, output: 5, cacheRead: 0.1, cacheWrite5m: 1.25, cacheWrite1h: 2 },
   'claude-haiku-4-5-20251001': { input: 1, output: 5, cacheRead: 0.1, cacheWrite5m: 1.25, cacheWrite1h: 2 },
   'claude-opus-5': { input: 5, output: 25, cacheRead: 0.5, cacheWrite5m: 6.25, cacheWrite1h: 10 },
@@ -50,4 +57,12 @@ export function lookupModelRate(model: string | undefined): ModelRate | undefine
     if (model.startsWith(key) && (!best || key.length > best.length)) best = key;
   }
   return best ? MODEL_RATES[best] : undefined;
+}
+
+/** The card that prices one request with this many prompt tokens. A summed
+ *  multi-call entry is priced by its summed prompt — for the brain each call
+ *  carries the ~110K shared prompt, so the long card is right either way. */
+export function rateForPrompt(rate: ModelRate | undefined, promptTokens: number): ModelRate | undefined {
+  if (!rate?.longContext || !(promptTokens > rate.longContext.above)) return rate;
+  return rate.longContext;
 }

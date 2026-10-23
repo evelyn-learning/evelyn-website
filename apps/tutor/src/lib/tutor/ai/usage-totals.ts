@@ -18,7 +18,7 @@
  *
  * Pure, client-safe (plain data + arithmetic; no env, no I/O).
  */
-import { MODEL_RATES, lookupModelRate } from './model-rates';
+import { MODEL_RATES, lookupModelRate, rateForPrompt } from './model-rates';
 
 // Pricing per 1M tokens — sourced from the shared rate card (model-rates.ts)
 // so every estimate in the app prices from ONE table. Brain turns run the
@@ -241,7 +241,7 @@ function entryCost(u: UsageEntry, voiceEngine: unknown): number {
   // model actually used (Sonnet, DeepSeek, …). Entries without a model
   // (greeting/chat/homework + historical records) fall back to
   // FALLBACK_PRICING.
-  const r = lookupModelRate(typeof u.model === 'string' ? u.model : undefined);
+  const r = rateForPrompt(lookupModelRate(typeof u.model === 'string' ? u.model : undefined), n(u.inputTokens) + n(u.cacheReadTokens) + n(u.cacheCreationTokens));
   return (n(u.inputTokens) / 1_000_000) * (r?.input ?? FALLBACK_PRICING.input)
        + (n(u.outputTokens) / 1_000_000) * (r?.output ?? FALLBACK_PRICING.output)
        + (n(u.cacheReadTokens) / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : FALLBACK_PRICING.cacheRead)

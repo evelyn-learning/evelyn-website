@@ -12,7 +12,7 @@
  * mock-exam report) reporting is a no-op.
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { lookupModelRate } from '../ai/model-rates';
+import { lookupModelRate, rateForPrompt } from '../ai/model-rates';
 
 export interface GradeCallUsage {
   model: string;
@@ -51,7 +51,7 @@ export async function collectGradeUsage<T>(fn: () => Promise<T>): Promise<{ resu
 export function gradeUsageCost(calls: GradeCallUsage[]): number {
   let cost = 0;
   for (const c of calls) {
-    const r = lookupModelRate(c.model);
+    const r = rateForPrompt(lookupModelRate(c.model), c.inputTokens + c.cacheReadTokens + c.cacheCreationTokens);
     if (!r) continue;
     cost += (c.inputTokens * r.input
       + c.outputTokens * r.output
