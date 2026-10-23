@@ -145,3 +145,54 @@ export function textFieldReasons(fields: Array<{ value: unknown; axis?: boolean 
   }
   return out;
 }
+
+// ---- Numeric provenance: a drawn number must be a number the text states ----
+
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const NUMBER_WORD_RE = new RegExp(`(?<![A-Za-z0-9-])(?:${NUMBER_WORDS.join('|')})(?![A-Za-z0-9-])`, 'gi');
+// optional sign, then a number token with no letter/digit directly before it and no digit after it
+const NUMBER_TOKEN_RE = /(?<![A-Za-z0-9.])(-?)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?(?:\/\d+)?)(?!\d)(%?)/g;
+
+function tokenValue(body: string): number | null {
+  if (body.includes('/')) {
+    const [a, b] = body.split('/').map(Number);
+    return b === 0 ? null : a / b;
+  }
+  const v = Number(body.replace(/,/g, ''));
+  return Number.isFinite(v) ? v : null;
+}
+
+/**
+ * Is this number one the problem text states? A whole numeric token (sign,
+ * thousands separators, decimal, a/b; units may follow; a `%` token also
+ * states value/100) or a small number word zero..twenty. A digit inside
+ * another token (P1, x2, 15, 2023) is not a stated number; "twenty-one" states
+ * neither 20 nor 21 (a hyphen-joined number word is not a small number word).
+ * A computed value therefore fails.
+ */
+export function numberIsFromText(value: number, problemText: string): boolean {
+  if (!Number.isFinite(value)) return false;
+  const text = normalise(problemText);
+  const eq = (a: number, b: number) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b));
+  for (const m of text.matchAll(NUMBER_TOKEN_RE)) {
+    const v = tokenValue(m[2]);
+    if (v === null) continue;
+    const signed = m[1] ? -v : v;
+    if (eq(value, signed)) return true;
+    if (m[3] && eq(value, signed / 100)) return true;
+  }
+  for (const m of text.matchAll(NUMBER_WORD_RE)) {
+    if (eq(value, NUMBER_WORDS.indexOf(m[0].toLowerCase()))) return true;
+  }
+  return false;
+}
+
+const CELL_RE = /^(-?)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?(?:\/\d+)?)\s*(%?)\s*[A-Za-z°]*$/;
+
+/** A cell or label written as a number (sign, separators, decimal, a/b, trailing % gives the percentage number, units). Anything else is null. */
+export function parseNumberCell(s: string): number | null {
+  const m = CELL_RE.exec(normalise(String(s ?? '')));
+  if (!m) return null;
+  const v = tokenValue(m[2]);
+  return v === null ? null : m[1] ? -v : v;
+}

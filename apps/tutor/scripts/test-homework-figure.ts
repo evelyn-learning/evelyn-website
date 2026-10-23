@@ -12,6 +12,7 @@
 import { strict as assert } from 'node:assert';
 import { homeworkFigureFor, titleNamesProblem } from '../src/lib/tutor/whiteboard/homework-figure';
 import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../src/lib/tutor/homework-build/figure-validate';
+import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
 
@@ -410,6 +411,29 @@ test('an internally tangent circle hole passes the containment guard on a small 
   assert.ok(!out.ok && out.reasons.includes('region "shade" fails: inner ch is not inside outer co'), out.ok ? 'passed' : out.reasons.join(' | '));
   const poke = validateFigure(circles({ x: 0.52, y: 0, r: 0.5 }, 1), { problemText: TANGENT_TEXT, claims: [] });
   assert.ok(!poke.ok && poke.reasons.includes('region "shade" fails: inner ch is not inside outer co'), poke.ok ? 'passed' : 'a hole poking 0.02 out still fails');
+});
+
+test('numberIsFromText: whole tokens, signs, separators, fractions, percentages, small number words', () => {
+  const T = (v: number, t: string) => numberIsFromText(v, t);
+  assert.ok(T(9, 'the median is ≈ 9 minutes'));
+  assert.ok(T(1200, 'a total of 1,200 people'));
+  assert.ok(T(-3, 'a closed dot at −3')); assert.ok(!T(3, 'a closed dot at −3'));
+  assert.ok(T(0.5, 'shade 1/2 of the bar'));
+  assert.ok(T(25, '25% chose red') && T(0.25, '25% chose red'));
+  assert.ok(T(10, 'a height of 10 cm') && T(10, 'height 10cm'));
+  assert.ok(T(1.5, 'a step of 1.50'));
+  assert.ok(T(3, 'three dots at 5') && T(20, 'Twenty students') && T(0, 'zero'));
+  // a range states both endpoints
+  assert.ok(T(90, 'scores of 90–100') && T(100, 'scores of 90–100'));
+  assert.ok(T(90, 'scores of 90-100') && T(100, 'scores of 90-100'));
+  assert.ok(T(21, 'twenty-one and 21'));
+  // a digit inside another token is not a stated number
+  for (const [v, t] of [[1, 'point P1'], [2, 'x2 + 1'], [5, '15 students'], [20, 'in 2023'], [21, 'twenty-one'], [9, 'about 19']] as const) assert.ok(!T(v, t), `${v} in "${t}"`);
+  assert.ok(!T(1, 'twenty-one') && !T(20, 'twenty-one'), 'hyphen-joined number words state neither part');
+  assert.ok(!T(7, 'seventeen') && !T(25, 'twenty five'));
+  assert.equal(parseNumberCell('1,200'), 1200); assert.equal(parseNumberCell('3/4'), 0.75); assert.equal(parseNumberCell('Red'), null);
+  assert.equal(parseNumberCell('25%'), 25); assert.equal(parseNumberCell('−3.5'), -3.5); assert.equal(parseNumberCell('10 cm'), 10);
+  assert.equal(parseNumberCell('x2'), null); assert.equal(parseNumberCell('1/0'), null); assert.equal(parseNumberCell(''), null);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
