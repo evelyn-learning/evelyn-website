@@ -941,6 +941,21 @@ test('coordinate plane: a transformation image is drawn only when the sheet stat
   assert.deepEqual(statsOk({ action: 'showDiagram', type: 'transformation', params: { shape: { type: 'triangle', vertices: pre }, transform: { type: 'reflect', axis: 'y' } } } as unknown as Fig, TR),
     { ok: false, reasons: ['unsupported figure kind "showDiagram:transformation"'] });
 });
+test('coordinate plane: each point is a stated (x, y) pair, not two numbers found anywhere in the text', () => {
+  const T = 'Reflect triangle ABC over the line y = x. [Figure: triangle ABC with vertices A(1, 2), B(3, 4), C(2, 5) on a grid.]';
+  const pre = [{ x: 1, y: 2 }, { x: 3, y: 4 }, { x: 2, y: 5 }];
+  const image = pre.map((p) => ({ x: p.y, y: p.x }));
+  assert.deepEqual(statsOk({ action: 'showCoordinatePlane', points: pre } as unknown as Fig, T), { ok: true });
+  // (2, 1), (4, 3), (5, 2): every coordinate is in the text, but no pair is.
+  statsFails({ action: 'showCoordinatePlane', points: image } as unknown as Fig, T, /\(2, 1\) in points\[0\] is not a coordinate pair the problem text states/);
+  statsFails({ action: 'showCoordinatePlane', segments: [{ from: pre[0], to: image[1] }] } as unknown as Fig, T, /\(4, 3\) in segments\[0\]\.to is not a coordinate pair/);
+  // Spacing, a label prefix and typeset minus signs are all the same pair.
+  for (const t of ['P(-1,4)', 'P( −1 , 4 )', '(−1, 4)', '(‒1, 4)', 'P (–1, 4)', '$(-1, 4)$']) {
+    assert.deepEqual(statsOk({ action: 'showCoordinatePlane', points: [{ x: -1, y: 4 }] } as unknown as Fig, `[Figure: the point ${t}.]`), { ok: true }, t);
+  }
+  // Reversed is not the pair.
+  statsFails({ action: 'showCoordinatePlane', points: [{ x: 4, y: -1 }] } as unknown as Fig, '[Figure: the point (−1, 4).]', /not a coordinate pair/);
+});
 test('coordinate plane: a bad range, a non-numeric or off-plane point, a bad segment or an unused field fails structurally', () => {
   statsFails({ ...cpFig(), xRange: [5, 1] } as unknown as Fig, CP, /xRange must be \[lo, hi\] with lo < hi/);
   const f = cpFig(); cpPts(f)[0].x = 'one';
@@ -1002,6 +1017,12 @@ test('coordinate grid: a computed point or unstated label fails on provenance', 
   statsFails(f, GRID, /number 0\.5 in params\.points\[2\]\.x does not come from the problem text/);
   const g = gridFig(); (paramsOf(g).points as Obj[])[0].label = 'P(2, 3) midpoint';
   statsFails(g, GRID, /label "P\(2, 3\) midpoint"/);
+});
+test('coordinate grid: each point is a stated (x, y) pair', () => {
+  const T = '[Figure: triangle ABC with vertices A(1, 2), B(3, 4), C(2, 5) on a grid.]';
+  const grid = (points: Obj[]) => ({ action: 'showDiagram', type: 'coordinate_grid', params: { points } } as unknown as Fig);
+  assert.deepEqual(statsOk(grid([{ x: 1, y: 2 }, { x: 3, y: 4 }, { x: 2, y: 5 }]), T), { ok: true });
+  statsFails(grid([{ x: 2, y: 1 }, { x: 4, y: 3 }, { x: 5, y: 2 }]), T, /\(2, 1\) in params\.points\[0\] is not a coordinate pair the problem text states/);
 });
 test('coordinate grid: bad points, quadrants, bounds or an unused param fail structurally (before the solver can default)', () => {
   statsFails({ action: 'showDiagram', type: 'coordinate_grid', params: { points: 'P' } } as unknown as Fig, GRID, /coordinate_grid points must be an array/);

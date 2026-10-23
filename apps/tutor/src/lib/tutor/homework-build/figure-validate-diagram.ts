@@ -18,7 +18,7 @@
  */
 
 import { solveDiagram } from '../diagrams/catalog/manifest';
-import { normalise, numberIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
+import { normalise, numberIsFromText, pairIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
 import type { FigureContext } from './figure-validate';
 import type { DiagramFigure } from './types';
 
@@ -251,8 +251,9 @@ function validateInequalityGraph(params: Record<string, unknown>, ctx: FigureCon
 export const GRID_MAX_POINTS = 40;
 
 /**
- * coordinate_grid: every plotted point at stated coordinates (an unlabelled
- * point prints its own coordinates, which are then stated too), labels and
+ * coordinate_grid: every plotted point at stated coordinates, written in the
+ * text as the pair "(x, y)" (two numbers stated apart are not the point; an
+ * unlabelled point prints its own coordinates, which are then stated too), labels and
  * the title from the text. quadrants and the x/y bounds are scaffolding
  * (structure only). After the gate, the solved grid (its auto-fit, clamped
  * to a 30-unit span) must hold every point: a point off the grid is not drawn.
@@ -277,8 +278,10 @@ function validateCoordinateGrid(params: Record<string, unknown>, ctx: FigureCont
     if (p.label !== undefined && typeof p.label !== 'string') reasons.push(`${where}: label must be a string`);
     else reasons.push(...textFieldReasons([{ value: p.label }], text));
     if (!isNum(p.x) || !isNum(p.y)) { reasons.push(`${where}: x and y must be finite numbers`); return; }
-    if (!numberIsFromText(p.x, text)) reasons.push(`number ${p.x} in ${where}.x does not come from the problem text`);
-    if (!numberIsFromText(p.y, text)) reasons.push(`number ${p.y} in ${where}.y does not come from the problem text`);
+    const xOk = numberIsFromText(p.x, text), yOk = numberIsFromText(p.y, text);
+    if (!xOk) reasons.push(`number ${p.x} in ${where}.x does not come from the problem text`);
+    if (!yOk) reasons.push(`number ${p.y} in ${where}.y does not come from the problem text`);
+    if (xOk && yOk && !pairIsFromText(p.x, p.y, text)) reasons.push(`(${p.x}, ${p.y}) in ${where} is not a coordinate pair the problem text states (write each point as the sheet writes it, "(x, y)"; a computed point is never drawn)`);
   });
   if (reasons.length) return reasons;
   try {

@@ -107,7 +107,7 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   },
   {
     id: 'showCoordinatePlane', box: 'fixed',
-    when: 'the sheet shows points, segments or a polygon plotted on a coordinate plane at stated coordinates (not a function graph): each vertex as a point, each side as a segment; a transformation only when the sheet states the vertices of both the shape and its image; never a computed image, a shaded region or a boundary line the student must find',
+    when: 'the sheet shows points, segments or a polygon plotted on a coordinate plane at stated coordinates (not a function graph): each point and segment end an ordered pair the text writes as (x, y); each vertex as a point, each side as a segment; a transformation only when the sheet writes the vertices of both the shape and its image as pairs; never a computed image, a shaded region or a boundary line the student must find',
     shape: '{"action":"showCoordinatePlane","title"?,"xRange"?:[lo,hi],"yRange"?:[lo,hi],"xLabel"?,"yLabel"?,"points"?:[{"x","y","label"?}],"segments"?:[{"from":{"x","y"},"to":{"x","y"},"label"?,"dashed"?}],"vectors"?:[{"from"?:{"x","y"},"to":{"x","y"},"label"?}]}',
   },
   {
@@ -117,7 +117,7 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   },
   {
     id: 'showDiagram:coordinate_grid', box: 'fixed',
-    when: 'the sheet shows ordered pairs plotted on a coordinate grid (connect:true when the sheet joins them into a segment or polygon); every point at its stated coordinates; a blank grid when the sheet gives one to plot on',
+    when: 'the sheet shows ordered pairs plotted on a coordinate grid (connect:true when the sheet joins them into a segment or polygon); every point an ordered pair the text writes as (x, y); a blank grid when the sheet gives one to plot on',
     shape: diagramShape('coordinate_grid'),
   },
 ];

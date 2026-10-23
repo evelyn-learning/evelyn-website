@@ -8,7 +8,7 @@
  * bins from raw data) is drawn only when the text states it. Pure.
  */
 
-import { numberIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
+import { numberIsFromText, pairIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
 import type { FigureContext } from './figure-validate';
 import type { FigureCommand, StatsFigure } from './types';
 
@@ -483,10 +483,15 @@ export const PLANE_DEFAULT_RANGE: [number, number] = [-10, 10];
  * provenance-checked); every drawn coordinate (each point, each segment and
  * vector end; a vector's tail defaults to the origin, which states nothing)
  * is a number the text states, and the title, axis labels, every label and
- * notes come from the text. So a transformation's image is drawn only when
- * the sheet states its vertices: a computed image fails on its numbers. A
- * drawn coordinate outside the plane's range (default −10..10) would be drawn
- * off the plot. The renderer cannot shade a region.
+ * notes come from the text. Each point and each segment end is more: an
+ * ordered pair the text writes as "(x, y)" (pairIsFromText). Numbers alone do
+ * not keep a computed image out: reflecting A(1, 2), B(3, 4), C(2, 5) over
+ * y = x gives (2, 1), (4, 3), (5, 2), every coordinate of which the text
+ * states. So a transformation's image is drawn only when the sheet writes its
+ * vertices as pairs. A vector end is checked by its numbers only (a sheet may
+ * write a vector as ⟨a, b⟩). A drawn coordinate outside the plane's range
+ * (default −10..10) would be drawn off the plot. The renderer cannot shade a
+ * region.
  */
 export function validateCoordinatePlaneFigure(fig: Extract<FigureCommand, { action: 'showCoordinatePlane' }>, ctx: FigureContext): string[] {
   const text = ctx.problemText;
@@ -516,10 +521,12 @@ export function validateCoordinatePlaneFigure(fig: Extract<FigureCommand, { acti
     return v;
   };
   const isXY = (v: unknown): v is { x: number; y: number } => !!v && typeof v === 'object' && isNum((v as Record<string, unknown>).x) && isNum((v as Record<string, unknown>).y);
-  /** One stated coordinate pair, drawn inside the plane. */
-  const stated = (p: { x: number; y: number }, where: string) => {
-    if (!numberIsFromText(p.x, text)) reasons.push(`number ${p.x} in ${where}.x does not come from the problem text`);
-    if (!numberIsFromText(p.y, text)) reasons.push(`number ${p.y} in ${where}.y does not come from the problem text`);
+  /** One stated coordinate pair, drawn inside the plane; `asPair`: the text writes it as "(x, y)". */
+  const stated = (p: { x: number; y: number }, where: string, asPair = true) => {
+    const xOk = numberIsFromText(p.x, text), yOk = numberIsFromText(p.y, text);
+    if (!xOk) reasons.push(`number ${p.x} in ${where}.x does not come from the problem text`);
+    if (!yOk) reasons.push(`number ${p.y} in ${where}.y does not come from the problem text`);
+    if (asPair && xOk && yOk && !pairIsFromText(p.x, p.y, text)) reasons.push(`(${p.x}, ${p.y}) in ${where} is not a coordinate pair the problem text states (write each point as the sheet writes it, "(x, y)"; a computed point is never drawn)`);
     if (p.x < xr[0] || p.x > xr[1] || p.y < yr[0] || p.y > yr[1]) reasons.push(`(${p.x}, ${p.y}) in ${where} is outside xRange/yRange`);
   };
   const item = (raw: unknown, where: string, keys: readonly string[]): Record<string, unknown> | null => {
@@ -552,8 +559,8 @@ export function validateCoordinatePlaneFigure(fig: Extract<FigureCommand, { acti
     const v = item(raw, where, ['from', 'to', 'label', 'color']);
     if (!v) return;
     if (!isXY(v.to) || (v.from !== undefined && !isXY(v.from))) { reasons.push(`${where}: to (and from, when given) must be { x, y } with finite numbers`); return; }
-    if (v.from !== undefined) stated(v.from as { x: number; y: number }, `${where}.from`);
-    stated(v.to, `${where}.to`);
+    if (v.from !== undefined) stated(v.from as { x: number; y: number }, `${where}.from`, false);
+    stated(v.to, `${where}.to`, false);
   });
   return reasons;
 }

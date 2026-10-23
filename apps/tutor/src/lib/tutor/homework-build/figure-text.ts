@@ -187,6 +187,34 @@ export function numberIsFromText(value: number, problemText: string): boolean {
   return false;
 }
 
+// An ordered pair as a sheet writes it: "(1, 2)", "A(1,2)", "( −1 , 4 )". The
+// label prefix needs no pattern (the pair is matched inside "A(1, 2)").
+const PAIR_NUM = String.raw`(-?\s?\d+(?:\.\d+)?(?:\/\d+)?)`;
+const PAIR_RE = new RegExp(String.raw`\(\s*${PAIR_NUM}\s*,\s*${PAIR_NUM}\s*\)`, 'g');
+
+/**
+ * Is (x, y) written in the text as an ordered pair "(x, y)": spacing, a label
+ * prefix (A(1, 2)) and typeset minus signs (− ‒ – ﹣ －) aside? Two numbers
+ * stated somewhere else in the text are not the pair: a reflection's image
+ * (2, 1) of A(1, 2) uses only stated numbers but is the student's answer.
+ */
+export function pairIsFromText(x: number, y: number, problemText: string): boolean {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+  const text = normalise(problemText.replace(/[\u2212\u2012\u2013\ufe63\uff0d]/g, '-'));
+  const eq = (a: number, b: number) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b));
+  const val = (s: string) => {
+    const t = s.replace(/\s/g, '');
+    const neg = t.startsWith('-');
+    const v = tokenValue(neg ? t.slice(1) : t);
+    return v === null ? null : neg ? -v : v;
+  };
+  for (const m of text.matchAll(PAIR_RE)) {
+    const a = val(m[1]), b = val(m[2]);
+    if (a !== null && b !== null && eq(x, a) && eq(y, b)) return true;
+  }
+  return false;
+}
+
 const CELL_RE = /^(-?)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?(?:\/\d+)?)\s*(%?)\s*[A-Za-z°]*$/;
 
 /** A cell or label written as a number (sign, separators, decimal, a/b, trailing % gives the percentage number, units). Anything else is null. */
