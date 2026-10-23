@@ -15,7 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
-import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, VENN, VENN3, TREE, vennFig, venn3Fig, treeFig, FRAC, TAPE, AREA, fracFig, tapeFig, areaFig, type Fig } from './fixtures/homework-figure-fixtures';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, VENN, VENN3, TREE, vennFig, venn3Fig, treeFig, FRAC, TAPE, AREA, fracFig, tapeFig, areaFig, CP, TR, INEQ, GRID, cpFig, ineqFig, gridFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -879,6 +879,119 @@ test('area model: an empty or non-positive side, a bad cellLabels matrix or an u
 });
 test('area model: the kill switch (geometry) rejects it', () => {
   assert.deepEqual(statsOk(areaFig(), AREA, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showDiagram:area_model"'] });
+});
+
+// ---------------------------------------------------------------- coordinate plane, inequality graph, coordinate grid (Task 16)
+
+const cpPts = (f: Fig) => (f as unknown as { points: Obj[] }).points;
+const cpSegs = (f: Fig) => (f as unknown as { segments: Array<Obj & { from: Obj; to: Obj }> }).segments;
+
+test('coordinate plane: the stated triangle passes (vertices, sides, labels; ranges are scaffolding)', () => {
+  assert.deepEqual(statsOk(cpFig(), CP), { ok: true });
+  // Any range, grid flag or a one-letter axis name passes; ranges are never provenance-checked.
+  assert.deepEqual(statsOk({ ...cpFig(), xRange: [-10, 10], yRange: [-3, 9], showGrid: false, xLabel: 'x', yLabel: 'y' } as unknown as Fig, CP), { ok: true });
+  // A vector between stated points passes; a vector from the origin (the default tail) passes.
+  assert.deepEqual(statsOk({ ...cpFig(), vectors: [{ from: { x: 1, y: 2 }, to: { x: 4, y: 2 } }, { to: { x: 1, y: 6 } }] } as unknown as Fig, CP), { ok: true });
+  // A blank plane (a "plot these" grid) passes.
+  assert.deepEqual(statsOk({ action: 'showCoordinatePlane', xRange: [-5, 5], yRange: [-5, 5] } as unknown as Fig, CP), { ok: true });
+});
+test('coordinate plane: a point, vertex or label the sheet does not state fails on provenance', () => {
+  // D(4, 6): both numbers happen to be stated (B and C), so the label is what fails.
+  const f = cpFig(); cpPts(f).push({ x: 4, y: 6, label: 'D' });
+  statsFails(f, CP, /label "D" does not come from the problem text/);
+  const g = cpFig(); cpPts(g)[1].x = 7;
+  statsFails(g, CP, /number 7 in points\[1\]\.x does not come from the problem text/);
+  const h = cpFig(); cpSegs(h)[0].to = { x: 4, y: 5 };
+  statsFails(h, CP, /number 5 in segments\[0\]\.to\.y/);
+  statsFails({ ...cpFig(), notes: 'Area = 6' } as unknown as Fig, CP, /label "Area = 6"/);
+  statsFails({ ...cpFig(), title: 'Triangle with area 6' } as unknown as Fig, CP, /label "Triangle with area 6"/);
+});
+test('coordinate plane: a transformation image is drawn only when the sheet states it (never computed)', () => {
+  const pre = [{ x: 1, y: 2 }, { x: 4, y: 2 }, { x: 1, y: 6 }];
+  const image = pre.map((p) => ({ x: -p.x, y: p.y }));
+  assert.deepEqual(statsOk({ action: 'showCoordinatePlane', points: pre } as unknown as Fig, TR), { ok: true });
+  statsFails({ action: 'showCoordinatePlane', points: [...pre, ...image] } as unknown as Fig, TR, /number -1 in points\[3\]\.x does not come from the problem text/);
+  // The sheet states both shapes' vertices: both are drawn.
+  const both = 'Triangle ABC has A(1, 2), B(4, 2), C(1, 6); its image after a reflection over the y-axis has vertices (−1, 2), (−4, 2), (−1, 6).';
+  assert.deepEqual(statsOk({ action: 'showCoordinatePlane', points: [...pre, ...image] } as unknown as Fig, both), { ok: true });
+  // The catalog transformation kind (which computes the image) is not in the vocabulary.
+  assert.deepEqual(statsOk({ action: 'showDiagram', type: 'transformation', params: { shape: { type: 'triangle', vertices: pre }, transform: { type: 'reflect', axis: 'y' } } } as unknown as Fig, TR),
+    { ok: false, reasons: ['unsupported figure kind "showDiagram:transformation"'] });
+});
+test('coordinate plane: a bad range, a non-numeric or off-plane point, a bad segment or an unused field fails structurally', () => {
+  statsFails({ ...cpFig(), xRange: [5, 1] } as unknown as Fig, CP, /xRange must be \[lo, hi\] with lo < hi/);
+  const f = cpFig(); cpPts(f)[0].x = 'one';
+  statsFails(f, CP, /points\[0\]: x and y must be finite numbers/);
+  statsFails({ ...cpFig(), xRange: [2, 8] } as unknown as Fig, CP, /\(1, 2\) in points\[0\] is outside xRange\/yRange/);
+  // No range given: the board's default is −10..10.
+  statsFails({ action: 'showCoordinatePlane', points: [{ x: 12, y: 2 }] } as unknown as Fig, '[Figure: the point (12, 2).]', /outside xRange\/yRange/);
+  const g = cpFig(); delete cpSegs(g)[0].to;
+  statsFails(g, CP, /segments\[0\]: from and to must be \{ x, y \}/);
+  statsFails({ ...cpFig(), shading: 'above' } as unknown as Fig, CP, /showCoordinatePlane field "shading" is not used/);
+  const h = cpFig(); cpPts(h)[0].size = 3;
+  statsFails(h, CP, /points\[0\] field "size" is not used/);
+});
+test('coordinate plane: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(cpFig(), CP, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showCoordinatePlane"'] });
+});
+
+test('inequality graph: the stated inequality passes (either way round, any operator spelling)', () => {
+  assert.deepEqual(statsOk(ineqFig(), INEQ), { ok: true });
+  const one = (operator: string, value: number, variable = 'x') => ({ action: 'showDiagram', type: 'inequality_graph', params: { variable, operator, value, title: undefined } } as unknown as Fig);
+  assert.deepEqual(statsOk(one('>=', 3), '[Figure: A number line showing x >= 3.]'), { ok: true });
+  assert.deepEqual(statsOk(one('>=', 3), '[Figure: The graph of $x \\geq 3$.]'), { ok: true });
+  assert.deepEqual(statsOk(one('<', -2, 'n'), '[Figure: A number line for n < −2 with an open circle at −2.]'), { ok: true });
+  // "−2 < x ≤ 5": each half is stated (reversed for the left half).
+  assert.deepEqual(statsOk(one('>', -2), '[Figure: A number line for −2 < x ≤ 5.]'), { ok: true });
+  assert.deepEqual(statsOk(one('<=', 5), '[Figure: A number line for −2 < x ≤ 5.]'), { ok: true });
+});
+test('inequality graph: a solution the student must find fails on provenance', () => {
+  // The boundary is the answer: 3 is not stated.
+  statsFails(ineqFig(), 'Solve 2x + 1 ≥ 7 and graph the solution on a number line.', /number 3 in params\.value does not come from the problem text/);
+  // The boundary number is stated, but the inequality x ≥ 3 is the answer, not the sheet's.
+  statsFails(ineqFig(), 'Solve 3x ≥ 9 and graph the solution.', /the inequality x >= 3 is not stated in the problem text/);
+  // The opposite direction, or a variable the sheet does not use (the solver's default x included).
+  const f = ineqFig(); paramsOf(f).operator = '<=';
+  statsFails(f, INEQ, /the inequality x <= 3 is not stated/);
+  const g = ineqFig(); delete paramsOf(g).variable;
+  statsFails(g, '[Figure: A number line showing n ≥ 3.]', /the inequality x >= 3 is not stated/);
+  statsFails({ ...ineqFig(), params: { ...paramsOf(ineqFig()), title: 'x = 3 or more' } } as unknown as Fig, INEQ, /label "x = 3 or more"/);
+});
+test('inequality graph: a bad operator, a non-numeric value or an unused param fails structurally', () => {
+  const f = ineqFig(); paramsOf(f).operator = '==';
+  statsFails(f, INEQ, /inequality_graph operator must be one of <, >, <=, >=/);
+  const g = ineqFig(); paramsOf(g).value = '3';
+  statsFails(g, INEQ, /inequality_graph value must be a finite number/);
+  statsFails({ ...ineqFig(), params: { ...paramsOf(ineqFig()), shade: 'right' } } as unknown as Fig, INEQ, /inequality_graph param "shade" is not used/);
+});
+test('inequality graph: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(ineqFig(), INEQ, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showDiagram:inequality_graph"'] });
+});
+
+test('coordinate grid: the stated points pass (bounds are scaffolding; a blank grid passes)', () => {
+  assert.deepEqual(statsOk(gridFig(), GRID), { ok: true });
+  assert.deepEqual(statsOk({ ...gridFig(), params: { ...paramsOf(gridFig()), xMin: -5, xMax: 5, yMin: -5, yMax: 5, quadrants: 4, connect: true, title: 'grid' } } as unknown as Fig, GRID), { ok: true });
+  assert.deepEqual(statsOk({ action: 'showDiagram', type: 'coordinate_grid', params: {} } as unknown as Fig, GRID), { ok: true });
+});
+test('coordinate grid: a computed point or unstated label fails on provenance', () => {
+  // The midpoint of PQ is the answer.
+  const f = gridFig(); (paramsOf(f).points as Obj[]).push({ x: 0.5, y: 3.5, label: 'M' });
+  statsFails(f, GRID, /number 0\.5 in params\.points\[2\]\.x does not come from the problem text/);
+  const g = gridFig(); (paramsOf(g).points as Obj[])[0].label = 'P(2, 3) midpoint';
+  statsFails(g, GRID, /label "P\(2, 3\) midpoint"/);
+});
+test('coordinate grid: bad points, quadrants, bounds or an unused param fail structurally (before the solver can default)', () => {
+  statsFails({ action: 'showDiagram', type: 'coordinate_grid', params: { points: 'P' } } as unknown as Fig, GRID, /coordinate_grid points must be an array/);
+  const f = gridFig(); (paramsOf(f).points as Obj[])[0].x = '2';
+  statsFails(f, GRID, /params\.points\[0\]: x and y must be finite numbers/);
+  statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), quadrants: 2 } } as unknown as Fig, GRID, /coordinate_grid quadrants must be 1 or 4/);
+  statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), xMax: 'ten' } } as unknown as Fig, GRID, /coordinate_grid xMax must be a finite number/);
+  // An explicit bound that leaves a stated point off the grid.
+  statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), xMax: 1 } } as unknown as Fig, GRID, /point \(2, 3\) in params\.points\[0\] is off the grid/);
+  statsFails({ ...gridFig(), params: { ...paramsOf(gridFig()), shadeBelow: true } } as unknown as Fig, GRID, /coordinate_grid param "shadeBelow" is not used/);
+});
+test('coordinate grid: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(gridFig(), GRID, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showDiagram:coordinate_grid"'] });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

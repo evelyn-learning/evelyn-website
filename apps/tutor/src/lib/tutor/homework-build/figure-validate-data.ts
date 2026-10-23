@@ -1,7 +1,7 @@
 /**
  * Validators for the data homework figures: showStats (box plot, histogram,
  * dot plot, bar, pie), showTable, showNumberLine, showScatterPlot,
- * showVennDiagram, showTree and showFractionBar. Structural: the chart must render as the
+ * showVennDiagram, showTree, showFractionBar and showCoordinatePlane. Structural: the chart must render as the
  * sheet shows it. Provenance: every drawn number is one the problem text
  * states (numberIsFromText) and every free-text field comes from the text
  * (textFieldReasons). A number the renderer would compute (pie percentages,
@@ -463,6 +463,94 @@ export function validateFractionBarFigure(fig: Extract<FigureCommand, { action: 
     // fraction is matched as written, never by value: "2/4" states 2/4, not 1/2.
     const stated = fractionTokenInText(n, d, text) || (numberIsFromText(n, text) && numberIsFromText(d, text));
     if (!stated) reasons.push(`fraction ${n}/${d} in ${where} does not come from the problem text (copy the fraction as written)`);
+  });
+  return reasons;
+}
+
+/** Bounds for the homework gate (the thumbnail draws no more than this). */
+export const PLANE_MAX_POINTS = 40;
+export const PLANE_MAX_SEGMENTS = 40;
+export const PLANE_MAX_VECTORS = 20;
+/** CoordinatePlaneRenderer's default ranges. */
+export const PLANE_DEFAULT_RANGE: [number, number] = [-10, 10];
+
+/**
+ * showCoordinatePlane (a plotted shape, not a function graph): the ranges,
+ * axis names and grid flag are scaffolding (structure only, never
+ * provenance-checked); every drawn coordinate (each point, each segment and
+ * vector end; a vector's tail defaults to the origin, which states nothing)
+ * is a number the text states, and the title, axis labels, every label and
+ * notes come from the text. So a transformation's image is drawn only when
+ * the sheet states its vertices: a computed image fails on its numbers. A
+ * drawn coordinate outside the plane's range (default −10..10) would be drawn
+ * off the plot. The renderer cannot shade a region.
+ */
+export function validateCoordinatePlaneFigure(fig: Extract<FigureCommand, { action: 'showCoordinatePlane' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = Object.keys(f)
+    .filter((k) => k !== 'action' && f[k] !== undefined && !['title', 'xRange', 'yRange', 'xLabel', 'yLabel', 'points', 'segments', 'vectors', 'showGrid', 'notes'].includes(k))
+    .map((k) => `showCoordinatePlane field "${k}" is not used by a coordinate plane`);
+  if (f.showGrid !== undefined && typeof f.showGrid !== 'boolean') reasons.push('coordinate plane showGrid must be true or false');
+  reasons.push(...textFieldReasons([
+    { value: f.title },
+    { value: f.xLabel, axis: true },
+    { value: f.yLabel, axis: true },
+    { value: f.notes },
+  ], text));
+  const range = (key: 'xRange' | 'yRange'): [number, number] => {
+    const r = f[key];
+    if (r === undefined) return PLANE_DEFAULT_RANGE;
+    if (!Array.isArray(r) || r.length !== 2 || !r.every(isNum) || !(r[0] < r[1])) { reasons.push(`coordinate plane ${key} must be [lo, hi] with lo < hi`); return [-Infinity, Infinity]; }
+    return r as [number, number];
+  };
+  const xr = range('xRange'), yr = range('yRange');
+  const list = (key: 'points' | 'segments' | 'vectors', max: number): unknown[] => {
+    const v = f[key];
+    if (v === undefined) return [];
+    if (!Array.isArray(v)) { reasons.push(`coordinate plane ${key} must be an array`); return []; }
+    if (v.length > max) { reasons.push(`a coordinate plane holds at most ${max} ${key}`); return []; }
+    return v;
+  };
+  const isXY = (v: unknown): v is { x: number; y: number } => !!v && typeof v === 'object' && isNum((v as Record<string, unknown>).x) && isNum((v as Record<string, unknown>).y);
+  /** One stated coordinate pair, drawn inside the plane. */
+  const stated = (p: { x: number; y: number }, where: string) => {
+    if (!numberIsFromText(p.x, text)) reasons.push(`number ${p.x} in ${where}.x does not come from the problem text`);
+    if (!numberIsFromText(p.y, text)) reasons.push(`number ${p.y} in ${where}.y does not come from the problem text`);
+    if (p.x < xr[0] || p.x > xr[1] || p.y < yr[0] || p.y > yr[1]) reasons.push(`(${p.x}, ${p.y}) in ${where} is outside xRange/yRange`);
+  };
+  const item = (raw: unknown, where: string, keys: readonly string[]): Record<string, unknown> | null => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { reasons.push(`${where} must be an object`); return null; }
+    const o = raw as Record<string, unknown>;
+    for (const k of Object.keys(o).filter((x) => o[x] !== undefined && !keys.includes(x))) reasons.push(`${where} field "${k}" is not used`);
+    if (o.color !== undefined && typeof o.color !== 'string') reasons.push(`${where}: color must be a string`);
+    if (o.label !== undefined && typeof o.label !== 'string') reasons.push(`${where}: label must be a string`);
+    else reasons.push(...textFieldReasons([{ value: o.label }], text));
+    return o;
+  };
+  list('points', PLANE_MAX_POINTS).forEach((raw, i) => {
+    const where = `points[${i}]`;
+    const p = item(raw, where, ['x', 'y', 'label', 'color']);
+    if (!p) return;
+    if (!isXY(p)) { reasons.push(`${where}: x and y must be finite numbers`); return; }
+    stated(p, where);
+  });
+  list('segments', PLANE_MAX_SEGMENTS).forEach((raw, i) => {
+    const where = `segments[${i}]`;
+    const s = item(raw, where, ['from', 'to', 'label', 'color', 'dashed', 'arrow']);
+    if (!s) return;
+    for (const k of ['dashed', 'arrow']) if (s[k] !== undefined && typeof s[k] !== 'boolean') reasons.push(`${where}: ${k} must be true or false`);
+    if (!isXY(s.from) || !isXY(s.to)) { reasons.push(`${where}: from and to must be { x, y } with finite numbers`); return; }
+    stated(s.from, `${where}.from`);
+    stated(s.to, `${where}.to`);
+  });
+  list('vectors', PLANE_MAX_VECTORS).forEach((raw, i) => {
+    const where = `vectors[${i}]`;
+    const v = item(raw, where, ['from', 'to', 'label', 'color']);
+    if (!v) return;
+    if (!isXY(v.to) || (v.from !== undefined && !isXY(v.from))) { reasons.push(`${where}: to (and from, when given) must be { x, y } with finite numbers`); return; }
+    if (v.from !== undefined) stated(v.from as { x: number; y: number }, `${where}.from`);
+    stated(v.to, `${where}.to`);
   });
   return reasons;
 }

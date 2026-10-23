@@ -1,0 +1,23 @@
+{
+  "label": "figure-coordinate-grid",
+  "tool": "show_diagram",
+  "expect": "render",
+  "args": {
+    "type": "coordinate_grid",
+    "params": {
+      "points": [
+        {
+          "x": 2,
+          "y": 3,
+          "label": "P"
+        },
+        {
+          "x": -1,
+          "y": 4,
+          "label": "Q"
+        }
+      ]
+    }
+  },
+  "problemText": "[Figure: points P(2, 3) and Q(−1, 4) on a grid.]"
+}

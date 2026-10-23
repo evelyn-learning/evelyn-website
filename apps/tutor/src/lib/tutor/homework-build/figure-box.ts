@@ -31,6 +31,9 @@ export const FIGURE_BOX_MODES: Readonly<Record<string, 'fixed' | 'natural'>> = {
   showFractionBar: 'fixed',
   'showDiagram:tape_diagram': 'fixed',
   'showDiagram:area_model': 'fixed',
+  showCoordinatePlane: 'fixed',
+  'showDiagram:inequality_graph': 'natural',
+  'showDiagram:coordinate_grid': 'fixed',
 };
 
 /** `fixed` or `natural` for a figure; an unknown kind is drawn at natural height (as every non-geometry figure was before). */

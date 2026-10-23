@@ -232,7 +232,7 @@ async function main() {
     const { FIGURE_ACTIONS } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
     const dir = path.join(__dirname, 'tutor-render-harness', 'fixtures', 'homework');
     const files = fs.readdirSync(dir).filter((f) => /^figure-.*\.json$/.test(f));
-    assert.ok(files.length >= 14, `expected at least 14 figure fixtures, found ${files.length}`);
+    assert.ok(files.length >= 17, `expected at least 17 figure fixtures, found ${files.length}`);
     for (const file of files) {
       const f = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')) as { label: string; tool: string; expect: string; args: Record<string, unknown>; problemText: string };
       assert.equal(f.label, file.replace(/\.json$/, ''), file);

@@ -9,12 +9,16 @@
  * area_model are gated the same way, structure and provenance first, before
  * their solver runs: area_model's solver defaults showProducts to true, so a
  * figure that leaves it out would print every partial product, the very
- * numbers the student is asked to find. The solvers themselves are not
+ * numbers the student is asked to find. inequality_graph and coordinate_grid
+ * are gated the same way (the inequality solver defaults its variable to x;
+ * the grid solver auto-fits and clamps its bounds). The catalog
+ * `transformation` kind is not in the vocabulary: its solver computes the
+ * image, the student's answer. The solvers themselves are not
  * changed (shared live code, GAC freeze). Pure.
  */
 
 import { solveDiagram } from '../diagrams/catalog/manifest';
-import { numberIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
+import { normalise, numberIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
 import type { FigureContext } from './figure-validate';
 import type { DiagramFigure } from './types';
 
@@ -177,6 +181,114 @@ function validateAreaModel(params: Record<string, unknown>, ctx: FigureContext):
   return reasons.length ? reasons : solves('area_model', params);
 }
 
+const INEQUALITY_OPERATORS = ['<', '>', '<=', '>='] as const;
+type InequalityOperator = (typeof INEQUALITY_OPERATORS)[number];
+/** How a sheet may write each operator (plain, Unicode, LaTeX), and its mirror for the reversed form "3 ≤ x". */
+const OPERATOR_SPELLINGS: Record<InequalityOperator, readonly string[]> = {
+  '<': ['<', '\\lt'],
+  '>': ['>', '\\gt'],
+  '<=': ['<=', '≤', '⩽', '\\leq', '\\le'],
+  '>=': ['>=', '≥', '⩾', '\\geq', '\\ge'],
+};
+const MIRROR: Record<InequalityOperator, InequalityOperator> = { '<': '>', '>': '<', '<=': '>=', '>=': '<=' };
+const reEsc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const NUM_RE = String.raw`(-?\d[\d,]*(?:\.\d+)?(?:\/\d+)?)`;
+
+/**
+ * Is `variable operator value` written in the text: "x ≥ 3" (any spelling of
+ * the operator, inside $…$ or not), or reversed, "3 ≤ x" (so each half of
+ * "−2 < x ≤ 5" counts)? The value is compared as a number.
+ */
+export function inequalityIsStated(variable: string, operator: InequalityOperator, value: number, problemText: string): boolean {
+  const text = normalise(problemText);
+  const v = reEsc(variable);
+  const ops = (op: InequalityOperator) => `(?:${[...OPERATOR_SPELLINGS[op]].sort((a, b) => b.length - a.length).map((o) => `${reEsc(o)}(?![A-Za-z=])`).join('|')})`;
+  const forms = [
+    new RegExp(String.raw`(?<![A-Za-z0-9_])${v}\s*${ops(operator)}\s*${NUM_RE}(?![\d])`, 'g'),
+    new RegExp(String.raw`(?<![A-Za-z0-9.])${NUM_RE}\s*${ops(MIRROR[operator])}\s*${v}(?![A-Za-z0-9_])`, 'g'),
+  ];
+  return forms.some((re) => [...text.matchAll(re)].some((m) => {
+    const n = parseNumberCell(m[1]);
+    return n !== null && Math.abs(n - value) <= 1e-9 * Math.max(1, Math.abs(value));
+  }));
+}
+
+/**
+ * inequality_graph: the board draws the solution ray of `variable operator
+ * value` on a number line, so the drawn inequality must be one the sheet
+ * states, never one the student solves for: the boundary value is a stated
+ * number, and the whole inequality (the solver's default variable "x"
+ * included when variable is left out) is written in the text. The number
+ * line's span and ticks are scaffolding.
+ */
+function validateInequalityGraph(params: Record<string, unknown>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const reasons = unusedParams('inequality_graph', params, ['variable', 'operator', 'value', 'title']);
+  reasons.push(...textFieldReasons([{ value: params.title }], text));
+  if (params.variable !== undefined && (typeof params.variable !== 'string' || !/^[A-Za-z]$/.test(params.variable.trim()))) {
+    reasons.push('inequality_graph variable must be a single letter');
+  }
+  const op = params.operator;
+  if (!INEQUALITY_OPERATORS.includes(op as InequalityOperator)) reasons.push(`inequality_graph operator must be one of ${INEQUALITY_OPERATORS.join(', ')}`);
+  const value = params.value;
+  if (!isNum(value)) reasons.push('inequality_graph value must be a finite number');
+  if (reasons.length) return reasons;
+  const variable = typeof params.variable === 'string' ? params.variable.trim() : 'x';
+  if (!numberIsFromText(value as number, text)) return [`number ${value} in params.value does not come from the problem text`];
+  if (!inequalityIsStated(variable, op as InequalityOperator, value as number, text)) {
+    return [`the inequality ${variable} ${String(op)} ${value} is not stated in the problem text (a solution the student finds is never drawn; for a number line the sheet draws, use showNumberLine)`];
+  }
+  return solves('inequality_graph', params);
+}
+
+/** Bounds for the homework gate (the thumbnail draws no more than this). */
+export const GRID_MAX_POINTS = 40;
+
+/**
+ * coordinate_grid: every plotted point at stated coordinates (an unlabelled
+ * point prints its own coordinates, which are then stated too), labels and
+ * the title from the text. quadrants and the x/y bounds are scaffolding
+ * (structure only). After the gate, the solved grid (its auto-fit, clamped
+ * to a 30-unit span) must hold every point: a point off the grid is not drawn.
+ */
+function validateCoordinateGrid(params: Record<string, unknown>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const reasons = unusedParams('coordinate_grid', params, ['points', 'quadrants', 'xMin', 'xMax', 'yMin', 'yMax', 'connect', 'title']);
+  reasons.push(...textFieldReasons([{ value: params.title }], text));
+  if (params.quadrants !== undefined && params.quadrants !== 1 && params.quadrants !== 4) reasons.push('coordinate_grid quadrants must be 1 or 4');
+  if (params.connect !== undefined && typeof params.connect !== 'boolean') reasons.push('coordinate_grid connect must be true or false');
+  for (const k of ['xMin', 'xMax', 'yMin', 'yMax']) if (params[k] !== undefined && !isNum(params[k])) reasons.push(`coordinate_grid ${k} must be a finite number`);
+  const pts = params.points;
+  if (pts !== undefined && !Array.isArray(pts)) return [...reasons, 'coordinate_grid points must be an array of { x, y, label? }'];
+  const points = (pts ?? []) as unknown[];
+  if (points.length > GRID_MAX_POINTS) return [...reasons, `coordinate_grid holds at most ${GRID_MAX_POINTS} points`];
+  points.forEach((raw, i) => {
+    const where = `params.points[${i}]`;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { reasons.push(`${where} must be { x, y, label? }`); return; }
+    const p = raw as Record<string, unknown>;
+    for (const k of Object.keys(p).filter((x) => p[x] !== undefined && !['x', 'y', 'label', 'color'].includes(x))) reasons.push(`${where} field "${k}" is not used`);
+    if (p.color !== undefined && typeof p.color !== 'string') reasons.push(`${where}: color must be a string`);
+    if (p.label !== undefined && typeof p.label !== 'string') reasons.push(`${where}: label must be a string`);
+    else reasons.push(...textFieldReasons([{ value: p.label }], text));
+    if (!isNum(p.x) || !isNum(p.y)) { reasons.push(`${where}: x and y must be finite numbers`); return; }
+    if (!numberIsFromText(p.x, text)) reasons.push(`number ${p.x} in ${where}.x does not come from the problem text`);
+    if (!numberIsFromText(p.y, text)) reasons.push(`number ${p.y} in ${where}.y does not come from the problem text`);
+  });
+  if (reasons.length) return reasons;
+  try {
+    const g = solveDiagram('coordinate_grid', params) as unknown as { xMin: number; xMax: number; yMin: number; yMax: number };
+    points.forEach((raw, i) => {
+      const p = raw as { x: number; y: number };
+      if (p.x < g.xMin || p.x > g.xMax || p.y < g.yMin || p.y > g.yMax) {
+        reasons.push(`point (${p.x}, ${p.y}) in params.points[${i}] is off the grid (x ${g.xMin}..${g.xMax}, y ${g.yMin}..${g.yMax}); widen the bounds`);
+      }
+    });
+    return reasons;
+  } catch (e) {
+    return [`coordinate_grid does not solve: ${(e as Error).message}`];
+  }
+}
+
 /** Dispatches on the catalog kind; a kind with no case here is not reached (the vocabulary gate names it first). */
 export function validateDiagramFigure(fig: DiagramFigure, ctx: FigureContext): string[] {
   const params = fig.params;
@@ -187,6 +299,8 @@ export function validateDiagramFigure(fig: DiagramFigure, ctx: FigureContext): s
     case 'solid_3d': return [...reasons, ...validateSolid3D(params, ctx)];
     case 'tape_diagram': return [...reasons, ...validateTape(params, ctx)];
     case 'area_model': return [...reasons, ...validateAreaModel(params, ctx)];
+    case 'inequality_graph': return [...reasons, ...validateInequalityGraph(params, ctx)];
+    case 'coordinate_grid': return [...reasons, ...validateCoordinateGrid(params, ctx)];
     default: return [...reasons, `unsupported figure kind "showDiagram:${String(fig.type)}"`];
   }
 }

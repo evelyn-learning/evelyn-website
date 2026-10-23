@@ -161,3 +161,32 @@ export const areaFig = () => ({
   action: 'showDiagram', type: 'area_model',
   params: { rows: [20, 3], cols: [10, 4], showProducts: false },
 }) as unknown as Fig;
+
+// ---------------------------------------------------------------- coordinate plane, inequality graph, coordinate grid (Task 16)
+
+export const CP = '[Figure: A coordinate plane with triangle ABC at A(1, 2), B(4, 2), C(1, 6).]';
+/** A transformation the student must carry out: only the pre-image is stated, so the image is never drawn. */
+export const TR = 'Reflect triangle ABC over the y-axis. [Figure: triangle with vertices (1, 2), (4, 2), (1, 6) on a grid.]';
+export const INEQ = '[Figure: A number line showing x ≥ 3 with a closed dot at 3.]';
+export const GRID = '[Figure: points P(2, 3) and Q(−1, 4) on a grid.]';
+
+/** The stated triangle: three labelled vertices and its three sides. The ranges are scaffolding. */
+export const cpFig = () => ({
+  action: 'showCoordinatePlane', xRange: [-2, 8], yRange: [-2, 8],
+  points: [{ x: 1, y: 2, label: 'A' }, { x: 4, y: 2, label: 'B' }, { x: 1, y: 6, label: 'C' }],
+  segments: [
+    { from: { x: 1, y: 2 }, to: { x: 4, y: 2 } },
+    { from: { x: 4, y: 2 }, to: { x: 1, y: 6 } },
+    { from: { x: 1, y: 6 }, to: { x: 1, y: 2 } },
+  ],
+}) as unknown as Fig;
+
+export const ineqFig = () => ({
+  action: 'showDiagram', type: 'inequality_graph',
+  params: { variable: 'x', operator: '>=', value: 3 },
+}) as unknown as Fig;
+
+export const gridFig = () => ({
+  action: 'showDiagram', type: 'coordinate_grid',
+  params: { points: [{ x: 2, y: 3, label: 'P' }, { x: -1, y: 4, label: 'Q' }] },
+}) as unknown as Fig;

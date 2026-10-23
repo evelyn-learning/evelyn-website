@@ -15,7 +15,8 @@
  * skipped) each have a hook-free hand-written writer: stats-svg.ts (box plot,
  * histogram, dot plot, bar, pie, scatter), table-svg.ts, number-line-svg.ts
  * solid-svg.ts (solid_3d), sets-tree-svg.ts (Venn, tree) and part-whole-svg.ts
- * (fraction bar, tape diagram, area model). Their live renderers are not rendered here
+ * (fraction bar, tape diagram, area model) and coordinate-svg.ts (coordinate
+ * plane, inequality graph, coordinate grid). Their live renderers are not rendered here
  * (hooks across React instances) and not refactored (GAC freeze). A kind with
  * no writer has no thumbnail.
  */
@@ -24,6 +25,7 @@ import { version as reactVersion } from 'react';
 import { renderGeometryTree } from '@/app/tutor/components/whiteboard/GeometryRenderer';
 import { solveGeometry, type ConstructedGeometrySpec } from '../diagrams/geometry-solver';
 import type { FigureCommand } from './types';
+import { coordinateGridToSvg, coordinatePlaneToSvg, inequalityToSvg } from './coordinate-svg';
 import { graphToSvg } from './graph-svg';
 import { figureKindId } from './figure-vocabulary';
 import { numberLineToSvg } from './number-line-svg';
@@ -96,6 +98,9 @@ function vocabularySvg(figure: FigureCommand): string | null {
   if (id === 'showFractionBar') return fractionBarToSvg(figure as Extract<FigureCommand, { action: 'showFractionBar' }>);
   if (id === 'showDiagram:tape_diagram') return tapeToSvg(figure as DiagramFigure);
   if (id === 'showDiagram:area_model') return areaModelToSvg(figure as DiagramFigure);
+  if (id === 'showCoordinatePlane') return coordinatePlaneToSvg(figure as Extract<FigureCommand, { action: 'showCoordinatePlane' }>);
+  if (id === 'showDiagram:inequality_graph') return inequalityToSvg(figure as DiagramFigure);
+  if (id === 'showDiagram:coordinate_grid') return coordinateGridToSvg(figure as DiagramFigure);
   return null;
 }
 

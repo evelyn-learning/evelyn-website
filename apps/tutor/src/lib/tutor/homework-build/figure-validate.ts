@@ -13,7 +13,7 @@ import type { GraphData } from '@core/knowledge/types';
 import type { FigureClaim, FigureCommand } from './types';
 import { isCaptionLabel, labelIsFromText, textFieldIsFromText, textFieldReasons } from './figure-text';
 import { figureKindId, isFigureKindAllowed, type FigureVocabulary } from './figure-vocabulary';
-import { validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure, validateFractionBarFigure, validateTreeFigure, validateVennFigure } from './figure-validate-data';
+import { validateCoordinatePlaneFigure, validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure, validateFractionBarFigure, validateTreeFigure, validateVennFigure } from './figure-validate-data';
 import { validateDiagramFigure } from './figure-validate-diagram';
 
 /** Re-exported so existing imports from figure-validate keep working. */
@@ -446,6 +446,9 @@ const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext
   'showDiagram:solid_3d': diagramValidator,
   'showDiagram:tape_diagram': diagramValidator,
   'showDiagram:area_model': diagramValidator,
+  showCoordinatePlane: (figure, ctx) => validateCoordinatePlaneFigure(figure as Extract<FigureCommand, { action: 'showCoordinatePlane' }>, ctx),
+  'showDiagram:inequality_graph': diagramValidator,
+  'showDiagram:coordinate_grid': diagramValidator,
 };
 
 function validateFigureUnsafe(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {

@@ -19,13 +19,13 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram', 'showVennDiagram', 'showTree', 'showFractionBar'];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram', 'showVennDiagram', 'showTree', 'showFractionBar', 'showCoordinatePlane'];
 
 /** The showStats chart types in the vocabulary. */
 export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
 
 /** The showDiagram catalog kinds in the vocabulary (each has a catalog solver). */
-export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = ['solid_3d', 'tape_diagram', 'area_model'];
+export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = ['solid_3d', 'tape_diagram', 'area_model', 'inequality_graph', 'coordinate_grid'];
 
 /** A showDiagram kind's shape, from the catalog's own paramSchema (generated, so it cannot drift from the solver). */
 const diagramShape = (kind: FigureDiagramKind) => `{"action":"showDiagram","type":"${kind}","params":{${getDiagramKind(kind)!.paramSchema}}}`;
@@ -104,6 +104,21 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
     id: 'showDiagram:area_model', box: 'fixed',
     when: 'the sheet shows an area model (a rectangle split into parts for a product): the stated side splits as rows and cols; showProducts false unless the sheet prints every partial product',
     shape: diagramShape('area_model'),
+  },
+  {
+    id: 'showCoordinatePlane', box: 'fixed',
+    when: 'the sheet shows points, segments or a polygon plotted on a coordinate plane at stated coordinates (not a function graph): each vertex as a point, each side as a segment; a transformation only when the sheet states the vertices of both the shape and its image; never a computed image, a shaded region or a boundary line the student must find',
+    shape: '{"action":"showCoordinatePlane","title"?,"xRange"?:[lo,hi],"yRange"?:[lo,hi],"xLabel"?,"yLabel"?,"points"?:[{"x","y","label"?}],"segments"?:[{"from":{"x","y"},"to":{"x","y"},"label"?,"dashed"?}],"vectors"?:[{"from"?:{"x","y"},"to":{"x","y"},"label"?}]}',
+  },
+  {
+    id: 'showDiagram:inequality_graph', box: 'natural',
+    when: 'the sheet draws a one-variable inequality on a number line and states the inequality itself (variable, operator and boundary as written); never the solution of an inequality the student must solve',
+    shape: diagramShape('inequality_graph'),
+  },
+  {
+    id: 'showDiagram:coordinate_grid', box: 'fixed',
+    when: 'the sheet shows ordered pairs plotted on a coordinate grid (connect:true when the sheet joins them into a segment or polygon); every point at its stated coordinates; a blank grid when the sheet gives one to plot on',
+    shape: diagramShape('coordinate_grid'),
   },
 ];
 

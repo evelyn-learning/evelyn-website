@@ -1,0 +1,14 @@
+{
+  "label": "figure-inequality",
+  "tool": "show_diagram",
+  "expect": "render",
+  "args": {
+    "type": "inequality_graph",
+    "params": {
+      "variable": "x",
+      "operator": ">=",
+      "value": 3
+    }
+  },
+  "problemText": "[Figure: A number line showing x ≥ 3 with a closed dot at 3.]"
+}

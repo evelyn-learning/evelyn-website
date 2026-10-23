@@ -617,6 +617,55 @@ async function main() {
         assert.ok(r === null || (typeof r === 'string' && r.length <= FIGURE_SVG_MAX_CHARS), JSON.stringify(bad).slice(0, 80));
       }
     });
+    await section('figureToSvg: coordinate plane, inequality graph and coordinate grid thumbnails draw the stated figure, escape text, and never throw', async () => {
+      const { figureToSvg, FIGURE_SVG_MAX_CHARS } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const F = await import('./fixtures/homework-figure-fixtures');
+      const shape = (svg: string | null, id: string) => {
+        assert.ok(svg && /^<svg[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg) && /viewBox=/.test(svg) && svg.endsWith('</svg>'), `${id}: ${String(svg).slice(0, 120)}`);
+        assert.ok(svg.length <= FIGURE_SVG_MAX_CHARS && !/NaN|undefined|Infinity/.test(svg), id);
+        return svg;
+      };
+      const cp = shape(await figureToSvg(F.cpFig()), 'coordinate plane');
+      assert.equal((cp.match(/data-point=/g) ?? []).length, 3, 'three vertices');
+      assert.equal((cp.match(/data-segment=/g) ?? []).length, 3, 'three sides');
+      for (const l of ['A', 'B', 'C']) assert.ok(cp.includes(`>${l}<`), `label ${l}`);
+      assert.equal(await figureToSvg(F.cpFig()), cp, 'deterministic');
+      const vec = shape(await figureToSvg({ action: 'showCoordinatePlane', vectors: [{ to: { x: 3, y: 4 }, label: 'v' }] } as unknown as Fig), 'vector');
+      assert.equal((vec.match(/data-vector=/g) ?? []).length, 1);
+      assert.ok(vec.includes('>v<'));
+      const ineq = shape(await figureToSvg(F.ineqFig()), 'inequality');
+      assert.ok(ineq.includes('data-endpoint="closed"') && ineq.includes('data-ray="right"'), 'closed dot, ray to the right');
+      assert.ok(ineq.includes('>x &gt;= 3<'), 'the board prints the inequality as given');
+      const open = shape(await figureToSvg({ action: 'showDiagram', type: 'inequality_graph', params: { variable: 'n', operator: '<', value: -2 } } as unknown as Fig), 'open');
+      assert.ok(open.includes('data-endpoint="open"') && open.includes('data-ray="left"'));
+      const grid = shape(await figureToSvg(F.gridFig()), 'grid');
+      assert.equal((grid.match(/data-point=/g) ?? []).length, 2, 'two points');
+      assert.ok(grid.includes('>P<') && grid.includes('>Q<'));
+      const unl = shape(await figureToSvg({ action: 'showDiagram', type: 'coordinate_grid', params: { points: [{ x: 2, y: 3 }], connect: false } } as unknown as Fig), 'unlabelled');
+      assert.ok(unl.includes('>(2, 3)<'), 'an unlabelled point shows its coordinates, as the board does');
+      const blank = shape(await figureToSvg({ action: 'showDiagram', type: 'coordinate_grid', params: {} } as unknown as Fig), 'blank grid');
+      assert.equal((blank.match(/data-point=/g) ?? []).length, 0);
+      const poly = shape(await figureToSvg({ action: 'showDiagram', type: 'coordinate_grid', params: { points: [{ x: 1, y: 1 }, { x: 3, y: 1 }, { x: 2, y: 3 }], connect: true } } as unknown as Fig), 'connect');
+      assert.ok(poly.includes('<polyline'), 'connected in order');
+      const escC = shape(await figureToSvg({ action: 'showCoordinatePlane', title: 'a<b', xLabel: '"t"', points: [{ x: 1, y: 1, label: 'x & y' }], segments: [{ from: { x: 0, y: 0 }, to: { x: 1, y: 1 }, label: '<s>' }] } as unknown as Fig), 'escaped plane');
+      assert.ok(escC.includes('x &amp; y') && escC.includes('&lt;s&gt;') && escC.includes('&quot;t&quot;') && !escC.includes('<s>'), 'plane text escaped');
+      const escI = shape(await figureToSvg({ action: 'showDiagram', type: 'inequality_graph', params: { variable: '<v>', operator: '>', value: 1, title: 'a&b' } } as unknown as Fig), 'escaped ineq');
+      assert.ok(escI.includes('&lt;v&gt;') && escI.includes('a&amp;b') && !escI.includes('<v>'), 'ineq text escaped');
+      const escG = shape(await figureToSvg({ action: 'showDiagram', type: 'coordinate_grid', params: { title: '<g>', points: [{ x: 1, y: 1, label: '"p"' }] } } as unknown as Fig), 'escaped grid');
+      assert.ok(escG.includes('&lt;g&gt;') && escG.includes('&quot;p&quot;') && !escG.includes('<g>'), 'grid text escaped');
+      for (const bad of [
+        { action: 'showCoordinatePlane', xRange: [5, 1] }, { action: 'showCoordinatePlane', points: 'x' }, { action: 'showCoordinatePlane', points: [null, { x: 'a' }] },
+        { action: 'showCoordinatePlane', segments: [{ from: null }] }, { action: 'showCoordinatePlane', xRange: [0, 1e12] },
+        { action: 'showCoordinatePlane', points: Array.from({ length: 5000 }, (_, i) => ({ x: i % 10, y: 1, label: 'long label '.repeat(5) })) },
+        { action: 'showDiagram', type: 'inequality_graph', params: { operator: '==', value: 3 } }, { action: 'showDiagram', type: 'inequality_graph', params: { operator: '<', value: 1e300 } },
+        { action: 'showDiagram', type: 'inequality_graph' },
+        { action: 'showDiagram', type: 'coordinate_grid', params: { points: [null, { x: 'a' }], xMin: 'q' } },
+        { action: 'showDiagram', type: 'coordinate_grid', params: { points: Array.from({ length: 5000 }, (_, i) => ({ x: i, y: -i })) } },
+      ]) {
+        const r = await figureToSvg(bad as unknown as Fig);
+        assert.ok(r === null || (typeof r === 'string' && r.length <= FIGURE_SVG_MAX_CHARS && !/NaN|Infinity/.test(r)), JSON.stringify(bad).slice(0, 80));
+      }
+    });
     await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
       // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
       // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.
@@ -697,8 +746,8 @@ async function main() {
       const { figureBoxMode, FIGURE_BOX_MODES } = await import('../src/lib/tutor/homework-build/figure-box');
       const { FIGURE_KIND_DOCS } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
       const F = await import('./fixtures/homework-figure-fixtures');
-      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig(), F.vennFig(), F.treeFig(), F.fracFig(), F.tapeFig(), F.areaFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
-      for (const fig of [F.tableFig(), F.nlFig(), hw14p8Fig() as never]) assert.equal(figureBoxMode(fig), 'natural', JSON.stringify(fig).slice(0, 60));
+      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig(), F.vennFig(), F.treeFig(), F.fracFig(), F.tapeFig(), F.areaFig(), F.cpFig(), F.gridFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
+      for (const fig of [F.tableFig(), F.nlFig(), F.ineqFig(), hw14p8Fig() as never]) assert.equal(figureBoxMode(fig), 'natural', JSON.stringify(fig).slice(0, 60));
       assert.equal(figureBoxMode(goodFig()), 'fixed', 'a geometry figure is in the fixed box');
       // The client-safe table cannot drift from the proposer's docs.
       assert.deepEqual(Object.fromEntries(FIGURE_KIND_DOCS.map((d) => [d.id, d.box])),
