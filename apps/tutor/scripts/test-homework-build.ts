@@ -1093,9 +1093,30 @@ async function main() {
       assert.equal(b.problems[0].key!.parts[0].final, '5');
     });
 
-    await section('HOMEWORK_FIGURE_KINDS=geometry: a cached figure outside the vocabulary is retried, not copied', async () => {
-      const text = 'Box [Figure: box plot]';
-      const statsFig = { action: 'showStats', type: 'boxplot', boxplot: { datasets: [] } };
+    await section('HOMEWORK_FIGURE_KINDS: a valid cached box plot is copied under all, retried under geometry', async () => {
+      // Controller ruling: the seed passes under `all` and fails only under `geometry`.
+      const { BOX, boxFig } = await import('./fixtures/homework-figure-fixtures');
+      const { validateFigure } = await import('../src/lib/tutor/homework-build/figure-validate');
+      const text = BOX;
+      const statsFig = boxFig();
+      assert.deepEqual(validateFigure(statsFig, { problemText: text, claims: [] }), { ok: true }, 'the seed is valid under all');
+      await ensureHomeworkBuild('gen-v2', 'greenapple', [{ n: 1, text }]);
+      await patchProblemBuild('gen-v2', 1, {
+        status: 'ready', figure: statsFig as never,
+        key: { parts: [{ label: '', final: '5', canonical: { kind: 'number', value: 5 } }], solvers: ['A', 'B'], steps: [{ relation: 'x = 5' }] }, verify: { agreed: true }, ms: 9,
+      });
+      await mkPlan('gen-v3', [text]);
+      const all = mkDeps();
+      const prevAll = process.env.HOMEWORK_FIGURE_KINDS;
+      delete process.env.HOMEWORK_FIGURE_KINDS;
+      try {
+        await runHomeworkBuild('gen-v3', 'greenapple', { deps: all.deps, concurrency: 1 });
+      } finally {
+        if (prevAll !== undefined) process.env.HOMEWORK_FIGURE_KINDS = prevAll;
+      }
+      assert.deepEqual(all.order, [], 'under all the cached box plot is copied, not rebuilt');
+      assert.deepEqual((await getHomeworkBuild('gen-v3'))!.problems[0].figure, statsFig, 'the box plot was copied');
+
       await ensureHomeworkBuild('gen-v0', 'greenapple', [{ n: 1, text }]);
       await patchProblemBuild('gen-v0', 1, {
         status: 'ready', figure: statsFig as never,

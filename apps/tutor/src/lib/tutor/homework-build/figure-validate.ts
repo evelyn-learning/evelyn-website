@@ -13,6 +13,7 @@ import type { GraphData } from '@core/knowledge/types';
 import type { FigureClaim, FigureCommand } from './types';
 import { isCaptionLabel, labelIsFromText, textFieldIsFromText, textFieldReasons } from './figure-text';
 import { figureKindId, isFigureKindAllowed, type FigureVocabulary } from './figure-vocabulary';
+import { validateStatsFigure } from './figure-validate-data';
 
 /** Re-exported so existing imports from figure-validate keep working. */
 export { isCaptionLabel, labelIsFromText, textFieldIsFromText };
@@ -427,7 +428,14 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
 /** The validators of the kinds beyond geometry and function graphs, by kind
  *  id (figureKindId). Each kind task adds its own; a kind the vocabulary allows
  *  with no validator here is unsupported. */
-const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext) => string[]> = {};
+const statsValidator = (figure: FigureCommand, ctx: FigureContext) => validateStatsFigure(figure as Extract<FigureCommand, { action: 'showStats' }>, ctx);
+const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext) => string[]> = {
+  'showStats:boxplot': statsValidator,
+  'showStats:histogram': statsValidator,
+  'showStats:dotplot': statsValidator,
+  'showStats:bar': statsValidator,
+  'showStats:pie': statsValidator,
+};
 
 function validateFigureUnsafe(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {
   if (!figure) return { ok: true };

@@ -15,6 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -434,6 +435,105 @@ test('numberIsFromText: whole tokens, signs, separators, fractions, percentages,
   assert.equal(parseNumberCell('1,200'), 1200); assert.equal(parseNumberCell('3/4'), 0.75); assert.equal(parseNumberCell('Red'), null);
   assert.equal(parseNumberCell('25%'), 25); assert.equal(parseNumberCell('−3.5'), -3.5); assert.equal(parseNumberCell('10 cm'), 10);
   assert.equal(parseNumberCell('x2'), null); assert.equal(parseNumberCell('1/0'), null); assert.equal(parseNumberCell(''), null);
+});
+
+// ---------------------------------------------------------------- stats family (Task 4)
+
+const statsOk = (fig: Fig, text: string, vocabulary?: 'all' | 'geometry') => validateFigure(fig, { problemText: text, claims: [], vocabulary });
+const statsFails = (fig: Fig, text: string, re: RegExp) => {
+  const v = statsOk(fig, text);
+  assert.ok(!v.ok, `expected a failure matching ${re}, got ok`);
+  assert.ok(v.reasons.some((r) => re.test(r)), `no reason matches ${re}: ${v.reasons.join(' | ')}`);
+};
+const withBox = (f: Fig, patch: Record<string, unknown>) => {
+  const o = f as unknown as { boxplot: { datasets: Array<Record<string, unknown>> } };
+  Object.assign(o.boxplot.datasets[0], patch);
+  return f;
+};
+
+test('box plot: the stated five numbers pass', () => {
+  assert.deepEqual(statsOk(boxFig(), BOX), { ok: true });
+});
+test('box plot: an answer value fails on provenance (q3 42, title "IQR = 21")', () => {
+  statsFails(withBox(boxFig(), { q3: 42 }), BOX, /number 42 .*does not come from the problem text/);
+  statsFails(Object.assign(boxFig(), { title: 'IQR = 21' }), BOX, /label "IQR = 21"/);
+});
+test('box plot: five numbers out of order fail structurally', () => {
+  statsFails(withBox(boxFig(), { q1: 35 }), BOX, /min ≤ q1 ≤ median ≤ q3 ≤ max fails/);
+  statsFails(Object.assign(boxFig(), { boxplot: { datasets: [] } }), BOX, /at least one/);
+  statsFails(withBox(boxFig(), { outliers: [30] }), BOX, /outlier 30 is inside the whiskers/);
+});
+test('hw-11 p6 (stored text): good passes; IQR/range answers fail; q1 and q3 swapped fails', () => {
+  assert.deepEqual(statsOk(hw11p6Fig(), HW11_P6), { ok: true });
+  statsFails(withBox(hw11p6Fig(), { max: 38 }), HW11_P6, /number 38 .*does not come from the problem text/);
+  statsFails(Object.assign(hw11p6Fig(), { title: 'IQR = 16' }), HW11_P6, /label "IQR = 16"/);
+  statsFails(withBox(hw11p6Fig(), { q1: 33, q3: 17 }), HW11_P6, /min ≤ q1 ≤ median ≤ q3 ≤ max fails/);
+});
+
+test('histogram: the stated bins pass', () => {
+  assert.deepEqual(statsOk(histFig(), HIST), { ok: true });
+});
+test('histogram: a bin the text does not state fails on provenance', () => {
+  const f = histFig() as unknown as { bins: number[][] };
+  f.bins.push([100, 110, 2]);
+  statsFails(f as unknown as Fig, HIST, /number 110/);
+});
+test('histogram: gapped bins and raw data fail structurally', () => {
+  statsFails(Object.assign(histFig(), { bins: [[50, 60, 3], [65, 70, 7]] }), HIST, /not contiguous at 60 \/ 65/);
+  statsFails(Object.assign(histFig(), { data: [55, 61] }), HIST, /takes bins only/);
+  statsFails(Object.assign(histFig(), { bins: [[60, 50, 3]] }), HIST, /lo < hi/);
+  statsFails(Object.assign(histFig(), { bins: [[50, 60, 2.5]] }), HIST, /non-negative integer/);
+});
+
+test('dot plot: the stated counts pass', () => {
+  assert.deepEqual(statsOk(dotFig(), DOT), { ok: true });
+});
+test('dot plot: a count the text does not state fails', () => {
+  statsFails(Object.assign(dotFig(), { data: [0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 4] }), DOT, /5 dots at 1/);
+  statsFails(Object.assign(dotFig(), { data: [0, 0, 1, 1, 1, 1, 2, 2, 2, 7] }), DOT, /number 7/);
+});
+test('dot plot: empty data fails structurally', () => {
+  statsFails(Object.assign(dotFig(), { data: [] }), DOT, /non-empty/);
+});
+
+test('bar: the stated categories and values pass', () => {
+  assert.deepEqual(statsOk(barFig(), BAR), { ok: true });
+});
+test('bar: a value the text does not state fails', () => {
+  statsFails(Object.assign(barFig(), { bar: { categories: ['Apple', 'Banana', 'Cherry'], values: [8, 5, 4] } }), BAR, /number 4/);
+  statsFails(Object.assign(barFig(), { bar: { categories: ['Apple', 'Banana', 'Kiwi'], values: [8, 5, 3] } }), BAR, /label "Kiwi"/);
+});
+test('bar: 3 categories and 2 values fail structurally', () => {
+  statsFails(Object.assign(barFig(), { bar: { categories: ['Apple', 'Banana', 'Cherry'], values: [8, 5] } }), BAR, /categories and values/);
+});
+
+test('pie: the stated slices pass', () => {
+  assert.deepEqual(statsOk(pieFig(), PIE), { ok: true });
+});
+test('pie: computed percentages fail; stated ones pass', () => {
+  const f = pieFig() as unknown as { pie: Record<string, unknown> };
+  f.pie.showPercentages = true;
+  statsFails(f as unknown as Fig, PIE, /computed, not stated/);
+  const stated = 'A pie chart: Red 10 (25%), Blue 18 (45%), Green 12 (30%).';
+  assert.deepEqual(statsOk(f as unknown as Fig, stated), { ok: true });
+  statsFails(Object.assign(pieFig(), { showPercentages: true }), PIE, /showStats field "showPercentages" is not used by a pie/);
+});
+test('pie: a zero slice and a single slice fail structurally', () => {
+  statsFails(Object.assign(pieFig(), { pie: { slices: [{ label: 'Red', value: 0 }, { label: 'Blue', value: 18 }] } }), PIE, /pie slice "Red" value must be positive/);
+  statsFails(Object.assign(pieFig(), { pie: { slices: [{ label: 'Red', value: 10 }] } }), PIE, /at least two/);
+});
+
+test('stats: a field the type does not use is rejected', () => {
+  statsFails(Object.assign(barFig(), { bins: [[0, 1, 1]] }), BAR, /showStats field "bins" is not used by a bar/);
+  statsFails(Object.assign(boxFig(), { yLabel: 'Minutes' }), BOX, /showStats field "yLabel" is not used by a boxplot/);
+});
+test('stats: distribution and scatter types are unsupported', () => {
+  for (const t of ['distribution', 'scatter', 'scatterplot', 'scatterplot_regression']) {
+    statsFails({ action: 'showStats', type: t } as unknown as Fig, BOX, new RegExp(`unsupported figure kind "showStats:${t}"`));
+  }
+});
+test('stats: the kill switch (geometry) rejects a good box plot', () => {
+  assert.deepEqual(statsOk(boxFig(), BOX, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showStats:boxplot"'] });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

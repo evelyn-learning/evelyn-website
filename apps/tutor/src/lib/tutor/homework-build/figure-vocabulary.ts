@@ -18,10 +18,10 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats'];
 
 /** The showStats chart types in the vocabulary. */
-export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = [];
+export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
 
 /** The showDiagram catalog kinds in the vocabulary (each has a catalog solver). */
 export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = [];
@@ -30,7 +30,33 @@ export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = [];
 export interface FigureKindDoc { id: string; when: string; shape: string; box: 'fixed' | 'natural' }
 
 /** The kinds beyond geometry and function graphs, one entry each. */
-export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [];
+export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
+  {
+    id: 'showStats:boxplot', box: 'fixed',
+    when: 'the sheet shows one or more box plots (box-and-whisker plots)',
+    shape: '{"action":"showStats","type":"boxplot","title"?,"xLabel"?,"boxplot":{"datasets":[{"label","min","q1","median","q3","max","outliers"?:[…]}],"showValues"?}}',
+  },
+  {
+    id: 'showStats:histogram', box: 'fixed',
+    when: 'the sheet shows a histogram (bars over touching intervals)',
+    shape: '{"action":"showStats","type":"histogram","title"?,"xLabel"?,"yLabel"?,"bins":[[lo,hi,count],…],"showCounts"?}',
+  },
+  {
+    id: 'showStats:dotplot', box: 'fixed',
+    when: 'the sheet shows a dot plot or line plot (stacked dots or crosses over a number line)',
+    shape: '{"action":"showStats","type":"dotplot","title"?,"xLabel"?,"data":[one value per dot]}',
+  },
+  {
+    id: 'showStats:bar', box: 'fixed',
+    when: 'the sheet shows a bar chart of categories',
+    shape: '{"action":"showStats","type":"bar","title"?,"xLabel"?,"yLabel"?,"bar":{"categories":[…],"values":[…]}}',
+  },
+  {
+    id: 'showStats:pie', box: 'fixed',
+    when: 'the sheet shows a pie chart (circle graph)',
+    shape: '{"action":"showStats","type":"pie","title"?,"pie":{"slices":[{"label","value"}]}}',
+  },
+];
 
 /** HOMEWORK_FIGURE_KINDS, trimmed and lower-cased: `geometry` → geometry; unset or `all` → all; anything else → all, with a warning (flags default ON). */
 export function figureVocabularyFromEnv(env: Record<string, string | undefined> = process.env): FigureVocabulary {
