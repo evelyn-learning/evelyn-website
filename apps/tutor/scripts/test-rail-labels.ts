@@ -410,7 +410,8 @@ async function runMongoCases() {
 
   const { deriveSegmentLabels } = await import('../src/lib/tutor/lesson-plan/derive-rail-labels');
   const { LessonPlanRailLabelsModel, buildRailLabelsId } = await import('../src/models/LessonPlanRailLabels');
-  const { RAIL_LABELS_VERSION } = await import('../src/lib/tutor/lesson-plan/rail-labels');
+  const { railLabelsCacheVersion } = await import('../src/lib/tutor/lesson-plan/derive-rail-labels');
+  const RAIL_LABELS_VERSION = railLabelsCacheVersion(); // model-aware since 2026-10-23
   const { default: connectDB } = await import('@core/db');
   const { upsertLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
   const { GET: railLabelsGET } = await import('../src/app/api/tutor/lesson-plans/[id]/rail-labels/route');
@@ -574,7 +575,51 @@ async function runMongoCases() {
   }
 }
 
-runMongoCases()
+/* ------------------------------------------------------------------ */
+/* deriveSegmentLabels — verdict + cache version (in-memory store)    */
+/* ------------------------------------------------------------------ */
+
+async function runStoreCases() {
+  process.env.ANTHROPIC_API_KEY ||= 'test-key';
+  const d = await import('../src/lib/tutor/lesson-plan/derive-rail-labels');
+  const { buildRailLabelsId } = await import('../src/models/LessonPlanRailLabels');
+
+  // Cache version: Haiku 4.5 keeps the bare version; other models carry their id.
+  assert(d.railLabelsCacheVersion('claude-haiku-4-5-20251001') === 'rail-v1', 'version: Haiku 4.5 keeps rail-v1 (old rows stay valid)');
+  assert(d.railLabelsCacheVersion('claude-haiku-5-5') === 'rail-v1|claude-haiku-5-5', 'version: Haiku 5.5 carries the model id');
+  assert(d.railLabelsCacheVersion('claude-haiku-5-5') !== d.railLabelsCacheVersion('claude-sonnet-5'), 'version: differs per model');
+
+  const rows = new Map<string, { _id: string; atomic: boolean; labels: unknown }>();
+  const store = {
+    async find(id: string) { return rows.get(id) ?? null; },
+    async create(row: { _id: string; planId: string; labels: Record<string, string>; atomic: boolean }) { rows.set(row._id, row); return row; },
+  };
+  const plan = mkPlan({ title: 'Store plan', los: [{ id: 'lo-a', description: 'a' }, { id: 'lo-b', description: 'b' }], segmentIds: ['hook', 'concept-a', 'worked-b', 'recap'] });
+  const id = (p: { id: string }) => buildRailLabelsId(p.id, d.railLabelsCacheVersion());
+  const run = async (pid: string, reply: Parameters<typeof d.railLabelsVerdict>[0]) => {
+    rows.clear();
+    const p = { ...plan, id: pid };
+    const out = await d.deriveSegmentLabels(p, async () => reply, store);
+    return { out, row: rows.get(id(p)) };
+  };
+
+  let r = await run('p-cut', { text: '{"atomic": true}', stopReason: 'max_tokens' });
+  assert(r.out === null && !r.row, 'store: max_tokens reply → null, NO row (never persisted as atomic)');
+  r = await run('p-refusal', { text: '{"labels":[{"id":"concept-a","label":"Alpha"}]}', stopReason: 'refusal' });
+  assert(r.out === null && !r.row, 'store: non-end_turn reply → null, NO row');
+  r = await run('p-empty', { text: '  ', stopReason: 'end_turn' });
+  assert(r.out === null && !r.row, 'store: empty end_turn reply → null, NO row');
+  r = await run('p-empty-str', '');
+  assert(r.out === null && !r.row, 'store: empty string reply → null, NO row');
+  r = await run('p-atomic', { text: '{"atomic": true}', stopReason: 'end_turn' });
+  assert(r.out === null && r.row?.atomic === true, 'store: explicit atomic on end_turn → atomic row persisted');
+  r = await run('p-ok', { text: '{"labels":[{"id":"concept-a","label":"Alpha idea"},{"id":"worked-b","label":"Beta example"}]}', stopReason: 'end_turn' });
+  assert(r.out?.['concept-a'] === 'Alpha idea' && r.row?.atomic === false, 'store: labels on end_turn → persisted under the model-aware id');
+  assert(id({ id: 'p-ok' }) === buildRailLabelsId('p-ok', 'rail-v1|claude-haiku-5-5'), 'store: default (Haiku 5.5) row id carries the model');
+}
+
+runStoreCases()
+  .then(runMongoCases)
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     process.exit(failed > 0 ? 1 : 0);

@@ -203,7 +203,7 @@ async function child(modelId: string, outFile: string) {
       const plan = await loadSeed(name);
       cur = { caller: 'rail', fixture: name, rep };
       let raw = '';
-      try { raw = await rail.realComplete(railLib.buildLabelPrompt(plan)); } catch (err) { raw = `ERROR ${(err as Error).message}`; }
+      try { const r = await rail.realComplete(railLib.buildLabelPrompt(plan)); raw = typeof r === 'string' ? r : r.text; } catch (err) { raw = `ERROR ${(err as Error).message}`; }
       push('rail', name, { labels: railLib.parseLabelResponse(raw, plan), raw: raw.slice(0, 600) });
     }
     for (const [f, names] of Object.entries(CONDENSE_SETS)) {

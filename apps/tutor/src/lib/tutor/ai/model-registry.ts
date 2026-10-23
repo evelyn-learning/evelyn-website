@@ -74,15 +74,17 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   'social-threads': 'claude-haiku-4-5-20251001',
   'video-curator': 'claude-sonnet-4-6',
   plangen: 'claude-haiku-5-5', // docs/superpowers/evals/2026-10-23-plangen-model-compare.md: 98.4% verified keys, judge 7.20/8, $0.002/plan (Haiku 4.5: 92.3%, 5.77, $0.0115)
-  // 2026-10-23: enumerate / classify / summary / rail labels / condense move to
-  // Haiku 5.5 at effort low (lesson-plan/plangen-fast.ts drops temperature and
-  // adds thinking headroom). Eval: docs/superpowers/evals/2026-10-23-plangen-fast-compare.md.
+  // 2026-10-23: enumerate / summary / rail labels / condense move to Haiku 5.5
+  // at effort low (lesson-plan/plangen-fast.ts drops temperature and adds
+  // thinking headroom). Classify does NOT — it has its own role below. Eval: docs/superpowers/evals/2026-10-23-plangen-fast-compare.md.
   // Rollback: TUTOR_MODEL_PLANGEN_FAST=claude-haiku-4-5-20251001 restores the old bodies.
   'plangen-fast': 'claude-haiku-5-5',
   // material-classify stays on Haiku 4.5: in the same eval Haiku 5.5 returned
   // malformed JSON (`..."topicSummary":"...","}` — it starts the optional
-  // itemCount key and drops it) on 3/10 calls, which the gate reads as "no
-  // answer". Flip with TUTOR_MODEL_PLANGEN_CLASSIFY once the prompt/parse is fixed.
+  // itemCount key and drops it) on 2-3 of 10 calls, which the gate reads as "no
+  // answer". Flip with TUTOR_MODEL_PLANGEN_CLASSIFY once the prompt/parse is fixed;
+  // once moved off Haiku 4.5 it gets effort low too, and TUTOR_PLANGEN_FAST_EFFORT
+  // (not a classify-specific env) sets its level.
   'plangen-classify': 'claude-haiku-4-5-20251001',
   // 2026-10-20 (GAC Geometry upload, twice): Sonnet 4.6 put a labelled angle on
   // the wrong side of the transversal in two reads of the same worksheet.

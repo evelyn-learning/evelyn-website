@@ -758,6 +758,13 @@ Rules:
 3. Do NOT invent content that isn't in the source.
 4. Output ONLY the condensed material as plain text — no preamble, no commentary, no markdown fences.`;
 
+/** Thinking headroom on top of the condensed text, for models that think (plangen-fast.ts). */
+const CONDENSE_THINKING_HEADROOM = 4000;
+/** max_tokens floor for a thinking model: targetChars/3 tokens of text plus headroom, at least 8192. Pure. */
+export function condenseMaxTokens(targetChars: number): number {
+  return Math.max(8192, Math.ceil(targetChars / 3) + CONDENSE_THINKING_HEADROOM);
+}
+
 export async function condenseForPipeline(text: string, opts: { targetChars: number }): Promise<string> {
   const target = opts.targetChars;
   if (text.length <= target) return text;
@@ -767,7 +774,8 @@ export async function condenseForPipeline(text: string, opts: { targetChars: num
     const response = await getModelClient('plangen-fast').client.messages.create({
       model: HAIKU_MODEL_ID,
       // Haiku 5.5: effort low + thinking headroom (plangen-fast.ts); no temperature was ever sent here.
-      ...plangenFastParams(CONDENSE_MAX_TOKENS, undefined, { model: HAIKU_MODEL_ID, minMaxTokens: 8192 }),
+      // Thinking models: room for the target text (~3 chars/token) plus thinking, never below 8192.
+      ...plangenFastParams(CONDENSE_MAX_TOKENS, undefined, { model: HAIKU_MODEL_ID, minMaxTokens: condenseMaxTokens(target) }),
       system: CONDENSE_SYSTEM_PROMPT,
       messages: [
         {
@@ -785,6 +793,12 @@ export async function condenseForPipeline(text: string, opts: { targetChars: num
       if (block.type === 'text') condensed += block.text;
     }
     condensed = condensed.trim();
+    // A reply cut at max_tokens is a failure (partial text, possibly all thinking),
+    // not a condensed version: same fallback as an error.
+    if (response.stop_reason === 'max_tokens') {
+      console.error(`[material-extract] condense hit max_tokens inputLen=${text.length} target=${target}`);
+      return text.slice(0, target);
+    }
   } catch (err) {
     console.error(
       `[material-extract] condense call failed inputLen=${text.length} target=${target} errorType=${errorKind(err)}`,

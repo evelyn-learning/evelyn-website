@@ -35,12 +35,13 @@ async function main() {
   const { client, model } = getModelClient('plangen-fast');
 
   const seen: Record<string, unknown>[] = [];
+  let stopReason = 'end_turn';
   (client.messages as unknown as { create: (p: unknown) => Promise<unknown> }).create = async (p: unknown) => {
     seen.push(p as Record<string, unknown>);
     // A thinking block first: every caller must read the text block only.
     return {
       content: [{ type: 'thinking', thinking: '', signature: 'x' }, { type: 'text', text: 'REPLY' }],
-      stop_reason: 'end_turn',
+      stop_reason: stopReason,
       usage: { input_tokens: 1, output_tokens: 1 },
     };
   };
@@ -52,12 +53,16 @@ async function main() {
       enumerate: await enumerate.defaultEnumerateDeps(client).complete('S', 'U'),
       classify: await classify.defaultClassifyDeps(client).complete('S', 'U'),
       summary: await summary.defaultSummaryDeps(client).complete('S', 'U'),
-      rail: await rail.realComplete('P'),
+      rail: await rail.realComplete('P').then((r) => (typeof r === 'string' ? r : r.text)),
       condense: await extract.condenseForPipeline(longText, { targetChars: 8000 }),
     };
     assert.equal(seen.length, 5, 'one call per caller');
     return { out, bodies: { enumerate: seen[0]!, classify: seen[1]!, summary: seen[2]!, rail: seen[3]!, condense: seen[4]! } };
   };
+
+  // getClassifierClient() is the 'plangen-classify' role's client; Haiku 4.5 by default.
+  assert.equal(getModelClient('plangen-classify').model, 'claude-haiku-4-5-20251001', 'plangen-classify defaults to Haiku 4.5');
+  assert.equal(classify.getClassifierClient(), getModelClient('plangen-classify').client, 'getClassifierClient() = the plangen-classify client');
 
   const { out, bodies } = await runAll();
   for (const [name, text] of Object.entries(out)) assert.equal(text, 'REPLY', `${name}: text block only (thinking ignored)`);
@@ -88,6 +93,19 @@ async function main() {
     assert.equal(b.max_tokens, expectMax[name], `${name}: max_tokens headroom`);
     assert.ok(!('thinking' in b), `${name}: thinking left at the model default`);
   }
+
+  // condense: max_tokens sized from the target (target/3 tokens + 4000 thinking, >= 8192).
+  assert.equal(extract.condenseMaxTokens(8000), 8192);
+  assert.equal(extract.condenseMaxTokens(30000), 14000);
+  seen.length = 0;
+  const bigText = 'Heading One\n' + 'some material line. '.repeat(2000);
+  await extract.condenseForPipeline(bigText, { targetChars: 30000 });
+  assert.equal(seen[0]!.max_tokens, 14000, 'condense: max_tokens scales with targetChars');
+  // condense: a reply cut at max_tokens takes the failure fallback (hard truncate of the original).
+  stopReason = 'max_tokens';
+  const cut = await extract.condenseForPipeline(longText, { targetChars: 8000 });
+  assert.equal(cut, longText.slice(0, 8000), 'condense: stop_reason max_tokens → fallback, partial reply discarded');
+  stopReason = 'end_turn';
 
   // Env override.
   process.env.TUTOR_PLANGEN_FAST_EFFORT = 'medium';
