@@ -102,6 +102,8 @@ export function classifyHomeworkProblemOutcome(input: {
   finished?: boolean;
   /** The verified key, for the finished check; null/undefined when there is none. */
   key?: AnswerKey | null;
+  /** A2: marks an earlier session of this problem confirmed (keyed-verdict.ts). */
+  priorConfirmed?: ReadonlyArray<string>;
 }): HomeworkProblemOutcome {
   const events = Array.isArray(input.debugEvents) ? input.debugEvents : [];
   if (events.some((e) => e?.type === HOMEWORK_PROBLEM_DONE_EVENT)) return 'done';
@@ -109,7 +111,7 @@ export function classifyHomeworkProblemOutcome(input: {
   // list" — the problem stayed "In progress" and the next open started over.
   // Every key part confirmed by the transcript is done, finish button or not.
   const history = (input.transcript ?? []).filter(isStudent).map((t) => ({ role: 'user' as const, content: String(t.text) }));
-  if (input.key?.parts?.length && allKeyPartsConfirmed(history, '', input.key)) return 'done';
+  if (input.key?.parts?.length && allKeyPartsConfirmed(history, '', input.key, input.priorConfirmed ?? [])) return 'done';
   if (input.finished) return 'needs_review';
   if (input.verified === false) {
     const lastStudent = [...(input.transcript ?? [])].reverse().find(isStudent);

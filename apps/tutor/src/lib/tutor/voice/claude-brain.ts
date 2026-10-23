@@ -2648,7 +2648,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   }
   // GAC per-problem homework: every key part confirmed by the student's
   // messages so far (stateless: recomputed from the history every turn).
-  if (hpKey && allKeyPartsConfirmed(input.conversationHistory, studentSaid, hpKey)) {
+  if (hpKey && allKeyPartsConfirmed(input.conversationHistory, studentSaid, hpKey, input.homeworkProblem?.priorConfirmed ?? [])) {
     console.log('[homework-problem] every part confirmed — homework-problem-done');
     yield { type: 'homework-problem-done' };
   }

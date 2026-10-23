@@ -19,6 +19,8 @@ export interface HomeworkProblemTurnInput {
   verified: boolean;
   hasFigure: boolean;
   priorNote?: string;
+  /** A2: marks earlier sessions of this problem confirmed (keyed-verdict.ts). */
+  priorConfirmed?: string[];
   /** Present only when `verified`; read server-side from the homework build. */
   key?: AnswerKey;
 }
@@ -84,6 +86,18 @@ export function boardRevealsHomeworkKey(args: unknown, withheld: ReadonlyArray<W
 
 const oneLine = (s: string, max: number) => String(s ?? '').replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 
+/** A2 (2026-10-23): what an earlier session already confirmed, in words. */
+function priorConfirmedLine(marks: string[] | undefined): string {
+  const items = (marks ?? []).map((m) => {
+    if (m.startsWith('part:')) return m.slice(5) ? `part ${m.slice(5)}` : 'the answer';
+    const body = m.slice(6); const eq = body.indexOf('=');
+    const part = body.slice(0, eq); const value = oneLine(body.slice(eq + 1), 40);
+    return part ? `${value} in part ${part}` : value;
+  }).filter(Boolean);
+  if (!items.length) return '';
+  return `Already confirmed correct in an earlier session: ${items.join('; ')}. Do not ask for these again; acknowledge them briefly and continue with what is left.\n`;
+}
+
 export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined): string {
   if (!hp?.text?.trim()) return '';
   const note = hp.priorNote ? oneLine(hp.priorNote, 400) : '';
@@ -91,6 +105,7 @@ export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefi
     + 'The student is working ONE problem from their homework sheet (verbatim):\n'
     + `${hp.text.trim().slice(0, 4000)}\n`
     + (note ? `Prior work on this problem: ${note}\n` : '')
+    + priorConfirmedLine(hp.priorConfirmed)
     + `- ${hp.hasFigure ? HOMEWORK_PROBLEM_FIGURE_SHOWN : HOMEWORK_PROBLEM_NO_FIGURE}\n`
     + `- ${hp.verified ? HOMEWORK_PROBLEM_VERIFIED : HOMEWORK_PROBLEM_UNVERIFIED}\n`
     + `${HOMEWORK_PROBLEM_RULES}\n`

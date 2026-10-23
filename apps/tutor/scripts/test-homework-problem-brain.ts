@@ -845,6 +845,58 @@ async function main() {
     });
   }
 
+  // A2 (2026-10-23): confirmed parts carry across sessions of one problem
+  // (hw-15 p2: the resumed session could not see what the first one confirmed).
+  await section('A2: confirmed marks round-trip and union with the current session', async () => {
+    const kv2 = await import('../src/lib/tutor/voice/keyed-verdict');
+    const K: AnswerKey = { parts: [
+      { label: 'a', final: '132', canonical: { kind: 'number', value: 132 } },
+      { label: 'b', final: '17', canonical: { kind: 'number', value: 17 } },
+    ], solvers: [] };
+    const h = (...msgs: string[]) => msgs.map((content) => ({ role: 'user' as const, content }));
+    const marks = kv2.confirmedKeyMarks(h('a) 132'), '', K);
+    assert.deepEqual(marks, ['part:a']);
+    assert.equal(kv2.allKeyPartsConfirmed([], '17', K), false, 'b alone is not every part');
+    assert.equal(kv2.allKeyPartsConfirmed([], '17', K, marks), true, 'prior a + this session b');
+    assert.deepEqual(kv2.confirmedKeyMarks([], '17', K, marks).sort(), ['part:a', 'part:b']);
+    // A multi-value part half-confirmed in session 1 keeps the value it got.
+    const { normalizeKeyParts } = await import('../src/lib/tutor/homework-build/key-solve');
+    const parts = normalizeKeyParts({ parts: [{ label: 'b', final: 'm∠1 = 116°, m∠2 = 64°', canonical: { kind: 'text', text: '' } }] })!;
+    const AK: AnswerKey = { parts, solvers: [] };
+    const half = kv2.confirmedKeyMarks(h('angle 1 is 116'), '', AK);
+    assert.equal(half.length, 1);
+    assert.ok(half[0].startsWith('value:b='), half[0]);
+    assert.equal(kv2.allKeyPartsConfirmed([], 'angle 2 = 64', AK), false);
+    assert.equal(kv2.allKeyPartsConfirmed([], 'angle 2 = 64', AK, half), true);
+    // Junk marks are ignored, never throw.
+    assert.equal(kv2.allKeyPartsConfirmed([], '', K, ['nonsense', 'part:zz', 'value:=']), false);
+  });
+  await section('A2: the outcome is done when prior marks complete the key', async () => {
+    const oc2 = await import('../src/lib/tutor/homework-build/outcome');
+    const K: AnswerKey = { parts: [
+      { label: 'a', final: '132', canonical: { kind: 'number', value: 132 } },
+      { label: 'b', final: '17', canonical: { kind: 'number', value: 17 } },
+    ], solvers: [] };
+    const stu = (text: string) => ({ role: 'student', text });
+    assert.equal(oc2.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('b is 17')], verified: true, key: K }), 'in_progress');
+    assert.equal(oc2.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('b is 17')], verified: true, key: K, priorConfirmed: ['part:a'] }), 'done');
+  });
+  await section('A2: the meta, block, plan route and outcome route carry priorConfirmed', async () => {
+    const meta = await import('../src/lib/tutor/lesson-plan/homework-problem-meta');
+    const got = meta.homeworkProblemOf({ metadata: { kind: 'homework-problem', parentPlanId: 'p', n: 1, text: 'T', verified: true, priorConfirmed: ['part:a', 7, 'x'.repeat(200)] } });
+    assert.deepEqual(got?.priorConfirmed, ['part:a']);
+    const blk2 = await import('../src/lib/tutor/voice/homework-problem-block');
+    const b = blk2.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true, priorConfirmed: ['part:a', 'value:b=m∠1'] });
+    assert.ok(/Already confirmed correct in an earlier session: part a; m∠1 in part b/.test(b), b);
+    assert.ok(!blk2.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true }).includes('Already confirmed'));
+    const src = (f: string) => fs.readFileSync(path.join(__dirname, '../src', f), 'utf8');
+    assert.ok(/priorConfirmed/.test(src('app/api/portal/v1/homework-problem-plan/route.ts')), 'plan route reads priorConfirmed');
+    const o = src('app/api/portal/v1/homework-problem-outcome/route.ts');
+    assert.ok(/confirmedKeyMarks/.test(o) && /confirmed/.test(o), 'outcome route returns confirmed marks');
+    assert.ok(/allKeyPartsConfirmed\([^)]*priorConfirmed/.test(src('lib/tutor/voice/claude-brain.ts')), 'brain unions the prior marks');
+    assert.ok(/priorConfirmed/.test(src('lib/tutor/voice/homework-problem-turn.ts')), 'turn passes the prior marks');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

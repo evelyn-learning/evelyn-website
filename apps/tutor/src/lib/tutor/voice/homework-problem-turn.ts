@@ -75,6 +75,7 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
       verified,
       hasFigure: meta.figure != null,
       ...(meta.priorNote ? { priorNote: meta.priorNote } : {}),
+      ...(meta.priorConfirmed?.length ? { priorConfirmed: meta.priorConfirmed } : {}),
       ...(key ? { key } : {}),
     },
     ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key), ...(solutionPath.length ? { solutionPath } : {}) } } : {}),

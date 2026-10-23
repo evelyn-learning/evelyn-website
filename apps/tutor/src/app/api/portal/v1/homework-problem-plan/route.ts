@@ -1,5 +1,5 @@
 /**
- * POST /api/portal/v1/homework-problem-plan  { planId, n, priorNote?, waitMs? }
+ * POST /api/portal/v1/homework-problem-plan  { planId, n, priorNote?, priorConfirmed?, waitMs? }
  *   -> 201 { planId, verified, hasFigure, buildStatus }
  *
  * Mints the one-problem plan a student's session runs on. Waits (up to
@@ -8,6 +8,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { sanitizeConfirmedMarks } from '@/lib/tutor/voice/keyed-verdict';
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { getLessonPlan, upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
@@ -26,7 +27,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const POST = withPortalAuth(async (_req, auth) => {
   // withPortalAuth consumed the request stream for the HMAC check; the parsed
   // body is auth.body (reading _req.json() here finds an empty stream → 400).
-  const body = (auth.body && typeof auth.body === 'object' ? auth.body : {}) as { planId?: unknown; n?: unknown; priorNote?: unknown; waitMs?: unknown };
+  const body = (auth.body && typeof auth.body === 'object' ? auth.body : {}) as { planId?: unknown; n?: unknown; priorNote?: unknown; priorConfirmed?: unknown; waitMs?: unknown };
   if (typeof body.planId !== 'string' || !body.planId || typeof body.n !== 'number') {
     return NextResponse.json({ error: 'bad_request', reason: 'planId and n required' }, { status: 400 });
   }
@@ -39,6 +40,8 @@ export const POST = withPortalAuth(async (_req, auth) => {
   }
   const waitMs = Math.min(MAX_WAIT_MS, Math.max(0, typeof body.waitMs === 'number' && Number.isFinite(body.waitMs) ? body.waitMs : MAX_WAIT_MS));
   const priorNote = typeof body.priorNote === 'string' ? body.priorNote.trim().slice(0, PRIOR_NOTE_MAX) : '';
+  // A2 (2026-10-23): the parts earlier sessions of this problem confirmed.
+  const priorConfirmed = sanitizeConfirmedMarks(body.priorConfirmed);
 
   const deadline = Date.now() + waitMs;
   let kicked = false;
@@ -59,6 +62,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
   const plan = buildHomeworkProblemPlan(parent, {
     parentPlanId: parentId, n, text: problem.text, figure, verified,
     ...(priorNote ? { priorNote } : {}),
+    ...(priorConfirmed.length ? { priorConfirmed } : {}),
   }, planId);
   await upsertLessonPlan(plan);
   return NextResponse.json({ planId, verified, hasFigure: figure != null, buildStatus }, { status: 201 });

@@ -488,20 +488,46 @@ export function keyedPrecheckResult(v: KeyedVerdict, key: AnswerKey): VerdictPre
   };
 }
 
-/** Parts confirmed correct by any student message so far, this one included. */
-export function confirmedKeyParts(
+/** A2 (2026-10-23): what one session confirmed, carried into the next session
+ *  of the same problem. `part:<label>` is a whole part; `value:<label>=<name>`
+ *  one value of a multi-value part. Labels are normalised (normLabel). */
+export const PRIOR_CONFIRMED_MAX = 40;
+export const PRIOR_CONFIRMED_MARK_MAX = 120;
+
+/** Keep only well-formed marks (bounded); anything else is dropped. */
+export function sanitizeConfirmedMarks(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const m of raw) {
+    if (typeof m !== 'string' || m.length > PRIOR_CONFIRMED_MARK_MAX) continue;
+    if (!/^part:[a-z0-9]*$/.test(m) && !/^value:[a-z0-9]*=.+$/.test(m)) continue;
+    if (!out.includes(m)) out.push(m);
+    if (out.length >= PRIOR_CONFIRMED_MAX) break;
+  }
+  return out;
+}
+
+function collectConfirmed(
   history: ReadonlyArray<{ role: 'user' | 'assistant'; content: unknown }>,
   currentMessage: string,
   key: AnswerKey,
-): Set<string> {
+  prior: ReadonlyArray<string>,
+): { done: Set<string>; values: Map<string, Set<string>> } {
   const done = new Set<string>();
   const values = new Map<string, Set<string>>();   // part → confirmed value names
+  const addValue = (part: string, value: string) => { const set = values.get(part) ?? new Set<string>(); set.add(value); values.set(part, set); };
+  const labels = new Set(key.parts.map((p) => normLabel(p.label)));
+  for (const m of sanitizeConfirmedMarks(prior)) {
+    if (m.startsWith('part:')) { const l = m.slice(5); if (labels.has(l)) done.add(l); continue; }
+    const body = m.slice(6); const eq = body.indexOf('=');
+    if (eq >= 0 && labels.has(body.slice(0, eq))) addValue(body.slice(0, eq), body.slice(eq + 1));
+  }
   const msgs = [...history.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), currentMessage];
   // keyedVerdicts drops a runtime note in front of a student's words (R19b).
   for (const msg of msgs) {
     for (const v of keyedVerdicts(msg, key)) {
       if (v.verdict !== 'correct') continue;
-      if (v.value) { const set = values.get(v.part ?? '') ?? new Set<string>(); set.add(v.value); values.set(v.part ?? '', set); }
+      if (v.value) addValue(v.part ?? '', v.value);
       else done.add(v.part ?? '');
     }
   }
@@ -510,16 +536,42 @@ export function confirmedKeyParts(
     const label = normLabel(p.label);
     if (p.values?.length && !done.has(label) && p.values.every((v) => values.get(label)?.has(v.name))) done.add(label);
   }
-  return done;
+  return { done, values };
+}
+
+/** Parts confirmed correct by any student message so far, this one included,
+ *  plus the marks an earlier session of this problem confirmed (A2). */
+export function confirmedKeyParts(
+  history: ReadonlyArray<{ role: 'user' | 'assistant'; content: unknown }>,
+  currentMessage: string,
+  key: AnswerKey,
+  prior: ReadonlyArray<string> = [],
+): Set<string> {
+  return collectConfirmed(history, currentMessage, key, prior).done;
+}
+
+/** The marks to carry into the next session (A2): every confirmed part, and
+ *  the confirmed values of a part not yet confirmed whole. */
+export function confirmedKeyMarks(
+  history: ReadonlyArray<{ role: 'user' | 'assistant'; content: unknown }>,
+  currentMessage: string,
+  key: AnswerKey,
+  prior: ReadonlyArray<string> = [],
+): string[] {
+  const { done, values } = collectConfirmed(history, currentMessage, key, prior);
+  const out = [...done].map((l) => `part:${l}`);
+  for (const [l, set] of values) if (!done.has(l)) for (const v of set) out.push(`value:${l}=${v}`);
+  return sanitizeConfirmedMarks(out);
 }
 
 export function allKeyPartsConfirmed(
   history: ReadonlyArray<{ role: 'user' | 'assistant'; content: unknown }>,
   currentMessage: string,
   key: AnswerKey,
+  prior: ReadonlyArray<string> = [],
 ): boolean {
   if (!key.parts.length) return false;
-  const done = confirmedKeyParts(history, currentMessage, key);
+  const done = confirmedKeyParts(history, currentMessage, key, prior);
   return key.parts.every((p) => done.has(normLabel(p.label)));
 }
 

@@ -1,6 +1,8 @@
 /**
  * GET /api/portal/v1/homework-problem-outcome?sessionId=[&planId=]
- *   -> 200 { outcome: 'done' | 'in_progress' | 'needs_review', priorNote }
+ *   -> 200 { outcome: 'done' | 'in_progress' | 'needs_review', priorNote, confirmed }
+ *      `confirmed` (A2): keyed-verdict marks for every part confirmed so far,
+ *      earlier sessions' included — the host passes them to the next mint.
  *   -> 400 sessionId missing · 404 session missing or another partner's
  *
  * The outcome of one homework-problem session (lib/tutor/homework-build/
@@ -17,6 +19,7 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { homeworkProblemOf } from '@/lib/tutor/lesson-plan/homework-problem';
 import { classifyHomeworkProblemOutcome, homeworkProblemPriorNote } from '@/lib/tutor/homework-build/outcome';
 import { getHomeworkBuild } from '@/lib/tutor/homework-build/store';
+import { confirmedKeyMarks } from '@/lib/tutor/voice/keyed-verdict';
 
 export const GET = withPortalAuth(async (req, auth) => {
   const params = new URL(req.url).searchParams;
@@ -44,7 +47,12 @@ export const GET = withPortalAuth(async (req, auth) => {
     verified: meta ? meta.verified : null,
     finished,
     key,
+    priorConfirmed: meta?.priorConfirmed ?? [],
   });
   const priorNote = await homeworkProblemPriorNote(session.transcript);
-  return NextResponse.json({ outcome, priorNote });
+  const history = (session.transcript ?? [])
+    .filter((t) => t?.role === 'student' && typeof t.text === 'string' && t.text.trim() !== '')
+    .map((t) => ({ role: 'user' as const, content: String(t.text) }));
+  const confirmed = key?.parts?.length ? confirmedKeyMarks(history, '', key, meta?.priorConfirmed ?? []) : (meta?.priorConfirmed ?? []);
+  return NextResponse.json({ outcome, priorNote, confirmed });
 });

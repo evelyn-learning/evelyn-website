@@ -17,6 +17,19 @@ export interface HomeworkProblemMeta {
   figure: FigureCommand | null;
   verified: boolean;
   priorNote?: string;
+  /** A2 (2026-10-23): marks earlier sessions of this problem confirmed (keyed-verdict.ts). */
+  priorConfirmed?: string[];
+}
+
+/** Client-safe copy of keyed-verdict's sanitizeConfirmedMarks (this file must stay import-light). */
+function priorMarks(raw: unknown[]): string[] {
+  const out: string[] = [];
+  for (const m of raw) {
+    if (typeof m !== 'string' || m.length > 120 || out.includes(m)) continue;
+    if (/^part:[a-z0-9]*$/.test(m) || /^value:[a-z0-9]*=.+$/.test(m)) out.push(m);
+    if (out.length >= 40) break;
+  }
+  return out;
 }
 
 /** Read the problem metadata back off a plan, or null when it isn't a one-problem plan. */
@@ -32,6 +45,7 @@ export function homeworkProblemOf(plan: { metadata?: Record<string, unknown> } |
     figure: (m.figure ?? null) as FigureCommand | null,
     verified: m.verified === true,
     ...(typeof m.priorNote === 'string' ? { priorNote: m.priorNote } : {}),
+    ...(Array.isArray(m.priorConfirmed) ? { priorConfirmed: priorMarks(m.priorConfirmed) } : {}),
   };
 }
 
