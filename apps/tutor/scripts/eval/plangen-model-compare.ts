@@ -10,7 +10,7 @@
  * Stage 2 (expandSegmentsForLOs), namespace + parseLessonPlan, fallbackPlan on
  * any failure. No Mongo: nothing is cached or persisted.
  *
- * The registry reads TUTOR_MODEL_PLANGEN_FAST at module load, so each model's
+ * The registry reads TUTOR_MODEL_PLANGEN at module load, so each model's
  * generation pass runs as a CHILD PROCESS with that env (plus
  * TUTOR_PLANGEN_EFFORT for the newer models).
  *
@@ -164,7 +164,7 @@ async function genChild(modelId: string, topicIds: string[]) {
   const { maxLOsForBudget } = await import('../../src/lib/tutor/lesson-plan/session-budget');
   const { parseLessonPlan } = await import('../../src/lib/tutor/lesson-plan/parser');
   const { LESSON_PLAN_SCHEMA_VERSION } = await import('../../src/lib/tutor/lesson-plan/types');
-  const { client, model } = getModelClient('plangen-fast');
+  const { client, model } = getModelClient('plangen');
   if (model !== modelId) throw new Error(`registry resolved ${model}, expected ${modelId}`);
   const effort = gen.plangenEffort() ?? null;
 
@@ -280,7 +280,7 @@ function runGen(models: typeof MODELS, topicIds: string[]) {
       console.log(`[gen] ${m.id}: all ${topicIds.length} recorded, skipping`);
       continue;
     }
-    const env: NodeJS.ProcessEnv = { ...process.env, TUTOR_MODEL_PLANGEN_FAST: m.id, PLANGEN_EVAL_DIR: DIR };
+    const env: NodeJS.ProcessEnv = { ...process.env, TUTOR_MODEL_PLANGEN: m.id, PLANGEN_EVAL_DIR: DIR };
     delete env.TUTOR_PLANGEN_EFFORT;
     if (m.effort) env.TUTOR_PLANGEN_EFFORT = m.effort;
     const r = spawnSync('npx', ['tsx', process.argv[1], '__gen-child', m.id, todo.join(',')], { stdio: 'inherit', env, cwd: process.cwd() });
