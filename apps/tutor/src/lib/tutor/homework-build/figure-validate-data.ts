@@ -409,12 +409,27 @@ export const FRACTION_MAX_ITEMS = 8;
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 
 /**
+ * Is the fraction n/d written in the text with exactly this numerator and
+ * denominator? Typesetting variants of the same n/d count: spaces around the
+ * slash, the fraction slash (n⁄d) and \frac{n}{d} (\dfrac, \tfrac). An
+ * equivalent fraction (1/2 for 2/4) or a decimal does not.
+ */
+export function fractionTokenInText(n: number, d: number, text: string): boolean {
+  const t = text.replace(/[−‒–]/g, '-');
+  const slash = new RegExp(`(?<![\\d.])${n}\\s*[/⁄∕]\\s*${d}(?![\\d.])`);
+  const frac = new RegExp(`\\\\[dt]?frac\\s*\\{\\s*${n}\\s*\\}\\s*\\{\\s*${d}\\s*\\}`);
+  return slash.test(t) || frac.test(t);
+}
+
+/**
  * showFractionBar: one item per shaded whole, an integer denominator > 0 (at
  * most 100) and an integer numerator 0..denominator (the board shades at most
- * every part, so an improper fraction would not draw as stated). Provenance:
- * the numerator and denominator are each stated, or the fraction is stated as
- * a value (a "3/4" token states 0.75, not 3 and 4); item labels and the title
- * from the text. showComparison draws alignment lines that compare the bars:
+ * every part, so an improper fraction would not draw as stated). Provenance
+ * (controller ruling 2026-10-23): the fraction is written in the text with
+ * this exact numerator and denominator (fractionTokenInText; "2/4" never
+ * accepts 1/2, since the denominator is the number of parts drawn), or the
+ * numerator and denominator are each stated as numbers ("5 of the 8 slices");
+ * item labels and the title from the text. showComparison draws alignment lines that compare the bars:
  * a comparison is the student's work, never drawn.
  */
 export function validateFractionBarFigure(fig: Extract<FigureCommand, { action: 'showFractionBar' }>, ctx: FigureContext): string[] {
@@ -444,8 +459,10 @@ export function validateFractionBarFigure(fig: Extract<FigureCommand, { action: 
     if (d > FRACTION_MAX_DENOMINATOR) { reasons.push(`${where}: denominator must be at most ${FRACTION_MAX_DENOMINATOR}`); return; }
     if (!isInt(n) || n < 0) { reasons.push(`${where}: numerator must be an integer ≥ 0`); return; }
     if (n > d) { reasons.push(`${where}: ${n}/${d} has more shaded parts than parts (the board cannot draw an improper fraction in one whole)`); return; }
-    const stated = (numberIsFromText(n, text) && numberIsFromText(d, text)) || numberIsFromText(n / d, text);
-    if (!stated) reasons.push(`fraction ${n}/${d} in ${where} does not come from the problem text`);
+    // The denominator is what the board draws (the number of parts), so a
+    // fraction is matched as written, never by value: "2/4" states 2/4, not 1/2.
+    const stated = fractionTokenInText(n, d, text) || (numberIsFromText(n, text) && numberIsFromText(d, text));
+    if (!stated) reasons.push(`fraction ${n}/${d} in ${where} does not come from the problem text (copy the fraction as written)`);
   });
   return reasons;
 }

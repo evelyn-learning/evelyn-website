@@ -809,6 +809,17 @@ test('fraction bar: a zero denominator, a negative or fractional numerator, an i
   const j = fracFig(); itemsOf(j)[0].style = 'hexagon';
   statsFails(j, FRAC, /style/);
 });
+test('fraction bar: a fraction matches the text as written, never by value (controller ruling)', () => {
+  const T = '[Figure: A fraction bar with 2/4 shaded.]';
+  const one = (n: number, d: number) => ({ action: 'showFractionBar', items: [{ numerator: n, denominator: d }] } as unknown as Fig);
+  assert.deepEqual(statsOk(one(2, 4), T), { ok: true });
+  statsFails(one(1, 2), T, /fraction 1\/2 in items\[0\] does not come from the problem text/);
+  // Typesetting variants of the same n/d pass.
+  for (const v of ['2 / 4', '2⁄4', '\\frac{2}{4}', '\\dfrac{2}{4}']) assert.deepEqual(statsOk(one(2, 4), `[Figure: A bar with ${v} shaded.]`), { ok: true }, v);
+  // A decimal or percent is not the fraction; a longer number is not a match.
+  statsFails(one(3, 4), '[Figure: A bar with 0.75 shaded.]', /fraction 3\/4/);
+  statsFails(one(2, 4), '[Figure: A bar with 12/45 shaded.]', /fraction 2\/4/);
+});
 test('fraction bar: the kill switch (geometry) rejects it', () => {
   assert.deepEqual(statsOk(fracFig(), FRAC, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showFractionBar"'] });
 });
