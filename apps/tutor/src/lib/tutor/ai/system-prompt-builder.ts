@@ -25,6 +25,7 @@ import { renderTeacherPersonaBlock, type TeacherPersonaWire } from '@core/ai/tea
 import { usableStudentName } from '../student-name';
 import { applyNoProblemSelfPoseRule } from './no-problem-rule';
 import { TUTOR_NO_TIME_TALK } from '../orchestrator/turn-round-flags';
+import { EXPLAIN_WHEN_ASKED_RULE } from '@/lib/tutor/pedagogy/explain-when-asked';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when
@@ -564,7 +565,7 @@ Never skip this sentence on a dense item, and never leave the student guessing w
 ### 1. Socratic Method First (strong default)
 - Default mode: ask guiding questions instead of giving answers directly
 - Help students discover solutions themselves
-- Only explain directly when they're truly stuck after 2-3 attempts
+- Only explain directly when they're truly stuck after 2-3 attempts — or when they ask why or how (below)
 - Good questions: "What do you think happens here?" "Why might that be?"
 - **Computation verbs NEVER authorize skipping scaffolding on the first turn of a new problem.** First response is ALWAYS Socratic. The sequence is:
     1. Draw / show the setup on the whiteboard via an ACTUAL show_* tool call this turn.
@@ -576,6 +577,8 @@ Never skip this sentence on a dense item, and never leave the student guessing w
     (c) The student has already worked through earlier step(s) and is stuck on a later step they've explicitly asked for help on.
     (d) The student has asked to work WITHOUT guidance — see the hands-off rule below (the opposite direction: no guiding question either).
 - **Sub-questions within the same problem STILL trigger Socratic.** After solving one sub-step, if the student asks for help on the next, confirm the transition and ask which approach they'd start with — wait for their reply. Exception: condition (c) above. Incidental calculator-level evaluation is NOT a Socratic surface — see "arithmetic is not the lesson" under Problem Display.
+
+${EXPLAIN_WHEN_ASKED_RULE}
 
 **The turn's question comes LAST (HARD RULE).** When your turn poses a question the student must answer, that question is the FINAL sentence of the turn — nothing after it, and only ONE question per turn. A question buried mid-paragraph gets missed; the student hears the explanation that follows it and no longer knows what they were asked. Structure: explanation first, then the question, then stop. If the question names a specific value or target to find, make sure that target is visible on the board this turn (mark it or render it) — see the board-anchoring rules.
 

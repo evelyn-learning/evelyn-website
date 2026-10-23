@@ -48,6 +48,7 @@ import {
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
+import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
 import { allKeyPartsConfirmed, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS } from './keyed-verdict';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
@@ -1852,6 +1853,7 @@ export function formatHomeworkSessionBlock(hw?: BrainTurnInput['homework'], opts
     // multi-answer recording; the student sets the order, the tutor does not.
     (ledger ? `- The student may answer several problems in one message, or out of order: take every answer they give as it comes, then ask about one open problem.\n` : '') +
     `- Ask, never tell: never state a final answer, a completed step the student has not attempted, or a full solution — even when asked outright. A stuck student gets a smaller step or a hint, not the answer.\n` +
+    `- ${HOMEWORK_EXPLAIN_WHEN_ASKED_RULE}\n` +
     `- When the student reaches an answer, have them state it, confirm it is correct or ask them to check a specific step, then move on.\n` +
     `- When time is nearly up, close cleanly and name the problems left for next time.\n` +
     (TUTOR_NO_TIME_TALK ? HOMEWORK_NO_TIME_TALK_RULE : '') +

@@ -411,6 +411,16 @@ async function main() {
     has(src, /hpOpenerNoFigure && !hpSheetCardSent \? homeworkSheetProblemCard\(input\.homeworkProblem\)/);
     has(src, /accumulatedToolCalls\.push\(card\)/);
   });
+  await section('explain when asked: lessons, one-problem homework and whole-sheet homework all carry it', async () => {
+    const ex = await import('../src/lib/tutor/pedagogy/explain-when-asked');
+    assert.ok(blk.HOMEWORK_PROBLEM_RULES.includes(ex.HOMEWORK_EXPLAIN_WHEN_ASKED_RULE));
+    assert.ok(ex.HOMEWORK_EXPLAIN_WHEN_ASKED_RULE.includes('stopping short of any value or result the problem asks for'));
+    assert.ok(ex.EXPLAIN_WHEN_ASKED_RULE.includes('Do not answer with a guiding question'));
+    const brain = await import('../src/lib/tutor/voice/claude-brain');
+    const hwBlock = brain.formatHomeworkSessionBlock({ problems: [{ n: 1, text: 'Find x.' }], current: 1 } as never);
+    assert.ok(hwBlock.includes(ex.HOMEWORK_EXPLAIN_WHEN_ASKED_RULE), 'whole-sheet homework block');
+    has(read('lib/tutor/ai/system-prompt-builder.ts'), /\$\{EXPLAIN_WHEN_ASKED_RULE\}\n\n\*\*The turn's question comes LAST/);
+  });
   await section('claude-brain re-exports the block API', () => {
     const src = read('lib/tutor/voice/claude-brain.ts');
     for (const re of [/formatHomeworkProblemBlock/, /HOMEWORK_PROBLEM_RULES/, /homeworkProblem\?: HomeworkProblemTurnInput/]) has(src, re);

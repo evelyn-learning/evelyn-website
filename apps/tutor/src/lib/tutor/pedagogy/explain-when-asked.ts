@@ -1,0 +1,19 @@
+/**
+ * "Explain when asked" (2026-10-23, Praveen after the Haiku 5.5 / Sonnet 5
+ * brain comparison). Asked "I know it's half but not why — can you explain?",
+ * then "derive it using figures", then "prove it": one model answered with a
+ * guiding question for nine turns and never explained; the other gave a
+ * wrong proof on a figure missing the lines it named. A student who asks why
+ * or how must leave knowing why — in homework too. Not giving the answer away
+ * still holds there: the explanation stops short of the value the problem asks for.
+ *
+ * Generic by design: no topic, no example from a particular subject.
+ */
+
+/** Lessons and every non-homework session (core system prompt). */
+export const EXPLAIN_WHEN_ASKED_RULE =
+  '**A request to explain why or how gets the explanation (HARD RULE).** When the student asks why something is true, how a rule or method works, or asks you to explain, derive or prove it, explain it on this turn, step by step, to the end. Do not answer with a guiding question, and do not ask them to work it out first: they asked to be shown, and this is not a request to solve a problem for them, so it needs no insistence. Write each step on the board; when the reasoning uses a figure, draw it with every point, line and label the argument names. Check that each step is true before you say it. Then ask one short question that checks they followed.';
+
+/** Homework sessions (one-problem and whole-sheet). */
+export const HOMEWORK_EXPLAIN_WHEN_ASKED_RULE =
+  'When the student asks why a rule, method or step works, or asks you to explain, derive or prove one, explain it on this turn, step by step, to the end — in general terms or on the problem\'s figure (drawn with every point, line and label the argument names) — stopping short of any value or result the problem asks for. Do not answer such a request with a guiding question: they leave knowing why, and they still work out the answer themselves. Check that each step is true before you say it, then ask one short question that has them use it on their problem. When what they ask to have explained IS what the problem asks them to explain or find, it is the answer: help them reason it out instead.';

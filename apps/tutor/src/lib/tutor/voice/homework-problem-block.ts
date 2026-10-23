@@ -10,6 +10,7 @@
  */
 
 import type { AnswerKey } from '../homework-build/types';
+import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { EXTRA_PROBLEM_SAME_RULES, LEDGER_CONDUCT_RULES, OFF_TOPIC_NOT_ANSWERED, PERSONAL_DETAILS_RULE } from '../lesson-plan/homework-ledger';
 import { boardRevealsWithheldAnswer, type RevealRead, type WithheldAnswer } from './whole-answer-reveal';
 
@@ -38,6 +39,7 @@ export const HOMEWORK_PROBLEM_UNVERIFIED =
 export const HOMEWORK_PROBLEM_RULES = [
   '- Labels and values are the ones on the student\'s sheet, as written in the problem above.',
   '- Ask, never tell: never state the final answer, even when asked outright; when the student gives up, give the next smallest hint.',
+  `- ${HOMEWORK_EXPLAIN_WHEN_ASKED_RULE}`,
   '- When the student says they do not know or remember a fact to recall (a name, a definition, a formula), tell them after one miss and move on. This never applies to the problem\'s answer or to any numeric result.',
   '- The prior-work note, when there is one, is what happened last time on this problem.',
   '- When every part is confirmed correct, say the problem is done and offer "Back to your list".',
