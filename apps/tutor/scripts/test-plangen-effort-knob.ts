@@ -137,6 +137,24 @@ async function main() {
   const viaEnv = execFileSync('npx', ['tsx', __filename, 'print-model'], { env: { ...env, ANTHROPIC_API_KEY: 'k', TUTOR_MODEL_PLANGEN: 'claude-sonnet-5' } }).toString().trim();
   assert.equal(viaEnv, 'claude-sonnet-5', 'TUTOR_MODEL_PLANGEN honoured');
 
+  // 2026-10-23 (GAC Haiku 5.5 retest, plan gen-d9c6d924): Stage 1 "non-JSON".
+  if (!LEGACY) {
+    assert.deepEqual(gen.safeJsonParse('Here are the objectives:\n{"los":[1]}\nHope this helps.'), { los: [1] }, 'prose around the object');
+    assert.equal(gen.safeJsonParse('no json here'), null);
+    const replies = ['Sorry, one moment.', JSON.stringify({ titleSuggestion: 't', los })];
+    (client.messages as unknown as { create: (p: unknown) => Promise<unknown> }).create = async (p: unknown) => {
+      seen.push(p);
+      return { content: [{ type: 'text', text: replies.shift() ?? '' }], stop_reason: 'end_turn', usage: { input_tokens: 1, output_tokens: 1 } };
+    };
+    seen.length = 0;
+    const r = await gen.extractLearningObjectives(input);
+    assert.ok(r.ok && seen.length === 2, 'one retry after an unreadable Stage 1 reply');
+    replies.push('x', 'y');
+    seen.length = 0;
+    const r2 = await gen.extractLearningObjectives(input);
+    assert.ok(!r2.ok && seen.length === 2 && r2.reason === 'haiku returned non-JSON (stop=end_turn, 1 chars)', r2.reason);
+  }
+
   console.log('test-plangen-effort-knob: all assertions passed');
 }
 

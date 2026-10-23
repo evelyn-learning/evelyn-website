@@ -219,7 +219,7 @@ Schema:
   ]
 }`;
 
-function safeJsonParse(s: string): unknown | null {
+export function safeJsonParse(s: string): unknown | null {
   const cleaned = s
     .trim()
     .replace(/^```(?:json)?\s*/i, '')
@@ -228,7 +228,18 @@ function safeJsonParse(s: string): unknown | null {
   try {
     return JSON.parse(cleaned);
   } catch {
-    return null;
+    // 2026-10-23 (GAC Haiku 5.5 retest, plan gen-d9c6d924): Stage 1 came back
+    // "non-JSON" and the student got the one-line fallback plan. A sentence
+    // before or after the object is the likely shape — take the outermost
+    // {...} before giving up.
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start < 0 || end <= start) return null;
+    try {
+      return JSON.parse(cleaned.slice(start, end + 1));
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -272,33 +283,43 @@ export async function extractLearningObjectives(
   }
 
   let raw = '';
-  try {
-    const response = await anthropic.messages.create(withPlangenEffort({
-      model: HAIKU_MODEL_ID,
-      max_tokens: STAGE1_MAX_TOKENS,
-      system: STAGE1_SYSTEM,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nStudent's text:\n${input.text.trim()}`,
-            },
-          ],
-        },
-      ],
-    }, 1));
-    for (const block of response.content) {
-      if (block.type === 'text') raw += block.text;
+  let stop = '';
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    raw = '';
+    try {
+      const response = await anthropic.messages.create(withPlangenEffort({
+        model: HAIKU_MODEL_ID,
+        max_tokens: STAGE1_MAX_TOKENS,
+        system: STAGE1_SYSTEM,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nStudent's text:\n${input.text.trim()}`,
+              },
+            ],
+          },
+        ],
+      }, 1));
+      stop = String(response.stop_reason ?? '');
+      for (const block of response.content) {
+        if (block.type === 'text') raw += block.text;
+      }
+    } catch (err) {
+      return {
+        titleSuggestion: 'Freestyle session',
+        los: [],
+        ok: false,
+        reason: `haiku call failed: ${(err as Error).message}`,
+      };
     }
-  } catch (err) {
-    return {
-      titleSuggestion: 'Freestyle session',
-      los: [],
-      ok: false,
-      reason: `haiku call failed: ${(err as Error).message}`,
-    };
+    // One retry on an unreadable reply: Stage 1 is ~2 s, and the alternative
+    // is the one-line fallback plan.
+    const p1 = safeJsonParse(raw);
+    if (p1 && typeof p1 === 'object') break;
+    console.warn(`[plan-generate] stage1 non-JSON (attempt ${attempt}; stop=${stop}; ${raw.length} chars)`);
   }
 
   const parsed = safeJsonParse(raw);
@@ -307,7 +328,7 @@ export async function extractLearningObjectives(
       titleSuggestion: 'Freestyle session',
       los: [],
       ok: false,
-      reason: 'haiku returned non-JSON',
+      reason: `haiku returned non-JSON (stop=${stop}, ${raw.length} chars)`,
     };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -483,6 +504,7 @@ export async function expandSegmentsForLOs(
   const losPayload = los.map((lo) => ({ id: lo.id, description: lo.description }));
 
   let raw = '';
+  let stop2 = '';
   try {
     const response = await anthropic.messages.create(withPlangenEffort({
       model: HAIKU_MODEL_ID,
@@ -500,6 +522,7 @@ export async function expandSegmentsForLOs(
         },
       ],
     }, 2));
+    stop2 = String(response.stop_reason ?? '');
     for (const block of response.content) {
       if (block.type === 'text') raw += block.text;
     }
@@ -509,7 +532,8 @@ export async function expandSegmentsForLOs(
 
   const parsed = safeJsonParse(raw);
   if (!parsed || typeof parsed !== 'object') {
-    return { segments: [], ok: false, reason: 'haiku returned non-JSON' };
+    console.warn(`[plan-generate] stage2 non-JSON (stop=${stop2}; ${raw.length} chars)`);
+    return { segments: [], ok: false, reason: `haiku returned non-JSON (stop=${stop2}, ${raw.length} chars)` };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const segments: unknown = (parsed as any).segments;
