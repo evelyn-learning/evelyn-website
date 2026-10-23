@@ -48,28 +48,36 @@ import { parseLessonPlan } from './parser';
 import type { LearnerHints } from '../learner-model/hints';
 import { TUNING } from '../learner-model/estimator';
 
-const HAIKU_MODEL_ID = getModelClient('plangen-fast').model;
+const HAIKU_MODEL_ID = getModelClient('plangen').model;
+/** The model the two typed-topic generation stages run on (cache-key input). */
+export const PLANGEN_MODEL_ID = HAIKU_MODEL_ID;
 const MAX_OBJECTIVES = 12;
 const STAGE1_MAX_TOKENS = 1500; // LO list only — small payload.
 const STAGE2_MAX_TOKENS = 8192; // Per-LO expansion can be larger.
 
-const anthropic = getModelClient('plangen-fast').client;
+const anthropic = getModelClient('plangen').client;
 
 /**
- * 2026-10-22 — env-gated effort knob for the two plan-generation stages
- * (plangen model-compare eval). Haiku 5.5 / Sonnet 5 run adaptive thinking
- * by default and the thinking tokens count toward `max_tokens`, so a newer
- * model on this role needs `output_config.effort` and a roomier Stage-1 cap
- * (1 500 → 4 000) or the LO list can truncate. UNSET ⇒ the request body is
- * returned as the SAME object, byte-identical to before the knob existed
- * (asserted by scripts/test-plangen-effort-knob.ts) — today's Haiku 4.5
- * requests never change. Any value other than low|medium|high is ignored.
+ * Effort knob for the two plan-generation stages. Haiku 5.5 / Sonnet 5 run
+ * adaptive thinking by default and the thinking tokens count toward
+ * `max_tokens`, so any model that is NOT Haiku 4.5 defaults to
+ * `output_config.effort: 'low'` and a roomier Stage-1 cap (1 500 → 4 000) —
+ * 2026-10-23 eval: Haiku 5.5 at low beat Haiku 4.5 and Sonnet 5.
+ * `TUTOR_PLANGEN_EFFORT` (low|medium|high) overrides the level; any other
+ * value is ignored. A Haiku 4.5 model with the env unset returns the request
+ * as the SAME object — byte-identical to before (asserted by
+ * scripts/test-plangen-effort-knob.ts). No temperature/top_p is ever sent
+ * (Haiku 5.5 rejects sampling params).
  */
 const STAGE1_MAX_TOKENS_WITH_EFFORT = 4000;
 export type PlangenEffort = 'low' | 'medium' | 'high';
 
-export function plangenEffort(raw: string | undefined = process.env.TUTOR_PLANGEN_EFFORT): PlangenEffort | undefined {
-  return raw === 'low' || raw === 'medium' || raw === 'high' ? raw : undefined;
+export function plangenEffort(
+  raw: string | undefined = process.env.TUTOR_PLANGEN_EFFORT,
+  model: string = PLANGEN_MODEL_ID,
+): PlangenEffort | undefined {
+  if (raw === 'low' || raw === 'medium' || raw === 'high') return raw;
+  return /haiku-4-5/.test(model) ? undefined : 'low';
 }
 
 export function withPlangenEffort<T extends { max_tokens: number }>(

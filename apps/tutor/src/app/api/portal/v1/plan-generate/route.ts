@@ -65,6 +65,7 @@ import {
   fallbackPlan,
   buildRecapSegment,
   namespaceGeneratedLos,
+  PLANGEN_MODEL_ID,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { extractMaterials } from '@/lib/tutor/lesson-plan/material-extract';
 import {
@@ -299,7 +300,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // built to fix. Measured 2026-08-27: 94 cache-eligible plans existed, so
     // this was not a theoretical hit.
   } else {
-    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale, band: learner?.band });
+    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale, band: learner?.band, model: PLANGEN_MODEL_ID });
     const cachedPlan = await findCachedPlan(cacheKey);
     if (cachedPlan) {
       return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(cachedPlan, { cached: true, sessionMinutes })));
