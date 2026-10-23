@@ -55,3 +55,19 @@ export const pieFig = () => ({
   action: 'showStats', type: 'pie',
   pie: { slices: [{ label: 'Red', value: 10 }, { label: 'Blue', value: 18 }, { label: 'Green', value: 12 }] },
 }) as unknown as Fig;
+
+// ---------------------------------------------------------------- table and number line (Task 5)
+
+export const TABLE = '[Figure: A frequency table with columns "Score" and "Frequency": 1 – 4, 2 – 6, 3 – 5, 4 – 2.]';
+export const NL = 'Write the inequality shown. [Figure: A number line from −5 to 5 marked every 1. An open circle at −2 with an arrow shading to the right.]';
+
+export const tableFig = () => ({
+  action: 'showTable', headers: ['Score', 'Frequency'],
+  rows: [['1', '4'], ['2', '6'], ['3', '5'], ['4', '2']],
+}) as unknown as Fig;
+
+export const nlFig = () => ({
+  action: 'showNumberLine', min: -5, max: 5, step: 1,
+  intervals: [{ from: -2, to: 5, fromInclusive: false }],
+  points: [{ value: -2, style: 'open' }],
+}) as unknown as Fig;

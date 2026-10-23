@@ -15,7 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
-import { BOX, HIST, DOT, BAR, PIE, HW11_P6, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, type Fig } from './fixtures/homework-figure-fixtures';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -534,6 +534,76 @@ test('stats: distribution and scatter types are unsupported', () => {
 });
 test('stats: the kill switch (geometry) rejects a good box plot', () => {
   assert.deepEqual(statsOk(boxFig(), BOX, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showStats:boxplot"'] });
+});
+
+// ---------------------------------------------------------------- table and number line (Task 5)
+
+const rowsOf = (f: Fig) => (f as unknown as { rows: string[][] }).rows;
+
+test('table: the stated headers and rows pass', () => {
+  assert.deepEqual(statsOk(tableFig(), TABLE), { ok: true });
+});
+test('table: an answer row (Total 17) fails on provenance', () => {
+  const f = tableFig(); rowsOf(f).push(['Total', '17']);
+  statsFails(f, TABLE, /table cell "17" does not come from the problem text/);
+});
+test('table: a ragged row fails structurally (rows are numbered from 1)', () => {
+  const f = tableFig(); rowsOf(f)[1] = ['2', '6', '9'];
+  statsFails(f, TABLE, /table row 2 has 3 cells, headers have 2/);
+});
+test('table: a cell the sheet leaves blank is ""; a stated number beside it passes', () => {
+  const f = tableFig(); rowsOf(f).push(['5', '']);
+  assert.deepEqual(statsOk(f, TABLE), { ok: true });
+});
+test('table: no headers or no rows fails structurally', () => {
+  statsFails(Object.assign(tableFig(), { headers: [] }), TABLE, /at least one header/);
+  statsFails(Object.assign(tableFig(), { rows: [] }), TABLE, /at least one row/);
+});
+test('table: a stem-and-leaf display as two columns passes the same rules', () => {
+  const text = '[Figure: A stem-and-leaf plot. Stem 1 | Leaf 2 5 8; Stem 2 | Leaf 0 3; Key: 1 | 2 means 12.]';
+  const f = { action: 'showTable', headers: ['Stem', 'Leaf'], rows: [['1', '2 5 8'], ['2', '0 3']] } as unknown as Fig;
+  assert.deepEqual(statsOk(f, text), { ok: true });
+});
+test('table: a 40-row table is valid data', () => {
+  const rows = Array.from({ length: 40 }, (_, i) => [String(i + 1), String(2 * (i + 1))]);
+  const text = `[Figure: A table of x and y: ${rows.map((r) => `${r[0]} – ${r[1]}`).join(', ')}.]`;
+  assert.deepEqual(statsOk({ action: 'showTable', headers: ['x', 'y'], rows } as unknown as Fig, text), { ok: true });
+});
+
+test('number line: the stated open circle and ray pass', () => {
+  assert.deepEqual(statsOk(nlFig(), NL), { ok: true });
+});
+test('number line: an answer label (x > -2) fails on provenance', () => {
+  const f = nlFig() as unknown as { points: Array<Record<string, unknown>> };
+  f.points[0].label = 'x > -2';
+  statsFails(f as unknown as Fig, NL, /label "x > -2"/);
+});
+test('number line: a point outside [min, max] fails structurally', () => {
+  const f = nlFig() as unknown as { points: Array<Record<string, unknown>> };
+  f.points.push({ value: 7 });
+  statsFails(f as unknown as Fig, NL, /number line point 7 is outside \[-5, 5\]/);
+});
+test('number line: a point or interval end the text does not state fails; min/max/step are scaffolding', () => {
+  const f = nlFig() as unknown as { points: Array<Record<string, unknown>>; intervals: Array<Record<string, unknown>> };
+  f.points.push({ value: 3 });
+  statsFails(f as unknown as Fig, NL, /number 3 .*does not come from the problem text/);
+  const g = nlFig() as unknown as { intervals: Array<Record<string, unknown>> };
+  g.intervals[0].to = 4;
+  statsFails(g as unknown as Fig, NL, /number 4 .*does not come from the problem text/);
+  // a wider axis than the sheet's, and an unstated step, are scaffolding
+  assert.deepEqual(statsOk(Object.assign(nlFig(), { min: -6, max: 6, step: 2 }), NL), { ok: true });
+});
+test('number line: min ≥ max, step ≤ 0 and an unused field fail structurally', () => {
+  statsFails(Object.assign(nlFig(), { min: 5, max: -5 }), NL, /min < max/);
+  statsFails(Object.assign(nlFig(), { step: 0 }), NL, /step must be > 0/);
+  statsFails(Object.assign(nlFig(), { data: [1] }), NL, /showNumberLine field "data" is not used/);
+});
+test('number line: an unstated fraction-tick denominator fails', () => {
+  statsFails(Object.assign(nlFig(), { fractionTicks: { denominator: 3 } }), NL, /number 3 .*fractionTicks/);
+});
+test('table and number line: the kill switch (geometry) rejects them', () => {
+  assert.deepEqual(statsOk(tableFig(), TABLE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showTable"'] });
+  assert.deepEqual(statsOk(nlFig(), NL, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showNumberLine"'] });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

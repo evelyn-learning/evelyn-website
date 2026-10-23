@@ -18,7 +18,7 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats'];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine'];
 
 /** The showStats chart types in the vocabulary. */
 export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
@@ -55,6 +55,16 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
     id: 'showStats:pie', box: 'fixed',
     when: 'the sheet shows a pie chart (circle graph)',
     shape: '{"action":"showStats","type":"pie","title"?,"pie":{"slices":[{"label","value"}]}}',
+  },
+  {
+    id: 'showTable', box: 'natural',
+    when: 'the sheet shows a table (frequency, two-way, function or input-output table; a stem-and-leaf display as two columns)',
+    shape: '{"action":"showTable","headers":[…],"rows":[[…],…]} (every row as long as headers; a cell the sheet leaves blank is "")',
+  },
+  {
+    id: 'showNumberLine', box: 'natural',
+    when: 'the sheet shows a number line (marked points, open or closed circles, shaded intervals or rays, an inequality graph)',
+    shape: '{"action":"showNumberLine","title"?,"min","max","step"?,"points"?:[{"value","label"?,"style"?:"filled"|"open"}],"intervals"?:[{"from","to","fromInclusive"?,"toInclusive"?,"label"?}]}',
   },
 ];
 

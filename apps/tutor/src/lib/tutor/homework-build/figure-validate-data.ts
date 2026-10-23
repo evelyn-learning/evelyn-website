@@ -1,15 +1,15 @@
 /**
- * Validators for the data-chart homework figures (showStats: box plot,
- * histogram, dot plot, bar, pie). Structural: the chart must render as the
+ * Validators for the data homework figures: showStats (box plot, histogram,
+ * dot plot, bar, pie), showTable and showNumberLine. Structural: the chart must render as the
  * sheet shows it. Provenance: every drawn number is one the problem text
  * states (numberIsFromText) and every free-text field comes from the text
  * (textFieldReasons). A number the renderer would compute (pie percentages,
  * bins from raw data) is drawn only when the text states it. Pure.
  */
 
-import { numberIsFromText, textFieldReasons } from './figure-text';
+import { numberIsFromText, parseNumberCell, textFieldIsFromText, textFieldReasons } from './figure-text';
 import type { FigureContext } from './figure-validate';
-import type { StatsFigure } from './types';
+import type { FigureCommand, StatsFigure } from './types';
 
 /** The top-level fields each chart type reads; anything else would be ignored by the renderer or draw something the sheet does not. */
 const STATS_FIELDS: Record<string, readonly string[]> = {
@@ -116,6 +116,104 @@ export function validateStatsFigure(fig: StatsFigure, ctx: FigureContext): strin
       const pcts = vals.map((v) => Number(((v / sum) * 100).toFixed(1)));
       if (!pcts.every((p) => numberIsFromText(p, text))) reasons.push('pie percentages are computed, not stated: set showPercentages only when the text states every slice\'s percentage');
     }
+  }
+  return reasons;
+}
+
+/** Fields a command's renderer reads; any other field is named (the renderer would ignore it, or it would draw what the sheet does not). */
+function unusedFieldReasons(f: Record<string, unknown>, used: readonly string[]): string[] {
+  const action = String(f.action);
+  return Object.keys(f)
+    .filter((k) => k !== 'action' && f[k] !== undefined && !used.includes(k))
+    .map((k) => `${action} field "${k}" is not used by a ${action === 'showTable' ? 'table' : action === 'showNumberLine' ? 'number line' : 'scatter plot'}`);
+}
+
+/** A header or cell is blank, a phrase of the text, or a number the text states. */
+function cellIsFromText(cell: string, text: string): boolean {
+  if (cell.trim() === '') return true;
+  if (textFieldIsFromText(cell, text)) return true;
+  const n = parseNumberCell(cell);
+  return n !== null && numberIsFromText(n, text);
+}
+
+/**
+ * showTable: at least one header and one row, every row as long as the
+ * headers (rows numbered from 1 in the reason), every header and cell from the
+ * text (a cell the sheet leaves blank is ""). A stem-and-leaf display is a
+ * two-column table under the same rules. Size is not limited here (a long
+ * table is valid data; the thumbnail shows its first rows).
+ */
+export function validateTableFigure(fig: Extract<FigureCommand, { action: 'showTable' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = unusedFieldReasons(f, ['headers', 'rows']);
+  const { headers, rows } = f;
+  if (!Array.isArray(headers) || headers.length === 0) reasons.push('a table needs at least one header');
+  if (!Array.isArray(rows) || rows.length === 0) reasons.push('a table needs at least one row');
+  if (reasons.length) return reasons;
+  const h = (headers as unknown[]).length;
+  const check = (cell: unknown) => {
+    if (typeof cell !== 'string') { reasons.push(`table cell ${JSON.stringify(cell)} must be a string`); return; }
+    if (!cellIsFromText(cell, text)) reasons.push(`table cell "${cell}" does not come from the problem text`);
+  };
+  (headers as unknown[]).forEach(check);
+  (rows as unknown[]).forEach((row, i) => {
+    if (!Array.isArray(row)) { reasons.push(`table row ${i + 1} must be an array of cells`); return; }
+    if (row.length !== h) reasons.push(`table row ${i + 1} has ${row.length} cells, headers have ${h}`);
+    row.forEach(check);
+  });
+  return reasons;
+}
+
+/**
+ * showNumberLine: min < max and step > 0 are scaffolding (not checked against
+ * the text, like graph ranges). Every point, interval end and segment end lies
+ * in [min, max] and is a number the text states — except an interval end at
+ * min or max (a ray running off the line). The fraction-tick denominator is
+ * stated too; the title and every label come from the text.
+ */
+export function validateNumberLineFigure(fig: Extract<FigureCommand, { action: 'showNumberLine' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = unusedFieldReasons(f, ['title', 'min', 'max', 'step', 'points', 'intervals', 'segments', 'fractionTicks']);
+  const { min, max, step } = f;
+  if (!isNum(min) || !isNum(max)) return [...reasons, 'a number line needs numeric min and max'];
+  if (!(min < max)) return [...reasons, `number line min < max fails (${min}, ${max})`];
+  if (step !== undefined && (!isNum(step) || step <= 0)) reasons.push('number line step must be > 0');
+  reasons.push(...textFieldReasons([{ value: f.title }], text));
+
+  const list = (key: string): Array<Record<string, unknown>> => {
+    const v = f[key];
+    if (v === undefined) return [];
+    if (!Array.isArray(v)) { reasons.push(`number line ${key} must be an array`); return []; }
+    return v.map((x) => (x ?? {}) as Record<string, unknown>);
+  };
+  const place = (v: unknown, where: string, rayEndOk: boolean) => {
+    if (!isNum(v)) { reasons.push(`number line ${where} must be a number`); return; }
+    if (v < min || v > max) { reasons.push(`number line point ${v} is outside [${min}, ${max}]`); return; }
+    if (rayEndOk && (v === min || v === max)) return;
+    if (!numberIsFromText(v, text)) reasons.push(`number ${v} in ${where} does not come from the problem text`);
+  };
+  list('points').forEach((p, i) => {
+    place(p.value, `points[${i}].value`, false);
+    if (p.style !== undefined && p.style !== 'filled' && p.style !== 'open') reasons.push(`number line point ${i}: style must be "filled" or "open"`);
+    reasons.push(...textFieldReasons([{ value: p.label }], text));
+  });
+  list('intervals').forEach((iv, i) => {
+    place(iv.from, `intervals[${i}].from`, true);
+    place(iv.to, `intervals[${i}].to`, true);
+    if (isNum(iv.from) && isNum(iv.to) && !(iv.from < iv.to)) reasons.push(`number line interval ${i}: from < to fails`);
+    reasons.push(...textFieldReasons([{ value: iv.label }], text));
+  });
+  list('segments').forEach((sg, i) => {
+    place(sg.from, `segments[${i}].from`, false);
+    place(sg.to, `segments[${i}].to`, false);
+    reasons.push(...textFieldReasons([{ value: sg.label }], text));
+  });
+  if (f.fractionTicks !== undefined) {
+    const d = (f.fractionTicks ?? {}) as Record<string, unknown>;
+    if (!isNum(d.denominator) || !Number.isInteger(d.denominator) || d.denominator < 1) reasons.push('number line fractionTicks.denominator must be a positive integer');
+    else if (!numberIsFromText(d.denominator, text)) reasons.push(`number ${d.denominator} in fractionTicks.denominator does not come from the problem text`);
   }
   return reasons;
 }
