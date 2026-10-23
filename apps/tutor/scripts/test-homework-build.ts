@@ -533,6 +533,46 @@ async function main() {
         { action: 'showDiagram', type: 'tape_diagram', params: {} },
       ]) assert.equal(await figureToSvg(bad as unknown as Fig), null, JSON.stringify(bad));
     });
+    await section('figureToSvg: Venn and tree thumbnails draw the stated figure, escape text, and never throw', async () => {
+      const { figureToSvg, FIGURE_SVG_MAX_CHARS } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const F = await import('./fixtures/homework-figure-fixtures');
+      const shape = (svg: string | null, id: string) => {
+        assert.ok(svg && /^<svg[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg) && /viewBox=/.test(svg) && svg.endsWith('</svg>'), `${id}: ${String(svg).slice(0, 120)}`);
+        assert.ok(svg.length <= FIGURE_SVG_MAX_CHARS && !/NaN|undefined|Infinity/.test(svg), id);
+        return svg;
+      };
+      const venn = shape(await figureToSvg(F.vennFig()), 'venn');
+      assert.equal((venn.match(/data-set=/g) ?? []).length, 2, 'two circles');
+      assert.ok(venn.includes('>Soccer<') && venn.includes('>Band<'), 'set labels');
+      for (const v of ['8', '5', '10', '7']) assert.ok(venn.includes(`>${v}<`), `region value ${v}`);
+      assert.equal(await figureToSvg(F.vennFig()), venn, 'deterministic');
+      const venn3 = shape(await figureToSvg(F.venn3Fig()), 'venn3');
+      assert.equal((venn3.match(/data-set=/g) ?? []).length, 3, 'three circles');
+      const tree = shape(await figureToSvg(F.treeFig()), 'tree');
+      assert.equal((tree.match(/data-node=/g) ?? []).length, 7, 'root, two, four');
+      assert.equal((tree.match(/data-branch=/g) ?? []).length, 6, 'one line per branch');
+      for (const p of ['2/5', '3/5', '1/4', '3/4', '2/4']) assert.ok(tree.includes(`>${p}<`), `branch probability ${p}`);
+      // Leaf products are never drawn by the thumbnail (showLeafProbabilities passes only when stated; the board draws them).
+      assert.ok(!tree.includes('1/10'), 'no computed product');
+      const esc = shape(await figureToSvg({ action: 'showVennDiagram', title: 'a<b', sets: [{ label: 'x & "y"' }, { label: "<z>" }], regions: { onlyA: { items: ['<i>'] } } } as unknown as Fig), 'escaped venn');
+      assert.ok(esc.includes('x &amp; &quot;y&quot;') && esc.includes('&lt;z&gt;') && esc.includes('&lt;i&gt;') && !esc.includes('<z>') && !esc.includes('<i>'), 'venn text escaped');
+      const escT = shape(await figureToSvg({ action: 'showTree', root: { label: '<r>', children: [{ label: 'a&b', probability: '1/2', node: { label: '"n"' } }] } } as unknown as Fig), 'escaped tree');
+      assert.ok(escT.includes('&lt;r&gt;') && escT.includes('a&amp;b') && escT.includes('&quot;n&quot;') && !escT.includes('<r>'), 'tree text escaped');
+      for (const bad of [
+        { action: 'showVennDiagram' }, { action: 'showVennDiagram', sets: 'x' }, { action: 'showVennDiagram', sets: [{ label: 'A' }], regions: null },
+        { action: 'showVennDiagram', sets: [null, 5], regions: { onlyA: null, ABC: { items: 'x' } } },
+        { action: 'showTree' }, { action: 'showTree', root: null }, { action: 'showTree', root: { children: 'x' } },
+        { action: 'showTree', root: { label: 7, children: [null, { node: null }, { probability: 0.5, node: { label: 'a' } }] } },
+      ]) {
+        const r = await figureToSvg(bad as unknown as Fig);
+        assert.ok(r === null || typeof r === 'string', JSON.stringify(bad));
+      }
+      // A very deep or wide tree is drawn bounded (the svg cap holds).
+      let deep: Record<string, unknown> = { label: 'leaf' };
+      for (let i = 0; i < 30; i++) deep = { label: `n${i}`, children: Array.from({ length: 2 }, () => ({ label: 'b', probability: '1/2', node: deep })) };
+      const big = await figureToSvg({ action: 'showTree', root: deep } as unknown as Fig);
+      assert.ok(big === null || big.length <= FIGURE_SVG_MAX_CHARS, 'bounded');
+    });
     await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
       // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
       // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.
@@ -613,7 +653,7 @@ async function main() {
       const { figureBoxMode, FIGURE_BOX_MODES } = await import('../src/lib/tutor/homework-build/figure-box');
       const { FIGURE_KIND_DOCS } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
       const F = await import('./fixtures/homework-figure-fixtures');
-      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
+      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig(), F.vennFig(), F.treeFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
       for (const fig of [F.tableFig(), F.nlFig(), hw14p8Fig() as never]) assert.equal(figureBoxMode(fig), 'natural', JSON.stringify(fig).slice(0, 60));
       assert.equal(figureBoxMode(goodFig()), 'fixed', 'a geometry figure is in the fixed box');
       // The client-safe table cannot drift from the proposer's docs.

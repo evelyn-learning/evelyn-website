@@ -102,3 +102,39 @@ export const coneFig = () => ({
 export const hw910p4Fig = () => ({
   action: 'showDiagram', type: 'solid_3d', params: { shape: 'cone', dims: { radius: 5, height: 12 } },
 }) as unknown as Fig;
+
+// ---------------------------------------------------------------- Venn and tree diagrams (Task 14)
+
+export const VENN = '[Figure: A Venn diagram of 30 students with circles "Soccer" and "Band": 8 in Soccer only, 5 in both, 10 in Band only, 7 outside both circles.]';
+export const VENN3 = '[Figure: A Venn diagram with three circles "Math", "Art" and "Music": 4 in Math only, 6 in Art only, 3 in Music only, 2 in Math and Art only, 1 in all three, 9 outside.]';
+export const TREE = '[Figure: A tree diagram. First branch: Red 2/5, Blue 3/5. After Red: Red 1/4, Blue 3/4. After Blue: Red 2/4, Blue 2/4.]';
+
+export const vennFig = () => ({
+  action: 'showVennDiagram',
+  sets: [{ label: 'Soccer' }, { label: 'Band' }],
+  regions: { onlyA: { value: '8' }, intersection: { value: '5' }, onlyB: { value: '10' }, neither: { value: '7' } },
+}) as unknown as Fig;
+
+export const venn3Fig = () => ({
+  action: 'showVennDiagram',
+  sets: [{ label: 'Math' }, { label: 'Art' }, { label: 'Music' }],
+  regions: { onlyA: { value: '4' }, onlyB: { value: '6' }, onlyC: { value: '3' }, AB: { value: '2' }, ABC: { value: '1' }, neither: { value: '9' } },
+}) as unknown as Fig;
+
+/** Outcomes in the node boxes, the stated probability on each branch; the root box is blank (the sheet names no root). */
+export const treeFig = () => ({
+  action: 'showTree', type: 'probability',
+  root: {
+    label: '',
+    children: [
+      { label: '', probability: '2/5', node: { label: 'Red', children: [
+        { label: '', probability: '1/4', node: { label: 'Red' } },
+        { label: '', probability: '3/4', node: { label: 'Blue' } },
+      ] } },
+      { label: '', probability: '3/5', node: { label: 'Blue', children: [
+        { label: '', probability: '2/4', node: { label: 'Red' } },
+        { label: '', probability: '2/4', node: { label: 'Blue' } },
+      ] } },
+    ],
+  },
+}) as unknown as Fig;

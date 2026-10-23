@@ -24,6 +24,8 @@ export type FigureCommand =
   | Cmd<'showScatterPlot'>
   | Cmd<'showTable'>
   | Cmd<'showNumberLine'>
+  | Cmd<'showVennDiagram'>
+  | Cmd<'showTree'>
   | DiagramFigure;
 
 export type FigureClaim =

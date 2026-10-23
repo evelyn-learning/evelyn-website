@@ -1,0 +1,30 @@
+{
+  "label": "figure-venn",
+  "tool": "show_venn_diagram",
+  "expect": "render",
+  "args": {
+    "sets": [
+      {
+        "label": "Soccer"
+      },
+      {
+        "label": "Band"
+      }
+    ],
+    "regions": {
+      "onlyA": {
+        "value": "8"
+      },
+      "intersection": {
+        "value": "5"
+      },
+      "onlyB": {
+        "value": "10"
+      },
+      "neither": {
+        "value": "7"
+      }
+    }
+  },
+  "problemText": "[Figure: A Venn diagram of 30 students with circles \"Soccer\" and \"Band\": 8 in Soccer only, 5 in both, 10 in Band only, 7 outside both circles.]"
+}

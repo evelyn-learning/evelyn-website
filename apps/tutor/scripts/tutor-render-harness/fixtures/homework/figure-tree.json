@@ -1,0 +1,60 @@
+{
+  "label": "figure-tree",
+  "tool": "show_tree",
+  "expect": "render",
+  "args": {
+    "type": "probability",
+    "root": {
+      "label": "",
+      "children": [
+        {
+          "label": "",
+          "probability": "2/5",
+          "node": {
+            "label": "Red",
+            "children": [
+              {
+                "label": "",
+                "probability": "1/4",
+                "node": {
+                  "label": "Red"
+                }
+              },
+              {
+                "label": "",
+                "probability": "3/4",
+                "node": {
+                  "label": "Blue"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": "",
+          "probability": "3/5",
+          "node": {
+            "label": "Blue",
+            "children": [
+              {
+                "label": "",
+                "probability": "2/4",
+                "node": {
+                  "label": "Red"
+                }
+              },
+              {
+                "label": "",
+                "probability": "2/4",
+                "node": {
+                  "label": "Blue"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "problemText": "[Figure: A tree diagram. First branch: Red 2/5, Blue 3/5. After Red: Red 1/4, Blue 3/4. After Blue: Red 2/4, Blue 2/4.]"
+}

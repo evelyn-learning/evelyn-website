@@ -13,7 +13,7 @@ import type { GraphData } from '@core/knowledge/types';
 import type { FigureClaim, FigureCommand } from './types';
 import { isCaptionLabel, labelIsFromText, textFieldIsFromText, textFieldReasons } from './figure-text';
 import { figureKindId, isFigureKindAllowed, type FigureVocabulary } from './figure-vocabulary';
-import { validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure } from './figure-validate-data';
+import { validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure, validateTreeFigure, validateVennFigure } from './figure-validate-data';
 import { validateDiagramFigure } from './figure-validate-diagram';
 
 /** Re-exported so existing imports from figure-validate keep working. */
@@ -439,6 +439,8 @@ const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext
   showTable: (figure, ctx) => validateTableFigure(figure as Extract<FigureCommand, { action: 'showTable' }>, ctx),
   showNumberLine: (figure, ctx) => validateNumberLineFigure(figure as Extract<FigureCommand, { action: 'showNumberLine' }>, ctx),
   showScatterPlot: (figure, ctx) => validateScatterFigure(figure as Extract<FigureCommand, { action: 'showScatterPlot' }>, ctx),
+  showVennDiagram: (figure, ctx) => validateVennFigure(figure as Extract<FigureCommand, { action: 'showVennDiagram' }>, ctx),
+  showTree: (figure, ctx) => validateTreeFigure(figure as Extract<FigureCommand, { action: 'showTree' }>, ctx),
   'showDiagram:solid_3d': (figure, ctx) => validateDiagramFigure(figure as Extract<FigureCommand, { action: 'showDiagram' }>, ctx),
 };
 

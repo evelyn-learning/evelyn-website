@@ -19,7 +19,7 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram'];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram', 'showVennDiagram', 'showTree'];
 
 /** The showStats chart types in the vocabulary. */
 export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
@@ -79,6 +79,16 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
     id: 'showDiagram:solid_3d', box: 'fixed',
     when: 'the sheet shows one 3D solid (cube, rectangular prism, triangular prism, cylinder, cone, sphere or square pyramid) with every dimension the shape needs stated; never a composite or cut-out solid, never a dimension the student must find',
     shape: diagramShape('solid_3d'),
+  },
+  {
+    id: 'showVennDiagram', box: 'fixed',
+    when: 'the sheet shows a Venn diagram of 2 or 3 sets (regions: onlyA, onlyB, intersection, neither for 2 sets; onlyA, onlyB, onlyC, AB, AC, BC, ABC, neither for 3); a region the sheet leaves empty or asks for is left out',
+    shape: '{"action":"showVennDiagram","title"?,"sets":[{"label"}],"regions":{"<region>":{"value"?,"items"?:[…]}},"universalLabel"?}',
+  },
+  {
+    id: 'showTree', box: 'fixed',
+    when: 'the sheet shows a tree diagram (probability, factor or decision tree): outcomes in the node boxes, a stated probability on each branch; never a leaf probability the sheet does not print',
+    shape: '{"action":"showTree","title"?,"type"?:"probability"|"factor"|"decision"|"generic","root":{"label","children":[{"label","probability"?,"node":{"label","value"?,"children"?:[…]}}]}}',
   },
 ];
 

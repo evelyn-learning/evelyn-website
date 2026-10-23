@@ -1,6 +1,7 @@
 /**
  * Validators for the data homework figures: showStats (box plot, histogram,
- * dot plot, bar, pie), showTable, showNumberLine and showScatterPlot. Structural: the chart must render as the
+ * dot plot, bar, pie), showTable, showNumberLine, showScatterPlot,
+ * showVennDiagram and showTree. Structural: the chart must render as the
  * sheet shows it. Provenance: every drawn number is one the problem text
  * states (numberIsFromText) and every free-text field comes from the text
  * (textFieldReasons). A number the renderer would compute (pie percentages,
@@ -256,5 +257,146 @@ export function validateScatterFigure(fig: Extract<FigureCommand, { action: 'sho
     if ((xr && (p.x < xr[0] || p.x > xr[1])) || (yr && (p.y < yr[0] || p.y > yr[1]))) reasons.push(`scatter point (${p.x}, ${p.y}) is outside xRange/yRange`);
     reasons.push(...textFieldReasons([{ value: p.label }, { value: p.series }], text));
   });
+  return reasons;
+}
+
+/** The region keys the Venn renderer places, by set count (VennDiagramRenderer TWO_/THREE_SET_REGION_CENTERS); any other key is not drawn. */
+const VENN_REGION_KEYS: Record<2 | 3, readonly string[]> = {
+  2: ['onlyA', 'onlyB', 'intersection', 'neither'],
+  3: ['onlyA', 'onlyB', 'onlyC', 'AB', 'AC', 'BC', 'ABC', 'neither'],
+};
+
+/** A printed value (a region count, a node value): a number the text states when it reads as one, else a phrase of the text. */
+function valueReason(value: unknown, where: string, text: string): string | null {
+  if (value === undefined || value === '') return null;
+  if (typeof value !== 'string') return `${where} must be a string`;
+  const n = parseNumberCell(value);
+  if (n !== null) return numberIsFromText(n, text) ? null : `number ${value} in ${where} does not come from the problem text`;
+  return textFieldIsFromText(value, text) ? null : `${where} "${value}" does not come from the problem text`;
+}
+
+/**
+ * showVennDiagram: 2 or 3 labelled sets; every region key one the renderer
+ * places for that set count; every region's value (a count, or a word) and
+ * item, every set label, the title and the universal label from the text.
+ * A region count the sheet does not state (a complement, a total) fails.
+ */
+export function validateVennFigure(fig: Extract<FigureCommand, { action: 'showVennDiagram' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = Object.keys(f)
+    .filter((k) => k !== 'action' && f[k] !== undefined && !['title', 'sets', 'regions', 'universalLabel'].includes(k))
+    .map((k) => `showVennDiagram field "${k}" is not used by a Venn diagram`);
+  reasons.push(...textFieldReasons([{ value: f.title }, { value: f.universalLabel }], text));
+  const sets = f.sets;
+  if (!Array.isArray(sets) || (sets.length !== 2 && sets.length !== 3)) return [...reasons, 'a Venn diagram needs 2 or 3 sets'];
+  sets.forEach((raw, i) => {
+    const s = (raw ?? {}) as Record<string, unknown>;
+    if (typeof s.label !== 'string' || !s.label.trim()) { reasons.push(`Venn set ${i} needs a label`); return; }
+    if (s.color !== undefined && typeof s.color !== 'string') reasons.push(`Venn set ${i}: color must be a string`);
+    reasons.push(...textFieldReasons([{ value: s.label }], text));
+  });
+  const n = sets.length as 2 | 3;
+  const regions = f.regions;
+  if (regions === undefined) return reasons;
+  if (!regions || typeof regions !== 'object' || Array.isArray(regions)) return [...reasons, 'Venn regions must be an object keyed by region'];
+  for (const [k, raw] of Object.entries(regions as Record<string, unknown>)) {
+    if (!VENN_REGION_KEYS[n].includes(k)) { reasons.push(`Venn region "${k}" does not belong to ${n} sets`); continue; }
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { reasons.push(`Venn region "${k}" must be an object`); continue; }
+    const r = raw as Record<string, unknown>;
+    for (const extra of Object.keys(r).filter((x) => r[x] !== undefined && !['value', 'items', 'highlight'].includes(x))) {
+      reasons.push(`Venn region "${k}" field "${extra}" is not used`);
+    }
+    if (r.highlight !== undefined && typeof r.highlight !== 'boolean') reasons.push(`Venn region "${k}": highlight must be true or false`);
+    const v = valueReason(r.value, `regions.${k}.value`, text);
+    if (v) reasons.push(v);
+    if (r.items !== undefined) {
+      if (!Array.isArray(r.items) || !r.items.every((x) => typeof x === 'string')) reasons.push(`Venn region "${k}": items must be an array of strings`);
+      else reasons.push(...(r.items as string[]).map((item) => {
+        const n2 = parseNumberCell(item);
+        if (n2 !== null && numberIsFromText(n2, text)) return null;
+        return textFieldIsFromText(item, text) ? null : `label "${item}" does not come from the problem text`;
+      }).filter((x): x is string => x !== null));
+    }
+  }
+  return reasons;
+}
+
+const TREE_TYPES = ['probability', 'factor', 'decision', 'generic'];
+/** TreeRenderer's documented reach: up to 4 levels below the root, up to 6 branches per node. */
+export const TREE_MAX_DEPTH = 4;
+export const TREE_MAX_BRANCHES = 6;
+
+/**
+ * showTree: a root with at least one branch, every branch an edge wrapper
+ * { label, probability?, node } (the live gate's shape), at most 4 levels and
+ * 6 branches per node. Every node label and value and every branch label from
+ * the text; a branch probability a number the text states (fractions by
+ * value) and within [0, 1], or a phrase of the text. The root label is
+ * optional (a blank root box). showLeafProbabilities prints the product of
+ * each path's probabilities: rejected unless the text states every one.
+ */
+export function validateTreeFigure(fig: Extract<FigureCommand, { action: 'showTree' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = Object.keys(f)
+    .filter((k) => k !== 'action' && f[k] !== undefined && !['title', 'type', 'root', 'showLeafProbabilities'].includes(k))
+    .map((k) => `showTree field "${k}" is not used by a tree diagram`);
+  if (f.type !== undefined && !TREE_TYPES.includes(String(f.type))) reasons.push(`tree type must be one of ${TREE_TYPES.join(', ')}`);
+  if (f.showLeafProbabilities !== undefined && typeof f.showLeafProbabilities !== 'boolean') reasons.push('showLeafProbabilities must be true or false');
+  reasons.push(...textFieldReasons([{ value: f.title }], text));
+  const root = f.root;
+  if (!root || typeof root !== 'object' || Array.isArray(root)) return [...reasons, 'a tree needs a root node { label, children }'];
+  const rootKids = (root as Record<string, unknown>).children;
+  if (!Array.isArray(rootKids) || rootKids.length === 0) return [...reasons, 'a tree needs at least one branch from the root'];
+
+  const leafProducts: number[] = [];
+  const walk = (node: Record<string, unknown>, path: string, depth: number, product: number) => {
+    for (const k of Object.keys(node).filter((x) => node[x] !== undefined && !['label', 'value', 'color', 'children'].includes(x))) {
+      reasons.push(`${path} field "${k}" is not used`);
+    }
+    if (node.label !== undefined && typeof node.label !== 'string') reasons.push(`${path}.label must be a string`);
+    else reasons.push(...textFieldReasons([{ value: node.label }], text));
+    if (node.color !== undefined && typeof node.color !== 'string') reasons.push(`${path}.color must be a string`);
+    const v = valueReason(node.value, `${path}.value`, text);
+    if (v) reasons.push(v);
+    const children = node.children;
+    if (children === undefined || (Array.isArray(children) && children.length === 0)) { leafProducts.push(product); return; }
+    if (!Array.isArray(children)) { reasons.push(`${path}.children must be an array`); return; }
+    if (depth >= TREE_MAX_DEPTH) { reasons.push(`the tree is deeper than ${TREE_MAX_DEPTH} levels`); return; }
+    if (children.length > TREE_MAX_BRANCHES) { reasons.push(`${path} has more than ${TREE_MAX_BRANCHES} branches`); return; }
+    children.forEach((raw, i) => {
+      const where = `${path}.children[${i}]`;
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { reasons.push(`${where} must be a branch { label, probability?, node }`); return; }
+      const b = raw as Record<string, unknown>;
+      for (const k of Object.keys(b).filter((x) => b[x] !== undefined && !['label', 'probability', 'node'].includes(x))) {
+        reasons.push(`${where} field "${k}" is not used`);
+      }
+      if (b.label !== undefined && typeof b.label !== 'string') reasons.push(`${where}.label must be a string`);
+      else reasons.push(...textFieldReasons([{ value: b.label }], text));
+      let p = product;
+      if (b.probability !== undefined && b.probability !== '') {
+        if (typeof b.probability !== 'string') reasons.push(`${where}.probability must be a string ("2/5")`);
+        else {
+          const pv = parseNumberCell(b.probability);
+          if (pv === null) {
+            if (!textFieldIsFromText(b.probability, text)) reasons.push(`probability "${b.probability}" in ${where} does not come from the problem text`);
+            p = NaN;
+          } else {
+            if (!numberIsFromText(pv, text)) reasons.push(`probability "${b.probability}" in ${where} does not come from the problem text`);
+            if (f.type === 'probability' && (pv < 0 || pv > 1)) reasons.push(`probability "${b.probability}" in ${where} is not between 0 and 1`);
+            p = product * pv;
+          }
+        }
+      }
+      if (!b.node || typeof b.node !== 'object' || Array.isArray(b.node)) { reasons.push(`${where} has no node (a branch is { label, probability?, node })`); return; }
+      walk(b.node as Record<string, unknown>, `${where}.node`, depth + 1, p);
+    });
+  };
+  walk(root as Record<string, unknown>, 'root', 0, 1);
+
+  if (f.showLeafProbabilities === true && !leafProducts.every((p) => numberIsFromText(p, text))) {
+    reasons.push('leaf probabilities are computed products, not stated: set showLeafProbabilities only when the text states every leaf\'s probability');
+  }
   return reasons;
 }

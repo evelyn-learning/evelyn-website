@@ -14,7 +14,7 @@
  * The figure-vocabulary kinds (spec 2026-10-21 §4.6 option (b), Task 1 spike
  * skipped) each have a hook-free hand-written writer: stats-svg.ts (box plot,
  * histogram, dot plot, bar, pie, scatter), table-svg.ts, number-line-svg.ts
- * and solid-svg.ts (solid_3d). Their live renderers are not rendered here
+ * solid-svg.ts (solid_3d) and sets-tree-svg.ts (Venn, tree). Their live renderers are not rendered here
  * (hooks across React instances) and not refactored (GAC freeze). A kind with
  * no writer has no thumbnail.
  */
@@ -27,6 +27,7 @@ import { graphToSvg } from './graph-svg';
 import { figureKindId } from './figure-vocabulary';
 import { numberLineToSvg } from './number-line-svg';
 import { solidToSvg } from './solid-svg';
+import { treeToSvg, vennToSvg } from './sets-tree-svg';
 import { statsToSvg } from './stats-svg';
 import { tableToSvg } from './table-svg';
 import type { DiagramFigure, StatsFigure } from './types';
@@ -88,6 +89,8 @@ function vocabularySvg(figure: FigureCommand): string | null {
   if (id === 'showTable') return tableToSvg(figure as Extract<FigureCommand, { action: 'showTable' }>);
   if (id === 'showNumberLine') return numberLineToSvg(figure as Extract<FigureCommand, { action: 'showNumberLine' }>);
   if (id === 'showDiagram:solid_3d') return solidToSvg(figure as DiagramFigure);
+  if (id === 'showVennDiagram') return vennToSvg(figure as Extract<FigureCommand, { action: 'showVennDiagram' }>);
+  if (id === 'showTree') return treeToSvg(figure as Extract<FigureCommand, { action: 'showTree' }>);
   return null;
 }
 

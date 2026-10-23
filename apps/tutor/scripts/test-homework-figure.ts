@@ -15,7 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
-import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, type Fig } from './fixtures/homework-figure-fixtures';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, VENN, VENN3, TREE, vennFig, venn3Fig, treeFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -691,6 +691,88 @@ test('solid_3d: hw-9/10 p4 cone (hand-written): good passes, the slant height fa
   const f = hw910p4Fig(); (paramsOf(f).dims as Record<string, number>).height = 13;
   statsFails(f, HW910_P4, /number 13/);
   statsFails(solid({ shape: 'cone', dims: { radius: 5 } }), HW910_P4, /needs dims radius, height/);
+});
+
+// ---------------------------------------------------------------- Venn and tree diagrams (Task 14)
+
+type Obj = Record<string, unknown>;
+const regionsOf = (f: Fig) => (f as unknown as { regions: Record<string, Obj> }).regions;
+const rootOf = (f: Fig) => (f as unknown as { root: Obj }).root;
+const kids = (n: Obj) => n.children as Array<Obj & { node: Obj }>;
+
+test('venn: the stated two-set diagram passes; a three-set one passes', () => {
+  assert.deepEqual(statsOk(vennFig(), VENN), { ok: true });
+  assert.deepEqual(statsOk(venn3Fig(), VENN3), { ok: true });
+});
+test('venn: a region count the sheet does not state fails on provenance', () => {
+  const f = vennFig(); regionsOf(f).intersection.value = '6';
+  statsFails(f, VENN, /number 6|"6"/);
+});
+test('venn: a region key of the other set count fails structurally', () => {
+  const f = vennFig(); regionsOf(f).ABC = { value: '5' };
+  statsFails(f, VENN, /does not belong to 2 sets/);
+  const g = venn3Fig(); regionsOf(g).intersection = { value: '1' };
+  statsFails(g, VENN3, /Venn region "intersection" does not belong to 3 sets/);
+});
+test('venn: one or four sets, an unlabelled set, an unused field or a bad items list fails', () => {
+  statsFails({ ...vennFig(), sets: [{ label: 'Soccer' }] } as unknown as Fig, VENN, /2 or 3 sets/);
+  statsFails({ ...vennFig(), sets: [{ label: 'Soccer' }, { label: 'Band' }, { label: 'Soccer' }, { label: 'Band' }] } as unknown as Fig, VENN, /2 or 3 sets/);
+  statsFails({ ...vennFig(), sets: [{ label: 'Soccer' }, {}] } as unknown as Fig, VENN, /set 1 needs a label/);
+  statsFails({ ...vennFig(), showCounts: true } as unknown as Fig, VENN, /field "showCounts" is not used/);
+  const f = vennFig(); regionsOf(f).onlyA = { items: 'Ana' };
+  statsFails(f, VENN, /items must be an array/);
+  statsFails({ ...vennFig(), regions: [] } as unknown as Fig, VENN, /regions must be an object/);
+});
+test('venn: set labels, items, title and universal label come from the text', () => {
+  statsFails({ ...vennFig(), sets: [{ label: 'Soccer' }, { label: 'Chess' }] } as unknown as Fig, VENN, /label "Chess"/);
+  statsFails({ ...vennFig(), title: 'Clubs' } as unknown as Fig, VENN, /label "Clubs"/);
+  assert.deepEqual(statsOk({ ...vennFig(), universalLabel: '30 students' } as unknown as Fig, VENN), { ok: true });
+  statsFails({ ...vennFig(), universalLabel: '31 students' } as unknown as Fig, VENN, /label "31 students"/);
+  const f = vennFig(); regionsOf(f).onlyA = { items: ['Ana'] };
+  statsFails(f, VENN, /label "Ana"/);
+  const t = 'Sets: A = {1, 2, 3}, B = {2, 4}. [Figure: A Venn diagram of A and B.]';
+  assert.deepEqual(statsOk({ action: 'showVennDiagram', sets: [{ label: 'A' }, { label: 'B' }], regions: { onlyA: { items: ['1', '3'] }, intersection: { items: ['2'] }, onlyB: { items: ['4'] } } } as unknown as Fig, t), { ok: true });
+});
+test('venn: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(vennFig(), VENN, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showVennDiagram"'] });
+});
+
+test('tree: the stated probability tree passes (no root label needed)', () => {
+  assert.deepEqual(statsOk(treeFig(), TREE), { ok: true });
+});
+test('tree: leaf probabilities are computed products and fail unless every one is stated', () => {
+  statsFails({ ...treeFig(), showLeafProbabilities: true } as unknown as Fig, TREE, /computed products/);
+  const stated = `${TREE} The leaf probabilities are 1/10, 3/10, 3/10 and 3/10.`;
+  assert.deepEqual(statsOk({ ...treeFig(), showLeafProbabilities: true } as unknown as Fig, stated), { ok: true });
+});
+test('tree: a branch probability or node value the sheet does not state fails on provenance', () => {
+  const f = treeFig(); kids(kids(rootOf(f))[0].node)[0].probability = '1/10';
+  statsFails(f, TREE, /probability "1\/10"/);
+  const g = treeFig(); kids(rootOf(g))[1].node.value = '3/10';
+  statsFails(g, TREE, /number 3\/10 in root\.children\[1\]\.node\.value/);
+  const h = treeFig(); kids(rootOf(h))[0].node.label = 'Green';
+  statsFails(h, TREE, /label "Green"/);
+});
+test('tree: a branch with no node, a bad children list, a bad type or a missing root fails structurally', () => {
+  const f = treeFig(); delete (kids(rootOf(f))[0] as Obj).node;
+  statsFails(f, TREE, /has no node/);
+  const g = treeFig(); kids(rootOf(g))[0].node.children = 'Red';
+  statsFails(g, TREE, /children must be an array/);
+  statsFails({ ...treeFig(), type: 'family' } as unknown as Fig, TREE, /tree type/);
+  statsFails({ action: 'showTree', type: 'probability' } as unknown as Fig, TREE, /needs a root/);
+  statsFails({ action: 'showTree', root: { label: 'Red' } } as unknown as Fig, TREE, /at least one branch/);
+  statsFails({ ...treeFig(), direction: 'left-right' } as unknown as Fig, TREE, /field "direction" is not used/);
+  let deep: Obj = { label: 'Red' };
+  for (let i = 0; i < 5; i++) deep = { label: 'Red', children: [{ label: '', probability: '2/5', node: deep }] };
+  statsFails({ action: 'showTree', root: deep } as unknown as Fig, TREE, /deeper than 4 levels/);
+  statsFails({ action: 'showTree', root: { label: '', children: Array.from({ length: 7 }, () => ({ label: '', probability: '2/5', node: { label: 'Red' } })) } } as unknown as Fig, TREE, /more than 6 branches/);
+  const p = treeFig(); kids(rootOf(p))[0].probability = '7/5';
+  const t = `${TREE} 7/5`;
+  const v = statsOk(p, t);
+  assert.ok(!v.ok && v.reasons.some((r) => /between 0 and 1/.test(r)), JSON.stringify(v));
+});
+test('tree: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(treeFig(), TREE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showTree"'] });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
