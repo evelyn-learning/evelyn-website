@@ -31,6 +31,17 @@ function parseLastJson(text: string): unknown {
 
 const clip = (v: unknown, max: number): string => (typeof v === 'string' ? v.trim().slice(0, max).trim() : '');
 
+/** A level that only says the level is unknown, or that the 40-char cap cut
+ *  mid-parenthesis, is meta text, not a level — treated as absent (2026-10-23:
+ *  Haiku 5.5 wrote "Secondary school (grade level not stated" into it). Pure. */
+const LEVEL_UNKNOWN = /\b(unknown|unspecified|not (?:stated|specified|given|shown|clear|indicated)|unclear|n\/a)\b/i;
+export function usableLevel(level: string): string {
+  if (!level || LEVEL_UNKNOWN.test(level)) return '';
+  const open = (level.match(/\(/g) ?? []).length;
+  const close = (level.match(/\)/g) ?? []).length;
+  return open === close ? level : '';
+}
+
 /** Contract caps (MaterialSummaryResponseSchema): subject 80, level 40, topic 120, summary 400. Pure. */
 export function parseMaterialSummary(raw: unknown): MaterialSummary | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -39,7 +50,7 @@ export function parseMaterialSummary(raw: unknown): MaterialSummary | null {
   const topic = clip(o.topic, 120);
   const summary = clip(o.summary, 400);
   if (!subject || !topic || !summary) return null;
-  const level = clip(o.level, 40);
+  const level = usableLevel(clip(o.level, 40));
   return { subject, ...(level ? { level } : {}), topic, summary };
 }
 

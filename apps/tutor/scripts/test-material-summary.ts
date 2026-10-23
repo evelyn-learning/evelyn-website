@@ -13,6 +13,12 @@ const assert = (c: boolean, n: string) => { c ? passed++ : failed++; console.log
   assert(ok?.subject === 'Algebra' && ok.level === 'Grade 8' && ok.topic === 'Solving linear equations', 'parses and trims');
   assert(parseMaterialSummary({ subject: 'Algebra', level: '', topic: 't', summary: 's' })?.level === undefined, 'empty level omitted');
   assert(parseMaterialSummary({ topic: 't', summary: 's' }) === null, 'missing subject → null');
+  // 2026-10-23: meta text in `level` is dropped (Haiku 5.5 output, verbatim).
+  const lv = (level: string) => parseMaterialSummary({ subject: 'History', level, topic: 't', summary: 's' })?.level;
+  assert(lv('Secondary school (grade level not stated') === undefined, 'level: "Secondary school (grade level not stated" dropped');
+  assert(lv('Unknown') === undefined && lv('Grade level not specified') === undefined && lv('unspecified') === undefined, 'level: unknown / not specified / unspecified dropped');
+  assert(lv('Grade (7') === undefined, 'level: unbalanced parenthesis dropped');
+  assert(lv('Grade 7') === 'Grade 7' && lv('High school') === 'High school' && lv('AP Biology (Unit 3)') === 'AP Biology (Unit 3)', 'level: normal levels pass through');
   assert(parseMaterialSummary(null) === null, 'null → null');
   assert((parseMaterialSummary({ subject: 'x'.repeat(200), topic: 'y'.repeat(300), summary: 'z'.repeat(900) })?.topic.length ?? 0) === 120, 'clips to the contract caps');
 
