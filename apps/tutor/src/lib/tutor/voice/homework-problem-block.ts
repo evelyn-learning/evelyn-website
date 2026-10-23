@@ -68,6 +68,21 @@ export const HOMEWORK_OPENER_BOARD_WITHHELD_REASON =
 export const HOMEWORK_BOARD_KEY_WITHHELD_REASON =
   'not shown — it writes a value the problem asks the student to find; draw only what the sheet gives';
 
+/**
+ * Haiku 5.5 brain trial 2026-10-23 (worksheet 3 p6, no figure): the opener's
+ * problem card carried the area answer, the key guard withheld it, and the
+ * model said "here's the problem" over an empty board. In the opening turn of
+ * a problem with no figure, a withheld board item is replaced — once — by the
+ * sheet's own problem text, which holds only what the sheet gives.
+ */
+export const HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON =
+  'not shown — it writes a value the problem asks the student to find; the sheet\'s own problem text is on the board in its place, so do not draw the problem again';
+
+export function homeworkSheetProblemCard(hp: HomeworkProblemTurnInput | undefined): Record<string, unknown> | null {
+  const statement = String(hp?.text ?? '').trim().slice(0, 4000);
+  return statement ? { statement, title: 'Problem', format: 'free-response' } : null;
+}
+
 export function homeworkKeyWithheld(hp: HomeworkProblemTurnInput | undefined, studentText: string): WithheldAnswer[] {
   if (!hp?.verified || !hp.key?.parts?.length) return [];
   return hp.key.parts

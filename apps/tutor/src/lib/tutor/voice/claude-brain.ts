@@ -48,7 +48,7 @@ import {
   type VerdictPrecheckResult,
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
-import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld } from './homework-problem-block';
+import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
 import { allKeyPartsConfirmed, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS } from './keyed-verdict';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
@@ -2514,6 +2514,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // board call in the opening turn of a one-problem session with a figure is
   // never new work; it is not forwarded, and the model reads why.
   const hpOpenerWithFigure = !!input.homeworkProblem?.hasFigure && /^\[start (?:lesson|session)\]$/.test(studentSaid);
+  // Haiku 5.5 trial 2026-10-23 (homework-problem-block.ts homeworkSheetProblemCard).
+  const hpOpenerNoFigure = !!input.homeworkProblem && !input.homeworkProblem.hasFigure && /^\[start (?:lesson|session)\]$/.test(studentSaid);
+  let hpSheetCardSent = false;
   const hpWithheld = hpKey
     ? homeworkKeyWithheld(input.homeworkProblem, [studentSaid, ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : ''))].join('\n'))
     : [];
@@ -2877,8 +2880,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
             // tool result, so it redraws with the sheet's values.
             const hit = boardRevealsHomeworkKey(args, hpWithheld);
             console.warn(`[homework-problem] board item withheld (${tc.name}; ${hit?.how}; matched "${String(hit?.matched ?? '').slice(0, 40)}")`);
-            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: HOMEWORK_BOARD_KEY_WITHHELD_REASON });
-            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: HOMEWORK_BOARD_KEY_WITHHELD_REASON };
+            const sheetCard = hpOpenerNoFigure && !hpSheetCardSent ? homeworkSheetProblemCard(input.homeworkProblem) : null;
+            const reason = sheetCard ? HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON : HOMEWORK_BOARD_KEY_WITHHELD_REASON;
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: reason });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason };
+            if (sheetCard) {
+              hpSheetCardSent = true;
+              console.warn('[homework-problem] opener: the sheet\'s problem text is boarded in its place');
+              const card: BrainToolCall = { id: `${tc.id}-sheet`, name: 'show_problem', args: sheetCard };
+              accumulatedToolCalls.push(card);
+              yield { type: 'tool-call', id: card.id, name: card.name, args: card.args };
+            }
             currentToolUse = null;
           } else {
             newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });

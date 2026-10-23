@@ -398,7 +398,18 @@ async function main() {
     const src = read('lib/tutor/voice/claude-brain.ts');
     has(src, /const hpWithheld = hpKey/);
     has(src, /boardRevealsHomeworkKey\(args, hpWithheld\)/);
-    has(src, /rejectionReason: HOMEWORK_BOARD_KEY_WITHHELD_REASON/);
+    has(src, /sheetCard \? HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON : HOMEWORK_BOARD_KEY_WITHHELD_REASON/);
+  });
+  await section('opener with no figure: a withheld board item is replaced once by the sheet\'s own problem text', () => {
+    const hp = { text: 'A rectangle 10 cm by 6 cm has a semicircle on its right side. Find its area and perimeter.', verified: true, hasFigure: false };
+    assert.deepEqual(blk.homeworkSheetProblemCard(hp), { statement: hp.text, title: 'Problem', format: 'free-response' });
+    assert.equal(blk.homeworkSheetProblemCard({ ...hp, text: '  ' }), null);
+    assert.equal(blk.homeworkSheetProblemCard(undefined), null);
+    assert.ok(blk.HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON.includes('do not draw the problem again'));
+    const src = read('lib/tutor/voice/claude-brain.ts');
+    has(src, /const hpOpenerNoFigure = !!input\.homeworkProblem && !input\.homeworkProblem\.hasFigure && /);
+    has(src, /hpOpenerNoFigure && !hpSheetCardSent \? homeworkSheetProblemCard\(input\.homeworkProblem\)/);
+    has(src, /accumulatedToolCalls\.push\(card\)/);
   });
   await section('claude-brain re-exports the block API', () => {
     const src = read('lib/tutor/voice/claude-brain.ts');
