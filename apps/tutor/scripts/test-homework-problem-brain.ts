@@ -883,8 +883,10 @@ async function main() {
   });
   await section('A2: the meta, block, plan route and outcome route carry priorConfirmed', async () => {
     const meta = await import('../src/lib/tutor/lesson-plan/homework-problem-meta');
-    const got = meta.homeworkProblemOf({ metadata: { kind: 'homework-problem', parentPlanId: 'p', n: 1, text: 'T', verified: true, priorConfirmed: ['part:a', 7, 'x'.repeat(200)] } });
-    assert.deepEqual(got?.priorConfirmed, ['part:a']);
+    const got = meta.homeworkProblemOf({ metadata: { kind: 'homework-problem', parentPlanId: 'p', n: 1, text: 'T', verified: true, priorConfirmed: ['part:a', 7, 'part:' + 'b'.repeat(130)] } });
+    assert.deepEqual(got?.priorConfirmed, ['part:a'], 'a well-formed mark over 120 characters is dropped by the length cap');
+    const kvc = await import('../src/lib/tutor/voice/keyed-verdict');
+    assert.deepEqual(kvc.sanitizeConfirmedMarks(['part:a', 'part:' + 'b'.repeat(130)]), ['part:a']);
     const blk2 = await import('../src/lib/tutor/voice/homework-problem-block');
     const b = blk2.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true, priorConfirmed: ['part:a', 'value:b=m∠1'] });
     assert.ok(/Already confirmed correct in an earlier session: part a; m∠1 in part b/.test(b), b);

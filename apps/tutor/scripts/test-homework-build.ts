@@ -1091,7 +1091,7 @@ async function main() {
       assert.deepEqual(a.order, [], 'the figure was not rebuilt');
       const p1 = (await getHomeworkBuild('gen-d1'))!.problems[0];
       assert.equal(p1.status, 'ready', 'never demoted to unverified');
-      assert.deepEqual(p1.key, { ...key, stepsTried: true }, 'kept, and marked tried (B9)'); assert.deepEqual(p1.verify, verify);
+      assert.deepEqual(p1.key, key, 'kept, and NOT marked tried: a failed re-solve retries later (B9 review)'); assert.deepEqual(p1.verify, verify);
       assert.deepEqual((p1.figure as unknown as typeof fig).given, fig.given); assert.equal(p1.figureSvg, '<svg/>');
       assert.deepEqual(p1.tokens, { in: 6, out: 2 }, 'tokens still summed');
       // Branch 3: the figure is retried, the key re-solve fails.
@@ -1104,7 +1104,7 @@ async function main() {
       assert.deepEqual(b.order, ['Demote 2 [Figure: a box ABCD]'], 'the figure dep was called');
       const p2 = (await getHomeworkBuild('gen-d3'))!.problems[0];
       assert.equal(p2.status, 'ready');
-      assert.deepEqual(p2.key, { ...key, stepsTried: true }); assert.deepEqual(p2.verify, verify);
+      assert.deepEqual(p2.key, key); assert.deepEqual(p2.verify, verify);
     });
 
     await section('B9: a stepless key marked stepsTried is copied on a cache hit, not re-solved', async () => {
