@@ -77,7 +77,7 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   },
   {
     id: 'showDiagram:solid_3d', box: 'fixed',
-    when: 'the sheet shows one 3D solid (cube, rectangular prism, triangular prism, cylinder, cone, sphere or square pyramid) with every dimension the shape needs stated; never a composite or cut-out solid, never a dimension the student must find',
+    when: 'the sheet shows one 3D solid (cube, rectangular prism, triangular prism, cylinder, cone, sphere or square pyramid) with every dimension the shape needs stated (at most one decimal place, as the board prints it); never a composite or cut-out solid, never a dimension the student must find',
     shape: diagramShape('solid_3d'),
   },
   {

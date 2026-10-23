@@ -5,7 +5,8 @@
  * unknown shape, and fills a missing dimension from its defaults. A homework
  * figure must never draw a guess, so the gate here is exact: the shape is one
  * of the solver's own keys, the dims are exactly that shape's keys, and every
- * dimension is a number the problem text states. tape_diagram and
+ * dimension is a number the problem text states and the board prints as
+ * stated (it rounds to one decimal place, so 2.25 would print "2.3"). tape_diagram and
  * area_model are gated the same way, structure and provenance first, before
  * their solver runs: area_model's solver defaults showProducts to true, so a
  * figure that leaves it out would print every partial product, the very
@@ -63,7 +64,10 @@ function validateSolid3D(params: Record<string, unknown>, ctx: FigureContext): s
   for (const [k, v] of Object.entries(d)) {
     if (!keys.includes(k)) { reasons.push(`solid_3d dim "${k}" is not drawn for a ${shape}`); continue; }
     if (!isNum(v) || v <= 0) { reasons.push(`solid_3d dim "${k}" must be a number > 0`); continue; }
-    if (!numberIsFromText(v, text)) reasons.push(`number ${v} in params.dims.${k} does not come from the problem text`);
+    if (!numberIsFromText(v, text)) { reasons.push(`number ${v} in params.dims.${k} does not come from the problem text`); continue; }
+    // CatalogSolid3DRenderer prints a non-integer dim with toFixed(1): 2.25 would print as "2.3", a number not on the sheet.
+    const printed = Number.isInteger(v) ? String(v) : v.toFixed(1);
+    if (Math.abs(Number(printed) - v) > 1e-9) reasons.push(`number ${v} in params.dims.${k} would print as ${printed} (the board shows one decimal place), a number the problem text does not state`);
   }
   if (reasons.length) return reasons;
 

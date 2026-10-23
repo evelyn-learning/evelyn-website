@@ -683,6 +683,11 @@ test('solid_3d: an extra dim, a bad dim value, or an unread param fails', () => 
   statsFails(solid({ shape: 'cone', dims: { radius: 4, height: '9' } }), CONE, /height/);
   statsFails(solid({ shape: 'cone', dimensions: { radius: 4, height: 9 } }), CONE, /solid_3d param "dimensions"/);
 });
+test('solid_3d: a dim the board would print rounded (toFixed(1)) fails; one decimal place passes', () => {
+  // 2.25 prints as "2.3", a number not on the sheet.
+  statsFails(solid({ shape: 'cylinder', dims: { radius: 2.25, height: 6 } }), '[Figure: A cylinder with radius 2.25 m and height 6 m.]', /2\.25 in params\.dims\.radius would print as 2\.3/);
+  assert.deepEqual(statsOk(solid({ shape: 'cylinder', dims: { radius: 2.5, height: 6 } }), '[Figure: A cylinder with radius 2.5 m and height 6 m.]'), { ok: true });
+});
 test('solid_3d: a sphere has no net', () => {
   statsFails(solid({ shape: 'sphere', dims: { radius: 2 }, showNet: true }), 'sphere of radius 2', /no net/);
   assert.deepEqual(statsOk(solid({ shape: 'sphere', dims: { radius: 2 } }), 'sphere of radius 2'), { ok: true });
