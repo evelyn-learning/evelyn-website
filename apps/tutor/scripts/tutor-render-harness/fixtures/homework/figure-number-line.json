@@ -1,0 +1,24 @@
+{
+  "label": "figure-number-line",
+  "tool": "show_number_line",
+  "expect": "render",
+  "args": {
+    "min": -5,
+    "max": 5,
+    "step": 1,
+    "intervals": [
+      {
+        "from": -2,
+        "to": 5,
+        "fromInclusive": false
+      }
+    ],
+    "points": [
+      {
+        "value": -2,
+        "style": "open"
+      }
+    ]
+  },
+  "problemText": "Write the inequality shown. [Figure: A number line from −5 to 5 marked every 1. An open circle at −2 with an arrow shading to the right.]"
+}

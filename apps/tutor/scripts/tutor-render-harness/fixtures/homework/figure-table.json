@@ -1,0 +1,30 @@
+{
+  "label": "figure-table",
+  "tool": "show_table",
+  "expect": "render",
+  "args": {
+    "headers": [
+      "Score",
+      "Frequency"
+    ],
+    "rows": [
+      [
+        "1",
+        "4"
+      ],
+      [
+        "2",
+        "6"
+      ],
+      [
+        "3",
+        "5"
+      ],
+      [
+        "4",
+        "2"
+      ]
+    ]
+  },
+  "problemText": "[Figure: A frequency table with columns \"Score\" and \"Frequency\": 1 – 4, 2 – 6, 3 – 5, 4 – 2.]"
+}

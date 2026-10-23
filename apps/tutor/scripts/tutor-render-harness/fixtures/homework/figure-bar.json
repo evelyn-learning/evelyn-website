@@ -1,0 +1,22 @@
+{
+  "label": "figure-bar",
+  "tool": "show_stats",
+  "expect": "render",
+  "args": {
+    "type": "bar",
+    "title": "Favorite Fruit",
+    "bar": {
+      "categories": [
+        "Apple",
+        "Banana",
+        "Cherry"
+      ],
+      "values": [
+        8,
+        5,
+        3
+      ]
+    }
+  },
+  "problemText": "[Figure: A bar graph \"Favorite Fruit\": Apple 8, Banana 5, Cherry 3.]"
+}

@@ -1,0 +1,22 @@
+{
+  "label": "figure-boxplot",
+  "tool": "show_stats",
+  "expect": "render",
+  "args": {
+    "type": "boxplot",
+    "title": "Homework Minutes",
+    "boxplot": {
+      "datasets": [
+        {
+          "label": "",
+          "min": 12,
+          "q1": 20,
+          "median": 30,
+          "q3": 41,
+          "max": 55
+        }
+      ]
+    }
+  },
+  "problemText": "The box plot shows the minutes students spent on homework. Find the interquartile range. [Figure: A box plot titled \"Homework Minutes\" above a number line from 0 to 60 marked every 10. The left whisker starts at 12, the box runs from 20 to 41 with the median line at 30, and the right whisker ends at 55.]"
+}

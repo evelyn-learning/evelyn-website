@@ -1,0 +1,22 @@
+{
+  "label": "figure-dotplot",
+  "tool": "show_stats",
+  "expect": "render",
+  "args": {
+    "type": "dotplot",
+    "title": "Pets per household",
+    "data": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2,
+      2,
+      4
+    ]
+  },
+  "problemText": "[Figure: A dot plot of \"Pets per household\": two dots at 0, four dots at 1, three dots at 2, one dot at 4.]"
+}

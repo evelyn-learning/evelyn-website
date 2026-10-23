@@ -1,0 +1,16 @@
+{
+  "label": "figure-solid-cone",
+  "tool": "show_diagram",
+  "expect": "render",
+  "args": {
+    "type": "solid_3d",
+    "params": {
+      "shape": "cone",
+      "dims": {
+        "radius": 4,
+        "height": 9
+      }
+    }
+  },
+  "problemText": "Find the volume of the cone. Leave your answer in terms of π. [Figure: A cone with a radius of 4 cm drawn from the centre of the base to its edge and a height of 9 cm drawn as a dashed line from the apex to the centre of the base.]"
+}

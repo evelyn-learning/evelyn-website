@@ -224,6 +224,25 @@ async function main() {
     assert.ok(!raw[0].args.steps.some((s) => s.label === 'DB = 9'));
   });
 
+  await section('every homework figure fixture is a valid figure for its text', async () => {
+    // The render harness itself needs a dev server (npm run test:render-tools -- homework);
+    // this checks offline that each fixture is what the build would store for its text.
+    const { toWhiteboardCommand } = await import('../src/lib/tutor/whiteboard/process-tool-call');
+    const { validateFigure } = await import('../src/lib/tutor/homework-build/figure-validate');
+    const { FIGURE_ACTIONS } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
+    const dir = path.join(__dirname, 'tutor-render-harness', 'fixtures', 'homework');
+    const files = fs.readdirSync(dir).filter((f) => /^figure-.*\.json$/.test(f));
+    assert.ok(files.length >= 9, `expected at least 9 figure fixtures, found ${files.length}`);
+    for (const file of files) {
+      const f = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')) as { label: string; tool: string; expect: string; args: Record<string, unknown>; problemText: string };
+      assert.equal(f.label, file.replace(/\.json$/, ''), file);
+      assert.equal(f.expect, 'render', file);
+      const cmd = toWhiteboardCommand(f.tool, f.args);
+      assert.ok(FIGURE_ACTIONS.includes(cmd.action), `${file}: ${cmd.action} is a figure action`);
+      assert.deepEqual(validateFigure(cmd as never, { problemText: f.problemText, claims: [] }), { ok: true }, file);
+    }
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

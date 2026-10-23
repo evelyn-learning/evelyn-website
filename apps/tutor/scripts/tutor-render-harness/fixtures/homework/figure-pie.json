@@ -1,0 +1,25 @@
+{
+  "label": "figure-pie",
+  "tool": "show_stats",
+  "expect": "render",
+  "args": {
+    "type": "pie",
+    "pie": {
+      "slices": [
+        {
+          "label": "Red",
+          "value": 10
+        },
+        {
+          "label": "Blue",
+          "value": 18
+        },
+        {
+          "label": "Green",
+          "value": 12
+        }
+      ]
+    }
+  },
+  "problemText": "[Figure: A pie chart of 40 votes: Red 10, Blue 18, Green 12.]"
+}

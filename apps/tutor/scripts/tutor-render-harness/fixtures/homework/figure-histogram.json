@@ -1,0 +1,38 @@
+{
+  "label": "figure-histogram",
+  "tool": "show_stats",
+  "expect": "render",
+  "args": {
+    "type": "histogram",
+    "title": "Test Scores",
+    "yLabel": "Frequency",
+    "bins": [
+      [
+        50,
+        60,
+        3
+      ],
+      [
+        60,
+        70,
+        7
+      ],
+      [
+        70,
+        80,
+        12
+      ],
+      [
+        80,
+        90,
+        11
+      ],
+      [
+        90,
+        100,
+        7
+      ]
+    ]
+  },
+  "problemText": "[Figure: A histogram of \"Test Scores\". Bars: 50–60 has height 3, 60–70 has 7, 70–80 has 12, 80–90 has 11, 90–100 has 7. The vertical axis is labelled Frequency.]"
+}
