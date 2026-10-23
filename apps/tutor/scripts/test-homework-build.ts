@@ -471,6 +471,68 @@ async function main() {
       const filled = renderToStaticMarkup(renderGeometryTree({ ...GEOMETRY_FREEZE_FIXTURE, polygons: [{ vertices: ['A', 'B', 'C'] }] }));
       assert.ok(filled.includes('fill="#4f8cff" fill-opacity="0.15"'), 'a polygon without fill still fills 15 % as before');
     });
+    await section('figureToSvg: the minimum new-kind set gives an svg document', async () => {
+      const { figureToSvg, FIGURE_SVG_MAX_CHARS } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const F = await import('./fixtures/homework-figure-fixtures');
+      const cases: Array<[string, Fig]> = [
+        ['boxplot', F.boxFig()], ['boxplot hw-11 p6', F.hw11p6Fig()], ['histogram', F.histFig()], ['dotplot', F.dotFig()],
+        ['bar', F.barFig()], ['table', F.tableFig()], ['number line', F.nlFig()], ['solid_3d cone', F.coneFig()],
+        ['pie', F.pieFig()], ['scatter', F.scatFig()],
+      ];
+      const out: Record<string, string> = {};
+      for (const [id, fig] of cases) {
+        const svg = await figureToSvg(fig);
+        assert.ok(svg && /^<svg[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg) && /viewBox=/.test(svg) && !/^<svg[^>]* (class|style)=/.test(svg) && svg.endsWith('</svg>'), `${id}: ${String(svg).slice(0, 120)}`);
+        assert.ok(svg.length <= FIGURE_SVG_MAX_CHARS, id);
+        assert.equal(await figureToSvg(fig), svg, `${id}: deterministic`);
+        assert.ok(!/NaN|undefined|Infinity/.test(svg), `${id}: no NaN/undefined in the markup`);
+        out[id] = svg;
+      }
+      assert.ok(out.table.includes('>Score<') && out.table.includes('>Frequency<'), 'the table headers are drawn');
+      assert.equal((out.dotplot.match(/<circle /g) ?? []).length, 10, 'one dot per value');
+      assert.ok(out.boxplot.includes('<rect') && out.boxplot.includes('>Homework Minutes<'), 'the box and its title');
+      assert.equal((out.histogram.match(/data-bar=/g) ?? []).length, 5, 'one bar per bin');
+      assert.equal((out.bar.match(/data-bar=/g) ?? []).length, 3, 'one bar per category');
+      assert.ok(out.bar.includes('>Apple<') && out.bar.includes('>Cherry<'), 'category labels');
+      assert.ok(out['solid_3d cone'].includes('r=4') && out['solid_3d cone'].includes('h=9'), 'the cone carries its stated dims');
+      assert.equal((out.pie.match(/data-wedge=/g) ?? []).length, 3, 'one wedge per slice');
+      assert.equal((out.scatter.match(/<circle /g) ?? []).length, 5, 'one dot per point');
+      // Number line: the interval ends at max, so it is a ray (an arrow to the edge), with no circle at 5; one open circle at −2.
+      const nl = out['number line'];
+      assert.equal((nl.match(/<circle /g) ?? []).length, 1, `one circle (the open −2), none at the ray's end: ${nl}`);
+      assert.ok(/<circle [^>]*fill="#ffffff"/.test(nl), 'the −2 circle is open');
+      assert.ok(nl.includes('data-ray="right"'), 'the interval runs off the right edge as a ray');
+      // A closed interval inside the line draws both ends as circles.
+      const closed = await figureToSvg({ action: 'showNumberLine', min: 0, max: 10, step: 1, intervals: [{ from: 2, to: 7, fromInclusive: true, toInclusive: false }] } as Fig);
+      assert.equal((closed!.match(/<circle /g) ?? []).length, 2, 'both ends of an inner interval');
+      assert.ok(!closed!.includes('data-ray='), 'no ray');
+    });
+    await section('figureToSvg: a 40-row table keeps 6 rows plus one … row; text is escaped; pie/scatter never reject; a malformed figure gives null', async () => {
+      const { figureToSvg, FIGURE_SVG_MAX_CHARS } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const rows = Array.from({ length: 40 }, (_, i) => [String(i + 1), `x<${i}> & "y"`]);
+      const svg = await figureToSvg({ action: 'showTable', headers: ['n', 'a<b'], rows } as Fig);
+      assert.ok(svg && svg.length <= FIGURE_SVG_MAX_CHARS);
+      assert.equal((svg.match(/data-row=/g) ?? []).length, 7, 'six rows and the ellipsis row');
+      assert.ok(svg.includes('…') && !svg.includes('>7<'), 'row 7 is not drawn');
+      assert.ok(svg.includes('a&lt;b') && svg.includes('x&lt;0&gt; &amp; &quot;y&quot;') && !svg.includes('a<b'), 'cells are XML-escaped');
+      const short = await figureToSvg({ action: 'showTable', headers: ['n'], rows: [['1'], ['2']] } as Fig);
+      assert.equal((short!.match(/data-row=/g) ?? []).length, 2, 'no ellipsis row when every row fits');
+      for (const fig of [{ action: 'showStats', type: 'pie', pie: { slices: [{ label: 'A', value: 0 }] } }, { action: 'showStats', type: 'pie' }, { action: 'showScatterPlot', points: [] }, { action: 'showScatterPlot', points: [{ x: 1, y: 1 }] }]) {
+        const r = await figureToSvg(fig as unknown as Fig);
+        assert.ok(r === null || typeof r === 'string', JSON.stringify(fig));
+      }
+      for (const bad of [
+        { action: 'showStats', type: 'boxplot', boxplot: {} },
+        { action: 'showStats', type: 'histogram', bins: 'x' },
+        { action: 'showStats', type: 'dotplot', data: [] },
+        { action: 'showStats', type: 'bar', bar: { categories: ['a'], values: [] } },
+        { action: 'showTable', headers: [], rows: [] },
+        { action: 'showNumberLine', min: 5, max: 1 },
+        { action: 'showDiagram', type: 'solid_3d', params: { shape: 'blob' } },
+        { action: 'showDiagram', type: 'solid_3d', params: { shape: 'cone', dims: { radius: 4 } } },
+        { action: 'showDiagram', type: 'tape_diagram', params: {} },
+      ]) assert.equal(await figureToSvg(bad as unknown as Fig), null, JSON.stringify(bad));
+    });
     await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
       // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
       // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.

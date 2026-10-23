@@ -10,6 +10,13 @@
  * The title is left out: it is an InlineMathText (a client component with
  * KaTeX), and a thumbnail does not need it. The board's sizing classes and inline max
  * sizes are stripped so a data-URI <img> sizes the svg from its viewBox.
+ *
+ * The figure-vocabulary kinds (spec 2026-10-21 §4.6 option (b), Task 1 spike
+ * skipped) each have a hook-free hand-written writer: stats-svg.ts (box plot,
+ * histogram, dot plot, bar, pie, scatter), table-svg.ts, number-line-svg.ts
+ * and solid-svg.ts (solid_3d). Their live renderers are not rendered here
+ * (hooks across React instances) and not refactored (GAC freeze). A kind with
+ * no writer has no thumbnail.
  */
 
 import { version as reactVersion } from 'react';
@@ -17,6 +24,12 @@ import { renderGeometryTree } from '@/app/tutor/components/whiteboard/GeometryRe
 import { solveGeometry, type ConstructedGeometrySpec } from '../diagrams/geometry-solver';
 import type { FigureCommand } from './types';
 import { graphToSvg } from './graph-svg';
+import { figureKindId } from './figure-vocabulary';
+import { numberLineToSvg } from './number-line-svg';
+import { solidToSvg } from './solid-svg';
+import { statsToSvg } from './stats-svg';
+import { tableToSvg } from './table-svg';
+import type { DiagramFigure, StatsFigure } from './types';
 
 /** Mirrors the academy's cap on the stored copy. */
 export const FIGURE_SVG_MAX_CHARS = 65_536;
@@ -59,14 +72,30 @@ async function renderToStaticMarkup(el: JSX.Element): Promise<string> {
   return (await rendererPromise)(el);
 }
 
+/** The root clean-up every branch gets: no class/style on the root <svg>, xmlns present, the size cap. */
+function finish(markup: string | null): string | null {
+  const m = markup?.match(/<svg[\s\S]*<\/svg>/);
+  if (!m) return null;
+  let svg = m[0].replace(/^<svg( [^>]*)?>/, (open) => open.replace(/ class="[^"]*"/, '').replace(/ style="[^"]*"/, ''));
+  if (!/\sxmlns=/.test(svg.slice(0, 200))) svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  return svg.length <= FIGURE_SVG_MAX_CHARS ? svg : null;
+}
+
+/** The hand-written writers of the vocabulary kinds, by figureKindId. */
+function vocabularySvg(figure: FigureCommand): string | null {
+  const id = figureKindId(figure);
+  if (id.startsWith('showStats:') || id === 'showScatterPlot') return statsToSvg(figure as StatsFigure);
+  if (id === 'showTable') return tableToSvg(figure as Extract<FigureCommand, { action: 'showTable' }>);
+  if (id === 'showNumberLine') return numberLineToSvg(figure as Extract<FigureCommand, { action: 'showNumberLine' }>);
+  if (id === 'showDiagram:solid_3d') return solidToSvg(figure as DiagramFigure);
+  return null;
+}
+
 export async function figureToSvg(figure: FigureCommand | null | undefined): Promise<string | null> {
   if (!figure) return null;
-  if (figure.action === 'showGraph') {
-    const svg = graphToSvg(figure.data);
-    return svg && svg.length <= FIGURE_SVG_MAX_CHARS ? svg : null;
-  }
-  if (figure.action !== 'showGeometryConstructed') return null;
   try {
+    if (figure.action === 'showGraph') return finish(graphToSvg(figure.data));
+    if (figure.action !== 'showGeometryConstructed') return finish(vocabularySvg(figure));
     const solved = solveGeometry({ given: figure.given, steps: figure.steps, display: figure.display } as ConstructedGeometrySpec);
     const html = await renderToStaticMarkup(renderGeometryTree({
       points: solved.points, segments: solved.segments, polygons: solved.polygons, circles: solved.circles,
@@ -74,11 +103,7 @@ export async function figureToSvg(figure: FigureCommand | null | undefined): Pro
       showGrid: solved.showGrid, showAxes: solved.showAxes, viewRange: solved.viewRange,
       fit: 'content',
     }));
-    const m = html.match(/<svg[\s\S]*<\/svg>/);
-    if (!m) return null;
-    let svg = m[0].replace(/^<svg( [^>]*)?>/, (open) => open.replace(/ class="[^"]*"/, '').replace(/ style="[^"]*"/, ''));
-    if (!/\sxmlns=/.test(svg.slice(0, 200))) svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-    return svg.length <= FIGURE_SVG_MAX_CHARS ? svg : null;
+    return finish(html);
   } catch (e) {
     console.warn(`[homework-figure] svg render failed: ${(e as Error)?.message ?? e}`);
     return null;
