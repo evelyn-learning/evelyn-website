@@ -43,6 +43,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, resolveModel } from '../ai/model-registry';
+import { plangenFastParams } from './plangen-fast';
 
 /** What the student handed over. */
 export type MaterialKind = 'problem_set' | 'explanatory_text' | 'mixed' | 'diagram' | 'unusable';
@@ -185,8 +186,9 @@ export function generationHintForKind(kind: MaterialKind, itemCount?: number): s
 /* The model call                                                      */
 /* ------------------------------------------------------------------ */
 
-/** Same fast-pass model the rest of this pipeline uses (registry role 'plangen-fast'). */
-const HAIKU_MODEL_ID = resolveModel('plangen-fast').model;
+/** Registry role 'plangen-classify' — Haiku 4.5; the rest of the fast pipeline
+ *  ('plangen-fast') moved to Haiku 5.5 on 2026-10-23, see model-registry.ts. */
+const HAIKU_MODEL_ID = resolveModel('plangen-classify').model;
 const CLASSIFY_MAX_TOKENS = 400;
 /** Only the head of the material is needed to tell WHAT it is. Bounded so a
  *  30-page PDF costs the same as a one-page worksheet. */
@@ -262,7 +264,7 @@ export async function classifyMaterial(
  * find it undefined.
  */
 export function getClassifierClient(): Anthropic {
-  return getModelClient('plangen-fast').client;
+  return getModelClient('plangen-classify').client;
 }
 
 /** Production deps: one cheap Haiku call. */
@@ -271,8 +273,9 @@ export function defaultClassifyDeps(client: Anthropic): ClassifyDeps {
     async complete(system, user) {
       const res = await client.messages.create({
         model: HAIKU_MODEL_ID,
-        max_tokens: CLASSIFY_MAX_TOKENS,
-        temperature: 0,
+        // Haiku 4.5 => the old body (temperature 0); a newer model via
+        // TUTOR_MODEL_PLANGEN_CLASSIFY gets effort low + no temperature (plangen-fast.ts).
+        ...plangenFastParams(CLASSIFY_MAX_TOKENS, 0, { model: HAIKU_MODEL_ID }),
         system,
         messages: [{ role: 'user', content: [{ type: 'text', text: user }] }],
       });

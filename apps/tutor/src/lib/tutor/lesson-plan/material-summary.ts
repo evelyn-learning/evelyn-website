@@ -8,6 +8,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, resolveModel } from '../ai/model-registry';
+import { plangenFastParams } from './plangen-fast';
 
 export interface MaterialSummary { subject: string; level?: string; topic: string; summary: string }
 
@@ -65,8 +66,7 @@ export function defaultSummaryDeps(client: Anthropic): SummaryDeps {
     async complete(system, user) {
       const res = await client.messages.create({
         model: HAIKU_MODEL_ID,
-        max_tokens: SUMMARY_MAX_TOKENS,
-        temperature: 0,
+        ...plangenFastParams(SUMMARY_MAX_TOKENS, 0, { model: HAIKU_MODEL_ID }), // Haiku 5.5: no temperature, effort low (plangen-fast.ts)
         system,
         messages: [{ role: 'user', content: [{ type: 'text', text: user }] }],
       });

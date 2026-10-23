@@ -44,7 +44,8 @@ export type ModelRole =
   | 'social-threads'    // portal social-thread extraction
   | 'video-curator'
   | 'plangen'           // typed-topic lesson-plan generation, stage 1 + stage 2 of generate-from-text — 2026-10-23 eval: Haiku 5.5 low beat Haiku 4.5 and Sonnet 5 on verified keys, judge score and cost
-  | 'plangen-fast'      // lesson-plan text generation / labels / classify / condense
+  | 'plangen-fast'      // lesson-plan enumerate / summary / rail labels / condense
+  | 'plangen-classify'  // material-classify (upload gate) — kept on Haiku 4.5, see DEFAULT_MODEL
   | 'plangen-vision'    // lesson-plan material vision extraction
   | 'taxonomy'          // taxonomy generation (legacy TAXONOMY_MODEL)
   | 'content-gen'       // offline course-content generation (bank items, batch authoring scripts)
@@ -73,7 +74,16 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   'social-threads': 'claude-haiku-4-5-20251001',
   'video-curator': 'claude-sonnet-4-6',
   plangen: 'claude-haiku-5-5', // docs/superpowers/evals/2026-10-23-plangen-model-compare.md: 98.4% verified keys, judge 7.20/8, $0.002/plan (Haiku 4.5: 92.3%, 5.77, $0.0115)
-  'plangen-fast': 'claude-haiku-4-5-20251001', // other callers send temperature:0 (Haiku 5.5 rejects it), unevaluated
+  // 2026-10-23: enumerate / classify / summary / rail labels / condense move to
+  // Haiku 5.5 at effort low (lesson-plan/plangen-fast.ts drops temperature and
+  // adds thinking headroom). Eval: docs/superpowers/evals/2026-10-23-plangen-fast-compare.md.
+  // Rollback: TUTOR_MODEL_PLANGEN_FAST=claude-haiku-4-5-20251001 restores the old bodies.
+  'plangen-fast': 'claude-haiku-5-5',
+  // material-classify stays on Haiku 4.5: in the same eval Haiku 5.5 returned
+  // malformed JSON (`..."topicSummary":"...","}` — it starts the optional
+  // itemCount key and drops it) on 3/10 calls, which the gate reads as "no
+  // answer". Flip with TUTOR_MODEL_PLANGEN_CLASSIFY once the prompt/parse is fixed.
+  'plangen-classify': 'claude-haiku-4-5-20251001',
   // 2026-10-20 (GAC Geometry upload, twice): Sonnet 4.6 put a labelled angle on
   // the wrong side of the transversal in two reads of the same worksheet.
   // 2026-10-20 (GAC uploads, 3 sheets): Sonnet 5 still misplaced angle arcs

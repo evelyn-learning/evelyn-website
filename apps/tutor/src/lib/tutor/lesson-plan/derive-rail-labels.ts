@@ -7,6 +7,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, resolveModel } from '../ai/model-registry';
+import { plangenFastParams } from './plangen-fast';
 import { connectDB } from '@core/db';
 import { LessonPlanRailLabelsModel, buildRailLabelsId } from '@/models/LessonPlanRailLabels';
 import { buildLabelPrompt, parseLabelResponse, RAIL_LABELS_VERSION, type SegmentLabels } from './rail-labels';
@@ -20,12 +21,12 @@ function getClient(): Anthropic {
   return getModelClient('plangen-fast').client;
 }
 
-const realComplete: CompleteFn = async (prompt) => {
+/** The real model call (exported for the request-shape test). */
+export const realComplete: CompleteFn = async (prompt) => {
   const res = await getClient().messages.create(
     {
       model: HAIKU_MODEL_ID,
-      max_tokens: 400,
-      temperature: 0.1,
+      ...plangenFastParams(400, 0.1, { model: HAIKU_MODEL_ID }), // Haiku 5.5: no temperature, effort low (plangen-fast.ts)
       messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
     },
     { timeout: 8000, maxRetries: 0 },

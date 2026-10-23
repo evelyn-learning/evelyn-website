@@ -92,7 +92,7 @@ async function main() {
 
   // (a) role default + env override
   assert.equal(model, 'claude-haiku-5-5', 'plangen defaults to Haiku 5.5');
-  assert.equal(getModelClient('plangen-fast').model, 'claude-haiku-4-5-20251001', 'plangen-fast untouched');
+  // plangen-fast moved to Haiku 5.5 too (2026-10-23) — see test-plangen-fast-params.ts.
   assert.equal(gen.PLANGEN_MODEL_ID, 'claude-haiku-5-5');
 
   // (b) Haiku 5.5, env unset => effort low on both stages, stage-1 cap 4000, no sampling params.

@@ -33,6 +33,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createHash } from 'node:crypto';
 import { getModelClient, resolveModel } from '../ai/model-registry';
+import { plangenFastParams } from './plangen-fast';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import { extractDocxText, normalizeExtractedText } from '@core/utils/document-extract';
 import connectDB from '@core/db';
@@ -91,7 +92,7 @@ const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image
 
 // Same vision model extract-homework/route.ts uses for image reads.
 const VISION_MODEL_ID = resolveModel('plangen-vision').model;
-// Same Haiku id generate-from-text.ts uses for its Stage 1/2 calls.
+// Registry role 'plangen-fast' (Haiku 5.5 at effort low since 2026-10-23, see plangen-fast.ts).
 const HAIKU_MODEL_ID = resolveModel('plangen-fast').model;
 const CONDENSE_MAX_TOKENS = 4096;
 // Vision output scales with how many images are in the batch (more images
@@ -765,7 +766,8 @@ export async function condenseForPipeline(text: string, opts: { targetChars: num
   try {
     const response = await getModelClient('plangen-fast').client.messages.create({
       model: HAIKU_MODEL_ID,
-      max_tokens: CONDENSE_MAX_TOKENS,
+      // Haiku 5.5: effort low + thinking headroom (plangen-fast.ts); no temperature was ever sent here.
+      ...plangenFastParams(CONDENSE_MAX_TOKENS, undefined, { model: HAIKU_MODEL_ID, minMaxTokens: 8192 }),
       system: CONDENSE_SYSTEM_PROMPT,
       messages: [
         {

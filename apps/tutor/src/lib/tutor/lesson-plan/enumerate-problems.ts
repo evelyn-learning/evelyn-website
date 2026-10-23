@@ -27,6 +27,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, resolveModel } from '../ai/model-registry';
+import { plangenFastParams } from './plangen-fast';
 import { TUTOR_HOMEWORK_OWN_MATERIAL } from '../orchestrator/turn-round-flags';
 
 /** Hard ceiling on how many problems a single homework plan can hold. */
@@ -186,8 +187,9 @@ export function defaultEnumerateDeps(client: Anthropic): EnumerateDeps {
     async complete(system, user) {
       const res = await client.messages.create({
         model: HAIKU_MODEL_ID,
-        max_tokens: ENUMERATE_MAX_TOKENS,
-        temperature: 0,
+        // Haiku 5.5: no temperature, effort low, thinking headroom — enumerate
+        // echoes problems verbatim, so its floor is higher (plangen-fast.ts).
+        ...plangenFastParams(ENUMERATE_MAX_TOKENS, 0, { model: HAIKU_MODEL_ID, minMaxTokens: 8192 }),
         system,
         messages: [{ role: 'user', content: [{ type: 'text', text: user }] }],
       });
