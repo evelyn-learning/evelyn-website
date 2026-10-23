@@ -18,6 +18,9 @@
  * Keep new rules structural (shape / non-emptiness / range), not content.
  */
 
+import { solveGeometry } from '../diagrams/geometry-solver';
+import type { ConstructedGeometrySpec } from '../diagrams/geometry-solver';
+
 export type ToolCallValidation =
   | { ok: true }
   | { ok: false; reason: string };
@@ -109,6 +112,26 @@ export function validateToolCall(
           };
         }
       }
+    }
+    return { ok: true };
+  }
+
+  if (n === 'showgeometryconstructed') {
+    // Haiku 5.5 brain trial 2026-10-23: a circle with center {x, y} instead of
+    // a point id reached the page, the page's solver rejected it, and the fix
+    // cost the student a whole extra turn. The same pure solver runs here, so
+    // the model reads the error as its tool result inside the same turn.
+    // A conic step is left to the page, which can carry a prior figure's curve
+    // forward into a curve-less redraw before solving.
+    if (JSON.stringify(args.steps ?? []).includes('"conic')) return { ok: true };
+    try {
+      solveGeometry({ title: args.title, given: args.given, steps: args.steps, display: args.display } as ConstructedGeometrySpec);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return {
+        ok: false,
+        reason: `show_geometry_constructed solver rejected the spec: ${msg}. Re-emit show_geometry_constructed with the corrected step shape. Check each step's required fields against the schema.`,
+      };
     }
     return { ok: true };
   }
