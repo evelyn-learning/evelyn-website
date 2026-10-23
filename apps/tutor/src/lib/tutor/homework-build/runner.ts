@@ -45,7 +45,8 @@ const verifyOf = (keyRes: KeySolveResult): ProblemBuild['verify'] => ({
 function refreshedKey(n: number, keyRes: KeySolveResult, cached: Pick<ProblemBuild, 'key' | 'verify'>): Pick<ProblemBuild, 'key' | 'verify'> {
   if (keyRes.key) return { key: keyRes.key, verify: verifyOf(keyRes) };
   console.warn(`[homework-build] n=${n} steps refresh failed: ${keyRes.note ?? keyRes.candidates.join('; ')}, keeping the verified key`);
-  return { key: cached.key, verify: cached.verify };
+  // B9: marked tried, so the next cache hit copies it instead of re-solving again.
+  return { key: cached.key ? { ...cached.key, stepsTried: true } : cached.key, verify: cached.verify };
 }
 
 export interface RunnerDeps { figure: FigureBuildDeps; key: KeySolveDeps; now?: () => number }
@@ -97,7 +98,7 @@ export async function runHomeworkBuild(
       }
       const figureCopyable = cachedFigureOk || (!cached?.figure && !hasFigureDescription(p.text));
       // round 11: a key built before the solution path is re-solved; the figure is copied
-      const keyStale = cached?.status === 'ready' && !!cached.key && !cached.key.steps?.length;
+      const keyStale = cached?.status === 'ready' && !!cached.key && !cached.key.steps?.length && !cached.key.stepsTried;
       if (cached && cached.status === 'ready' && figureCopyable && keyStale) {
         const keyRes = await solveKey(p, deps.key);
         patch = {

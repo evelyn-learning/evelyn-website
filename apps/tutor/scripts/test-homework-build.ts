@@ -1091,7 +1091,7 @@ async function main() {
       assert.deepEqual(a.order, [], 'the figure was not rebuilt');
       const p1 = (await getHomeworkBuild('gen-d1'))!.problems[0];
       assert.equal(p1.status, 'ready', 'never demoted to unverified');
-      assert.deepEqual(p1.key, key); assert.deepEqual(p1.verify, verify);
+      assert.deepEqual(p1.key, { ...key, stepsTried: true }, 'kept, and marked tried (B9)'); assert.deepEqual(p1.verify, verify);
       assert.deepEqual((p1.figure as unknown as typeof fig).given, fig.given); assert.equal(p1.figureSvg, '<svg/>');
       assert.deepEqual(p1.tokens, { in: 6, out: 2 }, 'tokens still summed');
       // Branch 3: the figure is retried, the key re-solve fails.
@@ -1104,7 +1104,21 @@ async function main() {
       assert.deepEqual(b.order, ['Demote 2 [Figure: a box ABCD]'], 'the figure dep was called');
       const p2 = (await getHomeworkBuild('gen-d3'))!.problems[0];
       assert.equal(p2.status, 'ready');
-      assert.deepEqual(p2.key, key); assert.deepEqual(p2.verify, verify);
+      assert.deepEqual(p2.key, { ...key, stepsTried: true }); assert.deepEqual(p2.verify, verify);
+    });
+
+    await section('B9: a stepless key marked stepsTried is copied on a cache hit, not re-solved', async () => {
+      const key = { parts: [{ label: '', final: '9', canonical: { kind: 'number' as const, value: 9 } }], solvers: ['A', 'B'], stepsTried: true };
+      await ensureHomeworkBuild('gen-t0', 'greenapple', [{ n: 1, text: 'Tried 1' }]);
+      await patchProblemBuild('gen-t0', 1, { status: 'ready', figure: null, key, verify: { agreed: true }, ms: 9 });
+      await mkPlan('gen-t1', ['Tried 1']);
+      const d = mkDeps();
+      let solves = 0;
+      d.deps.key.solveA = async () => { solves++; return { parts: null }; };
+      d.deps.key.solveB = async () => { solves++; return { parts: null }; };
+      await runHomeworkBuild('gen-t1', 'greenapple', { deps: d.deps, concurrency: 1 });
+      assert.equal(solves, 0, 'not re-solved');
+      assert.deepEqual((await getHomeworkBuild('gen-t1'))!.problems[0].key, key);
     });
 
     await section('an unverified cached entry is ignored and rebuilt', async () => {

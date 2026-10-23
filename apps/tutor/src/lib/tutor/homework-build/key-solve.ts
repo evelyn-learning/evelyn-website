@@ -301,7 +301,7 @@ export async function solveKey(problem: { n: number; text: string }, deps: KeySo
     const paths = ordered.map(([slot]) => steps.get(slot)).filter((s): s is KeyStep[] => !!s?.length);
     const st = paths.find((s) => pathReachesFinals(pair[0][2], s));
     if (paths.length && !st) console.warn(`[homework-build] n=${problem.n} steps dropped: finals not reachable from the path`);
-    return { parts: pair[0][2], solvers: pair.map(([, name]) => name), ...(st?.length ? { steps: st } : {}) };
+    return { parts: pair[0][2], solvers: pair.map(([, name]) => name), ...(st?.length ? { steps: st } : {}), stepsTried: true };
   };
   const out = async (r: KeySolveResult): Promise<KeySolveResult> => (tokens ? { ...r, tokens } : r);
   const [n0, n1, n2] = deps.names;

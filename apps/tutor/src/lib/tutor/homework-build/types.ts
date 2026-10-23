@@ -34,7 +34,15 @@ export interface AnswerPart {
 /** One step of the verified solution path: the fact/theorem/equation used, and the intermediate result when there is one. */
 export interface KeyStep { relation: string; value?: string }
 
-export interface AnswerKey { parts: AnswerPart[]; solvers: string[]; steps?: KeyStep[] }
+export interface AnswerKey {
+  parts: AnswerPart[];
+  solvers: string[];
+  steps?: KeyStep[];
+  /** B9 (2026-10-23): the solve asked for a solution path. A key with this and
+   *  no `steps` had its path dropped (finals not reachable) — a cache hit copies
+   *  it instead of re-solving it every time. Absent on keys built before round 11. */
+  stepsTried?: boolean;
+}
 
 export type ProblemBuildStatus = 'preparing' | 'ready' | 'unverified';
 
