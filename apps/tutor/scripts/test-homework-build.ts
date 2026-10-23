@@ -497,11 +497,13 @@ async function main() {
       assert.ok(out['solid_3d cone'].includes('r=4') && out['solid_3d cone'].includes('h=9'), 'the cone carries its stated dims');
       assert.equal((out.pie.match(/data-wedge=/g) ?? []).length, 3, 'one wedge per slice');
       assert.equal((out.scatter.match(/<circle /g) ?? []).length, 5, 'one dot per point');
-      // Number line: the interval ends at max, so it is a ray (an arrow to the edge), with no circle at 5; one open circle at −2.
+      // Number line: like the board, an interval is a bounded run with a circle at each end, never a ray,
+      // even where it ends at max: the open −2 (the point's own circle) and an open circle at 5.
       const nl = out['number line'];
-      assert.equal((nl.match(/<circle /g) ?? []).length, 1, `one circle (the open −2), none at the ray's end: ${nl}`);
-      assert.ok(/<circle [^>]*fill="#ffffff"/.test(nl), 'the −2 circle is open');
-      assert.ok(nl.includes('data-ray="right"'), 'the interval runs off the right edge as a ray');
+      assert.equal((nl.match(/<circle /g) ?? []).length, 2, `a circle at each interval end: ${nl}`);
+      assert.equal((nl.match(/<circle [^>]*fill="#ffffff"/g) ?? []).length, 2, 'both ends are open (neither is inclusive)');
+      assert.ok(!nl.includes('data-ray='), 'no ray: the board has none');
+      assert.equal((nl.match(/<path /g) ?? []).length, 2, 'only the axis arrowheads, no ray arrowhead');
       // A closed interval inside the line draws both ends as circles.
       const closed = await figureToSvg({ action: 'showNumberLine', min: 0, max: 10, step: 1, intervals: [{ from: 2, to: 7, fromInclusive: true, toInclusive: false }] } as Fig);
       assert.equal((closed!.match(/<circle /g) ?? []).length, 2, 'both ends of an inner interval');

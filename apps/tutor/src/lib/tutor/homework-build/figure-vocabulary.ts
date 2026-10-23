@@ -72,7 +72,7 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   },
   {
     id: 'showNumberLine', box: 'natural',
-    when: 'the sheet shows a number line (marked points, open or closed circles, shaded intervals or rays, an inequality graph)',
+    when: 'the sheet shows a number line (marked points, open or closed circles, shaded intervals); every interval end is a number the text states and is drawn as a circle, open or closed (there are no rays); an inequality the sheet states, drawn as a ray, is showDiagram inequality_graph',
     shape: '{"action":"showNumberLine","title"?,"min","max","step"?,"points"?:[{"value","label"?,"style"?:"filled"|"open"}],"intervals"?:[{"from","to","fromInclusive"?,"toInclusive"?,"label"?}]}',
   },
   {

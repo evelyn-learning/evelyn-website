@@ -169,9 +169,13 @@ export function validateTableFigure(fig: Extract<FigureCommand, { action: 'showT
 /**
  * showNumberLine: min < max and step > 0 are scaffolding (not checked against
  * the text, like graph ranges). Every point, interval end and segment end lies
- * in [min, max] and is a number the text states — except an interval end at
- * min or max (a ray running off the line). The fraction-tick denominator is
- * stated too; the title and every label come from the text.
+ * in [min, max] and is a number the text states, an interval end at min or max
+ * included: the board (NumberLineRenderer) draws a circle at both ends of an
+ * interval and has no rays, so an end at the bound is drawn as a bounded end,
+ * and exempting it would let the solution of an inequality the student solves
+ * through with nothing checked. A stated inequality's ray is drawn with
+ * showDiagram inequality_graph. The fraction-tick denominator is stated too;
+ * the title and every label come from the text.
  */
 export function validateNumberLineFigure(fig: Extract<FigureCommand, { action: 'showNumberLine' }>, ctx: FigureContext): string[] {
   const text = ctx.problemText;
@@ -189,26 +193,25 @@ export function validateNumberLineFigure(fig: Extract<FigureCommand, { action: '
     if (!Array.isArray(v)) { reasons.push(`number line ${key} must be an array`); return []; }
     return v.map((x) => (x ?? {}) as Record<string, unknown>);
   };
-  const place = (v: unknown, where: string, rayEndOk: boolean) => {
+  const place = (v: unknown, where: string) => {
     if (!isNum(v)) { reasons.push(`number line ${where} must be a number`); return; }
     if (v < min || v > max) { reasons.push(`number line point ${v} is outside [${min}, ${max}]`); return; }
-    if (rayEndOk && (v === min || v === max)) return;
     if (!numberIsFromText(v, text)) reasons.push(`number ${v} in ${where} does not come from the problem text`);
   };
   list('points').forEach((p, i) => {
-    place(p.value, `points[${i}].value`, false);
+    place(p.value, `points[${i}].value`);
     if (p.style !== undefined && p.style !== 'filled' && p.style !== 'open') reasons.push(`number line point ${i}: style must be "filled" or "open"`);
     reasons.push(...textFieldReasons([{ value: p.label }], text));
   });
   list('intervals').forEach((iv, i) => {
-    place(iv.from, `intervals[${i}].from`, true);
-    place(iv.to, `intervals[${i}].to`, true);
+    place(iv.from, `intervals[${i}].from`);
+    place(iv.to, `intervals[${i}].to`);
     if (isNum(iv.from) && isNum(iv.to) && !(iv.from < iv.to)) reasons.push(`number line interval ${i}: from < to fails`);
     reasons.push(...textFieldReasons([{ value: iv.label }], text));
   });
   list('segments').forEach((sg, i) => {
-    place(sg.from, `segments[${i}].from`, false);
-    place(sg.to, `segments[${i}].to`, false);
+    place(sg.from, `segments[${i}].from`);
+    place(sg.to, `segments[${i}].to`);
     reasons.push(...textFieldReasons([{ value: sg.label }], text));
   });
   if (f.fractionTicks !== undefined) {

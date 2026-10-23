@@ -2,13 +2,13 @@
  * Static SVG thumbnail of a homework number line (showNumberLine), at natural
  * height like the board (spec 2026-10-21 §4.5–4.6). Ticks at the figure's
  * step (scaffolding, as the validator treats it), marked points (filled or
- * open), shaded intervals and labelled segments. An interval end at the
- * line's min or max is a ray (the validator lets such an end through
- * unstated for that reason): it runs on to the edge with an arrowhead and has
- * no circle there. An interval end inside the line is a circle, closed when
- * inclusive and open otherwise (the board's default); where a marked point
- * sits on that end, the point's own circle stands for it. Never throws: a
- * line it cannot draw gives null.
+ * open), shaded intervals and labelled segments. An interval is drawn as the
+ * board (NumberLineRenderer) draws it: a bounded run with a circle at both
+ * ends, closed when inclusive and open otherwise (the board's default), even
+ * where an end sits at the line's min or max; the board has no rays (a stated
+ * inequality's ray is the inequality_graph figure). Where a marked point sits
+ * on an end, the point's own circle stands for it. Never throws: a line it
+ * cannot draw gives null.
  */
 
 import { DIAGRAM_COLORS as C } from '../diagrams/theme';
@@ -71,19 +71,14 @@ export function numberLineToSvg(fig: NumberLine): string | null {
       if (s.label) out.push(`<text x="${fmt((a + b) / 2)}" y="${fmt(y - 24)}" text-anchor="middle" font-size="11" fill="${color}">${esc(clip(s.label, 16))}</text>`);
     });
 
-    // Intervals: a thick shaded run; an end at a bound is a ray to the edge.
+    // Intervals: a thick shaded run between its two end circles (the board has no rays).
     const pointAt = new Set(points.map((p) => p.value));
     intervals.forEach((iv) => {
       const color = C.primary;
-      const leftRay = iv.from <= min, rightRay = iv.to >= max;
-      const x0 = leftRay ? EDGE + 9 : sx(iv.from), x1 = rightRay ? W - EDGE - 9 : sx(iv.to);
-      const ray = leftRay && rightRay ? ' data-ray="both"' : leftRay ? ' data-ray="left"' : rightRay ? ' data-ray="right"' : '';
-      out.push(`<g${ray}><line x1="${fmt(x0)}" y1="${fmt(y)}" x2="${fmt(x1)}" y2="${fmt(y)}" stroke="${color}" stroke-width="5" stroke-opacity="0.85"></line>`);
-      if (leftRay) out.push(arrow(EDGE, y, -1, color));
-      if (rightRay) out.push(arrow(W - EDGE, y, 1, color));
-      out.push('</g>');
-      if (!leftRay && !pointAt.has(iv.from)) out.push(`<circle cx="${fmt(sx(iv.from))}" cy="${fmt(y)}" r="6" fill="${iv.fromInclusive ? color : C.white}" stroke="${color}" stroke-width="2.5"></circle>`);
-      if (!rightRay && !pointAt.has(iv.to)) out.push(`<circle cx="${fmt(sx(iv.to))}" cy="${fmt(y)}" r="6" fill="${iv.toInclusive ? color : C.white}" stroke="${color}" stroke-width="2.5"></circle>`);
+      const x0 = sx(iv.from), x1 = sx(iv.to);
+      out.push(`<line x1="${fmt(x0)}" y1="${fmt(y)}" x2="${fmt(x1)}" y2="${fmt(y)}" stroke="${color}" stroke-width="5" stroke-opacity="0.85"></line>`);
+      if (!pointAt.has(iv.from)) out.push(`<circle cx="${fmt(x0)}" cy="${fmt(y)}" r="6" fill="${iv.fromInclusive ? color : C.white}" stroke="${color}" stroke-width="2.5"></circle>`);
+      if (!pointAt.has(iv.to)) out.push(`<circle cx="${fmt(x1)}" cy="${fmt(y)}" r="6" fill="${iv.toInclusive ? color : C.white}" stroke="${color}" stroke-width="2.5"></circle>`);
       if (iv.label) out.push(`<text x="${fmt((x0 + x1) / 2)}" y="${fmt(y - 14)}" text-anchor="middle" font-size="11" fill="${color}">${esc(clip(iv.label, 16))}</text>`);
     });
 

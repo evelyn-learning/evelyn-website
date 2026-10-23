@@ -598,6 +598,21 @@ test('number line: min ≥ max, step ≤ 0 and an unused field fail structurally
   statsFails(Object.assign(nlFig(), { step: 0 }), NL, /step must be > 0/);
   statsFails(Object.assign(nlFig(), { data: [1] }), NL, /showNumberLine field "data" is not used/);
 });
+test('number line: an interval end at the axis bound is checked like any other (the board draws a circle there, never a ray)', () => {
+  // The solution of an inequality the student solves: 3 and 10 are not stated, and the bounds exempt nothing.
+  const solve = 'Solve 2x + 1 > 7 and graph the solution on a number line.';
+  statsFails({ action: 'showNumberLine', min: 3, max: 10, step: 1, intervals: [{ from: 3, to: 10 }] } as unknown as Fig, solve, /number 3 in intervals\[0\]\.from does not come from the problem text/);
+  statsFails({ action: 'showNumberLine', min: 0, max: 10, step: 1, intervals: [{ from: 3, to: 10 }] } as unknown as Fig, solve, /number 10 in intervals\[0\]\.to/);
+  // A stated bounded interval passes.
+  const bounded = '[Figure: A number line from 0 to 10 with the interval from 2 to 7 shaded, a closed circle at 2 and an open circle at 7.]';
+  assert.deepEqual(statsOk({ action: 'showNumberLine', min: 0, max: 10, step: 1, intervals: [{ from: 2, to: 7, fromInclusive: true }] } as unknown as Fig, bounded), { ok: true });
+  // The old ray fixture: an interval end at the bound passes only when that number is stated (here 5, the sheet's axis end) …
+  assert.deepEqual(statsOk(nlFig(), NL), { ok: true });
+  // … and fails when it is not (a widened axis, the interval run to its unstated end).
+  const g = Object.assign(nlFig(), { min: -6, max: 6 }) as unknown as { intervals: Array<Record<string, unknown>> };
+  g.intervals[0].to = 6;
+  statsFails(g as unknown as Fig, NL, /number 6 in intervals\[0\]\.to does not come from the problem text/);
+});
 test('number line: an unstated fraction-tick denominator fails', () => {
   statsFails(Object.assign(nlFig(), { fractionTicks: { denominator: 3 } }), NL, /number 3 .*fractionTicks/);
 });
