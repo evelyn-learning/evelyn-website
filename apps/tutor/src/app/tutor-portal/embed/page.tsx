@@ -17,7 +17,7 @@ import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
-import { lookupModelRate } from '@/lib/tutor/ai/model-rates';
+import { lookupModelRate, rateForPrompt } from '@/lib/tutor/ai/model-rates';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
 import { type TutorMilestone, type TutorResumeState, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -1168,7 +1168,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // inputTokens excludes cache reads/creations (Anthropic semantics), so
   // totalInputTokens below reports the full billed input volume.
   const FALLBACK_PRICING = { input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 }; // $/1M tok
-  const brainUsageRef = useRef({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, model: undefined as string | undefined });
+  const brainUsageRef = useRef({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cost: 0, model: undefined as string | undefined });
   const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string }) => {
     const acc = brainUsageRef.current;
     acc.inputTokens += u.inputTokens;
@@ -1176,15 +1176,17 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     acc.cacheReadTokens += u.cacheReadTokens;
     acc.cacheCreationTokens += u.cacheCreationTokens;
     if (u.model) acc.model = u.model;
+    // Priced per turn: a model's rate card can depend on the turn's prompt size.
+    const r = rateForPrompt(lookupModelRate(u.model ?? acc.model), u.inputTokens + u.cacheReadTokens + u.cacheCreationTokens);
+    acc.cost +=
+      (u.inputTokens / 1_000_000) * (r?.input ?? FALLBACK_PRICING.input) +
+      (u.outputTokens / 1_000_000) * (r?.output ?? FALLBACK_PRICING.output) +
+      (u.cacheReadTokens / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : FALLBACK_PRICING.cacheRead) +
+      (u.cacheCreationTokens / 1_000_000) * (r ? (r.cacheWrite1h ?? 0) : FALLBACK_PRICING.cacheWrite);
   }, []);
   const brainUsageTotals = useCallback(() => {
     const acc = brainUsageRef.current;
-    const r = lookupModelRate(acc.model);
-    const cost =
-      (acc.inputTokens / 1_000_000) * (r?.input ?? FALLBACK_PRICING.input) +
-      (acc.outputTokens / 1_000_000) * (r?.output ?? FALLBACK_PRICING.output) +
-      (acc.cacheReadTokens / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : FALLBACK_PRICING.cacheRead) +
-      (acc.cacheCreationTokens / 1_000_000) * (r ? (r.cacheWrite1h ?? 0) : FALLBACK_PRICING.cacheWrite);
+    const cost = acc.cost;
     return {
       totalInputTokens: acc.inputTokens + acc.cacheReadTokens + acc.cacheCreationTokens,
       totalOutputTokens: acc.outputTokens,
