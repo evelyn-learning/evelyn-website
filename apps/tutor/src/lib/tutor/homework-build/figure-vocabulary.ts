@@ -82,6 +82,23 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
   },
 ];
 
+/**
+ * The proposer's "Figure kinds" block, generated from FIGURE_KIND_DOCS (a kind
+ * task adds only its doc), plus rules 11–12. Inserted before the step
+ * reference; '' under `geometry`, so that prompt stays today's, byte for byte.
+ */
+export function figureKindsSection(v: FigureVocabulary): string {
+  if (v === 'geometry') return '';
+  return [
+    '',
+    '',
+    "Figure kinds (figure_json holds ONE of these when the sheet's figure is not a geometry construction or a function graph):",
+    ...FIGURE_KIND_DOCS.map((d) => `- ${d.when} ${d.shape}`),
+    '11. Numbers are copied from the problem text as written there. A statistic the problem asks for, or a value you would have to compute, is never drawn — leave it off and say so in note.',
+    '12. Pick the kind the description names; when the description names none of the kinds you have, return "" with a note.',
+  ].join('\n');
+}
+
 /** HOMEWORK_FIGURE_KINDS, trimmed and lower-cased: `geometry` → geometry; unset or `all` → all; anything else → all, with a warning (flags default ON). */
 export function figureVocabularyFromEnv(env: Record<string, string | undefined> = process.env): FigureVocabulary {
   const raw = env.HOMEWORK_FIGURE_KINDS;

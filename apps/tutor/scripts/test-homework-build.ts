@@ -547,6 +547,32 @@ async function main() {
       }
     });
 
+    await section('figure kinds section: generated from the vocabulary, rules 11–12 verbatim, geometry prompt unchanged', async () => {
+      const { figureProposeSystem, FIGURE_PROPOSE_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');
+      const { FIGURE_KIND_DOCS, figureKindsSection } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
+      const { getDiagramKind } = await import('../src/lib/tutor/diagrams/catalog/manifest');
+      const { createHash } = await import('node:crypto');
+      const all = figureProposeSystem('all'), geo = figureProposeSystem('geometry');
+      // Kill switch: under geometry the prompt is byte-identical to the prompt before the vocabulary (2026-10-23, 11858 chars).
+      assert.equal(geo.length, 11858);
+      assert.equal(createHash('sha256').update(geo).digest('hex'), '176bad9a01ebce24960c78180e1549facb97aba087e650885744bf21cd3f399b');
+      assert.equal(figureKindsSection('geometry'), '');
+      const cut = geo.indexOf('\n\nStep reference');
+      assert.ok(cut > 0);
+      assert.ok(all.startsWith(geo.slice(0, cut)) && all.endsWith(geo.slice(cut)));
+      assert.equal(all, geo.slice(0, cut) + figureKindsSection('all') + geo.slice(cut));
+      assert.ok(all.includes('Figure kinds (figure_json holds ONE of these when the sheet\'s figure is not a geometry construction or a function graph):'));
+      for (const d of FIGURE_KIND_DOCS) {
+        assert.ok(all.includes(d.shape), d.id);
+        assert.ok(all.includes(`- ${d.when} ${d.shape}`), `${d.id}: one line, when then shape`);
+      }
+      assert.ok(all.includes(getDiagramKind('solid_3d')!.paramSchema));
+      assert.ok(all.includes('11. Numbers are copied from the problem text as written there. A statistic the problem asks for, or a value you would have to compute, is never drawn — leave it off and say so in note.'));
+      assert.ok(all.includes('12. Pick the kind the description names; when the description names none of the kinds you have, return "" with a note.'));
+      assert.ok(!geo.includes('Figure kinds') && !geo.includes('11. Numbers are copied'));
+      assert.equal(FIGURE_PROPOSE_SYSTEM, all);
+    });
+
     // ---- 3 build figure (pure: stub deps, no Mongo, no model) ----
     console.log('3 build figure');
     const { buildFigure, FIGURE_PROPOSE_SYSTEM, parseProposal, normalizeClaims } = await import('../src/lib/tutor/homework-build/figure-build');
@@ -664,6 +690,41 @@ async function main() {
       seen.length = 0;
       const g = await buildFigure({ n: 1, text: 'x' }, d, { vocabulary: 'geometry' });
       assert.equal(g.figure, null); assert.deepEqual(seen, ['geometry', 'geometry']);
+    });
+    await section('the proposer is given the build\'s vocabulary', async () => {
+      const seen: unknown[] = [];
+      const d: Deps = {
+        async propose(i) { seen.push(i.vocabulary); return { figure: null, claims: [], note: 'text only' }; },
+        async extractClaims() { return { claims: [] }; },
+      };
+      await buildFigure({ n: 1, text: 'x' }, d, { vocabulary: 'geometry' });
+      assert.deepEqual(seen, ['geometry']);
+      seen.length = 0;
+      await buildFigure({ n: 1, text: 'x' }, d);
+      assert.deepEqual(seen, ['all']);
+    });
+    await section('a caption-like stats title not on the sheet is dropped, not fatal', async () => {
+      const { BOX, boxFig } = await import('./fixtures/homework-figure-fixtures');
+      const withTitle = (title: string) => ({ ...(boxFig() as object), title }) as never;
+      const stub = (fig: unknown): Deps => ({
+        async propose() { return { figure: fig as never, claims: [] }; },
+        async extractClaims() { return { claims: [] }; },
+      });
+      const r = await buildFigure({ n: 1, text: BOX }, stub(withTitle('Distribution Of Student Homework Times')));
+      assert.ok(r.figure, r.note);
+      assert.equal(r.attempts, 1);
+      assert.ok(!('title' in (r.figure as object)), JSON.stringify(r.figure));
+      const k = await buildFigure({ n: 1, text: BOX }, stub(withTitle('Homework Minutes')));
+      assert.equal((k.figure as { title?: string } | null)?.title, 'Homework Minutes');
+      // A diagram's params.title is the same rule; a caption the sheet does state is kept.
+      const { normalizeFigureDisplay } = await import('../src/lib/tutor/homework-build/figure-build');
+      const dia = { action: 'showDiagram', type: 'solid_3d', params: { shape: 'cone', dims: { r: 4, h: 9 }, title: 'A Lovely Cone Picture' } } as never;
+      assert.ok(!('title' in (normalizeFigureDisplay(dia, BOX) as { params: object }).params));
+      const kept = { action: 'showStats', type: 'boxplot', title: 'minutes students spent on homework', boxplot: { datasets: [] } } as never;
+      assert.equal((normalizeFigureDisplay(kept, BOX) as { title?: string }).title, 'minutes students spent on homework');
+      // Every other new-kind figure passes through unchanged (the same object).
+      const plain = boxFig();
+      assert.equal(normalizeFigureDisplay(plain, BOX), plain);
     });
     await section('normalizeClaims / FIGURE_CLAIMS_SYSTEM (hw-14b p1, G1): stated relative positions are claims', async () => {
       const { FIGURE_CLAIMS_SYSTEM } = await import('../src/lib/tutor/homework-build/figure-build');

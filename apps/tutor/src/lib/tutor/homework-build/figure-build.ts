@@ -12,10 +12,10 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
 import { getGeometryStepKindsDescriptionTail } from '../diagrams/geometry-solver';
 import { GEOMETRY_STEP_DOCS, GEOMETRY_STEP_DOCS_EXTRA } from '../diagrams/geometry-step-docs';
-import { isCaptionLabel, labelIsFromText, validateFigure, namedPointsIn, POINT_KINDS } from './figure-validate';
+import { isCaptionLabel, labelIsFromText, textFieldIsFromText, validateFigure, namedPointsIn, POINT_KINDS } from './figure-validate';
 import { functionSourceOf } from '../whiteboard/graph-function-source';
 import type { FigureClaim, FigureCommand } from './types';
-import type { FigureVocabulary } from './figure-vocabulary';
+import { figureKindsSection, type FigureVocabulary } from './figure-vocabulary';
 
 export interface TokenUsage { in: number; out: number }
 export interface FigureProposal { figure: FigureCommand | null; claims: FigureClaim[]; note?: string; usage?: TokenUsage }
@@ -33,7 +33,8 @@ const CALL_OPTS = { timeout: 60_000, maxRetries: 0 } as const;
 const PROPOSE_MAX_TOKENS = 6000;
 const CLAIMS_MAX_TOKENS = 2000;
 
-export const FIGURE_PROPOSE_SYSTEM = `You draw the figure that accompanies one homework problem, as a tool payload that a geometric solver renders exactly. You are given the problem text, including its bracketed figure or graph description. Reply with JSON only.
+/** Today's proposer prompt: the `geometry` vocabulary's prompt, unchanged. */
+const FIGURE_PROPOSE_BASE = `You draw the figure that accompanies one homework problem, as a tool payload that a geometric solver renders exactly. You are given the problem text, including its bracketed figure or graph description. Reply with JSON only.
 
 Output fields:
 - figure_json: a JSON-encoded string holding ONE figure command, or "" when the problem needs no figure (text-only) or the description is too vague to draw faithfully (then say why in note).
@@ -58,6 +59,17 @@ Step reference (the steps array of showGeometryConstructed):
 ${GEOMETRY_STEP_DOCS}${getGeometryStepKindsDescriptionTail()}
 
 ${GEOMETRY_STEP_DOCS_EXTRA} translate_point: { kind: "translate_point", point: pointId, by: { dx, dy } | { from: pointId, to: pointId }, label? } — the point moved by a vector, given as numbers or as two points (the vector from → to, so ABCD's fourth vertex C is B translated by { from: "A", to: "D" }). region: { kind: "region", outer: circleId|polygonId, inner?: [circleId|polygonId, ...] } — shades the inside of outer with the inner shapes cut out (the four circular segments between a circle c1 and its inscribed square sq: { kind: "region", outer: "c1", inner: ["sq"] }); outer and inner name circles (given or step) or polygons (given or step, a sector included). A polygon (given or step) also takes fill: "none" to draw its outline only, so a square the sheet leaves white is not painted. sector: { kind: "sector", on: circleId, from: pointId, to: pointId, direction?: "ccw"|"cw", fill? } — the pie slice of a circle between two points ON that circle (a vertex at the right distance, or a point_on_circle), swept counter-clockwise from "from" to "to" unless direction is "cw"; it is a polygon, so region takes it as outer or inner and fill: "none" leaves it white. A circle the sheet never draws whole (a quarter circle at a rectangle's corner D) is { kind: "circle", center: "D", radius: 8, hidden: true } — hidden: true draws no circle, only what is built on it — plus a sector on it from one arc end to the other.`;
+
+const STEP_REFERENCE_AT = FIGURE_PROPOSE_BASE.indexOf('\n\nStep reference');
+
+/** The proposer prompt for a vocabulary: the base prompt with the Figure kinds block before the step reference ('' under geometry). */
+export function figureProposeSystem(v: FigureVocabulary): string {
+  const kinds = figureKindsSection(v);
+  return kinds ? FIGURE_PROPOSE_BASE.slice(0, STEP_REFERENCE_AT) + kinds + FIGURE_PROPOSE_BASE.slice(STEP_REFERENCE_AT) : FIGURE_PROPOSE_BASE;
+}
+
+/** The whole-vocabulary prompt (the default). */
+export const FIGURE_PROPOSE_SYSTEM = figureProposeSystem('all');
 
 export const FIGURE_CLAIMS_SYSTEM = `You read one homework problem, including its bracketed figure or graph description, and list the geometric relations it states. Use only what the text says; do not infer relations from how a figure would look. Reply with JSON only: {"claims":[...]}. Claim kinds: on_segment (point, segment:[p,q]), on_circle (point, circle), parallel (a:[p,q], b:[r,s]), perpendicular (a, b), collinear (points:[...]), between (point, ends:[p,q]), and stated relative positions of named points (left of, right of, above, below): left_of (point, of), right_of (point, of), above (point, of), below (point, of) — the point sits to the left of, to the right of, above or below the point named in of. Point names are the single letters or ids the text uses. Collinear is stated only: collinear only when the text says the points lie on one line; an angle name (angle ABC, ∠ABC) or a polygon name (ABCD) is not a collinear statement. If the text states no such relation, return {"claims":[]}.`;
 
@@ -134,7 +146,8 @@ const COORDINATE_TEXT_RE = /\bcoordinates?\b|\bcoordinate plane\b|\bax[ie]s\b|\b
 
 export function normalizeFigureDisplay(figure: FigureCommand | null, problemText: string): FigureCommand | null {
   if (figure?.action === 'showGraph') return normalizeGraphFunctions(figure);
-  if (!figure || figure.action !== 'showGeometryConstructed') return figure;
+  if (!figure) return figure;
+  if (figure.action !== 'showGeometryConstructed') return dropCaptionTitle(figure, problemText);
   // GAC acceptance 2026-10-21: the renderer labels an unlabelled point by its
   // id, so helper points the proposer invented (P1, Q1, R2) came out lettered
   // on the board. A point with no label whose id is not a word of the problem
@@ -168,6 +181,26 @@ export function normalizeFigureDisplay(figure: FigureCommand | null, problemText
   const display = geo.display && typeof geo.display === 'object' ? geo.display : {};
   if (COORDINATE_TEXT_RE.test(problemText ?? '')) return { ...named, display: { ...display, keepLabels: true } };
   return { ...named, display: { ...display, grid: false, axes: false, keepLabels: true } };
+}
+
+/**
+ * Figure vocabulary (Task 8): a new-kind figure's caption-like title (or a
+ * showDiagram's params.title) that the sheet does not state is the proposer's
+ * own words: it is dropped, not failed. Anything else is returned as is (the
+ * same object). Pure.
+ */
+function dropCaptionTitle(figure: FigureCommand, problemText: string): FigureCommand {
+  const invented = (t: unknown) => typeof t === 'string' && isCaptionLabel(t) && !textFieldIsFromText(t, problemText ?? '');
+  const f = figure as unknown as Record<string, unknown>;
+  if (f.action === 'showDiagram') {
+    const params = f.params as Record<string, unknown> | undefined;
+    if (!params || typeof params !== 'object' || !invented(params.title)) return figure;
+    const { title: _drop, ...rest } = params; void _drop;
+    return { ...f, params: rest } as unknown as FigureCommand;
+  }
+  if (!invented(f.title)) return figure;
+  const { title: _drop, ...rest } = f; void _drop;
+  return rest as unknown as FigureCommand;
 }
 
 /**
@@ -247,12 +280,12 @@ export function parseProposal(o: Record<string, unknown>): FigureProposal {
 /** Production deps. Any SDK / parse failure resolves as a failed proposal. */
 export function defaultFigureBuildDeps(): FigureBuildDeps {
   return {
-    async propose({ text, feedback, previous }) {
+    async propose({ text, feedback, previous, vocabulary }) {
       const user = feedback?.length
         ? `${text}\n\nYour previous figure failed validation:\n${previous ? `${JSON.stringify(previous)}\n\n` : ''}Fix every item, keeping what was not criticized:\n${feedback.map((f) => `- ${f}`).join('\n')}`
         : text;
       try {
-        const { o, usage } = await callJson('plangen-vision', PROPOSE_MAX_TOKENS, FIGURE_PROPOSE_SYSTEM, user, FIGURE_PROPOSAL_SCHEMA);
+        const { o, usage } = await callJson('plangen-vision', PROPOSE_MAX_TOKENS, figureProposeSystem(vocabulary ?? 'all'), user, FIGURE_PROPOSAL_SCHEMA);
         return { ...parseProposal(o), usage };
       } catch (e) {
         return { figure: null, claims: [], note: `propose_failed:${errorKind(e)}` };
