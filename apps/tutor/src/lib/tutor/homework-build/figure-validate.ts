@@ -13,7 +13,7 @@ import type { GraphData } from '@core/knowledge/types';
 import type { FigureClaim, FigureCommand } from './types';
 import { isCaptionLabel, labelIsFromText, textFieldIsFromText, textFieldReasons } from './figure-text';
 import { figureKindId, isFigureKindAllowed, type FigureVocabulary } from './figure-vocabulary';
-import { validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure, validateTreeFigure, validateVennFigure } from './figure-validate-data';
+import { validateNumberLineFigure, validateScatterFigure, validateStatsFigure, validateTableFigure, validateFractionBarFigure, validateTreeFigure, validateVennFigure } from './figure-validate-data';
 import { validateDiagramFigure } from './figure-validate-diagram';
 
 /** Re-exported so existing imports from figure-validate keep working. */
@@ -430,6 +430,7 @@ function validateGraph(data: GraphData, ctx: FigureContext): string[] {
  *  id (figureKindId). Each kind task adds its own; a kind the vocabulary allows
  *  with no validator here is unsupported. */
 const statsValidator = (figure: FigureCommand, ctx: FigureContext) => validateStatsFigure(figure as Extract<FigureCommand, { action: 'showStats' }>, ctx);
+const diagramValidator = (figure: FigureCommand, ctx: FigureContext) => validateDiagramFigure(figure as Extract<FigureCommand, { action: 'showDiagram' }>, ctx);
 const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext) => string[]> = {
   'showStats:boxplot': statsValidator,
   'showStats:histogram': statsValidator,
@@ -441,7 +442,10 @@ const KIND_VALIDATORS: Record<string, (figure: FigureCommand, ctx: FigureContext
   showScatterPlot: (figure, ctx) => validateScatterFigure(figure as Extract<FigureCommand, { action: 'showScatterPlot' }>, ctx),
   showVennDiagram: (figure, ctx) => validateVennFigure(figure as Extract<FigureCommand, { action: 'showVennDiagram' }>, ctx),
   showTree: (figure, ctx) => validateTreeFigure(figure as Extract<FigureCommand, { action: 'showTree' }>, ctx),
-  'showDiagram:solid_3d': (figure, ctx) => validateDiagramFigure(figure as Extract<FigureCommand, { action: 'showDiagram' }>, ctx),
+  showFractionBar: (figure, ctx) => validateFractionBarFigure(figure as Extract<FigureCommand, { action: 'showFractionBar' }>, ctx),
+  'showDiagram:solid_3d': diagramValidator,
+  'showDiagram:tape_diagram': diagramValidator,
+  'showDiagram:area_model': diagramValidator,
 };
 
 function validateFigureUnsafe(figure: FigureCommand | null, ctx: FigureContext): FigureVerdict {

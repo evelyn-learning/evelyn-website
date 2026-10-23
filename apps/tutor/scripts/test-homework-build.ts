@@ -573,6 +573,50 @@ async function main() {
       const big = await figureToSvg({ action: 'showTree', root: deep } as unknown as Fig);
       assert.ok(big === null || big.length <= FIGURE_SVG_MAX_CHARS, 'bounded');
     });
+    await section('figureToSvg: fraction bar, tape and area model thumbnails draw the stated figure, escape text, and never throw', async () => {
+      const { figureToSvg, FIGURE_SVG_MAX_CHARS } = await import('../src/lib/tutor/homework-build/figure-svg');
+      const F = await import('./fixtures/homework-figure-fixtures');
+      const shape = (svg: string | null, id: string) => {
+        assert.ok(svg && /^<svg[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg) && /viewBox=/.test(svg) && svg.endsWith('</svg>'), `${id}: ${String(svg).slice(0, 120)}`);
+        assert.ok(svg.length <= FIGURE_SVG_MAX_CHARS && !/NaN|undefined|Infinity/.test(svg), id);
+        return svg;
+      };
+      const frac = shape(await figureToSvg(F.fracFig()), 'fraction bar');
+      assert.equal((frac.match(/data-part=/g) ?? []).length, 7, 'four parts and three parts');
+      assert.equal((frac.match(/data-shaded="1"/g) ?? []).length, 5, 'three shaded and two shaded');
+      assert.ok(frac.includes('>3/4<') && frac.includes('>2/3<'), 'default labels are the stated fractions');
+      assert.equal(await figureToSvg(F.fracFig()), frac, 'deterministic');
+      const circ = shape(await figureToSvg({ action: 'showFractionBar', items: [{ numerator: 1, denominator: 3, style: 'circle' }, { numerator: 2, denominator: 4, style: 'grid' }] } as unknown as Fig), 'circle + grid');
+      assert.equal((circ.match(/data-part=/g) ?? []).length, 7);
+      const tape = shape(await figureToSvg(F.tapeFig()), 'tape');
+      assert.equal((tape.match(/data-segment=/g) ?? []).length, 3, 'three segments');
+      assert.equal((tape.match(/>x</g) ?? []).length, 3, 'each part labelled x');
+      assert.ok(tape.includes('>24<'), 'the stated total');
+      assert.ok(!tape.includes('>8<'), 'no computed part');
+      const area = shape(await figureToSvg(F.areaFig()), 'area');
+      assert.equal((area.match(/data-cell=/g) ?? []).length, 4, 'two by two');
+      for (const v of ['20', '3', '10', '4']) assert.ok(area.includes(`>${v}<`), `side ${v}`);
+      for (const p of ['200', '80', '30', '12']) assert.ok(!area.includes(`>${p}<`), `no product ${p} with showProducts false`);
+      const withP = shape(await figureToSvg({ action: 'showDiagram', type: 'area_model', params: { rows: [20, 3], cols: [10, 4] } } as unknown as Fig), 'area products');
+      for (const p of ['200', '80', '30', '12']) assert.ok(withP.includes(`>${p}<`), `stated product ${p} drawn as the board does`);
+      const escF = shape(await figureToSvg({ action: 'showFractionBar', title: 'a<b', items: [{ numerator: 1, denominator: 2, label: 'x & "y"' }] } as unknown as Fig), 'escaped frac');
+      assert.ok(escF.includes('x &amp; &quot;y&quot;') && escF.includes('a&lt;b') && !escF.includes('a<b'), 'frac text escaped');
+      const escT = shape(await figureToSvg({ action: 'showDiagram', type: 'tape_diagram', params: { title: '<t>', bars: [{ name: '<n>', segments: [{ length: 2, label: 'a&b' }], totalLabel: '"z"' }] } } as unknown as Fig), 'escaped tape');
+      assert.ok(escT.includes('&lt;t&gt;') && escT.includes('&lt;n&gt;') && escT.includes('a&amp;b') && escT.includes('&quot;z&quot;') && !escT.includes('<n>'), 'tape text escaped');
+      const escA = shape(await figureToSvg({ action: 'showDiagram', type: 'area_model', params: { rows: [1], cols: [1], cellLabels: [['<c>']] } } as unknown as Fig), 'escaped area');
+      assert.ok(escA.includes('&lt;c&gt;') && !escA.includes('<c>'), 'area text escaped');
+      for (const bad of [
+        { action: 'showFractionBar' }, { action: 'showFractionBar', items: 'x' }, { action: 'showFractionBar', items: [null, { numerator: 'a', denominator: 0 }] },
+        { action: 'showFractionBar', items: [{ numerator: 3, denominator: 1e9 }] },
+        { action: 'showDiagram', type: 'tape_diagram', params: { bars: [null, { segments: 'x' }] } },
+        { action: 'showDiagram', type: 'tape_diagram', params: { bars: Array.from({ length: 500 }, () => ({ segments: Array.from({ length: 500 }, () => ({ length: 1, label: 'x' })) })) } },
+        { action: 'showDiagram', type: 'area_model', params: { rows: [0], cols: 'x' } },
+        { action: 'showDiagram', type: 'area_model', params: { rows: Array(400).fill(1), cols: Array(400).fill(1) } },
+      ]) {
+        const r = await figureToSvg(bad as unknown as Fig);
+        assert.ok(r === null || (typeof r === 'string' && r.length <= FIGURE_SVG_MAX_CHARS), JSON.stringify(bad).slice(0, 80));
+      }
+    });
     await section('graph svg (hw-14 p8, F8): y tick labels stay inside the plot when the y-axis is at the left edge', async () => {
       // The plot is clipped to x ≥ M.l (44). With xRange [0, 360] the y-axis sits
       // on that edge, so labels drawn right-aligned at axisX − 6 were clipped away.
@@ -653,7 +697,7 @@ async function main() {
       const { figureBoxMode, FIGURE_BOX_MODES } = await import('../src/lib/tutor/homework-build/figure-box');
       const { FIGURE_KIND_DOCS } = await import('../src/lib/tutor/homework-build/figure-vocabulary');
       const F = await import('./fixtures/homework-figure-fixtures');
-      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig(), F.vennFig(), F.treeFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
+      for (const fig of [F.boxFig(), F.histFig(), F.scatFig(), F.coneFig(), F.vennFig(), F.treeFig(), F.fracFig(), F.tapeFig(), F.areaFig()]) assert.equal(figureBoxMode(fig), 'fixed', JSON.stringify(fig).slice(0, 60));
       for (const fig of [F.tableFig(), F.nlFig(), hw14p8Fig() as never]) assert.equal(figureBoxMode(fig), 'natural', JSON.stringify(fig).slice(0, 60));
       assert.equal(figureBoxMode(goodFig()), 'fixed', 'a geometry figure is in the fixed box');
       // The client-safe table cannot drift from the proposer's docs.

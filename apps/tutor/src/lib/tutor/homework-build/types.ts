@@ -26,6 +26,7 @@ export type FigureCommand =
   | Cmd<'showNumberLine'>
   | Cmd<'showVennDiagram'>
   | Cmd<'showTree'>
+  | Cmd<'showFractionBar'>
   | DiagramFigure;
 
 export type FigureClaim =

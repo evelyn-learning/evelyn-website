@@ -28,6 +28,9 @@ export const FIGURE_BOX_MODES: Readonly<Record<string, 'fixed' | 'natural'>> = {
   'showDiagram:solid_3d': 'fixed',
   showVennDiagram: 'fixed',
   showTree: 'fixed',
+  showFractionBar: 'fixed',
+  'showDiagram:tape_diagram': 'fixed',
+  'showDiagram:area_model': 'fixed',
 };
 
 /** `fixed` or `natural` for a figure; an unknown kind is drawn at natural height (as every non-geometry figure was before). */

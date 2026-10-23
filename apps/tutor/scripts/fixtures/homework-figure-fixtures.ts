@@ -138,3 +138,26 @@ export const treeFig = () => ({
     ],
   },
 }) as unknown as Fig;
+
+// ---------------------------------------------------------------- fraction bar, tape diagram, area model (Task 15)
+
+export const FRAC = '[Figure: Two fraction bars: the top shows 3/4 shaded, the bottom shows 2/3 shaded.]';
+export const TAPE = '[Figure: A tape diagram split into 3 equal parts labelled x, with a total of 24 marked above.]';
+export const AREA = '[Figure: An area model for 23 × 14 with the rows split 20 and 3 and the columns split 10 and 4.]';
+
+export const fracFig = () => ({
+  action: 'showFractionBar', layout: 'vertical',
+  items: [{ numerator: 3, denominator: 4 }, { numerator: 2, denominator: 3 }],
+}) as unknown as Fig;
+
+/** Three unknown parts labelled x (their lengths are proportions, not printed); the stated total on the brace. */
+export const tapeFig = () => ({
+  action: 'showDiagram', type: 'tape_diagram',
+  params: { bars: [{ segments: [1, 2, 3].map(() => ({ length: 1, label: 'x', unknown: true })), totalLabel: '24' }] },
+}) as unknown as Fig;
+
+/** The split sides only: the partial products are what the student finds, so showProducts is false. */
+export const areaFig = () => ({
+  action: 'showDiagram', type: 'area_model',
+  params: { rows: [20, 3], cols: [10, 4], showProducts: false },
+}) as unknown as Fig;

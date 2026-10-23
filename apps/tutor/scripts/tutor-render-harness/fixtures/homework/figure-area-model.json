@@ -1,0 +1,20 @@
+{
+  "label": "figure-area-model",
+  "tool": "show_diagram",
+  "expect": "render",
+  "args": {
+    "type": "area_model",
+    "params": {
+      "rows": [
+        20,
+        3
+      ],
+      "cols": [
+        10,
+        4
+      ],
+      "showProducts": false
+    }
+  },
+  "problemText": "[Figure: An area model for 23 × 14 with the rows split 20 and 3 and the columns split 10 and 4.]"
+}

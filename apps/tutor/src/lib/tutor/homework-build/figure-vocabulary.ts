@@ -19,13 +19,13 @@ export type FigureVocabulary = 'all' | 'geometry';
 const GEOMETRY_IDS: readonly string[] = ['showGeometryConstructed', 'showGraph'];
 
 /** Every whiteboard action a homework figure may use. */
-export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram', 'showVennDiagram', 'showTree'];
+export const FIGURE_ACTIONS: readonly string[] = [...GEOMETRY_IDS, 'showStats', 'showTable', 'showNumberLine', 'showScatterPlot', 'showDiagram', 'showVennDiagram', 'showTree', 'showFractionBar'];
 
 /** The showStats chart types in the vocabulary. */
 export const FIGURE_STATS_TYPES: readonly FigureStatsType[] = ['boxplot', 'histogram', 'dotplot', 'bar', 'pie'];
 
 /** The showDiagram catalog kinds in the vocabulary (each has a catalog solver). */
-export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = ['solid_3d'];
+export const FIGURE_DIAGRAM_KINDS: readonly FigureDiagramKind[] = ['solid_3d', 'tape_diagram', 'area_model'];
 
 /** A showDiagram kind's shape, from the catalog's own paramSchema (generated, so it cannot drift from the solver). */
 const diagramShape = (kind: FigureDiagramKind) => `{"action":"showDiagram","type":"${kind}","params":{${getDiagramKind(kind)!.paramSchema}}}`;
@@ -89,6 +89,21 @@ export const FIGURE_KIND_DOCS: readonly FigureKindDoc[] = [
     id: 'showTree', box: 'fixed',
     when: 'the sheet shows a tree diagram (probability, factor or decision tree): outcomes in the node boxes, a stated probability on each branch; never a leaf probability the sheet does not print',
     shape: '{"action":"showTree","title"?,"type"?:"probability"|"factor"|"decision"|"generic","root":{"label","children":[{"label","probability"?,"node":{"label","value"?,"children"?:[…]}}]}}',
+  },
+  {
+    id: 'showFractionBar', box: 'fixed',
+    when: 'the sheet shows fraction bars, fraction circles or a shaded grid (one item per shaded whole: its numerator and denominator as stated; style "circle" or "grid" when drawn so); never a comparison line',
+    shape: '{"action":"showFractionBar","title"?,"items":[{"numerator","denominator","label"?,"style"?:"bar"|"circle"|"grid"}],"layout"?:"vertical"|"horizontal"}',
+  },
+  {
+    id: 'showDiagram:tape_diagram', box: 'fixed',
+    when: 'the sheet shows a tape diagram (bar model): each part with its stated length, a part the student must find as unknown:true with its label or "?"; a total only as the sheet prints it',
+    shape: diagramShape('tape_diagram'),
+  },
+  {
+    id: 'showDiagram:area_model', box: 'fixed',
+    when: 'the sheet shows an area model (a rectangle split into parts for a product): the stated side splits as rows and cols; showProducts false unless the sheet prints every partial product',
+    shape: diagramShape('area_model'),
   },
 ];
 

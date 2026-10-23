@@ -1,0 +1,33 @@
+{
+  "label": "figure-tape",
+  "tool": "show_diagram",
+  "expect": "render",
+  "args": {
+    "type": "tape_diagram",
+    "params": {
+      "bars": [
+        {
+          "segments": [
+            {
+              "length": 1,
+              "label": "x",
+              "unknown": true
+            },
+            {
+              "length": 1,
+              "label": "x",
+              "unknown": true
+            },
+            {
+              "length": 1,
+              "label": "x",
+              "unknown": true
+            }
+          ],
+          "totalLabel": "24"
+        }
+      ]
+    }
+  },
+  "problemText": "[Figure: A tape diagram split into 3 equal parts labelled x, with a total of 24 marked above.]"
+}

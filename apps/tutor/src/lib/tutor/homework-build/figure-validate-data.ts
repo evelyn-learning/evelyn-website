@@ -1,7 +1,7 @@
 /**
  * Validators for the data homework figures: showStats (box plot, histogram,
  * dot plot, bar, pie), showTable, showNumberLine, showScatterPlot,
- * showVennDiagram and showTree. Structural: the chart must render as the
+ * showVennDiagram, showTree and showFractionBar. Structural: the chart must render as the
  * sheet shows it. Provenance: every drawn number is one the problem text
  * states (numberIsFromText) and every free-text field comes from the text
  * (textFieldReasons). A number the renderer would compute (pie percentages,
@@ -398,5 +398,54 @@ export function validateTreeFigure(fig: Extract<FigureCommand, { action: 'showTr
   if (f.showLeafProbabilities === true && !leafProducts.every((p) => numberIsFromText(p, text))) {
     reasons.push('leaf probabilities are computed products, not stated: set showLeafProbabilities only when the text states every leaf\'s probability');
   }
+  return reasons;
+}
+
+const FRACTION_STYLES = ['bar', 'circle', 'grid'];
+/** The most parts one fraction item may be cut into (a hundredths grid); beyond that the board draws a smear of slivers. */
+export const FRACTION_MAX_DENOMINATOR = 100;
+/** The most items one fraction figure holds. */
+export const FRACTION_MAX_ITEMS = 8;
+const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
+
+/**
+ * showFractionBar: one item per shaded whole, an integer denominator > 0 (at
+ * most 100) and an integer numerator 0..denominator (the board shades at most
+ * every part, so an improper fraction would not draw as stated). Provenance:
+ * the numerator and denominator are each stated, or the fraction is stated as
+ * a value (a "3/4" token states 0.75, not 3 and 4); item labels and the title
+ * from the text. showComparison draws alignment lines that compare the bars:
+ * a comparison is the student's work, never drawn.
+ */
+export function validateFractionBarFigure(fig: Extract<FigureCommand, { action: 'showFractionBar' }>, ctx: FigureContext): string[] {
+  const text = ctx.problemText;
+  const f = fig as unknown as Record<string, unknown>;
+  const reasons = Object.keys(f)
+    .filter((k) => k !== 'action' && f[k] !== undefined && !['title', 'items', 'layout', 'showComparison'].includes(k))
+    .map((k) => `showFractionBar field "${k}" is not used by a fraction bar`);
+  if (f.layout !== undefined && f.layout !== 'vertical' && f.layout !== 'horizontal') reasons.push('fraction bar layout must be "vertical" or "horizontal"');
+  if (f.showComparison !== undefined && f.showComparison !== false) reasons.push('a comparison is computed, not stated: leave showComparison off');
+  reasons.push(...textFieldReasons([{ value: f.title }], text));
+  const items = f.items;
+  if (!Array.isArray(items) || items.length === 0) return [...reasons, 'a fraction bar needs at least one fraction item'];
+  if (items.length > FRACTION_MAX_ITEMS) return [...reasons, `a fraction bar holds at most ${FRACTION_MAX_ITEMS} items`];
+  items.forEach((raw, i) => {
+    const where = `items[${i}]`;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { reasons.push(`${where} must be { numerator, denominator, label? }`); return; }
+    const it = raw as Record<string, unknown>;
+    for (const k of Object.keys(it).filter((x) => it[x] !== undefined && !['numerator', 'denominator', 'label', 'style'].includes(x))) {
+      reasons.push(`${where} field "${k}" is not used`);
+    }
+    if (it.style !== undefined && !FRACTION_STYLES.includes(String(it.style))) reasons.push(`${where}: style must be one of ${FRACTION_STYLES.join(', ')}`);
+    if (it.label !== undefined && typeof it.label !== 'string') reasons.push(`${where}: label must be a string`);
+    else reasons.push(...textFieldReasons([{ value: it.label }], text));
+    const { numerator: n, denominator: d } = it;
+    if (!isInt(d) || d <= 0) { reasons.push(`${where}: denominator must be an integer > 0`); return; }
+    if (d > FRACTION_MAX_DENOMINATOR) { reasons.push(`${where}: denominator must be at most ${FRACTION_MAX_DENOMINATOR}`); return; }
+    if (!isInt(n) || n < 0) { reasons.push(`${where}: numerator must be an integer ≥ 0`); return; }
+    if (n > d) { reasons.push(`${where}: ${n}/${d} has more shaded parts than parts (the board cannot draw an improper fraction in one whole)`); return; }
+    const stated = (numberIsFromText(n, text) && numberIsFromText(d, text)) || numberIsFromText(n / d, text);
+    if (!stated) reasons.push(`fraction ${n}/${d} in ${where} does not come from the problem text`);
+  });
   return reasons;
 }

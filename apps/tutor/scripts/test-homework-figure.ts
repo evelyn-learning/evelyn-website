@@ -15,7 +15,7 @@ import { namedPointsIn, validateFigure, checkClaims, labelIsFromText } from '../
 import { numberIsFromText, parseNumberCell } from '../src/lib/tutor/homework-build/figure-text';
 import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
 import { normalizeFigureDisplay } from '../src/lib/tutor/homework-build/figure-build';
-import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, VENN, VENN3, TREE, vennFig, venn3Fig, treeFig, type Fig } from './fixtures/homework-figure-fixtures';
+import { BOX, HIST, DOT, BAR, PIE, HW11_P6, TABLE, NL, SCAT, boxFig, hw11p6Fig, histFig, dotFig, barFig, pieFig, tableFig, nlFig, scatFig, CONE, SLANT, HW910_P4, coneFig, hw910p4Fig, VENN, VENN3, TREE, vennFig, venn3Fig, treeFig, FRAC, TAPE, AREA, fracFig, tapeFig, areaFig, type Fig } from './fixtures/homework-figure-fixtures';
 
 let passed = 0;
 let failed = 0;
@@ -773,6 +773,101 @@ test('tree: a branch with no node, a bad children list, a bad type or a missing 
 });
 test('tree: the kill switch (geometry) rejects it', () => {
   assert.deepEqual(statsOk(treeFig(), TREE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showTree"'] });
+});
+
+// ---------------------------------------------------------------- fraction bar, tape diagram, area model (Task 15)
+
+const itemsOf = (f: Fig) => (f as unknown as { items: Obj[] }).items;
+const pOf = (f: Fig) => (f as unknown as { params: Obj }).params;
+const barsOf = (f: Fig) => pOf(f).bars as Array<Obj & { segments: Obj[] }>;
+
+test('fraction bar: the stated bars pass (numerator/denominator read as the stated fraction)', () => {
+  assert.deepEqual(statsOk(fracFig(), FRAC), { ok: true });
+  assert.deepEqual(statsOk({ ...fracFig(), title: 'fraction bars', layout: 'horizontal' } as unknown as Fig, FRAC), { ok: true });
+  // Each part stated on its own also passes (no fraction token needed).
+  assert.deepEqual(statsOk({ action: 'showFractionBar', items: [{ numerator: 5, denominator: 8, label: 'Ana', style: 'circle' }] } as unknown as Fig, 'Ana ate 5 of the 8 slices. [Figure: A circle cut into 8 equal parts with 5 shaded, labelled Ana.]'), { ok: true });
+});
+test('fraction bar: a fraction or label the sheet does not state, or a computed comparison, fails on provenance', () => {
+  const f = fracFig(); itemsOf(f)[1].numerator = 1;
+  statsFails(f, FRAC, /fraction 1\/3 in items\[1\] does not come from the problem text/);
+  const g = fracFig(); itemsOf(g)[0].label = '0.75';
+  statsFails(g, FRAC, /"0\.75"/);
+  statsFails({ ...fracFig(), showComparison: true } as unknown as Fig, FRAC, /a comparison is computed, not stated/);
+});
+test('fraction bar: a zero denominator, a negative or fractional numerator, an improper fraction or an unused field fails structurally', () => {
+  const f = fracFig(); itemsOf(f)[0].denominator = 0;
+  statsFails(f, FRAC, /items\[0\]: denominator must be an integer > 0/);
+  const g = fracFig(); itemsOf(g)[0].numerator = -1;
+  statsFails(g, FRAC, /items\[0\]: numerator must be an integer ≥ 0/);
+  const h = fracFig(); itemsOf(h)[0].numerator = 1.5;
+  statsFails(h, FRAC, /numerator must be an integer/);
+  const i = fracFig(); itemsOf(i)[0].numerator = 5;
+  statsFails(i, `${FRAC} 5/4`, /more shaded parts than parts/);
+  statsFails({ action: 'showFractionBar', items: [] } as unknown as Fig, FRAC, /at least one fraction/);
+  statsFails({ ...fracFig(), layout: 'grid' } as unknown as Fig, FRAC, /layout/);
+  statsFails({ ...fracFig(), shaded: true } as unknown as Fig, FRAC, /field "shaded" is not used/);
+  const j = fracFig(); itemsOf(j)[0].style = 'hexagon';
+  statsFails(j, FRAC, /style/);
+});
+test('fraction bar: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(fracFig(), FRAC, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showFractionBar"'] });
+});
+
+test('tape diagram: the stated tape passes (unknown parts need no stated length)', () => {
+  assert.deepEqual(statsOk(tapeFig(), TAPE), { ok: true });
+  const t = 'Sam has 5 more stickers than Jo. [Figure: Two tapes: Jo has one part labelled j; Sam has a part labelled j and a part of 5.]';
+  assert.deepEqual(statsOk({ action: 'showDiagram', type: 'tape_diagram', params: { bars: [
+    { name: 'Jo', segments: [{ length: 1, label: 'j', unknown: true }] },
+    { name: 'Sam', segments: [{ length: 1, label: 'j', unknown: true }, { length: 5, label: '5' }] },
+  ] } } as unknown as Fig, t), { ok: true });
+});
+test('tape diagram: an answer label or a computed part length fails on provenance', () => {
+  const f = tapeFig(); barsOf(f)[0].totalLabel = 'x = 8';
+  statsFails(f, TAPE, /label "x = 8"/);
+  const g = tapeFig(); barsOf(g)[0].segments[0] = { length: 8, label: 'x' };
+  statsFails(g, TAPE, /number 8 in params\.bars\[0\]\.segments\[0\]\.length/);
+});
+test('tape diagram: no bars, an empty or bad segment, or an unused param fails structurally (before the solver can default)', () => {
+  statsFails({ action: 'showDiagram', type: 'tape_diagram', params: { bars: [] } } as unknown as Fig, TAPE, /tape_diagram needs at least one bar/);
+  const f = tapeFig(); barsOf(f)[0].segments = [];
+  statsFails(f, TAPE, /bars\[0\] needs at least one segment/);
+  const g = tapeFig(); barsOf(g)[0].segments[0].length = 0;
+  statsFails(g, TAPE, /length must be a number > 0/);
+  statsFails({ ...tapeFig(), params: { ...pOf(tapeFig()), orientation: 'vertical' } } as unknown as Fig, TAPE, /param "orientation" is not used/);
+});
+test('tape diagram: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(tapeFig(), TAPE, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showDiagram:tape_diagram"'] });
+});
+
+test('area model: the split sides pass with showProducts false; stated products or stated cell labels pass', () => {
+  assert.deepEqual(statsOk(areaFig(), AREA), { ok: true });
+  const stated = `${AREA} The parts are 200, 80, 30 and 12.`;
+  assert.deepEqual(statsOk({ action: 'showDiagram', type: 'area_model', params: { rows: [20, 3], cols: [10, 4] } } as unknown as Fig, stated), { ok: true });
+  // A full cellLabels matrix replaces every product, so none is drawn.
+  const t = `${AREA} The top-left part is labelled A and the others are blank.`;
+  assert.deepEqual(statsOk({ action: 'showDiagram', type: 'area_model', params: { rows: [20, 3], cols: [10, 4], cellLabels: [['A', ''], ['', '']] } } as unknown as Fig, t), { ok: true });
+});
+test('area model: products the student must find fail on provenance (showProducts defaults on); a side not stated fails', () => {
+  const f = areaFig(); delete pOf(f).showProducts;
+  statsFails(f, AREA, /area model products are computed, not stated; set showProducts false/);
+  const g = areaFig(); pOf(g).showProducts = true;
+  statsFails(g, AREA, /products are computed/);
+  const h = areaFig(); pOf(h).cols = [10, 5];
+  statsFails(h, AREA, /number 5 in params\.cols\[1\]/);
+  const i = areaFig(); pOf(i).cellLabels = [['200', ''], ['', '']];
+  statsFails(i, AREA, /"200"/);
+});
+test('area model: an empty or non-positive side, a bad cellLabels matrix or an unused param fails structurally', () => {
+  const f = areaFig(); pOf(f).rows = [];
+  statsFails(f, AREA, /rows must be a non-empty array/);
+  const g = areaFig(); pOf(g).cols = [10, -4];
+  statsFails(g, AREA, /cols\[1\] must be a number > 0/);
+  const h = areaFig(); pOf(h).cellLabels = [['']];
+  statsFails(h, AREA, /cellLabels must be a 2×2 matrix/);
+  statsFails({ ...areaFig(), params: { ...pOf(areaFig()), showSum: true } } as unknown as Fig, AREA, /param "showSum" is not used/);
+});
+test('area model: the kill switch (geometry) rejects it', () => {
+  assert.deepEqual(statsOk(areaFig(), AREA, 'geometry'), { ok: false, reasons: ['unsupported figure kind "showDiagram:area_model"'] });
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
