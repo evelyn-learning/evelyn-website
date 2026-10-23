@@ -529,6 +529,19 @@ async function runAdvanceToolResultProviderChecks(): Promise<void> {
     JSON.stringify(crossingResult),
   );
 
+  // B8 (2026-10-23): both segment-moving tool results ask the reply's text to introduce the segment.
+  check(
+    'makeToolResultProvider (route.ts): advance_lesson instruction carries the segment-intro rule',
+    String(crossingResult.instruction).includes('A lead-in alone'),
+    JSON.stringify(crossingResult),
+  );
+  const cardResult = await crossingProvider!('show_segment_card', {});
+  check(
+    'makeToolResultProvider (route.ts): show_segment_card result carries the segment-intro rule',
+    cardResult.startsWith('show_segment_card executed successfully.') && cardResult.includes('A lead-in alone'),
+    cardResult,
+  );
+
   const withinCtx = buildLessonPlanContext(genPlan, 'lo-1-hook')!;
   const withinProvider = makeToolResultProvider(withinCtx, [], []);
   const withinResult = JSON.parse(await withinProvider!('advance_lesson', { to: 'lo-1-try' }));

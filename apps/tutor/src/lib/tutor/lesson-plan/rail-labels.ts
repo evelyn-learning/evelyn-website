@@ -296,3 +296,10 @@ export function loBoundaryBeat(
 export function buildAdvanceBeatNote(beat: { title: string; index: number; total: number }): string {
   return `You just crossed into agenda item ${beat.index} of ${beat.total}: "${beat.title}". Before teaching it, say ONE short spoken transition sentence in your own words that closes the previous item and names this one (e.g. "Nice — that's done. Next up: ${beat.title}."). Then teach. Do not skip this sentence.`;
 }
+
+/** B8 (2026-10-23, "Here we go." + three silent tool calls): a turn that moves
+ *  to a new segment must say what comes next. Rides the advance_lesson and
+ *  show_segment_card tool results, read in the same generation as the text
+ *  that follows them — the same channel as the LO-boundary beat. */
+export const SEGMENT_INTRO_RULE =
+  'The text of this reply introduces it: in one or two sentences, say what the student is about to look at and what they will do. A lead-in alone ("Here we go.", "Okay!") is not an introduction.';

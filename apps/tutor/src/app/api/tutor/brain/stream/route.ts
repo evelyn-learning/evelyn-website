@@ -37,7 +37,7 @@ import { resolveSystemPrompt, allowedSubjectsForTurn } from '@/lib/tutor/ai/prom
 import { cacheKeyLine } from '@/lib/tutor/ai/prompt-cache-log';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
-import { loBoundaryBeat, buildAdvanceBeatNote } from '@/lib/tutor/lesson-plan/rail-labels';
+import { loBoundaryBeat, buildAdvanceBeatNote, SEGMENT_INTRO_RULE } from '@/lib/tutor/lesson-plan/rail-labels';
 import {
   generateProblem,
   type Difficulty,
@@ -381,8 +381,11 @@ export function makeToolResultProvider(
         segmentKind: resolvedSeg?.kind ?? null,
         loId,
         loDescription,
-        instruction: `You are now at segment "${resolvedSegmentId}" (kind: ${resolvedSeg?.kind ?? 'unknown'}${loDescription ? `, LO: "${loDescription}"` : ''}). Teach the content of THIS segment. Do not skip ahead further on your own — the next advance must come from another advance_lesson call or natural completion.${beatNote}`,
+        instruction: `You are now at segment "${resolvedSegmentId}" (kind: ${resolvedSeg?.kind ?? 'unknown'}${loDescription ? `, LO: "${loDescription}"` : ''}). Teach the content of THIS segment. Do not skip ahead further on your own — the next advance must come from another advance_lesson call or natural completion.${beatNote} ${SEGMENT_INTRO_RULE}`,
       });
+    }
+    if (name === 'show_segment_card') {
+      return `show_segment_card executed successfully. ${SEGMENT_INTRO_RULE}`;
     }
     if (name !== 'generate_problem') {
       return `${name} executed successfully.`;
