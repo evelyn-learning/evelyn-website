@@ -21,12 +21,6 @@ export const pricing = {
    * (Praveen ruling 2026-09-19).
    */
   textPerMinuteUsd: 0.16,
-  /**
-   * 2026-10-22 (Praveen ruling): every session is billed for at least this many
-   * minutes — it covers the cold-start cost (the prompt-cache write) that a
-   * one-minute session would otherwise leave unpaid.
-   */
-  minimumMinutesPerSession: 5,
   tagline: 'One product. One rate. No fixed fees.',
   description:
     'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
@@ -44,7 +38,6 @@ export const pricing = {
   billing: [
     'No setup fee, no monthly platform fee, no minimum commitment',
     'Minutes are metered per session and billed monthly in arrears',
-    'Every session is billed for at least 5 minutes',
     'Volume pricing available for 50,000+ minutes per month — contact us',
   ],
 };
@@ -63,10 +56,9 @@ export type SessionMode = 'voice' | 'text';
 export const rateFor = (mode: SessionMode = 'voice') =>
   mode === 'text' ? pricing.textPerMinuteUsd : pricing.perMinuteUsd;
 
-/** Minutes billed for a session: its length, never less than the per-session minimum. */
-export const billableMinutes = (minutes: number) => Math.max(minutes, pricing.minimumMinutesPerSession);
-
-export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => billableMinutes(minutes) * rateFor(mode);
+// 2026-10-24 (Praveen ruling): the 5-minute per-session minimum is dropped —
+// on Haiku 5.5 a short session costs well under the per-minute rate.
+export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => minutes * rateFor(mode);
 
 export function estimateMonthlyCost(
   studentsPerMonth: number,
@@ -74,7 +66,7 @@ export function estimateMonthlyCost(
   avgSessionMinutes: number,
   mode: SessionMode = 'voice',
 ): { totalMinutes: number; cost: number; perStudent: number; rate: number } {
-  const totalMinutes = studentsPerMonth * sessionsPerStudent * billableMinutes(avgSessionMinutes);
+  const totalMinutes = studentsPerMonth * sessionsPerStudent * avgSessionMinutes;
   const rate = rateFor(mode);
   const cost = totalMinutes * rate;
   return { totalMinutes, cost, perStudent: studentsPerMonth > 0 ? cost / studentsPerMonth : 0, rate };

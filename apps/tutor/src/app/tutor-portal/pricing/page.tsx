@@ -30,9 +30,6 @@ export default function PricingPage() {
             <p className="mt-1 text-sm text-slate-500">
               Text-only sessions: ${pricing.textPerMinuteUsd.toFixed(2)} / minute.
             </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Every session is billed for at least {pricing.minimumMinutesPerSession} minutes.
-            </p>
           </div>
           <div>
             <p className="mb-3 text-sm text-slate-600">{pricing.description}</p>
@@ -61,7 +58,7 @@ export default function PricingPage() {
         </ul>
         <p className="mt-4 text-sm text-slate-500">
           Voice sessions are billed at ${pricing.perMinuteUsd.toFixed(2)}/min and text-only sessions at $
-          {pricing.textPerMinuteUsd.toFixed(2)}/min, with a {pricing.minimumMinutesPerSession}-minute minimum per session. There are no tiers, add-ons or per-seat fees.
+          {pricing.textPerMinuteUsd.toFixed(2)}/min. There are no tiers, add-ons or per-seat fees.
         </p>
       </div>
 
