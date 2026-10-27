@@ -1131,10 +1131,67 @@ async function main() {
       const r = await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('2', 2)], [num('3', 3)]));
       assert.equal(r.key, null); assert.equal(r.agreed, false); assert.equal(r.candidates.length, 3);
     });
-    await section('two parts: (a) agrees, (b) differs, tie-break matches neither -> no partial key', async () => {
+    // 2026-10-26: agreement is per part — the agreed part is keyed, the other listed `unkeyed`.
+    await section('two parts: (a) agrees, (b) differs, tie-break matches neither -> partial key (a), (b) unkeyed', async () => {
       const r = await solveKey({ n: 1, text: 'q' }, mk(
         [num('5', 5, 'a'), num('7', 7, 'b')], [num('5', 5, 'a'), num('8', 8, 'b')], [num('6', 6, 'a'), num('9', 9, 'b')]));
-      assert.equal(r.key, null); assert.equal(r.candidates[0], 'A: a) 5; b) 7');
+      assert.equal(r.agreed, true);
+      assert.deepEqual(r.key!.parts.map((p) => p.label), ['a']);
+      assert.deepEqual(r.key!.unkeyed, ['b']);
+      assert.deepEqual(r.key!.solvers, ['A', 'B']);
+      assert.equal(r.candidates[0], 'A: a) 5; b) 7');
+      assert.match(r.note ?? '', /partial: unkeyed b/);
+    });
+    await section('per part: the tie-break settles (b) with exactly one solver; every part keyed is a full key', async () => {
+      const r = await solveKey({ n: 1, text: 'q' }, mk(
+        [num('5', 5, 'a'), num('7', 7, 'b')], [num('6', 6, 'a'), num('8', 8, 'b')], [num('5', 5, 'a'), num('8', 8, 'b')]));
+      assert.equal(r.key!.unkeyed, undefined, 'T agrees with neither solver whole, but per part: a with A, b with B');
+    });
+    await section('per part: A and B differ everywhere, the tie-break matches A on (a) only -> (a) keyed via A+T', async () => {
+      const r = await solveKey({ n: 1, text: 'q' }, mk(
+        [num('5', 5, 'a'), num('7', 7, 'b')], [num('6', 6, 'a'), num('8', 8, 'b')], [num('5', 5, 'a'), num('9', 9, 'b')]));
+      assert.deepEqual(r.key!.parts.map((p) => p.final), ['5']); assert.deepEqual(r.key!.unkeyed, ['b']); assert.deepEqual(r.key!.solvers, ['A', 'T']);
+    });
+    await section('per part: nothing agrees -> null key; one-part problems are never partial', async () => {
+      assert.equal((await solveKey({ n: 1, text: 'q' }, mk([num('1', 1, 'a'), num('2', 2, 'b')], [num('3', 3, 'a'), num('4', 4, 'b')], [num('5', 5, 'a'), num('6', 6, 'b')]))).key, null);
+      assert.equal((await solveKey({ n: 1, text: 'q' }, mk([num('1', 1)], [num('2', 2)], [num('3', 3)]))).key, null);
+    });
+    // Real builds 2026-10-26 (prod homeworkbuilds, read-only): three solves, refused whole.
+    await section('real AP Bio build: (a) prose differs, (b) "9 water molecules" agreed -> (b) keyed, (a) unkeyed', async () => {
+      const A = [txt('A water molecule is removed (released) as two monomers bond together, forming the covalent bond between them.', 'a'), txt('9 water molecules', 'b')];
+      const B = [txt('A water molecule is removed (released) for each covalent bond formed between monomers.', 'a'), txt('9 water molecules', 'b')];
+      const T = [txt('Water is released (removed) as a byproduct when two monomers are joined by a covalent bond: an –OH from one monomer and an –H from the other combine to form H2O.', 'a'), txt('9 water molecules', 'b')];
+      const r = await solveKey({ n: 1, text: 'q' }, mk(A, B, T));
+      assert.deepEqual(r.key!.parts.map((p) => p.label), ['b']); assert.deepEqual(r.key!.unkeyed, ['a']);
+    });
+    await section('real AP Stats build: the same yes/no answer in different prose agrees whole', async () => {
+      const a = txt('Median = 15.5, IQR = 15', 'a');
+      const r = await solveKey({ n: 1, text: 'q' }, mk(
+        [a, txt('No, 42 is not an outlier (upper fence = 45.5)', 'b')],
+        [a, txt('No, 42 is not an outlier because 42 < 45.5 (the upper fence).', 'b')],
+        [a, txt('No, 42 is not an outlier because 42 < 45.5 (upper fence)', 'b')]));
+      assert.equal(r.agreed, true); assert.equal(r.key!.parts.length, 2); assert.equal(r.key!.unkeyed, undefined);
+    });
+    await section('real Biology build: two prose parts with nothing decisive stay unverified', async () => {
+      const r = await solveKey({ n: 1, text: 'q' }, mk(
+        [txt('High temperatures cause the enzyme to denature.', 'a'), txt('A competitive inhibitor binds the active site.', 'b')],
+        [txt('At too high a temperature the enzyme denatures.', 'a'), txt('It occupies the active site, blocking the substrate.', 'b')],
+        [txt('The enzyme denatures.', 'a'), txt('It competes with the substrate for the active site.', 'b')]));
+      assert.equal(r.key, null);
+    });
+    await section('decisiveToken: prose differs, decisive content agrees; any doubt disagrees', async () => {
+      const { decisiveToken } = await import('../src/lib/tutor/homework-build/key-solve');
+      assert.equal(partsAgree([txt('The angles are 45° and 135°')], [txt('45 degrees and 135 degrees')]), true);
+      assert.equal(partsAgree([txt('x = 5 or x = -2')], [txt('The solutions are x = 5 or x = -2.')]), true);
+      assert.equal(partsAgree([txt('y = 2x + 3')], [txt('y = 3x + 2')]), false);
+      assert.equal(partsAgree([txt('x = 5 or x = -2')], [txt('x = -2 or x = 5')]), false, 'order kept: doubt → disagree');
+      assert.equal(partsAgree([txt('-10 < x < 2')], [txt('x > -10 and x < 2')]), false);
+      assert.equal(partsAgree([txt('Yes, because the slopes are equal')], [txt('Yes — both slopes are 3')]), false, 'a number on one side only');
+      assert.equal(partsAgree([txt('Yes, the slopes are equal.')], [txt('Yes. They are parallel.')]), true);
+      assert.equal(partsAgree([txt('No, 42 is not an outlier')], [txt('Yes, 42 is an outlier')]), false);
+      assert.equal(partsAgree([txt('The empirical formula is CH2O')], [txt('CH2O')]), true);
+      assert.equal(partsAgree([txt('CH2O')], [txt('C2H4O2')]), false);
+      assert.equal(decisiveToken('parallel'), '', 'prose alone has nothing decisive');
     });
     await section('tie-break matching both disagreeing solvers is refused as ambiguous', async () => {
       const r = await solveKey({ n: 1, text: 'q' }, mk([num('100', 100)], [num('102', 102)], [num('101', 101)]));

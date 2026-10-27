@@ -62,6 +62,11 @@ export interface AnswerKey {
    *  no `steps` had its path dropped (finals not reachable) — a cache hit copies
    *  it instead of re-solving it every time. Absent on keys built before round 11. */
   stepsTried?: boolean;
+  /** 2026-10-26: labels of the problem's parts the solvers did NOT agree on.
+   *  `parts` holds only the agreed (keyed) parts; these are never judged and
+   *  never confirmed, so the problem is never "done" on the record while any
+   *  is listed. Absent when every part agreed. */
+  unkeyed?: string[];
 }
 
 export type ProblemBuildStatus = 'preparing' | 'ready' | 'unverified';

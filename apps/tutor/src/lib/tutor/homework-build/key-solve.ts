@@ -1,8 +1,9 @@
 /**
  * Offline answer key for the per-problem homework build: two independent
  * solves must AGREE before the key is trusted; a disagreement gets one
- * tie-break solve, and anything still unresolved yields no key at all (never a
- * partial key). Every model call sits behind `KeySolveDeps`; tests inject
+ * tie-break solve. 2026-10-26: agreement is per part — the parts still
+ * unresolved are listed `unkeyed` (never judged) and the agreed ones keyed; a
+ * problem with no agreed part yields no key at all. Every model call sits behind `KeySolveDeps`; tests inject
  * stubs, only production code constructs `defaultKeySolveDeps()`.
  *
  * Asymmetry that drives `partsAgree`: a false "agree" lets a wrong key judge
@@ -192,11 +193,37 @@ function relClose(a: number, b: number): boolean {
   return Math.abs(a - b) <= 0.01 * Math.max(Math.abs(a), Math.abs(b));
 }
 
+const DECISIVE_STOP = new Set(['the', 'a', 'an', 'and', 'or', 'is', 'are', 'of', 'to', 'so', 'it', 'its', 'by', 'be', 'in', 'on', 'at', 'as', 'for', 'both', 'then', 'thus', 'with', 'than']);
+
+/**
+ * 2026-10-26 (typed sessions, verdict review): two solvers wrote the same
+ * answer in different prose ("The angles are 45° and 135°" / "45° and 135°")
+ * and the key was refused. The decisive content of a text answer: a leading
+ * yes / no (with any numbers), else its numbers, operators and short math
+ * tokens (variables, units, formulas) in order, prose words dropped. '' when
+ * there is nothing decisive — two texts with no decisive content never agree
+ * this way. Order and every symbol are kept, so any doubt stays "disagree".
+ */
+export function decisiveToken(text: string): string {
+  const t = String(text ?? '').normalize('NFKC').toLowerCase()
+    .replace(/[−–—]/g, '-').replace(/<=/g, '≤').replace(/>=/g, '≥')
+    .replace(/\s*\bdeg(?:rees?)?\b/g, '°');
+  const toks = t.match(/-?\d+(?:\.\d+)?|[a-z][a-z0-9]*|[<>≤≥=±+\-*/^√π°%]/g) ?? [];
+  const yn = /^\s*(yes|no|true|false)\b/.exec(t)?.[1];
+  // A yes / no answer: the word and the distinct numbers its reason names, in any order
+  // ("No, 42 is not an outlier (upper fence = 45.5)" = "No, 42 < 45.5, the upper fence").
+  if (yn) return `${yn}|${[...new Set(toks.filter((x) => /^-?\d/.test(x)).map(Number))].sort((x, y) => x - y).join(' ')}`;
+  const kept = toks.filter((x) => !/^[a-z]/.test(x) || (/\d/.test(x) || (x.length <= 4 && !DECISIVE_STOP.has(x))));
+  return kept.some((x) => /\d/.test(x)) ? kept.join(' ') : '';
+}
+
 function partAgree(a: AnswerPart, b: AnswerPart): boolean {
   if (a.canonical.kind !== b.canonical.kind) return false;
   if (a.canonical.kind === 'text' && b.canonical.kind === 'text') {
     const x = normText(a.canonical.value), y = normText(b.canonical.value);
-    return !!x && x === y;
+    if (!!x && x === y) return true;
+    const dx = decisiveToken(a.canonical.value);
+    return !!dx && dx === decisiveToken(b.canonical.value);
   }
   if (a.canonical.kind !== 'number' || b.canonical.kind !== 'number') return false;
   const av = a.canonical.value, bv = b.canonical.value;
@@ -213,6 +240,19 @@ function partAgree(a: AnswerPart, b: AnswerPart): boolean {
   const sa = String(av), sb = String(bv);
   if (compareDeterministic(sa, sb).result !== 'same' || compareDeterministic(sb, sa).result !== 'same') return false;
   return av === bv || relClose(av, bv);
+}
+
+/**
+ * The pairing of two solves' parts (index into `b` for each part of `a`): by
+ * label when the labels match, else by position. Null when they cannot be
+ * paired (different counts, a duplicate label).
+ */
+function pairParts(a: AnswerPart[] | null, b: AnswerPart[] | null): number[] | null {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || a.length !== b.length) return null;
+  const la = a.map((p) => normLabel(p.label)), lb = b.map((p) => normLabel(p.label));
+  if (new Set(la).size !== la.length || new Set(lb).size !== lb.length) return null;
+  if (la.every((l) => lb.includes(l))) return la.map((l) => lb.indexOf(l));
+  return a.map((_, i) => i);
 }
 
 /** Same part count, every part equal — by label when the labels match, else by position; any doubt is "no". */
@@ -316,5 +356,51 @@ export async function solveKey(problem: { n: number; text: string }, deps: KeySo
   if (withA && withB) return out({ key: null, agreed: false, candidates, note: 'ambiguous: tie-break matches both disagreeing solvers' });
   if (withA) return out({ key: keyOf([['a', n0, a!], ['t', n2, t!]]), agreed: true, candidates: [] });
   if (withB) return out({ key: keyOf([['b', n1, b!], ['t', n2, t!]]), agreed: true, candidates: [] });
+  // 2026-10-26 (typed sessions): one disagreeing part used to cost the whole
+  // key — every part of the problem then went unjudged. Per part now: a part
+  // two solves agree on (A = B, or the tie-break with exactly one of them) is
+  // keyed; the rest are listed `unkeyed` and never judged.
+  const partial = partialKey(a, b, t);
+  if (partial) {
+    const { parts, unkeyed, solverSlots } = partial;
+    const slotName: Record<Slot, string> = { a: n0, b: n1, t: n2 };
+    const pair = solverSlots.map((slot) => [slot, slotName[slot], parts] as [Slot, string, AnswerPart[]]);
+    if (!unkeyed.length) return out({ key: keyOf(pair), agreed: true, candidates: [], note: 'agreed part by part' });
+    const key = { ...keyOf(pair), unkeyed };
+    return out({ key, agreed: true, candidates, note: `partial: unkeyed ${unkeyed.map((l) => l || '(unlabelled)').join(', ')}` });
+  }
   return out({ key: null, agreed: false, candidates });
+}
+
+/**
+ * Per-part agreement of up to three solves (A, B, tie-break T). A part is kept
+ * when A and B agree on it, or when T agrees with exactly one of them (T with
+ * the only other solve when one failed). Null when no part is kept, or when
+ * the solves cannot be paired part by part.
+ */
+function partialKey(
+  a: AnswerPart[] | null, b: AnswerPart[] | null, t: AnswerPart[] | null,
+): { parts: AnswerPart[]; unkeyed: string[]; solverSlots: Array<'a' | 'b' | 't'> } | null {
+  const ref = a ?? b;
+  if (!ref || ref.length < 2) return null;
+  const refSlot: 'a' | 'b' = a ? 'a' : 'b';
+  const other = a ? b : null;
+  const pOther = other ? pairParts(ref, other) : null;
+  const pT = t ? pairParts(ref, t) : null;
+  if (other && !pOther) return null;
+  const parts: AnswerPart[] = [];
+  const unkeyed: string[] = [];
+  const slots = new Set<'a' | 'b' | 't'>();
+  ref.forEach((rp, i) => {
+    const op = other && pOther ? other[pOther[i]] : null;
+    const tp = t && pT ? t[pT[i]] : null;
+    if (op && partAgree(rp, op)) { parts.push(rp); slots.add(refSlot); slots.add('b'); return; }
+    const withRef = !!tp && partAgree(rp, tp);
+    const withOther = !!tp && !!op && partAgree(op, tp);
+    if (withRef && !withOther) { parts.push(rp); slots.add(refSlot); slots.add('t'); return; }
+    if (withOther && !withRef) { parts.push(op!); slots.add('b'); slots.add('t'); return; }
+    unkeyed.push(normLabel(rp.label));
+  });
+  if (!parts.length) return null;
+  return { parts, unkeyed, solverSlots: (['a', 'b', 't'] as const).filter((s) => slots.has(s)) };
 }
