@@ -40,7 +40,7 @@ import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPreche
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
-import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn } from '../orchestrator/advance-request';
+import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn, detectAdvanceRequest, isBackwardAdvance, BACKWARD_ADVANCE_REFUSED_REASON } from '../orchestrator/advance-request';
 import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
@@ -2514,6 +2514,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // A navigation turn (the runtime moved the lesson) is not an answer: no
   // turn-shape frame and no verdict guard on it (advance-request.ts).
   const navigationTurn = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript);
+  // Round 5: on a turn where the student asked to move on (or the runtime
+  // already moved), the lesson never goes back (advance-request.ts).
+  const moveRequestTurn = navigationTurn || (TUTOR_TYPED_ADVANCE && !!detectAdvanceRequest(studentSaid));
   // 2026-10-29 (local validation on Haiku, AP Chemistry): after the problem was
   // done, the open-question frames kept the tutor's last question about it
   // alive ("what whole number n makes n × 30 equal 180?", three turns). With
@@ -2617,7 +2620,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   /** This turn's model-check credit re-checked against the key (marks). */
   const hpModelCredit: string[] = [];
   const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
-  if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified) {
+  if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified && !navigationTurn) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
     if (turnShape?.answerShaped && hasContext) {
       const startedAt = Date.now();
@@ -2990,6 +2993,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               const hit = boardRevealsWithheldAnswer(args, reveal.withheld);
               yield* revealStop('board', hit.how, hit.matched);
             }
+            currentToolUse = null;
+          } else if (
+            moveRequestTurn && tc.name === 'advance_lesson' && input.lessonPlanContext
+            && isBackwardAdvance((args as { to?: unknown }).to, input.lessonPlanContext.currentSegmentId, input.lessonPlanContext.segmentIndex)
+          ) {
+            console.warn(`[advance-request] advance_lesson to "${String((args as { to?: unknown }).to)}" refused — the student asked to move on`);
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: BACKWARD_ADVANCE_REFUSED_REASON });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: BACKWARD_ADVANCE_REFUSED_REASON };
             currentToolUse = null;
           } else if (hpOpenerWithFigure && tc.name.startsWith('show_')) {
             console.warn(`[homework-problem] opener board call withheld (${tc.name}): the figure is already on the board`);
