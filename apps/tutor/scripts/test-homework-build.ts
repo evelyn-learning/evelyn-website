@@ -1179,6 +1179,42 @@ async function main() {
         [txt('The enzyme denatures.', 'a'), txt('It competes with the substrate for the active site.', 'b')]));
       assert.equal(r.key, null);
     });
+    // 2026-10-29: prose parts keyed by one short verify call (stubbed here).
+    await section('prose: real Biology build — both prose parts keyed by the verify call; numbers never sent to it', async () => {
+      const seen: Array<{ label: string; answers: string[] }> = [];
+      const same = async (r: { problem: string; label: string; answers: string[] }) => { seen.push({ label: r.label, answers: r.answers }); return { same: true, statement: `canonical ${r.label}`, usage: { in: 10, out: 2 } }; };
+      const r = await solveKey({ n: 1, text: 'q' }, { ...mk(
+        [txt('High temperatures cause the enzyme to denature.', 'a'), txt('A competitive inhibitor binds the active site.', 'b')],
+        [txt('At too high a temperature the enzyme denatures.', 'a'), txt('It occupies the active site, blocking the substrate.', 'b')],
+        [txt('The enzyme denatures.', 'a'), txt('It competes with the substrate for the active site.', 'b')]), sameStatement: same });
+      assert.equal(r.agreed, true);
+      assert.deepEqual(r.key!.parts.map((p) => [p.label, p.final, p.prose]), [['a', 'canonical a', true], ['b', 'canonical b', true]]);
+      assert.equal(r.key!.unkeyed, undefined);
+      assert.deepEqual(seen.map((x) => [x.label, x.answers.length]), [['a', 3], ['b', 3]]);
+      assert.deepEqual(r.tokens, { in: 270, out: 29 }, 'the verify calls are counted (250/25 solves + 2 × 10/2)');
+      const n = await solveKey({ n: 1, text: 'q' }, { ...mk([num('1', 1, 'a'), txt('x', 'b')], [num('2', 2, 'a'), txt('y', 'b')], [num('3', 3, 'a'), txt('z', 'b')]), sameStatement: async (q) => { seen.push({ label: `N${q.label}`, answers: q.answers }); return { same: true, statement: 's' }; } });
+      assert.ok(!seen.some((x) => x.label === 'Na'), 'a number part is never sent');
+      assert.deepEqual(n.key!.parts.map((p) => p.label), ['b']); assert.deepEqual(n.key!.unkeyed, ['a']);
+    });
+    await section('prose: AP Bio — prose (a) keyed by the verify call next to the agreed number (b)', async () => {
+      const A = [txt('A water molecule is removed as two monomers bond.', 'a'), num('9 water molecules', 9, 'b')];
+      const B = [txt('Water is released for each covalent bond formed.', 'a'), num('9 water molecules', 9, 'b')];
+      const r = await solveKey({ n: 1, text: 'q' }, { ...mk(A, B, [txt('H2O is released as a byproduct.', 'a'), num('9', 9, 'b')]), sameStatement: async () => ({ same: true, statement: 'Water is released as each bond forms.' }) });
+      assert.deepEqual(r.key!.parts.map((p) => [p.label, !!p.prose]), [['a', true], ['b', false]]);
+    });
+    await section('prose: not the same, a failed call, or no verify dep → the part stays unkeyed', async () => {
+      const args = (): Parameters<typeof mk> => [[txt('p', 'a'), num('9', 9, 'b')], [txt('q', 'a'), num('9', 9, 'b')], [txt('r', 'a'), num('9', 9, 'b')]];
+      for (const same of [async () => ({ same: false, statement: '' }), async () => { throw new Error('x'); }, async () => null, async () => ({ same: true, statement: '  ' })]) {
+        const r = await solveKey({ n: 1, text: 'q' }, { ...mk(...args()), sameStatement: same });
+        assert.deepEqual(r.key!.unkeyed, ['a']);
+      }
+      assert.deepEqual((await solveKey({ n: 1, text: 'q' }, mk(...args()))).key!.unkeyed, ['a']);
+    });
+    await section('BUILD_LOGIC_VERSION is 3: problems built before prose keys are rebuilt', async () => {
+      const { BUILD_LOGIC_VERSION, problemHash } = await import('../src/lib/tutor/homework-build/types');
+      assert.equal(BUILD_LOGIC_VERSION, 3);
+      assert.notEqual(problemHash('x'), (await import('node:crypto')).createHash('sha256').update('v2|x').digest('hex').slice(0, 16));
+    });
     await section('decisiveToken: prose differs, decisive content agrees; any doubt disagrees', async () => {
       const { decisiveToken } = await import('../src/lib/tutor/homework-build/key-solve');
       assert.equal(partsAgree([txt('The angles are 45° and 135°')], [txt('45 degrees and 135 degrees')]), true);

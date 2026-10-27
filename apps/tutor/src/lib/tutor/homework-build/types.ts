@@ -49,6 +49,11 @@ export interface AnswerPart {
    *  several named numbers is confirmed value by value, across messages
    *  (keyed-verdict.ts). Names are normalised (lower case, no spaces). */
   values?: Array<{ name: string; value: number }>;
+  /** 2026-10-29: a prose answer (an explanation) the solves state the same way
+   *  in different words, agreed by the build's verify call (key-solve.ts
+   *  sameStatement); `final` is a short canonical statement. Never matched
+   *  deterministically: confirmed only by a high-confidence model answer check. */
+  prose?: boolean;
 }
 
 /** One step of the verified solution path: the fact/theorem/equation used, and the intermediate result when there is one. */
@@ -98,8 +103,8 @@ export interface HomeworkBuildDoc {
 
 /** Bump when a change to the build (figure, answer key) must not reuse problems built before it: the
  *  cache matches on this hash, so an older build's figure or key is never served after the bump.
- *  2 = 2026-10-27 per-part answer keys. */
-export const BUILD_LOGIC_VERSION = 2;
+ *  2 = 2026-10-27 per-part answer keys. 3 = 2026-10-29 prose parts keyed by a verify call. */
+export const BUILD_LOGIC_VERSION = 3;
 
 /** sha256 of the build version and the text with whitespace collapsed and trimmed, first 16 hex chars. */
 export function problemHash(text: string): string {

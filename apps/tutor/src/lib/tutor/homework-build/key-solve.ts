@@ -18,7 +18,9 @@ import type { AnswerKey, AnswerPart, KeyStep } from './types';
 
 export interface SolveOutcome { parts: AnswerPart[] | null; steps?: KeyStep[]; usage?: { in: number; out: number } }
 export type SolveFn = (text: string) => Promise<SolveOutcome>;
-export interface KeySolveDeps { solveA: SolveFn; solveB: SolveFn; solveTieBreak: SolveFn; names: [string, string, string] }
+/** 2026-10-29: do these answers to one part state the same thing? (the build's verify model, one short call). */
+export type SameStatementFn = (req: { problem: string; label: string; answers: string[] }) => Promise<{ same: boolean; statement: string; usage?: { in: number; out: number } } | null>;
+export interface KeySolveDeps { solveA: SolveFn; solveB: SolveFn; solveTieBreak: SolveFn; names: [string, string, string]; /** Absent ⇒ prose parts stay unkeyed. */ sameStatement?: SameStatementFn }
 export interface KeySolveResult { key: AnswerKey | null; agreed: boolean; candidates: string[]; note?: string; tokens?: { in: number; out: number } }
 
 const CALL_OPTS = { timeout: 60_000, maxRetries: 0 } as const;
@@ -163,8 +165,39 @@ async function callSolve(role: 'plangen-vision' | 'content-verify', effort: 'med
   }
 }
 
+export const SAME_STATEMENT_SYSTEM = 'You check an answer key for one part of a homework problem. Several independent solvers answered the part in their own words. Decide whether every answer states the same thing: the same claim, mechanism or conclusion, with no answer adding or contradicting a point another one makes as the answer. Wording, detail and order may differ. If they state the same thing, write that shared answer as one short plain sentence a teacher would accept (at most 30 words); otherwise leave statement empty.';
+
+export const SAME_STATEMENT_SCHEMA = {
+  type: 'object',
+  properties: { same: { type: 'boolean' }, statement: { type: 'string' } },
+  required: ['same', 'statement'],
+  additionalProperties: false,
+} as const;
+
+async function callSameStatement(req: { problem: string; label: string; answers: string[] }): Promise<{ same: boolean; statement: string; usage?: { in: number; out: number } } | null> {
+  try {
+    const { client, model } = getModelClient('content-verify');
+    const params = prepareParams('content-verify', {
+      model,
+      max_tokens: 1000,
+      system: SAME_STATEMENT_SYSTEM,
+      messages: [{ role: 'user', content: `Problem:\n${req.problem}\n\nPart: ${req.label || '(the whole problem)'}\n\nAnswers:\n${req.answers.map((x, i) => `${i + 1}. ${x}`).join('\n')}` }],
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: SAME_STATEMENT_SCHEMA } },
+    });
+    const msg = await client.messages.create(params as unknown as Anthropic.MessageCreateParamsNonStreaming, { ...CALL_OPTS });
+    const usage = { in: msg.usage?.input_tokens ?? 0, out: msg.usage?.output_tokens ?? 0 };
+    if (msg.stop_reason === 'max_tokens' || msg.stop_reason === 'refusal') return null;
+    const raw = msg.content.filter((b) => b.type === 'text').map((b) => (b as Anthropic.TextBlock).text).join('');
+    const json = JSON.parse(raw.trim()) as { same?: unknown; statement?: unknown };
+    return { same: json.same === true, statement: typeof json.statement === 'string' ? json.statement : '', usage };
+  } catch {
+    return null;
+  }
+}
+
 export function defaultKeySolveDeps(): KeySolveDeps {
   return {
+    sameStatement: callSameStatement,
     solveA: (t) => callSolve('content-verify', 'medium', t),
     solveB: (t) => callSolve('plangen-vision', 'medium', t),
     solveTieBreak: (t) => callSolve('plangen-vision', 'high', t),
@@ -360,47 +393,71 @@ export async function solveKey(problem: { n: number; text: string }, deps: KeySo
   // key — every part of the problem then went unjudged. Per part now: a part
   // two solves agree on (A = B, or the tie-break with exactly one of them) is
   // keyed; the rest are listed `unkeyed` and never judged.
-  const partial = partialKey(a, b, t);
-  if (partial) {
-    const { parts, unkeyed, solverSlots } = partial;
-    const slotName: Record<Slot, string> = { a: n0, b: n1, t: n2 };
-    const pair = solverSlots.map((slot) => [slot, slotName[slot], parts] as [Slot, string, AnswerPart[]]);
-    if (!unkeyed.length) return out({ key: keyOf(pair), agreed: true, candidates: [], note: 'agreed part by part' });
-    const key = { ...keyOf(pair), unkeyed };
-    return out({ key, agreed: true, candidates, note: `partial: unkeyed ${unkeyed.map((l) => l || '(unlabelled)').join(', ')}` });
+  const rows = perPartAgreement(a, b, t);
+  if (rows) {
+    // 2026-10-29 (local validation, AP Biology / Biology): a prose part (an
+    // explanation) never agreed word for word, so it was never keyed and the
+    // problem never "done". A text part still open whose solves all answered
+    // in text gets ONE short verify call: do these answers state the same
+    // thing? Agreed → keyed as a prose part with a short canonical statement.
+    let proseTokens: { in: number; out: number } | undefined;
+    for (const row of rows) {
+      if (row.kept || !deps.sameStatement) continue;
+      const answers = row.answers.filter((p) => p.canonical.kind === 'text');
+      if (answers.length < 2 || answers.length !== row.answers.length) continue;
+      try {
+        const v = await deps.sameStatement({ problem: problem.text, label: row.label, answers: answers.map((p) => p.final) });
+        if (v?.usage) proseTokens = { in: (proseTokens?.in ?? 0) + v.usage.in, out: (proseTokens?.out ?? 0) + v.usage.out };
+        const statement = oneLine(v?.statement ?? '').slice(0, 300);
+        if (v?.same === true && statement) {
+          row.kept = { label: answers[0].label, final: statement, canonical: { kind: 'text', value: statement }, prose: true };
+          for (const sl of row.answerSlots) row.slots.add(sl);
+        }
+      } catch { /* a failed verify call leaves the part unkeyed */ }
+    }
+    if (proseTokens) tokens = { in: (tokens?.in ?? 0) + proseTokens.in, out: (tokens?.out ?? 0) + proseTokens.out };
+    const parts = rows.flatMap((r) => (r.kept ? [r.kept] : []));
+    const unkeyed = rows.filter((r) => !r.kept).map((r) => r.label);
+    if (parts.length) {
+      const slots = new Set<Slot>(rows.flatMap((r) => (r.kept ? [...r.slots] : [])));
+      const slotName: Record<Slot, string> = { a: n0, b: n1, t: n2 };
+      const pair = (['a', 'b', 't'] as const).filter((sl) => slots.has(sl)).map((slot) => [slot, slotName[slot], parts] as [Slot, string, AnswerPart[]]);
+      if (!unkeyed.length) return out({ key: keyOf(pair), agreed: true, candidates: [], note: 'agreed part by part' });
+      const key = { ...keyOf(pair), unkeyed };
+      return out({ key, agreed: true, candidates, note: `partial: unkeyed ${unkeyed.map((l) => l || '(unlabelled)').join(', ')}` });
+    }
   }
   return out({ key: null, agreed: false, candidates });
 }
 
+interface PartRow { label: string; kept: AnswerPart | null; slots: Set<'a' | 'b' | 't'>; answers: AnswerPart[]; answerSlots: Array<'a' | 'b' | 't'> }
+
 /**
- * Per-part agreement of up to three solves (A, B, tie-break T). A part is kept
- * when A and B agree on it, or when T agrees with exactly one of them (T with
- * the only other solve when one failed). Null when no part is kept, or when
- * the solves cannot be paired part by part.
+ * Per-part agreement of up to three solves (A, B, tie-break T), one row per
+ * part of the first available solve. A part is kept when A and B agree on it,
+ * or when T agrees with exactly one of them (T with the only other solve when
+ * one failed). `answers`: every solve's answer to the part, for the prose
+ * check. Null when the solves cannot be paired part by part.
  */
-function partialKey(
-  a: AnswerPart[] | null, b: AnswerPart[] | null, t: AnswerPart[] | null,
-): { parts: AnswerPart[]; unkeyed: string[]; solverSlots: Array<'a' | 'b' | 't'> } | null {
+function perPartAgreement(a: AnswerPart[] | null, b: AnswerPart[] | null, t: AnswerPart[] | null): PartRow[] | null {
   const ref = a ?? b;
-  if (!ref || ref.length < 2) return null;
+  if (!ref || !ref.length) return null;
   const refSlot: 'a' | 'b' = a ? 'a' : 'b';
   const other = a ? b : null;
   const pOther = other ? pairParts(ref, other) : null;
   const pT = t ? pairParts(ref, t) : null;
   if (other && !pOther) return null;
-  const parts: AnswerPart[] = [];
-  const unkeyed: string[] = [];
-  const slots = new Set<'a' | 'b' | 't'>();
-  ref.forEach((rp, i) => {
+  return ref.map((rp, i) => {
     const op = other && pOther ? other[pOther[i]] : null;
     const tp = t && pT ? t[pT[i]] : null;
-    if (op && partAgree(rp, op)) { parts.push(rp); slots.add(refSlot); slots.add('b'); return; }
+    const answers = [rp, ...(op ? [op] : []), ...(tp ? [tp] : [])];
+    const answerSlots: Array<'a' | 'b' | 't'> = [refSlot, ...(op ? ['b' as const] : []), ...(tp ? ['t' as const] : [])];
+    const row = (kept: AnswerPart | null, slots: Array<'a' | 'b' | 't'>): PartRow => ({ label: normLabel(rp.label), kept, slots: new Set(slots), answers, answerSlots });
+    if (op && partAgree(rp, op)) return row(rp, [refSlot, 'b']);
     const withRef = !!tp && partAgree(rp, tp);
     const withOther = !!tp && !!op && partAgree(op, tp);
-    if (withRef && !withOther) { parts.push(rp); slots.add(refSlot); slots.add('t'); return; }
-    if (withOther && !withRef) { parts.push(op!); slots.add('b'); slots.add('t'); return; }
-    unkeyed.push(normLabel(rp.label));
+    if (withRef && !withOther) return row(rp, [refSlot, 't']);
+    if (withOther && !withRef) return row(op!, ['b', 't']);
+    return row(null, []);
   });
-  if (!parts.length) return null;
-  return { parts, unkeyed, solverSlots: (['a', 'b', 't'] as const).filter((s) => slots.has(s)) };
 }
