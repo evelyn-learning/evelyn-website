@@ -15,6 +15,8 @@ import {
   toolResultWithDelivered,
   isNearDuplicateSentence,
   contentWords,
+  endsTurn,
+  laterCallSentenceDecision,
   THIN_TURN_RESCUE_INSTRUCTION,
 } from '../src/lib/tutor/voice/post-tool-turn';
 
@@ -40,6 +42,8 @@ for (const t of [
   'Happy to help with that one. Here it is on the board.',
   "Let's take a look at this one.",
 ]) check(`A: "${t}" → rescue`, decideThinToolTurnRescue({ ...thin, text: t, toolCalls: [{ name: 'show_problem' }] }).rescue);
+check('A: an offer line already closes the turn → no rescue',
+  decideThinToolTurnRescue({ ...thin, text: "This problem is done. Back to your list whenever you're ready." }).reason === 'turn-closed');
 check('A: a question already asked → no rescue',
   decideThinToolTurnRescue({ ...thin, text: 'Here it is. What would you do first?' }).reason === 'has-question');
 check('A: no text → left to the Option-A rescue', decideThinToolTurnRescue({ ...thin, text: '  ' }).reason === 'no-text');
@@ -64,7 +68,12 @@ check('A: instruction is generic (no subject words)', !/limit|equation|slope|che
   const said = "The limit's final value is 1/4. How do you get rid of the 0 in the denominator?";
   const r = toolResultWithDelivered('show_equation executed successfully.', 'show_equation', said, true);
   check('B: default ack quotes what was delivered', r.startsWith('show_equation executed successfully.') && r.includes(`«${said}»`), r);
-  check('B: default ack forbids restating', /Do not restate or rephrase/.test(r), r);
+  // Round 3 (Haiku, 10-27): the long note ("If those words already ask the
+  // student a question, end the turn …") was echoed back: "Those words already
+  // ask the question, so I'll stop there." The note is now one terse clause
+  // with no conditional instruction to talk about.
+  check('B: the note is terse — no conditional about questions', !/question/i.test(r.replace(said, '')) && r.length - said.length < 140, r);
+  check('B: the note says never to repeat or mention it', /never repeat or mention it/.test(r), r);
   check('B: nothing said yet → bare ack', toolResultWithDelivered('show_equation executed successfully.', 'show_equation', ' ', true) === 'show_equation executed successfully.');
   const data = '{"canonicalText":"Solve 2x = 6"}';
   check('B: a resolver result is unchanged', toolResultWithDelivered(data, 'generate_problem', said, true) === data);
@@ -110,6 +119,29 @@ check('A: instruction is generic (no subject words)', !/limit|equation|slope|che
   check('B: Algebra restated check dropped',
     isNearDuplicateSentence("Let's check it in the original equation: 5(2(−2) + 1) = −15 and 3(−2) − 9 = −15, so y = −2 does satisfy the equation.", first));
 }
+// ── Round 3: a later call after a reply that already ended the turn ─────────
+{
+  check('endsTurn: a question', endsTurn('Back to your list?'));
+  check('endsTurn: an offer line', endsTurn("Back to your list whenever you're ready."));
+  check('endsTurn: a sign-off', endsTurn('Take care, and see you next time.'));
+  check('endsTurn: a plain statement does not', !endsTurn('Here it is on the board.'));
+  // portal-93b6dd9b (APES): "... Back to your list?" + tool + "The card is up. Those words already ask the question, so I'll stop there."
+  const apes = ['Both parts are now confirmed, so this problem is done.', 'Back to your list?'];
+  check('later call after a question → dropped (continuation)', laterCallSentenceDecision({ sentence: 'The card is up.', earlier: apes, mode: 'continuation', questionTaken: false }) === 'drop-turn-ended');
+  check('later call after a question → every sentence dropped', laterCallSentenceDecision({ sentence: "Those words already ask the question, so I'll stop there.", earlier: apes, mode: 'continuation', questionTaken: false }) === 'drop-turn-ended');
+  // portal-cea7abf0 (Calc BC): "... Back to your list whenever you're ready." + tool + restatement.
+  const calc = ["That's the final answer, so this problem is done.", "Back to your list whenever you're ready."];
+  check('later call after an offer line → dropped', laterCallSentenceDecision({ sentence: 'The equation is on the board and the problem is complete.', earlier: calc, mode: 'continuation', questionTaken: false }) === 'drop-turn-ended');
+  check('a data-returning tool result → later call kept', laterCallSentenceDecision({ sentence: 'Here is a new one: solve 3x = 12.', earlier: ['Ready for another?'], mode: 'data', questionTaken: false }) === 'keep');
+  check('later call after a statement → kept', laterCallSentenceDecision({ sentence: 'Where does it cross the vertical axis?', earlier: ['Here is the graph.'], mode: 'continuation', questionTaken: false }) === 'keep');
+  // portal-136a30a0 (Physics): the follow-up wrote the question, then "The equation card is up, so there's nothing more to add."
+  const lead = ["Let's reason it out from the acceleration.", 'The ball gains 10 m/s of speed every second, starting from rest.'];
+  check('question-only follow-up: the question is kept', laterCallSentenceDecision({ sentence: 'After 1 second, what is its speed?', earlier: lead, mode: 'question-only', questionTaken: false }) === 'keep-question');
+  check('question-only follow-up: a statement is dropped', laterCallSentenceDecision({ sentence: "The equation card is up, so there's nothing more to add.", earlier: lead, mode: 'question-only', questionTaken: false }) === 'drop-not-question');
+  check('question-only follow-up: a second question is dropped', laterCallSentenceDecision({ sentence: 'What about after 2 seconds?', earlier: lead, mode: 'question-only', questionTaken: true }) === 'drop-after-question');
+  check('first call → always kept', laterCallSentenceDecision({ sentence: 'Anything.', earlier: [], mode: 'continuation', questionTaken: false }) === 'keep');
+}
+
 // Must keep.
 {
   const lead = ["Here's 2x + 3 = 7 on the board."];

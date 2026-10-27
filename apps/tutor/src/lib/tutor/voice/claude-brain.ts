@@ -39,7 +39,7 @@ import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from '.
 import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
-import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence } from './post-tool-turn';
+import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
 import { pacingHintForCue, DIFFICULTY_CUE_HINT } from '../orchestrator/advance-request';
 import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
@@ -2314,10 +2314,25 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // turn's fullText the forwarded sentences, not the model's raw text.
   let callStartForwarded = 0;
   let nearDupDropped = 0;
+  // Round 3 (Haiku 5.5, 10-27): what a later call may add at all — see
+  // post-tool-turn.ts laterCallSentenceDecision. Set when the tool results
+  // are built (bare acks → 'continuation', any data → 'data') and by the
+  // thin-turn follow-up ('question-only').
+  let laterCallMode: LaterCallMode = 'data';
+  let laterQuestionTaken = false;
   function* guardedSentence(raw: string): Generator<BrainStreamEvent> {
     if (reveal.muted) return;
     const text = stripEchoedTags(raw);
     if (!text) return;
+    if (TUTOR_CROSS_CALL_DEDUP && callStartForwarded > 0) {
+      const decision = laterCallSentenceDecision({ sentence: text, earlier: reveal.forwarded.slice(0, callStartForwarded), mode: laterCallMode, questionTaken: laterQuestionTaken });
+      if (decision === 'keep-question') laterQuestionTaken = true;
+      else if (decision !== 'keep') {
+        nearDupDropped++;
+        console.warn(`[later-call] sentence dropped (${decision}): "${text.slice(0, 80)}"`);
+        return;
+      }
+    }
     if (TUTOR_CROSS_CALL_DEDUP && callStartForwarded > 0 && isNearDuplicateSentence(text, reveal.forwarded.slice(0, callStartForwarded))) {
       nearDupDropped++;
       console.warn(`[cross-call-dedup] sentence dropped — restates an earlier call of this turn: "${text.slice(0, 80)}"`);
@@ -2802,6 +2817,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // iteration. Rejected tool calls (validation failures) get the
     // rejection reason as their result so the model learns and can
     // retry with valid args.
+    let allBareAcks = true;
     const resolvedResults = await Promise.all(
       newToolUseBlocks.map(async (b) => {
         let content: string;
@@ -2823,10 +2839,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           tool_use_id: b.id,
           // 2026-10-26 (post-tool-turn.ts, B): the bare ack quotes what the
           // student already has, so the next call does not start over.
-          content: b.rejectionReason ? content : toolResultWithDelivered(content, b.name, reveal.forwarded.join(' '), TUTOR_TOOL_RESULT_DELIVERED_NOTE),
+          content: (() => {
+            if (b.rejectionReason || content !== `${b.name} executed successfully.`) allBareAcks = false;
+            return b.rejectionReason ? content : toolResultWithDelivered(content, b.name, reveal.forwarded.join(' '), TUTOR_TOOL_RESULT_DELIVERED_NOTE);
+          })(),
         };
       })
     );
+    laterCallMode = allBareAcks ? 'continuation' : 'data';
+    laterQuestionTaken = false;
     messages = [
       ...messages,
       { role: 'assistant', content: finalMessage.content },
@@ -2901,8 +2922,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           : THIN_TURN_RESCUE_INSTRUCTION,
       },
     ];
-    // Its sentences are checked against everything already forwarded.
+    // Its sentences are checked against everything already forwarded; the
+    // thin-turn follow-up may add its one question and nothing else.
     callStartForwarded = reveal.forwarded.length;
+    laterCallMode = zeroTextRescue ? 'data' : 'question-only';
+    laterQuestionTaken = false;
     // No `tools` field → model has no tool slots to fill → forced to
     // emit text. We deliberately omit tools rather than passing []
     // because some Anthropic SDK versions treat [] as "no tools
