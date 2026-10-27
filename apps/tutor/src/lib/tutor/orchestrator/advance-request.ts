@@ -95,15 +95,27 @@ const nameWords = (s: string): string[] =>
     .map((w) => w.replace(/(?:ies)$/, 'y').replace(/(?<=[a-z]{3})s$/, ''))
     .filter((w) => w.length >= 3 && !NAME_STOP.has(w));
 
+export type ObjectiveMove = { kind: 'move'; target: string } | { kind: 'already'; target: string };
+
 /**
- * The segment a request to move on lands on: the first on-topic segment of
- * the next objective (LO group) after the current one — or, when the student
- * named one, of the objective whose description / segment titles carry at
- * least half of the named words (best score wins; ties go to the earliest
- * after the current objective). The recap when no objective is left. Null
- * when nothing resolves (unknown name, empty plan) — the brain handles it.
+ * Where a request to move on lands.
+ *
+ * No name: the first on-topic segment of the next objective (LO group) after
+ * the current one; the recap when no objective is left.
+ *
+ * A name ("move on to X"): only the CURRENT objective and the ones after it
+ * are candidates — a request to move on never goes back. Words that every
+ * objective carries are not distinctive and are left out of the match (unless
+ * nothing else is left). The best candidate carrying at least half of the
+ * named words wins; a tie goes to the current objective, then the earliest.
+ * When the best is the current objective → `already` (stay and continue it).
+ * Round 3 (portal-939d545b, 10-27): "move on to slope intercept form" on that
+ * very objective went back to objective 1 — "slope" was in every objective
+ * and the current one was never scored.
+ *
+ * Null when nothing resolves — the brain handles it.
  */
-export function resolveObjectiveTarget(plan: PlanShape, currentSegmentId: string, named: string | null): string | null {
+export function resolveObjectiveMove(plan: PlanShape, currentSegmentId: string, named: string | null): ObjectiveMove | null {
   const segs = plan.segments.filter((s) => s.offTopic !== true);
   const groups: string[] = [];
   for (const s of segs) {
@@ -115,23 +127,53 @@ export function resolveObjectiveTarget(plan: PlanShape, currentSegmentId: string
   const current = loGroupOf(currentSegmentId || '');
   const curIdx = groups.indexOf(current);
   if (named) {
-    const want = [...new Set(nameWords(named))];
-    if (!want.length) return null;
-    // Order: groups after the current one first, then earlier ones.
-    const order = [...groups.slice(curIdx + 1), ...groups.slice(0, Math.max(curIdx, 0))].filter((g) => g !== current);
-    let best: { g: string; score: number } | null = null;
-    for (const g of order) {
+    const textOf = (g: string): Set<string> => {
       const lo = plan.los?.find((l) => l.id === g);
-      const have = new Set(nameWords([lo?.description ?? '', ...segs.filter((s) => loGroupOf(s.id) === g).map((s) => s.title ?? '')].join(' ')));
+      return new Set(nameWords([lo?.description ?? '', ...segs.filter((s) => loGroupOf(s.id) === g).map((s) => s.title ?? '')].join(' ')));
+    };
+    const sets = new Map(groups.map((g) => [g, textOf(g)] as const));
+    const asked = [...new Set(nameWords(named))];
+    if (!asked.length) return null;
+    const distinctive = asked.filter((w) => !groups.every((g) => sets.get(g)!.has(w)));
+    const want = distinctive.length ? distinctive : asked;
+    const candidates = curIdx >= 0 ? groups.slice(curIdx) : current === 'intro' ? groups : [];
+    let best: { g: string; score: number } | null = null;
+    for (const g of candidates) {
+      const have = sets.get(g)!;
       const score = want.filter((w) => have.has(w)).length / want.length;
       if (score >= 0.5 && (!best || score > best.score)) best = { g, score };
     }
-    return best ? firstOf(best.g) : null;
+    if (!best) return null;
+    if (best.g === current) return { kind: 'already', target: currentSegmentId };
+    const target = firstOf(best.g);
+    return target ? { kind: 'move', target } : null;
   }
   const next = current === 'intro' ? groups[0] : curIdx >= 0 ? groups[curIdx + 1] : undefined;
-  if (next) return firstOf(next);
-  if (current !== 'recap') return segs.find((s) => s.id === 'recap' || s.kind === 'recap')?.id ?? null;
-  return null;
+  const target = next ? firstOf(next) : current !== 'recap' ? segs.find((s) => s.id === 'recap' || s.kind === 'recap')?.id ?? null : null;
+  return target ? { kind: 'move', target } : null;
+}
+
+/** The segment to move to, or null (no move: unresolved, or already there). */
+export function resolveObjectiveTarget(plan: PlanShape, currentSegmentId: string, named: string | null): string | null {
+  const m = resolveObjectiveMove(plan, currentSegmentId, named);
+  return m?.kind === 'move' ? m.target : null;
+}
+
+/** The fact the brain reads when the student named the objective already in progress. */
+export function describeAlreadyOnObjective(input: { named: string; target: string; objective?: string }): string {
+  const objective = input.objective ? ` ("${input.objective.replace(/\s+/g, ' ').trim().slice(0, 160)}")` : '';
+  return (
+    `[Lesson: the student asked to move on to "${input.named.slice(0, 60)}", and the lesson is ALREADY on that objective${objective}, segment "${input.target}". ` +
+    `Say so in one short clause and continue this objective from where it is. Never go back to an earlier objective. ` +
+    `Do NOT call advance_lesson. Do not offer choices, and do not re-pose or re-check a problem the student has already solved.]`
+  );
+}
+
+/** A turn whose transcript carries a runtime advance fact (typed request or
+ *  Skip button): the student's words are navigation, not an answer — nothing
+ *  on it is judged against the previous question. */
+export function isAutoAdvancedTurn(transcript: string): boolean {
+  return /\[Lesson auto-advanced:|\[Lesson: the student asked to move on/.test(transcript ?? '');
 }
 
 /** The fact the brain reads on a turn the runtime already advanced. */
@@ -141,7 +183,7 @@ export function describeTypedAdvance(input: { target: string; kind?: string; obj
   return (
     `[Lesson auto-advanced: the student asked to move on, and the lesson pointer has ALREADY moved to segment "${input.target}"${kind}${objective}. ` +
     `If their message also answers your last question, give the verdict in one short sentence first. ` +
-    `Then introduce THAT segment briefly and pose its first question or problem. ` +
+    `Then say plainly that you are moving on to it — never say you are staying — introduce THAT segment briefly and pose its first question or problem. ` +
     `Do NOT call advance_lesson — the advance is already done. ` +
     `Do not offer choices, and do not re-pose or re-check a problem the student has already solved.]`
   );

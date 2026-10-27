@@ -99,7 +99,7 @@ import {
 export const runtime = 'nodejs';
 
 const INTRO_SEGMENT_GOAL =
-  'Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.';
+  'Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and say you are starting with the first one — never ask the student to choose or confirm where to start. Stay brief — under 25 spoken words.';
 
 // Mirrors PlanGenerateRequestSchema's own `topic: z.string().max(300)`
 // (contract v1.9.0+). The materials path falls back to the request's raw

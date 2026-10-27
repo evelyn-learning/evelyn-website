@@ -530,7 +530,7 @@ import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-aff
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
 import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn, decideTypedBeforeHomeworkReady, createTypedHold, type TypedHold } from '@/app/tutor/components/session/text-kickoff';
 import { TUTOR_TYPED_WAITS_FOR_HOMEWORK, TUTOR_EMPTY_RECAP_CONTINUE, TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
-import { detectAdvanceRequest, resolveObjectiveTarget, describeTypedAdvance, overlongNoteForTurn, OVERLONG_FINISH_FIRST, type AdvanceRequest } from '@/lib/tutor/orchestrator/advance-request';
+import { detectAdvanceRequest, resolveObjectiveMove, describeAlreadyOnObjective, describeTypedAdvance, overlongNoteForTurn, OVERLONG_FINISH_FIRST, type AdvanceRequest } from '@/lib/tutor/orchestrator/advance-request';
 import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
 import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
 
@@ -11338,8 +11338,21 @@ export function VoiceTutorRealtime({
         const advFrom = currentSegmentIdRef.current;
         const advHomework = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;
         if (advanceRequest?.scope === 'objective' && advPlan && advFrom && !advHomework) {
-          const advTarget = resolveObjectiveTarget(advPlan, advFrom, advanceRequest.named);
-          if (advTarget && advTarget !== advFrom) {
+          const advMove = resolveObjectiveMove(advPlan, advFrom, advanceRequest.named);
+          const advTarget = advMove?.kind === 'move' ? advMove.target : null;
+          // Round 3 (portal-939d545b): a note about the question just left (the
+          // board-anchor note "your previous turn ended by asking …", the
+          // no-advance note) made the brain say "we'll stay on the two-points
+          // question" over the fact. Navigation turns carry neither.
+          if (advMove) {
+            pendingBoardAnchorNoteRef.current = null;
+            pendingNoAdvanceNoteRef.current = null;
+          }
+          if (advMove?.kind === 'already' && advanceRequest.named) {
+            const hereLo = advPlan.los?.find((lo) => advFrom.startsWith(`${lo.id}-`));
+            typedAdvanceFact = describeAlreadyOnObjective({ named: advanceRequest.named, target: advFrom, objective: hereLo?.description });
+            onDebugEvent?.('typed_advance_already_here', `"${advFrom}" named="${advanceRequest.named}"`);
+          } else if (advTarget && advTarget !== advFrom) {
             applyResolvedAdvance(advPlan, advFrom, advTarget);
             const advSeg = getSegment(advPlan, advTarget);
             const advLo = advPlan.los?.find((lo) => advTarget.startsWith(`${lo.id}-`));
