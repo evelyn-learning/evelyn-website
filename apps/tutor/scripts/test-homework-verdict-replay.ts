@@ -12,8 +12,10 @@
 import { strict as assert } from 'node:assert';
 import type { AnswerKey } from '../src/lib/tutor/homework-build/types';
 import {
-  confirmedKeyMarks, formatKeyedVerdictDebug, KEYED_VERDICT_DEBUG_TYPE, keyedProblemFacts, keyedVerdicts, marksFromKeyedEvents, modelCheckConfirms,
+  confirmedKeyMarks, formatKeyedVerdictDebug, inSheetScope, KEYED_VERDICT_DEBUG_TYPE, keyedProblemFacts, keyedVerdicts, marksFromKeyedEvents, modelCheckConfirms,
+  proseModelCredit, sessionKeyedVerdicts,
 } from '../src/lib/tutor/voice/keyed-verdict';
+import { ATTRIBUTE_STUDENT_CLAIM_RULE } from '../src/lib/tutor/voice/work-then-match';
 import { classifyHomeworkProblemOutcome, homeworkProblemPriorNote, priorNoteProblem } from '../src/lib/tutor/homework-build/outcome';
 import { formatHomeworkProblemBlock, sessionRecordLine } from '../src/lib/tutor/voice/homework-problem-block';
 
@@ -197,6 +199,59 @@ async function main() {
       await homeworkProblemPriorNote([student('hi', 0)], { summarize: async (p) => { user = p.transcript; return 'ok'; } });
       assert.match(user, /^<transcript>\n[\s\S]*\n<\/transcript>$/, 'the transcript is framed as data');
     } finally { console.warn = w; }
+  });
+
+  console.log('f round 2 (local validation 2026-10-29)');
+  // AP Calc AB local portal-61c2dfed: the student's own new problem was open; "x = 4" was credited to part (a).
+  const CALC = key(num('a', '4', 4), num('b', '1/6', 0.1667));
+  const CALC_MSGS = ['For (a): factor, (x - 2)(x + 2)/(x - 2) = x + 2, so the limit is 4.', 'For (b): plugging in 0 gives (3 - 3)/0, and 0 on top means the limit is 0.', "I don't know, maybe 1/6?", 'why does that work?', '4', 'yes', 'can you help me with lim as x -> 1 of (x^3 - 1)/(x - 1)', 'can you check my answer x = 4'];
+  await section('Calc AB local: an unlabelled value while the student\'s own problem is open is never judged against the sheet', () => {
+    const per = sessionKeyedVerdicts(CALC_MSGS, CALC).map((vs) => vs.map((v) => `${v.verdict}:${v.part}`));
+    assert.deepEqual(per[0], ['correct:a']);
+    assert.deepEqual(per[2], ['correct:b']);
+    assert.deepEqual(per[4], [], 'a bare "4" restating confirmed part (a) is not a fresh verdict');
+    assert.deepEqual(per[6], [], 'the off-sheet request itself');
+    assert.deepEqual(per[7], [], '"check my answer x = 4" answers the student\'s own problem');
+    assert.deepEqual(inSheetScope(CALC_MSGS, CALC, [], modelCheckConfirms('x = 4', CALC_MSGS[7], CALC)), [], 'model credit is scoped too');
+  });
+  await section('scope: naming a part brings the sheet back; an unconfirmed part is still judged unlabelled on the sheet', () => {
+    const per = sessionKeyedVerdicts(['can you help me with another problem', 'x = 4', 'For (b): 1/6', '4'], CALC).map((vs) => vs.map((v) => `${v.verdict}:${v.part}`));
+    assert.deepEqual(per, [[], [], ['correct:b'], ['correct:a']]);
+  });
+
+  // Prose parts (key-solve.ts sameStatement): confirmed only by a high-confidence model check, via proseModelCredit.
+  const prose = (label: string, final: string) => ({ ...txt(label, final), prose: true });
+  const BIOLOGY = key(prose('a', 'Heat breaks the bonds holding the enzyme\'s shape, so it denatures and the active site no longer fits the substrate.'), prose('b', 'It binds the active site itself, blocking the substrate.'));
+  const BIO_MSGS = ["For (a): high heat breaks the bonds that hold the enzyme's 3D shape, so it denatures and the active site no longer fits the substrate.", 'For (b): a competitive inhibitor binds to the allosteric site, which changes the shape of the active site so the substrate can\'t bind.', "I don't know, maybe it binds in the active site itself and blocks the substrate from getting in?", 'why does that work?', 'denatured', 'yes', 'can you help me with how pH affects enzyme activity', 'can you check my answer: enzymes get used up in the reaction'];
+  await section('Biology local: prose parts — the labelled part, then the only open part; never off-sheet; never deterministic', () => {
+    const credit = (i: number, confirmed: string[]) => proseModelCredit(BIO_MSGS.slice(0, i + 1), BIOLOGY, [], confirmed).map((v) => v.part);
+    assert.deepEqual(credit(0, []), ['a']);
+    assert.deepEqual(credit(2, ['part:a']), ['b'], 'the hedge answers the only open part');
+    assert.deepEqual(credit(2, []), [], 'unlabelled with two parts open: no credit');
+    assert.deepEqual(credit(7, ['part:a']), [], 'off-sheet: no credit');
+    assert.deepEqual(keyedVerdicts(BIO_MSGS[1], BIOLOGY).filter((v) => v.verdict !== 'undecided'), [], 'a prose part is never judged deterministically');
+    const transcript = BIO_MSGS.map(student);
+    const ev = (part: string) => ({ type: KEYED_VERDICT_DEBUG_TYPE, message: formatKeyedVerdictDebug(part, 'correct'), timestamp: new Date(9_000) });
+    assert.equal(classifyHomeworkProblemOutcome({ debugEvents: [ev('a'), ev('b')], transcript, verified: true, finished: true, key: BIOLOGY }), 'done');
+    assert.equal(classifyHomeworkProblemOutcome({ debugEvents: [ev('a')], transcript, verified: true, finished: true, key: BIOLOGY }), 'needs_review');
+  });
+  await section('AP Biology local: prose (a) by the model check, numeric (b) by the key → done', () => {
+    const APBIO = key(prose('a', 'A water molecule is released as each bond forms between two monomers.'), num('b', '9 water molecules', 9, 'water molecules'));
+    const msgs = ['For (a): a water molecule is removed (released) when two monomers bond, an H from one and an OH from the other.', 'For (b): 10 water molecules, one for each glucose.', "I don't know, maybe 9, one for each bond between the units?"];
+    assert.deepEqual(proseModelCredit(msgs.slice(0, 1), APBIO, [], []).map((v) => v.part), ['a']);
+    const ev = { type: KEYED_VERDICT_DEBUG_TYPE, message: formatKeyedVerdictDebug('a', 'correct'), timestamp: new Date(9_000) };
+    assert.equal(classifyHomeworkProblemOutcome({ debugEvents: [ev], transcript: msgs.map(student), verified: true, finished: true, key: APBIO }), 'done');
+  });
+  await section('a prose final starting with yes/no is never judged by the student\'s yes/no', () => {
+    const K = key(prose('a', 'No, because the sample is not random.'), num('b', '5', 5));
+    assert.deepEqual(keyedVerdicts('For (a): yes it is fine', K).filter((v) => v.verdict !== 'undecided'), []);
+    assert.deepEqual(keyedVerdicts("I don't know, maybe no, because it was not random?", K), []);
+  });
+  await section('record: nothing open → a follow-up poses no solved question; corrections attribute the student\'s claim', () => {
+    assert.match(sessionRecordLine(CALC, ['part:a', 'part:b']), /without posing any question whose answer is already confirmed/);
+    assert.match(sessionRecordLine(CALC, ['part:a', 'part:b']), /a NEW question about something not yet worked, never a solved one/);
+    assert.ok(formatHomeworkProblemBlock({ text: 'P', verified: false, hasFigure: false }).includes(ATTRIBUTE_STUDENT_CLAIM_RULE.trim()));
+    assert.match(ATTRIBUTE_STUDENT_CLAIM_RULE, /attribute it to them \("you said …"/);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

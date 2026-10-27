@@ -369,7 +369,8 @@ function judgePart(part: AnswerPart, cands: Candidate[], studentText?: string, o
   if (v.verdict === 'undecided' && studentText !== undefined && textMatchesPart(part, studentText)) {
     return { verdict: 'correct', part: normLabel(part.label), matched: studentText.trim().replace(/[.!]+$/, '') };
   }
-  const mode = opts.yesNo ?? 'off';
+  // A prose part (key-solve.ts sameStatement) is judged by the model check only.
+  const mode = part.prose ? 'off' : (opts.yesNo ?? 'off');
   if (v.verdict === 'undecided' && studentText !== undefined && mode !== 'off') {
     const want = yesNoOf(part.final), got = yesNoOf(studentText);
     if (want && got) {
@@ -516,7 +517,7 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
       }
       // A hedged yes / no ("maybe no, because …") confirms the one yes/no part it equals.
       if (!out.length && hedged !== null && yesNoOf(text)) {
-        const ynHits = key.parts.filter((p) => yesNoOf(p.final) !== null);
+        const ynHits = key.parts.filter((p) => !p.prose && yesNoOf(p.final) !== null);
         if (ynHits.length === 1 && yesNoOf(ynHits[0].final) === yesNoOf(text)) out.push({ verdict: 'correct', part: normLabel(ynHits[0].label), matched: yesNoOf(text)! });
       }
     }
@@ -534,7 +535,11 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
  * → `undecided`. `part` = the part labels judged, comma-joined.
  */
 export function keyedVerdict(studentMessage: string, key: AnswerKey): KeyedVerdict {
-  const vs = keyedVerdicts(studentMessage, key);
+  return combineKeyedVerdicts(keyedVerdicts(studentMessage, key));
+}
+
+/** One turn's verdict from its per-part verdicts (keyedVerdict). */
+export function combineKeyedVerdicts(vs: ReadonlyArray<KeyedVerdict>): KeyedVerdict {
   if (!vs.length || vs.some((v) => v.verdict === 'undecided')) return { verdict: 'undecided' };
   const first = vs[0].verdict;
   if (!vs.every((v) => v.verdict === first)) return { verdict: 'undecided' };
@@ -628,9 +633,10 @@ function collectConfirmed(
     if (eq >= 0 && labels.has(body.slice(0, eq))) addValue(body.slice(0, eq), body.slice(eq + 1));
   }
   const msgs = [...history.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), currentMessage];
-  // keyedVerdicts drops a runtime note in front of a student's words (R19b).
-  for (const msg of msgs) {
-    for (const v of keyedVerdicts(msg, key)) {
+  // keyedVerdicts drops a runtime note in front of a student's words (R19b);
+  // sessionKeyedVerdicts scopes unlabelled values to the sheet (2026-10-29).
+  for (const vs of sessionKeyedVerdicts(msgs, key, prior)) {
+    for (const v of vs) {
       if (v.verdict !== 'correct') continue;
       if (v.value) addValue(v.part ?? '', v.value);
       else done.add(v.part ?? '');
@@ -642,6 +648,79 @@ function collectConfirmed(
     if (p.values?.length && !done.has(label) && p.values.every((v) => values.get(label)?.has(v.name))) done.add(label);
   }
   return { done, values };
+}
+
+/**
+ * A message that asks for help with something other than the sheet's parts
+ * ("can you help me with …", "another problem"). Until the student names one
+ * of the key's parts again, an unlabelled value answers THAT, not the sheet.
+ */
+const OFF_SHEET_RE = /\b(?:can|could|would)\s+you\s+(?:please\s+)?help\s+(?:me\s+)?(?:with|on)\b|\bhelp\s+me\s+(?:with|on)\b|\b(?:another|a\s+new|a\s+different|my\s+own)\s+(?:problem|question|one)\b/i;
+
+/** The message names one of the key's parts (or an unkeyed one) by its label. */
+export function namesKeyPart(message: string, key: AnswerKey): boolean {
+  return labelMarks(normalize(stripRuntimeNote(message)).trim(), key).length > 0;
+}
+
+/**
+ * 2026-10-29 (local validation, AP Calc AB): the student brought their own
+ * new problem; on "can you check my answer x = 4" the 4 was matched to the
+ * sheet's part (a) and the tutor said "x = 4 is correct … both parts done".
+ * The keyed verdicts of a session's student messages, in order, scoped:
+ *   - while a question of the student's own (OFF_SHEET_RE) is the open topic
+ *     and they have not named a part since, an unlabelled value is never
+ *     judged against the key (the model check judges it against the open
+ *     question);
+ *   - an unlabelled value for a part already confirmed is a restatement —
+ *     acknowledged, never a fresh verdict.
+ * A labelled message is always judged. `prior`: marks confirmed before.
+ */
+export function sessionKeyedVerdicts(messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string> = []): KeyedVerdict[][] {
+  const done = new Set(sanitizeConfirmedMarks(prior).filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
+  let offSheet = false;
+  return messages.map((msg) => {
+    const text = stripRuntimeNote(msg);
+    const labelled = namesKeyPart(text, key);
+    if (labelled) offSheet = false;
+    else if (!isRuntimeNote(String(msg ?? '').trim()) && OFF_SHEET_RE.test(text)) { offSheet = true; return []; }
+    let vs = keyedVerdicts(msg, key);
+    if (!labelled) vs = offSheet ? [] : vs.filter((v) => !done.has(v.part ?? ''));
+    for (const v of vs) if (v.verdict === 'correct' && !v.value) done.add(v.part ?? '');
+    return vs;
+  });
+}
+
+/**
+ * Keep only the verdicts the sheet scope allows for the LAST of `messages`
+ * (sessionKeyedVerdicts' rules) — for verdicts from another source (the
+ * model check re-checked against the key).
+ */
+export function inSheetScope(messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string>, vs: ReadonlyArray<KeyedVerdict>): KeyedVerdict[] {
+  if (!messages.length) return [...vs];
+  const last = messages[messages.length - 1];
+  if (namesKeyPart(stripRuntimeNote(last), key)) return [...vs];
+  const done = new Set<string>();
+  for (const m of sanitizeConfirmedMarks(prior)) if (m.startsWith('part:')) done.add(m.slice(5));
+  let offSheet = false;
+  sessionKeyedVerdicts(messages.slice(0, -1), key, prior).forEach((mv, i) => {
+    const t = stripRuntimeNote(messages[i]);
+    if (namesKeyPart(t, key)) offSheet = false;
+    else if (!isRuntimeNote(String(messages[i] ?? '').trim()) && OFF_SHEET_RE.test(t)) offSheet = true;
+    for (const v of mv) if (v.verdict === 'correct' && !v.value) done.add(v.part ?? '');
+  });
+  if (!isRuntimeNote(String(last ?? '').trim()) && OFF_SHEET_RE.test(stripRuntimeNote(last))) return [];
+  return offSheet ? [] : vs.filter((v) => !done.has(v.part ?? ''));
+}
+
+/** This message's scoped keyed verdicts (sessionKeyedVerdicts), after the history's. */
+export function scopedKeyedVerdicts(
+  history: ReadonlyArray<{ role: 'user' | 'assistant'; content: unknown }>,
+  currentMessage: string,
+  key: AnswerKey,
+  prior: ReadonlyArray<string> = [],
+): KeyedVerdict[] {
+  const msgs = [...history.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), currentMessage];
+  return sessionKeyedVerdicts(msgs, key, prior).at(-1) ?? [];
 }
 
 /** Parts confirmed correct by any student message so far, this one included,
@@ -695,6 +774,33 @@ export function modelCheckConfirms(proposed: string, studentMessage: string, key
   const said = normExact(stripRuntimeNote(studentMessage));
   if (!p || !key?.parts?.length || !said.includes(normExact(p))) return [];
   return keyedVerdicts(p, key).filter((v) => v.verdict === 'correct');
+}
+
+/**
+ * 2026-10-29: a prose part (an explanation; key-solve.ts sameStatement) has no
+ * deterministic match. It is confirmed by a HIGH-confidence model answer
+ * check saying correct — the caller checks that — for the one prose part the
+ * message answers: the one it labels, or, unlabelled, the only part still
+ * open when that part is prose. Sheet scope applies (inSheetScope). Never a
+ * denial. `confirmed`: marks confirmed so far.
+ */
+export function proseModelCredit(messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string>, confirmed: ReadonlyArray<string>): KeyedVerdict[] {
+  if (!messages.length || !key?.parts?.some((p) => p.prose)) return [];
+  const last = normalize(stripRuntimeNote(messages[messages.length - 1])).trim();
+  if (!last) return [];
+  const done = new Set(confirmed.filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
+  const named = [...new Set(labelMarks(last, key).map((m) => m.label))];
+  let target: AnswerPart | undefined;
+  if (named.length) {
+    if (named.length !== 1) return [];
+    target = key.parts.find((p) => normLabel(p.label) === named[0]);
+  } else {
+    const open = key.parts.filter((p) => !done.has(normLabel(p.label)));
+    if (open.length === 1 && !(key.unkeyed ?? []).length) target = open[0];
+  }
+  if (!target?.prose || done.has(normLabel(target.label))) return [];
+  const v: KeyedVerdict = { verdict: 'correct', part: normLabel(target.label), matched: last.slice(0, 120) };
+  return inSheetScope(messages, key, prior, [v]);
 }
 
 /** The marks of correct keyed-verdict debug events (`part:<l>` / `value:<l>=<name>`), for the outcome. */

@@ -460,8 +460,8 @@ async function main() {
     has(route + turn, /HOMEWORK_PROBLEM_THINKING_DEADLINE_MS/);
     has(turn, /HOMEWORK_PROBLEM_THINKING_DEADLINE_MS = 8000/);
   });
-  await section('brain runs the keyed verdict with the 4 s model cap', () => {
-    has(brain, /keyedVerdict\(/);
+  await section('brain runs the scoped keyed verdict with the model cap', () => {
+    has(brain, /scopedKeyedVerdicts\(/);
     has(brain, /KEYED_VERDICT_MODEL_TIMEOUT_MS/);
     has(brain, /homework-problem-done/);
   });
@@ -657,6 +657,30 @@ async function main() {
       const r = await run('why does that work?', { homeworkProblem: { ...verifiedHp, sessionConfirmed: ['part:'] } });
       assert.match(r.content, /the problem is done\. Nothing is open/);
       assert.ok(r.events.some((e) => e.type === 'homework-problem-done'));
+    });
+    await section('2026-10-29 (Calc AB local): "check my answer x = 4" on the student\'s own problem is not credited to the sheet', async () => {
+      const K = numKey([['a', '4', 4], ['b', '1/6', 0.1667]]);
+      const hp = { text: '(a) lim x->2 (x^2-4)/(x-2) (b) lim x->0 (sqrt(x+9)-3)/x', verified: true, hasFigure: false, key: K };
+      const conversationHistory = [
+        { role: 'user' as const, content: 'For (a): factor, so the limit is 4.' }, { role: 'assistant' as const, content: 'Matches. Part (b)?' },
+        { role: 'user' as const, content: 'can you help me with lim as x -> 1 of (x^3 - 1)/(x - 1)' }, { role: 'assistant' as const, content: 'What do you get if you plug in x = 1?' },
+      ];
+      const r = await run('can you check my answer x = 4', { homeworkProblem: hp, conversationHistory });
+      assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict'), JSON.stringify(r.events.filter((e) => e.type === 'homework-keyed-verdict')));
+      assert.ok(!r.events.some((e) => e.type === 'homework-problem-done'));
+      assert.match(r.content, /Still open — part b/);
+    });
+    await section('2026-10-29: a prose part is recorded from a high-confidence model "correct"; scoped to the sheet', async () => {
+      const said = (verdict: string, confidence = 'high') => async () => { llmCalls++; return { text: JSON.stringify({ proposed_value: 'heat denatures it', problem_final_answer: '', proposed_equals_final_answer: verdict === 'correct', answers: 'overall_problem', target: 'part a', correct_value: '', verdict, confidence, differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 }; };
+      const PROSE: AnswerKey = { parts: [{ label: 'a', final: 'Heat denatures the enzyme.', canonical: { kind: 'text', value: 'Heat denatures the enzyme.' }, prose: true }], solvers: [] };
+      const hp = { text: '(a) Why does an enzyme stop working when hot?', verified: true, hasFigure: false, key: PROSE };
+      const ok = await run('For (a): heat breaks the bonds holding its shape, so it denatures', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('correct') } });
+      assert.ok(ok.events.some((e) => e.type === 'homework-keyed-verdict' && e.verdict === 'correct' && e.part === 'a'), 'prose credit frame');
+      assert.ok(ok.events.some((e) => e.type === 'homework-problem-done'));
+      const medium = await run('For (a): heat breaks the bonds holding its shape, so it denatures', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('correct', 'medium') } });
+      assert.ok(!medium.events.some((e) => e.type === 'homework-keyed-verdict'), 'medium confidence: no credit');
+      const wrong = await run('For (a): it gets used up', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('incorrect') } });
+      assert.ok(!wrong.events.some((e) => e.type === 'homework-keyed-verdict'), 'never a denial frame for a prose part');
     });
     await section('2026-10-26: a model "correct" becomes a keyed frame only when its proposed value confirms against the key', async () => {
       const said = (proposed: string) => async () => { llmCalls++; return { text: JSON.stringify({ proposed_value: proposed, problem_final_answer: '20', proposed_equals_final_answer: true, answers: 'overall_problem', target: 'x', correct_value: '20', verdict: 'correct', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 }; };

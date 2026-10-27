@@ -147,6 +147,7 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'When their value is right as far as it goes but the question asks for more (one of several values that work, one bound of two, one part of several): say what it does satisfy and that the question asks for more, and ask for the rest. Do not supply the rest.\n'
     + (ledger ? LEDGER_FINAL_ANSWER_RULE : 'When they gave the correct FINAL answer while a smaller step was open: show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n')
     + FINAL_ANSWER_ALSO_JUDGED_RULE
+    + ATTRIBUTE_STUDENT_CLAIM_RULE
     + 'When the message does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them their message "is not an answer".\n'
     + 'Work from the student\'s own problem and data, not from a value stated earlier in the conversation: an earlier line — yours included — can be wrong, and if your working now shows that one of yours was, say so plainly and use the corrected value.\n'
     + (TUTOR_AMBIGUOUS_EXPRESSION_RULE ? AMBIGUOUS_READING_TEXT_RULE : '')
@@ -160,6 +161,15 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
  *  never called wrong. */
 export const FINAL_ANSWER_ALSO_JUDGED_RULE =
   'When the message also states a final answer to the problem or to one of its parts, that final answer is judged in the same reply: a step that matches never stands in for a verdict on a final answer that does not match.\n';
+
+/** 2026-10-29 (local validation, Biology): "A competitive inhibitor binds the
+ *  allosteric site — that's actually a different kind of inhibitor" stated the
+ *  student's mistake as a fact. */
+export const ATTRIBUTE_STUDENT_CLAIM_RULE =
+  'When you name something the student said that does not hold, attribute it to them ("you said …", "you wrote …") — never state it as a fact in your own voice.\n';
+/** The voice form (a voice block never mentions writing or typing). */
+export const ATTRIBUTE_STUDENT_CLAIM_VOICE_RULE =
+  'When you name something the student said that does not hold, attribute it to them ("you said …") — never state it as a fact in your own voice.\n';
 
 // ── before display: a verdict or praise opener ─────────────────────────────
 

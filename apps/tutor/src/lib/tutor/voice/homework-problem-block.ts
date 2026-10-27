@@ -13,6 +13,7 @@ import type { AnswerKey } from '../homework-build/types';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { EXTRA_PROBLEM_SAME_RULES, LEDGER_CONDUCT_RULES, OFF_TOPIC_NOT_ANSWERED, PERSONAL_DETAILS_RULE } from '../lesson-plan/homework-ledger';
 import { boardRevealsWithheldAnswer, type RevealRead, type WithheldAnswer } from './whole-answer-reveal';
+import { ATTRIBUTE_STUDENT_CLAIM_RULE } from './work-then-match';
 
 /** Server-populated only (never from the request body). */
 export interface HomeworkProblemTurnInput {
@@ -47,6 +48,7 @@ export const HOMEWORK_PROBLEM_RULES = [
   '- When the student says they do not know or remember a fact to recall (a name, a definition, a formula), tell them after one miss and move on. This never applies to the problem\'s answer or to any numeric result.',
   '- The prior-work note, when there is one, is what happened last time on this problem.',
   '- When the record says every part is confirmed correct, say the problem is done and offer "Back to your list".',
+  `- ${ATTRIBUTE_STUDENT_CLAIM_RULE.trim()}`,
 ].join('\n');
 
 /** The homework path's conduct and safeguarding rules (crisis line, personal
@@ -137,7 +139,8 @@ export function sessionRecordLine(key: AnswerKey | undefined, confirmed: Readonl
   const open = labels.filter((l) => !done.includes(l));
   const unkeyed = (key.unkeyed ?? []).filter((l) => !labels.includes(l));
   if (!open.length && !unkeyed.length) {
-    return 'Record: every part of this problem is confirmed correct — the problem is done. Nothing is open: do not re-ask its questions or re-open its parts, and do not say anything is left for next time; offer "Back to your list".\n';
+    return 'Record: every part of this problem is confirmed correct — the problem is done. Nothing is open: do not re-ask its questions or re-open its parts, and do not say anything is left for next time; offer "Back to your list". '
+      + 'A follow-up (a "why", a bare value, a yes) is answered without posing any question whose answer is already confirmed, in any form — not as a check, a step to redo or a value to compute again; end by offering the list or a NEW question about something not yet worked, never a solved one.\n';
   }
   return `Record so far: confirmed correct — ${done.length ? nameList(done) : 'nothing yet'}.`
     + (open.length ? ` Still open — ${nameList(open)}.` : '')

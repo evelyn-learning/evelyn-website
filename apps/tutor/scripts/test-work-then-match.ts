@@ -631,6 +631,13 @@ async function main() {
     assert.ok(formatVoiceWorkThenMatchBlock('x is 3 so the answer is 7').includes(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE.trim()));
     assert.ok(!/angle|formula|inequalit|enzyme/i.test(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE), 'generic');
   });
+  await test('2026-10-29: text + voice: a correction attributes the student\'s claim, never states it as fact', async () => {
+    const wtm = await import('../src/lib/tutor/voice/work-then-match');
+    const { formatVoiceWorkThenMatchBlock } = await import('../src/lib/tutor/voice/voice-judging');
+    assert.ok(formatWorkThenMatchBlock('it binds the other site').includes(wtm.ATTRIBUTE_STUDENT_CLAIM_RULE.trim()));
+    assert.ok(formatVoiceWorkThenMatchBlock('it binds the other site').includes(wtm.ATTRIBUTE_STUDENT_CLAIM_VOICE_RULE.trim()));
+    assert.ok(!/inhibitor|enzyme|allosteric/i.test(wtm.ATTRIBUTE_STUDENT_CLAIM_RULE), 'generic');
+  });
   await test('keyed problem, no check returned: the tutor\'s own "checks out" credits nothing', async () => {
     const { resolveMatchCredit } = await import('../src/lib/tutor/voice/work-then-match');
     assert.deepEqual(resolveMatchCredit({ precheck: null, match: 'matches', keyedProblem: true }), { credit: 'none', source: 'none', disagreement: false });

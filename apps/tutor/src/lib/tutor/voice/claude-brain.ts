@@ -53,7 +53,7 @@ import {
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
-import { allKeyPartsConfirmed, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms } from './keyed-verdict';
+import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
 import { formatWorkThenMatchBlock } from './work-then-match';
@@ -2552,7 +2552,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const hpWithheld = hpKey
     ? homeworkKeyWithheld(input.homeworkProblem, [studentSaid, ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : ''))].join('\n'))
     : [];
-  const keyed = hpKey && input.textVerdictPrecheck === true && !ledgerKind ? keyedVerdict(studentSaid, hpKey) : null;
+  // 2026-10-29: scoped to the sheet — an unlabelled value while the student's own
+  // question is open, or one restating a confirmed part, is not judged by the key.
+  const hpPrior = [...(input.homeworkProblem?.priorConfirmed ?? []), ...(input.homeworkProblem?.sessionConfirmed ?? [])];
+  const hpScoped = hpKey ? scopedKeyedVerdicts(input.conversationHistory, studentSaid, hpKey, hpPrior) : [];
+  const keyed = hpKey && input.textVerdictPrecheck === true && !ledgerKind ? combineKeyedVerdicts(hpScoped) : null;
   /** This turn's model-check credit re-checked against the key (marks). */
   const hpModelCredit: string[] = [];
   const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
@@ -2566,7 +2570,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         yield { type: 'thinking' };
       } else {
         console.log(`[keyed-verdict] part=${keyed?.part ?? ''} verdict=${keyedResult.verdict} ms=0`);
-        for (const v of keyedVerdicts(studentSaid, hpKey!)) {
+        for (const v of hpScoped) {
           if (v.verdict !== 'undecided') yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: v.verdict, ...(v.value ? { value: v.value } : {}) };
         }
       }
@@ -2601,7 +2605,12 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         // 2026-10-26: a model "correct" becomes a recorded part only when its
         // proposed value — the student's own words — confirms against the key.
         if (hpKey && !keyedResult && result.verdict === 'correct' && result.confidence === 'high') {
-          for (const v of modelCheckConfirms(result.proposed ?? '', studentSaid, hpKey)) {
+          const hpMsgs = [...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), studentSaid];
+          // A prose part (an explanation) is confirmed by this check alone (keyed-verdict.ts proseModelCredit).
+          const hpProse = pub.answers === 'overall_problem'
+            ? proseModelCredit(hpMsgs, hpKey, hpPrior, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior))
+            : [];
+          for (const v of [...inSheetScope(hpMsgs, hpKey, hpPrior, modelCheckConfirms(result.proposed ?? '', studentSaid, hpKey)), ...hpProse]) {
             hpModelCredit.push(v.value ? `value:${v.part ?? ''}=${v.value}` : `part:${v.part ?? ''}`);
             yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: 'correct', ...(v.value ? { value: v.value } : {}) };
           }
