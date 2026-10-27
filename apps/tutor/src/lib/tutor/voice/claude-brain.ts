@@ -53,8 +53,9 @@ import {
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_DONE_GUARD, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
-import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, offSheetTopicOpen, proseCreditTarget, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
+import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, offSheetTopicOpen, proseCreditForPart, proseMatchCandidates, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
 import { proseAnswerMatches, type ProseAnswerMatchFn } from './prose-answer-match';
+import type { KeyedVerdict } from './keyed-verdict';
 import type { AnswerKey } from '../homework-build/types';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
@@ -2679,24 +2680,38 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         : input.verdictPrecheckDeps);
       const ms = keyedResult ? 0 : Date.now() - startedAt;
       input.verdictPrecheckDeps?.onResult?.(result, ms);
-      if (result && hpKey && !keyedResult && !hpDoneBefore && !result.disputed && !result.wrongStep && !result.wrongProblems?.length
+      // GAC review 2026-10-27 (Biology): a worded answer to a prose part —
+      // found partly right with nothing wrong, right at less than high
+      // confidence, or not checked in time — is compared with the key's
+      // statement and the part's own question (prose-answer-match.ts).
+      let proseCredited: KeyedVerdict[] = [];
+      if (hpKey && !keyedResult && !hpDoneBefore && (!result || (!result.disputed && !result.wrongStep && !result.wrongProblems?.length
         && (result.answers === 'overall_problem' || result.answers === 'open_question')
-        && (result.verdict === 'partly_correct' || (result.verdict === 'correct' && result.confidence !== 'high'))) {
-        // GAC review 2026-10-27 (Biology): a worded answer to a prose part,
-        // found partly right with nothing wrong, is compared with the key's
-        // statement and the part's own question (prose-answer-match.ts).
+        && (result.verdict === 'partly_correct' || (result.verdict === 'correct' && result.confidence !== 'high'))))) {
         const hpMsgsP = [...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), studentSaid];
-        const proseTarget = proseCreditTarget(hpMsgsP, hpKey, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior), result.answers);
-        if (proseTarget && proseModelCredit(hpMsgsP, hpKey, hpPrior, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior), result.answers).length) {
+        const confirmedP = confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior);
+        const candidates = proseMatchCandidates(hpMsgsP, hpKey, confirmedP, result?.answers ?? 'overall_problem')
+          .filter((part) => proseCreditForPart(hpMsgsP, hpKey, hpPrior, part).length);
+        if (candidates.length) {
           const t0 = Date.now();
-          const match = await (input.verdictPrecheckDeps?.proseAnswerMatch ?? proseAnswerMatches)({
-            problem: input.homeworkProblem?.text ?? '', label: proseTarget.label, keyStatement: proseTarget.final, studentMessage: studentSaid,
-          });
-          console.log(`[prose-answer-match] part=${proseTarget.label} ${match === null ? 'no reply' : match ? 'answers the part' : 'does not answer the part'} · ${Date.now() - t0} ms`);
-          if (match === true) {
-            result.verdict = 'correct';
-            result.confidence = 'high';
-            delete result.missingOnly;
+          const matchFn = input.verdictPrecheckDeps?.proseAnswerMatch ?? proseAnswerMatches;
+          const found = await Promise.all(candidates.map((part) => matchFn({
+            problem: input.homeworkProblem?.text ?? '', label: part.label, keyStatement: part.final, studentMessage: studentSaid,
+          })));
+          console.log(`[prose-answer-match] ${candidates.map((part, i) => `part=${part.label} ${found[i] === null ? 'no reply' : found[i] ? 'answers the part' : 'does not answer the part'}`).join(' · ')} · ${Date.now() - t0} ms`);
+          const hits = candidates.filter((_, i) => found[i] === true);
+          if (hits.length === 1) {
+            proseCredited = proseCreditForPart(hpMsgsP, hpKey, hpPrior, hits[0]);
+            for (const v of proseCredited) {
+              hpModelCredit.push(`part:${v.part ?? ''}`);
+              yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: 'correct' };
+            }
+            if (proseCredited.length) console.log(`[keyed-verdict] prose answer confirmed by the key: ${hpModelCredit.join(' ')}`);
+            if (result && proseCredited.length) {
+              result.verdict = 'correct';
+              result.confidence = 'high';
+              delete result.missingOnly;
+            }
           }
         }
       }
@@ -2705,7 +2720,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${pub.differsAt ? ` differs_at="${pub.differsAt}"` : ''}${precheckInforms(pub) ? '' : ' (not injected)'}`);
         // 2026-10-26: a model "correct" becomes a recorded part only when its
         // proposed value — the student's own words — confirms against the key.
-        if (hpKey && !keyedResult && result.verdict === 'correct' && result.confidence === 'high') {
+        if (hpKey && !keyedResult && !proseCredited.length && result.verdict === 'correct' && result.confidence === 'high') {
           const hpMsgs = [...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), studentSaid];
           // A prose part (an explanation) is confirmed by this check alone (keyed-verdict.ts proseModelCredit).
           const hpProse = proseModelCredit(hpMsgs, hpKey, hpPrior, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior), pub.answers);

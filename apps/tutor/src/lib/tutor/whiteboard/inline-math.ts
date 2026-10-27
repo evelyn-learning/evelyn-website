@@ -651,6 +651,18 @@ function wrapBareLatex(text: string): string {
       i = dollar + 1;
       continue;
     }
+    // GAC production check 2026-10-27 (AP Calculus BC): display maths
+    // `$$…$$` read as an empty `$$` span, so its body was wrapped again
+    // (`$$$\frac…$$$`) and the bubble showed raw dollars. Opaque as a whole.
+    if (text.startsWith('$$', dollar)) {
+      const dClose = text.indexOf('$$', dollar + 2);
+      if (dClose >= 0) {
+        out.push(autoWrapPlainText(text.slice(i, dollar)));
+        out.push(text.slice(dollar, dClose + 2));
+        i = dClose + 2;
+        continue;
+      }
+    }
     const close = text.indexOf('$', dollar + 1);
     if (close < 0) { out.push(autoWrapPlainText(text.slice(i))); break; }
     out.push(autoWrapPlainText(text.slice(i, dollar)));

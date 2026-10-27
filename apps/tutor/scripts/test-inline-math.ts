@@ -869,5 +869,14 @@ console.log('\n=== Bubbles wrap un-delimited maths (GAC live 2026-10-16) ===');
   check('unclosed $$ stays text', mathBodies('price $$ and more').length === 0);
 }
 
+{
+  // GAC production check 2026-10-27 (AP Calculus BC): the bubble path wraps bare LaTeX first; a
+  // \frac inside $$…$$ was wrapped again ($$$\frac…$$$) and the bubble showed raw dollars.
+  const live = String.raw`Let's look at why the cancelling is allowed.  $$\frac{x^2 - 9}{x - 3} = \frac{(x - 3)(x + 3)}{x - 3} = x + 3, \quad x \neq 3$$ The step is valid because $x-3$ is not 0.`;
+  const prepared = prepareBubbleText(live);
+  check('bubble path: $$…$$ passes the auto-wrap untouched', prepared === live, prepared);
+  check('bubble path: one display span, no literal $', mathBodies(prepared)[0] === String.raw`\frac{x^2 - 9}{x - 3} = \frac{(x - 3)(x + 3)}{x - 3} = x + 3, \quad x \neq 3` && !joined(prepared).includes('$'), joined(prepared));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

@@ -838,6 +838,35 @@ export function proseCreditTarget(
   return target;
 }
 
+/**
+ * GAC production check 2026-10-27 (Biology): part (a)'s check ran out of time,
+ * so (a) was never recorded, and the hedged answer to (b) came unlabelled with
+ * two parts open — proseCreditTarget names none. The open prose parts an
+ * unlabelled message may answer (at most three) are each compared with the key
+ * (prose-answer-match.ts); a part is credited only when exactly one matches.
+ */
+export function proseMatchCandidates(
+  messages: ReadonlyArray<string>, key: AnswerKey, confirmed: ReadonlyArray<string>, answers: string = 'overall_problem',
+): AnswerPart[] {
+  const one = proseCreditTarget(messages, key, confirmed, answers);
+  if (one) return [one];
+  if (!messages.length || !key?.parts?.some((p) => p.prose)) return [];
+  if (answers !== 'overall_problem' && answers !== 'open_question') return [];
+  const last = normalize(stripRuntimeNote(messages[messages.length - 1])).trim();
+  if (!last || labelMarks(last, key).length) return [];
+  const done = new Set(confirmed.filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
+  const open = key.parts.filter((p) => p.prose && !done.has(normLabel(p.label)));
+  return open.length <= 3 ? open : [];
+}
+
+/** The scoped credit for one prose part the last message answers (inSheetScope). */
+export function proseCreditForPart(messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string>, part: AnswerPart): KeyedVerdict[] {
+  if (!messages.length || !part.prose) return [];
+  const last = normalize(stripRuntimeNote(messages[messages.length - 1])).trim();
+  if (!last) return [];
+  return inSheetScope(messages, key, prior, [{ verdict: 'correct', part: normLabel(part.label), matched: last.slice(0, 120) }]);
+}
+
 /** The marks of correct keyed-verdict debug events (`part:<l>` / `value:<l>=<name>`), for the outcome. */
 export function marksFromKeyedEvents(events: ReadonlyArray<{ type?: unknown; message?: unknown }> | null | undefined): string[] {
   const out: string[] = [];

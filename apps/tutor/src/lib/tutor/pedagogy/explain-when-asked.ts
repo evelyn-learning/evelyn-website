@@ -13,11 +13,13 @@
  * defined a term by a property that holds only in a common special case (a
  * pairing of angles "sit side by side", which the definition does not
  * require). DEFINITION_AS_STATED: a definition or rule is stated with exactly
- * its own conditions.
+ * its own conditions. Production check the same day: the tutor drew the two
+ * angles on a straight line itself and then said they "sit side by side on a
+ * straight line" — an arrangement the problem never gave.
  */
 
 export const DEFINITION_AS_STATED =
-  'State a definition or rule exactly as the subject states it, with its own conditions and nothing added: a property that holds only in the drawing, in this example or in a common special case is not part of it, so never say it as if it were (say it is true here, if it matters).';
+  'State a definition or rule exactly as the subject states it, with its own conditions and nothing added: a property that holds only in the drawing, in this example or in a common special case is not part of it, so never say it as if it were (say it is true here, if it matters). The same holds for the problem\'s objects: never draw or describe them in a position or arrangement the problem does not state as if the problem gave it — when a drawing needs one, say it shows one possible case.';
 
 /** Lessons and every non-homework session (core system prompt). */
 export const EXPLAIN_WHEN_ASKED_RULE =

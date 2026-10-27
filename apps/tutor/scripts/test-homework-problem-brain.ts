@@ -434,6 +434,7 @@ async function main() {
     assert.ok(ew.EXPLAIN_WHEN_ASKED_RULE.includes(ew.DEFINITION_AS_STATED));
     assert.ok(ew.HOMEWORK_EXPLAIN_WHEN_ASKED_RULE.includes(ew.DEFINITION_AS_STATED));
     assert.match(ew.DEFINITION_AS_STATED, /common special case is not part of it/);
+    assert.match(ew.DEFINITION_AS_STATED, /say it shows one possible case/);
   });
   await section('GAC review 2026-10-27: the own-question line renders only on request', async () => {
     const blk = await import('../src/lib/tutor/voice/homework-problem-block');
@@ -770,6 +771,29 @@ async function main() {
       await run(msg, { homeworkProblem: { ...hp, sessionConfirmed: ['part:a', 'part:b'] }, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async () => { calls++; return true; } } });
       await run('maybe 25?', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async () => { calls++; return true; } } });
       assert.equal(calls, 0, 'compared only for an open prose part with nothing found wrong');
+    });
+    await section('GAC production check 2026-10-27 (Biology): (a) never recorded (check timed out), the unlabelled hedge is matched against each open prose part', async () => {
+      const BIOK: AnswerKey = { parts: [
+        { label: 'a', final: 'High temperature denatures the enzyme.', canonical: { kind: 'text', value: 'High temperature denatures the enzyme.' }, prose: true },
+        { label: 'b', final: 'A competitive inhibitor mimics the substrate and binds the active site, blocking substrate binding.', canonical: { kind: 'text', value: 'A competitive inhibitor mimics the substrate and binds the active site, blocking substrate binding.' }, prose: true },
+      ], solvers: [] };
+      const hp = { text: 'Homework questions on enzymes: (a) Why does an enzyme stop working when the temperature gets too high? (b) What does a competitive inhibitor do to an enzyme\'s active site?', verified: true, hasFigure: false, key: BIOK };
+      const conversationHistory = [
+        { role: 'user' as const, content: 'For (a): high heat breaks the bonds that hold the enzyme\'s 3D shape, so it denatures.' }, { role: 'assistant' as const, content: 'That matches. Part (b)?' },
+        { role: 'user' as const, content: 'For (b): a competitive inhibitor binds to the allosteric site.' }, { role: 'assistant' as const, content: 'That step does not hold. What is it competing with?' },
+      ];
+      const msg = "I don't know, maybe it binds in the active site itself and blocks the substrate from getting in?";
+      const never = () => new Promise<never>(() => {});
+      const onlyB = async (req: Record<string, string>) => req.label === 'b';
+      const timedOut = await run(msg, { homeworkProblem: hp, conversationHistory, verdictPrecheckDeps: { llm: never, timeoutMs: 50, proseAnswerMatch: onlyB } });
+      assert.ok(timedOut.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'b'), 'part (b) recorded with no check result');
+      assert.ok(!timedOut.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'a'));
+      assert.match(timedOut.content, /confirmed correct — part b\. Still open — part a/);
+      const medium = async () => { llmCalls++; return { text: JSON.stringify({ proposed_value: 'binds in the active site', problem_final_answer: '', proposed_equals_final_answer: true, answers: 'overall_problem', target: 'part b', correct_value: '', verdict: 'correct', confidence: 'medium', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 }; };
+      const r = await run(msg, { homeworkProblem: hp, conversationHistory, verdictPrecheckDeps: { llm: medium, proseAnswerMatch: onlyB } });
+      assert.equal(r.events.filter((e) => e.type === 'homework-keyed-verdict').length, 1, 'credited once');
+      const both = await run(msg, { homeworkProblem: hp, conversationHistory, verdictPrecheckDeps: { llm: medium, proseAnswerMatch: async () => true } });
+      assert.ok(!both.events.some((e) => e.type === 'homework-keyed-verdict'), 'two matches: no credit');
     });
     await section('GAC review 2026-10-27 (AP Calculus BC): with the sheet done and the student\'s own limit open, a value is about their question', async () => {
       const K = numKey([['a', '6', 6], ['b', '1/4', 0.25]]);
