@@ -247,6 +247,17 @@ async function main() {
     assert.deepEqual(keyedVerdicts('For (a): yes it is fine', K).filter((v) => v.verdict !== 'undecided'), []);
     assert.deepEqual(keyedVerdicts("I don't know, maybe no, because it was not random?", K), []);
   });
+  await section('round 3 (Haiku, local2 Biology portal-b0f68914): prose credit by the check\'s `answers`', () => {
+    const credit = (i: number, confirmed: string[], answers: string) => proseModelCredit(BIO_MSGS.slice(0, i + 1), BIOLOGY, [], confirmed, answers).map((v) => v.part);
+    assert.deepEqual(credit(0, [], 'open_question'), ['a'], 'labelled: the open question was that part');
+    assert.deepEqual(credit(2, ['part:a'], 'overall_problem'), ['b'], 'the hedge proposing the only open part, checked as its answer');
+    assert.deepEqual(credit(2, ['part:a'], 'open_question'), [], 'unlabelled + open_question: may be a smaller step — not counted');
+    assert.deepEqual(credit(0, [], 'other_part'), []);
+  });
+  await section('round 3: an unverified problem still says a plainly false claim is not right, as the student\'s claim', () => {
+    const b = formatHomeworkProblemBlock({ text: 'P', verified: false, hasFigure: false });
+    assert.match(b, /say plainly that it is not right, as their claim \("you said …, but that is not right"\)/);
+  });
   await section('record: nothing open → a follow-up poses no solved question; corrections attribute the student\'s claim', () => {
     assert.match(sessionRecordLine(CALC, ['part:a', 'part:b']), /without posing any question whose answer is already confirmed/);
     assert.match(sessionRecordLine(CALC, ['part:a', 'part:b']), /a NEW question about something not yet worked, never a solved one/);

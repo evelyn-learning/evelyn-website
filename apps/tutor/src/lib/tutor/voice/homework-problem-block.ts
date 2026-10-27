@@ -38,7 +38,7 @@ export const HOMEWORK_PROBLEM_NO_FIGURE =
 export const HOMEWORK_PROBLEM_VERIFIED =
   'Check the student\'s final answer against the expected answer in <active_problem> and say plainly whether it matches. The expected answer is correct: before you assert a relation or an intermediate value, make sure it is consistent with the expected values, and when the student\'s claim is consistent with them and yours is not, the student is right — say so and continue from their claim.';
 export const HOMEWORK_PROBLEM_UNVERIFIED =
-  'This problem has no checked answer, so never say whether the student\'s final answer is right or wrong — work it through step by step with the student and ask them to check their final result with their teacher. You still name a slip in their working (an arithmetic error, a sign, a misread value) and a plainly false general statement in their message, and you answer their request to check such a statement. Never tell them their message is not an answer. This overrides every other line of this message that asks you to grade a final answer or say whether it matches.';
+  'This problem has no checked answer, so never say whether the student\'s final answer is right or wrong — work it through step by step with the student and ask them to check their final result with their teacher. You still name a slip in their working (an arithmetic error, a sign, a misread value) and a plainly false general statement in their message — say plainly that it is not right, as their claim ("you said …, but that is not right"), before any question — and you answer their request to check such a statement. Never tell them their message is not an answer. This overrides every other line of this message that asks you to grade a final answer or say whether it matches.';
 
 /** The rules every homework-problem turn carries. */
 export const HOMEWORK_PROBLEM_RULES = [
@@ -121,6 +121,14 @@ function priorConfirmedLine(marks: string[] | undefined): string {
   return `Already confirmed correct in an earlier session: ${items.join('; ')}. Do not ask for these again; acknowledge them briefly and continue with what is left.\n`;
 }
 
+/** 2026-10-29: the verdict guard of a turn on a problem already done (claude-brain.ts hpDoneBefore). */
+export const HOMEWORK_PROBLEM_DONE_GUARD = '<verdict_guard>\n'
+  + 'Every part of this problem was already confirmed correct before this message: the problem is done, and every question you asked about it is closed — the last one included. '
+  + 'Do not ask any of them again, or any question whose answer is already confirmed, in any form: not as a check, a step to redo, a value to compute again or "how did you get it". '
+  + 'Answer what the student just said: explain when they ask why, and say a repeated value is already settled. Then offer to go back to their list, or take up a new question they bring — that one is worked as usual. '
+  + 'Never tell them their message is not an answer.\n'
+  + '</verdict_guard>\n\n';
+
 const partName = (l: string) => (l ? `part ${l}` : 'the answer');
 const nameList = (ls: string[]) => ls.map(partName).join(', ');
 
@@ -144,7 +152,7 @@ export function sessionRecordLine(key: AnswerKey | undefined, confirmed: Readonl
   }
   return `Record so far: confirmed correct — ${done.length ? nameList(done) : 'nothing yet'}.`
     + (open.length ? ` Still open — ${nameList(open)}.` : '')
-    + (unkeyed.length ? ` Not checkable — ${nameList(unkeyed)}: there is no checked answer for it, so never say whether its final answer is right or wrong (a slip in the working you still name).` : '')
+    + (unkeyed.length ? ` Not checkable — ${nameList(unkeyed)}: there is no checked answer for it, so never say whether its final answer is right or wrong (a slip in the working, or a plainly false statement, you still say is not right, as their claim).` : '')
     + ' Call a part done or right only when the record lists it as confirmed. When the answer check says a value is right but the record does not list its part, say the value matches and ask how they got it — never call the part done. Never re-open a confirmed part.\n';
 }
 

@@ -237,13 +237,23 @@ export function formatAnswerCheckBlock(
      *  `NEXT_MOVE_AFTER_CONFIRM_RULE`, so the reply carries the next move.
      *  Unset/false ⇒ the block as before. */
     nextMoveAfterConfirm?: boolean;
+    /** 2026-10-29: one-problem homework — with this answer every part is
+     *  confirmed on the record: `PROBLEM_DONE_AFTER_CONFIRM_RULE` replaces the
+     *  next-move rule (no "show me the working" on a finished problem). */
+    problemDone?: boolean;
+    /** 2026-10-29: one-problem homework — the check says correct but the record
+     *  cannot count it: `NOT_RECORDED_CORRECT_RULE` (never "right / matches"). */
+    notRecorded?: boolean;
   },
 ): string {
   const block = formatAnswerCheckBlockBase(p, opts);
   if (!block || !p || p.disputed === true || p.answers === 'neither' || p.verdict !== 'correct') return block;
   if (!block.endsWith(ANSWER_CHECK_END)) return block;
+  if (opts?.notRecorded === true) return block.slice(0, -ANSWER_CHECK_END.length) + NOT_RECORDED_CORRECT_RULE + ANSWER_CHECK_END;
   const rules = (opts?.statedReasonCheck === true && !block.includes(UNSURE_CORRECT_RULE) ? STATED_REASON_CHECK_RULE : '')
-    + (opts?.nextMoveAfterConfirm === true && nextMoveFits(block) ? NEXT_MOVE_AFTER_CONFIRM_RULE : '');
+    + (opts?.problemDone === true
+      ? PROBLEM_DONE_AFTER_CONFIRM_RULE
+      : (opts?.nextMoveAfterConfirm === true && nextMoveFits(block) ? NEXT_MOVE_AFTER_CONFIRM_RULE : ''));
   if (!rules) return block;
   return block.slice(0, -ANSWER_CHECK_END.length) + rules + ANSWER_CHECK_END;
 }
@@ -262,6 +272,18 @@ export const STATED_REASON_CHECK_RULE =
 // Final review (finding 4): "with one question" — stacked on
 // CORRECT_GO_NO_FURTHER_RULE ("ask them to show the step that gets there") the
 // old "ask the next question" could make a reply carry two asks.
+// 2026-10-29 (local validation on Haiku, AP Chemistry): the hedge that completed
+// the problem was confirmed, then "walk me through how you got there" — and the
+// solved step was asked again for three turns after the problem was done.
+export const PROBLEM_DONE_AFTER_CONFIRM_RULE =
+  'With this answer every part of the problem is confirmed: say that it is right and that the problem is done, and offer to go back to their list. Do not ask them to show their working or any step, and pose no question about this problem — this overrides any line above that asks for a step, the working or the next move.\n';
+
+// 2026-10-29 (local validation on Haiku, AP Biology): "That matches what you
+// wrote for part (a)" for a part the record never counted — the part was then
+// re-opened and left "still open" at the wrap-up.
+export const NOT_RECORDED_CORRECT_RULE =
+  'This answer cannot be counted on the problem\'s record yet, so do not call it right, correct, matching or done — this overrides any line above that says to confirm it. Say what in it checks out against the problem, then ask one question that has them state their whole answer to the part it belongs to, naming the part.\n';
+
 export const NEXT_MOVE_AFTER_CONFIRM_RULE =
   'Then, in the same reply, move the problem forward with one question toward what the problem still asks, or, when every part is now confirmed, say the problem is done. Never end on the confirmation alone.\n';
 

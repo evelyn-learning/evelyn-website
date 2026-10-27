@@ -44,6 +44,7 @@ const numKey = (parts: Array<[string, string, number, string?]>): AnswerKey => (
 
 async function main() {
   const kv = await import('../src/lib/tutor/voice/keyed-verdict');
+  const { NOT_RECORDED_CORRECT_RULE, PROBLEM_DONE_AFTER_CONFIRM_RULE } = await import('../src/lib/tutor/voice/verdict-precheck-shared');
   const { keyedVerdict, KEYED_VERDICT_MODEL_TIMEOUT_MS } = kv;
 
   console.log('a keyedVerdict');
@@ -505,7 +506,12 @@ async function main() {
     assert.equal(r.homeworkProblem.verified, false);
     assert.equal(r.homeworkProblem.key, undefined);
     assert.equal(r.activeProblem, undefined, 'an unverified problem carries no <active_problem>');
-    assert.equal(builds, 0, 'the build is never read for an unverified plan');
+    assert.equal(builds, 1, '2026-10-29: the build is read for an unverified plan too (it may have finished since the mint)');
+    // Biology local portal-b0f68914: minted while the build was preparing; the key was ready seconds later.
+    const late = await t.resolveHomeworkProblemTurn('p2late', { getPlan: async () => plan as never, getBuild: async () => ({ problems: [{ n: 1, status: 'ready', key: AB }] }) as never, noCache: true });
+    assert.equal(late!.homeworkProblem.verified, true, 'a build ready after the mint makes the turn verified');
+    const prep = await t.resolveHomeworkProblemTurn('p2prep', { getPlan: async () => plan as never, getBuild: async () => ({ problems: [{ n: 1, status: 'preparing', key: null }] }) as never, noCache: true });
+    assert.equal(prep!.homeworkProblem.verified, false, 'still preparing: unverified');
     const none = await t.resolveHomeworkProblemTurn('p3', { getPlan: async () => ({ metadata: { kind: 'homework-help' } }) as never, getBuild: async () => null, noCache: true });
     assert.equal(none, null);
   });
@@ -531,7 +537,7 @@ async function main() {
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I think x = 4')], verified: true, key }), 'in_progress');
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [], transcript: [stu('I think x = 4')], verified: true, key, finished: true }), 'needs_review');
     const route = readSrc('app/api/portal/v1/homework-problem-outcome/route.ts');
-    assert.match(route, /const build = meta\?\.verified \? await getHomeworkBuild\(meta\.parentPlanId\)/, 'the key is loaded for every outcome call, not only a finish');
+    assert.match(route, /const build = meta \? await getHomeworkBuild\(meta\.parentPlanId\)/, 'the key is loaded for every outcome call, not only a finish — for a plan minted unverified too');
   });
   await section('done when homework_problem_done is recorded', () => {
     assert.equal(oc.classifyHomeworkProblemOutcome({ debugEvents: [ev('homework_problem_done', 'done')], transcript: [], verified: true }), 'done');
@@ -658,6 +664,52 @@ async function main() {
       assert.match(r.content, /the problem is done\. Nothing is open/);
       assert.ok(r.events.some((e) => e.type === 'homework-problem-done'));
     });
+    // Round 3 (local validation on Haiku, 2026-10-29): real builds and messages.
+    const checkSays = (verdict: string, answers: string, proposed = '') => async () => { llmCalls++; return { text: JSON.stringify({ proposed_value: proposed, problem_final_answer: '', proposed_equals_final_answer: verdict === 'correct', answers, target: 'the part', correct_value: '', verdict, confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 }; };
+    const APBIO: AnswerKey = { parts: [
+      { label: 'a', final: 'During dehydration synthesis, water is released as monomers bond, formed from an -OH and an -H from the joining molecules.', canonical: { kind: 'text', value: 'During dehydration synthesis, water is released as monomers bond, formed from an -OH and an -H from the joining molecules.' }, prose: true },
+      { label: 'b', final: '9 water molecules', canonical: { kind: 'number', value: 9, units: 'water molecules' } },
+    ], solvers: [] };
+    const apbioHp = { text: '(a) What happens to water during dehydration synthesis?\n(b) How many water molecules are needed to break a chain of 10 glucose units completely into monomers?', verified: true, hasFigure: false, key: APBIO };
+    await section('AP Bio local2 (portal-ab6ea6ec): a labelled prose answer checked "open_question" correct is recorded', async () => {
+      const r = await run('For (a): a water molecule is removed (released) when two monomers bond, an H from one and an OH from the other.', { homeworkProblem: apbioHp, verdictPrecheckDeps: { llm: checkSays('correct', 'open_question', 'a water molecule is removed when two monomers bond') } });
+      assert.ok(r.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'a' && e.verdict === 'correct'), 'part (a) recorded');
+      assert.match(r.content, /confirmed correct — part a\. Still open — part b\./);
+    });
+    await section('a correct check the record cannot count is never called right (unlabelled, one part open)', async () => {
+      const r = await run('maybe it is because water leaves when they join', { homeworkProblem: { ...apbioHp, sessionConfirmed: ['part:b'] }, verdictPrecheckDeps: { llm: checkSays('correct', 'open_question') } });
+      assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict'));
+      const r2 = await run('it is because water leaves when they join', { homeworkProblem: { ...apbioHp, sessionConfirmed: ['part:b'] }, verdictPrecheckDeps: { llm: checkSays('correct', 'overall_problem') } });
+      assert.ok(r2.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'a'), 'the only open part, checked as the final answer: recorded');
+      const brain = await import('../src/lib/tutor/voice/claude-brain');
+      assert.deepEqual(brain.homeworkConfirmFlags({ conversationHistory: [] }, 'For (a): water leaves', APBIO, ['part:b'], [], { keyedCorrect: false, answers: 'overall_problem' }), { notRecorded: true });
+      assert.deepEqual(brain.homeworkConfirmFlags({ conversationHistory: [] }, 'For (a): water leaves', APBIO, ['part:b'], ['part:a'], { keyedCorrect: false, answers: 'overall_problem' }), { problemDone: true });
+      assert.deepEqual(brain.homeworkConfirmFlags({ conversationHistory: [] }, 'water leaves', APBIO, [], [], { keyedCorrect: false, answers: 'overall_problem' }), {}, 'two parts open, none named: no flag');
+    });
+    const CHEM: AnswerKey = { parts: [{ label: 'a', final: 'CH2O', canonical: { kind: 'text', value: 'CH2O' } }, { label: 'b', final: 'C6H12O6', canonical: { kind: 'text', value: 'C6H12O6' } }], solvers: [] };
+    const chemHp = { text: '(a) A compound is 40.0% C, 6.7% H and 53.3% O by mass. Find its empirical formula. (b) The molar mass is 180 g/mol. What is the molecular formula?', verified: true, hasFigure: false, key: CHEM };
+    const chemHistory = [
+      { role: 'assistant' as const, content: 'What does 40.0% carbon mean in grams for a 100 g sample?' },
+      { role: 'user' as const, content: 'For (a): in 100 g, C = 40.0/12.01 = 3.33 mol, H = 6.7/1.008 = 6.65 mol, O = 53.3/16.00 = 3.33 mol. Dividing by 3.33 gives 1 : 2 : 1, so the empirical formula is CH2O.' },
+      { role: 'assistant' as const, content: 'That\'s the right empirical formula for part (a). What is the mass of one CH₂O unit?' },
+      { role: 'user' as const, content: 'For (b): CH2O is 30 g/mol and 180/30 = 3, so the molecular formula is C3H6O3.' },
+      { role: 'assistant' as const, content: 'Take another look at the division 180 ÷ 30: what does it actually equal?' },
+    ];
+    await section('AP Chem local2 (portal-6132780d): the hedge that completes the problem gets the done rule, not "walk me through it"', async () => {
+      const r = await run("I don't know, maybe C6H12O6?", { homeworkProblem: chemHp, conversationHistory: chemHistory });
+      const block = r.content.slice(r.content.indexOf('<answer_check>'), r.content.indexOf('</answer_check>'));
+      assert.ok(block.includes(PROBLEM_DONE_AFTER_CONFIRM_RULE.trim()), block);
+      assert.ok(!block.includes('Then, in the same reply, move the problem forward'), 'no next-move rule');
+    });
+    await section('AP Chem local2: after the problem is done, "why does that work?" / "CH2O" / "yes" get the done guard, no open-question frames', async () => {
+      const history = [...chemHistory, { role: 'user' as const, content: "I don't know, maybe C6H12O6?" }, { role: 'assistant' as const, content: 'Your C₆H₁₂O₆ matches. What whole number n makes n × 30 equal 180?' }];
+      for (const msg of ['why does that work?', 'CH2O', 'yes']) {
+        const r = await run(msg, { homeworkProblem: chemHp, conversationHistory: history });
+        assert.ok(r.content.includes('every question you asked about it is closed'), `${msg}: done guard`);
+        assert.ok(!r.content.includes('<active_question>\n'), `${msg}: no active-question block`);
+        assert.ok(!r.content.includes('WORK IT, THEN MATCH'), `${msg}: no work-then-match guard`);
+      }
+    });
     await section('2026-10-29 (Calc AB local): "check my answer x = 4" on the student\'s own problem is not credited to the sheet', async () => {
       const K = numKey([['a', '4', 4], ['b', '1/6', 0.1667]]);
       const hp = { text: '(a) lim x->2 (x^2-4)/(x-2) (b) lim x->0 (sqrt(x+9)-3)/x', verified: true, hasFigure: false, key: K };
@@ -738,7 +790,10 @@ async function main() {
       assert.ok(okCalls > 0, 'the model check ran (the key left it undecided)');
       const block = answerCheckOf(modelChecked.content);
       assert.ok(block.length > 0, 'model-check block injected');
-      for (const re of STATED_REASON) assert.match(block, re);
+      // 2026-10-29: "twenty" cannot be counted on the record (not confirmed by the key) → never called right.
+      assert.ok(block.includes(NOT_RECORDED_CORRECT_RULE.trim()), block);
+      const counted = answerCheckOf((await run('so it is twenty, x = 20 or 25', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: okLlm } })).content);
+      for (const re of STATED_REASON) assert.match(counted, re);
     });
     await section('F6 carried correct verdict (transport retry): rule kept WITH hpKey, absent WITHOUT — text and voice', async () => {
       const carry = { answers: 'overall_problem' as const, target: 'x', proposed: '20', verdict: 'correct' as const, confidence: 'high' as const };
@@ -820,7 +875,8 @@ async function main() {
       assert.ok(block.length > 0, 'model-check block injected');
       assert.ok(block.includes(NEXT_MOVE_SENTENCE), 'model-checked correct with hpKey: next move present');
       const keyed = answerCheckOf((await run('x = 60/3 = 20', { homeworkProblem: verifiedHp })).content);
-      assert.ok(keyed.includes(NEXT_MOVE_SENTENCE), 'keyed correct with hpKey: next move present');
+      // 2026-10-29: this answer completes the one-part problem → the done rule replaces the next move.
+      assert.ok(keyed.includes(PROBLEM_DONE_AFTER_CONFIRM_RULE.trim()) && !keyed.includes(NEXT_MOVE_SENTENCE), 'keyed correct completing the problem: done rule');
       const plain = await run('x = 60/3 = 20', { verdictPrecheckDeps: { llm: okLlm } });
       assert.ok(plain.content.includes('<answer_check>'), 'no-hp block injected');
       assert.ok(!plain.content.includes(NEXT_MOVE_SENTENCE), 'no-hp: next move absent');

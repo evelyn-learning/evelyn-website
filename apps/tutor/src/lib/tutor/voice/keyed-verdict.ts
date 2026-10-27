@@ -657,6 +657,11 @@ function collectConfirmed(
  */
 const OFF_SHEET_RE = /\b(?:can|could|would)\s+you\s+(?:please\s+)?help\s+(?:me\s+)?(?:with|on)\b|\bhelp\s+me\s+(?:with|on)\b|\b(?:another|a\s+new|a\s+different|my\s+own)\s+(?:problem|question|one)\b/i;
 
+/** The labels of the key's parts (unkeyed included) the message names. */
+export function namedKeyParts(message: string, key: AnswerKey): string[] {
+  return [...new Set(labelMarks(normalize(stripRuntimeNote(message)).trim(), key).map((m) => m.label))];
+}
+
 /** The message names one of the key's parts (or an unkeyed one) by its label. */
 export function namesKeyPart(message: string, key: AnswerKey): boolean {
   return labelMarks(normalize(stripRuntimeNote(message)).trim(), key).length > 0;
@@ -784,13 +789,21 @@ export function modelCheckConfirms(proposed: string, studentMessage: string, key
  * open when that part is prose. Sheet scope applies (inSheetScope). Never a
  * denial. `confirmed`: marks confirmed so far.
  */
-export function proseModelCredit(messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string>, confirmed: ReadonlyArray<string>): KeyedVerdict[] {
+export function proseModelCredit(
+  messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string>, confirmed: ReadonlyArray<string>,
+  /** The check's `answers`. 2026-10-29 (local, Haiku): a labelled prose answer came back
+   *  `open_question` (the tutor's question WAS that part) and was never recorded. A
+   *  labelled message counts with `overall_problem` or `open_question`; an unlabelled
+   *  one only with `overall_problem` (an open question may be a smaller step). */
+  answers: string = 'overall_problem',
+): KeyedVerdict[] {
   if (!messages.length || !key?.parts?.some((p) => p.prose)) return [];
   const last = normalize(stripRuntimeNote(messages[messages.length - 1])).trim();
   if (!last) return [];
   const done = new Set(confirmed.filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
   const named = [...new Set(labelMarks(last, key).map((m) => m.label))];
   let target: AnswerPart | undefined;
+  if (answers !== 'overall_problem' && !(named.length && answers === 'open_question')) return [];
   if (named.length) {
     if (named.length !== 1) return [];
     target = key.parts.find((p) => normLabel(p.label) === named[0]);

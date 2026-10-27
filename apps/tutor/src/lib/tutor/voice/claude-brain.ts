@@ -52,8 +52,9 @@ import {
 } from './verdict-precheck-shared';
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
-import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
-import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
+import { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_DONE_GUARD, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
+import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
+import type { AnswerKey } from '../homework-build/types';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
 import { formatWorkThenMatchBlock } from './work-then-match';
@@ -1587,6 +1588,28 @@ export function homeworkRecordMarks(input: Pick<BrainTurnInput, 'homeworkProblem
   return confirmedKeyMarks(input.conversationHistory, studentSaid, hp.key, [...(hp.priorConfirmed ?? []), ...(hp.sessionConfirmed ?? []), ...extra]);
 }
 
+/**
+ * 2026-10-29: the answer-check flags that make a correct verdict's reply
+ * follow the record. `problemDone`: with this message (and this turn's
+ * credit) every part is confirmed. `notRecorded`: the model check says a
+ * final answer is correct, nothing was recorded this turn, and the message
+ * names an open part or exactly one part is open — so it must not be called right.
+ */
+export function homeworkConfirmFlags(
+  input: Pick<BrainTurnInput, 'conversationHistory'>, studentSaid: string, key: AnswerKey,
+  prior: ReadonlyArray<string>, credit: ReadonlyArray<string>, o: { keyedCorrect: boolean; answers: string },
+): { problemDone?: true; notRecorded?: true } {
+  const marks = confirmedKeyMarks(input.conversationHistory, studentSaid, key, [...prior, ...credit]);
+  if (allKeyPartsConfirmed(input.conversationHistory, studentSaid, key, [...prior, ...credit])) return { problemDone: true };
+  if (o.keyedCorrect || credit.length || o.answers !== 'overall_problem') return {};
+  const done = new Set(marks.filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
+  const labels = [...key.parts.map((p: AnswerKey['parts'][number]) => p.label), ...(key.unkeyed ?? [])].map((l) => String(l ?? '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const open = labels.filter((l) => !done.has(l));
+  const named = namedKeyParts(studentSaid, key);
+  if (named.some((l) => open.includes(l)) || (!named.length && open.length === 1)) return { notRecorded: true };
+  return {};
+}
+
 export function homeworkProblemNeverJudged(input: Pick<BrainTurnInput, 'homeworkProblem'>): boolean {
   return !!input.homeworkProblem && !(input.homeworkProblem.verified && input.homeworkProblem.key?.parts?.length);
 }
@@ -2491,7 +2514,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // A navigation turn (the runtime moved the lesson) is not an answer: no
   // turn-shape frame and no verdict guard on it (advance-request.ts).
   const navigationTurn = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript);
-  const turnShapeBlock = turnShapeOn && !navigationTurn
+  // 2026-10-29 (local validation on Haiku, AP Chemistry): after the problem was
+  // done, the open-question frames kept the tutor's last question about it
+  // alive ("what whole number n makes n × 30 equal 180?", three turns). With
+  // every part confirmed before this turn, nothing of the problem is open: the
+  // open-question frames are dropped and the done guard takes their place.
+  const hpDoneBefore = !hpNeverJudged && !!input.homeworkProblem?.verified && !!input.homeworkProblem.key?.parts?.length
+    && allKeyPartsConfirmed(input.conversationHistory, '', input.homeworkProblem.key, [...(input.homeworkProblem.priorConfirmed ?? []), ...(input.homeworkProblem.sessionConfirmed ?? [])]);
+  if (hpDoneBefore) console.log('[homework-problem] done before this turn — open-question frames dropped');
+  const turnShapeBlock = turnShapeOn && !navigationTurn && !hpDoneBefore
     ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
     : '';
   if (turnShapeBlock) console.log(`[turn-shape] ${turnShape?.shape} · question=${turnShape?.open?.kind}`);
@@ -2502,7 +2533,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   );
   // Under the mode the rule block takes the guard's place; plain consent to
   // an offer keeps its continuation guard (nothing is being judged there).
-  const verdictGuardBlock = navigationTurn ? '' : hpNeverJudged
+  const verdictGuardBlock = navigationTurn ? '' : hpDoneBefore ? HOMEWORK_PROBLEM_DONE_GUARD : hpNeverJudged
     ? (ordinaryGuardBlock.includes('<continuation_guard>') ? ordinaryGuardBlock : '')
     : workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
     ? (voiceWorkThenMatch
@@ -2516,7 +2547,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // the student's words are navigation — the open-question block told the
   // brain to grade them against the question just left ("we'll stay on the
   // two-points question").
-  const activeQuestionBlock = homeworkProblemNeverJudged(input) || (TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript)) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
+  const activeQuestionBlock = homeworkProblemNeverJudged(input) || hpDoneBefore || (TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript)) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
@@ -2633,9 +2664,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         if (hpKey && !keyedResult && result.verdict === 'correct' && result.confidence === 'high') {
           const hpMsgs = [...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), studentSaid];
           // A prose part (an explanation) is confirmed by this check alone (keyed-verdict.ts proseModelCredit).
-          const hpProse = pub.answers === 'overall_problem'
-            ? proseModelCredit(hpMsgs, hpKey, hpPrior, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior))
-            : [];
+          const hpProse = proseModelCredit(hpMsgs, hpKey, hpPrior, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior), pub.answers);
           for (const v of [...inSheetScope(hpMsgs, hpKey, hpPrior, modelCheckConfirms(result.proposed ?? '', studentSaid, hpKey)), ...hpProse]) {
             hpModelCredit.push(v.value ? `value:${v.part ?? ''}=${v.value}` : `part:${v.part ?? ''}`);
             yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: 'correct', ...(v.value ? { value: v.value } : {}) };
@@ -2647,7 +2676,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           // frame asks for any stated reason to be checked too. Final review: in
           // a one-problem session (hpKey) whichever path judged it, keyed or
           // model-checked ("so it is twenty" is left to the model).
-          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts, ...(hpKey && pub.verdict === 'correct' ? { statedReasonCheck: true, nextMoveAfterConfirm: true } : {}) });
+          // 2026-10-29: the reply follows the record — a problem this answer
+          // completes is done (no "show me the working"); a correct check the
+          // record cannot count is never called right.
+          const hpRecordFlags = hpKey && pub.verdict === 'correct' ? homeworkConfirmFlags(input, studentSaid, hpKey, hpPrior, hpModelCredit, { keyedCorrect: keyedResult?.verdict === 'correct', answers: pub.answers }) : {};
+          answerCheckBlock = formatAnswerCheckBlock(pub, { correctValue: result.correctValue, ...(workThenMatch ? { workThenMatch: true } : {}), ...checkBlockOpts, ...(hpKey && pub.verdict === 'correct' ? { statedReasonCheck: true, nextMoveAfterConfirm: true } : {}), ...hpRecordFlags });
           // 2026-10-15 (GAC staging v5): the problems THIS message completed
           // are in the ledger for this reply too — the browser records them
           // only from the frame below, i.e. for the next turn. Without this
