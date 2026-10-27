@@ -101,4 +101,12 @@ ok('caps are the turn-shape caps', MAX_CONTINUATIONS_PER_TURN === 1 && MAX_CONTI
   ok('not the tool-rejection wording', !msg.includes('structural validator rejected'));
 }
 
+// ── 2026-10-26 (portal-bd896905): a recap card with nothing to list ───────
+{
+  const reason = describeEmptySegmentCardTurn('recap', 'recap');
+  ok('recap reason asks for the recap in words, then one question — not a problem',
+    reason.includes('"recap"') && /give the recap yourself/.test(reason) && /one question/.test(reason) && !reason.includes('show_problem'));
+  ok('a non-recap kind keeps the problem wording', /first concrete question or problem/.test(describeEmptySegmentCardTurn('lo-2-hook', 'hook')));
+}
+
 console.log(`empty-segment-card: ${n} cases passed`);

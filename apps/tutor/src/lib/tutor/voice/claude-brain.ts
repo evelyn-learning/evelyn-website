@@ -38,7 +38,8 @@ import {
 import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from './turn-shape-signal';
 import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
-import { TUTOR_INEQUALITY_FACTS } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence } from './post-tool-turn';
 import {
   formatAnswerCheckBlock,
   precheckDecides,
@@ -2302,10 +2303,21 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       yield { type: 'sentence', text };
     }
   }
+  // 2026-10-26 (post-tool-turn.ts, B): sentences forwarded by EARLIER API
+  // calls of this turn are `reveal.forwarded[0, callStartForwarded)`. A later
+  // call's sentence that restates them is dropped; `nearDupDropped` makes the
+  // turn's fullText the forwarded sentences, not the model's raw text.
+  let callStartForwarded = 0;
+  let nearDupDropped = 0;
   function* guardedSentence(raw: string): Generator<BrainStreamEvent> {
     if (reveal.muted) return;
     const text = stripEchoedTags(raw);
     if (!text) return;
+    if (TUTOR_CROSS_CALL_DEDUP && callStartForwarded > 0 && isNearDuplicateSentence(text, reveal.forwarded.slice(0, callStartForwarded))) {
+      nearDupDropped++;
+      console.warn(`[cross-call-dedup] sentence dropped — restates an earlier call of this turn: "${text.slice(0, 80)}"`);
+      return;
+    }
     if (reveal.confirmed && deniesCheckedAnswer(text, reveal.confirmed)) {
       reveal.muted = true;
       console.warn(`[checked-correct-denial] sentence withheld: "${text.slice(0, 80)}" — fixed confirmation follows`);
@@ -2566,6 +2578,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const iterStartedAt = Date.now();
     const thinkingDeadlineMs = input.textThinkingDeadlineMs ?? TEXT_THINKING_DEADLINE_MS;
     const textCharsBeforeIter = accumulatedText.length;
+    callStartForwarded = reveal.forwarded.length;
     let shownThisIter = false;
     let thinkingAnnounced = false;
     let deadlineHit = false;
@@ -2803,7 +2816,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         return {
           type: 'tool_result' as const,
           tool_use_id: b.id,
-          content,
+          // 2026-10-26 (post-tool-turn.ts, B): the bare ack quotes what the
+          // student already has, so the next call does not start over.
+          content: b.rejectionReason ? content : toolResultWithDelivered(content, b.name, reveal.forwarded.join(' '), TUTOR_TOOL_RESULT_DELIVERED_NOTE),
         };
       })
     );
@@ -2835,8 +2850,24 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // for any tool_use blocks it contained. This is the same bridging
   // pattern that the in-loop continuation uses; we just apply it once
   // more before the rescue user-message.
-  if (!accumulatedText.trim() && accumulatedToolCalls.length > 0 && lastFinalMessage) {
-    console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
+  // 2026-10-26 (post-tool-turn.ts, A): the same rescue, for a reply that
+  // DID write a lead-in, put something on the board and ended its response
+  // (no tool round trip) without asking anything — "Here it is on the
+  // board." and silence. Its follow-up call asks the question only.
+  const thinRescue = lastFinalMessage
+    ? decideThinToolTurnRescue({
+        enabled: TUTOR_THIN_TOOL_TURN_RESCUE,
+        text: reveal.forwarded.join(' '),
+        lastResponseToolUses: lastFinalMessage.content.filter((b) => b.type === 'tool_use').length,
+        lastStopReason,
+        toolCalls: accumulatedToolCalls,
+        muted: reveal.muted,
+      })
+    : null;
+  const zeroTextRescue = !accumulatedText.trim() && accumulatedToolCalls.length > 0 && !!lastFinalMessage;
+  if ((zeroTextRescue || thinRescue?.rescue) && lastFinalMessage) {
+    if (zeroTextRescue) console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
+    else console.warn(`[brain.stream] THIN-TURN rescue: ${accumulatedToolCalls.length} tool(s), no question, stop=${lastStopReason} — invoking follow-up call`);
     const lastToolUseBlocks = lastFinalMessage.content.filter(
       (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
     );
@@ -2858,12 +2889,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       ...messages,
       {
         role: 'user',
-        content:
-          'You emitted whiteboard tools without any narration. ' +
-          'Voice a brief opener sentence + 1-2 sentences describing what is now on the board. ' +
-          'No more tools — text only.',
+        content: zeroTextRescue
+          ? 'You emitted whiteboard tools without any narration. ' +
+            'Voice a brief opener sentence + 1-2 sentences describing what is now on the board. ' +
+            'No more tools — text only.'
+          : THIN_TURN_RESCUE_INSTRUCTION,
       },
     ];
+    // Its sentences are checked against everything already forwarded.
+    callStartForwarded = reveal.forwarded.length;
     // No `tools` field → model has no tool slots to fill → forced to
     // emit text. We deliberately omit tools rather than passing []
     // because some Anthropic SDK versions treat [] as "no tools
@@ -2879,6 +2913,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
         messages,
       }), input.model, input.allowFallback !== false);
+      if (accumulatedText && !/\s$/.test(accumulatedText)) accumulatedText += ' ';
       const rescueBuffer = new SentenceBuffer();
       for await (const event of rescueOpened.events) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -2896,7 +2931,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       totalUsage.outputTokens += rescueFinal.usage.output_tokens;
       totalUsage.cacheReadTokens += rescueFinal.usage.cache_read_input_tokens ?? 0;
       totalUsage.cacheCreationTokens += rescueFinal.usage.cache_creation_input_tokens ?? 0;
-      lastStopReason = `${lastStopReason}+rescued`;
+      lastStopReason = `${lastStopReason}+${zeroTextRescue ? 'rescued' : 'thin-rescued'}`;
     } catch (err) {
       console.error('[brain.stream] OPTION-A rescue call failed:', err);
       // Swallow — the original (toolful, textless) result is still returned.
@@ -2921,7 +2956,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // (spacing repair + stage-direction strip, same as the voiced path).
     // (A reply stopped by the whole-answer reveal guard: only what was
     // forwarded — the model's own text holds the withheld result.)
-    fullText: scrubTutorText(normalizeSentenceSpacing((reveal.muted ? reveal.forwarded.join(' ') : accumulatedText).trim())),
+    // (2026-10-26: a sentence dropped as a restatement is not in it either.)
+    fullText: scrubTutorText(normalizeSentenceSpacing((reveal.muted || nearDupDropped > 0 ? reveal.forwarded.join(' ') : accumulatedText).trim())),
     toolCalls: accumulatedToolCalls,
   };
 }
