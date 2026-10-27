@@ -532,7 +532,7 @@ import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
 import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn, decideTypedBeforeHomeworkReady, createTypedHold, type TypedHold } from '@/app/tutor/components/session/text-kickoff';
-import { TUTOR_TYPED_WAITS_FOR_HOMEWORK } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_TYPED_WAITS_FOR_HOMEWORK, TUTOR_EMPTY_RECAP_CONTINUE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
 import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
 
@@ -16270,6 +16270,11 @@ export function VoiceTutorRealtime({
                           // above — no LO covered yet): unchanged.
                           console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
                           onDebugEvent?.('show_segment_card_no_truth', segId);
+                          // 2026-10-26 (portal-bd896905): the turn that promised
+                          // the recap must not end on nothing — the same
+                          // end-of-attempt continuation as an empty card, with
+                          // its recap reason (empty-segment-card.ts).
+                          if (TUTOR_EMPTY_RECAP_CONTINUE) emptySegmentCardThisAttempt = segId;
                         } else {
                           // 2026-10-04 (empty-segment-card.ts): a segment with
                           // no authored card (a generated plan's hook has
@@ -18189,7 +18194,7 @@ export function VoiceTutorRealtime({
             continuationNextAttempt = true;
             continuationBubble = { id: attemptStreamingId, text: aggregatedFullText.trim() };
             continuationDeliveredRef.current = { turnStartMs: t0, fromMs: Date.now() };
-            rejectionsThisAttempt.push({ action: TURN_CONTINUATION_ACTION, reason: describeEmptySegmentCardTurn(emptyCardSegId) });
+            rejectionsThisAttempt.push({ action: TURN_CONTINUATION_ACTION, reason: describeEmptySegmentCardTurn(emptyCardSegId, lessonPlanRef.current ? getSegment(lessonPlanRef.current, emptyCardSegId)?.kind : undefined) });
             console.warn(`[brain-orchestrator] empty-segment-card: "${emptyCardSegId}" has no authored card and the turn asked nothing — auto-continuing (attempt cap now ${attemptCap}).`);
             onDebugEvent?.('brain_turn_continuation', `empty-segment-card "${emptyCardSegId}" session=${turnContinuationsSessionRef.current} cap=${attemptCap} · "${attemptText.slice(0, 80)}"`);
           }

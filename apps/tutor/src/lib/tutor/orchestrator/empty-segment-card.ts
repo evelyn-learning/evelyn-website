@@ -136,7 +136,18 @@ export function decideEmptyCardContinuation(input: {
 }
 
 /** Fills "Your last turn stopped too early: …" (validator-feedback.ts). */
-export function describeEmptySegmentCardTurn(segmentId: string): string {
+export function describeEmptySegmentCardTurn(segmentId: string, kind?: string): string {
+  // 2026-10-26 (portal-bd896905): "Sounds good. Let's wrap up with a quick
+  // recap." — the recap card had nothing to list, nothing reached the board,
+  // and the turn ended on the promise. A recap is not a problem to pose.
+  if (kind === 'recap') {
+    return (
+      `you called show_segment_card for the recap segment "${segmentId}", which had nothing to list — ` +
+      `so no recap reached the board, and you ended the turn on the promise of one. ` +
+      `Do not call show_segment_card for that segment again: give the recap yourself in two or three sentences ` +
+      `naming what this session actually worked on, then ask the student one question about what they want to do next.`
+    );
+  }
   return (
     `you called show_segment_card for segment "${segmentId}", which has no authored card — ` +
     `so no question or problem reached the board, and you ended the turn without asking the student anything. ` +
