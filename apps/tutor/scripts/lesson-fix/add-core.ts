@@ -111,7 +111,7 @@ export function storedSegment(seg: LessonSegment): Record<string, unknown> {
 
 /** The intro goal exactly as lesson-plan/expand.ts writes it. */
 export function introGoal(n: number): string {
-  return `Acknowledge the student's pick of ${n} learning objectives, list them in the planned order in 1 sentence, and say you are starting with the first one — never ask the student to choose or confirm where to start. Stay brief — under 25 spoken words.`;
+  return `Acknowledge the student's pick of ${n} learning objectives, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.`;
 }
 
 /** lesson-plan/session-budget.ts `minutesPerLOForGrade` gives 5 minutes per
