@@ -12,6 +12,9 @@
 import {
   detectAdvanceRequest,
   resolveObjectiveTarget,
+  resolveObjectiveMove,
+  describeAlreadyOnObjective,
+  isAutoAdvancedTurn,
   describeTypedAdvance,
   pacingHintForCue,
   isAdvanceCue,
@@ -23,6 +26,8 @@ import {
 } from '../src/lib/tutor/orchestrator/advance-request';
 
 import { readFileSync } from 'node:fs';
+import { normalizeIntroGoal, withIntroStart, INTRO_START_CLAUSE } from '../src/lib/tutor/lesson-plan/intro-goal';
+import { buildLessonPlanContext } from '../src/lib/tutor/lesson-plan/context';
 import { join } from 'node:path';
 
 let failures = 0;
@@ -104,6 +109,63 @@ check('off-topic segments are never landed on', resolveObjectiveTarget({
   segments: [{ id: `${P}.lo-1-hook` }, { id: `${P}.lo-2-hook`, offTopic: true }, { id: `${P}.lo-3-hook` }],
 }, `${P}.lo-1-hook`, null) === `${P}.lo-3-hook`);
 
+// ── Round 3 (Haiku 5.5, lesson portal-939d545b, 10-27) ───────────────────
+{
+  const Q = 'gen-6f0109e0';
+  const real = {
+    segments: [
+      { id: 'intro', kind: 'hook' },
+      { id: `${Q}.lo-1-hook`, kind: 'hook' }, { id: `${Q}.lo-1-concept`, kind: 'concept' },
+      { id: `${Q}.lo-2-hook`, kind: 'hook' }, { id: `${Q}.lo-2-try`, kind: 'try_yourself' },
+      { id: `${Q}.lo-3-hook`, kind: 'hook' }, { id: `${Q}.lo-3-try`, kind: 'try_yourself' },
+      { id: `${Q}.lo-4-hook`, kind: 'hook' }, { id: `${Q}.lo-4-try`, kind: 'try_yourself' },
+      { id: 'recap', kind: 'recap' },
+    ],
+    los: [
+      { id: `${Q}.lo-1`, description: 'Define slope as the rate of change between two points on a line.' },
+      { id: `${Q}.lo-2`, description: 'Compute slope from two points using the rise-over-run formula.' },
+      { id: `${Q}.lo-3`, description: 'Interpret positive, negative, zero, and undefined slopes.' },
+      { id: `${Q}.lo-4`, description: 'Identify slope from the equation of a line in slope-intercept form.' },
+    ],
+  };
+  // "move on to slope intercept form" on objective 4 went BACK to objective 1:
+  // "slope" is in every objective, and the current one was never scored.
+  const here = resolveObjectiveMove(real, `${Q}.lo-4-hook`, 'slope intercept form');
+  check('named objective already in progress → already (never back to objective 1)', here?.kind === 'already' && here.target === `${Q}.lo-4-hook`, here);
+  check('…and resolveObjectiveTarget does not move', resolveObjectiveTarget(real, `${Q}.lo-4-hook`, 'slope intercept form') === null);
+  const ahead = resolveObjectiveMove(real, `${Q}.lo-2-try`, 'slope intercept form');
+  check('named later objective → move there', ahead?.kind === 'move' && ahead.target === `${Q}.lo-4-hook`, ahead);
+  check('a name matching only an EARLIER objective → nothing (never backwards)', resolveObjectiveMove(real, `${Q}.lo-3-hook`, 'rate of change') === null, resolveObjectiveMove(real, `${Q}.lo-3-hook`, 'rate of change'));
+  check('a name of words every objective carries → stay (already)', resolveObjectiveMove(real, `${Q}.lo-2-hook`, 'slope')?.kind === 'already');
+  check('skip on objective 2 → objective 3', resolveObjectiveMove(real, `${Q}.lo-2-hook`, null)?.target === `${Q}.lo-3-hook`);
+  check('skip on objective 3 → objective 4', resolveObjectiveMove(real, `${Q}.lo-3-hook`, null)?.target === `${Q}.lo-4-hook`);
+  const already = describeAlreadyOnObjective({ named: 'slope intercept form', target: `${Q}.lo-4-hook`, objective: real.los[3].description });
+  check('already-here fact: bracketed, continue it, never go back', already.startsWith('[') && already.endsWith(']') && /ALREADY on that objective/.test(already) && /never go back to an earlier objective/i.test(already) && /Do NOT call advance_lesson/.test(already), already);
+  const f = describeTypedAdvance({ target: `${Q}.lo-3-hook`, kind: 'hook' });
+  check('advance fact: say you are moving on, never that you are staying', /never say you are staying/i.test(f), f);
+  check('isAutoAdvancedTurn: the fact behind other notes', isAutoAdvancedTurn(`[board-anchor note — not from the student] x\n\n${f}\n\nno move to the next section`));
+  check('isAutoAdvancedTurn: the already-here fact', isAutoAdvancedTurn(already));
+  check('isAutoAdvancedTurn: a plain student turn', !isAutoAdvancedTurn('no move to the next section'));
+}
+
+// ── Round 3: the lesson starts objective 1 — it does not ask which ───────
+{
+  const legacy = "Acknowledge the student's pick of 4 learning objectives, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.";
+  const fixed = normalizeIntroGoal(legacy);
+  check('stored intro goal: no "propose"', !/propose starting/.test(fixed) && fixed.includes(INTRO_START_CLAUSE), fixed);
+  check('intro clause forbids asking the student to choose', /never ask the student to choose or confirm where to start/.test(INTRO_START_CLAUSE));
+  const seg = { id: 'intro', kind: 'hook', goal: legacy };
+  check('withIntroStart: rewrites a copy, never the stored object', withIntroStart(seg).goal === fixed && seg.goal === legacy);
+  const other = { id: 'x', kind: 'hook', goal: 'Hook the student.' };
+  check('withIntroStart: other goals are the same object', withIntroStart(other) === other);
+  const ctx = buildLessonPlanContext({ id: 'gen-1', title: 'T', grade: '8', subject: 'math', curriculum: 'x', los: [], estimatedMinutes: 10, schemaVersion: 1, segments: [seg] } as never, 'intro');
+  check('the brain reads the rewritten intro goal', (ctx?.currentSegment as { goal?: string } | undefined)?.goal === fixed, ctx?.currentSegment);
+  for (const f of ['src/app/api/portal/v1/plan-generate/route.ts', 'src/app/api/tutor/plan-from-text/route.ts', 'src/lib/tutor/lesson-plan/expand.ts', 'src/lib/tutor/lesson-plan/generate-from-text.ts']) {
+    const src = readFileSync(join(__dirname, '..', f), 'utf8');
+    check(`new plans (${f}): intro starts with the first one`, !src.includes('propose starting with the first one') && src.includes(INTRO_START_CLAUSE));
+  }
+}
+
 // ── what the brain reads ─────────────────────────────────────────────────
 {
   const f = describeTypedAdvance({ target: `${P}.lo-2-hook`, kind: 'hook', objective: 'Calculate slope from two points.' });
@@ -128,7 +190,7 @@ for (const s of [ADVANCE_CUE_HINT, OVERLONG_ADVANCE_NOW, describeTypedAdvance({ 
 // ── wiring (source): the browser orchestrator uses all of the above ───────
 {
   const src = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
-  check('wiring: typed request detected and resolved before the brain call', /detectAdvanceRequest\(transcript\)/.test(src) && /resolveObjectiveTarget\(advPlan, advFrom, advanceRequest\.named\)/.test(src) && /applyResolvedAdvance\(advPlan, advFrom, advTarget\)/.test(src));
+  check('wiring: typed request detected and resolved before the brain call', /detectAdvanceRequest\(transcript\)/.test(src) && /resolveObjectiveMove\(advPlan, advFrom, advanceRequest\.named\)/.test(src) && /describeAlreadyOnObjective\(/.test(src) && /pendingBoardAnchorNoteRef\.current = null;\n\s*pendingNoAdvanceNoteRef\.current = null;/.test(src) && /applyResolvedAdvance\(advPlan, advFrom, advTarget\)/.test(src));
   check('wiring: the fact rides the brain transcript', /if \(typedAdvanceFact\) runTranscript = `\$\{typedAdvanceFact\}/.test(src));
   check('wiring: an advanced turn carries no pace hint', /const cueMatch = !hasButtonMarker && !typedAdvanceFact/.test(src));
   check('wiring: a move-on turn delivers the overlong note without "finish first"', /askedToMoveOn \|\| runtimeNoteHeldTurnsRef/.test(src) && /overlongNoteForTurn\(pendingRuntimeNoteRef\.current, askedToMoveOn\)/.test(src));

@@ -40,7 +40,7 @@ import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPreche
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
-import { pacingHintForCue, DIFFICULTY_CUE_HINT } from '../orchestrator/advance-request';
+import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn } from '../orchestrator/advance-request';
 import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
@@ -2128,7 +2128,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // 2026-08-07: the last spoken question outranks a stale card question —
   // rendered directly after <active_problem> so the override reads in place.
   // Its "grade it against THIS … say so" is a judging rule: never on an unverified homework problem.
-  const activeQuestionBlock = homeworkProblemNeverJudged(input) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
+  // Round 3 (portal-939d545b): on a turn the runtime already moved the lesson,
+  // the student's words are navigation — the open-question block told the
+  // brain to grade them against the question just left ("we'll stay on the
+  // two-points question").
+  const activeQuestionBlock = homeworkProblemNeverJudged(input) || (TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript)) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
@@ -2484,7 +2488,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     reveal.forwarded.push(text);
     yield { type: 'sentence', text };
   }
-  const turnShapeBlock = turnShapeOn
+  // A navigation turn (the runtime moved the lesson) is not an answer: no
+  // turn-shape frame and no verdict guard on it (advance-request.ts).
+  const navigationTurn = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript);
+  const turnShapeBlock = turnShapeOn && !navigationTurn
     ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
     : '';
   if (turnShapeBlock) console.log(`[turn-shape] ${turnShape?.shape} · question=${turnShape?.open?.kind}`);
@@ -2495,7 +2502,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   );
   // Under the mode the rule block takes the guard's place; plain consent to
   // an offer keeps its continuation guard (nothing is being judged there).
-  const verdictGuardBlock = hpNeverJudged
+  const verdictGuardBlock = navigationTurn ? '' : hpNeverJudged
     ? (ordinaryGuardBlock.includes('<continuation_guard>') ? ordinaryGuardBlock : '')
     : workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
     ? (voiceWorkThenMatch
@@ -2505,7 +2512,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : workThenMatch ? '[verdict-guard] work-then-match rule attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
   // Its "grade it against THIS … say so" is a judging rule: never on an unverified homework problem.
-  const activeQuestionBlock = homeworkProblemNeverJudged(input) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
+  // Round 3 (portal-939d545b): on a turn the runtime already moved the lesson,
+  // the student's words are navigation — the open-question block told the
+  // brain to grade them against the question just left ("we'll stay on the
+  // two-points question").
+  const activeQuestionBlock = homeworkProblemNeverJudged(input) || (TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript)) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
