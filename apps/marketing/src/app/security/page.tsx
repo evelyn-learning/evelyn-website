@@ -329,13 +329,13 @@ function VendorSecuritySection() {
       name: 'Anthropic (Claude)',
       logo: '🧠',
       certifications: ['SOC 2 Type II', 'GDPR Compliant'],
-      dataPolicy: 'No training on API data. Prompts not stored beyond request processing.'
+      dataPolicy: 'No training on API data. API inputs and outputs are deleted within 30 days.'
     },
     {
       name: 'OpenAI',
       logo: '🤖',
       certifications: ['SOC 2 Type II', 'GDPR Compliant'],
-      dataPolicy: 'API data not used for training. Zero data retention available.'
+      dataPolicy: 'API data not used for training. Abuse-monitoring logs are kept for up to 30 days, then deleted.'
     },
     {
       name: 'Cartesia (speech)',
