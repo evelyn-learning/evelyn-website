@@ -2714,6 +2714,11 @@ export function VoiceTutorRealtime({
   // `homework_problem_done` is recorded once per session (the server sends
   // its frame on every turn once every key part is confirmed).
   const homeworkProblemDoneRecordedRef = useRef(false);
+  // 2026-10-26: the marks this session's keyed-verdict frames confirmed
+  // (`part:<l>` / `value:<l>=<name>`), sent back each turn as
+  // `homeworkConfirmed` so the server's in-session record keeps a part
+  // confirmed by a re-checked model verdict on an earlier turn.
+  const homeworkConfirmedMarksRef = useRef<string[]>([]);
   const onHomeworkProblemRef = useRef(onHomeworkProblem);
   onHomeworkProblemRef.current = onHomeworkProblem;
   const homeworkProblemReportedRef = useRef(false);
@@ -12614,6 +12619,10 @@ export function VoiceTutorRealtime({
             ...(homeworkProblemsRef.current
               ? { homework: { problems: homeworkProblemsRef.current, current: homeworkCurrentRef.current, solved: homeworkSolvedRef.current } }
               : {}),
+            // One-problem homework (2026-10-26): this session's confirmed marks.
+            ...(homeworkProblemRef.current && homeworkConfirmedMarksRef.current.length
+              ? { homeworkConfirmed: homeworkConfirmedMarksRef.current }
+              : {}),
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
@@ -16937,6 +16946,10 @@ export function VoiceTutorRealtime({
                   const kvKey = `${String(kv.part ?? '')}#${typeof kv.value === 'string' ? kv.value : ''}`;
                   if ((kv.verdict === 'correct' || kv.verdict === 'incorrect') && !keyedVerdictPartsThisTurn.has(kvKey)) {
                     keyedVerdictPartsThisTurn.add(kvKey);
+                    if (kv.verdict === 'correct') {
+                      const mark = typeof kv.value === 'string' ? `value:${String(kv.part ?? '')}=${kv.value}` : `part:${String(kv.part ?? '')}`;
+                      if (!homeworkConfirmedMarksRef.current.includes(mark) && homeworkConfirmedMarksRef.current.length < 40) homeworkConfirmedMarksRef.current = [...homeworkConfirmedMarksRef.current, mark];
+                    }
                     onDebugEvent?.(KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug(String(kv.part ?? ''), kv.verdict, typeof kv.value === 'string' ? kv.value : undefined));
                   }
                 } else if ((ev as { type?: string }).type === 'homework-problem-done') {
@@ -18883,6 +18896,8 @@ export function VoiceTutorRealtime({
                 precheck: verdictPrecheckRef.current,
                 match: readMatchStatement(fullText, ledgerStudentTextRef.current),
                 echo: { studentText: ledgerStudentTextRef.current, priorTutorTurn: ledgerPriorTutorTextRef.current },
+                // 2026-10-26: a verified key → no credit from the tutor's words alone.
+                keyedProblem: !!homeworkProblemRef.current?.verified,
               })
             : null;
           if (matchCredit && countsAsAnswer) {
@@ -19137,7 +19152,7 @@ export function VoiceTutorRealtime({
               // 2026-10-06, text mode "work it, then match": the resolved
               // credit decides; the tutor's opener words are not read.
               ...(TUTOR_TEXT_MATCH_COUNTING && workThenMatchTurnRef.current
-                ? { matchCredit: resolveMatchCredit({ objectiveCorrect: !!objectiveSignal, verifiedWrong: keyVerifiedWrongThisTurnRef.current, precheck: verdictPrecheckRef.current, match: readMatchStatement(fullText, ledgerStudentTextRef.current), echo: { studentText: ledgerStudentTextRef.current, priorTutorTurn: ledgerPriorTutorTextRef.current } }).credit }
+                ? { matchCredit: resolveMatchCredit({ objectiveCorrect: !!objectiveSignal, verifiedWrong: keyVerifiedWrongThisTurnRef.current, precheck: verdictPrecheckRef.current, match: readMatchStatement(fullText, ledgerStudentTextRef.current), echo: { studentText: ledgerStudentTextRef.current, priorTutorTurn: ledgerPriorTutorTextRef.current }, keyedProblem: !!homeworkProblemRef.current?.verified }).credit }
                 : {}),
             })) {
           const segId = ver?.segId ?? currentSegmentIdRef.current;

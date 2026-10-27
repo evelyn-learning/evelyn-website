@@ -41,8 +41,11 @@ export type KeyedVerdict = {
   value?: string;
 };
 
-/** The model check's cap when the keyed verdict is undecided. */
-export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 4000;
+/** The model check's cap when the keyed verdict is undecided. 2026-10-26
+ *  (typed sessions): checks were cut at exactly 4 s, leaving correct answers
+ *  unrecorded — the cap is now the ledger's (verdict-precheck.ts
+ *  LEDGER_VERDICT_PRECHECK_TIMEOUT_MS, 10 s). */
+export const KEYED_VERDICT_MODEL_TIMEOUT_MS = 10_000;
 
 /** Debug event the browser records for each keyed verdict frame. */
 export const KEYED_VERDICT_DEBUG_TYPE = 'homework_keyed_verdict';
@@ -53,7 +56,13 @@ interface Candidate { value: number; text: string; at: number; explicit: boolean
 const NUM_RE = /-?\d+(?:\.\d+)?/g;
 /** Words / marks after which a number is an offered value. */
 const LEAD_RE = /(?:=|≈|:|\bis|'s|\bare|\bequals?(?:\s+to)?|\bgot|\bget|\bbe|\banswer)\s*$/i;
-const UNIT_RE = /^(?:°|º|%|degrees?|deg|cm|mm|km|m|in|inches|ft|feet|yd|mi|miles|units?|sq|kg|g|s|sec|seconds?|min|minutes?|h|hrs?|hours?|mph)(?:\^?[23²³])?(?![A-Za-z])/i;
+const UNIT_RE = /^(?:°|º|%|degrees?|deg|cm|mm|km|m|in|inches|ft|feet|yd|mi|miles|units?|sq|kg|g|s|sec|seconds?|min|minutes?|h|hrs?|hours?|mph|kcal|cal|kj|mol|ml|kpa|atm|yr|years?|days?|hz)(?:\^?[23²³])?(?![A-Za-z])/i;
+/** A compound unit after a bare value ("m/s", "kcal/m^2/yr", "g/cm^3"): every piece a unit. */
+const COMPOUND_UNIT_RE = /^[A-Za-z°º%]+(?:\^?[23²³])?(?:\s*[/·*]\s*[A-Za-z]+(?:\^?[23²³])?)*$/;
+function isUnitText(u: string): boolean {
+  if (!COMPOUND_UNIT_RE.test(u)) return false;
+  return u.split(/\s*[/·*]\s*/).every((piece) => { const m = UNIT_RE.exec(piece); return !!m && m[0].length === piece.length; });
+}
 // 2026-10-22 (hw-15 p6): a number before a function word ("8 sin 60") is working, not an offer.
 const OPERATOR_WORD_RE = /^\s+(?:times|plus|minus|over|divided|multiplied|squared|cubed|root|pi|sqrt|π|√|sin|cos|tan|csc|cot|arcsin|arccos|arctan|log|ln)\b/i;   // not sec: "5 sec" is seconds (UNIT_RE)
 /** An exact radical: "4 root 3", "4√3", "4 sqrt 3", "4\\sqrt{3}", "√3". Groups: coefficient?, radicand. */
@@ -112,7 +121,20 @@ export function stripRuntimeNote(text: unknown): string {
   return t;
 }
 
-/** A question ("…?" at the end, or "is it …", "does …", "would …") offers nothing to judge. */
+/**
+ * A hedge in front of an offered value: "I don't know, maybe …", "maybe …",
+ * "perhaps …", "I think it's …", "is it …", "could it be …". Returns the value
+ * offered (trailing "?" dropped), or null when the message is not a hedge.
+ */
+const HEDGE_RE = /^(?:(?:i\s+(?:don'?t|do\s+not)\s+know|i'?m\s+not\s+sure|not\s+sure|no\s+idea|idk|um+|uh+|hmm+)[\s,.!—–-]*)*(?:(?:so\s+|then\s+)?(?:maybe|perhaps|probably|possibly)|i\s+(?:think|guess)|is\s+it|could\s+it\s+be|would\s+it\s+be|might\s+it\s+be|is\s+the\s+answer)\b[\s,:]*(?:(?:it'?s|it\s+is|that\s+it'?s|the\s+answer\s+is)\s+)?/i;
+function hedgedOffer(text: string): string | null {
+  const m = HEDGE_RE.exec(text);
+  if (!m) return null;
+  const rest = text.slice(m[0].length).replace(/\?+\s*$/, '').trim();
+  return rest || null;
+}
+
+/** A question ("…?" at the end, or "is it …", "does …", "would …"): it may confirm, never deny. */
 const QUESTION_FORM_RE = /^(?:so\s+|and\s+|um\s+|uh\s+)?(?:is|isn't|does|doesn't|do|did|would|could|can|should|will|was|were|are|am|has|have|shall|might|may)\b/i;
 function isQuestionForm(text: string): boolean {
   return /\?\s*$/.test(text) || QUESTION_FORM_RE.test(text);
@@ -125,19 +147,49 @@ function normExact(s: string): string {
     .toLowerCase()
     .replace(/[×·*]/g, '*')
     .replace(/[÷/]/g, '/')
+    // 2026-10-26: "45 degrees" is "45°".
+    .replace(/\s*\bdeg(?:rees?)?\b/g, '°')
     .replace(/\s+/g, '')
     .replace(/[.!]+$/, '');
 }
 
-/** The student's text equals the part's final (or text value) exactly, after normalisation. */
+/** Words after which the rest of a sentence is the value offered ("so x = 5 or x = -2", "the formula is CH2O"). */
+const TAIL_LEAD_RE = /\b(?:so|thus|therefore|hence|gives?|giving|is|are|equals?|get|got)\b/gi;
+
+/**
+ * 2026-10-26 (typed sessions, text-kind keys): "… so x = 5 or x = -2." and
+ * "… so the empirical formula is CH2O." never matched a text final because
+ * the whole message carried the working too. The texts tried: the whole
+ * message, each sentence / clause, and what follows each lead word in them.
+ */
+function offeredTexts(studentText: string): { texts: string[]; tails: string[] } {
+  const whole = String(studentText ?? '').trim();
+  const chunks = whole.split(/(?<=[.;!?])\s+|\n+/).map((c) => c.trim()).filter(Boolean);
+  const tails = new Set<string>();
+  for (const c of chunks) {
+    for (const m of c.matchAll(TAIL_LEAD_RE)) {
+      const tail = c.slice((m.index ?? 0) + m[0].length).replace(/^[\s,:]+/, '').replace(/[?.!;,]+$/, '').trim();
+      if (tail) tails.add(tail);
+    }
+  }
+  return { texts: [...new Set([whole, ...chunks])], tails: [...tails] };
+}
+
+/** The student's text — or a sentence, or what follows a lead word in one — equals the part's final (or text value) exactly, after normalisation. */
 function textMatchesPart(part: AnswerPart, studentText: string): boolean {
+  const { texts, tails } = offeredTexts(studentText);
+  // A tail must be the whole final as written: "y is 3/4" never offers "x = 3/4".
+  return texts.some((t) => textEqualsPart(part, t)) || tails.some((t) => textEqualsPart(part, t, { strict: true }));
+}
+
+function textEqualsPart(part: AnswerPart, studentText: string, opts: { strict?: boolean } = {}): boolean {
   const got = normExact(studentText);
   if (!got) return false;
   const wants = [part.final, ...(part.canonical.kind === 'text' ? [part.canonical.value] : [])].map(normExact).filter(Boolean);
   const v = keyVarOf(part);
   // "x = 3/4" offered for a final written "3/4" (or the reverse): the key's own variable only.
   const strip = (x: string) => (v && x.startsWith(`${v}=`) ? x.slice(v.length + 1) : x);
-  return wants.some((w) => w === got || (v !== null && strip(w) === strip(got) && strip(got) !== ''));
+  return wants.some((w) => w === got || (!opts.strict && v !== null && strip(w) === strip(got) && strip(got) !== ''));
 }
 
 const FRACTION_RE = /(-?)(\d+)(?:\s+(\d+))?\s*\/\s*(\d+)/g;
@@ -254,9 +306,12 @@ function bareNumber(text: string): Candidate | null {
   // A message that is one exact radical ("4 root 3") offers that value (hw-15 p6).
   const r = new RegExp(`^\\s*${RADICAL_RE.source}\\s*[.!]?\\s*$`, 'i').exec(text);
   if (r) { const value = radicalValue(r); return value === null ? null : { value, text: r[0].trim(), at: 0, explicit: false, frac: true }; }
-  const m = /^\s*(-?\d+(?:\.\d+)?)\s*([A-Za-z°º%²³^23]*)\s*[.!]?\s*$/.exec(text);
+  // 2026-10-26: a reason after the value ("4 kcal/m^2/yr, because it's 10% twice") is not part of it.
+  const lead = text.replace(/\s*(?:[,;]|\bbecause\b|\bsince\b)\s[\s\S]*$/i, '');
+  const m = /^\s*(-?\d+(?:\.\d+)?)\s*([A-Za-z°º%][A-Za-z°º%²³^0-9/·*]*)?\s*[.!]?\s*$/.exec(lead);
   if (!m) return null;
-  if (m[2] && !UNIT_RE.test(m[2])) return null;
+  // A compound unit ("m/s", "kcal/m^2/yr") counts when every piece is a unit.
+  if (m[2] && !(/[/·*]/.test(m[2]) ? isUnitText(m[2]) : UNIT_RE.test(m[2]))) return null;
   return { value: Number(m[1]), text: (m[1] + (m[2] ? ` ${m[2]}` : '')).trim(), at: 0, explicit: false };
 }
 
@@ -266,7 +321,9 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Where each part label is named in the message: [label, index of the label's end]. */
 function labelMarks(text: string, key: AnswerKey): Array<{ label: string; at: number; end: number }> {
-  const labels = [...new Set(key.parts.map((p) => normLabel(p.label)).filter(Boolean))];
+  // 2026-10-26: an unkeyed part's label marks its segment too, so its values are never read as another part's.
+  const labels = [...new Set([...key.parts.map((p) => normLabel(p.label)), ...(key.unkeyed ?? [])].filter(Boolean))];
+  const partCount = key.parts.length + (key.unkeyed?.length ?? 0);
   const marks: Array<{ label: string; at: number; end: number }> = [];
   for (const label of labels) {
     const L = escapeRe(label);
@@ -275,7 +332,7 @@ function labelMarks(text: string, key: AnswerKey): Array<{ label: string; at: nu
       new RegExp(`\\(${L}\\)\\s*[:=]?`, 'gi'),
       new RegExp(`(?:^|(?<=[\\s,;]))${L}\\)\\s*[:=]?`, 'gi'),
       new RegExp(`(?:^|(?<=[\\s,;]))${L}\\s*:`, 'gi'),
-      ...(key.parts.length > 1 && /^[a-z]$/.test(label) ? [new RegExp(`(?:^|(?<=[\\s,;]))${L}\\s*=`, 'gi')] : []),
+      ...(partCount > 1 && /^[a-z]$/.test(label) ? [new RegExp(`(?:^|(?<=[\\s,;]))${L}\\s*=`, 'gi')] : []),
     ];
     for (const re of res) {
       for (const m of text.matchAll(re)) {
@@ -294,11 +351,31 @@ function keyVarOf(part: AnswerPart): string | null {
 }
 
 /** Judge the offered values for one part: the last offered value decides. */
-function judgePart(part: AnswerPart, cands: Candidate[], studentText?: string): KeyedVerdict {
+/** The yes / no a text starts with ("No, 42 is not an outlier …" → 'no'); null otherwise. */
+function yesNoOf(s: string): 'yes' | 'no' | null {
+  const m = /^[\s:,.)-]*(yes|no)\b/i.exec(String(s ?? ''));
+  return m ? (m[1].toLowerCase() as 'yes' | 'no') : null;
+}
+
+/**
+ * `yesNo` (2026-10-26): a part whose final starts with yes / no is judged by
+ * the student's leading yes / no — 'judge' (a labelled segment: same → correct,
+ * opposite → incorrect), 'confirm' (a hedge: same → correct only), 'off' (an
+ * unlabelled message: a bare "yes" usually answers the tutor's last question).
+ */
+function judgePart(part: AnswerPart, cands: Candidate[], studentText?: string, opts: { yesNo?: 'judge' | 'confirm' | 'off' } = {}): KeyedVerdict {
   const v = judgeValues(part, cands);
   // I3: undecided, but the student's text is exactly the key's final (any part kind) → correct.
   if (v.verdict === 'undecided' && studentText !== undefined && textMatchesPart(part, studentText)) {
     return { verdict: 'correct', part: normLabel(part.label), matched: studentText.trim().replace(/[.!]+$/, '') };
+  }
+  const mode = opts.yesNo ?? 'off';
+  if (v.verdict === 'undecided' && studentText !== undefined && mode !== 'off') {
+    const want = yesNoOf(part.final), got = yesNoOf(studentText);
+    if (want && got) {
+      if (got === want) return { verdict: 'correct', part: normLabel(part.label), matched: got };
+      if (mode === 'judge') return { verdict: 'incorrect', part: normLabel(part.label), matched: got };
+    }
   }
   return v;
 }
@@ -360,11 +437,18 @@ function judgeNamedValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict[] 
 export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerdict[] {
   // A runtime note in front of the student's words is dropped (R19b); a
   // message that is only a note is never judged.
-  const text = normalize(stripRuntimeNote(studentMessage)).trim();
-  if (!text || !key?.parts?.length || isRuntimeNote(text)) return [];
-  // R19a: a question is judged neither right nor wrong.
-  if (isQuestionForm(text)) return [];
-  const isQuestion = /\?/.test(text);
+  const raw = normalize(stripRuntimeNote(studentMessage)).trim();
+  if (!raw || !key?.parts?.length || isRuntimeNote(raw)) return [];
+  // R19a, revised 2026-10-26 (typed sessions): a question or a hedge ("maybe
+  // 30 m/s?", "I don't know, maybe 1/6?", "is it 20?") may CONFIRM but never
+  // DENY. It was judged neither way, while the model check judges the value
+  // inside a hedge (verdict-precheck.ts rule 1) — the tutor said "that's right"
+  // and the record never counted it. Not knowing is not being wrong, so a
+  // hedged wrong value stays undecided (mapped below).
+  const hedged = hedgedOffer(raw);
+  const isQuestion = /\?/.test(raw) || isQuestionForm(raw) || hedged !== null;
+  const text = hedged ?? raw.replace(/\?+\s*$/, '').trim();
+  if (!text) return [];
   const marks = labelMarks(text, key);
   const byLabel = new Map<string, Candidate[]>();
   const segText = new Map<string, string>();
@@ -386,25 +470,29 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
       ...[...candidates(head, { keyVar }), ...fractionCandidates(head, { keyVar })].sort(byAt),
       ...(byLabel.get(normLabel(part.label)) ?? []),
     ];
-    const bare = !marks.length && !cands.length ? bareNumber(text) : null;
+    // A hedge's value comes first ("maybe 4 kcal/m^2/yr, because it's 10% twice"): the reason after it is not the offer.
+    const bare = !marks.length && (!cands.length || hedged !== null) ? bareNumber(text) : null;
     const whole = marks.length ? (segText.get(normLabel(part.label)) || undefined) : text;
     const named = part.values?.length ? judgeNamedValues(part, bare ? [bare] : cands) : [];
     if (named.length) out.push(...named);
-    else out.push(judgePart(part, bare ? [bare] : cands, whole));
+    else out.push(judgePart(part, bare ? [bare] : cands, whole, { yesNo: marks.length ? 'judge' : hedged !== null ? 'confirm' : 'off' }));
   } else {
     for (const part of key.parts) {
       const cands = byLabel.get(normLabel(part.label));
       const seg = segText.get(normLabel(part.label)) || undefined;
       const named = part.values?.length && cands?.length ? judgeNamedValues(part, cands) : [];
       if (named.length) out.push(...named);
-      else if (cands?.length) out.push(judgePart(part, cands, seg));
-      else if (seg !== undefined && textMatchesPart(part, seg)) out.push(judgePart(part, [], seg));
+      else if (cands?.length) out.push(judgePart(part, cands, seg, { yesNo: 'judge' }));
+      else if (seg !== undefined) {
+        const v = judgePart(part, [], seg, { yesNo: 'judge' });
+        if (v.verdict !== 'undecided') out.push(v);
+      }
     }
     // An unlabeled value counts only when it matches exactly one numeric part
     // (or, named or unique, one value of a multi-value part).
     if (!marks.length) {
       const cands = candidates(head, {});
-      const bare = !cands.length ? bareNumber(text) : null;
+      const bare = !cands.length || hedged !== null ? bareNumber(text) : null;
       const vals = bare ? [bare] : cands;
       const last = vals[vals.length - 1];
       // Named by exactly one part's variable ("x = 20", part a "x = 27"): that part is judged.
@@ -419,10 +507,25 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
         if (hits.length === 1 && namedHits.length === 0) out.push({ verdict: 'correct', part: normLabel(hits[0].label), matched: last.text });
         else if (hits.length === 0 && namedHits.length === 1) out.push(namedHits[0]);
       }
+      // 2026-10-26 (typed sessions): an unlabelled text answer ("CH2O",
+      // "-10 < x < 2") was never matched on a multi-part key. Nothing judged
+      // by value → the text is tried against every part; exactly one hit confirms it.
+      if (!out.length) {
+        const textHits = key.parts.filter((p) => textMatchesPart(p, text));
+        if (textHits.length === 1) out.push({ verdict: 'correct', part: normLabel(textHits[0].label), matched: text.replace(/[.!]+$/, '') });
+      }
+      // A hedged yes / no ("maybe no, because …") confirms the one yes/no part it equals.
+      if (!out.length && hedged !== null && yesNoOf(text)) {
+        const ynHits = key.parts.filter((p) => yesNoOf(p.final) !== null);
+        if (ynHits.length === 1 && yesNoOf(ynHits[0].final) === yesNoOf(text)) out.push({ verdict: 'correct', part: normLabel(ynHits[0].label), matched: yesNoOf(text)! });
+      }
     }
   }
-  // A question is never marked wrong.
-  return out.map((v) => (isQuestion && v.verdict === 'incorrect' ? { verdict: 'undecided', ...(v.part !== undefined ? { part: v.part } : {}) } : v));
+  // A question is never marked wrong. Nor, on a key with unkeyed parts, is a
+  // value the student did not label: it may be their answer to an unkeyed part.
+  const partial = !!key.unkeyed?.length;
+  const undecided = (v: KeyedVerdict): KeyedVerdict => ({ verdict: 'undecided', ...(v.part !== undefined ? { part: v.part } : {}) });
+  return out.map((v) => (v.verdict === 'incorrect' && (isQuestion || (partial && !marks.some((m) => m.label === v.part))) ? undecided(v) : v));
 }
 
 /**
@@ -452,7 +555,9 @@ export function keyFinalsLine(key: AnswerKey): string {
 /** Facts for the model check when the keyed verdict is undecided. */
 export function keyedProblemFacts(key: AnswerKey): string {
   const path = solutionPathLines(key);
+  const unkeyed = (key.unkeyed ?? []).map((l) => (l ? `(${l})` : 'the unlabelled part'));
   return `The problem's verified final answer: ${keyFinalsLine(key)}` +
+    (unkeyed.length ? `\nNo verified answer for part ${unkeyed.join(' and ')}: a final answer to it is cannot_determine.` : '') +
     (path.length
       ? `\nVerified intermediate steps: ${path.join('; ')} These are one verified route: judge a student's intermediate value against a step only when it is the same quantity; a value from another valid route is judged on its own logic.`
       : '');
@@ -570,9 +675,38 @@ export function allKeyPartsConfirmed(
   key: AnswerKey,
   prior: ReadonlyArray<string> = [],
 ): boolean {
-  if (!key.parts.length) return false;
+  // A part the solvers could not agree on (key-solve.ts `unkeyed`) can never be
+  // confirmed here: the problem is never "done" on the record while it is open.
+  if (!key.parts.length || key.unkeyed?.length) return false;
   const done = confirmedKeyParts(history, currentMessage, key, prior);
   return key.parts.every((p) => done.has(normLabel(p.label)));
+}
+
+/**
+ * 2026-10-26 (typed sessions): the model check said "correct" and the tutor
+ * said so, but the record never counted it — only the deterministic check
+ * records. The check's `proposed` value is re-checked HERE against the key,
+ * with no model trust: it must be the student's own words (found in their
+ * message after normalisation) and it must confirm by the deterministic rules.
+ * Only `correct` verdicts are returned; never a denial.
+ */
+export function modelCheckConfirms(proposed: string, studentMessage: string, key: AnswerKey): KeyedVerdict[] {
+  const p = String(proposed ?? '').trim();
+  const said = normExact(stripRuntimeNote(studentMessage));
+  if (!p || !key?.parts?.length || !said.includes(normExact(p))) return [];
+  return keyedVerdicts(p, key).filter((v) => v.verdict === 'correct');
+}
+
+/** The marks of correct keyed-verdict debug events (`part:<l>` / `value:<l>=<name>`), for the outcome. */
+export function marksFromKeyedEvents(events: ReadonlyArray<{ type?: unknown; message?: unknown }> | null | undefined): string[] {
+  const out: string[] = [];
+  for (const e of events ?? []) {
+    if (e?.type !== KEYED_VERDICT_DEBUG_TYPE) continue;
+    const v = parseKeyedVerdictDebug(e.message);
+    if (!v || v.verdict !== 'correct') continue;
+    out.push(v.value ? `value:${v.part}=${v.value}` : `part:${v.part}`);
+  }
+  return sanitizeConfirmedMarks(out);
 }
 
 /** Debug message for a keyed verdict: `keyed part=<label> verdict=<v>`. */

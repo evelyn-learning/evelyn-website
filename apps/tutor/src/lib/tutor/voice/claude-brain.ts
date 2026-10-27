@@ -50,7 +50,7 @@ import {
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { formatHomeworkProblemBlock, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
-import { allKeyPartsConfirmed, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS } from './keyed-verdict';
+import { allKeyPartsConfirmed, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, keyedVerdict, keyedVerdicts, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms } from './keyed-verdict';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
 import { formatWorkThenMatchBlock } from './work-then-match';
@@ -1569,6 +1569,18 @@ export const ACTIVE_PROBLEM_HOMEWORK_PART_SUFFIX =
   ' The check against this problem applies ONLY when the student\'s reply is an answer to THIS problem. The student has several problems and parts in front of them: if their reply answers a different part or problem (they name it, or it plainly fits another one), judge it against the part it actually answers — work that part out yourself — and never mark it wrong for not matching this one.';
 
 /** A homework-problem turn with no verified key: never judged (spec §9.2). */
+/**
+ * 2026-10-26: the marks on the record for a verified homework problem — the
+ * student's messages re-checked against the key (this one included), earlier
+ * sessions' marks, the browser's record of this session's keyed frames, and
+ * `extra` (this turn's re-checked model credit). Undefined for any other turn.
+ */
+export function homeworkRecordMarks(input: Pick<BrainTurnInput, 'homeworkProblem' | 'conversationHistory'>, studentSaid: string, extra: ReadonlyArray<string> = []): string[] | undefined {
+  const hp = input.homeworkProblem;
+  if (!hp?.verified || !hp.key?.parts?.length) return undefined;
+  return confirmedKeyMarks(input.conversationHistory, studentSaid, hp.key, [...(hp.priorConfirmed ?? []), ...(hp.sessionConfirmed ?? []), ...extra]);
+}
+
 export function homeworkProblemNeverJudged(input: Pick<BrainTurnInput, 'homeworkProblem'>): boolean {
   return !!input.homeworkProblem && !(input.homeworkProblem.verified && input.homeworkProblem.key?.parts?.length);
 }
@@ -2060,7 +2072,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
   // GAC per-problem homework: '' unless the route resolved a homework-problem plan.
-  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem);
+  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem, { confirmed: homeworkRecordMarks(input, (input.studentMessage ?? input.studentTranscript ?? '').trim()) });
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -2278,7 +2290,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
   // GAC per-problem homework: '' unless the route resolved a homework-problem plan.
-  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem);
+  // 2026-10-26: re-rendered with the record once this turn's checks are in (below).
+  let homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem);
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -2523,6 +2536,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? homeworkKeyWithheld(input.homeworkProblem, [studentSaid, ...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : ''))].join('\n'))
     : [];
   const keyed = hpKey && input.textVerdictPrecheck === true && !ledgerKind ? keyedVerdict(studentSaid, hpKey) : null;
+  /** This turn's model-check credit re-checked against the key (marks). */
+  const hpModelCredit: string[] = [];
   const keyedResult = keyed && hpKey ? keyedPrecheckResult(keyed, hpKey) : null;
   if (input.textVerdictPrecheck === true && !ledgerKind && !hpUnverified) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
@@ -2550,7 +2565,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           : {}),
         ...(noRevealLedger && input.homework ? { solved: input.homework.solved ?? [] } : {}),
       }, hpKey
-        ? { ...(noRevealLedger ? { claimVerdict: true } : {}), ...input.verdictPrecheckDeps, timeoutMs: input.verdictPrecheckDeps?.timeoutMs ?? KEYED_VERDICT_MODEL_TIMEOUT_MS }
+        ? { ...(noRevealLedger ? { claimVerdict: true } : {}), ...input.verdictPrecheckDeps, timeoutMs: input.verdictPrecheckDeps?.timeoutMs ?? Math.max(KEYED_VERDICT_MODEL_TIMEOUT_MS, ledgerVerdictPrecheckTimeoutFor({ problems: input.homework?.problems, currentProblem: input.homework?.current, activeProblemStatement: input.activeProblem?.statement })) }
         : noRevealLedger
         ? {
           // 2026-10-15: under the ledger a check cut by its cap leaves a solved
@@ -2566,6 +2581,15 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       if (result) {
         const pub = toPublicPrecheck(result);
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${pub.differsAt ? ` differs_at="${pub.differsAt}"` : ''}${precheckInforms(pub) ? '' : ' (not injected)'}`);
+        // 2026-10-26: a model "correct" becomes a recorded part only when its
+        // proposed value — the student's own words — confirms against the key.
+        if (hpKey && !keyedResult && result.verdict === 'correct' && result.confidence === 'high') {
+          for (const v of modelCheckConfirms(result.proposed ?? '', studentSaid, hpKey)) {
+            hpModelCredit.push(v.value ? `value:${v.part ?? ''}=${v.value}` : `part:${v.part ?? ''}`);
+            yield { type: 'homework-keyed-verdict', part: v.part ?? '', verdict: 'correct', ...(v.value ? { value: v.value } : {}) };
+          }
+          if (hpModelCredit.length) console.log(`[keyed-verdict] model check confirmed by the key: ${hpModelCredit.join(' ')}`);
+        }
         if (precheckInforms(pub)) {
           // 2026-10-22 (hw-14 p4, F6): a correct verdict confirms values only — the
           // frame asks for any stated reason to be checked too. Final review: in
@@ -2653,9 +2677,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   }
   // GAC per-problem homework: every key part confirmed by the student's
   // messages so far (stateless: recomputed from the history every turn).
-  if (hpKey && allKeyPartsConfirmed(input.conversationHistory, studentSaid, hpKey, input.homeworkProblem?.priorConfirmed ?? [])) {
+  const hpRecordPrior = [...(input.homeworkProblem?.priorConfirmed ?? []), ...(input.homeworkProblem?.sessionConfirmed ?? []), ...hpModelCredit];
+  if (hpKey && allKeyPartsConfirmed(input.conversationHistory, studentSaid, hpKey, hpRecordPrior)) {
     console.log('[homework-problem] every part confirmed — homework-problem-done');
     yield { type: 'homework-problem-done' };
+  }
+  // 2026-10-26: the in-session record, after this turn's checks.
+  if (input.homeworkProblem && hpKey) {
+    homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem, { confirmed: homeworkRecordMarks(input, studentSaid, hpModelCredit) });
   }
   /** The parallel check's frame, once, when it is in. Null otherwise. */
   const takeParallelPrecheckFrame = (): BrainStreamEvent | null => {

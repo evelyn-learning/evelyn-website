@@ -19,7 +19,7 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { homeworkProblemOf } from '@/lib/tutor/lesson-plan/homework-problem';
 import { classifyHomeworkProblemOutcome, homeworkProblemPriorNote } from '@/lib/tutor/homework-build/outcome';
 import { getHomeworkBuild } from '@/lib/tutor/homework-build/store';
-import { confirmedKeyMarks } from '@/lib/tutor/voice/keyed-verdict';
+import { confirmedKeyMarks, marksFromKeyedEvents } from '@/lib/tutor/voice/keyed-verdict';
 
 export const GET = withPortalAuth(async (req, auth) => {
   const params = new URL(req.url).searchParams;
@@ -49,10 +49,13 @@ export const GET = withPortalAuth(async (req, auth) => {
     key,
     priorConfirmed: meta?.priorConfirmed ?? [],
   });
-  const priorNote = await homeworkProblemPriorNote(session.transcript);
+  const priorNote = await homeworkProblemPriorNote(session.transcript, {}, { key });
   const history = (session.transcript ?? [])
     .filter((t) => t?.role === 'student' && typeof t.text === 'string' && t.text.trim() !== '')
     .map((t) => ({ role: 'user' as const, content: String(t.text) }));
-  const confirmed = key?.parts?.length ? confirmedKeyMarks(history, '', key, meta?.priorConfirmed ?? []) : (meta?.priorConfirmed ?? []);
+  // 2026-10-26: the session's correct keyed-verdict events count too (outcome.ts).
+  const confirmed = key?.parts?.length
+    ? confirmedKeyMarks(history, '', key, [...(meta?.priorConfirmed ?? []), ...marksFromKeyedEvents(session.debugEvents)])
+    : (meta?.priorConfirmed ?? []);
   return NextResponse.json({ outcome, priorNote, confirmed });
 });

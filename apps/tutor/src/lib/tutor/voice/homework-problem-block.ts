@@ -22,6 +22,10 @@ export interface HomeworkProblemTurnInput {
   priorNote?: string;
   /** A2: marks earlier sessions of this problem confirmed (keyed-verdict.ts). */
   priorConfirmed?: string[];
+  /** 2026-10-26: marks THIS session's keyed-verdict frames confirmed, as the
+   *  browser recorded them (sanitised by the stream route). Read with the
+   *  history's own re-check for the in-session record (sessionRecordLine). */
+  sessionConfirmed?: string[];
   /** Present only when `verified`; read server-side from the homework build. */
   key?: AnswerKey;
 }
@@ -33,7 +37,7 @@ export const HOMEWORK_PROBLEM_NO_FIGURE =
 export const HOMEWORK_PROBLEM_VERIFIED =
   'Check the student\'s final answer against the expected answer in <active_problem> and say plainly whether it matches. The expected answer is correct: before you assert a relation or an intermediate value, make sure it is consistent with the expected values, and when the student\'s claim is consistent with them and yours is not, the student is right — say so and continue from their claim.';
 export const HOMEWORK_PROBLEM_UNVERIFIED =
-  'This problem has no checked answer, so never say an answer is right or wrong — work it through step by step with the student and ask them to check their result with their teacher. This overrides every other line of this message that asks you to grade an answer or say whether it matches.';
+  'This problem has no checked answer, so never say whether the student\'s final answer is right or wrong — work it through step by step with the student and ask them to check their final result with their teacher. You still name a slip in their working (an arithmetic error, a sign, a misread value) and a plainly false general statement in their message, and you answer their request to check such a statement. Never tell them their message is not an answer. This overrides every other line of this message that asks you to grade a final answer or say whether it matches.';
 
 /** The rules every homework-problem turn carries. */
 export const HOMEWORK_PROBLEM_RULES = [
@@ -42,7 +46,7 @@ export const HOMEWORK_PROBLEM_RULES = [
   `- ${HOMEWORK_EXPLAIN_WHEN_ASKED_RULE}`,
   '- When the student says they do not know or remember a fact to recall (a name, a definition, a formula), tell them after one miss and move on. This never applies to the problem\'s answer or to any numeric result.',
   '- The prior-work note, when there is one, is what happened last time on this problem.',
-  '- When every part is confirmed correct, say the problem is done and offer "Back to your list".',
+  '- When the record says every part is confirmed correct, say the problem is done and offer "Back to your list".',
 ].join('\n');
 
 /** The homework path's conduct and safeguarding rules (crisis line, personal
@@ -115,7 +119,33 @@ function priorConfirmedLine(marks: string[] | undefined): string {
   return `Already confirmed correct in an earlier session: ${items.join('; ')}. Do not ask for these again; acknowledge them briefly and continue with what is left.\n`;
 }
 
-export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined): string {
+const partName = (l: string) => (l ? `part ${l}` : 'the answer');
+const nameList = (ls: string[]) => ls.map(partName).join(', ');
+
+/**
+ * 2026-10-26 (typed sessions): the tutor said "part (a) is done" for parts the
+ * record never counted, re-opened parts it had confirmed, asked a solved
+ * problem's opening question again and said "next time we pick up at part
+ * (b)" after confirming (b). The record — every part confirmed so far, this
+ * session and earlier ones — is restated on every turn, and the tutor's words
+ * follow it. `confirmed`: marks (keyed-verdict.ts confirmedKeyMarks).
+ */
+export function sessionRecordLine(key: AnswerKey | undefined, confirmed: ReadonlyArray<string> | undefined): string {
+  if (!key?.parts?.length || !confirmed) return '';
+  const labels = key.parts.map((p) => String(p.label ?? '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const done = labels.filter((l) => confirmed.includes(`part:${l}`));
+  const open = labels.filter((l) => !done.includes(l));
+  const unkeyed = (key.unkeyed ?? []).filter((l) => !labels.includes(l));
+  if (!open.length && !unkeyed.length) {
+    return 'Record: every part of this problem is confirmed correct — the problem is done. Nothing is open: do not re-ask its questions or re-open its parts, and do not say anything is left for next time; offer "Back to your list".\n';
+  }
+  return `Record so far: confirmed correct — ${done.length ? nameList(done) : 'nothing yet'}.`
+    + (open.length ? ` Still open — ${nameList(open)}.` : '')
+    + (unkeyed.length ? ` Not checkable — ${nameList(unkeyed)}: there is no checked answer for it, so never say whether its final answer is right or wrong (a slip in the working you still name).` : '')
+    + ' Call a part done or right only when the record lists it as confirmed. When the answer check says a value is right but the record does not list its part, say the value matches and ask how they got it — never call the part done. Never re-open a confirmed part.\n';
+}
+
+export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined, opts: { confirmed?: ReadonlyArray<string> } = {}): string {
   if (!hp?.text?.trim()) return '';
   const note = hp.priorNote ? oneLine(hp.priorNote, 400) : '';
   return '<homework_problem>\n'
@@ -123,6 +153,7 @@ export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefi
     + `${hp.text.trim().slice(0, 4000)}\n`
     + (note ? `Prior work on this problem: ${note}\n` : '')
     + priorConfirmedLine(hp.priorConfirmed)
+    + (hp.verified ? sessionRecordLine(hp.key, opts.confirmed) : '')
     + `- ${hp.hasFigure ? HOMEWORK_PROBLEM_FIGURE_SHOWN : HOMEWORK_PROBLEM_NO_FIGURE}\n`
     + `- ${hp.verified ? HOMEWORK_PROBLEM_VERIFIED : HOMEWORK_PROBLEM_UNVERIFIED}\n`
     + `${HOMEWORK_PROBLEM_RULES}\n`

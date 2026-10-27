@@ -53,6 +53,7 @@ import { noRevealLedgerForPartner } from '@/lib/tutor/voice/no-reveal-ledger-gat
 import { sanitizeSolvedPositions } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { sanitizePublicPrecheck } from '@/lib/tutor/voice/verdict-precheck-shared';
 import { HOMEWORK_PROBLEM_THINKING_DEADLINE_MS, resolveHomeworkProblemTurn } from '@/lib/tutor/voice/homework-problem-turn';
+import { sanitizeConfirmedMarks } from '@/lib/tutor/voice/keyed-verdict';
 import {
   VOICE_THINKING_DEADLINE_MS,
   isVoiceJudgingRequest,
@@ -137,6 +138,10 @@ interface BrainStreamRequestBody {
    *  undefined (no `<homework_session>` block, no set_current_problem
    *  tool). See BrainTurnInput.homework. */
   homework?: { problems: Array<{ n: number; text: string }>; current: number; solved?: unknown };
+  /** 2026-10-26: one-problem homework — the marks this session's keyed-verdict
+   *  frames confirmed, as the browser recorded them. Sanitised below
+   *  (sanitizeConfirmedMarks); used only for the in-session record line. */
+  homeworkConfirmed?: unknown;
   /** Mock-review context (Task WS3). Present only for a mock-review session
    *  whose embed context fetch succeeded. Surfaces as the durable
    *  `<mock_review>` block. See BrainTurnInput.mockReview. */
@@ -700,7 +705,12 @@ export async function POST(req: NextRequest) {
       const homeworkProblemTurn = body.lessonPlanContext?.plan?.id
         ? await resolveHomeworkProblemTurn(body.lessonPlanContext.plan.id)
         : null;
-      const homeworkProblem = homeworkProblemTurn?.homeworkProblem;
+      // 2026-10-26: the browser's record of this session's confirmed marks, on a
+      // copy (the resolved turn is cached per plan and shared).
+      const sessionConfirmed = homeworkProblemTurn?.homeworkProblem.verified ? sanitizeConfirmedMarks(body.homeworkConfirmed) : [];
+      const homeworkProblem = homeworkProblemTurn
+        ? (sessionConfirmed.length ? { ...homeworkProblemTurn.homeworkProblem, sessionConfirmed } : homeworkProblemTurn.homeworkProblem)
+        : undefined;
       if (homeworkProblemTurn) {
         console.log(`[homework-problem] n=${homeworkProblemTurn.meta.n} verified=${homeworkProblem?.verified} figure=${homeworkProblem?.hasFigure} key_parts=${homeworkProblem?.key?.parts.length ?? 0}`);
       }
