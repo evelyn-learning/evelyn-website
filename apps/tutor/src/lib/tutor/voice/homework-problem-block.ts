@@ -125,7 +125,7 @@ function priorConfirmedLine(marks: string[] | undefined): string {
 export const HOMEWORK_PROBLEM_DONE_GUARD = '<verdict_guard>\n'
   + 'Every part of this problem was already confirmed correct before this message: the problem is done, and every question you asked about it is closed — the last one included. '
   + 'Do not ask any of them again, or any question whose answer is already confirmed, in any form: not as a check, a step to redo, a value to compute again or "how did you get it". '
-  + 'Answer what the student just said: explain when they ask why, and say a repeated value is already settled. Then offer to go back to their list, or take up a new question they bring — that one is worked as usual. '
+  + 'Answer what the student just said: explain when they ask why, and say a repeated value is already settled. Ask no question about this problem: the only question you may end on is whether they want to go back to their list or have a new question of their own. A new question they bring is worked as usual. '
   + 'Never tell them their message is not an answer.\n'
   + '</verdict_guard>\n\n';
 

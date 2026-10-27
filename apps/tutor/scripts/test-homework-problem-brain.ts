@@ -677,8 +677,11 @@ async function main() {
       assert.match(r.content, /confirmed correct — part a\. Still open — part b\./);
     });
     await section('a correct check the record cannot count is never called right (unlabelled, one part open)', async () => {
+      // Round 4: the only open (prose) part, checked correct as the open question, is recorded.
       const r = await run('maybe it is because water leaves when they join', { homeworkProblem: { ...apbioHp, sessionConfirmed: ['part:b'] }, verdictPrecheckDeps: { llm: checkSays('correct', 'open_question') } });
-      assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict'));
+      assert.ok(r.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'a'));
+      const two = await run('maybe it is because water leaves when they join', { homeworkProblem: apbioHp, verdictPrecheckDeps: { llm: checkSays('correct', 'open_question') } });
+      assert.ok(!two.events.some((e) => e.type === 'homework-keyed-verdict'), 'two parts open, unlabelled: not recorded');
       const r2 = await run('it is because water leaves when they join', { homeworkProblem: { ...apbioHp, sessionConfirmed: ['part:b'] }, verdictPrecheckDeps: { llm: checkSays('correct', 'overall_problem') } });
       assert.ok(r2.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'a'), 'the only open part, checked as the final answer: recorded');
       const brain = await import('../src/lib/tutor/voice/claude-brain');
@@ -709,6 +712,25 @@ async function main() {
         assert.ok(!r.content.includes('<active_question>\n'), `${msg}: no active-question block`);
         assert.ok(!r.content.includes('WORK IT, THEN MATCH'), `${msg}: no work-then-match guard`);
       }
+    });
+    await section('round 4 (AP Chem local3 portal-01069dbb): after done, "CH2O" gets no sheet answer check; the guard allows only the list / a new question', async () => {
+      const history = [...chemHistory, { role: 'user' as const, content: "I don't know, maybe C6H12O6?" }, { role: 'assistant' as const, content: 'That matches, and this problem is done.' },
+        { role: 'user' as const, content: 'why does that work?' }, { role: 'assistant' as const, content: 'If you multiply every subscript by the same whole number, what do you get?' }];
+      const r = await run('CH2O', { homeworkProblem: chemHp, conversationHistory: history, verdictPrecheckDeps: { llm: checkSays('incorrect', 'other_part', 'CH2O') } });
+      assert.ok(!r.content.includes('<answer_check>'), 'no answer check on a done problem');
+      assert.ok(r.content.includes('the only question you may end on is whether they want to go back to their list or have a new question of their own'));
+      const own = await run('can you check my answer x = 4', { homeworkProblem: chemHp, conversationHistory: [...history, { role: 'user' as const, content: 'can you help me with: a compound is 75% carbon and 25% hydrogen, what\'s the empirical formula' }, { role: 'assistant' as const, content: 'How many grams of carbon in 100 g?' }], verdictPrecheckDeps: { llm: checkSays('incorrect', 'open_question', 'x = 4') } });
+      assert.ok(own.content.includes('<answer_check>'), 'the student\'s own new question is still checked');
+    });
+    await section('round 4 (Biology local3 portal-64b8ed82): the unlabelled hedge for the only open prose part is recorded', async () => {
+      const BIOK: AnswerKey = { parts: [
+        { label: 'a', final: 'High temperature denatures the enzyme by breaking weak bonds maintaining its shape, altering the active site so substrate can no longer bind.', canonical: { kind: 'text', value: 'High temperature denatures the enzyme.' }, prose: true },
+        { label: 'b', final: 'A competitive inhibitor mimics the substrate and binds the active site, blocking substrate binding.', canonical: { kind: 'text', value: 'binds the active site' }, prose: true },
+      ], solvers: [] };
+      const hp = { text: 'Homework questions on enzymes: (a) Why does an enzyme stop working when the temperature gets too high? (b) What does a competitive inhibitor do to an enzyme\'s active site?', verified: true, hasFigure: false, key: BIOK, sessionConfirmed: ['part:a'] };
+      const r = await run("I don't know, maybe it binds in the active site itself and blocks the substrate from getting in?", { homeworkProblem: hp, verdictPrecheckDeps: { llm: checkSays('correct', 'open_question', 'binds in the active site itself') } });
+      assert.ok(r.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'b'), 'part (b) recorded');
+      assert.ok(r.events.some((e) => e.type === 'homework-problem-done'));
     });
     await section('2026-10-29 (Calc AB local): "check my answer x = 4" on the student\'s own problem is not credited to the sheet', async () => {
       const K = numKey([['a', '4', 4], ['b', '1/6', 0.1667]]);

@@ -53,7 +53,7 @@ import {
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_DONE_GUARD, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
-import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
+import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, offSheetTopicOpen, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
 import type { AnswerKey } from '../homework-build/types';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
@@ -2671,7 +2671,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           }
           if (hpModelCredit.length) console.log(`[keyed-verdict] model check confirmed by the key: ${hpModelCredit.join(' ')}`);
         }
-        if (precheckInforms(pub)) {
+        // 2026-10-29 (round 4, AP Chem local3): on a problem already done, a check
+        // of a value against the sheet ("CH2O" → other_part) kept the solved
+        // step alive. Nothing of the problem is graded once it is done, unless
+        // the student's own new question is the open topic.
+        const hpDoneSkip = hpDoneBefore && !!hpKey
+          && !offSheetTopicOpen([...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), studentSaid], hpKey);
+        if (hpDoneSkip) console.log('[homework-problem] done: answer check not injected');
+        if (precheckInforms(pub) && !hpDoneSkip) {
           // 2026-10-22 (hw-14 p4, F6): a correct verdict confirms values only — the
           // frame asks for any stated reason to be checked too. Final review: in
           // a one-problem session (hpKey) whichever path judged it, keyed or

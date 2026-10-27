@@ -251,7 +251,9 @@ async function main() {
     const credit = (i: number, confirmed: string[], answers: string) => proseModelCredit(BIO_MSGS.slice(0, i + 1), BIOLOGY, [], confirmed, answers).map((v) => v.part);
     assert.deepEqual(credit(0, [], 'open_question'), ['a'], 'labelled: the open question was that part');
     assert.deepEqual(credit(2, ['part:a'], 'overall_problem'), ['b'], 'the hedge proposing the only open part, checked as its answer');
-    assert.deepEqual(credit(2, ['part:a'], 'open_question'), [], 'unlabelled + open_question: may be a smaller step — not counted');
+    // Round 4 (local3 portal-64b8ed82): the ONLY open part, checked correct as the open question → recorded.
+    assert.deepEqual(credit(2, ['part:a'], 'open_question'), ['b'], 'the only open part: open_question counts');
+    assert.deepEqual(credit(2, [], 'open_question'), [], 'two parts open, unlabelled: not counted');
     assert.deepEqual(credit(0, [], 'other_part'), []);
   });
   await section('round 3: an unverified problem still says a plainly false claim is not right, as the student\'s claim', () => {

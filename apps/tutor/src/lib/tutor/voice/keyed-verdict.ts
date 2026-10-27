@@ -717,6 +717,17 @@ export function inSheetScope(messages: ReadonlyArray<string>, key: AnswerKey, pr
   return offSheet ? [] : vs.filter((v) => !done.has(v.part ?? ''));
 }
 
+/** A question of the student's own (OFF_SHEET_RE) is the open topic after `messages`: none of the key's parts named since. */
+export function offSheetTopicOpen(messages: ReadonlyArray<string>, key: AnswerKey): boolean {
+  let off = false;
+  for (const m of messages) {
+    const t = stripRuntimeNote(m);
+    if (namesKeyPart(t, key)) off = false;
+    else if (!isRuntimeNote(String(m ?? '').trim()) && OFF_SHEET_RE.test(t)) off = true;
+  }
+  return off;
+}
+
 /** This message's scoped keyed verdicts (sessionKeyedVerdicts), after the history's. */
 export function scopedKeyedVerdicts(
   history: ReadonlyArray<{ role: 'user' | 'assistant'; content: unknown }>,
@@ -791,10 +802,8 @@ export function modelCheckConfirms(proposed: string, studentMessage: string, key
  */
 export function proseModelCredit(
   messages: ReadonlyArray<string>, key: AnswerKey, prior: ReadonlyArray<string>, confirmed: ReadonlyArray<string>,
-  /** The check's `answers`. 2026-10-29 (local, Haiku): a labelled prose answer came back
-   *  `open_question` (the tutor's question WAS that part) and was never recorded. A
-   *  labelled message counts with `overall_problem` or `open_question`; an unlabelled
-   *  one only with `overall_problem` (an open question may be a smaller step). */
+  /** The check's `answers`: `overall_problem` or `open_question` (2026-10-29, local,
+   *  Haiku: the tutor's open question WAS that part). Unlabelled, only the one open part counts. */
   answers: string = 'overall_problem',
 ): KeyedVerdict[] {
   if (!messages.length || !key?.parts?.some((p) => p.prose)) return [];
@@ -803,7 +812,10 @@ export function proseModelCredit(
   const done = new Set(confirmed.filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
   const named = [...new Set(labelMarks(last, key).map((m) => m.label))];
   let target: AnswerPart | undefined;
-  if (answers !== 'overall_problem' && !(named.length && answers === 'open_question')) return [];
+  // 2026-10-29 (round 4, Biology local3): the unlabelled hedge for the ONLY open
+  // part, checked correct as the open question, was told "that matches" and
+  // never recorded. With exactly one part open, `open_question` counts too.
+  if (answers !== 'overall_problem' && answers !== 'open_question') return [];
   if (named.length) {
     if (named.length !== 1) return [];
     target = key.parts.find((p) => normLabel(p.label) === named[0]);
