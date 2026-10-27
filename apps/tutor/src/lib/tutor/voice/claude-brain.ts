@@ -2427,7 +2427,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     answerCheckBlock = formatLedgerTurnBlock(ledgerKind);
     console.log(`[homework-ledger] message kind: ${ledgerKind} (not checked)`);
   }
-  if (input.textVerdictPrecheck === true && !ledgerKind) {
+  if (input.textVerdictPrecheck === true && !ledgerKind && !navigationTurn) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
     if (turnShape?.answerShaped && hasContext) {
       // Liveness: the client keeps its typing indicator up while this runs.
@@ -2744,6 +2744,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               const hit = boardRevealsWithheldAnswer(args, reveal.withheld);
               yield* revealStop('board', hit.how, hit.matched);
             }
+            currentToolUse = null;
+          } else if (
+            moveRequestTurn && tc.name === 'advance_lesson' && input.lessonPlanContext
+            && isBackwardAdvance((args as { to?: unknown }).to, input.lessonPlanContext.currentSegmentId, input.lessonPlanContext.segmentIndex)
+          ) {
+            console.warn(`[advance-request] advance_lesson to "${String((args as { to?: unknown }).to)}" refused — the student asked to move on`);
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: BACKWARD_ADVANCE_REFUSED_REASON });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: BACKWARD_ADVANCE_REFUSED_REASON };
             currentToolUse = null;
           } else {
             newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });

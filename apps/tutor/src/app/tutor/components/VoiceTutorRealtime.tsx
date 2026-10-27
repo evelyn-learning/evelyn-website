@@ -11337,7 +11337,7 @@ export function VoiceTutorRealtime({
         advanceRequest = detectAdvanceRequest(transcript);
         const advPlan = lessonPlanRef.current;
         const advFrom = currentSegmentIdRef.current;
-        const advHomework = (homeworkProblemsRef.current?.length ?? 0) > 0 || homeworkProblemRef.current != null;
+        const advHomework = (homeworkProblemsRef.current?.length ?? 0) > 0;
         if (advanceRequest?.scope === 'objective' && advPlan && advFrom && !advHomework) {
           const advMove = resolveObjectiveMove(advPlan, advFrom, advanceRequest.named);
           const advTarget = advMove?.kind === 'move' ? advMove.target : null;
