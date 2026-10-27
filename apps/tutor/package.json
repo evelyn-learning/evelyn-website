@@ -372,6 +372,7 @@
     "test:streak-claim": "npx tsx scripts/test-streak-claim.ts",
     "test:boredom-cue": "npx tsx scripts/test-boredom-cue.ts",
     "test:advance-request": "npx tsx scripts/test-advance-request.ts",
+    "test:killed-bubble": "npx tsx scripts/test-killed-bubble.ts",
     "test:advance-request-brain": "npx tsx scripts/test-advance-request-brain.ts",
     "test:post-tool-turn": "npx tsx scripts/test-post-tool-turn.ts",
     "test:post-tool-turn-brain": "npx tsx scripts/test-post-tool-turn-brain.ts",

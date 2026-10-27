@@ -529,6 +529,7 @@ import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
 import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn, decideTypedBeforeHomeworkReady, createTypedHold, type TypedHold } from '@/app/tutor/components/session/text-kickoff';
+import { markKilledBubbleRevising } from '@/lib/tutor/orchestrator/killed-bubble';
 import { TUTOR_TYPED_WAITS_FOR_HOMEWORK, TUTOR_EMPTY_RECAP_CONTINUE, TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { detectAdvanceRequest, resolveObjectiveMove, describeAlreadyOnObjective, describeTypedAdvance, overlongNoteForTurn, OVERLONG_FINISH_FIRST, type AdvanceRequest } from '@/lib/tutor/orchestrator/advance-request';
 import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
@@ -18340,14 +18341,11 @@ export function VoiceTutorRealtime({
           );
           onTranscriptUpdate([...transcriptRef.current]);
         } else {
-          let changedRevise = false;
-          transcriptRef.current = transcriptRef.current.map((e) => {
-            if (e.id === killedStreamingId && !e.revising) {
-              changedRevise = true;
-              return { ...e, revising: true, streaming: false };
-            }
-            return e;
-          });
+          // 2026-10-27 (killed-bubble.ts): dimmed AND still in progress — a
+          // killed fragment never reads as the finished reply while the retry runs.
+          const revised = markKilledBubbleRevising(transcriptRef.current, killedStreamingId);
+          transcriptRef.current = revised.entries;
+          const changedRevise = revised.changed;
           if (changedRevise) {
             onTranscriptUpdate([...transcriptRef.current]);
           }
