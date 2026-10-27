@@ -564,3 +564,12 @@ export const TUTOR_CROSS_CALL_DEDUP =
  *  (the brain gives the recap itself) instead of ending it. */
 export const TUTOR_EMPTY_RECAP_CONTINUE =
   process.env.NEXT_PUBLIC_TUTOR_EMPTY_RECAP_CONTINUE !== 'off';
+
+// ── 2026-10-26: a student's request to move on in a lesson ─────────────────
+/** "skip" / "move on to the next section" / "move on to <objective>" moves the
+ *  lesson to the next (or named) objective before the brain call, as the Skip
+ *  button does; an advance cue's hint says to move on (no menu); the
+ *  overlong-segment note is not held, and drops "finish first", on such a turn
+ *  (orchestrator/advance-request.ts). 'off' restores all three. */
+export const TUTOR_TYPED_ADVANCE =
+  process.env.NEXT_PUBLIC_TUTOR_TYPED_ADVANCE !== 'off';

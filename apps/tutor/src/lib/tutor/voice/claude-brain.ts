@@ -40,6 +40,8 @@ import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPreche
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence } from './post-tool-turn';
+import { pacingHintForCue, DIFFICULTY_CUE_HINT } from '../orchestrator/advance-request';
+import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
   precheckDecides,
@@ -1185,7 +1187,10 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
     // signal, and the brain spoke that name back ("Given that boredom cue,
     // let's not linger."). Plain second-person guidance describes the
     // situation instead; the instruction itself is unchanged.
-    return `the student has just told you in their own words that this pace or level is not right for them — verbally offer "harder / skip / different topic" immediately`;
+    // 2026-10-26 (lesson portal-fa3e2830): "skip" / "move on to the next
+    // section" got a menu of choices four times. An advance cue now says to
+    // move on; a difficulty / pace cue keeps the offer (advance-request.ts).
+    return TUTOR_TYPED_ADVANCE ? pacingHintForCue(state.cue) : DIFFICULTY_CUE_HINT;
   }
   // Streak-based hints are EDGE-triggered: fire ONCE when count first
   // hits the threshold value, then go silent. Conversation history
