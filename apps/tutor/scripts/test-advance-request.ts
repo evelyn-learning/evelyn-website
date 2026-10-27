@@ -15,6 +15,7 @@ import {
   resolveObjectiveMove,
   describeAlreadyOnObjective,
   isAutoAdvancedTurn,
+  isBackwardAdvance,
   describeTypedAdvance,
   pacingHintForCue,
   isAdvanceCue,
@@ -166,6 +167,44 @@ check('off-topic segments are never landed on', resolveObjectiveTarget({
   }
 }
 
+// ── Round 5 (Haiku 5.5, lesson portal-d82e6e5e, 10-27): the exact sequence ──
+{
+  const Q = 'gen-6f0109e0';
+  const segs = ['intro', `${Q}.lo-1-hook`, `${Q}.lo-1-concept`, `${Q}.lo-2-hook`, `${Q}.lo-2-try`, `${Q}.lo-3-hook`, `${Q}.lo-3-try`, `${Q}.lo-4-hook`, 'recap'];
+  const real = { segments: segs.map((id) => ({ id })) };
+  let cur = `${Q}.lo-1-hook`;
+  const seq: Array<[string, 'objective' | null, boolean, string]> = [
+    ['can we move to the next section?', 'objective', false, `${Q}.lo-2-hook`],
+    ['ok', null, false, `${Q}.lo-2-hook`],
+    ['no move to the next section', 'objective', true, `${Q}.lo-3-hook`],
+    ['skip', 'objective', false, `${Q}.lo-4-hook`],
+  ];
+  for (const [text, scope, leadingNo, landOn] of seq) {
+    const r = detectAdvanceRequest(text);
+    check(`seq "${text}": scope`, (r?.scope ?? null) === scope, r);
+    check(`seq "${text}": leading "no" flagged`, (r?.leadingNo ?? false) === leadingNo, r);
+    if (r?.scope === 'objective') cur = resolveObjectiveTarget(real, cur, r.named) ?? cur;
+    check(`seq "${text}": lands on ${landOn}`, cur === landOn, cur);
+  }
+  for (const t of ['nah, skip', 'no, move on to the next topic', 'No. Next section please']) {
+    const r = detectAdvanceRequest(t);
+    check(`leading no + explicit move: "${t}"`, r?.scope === 'objective' && r.leadingNo === true, r);
+  }
+  check('"no, don\'t skip" is still not a move', detectAdvanceRequest("no, don't skip") === null);
+  const f = describeTypedAdvance({ target: `${Q}.lo-3-hook`, kind: 'hook', declinedOffer: true });
+  check('fact: a leading "no" declines the offer, not the move', /declines your last offer or question, not the move/.test(f) && /wants to move on/.test(f), f);
+  check('fact without a leading no says nothing about it', !/declines/.test(describeTypedAdvance({ target: 't' })));
+  // A move back on a move turn.
+  const index = segs.map((id) => ({ id }));
+  check('backward: "previous"', isBackwardAdvance('previous', `${Q}.lo-3-hook`, index));
+  check('backward: an earlier segment id', isBackwardAdvance(`${Q}.lo-2-try`, `${Q}.lo-3-hook`, index));
+  check('not backward: next', !isBackwardAdvance('next', `${Q}.lo-3-hook`, index));
+  check('not backward: a later id', !isBackwardAdvance(`${Q}.lo-4-hook`, `${Q}.lo-3-hook`, index));
+  check('not backward: the current id', !isBackwardAdvance(`${Q}.lo-3-hook`, `${Q}.lo-3-hook`, index));
+  check('not backward: recap / free', !isBackwardAdvance('recap', `${Q}.lo-3-hook`, index) && !isBackwardAdvance('free', `${Q}.lo-3-hook`, index));
+  check('unknown position → not backward', !isBackwardAdvance(`${Q}.lo-2-try`, 'not-in-plan', index));
+}
+
 // ── what the brain reads ─────────────────────────────────────────────────
 {
   const f = describeTypedAdvance({ target: `${P}.lo-2-hook`, kind: 'hook', objective: 'Calculate slope from two points.' });
@@ -192,6 +231,7 @@ for (const s of [ADVANCE_CUE_HINT, OVERLONG_ADVANCE_NOW, describeTypedAdvance({ 
   const src = readFileSync(join(__dirname, '../src/app/tutor/components/VoiceTutorRealtime.tsx'), 'utf8');
   check('wiring: typed request detected and resolved before the brain call', /detectAdvanceRequest\(transcript\)/.test(src) && /resolveObjectiveMove\(advPlan, advFrom, advanceRequest\.named\)/.test(src) && /describeAlreadyOnObjective\(/.test(src) && /pendingBoardAnchorNoteRef\.current = null;\n\s*pendingNoAdvanceNoteRef\.current = null;/.test(src) && /applyResolvedAdvance\(advPlan, advFrom, advTarget\)/.test(src));
   check('wiring: the fact rides the brain transcript', /if \(typedAdvanceFact\) runTranscript = `\$\{typedAdvanceFact\}/.test(src));
+  check('wiring: a leading "no" reaches the fact', /declinedOffer: advanceRequest\.leadingNo/.test(src));
   check('wiring: an advanced turn carries no pace hint', /const cueMatch = !hasButtonMarker && !typedAdvanceFact/.test(src));
   check('wiring: a move-on turn delivers the overlong note without "finish first"', /askedToMoveOn \|\| runtimeNoteHeldTurnsRef/.test(src) && /overlongNoteForTurn\(pendingRuntimeNoteRef\.current, askedToMoveOn\)/.test(src));
   check('wiring: the planted note uses the shared "finish first" text', src.includes('`${OVERLONG_FINISH_FIRST}${nextHint} `'));

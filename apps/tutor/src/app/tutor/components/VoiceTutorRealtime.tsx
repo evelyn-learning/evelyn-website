@@ -11357,7 +11357,7 @@ export function VoiceTutorRealtime({
             applyResolvedAdvance(advPlan, advFrom, advTarget);
             const advSeg = getSegment(advPlan, advTarget);
             const advLo = advPlan.los?.find((lo) => advTarget.startsWith(`${lo.id}-`));
-            typedAdvanceFact = describeTypedAdvance({ target: advTarget, kind: advSeg?.kind, objective: advLo?.description });
+            typedAdvanceFact = describeTypedAdvance({ target: advTarget, kind: advSeg?.kind, objective: advLo?.description, declinedOffer: advanceRequest.leadingNo });
             // The overlong note was about the segment just left.
             pendingRuntimeNoteRef.current = null;
             runtimeNoteHeldTurnsRef.current = 0;

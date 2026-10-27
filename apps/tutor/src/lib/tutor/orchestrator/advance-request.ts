@@ -30,6 +30,9 @@ export interface AdvanceRequest {
   named: string | null;
   /** The clause that matched (telemetry). */
   matched: string;
+  /** The clause opened with "no" / "nah" / "nope" — declining the tutor's
+   *  last offer or question, not the move ("no move to the next section"). */
+  leadingNo: boolean;
 }
 
 const NEGATION_RE = /\b(?:don'?t|do\s+not|not|never|no\s+need\s+to|wait)\b|n't\b/i;
@@ -67,16 +70,21 @@ export function detectAdvanceRequest(text: string): AdvanceRequest | null {
     if (NEGATION_RE.test(clause.replace(/^(?:no|nope|nah)\b[\s,]*/i, ''))) continue;
     const c = core(clause);
     if (!c) continue;
-    if (NEXT_LEVEL_RE.test(c) || SKIP_RE.test(c)) return { scope: 'objective', named: null, matched: clause };
+    // A "no" opening this clause, or standing as the clause before it
+    // ("No. Next section please").
+    const idx = t.indexOf(clause);
+    const before = idx > 0 ? t.slice(0, idx) : '';
+    const leadingNo = /^\s*(?:no|nope|nah)\b/i.test(clause) || /(?:^|[.!?;]\s*)(?:no|nope|nah)[\s,.!]*$/i.test(before.trim());
+    if (NEXT_LEVEL_RE.test(c) || SKIP_RE.test(c)) return { scope: 'objective', named: null, matched: clause, leadingNo };
     const named = NAMED_RE.exec(c);
     if (named) {
       const target = named[1].trim();
       const words = target.split(/\s+/);
       if (!NOT_A_TARGET_RE.test(target) && !/[\d=<>+*/^]/.test(target) && words.length <= 6) {
-        return { scope: 'objective', named: target, matched: clause };
+        return { scope: 'objective', named: target, matched: clause, leadingNo };
       }
     }
-    if (!onward && ONWARD_RE.test(c)) onward = { scope: 'onward', named: null, matched: clause };
+    if (!onward && ONWARD_RE.test(c)) onward = { scope: 'onward', named: null, matched: clause, leadingNo };
   }
   return onward;
 }
@@ -177,11 +185,16 @@ export function isAutoAdvancedTurn(transcript: string): boolean {
 }
 
 /** The fact the brain reads on a turn the runtime already advanced. */
-export function describeTypedAdvance(input: { target: string; kind?: string; objective?: string }): string {
+export function describeTypedAdvance(input: { target: string; kind?: string; objective?: string; declinedOffer?: boolean }): string {
   const kind = input.kind ? ` (a ${input.kind} segment)` : '';
   const objective = input.objective ? `, the start of the objective "${input.objective.replace(/\s+/g, ' ').trim().slice(0, 160)}"` : '';
   return (
     `[Lesson auto-advanced: the student asked to move on, and the lesson pointer has ALREADY moved to segment "${input.target}"${kind}${objective}. ` +
+    // Round 5 (portal-d82e6e5e): "no move to the next section" was read as
+    // "no, stay" and the brain moved the lesson back.
+    (input.declinedOffer
+      ? `Their message starts with "no": that declines your last offer or question, not the move — the student wants to move on. `
+      : '') +
     `If their message also answers your last question, give the verdict in one short sentence first. ` +
     `Then say plainly that you are moving on to it — never say you are staying — introduce THAT segment briefly and pose its first question or problem. ` +
     `Do NOT call advance_lesson — the advance is already done. ` +
@@ -216,3 +229,25 @@ export const OVERLONG_ADVANCE_NOW =
 export function overlongNoteForTurn(note: string, studentAskedToMoveOn: boolean): string {
   return studentAskedToMoveOn ? note.replace(OVERLONG_FINISH_FIRST, OVERLONG_ADVANCE_NOW) : note;
 }
+
+/**
+ * True when an advance_lesson target moves the lesson BACK from the current
+ * segment: "previous", or an explicit segment id earlier in the plan. Used to
+ * refuse a move back on a turn where the student asked to move on (round 5,
+ * portal-d82e6e5e: the runtime moved objective 2 → 3, then the brain called
+ * advance_lesson {to:"previous"} — "I'm moving the lesson back"). An unknown
+ * current position, "next", "recap", "free" or a later / the same id is not
+ * backward.
+ */
+export function isBackwardAdvance(to: unknown, currentSegmentId: string, segmentIndex: ReadonlyArray<{ id: string }>): boolean {
+  const target = typeof to === 'string' ? to.trim() : '';
+  const cur = segmentIndex.findIndex((s) => s.id === currentSegmentId);
+  if (cur < 0) return false;
+  if (target === 'previous') return true;
+  const idx = segmentIndex.findIndex((s) => s.id === target);
+  return idx >= 0 && idx < cur;
+}
+
+/** The tool result the brain reads when that move back is refused. */
+export const BACKWARD_ADVANCE_REFUSED_REASON =
+  'the student asked to move on, so the lesson is not moved back on this turn. Do not say you are staying or going back: continue from the segment the lesson is on now';

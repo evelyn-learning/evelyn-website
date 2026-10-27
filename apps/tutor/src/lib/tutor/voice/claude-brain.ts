@@ -40,7 +40,7 @@ import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPreche
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
 import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
-import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn } from '../orchestrator/advance-request';
+import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn, detectAdvanceRequest, isBackwardAdvance, BACKWARD_ADVANCE_REFUSED_REASON } from '../orchestrator/advance-request';
 import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
@@ -2358,6 +2358,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // A navigation turn (the runtime moved the lesson) is not an answer: no
   // turn-shape frame and no verdict guard on it (advance-request.ts).
   const navigationTurn = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript);
+  // Round 5: on a turn where the student asked to move on (or the runtime
+  // already moved), the lesson never goes back (advance-request.ts).
+  const moveRequestTurn = navigationTurn || (TUTOR_TYPED_ADVANCE && !!detectAdvanceRequest(studentSaid));
   const turnShapeBlock = turnShapeOn && !navigationTurn
     ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
     : '';
