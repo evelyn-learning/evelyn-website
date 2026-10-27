@@ -171,7 +171,7 @@ export default function SolutionPlayer({ solution }: { solution: Solution }) {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div>
         <Link href={`${SHOWCASE.basePath}/solutions`} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-800">
-          <ArrowLeft className="h-4 w-4" /> All sample solutions
+          <ArrowLeft className="h-4 w-4" /> All standard solutions
         </Link>
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium uppercase tracking-wider text-slate-500">
           <span>{solution.course}</span>

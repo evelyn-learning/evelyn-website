@@ -18,7 +18,7 @@ export default function PremiumSolutionsPage() {
       <div>
         <h1 className="font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Premium AI Solutions</h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-slate-700">
-          Four items, one per subject, built to a higher grade than the regular samples. The written solution is still there, answer first, but the figure now builds up with the voice, the student can tap any step to hear it again, and the board turns into a short task at the end. Open one and press play.
+          Four items, one per subject, built to a higher grade than the standard solutions. The written solution is still there, answer first, but the figure now builds up with the voice, the student can tap any step to hear it again, and the board turns into a short task at the end. Open one and press play.
         </p>
       </div>
 
