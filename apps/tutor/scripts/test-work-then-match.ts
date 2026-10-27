@@ -623,6 +623,21 @@ async function main() {
     assert.match(vtr, /counting_disagreement/);
   });
 
+  console.log('2026-10-26 — a final answer is judged; a keyed problem is credited by a check only');
+  await test('text + voice: a matching step never stands in for a verdict on a stated final answer', async () => {
+    const wtm = await import('../src/lib/tutor/voice/work-then-match');
+    const { formatVoiceWorkThenMatchBlock } = await import('../src/lib/tutor/voice/voice-judging');
+    assert.ok(formatWorkThenMatchBlock('x = 3 so the answer is 7').includes(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE.trim()));
+    assert.ok(formatVoiceWorkThenMatchBlock('x is 3 so the answer is 7').includes(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE.trim()));
+    assert.ok(!/angle|formula|inequalit|enzyme/i.test(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE), 'generic');
+  });
+  await test('keyed problem, no check returned: the tutor\'s own "checks out" credits nothing', async () => {
+    const { resolveMatchCredit } = await import('../src/lib/tutor/voice/work-then-match');
+    assert.deepEqual(resolveMatchCredit({ precheck: null, match: 'matches', keyedProblem: true }), { credit: 'none', source: 'none', disagreement: false });
+    assert.equal(resolveMatchCredit({ precheck: null, match: 'matches' }).credit, 'correct', 'without a key: as before');
+    assert.equal(resolveMatchCredit({ objectiveCorrect: true, precheck: null, match: 'none', keyedProblem: true }).credit, 'correct', 'the key itself still credits');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

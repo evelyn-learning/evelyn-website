@@ -146,6 +146,7 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + (TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL ? WRONG_WHOLE_ANSWER_TEXT_RULE : '')
     + 'When their value is right as far as it goes but the question asks for more (one of several values that work, one bound of two, one part of several): say what it does satisfy and that the question asks for more, and ask for the rest. Do not supply the rest.\n'
     + (ledger ? LEDGER_FINAL_ANSWER_RULE : 'When they gave the correct FINAL answer while a smaller step was open: show the remaining step or steps briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n')
+    + FINAL_ANSWER_ALSO_JUDGED_RULE
     + 'When the message does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them their message "is not an answer".\n'
     + 'Work from the student\'s own problem and data, not from a value stated earlier in the conversation: an earlier line — yours included — can be wrong, and if your working now shows that one of yours was, say so plainly and use the corrected value.\n'
     + (TUTOR_AMBIGUOUS_EXPRESSION_RULE ? AMBIGUOUS_READING_TEXT_RULE : '')
@@ -153,6 +154,12 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'Reason silently. Your first words are addressed to the student — the working itself when their message proposed something — never deliberation about this rule, the turn or the lesson state, never an announcement that you are going to check. Never refer to the student in the third person.\n'
     + '</verdict_guard>\n\n';
 }
+
+/** 2026-10-26 (typed sessions): a message with a right intermediate step and a
+ *  wrong final answer got only "your step matches" — the wrong final answer was
+ *  never called wrong. */
+export const FINAL_ANSWER_ALSO_JUDGED_RULE =
+  'When the message also states a final answer to the problem or to one of its parts, that final answer is judged in the same reply: a step that matches never stands in for a verdict on a final answer that does not match.\n';
 
 // ── before display: a verdict or praise opener ─────────────────────────────
 
@@ -653,6 +660,8 @@ export function resolveMatchCredit(input: {
   echoNoCredit?: boolean;
   /** Unset ⇒ TUTOR_WRONG_WHOLE_ANSWER_NO_REVEAL. */
   wrongWholeAnswerNoReveal?: boolean;
+  /** 2026-10-26: the problem has a verified key — no credit from the match statement alone. */
+  keyedProblem?: boolean;
 }): MatchCredit {
   const credit = resolveMatchCreditBase(input);
   if (credit.credit === 'correct' && credit.source !== 'verified_key' && input.echo
@@ -669,10 +678,15 @@ function resolveMatchCreditBase(input: {
   precheck: PublicVerdictPrecheck | null | undefined;
   match: MatchStatement;
   wrongWholeAnswerNoReveal?: boolean;
+  keyedProblem?: boolean;
 }): MatchCredit {
   if (input.objectiveCorrect === true) return { credit: 'correct', source: 'verified_key', disagreement: false };
   if (input.verifiedWrong === true) return { credit: 'incorrect', source: 'verified_key', disagreement: false };
   const p = input.precheck;
+  // 2026-10-26 (typed sessions): with a verified key, credit comes from a check
+  // (the key, or a model check that returned something) — never from the
+  // tutor's own "that checks out" when the check returned nothing.
+  if (input.keyedProblem === true && !p) return { credit: 'none', source: 'none', disagreement: false };
   const match = input.match;
   if (precheckDecides(p)) {
     // Not an answer to anything on the table; or right for a DIFFERENT part

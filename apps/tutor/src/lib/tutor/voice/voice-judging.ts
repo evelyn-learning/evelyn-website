@@ -63,7 +63,7 @@ import {
   type PrecheckContradiction,
   type PublicVerdictPrecheck,
 } from '@/lib/tutor/voice/verdict-precheck-shared';
-import { isNonAnswerShape, readMatchStatement, readVerdictOpener } from '@/lib/tutor/voice/work-then-match';
+import { FINAL_ANSWER_ALSO_JUDGED_RULE, isNonAnswerShape, readMatchStatement, readVerdictOpener } from '@/lib/tutor/voice/work-then-match';
 
 // ── server switches ────────────────────────────────────────────────────────
 
@@ -179,6 +179,7 @@ export function formatVoiceWorkThenMatchBlock(transcript: string, ts?: TurnShape
     + 'When what they said does not match, your working goes as far as the step where theirs and yours part, and that step\'s result is what you state; the steps after it stay with the student.\n'
     + 'When their value is right as far as it goes but the question asks for more (one of several values that work, one bound of two, one part of several): say what it does satisfy and that the question asks for more, and ask for the rest. Do not supply the rest.\n'
     + 'When they gave the correct FINAL answer while a smaller step was open: say the remaining step briefly, reach the result, and say that it is the value they gave and that it is the final answer. Do not send them back to the smaller step.\n'
+    + FINAL_ANSWER_ALSO_JUDGED_RULE
     + 'When what they said does not answer the open question — a bare yes or ok to a question that asks for a value or a choice, a value that is the wrong kind of thing for the question, a question or request of their own, a statement of not knowing with nothing proposed, conversation: no verdict of any kind, and do not work the open question out for them or state its result. Restate or re-ask the open question in fewer words, or take one smaller step with them, or respond to what they asked. Never tell them that what they said "is not an answer".\n'
     + 'Work from the student\'s own problem and data, not from a value stated earlier in the conversation: an earlier line — yours included — can be wrong, and if your working now shows that one of yours was, say so plainly and use the corrected value.\n'
     + (TUTOR_AMBIGUOUS_EXPRESSION_RULE ? AMBIGUOUS_READING_VOICE_RULE : '')
