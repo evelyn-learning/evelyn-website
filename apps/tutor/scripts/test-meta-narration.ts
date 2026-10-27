@@ -600,5 +600,18 @@ drop('system leak still caught by the reaction shape: "The system says I should 
   else process.env.NEXT_PUBLIC_TUTOR_CORRECTION_WORKING_DROP = prev;
 }
 
+// ─── Round 3 (Haiku 5.5, 10-27): commentary on the reply / the instruction ───
+check('"Those words already ask the question, so I\'ll stop there." (portal-93b6dd9b)', isMetaNarration("Those words already ask the question, so I'll stop there."));
+check('"Your words already ended with the question, so I\'ll stop here." (portal-d8c8a3f6)', isMetaNarration("Your words already ended with the question, so I'll stop here."));
+check('"The equation card is up, so there\'s nothing more to add." (portal-136a30a0)', isMetaNarration("The equation card is up, so there's nothing more to add."));
+check('"The card is up."', isMetaNarration('The card is up.'));
+check('"That already asks the question."', isMetaNarration('That already asks the question.'));
+check('"…, so I\'ll stop there."', isMetaNarration("The question is on the board, so I'll stop there."));
+check('kept: "Sounds good, let\'s stop here."', !isMetaNarration("Sounds good, let's stop here."));
+check('kept: "There\'s nothing more to add to the left side, so subtract 3 from both sides."', !isMetaNarration("There's nothing more to add to the left side, so subtract 3 from both sides."));
+check('kept: "The problem card is up on the board — what\'s the first step?"', !isMetaNarration("The problem card is up on the board — what's the first step?"));
+check('kept: "Put those words in your own sentence."', !isMetaNarration('Put those words in your own sentence.'));
+check('kept: "Read the question again: what does it already ask for?"', !isMetaNarration('Read the question again: what does it already ask for?'));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

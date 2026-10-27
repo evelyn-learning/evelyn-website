@@ -359,8 +359,29 @@ function isLearnerDeliberation(s: string): boolean {
   return LEARNER_THIRD_PERSON_RE.test(s) && SELF_INSTRUCTION_RE.test(s);
 }
 
+// g. Commentary on the reply itself or on an instruction about it (round 3,
+// Haiku 5.5, 2026-10-27): "Those words already ask the question, so I'll stop
+// there." / "Your words already ended with the question, so I'll stop here." /
+// "The equation card is up, so there's nothing more to add." — a later call
+// talking about what the earlier one said. Each form is narrow: "words
+// already", "already asks/ends with the question", a sentence-final "nothing
+// more to add", a BARE "<…> card is up" (or "…, so"), and "so I'll stop
+// here/there". "Let's stop here", "nothing more to add to the left side" and
+// "The card is up on the board — what's …?" are kept.
+const REPLY_COMMENTARY_RE = new RegExp(
+  [
+    String.raw`\b(?:those|these|your|my|the)\s+words\s+already\b`,
+    String.raw`\balready\s+(?:asks?|asked|ends?|ended)\s+(?:with\s+)?(?:the|a|that|this)\s+question\b`,
+    String.raw`\bnothing\s+(?:more|else)\s+to\s+add\s*[.!…]*\s*$`,
+    String.raw`^\s*(?:the\s+)?(?:[\w-]+\s+){0,2}card\s+is\s+(?:up|showing)\s*(?:[.!…]*\s*$|,\s*so\b)`,
+    String.raw`\bso\s+i(?:['’]ll|\s+will)\s+stop\s+(?:here|there)\b`,
+  ].join('|'),
+  'i',
+);
+
 function isLeakShape(s: string): boolean {
-  return isPrivateWorking(s)
+  return REPLY_COMMENTARY_RE.test(s)
+    || isPrivateWorking(s)
     || isTurnGrading(s)
     || ARTEFACT_REACTION_RE.test(s)
     || TOOL_RESULT_RE.test(s)

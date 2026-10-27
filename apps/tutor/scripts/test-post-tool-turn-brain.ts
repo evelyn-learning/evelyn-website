@@ -96,8 +96,7 @@ async function main() {
     assert.equal(requests.length, 2);
     const results = requests[1].messages[requests[1].messages.length - 1].content as Array<{ type: string; content: string }>;
     assert.equal(results[0].type, 'tool_result');
-    assert.match(results[0].content, /^show_equation executed successfully\. The student has already received your words this turn: «The limit's final value/);
-    assert.match(results[0].content, /Do not restate or rephrase/);
+    assert.match(results[0].content, /^show_equation executed successfully\. Already sent to the student this turn \(never repeat or mention it\): «The limit's final value/);
     assert.deepEqual(r.sentences, ["The limit's final value is 1/4, so 1/4 is the right final answer.", 'How do you get rid of the 0 in the denominator?']);
     assert.ok(!/deal with/.test(r.done!.fullText), r.done!.fullText);
   });
@@ -108,6 +107,24 @@ async function main() {
     ]);
     assert.ok(r.sentences.includes('Where does it cross the vertical axis?'));
     assert.match(r.done!.fullText, /vertical axis\?/);
+  });
+  // Round 3 (Haiku 5.5, 10-27): the later call talked about the instruction.
+  await section('round 3: a reply that already asked → the later call is dropped whole (portal-93b6dd9b)', async () => {
+    const r = await run([
+      { blocks: [{ type: 'text', text: 'Both parts are now confirmed, so this problem is done. Back to your list?' }, tool('t1')], stop: 'tool_use' },
+      { blocks: [{ type: 'text', text: "The card is up. Those words already ask the question, so I'll stop there." }], stop: 'end_turn' },
+    ]);
+    assert.deepEqual(r.sentences, ['Both parts are now confirmed, so this problem is done.', 'Back to your list?']);
+    assert.equal(r.done!.fullText, 'Both parts are now confirmed, so this problem is done. Back to your list?');
+  });
+  await section('round 3: the thin-turn follow-up keeps only its first question (portal-136a30a0)', async () => {
+    const r = await run([
+      { blocks: [{ type: 'text', text: "Let's reason it out from the acceleration. The ball gains 10 m/s of speed every second, starting from rest." }, tool('t1')], stop: 'end_turn' },
+      { blocks: [{ type: 'text', text: "After 1 second, what is its speed? The equation card is up, so there's nothing more to add. And after 2?" }], stop: 'end_turn' },
+    ]);
+    assert.equal(requests.length, 2);
+    assert.deepEqual(r.sentences.slice(-1), ['After 1 second, what is its speed?'], JSON.stringify(r.sentences));
+    assert.ok(!/nothing more to add|after 2/i.test(r.done!.fullText), r.done!.fullText);
   });
   console.log(`test:post-tool-turn-brain PASS (${n} sections)`);
 }

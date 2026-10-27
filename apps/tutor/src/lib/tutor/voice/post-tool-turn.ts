@@ -32,7 +32,7 @@ const CLOSING_TOOLS = new Set(['close_session_notes', 'hold_for_student']);
 export type ThinTurnRescueReason =
   | 'thin-tool-turn'
   | 'flag-off' | 'muted' | 'no-text' | 'no-tool-in-last-response' | 'tool-round-trip'
-  | 'has-question' | 'closing-tool' | 'recap';
+  | 'has-question' | 'turn-closed' | 'closing-tool' | 'recap';
 
 /** A recap move: advance to the recap segment, or its card. */
 function isRecapCall(call: { name: string; args?: Record<string, unknown> }): boolean {
@@ -65,6 +65,7 @@ export function decideThinToolTurnRescue(input: {
   // A tool_use stop means the loop ran (or capped) the round trip itself.
   if (input.lastStopReason === 'tool_use') return no('tool-round-trip');
   if (/[?？]/.test(text)) return no('has-question');
+  if (endsTurn(text)) return no('turn-closed');
   if (input.toolCalls.some((c) => CLOSING_TOOLS.has(c.name))) return no('closing-tool');
   if (input.toolCalls.some(isRecapCall)) return no('recap');
   return { rescue: true, reason: 'thin-tool-turn' };
@@ -91,11 +92,53 @@ export function toolResultWithDelivered(content: string, name: string, delivered
   const said = (delivered ?? '').replace(/\s+/g, ' ').trim();
   if (!said) return content;
   const quoted = said.length > DELIVERED_CLIP ? `…${said.slice(said.length - DELIVERED_CLIP)}` : said;
-  return (
-    `${content} The student has already received your words this turn: «${quoted}» ` +
-    'Do not restate or rephrase any of it. If those words already ask the student a question, end the turn with no more text; ' +
-    'if they do not, add only that one question.'
-  );
+  // Round 3 (Haiku 5.5, 10-27): a longer note with a conditional ("If those
+  // words already ask the student a question, end the turn …") was echoed
+  // back to the student ("Those words already ask the question, so I'll stop
+  // there."). Terse, with nothing to talk about; what a later call may add is
+  // decided structurally (laterCallSentenceDecision).
+  return `${content} Already sent to the student this turn (never repeat or mention it): «${quoted}»`;
+}
+
+/** An offer / sign-off line that hands the turn back without a "?". */
+const CLOSING_LINE_RE =
+  /\b(?:when(?:ever)?\s+you(?:['’]re|\s+are)\s+ready|let\s+me\s+know\s+(?:when|if|whenever)|see\s+you|take\s+care|talk\s+(?:to\s+you\s+)?soon|that['’]?s\s+(?:all|it)\s+for\s+(?:now|today))\b/i;
+
+/** True when the LAST sentence of `text` already hands the turn to the
+ *  student: a question, or an offer / sign-off line. */
+export function endsTurn(text: string): boolean {
+  const t = (text ?? '').trim();
+  if (!t) return false;
+  const parts = t.split(/(?<=[.!?？])\s+/);
+  const last = parts[parts.length - 1] ?? '';
+  return /[?？]["'”’)\]]*\s*$/.test(last) || CLOSING_LINE_RE.test(last);
+}
+
+/** What a sentence from a LATER API call of the turn may do.
+ *  · `continuation` — the earlier call's tool results were bare acks: the
+ *    later call only continues the same reply. When the earlier text already
+ *    ended the turn (a question / an offer line), nothing more is said.
+ *  · `question-only` — the thin-turn follow-up, made only to add the missing
+ *    question: its first question sentence is kept, nothing else.
+ *  · `data` — a tool returned data the brain must present: unrestricted. */
+export type LaterCallMode = 'continuation' | 'question-only' | 'data';
+export type LaterCallDecision = 'keep' | 'keep-question' | 'drop-turn-ended' | 'drop-not-question' | 'drop-after-question';
+
+export function laterCallSentenceDecision(input: {
+  sentence: string;
+  /** Sentences forwarded by EARLIER calls of this turn. */
+  earlier: ReadonlyArray<string>;
+  mode: LaterCallMode;
+  /** The question-only follow-up already kept its question. */
+  questionTaken: boolean;
+}): LaterCallDecision {
+  if (!input.earlier.length) return 'keep';
+  if (input.mode === 'question-only') {
+    if (input.questionTaken) return 'drop-after-question';
+    return /[?？]["'”’)\]]*\s*$/.test((input.sentence ?? '').trim()) ? 'keep-question' : 'drop-not-question';
+  }
+  if (input.mode === 'continuation' && endsTurn(input.earlier.join(' '))) return 'drop-turn-ended';
+  return 'keep';
 }
 
 const STOP_WORDS = new Set([
