@@ -55,16 +55,19 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
     if (!deps.noCache) remember(planId, null);
     return null;
   }
+  // 2026-10-29 (local validation, Biology): a problem opened while its build was
+  // still preparing was minted unverified and stayed so for the whole session,
+  // although its key was ready seconds later. The build is read on every
+  // unresolved turn; a ready key makes the turn verified.
   let key: AnswerKey | undefined;
-  if (meta.verified) {
-    try {
-      const build = await getBuild(meta.parentPlanId);
-      key = build?.problems.find((p) => p.n === meta.n)?.key ?? undefined;
-    } catch { key = undefined; }
-    if (!key?.parts?.length) {
-      key = undefined;
-      console.warn(`[homework-problem] plan ${planId} is verified but its key could not be read — running unverified this turn`);
-    }
+  try {
+    const build = await getBuild(meta.parentPlanId);
+    const pb = build?.problems.find((p) => p.n === meta.n) as { key?: AnswerKey | null; status?: string } | undefined;
+    key = pb && (pb.status === undefined || pb.status === 'ready') ? (pb.key ?? undefined) : undefined;
+  } catch { key = undefined; }
+  if (!key?.parts?.length) {
+    key = undefined;
+    if (meta.verified) console.warn(`[homework-problem] plan ${planId} is verified but its key could not be read — running unverified this turn`);
   }
   const verified = !!key;
   const solutionPath = key ? solutionPathLines(key) : [];
@@ -80,6 +83,7 @@ export async function resolveHomeworkProblemTurn(planId: string, deps: HomeworkP
     },
     ...(key ? { activeProblem: { statement: meta.text, source: 'homework' as const, expectedAnswer: keyFinalsLine(key), ...(solutionPath.length ? { solutionPath } : {}) } } : {}),
   };
-  if (!deps.noCache && (verified || !meta.verified)) remember(planId, turn);
+  // Only a verified turn is cached: an unverified one looks again next turn (the build may finish).
+  if (!deps.noCache && verified) remember(planId, turn);
   return turn;
 }

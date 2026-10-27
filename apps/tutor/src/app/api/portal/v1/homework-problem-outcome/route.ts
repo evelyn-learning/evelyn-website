@@ -39,12 +39,14 @@ export const GET = withPortalAuth(async (req, auth) => {
   // transcript confirms every key part, else needs_review (outcome.ts).
   const finished = params.get('finished') === '1';
   // The key is loaded for every call (2026-10-22): a pause after solving the problem is done too.
-  const build = meta?.verified ? await getHomeworkBuild(meta.parentPlanId).catch(() => null) : null;
-  const key = build?.problems.find((p) => p.n === meta?.n)?.key ?? null;
+  // 2026-10-29: read for an unverified plan too — its build may have finished after the mint.
+  const build = meta ? await getHomeworkBuild(meta.parentPlanId).catch(() => null) : null;
+  const pb = build?.problems.find((p) => p.n === meta?.n);
+  const key = pb && (pb.status === 'ready' || meta?.verified) && pb.key?.parts?.length ? pb.key : null;
   const outcome = classifyHomeworkProblemOutcome({
     debugEvents: session.debugEvents,
     transcript: session.transcript,
-    verified: meta ? meta.verified : null,
+    verified: meta ? (meta.verified || !!key) : null,
     finished,
     key,
     priorConfirmed: meta?.priorConfirmed ?? [],
