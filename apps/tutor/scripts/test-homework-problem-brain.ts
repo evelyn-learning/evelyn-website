@@ -438,6 +438,7 @@ async function main() {
   await section('GAC review 2026-10-27: the own-question line renders only on request', async () => {
     const blk = await import('../src/lib/tutor/voice/homework-problem-block');
     assert.ok(blk.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true }, { ownQuestionOpen: true }).includes(blk.HOMEWORK_OWN_QUESTION_OPEN));
+    assert.match(blk.HOMEWORK_OWN_QUESTION_OPEN, /A false statement in their message is still corrected, whatever it is about/);
     assert.ok(!blk.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true }).includes(blk.HOMEWORK_OWN_QUESTION_OPEN));
   });
   await section('claude-brain re-exports the block API', () => {

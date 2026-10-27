@@ -157,9 +157,12 @@ export function sessionRecordLine(key: AnswerKey | undefined, confirmed: Readonl
 }
 
 /** GAC review 2026-10-27 (AP Calculus BC): a value given while the student's
- *  own question is open was judged against the sheet. */
+ *  own question is open was judged against the sheet. Local check the same
+ *  day (Biology): with the student's pH question open, "can you check my
+ *  answer: enzymes get used up" was set aside as off the question instead of
+ *  corrected — a false statement is corrected whatever it is about. */
 export const HOMEWORK_OWN_QUESTION_OPEN =
-  'The open topic now is the question the student brought themselves (their latest one in the chat), not this sheet problem. A value they give, or ask you to check, answers that question unless they name a part of the sheet problem: check it against your own working of their question, never against this sheet problem, its parts, its record or its answers.\n';
+  'The open topic now is the question the student brought themselves (their latest one in the chat), not this sheet problem. A value they give, or ask you to check, answers that question unless they name a part of the sheet problem: check it against your own working of their question, never against this sheet problem, its parts, its record or its answers. A false statement in their message is still corrected, whatever it is about: say plainly that it is not right, as their claim, and when they ask you to check a statement, check it.\n';
 
 export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined, opts: { confirmed?: ReadonlyArray<string>; ownQuestionOpen?: boolean } = {}): string {
   if (!hp?.text?.trim()) return '';
