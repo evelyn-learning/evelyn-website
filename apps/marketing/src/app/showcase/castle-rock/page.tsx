@@ -59,7 +59,10 @@ export default function CastleRockOverviewPage() {
         <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">
           These first samples cover Math 30-1, Physics 30, Chemistry 30 and Biology 30. Two of them were solved from the question alone, with no answer key. The same format extends to any SOLARO course and item type, and it sits comfortably beside a live Evelyn tutor for students who want to ask a follow-up question.
         </p>
-        <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">More sections will be added to this showcase as the partnership takes shape.</p>
+        <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">
+          Solutions come in two grades. The regular grade is the written solution with a figure and a tutor's voice for each step. The premium grade adds a figure that builds up with the voice, fold-out answers to the questions a student would ask, and a short task for the student at the end.{" "}
+          <Link href={`${SHOWCASE.basePath}/premium`} className="font-medium text-primary-600 hover:text-primary-800">See the four premium solutions</Link>, one per subject.
+        </p>
       </section>
     </div>
   );
