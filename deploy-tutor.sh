@@ -195,7 +195,7 @@ handle_error() {
   # block initialises it, $RESTORE_ENV is unset and this is a no-op, which is
   # the right answer: no backup can exist that early.)
   if [ "$RESTORE_ENV" = true ] && [ -f ".env.local.dev.bak" ]; then
-    mv .env.local.dev.bak .env.local
+    put_back_dev_env
     log_message "INFO" "Restored local dev .env.local"
   fi
   if [ -f "$ZIP_FILE" ]; then
@@ -348,6 +348,17 @@ LOCK_HELD=false
 # long before Step 1 runs (a refused lock, an early error) and must see a
 # definite "this process has made no backup".
 RESTORE_ENV=false
+ENV_LINK=""
+
+# Put the developer's .env.local back exactly as it was: the same symlink when
+# it was one (see the swap step), otherwise the saved copy.
+put_back_dev_env() {
+  if [ -n "${ENV_LINK:-}" ]; then
+    rm -f .env.local && ln -s "$ENV_LINK" .env.local && rm -f .env.local.dev.bak
+  else
+    mv .env.local.dev.bak .env.local
+  fi
+}
 
 restore_dev_env() {
   # Two conditions, and both are load-bearing:
@@ -359,7 +370,7 @@ restore_dev_env() {
   #                   (restored inline) and after handle_error (restored
   #                   there); only a signal-interrupted run still has it.
   if [ "$RESTORE_ENV" = true ] && [ -f ".env.local.dev.bak" ]; then
-    mv .env.local.dev.bak .env.local 2>/dev/null || true
+    put_back_dev_env 2>/dev/null || true
     log_message "INFO" "Restored local dev .env.local"
   fi
 }
@@ -556,6 +567,14 @@ log_message "STEP" "Building Next.js application locally..."
 # with its cwd inside $APP_DIR: apps/*/.env.local are symlinks to ../../.env.local,
 # so swapping the root file is what the app actually reads at build time.
 RESTORE_ENV=false
+# 2026-10-27: in a worktree .env.local is usually a SYMLINK to the main
+# checkout's file. `cp .env.local.production .env.local` wrote THROUGH it —
+# the main checkout's dev .env.local became production config — and the
+# restore's `mv` then left a plain stale copy where the link had been (the
+# local GAC engine silently ran the old dev brain model for a day). Swap the
+# link itself, and put the same link back on restore.
+ENV_LINK=""
+if [ -L ".env.local" ]; then ENV_LINK=$(readlink .env.local); fi
 if [ -f ".env.local.production" ]; then
   cp .env.local .env.local.dev.bak
   # ARM THE RESTORE THE INSTANT THE BACKUP EXISTS, and before anything is
@@ -565,6 +584,7 @@ if [ -f ".env.local.production" ]; then
   # PRODUCTION .env.local plus an orphaned .dev.bak. Ordering is the whole fix
   # — setting it here makes the window empty rather than sub-millisecond.
   RESTORE_ENV=true
+  rm -f .env.local
   cp .env.local.production .env.local
   log_message "INFO" "Temporarily using .env.local.production for build"
 fi
@@ -582,7 +602,7 @@ rm -f "$APP_DIR/tsconfig.tsbuildinfo" 2>/dev/null || true
 npm run --workspace "$APP_WORKSPACE" build || {
   # Restore dev env before exiting on error
   if [ "$RESTORE_ENV" = true ]; then
-    mv .env.local.dev.bak .env.local
+    put_back_dev_env
   fi
   log_message "ERROR" "Failed to build application locally"
   exit 1
@@ -590,7 +610,7 @@ npm run --workspace "$APP_WORKSPACE" build || {
 
 # Restore dev env immediately after build
 if [ "$RESTORE_ENV" = true ]; then
-  mv .env.local.dev.bak .env.local
+  put_back_dev_env
   log_message "INFO" "Restored local dev .env.local"
 fi
 log_message "INFO" "Application built successfully"
