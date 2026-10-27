@@ -429,6 +429,17 @@ async function main() {
     assert.ok(hwBlock.includes(ex.HOMEWORK_EXPLAIN_WHEN_ASKED_RULE), 'whole-sheet homework block');
     has(read('lib/tutor/ai/system-prompt-builder.ts'), /\$\{EXPLAIN_WHEN_ASKED_RULE\}\n\n\*\*The turn's question comes LAST/);
   });
+  await section('GAC review 2026-10-27 (Geometry): a definition is stated with its own conditions, in lessons and homework', async () => {
+    const ew = await import('../src/lib/tutor/pedagogy/explain-when-asked');
+    assert.ok(ew.EXPLAIN_WHEN_ASKED_RULE.includes(ew.DEFINITION_AS_STATED));
+    assert.ok(ew.HOMEWORK_EXPLAIN_WHEN_ASKED_RULE.includes(ew.DEFINITION_AS_STATED));
+    assert.match(ew.DEFINITION_AS_STATED, /common special case is not part of it/);
+  });
+  await section('GAC review 2026-10-27: the own-question line renders only on request', async () => {
+    const blk = await import('../src/lib/tutor/voice/homework-problem-block');
+    assert.ok(blk.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true }, { ownQuestionOpen: true }).includes(blk.HOMEWORK_OWN_QUESTION_OPEN));
+    assert.ok(!blk.formatHomeworkProblemBlock({ text: 'P', verified: true, hasFigure: true }).includes(blk.HOMEWORK_OWN_QUESTION_OPEN));
+  });
   await section('claude-brain re-exports the block API', () => {
     const src = read('lib/tutor/voice/claude-brain.ts');
     for (const re of [/formatHomeworkProblemBlock/, /HOMEWORK_PROBLEM_RULES/, /homeworkProblem\?: HomeworkProblemTurnInput/]) has(src, re);
@@ -732,6 +743,48 @@ async function main() {
       assert.ok(r.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'b'), 'part (b) recorded');
       assert.ok(r.events.some((e) => e.type === 'homework-problem-done'));
     });
+    await section('GAC review 2026-10-27 (Biology): a worded answer checked partly_correct is compared with the key statement and recorded on a yes', async () => {
+      const BIOK: AnswerKey = { parts: [
+        { label: 'a', final: 'High temperature denatures the enzyme.', canonical: { kind: 'text', value: 'High temperature denatures the enzyme.' }, prose: true },
+        { label: 'b', final: 'A competitive inhibitor mimics the substrate and binds the active site, blocking substrate binding.', canonical: { kind: 'text', value: 'A competitive inhibitor mimics the substrate and binds the active site, blocking substrate binding.' }, prose: true },
+      ], solvers: [] };
+      const hp = { text: 'Homework questions on enzymes: (a) Why does an enzyme stop working when the temperature gets too high? (b) What does a competitive inhibitor do to an enzyme\'s active site?', verified: true, hasFigure: false, key: BIOK, sessionConfirmed: ['part:a'] };
+      const partly = async () => { llmCalls++; return { text: JSON.stringify({ proposed_value: 'binds in the active site and blocks the substrate', problem_final_answer: '', proposed_equals_final_answer: false, answers: 'overall_problem', target: 'part b', correct_value: '', verdict: 'partly_correct', confidence: 'medium', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 }; };
+      const asked: Array<Record<string, string>> = [];
+      const msg = "I don't know, maybe it binds in the active site itself and blocks the substrate from getting in?";
+      const yes = await run(msg, { homeworkProblem: hp, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async (req: Record<string, string>) => { asked.push(req); return true; } } });
+      assert.equal(asked.length, 1, 'compared once');
+      assert.equal(asked[0].label, 'b');
+      assert.match(asked[0].keyStatement, /mimics the substrate/);
+      assert.ok(yes.events.some((e) => e.type === 'homework-keyed-verdict' && e.part === 'b'), 'part (b) recorded');
+      assert.ok(yes.events.some((e) => e.type === 'homework-problem-done'));
+      const no = await run(msg, { homeworkProblem: hp, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async () => false } });
+      assert.ok(!no.events.some((e) => e.type === 'homework-keyed-verdict'), 'a no leaves the finding');
+      const silent = await run(msg, { homeworkProblem: hp, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async () => null } });
+      assert.ok(!silent.events.some((e) => e.type === 'homework-keyed-verdict'), 'no reply leaves the finding');
+      // Never for a number part, a wrong finding, or a part already confirmed.
+      let calls = 0;
+      const wrong = async () => { llmCalls++; return { text: JSON.stringify({ proposed_value: 'allosteric site', problem_final_answer: '', proposed_equals_final_answer: false, answers: 'overall_problem', target: 'part b', correct_value: '', verdict: 'incorrect', confidence: 'high', differs_test: '', differs_at: '' }), model: 'fake', inputTokens: 1, outputTokens: 1 }; };
+      await run('it binds to the allosteric site', { homeworkProblem: hp, verdictPrecheckDeps: { llm: wrong, proseAnswerMatch: async () => { calls++; return true; } } });
+      await run(msg, { homeworkProblem: { ...hp, sessionConfirmed: ['part:a', 'part:b'] }, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async () => { calls++; return true; } } });
+      await run('maybe 25?', { homeworkProblem: verifiedHp, verdictPrecheckDeps: { llm: partly, proseAnswerMatch: async () => { calls++; return true; } } });
+      assert.equal(calls, 0, 'compared only for an open prose part with nothing found wrong');
+    });
+    await section('GAC review 2026-10-27 (AP Calculus BC): with the sheet done and the student\'s own limit open, a value is about their question', async () => {
+      const K = numKey([['a', '6', 6], ['b', '1/4', 0.25]]);
+      const hp = { text: '(a) lim x->3 (x^2-9)/(x-3) (b) lim x->0 (sqrt(x+4)-2)/x', verified: true, hasFigure: false, key: K, sessionConfirmed: ['part:a', 'part:b'] };
+      const conversationHistory = [
+        { role: 'user' as const, content: 'I don\'t know, maybe 1/4?' }, { role: 'assistant' as const, content: 'That matches. This problem is done.' },
+        { role: 'user' as const, content: 'can you help me with lim as x -> 2 of (x^2 - 4)/(x^2 - 3x + 2)' }, { role: 'assistant' as const, content: 'What do you get when you substitute x = 2 into the top and the bottom?' },
+      ];
+      const r = await run('can you check my answer x = 4', { homeworkProblem: hp, conversationHistory });
+      assert.ok(r.content.includes('The open topic now is the question the student brought themselves'), 'own-question line');
+      assert.ok(!r.content.includes('Every part of this problem was already confirmed correct before this message'), 'no done guard');
+      assert.ok(!r.events.some((e) => e.type === 'homework-keyed-verdict'));
+      // Back on the sheet (a part named): the line goes.
+      const back = await run('for (b) I got 1/4', { homeworkProblem: hp, conversationHistory });
+      assert.ok(!back.content.includes('The open topic now is the question the student brought themselves'));
+    });
     await section('2026-10-29 (Calc AB local): "check my answer x = 4" on the student\'s own problem is not credited to the sheet', async () => {
       const K = numKey([['a', '4', 4], ['b', '1/6', 0.1667]]);
       const hp = { text: '(a) lim x->2 (x^2-4)/(x-2) (b) lim x->0 (sqrt(x+9)-3)/x', verified: true, hasFigure: false, key: K };
@@ -751,8 +804,8 @@ async function main() {
       const ok = await run('For (a): heat breaks the bonds holding its shape, so it denatures', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('correct') } });
       assert.ok(ok.events.some((e) => e.type === 'homework-keyed-verdict' && e.verdict === 'correct' && e.part === 'a'), 'prose credit frame');
       assert.ok(ok.events.some((e) => e.type === 'homework-problem-done'));
-      const medium = await run('For (a): heat breaks the bonds holding its shape, so it denatures', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('correct', 'medium') } });
-      assert.ok(!medium.events.some((e) => e.type === 'homework-keyed-verdict'), 'medium confidence: no credit');
+      const medium = await run('For (a): heat breaks the bonds holding its shape, so it denatures', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('correct', 'medium'), proseAnswerMatch: async () => false } });
+      assert.ok(!medium.events.some((e) => e.type === 'homework-keyed-verdict'), 'medium confidence, the key comparison says no: no credit');
       const wrong = await run('For (a): it gets used up', { homeworkProblem: hp, verdictPrecheckDeps: { llm: said('incorrect') } });
       assert.ok(!wrong.events.some((e) => e.type === 'homework-keyed-verdict'), 'never a denial frame for a prose part');
     });

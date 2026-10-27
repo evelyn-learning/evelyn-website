@@ -53,7 +53,8 @@ import {
 import { brainThinkingParams, formatTextThinkingBlock, thinkingStarved, textThinkingDeadline } from './text-thinking';
 import { HOMEWORK_EXPLAIN_WHEN_ASKED_RULE } from '../pedagogy/explain-when-asked';
 import { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_DONE_GUARD, type HomeworkProblemTurnInput, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON, HOMEWORK_SHEET_CARD_SUBSTITUTED_REASON, boardRevealsHomeworkKey, homeworkKeyWithheld, homeworkSheetProblemCard } from './homework-problem-block';
-import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, offSheetTopicOpen, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
+import { allKeyPartsConfirmed, combineKeyedVerdicts, confirmedKeyMarks, keyedPrecheckResult, keyedProblemFacts, inSheetScope, KEYED_VERDICT_MODEL_TIMEOUT_MS, modelCheckConfirms, namedKeyParts, offSheetTopicOpen, proseCreditTarget, proseModelCredit, scopedKeyedVerdicts } from './keyed-verdict';
+import { proseAnswerMatches, type ProseAnswerMatchFn } from './prose-answer-match';
 import type { AnswerKey } from '../homework-build/types';
 export { formatHomeworkProblemBlock, HOMEWORK_PROBLEM_RULES } from './homework-problem-block';
 export type { HomeworkProblemTurnInput } from './homework-problem-block';
@@ -585,7 +586,7 @@ export interface BrainTurnInput {
    *  Absent/false ⇒ request, blocks and events exactly as before. */
   noRevealLedger?: boolean;
   /** Test/measurement seam for the pre-check (model call, timeout, model). */
-  verdictPrecheckDeps?: VerdictPrecheckDeps & { onResult?: (r: VerdictPrecheckResult | null, ms: number) => void };
+  verdictPrecheckDeps?: VerdictPrecheckDeps & { onResult?: (r: VerdictPrecheckResult | null, ms: number) => void; /** Test seam (prose-answer-match.ts). */ proseAnswerMatch?: ProseAnswerMatchFn };
   /** Optional async resolver for tool_result content. Default behavior
    *  returns "${name} executed successfully" — fire-and-forget tools
    *  like show_problem just need an ack. For tools that produce DATA
@@ -1589,6 +1590,21 @@ export function homeworkRecordMarks(input: Pick<BrainTurnInput, 'homeworkProblem
 }
 
 /**
+ * GAC review 2026-10-27 (AP Calculus BC, 27 Oct transcripts): with the sheet
+ * problem done, the student brought a limit of their own and asked "can you
+ * check my answer x = 4"; the tutor judged it against the sheet's part (b)
+ * ("the 1/4 you already found still stands"). While a question of the
+ * student's own is the open topic (keyed-verdict.ts offSheetTopicOpen), a
+ * value is about that question: the done guard and the sheet record step aside.
+ */
+export function homeworkOwnQuestionOpen(input: Pick<BrainTurnInput, 'homeworkProblem' | 'conversationHistory'>, studentSaid: string): boolean {
+  const key = input.homeworkProblem?.verified ? input.homeworkProblem.key : undefined;
+  if (!key?.parts?.length) return false;
+  const msgs = input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : ''));
+  return offSheetTopicOpen([...msgs, studentSaid], key);
+}
+
+/**
  * 2026-10-29: the answer-check flags that make a correct verdict's reply
  * follow the record. `problemDone`: with this message (and this turn's
  * credit) every part is confirmed. `notRecorded`: the model check says a
@@ -2101,7 +2117,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     console.log(`[homework] homework_session block attached current=${input.homework?.current}/${input.homework?.problems.length}`);
   }
   // GAC per-problem homework: '' unless the route resolved a homework-problem plan.
-  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem, { confirmed: homeworkRecordMarks(input, (input.studentMessage ?? input.studentTranscript ?? '').trim()) });
+  const homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem, { confirmed: homeworkRecordMarks(input, (input.studentMessage ?? input.studentTranscript ?? '').trim()), ownQuestionOpen: homeworkOwnQuestionOpen(input, (input.studentMessage ?? input.studentTranscript ?? '').trim()) });
   // Task WS3: durable mock-review mandate. '' when not a mock-review session.
   const mockReviewBlock = formatMockReviewBlock(input.mockReview);
   if (mockReviewBlock) {
@@ -2522,7 +2538,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // alive ("what whole number n makes n × 30 equal 180?", three turns). With
   // every part confirmed before this turn, nothing of the problem is open: the
   // open-question frames are dropped and the done guard takes their place.
-  const hpDoneBefore = !hpNeverJudged && !!input.homeworkProblem?.verified && !!input.homeworkProblem.key?.parts?.length
+  // GAC review 2026-10-27: not while the student's own question is open — a
+  // value then answers that question, and its open-question frames stay.
+  const hpOwnQuestionOpen = homeworkOwnQuestionOpen(input, studentSaid);
+  if (hpOwnQuestionOpen) console.log('[homework-problem] student\'s own question open — sheet record steps aside');
+  const hpDoneBefore = !hpNeverJudged && !hpOwnQuestionOpen && !!input.homeworkProblem?.verified && !!input.homeworkProblem.key?.parts?.length
     && allKeyPartsConfirmed(input.conversationHistory, '', input.homeworkProblem.key, [...(input.homeworkProblem.priorConfirmed ?? []), ...(input.homeworkProblem.sessionConfirmed ?? [])]);
   if (hpDoneBefore) console.log('[homework-problem] done before this turn — open-question frames dropped');
   const turnShapeBlock = turnShapeOn && !navigationTurn && !hpDoneBefore
@@ -2659,6 +2679,27 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         : input.verdictPrecheckDeps);
       const ms = keyedResult ? 0 : Date.now() - startedAt;
       input.verdictPrecheckDeps?.onResult?.(result, ms);
+      if (result && hpKey && !keyedResult && !hpDoneBefore && !result.disputed && !result.wrongStep && !result.wrongProblems?.length
+        && (result.answers === 'overall_problem' || result.answers === 'open_question')
+        && (result.verdict === 'partly_correct' || (result.verdict === 'correct' && result.confidence !== 'high'))) {
+        // GAC review 2026-10-27 (Biology): a worded answer to a prose part,
+        // found partly right with nothing wrong, is compared with the key's
+        // statement and the part's own question (prose-answer-match.ts).
+        const hpMsgsP = [...input.conversationHistory.filter((m) => m.role === 'user').map((m) => (typeof m.content === 'string' ? m.content : '')), studentSaid];
+        const proseTarget = proseCreditTarget(hpMsgsP, hpKey, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior), result.answers);
+        if (proseTarget && proseModelCredit(hpMsgsP, hpKey, hpPrior, confirmedKeyMarks(input.conversationHistory, studentSaid, hpKey, hpPrior), result.answers).length) {
+          const t0 = Date.now();
+          const match = await (input.verdictPrecheckDeps?.proseAnswerMatch ?? proseAnswerMatches)({
+            problem: input.homeworkProblem?.text ?? '', label: proseTarget.label, keyStatement: proseTarget.final, studentMessage: studentSaid,
+          });
+          console.log(`[prose-answer-match] part=${proseTarget.label} ${match === null ? 'no reply' : match ? 'answers the part' : 'does not answer the part'} · ${Date.now() - t0} ms`);
+          if (match === true) {
+            result.verdict = 'correct';
+            result.confidence = 'high';
+            delete result.missingOnly;
+          }
+        }
+      }
       if (result) {
         const pub = toPublicPrecheck(result);
         console.log(`[verdict-precheck] ${ms} ms · ${result.model} · answers=${pub.answers} verdict=${pub.verdict} confidence=${pub.confidence}${pub.differsAt ? ` differs_at="${pub.differsAt}"` : ''}${precheckInforms(pub) ? '' : ' (not injected)'}`);
@@ -2779,7 +2820,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   }
   // 2026-10-26: the in-session record, after this turn's checks.
   if (input.homeworkProblem && hpKey) {
-    homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem, { confirmed: homeworkRecordMarks(input, studentSaid, hpModelCredit) });
+    homeworkProblemBlock = formatHomeworkProblemBlock(input.homeworkProblem, { confirmed: homeworkRecordMarks(input, studentSaid, hpModelCredit), ownQuestionOpen: hpOwnQuestionOpen });
   }
   /** The parallel check's frame, once, when it is in. Null otherwise. */
   const takeParallelPrecheckFrame = (): BrainStreamEvent | null => {

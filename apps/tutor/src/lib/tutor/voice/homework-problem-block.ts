@@ -156,7 +156,12 @@ export function sessionRecordLine(key: AnswerKey | undefined, confirmed: Readonl
     + ' Call a part done or right only when the record lists it as confirmed. When the answer check says a value is right but the record does not list its part, say the value matches and ask how they got it — never call the part done. Never re-open a confirmed part.\n';
 }
 
-export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined, opts: { confirmed?: ReadonlyArray<string> } = {}): string {
+/** GAC review 2026-10-27 (AP Calculus BC): a value given while the student's
+ *  own question is open was judged against the sheet. */
+export const HOMEWORK_OWN_QUESTION_OPEN =
+  'The open topic now is the question the student brought themselves (their latest one in the chat), not this sheet problem. A value they give, or ask you to check, answers that question unless they name a part of the sheet problem: check it against your own working of their question, never against this sheet problem, its parts, its record or its answers.\n';
+
+export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefined, opts: { confirmed?: ReadonlyArray<string>; ownQuestionOpen?: boolean } = {}): string {
   if (!hp?.text?.trim()) return '';
   const note = hp.priorNote ? oneLine(hp.priorNote, 400) : '';
   return '<homework_problem>\n'
@@ -165,6 +170,7 @@ export function formatHomeworkProblemBlock(hp: HomeworkProblemTurnInput | undefi
     + (note ? `Prior work on this problem: ${note}\n` : '')
     + priorConfirmedLine(hp.priorConfirmed)
     + (hp.verified ? sessionRecordLine(hp.key, opts.confirmed) : '')
+    + (opts.ownQuestionOpen ? HOMEWORK_OWN_QUESTION_OPEN : '')
     + `- ${hp.hasFigure ? HOMEWORK_PROBLEM_FIGURE_SHOWN : HOMEWORK_PROBLEM_NO_FIGURE}\n`
     + `- ${hp.verified ? HOMEWORK_PROBLEM_VERIFIED : HOMEWORK_PROBLEM_UNVERIFIED}\n`
     + `${HOMEWORK_PROBLEM_RULES}\n`

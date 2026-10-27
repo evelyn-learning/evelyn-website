@@ -806,26 +806,36 @@ export function proseModelCredit(
    *  Haiku: the tutor's open question WAS that part). Unlabelled, only the one open part counts. */
   answers: string = 'overall_problem',
 ): KeyedVerdict[] {
-  if (!messages.length || !key?.parts?.some((p) => p.prose)) return [];
+  const target = proseCreditTarget(messages, key, confirmed, answers);
+  if (!target) return [];
   const last = normalize(stripRuntimeNote(messages[messages.length - 1])).trim();
-  if (!last) return [];
+  const v: KeyedVerdict = { verdict: 'correct', part: normLabel(target.label), matched: last.slice(0, 120) };
+  return inSheetScope(messages, key, prior, [v]);
+}
+
+/** The open prose part the last message answers (proseModelCredit's rule), or undefined. */
+export function proseCreditTarget(
+  messages: ReadonlyArray<string>, key: AnswerKey, confirmed: ReadonlyArray<string>, answers: string = 'overall_problem',
+): AnswerPart | undefined {
+  if (!messages.length || !key?.parts?.some((p) => p.prose)) return undefined;
+  const last = normalize(stripRuntimeNote(messages[messages.length - 1])).trim();
+  if (!last) return undefined;
   const done = new Set(confirmed.filter((m) => m.startsWith('part:')).map((m) => m.slice(5)));
   const named = [...new Set(labelMarks(last, key).map((m) => m.label))];
   let target: AnswerPart | undefined;
   // 2026-10-29 (round 4, Biology local3): the unlabelled hedge for the ONLY open
   // part, checked correct as the open question, was told "that matches" and
   // never recorded. With exactly one part open, `open_question` counts too.
-  if (answers !== 'overall_problem' && answers !== 'open_question') return [];
+  if (answers !== 'overall_problem' && answers !== 'open_question') return undefined;
   if (named.length) {
-    if (named.length !== 1) return [];
+    if (named.length !== 1) return undefined;
     target = key.parts.find((p) => normLabel(p.label) === named[0]);
   } else {
     const open = key.parts.filter((p) => !done.has(normLabel(p.label)));
     if (open.length === 1 && !(key.unkeyed ?? []).length) target = open[0];
   }
-  if (!target?.prose || done.has(normLabel(target.label))) return [];
-  const v: KeyedVerdict = { verdict: 'correct', part: normLabel(target.label), matched: last.slice(0, 120) };
-  return inSheetScope(messages, key, prior, [v]);
+  if (!target?.prose || done.has(normLabel(target.label))) return undefined;
+  return target;
 }
 
 /** The marks of correct keyed-verdict debug events (`part:<l>` / `value:<l>=<name>`), for the outcome. */
