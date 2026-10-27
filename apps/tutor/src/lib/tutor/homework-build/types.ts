@@ -96,8 +96,13 @@ export interface HomeworkBuildDoc {
   done: boolean;
 }
 
-/** sha256 of the text with whitespace collapsed and trimmed, first 16 hex chars. */
+/** Bump when a change to the build (figure, answer key) must not reuse problems built before it: the
+ *  cache matches on this hash, so an older build's figure or key is never served after the bump.
+ *  2 = 2026-10-27 per-part answer keys. */
+export const BUILD_LOGIC_VERSION = 2;
+
+/** sha256 of the build version and the text with whitespace collapsed and trimmed, first 16 hex chars. */
 export function problemHash(text: string): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
-  return createHash('sha256').update(normalized).digest('hex').slice(0, 16);
+  return createHash('sha256').update(`v${BUILD_LOGIC_VERSION}|${normalized}`).digest('hex').slice(0, 16);
 }

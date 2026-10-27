@@ -1260,6 +1260,8 @@ async function main() {
     assert.equal(problemHash('  a b c '), problemHash('a b c'));
     assert.equal(problemHash('a b c').length, 16);
     assert.notEqual(problemHash('a b c'), problemHash('a b d'));
+    // A build-logic bump changes every hash, so problems built before it are never reused.
+    assert.notEqual(problemHash('a b c'), '0e9f64031fcb2bc7'); // the pre-version hash of 'a b c'
   });
 
   await section('ensure is idempotent; patch recomputes done; cache lookup', async () => {
