@@ -860,5 +860,14 @@ console.log('\n=== Bubbles wrap un-delimited maths (GAC live 2026-10-16) ===');
   check('leading relation with a prose word stays literal', mathBodies('cost $= the fee$ plus tax').length === 0);
 }
 
+{
+  // GAC 2026-10-27 (portal-6cf3b2c7): display maths "$$…$$" left a literal "$$" each side.
+  const live = String.raw`so part a holds. $$\text{NPP} = \text{GPP} - R = 1000 - 600 = 400$$ For part b, what rule applies?`;
+  check('display maths $$…$$ is one math span', JSON.stringify(mathBodies(live)) === JSON.stringify([String.raw`\text{NPP} = \text{GPP} - R = 1000 - 600 = 400`]), JSON.stringify(mathBodies(live)));
+  check('no literal $$ left in the text', !joined(live).includes('$'), joined(live));
+  check('inline $…$ unchanged', JSON.stringify(mathBodies('so $x = 2$ here')) === JSON.stringify(['x = 2']));
+  check('unclosed $$ stays text', mathBodies('price $$ and more').length === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
