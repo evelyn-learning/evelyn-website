@@ -63,7 +63,7 @@ import {
   type PrecheckContradiction,
   type PublicVerdictPrecheck,
 } from '@/lib/tutor/voice/verdict-precheck-shared';
-import { ATTRIBUTE_STUDENT_CLAIM_VOICE_RULE, FINAL_ANSWER_ALSO_JUDGED_RULE, isNonAnswerShape, readMatchStatement, readVerdictOpener } from '@/lib/tutor/voice/work-then-match';
+import { ATTRIBUTE_STUDENT_CLAIM_VOICE_RULE, CHECK_REQUEST_VERDICT_RULE, FINAL_ANSWER_ALSO_JUDGED_RULE, isNonAnswerShape, readMatchStatement, readVerdictOpener } from '@/lib/tutor/voice/work-then-match';
 
 // ── server switches ────────────────────────────────────────────────────────
 
@@ -172,6 +172,7 @@ export function formatVoiceWorkThenMatchBlock(transcript: string, ts?: TurnShape
     + 'WORK IT, THEN MATCH. When what the student just said proposes an answer or a step — in any shape: stated in full, hedged or in question form, a statement of not knowing that goes on to propose something, a bare value, a request to check a value, a fact they ask you to confirm:\n'
     + 'FIRST, silently, decide what their value is an attempt AT. It is an attempt at your open question only if it is the kind of thing that question asks for; a value already settled earlier in the session (an earlier answer repeated, a given of the problem) is not a new attempt at anything. The working you say is only ever for the question their value is an attempt at. If it is not an attempt at your open question, you do not work that question and you do not state its result or any part of it: say in a few words what their value is, if you recognise it, and ask your question again — or ask what the value refers to.\n'
     + 'For a genuine attempt:\n'
+    + (ts?.shape === 'check_request' ? CHECK_REQUEST_VERDICT_RULE : '')
     + '1. After the neutral opener, do not say a verdict or praise word or phrase — no acceptance, denial, credit or praise of any kind before the working.\n'
     + '2. Say the working: one short sentence that works the relevant step from the student\'s own problem and data and states its result plainly.\n'
     + '3. Only then say whether that result matches what the student said, as a statement of fact tied to the result, in a sentence of its own. When it matches: say that it is the value they gave. When it does not: say what they said, what the working gives, and which step the difference is in. An equivalent form, notation or phrasing is the same value — including a value spoken in words. Uncertainty in how they said it is not wrongness.\n'

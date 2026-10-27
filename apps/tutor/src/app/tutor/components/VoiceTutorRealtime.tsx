@@ -14730,7 +14730,7 @@ export function VoiceTutorRealtime({
                   if (!attemptKilled && TUTOR_TEXT_OPENER_BACKSTOP && sessionMode === 'text' && workThenMatchTurnRef.current
                       && !isContinuationAttempt && !attemptText && !openerBackstopDone && !openerBackstopFrame) {
                     if (openerBackstopShape === undefined) openerBackstopShape = classifyTurnShape(transcript, bareAssentPriorTutorTurn);
-                    if (!backstopAppliesTo(openerBackstopShape)) {
+                    if (!backstopAppliesTo(openerBackstopShape, verdictPrecheckRef.current)) {
                       openerBackstopDone = true;
                     } else {
                       // 2026-10-06b: the comma form ("Right, isolating … gives

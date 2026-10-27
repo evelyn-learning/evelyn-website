@@ -133,6 +133,7 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'WORK IT, THEN MATCH. When the message below proposes an answer or a step — in any shape: stated in full, hedged or in question form, a statement of not knowing that goes on to propose something, a bare value, a request to check a value, a fact they ask you to confirm:\n'
     + 'FIRST, silently, decide what their value is an attempt AT. It is an attempt at your open question only if it is the kind of thing that question asks for; a value already settled earlier in the session (an earlier answer repeated, a given of the problem) is not a new attempt at anything. The working you show is only ever for the question their value is an attempt at. If it is not an attempt at your open question, you do not work that question and you do not state its result or any part of it: say in a few words what their value is, if you recognise it, and ask your question again — or ask what the value refers to.\n'
     + 'For a genuine attempt:\n'
+    + (ts?.shape === 'check_request' ? CHECK_REQUEST_VERDICT_RULE : '')
     + '1. Do not begin with a verdict or praise word or phrase — no acceptance, denial, credit or praise of any kind before the working ("Right", "Exactly", "Yes", "Correct", "Good", "Nice", "Not quite", "Close", "Almost", "No", "Hmm" and their like).\n'
     + '2. Begin with the working itself: in one or two short sentences work the relevant step from the student\'s own problem and data, and state its result plainly.\n'
     + (ledger
@@ -155,6 +156,13 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'Reason silently. Your first words are addressed to the student — the working itself when their message proposed something — never deliberation about this rule, the turn or the lesson state, never an announcement that you are going to check. Never refer to the student in the third person.\n'
     + '</verdict_guard>\n\n';
 }
+
+/** 2026-10-29 (local validation on Haiku, Biology): "can you check my answer:
+ *  enzymes get used up in the reaction" got "You said … Test it: what would
+ *  happen …?" — no verdict at all. A request to check something is answered
+ *  with the verdict first. Carries no value. */
+export const CHECK_REQUEST_VERDICT_RULE =
+  'The student asked you to check what they wrote. For this reply, rule 1 below does not apply: your first sentence says whether it is right, as their claim — "You said …, and that is right." or "You said …, but that is not right." — then, in the same reply, the working or one question. Never only a question, and never only the verdict.\n';
 
 /** 2026-10-26 (typed sessions): a message with a right intermediate step and a
  *  wrong final answer got only "your step matches" — the wrong final answer was
@@ -300,8 +308,13 @@ function fusedOrOnly(opener: string, rest: string, opts?: VerdictOpenerOpts): Ve
  * on plain consent to an offer or a readiness check (the reply's "Great —
  * here we go" is chatter, not a verdict), and not on a runtime turn.
  */
-export function backstopAppliesTo(ts: TurnShape | null): boolean {
+export function backstopAppliesTo(ts: TurnShape | null, precheck?: PublicVerdictPrecheck | null): boolean {
   if (!ts) return false;
+  // 2026-10-29 (local, Haiku, Biology): "That's not right: you said …" — the
+  // verdict a check request asked for — was cut to "You said …". A check
+  // request whose HIGH-confidence check decided right or wrong keeps its
+  // verdict-first reply (CHECK_REQUEST_VERDICT_RULE).
+  if (ts.shape === 'check_request' && precheck?.confidence === 'high' && (precheck.verdict === 'correct' || precheck.verdict === 'incorrect')) return false;
   if (ts.answerShaped) return true;
   if (ts.shape === 'bare_assent' || ts.shape === 'bare_dissent' || ts.shape === 'acknowledgment') {
     return assentSettlesNothing(ts) || (ts.open?.kind === 'yes_no' && ts.shape !== 'acknowledgment');

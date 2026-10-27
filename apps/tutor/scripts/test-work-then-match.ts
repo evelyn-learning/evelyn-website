@@ -631,6 +631,22 @@ async function main() {
     assert.ok(formatVoiceWorkThenMatchBlock('x is 3 so the answer is 7').includes(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE.trim()));
     assert.ok(!/angle|formula|inequalit|enzyme/i.test(wtm.FINAL_ANSWER_ALSO_JUDGED_RULE), 'generic');
   });
+  await test('round 4 (Biology local3): a check request gets its verdict first; the backstop keeps it when a HIGH check decided', async () => {
+    const wtm = await import('../src/lib/tutor/voice/work-then-match');
+    const { formatVoiceWorkThenMatchBlock } = await import('../src/lib/tutor/voice/voice-judging');
+    const msg = 'can you check my answer: enzymes get used up in the reaction';
+    const ts = classifyTurnShape(msg, 'What do you think a change in pH might do to those bonds?');
+    assert.equal(ts?.shape, 'check_request');
+    assert.ok(formatWorkThenMatchBlock(msg, ts).includes(wtm.CHECK_REQUEST_VERDICT_RULE.trim()));
+    assert.ok(formatVoiceWorkThenMatchBlock(msg, ts).includes(wtm.CHECK_REQUEST_VERDICT_RULE.trim()));
+    const plain = classifyTurnShape('x = 25', 'What is x?');
+    assert.ok(!formatWorkThenMatchBlock('x = 25', plain).includes(wtm.CHECK_REQUEST_VERDICT_RULE.trim()), 'only on a check request');
+    const high = { answers: 'neither' as const, target: '', proposed: 'enzymes get used up in the reaction', verdict: 'incorrect' as const, confidence: 'high' as const };
+    assert.equal(backstopAppliesTo(ts, high), false, 'high check decided: "That\'s not right: you said …" is kept');
+    assert.equal(backstopAppliesTo(ts, { ...high, confidence: 'medium' as const }), true, 'no deciding check: the backstop still applies');
+    assert.equal(backstopAppliesTo(ts), true);
+    assert.ok(!/enzyme|inhibitor/i.test(wtm.CHECK_REQUEST_VERDICT_RULE), 'generic');
+  });
   await test('2026-10-29: text + voice: a correction attributes the student\'s claim, never states it as fact', async () => {
     const wtm = await import('../src/lib/tutor/voice/work-then-match');
     const { formatVoiceWorkThenMatchBlock } = await import('../src/lib/tutor/voice/voice-judging');
