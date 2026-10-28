@@ -412,9 +412,16 @@ async function main() {
   await test('transcription store: the in-flight join still makes one read (G6)', testInFlightJoinStillOneRead);
   await test('transcription store: a stored empty read is a miss, the read runs (final review)', testStoredEmptyReadIsAMiss);
 
-  // Live LLM calls (budget: 2 total for this whole run).
-  await test('image material: vision transcription finds expected text', testImageTranscription);
-  await test('condenseForPipeline: over target condenses + preserves heading', testCondenseForPipeline);
+  // Live LLM calls (budget: 2 total for this whole run). 2026-10-28: a gate
+  // never spends money (docs/ops/WORKFLOW.md §4) — these two run only with
+  // TUTOR_TEST_LIVE=1; otherwise they are reported as skipped, not passed.
+  if (process.env.TUTOR_TEST_LIVE === '1') {
+    await test('image material: vision transcription finds expected text', testImageTranscription);
+    await test('condenseForPipeline: over target condenses + preserves heading', testCondenseForPipeline);
+  } else {
+    console.log('  skip - image material: vision transcription (live LLM; TUTOR_TEST_LIVE=1 to run)');
+    console.log('  skip - condenseForPipeline: over target condenses (live LLM; TUTOR_TEST_LIVE=1 to run)');
+  }
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);

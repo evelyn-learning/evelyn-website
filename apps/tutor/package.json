@@ -24,6 +24,7 @@
     "test:portal-contract": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-contract.ts",
     "test:plangen-effort-knob": "npx tsx scripts/test-plangen-effort-knob.ts",
     "test:plangen-fast-params": "npx tsx scripts/test-plangen-fast-params.ts",
+    "test:changed": "node scripts/test-changed.mjs",
     "test:plan-generate": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-plan-generate.ts",
     "test:portal-auth": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-auth.ts",
     "test:demo-gate": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-demo-gate.ts",
