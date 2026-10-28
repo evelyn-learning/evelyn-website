@@ -38,7 +38,7 @@ const ALWAYS = ['test:partner-session-options']; // the invariance suite is chea
 const sh = (cmd) => execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
 try { sh(`git fetch origin --quiet`); } catch { /* offline: use whatever origin/main is */ }
 const changed = new Set(
-  [sh(`git diff --name-only ${BASE}...HEAD`), sh('git diff --name-only'), sh('git ls-files --others --exclude-standard apps/tutor packages/core')]
+  [sh(`git diff --name-only ${BASE}...HEAD`), sh('git diff --name-only HEAD') /* staged + unstaged */, sh('git ls-files --others --exclude-standard apps/tutor packages/core')]
     .join('\n').split('\n').map((s) => s.trim()).filter(Boolean),
 );
 if (changed.size === 0) { console.log(`test:changed — nothing changed against ${BASE}`); process.exit(0); }

@@ -129,6 +129,15 @@ export const TUTOR_TYPED_SUPERSEDE =
 // 'off' restores the pre-merge bubble rendering for every tenant.
 export const TUTOR_BUBBLE_MATH =
   process.env.NEXT_PUBLIC_TUTOR_BUBBLE_MATH !== 'off';
+// 2026-10-28 (Crimsora trial portal-ba5a6b3c, Praveen): in a FREE demo
+// session (marketing demo, academy trial `is_trial`, partner showcase) the
+// student may change the topic at any point and the first turn briefly
+// confirms the chosen topic. On ⇒ every `is_trial` session is open-scope,
+// the demo-start / showcase mints set `is_trial`, and the demo prompt blocks
+// carry the switch-this-turn rule (src/lib/tutor/portal/demo-topic-choice.ts).
+// `off` ⇒ previous behaviour byte-for-byte. Paid sessions never see it.
+export const TUTOR_DEMO_TOPIC_CHOICE =
+  process.env.NEXT_PUBLIC_TUTOR_DEMO_TOPIC_CHOICE !== 'off';
 // R58 false-final-assertion kill (live, portal-71d11dac: "Right. Dividing
 // both sides by 3 gives $x = 11$" spoken — twice — against a card whose
 // verified answer is 13/3; the LLM judge killed both and Pillar 2b

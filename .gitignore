@@ -113,4 +113,4 @@ docs/whitelabel/kanzoo/*.zip
 # 2026-10-28: blog media (185 MB) lives on the server and in each developer's
 # checkout, never in git — docs/ops/WORKFLOW.md §6. deploy-marketing.sh rsyncs it
 # without --delete and never prunes it.
-apps/marketing/public/images/blog/
+apps/marketing/public/images/blog

@@ -316,6 +316,7 @@
     "test:goal-threads": "npx tsx scripts/test-goal-threads.ts",
     "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts",
     "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
+    "test:demo-topic-choice": "npx tsx scripts/test-demo-topic-choice.ts",
     "test:pedagogy-e2": "npx tsx scripts/test-demo-cta.ts",
     "test:pedagogy-e3": "npx tsx scripts/test-demo-intent.ts",
     "test:pedagogy-resume": "npx tsx scripts/test-portal-resume.ts",

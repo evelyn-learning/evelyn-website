@@ -28,7 +28,8 @@ import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, stripMarkdownEmphasis, ABBREV_TAIL_RE } from './sentence-spacing';
-import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_META_NARRATION_STRIP, TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
+import { DEMO_PLAN_SUBORDINATE_RULE, DEMO_STOP_SWITCH_EXCEPTION, DEMO_WRAP_SWITCH_EXCEPTION } from '@/lib/tutor/portal/demo-topic-choice';
 import {
   TUTOR_HOMEWORK_OWN_MATERIAL,
   TUTOR_VERDICT_PROMPT_HEDGE_AND_PARTS,
@@ -1069,6 +1070,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
         ? [
             ``,
             `This plan is raw material only — no obligation to cover it. Spend the time on whatever teaches this student best and shows what great teaching feels like.`,
+            ...(TUTOR_DEMO_TOPIC_CHOICE ? [DEMO_PLAN_SUBORDINATE_RULE] : []),
             prerequisiteHint,
             // Task E2 (pedagogy): soft conversion close — demo sessions
             // only, session-wide (rides the same sessionMode gate as the
@@ -1829,10 +1831,12 @@ export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
       typeof input.wrapAtMinutes === 'number' && input.minutesElapsed >= input.wrapAtMinutes;
     body = inWrap
       ? `Wrap up NOW: land the "I get it" moment if it hasn't landed yet, then summarize what they learned in 1-2 turns and end on an encouraging note. Do not start new material or open a new example — time is almost up.`
+        + (TUTOR_DEMO_TOPIC_CHOICE ? DEMO_WRAP_SWITCH_EXCEPTION : '')
       : `You have about ${Math.max(0, input.budgetMinutes - input.minutesElapsed)} of ${input.budgetMinutes} minutes left with this student. Pace so they reach one genuine "I get it now" moment AND a clean stopping point before time runs out — never end mid-concept or mid-example. Show what great teaching feels like through the RIGHT visual and by adapting when they're confused, not by drawing extra pictures.`
         + (TUTOR_NO_TIME_TALK ? NO_TIME_TALK_RULE : '');
   } else {
-    body = `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`;
+    body = `This trial session's win must land ON completing the first concept: pace toward one genuinely-earned "I get it now" moment that completes a concept — the session's value is boxed to that moment; never end mid-concept.`
+      + (TUTOR_DEMO_TOPIC_CHOICE ? DEMO_STOP_SWITCH_EXCEPTION : '');
   }
   return `<demo_stop>\n${body}\n</demo_stop>\n\n`;
 }

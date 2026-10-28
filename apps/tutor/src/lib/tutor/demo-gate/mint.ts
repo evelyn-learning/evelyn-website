@@ -13,6 +13,7 @@
 import { randomUUID } from 'node:crypto';
 import { getPartnerSecret } from '@/lib/tutor/portal/auth';
 import { signEmbedToken } from '@/lib/tutor/portal/embed-token';
+import { TUTOR_DEMO_TOPIC_CHOICE } from '@/lib/tutor/orchestrator/flags';
 
 export interface MintedDemoToken {
   token: string;
@@ -27,6 +28,9 @@ export function mintDemoEmbedToken(config: Record<string, unknown>, studentName?
     partner_id: 'evelyn-marketing',
     student_id: studentId,
     demo_gate: 1,
+    // 2026-10-28: the marketing demo is a free demo — mark it so the engine
+    // resolves the demo journey (sessionMode 'demo') and open scope.
+    ...(TUTOR_DEMO_TOPIC_CHOICE ? { is_trial: true } : {}),
     exp: Math.floor(Date.now() / 1000) + 2 * 60 * 60,
   };
 

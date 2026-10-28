@@ -83,9 +83,12 @@ there is two deploys.
 * `deploy-marketing.sh`: same, and `public/` (210 MB of media) is rsynced
   incrementally, never zipped. `public/images/blog` is not in git — it lives
   on the server and in each developer's checkout only.
-* Academy: `deploy/academy-deploy.sh` builds `apps/web` locally with the
-  tenant env, uploads `.next` and source, restarts; the server never builds.
-  `DEPLOY_CHECK=1` stops before touching the server.
+* Academy: `deploy/academy-deploy.sh` typechecks locally, rsyncs the tree,
+  and the server runs `npm ci` only when the lockfile changed and then
+  `next build` — the build stays on the server by design (`apps/web` pages
+  fetch the tenant API at http://127.0.0.1 at build time; a laptop build
+  would bake empty pages). `DEPLOY_CHECK=1` stops before touching the
+  server. After merging into any academy checkout run `npm ci` there.
 * After every deploy: process Ready, the public URL answers 200, and the
   **other** engine build ids are unchanged. GAC :3008 and GreenApple web move
   only when GAC has been told.

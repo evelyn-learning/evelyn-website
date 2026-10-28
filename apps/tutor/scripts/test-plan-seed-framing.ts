@@ -245,7 +245,7 @@ function main() {
       'subscribed output minus framing should equal mode-absent output',
     );
     assert.equal(
-      stripFraming(demoOutput, [DEMO_MARKER, PREREQ_HINT, 'When the session winds down']),
+      stripFraming(demoOutput, [DEMO_MARKER, PREREQ_HINT, 'When the session winds down', 'outranks this plan' /* demo topic choice, 2026-10-28 */]),
       offOutput,
       'demo output minus framing should equal mode-absent output',
     );

@@ -31,6 +31,8 @@ export type GdiEmbedPayload = {
   speech_rate: number;
   thinking_cue: true;
   max_duration_minutes: number;
+  /** Free showcase demo (2026-10-28): the engine resolves the demo journey and open scope. */
+  is_trial?: true;
   iat: number;
   exp: number;
 };
@@ -65,6 +67,7 @@ export function buildGdiEmbedPayload(args: {
     speech_rate: l.speechRate,
     thinking_cue: true,
     max_duration_minutes: 30,
+    is_trial: true,
     iat: args.nowSec,
     exp: args.nowSec + Math.round(ttl * 3600),
   };

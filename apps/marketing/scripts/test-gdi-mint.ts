@@ -36,6 +36,8 @@ test("payload carries what the embed reads: bilingual en+ja, voice, languages su
   assert.equal(p.target_kind, "lessonNode");
   assert.equal(p.input_mode, "voice");
   assert.deepEqual(p.tutor_languages, ["en", "ja"]);
+  // 2026-10-28 demo topic choice: the showcase is a free demo (open scope + topic confirm on the engine).
+  assert.equal(p.is_trial, true);
   assert.equal(p.teacher.id, "ryota");
   assert.equal(p.speech_rate, 0.75);
   assert.equal(p.thinking_cue, true);

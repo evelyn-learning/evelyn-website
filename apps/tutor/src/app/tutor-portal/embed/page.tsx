@@ -13,6 +13,7 @@
  * orchestrator with realtime voice.
  */
 
+import { resolveOpenScope } from '@/lib/tutor/portal/demo-topic-choice';
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -630,7 +631,8 @@ function EmbedSession() {
 }
 
 function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedToken?: string }) {
-  const openScope = config.open_scope === true;
+  // Demo topic choice (2026-10-28): a trial/demo session is open-scope too.
+  const openScope = resolveOpenScope({ openScopeClaim: config.open_scope === true, isTrial: config.is_trial === true });
   const tutorOpens = config.tutor_opens === true;
   // In-flow fields (partner spec v1.1): clamped by the parser, never rejected.
   const rawPayload = config as unknown;
