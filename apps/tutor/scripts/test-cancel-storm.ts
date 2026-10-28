@@ -30,7 +30,9 @@ function check(name: string, actual: boolean, expected: boolean) {
   g.recordCancel(t0);
   check('2nd cancel allowed', g.allowCancel(t0 + 8_000), true);
   g.recordCancel(t0 + 8_000);
-  check('3rd cancel within window suppressed', g.allowCancel(t0 + 16_000), false);
+  check('3rd cancel within window allowed (10-28: limit 3)', g.allowCancel(t0 + 16_000), true);
+  g.recordCancel(t0 + 16_000);
+  check('4th cancel within window suppressed', g.allowCancel(t0 + 24_000), false);
 }
 
 {
@@ -47,8 +49,11 @@ function check(name: string, actual: boolean, expected: boolean) {
   const g = new CancelStormGovernor();
   const t0 = 3_000_000;
   g.recordCancel(t0);
-  g.recordCancel(t0 + 1_000);
-  check('suppressed right after two rapid cancels', g.allowCancel(t0 + 2_000), false);
+  g.recordCancel(t0 + 1_000); // same utterance (eager + retro) — not counted
+  check('eager + retro cancel of one utterance count once', g.allowCancel(t0 + 2_000), true);
+  g.recordCancel(t0 + 3_000);
+  g.recordCancel(t0 + 6_000);
+  check('suppressed after three distinct cancels', g.allowCancel(t0 + 7_000), false);
   check('allowed again once the window has passed', g.allowCancel(t0 + 50_000), true);
 }
 
@@ -59,6 +64,7 @@ function check(name: string, actual: boolean, expected: boolean) {
   const t0 = 4_000_000;
   g.recordCancel(t0);
   g.recordCancel(t0 + 5_000);
+  g.recordCancel(t0 + 8_000);
   check('suppressed during storm', g.allowCancel(t0 + 10_000), false);
   g.recordDelivery();
   check('allowed after a delivered turn resets history', g.allowCancel(t0 + 11_000), true);
@@ -77,7 +83,7 @@ function check(name: string, actual: boolean, expected: boolean) {
   let t = 1_000_000;
   for (let i = 0; i < 10 && g.allowCancel(t); i++) {
     g.recordCancel(t);
-    t += 100;
+    t += 3_000; // distinct utterances (recordCancel dedupes within 2 s)
   }
   check('storm driven into suppression', g.allowCancel(t), false);
   check('stop imperative bypasses an active storm suppression', g.allowCancel(t, { stopImperative: true }), true);

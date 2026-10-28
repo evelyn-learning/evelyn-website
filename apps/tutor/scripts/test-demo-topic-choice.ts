@@ -27,6 +27,8 @@ import { buildOpenerClause, buildSystemPrompt, type SystemPromptContext } from '
 import { formatDemoStopBlock } from '../src/lib/tutor/voice/claude-brain';
 import { TUTOR_DEMO_TOPIC_CHOICE } from '../src/lib/tutor/orchestrator/flags';
 import { OPENING_DIRECTIVE_MAX_CHARS, OPENING_FOLLOWUP_DIRECTIVE } from '../src/lib/tutor/ai/opening-behavior';
+import { stripFirstTurnRunway } from '../src/lib/tutor/voice/first-turn-runway';
+import { bridgeLineFor } from '../src/lib/tutor/voice/bridge-line';
 
 let passed = 0;
 let failed = 0;
@@ -62,23 +64,24 @@ function main() {
     assert.ok(clause);
     assert.ok(clause!.includes(DEMO_TOPIC_CONFIRM_CLAUSE));
     assert.match(clause!, /HARD RULE for this opening turn/);
-    assert.ok(clause!.indexOf('HARD RULE for this opening turn') < clause!.indexOf('confirm the topic'), 'board-first comes before the confirm');
-    assert.match(clause!, /Do not wait for the answer/);
+    assert.ok(clause!.startsWith('HARD RULE for this DEMO opening turn'), 'the confirm leads the clause (10-28 local test: appended, it was ignored)');
+    assert.match(clause!, /LAST sentence you speak this turn is a one-line topic confirm/);
+    assert.match(clause!, /overrides Rule 6/);
   });
   test('subscribed opener has no topic confirm', () => {
     const clause = buildOpenerClause({ ...baseCtx, openingPhase: true, sessionMode: 'subscribed' });
     assert.ok(clause);
-    assert.doesNotMatch(clause!, /confirm the topic/);
+    assert.doesNotMatch(clause!, /topic confirm/);
   });
   test('sessionMode undefined (the /tutor page) has no topic confirm', () => {
     const clause = buildOpenerClause({ ...baseCtx, openingPhase: true });
     assert.ok(clause);
-    assert.doesNotMatch(clause!, /confirm the topic/);
+    assert.doesNotMatch(clause!, /topic confirm/);
   });
   test('typed-content opener is untouched', () => {
     const clause = buildOpenerClause({ ...baseCtx, openingPhase: true, sessionMode: 'demo', entryMode: 'typed-content' });
     assert.ok(clause);
-    assert.doesNotMatch(clause!, /confirm the topic/);
+    assert.doesNotMatch(clause!, /topic confirm/);
   });
 
   // ── 2b. the full directive must fit the brain route's bound ──────────────
@@ -88,6 +91,20 @@ function main() {
     assert.ok(clause.length + INTRO_AND_CONTINUITY_ALLOWANCE < OPENING_DIRECTIVE_MAX_CHARS, `clause ${clause.length} + ${INTRO_AND_CONTINUITY_ALLOWANCE} must stay under ${OPENING_DIRECTIVE_MAX_CHARS}`);
     assert.ok(OPENING_DIRECTIVE_MAX_CHARS >= 4000, 'bound must cover the measured live directives');
     assert.ok(OPENING_FOLLOWUP_DIRECTIVE.length < OPENING_DIRECTIVE_MAX_CHARS);
+  });
+
+  // ── 2c. first-turn runway strip + greeting-only bridge line ──────────────
+  test('first-turn runway: bare lead-in sentences are dropped, prefixes trimmed, content kept', () => {
+    for (const s of ["Okay, let's dig in.", "Alright, let's dig in.", "Let's dig in, Praveen.", "Let’s get started!", "So, let's dive right in, then."]) {
+      assert.equal(stripFirstTurnRunway(s), '', s);
+    }
+    assert.equal(stripFirstTurnRunway("Okay, let's dig in: a caterpillar and a butterfly are the same animal."), 'A caterpillar and a butterfly are the same animal.');
+    assert.equal(stripFirstTurnRunway('Think about a baseball after it leaves your hand.'), 'Think about a baseball after it leaves your hand.');
+    assert.equal(stripFirstTurnRunway("Let's look at the first stage."), "Let's look at the first stage.");
+  });
+  test('bridge line is the greeting alone', () => {
+    assert.equal(bridgeLineFor({ studentName: 'Praveen', inFlow: false } as any), 'Hey Praveen.');
+    assert.equal(bridgeLineFor({ inFlow: false } as any), 'Hey.');
   });
 
   // ── 3. system prompt open-scope block ────────────────────────────────────

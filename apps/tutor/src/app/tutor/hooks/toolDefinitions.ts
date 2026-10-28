@@ -1996,7 +1996,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       type: 'object',
       properties: {
         targetSubTopic: { type: 'string', description: 'Short plain-English label (3-8 words) for the sub-topic / LO the student wants to switch to. Used by the orchestrator to search the catalog and (if needed) seed plan generation.' },
-        targetSubject: { type: 'string', description: 'OPEN-SCOPE sessions only: the subject the new topic belongs to when it differs from the configured subject (e.g. "math", "physics", "chemistry", "biology", "history", "english"). Omit in every other session.' },
+        targetSubject: { type: 'string', description: 'OPEN-SCOPE sessions: ALWAYS pass the plain subject word the new topic belongs to ("math", "physics", "chemistry", "biology", "history", "english"), even when it is the subject the session started in. Scoped sessions: omit.' },
         reason: { type: 'string', description: 'Brief telemetry note: what the student said or what segment was completed that motivated the swap.' },
       },
       required: ['targetSubTopic'],

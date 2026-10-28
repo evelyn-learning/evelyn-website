@@ -8,6 +8,7 @@
  * a single real-time WebSocket connection to OpenAI.
  */
 
+import { stripFirstTurnRunway } from '@/lib/tutor/voice/first-turn-runway';
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
@@ -15326,7 +15327,23 @@ export function VoiceTutorRealtime({
                     lastDisclaimerPhraseRef.current = sentenceNorm;
                   }
                   // Re-read the (possibly swapped) sentence text.
-                  const finalSentence = (ev.text as string) || updatedSentence;
+                  const finalSentenceRaw = (ev.text as string) || updatedSentence;
+                  // First-turn runway strip (2026-10-28): sentence 0 of the opening
+                  // attempt loses its "Okay, let's dig in" — the prompt's first-turn
+                  // exception to the runway rule is ignored by the model, and the
+                  // bridge line already greeted. See voice/first-turn-runway.ts.
+                  let finalSentence = finalSentenceRaw;
+                  if (fullOpeningDirectiveThisAttempt && attemptSentences.length === 0 && !attemptKilled) {
+                    const stripped = stripFirstTurnRunway(finalSentenceRaw);
+                    if (stripped === '') {
+                      onDebugEvent?.('first_turn_runway_dropped', finalSentenceRaw.slice(0, 80));
+                      continue;
+                    }
+                    if (stripped !== finalSentenceRaw) {
+                      onDebugEvent?.('first_turn_runway_trimmed', finalSentenceRaw.slice(0, 80));
+                      finalSentence = stripped;
+                    }
+                  }
                   // Round-7+ Fix 4: verbatim-sentence dedup within turn.
                   // Skip TTS + transcript add when this exact sentence
                   // already played this turn AND it has ≥4 words. Avoids

@@ -49,7 +49,7 @@ export function bridgeLineFor(a: {
     // with beginners, so the first words follow the level: a beginner hears
     // the Japanese line, anyone else a nameless English one (names can arrive
     // family-name first — "Hey Sato." in embed-1792378728971).
-    if (!isBeginnerLevel(a.level)) return 'Hello. Let’s get started.';
+    if (!isBeginnerLevel(a.level)) return 'Hello.';
     const lang = (a.tutorLanguages ?? []).find((l) => l in NON_LATIN_BRIDGE_LINES);
     return lang ? NON_LATIN_BRIDGE_LINES[lang] : null;
   }
@@ -61,7 +61,9 @@ export function bridgeLineFor(a: {
     const title = t.length > MAX_TITLE ? `${t.slice(0, MAX_TITLE - 1)}…` : t;
     return title ? `${greet} ${title} — let’s look at it.` : `${greet} Let’s look at it.`;
   }
-  return `${greet} Let’s get started.`;
+  // 2026-10-28 (Praveen): the greeting alone — "Let's get started" stacked
+  // on the brain's own lead-in read as stalling.
+  return greet;
 }
 
 /** Did this bridge line address the student by name? (The English lines do

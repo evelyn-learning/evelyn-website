@@ -4,8 +4,8 @@ const checks: Array<[string, boolean]> = [];
 const v = { inputMode: 'voice' as const, resume: false };
 checks.push(['in-flow with name and title', bridgeLineFor({ ...v, studentName: 'Maya', title: 'Own a Piece?', inFlow: true }) === 'Hey Maya. Own a Piece? — let’s look at it.']);
 checks.push(['in-flow without title', bridgeLineFor({ ...v, studentName: 'Maya', inFlow: true }) === 'Hey Maya. Let’s look at it.']);
-checks.push(['standalone with name', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false }) === 'Hey Alex. Let’s get started.']);
-checks.push(['no name', bridgeLineFor({ ...v, inFlow: false }) === 'Hey. Let’s get started.']);
+checks.push(['standalone with name', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false }) === 'Hey Alex.']);
+checks.push(['no name', bridgeLineFor({ ...v, inFlow: false }) === 'Hey.']);
 checks.push(['first name only', bridgeLineFor({ ...v, studentName: 'Maya Chen', inFlow: false })?.startsWith('Hey Maya.') === true]);
 checks.push(['long title is cut', (bridgeLineFor({ ...v, studentName: 'M', title: 'x'.repeat(200), inFlow: true }) ?? '').length < 90]);
 checks.push(['text mode → null', bridgeLineFor({ ...v, inputMode: 'text', studentName: 'Maya', inFlow: true }) === null]);
@@ -20,13 +20,13 @@ checks.push(['ja session in-flow → same Japanese line (no English title)', bri
 checks.push(['ja session: no English and no name anywhere', !/Hey|Sato|Kenji|let/i.test(bridgeLineFor({ ...v, studentName: 'Sato Kenji', inFlow: false, tutorLanguages: ['ja'] }) ?? 'Hey')]);
 // 2026-10-27: the first words follow the level in a bilingual session.
 checks.push(['ja beginner (demo starter level) → Japanese line', bridgeLineFor({ ...v, studentName: 'Kenji', inFlow: false, tutorLanguages: ['en', 'ja'], level: 'Adult beginner (A1)' }) === 'こんにちは。それでは、始めましょう。']);
-checks.push(['ja advanced (demo advanced level) → nameless English line', bridgeLineFor({ ...v, studentName: 'Sato Kenji', inFlow: false, tutorLanguages: ['en', 'ja'], level: 'Adult advanced (A2–B1)' }) === 'Hello. Let’s get started.']);
-checks.push(['ja business level → nameless English line', bridgeLineFor({ ...v, studentName: 'Kenji', inFlow: true, title: 'Meeting Skills', tutorLanguages: ['en', 'ja'], level: 'Adult business English' }) === 'Hello. Let’s get started.']);
-checks.push(['English-only session ignores level', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false, level: 'Grade 8' }) === 'Hey Alex. Let’s get started.']);
+checks.push(['ja advanced (demo advanced level) → nameless English line', bridgeLineFor({ ...v, studentName: 'Sato Kenji', inFlow: false, tutorLanguages: ['en', 'ja'], level: 'Adult advanced (A2–B1)' }) === 'Hello.']);
+checks.push(['ja business level → nameless English line', bridgeLineFor({ ...v, studentName: 'Kenji', inFlow: true, title: 'Meeting Skills', tutorLanguages: ['en', 'ja'], level: 'Adult business English' }) === 'Hello.']);
+checks.push(['English-only session ignores level', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false, level: 'Grade 8' }) === 'Hey Alex.']);
 checks.push(['other non-Latin language without a line → null', bridgeLineFor({ ...v, studentName: 'Amal', inFlow: false, tutorLanguages: ['ar', 'en'] }) === null]);
-checks.push(['English-only session unchanged', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false, tutorLanguages: ['en'] }) === 'Hey Alex. Let’s get started.']);
+checks.push(['English-only session unchanged', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false, tutorLanguages: ['en'] }) === 'Hey Alex.']);
 checks.push(['no-name directive: hello was said, name was not', /without the student's name/i.test(BRIDGE_SPOKEN_NO_NAME_DIRECTIVE) && /do not say hello again/i.test(BRIDGE_SPOKEN_NO_NAME_DIRECTIVE)]);
-checks.push(['bridgeSpokeName: ja line did not say the name', bridgeSpokeName('こんにちは。それでは、始めましょう。') === false && bridgeSpokeName('Hey Alex. Let’s get started.') === true]);
+checks.push(['bridgeSpokeName: ja line did not say the name', bridgeSpokeName('こんにちは。それでは、始めましょう。') === false && bridgeSpokeName('Hey Alex.') === true]);
 let fail = 0;
 for (const [name, ok] of checks) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) fail++; }
 console.log(`${checks.length - fail}/${checks.length} passed`);

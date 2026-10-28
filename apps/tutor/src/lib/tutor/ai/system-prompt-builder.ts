@@ -1612,7 +1612,11 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
 
   // Default: demo, first-ever subscribed session, or entryMode 'typed-greeting'
   // — treated as the full opener per the brief.
+  // Demo topic choice (2026-10-28): the confirm leads the clause — appended
+  // at the end it was present (2324-char directive, local test) and ignored.
+  const demoConfirmLead = TUTOR_DEMO_TOPIC_CHOICE && ctx.sessionMode === 'demo' ? DEMO_TOPIC_CONFIRM_CLAUSE : '';
   return (
+    demoConfirmLead +
     agendaClause +
     'Open by ACTING FIRST: put one intriguing, level-appropriate thing about the topic on ' +
     'the board, greet them by name if you have it, then get to know them briefly like a real ' +
@@ -1630,10 +1634,7 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     '"don\'t worry about getting it right" read as the same script every session — skip the ' +
     'framing sentence entirely and lead with the intriguing thing ITSELF, phrased however ' +
     'THIS topic is most striking: a pointed question, a surprising claim, a concrete ' +
-    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause +
-    // Demo topic choice (2026-10-28): explicit 'demo' only — undefined
-    // (the /tutor page) keeps the previous text.
-    (TUTOR_DEMO_TOPIC_CHOICE && ctx.sessionMode === 'demo' ? DEMO_TOPIC_CONFIRM_CLAUSE : '')
+    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause
   );
 }
 
@@ -2012,7 +2013,7 @@ export function buildSystemPromptParts(context: SystemPromptContext): { core: st
     // says "note the scope and offer to end"; this block wins because it is
     // later in the prompt and names the rule it supersedes.
     prompt += `\n### Open-scope session — OVERRIDES Rule 7(b)\n`;
-    prompt += `This is an open demo session. The configured subject/topic above is only where the session STARTED — it is NOT a boundary. The student may switch to ANY subject or topic at ANY time, and every such request is an in-scope Rule 7 path (a) switch: call propose_plan_swap with a 3-8 word targetSubTopic and, when the new topic belongs to a different subject, also pass targetSubject (a plain subject word such as "math", "physics", "chemistry", "biology", "history", "english"). Never deflect, never say the session is scoped to something else, never offer to end the session so they can start another. Keep teaching the new topic right away from your own knowledge while the new plan loads; the plan's first segment becomes active on the next turn. Off-topic chatter that is not a learning request (shopping, personal questions) is still redirected to learning as usual.${TUTOR_DEMO_TOPIC_CHOICE ? DEMO_TOPIC_SWITCH_RULE : ''}\n`;
+    prompt += `This is an open demo session. The configured subject/topic above is only where the session STARTED — it is NOT a boundary. The student may switch to ANY subject or topic at ANY time, and every such request is an in-scope Rule 7 path (a) switch: call propose_plan_swap with a 3-8 word targetSubTopic and ALWAYS pass targetSubject — the plain subject word the new topic belongs to ("math", "physics", "chemistry", "biology", "history", "english"), even when it is the same subject the session started in. Never deflect, never say the session is scoped to something else, never offer to end the session so they can start another. Keep teaching the new topic right away from your own knowledge while the new plan loads; the plan's first segment becomes active on the next turn. Off-topic chatter that is not a learning request (shopping, personal questions) is still redirected to learning as usual.${TUTOR_DEMO_TOPIC_CHOICE ? DEMO_TOPIC_SWITCH_RULE : ''}\n`;
   }
 
   // Only a name a tutor may SAY reaches the prompt (student-name.ts): an

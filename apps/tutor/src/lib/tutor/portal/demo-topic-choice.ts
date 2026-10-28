@@ -43,7 +43,7 @@ export function resolveOpenScope(args: {
  * for the answer. Generic by design (feedback_generic_prompts).
  */
 export const DEMO_TOPIC_CONFIRM_CLAUSE =
-  ' This is a demo session, so ALSO confirm the topic — in ONE short spoken sentence, after the board already shows the hook for the configured topic: name what today is about and ask whether they would rather learn something else. Do not wait for the answer; carry straight on with the configured topic unless they name a different one. If they do name something else, that is the topic now — switch to it in your very next turn (open-scope rules) and put something about IT on the board.';
+  'HARD RULE for this DEMO opening turn (it overrides Rule 6\'s ban on asking what to work on, for this one turn only): the LAST sentence you speak this turn is a one-line topic confirm — name what today is about and ask whether they would rather learn something else — and then you stop and listen. Everything below still applies: board first, hook first; the confirm comes after the hook, as the closing sentence, and it is the question you leave them with (no other question in this turn). If they name something else, that is the topic now — switch to it in your very next turn (open-scope rules) and put something about IT on the board. '
 
 /**
  * Open-scope block, the part added for demos: the switch happens THIS

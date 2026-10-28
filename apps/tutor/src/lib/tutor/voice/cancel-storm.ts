@@ -19,7 +19,12 @@
  * the cap.
  */
 const WINDOW_MS = 45_000;
-const MAX_CANCELS_PER_WINDOW = 2;
+// 2026-10-28 (local test): an engaged student who changed topic three times in
+// 20 s hit the breaker — and the eager + retro cancel of ONE utterance counted
+// twice. 3 per window, one count per utterance (recordCancel dedupes within
+// SAME_UTTERANCE_MS).
+const MAX_CANCELS_PER_WINDOW = 3;
+const SAME_UTTERANCE_MS = 2_000;
 
 /** Issue G (embed-1788187567764): explicit stop imperatives must never be
  *  storm-suppressed — a student shouting "stop" while the storm breaker is
@@ -50,6 +55,8 @@ export class CancelStormGovernor {
 
   recordCancel(now: number): void {
     this.prune(now);
+    const last = this.cancelTimes[this.cancelTimes.length - 1];
+    if (last !== undefined && now - last < SAME_UTTERANCE_MS) return; // eager + retro of one utterance
     this.cancelTimes.push(now);
   }
 
