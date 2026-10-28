@@ -44,6 +44,11 @@ assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4' }) === 's
 assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4', inFlightShown: true }) === 'queue_after_turn', 'a student turn already showing → the new message runs after it');
 assert(/typedDuringTurn === 'supersede_turn'\) \{[\s\S]{0,400}inFlightBrainAbortRef\.current\?\.abort\(\)/.test(vtr.slice(vtr.indexOf('const typedDuringTurn = decideTypedDuringTurn({'))) && !/typedDuringTurn === 'supersede_turn'\) \{[\s\S]{0,400}openerSupersededByStudentRef/.test(vtr), 'wiring: superseding a student turn aborts it without the opener flag');
 assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: '[Skip-button-clicked: advance]' }) === 'force_clear', 'another runtime dispatch in flight → unchanged');
+// 2026-10-28 merge: NEXT_PUBLIC_TUTOR_TYPED_SUPERSEDE=off restores the force-clear for a student turn, not for the opener.
+assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4', supersedeTurn: false }) === 'force_clear', 'kill switch off → a student turn in flight is force-cleared as before the merge');
+assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: 'x = 4', inFlightShown: true, supersedeTurn: false }) === 'force_clear', 'kill switch off → shown or not');
+assert(decideTypedDuringTurn({ ...typedAt, supersedeTurn: false }) === 'supersede_opening', 'kill switch off → the opening-turn rules still apply');
+assert(/supersedeTurn: TUTOR_TYPED_SUPERSEDE,/.test(vtr), 'wiring: the runtime passes the TUTOR_TYPED_SUPERSEDE flag');
 assert(decideTypedDuringTurn({ ...typedAt, inFlightTranscript: null }) === 'force_clear', 'busy with no turn on record (a stale flag) → unchanged');
 assert(decideTypedDuringTurn({ ...typedAt, sessionMode: 'voice' }) === 'force_clear', 'voice → unchanged');
 assert(isKickoffMessage(' [start lesson] ') && isKickoffMessage('[start session]') && !isKickoffMessage('start lesson') && !isKickoffMessage(null) && !isKickoffMessage('[Session-resumed]'), 'only the two session-start kickoffs are opening turns');

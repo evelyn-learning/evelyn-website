@@ -1508,7 +1508,9 @@ export function buildGeometryManifest(props: GeometryRendererProps): FeatureMani
     });
   });
 
-  points.forEach((pt) => {
+  // 2026-10-28: construction helpers (`hidden`, never drawn or labelled —
+  // labelled-line ends, sector arc samples) are not targets either.
+  points.filter((pt) => !pt.hidden).forEach((pt) => {
     const name = pt.label ? `point-${featSlug(pt.label)}` : `point-${featSlug(pt.id)}`;
     const human = pt.label ?? pt.id;
     const slug = featSlug(human);

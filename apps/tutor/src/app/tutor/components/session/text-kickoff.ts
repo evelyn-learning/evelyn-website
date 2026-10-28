@@ -65,10 +65,16 @@ export function decideTypedDuringTurn(i: {
   inFlightTranscript: string | null;
   /** A sentence of that turn has reached the student. */
   inFlightShown: boolean;
+  /** 2026-10-28: NEXT_PUBLIC_TUTOR_TYPED_SUPERSEDE kill switch (flags.ts
+   *  TUTOR_TYPED_SUPERSEDE). Default true; false restores the pre-merge
+   *  force-clear for a typed student turn in flight. The opening-turn
+   *  rules (2026-10-09) are not behind it. */
+  supersedeTurn?: boolean;
 }): TypedDuringTurn {
   if (!i.brainBusy) return 'dispatch';
   if (i.sessionMode !== 'text') return 'force_clear';
   if (isKickoffMessage(i.inFlightTranscript)) return i.inFlightShown ? 'queue_after_opening' : 'supersede_opening';
+  if (i.supersedeTurn === false) return 'force_clear';
   // 2026-10-19 (GAC AP Statistics, portal-7b0e93dc): "60 - 48" then "= 12"
   // a second later ran as two overlapping turns — two tutor messages, the
   // second repeating the first. A student turn in flight that has shown

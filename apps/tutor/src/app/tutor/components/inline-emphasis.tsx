@@ -19,6 +19,7 @@
 import React from 'react';
 import { segment, prepareBubbleText } from '@/lib/tutor/whiteboard/inline-math';
 import { InlineMathText } from './whiteboard/InlineMathText';
+import { TUTOR_BUBBLE_MATH } from '@/lib/tutor/orchestrator/flags';
 
 /** Render markdown-style *emphasis* and **strong** as actual styled spans
  *  instead of leaving the asterisks raw in the chat bubble. The brain
@@ -57,13 +58,13 @@ export function renderInlineEmphasis(text: string): React.ReactNode {
  *  through renderInlineEmphasis so emphasis markers never leak into a
  *  KaTeX span. Does NOT run normalizeSentenceGaps — see module doc. */
 export function renderBubbleEmphasis(text: string): React.ReactNode {
-  if (text) text = prepareBubbleText(text);
+  if (text && TUTOR_BUBBLE_MATH) text = prepareBubbleText(text);
   if (!text || !text.includes('$')) return renderInlineEmphasis(text);
   const parts = segment(text);
   if (!parts.some((p) => p.kind === 'math')) return renderInlineEmphasis(text);
   return parts.map((p, i) =>
     p.kind === 'math'
-      ? <InlineMathText key={`m-${i}`} text={`$${p.body}$`} wrap />
+      ? <InlineMathText key={`m-${i}`} text={`$${p.body}$`} wrap={TUTOR_BUBBLE_MATH} />
       : <React.Fragment key={`t-${i}`}>{renderInlineEmphasis(p.body)}</React.Fragment>,
   );
 }

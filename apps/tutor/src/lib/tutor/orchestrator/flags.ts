@@ -114,6 +114,21 @@ export const TUTOR_IDLE_NUDGE =
 // lib/tutor/portal/partner-session-options.ts (on by default, 2026-10-27).
 export const TUTOR_LESSON_CLOSE_AUTO_END =
   process.env.NEXT_PUBLIC_TUTOR_LESSON_CLOSE_AUTO_END !== 'off';
+// 2026-10-19 (GAC AP Statistics, portal-7b0e93dc; global since the 2026-10-28
+// merge): a typed message while a typed student turn is in flight supersedes
+// it (nothing shown yet) or queues behind it (a sentence already shown),
+// instead of force-clearing the busy flag and running two overlapping turns.
+// session/text-kickoff.ts `decideTypedDuringTurn`. Text mode only. 'off'
+// restores the force-clear for every tenant.
+export const TUTOR_TYPED_SUPERSEDE =
+  process.env.NEXT_PUBLIC_TUTOR_TYPED_SUPERSEDE !== 'off';
+// 2026-10-20 (GAC; global since the 2026-10-28 merge): chat bubbles run
+// prepareBubbleText (bare LaTeX / unicode-with-limits auto-wrapped in $…$)
+// and long math spans may wrap at a paren (InlineMathText `wrap`).
+// TranscriptView.renderBubbleText + inline-emphasis.renderBubbleEmphasis.
+// 'off' restores the pre-merge bubble rendering for every tenant.
+export const TUTOR_BUBBLE_MATH =
+  process.env.NEXT_PUBLIC_TUTOR_BUBBLE_MATH !== 'off';
 // R58 false-final-assertion kill (live, portal-71d11dac: "Right. Dividing
 // both sides by 3 gives $x = 11$" spoken — twice — against a card whose
 // verified answer is 13/3; the LLM judge killed both and Pillar 2b

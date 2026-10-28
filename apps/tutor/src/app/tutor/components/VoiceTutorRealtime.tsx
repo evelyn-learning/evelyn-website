@@ -357,6 +357,7 @@ import {
   TUTOR_NOISE_NAG,
   TUTOR_IDLE_NUDGE,
   TUTOR_LESSON_CLOSE_AUTO_END,
+  TUTOR_TYPED_SUPERSEDE,
   TUTOR_BARGEIN_PAUSE_FIRST,
   TUTOR_HOST_LESSON,
   TUTOR_EVOLVE_SWAP,
@@ -26759,6 +26760,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               brainBusy: brainBusyRef.current,
               inFlightTranscript: inFlightTurnRef.current?.transcript ?? null,
               inFlightShown: inFlightTurnRef.current?.shown === true,
+              supersedeTurn: TUTOR_TYPED_SUPERSEDE,
             });
             if (typedDuringTurn === 'supersede_opening') {
               // The busy flag stays set: the aborted turn's own handler
