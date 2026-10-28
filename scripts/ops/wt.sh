@@ -47,7 +47,11 @@ setup_env() {
     # Blog media is not in git (WORKFLOW.md §6); link the root checkout's copy
     # so local marketing dev shows blog images. The deploy never prunes it.
     if [ -d "$REPO/apps/marketing/public/images/blog" ] && [ ! -e "$wt/apps/marketing/public/images/blog" ]; then
-      ln -s "$REPO/apps/marketing/public/images/blog" "$wt/apps/marketing/public/images/blog"
+      # Hardlinked copy, not a symlink: Turbopack refuses a symlink that points
+      # outside the project root ("Symlink … is invalid, it points out of the
+      # project") and the marketing build fails (10-28). Hardlinks cost no space.
+      mkdir -p "$wt/apps/marketing/public/images/blog"
+      rsync -a --link-dest="$REPO/apps/marketing/public/images/blog/" "$REPO/apps/marketing/public/images/blog/" "$wt/apps/marketing/public/images/blog/"
     fi
   elif is_academy; then
     [ -f "$REPO/.env.local" ] && { cp "$REPO/.env.local" "$wt/.env.local"; chmod 600 "$wt/.env.local"; }
