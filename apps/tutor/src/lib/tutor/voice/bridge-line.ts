@@ -23,6 +23,14 @@ const NON_LATIN_BRIDGE_LINES: Readonly<Record<string, string>> = {
   ja: 'こんにちは。それでは、始めましょう。',
 };
 
+/** "Adult beginner (A1)", "Pre-A1", "true beginner", "初級" → beginner.
+ *  Missing level → beginner (the line it gave before levels were read). */
+export function isBeginnerLevel(level?: string): boolean {
+  const l = (level ?? '').trim();
+  if (!l) return true;
+  return /\bbeginner\b|\b(?:pre-?)?a1\b|初級|入門|初心者/i.test(l);
+}
+
 export function bridgeLineFor(a: {
   studentName?: string;
   title?: string;
@@ -31,9 +39,17 @@ export function bridgeLineFor(a: {
   resume: boolean;
   /** The session's tutor languages (embed `tutor_languages`); undefined = English. */
   tutorLanguages?: string[];
+  /** The student's level string (e.g. "Adult beginner (A1)"). */
+  level?: string;
 }): string | null {
   if (a.inputMode === 'text' || a.resume) return null;
   if (sessionAllowsNonLatin(a.tutorLanguages)) {
+    // 2026-10-27 (GDI demo embed-1793146791189): an advanced, English-led
+    // lesson opened in Japanese. The prompt uses the second language mostly
+    // with beginners, so the first words follow the level: a beginner hears
+    // the Japanese line, anyone else a nameless English one (names can arrive
+    // family-name first — "Hey Sato." in embed-1792378728971).
+    if (!isBeginnerLevel(a.level)) return 'Hello. Let’s get started.';
     const lang = (a.tutorLanguages ?? []).find((l) => l in NON_LATIN_BRIDGE_LINES);
     return lang ? NON_LATIN_BRIDGE_LINES[lang] : null;
   }

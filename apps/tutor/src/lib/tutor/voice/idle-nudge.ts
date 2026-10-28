@@ -28,6 +28,10 @@
  *  look this over" hand-offs land well inside it); short enough that the
  *  b2fe010e 7.7-minute hole can't recur. */
 export const IDLE_NUDGE_FIRST_MS = 75_000;
+/** First nudge in a bilingual language lesson (2026-10-27, GDI demo
+ *  embed-1793146527837: 88 s of silence after a turn that asked nothing).
+ *  Turns there are short spoken exchanges, not dense renders to work through. */
+export const IDLE_NUDGE_FIRST_LANGUAGE_MS = 30_000;
 /** Gap before a second nudge in the SAME silence stretch. */
 export const IDLE_NUDGE_REPEAT_MS = 120_000;
 /** Re-poll delay when the fire moment lands busy (tutor talking, student
@@ -73,8 +77,9 @@ export function createIdleNudgeState(): IdleNudgeState {
 
 /** Arm delay for the next timer: first nudge of a stretch waits the long
  *  threshold; follow-ups in the same stretch wait the repeat gap. */
-export function idleNudgeArmDelayMs(state: IdleNudgeState): number {
-  return state.stretchCount === 0 ? IDLE_NUDGE_FIRST_MS : IDLE_NUDGE_REPEAT_MS;
+export function idleNudgeArmDelayMs(state: IdleNudgeState, opts?: { languageLesson?: boolean }): number {
+  if (state.stretchCount === 0) return opts?.languageLesson ? IDLE_NUDGE_FIRST_LANGUAGE_MS : IDLE_NUDGE_FIRST_MS;
+  return IDLE_NUDGE_REPEAT_MS;
 }
 
 export type IdleNudgeDecision = 'fire' | 'recheck' | 'stand-down';

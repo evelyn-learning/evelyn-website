@@ -18,6 +18,11 @@ checks.push(['directive tells the brain not to greet again', /already greeted|do
 checks.push(['ja session → Japanese line, no name', bridgeLineFor({ ...v, studentName: 'Sato Kenji', inFlow: false, tutorLanguages: ['ja', 'en'] }) === 'こんにちは。それでは、始めましょう。']);
 checks.push(['ja session in-flow → same Japanese line (no English title)', bridgeLineFor({ ...v, studentName: 'Sato Kenji', title: 'Experiences — Starter', inFlow: true, tutorLanguages: ['ja'] }) === 'こんにちは。それでは、始めましょう。']);
 checks.push(['ja session: no English and no name anywhere', !/Hey|Sato|Kenji|let/i.test(bridgeLineFor({ ...v, studentName: 'Sato Kenji', inFlow: false, tutorLanguages: ['ja'] }) ?? 'Hey')]);
+// 2026-10-27: the first words follow the level in a bilingual session.
+checks.push(['ja beginner (demo starter level) → Japanese line', bridgeLineFor({ ...v, studentName: 'Kenji', inFlow: false, tutorLanguages: ['en', 'ja'], level: 'Adult beginner (A1)' }) === 'こんにちは。それでは、始めましょう。']);
+checks.push(['ja advanced (demo advanced level) → nameless English line', bridgeLineFor({ ...v, studentName: 'Sato Kenji', inFlow: false, tutorLanguages: ['en', 'ja'], level: 'Adult advanced (A2–B1)' }) === 'Hello. Let’s get started.']);
+checks.push(['ja business level → nameless English line', bridgeLineFor({ ...v, studentName: 'Kenji', inFlow: true, title: 'Meeting Skills', tutorLanguages: ['en', 'ja'], level: 'Adult business English' }) === 'Hello. Let’s get started.']);
+checks.push(['English-only session ignores level', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false, level: 'Grade 8' }) === 'Hey Alex. Let’s get started.']);
 checks.push(['other non-Latin language without a line → null', bridgeLineFor({ ...v, studentName: 'Amal', inFlow: false, tutorLanguages: ['ar', 'en'] }) === null]);
 checks.push(['English-only session unchanged', bridgeLineFor({ ...v, studentName: 'Alex', inFlow: false, tutorLanguages: ['en'] }) === 'Hey Alex. Let’s get started.']);
 checks.push(['no-name directive: hello was said, name was not', /without the student's name/i.test(BRIDGE_SPOKEN_NO_NAME_DIRECTIVE) && /do not say hello again/i.test(BRIDGE_SPOKEN_NO_NAME_DIRECTIVE)]);

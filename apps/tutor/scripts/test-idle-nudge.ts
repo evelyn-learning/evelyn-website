@@ -43,6 +43,8 @@ function check(name: string, cond: boolean, got?: unknown) {
 {
   const s = createIdleNudgeState();
   check('fresh-arm-delay-is-first', idleNudgeArmDelayMs(s) === IDLE_NUDGE_FIRST_MS);
+  check('language-lesson-first-delay-is-30s', idleNudgeArmDelayMs(s, { languageLesson: true }) === 30_000);
+  check('non-language-first-delay-unchanged', idleNudgeArmDelayMs(s, { languageLesson: false }) === IDLE_NUDGE_FIRST_MS);
   check('quiet-visible-fires', decideIdleNudge({ busy: false, hidden: false, state: s }) === 'fire');
 }
 

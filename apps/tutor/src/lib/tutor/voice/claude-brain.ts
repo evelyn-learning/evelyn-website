@@ -39,7 +39,7 @@ import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from '.
 import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
 import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
-import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
+import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, ANNOUNCED_STEP_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
 import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn, detectAdvanceRequest, isBackwardAdvance, BACKWARD_ADVANCE_REFUSED_REASON } from '../orchestrator/advance-request';
 import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
@@ -762,6 +762,9 @@ export type BrainStreamEvent =
   /** 2026-10-18 (tool-markup.ts): the model wrote a tool call out as text;
    *  the span was removed from speech and transcript. Telemetry only. */
   | { type: 'tool-markup-stripped'; text: string }
+  /** 2026-10-27 (post-tool-turn.ts): a turn that asked nothing got one
+   *  text-only follow-up call. Telemetry only. */
+  | { type: 'thin-turn-rescue'; reason: string }
   /** 2026-10-18 (output-budget.ts): the reply hit max_tokens mid-sentence;
    *  the cut-off fragment was dropped. Telemetry only. */
   | { type: 'max-tokens-tail-dropped'; text: string }
@@ -3074,7 +3077,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const zeroTextRescue = !accumulatedText.trim() && accumulatedToolCalls.length > 0 && !!lastFinalMessage;
   if ((zeroTextRescue || thinRescue?.rescue) && lastFinalMessage) {
     if (zeroTextRescue) console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
-    else console.warn(`[brain.stream] THIN-TURN rescue: ${accumulatedToolCalls.length} tool(s), no question, stop=${lastStopReason} — invoking follow-up call`);
+    else console.warn(`[brain.stream] THIN-TURN rescue (${thinRescue?.reason}): ${accumulatedToolCalls.length} tool(s), no question, stop=${lastStopReason} — invoking follow-up call`);
+    if (thinRescue?.rescue) yield { type: 'thin-turn-rescue', reason: thinRescue.reason };
     const lastToolUseBlocks = lastFinalMessage.content.filter(
       (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
     );
@@ -3091,12 +3095,16 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           })),
         },
       ];
+    } else {
+      // 2026-10-27: a text-only reply (announced-next-step) — the follow-up
+      // must see its own words, or it opens the turn over again.
+      messages = [...messages, { role: 'assistant', content: lastFinalMessage.content }];
     }
     messages = [
       ...messages,
       {
         role: 'user',
-        content: zeroTextRescue
+        content: thinRescue?.reason === 'announced-next-step' ? ANNOUNCED_STEP_RESCUE_INSTRUCTION : zeroTextRescue
           ? 'You emitted whiteboard tools without any narration. ' +
             'Voice a brief opener sentence + 1-2 sentences describing what is now on the board. ' +
             'No more tools — text only.'

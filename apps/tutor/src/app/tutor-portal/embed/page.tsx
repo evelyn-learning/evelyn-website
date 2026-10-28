@@ -72,7 +72,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // 2026-10-19 (GDI fixes 1–5 round): the cut-tool continuation, the
   // mid-lesson close drop and the prompted-repeat note — embed-1792367246990
   // ran blind on all three because this list ate them.
-  'premature_close', 'tool_call_continued', 'prompted_repeat',
+  'premature_close', 'tool_call_continued', 'thin_turn_rescue', 'prompted_repeat',
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',

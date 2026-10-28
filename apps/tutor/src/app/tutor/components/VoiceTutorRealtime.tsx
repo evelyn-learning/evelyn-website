@@ -17239,6 +17239,8 @@ export function VoiceTutorRealtime({
                   // Voice: the check failed, timed out or was unsure.
                   onDebugEvent?.('verdict_precheck_none', `ms=${Number((ev as { ms?: number }).ms ?? 0)}`);
                   settleVoiceGate(null);
+                } else if (ev.type === 'thin-turn-rescue') {
+                  onDebugEvent?.('thin_turn_rescue', String(ev.reason ?? ''));
                 } else if (ev.type === 'tool-markup-stripped') {
                   onDebugEvent?.('tool_markup_stripped', String(ev.text ?? '').slice(0, 80));
                 } else if (ev.type === 'max-tokens-tail-dropped') {
@@ -22110,7 +22112,7 @@ export function VoiceTutorRealtime({
       );
       void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2 }), { silent: true, bypassPerceptionDedupe: true });
     };
-    const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current);
+    const idleNudgeArmDelay = idleNudgeArmDelayMs(idleNudgeStateRef.current, { languageLesson: sessionAllowsNonLatin(tutorLanguages) });
     idleNudgeDueAtRef.current = Date.now() + idleNudgeArmDelay;
     idleNudgePostponeRef.current = { lastReason: null, loggedReason: null, loggedAtMs: 0 };
     idleNudgeTimerRef.current = setTimeout(fireOrRecheck, idleNudgeArmDelay);
@@ -25467,8 +25469,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             studentName, title: lessonContext?.title, inFlow: isInFlow,
             // Text mode returned above (typed start, no dead air to cover).
             inputMode: 'voice', resume: Boolean(resumeState),
-            // Japanese sessions get a Japanese, nameless line (bridge-line.ts).
-            tutorLanguages,
+            // Japanese sessions get a Japanese, nameless line (bridge-line.ts);
+            // a non-beginner in one gets a nameless English line.
+            tutorLanguages, level,
           });
           if (line) {
             bridgeSpokenRef.current = true;

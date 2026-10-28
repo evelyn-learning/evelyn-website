@@ -168,6 +168,13 @@ test('clause is generic: no client or product names', () => {
   for (const banned of ['GDI', 'Gambit', 'Toyota', 'Denso', 'Nagoya']) assert.ok(!c.includes(banned), banned);
 });
 
+test('clause: stop hinting after two tries and explain in Japanese (GDI demo 10-27)', () => {
+  const c = buildBilingualClause(['en', 'ja'])!;
+  assert.ok(c.includes('stop hinting after two tries'));
+  assert.ok(c.includes('explain it in two or three short sentences — in Japanese for a beginner'));
+  assert.ok(c.includes('Never give a third hint on the same question'));
+});
+
 console.log('TTS text rewrite');
 test('rewriteForTTS leaves Japanese text intact', () => {
   for (const t of ['過去形を練習しましょう。', '「I went to Osaka」は過去形です。', '火曜日の午後3時はどうですか？']) {
