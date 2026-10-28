@@ -93,6 +93,13 @@ function check(name: string, actual: boolean, expected: boolean) {
   }
 }
 
+// 2026-10-28 (portal-5dfefedd): a request to be heard bypasses the breaker.
+check('"Can I please talk?" is a stop imperative', STOP_IMPERATIVE_RE.test('Can I please talk? 2 less than equal to uh 2 less than equal to 0 plus 5.'), true);
+check('"let me finish" is a stop imperative', STOP_IMPERATIVE_RE.test('no no let me finish the second one'), true);
+check('"I\'m still talking" is a stop imperative', STOP_IMPERATIVE_RE.test("I'm still talking"), true);
+check('a plain answer is not', STOP_IMPERATIVE_RE.test('Yeah, so 2 less than 5 is true.'), false);
+check('"talk" inside content is not', STOP_IMPERATIVE_RE.test('the chapter talks about the respiratory system'), false);
+
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);
   process.exit(1);

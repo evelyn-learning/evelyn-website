@@ -66,6 +66,12 @@ export function isNonAnswerShape(ts: TurnShape | null | undefined): boolean {
 
 const REPLACES =
   'This is a TEXT session. For this reply the rule below REPLACES every instruction elsewhere about opening a turn with a verdict, an affirmation, praise or a corrective word (the affirmation cap, "the affirmation word must match your verdict", "lead with confirmation", corrective openers). What stays from those instructions is the checking behind them: work the answer out yourself before you say anything about theirs.\n';
+/** Spoken working: results, not substitutions; never the student's own lines
+ *  read back. Placed FIRST in the genuine-attempt branch (and the general
+ *  LENGTH line still closes the block). Exported for the unit suite. */
+export const SPOKEN_WORKING_LENGTH_RULE =
+  'Length comes first, however many parts the attempt has: the whole reply is about thirty words and never more than about forty-five. Speak RESULTS, not substitutions — name what each part comes to in a few words; a substitution the student needs to see goes on the board (show_equation), not into speech. When the student has already said their working aloud, do not say it back to them: one short sentence with the result and the match, then your next question in one sentence. A reply that re-walks each line of what they just said is wrong even when every line of it is right.\n';
+
 const LENGTH =
   'Length: the same as any other turn — about thirty words in all, and never more than about forty-five. Do not restate what is already settled.\n';
 
@@ -133,6 +139,11 @@ export function formatWorkThenMatchBlock(transcript: string, ts?: TurnShape | nu
     + 'WORK IT, THEN MATCH. When the message below proposes an answer or a step — in any shape: stated in full, hedged or in question form, a statement of not knowing that goes on to propose something, a bare value, a request to check a value, a fact they ask you to confirm:\n'
     + 'FIRST, silently, decide what their value is an attempt AT. It is an attempt at your open question only if it is the kind of thing that question asks for; a value already settled earlier in the session (an earlier answer repeated, a given of the problem) is not a new attempt at anything. The working you show is only ever for the question their value is an attempt at. If it is not an attempt at your open question, you do not work that question and you do not state its result or any part of it: say in a few words what their value is, if you recognise it, and ask your question again — or ask what the value refers to.\n'
     + 'For a genuine attempt:\n'
+    // 2026-10-28 (portal-5dfefedd): a two-part check came back as 131 words
+    // — every substitution the student had just said, read back line by
+    // line, then the match, then a two-sentence question. The length rule
+    // sat at the END of this block and lost. Generic by design.
+    + SPOKEN_WORKING_LENGTH_RULE
     + (ts?.shape === 'check_request' ? CHECK_REQUEST_VERDICT_RULE : '')
     + '1. Do not begin with a verdict or praise word or phrase — no acceptance, denial, credit or praise of any kind before the working ("Right", "Exactly", "Yes", "Correct", "Good", "Nice", "Not quite", "Close", "Almost", "No", "Hmm" and their like).\n'
     + '2. Begin with the working itself: in one or two short sentences work the relevant step from the student\'s own problem and data, and state its result plainly.\n'

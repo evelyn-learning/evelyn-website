@@ -32,8 +32,11 @@ const MAX_CANCELS_PER_WINDOW = 2;
  *  it's preceded — "No, no, stop."). A stop-word buried mid-sentence
  *  with content on both sides ("the bus stop is far", "I can't wait for
  *  class") matches neither edge and is correctly rejected. */
+// 2026-10-28 (portal-5dfefedd): "Can I please talk?" was the third cancel in
+// the window and was suppressed — the student had to shout over the tutor.
+// A request to be heard, in any wording, is a stop imperative.
 export const STOP_IMPERATIVE_RE =
-  /^\s*\b(?:stop|wait|pause|hold on|be quiet|quiet|shush)\b|\b(?:stop|wait|pause|hold on|be quiet|quiet|shush)\b[.!,]?\s*$/i;
+  /^\s*\b(?:stop|wait|pause|hold on|be quiet|quiet|shush)\b|\b(?:stop|wait|pause|hold on|be quiet|quiet|shush)\b[.!,]?\s*$|\b(?:can|may|could) i (?:please )?(?:talk|speak|finish|say something)\b|\blet me (?:talk|speak|finish|say)\b|\bi(?:'m| am) (?:not done|not finished|still talking|still speaking)\b|\bplease let me\b|\bexcuse me\b|\blisten to me\b/i;
 
 export class CancelStormGovernor {
   private cancelTimes: number[] = [];

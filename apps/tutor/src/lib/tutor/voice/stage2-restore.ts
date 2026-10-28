@@ -41,6 +41,16 @@ const STALE_CUTOFF_MS = 60_000;
  *  meaningfully delaying recovery from a genuinely abandoned utterance. */
 export const RECENT_VAD_ACTIVITY_WINDOW_MS = 4_000;
 
+/** 2026-10-28 (portal-5dfefedd, Crimsora trial): the student barged in and
+ *  then answered for ~30 s straight. No VAD edge fires during continuous
+ *  speech, the 30 s mid-utterance watchdog cleared `midUtterance`, and the
+ *  next 2 s re-check found no recent activity → 'resume-tts' replayed the
+ *  cut tail ("…thinking.") OVER the student, who said "hello, hello" and
+ *  then "Can I please talk?". A cut tail this old is stale whatever the
+ *  VAD says: the student's transcript is about to drive a fresh turn.
+ *  Below this age the R42 recent-activity defer still applies. */
+export const RESUME_TTS_STALE_MS = 20_000;
+
 export function decideStage2TimeoutRestore(args: {
   /** The armed checkpoint is still unresolved (same object, not cleared).
    *  Optional — omitted/undefined is treated as still-active; only an
@@ -103,6 +113,7 @@ export function decideStage2TimeoutRestore(args: {
       if (args.ageMs < timeoutMs) return 'defer';
       return 'restore';
     }
+    if (args.ageMs > RESUME_TTS_STALE_MS) return 'drop';
     if (recentActivity) return 'defer';
     if (args.ageMs < timeoutMs) return 'defer';
     return 'resume-tts';
@@ -117,7 +128,7 @@ export function decideStage2TimeoutRestore(args: {
     // not "delivered". Resume the snapshot (replay-only, no re-fire, no
     // duplication risk); pure-drop only when nothing was queued.
     if (args.hasUnplayedSnapshot) {
-      if (args.ageMs > STALE_CUTOFF_MS) return 'drop';
+      if (args.ageMs > RESUME_TTS_STALE_MS) return 'drop';
       if (args.midUtterance) return 'defer';
       if (args.ageMs < timeoutMs) return 'defer';
       return 'resume-tts';

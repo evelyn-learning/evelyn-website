@@ -30,6 +30,7 @@ import {
   resolveMatchCredit,
   textWorkThenMatchEnabled,
   WRONG_WHOLE_ANSWER_TEXT_RULE,
+  SPOKEN_WORKING_LENGTH_RULE,
 } from '../src/lib/tutor/voice/work-then-match';
 import { classifyTurnShape, formatTurnShapeBlock } from '../src/lib/tutor/voice/turn-shape-signal';
 import { formatAnswerCheckBlock, precheckOpenerContradiction, wrongWholeAnswerChecked, type PublicVerdictPrecheck } from '../src/lib/tutor/voice/verdict-precheck-shared';
@@ -165,6 +166,13 @@ async function main() {
     assert.match(b, /decide what their value is an attempt AT/);
     assert.match(b, /you do not work that question and you do not state its result/);
     assert.match(b, /Do not supply the rest/);
+  });
+  await test('spoken working: length rule FIRST, results not substitutions, never the student\'s lines read back (portal-5dfefedd)', () => {
+    const b = formatWorkThenMatchBlock('Am I right?', { shape: 'check_request' } as any);
+    assert.match(b, /Speak RESULTS, not substitutions/);
+    assert.match(b, /do not say it back to them/);
+    assert.ok(b.indexOf('Length comes first') < b.indexOf('1. Do not begin with a verdict'), 'length rule precedes the numbered steps');
+    assert.doesNotMatch(SPOKEN_WORKING_LENGTH_RULE, /inequalit|crimsora|shading/i);
   });
   await test('on the retry (no kill left) a fused opener loses its verdict phrase — never a second kill', () => {
     const r = applyOpenerBackstop(['Right — the x\'s cancel.', 'What is left?'], { answerShaped: true, canKill: false });

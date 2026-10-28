@@ -16,6 +16,13 @@ const base = {
 // R32: a 'speaking' cancel whose interrupting sound never transcribes used to
 // dangle forever (silence audit H3). Timed out + unplayed sentences → resume.
 check('speaking-timeout-resumes', decideStage2TimeoutRestore(base) === 'resume-tts');
+// 2026-10-28 (portal-5dfefedd): a cut tail older than 20 s is stale — never
+// replayed over a student who has been answering that long (the watchdog had
+// cleared midUtterance; live: resumed after 31 s, 'hello, hello', 'Can I please talk?').
+check('speaking-stale-tail-drops-not-resumes', decideStage2TimeoutRestore({ ...base, ageMs: 31_000 }) === 'drop');
+check('speaking-stale-tail-drops-even-with-recent-vad', decideStage2TimeoutRestore({ ...base, ageMs: 31_000, msSinceLastVadActivity: 500 }) === 'drop');
+check('speaking-19s-tail-still-resumes', decideStage2TimeoutRestore({ ...base, ageMs: 19_000 }) === 'resume-tts');
+check('processing-stale-queued-tail-drops', decideStage2TimeoutRestore({ ...base, cancelledDuringState: 'processing' as const, ageMs: 31_000 }) === 'drop');
 check('speaking-no-snapshot-drops', decideStage2TimeoutRestore({ ...base, hasUnplayedSnapshot: false }) === 'drop');
 // Round-6c (portal-28ee6557): same shape but the brain was genuinely cut
 // mid-stream (in flight + aborted) → the turn was never delivered; restore.
