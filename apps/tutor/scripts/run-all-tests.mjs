@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 
 const EXCLUDE = new Set([
   'test:all',
+  'test:changed',         // selector over the other test:* entries (would recurse)
   'test:portal',            // aggregate of other test:portal-* entries
   'test:outreach',          // aggregate of other test:outreach-* entries
   'test:pedagogy-sim-live', // live LLM calls
