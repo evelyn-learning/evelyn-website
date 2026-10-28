@@ -100,7 +100,12 @@ test('wiring: pause at a speaking onset, partials and stops decide, every kill o
   assert.ok(vtr.includes('if (canStage3) beginBargeInPause();'));
   assert.ok(vtr.includes("onPartialTranscript: perceptionOnPartialTranscript,"));
   assert.ok(vtr.includes('bargeInPauseRef.current.speechStopped = true;'));
-  assert.equal(vtr.split('if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }').length - 1, 3, 'all three kill refusals resume');
+  // 2026-10-28: the cancel-storm refusal no longer resumes at once — it holds
+  // the pause until speech_stopped (embed-1793229891015: the tutor talked over
+  // a 20 s complaint). The other two refusals still resume immediately.
+  assert.equal(vtr.split('if (pausedForBargeIn) { try { realtime.resumeSpeech(); } catch {} }').length - 1, 2, 'self-echo + no-ctx refusals resume');
+  assert.ok(vtr.includes("'bargein_pause_held'"), 'storm refusal holds the pause');
+  assert.ok(vtr.includes("'bargein_pause_resumed'"), 'and resumes on speech_stopped / safety timer');
   for (const ev of ['perception_bargein_paused', 'perception_bargein_pause_kill', 'perception_bargein_pause_resume']) assert.ok(vtr.includes(`'${ev}'`), ev);
   const rt = readFileSync('src/app/tutor/hooks/useOpenAIRealtime.ts', 'utf8');
   assert.ok(rt.includes('void ctx.suspend().catch('));

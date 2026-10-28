@@ -820,7 +820,7 @@ export async function POST(req: NextRequest) {
         if (len > OPENING_DIRECTIVE_MAX_CHARS) console.warn(`[opener] opening_directive DROPPED (${len} chars > ${OPENING_DIRECTIVE_MAX_CHARS})`);
         else console.log(`[opener] opening_directive attached (${len} chars)`);
         // 2026-10-28 diagnostics: is the open-scope block in THIS session's prompt?
-        const promptText = [body.systemPromptCore, body.systemPromptSession, body.systemPrompt].filter((x) => typeof x === 'string').join('');
+        const promptText = prompt?.full ?? '';
         console.log(`[scope] open-scope block: ${promptText.includes('Open-scope session') ? 'present' : 'ABSENT'} · demo_topic_choice: ${String(body.openingDirective).includes('<demo_topic_choice>') ? 'yes' : 'no'}`);
       }
       if (body.studentMarks) {
