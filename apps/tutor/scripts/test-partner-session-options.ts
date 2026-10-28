@@ -80,9 +80,20 @@ test('no partner id (retail, showcase without a token) resolves to the engine de
     { openerPrefetch: true, lessonCloseAutoEnd: true }, 'a bilingual session with no partner row prefetches');
 });
 
-test('an unlisted English-only partner gets no prefetch and auto-end on', () => {
-  for (const partnerId of ['kanzoo', 'crimsora', 'evelyntutor', 'academy', 'some-future-partner']) {
+test('an unlisted English-only partner (test tenants, a future partner) gets no prefetch and auto-end on', () => {
+  for (const partnerId of ['trial', 'portalA', 'lmtest', 'revtest', 'some-future-partner']) {
     assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true }, partnerId);
+  }
+});
+
+test('Praveen 2026-10-28: every production partner has a row — prefetch ON only for gdi-demo, OFF for the rest, even with a languages claim', () => {
+  // The `partners` collection _ids in production on 2026-10-28 (kind partner / first-party).
+  const prod = ['academy', 'crimsora', 'evelyn', 'evelyn-marketing', 'evelyntutor', 'kanzoo', 'greenapple', 'gameclass', 'gdi-demo', 'globalead'];
+  for (const partnerId of prod) {
+    assert.ok(Object.hasOwn(PARTNER_SESSION_DEFAULTS, partnerId), `${partnerId} has a row`);
+    const want = partnerId === 'gdi-demo';
+    assert.equal(resolvePartnerSessionOptions({ partnerId }).openerPrefetch, want, `${partnerId} plain`);
+    assert.equal(resolvePartnerSessionOptions({ partnerId, tutorLanguages: ['en', 'ja'] }).openerPrefetch, want, `${partnerId} with a languages claim`);
   }
 });
 

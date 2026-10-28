@@ -42,10 +42,20 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   // the prefetch was built on its sessions (embed-1792338502233). Explicit so
   // the row survives a token minted without the languages claim.
   'gdi-demo': { openerPrefetch: true },
-  // English-only partners: prefetch stays OFF until each is asked (it is a
-  // brain call per page load). Auto-end after the close is on by default.
+  // Praveen 2026-10-28: prefetch ON only for GDI; OFF for every other
+  // existing partner (it is a brain call per page load). Rows for each
+  // `partners` _id in production as of 2026-10-28 (registry is DB-backed), so
+  // a later `tutor_languages` claim on one of these cannot switch it on by
+  // the language default. Post-close auto-end stays on for all (his call).
+  academy: { openerPrefetch: false },
+  crimsora: { openerPrefetch: false },
+  evelyn: { openerPrefetch: false },
+  'evelyn-marketing': { openerPrefetch: false },
+  evelyntutor: { openerPrefetch: false },
+  kanzoo: { openerPrefetch: false },
   greenapple: { openerPrefetch: false },
   gameclass: { openerPrefetch: false },
+  globalead: { openerPrefetch: false },
 };
 
 export interface PartnerSessionLike {
