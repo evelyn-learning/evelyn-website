@@ -98,6 +98,27 @@ export function stripHtmlBreakTags(text: string): string {
   return stripped.replace(/\s*\n\s*/g, ' ').replace(/[ \t]{2,}/g, ' ').trim();
 }
 
+/**
+ * Markdown emphasis leak (GDI embed-1792363895174, 2026-10-18): the model
+ * emphasised its English targets — `*「Have you ever been to Kyoto?」*`,
+ * `**ever**` — in the opener and several turns. The asterisks reached the
+ * transcript drawer, and a Japanese voice may read them aloud. Strip the
+ * markers, keep the text. Multiplication is untouched: neither marker may
+ * touch a letter or digit on its outer side (`2*3*4` keeps its stars), and
+ * the emphasised text must begin and end on a non-space character. The live
+ * shapes (embed-1792367246990) were 「いいですね!*I played golf.*(昨日…)」 and
+ * 「聞きますね。 *What did you do?*(昨日…)」 — punctuation on both sides.
+ * (`rewriteForTTS` has a Latin-only version of this for speech; this one
+ * runs on every sentence before TTS and the transcript see it.)
+ */
+const MD_EMPHASIS_RE =
+  /(?<![A-Za-z0-9])\*{1,2}(\S(?:[^*\n]*?\S)?)\*{1,2}(?![A-Za-z0-9])/g;
+
+export function stripMarkdownEmphasis(text: string): string {
+  if (!text || !text.includes('*')) return text;
+  return text.replace(MD_EMPHASIS_RE, '$1');
+}
+
 export function stripStageDirections(text: string): string {
   if (!text || !text.includes('(')) return text;
   const stripped = text.replace(STAGE_DIRECTION_RE, '');

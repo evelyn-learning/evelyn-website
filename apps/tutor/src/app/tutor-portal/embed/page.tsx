@@ -68,7 +68,11 @@ const TUTOR_PARTNER_POOL = process.env.NEXT_PUBLIC_TUTOR_PARTNER_POOL !== 'off';
 // perception/reliability breadcrumb dropped. The reliability families are
 // one short line per utterance, so real-student volume stays modest.
 const EMBED_DEBUG_EVENT_PREFIXES = [
-  'turn_latency', 'ack_', 'tts_ws_', 'render_dropped', 'rule8',
+  'turn_latency', 'opener_prefetch', 'unreadable_word', 'unknown_name', 'late_tail', 'romaji', 'english_instruction', 'language_drift', 'bridge_skipped', 'run_together', 'retry_cap', 'katakana_english', 'katakana_echo', 'katakana_reading', 'stock_opener', 'identical_retry', 'post_close_', 'tool_markup_', 'max_tokens_tail', 'already_answered', 'output_budget', 'voice_only', 'no_english_reply', 'learner_address', 'praise_variety', 'correct_retry', 'readiness_ask', 'pronunciation_claim', 'wait_request', 'ack_', 'tts_ws_', 'render_dropped', 'rule8',
+  // 2026-10-19 (GDI fixes 1–5 round): the cut-tool continuation, the
+  // mid-lesson close drop and the prompted-repeat note — embed-1792367246990
+  // ran blind on all three because this list ate them.
+  'premature_close', 'tool_call_continued', 'thin_turn_rescue', 'prompted_repeat',
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',

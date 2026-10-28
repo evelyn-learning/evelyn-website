@@ -34,7 +34,8 @@
  *     never the raw CARTESIA_API_KEY.
  *   - Turn-detection thresholds are Ink 2 query params, env-tunable
  *     (NEXT_PUBLIC_TUTOR_INK_TURN_START/EAGER_END/END/END_TIMEOUT_MS),
- *     defaulting to the Phase-1-verified values (0.8/0.4/0.2/5600ms).
+ *     defaulting to 0.8/0.4/0.2 and a 3000 ms end timeout (5600 ms until
+ *     2026-10-17 — see ENV_TURN_END_TIMEOUT_MS).
  *   - `onSpeechStart` fires on `turn.start` (barge-in timing signal).
  *     `onSpeechStop` fires on `turn.eager_end` (Ink 2's "turn is probably
  *     over" provisional signal — closest analogue to server_vad's
@@ -69,6 +70,7 @@ import type { PerceptionState, PerceptionTranscript, PerceptionSpeechEvent } fro
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted } from '@/lib/tutor/voice/shared-mic';
 import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
+import { isStaleInkFinal, countSpeechTokens } from '@/lib/tutor/voice/stale-ink-final';
 
 /** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
 const MIC_CONSUMER = 'ink2-stt';
@@ -129,6 +131,9 @@ export interface UseCartesiaInkWSOptions {
   turnEndTimeoutMs?: number;
   onSpeechStart?: (e: PerceptionSpeechEvent) => void;
   onSpeechStop?: (e: PerceptionSpeechEvent) => void;
+  /** The cumulative partial transcript on every `turn.update` (pause-first
+   *  barge-in, bargein-pause.ts): the earliest content evidence Ink gives. */
+  onPartialTranscript?: (p: { text: string; tMs: number }) => void;
   onMicLevel?: (level: number) => void;
   onTranscript?: (t: PerceptionTranscript) => void;
   onTranscriptionFailed?: (errorType: string | undefined) => void;
@@ -177,7 +182,13 @@ function envFloat(raw: string | undefined, fallback: number): number {
 const ENV_TURN_START_THRESHOLD = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_START, 0.8);
 const ENV_TURN_EAGER_END_THRESHOLD = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_EAGER_END, 0.4);
 const ENV_TURN_END_THRESHOLD = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_END, 0.2);
-const ENV_TURN_END_TIMEOUT_MS = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 5600);
+// 2026-10-17 (GDI embed-1792254012923 / -1792261973710): with 5600 ms, Ink
+// confirmed the end of a finished A1 turn 3–5.4 s after its eager end on about
+// half the turns (the student had stopped; Ink was waiting out the timeout),
+// and that wait was most of the "Hearing you" time. 3000 ms, decided with
+// Praveen. A student who pauses longer mid-thought is covered by turn.resume
+// and the perception continuation verdict.
+const ENV_TURN_END_TIMEOUT_MS = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 3000);
 
 // Module-scoped so React StrictMode dev double-mounts share one
 // AudioContext (mirrors usePerceptionWS's getPerceptionAudioContext — the
@@ -206,6 +217,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     turnEndTimeoutMs = ENV_TURN_END_TIMEOUT_MS,
     onSpeechStart,
     onSpeechStop,
+    onPartialTranscript,
     onMicLevel,
     onTranscript,
     onTranscriptionFailed,
@@ -218,6 +230,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
 
   const onSpeechStartRef = useRef(onSpeechStart);
   const onSpeechStopRef = useRef(onSpeechStop);
+  const onPartialTranscriptRef = useRef(onPartialTranscript);
   const onMicLevelRef = useRef(onMicLevel);
   const onTranscriptRef = useRef(onTranscript);
   const onTranscriptionFailedRef = useRef(onTranscriptionFailed);
@@ -226,6 +239,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const onDiagnosticRef = useRef(onDiagnostic);
   onSpeechStartRef.current = onSpeechStart;
   onSpeechStopRef.current = onSpeechStop;
+  onPartialTranscriptRef.current = onPartialTranscript;
   onMicLevelRef.current = onMicLevel;
   onTranscriptRef.current = onTranscript;
   onTranscriptionFailedRef.current = onTranscriptionFailed;
@@ -450,6 +464,17 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     const now = Date.now();
     const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
     const latencyMs = speechStartedAtRef.current ? now - speechStartedAtRef.current : 0;
+    // 2026-10-18 (embed-1792338502233): a turn that opened during the tutor's
+    // speech and sat muted never closes; its final arrives tens of seconds
+    // later, when the student next speaks, carrying a two-token fragment of
+    // what the mic caught back then. Dispatched, it cost two brain calls and
+    // a spoken fragment. See lib/tutor/voice/stale-ink-final.ts.
+    if (isStaleInkFinal(text, latencyMs)) {
+      console.warn(`${logPrefix} stale final dropped (${latencyMs}ms open, ${countSpeechTokens(text)} token(s)): ${JSON.stringify(text)}`);
+      onDiagnosticRef.current?.('ink_stale_final_dropped',
+        `turn ${turnId} open ${latencyMs}ms with ${countSpeechTokens(text)} token(s) — dropped: ${JSON.stringify(text.slice(0, 80))}`);
+      return;
+    }
     console.warn(`${logPrefix} transcript (${latencyMs}ms): ${JSON.stringify(text)}`);
     try { onTranscriptRef.current?.({ text, tMs, latencyMs, itemId: turnId }); } catch {}
   }, [logPrefix]);
@@ -482,6 +507,10 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       }
       case 'turn.update': {
         if (data.turn_id) turnBuffersRef.current.get(data.turn_id)?.events.push(data);
+        if (typeof data.transcript === 'string' && data.transcript.trim()) {
+          const tMs = inkT0Ref.current ? Date.now() - inkT0Ref.current : 0;
+          try { onPartialTranscriptRef.current?.({ text: data.transcript, tMs }); } catch {}
+        }
         break;
       }
       case 'turn.eager_end': {

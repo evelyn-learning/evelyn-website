@@ -27,12 +27,50 @@ export interface HoldRequest {
   hold: boolean;
   /** The student's chosen resume codeword, when they named one. */
   resumeCue?: string;
+  /** "Wait a moment" (ちょっと待ってください): the student is still with the
+   *  tutor and wants a breath — one short acknowledgement, no question, and
+   *  the next thing they say resumes (embed-1792276942766: the tutor said
+   *  「もちろん、ゆっくりで大丈夫ですよ」 and then kept explaining). */
+  soft?: boolean;
 }
+
+/** 「ちょっと待ってください」 / "wait a second" / "can you wait" — a pause
+ *  request addressed to the tutor, not a step-away. "hold on" / "one sec" /
+ *  "give me a sec" stay thinking stalls (cover-layer STALL_RE, and the suite
+ *  pins them): these need the explicit wait verb, or a ください. */
+const WAIT_REQUEST_RE =
+  /(?:ちょっと|少し|すこし|一瞬|いっしゅん)?(?:待って|まって)(?:ください|下さい|もらえ|いただけ)|タイム(?:ください)?|\b(?:please )?wait (?:a |one |for a )?(?:sec(?:ond)?|moment|minute|bit)\b|\bcan you (?:just )?wait\b|\bplease wait\b/i;
+
+export const WAIT_REQUEST_NOTE =
+  '[runtime note — not from the student] The student asked you to wait a moment. Reply with ONE short sentence that says you will wait — ' +
+  'no explanation, no new question, no next item — and stop. They will tell you when to go on. Apply this silently; never mention this note.';
 
 export interface ResumeCheck {
   resume: boolean;
-  reason?: 'cue' | 'ready-intent' | 'direct-address';
+  reason?: 'cue' | 'ready-intent' | 'direct-address' | 'soft-any-speech';
 }
+
+/**
+ * 2026-10-17 (GDI, embed-1792274192055): a human barged in with "Okay, can
+ * you just wait for a second?"; the brain called hold_for_student with no
+ * cue, and the student's next five utterances — "No, but like, can you carry
+ * on?", "What are we teaching here?", "Are you gonna start?", "Why don't you
+ * start?", "Okay, can you carry on, please? I want to get on with the lesson."
+ * — were all swallowed: none matched the resume shapes written for the
+ * "until I say candle" case. Two changes:
+ *   - a hold with NO codeword that the utterance itself did not declare as a
+ *     step-away ("ignore me", "I need to talk to someone") is a SOFT hold —
+ *     "wait a second" — and the next thing the student says resumes it;
+ *   - the strict shapes gain the plain ways of asking the tutor to go on.
+ */
+export interface ResumeOptions {
+  /** A cue-less hold the student never declared as stepping away: any
+   *  substantive utterance resumes. */
+  soft?: boolean;
+}
+
+/** A soft hold checks in — and ends — after this long, not five minutes. */
+export const SOFT_HOLD_CHECKIN_MS = 60_000;
 
 /** "ignore (everything I say) until I say X" — captures the cue. The cue
  *  capture stops at punctuation/conjunction so trailing chatter doesn't
@@ -44,16 +82,32 @@ const IGNORE_UNTIL_RE =
  *  "hold on" / "one sec" are ordinary thinking stalls (STALL_RE territory
  *  in cover-layer.ts) and must NOT enter hold. These shapes all declare
  *  the student is leaving the conversation or talking to someone else. */
+// "don't listen / respond / reply" is an IMPERATIVE to the tutor. With a
+// subject in front of it ("If I don't listen to you, then what will
+// happen?", embed-1792275630905) it is the student talking ABOUT listening —
+// that one armed a strict hold and swallowed seven utterances.
 const STEP_AWAY_RE =
-  /\b(?:i(?:'m| am| have| need|'ve got) (?:go(?:ing|nna)? |to )?(?:step away|talk to (?:someone|my|a friend)|take a (?:quick )?break)\b|(?:don'?t|do not) (?:listen|respond|reply)(?: to me)?\b|i'?m not talking to you\b|stop listening\b)/i;
+  /\b(?:i(?:'m| am| have| need|'ve got) (?:go(?:ing|nna)? |to )?(?:step away|talk to (?:someone|my|a friend)|take a (?:quick )?break)\b|(?<!\b(?:i|you|we|they|he|she|it|who|that|which|people|students|kids) )(?<!\bif i )(?:don'?t|do not) (?:listen|respond|reply)(?: to (?:me|us|anything|this))?\b|i'?m not talking to you\b|stop listening\b)/i;
 
 const READY_INTENT_RE =
-  /\b(?:i'?m ready\b|ready to (?:keep going|continue|go|start)\b|let'?s (?:continue|keep going|get back|go on|resume|pick (?:it )?(?:back )?up)\b|i'?m (?:back|done)\b|back now\b|okay,? i'?m (?:here|ready|back|done)\b|we can (?:continue|keep going|resume)\b)/i;
+  /\b(?:i'?m ready\b|ready to (?:keep going|continue|go|start)\b|let'?s (?:continue|keep going|get back|go on|resume|start|carry on|pick (?:it )?(?:back )?up)\b|i'?m (?:back|done)\b|back now\b|okay,? i'?m (?:here|ready|back|done)\b|we can (?:continue|keep going|resume)\b|(?:can|could|will|would) you (?:please )?(?:carry on|continue|go on|keep going|start|resume|go ahead)\b|(?:why don'?t you|are you (?:gonna|going to)|aren'?t you (?:gonna|going to)) (?:start|continue|carry on|go on|keep going)\b|get on with (?:it|the lesson)\b|i'?m listening\b)/i;
 
 /** The student addressing the TUTOR directly mid-hold — always resumes
  *  (a student asking "are you there?" must never be met with silence). */
 const DIRECT_ADDRESS_RE =
-  /\b(?:are you (?:there|still there|listening)\b|can you hear me\b|hello\?|hey,? (?:tutor|are you)\b)/i;
+  /\b(?:are you (?:there|still there|listening)\b|can you hear me\b|hello\?|hey,? (?:tutor|are you)\b|what are we (?:doing|teaching|learning|working on|practi[cs]ing)\b|what(?:'s| is) (?:the|today'?s) (?:lesson|topic|plan)\b)/i;
+
+/** A bare "carry on" / "please continue" / "go ahead" at the start of the
+ *  utterance or a clause — not inside one ("I am not continue… I have to
+ *  talk to a friend", the live R58 fixture, must stay swallowed). */
+const BARE_GO_ON_RE =
+  /(?:^|[.!?]\s*|\b(?:okay|ok|yes|yeah|alright|so),?\s+)(?:please\s+)?(?:carry on|go on|go ahead|continue|keep going|resume)(?:,?\s*please)?\b/i;
+
+/** Japanese ready-intent and direct address (bilingual sessions): 「続けて
+ *  ください」「再開しましょう」「大丈夫です、どうぞ」「聞いてますか」. */
+const READY_INTENT_JA_RE =
+  /続け(?:て|ましょう|よう|たい|る)|再開|始め(?:て|ましょう)|(?:もう)?大丈夫です|いいですよ|どうぞ|戻りました|準備(?:が)?(?:でき|整い)|お願いします|やりましょう|行きましょう|いきましょう|オーケー/;
+const DIRECT_ADDRESS_JA_RE = /聞いて(?:い)?ますか|聞こえ(?:て)?(?:い)?ますか|先生[、,？?]|もしもし|いますか[？?]?$/;
 
 function normalizeForCue(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -68,12 +122,22 @@ export function detectHoldRequest(utterance: string): HoldRequest {
     return { hold: true, resumeCue: cue || undefined };
   }
   if (STEP_AWAY_RE.test(t)) return { hold: true };
+  if (WAIT_REQUEST_RE.test(t)) return { hold: true, soft: true };
   return { hold: false };
 }
 
-export function checkResume(utterance: string, resumeCue?: string): ResumeCheck {
+export function checkResume(utterance: string, resumeCue?: string, opts?: ResumeOptions): ResumeCheck {
   const t = (utterance ?? '').trim();
   if (!t) return { resume: false };
+  // Soft hold ("wait a second"): the student is still talking to the tutor,
+  // so anything with a couple of words in it resumes.
+  // embed-1792280893534: 「はい、続けてください」 was swallowed — the word count
+  // read Latin letters only, so Japanese scored zero. Kana / kanji count too.
+  const latinWords = normalizeForCue(t).split(' ').filter(Boolean).length;
+  const cjkChars = (t.match(/[ぁ-んァ-ヺ一-龯々]/g) ?? []).length;
+  if (opts?.soft && (latinWords >= 2 || cjkChars >= 3)) {
+    return { resume: true, reason: 'soft-any-speech' };
+  }
   if (resumeCue) {
     const norm = ` ${normalizeForCue(t)} `;
     const cueTokens = resumeCue.split(' ').filter(Boolean);
@@ -86,7 +150,7 @@ export function checkResume(utterance: string, resumeCue?: string): ResumeCheck 
       if (hit * 2 > cueTokens.length) return { resume: true, reason: 'cue' };
     }
   }
-  if (READY_INTENT_RE.test(t)) return { resume: true, reason: 'ready-intent' };
-  if (DIRECT_ADDRESS_RE.test(t)) return { resume: true, reason: 'direct-address' };
+  if (READY_INTENT_RE.test(t) || BARE_GO_ON_RE.test(t) || READY_INTENT_JA_RE.test(t)) return { resume: true, reason: 'ready-intent' };
+  if (DIRECT_ADDRESS_RE.test(t) || DIRECT_ADDRESS_JA_RE.test(t)) return { resume: true, reason: 'direct-address' };
   return { resume: false };
 }

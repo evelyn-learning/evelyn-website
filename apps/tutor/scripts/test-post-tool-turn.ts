@@ -16,6 +16,7 @@ import {
   isNearDuplicateSentence,
   contentWords,
   endsTurn,
+  announcesNextStep,
   laterCallSentenceDecision,
   THIN_TURN_RESCUE_INSTRUCTION,
 } from '../src/lib/tutor/voice/post-tool-turn';
@@ -57,6 +58,25 @@ check('A: a student hold → no rescue',
   decideThinToolTurnRescue({ ...thin, text: 'Sure, take your time.', toolCalls: [{ name: 'hold_for_student' }] }).reason === 'closing-tool');
 check('A: advance to the recap → no rescue (the recap card path owns it)',
   decideThinToolTurnRescue({ ...thin, text: "Sounds good. Let's wrap up with a quick recap.", toolCalls: [{ name: 'advance_lesson', args: { to: 'recap' } }, { name: 'show_segment_card', args: { segmentId: 'recap' } }] }).reason === 'recap');
+// ── 2026-10-27: Japanese next-step announcement (GDI demo embed-1793146527837)
+{
+  const demo = 'いいですね、「I worked in Nagoya with my team yesterday.」で完璧につながりました。 次は、もう一つの大事な言い方「〜したことがありますか？」 を練習しましょう。';
+  check('JA: the demo stall line announces a next step', announcesNextStep(demo));
+  const r = decideThinToolTurnRescue({ ...thin, text: demo, lastResponseToolUses: 0, toolCalls: [] });
+  check('JA: text-only announcement with a quoted question → rescue', r.rescue && r.reason === 'announced-next-step', r);
+  const r2 = decideThinToolTurnRescue({ ...thin, text: demo });
+  check('JA: same line after a board render → thin-tool rescue (quoted ？ is not a question)', r2.rescue && r2.reason === 'thin-tool-turn', r2);
+  check('JA: a real question outside the quotes → no rescue',
+    decideThinToolTurnRescue({ ...thin, text: '次は「Have you ever…?」を練習しましょう。ゴルフをしたことがありますか？', lastResponseToolUses: 0, toolCalls: [] }).reason === 'has-question');
+  check('JA: 〜てみましょう hands the turn over → not an announcement', !announcesNextStep('では、言ってみましょう。'));
+  check('JA: 次に進みましょう → announcement', announcesNextStep('よくできました。それでは、次に進みましょう。'));
+  check('JA: plain praise is not an announcement', !announcesNextStep('いいですね、ばっちりです。'));
+  check('JA: announcement + advance to recap → no rescue',
+    decideThinToolTurnRescue({ ...thin, text: '次はまとめをしましょう。', lastResponseToolUses: 0, toolCalls: [{ name: 'advance_lesson', args: { to: 'recap' } }] }).rescue === false);
+  check('EN: English text-only turn is unchanged (no rescue)',
+    decideThinToolTurnRescue({ ...thin, text: "Next, let's practise the second pattern.", lastResponseToolUses: 0, toolCalls: [] }).reason === 'no-tool-in-last-response');
+  check('EN: an English "?" is still a question', decideThinToolTurnRescue({ ...thin, text: 'Ready? Here it is.' }).reason === 'has-question');
+}
 check('A: a guard-stopped reply → no rescue', decideThinToolTurnRescue({ ...thin, muted: true }).reason === 'muted');
 check('A: flag off → no rescue', decideThinToolTurnRescue({ ...thin, enabled: false }).reason === 'flag-off');
 check('A: the instruction forbids repeating and asks one question',

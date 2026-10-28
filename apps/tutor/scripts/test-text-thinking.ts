@@ -374,6 +374,23 @@ async function main() {
     assert.equal(r.requests.length, 1);
   });
 
+  // GDI starter embed-1792254012923 (2026-10-17): the identical re-issue after
+  // an unasked thinking block brought the same thinking block back (9 s / 28 s).
+  // The re-issue now lets the model reason, briefly: adaptive + low effort.
+  await test('a voice turn that opens a thinking block with thinking off is cut and re-issued with adaptive thinking at low effort', async () => {
+    const r = await run(baseInput, [starvedScript(), textScript('Right. Thirty it is.')]);
+    assert.equal(r.aborts, 1);
+    assert.equal(r.requests.length, 2);
+    assert.deepEqual(r.requests[0].thinking, { type: 'disabled' });
+    assert.deepEqual(r.requests[1].thinking, { type: 'adaptive' });
+    assert.deepEqual(r.requests[1].output_config, { effort: 'low' });
+    assert.equal(r.requests[1].max_tokens, 2000 + tt.TEXT_THINKING_HEADROOM_TOKENS);
+    assert.equal(JSON.stringify(r.requests[1].messages), JSON.stringify(r.requests[0].messages));
+    const done = r.events.find((e) => e.type === 'done') as { fullText: string };
+    assert.ok(done.fullText.includes('Thirty'));
+    assert.ok(!JSON.stringify(r.events).includes('SECRET'));
+  });
+
   console.log('thinking deadline');
   const late = await run({ ...baseInput, textThinking: true, textThinkingDeadlineMs: 40 }, [hangingScript(), textScript('Right. Thirty it is.')]);
   await test('nothing shown by the deadline ⇒ stream aborted, iteration re-issued without thinking', () => {

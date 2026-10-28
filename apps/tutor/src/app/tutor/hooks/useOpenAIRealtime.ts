@@ -449,6 +449,12 @@ export interface RealtimeResult {
   dropQueuedSpeech: () => number;
   /** True while any tutor sentence is queued, being fetched or playing. */
   isSpeechPending: () => boolean;
+  /** Pause-first barge-in (bargein-pause.ts): suspend the playback clock at a
+   *  speech onset. True when something was playing and is now paused. */
+  pauseSpeech: () => boolean;
+  /** Resume after pauseSpeech; a no-op when not paused. Any kill
+   *  (clearSpeechQueue) resumes the clock itself. */
+  resumeSpeech: () => void;
   /**
    * Voice Perception Stage 3.1 (2026-06-16). Non-destructive snapshot of
    * the pending speakText queue — sentences that the brain emitted but
@@ -3728,7 +3734,34 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     [],
   );
 
+  // Pause-first barge-in (bargein-pause.ts, 2026-10-17). Suspending the
+  // playback AudioContext freezes every scheduled chunk and the sentence
+  // clock together, so a resume continues exactly where the student cut in;
+  // the capture side (Ink2's own context) keeps running. isPlayingRef stays
+  // true while paused, so the stuck-'speaking' watchdog never fires on it.
+  const playbackPausedRef = useRef(false);
+  const pauseSpeech = useCallback((): boolean => {
+    if (playbackPausedRef.current) return true;
+    if (!isPlayingRef.current) return false;
+    const ctx = getAudioContext();
+    if (ctx.state !== 'running') return false;
+    playbackPausedRef.current = true;
+    void ctx.suspend().catch(() => { playbackPausedRef.current = false; });
+    return true;
+  }, []);
+  const resumeSpeech = useCallback(() => {
+    if (!playbackPausedRef.current) return;
+    playbackPausedRef.current = false;
+    void getAudioContext().resume().catch(() => {});
+  }, []);
+
   const clearSpeechQueue = useCallback((): Promise<void> => {
+    // A kill while paused for a barge-in: the clock must run again so the
+    // drain below completes and the reply to the interruption can play.
+    if (playbackPausedRef.current) {
+      playbackPausedRef.current = false;
+      void getAudioContext().resume().catch(() => {});
+    }
     // Bump the speak epoch BEFORE we clear queues — any TTS dispatch
     // currently parked at `await fetchTTSPromise` will compare against
     // this new value when it resumes and silently drop the bytes
@@ -4135,6 +4168,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     clearSpeechQueue,
     dropQueuedSpeech,
     isSpeechPending,
+    pauseSpeech,
+    resumeSpeech,
     peekSpeechQueue,
     resumeSpeakText,
     getCurrentSentenceFraction,

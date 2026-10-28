@@ -24,6 +24,7 @@
  */
 
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { AFFIRM_OPENER_JA_RE } from './affirm-opener';
 import { TUTOR_BARE_ASSENT_PRAISE_KILL, TUTOR_AMBIGUOUS_ASSENT_KILL, TUTOR_READINESS_NAMED_TASK } from '@/lib/tutor/orchestrator/turn-round-flags';
 
 /** Filler tokens stripped before matching (never load-bearing). */
@@ -231,7 +232,10 @@ const VERDICT_OPENER_RE = new RegExp(
   'i',
 );
 export function opensWithAffirmingVerdict(attemptText: string): boolean {
-  return VERDICT_OPENER_RE.test(attemptText ?? '');
+  const t = attemptText ?? '';
+  // Japanese verdict openers (affirm-opener.ts): 「完璧です」 / 「正解です」 /
+  // 「ちゃんと言えましたね」, with or without the student's sentence quoted first.
+  return VERDICT_OPENER_RE.test(t) || AFFIRM_OPENER_JA_RE.test(t);
 }
 
 /**

@@ -6,6 +6,7 @@
  * inlining works in any module — these are build-time substitutions.
  */
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+import { LANGUAGE_TURN_MAX_TOKENS_DEFAULT } from '@/lib/tutor/voice/output-budget';
 
 // ─── Topic-notes orchestrator guardrails ───
 // Brain may emit expand_topic_notes_theory / add_topic_notes_method /
@@ -105,6 +106,12 @@ export const TUTOR_NOISE_NAG =
 // src/lib/tutor/voice/idle-nudge.ts (test:idle-nudge).
 export const TUTOR_IDLE_NUDGE =
   process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE !== 'off';
+// 2026-10-17 (GDI embed-1792261973710): after the lesson closes, a quiet
+// LESSON_CLOSE_AUTO_END_MS ends the voice session the way the End button does
+// (lesson-close.ts). Without it the mic, the recogniser and the recording ran
+// 8.5 minutes past the goodbye, until the tab was closed. 'off' disables.
+export const TUTOR_LESSON_CLOSE_AUTO_END =
+  process.env.NEXT_PUBLIC_TUTOR_LESSON_CLOSE_AUTO_END !== 'off';
 // R58 false-final-assertion kill (live, portal-71d11dac: "Right. Dividing
 // both sides by 3 gives $x = 11$" spoken — twice — against a card whose
 // verified answer is 13/3; the LLM judge killed both and Pillar 2b
@@ -614,6 +621,13 @@ export const BARGEIN_GATE_MAX_MS = 5000;
 // deliberately left in place; set this true to bring it back.
 export const INK_NOTE_DRAG = false;
 export const BARGEIN_ENERGY_FLOOR = 0.03;
+// 2026-10-17 (GDI, embed-1792271667337 — a human barge-in test): pause the
+// playback clock at the onset, then kill or resume on the first evidence
+// (bargein-pause.ts). The energy gate above sat at its 0.15 ceiling on the
+// test laptop and never passed; every kill came from the final transcript,
+// 1.5–2 s after the student began. 'off' restores decide-then-kill.
+export const TUTOR_BARGEIN_PAUSE_FIRST =
+  process.env.NEXT_PUBLIC_TUTOR_BARGEIN_PAUSE_FIRST !== 'off';
 export const BARGEIN_ECHO_MARGIN = 2.5;
 /** How far back from the onset the echo-floor baseline is sampled. Must stay
  *  under usePerceptionWS/useCartesiaInkWS's 1500ms energy window. */
@@ -804,3 +818,29 @@ export const TUTOR_DEFER_SESSION_DOC =
  *  Default ON; NEXT_PUBLIC_TUTOR_SILENT_MOLECULE_EDITS=off answers every edit again. */
 export const TUTOR_SILENT_MOLECULE_EDITS =
   process.env.NEXT_PUBLIC_TUTOR_SILENT_MOLECULE_EDITS !== 'off';
+/** 2026-10-18 (GDI embed-1792338502233): the learner waited 4.6 s after Start
+ *  for the tutor's first sentence — the opener brain call ran cold. The opener
+ *  depends only on plan, persona and student, so the embed now builds and sends
+ *  it pre-start (callBrainOnce `prefetchOnly`); the route caches the stream
+ *  under the session id and the Start call replays it in ~100 ms
+ *  (lib/tutor/voice/opener-prefetch.ts). One brain call per page load even if
+ *  Start is never tapped. Default ON; NEXT_PUBLIC_TUTOR_OPENER_PREFETCH=off
+ *  restores the cold opener. */
+export const TUTOR_OPENER_PREFETCH =
+  process.env.NEXT_PUBLIC_TUTOR_OPENER_PREFETCH !== 'off';
+/** How long after the prompt is built the pre-start opener is sent: lets the
+ *  plan and persona refs settle and skips a tab that bounces straight off. */
+export const OPENER_PREFETCH_DELAY_MS = 1500;
+/** 2026-10-18 (output-budget.ts, Praveen's ruling after GDI
+ *  embed-1792350642171): hard cap on the brain's output tokens for a plain
+ *  language VOICE turn (bilingual session; not the opener, not a tool-carrying
+ *  turn). Default 220 (was 320 until 2026-10-18: embed-1792363895174 passed
+ *  9-sentence turns at out=216; a tool call the cap cuts is now finished by a
+ *  continuation call, see output-budget.ts); a number overrides; 'off'
+ *  disables. */
+export const TUTOR_LANGUAGE_TURN_MAX_TOKENS: number | null = (() => {
+  const raw = process.env.NEXT_PUBLIC_TUTOR_LANGUAGE_TURN_MAX_TOKENS;
+  if (raw === 'off') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : LANGUAGE_TURN_MAX_TOKENS_DEFAULT;
+})();

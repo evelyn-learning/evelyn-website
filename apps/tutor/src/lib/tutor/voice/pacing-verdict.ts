@@ -70,6 +70,10 @@ const STRONG_DISQUALIFIER_RE =
  */
 const CORRECTION_RE =
   /\b(not\s+quite|that'?s\s+not|that\s+is\s+not|let'?s\s+(?:re)?check|close\s+but|incorrect)\b/i;
+/** Japanese correction markers (GDI bilingual sessions). Narrow on purpose:
+ *  「でも」 and 「ではなく」 alone are ordinary explaining prose in a grammar
+ *  lesson. No `\b` — Japanese has no word boundaries. */
+const CORRECTION_JA_RE = /惜しい|残念|ちょっと違|少し違|違います|そうではなく|正しくは/;
 
 /** The evaluative uses of "almost" only. */
 const ALMOST_VERDICT_RE =
@@ -232,7 +236,15 @@ function readHeadCorrection(headSentences: string[], all: string[], studentText:
  *  decimal ("10.5") is never treated as a boundary — digits are not
  *  capitals. `\s*` because real turns run sentences together with no space. */
 function sentences(text: string): string[] {
-  return (text || '').split(/(?<=[.!?])\s*(?=[A-Z"'“])/).filter((s) => s.trim().length > 0);
+  // Japanese (2026-10-17, GDI bilingual): 。！？ end a sentence too, and the
+  // next one may open with kana, kanji or 「. Without this the whole 200-char
+  // head of 「なるほど。 "I played golf with my friend." ちゃんと答えられて
+  // いますね。」 was ONE sentence and its opener read 「なるほど」 — never an
+  // affirmation, so the question pin never cleared.
+  // A quote mark right after the terminator is a CLOSING one unless a capital
+  // follows it (「"I played golf." ちゃんと…」 stays one sentence; `"Hi." Next`
+  // still splits as before).
+  return (text || '').split(/(?<=[.!?。！？])\s*(?=[A-Z“「ぁ-んァ-ヺ一-龯々]|["']\s*[A-Z])/).filter((s) => s.trim().length > 0);
 }
 
 /**
@@ -319,7 +331,7 @@ export function readPacingVerdict(fullText: string, opts?: PacingVerdictOptions)
     WEAK_DISQUALIFIER_RE.test(affirmText) ||
     STRONG_DISQUALIFIER_RE.test(`${affirmText} ${nextText}`);
   let isAffirm = affirmSentence >= 0 && !disqualified;
-  const marker = CORRECTION_RE.test(text) || ALMOST_VERDICT_RE.test(text);
+  const marker = CORRECTION_RE.test(text) || ALMOST_VERDICT_RE.test(text) || CORRECTION_JA_RE.test(text);
   let correctionSource: PacingVerdictRead['correctionSource'] = marker ? 'marker' : null;
   let ownValueExcluded = false;
   if (widened) {

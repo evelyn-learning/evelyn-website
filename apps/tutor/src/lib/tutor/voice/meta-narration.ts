@@ -102,9 +102,37 @@ const PERSONA_DIRECTIVE_RE =
 // whole sentence ("Let's see this together.", "Okay, let's see."). The
 // filler is caught only when it IS the whole sentence; "Let's see what
 // happens if…" is teaching and survives.
+// 2026-10-18 (GDI embed-1792356364051): the same reasoning in Japanese —
+// 「これは質問ですね — 答えではなく、もう一度同じ形を繰り返していますよ。」 (the
+// turn-shape verdict read to the student). Whole-sentence openers only.
+const VERDICT_NARRATION_JA_RE =
+  /^\s*(?:これ|それ)は(?:質問|答え|繰り返し|同じ形)ですね\s*[—–、,]|同じ形を繰り返してい?ますよ?/;
 const VERDICT_NARRATION_RE =
-  /\bthis turn['’]?s\b|^\s*(?:this|that) matches (?:what['’]?s on the board|the (?:expected|target)\b)|\bexpected answer\b|^\s*that['’]?s an attempt at\b/i;
-const BARE_FILLER_RE = /^\s*(?:ok(?:ay)?,?\s+)?let['’]?s see(?: this together)?[.!]?\s*$/i;
+  /\bthis turn['’]?s\b|^\s*(?:this|that) matches (?:what['’]?s on the board|the (?:expected|target)\b)|\bexpected answer\b|^\s*that['’]?s an attempt at\b|^\s*that answers\b/i;
+// embed-1792199116313: "Let me verify the card is there before scribbling." —
+// a tool-use plan read aloud.
+const TOOL_PLAN_SPOKEN_RE =
+  /^\s*let me (?:just )?(?:verify|check|confirm|make sure)\b[^.!?]*\b(?:card|scribbl\w*|render\w*|tool|snapshot)\b|\bbefore (?:scribbling|rendering|drawing on the board)\b/i;
+// embed-1792196208833: "Okay. let me think about that for a second." opened a
+// Japanese explanation. Whole-sentence only, like the fillers below.
+const THINK_FILLER_RE =
+  /^\s*(?:(?:ok(?:ay)?|alright|all right|hmm|so)[,.]?\s+)?let me (?:just )?think(?: about (?:that|this|it))?(?: for a (?:second|sec|moment|bit))?[.!]?\s*$/i;
+// embed-1792174263669 (2026-10-16): the filler came back reworded on almost
+// every turn — "Let's see what you've got.", "Okay, let's hear what you've
+// got.", "Let's see where this is.", "Let's see what's going on.", and the
+// Japanese 「はい、少し見てみましょう。」. Still whole-sentence only.
+const BARE_FILLER_RE =
+  /^\s*(?:(?:ok(?:ay)?|alright|all right|right|ah|hmm|so)[,.]?\s+)?let['’]?s (?:see|hear|look|check)(?: at)?(?: (?:this(?: together)?|that|it|here|what you['’]?ve got|what we['’]?ve got|where this is|where we are|what['’]?s going on|what you said))?[.!]?\s*$/i;
+// embed-1792185403054: tool names spoken to the learner ("show_passage を使って
+// 完成した文を見せます", "show_equationを見てください") and the tutor's plan read
+// aloud ("Let me give the correct form directly, kindly, then close this out
+// and move on.", "That matches what you said, well done on part two.").
+const TOOL_NAME_SPOKEN_RE =
+  /(?:^|[^a-z_])(?:show|mark|advance|close|tutor|add|record|flag|expand|propose|hold|set|clear|request|render)_[a-z][a-z_]*/i;
+const PLAN_ALOUD_RE =
+  /\bclose (?:this|it) out\b|^\s*let me (?:give|just|now|quickly|first)\b[^.!?]*\b(?:then|and then)\b|\bthat matches what you said\b/i;
+const BARE_FILLER_JA_RE =
+  /^\s*(?:(?:はい|いいですね|では|じゃあ|さて)[、,]?\s*)?(?:少し|ちょっと)?見てみましょう(?:ね|か)?[。！!]?\s*$/;
 
 /** A tag block the model echoed from its input ("<students_said> Hi, today
  *  </students_said> …", same session): the block and any stray tag go, the
@@ -395,7 +423,7 @@ export function isMetaNarration(
 ): boolean {
   const s = sentence ?? '';
   const shapes = shapesEnabled();
-  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || BARE_FILLER_RE.test(s)) return true;
+  if ((shapes ? PHRASE_START_RE : PHRASE_START_LEGACY_RE).test(s) || PHRASE_ANYWHERE_RE.test(s) || LEDGER_RECORD_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s) || PERSONA_DIRECTIVE_RE.test(s) || MID_REPLY_SELF_CORRECTION_RE.test(s) || VERDICT_NARRATION_RE.test(s) || VERDICT_NARRATION_JA_RE.test(s) || BARE_FILLER_RE.test(s) || THINK_FILLER_RE.test(s) || TOOL_PLAN_SPOKEN_RE.test(s) || BARE_FILLER_JA_RE.test(s) || TOOL_NAME_SPOKEN_RE.test(s) || PLAN_ALOUD_RE.test(s)) return true;
   if (shapes && isLeakShape(s)) return true;
   if (thirdPersonEnabled() && isLearnerDeliberation(s)) return true;
   if (opts?.structural === false) return false;
