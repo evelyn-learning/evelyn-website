@@ -26,6 +26,7 @@ import {
 import { buildOpenerClause, buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
 import { formatDemoStopBlock } from '../src/lib/tutor/voice/claude-brain';
 import { TUTOR_DEMO_TOPIC_CHOICE } from '../src/lib/tutor/orchestrator/flags';
+import { OPENING_DIRECTIVE_MAX_CHARS, OPENING_FOLLOWUP_DIRECTIVE } from '../src/lib/tutor/ai/opening-behavior';
 
 let passed = 0;
 let failed = 0;
@@ -78,6 +79,15 @@ function main() {
     const clause = buildOpenerClause({ ...baseCtx, openingPhase: true, sessionMode: 'demo', entryMode: 'typed-content' });
     assert.ok(clause);
     assert.doesNotMatch(clause!, /confirm the topic/);
+  });
+
+  // ── 2b. the full directive must fit the brain route's bound ──────────────
+  test('demo opener clause + intro + agenda fits the route bound with room (live full directives: 3074–3539 chars)', () => {
+    const clause = buildOpenerClause({ ...baseCtx, openingPhase: true, sessionMode: 'demo', agendaItemCount: 3 }) || '';
+    const INTRO_AND_CONTINUITY_ALLOWANCE = 2000;
+    assert.ok(clause.length + INTRO_AND_CONTINUITY_ALLOWANCE < OPENING_DIRECTIVE_MAX_CHARS, `clause ${clause.length} + ${INTRO_AND_CONTINUITY_ALLOWANCE} must stay under ${OPENING_DIRECTIVE_MAX_CHARS}`);
+    assert.ok(OPENING_DIRECTIVE_MAX_CHARS >= 4000, 'bound must cover the measured live directives');
+    assert.ok(OPENING_FOLLOWUP_DIRECTIVE.length < OPENING_DIRECTIVE_MAX_CHARS);
   });
 
   // ── 3. system prompt open-scope block ────────────────────────────────────

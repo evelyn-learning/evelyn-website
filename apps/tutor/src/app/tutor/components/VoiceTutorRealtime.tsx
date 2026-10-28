@@ -69,6 +69,7 @@ import {
   OPENING_FOLLOWUP_DIRECTIVE,
   type OpeningSignals,
   type SessionMode,
+  OPENING_DIRECTIVE_MAX_CHARS,
 } from '@/lib/tutor/ai/opening-behavior';
 import {
   shouldEmitOpenerFallback,
@@ -12721,6 +12722,11 @@ export function VoiceTutorRealtime({
             if (TUTOR_HOST_LESSON) {
               if (openingNoteRef.current === null) openingNoteRef.current = getOpeningNoteRef.current?.() ?? '';
               if (openingNoteRef.current) openingDirective += ` ${openingNoteRef.current}`;
+            }
+            // The route drops a directive over its bound SILENTLY (it did so for
+            // every full opener until 2026-10-28, cap 2000 vs 3074–3539 live).
+            if (openingDirective.length > OPENING_DIRECTIVE_MAX_CHARS) {
+              onDebugEvent?.('brain_opening_directive_oversize', `${openingDirective.length} chars > ${OPENING_DIRECTIVE_MAX_CHARS} — the server will drop it`);
             }
             // The client already spoke the greeting (bridge line): the brain
             // must not greet again on its first opening turn.

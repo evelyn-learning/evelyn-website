@@ -22,6 +22,7 @@
  */
 import { NextRequest } from 'next/server';
 import { noProblemToolMessage } from '@/lib/tutor/ai/no-problem-rule';
+import { OPENING_DIRECTIVE_MAX_CHARS } from '@/lib/tutor/ai/opening-behavior';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
@@ -815,7 +816,9 @@ export async function POST(req: NextRequest) {
       // and then STOP (advance_lesson or turn ceiling) — this line is how a
       // live run proves the retirement actually happened server-side.
       if (body.openingDirective) {
-        console.log(`[opener] opening_directive attached (${String(body.openingDirective.length)} chars)`);
+        const len = String(body.openingDirective).length;
+        if (len > OPENING_DIRECTIVE_MAX_CHARS) console.warn(`[opener] opening_directive DROPPED (${len} chars > ${OPENING_DIRECTIVE_MAX_CHARS})`);
+        else console.log(`[opener] opening_directive attached (${len} chars)`);
       }
       if (body.studentMarks) {
         console.log(`[student-marks] block attached (${String(body.studentMarks.length)} chars)`);
@@ -929,7 +932,7 @@ export async function POST(req: NextRequest) {
           // Opening-phase directive: string-typed + bounded (defense against
           // a malformed client resending an unbounded blob every turn).
           openingDirective:
-            typeof body.openingDirective === 'string' && body.openingDirective.length <= 2000
+            typeof body.openingDirective === 'string' && body.openingDirective.length <= OPENING_DIRECTIVE_MAX_CHARS
               ? body.openingDirective
               : undefined,
           // Student marks: same string-typed + bounded defense.

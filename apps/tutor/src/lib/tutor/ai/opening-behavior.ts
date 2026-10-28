@@ -262,6 +262,17 @@ export function isPedagogyOpenerFlagValue(raw: string | undefined): boolean {
  */
 export const OPENING_DIRECTIVE_MAX_BRAIN_TURNS = 4;
 
+/** Upper bound on the opening directive's length as the brain route accepts
+ *  it (a defence against a malformed client resending an unbounded blob).
+ *  2026-10-28: the route's old literal was 2000 and the FULL opener
+ *  directive (teacher intro + opener clause + agenda preview + continuity)
+ *  measured 3074–3539 chars on live sessions — the route dropped it
+ *  silently, so the board-first rule, the agenda preview and the demo topic
+ *  confirm never reached the brain on turn one. The follow-up directive is
+ *  434 chars. The client logs `brain_opening_directive_oversize` when it is
+ *  about to exceed this. */
+export const OPENING_DIRECTIVE_MAX_CHARS = 6000;
+
 /**
  * Pure: should the orchestrator STOP attaching the per-turn opening
  * directive? True once the lesson has advanced past the intro (the brain
