@@ -10,10 +10,14 @@ import { connectDB } from "@core/db";
 import { TutorSession, type ITutorSession } from "@/models/TutorSession";
 import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
 import { lookupGeo } from "@/lib/tutor/recordings/geo";
-import { checkEmbedAuthAsync } from "@/lib/tutor/portal/embed-token";
+import { checkEmbedAuthAsync, embedEnforceMode } from "@/lib/tutor/portal/embed-token";
 import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
 import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
 import { isStaleSessionReuse } from "@/lib/tutor/portal/session-id-reuse";
+import { chargePartnerFor, poolFlagOn } from "@/lib/tutor/portal/partner-pool";
+import { chargeSitting } from "@/lib/tutor/portal/partner-pool-store";
+import { sendPoolAlert } from "@/lib/tutor/portal/partner-pool-alerts";
+import { PartnerModel } from "@/models/Partner";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
 
@@ -65,6 +69,12 @@ export async function GET(req: NextRequest) {
       inputMode: session.inputMode,
       startedAt: session.startedAt,
       activeSeconds: sessionActiveSeconds(session) ?? 0,
+      // 2026-10-23 (GAC Sonnet resume): an embed page saves running totals
+      // only, raised with $max — a resumed page continues from these, or its
+      // sitting (smaller than the stored total) would never be recorded.
+      totalInputTokens: session.totalInputTokens ?? 0,
+      totalOutputTokens: session.totalOutputTokens ?? 0,
+      estimatedCost: session.estimatedCost ?? 0,
       lessonProgress: session.lessonProgress ?? null,
       transcript: session.transcript ?? [],
       whiteboardCommands: session.whiteboardCommands ?? [],
@@ -122,6 +132,10 @@ export async function POST(req: NextRequest) {
     // studentId and stay unauthenticated by design. Checked BEFORE
     // checkRateLimit/connectDB so a forged flood of studentId-bearing
     // requests gets 401s, not DB-adjacent work.
+    // Partner minute pool: the verified token's partner_id is the one we
+    // charge (the body's sourcePartnerId is a fallback). Captured from the
+    // studentId auth below, or verified once more below when that didn't run.
+    let tokenPartnerId: string | null = null;
     if (body.studentId) {
       const auth = await checkEmbedAuthAsync({
         token,
@@ -131,6 +145,7 @@ export async function POST(req: NextRequest) {
       if (!auth.allow) {
         return NextResponse.json({ error: "unauthorized", reason: auth.reason }, { status: 401 });
       }
+      tokenPartnerId = auth.payload?.partner_id ?? null;
     }
 
     if (!checkRateLimit(sessionId)) {
@@ -487,6 +502,57 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Partner minute pool (spec 2026-10-21 §4.2): charge this sitting's
+    // wall clock, from the moment the tutor engaged to this save's own end,
+    // on every report. Whole block fails open — a pool problem never sinks
+    // the save or blocks the student.
+    let pool: { remaining_sec: number; exhausted: boolean } | undefined;
+    if (poolFlagOn(process.env.TUTOR_PARTNER_POOL) && typeof body.attemptEngagedAt === "string") {
+      try {
+        const engagedMs = Date.parse(body.attemptEngagedAt);
+        if (Number.isFinite(engagedMs)) {
+          if (!tokenPartnerId && token) {
+            const poolAuth = await checkEmbedAuthAsync({ token, route: 'session-usage:pool' });
+            tokenPartnerId = poolAuth.payload?.partner_id ?? null;
+          }
+          const bodyPartnerId = typeof body.sourcePartnerId === "string" ? body.sourcePartnerId : null;
+          // With token enforcement on, every real frame sends its token, so a
+          // body-only partner is an anonymous caller: attribute, never charge.
+          const who = chargePartnerFor({ tokenPartnerId, bodyPartnerId, trustBody: embedEnforceMode() !== "on" });
+          if (who.mismatch) console.warn("[partner-pool] partner_mismatch", `token=${tokenPartnerId}`, `body=${bodyPartnerId}`, sessionId);
+          if (who.untrustedBody) console.warn("[partner-pool] partner_pool_untrusted_body", `body=${bodyPartnerId}`, sessionId);
+          if (who.partnerId) {
+            const status: "active" | "completed" | "abandoned" =
+              body.status === "completed" || body.status === "abandoned" ? body.status : "active";
+            const endedAtMs = typeof body.endedAt === "string" ? Date.parse(body.endedAt) : null;
+            const result = await chargeSitting({
+              partnerId: who.partnerId,
+              sessionId,
+              reportedEngagedAtMs: engagedMs,
+              save: { status, endedAtMs: Number.isFinite(endedAtMs as number) ? endedAtMs : null },
+            });
+            if (result.snapshot.pooled) {
+              pool = { remaining_sec: result.snapshot.remainingSec, exhausted: result.snapshot.exhausted };
+              if (result.crossed.length) {
+                const partnerId = who.partnerId;
+                const snap = result.snapshot;
+                void PartnerModel.findById(partnerId, { name: 1 }).lean<{ name?: string } | null>()
+                  .then((p) => p?.name || partnerId)
+                  .catch(() => partnerId)
+                  .then((partnerName) => {
+                    for (const which of result.crossed) {
+                      void sendPoolAlert({ partnerId, partnerName, usedSec: snap.usedSec, capSec: snap.capSec, which });
+                    }
+                  });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[partner-pool] partner_pool_unavailable", sessionId, (err as Error)?.message);
+      }
+    }
+
     // Fire-and-forget geolocation — a down ip-api can never sink the save.
     if (clientIp) {
       void lookupGeo(clientIp)
@@ -511,6 +577,8 @@ export async function POST(req: NextRequest) {
             ...(attemptPlan.activeSec != null ? { activeSeconds: attemptPlan.activeSec } : {}),
           }
         : {}),
+      // Partner minute pool state after this charge (only for pooled partners).
+      ...(pool ? { pool } : {}),
     });
   } catch (error) {
     console.error("Session usage error:", error);

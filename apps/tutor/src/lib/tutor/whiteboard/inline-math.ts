@@ -688,6 +688,20 @@ export function segment(text: string, forceMath = false): Array<{ kind: 'text' |
       i = dollar + 1;
       continue;
     }
+    // Display maths `$$…$$` (GAC 2026-10-27, portal-6cf3b2c7: a reply's
+    // "$$\text{NPP} = … $$" painted its maths with a literal "$$" on each
+    // side — the empty "$$" pairs were emitted as text). One-line display
+    // maths renders like an inline span.
+    if (text.startsWith('$$', dollar)) {
+      const dClose = text.indexOf('$$', dollar + 2);
+      const dInner = dClose < 0 ? '' : text.slice(dollar + 2, dClose);
+      if (dClose >= 0 && dInner.trim() && !dInner.includes('\n')) {
+        if (dollar > i) out.push({ kind: 'text', body: text.slice(i, dollar) });
+        out.push({ kind: 'math', body: dInner.trim() });
+        i = dClose + 2;
+        continue;
+      }
+    }
     const close = text.indexOf('$', dollar + 1);
     if (close < 0) {
       // Unmatched — emit remainder as text

@@ -11,6 +11,7 @@ import { buildSessionFilter, buildGradeUsageFilter, parseApproxDate, type Sessio
 import { gradeUsageReport } from "@/lib/tutor/portal/grade-usage-report";
 import { PracticeGradingView, formatUsd } from "./PracticeGradingView";
 import { sessionActiveSeconds } from "@/lib/tutor/recordings/active-seconds";
+import { readPoolSnapshot } from "@/lib/tutor/portal/partner-pool-store";
 
 const PAGE_SIZE = 50;
 
@@ -164,9 +165,11 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
   // date chips apply there; the session-only controls are hidden.
   const grading = param(sp, 'view') === 'grading';
   const nav = { ...filters, view: grading ? 'grading' : undefined };
-  const [{ sessions, total, tutorCost, partners: sessionPartners, hosts, lessonTitles }, report] = await Promise.all([
+  const [{ sessions, total, tutorCost, partners: sessionPartners, hosts, lessonTitles }, report, pool] = await Promise.all([
     getSessions(filters, page),
     gradeUsageReport(buildGradeUsageFilter(filters)),
+    // Partner minute pool (2026-10-21): only the Partner chip names one.
+    filters.partner ? readPoolSnapshot(filters.partner) : Promise.resolve({ pooled: false as const }),
   ]);
   const partners = [...new Set([...sessionPartners, ...report.partners])].sort();
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -212,6 +215,13 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
             <span className="text-gray-400" title="Grading follows only the Partner and date chips.">
               {' '}({report.total.grades} grades{filters.partner ? `, ${filters.partner}` : ''})
             </span>
+            {pool.pooled && (
+              <span data-testid="pool-line" title="Wall-clock minutes charged to this partner's pool (all sessions, all time). Top up: scripts/ops/partner-pool.sh">
+                {' · '}
+                Pool: <span className="font-mono font-medium text-gray-800">{(Math.round(pool.usedSec / 6) / 10).toFixed(1)} / {Math.round(pool.capSec / 60)} min</span>
+                {pool.exhausted ? <span className="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">used up</span> : null}
+              </span>
+            )}
           </p>
         </div>
       </header>

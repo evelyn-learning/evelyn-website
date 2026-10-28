@@ -70,5 +70,19 @@ check('same-def-repeat-ok', validateToolCall('show_equation', {
   latex: 'f(x) = x^2, \\quad f(x) = x^2',
 }).ok === true);
 
+// show_geometry_constructed runs the solver server-side (Haiku 5.5 trial 2026-10-23)
+const geoBad = validateToolCall('show_geometry_constructed', {
+  given: [{ id: 'c', kind: 'circle', center: { x: 0, y: 0 }, radius: 4 }],
+  steps: [{ id: 'A', kind: 'point_on_circle', on: 'c', angle: 30, label: 'A' }],
+});
+check('geo-center-object-rejected', !geoBad.ok && /not declared/.test((geoBad as { reason: string }).reason));
+check('geo-ok', validateToolCall('show_geometry_constructed', {
+  given: [{ id: 'O', kind: 'point', x: 0, y: 0 }, { id: 'c', kind: 'circle', center: 'O', radius: 5 }],
+  steps: [{ id: 'A', kind: 'point_on_circle', on: 'c', angle: 30 }, { id: 'B', kind: 'point_on_circle', on: 'c', angle: 150 }, { id: 's', kind: 'segment', from: 'A', to: 'B' }],
+}).ok === true);
+check('geo-conic-left-to-page', validateToolCall('show_geometry_constructed', {
+  given: [], steps: [{ id: 'd', kind: 'conic_directrix', of: 'missing' }],
+}).ok === true);
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:validate-tool-call PASS');

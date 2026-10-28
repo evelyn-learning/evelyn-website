@@ -38,7 +38,10 @@ import {
 import { assentSettlesNothing, classifyTurnShape, formatTurnShapeBlock } from './turn-shape-signal';
 import { ledgerVerdictPrecheckTimeoutFor, runVerdictPrecheck, type VerdictPrecheckDeps } from './verdict-precheck';
 import { formatInequalityFactsBlock, formatInequalityFactsText, problemInequalityFacts, type InequalityFacts } from '@/lib/tutor/whiteboard/inequality-facts';
-import { TUTOR_INEQUALITY_FACTS } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { TUTOR_INEQUALITY_FACTS, TUTOR_THIN_TOOL_TURN_RESCUE, TUTOR_TOOL_RESULT_DELIVERED_NOTE, TUTOR_CROSS_CALL_DEDUP } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { decideThinToolTurnRescue, THIN_TURN_RESCUE_INSTRUCTION, toolResultWithDelivered, isNearDuplicateSentence, laterCallSentenceDecision, type LaterCallMode } from './post-tool-turn';
+import { pacingHintForCue, DIFFICULTY_CUE_HINT, isAutoAdvancedTurn, detectAdvanceRequest, isBackwardAdvance, BACKWARD_ADVANCE_REFUSED_REASON } from '../orchestrator/advance-request';
+import { TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
 import {
   formatAnswerCheckBlock,
   precheckDecides,
@@ -1175,7 +1178,10 @@ function computePacingHint(state: NonNullable<BrainTurnInput['pacingState']>): s
     // signal, and the brain spoke that name back ("Given that boredom cue,
     // let's not linger."). Plain second-person guidance describes the
     // situation instead; the instruction itself is unchanged.
-    return `the student has just told you in their own words that this pace or level is not right for them — verbally offer "harder / skip / different topic" immediately`;
+    // 2026-10-26 (lesson portal-fa3e2830): "skip" / "move on to the next
+    // section" got a menu of choices four times. An advance cue now says to
+    // move on; a difficulty / pace cue keeps the offer (advance-request.ts).
+    return TUTOR_TYPED_ADVANCE ? pacingHintForCue(state.cue) : DIFFICULTY_CUE_HINT;
   }
   // Streak-based hints are EDGE-triggered: fire ONCE when count first
   // hits the threshold value, then go silent. Conversation history
@@ -2045,7 +2051,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: the last spoken question outranks a stale card question —
   // rendered directly after <active_problem> so the override reads in place.
-  const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
+  // Round 3 (portal-939d545b): on a turn the runtime already moved the lesson,
+  // the student's words are navigation — the open-question block told the
+  // brain to grade them against the question just left ("we'll stay on the
+  // two-points question").
+  const activeQuestionBlock = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
@@ -2323,6 +2333,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     }
   }
   const toolMarkup = new ToolMarkupFilter();
+  // 2026-10-26 (post-tool-turn.ts, B): sentences forwarded by EARLIER API
+  // calls of this turn are `reveal.forwarded[0, callStartForwarded)`. A later
+  // call's sentence that restates them is dropped; `nearDupDropped` makes the
+  // turn's fullText the forwarded sentences, not the model's raw text.
+  let callStartForwarded = 0;
+  let nearDupDropped = 0;
+  // Round 3 (Haiku 5.5, 10-27): what a later call may add at all — see
+  // post-tool-turn.ts laterCallSentenceDecision. Set when the tool results
+  // are built (bare acks → 'continuation', any data → 'data') and by the
+  // thin-turn follow-up ('question-only').
+  let laterCallMode: LaterCallMode = 'data';
+  let laterQuestionTaken = false;
   function* guardedSentence(raw: string): Generator<BrainStreamEvent> {
     if (reveal.muted) return;
     // 2026-10-18 (tool-markup.ts): a tool call written as text — from its
@@ -2335,6 +2357,20 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     }
     const text = stripEchoedTags(markup.text);
     if (!text) return;
+    if (TUTOR_CROSS_CALL_DEDUP && callStartForwarded > 0) {
+      const decision = laterCallSentenceDecision({ sentence: text, earlier: reveal.forwarded.slice(0, callStartForwarded), mode: laterCallMode, questionTaken: laterQuestionTaken });
+      if (decision === 'keep-question') laterQuestionTaken = true;
+      else if (decision !== 'keep') {
+        nearDupDropped++;
+        console.warn(`[later-call] sentence dropped (${decision}): "${text.slice(0, 80)}"`);
+        return;
+      }
+    }
+    if (TUTOR_CROSS_CALL_DEDUP && callStartForwarded > 0 && isNearDuplicateSentence(text, reveal.forwarded.slice(0, callStartForwarded))) {
+      nearDupDropped++;
+      console.warn(`[cross-call-dedup] sentence dropped — restates an earlier call of this turn: "${text.slice(0, 80)}"`);
+      return;
+    }
     if (reveal.confirmed && deniesCheckedAnswer(text, reveal.confirmed)) {
       reveal.muted = true;
       console.warn(`[checked-correct-denial] sentence withheld: "${text.slice(0, 80)}" — fixed confirmation follows`);
@@ -2348,7 +2384,13 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     reveal.forwarded.push(text);
     yield { type: 'sentence', text };
   }
-  const turnShapeBlock = turnShapeOn
+  // A navigation turn (the runtime moved the lesson) is not an answer: no
+  // turn-shape frame and no verdict guard on it (advance-request.ts).
+  const navigationTurn = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript);
+  // Round 5: on a turn where the student asked to move on (or the runtime
+  // already moved), the lesson never goes back (advance-request.ts).
+  const moveRequestTurn = navigationTurn || (TUTOR_TYPED_ADVANCE && !!detectAdvanceRequest(studentSaid));
+  const turnShapeBlock = turnShapeOn && !navigationTurn
     ? formatTurnShapeBlock(turnShape, studentSaid, workThenMatch ? { workThenMatch: true } : undefined)
     : '';
   if (turnShapeBlock) console.log(`[turn-shape] ${turnShape?.shape} · question=${turnShape?.open?.kind}`);
@@ -2359,14 +2401,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   );
   // Under the mode the rule block takes the guard's place; plain consent to
   // an offer keeps its continuation guard (nothing is being judged there).
-  const verdictGuardBlock = workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
+  const verdictGuardBlock = navigationTurn ? '' : workThenMatch && !ordinaryGuardBlock.includes('<continuation_guard>')
     ? (voiceWorkThenMatch
       ? formatVoiceWorkThenMatchBlock(input.studentTranscript, turnShape)
       : formatWorkThenMatchBlock(input.studentTranscript, turnShape))
     : ordinaryGuardBlock;
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : workThenMatch ? '[verdict-guard] work-then-match rule attached' : '[verdict-guard] verdict guard attached');
   // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
-  const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
+  // Round 3 (portal-939d545b): on a turn the runtime already moved the lesson,
+  // the student's words are navigation — the open-question block told the
+  // brain to grade them against the question just left ("we'll stay on the
+  // two-points question").
+  const activeQuestionBlock = TUTOR_TYPED_ADVANCE && isAutoAdvancedTurn(input.studentTranscript) ? '' : formatActiveQuestionBlock(lastTutorMsgForGuard);
   if (activeQuestionBlock) console.log('[active-question] block attached');
   // 2026-10-06b: computed facts of a system / inequality problem (twins in lockstep).
   const problemFacts = problemFactsFor(input);
@@ -2431,7 +2477,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     answerCheckBlock = formatLedgerTurnBlock(ledgerKind);
     console.log(`[homework-ledger] message kind: ${ledgerKind} (not checked)`);
   }
-  if (input.textVerdictPrecheck === true && !ledgerKind) {
+  if (input.textVerdictPrecheck === true && !ledgerKind && !navigationTurn) {
     const hasContext = !!turnShape?.open || !!input.homework?.problems.length || !!input.activeProblem?.statement;
     if (turnShape?.answerShaped && hasContext) {
       // Liveness: the client keeps its typing indicator up while this runs.
@@ -2625,6 +2671,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     const iterStartedAt = Date.now();
     const thinkingDeadlineMs = input.textThinkingDeadlineMs ?? TEXT_THINKING_DEADLINE_MS;
     const textCharsBeforeIter = accumulatedText.length;
+    callStartForwarded = reveal.forwarded.length;
     let shownThisIter = false;
     let thinkingAnnounced = false;
     let deadlineHit = false;
@@ -2775,6 +2822,14 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
               const hit = boardRevealsWithheldAnswer(args, reveal.withheld);
               yield* revealStop('board', hit.how, hit.matched);
             }
+            currentToolUse = null;
+          } else if (
+            moveRequestTurn && tc.name === 'advance_lesson' && input.lessonPlanContext
+            && isBackwardAdvance((args as { to?: unknown }).to, input.lessonPlanContext.currentSegmentId, input.lessonPlanContext.segmentIndex)
+          ) {
+            console.warn(`[advance-request] advance_lesson to "${String((args as { to?: unknown }).to)}" refused — the student asked to move on`);
+            newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args, rejectionReason: BACKWARD_ADVANCE_REFUSED_REASON });
+            yield { type: 'tool-rejected', id: tc.id, name: tc.name, args, reason: BACKWARD_ADVANCE_REFUSED_REASON };
             currentToolUse = null;
           } else {
             newToolUseBlocks.push({ id: tc.id, name: tc.name, input: args });
@@ -2943,6 +2998,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // iteration. Rejected tool calls (validation failures) get the
     // rejection reason as their result so the model learns and can
     // retry with valid args.
+    let allBareAcks = true;
     const resolvedResults = await Promise.all(
       newToolUseBlocks.map(async (b) => {
         let content: string;
@@ -2962,10 +3018,17 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         return {
           type: 'tool_result' as const,
           tool_use_id: b.id,
-          content,
+          // 2026-10-26 (post-tool-turn.ts, B): the bare ack quotes what the
+          // student already has, so the next call does not start over.
+          content: (() => {
+            if (b.rejectionReason || content !== `${b.name} executed successfully.`) allBareAcks = false;
+            return b.rejectionReason ? content : toolResultWithDelivered(content, b.name, reveal.forwarded.join(' '), TUTOR_TOOL_RESULT_DELIVERED_NOTE);
+          })(),
         };
       })
     );
+    laterCallMode = allBareAcks ? 'continuation' : 'data';
+    laterQuestionTaken = false;
     messages = [
       ...messages,
       { role: 'assistant', content: finalMessage.content },
@@ -2994,8 +3057,24 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // for any tool_use blocks it contained. This is the same bridging
   // pattern that the in-loop continuation uses; we just apply it once
   // more before the rescue user-message.
-  if (!accumulatedText.trim() && accumulatedToolCalls.length > 0 && lastFinalMessage) {
-    console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
+  // 2026-10-26 (post-tool-turn.ts, A): the same rescue, for a reply that
+  // DID write a lead-in, put something on the board and ended its response
+  // (no tool round trip) without asking anything — "Here it is on the
+  // board." and silence. Its follow-up call asks the question only.
+  const thinRescue = lastFinalMessage
+    ? decideThinToolTurnRescue({
+        enabled: TUTOR_THIN_TOOL_TURN_RESCUE,
+        text: reveal.forwarded.join(' '),
+        lastResponseToolUses: lastFinalMessage.content.filter((b) => b.type === 'tool_use').length,
+        lastStopReason,
+        toolCalls: accumulatedToolCalls,
+        muted: reveal.muted,
+      })
+    : null;
+  const zeroTextRescue = !accumulatedText.trim() && accumulatedToolCalls.length > 0 && !!lastFinalMessage;
+  if ((zeroTextRescue || thinRescue?.rescue) && lastFinalMessage) {
+    if (zeroTextRescue) console.warn(`[brain.stream] OPTION-A rescue: ${accumulatedToolCalls.length} tools emitted with zero narration — invoking rescue call`);
+    else console.warn(`[brain.stream] THIN-TURN rescue: ${accumulatedToolCalls.length} tool(s), no question, stop=${lastStopReason} — invoking follow-up call`);
     const lastToolUseBlocks = lastFinalMessage.content.filter(
       (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
     );
@@ -3017,12 +3096,18 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       ...messages,
       {
         role: 'user',
-        content:
-          'You emitted whiteboard tools without any narration. ' +
-          'Voice a brief opener sentence + 1-2 sentences describing what is now on the board. ' +
-          'No more tools — text only.',
+        content: zeroTextRescue
+          ? 'You emitted whiteboard tools without any narration. ' +
+            'Voice a brief opener sentence + 1-2 sentences describing what is now on the board. ' +
+            'No more tools — text only.'
+          : THIN_TURN_RESCUE_INSTRUCTION,
       },
     ];
+    // Its sentences are checked against everything already forwarded; the
+    // thin-turn follow-up may add its one question and nothing else.
+    callStartForwarded = reveal.forwarded.length;
+    laterCallMode = zeroTextRescue ? 'data' : 'question-only';
+    laterQuestionTaken = false;
     // No `tools` field → model has no tool slots to fill → forced to
     // emit text. We deliberately omit tools rather than passing []
     // because some Anthropic SDK versions treat [] as "no tools
@@ -3038,6 +3123,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
         system: buildSystemBlocks(input.systemPrompt, input.systemPromptCore),
         messages,
       }), input.model, input.allowFallback !== false);
+      if (accumulatedText && !/\s$/.test(accumulatedText)) accumulatedText += ' ';
       const rescueBuffer = new SentenceBuffer();
       for await (const event of rescueOpened.events) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -3055,7 +3141,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       totalUsage.outputTokens += rescueFinal.usage.output_tokens;
       totalUsage.cacheReadTokens += rescueFinal.usage.cache_read_input_tokens ?? 0;
       totalUsage.cacheCreationTokens += rescueFinal.usage.cache_creation_input_tokens ?? 0;
-      lastStopReason = `${lastStopReason}+rescued`;
+      lastStopReason = `${lastStopReason}+${zeroTextRescue ? 'rescued' : 'thin-rescued'}`;
     } catch (err) {
       console.error('[brain.stream] OPTION-A rescue call failed:', err);
       // Swallow — the original (toolful, textless) result is still returned.
@@ -3080,7 +3166,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // (spacing repair + stage-direction strip, same as the voiced path).
     // (A reply stopped by the whole-answer reveal guard: only what was
     // forwarded — the model's own text holds the withheld result.)
-    fullText: scrubTutorText(normalizeSentenceSpacing(stripToolMarkup(reveal.muted ? reveal.forwarded.join(' ') : accumulatedText).text.trim())),
+    // (2026-10-26: a sentence dropped as a restatement is not in it either.)
+    fullText: scrubTutorText(normalizeSentenceSpacing(stripToolMarkup(reveal.muted || nearDupDropped > 0 ? reveal.forwarded.join(' ') : accumulatedText).text.trim())),
     toolCalls: accumulatedToolCalls,
   };
 }

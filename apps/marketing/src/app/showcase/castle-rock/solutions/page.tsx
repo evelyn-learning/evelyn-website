@@ -3,13 +3,13 @@ import { ArrowRight } from "lucide-react";
 import { SHOWCASE } from "../_lib/config";
 import { SOLUTIONS, SUBJECT_ORDER } from "../_solutions";
 
-export default function SampleSolutionsPage() {
+export default function StandardSolutionsPage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6">
       <div>
-        <h1 className="font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Sample AI Solutions</h1>
+        <h1 className="font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Standard AI Solutions</h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-slate-700">
-          SOLARO items from each subject. Every solution states the answer first and then works through it step by step. Open one to read it in full, or press play to have a tutor walk through it with or without voice.
+          Six SOLARO items across the four subjects, at the standard grade: the written solution, answer first, with a figure drawn for the item and a tutor's voice for each step. Open one to read it in full, or press play to have the tutor walk through it.
         </p>
       </div>
       {SUBJECT_ORDER.map((subject) => {

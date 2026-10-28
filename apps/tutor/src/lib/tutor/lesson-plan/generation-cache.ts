@@ -102,6 +102,10 @@ export function topicCacheKey(args: {
   sessionMinutes: number;
   locale?: string;
   band?: string;
+  /** Generator model id. Part of the key unless it is a Haiku 4.5 id, so
+   *  plans cached under the old generator keep their old key and a switch to
+   *  another model regenerates each topic once. */
+  model?: string;
 }): string {
   const topic = args.topic.trim().toLowerCase().replace(/\s+/g, ' ');
   const subject = args.subject.trim().toLowerCase();
@@ -109,7 +113,8 @@ export function topicCacheKey(args: {
   const bucket = lengthBucketFor(args.sessionMinutes);
   const locale = (args.locale ?? 'en').trim().toLowerCase();
   const abilityBandSeg = args.band ? `${args.band.trim().toLowerCase()}|` : '';
-  return `${topic}|${subject}|${gradeBand}|${bucket}|${locale}|${abilityBandSeg}${CACHE_KEY_VERSION}`;
+  const modelSeg = args.model && !/haiku-4-5/.test(args.model) ? `|${args.model.trim().toLowerCase()}` : '';
+  return `${topic}|${subject}|${gradeBand}|${bucket}|${locale}|${abilityBandSeg}${CACHE_KEY_VERSION}${modelSeg}`;
 }
 
 /** Look up a previously generated plan by cache key, within `ttlDays` of

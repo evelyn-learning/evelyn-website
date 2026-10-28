@@ -1,11 +1,11 @@
 {
-  "math_g8": "77a70ee739d9e6fe83d20a182705ab9874ed62b7ed9acf44945863b89930aef2",
-  "physics_ap": "64aaa6289ed0989576257e0cccf67d8b542e6329b1abfff3525a4cfbdfb811c2",
-  "freetext_subject": "9d2d64a17705d86c91db78aef8753b74962f87e90be2f77d1b48024baaeef6ce",
-  "no_name_no_topic": "3296243366bf9c6ae52e18fc03c00dd39c51036a47a0cbd118e5db765c7d24d4",
-  "text_mode": "097f72b8512997310fbcf67ead176df61d93169fbcf076b48452fe848ffa5094",
-  "open_scope": "a41f333b2ecb79f3be8b8f571fd047c9d7e4887fad0c518e370c741dd9c9d9ae",
-  "first_turn_flags": "ea52ca7dde3a38da3715a8c642caded2d61d139107d7b884096ea98e72fb21d7",
-  "humor_override": "0347db1e417b8041fa41ee465f73d432c01814a46cf0cd4f88fabf98668a70c6",
-  "self_report": "f36d6c43f26872fa16d5eb595d5389d776b7634f2ce8717f5f3ff1fd1bf67a6a"
+  "math_g8": "c2c1c5dedc42679459efc00726c754f3361e9413cb50b465c8e82a37ae976a66",
+  "physics_ap": "0de7dc9004cd2c004f1fcdcd988e5a54d926a94fbf57dff95c19c685d280fcbf",
+  "freetext_subject": "84563a1ee9605348f812e209e0657719db5c7596fb0740959fca29304c172a19",
+  "no_name_no_topic": "a1609c65157bdc50f3a325ea42d896c782061abb76ac1d7c2ce40e19a29dd181",
+  "text_mode": "d82914db05439cdec25d162adffdf8a69fc6958f38358b71b81c9f62ddda4cee",
+  "open_scope": "7816bafe2ac459557eecde15ce3b8b6c99b982af9c54a802b7756c2096d3e26e",
+  "first_turn_flags": "49c93b2dd557d0b4419a0a2ba31369eb62cf666eaa9bb2d2230369d228c9320b",
+  "humor_override": "c6724242ae451f11cb9b38fb485d5872fab02a927efd68164f00b6393807e7b9",
+  "self_report": "f6a1a2809a1eabfc799f0ce42f8edb233e53d97f9c8152aace71faea287c9bd8"
 }

@@ -18,7 +18,7 @@
  *
  * Pure, client-safe (plain data + arithmetic; no env, no I/O).
  */
-import { MODEL_RATES, lookupModelRate } from './model-rates';
+import { MODEL_RATES, lookupModelRate, rateForPrompt } from './model-rates';
 
 // Pricing per 1M tokens — sourced from the shared rate card (model-rates.ts)
 // so every estimate in the app prices from ONE table. Brain turns run the
@@ -241,7 +241,7 @@ function entryCost(u: UsageEntry, voiceEngine: unknown): number {
   // model actually used (Sonnet, DeepSeek, …). Entries without a model
   // (greeting/chat/homework + historical records) fall back to
   // FALLBACK_PRICING.
-  const r = lookupModelRate(typeof u.model === 'string' ? u.model : undefined);
+  const r = rateForPrompt(lookupModelRate(typeof u.model === 'string' ? u.model : undefined), n(u.inputTokens) + n(u.cacheReadTokens) + n(u.cacheCreationTokens));
   return (n(u.inputTokens) / 1_000_000) * (r?.input ?? FALLBACK_PRICING.input)
        + (n(u.outputTokens) / 1_000_000) * (r?.output ?? FALLBACK_PRICING.output)
        + (n(u.cacheReadTokens) / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : FALLBACK_PRICING.cacheRead)
@@ -325,4 +325,12 @@ export function clientTotalsMax(body: { totalInputTokens?: unknown; totalOutputT
   if (ok(b.totalOutputTokens)) out.totalOutputTokens = b.totalOutputTokens;
   if (ok(b.estimatedCost)) out.estimatedCost = b.estimatedCost;
   return out;
+}
+
+/** The stored totals a resumed embed page continues from (session-usage GET);
+ *  anything missing or malformed reads as 0. */
+export function readPriorUsageTotals(prior: unknown): Required<Pick<UsageTotals, 'totalInputTokens' | 'totalOutputTokens' | 'estimatedCost'>> {
+  const p = (prior ?? {}) as Record<string, unknown>;
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0);
+  return { totalInputTokens: num(p.totalInputTokens), totalOutputTokens: num(p.totalOutputTokens), estimatedCost: num(p.estimatedCost) };
 }

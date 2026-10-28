@@ -551,7 +551,9 @@ import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
 import { textKickoffReady, textKickoffMessage, isKickoffMessage, decideTypedDuringTurn, decideTypedBeforeHomeworkReady, createTypedHold, type TypedHold } from '@/app/tutor/components/session/text-kickoff';
-import { TUTOR_TYPED_WAITS_FOR_HOMEWORK } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { markKilledBubbleRevising } from '@/lib/tutor/orchestrator/killed-bubble';
+import { TUTOR_TYPED_WAITS_FOR_HOMEWORK, TUTOR_EMPTY_RECAP_CONTINUE, TUTOR_TYPED_ADVANCE } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { detectAdvanceRequest, resolveObjectiveMove, describeAlreadyOnObjective, describeTypedAdvance, overlongNoteForTurn, OVERLONG_FINISH_FIRST, type AdvanceRequest } from '@/lib/tutor/orchestrator/advance-request';
 import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
 import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
 
@@ -11430,6 +11432,51 @@ export function VoiceTutorRealtime({
         }
       }
 
+      // 2026-10-26 (lesson portal-fa3e2830): a typed request to move on —
+      // "skip", "move on to the next section", "move on to <objective>" —
+      // moves the lesson HERE, as the Skip button does, to the first segment
+      // of the next (or named) objective; the brain reads the fact
+      // (advance-request.ts). A bare "move on" / "next" is `onward`: no jump,
+      // but the turn counts as a move-on (pace hint, overlong note below).
+      // Not in a homework session (it paces by problem).
+      let advanceRequest: AdvanceRequest | null = null;
+      let typedAdvanceFact: string | null = null;
+      if (TUTOR_TYPED_ADVANCE && !silent && !isBracketed) {
+        advanceRequest = detectAdvanceRequest(transcript);
+        const advPlan = lessonPlanRef.current;
+        const advFrom = currentSegmentIdRef.current;
+        const advHomework = (homeworkProblemsRef.current?.length ?? 0) > 0;
+        if (advanceRequest?.scope === 'objective' && advPlan && advFrom && !advHomework) {
+          const advMove = resolveObjectiveMove(advPlan, advFrom, advanceRequest.named);
+          const advTarget = advMove?.kind === 'move' ? advMove.target : null;
+          // Round 3 (portal-939d545b): a note about the question just left (the
+          // board-anchor note "your previous turn ended by asking …", the
+          // no-advance note) made the brain say "we'll stay on the two-points
+          // question" over the fact. Navigation turns carry neither.
+          if (advMove) {
+            pendingBoardAnchorNoteRef.current = null;
+            pendingNoAdvanceNoteRef.current = null;
+          }
+          if (advMove?.kind === 'already' && advanceRequest.named) {
+            const hereLo = advPlan.los?.find((lo) => advFrom.startsWith(`${lo.id}-`));
+            typedAdvanceFact = describeAlreadyOnObjective({ named: advanceRequest.named, target: advFrom, objective: hereLo?.description });
+            onDebugEvent?.('typed_advance_already_here', `"${advFrom}" named="${advanceRequest.named}"`);
+          } else if (advTarget && advTarget !== advFrom) {
+            applyResolvedAdvance(advPlan, advFrom, advTarget);
+            const advSeg = getSegment(advPlan, advTarget);
+            const advLo = advPlan.los?.find((lo) => advTarget.startsWith(`${lo.id}-`));
+            typedAdvanceFact = describeTypedAdvance({ target: advTarget, kind: advSeg?.kind, objective: advLo?.description, declinedOffer: advanceRequest.leadingNo });
+            // The overlong note was about the segment just left.
+            pendingRuntimeNoteRef.current = null;
+            runtimeNoteHeldTurnsRef.current = 0;
+            console.warn(`[brain-orchestrator] typed advance: "${advanceRequest.matched}" → "${advFrom}" → "${advTarget}" (brain told as fact).`);
+            onDebugEvent?.('typed_advance_app', `"${advFrom}" → "${advTarget}"${advanceRequest.named ? ` named="${advanceRequest.named}"` : ''} · "${advanceRequest.matched.slice(0, 60)}"`);
+          } else {
+            onDebugEvent?.('typed_advance_unresolved', `from "${advFrom}"${advanceRequest.named ? ` named="${advanceRequest.named}"` : ''} — left to the brain`);
+          }
+        }
+      }
+
       // GreenApple round-2 Task 9: claim a parked upload image for this
       // dispatch (containment, not equality — a busy-queue coalesce may have
       // joined the marker with another final). Removed from the table on
@@ -11725,8 +11772,12 @@ export function VoiceTutorRealtime({
         // we're supposed to do next" matched bare "next" and the tutor spoke
         // about a "boredom cue". Rule + cases: orchestrator/boredom-cue.ts.
         const cueDecision = TUTOR_BOREDOM_CUE_REQUEST_SHAPE ? detectBoredomCue(t, { requestShape: true }) : null;
-        const cueMatch = !hasButtonMarker
-          && (cueDecision ? (cueDecision.cue ? [cueDecision.cue] : null) : t.match(boredomCueRegex));
+        // 2026-10-26: a turn the runtime already advanced carries the fact,
+        // not a pace hint; a move-on request with no cue word ("move on to
+        // the next section") still rides as one (advance-request.ts).
+        const cueMatch = !hasButtonMarker && !typedAdvanceFact
+          && ((cueDecision ? (cueDecision.cue ? [cueDecision.cue] : null) : t.match(boredomCueRegex))
+            ?? (advanceRequest ? [advanceRequest.matched] : null));
         if (!hasButtonMarker && cueDecision && !cueDecision.cue && cueDecision.ignored.length > 0) {
           logPacing(`student-cue ignored (not a request shape) word="${cueDecision.ignored.join(',')}" turn=${pacingTurnCounterRef.current}`);
           onDebugEvent?.('pacing_cue_ignored', `word="${cueDecision.ignored.join(',')}" reason=not-request-shape`);
@@ -11851,6 +11902,7 @@ export function VoiceTutorRealtime({
         ? [...priorHistory, ...opts.injectedHistoryTail]
         : priorHistory;
       let runTranscript = transcript;
+      if (typedAdvanceFact) runTranscript = `${typedAdvanceFact}\n\n${runTranscript}`;
       // Turn-length cap: deliver the pending cadence corrective with this
       // turn's input (same "[… — not from the student]" convention as the
       // validator feedback below), then clear it — one corrective per lapse.
@@ -12013,13 +12065,16 @@ export function VoiceTutorRealtime({
         // Held at most 3 turns, then delivered regardless (the note itself now says
         // "finish the problem in play first").
         const ackOrMoveOn = /^(?:ok(?:ay)?|yes|yeah|yep|sure|ready|next|go|continue|done|move on|let'?s (?:go|move on|continue)|got it|alright)[!.\s]*$/i.test(transcript.trim());
-        // 2026-10-18: held at most ONE turn. In a language lesson every turn ends
-        // with an ask, so a 3-turn hold always ran to its cap (three times in
-        // embed-1792338502233) — and the note itself already tells the tutor
-        // to close the open item first.
-        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || runtimeNoteHeldTurnsRef.current >= 1;
+        // 2026-10-26: a request to move on ("no move to the next section") is
+        // not an answer to the open question — deliver, without "finish first".
+        const askedToMoveOn = TUTOR_TYPED_ADVANCE && (!!advanceRequest || studentCueRef.current?.turn === pacingTurnCounterRef.current);
+        // 2026-10-18 (bilingual only): held at most ONE turn. In a language
+        // lesson every turn ends with an ask, so a 3-turn hold always ran to
+        // its cap (three times in embed-1792338502233).
+        const noteHoldCap = sessionAllowsNonLatin(tutorLanguages) ? 1 : 3;
+        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || askedToMoveOn || runtimeNoteHeldTurnsRef.current >= noteHoldCap;
         if (deliver) {
-          runTranscript = `${pendingRuntimeNoteRef.current}\n\n${runTranscript}`;
+          runTranscript = `${overlongNoteForTurn(pendingRuntimeNoteRef.current, askedToMoveOn)}\n\n${runTranscript}`;
           pendingRuntimeNoteRef.current = null;
           runtimeNoteHeldTurnsRef.current = 0;
           onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
@@ -16510,6 +16565,11 @@ export function VoiceTutorRealtime({
                           // above — no LO covered yet): unchanged.
                           console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
                           onDebugEvent?.('show_segment_card_no_truth', segId);
+                          // 2026-10-26 (portal-bd896905): the turn that promised
+                          // the recap must not end on nothing — the same
+                          // end-of-attempt continuation as an empty card, with
+                          // its recap reason (empty-segment-card.ts).
+                          if (TUTOR_EMPTY_RECAP_CONTINUE) emptySegmentCardThisAttempt = segId;
                         } else {
                           // 2026-10-04 (empty-segment-card.ts): a segment with
                           // no authored card (a generated plan's hook has
@@ -18417,7 +18477,7 @@ export function VoiceTutorRealtime({
             continuationNextAttempt = true;
             continuationBubble = { id: attemptStreamingId, text: aggregatedFullText.trim() };
             continuationDeliveredRef.current = { turnStartMs: t0, fromMs: Date.now() };
-            rejectionsThisAttempt.push({ action: TURN_CONTINUATION_ACTION, reason: describeEmptySegmentCardTurn(emptyCardSegId) });
+            rejectionsThisAttempt.push({ action: TURN_CONTINUATION_ACTION, reason: describeEmptySegmentCardTurn(emptyCardSegId, lessonPlanRef.current ? getSegment(lessonPlanRef.current, emptyCardSegId)?.kind : undefined) });
             console.warn(`[brain-orchestrator] empty-segment-card: "${emptyCardSegId}" has no authored card and the turn asked nothing — auto-continuing (attempt cap now ${attemptCap}).`);
             onDebugEvent?.('brain_turn_continuation', `empty-segment-card "${emptyCardSegId}" session=${turnContinuationsSessionRef.current} cap=${attemptCap} · "${attemptText.slice(0, 80)}"`);
           }
@@ -18611,14 +18671,11 @@ export function VoiceTutorRealtime({
           );
           onTranscriptUpdate([...transcriptRef.current]);
         } else {
-          let changedRevise = false;
-          transcriptRef.current = transcriptRef.current.map((e) => {
-            if (e.id === killedStreamingId && !e.revising) {
-              changedRevise = true;
-              return { ...e, revising: true, streaming: false };
-            }
-            return e;
-          });
+          // 2026-10-27 (killed-bubble.ts): dimmed AND still in progress — a
+          // killed fragment never reads as the finished reply while the retry runs.
+          const revised = markKilledBubbleRevising(transcriptRef.current, killedStreamingId);
+          transcriptRef.current = revised.entries;
+          const changedRevise = revised.changed;
           if (changedRevise) {
             onTranscriptUpdate([...transcriptRef.current]);
           }
@@ -18840,9 +18897,9 @@ export function VoiceTutorRealtime({
           pendingRuntimeNoteSegRef.current = segIdNow;
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
-            `First finish the problem in play — give the student the verdict on what they just said and close that problem out. Then move the lesson forward: ${nextHint} ` +
+            `${OVERLONG_FINISH_FIRST}${nextHint} ` +
             (voiceOnlyRef.current ? `The student cannot see the board: say the new segment's first item aloud in full. ` : `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. `) +
-            `Say any transition sentence in the language you are using with this student, in your own words. ` +
+            (sessionAllowsNonLatin(tutorLanguages) ? `Say any transition sentence in the language you are using with this student, in your own words. ` : '') +
             `Apply this silently; never mention this note.`;
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
         }
@@ -22146,8 +22203,10 @@ export function VoiceTutorRealtime({
         now - lastVadActivityAtRef.current < 4000;
       const moment = pendingMomentRef.current;
       if (moment) {
-        if (!hasStartedRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
-          // The tutor was not open for this moment and no start followed it.
+        if (!hasStartedRef.current && standbyRef.current && now - moment.atMs > MOMENT_PRESTART_HOLD_MS) {
+          // The tutor was not open for this moment and the video has played
+          // on without a start. (Paused on the moment, it waits for the tap —
+          // the host pauses first, the student taps start seconds later.)
           pendingMomentRef.current = null;
           onDebugEventRef.current?.('moment_dropped', 'why=not_started');
         } else if (now - moment.atMs > MOMENT_STALE_MS) {

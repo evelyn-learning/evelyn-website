@@ -68,6 +68,11 @@ export interface ITutorSession extends Document {
    *  spans also give the wall span (last start + its duration − startedAt)
    *  and the attempt boundaries. See lib/tutor/recordings/session-span.ts. */
   attemptSpans?: Array<{ startedAt: Date; duration: number; endedAt?: Date }>;
+  /** Partner minute pool (lib/tutor/portal/partner-pool-store.ts): one entry per
+   *  sitting (page mount), keyed by the moment the tutor engaged; `chargedSec`
+   *  is the wall-clock seconds already debited from the partner's pool for it.
+   *  Absent for every non-pooled partner. */
+  poolCharges?: Array<{ engagedAt: Date; chargedSec: number }>;
   messageCount: number;
   whiteboardItemCount: number;
   transcript: ITranscriptEntry[];
@@ -275,6 +280,15 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       type: [
         new Schema(
           { startedAt: { type: Date, required: true }, duration: { type: Number, required: true }, endedAt: { type: Date } },
+          { _id: false },
+        ),
+      ],
+      default: undefined,
+    },
+    poolCharges: {
+      type: [
+        new Schema(
+          { engagedAt: { type: Date, required: true }, chargedSec: { type: Number, required: true } },
           { _id: false },
         ),
       ],

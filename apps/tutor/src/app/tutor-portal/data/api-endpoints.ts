@@ -13,6 +13,7 @@ export interface ApiEndpoint {
 export const apiEndpoints: ApiEndpoint[] = [
   // Session facts & learning state
   { method: 'GET', path: '/sessions/summary?ids=a,b,c', description: 'Per-session facts for up to 50 sessions: status, startedAt/endedAt, durationSec (ACTIVE tutoring seconds — the billed number), studentTurns, tutorTurns, boardItems, coarse location.', category: 'Session facts & learning state' },
+  { method: 'GET', path: '/usage', description: 'Your tutoring minute pool, when one applies: { partner_id, pooled, cap_minutes, used_minutes, remaining_minutes, session_max_minutes }. Minutes are wall clock per sitting (tutor start to end, pauses included). Hide your start button under 1 minute remaining; cache for 60 s.', category: 'Session facts & learning state' },
   { method: 'GET', path: '/session-progress?sessionId=', description: 'Lesson position for one session: { lessonProgress | null, resumable, updatedAt }. Resumable within 30 days.', category: 'Session facts & learning state' },
   { method: 'GET', path: '/gaps?studentId=', description: 'Learning gaps for a student: id, kind (lo | prerequisite), loId, conceptLabel, status, confidence, evidence (signals, observation, student quotes), first/last seen.', category: 'Session facts & learning state' },
   { method: 'GET', path: '/mastery?studentId=', description: 'Mastery per learning objective: { [loId]: { score, exposures, lastTouchedAt, confidence } }.', category: 'Session facts & learning state' },

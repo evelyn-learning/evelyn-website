@@ -9,6 +9,7 @@ import type { LessonPlan, Segment, SegmentRecap } from './types';
 import type { LessonPlanContext } from '@/lib/tutor/voice/claude-brain';
 // Pure data module (no I/O). Relative on purpose, like its other importers.
 import { effectiveSegment } from '../portal/withdrawn-items';
+import { withIntroStart } from './intro-goal';
 
 export function buildLessonPlanContext(
   plan: LessonPlan,
@@ -45,7 +46,9 @@ export function buildLessonPlanContext(
     currentSegmentId,
     // A withdrawn segment (answer-key audit) leaves here WITHOUT its stored
     // key — same object for every other segment. See effectiveSegment.
-    currentSegment: effectiveSegment(plan.id, seg),
+    // Round 3: an intro stored with "propose starting with the first one"
+    // reads as starting with it (intro-goal.ts).
+    currentSegment: withIntroStart(effectiveSegment(plan.id, seg)),
     segmentIndex: plan.segments.map((s) => ({
       id: s.id,
       kind: s.kind,

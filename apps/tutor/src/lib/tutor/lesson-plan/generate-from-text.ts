@@ -48,12 +48,50 @@ import { parseLessonPlan } from './parser';
 import type { LearnerHints } from '../learner-model/hints';
 import { TUNING } from '../learner-model/estimator';
 
-const HAIKU_MODEL_ID = getModelClient('plangen-fast').model;
+const HAIKU_MODEL_ID = getModelClient('plangen').model;
+/** The model the two typed-topic generation stages run on (cache-key input). */
+export const PLANGEN_MODEL_ID = HAIKU_MODEL_ID;
 const MAX_OBJECTIVES = 12;
 const STAGE1_MAX_TOKENS = 1500; // LO list only — small payload.
 const STAGE2_MAX_TOKENS = 8192; // Per-LO expansion can be larger.
 
-const anthropic = getModelClient('plangen-fast').client;
+const anthropic = getModelClient('plangen').client;
+
+/**
+ * Effort knob for the two plan-generation stages. Haiku 5.5 / Sonnet 5 run
+ * adaptive thinking by default and the thinking tokens count toward
+ * `max_tokens`, so any model that is NOT Haiku 4.5 defaults to
+ * `output_config.effort: 'low'` and a roomier Stage-1 cap (1 500 → 4 000) —
+ * 2026-10-23 eval: Haiku 5.5 at low beat Haiku 4.5 and Sonnet 5.
+ * `TUTOR_PLANGEN_EFFORT` (low|medium|high) overrides the level; any other
+ * value is ignored. A Haiku 4.5 model with the env unset returns the request
+ * as the SAME object — byte-identical to before (asserted by
+ * scripts/test-plangen-effort-knob.ts). No temperature/top_p is ever sent
+ * (Haiku 5.5 rejects sampling params).
+ */
+const STAGE1_MAX_TOKENS_WITH_EFFORT = 4000;
+export type PlangenEffort = 'low' | 'medium' | 'high';
+
+export function plangenEffort(
+  raw: string | undefined = process.env.TUTOR_PLANGEN_EFFORT,
+  model: string = PLANGEN_MODEL_ID,
+): PlangenEffort | undefined {
+  if (raw === 'low' || raw === 'medium' || raw === 'high') return raw;
+  return /haiku-4-5/.test(model) ? undefined : 'low';
+}
+
+export function withPlangenEffort<T extends { max_tokens: number }>(
+  params: T,
+  stage: 1 | 2,
+  effort: PlangenEffort | undefined = plangenEffort(),
+): T {
+  if (!effort) return params;
+  return {
+    ...params,
+    ...(stage === 1 ? { max_tokens: Math.max(params.max_tokens, STAGE1_MAX_TOKENS_WITH_EFFORT) } : {}),
+    output_config: { effort },
+  } as T;
+}
 
 /* ------------------------------------------------------------------ */
 /* Plan-id + LO-id identity                                           */
@@ -181,7 +219,7 @@ Schema:
   ]
 }`;
 
-function safeJsonParse(s: string): unknown | null {
+export function safeJsonParse(s: string): unknown | null {
   const cleaned = s
     .trim()
     .replace(/^```(?:json)?\s*/i, '')
@@ -190,7 +228,18 @@ function safeJsonParse(s: string): unknown | null {
   try {
     return JSON.parse(cleaned);
   } catch {
-    return null;
+    // 2026-10-23 (GAC Haiku 5.5 retest, plan gen-d9c6d924): Stage 1 came back
+    // "non-JSON" and the student got the one-line fallback plan. A sentence
+    // before or after the object is the likely shape — take the outermost
+    // {...} before giving up.
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start < 0 || end <= start) return null;
+    try {
+      return JSON.parse(cleaned.slice(start, end + 1));
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -234,33 +283,43 @@ export async function extractLearningObjectives(
   }
 
   let raw = '';
-  try {
-    const response = await anthropic.messages.create({
-      model: HAIKU_MODEL_ID,
-      max_tokens: STAGE1_MAX_TOKENS,
-      system: STAGE1_SYSTEM,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nStudent's text:\n${input.text.trim()}`,
-            },
-          ],
-        },
-      ],
-    });
-    for (const block of response.content) {
-      if (block.type === 'text') raw += block.text;
+  let stop = '';
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    raw = '';
+    try {
+      const response = await anthropic.messages.create(withPlangenEffort({
+        model: HAIKU_MODEL_ID,
+        max_tokens: STAGE1_MAX_TOKENS,
+        system: STAGE1_SYSTEM,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nStudent's text:\n${input.text.trim()}`,
+              },
+            ],
+          },
+        ],
+      }, 1));
+      stop = String(response.stop_reason ?? '');
+      for (const block of response.content) {
+        if (block.type === 'text') raw += block.text;
+      }
+    } catch (err) {
+      return {
+        titleSuggestion: 'Freestyle session',
+        los: [],
+        ok: false,
+        reason: `haiku call failed: ${(err as Error).message}`,
+      };
     }
-  } catch (err) {
-    return {
-      titleSuggestion: 'Freestyle session',
-      los: [],
-      ok: false,
-      reason: `haiku call failed: ${(err as Error).message}`,
-    };
+    // One retry on an unreadable reply: Stage 1 is ~2 s, and the alternative
+    // is the one-line fallback plan.
+    const p1 = safeJsonParse(raw);
+    if (p1 && typeof p1 === 'object') break;
+    console.warn(`[plan-generate] stage1 non-JSON (attempt ${attempt}; stop=${stop}; ${raw.length} chars)`);
   }
 
   const parsed = safeJsonParse(raw);
@@ -269,7 +328,7 @@ export async function extractLearningObjectives(
       titleSuggestion: 'Freestyle session',
       los: [],
       ok: false,
-      reason: 'haiku returned non-JSON',
+      reason: `haiku returned non-JSON (stop=${stop}, ${raw.length} chars)`,
     };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -445,8 +504,9 @@ export async function expandSegmentsForLOs(
   const losPayload = los.map((lo) => ({ id: lo.id, description: lo.description }));
 
   let raw = '';
+  let stop2 = '';
   try {
-    const response = await anthropic.messages.create({
+    const response = await anthropic.messages.create(withPlangenEffort({
       model: HAIKU_MODEL_ID,
       max_tokens: STAGE2_MAX_TOKENS,
       system: opts?.system ?? STAGE2_SYSTEM,
@@ -461,7 +521,8 @@ export async function expandSegmentsForLOs(
           ],
         },
       ],
-    });
+    }, 2));
+    stop2 = String(response.stop_reason ?? '');
     for (const block of response.content) {
       if (block.type === 'text') raw += block.text;
     }
@@ -471,7 +532,8 @@ export async function expandSegmentsForLOs(
 
   const parsed = safeJsonParse(raw);
   if (!parsed || typeof parsed !== 'object') {
-    return { segments: [], ok: false, reason: 'haiku returned non-JSON' };
+    console.warn(`[plan-generate] stage2 non-JSON (stop=${stop2}; ${raw.length} chars)`);
+    return { segments: [], ok: false, reason: `haiku returned non-JSON (stop=${stop2}, ${raw.length} chars)` };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const segments: unknown = (parsed as any).segments;
@@ -701,7 +763,7 @@ export async function generatePlanFromText(
   const introSegment: Segment = {
     id: 'intro',
     kind: 'hook',
-    goal: `Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.`,
+    goal: `Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and say you are starting with the first one — never ask the student to choose or confirm where to start. Stay brief — under 25 spoken words.`,
   };
 
   const raw = {

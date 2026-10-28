@@ -1,9 +1,10 @@
 /** Session token totals + cost from the stored usage entries (2026-10-04).
  *  Usage: npx tsx scripts/test-usage-totals.ts */
-import { MODEL_RATES, lookupModelRate } from '../src/lib/tutor/ai/model-rates';
+import { MODEL_RATES, lookupModelRate, rateForPrompt } from '../src/lib/tutor/ai/model-rates';
 import {
   computeUsageTotals, dedupeUsageEntries, usageEntryKey, usageTotalsBehind, clientTotalsMax, countedUsageEntries, usageSaveWindow,
   FALLBACK_PRICING, REALTIME_PRICING, REALTIME_2_PRICING, type UsageEntry,
+  readPriorUsageTotals,
 } from '../src/lib/tutor/ai/usage-totals';
 
 let passed = 0, failed = 0;
@@ -203,6 +204,29 @@ console.log('\nrates:');
   check('realtime entry still counts its input/output tokens in the totals', computeUsageTotals([rt]).totalInputTokens === 5 && computeUsageTotals([rt]).totalOutputTokens === 7);
   check('totalInputTokens = input + cache read + cache write', computeUsageTotals([e]).totalInputTokens === 3_000_000);
   check('junk in → zeros, never NaN', same(computeUsageTotals(undefined), { totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 }) && same(computeUsageTotals([null, 7, 'x', { operation: 'chat', inputTokens: 'NaN', outputTokens: NaN }]), { totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 }));
+}
+
+console.log('\nHaiku 5.5 two rate cards (2026-10-23 brain trial):');
+{
+  const turn = (i: number, cr: number, o: number) => ({ operation: 'brain', inputTokens: i, cacheReadTokens: cr, cacheCreationTokens: 0, outputTokens: o, model: 'claude-haiku-5-5' });
+  // ~110K brain prompt → long card: 10K × $0.50 + 100K × $0.05 + 1K × $2.50 per 1M
+  check('a brain turn over 100K prompt tokens prices at the long card', computeUsageTotals([turn(10_000, 100_000, 1_000)]).estimatedCost === 0.0125, computeUsageTotals([turn(10_000, 100_000, 1_000)]));
+  // 50K prompt → short card: 10K × $0.10 + 40K × $0.01 + 1K × $0.50 per 1M
+  check('a short Haiku call keeps the short card', computeUsageTotals([turn(10_000, 40_000, 1_000)]).estimatedCost === 0.0019, computeUsageTotals([turn(10_000, 40_000, 1_000)]));
+  check('rateForPrompt leaves a model with one card unchanged', rateForPrompt(MODEL_RATES['claude-sonnet-5'], 500_000) === MODEL_RATES['claude-sonnet-5']);
+  check('rateForPrompt: exactly 100K is the short card', rateForPrompt(MODEL_RATES['claude-haiku-5-5'], 100_000) === MODEL_RATES['claude-haiku-5-5']);
+}
+
+console.log('\nresumed embed page continues from the stored totals (2026-10-23):');
+{
+  check('stored totals are read as numbers', same(readPriorUsageTotals({ totalInputTokens: 3_548_257, totalOutputTokens: 5150, estimatedCost: 1.6715, other: 1 }), { totalInputTokens: 3_548_257, totalOutputTokens: 5150, estimatedCost: 1.6715 }));
+  check('missing / junk read as 0', same(readPriorUsageTotals(null), { totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 }) && same(readPriorUsageTotals({ estimatedCost: 'x', totalInputTokens: -4 }), { totalInputTokens: 0, totalOutputTokens: 0, estimatedCost: 0 }));
+  const fs = require('node:fs') as typeof import('node:fs'); const path = require('node:path') as typeof import('node:path');
+  const embed = fs.readFileSync(path.join(__dirname, '..', 'src/app/tutor-portal/embed/page.tsx'), 'utf8');
+  check('embed: the resume read seeds the prior totals', /priorUsageRef\.current = readPriorUsageTotals\(prior\)/.test(embed));
+  check('embed: saved totals = prior + this sitting', /prior\.totalInputTokens \+ acc\.inputTokens/.test(embed) && /prior\.estimatedCost \+ cost/.test(embed));
+  const route = fs.readFileSync(path.join(__dirname, '..', 'src/app/api/tutor/session-usage/route.ts'), 'utf8');
+  check('route GET returns the stored totals', /estimatedCost: session\.estimatedCost \?\? 0/.test(route));
 }
 
 console.log('\nwhat the route takes from the client:');

@@ -65,6 +65,7 @@ import {
   fallbackPlan,
   buildRecapSegment,
   namespaceGeneratedLos,
+  PLANGEN_MODEL_ID,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { extractMaterials } from '@/lib/tutor/lesson-plan/material-extract';
 import {
@@ -98,7 +99,7 @@ import {
 export const runtime = 'nodejs';
 
 const INTRO_SEGMENT_GOAL =
-  'Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.';
+  'Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and say you are starting with the first one — never ask the student to choose or confirm where to start. Stay brief — under 25 spoken words.';
 
 // Mirrors PlanGenerateRequestSchema's own `topic: z.string().max(300)`
 // (contract v1.9.0+). The materials path falls back to the request's raw
@@ -299,7 +300,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // built to fix. Measured 2026-08-27: 94 cache-eligible plans existed, so
     // this was not a theoretical hit.
   } else {
-    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale, band: learner?.band });
+    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale, band: learner?.band, model: PLANGEN_MODEL_ID });
     const cachedPlan = await findCachedPlan(cacheKey);
     if (cachedPlan) {
       return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(cachedPlan, { cached: true, sessionMinutes })));

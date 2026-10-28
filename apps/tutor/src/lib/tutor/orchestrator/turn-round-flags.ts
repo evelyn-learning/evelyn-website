@@ -534,3 +534,36 @@ export const TUTOR_TYPED_WAITS_FOR_HOMEWORK =
  *  (voice/tutor-audio-capture.ts). */
 export const TUTOR_NO_SILENT_AUDIO_CAPTURE =
   process.env.NEXT_PUBLIC_TUTOR_NO_SILENT_AUDIO_CAPTURE !== 'off';
+
+// ── 2026-10-26: around a tool call in the brain's agent loop ───────────────
+// (voice/post-tool-turn.ts). Each defaults ON; 'off' restores the behaviour
+// before it for that one mechanism.
+
+/** A reply that wrote a lead-in, put something on the board and ended with no
+ *  question gets one text-only follow-up call that asks it. */
+export const TUTOR_THIN_TOOL_TURN_RESCUE =
+  process.env.NEXT_PUBLIC_TUTOR_THIN_TOOL_TURN_RESCUE !== 'off';
+
+/** A fire-and-forget tool_result quotes what the turn already sent and says
+ *  not to restate it. */
+export const TUTOR_TOOL_RESULT_DELIVERED_NOTE =
+  process.env.NEXT_PUBLIC_TUTOR_TOOL_RESULT_DELIVERED_NOTE !== 'off';
+
+/** A later call's sentence that restates an earlier call's in the same turn
+ *  is dropped. */
+export const TUTOR_CROSS_CALL_DEDUP =
+  process.env.NEXT_PUBLIC_TUTOR_CROSS_CALL_DEDUP !== 'off';
+
+/** show_segment_card for a recap with nothing to list continues the turn
+ *  (the brain gives the recap itself) instead of ending it. */
+export const TUTOR_EMPTY_RECAP_CONTINUE =
+  process.env.NEXT_PUBLIC_TUTOR_EMPTY_RECAP_CONTINUE !== 'off';
+
+// ── 2026-10-26: a student's request to move on in a lesson ─────────────────
+/** "skip" / "move on to the next section" / "move on to <objective>" moves the
+ *  lesson to the next (or named) objective before the brain call, as the Skip
+ *  button does; an advance cue's hint says to move on (no menu); the
+ *  overlong-segment note is not held, and drops "finish first", on such a turn
+ *  (orchestrator/advance-request.ts). 'off' restores all three. */
+export const TUTOR_TYPED_ADVANCE =
+  process.env.NEXT_PUBLIC_TUTOR_TYPED_ADVANCE !== 'off';

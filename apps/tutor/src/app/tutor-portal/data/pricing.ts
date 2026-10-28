@@ -10,14 +10,17 @@
 
 export const pricing = {
   productName: 'Voice Tutor',
-  /** Partner list price, USD per VOICE tutoring minute (whiteboard included). */
-  perMinuteUsd: 0.15,
+  /** Partner list price, USD per VOICE tutoring minute (whiteboard included).
+   *  2026-10-22 (Praveen ruling): $0.15 → $0.20. The measured all-in cost is
+   *  ≈ $0.12–0.13 per minute and a cold session writes a ≈ $0.50 prompt
+   *  cache, so the old rate was at cost. */
+  perMinuteUsd: 0.2,
   /**
    * Text-only sessions (same tutor, same whiteboard, typed instead of spoken).
    * Cheaper because the speech layer (TTS + STT) is what the difference pays for
    * (Praveen ruling 2026-09-19).
    */
-  textPerMinuteUsd: 0.12,
+  textPerMinuteUsd: 0.16,
   tagline: 'One product. One rate. No fixed fees.',
   description:
     'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
@@ -53,6 +56,8 @@ export type SessionMode = 'voice' | 'text';
 export const rateFor = (mode: SessionMode = 'voice') =>
   mode === 'text' ? pricing.textPerMinuteUsd : pricing.perMinuteUsd;
 
+// 2026-10-24 (Praveen ruling): the 5-minute per-session minimum is dropped —
+// on Haiku 5.5 a short session costs well under the per-minute rate.
 export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => minutes * rateFor(mode);
 
 export function estimateMonthlyCost(

@@ -43,6 +43,7 @@ export type ModelRole =
   | 'grader'            // portal free-response grader
   | 'social-threads'    // portal social-thread extraction
   | 'video-curator'
+  | 'plangen'           // typed-topic lesson-plan generation, stage 1 + stage 2 of generate-from-text — 2026-10-23 eval: Haiku 5.5 low beat Haiku 4.5 and Sonnet 5 on verified keys, judge score and cost
   | 'plangen-fast'      // lesson-plan text generation / labels / classify / condense
   | 'plangen-vision'    // lesson-plan material vision extraction
   | 'taxonomy'          // taxonomy generation (legacy TAXONOMY_MODEL)
@@ -71,7 +72,8 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   grader: 'claude-sonnet-4-6',
   'social-threads': 'claude-haiku-4-5-20251001',
   'video-curator': 'claude-sonnet-4-6',
-  'plangen-fast': 'claude-haiku-4-5-20251001',
+  plangen: 'claude-haiku-5-5', // docs/superpowers/evals/2026-10-23-plangen-model-compare.md: 98.4% verified keys, judge 7.20/8, $0.002/plan (Haiku 4.5: 92.3%, 5.77, $0.0115)
+  'plangen-fast': 'claude-haiku-4-5-20251001', // other callers send temperature:0 (Haiku 5.5 rejects it), unevaluated
   'plangen-vision': 'claude-sonnet-4-6',
   taxonomy: 'claude-sonnet-5',
   'content-gen': 'claude-sonnet-5',
