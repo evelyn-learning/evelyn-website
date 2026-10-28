@@ -34,8 +34,8 @@
  *     never the raw CARTESIA_API_KEY.
  *   - Turn-detection thresholds are Ink 2 query params, env-tunable
  *     (NEXT_PUBLIC_TUTOR_INK_TURN_START/EAGER_END/END/END_TIMEOUT_MS),
- *     defaulting to 0.8/0.4/0.2 and a 3000 ms end timeout (5600 ms until
- *     2026-10-17 — see ENV_TURN_END_TIMEOUT_MS).
+ *     defaulting to 0.8/0.4/0.2 and a 5600 ms end timeout (3000 ms for a
+ *     bilingual session — lib/tutor/voice/ink-turn-end.ts).
  *   - `onSpeechStart` fires on `turn.start` (barge-in timing signal).
  *     `onSpeechStop` fires on `turn.eager_end` (Ink 2's "turn is probably
  *     over" provisional signal — closest analogue to server_vad's
@@ -71,6 +71,7 @@ import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted } from '@/lib/tutor/voice/shared-mic';
 import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 import { isStaleInkFinal, countSpeechTokens } from '@/lib/tutor/voice/stale-ink-final';
+import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 
 /** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
 const MIC_CONSUMER = 'ink2-stt';
@@ -182,13 +183,11 @@ function envFloat(raw: string | undefined, fallback: number): number {
 const ENV_TURN_START_THRESHOLD = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_START, 0.8);
 const ENV_TURN_EAGER_END_THRESHOLD = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_EAGER_END, 0.4);
 const ENV_TURN_END_THRESHOLD = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_END, 0.2);
-// 2026-10-17 (GDI embed-1792254012923 / -1792261973710): with 5600 ms, Ink
-// confirmed the end of a finished A1 turn 3–5.4 s after its eager end on about
-// half the turns (the student had stopped; Ink was waiting out the timeout),
-// and that wait was most of the "Hearing you" time. 3000 ms, decided with
-// Praveen. A student who pauses longer mid-thought is covered by turn.resume
-// and the perception continuation verdict.
-const ENV_TURN_END_TIMEOUT_MS = envFloat(process.env.NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 3000);
+// The end timeout is keyed on the session's languages (5600 ms, or 3000 ms
+// for a bilingual lesson — see lib/tutor/voice/ink-turn-end.ts); the wiring
+// layer passes `turnEndTimeoutMs` from inkTurnEndTimeoutMs(tutorLanguages).
+// This default is the English-only value (env override included).
+const ENV_TURN_END_TIMEOUT_MS = inkTurnEndTimeoutMs(undefined);
 
 // Module-scoped so React StrictMode dev double-mounts share one
 // AudioContext (mirrors usePerceptionWS's getPerceptionAudioContext — the

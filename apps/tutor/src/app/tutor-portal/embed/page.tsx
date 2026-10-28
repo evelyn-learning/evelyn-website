@@ -393,6 +393,7 @@ const MILESTONE_RANK: Record<SessionMilestone, number> = {
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import { EMBED_DOCUMENT_TITLE, partnerFrameTitle } from '@/lib/tutor/portal/partner-frame-metadata';
 import { resolveEmbedUiOptions } from '@/lib/tutor/portal/embed-ui-options';
+import { resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session-options';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
@@ -672,6 +673,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // speed sent — unchanged behavior for every other partner voice).
   const cartesiaVoiceSpeed = cartesiaSpeedForVoiceId(cartesiaVoiceId);
   const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
+  // Per-partner behaviour (2026-10-27 merge decisions): opener prefetch on
+  // for bilingual sessions only, post-close auto-end on unless a partner row
+  // says otherwise. See lib/tutor/portal/partner-session-options.ts.
+  const sessionOptions = resolvePartnerSessionOptions({ partnerId: config.partner_id, tutorLanguages });
   const speechRate = parseSpeechRate(config.speech_rate);
   const thinkingCue = TUTOR_THINKING_CUE && parseThinkingCue(config.thinking_cue);
   // Clamp partner-supplied session length to [1, 120] min. The hard
@@ -2226,6 +2231,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
+        openerPrefetch={sessionOptions.openerPrefetch}
+        lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}
         speechRate={speechRate}
         thinkingCue={thinkingCue}
         sessionMaxMinutes={maxDuration}

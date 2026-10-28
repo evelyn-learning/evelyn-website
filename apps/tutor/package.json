@@ -398,6 +398,7 @@
     "test:teacher-role-name": "npx tsx scripts/test-teacher-role-name.ts",
     "test:partner-frame-metadata": "npx tsx scripts/test-partner-frame-metadata.ts",
     "test:embed-ui-options": "npx tsx scripts/test-embed-ui-options.tsx",
+    "test:partner-session-options": "npx tsx scripts/test-partner-session-options.ts",
     "test:essay-practice": "npx tsx scripts/test-essay-practice.ts",
     "test:local-time": "npx tsx scripts/test-local-time.tsx",
     "test:practice-gen-partner-switch": "npx tsx scripts/test-practice-gen-partner-switch.ts",

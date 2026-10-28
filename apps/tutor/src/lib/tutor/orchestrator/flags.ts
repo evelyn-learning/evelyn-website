@@ -109,7 +109,9 @@ export const TUTOR_IDLE_NUDGE =
 // 2026-10-17 (GDI embed-1792261973710): after the lesson closes, a quiet
 // LESSON_CLOSE_AUTO_END_MS ends the voice session the way the End button does
 // (lesson-close.ts). Without it the mic, the recogniser and the recording ran
-// 8.5 minutes past the goodbye, until the tab was closed. 'off' disables.
+// 8.5 minutes past the goodbye, until the tab was closed. 'off' disables
+// everywhere; per partner it is `lessonCloseAutoEnd` in
+// lib/tutor/portal/partner-session-options.ts (on by default, 2026-10-27).
 export const TUTOR_LESSON_CLOSE_AUTO_END =
   process.env.NEXT_PUBLIC_TUTOR_LESSON_CLOSE_AUTO_END !== 'off';
 // R58 false-final-assertion kill (live, portal-71d11dac: "Right. Dividing
@@ -824,8 +826,11 @@ export const TUTOR_SILENT_MOLECULE_EDITS =
  *  it pre-start (callBrainOnce `prefetchOnly`); the route caches the stream
  *  under the session id and the Start call replays it in ~100 ms
  *  (lib/tutor/voice/opener-prefetch.ts). One brain call per page load even if
- *  Start is never tapped. Default ON; NEXT_PUBLIC_TUTOR_OPENER_PREFETCH=off
- *  restores the cold opener. */
+ *  Start is never tapped — so since the 2026-10-27 merge it is a PER-PARTNER
+ *  setting (lib/tutor/portal/partner-session-options.ts: on for bilingual
+ *  sessions, off for English-only partners until asked). This flag is the
+ *  kill switch over that: NEXT_PUBLIC_TUTOR_OPENER_PREFETCH=off restores the
+ *  cold opener everywhere. */
 export const TUTOR_OPENER_PREFETCH =
   process.env.NEXT_PUBLIC_TUTOR_OPENER_PREFETCH !== 'off';
 /** How long after the prompt is built the pre-start opener is sent: lets the

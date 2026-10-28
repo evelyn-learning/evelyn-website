@@ -19,6 +19,7 @@ import { isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 import { latexAsProse } from '../src/lib/tutor/whiteboard/prose-latex';
 import { classifyTranscript, sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
+import { inkTurnEndTimeoutMs } from '../src/lib/tutor/voice/ink-turn-end';
 import { buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
 import { isPleasantryOnly, isTutorFarewell, isSessionEndSignalJa } from '../src/lib/tutor/voice/lesson-close';
 import { splitRunTogetherEnglish } from '../src/lib/tutor/voice/run-together-english';
@@ -555,10 +556,18 @@ test('english-reply: an English ask answered with no Latin letters gets the note
 
 // ── embed-1792261973710 (2026-10-17) ─────────────────────────────────────────
 
-test('Ink turn-end timeout defaults to 3000 ms (was 5600; decided 2026-10-17)', () => {
+test('Ink turn-end timeout: 3000 ms for a bilingual session (decided 2026-10-17), 5600 ms otherwise (merge 2026-10-27)', () => {
+  // The hook no longer carries a hardcoded value: the wiring layer passes
+  // inkTurnEndTimeoutMs(tutorLanguages) and the hook's default is the
+  // English-only value. test:partner-session-options pins the numbers.
   const hook = readFileSync('src/app/tutor/hooks/useCartesiaInkWS.ts', 'utf8');
-  assert.ok(hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 3000)'));
+  assert.ok(!hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 3000)'));
   assert.ok(!hook.includes('NEXT_PUBLIC_TUTOR_INK_TURN_END_TIMEOUT_MS, 5600)'));
+  assert.ok(hook.includes('const ENV_TURN_END_TIMEOUT_MS = inkTurnEndTimeoutMs(undefined);'));
+  assert.equal(inkTurnEndTimeoutMs(['en', 'ja'], undefined), 3000);
+  assert.equal(inkTurnEndTimeoutMs(undefined, undefined), 5600);
+  const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
+  assert.ok(vtr.includes('turnEndTimeoutMs: inkTurnEndTimeoutMs(tutorLanguages),'));
 });
 
 test('Japanese affirmations read as affirmations: the question pin clears (seq 3, 01:12)', () => {
@@ -645,7 +654,9 @@ test('lesson close → quiet auto-end: 45 s, deferred while busy, re-armed by a 
   const vtr = readFileSync('src/app/tutor/components/VoiceTutorRealtime.tsx', 'utf8');
   assert.equal(vtr.split('armLessonCloseAutoEndRef.current();').length - 1, 3, 'armed at both close sites and on a post-close student turn');
   assert.ok(vtr.includes("onDebugEvent?.('lesson_closed_auto_end'"));
-  assert.ok(vtr.includes("if (!TUTOR_LESSON_CLOSE_AUTO_END || sessionMode === 'text') return;"));
+  // Per partner since the 2026-10-27 merge (partner-session-options.ts,
+  // default on): the prop sits beside the build-time kill switch.
+  assert.ok(vtr.includes("if (!TUTOR_LESSON_CLOSE_AUTO_END || !lessonCloseAutoEnd || sessionMode === 'text') return;"));
   assert.ok(vtr.includes('void endSessionNowRef.current();\n    };\n    lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_MS);'));
   assert.equal(TUTOR_LESSON_CLOSE_AUTO_END, true, 'default ON');
 });

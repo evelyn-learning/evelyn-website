@@ -535,6 +535,7 @@ async function dispatchTopicNotesOverlay(
 
 // Words that Whisper commonly misrecognizes as inappropriate
 import { filterTranscriptText, classifyTranscript, wrapUncertainTranscript, isContextLossGreeting, sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
+import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import { checkTopicShift, createTopicShiftState, type TopicShiftDetectorState } from '@/lib/tutor/voice/topic-shift-detector';
 import { detectStudentIntent, isContinuationRequest } from '@/lib/tutor/voice/student-intent';
 import { detectTutorSameContext, decidePageStrip } from '@/lib/tutor/voice/tutor-context-detector';
@@ -930,6 +931,14 @@ interface VoiceTutorRealtimeProps {
    *  normalised by parseTutorLanguages). Absent ⇒ English-only: the prompt
    *  and every TTS request are byte-identical to before. */
   tutorLanguages?: string[];
+  /** Per-partner (lib/tutor/portal/partner-session-options.ts): run the
+   *  opener's brain call pre-start and replay it on Start. Costs a brain call
+   *  per page load, so it is OFF unless the surface resolves it on. */
+  openerPrefetch?: boolean;
+  /** Per-partner (same module): after the lesson is closed, a quiet 45 s ends
+   *  the voice session (lesson-close.ts). Default on; a partner row turns it
+   *  off. The build-time TUTOR_LESSON_CLOSE_AUTO_END flag stays a kill switch. */
+  lessonCloseAutoEnd?: boolean;
   /** Tutor speaking rate → Cartesia generation_config.speed (tenant claim
    *  `speech_rate`). Absent ⇒ every TTS request unchanged. */
   speechRate?: number;
@@ -1311,6 +1320,8 @@ export function VoiceTutorRealtime({
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   tutorLanguages,
+  openerPrefetch = false,
+  lessonCloseAutoEnd = true,
   speechRate,
   thinkingCue = false,
   onLessonPlanProgress,
@@ -22007,7 +22018,7 @@ export function VoiceTutorRealtime({
   // student may still be typing. A dispatched post-close turn re-arms it; the
   // tutor still talking, or a turn in flight, defers it.
   const armLessonCloseAutoEnd = useCallback(() => {
-    if (!TUTOR_LESSON_CLOSE_AUTO_END || sessionMode === 'text') return;
+    if (!TUTOR_LESSON_CLOSE_AUTO_END || !lessonCloseAutoEnd || sessionMode === 'text') return;
     if (lessonCloseAutoEndTimerRef.current) clearTimeout(lessonCloseAutoEndTimerRef.current);
     const closedAt = Date.now();
     const check = () => {
@@ -22026,7 +22037,7 @@ export function VoiceTutorRealtime({
       void endSessionNowRef.current();
     };
     lessonCloseAutoEndTimerRef.current = setTimeout(check, LESSON_CLOSE_AUTO_END_MS);
-  }, [sessionMode, onDebugEvent]);
+  }, [sessionMode, lessonCloseAutoEnd, onDebugEvent]);
   armLessonCloseAutoEndRef.current = armLessonCloseAutoEnd;
 
   const armIdleNudge = useCallback(() => {
@@ -24255,6 +24266,8 @@ export function VoiceTutorRealtime({
   // perceptionWS above, so exactly one hook ever owns the mic + WS.
   const perceptionInk2 = useCartesiaInkWS({
     enabled: perceptionEnabled && TUTOR_STT_ENGINE_INK2,
+    // 5600 ms, or 3000 ms for a bilingual session (ink-turn-end.ts).
+    turnEndTimeoutMs: inkTurnEndTimeoutMs(tutorLanguages),
     onSpeechStart: perceptionOnSpeechStart,
     onSpeechStop: perceptionOnSpeechStop,
     onPartialTranscript: perceptionOnPartialTranscript,
@@ -26318,9 +26331,12 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // call replays it (lib/tutor/voice/opener-prefetch.ts). Same conditions as
   // the tap's lesson branch: claude-brain, a lesson plan, not a checkpoint
   // resume, voice session. Once per mount; a tap before it fires wins.
+  // Per partner (2026-10-27 merge decision): the surface resolves
+  // `openerPrefetch` from lib/tutor/portal/partner-session-options.ts — on
+  // for bilingual sessions, off for English-only partners until asked.
   const openerPrefetchFiredRef = useRef(false);
   useEffect(() => {
-    if (!TUTOR_OPENER_PREFETCH || !claudeBrainMode || !isInitialized || sessionMode === 'text') return;
+    if (!TUTOR_OPENER_PREFETCH || !openerPrefetch || !claudeBrainMode || !isInitialized || sessionMode === 'text') return;
     if (resumeState || hasStartedRef.current || openerPrefetchFiredRef.current) return;
     let tries = 0;
     let timer: ReturnType<typeof setTimeout>;
@@ -26337,7 +26353,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     };
     timer = setTimeout(tick, OPENER_PREFETCH_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [claudeBrainMode, isInitialized, sessionMode, resumeState, callBrainOnce, prepareOpenerDirectiveForStart, onDebugEvent]);
+  }, [openerPrefetch, claudeBrainMode, isInitialized, sessionMode, resumeState, callBrainOnce, prepareOpenerDirectiveForStart, onDebugEvent]);
 
   return (
     <div className={`voice-tutor-realtime flex items-center flex-wrap ${isIsland ? 'py-1 px-1 gap-2 sm:gap-2.5' : 'py-2 px-2 gap-2 sm:gap-3'}`}>
