@@ -29,6 +29,8 @@ import { TUTOR_DEMO_TOPIC_CHOICE } from '../src/lib/tutor/orchestrator/flags';
 import { OPENING_DIRECTIVE_MAX_CHARS, OPENING_FOLLOWUP_DIRECTIVE } from '../src/lib/tutor/ai/opening-behavior';
 import { stripFirstTurnRunway } from '../src/lib/tutor/voice/first-turn-runway';
 import { bridgeLineFor } from '../src/lib/tutor/voice/bridge-line';
+import { computeGreetingGuard } from '../src/lib/tutor/validation/continuity';
+import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
 
 let passed = 0;
 let failed = 0;
@@ -105,6 +107,23 @@ function main() {
   test('bridge line is the greeting alone', () => {
     assert.equal(bridgeLineFor({ studentName: 'Praveen', inFlow: false } as any), 'Hey Praveen.');
     assert.equal(bridgeLineFor({ inFlow: false } as any), 'Hey.');
+  });
+
+  // ── 2d. opener card guard + minus sign speech (local trial embed-1793229013524) ──
+  test('greeting guard: the synthetic session start is not a greeting (no plan loaded yet)', () => {
+    assert.equal(computeGreetingGuard({ lessonPlanActive: false, priorStudentTurns: 0, lastStudentText: '', mockReviewActive: false }), false);
+    assert.equal(computeGreetingGuard({ lessonPlanActive: false, priorStudentTurns: 1, lastStudentText: 'hi', mockReviewActive: false }), true, 'a real greeting is still guarded');
+    assert.equal(computeGreetingGuard({ lessonPlanActive: true, priorStudentTurns: 1, lastStudentText: 'hi', mockReviewActive: false }), false);
+  });
+  test('TTS: U+2212 minus is voiced — binary "minus", unary "negative"', () => {
+    const a = rewriteForTTS('The function is y = (x − 1)² − 2, and k is −2, so the vertex is (1, −2).');
+    assert.match(a, /\(x minus 1\) squared minus 2/);
+    assert.match(a, /k is negative 2/);
+    assert.match(a, /\(1, negative 2\)/);
+    assert.doesNotMatch(a, /−/);
+    assert.match(rewriteForTTS('The curve crosses the y-axis at −2.'), /at negative 2/);
+    assert.match(rewriteForTTS('y = (0 − 1)² − 2 = 1 − 2 = −1'), /\(0 minus 1\) squared minus 2 equals 1 minus 2 equals negative 1/);
+    assert.equal(rewriteForTTS('a well-known two-step method'), rewriteForTTS('a well-known two-step method'), 'ASCII hyphens untouched by these rules');
   });
 
   // ── 3. system prompt open-scope block ────────────────────────────────────

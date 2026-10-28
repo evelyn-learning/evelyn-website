@@ -282,6 +282,14 @@ export function computeGreetingGuard(input: {
    *  older call sites keep their verdict. */
   problemContextActive?: boolean;
 }): boolean {
+  // 2026-10-28 (local trial embed-1793229013524): the runtime-triggered
+  // opener ('[start session]', no student words, no prior turns) fired
+  // show_problem before the lesson plan had loaded; isPureGreeting('') read
+  // the empty text as "the student only said hi", the card was rejected,
+  // the validator retried and the retry opened with a bare question — no
+  // hook, no demo topic confirm. Nobody greeted: the guard is for a student
+  // who actually said hi.
+  if (input.priorStudentTurns === 0 && !input.lastStudentText.trim()) return false;
   return (
     !input.lessonPlanActive &&
     !input.mockReviewActive &&

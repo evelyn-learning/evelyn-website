@@ -9825,7 +9825,11 @@ export function VoiceTutorRealtime({
       whiteboardStatusTimerRef.current = setTimeout(() => setWhiteboardStatus(null), 4500);
     } else if (processed.length > 0) {
       // Successful render — clear any lingering "retrying" status.
-      if (whiteboardStatus) setWhiteboardStatus(null);
+      // 2026-10-28: unconditional. `whiteboardStatus` here is the closure's
+      // snapshot; when it was stale-null the timer below was cancelled and
+      // the status never cleared ("Re-rendering problem…" stuck in the
+      // caption strip for the rest of a local session).
+      setWhiteboardStatus(null);
       if (whiteboardStatusTimerRef.current) {
         clearTimeout(whiteboardStatusTimerRef.current);
         whiteboardStatusTimerRef.current = null;

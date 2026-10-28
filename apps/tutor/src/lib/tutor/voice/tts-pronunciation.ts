@@ -275,6 +275,16 @@ const MATH_OPERATOR_REPLACEMENTS: Replacement[] = [
   { pattern: /\s*≠\s*/g, replacement: ' not equal to ' },
   { pattern: /\s*≈\s*/g, replacement: ' approximately ' },
   { pattern: /\s*±\s*/g, replacement: ' plus or minus ' },
+  // 2026-10-28 (local trial embed-1793229013524): the brain writes the true
+  // minus sign U+2212 in prose maths — "(x − 1)² − 2" spoke as "x 1 squared
+  // 2", "crosses the y-axis at −2" as "at 2". Unlike '-', U+2212 is never a
+  // hyphen, so it is always safe to voice: between two operands it is
+  // "minus", in front of a lone operand it is "negative".
+  // Unary = sits at the start / after a space, '(', '=', ',' or '[' and is
+  // glued to its operand ("at −2", "= −1", "(1, −2)"); everything else is
+  // binary ("x − 1", "1−2").
+  { pattern: /(?<=^|[\s(=,\[])−(?=[\p{L}\p{N}(])/gu, replacement: 'negative ' },
+  { pattern: /\s*−\s*/g, replacement: ' minus ' },
 ];
 
 /** Slash-pair whitelist — curated option/direction pairs where "/" is
