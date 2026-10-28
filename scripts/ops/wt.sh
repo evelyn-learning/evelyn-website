@@ -36,6 +36,14 @@ setup_env() {
     if [ -f "$REPO/apps/tutor/public/ketcher/bundle.js" ]; then
       cp "$REPO/apps/tutor/public/ketcher/bundle.js" "$REPO/apps/tutor/public/ketcher/bundle.css" "$wt/apps/tutor/public/ketcher/"
     fi
+    # A cold Turbopack cache costs ~16 minutes on the first prod build of a new
+    # worktree (measured 2026-10-28); a warm one ~10 s. Seed it from the root
+    # checkout's cache when there is one (best effort — it is only a cache).
+    for app in tutor marketing; do
+      if [ -d "$REPO/apps/$app/.next/cache" ] && [ ! -d "$wt/apps/$app/.next/cache" ]; then
+        mkdir -p "$wt/apps/$app/.next" && cp -R "$REPO/apps/$app/.next/cache" "$wt/apps/$app/.next/cache" 2>/dev/null || true
+      fi
+    done
     # Blog media is not in git (WORKFLOW.md §6); link the root checkout's copy
     # so local marketing dev shows blog images. The deploy never prunes it.
     if [ -d "$REPO/apps/marketing/public/images/blog" ] && [ ! -e "$wt/apps/marketing/public/images/blog" ]; then
