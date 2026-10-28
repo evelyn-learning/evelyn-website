@@ -846,6 +846,15 @@ fi
 #      would leave cwd at the repo root, which is exactly the breakage.
 #      The `../../node_modules/.bin/next` path is relative for the same
 #      reason deps are hoisted: there is no node_modules/.bin inside the app.
+# 2026-10-28: `npm ci --omit=dev` reinstalled 732 packages (1.7 GB) on EVERY
+# deploy — 2 of the ~2.5 minutes a tutor deploy took, for a lockfile that
+# changes maybe once a week. The server keeps the sha256 of the lockfile it
+# last installed in $REMOTE_DIR/.deploy-lock-hash and installs only when the
+# uploaded package-lock.json differs (or node_modules is missing). The hash
+# is written only after a SUCCESSFUL install, so a failed one re-runs next
+# time. DEPLOY_FORCE_NPM_CI=1 forces the install.
+LOCK_HASH="$(shasum -a 256 package-lock.json | cut -c1-32)"
+[ "${DEPLOY_FORCE_NPM_CI:-}" = "1" ] && LOCK_HASH="force-$(date +%s)"
 log_message "STEP" "Running deployment on production server..."
 run_remote_command "cd $REMOTE_DIR && \
   if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.$TMP_TAG.prev; else : > /tmp/.deploy-public-manifest.$TMP_TAG.prev; fi && \
@@ -856,7 +865,7 @@ run_remote_command "cd $REMOTE_DIR && \
   if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
   rm -f /tmp/.deploy-public-manifest.$TMP_TAG.prev && \
   if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans.$TMP_TAG) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
-  npm ci --omit=dev && \
+  if [ -d node_modules ] && [ \"\$(cat .deploy-lock-hash 2>/dev/null)\" = \"$LOCK_HASH\" ]; then echo \"npm ci skipped — package-lock.json unchanged since the last install ($LOCK_HASH)\"; else echo \"npm ci — lockfile changed or first install\" && npm ci --omit=dev && echo \"$LOCK_HASH\" > .deploy-lock-hash; fi && \
   (pm2 delete $PM2_NAME 2>/dev/null || true) && \
   (cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME -- start -p $PM2_PORT) && \
   pm2 save && \

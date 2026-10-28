@@ -494,7 +494,11 @@ log_message "INFO" "Application built successfully"
 # apps/marketing/), because the server consumes them with its cwd at $REMOTE_DIR,
 # which mirrors the repo root. Do not cd into $APP_DIR to shorten them.
 log_message "STEP" "Generating public/ manifest..."
-find "$APP_DIR/public" -type f | LC_ALL=C sort > .deploy-public-manifest
+# public/images/blog is NOT tracked in git since 2026-10-28 (185 MB of blog
+# media; it lives on the server and in each developer's checkout). It is
+# excluded from the manifest so a checkout without it can never prune the
+# server's copy, and the server-side prune refuses that path too.
+find "$APP_DIR/public" -type f -not -path "$APP_DIR/public/images/blog/*" | LC_ALL=C sort > .deploy-public-manifest
 log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries"
 
 # Step 1.6: Generate a .next/static/ manifest for orphan-chunk pruning.
@@ -569,9 +573,11 @@ fi
 # The other app's workspace is deliberately absent: `npm ci` tolerates a
 # missing sibling workspace (verified locally — it simply creates one fewer
 # node_modules link), which is what keeps the two deploys independent.
+# 2026-10-28: public/ is NOT in the zip any more. Zipping its ~210 MB of media
+# took 8.5 of the 11.7 minutes a marketing deploy spent; it is rsynced
+# incrementally below instead (only changed files cross the wire).
 zip -qr "$ZIP_FILE" \
   "$APP_DIR/.next" \
-  "$APP_DIR/public" \
   "$APP_DIR/src" \
   "$APP_DIR/.env" \
   "$APP_DIR/package.json" \
@@ -636,6 +642,23 @@ if [ -f ".env.local.production" ]; then
 else
   log_message "WARNING" ".env.local.production not found, skipping env file upload"
 fi
+
+# Step 3.6: public/ goes over by rsync, incrementally (2026-10-28). No
+# --delete: the server's public/ also holds user uploads, generated blog
+# images and the GSC verification file that exist in no checkout. Files
+# removed from the repo are still pruned by the manifest diff below.
+log_message "STEP" "Syncing public/ (incremental rsync)..."
+rsync -az --no-perms --no-owner --no-group \
+  -e "ssh -o StrictHostKeyChecking=no" \
+  "$APP_DIR/public/" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/$APP_DIR/public/" || {
+  log_message "ERROR" "Failed to rsync public/ to the server"
+  exit 1
+}
+log_message "INFO" "public/ in sync"
+
+# 2026-10-28: see deploy-tutor.sh — install only when the lockfile changed.
+LOCK_HASH="$(shasum -a 256 package-lock.json | cut -c1-32)"
+[ "${DEPLOY_FORCE_NPM_CI:-}" = "1" ] && LOCK_HASH="force-$(date +%s)"
 
 # Step 4: Deploy on remote server
 #
@@ -702,11 +725,11 @@ run_remote_command "cd $REMOTE_DIR && \
   unzip -qo $ZIP_FILE && \
   rm -f $ZIP_FILE && \
   if [ ! -s $APP_DIR/.env.local ]; then echo \"FATAL: $REMOTE_DIR/$APP_DIR/.env.local is missing or empty. Refusing to restart $PM2_NAME — it would start with none of its secrets.\"; exit 1; fi && \
-  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.$TMP_TAG.prev .deploy-public-manifest) && \
+  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.$TMP_TAG.prev .deploy-public-manifest | grep -v '^$APP_DIR/public/images/blog/' || true) && \
   if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
   rm -f /tmp/.deploy-public-manifest.$TMP_TAG.prev && \
   if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans.$TMP_TAG) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
-  npm ci --omit=dev && \
+  if [ -d node_modules ] && [ \"\$(cat .deploy-lock-hash 2>/dev/null)\" = \"$LOCK_HASH\" ]; then echo \"npm ci skipped — package-lock.json unchanged since the last install ($LOCK_HASH)\"; else echo \"npm ci — lockfile changed or first install\" && npm ci --omit=dev && echo \"$LOCK_HASH\" > .deploy-lock-hash; fi && \
   (pm2 delete $PM2_NAME 2>/dev/null || true) && \
   (cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME -- start -p $PM2_PORT) && \
   pm2 save && \
